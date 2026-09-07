@@ -217,7 +217,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _arrow_stamp = -1
   private _arrow_stamp_source = -1
   /**
-   * os#1378 — ANCRE dont chaque pointe a été déduite, à côté de l'époque. L'époque seule ne
+   * os#1384 — ANCRE dont chaque pointe a été déduite, à côté de l'époque. L'époque seule ne
    * suffit pas : elle ne change qu'à `Class_Sankey.draw`, alors qu'À L'INTÉRIEUR d'une passe les
    * ancres bougent encore (un nœud placé après la cible, une migration de coordonnées après le
    * premier dessin). Une pointe posée avant que l'ancre soit connue portait le numéro de l'époque
@@ -486,7 +486,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // vider ferait redemander au nœud l'éventail entier de son côté, alors qu'il vient de le
     // calculer pour ces positions-là. Hors d'un `Class_Sankey.draw` (`keeps_arrow_caches` faux),
     // on vide comme avant — c'est ce que réclament le glisser-déposer et `refreshArrow`.
-    // os#1378 — ...À CONDITION qu'elle ait été déduite de l'ancre COURANTE. L'époque ne change
+    // os#1384 — ...À CONDITION qu'elle ait été déduite de l'ancre COURANTE. L'époque ne change
     // qu'entre deux passes ; l'ancre, elle, se fixe PENDANT la passe. Comparer les deux garde le
     // gain d'os#1374 (une fois les positions posées, l'ancre ne bouge plus et le cache tient)
     // sans laisser survivre une pointe calculée trop tôt.
@@ -503,7 +503,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * os#1378 — Ancre RÉELLEMENT consommée par l'éventail, côté cible puis côté source : ce sont
+   * os#1384 — Ancre RÉELLEMENT consommée par l'éventail, côté cible puis côté source : ce sont
    * les mêmes valeurs que `Class_NodeElement.drawLinksArrow` lit pour placer l'apex
    * (`bandTransversePos`), donc deux pointes d'ancres identiques ont la même géométrie.
    */
@@ -1686,27 +1686,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
     }
-    const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
-    if (unitary_tagg) {
-      const node_type = this.sankey.node_taggs_dict['type de noeud']
-      const productTag = node_type?.tags_dict['produit']
-      const sectorTag = node_type?.tags_dict['secteur']
-      // Le tagg unitaire d'une extrémité dépend de SON propre type (produit/secteur),
-      // pas de l'opposé de la source. L'ancien code supposait une structure bipartite
-      // produit↔secteur : pour un lien produit→produit (ex. Production biologique →
-      // Bois sur pied), il testait la cible dans 'sector_unitary' (groupe inexistant
-      // pour un nœud produit) → undefined → lien masqué. On teste chaque bout dans son
-      // groupe réel (les cas produit→secteur / secteur→produit restent identiques).
-      const unitaryTaggOf = (node: Class_NodeElement) =>
-        node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
-      const source_unitary_tagg = unitaryTaggOf(this.source)
-      const target_unitary_tagg = unitaryTaggOf(this.target)
-      const visible = this.source.grouped_taggs_dict[source_unitary_tagg] &&
-        this.source.grouped_taggs_dict[source_unitary_tagg][0].is_selected ||
-        this.target.grouped_taggs_dict[target_unitary_tagg] &&
-        this.target.grouped_taggs_dict[target_unitary_tagg][0].is_selected
-      if (!visible) return false
-    }
     return (
       super.is_visible &&
       this.are_source_and_target_displayed &&
@@ -2388,8 +2367,57 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (value !== null) {
       value.valueData = _
       value.valueResult = null
+      // SA#487 — une valeur chiffrée et un « min » / « max » ne peuvent pas
+      // coexister : le moteur ne saurait pas s'il doit honorer la valeur ou
+      // chercher l'optimum. Saisir un nombre retire donc l'intention, et vider
+      // le champ la retire aussi — c'est la même case, elle ne porte qu'une
+      // chose à la fois. Même règle que le parser Excel côté ligne de données.
+      value.value_objective = null
+      value.value_objective_rank = null
       this.redrawNodesSourceTarget()
     }
+  }
+
+  /**
+   * SA#487 — intention d'optimisation sur la valeur de ce flux : « min », « max »
+   * ou null. Écrite là où l'utilisateur formule son intention — la case Valeur —
+   * exactement comme dans la colonne Valeur d'une feuille de données.
+   *
+   * Le rang est attribué ici, et il compte : c'est lui qui arbitre entre
+   * plusieurs « min » concurrents, que le moteur fige l'un après l'autre. Dans
+   * un classeur, c'est l'ordre des lignes ; dans l'application, il n'y a pas de
+   * lignes — l'ordre est donc celui des déclarations, et le rang se prend à la
+   * suite du plus grand déjà posé sur le diagramme.
+   */
+  public get valueObjectiveCurrent(): string | null {
+    return this.value?.value_objective ?? null
+  }
+
+  public set valueObjectiveCurrent(_: string | null) {
+    const value = this.value
+    if (value === null) return
+    value.value_objective = _
+    if (_ === null) {
+      value.value_objective_rank = null
+    } else {
+      value.valueData = null
+      value.valueResult = null
+      if (value.value_objective_rank === null) {
+        value.value_objective_rank = this.nextValueObjectiveRank()
+      }
+    }
+    this.redrawNodesSourceTarget()
+  }
+
+  private nextValueObjectiveRank(): number {
+    let max_rank = -1
+    this.drawing_area.sankey.links_list.forEach(link => {
+      Object.values(link.getAllValues()).forEach(([value]) => {
+        const rank = value.value_objective_rank
+        if (rank !== null && rank > max_rank) max_rank = rank
+      })
+    })
+    return max_rank + 1
   }
 
   /**
@@ -2921,7 +2949,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._arrow_shape = _
     // os#1374 — estampiller la pointe : c'est ce qui la fait survivre à l'invalidation des
     // dessins de flux qui suivent, dans la même époque d'éventail.
-    // os#1378 — avec l'ancre dont elle vient : une ancre qui bouge ensuite la périme.
+    // os#1384 — avec l'ancre dont elle vient : une ancre qui bouge ensuite la périme.
     this._arrow_stamp = this.sankey.drawing_area.arrow_epoch
     this._arrow_stamp_anchor = this._targetAnchorKey()
     this.drawArrow()
@@ -3104,11 +3132,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty'>(
+  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty' | 'valueObjectiveCurrent'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
-    value: K extends 'text_value' ? string : number | null,
+    // SA#487 — « valueObjectiveCurrent » porte un mot-clé, donc une chaîne ou
+    // rien ; les autres clés restent ce qu'elles étaient.
+    value: K extends 'text_value' ? string
+      : K extends 'valueObjectiveCurrent' ? string | null
+        : number | null,
     refreshParentComponent: () => void
   ) => {
     const dict_old_val: { [id: string]: number | string | null } = {}

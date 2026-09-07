@@ -2,6 +2,36 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.2] — 2026-09-05
+
+- **Chargement : quatre dessins de flux refaits en moins** (os#1377). Deux causes,
+  toutes deux invisibles au total : des dessins hors de toute passe — donc hors de
+  la separation ancres/trace de 1.3.1 — et un mode d affichage rejoue avant la
+  mise en page. Le compteur `out_of_pass_draws` les a designes ; un test
+  verrouille desormais leur absence.
+
+## [Non publié]
+
+### Réconciliation
+
+- **« min » et « max » comme valeur objectif** ([sankeyapplication#487](https://gitlab.com/su-model/sankeyapplication/-/issues/487)). Écrire `min` dans la case Valeur d'un flux demande au moteur la plus petite valeur compatible avec le reste du modèle ; le flux ressort **déterminé**, avec une valeur au lieu d'un intervalle. C'est le besoin des flux d'équilibrage — écarts statistiques, « Indéterminé », pertes non documentées — dont la valeur juste est la plus petite possible. Le calcul vit dans MFAProblem, la lecture du classeur dans SankeyExcelParser.
+  - **La case Valeur accepte le mot-clé, dans l'application comme dans le classeur** — panneau des flux (onglets « Basique » et « AFM ») et colonne Valeur de l'onglet tableur, saisie comme collage. Le vocabulaire est celui du parser Excel, à la lettre : `min`/`mini`/`minimum`/`minimal(e)`, `max`/`maxi`/`maximum`/`maximal(e)`, sans casse. Sinon le même modèle ne se dirait pas de la même façon selon la porte par laquelle on entre.
+  - **Trois défauts de Chakra rendaient la saisie impossible** dans le panneau : `NumberInput` filtre les caractères à la frappe (les lettres étaient refusées), recadre la valeur sur `[min, max]` à la sortie du champ (ce qui restait serait revenu à 0), et son pas n'a pas de sens sur un mot. Les trois ne sont levés que sur les champs qui acceptent un mot-clé ; partout ailleurs le comportement est intact.
+  - **Le mot-clé et le nombre ne coexistent jamais** : saisir un nombre retire l'intention, écrire `min` efface la valeur — c'est la même case, elle ne porte qu'une chose à la fois, exactement comme une ligne de feuille de données. Une faute de frappe, elle, ne vide rien : la case revient à ce qu'elle affichait.
+  - **Le rang de déclaration est attribué à la saisie** : il arbitre entre plusieurs `min` concurrents, que le moteur fige l'un après l'autre. Dans un classeur c'est l'ordre des lignes ; dans l'application, il n'y a pas de lignes — le rang se prend à la suite du plus grand déjà posé sur le diagramme.
+  - **L'intention est reconduite à l'enregistrement** (`data_value_objective` et son rang) : `toJSON` réécrit le dictionnaire d'une valeur champ par champ, donc ouvrir puis enregistrer une étude l'aurait effacée sans rien dire.
+
+## [1.3.1] — 2026-09-04
+
+- **Cycle de dessin : calculer une fois, tracer une fois** (jalon 80, os#1373 à os#1376).
+  Les ancres sont toutes calculées avant que quoi que ce soit ne soit tracé, et l'éventail
+  de pointes d'un nœud n'est plus recalculé à chaque flux de son côté. Sur une étude de
+  4 050 flux : éventails 1 823 → 183, chargement −42 %, rendu identique au pixel.
+  Des compteurs de dessin sont exposés (`window.sankey_draw_counters`) pour que la
+  prochaine régression se mesure au lieu de se deviner.
+- Traçabilité de la détermination d'un flux dans l'inspecteur (#426).
+- Échelle adaptée : dataTag de référence, grandeur calculée (os#1372).
+
 ## [1.3.0] — 2026-08-22
 
 ### Menu Fichier — refonte complète (sa#424)

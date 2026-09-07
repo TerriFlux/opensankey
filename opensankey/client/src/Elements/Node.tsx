@@ -2356,20 +2356,6 @@ export class Class_NodeElement extends Class_NodeBase {
     })
   }
 
-  public get is_unitary_tag() {
-    const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
-    if (unitary_tagg) {
-      const node_type = this.sankey.node_taggs_dict['type de noeud']
-      const productTag = node_type?.tags_dict['produit']
-      const sectorTag = node_type?.tags_dict['secteur']
-      const is_product = this.hasGivenTag(productTag)
-      const is_sector = this.hasGivenTag(sectorTag)
-      const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
-      return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
-    }
-    return false
-  }
-
   /**
    * Filtre « mode vue » (cf. Class_ViewTagGroup.view_mode), version PLATE qui
    * court-circuite les level tags. Retourne :
@@ -2425,38 +2411,13 @@ export class Class_NodeElement extends Class_NodeBase {
         Object.entries(this._taggs_dict).filter(([key, _]) => this.sankey.node_taggs_dict[key]).forEach(([_, tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
-        const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
-        if (unitary_tagg) {
-          const node_type = this.sankey.node_taggs_dict['type de noeud']
-          const productTag = node_type?.tags_dict['produit']
-          const sectorTag = node_type?.tags_dict['secteur']
-          const is_product = this.hasGivenTag(productTag)
-          const is_sector = this.hasGivenTag(sectorTag)
-          const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
-          // Un voisin est « le centre unitaire » s'il est sélectionné dans SON propre
-          // groupe (produit/secteur), pas dans l'opposé du type de CE nœud. L'ancien
-          // code supposait une structure bipartite produit↔secteur : un voisin produit
-          // d'un nœud produit (ex. Production biologique → Bois sur pied) était cherché
-          // dans 'sector_unitary' → jamais trouvé → nœud masqué.
-          const isSelectedUnitaryCenter = (node: Class_NodeElement) => {
-            const tagg = node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
-            return node.grouped_taggs_dict[tagg] &&
-              (node.grouped_taggs_dict[tagg][0].group as Class_ViewTagGroup).activated &&
-              node.grouped_taggs_dict[tagg][0].is_selected
-          }
-          display = /*display &&*/
-            ((this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected)
-              || this.input_links_list.filter(l => isSelectedUnitaryCenter(l.source)).length > 0
-              || this.output_links_list.filter(l => isSelectedUnitaryCenter(l.target)).length > 0
-            )
-        }
         are_related_node_tags_selected = display
       } else {
         are_related_node_tags_selected = true
       }
 
-      // Mode filtre vue (généralisation du mécanisme unitaire) : un groupe view tag
-      // en mode filtre cache un nœud qui ne porte aucune de ses étiquettes sélectionnées.
+      // Mode filtre vue : un groupe view tag en mode filtre cache un nœud
+      // qui ne porte aucune de ses étiquettes sélectionnées.
       // Décidé ICI (caché par node_tags_fingerprint) pour que la visibilité des liens
       // se recalcule. Court-circuit des level tags via are_related_dimensions_selected.
       const vt = this.viewTagVisibility()
@@ -2709,7 +2670,14 @@ export class Class_NodeElement extends Class_NodeBase {
         input_or_output_link.addStyle(styles_dict[specific_link_style])
       }
 
-      input_or_output_link.shape_is_recycling = false
+      // os#1377 — n'écrire QUE si la valeur change. Le setter d'attribut enchaîne ses actions
+      // (`drawWithNodes`, `drawElements`, `drawControlPoint`, cf. ElementsAttributesConfig) et
+      // trace donc le flux, un par un, HORS de toute passe de dessin — la ré-explosion des
+      // nœuds d'échange au chargement en payait 211 sur les 230 dessins hors passe de CARTOFOB.
+      // Poser `false` sur un flux déjà à `false` ne change rien d'autre : le rétablissement des
+      // tangentes de `customShapeIsRecycling` ne concerne que la transition true → false, qui
+      // passe toujours, elle, par le setter complet.
+      if (input_or_output_link.shape_is_recycling) input_or_output_link.shape_is_recycling = false
 
       extremity_node.tags_list.forEach(tag => {
         if (tag.group.id === 'type de noeud') {
@@ -2744,8 +2712,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public get dimensions_as_child() { return this._nodeDimensionsManager.dimensions_as_child }
 
   public get are_related_dimensions_selected(): boolean {
-    if (this.is_unitary_tag) return true
-    // Mode filtre vue (généralisation de is_unitary_tag) : un nœud gouverné par un
+    // Mode filtre vue : un nœud gouverné par un
     // groupe view tag en mode filtre court-circuite les level tags. Le show/hide réel
     // est décidé par are_related_node_tags_selected (fingerprinté).
     if (this.sankey.view_mode_active && this.viewTagVisibility() !== undefined) return true

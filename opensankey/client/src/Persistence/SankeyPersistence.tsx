@@ -39,6 +39,7 @@ import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_Disaggre
 import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { originFromJSON, originToJSON } from '../types/Origin'
 import { determinationCatalogFromJSON, determinationCatalogToJSON } from '../types/Determination'
+import { unitaryProcessFromJSON, unitaryProcessToJSON } from '../types/UnitaryProcess'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -1525,6 +1526,12 @@ export class SankeyPersistence {
     // ici pour que l'enregistrement survive à une sauvegarde depuis l'appli.
     if (sankey.determination)
       json_object['determination'] = determinationCatalogToJSON(sankey.determination)
+    // os#1378 (U0) — section `process` : ce qui fait de ce fichier une BRIQUE
+    // Sankey unitaire (nœud procédé, ports typés, coefficients d'échange…).
+    // Additive, et la clé est OMISE quand le diagramme n'est pas une brique :
+    // un fichier ordinaire se réécrit octet pour octet comme avant.
+    if (sankey.unitary_process !== null)
+      json_object['process'] = unitaryProcessToJSON(sankey.unitary_process)
     // Out
     return json_object
   }
@@ -1811,6 +1818,14 @@ export class SankeyPersistence {
     // pointeraient à côté produiraient des explications vraisemblables et
     // fausses, ce que l'axe A a déjà payé une fois.
     sankey.determination = determinationCatalogFromJSON(json_object['determination'])
+
+    // os#1378 (U0) — section `process` (brique Sankey unitaire). Additive :
+    // clé absente -> null, c'est un diagramme ordinaire. Une section illisible
+    // est rejetée EN ENTIER (cf. unitaryProcessFromJSON) : une brique
+    // partiellement lue aurait des coefficients d'entrée qui ne sommeraient
+    // plus à 1, et la composition (U3) fermerait ses bilans sur un procédé
+    // amputé sans que rien ne le signale.
+    sankey['_unitary_process'] = unitaryProcessFromJSON(json_object['process'])
 
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).
@@ -2129,10 +2144,12 @@ export class DrawingAreaPersistence {
       if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
     }
     // #369 — Mode « échelle adaptée » : couple capturé (échelle de BASE + grandeur du diagramme)
-    // qui définit la hauteur tenue par le diagramme. Sans lui, la relecture reprendrait
-    // `user_scale` (= échelle DÉJÀ adaptée au datatag courant) pour base et recomposerait le
-    // ratio → saut d'échelle juste après l'ouverture. Écrit seulement dans ce mode : ailleurs le
+    // qui définit la hauteur tenue par le diagramme. Écrit seulement dans ce mode : ailleurs le
     // couple n'a pas de sens et ne doit pas ressusciter avec le mode.
+    // os#1383 — `user_scale` est désormais TOUJOURS l'échelle de base de l'utilisateur :
+    // l'adaptation et les plafonds n'écrivent plus que l'échelle effective de la frame, jamais
+    // `_scale`. Le couple reste écrit pour les documents à élément de référence, dont la grandeur
+    // capturée n'est pas recalculable à l'ouverture.
     // #384 — La clé de valeur s'appelle désormais `scale_adapted_ref_magnitude` : elle porte une
     // grandeur de diagramme, plus la valeur d'un élément de référence. Le renommage est ce qui
     // rend les fichiers antérieurs sûrs (cf. fromJSON).
@@ -2751,9 +2768,10 @@ export class DrawingAreaPersistence {
       }
     }
     // #369 — Mode « échelle adaptée » restitué : recharger le couple capturé (échelle de base +
-    // grandeur du diagramme) écrit par toJSON, sinon `applyAdaptedScale` recapturerait sur
-    // l'échelle DÉJÀ adaptée du fichier et le diagramme sauterait d'échelle au dessin suivant.
-    // Fichier antérieur (clés absentes) : capture paresseuse au premier dessin, comme avant.
+    // grandeur du diagramme) écrit par toJSON. Fichier antérieur (clés absentes) : capture
+    // paresseuse au premier dessin, comme avant. os#1383 — `user_scale` est l'échelle de base
+    // de l'utilisateur (l'adaptation n'écrit plus que l'échelle effective de la frame) ; le
+    // couple ne sert plus qu'aux documents à élément de référence.
     // #384 — Un fichier écrit AVANT le changement de référence ne porte que l'ancienne clé
     // `scale_adapted_ref_value` (valeur d'un élément) : elle est ignorée, sans quoi le ratio
     // grandeur_courante / valeur_élément ferait sauter l'échelle à l'ouverture. Le couple est
