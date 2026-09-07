@@ -2187,9 +2187,9 @@ export class DrawingAreaPersistence {
     if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
     // os#671 — smart guides : actifs par défaut, on ne persiste que la désactivation.
     if (!drawing_area.smart_guides) json_object['smart_guides'] = false
-    // sa#422 — flèches de création rapide : visibles par défaut, on ne persiste que
-    // leur coupure. Clé absente (tout fichier antérieur) ⇒ comportement historique.
-    if (drawing_area.connection_arrows_off) json_object['connection_arrows_off'] = true
+    // sa#422 — flèches de création rapide : COUPÉES par défaut, on ne persiste que
+    // leur réactivation. Clé absente (tout fichier antérieur) ⇒ flèches coupées.
+    if (!drawing_area.connection_arrows_off) json_object['connection_arrows_off'] = false
 
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
@@ -2623,8 +2623,8 @@ export class DrawingAreaPersistence {
     drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
     // os#671 — smart guides (défaut true : absent du JSON = actif).
     drawing_area['_smart_guides'] = getBooleanFromJSON(json_object, 'smart_guides', drawing_area.smart_guides)
-    // sa#422 — flèches de création rapide (défaut false : absent du JSON = flèches visibles).
-    drawing_area['_connection_arrows_off'] = getBooleanFromJSON(json_object, 'connection_arrows_off', false)
+    // sa#422 — flèches de création rapide (défaut true : absent du JSON = flèches coupées).
+    drawing_area['_connection_arrows_off'] = getBooleanFromJSON(json_object, 'connection_arrows_off', true)
 
     // Paper format
     drawing_area['_paper_format'] = getStringFromJSON(json_object, 'paper_format', default_paper_format) as Type_PaperFormat

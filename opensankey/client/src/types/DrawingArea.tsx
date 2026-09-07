@@ -303,9 +303,10 @@ export class Class_DrawingArea {
   // utile quand on DESSINE, gênant quand on lit : les flèches surgissaient à chaque
   // passage de souris sans aucun interrupteur. L'interrupteur est le bouton
   // « Sélection » de la colonne d'outils, dont l'état n'était jusqu'ici que dérivé
-  // des outils de création. Défaut `false` = comportement historique (flèches
-  // visibles) : aucun fichier existant ne change de comportement.
-  protected _connection_arrows_off: boolean = false
+  // des outils de création. Défaut `true` = flèches COUPÉES : on lit un diagramme
+  // bien plus souvent qu'on ne le dessine, et le geste reste à un clic (bouton
+  // « Sélection »). Le réglage contraire, lui, est écrit dans le JSON.
+  protected _connection_arrows_off: boolean = true
 
   // Paper format properties
   protected _paper_format: Type_PaperFormat = default_paper_format
