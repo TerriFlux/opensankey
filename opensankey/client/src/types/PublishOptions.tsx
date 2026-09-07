@@ -84,9 +84,11 @@ export interface SankeyGlobals {
   // que les données sont dans le bundle qu'il a déjà téléchargé.
   // À ne pas confondre avec l'analyse d'un ÉLÉMENT (couronne / barres / unitaire de la pop-up
   // d'élément) : ce sont deux échelles, elles ne partagent pas de sélecteur.
-  // Elle ENGLOBE `unitary` et `doc`, qui n'exposaient chacun qu'un bouton de ce groupe : quand
-  // elle est active, ces deux options n'ont plus d'effet propre (cf. MenuTopButtonsStatic), sinon
-  // le même bouton apparaîtrait deux fois dans la barre.
+  // Elle OUVRE le sélecteur ; `representations` (liste blanche d'ids) et le `publish_option` de
+  // chaque entrée du registre disent ensuite CE QU'IL CONTIENT. `unitary` et `doc` sont
+  // précisément ces `publish_option`-là : une page peut donc offrir la représentation sans
+  // offrir l'unitaire. Ils ne posent simplement plus leur bouton isolé quand le groupe est là
+  // (cf. MenuTopButtonsStatic), sinon le même bouton apparaîtrait deux fois.
   representation?: boolean
   // sa#402 — document markdown posé À CÔTÉ de la page (README.md du projet, recopié par le rendu).
   // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
