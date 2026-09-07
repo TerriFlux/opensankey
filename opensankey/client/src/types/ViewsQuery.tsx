@@ -31,7 +31,30 @@ export type Type_ViewEntry = {
   tag_selection?: { [view_tagg_id: string]: string }
   is_light?: boolean
   generated_from_group_id?: string
+  // os#1357 — depuis l'annuaire, ce sont des IDENTIFIANTS de label, plus des noms. Un
+  // fichier antérieur porte des noms : ils sont migrés à la lecture (cf.
+  // `parseViewExtraFields`), de façon transparente.
   labels?: string[]
+  // os#1358 — Texte libre de l'auteur sur la vue. Page, section et site en ont un
+  // (`WorkbookNode.doc`, `Workbook.doc`) ; la vue, qui est pourtant l'unité publiable,
+  // n'en avait pas. Candidat naturel au texte d'accompagnement d'une page publiée.
+  description?: string
+}
+
+/**
+ * os#1357 — Définition d'un label de vue, dans l'annuaire de la racine du fichier.
+ *
+ * Un label était une chaîne libre, recopiée dans chaque vue : le renommer cassait
+ * silencieusement toute publication qui le ciblait. Il porte désormais un identifiant
+ * stable ; le nom devient un simple libellé, modifiable sans rien casser.
+ *
+ * `group` prépare le « public visé » (grand public / experts) : deux labels du même
+ * groupe sont deux valeurs d'une même question, ce qu'une liste plate ne pouvait pas dire.
+ */
+export type Type_ViewLabelDef = {
+  id: string
+  name: string
+  group?: string
 }
 
 /**
@@ -53,6 +76,10 @@ export interface ViewsQueryHost {
   // l'ordre de navigation aux vues portant ce label. Optionnel (null/absent = pas de filtre) :
   // seul le viewer publié le pose, l'éditeur n'est jamais filtré.
   readonly publish_view_label_filter?: string | null
+  // os#1357 — Annuaire des labels, ordonné (l'ordre du tableau EST l'ordre d'affichage,
+  // sans second registre qui pourrait le contredire). Muté en place à la lecture, lors de
+  // la migration des fichiers antérieurs.
+  readonly view_label_defs: Type_ViewLabelDef[]
 }
 
 /**
@@ -136,27 +163,162 @@ export class ViewsQuery {
       const cleaned = [...new Set(
         labels.filter((l): l is string => typeof l === 'string' && l.trim() !== '')
       )]
-      if (cleaned.length > 0) entry.labels = cleaned
+      // os#1357 — Migration transparente : une entrée qui n'est pas un id connu de
+      // l'annuaire est un NOM, écrit par une version antérieure. On lui donne (ou lui
+      // retrouve) un identifiant, et la vue référence désormais celui-ci. Un fichier
+      // ancien se relit donc sans intervention, et se réenregistre à la forme nouvelle.
+      const ids = [...new Set(cleaned.map(l => this.labelIdFromIdOrName(l, true)))]
+      if (ids.length > 0) entry.labels = ids
     }
+    // os#1358 — description de la vue. Clé `view_description`, PAS `description` : au même
+    // niveau, la racine du JSON d'une vue est celle d'une DrawingArea, et lui prendre un nom
+    // générique est exactement ce qui avait détruit les zones de texte avec `labels`.
+    const desc = view_json['view_description']
+    if (typeof desc === 'string' && desc !== '') entry.description = desc
+  }
+
+  // --- Annuaire des labels (os#1357) -------------------------------------------------------
+
+  /** Définition d'un label par son identifiant. */
+  public labelDefById(id: string): Type_ViewLabelDef | undefined {
+    return this.host.view_label_defs.find(d => d.id === id)
+  }
+
+  /**
+   * Résout un id OU un nom vers un identifiant de label.
+   *
+   * Accepter les deux n'est pas une commodité : les pages DÉJÀ publiées portent le nom en
+   * clair (`window.sankey.view_label`), et le classeur le stocke tel quel côté serveur.
+   * Résoudre par nom est ce qui permet de passer aux identifiants sans casser l'existant.
+   *
+   * @param create Crée la définition si le nom est inconnu — réservé à la lecture d'un
+   *               fichier, jamais à la résolution d'une requête d'affichage.
+   */
+  public labelIdFromIdOrName(id_or_name: string, create: boolean = false): string {
+    const defs = this.host.view_label_defs
+    const by_id = defs.find(d => d.id === id_or_name)
+    if (by_id) return by_id.id
+    const by_name = defs.find(d => d.name === id_or_name)
+    if (by_name) return by_name.id
+    if (!create) return id_or_name
+    // Identifiant dérivé du nom, donc lisible dans le fichier et dans une URL — mais
+    // dédoublonné : deux labels peuvent porter le même nom sans se confondre.
+    const base = 'vl_' + id_or_name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+    let candidate = base || 'vl'
+    let n = 2
+    while (defs.some(d => d.id === candidate)) { candidate = `${base}_${n}`; n += 1 }
+    defs.push({ id: candidate, name: id_or_name })
+    return candidate
+  }
+
+  /** Nom affichable d'un label, par son id. Repli sur l'id si l'annuaire l'ignore. */
+  public labelNameOf(id: string): string {
+    return this.labelDefById(id)?.name ?? id
+  }
+
+  /**
+   * Renomme un label. C'est le geste que l'annuaire rend sûr : le nom change, l'identifiant
+   * ne bouge pas, donc les vues qui le portent et les pages publiées qui le ciblent par id
+   * suivent sans rien casser.
+   *
+   * Deux refus : un nom vide, et un nom déjà porté par un AUTRE label — deux définitions
+   * homonymes rendraient la résolution par nom (celle des pages anciennes) ambiguë.
+   * Renvoie `false` sans rien changer dans ces cas.
+   */
+  public renameViewLabel(id: string, raw_name: string): boolean {
+    const name = raw_name.trim()
+    if (name === '') return false
+    const def = this.labelDefById(id)
+    if (!def) return false
+    if (def.name === name) return true
+    if (this.host.view_label_defs.some(d => d.id !== id && d.name === name)) return false
+    def.name = name
+    return true
+  }
+
+  /**
+   * Range un label dans un groupe, ou l'en sort (groupe vide).
+   *
+   * Le groupe est une DIMENSION de classement, pas une décoration : « Public visé » avec
+   * « Grand public » et « Experts » dit qu'un lecteur choisit UNE valeur parmi celles du
+   * groupe, là où deux labels sans groupe sont deux étiquettes sans rapport. C'est ce qui
+   * distingue un annuaire d'une liste de mots-clés.
+   */
+  public setViewLabelGroup(id: string, raw_group: string): boolean {
+    const def = this.labelDefById(id)
+    if (!def) return false
+    const group = raw_group.trim()
+    if (group === '') delete def.group
+    else def.group = group
+    return true
+  }
+
+  /**
+   * Retire une définition de l'annuaire — refusé tant qu'une vue la porte.
+   *
+   * Sans ce refus, la vue garderait un identifiant que plus rien ne nomme : l'étiquette
+   * retomberait sur l'id brut, illisible. On ne supprime donc que ce que plus personne
+   * n'utilise ; retirer le label des vues reste le geste préalable.
+   */
+  public deleteViewLabel(id: string): boolean {
+    const defs = this.host.view_label_defs
+    const idx = defs.findIndex(d => d.id === id)
+    if (idx < 0) return false
+    if (this.viewIdsWithLabel(id).length > 0) return false
+    defs.splice(idx, 1)
+    return true
+  }
+
+  /** Groupes déclarés dans l'annuaire, dédoublonnés, dans l'ordre où ils apparaissent. */
+  public get view_label_groups(): string[] {
+    const seen = new Set<string>()
+    this.host.view_label_defs.forEach(d => { if (d.group) seen.add(d.group) })
+    return [...seen]
+  }
+
+  /** Labels d'un groupe donné — les valeurs possibles de cette dimension. */
+  public labelDefsInGroup(group: string): Type_ViewLabelDef[] {
+    return this.host.view_label_defs.filter(d => (d.group ?? '') === group)
   }
 
   // --- Labels de vues (sa#396/397) ---------------------------------------------------------
   // Étiquettes libres de SÉLECTION posées sur les vues — rien à voir avec les view tags
   // (dimension de génération), qui ne sont pas touchés.
 
-  /** Tous les labels utilisés dans le document (ordre de première apparition, dédoublonnés). */
+  /**
+   * Tous les labels utilisés dans le document, **par leur NOM** (dédoublonnés).
+   *
+   * Renvoie des noms et non des identifiants : ses appelants sont des surfaces d'affichage
+   * et de publication (liste de suggestions, sélecteur de page, constructeur de site) qui
+   * manipulent du texte lisible. L'annuaire reste interne.
+   */
   public get all_view_labels(): string[] {
     const seen = new Set<string>()
     this.host.views_order.forEach(id => {
-      (this.host.views_dict[id]?.labels ?? []).forEach(l => seen.add(l))
+      (this.host.views_dict[id]?.labels ?? []).forEach(l => seen.add(this.labelNameOf(l)))
     })
     return [...seen]
   }
 
-  /** Ids des vues portant ce label, dans l'ordre des vues. Vide si aucun. */
+  /** Les labels utilisés, en définitions complètes — pour qui a besoin du groupe ou de l'id. */
+  public get used_view_label_defs(): Type_ViewLabelDef[] {
+    const seen = new Set<string>()
+    this.host.views_order.forEach(id => {
+      (this.host.views_dict[id]?.labels ?? []).forEach(l => seen.add(l))
+    })
+    return [...seen].map(id => this.labelDefById(id) ?? { id, name: id })
+  }
+
+  /**
+   * Ids des vues portant ce label, dans l'ordre des vues. Vide si aucun.
+   *
+   * Accepte un identifiant OU un nom : une page publiée avant l'annuaire cible le label par
+   * son nom, et doit continuer de fonctionner sans être republiée.
+   */
   public viewIdsWithLabel(label: string): string[] {
+    const label_id = this.labelIdFromIdOrName(label)
     return this.host.views_order.filter(id =>
-      (this.host.views_dict[id]?.labels ?? []).includes(label)
+      (this.host.views_dict[id]?.labels ?? []).includes(label_id)
     )
   }
 
