@@ -2144,10 +2144,12 @@ export class DrawingAreaPersistence {
       if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
     }
     // #369 — Mode « échelle adaptée » : couple capturé (échelle de BASE + grandeur du diagramme)
-    // qui définit la hauteur tenue par le diagramme. Sans lui, la relecture reprendrait
-    // `user_scale` (= échelle DÉJÀ adaptée au datatag courant) pour base et recomposerait le
-    // ratio → saut d'échelle juste après l'ouverture. Écrit seulement dans ce mode : ailleurs le
+    // qui définit la hauteur tenue par le diagramme. Écrit seulement dans ce mode : ailleurs le
     // couple n'a pas de sens et ne doit pas ressusciter avec le mode.
+    // os#1383 — `user_scale` est désormais TOUJOURS l'échelle de base de l'utilisateur :
+    // l'adaptation et les plafonds n'écrivent plus que l'échelle effective de la frame, jamais
+    // `_scale`. Le couple reste écrit pour les documents à élément de référence, dont la grandeur
+    // capturée n'est pas recalculable à l'ouverture.
     // #384 — La clé de valeur s'appelle désormais `scale_adapted_ref_magnitude` : elle porte une
     // grandeur de diagramme, plus la valeur d'un élément de référence. Le renommage est ce qui
     // rend les fichiers antérieurs sûrs (cf. fromJSON).
@@ -2766,9 +2768,10 @@ export class DrawingAreaPersistence {
       }
     }
     // #369 — Mode « échelle adaptée » restitué : recharger le couple capturé (échelle de base +
-    // grandeur du diagramme) écrit par toJSON, sinon `applyAdaptedScale` recapturerait sur
-    // l'échelle DÉJÀ adaptée du fichier et le diagramme sauterait d'échelle au dessin suivant.
-    // Fichier antérieur (clés absentes) : capture paresseuse au premier dessin, comme avant.
+    // grandeur du diagramme) écrit par toJSON. Fichier antérieur (clés absentes) : capture
+    // paresseuse au premier dessin, comme avant. os#1383 — `user_scale` est l'échelle de base
+    // de l'utilisateur (l'adaptation n'écrit plus que l'échelle effective de la frame) ; le
+    // couple ne sert plus qu'aux documents à élément de référence.
     // #384 — Un fichier écrit AVANT le changement de référence ne porte que l'ancienne clé
     // `scale_adapted_ref_value` (valeur d'un élément) : elle est ignorée, sans quoi le ratio
     // grandeur_courante / valeur_élément ferait sauter l'échelle à l'ouverture. Le couple est

@@ -74,19 +74,23 @@ describe('os#1383 setScaleAdaptedReferenceDataTag — la reference est enoncee',
   const makeRefStubs = () => {
     const { app_data, tagg, trace } = makeStubs()
     const oublis: number[] = []
-    let ids: string[] = []
-    // La zone de dessin réduite à ce que le geste touche, setter compris : c'est lui qui
-    // oublie la base capturée contre l'ANCIENNE référence.
+    let ids: string[] | undefined = undefined
+    // Le positionnement réduit à ce que le geste touche : le datatag de référence du couple
+    // élément/datatag (`prop_reference_datatag`, un seul pour le document) et l'oubli de la base
+    // capturée contre l'ANCIENNE référence.
     const drawing_area = {
-      get scale_adapted_reference_datatag() { return ids },
-      set scale_adapted_reference_datatag(v: string[]) { ids = v; oublis.push(1) },
+      nodePositioning: {
+        get proportionalReferenceDatatagIds() { return ids },
+        set proportionalReferenceDatatagIds(v: string[] | undefined) { ids = (v && v.length > 0) ? v : undefined },
+        forgetScaleAdaptedCapture() { oublis.push(1) },
+      },
     }
     Object.defineProperty(app_data, 'drawing_area', { value: drawing_area, configurable: true })
     Object.defineProperty(tagg, 'tags_list', {
       value: [{ id: 'chene', name: 'Chêne' }, { id: 'pin', name: 'Pin maritime' }],
       configurable: true,
     })
-    return { app_data, tagg, trace, oublis, lire: () => ids, poser: (v: string[]) => { ids = v } }
+    return { app_data, tagg, trace, oublis, lire: () => ids ?? [], poser: (v: string[]) => { ids = v } }
   }
 
   it('designe un tag, et le relit', () => {

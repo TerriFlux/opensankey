@@ -762,6 +762,25 @@ export class Class_DrawingArea {
     .domain([0, this._scale])
     .range([0, 100])
 
+  /**
+   * os#1383 — ÉCHELLE EFFECTIVE de la frame : celle que le rendu et la légende utilisent, DÉRIVÉE
+   * à chaque dessin de l'échelle de base `_scale` par la chaîne échelle adaptée → référence
+   * d'épaisseur par view tag → plafond de hauteur de nœud. Transitoire, jamais persistée.
+   *
+   * Pourquoi un second champ : ces trois règles écrivaient jusqu'ici DANS `_scale`, l'échelle
+   * absolue de l'utilisateur, en s'engageant à la restaurer à la frame suivante « sauf si une
+   * autre source l'avait recalculée entre-temps ». Chacune voyait alors la surcharge de l'autre,
+   * l'adoptait comme base, et l'échelle adaptée d'une vue finissait dans `user_scale` : le mode
+   * absolu héritait de l'échelle du dernier datatag adapté, et le mode adapté repartait d'une
+   * base déjà plafonnée. Mesuré sur CARTOFOB : le stock, à 1585 px partout à l'ouverture,
+   * tombait à 619 px après un aller-retour absolu → adapté, puis 767 / 1585 / 773 selon la vue.
+   *
+   * Règle : `_scale` n'est écrit QUE par l'utilisateur (setter `scale`), le chargement et la
+   * copie ; les règles de frame n'écrivent que `_scale_effective`, remis à `undefined` en tête
+   * de chaque dessin (`beginScaleFrame`). Rien n'est à restaurer, donc rien ne peut dériver.
+   */
+  protected _scale_effective: number | undefined = undefined
+
   // Shifting of d3 elements
   // OS#1250 phase 2 — `_elements_d3_groups_shift_x/y` supprimés : ils n'étaient
   // que la trace du déplacement du monde par recenter(), et ne servaient nulle
@@ -1709,11 +1728,17 @@ export class Class_DrawingArea {
     // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
     // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
     const _position_type = this._effectivePositionMode()
+    // os#1383 — La frame repart de l'échelle de BASE : les trois règles ci-dessous n'écrivent
+    // que l'échelle effective (cf. `_scale_effective`), jamais `_scale`.
+    this.beginScaleFrame()
     // #1231 — Mode « échelle adaptée » : ajuster d'abord l'échelle (valeur→px) pour que le
     // flux de référence garde la même épaisseur d'un datatag à l'autre. Sorti de la branche
     // ci-dessous pour tourner AVANT le plafond par view tag (qui s'applique par-dessus).
+    // `adapted` = faux si le document ne fournit aucune grandeur de référence exploitable :
+    // c'est alors le plafond de hauteur, rendu EXACT, qui fait l'adaptation.
+    let adapted = false
     if (_position_type === 'scale_adapted') {
-      this.nodePositioning.applyAdaptedScale()
+      adapted = this.nodePositioning.applyAdaptedScale()
     } else if (this.is_position_mode_suspended
       && this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
       // #384 — Mode ARMÉ mais pas encore appliqué (ouverture de fichier, ou choix du mode au
@@ -1732,7 +1757,9 @@ export class Class_DrawingArea {
     this.applyViewTagScaleReference()
     // #1231b — Plafond de taille de nœud par l'échelle : en DERNIER, par-dessus les autres
     // recalages, pour qu'aucun nœud (donc aucun flux entrant/sortant) ne dépasse maximum_node.
-    this.applyMaximumNodeScale()
+    // os#1383 — EXACT en échelle adaptée sans grandeur de référence : le nœud le plus haut
+    // remplit alors le plafond à chaque datatag et dans chaque vue, dans les deux sens.
+    this.applyMaximumNodeScale(_position_type === 'scale_adapted' && !adapted)
     // PR 3 — central entry point for parametric layout. Node.applyPosition
     // is now a pass-through in parametric mode, so positions must be
     // refreshed here before any node is drawn. Single source of truth.
@@ -2501,8 +2528,8 @@ export class Class_DrawingArea {
           // petit que « bois énergie »). Sans plafond, le central est strictement constant ;
           // une étoile à très nombreux flux peut déborder (scroll de l'aperçu), cas rare.
           // (hauteur nominale nulle → on retombe sur un fit des formes pour ne pas diviser par 0.)
-          const central_flow_h = this._scale > 0
-            ? (unitary_center_node.data_value / this._scale) * 100
+          const central_flow_h = this.scale > 0
+            ? (unitary_center_node.data_value / this.scale) * 100
             : 0
           if (central_flow_h > 0) {
             const k_height = (UNITARY_CENTRAL_HEIGHT_FRACTION * this.window_fitting_height) / central_flow_h
@@ -4179,16 +4206,20 @@ export class Class_DrawingArea {
   } // TODO add regular expression check here
 
   // Scale
+  /** Échelle EFFECTIVE de la frame (cf. `_scale_effective`) — celle du rendu et de la légende. */
   public get scale(): number {
-    return this._scale
+    return this._scale_effective ?? this._scale
   }
+  /** Échelle de BASE, absolue, celle de l'utilisateur et du fichier (`user_scale`). */
+  public get base_scale(): number { return this._scale }
+
   public set scale(value: number) {
     if (value > 0) {
-      // os#1383 — échelle posée DÉLIBÉRÉMENT : elle devient la base. Les plafonds
-      // (référence d'épaisseur par view tag, hauteur maximale de nœud) oublient donc la leur,
-      // sans la défaire — sinon la frame suivante restaurerait par-dessus ce choix.
+      // os#1383 — échelle posée DÉLIBÉRÉMENT : c'est la base qui change, et la frame repart
+      // d'elle. Le plafond porté par un tag (échelle propre) oublie le sien sans le défaire.
       this._scale_overrides.invalidate()
       this._scale = value
+      this._scale_effective = undefined
       this._scaleValueToPx.domain([0, value])
       this.application_data.menu_configuration.updateComponentRelatedToLayoutApparence()
       this.drawElements()
@@ -4323,8 +4354,27 @@ export class Class_DrawingArea {
   /**
    * #1231b — Plafond de hauteur de nœud appliqué par l'ÉCHELLE (cf. Class_ScaleOverrides).
    */
-  public applyMaximumNodeScale() {
-    this._scale_overrides.applyMaximumNodeScale(this)
+  public applyMaximumNodeScale(exact: boolean = false) {
+    this._scale_overrides.applyMaximumNodeScale(this, exact)
+  }
+
+  /**
+   * os#1383 — Tête de frame : l'échelle effective repart de la base. Appelé par `drawElements`
+   * avant les trois règles d'échelle (adaptée, référence de vue, plafond).
+   */
+  public beginScaleFrame() {
+    this._scale_effective = undefined
+    this._scaleValueToPx.domain([0, this._scale])
+  }
+
+  /**
+   * os#1383 — Pose l'échelle EFFECTIVE de la frame (cf. `_scale_effective`) : le domaine
+   * valeur→px suit, `_scale` — l'échelle absolue de l'utilisateur — ne bouge pas.
+   */
+  public setEffectiveScale(value: number) {
+    if (!(isFinite(value) && value > 0)) return
+    this._scale_effective = value
+    this._scaleValueToPx.domain([0, value])
   }
 
   // OS#1272 — Réglages globaux du marqueur de bilan (voir champs privés).
