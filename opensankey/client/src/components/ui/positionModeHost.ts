@@ -155,6 +155,51 @@ export const positionModeSelectorEnabledFor = (app: Type_PositionModeHostApp): b
  * Les classes ne sont prises qu'en `import type` — ce module reste une feuille sans arête
  * runtime.
  */
+/**
+ * os#1383 — DÉSIGNE (ou libère) le datatag de RÉFÉRENCE du mode « échelle adaptée », pour la
+ * dimension `tagg`.
+ *
+ * Ce que le réglage veut dire : « une espèce + un mode = une échelle, quel que soit le chemin ».
+ * Sans référence désignée, la grandeur de référence est CAPTURÉE au vol — celle qui se trouvait à
+ * l'écran quand le mode a pris effet. Personne ne l'a choisie, et elle dépend donc de l'ordre des
+ * clics. Ici elle est ÉNONCÉE, et `NodePositioningScaleAdapted.referenceDataTagMagnitude` la
+ * recalcule à chaque dessin : le chemin cesse de compter.
+ *
+ * Le modèle existait depuis os#1372 (`Class_DrawingArea.scale_adapted_reference_datatag`,
+ * persisté, recopié, lu par l'algorithme) — mais AUCUNE interface ne le posait. C'est ce geste-ci.
+ *
+ * `tag_id` `undefined` = retour à la sélection courante (aucune référence pour cette dimension).
+ * La référence nomme AU PLUS UN tag par dimension : on retire donc d'abord ceux de `tagg`, les
+ * autres dimensions gardant la leur.
+ *
+ * Comme `applyPositionMode`, ce geste ne persiste rien de lui-même : il pose la valeur en mémoire
+ * et redessine. En édition, l'enregistrement suit le rythme habituel du document.
+ */
+export const setScaleAdaptedReferenceDataTag = (
+  app_data: Class_ApplicationData,
+  tagg: Class_DataTagGroup,
+  tag_id: string | undefined
+) => {
+  const drawing_area = app_data.drawing_area
+  const mine = new Set(tagg.tags_list.map(t => t.id))
+  const kept = drawing_area.scale_adapted_reference_datatag.filter(id => !mine.has(id))
+  // Le setter oublie la base capturée : elle avait été prise contre une AUTRE référence.
+  drawing_area.scale_adapted_reference_datatag = tag_id ? [...kept, tag_id] : kept
+  // Rejouer le mode est ce qui fait VOIR la nouvelle référence : l'échelle s'en déduit au dessin.
+  tagg.applyPositionModeToDrawing(true)
+  app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+}
+
+/** os#1383 — Tag de `tagg` actuellement désigné comme référence, `undefined` si aucun. */
+export const scaleAdaptedReferenceDataTagOf = (
+  app_data: Class_ApplicationData,
+  tagg: Class_DataTagGroup
+): string | undefined => {
+  const ids = app_data.drawing_area.scale_adapted_reference_datatag
+  return tagg.tags_list.find(t => ids.includes(t.id))?.id
+}
+
 export const applyPositionMode = (
   app_data: Class_ApplicationData,
   tagg: Class_DataTagGroup,

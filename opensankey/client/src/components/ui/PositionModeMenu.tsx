@@ -28,7 +28,9 @@
  */
 
 import React from 'react'
-import { Button, Menu, MenuButton, MenuList, MenuItem, HStack, Box, Portal } from '@chakra-ui/react'
+import {
+  Button, Menu, MenuButton, MenuList, MenuItem, MenuDivider, MenuGroup, HStack, Box, Portal
+} from '@chakra-ui/react'
 import { CheckIcon } from '@chakra-ui/icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
@@ -37,7 +39,9 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { OSTooltip } from './OSTooltip'
 // `applyPositionMode` vit dans le module de règles voisin (sans Chakra) : c'est ce qui le rend
 // testable — aucune suite jest du dépôt ne peut charger `@chakra-ui/react`.
-import { applyPositionMode } from './positionModeHost'
+import {
+  applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
+} from './positionModeHost'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -67,6 +71,8 @@ export const PositionModeMenu = ({ app_data, tagg }: {
   const mode = tagg.position_mode
   // Valeur héritée hors liste : on affiche l'icône absolu sans le cocher.
   const current = POSITION_MODE_META.find(m => m.value === mode) ?? POSITION_MODE_META[0]
+  // os#1383 — La référence ne se propose qu'en échelle adaptée : c'est le seul mode qu'elle règle.
+  const reference = mode === 'scale_adapted' ? scaleAdaptedReferenceDataTagOf(app_data, tagg) : undefined
   return <Menu placement='bottom-start'>
     <OSTooltip placement='bottom' label={t('Banner.posMode_title_tt')}>
       {/* `variant` obligatoire : le style de base des boutons du thème est vert PLEINE
@@ -101,6 +107,35 @@ export const PositionModeMenu = ({ app_data, tagg }: {
             </HStack>
           </MenuItem>
         ))}
+        {/* os#1383 — Sur quoi l'échelle adaptée se cale. Sans ce réglage, la grandeur de
+            référence est celle qui se trouvait à l'écran quand le mode a pris : l'échelle
+            dépend alors du chemin de clics. Désignée, elle se recalcule à chaque dessin. */}
+        {mode === 'scale_adapted' && tagg.tags_list.length > 0 ? <>
+          <MenuDivider />
+          <MenuGroup title={t('Banner.posMode_ref_title')} fontSize='0.7rem'>
+            <MenuItem
+              fontSize='0.75rem'
+              onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, undefined)}
+            >
+              <HStack spacing='0.5rem'>
+                <Box as='span'>{t('Banner.posMode_ref_none')}</Box>
+                {reference === undefined ? <CheckIcon boxSize='0.6rem' /> : null}
+              </HStack>
+            </MenuItem>
+            {tagg.tags_list.map(tag => (
+              <MenuItem
+                key={tag.id}
+                fontSize='0.75rem'
+                onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, tag.id)}
+              >
+                <HStack spacing='0.5rem'>
+                  <Box as='span'>{tag.name}</Box>
+                  {reference === tag.id ? <CheckIcon boxSize='0.6rem' /> : null}
+                </HStack>
+              </MenuItem>
+            ))}
+          </MenuGroup>
+        </> : null}
       </MenuList>
     </Portal>
   </Menu>
