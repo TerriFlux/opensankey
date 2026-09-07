@@ -108,6 +108,9 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // OS#1286 — éditeur du registre d'unités (grandeurs/unités/défauts) en
   // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
   ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // sa#503 (U1) — éditeur du MODE BRIQUE (section `process` : nœud central,
+  // ports typés, coefficients), ouvert depuis l'onglet Brique de l'inspecteur.
+  ref_setter_show_unitary_process_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Éditeur texte SankeyMATIC en dialogue draggable : ouvert après un import
   // SankeyMATIC (openSankeymaticEditor) ou depuis le menu d'import. Sorti du
   // panneau Tableur, dont le sous-onglet texte est devenu la vue JSON.
@@ -928,6 +931,7 @@ export class Class_MenuConfig {
       ref_setter_show_value_type_editor: { current: () => null },
       ref_setter_show_tooltip_editor: { current: () => null },
       ref_setter_show_units_editor: { current: () => null },
+      ref_setter_show_unitary_process_editor: { current: () => null },
       ref_setter_show_sankeymatic_editor: { current: () => null },
 
       ref_setter_show_modal_export: { current: () => null },
@@ -986,6 +990,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_unitary_process_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
