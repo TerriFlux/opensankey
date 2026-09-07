@@ -78,6 +78,10 @@ export class NodePositioning {
   // du mode << echelle adaptee >> depuis qu'elle a remplace l'element de reference unique.
   public diagramMagnitude() { return this._scale.diagramMagnitude() }
 
+  // os#1383 — Valeur-equivalente du nœud visible le plus haut : plafond EXACT du mode
+  // << echelle adaptee >> sans element de reference (cf. ScaleOverrides.applyMaximumNodeScale).
+  public tallestNodeMagnitude() { return this._scale.tallestNodeMagnitude() }
+
   // os#1352 — Regime `element` : oubli de la capture au changement de regime, et diagnostic
   // expose quand l'element de reference est absent ou nul.
   public forgetScaleAdaptedCapture() { return this._scale.forgetScaleAdaptedCapture() }
