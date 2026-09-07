@@ -48,6 +48,13 @@ export const registerBaseRepresentations = (): void => {
     order: 20,
     label: (a) => a.t('Spreadsheet.zone.spreadsheet'),
     icon: <FaTable />,
+    // os#1356 — PAS DE VERROU EN LECTURE, ET C'EST VOULU (arbitrage Julien).
+    // Univer n'a pas de mode lecture seule ici : le visiteur d'une page publiée
+    // peut donc éditer des cellules. Ce qu'il change vit dans SON navigateur —
+    // ni le bundle servi ni les données n'en savent rien : c'est explorer, pas
+    // altérer. Et plomber Univer interdirait du même coup les gestes qui font
+    // l'intérêt du tableur pour un lecteur : trier une colonne, copier une
+    // plage. Le trou n'est pas un oubli, ne le bouchez pas.
     toggle: {
       isActive: (a) => a.menu_configuration.main_zone_show_spreadsheet,
       setActive: (a, on) => { a.menu_configuration.main_zone_show_spreadsheet = on }
