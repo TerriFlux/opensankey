@@ -2337,7 +2337,20 @@ export class Class_ApplicationData {
     // Labels rich-text → <text> SVG natifs, pour que l'export se rende sans la feuille de
     // style de la page (cf. Persistence/foreignObjectToSvgText).
     const clone_node = d3_select?.node()
-    if (clone_node && convert_fo) convertForeignObjectsInPlace(clone_node)
+    if (clone_node && convert_fo) {
+      convertForeignObjectsInPlace(clone_node)
+      // Blink (Chrome, Edge) considère qu'un SVG contenant un <foreignObject> n'est PAS
+      // « origin-clean » : le dessiner sur un canvas souille celui-ci, et toBlob lève
+      // alors « Tainted canvases may not be exported ». L'export PNG échouait donc sous
+      // Chrome sur TOUT diagramme, même à un seul flux, alors qu'il passait sous Firefox.
+      // Or il en reste toujours : convertForeignObjectsInPlace épargne délibérément ceux
+      // qui portent un [contenteditable] — le champ d'édition en ligne posé sous chaque
+      // label, masqué tant qu'on ne double-clique pas. Ce sont des accessoires d'édition,
+      // ils n'ont rien à faire dans un export : on les retire du clone. Les <foreignObject>
+      // que la conversion n'a pas su traduire partent aussi, faute de quoi ils
+      // continueraient de bloquer l'export entier pour un seul label récalcitrant.
+      clone_node.querySelectorAll('foreignObject').forEach(fo => fo.remove())
+    }
 
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
@@ -2788,10 +2801,24 @@ export class Class_ApplicationData {
             description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
             duration: default_toast_duration
           },
-          error: {
-            title: intake?.error?.title ?? this.t('toast.default.error.title'),
-            description: intake?.error?.desc ?? this.t('toast.default.error.desc'),
-            duration: default_toast_duration
+          // La raison du rejet était JETÉE : l'utilisateur voyait un titre
+          // générique, la console ne montrait rien, et un échec survenu sur une
+          // autre machine restait indiagnosticable — c'est exactement ce qui a
+          // fait perdre une semaine sur l'export PNG. Chakra accepte une
+          // fonction ici : on y récupère l'erreur, on la trace et on la montre.
+          // L'erreur reste affichée (duration null) et refermable : c'est un
+          // message que l'utilisateur doit pouvoir lire et recopier.
+          error: (err: Error) => {
+            console.error('[toast] tache en echec :', err)
+            const detail = err?.message ? String(err.message) : ''
+            const base = intake?.error?.desc
+            const description = [base, detail].filter(Boolean).join(' — ')
+            return {
+              title: intake?.error?.title ?? this.t('toast.default.error.title'),
+              description: description || this.t('toast.default.error.desc'),
+              duration: detail ? null : default_toast_duration,
+              isClosable: true
+            }
           },
         }
       )

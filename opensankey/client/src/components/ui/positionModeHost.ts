@@ -155,6 +155,55 @@ export const positionModeSelectorEnabledFor = (app: Type_PositionModeHostApp): b
  * Les classes ne sont prises qu'en `import type` — ce module reste une feuille sans arête
  * runtime.
  */
+/**
+ * os#1383 — DÉSIGNE (ou libère) le datatag de RÉFÉRENCE du mode « échelle adaptée », pour la
+ * dimension `tagg`.
+ *
+ * Ce que le réglage veut dire : « une espèce + un mode = une échelle, quel que soit le chemin ».
+ * Sans référence désignée, la grandeur de référence est CAPTURÉE au vol — celle qui se trouvait à
+ * l'écran quand le mode a pris effet. Personne ne l'a choisie, et elle dépend donc de l'ordre des
+ * clics. Ici elle est ÉNONCÉE, et `NodePositioningScaleAdapted.referenceDataTagMagnitude` la
+ * recalcule à chaque dessin : le chemin cesse de compter.
+ *
+ * UN SEUL datatag de référence pour le document : celui du couple élément/datatag,
+ * `prop_reference_datatag` (`NodePositioning.proportionalReferenceDatatagIds`), persisté depuis
+ * #1231 et déjà lu par le régime `element` — CARTOFOB le porte (84). Le geste écrit celui-là ;
+ * la désignation propre au mode adapté d'os#1372 (`scale_adapted_reference_datatag`) reste un
+ * simple alias de repli, jamais posé par l'interface.
+ *
+ * `tag_id` `undefined` = retour à la sélection courante (aucune référence pour cette dimension).
+ * La référence nomme AU PLUS UN tag par dimension : on retire donc d'abord ceux de `tagg`, les
+ * autres dimensions gardant la leur.
+ *
+ * Comme `applyPositionMode`, ce geste ne persiste rien de lui-même : il pose la valeur en mémoire
+ * et redessine. En édition, l'enregistrement suit le rythme habituel du document.
+ */
+export const setScaleAdaptedReferenceDataTag = (
+  app_data: Class_ApplicationData,
+  tagg: Class_DataTagGroup,
+  tag_id: string | undefined
+) => {
+  const np = app_data.drawing_area.nodePositioning
+  const mine = new Set(tagg.tags_list.map(t => t.id))
+  const kept = (np.proportionalReferenceDatatagIds ?? []).filter(id => !mine.has(id))
+  np.proportionalReferenceDatatagIds = tag_id ? [...kept, tag_id] : kept
+  // La base capturée n'a plus de sens : elle avait été prise contre une AUTRE référence.
+  np.forgetScaleAdaptedCapture()
+  // Rejouer le mode est ce qui fait VOIR la nouvelle référence : l'échelle s'en déduit au dessin.
+  tagg.applyPositionModeToDrawing(true)
+  app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+}
+
+/** os#1383 — Tag de `tagg` actuellement désigné comme référence, `undefined` si aucun. */
+export const scaleAdaptedReferenceDataTagOf = (
+  app_data: Class_ApplicationData,
+  tagg: Class_DataTagGroup
+): string | undefined => {
+  const ids = app_data.drawing_area.nodePositioning.proportionalReferenceDatatagIds ?? []
+  return tagg.tags_list.find(t => ids.includes(t.id))?.id
+}
+
 export const applyPositionMode = (
   app_data: Class_ApplicationData,
   tagg: Class_DataTagGroup,

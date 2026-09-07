@@ -1,25 +1,17 @@
 // ==================================================================================================
-// os#1383 — UNE ESPÈCE + UN MODE = UNE ÉCHELLE, QUEL QUE SOIT LE CHEMIN.
+// os#1383 — DEUX ÉCHELLES, PAS UNE : la base de l'utilisateur et l'effective de la frame.
 //
-// Les deux plafonds de `Class_ScaleOverrides` s'appliquent l'un après l'autre sur la même échelle :
-// la référence d'épaisseur par view tag, puis la hauteur maximale de nœud. Chacun défaisait sa
-// surcharge « sauf si une autre source a recalculé depuis » — et voyait la surcharge de l'AUTRE.
-// Il renonçait donc à défaire la sienne et adoptait comme base une échelle qui la contenait déjà.
+// Les trois règles de frame (échelle adaptée, référence d'épaisseur par view tag, plafond de
+// hauteur de nœud) écrivaient toutes DANS `_scale`, l'échelle absolue de l'utilisateur, en
+// s'engageant à la restaurer à la frame suivante « sauf si une autre source l'avait recalculée ».
+// Chacune voyait la surcharge de l'autre, l'adoptait comme base, et l'échelle adaptée d'une vue
+// finissait dans `user_scale`. Mesuré sur CARTOFOB : le stock, à 1585 px partout à l'ouverture,
+// tombait à 619 px après un aller-retour absolu → adapté, puis 767 / 1585 / 773 selon la vue.
 //
-// Mesuré sur CARTOFOB avant correctif : en alternant chêne et pin maritime en mode absolu, le
-// dessin grandissait de 111 unités À CHAQUE aller-retour, sans fin — les nœuds passant de 536 à
-// 662 en trois tours. Le recadrage compensait en rapetissant le diagramme, d'où le symptôme vécu :
-// « le dessin se recalcule sur une toute petite partie de l'écran ».
-//
-// Ces tests verrouillent l'IDEMPOTENCE : rejouer la même frame ne doit jamais déplacer l'échelle.
-//
-// ⚠️ CE QU'ILS NE FONT PAS — vérifié, pas supposé : ils passent AUSSI sur le code d'avant le
-// correctif. Ce ne sont donc PAS des tests de non-régression du défaut d'os#1383, et il ne faut pas
-// leur prêter cette valeur. Le cliquet demande que les DEUX plafonds tirent en même temps ET qu'un
-// tiers (la bascule de mode, qui écrit `_scale` directement) passe entre deux frames ; ce diagramme
-// synthétique ne reproduit pas cette conjonction. Le défaut n'a été constaté et le correctif validé
-// que sur le vrai CARTOFOB, en navigateur (cf. os#1383 : +111 unités par aller-retour avant, série
-// stable après). Reproduire le cliquet en test unitaire reste à faire.
+// Désormais `_scale` n'est écrit que par l'utilisateur (setter `scale`), le chargement et la
+// copie ; les règles n'écrivent que `_scale_effective`, remis à la base en tête de chaque frame.
+// Ces tests verrouillent cela : la base ne bouge JAMAIS sous les règles, l'effective est
+// reproductible, et le plafond exact du mode adapté remplit dans les deux sens.
 // ==================================================================================================
 import { Class_ApplicationData } from './ApplicationData'
 
@@ -51,41 +43,66 @@ function makeApp() {
   return { app, da, sankey, link }
 }
 
-/** Une frame de dessin, dans l ordre reel de `drawElements`. */
-function frame(da: ReturnType<typeof makeApp>['da']) {
+/** Une frame de dessin, dans l ordre reel de `drawElements` (sans adaptation). */
+function frame(da: ReturnType<typeof makeApp>['da'], exact = false) {
+  da.beginScaleFrame()
   da.applyViewTagScaleReference()
-  da.applyMaximumNodeScale()
-  return da._scale
+  da.applyMaximumNodeScale(exact)
+  return da.scale
 }
 
-describe('os#1383 — les plafonds d echelle sont idempotents', () => {
-  it('rejouer la meme frame ne deplace plus l echelle', () => {
+describe('os#1383 — la base de l utilisateur ne bouge jamais sous les regles de frame', () => {
+  it('les plafonds ecrivent l echelle effective, pas la base', () => {
     const { da } = makeApp()
-    const premiere = frame(da)
-    // Sans le correctif, chaque frame repartait de l echelle deja plafonnee : le cliquet.
-    expect(frame(da)).toBeCloseTo(premiere, 9)
-    expect(frame(da)).toBeCloseTo(premiere, 9)
-    expect(frame(da)).toBeCloseTo(premiere, 9)
+    const effective = frame(da)
+    // Le flux de reference fait 35000/1000*100 = 3500 px > 100 : le plafond mord.
+    expect(effective).toBeGreaterThan(DA_SCALE)
+    expect(da.base_scale).toBe(DA_SCALE)
+    expect(da._scale).toBe(DA_SCALE)
   })
 
-  it('le plafond de hauteur de nœud ne fait plus prendre la surcharge de l autre pour une base', () => {
+  it('rejouer la meme frame rend la meme echelle effective, sans cliquet', () => {
     const { da } = makeApp()
     da.maximum_node = 50
     const premiere = frame(da)
-    // C est le cas qui produisait la derive : les deux plafonds actifs en meme temps.
+    // C etait le cas qui produisait la derive : les deux plafonds actifs en meme temps.
     expect(frame(da)).toBeCloseTo(premiere, 9)
     expect(frame(da)).toBeCloseTo(premiere, 9)
+    expect(da.base_scale).toBe(DA_SCALE)
   })
 
-  it('une echelle posee DELIBEREMENT devient la base et n est pas defaite a la frame suivante', () => {
+  it('une echelle posee DELIBEREMENT devient la base et la frame repart d elle', () => {
     const { da } = makeApp()
     frame(da)
-    // Le setter public invalide les bases memorisees : le choix de l utilisateur fait foi.
     da.scale = 7000
-    expect(da._scale).toBeCloseTo(7000, 9)
-    // La frame suivante peut replafonner, mais elle ne restaure JAMAIS l ancienne base.
+    expect(da.base_scale).toBe(7000)
+    // Juste apres le setter, aucune surcharge : l effective EST la base.
+    expect(da.scale).toBe(7000)
     const apres = frame(da)
     expect(apres).toBeGreaterThanOrEqual(7000)
     expect(frame(da)).toBeCloseTo(apres, 9)
+    expect(da.base_scale).toBe(7000)
+  })
+
+  it('le plafond exact (mode adapte sans reference) remplit dans les DEUX sens', () => {
+    const { da, sankey } = makeApp()
+    // La reference d epaisseur (100 px) reste posee : a grande base elle ne mord pas, et en
+    // exact c est le plafond qui a le dernier mot — il s applique apres elle.
+    da.maximum_node = 200
+    // Grande base : le plus haut nœud est bien plus petit que le plafond.
+    da.scale = 1e6
+    const petit = frame(da, false)
+    // Semantique « maximum » : rien ne depasse, rien ne bouge.
+    expect(petit).toBe(1e6)
+    const exact = frame(da, true)
+    // Exact : l echelle DESCEND pour que le plus haut nœud atteigne le plafond.
+    expect(exact).toBeLessThan(1e6)
+    let tallest = 0
+    sankey.visible_nodes_list.forEach(n => { tallest = Math.max(tallest, n.getNaturalShapeHeight()) })
+    expect(tallest).toBeCloseTo(200, 6)
+    // Et la base n a pas bouge.
+    expect(da.base_scale).toBe(1e6)
+    // Reproductible.
+    expect(frame(da, true)).toBeCloseTo(exact, 9)
   })
 })

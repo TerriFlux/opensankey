@@ -58,12 +58,17 @@ function node(
 }
 
 // Aire de dessin minimale : assez pour `diagramMagnitude` (liste des nœuds visibles + tag
-// « echange ») et pour `applyAdaptedScale`, qui écrit `_scale` et le domaine de `_scaleValueToPx`.
+// « echange ») et pour `applyAdaptedScale`. os#1383 — l'adaptation n'écrit plus `_scale` (la
+// base de l'utilisateur) mais l'échelle EFFECTIVE de la frame, via `setEffectiveScale` ; `scale`
+// rend l'effective si elle existe, sinon la base — comme la vraie `Class_DrawingArea`.
 function positioning(nodes: FakeNode[], scale = 100) {
   const drawingArea = {
     _scale: scale,
+    _scale_effective: undefined as number | undefined,
     _scaleValueToPx: { domain: () => undefined },
-    get scale() { return this._scale },
+    get scale() { return this._scale_effective ?? this._scale },
+    get base_scale() { return this._scale },
+    setEffectiveScale(v: number) { this._scale_effective = v },
     sankey: {
       node_taggs_dict: {
         'type de noeud': { tags_dict: { echange: { id: 'echange' } } },
@@ -136,11 +141,11 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
 
     np.applyAdaptedScale()   // capture paresseuse : base = (100, 50), ratio 1
     expect(np.scaleAdaptedReference).toEqual({ scale: 100, magnitude: 50 })
-    expect(drawingArea._scale).toBe(100)
+    expect(drawingArea.scale).toBe(100)
 
     n.visible_output_links_list = [{ valueCurrent: 150 }]  // datatag 3× plus gros
     np.applyAdaptedScale()
-    expect(drawingArea._scale).toBe(300)
+    expect(drawingArea.scale).toBe(300)
   })
 
   it('adapte l\'échelle même quand un flux donné disparaît du datatag', () => {
@@ -154,7 +159,7 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
     a.is_visible = false     // le flux « de référence » d'hier n'existe plus ici
     b.visible_output_links_list = [{ valueCurrent: 200 }]
     np.applyAdaptedScale()
-    expect(drawingArea._scale).toBe(200)
+    expect(drawingArea.scale).toBe(200)
   })
 
   it('garde l\'échelle précédente si la grandeur est nulle', () => {
@@ -164,7 +169,7 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
     np.applyAdaptedScale()
     n.visible_output_links_list = []
     np.applyAdaptedScale()
-    expect(drawingArea._scale).toBe(100)
+    expect(drawingArea.scale).toBe(100)
   })
 
   it('ne perd pas la référence en capturant sur un datatag sans valeur', () => {
@@ -180,7 +185,7 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
 
     n.visible_output_links_list = [{ valueCurrent: 200 }]
     np.applyAdaptedScale()
-    expect(drawingArea._scale).toBe(400)
+    expect(drawingArea.scale).toBe(400)
   })
 
   it('n\'exige aucun élément de référence pour se déclencher', () => {
@@ -191,6 +196,6 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
     np.applyAdaptedScale()
     n.visible_output_links_list = [{ valueCurrent: 40 }]
     np.applyAdaptedScale()
-    expect(drawingArea._scale).toBe(400)
+    expect(drawingArea.scale).toBe(400)
   })
 })

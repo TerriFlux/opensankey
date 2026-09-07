@@ -480,6 +480,11 @@ export class Class_MenuConfig {
   // reste exposé pour les points d'entrée OS+ (clic droit / onglet tooltip de nœud).
   public unitary_tab_available: boolean = false
 
+  // sa#508 — dernier import réussi (format d'entrée du dialogue de persistance :
+  // 'excel', 'json'…), posé juste avant la notification IMPORT_TOPIC. Lu par
+  // les abonnés du topic ; jamais persisté.
+  public last_import: { format: string } | null = null
+
   // sa#1354 — Applicateur de NIVEAU, injecté par la couche éditeur.
   //
   // Les autres axes du contrôleur se restaurent par un simple setter ; le niveau
