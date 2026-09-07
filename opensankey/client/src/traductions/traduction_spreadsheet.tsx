@@ -207,7 +207,10 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentation',
           unitary: 'Unitary Sankey',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Diagram representation'
         }
       }
     }
@@ -402,7 +405,10 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentation',
           unitary: 'Sankey unitaire',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Représentation du diagramme'
         }
       }
     }
@@ -597,7 +603,10 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentación',
           unitary: 'Sankey unitario',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Representación del diagrama'
         }
       }
     }
@@ -792,7 +801,10 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Dokumentation',
           unitary: 'Unitäres Sankey',
-          unit: 'Einh.'
+          unit: 'Einh.',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Darstellung des Diagramms'
         }
       }
     }
@@ -987,7 +999,10 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentazione',
           unitary: 'Sankey unitario',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Rappresentazione del diagramma'
         }
       }
     }
@@ -1188,7 +1203,10 @@ export const resources_spreadsheet = {
           doc: '文档',
           documentation: '文档',
           unitary: '单位桑基图',
-          unit: '单位图'
+          unit: '单位图',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: '图表表示形式'
         }
       }
     }
@@ -1389,7 +1407,10 @@ export const resources_spreadsheet = {
           doc: '文書',
           documentation: '文書',
           unitary: '単位サンキー',
-          unit: '単位'
+          unit: '単位',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: '図の表現形式'
         }
       }
     }

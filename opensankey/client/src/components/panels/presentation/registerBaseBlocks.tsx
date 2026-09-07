@@ -482,5 +482,5 @@ export function registerBasePresentationBlocks(): void {
 
   // Les DIAGRAMMES (Sankey unitaire / Analyse) ne sont plus des blocs de la
   // composition : ils vivent dans la colonne de boutons de la POP-UP d'élément,
-  // fournis par OS+ (`presentation_diagrams_for`) et rendus en ligne.
+  // fournis par OS+ (`element_analyses_for`) et rendus en ligne.
 }
