@@ -18,6 +18,27 @@ import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constr
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { escapeHtml } from './htmlEscape'
 
+/** Une tranche de la série d'un flux (une combinaison de dataTags). */
+export type Type_LinkSeriesEntry = {
+  /** Clé stable de la combinaison (groupe:tag|groupe:tag). */
+  key: string
+  /** Libellé de la combinaison, tel qu'affiché (« Auvergne-Rhône-Alpes »). */
+  label: string
+  /** Valeur brute, pour dimensionner une barre. `null` = pas de valeur. */
+  value: number | null
+  /** Valeur FORMATÉE (chiffres significatifs du flux), sans suffixe d'unité. */
+  text: string
+  /** Cette tranche est-elle celle actuellement sélectionnée dans les bannières ? */
+  is_current: boolean
+}
+
+/** Série complète d'un flux : ses tranches et l'unité qui les qualifie toutes. */
+export type Type_LinkSeries = {
+  /** Symbole d'unité, '' si l'unité n'est pas affichée. */
+  unit: string
+  entries: Type_LinkSeriesEntry[]
+}
+
 export class LinkTooltip {
 
   private _link: Class_LinkElement
@@ -35,7 +56,11 @@ export class LinkTooltip {
     case 'flux':
       return this.getMainTabHTML()
     case 'series_flux':
-      return has_series ? this.getSeriesFluxHTML(combos) : null
+      // Plus de tableau : la série se lit en BARRES, rendues par le bloc de
+      // présentation à partir de `getSeriesFlux()`. Une combinaison par colonne
+      // débordait de l'info-bulle dès quelques tranches (13 régions CARTOFOB) et
+      // n'a jamais permis de comparer deux valeurs d'un coup d'œil.
+      return null
     case 'data':
       return has_children ? this.getDataTabHTML(groups) : null
     case 'series_data':
@@ -150,23 +175,26 @@ export class LinkTooltip {
   }
 
   /**
+   * Noms des DIMENSIONS sous lesquelles ce flux porte des données saisies — de
+   * quoi annoncer le contenu du bloc « Données » sans le déplier.
+   */
+  public getDataAxisNames(): string[] {
+    try { return this.getChildLinkGroups().map(g => g.axisName) } catch { return [] }
+  }
+
+  /**
    * Onglet Données : un tableau par dimension (axe d'agrégation). Chaque tableau
    * liste les flux enfants feuille→feuille de cet axe avec valeur et ratio.
    */
   private getDataTabHTML(groups: { axisName: string, links: Class_LinkElement[] }[]): string {
     const parent_total = this._link.valueCurrent
 
-    // Contexte dataTags courant en haut (valeur du flux parent + Année/région… + source/URL du parent)
+    // PAS d'en-tête de contexte ici (valeur du flux parent + Année/région… +
+    // source/URL du parent). Il existait du temps des ONGLETS, où chaque onglet
+    // s'affichait seul et devait donc rappeler de quoi il parlait. Les blocs sont
+    // désormais EMPILÉS dans le même contenant : le bloc « Flux », juste au-dessus,
+    // porte déjà ces lignes, et les redire n'ajoutait rien qu'une répétition.
     let html = ''
-    const context_rows = this.getDataTagContextRows()
-    const parent_meta = this.getDataSourceUrlRows()
-    if (context_rows || parent_meta) {
-      html += '<table class="tooltip-table" style="margin-bottom:10px;">'
-      html += `<tr><th>Valeur</th><td class="value">${this.formatLinkValue(this._link)}</td></tr>`
-      html += context_rows
-      html += parent_meta
-      html += '</table>'
-    }
 
     // Colonnes Source/URL affichées seulement si au moins un flux enfant en porte une.
     let show_source = false
@@ -227,18 +255,6 @@ export class LinkTooltip {
       html += '</div>'
     })
     return html
-  }
-
-  /** Formate la valeur d'un lien comme dans l'onglet principal (unité nommée). */
-  private formatLinkValue(link: Class_LinkElement): string {
-    const data_label_visible = link.value_label_is_visible
-    link.value_label_is_visible = true
-    const tmp = link.value_label_unit_type
-    if (tmp !== 'unit_model') link.value_label_unit_type = 'unit_name'
-    const label = link_data_label('free_value', link, 'value_label')
-    link.value_label_unit_type = tmp
-    link.value_label_is_visible = data_label_visible
-    return label
   }
 
   /**
@@ -392,26 +408,48 @@ export class LinkTooltip {
     return text.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
   }
 
-  /** Libellé « Unité : X » à afficher au-dessus des séries (vide si pas d'unité visible). */
-  private getSeriesUnitLabelHTML(): string {
+  /** Symbole d'unité des séries ('' si l'unité n'est pas affichée sur ce flux). */
+  private getSeriesUnit(): string {
     const lv = getNameLabelValues(this._link, 'value_label')
     // OS#1286 — en mode unit_model, `unit` porte un id : afficher le symbole résolu.
     const unit = lv.unit_type === 'unit_model'
       ? (this._link.sankey.units.resolve(lv.unit)?.unit.label ?? '')
       : lv.unit
-    if (!lv.unit_visible || !unit) return ''
+    return (lv.unit_visible && unit) ? unit : ''
+  }
+
+  /** Libellé « Unité : X » à afficher au-dessus des séries (vide si pas d'unité visible). */
+  private getSeriesUnitLabelHTML(): string {
+    const unit = this.getSeriesUnit()
+    if (!unit) return ''
     return `<div class="series-unit">Unité : ${escapeHtml(unit)}</div>`
   }
 
-  /** Onglet Séries flux : valeur du flux par combinaison de dataTags (combinaisons en colonnes). */
-  private getSeriesFluxHTML(combos: { key: string, label: string, value: Class_LinkValue }[]): string {
-    let html = this.getSeriesUnitLabelHTML()
-    html += '<table class="tooltip-table"><thead><tr>'
-    combos.forEach(c => html += `<th class="value">${escapeHtml(c.label)}</th>`)
-    html += '</tr></thead><tbody><tr>'
-    combos.forEach(c => html += `<td class="value">${this.fmtNum(this.linkValueNumber(c.value))}</td>`)
-    html += '</tr></tbody></table>'
-    return html
+  /**
+   * SÉRIE du flux : sa valeur pour chaque combinaison de dataTags. Renvoie `null`
+   * quand il n'y a pas de série (valeur unique, ou une seule combinaison).
+   *
+   * ORDRE PRÉSERVÉ — celui des groupes de dataTags du sankey, jamais un tri par
+   * valeur : une série est souvent TEMPORELLE (des années), et la trier par
+   * valeur décroissante détruirait la seule lecture qui compte, la chronologie.
+   */
+  public getSeriesFlux(): Type_LinkSeries | null {
+    const combos = this.getValueComboEntries(this._link)
+    if (combos.length < 2) return null
+    const current = this._link.value
+    return {
+      unit: this.getSeriesUnit(),
+      entries: combos.map(c => {
+        const value = this.linkValueNumber(c.value)
+        return {
+          key: c.key,
+          label: c.label,
+          value,
+          text: this.fmtNum(value),
+          is_current: current !== null && c.value === current
+        }
+      })
+    }
   }
 
   /**

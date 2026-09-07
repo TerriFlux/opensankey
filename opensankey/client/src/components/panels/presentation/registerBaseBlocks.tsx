@@ -28,7 +28,7 @@ import { default_font_size } from '../../../css/Theme'
 import { formatElementValue, resolveValueUnit } from '../../../Elements/ValueFormatting'
 import type { Class_LinkElement } from '../../../Elements/Link'
 import { NodeTooltip } from '../../../Elements/TooltipsNode'
-import { LinkTooltip } from '../../../Elements/TooltipsLink'
+import { LinkTooltip, type Type_LinkSeries } from '../../../Elements/TooltipsLink'
 import { TOOLTIP_STYLES } from '../../../Elements/TooltipsCSS'
 import type { Class_NodeElement } from '../../../Elements/Node'
 import {
@@ -152,6 +152,81 @@ const linkBlockHtml = (el: Unknown_Element, block_id: string): string | null => 
   try {
     return new LinkTooltip(el as unknown as Class_LinkElement).getBlockHTML(block_id)
   } catch { return null }
+}
+
+// --- Série d'un flux, en BARRES ----------------------------------------------
+// Le tableau d'origine mettait une combinaison de dataTags PAR COLONNE : à treize
+// régions il débordait de l'info-bulle, imposait un défilement horizontal, et ne
+// permettait toujours pas de comparer deux valeurs d'un coup d'œil. Une barre par
+// tranche tient dans la largeur, quel que soit leur nombre, et se lit sans lire
+// les chiffres.
+
+const linkSeries = (el: Unknown_Element): Type_LinkSeries | null => {
+  if (!el || !isLinkLike(el)) return null
+  try {
+    return new LinkTooltip(el as unknown as Class_LinkElement).getSeriesFlux()
+  } catch { return null }
+}
+
+const SERIES_BAR_FILL = '#9ac2ae'
+const SERIES_BAR_CURRENT = '#2f855a'
+const SERIES_BAR_TRACK = '#edf2f7'
+
+const SeriesBars = ({ series, compact }: { series: Type_LinkSeries, compact: boolean }) => {
+  // Échelle commune à toutes les barres — c'est ce qui les rend comparables. Une
+  // valeur négative (rare, mais possible sur un flux réconcilié) est ramenée à
+  // zéro de LARGEUR : le chiffre, lui, reste écrit tel quel à droite.
+  const max = series.entries.reduce((m, e) => Math.max(m, e.value ?? 0), 0)
+  const width = (v: number | null) =>
+    (max > 0 && v !== null && v > 0) ? `${(v / max) * 100}%` : '0%'
+  return (
+    <Box
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'auto minmax(3rem, 1fr) auto',
+        alignItems: 'center',
+        columnGap: '0.5rem',
+        rowGap: compact ? '1px' : '2px',
+        fontSize: '0.72rem'
+      }}
+    >
+      {series.entries.map(e => (
+        <React.Fragment key={e.key}>
+          <Text
+            as='span'
+            title={e.label}
+            style={{
+              maxWidth: '11rem', whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis',
+              color: e.is_current ? '#22543d' : '#4a5568',
+              fontWeight: e.is_current ? 700 : 400
+            }}
+          >
+            {e.label}
+          </Text>
+          <Box style={{ background: SERIES_BAR_TRACK, borderRadius: '2px', height: '0.65rem' }}>
+            <Box
+              style={{
+                display: 'block', height: '0.65rem', borderRadius: '2px',
+                width: width(e.value),
+                background: e.is_current ? SERIES_BAR_CURRENT : SERIES_BAR_FILL
+              }}
+            />
+          </Box>
+          <Text
+            as='span'
+            style={{
+              fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+              color: e.is_current ? '#22543d' : '#4a5568',
+              fontWeight: e.is_current ? 700 : 400
+            }}
+          >
+            {e.text}
+          </Text>
+        </React.Fragment>
+      ))}
+    </Box>
+  )
 }
 
 // --- Enregistrement ----------------------------------------------------------
@@ -340,15 +415,27 @@ export function registerBasePresentationBlocks(): void {
   })
 
   const legacyLinkBlock = (
-    id: string, order: number, key: string, label_key: string, fallback: string
+    id: string, order: number, key: string, label_key: string, fallback: string,
+    summary?: (ctx: Type_BlockRenderContext) => string | null
   ) => presentation_block_registry.register({
     id, target: 'link', order,
     label: (a) => a.t(label_key, { defaultValue: fallback }),
+    summary,
     render: (ctx) => {
       const html = linkBlockHtml(el_of(ctx), key)
       return html ? <LegacyHtml html={html} /> : null
     }
   })
+
+  /** Dimensions annoncées en résumé des blocs de données (« Niveau Essences »). */
+  const dataAxesSummary = (ctx: Type_BlockRenderContext): string | null => {
+    const el = el_of(ctx)
+    if (!el || !isLinkLike(el)) return null
+    try {
+      const axes = new LinkTooltip(el as unknown as Class_LinkElement).getDataAxisNames()
+      return axes.length > 0 ? axes.join(', ') : null
+    } catch { return null }
+  }
 
   // Nœud : bilan (entrées/sorties/ratios + équilibre) et répartition par tag de flux.
   legacyNodeBlock('os.block.balance', 25, 'values',
@@ -359,12 +446,39 @@ export function registerBasePresentationBlocks(): void {
   // Flux : valeur/donnée/tags, séries, flux enfants par dimension.
   legacyLinkBlock('os.block.link_flux', 50, 'flux',
     'presentation.block.link_flux', 'Flux')
-  legacyLinkBlock('os.block.link_series_flux', 55, 'series_flux',
-    'presentation.block.link_series_flux', 'Séries de flux')
   legacyLinkBlock('os.block.link_data', 60, 'data',
-    'presentation.block.link_data', 'Données')
+    'presentation.block.link_data', 'Données', dataAxesSummary)
   legacyLinkBlock('os.block.link_series_data', 65, 'series_data',
-    'presentation.block.link_series_data', 'Séries de données')
+    'presentation.block.link_series_data', 'Séries de données', dataAxesSummary)
+
+  // Séries de flux : le seul bloc qui n'est PAS du HTML hérité — la série se lit
+  // en barres (cf. SeriesBars). L'id reste celui écrit dans le JSON.
+  presentation_block_registry.register({
+    id: 'os.block.link_series_flux',
+    target: 'link',
+    order: 55,
+    label: (a) => a.t('presentation.block.link_series_flux', { defaultValue: 'Séries de flux' }),
+    // Résumé d'en-tête : combien de tranches, et dans quelle unité — de quoi
+    // décider si le bloc mérite d'être déplié, sans le déplier.
+    summary: (ctx) => {
+      const series = linkSeries(el_of(ctx))
+      if (!series) return null
+      const count = ctx.app_data.t('presentation.block.series_count', {
+        count: series.entries.length,
+        defaultValue: '{{count}} valeurs'
+      })
+      return series.unit ? `${count} · ${series.unit}` : count
+    },
+    render: (ctx) => {
+      const series = linkSeries(el_of(ctx))
+      if (!series) return null
+      return (
+        <BlockSection compact={isCompact(ctx)}>
+          <SeriesBars series={series} compact={isCompact(ctx)} />
+        </BlockSection>
+      )
+    }
+  })
 
   // Les DIAGRAMMES (Sankey unitaire / Analyse) ne sont plus des blocs de la
   // composition : ils vivent dans la colonne de boutons de la POP-UP d'élément,
