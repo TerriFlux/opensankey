@@ -4,6 +4,9 @@ import {
   diagramContext,
   elementContext,
   isOfferedToReader,
+  mountRepresentation,
+  redrawMounted,
+  representation_registry,
   type Type_RepresentationEntry
 } from './RepresentationRegistry'
 import type { Class_ApplicationData } from '../types/ApplicationData'
@@ -148,5 +151,72 @@ describe('os#1361 diagramCapabilities', () => {
   it('ne voit aucune hierarchie sur un diagramme plat', () => {
     const a = app({ sankey: { level_taggs_list: [], nodes_list: [{ dimensions_as_parent: [] }] } })
     expect(diagramCapabilities(a).hierarchy).toBe(false)
+  })
+})
+
+describe('os#1361 montage et redessin', () => {
+  const container = () => ({} as unknown as HTMLElement)
+
+  beforeEach(() => { representation_registry.clear() })
+  afterEach(() => { representation_registry.clear() })
+
+  it('rend null sur un id inconnu, plutot que de casser l ecran', () => {
+    expect(mountRepresentation('jamais.vu', container(), diagramContext(app()))).toBeNull()
+  })
+
+  it('rend null pour une entree de forme toggle', () => {
+    representation_registry.register({
+      id: 't', scale: 'diagram', order: 10, label: () => 't',
+      toggle: { isActive: () => false, setActive: () => undefined }
+    })
+    expect(mountRepresentation('t', container(), diagramContext(app()))).toBeNull()
+  })
+
+  it('une entree qui ne rend rien reste montable et demontable', () => {
+    representation_registry.register(entry({ id: 'v', draw: () => undefined }))
+    const m = mountRepresentation('v', container(), diagramContext(app()))
+    expect(m?.redraw).toBeNull()
+    expect(() => m?.cleanup()).not.toThrow()
+  })
+
+  it('la forme historique, une fonction de demontage, reste valide', () => {
+    const cleanup = jest.fn()
+    representation_registry.register(entry({ id: 'f', draw: () => cleanup }))
+    const m = mountRepresentation('f', container(), diagramContext(app()))
+    expect(m?.redraw).toBeNull()
+    m?.cleanup()
+    expect(cleanup).toHaveBeenCalledTimes(1)
+  })
+
+  it('la poignee complete expose redraw et cleanup', () => {
+    const redraw = jest.fn()
+    const cleanup = jest.fn()
+    representation_registry.register(entry({ id: 'h', draw: () => ({ redraw, cleanup }) }))
+    const m = mountRepresentation('h', container(), diagramContext(app()))
+    expect(redrawMounted(m)).toBe(true)
+    expect(redraw).toHaveBeenCalledTimes(1)
+    m?.cleanup()
+    expect(cleanup).toHaveBeenCalledTimes(1)
+  })
+
+  it('une poignee sans cleanup reste demontable sans lever', () => {
+    representation_registry.register(entry({ id: 'r', draw: () => ({ redraw: () => undefined }) }))
+    const m = mountRepresentation('r', container(), diagramContext(app()))
+    expect(() => m?.cleanup()).not.toThrow()
+  })
+
+  it('redrawMounted rend false quand la representation ne sait pas se redessiner', () => {
+    representation_registry.register(entry({ id: 'f', draw: () => () => undefined }))
+    expect(redrawMounted(mountRepresentation('f', container(), diagramContext(app())))).toBe(false)
+    expect(redrawMounted(null)).toBe(false)
+  })
+
+  it('un redraw qui leve vaut false, a l hote de remonter', () => {
+    representation_registry.register(entry({
+      id: 'b',
+      draw: () => ({ redraw: () => { throw new Error('donnees absentes') } })
+    }))
+    const m = mountRepresentation('b', container(), diagramContext(app()))
+    expect(redrawMounted(m)).toBe(false)
   })
 })
