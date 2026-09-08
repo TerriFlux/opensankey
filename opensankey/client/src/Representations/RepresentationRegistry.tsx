@@ -191,6 +191,12 @@ type Type_RepresentationCommon = {
     app_data: Class_ApplicationData
     options: { [key: string]: unknown }
     setOptions: (next: { [key: string]: unknown }) => void
+    /**
+     * os#1387 — le contexte du PREMIER sujet de la fenêtre, quand il y en a un : les réglages
+     * d'une analyse d'élément (décomposer par…) se construisent sur l'objet regardé. Absent
+     * dans une fenêtre sans sujet, ou à l'échelle diagramme.
+     */
+    ctx?: Type_RepresentationContext
   }) => React.ReactNode
 }
 
