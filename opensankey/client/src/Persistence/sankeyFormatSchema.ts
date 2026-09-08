@@ -20,20 +20,31 @@ import { z } from 'zod'
 const jsonObjectBag = z.object({}).passthrough()
 
 /**
- * os#1378 (U0) — un port de brique : un nœud d'échange vu comme interface du
- * procédé. Contrairement au reste de la racine, la structure est ici CONTRAINTE
- * (et non laissée en passthrough) : c'est un contrat neuf, sans historique de
- * fichiers à ménager, et `direction` est ce qui décide du côté du bilan.
+ * os#1378 (U0) puis os#1380 (U4) — un port de brique : un nœud d'échange vu
+ * comme interface du procédé, POUR UNE GRANDEUR. Contrairement au reste de la
+ * racine, la structure est ici CONTRAINTE (et non laissée en passthrough) :
+ * c'est un contrat neuf, sans historique de fichiers à ménager, et `direction`
+ * est ce qui décide du côté du bilan.
  */
 const unitaryProcessPortSchema = z
   .object({
+    // Le nœud d'échange. Depuis os#1380 il est porté par le port lui-même, les
+    // ports étant une LISTE et non plus un dictionnaire keyé par nœud.
+    node_id: z.string(),
     direction: z.enum(['input', 'output']),
+    // Grandeur mesurée (masse, énergie, volume…) : id de GRANDEUR du registre
+    // d'unités (OS#1286). Absente = grandeur du diagramme, celle qui porte la
+    // convention « Σ entrées = 1 ».
+    quantity_ref: z.string().optional(),
     port_type: z.string().optional(),
-    // Par unité d'activité ; somme des entrées = 1 (convention V1, non vérifiée
-    // ici — cf. types/UnitaryProcess.ts).
+    // Par unité d'activité ; somme des entrées de la grandeur de référence = 1
+    // (convention V1, non vérifiée ici — cf. types/UnitaryProcess.ts).
     coefficient: z.number().optional(),
-    // Référence du registre d'unités du diagramme (OS#1286), multi-flux U4.
+    // Référence du registre d'unités du diagramme (OS#1286).
     unit_ref: z.string().optional(),
+    // Nature de l'échange pour la passerelle Brightway (ACV). Absente =
+    // technosphère.
+    exchange_kind: z.enum(['technosphere', 'biosphere']).optional(),
   })
   .passthrough()
 
@@ -58,8 +69,13 @@ const unitaryProcessSchema = z
       .optional(),
     // Durée de vie en années (dimension dynamique WooDyn).
     lifetime_years: z.number().optional(),
-    // Un port par nœud d'échange, keyé par id de nœud.
-    ports: z.record(unitaryProcessPortSchema).optional(),
+    // Les ports, en LISTE à clé composite `(node_id, direction, quantity_ref)`
+    // depuis os#1380 : un même nœud porte plusieurs grandeurs et peut être à la
+    // fois entrée et sortie. L'ancienne forme dictionnaire de U0 reste LUE par
+    // `unitaryProcessFromJSON` mais n'est pas décrite ici : le schéma publie le
+    // contrat COURANT, et le `.catch()` ci-dessous fait que la décrire ou non
+    // ne change rien à l'ouverture d'un vieux fichier.
+    ports: z.array(unitaryProcessPortSchema).optional(),
   })
   .passthrough()
 
