@@ -26,12 +26,16 @@
 //
 //  1. Écrire le rendu. La forme normale est IMPÉRATIVE : `draw(container, ctx)`
 //     dessine dans un conteneur DOM (d3, canvas, ce que vous voulez). C'est ce
-//     qu'attendent les hôtes existants (pop-up d'élément, panneau) et ce dont ont
-//     besoin camembert / histogramme / sunburst.
-//     La variante `toggle` est réservée aux représentations qui ont DÉJÀ leur
-//     hôte React et ne se dessinent donc pas dans un conteneur qu'on leur donne
-//     (Sankey, Tableur, Doc : la grande zone les monte, le registre ne fait que
-//     les allumer). N'inventez pas une troisième forme.
+//     qu'attendent les hôtes (pop-up d'élément, grande zone) et ce dont ont
+//     besoin camembert / histogramme / sunburst. À l'échelle DIAGRAMME, une
+//     entrée `draw` devient un OCCUPANT de la grande zone comme le tableur :
+//     elle reçoit un cadre, une place, et peut être détachée dans sa fenêtre.
+//     La variante `host` dit qu'une représentation possède DÉJÀ son rendu et
+//     que le registre ne fait que la nommer : 'canvas' pour le SVG du diagramme,
+//     'component' pour un panneau React fourni par la couche éditeur (tableur,
+//     doc), 'external' pour un contenu porté hors de l'arbre et positionné sur
+//     le cadre qu'on lui réserve (Sankey unitaire d'OS+). N'inventez pas une
+//     quatrième forme : si ça se dessine dans un conteneur, c'est `draw`.
 //
 //  1bis. CE QUE `draw` REND — et quand fournir `redraw`.
 //     Trois retours sont légaux, du plus simple au plus complet :
@@ -191,23 +195,35 @@ type Type_RepresentationCommon = {
 }
 
 /**
- * Une entrée dessine DANS UN CONTENEUR, ou BASCULE un hôte qu'elle possède
- * déjà — jamais les deux, jamais aucun. L'union le rend impossible à écrire
- * de travers plutôt qu'à vérifier à l'exécution.
+ * Qui possède le rendu d'une représentation qui ne se dessine PAS dans un
+ * conteneur qu'on lui donne (os#1355) :
+ *  - 'canvas'    : le SVG du diagramme, sous tout le reste — la grande zone ne
+ *                  fait que lui réserver l'espace restant ;
+ *  - 'component' : un panneau React fourni par la couche éditeur (tableur,
+ *                  doc), monté par la grande zone dans le cadre de l'occupant ;
+ *  - 'external'  : un contenu porté hors de l'arbre (le Sankey unitaire d'OS+,
+ *                  hors #sankey_app pour survivre au redraw) et positionné sur le
+ *                  cadre qu'on lui réserve.
+ */
+export type Type_RepresentationHost = 'canvas' | 'component' | 'external'
+
+/**
+ * Une entrée dessine DANS UN CONTENEUR, ou NOMME un rendu qu'elle possède déjà
+ * — jamais les deux, jamais aucun. L'union le rend impossible à écrire de
+ * travers plutôt qu'à vérifier à l'exécution. La présence dans la grande zone,
+ * elle, ne se déclare pas ici : c'est la liste d'occupants de
+ * `menu_configuration` qui la porte, pour toutes les entrées de la même façon.
  */
 export type Type_RepresentationEntry =
   | (Type_RepresentationCommon & {
     /** Dessine dans le conteneur ; rend son démontage, ou une poignée complète. */
     draw: (container: HTMLElement, ctx: Type_RepresentationContext) => Type_RepresentationMount
-    toggle?: never
+    host?: never
   })
   | (Type_RepresentationCommon & {
     draw?: never
-    /** Allume/éteint un hôte que la représentation possède déjà. */
-    toggle: {
-      isActive: (app_data: Class_ApplicationData) => boolean
-      setActive: (app_data: Class_ApplicationData, active: boolean) => void
-    }
+    /** Rendu possédé ailleurs — le registre le nomme, la grande zone le cadre. */
+    host: Type_RepresentationHost
   })
 
 /**

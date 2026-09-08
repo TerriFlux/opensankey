@@ -37,7 +37,7 @@ import { StepType } from '@reactour/tour'
 import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
-import { Class_MenuConfig } from '../types/MenuConfig'
+import { Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES } from '../types/MenuConfig'
 import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, makeId, randomId, toast_bypass, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
@@ -2246,18 +2246,16 @@ export class Class_ApplicationData {
     if (this._drawing_area.interval_display !== 'free_value') {
       params.set('iv', this._drawing_area.interval_display)
     }
-    // sa#1354 — La REPRÉSENTATION : quels panneaux de la grande zone sont ouverts. Ce sont
-    // des booléens indépendants (diagramme + tableur côte à côte est un état légitime), d'où
-    // une liste et non une valeur unique. Absent = l'état par défaut, diagramme seul.
+    // sa#1354 — La REPRÉSENTATION : les occupants de la grande zone, dans l'ordre. Une liste
+    // et non une valeur unique (diagramme + tableur côte à côte est un état légitime).
+    // os#1355 — ce sont des ids du registre ; les quatre historiques gardent leur nom court
+    // dans l'URL (`diagram`, `spreadsheet`, `doc`, `unitary`) pour que les adresses déjà
+    // partagées restent lisibles. Absent = l'état par défaut, diagramme seul.
     // `_menu_configuration` est optionnel (posé à la première lecture de
     // `menu_configuration`) : sans lui, pas de grande zone à décrire.
     const mc = this._menu_configuration
     if (mc) {
-      const shown: string[] = []
-      if (mc.main_zone_show_diagram) shown.push('diagram')
-      if (mc.main_zone_show_spreadsheet) shown.push('spreadsheet')
-      if (mc.main_zone_show_doc) shown.push('doc')
-      if (mc.main_zone_show_unitary) shown.push('unitary')
+      const shown = mc.main_zone_occupants.map(o => URL_MAIN_ZONE_SHORT_NAMES[o.id] ?? o.id)
       if (shown.join(',') !== 'diagram') {
         params.set('rep', shown.join(','))
       }
@@ -2302,22 +2300,15 @@ export class Class_ApplicationData {
     // sa#1354 — La REPRÉSENTATION d'abord : elle ne touche pas au modèle, seulement à la
     // grande zone, et l'appliquer avant le dessin évite un rendu dans la mauvaise géométrie.
     if (representation !== null) {
-      const shown = representation.split(',').map(s => s.trim()).filter(Boolean)
-      const known = ['diagram', 'spreadsheet', 'doc', 'unitary']
-      const unknown = shown.filter(s => !known.includes(s))
-      if (unknown.length > 0) {
-        // eslint-disable-next-line no-console
-        console.warn(`[OpenSankey] paramètre d'URL rep : représentation inconnue « ${unknown.join(', ')} »`)
-      }
+      // os#1355 — noms courts historiques OU ids de registre. Un id inconnu du registre est
+      // gardé tel quel : c'est la grande zone qui l'ignorera (pas d'entrée, pas de cadre), et
+      // une URL écrite par une version plus récente ne doit pas casser l'écran.
+      const ids = representation.split(',').map(s => s.trim()).filter(Boolean)
+        .map(s => URL_MAIN_ZONE_LONG_NAMES[s] ?? s)
       // Garde explicite plutôt que le getter `menu_configuration`, qui porte une
       // assertion non-nulle : un viewer sans configuration de menus ne doit pas lever.
       const mc = this._menu_configuration
-      if (mc) {
-        mc.main_zone_show_diagram = shown.includes('diagram')
-        mc.main_zone_show_spreadsheet = shown.includes('spreadsheet')
-        mc.main_zone_show_doc = shown.includes('doc')
-        mc.main_zone_show_unitary = shown.includes('unitary')
-      }
+      if (mc && ids.length > 0) mc.setMainZoneOccupantIds(ids)
     }
     // sa#1354 — La COUCHE DE DONNÉES. Valeurs validées : une URL bricolée ne doit pas poser
     // un mode que le rendu ne sait pas lire.

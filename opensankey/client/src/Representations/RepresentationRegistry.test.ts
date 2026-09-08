@@ -164,10 +164,10 @@ describe('os#1361 montage et redessin', () => {
     expect(mountRepresentation('jamais.vu', container(), diagramContext(app()))).toBeNull()
   })
 
-  it('rend null pour une entree de forme toggle', () => {
+  it('rend null pour une entree de forme host, qui possede deja son rendu', () => {
     representation_registry.register({
       id: 't', scale: 'diagram', order: 10, label: () => 't',
-      toggle: { isActive: () => false, setActive: () => undefined }
+      host: 'component'
     })
     expect(mountRepresentation('t', container(), diagramContext(app()))).toBeNull()
   })

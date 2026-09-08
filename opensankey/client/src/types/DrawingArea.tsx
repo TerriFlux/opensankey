@@ -72,7 +72,7 @@ import * as CameraMath from './CameraMath'
 import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
-import { ZOOM_TOPIC } from './EventBus'
+import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
@@ -1171,6 +1171,9 @@ export class Class_DrawingArea {
     // ne touche au DOM que si elle a changé — pendant un glisser, la signature est stable,
     // donc aucun `replaceState`.
     this.application_data.syncUrlState()
+    // os#1361 — les occupants `draw` de la grande zone lisent les mêmes données que ce dessin :
+    // c'est ici, et nulle part ailleurs, qu'ils apprennent qu'elles ont changé.
+    this.application_data.menu_configuration?.notify(DRAW_TOPIC)
   }
 
   /**

@@ -208,6 +208,9 @@ export const resources_spreadsheet = {
           documentation: 'Documentation',
           unitary: 'Unitary Sankey',
           unit: 'Unit.',
+          move_right: 'Move to the right column',
+          move_bottom: 'Move to the bottom band',
+          close: 'Close',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Diagram representation'
@@ -406,6 +409,9 @@ export const resources_spreadsheet = {
           documentation: 'Documentation',
           unitary: 'Sankey unitaire',
           unit: 'Unit.',
+          move_right: 'Passer dans la colonne de droite',
+          move_bottom: 'Passer dans le bandeau du bas',
+          close: 'Fermer',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Représentation du diagramme'
@@ -604,6 +610,9 @@ export const resources_spreadsheet = {
           documentation: 'Documentación',
           unitary: 'Sankey unitario',
           unit: 'Unit.',
+          move_right: 'Mover a la columna derecha',
+          move_bottom: 'Mover a la banda inferior',
+          close: 'Cerrar',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Representación del diagrama'
@@ -802,6 +811,9 @@ export const resources_spreadsheet = {
           documentation: 'Dokumentation',
           unitary: 'Unitäres Sankey',
           unit: 'Einh.',
+          move_right: 'In die rechte Spalte verschieben',
+          move_bottom: 'In das untere Band verschieben',
+          close: 'Schließen',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Darstellung des Diagramms'
@@ -1000,6 +1012,9 @@ export const resources_spreadsheet = {
           documentation: 'Documentazione',
           unitary: 'Sankey unitario',
           unit: 'Unit.',
+          move_right: 'Sposta nella colonna destra',
+          move_bottom: 'Sposta nella fascia inferiore',
+          close: 'Chiudi',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Rappresentazione del diagramma'
@@ -1204,6 +1219,9 @@ export const resources_spreadsheet = {
           documentation: '文档',
           unitary: '单位桑基图',
           unit: '单位图',
+          move_right: '移到右栏',
+          move_bottom: '移到底栏',
+          close: '关闭',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: '图表表示形式'
@@ -1408,6 +1426,9 @@ export const resources_spreadsheet = {
           documentation: '文書',
           unitary: '単位サンキー',
           unit: '単位',
+          move_right: '右の列へ移動',
+          move_bottom: '下の帯へ移動',
+          close: '閉じる',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: '図の表現形式'

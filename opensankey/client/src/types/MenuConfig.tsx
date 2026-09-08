@@ -73,6 +73,54 @@ export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
   ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
 // Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
 export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
+// (Les six dispositions ci-dessus ne sont plus qu'un format de LECTURE : cf. mainZoneStateFromJSON.)
+
+// os#1355/1361 — GRANDE ZONE À N OCCUPANTS. Un occupant est un id du registre des
+// représentations et une PLACE parmi trois piles — c'est tout ce que la disposition a
+// besoin de savoir pour se calculer :
+//  - 'main'   : la zone principale (le canevas SVG quand le diagramme est affiché) ;
+//  - 'right'  : une colonne à droite, occupants empilés VERTICALEMENT ;
+//  - 'bottom' : un bandeau en bas, occupants côte à côte.
+// `size` est un POIDS dans sa pile (normalisé à l'affichage), pas une fraction figée : ajouter
+// un occupant ne demande pas de recalculer les autres.
+export type Type_MainZonePlace = 'main' | 'right' | 'bottom'
+export type Type_MainZoneOccupant = { id: string, place: Type_MainZonePlace, size: number }
+export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom']
+// Les quatre occupants historiques, par leur id de registre. Nommés ici (et non dans le
+// registre) parce que la grande zone a besoin d'en reconnaître UN : le canevas, qui est le
+// SVG sous tout le reste et ne peut être que `main`.
+export const MAIN_ZONE_CANVAS_ID = 'os.repr.sankey'
+export const MAIN_ZONE_SPREADSHEET_ID = 'os.repr.spreadsheet'
+export const MAIN_ZONE_DOC_ID = 'os.repr.doc'
+export const MAIN_ZONE_UNITARY_ID = 'os.repr.unitary'
+// Noms courts des quatre occupants historiques dans le paramètre d'URL `rep` (sa#1354) :
+// les adresses déjà partagées les portent, et un id de registre y serait moins lisible.
+export const URL_MAIN_ZONE_SHORT_NAMES: { [id: string]: string } = {
+  [MAIN_ZONE_CANVAS_ID]: 'diagram',
+  [MAIN_ZONE_SPREADSHEET_ID]: 'spreadsheet',
+  [MAIN_ZONE_DOC_ID]: 'doc',
+  [MAIN_ZONE_UNITARY_ID]: 'unitary'
+}
+export const URL_MAIN_ZONE_LONG_NAMES: { [short: string]: string } = Object.fromEntries(
+  Object.entries(URL_MAIN_ZONE_SHORT_NAMES).map(([id, short]) => [short, id])
+)
+// Bornes de la colonne droite et de la zone principale (px). Une seule définition, lue par la
+// réserve du diagramme ET par la mise en page : les deux DOIVENT donner la même largeur, sinon
+// le dessin se recadre sur une colonne que l'écran ne montre pas.
+export const MAIN_ZONE_MIN_RIGHT_PX = 320
+export const MAIN_ZONE_MIN_MAIN_PX = 160
+export const MAIN_ZONE_MIN_BOTTOM_PX = 120
+/** Largeur (px) de la colonne droite pour une part `split_ratio` donnée à la zone principale. */
+export const mainZoneRightColumnWidthPx = (split_ratio: number): number => {
+  const W = window.innerWidth
+  let w = (1 - split_ratio) * W
+  w = Math.max(MAIN_ZONE_MIN_RIGHT_PX, w)
+  w = Math.min(w, Math.max(MAIN_ZONE_MIN_RIGHT_PX, W - MAIN_ZONE_MIN_MAIN_PX))
+  return w
+}
+/** Hauteur (px) du bandeau du bas pour une hauteur demandée, bornée par ce que l'écran laisse. */
+export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number): number =>
+  Math.min(Math.max(MAIN_ZONE_MIN_BOTTOM_PX, wanted_px), Math.max(MAIN_ZONE_MIN_BOTTOM_PX, content_h - MAIN_ZONE_MIN_BOTTOM_PX))
 // Sous-onglets du panneau Tableur : grille Univer ou vue JSON (lecture seule) du diagramme.
 // L'éditeur texte SankeyMATIC, lui, vit dans un dialogue dédié (ref_setter_show_sankeymatic_editor).
 export type Type_SheetMode = 'grid' | 'json'
@@ -228,41 +276,43 @@ export class Class_MenuConfig {
   public get tab_selected() { return this._tab_selected }
   public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
 
-  // Grande zone : diagramme et/ou tableur affichables simultanément (split view avec séparateur
-  // déplaçable). Deux booléens indépendants + ratio du séparateur (0..1 = part gauche/diagramme).
-  // Pub/sub pour partager l'état entre la barre du haut et l'overlay MainZoneTabs.
-  protected _main_zone_show_diagram: boolean = true
-  protected _main_zone_show_spreadsheet: boolean = false
-  // Onglet « Doc » : panneau de documentation markdown, partage le slot droit comme le tableur.
-  protected _main_zone_show_doc: boolean = false
-  // Doc détachée dans une fenêtre OS séparée : état TRANSITOIRE (non sérialisé), piloté par
-  // MainZoneTabs. Quand vrai, la doc ne réserve plus d'espace in-app (le diagramme récupère la place).
-  public main_zone_doc_detached: boolean = false
+  // ---------------------------------------------------------------------------------------
+  // GRANDE ZONE — os#1355/1361 : N OCCUPANTS venus du registre des représentations, plus
+  // quatre noms en dur.
+  //
+  // Jusqu'ici la grande zone connaissait quatre occupants nommés (diagramme, tableur, doc,
+  // unitaire), chacun avec son booléen, son ratio, son drapeau de détachement, et quatre
+  // dispositions rien que pour la doc. Le registre avait rendu l'AXE des représentations
+  // extensible ; l'ESPACE, lui, restait codé en dur — un sunburst enregistré n'avait nulle
+  // part où se dessiner. Ici, un occupant est un id du registre, et la disposition se
+  // CALCULE depuis la liste au lieu d'être écrite : afficher, c'est ajouter un id ; placer,
+  // c'est dire dans quelle pile il va ; détacher est une propriété de tout occupant.
+  //
+  // Les six dispositions historiques de la doc se ramènent aux trois piles à la lecture d'un
+  // fichier ancien (cf. mainZoneStateFromJSON) ; « doc à droite du tableur DANS la colonne »
+  // devient « doc sous le tableur » — simplification arbitrée (Julien, 08/09/2026).
+  //
+  // Une contrainte que le dessin impose : le diagramme (MAIN_ZONE_CANVAS_ID) est le canevas
+  // SVG sous tout le reste, et une drawing area ne sait que RÉSERVER à droite et en bas. Donc
+  // quand il est affiché, il est TOUJOURS l'occupant `main` ; un autre occupant ne prend
+  // `main` que si le diagramme est caché. `_normalizeMainZoneOccupants` le garantit après
+  // chaque mutation, plutôt que chaque appelant.
+  // ---------------------------------------------------------------------------------------
+  protected _main_zone_occupants: Type_MainZoneOccupant[] = [
+    { id: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }
+  ]
+  // Occupants DÉTACHÉS (fenêtre séparée ou dialogue flottant) : ils gardent leur place dans la
+  // liste — la refermer les ré-attache là où ils étaient — mais ne réservent plus d'espace.
+  // État TRANSITOIRE : une fenêtre détachée ne survit pas au fichier.
+  protected _main_zone_detached: Set<string> = new Set()
   // Document EXTERNE affiché à la place de la documentation du diagramme : présentation d'une
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
   protected _doc_external: { title: string, markdown: string } | null = null
-  // Position de la doc dans la grande zone (cf. Type_MainZoneDocLayout).
-  protected _main_zone_doc_layout: Type_MainZoneDocLayout = 'sheet-right'
-  // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
-  protected _main_zone_doc_bottom_px: number = 280
-  protected _main_zone_split_ratio: number = 2 / 3 // part gauche/diagramme -> tableur = 1/3
-  // Part de la colonne droite donnée au TABLEUR quand la doc est accolée (modes sheet-*) ; la doc
-  // occupe le reste. Réglée par le séparateur tableur/doc. Vaut pour l'axe horizontal (sheet-left/
-  // right) comme vertical (sheet-top/bottom).
-  protected _main_zone_doc_sheet_ratio: number = 0.5
-  // Panneau « Sankey unitaire » (feature OS+) : partage la colonne de droite avec le tableur/doc, en
-  // s'empilant DESSOUS (séparateur horizontal). Booléen d'affichage + part VERTICALE de la colonne
-  // droite donnée au groupe tableur/doc (l'unitaire occupe le reste). Le CONTENU du panneau est rendu
-  // par OS+ (porté vers document.body, hors #sankey_app, cf. ModalUnitarySankeyOSP) et positionné sur
-  // le bloc réservé ici via mainZoneUnitaryRect ; OS de base ne fait que réserver/empiler l'espace.
-  protected _main_zone_show_unitary: boolean = false
-  protected _main_zone_unitary_ratio: number = 0.6
-  // Panneau unitaire DÉTACHÉ en dialogue flottant (draggable) au lieu d'être docké dans la colonne
-  // droite. État TRANSITOIRE (non sérialisé), piloté par le bouton détacher/rattacher du panneau.
-  // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
-  // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
-  protected _main_zone_unitary_detached: boolean = false
+  // Part de la largeur donnée à la zone principale face à la colonne droite (0..1).
+  protected _main_zone_split_ratio: number = 2 / 3
+  // Hauteur (px) du bandeau du bas, réglée par sa poignée.
+  protected _main_zone_bottom_px: number = 280
   // Sous-onglet courant du Tableur (grille/JSON). Porté ici et non par un useState de
   // SpreadsheetPanel : le panneau est démonté quand le tableur est fermé, donc un état local
   // repartirait toujours sur 'grid'. État TRANSITOIRE : volontairement absent de
@@ -429,31 +479,159 @@ export class Class_MenuConfig {
     // réserve du filtre.
     return this.getToolsColumnWidthPx() + this.panels.getSidebarReservedPx()
   }
-  public get main_zone_show_diagram() { return this._main_zone_show_diagram }
-  public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
-  public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
-  public set main_zone_show_spreadsheet(v: boolean) { this._main_zone_show_spreadsheet = v; this._notifyMainZone() }
-  public get main_zone_show_doc() { return this._main_zone_show_doc }
-  public set main_zone_show_doc(v: boolean) { this._main_zone_show_doc = v; this._notifyMainZone() }
+  // --- Occupants de la grande zone (os#1355/1361) -----------------------------------------
+
+  /** Les occupants dans l'ordre des piles. COPIE : les mutations passent par les méthodes. */
+  public get main_zone_occupants(): Type_MainZoneOccupant[] {
+    return this._main_zone_occupants.map(o => ({ ...o }))
+  }
+  public isMainZoneOccupant(id: string): boolean {
+    return this._main_zone_occupants.some(o => o.id === id)
+  }
+  /** Occupants EFFECTIFS d'une pile : présents et non détachés (un détaché ne réserve rien). */
+  public mainZoneOccupantsIn(place: Type_MainZonePlace): Type_MainZoneOccupant[] {
+    return this._main_zone_occupants
+      .filter(o => o.place === place && !this._main_zone_detached.has(o.id))
+      .map(o => ({ ...o }))
+  }
+  /** L'occupant principal, ou null (jamais après normalisation, sauf liste vide transitoire). */
+  public get main_zone_main_id(): string | null {
+    return this._main_zone_occupants.find(o => o.place === 'main')?.id ?? null
+  }
+  public mainZonePlaceOf(id: string): Type_MainZonePlace | null {
+    return this._main_zone_occupants.find(o => o.id === id)?.place ?? null
+  }
+
+  /**
+   * Affiche un occupant. Sans `place`, il va en `main` si la zone principale est libre, sinon
+   * dans la colonne droite — c'est le geste « ouvrir » de la barre du haut. Déjà présent : ne
+   * change de place que si on la demande.
+   */
+  public showMainZoneOccupant(id: string, place?: Type_MainZonePlace): void {
+    const existing = this._main_zone_occupants.find(o => o.id === id)
+    if (existing) {
+      if (place && existing.place !== place) existing.place = place
+    } else {
+      const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
+      // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
+      const peers = this._main_zone_occupants.filter(o => o.place === wanted)
+      const size = peers.length > 0 ? peers.reduce((s, o) => s + o.size, 0) / peers.length : 1
+      this._main_zone_occupants.push({ id, place: wanted, size })
+    }
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+  /**
+   * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
+   * rien pour se rallumer que le bouton qu'on vient de cliquer. Un occupant `main` qui part
+   * cède la place au premier de la colonne droite (cf. normalisation).
+   */
+  public hideMainZoneOccupant(id: string): boolean {
+    if (this._main_zone_occupants.length <= 1 && this.isMainZoneOccupant(id)) return false
+    this._main_zone_occupants = this._main_zone_occupants.filter(o => o.id !== id)
+    this._main_zone_detached.delete(id)
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+    return true
+  }
+  public toggleMainZoneOccupant(id: string): void {
+    if (this.isMainZoneOccupant(id)) this.hideMainZoneOccupant(id)
+    else this.showMainZoneOccupant(id)
+  }
+  public setMainZoneOccupantPlace(id: string, place: Type_MainZonePlace): void {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o || o.place === place) return
+    o.place = place
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+  /** Remplace la liste (état d'URL, vue) : les places se calculent, l'ordre donné est conservé. */
+  public setMainZoneOccupantIds(ids: string[]): void {
+    const kept = new Map(this._main_zone_occupants.map(o => [o.id, o]))
+    this._main_zone_occupants = []
+    ids.forEach(id => {
+      const prev = kept.get(id)
+      this._main_zone_occupants.push(prev ? { ...prev } : { id, place: 'right', size: 1 })
+    })
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+  /** Poids des occupants d'une pile, écrits par ses poignées de redimensionnement. */
+  public setMainZoneStackSizes(sizes: { [id: string]: number }): void {
+    this._main_zone_occupants.forEach(o => {
+      const s = sizes[o.id]
+      if (typeof s === 'number' && Number.isFinite(s) && s > 0) o.size = s
+    })
+    this._notifyMainZone()
+  }
+  public isMainZoneDetached(id: string): boolean { return this._main_zone_detached.has(id) }
+  public setMainZoneDetached(id: string, detached: boolean): void {
+    if (detached === this._main_zone_detached.has(id)) return
+    if (detached) this._main_zone_detached.add(id)
+    else this._main_zone_detached.delete(id)
+    this._notifyMainZone()
+  }
+  /**
+   * L'invariant de la grande zone, rétabli après chaque mutation : au moins un occupant ;
+   * exactement un `main` ; le canevas, s'il est là, EST ce `main` (contrainte du SVG, cf. en-
+   * tête) ; pas de doublon ; des poids finis et positifs.
+   */
+  protected _normalizeMainZoneOccupants(): void {
+    const seen = new Set<string>()
+    let list = this._main_zone_occupants.filter(o => {
+      if (seen.has(o.id) || !MAIN_ZONE_PLACES.includes(o.place)) return false
+      seen.add(o.id)
+      return true
+    })
+    if (list.length === 0) list = [{ id: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
+    const canvas = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
+    if (canvas) {
+      list.forEach(o => { if (o.place === 'main' && o !== canvas) o.place = 'right' })
+      canvas.place = 'main'
+    } else {
+      const mains = list.filter(o => o.place === 'main')
+      if (mains.length === 0) {
+        const promoted = list.find(o => o.place === 'right') ?? list[0]
+        promoted.place = 'main'
+      } else mains.slice(1).forEach(o => { o.place = 'right' })
+    }
+    list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
+    this._main_zone_occupants = list
+  }
+
+  // --- Compatibilité : les quatre occupants historiques par leur ancien nom -----------------
+  // Conservés parce que dix appelants (OS+, éditeur, état d'URL) les écrivent encore, et que
+  // le geste qu'ils expriment — « montre le tableur » — est exactement `showMainZoneOccupant`.
+  public get main_zone_show_diagram() { return this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID) }
+  public set main_zone_show_diagram(v: boolean) {
+    if (v) this.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID); else this.hideMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
+  }
+  public get main_zone_show_spreadsheet() { return this.isMainZoneOccupant(MAIN_ZONE_SPREADSHEET_ID) }
+  public set main_zone_show_spreadsheet(v: boolean) {
+    if (v) this.showMainZoneOccupant(MAIN_ZONE_SPREADSHEET_ID); else this.hideMainZoneOccupant(MAIN_ZONE_SPREADSHEET_ID)
+  }
+  public get main_zone_show_doc() { return this.isMainZoneOccupant(MAIN_ZONE_DOC_ID) }
+  public set main_zone_show_doc(v: boolean) {
+    if (v) this.showMainZoneOccupant(MAIN_ZONE_DOC_ID); else this.hideMainZoneOccupant(MAIN_ZONE_DOC_ID)
+  }
+  public get main_zone_show_unitary() { return this.isMainZoneOccupant(MAIN_ZONE_UNITARY_ID) }
+  public set main_zone_show_unitary(v: boolean) {
+    if (v) this.showMainZoneOccupant(MAIN_ZONE_UNITARY_ID); else this.hideMainZoneOccupant(MAIN_ZONE_UNITARY_ID)
+  }
+  public get main_zone_doc_detached() { return this.isMainZoneDetached(MAIN_ZONE_DOC_ID) }
+  public set main_zone_doc_detached(v: boolean) { this.setMainZoneDetached(MAIN_ZONE_DOC_ID, v) }
+  public get main_zone_unitary_detached() { return this.isMainZoneDetached(MAIN_ZONE_UNITARY_ID) }
+  public set main_zone_unitary_detached(v: boolean) { this.setMainZoneDetached(MAIN_ZONE_UNITARY_ID, v) }
+
   public get doc_external() { return this._doc_external }
   public set doc_external(v: { title: string, markdown: string } | null) {
     this._doc_external = v
     this._notifyMainZone()
   }
-  public get main_zone_doc_layout() { return this._main_zone_doc_layout }
-  public set main_zone_doc_layout(v: Type_MainZoneDocLayout) { this._main_zone_doc_layout = v; this._notifyMainZone() }
-  public get main_zone_doc_bottom_px() { return this._main_zone_doc_bottom_px }
-  public set main_zone_doc_bottom_px(v: number) { this._main_zone_doc_bottom_px = v; this._notifyMainZone() }
   public get main_zone_split_ratio() { return this._main_zone_split_ratio }
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
-  public get main_zone_doc_sheet_ratio() { return this._main_zone_doc_sheet_ratio }
-  public set main_zone_doc_sheet_ratio(v: number) { this._main_zone_doc_sheet_ratio = v; this._notifyMainZone() }
-  public get main_zone_show_unitary() { return this._main_zone_show_unitary }
-  public set main_zone_show_unitary(v: boolean) { this._main_zone_show_unitary = v; this._notifyMainZone() }
-  public get main_zone_unitary_ratio() { return this._main_zone_unitary_ratio }
-  public set main_zone_unitary_ratio(v: number) { this._main_zone_unitary_ratio = v; this._notifyMainZone() }
-  public get main_zone_unitary_detached() { return this._main_zone_unitary_detached }
-  public set main_zone_unitary_detached(v: boolean) { this._main_zone_unitary_detached = v; this._notifyMainZone() }
+  public get main_zone_bottom_px() { return this._main_zone_bottom_px }
+  public set main_zone_bottom_px(v: number) { this._main_zone_bottom_px = v; this._notifyMainZone() }
   public get main_zone_spreadsheet_mode() { return this._main_zone_spreadsheet_mode }
   public set main_zone_spreadsheet_mode(v: Type_SheetMode) { this._main_zone_spreadsheet_mode = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
@@ -499,85 +677,103 @@ export class Class_MenuConfig {
   public level_selection_applier: ((tagg_id: string, tag_id: string) => void) | null = null
   public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
   /**
-   * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
-   * vérité : calculée à partir de l'état (booléens + ratio) et de window.innerWidth, donc valable
-   * pour N'IMPORTE quelle drawing area (maître ou vue recréée à la volée) sans état par instance.
-   * Cf. MainZoneTabs (spreadsheetWidthPx) pour la disposition de l'overlay.
+   * Largeur (px) réservée à droite par la colonne d'occupants (chrome droit compris). Source
+   * unique de vérité : calculée depuis les occupants et window.innerWidth, donc valable pour
+   * N'IMPORTE quelle drawing area (maître ou vue recréée à la volée) sans état par instance.
+   * La mise en page (MainZoneTabs) lit la même `mainZoneRightColumnWidthPx`.
    */
   public getMainZoneRightReservedPx(): number {
-    // La colonne de droite n'existe que si le tableur est affiché, OU si la doc est en mode « accolée
-    // au tableur » (sheet-*). En mode bas (diagram-bottom / window-bottom) la doc ne réserve pas de
-    // largeur à droite.
-    const docInRightColumn = this._main_zone_show_doc && !this.main_zone_doc_detached &&
-      DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
-    // Le panneau unitaire (OS+) s'empile dans la colonne droite : il la fait exister à lui seul,
-    // SAUF s'il est détaché en dialogue flottant (il ne réserve alors plus d'espace).
-    const unitaryDocked = this._main_zone_show_unitary && !this._main_zone_unitary_detached
-    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
-    // Le chrome droit (colonne d'outils + panneau de config épinglé #1243) s'ajoute toujours à la
-    // réserve (qu'il y ait ou non un tableur/doc) : il occupe l'extrême droite et le tableur/doc se
-    // décale d'autant vers la gauche (cf. MainZoneTabs).
+    // Le chrome droit (colonne d'outils + barre latérale) se réserve toujours : il occupe
+    // l'extrême droite et la colonne d'occupants se décale d'autant vers la gauche.
     const tools = this.getRightChromeReservedPx()
-    if (!(this._main_zone_show_diagram && rightColumnShown)) return tools
-    const MIN_SPREADSHEET_PX = 320
-    const MIN_DIAGRAM_PX = 160
-    const W = window.innerWidth
-    let w = (1 - this._main_zone_split_ratio) * W
-    w = Math.max(MIN_SPREADSHEET_PX, w)
-    w = Math.min(w, Math.max(MIN_SPREADSHEET_PX, W - MIN_DIAGRAM_PX))
-    return w + tools
+    // La colonne droite n'existe que si quelque chose y vit ET qu'une zone principale la borde ;
+    // un occupant détaché n'y compte pas (cf. mainZoneOccupantsIn).
+    if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('right').length === 0) return tools
+    return mainZoneRightColumnWidthPx(this._main_zone_split_ratio) + tools
   }
 
   /**
-   * Hauteur (px) réservée en bas pour la doc quand elle est en mode bas (diagram-bottom / window-
-   * bottom). Symétrique de getMainZoneRightReservedPx : lue par window_fitting_height de toute
-   * drawing area, donc le diagramme se recadre dans la hauteur restante. 0 dans les autres cas.
+   * Hauteur (px) réservée en bas par le bandeau d'occupants. Symétrique de la réserve droite :
+   * lue par window_fitting_height de toute drawing area, donc le diagramme se recadre dans la
+   * hauteur restante. 0 sans bandeau.
    */
   public getMainZoneBottomReservedPx(): number {
-    if (!(this._main_zone_show_diagram && this._main_zone_show_doc && !this.main_zone_doc_detached)) return 0
-    if (!DOC_LAYOUTS_BOTTOM.includes(this._main_zone_doc_layout)) return 0
-    const MIN_DOC_PX = 120
-    const MIN_DIAGRAM_PX = 120
-    const H = window.innerHeight
-    let h = this._main_zone_doc_bottom_px
-    h = Math.max(MIN_DOC_PX, h)
-    h = Math.min(h, Math.max(MIN_DOC_PX, H - MIN_DIAGRAM_PX))
-    return h
+    if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('bottom').length === 0) return 0
+    return mainZoneBottomBandHeightPx(this._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX)
   }
+
   /**
-   * Sérialise l'état d'affichage de la grande zone (panneaux diagramme / tableur / doc visibles,
-   * position de la doc, ratios) pour le persister dans le JSON du diagramme. Restauré par
-   * mainZoneStateFromJSON au chargement.
+   * Sérialise l'état de la grande zone (clé `main_zone` du fichier). Les occupants vont dans un
+   * DICTIONNAIRE indexé par id — la seule forme d'objet que `Type_JSON` sait porter — avec leur
+   * rang, puisque l'ordre des piles compte et que l'ordre des clés JSON n'est pas un contrat.
    */
   public mainZoneStateToJSON(): Type_JSON {
+    const occupants: Type_JSON = {}
+    this._main_zone_occupants.forEach((o, order) => {
+      occupants[o.id] = { place: o.place, size: o.size, order }
+    })
     return {
-      show_diagram: this._main_zone_show_diagram,
-      show_spreadsheet: this._main_zone_show_spreadsheet,
-      show_doc: this._main_zone_show_doc,
-      doc_layout: this._main_zone_doc_layout,
-      doc_bottom_px: this._main_zone_doc_bottom_px,
+      occupants,
       split_ratio: this._main_zone_split_ratio,
-      doc_sheet_ratio: this._main_zone_doc_sheet_ratio,
-      show_unitary: this._main_zone_show_unitary,
-      unitary_ratio: this._main_zone_unitary_ratio
+      bottom_px: this._main_zone_bottom_px
     }
   }
 
   /**
-   * Restaure l'état d'affichage de la grande zone depuis le JSON (clé `main_zone`). Les champs
-   * absents conservent la valeur courante. Notifie les abonnés (barre du haut + MainZoneTabs).
+   * Restaure l'état de la grande zone depuis le JSON (clé `main_zone`).
+   *
+   * Deux formats lus. Le courant (`occupants`), et l'ANCIEN — quatre booléens, six dispositions
+   * de doc, trois ratios — ramené aux trois piles : la doc « accolée au tableur » va sous lui
+   * dans la colonne droite (avant lui pour sheet-top/left), la doc « en bas » va au bandeau, et
+   * les ratios historiques deviennent des poids de pile. Un fichier ancien s'ouvre donc comme
+   * avant, à la simplification près qu'on a arbitrée.
    */
   public mainZoneStateFromJSON(json: Type_JSON) {
-    this._main_zone_show_diagram = getBooleanFromJSON(json, 'show_diagram', this._main_zone_show_diagram)
-    this._main_zone_show_spreadsheet = getBooleanFromJSON(json, 'show_spreadsheet', this._main_zone_show_spreadsheet)
-    this._main_zone_show_doc = getBooleanFromJSON(json, 'show_doc', this._main_zone_show_doc)
-    const layout = getStringFromJSON(json, 'doc_layout', this._main_zone_doc_layout) as Type_MainZoneDocLayout
-    if ([...DOC_LAYOUTS_WITH_SHEET, ...DOC_LAYOUTS_BOTTOM].includes(layout)) this._main_zone_doc_layout = layout
-    this._main_zone_doc_bottom_px = getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_doc_bottom_px)
+    const raw = json['occupants']
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      const entries = Object.entries(raw as Type_JSON)
+        .map(([id, v]) => {
+          const e = (v && typeof v === 'object' && !Array.isArray(v)) ? v as Type_JSON : {}
+          const place = getStringFromJSON(e, 'place', 'right') as Type_MainZonePlace
+          return {
+            id,
+            place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
+            size: getNumberFromJSON(e, 'size', 1),
+            order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER)
+          }
+        })
+        .sort((a, b) => a.order - b.order)
+      this._main_zone_occupants = entries.map(({ id, place, size }) => ({ id, place, size }))
+    } else if ('show_diagram' in json || 'show_spreadsheet' in json || 'show_doc' in json || 'show_unitary' in json) {
+      const show_diagram = getBooleanFromJSON(json, 'show_diagram', true)
+      const show_sheet = getBooleanFromJSON(json, 'show_spreadsheet', false)
+      const show_doc = getBooleanFromJSON(json, 'show_doc', false)
+      const show_unit = getBooleanFromJSON(json, 'show_unitary', false)
+      const layout = getStringFromJSON(json, 'doc_layout', 'sheet-right') as Type_MainZoneDocLayout
+      const unitary_ratio = getNumberFromJSON(json, 'unitary_ratio', 0.6)
+      const doc_sheet_ratio = getNumberFromJSON(json, 'doc_sheet_ratio', 0.5)
+      const doc_bottom = DOC_LAYOUTS_BOTTOM.includes(layout)
+      const doc_in_column = show_doc && !doc_bottom
+      // Le groupe tableur/doc avait `unitary_ratio` de la colonne, l'unitaire le reste ; dans le
+      // groupe, le tableur avait `doc_sheet_ratio`. Les poids reproduisent ces parts.
+      const group = show_unit ? unitary_ratio : 1
+      const sheet_size = doc_in_column ? group * doc_sheet_ratio : group
+      const doc_size = show_sheet ? group * (1 - doc_sheet_ratio) : group
+      const list: Type_MainZoneOccupant[] = []
+      if (show_diagram) list.push({ id: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 })
+      const doc_first = layout === 'sheet-top' || layout === 'sheet-left'
+      if (doc_in_column && doc_first) list.push({ id: MAIN_ZONE_DOC_ID, place: 'right', size: doc_size })
+      if (show_sheet) list.push({ id: MAIN_ZONE_SPREADSHEET_ID, place: 'right', size: sheet_size })
+      if (doc_in_column && !doc_first) list.push({ id: MAIN_ZONE_DOC_ID, place: 'right', size: doc_size })
+      if (show_unit) list.push({ id: MAIN_ZONE_UNITARY_ID, place: 'right', size: 1 - unitary_ratio })
+      if (show_doc && doc_bottom) list.push({ id: MAIN_ZONE_DOC_ID, place: 'bottom', size: 1 })
+      this._main_zone_occupants = list
+    }
+    this._normalizeMainZoneOccupants()
     this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
-    this._main_zone_doc_sheet_ratio = getNumberFromJSON(json, 'doc_sheet_ratio', this._main_zone_doc_sheet_ratio)
-    this._main_zone_show_unitary = getBooleanFromJSON(json, 'show_unitary', this._main_zone_show_unitary)
-    this._main_zone_unitary_ratio = getNumberFromJSON(json, 'unitary_ratio', this._main_zone_unitary_ratio)
+    this._main_zone_bottom_px = getNumberFromJSON(
+      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_bottom_px)
+    )
     this._notifyMainZone()
   }
 
@@ -1026,7 +1222,7 @@ export class Class_MenuConfig {
     // légende, stock…) : on la neutralise si le tableur est affiché, sinon elle
     // le refermerait (colonne droite partagée). L'ouverture MANUELLE passe par
     // setConfigOpen (bouton) et reste possible — elle ferme alors le tableur.
-    if (this._main_zone_show_spreadsheet) return
+    if (this.main_zone_show_spreadsheet) return
     if (
       this._ref_menu_opened.current &&
       this._ref_menu_opened.current[0] === false
