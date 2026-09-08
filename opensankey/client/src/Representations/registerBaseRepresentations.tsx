@@ -12,39 +12,42 @@
 
 // OS#1361 (D0) — Représentations de BASE, échelle DIAGRAMME.
 //
-// Les trois que la grande zone monte déjà (Sankey, Tableur, Doc) plus le Sankey
-// unitaire d'OS+ : elles existaient, câblées une par une dans
+// Les trois que la grande zone montait déjà (Sankey, Tableur, Doc) plus le
+// Sankey unitaire d'OS+ : elles existaient, câblées une par une dans
 // `TopBarStateButtons` (MenuTop). Les enregistrer ici ne change RIEN à leur
-// rendu — elles gardent leur hôte React — mais les fait exister comme entrées
-// de l'axe « représentation », donc comme quelque chose qu'une publication peut
+// rendu — elles gardent leur hôte — mais les fait exister comme entrées de
+// l'axe « représentation », donc comme quelque chose qu'une publication peut
 // offrir ou retirer, et qu'un sélecteur peut énumérer sans les connaître.
 //
-// D'où la forme `toggle` : le registre les allume, il ne les dessine pas. La
-// règle « garder au moins un panneau affiché » reste à l'hôte — c'est une
-// contrainte de mise en page, pas du modèle.
+// os#1355 — D'où la forme `host` : le registre les NOMME, la grande zone les
+// cadre comme n'importe quel occupant (cf. `menu_configuration.main_zone_*`).
+// La règle « garder au moins un occupant » vit dans le modèle de la grande
+// zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
 import { FaProjectDiagram, FaTable, FaFileAlt, FaShareAlt, FaBullseye } from 'react-icons/fa'
 import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
+import {
+  MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_UNITARY_ID
+} from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
 
 export const registerBaseRepresentations = (): void => {
   representation_registry.register({
-    id: 'os.repr.sankey',
+    id: MAIN_ZONE_CANVAS_ID,
     scale: 'diagram',
     order: 10,
     label: (a) => a.t('Spreadsheet.zone.diagram'),
     icon: <FaProjectDiagram />,
-    toggle: {
-      isActive: (a) => a.menu_configuration.main_zone_show_diagram,
-      setActive: (a, on) => { a.menu_configuration.main_zone_show_diagram = on }
-    }
+    // Le SVG sous tout le reste : la grande zone lui réserve ce que les autres
+    // occupants ne prennent pas, et c'est tout ce qu'il lui faut.
+    host: 'canvas'
   })
 
   representation_registry.register({
-    id: 'os.repr.spreadsheet',
+    id: MAIN_ZONE_SPREADSHEET_ID,
     scale: 'diagram',
     order: 20,
     label: (a) => a.t('Spreadsheet.zone.spreadsheet'),
@@ -56,14 +59,11 @@ export const registerBaseRepresentations = (): void => {
     // altérer. Et plomber Univer interdirait du même coup les gestes qui font
     // l'intérêt du tableur pour un lecteur : trier une colonne, copier une
     // plage. Le trou n'est pas un oubli, ne le bouchez pas.
-    toggle: {
-      isActive: (a) => a.menu_configuration.main_zone_show_spreadsheet,
-      setActive: (a, on) => { a.menu_configuration.main_zone_show_spreadsheet = on }
-    }
+    host: 'component'
   })
 
   representation_registry.register({
-    id: 'os.repr.doc',
+    id: MAIN_ZONE_DOC_ID,
     scale: 'diagram',
     order: 30,
     label: (a) => a.t('Spreadsheet.zone.doc'),
@@ -80,14 +80,11 @@ export const registerBaseRepresentations = (): void => {
       !app_data.is_static ||
       app_data.documentation_markdown !== '' ||
       app_data.menu_configuration.doc_external !== null,
-    toggle: {
-      isActive: (a) => a.menu_configuration.main_zone_show_doc,
-      setActive: (a, on) => { a.menu_configuration.main_zone_show_doc = on }
-    }
+    host: 'component'
   })
 
   representation_registry.register({
-    id: 'os.repr.unitary',
+    id: MAIN_ZONE_UNITARY_ID,
     scale: 'diagram',
     order: 40,
     label: (a) => a.t('Spreadsheet.zone.unitary'),
@@ -98,10 +95,9 @@ export const registerBaseRepresentations = (): void => {
     // existe dans le registre mais n'est jamais proposée : c'est exactement ce
     // que fait déjà le bouton « Unit. » de la barre du haut.
     gate: (a) => a.menu_configuration.unitary_tab_available,
-    toggle: {
-      isActive: (a) => a.menu_configuration.main_zone_show_unitary,
-      setActive: (a, on) => { a.menu_configuration.main_zone_show_unitary = on }
-    }
+    // Porté vers document.body par OS+ (hors #sankey_app, pour survivre au redraw
+    // du diagramme) et positionné sur le cadre que la grande zone lui réserve.
+    host: 'external'
   })
 
   // os#1363 — Sunburst. Première entrée en forme `draw` à l'échelle diagramme :

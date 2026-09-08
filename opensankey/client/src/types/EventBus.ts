@@ -15,6 +15,15 @@
 export const MAIN_ZONE_TOPIC = 'main_zone'
 
 /**
+ * os#1361 — Topic « le diagramme vient d'être dessiné ». Notifié en fin de
+ * `DrawingArea.draw()`, donc à chaque changement de coordonnées effectivement
+ * rendu (dataTag, niveau, couche, vue). Abonnés : les occupants `draw` de la
+ * grande zone (sunburst, camembert, histogramme), qui lisent les mêmes données
+ * que le dessin et se redessinent sur place au lieu d'être démontés.
+ */
+export const DRAW_TOPIC = 'draw'
+
+/**
  * #1243 — Topic « composition de la sélection » (add/remove/purge d'éléments).
  * Notifié par Class_MenuConfig.updateInspector(), donc à chaque changement de
  * sélection. Contrairement aux slots ref (un seul titulaire), ce topic accepte
