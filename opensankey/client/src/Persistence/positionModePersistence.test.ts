@@ -145,17 +145,19 @@ describe('#369 — le mode restitué est ARMÉ, pas appliqué à l\'ouverture', 
     expect(app.drawing_area.is_position_mode_suspended).toBe(false)
   })
 
-  it('#384 — CHOISIR « échelle adaptée » l\'arme aussi, au lieu de l\'appliquer tout de suite', () => {
-    // Retour du test local : passer la dimension en « échelle adaptée » déplaçait les nœuds
-    // (recalage d'affichage par colonne) alors qu'aucune donnée n'avait changé. La règle du
-    // premier rendu du #369 ne valait que pour l'OUVERTURE ; elle vaut tout autant pour le
-    // choix explicite au sélecteur : le mode gouverne le changement de datatag, pas l'instant
-    // où on le choisit.
+  it('os#1383 — CHOISIR « échelle adaptée » l\'applique tout de suite, et lève l\'armement d\'ouverture', () => {
+    // #384 armait le mode au choix explicite parce que l'appliquer déplaçait les nœuds : le
+    // recalage d'affichage de `resolveScaleAdaptedOverlaps` finissait dans les centres. Il est
+    // désormais tracé et défait avant toute capture (cf. nodeDisplayShift.test) ; ce qui restait
+    // de l'armement, c'était un sélecteur qui ne « prenait » que dans un sens. L'OUVERTURE d'un
+    // fichier garde son armement propre (test précédent) ; le choix, lui, le lève.
     const app = new Class_ApplicationData(false)
-    expect(app.drawing_area.is_position_mode_suspended).toBe(false)
+    app.drawing_area.suspendPositionModeUntilDataChange()   // comme après une ouverture
+    expect(app.drawing_area.is_position_mode_suspended).toBe(true)
     app.drawing_area.setScaleAdaptedMode()
     expect(app.drawing_area.sankey.default_style.shape_position_type).toBe('scale_adapted')
-    expect(app.drawing_area.is_position_mode_suspended).toBe(true)
+    expect(app.drawing_area.is_position_mode_suspended).toBe(false)
+    expect(app.drawing_area.effective_position_mode).toBe('scale_adapted')
   })
 })
 

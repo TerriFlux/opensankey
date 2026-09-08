@@ -454,8 +454,9 @@ export class NodePositioningScaleAdapted {
    * traînerait d'un datatag/viewtag à l'autre. No-op si `dy` nul.
    */
   private shiftNodeY(n: Class_NodeElement, dy: number) {
-    if (!dy) return
-    n.position_y += dy
+    // os#1383 — poussée d'AFFICHAGE enregistrée sur le nœud : défaite avant toute capture du
+    // centre, annulée par toute dérivation. Elle ne peut plus fuir dans la vérité du nœud.
+    n.pushDisplayShiftY(dy)
   }
 
   /**

@@ -1902,6 +1902,11 @@ export class Class_ApplicationData {
       const mode = opts.position_mode
       const applyMode = (da: Class_DrawingArea | undefined) => {
         if (!da) return
+        // os#1383 — Le mode d'affichage est celui de la DIMENSION pilotée (#370) : on le pose
+        // aussi sur les dimensions affichées. Sans quoi chaque changement de datatag rejouait le
+        // mode du FICHIER (`applyPositionModeToDrawing`, sur le groupe) avant que la prop ne
+        // repose le sien : deux bascules muettes par sélection — et deux « settle » des centres.
+        da.sankey.data_taggs_list.forEach(g => { if (g.banner !== 'none') g.position_mode = mode })
         if (da.sankey.styles_dict['default'].shape_position_type === mode) return
         if (mode === 'absolute') da.setAbsoluteMode()
         else if (mode === 'proportional') da.setProportionalMode()

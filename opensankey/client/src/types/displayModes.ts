@@ -34,7 +34,13 @@ import type { Class_DrawingArea } from './DrawingArea'
  */
 function settleCentersIfLaidOut(da: Class_DrawingArea) {
   if (!da.has_been_laid_out) return
-  da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+  // os#1383 — jamais sur un nœud MASQUÉ : sa hauteur rendue ne veut rien dire (ses flux sont
+  // masqués, la bande vaut son plancher de 2-3 px), et « centre = coin + hauteur/2 » y détruit
+  // le centre d'une demi-hauteur réelle. Mesuré sur CARTOFOB : Prélèvements (Douglas), masqué
+  // dans la vue agrégée, centre 353 → 143 à la bascule — puis dessiné 210 px trop haut dans sa
+  // vue. Un nœud masqué garde son centre ; son coin sera redérivé quand il réapparaîtra
+  // (`anchorByCenterIfResized`, taille changée).
+  da.sankey.nodes_list.forEach(n => { if (n.is_visible) n.settleCenterAnchor() })
 }
 
 // #369 — Choisir un mode est un geste EXPLICITE : il lève la suspension d'ouverture (qui fait
@@ -132,12 +138,16 @@ export function setScaleAdaptedMode(da: Class_DrawingArea, redraw: boolean = tru
   // `withBypassRedraws(…, false)` neutralise donc ces dessins unitaires — l'affectation, elle,
   // a bien lieu. Même geste que `setParametricMode`, qui enveloppe tout son corps.
   da.withBypassRedraws(() => { default_style.shape_position_type = 'scale_adapted' }, false)
-  // #384 — CHOISIR le mode ne change rien au diagramme : il est ARMÉ, pas appliqué, et ne se
-  // fait sentir qu'au premier changement de datatag — ce qu'il gouverne. C'est la règle du
-  // premier rendu du #369, jusqu'ici réservée à l'OUVERTURE d'un fichier ; elle vaut tout
-  // autant pour le choix explicite au sélecteur. Appliquer dès l'entrée déplaçait les nœuds
-  // (recalage d'affichage de `resolveScaleAdaptedOverlaps`) sans qu'aucune donnée ait changé.
-  da.suspendPositionModeUntilDataChange()
+  // os#1383 — CHOISIR le mode l'APPLIQUE. La règle #384 (« armé, pas appliqué, jusqu'au premier
+  // changement de datatag ») protégeait de deux choses qui n'existent plus : la capture d'une
+  // référence sur la frame d'entrée (la référence est désormais énoncée ou dérivée de l'échelle
+  // de BASE, cf. `applyAdaptedScale`), et le recalage d'affichage de `resolveScaleAdaptedOverlaps`
+  // qui, faute d'être défait, finissait dans les centres (il est désormais tracé et défait
+  // avant toute capture, cf. `NodeBase.pushDisplayShiftY`). Ce qui restait de l'armement, c'est
+  // un sélecteur qui ne « prend » que dans un sens — absolu → adapté ne faisait rien à l'écran.
+  // L'ouverture d'un fichier garde son armement propre (SankeyPersistence, positionModeOnLoad) :
+  // ici on le lève, comme le font les autres setters de mode.
+  da.clearPositionModeSuspension()
   // La référence est l'état AFFICHÉ à l'entrée du mode. Capturée ici (et rafraîchie à chaque
   // frame tant que le mode reste armé, cf. drawElements) : sans cela, la capture paresseuse
   // n'aurait lieu qu'à la première frame APPLIQUÉE, donc déjà au datatag suivant — d'où un
