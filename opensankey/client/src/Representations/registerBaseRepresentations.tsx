@@ -25,7 +25,8 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaShareAlt } from 'react-icons/fa'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaShareAlt, FaBullseye } from 'react-icons/fa'
+import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
@@ -99,9 +100,22 @@ export const registerBaseRepresentations = (): void => {
     host: 'external'
   })
 
-  // os#1363 — Le sunburst n'est PAS déclaré à l'échelle diagramme (arbitrage Julien,
-  // 08/09/2026) : camembert, histogramme, sunburst, unitaire sont des variantes de
-  // représentation d'UN NŒUD ou d'UN FLUX, pas des statistiques sur le diagramme entier.
-  // Le module (`SunburstRepresentation`, avec son `root_ids`) attend la fenêtre à sujet
-  // pointé — cf. NOTE-FENETRES-ET-POINTAGE.md — pour se poser sur un nœud.
+  // os#1363 / os#1387 — Le sunburst est une représentation d'UN NŒUD (arbitrage Julien,
+  // 08/09/2026 : pas de statistiques sur le diagramme entier), donc à l'échelle ÉLÉMENT :
+  // ses anneaux sont la descendance du nœud sujet. `root_ids` est posé depuis le sujet — le
+  // module ne sait pas qu'il vit dans une fenêtre. Un flux n'a pas de descendance : refusé.
+  representation_registry.register({
+    id: 'os.repr.sunburst',
+    scale: 'element',
+    order: 40,
+    label: (a) => a.t('sunburst.title'),
+    icon: <FaBullseye />,
+    needs: { hierarchy: true },
+    isAvailable: (ctx) => !!ctx.element && Array.isArray((ctx.element as { output_links_list?: unknown }).output_links_list),
+    renderOptions: (args) => <SunburstRepresentationOptions {...args} />,
+    draw: (container, ctx) => drawSunburstRepresentation(container, {
+      ...ctx,
+      options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
+    })
+  })
 }

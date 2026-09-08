@@ -84,8 +84,33 @@ export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', '
 // `size` est un POIDS dans sa pile (normalisé à l'affichage), pas une fraction figée : ajouter
 // un occupant ne demande pas de recalculer les autres.
 export type Type_MainZonePlace = 'main' | 'right' | 'bottom'
-export type Type_MainZoneOccupant = { id: string, place: Type_MainZonePlace, size: number }
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom']
+// os#1387 — LE SUJET d'une fenêtre : ce qu'elle regarde (NOTE-FENETRES-ET-POINTAGE.md).
+//  - 'diagram'   : le document ;
+//  - 'selection' : elle SUIT l'élément sélectionné dans le dessin (fil d'Ariane) ;
+//  - 'node' / 'link' : ÉPINGLÉE sur un objet, quoi qu'on sélectionne ensuite.
+// `sheet` (os#1386) : la feuille regardée ; absente = la feuille courante.
+export type Type_MainZoneSubject =
+  | { kind: 'diagram', sheet?: string }
+  | { kind: 'selection' }
+  | { kind: 'node', id: string, sheet?: string }
+  | { kind: 'link', id: string, sheet?: string }
+export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link']
+/**
+ * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
+ * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME, `id === representation` : il n'y
+ * en a qu'une par représentation, et c'est ce que lisent la barre du haut, le paramètre d'URL
+ * `rep` et les accesseurs de compatibilité. Une fenêtre à sujet ÉLÉMENT a un id propre (`w_N`)
+ * — on peut en ouvrir plusieurs sur la même représentation, épinglées sur des objets différents.
+ */
+export type Type_MainZoneOccupant = {
+  id: string
+  subject: Type_MainZoneSubject
+  representation: string
+  place: Type_MainZonePlace
+  size: number
+}
+export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
 // Les quatre occupants historiques, par leur id de registre. Nommés ici (et non dans le
 // registre) parce que la grande zone a besoin d'en reconnaître UN : le canevas, qui est le
 // SVG sous tout le reste et ne peut être que `main`.
@@ -299,12 +324,18 @@ export class Class_MenuConfig {
   // chaque mutation, plutôt que chaque appelant.
   // ---------------------------------------------------------------------------------------
   protected _main_zone_occupants: Type_MainZoneOccupant[] = [
-    { id: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }
+    { id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }
   ]
   // Occupants DÉTACHÉS (fenêtre séparée ou dialogue flottant) : ils gardent leur place dans la
   // liste — la refermer les ré-attache là où ils étaient — mais ne réservent plus d'espace.
   // État TRANSITOIRE : une fenêtre détachée ne survit pas au fichier.
   protected _main_zone_detached: Set<string> = new Set()
+  // os#1387 — Compteur des ids de fenêtres à sujet élément (`w_N`). Réaligné à la lecture d'un
+  // fichier sur le plus grand N rencontré, sinon une fenêtre nouvelle prendrait l'id d'une ancienne.
+  protected _main_zone_window_seq: number = 0
+  // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
+  // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
+  protected _main_zone_active_id: string | null = null
   // Document EXTERNE affiché à la place de la documentation du diagramme : présentation d'une
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
@@ -512,13 +543,84 @@ export class Class_MenuConfig {
     if (existing) {
       if (place && existing.place !== place) existing.place = place
     } else {
-      const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
-      // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
-      const peers = this._main_zone_occupants.filter(o => o.place === wanted)
-      const size = peers.length > 0 ? peers.reduce((s, o) => s + o.size, 0) / peers.length : 1
-      this._main_zone_occupants.push({ id, place: wanted, size })
+      // Une fenêtre à sujet DIAGRAMME : son id est sa représentation (cf. Type_MainZoneOccupant).
+      this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, place)
     }
     this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+  /** Ajoute une fenêtre à la place demandée (ou `main` si libre, sinon la colonne droite). */
+  protected _pushMainZoneOccupant(
+    o: { id: string, subject: Type_MainZoneSubject, representation: string }, place?: Type_MainZonePlace
+  ): void {
+    const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
+    // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
+    const peers = this._main_zone_occupants.filter(x => x.place === wanted)
+    const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
+    this._main_zone_occupants.push({ ...o, place: wanted, size })
+  }
+
+  // --- os#1387 : fenêtres = (sujet, représentation) ------------------------------------------
+
+  /**
+   * Ouvre une fenêtre. Sujet diagramme : c'est `showMainZoneOccupant` (une par représentation).
+   * Sujet élément : une fenêtre NEUVE à id propre, pour pouvoir en avoir plusieurs sur la même
+   * représentation, épinglées sur des objets différents. Rend l'id de la fenêtre.
+   */
+  public openMainZoneWindow(
+    subject: Type_MainZoneSubject, representation: string, place?: Type_MainZonePlace
+  ): string {
+    if (subject.kind === 'diagram') {
+      this.showMainZoneOccupant(representation, place)
+      return representation
+    }
+    let id = ''
+    do { this._main_zone_window_seq += 1; id = `w_${this._main_zone_window_seq}` } while (this.isMainZoneOccupant(id))
+    this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
+    this._normalizeMainZoneOccupants()
+    this._main_zone_active_id = id
+    this._notifyMainZone()
+    return id
+  }
+  /**
+   * Change la NATURE d'une fenêtre sur le même sujet — le geste « type de graphique » d'Excel.
+   * Sujet élément : on change la représentation, l'id ne bouge pas. Sujet diagramme : l'id EST
+   * la représentation, donc la fenêtre est remplacée en place (même place, même poids) ; si la
+   * représentation visée est déjà ouverte ailleurs, celle-ci se referme simplement.
+   */
+  public setMainZoneWindowRepresentation(id: string, representation: string): void {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o || o.representation === representation) return
+    if (o.subject.kind !== 'diagram') {
+      o.representation = representation
+    } else if (this.isMainZoneOccupant(representation)) {
+      this._main_zone_occupants = this._main_zone_occupants.filter(x => x.id !== id)
+      this._main_zone_detached.delete(id)
+    } else {
+      o.id = representation
+      o.representation = representation
+      if (this._main_zone_active_id === id) this._main_zone_active_id = representation
+    }
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+  /** Épingle (node/link) ou remet à suivre (selection) une fenêtre à sujet élément. */
+  public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
+    o.subject = { ...subject }
+    this._notifyMainZone()
+  }
+  public mainZoneOccupantById(id: string): Type_MainZoneOccupant | undefined {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    return o ? { ...o, subject: { ...o.subject } } : undefined
+  }
+  public get main_zone_active_id(): string | null {
+    return this._main_zone_active_id ?? this.main_zone_main_id
+  }
+  public set main_zone_active_id(id: string | null) {
+    if (this._main_zone_active_id === id) return
+    this._main_zone_active_id = id
     this._notifyMainZone()
   }
   /**
@@ -545,14 +647,22 @@ export class Class_MenuConfig {
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
-  /** Remplace la liste (état d'URL, vue) : les places se calculent, l'ordre donné est conservé. */
+  /**
+   * Remplace la liste des fenêtres à sujet DIAGRAMME (état d'URL) : les places se calculent,
+   * l'ordre donné est conservé. Les fenêtres à sujet élément ne sont pas décrites par l'URL
+   * (leur objet n'y a pas de sens) : elles sont conservées telles quelles.
+   */
   public setMainZoneOccupantIds(ids: string[]): void {
     const kept = new Map(this._main_zone_occupants.map(o => [o.id, o]))
+    const element_windows = this._main_zone_occupants.filter(o => o.subject.kind !== 'diagram')
     this._main_zone_occupants = []
     ids.forEach(id => {
       const prev = kept.get(id)
-      this._main_zone_occupants.push(prev ? { ...prev } : { id, place: 'right', size: 1 })
+      this._main_zone_occupants.push(prev
+        ? { ...prev }
+        : { id, subject: { kind: 'diagram' }, representation: id, place: 'right', size: 1 })
     })
+    this._main_zone_occupants.push(...element_windows)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
@@ -583,7 +693,19 @@ export class Class_MenuConfig {
       seen.add(o.id)
       return true
     })
-    if (list.length === 0) list = [{ id: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
+    // Sujet et représentation absents (liste construite par un ancien appelant) : fenêtre
+    // diagramme dont l'id est la représentation, l'invariant de compatibilité.
+    list.forEach(o => {
+      if (!o.subject || !MAIN_ZONE_SUBJECT_KINDS.includes(o.subject.kind)) o.subject = { kind: 'diagram' }
+      if (!o.representation) o.representation = o.id
+      if (o.subject.kind === 'diagram') o.representation = o.id
+    })
+    if (list.length === 0) {
+      list = [{ id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
+    }
+    if (this._main_zone_active_id !== null && !list.some(o => o.id === this._main_zone_active_id)) {
+      this._main_zone_active_id = null
+    }
     const canvas = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
     if (canvas) {
       list.forEach(o => { if (o.place === 'main' && o !== canvas) o.place = 'right' })
@@ -710,7 +832,12 @@ export class Class_MenuConfig {
   public mainZoneStateToJSON(): Type_JSON {
     const occupants: Type_JSON = {}
     this._main_zone_occupants.forEach((o, order) => {
-      occupants[o.id] = { place: o.place, size: o.size, order }
+      // os#1387 — le sujet est un objet imbriqué (kind, id, sheet), la représentation une
+      // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
+      const subject: Type_JSON = { kind: o.subject.kind }
+      if ('id' in o.subject) subject['id'] = o.subject.id
+      if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
+      occupants[o.id] = { place: o.place, size: o.size, order, representation: o.representation, subject }
     })
     return {
       occupants,
@@ -735,15 +862,31 @@ export class Class_MenuConfig {
         .map(([id, v]) => {
           const e = (v && typeof v === 'object' && !Array.isArray(v)) ? v as Type_JSON : {}
           const place = getStringFromJSON(e, 'place', 'right') as Type_MainZonePlace
+          // os#1387 — sujet et représentation ; absents (fichier d'avant) = fenêtre diagramme.
+          const s = e['subject']
+          const sj = (s && typeof s === 'object' && !Array.isArray(s)) ? s as Type_JSON : {}
+          const kind = getStringFromJSON(sj, 'kind', 'diagram')
+          const sheet = getStringFromJSON(sj, 'sheet', '')
+          const obj_id = getStringFromJSON(sj, 'id', '')
+          let subject: Type_MainZoneSubject = { kind: 'diagram' }
+          if (kind === 'selection') subject = { kind: 'selection' }
+          else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
+          if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
           return {
             id,
+            subject,
+            representation: getStringFromJSON(e, 'representation', id),
             place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
             size: getNumberFromJSON(e, 'size', 1),
             order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER)
           }
         })
         .sort((a, b) => a.order - b.order)
-      this._main_zone_occupants = entries.map(({ id, place, size }) => ({ id, place, size }))
+      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
+        ({ id, subject, representation, place, size }))
+      // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
+      this._main_zone_window_seq = Math.max(this._main_zone_window_seq, ...this._main_zone_occupants
+        .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
     } else if ('show_diagram' in json || 'show_spreadsheet' in json || 'show_doc' in json || 'show_unitary' in json) {
       const show_diagram = getBooleanFromJSON(json, 'show_diagram', true)
       const show_sheet = getBooleanFromJSON(json, 'show_spreadsheet', false)
@@ -759,14 +902,16 @@ export class Class_MenuConfig {
       const group = show_unit ? unitary_ratio : 1
       const sheet_size = doc_in_column ? group * doc_sheet_ratio : group
       const doc_size = show_sheet ? group * (1 - doc_sheet_ratio) : group
+      const diagramWindow = (id: string, place: Type_MainZonePlace, size: number): Type_MainZoneOccupant =>
+        ({ id, subject: { kind: 'diagram' }, representation: id, place, size })
       const list: Type_MainZoneOccupant[] = []
-      if (show_diagram) list.push({ id: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 })
+      if (show_diagram) list.push(diagramWindow(MAIN_ZONE_CANVAS_ID, 'main', 1))
       const doc_first = layout === 'sheet-top' || layout === 'sheet-left'
-      if (doc_in_column && doc_first) list.push({ id: MAIN_ZONE_DOC_ID, place: 'right', size: doc_size })
-      if (show_sheet) list.push({ id: MAIN_ZONE_SPREADSHEET_ID, place: 'right', size: sheet_size })
-      if (doc_in_column && !doc_first) list.push({ id: MAIN_ZONE_DOC_ID, place: 'right', size: doc_size })
-      if (show_unit) list.push({ id: MAIN_ZONE_UNITARY_ID, place: 'right', size: 1 - unitary_ratio })
-      if (show_doc && doc_bottom) list.push({ id: MAIN_ZONE_DOC_ID, place: 'bottom', size: 1 })
+      if (doc_in_column && doc_first) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'right', doc_size))
+      if (show_sheet) list.push(diagramWindow(MAIN_ZONE_SPREADSHEET_ID, 'right', sheet_size))
+      if (doc_in_column && !doc_first) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'right', doc_size))
+      if (show_unit) list.push(diagramWindow(MAIN_ZONE_UNITARY_ID, 'right', 1 - unitary_ratio))
+      if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
       this._main_zone_occupants = list
     }
     this._normalizeMainZoneOccupants()
