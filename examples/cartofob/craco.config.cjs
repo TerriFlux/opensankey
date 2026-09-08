@@ -70,7 +70,32 @@ module.exports = {
         compiles.forEach((r) => {
           r.include = [].concat(r.include, OS_SRC);
         });
-        console.log(`[OS_LOCAL] @terriflux/opensankey/src -> ${OS_SRC}`);
+
+        // Le VERIFICATEUR de types (ForkTsChecker) ne lit pas l'alias webpack : il
+        // resolvait `@terriflux/opensankey/src` dans node_modules, donc sur les types
+        // du paquet PUBLIE. Toute prop nouvelle du viewer (os#1383 : `zoom_control`)
+        // faisait echouer le build alors que le bundle, lui, la connaissait. On lui
+        // donne le meme chemin par `paths` (qui exige un `baseUrl`).
+        const checker = (config.plugins || []).find(
+          (p) => p.constructor.name === 'ForkTsCheckerWebpackPlugin'
+        );
+        if (!checker || !checker.options) {
+          throw new Error(
+            'OS_LOCAL=1 : ForkTsCheckerWebpackPlugin introuvable dans la config CRA. ' +
+            'Elle a du changer de forme — a reprendre avant de se fier a ce mode.'
+          );
+        }
+        const ts = (checker.options.typescript = checker.options.typescript || {});
+        const overwrite = (ts.configOverwrite = ts.configOverwrite || {});
+        overwrite.compilerOptions = {
+          ...(overwrite.compilerOptions || {}),
+          baseUrl: __dirname,
+          paths: {
+            ...((overwrite.compilerOptions || {}).paths || {}),
+            '@terriflux/opensankey/src/*': [path.join(OS_SRC, '*')],
+          },
+        };
+        console.log(`[OS_LOCAL] @terriflux/opensankey/src -> ${OS_SRC} (bundle + types)`);
       }
       // Pas de source maps : gros gain de temps et de memoire au build. Le
       // reglage vivait dans un .env, que le .gitignore du monorepo excluait —
