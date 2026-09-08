@@ -1902,11 +1902,19 @@ export class Class_ApplicationData {
       const mode = opts.position_mode
       const applyMode = (da: Class_DrawingArea | undefined) => {
         if (!da) return
-        if (da.sankey.styles_dict['default'].shape_position_type === mode) return
-        if (mode === 'absolute') da.setAbsoluteMode()
-        else if (mode === 'proportional') da.setProportionalMode()
+        // os#1383 — Le mode d'affichage est celui de la DIMENSION pilotée (#370) : on le pose
+        // sur les dimensions affichées, sans quoi un changement de datatag rejouait le mode du
+        // fichier (`applyPositionModeToDrawing`) avant que le mode demandé ne soit reposé —
+        // deux bascules muettes par sélection. Et c'est sur le groupe que `applyAdaptedScale`
+        // lit la variante « adaptée au maximum ».
+        da.sankey.data_taggs_list.forEach(g => { if (g.banner !== 'none') g.position_mode = mode })
+        // Côté zone de dessin, la variante « au maximum » est l'échelle adaptée.
+        const style_mode = mode === 'scale_adapted_max' ? 'scale_adapted' : mode
+        if (da.sankey.styles_dict['default'].shape_position_type === style_mode) return
+        if (style_mode === 'absolute') da.setAbsoluteMode()
+        else if (style_mode === 'proportional') da.setProportionalMode()
         // os#1372 — `false` : le dessin de fin de méthode s'en charge.
-        else if (mode === 'scale_adapted') da.setScaleAdaptedMode(false)
+        else if (style_mode === 'scale_adapted') da.setScaleAdaptedMode(false)
         // Aucun des trois setters ne redessine désormais depuis ici : c'est donc une mutation
         // MUETTE, et le dessin de fin de méthode devient obligatoire — y compris si la sélection
         // de tags vient d'en déclencher un, celui-ci étant antérieur au changement de mode.

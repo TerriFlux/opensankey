@@ -12,7 +12,10 @@
 
 // Modes de navigation / positionnement (cf. DrawingArea.setAbsoluteMode / setProportionalMode /
 // setScaleAdaptedMode et styles_dict['default'].shape_position_type).
-export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
+// os#1383 — `scale_adapted_max` : variante de l'échelle adaptée portée par la DIMENSION (« grille ») :
+// une échelle par vue, calée sur la plus grande valeur de la dimension. Côté zone de dessin le
+// style reste `scale_adapted` (cf. TagGroup.applyPositionModeToDrawing).
+export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted' | 'scale_adapted_max'
 
 // os#1352 — régime de référence du mode « échelle adaptée ». `import type` : effacé à la
 // compilation, donc aucun cycle de module à l'exécution.
@@ -244,7 +247,7 @@ const num = (v: unknown): number | null => {
   const n = (typeof v === 'number') ? v : (typeof v === 'string' && v.trim() !== '') ? Number(v) : NaN
   return (Number.isFinite(n) && n >= 0) ? n : null
 }
-const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted']
+const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted', 'scale_adapted_max']
 /**
  * #370 — Garde de type des trois modes proposés par le sélecteur. Exporté depuis que le
  * mode est porté par chaque dimension (`Class_DataTagGroup.position_mode`) et relu d'un

@@ -934,14 +934,18 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     const drawing_area = this._ref_sankey.drawing_area
     const default_style = this._ref_sankey.default_style
     if (!drawing_area || !default_style) return
-    if (default_style.shape_position_type === this._position_mode) return
+    // os#1383 — « Adaptée au maximum » est une VARIANTE de l'échelle adaptée, portée par la
+    // dimension : côté zone de dessin le style reste `scale_adapted` (même suspension #384, même
+    // persistance), c'est `applyAdaptedScale` qui lit la variante sur le groupe.
+    const target = this._position_mode === 'scale_adapted_max' ? 'scale_adapted' : this._position_mode
+    if (default_style.shape_position_type === target) return
     if (!force && default_style.shape_position_type === 'parametric') return
     if (this._position_mode === 'proportional') {
       drawing_area.setProportionalMode()
       if (redraw) drawing_area.draw()
     }
     // setScaleAdaptedMode redessine lui-même (cf. displayModes.ts).
-    else if (this._position_mode === 'scale_adapted') { drawing_area.setScaleAdaptedMode(redraw) }
+    else if (target === 'scale_adapted') { drawing_area.setScaleAdaptedMode(redraw) }
     else {
       drawing_area.setAbsoluteMode()
       if (redraw) drawing_area.draw()
