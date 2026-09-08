@@ -95,7 +95,9 @@ export type Type_MainZoneSubject =
   | { kind: 'selection' }
   | { kind: 'node', id: string, sheet?: string }
   | { kind: 'link', id: string, sheet?: string }
-export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link']
+  // Plusieurs objets épinglés (nœuds et/ou flux, par id) : une vignette par objet.
+  | { kind: 'elements', ids: string[], sheet?: string }
+export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements']
 /**
  * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
  * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME, `id === representation` : il n'y
@@ -109,6 +111,9 @@ export type Type_MainZoneOccupant = {
   representation: string
   place: Type_MainZonePlace
   size: number
+  // Réglages de la représentation, PAR FENÊTRE (décomposer par…, mode des valeurs…), opaques
+  // ici : c'est l'entrée de registre qui les lit. Persistés avec la fenêtre.
+  options?: Type_JSON
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
 // Les quatre occupants historiques, par leur id de registre. Nommés ici (et non dans le
@@ -604,11 +609,18 @@ export class Class_MenuConfig {
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
-  /** Épingle (node/link) ou remet à suivre (selection) une fenêtre à sujet élément. */
+  /** Épingle (node/link/elements) ou remet à suivre (selection) une fenêtre à sujet élément. */
   public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
-    o.subject = { ...subject }
+    o.subject = subject.kind === 'elements' ? { ...subject, ids: [...subject.ids] } : { ...subject }
+    this._notifyMainZone()
+  }
+  /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
+  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    o.options = { ...options }
     this._notifyMainZone()
   }
   public mainZoneOccupantById(id: string): Type_MainZoneOccupant | undefined {
@@ -836,8 +848,11 @@ export class Class_MenuConfig {
       // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
       const subject: Type_JSON = { kind: o.subject.kind }
       if ('id' in o.subject) subject['id'] = o.subject.id
+      if ('ids' in o.subject) subject['ids'] = [...o.subject.ids]
       if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
-      occupants[o.id] = { place: o.place, size: o.size, order, representation: o.representation, subject }
+      const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
+      if (o.options && Object.keys(o.options).length > 0) entry['options'] = { ...o.options }
+      occupants[o.id] = entry
     })
     return {
       occupants,
@@ -868,22 +883,28 @@ export class Class_MenuConfig {
           const kind = getStringFromJSON(sj, 'kind', 'diagram')
           const sheet = getStringFromJSON(sj, 'sheet', '')
           const obj_id = getStringFromJSON(sj, 'id', '')
+          const raw_ids = sj['ids']
+          const ids = Array.isArray(raw_ids) ? raw_ids.filter((x): x is string => typeof x === 'string' && x !== '') : []
           let subject: Type_MainZoneSubject = { kind: 'diagram' }
           if (kind === 'selection') subject = { kind: 'selection' }
           else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
+          else if (kind === 'elements') subject = { kind: 'elements', ids }
           if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
+          const opts = e['options']
+          const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
           return {
             id,
             subject,
             representation: getStringFromJSON(e, 'representation', id),
             place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
             size: getNumberFromJSON(e, 'size', 1),
-            order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER)
+            order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),
+            options
           }
         })
         .sort((a, b) => a.order - b.order)
-      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
-        ({ id, subject, representation, place, size }))
+      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size, options }) =>
+        (options ? { id, subject, representation, place, size, options } : { id, subject, representation, place, size }))
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
       this._main_zone_window_seq = Math.max(this._main_zone_window_seq, ...this._main_zone_occupants
         .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))

@@ -222,6 +222,11 @@ export const resources_spreadsheet = {
           no_representation: 'No representation for this element',
           node: 'Node',
           link: 'Flow',
+          add_subject: 'Add a node or a flow',
+          remove_subject: 'Remove',
+          pin_all: 'Pin the selected elements',
+          value_mode: 'Values',
+          normalize_on: 'Normalize on',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Diagram representation'
@@ -434,6 +439,11 @@ export const resources_spreadsheet = {
           no_representation: 'Aucune représentation pour cet élément',
           node: 'Nœud',
           link: 'Flux',
+          add_subject: 'Ajouter un nœud ou un flux',
+          remove_subject: 'Retirer',
+          pin_all: 'Épingler les éléments sélectionnés',
+          value_mode: 'Valeurs',
+          normalize_on: 'Normaliser sur',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Représentation du diagramme'
@@ -646,6 +656,11 @@ export const resources_spreadsheet = {
           no_representation: 'Ninguna representación para este elemento',
           node: 'Nodo',
           link: 'Flujo',
+          add_subject: 'Añadir un nodo o un flujo',
+          remove_subject: 'Quitar',
+          pin_all: 'Fijar los elementos seleccionados',
+          value_mode: 'Valores',
+          normalize_on: 'Normalizar sobre',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Representación del diagrama'
@@ -858,6 +873,11 @@ export const resources_spreadsheet = {
           no_representation: 'Keine Darstellung für dieses Element',
           node: 'Knoten',
           link: 'Fluss',
+          add_subject: 'Knoten oder Fluss hinzufügen',
+          remove_subject: 'Entfernen',
+          pin_all: 'Ausgewählte Elemente anheften',
+          value_mode: 'Werte',
+          normalize_on: 'Normieren auf',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Darstellung des Diagramms'
@@ -1070,6 +1090,11 @@ export const resources_spreadsheet = {
           no_representation: 'Nessuna rappresentazione per questo elemento',
           node: 'Nodo',
           link: 'Flusso',
+          add_subject: 'Aggiungi un nodo o un flusso',
+          remove_subject: 'Rimuovi',
+          pin_all: 'Fissa gli elementi selezionati',
+          value_mode: 'Valori',
+          normalize_on: 'Normalizza su',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Rappresentazione del diagramma'
@@ -1288,6 +1313,11 @@ export const resources_spreadsheet = {
           no_representation: '此元素没有可用的表示',
           node: '节点',
           link: '流',
+          add_subject: '添加节点或流',
+          remove_subject: '移除',
+          pin_all: '固定所选元素',
+          value_mode: '数值',
+          normalize_on: '归一化于',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: '图表表示形式'
@@ -1506,6 +1536,11 @@ export const resources_spreadsheet = {
           no_representation: 'この要素の表現はありません',
           node: 'ノード',
           link: 'フロー',
+          add_subject: 'ノードまたはフローを追加',
+          remove_subject: '削除',
+          pin_all: '選択した要素を固定',
+          value_mode: '値',
+          normalize_on: '正規化の基準',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: '図の表現形式'
