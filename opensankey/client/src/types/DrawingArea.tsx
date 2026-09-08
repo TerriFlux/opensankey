@@ -3282,6 +3282,19 @@ export class Class_DrawingArea {
    * causait. Le calcul de canvas (width/height) a lui aussi disparu : areaAutoFit
    * le refait avec la même formule juste en dessous.
    */
+  /**
+   * os#1383 — Marque le cadrage VERROUILLÉ à refaire : le prochain `draw()` recalcule le cadrage
+   * de référence comme à l'ouverture (fit sur la géométrie fraîchement dessinée, puis capture),
+   * au lieu de reposer la caméra figée. C'est le geste d'un changement de VUE — une sélection
+   * d'étiquette de vue recompose le diagramme, ce n'est pas un défilement de datatag — et c'est
+   * ce que fait l'application quand on passe d'une essence à l'autre. Sans lui, un viewer
+   * embarqué gardait la caméra resserrée d'une essence peu fournie en revenant à la vue agrégée.
+   * No-op hors verrou de taille : les autres modes se recadrent déjà d'eux-mêmes.
+   */
+  public invalidateLockedFit() {
+    if (this._size_locked) this._locked_fit_dirty = true
+  }
+
   public recenter(force: boolean = false) {
     // In paper mode, positions are already computed for the format — don't refit
     if (this.is_paper_mode) return

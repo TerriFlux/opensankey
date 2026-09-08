@@ -25,13 +25,14 @@
 // ==================================================================================================
 
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { ChakraProvider, useToast } from '@chakra-ui/react'
+import { Box, ChakraProvider, useToast } from '@chakra-ui/react'
 import i18next from 'i18next'
 import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
 
 import { Class_ApplicationData } from './types/ApplicationData'
 import { Type_AnyJSON, Type_JSON } from './types/Utils'
 import { applyViewerOptions, ViewerSankeyOptions } from './types/PublishOptions'
+import { ComponentZoomControl } from './components/ui/ZoomControl'
 
 if (!i18next.isInitialized) {
   i18next.use(initReactI18next).init({
@@ -129,7 +130,17 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
   // dans une bande, quelle que soit la taille donnee par l'embarqueur.
   // Le paquet editeur pose deja `height: '100%'` sur le meme conteneur (App.tsx) : c'est le contrat
   // normal, l'hote decide de la taille, le viewer la remplit. Il manquait seulement ici.
-  return <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke', height: '100%' }} />
+  // os#1383 — `zoom_control` : la barre de zoom de l'application (+ / % / -), à droite, par-dessus
+  // le dessin. Le conteneur `#sankey_app` garde ses 100 % : c'est lui que `embedded` mesure.
+  // Variantes Chakra natives : ce viewer monte un `ChakraProvider` sans le thème de l'application.
+  return <div style={{ position: 'relative', height: '100%' }}>
+    <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke', height: '100%' }} />
+    {options.zoom_control
+      ? <Box position='absolute' right='12px' top='12px' zIndex={10}>
+        <ComponentZoomControl app_data={app_data} variant='outline' size='xs' />
+      </Box>
+      : null}
+  </div>
 }
 
 export const ViewerOpenSankeyApp: FC<ViewerOpenSankeyAppProps> = (props) => (

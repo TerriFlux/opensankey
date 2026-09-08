@@ -129,6 +129,7 @@ export interface SankeyGlobals {
 
   // Interaction (viewer publish)
   lock_zoom?: boolean             // default false : bloque le zoom molette/scale (le pan au bouton milieu reste actif)
+  zoom_control?: boolean          // os#1383 — default false : barre de zoom (+ / % / -) à droite du viewer MIT, même composant que l'application
   tooltip_on_hover?: boolean      // default false : affiche les tooltips au simple survol, sans maintenir Shift
   // OS#305 — le déclencheur/délai de la présentation composée ne sont PAS ici :
   // ce sont des réglages d'AUTEUR, enregistrés dans le diagramme (cf.
@@ -199,6 +200,7 @@ export interface PublishOptions {
   node_filter: boolean
   data_filter: boolean
   lock_zoom: boolean
+  zoom_control: boolean
   tooltip_on_hover: boolean
   language: string | null
   minimum_flux: number | null
@@ -430,6 +432,7 @@ export const getPublishOptions = (): PublishOptions => {
     node_filter: bool(s.node_filter, true),
     data_filter: bool(s.data_filter, true),
     lock_zoom: bool(s.lock_zoom, false),
+    zoom_control: bool(s.zoom_control, false),
     tooltip_on_hover: bool(s.tooltip_on_hover, false),
     language: str(s.language),
     minimum_flux: num(s.minimum_flux),
@@ -496,6 +499,7 @@ export type ViewerSankeyOptions = {
   node_filter?: boolean
   data_filter?: boolean
   lock_zoom?: boolean
+  zoom_control?: boolean  // os#1383 : barre de zoom à droite (+ / % / -), celle de l'application
   tooltip_on_hover?: boolean
   language?: string
   header_i18n?: Record<string, string>
@@ -528,7 +532,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
-    'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
+    'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
     'view', 'view_label',
