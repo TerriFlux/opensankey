@@ -24,7 +24,8 @@
 // contrainte de mise en page, pas du modèle.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaShareAlt } from 'react-icons/fa'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaShareAlt, FaBullseye } from 'react-icons/fa'
+import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import { representation_registry } from './RepresentationRegistry'
@@ -101,5 +102,20 @@ export const registerBaseRepresentations = (): void => {
       isActive: (a) => a.menu_configuration.main_zone_show_unitary,
       setActive: (a, on) => { a.menu_configuration.main_zone_show_unitary = on }
     }
+  })
+
+  // os#1363 — Sunburst. Première entrée en forme `draw` à l'échelle diagramme :
+  // elle n'a pas d'hôte React à elle, le sélecteur la monte dans un conteneur.
+  // `needs.hierarchy` suffit à la faire disparaître d'un diagramme plat — le
+  // registre s'en charge, le module n'a pas à redoubler la garde.
+  representation_registry.register({
+    id: 'os.repr.sunburst',
+    scale: 'diagram',
+    order: 50,
+    label: (a) => a.t('sunburst.title'),
+    icon: <FaBullseye />,
+    needs: { hierarchy: true },
+    renderOptions: (args) => <SunburstRepresentationOptions {...args} />,
+    draw: (container, ctx) => drawSunburstRepresentation(container, ctx)
   })
 }
