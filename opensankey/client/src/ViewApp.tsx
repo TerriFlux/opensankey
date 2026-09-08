@@ -33,6 +33,8 @@ import { Class_ApplicationData } from './types/ApplicationData'
 import { Type_AnyJSON, Type_JSON } from './types/Utils'
 import { applyViewerOptions, ViewerSankeyOptions } from './types/PublishOptions'
 import { ComponentZoomControl } from './components/ui/ZoomControl'
+import { PanelDismissLayer } from './components/panels/PanelShell'
+import { PresentationPanels } from './components/panels/presentation/PresentationPanels'
 
 if (!i18next.isInitialized) {
   i18next.use(initReactI18next).init({
@@ -135,6 +137,14 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
   // Variantes Chakra natives : ce viewer monte un `ChakraProvider` sans le thème de l'application.
   return <div style={{ position: 'relative', height: '100%' }}>
     <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke', height: '100%' }} />
+    {/* os#1383 — Info-bulles et pop-ups de PRÉSENTATION (OS#305) : rendues par
+        `PresentationPanels`, que seul l'éditeur montait (SankeyMenus). Le viewer MIT n'en
+        avait donc AUCUNE — le survol d'un flux ne montrait rien dans `examples/cartofob`
+        alors que l'application, sur le même fichier, ouvrait l'info-bulle. Même paire que
+        l'éditeur : la couche de congé (OS#321) referme les pop-ups non épinglées au clic
+        ailleurs. La barre latérale (`SidebarSurface`) reste propre aux menus de l'éditeur. */}
+    <PanelDismissLayer app_data={app_data} />
+    <PresentationPanels app_data={app_data} />
     {options.zoom_control
       ? <Box position='absolute' right='12px' top='12px' zIndex={10}>
         <ComponentZoomControl app_data={app_data} variant='outline' size='xs' />
