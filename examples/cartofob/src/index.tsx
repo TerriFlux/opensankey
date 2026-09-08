@@ -197,7 +197,7 @@ const App = () => {
   );
 
   // Mode de positionnement, pilote depuis la topbar. Reactif lui aussi.
-  const [mode, setMode] = useState<"scale_adapted" | "scale_adapted_max" | "absolute">("scale_adapted_max");
+  const [mode, setMode] = useState<"scale_adapted" | "absolute">("scale_adapted");
 
   return (
     <div
@@ -264,13 +264,8 @@ const App = () => {
             disabled={!diagram}
             onChange={(e) => setMode(e.target.value as typeof mode)}
           >
-            {/* « Par essence » (os#1383) : une echelle par essence, calee sur sa region la
-                plus grosse — les regions se comparent entre elles, chaque essence reste
-                lisible. « Adaptee » : chaque case remplit l ecran, rien ne se compare.
-                « Absolue » : une seule echelle pour tout, tout se compare. */}
-            <option value="scale_adapted_max">Par essence (regions comparables)</option>
             <option value="scale_adapted">Adaptee a la selection</option>
-            <option value="absolute">Absolue (tout comparable)</option>
+            <option value="absolute">Absolue (comparable)</option>
           </select>
         </label>
       </div>

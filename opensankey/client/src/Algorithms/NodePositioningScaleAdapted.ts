@@ -25,7 +25,6 @@ import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_DataTag } from '../types/Tag'
-import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { NodePositioning } from './NodePositioning'
 
 export class NodePositioningScaleAdapted {
@@ -86,42 +85,13 @@ export class NodePositioningScaleAdapted {
    * nœud, `minimum_flux`) : à grande échelle, un nœud de 3 px rend 40, et un facteur pris sur
    * 40 ne l'amènerait jamais au plafond.
    *
-   * 0 si aucun nœud visible ne porte de valeur. `tags` : lire les valeurs à un jeu de datatags
-   * EXPLICITE (la visibilité reste celle de la sélection courante, cf. `diagramMagnitudeForDataTags`).
+   * 0 si aucun nœud visible ne porte de valeur.
    */
-  public tallestNodeMagnitude(tags?: Class_DataTag[]): number {
+  public tallestNodeMagnitude(): number {
     let max = 0
     this.drawingArea.sankey.visible_nodes_list.forEach(n => {
       if (!n.is_visible) return
-      const v = this.nodeMagnitude(n, tags)
-      if (v > max) max = v
-    })
-    return max
-  }
-
-  /**
-   * os#1383 — Mode « adaptée au maximum » (la « grille » de Julien) : la plus grande valeur-
-   * équivalente du nœud le plus haut, TOUTES VALEURS DE LA DIMENSION CONFONDUES — pour la vue
-   * courante, en gardant la sélection courante des autres dimensions.
-   *
-   * L'idée : une échelle par VUE, valable pour toute la dimension. Adapté entre vues (chaque
-   * essence remplit le cadre avec sa région la plus grosse), absolu entre valeurs de la dimension
-   * (Corse est vraiment plus petite qu'Auvergne-Rhône-Alpes). Calé sur le nœud le plus haut et
-   * non sur le stock : pour le peuplier, dont les flux d'import dominent le stock, c'est Récolte
-   * qui définit le cadre — l'image dit vrai, rien n'est écrasé, et la bride de 200 px par vue
-   * qui compensait ça n'a plus d'objet. Sans état : recalculé à chaque dessin.
-   *
-   * 0 si la dimension n'a aucun tag ou qu'aucun nœud visible ne porte de valeur.
-   */
-  public maxDimensionMagnitude(group: Class_DataTagGroup): number {
-    let max = 0
-    group.tags_list.forEach(candidate => {
-      const tags: Class_DataTag[] = []
-      this.drawingArea.sankey.data_taggs_list.forEach(tagg => {
-        const kept = tagg === group ? candidate : tagg.selected_tags_list[0]
-        if (kept) tags.push(kept as Class_DataTag)
-      })
-      const v = this.tallestNodeMagnitude(tags)
+      const v = this.nodeMagnitude(n, undefined)
       if (v > max) max = v
     })
     return max
@@ -394,22 +364,6 @@ export class NodePositioningScaleAdapted {
    * `drawElements` rend le plafond de hauteur EXACT : c'est lui qui adapte.
    */
   public applyAdaptedScale(): boolean {
-    // os#1383 — Variante « adaptée au maximum » portée par une dimension (cf.
-    // `maxDimensionMagnitude`) : une échelle par vue, celle qui amène le nœud le plus haut de la
-    // plus grande valeur de la dimension à `maximum_node`. Sans état, sans référence à désigner.
-    // Exige un plafond de hauteur : sans lui, « remplir » n'a pas de définition — on retombe
-    // alors sur l'échelle adaptée ordinaire.
-    const max_group = this.drawingArea.sankey.data_taggs_list
-      .find(g => g.position_mode === 'scale_adapted_max')
-    const max_node = this.drawingArea.maximum_node
-    if (max_group && max_node && max_node > 0) {
-      const magnitude = this.maxDimensionMagnitude(max_group)
-      if (magnitude > 0) {
-        this._scale_adapted_warning = undefined
-        this.drawingArea.setEffectiveScale(magnitude * 100 / max_node)
-        return true
-      }
-    }
     // os#1372 — Grandeur de référence : celle du datatag DÉSIGNÉ si le document en nomme un
     // (calculée à chaque dessin), sinon celle capturée au vol (fichiers antérieurs).
     const designated = this.referenceDataTagMagnitude()
