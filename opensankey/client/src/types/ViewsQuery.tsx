@@ -39,6 +39,12 @@ export type Type_ViewEntry = {
   // (`WorkbookNode.doc`, `Workbook.doc`) ; la vue, qui est pourtant l'unité publiable,
   // n'en avait pas. Candidat naturel au texte d'accompagnement d'une page publiée.
   description?: string
+  // os#1355 — LA REPRÉSENTATION de la vue : l'état de la grande zone (occupants, places,
+  // poids) figé avec elle. « Vue = diagramme + coordonnées figées » gagne « + représentation »,
+  // et une vue peut ainsi s'ouvrir sur un sunburst ou un tableur — donc devenir une page
+  // camembert publiée. Absent : la vue ne touche pas à la disposition courante (fichiers
+  // antérieurs, et vues dont l'auteur a retiré la mémoire de disposition).
+  main_zone?: Type_JSON
 }
 
 /**
@@ -175,6 +181,12 @@ export class ViewsQuery {
     // générique est exactement ce qui avait détruit les zones de texte avec `labels`.
     const desc = view_json['view_description']
     if (typeof desc === 'string' && desc !== '') entry.description = desc
+    // os#1355 — disposition de la grande zone figée avec la vue. Clé `view_main_zone`, PAS
+    // `main_zone` : cette dernière est une clé RACINE du fichier, donc dans la base du delta —
+    // chaque vue décodée en hérite, et la lire ici prendrait l'état du fichier pour celui de
+    // la vue. Même piège que `labels` et `description`, même parade.
+    const mz = view_json['view_main_zone']
+    if (mz && typeof mz === 'object' && !Array.isArray(mz)) entry.main_zone = mz as Type_JSON
   }
 
   // --- Annuaire des labels (os#1357) -------------------------------------------------------
