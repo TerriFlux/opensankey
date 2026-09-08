@@ -89,16 +89,22 @@
               "type": "number"
             },
             "ports": {
-              "type": "object",
-              "additionalProperties": {
+              "type": "array",
+              "items": {
                 "type": "object",
                 "properties": {
+                  "node_id": {
+                    "type": "string"
+                  },
                   "direction": {
                     "type": "string",
                     "enum": [
                       "input",
                       "output"
                     ]
+                  },
+                  "quantity_ref": {
+                    "type": "string"
                   },
                   "port_type": {
                     "type": "string"
@@ -108,9 +114,17 @@
                   },
                   "unit_ref": {
                     "type": "string"
+                  },
+                  "exchange_kind": {
+                    "type": "string",
+                    "enum": [
+                      "technosphere",
+                      "biosphere"
+                    ]
                   }
                 },
                 "required": [
+                  "node_id",
                   "direction"
                 ],
                 "additionalProperties": true
