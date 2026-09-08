@@ -73,6 +73,8 @@ function positioning(nodes: FakeNode[], scale = 100) {
       node_taggs_dict: {
         'type de noeud': { tags_dict: { echange: { id: 'echange' } } },
       },
+      // os#1383 — `applyAdaptedScale` cherche une dimension en « adaptée au maximum ».
+      data_taggs_list: [],
       get visible_nodes_list() {
         return nodes.filter(n => n.is_visible) as unknown as Class_NodeElement[]
       },
@@ -197,5 +199,65 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
     n.visible_output_links_list = [{ valueCurrent: 40 }]
     np.applyAdaptedScale()
     expect(drawingArea.scale).toBe(400)
+  })
+})
+
+// os#1383 — « Adaptée au maximum » (la grille) : une échelle par vue, calée sur la plus grande
+// valeur de la dimension, valable pour toutes ses valeurs. Adapté entre vues, absolu entre valeurs.
+describe('os#1383 — echelle adaptee au maximum de la dimension', () => {
+  // Un flux dont la valeur depend du datatag : 10 en `a`, 50 en `b`, 20 en `c`.
+  const parTag: Record<string, number> = { a: 10, b: 50, c: 20 }
+  const grille = (selection: string, max_node: number | undefined, mode = 'scale_adapted_max') => {
+    const tags = ['a', 'b', 'c'].map(id => ({ id }))
+    const group = {
+      position_mode: mode, banner: 'topbar', tags_list: tags,
+      get selected_tags_list() { return tags.filter(t => t.id === selection) },
+    }
+    const link = {
+      valueCurrent: parTag[selection],
+      valueForDataTags: (ts: { id: string }[]) => parTag[ts[0].id],
+    }
+    const n = node({ u: 0 })
+    n.visible_output_links_list = [link as unknown as FakeLink]
+    const drawingArea = {
+      _scale: 1000, _scale_effective: undefined as number | undefined,
+      _scaleValueToPx: { domain: () => undefined },
+      get scale() { return this._scale_effective ?? this._scale },
+      get base_scale() { return this._scale },
+      setEffectiveScale(v: number) { this._scale_effective = v },
+      maximum_node: max_node,
+      scale_adapted_reference: 'diagram',
+      scale_adapted_reference_datatag: [],
+      sankey: {
+        node_taggs_dict: { 'type de noeud': { tags_dict: { echange: { id: 'echange' } } } },
+        data_taggs_list: [group],
+        get visible_nodes_list() { return [n] as unknown as Class_NodeElement[] },
+      },
+    }
+    return { np: new NodePositioning(drawingArea as unknown as Class_DrawingArea), drawingArea }
+  }
+
+  it('cale l echelle sur la plus grande valeur de la dimension, quelle que soit la selection', () => {
+    // max = 50 (tag b), plafond 200 px : echelle = 50 x 100 / 200 = 25, identique en a, b et c.
+    for (const sel of ['a', 'b', 'c']) {
+      const { np, drawingArea } = grille(sel, 200)
+      expect(np.applyAdaptedScale()).toBe(true)
+      expect(drawingArea.scale).toBe(25)
+      // La base de l utilisateur n a pas bouge.
+      expect(drawingArea._scale).toBe(1000)
+    }
+  })
+
+  it('sans plafond de hauteur, retombe sur l echelle adaptee ordinaire', () => {
+    // Pas de maximum_node : « remplir » n a pas de definition, la variante s efface.
+    const { np, drawingArea } = grille('a', undefined)
+    np.applyAdaptedScale()   // capture paresseuse de l adapte ordinaire : ratio 1
+    expect(drawingArea.scale).toBe(1000)
+  })
+
+  it('ne joue pas quand la dimension est en echelle adaptee ordinaire', () => {
+    const { np, drawingArea } = grille('a', 200, 'scale_adapted')
+    np.applyAdaptedScale()   // capture paresseuse
+    expect(drawingArea.scale).toBe(1000)
   })
 })

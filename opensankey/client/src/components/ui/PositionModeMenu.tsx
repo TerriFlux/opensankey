@@ -33,7 +33,7 @@ import {
 } from '@chakra-ui/react'
 import { CheckIcon } from '@chakra-ui/icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faPercent, faRulerVertical, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 import { OSTooltip } from './OSTooltip'
@@ -50,6 +50,8 @@ export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinitio
   { value: 'absolute', icon: faLocationDot, label_key: 'Banner.posModeShort_absolute' },
   { value: 'proportional', icon: faPercent, label_key: 'Banner.posModeShort_proportional' },
   { value: 'scale_adapted', icon: faRulerVertical, label_key: 'Banner.posModeShort_scale_adapted' },
+  // os#1383 — « grille » : une échelle par vue, calée sur la plus grande valeur de la dimension.
+  { value: 'scale_adapted_max', icon: faTableCellsLarge, label_key: 'Banner.posModeShort_scale_adapted_max' },
 ]
 
 /**
