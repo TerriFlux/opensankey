@@ -2078,6 +2078,14 @@ export class Class_ApplicationData {
             n.position_y === const_default_position_y)
           if (needs_auto_layout) this._drawing_area.nodePositioning.computeAutoSankey(true, true)
         }
+        // os#1383 — Une sélection d'étiquette de vue recompose le diagramme : c'est un
+        // changement de VUE, pas un défilement de datatag. En taille verrouillée, le dessin qui
+        // suit doit donc recalculer le cadrage de référence comme à l'ouverture. Sans ça, un
+        // viewer embarqué gardait la caméra resserrée d'une essence peu fournie (peuplier :
+        // k = 0,326) en revenant à la vue agrégée (k = 0,405 à l'aller) — là où l'application,
+        // dont les essences sont des vues, se remettait d'aplomb. Ni `recenter()` ni
+        // `areaAutoFit()` n'agissent sous verrou : mesuré, les deux laissaient 0,326.
+        this._drawing_area.invalidateLockedFit()
       }
     }
   }

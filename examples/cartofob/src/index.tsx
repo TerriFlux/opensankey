@@ -317,6 +317,9 @@ const App = () => {
             // Le diagramme est cadre a l'ouverture ; laisser le zoom molette
             // libre sur un dessin de cette taille desoriente vite.
             lock_zoom={true}
+            // ... mais le lecteur garde la main : la barre de zoom de l'application
+            // (+ / % / -), a droite. Meme composant que dans l'editeur (os#1383).
+            zoom_control={true}
           />
         )}
       </div>
