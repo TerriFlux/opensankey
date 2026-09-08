@@ -211,6 +211,17 @@ export const resources_spreadsheet = {
           move_right: 'Move to the right column',
           move_bottom: 'Move to the bottom band',
           close: 'Close',
+          main_window: 'Main window',
+          new_window: 'New window',
+          on_diagram: 'On the diagram',
+          on_selection: 'On the selected element',
+          follow: 'Follows the selection',
+          pin: 'Pin to this element',
+          unpin: 'Follow the selection again',
+          no_selection: 'Select a node or a flow',
+          no_representation: 'No representation for this element',
+          node: 'Node',
+          link: 'Flow',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Diagram representation'
@@ -412,6 +423,17 @@ export const resources_spreadsheet = {
           move_right: 'Passer dans la colonne de droite',
           move_bottom: 'Passer dans le bandeau du bas',
           close: 'Fermer',
+          main_window: 'Fenêtre principale',
+          new_window: 'Nouvelle fenêtre',
+          on_diagram: 'Sur le diagramme',
+          on_selection: 'Sur l’élément sélectionné',
+          follow: 'Suit la sélection',
+          pin: 'Épingler sur cet élément',
+          unpin: 'Suivre à nouveau la sélection',
+          no_selection: 'Sélectionnez un nœud ou un flux',
+          no_representation: 'Aucune représentation pour cet élément',
+          node: 'Nœud',
+          link: 'Flux',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Représentation du diagramme'
@@ -613,6 +635,17 @@ export const resources_spreadsheet = {
           move_right: 'Mover a la columna derecha',
           move_bottom: 'Mover a la banda inferior',
           close: 'Cerrar',
+          main_window: 'Ventana principal',
+          new_window: 'Nueva ventana',
+          on_diagram: 'Sobre el diagrama',
+          on_selection: 'Sobre el elemento seleccionado',
+          follow: 'Sigue la selección',
+          pin: 'Fijar en este elemento',
+          unpin: 'Volver a seguir la selección',
+          no_selection: 'Seleccione un nodo o un flujo',
+          no_representation: 'Ninguna representación para este elemento',
+          node: 'Nodo',
+          link: 'Flujo',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Representación del diagrama'
@@ -814,6 +847,17 @@ export const resources_spreadsheet = {
           move_right: 'In die rechte Spalte verschieben',
           move_bottom: 'In das untere Band verschieben',
           close: 'Schließen',
+          main_window: 'Hauptfenster',
+          new_window: 'Neues Fenster',
+          on_diagram: 'Auf das Diagramm',
+          on_selection: 'Auf das ausgewählte Element',
+          follow: 'Folgt der Auswahl',
+          pin: 'An dieses Element heften',
+          unpin: 'Wieder der Auswahl folgen',
+          no_selection: 'Knoten oder Fluss auswählen',
+          no_representation: 'Keine Darstellung für dieses Element',
+          node: 'Knoten',
+          link: 'Fluss',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Darstellung des Diagramms'
@@ -1015,6 +1059,17 @@ export const resources_spreadsheet = {
           move_right: 'Sposta nella colonna destra',
           move_bottom: 'Sposta nella fascia inferiore',
           close: 'Chiudi',
+          main_window: 'Finestra principale',
+          new_window: 'Nuova finestra',
+          on_diagram: 'Sul diagramma',
+          on_selection: 'Sull’elemento selezionato',
+          follow: 'Segue la selezione',
+          pin: 'Fissa su questo elemento',
+          unpin: 'Segui di nuovo la selezione',
+          no_selection: 'Seleziona un nodo o un flusso',
+          no_representation: 'Nessuna rappresentazione per questo elemento',
+          node: 'Nodo',
+          link: 'Flusso',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: 'Rappresentazione del diagramma'
@@ -1222,6 +1277,17 @@ export const resources_spreadsheet = {
           move_right: '移到右栏',
           move_bottom: '移到底栏',
           close: '关闭',
+          main_window: '主窗口',
+          new_window: '新建窗口',
+          on_diagram: '针对图表',
+          on_selection: '针对所选元素',
+          follow: '跟随选择',
+          pin: '固定到此元素',
+          unpin: '重新跟随选择',
+          no_selection: '请选择一个节点或流',
+          no_representation: '此元素没有可用的表示',
+          node: '节点',
+          link: '流',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: '图表表示形式'
@@ -1429,6 +1495,17 @@ export const resources_spreadsheet = {
           move_right: '右の列へ移動',
           move_bottom: '下の帯へ移動',
           close: '閉じる',
+          main_window: 'メインウィンドウ',
+          new_window: '新しいウィンドウ',
+          on_diagram: '図全体に',
+          on_selection: '選択した要素に',
+          follow: '選択に追従',
+          pin: 'この要素に固定',
+          unpin: '再び選択に追従',
+          no_selection: 'ノードまたはフローを選択',
+          no_representation: 'この要素の表現はありません',
+          node: 'ノード',
+          link: 'フロー',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
           diagram_representation: '図の表現形式'

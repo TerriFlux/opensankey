@@ -2255,7 +2255,11 @@ export class Class_ApplicationData {
     // `menu_configuration`) : sans lui, pas de grande zone à décrire.
     const mc = this._menu_configuration
     if (mc) {
-      const shown = mc.main_zone_occupants.map(o => URL_MAIN_ZONE_SHORT_NAMES[o.id] ?? o.id)
+      // os#1387 — seules les fenêtres à sujet DIAGRAMME ont un sens dans une adresse : une
+      // fenêtre épinglée sur un nœud désigne un objet que le destinataire n'a pas sélectionné.
+      const shown = mc.main_zone_occupants
+        .filter(o => o.subject.kind === 'diagram')
+        .map(o => URL_MAIN_ZONE_SHORT_NAMES[o.id] ?? o.id)
       if (shown.join(',') !== 'diagram') {
         params.set('rep', shown.join(','))
       }
