@@ -30,11 +30,11 @@
 // leur bypass de la porte des niveaux ont été supprimés par os#1382.)
 //
 // NŒUDS D'ÉCHANGE — l'extraction travaille sur l'état ÉCLATÉ (les nœuds splittés
-// par `afterFromJSON`), parce que ce sont ces identifiants-là que la clé de `ports`
-// doit porter. TOUTES les sérialisations passent donc par `keep_siblings: true` :
+// par `afterFromJSON`), parce que ce sont ces identifiants-là que le `node_id` d'un
+// port doit porter. TOUTES les sérialisations passent donc par `keep_siblings: true` :
 // sans lui, `SankeyPersistence.toJSON` réécrit un nœud éclaté sous l'id de son
-// AGRÉGAT (`Persistence/SankeyPersistence.tsx:1431-1441`) et les clés de ports ne
-// désigneraient plus rien dans leur propre fichier.
+// AGRÉGAT (`Persistence/SankeyPersistence.tsx:1431-1441`) et les `node_id` des ports
+// ne désigneraient plus rien dans leur propre fichier.
 //
 // COMMENT UNE BRIQUE EST FABRIQUÉE — copie complète puis suppression, la voie
 // éprouvée par `buildUnitaryDrawingArea` : on repart du JSON du global, on le
@@ -48,12 +48,17 @@ import { Class_ApplicationData } from '../types/ApplicationData'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { link_ratio_constraint } from '../types/Utils'
 import { unitaryAssemblyToJSON, unitaryAssemblyFromJSON } from '../types/UnitaryAssembly'
+import { unitaryProcessPortKey } from '../types/UnitaryProcess'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
-import type { Class_Tag } from '../types/Tag'
+import type { Class_Tag, Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import type { Type_JSON } from '../types/Utils'
-import type { Type_UnitaryProcess, Type_UnitaryProcessPort } from '../types/UnitaryProcess'
+import type {
+  Type_UnitaryProcess, Type_UnitaryProcessPort, Type_UnitaryProcessPortDirection,
+  Type_UnitaryProcessActivityReference
+} from '../types/UnitaryProcess'
 import type {
   Type_UnitaryAssembly, Type_UnitaryAssemblyConnection
 } from '../types/UnitaryAssembly'
@@ -130,7 +135,7 @@ const sumLinkValues = (links: Class_LinkElement[]): number =>
   links.reduce((total, link) => total + linkValue(link), 0)
 
 /**
- * Coefficient d'un port, par unité d'activité (convention V1 de `UnitaryProcess.ts`).
+ * Coefficient DÉCLARÉ d'un flux, ou `null` s'il n'y en a pas.
  *
  * SOURCE DÉCLARÉE > CALCUL : si une contrainte de ratio flux
  * (`Type_RatioFluxConstraint`, `types/Sankey.tsx:74-85`) prescrit ce flux ET la
@@ -142,29 +147,84 @@ const sumLinkValues = (links: Class_LinkElement[]): number =>
  * flux nommé, les sorties d'un tiers) ne dit PAS la même grandeur et n'est pas
  * reprise.
  *
- * `null` quand l'activité est nulle : un quotient par zéro ne serait pas « 0 »,
- * il serait faux — et un port sans coefficient dit honnêtement « le fichier ne le
- * dit pas » (cf. UnitaryProcess.ts).
+ * NE VAUT QUE POUR LA GRANDEUR DE RÉFÉRENCE : `link_ratio_constraint` apparie la
+ * contrainte à la combinaison de dataTags COURANTE du flux
+ * (`types/Utils.tsx:414-421`), c'est-à-dire à la tranche sélectionnée. Une
+ * contrainte ne dit donc jamais rien des AUTRES grandeurs du multi-flux, et
+ * l'appelant ne l'interroge que pour le tag d'unité de référence.
  */
-const portCoefficient = (
+const declaredCoefficient = (
   link: Class_LinkElement,
-  process_node: Class_NodeElement,
-  activity: number
+  process_node: Class_NodeElement
 ): number | null => {
   const constraint = link_ratio_constraint(link)
   if (
     constraint !== null && constraint.coef !== null &&
     constraint.origin_ref === '*' && constraint.destination_ref === process_node.name
   ) return constraint.coef
-  if (activity === 0) return null
-  return linkValue(link) / activity
+  return null
+}
+
+/**
+ * La DIMENSION D'UNITÉ du diagramme : le premier groupe de dataTags marqué
+ * `is_unit`, ou `null`. C'est par elle que passe le multi-flux (os#1380) — un
+ * diagramme qui mesure la matière, l'énergie, l'eau et l'azote porte une tranche
+ * de valeurs par unité, exactement comme le corpus SOCLE Lait (4 unités).
+ *
+ * MÊME CHOIX QUE L'AFFICHAGE : `format_value` (`types/Utils.tsx:683`) prend lui
+ * aussi le PREMIER groupe `is_unit` de `getTagGroupsAsList('data_taggs')` — donc
+ * dans l'ordre des groupes du document. Les deux désignent ainsi la même
+ * dimension, et un port ne peut pas nommer une grandeur que le libellé du flux
+ * ignore.
+ */
+const unitTagGroup = (sankey: Class_Sankey): Class_DataTagGroup | null => {
+  const unit_taggs = sankey.getTagGroupsAsList('data_taggs')
+    .filter(tagg => (tagg as Class_DataTagGroup).is_unit) as Class_DataTagGroup[]
+  return unit_taggs.length > 0 ? unit_taggs[0] : null
+}
+
+/**
+ * Le tag d'unité de RÉFÉRENCE : la tranche sélectionnée, celle que `valueCurrent`
+ * rend et donc celle qui définit le niveau d'activité. À défaut de sélection (cas
+ * dégénéré d'un groupe dont aucun tag n'est coché), le premier tag du groupe.
+ */
+const referenceUnitTag = (unit_tagg: Class_DataTagGroup): Class_DataTag | null =>
+  (unit_tagg.selected_tags_list[0] ?? unit_tagg.tags_list[0] ?? null) as Class_DataTag | null
+
+/**
+ * Valeur d'UNE tranche d'unité sur un flux, ou `null` si le flux n'a pas de valeur
+ * pour cette grandeur — une brique ne doit pas inventer un 0 là où le diagramme ne
+ * mesure rien.
+ *
+ * On refait la résolution de `Class_LinkElement.valueForTag` (`Elements/Link.tsx:2173`)
+ * — le tag imposé sur SA dimension, la sélection courante sur les autres — puis on
+ * lit le nombre par `valueForDataTags` (`:2166`), qui applique exactement la règle de
+ * `valueCurrent` (données brutes ou résultat réconcilié selon `type_data`). Les
+ * coefficients d'une grandeur et le niveau d'activité sont donc lus à la même aune.
+ */
+const sliceValue = (link: Class_LinkElement, tag: Class_DataTag): number | null => {
+  const data_tags = link.sankey.data_taggs_list.map(tagg =>
+    (tagg === tag.group ? tag : tagg.selected_tags_list[0]) as Class_DataTag)
+  return link.valueForDataTags(data_tags)
+}
+
+/** Ce qu'un port accumule avant d'être écrit : cf. « flux parallèles » ci-dessous. */
+type Type_PortAccumulator = {
+  port: Type_UnitaryProcessPort
+  // Somme des valeurs des flux visibles qui tombent sur ce port.
+  total: number
+  // Coefficient prescrit par une contrainte de ratio, s'il y en a une.
+  declared: number | null
 }
 
 /**
  * La section `process` d'une brique, lue sur le diagramme SOURCE.
  *
  * NIVEAU D'ACTIVITÉ — la somme des entrées visibles du procédé, conformément à la
- * convention V1 (« la somme des coefficients d'entrée vaut 1 »).
+ * convention V1 (« la somme des coefficients d'entrée de la grandeur de référence
+ * vaut 1 »). Il est UNIQUE : toutes les grandeurs du multi-flux lui sont
+ * rapportées, c'est ce qui les rend comparables entre elles (1 kt de grume, et à
+ * côté les kWh et les m³ qu'il a fallu).
  *
  * REPLI sur les SORTIES quand cette somme est nulle (procédé sans entrée valuée :
  * une source, un import pur, un procédé dont les entrées ne sont pas renseignées).
@@ -175,37 +235,95 @@ const portCoefficient = (
  * (procédé isolé, valeurs absentes), l'activité vaut 0 et AUCUN coefficient n'est
  * écrit — l'absence dit « le fichier ne le dit pas », jamais zéro.
  *
- * COLLISION DE PORTS — `ports` est keyé par id de nœud opposé (format U0). Un même
- * voisin à la fois en amont et en aval du procédé (recyclage, boucle) ne peut donc
- * tenir qu'UN port : c'est l'ENTRÉE qui est retenue, la sortie n'étant pas
- * représentée. C'est une limite du FORMAT, pas de l'extraction — et elle ne coûte
- * rien à la recette, qui reconstitue le diagramme depuis les nœuds et les flux, pas
- * depuis les ports.
+ * ENTRÉE **ET** SORTIE — depuis os#1380, `ports` est une LISTE dont l'identité est
+ * le triplet `(node_id, direction, quantity_ref)`. Un même voisin à la fois en
+ * amont et en aval du procédé (recyclage, retour de connexes, boucle) donne donc
+ * DEUX ports, un par sens. C'était la limite « premier arrivé gagne, l'entrée
+ * écrase la sortie » du format U0 : elle est levée, et la sortie n'est plus muette.
+ *
+ * FLUX PARALLÈLES — deux flux VISIBLES entre le même voisin et le procédé, dans le
+ * même sens, tombent sur le MÊME port pour une grandeur donnée : leurs valeurs y
+ * sont SOMMÉES. C'est le seul choix cohérent avec l'identité de port, et il est
+ * juste : un port dit « ce que ce voisin échange avec ce procédé dans ce sens »,
+ * pas « ce que tel tracé transporte ». Si l'un des deux porte une contrainte de
+ * ratio déclarée, elle prime pour le port entier (source déclarée > calcul).
+ *
+ * MULTI-GRANDEURS — sans dimension d'unité, un port par (voisin × sens), sans
+ * `quantity_ref` : la grandeur est celle du diagramme, implicite. Avec une
+ * dimension d'unité, un port par (voisin × sens × tag d'unité), chacun nommant sa
+ * grandeur (`quantity_ref` = id du tag) et son unité (`unit_ref` = nom du tag) —
+ * la grandeur de référence comprise, qui est ainsi nommée plutôt que laissée
+ * implicite : dans une brique qui en mesure quatre, un port anonyme se lirait mal.
+ * Une tranche ABSENTE ne produit pas de port (cf. `sliceValue`).
  */
 const buildProcessSection = (process_node: Class_NodeElement): Type_UnitaryProcess => {
   const input_links = process_node.visible_input_links_list
   const output_links = process_node.visible_output_links_list
   const total_input = sumLinkValues(input_links)
   const activity = total_input !== 0 ? total_input : sumLinkValues(output_links)
-  const ports: { [node_id: string]: Type_UnitaryProcessPort } = {}
-  const addPort = (
-    opposite_node_id: string,
-    direction: 'input' | 'output',
-    link: Class_LinkElement
+  const unit_tagg = unitTagGroup(process_node.sankey)
+  const reference_tag = unit_tagg !== null ? referenceUnitTag(unit_tagg) : null
+
+  // Les ports dans l'ordre où ils apparaissent (entrées puis sorties, et pour
+  // chaque flux les grandeurs dans l'ordre des tags) ; le dictionnaire ne sert
+  // qu'à retrouver l'accumulateur d'une identité déjà rencontrée.
+  const accumulators: Type_PortAccumulator[] = []
+  const by_key: { [key: string]: Type_PortAccumulator } = {}
+  const accumulate = (
+    node_id: string,
+    direction: Type_UnitaryProcessPortDirection,
+    tag: Class_DataTag | null,
+    value: number,
+    declared: number | null
   ) => {
-    if (ports[opposite_node_id] !== undefined) return // cf. « collision de ports »
-    const port: Type_UnitaryProcessPort = { direction }
-    const coefficient = portCoefficient(link, process_node, activity)
-    if (coefficient !== null) port.coefficient = coefficient
-    ports[opposite_node_id] = port
+    const port: Type_UnitaryProcessPort = { node_id, direction }
+    if (tag !== null) {
+      port.quantity_ref = tag.id
+      port.unit_ref = tag.name
+    }
+    const key = unitaryProcessPortKey(port)
+    let accumulator = by_key[key]
+    if (accumulator === undefined) {
+      accumulator = { port, total: 0, declared: null }
+      by_key[key] = accumulator
+      accumulators.push(accumulator)
+    }
+    accumulator.total += value
+    if (accumulator.declared === null) accumulator.declared = declared
   }
-  input_links.forEach(link => addPort(link.source.id, 'input', link))
-  output_links.forEach(link => addPort(link.target.id, 'output', link))
-  return {
-    central_node_id: process_node.id,
-    activity_reference: { value: activity },
-    ports
+
+  const addLink = (link: Class_LinkElement, direction: Type_UnitaryProcessPortDirection) => {
+    const opposite_node_id = direction === 'input' ? link.source.id : link.target.id
+    if (unit_tagg === null) {
+      accumulate(opposite_node_id, direction, null, linkValue(link), declaredCoefficient(link, process_node))
+      return
+    }
+    unit_tagg.tags_list.forEach(tag => {
+      const data_tag = tag as Class_DataTag
+      const value = sliceValue(link, data_tag)
+      if (value === null) return // tranche absente : pas de port, pas de 0 inventé
+      // Seule la grandeur de référence peut être prescrite par une contrainte.
+      const declared = data_tag === reference_tag ? declaredCoefficient(link, process_node) : null
+      accumulate(opposite_node_id, direction, data_tag, value, declared)
+    })
   }
+
+  input_links.forEach(link => addLink(link, 'input'))
+  output_links.forEach(link => addLink(link, 'output'))
+
+  const ports = accumulators.map(({ port, total, declared }) => {
+    if (declared !== null) return { ...port, coefficient: declared }
+    // Un quotient par zéro ne serait pas « 0 », il serait faux : le port sort
+    // alors sans coefficient, ce qui dit « le fichier ne le dit pas ».
+    if (activity === 0) return port
+    return { ...port, coefficient: total / activity }
+  })
+
+  const activity_reference: Type_UnitaryProcessActivityReference = { value: activity }
+  // L'activité est exprimée dans l'unité de la tranche SÉLECTIONNÉE : c'est elle
+  // que `valueCurrent` rend, donc elle que les sommes ci-dessus ont additionnée.
+  if (reference_tag !== null) activity_reference.unit_ref = reference_tag.name
+  return { central_node_id: process_node.id, activity_reference, ports }
 }
 
 /**
@@ -389,10 +507,15 @@ export const extractUnitaryBricks = (app_data: Class_ApplicationData): Type_Unit
 
   const assembly_bricks: Type_UnitaryAssembly['bricks'] = {}
   process_nodes.forEach(node => {
-    // L'unité reste implicite (celle du diagramme) : rien dans le global ne
-    // désigne, aujourd'hui, une unité PAR PROCÉDÉ. `unit_ref` attend le
-    // multi-flux (U4), où un port porte la sienne.
-    assembly_bricks[node.id] = { activity: process_sections[node.id].activity_reference?.value ?? 0 }
+    // os#1380 — l'unité du niveau d'activité est celle de la GRANDEUR DE
+    // RÉFÉRENCE, c'est-à-dire du tag d'unité sélectionné quand le diagramme porte
+    // une dimension `is_unit`. Sans cette dimension elle reste implicite (celle du
+    // diagramme) et la clé n'est pas écrite : rien d'autre, dans le global, ne
+    // désigne une unité par procédé.
+    const activity_reference = process_sections[node.id].activity_reference
+    assembly_bricks[node.id] = { activity: activity_reference?.value ?? 0 }
+    if (activity_reference?.unit_ref !== undefined)
+      assembly_bricks[node.id].unit_ref = activity_reference.unit_ref
   })
   const assembly: Type_UnitaryAssembly = {
     bricks: assembly_bricks,

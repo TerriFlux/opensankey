@@ -7,7 +7,7 @@ import {
   SankeyUnitaryNodeStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle,
   LinkInUnitaryStyle, LinkOutUnitaryStyle, node_unitary_styles, elementStyleConfigs
 } from '../Elements/ElementStyle'
-import type { Type_UnitaryProcess } from '../types/UnitaryProcess'
+import type { Type_UnitaryProcess, Type_UnitaryProcessPort } from '../types/UnitaryProcess'
 import type { Type_JSON } from '../types/Utils'
 
 /**
@@ -86,6 +86,35 @@ const recipe = (json: Type_JSON) => {
 const processOf = (brick: Type_JSON): Type_UnitaryProcess =>
   brick['process'] as unknown as Type_UnitaryProcess
 
+/**
+ * os#1380 — `ports` est une LISTE depuis le multi-flux : un port se retrouve par
+ * son identite `(node_id, direction, quantity_ref)`, jamais par une cle de
+ * dictionnaire. Ces deux aides disent exactement ce que les anciennes assertions
+ * disaient, sans supposer qu un voisin n a qu un port.
+ */
+const portsOf = (
+  brick: Type_JSON,
+  node_id: string,
+  quantity_ref?: string
+): Type_UnitaryProcessPort[] =>
+  processOf(brick).ports.filter(port =>
+    port.node_id === node_id && (quantity_ref === undefined || port.quantity_ref === quantity_ref))
+
+/** Le port unique d un voisin, pour une grandeur donnee. */
+const portOf = (
+  brick: Type_JSON,
+  node_id: string,
+  quantity_ref?: string
+): Type_UnitaryProcessPort | undefined => {
+  const found = portsOf(brick, node_id, quantity_ref)
+  expect(found.length).toBeLessThanOrEqual(1)
+  return found[0]
+}
+
+/** Les voisins nommes par les ports, dedoublonnes et tries. */
+const portNodeIdsOf = (brick: Type_JSON): string[] =>
+  [...new Set(processOf(brick).ports.map(port => port.node_id))].sort()
+
 const nodeIdsOf = (json: Type_JSON): string[] =>
   Object.keys((json['nodes'] as Type_JSON | undefined) ?? {}).sort()
 const linkIdsOf = (json: Type_JSON): string[] =>
@@ -133,9 +162,14 @@ describe('os#1379 — recette sur un global bipartite', () => {
     expect(s1.central_node_id).toBe('S1')
     expect(s1.activity_reference).toEqual({ value: 40 })
     // 30 / 40 et 10 / 40 : la somme des coefficients d ENTREE vaut bien 1.
-    expect(s1.ports.Pa).toEqual({ direction: 'input', coefficient: 0.75 })
-    expect(s1.ports.Pb).toEqual({ direction: 'input', coefficient: 0.25 })
-    expect(s1.ports.Pmid).toEqual({ direction: 'output', coefficient: 1 })
+    expect(s1.ports).toEqual([
+      { node_id: 'Pa', direction: 'input', coefficient: 0.75 },
+      { node_id: 'Pb', direction: 'input', coefficient: 0.25 },
+      { node_id: 'Pmid', direction: 'output', coefficient: 1 }
+    ])
+    // Sans dimension d unite, aucun port ne nomme sa grandeur : c est celle du
+    // diagramme, implicite.
+    expect(s1.ports.every(port => port.quantity_ref === undefined)).toBe(true)
   })
 
   it('l assemblage porte le niveau d activite et le graphe port a port', () => {
@@ -198,19 +232,18 @@ describe('os#1379 — replis du calcul de coefficient', () => {
     // coefficient de sortie est la part du flux dans ce total (l enonce
     // symetrique de la convention V1).
     expect(s0.activity_reference).toEqual({ value: 40 })
-    expect(s0.ports.Pa).toEqual({ direction: 'output', coefficient: 0.75 })
-    expect(s0.ports.Pb).toEqual({ direction: 'output', coefficient: 0.25 })
+    expect(portOf(bricks.S0, 'Pa')).toEqual({ node_id: 'Pa', direction: 'output', coefficient: 0.75 })
+    expect(portOf(bricks.S0, 'Pb')).toEqual({ node_id: 'Pb', direction: 'output', coefficient: 0.25 })
   })
 
   it('un coefficient declare prime sur le quotient de valeurs', () => {
     const { bricks } = recipe(avecRatioDeclare())
-    const s1 = processOf(bricks.S1)
     // 36 / 40 vaut 0.9 aussi, mais c est bien la contrainte qui repond : elle est
     // reprise TELLE QUELLE, la ou le calcul n aurait donne qu une approximation
     // de valeurs reconciliees.
-    expect(s1.ports.Pmid).toEqual({ direction: 'output', coefficient: 0.9 })
+    expect(portOf(bricks.S1, 'Pmid')).toEqual({ node_id: 'Pmid', direction: 'output', coefficient: 0.9 })
     // Le flux sans contrainte reste calcule : 4 / 40.
-    expect(s1.ports.Pperte).toEqual({ direction: 'output', coefficient: 0.1 })
+    expect(portOf(bricks.S1, 'Pperte')).toEqual({ node_id: 'Pperte', direction: 'output', coefficient: 0.1 })
   })
 })
 
@@ -256,9 +289,9 @@ describe('os#1379 — deux niveaux d agregation', () => {
     const s1 = processOf(bricks.S1)
     // Deux ports, pas quatre : ce sont les flux VISIBLES qui font l etoile.
     // `input_links_list` en aurait donne quatre, et l activite 40 serait devenue 80.
-    expect(Object.keys(s1.ports).sort()).toEqual(['Pin', 'Ptot'])
+    expect(portNodeIdsOf(bricks.S1)).toEqual(['Pin', 'Ptot'])
     expect(s1.activity_reference).toEqual({ value: 40 })
-    expect(s1.ports.Ptot).toEqual({ direction: 'output', coefficient: 1 })
+    expect(portOf(bricks.S1, 'Ptot')).toEqual({ node_id: 'Ptot', direction: 'output', coefficient: 1 })
   })
 
   it('les niveaux masques restent dans le shell, et la recette passe', () => {
@@ -288,14 +321,14 @@ const avecEchange = () => file({
 })
 
 describe('os#1379 — nœud d echange eclate', () => {
-  it('les cles de ports sont les identifiants eclates', () => {
+  it('les ports nomment les identifiants eclates', () => {
     const { app, bricks } = recipe(avecEchange())
     const split_id = 'S1-ImportNettesImportations'
     // L eclatement a bien eu lieu sur le diagramme source.
     expect((app.drawing_area.sankey.nodes_list as unknown as { id: string }[])
       .map(n => n.id)).toContain(split_id)
-    expect(Object.keys(processOf(bricks.S1).ports).sort()).toEqual(['Pout', split_id])
-    expect(processOf(bricks.S1).ports[split_id]).toEqual({ direction: 'input', coefficient: 1 })
+    expect(portNodeIdsOf(bricks.S1)).toEqual(['Pout', split_id])
+    expect(portOf(bricks.S1, split_id)).toEqual({ node_id: split_id, direction: 'input', coefficient: 1 })
     // Et la cle designe bien un nœud du fichier de brique : sans keep_siblings,
     // la persistance l aurait reecrit sous l id de son agregat.
     expect(nodeIdsOf(bricks.S1)).toContain(split_id)
@@ -355,8 +388,142 @@ describe('os#1379 — flux secteur vers secteur', () => {
 
   it('les deux procedes se voient l un l autre comme un port', () => {
     const { bricks } = recipe(secteurVersSecteur())
-    expect(processOf(bricks.S1).ports.S2).toEqual({ direction: 'output', coefficient: 1 })
-    expect(processOf(bricks.S2).ports.S1).toEqual({ direction: 'input', coefficient: 1 })
+    expect(portOf(bricks.S1, 'S2')).toEqual({ node_id: 'S2', direction: 'output', coefficient: 1 })
+    expect(portOf(bricks.S2, 'S1')).toEqual({ node_id: 'S1', direction: 'input', coefficient: 1 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5 bis. os#1380 (U4) — un meme voisin en entree ET en sortie
+// ---------------------------------------------------------------------------
+
+/**
+ * `Pco` (les connexes) revient dans `S1` apres en etre sorti : la boucle de
+ * recyclage du corpus bois. Dans la forme U0, `ports` etait keye par nœud et
+ * l entree ecrasait la sortie — la brique disait donc que S1 consommait des
+ * connexes sans jamais en produire. La forme LISTE lui rend ses deux ports.
+ */
+const boucleDeRecyclage = () => file({
+  nodes: { Pin: produit('Pin'), S1: secteur('S1'), Pco: produit('Pco') },
+  links: {
+    in_s1: flux('in_s1', 'Pin', 'S1', 30),
+    s1_co: flux('s1_co', 'S1', 'Pco', 40),
+    co_s1: flux('co_s1', 'Pco', 'S1', 10)
+  }
+})
+
+/** Deux flux VISIBLES de meme sens entre les memes nœuds : un seul port, somme. */
+const fluxParalleles = () => file({
+  nodes: { Pin: produit('Pin'), S1: secteur('S1'), Pout: produit('Pout') },
+  links: {
+    in_a: flux('in_a', 'Pin', 'S1', 30),
+    in_b: flux('in_b', 'Pin', 'S1', 10),
+    s1_out: flux('s1_out', 'S1', 'Pout', 40)
+  }
+})
+
+describe('os#1380 — collision de ports levee', () => {
+  it('un voisin a la fois amont et aval donne DEUX ports', () => {
+    const { bricks } = recipe(boucleDeRecyclage())
+    // L activite reste la somme des ENTREES visibles : 30 + 10.
+    expect(processOf(bricks.S1).activity_reference).toEqual({ value: 40 })
+    expect(portsOf(bricks.S1, 'Pco')).toEqual([
+      { node_id: 'Pco', direction: 'input', coefficient: 0.25 },
+      { node_id: 'Pco', direction: 'output', coefficient: 1 }
+    ])
+    // Et la convention V1 tient toujours : 0.75 + 0.25 = 1 en entree.
+    expect(portOf(bricks.S1, 'Pin')).toEqual({ node_id: 'Pin', direction: 'input', coefficient: 0.75 })
+  })
+
+  it('deux flux paralleles de meme sens tombent sur le meme port, sommes', () => {
+    const { bricks } = recipe(fluxParalleles())
+    // Un port dit ce que ce voisin echange dans ce sens, pas ce que tel trace
+    // transporte : 30 + 10 sur 40.
+    expect(portsOf(bricks.S1, 'Pin')).toEqual([
+      { node_id: 'Pin', direction: 'input', coefficient: 1 }
+    ])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5 ter. os#1380 (U4) — plusieurs grandeurs, via la dimension d unite
+// ---------------------------------------------------------------------------
+
+const UNIT_GROUP = 'unites'
+
+/** Un flux dont les valeurs sont ventilees par tag de la dimension d unite. */
+const fluxTranches = (
+  id: string,
+  source: string,
+  target: string,
+  tranches: { [tag_id: string]: number }
+) => ({
+  idLink: id,
+  idSource: source,
+  idTarget: target,
+  value: {
+    datatag_group: UNIT_GROUP,
+    ...Object.fromEntries(Object.entries(tranches).map(([tag_id, value]) => [tag_id, { value }]))
+  }
+})
+
+/**
+ * Le cas reel du corpus (SOCLE Lait, 4 unites) reduit a deux grandeurs : une
+ * dimension de dataTags `is_unit` dont la tranche SELECTIONNEE — la matiere —
+ * definit l activite, et une seconde grandeur rapportee a cette meme activite.
+ * `s1_perte` ne porte pas d energie : la tranche est ABSENTE, et l extraction ne
+ * doit pas inventer un port a 0.
+ */
+const deuxGrandeurs = () => file({
+  dataTags: {
+    [UNIT_GROUP]: {
+      group_name: 'Unites', banner: 'one', activated: true, is_unit: true,
+      tags: {
+        matiere: { name: 'matiere', selected: true },
+        energie: { name: 'energie', selected: false }
+      }
+    }
+  },
+  nodes: { Pin: produit('Pin'), S1: secteur('S1'), Pout: produit('Pout'), Pperte: produit('Pperte') },
+  links: {
+    in_s1: fluxTranches('in_s1', 'Pin', 'S1', { matiere: 40, energie: 12 }),
+    s1_out: fluxTranches('s1_out', 'S1', 'Pout', { matiere: 30, energie: 9 }),
+    s1_perte: fluxTranches('s1_perte', 'S1', 'Pperte', { matiere: 10 })
+  }
+})
+
+describe('os#1380 — plusieurs grandeurs sur la dimension d unite', () => {
+  it('emet un port par voisin, sens et grandeur, chacun rapporte a la meme activite', () => {
+    const { bricks } = recipe(deuxGrandeurs())
+    const s1 = processOf(bricks.S1)
+    // L activite est celle de la grandeur de REFERENCE (la tranche selectionnee),
+    // et elle est desormais nommee.
+    expect(s1.activity_reference).toEqual({ value: 40, unit_ref: 'matiere' })
+    // Matiere : la convention V1 tient (1 en entree, 0.75 + 0.25 en sortie).
+    expect(portOf(bricks.S1, 'Pin', 'matiere'))
+      .toEqual({ node_id: 'Pin', direction: 'input', quantity_ref: 'matiere', unit_ref: 'matiere', coefficient: 1 })
+    expect(portOf(bricks.S1, 'Pout', 'matiere'))
+      .toEqual({ node_id: 'Pout', direction: 'output', quantity_ref: 'matiere', unit_ref: 'matiere', coefficient: 0.75 })
+    expect(portOf(bricks.S1, 'Pperte', 'matiere'))
+      .toEqual({ node_id: 'Pperte', direction: 'output', quantity_ref: 'matiere', unit_ref: 'matiere', coefficient: 0.25 })
+    // Energie : NON normalisee, rapportee a la MEME activite — 12 / 40 et 9 / 40.
+    expect(portOf(bricks.S1, 'Pin', 'energie'))
+      .toEqual({ node_id: 'Pin', direction: 'input', quantity_ref: 'energie', unit_ref: 'energie', coefficient: 0.3 })
+    expect(portOf(bricks.S1, 'Pout', 'energie'))
+      .toEqual({ node_id: 'Pout', direction: 'output', quantity_ref: 'energie', unit_ref: 'energie', coefficient: 0.225 })
+  })
+
+  it('une tranche absente ne fait pas de port, et surtout pas un zero', () => {
+    const { bricks } = recipe(deuxGrandeurs())
+    // `s1_perte` n a pas de valeur en energie : le fichier ne dit rien de cette
+    // grandeur-la sur ce flux, et un port a 0 dirait le contraire.
+    expect(portsOf(bricks.S1, 'Pperte', 'energie')).toEqual([])
+    expect(processOf(bricks.S1).ports).toHaveLength(5)
+  })
+
+  it('l assemblage porte l unite de la grandeur de reference', () => {
+    const { assembly } = recipe(deuxGrandeurs())
+    expect(assembly.bricks).toEqual({ S1: { activity: 40, unit_ref: 'matiere' } })
   })
 })
 
@@ -487,10 +654,11 @@ describe('os#1382 — brique d un nœud arbitraire', () => {
     const process = processOf(brick)
     expect(process.central_node_id).toBe('Pmid')
     expect(process.activity_reference).toEqual({ value: 40 })
-    // Les cles de ports sont les ids des VOISINS, pas ceux des flux.
-    expect(Object.keys(process.ports).sort()).toEqual(['S1', 'S2'])
-    expect(process.ports.S1).toEqual({ direction: 'input', coefficient: 1 })
-    expect(process.ports.S2).toEqual({ direction: 'output', coefficient: 1 })
+    // Un port nomme un VOISIN, pas un flux.
+    expect(process.ports).toEqual([
+      { node_id: 'S1', direction: 'input', coefficient: 1 },
+      { node_id: 'S2', direction: 'output', coefficient: 1 }
+    ])
   })
 
   it('laisse le diagramme source intact', () => {
@@ -521,7 +689,7 @@ describe('os#1382 — brique d un nœud arbitraire', () => {
     expect(process.central_node_id).toBe('A')
     // `A` n a aucune entree : repli documente sur ses sorties.
     expect(process.activity_reference).toEqual({ value: 3 })
-    expect(process.ports.B).toEqual({ direction: 'output', coefficient: 1 })
+    expect(process.ports).toEqual([{ node_id: 'B', direction: 'output', coefficient: 1 }])
   })
 
   it('rend un fichier OpenSankey complet, qui se recharge tel quel', () => {

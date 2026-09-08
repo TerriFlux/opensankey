@@ -129,7 +129,9 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                 onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, tag.id)}
               >
                 <HStack spacing='0.5rem'>
-                  <Box as='span'>{tag.name}</Box>
+                  {/* Libellé long s'il existe (« Corse »), sinon le nom (« 94 ») — la
+                      même règle que les sélecteurs de l'éditeur. */}
+                  <Box as='span'>{tag.display_name}</Box>
                   {reference === tag.id ? <CheckIcon boxSize='0.6rem' /> : null}
                 </HStack>
               </MenuItem>
