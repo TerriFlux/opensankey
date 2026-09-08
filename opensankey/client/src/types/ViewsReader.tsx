@@ -369,6 +369,11 @@ export class ViewsReader {
     // Identité LOGIQUE de la vue courante (découplée de l'id du Sankey de la DA). Posée AVANT
     // applyViewTagSelection / les redraws.
     host.current_view_id = id
+    // os#1355 — la vue porte sa REPRÉSENTATION : si elle a figé une disposition de la grande
+    // zone, on la rejoue AVANT le dessin, pour que le diagramme se cadre d'emblée dans la bonne
+    // géométrie. Sans disposition figée (maître, fichiers antérieurs), la courante reste.
+    const view_main_zone = id === MASTER_VIEW_ID ? undefined : host.views_dict[id]?.main_zone
+    if (view_main_zone) host.menu_configuration?.mainZoneStateFromJSON(view_main_zone)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {

@@ -199,6 +199,8 @@ export const EXPECTED_ROOT_KEYS: string[] = [
   // texte d'auteur ; ni l'un ni l'autre ne décrit le diagramme d'une vue.
   'views_order',
   'view_description',
+  // os#1355 — la disposition figée avec la vue est de la MISE EN PAGE, pas du diagramme.
+  'view_main_zone',
   'heredited_attr',
   'heredited_source_id',
   'tag_selection',
