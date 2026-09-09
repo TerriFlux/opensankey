@@ -258,6 +258,46 @@ export class NodePositioningAutoSankey {
   }
 
   /**
+   * Vrai quand cette zone de dessin est un APERÇU, et non le document que l'utilisateur édite.
+   *
+   * POURQUOI CE PRÉDICAT EXISTE. Un aperçu — le board unitaire d'os#1382/os#1387 au premier
+   * chef, mais aussi les zones temporaires d'un import ou d'un chargement de vue — est une
+   * `Class_DrawingArea` de la MÊME `Class_ApplicationData` que le diagramme affiché. Or
+   * l'historique d'annulation et l'indicateur « document non enregistré » sont uniques PAR
+   * APPLICATION, pas par zone de dessin : `Class_ApplicationHistory` ne connaît aucune notion
+   * de drawing area (elle ne porte qu'une table de dix transitions et un index), et
+   * `Class_DrawingArea.saveUndo/saveRedo` ne sont qu'un raccourci qui referme `this` dans la
+   * fonction avant de la pousser dans CETTE table. Tout ce qu'un aperçu y enregistre atterrit
+   * donc dans l'historique DE L'UTILISATEUR et allume son indicateur de non-enregistrement,
+   * alors qu'il n'a rien modifié : il a REGARDÉ un nœud.
+   *
+   * Ce n'est pas une élégance : depuis la grande zone à N fenêtres (os#1387), une fenêtre
+   * affiche une vignette par nœud sélectionné et chaque vignette remonte sa propre brique.
+   * Sélectionner trois nœuds vaudrait trois entrées, et chaque remontage recommencerait — dix
+   * slots d'historique, donc l'annulation réelle de l'utilisateur chassée du tampon en deux
+   * gestes de consultation, et un « non enregistré » permanent qui ne veut plus rien dire.
+   *
+   * DEUX CRITÈRES PLUTÔT QU'UN, parce qu'ils ne disent pas la même chose :
+   *  - `is_unitary` est posé par `buildUnitaryDrawingArea` (OS+) et n'est JAMAIS relu d'un
+   *    fichier : c'est un drapeau d'exécution qui signe « je suis une brique d'aperçu », et il
+   *    tient même si l'aperçu venait un jour à être momentanément la zone courante ;
+   *  - « ce n'est pas la zone affichée » est la règle GÉNÉRALE, et elle couvre les zones
+   *    temporaires qui n'ont rien d'unitaire (`__tmp_layout_source__` de ViewsReader, les
+   *    `tmp_DA` des dialogues d'import) sans qu'aucune ait à se déclarer.
+   *
+   * CE N'EST PAS LE RÔLE DE `launched_from_process`, et c'est pour ça qu'on ne s'en sert pas
+   * ici. Ce drapeau-là dit « l'appelant est un traitement, pas un geste », et il gouverne au
+   * passage l'ÉCHELLE du diagramme (cf. `computeAutoSankey` : `tag.scale` et `computeScale`).
+   * Le passer à `true` depuis le board unitaire pour éteindre l'historique écraserait l'échelle
+   * unitaire que `updateUnitaryStyles` vient tout juste de calculer sur le nœud central — on
+   * gagnerait un historique propre contre un aperçu aux épaisseurs fausses.
+   */
+  private get _is_preview_area(): boolean {
+    return this.drawingArea.is_unitary ||
+      this.drawingArea !== this.drawingArea.application_data.drawing_area
+  }
+
+  /**
    * Page de REFERENCE sur laquelle l'auto-layout repartit colonnes et lignes, en mode papier.
    *
    * Deliberement INDEPENDANTE du contenu : `drawing_area.width/height` derive desormais de la
@@ -939,7 +979,11 @@ export class NodePositioningAutoSankey {
   ) {
 
     // If it's not launched_from_process then we assume it's user input so we save it undoing
-    if (!launched_from_process) {
+    // — sauf sur un APERÇU, qui partage l'historique de l'application sans être le document
+    // que l'utilisateur édite (cf. `_is_preview_area`). Le geste enregistré ici est « j'ai
+    // demandé la disposition automatique » ; sur une brique d'aperçu il n'y a pas de geste,
+    // seulement un montage, et l'annuler ne voudrait rien dire (la zone n'existe déjà plus).
+    if (!launched_from_process && !this._is_preview_area) {
       const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
       const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
@@ -991,11 +1035,20 @@ export class NodePositioningAutoSankey {
     // Update area
     this.drawingArea.areaAutoFit()
     this.drawingArea.draw()
-    // Toggle saving indicator
-    this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Toggle saving indicator — SAUF sur un aperçu. L'indicateur est unique par application :
+    // l'allumer depuis une brique dirait à l'utilisateur qu'il a du travail non enregistré
+    // dans SON document parce qu'il a ouvert une fenêtre pour regarder un nœud. Noter que
+    // cette ligne est inconditionnelle en `launched_from_process` : le seul garde-fou qui
+    // vaille ici est donc « est-ce le document de l'utilisateur ? », pas « qui appelle ? ».
+    if (!this._is_preview_area) {
+      this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
 
     // If it's not launched_from_process then we assume it's user input so we save it undoing
-    if (!launched_from_process) {
+    // (même garde qu'au saveUndo ci-dessus : un aperçu n'écrit pas dans l'historique de
+    // l'utilisateur ; et un saveRedo sans le saveUndo qui lui ouvre son slot écraserait le
+    // `toNext` de la transition PRÉCÉDENTE — celle d'un vrai geste, elle).
+    if (!launched_from_process && !this._is_preview_area) {
       const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
       const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
