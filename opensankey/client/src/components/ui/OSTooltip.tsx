@@ -37,12 +37,15 @@ export const OSTooltipDisabledContext = React.createContext(false)
 // l'infobulle s'ouvre via le handler React posé sur le `<label>` mais ne se referme jamais.
 // Toujours interposer un `Box`/`Td` (cf. Toolbar.tsx, SankeyPlusMenuConfigurationTags.tsx).
 
-export const OSTooltip = ({ label, disabled = false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
+// sa#513 — plus de mode « toujours ouverte » : il servait à afficher, tant que la modale
+// d'accueil était visible, cinq infobulles d'un coup (accueil, roue crantée, colonne
+// d'outils, menu Nouveau, aide). À froid, un premier visiteur voyait une page cassée.
+// Les descriptions vivent désormais DANS la modale d'accueil (SplashScreen.tsx).
+export const OSTooltip = ({ label, disabled = false, delay = 500, placement = 'auto', children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
   disabled?: boolean,
   placement?: PlacementWithLogical
-  isAlwaysOpen?: boolean
   children: ReactNode
 }>) => {
   const tooltips_disabled = React.useContext(OSTooltipDisabledContext)
@@ -50,27 +53,13 @@ export const OSTooltip = ({ label, disabled = false, delay = 500, placement = 'a
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')
-  if (isAlwaysOpen) {
-    return <Tooltip
-      key={element_key}
-      openDelay={delay}
-      placement={placement}
-      label={disabled ? label + '. MFASankey Dataviz required.' : label}
-      closeDelay={100}
-      isOpen={true}
-      hasArrow={true}
-    >
-      {children}
-    </Tooltip>
-  } else {
-    return <Tooltip
-      key={element_key}
-      openDelay={delay}
-      placement={placement}
-      label={disabled ? label + '. MFASankey Dataviz required.' : label}
-      closeDelay={100}
-    >
-      {children}
-    </Tooltip>
-  }
+  return <Tooltip
+    key={element_key}
+    openDelay={delay}
+    placement={placement}
+    label={disabled ? label + '. MFASankey Dataviz required.' : label}
+    closeDelay={100}
+  >
+    {children}
+  </Tooltip>
 }

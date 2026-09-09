@@ -80,6 +80,20 @@ export const resources_welcome = {
         start_template: 'Choose a ready-to-use diagram from the template library as a starting point.',
         start_tour: 'Interactive walkthrough of the interface — menus, toolbar and configuration panel — on a small demo diagram.',
         start_blank: 'Start with an empty drawing area. To draw a flow, click in the drawing area, drag without releasing, then release.'
+      },
+      splash: {
+        title: 'Welcome to OpenSankey',
+        question: 'How would you like to start?',
+        fastest: 'Fastest',
+        desc_template: 'A ready-to-use diagram from the library, to adapt with your own data.',
+        desc_tour: 'Menus, toolbar and configuration panel, in five minutes on a small diagram.',
+        desc_blank: 'An empty drawing area. Click, drag, release: your first flow is drawn.',
+        import_excel: 'Import an Excel file',
+        dont_show: 'Do not show at startup',
+        editions_title: 'To go further',
+        dataviz_desc: 'Views, data tags, hierarchies, batch Excel import: when one diagram becomes a production line.',
+        reconciliation_desc: 'Solver, uncertainties, mass balances: when the data does not add up.',
+        trial: 'Try MFASankey free for 30 days'
       }
     }
   },
@@ -164,6 +178,20 @@ export const resources_welcome = {
         start_template: 'Choisissez un diagramme prêt à l\'emploi dans la bibliothèque de modèles comme point de départ.',
         start_tour: 'Découverte interactive de l\'interface — menus, barre d\'outils et panneau de configuration — sur un petit diagramme de démonstration.',
         start_blank: 'Commencez sur une zone de dessin vide. Pour tracer un flux, cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+      },
+      splash: {
+        title: 'Bienvenue dans OpenSankey',
+        question: 'Comment voulez-vous commencer ?',
+        fastest: 'Le plus rapide',
+        desc_template: 'Un diagramme prêt à l\'emploi de la bibliothèque, à adapter avec vos données.',
+        desc_tour: 'Menus, barre d\'outils et panneau de configuration, en cinq minutes sur un petit diagramme.',
+        desc_blank: 'Une zone de dessin vide. Cliquez, faites glisser, relâchez : votre premier flux est tracé.',
+        import_excel: 'Importer un fichier Excel',
+        dont_show: 'Ne plus afficher à l\'ouverture',
+        editions_title: 'Pour aller plus loin',
+        dataviz_desc: 'Vues, étiquettes de données, hiérarchisation, import Excel en série : quand un diagramme devient une chaîne de production.',
+        reconciliation_desc: 'Solveur, incertitudes, bilans matière : quand les données ne bouclent pas.',
+        trial: 'Essayer MFASankey 30 jours'
       }
     }
   },
@@ -248,6 +276,20 @@ export const resources_welcome = {
         start_template: 'Elija un diagrama listo para usar de la biblioteca de plantillas como punto de partida.',
         start_tour: 'Recorrido interactivo por la interfaz — menús, barra de herramientas y panel de configuración — sobre un pequeño diagrama de demostración.',
         start_blank: 'Comience con un área de dibujo vacía. Para trazar un flujo, haga clic en el área de dibujo, arrastre sin soltar y luego suelte.'
+      },
+      splash: {
+        title: 'Bienvenido a OpenSankey',
+        question: '¿Cómo quiere empezar?',
+        fastest: 'Lo más rápido',
+        desc_template: 'Un diagrama listo para usar de la biblioteca, para adaptar con sus datos.',
+        desc_tour: 'Menús, barra de herramientas y panel de configuración, en cinco minutos sobre un pequeño diagrama.',
+        desc_blank: 'Un área de dibujo vacía. Haga clic, arrastre, suelte: su primer flujo está trazado.',
+        import_excel: 'Importar un archivo Excel',
+        dont_show: 'No mostrar al abrir',
+        editions_title: 'Para ir más lejos',
+        dataviz_desc: 'Vistas, etiquetas de datos, jerarquías, importación Excel en serie: cuando un diagrama se convierte en una cadena de producción.',
+        reconciliation_desc: 'Solver, incertidumbres, balances de materia: cuando los datos no cuadran.',
+        trial: 'Probar MFASankey 30 días'
       }
     }
   },
@@ -332,6 +374,20 @@ export const resources_welcome = {
         start_template: 'Wählen Sie ein fertiges Diagramm aus der Vorlagenbibliothek als Ausgangspunkt.',
         start_tour: 'Interaktiver Rundgang durch die Oberfläche — Menüs, Symbolleiste und Konfigurationsbereich — anhand eines kleinen Demo-Diagramms.',
         start_blank: 'Beginnen Sie mit einer leeren Zeichenfläche. Um einen Fluss zu zeichnen, klicken Sie in die Zeichenfläche, ziehen Sie ohne loszulassen und lassen Sie dann los.'
+      },
+      splash: {
+        title: 'Willkommen bei OpenSankey',
+        question: 'Wie möchten Sie beginnen?',
+        fastest: 'Am schnellsten',
+        desc_template: 'Ein fertiges Diagramm aus der Bibliothek, mit Ihren Daten anzupassen.',
+        desc_tour: 'Menüs, Symbolleiste und Konfigurationsbereich, in fünf Minuten an einem kleinen Diagramm.',
+        desc_blank: 'Eine leere Zeichenfläche. Klicken, ziehen, loslassen: Ihr erster Fluss ist gezeichnet.',
+        import_excel: 'Eine Excel-Datei importieren',
+        dont_show: 'Beim Start nicht mehr anzeigen',
+        editions_title: 'Um weiterzugehen',
+        dataviz_desc: 'Ansichten, Daten-Tags, Hierarchien, Excel-Import in Serie: wenn aus einem Diagramm eine Produktionskette wird.',
+        reconciliation_desc: 'Solver, Unsicherheiten, Massenbilanzen: wenn die Daten nicht aufgehen.',
+        trial: 'MFASankey 30 Tage testen'
       }
     }
   },
@@ -416,6 +472,20 @@ export const resources_welcome = {
         start_template: 'Scegliete un diagramma pronto all\'uso dalla libreria di modelli come punto di partenza.',
         start_tour: 'Percorso interattivo dell\'interfaccia — menu, barra degli strumenti e pannello di configurazione — su un piccolo diagramma dimostrativo.',
         start_blank: 'Iniziate con un\'area di disegno vuota. Per tracciare un flusso, cliccate nell\'area di disegno, trascinate senza rilasciare, poi rilasciate.'
+      },
+      splash: {
+        title: 'Benvenuti in OpenSankey',
+        question: 'Come volete iniziare?',
+        fastest: 'Il più rapido',
+        desc_template: 'Un diagramma pronto all\'uso dalla libreria, da adattare con i vostri dati.',
+        desc_tour: 'Menu, barra degli strumenti e pannello di configurazione, in cinque minuti su un piccolo diagramma.',
+        desc_blank: 'Un\'area di disegno vuota. Cliccate, trascinate, rilasciate: il vostro primo flusso è tracciato.',
+        import_excel: 'Importare un file Excel',
+        dont_show: 'Non mostrare più all\'apertura',
+        editions_title: 'Per andare oltre',
+        dataviz_desc: 'Viste, etichette di dati, gerarchie, importazione Excel in serie: quando un diagramma diventa una catena di produzione.',
+        reconciliation_desc: 'Solver, incertezze, bilanci di materia: quando i dati non tornano.',
+        trial: 'Provare MFASankey per 30 giorni'
       }
     }
   },
@@ -500,6 +570,20 @@ export const resources_welcome = {
         start_template: '从模板库中选择一张开箱即用的图表作为起点。',
         start_tour: '在一张小型演示图上交互式浏览界面——菜单、工具栏与配置面板。',
         start_blank: '从空白绘图区开始。绘制流量时，请在绘图区中点击、按住拖动，然后松开。'
+      },
+      splash: {
+        title: '欢迎使用 OpenSankey',
+        question: '您想如何开始？',
+        fastest: '最快',
+        desc_template: '从库中选择一张开箱即用的图表，用您的数据进行调整。',
+        desc_tour: '在一张小图上用五分钟了解菜单、工具栏和配置面板。',
+        desc_blank: '一个空白绘图区。点击、拖动、松开：您的第一条流量就画好了。',
+        import_excel: '导入 Excel 文件',
+        dont_show: '启动时不再显示',
+        editions_title: '更进一步',
+        dataviz_desc: '视图、数据标签、层级、批量 Excel 导入：当一张图表变成一条生产线。',
+        reconciliation_desc: '求解器、不确定性、物料平衡：当数据无法闭合时。',
+        trial: '免费试用 MFASankey 30 天'
       }
     }
   },
@@ -584,6 +668,20 @@ export const resources_welcome = {
         start_template: 'テンプレートライブラリからすぐ使える図を選び、出発点にします。',
         start_tour: '小さなデモ図を使って、画面（メニュー、ツールバー、設定パネル）を対話的に確認します。',
         start_blank: '空の描画エリアから始めます。フローを描くには、描画エリアでクリックし、押したままドラッグして、離してください。'
+      },
+      splash: {
+        title: 'OpenSankey へようこそ',
+        question: 'どのように始めますか？',
+        fastest: '最速',
+        desc_template: 'ライブラリのすぐ使える図を、ご自身のデータに合わせて調整します。',
+        desc_tour: '小さな図を使って、メニュー、ツールバー、設定パネルを5分で確認します。',
+        desc_blank: '空の描画エリアです。クリック、ドラッグ、離す：最初のフローが描かれます。',
+        import_excel: 'Excel ファイルを読み込む',
+        dont_show: '起動時に表示しない',
+        editions_title: 'さらに先へ',
+        dataviz_desc: 'ビュー、データタグ、階層、Excel の一括読み込み：1枚の図が生産ラインになるとき。',
+        reconciliation_desc: 'ソルバー、不確実性、物質収支：データが合わないとき。',
+        trial: 'MFASankey を30日間試す'
       }
     }
   }
