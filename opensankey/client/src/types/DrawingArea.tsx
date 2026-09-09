@@ -615,6 +615,16 @@ export class Class_DrawingArea {
    */
   public applyAutoFitMode(animated: boolean = false): void {
     const mode = this._auto_fit_mode
+    // os#1383 — Recadrage AUTOMATIQUE (animated=false) sous « échelle adaptée » ET verrou de
+    // taille : on ne recadre pas. C'est le mode qui tient la taille apparente, côté données ;
+    // recadrer par-dessus régule la même grandeur par la caméra — le conflit qu'os#1371 avait
+    // tranché pour le dézoom de secours (`locked_overflow_shrink_allowed`). Ici le forçage
+    // passait par `recenter(true)` / `areaAutoFit(..., true)`, qui traversent le verrou par
+    // construction, et chaque changement d'étiquette de vue recadrait sur une boîte englobante
+    // différente (libellés, hauteurs) : mesuré sur CARTOFOB/AURA, essence par essence,
+    // k = 0,405 → 0,429 → 0,431 → 0,347, d'où un déplacement horizontal à chaque bascule.
+    // Le GESTE explicite (animated=true, bouton de cadrage) reste souverain, comme le veut #1240.
+    if (!animated && this._size_locked && this._effectivePositionMode() === 'scale_adapted') return
     if (mode === 'width') {
       // fill_axis_forced=true → REMPLIT la largeur (hauteur peut déborder, scrollable).
       if (animated) this.areaAutoFitAnimated(true, true, true)
@@ -1369,7 +1379,16 @@ export class Class_DrawingArea {
         // La zone a pu RÉTRÉCIR (barre latérale ouverte/élargie) : le cadrage de
         // référence ne suffit alors plus à tout montrer -> dézoom transitoire, la
         // référence restant intacte pour ré-agrandir à la fermeture.
-        if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+        // os#1383 — même garde qu'à l'autre site (os#1371, cf. `locked_overflow_shrink_allowed`) :
+        // sous « échelle adaptée », c'est le MODE qui tient la taille apparente, pas la caméra.
+        // Elle manquait ici, et ce site-ci se déclenche à chaque changement d'étiquette de vue :
+        // la boîte englobante variant d'une essence à l'autre (libellés, hauteurs), le dézoom
+        // mordait, puis la ligne du dessus reprenait cette caméra rétrécie comme nouvelle
+        // référence — un cliquet vers le bas. Mesuré sur AURA, essence par essence :
+        // k = 0,405 → 0,429 → 0,431 → 0,347, figé au plus petit. Le zoom doit rester CONSTANT
+        // dans ce mode : seule l'échelle change.
+        if (this.locked_overflow_shrink_allowed
+          && this._lockedContentOverflows(locked_zoom_transform.k)) {
           this._locked_overflow_shrunk = true
           this.areaAutoFit(false, true)
         } else {
