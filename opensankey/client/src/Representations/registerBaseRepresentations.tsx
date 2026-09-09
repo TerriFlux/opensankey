@@ -25,12 +25,12 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaShareAlt, FaBullseye } from 'react-icons/fa'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye } from 'react-icons/fa'
 import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
-  MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_UNITARY_ID
+  MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
 
@@ -83,22 +83,12 @@ export const registerBaseRepresentations = (): void => {
     host: 'component'
   })
 
-  representation_registry.register({
-    id: MAIN_ZONE_UNITARY_ID,
-    scale: 'diagram',
-    order: 40,
-    label: (a) => a.t('Spreadsheet.zone.unitary'),
-    short_label: (a) => a.t('Spreadsheet.zone.unit'),
-    icon: <FaShareAlt />,
-    publish_option: 'unitary',
-    // La brique est portée par OS+, qui lève ce drapeau. Sans OS+, l'entrée
-    // existe dans le registre mais n'est jamais proposée : c'est exactement ce
-    // que fait déjà le bouton « Unit. » de la barre du haut.
-    gate: (a) => a.menu_configuration.unitary_tab_available,
-    // Porté vers document.body par OS+ (hors #sankey_app, pour survivre au redraw
-    // du diagramme) et positionné sur le cadre que la grande zone lui réserve.
-    host: 'external'
-  })
+  // os#1387 — Le panneau unitaire OS+ (`os.repr.unitary`, hôte externe) n'est PLUS offert à
+  // l'échelle diagramme : le Sankey unitaire est une représentation d'UN NŒUD, et c'est la
+  // fenêtre d'élément « Unit. » (`osp.repr.unit`) qui le porte, avec ses réglages et le choix
+  // des nœuds. Deux interfaces pour le même objet, c'était une de trop (arbitrage Julien).
+  // Les fichiers qui portent encore `os.repr.unitary` dans leur grande zone se relisent en
+  // fenêtre « Unit. » sur la sélection (cf. mainZoneStateFromJSON).
 
   // os#1363 / os#1387 — Le sunburst est une représentation d'UN NŒUD (arbitrage Julien,
   // 08/09/2026 : pas de statistiques sur le diagramme entier), donc à l'échelle ÉLÉMENT :
