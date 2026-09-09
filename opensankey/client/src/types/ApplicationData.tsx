@@ -2090,7 +2090,19 @@ export class Class_ApplicationData {
         // k = 0,326) en revenant à la vue agrégée (k = 0,405 à l'aller) — là où l'application,
         // dont les essences sont des vues, se remettait d'aplomb. Ni `recenter()` ni
         // `areaAutoFit()` n'agissent sous verrou : mesuré, les deux laissaient 0,326.
-        this._drawing_area.invalidateLockedFit()
+        //
+        // SAUF en « échelle adaptée » : ce mode tient déjà la taille apparente côté DONNÉES
+        // (l'échelle s'ajuste pour que le diagramme garde sa hauteur). Recadrer par-dessus, c'est
+        // réguler la même grandeur par la caméra — le même conflit qu'os#1371 avait tranché pour
+        // le dézoom de secours (`locked_overflow_shrink_allowed`, faux dans ce mode). Et comme le
+        // cadrage suit la boîte englobante, qui varie d'une essence à l'autre (libellés, hauteurs),
+        // chaque essence prenait un zoom différent : mesuré sur AURA, bbox 3483 → k=0,405
+        // (agrégées), 3372 → 0,429 (chêne), 3491 → 0,347 (douglas), 3356 → 0,450 (peuplier), d'où
+        // un déplacement horizontal à chaque changement. Sans refit, la caméra reste posée : le
+        // mode garantit seul que le diagramme garde sa taille.
+        if (this._drawing_area.effective_position_mode !== 'scale_adapted') {
+          this._drawing_area.invalidateLockedFit()
+        }
       }
     }
   }
