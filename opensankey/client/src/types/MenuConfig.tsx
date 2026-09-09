@@ -123,6 +123,9 @@ export const MAIN_ZONE_CANVAS_ID = 'os.repr.sankey'
 export const MAIN_ZONE_SPREADSHEET_ID = 'os.repr.spreadsheet'
 export const MAIN_ZONE_DOC_ID = 'os.repr.doc'
 export const MAIN_ZONE_UNITARY_ID = 'os.repr.unitary'
+// os#1387 — la représentation « Unit. » d'ÉLÉMENT (OS+), qui remplace le panneau unitaire à
+// hôte externe. Nommée ici pour que la grande zone sache y rediriger les anciens appels.
+export const MAIN_ZONE_UNIT_WINDOW_ID = 'osp.repr.unit'
 // Noms courts des quatre occupants historiques dans le paramètre d'URL `rep` (sa#1354) :
 // les adresses déjà partagées les portent, et un id de registre y serait moins lisible.
 export const URL_MAIN_ZONE_SHORT_NAMES: { [id: string]: string } = {
@@ -748,9 +751,19 @@ export class Class_MenuConfig {
   public set main_zone_show_doc(v: boolean) {
     if (v) this.showMainZoneOccupant(MAIN_ZONE_DOC_ID); else this.hideMainZoneOccupant(MAIN_ZONE_DOC_ID)
   }
-  public get main_zone_show_unitary() { return this.isMainZoneOccupant(MAIN_ZONE_UNITARY_ID) }
+  // os#1387 — « montrer l'unitaire » ouvre désormais une FENÊTRE D'ÉLÉMENT « Unit. » qui suit la
+  // sélection (le panneau OS+ à hôte externe n'est plus offert) ; la masquer ferme les fenêtres
+  // Unit. ouvertes. Les appelants OS+ (bouton, clic droit) gardent leur geste.
+  public get main_zone_show_unitary() {
+    return this._main_zone_occupants.some(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID)
+  }
   public set main_zone_show_unitary(v: boolean) {
-    if (v) this.showMainZoneOccupant(MAIN_ZONE_UNITARY_ID); else this.hideMainZoneOccupant(MAIN_ZONE_UNITARY_ID)
+    if (v) {
+      if (!this.main_zone_show_unitary) this.openMainZoneWindow({ kind: 'selection' }, MAIN_ZONE_UNIT_WINDOW_ID)
+    } else {
+      this._main_zone_occupants.filter(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID)
+        .forEach(o => this.hideMainZoneOccupant(o.id))
+    }
   }
   public get main_zone_doc_detached() { return this.isMainZoneDetached(MAIN_ZONE_DOC_ID) }
   public set main_zone_doc_detached(v: boolean) { this.setMainZoneDetached(MAIN_ZONE_DOC_ID, v) }
@@ -905,6 +918,11 @@ export class Class_MenuConfig {
         .sort((a, b) => a.order - b.order)
       this._main_zone_occupants = entries.map(({ id, subject, representation, place, size, options }) =>
         (options ? { id, subject, representation, place, size, options } : { id, subject, representation, place, size }))
+      // os#1387 — un fichier écrit avec le panneau unitaire à hôte externe : sa fenêtre devient
+      // une fenêtre d'élément « Unit. » qui suit la sélection, même place, même poids.
+      this._main_zone_occupants = this._main_zone_occupants.map(o => o.id === MAIN_ZONE_UNITARY_ID
+        ? { ...o, id: `w_${++this._main_zone_window_seq}`, subject: { kind: 'selection' }, representation: MAIN_ZONE_UNIT_WINDOW_ID }
+        : o)
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
       this._main_zone_window_seq = Math.max(this._main_zone_window_seq, ...this._main_zone_occupants
         .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
@@ -931,7 +949,12 @@ export class Class_MenuConfig {
       if (doc_in_column && doc_first) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'right', doc_size))
       if (show_sheet) list.push(diagramWindow(MAIN_ZONE_SPREADSHEET_ID, 'right', sheet_size))
       if (doc_in_column && !doc_first) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'right', doc_size))
-      if (show_unit) list.push(diagramWindow(MAIN_ZONE_UNITARY_ID, 'right', 1 - unitary_ratio))
+      if (show_unit) {
+        list.push({
+          id: `w_${++this._main_zone_window_seq}`, subject: { kind: 'selection' },
+          representation: MAIN_ZONE_UNIT_WINDOW_ID, place: 'right', size: 1 - unitary_ratio
+        })
+      }
       if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
       this._main_zone_occupants = list
     }
