@@ -116,6 +116,16 @@ export type Type_MainZoneOccupant = {
   options?: Type_JSON
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
+/**
+ * os#1386 — La FEUILLE d'un sujet, ou `''` pour la feuille courante.
+ *
+ * Un seul endroit pour lire ce champ optionnel, parce qu'il y a deux façons de dire « la
+ * feuille courante » et qu'elles doivent rester interchangeables : l'absence de la clé
+ * (fichiers d'avant os#1386, et sujets qu'on n'a jamais dépaysés) et la chaîne vide. Un
+ * sujet 'selection' n'en porte jamais : il SUIT le dessin, donc la feuille vivante.
+ */
+export const mainZoneSubjectSheet = (s: Type_MainZoneSubject): string =>
+  ('sheet' in s && typeof s.sheet === 'string') ? s.sheet : ''
 // Les quatre occupants historiques, par leur id de registre. Nommés ici (et non dans le
 // registre) parce que la grande zone a besoin d'en reconnaître UN : le canevas, qui est le
 // SVG sous tout le reste et ne peut être que `main`.

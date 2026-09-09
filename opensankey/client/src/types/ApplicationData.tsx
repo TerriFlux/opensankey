@@ -191,6 +191,24 @@ export type Type_SheetEntry = {
 }
 
 /**
+ * os#1386 — Conteneur de dessin d'une application de LECTURE de feuille : un sélecteur qui
+ * ne peut désigner aucun élément réel de la page.
+ *
+ * Ce n'est pas une précaution de style. Une `Class_DrawingArea` naît avec
+ * `container_selector = '#sankey_app'`, c'est-à-dire le conteneur du diagramme AFFICHÉ, et
+ * tout chemin qui dessine commence par `selectAll('#draw_zoom').remove()` dedans : une
+ * application détachée qu'on laisserait avec le sélecteur par défaut EFFACERAIT le
+ * diagramme de l'utilisateur au premier calcul de placement. Le board unitaire a payé ce
+ * défaut jusqu'en septembre 2026 (cf. `UnitaryBoard.buildUnitaryDrawingArea`, « LE
+ * CONTENEUR, TOUT DE SUITE »), au prix d'un redessin complet du diagramme principal après
+ * chaque vignette. On ne le refait pas ici.
+ *
+ * Le nom est volontairement imprononçable : aucune feuille de style, aucun composant ne
+ * peut le poser par mégarde sur un vrai nœud du DOM.
+ */
+const SHEET_SNAPSHOT_CONTAINER_SELECTOR = '#os1386_sheet_snapshot_offscreen_never_in_dom'
+
+/**
  * Association du document ouvert à sa BRIQUE de bibliothèque (sa#399) : id du
  * projet côté serveur (server/library.py) et chemin du fichier dans le manifeste
  * des versions. PERSISTÉE dans le JSON du diagramme (clé racine `library_ref`)
@@ -606,6 +624,13 @@ export class Class_ApplicationData {
   /** True dès que le document porte des feuilles nommées (au moins une entrée). */
   public get has_sheets(): boolean { return this._sheets_order.length > 0 }
 
+  /**
+   * os#1386 — Applications de LECTURE des feuilles NON courantes, par id de feuille, avec
+   * l'instantané dont elles sont issues. Voir `sheetApplication` pour le pourquoi, la
+   * politique d'invalidation et le contrat de lecture seule.
+   */
+  protected _sheet_apps: { [id: string]: { snapshot: Uint8Array, app: Class_ApplicationData } } = {}
+
   // Service de LECTURE des vues (#1316). Instancié via une fabrique virtuelle : OpenSankey+
   // (Class_ApplicationDataOSP) la surcharge pour fournir un `ViewsManager` (édition) à la place,
   // sans dupliquer le corps de lecture. Ce champ vit ici pour qu'un viewer OS pur sache
@@ -926,6 +951,9 @@ export class Class_ApplicationData {
     this._sheets = {}
     this._sheets_order = []
     this._current_sheet_id = ''
+    // os#1386 — et donc leurs applications de lecture : elles portent le modèle d'un
+    // document qui n'est plus ouvert (cf. `sheetApplication`).
+    this._clearSheetApplications()
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -1467,6 +1495,12 @@ export class Class_ApplicationData {
     const sheets = this._sheets
     const order = this._sheets_order
     const current = this._current_sheet_id
+    // os#1386 — les applications de lecture des AUTRES feuilles traversent l'opération :
+    // une bascule de feuille ne change pas leurs instantanés, donc les recharger serait
+    // payer O(feuille) pour un modèle identique. Celle de la feuille qu'on vient de quitter
+    // s'invalide toute seule, parce que `_snapshotCurrentSheet` a réécrit son instantané et
+    // que le cache compare la RÉFÉRENCE (cf. `sheetApplication`).
+    const sheet_apps = this._sheet_apps
     this._loading_into_sheet = true
     try {
       this.fromJSON(json_object, undefined, draw)
@@ -1476,6 +1510,7 @@ export class Class_ApplicationData {
     this._sheets = sheets
     this._sheets_order = order
     this._current_sheet_id = current
+    this._sheet_apps = sheet_apps
   }
 
   /**
@@ -1582,10 +1617,137 @@ export class Class_ApplicationData {
       this.switchToSheet(fallback, draw)
     }
     delete this._sheets[id]
+    // os#1386 — plus d'instantané, donc plus d'application de lecture. Les fenêtres qui
+    // pointaient cette feuille le découvriront par `sheetApplication`, qui rend `null`,
+    // et le diront à l'écran.
+    delete this._sheet_apps[id]
     const idx = this._sheets_order.indexOf(id)
     if (idx >= 0) this._sheets_order.splice(idx, 1)
     this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+  }
+
+  // os#1386 — LIRE UNE AUTRE FEUILLE SANS QUITTER LA SIENNE ==============================
+  //
+  // La moitié LECTURE du multi-document (NOTE-FENETRES-ET-POINTAGE.md §4bis) : une fenêtre
+  // de la grande zone peut pointer un nœud ou un flux d'une AUTRE feuille — son sujet porte
+  // alors `sheet` (cf. `Type_MainZoneSubject`) — et le montrer en couronne, en barres, en
+  // sunburst ou en Sankey unitaire pendant qu'on travaille sur la sienne.
+  //
+  // POURQUOI IL FAUT UNE APPLICATION, ET PAS SEULEMENT DU JSON. Les représentations lisent
+  // des OBJETS DE MODÈLE — un `Class_NodeElement`, ses flux visibles, ses tags, son
+  // sankey — et rien dans l'arbre ne sait tracer une couronne depuis un dictionnaire JSON.
+  // L'instantané d'une feuille doit donc être CHARGÉ, dans une application à part, et c'est
+  // très exactement ce que l'issue demande : « rendre depuis l'instantané ».
+
+  /**
+   * L'application qui porte le modèle d'une feuille, prête à être lue.
+   *
+   * Rend `this` pour la feuille COURANTE (elle est l'état vivant, il n'y a rien à charger)
+   * et pour un `sheet_id` vide (un sujet sans feuille désigne la feuille courante, c'est la
+   * convention de `Type_MainZoneSubject`). Rend `null` quand la feuille a disparu ou n'a pas
+   * d'instantané : l'appelant le DIT à l'écran, il ne casse rien — une fenêtre épinglée sur
+   * une feuille supprimée est une fenêtre sans sujet, pas une erreur.
+   *
+   * LE COÛT, ET LE CACHE. Charger un instantané est O(feuille) : décompression, parsing,
+   * construction du modèle complet, vues comprises. C'est une dépense d'OUVERTURE, pas de
+   * rendu — elle ne doit être payée ni à chaque dessin, ni à chaque redessin, ni à chaque
+   * re-rendu React de la fenêtre, qui sont tous bien plus fréquents. D'où ce cache par
+   * feuille, dont l'invalidation tient en trois portes :
+   *
+   *  - L'INSTANTANÉ LUI-MÊME est la clé, par l'identité de son `Uint8Array` et non par un
+   *    hachage : `_snapshotCurrentSheet` REMPLACE le tableau chaque fois qu'une feuille
+   *    cesse d'être courante, et `sheetsFromJSON` les recrée tous. Comparer la référence
+   *    suffit donc à voir « cette feuille a changé », pour un coût nul. C'est aussi ce qui
+   *    rend une BASCULE de feuille correcte sans traitement particulier : les feuilles qu'on
+   *    ne quitte pas gardent leur instantané, donc leur application ; celle qu'on vient de
+   *    quitter est réécrite, donc sa référence change, donc elle se recharge.
+   *  - `reset()` vide le cache : les feuilles appartiennent au DOCUMENT (cf. son commentaire),
+   *    charger un autre document les efface toutes, et leurs applications avec.
+   *  - `deleteSheet` retire l'entrée de la feuille supprimée.
+   *
+   * LECTURE SEULE, ET C'EST UN CONTRAT. Rien de ce qui vit dans cette application ne
+   * remonte : on ne la resérialise jamais vers `_sheets[id].json`, et aucun geste de la
+   * fenêtre n'écrit dans le document. Si une représentation mute son modèle — le clic
+   * d'agrégation du sunburst le fait —, elle ne mute que cette copie, qui meurt avec le
+   * cache. Une fenêtre sur une autre feuille MONTRE ; elle ne modifie pas.
+   */
+  public sheetApplication(sheet_id: string): Class_ApplicationData | null {
+    if (sheet_id === '' || sheet_id === this._current_sheet_id) return this
+    const sheet = this._sheets[sheet_id]
+    if (!sheet || !sheet.json) return null
+    const cached = this._sheet_apps[sheet_id]
+    if (cached && cached.snapshot === sheet.json) return cached.app
+    const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+    const app = this._loadSheetSnapshotApplication(json)
+    this._sheet_apps[sheet_id] = { snapshot: sheet.json, app }
+    return app
+  }
+
+  /**
+   * Charge un instantané de feuille dans une application HORS ÉCRAN.
+   *
+   * LA MÊME CLASSE QUE L'HÔTE — `new (this.constructor)` et non `new Class_ApplicationData` :
+   * en OpenSankey+ le modèle, la persistance (vues, view tags) et le rendu unitaire sont ceux
+   * d'`ApplicationDataOSP`, et une application de base relirait de travers un fichier qu'OSP a
+   * écrit. Le constructeur de la sous-classe est appelé sans que celle-ci ait rien à surcharger.
+   *
+   * LE CONTENEUR EST POSÉ SUR LA FABRIQUE, ET PAS SEULEMENT SUR LA PREMIÈRE ZONE. Poser
+   * `container_selector` sur `app.drawing_area` avant `fromJSON` ne suffirait PAS, et pas
+   * seulement parce que `reset()` remplace la zone par une neuve : le chargement en crée
+   * d'autres en chemin — une par vue lourde extraite (`ViewsReader.extractViewFromJSON`,
+   * `ViewsManager`), une pour la source de mise en page — et l'une d'elles DESSINE. Le cas
+   * n'a rien de théorique : quand l'instantané a été enregistré sur une vue autre que le
+   * maître, `ViewsReader.viewsFromJSON` appelle `drawing_area.draw()` de sa propre autorité,
+   * précisément parce qu'on charge avec `draw = false` et que personne d'autre ne dessinera
+   * (os#1377). Et `draw()` remet `bypass_redraws` à `false` en entrant : ce drapeau ne
+   * protège de rien. Une seule ligne de défense tient donc : que TOUTE zone de dessin de
+   * cette application naisse hors écran, d'où l'enveloppe posée ici sur sa fabrique. Un
+   * dessin sur un conteneur introuvable est inoffensif — d3 travaille alors sur une sélection
+   * vide — là où un dessin sur `'#sankey_app'` effacerait le diagramme de l'utilisateur.
+   *
+   * L'enveloppe est posée sur l'INSTANCE, et c'est voulu : `createNewDrawingArea` est
+   * surchargée par OpenSankey+ (elle construit une `Class_DrawingAreaOSP`), et envelopper la
+   * méthode telle que la sous-classe la fournit garde ce dispatch intact. Elle n'empêche
+   * personne de repointer ensuite une zone vers un vrai conteneur — c'est ce que fait le
+   * board unitaire pour sa vignette, juste après l'avoir demandée.
+   *
+   * CE QU'ON RECOPIE DE L'HÔTE, ET POURQUOI. Le registre des représentations filtre ses
+   * entrées sur l'application du CONTEXTE — `isOfferedToReader` lit `is_static` et les options
+   * de publication, les `gate` lisent les licences, les libellés passent par `t`. Sans ces
+   * quatre-là, une fenêtre sur une autre feuille proposerait une autre liste de natures que la
+   * même fenêtre sur la feuille courante, et l'écrirait sans traduction. `publish_options` n'a
+   * pas à être recopié : il est lu de `window.sankey`, donc déjà commun aux deux.
+   *
+   * `draw = false` : cette application n'a pas d'écran. Ce sont les représentations qui
+   * dessinent, chacune dans le conteneur que son hôte lui donne.
+   */
+  protected _loadSheetSnapshotApplication(json_object: Type_JSON): Class_ApplicationData {
+    const Ctor = this.constructor as new (
+      published_mode: boolean, options?: { [_: string]: boolean | string }
+    ) => Class_ApplicationData
+    const app = new Ctor(this.is_static, this.options)
+    app.t = this.t
+    app.has_sankey_plus = this.has_sankey_plus
+    app.has_sankey_afm = this.has_sankey_afm
+    const create_drawing_area = app.createNewDrawingArea.bind(app)
+    app.createNewDrawingArea = (id?: string): Class_DrawingArea => {
+      const drawing_area = create_drawing_area(id)
+      drawing_area.container_selector = SHEET_SNAPSHOT_CONTAINER_SELECTOR
+      return drawing_area
+    }
+    app.drawing_area.container_selector = SHEET_SNAPSHOT_CONTAINER_SELECTOR
+    app.fromJSON(json_object, {}, false)
+    // `reset()` a créé une drawing area neuve, dont `static` retombe sur le défaut global
+    // (`window.sankey?.publish`). On le réaligne sur l'hôte : c'est lui qui décide si l'on
+    // est dans une page publiée, et le registre s'en sert pour offrir ou retirer une nature.
+    app.drawing_area.static = this.is_static
+    return app
+  }
+
+  /** Oublie les applications de lecture des feuilles (cf. `sheetApplication`). */
+  protected _clearSheetApplications(): void {
+    this._sheet_apps = {}
   }
 
   /**

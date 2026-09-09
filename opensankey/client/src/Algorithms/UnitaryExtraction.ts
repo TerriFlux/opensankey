@@ -112,6 +112,22 @@ const cloneJSON = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T
  */
 const loadDetachedApp = (json: Type_JSON, consume_json: boolean = false): Class_ApplicationData => {
   const app = new Class_ApplicationData(false)
+  // HORS ÉCRAN, POUR DE BON. Une Class_DrawingArea naît avec `container_selector = '#sankey_app'`,
+  // le conteneur du diagramme AFFICHÉ, et tout chemin qui dessine commence par y retirer le
+  // `#draw_zoom` qu'il trouve : une application détachée qui dessine EFFACE le diagramme de
+  // l'utilisateur. On l'a payé sur le board unitaire (os#1387). Ici rien ne dessine
+  // aujourd'hui — les JSON de brique ne portent ni vues ni vue courante, et c'est la lecture
+  // des vues qui déclenche un dessin d'autorité — mais l'invariant ne doit pas dépendre de la
+  // forme du JSON qu'on nous donne. La fabrique est enveloppée sur l'instance, pour que TOUTE
+  // zone créée ensuite (un `reset()` en construit une neuve) hérite du même conteneur : un
+  // sélecteur qui ne peut désigner aucun élément, où d3 travaille sur une sélection vide.
+  const create = app.createNewDrawingArea.bind(app)
+  app.createNewDrawingArea = (id?: string) => {
+    const da = create(id)
+    da.container_selector = '#os_detached_app_offscreen_never_in_dom'
+    return da
+  }
+  app.drawing_area.container_selector = '#os_detached_app_offscreen_never_in_dom'
   app.fromJSON((consume_json ? json : cloneJSON(json)) as never, {}, false)
   return app
 }

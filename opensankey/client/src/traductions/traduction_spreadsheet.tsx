@@ -234,7 +234,13 @@ export const resources_spreadsheet = {
           normalize_on: 'Normalize on',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: 'Diagram representation'
+          diagram_representation: 'Diagram representation',
+          // os#1386 — une fenêtre peut regarder une AUTRE feuille du document, en lecture.
+          // `subject_sheet` nomme le choix (liste déroulante de la barre des sujets, montrée
+          // seulement si le document a plusieurs feuilles) ; `sheet_gone` est ce que dit une
+          // fenêtre restée épinglée sur une feuille supprimée — elle le DIT, elle ne casse rien.
+          subject_sheet: 'Sheet of the subject',
+          sheet_gone: 'This sheet no longer exists'
         }
       }
     }
@@ -453,7 +459,10 @@ export const resources_spreadsheet = {
           normalize_on: 'Normaliser sur',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: 'Représentation du diagramme'
+          diagram_representation: 'Représentation du diagramme',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Feuille du sujet',
+          sheet_gone: 'Cette feuille n\'existe plus'
         }
       }
     }
@@ -672,7 +681,10 @@ export const resources_spreadsheet = {
           normalize_on: 'Normalizar sobre',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: 'Representación del diagrama'
+          diagram_representation: 'Representación del diagrama',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Hoja del sujeto',
+          sheet_gone: 'Esta hoja ya no existe'
         }
       }
     }
@@ -891,7 +903,10 @@ export const resources_spreadsheet = {
           normalize_on: 'Normieren auf',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: 'Darstellung des Diagramms'
+          diagram_representation: 'Darstellung des Diagramms',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Blatt des Gegenstands',
+          sheet_gone: 'Dieses Blatt existiert nicht mehr'
         }
       }
     }
@@ -1110,7 +1125,10 @@ export const resources_spreadsheet = {
           normalize_on: 'Normalizza su',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: 'Rappresentazione del diagramma'
+          diagram_representation: 'Rappresentazione del diagramma',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Foglio del soggetto',
+          sheet_gone: 'Questo foglio non esiste più'
         }
       }
     }
@@ -1335,7 +1353,10 @@ export const resources_spreadsheet = {
           normalize_on: '归一化于',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: '图表表示形式'
+          diagram_representation: '图表表示形式',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: '主体所在工作表',
+          sheet_gone: '该工作表已不存在'
         }
       }
     }
@@ -1560,7 +1581,10 @@ export const resources_spreadsheet = {
           normalize_on: '正規化の基準',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
-          diagram_representation: '図の表現形式'
+          diagram_representation: '図の表現形式',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: '対象のシート',
+          sheet_gone: 'このシートは存在しません'
         }
       }
     }
