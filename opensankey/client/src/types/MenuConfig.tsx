@@ -325,11 +325,13 @@ export class Class_MenuConfig {
   // fichier ancien (cf. mainZoneStateFromJSON) ; « doc à droite du tableur DANS la colonne »
   // devient « doc sous le tableur » — simplification arbitrée (Julien, 08/09/2026).
   //
-  // Une contrainte que le dessin impose : le diagramme (MAIN_ZONE_CANVAS_ID) est le canevas
-  // SVG sous tout le reste, et une drawing area ne sait que RÉSERVER à droite et en bas. Donc
-  // quand il est affiché, il est TOUJOURS l'occupant `main` ; un autre occupant ne prend
-  // `main` que si le diagramme est caché. `_normalizeMainZoneOccupants` le garantit après
-  // chaque mutation, plutôt que chaque appelant.
+  // Le diagramme (MAIN_ZONE_CANVAS_ID) est une fenêtre COMME LES AUTRES (arbitrage Julien,
+  // 09/09/2026 : « la fenêtre principale peut contenir des graphes ») : il va dans la colonne
+  // droite ou le bandeau du bas, et se ferme. Ce modèle ne sait rien du SVG : l'hôte
+  // (MainZoneTabs) donne à la drawing area le CADRE de sa case quand il n'est pas `main` (cf.
+  // ApplicationData.main_zone_canvas_frame), et le SVG s'y cadre comme une zone détachée.
+  // Seul invariant : exactement un occupant `main`, garanti par `_normalizeMainZoneOccupants`
+  // après chaque mutation, plutôt que par chaque appelant.
   // ---------------------------------------------------------------------------------------
   protected _main_zone_occupants: Type_MainZoneOccupant[] = [
     { id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }
@@ -550,6 +552,12 @@ export class Class_MenuConfig {
     const existing = this._main_zone_occupants.find(o => o.id === id)
     if (existing) {
       if (place && existing.place !== place) existing.place = place
+    } else if (id === MAIN_ZONE_CANVAS_ID && !place) {
+      // Le diagramme qui revient reprend la principale ; celui qui l'occupait prend sa place.
+      this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, 'right')
+      this._normalizeMainZoneOccupants()
+      this.makeMainZoneOccupantMain(id)
+      return
     } else {
       // Une fenêtre à sujet DIAGRAMME : son id est sa représentation (cf. Type_MainZoneOccupant).
       this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, place)
@@ -721,19 +729,33 @@ export class Class_MenuConfig {
     if (this._main_zone_active_id !== null && !list.some(o => o.id === this._main_zone_active_id)) {
       this._main_zone_active_id = null
     }
-    const canvas = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
-    if (canvas) {
-      list.forEach(o => { if (o.place === 'main' && o !== canvas) o.place = 'right' })
-      canvas.place = 'main'
-    } else {
-      const mains = list.filter(o => o.place === 'main')
-      if (mains.length === 0) {
-        const promoted = list.find(o => o.place === 'right') ?? list[0]
-        promoted.place = 'main'
-      } else mains.slice(1).forEach(o => { o.place = 'right' })
-    }
+    const mains = list.filter(o => o.place === 'main')
+    if (mains.length === 0) {
+      // Personne en principale : le diagramme s'il est là, sinon le premier de la colonne
+      // droite, sinon le premier venu.
+      const promoted = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
+        ?? list.find(o => o.place === 'right') ?? list[0]
+      promoted.place = 'main'
+    } else mains.slice(1).forEach(o => { o.place = 'right' })
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
     this._main_zone_occupants = list
+  }
+
+  /**
+   * Fait d'une fenêtre LA principale : elle échange sa place (et son poids) avec l'occupant
+   * `main` du moment, qui prend la sienne — la grande zone garde exactement une principale
+   * sans qu'aucune fenêtre ne disparaisse. Une fenêtre détachée se ré-attache pour cela.
+   */
+  public makeMainZoneOccupantMain(id: string): void {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o || o.place === 'main') return
+    const main = this._main_zone_occupants.find(x => x.place === 'main')
+    if (main) { main.place = o.place; main.size = o.size }
+    o.place = 'main'
+    o.size = 1
+    this._main_zone_detached.delete(id)
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
   }
 
   // --- Compatibilité : les quatre occupants historiques par leur ancien nom -----------------
