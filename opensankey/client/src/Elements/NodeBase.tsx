@@ -126,6 +126,43 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _center_x: number | undefined = undefined
   protected _center_y: number | undefined = undefined
 
+  /**
+   * os#1383 — Poussée D'AFFICHAGE en cours sur `position_y` (anti-chevauchement et clamp haut
+   * du mode « échelle adaptée », cf. `resolveScaleAdaptedOverlaps`). Elle ne fait pas partie de
+   * la vérité du nœud (le centre) : toute CAPTURE du centre depuis le coin la défait d'abord,
+   * et toute dérivation du coin depuis le centre l'annule. Sans ce registre, un nœud poussé dans
+   * une vue puis masqué dans la suivante gardait son coin poussé, que `settleCenterAnchor`
+   * (bascule de mode, sur TOUS les nœuds) ou la branche « taille inchangée » de
+   * `anchorByCenterIfResized` committaient dans le centre — du maître, donc de toutes les vues
+   * légères. Mesuré sur CARTOFOB : Prélèvements (Douglas) remonté à y = −793.
+   */
+  protected _display_shift_y: number = 0
+  // Le coin d'AVANT la première poussée de la frame : c'est lui qu'on restaure, et non « coin
+  // courant − cumul » — un tiers peut réécrire `position_y` entre la poussée et la capture
+  // (mesuré : coin redérivé, cumul encore posé, et l'annulation par soustraction plantait alors
+  // le centre de 127 px). Restaurer une valeur est immune à ce que d'autres écrivent entre-temps.
+  protected _display_base_y: number | undefined = undefined
+
+  /** Décale le coin pour l'AFFICHAGE seulement : sera défait avant toute capture du centre. */
+  public pushDisplayShiftY(dy: number) {
+    if (!dy) return
+    if (this._display_base_y === undefined) this._display_base_y = this.position_y
+    this.position_y += dy
+    this._display_shift_y += dy
+  }
+
+  /** Ramène le coin là où il était avant les poussées d'affichage. */
+  public undoDisplayShift() {
+    if (this._display_base_y !== undefined) this.position_y = this._display_base_y
+    this.clearDisplayShift()
+  }
+
+  /** Oublie les poussées sans toucher au coin : il vient d'être redérivé, ou déplacé exprès. */
+  public clearDisplayShift() {
+    this._display_base_y = undefined
+    this._display_shift_y = 0
+  }
+
   // #1231 — Mode proportionnel : centre vertical de référence (capturé à l'entrée du
   // mode / après un drag, cf. NodePositioning.captureProportionalReference). À chaque
   // dessin, le centre affiché = médiane + (center_ref − médiane) × f, où f est le
@@ -400,6 +437,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
    * (appelée au 1er draw, datatag du save restauré → exact en mode absolu).
    */
   public captureCenterFromCorner() {
+    // os#1383 — une poussée d'affichage n'est pas une position : on la défait avant de lire le coin.
+    this.undoDisplayShift()
     this._center_x = this.position_x + this.getShapeWidthToUse() / 2
     this._center_y = this.position_y + this.getShapeHeightToUse() / 2
   }
@@ -413,6 +452,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (this._center_x === undefined || this._center_y === undefined) return
     this.position_x = this._center_x - this.getShapeWidthToUse() / 2
     this.position_y = this._center_y - this.getShapeHeightToUse() / 2
+    // os#1383 — le coin vient d'être redérivé : plus aucune poussée d'affichage dessus.
+    this.clearDisplayShift()
   }
 
   /**
@@ -631,6 +672,9 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
   protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragStart(event)
+    // os#1383 — un glisser est un geste EXPLICITE : le coin d'où il part fait foi, poussée
+    // d'affichage comprise ; la capture de fin de geste ne doit rien en défaire.
+    this.clearDisplayShift()
     this.drawing_area.beginFitDrag() // #680 — réinitialise l'accumulateur de direction du glissé
     // os#1344 — un drag de nœud commence : les flèches de création connectée s'effacent.
     this.drawing_area.connection_gesture.onNodeDragStart()
