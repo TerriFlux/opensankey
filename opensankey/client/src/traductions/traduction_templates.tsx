@@ -17,6 +17,7 @@ export const resources_template = {
           empty: 'No published study yet',
           back: 'All studies',
           open_study: 'Open this study',
+          made_with: 'Made with',
           diagrams: '{{count}} diagram(s)',
           versions: 'Published versions',
           others: 'Other diagrams'
@@ -271,6 +272,7 @@ export const resources_template = {
           empty: 'Aucune étude publiée pour l\'instant',
           back: 'Toutes les études',
           open_study: 'Ouvrir cette étude',
+          made_with: 'Réalisé avec',
           diagrams: '{{count}} diagramme(s)',
           versions: 'Versions publiées',
           others: 'Autres diagrammes'
@@ -526,6 +528,7 @@ export const resources_template = {
           empty: 'Ningún estudio publicado por ahora',
           back: 'Todos los estudios',
           open_study: 'Abrir este estudio',
+          made_with: 'Realizado con',
           diagrams: '{{count}} diagrama(s)',
           versions: 'Versiones publicadas',
           others: 'Otros diagramas'
@@ -776,6 +779,7 @@ export const resources_template = {
           empty: 'Noch keine veröffentlichte Studie',
           back: 'Alle Studien',
           open_study: 'Diese Studie öffnen',
+          made_with: 'Erstellt mit',
           diagrams: '{{count}} Diagramm(e)',
           versions: 'Veröffentlichte Versionen',
           others: 'Weitere Diagramme'
@@ -1026,6 +1030,7 @@ export const resources_template = {
           empty: 'Nessuno studio pubblicato per ora',
           back: 'Tutti gli studi',
           open_study: 'Apri questo studio',
+          made_with: 'Realizzato con',
           diagrams: '{{count}} diagramma/i',
           versions: 'Versioni pubblicate',
           others: 'Altri diagrammi'
@@ -1274,6 +1279,7 @@ export const resources_template = {
           empty: '暂无已发布的研究',
           back: '全部研究',
           open_study: '打开此研究',
+          made_with: '制作工具',
           diagrams: '{{count}} 个图表',
           versions: '已发布版本',
           others: '其他图表'
@@ -1519,6 +1525,7 @@ export const resources_template = {
           empty: '公開済みの研究事例はまだありません',
           back: 'すべての研究事例',
           open_study: 'この研究事例を開く',
+          made_with: '作成ツール',
           diagrams: '{{count}} 件の図',
           versions: '公開済みバージョン',
           others: 'その他の図'
