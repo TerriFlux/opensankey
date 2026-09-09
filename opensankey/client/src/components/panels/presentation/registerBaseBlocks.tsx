@@ -26,6 +26,10 @@ import { Box, Checkbox, Text } from '@chakra-ui/react'
 
 import { default_font_size } from '../../../css/Theme'
 import { formatElementValue, resolveValueUnit } from '../../../Elements/ValueFormatting'
+import {
+  displayedLabelOf,
+  isLinkLikeElement as isLinkLike
+} from '../../../Elements/ElementNaming'
 import type { Class_LinkElement } from '../../../Elements/Link'
 import { NodeTooltip } from '../../../Elements/TooltipsNode'
 import { LinkTooltip, type Type_LinkSeries } from '../../../Elements/TooltipsLink'
@@ -40,16 +44,10 @@ import {
 
 type Unknown_Element = Record<string, unknown> | null
 
-const isLinkLike = (el: Unknown_Element): boolean =>
-  !!el && 'source' in el && 'target' in el
-
-const readName = (el: Unknown_Element): string => {
-  if (!el) return ''
-  const effective = el['name_label_effective']
-  if (typeof effective === 'string' && effective.trim() !== '') return effective
-  const name = el['name']
-  return typeof name === 'string' ? name : ''
-}
+// La reconnaissance d'un flux et la lecture du libellé AFFICHÉ vivent désormais en
+// un seul endroit (Elements/ElementNaming) : ces deux règles se retrouvaient aussi
+// dans les graphiques d'analyse et dans les fenêtres de la grande zone, et une copie
+// oubliée est un nom de plus qui diverge de ce que montre le diagramme.
 
 /** Flux représentatif servant de référence de FORMAT (unité, précision). */
 const sampleLinkOf = (el: Unknown_Element): Class_LinkElement | undefined => {
@@ -251,11 +249,11 @@ export function registerBasePresentationBlocks(): void {
       const el = el_of(ctx)
       let text = ''
       if (isLinkLike(el)) {
-        const src = readName(el?.['source'] as Unknown_Element)
-        const tgt = readName(el?.['target'] as Unknown_Element)
+        const src = displayedLabelOf(el?.['source'])
+        const tgt = displayedLabelOf(el?.['target'])
         text = (src || tgt) ? `${src} → ${tgt}` : ''
       } else {
-        text = readName(el)
+        text = displayedLabelOf(el)
       }
       if (text.trim() === '') return null
       return (

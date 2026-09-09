@@ -33,6 +33,7 @@ import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_LevelTagGroup } from '../types/TagGroup'
+import { displayedNameOf } from '../Elements/ElementNaming'
 
 // Registre minimal attendu du diagramme. Structurel plutôt que nominal : le module
 // n'a besoin que de ces deux entrées, et rester sur une forme évite d'attacher le
@@ -199,7 +200,10 @@ const buildNode = (
   const declared = sunburstNodeValue(node)
   const base: Type_SunburstNode = {
     id: node.id,
-    label: node.name,
+    // Le nom TEL QUE LE DIAGRAMME LE PRODUIT (gabarit, tag, nœud ancêtre) : une couronne
+    // nomme ses secteurs comme le dessin nomme ses nœuds, sinon le même objet porte deux
+    // noms à l'écran (arbitrage Julien, 09/09/2026).
+    label: displayedNameOf(node),
     value: declared,
     declared,
     color: node.getShapeColorToUse() ?? null,
