@@ -153,7 +153,16 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   /** Ramène le coin là où il était avant les poussées d'affichage. */
   public undoDisplayShift() {
-    if (this._display_base_y !== undefined) this.position_y = this._display_base_y
+    if (this._display_base_y !== undefined) {
+      // La poussée n'est défaite que si le coin la porte ENCORE (coin = base + poussée). Un
+      // tiers qui a réécrit `position_y` depuis a posé une position VOULUE — l'empilement des
+      // feuilles d'un cadre (`restackContainerChildren`), qui écrit le coin puis capture le
+      // centre pour committer la pile, ou un glisser. La restaurer sans condition effaçait la
+      // pile : dans « Toutes essences » en échelle adaptée, les stocks retombaient à leur coin
+      // dérivé et se chevauchaient.
+      const pushed = this._display_base_y + this._display_shift_y
+      if (Math.abs(this.position_y - pushed) < 1e-6) this.position_y = this._display_base_y
+    }
     this.clearDisplayShift()
   }
 
