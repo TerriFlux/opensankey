@@ -1173,7 +1173,14 @@ export class Class_DrawingArea {
     this.application_data.syncUrlState()
     // os#1361 — les occupants `draw` de la grande zone lisent les mêmes données que ce dessin :
     // c'est ici, et nulle part ailleurs, qu'ils apprennent qu'elles ont changé.
-    this.application_data.menu_configuration?.notify(DRAW_TOPIC)
+    //
+    // Seul le diagramme AFFICHÉ le signale. Un board unitaire (jalon 81) est une DrawingArea
+    // de la même application, dessinée DANS une fenêtre de la grande zone : si son propre
+    // dessin notifiait, la fenêtre qui l'héberge se croirait périmée, le remonterait, il se
+    // redessinerait… — c'était le clignotement lent des fenêtres Unit.
+    if (this.application_data.drawing_area === this) {
+      this.application_data.menu_configuration?.notify(DRAW_TOPIC)
+    }
   }
 
   /**
