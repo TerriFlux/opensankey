@@ -7,6 +7,8 @@ export const resources_template = {
       templates: {
         need_osp: 'MFASankey Dataviz needed',
         gallery_hint: 'Click a template to start from an example',
+        entry_studies: 'Studies',
+        entry_models: 'Templates',
         sankeytheque_hint: 'Click a study to open it',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
@@ -259,6 +261,8 @@ export const resources_template = {
       templates: {
         need_osp: 'MFASankey Dataviz necessaire',
         gallery_hint: 'Cliquez sur un modèle pour partir d\'un exemple',
+        entry_studies: 'Études',
+        entry_models: 'Modèles',
         sankeytheque_hint: 'Cliquez sur une étude pour l\'ouvrir',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
@@ -512,6 +516,8 @@ export const resources_template = {
       templates: {
         need_osp: 'Se necesita MFASankey Dataviz',
         gallery_hint: 'Haga clic en una plantilla para empezar desde un ejemplo',
+        entry_studies: 'Estudios',
+        entry_models: 'Plantillas',
         sankeytheque_hint: 'Haga clic en un estudio para abrirlo',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
@@ -760,6 +766,8 @@ export const resources_template = {
       templates: {
         need_osp: 'MFASankey Dataviz erforderlich',
         gallery_hint: 'Klicken Sie auf eine Vorlage, um mit einem Beispiel zu starten',
+        entry_studies: 'Studien',
+        entry_models: 'Vorlagen',
         sankeytheque_hint: 'Klicken Sie auf eine Studie, um sie zu öffnen',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
@@ -1008,6 +1016,8 @@ export const resources_template = {
       templates: {
         need_osp: 'MFASankey Dataviz necessario',
         gallery_hint: 'Clicca su un modello per partire da un esempio',
+        entry_studies: 'Studi',
+        entry_models: 'Modelli',
         sankeytheque_hint: 'Clicca su uno studio per aprirlo',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
@@ -1254,6 +1264,8 @@ export const resources_template = {
       templates: {
         need_osp: '需要 MFASankey Dataviz',
         gallery_hint: '点击某个模板即可从示例开始',
+        entry_studies: '研究',
+        entry_models: '模板',
         sankeytheque_hint: '点击某项研究即可打开',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
@@ -1497,6 +1509,8 @@ export const resources_template = {
       templates: {
         need_osp: 'MFASankey Dataviz が必要です',
         gallery_hint: 'テンプレートをクリックすると、その例から始められます',
+        entry_studies: '研究',
+        entry_models: 'テンプレート',
         sankeytheque_hint: '研究事例をクリックすると開きます',
         // sa#509 — panneau SankeyThèque à vignettes
         theque: {
