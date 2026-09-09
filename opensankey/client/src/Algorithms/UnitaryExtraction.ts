@@ -94,10 +94,25 @@ export type Type_UnitaryExtraction = {
 
 const cloneJSON = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-/** Charge un JSON dans une application NEUVE, sans dessiner (usage hors écran). */
-const loadDetachedApp = (json: Type_JSON): Class_ApplicationData => {
+/**
+ * Charge un JSON dans une application NEUVE, sans dessiner (usage hors écran).
+ *
+ * `consume_json` — `fromJSON` MUTE son argument (migrations de format écrites en
+ * place, sous-objets repris par référence) : par défaut on lui donne donc une
+ * copie, sans quoi l'appelant qui réutilise son JSON pour une autre brique
+ * repartirait d'un objet déjà digéré. Cette copie est une vraie dépense, et non
+ * une précaution symbolique : sur le corpus CARTOFOB (194 nœuds, 1 608 flux) le
+ * JSON de niveau drawing area pèse 3,5 Mo et son `JSON.parse(JSON.stringify(…))`
+ * coûte ~20 ms, à chaque brique. Quand l'appelant vient tout juste de fabriquer
+ * ce JSON pour ce seul appel — c'est le cas de `extractUnitaryBrickFor`, qui
+ * sérialise la drawing area courante et n'en refait rien après —, personne ne
+ * peut observer la mutation : on lui passe alors l'objet tel quel et on économise
+ * la copie. `extractUnitaryBricks`, lui, clone son `global_json` une fois par
+ * procédé PLUS une fois pour le shell : il garde le défaut.
+ */
+const loadDetachedApp = (json: Type_JSON, consume_json: boolean = false): Class_ApplicationData => {
   const app = new Class_ApplicationData(false)
-  app.fromJSON(cloneJSON(json) as never, {}, false)
+  app.fromJSON((consume_json ? json : cloneJSON(json)) as never, {}, false)
   return app
 }
 
@@ -374,15 +389,51 @@ const jsonSubObject = (json: Type_JSON, key: string): { [id: string]: unknown } 
 const buildBrickJSON = (
   source_json: Type_JSON,
   star: Set<string>,
-  process_section: Type_UnitaryProcess
+  process_section: Type_UnitaryProcess,
+  // Vrai quand le JSON source n'a plus d'autre lecteur (cf. `loadDetachedApp`).
+  consume_source: boolean = false
 ): Type_JSON => {
-  const brick_app = loadDetachedApp(source_json)
-  const brick_sankey = brick_app.drawing_area.sankey
+  const brick_app = loadDetachedApp(source_json, consume_source)
+  const brick_drawing_area = brick_app.drawing_area
+  const brick_sankey = brick_drawing_area.sankey
+  const victims = brick_sankey.nodes_list.filter(brick_node => !star.has(brick_node.id))
+
+  // POURQUOI ON MET L'ORDRE DE DESSIN DE CÔTÉ LE TEMPS DE L'AMPUTATION.
+  //
+  // `DrawingArea.deleteNode` et `deleteLink` entretiennent l'ordre de dessin
+  // (`list_g_element`, sérialisé en `order_g_elements`) en le RE-FILTRANT en
+  // entier à chaque suppression. C'est juste, et c'est linéaire dans la taille du
+  // diagramme — donc quadratique ici, où l'on supprime presque tout : sur le
+  // corpus CARTOFOB, amputer un global de 2 167 éléments pour ne garder l'étoile
+  // d'un nœud de degré médian revient à ~1 780 suppressions, chacune reconstruisant
+  // un tableau de ~2 000 chaînes. Mesuré : 72 ms de pur recopiage de tableau par
+  // brique, pour un résultat que l'on connaît d'avance.
+  //
+  // On le calcule donc UNE fois. L'ordre parqué est vide pendant la boucle (les
+  // filtrages deviennent des no-op sur tableau vide), et on le repose ensuite privé
+  // des identifiants effectivement supprimés. Le résultat est le MÊME liste à
+  // liste : les seuls retraits que la boucle opère sont le nœud visé et ses flux
+  // incidents (`Class_Sankey.deleteNode` cascade sur `input_links_list` et
+  // `output_links_list`), et l'ordre relatif de ce qui reste est préservé par le
+  // filtre. On lit l'adjacence AVANT la boucle, sur le graphe intact : une fois un
+  // nœud supprimé, ses dictionnaires de flux sont vidés et ne diraient plus rien.
+  // Tout le reste de l'ordre — libellés, zones, formes de stock — n'est jamais
+  // touché par `deleteNode` et traverse donc l'opération intact, ce qu'une
+  // reconstruction « à partir des éléments survivants » aurait au contraire perdu.
+  const removed_ids = new Set<string>()
+  victims.forEach(brick_node => {
+    removed_ids.add(brick_node.id)
+    brick_node.input_links_list.forEach(link => removed_ids.add(link.id))
+    brick_node.output_links_list.forEach(link => removed_ids.add(link.id))
+  })
+  const draw_order = brick_drawing_area.list_g_element
+  brick_drawing_area.list_g_element = []
+
   // Copie complète puis suppression : `deleteNode` cascade sur les flux, donc
   // l'ordre « flux puis nœuds » n'a pas à être orchestré ici.
-  brick_sankey.nodes_list
-    .filter(brick_node => !star.has(brick_node.id))
-    .forEach(brick_node => brick_app.drawing_area.deleteNode(brick_node))
+  victims.forEach(brick_node => brick_drawing_area.deleteNode(brick_node))
+
+  brick_drawing_area.list_g_element = draw_order.filter(id => !removed_ids.has(id))
   brick_sankey.unitary_process = process_section
   return brick_app.toJSON(SERIALIZATION_KWARGS) as Type_JSON
 }
@@ -406,6 +457,15 @@ const buildBrickJSON = (
  * parce que c'est exactement le coût d'ouverture du board unitaire d'aujourd'hui
  * (`buildUnitaryDrawingArea` sérialise et recharge le global entier). Un focus
  * successif sur N nœuds paie donc N fois ce prix, pas une fois.
+ *
+ * Ce que « O(graphe) » veut dire sur un vrai corpus (CARTOFOB, 194 nœuds et
+ * 1 608 flux, 3,5 Mo de JSON au niveau drawing area) : une sérialisation complète
+ * du diagramme affiché, la construction d'un modèle complet dans une application
+ * neuve, puis ~1 780 suppressions en cascade — pour rendre une étoile de 11 nœuds
+ * et 11 flux, soit 0,6 % du graphe. Le chemin est bon pour l'EXPORT d'une brique
+ * (jalon 81 : un fichier autonome, produit sur geste explicite) ; il est
+ * disproportionné pour un APERÇU qui se remonte à chaque changement de sujet.
+ * C'est la conception, pas ce module, qui décidera de le remplacer.
  *
  * POURQUOI CE POINT D'ENTRÉE SÉRIALISE AU NIVEAU DRAWING AREA, et non
  * `app_data.toJSON` comme `extractUnitaryBricks` — deux raisons, toutes deux
@@ -446,7 +506,10 @@ export const extractUnitaryBrickFor = (
   const source_json = DrawingAreaPersistence.toJSON(drawing_area, SERIALIZATION_KWARGS) as Type_JSON
   // La section `process` se lit sur le diagramme SOURCE, avant toute amputation
   // (cf. « niveau d'agrégation » en tête de module).
-  return buildBrickJSON(source_json, starNodeIds(node), buildProcessSection(node))
+  // `consume_source` : ce JSON vient d'être fabriqué pour ce seul appel et n'est
+  // relu par personne ensuite — la copie défensive de `loadDetachedApp` n'aurait
+  // rien à protéger (cf. son commentaire).
+  return buildBrickJSON(source_json, starNodeIds(node), buildProcessSection(node), true)
 }
 
 /**
