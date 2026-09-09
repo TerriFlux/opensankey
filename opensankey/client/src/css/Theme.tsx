@@ -244,6 +244,28 @@ export const modalStyles = {
     footer: { height: 'fit-content', padding: '0' }
   }),
 
+  // Modale d'accueil (sa#513). Le style de base pose le dialogue en grille
+  // « 3rem auto » (en-tête + corps) : sans en-tête, le corps tombait dans la
+  // rangée de 3rem et le pied venait se dessiner par-dessus les cartes. On
+  // revient à un flux en bloc, la modale prend la hauteur de son contenu.
+  modal_splash: modal.definePartsStyle({
+    overlay: { opacity: 0.3 },
+    dialog: {
+      display: 'block',
+      width: 'min(44rem, 95vw)',
+      maxWidth: '44rem',
+      height: 'auto',
+      maxHeight: 'calc(100vh - 2rem)',
+      overflowY: 'auto',
+      padding: 0,
+      gridGap: 0,
+      gridTemplateRows: 'none',
+      alignSelf: 'center'
+    },
+    body: { display: 'block', width: '100%', height: 'auto', minWidth: 0, padding: 0 },
+    footer: { height: 'auto', padding: '0.75rem 1.75rem 1rem' }
+  }),
+
   modal_select_unit_from_data: modal.definePartsStyle({
     body: {
       '.rd3t-tree-container': {
