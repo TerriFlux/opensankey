@@ -67,13 +67,25 @@ describe('os#1383 — la poussee d affichage ne fuit pas dans le centre', () => 
   it('une ecriture directe du coin entre la poussee et la capture ne fausse pas le centre', () => {
     // Mesure sur CARTOFOB : coin redérivé par un tiers alors que la poussée était encore posée.
     // Une annulation par SOUSTRACTION aurait retranché 127 d un coin déjà propre : centre faux
-    // d une demi-hauteur. On restaure le coin d AVANT la poussée, quoi qu il soit arrivé depuis.
+    // d une demi-hauteur. Le coin ne porte plus la poussée : on ne défait rien, on capture ce qui est.
     const { n, cy } = makeNode()
     n.pushDisplayShiftY(127)
     n.position_y = 200   // un tiers redérive le coin sans passer par applyCenterToCorner
     n.captureCenterFromCorner()
     expect(n.position_y).toBe(200)
     expect(n.center_y).toBe(cy)
+  })
+
+  it('une position VOULUE posee apres la poussee est gardee et devient le centre (empilement de cadre)', () => {
+    // `restackContainerChildren` ecrit le coin de chaque feuille puis capture le centre pour
+    // committer la pile. Restaurer la base sans condition effacait la pile : dans « Toutes
+    // essences » en echelle adaptee, les stocks retombaient a leur coin derive et se chevauchaient.
+    const { n } = makeNode()
+    n.pushDisplayShiftY(127)
+    n.position_y = 900   // la pile
+    n.captureCenterFromCorner()
+    expect(n.position_y).toBe(900)
+    expect(n.center_y).toBeCloseTo(900 + n.getShapeHeightToUse() / 2, 9)
   })
 
   it('un geste explicite oublie la poussee : le coin courant fait foi', () => {
