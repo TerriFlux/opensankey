@@ -47,6 +47,7 @@ import { decodeViewsFromDelta } from './viewDelta'
 import type { Type_ViewEntry, Type_ViewLabelDef } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
+import type { Type_CanvasFrame } from './DrawingArea'
 import { exposeDrawCounters } from './DrawCounters'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
@@ -1836,6 +1837,15 @@ export class Class_ApplicationData {
   public refreshWindowFraming() {
     this._drawing_area.refreshWindowFraming()
   }
+
+  /**
+   * os#1387 — CADRE du canevas quand le diagramme n'est pas la fenêtre principale de la
+   * grande zone : sa case, ou 'hidden' quand il est fermé. `null` = disposition ordinaire (le
+   * SVG remplit la page et réserve à droite / en bas). Posé par l'hôte (MainZoneTabs), lu par
+   * la drawing area affichée (cf. DrawingArea.canvas_frame). TRANSITOIRE : la disposition,
+   * elle, vit dans menu_configuration et se recalcule à l'ouverture.
+   */
+  public main_zone_canvas_frame: Type_CanvasFrame | null = null
 
   /**
    * Applique l'état initial demandé par les options de publication (`publish_options`) :

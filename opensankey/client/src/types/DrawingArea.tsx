@@ -73,6 +73,13 @@ import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
 import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
+
+/**
+ * os#1387 — Cadre du canevas dans la grande zone : sa case (coordonnées viewport) quand le
+ * diagramme n'est pas la fenêtre principale, 'hidden' quand il est fermé. Posé par l'hôte
+ * (MainZoneTabs) dans ApplicationData.main_zone_canvas_frame, lu par la drawing area affichée.
+ */
+export type Type_CanvasFrame = { left: number, top: number, width: number, height: number } | 'hidden'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
@@ -237,6 +244,50 @@ export class Class_DrawingArea {
    * modal/panneau détaché). Sert à neutraliser les offsets liés aux menus
    * (navbar/footer) qui n'existent pas autour du conteneur détaché. */
   public get is_detached(): boolean { return this.container_selector !== '#sankey_app' }
+
+  /**
+   * os#1387 — Le cadre que la grande zone donne au canevas quand le diagramme n'est PAS sa
+   * fenêtre principale (cf. ApplicationData.main_zone_canvas_frame). Ne vaut que pour la
+   * drawing area AFFICHÉE : un board unitaire, une vue en coulisse n'en ont pas.
+   */
+  public get canvas_frame(): Type_CanvasFrame | null {
+    if (this.is_detached || this.application_data.drawing_area !== this) return null
+    return this.application_data.main_zone_canvas_frame ?? null
+  }
+  /** Le canevas est cadré dans une case (colonne droite, bandeau du bas) : il se cadre alors
+   *  comme une zone détachée — dans son cadre, sans barres autour, sans réserves. */
+  public get is_framed(): boolean {
+    const f = this.canvas_frame
+    return f !== null && f !== 'hidden'
+  }
+  /** Hauteur du SVG en disposition ordinaire : celle du conteneur hôte quand il est cadré par
+   *  lui (embarqué, détaché), la fenêtre sinon. */
+  protected _svgDefaultHeight(): string | number {
+    return (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : window.innerHeight
+  }
+  /**
+   * Pose sur le SVG le style de son cadre : position fixe sur sa case ; ou masqué quand le
+   * diagramme est fermé (`visibility`, pas `display` : il reste dessiné et ses mesures de
+   * texte restent justes) ; ou rien, en disposition ordinaire. Rejoué à chaque fenêtrage et à
+   * chaque (re)construction du SVG.
+   */
+  protected _applyCanvasFrameStyle() {
+    const svg = this.d3_selection_zoom_area
+    if (!svg) return
+    const f = this.canvas_frame
+    if (f === null || f === 'hidden') {
+      svg.style('position', null).style('left', null).style('top', null)
+        .style('width', null).style('height', null)
+        .attr('width', '100%').attr('height', this._svgDefaultHeight())
+      if (f === 'hidden') svg.style('visibility', 'hidden')
+      else svg.style('visibility', null)
+      return
+    }
+    svg.style('visibility', null)
+      .style('position', 'fixed').style('left', f.left + 'px').style('top', f.top + 'px')
+      .style('width', f.width + 'px').style('height', f.height + 'px')
+      .attr('width', f.width).attr('height', f.height)
+  }
 
   /** True quand l'utilisateur peut interagir (édition normale, ou publish + editable).
    * Une DA détachée (sankey unitaire en modal) est en lecture seule : pas d'édition,
@@ -1343,6 +1394,9 @@ export class Class_DrawingArea {
   public refreshWindowFraming() {
     // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
     if (!this.d3_selection_zoom_area) return
+    // os#1387 — le cadre du canevas (case de la grande zone, masqué, ou ordinaire) AVANT tout
+    // cadrage : c'est lui qui fixe window_fitting_* ci-dessous.
+    this._applyCanvasFrameStyle()
 
     // AUCUN CADRAGE AUTOMATIQUE : la géométrie du contenu ne bouge pas d'un pixel,
     // seul le chrome est rafraîchi. Règle sans exception — c'est le premier test, AVANT
@@ -1461,7 +1515,7 @@ export class Class_DrawingArea {
   protected _initDraw() {
     // DA détachée (modal) : on remplit le conteneur hôte ('100%') plutôt que
     // d'imposer window.innerHeight (qui déborderait le modal).
-    const height = (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : window.innerHeight
+    const height = this._svgDefaultHeight()
     // _initDraw est l'UNIQUE point de création de #draw_zoom : on le rend idempotent en
     // retirant tout #draw_zoom préexistant avant d'en append un nouveau. unDraw() ne
     // supprime que le nœud référencé par this.d3_selection_zoom_area ; un orphelin laissé
@@ -1482,6 +1536,8 @@ export class Class_DrawingArea {
       .attr('width', '100%')
       .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
+    // os#1387 — le SVG neuf prend le cadre que la grande zone lui donne (ou aucun).
+    this._applyCanvasFrameStyle()
 
     // Init drawing area
     const x = this._fit_margin / 2
@@ -3965,6 +4021,9 @@ export class Class_DrawingArea {
     this._height = _; this.drawBackground(); this.drawGrid()
   }
   public get window_fitting_height(): number {
+    // Canevas cadré dans une case de la grande zone : c'est elle qu'on remplit.
+    const frame = this.canvas_frame
+    if (frame && frame !== 'hidden') return frame.height - this._fit_margin - this._scrollbar_reserve_bottom
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
@@ -4005,7 +4064,7 @@ export class Class_DrawingArea {
    *  permanente : elle est là au repos, la rendre ferait dessiner sous les boutons.
    *  Nulle sur une zone détachée, dont le cadrage suit son conteneur hôte. */
   public get panel_reserve_right(): number {
-    if (this.is_detached) return 0
+    if (this.is_detached || this.is_framed) return 0
     const mc = this.application_data.menu_configuration
     if (!mc) return 0
     return Math.max(0, mc.getMainZoneRightReservedPx() - mc.getToolsColumnWidthPx())
@@ -4013,7 +4072,7 @@ export class Class_DrawingArea {
 
   /** Symétrique en bas : réserve de la doc en mode bandeau. */
   public get panel_reserve_bottom(): number {
-    if (this.is_detached) return 0
+    if (this.is_detached || this.is_framed) return 0
     return this.main_zone_bottom_reserved
   }
 
@@ -4071,6 +4130,9 @@ export class Class_DrawingArea {
   private _suppress_scrollbar_reserve: boolean = false
   public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
   public get window_fitting_width(): number {
+    // Canevas cadré dans une case de la grande zone : c'est elle qu'on remplit.
+    const frame = this.canvas_frame
+    if (frame && frame !== 'hidden') return frame.width - this._fit_margin - this._scrollbar_reserve_right
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const w = this.getContainerNode()?.clientWidth ?? 0
@@ -4198,8 +4260,8 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
-    // DA détachée : aucun menu autour du conteneur → pas d'offset.
-    if (this.is_detached) {
+    // DA détachée, ou canevas cadré dans sa case : aucun menu autour du conteneur → pas d'offset.
+    if (this.is_detached || this.is_framed) {
       return 0
     }
     if (this.static && !this.application_data.publish_options.topbar) {
@@ -4215,8 +4277,8 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getBottomBarHeight() {
-    // DA détachée : aucun menu autour du conteneur → pas d'offset.
-    if (this.is_detached) {
+    // DA détachée, ou canevas cadré dans sa case : aucun menu autour du conteneur → pas d'offset.
+    if (this.is_detached || this.is_framed) {
       return 0
     }
     return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
