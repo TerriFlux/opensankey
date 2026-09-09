@@ -2,17 +2,46 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [1.3.2] — 2026-09-05
+## [1.3.3] — 2026-09-08
 
-- **Chargement : quatre dessins de flux refaits en moins** (os#1377). Deux causes,
-  toutes deux invisibles au total : des dessins hors de toute passe — donc hors de
-  la separation ancres/trace de 1.3.1 — et un mode d affichage rejoue avant la
-  mise en page. Le compteur `out_of_pass_draws` les a designes ; un test
-  verrouille desormais leur absence.
+### Échelle (os#1383)
 
-## [Non publié]
+- **Deux échelles, pas une.** `_scale` est la base absolue de l'utilisateur (persistée
+  `user_scale`), écrite seulement par lui, le chargement et la copie ; `_scale_effective`
+  est dérivée à chaque dessin par la chaîne adaptation → référence d'épaisseur par vue →
+  plafond de hauteur (`beginScaleFrame` / `setEffectiveScale`). Plus rien à restaurer entre
+  deux frames, donc plus de cliquet. Pour un fichier antérieur, la base est l'échelle du couple
+  `scale_adapted_ref_scale`, `user_scale` y étant l'échelle déjà adaptée.
+- **Une poussée d'affichage n'est pas une position.** L'anti-chevauchement de l'échelle
+  adaptée est tracé sur le nœud (`pushDisplayShiftY`), défait avant toute capture du centre,
+  annulé par toute dérivation ; `settleCentersIfLaidOut` ignore les nœuds masqués. Les centres
+  du maître sont immuables en navigation — donc ceux de toutes les vues légères.
+- **Choisir le mode l'applique** : `setScaleAdaptedMode` lève la suspension d'ouverture au
+  lieu de l'armer. Le `position_mode` passé au viewer est posé sur les dimensions affichées.
+- **Datatag de référence désigné** : menu « Échelle de référence » sur une dimension en
+  échelle adaptée, écrit `prop_reference_datatag` (un seul pour le document) ; en régime
+  `element` la grandeur de référence est recalculée à chaque dessin. Sans élément de
+  référence, le plafond de hauteur devient exact (`tallestNodeMagnitude`).
 
-### Réconciliation
+### Viewer MIT
+
+- **Barre de zoom** : `ComponentZoomControl` déplacé dans OpenSankey (`components/ui/ZoomControl`)
+  et rendu à droite du viewer sur l'option `zoom_control`.
+- **Info-bulles et pop-ups de présentation** : `ViewApp` monte `PanelDismissLayer` et
+  `PresentationPanels`, jusqu'ici montés par le seul éditeur.
+- **Cadrage refait au changement d'étiquette de vue** en taille verrouillée
+  (`invalidateLockedFit`), comme un changement de vue dans l'application.
+- `OS_LOCAL=1` : le vérificateur de types de CRA suit l'alias vers les sources locales.
+
+### Autres
+
+- Pointes de flux : le cache est invalidé APRÈS la relecture des ancres (os#1384).
+- Export PNG / SVG : image injoignable ou illisible retirée au lieu de bloquer, libellé à
+  entité HTML décodable, canvas non souillé sous Chrome, diagnostic qui ne recrée pas la panne.
+- Flèches de création rapide coupées par défaut.
+- Dépendances : `uuid` ^11.1.1, `svgo` ^3.3.4.
+
+### Réconciliation (sa#487)
 
 - **« min » et « max » comme valeur objectif** ([sankeyapplication#487](https://gitlab.com/su-model/sankeyapplication/-/issues/487)). Écrire `min` dans la case Valeur d'un flux demande au moteur la plus petite valeur compatible avec le reste du modèle ; le flux ressort **déterminé**, avec une valeur au lieu d'un intervalle. C'est le besoin des flux d'équilibrage — écarts statistiques, « Indéterminé », pertes non documentées — dont la valeur juste est la plus petite possible. Le calcul vit dans MFAProblem, la lecture du classeur dans SankeyExcelParser.
   - **La case Valeur accepte le mot-clé, dans l'application comme dans le classeur** — panneau des flux (onglets « Basique » et « AFM ») et colonne Valeur de l'onglet tableur, saisie comme collage. Le vocabulaire est celui du parser Excel, à la lettre : `min`/`mini`/`minimum`/`minimal(e)`, `max`/`maxi`/`maximum`/`maximal(e)`, sans casse. Sinon le même modèle ne se dirait pas de la même façon selon la porte par laquelle on entre.
@@ -20,6 +49,14 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
   - **Le mot-clé et le nombre ne coexistent jamais** : saisir un nombre retire l'intention, écrire `min` efface la valeur — c'est la même case, elle ne porte qu'une chose à la fois, exactement comme une ligne de feuille de données. Une faute de frappe, elle, ne vide rien : la case revient à ce qu'elle affichait.
   - **Le rang de déclaration est attribué à la saisie** : il arbitre entre plusieurs `min` concurrents, que le moteur fige l'un après l'autre. Dans un classeur c'est l'ordre des lignes ; dans l'application, il n'y a pas de lignes — le rang se prend à la suite du plus grand déjà posé sur le diagramme.
   - **L'intention est reconduite à l'enregistrement** (`data_value_objective` et son rang) : `toJSON` réécrit le dictionnaire d'une valeur champ par champ, donc ouvrir puis enregistrer une étude l'aurait effacée sans rien dire.
+
+## [1.3.2] — 2026-09-05
+
+- **Chargement : quatre dessins de flux refaits en moins** (os#1377). Deux causes,
+  toutes deux invisibles au total : des dessins hors de toute passe — donc hors de
+  la separation ancres/trace de 1.3.1 — et un mode d affichage rejoue avant la
+  mise en page. Le compteur `out_of_pass_draws` les a designes ; un test
+  verrouille desormais leur absence.
 
 ## [1.3.1] — 2026-09-04
 

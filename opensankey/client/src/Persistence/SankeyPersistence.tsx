@@ -2794,6 +2794,17 @@ export class DrawingAreaPersistence {
       const ref_magnitude = json_object['scale_adapted_ref_magnitude']
       if (typeof ref_scale === 'number' && typeof ref_magnitude === 'number') {
         drawing_area.nodePositioning.restoreScaleReference(ref_scale, ref_magnitude)
+        // os#1383 — Dans un fichier écrit AVANT le modèle à deux échelles, `user_scale` était
+        // l'échelle DÉJÀ ADAPTÉE au datatag courant (cf. l'ancien commentaire de toJSON), et la
+        // base — celle de l'absolu — était l'échelle du couple. La relire comme base aujourd'hui
+        // faisait mordre le plafond de hauteur sur toutes les vues (CARTOFOB : base 337035 au
+        // lieu de 2000548, chaque essence rabattue à 1585 px en absolu, « même taille, échelle
+        // changée »). L'échelle du couple est donc la base : pour un fichier écrit depuis, elle
+        // vaut déjà `user_scale` (capturée sur `base_scale`), et ceci est un no-op.
+        if (isFinite(ref_scale) && ref_scale > 0) {
+          drawing_area['_scale'] = ref_scale
+          drawing_area._scaleValueToPx.domain([0, ref_scale])
+        }
       }
     }
   }
