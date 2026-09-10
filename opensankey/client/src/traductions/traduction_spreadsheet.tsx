@@ -240,7 +240,19 @@ export const resources_spreadsheet = {
           // seulement si le document a plusieurs feuilles) ; `sheet_gone` est ce que dit une
           // fenêtre restée épinglée sur une feuille supprimée — elle le DIT, elle ne casse rien.
           subject_sheet: 'Sheet of the subject',
-          sheet_gone: 'This sheet no longer exists'
+          sheet_gone: 'This sheet no longer exists',
+          // os#1389 lot 1 — LE PONT entre la barre d'onglets de feuilles (en bas) et les
+          // fenêtres de la grande zone. `open_sheet_in_window` est le geste, au clic droit sur
+          // un onglet ; `sheet_window` nomme ce qui s'ouvre (titre de la fenêtre, et libellé de
+          // la pastille qui marque un onglet déjà regardé ailleurs) ; `make_sheet_active` est le
+          // retour — rapatrier cette feuille dans l'onglet, là où on édite ; `sheet_read_only`
+          // dit POURQUOI la fenêtre ne se laisse pas modifier, sans quoi elle passerait pour
+          // cassée : une seule feuille est vivante à la fois, c'est celle de l'onglet.
+          sheet_window: 'Sheet in a window',
+          make_sheet_active: 'Make this sheet the active one',
+          sheet_read_only: 'Read-only — editing happens in the tab',
+          open_sheet_in_window: 'Open in a new window',
+          sheet_already_windowed: 'This sheet is already open in another window'
         }
       }
     }
@@ -462,7 +474,13 @@ export const resources_spreadsheet = {
           diagram_representation: 'Représentation du diagramme',
           // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
           subject_sheet: 'Feuille du sujet',
-          sheet_gone: 'Cette feuille n\'existe plus'
+          sheet_gone: 'Cette feuille n\'existe plus',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Feuille dans une fenêtre',
+          make_sheet_active: 'Rendre cette feuille active',
+          sheet_read_only: 'Lecture seule — c\'est l\'onglet qui édite',
+          open_sheet_in_window: 'Ouvrir dans une nouvelle fenêtre',
+          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre'
         }
       }
     }
@@ -684,7 +702,13 @@ export const resources_spreadsheet = {
           diagram_representation: 'Representación del diagrama',
           // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
           subject_sheet: 'Hoja del sujeto',
-          sheet_gone: 'Esta hoja ya no existe'
+          sheet_gone: 'Esta hoja ya no existe',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Hoja en una ventana',
+          make_sheet_active: 'Activar esta hoja',
+          sheet_read_only: 'Solo lectura — la edición se hace en la pestaña',
+          open_sheet_in_window: 'Abrir en una ventana nueva',
+          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana'
         }
       }
     }
@@ -906,7 +930,13 @@ export const resources_spreadsheet = {
           diagram_representation: 'Darstellung des Diagramms',
           // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
           subject_sheet: 'Blatt des Gegenstands',
-          sheet_gone: 'Dieses Blatt existiert nicht mehr'
+          sheet_gone: 'Dieses Blatt existiert nicht mehr',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Blatt in einem Fenster',
+          make_sheet_active: 'Dieses Blatt aktivieren',
+          sheet_read_only: 'Nur Lesen — bearbeitet wird über die Registerkarte',
+          open_sheet_in_window: 'In einem neuen Fenster öffnen',
+          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet'
         }
       }
     }
@@ -1128,7 +1158,13 @@ export const resources_spreadsheet = {
           diagram_representation: 'Rappresentazione del diagramma',
           // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
           subject_sheet: 'Foglio del soggetto',
-          sheet_gone: 'Questo foglio non esiste più'
+          sheet_gone: 'Questo foglio non esiste più',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Foglio in una finestra',
+          make_sheet_active: 'Rendi attivo questo foglio',
+          sheet_read_only: 'Sola lettura — si modifica dalla scheda',
+          open_sheet_in_window: 'Apri in una nuova finestra',
+          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra'
         }
       }
     }
@@ -1356,7 +1392,14 @@ export const resources_spreadsheet = {
           diagram_representation: '图表表示形式',
           // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
           subject_sheet: '主体所在工作表',
-          sheet_gone: '该工作表已不存在'
+          sheet_gone: '该工作表已不存在',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés. Le tiret
+          // cadratin de `sheet_read_only` cède la place aux deux-points, seuls naturels ici.
+          sheet_window: '窗口中的工作表',
+          make_sheet_active: '将此工作表设为当前工作表',
+          sheet_read_only: '只读：编辑请在标签页中进行',
+          open_sheet_in_window: '在新窗口中打开',
+          sheet_already_windowed: '该工作表已在另一个窗口中打开'
         }
       }
     }
@@ -1584,7 +1627,14 @@ export const resources_spreadsheet = {
           diagram_representation: '図の表現形式',
           // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
           subject_sheet: '対象のシート',
-          sheet_gone: 'このシートは存在しません'
+          sheet_gone: 'このシートは存在しません',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés. Le tiret
+          // cadratin de `sheet_read_only` cède la place aux deux-points, seuls naturels ici.
+          sheet_window: 'ウィンドウ内のシート',
+          make_sheet_active: 'このシートをアクティブにする',
+          sheet_read_only: '読み取り専用：編集はタブで行います',
+          open_sheet_in_window: '新しいウィンドウで開く',
+          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています'
         }
       }
     }
