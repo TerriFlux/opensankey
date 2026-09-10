@@ -246,6 +246,19 @@ export class Class_DrawingArea {
   public get is_detached(): boolean { return this.container_selector !== '#sankey_app' }
 
   /**
+   * Cette zone est-elle celle du conteneur principal de la page ?
+   *
+   * `#sankey_app` est le div que l'application monte une fois pour toutes autour du diagramme
+   * que l'utilisateur édite : il est UNIQUE PAR CONSTRUCTION, quel que soit le nombre
+   * d'applications vivantes dans l'onglet. C'est ce qui en fait le bon critère pour tout ce qui
+   * doit distinguer « la zone que l'utilisateur regarde et manipule » des zones que le code
+   * fabrique à côté (aperçu unitaire, instantané de feuille, source de mise en page, vue
+   * extraite en coulisse) — là où « je suis la zone affichée de MON application » ne distingue
+   * plus rien dès qu'il y a deux applications, puisque chacune a la sienne.
+   */
+  public get is_in_main_container(): boolean { return this.container_selector === '#sankey_app' }
+
+  /**
    * os#1387 — Le cadre que la grande zone donne au canevas quand le diagramme n'est PAS sa
    * fenêtre principale (cf. ApplicationData.main_zone_canvas_frame). Ne vaut que pour la
    * drawing area AFFICHÉE : un board unitaire, une vue en coulisse n'en ont pas.
@@ -255,24 +268,34 @@ export class Class_DrawingArea {
     return this.application_data.main_zone_canvas_frame ?? null
   }
   /**
-   * Préfixe des identifiants DOM des éléments de CETTE zone. Vide pour la zone AFFICHÉE,
-   * unique pour toutes les autres.
+   * Préfixe des identifiants DOM des éléments de CETTE zone. Vide pour la zone du CONTENEUR
+   * PRINCIPAL, unique pour toutes les autres.
    *
-   * POURQUOI. Un identifiant DOM doit être unique dans le document, et le nôtre est celui du
-   * modèle : le chemin d'un flux porte `id="A --> B"`. Or un aperçu unitaire est l'étoile du
-   * diagramme, extraite EN PRÉSERVANT LES IDENTIFIANTS (c'est ce qui permet de résoudre le
-   * flux de référence du mode normalisé), et il est dessiné DANS LA MÊME PAGE. Deux chemins
-   * portaient donc le même identifiant, et une référence `href="#A --> B"` — celle qu'utilise
-   * un libellé de valeur posé LE LONG du tracé (`<textPath>`) — résout au PREMIER du document.
-   * Les libellés du diagramme de l'utilisateur allaient ainsi se coller sur la géométrie de
-   * l'aperçu : ils partaient vers le haut, tournés, loin de leur flux (constaté le 10/09/2026).
+   * POURQUOI PRÉFIXER. Un identifiant DOM doit être unique dans le document, et le nôtre est
+   * celui du modèle : le chemin d'un flux porte `id="A --> B"`. Or un aperçu unitaire est
+   * l'étoile du diagramme, extraite EN PRÉSERVANT LES IDENTIFIANTS (c'est ce qui permet de
+   * résoudre le flux de référence du mode normalisé), et il est dessiné DANS LA MÊME PAGE. Deux
+   * chemins portaient donc le même identifiant, et une référence `href="#A --> B"` — celle
+   * qu'utilise un libellé de valeur posé LE LONG du tracé (`<textPath>`) — résout au PREMIER du
+   * document. Les libellés du diagramme de l'utilisateur allaient ainsi se coller sur la
+   * géométrie de l'aperçu : ils partaient vers le haut, tournés, loin de leur flux (constaté le
+   * 10/09/2026).
    *
-   * Seules les zones NON AFFICHÉES préfixent : le diagramme de l'utilisateur garde ses
-   * identifiants tels quels, donc l'export SVG, les sondes et tout ce qui les cite dehors sont
-   * inchangés. Même parade que `viewport_clip_id`, qui se namespace déjà pour la même raison.
+   * POURQUOI LE CRITÈRE EST LE CONTENEUR, ET NON « LA ZONE AFFICHÉE DE MON APPLICATION ».
+   * Ce dernier critère supposait qu'il n'existe qu'UNE application vivante dans la page. Il est
+   * faux : il en tourne déjà plusieurs (l'application de feuille d'os#1386, la source d'un
+   * import Excel, l'extraction unitaire hors écran), et chacune a SA zone affichée — donc
+   * chacune rendait le préfixe vide et réintroduisait exactement la collision qu'on venait de
+   * corriger, dès qu'une seconde application dessinait pour de bon. Le conteneur, lui, est
+   * unique par construction : une seule zone au monde vit dans `#sankey_app`, celle du document
+   * que l'utilisateur édite. Le critère reste donc juste quel que soit le nombre d'applications.
+   *
+   * Le diagramme du conteneur principal garde ses identifiants tels quels : l'export SVG, les
+   * sondes et tout ce qui les cite dehors sont inchangés. Même parade que `viewport_clip_id`,
+   * qui se namespace déjà pour la même raison.
    */
   public get dom_id_prefix(): string {
-    return this.application_data?.drawing_area === this ? '' : this.id + '__'
+    return this.is_in_main_container ? '' : this.id + '__'
   }
 
   /** Le canevas est cadré dans une case (colonne droite, bandeau du bas) : il se cadre alors

@@ -109,10 +109,13 @@ export type Type_MainZoneSubject =
 export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements']
 /**
  * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
- * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME, `id === representation` : il n'y
- * en a qu'une par représentation, et c'est ce que lisent la barre du haut, le paramètre d'URL
- * `rep` et les accesseurs de compatibilité. Une fenêtre à sujet ÉLÉMENT a un id propre (`w_N`)
- * — on peut en ouvrir plusieurs sur la même représentation, épinglées sur des objets différents.
+ * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME sur la feuille courante,
+ * `id === representation` : il n'y en a qu'une par représentation, et c'est ce que lisent la
+ * barre du haut, le paramètre d'URL `rep` et les accesseurs de compatibilité. Une fenêtre à
+ * sujet ÉLÉMENT a un id propre (`w_N`) — on peut en ouvrir plusieurs sur la même
+ * représentation, épinglées sur des objets différents ; une fenêtre à sujet DIAGRAMME qui nomme
+ * une AUTRE FEUILLE aussi, pour la même raison (os#1385 lot 0). Cf.
+ * `mainZoneSubjectUsesOwnWindowId`, seul juge de cette distinction.
  */
 export type Type_MainZoneOccupant = {
   id: string
@@ -135,6 +138,29 @@ export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind ===
  */
 export const mainZoneSubjectSheet = (s: Type_MainZoneSubject): string =>
   ('sheet' in s && typeof s.sheet === 'string') ? s.sheet : ''
+
+/**
+ * os#1385 lot 0 — Cette fenêtre a-t-elle un identifiant PROPRE (`w_N`), plutôt que son
+ * identifiant de représentation ?
+ *
+ * La règle historique était binaire : sujet diagramme = une fenêtre par représentation, donc
+ * `id === representation` ; sujet élément = un identifiant propre, puisqu'on peut en épingler
+ * plusieurs sur la même nature. Le second canevas la casse : « le diagramme de la feuille B »
+ * et « le diagramme de la feuille courante » sont deux fenêtres de MÊME nature
+ * (`MAIN_ZONE_CANVAS_ID`) qui doivent coexister — l'identifiant de représentation ne peut plus
+ * les distinguer. Une fenêtre à sujet diagramme DÉPAYSÉE (elle nomme une feuille) rejoint donc
+ * les fenêtres d'élément : identifiant propre, représentation gardée à part.
+ *
+ * Le cas SANS feuille, lui, ne bouge pas d'un iota, et c'est délibéré : c'est l'invariant que
+ * lisent la barre du haut, le paramètre d'URL `rep` et les accesseurs de compatibilité
+ * (`main_zone_show_spreadsheet`…), qui désignent tous une fenêtre par son identifiant de
+ * registre. Un seul prédicat pour toute la règle, parce qu'elle se relit à quatre endroits
+ * (ouverture, normalisation, changement de nature, état d'URL) et qu'ils DOIVENT s'accorder :
+ * si l'un d'eux croyait qu'une fenêtre de feuille est nommée par sa représentation, il
+ * l'écraserait avec le canevas de la feuille courante.
+ */
+export const mainZoneSubjectUsesOwnWindowId = (s: Type_MainZoneSubject): boolean =>
+  s.kind !== 'diagram' || mainZoneSubjectSheet(s) !== ''
 
 /**
  * os#1387 (10/09/2026) — LA CLÉ DE LA VIGNETTE de rang `i` d'un sujet `elements`.
@@ -672,14 +698,16 @@ export class Class_MenuConfig {
   // --- os#1387 : fenêtres = (sujet, représentation) ------------------------------------------
 
   /**
-   * Ouvre une fenêtre. Sujet diagramme : c'est `showMainZoneOccupant` (une par représentation).
-   * Sujet élément : une fenêtre NEUVE à id propre, pour pouvoir en avoir plusieurs sur la même
-   * représentation, épinglées sur des objets différents. Rend l'id de la fenêtre.
+   * Ouvre une fenêtre. Sujet diagramme SUR LA FEUILLE COURANTE : c'est `showMainZoneOccupant`
+   * (une par représentation). Sujet élément, ou sujet diagramme sur une AUTRE FEUILLE : une
+   * fenêtre NEUVE à id propre, pour pouvoir en avoir plusieurs sur la même représentation —
+   * épinglées sur des objets différents, ou pointées sur des feuilles différentes (os#1385
+   * lot 0 : le canevas de la feuille B à côté de celui qu'on édite). Rend l'id de la fenêtre.
    */
   public openMainZoneWindow(
     subject: Type_MainZoneSubject, representation: string, place?: Type_MainZonePlace
   ): string {
-    if (subject.kind === 'diagram') {
+    if (!mainZoneSubjectUsesOwnWindowId(subject)) {
       this.showMainZoneOccupant(representation, place)
       return representation
     }
@@ -693,14 +721,19 @@ export class Class_MenuConfig {
   }
   /**
    * Change la NATURE d'une fenêtre sur le même sujet — le geste « type de graphique » d'Excel.
-   * Sujet élément : on change la représentation, l'id ne bouge pas. Sujet diagramme : l'id EST
-   * la représentation, donc la fenêtre est remplacée en place (même place, même poids) ; si la
+   * Fenêtre à id propre (sujet élément, ou diagramme d'une autre feuille) : on change la
+   * représentation, l'id ne bouge pas. Fenêtre diagramme de la feuille courante : l'id EST la
+   * représentation, donc la fenêtre est remplacée en place (même place, même poids) ; si la
    * représentation visée est déjà ouverte ailleurs, celle-ci se referme simplement.
+   *
+   * Le remplacement en place ne vaut QUE pour ce dernier cas : appliqué à une fenêtre de
+   * feuille, il lui donnerait l'identifiant de la représentation — donc celui du canevas de la
+   * feuille courante — et les deux canevas fusionneraient en un seul (os#1385 lot 0).
    */
   public setMainZoneWindowRepresentation(id: string, representation: string): void {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o || o.representation === representation) return
-    if (o.subject.kind !== 'diagram') {
+    if (mainZoneSubjectUsesOwnWindowId(o.subject)) {
       o.representation = representation
     } else if (this.isMainZoneOccupant(representation)) {
       this._main_zone_occupants = this._main_zone_occupants.filter(x => x.id !== id)
@@ -793,13 +826,17 @@ export class Class_MenuConfig {
     this._notifyMainZone()
   }
   /**
-   * Remplace la liste des fenêtres à sujet DIAGRAMME (état d'URL) : les places se calculent,
-   * l'ordre donné est conservé. Les fenêtres à sujet élément ne sont pas décrites par l'URL
-   * (leur objet n'y a pas de sens) : elles sont conservées telles quelles.
+   * Remplace la liste des fenêtres à sujet DIAGRAMME SUR LA FEUILLE COURANTE (état d'URL) : les
+   * places se calculent, l'ordre donné est conservé. Les fenêtres à identifiant propre ne sont
+   * pas décrites par l'URL et sont CONSERVÉES telles quelles : une fenêtre à sujet élément
+   * parce que l'objet qu'elle épingle n'a pas de sens dans une adresse, et — même raison — une
+   * fenêtre canevas sur une AUTRE FEUILLE, dont l'identifiant `w_N` ne nomme aucune
+   * représentation du registre (os#1385 lot 0). Les recréer depuis la liste d'identifiants les
+   * transformerait en fenêtres diagramme vides sur une nature inconnue.
    */
   public setMainZoneOccupantIds(ids: string[]): void {
     const kept = new Map(this._main_zone_occupants.map(o => [o.id, o]))
-    const element_windows = this._main_zone_occupants.filter(o => o.subject.kind !== 'diagram')
+    const own_id_windows = this._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
     this._main_zone_occupants = []
     ids.forEach(id => {
       const prev = kept.get(id)
@@ -807,7 +844,7 @@ export class Class_MenuConfig {
         ? { ...prev }
         : { id, subject: { kind: 'diagram' }, representation: id, place: 'right', size: 1 })
     })
-    this._main_zone_occupants.push(...element_windows)
+    this._main_zone_occupants.push(...own_id_windows)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
@@ -840,10 +877,15 @@ export class Class_MenuConfig {
     })
     // Sujet et représentation absents (liste construite par un ancien appelant) : fenêtre
     // diagramme dont l'id est la représentation, l'invariant de compatibilité.
+    //
+    // La ré-affirmation `representation = id` ne vaut QUE pour les fenêtres nommées par leur
+    // représentation. Une fenêtre canevas sur une autre feuille porte un `w_N` : lui appliquer
+    // la règle lui donnerait `w_N` comme nature, que le registre ne connaît pas — la fenêtre
+    // n'aurait plus rien à dessiner, et le fichier la rouvrirait vide (os#1385 lot 0).
     list.forEach(o => {
       if (!o.subject || !MAIN_ZONE_SUBJECT_KINDS.includes(o.subject.kind)) o.subject = { kind: 'diagram' }
       if (!o.representation) o.representation = o.id
-      if (o.subject.kind === 'diagram') o.representation = o.id
+      if (!mainZoneSubjectUsesOwnWindowId(o.subject)) o.representation = o.id
     })
     if (list.length === 0) {
       list = [{ id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]

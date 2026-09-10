@@ -37,7 +37,10 @@ import { StepType } from '@reactour/tour'
 import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
-import { Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES } from '../types/MenuConfig'
+import {
+  Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES,
+  mainZoneSubjectUsesOwnWindowId
+} from '../types/MenuConfig'
 import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, makeId, randomId, toast_bypass, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
@@ -2446,8 +2449,14 @@ export class Class_ApplicationData {
     if (mc) {
       // os#1387 — seules les fenêtres à sujet DIAGRAMME ont un sens dans une adresse : une
       // fenêtre épinglée sur un nœud désigne un objet que le destinataire n'a pas sélectionné.
+      //
+      // os#1385 (lot 0) — et pas TOUTES les fenêtres à sujet diagramme : celle qui regarde une
+      // AUTRE FEUILLE porte un identifiant de session (`w_N`) et non un id du registre. L'écrire
+      // dans l'adresse y mettrait un nom qui ne désigne aucune représentation, et une session
+      // neuve en ferait une fenêtre fantôme. Le prédicat du modèle dit lequel est lequel : une
+      // fenêtre garde l'identifiant de sa représentation TANT QU'ELLE n'a pas de sujet propre.
       const shown = mc.main_zone_occupants
-        .filter(o => o.subject.kind === 'diagram')
+        .filter(o => !mainZoneSubjectUsesOwnWindowId(o.subject))
         .map(o => URL_MAIN_ZONE_SHORT_NAMES[o.id] ?? o.id)
       if (shown.join(',') !== 'diagram') {
         params.set('rep', shown.join(','))
