@@ -3,13 +3,15 @@ import { Class_FluxTagGroup } from '../types/TagGroup'
 import type { Class_LinkElement } from './Link'
 import type { Class_Sankey } from '../types/Sankey'
 
-// SA#507 — la valeur objectif s'écrit aussi « une cible, et une incertitude
+// SA#507 — la valeur objectif s'écrit « une valeur, et une incertitude
 // infinie ».
 //
-// « min » / « max » disent une DIRECTION, jamais une CIBLE : « approche-toi de
-// 120 » était inexprimable. Une incertitude infinie est une valeur qui ne
-// contraint rien — donc pas une mesure, un souhait — et c'est exactement ce que
-// SA#487 établit déjà, dit dans les termes du classeur.
+// Une incertitude infinie est une valeur qui ne contraint rien — donc pas une
+// mesure, un souhait. La valeur en regard dit quoi viser : un nombre (la
+// cible), ou « infini » / « -infini » pour la plus grande / la plus petite
+// valeur possible. SA#487 avait d'abord écrit cela avec deux mots-clés, « min »
+// et « max », posés dans la case Valeur : ils sont SUPPRIMÉS (2026-09-10), car
+// ils ne savaient pas dire une cible et qu'une seule étude les portait.
 //
 // Le front ne calcule rien de tout cela : il RECONDUIT. `toJSON` réécrit le
 // dictionnaire d'une valeur champ par champ, donc un champ qu'il ignore
@@ -36,26 +38,23 @@ function makeEnv() {
   return { sankey, link }
 }
 
-describe('SA#507 — la cible et sa notation survivent à un enregistrement', () => {
+describe('SA#507 — la cible survit à un enregistrement', () => {
 
-  it('reconduit la cible et la notation', () => {
+  it('reconduit la cible', () => {
     const env = makeEnv()
     const value = new Class_LinkValue(env.link)
     value.fromJSON({
       data_value_objective: 'target',
       data_value_objective_rank: 0,
       data_value_objective_target: 120,
-      data_value_objective_notation: 'uncertainty',
     })
 
     expect(value.value_objective).toBe('target')
     expect(value.value_objective_target).toBe(120)
-    expect(value.value_objective_notation).toBe('uncertainty')
 
     const json = value.toJSON()
     expect(json['data_value_objective']).toBe('target')
     expect(json['data_value_objective_target']).toBe(120)
-    expect(json['data_value_objective_notation']).toBe('uncertainty')
   })
 
   it('une cible de zéro est reconduite, et non prise pour une absence', () => {
@@ -66,23 +65,22 @@ describe('SA#507 — la cible et sa notation survivent à un enregistrement', ()
     value.fromJSON({
       data_value_objective: 'target',
       data_value_objective_target: 0,
-      data_value_objective_notation: 'uncertainty',
     })
 
     expect(value.value_objective_target).toBe(0)
     expect(value.toJSON()['data_value_objective_target']).toBe(0)
   })
 
-  it('un fichier antérieur, ou un « min », n\'a ni cible ni notation', () => {
+  it('une intention de direction n\'a pas de cible', () => {
+    // « la plus petite valeur possible » ne vise rien : elle pousse dans un
+    // sens. C'est l'infini écrit dans la case Valeur, jamais un nombre.
     const env = makeEnv()
     const value = new Class_LinkValue(env.link)
     value.fromJSON({ data_value_objective: 'min', data_value_objective_rank: 1 })
 
     expect(value.value_objective_target).toBeNull()
-    expect(value.value_objective_notation).toBeNull()
     const json = value.toJSON()
     expect(json).not.toHaveProperty('data_value_objective_target')
-    expect(json).not.toHaveProperty('data_value_objective_notation')
   })
 
   it('la copie d\'une valeur emporte la cible', () => {
@@ -93,14 +91,12 @@ describe('SA#507 — la cible et sa notation survivent à un enregistrement', ()
     source.fromJSON({
       data_value_objective: 'target',
       data_value_objective_target: 120,
-      data_value_objective_notation: 'uncertainty',
     })
     const copy = new Class_LinkValue(env.link)
     copy.copyFrom(source)
 
     expect(copy.value_objective).toBe('target')
     expect(copy.value_objective_target).toBe(120)
-    expect(copy.value_objective_notation).toBe('uncertainty')
   })
 })
 
@@ -127,9 +123,11 @@ describe('SA#507 — « infini » est une intention, jamais un nombre', () => {
     expect(parseValueObjective('-infini')).toBe('min')
   })
 
-  it('les mots-clés historiques restent lus comme avant', () => {
-    expect(parseValueObjective('min')).toBe('min')
-    expect(parseValueObjective('Maximum')).toBe('max')
+  it('les mots-clés d\'hier ne sont plus des intentions', () => {
+    // Supprimés le 2026-09-10 : une seule étude les portait, et deux écritures
+    // d'une même chose valaient moins qu'une seule qui sait aussi dire une cible.
+    expect(parseValueObjective('min')).toBeNull()
+    expect(parseValueObjective('Maximum')).toBeNull()
     expect(parseValueObjective('120')).toBeNull()
     expect(parseValueObjective('bonjour')).toBeNull()
   })
