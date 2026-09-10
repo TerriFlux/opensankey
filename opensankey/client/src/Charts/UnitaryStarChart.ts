@@ -71,8 +71,13 @@ const RIBBON_OPACITY = 0.55
 // toute la case, et cette hauteur-là n'est pas négociable : c'est la face sur laquelle les rubans
 // arrivent jointifs. La seule dimension libre est donc la largeur, et chaque pixel qu'on lui reprend
 // va aux rubans, c'est-à-dire à la portée sur laquelle se lit la courbe et où s'écrivent les valeurs.
+//
+// LE PLANCHER, LUI, NE SUIT PAS : il vaut la largeur d'une ligne de nom réelle (une dizaine de
+// caractères à CENTER_FONT_PX), et le descendre plus bas ne rend pas la figure plus lisible, il
+// hache seulement le nom en moignons de six lettres. C'est le plafond, pas le plancher, qui rendait
+// le centre trop gros : sur une vignette large, la part de 32 % le poussait à 100 px et au-delà.
 const CENTER_SHARE = 0.18
-const CENTER_MIN_W_PX = 46
+const CENTER_MIN_W_PX = 60
 const CENTER_MAX_W_PX = 86
 // Gouttière des libellés de branche, de chaque côté. Bornée en absolu : sur une case large, réserver
 // un quart de la largeur à du texte ne sert à rien de plus qu'un plafond fixe, et les pixels gagnés
