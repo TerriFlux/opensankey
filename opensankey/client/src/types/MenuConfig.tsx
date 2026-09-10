@@ -111,9 +111,13 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // sa#503 (U1) — éditeur du MODE BRIQUE (section `process` : nœud central,
   // ports typés, coefficients), ouvert depuis l'onglet Brique de l'inspecteur.
   ref_setter_show_unitary_process_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // sa#514 (U7) — explorateur du catalogue ecoinvent (recherche d'activité,
-  // ouverture de sa brique en nouvelle feuille), ouvert depuis Fichier › Ouvrir.
-  ref_setter_show_ecoinvent_explorer: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // sa#514 (U7), renommé sa#519 — explorateur d'un CATALOGUE ACV externe
+  // (recherche d'activité, ouverture de sa brique en nouvelle feuille), ouvert
+  // depuis Fichier › Ouvrir. Le dialogue lui-même, ses traductions et le
+  // catalogue qu'il interroge vivent hors de ce paquet : ce n'est ici qu'un
+  // emplacement de fenêtre, et ce paquet public n'a pas à nommer une base de
+  // données commerciale.
+  ref_setter_show_lca_catalog_explorer: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Éditeur texte SankeyMATIC en dialogue draggable : ouvert après un import
   // SankeyMATIC (openSankeymaticEditor) ou depuis le menu d'import. Sorti du
   // panneau Tableur, dont le sous-onglet texte est devenu la vue JSON.
@@ -940,7 +944,7 @@ export class Class_MenuConfig {
       ref_setter_show_tooltip_editor: { current: () => null },
       ref_setter_show_units_editor: { current: () => null },
       ref_setter_show_unitary_process_editor: { current: () => null },
-      ref_setter_show_ecoinvent_explorer: { current: () => null },
+      ref_setter_show_lca_catalog_explorer: { current: () => null },
       ref_setter_show_sankeymatic_editor: { current: () => null },
 
       ref_setter_show_modal_export: { current: () => null },
@@ -1000,7 +1004,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_unitary_process_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_ecoinvent_explorer.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_lca_catalog_explorer.current(false)
     this._dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
