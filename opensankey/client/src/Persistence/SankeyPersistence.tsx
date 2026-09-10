@@ -40,6 +40,7 @@ import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { originFromJSON, originToJSON } from '../types/Origin'
 import { determinationCatalogFromJSON, determinationCatalogToJSON } from '../types/Determination'
 import { unitaryProcessFromJSON, unitaryProcessToJSON } from '../types/UnitaryProcess'
+import { geoReferenceFromJSON, geoReferenceToJSON } from '../Algorithms/geoProjection'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -280,6 +281,18 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     const persist_uv_all = node_base.sankey.default_style.shape_position_type == 'parametric'
     if (persist_uv_all || node_base.shape_position_u_locked) json_object['u'] = node_base.position_u
     if (persist_uv_all || node_base.shape_position_v_locked) json_object['v'] = node_base.position_v
+    // os#1364 — Coordonnées géographiques : écrites SEULEMENT quand le nœud en porte, quel que
+    // soit le mode de position. Ce n'est pas un réglage d'affichage comme `u`/`v` juste au-dessus
+    // (qui ne valent que dans le mode qui les fait vivre) : une latitude est une DONNÉE du nœud,
+    // aussi vraie en mode absolu qu'en mode géographique, et la perdre parce qu'on a enregistré
+    // depuis un autre mode obligerait à la ressaisir. Les deux ensemble ou aucune : `has_geo_position`
+    // est la seule condition, une demi-coordonnée ne veut rien dire.
+    const latitude = node_base.latitude
+    const longitude = node_base.longitude
+    if (latitude !== null && longitude !== null) {
+      json_object['lat'] = latitude
+      json_object['lon'] = longitude
+    }
     if (node_base.tied_to_nodes) {
       json_object['tiedToNode'] = true
       json_object['attachedNodes'] = node_base.attached_node.map(n => n.id)
@@ -345,6 +358,16 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     }
     node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
     node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
+    // os#1364 — Coordonnées géographiques. Relues par les SETTERS et non par le champ privé,
+    // contrairement à `u`/`v` juste au-dessus : ils bornent, et un fichier est précisément l'endroit
+    // d'où arrive une latitude de 900 (saisie libre, import d'un classeur, fichier écrit à la main).
+    // Une clé absente laisse `null`, donc un fichier d'avant cette version se relit inchangé.
+    if (json_node_object['lat'] !== undefined) {
+      node_base.latitude = getNumberFromJSON(json_node_object, 'lat', NaN)
+    }
+    if (json_node_object['lon'] !== undefined) {
+      node_base.longitude = getNumberFromJSON(json_node_object, 'lon', NaN)
+    }
 
     // Tied/attached frame state (shared by Class_NodeElement and Class_ContainerElement).
     // Backwards compatible: defaults to false / [] when keys are absent.
@@ -2191,6 +2214,15 @@ export class DrawingAreaPersistence {
     // leur réactivation. Clé absente (tout fichier antérieur) ⇒ flèches coupées.
     if (!drawing_area.connection_arrows_off) json_object['connection_arrows_off'] = false
 
+    // os#1364 — Calage géographique du fond. Écrit seulement s'il existe : un diagramme
+    // ordinaire ne gagne pas une clé de plus. Trois sous-objets imbriqués, ce que `Type_JSON`
+    // admet (ce qu'il refuse, ce sont les TABLEAUX d'objets — d'où deux clés nommées `a` et `b`
+    // plutôt qu'une liste de points, qui serait de toute façon le mauvais type : ils ne sont pas
+    // deux éléments d'une série, ils ont chacun leur rôle dans le calage).
+    if (drawing_area.geo_reference !== null) {
+      json_object['geo_reference'] = geoReferenceToJSON(drawing_area.geo_reference)
+    }
+
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
     if (drawing_area.paper_orientation !== default_paper_orientation) json_object['paper_orientation'] = drawing_area.paper_orientation
@@ -2709,6 +2741,12 @@ export class DrawingAreaPersistence {
     if (drawing_area.constrain_to_bg_image_ratio && drawing_area.show_background_image && !drawing_area.is_paper_mode) {
       drawing_area['_loadBgImageNaturalRatio'](false)
     }
+    // os#1364 — Calage géographique du fond. Relu DÉFENSIVEMENT et en TOUT OU RIEN : un calage
+    // amputé d'un point, ou porteur d'une coordonnée absurde, poserait les nœuds n'importe où
+    // sans que rien ne l'explique à l'écran. Mieux vaut aucun calage, état que le mode
+    // géographique sait déjà traiter — il ne déplace alors personne. Clé absente (tout fichier
+    // antérieur) : `null`, et le diagramme se relit inchangé.
+    drawing_area['_geo_reference'] = geoReferenceFromJSON(json_object['geo_reference'])
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
     // #369 — Les MODES D'AFFICHAGE globaux (proportionnel / échelle adaptée) sont RESTITUÉS : le
