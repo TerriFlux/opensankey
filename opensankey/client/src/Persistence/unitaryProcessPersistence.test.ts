@@ -1,5 +1,8 @@
 import { Class_ApplicationData } from '../types/ApplicationData'
-import { unitaryProcessFromJSON, unitaryProcessToJSON } from '../types/UnitaryProcess'
+import {
+  unitaryProcessFromJSON, unitaryProcessToJSON, unitaryProcessPortFlowTier,
+  unitaryProcessSuggestedFlowTier
+} from '../types/UnitaryProcess'
 import type { Type_UnitaryProcess } from '../types/UnitaryProcess'
 import type { Type_JSON } from '../types/Utils'
 
@@ -238,6 +241,112 @@ describe('os#1380 — multi-flux : les ports en liste a cle composite', () => {
     })).toBeNull()
     expect(unitaryProcessFromJSON({ central_node_id: 'S', ports: { p: 'input' } })).toBeNull()
     expect(unitaryProcessFromJSON({ central_node_id: 'S', ports: { '': { direction: 'input' } } })).toBeNull()
+  })
+})
+
+describe('os#1388 — le rang du flux : ce que la reconciliation ajuste', () => {
+  // Atelier ACV/AFM du 09/09/2026 : la reconciliation ne porte QUE sur le
+  // premier-plan. L'arriere-plan (base ACV) et les flux elementaires (echanges
+  // avec l'environnement) sont transportes tels quels vers Brightway. Le champ
+  // qui le dit est `flow_tier`, et son ABSENCE vaut premier-plan — c'est ce qui
+  // laisse les briques d'avant le champ se reconcilier exactement comme avant.
+  const tiered = {
+    central_node_id: 'Scierie',
+    ports: [
+      { node_id: 'grume', direction: 'input', coefficient: 1 },
+      { node_id: 'electricite', direction: 'input', coefficient: 0.02, flow_tier: 'background' },
+      {
+        node_id: 'co2', direction: 'output', coefficient: 12,
+        exchange_kind: 'biosphere', flow_tier: 'elementary'
+      },
+      { node_id: 'sciage', direction: 'output', coefficient: 0.52, flow_tier: 'foreground' },
+    ],
+  }
+
+  it('traverse l aller-retour, valeur par valeur', () => {
+    const parsed = unitaryProcessFromJSON(tiered)
+    expect(parsed).toEqual(tiered)
+    expect(unitaryProcessToJSON(parsed as Type_UnitaryProcess)).toEqual(tiered)
+    // Point fixe : la forme ecrite se relit a l identique.
+    expect(unitaryProcessFromJSON(unitaryProcessToJSON(parsed as Type_UnitaryProcess))).toEqual(parsed)
+  })
+
+  it('traverse le FICHIER entier, avec version et format_version intacts', () => {
+    // Le piege connu : une brique JSON sans `version` / `format_version` a la
+    // racine part dans les migrations legacy. On verifie donc l aller-retour AU
+    // NIVEAU FICHIER, et que ces deux cles sont bien reecrites.
+    const { app, dump } = loadAndDump(baseJSON({ process: tiered }))
+    expect(app.drawing_area.sankey.unitary_process).toEqual(tiered)
+    expect(dump['process']).toEqual(tiered)
+    expect(dump['version']).toBeDefined()
+    expect(dump['format_version']).toBeDefined()
+    // Second aller-retour : point fixe la aussi.
+    const { dump: dump2 } = loadAndDump(dump)
+    expect(dump2['process']).toEqual(tiered)
+  })
+
+  it('absent vaut premier-plan, et n est pas ecrit pour autant', () => {
+    // La brique historique du fichier de test ne porte aucun rang : elle se lit
+    // entierement en premier-plan, et sa reecriture ne gagne aucune cle. C est
+    // l invariant qui rend le champ ajoutable sans toucher a `format_version`.
+    const parsed = unitaryProcessFromJSON(fullProcess)
+    expect(parsed?.ports.every(port => port.flow_tier === undefined)).toBe(true)
+    expect(parsed?.ports.map(port => unitaryProcessPortFlowTier(port)))
+      .toEqual(['foreground', 'foreground', 'foreground'])
+    const dumped = unitaryProcessToJSON(parsed as Type_UnitaryProcess)
+    expect(dumped).toEqual(fullProcess)
+    expect((dumped.ports as unknown as Type_JSON[]).every(port => !('flow_tier' in port))).toBe(true)
+  })
+
+  it('lit le rang sur l ancienne forme dictionnaire aussi', () => {
+    const parsed = unitaryProcessFromJSON({
+      central_node_id: 'Scierie',
+      ports: { co2: { direction: 'output', exchange_kind: 'biosphere', flow_tier: 'elementary' } },
+    })
+    expect(parsed?.ports).toEqual([
+      { node_id: 'co2', direction: 'output', exchange_kind: 'biosphere', flow_tier: 'elementary' }
+    ])
+  })
+
+  it('rejette un rang inconnu, sans le rabattre sur un defaut', () => {
+    // Enumeration fermee : un rang illisible rabattu sur « premier-plan » ferait
+    // reconcilier un flux que le fichier voulait justement en soustraire.
+    expect(unitaryProcessFromJSON({
+      central_node_id: 'S', ports: [{ node_id: 'p', direction: 'input', flow_tier: 'premier-plan' }]
+    })).toBeNull()
+    expect(unitaryProcessFromJSON({
+      central_node_id: 'S', ports: [{ node_id: 'p', direction: 'input', flow_tier: 3 }]
+    })).toBeNull()
+  })
+
+  it('ne deduit RIEN a la lecture, meme d un echange biosphere', () => {
+    // Le rang est independant de la nature d echange : une brique existante qui
+    // dit « biosphere » sans rang reste en premier-plan a la relecture. La
+    // deduction n existe qu a la SAISIE, ou elle ne change pas un fichier deja
+    // ecrit.
+    const parsed = unitaryProcessFromJSON({
+      central_node_id: 'S',
+      ports: [{ node_id: 'co2', direction: 'output', exchange_kind: 'biosphere' }],
+    })
+    expect(parsed?.ports[0].flow_tier).toBeUndefined()
+    expect(unitaryProcessPortFlowTier(parsed?.ports[0] as never)).toBe('foreground')
+    // La suggestion, elle, dit bien « flux elementaire » — c est l aide a la
+    // saisie que le panneau et le pre-remplissage appliquent.
+    expect(unitaryProcessSuggestedFlowTier('biosphere')).toBe('elementary')
+    expect(unitaryProcessSuggestedFlowTier('technosphere')).toBe('foreground')
+    expect(unitaryProcessSuggestedFlowTier(undefined)).toBe('foreground')
+  })
+
+  it('copie le rang sans partager la reference', () => {
+    const { app: source } = loadAndDump(baseJSON({ process: tiered }))
+    const { app: target } = loadAndDump(baseJSON())
+    target.drawing_area.sankey.copyFrom(source.drawing_area.sankey)
+    const copied = target.drawing_area.sankey.unitary_process
+    expect(portOf(copied, 'electricite')?.flow_tier).toBe('background')
+    const copied_port = portOf(copied, 'electricite')
+    if (copied_port !== undefined) copied_port.flow_tier = 'foreground'
+    expect(portOf(source.drawing_area.sankey.unitary_process, 'electricite')?.flow_tier)
+      .toBe('background')
   })
 })
 
