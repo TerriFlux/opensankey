@@ -192,9 +192,10 @@ type Type_RepresentationCommon = {
     options: { [key: string]: unknown }
     setOptions: (next: { [key: string]: unknown }) => void
     /**
-     * os#1387 — le contexte du PREMIER sujet de la fenêtre, quand il y en a un : les réglages
-     * d'une analyse d'élément (décomposer par…) se construisent sur l'objet regardé. Absent
-     * dans une fenêtre sans sujet, ou à l'échelle diagramme.
+     * os#1387 — le contexte de la VIGNETTE que ces réglages commandent : les réglages d'une
+     * analyse d'élément (décomposer par…, normaliser sur…) se construisent sur l'objet regardé,
+     * et depuis le 10/09/2026 l'hôte appelle `renderOptions` une fois PAR VIGNETTE, avec le
+     * contexte et les réglages de celle-là. Absent à l'échelle diagramme (rien à pointer).
      */
     ctx?: Type_RepresentationContext
   }) => React.ReactNode

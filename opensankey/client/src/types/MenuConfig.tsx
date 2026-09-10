@@ -96,7 +96,16 @@ export type Type_MainZoneSubject =
   | { kind: 'node', id: string, sheet?: string }
   | { kind: 'link', id: string, sheet?: string }
   // Plusieurs objets épinglés (nœuds et/ou flux, par id) : une vignette par objet.
-  | { kind: 'elements', ids: string[], sheet?: string }
+  //
+  // os#1387 (10/09/2026) — `keys` est un tableau PARALLÈLE à `ids` : `keys[i]` est la clé
+  // STABLE de la vignette qui montre `ids[i]`. Il existe parce qu'un même objet a désormais le
+  // droit de figurer DEUX FOIS dans la même fenêtre — « pour le même nœud on peut vouloir
+  // plusieurs diagrammes suivant la décomposition » — et que l'identifiant de l'élément ne
+  // suffit alors plus à distinguer les deux vignettes : ni pour leur donner chacune ses
+  // réglages, ni pour en retirer une sans emporter l'autre, ni pour les monter séparément.
+  // Absent (fichiers d'avant cette date, où les doublons étaient impossibles) : la clé VAUT
+  // l'identifiant de l'élément — cf. mainZonePaneKeyAt.
+  | { kind: 'elements', ids: string[], keys?: string[], sheet?: string }
 export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements']
 /**
  * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
@@ -126,6 +135,80 @@ export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind ===
  */
 export const mainZoneSubjectSheet = (s: Type_MainZoneSubject): string =>
   ('sheet' in s && typeof s.sheet === 'string') ? s.sheet : ''
+
+/**
+ * os#1387 (10/09/2026) — LA CLÉ DE LA VIGNETTE de rang `i` d'un sujet `elements`.
+ *
+ * Un seul endroit pour appliquer le repli, parce qu'il y a deux façons d'écrire la même
+ * fenêtre et qu'elles doivent rester interchangeables : avec `keys` (fichiers d'aujourd'hui,
+ * seuls capables de porter deux fois le même objet) et sans (fichiers antérieurs, où un objet
+ * ne pouvait figurer qu'une fois — sa clé est donc son identifiant, sans ambiguïté possible).
+ * Une entrée vide ou absente de `keys` retombe sur l'identifiant pour la même raison.
+ */
+export const mainZonePaneKeyAt = (s: { ids: string[], keys?: string[] }, i: number): string => {
+  const k = s.keys?.[i]
+  return (typeof k === 'string' && k !== '') ? k : s.ids[i]
+}
+/** Les clés des vignettes d'un sujet `elements`, dans l'ordre des objets. */
+export const mainZonePaneKeys = (s: { ids: string[], keys?: string[] }): string[] =>
+  s.ids.map((_, i) => mainZonePaneKeyAt(s, i))
+/**
+ * Une clé de vignette LIBRE pour un objet qu'on ajoute à une fenêtre.
+ *
+ * L'identifiant de l'objet tant qu'il est libre — les fenêtres ordinaires gardent donc des
+ * clés lisibles, et surtout IDENTIQUES à celles qu'un fichier antérieur sous-entendait, ce qui
+ * fait que ses réglages retombent sur leur vignette au rechargement. Ce n'est qu'au doublon
+ * qu'on suffixe, et le suffixe n'a aucun sens à lui seul : il ne sert qu'à séparer.
+ */
+export const freshMainZonePaneKey = (id: string, used: string[]): string => {
+  if (!used.includes(id)) return id
+  let n = 2
+  while (used.includes(`${id}#${n}`)) n += 1
+  return `${id}#${n}`
+}
+
+/**
+ * os#1387 (10/09/2026) — LES RÉGLAGES SONT PAR VIGNETTE, PAS PAR FENÊTRE.
+ *
+ * « Pour normaliser il faut le faire par diagramme » (Julien) : le mode de valeur et le flux
+ * de référence d'un Sankey unitaire appartiennent à UN diagramme — un flux de référence
+ * n'existe même pas dans l'étoile d'un autre nœud — et il en va de même de l'axe de
+ * décomposition d'une couronne ou d'un histogramme. Une barre de réglages partagée par toutes
+ * les vignettes d'une fenêtre était donc fausse par construction.
+ *
+ * Forme retenue : `occupant.options.panes[clé de vignette]` porte les réglages d'UNE vignette,
+ * et le RESTE de `occupant.options` — tout ce qui n'est pas `panes` — reste la valeur de REPLI
+ * pour une vignette qui n'a pas encore d'entrée. C'est ce repli qui fait qu'un fichier
+ * enregistré du temps de la barre partagée se rouvre en montrant exactement les mêmes
+ * graphiques : ses réglages, écrits au niveau de la fenêtre, s'appliquent à chaque vignette
+ * tant que personne n'y touche. C'est aussi ce qui donne son réglage à une vignette qu'on
+ * vient d'ajouter : elle hérite de ce que la fenêtre disait, plutôt que de repartir de zéro.
+ */
+export const MAIN_ZONE_PANES_KEY = 'panes'
+/** Les réglages AU NIVEAU DE LA FENÊTRE : tout sauf le dictionnaire des vignettes. */
+export const mainZoneWindowLevelOptions = (options: Type_JSON | undefined): Type_JSON => {
+  if (!options) return {}
+  const rest: Type_JSON = { ...options }
+  delete rest[MAIN_ZONE_PANES_KEY]
+  return rest
+}
+/** Les réglages EFFECTIFS d'une vignette : les siens, ou — à défaut — ceux de la fenêtre. */
+export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string): Type_JSON => {
+  const panes = options?.[MAIN_ZONE_PANES_KEY]
+  if (panes && typeof panes === 'object' && !Array.isArray(panes)) {
+    const own = (panes as Type_JSON)[key]
+    if (own && typeof own === 'object' && !Array.isArray(own)) return { ...(own as Type_JSON) }
+  }
+  return mainZoneWindowLevelOptions(options)
+}
+/** Les réglages de la fenêtre, une vignette mise à jour. Les autres vignettes ne bougent pas. */
+export const withMainZonePaneOptions = (
+  options: Type_JSON | undefined, key: string, next: Type_JSON
+): Type_JSON => {
+  const panes = options?.[MAIN_ZONE_PANES_KEY]
+  const prev = (panes && typeof panes === 'object' && !Array.isArray(panes)) ? panes as Type_JSON : {}
+  return { ...(options ?? {}), [MAIN_ZONE_PANES_KEY]: { ...prev, [key]: { ...next } } }
+}
 // Les quatre occupants historiques, par leur id de registre. Nommés ici (et non dans le
 // registre) parce que la grande zone a besoin d'en reconnaître UN : le canevas, qui est le
 // SVG sous tout le reste et ne peut être que `main`.
@@ -634,7 +717,27 @@ export class Class_MenuConfig {
   public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
-    o.subject = subject.kind === 'elements' ? { ...subject, ids: [...subject.ids] } : { ...subject }
+    if (subject.kind === 'elements') {
+      // Les deux tableaux sont RECOPIÉS ensemble : ils sont parallèles, et n'en recopier qu'un
+      // ferait qu'un appelant qui garde le sien décalerait silencieusement les clés des
+      // vignettes — donc leurs réglages — sur les objets voisins.
+      o.subject = { ...subject, ids: [...subject.ids], keys: mainZonePaneKeys(subject) }
+      // os#1387 — les réglages des vignettes qui ne sont PLUS là s'en vont avec elles. Sans ce
+      // ménage, `options.panes` grossirait à chaque objet ajouté puis retiré, et — plus
+      // gênant — un objet remis dans la fenêtre ressusciterait des réglages que l'auteur avait
+      // oubliés. La liste des clés VIVANTES est celle qu'on vient d'écrire.
+      o.options = this._prunedPaneOptions(o.options, o.subject.keys ?? [])
+    } else o.subject = { ...subject }
+    this._notifyMainZone()
+  }
+  /**
+   * os#1387 — Réglages d'UNE VIGNETTE d'une fenêtre (cf. mainZonePaneOptions pour le pourquoi
+   * du découpage). Les autres vignettes, et le repli au niveau de la fenêtre, ne bougent pas.
+   */
+  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    o.options = withMainZonePaneOptions(o.options, pane_key, options)
     this._notifyMainZone()
   }
   /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
@@ -643,6 +746,15 @@ export class Class_MenuConfig {
     if (!o) return
     o.options = { ...options }
     this._notifyMainZone()
+  }
+  /** Les réglages d'une fenêtre, débarrassés des vignettes qui n'existent plus. */
+  protected _prunedPaneOptions(options: Type_JSON | undefined, live_keys: string[]): Type_JSON | undefined {
+    if (!options) return options
+    const panes = options[MAIN_ZONE_PANES_KEY]
+    if (!panes || typeof panes !== 'object' || Array.isArray(panes)) return options
+    const kept: Type_JSON = {}
+    Object.entries(panes as Type_JSON).forEach(([k, v]) => { if (live_keys.includes(k)) kept[k] = v })
+    return { ...options, [MAIN_ZONE_PANES_KEY]: kept }
   }
   public mainZoneOccupantById(id: string): Type_MainZoneOccupant | undefined {
     const o = this._main_zone_occupants.find(x => x.id === id)
@@ -894,6 +1006,10 @@ export class Class_MenuConfig {
       const subject: Type_JSON = { kind: o.subject.kind }
       if ('id' in o.subject) subject['id'] = o.subject.id
       if ('ids' in o.subject) subject['ids'] = [...o.subject.ids]
+      // os#1387 — les clés de vignettes sont écrites DÈS QU'IL Y A DES OBJETS, même quand elles
+      // valent leurs identifiants : c'est ce qui rend le fichier relisable tel quel quand deux
+      // vignettes montrent le même nœud, cas où `ids` seul ne dit plus laquelle est laquelle.
+      if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
       if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
       const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
       if (o.options && Object.keys(o.options).length > 0) entry['options'] = { ...o.options }
@@ -930,10 +1046,17 @@ export class Class_MenuConfig {
           const obj_id = getStringFromJSON(sj, 'id', '')
           const raw_ids = sj['ids']
           const ids = Array.isArray(raw_ids) ? raw_ids.filter((x): x is string => typeof x === 'string' && x !== '') : []
+          // os#1387 — les clés de vignettes, tableau PARALLÈLE à `ids`. Absentes (fichier
+          // antérieur, où un objet ne pouvait figurer qu'une fois) ou plus courtes qu'`ids`
+          // (fichier tronqué) : `mainZonePaneKeys` retombe sur les identifiants, exactement ce
+          // que ces fichiers voulaient dire. La liste est ramenée à la longueur d'`ids`, sans
+          // quoi une clé orpheline décalerait toutes les suivantes d'un cran.
+          const raw_keys = sj['keys']
+          const keys = Array.isArray(raw_keys) ? raw_keys.map(x => (typeof x === 'string' ? x : '')) : []
           let subject: Type_MainZoneSubject = { kind: 'diagram' }
           if (kind === 'selection') subject = { kind: 'selection' }
           else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
-          else if (kind === 'elements') subject = { kind: 'elements', ids }
+          else if (kind === 'elements') subject = { kind: 'elements', ids, keys: mainZonePaneKeys({ ids, keys }) }
           if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
           const opts = e['options']
           const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
