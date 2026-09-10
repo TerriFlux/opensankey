@@ -5265,6 +5265,9 @@ export class Class_DrawingArea {
 
   public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 
+  // os#1364 — Mode géographique : les nœuds coordonnés se posent sur le fond calé au prochain dessin.
+  public setGeographicMode() { DisplayModes.setGeographicMode(this) }
+
   public resetAllVerticalIntervals(v_spacing?: number) { DisplayModes.resetAllVerticalIntervals(this, v_spacing) }
 
   public get id() { return this._sankey.id }
