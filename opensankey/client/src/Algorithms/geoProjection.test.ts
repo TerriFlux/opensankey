@@ -65,31 +65,37 @@ describe('fitGeoReference', () => {
     expect(Math.hypot(b.x - a.x, b.y - a.y)).toBeCloseTo(voulue, 6)
   })
 
-  it('cale le MILIEU des deux points, donc partage l erreur entre eux', () => {
+  it('repose EXACTEMENT les deux points de calage la ou l utilisateur les a mis', () => {
+    // C est ce que la rotation achete : sans elle, l ecart d orientation entre le segment
+    // terrestre et le segment dessine se payait sur les deux points a la fois — douze pixels
+    // chacun sur ce calage-la.
     const fit = fitGeoReference(reference)!
     const a = placeGeoPoint(BREST.latitude, BREST.longitude, reference, fit)
     const b = placeGeoPoint(NICE.latitude, NICE.longitude, reference, fit)
-    expect((a.x + b.x) / 2).toBeCloseTo((BREST.x + NICE.x) / 2, 6)
-    expect((a.y + b.y) / 2).toBeCloseTo((BREST.y + NICE.y) / 2, 6)
-    // Aucun des deux n est parfaitement juste, et c est voulu : la similitude sans rotation ne
-    // peut pas absorber l ecart d orientation. Mais l erreur est BORNEE et partagee.
-    const err_a = Math.hypot(a.x - BREST.x, a.y - BREST.y)
-    const err_b = Math.hypot(b.x - NICE.x, b.y - NICE.y)
-    expect(err_a).toBeCloseTo(err_b, 6)
+    expect(a.x).toBeCloseTo(BREST.x, 9)
+    expect(a.y).toBeCloseTo(BREST.y, 9)
+    expect(b.x).toBeCloseTo(NICE.x, 9)
+    expect(b.y).toBeCloseTo(NICE.y, 9)
   })
 
-  it('garde UNE SEULE echelle pour les deux axes', () => {
+  it('ne DEFORME pas : angles conserves et longueurs proportionnelles dans toutes les directions', () => {
+    // La propriete qui fait qu une carte reste une carte. On prend un triangle rectangle isocele
+    // dans le plan projete, et on verifie qu il le reste une fois place : deux cotes de meme
+    // longueur, et toujours perpendiculaires. Deux echelles independantes echoueraient ici.
     const fit = fitGeoReference(reference)!
-    // Un degre de longitude a l equateur et le meme ecart projete en ordonnee doivent donner le
-    // meme nombre de pixels : c est la definition d une echelle isotrope.
-    const o = placeGeoPoint(0, 0, reference, fit)
-    const est = placeGeoPoint(0, 1, reference, fit)
-    const nord = projectGeoPoint(0, 0, 'mercator')
-    const nord2 = projectGeoPoint(1, 0, 'mercator')
-    const dy_projete = Math.abs(nord2.y - nord.y)
-    const nord_px = placeGeoPoint(1, 0, reference, fit)
-    expect(Math.abs(est.x - o.x) / (Math.PI / 180))
-      .toBeCloseTo(Math.abs(nord_px.y - o.y) / dy_projete, 6)
+    const o = projectGeoPoint(46, 2, 'mercator')
+    const pas = 0.05
+    const coin = (dx: number, dy: number) => ({
+      x: fit.tx + fit.wx * (o.x + dx) - fit.wy * (o.y + dy),
+      y: fit.ty + fit.wy * (o.x + dx) + fit.wx * (o.y + dy)
+    })
+    const centre = coin(0, 0)
+    const est = coin(pas, 0)
+    const sud = coin(0, pas)
+    const v1 = { x: est.x - centre.x, y: est.y - centre.y }
+    const v2 = { x: sud.x - centre.x, y: sud.y - centre.y }
+    expect(Math.hypot(v1.x, v1.y)).toBeCloseTo(Math.hypot(v2.x, v2.y), 9)
+    expect(v1.x * v2.x + v1.y * v2.y).toBeCloseTo(0, 9)
   })
 
   it('refuse deux points confondus sur la Terre', () => {
