@@ -254,6 +254,27 @@ export class Class_DrawingArea {
     if (this.is_detached || this.application_data.drawing_area !== this) return null
     return this.application_data.main_zone_canvas_frame ?? null
   }
+  /**
+   * Préfixe des identifiants DOM des éléments de CETTE zone. Vide pour la zone AFFICHÉE,
+   * unique pour toutes les autres.
+   *
+   * POURQUOI. Un identifiant DOM doit être unique dans le document, et le nôtre est celui du
+   * modèle : le chemin d'un flux porte `id="A --> B"`. Or un aperçu unitaire est l'étoile du
+   * diagramme, extraite EN PRÉSERVANT LES IDENTIFIANTS (c'est ce qui permet de résoudre le
+   * flux de référence du mode normalisé), et il est dessiné DANS LA MÊME PAGE. Deux chemins
+   * portaient donc le même identifiant, et une référence `href="#A --> B"` — celle qu'utilise
+   * un libellé de valeur posé LE LONG du tracé (`<textPath>`) — résout au PREMIER du document.
+   * Les libellés du diagramme de l'utilisateur allaient ainsi se coller sur la géométrie de
+   * l'aperçu : ils partaient vers le haut, tournés, loin de leur flux (constaté le 10/09/2026).
+   *
+   * Seules les zones NON AFFICHÉES préfixent : le diagramme de l'utilisateur garde ses
+   * identifiants tels quels, donc l'export SVG, les sondes et tout ce qui les cite dehors sont
+   * inchangés. Même parade que `viewport_clip_id`, qui se namespace déjà pour la même raison.
+   */
+  public get dom_id_prefix(): string {
+    return this.application_data?.drawing_area === this ? '' : this.id + '__'
+  }
+
   /** Le canevas est cadré dans une case (colonne droite, bandeau du bas) : il se cadre alors
    *  comme une zone détachée — dans son cadre, sans barres autour, sans réserves. */
   public get is_framed(): boolean {
