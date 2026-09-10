@@ -83,35 +83,52 @@ export const projectGeoPoint = (
 }
 
 /**
- * La transformation affine qui mène du plan projeté aux pixels : une échelle et une origine.
+ * La transformation qui mène du plan projeté aux pixels : une SIMILITUDE — échelle, rotation,
+ * translation. Écrite comme une multiplication complexe, `q = w·p + t`, parce que c'est ce
+ * qu'elle est : `w` porte à la fois le facteur d'échelle (son module) et l'angle (son argument).
  *
- * UNE SEULE ÉCHELLE POUR LES DEUX AXES, et c'est délibéré. Deux points donnent quatre nombres,
- * de quoi payer un facteur horizontal et un vertical distincts — mais une carte dont l'abscisse
- * et l'ordonnée n'ont pas la même échelle n'est plus une carte : les distances y mentent selon
- * la direction, et les cercles deviennent des œufs. On prend donc l'échelle qui fait coïncider
- * la DISTANCE entre les deux points, et l'origine qui recentre leur MILIEU. Chacun des deux
- * points tombe alors à mi-chemin de son erreur, plutôt que l'un juste et l'autre faux.
+ * POURQUOI UNE SIMILITUDE, ET PAS DEUX ÉCHELLES INDÉPENDANTES. Deux points donnent quatre
+ * nombres, de quoi payer soit un facteur horizontal et un vertical distincts, soit une échelle
+ * et une rotation. Ce ne sont pas des choix équivalents : deux échelles distinctes déforment —
+ * les distances mentent selon la direction, les cercles deviennent des œufs, et ce n'est plus
+ * une carte. La similitude, elle, ne déforme RIEN : elle envoie les cercles sur des cercles et
+ * conserve tous les angles. C'est la transformation la plus riche qui reste une carte.
+ *
+ * POURQUOI UNE ROTATION, ALORS QU'ON ATTEND UNE CARTE DROITE. Parce qu'elle est GRATUITE et
+ * qu'elle rend le calage EXACT sur les deux points. Sans elle, l'écart d'orientation entre le
+ * segment terrestre et le segment dessiné n'est absorbé nulle part et se paie sur les deux
+ * points à la fois : mesuré sur un calage Brest–Nice de 894 px, douze pixels de résidu chacun.
+ * Avec elle, les deux points de calage tombent exactement où l'utilisateur les a mis — ce qui
+ * est la moindre des choses, puisque c'est lui qui les a posés — et l'angle obtenu n'est jamais
+ * qu'une conséquence de ce qu'il a dessiné : si son fond est légèrement de travers, la rotation
+ * est la réponse JUSTE, pas un artefact.
  */
-export type Type_GeoFit = { scale: number, origin_x: number, origin_y: number }
+export type Type_GeoFit = { wx: number, wy: number, tx: number, ty: number }
 
 export const fitGeoReference = (reference: Type_GeoReference): Type_GeoFit | null => {
   const { a, b, projection } = reference
   const pa = projectGeoPoint(a.latitude, a.longitude, projection)
   const pb = projectGeoPoint(b.latitude, b.longitude, projection)
-  const projected_span = Math.hypot(pb.x - pa.x, pb.y - pa.y)
-  const drawn_span = Math.hypot(b.x - a.x, b.y - a.y)
-  // Deux points confondus — sur la Terre ou dans le dessin — ne disent rien d'une échelle.
+  const dpx = pb.x - pa.x
+  const dpy = pb.y - pa.y
+  const dqx = b.x - a.x
+  const dqy = b.y - a.y
+  const denominator = dpx * dpx + dpy * dpy
+  // Deux points confondus — sur la Terre, ou dans le dessin — ne disent rien d'une échelle.
   // Aucun calage plutôt qu'un calage arbitraire : le mode le signale, il ne l'invente pas.
-  if (!isFinite(projected_span) || !isFinite(drawn_span) ||
-    projected_span < 1e-12 || drawn_span < 1e-9) return null
-  const scale = drawn_span / projected_span
-  // L'origine cale le MILIEU des deux points, pas le premier : l'erreur résiduelle (l'écart
-  // d'orientation entre le segment terrestre et le segment dessiné, que la similitude sans
-  // rotation ne peut pas absorber) se partage ainsi entre les deux au lieu de s'accumuler sur
-  // le second.
-  const origin_x = (a.x + b.x) / 2 - scale * (pa.x + pb.x) / 2
-  const origin_y = (a.y + b.y) / 2 - scale * (pa.y + pb.y) / 2
-  return { scale, origin_x, origin_y }
+  if (!isFinite(denominator) || denominator < 1e-24) return null
+  if (!isFinite(dqx) || !isFinite(dqy) || Math.hypot(dqx, dqy) < 1e-9) return null
+  // w = (q_b − q_a) / (p_b − p_a), en complexes.
+  const wx = (dqx * dpx + dqy * dpy) / denominator
+  const wy = (dqy * dpx - dqx * dpy) / denominator
+  if (!isFinite(wx) || !isFinite(wy) || Math.hypot(wx, wy) < 1e-12) return null
+  // t = q_a − w·p_a.
+  return {
+    wx,
+    wy,
+    tx: a.x - (wx * pa.x - wy * pa.y),
+    ty: a.y - (wy * pa.x + wx * pa.y)
+  }
 }
 
 // ==================================================================================================
@@ -176,7 +193,10 @@ export const placeGeoPoint = (
   fit: Type_GeoFit
 ): Type_ProjectedPoint => {
   const p = projectGeoPoint(latitude, longitude, reference.projection)
-  return { x: fit.origin_x + fit.scale * p.x, y: fit.origin_y + fit.scale * p.y }
+  return {
+    x: fit.tx + fit.wx * p.x - fit.wy * p.y,
+    y: fit.ty + fit.wy * p.x + fit.wx * p.y
+  }
 }
 
 /**
@@ -190,8 +210,12 @@ export const unplaceGeoPoint = (
   reference: Type_GeoReference,
   fit: Type_GeoFit
 ): { latitude: number, longitude: number } => {
-  const px = (x - fit.origin_x) / fit.scale
-  const py = (y - fit.origin_y) / fit.scale
+  // p = (q − t) / w, en complexes.
+  const qx = x - fit.tx
+  const qy = y - fit.ty
+  const modulus = fit.wx * fit.wx + fit.wy * fit.wy
+  const px = (qx * fit.wx + qy * fit.wy) / modulus
+  const py = (qy * fit.wx - qx * fit.wy) / modulus
   const longitude = px / DEG
   if (reference.projection === 'equirectangular') return { latitude: -py / DEG, longitude }
   return { latitude: (2 * Math.atan(Math.exp(-py)) - Math.PI / 2) / DEG, longitude }
