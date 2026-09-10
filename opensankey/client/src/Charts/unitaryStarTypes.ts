@@ -74,4 +74,11 @@ export type Type_UnitaryStarOptions = {
   empty_label?: string
   /** Libellé du flux de référence en mode normalisé, s'il y en a un. */
   reference_label?: string
+  /**
+   * Rubans en GRIS uniforme — c'est le défaut, et l'aspect qu'avait l'ancien board unitaire, qui
+   * posait `default_element_color` sur tout ce qu'il dessinait. `false` rend aux branches les
+   * couleurs du diagramme (`branch.color`). Le pourquoi du défaut est dans `UnitaryStarChart`,
+   * là où la couleur se pose.
+   */
+  neutral_colors?: boolean
 }

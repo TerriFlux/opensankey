@@ -53,9 +53,11 @@ const MIN_RIBBON_PX = 2
 // Blanc entre deux rubans voisins CÔTÉ BRANCHE. Sans lui, deux flux adjacents de même couleur
 // (fréquent : un même nœud amont éclaté en plusieurs flux) se lisent comme un seul.
 const ROW_GAP_PX = 2
-// Largeur du talon coloré posé au bout de chaque branche. Il porte la couleur en APLAT là où le
-// ruban est translucide : c'est la seule référence chromatique fiable pour rapprocher un libellé
-// de son flux quand deux teintes voisines se ressemblent une fois délavées.
+// Largeur du talon posé au bout de chaque branche. Il porte la couleur en APLAT là où le ruban est
+// translucide : quand les couleurs du diagramme sont actives, c'est la seule référence chromatique
+// fiable pour rapprocher un libellé de son flux, deux teintes voisines se ressemblant une fois
+// délavées. En gris uniforme il ne dit plus la couleur mais garde son autre office : borner
+// franchement la branche là où le libellé vient s'aligner.
 const STUB_W_PX = 6
 // Translucidité des rubans. Le Sankey historique s'en sert pour montrer les croisements ; ici il
 // n'y en a pas, mais elle reste utile : elle éteint la saturation d'une dizaine d'aplats côte à
@@ -63,9 +65,15 @@ const STUB_W_PX = 6
 const RIBBON_OPACITY = 0.55
 // Le centre occupe cette fraction de l'espace horizontal libre, borné : trop étroit il ne peut plus
 // porter son nom, trop large il écrase les rubans, qui sont le sujet du dessin.
-const CENTER_SHARE = 0.32
-const CENTER_MIN_W_PX = 56
-const CENTER_MAX_W_PX = 140
+//
+// RÉGLÉ BAS (Julien, 10/09/2026 : « le nœud central est trop grand »). Le centre est déjà le plus
+// gros aplat de la figure par sa HAUTEUR — il porte la plus grande des deux piles, donc presque
+// toute la case, et cette hauteur-là n'est pas négociable : c'est la face sur laquelle les rubans
+// arrivent jointifs. La seule dimension libre est donc la largeur, et chaque pixel qu'on lui reprend
+// va aux rubans, c'est-à-dire à la portée sur laquelle se lit la courbe et où s'écrivent les valeurs.
+const CENTER_SHARE = 0.18
+const CENTER_MIN_W_PX = 46
+const CENTER_MAX_W_PX = 86
 // Gouttière des libellés de branche, de chaque côté. Bornée en absolu : sur une case large, réserver
 // un quart de la largeur à du texte ne sert à rien de plus qu'un plafond fixe, et les pixels gagnés
 // vont aux rubans.
@@ -73,9 +81,11 @@ const GUTTER_SHARE = 0.22
 const GUTTER_MAX_PX = 130
 // Nombre de lignes qu'on accorde au nom du centre. Le centre est HAUT (il porte la plus grande des
 // deux piles, donc presque toute la case) mais ÉTROIT : le replier sur quelques lignes est la seule
-// façon d'y écrire un nom réel, une troncature à huit caractères ne nommant plus rien. Au-delà de
-// trois lignes le pavé de texte prend le pas sur la figure.
-const MAX_CENTER_LINES = 3
+// façon d'y écrire un nom réel, une troncature à huit caractères ne nommant plus rien. Le budget
+// suit la largeur qu'on lui laisse : la boîte ayant été resserrée, une ligne y tient deux fois moins
+// de caractères, et s'en tenir à trois lignes reviendrait à tronquer là où il reste de la hauteur
+// libre. Au-delà de quatre, en revanche, le pavé de texte prend le pas sur la figure.
+const MAX_CENTER_LINES = 4
 // En deçà, la case n'a plus la place de trois colonnes ET de deux gouttières de texte : on garde la
 // figure et on sacrifie les libellés (les info-bulles, elles, restent). Un dessin sans nom vaut
 // mieux qu'un dessin dont les noms se chevauchent.
@@ -114,6 +124,11 @@ const MUTED_INK = '#718096'
 const INK_ON_DARK = '#ffffff'
 const CENTER_FILL = '#EDF2F7'
 const CENTER_STROKE = '#CBD5E0'
+// Gris des rubans en mode NEUTRE. C'est `default_element_color` d'OpenSankey — la couleur que
+// l'ancien board unitaire posait sur tous ses nœuds et, par la règle « couleur de la source », sur
+// tous ses flux : une étoile grise. Recopiée en dur plutôt qu'importée, pour que ce moteur reste
+// consommable sans rien connaître du modèle, comme la couronne et l'histogramme d'à côté.
+const NEUTRAL_COLOR = '#a9a9a9'
 // Fond supposé de la case. Sert au calcul d'encre ci-dessous : un ruban translucide n'a pas la
 // luminance de sa couleur, mais celle de son mélange avec ce qui est derrière.
 const SURFACE = '#ffffff'
@@ -418,6 +433,18 @@ export const drawUnitaryStar = (
 
   const has_in = inputs.length > 0
   const has_out = outputs.length > 0
+  // COULEUR EFFECTIVE d'une branche. En mode neutre, l'étoile entière est grise, comme l'était le
+  // board unitaire qui posait `default_element_color` sur tout ce qu'il dessinait.
+  //
+  // POURQUOI C'EST LE DÉFAUT, ET PAS UN REPLI. L'étoile est une figure de PROPORTIONS : ce qu'on y
+  // lit, c'est l'épaisseur d'une branche rapportée à celle des autres. Les couleurs du diagramme,
+  // elles, disent une tout autre chose — l'appartenance à un tag, à un secteur, à un produit — et
+  // ramener cette série-là dans une figure où elle ne signifie rien met une différence bien visible
+  // là où il n'y a rien à voir, pendant que la différence à lire, l'épaisseur, est celle que l'œil
+  // évalue le moins bien. Le gris rend la figure comparable d'un nœud à l'autre. Les couleurs du
+  // diagramme restent un choix, pour qui veut retrouver dans la vignette les teintes de sa carte.
+  const neutral = opts.neutral_colors !== false
+  const colorOf = (branch: Type_UnitaryStarBranch) => neutral ? NEUTRAL_COLOR : branch.color
   const show_labels = width >= MIN_W_FOR_LABELS_PX
   const gutter = Math.min(GUTTER_MAX_PX, W * GUTTER_SHARE)
   const gutter_left = (show_labels && has_in) ? gutter : 0
@@ -480,7 +507,7 @@ export const drawUnitaryStar = (
     .enter().append('path')
     .attr('class', 'unitary_star_ribbon')
     .attr('d', d => unitaryRibbonPath(outer_x, d.outer_y, inner_x, d.inner_y, d.thickness))
-    .attr('fill', d => d.branch.color)
+    .attr('fill', d => colorOf(d.branch))
     .attr('fill-opacity', RIBBON_OPACITY)
     .append('title')
     .text(d => branchTooltip(d.branch))
@@ -497,7 +524,7 @@ export const drawUnitaryStar = (
     .attr('y', d => d.outer_y)
     .attr('width', STUB_W_PX)
     .attr('height', d => d.thickness)
-    .attr('fill', d => d.branch.color)
+    .attr('fill', d => colorOf(d.branch))
     .append('title')
     .text(d => branchTooltip(d.branch))
 
@@ -642,7 +669,7 @@ export const drawUnitaryStar = (
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('font-size', VALUE_FONT_PX)
-      .attr('fill', d => readableInk(blendOver(d.branch.color, SURFACE, RIBBON_OPACITY)))
+      .attr('fill', d => readableInk(blendOver(colorOf(d.branch), SURFACE, RIBBON_OPACITY)))
       .attr('pointer-events', 'none')
       .text(d => d.branch.text)
   }
