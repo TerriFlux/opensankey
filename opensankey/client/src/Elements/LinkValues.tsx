@@ -589,26 +589,19 @@ export { Class_ElementValueTree as Class_LinkValueTree }
  * @export
  * @class Class_ElementValue
  */
-// SA#487 — le vocabulaire de la valeur objectif, partagé par toutes les
-// surfaces où une valeur de flux se saisit : le panneau des flux, l'onglet
+// SA#487 / SA#507 — le vocabulaire de la valeur objectif, partagé par toutes
+// les surfaces où une valeur de flux se saisit : le panneau des flux, l'onglet
 // tableur, et demain toute autre. Il reprend exactement celui du parser Excel
-// (io_excel_constants.DATA_VALUE_OBJECTIVE_KEYWORDS) : ce qui s'écrit dans un
-// classeur doit s'écrire dans l'application, sinon le même modèle ne se dit pas
-// de la même façon selon la porte par laquelle on entre.
+// (io_excel_constants) : ce qui s'écrit dans un classeur doit s'écrire dans
+// l'application, sinon le même modèle ne se dit pas de la même façon selon la
+// porte par laquelle on entre.
+//
+// Ce sont des CLÉS internes, pas des mots que l'utilisateur écrit : l'intention
+// se saisit en posant une incertitude infinie, et la valeur visée en regard.
+// SA#487 avait d'abord fait écrire « min » / « max » dans la case Valeur ; ces
+// deux mots-clés sont supprimés (2026-09-10).
 export const VALUE_OBJECTIVE_MIN = 'min'
 export const VALUE_OBJECTIVE_MAX = 'max'
-const VALUE_OBJECTIVE_KEYWORDS: { [_: string]: string } = {
-  min: VALUE_OBJECTIVE_MIN,
-  mini: VALUE_OBJECTIVE_MIN,
-  minimum: VALUE_OBJECTIVE_MIN,
-  minimal: VALUE_OBJECTIVE_MIN,
-  minimale: VALUE_OBJECTIVE_MIN,
-  max: VALUE_OBJECTIVE_MAX,
-  maxi: VALUE_OBJECTIVE_MAX,
-  maximum: VALUE_OBJECTIVE_MAX,
-  maximal: VALUE_OBJECTIVE_MAX,
-  maximale: VALUE_OBJECTIVE_MAX,
-}
 
 /**
  * SA#507 — orthographes de l'infini, dans la case Valeur comme dans la case
@@ -637,22 +630,19 @@ export function parseInfinity(text: string | null | undefined): number {
 }
 
 /**
- * SA#487 — « min » / « max » écrit à la place d'un nombre, ou null.
- * SA#507 — « infini » y est reçu comme « max », et « -infini » comme « min » :
- * une valeur infinie ne peut vouloir dire que « la plus grande possible ». Le
- * mot ne devient JAMAIS un nombre — la sentinelle passée à un solveur ruinait
- * son conditionnement (SA#487).
+ * SA#507 — l'intention que porte la case Valeur d'un flux DÉJÀ déclaré objectif
+ * (incertitude infinie) : « infini » y dit « la plus grande valeur possible »,
+ * « -infini » « la plus petite ». Tout le reste rend null — c'est un nombre, et
+ * ce nombre est la cible.
  *
- * Insensible à la casse et aux espaces. Tout autre texte rend null : ce n'est
- * pas une intention, c'est une saisie que l'appelant doit traiter comme il
- * traitait le texte avant — un nombre, ou rien.
+ * Le mot ne devient JAMAIS un nombre : la sentinelle passée telle quelle à un
+ * solveur ruinait son conditionnement (SA#487).
  */
 export function parseValueObjective(text: string | null | undefined): string | null {
-  if (text === null || text === undefined) return null
   const infinity = parseInfinity(text)
   if (infinity > 0) return VALUE_OBJECTIVE_MAX
   if (infinity < 0) return VALUE_OBJECTIVE_MIN
-  return VALUE_OBJECTIVE_KEYWORDS[String(text).trim().toLowerCase()] ?? null
+  return null
 }
 
 export class Class_ElementValue {
@@ -683,13 +673,9 @@ export class Class_ElementValue {
   // dictionnaire champ par champ.
   public value_objective: string | null = null
   public value_objective_rank: number | null = null
-  // SA#507 — la même intention s'écrit aussi « une cible, et une incertitude
-  // infinie » : une valeur qui ne contraint rien n'est pas une mesure, c'est un
-  // souhait. La cible est TOUJOURS finie — « infini » se dit par l'intention
-  // (« max »), jamais par un nombre. La notation dit laquelle des deux
-  // écritures l'utilisateur a employée, pour la lui rendre telle quelle.
+  // SA#507 — la valeur visée, quand l'intention en désigne une. TOUJOURS finie :
+  // « infini » se dit par l'intention (« max » / « min »), jamais par un nombre.
   public value_objective_target: number | null = null
-  public value_objective_notation: string | null = null
 
   /** Cf. `Class_ElementValueTree.fromJSON` : feuille qu'un fichier legacy ne mentionne pas. */
   public markStructurallyAbsent() {
@@ -771,7 +757,6 @@ export class Class_ElementValue {
     this.value_objective = element.value_objective
     this.value_objective_rank = element.value_objective_rank
     this.value_objective_target = element.value_objective_target
-    this.value_objective_notation = element.value_objective_notation
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
     this._flux_tags = []
@@ -1380,12 +1365,9 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this.value_objective_rank !== null) {
       json_object['data_value_objective_rank'] = this.value_objective_rank
     }
-    // SA#507 — la cible visée et la notation employée, même régime.
+    // SA#507 — la cible visée, même régime.
     if (this.value_objective_target !== null) {
       json_object['data_value_objective_target'] = this.value_objective_target
-    }
-    if (this.value_objective_notation !== null) {
-      json_object['data_value_objective_notation'] = this.value_objective_notation
     }
     return json_object
   }
@@ -1424,12 +1406,10 @@ export class Class_LinkValue extends Class_ElementValue {
     // aucune intention, et rien ne change.
     this.value_objective = getStringOrNullFromJSON(json_object, 'data_value_objective')
     this.value_objective_rank = getNumberOrNullFromJSON(json_object, 'data_value_objective_rank')
-    // SA#507 — absents eux aussi des fichiers antérieurs, et de toute intention
-    // écrite avec un mot-clé plutôt qu'avec une incertitude infinie.
+    // SA#507 — absente des fichiers antérieurs, et d'une intention qui dit une
+    // direction (« la plus petite ») plutôt qu'une cible.
     this.value_objective_target = getNumberOrNullFromJSON(
       json_object, 'data_value_objective_target')
-    this.value_objective_notation = getStringOrNullFromJSON(
-      json_object, 'data_value_objective_notation')
     if (Object.prototype.hasOwnProperty.call(json_object, 'value')) {
       this.fromJSONLegacy(json_object)
     }

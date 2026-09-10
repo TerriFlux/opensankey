@@ -183,8 +183,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public static readonly VALUE_OBJECTIVE_MIN = 'min'
   public static readonly VALUE_OBJECTIVE_MAX = 'max'
   public static readonly VALUE_OBJECTIVE_APPROACH = 'target'
-  public static readonly VALUE_OBJECTIVE_BY_KEYWORD = 'keyword'
-  public static readonly VALUE_OBJECTIVE_BY_UNCERTAINTY = 'uncertainty'
 
   private _position_ending: Type_BaseElementPosition
 
@@ -2402,11 +2400,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // chose à la fois. Même règle que le parser Excel côté ligne de données.
       value.value_objective = null
       value.value_objective_rank = null
-      // SA#507 : la cible et la notation partent avec l'intention — elles n'ont
-      // aucun sens sans elle, et les laisser traîner les ferait resurgir à la
-      // prochaine intention posée sur la même cellule.
+      // SA#507 : la cible part avec l'intention — elle n'a aucun sens sans elle,
+      // et la laisser traîner la ferait resurgir à la prochaine intention posée
+      // sur la même cellule.
       value.value_objective_target = null
-      value.value_objective_notation = null
       this.redrawNodesSourceTarget()
     }
   }
@@ -2433,22 +2430,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (_ === null) {
       value.value_objective_rank = null
       value.value_objective_target = null
-      value.value_objective_notation = null
     } else {
       value.valueData = null
       value.valueResult = null
       if (value.value_objective_rank === null) {
         value.value_objective_rank = this.nextValueObjectiveRank()
       }
-      // SA#507 : « min » / « max » disent une direction, pas une cible.
+      // SA#507 : « la plus petite » / « la plus grande » disent une direction,
+      // pas une cible.
       if (_ !== Class_LinkElement.VALUE_OBJECTIVE_APPROACH) {
         value.value_objective_target = null
-      }
-      if (value.value_objective_notation === null) {
-        value.value_objective_notation =
-          _ === Class_LinkElement.VALUE_OBJECTIVE_APPROACH
-            ? Class_LinkElement.VALUE_OBJECTIVE_BY_UNCERTAINTY
-            : Class_LinkElement.VALUE_OBJECTIVE_BY_KEYWORD
       }
     }
     this.redrawNodesSourceTarget()
@@ -2479,7 +2470,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     if (!Number.isFinite(_)) return
     value.value_objective_target = _
-    value.value_objective_notation = Class_LinkElement.VALUE_OBJECTIVE_BY_UNCERTAINTY
     this.valueObjectiveCurrent = Class_LinkElement.VALUE_OBJECTIVE_APPROACH
   }
 
@@ -2493,9 +2483,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * rend au champ Valeur, de sorte que l'aller-retour ne perde rien.
    */
   public get dataUncertaintyIsInfinite(): boolean {
-    const value = this.value
-    if (value === null || value.value_objective === null) return false
-    return value.value_objective_notation === Class_LinkElement.VALUE_OBJECTIVE_BY_UNCERTAINTY
+    return (this.value?.value_objective ?? null) !== null
   }
 
   public set dataUncertaintyIsInfinite(_: boolean) {
