@@ -2,6 +2,21 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.4] — 2026-09-09
+
+### Échelle (os#1383)
+
+- **Le zoom reste constant sous « échelle adaptée ».** Une seule règle, posée aux trois endroits
+  où elle manquait : sous ce mode et en verrou de taille, la caméra ne régule pas la taille
+  apparente (c'est ce qu'os#1371 avait tranché pour le dézoom de secours,
+  `locked_overflow_shrink_allowed`). `applyAutoFitMode` ne recadre plus automatiquement —
+  son `recenter(true)` traversait le verrou par construction ; `refreshWindowFraming` reçoit la
+  garde qui lui manquait ; `applyTagSelections` n'invalide plus le cadrage verrouillé.
+- **Une position voulue survit à une poussée d'affichage** : `undoDisplayShift` ne défait la
+  poussée d'anti-chevauchement que si le coin la porte encore. Le ré-empilement des feuilles d'un
+  cadre (`restackContainerChildren`) écrit la position puis capture le centre : sa pile était
+  effacée, et les stocks se chevauchaient dans une vue à plusieurs essences.
+
 ## [1.3.3] — 2026-09-08
 
 ### Échelle (os#1383)

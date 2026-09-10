@@ -66,19 +66,22 @@ describe('SA#487 — l\'intention « min » / « max » survit à un enregistrem
     expect(value.value_objective_rank).toBeNull()
   })
 
-  it('reconnaît les orthographes acceptées, et rien d\'autre', () => {
+  it('reconnaît la direction écrite dans la case Valeur, et rien d\'autre', () => {
     // Le même vocabulaire que le parser Excel : ce qui s'écrit dans un classeur
     // doit s'écrire dans l'application, sinon le même modèle ne se dit pas de la
     // même façon selon la porte par laquelle on entre.
-    expect(parseValueObjective('min')).toBe('min')
-    expect(parseValueObjective('  MIN ')).toBe('min')
-    expect(parseValueObjective('Minimum')).toBe('min')
-    expect(parseValueObjective('minimale')).toBe('min')
-    expect(parseValueObjective('MAX')).toBe('max')
-    expect(parseValueObjective('maximum')).toBe('max')
-    // Une faute de frappe n'est pas une intention : l'appelant la traitera comme
-    // il traitait le texte avant, c'est-à-dire comme un nombre ou comme rien.
-    expect(parseValueObjective('mn')).toBeNull()
+    // SA#507 (2026-09-10) — « min » et « max » ont été SUPPRIMÉS : l'intention
+    // se pose en rendant l'incertitude infinie, et la case Valeur porte alors la
+    // valeur visée — un nombre, ou « infini » / « -infini » pour dire la plus
+    // grande / la plus petite possible.
+    expect(parseValueObjective('infini')).toBe('max')
+    expect(parseValueObjective('  INFINI ')).toBe('max')
+    expect(parseValueObjective('∞')).toBe('max')
+    expect(parseValueObjective('-infini')).toBe('min')
+    // Les mots-clés d'hier ne sont plus des intentions.
+    expect(parseValueObjective('min')).toBeNull()
+    expect(parseValueObjective('MAX')).toBeNull()
+    // Un nombre non plus : c'est la cible, l'appelant la lit comme un nombre.
     expect(parseValueObjective('42')).toBeNull()
     expect(parseValueObjective('')).toBeNull()
     expect(parseValueObjective(null)).toBeNull()
