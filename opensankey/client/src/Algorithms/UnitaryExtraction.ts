@@ -149,13 +149,52 @@ const listProcessNodes = (sankey: Class_Sankey): Class_NodeElement[] => {
 }
 
 /**
+ * Les flux VISIBLES d'une étoile, entrants et sortants, dans l'ordre du modèle.
+ *
+ * POURQUOI CETTE FONCTION EXISTE — LA CONDITION DE NON-DIVERGENCE (os#1390).
+ * Deux surfaces montrent « l'étoile d'un nœud » et ne sont plus le même code :
+ * la BRIQUE (ce module, un fichier autonome exporté sur geste explicite) et
+ * l'APERÇU (`Charts/unitaryStarData.ts`, une représentation dessinée directement,
+ * sans brique ni seconde application). Elles doivent parler du MÊME périmètre,
+ * sinon on a deux vérités qui dérivent l'une de l'autre en silence : l'aperçu
+ * montre neuf flux, la brique en emporte onze, et personne ne s'en aperçoit avant
+ * le jour où l'on compare un export à ce qu'on croyait avoir vu.
+ *
+ * Le garde-fou est MÉCANIQUE et non disciplinaire : les deux chemins appellent
+ * cette fonction-ci, et rien d'autre. Changer ici la définition de l'étoile — le
+ * niveau d'agrégation, la porte de visibilité, l'ordre — la change des deux côtés
+ * par construction. Un futur qui voudrait diverger devra le faire explicitement,
+ * en cessant d'appeler cette fonction, ce qui se voit à la relecture.
+ *
+ * NIVEAU D'AGRÉGATION — `visible_*_links_list`, jamais `*_links_list` : cf.
+ * l'en-tête du module (sur un diagramme à plusieurs niveaux, les listes complètes
+ * mêlent le flux agrégé et ses enfants, et l'étoile double-compterait). C'est
+ * exactement la porte que `format_value` applique de son côté pour les modes en
+ * pourcentage (`input_links_list.filter(is_visible)`, `types/Utils.tsx:717-733`),
+ * donc les sommes de l'aperçu portent bien sur les flux que l'étoile contient.
+ *
+ * Fonction PURE : elle ne lit que le voisinage du nœud et ne touche à rien. Coût
+ * proportionnel au DEGRÉ du nœud, pas à la taille du diagramme.
+ */
+export const unitaryStarLinks = (node: Class_NodeElement): {
+  inputs: Class_LinkElement[], outputs: Class_LinkElement[]
+} => ({
+  inputs: node.visible_input_links_list,
+  outputs: node.visible_output_links_list
+})
+
+/**
  * L'ÉTOILE d'un procédé : lui-même, plus l'extrémité opposée de chacun de ses
  * flux VISIBLES. C'est le périmètre exact de sa brique.
+ *
+ * Le voisinage n'est pas relu ici : il vient de `unitaryStarLinks`, la définition
+ * partagée avec l'aperçu (cf. son commentaire).
  */
 const starNodeIds = (process_node: Class_NodeElement): Set<string> => {
+  const { inputs, outputs } = unitaryStarLinks(process_node)
   const ids = new Set<string>([process_node.id])
-  process_node.visible_input_links_list.forEach(link => ids.add(link.source.id))
-  process_node.visible_output_links_list.forEach(link => ids.add(link.target.id))
+  inputs.forEach(link => ids.add(link.source.id))
+  outputs.forEach(link => ids.add(link.target.id))
   return ids
 }
 
@@ -288,8 +327,9 @@ type Type_PortAccumulator = {
  * Une tranche ABSENTE ne produit pas de port (cf. `sliceValue`).
  */
 const buildProcessSection = (process_node: Class_NodeElement): Type_UnitaryProcess => {
-  const input_links = process_node.visible_input_links_list
-  const output_links = process_node.visible_output_links_list
+  // Même voisinage que le périmètre de la brique et que l'aperçu : un port ne peut
+  // pas naître d'un flux que l'étoile n'emporte pas (cf. `unitaryStarLinks`).
+  const { inputs: input_links, outputs: output_links } = unitaryStarLinks(process_node)
   const total_input = sumLinkValues(input_links)
   const activity = total_input !== 0 ? total_input : sumLinkValues(output_links)
   const unit_tagg = unitTagGroup(process_node.sankey)
