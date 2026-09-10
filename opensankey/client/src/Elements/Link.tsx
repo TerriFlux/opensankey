@@ -176,6 +176,14 @@ export function sortLinksElementsByRelativeNodesPositions(
  * @class Class_LinkElement
  */
 export class Class_LinkElement extends Class_LinkAttribute {
+  // SA#487 / SA#507 — les intentions qu'une cellule Valeur peut porter, et la
+  // notation employée pour l'écrire. Ce sont des CLÉS partagées avec le parser
+  // et le moteur (io_excel_constants.DATA_VALUE_OBJECTIVE_*) : elles ne se
+  // traduisent pas, et ne se renomment pas à la légère.
+  public static readonly VALUE_OBJECTIVE_MIN = 'min'
+  public static readonly VALUE_OBJECTIVE_MAX = 'max'
+  public static readonly VALUE_OBJECTIVE_APPROACH = 'target'
+
   private _position_ending: Type_BaseElementPosition
 
   private _tooltip_text: string = ''
@@ -2374,6 +2382,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const value = this.value
     // Cast as number
     if (value !== null) {
+      // SA#507 — quand la case Incertitude porte « infini », la case Valeur ne
+      // saisit plus une mesure mais une CIBLE : « approche-toi de celle-ci ».
+      // Y écrire un nombre met donc la cible à jour, au lieu de retirer
+      // l'intention comme le fait une saisie ordinaire.
+      if (value.value_objective === Class_LinkElement.VALUE_OBJECTIVE_APPROACH) {
+        value.value_objective_target = _
+        this.redrawNodesSourceTarget()
+        return
+      }
       value.valueData = _
       value.valueResult = null
       // SA#487 — une valeur chiffrée et un « min » / « max » ne peuvent pas
@@ -2383,6 +2400,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // chose à la fois. Même règle que le parser Excel côté ligne de données.
       value.value_objective = null
       value.value_objective_rank = null
+      // SA#507 : la cible part avec l'intention — elle n'a aucun sens sans elle,
+      // et la laisser traîner la ferait resurgir à la prochaine intention posée
+      // sur la même cellule.
+      value.value_objective_target = null
       this.redrawNodesSourceTarget()
     }
   }
@@ -2408,14 +2429,82 @@ export class Class_LinkElement extends Class_LinkAttribute {
     value.value_objective = _
     if (_ === null) {
       value.value_objective_rank = null
+      value.value_objective_target = null
     } else {
       value.valueData = null
       value.valueResult = null
       if (value.value_objective_rank === null) {
         value.value_objective_rank = this.nextValueObjectiveRank()
       }
+      // SA#507 : « la plus petite » / « la plus grande » disent une direction,
+      // pas une cible.
+      if (_ !== Class_LinkElement.VALUE_OBJECTIVE_APPROACH) {
+        value.value_objective_target = null
+      }
     }
     this.redrawNodesSourceTarget()
+  }
+
+  /**
+   * SA#507 — cible visée par une intention « au plus près de … ».
+   *
+   * La poser EST la déclaration : elle installe l'intention `target` et sa
+   * notation, comme écrire un nombre dans la cellule Valeur en regard d'une
+   * incertitude infinie. Toujours un nombre FINI — l'infini se dit « max », et
+   * le laisser entrer ici comme un nombre ramènerait la sentinelle que SA#487 a
+   * chassée des solveurs.
+   */
+  public get valueObjectiveTargetCurrent(): number | null {
+    return this.value?.value_objective_target ?? null
+  }
+
+  public set valueObjectiveTargetCurrent(_: number | null) {
+    const value = this.value
+    if (value === null) return
+    if (_ === null) {
+      value.value_objective_target = null
+      if (value.value_objective === Class_LinkElement.VALUE_OBJECTIVE_APPROACH) {
+        this.valueObjectiveCurrent = null
+      }
+      return
+    }
+    if (!Number.isFinite(_)) return
+    value.value_objective_target = _
+    this.valueObjectiveCurrent = Class_LinkElement.VALUE_OBJECTIVE_APPROACH
+  }
+
+  /**
+   * SA#507 — « incertitude infinie » : la case Valeur cesse d'être une mesure
+   * pour devenir une cible.
+   *
+   * C'est la notation du classeur, portée dans l'application : une incertitude
+   * infinie est une valeur qui ne contraint rien, donc pas une donnée mais un
+   * souhait. L'allumer transforme la valeur saisie en cible ; l'éteindre la
+   * rend au champ Valeur, de sorte que l'aller-retour ne perde rien.
+   */
+  public get dataUncertaintyIsInfinite(): boolean {
+    return (this.value?.value_objective ?? null) !== null
+  }
+
+  public set dataUncertaintyIsInfinite(_: boolean) {
+    const value = this.value
+    if (value === null) return
+    if (!_) {
+      if (!this.dataUncertaintyIsInfinite) return
+      const restored =
+        value.value_objective === Class_LinkElement.VALUE_OBJECTIVE_APPROACH
+          ? value.value_objective_target
+          : null
+      this.valueObjectiveCurrent = null
+      this.valueCurrent = restored
+      return
+    }
+    if (this.dataUncertaintyIsInfinite) return
+    // La valeur déjà saisie devient la cible — c'est elle que l'utilisateur
+    // regarde en cochant, et la reperdre serait incompréhensible. Rien de
+    // saisi : la cible est zéro, ce que « incertitude infinie » dit d'un flux
+    // d'équilibrage.
+    this.valueObjectiveTargetCurrent = value.valueData ?? 0
   }
 
   private nextValueObjectiveRank(): number {
@@ -3141,18 +3230,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty' | 'valueObjectiveCurrent'>(
+  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty' | 'valueObjectiveCurrent' | 'dataUncertaintyIsInfinite'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
     // SA#487 — « valueObjectiveCurrent » porte un mot-clé, donc une chaîne ou
     // rien ; les autres clés restent ce qu'elles étaient.
+    // SA#507 — « dataUncertaintyIsInfinite » est un interrupteur.
     value: K extends 'text_value' ? string
       : K extends 'valueObjectiveCurrent' ? string | null
-        : number | null,
+        : K extends 'dataUncertaintyIsInfinite' ? boolean
+          : number | null,
     refreshParentComponent: () => void
   ) => {
-    const dict_old_val: { [id: string]: number | string | null } = {}
+    const dict_old_val: { [id: string]: number | string | boolean | null } = {}
     elements.forEach(element => {
       dict_old_val[element.id] = element[key]
     })
