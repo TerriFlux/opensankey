@@ -25,6 +25,7 @@ import { resolveInlineEditEntry } from './inlineEditEntry'
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_BaseShape } from './Element'
+import { effectiveOpacity } from './elementOpacity'
 
 
 type DisplayPrefix = 'name' | 'value'
@@ -1094,7 +1095,7 @@ export abstract class DrawLabelBase {
       .attr('y', final_y)
       .attr('width', final_width)
       .attr('height', final_height)
-      .attr('opacity', this._element.shape_opacity)
+      .attr('opacity', effectiveOpacity(this._element))
 
     // Setup drag
     this.setupImageDrag()
@@ -1180,7 +1181,7 @@ export abstract class DrawLabelBase {
       .append('g')
       .append('path')
       .style('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
-      .style('opacity', this._element.shape_opacity)
+      .style('opacity', effectiveOpacity(this._element))
       .attr('d', this._element.sankey.getIconFromCatalog(this._label_values.icon_name))
 
     // ✅ Appliquer le drag générique unifié

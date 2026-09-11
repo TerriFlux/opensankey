@@ -21,6 +21,7 @@ import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
+import { effectiveOpacity } from '../Elements/elementOpacity'
 
 /**
  * Classe simplifiée gérant les animations pour les diagrammes Sankey
@@ -138,7 +139,8 @@ export class SankeyAnimation {
         return cast_d.source?.id === this.startNode.id
       })
 
-    glinks?.select('.link_path').attr('stroke-opacity', (l) => (l as Class_LinkElement).shape_opacity || 0.8)
+    // SA#534 — le repli à 0,8 est déclaré, non dissimulé : c'est le défaut que SA#529 traite.
+    glinks?.select('.link_path').attr('stroke-opacity', (l) => effectiveOpacity(l as Class_LinkElement, { fallback: 0.8 }))
 
     glinks?.selectAll('.link_path').each((d, i, nodes) => {
       const element = nodes[i] as SVGGeometryElement
@@ -174,7 +176,7 @@ export class SankeyAnimation {
         const arrow = animatedLink.d3_selection?.selectAll('.link_arrow')
         if (arrow) {
           // D'abord rendre visible
-          arrow.attr('opacity', animatedLink.shape_opacity || 0.8)
+          arrow.attr('opacity', effectiveOpacity(animatedLink, { fallback: 0.8 }))
 
           // Puis définir la couleur si possible
           if (targetNode) {
