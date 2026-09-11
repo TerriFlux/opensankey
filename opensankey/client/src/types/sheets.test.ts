@@ -128,8 +128,12 @@ describe('OS#85 — feuilles de dessin : modèle et persistance', () => {
 // fichier, ça efface les feuilles — le chargement ne devrait-il pas être associé à la
 // feuille ? ». Sémantique draw.io/Excel retenue : un fichier SANS feuilles se charge DANS
 // la feuille courante ; un fichier AVEC feuilles est un document complet et remplace tout.
+//
+// sa#539 — ce chargement-là se DEMANDE désormais (`into_current_sheet`) au lieu de se
+// déduire de l'absence de clé `sheets` : déduit, il faisait survivre les feuilles de
+// l'ancien document à un « Fichier → Ouvrir », sans que rien ne le signale.
 describe('OS#85 — charger un fichier dans la feuille courante', () => {
-  it('fichier SANS feuilles + document à feuilles : chargé dans la feuille courante, les autres restent', () => {
+  it('fichier SANS feuilles + document à feuilles + option demandée : chargé dans la feuille courante, les autres restent', () => {
     const ext = mkApp()
     ext.file_name = 'externe'
     const ext_dump = ext.toJSON() as Type_JSON
@@ -139,7 +143,7 @@ describe('OS#85 — charger un fichier dans la feuille courante', () => {
     const id2 = app.createNewSheet(false)
     const id1 = app.sheets_order[0]
 
-    app.fromJSON(deepClone(ext_dump), {}, false)
+    app.fromJSON(deepClone(ext_dump), { into_current_sheet: true }, false)
     // Le classeur n'a pas bougé : mêmes feuilles, même feuille courante.
     expect(app.sheets_order).toEqual([id1, id2])
     expect(app.current_sheet_id).toBe(id2)
@@ -164,5 +168,35 @@ describe('OS#85 — charger un fichier dans la feuille courante', () => {
     expect(app.sheets_order).toHaveLength(3)
     app.fromJSON(deepClone(doc_dump), {}, false)
     expect(app.sheets_order).toHaveLength(2)
+  })
+
+  // sa#539 — le défaut : sans l'option, OUVRIR un fichier abandonne le document courant.
+  it('sa#539 — fichier SANS feuilles, option NON demandée : le document courant est abandonné', () => {
+    const ext = mkApp()
+    ext.file_name = 'externe'
+    const ext_dump = ext.toJSON() as Type_JSON
+
+    const app = mkApp()
+    app.file_name = 'feuille-A'
+    app.createNewSheet(false)
+    expect(app.sheets_order).toHaveLength(2)
+
+    app.fromJSON(deepClone(ext_dump), {}, false)
+    // Page vierge puis le fichier : aucune feuille de l'ancien document ne subsiste.
+    expect(app.has_sheets).toBe(false)
+    expect(app.sheets_order).toHaveLength(0)
+    expect(app.file_name).toBe('externe')
+  })
+
+  // sa#539 — kwargs absents (la plupart des appelants) : même défaut, pas de survivance.
+  it('sa#539 — sans kwargs du tout : le document courant est abandonné aussi', () => {
+    const ext = mkApp()
+    ext.file_name = 'externe'
+    const ext_dump = ext.toJSON() as Type_JSON
+
+    const app = mkApp()
+    app.createNewSheet(false)
+    app.fromJSON(deepClone(ext_dump), undefined, false)
+    expect(app.has_sheets).toBe(false)
   })
 })
