@@ -27,6 +27,12 @@ describe('#369 — positionModeOnLoad (décision pure au chargement)', () => {
     expect(positionModeOnLoad('absolute')).toBe('absolute')
   })
 
+  // os#1364 — Un document geographique n a pas de disposition de repli qui aurait du sens : ses
+  // positions VIENNENT de ses coordonnees, et l ouvrir en absolu serait perdre la carte.
+  it('restitue le mode geographique', () => {
+    expect(positionModeOnLoad('geographic')).toBe('geographic')
+  })
+
   it('ramène le mode hérité `parametric` à `absolute`', () => {
     // Le mode « écart » n'est pas proposé par le sélecteur et décide, au chargement, si u/v
     // font autorité : le restituer rendrait la mise en page illisible sans moyen d'en sortir.
