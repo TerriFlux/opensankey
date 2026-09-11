@@ -245,3 +245,122 @@ export const determinationLookup = (
   if (!Number.isInteger(index) || index < 0 || index >= catalog.explanations.length) return undefined
   return catalog.explanations[index]
 }
+
+/**
+ * Une CELLULE dont on veut le statut : une valeur, pour une combinaison
+ * d'étiquettes donnée.
+ *
+ * Décrite par sa forme et non par sa classe — le résolveur doit rester dans
+ * `types/`, sous les `Elements/` qui l'appellent, et un test doit pouvoir lui
+ * présenter trois nombres sans construire un diagramme.
+ */
+export type Type_DeterminationCell = {
+  determination: number | null
+  valueData: number | null
+  valueResult: number | null
+}
+
+/** Ce qui PORTE la cellule affichée — un flux, aujourd'hui. Son propre index
+ * couvre les combinaisons d'étiquettes qui répondent toutes la même chose. */
+export type Type_DeterminationBearer = {
+  determination: number | null
+  value?: Type_DeterminationCell | null
+}
+
+/**
+ * Explication de la cellule affichée : celle de la cellule si elle en porte
+ * une, sinon celle du porteur. `null` quand le fichier n'en porte aucune.
+ */
+export const determinationIndexOf = (
+  bearer: Type_DeterminationBearer | null | undefined
+): number | null => {
+  if (bearer === null || bearer === undefined) return null
+  const cell_index = bearer.value?.determination ?? null
+  if (cell_index !== null) return cell_index
+  return bearer.determination ?? null
+}
+
+/**
+ * Les quatre états que l'utilisateur sait lire, là où le solveur en distingue
+ * cinq (cf. DETERMINATION_CLASSIFICATIONS). Ce ne sont pas des libellés : les
+ * libellés vivent dans les ressources i18n, comme partout dans ce module.
+ */
+export const DETERMINATION_STATUSES = [
+  'collected',
+  'reconciled',
+  'determined',
+  'undetermined'
+] as const
+
+export type Type_DeterminationStatus = typeof DETERMINATION_STATUSES[number]
+
+/**
+ * Le solveur a-t-il DÉPLACÉ la valeur de la cellule ?
+ *
+ * L'égalité est EXACTE, et c'est volontaire : `snap_reconciled_to_input`
+ * (`mfa_problem_results_writer.py`) ramène au nombre saisi, à l'identique, tout
+ * déplacement resté sous le plancher de bruit calculé par nœud. Se donner ici
+ * une tolérance reviendrait à réinventer ce plancher sans les données qui le
+ * calculent — le front n'a que deux nombres. Contrepartie assumée : sur un
+ * fichier réconcilié avec le rabotage désactivé (`snap_to_zero_threshold = 0`),
+ * un résidu numérique se lit comme un déplacement, donc « réconciliée ».
+ *
+ * Pas de résultat = rien n'a bougé : la cellule ne porte que ce qui a été
+ * saisi. Pas de donnée saisie, en revanche, veut dire qu'il n'y avait rien à
+ * collecter — la valeur vient du calcul.
+ */
+const cellValueMoved = (cell: Type_DeterminationCell | null | undefined): boolean => {
+  if (cell === null || cell === undefined) return false
+  const result = cell.valueResult
+  if (result === null || result === undefined) return false
+  const data = cell.valueData
+  if (data === null || data === undefined) return true
+  return result !== data
+}
+
+/**
+ * Projection d'une classification du solveur vers l'état que l'utilisateur lit.
+ *
+ * `redundant` est le seul cas qui a besoin de la cellule : il dit que le
+ * solveur POUVAIT déplacer la valeur, jamais qu'il l'ait fait. La donnée reste
+ * collectée tant qu'elle n'a pas bougé.
+ *
+ * `failed` et tout code inconnu rendent `undefined` — « pas de statut », et
+ * surtout pas « indéterminée ». Une campagne échouée laisse ses variables sans
+ * résultat ET sans explication (le writer les saute) : présenter cela comme un
+ * degré de liberté du modèle décrirait de travers un modèle qui n'a pas été
+ * résolu. Même prudence pour un code qu'un moteur plus récent introduirait :
+ * les quatre états sont un ensemble fermé, on ne devine pas où ranger le
+ * cinquième.
+ */
+export const determinationStatusOfType = (
+  type: string | undefined,
+  cell?: Type_DeterminationCell | null
+): Type_DeterminationStatus | undefined => {
+  switch (type) {
+    case 'measured': return 'collected'
+    case 'redundant': return cellValueMoved(cell) ? 'reconciled' : 'collected'
+    case 'determined': return 'determined'
+    case 'free':
+    case 'free_unbounded': return 'undetermined'
+    default: return undefined
+  }
+}
+
+/**
+ * Statut de la valeur affichée par un porteur, ou `undefined` quand le fichier
+ * ne permet pas de répondre.
+ *
+ * L'absence de catalogue est un état NORMAL, pas une anomalie : fichier
+ * antérieur au #426, diagramme jamais réconcilié, ou moteur plus ancien — sur
+ * le corpus SOCLE, le Lait porte 1 961 explications quand Volailles et Sucre
+ * n'en portent aucune. Le résolveur répond alors « pas de statut », en silence.
+ */
+export const determinationStatusOf = (
+  catalog: Type_DeterminationCatalog | undefined,
+  bearer: Type_DeterminationBearer | null | undefined
+): Type_DeterminationStatus | undefined => {
+  const explanation = determinationLookup(catalog, determinationIndexOf(bearer))
+  if (explanation === undefined) return undefined
+  return determinationStatusOfType(explanation.type, bearer?.value)
+}
