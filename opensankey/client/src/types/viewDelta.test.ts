@@ -193,8 +193,15 @@ describeCorpus('#254 — round-trip sur les fichiers réels du corpus', () => {
   it.each(files.map(f => [path.basename(f), f]))(
     '%s : encode -> décode restitue le fichier à l\'identique',
     (_name, file) => {
+      // sa#530 — NORMALISER l'entrée avant de mesurer. Un fichier du corpus peut être stocké
+      // sous l'une OU l'autre forme : vues intégrales (toutes les époques jusqu'ici) ou vues
+      // déjà encodées en delta (`__patch`), comme en écrit l'application depuis le format 3.
+      // Comparer le résultat DÉCODÉ à un original resté ENCODÉ ferait échouer la seconde forme
+      // pour une raison étrangère à l'invariant : le décodage a bien fait son travail, il a
+      // seulement dépassé le point de départ. On part donc des deux côtés de la forme dépliée.
       const original = readJSON(file) as J
-      const working = readJSON(file) as J // relecture => copie indépendante
+      decodeViewsFromDelta(original as never)
+      const working = JSON.parse(JSON.stringify(original)) as J // copie indépendante
       const size_before = JSON.stringify(working).length
 
       encodeViewsAsDelta(working as never)
@@ -218,6 +225,9 @@ describeCorpus('#254 — round-trip sur les fichiers réels du corpus', () => {
     let after_total = 0
     for (const file of files) {
       const d = readJSON(file) as J
+      // Même normalisation que ci-dessus : un fichier déjà encodé mesurerait 0 % de gain et
+      // ferait passer l'économie réelle pour nulle.
+      decodeViewsFromDelta(d as never)
       before_total += JSON.stringify(d).length
       encodeViewsAsDelta(d as never)
       after_total += JSON.stringify(d).length
