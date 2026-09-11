@@ -758,8 +758,21 @@ export class Class_DrawingArea {
       && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
       this._position_mode_suspended_selection = undefined
     }
+    // os#1364 — LA SUSPENSION NE CONCERNE PAS LE MODE GÉOGRAPHIQUE, et c'est le seul mode qu'elle
+    // épargne. Elle existe (#369) pour les modes d'AFFICHAGE, qui réagissent au changement de
+    // sélection de données : le fichier s'ouvre tel qu'il a été enregistré, et le mode ne se fait
+    // sentir qu'au premier changement de datatag — ce qu'il gouverne.
+    //
+    // Le mode géographique ne gouverne rien de tel : il dérive la position de coordonnées, qui ne
+    // changent pas avec la sélection. L'y soumettre avait une conséquence visible et absurde
+    // (constatée par Julien, 11/09/2026) : sur un document géographique fraîchement ouvert, la
+    // case « Poser les nœuds d'après leurs coordonnées » s'affichait DÉCOCHÉE et changer de
+    // projection ne déplaçait rien — la carte n'était pas vivante tant qu'on n'avait pas touché
+    // à un datatag qui n'a rien à voir avec elle.
+    const document_mode = this._sankey.styles_dict['default'].shape_position_type
+    if (document_mode === 'geographic') return document_mode
     if (this._position_mode_suspended_selection !== undefined) return 'absolute'
-    return this._sankey.styles_dict['default'].shape_position_type
+    return document_mode
   }
 
   // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
