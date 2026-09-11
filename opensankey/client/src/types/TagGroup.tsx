@@ -19,6 +19,23 @@ import { Type_PositionMode, isPositionMode } from './PublishOptions'
 export const DEFAULT_TAGS_SEPARATOR = ':'
 export const DEFAULT_ANTAGONISTS_SEPARATOR = '/'
 
+// #527 - cles de groupe d'etiquettes que le front sait lire et reecrire, toutes
+// sous-classes confondues. TOUT le reste traverse le front a l'identique
+// (passthrough), au lieu d'etre detruit au premier aller-retour : c'est le cas
+// de « Palette visible » (`show_legend`) et « Palette de couleur » (`colormap`),
+// que le parser ecrit mais que le front ne modelise pas.
+// A completer — et seulement alors — le jour ou le front apprend a lire une de
+// ces cles : une cle a la fois connue et dans le sac serait ecrite deux fois.
+const KNOWN_TAGG_JSON_KEYS = new Set([
+  'name', 'group_name', 'banner', 'tags', 'tags_order',
+  'tags_separator', 'antagonists_separator',
+  'use_colors',
+  'carries_values', 'has_own_scales', 'is_unit_type', 'is_additive',
+  'is_unit', 'is_sequence', 'propagate_structure', 'position_mode',
+  'activated', 'siblings', 'linked_tag_group',
+  'view_mode', 'full_view_label',
+])
+
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
  * Class that define a TagGroup object
@@ -55,6 +72,13 @@ export abstract class Class_ProtoTagGroup {
   // quand elle a ete demandee (fichiers existants inchanges).
   private _tags_separator: string | undefined = undefined
   private _antagonists_separator: string | undefined = undefined
+
+  // #527 - sac des cles JSON que le front ne modelise pas, reemises telles
+  // quelles. Sans lui, un attribut de groupe d'etiquettes (« Palette de
+  // couleur », « Palette visible », ou tout attribut pose par un ticket a
+  // venir) est detruit des que le diagramme repasse par le navigateur : le
+  // parser a beau le conserver, le front reconstruit le JSON de zero.
+  private _json_extras: Type_JSON = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
   protected abstract _tags: { [id: string]: Class_ProtoTag; };
@@ -118,6 +142,10 @@ export abstract class Class_ProtoTagGroup {
     // prochain export Excel casserait les libelles qui contiennent « / ».
     this._tags_separator = tagg_to_copy._tags_separator
     this._antagonists_separator = tagg_to_copy._antagonists_separator
+    // #527 - meme raison que pour les separateurs ci-dessus : sans cette ligne,
+    // une fusion de mise en page ou une duplication perdrait silencieusement
+    // les attributs que le front ne modelise pas.
+    this._json_extras = { ...tagg_to_copy._json_extras }
     // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
     // groups were matched by name but carry different tag ids (e.g. updateFrom
     // a JSON whose tags were renamed), copying the order verbatim would leave
@@ -161,6 +189,11 @@ export abstract class Class_ProtoTagGroup {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    // #527 - le sac d'abord : une cle que le front connait est ensuite reecrite
+    // par sa valeur courante (ici ou dans une sous-classe), une cle inconnue
+    // ressort intacte. L'ordre est le filet : il rend impossible qu'un attribut
+    // perime du sac prenne le pas sur l'etat reel du diagramme.
+    Object.assign(json_object, this._json_extras)
     // Fill group attributes
     // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
@@ -190,6 +223,14 @@ export abstract class Class_ProtoTagGroup {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    // #527 - memorise ce que le front ne modelise pas, pour le reemettre tel
+    // quel. Les cles connues sont ecartees : certaines ne sont ecrites que
+    // lorsqu'elles s'ecartent du defaut (separateurs, drapeaux de fusion), et
+    // les garder ici figerait un ancien etat que l'utilisateur vient de changer.
+    this._json_extras = {}
+    Object.keys(json_object)
+      .filter(key => !KNOWN_TAGG_JSON_KEYS.has(key))
+      .forEach(key => { this._json_extras[key] = json_object[key] })
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
     // Read group attributes
