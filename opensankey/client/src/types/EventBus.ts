@@ -73,6 +73,15 @@ export const LIBRARY_TOPIC = 'library'
  */
 export const IMPORT_TOPIC = 'import'
 
+/**
+ * sa#524 — Topic « un VRAI fichier vient d'être écrit » (JSON ou classeur Excel,
+ * cf. Class_ApplicationData.noteDocumentDownloaded ; les rendus PNG/PDF/SVG n'y
+ * passent pas). Même contrat qu'IMPORT_TOPIC : le noyau signale, la couche
+ * applicative décide — elle y propose le compte gratuit au visiteur anonyme,
+ * au moment où « garder ce diagramme » a un sens.
+ */
+export const SAVE_TOPIC = 'save'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 
