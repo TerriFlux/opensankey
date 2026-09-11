@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { Box, ChakraProvider, useToast } from '@chakra-ui/react'
+import { Box, ChakraProvider } from '@chakra-ui/react'
 import i18next from 'i18next'
 import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
 
@@ -35,6 +35,7 @@ import { applyViewerOptions, ViewerSankeyOptions } from './types/PublishOptions'
 import { ComponentZoomControl } from './components/ui/ZoomControl'
 import { PanelDismissLayer } from './components/panels/PanelShell'
 import { PresentationPanels } from './components/panels/presentation/PresentationPanels'
+import { useMenuConfiguration } from './hooks/useMenuConfiguration'
 
 if (!i18next.isInitialized) {
   i18next.use(initReactI18next).init({
@@ -49,32 +50,43 @@ export type ViewerOpenSankeyAppProps = ViewerSankeyOptions & {
   initial_data?: Type_AnyJSON
 }
 
-const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options }) => {
+/**
+ * Socle commun des viewers React : celui-ci (paquet MIT) et `ViewerSankeyApplication` (couche
+ * SaaS, ViewAppSA.tsx). Il porte tout ce qui ne dépend pas de la couche — options de publication,
+ * `initial_data`, ré-application réactive des sélections — pour que les deux viewers ne divergent
+ * plus par oubli de recopie. Chaque viewer n'y ajoute que sa classe d'`ApplicationData` et son
+ * rendu.
+ *
+ * @param create        construit l'`ApplicationData` de la couche (`Class_ApplicationData`, `…SA`).
+ * @param draw_on_mount ce viewer dessine lui-même au montage, même sans `initial_data` (le viewer
+ *                      MIT n'a pas d'autre dessinateur). Le viewer SaaS laisse `OpenSankeyApp`
+ *                      dessiner et charger `diagram`, et ne dessine ici que l'`initial_data` reçu.
+ */
+export function useViewerAppData<T extends Class_ApplicationData>(
+  { initial_data, ...options }: ViewerOpenSankeyAppProps,
+  create: () => T,
+  draw_on_mount = false
+): T {
   const { t, i18n } = useTranslation()
 
-  const [app_data] = useState<Class_ApplicationData>(() => {
+  const [app_data] = useState<T>(() => {
     applyViewerOptions(options)
-    const data = new Class_ApplicationData(true)
+    const data = create()
     data.t = t
     data.i18n = i18n
     return data
   })
 
-  // Le toast Chakra est un hook : acquis ici (corps du composant) puis injecté dans la
-  // config. Les constructeurs des classes modèle n'appellent plus de hooks.
-  const toast = useToast()
-  if (typeof app_data.createNewMenuConfiguration === 'function') {
-    app_data.createNewMenuConfiguration(toast)
-  }
-
   useEffect(() => {
     if (initial_data) {
       app_data.fromJSON(initial_data as unknown as Type_JSON)
+    } else if (!draw_on_mount) {
+      return
     }
     app_data.draw()
     // Applique l'état initial demandé via props viewer (position_mode / data_tag_selection)
     app_data.applyPublishStateOptions()
-  }, [app_data, initial_data])
+  }, [app_data, initial_data, draw_on_mount])
 
   // Ré-application RÉACTIVE des sélections (data tag / view tag / vue / mode) SANS remonter le
   // viewer. Sans ça, un embarqueur n'a pas le choix : il doit forcer un remount (prop `key`), ce
@@ -126,6 +138,17 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     app_data.applyPublishStateOptions()
   }, [selection_key, app_data])
 
+  return app_data
+}
+
+const ViewerInner: FC<ViewerOpenSankeyAppProps> = (props) => {
+  const app_data = useViewerAppData(props, () => new Class_ApplicationData(true), true)
+
+  // Le toast Chakra est un hook : acquis dans le corps du composant puis injecté dans la config.
+  // UNE FOIS par montage : la remplacer à chaque rendu rendrait sourds les panneaux montés
+  // ci-dessous (cf. useMenuConfiguration).
+  useMenuConfiguration(app_data)
+
   // `height: 100%` n'est pas cosmetique : en mode `embedded`, DrawingArea cadre le diagramme sur
   // le clientHeight de CE conteneur (window_fitting_height). Sans hauteur, le div s'effondre a la
   // hauteur intrinseque du SVG, et le dessin se reduit pour tenir dedans — un diagramme minuscule
@@ -145,7 +168,7 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
         ailleurs. La barre latérale (`SidebarSurface`) reste propre aux menus de l'éditeur. */}
     <PanelDismissLayer app_data={app_data} />
     <PresentationPanels app_data={app_data} />
-    {options.zoom_control
+    {props.zoom_control
       ? <Box position='absolute' right='12px' top='12px' zIndex={10}>
         <ComponentZoomControl app_data={app_data} variant='outline' size='xs' />
       </Box>
