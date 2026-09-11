@@ -23,6 +23,20 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
 
 /**
+ * sa#529 — Opacité de repli de l'animation, appliquée uniquement quand le flux n'en porte
+ * AUCUNE. Historiquement écrite `shape_opacity || 0.8`, ce qui remontait une opacité de 0 —
+ * valeur légitime (flux volontairement invisible) — à 0,8 : le flux réapparaissait pendant
+ * l'animation, et seulement là. Isolée ici pour être vérifiable sans dessiner le diagramme
+ * (l'animation dépend de `getTotalLength()`, que jsdom n'implémente pas).
+ */
+export const ANIMATION_FALLBACK_OPACITY = 0.8
+
+/** sa#529 — repli sur l'ABSENCE de valeur seulement ; 0 reste 0. */
+export function animatedLinkOpacity(shape_opacity: number | undefined): number {
+  return shape_opacity ?? ANIMATION_FALLBACK_OPACITY
+}
+
+/**
  * Classe simplifiée gérant les animations pour les diagrammes Sankey
  */
 export class SankeyAnimation {
@@ -138,7 +152,7 @@ export class SankeyAnimation {
         return cast_d.source?.id === this.startNode.id
       })
 
-    glinks?.select('.link_path').attr('stroke-opacity', (l) => (l as Class_LinkElement).shape_opacity || 0.8)
+    glinks?.select('.link_path').attr('stroke-opacity', (l) => animatedLinkOpacity((l as Class_LinkElement).shape_opacity))
 
     glinks?.selectAll('.link_path').each((d, i, nodes) => {
       const element = nodes[i] as SVGGeometryElement
@@ -174,7 +188,7 @@ export class SankeyAnimation {
         const arrow = animatedLink.d3_selection?.selectAll('.link_arrow')
         if (arrow) {
           // D'abord rendre visible
-          arrow.attr('opacity', animatedLink.shape_opacity || 0.8)
+          arrow.attr('opacity', animatedLinkOpacity(animatedLink.shape_opacity))
 
           // Puis définir la couleur si possible
           if (targetNode) {
