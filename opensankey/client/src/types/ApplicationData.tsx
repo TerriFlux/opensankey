@@ -48,6 +48,7 @@ import type { Type_ViewEntry } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { exposeDrawCounters } from './DrawCounters'
+import { SAVE_TOPIC } from './EventBus'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -991,6 +992,9 @@ export class Class_ApplicationData {
   public noteDocumentDownloaded() {
     localStorage.setItem('last_download', new Date().toISOString())
     this.menu_configuration.ref_to_last_download_updater.current()
+    // sa#524 — un vrai fichier vient d'être écrit : signalé aux couches qui
+    // veulent y réagir (la couche applicative y propose le compte gratuit).
+    this.menu_configuration.notify(SAVE_TOPIC)
   }
 
   public get last_document_download(): Date | null {
