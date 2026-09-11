@@ -45,6 +45,15 @@ import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup, Class_ViewTagG
 
 export type tag_banner_type = 'none' | 'one' | 'multi' | 'sequence' | 'topbar'
 
+// #527 - cles d'etiquette que le front sait lire et reecrire, toutes sous-classes
+// confondues. Le reste traverse le front a l'identique (passthrough) au lieu
+// d'etre detruit au premier aller-retour. A completer le jour ou le front
+// apprend a lire une nouvelle cle, sans quoi elle serait ecrite deux fois.
+const KNOWN_TAG_JSON_KEYS = new Set([
+  'name', 'long_name', 'selected', 'color',
+  'scale', 'unit', 'scale_owned',
+])
+
 // CLASS PROTO TAG ***********************************************************************
 
 /**
@@ -73,6 +82,11 @@ export abstract class Class_ProtoTag {
 
   // Boolean
   private _is_selected: boolean = false
+
+  // #527 - sac des cles JSON que le front ne modelise pas (« Noms longs » mis a
+  // part, deja porte ci-dessus), reemises telles quelles pour qu'un attribut
+  // pose sur une etiquette survive a l'aller-retour par le navigateur.
+  private _json_extras: Type_JSON = {}
 
   /**
    * True if tag is currently on a deletion process
@@ -151,6 +165,10 @@ export abstract class Class_ProtoTag {
     this._long_name_map = { ...tag_to_copy._long_name_map }
     this._color = tag_to_copy._color
     this._is_selected = tag_to_copy._is_selected
+    // #527 - les attributs que le front ne modelise pas suivent l'etiquette :
+    // sans cette ligne, une fusion de mise en page ou une duplication les
+    // perdrait silencieusement.
+    this._json_extras = { ...tag_to_copy._json_extras }
     // Groups are switched from related group class
   }
 
@@ -182,6 +200,9 @@ export abstract class Class_ProtoTag {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    // #527 - le sac d'abord : une cle connue est ensuite reecrite par sa valeur
+    // courante (ici ou dans une sous-classe), une cle inconnue ressort intacte.
+    Object.assign(json_object, this._json_extras)
     // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
     json_object['long_name'] = serializeLangMap(this._long_name_map) ?? ''
@@ -215,6 +236,14 @@ export abstract class Class_ProtoTag {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): void {
+    // #527 - memorise ce que le front ne modelise pas. Les cles connues sont
+    // ecartees : certaines ne sont ecrites que lorsqu'elles s'ecartent du defaut
+    // (`scale`, `unit`, `scale_owned`), et les garder ici figerait un ancien
+    // etat que l'utilisateur vient de changer.
+    this._json_extras = {}
+    Object.keys(json_object)
+      .filter(key => !KNOWN_TAG_JSON_KEYS.has(key))
+      .forEach(key => { this._json_extras[key] = json_object[key] })
     // OS#1299 — accepte la string historique (rangée sous la langue déclarée du
     // fichier) ou la map { langue -> nom }.
     const file_lang = this._ref_sankey.drawing_area.application_data.language
