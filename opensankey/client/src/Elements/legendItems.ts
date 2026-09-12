@@ -172,6 +172,9 @@ export function legendEntryText(
  *
  * Aujourd'hui aucune classe n'expose `has_style_patch` : le prédicat vaut
  * exactement `use_colors`, et aucun diagramme existant ne change d'aspect.
+ * C'est lui, et non plus `use_colors`, que filtre computeLegendItems ci-dessous
+ * (dont l'en-tête est laissé mot pour mot : il est prolongé par sa#532, et le
+ * retoucher ferait de deux tickets parallèles un arbitrage de fusion).
  */
 export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): boolean {
   return tag_group.use_colors || tag_group.has_style_patch === true
@@ -179,9 +182,8 @@ export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): bo
 
 /**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
- * drawTagDisplayed() — groupes portant une mise en forme
- * (tagGroupCarriesFormatting), tags sélectionnés portés par au moins un élément
- * visible (ou data tags, toujours montrés).
+ * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
+ * moins un élément visible (ou data tags, toujours montrés).
  */
 export function computeLegendItems(
   sankey: Type_SankeyForLegend,
