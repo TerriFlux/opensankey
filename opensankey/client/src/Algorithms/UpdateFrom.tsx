@@ -266,7 +266,11 @@ export const updateFrom = (
       })
     if (update_tag_level)
       to_update.forEach(id => {
-        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags']?.[id] ?? id])
+        // #528 — l'appariement des etiquettes est transmis, comme pour les
+        // nodeTags / fluxTags / dataTags plus bas : sans lui, deux groupes de
+        // niveaux apparies par NOM mais portant des ids d'etiquettes differents
+        // voyaient les leurs devenir orphelines.
+        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags']?.[id] ?? id], matching_tags_id['levelTags']?.[id])
       })
   }
   if (mode.includes('tagLevel') || all) {

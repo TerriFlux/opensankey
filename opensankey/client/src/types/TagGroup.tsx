@@ -793,6 +793,23 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     this._is_additive = getBooleanFromJSON(json_object, 'is_additive', this._is_additive)
   }
 
+  // #528 — ces quatre drapeaux sont serialises (ci-dessus) mais n'etaient pas
+  // recopies : une duplication de groupe, une fusion de mise en page
+  // (updateFrom) ou une copie de diagramme rendait un groupe « porteur de
+  // valeurs / de type unite / non additif » en simple groupe d'annotation, en
+  // silence. Comme au #385, la liste des etiquettes paraissait correcte sous le
+  // defaut : seule la valeur des reglages le montrait.
+  protected _copyFrom(
+    tagg_to_copy: Class_FluxTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
+    this._carries_values = tagg_to_copy._carries_values
+    this._has_own_scales = tagg_to_copy._has_own_scales
+    this._is_unit_type = tagg_to_copy._is_unit_type
+    this._is_additive = tagg_to_copy._is_additive
+  }
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_FluxTag; }
 
@@ -1135,6 +1152,8 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
   private _antitagged_refs: Class_NodeElement[] = []
 
   // PROTECTED ATTRIBUTES ===============================================================
+  // Groupe de nœuds dont la palette suit l'activation de ce groupe de niveaux
+  // (cf. Toolbar.tsx, case « activer » : elle allume/éteint use_colors dessus).
   public linked_tag_group : Class_TagGroup | null = null
 
   /**
@@ -1174,14 +1193,34 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
   }
 
   // COPY METHODS ========================================================================
-  public copyFrom(tagg_to_copy: Class_LevelTagGroup) {
-    this._copyFrom(tagg_to_copy)
+  // #528 — signature alignee sur celle du proto (deux arguments) : sans elle,
+  // l'appariement des etiquettes construit par updateFrom n'atteignait jamais
+  // Class_ProtoTagGroup._copyFrom pour cette famille, et deux groupes apparies
+  // par NOM mais portant des ids d'etiquettes differents perdaient les leurs.
+  public copyFrom(
+    tagg_to_copy: Class_LevelTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    this._copyFrom(tagg_to_copy, matching_tags_id)
   }
 
-  protected _copyFrom(tagg_to_copy: Class_LevelTagGroup) {
-    super._copyFrom(tagg_to_copy)
+  protected _copyFrom(
+    tagg_to_copy: Class_LevelTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._activated = tagg_to_copy._activated
-    this._siblings = (tagg_to_copy as unknown as Class_LevelTagGroup)._siblings
+    // #528 — copie du tableau, pas de la reference : addSibling/removeSibling
+    // ecrivent DANS le tableau, un ajout sur la copie apparaitrait donc sur
+    // l'original (et reciproquement). Class_ViewTagGroup le faisait deja.
+    this._siblings = [...tagg_to_copy._siblings]
+    // #528 — le lien suit le groupe, mais RESOLU dans le diagramme de la copie :
+    // recopier la reference telle quelle ferait pointer un groupe de ce sankey
+    // vers un groupe d'un AUTRE sankey lors d'un updateFrom (fusion de mise en
+    // page), et la case « activer » allumerait la palette du mauvais diagramme.
+    this.linked_tag_group = tagg_to_copy.linked_tag_group
+      ? (this._ref_sankey.node_taggs_dict[tagg_to_copy.linked_tag_group.id] ?? null)
+      : null
   }
 
 
@@ -1190,6 +1229,12 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
 
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
+    // #528 — la cle etait LUE sans jamais etre ECRITE : un fichier qui declarait
+    // le lien le perdait au premier aller-retour par le front, et la case
+    // « activer » du bandeau cessait d'allumer la palette du groupe de nœuds
+    // associe. L'asymetrie etait invisible au round-trip d'un fichier ecrit par
+    // le front, puisqu'il n'ecrivait jamais la cle.
+    if (this.linked_tag_group) json_object['linked_tag_group'] = this.linked_tag_group.id
   }
 
   protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
@@ -1341,12 +1386,19 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
   }
 
   // COPY METHODS =======================================================================
-  public copyFrom(tagg_to_copy: Class_ViewTagGroup) {
-    this._copyFrom(tagg_to_copy)
+  // #528 — meme alignement de signature que Class_LevelTagGroup ci-dessus.
+  public copyFrom(
+    tagg_to_copy: Class_ViewTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    this._copyFrom(tagg_to_copy, matching_tags_id)
   }
 
-  protected _copyFrom(tagg_to_copy: Class_ViewTagGroup) {
-    super._copyFrom(tagg_to_copy)
+  protected _copyFrom(
+    tagg_to_copy: Class_ViewTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._activated = tagg_to_copy._activated
     this._siblings = [...tagg_to_copy._siblings]
     this._view_mode = tagg_to_copy._view_mode
