@@ -1,6 +1,7 @@
 import colormap from 'colormap'
 import i18next from 'i18next'
-import { Type_LangMap, normalizeLang, parseLangMap, resolveLangMap, serializeLangMap } from '../Persistence/persistenceMigrations'
+import { Type_LangMap, normalizeLang, parseLangMap, parseStylePatch, resolveLangMap, serializeLangMap, serializeStylePatch } from '../Persistence/persistenceMigrations'
+import type { Type_StylePatch } from './Theme'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
@@ -34,6 +35,9 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'is_unit', 'is_sequence', 'propagate_structure', 'position_mode',
   'activated', 'siblings', 'linked_tag_group',
   'view_mode', 'full_view_label',
+  // #537 - le front MODELISE desormais ces trois cles (cf. la meme note dans
+  // Tag.tsx) : les laisser au sac ferait resurgir une valeur effacee.
+  'description', 'style_patch', 'pinned_in_legend',
 ])
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -72,6 +76,23 @@ export abstract class Class_ProtoTagGroup {
   // quand elle a ete demandee (fichiers existants inchanges).
   private _tags_separator: string | undefined = undefined
   private _antagonists_separator: string | undefined = undefined
+
+  // #537 - DEFINITION du groupe (« ce que decrit cette dimension »), destinee a
+  // l'info-bulle de legende et au bloc juxtapose aux groupes epingles. Distincte
+  // du nom : cf. la note de `Class_ProtoTag._description_map`.
+  private _description_map: Type_LangMap = {}
+
+  // #537 - mise en forme portee par le GROUPE : { attribut moderne -> valeur },
+  // meme forme que les patchs de theme (Type_StylePatch). Patch vide = cle
+  // absente = comportement d'avant. C'est l'interrupteur par groupe, ferme par
+  // defaut, de l'opacite de fiabilite (vague 2) : le groupe declare ce qu'il
+  // pilote, chaque etiquette porte sa valeur dans SON patch.
+  private _style_patch: Type_StylePatch = {}
+
+  // #537 - groupe EPINGLE en legende (« Source », « Methode » toujours visibles
+  // en bas). Pose des maintenant, pendant qu'on touche au format, pour que les
+  // tickets d'affichage qui suivent consomment un format fige.
+  private _pinned_in_legend: boolean = false
 
   // #527 - sac des cles JSON que le front ne modelise pas, reemises telles
   // quelles. Sans lui, un attribut de groupe d'etiquettes (« Palette de
@@ -146,6 +167,13 @@ export abstract class Class_ProtoTagGroup {
     // une fusion de mise en page ou une duplication perdrait silencieusement
     // les attributs que le front ne modelise pas.
     this._json_extras = { ...tagg_to_copy._json_extras }
+    // #537 - meme raison : sans ces lignes, une duplication de groupe ou un
+    // updateFrom rendrait un groupe defini et epingle en groupe muet, en
+    // silence. Maps et patchs sont CLONES : deux groupes qui partageraient la
+    // meme reference se mutueraient l'un l'autre.
+    this._description_map = { ...tagg_to_copy._description_map }
+    this._style_patch = { ...tagg_to_copy._style_patch }
+    this._pinned_in_legend = tagg_to_copy._pinned_in_legend
     // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
     // groups were matched by name but carry different tag ids (e.g. updateFrom
     // a JSON whose tags were renamed), copying the order verbatim would leave
@@ -203,6 +231,13 @@ export abstract class Class_ProtoTagGroup {
     // n'en declare pas produit exactement le meme JSON qu'avant.
     if (this._tags_separator !== undefined) json_object['tags_separator'] = this._tags_separator
     if (this._antagonists_separator !== undefined) json_object['antagonists_separator'] = this._antagonists_separator
+    // #537 - meme regle d'ecriture conditionnelle que les separateurs ci-dessus :
+    // un groupe qui ne declare rien produit exactement le meme JSON qu'avant.
+    const description = serializeLangMap(this._description_map)
+    if (description !== undefined) json_object['description'] = description
+    const style_patch = serializeStylePatch(this._style_patch)
+    if (style_patch !== undefined) json_object['style_patch'] = style_patch
+    if (this._pinned_in_legend) json_object['pinned_in_legend'] = true
     // Update tags infos
     const json_object_tags = {} as Type_JSON
     this.tags_list
@@ -256,6 +291,19 @@ export abstract class Class_ProtoTagGroup {
     const banner_read = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     const valid_banners: tag_banner_type[] = ['none', 'one', 'multi', 'sequence', 'topbar']
     if (valid_banners.includes(banner_read)) this._banner = banner_read
+    // #537 - cle absente = defaut du format. On n'ecrase que si la cle est
+    // presente : `fromJSON` sert aussi aux mises a jour partielles, ou un JSON
+    // muet ne doit rien effacer.
+    if (json_object['description'] !== undefined) {
+      this._description_map = parseLangMap(
+        json_object['description'],
+        this._ref_sankey.drawing_area.application_data.language
+      )
+    }
+    if (json_object['style_patch'] !== undefined) {
+      this._style_patch = parseStylePatch(json_object['style_patch'])
+    }
+    this._pinned_in_legend = getBooleanFromJSON(json_object, 'pinned_in_legend', this._pinned_in_legend)
     // Create new tags & read their attributes
     const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
     Object.entries(json_object['tags'])
@@ -280,6 +328,12 @@ export abstract class Class_ProtoTagGroup {
       this._tags_order = Object.keys(this._tags)
     }
 
+    // #537 - les attributs poses par ce ticket n'ont PAS d'equivalent de cette
+    // auto-coloration, et c'est une decision explicite : une definition ne se
+    // devine pas, et un patch de mise en forme fabrique d'office allumerait
+    // l'interrupteur par groupe sur tous les fichiers existants (arbitrage A5 :
+    // ferme par defaut, cle absente = comportement d'avant). Leur defaut est
+    // donc « vide », ici comme a la declaration.
     const nb_tags = Object.values(this._tags).length
     if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
       // if tags has no colors they are generated from the defaut color map
@@ -308,6 +362,36 @@ export abstract class Class_ProtoTagGroup {
   }
 
   // PUBLIC GETTERS / SETTERS ===========================================================
+  /**
+   * #537 - Definition du groupe, resolue pour la langue active (repli
+   * en->fr->premiere disponible). Destinee a l'info-bulle : JAMAIS affichee a la
+   * place du nom du groupe.
+   */
+  public get description() { return resolveLangMap(this._description_map ?? {}, i18next.language) }
+  public set description(value: string) {
+    const lang = normalizeLang(i18next.language)
+    if (!this._description_map) this._description_map = {}
+    // Vider dans une langue alors que d'autres existent = supprimer la traduction.
+    if (value === '' && Object.keys(this._description_map).some(l => l !== lang)) delete this._description_map[lang]
+    else this._description_map[lang] = value
+  }
+
+  /** Map complete { langue -> definition } — pour l'edition multilingue. Copie. */
+  public get description_map(): Type_LangMap { return { ...this._description_map } }
+  public set description_map(value: Type_LangMap) { this._description_map = { ...value } }
+
+  /**
+   * #537 - Mise en forme portee par le groupe. Copie en lecture comme en
+   * ecriture : un appelant qui garderait la reference muterait le groupe sans
+   * passer par le setter.
+   */
+  public get style_patch(): Type_StylePatch { return { ...this._style_patch } }
+  public set style_patch(value: Type_StylePatch) { this._style_patch = { ...value } }
+
+  /** #537 - Groupe epingle en bas de legende (Source, Methode). */
+  public get pinned_in_legend(): boolean { return this._pinned_in_legend }
+  public set pinned_in_legend(value: boolean) { this._pinned_in_legend = value }
+
   /**
    * #486 - Separateur effectif entre les etiquettes de ce groupe dans le format
    * Excel (colonne Etiquettes, et colonnes portant le nom du groupe). ':' par defaut.
