@@ -71,7 +71,17 @@ type Type_TagForLegend = {
 type Type_TagGroupForLegend = {
   id: string
   name: string
+  // Mise en forme pilotée par le groupe — voir tagGroupCarriesFormatting().
   use_colors: boolean
+  // #533 — terme à venir du prédicat « ce groupe porte une mise en forme » :
+  // le socle de format (#537) posera sur les classes Proto un porteur de style
+  // (`Type_StylePatch`) qui couvrira l'opacité, puis la bordure et la hachure.
+  // Aucune classe ne l'expose aujourd'hui : le champ reste `undefined`, et le
+  // prédicat se réduit donc EXACTEMENT à `use_colors`. Rien ne peut l'allumer
+  // par accident — il n'est ni lu ni écrit par la persistance, et le
+  // rétro-portage de `Legacy.tsx` (`backfillTagGroupUseColors`) ne dérive de
+  // `show_legend` que `use_colors`.
+  has_style_patch?: boolean
   selected_tags_list: Type_TagForLegend[]
 }
 export type Type_SankeyForLegend = {
@@ -146,9 +156,32 @@ export function legendEntryText(
 }
 
 /**
+ * #533 — « ce groupe porte une mise en forme » : prédicat d'apparition d'un
+ * groupe de tags dans la légende.
+ *
+ * La légende ne montrait que les groupes pilotant la COULEUR. Porter une
+ * information par un autre attribut (l'opacité de la fiabilité, puis la
+ * bordure, la hachure) l'aurait donc mécaniquement retirée de la légende —
+ * c'est-à-dire exactement ce qu'on veut y lire.
+ *
+ * Le prédicat est volontairement STRUCTUREL et posé ici, pas sur les classes :
+ * `Class_DataTagGroup` n'hérite pas de `Class_TagGroup` (il étend
+ * `Class_ProtoTagGroup`), `_use_colors` y existe en double avec deux getters et
+ * deux sérialisations — une méthode écrite contre `Class_TagGroup` raterait en
+ * silence tous les groupes de data tags.
+ *
+ * Aujourd'hui aucune classe n'expose `has_style_patch` : le prédicat vaut
+ * exactement `use_colors`, et aucun diagramme existant ne change d'aspect.
+ */
+export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): boolean {
+  return tag_group.use_colors || tag_group.has_style_patch === true
+}
+
+/**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
- * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
- * moins un élément visible (ou data tags, toujours montrés).
+ * drawTagDisplayed() — groupes portant une mise en forme
+ * (tagGroupCarriesFormatting), tags sélectionnés portés par au moins un élément
+ * visible (ou data tags, toujours montrés).
  */
 export function computeLegendItems(
   sankey: Type_SankeyForLegend,
@@ -163,11 +196,11 @@ export function computeLegendItems(
     items.push({ id: LEGEND_CHILD_PREFIX + 'data-type', text: env.data_type_label, bold: true, starts_group: true, own_line: true })
   }
 
-  // Groupes de tags colorés
+  // Groupes de tags porteurs d'une mise en forme (#533)
   const all_taggs = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
   const data_taggs = sankey.data_taggs_list as Type_TagGroupForLegend[]
   all_taggs
-    .filter(tag_group => tag_group.use_colors)
+    .filter(tagGroupCarriesFormatting)
     .forEach(tag_group => {
       const is_data_tagg = data_taggs.includes(tag_group)
       const displayed_tags = tag_group.selected_tags_list.filter(tag => {

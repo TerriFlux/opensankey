@@ -6,7 +6,7 @@
 // ne supporte pas d'être chargé par cette porte d'entrée sous jest.
 
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems,
+  computeLegendItems, computeScaleText, layoutLegendItems, tagGroupCarriesFormatting,
   Type_LegendConfigValues, Type_SankeyForLegend
 } from './legendItems'
 import { isLegendChildId, isLegendElementId, isLegendFrameId } from './legendIds'
@@ -151,6 +151,55 @@ describe('OS#1254 — computeLegendItems', () => {
     })
     const items = computeLegendItems(sankey, base_config)
     expect(items[1].id).toBe('legend-tag-mes_tags-l__t__2020')
+  })
+})
+
+describe('#533 — « ce groupe porte une mise en forme »', () => {
+  // La légende ne montrait que les groupes pilotant la COULEUR. Porter la
+  // fiabilité par l'opacité « pour laisser le tag couleur libre » l'aurait donc
+  // retirée de la légende — exactement l'information qu'on veut y lire. Le
+  // prédicat élargi se réduit à `use_colors` tant que le socle de format
+  // (#537) n'a pas posé son porteur de style : les deux premiers cas fixent
+  // cette équivalence, le troisième prouve que le terme à venir a bien prise.
+
+  it('se réduit à use_colors tant que le socle de format est absent', () => {
+    expect(tagGroupCarriesFormatting({ id: 'g', name: 'G', use_colors: true, selected_tags_list: [] })).toBe(true)
+    expect(tagGroupCarriesFormatting({ id: 'g', name: 'G', use_colors: false, selected_tags_list: [] })).toBe(false)
+  })
+
+  it('reste faux sur un groupe dont le porteur de style est absent ou éteint', () => {
+    // `has_style_patch` n'est exposé par aucune classe aujourd'hui : `undefined`
+    // est le cas réel de TOUS les groupes du parc.
+    expect(tagGroupCarriesFormatting({
+      id: 'g', name: 'G', use_colors: false, has_style_patch: undefined, selected_tags_list: []
+    })).toBe(false)
+    expect(tagGroupCarriesFormatting({
+      id: 'g', name: 'G', use_colors: false, has_style_patch: false, selected_tags_list: []
+    })).toBe(false)
+  })
+
+  it('fait apparaître en légende un groupe qui pilote autre chose que la couleur', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [
+        // Le cas mesuré sur `[SOCLE] Lait de vache - Résultats.gz` : les quatre
+        // groupes de fluxTags y sont à use_colors=false.
+        { id: 'fiab', name: 'Fiabilité des données', use_colors: false, has_style_patch: true, selected_tags_list: [makeTag('sure')] }
+      ],
+      visible_links_list: [makeElement(['sure'])]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => i.id)).toEqual(['legend-group-fiab', 'legend-tag-fiab-sure'])
+    expect(items[0]).toMatchObject({ text: 'Fiabilité des données', bold: true })
+  })
+
+  it('le même groupe sans porteur de style reste absent de la légende', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [
+        { id: 'fiab', name: 'Fiabilité des données', use_colors: false, selected_tags_list: [makeTag('sure')] }
+      ],
+      visible_links_list: [makeElement(['sure'])]
+    })
+    expect(computeLegendItems(sankey, base_config)).toEqual([])
   })
 })
 
