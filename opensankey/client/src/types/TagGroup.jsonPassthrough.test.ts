@@ -46,7 +46,13 @@ describe('#527 passthrough des attributs inconnus du front', () => {
     const group = new Class_NodeTagGroup('g', 'G', fakeSankey, false)
     group.fromJSON(jsonWithTags(
       { definition: 'texte libre', mise_en_forme: { opacite: 0.5 } },
-      { provenance: ['agreste', 2024] },
+      // Tableau HÉTÉROGÈNE, volontairement : c'est justement une valeur que
+      // `Type_JSON` ne sait pas exprimer (ses tableaux sont `string[]`) et qu'un
+      // fichier réel peut porter — le passthrough doit la rendre telle quelle.
+      // Le cast est donc la mesure de l'écart entre le type et le JSON réel, pas
+      // un contournement : sans lui la compilation `dist` refuse le fichier
+      // (constaté sur `main` le 12/09, job `build` rouge et déploiement bloqué).
+      { provenance: ['agreste', 2024] as unknown as string[] },
     ))
     const out = group.toJSON()
     expect(out['definition']).toBe('texte libre')
