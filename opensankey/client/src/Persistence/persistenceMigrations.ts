@@ -5,6 +5,7 @@
 // aucune dépendance runtime lourde.
 import type { Class_Sankey } from '../types/Sankey'
 import type { Class_ProtoElement } from '../Elements/Element'
+import type { Type_StylePatch } from '../types/Theme'
 import { sankeyRootSchema } from './sankeyFormatSchema'
 
 // ---------------------------------------------------------------------------
@@ -128,6 +129,48 @@ export function resolveLangMap(
 }
 /** Alias historique. */
 export const resolveDocMarkdown = resolveLangMap
+
+// ---------------------------------------------------------------------------
+// Patch de mise en forme porté par une étiquette / un groupe d'étiquettes (#537)
+// ---------------------------------------------------------------------------
+// Même forme que les patchs de thème (`Type_StylePatch`) : { attribut moderne ->
+// valeur }. Rangé ici, avec les autres lectures/écritures de persistance, pour
+// que les deux porteurs (Tag et TagGroup) partagent exactement la même tolérance
+// de relecture — deux copies d'une règle aussi discrète dériveraient en silence.
+//
+// Sérialisation CONDITIONNELLE : un patch vide ne s'écrit pas. C'est ce qui fait
+// qu'aucun fichier existant ne gagne de clé à la première re-sauvegarde.
+
+/**
+ * Relit un patch de mise en forme en n'en gardant que les valeurs scalaires
+ * (string | number | boolean), seules formes que décrit `Type_StylePatch`.
+ * Toute autre valeur (objet, tableau, null) est écartée : mieux vaut ignorer un
+ * attribut abîmé que rendre le diagramme inouvrable.
+ */
+export function parseStylePatch(raw: unknown): Type_StylePatch {
+  const out: Type_StylePatch = {}
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') out[k] = v
+    }
+  }
+  return out
+}
+
+/**
+ * Sérialise le patch pour le JSON, ou `undefined` s'il est vide — auquel cas la
+ * clé ne doit pas être écrite. Rend une COPIE : le JSON dumpé ne doit pas rester
+ * accroché à l'état interne de l'objet.
+ */
+export function serializeStylePatch(
+  patch: Type_StylePatch
+): Type_StylePatch | undefined {
+  const keys = Object.keys(patch)
+  if (keys.length === 0) return undefined
+  const out: Type_StylePatch = {}
+  keys.forEach((k) => { out[k] = patch[k] })
+  return out
+}
 
 /**
  * Compare deux versions « pointées » (ex. '0.92', '1.1', '1.1.4') segment par
