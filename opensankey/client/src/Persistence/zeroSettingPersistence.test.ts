@@ -1,4 +1,10 @@
-import { animatedLinkOpacity, ANIMATION_FALLBACK_OPACITY } from '../Algorithms/SankeyAnimation'
+import { ANIMATION_FALLBACK_OPACITY } from '../Algorithms/SankeyAnimation'
+import { effectiveOpacity } from '../Elements/elementOpacity'
+
+// SA#534 — le repli de l'animation est passé au point unique de résolution de l'opacité :
+// ces trois cas visent désormais `effectiveOpacity`, la fonction que le dessin appelle.
+const animatedLinkOpacity = (shape_opacity: number | undefined): number =>
+  effectiveOpacity({ shape_opacity: shape_opacity as number }, { fallback: ANIMATION_FALLBACK_OPACITY })
 import { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_JSON } from '../types/Utils'
 
