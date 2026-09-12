@@ -24,6 +24,17 @@ import { Class_NodeElement } from '../Elements/Node'
 import { effectiveOpacity } from '../Elements/elementOpacity'
 
 /**
+ * sa#529 — Opacité de repli de l'animation, appliquée uniquement quand le flux n'en porte
+ * AUCUNE. Historiquement écrite `shape_opacity || 0.8`, ce qui remontait une opacité de 0 —
+ * valeur légitime (flux volontairement invisible) — à 0,8 : le flux réapparaissait pendant
+ * l'animation, et seulement là. Depuis SA#534 elle est passée en `fallback` au point unique de
+ * résolution de l'opacité (`Elements/elementOpacity.ts`), qui ne l'applique que sur l'ABSENCE de
+ * valeur — vérifiable sans dessiner le diagramme (l'animation dépend de `getTotalLength()`, que
+ * jsdom n'implémente pas).
+ */
+export const ANIMATION_FALLBACK_OPACITY = 0.8
+
+/**
  * Classe simplifiée gérant les animations pour les diagrammes Sankey
  */
 export class SankeyAnimation {
@@ -139,8 +150,10 @@ export class SankeyAnimation {
         return cast_d.source?.id === this.startNode.id
       })
 
-    // SA#534 — le repli à 0,8 est déclaré, non dissimulé : c'est le défaut que SA#529 traite.
-    glinks?.select('.link_path').attr('stroke-opacity', (l) => effectiveOpacity(l as Class_LinkElement, { fallback: 0.8 }))
+    // SA#529 + SA#534 — le repli passe par le point unique, et ne joue que sur l'ABSENCE
+    // de valeur : une opacité de 0 reste 0.
+    glinks?.select('.link_path')
+      .attr('stroke-opacity', (l) => effectiveOpacity(l as Class_LinkElement, { fallback: ANIMATION_FALLBACK_OPACITY }))
 
     glinks?.selectAll('.link_path').each((d, i, nodes) => {
       const element = nodes[i] as SVGGeometryElement
@@ -176,7 +189,7 @@ export class SankeyAnimation {
         const arrow = animatedLink.d3_selection?.selectAll('.link_arrow')
         if (arrow) {
           // D'abord rendre visible
-          arrow.attr('opacity', effectiveOpacity(animatedLink, { fallback: 0.8 }))
+          arrow.attr('opacity', effectiveOpacity(animatedLink, { fallback: ANIMATION_FALLBACK_OPACITY }))
 
           // Puis définir la couleur si possible
           if (targetNode) {

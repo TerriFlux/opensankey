@@ -417,22 +417,14 @@ export function createConfigWithPrefix<
 
   for (const [key, config] of Object.entries(baseConfig)) {
     const newKey = prefix ? `${prefix}_${key}` : key
+    // #538 — recopie intégrale (et non énumération des 5 premières langues) : `zh-CN` et `ja`
+    // étaient perdus en silence pour tout attribut préfixé, et le contrôle i18n ne pouvait pas le
+    // voir (ce sont ici des renvois de propriétés, pas du texte). La prochaine langue ajoutée au
+    // dépôt n'a rien à faire ici.
     result[newKey] = {
       ...config,
-      labels: {
-        en: config.labels.en,
-        fr: config.labels.fr,
-        es: config.labels.es,
-        de: config.labels.de,
-        it: config.labels.it
-      },
-      tooltips: {
-        en: config.tooltips.en,
-        fr: config.tooltips.fr,
-        es: config.tooltips.es,
-        de: config.tooltips.de,
-        it: config.tooltips.it
-      }
+      labels: { ...config.labels },
+      tooltips: { ...config.tooltips }
     }
   }
 
@@ -487,20 +479,11 @@ export function createConfigWithPrefixAndOverrides<T extends Record<string, Attr
         : config.type,
       category: category,
       actions: actions,
-      labels: override.labels || {
-        en: config.labels.en,
-        fr: config.labels.fr,
-        es: config.labels.es,
-        de: config.labels.de,
-        it: config.labels.it
-      },
-      tooltips: override.tooltips || {
-        en: config.tooltips.en,
-        fr: config.tooltips.fr,
-        es: config.tooltips.es,
-        de: config.tooltips.de,
-        it: config.tooltips.it
-      }
+      // #538 — même correction qu'en createConfigWithPrefix : recopie intégrale du catalogue de
+      // base. Une surcharge, elle, remplace bien le catalogue entier (c'est son rôle : ses
+      // libellés ne décrivent plus le même attribut, on ne peut pas y rabouter le `zh-CN` d'avant).
+      labels: override.labels || { ...config.labels },
+      tooltips: override.tooltips || { ...config.tooltips }
     }
   }
 
@@ -2100,8 +2083,17 @@ export const BASE_LABEL_CONFIG = {
 } as const
 
 function createLabelConfig(prefix: string, category: string, drawAction: BaseActionType) {
-  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : prefix === 'stock_label' ? 'Stock' : 'Icône'
-  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : prefix === 'stock_label' ? 'Stock' : 'Icon'
+  // #538 — les 7 langues du dépôt. Ce catalogue sert de SURCHARGE, et une surcharge remplace le
+  // catalogue de base : ce qui ne s'y écrit pas retombe sur l'anglais. Il échappait au contrôle
+  // i18n tant que ses valeurs étaient choisies par `prefix` plutôt qu'écrites en dur.
+  const VISIBILITY_LABELS = {
+    name_label: { en: 'Label', fr: 'Libellé', es: 'Etiqueta', de: 'Beschriftung', it: 'Etichetta', 'zh-CN': '标签', ja: 'ラベル' },
+    value_label: { en: 'Value', fr: 'Valeur', es: 'Valor', de: 'Wert', it: 'Valore', 'zh-CN': '数值', ja: '値' },
+    stock_label: { en: 'Stock', fr: 'Stock', es: 'Stock', de: 'Stock', it: 'Stock', 'zh-CN': '库存', ja: 'ストック' },
+    icon: { en: 'Icon', fr: 'Icône', es: 'Icono', de: 'Symbol', it: 'Icona', 'zh-CN': '图标', ja: 'アイコン' }
+  }
+  const visibility_labels = VISIBILITY_LABELS[prefix as keyof typeof VISIBILITY_LABELS]
+    ?? VISIBILITY_LABELS.icon
 
 
   return {
@@ -2115,13 +2107,7 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
         // ✅ Surcharges spécifiques au prefix
         is_visible: {
           default: prefix === 'name_label' ? true : false,
-          labels: {
-            en: visibility_string_en,
-            fr: visibility_string_fr,
-            es: prefix === 'name_label' ? 'Etiqueta' : prefix === 'value_label' ? 'Valor' : prefix === 'stock_label' ? 'Stock' : 'Icono',
-            de: prefix === 'name_label' ? 'Beschriftung' : prefix === 'value_label' ? 'Wert' : prefix === 'stock_label' ? 'Stock' : 'Symbol',
-            it: prefix === 'name_label' ? 'Etichetta' : prefix === 'value_label' ? 'Valore' : prefix === 'stock_label' ? 'Stock' : 'Icona'
-          }
+          labels: { ...visibility_labels }
         },
         horiz: {
           setter: prefix === 'name_label' ? 'customNameLabelHoriz' : 'customValueLabelHoriz',

@@ -76,10 +76,11 @@ export type Type_OpacityGuards = {
    */
   hidden?: boolean
   /**
-   * Repli quand la source est falsy. **N'existe que pour l'animation**, qui remplace historiquement
-   * une opacité nulle par 0,8 — ce qui fait justement réapparaître un élément réglé à 0. Ce défaut
-   * est traité par SA#529 (« un réglage à zéro disparaît encore à l'enregistrement ») ; SA#534 se
-   * contente de le rendre visible ici plutôt que dissimulé dans un `|| 0.8`.
+   * Repli quand l'élément ne porte AUCUNE opacité. **N'existe que pour l'animation.** Écrit
+   * historiquement `shape_opacity || 0.8`, il remontait une opacité de 0 — valeur légitime, flux
+   * volontairement invisible — à 0,8 : le flux réapparaissait pendant l'animation, et seulement
+   * là. SA#529 a corrigé la règle, SA#534 l'a ramenée ici : le repli ne joue que sur l'absence de
+   * valeur, **0 reste 0**.
    */
   fallback?: number
 }
@@ -125,5 +126,5 @@ export function effectiveOpacity(
   if (isDimmed(element, guards.dim ?? 'never')) return DATA_LABEL_DIMMED_OPACITY
   if (guards.hidden) return 0
   const source = elementSourceOpacity(element)
-  return (guards.fallback !== undefined && !source) ? guards.fallback : source
+  return (guards.fallback !== undefined && !Number.isFinite(source)) ? guards.fallback : source
 }
