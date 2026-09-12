@@ -27,7 +27,7 @@ import {
 } from './ElementsAttributesConfig'
 import { LEGEND_FRAME_ID, isLegendChildId } from './legendIds'
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems,
+  computeLegendItems, computeScaleText, layoutLegendItems, renderableLegendItems,
   SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem, Type_SankeyForLegend
 } from './legendItems'
 
@@ -374,7 +374,14 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         values,
         env.t_scale ?? 'Echelle'
       )
-      items = computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
+      // sa#532 — `computeLegendItems` décrit aussi les étiquettes DÉSÉLECTIONNÉES
+      // (marquées `dimmed`), pour que la légende puisse devenir une porte de retour ;
+      // `renderableLegendItems` dit ce qui est effectivement posé sur le diagramme.
+      // Tant que rien ne permet de les réactiver, il les écarte : l'aspect des
+      // diagrammes existants est inchangé (golden de rendu #530).
+      items = renderableLegendItems(
+        computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
+      )
     }
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
