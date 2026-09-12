@@ -148,13 +148,17 @@ describe('effectiveOpacity — forme du nœud (NodeDrawShape)', () => {
 })
 
 describe('effectiveOpacity — repli de l animation (SankeyAnimation)', () => {
-  // avant : shape_opacity || 0.8
+  // SA#529 : le repli ne joue que sur l'ABSENCE de valeur — 0 est une opacité légitime.
   test.each([
     [0.85, 0.85],
     [1, 1],
-    [0, 0.8] // ⚠️ le défaut que SA#529 traitera : un réglage à 0 réapparaît à 0,8
+    [0, 0]
   ])('op=%p → %p', (op, expected) => {
     expect(effectiveOpacity(bearer(op), { fallback: 0.8 })).toBe(expected)
+  })
+
+  test('une opacité absente retombe sur le repli', () => {
+    expect(effectiveOpacity({ shape_opacity: undefined as unknown as number }, { fallback: 0.8 })).toBe(0.8)
   })
 
   test('sans fallback déclaré, une opacité nulle reste nulle', () => {

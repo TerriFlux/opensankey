@@ -751,6 +751,12 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
 
 
+    // sa#529 — le test de véracité est VOULU ici, ne pas le passer à `!== undefined` :
+    // `shape_local_link_scale` est un FACTEUR d'échelle (diviseur au rendu, cf.
+    // `Link.scaleValueToPx` et `NodePositioningScaleAdapted.linkMagnitude`). 0 n'y est pas
+    // une valeur légitime mais une valeur dégénérée — il poserait le domaine [0, 0] et
+    // ferait diverger toutes les épaisseurs. 0 vaut donc « pas d'échelle locale », comme
+    // l'absence de clé (même convention côté menu d'apparence des flux).
     if (link.shape_local_link_scale) {
       link.setDomainLocalScale(link.shape_local_link_scale)
     }
@@ -2078,7 +2084,13 @@ export class DrawingAreaPersistence {
     if (drawing_area.scale != default_scale) json_object['user_scale'] = drawing_area._scale
     if (drawing_area.color != default_background_color) json_object['couleur_fond_sankey'] = drawing_area.color
     if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
-    if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
+    // sa#529 — même règle que `minimum_flux` ci-dessous (sa#373) : on sérialise ce qui est
+    // DÉFINI, pas ce qui est « vrai ». Le plafond ne peut pas naître à 0 par l'interface (le
+    // setter refuse 0 et le menu efface la clé), mais un fichier tiers ou un format ancien
+    // peut en porter un : le test de véracité le faisait disparaître en silence à
+    // l'enregistrement. « Pas de plafond » reste marqué par l'ABSENCE de la clé
+    // (removeMaximumLinkThickness), jamais par un 0 — aucun fichier existant ne grossit.
+    if (drawing_area.maximum_flux !== undefined) json_object['maximum_flux'] = drawing_area.maximum_flux
     // sa#373 — le plancher d'épaisseur des flux est sérialisé dès qu'il est DÉFINI, et non
     // « s'il est vrai » : 0 est une valeur légitime depuis #200 (flux tracés à leur épaisseur
     // réelle, plus aucun plancher). Le test de véracité le laissait tomber silencieusement,
@@ -2094,8 +2106,10 @@ export class DrawingAreaPersistence {
     // ne grossit, et l'absence de clé continue de signifier « régime par défaut ».
     if (drawing_area.scale_adapted_reference !== 'diagram')
       json_object['scale_adapted_reference'] = drawing_area.scale_adapted_reference
-    if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
-    if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
+    // sa#529 — idem pour les bornes de hauteur des nœuds : sérialisées si DÉFINIES.
+    // « Pas de borne » = clé absente (removeMaximumNodeHeight / removeMinimumNodeHeight).
+    if (drawing_area.maximum_node !== undefined) json_object['maximum_node'] = drawing_area.maximum_node
+    if (drawing_area.minimum_node !== undefined) json_object['minimum_node'] = drawing_area.minimum_node
     // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
     // (défaut 'fill' → sérialisé seulement s'il diffère) et valeur constante (sérialisée seulement
     // si explicitement définie ; sinon le getter retombe sur default_style.shape_position_dy).
