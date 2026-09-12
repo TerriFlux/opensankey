@@ -197,6 +197,9 @@ export class NodePositioningScaleAdapted {
   private linkMagnitude(l: Class_LinkElement, tags?: Class_DataTag[]): number {
     const v = tags ? l.valueForDataTags(tags) : l.valueCurrent
     if (v === null || v === undefined || !isFinite(v)) return 0
+    // sa#529 — `|| 1` est VOULU, ne pas le passer à `?? 1` : le facteur est un DIVISEUR, et
+    // un 0 donnerait ici une grandeur infinie qui ruinerait le calcul d'échelle. 0 = « pas
+    // d'échelle locale », même convention qu'au chargement (SankeyPersistence).
     const factor = l.shape_local_link_scale || 1
     return Math.abs(v) / factor
   }
