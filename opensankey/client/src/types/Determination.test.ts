@@ -19,7 +19,10 @@ import {
   determinationSubjectKey,
   determinationIndexOf,
   determinationStatusOf,
-  determinationStatusOfType
+  determinationStatusOfType,
+  RECONCILIATION_STATUSES,
+  reconciliationStatusOf,
+  reconciliationStatusToDeterminationStatus
 } from './Determination'
 
 const catalog: Type_DeterminationCatalog = {
@@ -319,5 +322,56 @@ describe('#536 détermination — statut lu depuis le porteur', () => {
     expect(determinationStatusOf(status_catalog, undefined)).toBeUndefined()
     // Index hors catalogue : déjà écarté par determinationLookup.
     expect(determinationStatusOf(status_catalog, { determination: 99 })).toBeUndefined()
+  })
+})
+
+// #544 — le statut de réconciliation gradué, calculé par le moteur. Le front ne
+// fait que le restituer : ce qui peut mentir ici est la lecture (un champ perdu à
+// l'aller-retour) et le repli (inventer un statut que le fichier ne porte pas).
+
+const graded = (status?: unknown) => ({
+  type: 'determined', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [], combines: [],
+  ...(status === undefined ? {} : { status })
+})
+
+describe('#544 statut de réconciliation', () => {
+  it('garde le statut à l’aller-retour', () => {
+    const with_status = {
+      subjects: [],
+      explanations: [graded('determined_by_balance'), graded()]
+    } as Type_DeterminationCatalog
+    const read = determinationCatalogFromJSON(determinationCatalogToJSON(with_status))
+    expect(read).toEqual(with_status)
+    expect(read?.explanations[0].status).toBe('determined_by_balance')
+    expect('status' in (read?.explanations[1] ?? {})).toBe(false)
+  })
+
+  it('écarte le catalogue entier si le statut n’est pas une chaîne', () => {
+    expect(determinationCatalogFromJSON({ explanations: [graded(3)] })).toBeUndefined()
+  })
+
+  it('rend les six états, du pire au meilleur', () => {
+    expect(RECONCILIATION_STATUSES).toEqual([
+      'undetermined_unbounded', 'undetermined_bounded', 'reconciled',
+      'determined_by_balance', 'determined_by_coefficient', 'collected'
+    ])
+    const six = {
+      subjects: [],
+      explanations: [...RECONCILIATION_STATUSES.map(s => graded(s)), graded(), graded('quantum')]
+    } as Type_DeterminationCatalog
+    RECONCILIATION_STATUSES.forEach((status, index) => {
+      expect(reconciliationStatusOf(six, { determination: index })).toBe(status)
+    })
+    // Sans l'option, aucun statut — et surtout pas un repli sur les quatre états.
+    expect(reconciliationStatusOf(six, { determination: 6 })).toBeUndefined()
+    // Un code qu'un moteur plus récent introduirait ne se devine pas.
+    expect(reconciliationStatusOf(six, { determination: 7 })).toBeUndefined()
+    expect(reconciliationStatusOf(undefined, { determination: 0 })).toBeUndefined()
+  })
+
+  it('se projette sur les quatre états de l’inspecteur', () => {
+    expect(RECONCILIATION_STATUSES.map(reconciliationStatusToDeterminationStatus)).toEqual([
+      'undetermined', 'undetermined', 'reconciled', 'determined', 'determined', 'collected'
+    ])
   })
 })
