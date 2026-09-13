@@ -375,9 +375,10 @@ describe('#533 — « ce groupe porte une mise en forme »', () => {
   })
 
   it('reste fermé de lui-même : porteur de style absent, undefined ou éteint', () => {
-    // `has_style_patch` n'est exposé par aucune classe aujourd'hui — `undefined`
-    // est le cas réel de TOUS les groupes du parc, et rien dans la persistance
-    // ni dans le rétro-portage de Legacy ne peut l'allumer.
+    // Groupes simulés : `has_style_patch` y est posé à la main. Sur les vraies
+    // classes il dérive de `style_patch` (raccord du #537, cf.
+    // types/TagGroup.hasStylePatch.test.ts) et vaut `false` pour tout groupe
+    // sans patch — le cas réel de TOUS les groupes du parc.
     const avec = (has_style_patch?: boolean) => makeSankey({
       flux_taggs_list: [
         { id: 'fiab', name: 'Fiabilité des données', use_colors: false, has_style_patch, selected_tags_list: [makeTag('sure')] }
