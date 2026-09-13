@@ -38,7 +38,8 @@ import {
 import { default_grey_color } from '../Elements/ElementsAttributesConfig'
 import i18next from 'i18next'
 import { Class_Sankey } from './Sankey'
-import { Type_LangMap, normalizeLang, parseLangMap, resolveLangMap, serializeLangMap } from '../Persistence/persistenceMigrations'
+import { Type_LangMap, normalizeLang, parseLangMap, parseStylePatch, resolveLangMap, serializeLangMap, serializeStylePatch } from '../Persistence/persistenceMigrations'
+import type { Type_StylePatch } from './Theme'
 import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup, Class_ViewTagGroup } from './TagGroup'
 
 // SPECIFIC TYPES ***********************************************************************
@@ -52,6 +53,11 @@ export type tag_banner_type = 'none' | 'one' | 'multi' | 'sequence' | 'topbar'
 const KNOWN_TAG_JSON_KEYS = new Set([
   'name', 'long_name', 'selected', 'color',
   'scale', 'unit', 'scale_owned',
+  // #537 - le front MODELISE desormais ces deux cles : les laisser au sac du
+  // #527 ferait resurgir une valeur effacee. L'ecriture etant conditionnelle,
+  // effacer une definition n'ecrit plus la cle — et celle restee dans le sac
+  // reprendrait la main au dump suivant.
+  'description', 'style_patch',
 ])
 
 // CLASS PROTO TAG ***********************************************************************
@@ -76,6 +82,21 @@ export abstract class Class_ProtoTag {
 
   // Long name (used for display on the diagram - falls back to _name if empty)
   private _long_name_map: Type_LangMap = {}
+
+  // #537 - DEFINITION de l'etiquette (« donnee presentant un tres faible niveau
+  // d'incertitude... »), destinee a l'info-bulle de legende. A ne surtout pas
+  // confondre avec `long_name`, qui est le nom AFFICHE (cf. display_name) : les
+  // definitions font 95 caracteres en moyenne, y ranger une definition
+  // remplacerait « Fiable » par un paragraphe dans la legende et dans tous les
+  // selecteurs de banniere. Meme patron multilingue que les noms (OS#1299).
+  private _description_map: Type_LangMap = {}
+
+  // #537 - mise en forme portee par l'etiquette AU-DELA de la couleur :
+  // { attribut moderne -> valeur }, exactement la forme des patchs de theme
+  // (Type_StylePatch). Vide = comportement d'avant, l'etiquette ne pilote que sa
+  // couleur. Le premier attribut consomme sera l'opacite ; la bordure et la
+  // hachure viendront sans nouveau format.
+  private _style_patch: Type_StylePatch = {}
 
   // Color of tag
   private _color: string = default_grey_color
@@ -165,6 +186,11 @@ export abstract class Class_ProtoTag {
     this._long_name_map = { ...tag_to_copy._long_name_map }
     this._color = tag_to_copy._color
     this._is_selected = tag_to_copy._is_selected
+    // #537 - definition et mise en forme suivent l'etiquette. Sans ces lignes,
+    // une duplication de groupe ou une fusion de mise en page les perdrait en
+    // silence : #385 a l'identique.
+    this._description_map = { ...tag_to_copy._description_map }
+    this._style_patch = { ...tag_to_copy._style_patch }
     // #527 - les attributs que le front ne modelise pas suivent l'etiquette :
     // sans cette ligne, une fusion de mise en page ou une duplication les
     // perdrait silencieusement.
@@ -208,6 +234,14 @@ export abstract class Class_ProtoTag {
     json_object['long_name'] = serializeLangMap(this._long_name_map) ?? ''
     json_object['selected'] = this._is_selected
     json_object['color'] = this._color
+    // #537 - ecriture CONDITIONNELLE : la cle n'apparait que si l'etiquette
+    // porte quelque chose. C'est ce qui fait qu'aucun fichier existant ne gagne
+    // de cle a la premiere re-sauvegarde — contrairement aux quatre lignes
+    // ci-dessus, toujours ecrites, qui ne sont PAS un modele a suivre.
+    const description = serializeLangMap(this._description_map)
+    if (description !== undefined) json_object['description'] = description
+    const style_patch = serializeStylePatch(this._style_patch)
+    if (style_patch !== undefined) json_object['style_patch'] = style_patch
   }
 
   /**
@@ -255,6 +289,15 @@ export abstract class Class_ProtoTag {
     }
     this._is_selected = getBooleanFromJSON(json_object, 'selected', true)
     this._color = getStringFromJSON(json_object, 'color', this._color)
+    // #537 - cle absente = defaut du format (aucune definition, aucune mise en
+    // forme). On n'ecrase que si la cle est presente : `fromJSON` sert aussi aux
+    // mises a jour partielles, ou un JSON muet ne doit rien effacer.
+    if (json_object['description'] !== undefined) {
+      this._description_map = parseLangMap(json_object['description'], file_lang)
+    }
+    if (json_object['style_patch'] !== undefined) {
+      this._style_patch = parseStylePatch(json_object['style_patch'])
+    }
   }
 
   // PUBLIC METHODES ==================================================================
@@ -334,6 +377,38 @@ export abstract class Class_ProtoTag {
   public get display_name() {
     const long_name = this.long_name
     return long_name !== '' ? long_name : this.name
+  }
+
+  // #537 - Definition resolue pour la langue active (repli en->fr->premiere
+  // disponible), destinee a l'info-bulle. JAMAIS affichee a la place du nom.
+  public get description() { return resolveLangMap(this._description_map ?? {}, i18next.language) }
+  public set description(value: string) {
+    // Avoid useless updates
+    if (this.description !== value) {
+      const lang = normalizeLang(i18next.language)
+      if (!this._description_map) this._description_map = {}
+      // Vider dans une langue alors que d'autres existent = supprimer la traduction.
+      if (value === '' && Object.keys(this._description_map).some(l => l !== lang)) delete this._description_map[lang]
+      else this._description_map[lang] = value
+      // Redraw all related elements (l'info-bulle de legende en derive)
+      this.update()
+    }
+  }
+
+  /** Map complete { langue -> definition } — pour l'edition multilingue. Copie. */
+  public get description_map(): Type_LangMap { return { ...this._description_map } }
+  public set description_map(value: Type_LangMap) {
+    this._description_map = { ...value }
+    this.update()
+  }
+
+  // #537 - Mise en forme portee par l'etiquette. Copie en lecture comme en
+  // ecriture : un appelant qui garderait la reference muterait l'etiquette sans
+  // passer par le setter, donc sans redessiner.
+  public get style_patch(): Type_StylePatch { return { ...this._style_patch } }
+  public set style_patch(value: Type_StylePatch) {
+    this._style_patch = { ...value }
+    this.update()
   }
 
   public get color() { return this._color }
