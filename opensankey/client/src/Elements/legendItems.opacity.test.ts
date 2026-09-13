@@ -85,15 +85,23 @@ describe('SA#541 — légende d un groupe qui pilote la transparence', () => {
   })
 
   it('variante contour : la pastille « Non qualifiée » est pointillée', () => {
-    const { sankey } = mkSankey({ shape_opacity: 0.5, unqualified_outline: true }, { carried: [[]] })
+    const { sankey, fiable } = mkSankey({ shape_opacity: 0.5, unqualified_outline: true }, { carried: [] })
+    sankey.visible_links_list = [{ hasGivenTag: (t: MockTag) => t === fiable }, { hasGivenTag: () => false }]
     const unq = computeLegendItems(sankey, CONFIG).filter(i => i.unqualified)
     expect(unq[0].swatch_dashed).toBe(true)
   })
 
-  it('toutes les valeurs visibles sont non qualifiées : le bloc est rendu quand même', () => {
+  it('l entrée « Non qualifiée » suit les entrées de SON groupe, avant la suite de la légende', () => {
+    const { sankey, fiable } = mkSankey({ shape_opacity: 0.5 }, { carried: [] })
+    sankey.visible_links_list = [{ hasGivenTag: (t: MockTag) => t === fiable }, { hasGivenTag: () => false }]
+    const rendered = renderableLegendItems(computeLegendItems(sankey, { ...CONFIG, show_dataTags: true }))
+    expect(rendered.map(i => i.unqualified ? 'unqualified' : i.id))
+      .toEqual(['legend-group-fiabilite', 'legend-tag-fiabilite-fiable', 'unqualified'])
+  })
+
+  it('aucune étiquette du groupe portée par un élément visible : le groupe reste hors légende (règle d avant)', () => {
     const { sankey } = mkSankey({ shape_opacity: 0.5 }, { carried: [[], []] })
-    const rendered = renderableLegendItems(computeLegendItems(sankey, CONFIG))
-    expect(rendered.map(i => i.unqualified ? 'unqualified' : i.id)).toEqual(['legend-group-fiabilite', 'unqualified'])
+    expect(computeLegendItems(sankey, CONFIG)).toEqual([])
   })
 
   it('groupe qui porte une mise en forme SANS opacité : entrées inchangées (pas de clé nouvelle)', () => {

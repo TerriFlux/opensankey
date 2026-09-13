@@ -46,12 +46,6 @@ export type Type_LegendItem = {
   // Échelle : la forme de la zone est un trait vertical fin dont la hauteur
   // matérialise l'échelle (ex-barre draggable de l'ancienne légende).
   scale_bar?: boolean
-  // sa#532 — entrée de tag NON SÉLECTIONNÉ : l'étiquette existe dans le groupe mais
-  // ses porteurs sont masqués. L'entrée est présente dans le MODÈLE pour que la
-  // légende puisse un jour servir de porte de retour (clic = resélectionner) ;
-  // c'est `renderableLegendItems` qui décide si elle est rendue, et le ticket qui
-  // posera le clic qui décidera de SON aspect (grisé, barré...).
-  dimmed?: boolean
   // SA#541 — opacité de la pastille : celle de l'étiquette quand son groupe pilote la
   // transparence. Absent ailleurs (pastille opaque, comme avant).
   swatch_opacity?: number
@@ -60,6 +54,12 @@ export type Type_LegendItem = {
   // SA#541 — entrée « Non qualifiée » : des valeurs visibles ne portent aucune étiquette du
   // groupe pilote. Pas de `tag_id` (aucune étiquette derrière), donc pas de survol.
   unqualified?: boolean
+  // sa#532 — entrée de tag NON SÉLECTIONNÉ : l'étiquette existe dans le groupe mais
+  // ses porteurs sont masqués. L'entrée est présente dans le MODÈLE pour que la
+  // légende puisse un jour servir de porte de retour (clic = resélectionner) ;
+  // c'est `renderableLegendItems` qui décide si elle est rendue, et le ticket qui
+  // posera le clic qui décidera de SON aspect (grisé, barré...).
+  dimmed?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -96,13 +96,13 @@ type Type_TagForLegend = {
   // absent = traité comme sélectionné (les listes `selected_tags_list` que les
   // tests passaient déjà ne portent que des tags sélectionnés).
   is_selected?: boolean,
+  // SA#541 — niveau d'opacité de l'étiquette (`Class_ProtoTag.style_patch`)
+  style_patch?: Type_LegendStylePatch,
   // OS#1314 — jeton {Unit} du gabarit d'entrée : unité référencée par le tag
   // (groupes « de type unité », registre d'unités OS#1286). Absent ailleurs.
   // `label` = ce qui est écrit sur le diagramme (Class_Unit.label : display_name
   // s'il est posé, sinon le symbole canonique). `name` reste la référence.
   resolved_unit?: { unit: { name: string, label: string } }
-  // SA#541 — niveau d'opacité de l'étiquette (`Class_ProtoTag.style_patch`)
-  style_patch?: Type_LegendStylePatch
 }
 type Type_TagGroupForLegend = {
   id: string
@@ -263,9 +263,6 @@ export function computeLegendItems(
   // Groupes de tags porteurs d'une mise en forme (#533)
   const all_taggs = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
   const data_taggs = sankey.data_taggs_list as Type_TagGroupForLegend[]
-  // SA#541 — groupe de flux qui pilote la transparence : même règle que le rendu
-  // (`Link.tag_driven_opacity`), le premier dans l'ordre des groupes.
-  const opacity_group = opacityDrivingGroup(sankey.flux_taggs_list)
   all_taggs
     .filter(tagGroupCarriesFormatting)
     .forEach(tag_group => {
@@ -290,15 +287,7 @@ export function computeLegendItems(
         return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
           sankey.visible_links_list.some(f => f.hasGivenTag(tag))
       })
-      const drives_opacity = opacity_group !== undefined && tag_group === opacity_group
-      const group_opacity = drives_opacity ? stylePatchOpacity(tag_group) : undefined
-      // SA#541 — des valeurs VISIBLES ne portent aucune étiquette du groupe pilote (26,5 % des
-      // valeurs SOCLE) : elles ont un rendu propre, la légende doit le dire. `hasGivenTag` d'un
-      // flux lit la valeur affichée, donc la réponse suit l'année et l'unité sélectionnées.
-      const group_tags = tag_group.tags_list ?? tag_group.selected_tags_list
-      const has_unqualified = drives_opacity &&
-        sankey.visible_links_list.some(link => !group_tags.some(tag => link.hasGivenTag(tag)))
-      if (displayed_tags.length === 0 && !has_unqualified) return
+      if (displayed_tags.length === 0) return
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       items.push({
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
@@ -320,28 +309,8 @@ export function computeLegendItems(
         // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
         // entrées ordinaires restent structurellement identiques à avant.
         if (tag.is_selected === false) item.dimmed = true
-        if (drives_opacity) {
-          item.swatch_opacity = stylePatchOpacity(tag) ?? group_opacity
-          if (!tag_group.use_colors) item.swatch_color = LEGEND_NEUTRAL_SWATCH_COLOR
-        }
         items.push(item)
       })
-      if (has_unqualified) {
-        const unqualified_item: Type_LegendItem = {
-          // Préfixe distinct de 'tag-' : aucune étiquette, quel que soit son id, ne peut
-          // produire le même identifiant de zone.
-          id: LEGEND_CHILD_PREFIX + 'unqualified-' + slug(tag_group.id),
-          text: env.t_unqualified ?? 'Non qualifiée',
-          // Neutre même si le groupe colore : une valeur sans étiquette garde sa couleur propre.
-          swatch_color: LEGEND_NEUTRAL_SWATCH_COLOR,
-          swatch_opacity: group_opacity,
-          tag_group_id: tag_group.id,
-          unqualified: true,
-          block_id
-        }
-        if (unqualifiedOutlineRequested(tag_group)) unqualified_item.swatch_dashed = true
-        items.push(unqualified_item)
-      }
     })
 
   // Rappel des data tags sélectionnés par groupe
@@ -384,6 +353,61 @@ export function computeLegendItems(
     })
   }
 
+  return addTagDrivenOpacityToLegend(items, sankey, env)
+}
+
+/**
+ * SA#541 — légende du groupe qui pilote la transparence (même règle que le rendu,
+ * `Link.tag_driven_opacity` : le premier groupe de flux qui porte un `shape_opacity`).
+ *
+ *  - la pastille de chaque entrée porte l'opacité de son étiquette (repli : le groupe), sur
+ *    une couleur neutre si le groupe ne colore pas les flux ;
+ *  - une entrée « Non qualifiée » suit les entrées du groupe quand des valeurs VISIBLES ne
+ *    portent aucune de ses étiquettes (26,5 % des valeurs SOCLE). `hasGivenTag` d'un flux lit
+ *    la valeur affichée : la réponse suit l'année et l'unité sélectionnées.
+ *
+ * Appliquée APRÈS le calcul des entrées plutôt que mêlée à lui : les tickets de légende du
+ * même chantier touchent la boucle des entrées, et une collision de voisinage entre tickets
+ * parallèles se retire plutôt qu'elle ne s'arbitre (#533). Un groupe absent de la légende
+ * (aucune étiquette portée par un élément visible) n'y entre pas pour autant : la règle
+ * d'apparition d'un groupe reste celle d'avant.
+ */
+function addTagDrivenOpacityToLegend(
+  items: Type_LegendItem[],
+  sankey: Type_SankeyForLegend,
+  env: Type_LegendEnv
+): Type_LegendItem[] {
+  const group = opacityDrivingGroup(sankey.flux_taggs_list)
+  if (!group) return items
+  const group_opacity = stylePatchOpacity(group)
+  const group_tags = group.tags_list ?? group.selected_tags_list
+  items.forEach(item => {
+    if (item.tag_group_id !== group.id || item.tag_id === undefined) return
+    const tag = group_tags.find(t => t.id === item.tag_id)
+    if (!tag) return
+    item.swatch_opacity = stylePatchOpacity(tag) ?? group_opacity
+    if (!group.use_colors) item.swatch_color = LEGEND_NEUTRAL_SWATCH_COLOR
+  })
+  const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(group.id)
+  const last_of_block = items.map(item => item.block_id).lastIndexOf(block_id)
+  if (last_of_block < 0) return items
+  const has_unqualified = sankey.visible_links_list
+    .some(link => !group_tags.some(tag => link.hasGivenTag(tag)))
+  if (!has_unqualified) return items
+  const unqualified_item: Type_LegendItem = {
+    // Préfixe distinct de 'tag-' : aucune étiquette, quel que soit son id, ne peut produire
+    // le même identifiant de zone.
+    id: LEGEND_CHILD_PREFIX + 'unqualified-' + slug(group.id),
+    text: env.t_unqualified ?? 'Non qualifiée',
+    // Neutre même si le groupe colore : une valeur sans étiquette garde sa couleur propre.
+    swatch_color: LEGEND_NEUTRAL_SWATCH_COLOR,
+    swatch_opacity: group_opacity,
+    tag_group_id: group.id,
+    unqualified: true,
+    block_id
+  }
+  if (unqualifiedOutlineRequested(group)) unqualified_item.swatch_dashed = true
+  items.splice(last_of_block + 1, 0, unqualified_item)
   return items
 }
 
