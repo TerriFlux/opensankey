@@ -388,6 +388,19 @@ export abstract class Class_ProtoTagGroup {
   public get style_patch(): Type_StylePatch { return { ...this._style_patch } }
   public set style_patch(value: Type_StylePatch) { this._style_patch = { ...value } }
 
+  /**
+   * Raccord du #537 au predicat de legende du #533 (`tagGroupCarriesFormatting`,
+   * Elements/legendItems.ts), qui lit un booleen `has_style_patch` : les deux
+   * tickets, menes en parallele, s'etaient promis cette interface chacun avec
+   * son propre nom (`style_patch` ici). Sans ce getter, un groupe portant une
+   * mise en forme autre que la couleur n'entrait jamais en legende.
+   *
+   * Pose sur la classe COMMUNE : `Class_DataTagGroup` n'herite pas de
+   * `Class_TagGroup`, un getter pose plus bas raterait les groupes de donnees.
+   * Patch vide = false : aucun fichier existant ne change d'aspect.
+   */
+  public get has_style_patch(): boolean { return Object.keys(this._style_patch).length > 0 }
+
   /** #537 - Groupe epingle en bas de legende (Source, Methode). */
   public get pinned_in_legend(): boolean { return this._pinned_in_legend }
   public set pinned_in_legend(value: boolean) { this._pinned_in_legend = value }
