@@ -29,7 +29,12 @@ import { getNameLabelValues } from './ElementsAttributesConfig'
 import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
-import { effectiveOpacity } from './elementOpacity'
+import { effectiveOpacity, Type_OpacityGuards } from './elementOpacity'
+
+// SA#541 — contour des valeurs « non qualifiées » (variante proposée au test local).
+const UNQUALIFIED_OUTLINE_COLOR = '#404040'
+const UNQUALIFIED_OUTLINE_WIDTH = 1.5
+const UNQUALIFIED_OUTLINE_DASH = '4,3'
 
 /**
  * Sur-pente de la bézier par rapport à la corde (cf. drawShape).
@@ -134,6 +139,7 @@ export class LinkDrawShape {
     this._link.d3_selection?.selectAll('.link_band').remove()
     this._link.d3_selection?.selectAll('.link_band_label').remove()
     this._link.d3_selection?.selectAll('.link_uncertainty_band').remove()
+    this._link.d3_selection?.selectAll('.link_unqualified_outline').remove()
 
     // Failsafe
     if (this._link.source && this._link.target) {
@@ -147,7 +153,8 @@ export class LinkDrawShape {
       const shape_color = this._link.getShapeColorToUse()
       // SA#534 — opacité résolue par le point unique (voir elementOpacity.ts). Les tirages
       // dérivés ci-dessous (incertitude, bandes, gardes locaux) partent de cette variable.
-      const shape_opacity = effectiveOpacity(this._link, { dim: 'no_data', hidden: !this._link.shape_color_visible })
+      const opacity_guards: Type_OpacityGuards = { dim: 'no_data', hidden: !this._link.shape_color_visible }
+      const shape_opacity = effectiveOpacity(this._link, opacity_guards)
 
       // Check to choose how to draw
       const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
@@ -348,13 +355,27 @@ export class LinkDrawShape {
       // devient INVISIBLE (opacité 0) mais reste en place : c'est lui qui porte
       // les interactions (survol, clic, tooltip) — sinon sa peinture se
       // mélangerait aux bandes à travers l'opacité.
-      if (this.drawTaggedValueBands(shape_opacity)) {
+      if (this.drawTaggedValueBands(shape_opacity, opacity_guards)) {
         this._link.d3_selection?.selectAll('.link_path')
           .attr('opacity', 0)
           .attr('fill-opacity', 0)
           .attr('stroke-opacity', 0)
         this._link.d3_selection?.selectAll('.link_shape')
           .attr('opacity', 0)
+      }
+      // SA#541 — variante « non qualifiée » : contour pointillé posé PAR-DESSUS le flux et ses
+      // bandes, sur son contour. Décoratif (pointer-events none), sur les <path> et jamais sur
+      // le <g> — le survol de légende pose et efface l'opacité du <g>. Aucun fichier existant
+      // ne le déclenche : il faut un groupe pilote qui porte `unqualified_outline`.
+      if (this._link.shows_unqualified_outline && !this._link.linkIsStructure()) {
+        this._link.d3_selection?.append('path')
+          .classed('link_unqualified_outline', true)
+          .attr('d', this.getBezierPath(true))
+          .attr('fill', 'none')
+          .attr('stroke', UNQUALIFIED_OUTLINE_COLOR)
+          .attr('stroke-width', UNQUALIFIED_OUTLINE_WIDTH)
+          .attr('stroke-dasharray', UNQUALIFIED_OUTLINE_DASH)
+          .attr('pointer-events', 'none')
       }
       // opensankey#1301 — Alt+clic pour insérer un point de contrôle : branché à
       // CHAQUE dessin du flux (pas seulement à la sélection), pour qu'un Alt+clic
@@ -376,7 +397,7 @@ export class LinkDrawShape {
    * V1 : flux courbes hh/vv, hors recyclage. Retourne true si des bandes ont
    * été dessinées.
    */
-  private drawTaggedValueBands(shape_opacity: number | string): boolean {
+  private drawTaggedValueBands(shape_opacity: number, opacity_guards: Type_OpacityGuards): boolean {
     const link = this._link
     const bands = link.tagged_value_bands
     if (bands.length === 0) return false
@@ -489,7 +510,11 @@ export class LinkDrawShape {
         ? (!(da.filter_label_px > 0) || band_px * zoom >= da.filter_label_px)
         : band_value >= da.filter_label
     let cum = 0
-    bands.forEach(({ id, color, share, value, unit, label_visible, px }) => {
+    bands.forEach(({ id, color, share, value, unit, label_visible, px, opacity }) => {
+      // SA#541 — opacité PROPRE à la bande (étiquettes de sa valeur), mêmes gardes que le flux.
+      const band_opacity = opacity === undefined
+        ? shape_opacity
+        : effectiveOpacity({ shape_opacity: link.shape_opacity, tag_driven_opacity: opacity, has_data: link.has_data, drawing_area: link.drawing_area }, opacity_guards)
       const lo = cum
       cum += share
       const off_lo_src = -full_src / 2 + lo * full_src
@@ -510,7 +535,7 @@ export class LinkDrawShape {
         .attr('id', `${link.id}_band_${id}`)
         .attr('d', path)
         .attr('fill', color ?? link.getShapeColorToUse())
-        .attr('fill-opacity', shape_opacity)
+        .attr('fill-opacity', band_opacity)
         .attr('stroke', 'none')
         .attr('pointer-events', 'none')
       // #285 — label de valeur PAR bande, indépendant du label de total :

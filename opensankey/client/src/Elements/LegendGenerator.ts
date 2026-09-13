@@ -364,7 +364,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         has_interval_values,
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
-        t_scale: t('scale')
+        t_scale: t('scale'),
+        t_unqualified: t('MEP.legend_unqualified')
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
@@ -476,9 +477,18 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       zone.shape_color_visible = zone.shape_visible
       if (item.swatch_color !== undefined) {
         zone.shape_color = item.swatch_color
-        zone.shape_opacity = 1
+        // SA#541 — la pastille d'une étiquette qui porte un niveau d'opacité le montre
+        zone.shape_opacity = item.swatch_opacity ?? 1
       }
-      zone.shape_border_visible = false
+      zone.shape_border_visible = item.swatch_dashed === true
+      // SA#541 — écrit seulement quand il change : une zone ordinaire garde son attribut par
+      // défaut, et donc son empreinte de fichier et de rendu.
+      if (item.swatch_dashed === true) {
+        zone.shape_border_dashed = true
+        zone.shape_border_color = '#404040'
+      } else if (zone.shape_border_dashed) {
+        zone.shape_border_dashed = false
+      }
       zone.shape_border_radius = 3
       if (item.scale_bar) {
         // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.

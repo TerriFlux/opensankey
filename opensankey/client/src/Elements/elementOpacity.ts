@@ -46,6 +46,13 @@
 export type Type_OpacityBearer = {
   /** Opacité portée par l'élément (attribut `shape.opacity`, défaut 0.85). */
   shape_opacity: number
+  /**
+   * SA#541 — flux uniquement : opacité portée par l'étiquette du groupe qui pilote la
+   * transparence, pour la VALEUR AFFICHÉE (voir `tagDrivenOpacity`). `undefined` quand aucun
+   * groupe ne pilote l'opacité : c'est le cas de tous les fichiers existants.
+   */
+  tag_driven_opacity?: number
+
   /** Flux uniquement : l'élément porte-t-il au moins une donnée ? Absent ailleurs. */
   has_data?: boolean
   /** Zone de dessin, pour connaître le mode d'affichage courant (`type_data`). */
@@ -99,7 +106,84 @@ const DIMMING_TYPE_DATA = 'data_label'
  * suivront sans y toucher.
  */
 export function elementSourceOpacity(element: Type_OpacityBearer): number {
+  // SA#541 — l'étiquette REMPLACE l'opacité propre du flux (elle ne s'y multiplie pas) : le
+  // niveau « Fiable 100 % » doit rendre un flux pleinement opaque, quel que soit son réglage.
+  const from_tag = element.tag_driven_opacity
+  if (from_tag !== undefined && Number.isFinite(from_tag)) return from_tag
   return element.shape_opacity
+}
+
+// SA#541 — OPACITÉ PORTÉE PAR UNE ÉTIQUETTE ============================================
+//
+// Format (#537) : `style_patch` du GROUPE = l'interrupteur (et la valeur de repli),
+// `style_patch` de chaque ÉTIQUETTE = son niveau. Forme `{ "shape_opacity": 0.8 }`.
+//
+// Règles tranchées ici, et seulement ici :
+//  - un groupe pilote la transparence dès que son `style_patch` porte un `shape_opacity`
+//    numérique ; aucun fichier existant n'en porte, donc aucun diagramme ne change ;
+//  - DEUX groupes l'activent : le PREMIER dans l'ordre des groupes l'emporte — même règle
+//    que la couleur (`flux_taggs_activated[0]` dans `Link.getShapeColorToUse`). Le menu
+//    d'édition éteint les autres quand on en allume un ; la règle ne sert donc qu'aux
+//    fichiers écrits à la main ;
+//  - la valeur affichée porte PLUSIEURS étiquettes du groupe (« approximative | indicative ») :
+//    la MOINS fiable, c'est-à-dire la plus petite opacité — « le pire l'emporte » ;
+//  - la valeur n'en porte AUCUNE : « non qualifiée », opacité de repli = celle du groupe ;
+//  - une étiquette du groupe sans niveau propre vaut elle aussi la valeur du groupe.
+
+/** Clé du `style_patch` qui porte l'opacité (groupe = interrupteur, étiquette = niveau). */
+export const STYLE_PATCH_OPACITY_KEY = 'shape_opacity'
+
+/**
+ * Clé du `style_patch` du GROUPE qui ajoute un contour pointillé aux valeurs non qualifiées.
+ * Variante de rendu proposée au test local (SA#541, point 3) : sans elle, une valeur non
+ * qualifiée ne se distingue d'un niveau intermédiaire que par son opacité.
+ */
+export const STYLE_PATCH_UNQUALIFIED_OUTLINE_KEY = 'unqualified_outline'
+
+/** Ce que les règles ci-dessus lisent d'un groupe ou d'une étiquette — structurel. */
+export type Type_StylePatchCarrier = {
+  /** Optionnel : les modèles simulés de la légende n'en portent pas (absent = patch vide). */
+  style_patch?: { [attribute: string]: string | number | boolean }
+}
+export type Type_OpacityTag<G> = Type_StylePatchCarrier & { group: G }
+
+/** Opacité portée par un `style_patch`, ramenée dans [0, 1] ; `undefined` si absente. */
+export function stylePatchOpacity(carrier: Type_StylePatchCarrier): number | undefined {
+  const raw = carrier.style_patch?.[STYLE_PATCH_OPACITY_KEY]
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return undefined
+  return Math.min(1, Math.max(0, raw))
+}
+
+/** Le groupe qui pilote la transparence : le premier qui porte un `shape_opacity`. */
+export function opacityDrivingGroup<G extends Type_StylePatchCarrier>(groups: G[]): G | undefined {
+  return groups.find(group => stylePatchOpacity(group) !== undefined)
+}
+
+/**
+ * Opacité d'une valeur, d'après les étiquettes qu'elle porte.
+ *
+ * @param group le groupe pilote (voir `opacityDrivingGroup`)
+ * @param tags  les étiquettes portées par la valeur affichée, tous groupes confondus
+ */
+export function tagDrivenOpacity<G extends Type_StylePatchCarrier>(
+  group: G,
+  tags: Type_OpacityTag<unknown>[]
+): number {
+  const fallback = stylePatchOpacity(group) ?? 1
+  const levels = tags
+    .filter(tag => tag.group === group)
+    .map(tag => stylePatchOpacity(tag) ?? fallback)
+  return levels.length > 0 ? Math.min(...levels) : fallback
+}
+
+/** La valeur ne porte aucune étiquette du groupe pilote. */
+export function isUnqualifiedValue(group: unknown, tags: Type_OpacityTag<unknown>[]): boolean {
+  return !tags.some(tag => tag.group === group)
+}
+
+/** Le groupe pilote demande-t-il un contour pointillé sur les valeurs non qualifiées ? */
+export function unqualifiedOutlineRequested(group: Type_StylePatchCarrier): boolean {
+  return group.style_patch?.[STYLE_PATCH_UNQUALIFIED_OUTLINE_KEY] === true
 }
 
 /** L'élément est-il estompé par le mode « étiquettes de données » ? */
