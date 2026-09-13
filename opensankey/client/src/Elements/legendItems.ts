@@ -84,14 +84,11 @@ type Type_TagGroupForLegend = {
   name: string
   // Mise en forme pilotée par le groupe — voir tagGroupCarriesFormatting().
   use_colors: boolean
-  // #533 — terme à venir du prédicat « ce groupe porte une mise en forme » :
-  // le socle de format (#537) posera sur les classes Proto un porteur de style
-  // (`Type_StylePatch`) qui couvrira l'opacité, puis la bordure et la hachure.
-  // Aucune classe ne l'expose aujourd'hui : le champ reste `undefined`, et le
-  // prédicat se réduit donc EXACTEMENT à `use_colors`. Rien ne peut l'allumer
-  // par accident — il n'est ni lu ni écrit par la persistance, et le
-  // rétro-portage de `Legacy.tsx` (`backfillTagGroupUseColors`) ne dérive de
-  // `show_legend` que `use_colors`.
+  // #533 — second terme du prédicat « ce groupe porte une mise en forme ».
+  // Exposé par `Class_ProtoTagGroup.has_style_patch` : vrai dès que le porteur
+  // de style du socle de format (#537, `style_patch`) n'est pas vide. Il n'est
+  // pas persisté en tant que tel — il dérive de `style_patch`, écrit seulement
+  // quand il porte quelque chose : aucun fichier existant ne l'allume.
   has_style_patch?: boolean
   selected_tags_list: Type_TagForLegend[]
   // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
@@ -193,8 +190,9 @@ export function legendEntryText(
  * deux sérialisations — une méthode écrite contre `Class_TagGroup` raterait en
  * silence tous les groupes de data tags.
  *
- * Aujourd'hui aucune classe n'expose `has_style_patch` : le prédicat vaut
- * exactement `use_colors`, et aucun diagramme existant ne change d'aspect.
+ * `has_style_patch` est exposé par `Class_ProtoTagGroup` (raccord du #537) :
+ * faux tant que le groupe ne porte aucun patch de mise en forme, si bien
+ * qu'aucun diagramme existant ne change d'aspect.
  * C'est lui, et non plus `use_colors`, que filtre computeLegendItems ci-dessous
  * (dont l'en-tête est laissé mot pour mot : il est prolongé par sa#532, et le
  * retoucher ferait de deux tickets parallèles un arbitrage de fusion).
