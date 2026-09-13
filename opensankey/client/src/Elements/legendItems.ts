@@ -36,6 +36,12 @@ export type Type_LegendItem = {
   // Échelle : la forme de la zone est un trait vertical fin dont la hauteur
   // matérialise l'échelle (ex-barre draggable de l'ancienne légende).
   scale_bar?: boolean
+  // sa#532 — entrée de tag NON SÉLECTIONNÉ : l'étiquette existe dans le groupe mais
+  // ses porteurs sont masqués. L'entrée est présente dans le MODÈLE pour que la
+  // légende puisse un jour servir de porte de retour (clic = resélectionner) ;
+  // c'est `renderableLegendItems` qui décide si elle est rendue, et le ticket qui
+  // posera le clic qui décidera de SON aspect (grisé, barré...).
+  dimmed?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -62,6 +68,11 @@ export type Type_LegendEnv = {
 // compatible avec Class_Sankey — permet un mock trivial dans les tests).
 type Type_TagForLegend = {
   id: string, name: string, display_name: string, color: string,
+  // sa#532 — état de sélection : une entrée de tag non sélectionné est émise
+  // `dimmed` (cf. Type_LegendItem). Optionnel pour garder les mocks triviaux ;
+  // absent = traité comme sélectionné (les listes `selected_tags_list` que les
+  // tests passaient déjà ne portent que des tags sélectionnés).
+  is_selected?: boolean,
   // OS#1314 — jeton {Unit} du gabarit d'entrée : unité référencée par le tag
   // (groupes « de type unité », registre d'unités OS#1286). Absent ailleurs.
   // `label` = ce qui est écrit sur le diagramme (Class_Unit.label : display_name
@@ -73,6 +84,10 @@ type Type_TagGroupForLegend = {
   name: string
   use_colors: boolean
   selected_tags_list: Type_TagForLegend[]
+  // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
+  // absent, le calcul retombe sur `selected_tags_list` (comportement d'avant
+  // sa#532), ce qui garde les mocks des tests antérieurs valides.
+  tags_list?: Type_TagForLegend[]
 }
 export type Type_SankeyForLegend = {
   node_taggs_list: Type_TagGroupForLegend[]
@@ -82,6 +97,14 @@ export type Type_SankeyForLegend = {
   // hasGivenTag attend un Class_Tag, tout en gardant un mock trivial en test.
   visible_nodes_list: { hasGivenTag(t: Type_TagForLegend): boolean }[]
   visible_links_list: { hasGivenTag(t: Type_TagForLegend): boolean, valueCurrent?: number | null | undefined }[]
+  // sa#532 — éléments du diagramme SANS le filtre de visibilité. Un tag non
+  // sélectionné rend ses porteurs invisibles (Link.are_related_flux_tags_selected,
+  // Node.are_related_node_tags_selected) : le chercher dans les listes `visible_*`
+  // ne le trouverait JAMAIS, et aucune entrée atténuée ne serait produite. C'est
+  // sur ces listes-ci qu'on vérifie qu'une étiquette désélectionnée a bien un
+  // porteur (sinon c'est une étiquette morte du fichier, pas une porte de retour).
+  nodes_list?: { hasGivenTag(t: Type_TagForLegend): boolean }[]
+  links_list?: { hasGivenTag(t: Type_TagForLegend): boolean }[]
 }
 
 export type Type_LegendConfigValues = {
@@ -149,6 +172,20 @@ export function legendEntryText(
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
  * moins un élément visible (ou data tags, toujours montrés).
+ *
+ * sa#532 — les étiquettes NON SÉLECTIONNÉES d'un groupe de nodeTags / fluxTags
+ * sont désormais émises elles aussi, marquées `dimmed`. Sans elles, désélectionner
+ * une étiquette supprimait son entrée : la légende était une porte à sens unique,
+ * et le clic-pour-masquer que prépare le chantier aurait marché au premier clic
+ * puis plus jamais. Ce qui est RENDU ne change pas pour autant — c'est
+ * `renderableLegendItems` qui tranche, et il écarte les atténuées pour l'instant.
+ *
+ * Les dataTags gardent `selected_tags_list` : leur sélection n'est pas un
+ * masquage mais un choix de dimension (`checkSelectionCoherence` resélectionne
+ * d'office si elle tombe à zéro — TagGroup.tsx). Une entrée « atténuée » y
+ * signifierait « masqué, cliquez pour rétablir », ce qui serait faux : mesuré sur
+ * le corpus, cela ajouterait par exemple les 17 unités inactives du groupe
+ * `unite` de « Détail des modes de production ».
  */
 export function computeLegendItems(
   sankey: Type_SankeyForLegend,
@@ -170,9 +207,24 @@ export function computeLegendItems(
     .filter(tag_group => tag_group.use_colors)
     .forEach(tag_group => {
       const is_data_tagg = data_taggs.includes(tag_group)
-      const displayed_tags = tag_group.selected_tags_list.filter(tag => {
-        return is_data_tagg ||
-          sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
+      // sa#532 — sur un dataTag on reste sur les tags sélectionnés (voir l'en-tête) ;
+      // ailleurs on parcourt TOUTES les étiquettes du groupe. L'ordre relatif des
+      // sélectionnées est celui de `tags_list`, donc celui de `selected_tags_list`
+      // d'avant : le contenu rendu est inchangé au tag près.
+      const candidate_tags = is_data_tagg
+        ? tag_group.selected_tags_list
+        : (tag_group.tags_list ?? tag_group.selected_tags_list)
+      const displayed_tags = candidate_tags.filter(tag => {
+        if (is_data_tagg) return true
+        if (tag.is_selected === false) {
+          // Étiquette masquée : ses porteurs sont invisibles PAR SA FAUTE, donc on
+          // la cherche parmi tous les éléments du diagramme. Listes absentes (mock,
+          // appelant historique) → on la retient, faute de pouvoir la réfuter.
+          if (sankey.nodes_list === undefined && sankey.links_list === undefined) return true
+          return (sankey.nodes_list ?? []).some(n => n.hasGivenTag(tag)) ||
+            (sankey.links_list ?? []).some(f => f.hasGivenTag(tag))
+        }
+        return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
           sankey.visible_links_list.some(f => f.hasGivenTag(tag))
       })
       if (displayed_tags.length === 0) return
@@ -186,14 +238,18 @@ export function computeLegendItems(
         block_id
       })
       displayed_tags.forEach(tag => {
-        items.push({
+        const item: Type_LegendItem = {
           id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
           text: legendEntryText(tag, tag_group, config.entry_template),
           swatch_color: tag.color,
           tag_group_id: tag_group.id,
           tag_id: tag.id,
           block_id
-        })
+        }
+        // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
+        // entrées ordinaires restent structurellement identiques à avant.
+        if (tag.is_selected === false) item.dimmed = true
+        items.push(item)
       })
     })
 
@@ -238,6 +294,39 @@ export function computeLegendItems(
   }
 
   return items
+}
+
+/**
+ * sa#532 — les entrées atténuées sont-elles RENDUES ?
+ *
+ * `false` tant que rien ne permet de les réactiver : une entrée grise que le clic
+ * n'atteint pas n'informerait de rien et allongerait la légende pour rien —
+ * mesuré sur le corpus, la légende de « Vue d'ensemble du métabolisme
+ * énergétique » (Metabol'Heat) passerait de 4 à 84 lignes, dont 80 grises.
+ *
+ * Le ticket qui posera le clic sur une entrée de légende met ceci à `true`, décide
+ * de l'aspect des atténuées, et tranche le PLAFOND que ce chiffrage impose (les
+ * groupes colorés du corpus vont jusqu'à 84 étiquettes ; aucun au-delà de 200 —
+ * les groupes à 449/494/577 de Fruits et légumes ne portent pas la couleur et
+ * n'entrent donc pas dans la légende).
+ */
+export const RENDER_DIMMED_LEGEND_ENTRIES: boolean = false
+
+/**
+ * sa#532 — ce que le générateur de zones doit réellement poser sur le diagramme.
+ *
+ * Écarte les entrées atténuées, puis les titres de groupe et cadres de bloc restés
+ * sans aucune entrée : un groupe entièrement désélectionné n'émettait AUCUN item
+ * avant sa#532 (`displayed_tags.length === 0`), il ne doit pas se mettre à afficher
+ * un titre orphelin.
+ */
+export function renderableLegendItems(items: Type_LegendItem[]): Type_LegendItem[] {
+  if (RENDER_DIMMED_LEGEND_ENTRIES) return items
+  const kept = items.filter(i => !i.dimmed)
+  const blocks_with_entry = new Set(
+    kept.filter(i => i.tag_id !== undefined && i.block_id !== undefined).map(i => i.block_id as string)
+  )
+  return kept.filter(i => i.block_id === undefined || blocks_with_entry.has(i.block_id))
 }
 
 /**
