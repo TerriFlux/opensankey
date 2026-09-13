@@ -36,7 +36,7 @@ import { Class_SmartGuides } from './SmartGuides'
 import {
   openPresentationFor, opensPresentationOnClick, canPresentTooltip,
   matchesPresentationTrigger,
-  schedulePresentationHover, schedulePresentationHoverClose
+  schedulePresentationHover, schedulePresentationHoverClose, hoverOnTextOpensPresentation
 } from '../components/panels/presentation/openPresentation'
 
 export class NodeEventsHandler {
@@ -1071,7 +1071,9 @@ export class NodeEventsHandler {
     // d'INSPECTEUR qui occupait cette place a donc disparu : elle montrait des
     // champs d'édition là où le survol doit montrer le diagramme.
     if (event.buttons === 0
-      && (event.target as HTMLElement).tagName !== 'tspan'
+      && ((event.target as HTMLElement).tagName !== 'tspan'
+        // #542 — sauf entrée de légende : son texte est la surface à survoler.
+        || hoverOnTextOpensPresentation(this._node as unknown as Parameters<typeof canPresentTooltip>[0]))
       && matchesPresentationTrigger(this._node as unknown as Parameters<typeof canPresentTooltip>[0], event)
       && canPresentTooltip(this._node as unknown as Parameters<typeof canPresentTooltip>[0])) {
       const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()

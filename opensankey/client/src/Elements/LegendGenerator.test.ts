@@ -351,6 +351,66 @@ describe('OS#1254 — computeScaleText', () => {
   })
 })
 
+describe('#542 — la définition suit l\'entrée de légende', () => {
+  const FIABLE = 'Fiable : donnée présentant un très faible niveau d\'incertitude.'
+
+  it('porte la définition du groupe sur le titre et celle de l\'étiquette sur son entrée', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [{
+        id: 'fiab', name: 'Fiabilité des données', use_colors: true,
+        description: 'Niveau de confiance de la donnée.',
+        selected_tags_list: [{ ...makeTag('fiable'), description: FIABLE }, makeTag('indicative')]
+      }],
+      visible_links_list: [makeElement(['fiable', 'indicative'])]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => [i.id, i.description])).toEqual([
+      ['legend-group-fiab', 'Niveau de confiance de la donnée.'],
+      ['legend-tag-fiab-fiable', FIABLE],
+      ['legend-tag-fiab-indicative', undefined]
+    ])
+  })
+
+  it('sans définition, ni vide ni blanche, l\'entrée ne gagne pas de clé', () => {
+    const sankey = makeSankey({
+      node_taggs_list: [{
+        id: 'g', name: 'G', use_colors: true, description: '   ',
+        selected_tags_list: [{ ...makeTag('a'), description: '' }]
+      }],
+      visible_nodes_list: [makeElement(['a'])]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.every(i => !('description' in i))).toBe(true)
+  })
+
+  it('porte le texte de la langue COURANTE au moment du calcul', () => {
+    // Le modèle résout la définition dans la langue active (getter du #537) :
+    // la légende ne doit rien mettre en cache, une régénération suit la langue.
+    const definitions: Record<string, string> = { fr: FIABLE, en: 'Reliable: very low uncertainty.' }
+    let lang = 'fr'
+    const tag = { ...makeTag('fiable'), get description() { return definitions[lang] } }
+    const sankey = makeSankey({
+      data_taggs_list: [{ id: 'fiab', name: 'Fiabilité', use_colors: true, selected_tags_list: [tag] }]
+    })
+    const entry = () => computeLegendItems(sankey, base_config).find(i => i.tag_id === 'fiable')
+    expect(entry()?.description).toBe(FIABLE)
+    lang = 'en'
+    expect(entry()?.description).toBe('Reliable: very low uncertainty.')
+  })
+
+  it('la définition traverse renderableLegendItems', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [{
+        id: 'fiab', name: 'Fiabilité', use_colors: true, description: 'Groupe',
+        selected_tags_list: [{ ...makeTag('fiable'), description: FIABLE }]
+      }],
+      visible_links_list: [makeElement(['fiable'])]
+    })
+    const rendered = renderableLegendItems(computeLegendItems(sankey, base_config))
+    expect(rendered.map(i => i.description)).toEqual(['Groupe', FIABLE])
+  })
+})
+
 describe('#533 — « ce groupe porte une mise en forme »', () => {
   // La légende ne montrait que les groupes pilotant la COULEUR. Porter la
   // fiabilité par l'opacité « pour laisser le tag couleur libre » l'aurait donc

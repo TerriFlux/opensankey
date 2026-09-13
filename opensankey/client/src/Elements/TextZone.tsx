@@ -13,6 +13,13 @@ export class Class_ContainerElement extends Class_NodeBase {
   // des jetons {NomDuGroupe} remplacés par la valeur sélectionnée du data tag.
   protected _is_title: boolean = false
 
+  // #542 — texte libre lu par le bloc INFOS de la présentation. Seules les
+  // entrées de légende le renseignent, depuis la définition de leur étiquette ou
+  // de leur groupe, à chaque régénération. NI persisté (SankeyPersistence ne
+  // l'écrit que pour les nœuds et les flux) NI copié : c'est un reflet du modèle
+  // d'étiquettes, et le figer dans le fichier garderait une définition périmée.
+  protected _tooltip_text: string = ''
+
   constructor(
     id: string,
     name: string,
@@ -84,6 +91,9 @@ export class Class_ContainerElement extends Class_NodeBase {
   // GETTERS / SETTERS ===========================================================
   public get is_title(): boolean { return this._is_title }
   public set is_title(_: boolean) { this._is_title = _ }
+
+  public get tooltip_text(): string { return this._tooltip_text }
+  public set tooltip_text(_: string) { this._tooltip_text = _ }
 
   public setEventsListeners() {
     if (this.drawing_area.sankey.container_activated) {
