@@ -218,15 +218,24 @@ export const mainZoneWindowLevelOptions = (options: Type_JSON | undefined): Type
   delete rest[MAIN_ZONE_PANES_KEY]
   return rest
 }
-/** Les réglages EFFECTIFS d'une vignette : les siens, ou — à défaut — ceux de la fenêtre. */
-export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string): Type_JSON => {
+/**
+ * os#1394 — Les réglages PROPRES d'une vignette, ou `null` quand elle n'en a pas encore.
+ *
+ * Distinguer « la vignette n'a rien dit » de « la vignette a dit ceci » est ce qui permet au
+ * DÉFAUT PAR NATURE de s'intercaler avant le repli au niveau de la fenêtre (cf.
+ * `mainZonePaneOptionsOf`) : sans ce `null`, les deux cas se confondaient en un objet vide.
+ */
+export const ownMainZonePaneOptions = (options: Type_JSON | undefined, key: string): Type_JSON | null => {
   const panes = options?.[MAIN_ZONE_PANES_KEY]
   if (panes && typeof panes === 'object' && !Array.isArray(panes)) {
     const own = (panes as Type_JSON)[key]
     if (own && typeof own === 'object' && !Array.isArray(own)) return { ...(own as Type_JSON) }
   }
-  return mainZoneWindowLevelOptions(options)
+  return null
 }
+/** Les réglages EFFECTIFS d'une vignette : les siens, ou — à défaut — ceux de la fenêtre. */
+export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string): Type_JSON =>
+  ownMainZonePaneOptions(options, key) ?? mainZoneWindowLevelOptions(options)
 /** Les réglages de la fenêtre, une vignette mise à jour. Les autres vignettes ne bougent pas. */
 export const withMainZonePaneOptions = (
   options: Type_JSON | undefined, key: string, next: Type_JSON
@@ -478,6 +487,20 @@ export class Class_MenuConfig {
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
   protected _main_zone_active_id: string | null = null
+  // os#1394 — LA VIGNETTE active DANS la fenêtre active (sa clé), pour que le menu de
+  // configuration sache de quel dessin il montre les réglages : une fenêtre d'élément en porte
+  // N, et « la fenêtre active » ne suffit donc pas à désigner un sujet. TRANSITOIRE elle aussi,
+  // et volontairement minimale : ce n'est pas un système de focus, juste la dernière vignette
+  // avec laquelle l'utilisateur a interagi. `null` = la première vignette de la fenêtre.
+  protected _main_zone_active_pane_key: string | null = null
+  // os#1394 — LE RÉGLAGE PAR DÉFAUT D'UNE NATURE DE REPRÉSENTATION, indexé par son identifiant
+  // de registre, persisté avec le document (clé racine `representation_defaults`).
+  //
+  // Arbitrage : un réglage de représentation est un défaut PAR NATURE, pas par fenêtre ni par
+  // sujet. Toutes les étoiles unitaires d'une étude se règlent donc du même geste — celui qu'on
+  // fait sur l'une d'elles — tant que l'auteur n'a pas décidé autrement sur une vignette
+  // précise, auquel cas c'est la vignette qui gagne (cf. `mainZonePaneOptionsOf`).
+  protected _representation_defaults: { [representation_id: string]: Type_JSON } = {}
   // Document EXTERNE affiché à la place de la documentation du diagramme : présentation d'une
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
@@ -700,7 +723,14 @@ export class Class_MenuConfig {
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
     const peers = this._main_zone_occupants.filter(x => x.place === wanted)
     const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
-    this._main_zone_occupants.push({ ...o, place: wanted, size })
+    // os#1394 — une fenêtre NAÎT réglée comme sa nature l'est dans ce document : c'est le seul
+    // endroit où toute fenêtre se crée, ouverture de fenêtre d'élément comprise. Rien à écrire
+    // quand la nature n'a pas encore de défaut, pour ne pas semer des `options: {}` vides.
+    const defaults = this._representation_defaults[o.representation]
+    const options = (defaults && Object.keys(defaults).length > 0) ? { ...defaults } : undefined
+    this._main_zone_occupants.push(options
+      ? { ...o, place: wanted, size, options }
+      : { ...o, place: wanted, size })
   }
 
   // --- os#1387 : fenêtres = (sujet, représentation) ------------------------------------------
@@ -724,6 +754,9 @@ export class Class_MenuConfig {
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
     this._normalizeMainZoneOccupants()
     this._main_zone_active_id = id
+    // os#1394 — la fenêtre qu'on vient d'ouvrir devient l'active, sur sa PREMIÈRE vignette :
+    // la clé de la vignette active d'une autre fenêtre n'a aucun sens ici.
+    this._main_zone_active_pane_key = null
     this._notifyMainZone()
     return id
   }
@@ -779,6 +812,11 @@ export class Class_MenuConfig {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o) return
     o.options = withMainZonePaneOptions(o.options, pane_key, options)
+    // os#1394 — le geste vaut aussi pour la NATURE : ce que l'auteur vient de régler sur cette
+    // étoile devient le réglage des étoiles qu'il ouvrira ensuite. Sans cette écriture, chaque
+    // nouvelle fenêtre repartirait des valeurs d'usine et il faudrait refaire le même réglage
+    // autant de fois qu'on ouvre de vignettes.
+    this._representation_defaults[o.representation] = { ...options }
     this._notifyMainZone()
   }
   /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
@@ -786,7 +824,60 @@ export class Class_MenuConfig {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o) return
     o.options = { ...options }
+    // os#1394 — même règle qu'au niveau vignette. Le dictionnaire des vignettes, lui, n'a rien
+    // à faire dans un défaut de nature : il désigne des objets de CETTE fenêtre.
+    this._representation_defaults[o.representation] = mainZoneWindowLevelOptions(options)
     this._notifyMainZone()
+  }
+  // --- os#1394 : le réglage par défaut d'une NATURE de représentation ------------------------
+
+  /**
+   * Le défaut de cette nature ; objet vide quand le document n'en porte pas. Lecture seule :
+   * le défaut s'ÉCRIT en réglant une fenêtre ou une vignette (cf. les deux setters ci-dessus),
+   * jamais par un geste à part — sinon il y aurait deux façons de dire la même chose.
+   */
+  public representationDefaultOptions(representation_id: string): Type_JSON {
+    return { ...(this._representation_defaults[representation_id] ?? {}) }
+  }
+  /**
+   * Les réglages EFFECTIFS d'une vignette, défaut de nature compris.
+   *
+   * Trois sources, de la plus précise à la plus générale, et l'ordre est le sens de la
+   * décision : ce que l'auteur a dit SUR CETTE VIGNETTE gagne toujours ; sinon le réglage de
+   * la NATURE dans ce document, qui est le geste qu'il a fait ailleurs sur une étoile ou une
+   * couronne ; sinon seulement le repli au niveau de la fenêtre, qui n'existe que pour rouvrir
+   * à l'identique un fichier écrit du temps de la barre partagée (cf. mainZonePaneOptions).
+   */
+  public mainZonePaneOptionsOf(id: string, pane_key: string): Type_JSON {
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (!o) return {}
+    const own = ownMainZonePaneOptions(o.options, pane_key)
+    if (own) return own
+    const def = this._representation_defaults[o.representation]
+    if (def && Object.keys(def).length > 0) return { ...def }
+    return mainZoneWindowLevelOptions(o.options)
+  }
+  /**
+   * Sérialise les défauts par nature (clé racine `representation_defaults`). Dictionnaire
+   * indexé par identifiant de registre — la forme que `Type_JSON` sait porter, et l'unicité de
+   * la nature y devient structurelle. Clé ADDITIVE : rien à écrire tant que rien n'a été réglé.
+   */
+  public representationDefaultsToJSON(): Type_JSON | undefined {
+    const out: Type_JSON = {}
+    Object.entries(this._representation_defaults).forEach(([id, opts]) => {
+      if (opts && Object.keys(opts).length > 0) out[id] = { ...opts }
+    })
+    return Object.keys(out).length > 0 ? out : undefined
+  }
+  /** Relit les défauts par nature. Entrée malformée ignorée (fichier fabriqué à la main). */
+  public representationDefaultsFromJSON(json: unknown): void {
+    this._representation_defaults = {}
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return
+    Object.entries(json as Type_JSON).forEach(([id, v]) => {
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        this._representation_defaults[id] = { ...(v as Type_JSON) }
+      }
+    })
   }
   /** Les réglages d'une fenêtre, débarrassés des vignettes qui n'existent plus. */
   protected _prunedPaneOptions(options: Type_JSON | undefined, live_keys: string[]): Type_JSON | undefined {
@@ -807,6 +898,20 @@ export class Class_MenuConfig {
   public set main_zone_active_id(id: string | null) {
     if (this._main_zone_active_id === id) return
     this._main_zone_active_id = id
+    // os#1394 — changer de fenêtre PÉRIME la vignette active : sa clé n'a de sens que dans la
+    // fenêtre qui la porte, et deux fenêtres peuvent nommer la même. À id inchangé, en
+    // revanche, on ne touche à rien : un clic sur une vignette active d'abord celle-ci, puis
+    // remonte jusqu'à la fenêtre — l'effacer ici défairait le geste qu'on vient de faire.
+    this._main_zone_active_pane_key = null
+    this._notifyMainZone()
+  }
+  /** os#1394 — La vignette active de la fenêtre active ; `null` = la première de la fenêtre. */
+  public get main_zone_active_pane_key(): string | null { return this._main_zone_active_pane_key }
+  /** Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette). */
+  public setMainZoneActivePane(id: string, pane_key: string | null): void {
+    if (this._main_zone_active_id === id && this._main_zone_active_pane_key === pane_key) return
+    this._main_zone_active_id = id
+    this._main_zone_active_pane_key = pane_key
     this._notifyMainZone()
   }
   /**
@@ -900,6 +1005,8 @@ export class Class_MenuConfig {
     }
     if (this._main_zone_active_id !== null && !list.some(o => o.id === this._main_zone_active_id)) {
       this._main_zone_active_id = null
+      // os#1394 — la vignette active appartenait à cette fenêtre : elle part avec elle.
+      this._main_zone_active_pane_key = null
     }
     const mains = list.filter(o => o.place === 'main')
     if (mains.length === 0) {
