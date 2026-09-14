@@ -18,6 +18,8 @@ export const resources_inspector = {
         element_analysis: 'Element analysis',
         view: 'View',
         back_to_selection: 'Back to selection',
+        // os#1394 — same crumb, when there is no selection but an active representation.
+        back_to_representation: 'Back to the representation',
         pin: 'Pin the panel (the drawing resizes to its left)',
         unpin: 'Unpin the panel (floats over the drawing)',
         // Cibles : singulier / pluriel (fil d'Ariane).
@@ -28,9 +30,14 @@ export const resources_inspector = {
           container: 'Area', containers: 'areas',
           legend: 'Legend', legends: 'legends',
           title: 'Title', titles: 'titles',
-          mixed: 'Mixed selection', elements: 'elements'
+          mixed: 'Mixed selection', elements: 'elements',
+          representation: 'Representation', representations: 'representations'
         },
         nothing_here: 'No settings available for: {{target}}.',
+        // os#1394 — settings of the active representation of the main zone.
+        representation: {
+          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.'
+        },
         // Portée & cascade de styles
         selection: 'Selection',
         selection_count: 'Selection ({{count}})',
@@ -61,7 +68,8 @@ export const resources_inspector = {
           analysis: 'Analysis',
           title: 'Title',
           mfa: 'MFA',
-          styles: 'Styles'
+          styles: 'Styles',
+          representation: 'Representation'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -367,6 +375,8 @@ export const resources_inspector = {
         element_analysis: 'Analyse de l’élément',
         view: 'Vue',
         back_to_selection: 'Retour à la sélection',
+        // os#1394 — le même retour, quand il n'y a pas de sélection mais une représentation active.
+        back_to_representation: 'Retour à la représentation',
         pin: 'Épingler le panneau (le dessin se recadre à gauche)',
         unpin: 'Détacher le panneau (survol du dessin)',
         target: {
@@ -376,9 +386,14 @@ export const resources_inspector = {
           container: 'Zone', containers: 'zones',
           legend: 'Légende', legends: 'légendes',
           title: 'Titre', titles: 'titres',
-          mixed: 'Sélection mixte', elements: 'éléments'
+          mixed: 'Sélection mixte', elements: 'éléments',
+          representation: 'Représentation', representations: 'représentations'
         },
         nothing_here: 'Aucun réglage disponible pour : {{target}}.',
+        // os#1394 — réglages de la représentation active de la grande zone.
+        representation: {
+          none: 'Aucune représentation active : ouvrez une fenêtre sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.'
+        },
         selection: 'Sélection',
         selection_count: 'Sélection ({{count}})',
         styles_count: 'Styles ({{count}})',
@@ -407,7 +422,8 @@ export const resources_inspector = {
           analysis: 'Analyse',
           title: 'Titre',
           mfa: 'AFM',
-          styles: 'Styles'
+          styles: 'Styles',
+          representation: 'Représentation'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -708,6 +724,7 @@ export const resources_inspector = {
         element_analysis: 'Análisis del elemento',
         view: 'Vista',
         back_to_selection: 'Volver a la selección',
+        back_to_representation: 'Volver a la representación',
         pin: 'Fijar el panel (el dibujo se reajusta a su izquierda)',
         unpin: 'Desacoplar el panel (flota sobre el dibujo)',
         target: {
@@ -717,9 +734,13 @@ export const resources_inspector = {
           container: 'Zona', containers: 'zonas',
           legend: 'Leyenda', legends: 'leyendas',
           title: 'Título', titles: 'títulos',
-          mixed: 'Selección mixta', elements: 'elementos'
+          mixed: 'Selección mixta', elements: 'elementos',
+          representation: 'Representación', representations: 'representaciones'
         },
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
+        representation: {
+          none: 'Ninguna representación activa: abra una ventana sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.'
+        },
         selection: 'Selección',
         selection_count: 'Selección ({{count}})',
         styles_count: 'Estilos ({{count}})',
@@ -748,7 +769,8 @@ export const resources_inspector = {
           analysis: 'Análisis',
           title: 'Título',
           mfa: 'AFM',
-          styles: 'Estilos'
+          styles: 'Estilos',
+          representation: 'Representación'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1049,6 +1071,7 @@ export const resources_inspector = {
         element_analysis: 'Analyse des Elements',
         view: 'Ansicht',
         back_to_selection: 'Zurück zur Auswahl',
+        back_to_representation: 'Zurück zur Darstellung',
         pin: 'Panel anheften (die Zeichnung wird links davon neu angepasst)',
         unpin: 'Panel lösen (schwebt über der Zeichnung)',
         target: {
@@ -1058,9 +1081,13 @@ export const resources_inspector = {
           container: 'Bereich', containers: 'Bereiche',
           legend: 'Legende', legends: 'Legenden',
           title: 'Titel', titles: 'Titel',
-          mixed: 'Gemischte Auswahl', elements: 'Elemente'
+          mixed: 'Gemischte Auswahl', elements: 'Elemente',
+          representation: 'Darstellung', representations: 'Darstellungen'
         },
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
+        representation: {
+          none: 'Keine aktive Darstellung: Öffnen Sie ein Fenster auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.'
+        },
         selection: 'Auswahl',
         selection_count: 'Auswahl ({{count}})',
         styles_count: 'Stile ({{count}})',
@@ -1089,7 +1116,8 @@ export const resources_inspector = {
           analysis: 'Analyse',
           title: 'Titel',
           mfa: 'MFA',
-          styles: 'Stile'
+          styles: 'Stile',
+          representation: 'Darstellung'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1390,6 +1418,7 @@ export const resources_inspector = {
         element_analysis: 'Analisi dell’elemento',
         view: 'Vista',
         back_to_selection: 'Torna alla selezione',
+        back_to_representation: 'Torna alla rappresentazione',
         pin: 'Fissa il pannello (il disegno si ridimensiona alla sua sinistra)',
         unpin: 'Sgancia il pannello (fluttua sopra il disegno)',
         target: {
@@ -1399,9 +1428,13 @@ export const resources_inspector = {
           container: 'Zona', containers: 'zone',
           legend: 'Legenda', legends: 'legende',
           title: 'Titolo', titles: 'titoli',
-          mixed: 'Selezione mista', elements: 'elementi'
+          mixed: 'Selezione mista', elements: 'elementi',
+          representation: 'Rappresentazione', representations: 'rappresentazioni'
         },
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
+        representation: {
+          none: 'Nessuna rappresentazione attiva: aprite una finestra su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.'
+        },
         selection: 'Selezione',
         selection_count: 'Selezione ({{count}})',
         styles_count: 'Stili ({{count}})',
@@ -1430,7 +1463,8 @@ export const resources_inspector = {
           analysis: 'Analisi',
           title: 'Titolo',
           mfa: 'AFM',
-          styles: 'Stili'
+          styles: 'Stili',
+          representation: 'Rappresentazione'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1728,6 +1762,8 @@ export const resources_inspector = {
         element_analysis: '要素分析',
         view: '视图',
         back_to_selection: '返回所选内容',
+        // os#1394 — anglais en attendant une relecture native (comme d'autres clés récentes).
+        back_to_representation: 'Back to the representation',
         pin: '固定面板（绘图区在其左侧重新调整大小）',
         unpin: '取消固定面板（浮于绘图之上）',
         // Cibles : singulier / pluriel (fil d'Ariane).
@@ -1738,9 +1774,13 @@ export const resources_inspector = {
           container: '区域', containers: '区域',
           legend: '图例', legends: '图例',
           title: '标题', titles: '标题',
-          mixed: '混合选择', elements: '元素'
+          mixed: '混合选择', elements: '元素',
+          representation: 'Representation', representations: 'representations'
         },
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
+        representation: {
+          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.'
+        },
         // Portée & cascade de styles
         selection: '选择',
         selection_count: '选择（{{count}}）',
@@ -1771,7 +1811,8 @@ export const resources_inspector = {
           analysis: '分析',
           title: '标题',
           mfa: 'MFA',
-          styles: '样式'
+          styles: '样式',
+          representation: 'Representation'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -2072,6 +2113,8 @@ export const resources_inspector = {
         element_analysis: '要素の分析',
         view: 'ビュー',
         back_to_selection: '選択に戻る',
+        // os#1394 — anglais en attendant une relecture native (comme d'autres clés récentes).
+        back_to_representation: 'Back to the representation',
         pin: 'パネルを固定（描画エリアがその左側でサイズ調整されます）',
         unpin: 'パネルの固定を解除（描画の上に浮かびます）',
         // Cibles : singulier / pluriel (fil d'Ariane).
@@ -2082,9 +2125,13 @@ export const resources_inspector = {
           container: 'エリア', containers: 'エリア',
           legend: '凡例', legends: '凡例',
           title: 'タイトル', titles: 'タイトル',
-          mixed: '複数種類の選択', elements: '要素'
+          mixed: '複数種類の選択', elements: '要素',
+          representation: 'Representation', representations: 'representations'
         },
         nothing_here: '{{target}} に利用できる設定はありません。',
+        representation: {
+          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.'
+        },
         // Portée & cascade de styles
         selection: '選択',
         selection_count: '選択（{{count}}）',
@@ -2115,7 +2162,8 @@ export const resources_inspector = {
           analysis: '分析',
           title: 'タイトル',
           mfa: 'MFA',
-          styles: 'スタイル'
+          styles: 'スタイル',
+          representation: 'Representation'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {

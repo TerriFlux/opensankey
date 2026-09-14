@@ -1253,6 +1253,11 @@ export class Class_ApplicationData {
     // sa#399 — Référence de brique de bibliothèque, clé racine persistée avec le diagramme.
     if (this._library_ref) json_object['library_ref'] = { ...this._library_ref }
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    // os#1394 — Réglages PAR DÉFAUT des natures de représentation (étoile unitaire, couronne,
+    // histogrammes, sunburst), clé racine ADDITIVE : absente tant que rien n'a été réglé, donc
+    // un fichier antérieur se relit à l'identique.
+    const repr_defaults = this.menu_configuration.representationDefaultsToJSON()
+    if (repr_defaults) json_object['representation_defaults'] = repr_defaults
     // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
     json_object['panels'] = this.menu_configuration.panels.toJSON()
     // OS#85 — Feuilles du document (clé racine `sheets`). La racine du fichier EST le
@@ -1401,6 +1406,13 @@ export class Class_ApplicationData {
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
     // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
     if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
+    // os#1394 — défauts par nature de représentation. Relus seulement si la clé est là : un
+    // fichier qui n'en porte pas ne doit pas effacer ce que la session a déjà appris, même
+    // logique que `main_zone` juste au-dessus.
+    const repr_defaults = json_object['representation_defaults']
+    if (repr_defaults && typeof repr_defaults === 'object') {
+      this.menu_configuration?.representationDefaultsFromJSON(repr_defaults)
+    }
     // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
     const panels_json = json_object['panels']
     if (panels_json && typeof panels_json === 'object') {
