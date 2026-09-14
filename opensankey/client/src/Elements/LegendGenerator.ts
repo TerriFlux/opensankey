@@ -466,6 +466,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       zone.name_label_is_visible = true
       zone.name_label_font_size = values.police
       zone.name_label_bold = item.bold ?? false
+      // #542 — définition de l'étiquette ou du groupe, lue au survol par le bloc
+      // INFOS de la présentation. Reposée à CHAQUE régénération (changement de
+      // langue ou de définition compris) et vidée quand la définition disparaît :
+      // la zone est réutilisée par id, l'ancienne survivrait sinon. Écriture
+      // faite sous `_generating`, comme tout ce que le générateur pose.
+      zone.tooltip_text = item.description ?? ''
       // En horizontal les entrées restent sur une ligne (pas de wrap)
       zone.name_label_box_width = values.horizontal ? 4000 : Math.max(values.width, 4 * values.police)
       // Toutes les zones partagent la même géométrie : une petite boîte
