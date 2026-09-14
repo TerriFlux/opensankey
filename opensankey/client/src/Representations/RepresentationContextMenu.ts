@@ -160,6 +160,18 @@ export const attachRepresentationContextMenu = (
 ): (() => void) => {
   const declare = entry.contextMenu
   if (!declare) return () => { /* rien n'a été posé */ }
+  // os#1397 - LE FOND EST LE CONTENEUR, étiqueté ici plutôt que dans chaque moteur de dessin.
+  //
+  // `representationTargetAt` remonte au plus proche ancêtre étiqueté : ce qui est un ruban, un
+  // secteur ou une barre est trouvé avant, et tout le reste - les marges, le blanc autour de la
+  // figure, une légende, un message de vide - retombe sur le fond. Une représentation gagne donc
+  // le clic droit sur son fond sans toucher à son moteur d3, et la règle vaut d'avance pour
+  // celles qui n'existent pas encore.
+  //
+  // Posé seulement quand un menu est déclaré, et retiré au démontage : le conteneur est PRÊTÉ par
+  // l'hôte, on le rend comme on l'a trouvé.
+  const had_kind = container.getAttribute(REPR_KIND_ATTR)
+  container.setAttribute(REPR_KIND_ATTR, 'background')
   const onContextMenu = (event: MouseEvent) => {
     const target = representationTargetAt(event.target, container)
     if (!target) return
@@ -175,5 +187,32 @@ export const attachRepresentationContextMenu = (
     openRepresentationContextMenu({ ...menu, position: { x: event.clientX, y: event.clientY } })
   }
   container.addEventListener('contextmenu', onContextMenu)
-  return () => container.removeEventListener('contextmenu', onContextMenu)
+  return () => {
+    container.removeEventListener('contextmenu', onContextMenu)
+    if (had_kind === null) container.removeAttribute(REPR_KIND_ATTR)
+    else container.setAttribute(REPR_KIND_ATTR, had_kind)
+  }
 }
+
+/**
+ * os#1397 - LE MENU DU FOND D'UNE REPRÉSENTATION : ses réglages, et rien d'autre.
+ *
+ * C'est le menu que toute représentation ayant des réglages peut déclarer d'une ligne :
+ *
+ *     contextMenu: ({ target }) => target.kind === 'background' ? representationOptionsMenu() : null
+ *
+ * Il ne porte AUCUN libellé à traduire, parce qu'il ne porte aucune action : son unique entrée est
+ * le widget qui rend le volet de configuration, lequel affiche déjà le nom de la représentation et
+ * les réglages que l'entrée de registre expose. Le même composant sert donc la barre de la
+ * vignette, le volet du menu de configuration et ce menu-ci - trois chemins, aucune divergence
+ * possible, et c'est la condition posée pour retirer la barre.
+ */
+export const representationOptionsMenu = (): Type_RepresentationMenu => ({
+  config: {
+    structure: [{ type: 'widget', widgetName: REPRESENTATION_OPTIONS_WIDGET }],
+    actions: {},
+    sectionTitles: {}
+  },
+  modifier: {},
+  path: 'ContextMenuRepresentation'
+})

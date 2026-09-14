@@ -33,6 +33,7 @@ import {
   MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_JSON_ID
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
+import { representationOptionsMenu } from './RepresentationContextMenu'
 
 export const registerBaseRepresentations = (): void => {
   representation_registry.register({
@@ -118,6 +119,11 @@ export const registerBaseRepresentations = (): void => {
     needs: { hierarchy: true },
     isAvailable: (ctx) => !!ctx.element && Array.isArray((ctx.element as { output_links_list?: unknown }).output_links_list),
     renderOptions: (args) => <SunburstRepresentationOptions {...args} />,
+    // os#1397 - le clic droit sur le fond ouvre les réglages de la figure. Les SECTEURS, eux,
+    // n'ont pas encore de menu : leur clic gauche zoome déjà dans l'anneau, et décider ce que le
+    // clic droit y ajoute demande de trancher ce qu'on vise, le nœud du secteur ou la branche
+    // entière. À faire quand la question se posera vraiment, pas d'avance.
+    contextMenu: ({ target }) => target.kind === 'background' ? representationOptionsMenu() : null,
     draw: (container, ctx) => drawSunburstRepresentation(container, {
       ...ctx,
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
