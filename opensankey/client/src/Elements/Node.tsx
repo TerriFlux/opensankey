@@ -228,6 +228,10 @@ export class Class_NodeElement extends Class_NodeBase {
     ) {
       return this.shape_color
     }
+    // SA#541 — un style d'étiquette qui définit la couleur l'emporte sur la coloration par groupe
+    if (this.tagStyleLayerImposing('shape_color') !== undefined) {
+      return this.shape_color
+    }
     if (!this.sankey.node_taggs_list.some(tagg => tagg.use_colors)) {
       return this._ownShapeColor()
     }
@@ -751,6 +755,16 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // TAGS METHODS =======================================================================
   public hasGivenTag(tag: Class_Tag) { return this._nodeTagsManager.hasGivenTag(tag) }
+
+  // SA#541 — styles imposés par les étiquettes de nœuds (cf. Elements/tagStyles.ts). `null` tant que
+  // le gestionnaire d'étiquettes n'est pas construit : rien n'est alors mémorisé.
+  protected override computeTagStyleLayers() {
+    if (!this._nodeTagsManager) return null
+    return this.resolveTagStyleLayers(
+      this.sankey.getTagGroupsAsList('node_taggs'),
+      tag => this.hasGivenTag(tag as Class_Tag)
+    )
+  }
   public tagsUpdated() { this._are_related_node_tags_selected = undefined }
   public addTag(tag: Class_Tag) {
     this._nodeTagsManager.addTag(tag)

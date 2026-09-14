@@ -47,6 +47,7 @@ import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { effectiveOpacity } from './elementOpacity'
+import { topLayerDefining } from './tagStyles'
 import { resolveScaleCarrierTag } from '../types/ScaleResolution'
 import { countLinkDraw } from '../types/DrawCounters'
 import { Class_LinkAttribute } from './Element'
@@ -170,6 +171,17 @@ export function sortLinksElementsByRelativeNodesPositions(
   }
 }
 
+
+/**
+ * SA#541 — étiquettes portées par une valeur : celles de la feuille et celles de ses valeurs
+ * coordonnées (#285), comme le fait `Class_ElementValue.hasGivenTag`.
+ */
+function valueTags(value: Class_LinkValue | null): Class_Tag[] {
+  if (!value) return []
+  const tags = [...value.flux_tags_list]
+  value.tagged_values_list.forEach(tv => tags.push(...tv.tags_list))
+  return tags
+}
 
 /**
  * Class that define how to display a link element and how to interact with it
@@ -683,6 +695,25 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return false
   }
 
+  /**
+   * SA#541 — styles imposés par les étiquettes de la VALEUR AFFICHÉE (feuille de la sélection
+   * courante d'étiquettes de données) : la fiabilité change avec l'année ou l'unité (778 flux sur
+   * 800 du Lait SOCLE). `null` tant que l'arbre de valeurs n'existe pas.
+   */
+  protected override computeTagStyleLayers() {
+    if (this._values === undefined) return null
+    const carried = valueTags(this.value)
+    return this.resolveTagStyleLayers(
+      this.sankey.getTagGroupsAsList('flux_taggs'),
+      tag => carried.includes(tag as Class_Tag)
+    )
+  }
+
+  /** SA#541 — changer d'année ou d'unité change la valeur affichée, donc ses étiquettes. */
+  protected override tagStyleSelectionKey() {
+    return this.sankey.data_tags_fingerprint
+  }
+
   public tagsUpdated() {
     this._are_related_flux_tags_selected = undefined
   }
@@ -762,6 +793,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public getShapeColorToUse(): string {
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
+
+    // SA#541 — un style d'étiquette qui définit la couleur l'emporte sur toutes les règles
+    // (dégradé, extrémités, coloration par groupe)
+    if (this.tagStyleLayerImposing('shape_color') !== undefined) {
+      return this.shape_color
+    }
 
     // Apply gradient if needed
     if (this.shape_color_rule == 'gradient') {
@@ -946,29 +983,47 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean, opacity?: number }[] {
     if (this._is_expansion_link) return []
+    // SA#541 — une bande est une valeur à part entière : les styles des étiquettes de SA valeur
+    // imposent sa couleur et son opacité. Rien n'est calculé sans style d'étiquette.
+    const band_style = (tags: Class_Tag[]): { color?: string, opacity?: number } => {
+      if (!this.sankey.has_tag_styles) return {}
+      const layers = this.resolveTagStyleLayers(
+        this.sankey.getTagGroupsAsList('flux_taggs'),
+        tag => tags.includes(tag as Class_Tag)
+      )
+      const out: { color?: string, opacity?: number } = {}
+      const color_layer = topLayerDefining(layers, style => style.getElementProperty('shape_color'))
+      if (color_layer && this.attributes.shape_color_sustainable !== true) {
+        out.color = color_layer.style.getElementProperty('shape_color') as string
+      }
+      const opacity_layer = topLayerDefining(layers, style => style.getElementProperty('shape_opacity'))
+      if (opacity_layer) out.opacity = opacity_layer.style.getElementProperty('shape_opacity') as number
+      return out
+    }
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
     //    plus aucun lien fantôme dans le modèle).
     const multi_dim = this.sankey.data_taggs_list.find(tagg =>
       tagg.banner === 'multi' && tagg.tags_list.length > 1)
     if (multi_dim) {
-      const bands: { id: string, px: number, color: string | null, value: number }[] = []
+      const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
         const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
         if (v === null || v <= 0) return
+        const { color: styled_color, ...styled_opacity } = band_style(valueTags(leaf))
         // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
         // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
         // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
         const band_own_scale = (tag as Class_DataTag).own_scale
         if (band_own_scale !== undefined && band_own_scale > 0) {
           this.setDomainLocalScale(band_own_scale)
-          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v })
+          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
         }
         else {
-          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: tag.color, value: v })
+          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
         }
       })
       const dim_total = bands.reduce((acc, band) => acc + band.px, 0)
@@ -1021,7 +1076,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
       unit_tag_of(tv)?.resolved_unit?.unit.label
-    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible }))
+    // SA#541 — étiquettes d'une bande = les siennes + celles de la feuille qui la contient (une
+    // fiabilité posée sur la feuille vaut pour chacune de ses valeurs coordonnées).
+    const leaf_tags = this.value?.flux_tags_list ?? []
+    const bands = tvs.map(tv => {
+      const { color: styled_color, ...styled_opacity } = band_style([...tv.tags_list, ...leaf_tags])
+      return { id: tv.id, px: Math.max(0, px_for(tv)), color: styled_color ?? color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible, ...styled_opacity }
+    })
     const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
     return bands.map(band => ({ ...band, share: band.px / total }))
