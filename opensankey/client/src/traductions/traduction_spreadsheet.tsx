@@ -14,9 +14,6 @@ export const resources_spreadsheet = {
   en: {
     translation: {
       Spreadsheet: {
-        // --- Onglets (noms de feuilles) ---
-        mode_grid: 'Table',
-        mode_json: 'JSON',
         json: {
           help: 'Native JSON of the diagram, as written when saving (read-only).',
           other: 'Other',
@@ -204,6 +201,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: 'Diagram',
           spreadsheet: 'Spreadsheet',
+          json: 'JSON',
           doc: 'Doc',
           documentation: 'Documentation',
           unitary: 'Unitary Sankey',
@@ -263,8 +261,6 @@ export const resources_spreadsheet = {
   fr: {
     translation: {
       Spreadsheet: {
-        mode_grid: 'Tableur',
-        mode_json: 'JSON',
         json: {
           help: 'JSON natif du diagramme, tel qu\'écrit à l\'enregistrement (lecture seule).',
           other: 'Autres',
@@ -444,6 +440,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: 'Diagramme',
           spreadsheet: 'Tableur',
+          json: 'JSON',
           doc: 'Doc',
           documentation: 'Documentation',
           unitary: 'Sankey unitaire',
@@ -491,8 +488,6 @@ export const resources_spreadsheet = {
   es: {
     translation: {
       Spreadsheet: {
-        mode_grid: 'Tabla',
-        mode_json: 'JSON',
         json: {
           help: 'JSON nativo del diagrama, tal como se escribe al guardar (solo lectura).',
           other: 'Otros',
@@ -672,6 +667,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: 'Diagrama',
           spreadsheet: 'Hoja de cálculo',
+          json: 'JSON',
           doc: 'Doc',
           documentation: 'Documentación',
           unitary: 'Sankey unitario',
@@ -719,8 +715,6 @@ export const resources_spreadsheet = {
   de: {
     translation: {
       Spreadsheet: {
-        mode_grid: 'Tabelle',
-        mode_json: 'JSON',
         json: {
           help: 'Natives JSON des Diagramms, wie beim Speichern geschrieben (schreibgeschützt).',
           other: 'Sonstiges',
@@ -900,6 +894,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: 'Diagramm',
           spreadsheet: 'Tabelle',
+          json: 'JSON',
           doc: 'Doc',
           documentation: 'Dokumentation',
           unitary: 'Unitäres Sankey',
@@ -947,8 +942,6 @@ export const resources_spreadsheet = {
   it: {
     translation: {
       Spreadsheet: {
-        mode_grid: 'Tabella',
-        mode_json: 'JSON',
         json: {
           help: 'JSON nativo del diagramma, come scritto al salvataggio (sola lettura).',
           other: 'Altro',
@@ -1128,6 +1121,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: 'Diagramma',
           spreadsheet: 'Foglio di calcolo',
+          json: 'JSON',
           doc: 'Doc',
           documentation: 'Documentazione',
           unitary: 'Sankey unitario',
@@ -1172,9 +1166,6 @@ export const resources_spreadsheet = {
   'zh-CN': {
     translation: {
       Spreadsheet: {
-        // --- Onglets (noms de feuilles) ---
-        mode_grid: '表格',
-        mode_json: 'JSON',
         json: {
           help: '图表的原生 JSON，与保存文件时写出的内容一致（只读）。',
           other: '其他',
@@ -1362,6 +1353,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: '图表',
           spreadsheet: '电子表格',
+          json: 'JSON',
           doc: '文档',
           documentation: '文档',
           unitary: '单位桑基图',
@@ -1407,9 +1399,6 @@ export const resources_spreadsheet = {
   ja: {
     translation: {
       Spreadsheet: {
-        // --- Onglets (noms de feuilles) ---
-        mode_grid: '表',
-        mode_json: 'JSON',
         json: {
           help: '図のネイティブ JSON。保存時に書き出される内容と同じです（読み取り専用）。',
           other: 'その他',
@@ -1597,6 +1586,7 @@ export const resources_spreadsheet = {
         zone: {
           diagram: '図',
           spreadsheet: 'スプレッドシート',
+          json: 'JSON',
           doc: '文書',
           documentation: '文書',
           unitary: '単位サンキー',
