@@ -1421,7 +1421,16 @@ export const menuStyles = {
         margin: '0',
       },
     },
-    list: { minWidth: 'inherit' },
+    // `dropdown` (1000) : la liste d'un menu doit passer AU-DESSUS des fenêtres de la grande
+    // zone (MainZoneTabs, zIndex 20-25), qui sinon la recouvrent — un menu déroulant ouvert
+    // depuis la barre du haut se faisait trancher par la colonne du tableur.
+    //
+    // Ici, sur le BASE STYLE, et non variante par variante : la condition ne dépend d'aucune
+    // variante (toutes les listes flottent au-dessus de la page), et seule `selector_lang` la
+    // portait — les autres, dont celle du menu AFM, passaient dessous. Une variante qui
+    // déclarerait son propre `list` garde ce z-index : Chakra fusionne base et variante par
+    // partie, il n'y a qu'à ne pas le réécrire.
+    list: { minWidth: 'inherit', zIndex: 'dropdown' },
     item: { display: 'grid', fontSize: default_font_size }
   }),
 
