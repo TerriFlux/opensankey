@@ -46,7 +46,7 @@ import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
-import { effectiveOpacity, isUnqualifiedValue, opacityDrivingGroup, tagDrivenOpacity, unqualifiedOutlineRequested } from './elementOpacity'
+import { effectiveOpacity } from './elementOpacity'
 import { resolveScaleCarrierTag } from '../types/ScaleResolution'
 import { countLinkDraw } from '../types/DrawCounters'
 import { Class_LinkAttribute } from './Element'
@@ -170,17 +170,6 @@ export function sortLinksElementsByRelativeNodesPositions(
   }
 }
 
-
-/**
- * SA#541 — étiquettes portées par une valeur : celles de la feuille et celles de ses valeurs
- * coordonnées (#285), comme le fait `Class_ElementValue.hasGivenTag`.
- */
-function valueTags(value: Class_LinkValue | null): Class_Tag[] {
-  if (!value) return []
-  const tags = [...value.flux_tags_list]
-  value.tagged_values_list.forEach(tv => tags.push(...tv.tags_list))
-  return tags
-}
 
 /**
  * Class that define how to display a link element and how to interact with it
@@ -957,36 +946,29 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean, opacity?: number }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean }[] {
     if (this._is_expansion_link) return []
-    // SA#541 — une bande est une valeur à part entière : elle prend l'opacité des étiquettes
-    // de SA valeur, pas celle du flux entier. Rien n'est ajouté tant qu'aucun groupe ne
-    // pilote la transparence (tous les fichiers existants).
-    const opacity_group = opacityDrivingGroup(this.sankey.flux_taggs_list)
-    const opacity_of = (tags: Class_Tag[]): { opacity?: number } =>
-      opacity_group ? { opacity: tagDrivenOpacity(opacity_group, tags) } : {}
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
     //    plus aucun lien fantôme dans le modèle).
     const multi_dim = this.sankey.data_taggs_list.find(tagg =>
       tagg.banner === 'multi' && tagg.tags_list.length > 1)
     if (multi_dim) {
-      const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
+      const bands: { id: string, px: number, color: string | null, value: number }[] = []
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
         const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
         if (v === null || v <= 0) return
-        const leaf_opacity = opacity_of(valueTags(leaf))
         // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
         // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
         // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
         const band_own_scale = (tag as Class_DataTag).own_scale
         if (band_own_scale !== undefined && band_own_scale > 0) {
           this.setDomainLocalScale(band_own_scale)
-          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v, ...leaf_opacity })
+          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v })
         }
         else {
-          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: tag.color, value: v, ...leaf_opacity })
+          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: tag.color, value: v })
         }
       })
       const dim_total = bands.reduce((acc, band) => acc + band.px, 0)
@@ -1039,10 +1021,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
       unit_tag_of(tv)?.resolved_unit?.unit.label
-    // SA#541 — étiquettes de la bande = les siennes + celles de la feuille qui la contient
-    // (une fiabilité posée sur la feuille vaut pour chacune de ses valeurs coordonnées).
-    const leaf_tags = this.value?.flux_tags_list ?? []
-    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible, ...opacity_of([...tv.tags_list, ...leaf_tags]) }))
+    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible }))
     const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
     return bands.map(band => ({ ...band, share: band.px / total }))
@@ -1063,31 +1042,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get has_additive_bands(): boolean {
     return (this.value?.tagged_values_list?.length ?? 0) > 0
       && this.sankey.flux_taggs_list.some(tagg => tagg.is_additive_carrier)
-  }
-
-  /**
-   * SA#541 — opacité portée par l'étiquette du groupe qui pilote la transparence, pour la
-   * VALEUR AFFICHÉE (feuille de la sélection courante d'étiquettes de données). Lue par
-   * `elementSourceOpacity`, seul point de lecture de l'opacité : le tracé, la pointe de
-   * flèche, le capuchon, l'animation et les icônes suivent sans y toucher.
-   *
-   * Résolue à chaque lecture, jamais mémorisée : la fiabilité change avec l'année ou l'unité
-   * (778 flux sur 800 du Lait SOCLE). `undefined` quand aucun groupe ne pilote l'opacité.
-   */
-  public get tag_driven_opacity(): number | undefined {
-    const group = opacityDrivingGroup(this.sankey.flux_taggs_list)
-    if (!group) return undefined
-    return tagDrivenOpacity(group, valueTags(this.value))
-  }
-
-  /**
-   * SA#541 — la valeur affichée ne porte aucune étiquette du groupe pilote ET ce groupe
-   * demande la variante « contour pointillé » (`style_patch.unqualified_outline`).
-   */
-  public get shows_unqualified_outline(): boolean {
-    const group = opacityDrivingGroup(this.sankey.flux_taggs_list)
-    if (!group || !unqualifiedOutlineRequested(group)) return false
-    return isUnqualifiedValue(group, valueTags(this.value))
   }
 
 
