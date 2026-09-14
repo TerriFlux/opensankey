@@ -1421,16 +1421,11 @@ export const menuStyles = {
         margin: '0',
       },
     },
-    // `dropdown` (1000) : la liste d'un menu doit passer AU-DESSUS des fenêtres de la grande
-    // zone (MainZoneTabs, zIndex 20-25), qui sinon la recouvrent — un menu déroulant ouvert
-    // depuis la barre du haut se faisait trancher par la colonne du tableur.
-    //
-    // Ici, sur le BASE STYLE, et non variante par variante : la condition ne dépend d'aucune
-    // variante (toutes les listes flottent au-dessus de la page), et seule `selector_lang` la
-    // portait — les autres, dont celle du menu AFM, passaient dessous. Une variante qui
-    // déclarerait son propre `list` garde ce z-index : Chakra fusionne base et variante par
-    // partie, il n'y a qu'à ne pas le réécrire.
-    list: { minWidth: 'inherit', zIndex: 'dropdown' },
+    // PAS de z-index ici, et ce n'est pas un oubli. Un déroulant de la barre du haut ne se
+    // règle PAS par le z-index : la barre est un contexte d'empilement (`position: fixed;
+    // zIndex: 1`), et un z-index ne classe qu'à l'intérieur du sien — 1000 ou 10000 n'y
+    // changent rien. Le remède est le portail (cf. `TopMenuList`, dans components/ui).
+    list: { minWidth: 'inherit' },
     item: { display: 'grid', fontSize: default_font_size }
   }),
 
