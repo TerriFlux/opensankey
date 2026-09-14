@@ -1678,6 +1678,9 @@ export class Class_ElementStyle {
       delete this._references[ref.id]
     }
   }
+
+  /** SA#541 — nombre d'éléments qui portent ce style dans leur PROPRE liste de styles. */
+  public get reference_count(): number { return Object.keys(this._references).length }
   public get attributes() { return this._storage }
   public set attributes(value: Record<string, unknown>) {
     this._storage = value
