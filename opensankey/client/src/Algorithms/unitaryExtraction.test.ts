@@ -815,4 +815,35 @@ describe('os#1382 — updateUnitaryStyles sur une brique', () => {
     expect(nodeStyleIds(app, 'S1')).toEqual([])
     expect(app.drawing_area.bypass_redraws).toBe(false)
   })
+
+  /**
+   * LA DISPOSITION SUIT LES STYLES UNITAIRES, pas le style `default`.
+   *
+   * `computeAutoSankey` traite ses arguments `h_spacing` / `v_spacing` comme des
+   * ECRASEMENTS et non comme des defauts : `effective_v = v_spacing ?? colonne[0]
+   * ?.shape_position_dy`. Tant que `updateUnitaryStyles` lui passait l espacement
+   * du style `default`, les `shape_position_dx/dy` des styles unitaires n etaient
+   * JAMAIS consultes — l apercu sortait haut et etroit, au point de remplir la
+   * page en hauteur. Ce test mesure l ecart reel entre deux entrees empilees.
+   */
+  it('espace les entrees avec le style unitaire, pas avec le style default', () => {
+    // La brique de `S1` a DEUX entrees, `Pa` et `Pb` : elles partagent une colonne,
+    // donc l ecart entre elles EST l espacement effectif.
+    const app = loadApp(extractUnitaryBrickFor(loadApp(bipartite()), 'S1') as Type_JSON)
+    creerStylesUnitaires(app)
+
+    const styles = app.drawing_area.sankey.styles_dict
+    const unitary_dy = styles[SankeyUnitaryNodeInputStyle].shape_position_dy as number
+    // Le test n a de sens que si les deux espacements different : sinon il passerait
+    // meme en lisant le mauvais style. On le dit, plutot que de le supposer.
+    expect(unitary_dy).not.toBe(styles['default'].shape_position_dy)
+
+    updateUnitaryStyles(app.drawing_area, 'S1')
+
+    const [haut, bas] = ['Pa', 'Pb']
+      .map(id => app.drawing_area.sankey.nodes_dict[id])
+      .sort((a, b) => a.position_y - b.position_y)
+    const ecart = bas.position_y - (haut.position_y + haut.getShapeHeightToUse())
+    expect(ecart).toBeCloseTo(unitary_dy)
+  })
 })
