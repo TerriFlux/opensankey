@@ -49,6 +49,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Overridden here (on the selection)',
           from_style: 'Inherited from style « {{style}} »',
+          from_tag: 'Imposed by tag « {{tag}} » (style « {{style}} »)',
+          from_tag_group: 'Imposed by group « {{group}} » on elements without a tag (style « {{style}} »)',
           factory: 'Factory default value'
         },
         // Onglets
@@ -394,6 +396,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Surchargé ici (sur la sélection)',
           from_style: 'Hérité du style « {{style}} »',
+          from_tag: 'Imposé par l’étiquette « {{tag}} » (style « {{style}} »)',
+          from_tag_group: 'Imposé par le groupe « {{group}} » aux éléments sans étiquette (style « {{style}} »)',
           factory: 'Valeur d’usine'
         },
         tab: {
@@ -733,6 +737,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Anulado aquí (en la selección)',
           from_style: 'Heredado del estilo « {{style}} »',
+          from_tag: 'Impuesto por la etiqueta « {{tag}} » (estilo « {{style}} »)',
+          from_tag_group: 'Impuesto por el grupo « {{group}} » a los elementos sin etiqueta (estilo « {{style}} »)',
           factory: 'Valor de fábrica'
         },
         tab: {
@@ -1072,6 +1078,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Hier überschrieben (in der Auswahl)',
           from_style: 'Vom Stil « {{style}} » geerbt',
+          from_tag: 'Vom Etikett « {{tag}} » vorgegeben (Stil « {{style}} »)',
+          from_tag_group: 'Von der Gruppe « {{group}} » für Elemente ohne Etikett vorgegeben (Stil « {{style}} »)',
           factory: 'Werkseinstellung'
         },
         tab: {
@@ -1411,6 +1419,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Sovrascritto qui (sulla selezione)',
           from_style: 'Ereditato dallo stile « {{style}} »',
+          from_tag: 'Imposto dall’etichetta « {{tag}} » (stile « {{style}} »)',
+          from_tag_group: 'Imposto dal gruppo « {{group}} » agli elementi senza etichetta (stile « {{style}} »)',
           factory: 'Valore di fabbrica'
         },
         tab: {
@@ -1749,6 +1759,8 @@ export const resources_inspector = {
         provenance: {
           local: '在此处（所选内容上）被覆盖',
           from_style: '继承自样式 « {{style}} »',
+          from_tag: '由标签 « {{tag}} » 强制（样式 « {{style}} »）',
+          from_tag_group: '由组 « {{group}} » 对无标签元素强制（样式 « {{style}} »）',
           factory: '出厂默认值'
         },
         // Onglets
@@ -2091,6 +2103,8 @@ export const resources_inspector = {
         provenance: {
           local: 'ここで上書き（選択中の要素で）',
           from_style: 'スタイル «{{style}}» から継承',
+          from_tag: 'タグ «{{tag}}» により指定（スタイル «{{style}}»）',
+          from_tag_group: 'グループ «{{group}}» によりタグのない要素に指定（スタイル «{{style}}»）',
           factory: '工場出荷時の既定値'
         },
         // Onglets

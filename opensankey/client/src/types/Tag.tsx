@@ -58,6 +58,8 @@ const KNOWN_TAG_JSON_KEYS = new Set([
   // effacer une definition n'ecrit plus la cle — et celle restee dans le sac
   // reprendrait la main au dump suivant.
   'description', 'style_patch',
+  // SA#541 - style nomme impose par l'etiquette : modelise, donc hors du sac.
+  'style_id',
 ])
 
 // CLASS PROTO TAG ***********************************************************************
@@ -97,6 +99,11 @@ export abstract class Class_ProtoTag {
   // couleur. Le premier attribut consomme sera l'opacite ; la bordure et la
   // hachure viendront sans nouveau format.
   private _style_patch: Type_StylePatch = {}
+
+  // SA#541 - id du STYLE NOMME (liste des Styles) impose aux elements qui portent
+  // l'etiquette : il surcharge leur style et leur mise en forme locale, pour les
+  // seuls parametres qu'il definit (cf. Elements/tagStyles.ts). undefined = aucun.
+  private _style_id: string | undefined = undefined
 
   // Color of tag
   private _color: string = default_grey_color
@@ -154,6 +161,8 @@ export abstract class Class_ProtoTag {
     if (!this._is_currently_deleted) {
       // Set as currently deleted
       this._is_currently_deleted = true
+      // SA#541 - l'etiquette emporte son style : un style d'etiquette a pu disparaitre
+      if (this._style_id !== undefined) this._ref_sankey.tagStylesConfigUpdated?.()
       // Unref this from tag group
       this.group.removeTag(this)
       // Clean the rest
@@ -191,6 +200,11 @@ export abstract class Class_ProtoTag {
     // silence : #385 a l'identique.
     this._description_map = { ...tag_to_copy._description_map }
     this._style_patch = { ...tag_to_copy._style_patch }
+    // SA#541 - meme raison : le style impose suit l'etiquette.
+    if (this._style_id !== tag_to_copy._style_id) {
+      this._style_id = tag_to_copy._style_id
+      this._ref_sankey.tagStylesConfigUpdated?.()
+    }
     // #527 - les attributs que le front ne modelise pas suivent l'etiquette :
     // sans cette ligne, une fusion de mise en page ou une duplication les
     // perdrait silencieusement.
@@ -242,6 +256,8 @@ export abstract class Class_ProtoTag {
     if (description !== undefined) json_object['description'] = description
     const style_patch = serializeStylePatch(this._style_patch)
     if (style_patch !== undefined) json_object['style_patch'] = style_patch
+    // SA#541 - meme ecriture conditionnelle
+    if (this._style_id !== undefined) json_object['style_id'] = this._style_id
   }
 
   /**
@@ -297,6 +313,12 @@ export abstract class Class_ProtoTag {
     }
     if (json_object['style_patch'] !== undefined) {
       this._style_patch = parseStylePatch(json_object['style_patch'])
+    }
+    // SA#541 - cle absente = aucun style ; chaine vide ou non-chaine = aucun style.
+    if (json_object['style_id'] !== undefined) {
+      const style_id = json_object['style_id']
+      this._style_id = (typeof style_id === 'string' && style_id !== '') ? style_id : undefined
+      this._ref_sankey.tagStylesConfigUpdated?.()
     }
   }
 
@@ -411,6 +433,17 @@ export abstract class Class_ProtoTag {
     this.update()
   }
 
+  // SA#541 - Style nomme impose par l'etiquette (id de la liste des Styles).
+  public get style_id(): string | undefined { return this._style_id }
+  public set style_id(value: string | undefined) {
+    const next = value === '' ? undefined : value
+    if (this._style_id === next) return
+    this._style_id = next
+    this._ref_sankey.tagStylesConfigUpdated?.()
+    // Redessine les elements porteurs (et la legende)
+    this.update()
+  }
+
   public get color() { return this._color }
   public set color(value: string) {
     // Avoid useless updates
@@ -499,6 +532,11 @@ export abstract class Class_Tag extends Class_ProtoTag {
   public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
+      // SA#541 - ce que porte l'element change : ses couches de style sont a recalculer.
+      // Tout attachement d'etiquette (noeud, valeur, valeur coordonnee) passe par ici.
+      // Appel en `?.()` (comme tous les signaux d'epoque de ce fichier) : simple invalidation
+      // de cache, et des tests unitaires utilisent un diagramme simule qui ne la porte pas.
+      this._ref_sankey.tagStylesUpdated?.()
       _.addTag(this)
     }
   }
@@ -506,6 +544,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   public removeReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     if (this.hasGivenReference(_)) {
       delete this._references[_.id]
+      this._ref_sankey.tagStylesUpdated?.()
       _.removeTag(this)
     }
   }

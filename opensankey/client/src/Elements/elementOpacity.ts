@@ -94,9 +94,10 @@ const DIMMING_TYPE_DATA = 'data_label'
 /**
  * ÉTAGE 1 — l'opacité que porte l'élément lui-même, avant tout garde de rendu.
  *
- * **C'est le seul point de lecture de la source.** Quand l'opacité deviendra portée par une
- * étiquette, c'est cette fonction — et elle seule — qui changera : les sept sites de dessin
- * suivront sans y toucher.
+ * **C'est le seul point de lecture de la source.** SA#541 : l'opacité portée par une étiquette
+ * n'a pas de chemin propre ici — elle arrive par l'attribut `shape_opacity` lui-même, que la
+ * cascade des styles d'étiquette résout (`Class_ProtoElement.getElementProperty`). Les sept sites
+ * de dessin la suivent donc sans y toucher.
  */
 export function elementSourceOpacity(element: Type_OpacityBearer): number {
   return element.shape_opacity
