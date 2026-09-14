@@ -146,14 +146,36 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node
   // L'ancien code se limitait à computeAutoSankey + reorganize du seul nœud central,
   // d'où les croisements et le défaut de centrage à la création (corrigés dès qu'on
   // relançait la disposition auto).
-  // Espacements par défaut du style (NE PAS utiliser app_data.layout_v/h_spacing : ce
-  // réglage est dimensionné pour le GRAND diagramme principal et donne des écarts
-  // énormes sur le board unitaire compact). NB : le board est forcé en 'free'
-  // (cf. buildUnitaryDrawingArea) — sinon le mode papier hérité du source remplit la
-  // hauteur de la page et ces espacements sont ignorés.
-  const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
-  const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
-  drawing_area.nodePositioning.computeAutoSankey(false, true, default_dx, default_dy)
+  // ESPACEMENTS : CEUX DES STYLES UNITAIRES, et pas ceux du style `default`.
+  //
+  // Les styles qu'on vient d'appliquer portent la disposition voulue pour l'étoile :
+  // `shape_position_dx: 250`, `shape_position_dy: 25` (SankeyUnitaryNode{,Input,Output}
+  // Style, cf. Elements/ElementStyle). Le style `default` remis à l'usine, lui, ne
+  // déclare aucun de ces deux attributs et retombe sur les valeurs de la classe de
+  // style, dont un pas vertical de 50 — soit le DOUBLE de l'espacement unitaire. Le
+  // passer ici, ce que faisait ce code, étirait donc l'étoile en hauteur jusqu'à lui
+  // faire remplir la page, au lieu de l'aperçu compact voulu. Le style unitaire
+  // existait bien ; il n'était simplement jamais consulté pour la disposition.
+  // (Mesuré par le test « espace les entrees avec le style unitaire » :
+  // unitaryExtraction.test.ts rendait 50 au lieu de 25 sur deux entrées empilées.)
+  //
+  // Pourquoi les passer EXPLICITEMENT plutôt que de ne rien passer ? Parce que les deux
+  // axes ne retombent pas sur la même chose quand l'argument manque
+  // (NodePositioningAutoSankey, computeNodesPositions) :
+  //     horizontal : `h_spacing ?? nodes_dict[…].shape_position_dx`  → le STYLE du nœud
+  //     vertical   : `v_spacing ?? styles_dict['default'].shape_position_dy` → 50
+  // Le vertical ignore le style de l'élément. Tant que cette asymétrie est là, c'est à
+  // l'appelant de dire ce qu'il veut, sur les deux axes.
+  //
+  // NE PAS revenir à `app_data.layout_v/h_spacing` : ce réglage est dimensionné pour le
+  // GRAND diagramme principal. NB : le board est forcé en 'free' (buildUnitaryDrawingArea),
+  // sinon le mode papier hérité du source remplirait la hauteur de la page et tout
+  // espacement serait ignoré.
+  const unitary_style = drawing_area.sankey.styles_dict[SankeyUnitaryNodeInputStyle]
+  const default_style = drawing_area.sankey.styles_dict['default']
+  const unitary_dx = unitary_style?.shape_position_dx ?? default_style.shape_position_dx ?? 0
+  const unitary_dy = unitary_style?.shape_position_dy ?? default_style.shape_position_dy ?? 0
+  drawing_area.nodePositioning.computeAutoSankey(false, true, unitary_dx, unitary_dy)
   //drawing_area.nodePositioning.computeParametrization(true)
   drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
   // Rester en mode 'absolute' : les positions x/y calculées ci-dessus sont respectées
