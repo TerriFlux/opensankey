@@ -1842,11 +1842,40 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateSpreadsheet() {
+    if (!this._spreadsheet_is_selection_source) this._spreadsheet_rebuild_needed = true
     this._add_waiting_process(
       'ref_to_spreadsheet',
-      (_this: Class_MenuConfig) => { _this._ref_to_spreadsheet.current() }
+      (_this: Class_MenuConfig) => {
+        if (!_this._spreadsheet_rebuild_needed) return
+        _this._spreadsheet_rebuild_needed = false
+        _this._ref_to_spreadsheet.current()
+      }
     )
   }
+
+  /**
+   * os#1387 — LE TABLEUR EST LA SOURCE de ce changement de sélection : ne le reconstruis pas.
+   *
+   * Sélectionner un élément passe par `updateAllComponentsRelatedToNodes`, donc par
+   * `updateSpreadsheet` : c'est bon quand la sélection vient du canevas, c'est absurde quand
+   * elle vient d'un clic dans le tableur lui-même — le rebuild dispose et recrée l'unit Univer
+   * SOUS les doigts de l'utilisateur, au moment précis où il navigue dans les cellules.
+   *
+   * Le drapeau ne fait PAS taire le rebuild, il s'abstient seulement de le DEMANDER : si une
+   * édition de cellule de la même rafale en a réclamé un (elle, elle a changé des valeurs), le
+   * besoin reste marqué et le rebuild a lieu comme avant. C'est ce qui distingue ce garde-fou
+   * d'une annulation du process en attente, qui, elle, emporterait le rebuild légitime.
+   */
+  public withSpreadsheetAsSelectionSource(fn: () => void) {
+    const before = this._spreadsheet_is_selection_source
+    this._spreadsheet_is_selection_source = true
+    try { fn() } finally { this._spreadsheet_is_selection_source = before }
+  }
+
+  /** Un rebuild du classeur a été demandé par autre chose que le tableur lui-même. */
+  private _spreadsheet_rebuild_needed = false
+  /** Vrai le temps d'un geste de pointage venu du tableur (cf. withSpreadsheetAsSelectionSource). */
+  private _spreadsheet_is_selection_source = false
 
   /**
    * Re-render all menus for node config
