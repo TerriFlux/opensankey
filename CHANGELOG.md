@@ -2,6 +2,20 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.5] — 2026-09-11
+
+### Viewer embarqué
+
+- **Les info-bulles et pop-ups de présentation (OS#305) répondent dans un viewer embarqué.**
+  `OpenSankeyApp` et le viewer MIT recréaient la `menu_configuration` à chaque rendu ; un hôte
+  qui re-rend le viewer à chaque changement de prop (sélecteurs de région ou d'essence du viewer
+  CARTOFOB) laissait tous les panneaux abonnés à une instance périmée : `panels.setMode`
+  remplissait `open_ids` sans qu'aucun panneau ne s'affiche. Nouveau hook `useMenuConfiguration`
+  (une configuration par `app_data`, avec le toast Chakra).
+- `ViewApp` exporte le socle commun `useViewerAppData` (options de publication, `initial_data`,
+  ré-application réactive des sélections) ; le viewer de la couche SaaS le réutilise au lieu de
+  le recopier.
+
 ## [1.3.4] — 2026-09-09
 
 ### Échelle (os#1383)

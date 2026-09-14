@@ -46,6 +46,7 @@ import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
+import { effectiveOpacity } from './elementOpacity'
 import { resolveScaleCarrierTag } from '../types/ScaleResolution'
 import { countLinkDraw } from '../types/DrawCounters'
 import { Class_LinkAttribute } from './Element'
@@ -1139,7 +1140,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (triggered)
       return
     // Phase 2 — rendu : (re)dessiner toutes les pointes connues et demandées.
-    const da = this.sankey.drawing_area
     const border_visible = this.shape_border_visible
     const border_color = this.shape_border_color
     const border_dashed = this.shape_border_dashed
@@ -1154,7 +1154,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
         .attr('class', 'link_arrow')
         .attr('d', d)
         .attr('fill', this.shape_color_visible ? fill : 'none')
-        .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
+        .attr('fill-opacity', effectiveOpacity(this, { dim: 'no_data' }))
         .attr('stroke', border_visible ? border_color : 'none')
         .attr('stroke-width', border_visible ? border_thickness : 0)
         .attr('stroke-opacity', border_visible ? 1 : 0)

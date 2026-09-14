@@ -15,6 +15,16 @@ import { resources_sunburst } from './traduction_sunburst'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 
+// #538 — SUPPORTED_LANGS, le type `SupportedLang` et les deux aides de lecture vivent désormais
+// dans le module feuille `supportedLangs.ts` : un composant qui a seulement besoin de résoudre la
+// langue courante (une modale, par exemple) n'a plus à tirer les catalogues i18next ni leur
+// initialisation. Ré-exportés ici pour les imports existants — dont celui d'`editor/traductions.tsx`
+// (#1335), qui en a besoin pour construire les ressources du dialogue de traitement.
+import { SUPPORTED_LANGS } from './supportedLangs'
+import type { SupportedLang } from './supportedLangs'
+export { SUPPORTED_LANGS, resolve_supported_lang, localized_label } from './supportedLangs'
+export type { SupportedLang } from './supportedLangs'
+
 // #1335 — Ce module est la BASE viewer des traductions : il n'importe RIEN de la zone d'édition
 // (dialogues, menus de configuration). Les contributions de l'atelier d'édition sont appliquées
 // par `editor/traductions.tsx`, qui importe ce module et non l'inverse. Voir #1331 : le paquet
@@ -101,11 +111,6 @@ export interface TranslationConfig {
  * Convertit le format { key: { en: '...', fr: '...' } }
  * en format i18next { en: { translation: { key: '...' } }, fr: { translation: { key: '...' } } }
  */
-// Exportée depuis #1335 : `editor/traductions.tsx` en a besoin pour construire les ressources du
-// dialogue de traitement et pour pousser le complément dans i18next.
-export const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it', 'zh-CN', 'ja'] as const
-type SupportedLang = typeof SUPPORTED_LANGS[number]
-
 // Langues effectivement présentes dans un objet resources (racines en/fr/es/de/it/zh-CN/ja)
 const langs_of = (resources: I18nResources): SupportedLang[] =>
   SUPPORTED_LANGS.filter(lang => resources[lang] !== undefined)
