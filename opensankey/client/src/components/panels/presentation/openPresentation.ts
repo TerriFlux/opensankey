@@ -28,6 +28,17 @@ import {
   presentation_block_registry, renderPresentationBlock
 } from './PresentationBlockRegistry'
 import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
+// Module feuille sans import : ne tire pas LegendGenerator (cf. son en-tête).
+import { isLegendChildId } from '../../../Elements/legendIds'
+
+/**
+ * #542 — l'élément est-il une zone générée par la légende ? Une entrée de légende
+ * n'a qu'une chose à dire au survol : la définition de son étiquette ou de son
+ * groupe. Les trois règles propres à ces zones (déclencheur, texte survolable,
+ * pas de pop-up vide) partent de ce seul prédicat.
+ */
+const isLegendEntry = (element: Type_Presentable): boolean =>
+  typeof element.id === 'string' && isLegendChildId(element.id)
 
 // COMPOSITION PAR DÉFAUT de l'INFO-BULLE : les blocs légers, cochables dans le
 // sous-menu Info-bulle. Les DIAGRAMMES (unitaire / analyse) n'y figurent plus :
@@ -138,6 +149,9 @@ export const openPresentationFor = (
   element: Type_Presentable,
   anchor?: { x: number, y: number }
 ): boolean => {
+  // #542 — une entrée de légende sans définition n'a rien à montrer : la
+  // pop-up n'afficherait que « Rien à afficher pour cet élément ».
+  if (isLegendEntry(element) && !tooltipWouldRenderSomething(app_data, element)) return false
   const panels = app_data.menu_configuration.panels
   const id = presentationPanelId(element.id)
   // BASCULE — ce même clic vient de refermer la pop-up de cet élément (couche
@@ -225,11 +239,28 @@ export const enforcePopupCap = (app_data: Class_ApplicationData, incoming_id: st
 // `tooltip_trigger` / `tooltip_delay_ms`, résolus par la cascade), et non plus un
 // réglage document.
 
-/** Déclencheur résolu d'un élément (défaut : MAJ + survol). */
+/**
+ * Déclencheur résolu d'un élément (défaut : MAJ + survol).
+ *
+ * #542 — défaut SURVOL NU pour une entrée de légende : le survol y met déjà en
+ * exergue les éléments de l'étiquette, et la définition est ce qu'on vient y lire
+ * — exiger MAJ la rendrait introuvable au lecteur. Un déclencheur posé
+ * explicitement par l'auteur reste prioritaire.
+ */
 const triggerOf = (element: Type_Presentable): 'hover' | 'shift' | 'alt' => {
   const raw = element.getElementProperty('tooltip_trigger')
-  return raw === 'hover' || raw === 'alt' || raw === 'shift' ? raw : 'shift'
+  if (raw === 'hover' || raw === 'alt' || raw === 'shift') return raw
+  return isLegendEntry(element) ? 'hover' : 'shift'
 }
+
+/**
+ * #542 — le survol du TEXTE d'un élément (tspan) ouvre-t-il sa présentation ?
+ * Non en général : le libellé est la poignée d'édition et de glisser des
+ * labels. Oui pour une entrée de légende : son texte en occupe presque toute la
+ * surface, l'exclure ne laisserait que la pastille pour lire la définition.
+ */
+export const hoverOnTextOpensPresentation = (element: Type_Presentable): boolean =>
+  isLegendEntry(element)
 
 /** L'événement de survol satisfait-il le déclencheur RÉGLÉ SUR L'ÉLÉMENT ? */
 export const matchesPresentationTrigger = (
