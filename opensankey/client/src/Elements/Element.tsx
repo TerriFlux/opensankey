@@ -52,6 +52,23 @@ import {
   Type_Orientation, ValueLabelAttributeTypes,
   ConfigType
 } from './ElementsAttributesConfig'
+// SA#541 — module FEUILLE (aucun import) : il ne rouvre pas le cycle décrit plus haut.
+import { buildColorLockIndex, tagStyleLayers, topLayerDefining } from './tagStyles'
+import type { Type_TagStyleLayer, Type_TagStyleOwner } from './tagStyles'
+
+// SA#541 — index « couleur → cadenas », calculé au PREMIER usage : `ElementsAttributesConfig` et
+// `Element` se chargent en cycle, la config peut ne pas exister encore à l'évaluation du module.
+let tag_style_color_locks: { [attribute: string]: string } | undefined = undefined
+function colorLockOf(attribute: string): string | undefined {
+  if (tag_style_color_locks === undefined) tag_style_color_locks = buildColorLockIndex(Object.keys(ALL_ATTRIBUTES_CONFIG))
+  return tag_style_color_locks[attribute]
+}
+
+/** SA#541 — porteur d'un style d'étiquette tel qu'un élément le voit (étiquette ou groupe). */
+export type Type_ElementTagStyleOwner = Type_TagStyleOwner & { name: string }
+/** SA#541 — couche de style imposée à un élément par une étiquette ou un groupe (cf. tagStyles.ts). */
+export type Type_ElementTagStyleLayer = Type_TagStyleLayer<Class_ElementStyle, Type_ElementTagStyleOwner>
+const NO_TAG_STYLE_LAYERS: readonly Type_ElementTagStyleLayer[] = []
 
 // OS#1299 — attributs portant du TEXTE AFFICHÉ traduisible (même modèle que le
 // nom des nœuds/zones de texte) : stockés en interne comme string (historique)
@@ -447,6 +464,13 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   protected _position: Type_BaseElementPosition
   protected _style: Class_ElementStyle[]
 
+  // SA#541 — couches de style imposées par les étiquettes, MÉMORISÉES : `getElementProperty` est
+  // la lecture la plus fréquente du rendu. Clé = époque des styles d'étiquette du diagramme +
+  // sélection qui fixe la valeur portée (flux), cf. `tag_style_layers`.
+  private _tag_style_layers: readonly Type_ElementTagStyleLayer[] = NO_TAG_STYLE_LAYERS
+  private _tag_style_epoch: number = -1
+  private _tag_style_selection: string = ''
+
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
@@ -589,10 +613,75 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     return this._config[k].default
   }
   public getElementProperty(k: keyof ConfigType) {
+    // SA#541 — un style d'étiquette l'emporte sur la mise en forme locale et sur les styles de
+    // l'élément, pour les seuls paramètres qu'il définit. Sans style d'étiquette dans le diagramme
+    // (tous les fichiers existants), `tagStyleLayerImposing` rend `undefined` sans rien calculer.
+    const imposed = this.tagStyleLayerImposing(k)
+    if (imposed !== undefined) return imposed.style.getElementProperty(k)
     if (this._storage[k] !== undefined) {
       return this._storage[k]
     }
     return this.getStyleProperty(k)
+  }
+
+  /**
+   * SA#541 — couches de style imposées à cet élément par ses étiquettes, de la MOINS prioritaire à
+   * la PLUS prioritaire (ordre des listes, cf. `tagStyles.ts`). Liste vide tant que le diagramme
+   * n'a aucun style d'étiquette.
+   */
+  public get tag_style_layers(): readonly Type_ElementTagStyleLayer[] {
+    const sankey = this.drawing_area?.sankey
+    if (!sankey || !sankey.has_tag_styles) return NO_TAG_STYLE_LAYERS
+    const epoch = sankey.tag_styles_epoch
+    const selection = this.tagStyleSelectionKey()
+    if (epoch !== this._tag_style_epoch || selection !== this._tag_style_selection) {
+      const layers = this.computeTagStyleLayers()
+      // `null` : l'élément n'est pas encore construit — surtout ne rien mémoriser.
+      if (layers === null) return NO_TAG_STYLE_LAYERS
+      this._tag_style_layers = layers
+      this._tag_style_epoch = epoch
+      this._tag_style_selection = selection
+    }
+    return this._tag_style_layers
+  }
+
+  /**
+   * SA#541 — la couche qui impose le paramètre `k`, ou `undefined` : aucune couche ne le définit,
+   * ou c'est une couleur que l'élément a verrouillée par son cadenas (`<k>_sustainable` posé sur
+   * l'élément — le seul cadenas qui existe).
+   */
+  public tagStyleLayerImposing(k: keyof ConfigType): Type_ElementTagStyleLayer | undefined {
+    const layers = this.tag_style_layers
+    if (layers.length === 0) return undefined
+    const lock = colorLockOf(k as string)
+    if (lock !== undefined && this._storage[lock as keyof ConfigType] === true) return undefined
+    return topLayerDefining(layers, style => style.getElementProperty(k))
+  }
+
+  /** SA#541 — couches propres à la famille de l'élément (nœud, flux) ; `null` s'il n'est pas prêt. */
+  protected computeTagStyleLayers(): readonly Type_ElementTagStyleLayer[] | null {
+    return NO_TAG_STYLE_LAYERS
+  }
+
+  /** SA#541 — ce qui, en plus des étiquettes, change ce que porte l'élément (flux : sélection de données). */
+  protected tagStyleSelectionKey(): string {
+    return ''
+  }
+
+  /**
+   * SA#541 — couches d'après les groupes de la famille de l'élément et les étiquettes qu'il porte.
+   * Le style `default`, pré-rempli de TOUS les défauts usine, n'est jamais une couche : il
+   * imposerait chaque paramètre du diagramme.
+   */
+  protected resolveTagStyleLayers(
+    groups: readonly (Type_ElementTagStyleOwner & { tags_list: readonly Type_ElementTagStyleOwner[] })[],
+    carries: (tag: Type_ElementTagStyleOwner) => boolean
+  ): Type_ElementTagStyleLayer[] {
+    const styles = this.sankey.styles_dict
+    return tagStyleLayers<Type_ElementTagStyleOwner, Type_ElementTagStyleOwner, Class_ElementStyle>(groups, carries, style_id => {
+      const style = styles[style_id]
+      return (style && !style.is_default_style) ? style : undefined
+    })
   }
 
   public get style(): readonly Class_ElementStyle[] {
@@ -1495,6 +1584,9 @@ export class Class_ElementStyle {
         set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
           this._storage[key] = value
           Object.values(this._references).forEach(ref => ref.draw())
+          // SA#541 — les éléments qui reçoivent ce style par une étiquette n'en sont pas des
+          // références : sans cette ligne, éditer le style ne les redessinerait pas.
+          this._drawing_area?.sankey?.redrawTagStyleCarriers(this)
         },
         enumerable: true,
         configurable: true
@@ -1568,6 +1660,8 @@ export class Class_ElementStyle {
   /** Redessine tous les éléments qui référencent ce style. */
   public redrawReferences() {
     Object.values(this._references).forEach(ref => ref.draw())
+    // SA#541 — idem pour les porteurs d'étiquettes qui imposent ce style
+    this._drawing_area?.sankey?.redrawTagStyleCarriers(this)
   }
 
   /**

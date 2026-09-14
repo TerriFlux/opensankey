@@ -156,6 +156,16 @@ export class Class_Sankey {
   protected _flux_tags_fingerprint: string
   protected _data_tags_fingerprint: string
 
+  // SA#541 — époques des styles d'étiquette. `_tag_styles_config_epoch` bouge quand un style
+  // d'étiquette peut apparaître ou disparaître (style posé ou retiré, style créé ou supprimé,
+  // étiquette ou groupe supprimé) : il tient `has_tag_styles` à jour. `_tag_styles_epoch` bouge
+  // en plus à chaque changement de ce que portent les éléments (étiquettes attachées, ordre des
+  // listes) : il invalide les couches mémorisées par chaque élément.
+  private _tag_styles_epoch: number = 0
+  private _tag_styles_config_epoch: number = 0
+  private _has_tag_styles: boolean = false
+  private _has_tag_styles_epoch: number = -1
+
   private _icon_catalog: { [x: string]: string } = {}
 
   // Ratio Flux constraints — diagram-level relations between flux (incl. the
@@ -1303,6 +1313,8 @@ export class Class_Sankey {
         id, name, true, this.default_style, this.drawing_area
       )
       this._styles[id] = style
+      // SA#541 — une étiquette qui référençait déjà cet id (lecture de fichier) le trouve désormais
+      this.tagStylesConfigUpdated()
       return style
     }
     else {
@@ -1314,6 +1326,8 @@ export class Class_Sankey {
     if (this._styles[style.id] !== undefined) {
       this._styles[style.id].delete()
       delete this._styles[style.id]
+      // SA#541 — une étiquette qui l'imposait n'impose plus rien (son `style_id` reste, inerte)
+      this.tagStylesConfigUpdated()
     }
   }
 
@@ -1624,6 +1638,8 @@ export class Class_Sankey {
   public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
     const macro_tag_group = this.getTagGroupsAsDict(type_group)
     if (macro_tag_group[id] !== undefined) {
+      // SA#541 — le groupe et ses étiquettes emportent leurs styles
+      this.tagStylesConfigUpdated()
       // Get Tag group
       const tag_group = macro_tag_group[id]
       // Prune value tree for data tags
@@ -1688,6 +1704,8 @@ export class Class_Sankey {
       if (idx > 0) {
         order.splice(idx, 1)
         order.splice(idx - 1, 0, id)
+        // SA#541 — l'ordre des groupes départage les styles d'étiquette
+        this.tagStylesUpdated()
       }
     }
   }
@@ -1699,6 +1717,8 @@ export class Class_Sankey {
       if (idx >= 0 && idx < order.length - 1) {
         order.splice(idx, 1)
         order.splice(idx + 1, 0, id)
+        // SA#541 — l'ordre des groupes départage les styles d'étiquette
+        this.tagStylesUpdated()
       }
     }
   }
@@ -1714,6 +1734,50 @@ export class Class_Sankey {
   public nodeTagsUpdated() { this._node_tags_fingerprint = randomId() }
   public fluxTagsUpdated() { this._flux_tags_fingerprint = randomId() }
   public dataTagsUpdated() { this._data_tags_fingerprint = randomId() }
+
+  /** SA#541 — ce que portent les éléments a changé (étiquettes, ordre des listes). */
+  public tagStylesUpdated() { this._tag_styles_epoch++ }
+  /** SA#541 — un style d'étiquette a pu apparaître ou disparaître. */
+  public tagStylesConfigUpdated() {
+    this._tag_styles_config_epoch++
+    this._tag_styles_epoch++
+  }
+  public get tag_styles_epoch() { return this._tag_styles_epoch }
+
+  /**
+   * SA#541 — le diagramme porte-t-il au moins un style d'étiquette applicable ? Faux pour tous les
+   * fichiers existants : c'est ce qui rend la couche gratuite (`Class_ProtoElement.tag_style_layers`
+   * s'arrête là, sans calculer quoi que ce soit par élément).
+   */
+  public get has_tag_styles(): boolean {
+    if (this._has_tag_styles_epoch !== this._tag_styles_config_epoch) {
+      const styles = this._styles
+      const usable = (id: string | undefined) =>
+        id !== undefined && styles[id] !== undefined && !styles[id].is_default_style
+      this._has_tag_styles = [...this.getTagGroupsAsList('node_taggs'), ...this.getTagGroupsAsList('flux_taggs')]
+        .some(group => usable(group.style_id) ||
+          (group.tags_list as { style_id?: string }[]).some(tag => usable(tag.style_id)))
+      this._has_tag_styles_epoch = this._tag_styles_config_epoch
+    }
+    return this._has_tag_styles
+  }
+
+  /**
+   * SA#541 — redessine les éléments qui reçoivent `style` par une étiquette ou par le style d'un
+   * groupe : ils ne sont pas des références du style, son setter ne les atteint pas.
+   */
+  public redrawTagStyleCarriers(style: Class_ElementStyle) {
+    if (!this.has_tag_styles) return
+    const node_groups = this.getTagGroupsAsList('node_taggs')
+    const flux_groups = this.getTagGroupsAsList('flux_taggs')
+    // Style d'un GROUPE : il touche tous les éléments sans étiquette de ce groupe.
+    if (node_groups.some(group => group.style_id === style.id)) this.nodes_list.forEach(node => node.draw())
+    if (flux_groups.some(group => group.style_id === style.id)) this.links_list.forEach(link => link.draw())
+    const all_groups = [...node_groups, ...flux_groups]
+    all_groups.forEach(group => (group.tags_list as { style_id?: string, update(): void }[])
+      .filter(tag => tag.style_id === style.id)
+      .forEach(tag => tag.update()))
+  }
 
   public get selected_node_tags_links_list(): Class_LinkElement[] {
     return Object.values(this._links)
