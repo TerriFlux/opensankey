@@ -242,6 +242,14 @@ export const MAIN_ZONE_CANVAS_ID = 'os.repr.sankey'
 export const MAIN_ZONE_SPREADSHEET_ID = 'os.repr.spreadsheet'
 export const MAIN_ZONE_DOC_ID = 'os.repr.doc'
 export const MAIN_ZONE_UNITARY_ID = 'os.repr.unitary'
+// La vue JSON du format natif. Elle était un SOUS-ONGLET du tableur (`main_zone_spreadsheet_mode`,
+// supprimé) : le dernier câblage « un par un » que le registre des représentations devait solder.
+// C'est pourtant le même sujet — le document entier — rendu autrement, donc une entrée de l'axe
+// représentation exactement comme le tableur ou la doc. Trois conséquences, toutes voulues :
+// l'en-tête de fenêtre perd une ligne (son sélecteur de nature porte déjà le choix), le JSON et
+// la grille peuvent être ouverts CÔTE À CÔTE (impossible avec un mode exclusif), et une
+// publication peut l'offrir ou le retirer par `PublishOptions.representations` comme le reste.
+export const MAIN_ZONE_JSON_ID = 'os.repr.json'
 // os#1387 — la représentation « Unit. » d'ÉLÉMENT (OS+), qui remplace le panneau unitaire à
 // hôte externe. Nommée ici pour que la grande zone sache y rediriger les anciens appels.
 export const MAIN_ZONE_UNIT_WINDOW_ID = 'osp.repr.unit'
@@ -251,7 +259,8 @@ export const URL_MAIN_ZONE_SHORT_NAMES: { [id: string]: string } = {
   [MAIN_ZONE_CANVAS_ID]: 'diagram',
   [MAIN_ZONE_SPREADSHEET_ID]: 'spreadsheet',
   [MAIN_ZONE_DOC_ID]: 'doc',
-  [MAIN_ZONE_UNITARY_ID]: 'unitary'
+  [MAIN_ZONE_UNITARY_ID]: 'unitary',
+  [MAIN_ZONE_JSON_ID]: 'json'
 }
 export const URL_MAIN_ZONE_LONG_NAMES: { [short: string]: string } = Object.fromEntries(
   Object.entries(URL_MAIN_ZONE_SHORT_NAMES).map(([id, short]) => [short, id])
@@ -273,9 +282,6 @@ export const mainZoneRightColumnWidthPx = (split_ratio: number): number => {
 /** Hauteur (px) du bandeau du bas pour une hauteur demandée, bornée par ce que l'écran laisse. */
 export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number): number =>
   Math.min(Math.max(MAIN_ZONE_MIN_BOTTOM_PX, wanted_px), Math.max(MAIN_ZONE_MIN_BOTTOM_PX, content_h - MAIN_ZONE_MIN_BOTTOM_PX))
-// Sous-onglets du panneau Tableur : grille Univer ou vue JSON (lecture seule) du diagramme.
-// L'éditeur texte SankeyMATIC, lui, vit dans un dialogue dédié (ref_setter_show_sankeymatic_editor).
-export type Type_SheetMode = 'grid' | 'json'
 // Largeur (px) de la colonne d'outils rétractable à droite (barre verticale + config + filtres +
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
@@ -480,11 +486,6 @@ export class Class_MenuConfig {
   protected _main_zone_split_ratio: number = 2 / 3
   // Hauteur (px) du bandeau du bas, réglée par sa poignée.
   protected _main_zone_bottom_px: number = 280
-  // Sous-onglet courant du Tableur (grille/JSON). Porté ici et non par un useState de
-  // SpreadsheetPanel : le panneau est démonté quand le tableur est fermé, donc un état local
-  // repartirait toujours sur 'grid'. État TRANSITOIRE : volontairement absent de
-  // mainZoneStateToJSON/FromJSON.
-  protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
   // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
   // OS#300 Lot 2 avait rendu la barre TOUJOURS visible et neutralisé
@@ -972,8 +973,6 @@ export class Class_MenuConfig {
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
   public get main_zone_bottom_px() { return this._main_zone_bottom_px }
   public set main_zone_bottom_px(v: number) { this._main_zone_bottom_px = v; this._notifyMainZone() }
-  public get main_zone_spreadsheet_mode() { return this._main_zone_spreadsheet_mode }
-  public set main_zone_spreadsheet_mode(v: Type_SheetMode) { this._main_zone_spreadsheet_mode = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     return this._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }
