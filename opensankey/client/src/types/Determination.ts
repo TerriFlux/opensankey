@@ -375,7 +375,7 @@ export const determinationStatusOf = (
 }
 
 /**
- * #544 — Les six états du « Statut de réconciliation », du PIRE au MEILLEUR.
+ * #544 — Les six états du « Statut après réconciliation », du PIRE au MEILLEUR.
  *
  * Calculés par la réconciliation elle-même (`reconciliation_statuses`,
  * `mfa_problem_determination.py`) : une valeur déterminée y prend le pire de ce
