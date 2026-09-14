@@ -658,6 +658,30 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     return topLayerDefining(layers, style => style.getElementProperty(k))
   }
 
+  /**
+   * SA#541 — une couche définit la couleur `k`, mais le cadenas de couleur posé sur l'élément la
+   * tient à distance : la couleur de l'élément doit alors l'emporter, y compris sur les règles de
+   * couleur qui, sans style d'étiquette, ignorent ce cadenas (flux).
+   */
+  public isTagStyleLockedOut(k: keyof ConfigType): boolean {
+    const lock = colorLockOf(k as string)
+    if (lock === undefined || this._storage[lock as keyof ConfigType] !== true) return false
+    return topLayerDefining(this.tag_style_layers, style => style.getElementProperty(k)) !== undefined
+  }
+
+  /**
+   * SA#541 — la couleur `k` est-elle PROPRE à l'élément plutôt que dérivée de la couleur de sa
+   * forme ? Bordure, fonds et libellés suivent la couleur de la forme sauf cadenas
+   * (`<k>_sustainable`) : une couleur imposée par un style d'étiquette doit tenir de même, sans
+   * allumer pour autant le cadenas que montre l'inspecteur.
+   */
+  public keepsOwnColor(k: keyof ConfigType): boolean {
+    // Lecture directe du cadenas, comme le faisait le site appelant : le résultat est inchangé
+    // pour tout élément sans style d'étiquette.
+    if ((this as unknown as { [attribute: string]: unknown })[`${String(k)}_sustainable`] === true) return true
+    return this.tagStyleLayerImposing(k) !== undefined
+  }
+
   /** SA#541 — couches propres à la famille de l'élément (nœud, flux) ; `null` s'il n'est pas prêt. */
   protected computeTagStyleLayers(): readonly Type_ElementTagStyleLayer[] | null {
     return NO_TAG_STYLE_LAYERS
@@ -674,11 +698,14 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
    * imposerait chaque paramètre du diagramme.
    */
   protected resolveTagStyleLayers(
-    groups: readonly (Type_ElementTagStyleOwner & { tags_list: readonly Type_ElementTagStyleOwner[] })[],
+    groups: readonly (Type_ElementTagStyleOwner & { use_colors?: boolean, tags_list: readonly Type_ElementTagStyleOwner[] })[],
     carries: (tag: Type_ElementTagStyleOwner) => boolean
   ): Type_ElementTagStyleLayer[] {
     const styles = this.sankey.styles_dict
-    return tagStyleLayers<Type_ElementTagStyleOwner, Type_ElementTagStyleOwner, Class_ElementStyle>(groups, carries, style_id => {
+    // Interrupteur du groupe « Appliquer les styles associés » (`use_colors`) : fermé, le groupe
+    // n'impose rien — interrupteur par groupe, fermé par défaut (arbitrage du chantier).
+    const switched_on = groups.filter(group => group.use_colors === true)
+    return tagStyleLayers<Type_ElementTagStyleOwner, Type_ElementTagStyleOwner, Class_ElementStyle>(switched_on, carries, style_id => {
       const style = styles[style_id]
       return (style && !style.is_default_style) ? style : undefined
     })

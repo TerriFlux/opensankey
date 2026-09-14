@@ -2,6 +2,7 @@ import { Class_ApplicationData } from './ApplicationData'
 import type { Class_DataTag, Class_Tag } from './Tag'
 import type { Class_ElementStyle } from '../Elements/Element'
 import { effectiveOpacity } from '../Elements/elementOpacity'
+import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
 
 // jest 27/jsdom n'expose pas structuredClone (utilisé par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -14,7 +15,9 @@ if (typeof globalThis.structuredClone !== 'function') {
  * Arbitrages d'Alexandre (2026-09-14) : un style nommé par étiquette surcharge le style propre des
  * éléments ET leur mise en forme locale, sauf couleur verrouillée ; conflits réglés par l'ordre des
  * listes (groupe le plus bas, puis étiquette la plus bas) ; un groupe peut imposer un style aux
- * éléments qui ne portent aucune de ses étiquettes. Côté flux, résolution sur la valeur affichée.
+ * éléments qui ne portent aucune de ses étiquettes ; les styles d'un groupe ne s'appliquent que si
+ * son interrupteur « Appliquer les styles associés » (`use_colors`) est ouvert. Côté flux,
+ * résolution sur la valeur affichée.
  */
 function makeApp() {
   const app = new Class_ApplicationData(false)
@@ -36,6 +39,7 @@ describe('SA#541 — sans style d étiquette, rien ne change', () => {
   it('aucune couche, cascade intacte, même avec des étiquettes portées', () => {
     const { sankey, collecte } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
     collecte.addTag(fiab.addTag('Robuste', 'robuste') as Class_Tag)
     const before = collecte.shape_opacity
     expect(sankey.has_tag_styles).toBe(false)
@@ -50,6 +54,7 @@ describe('SA#541 — étiquettes de nœuds', () => {
   it('le style de l étiquette surcharge le style de l élément ET sa mise en forme locale', () => {
     const { sankey, collecte, laiteries, makeStyle } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
     const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
     collecte.addTag(robuste)
     collecte.shape_opacity = 0.3
@@ -69,25 +74,90 @@ describe('SA#541 — étiquettes de nœuds', () => {
     expect(collecte.attributes.shape_opacity).toBe(0.3)
   })
 
-  it('couleur : le style gagne même sur la coloration par groupe, sauf cadenas local', () => {
+  it('interrupteur « Appliquer les styles associés » fermé : le groupe n impose rien', () => {
     const { sankey, collecte, makeStyle } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
     const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
     collecte.addTag(robuste)
+    collecte.shape_opacity = 0.3
+    robuste.style_id = makeStyle('Robuste', { shape_opacity: 0.8 }).id
+
+    expect(fiab.use_colors).toBe(false)
+    expect(sankey.has_tag_styles).toBe(false)
+    expect(collecte.shape_opacity).toBe(0.3)
+    fiab.use_colors = true
+    expect(collecte.shape_opacity).toBe(0.8)
+    fiab.use_colors = false
+    expect(collecte.shape_opacity).toBe(0.3)
+  })
+
+  it('couleur : le style gagne, la couleur d étiquette historique ne s applique plus, le cadenas local tient', () => {
+    const { sankey, collecte, laiteries, makeStyle } = makeApp()
+    const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
+    const fiable = fiab.addTag('Fiable', 'fiable') as Class_Tag
+    fiable.color = '#0000ff'
+    collecte.addTag(robuste)
+    laiteries.addTag(fiable)
+    const own_color = laiteries.getShapeColorToUse()
     robuste.style_id = makeStyle('Robuste', { shape_color: '#ff0000' }).id
     collecte.shape_color = '#00ff00'
+    fiab.use_colors = true
 
     expect(collecte.shape_color).toBe('#ff0000')
-    fiab.use_colors = true
     expect(collecte.getShapeColorToUse()).toBe('#ff0000')
+    // Groupe qui fonctionne par styles : « Fiable », sans style, ne colore plus en bleu
+    expect(fiab.uses_tag_styles).toBe(true)
+    expect(laiteries.getShapeColorToUse()).toBe(own_color)
+    // Cadenas de couleur posé sur le nœud : sa couleur locale tient
     collecte.shape_color_sustainable = true
     expect(collecte.shape_color).toBe('#00ff00')
     expect(collecte.getShapeColorToUse()).toBe('#00ff00')
   })
 
+  it('couleurs dérivées : une couleur de bordure imposée par un style tient, sans allumer le cadenas', () => {
+    const { sankey, collecte, laiteries, makeStyle } = makeApp()
+    const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
+    const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
+    collecte.addTag(robuste)
+    // Témoin : cadenas de bordure OUVERT sur les deux nœuds (il est verrouillé par défaut) —
+    // la couleur ne peut alors tenir que par le style d'étiquette.
+    collecte.shape_border_color_sustainable = false
+    laiteries.shape_border_color_sustainable = false
+    expect(collecte.keepsOwnColor('shape_border_color')).toBe(false)
+    robuste.style_id = makeStyle('Robuste', { shape_border_color: '#123456' }).id
+
+    expect(collecte.keepsOwnColor('shape_border_color')).toBe(true)
+    expect(collecte.shape_border_color).toBe('#123456')
+    // Le cadenas que lit l'inspecteur n'est pas allumé pour autant
+    expect(collecte.shape_border_color_sustainable).toBe(false)
+    expect(laiteries.keepsOwnColor('shape_border_color')).toBe(false)
+  })
+
+  it('libellés : une couleur de libellé imposée tient au dessin, le cadenas de l inspecteur reste éteint', () => {
+    const { sankey, collecte, makeStyle } = makeApp()
+    const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
+    const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
+    collecte.addTag(robuste)
+    // Témoin : cadenas de couleur du libellé OUVERT — la couleur ne peut tenir que par le style
+    const attributes = collecte as unknown as { [k: string]: unknown }
+    attributes['name_label_color_sustainable'] = false
+    expect(getNameLabelValues(collecte, 'name_label').color_sustainable).toBe(false)
+    robuste.style_id = makeStyle('Robuste', { name_label_color: '#654321' }).id
+
+    const values = getNameLabelValues(collecte, 'name_label')
+    expect(values.color).toBe('#654321')
+    expect(values.color_sustainable).toBe(true)
+    // Le cadenas que lit l'inspecteur reste ouvert
+    expect(attributes['name_label_color_sustainable']).toBe(false)
+  })
+
   it('conflits : l étiquette la plus bas de son groupe, puis le groupe le plus bas, l emportent', () => {
     const { sankey, collecte, makeStyle } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
     const approx = fiab.addTag('Approximative', 'approximative') as Class_Tag
     const indicative = fiab.addTag('Indicative', 'indicative') as Class_Tag
     approx.style_id = makeStyle('Approximative', { shape_opacity: 0.4 }).id
@@ -100,6 +170,7 @@ describe('SA#541 — étiquettes de nœuds', () => {
     expect(collecte.shape_opacity).toBe(0.4)
 
     const methode = sankey.addNodeTagGroup('methode', 'Méthode', false)
+    methode.use_colors = true
     const collectee = methode.addTag('Collectée', 'collectee') as Class_Tag
     collectee.style_id = makeStyle('Collectée', { shape_opacity: 0.9 }).id
     collecte.addTag(collectee)
@@ -111,6 +182,7 @@ describe('SA#541 — étiquettes de nœuds', () => {
   it('style du groupe : imposé aux seuls éléments qui ne portent aucune de ses étiquettes', () => {
     const { sankey, collecte, laiteries, makeStyle } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
     collecte.addTag(fiab.addTag('Fiable', 'fiable') as Class_Tag)
     const sans = makeStyle('Non qualifiée', { shape_opacity: 0.5 })
     fiab.style_id = sans.id
@@ -123,6 +195,7 @@ describe('SA#541 — étiquettes de nœuds', () => {
   it('éditer le style s applique aussitôt ; le supprimer le retire', () => {
     const { sankey, collecte, makeStyle } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
     const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
     collecte.addTag(robuste)
     collecte.shape_opacity = 0.3
@@ -139,6 +212,7 @@ describe('SA#541 — étiquettes de nœuds', () => {
   it('le style par défaut, pré-rempli de tous les défauts usine, n est jamais une couche', () => {
     const { sankey, collecte } = makeApp()
     const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
     const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
     collecte.addTag(robuste)
     robuste.style_id = sankey.default_style.id
@@ -162,6 +236,7 @@ describe('SA#541 — étiquettes de flux : la valeur affichée décide', () => {
     link.valueForTag(y2019)!.valueData = 100
     link.valueForTag(y2020)!.valueData = 110
     const fiab = sankey.addFluxTagGroup('fiabilite', 'Fiabilité des données', false)
+    fiab.use_colors = true
     const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
     const indicative = fiab.addTag('Indicative', 'indicative') as Class_Tag
     robuste.style_id = makeStyle('Robuste', { shape_opacity: 0.8 }).id
@@ -181,6 +256,15 @@ describe('SA#541 — étiquettes de flux : la valeur affichée décide', () => {
     expect(link.getShapeColorToUse()).toBe('#cccccc')
     selectYear(y2019)
     expect(link.shape_opacity).toBe(0.8)
+  })
+
+  it('cadenas de couleur posé sur le flux : sa couleur locale l emporte sur le style ET sur les règles', () => {
+    const { link, y2019, indicative } = makeLait()
+    link.valueForTag(y2019)!.addTag(indicative)
+    link.shape_color = '#00ff00'
+    expect(link.getShapeColorToUse()).toBe('#cccccc')
+    link.shape_color_sustainable = true
+    expect(link.getShapeColorToUse()).toBe('#00ff00')
   })
 
   it('deux étiquettes du même groupe sur une valeur : la plus bas dans la liste l emporte', () => {

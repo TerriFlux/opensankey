@@ -232,12 +232,13 @@ export class Class_NodeElement extends Class_NodeBase {
     if (this.tagStyleLayerImposing('shape_color') !== undefined) {
       return this.shape_color
     }
-    if (!this.sankey.node_taggs_list.some(tagg => tagg.use_colors)) {
+    // SA#541 — un groupe qui fonctionne par styles ne colore plus par la couleur de ses étiquettes
+    if (!this.sankey.node_taggs_list.some(tagg => tagg.use_colors && !tagg.uses_tag_styles)) {
       return this._ownShapeColor()
     }
     // Is the color defined by tags
     const taggs_activated = this.taggs_list
-      .filter(tagg => tagg.use_colors)
+      .filter(tagg => tagg.use_colors && !tagg.uses_tag_styles)
     if (taggs_activated.length > 0) {
       const tagg_for_colormap = taggs_activated[0]
       const tags_for_colormap = this.tags_list
@@ -532,11 +533,12 @@ export class Class_NodeElement extends Class_NodeBase {
     const vert = this.stock_label_vert
     const insideH = this.stock_label_inside_horiz
     const insideV = this.stock_label_inside_vert
-    const bgColor = this.stock_label_background_color_sustainable
+    // SA#541 — une couleur imposée par un style d'étiquette tient comme une couleur verrouillée
+    const bgColor = this.keepsOwnColor('stock_label_background_color')
       ? this.stock_label_background_color : this.getShapeColorToUse()
     const bgVisible = this.stock_label_background_color_visible
     const borderVisible = this.stock_label_background_border_visible
-    const borderColor = this.stock_label_background_border_color_sustainable
+    const borderColor = this.keepsOwnColor('stock_label_background_border_color')
       ? this.stock_label_background_border_color : this.getShapeColorToUse()
     const borderThickness = this.stock_label_background_border_thickness
     const borderDashed = this.stock_label_background_border_dashed

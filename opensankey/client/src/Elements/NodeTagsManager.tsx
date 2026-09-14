@@ -379,7 +379,7 @@ export class NodeTagsManager {
       this.addTagToGroupTagDict(tag)
       // SA#541 — `Class_NodeTag.setReferenceFromIds` pose la référence AVANT d'appeler ceci :
       // `addReference` est alors sans effet et n'invaliderait pas les styles d'étiquette.
-      this._node.sankey.tagStylesUpdated()
+      this._node.sankey.tagStylesUpdated?.()
       tag.addReference(this._node)
     }
   }
@@ -393,7 +393,7 @@ export class NodeTagsManager {
       const idx = tagsData.tags.indexOf(tag)
       tagsData.tags.splice(idx, 1)
       this.removeTagFromGroupTagDict(tag)
-      this._node.sankey.tagStylesUpdated()
+      this._node.sankey.tagStylesUpdated?.()
       tag.removeReference(this._node)
     }
   }

@@ -1743,6 +1743,7 @@ export class Class_Sankey {
     this._tag_styles_epoch++
   }
   public get tag_styles_epoch() { return this._tag_styles_epoch }
+  public get tag_styles_config_epoch() { return this._tag_styles_config_epoch }
 
   /**
    * SA#541 — le diagramme porte-t-il au moins un style d'étiquette applicable ? Faux pour tous les
@@ -1755,8 +1756,9 @@ export class Class_Sankey {
       const usable = (id: string | undefined) =>
         id !== undefined && styles[id] !== undefined && !styles[id].is_default_style
       this._has_tag_styles = [...this.getTagGroupsAsList('node_taggs'), ...this.getTagGroupsAsList('flux_taggs')]
-        .some(group => usable(group.style_id) ||
-          (group.tags_list as { style_id?: string }[]).some(tag => usable(tag.style_id)))
+        // Un groupe dont l'interrupteur « Appliquer les styles associés » est fermé n'impose rien
+        .some(group => (group as { use_colors?: boolean }).use_colors === true && (usable(group.style_id) ||
+          (group.tags_list as { style_id?: string }[]).some(tag => usable(tag.style_id))))
       this._has_tag_styles_epoch = this._tag_styles_config_epoch
     }
     return this._has_tag_styles

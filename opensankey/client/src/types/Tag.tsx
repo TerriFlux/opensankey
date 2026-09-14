@@ -162,7 +162,7 @@ export abstract class Class_ProtoTag {
       // Set as currently deleted
       this._is_currently_deleted = true
       // SA#541 - l'etiquette emporte son style : un style d'etiquette a pu disparaitre
-      if (this._style_id !== undefined) this._ref_sankey.tagStylesConfigUpdated()
+      if (this._style_id !== undefined) this._ref_sankey.tagStylesConfigUpdated?.()
       // Unref this from tag group
       this.group.removeTag(this)
       // Clean the rest
@@ -203,7 +203,7 @@ export abstract class Class_ProtoTag {
     // SA#541 - meme raison : le style impose suit l'etiquette.
     if (this._style_id !== tag_to_copy._style_id) {
       this._style_id = tag_to_copy._style_id
-      this._ref_sankey.tagStylesConfigUpdated()
+      this._ref_sankey.tagStylesConfigUpdated?.()
     }
     // #527 - les attributs que le front ne modelise pas suivent l'etiquette :
     // sans cette ligne, une fusion de mise en page ou une duplication les
@@ -318,7 +318,7 @@ export abstract class Class_ProtoTag {
     if (json_object['style_id'] !== undefined) {
       const style_id = json_object['style_id']
       this._style_id = (typeof style_id === 'string' && style_id !== '') ? style_id : undefined
-      this._ref_sankey.tagStylesConfigUpdated()
+      this._ref_sankey.tagStylesConfigUpdated?.()
     }
   }
 
@@ -439,7 +439,7 @@ export abstract class Class_ProtoTag {
     const next = value === '' ? undefined : value
     if (this._style_id === next) return
     this._style_id = next
-    this._ref_sankey.tagStylesConfigUpdated()
+    this._ref_sankey.tagStylesConfigUpdated?.()
     // Redessine les elements porteurs (et la legende)
     this.update()
   }
@@ -534,7 +534,9 @@ export abstract class Class_Tag extends Class_ProtoTag {
       this._references[_.id] = _
       // SA#541 - ce que porte l'element change : ses couches de style sont a recalculer.
       // Tout attachement d'etiquette (noeud, valeur, valeur coordonnee) passe par ici.
-      this._ref_sankey.tagStylesUpdated()
+      // Appel en `?.()` (comme tous les signaux d'epoque de ce fichier) : simple invalidation
+      // de cache, et des tests unitaires utilisent un diagramme simule qui ne la porte pas.
+      this._ref_sankey.tagStylesUpdated?.()
       _.addTag(this)
     }
   }
@@ -542,7 +544,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   public removeReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     if (this.hasGivenReference(_)) {
       delete this._references[_.id]
-      this._ref_sankey.tagStylesUpdated()
+      this._ref_sankey.tagStylesUpdated?.()
       _.removeTag(this)
     }
   }

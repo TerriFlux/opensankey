@@ -795,8 +795,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // SA#541 — un style d'étiquette qui définit la couleur l'emporte sur toutes les règles
-    // (dégradé, extrémités, coloration par groupe)
-    if (this.tagStyleLayerImposing('shape_color') !== undefined) {
+    // (dégradé, extrémités, coloration par groupe). Le cadenas de couleur posé sur le flux lui rend
+    // SA couleur et l'emporte donc aussi : sans ce second terme, les règles ci-dessous — qui n'ont
+    // jamais lu ce cadenas — remplaçaient la couleur locale (constaté au test local du 2026-09-14).
+    if (this.tagStyleLayerImposing('shape_color') !== undefined || this.isTagStyleLockedOut('shape_color')) {
       return this.shape_color
     }
 
@@ -840,7 +842,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
-    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
+    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors && !tagg.uses_tag_styles).length == 0) {
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
       const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
@@ -894,8 +896,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Test if tagg of flow or data are activated, if so use color from tag associated to link
     const dataTagColorActivated = this.selected_data_tags_list.filter(tag => tag.group.use_colors)
     // Do we apply color of flux tags ?
+    // SA#541 — un groupe qui fonctionne par styles ne colore plus par la couleur de ses étiquettes
     const flux_taggs_activated = this.flux_taggs_list
-      .filter(tagg => tagg.use_colors)
+      .filter(tagg => tagg.use_colors && !tagg.uses_tag_styles)
     if (flux_taggs_activated.length > 0) {
       const tagg_for_colormap = flux_taggs_activated[0]
       const tags_for_colormap = this.flux_tags_list
