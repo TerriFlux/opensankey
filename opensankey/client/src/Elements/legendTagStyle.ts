@@ -71,7 +71,7 @@ export const LEGEND_SAMPLE_SWATCH_EM = 2.2
 export const LEGEND_SAMPLE_FONT_EM = 0.7
 
 /** Orientation de hachure appliquée au carré d'un style de flux « Hachuré » (`shape_is_dashed`). */
-const LINK_DASHED_HATCH = 'diagonal'
+const LINK_DASHED_HATCH = 'vertical'
 
 function stringOf(v: unknown): string | undefined {
   return typeof v === 'string' ? v : undefined

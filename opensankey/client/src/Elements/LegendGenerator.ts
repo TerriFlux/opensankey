@@ -352,39 +352,77 @@ export class Class_LegendConfig {
 
 // GÉNÉRATION (modèle + DOM) ==========================================================
 
-// Résout un tag (groupe + tag) à l'instant T — pour le survol → surbrillance.
-function resolveTag(
-  drawing_area: Class_DrawingArea,
-  tag_group_id: string,
-  tag_id: string
-): Class_Tag | undefined {
-  const sankey = drawing_area.sankey
-  const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
-    .find(g => g.id === tag_group_id)
-  return group?.tags_list.find(t => t.id === tag_id) as Class_Tag | undefined
+// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée, et depuis SA#545 le
+// TITRE d'un groupe (les porteurs d'une quelconque de ses étiquettes) et l'entrée « sans
+// étiquette » (les éléments de la famille du groupe qui n'en portent aucune).
+type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string, untagged?: boolean }
+
+type Type_TagCarrier = { hasGivenTag(tag: Class_Tag): boolean }
+type Type_LegendHoverPredicate = {
+  node: (node: Type_TagCarrier) => boolean
+  link: (link: Type_TagCarrier) => boolean
+  band: (carried: readonly Class_Tag[]) => boolean
 }
 
-// Survol d'une entrée de la légende : atténue tous les éléments qui ne portent
-// pas le tag (même comportement que l'ancienne légende).
-function wireTagHover(
+// Résout la cible à l'instant T — le modèle a pu changer depuis la génération.
+function hoverPredicate(
+  drawing_area: Class_DrawingArea,
+  target: Type_LegendHoverTarget
+): Type_LegendHoverPredicate | undefined {
+  const sankey = drawing_area.sankey
+  const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
+    .find(g => g.id === target.tag_group_id)
+  if (!group) return undefined
+  const tags = group.tags_list as Class_Tag[]
+  if (target.tag_id !== undefined) {
+    const tag = tags.find(t => t.id === target.tag_id)
+    if (!tag) return undefined
+    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band: carried => carried.includes(tag) }
+  }
+  const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
+  const bandCarriesOne = (carried: readonly Class_Tag[]) => carried.some(t => tags.includes(t))
+  if (target.untagged !== true) return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
+  // « Sans étiquette » : seuls les éléments de la famille du groupe peuvent en relever, sinon un
+  // groupe de nœuds désignerait tous les flux (qui ne portent jamais d'étiquette de nœuds).
+  const is_node_group = (sankey.node_taggs_list as unknown[]).includes(group)
+  return {
+    node: n => is_node_group && !carriesOne(n),
+    link: l => !is_node_group && !carriesOne(l),
+    band: carried => !is_node_group && !bandCarriesOne(carried)
+  }
+}
+
+// SA#545 — cible de survol d'un item : son étiquette, son entrée « sans étiquette », ou, pour un
+// titre de groupe, le groupe de son bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
+function hoverTargetOf(item: Type_LegendItem, block_groups: Map<string, string>): Type_LegendHoverTarget | undefined {
+  if (item.tag_group_id !== undefined) {
+    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id, untagged: item.untagged }
+  }
+  if (item.own_line && item.block_id !== undefined) {
+    const tag_group_id = block_groups.get(item.block_id)
+    return tag_group_id === undefined ? undefined : { tag_group_id }
+  }
+  return undefined
+}
+
+// Survol d'une zone de la légende : atténue tous les éléments qu'elle ne désigne
+// pas (même comportement que l'ancienne légende pour une entrée d'étiquette).
+function wireLegendHover(
   drawing_area: Class_DrawingArea,
   zone: Class_ContainerElement,
-  tag_group_id: string,
-  tag_id: string
+  target: Type_LegendHoverTarget | undefined
 ) {
   const d3_sel = zone.d3_selection
-  if (!d3_sel) return
+  if (!d3_sel || target === undefined) return
   d3_sel
     .on('mouseover.legend_highlight', () => {
-      const tag = resolveTag(drawing_area, tag_group_id, tag_id)
-      if (!tag) return
+      const matches = hoverPredicate(drawing_area, target)
+      if (!matches) return
       const flux_list = drawing_area.sankey.visible_links_list
       const node_list = drawing_area.sankey.visible_nodes_list
       const highlighted_nodes = new Set<Class_NodeBase>()
       flux_list.forEach(l => {
-        if (l.hasGivenTag(tag as Class_Tag) ||
-          l.source.hasGivenTag(tag as Class_Tag) ||
-          l.target.hasGivenTag(tag as Class_Tag)) {
+        if (matches.link(l) || matches.node(l.source) || matches.node(l.target)) {
           highlighted_nodes.add(l.source)
           highlighted_nodes.add(l.target)
           // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
@@ -393,7 +431,7 @@ function wireTagHover(
           if (bands && !bands.empty()) {
             const matching = new Set(
               (l.value?.tagged_values_list ?? [])
-                .filter(tv => tv.tags_list.includes(tag as Class_Tag))
+                .filter(tv => matches.band(tv.tags_list as Class_Tag[]))
                 .map(tv => l.id + '_band_' + tv.id))
             if (matching.size > 0) {
               bands.attr('opacity', function () {
@@ -406,7 +444,7 @@ function wireTagHover(
         }
       })
       node_list.forEach(n => {
-        if (!highlighted_nodes.has(n) && !n.hasGivenTag(tag as Class_Tag)) {
+        if (!highlighted_nodes.has(n) && !matches.node(n)) {
           n.d3_selection?.attr('opacity', 0.1)
         }
       })
@@ -551,6 +589,14 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       frame.setPosXY(config.initial_position.x, config.initial_position.y)
     }
 
+    // SA#545 — groupe de chaque bloc, relevé sur ses entrées : cible du survol de son titre
+    const block_groups = new Map<string, string>()
+    items.forEach(i => {
+      if (i.block_id !== undefined && i.tag_group_id !== undefined && !block_groups.has(i.block_id)) {
+        block_groups.set(i.block_id, i.tag_group_id)
+      }
+    })
+
     // Zones de contenu : réutilisation par id
     items.forEach(item => {
       const pos = positions.get(item.id)
@@ -624,9 +670,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       zone.draw()
       zone.setEventsListeners()
-      if (item.tag_group_id && item.tag_id) {
-        wireTagHover(drawing_area, zone, item.tag_group_id, item.tag_id)
-      }
+      const hover_target = hoverTargetOf(item, block_groups)
+      wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
       // créée après elle (donc dessinée par-dessus), attachée au même cadre et au même bloc.
       const sample_id = legendSampleZoneId(item)
@@ -639,9 +684,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         }
         sample.draw()
         sample.setEventsListeners()
-        if (item.tag_group_id && item.tag_id) {
-          wireTagHover(drawing_area, sample, item.tag_group_id, item.tag_id)
-        }
+        wireLegendHover(drawing_area, sample, hover_target)
       }
     })
 
@@ -683,6 +726,34 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     frame.computeSizeAndPositionFromAttachedNodes()
     frame.draw()
     frame.setEventsListeners()
+
+    // SA#545 — ORDRE Z, rétabli à CHAQUE régénération et non plus au seul dessin complet
+    // (DrawingArea._sendLegendFramesBehindMembers). Une zone créée par une régénération seule —
+    // valeur d'exemple, entrée « sans étiquette », entrée d'une étiquette qui prend un style — est
+    // inscrite au FOND de `list_g_element` (constructeur de Class_ContainerElement). Au premier
+    // geste qui réappliquait l'ordre Z, elle passait sous le cadre, dont la forme remplie capte la
+    // souris même transparente (ni surbrillance ni info-bulle au survol), et la valeur d'exemple
+    // sous son carré. `list_g_element` : l'index 0 est DEVANT.
+    const z_order = drawing_area.list_g_element
+    let sample_moved = false
+    items.forEach(item => {
+      const sample_id = legendSampleZoneId(item)
+      if (sample_id === undefined) return
+      const sample_idx = z_order.indexOf(sample_id)
+      const entry_idx = z_order.indexOf(item.id)
+      if (sample_idx < 0 || entry_idx < 0 || sample_idx < entry_idx) return
+      z_order.splice(sample_idx, 1)
+      z_order.splice(entry_idx, 0, sample_id)
+      sample_moved = true
+    })
+    if (sample_moved) drawing_area.orderElementOnDA()
+    // Blocs d'abord, cadre racine ensuite : il finit derrière toute sa descendance. Sans effet
+    // quand l'ordre est déjà bon — tous les diagrammes existants, normalisés au chargement.
+    block_members.forEach((_, block_id) => {
+      const block = sankey.containers_dict[block_id]
+      if (block) drawing_area.sendFrameBehindMembers(block)
+    })
+    drawing_area.sendFrameBehindMembers(frame)
   } finally {
     config._generating = false
   }

@@ -87,8 +87,8 @@ describe('SA#545 — familles définies par un style', () => {
     expect(legendEntryFormat(undefined)).toEqual({})
   })
 
-  it('flux « Hachuré » : le carré reçoit une hachure', () => {
-    expect(legendEntryFormat(makeStyle({ shape_is_dashed: true }))).toEqual({ swatch: { hatch: 'diagonal' } })
+  it('flux « Hachuré » : le carré reçoit une hachure verticale', () => {
+    expect(legendEntryFormat(makeStyle({ shape_is_dashed: true }))).toEqual({ swatch: { hatch: 'vertical' } })
   })
 })
 

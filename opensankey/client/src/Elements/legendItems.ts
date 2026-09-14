@@ -404,6 +404,8 @@ export function computeLegendItems(
           id: LEGEND_CHILD_PREFIX + 'untagged-' + slug(tag_group.id),
           text: env.t_untagged ?? '',
           untagged: true,
+          // Référence au groupe pour le survol → surbrillance de ses éléments sans étiquette
+          tag_group_id: tag_group.id,
           block_id
         }
         applyTagStyleFormat(untagged, untagged_style, UNTAGGED_SWATCH_COLOR)
