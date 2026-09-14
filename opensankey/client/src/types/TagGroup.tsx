@@ -1,6 +1,7 @@
 import colormap from 'colormap'
 import i18next from 'i18next'
-import { Type_LangMap, normalizeLang, parseLangMap, resolveLangMap, serializeLangMap } from '../Persistence/persistenceMigrations'
+import { Type_LangMap, normalizeLang, parseLangMap, parseStylePatch, resolveLangMap, serializeLangMap, serializeStylePatch } from '../Persistence/persistenceMigrations'
+import type { Type_StylePatch } from './Theme'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
@@ -18,6 +19,26 @@ import { Type_PositionMode, isPositionMode } from './PublishOptions'
 // quoi un aller-retour par l'application reecrirait la feuille avec les defauts.
 export const DEFAULT_TAGS_SEPARATOR = ':'
 export const DEFAULT_ANTAGONISTS_SEPARATOR = '/'
+
+// #527 - cles de groupe d'etiquettes que le front sait lire et reecrire, toutes
+// sous-classes confondues. TOUT le reste traverse le front a l'identique
+// (passthrough), au lieu d'etre detruit au premier aller-retour : c'est le cas
+// de « Palette visible » (`show_legend`) et « Palette de couleur » (`colormap`),
+// que le parser ecrit mais que le front ne modelise pas.
+// A completer — et seulement alors — le jour ou le front apprend a lire une de
+// ces cles : une cle a la fois connue et dans le sac serait ecrite deux fois.
+const KNOWN_TAGG_JSON_KEYS = new Set([
+  'name', 'group_name', 'banner', 'tags', 'tags_order',
+  'tags_separator', 'antagonists_separator',
+  'use_colors',
+  'carries_values', 'has_own_scales', 'is_unit_type', 'is_additive',
+  'is_unit', 'is_sequence', 'propagate_structure', 'position_mode',
+  'activated', 'siblings', 'linked_tag_group',
+  'view_mode', 'full_view_label',
+  // #537 - le front MODELISE desormais ces trois cles (cf. la meme note dans
+  // Tag.tsx) : les laisser au sac ferait resurgir une valeur effacee.
+  'description', 'style_patch', 'pinned_in_legend',
+])
 
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
@@ -55,6 +76,30 @@ export abstract class Class_ProtoTagGroup {
   // quand elle a ete demandee (fichiers existants inchanges).
   private _tags_separator: string | undefined = undefined
   private _antagonists_separator: string | undefined = undefined
+
+  // #537 - DEFINITION du groupe (« ce que decrit cette dimension »), destinee a
+  // l'info-bulle de legende et au bloc juxtapose aux groupes epingles. Distincte
+  // du nom : cf. la note de `Class_ProtoTag._description_map`.
+  private _description_map: Type_LangMap = {}
+
+  // #537 - mise en forme portee par le GROUPE : { attribut moderne -> valeur },
+  // meme forme que les patchs de theme (Type_StylePatch). Patch vide = cle
+  // absente = comportement d'avant. C'est l'interrupteur par groupe, ferme par
+  // defaut, de l'opacite de fiabilite (vague 2) : le groupe declare ce qu'il
+  // pilote, chaque etiquette porte sa valeur dans SON patch.
+  private _style_patch: Type_StylePatch = {}
+
+  // #537 - groupe EPINGLE en legende (« Source », « Methode » toujours visibles
+  // en bas). Pose des maintenant, pendant qu'on touche au format, pour que les
+  // tickets d'affichage qui suivent consomment un format fige.
+  private _pinned_in_legend: boolean = false
+
+  // #527 - sac des cles JSON que le front ne modelise pas, reemises telles
+  // quelles. Sans lui, un attribut de groupe d'etiquettes (« Palette de
+  // couleur », « Palette visible », ou tout attribut pose par un ticket a
+  // venir) est detruit des que le diagramme repasse par le navigateur : le
+  // parser a beau le conserver, le front reconstruit le JSON de zero.
+  private _json_extras: Type_JSON = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
   protected abstract _tags: { [id: string]: Class_ProtoTag; };
@@ -118,6 +163,17 @@ export abstract class Class_ProtoTagGroup {
     // prochain export Excel casserait les libelles qui contiennent « / ».
     this._tags_separator = tagg_to_copy._tags_separator
     this._antagonists_separator = tagg_to_copy._antagonists_separator
+    // #527 - meme raison que pour les separateurs ci-dessus : sans cette ligne,
+    // une fusion de mise en page ou une duplication perdrait silencieusement
+    // les attributs que le front ne modelise pas.
+    this._json_extras = { ...tagg_to_copy._json_extras }
+    // #537 - meme raison : sans ces lignes, une duplication de groupe ou un
+    // updateFrom rendrait un groupe defini et epingle en groupe muet, en
+    // silence. Maps et patchs sont CLONES : deux groupes qui partageraient la
+    // meme reference se mutueraient l'un l'autre.
+    this._description_map = { ...tagg_to_copy._description_map }
+    this._style_patch = { ...tagg_to_copy._style_patch }
+    this._pinned_in_legend = tagg_to_copy._pinned_in_legend
     // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
     // groups were matched by name but carry different tag ids (e.g. updateFrom
     // a JSON whose tags were renamed), copying the order verbatim would leave
@@ -161,6 +217,11 @@ export abstract class Class_ProtoTagGroup {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    // #527 - le sac d'abord : une cle que le front connait est ensuite reecrite
+    // par sa valeur courante (ici ou dans une sous-classe), une cle inconnue
+    // ressort intacte. L'ordre est le filet : il rend impossible qu'un attribut
+    // perime du sac prenne le pas sur l'etat reel du diagramme.
+    Object.assign(json_object, this._json_extras)
     // Fill group attributes
     // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
@@ -170,6 +231,13 @@ export abstract class Class_ProtoTagGroup {
     // n'en declare pas produit exactement le meme JSON qu'avant.
     if (this._tags_separator !== undefined) json_object['tags_separator'] = this._tags_separator
     if (this._antagonists_separator !== undefined) json_object['antagonists_separator'] = this._antagonists_separator
+    // #537 - meme regle d'ecriture conditionnelle que les separateurs ci-dessus :
+    // un groupe qui ne declare rien produit exactement le meme JSON qu'avant.
+    const description = serializeLangMap(this._description_map)
+    if (description !== undefined) json_object['description'] = description
+    const style_patch = serializeStylePatch(this._style_patch)
+    if (style_patch !== undefined) json_object['style_patch'] = style_patch
+    if (this._pinned_in_legend) json_object['pinned_in_legend'] = true
     // Update tags infos
     const json_object_tags = {} as Type_JSON
     this.tags_list
@@ -190,6 +258,14 @@ export abstract class Class_ProtoTagGroup {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    // #527 - memorise ce que le front ne modelise pas, pour le reemettre tel
+    // quel. Les cles connues sont ecartees : certaines ne sont ecrites que
+    // lorsqu'elles s'ecartent du defaut (separateurs, drapeaux de fusion), et
+    // les garder ici figerait un ancien etat que l'utilisateur vient de changer.
+    this._json_extras = {}
+    Object.keys(json_object)
+      .filter(key => !KNOWN_TAGG_JSON_KEYS.has(key))
+      .forEach(key => { this._json_extras[key] = json_object[key] })
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
     // Read group attributes
@@ -215,6 +291,19 @@ export abstract class Class_ProtoTagGroup {
     const banner_read = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     const valid_banners: tag_banner_type[] = ['none', 'one', 'multi', 'sequence', 'topbar']
     if (valid_banners.includes(banner_read)) this._banner = banner_read
+    // #537 - cle absente = defaut du format. On n'ecrase que si la cle est
+    // presente : `fromJSON` sert aussi aux mises a jour partielles, ou un JSON
+    // muet ne doit rien effacer.
+    if (json_object['description'] !== undefined) {
+      this._description_map = parseLangMap(
+        json_object['description'],
+        this._ref_sankey.drawing_area.application_data.language
+      )
+    }
+    if (json_object['style_patch'] !== undefined) {
+      this._style_patch = parseStylePatch(json_object['style_patch'])
+    }
+    this._pinned_in_legend = getBooleanFromJSON(json_object, 'pinned_in_legend', this._pinned_in_legend)
     // Create new tags & read their attributes
     const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
     Object.entries(json_object['tags'])
@@ -239,6 +328,12 @@ export abstract class Class_ProtoTagGroup {
       this._tags_order = Object.keys(this._tags)
     }
 
+    // #537 - les attributs poses par ce ticket n'ont PAS d'equivalent de cette
+    // auto-coloration, et c'est une decision explicite : une definition ne se
+    // devine pas, et un patch de mise en forme fabrique d'office allumerait
+    // l'interrupteur par groupe sur tous les fichiers existants (arbitrage A5 :
+    // ferme par defaut, cle absente = comportement d'avant). Leur defaut est
+    // donc « vide », ici comme a la declaration.
     const nb_tags = Object.values(this._tags).length
     if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
       // if tags has no colors they are generated from the defaut color map
@@ -267,6 +362,49 @@ export abstract class Class_ProtoTagGroup {
   }
 
   // PUBLIC GETTERS / SETTERS ===========================================================
+  /**
+   * #537 - Definition du groupe, resolue pour la langue active (repli
+   * en->fr->premiere disponible). Destinee a l'info-bulle : JAMAIS affichee a la
+   * place du nom du groupe.
+   */
+  public get description() { return resolveLangMap(this._description_map ?? {}, i18next.language) }
+  public set description(value: string) {
+    const lang = normalizeLang(i18next.language)
+    if (!this._description_map) this._description_map = {}
+    // Vider dans une langue alors que d'autres existent = supprimer la traduction.
+    if (value === '' && Object.keys(this._description_map).some(l => l !== lang)) delete this._description_map[lang]
+    else this._description_map[lang] = value
+  }
+
+  /** Map complete { langue -> definition } — pour l'edition multilingue. Copie. */
+  public get description_map(): Type_LangMap { return { ...this._description_map } }
+  public set description_map(value: Type_LangMap) { this._description_map = { ...value } }
+
+  /**
+   * #537 - Mise en forme portee par le groupe. Copie en lecture comme en
+   * ecriture : un appelant qui garderait la reference muterait le groupe sans
+   * passer par le setter.
+   */
+  public get style_patch(): Type_StylePatch { return { ...this._style_patch } }
+  public set style_patch(value: Type_StylePatch) { this._style_patch = { ...value } }
+
+  /**
+   * Raccord du #537 au predicat de legende du #533 (`tagGroupCarriesFormatting`,
+   * Elements/legendItems.ts), qui lit un booleen `has_style_patch` : les deux
+   * tickets, menes en parallele, s'etaient promis cette interface chacun avec
+   * son propre nom (`style_patch` ici). Sans ce getter, un groupe portant une
+   * mise en forme autre que la couleur n'entrait jamais en legende.
+   *
+   * Pose sur la classe COMMUNE : `Class_DataTagGroup` n'herite pas de
+   * `Class_TagGroup`, un getter pose plus bas raterait les groupes de donnees.
+   * Patch vide = false : aucun fichier existant ne change d'aspect.
+   */
+  public get has_style_patch(): boolean { return Object.keys(this._style_patch).length > 0 }
+
+  /** #537 - Groupe epingle en bas de legende (Source, Methode). */
+  public get pinned_in_legend(): boolean { return this._pinned_in_legend }
+  public set pinned_in_legend(value: boolean) { this._pinned_in_legend = value }
+
   /**
    * #486 - Separateur effectif entre les etiquettes de ce groupe dans le format
    * Excel (colonne Etiquettes, et colonnes portant le nom du groupe). ':' par defaut.
@@ -752,6 +890,23 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     this._is_additive = getBooleanFromJSON(json_object, 'is_additive', this._is_additive)
   }
 
+  // #528 — ces quatre drapeaux sont serialises (ci-dessus) mais n'etaient pas
+  // recopies : une duplication de groupe, une fusion de mise en page
+  // (updateFrom) ou une copie de diagramme rendait un groupe « porteur de
+  // valeurs / de type unite / non additif » en simple groupe d'annotation, en
+  // silence. Comme au #385, la liste des etiquettes paraissait correcte sous le
+  // defaut : seule la valeur des reglages le montrait.
+  protected _copyFrom(
+    tagg_to_copy: Class_FluxTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
+    this._carries_values = tagg_to_copy._carries_values
+    this._has_own_scales = tagg_to_copy._has_own_scales
+    this._is_unit_type = tagg_to_copy._is_unit_type
+    this._is_additive = tagg_to_copy._is_additive
+  }
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_FluxTag; }
 
@@ -1094,6 +1249,8 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
   private _antitagged_refs: Class_NodeElement[] = []
 
   // PROTECTED ATTRIBUTES ===============================================================
+  // Groupe de nœuds dont la palette suit l'activation de ce groupe de niveaux
+  // (cf. Toolbar.tsx, case « activer » : elle allume/éteint use_colors dessus).
   public linked_tag_group : Class_TagGroup | null = null
 
   /**
@@ -1133,14 +1290,34 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
   }
 
   // COPY METHODS ========================================================================
-  public copyFrom(tagg_to_copy: Class_LevelTagGroup) {
-    this._copyFrom(tagg_to_copy)
+  // #528 — signature alignee sur celle du proto (deux arguments) : sans elle,
+  // l'appariement des etiquettes construit par updateFrom n'atteignait jamais
+  // Class_ProtoTagGroup._copyFrom pour cette famille, et deux groupes apparies
+  // par NOM mais portant des ids d'etiquettes differents perdaient les leurs.
+  public copyFrom(
+    tagg_to_copy: Class_LevelTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    this._copyFrom(tagg_to_copy, matching_tags_id)
   }
 
-  protected _copyFrom(tagg_to_copy: Class_LevelTagGroup) {
-    super._copyFrom(tagg_to_copy)
+  protected _copyFrom(
+    tagg_to_copy: Class_LevelTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._activated = tagg_to_copy._activated
-    this._siblings = (tagg_to_copy as unknown as Class_LevelTagGroup)._siblings
+    // #528 — copie du tableau, pas de la reference : addSibling/removeSibling
+    // ecrivent DANS le tableau, un ajout sur la copie apparaitrait donc sur
+    // l'original (et reciproquement). Class_ViewTagGroup le faisait deja.
+    this._siblings = [...tagg_to_copy._siblings]
+    // #528 — le lien suit le groupe, mais RESOLU dans le diagramme de la copie :
+    // recopier la reference telle quelle ferait pointer un groupe de ce sankey
+    // vers un groupe d'un AUTRE sankey lors d'un updateFrom (fusion de mise en
+    // page), et la case « activer » allumerait la palette du mauvais diagramme.
+    this.linked_tag_group = tagg_to_copy.linked_tag_group
+      ? (this._ref_sankey.node_taggs_dict[tagg_to_copy.linked_tag_group.id] ?? null)
+      : null
   }
 
 
@@ -1149,6 +1326,12 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
 
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
+    // #528 — la cle etait LUE sans jamais etre ECRITE : un fichier qui declarait
+    // le lien le perdait au premier aller-retour par le front, et la case
+    // « activer » du bandeau cessait d'allumer la palette du groupe de nœuds
+    // associe. L'asymetrie etait invisible au round-trip d'un fichier ecrit par
+    // le front, puisqu'il n'ecrivait jamais la cle.
+    if (this.linked_tag_group) json_object['linked_tag_group'] = this.linked_tag_group.id
   }
 
   protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
@@ -1300,12 +1483,19 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
   }
 
   // COPY METHODS =======================================================================
-  public copyFrom(tagg_to_copy: Class_ViewTagGroup) {
-    this._copyFrom(tagg_to_copy)
+  // #528 — meme alignement de signature que Class_LevelTagGroup ci-dessus.
+  public copyFrom(
+    tagg_to_copy: Class_ViewTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    this._copyFrom(tagg_to_copy, matching_tags_id)
   }
 
-  protected _copyFrom(tagg_to_copy: Class_ViewTagGroup) {
-    super._copyFrom(tagg_to_copy)
+  protected _copyFrom(
+    tagg_to_copy: Class_ViewTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._activated = tagg_to_copy._activated
     this._siblings = [...tagg_to_copy._siblings]
     this._view_mode = tagg_to_copy._view_mode

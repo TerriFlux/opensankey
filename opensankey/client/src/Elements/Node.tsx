@@ -41,6 +41,7 @@ import { default_element_color, NameLabelAttributeTypes } from './ElementsAttrib
 import { resolveAssignedTagToken } from './LabelTemplate'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
+import { effectiveOpacity } from './elementOpacity'
 import { computeArrowPlacement, arrowMinWidthApplies, computeArrowMinWidthPlacement, applyFanMinWidth } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_DataTag, Class_Tag } from '../types/Tag'
@@ -3128,7 +3129,7 @@ export class Class_NodeElement extends Class_NodeBase {
         .attr('class', `link_cap_${type}`)
         .attr('d', capPath)
         .attr('fill', color)
-        .attr('opacity', link.shape_opacity)
+        .attr('opacity', effectiveOpacity(link))
         .attr('stroke', link.shape_border_visible ? link.shape_border_color : 'none')
         .attr('stroke-width', link.shape_border_visible ? link.shape_border_thickness : 0)
 

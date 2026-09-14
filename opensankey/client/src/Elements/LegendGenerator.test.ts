@@ -6,7 +6,8 @@
 // ne supporte pas d'être chargé par cette porte d'entrée sous jest.
 
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems,
+  computeLegendItems, computeScaleText, layoutLegendItems, renderableLegendItems,
+  RENDER_DIMMED_LEGEND_ENTRIES,
   Type_LegendConfigValues, Type_SankeyForLegend
 } from './legendItems'
 import { isLegendChildId, isLegendElementId, isLegendFrameId } from './legendIds'
@@ -154,6 +155,137 @@ describe('OS#1254 — computeLegendItems', () => {
   })
 })
 
+describe('sa#532 — étiquettes désélectionnées : l\'état est représentable', () => {
+  // Un groupe de nodeTags à 3 étiquettes dont une désélectionnée. Le mock reproduit le
+  // fait dur du modèle : une étiquette désélectionnée rend ses porteurs INVISIBLES
+  // (Node.are_related_node_tags_selected), donc `visible_nodes_list` ne la porte pas
+  // — elle n'apparaît que dans `nodes_list`. Un mock qui la mettrait dans les deux
+  // listes ferait passer le test sans rien prouver.
+  const t1 = { ...makeTag('t1', '#ff0000'), is_selected: true }
+  const t2 = { ...makeTag('t2', '#00ff00'), is_selected: false }
+  const t3 = { ...makeTag('t3', '#0000ff'), is_selected: true }
+
+  function sankeyWithOneUnselected(): Type_SankeyForLegend {
+    const visible = [makeElement(['t1', 't3'])]
+    return makeSankey({
+      node_taggs_list: [{
+        id: 'g1', name: 'Groupe 1', use_colors: true,
+        selected_tags_list: [t1, t3],
+        tags_list: [t1, t2, t3]
+      }],
+      visible_nodes_list: visible,
+      nodes_list: [...visible, makeElement(['t2'])]
+    })
+  }
+
+  it('rend 3 entrées pour un groupe à 3 étiquettes dont 1 désélectionnée, une seule atténuée', () => {
+    const items = computeLegendItems(sankeyWithOneUnselected(), base_config)
+    const entries = items.filter(i => i.tag_id !== undefined)
+    expect(entries).toHaveLength(3)
+    expect(entries.map(i => i.tag_id)).toEqual(['t1', 't2', 't3'])
+    expect(entries.map(i => i.dimmed)).toEqual([undefined, true, undefined])
+    // Le texte et la pastille d'une entrée atténuée restent ceux du tag : c'est le
+    // rendu (ticket du clic) qui la distinguera, pas son contenu.
+    expect(entries[1]).toMatchObject({ text: 'T2', swatch_color: '#00ff00', tag_group_id: 'g1' })
+  })
+
+  it('une étiquette désélectionnée que RIEN ne porte reste hors légende (étiquette morte)', () => {
+    const orphan = { ...makeTag('mort'), is_selected: false }
+    const visible = [makeElement(['t1'])]
+    const sankey = makeSankey({
+      node_taggs_list: [{
+        id: 'g1', name: 'Groupe 1', use_colors: true,
+        selected_tags_list: [t1], tags_list: [t1, orphan]
+      }],
+      visible_nodes_list: visible,
+      nodes_list: visible
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.filter(i => i.tag_id !== undefined).map(i => i.tag_id)).toEqual(['t1'])
+  })
+
+  it('un dataTag non sélectionné n\'est PAS atténué : sa sélection est un choix, pas un masquage', () => {
+    // checkSelectionCoherence reselectionne d'office si la selection tombe a zero
+    // (TagGroup.tsx) : une entree grisee « cliquez pour retablir » y mentirait.
+    const y2020 = { ...makeTag('2020'), is_selected: true }
+    const y2021 = { ...makeTag('2021'), is_selected: false }
+    const sankey = makeSankey({
+      data_taggs_list: [{
+        id: 'annee', name: 'Année', use_colors: true,
+        selected_tags_list: [y2020], tags_list: [y2020, y2021]
+      }]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => i.id)).toEqual(['legend-group-annee', 'legend-tag-annee-2020'])
+  })
+
+  it('modèle INCHANGÉ pour un appelant sans tags_list (rétro-compatibilité des mocks)', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [
+        { id: 'g', name: 'G', use_colors: true, selected_tags_list: [makeTag('a')] }
+      ],
+      visible_links_list: [makeElement(['a'])]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => i.id)).toEqual(['legend-group-g', 'legend-tag-g-a'])
+    expect(items.every(i => i.dimmed === undefined)).toBe(true)
+  })
+})
+
+describe('sa#532 — renderableLegendItems : ce qui est effectivement posé', () => {
+  it('la porte est fermée tant que le clic n\'existe pas', () => {
+    // Témoin du choix, pas une vérité éternelle : le ticket qui pose le clic passe la
+    // constante à true, ce test à revoir avec lui.
+    expect(RENDER_DIMMED_LEGEND_ENTRIES).toBe(false)
+  })
+
+  it('écarte les entrées atténuées — le contenu rendu est celui d\'avant sa#532', () => {
+    const t1 = { ...makeTag('t1'), is_selected: true }
+    const t2 = { ...makeTag('t2'), is_selected: false }
+    const visible = [makeElement(['t1'])]
+    const sankey = makeSankey({
+      node_taggs_list: [{
+        id: 'g1', name: 'Groupe 1', use_colors: true,
+        selected_tags_list: [t1], tags_list: [t1, t2]
+      }],
+      visible_nodes_list: visible,
+      nodes_list: [...visible, makeElement(['t2'])]
+    })
+    const rendered = renderableLegendItems(computeLegendItems(sankey, base_config))
+    expect(rendered.map(i => i.id)).toEqual(['legend-group-g1', 'legend-tag-g1-t1'])
+  })
+
+  it('un groupe ENTIÈREMENT désélectionné ne laisse pas de titre orphelin', () => {
+    // Avant sa#532 un tel groupe n'émettait AUCUN item (displayed_tags vide) : le titre
+    // et son cadre de bloc ne doivent pas apparaître maintenant que les étiquettes
+    // désélectionnées sont décrites.
+    const t1 = { ...makeTag('t1'), is_selected: false }
+    const t2 = { ...makeTag('t2'), is_selected: false }
+    const all = [makeElement(['t1', 't2'])]
+    const sankey = makeSankey({
+      node_taggs_list: [{
+        id: 'g1', name: 'Groupe 1', use_colors: true,
+        selected_tags_list: [], tags_list: [t1, t2]
+      }],
+      visible_nodes_list: [],
+      nodes_list: all
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => i.id)).toEqual(['legend-group-g1', 'legend-tag-g1-t1', 'legend-tag-g1-t2'])
+    expect(renderableLegendItems(items)).toEqual([])
+  })
+
+  it('ne touche pas aux lignes sans bloc (échelle, contraintes, infos)', () => {
+    const items = computeLegendItems(
+      makeSankey(),
+      { ...base_config, display_scale: true, show_constraints: true },
+      {},
+      'Echelle : 50 t'
+    )
+    expect(renderableLegendItems(items)).toEqual(items)
+  })
+})
+
 describe('OS#1254 — layoutLegendItems', () => {
   const items = [
     { id: 'a', text: 'Titre', bold: true, starts_group: true, own_line: true },
@@ -216,5 +348,56 @@ describe('OS#1254 — computeScaleText', () => {
   it('formatage : entier si >= 1, 3 chiffres significatifs sinon', () => {
     expect(computeScaleText(0.005, [], base_config, 'Echelle')).toBe('Echelle : 0.0025')
     expect(computeScaleText(3, [], base_config, 'Echelle')).toBe('Echelle : 1.5')
+  })
+})
+
+describe('#533 — « ce groupe porte une mise en forme »', () => {
+  // La légende ne montrait que les groupes pilotant la COULEUR. Porter la
+  // fiabilité par l'opacité « pour laisser le tag couleur libre » l'aurait donc
+  // retirée de la légende — exactement l'information qu'on veut y lire.
+  //
+  // Le prédicat élargi se réduit à `use_colors` tant que le socle de format
+  // (#537) n'a pas posé son porteur de style : les deux premiers cas fixent
+  // cette équivalence, le troisième prouve que le terme à venir a bien prise.
+  //
+  // Les cas de figure sont montés sur un groupe de fluxTags à `use_colors=false`
+  // parce que c'est le cas MESURÉ : les quatre groupes de fluxTags de
+  // « [SOCLE] Lait de vache - Résultats.gz » y sont tous.
+
+  it('laisse hors légende un groupe qui ne porte aucune mise en forme', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [
+        { id: 'fiab', name: 'Fiabilité des données', use_colors: false, selected_tags_list: [makeTag('sure')] }
+      ],
+      visible_links_list: [makeElement(['sure'])]
+    })
+    expect(computeLegendItems(sankey, base_config)).toEqual([])
+  })
+
+  it('reste fermé de lui-même : porteur de style absent, undefined ou éteint', () => {
+    // Groupes simulés : `has_style_patch` y est posé à la main. Sur les vraies
+    // classes il dérive de `style_patch` (raccord du #537, cf.
+    // types/TagGroup.hasStylePatch.test.ts) et vaut `false` pour tout groupe
+    // sans patch — le cas réel de TOUS les groupes du parc.
+    const avec = (has_style_patch?: boolean) => makeSankey({
+      flux_taggs_list: [
+        { id: 'fiab', name: 'Fiabilité des données', use_colors: false, has_style_patch, selected_tags_list: [makeTag('sure')] }
+      ],
+      visible_links_list: [makeElement(['sure'])]
+    })
+    expect(computeLegendItems(avec(undefined), base_config)).toEqual([])
+    expect(computeLegendItems(avec(false), base_config)).toEqual([])
+  })
+
+  it('fait apparaître un groupe qui pilote autre chose que la couleur', () => {
+    const sankey = makeSankey({
+      flux_taggs_list: [
+        { id: 'fiab', name: 'Fiabilité des données', use_colors: false, has_style_patch: true, selected_tags_list: [makeTag('sure')] }
+      ],
+      visible_links_list: [makeElement(['sure'])]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => i.id)).toEqual(['legend-group-fiab', 'legend-tag-fiab-sure'])
+    expect(items[0]).toMatchObject({ text: 'Fiabilité des données', bold: true })
   })
 })

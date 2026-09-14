@@ -87,6 +87,8 @@ export class Class_ScaleOverrides {
     if (!link) return
     const v = Math.abs(link.valueCurrent ?? 0)
     if (!(v > 0)) return
+    // sa#529 — `|| 1` VOULU (diviseur ; un 0 rendrait `new_scale` infini). Voir
+    // NodePositioningScaleAdapted.linkMagnitude et SankeyPersistence.fromJSON.
     const factor = link.shape_local_link_scale || 1
     // thickness = v / (carrier_scale × factor) × 100 (range [0,100]) → carrier_scale = v×100 / (T×factor)
     const new_scale = v * 100 / (ref.thickness * factor)

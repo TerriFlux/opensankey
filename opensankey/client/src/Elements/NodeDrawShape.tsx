@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 import { Class_NodeBase } from './NodeBase'
+import { effectiveOpacity } from './elementOpacity'
 import type { Class_NodeElement } from './Node'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 
@@ -282,7 +283,7 @@ export class NodeDrawShape {
     const effective_thickness = clip_attr ? base_thickness * 2 : base_thickness
     const sel = this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
-      .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
+      .attr('fill-opacity', effectiveOpacity(this._node, { hidden: !(this._node.shape_visible && this._node.shape_color_visible) }))
       .attr('fill', fill_to_use)
       .attr('stroke', this._node.shape_border_color_sustainable ? this._node.shape_border_color : this._node.getShapeColorToUse())
       .attr('stroke-width', effective_thickness)

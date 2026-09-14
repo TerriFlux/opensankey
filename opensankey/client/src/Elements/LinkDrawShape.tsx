@@ -29,6 +29,7 @@ import { getNameLabelValues } from './ElementsAttributesConfig'
 import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
+import { effectiveOpacity } from './elementOpacity'
 
 /**
  * Sur-pente de la bézier par rapport à la corde (cf. drawShape).
@@ -144,7 +145,9 @@ export class LinkDrawShape {
       // Avoid recomputations
       const thickness = !this._link.linkIsStructure() ? this._link.thickness : 2
       const shape_color = this._link.getShapeColorToUse()
-      const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && !this._link.has_data ? 0.2 : (this._link.shape_color_visible ? this._link.shape_opacity : 0)
+      // SA#534 — opacité résolue par le point unique (voir elementOpacity.ts). Les tirages
+      // dérivés ci-dessous (incertitude, bandes, gardes locaux) partent de cette variable.
+      const shape_opacity = effectiveOpacity(this._link, { dim: 'no_data', hidden: !this._link.shape_color_visible })
 
       // Check to choose how to draw
       const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
@@ -235,8 +238,6 @@ export class LinkDrawShape {
         // vh/hv links share the control-point-driven path of hh/vv so their curve
         // and tangent handles are correctly positioned and the curvature editable.
         const path = this.getBezierPath(bezier_outline)
-
-        const da = this._link.sankey.drawing_area
 
         // Tapered links must always use fill (not stroke) since stroke-width is uniform
         const is_stroke = !this._link.isTapered && (!bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible && !this._link.linkIsStructure())))
@@ -340,7 +341,8 @@ export class LinkDrawShape {
 
         if (!is_stroke) {
           this._link.d3_selection?.selectAll('.link_path')
-            .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 : shape_opacity)
+            // SA#534 — seul site à estomper AUSSI les flux qui ont des données ('always').
+            .attr('fill-opacity', effectiveOpacity(this._link, { dim: 'always', hidden: !this._link.shape_color_visible }))
             .attr('dasharray', show_as_dash ? '10,2' : '')
         }
       }

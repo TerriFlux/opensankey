@@ -52,6 +52,7 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import type { Type_CanvasFrame } from './DrawingArea'
 import { exposeDrawCounters } from './DrawCounters'
+import { SAVE_TOPIC } from './EventBus'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -423,7 +424,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '1.3.4'
+  public version: string = '1.3.5'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
@@ -1077,6 +1078,9 @@ export class Class_ApplicationData {
   public noteDocumentDownloaded() {
     localStorage.setItem('last_download', new Date().toISOString())
     this.menu_configuration.ref_to_last_download_updater.current()
+    // sa#524 — un vrai fichier vient d'être écrit : signalé aux couches qui
+    // veulent y réagir (la couche applicative y propose le compte gratuit).
+    this.menu_configuration.notify(SAVE_TOPIC)
   }
 
   public get last_document_download(): Date | null {
@@ -1277,10 +1281,21 @@ export class Class_ApplicationData {
     // OS#85 — Charger un fichier SANS feuilles alors que le document en a = charger
     // DANS la feuille courante : les autres feuilles restent (sémantique draw.io/Excel,
     // demandée par Julien le 10/08 — « le chargement devrait être associé à la feuille »).
+    //
+    // sa#539 — ce chargement-là est désormais DEMANDÉ, plus DÉDUIT. Tant qu'il se
+    // déclenchait sur la seule absence de clé `sheets`, « Fichier → Ouvrir » laissait
+    // survivre les feuilles du document précédent : on se retrouvait avec un document
+    // hybride, sans que rien ne le signale. `fromJSON` = j'ouvre un document (reset
+    // complet) ; `into_current_sheet` = je charge dans la feuille que j'ai sous les yeux.
+    // Le dialogue d'ouverture propose l'option DÉCOCHÉE ; la réconciliation blob→blob et
+    // « ouvrir dans une nouvelle feuille » (bibliothèque) la posent, eux, à `true`.
+    //
     // Un fichier AVEC feuilles reste un DOCUMENT complet : il remplace tout, feuilles
-    // comprises. La garde `_loading_into_sheet` coupe la récursion : _loadSheetContent
-    // repasse par fromJSON pour poser le contenu, et lui seul doit faire le vrai reset.
-    if (this.has_sheets && !this._loading_into_sheet && !json_object['sheets']) {
+    // comprises — même quand l'option est demandée. La garde `_loading_into_sheet` coupe
+    // la récursion : _loadSheetContent repasse par fromJSON pour poser le contenu, et lui
+    // seul doit faire le vrai reset.
+    const into_current_sheet = Boolean(kwargs && kwargs['into_current_sheet'])
+    if (into_current_sheet && this.has_sheets && !this._loading_into_sheet && !json_object['sheets']) {
       this._loadSheetContent(json_object, draw)
       this.menu_configuration?.ref_to_sheet_tabs_updater.current()
       return
