@@ -45,6 +45,11 @@ const unitaryProcessPortSchema = z
     // Nature de l'échange pour la passerelle Brightway (ACV). Absente =
     // technosphère.
     exchange_kind: z.enum(['technosphere', 'biosphere']).optional(),
+    // os#1388 — RANG du flux : `foreground` (premier-plan) est le seul que la
+    // réconciliation ajuste ; `background` (base ACV) et `elementary` (échange
+    // avec l'environnement) sont transportés tels quels vers Brightway. ABSENT
+    // vaut `foreground`, ce qui laisse les briques d'avant le champ inchangées.
+    flow_tier: z.enum(['foreground', 'background', 'elementary']).optional(),
   })
   .passthrough()
 
