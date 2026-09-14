@@ -285,7 +285,8 @@ export class NodeDrawShape {
       .attr('id', this._node.id)
       .attr('fill-opacity', effectiveOpacity(this._node, { hidden: !(this._node.shape_visible && this._node.shape_color_visible) }))
       .attr('fill', fill_to_use)
-      .attr('stroke', this._node.shape_border_color_sustainable ? this._node.shape_border_color : this._node.getShapeColorToUse())
+      // SA#541 — une couleur de bordure imposée par un style d'étiquette tient comme une couleur verrouillée
+      .attr('stroke', this._node.keepsOwnColor('shape_border_color') ? this._node.shape_border_color : this._node.getShapeColorToUse())
       .attr('stroke-width', effective_thickness)
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
