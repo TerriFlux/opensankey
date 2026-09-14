@@ -443,6 +443,7 @@ export const resources_app_elements = {
         importExportAboveBelow: 'Import/export top/bottom',
         show_legend_free_value: 'Value is contained in an interval',
         legend_dashed_links: 'Unknown flow value',
+        legend_untagged: 'No tag',
         hide_leg: 'Hide the legend',
         show_leg: 'Show the legend',
         tooltips: {
@@ -1198,6 +1199,7 @@ export const resources_app_elements = {
         defaultParametric: 'Calculer paramétrisation',
         show_legend_free_value: 'Valeur contenue dans un intervalle',
         legend_dashed_links: 'Valeur du flux inconnu',
+        legend_untagged: 'Sans étiquette',
         hide_leg: 'Masquer la légende',
         show_leg: 'Afficher la légende',
         tooltips: {
@@ -1921,6 +1923,7 @@ export const resources_app_elements = {
         defaultParametric: 'Calcular parametrización',
         show_legend_free_value: 'Valor contenido en un intervalo',
         legend_dashed_links: 'Valor del flujo desconocido',
+        legend_untagged: 'Sin etiqueta',
         hide_leg: 'Ocultar la leyenda',
         show_leg: 'Mostrar la leyenda',
         tooltips: {
@@ -2643,6 +2646,7 @@ export const resources_app_elements = {
         defaultParametric: 'Parametrisierung berechnen',
         show_legend_free_value: 'Wert in einem Intervall enthalten',
         legend_dashed_links: 'Unbekannter Flusswert',
+        legend_untagged: 'Ohne Etikett',
         hide_leg: 'Legende ausblenden',
         show_leg: 'Legende einblenden',
         tooltips: {
@@ -3365,6 +3369,7 @@ export const resources_app_elements = {
         defaultParametric: 'Calcola parametrizzazione',
         show_legend_free_value: 'Valore contenuto in un intervallo',
         legend_dashed_links: 'Valore del flusso sconosciuto',
+        legend_untagged: 'Senza etichetta',
         hide_leg: 'Nascondi la legenda',
         show_leg: 'Mostra la legenda',
         tooltips: {
@@ -4090,6 +4095,7 @@ export const resources_app_elements = {
         importExportAboveBelow: '进出口置于上下端',
         show_legend_free_value: '数值处于某一区间内',
         legend_dashed_links: '流量数值未知',
+        legend_untagged: '无标签',
         hide_leg: '隐藏图例',
         show_leg: '显示图例',
         tooltips: {
@@ -4819,6 +4825,7 @@ export const resources_app_elements = {
         importExportAboveBelow: '移入／移出を上下に',
         show_legend_free_value: '値が区間に含まれます',
         legend_dashed_links: 'フローの値が不明',
+        legend_untagged: 'ラベルなし',
         hide_leg: '凡例を隠す',
         show_leg: '凡例を表示',
         tooltips: {
