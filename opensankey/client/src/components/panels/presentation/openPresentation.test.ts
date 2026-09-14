@@ -1,7 +1,7 @@
 import {
   placePopupNear, matchesPresentationTrigger, MAX_PRESENTATION_POPUPS,
   presentationPanelId, isPresentationPanelId, elementIdOfPanel, openPresentationFor,
-  opensPresentationOnClick, tooltipWouldRenderSomething
+  opensPresentationOnClick, tooltipWouldRenderSomething, hoverOnTextOpensPresentation
 } from './openPresentation'
 import { presentation_block_registry } from './PresentationBlockRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
@@ -152,6 +152,62 @@ describe('tooltipWouldRenderSomething — info-bulle vide = pas ouverte', () => 
       id: BLOCK, target: 'node', order: 1, label: () => '', render: () => 'contenu'
     })
     expect(tooltipWouldRenderSomething(app, element)).toBe(true)
+  })
+})
+
+// #542 — une entrée de légende montre la définition de son étiquette ou de son
+// groupe : au survol nu, texte compris, et jamais en pop-up vide.
+describe('#542 entrées de légende', () => {
+  const legendEntry = (trigger?: 'hover' | 'shift' | 'alt') => ({
+    id: 'legend-tag-fiab-fiable',
+    getElementProperty: (k: string) => (k === 'tooltip_trigger' ? trigger : undefined)
+  })
+  const ordinary = { id: 'zdt', getElementProperty: () => undefined }
+  const BLOCK = 'os.block.free_text'
+  const realApp = () => {
+    const panels = new Class_PanelManager(new Class_EventBus())
+    return { app: { menu_configuration: { panels } } as unknown as Class_ApplicationData, panels }
+  }
+
+  afterEach(() => presentation_block_registry.unregister(BLOCK))
+
+  it('déclencheur par défaut : survol nu ; un déclencheur explicite reste prioritaire', () => {
+    expect(matchesPresentationTrigger(legendEntry(), {})).toBe(true)
+    expect(matchesPresentationTrigger(legendEntry('shift'), {})).toBe(false)
+    // Les autres éléments gardent MAJ + survol.
+    expect(matchesPresentationTrigger(ordinary, {})).toBe(false)
+  })
+
+  it('le texte d\'une entrée est survolable, pas celui des autres éléments', () => {
+    expect(hoverOnTextOpensPresentation(legendEntry())).toBe(true)
+    expect(hoverOnTextOpensPresentation(ordinary)).toBe(false)
+    expect(hoverOnTextOpensPresentation(fakeElement())).toBe(false)
+  })
+
+  it('clic sur une entrée SANS définition : aucune pop-up', () => {
+    presentation_block_registry.register({
+      id: BLOCK, target: 'node', order: 1, label: () => '', render: () => null
+    })
+    const { app, panels } = realApp()
+    expect(openPresentationFor(app, legendEntry(), { x: 100, y: 100 })).toBe(false)
+    expect(panels.open_ids).toEqual([])
+  })
+
+  it('clic sur une entrée AVEC définition : la pop-up s\'ouvre', () => {
+    presentation_block_registry.register({
+      id: BLOCK, target: 'node', order: 1, label: () => '', render: () => 'Fiable : …'
+    })
+    const { app, panels } = realApp()
+    expect(openPresentationFor(app, legendEntry(), { x: 100, y: 100 })).toBe(true)
+    expect(panels.getMode(presentationPanelId('legend-tag-fiab-fiable'))).toBe('popup')
+  })
+
+  it('hors légende, le clic ouvre comme avant même sans contenu', () => {
+    presentation_block_registry.register({
+      id: BLOCK, target: 'node', order: 1, label: () => '', render: () => null
+    })
+    const { app } = realApp()
+    expect(openPresentationFor(app, ordinary, { x: 100, y: 100 })).toBe(true)
   })
 })
 

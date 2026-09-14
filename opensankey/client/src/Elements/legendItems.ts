@@ -42,6 +42,11 @@ export type Type_LegendItem = {
   // c'est `renderableLegendItems` qui décide si elle est rendue, et le ticket qui
   // posera le clic qui décidera de SON aspect (grisé, barré...).
   dimmed?: boolean
+  // #542 — DÉFINITION de l'étiquette (entrée) ou du groupe (titre), déjà résolue
+  // dans la langue courante. Posée seulement quand elle porte du texte : c'est le
+  // générateur qui la recopie dans le texte libre de la zone, lu au survol par le
+  // bloc INFOS de la présentation.
+  description?: string
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -78,10 +83,15 @@ type Type_TagForLegend = {
   // `label` = ce qui est écrit sur le diagramme (Class_Unit.label : display_name
   // s'il est posé, sinon le symbole canonique). `name` reste la référence.
   resolved_unit?: { unit: { name: string, label: string } }
+  // #542 — `Class_ProtoTag.description` : définition résolue dans la langue
+  // courante ('' sans définition). Optionnel pour garder les mocks triviaux.
+  description?: string
 }
 type Type_TagGroupForLegend = {
   id: string
   name: string
+  // #542 — `Class_ProtoTagGroup.description`, même contrat que sur l'étiquette.
+  description?: string
   // Mise en forme pilotée par le groupe — voir tagGroupCarriesFormatting().
   use_colors: boolean
   // #533 — second terme du prédicat « ce groupe porte une mise en forme ».
@@ -176,6 +186,16 @@ export function legendEntryText(
 }
 
 /**
+ * #542 — définition d'une étiquette ou d'un groupe, telle que la légende la
+ * porte : `undefined` quand elle est absente ou blanche, pour que les entrées
+ * sans définition restent structurellement identiques à avant.
+ */
+function definitionOf(owner: { description?: string }): string | undefined {
+  const description = owner.description
+  return typeof description === 'string' && description.trim() !== '' ? description : undefined
+}
+
+/**
  * #533 — « ce groupe porte une mise en forme » : prédicat d'apparition d'un
  * groupe de tags dans la légende.
  *
@@ -262,14 +282,17 @@ export function computeLegendItems(
       })
       if (displayed_tags.length === 0) return
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
-      items.push({
+      const title: Type_LegendItem = {
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
         text: tag_group.name,
         bold: true,
         starts_group: true,
         own_line: true,
         block_id
-      })
+      }
+      const group_description = definitionOf(tag_group)
+      if (group_description !== undefined) title.description = group_description
+      items.push(title)
       displayed_tags.forEach(tag => {
         const item: Type_LegendItem = {
           id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
@@ -282,6 +305,8 @@ export function computeLegendItems(
         // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
         // entrées ordinaires restent structurellement identiques à avant.
         if (tag.is_selected === false) item.dimmed = true
+        const tag_description = definitionOf(tag)
+        if (tag_description !== undefined) item.description = tag_description
         items.push(item)
       })
     })
