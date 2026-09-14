@@ -92,6 +92,14 @@ import React from 'react'
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { PublishOptions } from '../types/PublishOptions'
 import type { Type_Presentable } from '../components/panels/presentation/openPresentation'
+// os#1393 - le clic droit dans une représentation. `attachRepresentationContextMenu` est la
+// SEULE valeur importée d'ici ; le module d'en face, lui, ne prend de ce fichier que des TYPES
+// (donc effacés à la compilation) : pas de cycle à l'exécution.
+import {
+  attachRepresentationContextMenu,
+  type Type_RepresentationMenu,
+  type Type_RepresentationTarget
+} from './RepresentationContextMenu'
 
 /**
  * Les deux échelles que le code confondait (§3.2 de la note). Une entrée en
@@ -126,6 +134,16 @@ export type Type_RepresentationContext = {
   element: Type_Presentable | null
   /** Réglages composés par l'auteur, opaques au registre. */
   options: { [key: string]: unknown }
+  /**
+   * os#1393 - LA FENÊTRE de la grande zone qui montre cette représentation, quand c'en est une.
+   *
+   * Absent partout ailleurs : la pop-up de présentation monte les mêmes entrées sans fenêtre,
+   * et une entrée de menu qui agit sur SA fenêtre (« épingler ce nœud comme sujet ») n'a alors
+   * rien à viser - elle ne se propose donc pas, plutôt que d'agir sur une fenêtre au hasard.
+   * C'est l'identité que l'hôte possède déjà (`Type_MainZoneOccupant.id`) ; on ne fait que la
+   * transmettre, les gestes de fenêtre restant ceux de `Class_MenuConfig`.
+   */
+  window_id?: string
 }
 
 /** Démontage seul ; `void` quand il n'y a rien à défaire. */
@@ -181,6 +199,29 @@ type Type_RepresentationCommon = {
   publish_option?: Type_PublishToggle
   /** Gating de couche (licence, module absent…). */
   gate?: (app_data: Class_ApplicationData) => boolean
+  /**
+   * os#1393 - LE MENU CONTEXTUEL de la représentation, par NATURE d'élément cliqué.
+   *
+   * Appelée à chaque clic droit, avec ce que l'étiquetage `data-*` a désigné (cf.
+   * `RepresentationContextMenu`) : elle rend la structure à afficher et les fonctions qu'elle
+   * appelle, ou `null` - et `null` laisse le menu du NAVIGATEUR s'ouvrir, ce qui est la bonne
+   * réponse là où la représentation n'offre rien.
+   *
+   * Construire la structure ICI, au clic, plutôt que de la déclarer une fois pour toutes : les
+   * conditions de visibilité du moteur de menu ne connaissent que `app_data` (elles ont été
+   * écrites pour le nœud contextualisé du diagramme), alors que ce qui décide ici, c'est
+   * l'objet cliqué. Une entrée absente de la structure est une entrée qui n'existe pas pour
+   * CET objet, sans condition à évaluer.
+   *
+   * RÈGLE DE TRI, valable pour toutes les représentations : une entrée n'est proposée que si
+   * elle a un effet VISIBLE dans cette représentation-ci. Le même objet peut donc offrir des
+   * gestes différents selon la figure où on le clique, et ce n'est pas une incohérence : c'est
+   * la figure qui dit ce qu'on peut y voir changer.
+   */
+  contextMenu?: (args: {
+    target: Type_RepresentationTarget
+    ctx: Type_RepresentationContext
+  }) => Type_RepresentationMenu | null
   /** Refus fin sur CE sujet ; absent = toujours applicable. */
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
   /**
@@ -353,12 +394,13 @@ export const diagramContext = (
   options: { [key: string]: unknown } = {}
 ): Type_RepresentationContext => ({ app_data, scale: 'diagram', element: null, options })
 
-/** Contexte d'échelle ÉLÉMENT. */
+/** Contexte d'échelle ÉLÉMENT. `window_id` : cf. Type_RepresentationContext (os#1393). */
 export const elementContext = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
-  options: { [key: string]: unknown } = {}
-): Type_RepresentationContext => ({ app_data, scale: 'element', element, options })
+  options: { [key: string]: unknown } = {},
+  window_id?: string
+): Type_RepresentationContext => ({ app_data, scale: 'element', element, options, window_id })
 
 /**
  * Une représentation MONTÉE, vue par son hôte. Forme NORMALISÉE : quoi qu'ait
@@ -404,7 +446,17 @@ export const mountRepresentation = (
   const entry = representation_registry.get(id)
   if (!entry?.draw) return null
   if (entry.gate && !entry.gate(ctx.app_data)) return null
-  return { id, ...normalizeMount(entry.draw(container, ctx)) }
+  const mount = normalizeMount(entry.draw(container, ctx))
+  // os#1393 - LE CLIC DROIT, posé ici et nulle part ailleurs : c'est le seul endroit que
+  // traversent toutes les représentations dessinées, et le conteneur survit aux redessins que
+  // le moteur, lui, refait de zéro. Une représentation qui ne déclare pas de menu n'écope
+  // d'aucun écouteur (cf. attachRepresentationContextMenu).
+  const detach = attachRepresentationContextMenu(container, entry, ctx)
+  return {
+    id,
+    redraw: mount.redraw,
+    cleanup: () => { detach(); mount.cleanup() }
+  }
 }
 
 /**

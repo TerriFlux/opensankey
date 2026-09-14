@@ -74,6 +74,10 @@ import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
 import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
+// os#1393 - les menus contextuels des REPRÉSENTATIONS (étoile unitaire, sunburst…) se ferment
+// par le même geste que ceux du diagramme : un seul menu à l'écran, une seule commande pour
+// tout refermer (le clic extérieur passe déjà par `closeAllContextMenus`).
+import { closeRepresentationContextMenu } from '../Representations/RepresentationContextMenu'
 
 /**
  * os#1387 — Cadre du canevas dans la grande zone : sa case (coordonnées viewport) quand le
@@ -2104,7 +2108,12 @@ export class Class_DrawingArea {
   }
 
   public closeAllContextMenus() {
-    const just_closed = this.node_contextualised != undefined ||
+    // os#1393 - le menu d'une représentation se ferme AVANT les autres : il ne vit pas dans la
+    // zone de dessin, mais il se referme sur les mêmes gestes (clic extérieur, ouverture d'un
+    // autre menu). Son `false` ne doit pas masquer une fermeture réelle, d'où le OU.
+    const closed_representation = closeRepresentationContextMenu()
+    const just_closed = closed_representation ||
+      this.node_contextualised != undefined ||
       this.link_contextualised != undefined ||
       this.is_drawing_area_contextualised != false ||
       this.contextualised_container != undefined

@@ -24,6 +24,13 @@
 // il n'achetait que le moteur de rendu. Ici on ne dessine que la figure, et l'aperçu redevient ce
 // qu'il est — une REPRÉSENTATION, l'exact pendant de la couronne et de l'histogramme.
 //
+// os#1393 - DES ÉTIQUETTES `data-*`, ET TOUJOURS AUCUN `id`. Le dessin porte depuis cette issue
+// `data-repr-kind` (ruban, centre) et `data-repr-id` (l'identifiant du flux, déjà présent dans les
+// données de branche), pour que le clic droit sache ce qu'on a cliqué. Ce N'EST PAS un relâchement
+// de la règle ci-dessous, qui reste entière : un `id` est GLOBAL au document, un attribut `data-*`
+// ne se lit qu'en remontant depuis l'élément cliqué, à l'intérieur du conteneur de CETTE étoile.
+// Deux étoiles côte à côte continuent donc de répondre chacune pour elle-même.
+//
 // AUCUN IDENTIFIANT DOM N'EST POSÉ ICI, ET C'EST DÉLIBÉRÉ. Une référence `url(#id)` (dégradé, masque,
 // clip) résout au PREMIER élément du document portant cet identifiant, jamais à celui du sous-arbre
 // courant : deux étoiles côte à côte dans la même page — deux vignettes, une fenêtre et son aperçu —
@@ -33,6 +40,11 @@
 // des rubans en aplat, des classes pour le repérage, zéro `id`, zéro `<defs>`.
 
 import * as d3 from '../d3Modules'
+// os#1393 - LES DEUX NOMS D'ATTRIBUTS DU CLIC DROIT, et rien d'autre : deux chaînes, aucun code.
+// Ce module reste sans dépendance au modèle ni à React ; les nommer ici en dur les ferait diverger
+// du lecteur qui les relit (cf. `representationTargetAt`), et la panne serait muette - le menu du
+// navigateur reviendrait, sans erreur.
+import { REPR_ID_ATTR, REPR_KIND_ATTR } from '../Representations/RepresentationContextMenu'
 import type {
   Type_UnitaryStar,
   Type_UnitaryStarBranch,
@@ -540,6 +552,10 @@ export const drawUnitaryStar = (
     .attr('d', d => unitaryRibbonPath(outer_x, d.outer_y, inner_x, d.inner_y, d.thickness))
     .attr('fill', d => colorOf(d.branch))
     .attr('fill-opacity', RIBBON_OPACITY)
+    // os#1393 - le ruban, son talon et son libellé portent LA MÊME étiquette : ce sont trois
+    // formes d'un seul objet, et l'utilisateur ne vise pas un `path`, il vise un flux.
+    .attr(REPR_KIND_ATTR, 'ribbon')
+    .attr(REPR_ID_ATTR, d => d.branch.id)
     .append('title')
     .text(d => branchTooltip(d.branch))
 
@@ -556,6 +572,8 @@ export const drawUnitaryStar = (
     .attr('width', STUB_W_PX)
     .attr('height', d => d.thickness)
     .attr('fill', d => colorOf(d.branch))
+    .attr(REPR_KIND_ATTR, 'ribbon')
+    .attr(REPR_ID_ATTR, d => d.branch.id)
     .append('title')
     .text(d => branchTooltip(d.branch))
 
@@ -574,6 +592,12 @@ export const drawUnitaryStar = (
     .attr('height', Math.max(center_h, 1))
     .attr('fill', CENTER_FILL)
     .attr('stroke', CENTER_STROKE)
+    // os#1393 - le centre n'a PAS de `data-repr-id` : l'étoile ne transporte pas l'identifiant
+    // de son nœud (cf. Type_UnitaryStar, qui n'en porte que le nom affiché), et la
+    // représentation qui déclare le menu connaît de toute façon son propre sujet. Inventer un
+    // identifiant ici l'obligerait à choisir entre celui du diagramme et celui de la source
+    // importée - deux fichiers, deux jeux d'identifiants.
+    .attr(REPR_KIND_ATTR, 'center')
     .append('title')
     .text(star.center_text ? `${star.center_label}\n${star.center_text}` : star.center_label)
 
@@ -665,6 +689,8 @@ export const drawUnitaryStar = (
       .attr('dominant-baseline', 'central')
       .attr('font-size', LABEL_FONT_PX)
       .attr('fill', INK)
+      .attr(REPR_KIND_ATTR, 'ribbon')
+      .attr(REPR_ID_ATTR, d => d.branch.id)
       .text(d => truncateToWidth(d.branch.label, room, LABEL_FONT_PX))
       .append('title')
       .text(d => branchTooltip(d.branch))
