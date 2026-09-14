@@ -69,6 +69,9 @@ export type Type_DeterminationExplanation = {
   // c'est de leur combinaison que sort l'équation aplatie, et le coefficient
   // qu'elle porte. Sans elles, ce coefficient sort de nulle part.
   combines: number[]
+  // #544 — statut de réconciliation gradué (cf. RECONCILIATION_STATUSES).
+  // Absent quand la réconciliation n'a pas été lancée avec l'option.
+  status?: string
 }
 
 export type Type_DeterminationCatalog = {
@@ -183,7 +186,12 @@ export const determinationCatalogFromJSON = (
         roles[role].push(id)
       }
     }
-    explanations.push({ type: e.type, constraints, coefs, ...roles })
+    const explanation: Type_DeterminationExplanation = { type: e.type, constraints, coefs, ...roles }
+    if (e.status !== undefined) {
+      if (typeof e.status !== 'string') return undefined
+      explanation.status = e.status
+    }
+    explanations.push(explanation)
   }
   return { subjects, explanations }
 }
@@ -203,6 +211,7 @@ export const determinationCatalogToJSON = (
     if (e.max_by.length > 0) out.max_by = e.max_by as unknown as Type_JSON
     if (e.fixed_by.length > 0) out.fixed_by = e.fixed_by as unknown as Type_JSON
     if (e.combines.length > 0) out.combines = e.combines as unknown as Type_JSON
+    if (e.status !== undefined) out.status = e.status
     return out
   })
   const out: Type_JSON = { explanations: explanations as unknown as Type_JSON }
@@ -363,4 +372,59 @@ export const determinationStatusOf = (
   const explanation = determinationLookup(catalog, determinationIndexOf(bearer))
   if (explanation === undefined) return undefined
   return determinationStatusOfType(explanation.type, bearer?.value)
+}
+
+/**
+ * #544 — Les six états du « Statut après réconciliation », du PIRE au MEILLEUR.
+ *
+ * Calculés par la réconciliation elle-même (`reconciliation_statuses`,
+ * `mfa_problem_determination.py`) : une valeur déterminée y prend le pire de ce
+ * qu'elle traverse jusqu'aux données — nature des équations (bilan ou
+ * coefficient ; une agrégation transmet l'état de ses termes) et état des
+ * termes. Le front ne peut rien en reconstituer, il n'a pas la matrice : il
+ * restitue le champ `status` de l'explication.
+ *
+ * L'ordre est porteur : c'est celui du pire au meilleur.
+ */
+export const RECONCILIATION_STATUSES = [
+  'undetermined_unbounded',
+  'undetermined_bounded',
+  'reconciled',
+  'determined_by_balance',
+  'determined_by_coefficient',
+  'collected'
+] as const
+
+export type Type_ReconciliationStatus = typeof RECONCILIATION_STATUSES[number]
+
+const isReconciliationStatus = (value: unknown): value is Type_ReconciliationStatus =>
+  typeof value === 'string' && (RECONCILIATION_STATUSES as readonly string[]).includes(value)
+
+/**
+ * Statut de réconciliation gradué de la valeur affichée, ou `undefined`.
+ *
+ * `undefined` est l'état NORMAL de tout fichier réconcilié sans l'option (ou
+ * avant #544) : pas de repli sur les quatre états, qui ne savent pas distinguer
+ * un bilan d'un coefficient. Un code inconnu — moteur plus récent — ne se
+ * devine pas non plus.
+ */
+export const reconciliationStatusOf = (
+  catalog: Type_DeterminationCatalog | undefined,
+  bearer: Type_DeterminationBearer | null | undefined
+): Type_ReconciliationStatus | undefined => {
+  const status = determinationLookup(catalog, determinationIndexOf(bearer))?.status
+  return isReconciliationStatus(status) ? status : undefined
+}
+
+/** Projection des six états sur les quatre que lit l'inspecteur (#536). */
+export const reconciliationStatusToDeterminationStatus = (
+  status: Type_ReconciliationStatus
+): Type_DeterminationStatus => {
+  switch (status) {
+    case 'undetermined_unbounded':
+    case 'undetermined_bounded': return 'undetermined'
+    case 'determined_by_balance':
+    case 'determined_by_coefficient': return 'determined'
+    default: return status
+  }
 }
