@@ -25,12 +25,12 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye } from 'react-icons/fa'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
 import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
-  MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID
+  MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_JSON_ID
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
 
@@ -59,6 +59,21 @@ export const registerBaseRepresentations = (): void => {
     // altérer. Et plomber Univer interdirait du même coup les gestes qui font
     // l'intérêt du tableur pour un lecteur : trier une colonne, copier une
     // plage. Le trou n'est pas un oubli, ne le bouchez pas.
+    host: 'component'
+  })
+
+  // La vue JSON du format natif, au MÊME niveau que le tableur (cf. MAIN_ZONE_JSON_ID) : le
+  // document entier, rendu comme le fichier qu'on enregistrerait. Elle était un sous-onglet du
+  // tableur, ce qui lui coûtait une ligne d'en-tête et interdisait de la voir à côté de la
+  // grille. Pas de `publish_option` propre : comme le tableur, elle est offerte au lecteur sauf
+  // si la liste blanche `PublishOptions.representations` la retire — c'est exactement ce que
+  // valait le sous-onglet, atteignable dès que le tableur l'était.
+  representation_registry.register({
+    id: MAIN_ZONE_JSON_ID,
+    scale: 'diagram',
+    order: 25,
+    label: (a) => a.t('Spreadsheet.zone.json'),
+    icon: <FaCode />,
     host: 'component'
   })
 
