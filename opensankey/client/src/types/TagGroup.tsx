@@ -38,6 +38,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // #537 - le front MODELISE desormais ces trois cles (cf. la meme note dans
   // Tag.tsx) : les laisser au sac ferait resurgir une valeur effacee.
   'description', 'style_patch', 'pinned_in_legend',
+  // SA#541 - style nomme impose aux elements sans etiquette du groupe.
+  'style_id',
 ])
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -89,6 +91,12 @@ export abstract class Class_ProtoTagGroup {
   // pilote, chaque etiquette porte sa valeur dans SON patch.
   private _style_patch: Type_StylePatch = {}
 
+  // SA#541 - id du STYLE NOMME impose aux elements qui ne portent AUCUNE etiquette
+  // du groupe (valeurs « non qualifiees » : 26,5 % des valeurs SOCLE). undefined = aucun.
+  private _style_id: string | undefined = undefined
+  private _uses_tag_styles: boolean = false
+  private _uses_tag_styles_epoch: number = -1
+
   // #537 - groupe EPINGLE en legende (« Source », « Methode » toujours visibles
   // en bas). Pose des maintenant, pendant qu'on touche au format, pour que les
   // tickets d'affichage qui suivent consomment un format fige.
@@ -128,6 +136,8 @@ export abstract class Class_ProtoTagGroup {
     if (!this._is_currently_deleted) {
       // Set as currently deleted
       this._is_currently_deleted = true
+      // SA#541 - le groupe et ses etiquettes emportent leurs styles
+      this._ref_sankey.tagStylesConfigUpdated?.()
       // Delete all tags properly
       Object.values(this._tags)
         .forEach(tag => {
@@ -174,6 +184,11 @@ export abstract class Class_ProtoTagGroup {
     this._description_map = { ...tagg_to_copy._description_map }
     this._style_patch = { ...tagg_to_copy._style_patch }
     this._pinned_in_legend = tagg_to_copy._pinned_in_legend
+    // SA#541 - meme raison : le style des elements sans etiquette suit le groupe.
+    if (this._style_id !== tagg_to_copy._style_id) {
+      this._style_id = tagg_to_copy._style_id
+      this._ref_sankey.tagStylesConfigUpdated?.()
+    }
     // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
     // groups were matched by name but carry different tag ids (e.g. updateFrom
     // a JSON whose tags were renamed), copying the order verbatim would leave
@@ -238,6 +253,8 @@ export abstract class Class_ProtoTagGroup {
     const style_patch = serializeStylePatch(this._style_patch)
     if (style_patch !== undefined) json_object['style_patch'] = style_patch
     if (this._pinned_in_legend) json_object['pinned_in_legend'] = true
+    // SA#541 - meme ecriture conditionnelle
+    if (this._style_id !== undefined) json_object['style_id'] = this._style_id
     // Update tags infos
     const json_object_tags = {} as Type_JSON
     this.tags_list
@@ -304,6 +321,12 @@ export abstract class Class_ProtoTagGroup {
       this._style_patch = parseStylePatch(json_object['style_patch'])
     }
     this._pinned_in_legend = getBooleanFromJSON(json_object, 'pinned_in_legend', this._pinned_in_legend)
+    // SA#541 - cle absente = aucun style ; chaine vide ou non-chaine = aucun style.
+    if (json_object['style_id'] !== undefined) {
+      const style_id = json_object['style_id']
+      this._style_id = (typeof style_id === 'string' && style_id !== '') ? style_id : undefined
+      this._ref_sankey.tagStylesConfigUpdated?.()
+    }
     // Create new tags & read their attributes
     const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
     Object.entries(json_object['tags'])
@@ -387,6 +410,39 @@ export abstract class Class_ProtoTagGroup {
    */
   public get style_patch(): Type_StylePatch { return { ...this._style_patch } }
   public set style_patch(value: Type_StylePatch) { this._style_patch = { ...value } }
+
+  /**
+   * SA#541 - Style nomme impose aux elements qui ne portent AUCUNE etiquette du
+   * groupe (id de la liste des Styles). Il touche potentiellement tous les
+   * elements de la famille : on les redessine tous.
+   */
+  public get style_id(): string | undefined { return this._style_id }
+  public set style_id(value: string | undefined) {
+    const next = value === '' ? undefined : value
+    if (this._style_id === next) return
+    this._style_id = next
+    this._ref_sankey.tagStylesConfigUpdated?.()
+    this._ref_sankey.nodes_list.forEach(node => node.draw())
+    this._ref_sankey.links_list.forEach(link => link.draw())
+  }
+
+  /**
+   * SA#541 - Le groupe fonctionne-t-il par STYLES (lui ou une de ses etiquettes impose un style
+   * existant) ? La coloration historique par couleur d'etiquette ne s'applique alors plus : la
+   * couleur vient du style, et le menu n'affiche plus de couleur d'etiquette. Faux pour tous les
+   * fichiers existants. Memorise sur l'epoque de configuration des styles d'etiquette.
+   */
+  public get uses_tag_styles(): boolean {
+    const epoch = this._ref_sankey.tag_styles_config_epoch
+    if (this._uses_tag_styles_epoch !== epoch) {
+      const styles = this._ref_sankey.styles_dict
+      const usable = (id: string | undefined) =>
+        id !== undefined && styles[id] !== undefined && !styles[id].is_default_style
+      this._uses_tag_styles = usable(this._style_id) || this.tags_list.some(tag => usable(tag.style_id))
+      this._uses_tag_styles_epoch = epoch
+    }
+    return this._uses_tag_styles
+  }
 
   /**
    * Raccord du #537 au predicat de legende du #533 (`tagGroupCarriesFormatting`,
@@ -509,6 +565,8 @@ export abstract class Class_ProtoTagGroup {
     if (idx > 0) {
       this._tags_order.splice(idx, 1)
       this._tags_order.splice(idx - 1, 0, id)
+      // SA#541 - l'ordre des etiquettes departage les styles d'etiquette
+      this._ref_sankey.tagStylesUpdated?.()
     }
   }
 
@@ -517,6 +575,8 @@ export abstract class Class_ProtoTagGroup {
     if (idx >= 0 && idx < this._tags_order.length - 1) {
       this._tags_order.splice(idx, 1)
       this._tags_order.splice(idx + 1, 0, id)
+      // SA#541 - l'ordre des etiquettes departage les styles d'etiquette
+      this._ref_sankey.tagStylesUpdated?.()
     }
   }
 
@@ -658,7 +718,8 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   ) {
     super._fromJSON(json_object, kwargs)
     this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
-
+    // SA#541 - l'interrupteur allume ou eteint les styles d'etiquette du groupe
+    this._ref_sankey.tagStylesConfigUpdated?.()
   }
 
   protected _copyFrom(
@@ -667,6 +728,8 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   ) {
     super._copyFrom(tagg_to_copy, matching_tags_id)
     this._use_colors = tagg_to_copy.use_colors
+    // SA#541 - l'interrupteur allume ou eteint les styles d'etiquette du groupe
+    this._ref_sankey.tagStylesConfigUpdated?.()
   }
 
   // PUBLIC METHODS =====================================================================
@@ -726,6 +789,16 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
     // Avoid useless updates
     if (this._use_colors !== value) {
       this._use_colors = value
+      // SA#541 - l'interrupteur « Appliquer les styles associes » allume ou eteint aussi les
+      // styles d'etiquette du groupe, qui touchent potentiellement tous les elements (style
+      // du groupe pour les elements sans etiquette). Les signaux d'epoque sont appeles en
+      // `?.()` dans tout ce fichier : ce ne sont que des invalidations de cache, et des tests
+      // unitaires construisent des groupes sur un diagramme simule qui ne les porte pas.
+      this._ref_sankey.tagStylesConfigUpdated?.()
+      if (this.uses_tag_styles) {
+        this._ref_sankey.nodes_list.forEach(node => node.draw())
+        this._ref_sankey.links_list.forEach(link => link.draw())
+      }
       this.updateTagsReferences()
     }
   }

@@ -17,18 +17,23 @@
 //  - à GAUCHE, le contenu : « Description » (texte libre) puis le bilan des flux
 //    (nœud) ou les caractéristiques (flux) — ce qui était affiché jusqu'ici dans
 //    l'info-bulle ;
-//  - à DROITE, une colonne de boutons de DIAGRAMME (Unit. / Couronne / Barres)
-//    fournis par OS+ ; cliquer un bouton dessine le diagramme dans la zone de
+//  - à DROITE, une colonne d'ANALYSES DE L'ÉLÉMENT (Unit. / Couronne / Barres)
+//    fournies par OS+ ; cliquer un bouton dessine l'analyse dans la zone de
 //    gauche, à la place du contenu. Un bouton « Infos » y ramène.
 //
-// Sans OS+, `presentation_diagrams_for` est absent : pas de colonne de droite,
+// os#1356 — « analyse de l'élément », et non « représentation » : la
+// représentation, c'est l'échelle du DIAGRAMME ENTIER (Diagramme / Tableur /
+// Doc / Unit., cf. DiagramRepresentationButtons). Les deux échelles portaient le
+// même mot sans jamais être distinguées ; elles ne partagent aucun sélecteur.
+//
+// Sans OS+, `element_analyses_for` est absent : pas de colonne de droite,
 // la pop-up n'affiche que le contenu.
 
 import React from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
 import { FaInfoCircle, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 
-import type { Class_ApplicationData, Type_PresentationDiagram } from '../../../types/ApplicationData'
+import type { Class_ApplicationData, Type_ElementAnalysis } from '../../../types/ApplicationData'
 import { default_font_size } from '../../../css/Theme'
 import {
   renderPresentationBlock, presentationBlockLabel, presentationBlockSummary
@@ -101,24 +106,24 @@ const CollapsibleBlock = ({ title, summary, is_open, onToggle, children }: React
   </Box>
 )
 
-/** Zone de rendu d'un diagramme : appelle son `render` au montage, nettoie au
- *  démontage / changement de diagramme. Le conteneur a une hauteur DÉFINIE (les
- *  diagrammes qui se dimensionnent en `100%` en ont besoin). */
-const DiagramHost = ({ diagram }: { diagram: Type_PresentationDiagram }) => {
+/** Zone de rendu d'une analyse : appelle son `render` au montage, nettoie au
+ *  démontage / changement d'analyse. Le conteneur a une hauteur DÉFINIE (les
+ *  graphiques qui se dimensionnent en `100%` en ont besoin). */
+const ElementAnalysisHost = ({ analysis }: { analysis: Type_ElementAnalysis }) => {
   const ref = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     const node = ref.current
     if (!node) return
     node.innerHTML = ''
-    const cleanup = diagram.render(node)
+    const cleanup = analysis.render(node)
     return () => { if (typeof cleanup === 'function') cleanup() }
-  }, [diagram])
+  }, [analysis])
   return <Box ref={ref} style={{ width: '100%', height: '260px', minHeight: '260px' }} />
 }
 
-/** Bouton de diagramme : icône au-dessus, libellé dessous — même habillage que
+/** Bouton d'analyse : icône au-dessus, libellé dessous — même habillage que
  *  les onglets du menu de configuration (`inspector_tab`). */
-const DiagramButton = ({ icon, label, active, onClick }: {
+const ElementAnalysisButton = ({ icon, label, active, onClick }: {
   icon?: React.ReactNode
   label: string
   active: boolean
@@ -176,27 +181,27 @@ export const PresentationPopup = ({ app_data, element }: {
     forceRender()
   }
 
-  // Diagrammes fournis par OS+ (colonne de droite). Absent hors OS+.
+  // Analyses de l'élément fournies par OS+ (colonne de droite). Absent hors OS+.
   // MÉMOÏSÉ par élément : sans cela, chaque re-rendu de la pop-up (les
   // notifications de panneaux sont fréquentes) reconstruirait le tableau, donc
-  // de NOUVEAUX objets `diagram`, et `DiagramHost` détruirait/recréerait sa zone
-  // de dessin en boucle — laissant l'unitaire vide.
-  const diagrams: Type_PresentationDiagram[] = React.useMemo(
-    () => app_data.presentation_diagrams_for?.(element as never) ?? [],
-    [element, app_data.presentation_diagrams_for]
+  // de NOUVEAUX objets d'analyse, et `ElementAnalysisHost` détruirait/recréerait
+  // sa zone de dessin en boucle — laissant l'unitaire vide.
+  const analyses: Type_ElementAnalysis[] = React.useMemo(
+    () => app_data.element_analyses_for?.(element as never) ?? [],
+    [element, app_data.element_analyses_for]
   )
 
-  // Diagramme actif (null = on montre le contenu). État local : la pop-up ne
+  // Analyse active (null = on montre le contenu). État local : la pop-up ne
   // change pas de contenant, donc pas de risque de remise à zéro intempestive.
   const [active, setActive] = React.useState<string | null>(null)
-  const active_diagram = diagrams.find(d => d.id === active) ?? null
+  const active_analysis = analyses.find(d => d.id === active) ?? null
 
   return (
     <Box style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
-      {/* CONTENU / DIAGRAMME (gauche) */}
+      {/* CONTENU / ANALYSE (gauche) */}
       <Box style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-        {active_diagram
-          ? <DiagramHost key={active_diagram.id} diagram={active_diagram} />
+        {active_analysis
+          ? <ElementAnalysisHost key={active_analysis.id} analysis={active_analysis} />
           : (content.length > 1
             // Plusieurs blocs : chacun dans sa section repliable.
             ? content.map((r, i) => (
@@ -223,25 +228,40 @@ export const PresentationPopup = ({ app_data, element }: {
               ))}
       </Box>
 
-      {/* COLONNE DE DIAGRAMMES (droite) — seulement si OS+ en fournit. Boutons
-          « icône au-dessus, libellé dessous », à l'image des onglets du menu de
-          configuration. */}
-      {diagrams.length > 0 && (
+      {/* COLONNE D'ANALYSES DE L'ÉLÉMENT (droite) — seulement si OS+ en fournit.
+          Boutons « icône au-dessus, libellé dessous », à l'image des onglets du
+          menu de configuration.
+
+          os#1356 — la colonne PORTE SON NOM. Sans titre, « Unit. » y voisinait
+          les mêmes mots que l'onglet « Unit. » de la barre du haut, qui lui ne
+          parle pas du même objet : ici c'est CET élément qu'on analyse, là-haut
+          c'est tout le diagramme qu'on représente autrement. */}
+      {analyses.length > 0 && (
         <Box
+          role='group'
+          aria-label={t('inspector.element_analysis')}
           style={{
             flex: 'none', width: '4.5rem',
             display: 'flex', flexDirection: 'column', gap: '0.2rem',
             borderLeft: '1px solid #e2e8f0', paddingLeft: '0.35rem'
           }}
         >
-          <DiagramButton
+          <Text
+            style={{
+              fontSize: '0.55rem', lineHeight: 1.15, opacity: 0.65,
+              textTransform: 'uppercase', letterSpacing: '0.02em'
+            }}
+          >
+            {t('inspector.element_analysis')}
+          </Text>
+          <ElementAnalysisButton
             icon={<FaInfoCircle />}
             label={t('presentation.infos', { defaultValue: 'Infos' })}
             active={active === null}
             onClick={() => setActive(null)}
           />
-          {diagrams.map(d => (
-            <DiagramButton
+          {analyses.map(d => (
+            <ElementAnalysisButton
               key={d.id}
               icon={d.icon}
               label={d.label}

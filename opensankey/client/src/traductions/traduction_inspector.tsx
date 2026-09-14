@@ -12,6 +12,10 @@ export const resources_inspector = {
   en: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Element analysis',
         view: 'View',
         back_to_selection: 'Back to selection',
         pin: 'Pin the panel (the drawing resizes to its left)',
@@ -45,6 +49,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Overridden here (on the selection)',
           from_style: 'Inherited from style « {{style}} »',
+          from_tag: 'Imposed by tag « {{tag}} » (style « {{style}} »)',
+          from_tag_group: 'Imposed by group « {{group}} » on elements without a tag (style « {{style}} »)',
           factory: 'Factory default value'
         },
         // Onglets
@@ -292,7 +298,7 @@ export const resources_inspector = {
           port_node: 'Node',
           port_direction: 'Direction',
           quantity: 'Quantity',
-          quantity_tooltip: 'Quantity this port measures — a quantity id from the diagram unit registry. Empty: the diagram quantity, the one that carries the convention that input coefficients sum to 1.',
+          quantity_tooltip: 'Quantity this port measures — an id from the unit registry. Empty: the brick reference quantity (the one of its activity), which carries the convention that input coefficients sum to 1.',
           quantity_default: 'diagram quantity',
           port_type: 'Port type',
           port_type_tooltip: 'Identifier of the port type in the referenced nomenclature. It is the typing, not the port itself, that makes two bricks connectable.',
@@ -305,6 +311,11 @@ export const resources_inspector = {
           exchange_default: 'Technosphere (default)',
           exchange_technosphere: 'Technosphere',
           exchange_biosphere: 'Biosphere',
+          flow_tier: 'Tier',
+          flow_tier_tooltip: 'Where the flow sits in the system, which decides whether reconciliation may adjust it. Foreground: measured at the granularity of the flow analysis — this is what reconciliation adjusts. Background: taken from an LCA database (ecoinvent), carried over to Brightway as is. Elementary flow: an exchange with the environment (emissions, extractions), carried over as is too. Bricks written before this column stay in the foreground.',
+          flow_tier_foreground: 'Foreground',
+          flow_tier_background: 'Background',
+          flow_tier_elementary: 'Elementary flow',
           add_selected: 'Add the selected nodes as ports',
           add_selected_tooltip: 'One port line per selected node; the direction is deduced from the visible flows with the central process. Lines a node already carries are kept — a node has one line per direction and quantity.',
           prefill: 'Prefill from the diagram',
@@ -350,6 +361,10 @@ export const resources_inspector = {
   fr: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Analyse de l’élément',
         view: 'Vue',
         back_to_selection: 'Retour à la sélection',
         pin: 'Épingler le panneau (le dessin se recadre à gauche)',
@@ -381,6 +396,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Surchargé ici (sur la sélection)',
           from_style: 'Hérité du style « {{style}} »',
+          from_tag: 'Imposé par l’étiquette « {{tag}} » (style « {{style}} »)',
+          from_tag_group: 'Imposé par le groupe « {{group}} » aux éléments sans étiquette (style « {{style}} »)',
           factory: 'Valeur d’usine'
         },
         tab: {
@@ -624,7 +641,7 @@ export const resources_inspector = {
           port_node: 'Nœud',
           port_direction: 'Sens',
           quantity: 'Grandeur',
-          quantity_tooltip: 'Grandeur mesurée par ce port — un id de grandeur du registre d\'unités du diagramme. Vide : la grandeur du diagramme, celle qui porte la convention « les coefficients d\'entrée somment à 1 ».',
+          quantity_tooltip: 'Grandeur mesurée par ce port — un id du registre d\'unités. Vide : la grandeur de référence de la brique (celle de son activité), qui porte la convention « les coefficients d\'entrée somment à 1 ».',
           quantity_default: 'grandeur du diagramme',
           port_type: 'Type de port',
           port_type_tooltip: 'Identifiant du type de port dans la nomenclature référencée. C\'est le typage, et non le port lui-même, qui rend deux briques raccordables.',
@@ -637,6 +654,11 @@ export const resources_inspector = {
           exchange_default: 'Technosphère (défaut)',
           exchange_technosphere: 'Technosphère',
           exchange_biosphere: 'Biosphère',
+          flow_tier: 'Rang',
+          flow_tier_tooltip: 'Place du flux dans le système, qui décide si la réconciliation a le droit de l\'ajuster. Premier-plan : mesuré à la granularité de l\'analyse de flux — c\'est ce que la réconciliation ajuste. Arrière-plan : repris d\'une base ACV (ecoinvent), transporté tel quel vers Brightway. Flux élémentaire : un échange avec l\'environnement (émissions, prélèvements), transporté tel quel lui aussi. Les briques écrites avant cette colonne restent en premier-plan.',
+          flow_tier_foreground: 'Premier-plan',
+          flow_tier_background: 'Arrière-plan',
+          flow_tier_elementary: 'Flux élémentaire',
           add_selected: 'Ajouter les nœuds sélectionnés comme ports',
           add_selected_tooltip: 'Une ligne de port par nœud sélectionné ; le sens est déduit des flux visibles avec le procédé central. Les lignes déjà portées par un nœud sont conservées — un nœud a une ligne par sens et par grandeur.',
           prefill: 'Pré-remplir depuis le diagramme',
@@ -680,6 +702,10 @@ export const resources_inspector = {
   es: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Análisis del elemento',
         view: 'Vista',
         back_to_selection: 'Volver a la selección',
         pin: 'Fijar el panel (el dibujo se reajusta a su izquierda)',
@@ -711,6 +737,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Anulado aquí (en la selección)',
           from_style: 'Heredado del estilo « {{style}} »',
+          from_tag: 'Impuesto por la etiqueta « {{tag}} » (estilo « {{style}} »)',
+          from_tag_group: 'Impuesto por el grupo « {{group}} » a los elementos sin etiqueta (estilo « {{style}} »)',
           factory: 'Valor de fábrica'
         },
         tab: {
@@ -954,7 +982,7 @@ export const resources_inspector = {
           port_node: 'Nodo',
           port_direction: 'Sentido',
           quantity: 'Magnitud',
-          quantity_tooltip: 'Magnitud medida por este puerto — un id de magnitud del registro de unidades del diagrama. Vacío: la magnitud del diagrama, la que lleva la convención de que los coeficientes de entrada suman 1.',
+          quantity_tooltip: 'Magnitud medida por este puerto — un id del registro de unidades. Vacío: la magnitud de referencia del bloque (la de su actividad), que lleva la convención de que los coeficientes de entrada suman 1.',
           quantity_default: 'magnitud del diagrama',
           port_type: 'Tipo de puerto',
           port_type_tooltip: 'Identificador del tipo de puerto en la nomenclatura referenciada. Es el tipado, y no el puerto en sí, lo que permite conectar dos ladrillos.',
@@ -967,6 +995,11 @@ export const resources_inspector = {
           exchange_default: 'Tecnosfera (por defecto)',
           exchange_technosphere: 'Tecnosfera',
           exchange_biosphere: 'Biosfera',
+          flow_tier: 'Rango',
+          flow_tier_tooltip: 'Lugar del flujo en el sistema, que decide si la conciliación puede ajustarlo. Primer plano: medido con la granularidad del análisis de flujos — es lo que la conciliación ajusta. Segundo plano: tomado de una base de datos de ACV (ecoinvent), trasladado tal cual a Brightway. Flujo elemental: un intercambio con el medio ambiente (emisiones, extracciones), trasladado tal cual también. Los ladrillos escritos antes de esta columna permanecen en primer plano.',
+          flow_tier_foreground: 'Primer plano',
+          flow_tier_background: 'Segundo plano',
+          flow_tier_elementary: 'Flujo elemental',
           add_selected: 'Añadir los nodos seleccionados como puertos',
           add_selected_tooltip: 'Una línea de puerto por nodo seleccionado; el sentido se deduce de los flujos visibles con el proceso central. Se conservan las líneas que un nodo ya tiene — un nodo tiene una línea por sentido y por magnitud.',
           prefill: 'Rellenar desde el diagrama',
@@ -1010,6 +1043,10 @@ export const resources_inspector = {
   de: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Analyse des Elements',
         view: 'Ansicht',
         back_to_selection: 'Zurück zur Auswahl',
         pin: 'Panel anheften (die Zeichnung wird links davon neu angepasst)',
@@ -1041,6 +1078,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Hier überschrieben (in der Auswahl)',
           from_style: 'Vom Stil « {{style}} » geerbt',
+          from_tag: 'Vom Etikett « {{tag}} » vorgegeben (Stil « {{style}} »)',
+          from_tag_group: 'Von der Gruppe « {{group}} » für Elemente ohne Etikett vorgegeben (Stil « {{style}} »)',
           factory: 'Werkseinstellung'
         },
         tab: {
@@ -1284,7 +1323,7 @@ export const resources_inspector = {
           port_node: 'Knoten',
           port_direction: 'Richtung',
           quantity: 'Größe',
-          quantity_tooltip: 'Größe, die dieser Port misst — eine Größen-Kennung aus dem Einheitenregister des Diagramms. Leer: die Größe des Diagramms, die die Konvention trägt, dass sich die Eingangskoeffizienten zu 1 summieren.',
+          quantity_tooltip: 'Vom Port gemessene Größe — eine Id aus dem Einheitenregister. Leer: die Referenzgröße des Bausteins (die seiner Aktivität), die die Konvention trägt, dass die Eingangskoeffizienten sich zu 1 summieren.',
           quantity_default: 'Größe des Diagramms',
           port_type: 'Port-Typ',
           port_type_tooltip: 'Kennung des Port-Typs in der referenzierten Nomenklatur. Erst die Typisierung, nicht der Port selbst, macht zwei Bausteine verbindbar.',
@@ -1297,6 +1336,11 @@ export const resources_inspector = {
           exchange_default: 'Technosphäre (Standard)',
           exchange_technosphere: 'Technosphäre',
           exchange_biosphere: 'Biosphäre',
+          flow_tier: 'Rang',
+          flow_tier_tooltip: 'Stellung des Flusses im System; sie entscheidet, ob der Abgleich ihn anpassen darf. Vordergrund: in der Granularität der Flussanalyse gemessen — genau das passt der Abgleich an. Hintergrund: aus einer Ökobilanz-Datenbank (ecoinvent) übernommen und unverändert an Brightway weitergereicht. Elementarfluss: ein Austausch mit der Umwelt (Emissionen, Entnahmen), ebenfalls unverändert weitergereicht. Bausteine aus der Zeit vor dieser Spalte bleiben im Vordergrund.',
+          flow_tier_foreground: 'Vordergrund',
+          flow_tier_background: 'Hintergrund',
+          flow_tier_elementary: 'Elementarfluss',
           add_selected: 'Ausgewählte Knoten als Ports hinzufügen',
           add_selected_tooltip: 'Eine Portzeile je ausgewähltem Knoten; die Richtung wird aus den sichtbaren Flüssen zum zentralen Prozess abgeleitet. Vorhandene Zeilen eines Knotens bleiben erhalten — ein Knoten hat eine Zeile je Richtung und Größe.',
           prefill: 'Aus dem Diagramm vorbelegen',
@@ -1340,6 +1384,10 @@ export const resources_inspector = {
   it: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Analisi dell’elemento',
         view: 'Vista',
         back_to_selection: 'Torna alla selezione',
         pin: 'Fissa il pannello (il disegno si ridimensiona alla sua sinistra)',
@@ -1371,6 +1419,8 @@ export const resources_inspector = {
         provenance: {
           local: 'Sovrascritto qui (sulla selezione)',
           from_style: 'Ereditato dallo stile « {{style}} »',
+          from_tag: 'Imposto dall’etichetta « {{tag}} » (stile « {{style}} »)',
+          from_tag_group: 'Imposto dal gruppo « {{group}} » agli elementi senza etichetta (stile « {{style}} »)',
           factory: 'Valore di fabbrica'
         },
         tab: {
@@ -1614,7 +1664,7 @@ export const resources_inspector = {
           port_node: 'Nodo',
           port_direction: 'Verso',
           quantity: 'Grandezza',
-          quantity_tooltip: 'Grandezza misurata da questa porta — un id di grandezza del registro delle unità del diagramma. Vuoto: la grandezza del diagramma, quella che porta la convenzione per cui i coefficienti in ingresso sommano a 1.',
+          quantity_tooltip: 'Grandezza misurata da questa porta — un id del registro delle unità. Vuoto: la grandezza di riferimento del mattone (quella della sua attività), che porta la convenzione per cui i coefficienti di ingresso sommano a 1.',
           quantity_default: 'grandezza del diagramma',
           port_type: 'Tipo di porta',
           port_type_tooltip: 'Identificatore del tipo di porta nella nomenclatura di riferimento. È la tipizzazione, non la porta in sé, a rendere due mattoni collegabili.',
@@ -1627,6 +1677,11 @@ export const resources_inspector = {
           exchange_default: 'Tecnosfera (predefinito)',
           exchange_technosphere: 'Tecnosfera',
           exchange_biosphere: 'Biosfera',
+          flow_tier: 'Rango',
+          flow_tier_tooltip: 'Posizione del flusso nel sistema, che decide se la riconciliazione può regolarlo. Primo piano: misurato alla granularità dell\'analisi dei flussi — è ciò che la riconciliazione regola. Secondo piano: ripreso da una banca dati LCA (ecoinvent), trasportato tale e quale verso Brightway. Flusso elementare: uno scambio con l\'ambiente (emissioni, prelievi), trasportato tale e quale anch\'esso. I mattoni scritti prima di questa colonna restano in primo piano.',
+          flow_tier_foreground: 'Primo piano',
+          flow_tier_background: 'Secondo piano',
+          flow_tier_elementary: 'Flusso elementare',
           add_selected: 'Aggiungere i nodi selezionati come porte',
           add_selected_tooltip: 'Una riga di porta per nodo selezionato; il verso è dedotto dai flussi visibili con il processo centrale. Le righe già presenti su un nodo sono conservate — un nodo ha una riga per verso e per grandezza.',
           prefill: 'Precompilare dal diagramma',
@@ -1667,6 +1722,10 @@ export const resources_inspector = {
   'zh-CN': {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: '要素分析',
         view: '视图',
         back_to_selection: '返回所选内容',
         pin: '固定面板（绘图区在其左侧重新调整大小）',
@@ -1700,6 +1759,8 @@ export const resources_inspector = {
         provenance: {
           local: '在此处（所选内容上）被覆盖',
           from_style: '继承自样式 « {{style}} »',
+          from_tag: '由标签 « {{tag}} » 强制（样式 « {{style}} »）',
+          from_tag_group: '由组 « {{group}} » 对无标签元素强制（样式 « {{style}} »）',
           factory: '出厂默认值'
         },
         // Onglets
@@ -1947,7 +2008,7 @@ export const resources_inspector = {
           port_node: '节点',
           port_direction: '方向',
           quantity: '量纲',
-          quantity_tooltip: '本端口所计量的量纲——取自图表单位注册表的量纲标识。留空表示使用本图的量纲，即遵循「输入系数之和为 1」约定的那一个。',
+          quantity_tooltip: '该端口度量的量纲——单位注册表中的量纲 id。留空：砖块的参考量纲（其活动的量纲），承载“输入系数之和为 1”的约定。',
           quantity_default: '本图量纲',
           port_type: '端口类型',
           port_type_tooltip: '所引用命名法中的端口类型标识。让两个构件得以对接的是类型，而非端口本身。',
@@ -1960,6 +2021,11 @@ export const resources_inspector = {
           exchange_default: '技术圈（默认）',
           exchange_technosphere: '技术圈',
           exchange_biosphere: '生物圈',
+          flow_tier: '层级',
+          flow_tier_tooltip: '该流在系统中的层级，决定数据调和是否可以调整它。前景：按流分析的粒度计量——数据调和调整的正是这一层。背景：取自生命周期评价数据库（ecoinvent），原样传递给 Brightway。基本流：与环境之间的交换（排放、取用），同样原样传递。本列出现之前写成的砖块一律视为前景。',
+          flow_tier_foreground: '前景',
+          flow_tier_background: '背景',
+          flow_tier_elementary: '基本流',
           add_selected: '将所选节点添加为端口',
           add_selected_tooltip: '每个所选节点新增一行端口；方向由其与中心工艺之间的可见流推断。节点已有的行会保留——每个节点按方向和量纲各占一行。',
           prefill: '从图中预填',
@@ -2000,6 +2066,10 @@ export const resources_inspector = {
   ja: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: '要素の分析',
         view: 'ビュー',
         back_to_selection: '選択に戻る',
         pin: 'パネルを固定（描画エリアがその左側でサイズ調整されます）',
@@ -2033,6 +2103,8 @@ export const resources_inspector = {
         provenance: {
           local: 'ここで上書き（選択中の要素で）',
           from_style: 'スタイル «{{style}}» から継承',
+          from_tag: 'タグ «{{tag}}» により指定（スタイル «{{style}}»）',
+          from_tag_group: 'グループ «{{group}}» によりタグのない要素に指定（スタイル «{{style}}»）',
           factory: '工場出荷時の既定値'
         },
         // Onglets
@@ -2280,7 +2352,7 @@ export const resources_inspector = {
           port_node: 'ノード',
           port_direction: '向き',
           quantity: '物理量',
-          quantity_tooltip: 'このポートが計る物理量です。図の単位レジストリにある物理量の識別子を指定します。空欄の場合は図の物理量、すなわち「入力側の係数の和は 1」の慣例を担う物理量になります。',
+          quantity_tooltip: 'このポートが測る量 — 単位レジストリの量の id。空欄：ブロックの基準量（そのアクティビティの量）であり、「入力係数の合計は 1」という規約を担う。',
           quantity_default: '図の物理量',
           port_type: 'ポート型',
           port_type_tooltip: '参照する命名体系におけるポート型の識別子です。二つのブリックを接続可能にするのはポートそのものではなく型付けです。',
@@ -2293,6 +2365,11 @@ export const resources_inspector = {
           exchange_default: 'テクノスフィア（既定）',
           exchange_technosphere: 'テクノスフィア',
           exchange_biosphere: 'バイオスフィア',
+          flow_tier: '階層',
+          flow_tier_tooltip: 'システムのなかでのこのフローの位置づけで、データ調和が値を動かしてよいかどうかを決めます。前景：フロー分析の粒度で計測されたフローで、データ調和が動かすのはこれだけです。背景：LCA データベース（ecoinvent）から取り込んだフローで、そのまま Brightway に渡します。基本フロー：環境との交換（排出、採取）で、これもそのまま渡します。この列より前に作られたブリックはすべて前景として扱われます。',
+          flow_tier_foreground: '前景',
+          flow_tier_background: '背景',
+          flow_tier_elementary: '基本フロー',
           add_selected: '選択したノードをポートとして追加',
           add_selected_tooltip: '選択ノードごとにポート行を追加します。向きは中心プロセスとの可視フローから推定されます。ノードが既に持つ行は保持されます — ノードは向きと物理量ごとに1行を持ちます。',
           prefill: '図から事前入力',
