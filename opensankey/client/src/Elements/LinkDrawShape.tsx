@@ -304,7 +304,10 @@ export class LinkDrawShape {
 
         // Apply properties
         this._link.d3_selection?.selectAll('.link_path')
-          .attr('id', this._link.id)
+          // Préfixé hors de la zone affichée : un aperçu unitaire porte les MÊMES identifiants
+          // de flux que le diagramme (l'extraction les préserve), et un `<textPath href="#id">`
+          // du diagramme irait suivre le tracé de l'aperçu (cf. DrawingArea.dom_id_prefix).
+          .attr('id', this._link.drawing_area.dom_id_prefix + this._link.id)
           .attr('fill', !is_stroke ? shape_color : 'none')
           .attr('stroke', is_stroke ? shape_color : 'none')
           .attr('stroke-opacity', is_stroke ? shape_opacity : '0')

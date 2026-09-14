@@ -2167,6 +2167,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * os#1359 — Vrai quand ce qui est affiché est la DONNÉE COLLECTÉE, faux quand c'est le
+   * résultat de la réconciliation. Un seul endroit le décide, parce que la lecture et
+   * l'écriture d'une valeur doivent désigner la même couche : le jour où elles divergent,
+   * une saisie va dans un jeu de données que l'utilisateur ne regarde pas.
+   *
+   * Attention, ce n'est PAS `data_source === 'data'` : la couche effectivement lue est
+   * `type_data`, qui croise la source et le mode d'affichage des intervalles (`data_source`
+   * seul, avec un `interval_display` resté à 'free_value', désigne encore le réconcilié).
+   */
+  private get _reads_collected_layer(): boolean {
+    return this.drawing_area.type_data === 'data'
+  }
+
+  /**
    * #1231 — Valeur numérique du flux pour un jeu de datatags EXPLICITE (même extraction que
    * `valueCurrent`, mais sans dépendre de la sélection courante). Utilisé par le mode % pour
    * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
@@ -2174,7 +2188,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public valueForDataTags(data_tags: Class_DataTag[]): number | null {
     const v = this.valueForTags(data_tags)
     if (!v) return null
-    if (this.drawing_area.type_data === 'data') return v.valueData ?? null
+    if (this._reads_collected_layer) return v.valueData ?? null
     return v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null) ?? null
   }
 
@@ -2241,7 +2255,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return v
     }
     let value_current = null
-    if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
+    if (this._reads_collected_layer) value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
     // #285 (§3.0ter) — pas de valeur principale : avec des groupes PORTEURS,
     // la valeur affichée est celle du TAG SÉLECTIONNÉ (comme pour les
@@ -2386,13 +2400,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // saisit plus une mesure mais une CIBLE : « approche-toi de celle-ci ».
       // Y écrire un nombre met donc la cible à jour, au lieu de retirer
       // l'intention comme le fait une saisie ordinaire.
+      //
+      // CE TEST PASSE AVANT LE CHOIX DE COUCHE ci-dessous, et c'est l'ordre juste : une cible
+      // n'appartient à aucune des deux couches de valeur, elle dit ce que le solveur doit
+      // chercher. La ranger dans la donnée collectée ou dans le résultat reviendrait à écrire
+      // une mesure là où l'auteur a exprimé une intention.
       if (value.value_objective === Class_LinkElement.VALUE_OBJECTIVE_APPROACH) {
         value.value_objective_target = _
         this.redrawNodesSourceTarget()
         return
       }
-      value.valueData = _
-      value.valueResult = null
+      // os#1359 — on écrit dans la couche que l'on REGARDE, symétriquement au getter.
+      // Auparavant toute saisie allait dans la donnée collectée et jetait le résultat :
+      // corriger un affichage en « Calculées » écrasait donc une donnée d'entrée que
+      // l'utilisateur ne voyait même pas, ET perdait la réconciliation — les deux jeux
+      // d'un coup, sans un mot. Les deux couches ne se recouvrent plus : l'autre survit.
+      if (this._writes_into_result_layer) {
+        value.valueResult = _
+        this._notifyValueLayer('collected_kept')
+      } else {
+        // `valueData` périme le résultat de ce flux (il ne dérive plus de sa donnée) :
+        // le garder afficherait un nombre réconcilié qui ne veut plus rien dire.
+        if (value.valueResult !== null) this._notifyValueLayer('result_dropped')
+        value.valueData = _
+      }
       // SA#487 — une valeur chiffrée et un « min » / « max » ne peuvent pas
       // coexister : le moteur ne saurait pas s'il doit honorer la valeur ou
       // chercher l'optimum. Saisir un nombre retire donc l'intention, et vider
@@ -2406,6 +2437,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
       value.value_objective_target = null
       this.redrawNodesSourceTarget()
     }
+  }
+
+  /**
+   * os#1359 — vrai quand une saisie de valeur doit aller dans la couche réconciliée
+   * plutôt que dans la donnée collectée : l'utilisateur regarde un résultat de
+   * réconciliation, il en corrige donc l'affichage, il ne saisit pas une donnée d'entrée.
+   *
+   * Faux dès qu'il n'y a pas de résultat à corriger — le cas de très loin le plus courant,
+   * un diagramme construit à la main : la saisie reste alors ce qu'elle a toujours été,
+   * la donnée collectée du flux.
+   */
+  private get _writes_into_result_layer(): boolean {
+    return !this._reads_collected_layer && (this.value?.valueResult ?? null) !== null
+  }
+
+  /**
+   * Dit laquelle des deux couches vient d'être écrite, et laquelle a survécu ou non.
+   * Sans ce mot, l'utilisateur ne peut pas savoir que sa saisie n'est pas allée là où il
+   * croyait : les deux couches portent le même nombre à l'écran, et rien ne les distingue.
+   */
+  private _notifyValueLayer(kind: 'collected_kept' | 'result_dropped'): void {
+    const app_data = this.drawing_area.application_data
+    app_data.notifyUser(
+      `value_edit_${kind}`,
+      app_data.t(`toast.value_edit.${kind}.title`),
+      app_data.t(`toast.value_edit.${kind}.desc`),
+      kind === 'result_dropped' ? 'warning' : 'info',
+      // Une règle de fonctionnement, dite une fois : saisir une série de valeurs ne doit
+      // pas faire clignoter le même bandeau à chaque champ quitté.
+      true
+    )
   }
 
   /**
@@ -2527,7 +2589,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this._is_computing) return null
     this._is_computing = true
     let value_target = null
-    if (this.drawing_area.type_data === 'data') {
+    if (this._reads_collected_layer) {
       value_target = this.value?.valueDataTarget ?? null
     } else {
       value_target = this.value?.valueResultTarget ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueDataTarget : null) ?? null
@@ -2539,8 +2601,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public set valueCurrentTarget(_: number | null) {
     const value = this.value
     if (value !== null) {
-      value.valueDataTarget = _
-      value.valueResultTarget = null
+      // os#1359 — même règle que `valueCurrent` : la saisie va dans la couche affichée.
+      if (!this._reads_collected_layer && value.valueResultTarget !== null) {
+        value.valueResultTarget = _
+        this._notifyValueLayer('collected_kept')
+      } else {
+        if (value.valueResultTarget !== null) this._notifyValueLayer('result_dropped')
+        value.valueDataTarget = _
+      }
       this.redrawNodesSourceTarget()
     }
   }
@@ -2788,7 +2856,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get uncertaintyBounds(): { min: number, max: number } | null {
     const v = this.value
     if (!v) return null
-    const use_data_first = this.drawing_area.type_data === 'data'
+    const use_data_first = this._reads_collected_layer
     const lo = use_data_first ? (v.data_min ?? v.result_min) : (v.result_min ?? v.data_min)
     const hi = use_data_first ? (v.data_max ?? v.result_max) : (v.result_max ?? v.data_max)
     if (lo == null || hi == null || hi <= lo) return null

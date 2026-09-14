@@ -1,4 +1,4 @@
-import { ViewsQuery, ViewsQueryHost, Type_ViewEntry, MASTER_VIEW_ID } from './ViewsQuery'
+import { ViewsQuery, ViewsQueryHost, Type_ViewEntry, Type_ViewLabelDef, MASTER_VIEW_ID } from './ViewsQuery'
 
 // #244 — ViewsQuery porte la logique PURE de vues (résolution / navigation / ordre) extraite
 // d'ApplicationDataOSP. Testée via un hôte mocké (aucune Class_ApplicationDataOSP réelle, aucun
@@ -17,6 +17,9 @@ const makeHost = (opts: {
   view_taggs_list?: MockGroup[]
   no_master?: boolean
   publish_view_label_filter?: string | null
+  // os#1357 — annuaire des labels. Par défaut vide : les tests qui posent des labels par
+  // NOM exercent alors la migration (nom inconnu → définition créée à la lecture).
+  view_label_defs?: Type_ViewLabelDef[]
 }): ViewsQueryHost => {
   const views = opts.views ?? {}
   const sankey = { view_taggs_list: opts.view_taggs_list ?? [] }
@@ -31,6 +34,7 @@ const makeHost = (opts: {
     master_drawing_area: opts.no_master ? undefined : da,
     drawing_area: da,
     publish_view_label_filter: opts.publish_view_label_filter ?? null,
+    view_label_defs: opts.view_label_defs ?? [],
   }
 }
 

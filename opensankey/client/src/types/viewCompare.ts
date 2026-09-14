@@ -192,6 +192,15 @@ export const EXPECTED_ROOT_KEYS: string[] = [
   'id',
   'name',
   'view_labels',
+  // os#1357 — l'annuaire des labels est une clé d'enveloppe de fichier, comme `current_view` :
+  // il ne dit rien du contenu d'une vue et noierait les vrais écarts s'il était comparé.
+  'view_label_defs',
+  // os#1358 — même statut : `views_order` est l'ordre du FICHIER, et `view_description` un
+  // texte d'auteur ; ni l'un ni l'autre ne décrit le diagramme d'une vue.
+  'views_order',
+  'view_description',
+  // os#1355 — la disposition figée avec la vue est de la MISE EN PAGE, pas du diagramme.
+  'view_main_zone',
   'heredited_attr',
   'heredited_source_id',
   'tag_selection',

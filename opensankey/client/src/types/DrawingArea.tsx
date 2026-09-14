@@ -58,6 +58,7 @@ import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
+import type { Type_GeoReference } from '../Algorithms/geoProjection'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
@@ -72,7 +73,14 @@ import * as CameraMath from './CameraMath'
 import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
-import { ZOOM_TOPIC } from './EventBus'
+import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
+
+/**
+ * os#1387 — Cadre du canevas dans la grande zone : sa case (coordonnées viewport) quand le
+ * diagramme n'est pas la fenêtre principale, 'hidden' quand il est fermé. Posé par l'hôte
+ * (MainZoneTabs) dans ApplicationData.main_zone_canvas_frame, lu par la drawing area affichée.
+ */
+export type Type_CanvasFrame = { left: number, top: number, width: number, height: number } | 'hidden'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
@@ -237,6 +245,94 @@ export class Class_DrawingArea {
    * modal/panneau détaché). Sert à neutraliser les offsets liés aux menus
    * (navbar/footer) qui n'existent pas autour du conteneur détaché. */
   public get is_detached(): boolean { return this.container_selector !== '#sankey_app' }
+
+  /**
+   * Cette zone est-elle celle du conteneur principal de la page ?
+   *
+   * `#sankey_app` est le div que l'application monte une fois pour toutes autour du diagramme
+   * que l'utilisateur édite : il est UNIQUE PAR CONSTRUCTION, quel que soit le nombre
+   * d'applications vivantes dans l'onglet. C'est ce qui en fait le bon critère pour tout ce qui
+   * doit distinguer « la zone que l'utilisateur regarde et manipule » des zones que le code
+   * fabrique à côté (aperçu unitaire, instantané de feuille, source de mise en page, vue
+   * extraite en coulisse) — là où « je suis la zone affichée de MON application » ne distingue
+   * plus rien dès qu'il y a deux applications, puisque chacune a la sienne.
+   */
+  public get is_in_main_container(): boolean { return this.container_selector === '#sankey_app' }
+
+  /**
+   * os#1387 — Le cadre que la grande zone donne au canevas quand le diagramme n'est PAS sa
+   * fenêtre principale (cf. ApplicationData.main_zone_canvas_frame). Ne vaut que pour la
+   * drawing area AFFICHÉE : un board unitaire, une vue en coulisse n'en ont pas.
+   */
+  public get canvas_frame(): Type_CanvasFrame | null {
+    if (this.is_detached || this.application_data.drawing_area !== this) return null
+    return this.application_data.main_zone_canvas_frame ?? null
+  }
+  /**
+   * Préfixe des identifiants DOM des éléments de CETTE zone. Vide pour la zone du CONTENEUR
+   * PRINCIPAL, unique pour toutes les autres.
+   *
+   * POURQUOI PRÉFIXER. Un identifiant DOM doit être unique dans le document, et le nôtre est
+   * celui du modèle : le chemin d'un flux porte `id="A --> B"`. Or un aperçu unitaire est
+   * l'étoile du diagramme, extraite EN PRÉSERVANT LES IDENTIFIANTS (c'est ce qui permet de
+   * résoudre le flux de référence du mode normalisé), et il est dessiné DANS LA MÊME PAGE. Deux
+   * chemins portaient donc le même identifiant, et une référence `href="#A --> B"` — celle
+   * qu'utilise un libellé de valeur posé LE LONG du tracé (`<textPath>`) — résout au PREMIER du
+   * document. Les libellés du diagramme de l'utilisateur allaient ainsi se coller sur la
+   * géométrie de l'aperçu : ils partaient vers le haut, tournés, loin de leur flux (constaté le
+   * 10/09/2026).
+   *
+   * POURQUOI LE CRITÈRE EST LE CONTENEUR, ET NON « LA ZONE AFFICHÉE DE MON APPLICATION ».
+   * Ce dernier critère supposait qu'il n'existe qu'UNE application vivante dans la page. Il est
+   * faux : il en tourne déjà plusieurs (l'application de feuille d'os#1386, la source d'un
+   * import Excel, l'extraction unitaire hors écran), et chacune a SA zone affichée — donc
+   * chacune rendait le préfixe vide et réintroduisait exactement la collision qu'on venait de
+   * corriger, dès qu'une seconde application dessinait pour de bon. Le conteneur, lui, est
+   * unique par construction : une seule zone au monde vit dans `#sankey_app`, celle du document
+   * que l'utilisateur édite. Le critère reste donc juste quel que soit le nombre d'applications.
+   *
+   * Le diagramme du conteneur principal garde ses identifiants tels quels : l'export SVG, les
+   * sondes et tout ce qui les cite dehors sont inchangés. Même parade que `viewport_clip_id`,
+   * qui se namespace déjà pour la même raison.
+   */
+  public get dom_id_prefix(): string {
+    return this.is_in_main_container ? '' : this.id + '__'
+  }
+
+  /** Le canevas est cadré dans une case (colonne droite, bandeau du bas) : il se cadre alors
+   *  comme une zone détachée — dans son cadre, sans barres autour, sans réserves. */
+  public get is_framed(): boolean {
+    const f = this.canvas_frame
+    return f !== null && f !== 'hidden'
+  }
+  /** Hauteur du SVG en disposition ordinaire : celle du conteneur hôte quand il est cadré par
+   *  lui (embarqué, détaché), la fenêtre sinon. */
+  protected _svgDefaultHeight(): string | number {
+    return (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : window.innerHeight
+  }
+  /**
+   * Pose sur le SVG le style de son cadre : position fixe sur sa case ; ou masqué quand le
+   * diagramme est fermé (`visibility`, pas `display` : il reste dessiné et ses mesures de
+   * texte restent justes) ; ou rien, en disposition ordinaire. Rejoué à chaque fenêtrage et à
+   * chaque (re)construction du SVG.
+   */
+  protected _applyCanvasFrameStyle() {
+    const svg = this.d3_selection_zoom_area
+    if (!svg) return
+    const f = this.canvas_frame
+    if (f === null || f === 'hidden') {
+      svg.style('position', null).style('left', null).style('top', null)
+        .style('width', null).style('height', null)
+        .attr('width', '100%').attr('height', this._svgDefaultHeight())
+      if (f === 'hidden') svg.style('visibility', 'hidden')
+      else svg.style('visibility', null)
+      return
+    }
+    svg.style('visibility', null)
+      .style('position', 'fixed').style('left', f.left + 'px').style('top', f.top + 'px')
+      .style('width', f.width + 'px').style('height', f.height + 'px')
+      .attr('width', f.width).attr('height', f.height)
+  }
 
   /** True quand l'utilisateur peut interagir (édition normale, ou publish + editable).
    * Une DA détachée (sankey unitaire en modal) est en lecture seule : pas d'édition,
@@ -514,8 +610,21 @@ export class Class_DrawingArea {
       && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
       this._position_mode_suspended_selection = undefined
     }
+    // os#1364 — LA SUSPENSION NE CONCERNE PAS LE MODE GÉOGRAPHIQUE, et c'est le seul mode qu'elle
+    // épargne. Elle existe (#369) pour les modes d'AFFICHAGE, qui réagissent au changement de
+    // sélection de données : le fichier s'ouvre tel qu'il a été enregistré, et le mode ne se fait
+    // sentir qu'au premier changement de datatag — ce qu'il gouverne.
+    //
+    // Le mode géographique ne gouverne rien de tel : il dérive la position de coordonnées, qui ne
+    // changent pas avec la sélection. L'y soumettre avait une conséquence visible et absurde
+    // (constatée par Julien, 11/09/2026) : sur un document géographique fraîchement ouvert, la
+    // case « Poser les nœuds d'après leurs coordonnées » s'affichait DÉCOCHÉE et changer de
+    // projection ne déplaçait rien — la carte n'était pas vivante tant qu'on n'avait pas touché
+    // à un datatag qui n'a rien à voir avec elle.
+    const document_mode = this._sankey.styles_dict['default'].shape_position_type
+    if (document_mode === 'geographic') return document_mode
     if (this._position_mode_suspended_selection !== undefined) return 'absolute'
-    return this._sankey.styles_dict['default'].shape_position_type
+    return document_mode
   }
 
   // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
@@ -1181,6 +1290,16 @@ export class Class_DrawingArea {
     // ne touche au DOM que si elle a changé — pendant un glisser, la signature est stable,
     // donc aucun `replaceState`.
     this.application_data.syncUrlState()
+    // os#1361 — les occupants `draw` de la grande zone lisent les mêmes données que ce dessin :
+    // c'est ici, et nulle part ailleurs, qu'ils apprennent qu'elles ont changé.
+    //
+    // Seul le diagramme AFFICHÉ le signale. Un board unitaire (jalon 81) est une DrawingArea
+    // de la même application, dessinée DANS une fenêtre de la grande zone : si son propre
+    // dessin notifiait, la fenêtre qui l'héberge se croirait périmée, le remonterait, il se
+    // redessinerait… — c'était le clignotement lent des fenêtres Unit.
+    if (this.application_data.drawing_area === this) {
+      this.application_data.menu_configuration?.notify(DRAW_TOPIC)
+    }
   }
 
   /**
@@ -1343,6 +1462,9 @@ export class Class_DrawingArea {
   public refreshWindowFraming() {
     // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
     if (!this.d3_selection_zoom_area) return
+    // os#1387 — le cadre du canevas (case de la grande zone, masqué, ou ordinaire) AVANT tout
+    // cadrage : c'est lui qui fixe window_fitting_* ci-dessous.
+    this._applyCanvasFrameStyle()
 
     // AUCUN CADRAGE AUTOMATIQUE : la géométrie du contenu ne bouge pas d'un pixel,
     // seul le chrome est rafraîchi. Règle sans exception — c'est le premier test, AVANT
@@ -1470,7 +1592,7 @@ export class Class_DrawingArea {
   protected _initDraw() {
     // DA détachée (modal) : on remplit le conteneur hôte ('100%') plutôt que
     // d'imposer window.innerHeight (qui déborderait le modal).
-    const height = (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : window.innerHeight
+    const height = this._svgDefaultHeight()
     // _initDraw est l'UNIQUE point de création de #draw_zoom : on le rend idempotent en
     // retirant tout #draw_zoom préexistant avant d'en append un nouveau. unDraw() ne
     // supprime que le nœud référencé par this.d3_selection_zoom_area ; un orphelin laissé
@@ -1491,6 +1613,8 @@ export class Class_DrawingArea {
       .attr('width', '100%')
       .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
+    // os#1387 — le SVG neuf prend le cadre que la grande zone lui donne (ou aucun).
+    this._applyCanvasFrameStyle()
 
     // Init drawing area
     const x = this._fit_margin / 2
@@ -1785,6 +1909,17 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    } else if (_position_type === 'geographic') {
+      // os#1364 — Mode géographique : les nœuds qui portent des coordonnées sont posés sur le
+      // fond calé. Ici, comme le mode paramétrique juste au-dessus, parce que la position doit
+      // être à jour AVANT que le moindre nœud ne soit dessiné — et pour la même raison : elle
+      // est DÉRIVÉE d'autre chose que d'elle-même, donc elle se recalcule à chaque frame plutôt
+      // que de se traîner d'une frame à l'autre.
+      //
+      // Sans calage ou sans coordonnées, la méthode ne touche à rien : le diagramme reste
+      // exactement où il est, ce qui est la seule chose raisonnable à faire tant que la carte
+      // n'existe pas encore.
+      this.nodePositioning.geographic.applyGeographicLayout()
     } else if (_position_type === 'proportional') {
       // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
       // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
@@ -3974,6 +4109,9 @@ export class Class_DrawingArea {
     this._height = _; this.drawBackground(); this.drawGrid()
   }
   public get window_fitting_height(): number {
+    // Canevas cadré dans une case de la grande zone : c'est elle qu'on remplit.
+    const frame = this.canvas_frame
+    if (frame && frame !== 'hidden') return frame.height - this._fit_margin - this._scrollbar_reserve_bottom
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
@@ -4014,7 +4152,7 @@ export class Class_DrawingArea {
    *  permanente : elle est là au repos, la rendre ferait dessiner sous les boutons.
    *  Nulle sur une zone détachée, dont le cadrage suit son conteneur hôte. */
   public get panel_reserve_right(): number {
-    if (this.is_detached) return 0
+    if (this.is_detached || this.is_framed) return 0
     const mc = this.application_data.menu_configuration
     if (!mc) return 0
     return Math.max(0, mc.getMainZoneRightReservedPx() - mc.getToolsColumnWidthPx())
@@ -4022,7 +4160,7 @@ export class Class_DrawingArea {
 
   /** Symétrique en bas : réserve de la doc en mode bandeau. */
   public get panel_reserve_bottom(): number {
-    if (this.is_detached) return 0
+    if (this.is_detached || this.is_framed) return 0
     return this.main_zone_bottom_reserved
   }
 
@@ -4080,6 +4218,9 @@ export class Class_DrawingArea {
   private _suppress_scrollbar_reserve: boolean = false
   public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
   public get window_fitting_width(): number {
+    // Canevas cadré dans une case de la grande zone : c'est elle qu'on remplit.
+    const frame = this.canvas_frame
+    if (frame && frame !== 'hidden') return frame.width - this._fit_margin - this._scrollbar_reserve_right
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const w = this.getContainerNode()?.clientWidth ?? 0
@@ -4207,8 +4348,8 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
-    // DA détachée : aucun menu autour du conteneur → pas d'offset.
-    if (this.is_detached) {
+    // DA détachée, ou canevas cadré dans sa case : aucun menu autour du conteneur → pas d'offset.
+    if (this.is_detached || this.is_framed) {
       return 0
     }
     if (this.static && !this.application_data.publish_options.topbar) {
@@ -4224,8 +4365,8 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getBottomBarHeight() {
-    // DA détachée : aucun menu autour du conteneur → pas d'offset.
-    if (this.is_detached) {
+    // DA détachée, ou canevas cadré dans sa case : aucun menu autour du conteneur → pas d'offset.
+    if (this.is_detached || this.is_framed) {
       return 0
     }
     return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
@@ -4664,6 +4805,19 @@ export class Class_DrawingArea {
   private _constrain_to_bg_image_ratio: boolean = false
   private _bg_image_natural_ratio: number = 0
   private _bg_image_horizontal_align: 'left' | 'center' | 'right' = 'left'
+
+  // os#1364 — CALAGE GÉOGRAPHIQUE du fond : la projection, et deux points dont on connaît à la
+  // fois la coordonnée terrestre et l'endroit où ils tombent dans le dessin. `null` = ce
+  // diagramme n'est pas géoréférencé, ce qui est le cas de tous sauf ceux qu'on géoréférence.
+  //
+  // PORTÉ PAR LA ZONE DE DESSIN, et non par le Sankey, exactement comme l'image de fond
+  // au-dessus, et pour la même raison : il ne parle pas des flux, il parle du support sur lequel
+  // on les pose. Un même modèle peut d'ailleurs se dessiner sur deux fonds différents.
+  //
+  // DEUX POINTS, ET PAS TROIS. Deux suffisent à une échelle et à une origine ; le troisième
+  // paierait une rotation et une déformation d'axes, c'est-à-dire justement ce qu'une carte ne
+  // doit pas avoir (cf. `fitGeoReference`, qui impose une échelle unique aux deux axes).
+  private _geo_reference: Type_GeoReference | null = null
   public drawBgImage() {
     this.d3_selection_bg?.select('#bg_image').remove()
 
@@ -4770,6 +4924,9 @@ export class Class_DrawingArea {
 
   public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 
+  // os#1364 — Mode géographique : les nœuds coordonnés se posent sur le fond calé au prochain dessin.
+  public setGeographicMode() { DisplayModes.setGeographicMode(this) }
+
   public resetAllVerticalIntervals(v_spacing?: number) { DisplayModes.resetAllVerticalIntervals(this, v_spacing) }
 
   public get id() { return this._sankey.id }
@@ -4806,6 +4963,23 @@ export class Class_DrawingArea {
     } else {
       this._loadBgImageNaturalRatio(true)
     }
+  }
+
+  // os#1364 — Calage géographique du fond (cf. `_geo_reference`). Le poser ne déplace rien tout
+  // seul : c'est le mode de position `'geographic'` qui s'en sert, au prochain dessin.
+  public get geo_reference(): Type_GeoReference | null { return this._geo_reference }
+  public set geo_reference(value: Type_GeoReference | null) { this._geo_reference = value }
+
+  /**
+   * os#1364 — Ce diagramme est-il géoréférencé AU SENS UTILE : un fond calé, et au moins un nœud
+   * qui sait où il est ? Les deux, car ni l'un ni l'autre ne suffit — un calage sans coordonnées
+   * ne place personne, des coordonnées sans calage ne savent pas où tomber. C'est ce que lit la
+   * capacité `geography` du registre des représentations, qui n'offre pas une carte à un
+   * diagramme qui n'en a pas les moyens.
+   */
+  public get is_geo_referenced(): boolean {
+    if (this._geo_reference === null) return false
+    return this._sankey.nodes_list.some(n => n.has_geo_position)
   }
 
   public get bg_image_horizontal_align(): 'left' | 'center' | 'right' { return this._bg_image_horizontal_align }
