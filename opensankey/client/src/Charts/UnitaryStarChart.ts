@@ -50,6 +50,17 @@ import type {
 // info-bulle. Il s'applique IDENTIQUEMENT aux deux côtés, donc deux flux de même valeur gardent
 // la même épaisseur même relevés : la comparabilité entrée/sortie survit au plancher.
 const MIN_RIBBON_PX = 2
+// Fraction de la hauteur de la case VISÉE par la plus grande des deux piles de rubans.
+//
+// Elle existe parce qu'une figure qui remplit sa case ne dit plus rien de ce qu'elle mesure :
+// à une entrée et une sortie, le ruban prenait toute la hauteur quelle que soit la valeur, et
+// l'étoile devenait un pavé. Ce n'est pas une marge d'esthétique, c'est ce qui rend l'épaisseur
+// lisible comme une QUANTITÉ.
+//
+// La valeur reprend `UNITARY_CENTRAL_HEIGHT_FRACTION` (types/DrawingArea), la hauteur apparente
+// que visait le nœud central du temps où l'aperçu passait par le moteur Sankey. Les deux doivent
+// rester d'accord : c'est la même figure, vue par deux moteurs de rendu.
+const TARGET_STACK_FILL = 0.3
 // Blanc entre deux rubans voisins CÔTÉ BRANCHE. Sans lui, deux flux adjacents de même couleur
 // (fréquent : un même nœud amont éclaté en plusieurs flux) se lisent comme un seul.
 const ROW_GAP_PX = 2
@@ -221,10 +232,25 @@ export const unitaryStarScale = (
   const total_out = output_values.reduce((acc, v) => acc + v, 0)
   const biggest = Math.max(total_in, total_out)
   if (biggest <= 0 || height <= 0) return 0
-  // Borne haute : l'échelle qui remplirait exactement la case SANS écart ni plancher. Aucune
-  // échelle supérieure ne peut tenir, l'ajout des écarts ne pouvant qu'allonger la pile.
-  const ideal = height / biggest
+  // ÉCHELLE VISÉE : la plus grande des deux piles occupe TARGET_STACK_FILL de la case, et non
+  // la case entière.
+  //
+  // Remplir la hauteur donnait, sur l'étoile la plus courante — un procédé, une entrée, une
+  // sortie —, deux rubans épais de toute la case : un pavé, pas un Sankey. Le défaut ne se
+  // voyait qu'à peu de branches, là où rien d'autre ne limite l'épaisseur ; au-delà, planchers
+  // et écarts rabotaient déjà l'échelle.
+  //
+  // La fraction reprend `UNITARY_CENTRAL_HEIGHT_FRACTION` du board Sankey (types/DrawingArea) :
+  // c'est la hauteur apparente que visait le nœud central quand l'aperçu était rendu par le
+  // moteur Sankey, donc celle à laquelle l'œil s'est habitué. Les deux chemins de calcul
+  // concordent : le board posait `scale = valeur_du_centre / 1.5` et une valeur égale à
+  // l'échelle vaut 100 px, soit 150 px pour le flux central — exactement 30 % d'une case de
+  // 500 px.
+  const ideal = (height * TARGET_STACK_FILL) / biggest
   if (fits(ideal)) return ideal
+  // Si même cette épaisseur ne tient pas, c'est que les planchers et les écarts saturent la
+  // case à eux seuls : on cherche alors en DESSOUS. Jamais au-dessus — une pile qui remplit la
+  // case est précisément ce qu'on vient d'écarter.
   let lo = 0
   let hi = ideal
   for (let i = 0; i < 40; i++) {
