@@ -42,6 +42,10 @@ import {
 } from './openPresentation'
 
 registerBasePresentationBlocks()
+// os#1356 — les représentations d'échelle DIAGRAMME ne s'enregistrent plus ici.
+// Elles étaient posées dans ce module faute d'hôte ; leur sélecteur existe
+// désormais (DiagramRepresentationButtons, couche éditeur) et les enregistre
+// lui-même, là où elles servent.
 
 // Contenants offerts à un élément : jamais la barre latérale (réservée aux menus).
 const ELEMENT_MODES: Type_PanelMode[] = ['tooltip', 'popup']

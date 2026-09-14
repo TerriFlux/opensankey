@@ -214,7 +214,7 @@ const App = () => {
           // badge (true), header, header_i18n, language,
           // data_type (true), data_type_intervals (true), value_filter (true),
           // view_filter (true), level_filter (true), node_filter (true),
-          // data_filter (true).
+          // data_filter (true), data_links_reveal (false).
           // doc (false) : demande l'ouverture du panneau documentation ; le
           //   panneau lui-meme est rendu par l'application complete.
           //

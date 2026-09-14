@@ -12,6 +12,7 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON } fro
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { decodeViewsFromDelta } from './viewDelta'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
+import type { Type_ViewLabelDef } from './ViewsQuery'
 import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
 import { createViewSwitchOverlay } from './viewSwitchOverlay'
 import type { Class_DrawingArea } from './DrawingArea'
@@ -76,6 +77,15 @@ export class ViewsReader {
   // sa#396/397 — labels de vues (étiquettes de SÉLECTION, distinctes des view tags de génération).
   public get all_view_labels(): string[] { return this.query.all_view_labels }
   public viewIdsWithLabel(label: string): string[] { return this.query.viewIdsWithLabel(label) }
+  // os#1357 — annuaire des labels : résolution, libellé, renommage.
+  public get used_view_label_defs(): Type_ViewLabelDef[] { return this.query.used_view_label_defs }
+  public labelIdFromIdOrName(v: string, create: boolean = false): string { return this.query.labelIdFromIdOrName(v, create) }
+  public labelNameOf(id: string): string { return this.query.labelNameOf(id) }
+  public renameViewLabel(id: string, name: string): boolean { return this.query.renameViewLabel(id, name) }
+  public setViewLabelGroup(id: string, group: string): boolean { return this.query.setViewLabelGroup(id, group) }
+  public deleteViewLabel(id: string): boolean { return this.query.deleteViewLabel(id) }
+  public get view_label_groups(): string[] { return this.query.view_label_groups }
+  public labelDefsInGroup(group: string): Type_ViewLabelDef[] { return this.query.labelDefsInGroup(group) }
 
   public get has_views(): boolean { return this.query.has_views }
   public get is_view_master(): boolean { return this.query.is_view_master }
@@ -190,6 +200,29 @@ export class ViewsReader {
     // OS#1315 — Caméra conservée entre les vues (rétro-compat : conservée si absent).
     this.host.keep_camera_across_views = getBooleanFromJSON(json_object, 'keep_camera_across_views', true)
 
+    // os#1357 — Annuaire des labels, lu AVANT les vues : `parseViewExtraFields` s'en sert pour
+    // résoudre — et au besoin compléter — les labels de chaque vue. Absent d'un fichier
+    // antérieur : l'annuaire se reconstruit alors depuis les noms rencontrés dans les vues.
+    // Sérialisé en DICTIONNAIRE indexé par identifiant, comme `views` et `contexts` : c'est la
+    // seule forme d'objet que `Type_JSON` sait porter (pas de tableau d'objets), et l'unicité
+    // de l'identifiant y est structurelle.
+    const defs_raw = json_object['view_label_defs']
+    const defs: Type_ViewLabelDef[] = []
+    if (defs_raw && typeof defs_raw === 'object' && !Array.isArray(defs_raw)) {
+      Object.entries(defs_raw as Type_JSON).forEach(([id, d]) => {
+        if (id === '' || !d || typeof d !== 'object' || Array.isArray(d)) return
+        const entry = d as Type_JSON
+        const name = entry['name']
+        if (typeof name !== 'string' || name === '') return
+        const group = entry['group']
+        defs.push(typeof group === 'string' && group !== ''
+          ? { id, name, group }
+          : { id, name })
+      })
+    }
+    this.host.view_label_defs.length = 0
+    this.host.view_label_defs.push(...defs)
+
     Object.entries(views_json)
       .forEach(([view_id, view_json]) => {
         this.pushViewIdInViewOrder(view_id)
@@ -202,6 +235,22 @@ export class ViewsReader {
         // Hook OSP : migration heredited_attr (édition). No-op en lecture OS.
         this.onViewParsed(view_id, view_json as Type_JSON)
       })
+    // os#1358 — Ordre explicite s'il est là ; sinon l'ordre des clés de `views` fait foi, ce
+    // que la boucle ci-dessus vient d'établir — un fichier antérieur se relit donc à
+    // l'identique. On ignore les ids inconnus et on garde en queue les vues absentes de la
+    // liste : un fichier partiellement à jour ne perd aucune vue.
+    const order_raw = json_object['views_order']
+    if (Array.isArray(order_raw)) {
+      const known = new Set(this.host.views_order)
+      const explicit = [...new Set(
+        order_raw.filter((id): id is string => typeof id === 'string' && known.has(id))
+      )]
+      const seen = new Set(explicit)
+      const rest = this.host.views_order.filter(id => !seen.has(id))
+      this.host.views_order.length = 0
+      this.host.views_order.push(...explicit, ...rest)
+    }
+
     let active_view_id = getStringFromJSON(json_object, 'current_view', MASTER_VIEW_ID)
     if (this.host.is_static && active_view_id == MASTER_VIEW_ID) active_view_id = Object.keys(views_json)[0]
     // current_view peut pointer vers une vue absente (vieux fichier, vue supprimée) => master.
@@ -320,6 +369,11 @@ export class ViewsReader {
     // Identité LOGIQUE de la vue courante (découplée de l'id du Sankey de la DA). Posée AVANT
     // applyViewTagSelection / les redraws.
     host.current_view_id = id
+    // os#1355 — la vue porte sa REPRÉSENTATION : si elle a figé une disposition de la grande
+    // zone, on la rejoue AVANT le dessin, pour que le diagramme se cadre d'emblée dans la bonne
+    // géométrie. Sans disposition figée (maître, fichiers antérieurs), la courante reste.
+    const view_main_zone = id === MASTER_VIEW_ID ? undefined : host.views_dict[id]?.main_zone
+    if (view_main_zone) host.menu_configuration?.mainZoneStateFromJSON(view_main_zone)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {

@@ -291,7 +291,7 @@ export function applyWrapLongWordsRetrocompat(sankey: Class_Sankey, version: str
 // Mode d'affichage GLOBAL à l'ouverture (#369)
 // ---------------------------------------------------------------------------
 /** Modes d'affichage globaux restituables (cf. Type_PositionMode côté PublishOptions). */
-export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapted'
+export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapted' | 'geographic'
 
 /**
  * Issue #369 — Mode d'affichage GLOBAL (`styles_dict['default'].shape_position_type`)
@@ -327,5 +327,16 @@ export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapt
  */
 export function positionModeOnLoad(incoming: string | undefined): Type_LoadedPositionMode {
   if (incoming === 'proportional' || incoming === 'scale_adapted') return incoming
+  // os#1364 — `geographic` est restitue pour la meme raison que les deux autres, et avec plus de
+  // force encore : un document geographique n a pas de disposition de repli qui aurait du sens,
+  // ses positions VIENNENT de ses coordonnees. L ouvrir en absolu ne serait pas une vue
+  // transitoire, ce serait perdre la carte.
+  //
+  // La regle du premier rendu ci-dessus lui va sans amenagement : le mode est ARME, pas applique,
+  // et le fichier s ouvre sur les x/y enregistres — qui sont precisement ceux que le mode
+  // produirait, puisque c est lui qui les a ecrits (cf. `captureCenterFromCorner` dans
+  // NodePositioningGeographic). Le diagramme s ouvre donc deja juste, et la premiere bascule de
+  // datatag ne le deplace pas.
+  if (incoming === 'geographic') return incoming
   return 'absolute'
 }

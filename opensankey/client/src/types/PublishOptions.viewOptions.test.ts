@@ -221,4 +221,20 @@ describe('sa#398 getPublishOptions — sélection de vues PAR diagramme (diagram
     expect(opts.diagrams_views).toEqual({ 'A': { view: 'v1', view_label: null } })
     expect(opts.view).toBe('v1')
   })
+
+  // os#1360 — la cle historique reste LUE (test ci-dessus, page ancienne) mais n'est plus
+  // PRODUITE : passee en prop, elle est reversee dans `diagrams_list` et n'apparait plus
+  // sous son ancien nom sur window.sankey.
+  it('applyViewerOptions : la prop depreciee sous_filieres est reversee dans diagrams_list', () => {
+    applyViewerOptions({ sous_filieres: { 'A': 'FileA' } })
+    expect(window.sankey?.diagrams_list).toEqual({ 'A': 'FileA' })
+    expect(window.sankey?.sous_filieres).toBeUndefined()
+    expect(getPublishOptions().diagrams_list).toEqual({ 'A': 'FileA' })
+  })
+
+  it('applyViewerOptions : diagrams_list gagne sur la prop depreciee', () => {
+    applyViewerOptions({ diagrams_list: { 'A': 'FileA' }, sous_filieres: { 'B': 'FileB' } })
+    expect(window.sankey?.diagrams_list).toEqual({ 'A': 'FileA' })
+    expect(window.sankey?.sous_filieres).toBeUndefined()
+  })
 })

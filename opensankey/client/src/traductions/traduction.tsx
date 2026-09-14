@@ -11,6 +11,7 @@ import { resources_loading_toasts } from './traduction_loading_toasts'
 import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
 import { resources_spreadsheet } from './traduction_spreadsheet'
+import { resources_sunburst } from './traduction_sunburst'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 
@@ -473,6 +474,7 @@ deep_assign_resources(resources_search as Record<string, unknown>, resources_ope
 deep_assign_resources(resources_loading_toasts as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_template as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_spreadsheet as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_sunburst as Record<string, unknown>, resources_opensankey)
 // `resources_process_dialog` est ajouté par `editor/traductions.tsx` (#1335).
 // Update traduction
 const resources = resources_opensankey // /!\ i18next accept only var with name "resources"

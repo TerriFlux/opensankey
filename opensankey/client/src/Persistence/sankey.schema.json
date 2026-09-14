@@ -121,6 +121,14 @@
                       "technosphere",
                       "biosphere"
                     ]
+                  },
+                  "flow_tier": {
+                    "type": "string",
+                    "enum": [
+                      "foreground",
+                      "background",
+                      "elementary"
+                    ]
                   }
                 },
                 "required": [
