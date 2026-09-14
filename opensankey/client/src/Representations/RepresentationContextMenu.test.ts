@@ -99,6 +99,23 @@ describe('representationTargetAt', () => {
     expect(representationTargetAt(null, container)).toBeNull()
   })
 
+  it('os#1397 : la racine de la figure est le FOND', () => {
+    const container = drawnStar('a')
+    const svg = container.querySelector('svg')!
+    expect(representationTargetAt(svg, container)).toEqual({ kind: 'background', id: null })
+  })
+
+  it('os#1397 : ce qui n est rien en particulier retombe sur le fond', () => {
+    // Le groupe de translation ne porte pas d etiquette : un clic dans le vide de la figure doit
+    // ouvrir les reglages, pas rien. C est ce qui permettra de retirer la barre de la vignette.
+    const container = drawnStar('a')
+    const group = container.querySelector('svg > g')!
+    expect(representationTargetAt(group, container)).toEqual({ kind: 'background', id: null })
+    // Et le fond ne vole pas les elements qui, eux, sont etiquetes.
+    const ribbon = container.querySelector(`[${REPR_KIND_ATTR}="ribbon"]`)!
+    expect(representationTargetAt(ribbon, container)?.kind).toBe('ribbon')
+  })
+
   it('refuse un element qui appartient a une AUTRE figure', () => {
     // Le cas qui condamne les identifiants DOM : deux figures dans la meme page.
     const first = drawnStar('a')

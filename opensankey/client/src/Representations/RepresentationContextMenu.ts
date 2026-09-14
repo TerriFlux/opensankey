@@ -56,6 +56,14 @@ import type { Type_RepresentationContext, Type_RepresentationEntry } from './Rep
 export const REPR_KIND_ATTR = 'data-repr-kind'
 /** Identifiant DU MODÈLE de l'élément cliqué (flux, nœud…) ; absent quand il n'y en a pas. */
 export const REPR_ID_ATTR = 'data-repr-id'
+/**
+ * os#1397 - Nom du widget qui rend LES RÉGLAGES de la représentation dans un menu contextuel,
+ * typiquement sur son fond. Déclaré ici, avec les noms d'attributs, pour la même raison : c'est un
+ * contrat entre la couche qui DÉCLARE le menu et celle qui l'AFFICHE, et deux chaînes écrites en
+ * dur de part et d'autre divergeraient un jour sans que rien ne le signale - le menu afficherait
+ * « widget introuvable » au lieu des réglages.
+ */
+export const REPRESENTATION_OPTIONS_WIDGET = 'RepresentationOptions'
 
 /** Ce qu'un clic droit a désigné dans une représentation. */
 export type Type_RepresentationTarget = {
