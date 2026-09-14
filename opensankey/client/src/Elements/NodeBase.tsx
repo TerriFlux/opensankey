@@ -73,6 +73,22 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_u: number
   private _position_v: number
 
+  // os#1364 — COORDONNÉES GÉOGRAPHIQUES, en degrés décimaux WGS 84. `null` = ce nœud n'en a
+  // pas, ce qui est le cas de l'immense majorité d'entre eux et doit le rester.
+  //
+  // POURQUOI ICI, ET NON DANS LES ATTRIBUTS/STYLES. Un style est fait pour être PARTAGÉ par
+  // plusieurs éléments : y mettre une latitude poserait dix nœuds au même endroit, c'est-à-dire
+  // exactement ce qu'une carte ne doit pas faire. La position d'un nœud est une donnée qui lui
+  // appartient en propre — comme `position_u`/`position_v` juste au-dessus, et pour la même
+  // raison. Elles voisinent donc, et se copient, se persistent et se lisent de la même façon.
+  //
+  // Ce ne sont PAS des pixels : `x`/`y` restent la vérité du dessin. Ces deux nombres sont
+  // l'ANTÉCÉDENT dont le mode de position `'geographic'` dérive `x`/`y` à chaque mise en page,
+  // par projection puis calage sur le fond (cf. `NodePositioningGeographic`). Un diagramme qui
+  // n'a pas de coordonnées ne change donc pas d'un pixel.
+  private _latitude: number | null = null
+  private _longitude: number | null = null
+
   // OS#1299 — nom multilingue : map { langue -> nom }, comme la documentation
   // markdown (cf. persistenceMigrations). Le getter/setter `name` expose une
   // string résolue/écrite pour la langue ACTIVE de l'app (i18next) : traduire un
@@ -259,6 +275,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // déjà copiés par copyAttrFrom (appelé dans Element._copyFrom via super).
     this._position_u = _._position_u
     this._position_v = _._position_v
+    this._latitude = _._latitude
+    this._longitude = _._longitude
 
   }
 
@@ -1441,6 +1459,30 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public set position_u(_: number) { this._position_u = _ }
   public get position_v() { return this._position_v }
   public set position_v(_: number) { this._position_v = _ }
+
+  // os#1364 — Latitude/longitude en degrés décimaux (WGS 84), ou `null`.
+  //
+  // Le setter REFUSE ce qui n'est pas une coordonnée — hors bornes, NaN, infini — et remet
+  // `null` : ces valeurs arrivent d'une saisie libre et d'un import Excel, et une latitude de
+  // 900 ne se voit pas à l'écran comme une faute de frappe, elle se voit comme un nœud
+  // mystérieusement absent, projeté à l'infini hors du cadre. Mieux vaut « pas de coordonnée »,
+  // qui est un état que le reste du code sait déjà traiter.
+  public get latitude() { return this._latitude }
+
+  public set latitude(_: number | null) {
+    this._latitude = (_ === null || !isFinite(_) || _ < -90 || _ > 90) ? null : _
+  }
+
+  public get longitude() { return this._longitude }
+
+  public set longitude(_: number | null) {
+    this._longitude = (_ === null || !isFinite(_) || _ < -180 || _ > 180) ? null : _
+  }
+
+  /** Vrai quand ce nœud sait où il est sur la Terre — les deux coordonnées, pas une seule. */
+  public get has_geo_position(): boolean {
+    return this._latitude !== null && this._longitude !== null
+  }
 
   public get selected_elements_list(): Class_NodeBase[] {
     return []

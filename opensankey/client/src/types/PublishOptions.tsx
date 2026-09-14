@@ -78,6 +78,18 @@ export interface SankeyGlobals {
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
   unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
+  // os#1356 — default false : la REPRÉSENTATION DU DIAGRAMME ENTIER offerte au lecteur, soit le
+  // groupe complet Diagramme / Tableur / Doc / Unit. Sans elle, ce groupe n'existait qu'en édition
+  // (`is_static` le coupait) : le lecteur d'un site publié ne pouvait pas passer au tableur, alors
+  // que les données sont dans le bundle qu'il a déjà téléchargé.
+  // À ne pas confondre avec l'analyse d'un ÉLÉMENT (couronne / barres / unitaire de la pop-up
+  // d'élément) : ce sont deux échelles, elles ne partagent pas de sélecteur.
+  // Elle OUVRE le sélecteur ; `representations` (liste blanche d'ids) et le `publish_option` de
+  // chaque entrée du registre disent ensuite CE QU'IL CONTIENT. `unitary` et `doc` sont
+  // précisément ces `publish_option`-là : une page peut donc offrir la représentation sans
+  // offrir l'unitaire. Ils ne posent simplement plus leur bouton isolé quand le groupe est là
+  // (cf. MenuTopButtonsStatic), sinon le même bouton apparaîtrait deux fois.
+  representation?: boolean
   // sa#402 — document markdown posé À CÔTÉ de la page (README.md du projet, recopié par le rendu).
   // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
   // diagramme n'embarque pas de documentation. Sa seule présence suffit à faire apparaître le bouton.
@@ -105,10 +117,15 @@ export interface SankeyGlobals {
   diagram?: string | Record<string, unknown> // URL d'un JSON à charger, OU objet JSON inline
   diagram_layout?: string                    // URL d'un layout à surimprimer
   diagram_layout_options?: string[]
-  // Dropdown multi-diagrammes (clés "a/b" pour groupage). sa#398 : chaque valeur peut être
-  // un objet `{file, view?, view_label?}` — sélection de vues PAR diagramme.
+  // Dropdown multi-diagrammes. Une clé « a/b » ouvre un second dropdown : le premier
+  // segment est le PÉRIMÈTRE au sens du modèle (os#1360), le second le diagramme.
+  // sa#398 : chaque valeur peut être un objet `{file, view?, view_label?}` — sélection
+  // de vues PAR diagramme.
   diagrams_list?: Record<string, Type_DiagramsListEntry>
-  /** @deprecated utiliser `diagrams_list` */
+  /**
+   * @deprecated utiliser `diagrams_list`. Lue pour les pages anciennes (os#1360) ;
+   * l'application ne pose plus jamais cette clé elle-même.
+   */
   sous_filieres?: Record<string, string>
   /**
    * @deprecated Désignation HISTORIQUE du diagramme courant : ces pages chargent
@@ -126,6 +143,12 @@ export interface SankeyGlobals {
   level_filter?: boolean          // default true : section "niveaux/hiérarchies" (level_taggs) dans le drawer
   node_filter?: boolean           // default true : section "tags d'éléments" (node/flux_taggs) dans le drawer
   data_filter?: boolean           // default true : section "sélection de données" (data_taggs) dans le drawer
+  // os#1359 — case « Toutes données » (reveal_data_links) dans « Données affichées ».
+  // DÉFAUT FALSE, à l'inverse des autres filtres : elle révèle les flux porteurs d'une donnée
+  // collectée tous niveaux confondus, donc la matière première de l'étude. L'ouvrir à un
+  // visiteur est un geste d'auteur, et aucune page déjà publiée ne doit changer d'aspect.
+  // En édition la case reste visible sans cette option.
+  data_links_reveal?: boolean     // default false
 
   // Interaction (viewer publish)
   lock_zoom?: boolean             // default false : bloque le zoom molette/scale (le pan au bouton milieu reste actif)
@@ -166,6 +189,13 @@ export interface SankeyGlobals {
   // publiée normale ne pose cette clé.
   export_json?: boolean
 
+  // os#1361 — LISTE BLANCHE des représentations offertes au lecteur, par id de
+  // registre ('os.repr.sankey', 'osp.repr.donut', …). C'est ici que la
+  // publication déclare l'axe « représentation » du contrôleur.
+  // Absente : toutes celles que le registre propose — donc une page écrite avant
+  // D0 ne change pas de comportement.
+  representations?: string[]
+
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
 }
@@ -188,6 +218,8 @@ export interface PublishOptions {
   unitary: boolean
   doc: boolean
   doc_file: string | null
+  // os#1356 — représentation du diagramme entier offerte au lecteur (cf. SankeyGlobals).
+  representation: boolean
   navigation_help: boolean
   badge: boolean
   app_info: boolean
@@ -199,6 +231,7 @@ export interface PublishOptions {
   level_filter: boolean
   node_filter: boolean
   data_filter: boolean
+  data_links_reveal: boolean
   lock_zoom: boolean
   zoom_control: boolean
   tooltip_on_hover: boolean
@@ -214,6 +247,8 @@ export interface PublishOptions {
   // chaîne simple devient [chaîne]). `view_label` ci-dessus reste le filtre ACTIF (premier de
   // la liste), seul consommé par les mécaniques historiques (diagrams_views, ouverture).
   view_labels: string[] | null
+  // os#1361 — ids de représentations offertes au lecteur ; null = toutes.
+  representations: string[] | null
   export_json: boolean
   logo: string | null
   header: string | null
@@ -285,6 +320,17 @@ const strLabels = (v: unknown): string[] | null => {
   }
   const labels = [...new Set(valid)]
   return labels.length > 0 ? labels : null
+}
+
+// os#1361 — liste blanche d'ids de représentations. Doctrine additive : une clé absente
+// ou vide vaut « toutes » (null), jamais « aucune » — sinon une page mal écrite masquerait
+// jusqu'au Sankey lui-même. Une chaîne seule est acceptée : ces pages s'écrivent à la main.
+const idList = (v: unknown): string[] | null => {
+  const raw = (typeof v === 'string') ? [v] : (Array.isArray(v) ? v : null)
+  if (!raw) return null
+  const valid = raw.filter((s): s is string => typeof s === 'string' && s.trim() !== '')
+  const ids = [...new Set(valid)]
+  return ids.length > 0 ? ids : null
 }
 
 // Langue effective côté page publiée : ?lang= > window.sankey.language > préférence
@@ -420,6 +466,7 @@ export const getPublishOptions = (): PublishOptions => {
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
     doc_file: str(s.doc_file),
+    representation: bool(s.representation, false),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
     app_info: bool(s.app_info, true),
@@ -431,6 +478,7 @@ export const getPublishOptions = (): PublishOptions => {
     level_filter: bool(s.level_filter, true),
     node_filter: bool(s.node_filter, true),
     data_filter: bool(s.data_filter, true),
+    data_links_reveal: bool(s.data_links_reveal, false),
     lock_zoom: bool(s.lock_zoom, false),
     zoom_control: bool(s.zoom_control, false),
     tooltip_on_hover: bool(s.tooltip_on_hover, false),
@@ -443,6 +491,7 @@ export const getPublishOptions = (): PublishOptions => {
     view: view_value,
     view_label: view_label_value,
     view_labels: page_view_labels,
+    representations: idList(s.representations),
     export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
@@ -480,6 +529,8 @@ export type ViewerSankeyOptions = {
   edit_button?: boolean
   unitary?: boolean
   doc?: boolean
+  // os#1356 — cf. SankeyGlobals : englobe `unitary` et `doc`.
+  representation?: boolean
   navigation_help?: boolean
   badge?: boolean
   logo?: string
@@ -489,7 +540,10 @@ export type ViewerSankeyOptions = {
   diagram_layout_options?: string[]
   // sa#398 : chaque valeur peut être un objet {file, view?, view_label?} (vues PAR diagramme)
   diagrams_list?: Record<string, Type_DiagramsListEntry>
-  /** @deprecated utiliser `diagrams_list` */
+  /**
+   * @deprecated utiliser `diagrams_list`. Prop encore acceptée, mais reversée dans
+   * `diagrams_list` : elle n'atteint plus `window.sankey` sous son ancien nom (os#1360).
+   */
   sous_filieres?: Record<string, string>
   data_type?: boolean
   data_type_intervals?: boolean
@@ -498,6 +552,7 @@ export type ViewerSankeyOptions = {
   level_filter?: boolean
   node_filter?: boolean
   data_filter?: boolean
+  data_links_reveal?: boolean
   lock_zoom?: boolean
   zoom_control?: boolean  // os#1383 : barre de zoom à droite (+ / % / -), celle de l'application
   tooltip_on_hover?: boolean
@@ -512,6 +567,8 @@ export type ViewerSankeyOptions = {
   // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396).
   // sa#412 : une LISTE rend en plus le sélecteur de label visible (cf. SankeyGlobals).
   view_label?: string | string[]
+  // os#1361 — ids de représentations offertes au lecteur (cf. SankeyGlobals).
+  representations?: string[]
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -527,19 +584,32 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
+    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
-    'diagrams_list', 'sous_filieres',
+    'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',
-    'view_filter', 'level_filter', 'node_filter', 'data_filter',
+    'view_filter', 'level_filter', 'node_filter', 'data_filter', 'data_links_reveal',
     'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
-    'view', 'view_label',
+    'view', 'view_label', 'representations',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {
       (next as Record<string, unknown>)[k as string] = options[k] as unknown
+    }
+  }
+  // os#1360 — la prop depreciee est LUE, jamais REPRODUITE : elle atterrit sous
+  // `diagrams_list`, la seule cle que l'application ecrive desormais. Recopier
+  // `sous_filieres` sur window.sankey aurait fait naitre la cle historique dans des
+  // pages neuves, alors que le jalon la cantonne aux fichiers anciens.
+  // `diagrams_list` gagne si les deux props sont fournies (regle documentee).
+  if (options.sous_filieres !== undefined && options.diagrams_list === undefined) {
+    (next as Record<string, unknown>).diagrams_list = options.sous_filieres
+    if (!_warned_sous_filieres) {
+      _warned_sous_filieres = true
+      // eslint-disable-next-line no-console
+      console.warn('[OpenSankey] la prop `sous_filieres` est dépréciée, utiliser `diagrams_list`.')
     }
   }
   if (options.diagrams_config) {

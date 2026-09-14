@@ -2740,12 +2740,16 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     // En mode stick_to_label, nom et valeur doivent être en <text> droit pour
     // pouvoir se coller l'un à l'autre — on désactive le rendu textPath.
     if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline' && this.link.shape_type !== 'bezier_outline_exact' && !this.link.isTapered && !this.link.value_label_stick_to_label) {
+      const dom_prefix = this.link.drawing_area.dom_id_prefix
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)
         .classed(`link_${this.displayPrefix}_textpath`, true)
-        .attr('id', `${this.displayPrefix}_textpath_${this._element.id}`)
-        .attr('href', '#' + this._element.id)
+        // Le tracé visé est celui de CETTE zone : hors de la zone affichée, les identifiants
+        // sont préfixés (cf. DrawingArea.dom_id_prefix) — sans quoi ce libellé irait suivre le
+        // chemin homonyme d'un autre diagramme de la page, et partirait avec lui.
+        .attr('id', `${dom_prefix}${this.displayPrefix}_textpath_${this._element.id}`)
+        .attr('href', '#' + dom_prefix + this._element.id)
         .attr('side', this.getTextPathSide())
         .text(String(labelText))
         .attr('spacing', 'exact')

@@ -29,7 +29,7 @@ import { getNameLabelValues } from './ElementsAttributesConfig'
 import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
-import { effectiveOpacity } from './elementOpacity'
+import { effectiveOpacity, Type_OpacityGuards } from './elementOpacity'
 
 /**
  * Sur-pente de la bézier par rapport à la corde (cf. drawShape).
@@ -147,7 +147,8 @@ export class LinkDrawShape {
       const shape_color = this._link.getShapeColorToUse()
       // SA#534 — opacité résolue par le point unique (voir elementOpacity.ts). Les tirages
       // dérivés ci-dessous (incertitude, bandes, gardes locaux) partent de cette variable.
-      const shape_opacity = effectiveOpacity(this._link, { dim: 'no_data', hidden: !this._link.shape_color_visible })
+      const opacity_guards: Type_OpacityGuards = { dim: 'no_data', hidden: !this._link.shape_color_visible }
+      const shape_opacity = effectiveOpacity(this._link, opacity_guards)
 
       // Check to choose how to draw
       const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
@@ -304,7 +305,10 @@ export class LinkDrawShape {
 
         // Apply properties
         this._link.d3_selection?.selectAll('.link_path')
-          .attr('id', this._link.id)
+          // Préfixé hors de la zone affichée : un aperçu unitaire porte les MÊMES identifiants
+          // de flux que le diagramme (l'extraction les préserve), et un `<textPath href="#id">`
+          // du diagramme irait suivre le tracé de l'aperçu (cf. DrawingArea.dom_id_prefix).
+          .attr('id', this._link.drawing_area.dom_id_prefix + this._link.id)
           .attr('fill', !is_stroke ? shape_color : 'none')
           .attr('stroke', is_stroke ? shape_color : 'none')
           .attr('stroke-opacity', is_stroke ? shape_opacity : '0')
@@ -348,7 +352,7 @@ export class LinkDrawShape {
       // devient INVISIBLE (opacité 0) mais reste en place : c'est lui qui porte
       // les interactions (survol, clic, tooltip) — sinon sa peinture se
       // mélangerait aux bandes à travers l'opacité.
-      if (this.drawTaggedValueBands(shape_opacity)) {
+      if (this.drawTaggedValueBands(shape_opacity, opacity_guards)) {
         this._link.d3_selection?.selectAll('.link_path')
           .attr('opacity', 0)
           .attr('fill-opacity', 0)
@@ -376,7 +380,7 @@ export class LinkDrawShape {
    * V1 : flux courbes hh/vv, hors recyclage. Retourne true si des bandes ont
    * été dessinées.
    */
-  private drawTaggedValueBands(shape_opacity: number | string): boolean {
+  private drawTaggedValueBands(shape_opacity: number, opacity_guards: Type_OpacityGuards): boolean {
     const link = this._link
     const bands = link.tagged_value_bands
     if (bands.length === 0) return false
@@ -489,7 +493,11 @@ export class LinkDrawShape {
         ? (!(da.filter_label_px > 0) || band_px * zoom >= da.filter_label_px)
         : band_value >= da.filter_label
     let cum = 0
-    bands.forEach(({ id, color, share, value, unit, label_visible, px }) => {
+    bands.forEach(({ id, color, share, value, unit, label_visible, px, opacity }) => {
+      // SA#541 — opacité imposée à LA bande par le style de ses étiquettes, mêmes gardes que le flux.
+      const band_opacity = opacity === undefined
+        ? shape_opacity
+        : effectiveOpacity({ shape_opacity: opacity, has_data: link.has_data, drawing_area: link.drawing_area }, opacity_guards)
       const lo = cum
       cum += share
       const off_lo_src = -full_src / 2 + lo * full_src
@@ -510,7 +518,7 @@ export class LinkDrawShape {
         .attr('id', `${link.id}_band_${id}`)
         .attr('d', path)
         .attr('fill', color ?? link.getShapeColorToUse())
-        .attr('fill-opacity', shape_opacity)
+        .attr('fill-opacity', band_opacity)
         .attr('stroke', 'none')
         .attr('pointer-events', 'none')
       // #285 — label de valeur PAR bande, indépendant du label de total :

@@ -2691,6 +2691,20 @@ export type LinkLabelSpecificValues = {
  * // { visible: false, type: 'rect', color: '#ffffff', ... }
  * 
  */
+/**
+ * SA#541 — cadenas de couleur « implicite », pour le DESSIN seulement. Bordure, fonds, icône et
+ * libellés suivent la couleur de la forme sauf cadenas (`<couleur>_sustainable`) : une couleur
+ * imposée par un style d'étiquette doit tenir de même, sinon le style serait ignoré en silence.
+ * Ces valeurs regroupées ne servent qu'au dessin — l'inspecteur lit les attributs eux-mêmes —, si
+ * bien que le cadenas qu'il affiche reste celui que l'utilisateur a posé.
+ */
+function sustainableForDrawing(element: unknown, fullKey: string, raw: unknown): unknown {
+  if (raw === true || !fullKey.endsWith('_sustainable')) return raw
+  const owner = element as { tagStyleLayerImposing?: (k: string) => unknown }
+  if (typeof owner.tagStyleLayerImposing !== 'function') return raw
+  return owner.tagStyleLayerImposing(fullKey.slice(0, -'_sustainable'.length)) !== undefined ? true : raw
+}
+
 export function getShapeValue<T extends typeof BASE_SHAPE_CONFIG>(
   element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: ShapePrefix,
@@ -2706,7 +2720,8 @@ export function getShapeValue<T extends typeof BASE_SHAPE_CONFIG>(
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
@@ -2735,7 +2750,8 @@ export function getLabelValues<T extends typeof BASE_LABEL_CONFIG>(
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: number | boolean | string) => {
           Reflect.set(element, fullKey, value)
@@ -2763,7 +2779,8 @@ export function getValueLabelValues(
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: number | string | boolean) => {
           Reflect.set(element, fullKey, value)
@@ -2791,7 +2808,8 @@ export function getNameLabelValues(
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
@@ -2823,7 +2841,8 @@ export function getNodeShapeSpecificValues(
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
@@ -2856,7 +2875,8 @@ export const getLinkShapeSpecificValue = (
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
@@ -2884,7 +2904,8 @@ export const getLinkLabelSpecificValue = (
       Object.defineProperty(result, key, {
         get: () => {
           //@ts-expect-error xxx
-          return Reflect.get(element, fullKey) ?? config[key].default
+          const raw = Reflect.get(element, fullKey) ?? config[key].default
+          return sustainableForDrawing(element, fullKey, raw)
         },
         set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)

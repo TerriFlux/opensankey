@@ -57,6 +57,39 @@ export type Type_UnitaryProcessPortDirection = 'input' | 'output'
 export type Type_UnitaryProcessExchangeKind = 'technosphere' | 'biosphere'
 
 /**
+ * RANG du flux, au sens de l'atelier ACV/AFM du 09/09/2026 (os#1388, jalon 82
+ * « briques agrégées ») — et c'est un choix de MODÉLISATION, pas une nuance
+ * d'affichage :
+ *
+ *  - `foreground` (PREMIER-PLAN) — le flux est décrit à la granularité de
+ *    l'analyse de flux, mesuré, et c'est LUI que la réconciliation ajuste ;
+ *  - `background` (ARRIÈRE-PLAN) — le flux vient d'une base ACV (ecoinvent) et
+ *    n'est pas mesuré ici : il est transporté TEL QUEL vers Brightway ;
+ *  - `elementary` (FLUX ÉLÉMENTAIRE) — l'échange avec l'environnement
+ *    (émissions, prélèvements), transporté tel quel lui aussi.
+ *
+ * LA RÈGLE DE L'ATELIER : la réconciliation ne porte QUE sur le premier-plan.
+ * Ajuster un arrière-plan reviendrait à réécrire la base ACV dont il est tiré ;
+ * ajuster un flux élémentaire reviendrait à réécrire une émission mesurée. Le
+ * consommateur de ce champ est la composition côté Python (sep#124 / mfa#253),
+ * qui filtre ses contraintes dessus.
+ *
+ * Ce rang est INDÉPENDANT de `exchange_kind` : la biosphère dit dans QUELLE
+ * matrice Brightway range l'échange, le rang dit si la réconciliation a le droit
+ * d'y toucher. Les deux coïncident souvent (un échange biosphère est un flux
+ * élémentaire), jamais nécessairement — d'où deux champs, et une simple
+ * SUGGESTION de l'un vers l'autre (`unitaryProcessSuggestedFlowTier`).
+ */
+export type Type_UnitaryProcessFlowTier = 'foreground' | 'background' | 'elementary'
+
+/**
+ * L'énumération, à UN seul endroit : la lecture la valide, l'éditeur en fait ses
+ * options. Deux listes divergeraient au premier rang ajouté.
+ */
+export const UNITARY_PROCESS_FLOW_TIERS: Type_UnitaryProcessFlowTier[] =
+  ['foreground', 'background', 'elementary']
+
+/**
  * Un port de la brique — un nœud d'échange du diagramme, vu comme une interface
  * du procédé, POUR UNE GRANDEUR DONNÉE. C'est par `node_id` que l'assemblage
  * (U2/U3) raccorde une sortie à une entrée.
@@ -85,7 +118,36 @@ export type Type_UnitaryProcessPort = {
   // Nature de l'échange pour la passerelle Brightway. Absente = technosphère,
   // le cas ordinaire d'un flux de matière entre procédés.
   exchange_kind?: Type_UnitaryProcessExchangeKind
+  // Rang du flux (os#1388). ABSENT = `foreground`, premier-plan : c'est ce que
+  // les fichiers antérieurs au champ décrivaient sans le dire, et la
+  // réconciliation les traite donc exactement comme avant. Ne JAMAIS lire cette
+  // absence autrement — passer par `unitaryProcessPortFlowTier`.
+  flow_tier?: Type_UnitaryProcessFlowTier
 }
+
+/**
+ * Le rang EFFECTIF d'un port — la seule lecture autorisée du champ, parce que
+ * son absence a un SENS (premier-plan) et non pas « on ne sait pas ». Les
+ * fichiers d'avant os#1388 n'en portent aucun : les lire comme premier-plan est
+ * ce qui préserve leur comportement de réconciliation à l'octet près.
+ */
+export const unitaryProcessPortFlowTier = (
+  port: Type_UnitaryProcessPort
+): Type_UnitaryProcessFlowTier => port.flow_tier ?? 'foreground'
+
+/**
+ * Le rang qu'on SUGGÈRE à la saisie quand on ne connaît du port que sa nature
+ * d'échange : un échange avec l'environnement est un flux élémentaire, tout le
+ * reste retombe sur le premier-plan.
+ *
+ * C'est une aide à la SAISIE, jamais une règle de lecture : un fichier qui dit
+ * `exchange_kind: 'biosphere'` sans rang reste premier-plan à la relecture (cf.
+ * `unitaryProcessPortFlowTier`), sans quoi un fichier existant changerait de
+ * comportement de réconciliation en silence.
+ */
+export const unitaryProcessSuggestedFlowTier = (
+  exchange_kind?: Type_UnitaryProcessExchangeKind
+): Type_UnitaryProcessFlowTier => exchange_kind === 'biosphere' ? 'elementary' : 'foreground'
 
 /**
  * Référence à la nomenclature de ports — l'objet PARTAGÉ entre briques, celui
@@ -173,6 +235,16 @@ const unitaryProcessPortFromJSON = (
   if (port_json.exchange_kind !== undefined) {
     if (port_json.exchange_kind !== 'technosphere' && port_json.exchange_kind !== 'biosphere') return null
     port.exchange_kind = port_json.exchange_kind
+  }
+  // Rang du flux (os#1388) : énumération fermée elle aussi. Un rang inconnu
+  // n'est pas récupérable par un défaut — « premier-plan » ferait réconcilier un
+  // flux que le fichier voulait justement soustraire à la réconciliation.
+  // ABSENT, en revanche, est une valeur légitime et vaut premier-plan : c'est ce
+  // qui laisse ouvrir sans rien changer les briques d'avant le champ.
+  if (port_json.flow_tier !== undefined) {
+    const flow_tier = port_json.flow_tier as Type_UnitaryProcessFlowTier
+    if (!UNITARY_PROCESS_FLOW_TIERS.includes(flow_tier)) return null
+    port.flow_tier = flow_tier
   }
   return port
 }
@@ -284,6 +356,10 @@ export const unitaryProcessToJSON = (unitary_process: Type_UnitaryProcess): Type
     if (port.coefficient !== undefined) port_json.coefficient = port.coefficient
     if (port.unit_ref !== undefined) port_json.unit_ref = port.unit_ref
     if (port.exchange_kind !== undefined) port_json.exchange_kind = port.exchange_kind
+    // Le rang n'est écrit que s'il est POSÉ : l'absence dit « premier-plan » et
+    // le dit aussi bien, et l'écrire partout ferait grossir toutes les briques
+    // d'une clé qui ne dirait rien de plus (même politique qu'`exchange_kind`).
+    if (port.flow_tier !== undefined) port_json.flow_tier = port.flow_tier
     return port_json
   }) as unknown as Type_JSON
   return out

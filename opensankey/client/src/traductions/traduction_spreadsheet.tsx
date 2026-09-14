@@ -207,7 +207,52 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentation',
           unitary: 'Unitary Sankey',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          move_right: 'Move to the right column',
+          move_bottom: 'Move to the bottom band',
+          make_main: 'Make it the main window',
+          close: 'Close',
+          main_window: 'Main window',
+          // os#1387 — infobulle du bouton unique qui tient lieu d'en-tête de la fenêtre
+          // principale : elle porte le mot « fenêtre principale » que la barre étroite ne peut
+          // plus écrire, et annonce les deux gestes que le menu réunit.
+          main_window_menu: 'Main window: change its representation, or open a new window',
+          new_window: 'New window',
+          on_diagram: 'On the diagram',
+          on_selection: 'On the selected element',
+          follow: 'Follows the selection',
+          pin: 'Pin to this element',
+          unpin: 'Follow the selection again',
+          no_selection: 'Select a node or a flow',
+          no_representation: 'No representation for this element',
+          node: 'Node',
+          link: 'Flow',
+          add_subject: 'Add a node or a flow',
+          remove_subject: 'Remove',
+          pin_all: 'Pin the selected elements',
+          value_mode: 'Values',
+          normalize_on: 'Normalize on',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Diagram representation',
+          // os#1386 — une fenêtre peut regarder une AUTRE feuille du document, en lecture.
+          // `subject_sheet` nomme le choix (liste déroulante de la barre des sujets, montrée
+          // seulement si le document a plusieurs feuilles) ; `sheet_gone` est ce que dit une
+          // fenêtre restée épinglée sur une feuille supprimée — elle le DIT, elle ne casse rien.
+          subject_sheet: 'Sheet of the subject',
+          sheet_gone: 'This sheet no longer exists',
+          // os#1389 lot 1 — LE PONT entre la barre d'onglets de feuilles (en bas) et les
+          // fenêtres de la grande zone. `open_sheet_in_window` est le geste, au clic droit sur
+          // un onglet ; `sheet_window` nomme ce qui s'ouvre (titre de la fenêtre, et libellé de
+          // la pastille qui marque un onglet déjà regardé ailleurs) ; `make_sheet_active` est le
+          // retour — rapatrier cette feuille dans l'onglet, là où on édite ; `sheet_read_only`
+          // dit POURQUOI la fenêtre ne se laisse pas modifier, sans quoi elle passerait pour
+          // cassée : une seule feuille est vivante à la fois, c'est celle de l'onglet.
+          sheet_window: 'Sheet in a window',
+          make_sheet_active: 'Make this sheet the active one',
+          sheet_read_only: 'Read-only — editing happens in the tab',
+          open_sheet_in_window: 'Open in a new window',
+          sheet_already_windowed: 'This sheet is already open in another window'
         }
       }
     }
@@ -402,7 +447,40 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentation',
           unitary: 'Sankey unitaire',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          move_right: 'Passer dans la colonne de droite',
+          move_bottom: 'Passer dans le bandeau du bas',
+          make_main: 'En faire la fenêtre principale',
+          close: 'Fermer',
+          main_window: 'Fenêtre principale',
+          main_window_menu: 'Fenêtre principale : changer sa représentation, ou ouvrir une nouvelle fenêtre',
+          new_window: 'Nouvelle fenêtre',
+          on_diagram: 'Sur le diagramme',
+          on_selection: 'Sur l’élément sélectionné',
+          follow: 'Suit la sélection',
+          pin: 'Épingler sur cet élément',
+          unpin: 'Suivre à nouveau la sélection',
+          no_selection: 'Sélectionnez un nœud ou un flux',
+          no_representation: 'Aucune représentation pour cet élément',
+          node: 'Nœud',
+          link: 'Flux',
+          add_subject: 'Ajouter un nœud ou un flux',
+          remove_subject: 'Retirer',
+          pin_all: 'Épingler les éléments sélectionnés',
+          value_mode: 'Valeurs',
+          normalize_on: 'Normaliser sur',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Représentation du diagramme',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Feuille du sujet',
+          sheet_gone: 'Cette feuille n\'existe plus',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Feuille dans une fenêtre',
+          make_sheet_active: 'Rendre cette feuille active',
+          sheet_read_only: 'Lecture seule — c\'est l\'onglet qui édite',
+          open_sheet_in_window: 'Ouvrir dans une nouvelle fenêtre',
+          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre'
         }
       }
     }
@@ -597,7 +675,40 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentación',
           unitary: 'Sankey unitario',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          move_right: 'Mover a la columna derecha',
+          move_bottom: 'Mover a la banda inferior',
+          make_main: 'Convertir en ventana principal',
+          close: 'Cerrar',
+          main_window: 'Ventana principal',
+          main_window_menu: 'Ventana principal: cambiar su representación o abrir una nueva ventana',
+          new_window: 'Nueva ventana',
+          on_diagram: 'Sobre el diagrama',
+          on_selection: 'Sobre el elemento seleccionado',
+          follow: 'Sigue la selección',
+          pin: 'Fijar en este elemento',
+          unpin: 'Volver a seguir la selección',
+          no_selection: 'Seleccione un nodo o un flujo',
+          no_representation: 'Ninguna representación para este elemento',
+          node: 'Nodo',
+          link: 'Flujo',
+          add_subject: 'Añadir un nodo o un flujo',
+          remove_subject: 'Quitar',
+          pin_all: 'Fijar los elementos seleccionados',
+          value_mode: 'Valores',
+          normalize_on: 'Normalizar sobre',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Representación del diagrama',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Hoja del sujeto',
+          sheet_gone: 'Esta hoja ya no existe',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Hoja en una ventana',
+          make_sheet_active: 'Activar esta hoja',
+          sheet_read_only: 'Solo lectura — la edición se hace en la pestaña',
+          open_sheet_in_window: 'Abrir en una ventana nueva',
+          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana'
         }
       }
     }
@@ -792,7 +903,40 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Dokumentation',
           unitary: 'Unitäres Sankey',
-          unit: 'Einh.'
+          unit: 'Einh.',
+          move_right: 'In die rechte Spalte verschieben',
+          move_bottom: 'In das untere Band verschieben',
+          make_main: 'Zum Hauptfenster machen',
+          close: 'Schließen',
+          main_window: 'Hauptfenster',
+          main_window_menu: 'Hauptfenster: Darstellung ändern oder ein neues Fenster öffnen',
+          new_window: 'Neues Fenster',
+          on_diagram: 'Auf das Diagramm',
+          on_selection: 'Auf das ausgewählte Element',
+          follow: 'Folgt der Auswahl',
+          pin: 'An dieses Element heften',
+          unpin: 'Wieder der Auswahl folgen',
+          no_selection: 'Knoten oder Fluss auswählen',
+          no_representation: 'Keine Darstellung für dieses Element',
+          node: 'Knoten',
+          link: 'Fluss',
+          add_subject: 'Knoten oder Fluss hinzufügen',
+          remove_subject: 'Entfernen',
+          pin_all: 'Ausgewählte Elemente anheften',
+          value_mode: 'Werte',
+          normalize_on: 'Normieren auf',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Darstellung des Diagramms',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Blatt des Gegenstands',
+          sheet_gone: 'Dieses Blatt existiert nicht mehr',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Blatt in einem Fenster',
+          make_sheet_active: 'Dieses Blatt aktivieren',
+          sheet_read_only: 'Nur Lesen — bearbeitet wird über die Registerkarte',
+          open_sheet_in_window: 'In einem neuen Fenster öffnen',
+          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet'
         }
       }
     }
@@ -987,7 +1131,40 @@ export const resources_spreadsheet = {
           doc: 'Doc',
           documentation: 'Documentazione',
           unitary: 'Sankey unitario',
-          unit: 'Unit.'
+          unit: 'Unit.',
+          move_right: 'Sposta nella colonna destra',
+          move_bottom: 'Sposta nella fascia inferiore',
+          make_main: 'Rendila la finestra principale',
+          close: 'Chiudi',
+          main_window: 'Finestra principale',
+          main_window_menu: 'Finestra principale: cambiare la sua rappresentazione o aprire una nuova finestra',
+          new_window: 'Nuova finestra',
+          on_diagram: 'Sul diagramma',
+          on_selection: 'Sull’elemento selezionato',
+          follow: 'Segue la selezione',
+          pin: 'Fissa su questo elemento',
+          unpin: 'Segui di nuovo la selezione',
+          no_selection: 'Seleziona un nodo o un flusso',
+          no_representation: 'Nessuna rappresentazione per questo elemento',
+          node: 'Nodo',
+          link: 'Flusso',
+          add_subject: 'Aggiungi un nodo o un flusso',
+          remove_subject: 'Rimuovi',
+          pin_all: 'Fissa gli elementi selezionati',
+          value_mode: 'Valori',
+          normalize_on: 'Normalizza su',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: 'Rappresentazione del diagramma',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: 'Foglio del soggetto',
+          sheet_gone: 'Questo foglio non esiste più',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
+          sheet_window: 'Foglio in una finestra',
+          make_sheet_active: 'Rendi attivo questo foglio',
+          sheet_read_only: 'Sola lettura — si modifica dalla scheda',
+          open_sheet_in_window: 'Apri in una nuova finestra',
+          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra'
         }
       }
     }
@@ -1188,7 +1365,41 @@ export const resources_spreadsheet = {
           doc: '文档',
           documentation: '文档',
           unitary: '单位桑基图',
-          unit: '单位图'
+          unit: '单位图',
+          move_right: '移到右栏',
+          move_bottom: '移到底栏',
+          make_main: '设为主窗口',
+          close: '关闭',
+          main_window: '主窗口',
+          main_window_menu: '主窗口：更改其表示方式，或打开新窗口',
+          new_window: '新建窗口',
+          on_diagram: '针对图表',
+          on_selection: '针对所选元素',
+          follow: '跟随选择',
+          pin: '固定到此元素',
+          unpin: '重新跟随选择',
+          no_selection: '请选择一个节点或流',
+          no_representation: '此元素没有可用的表示',
+          node: '节点',
+          link: '流',
+          add_subject: '添加节点或流',
+          remove_subject: '移除',
+          pin_all: '固定所选元素',
+          value_mode: '数值',
+          normalize_on: '归一化于',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: '图表表示形式',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: '主体所在工作表',
+          sheet_gone: '该工作表已不存在',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés. Le tiret
+          // cadratin de `sheet_read_only` cède la place aux deux-points, seuls naturels ici.
+          sheet_window: '窗口中的工作表',
+          make_sheet_active: '将此工作表设为当前工作表',
+          sheet_read_only: '只读：编辑请在标签页中进行',
+          open_sheet_in_window: '在新窗口中打开',
+          sheet_already_windowed: '该工作表已在另一个窗口中打开'
         }
       }
     }
@@ -1389,7 +1600,41 @@ export const resources_spreadsheet = {
           doc: '文書',
           documentation: '文書',
           unitary: '単位サンキー',
-          unit: '単位'
+          unit: '単位',
+          move_right: '右の列へ移動',
+          move_bottom: '下の帯へ移動',
+          make_main: 'メインウィンドウにする',
+          close: '閉じる',
+          main_window: 'メインウィンドウ',
+          main_window_menu: 'メインウィンドウ：表示形式を変更、または新しいウィンドウを開く',
+          new_window: '新しいウィンドウ',
+          on_diagram: '図全体に',
+          on_selection: '選択した要素に',
+          follow: '選択に追従',
+          pin: 'この要素に固定',
+          unpin: '再び選択に追従',
+          no_selection: 'ノードまたはフローを選択',
+          no_representation: 'この要素の表現はありません',
+          node: 'ノード',
+          link: 'フロー',
+          add_subject: 'ノードまたはフローを追加',
+          remove_subject: '削除',
+          pin_all: '選択した要素を固定',
+          value_mode: '値',
+          normalize_on: '正規化の基準',
+          // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
+          // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
+          diagram_representation: '図の表現形式',
+          // os#1386 — cf. le bloc anglais pour le pourquoi de ces deux clés.
+          subject_sheet: '対象のシート',
+          sheet_gone: 'このシートは存在しません',
+          // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés. Le tiret
+          // cadratin de `sheet_read_only` cède la place aux deux-points, seuls naturels ici.
+          sheet_window: 'ウィンドウ内のシート',
+          make_sheet_active: 'このシートをアクティブにする',
+          sheet_read_only: '読み取り専用：編集はタブで行います',
+          open_sheet_in_window: '新しいウィンドウで開く',
+          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています'
         }
       }
     }
