@@ -530,6 +530,12 @@ export const drawUnitaryStar = (
     .attr('class', 'unitary_star')
     .attr('width', width)
     .attr('height', height)
+    // os#1397 - LE FOND, étiqueté sur la racine et non sur un rectangle ajouté pour l'occasion :
+    // `representationTargetAt` remonte au plus proche ancêtre étiqueté, donc un clic sur un ruban
+    // trouve le ruban, et tout ce qui n'est rien en particulier retombe ici. Les textes du centre
+    // n'ont pas besoin d'étiquette pour autant : ils sont en `pointer-events: none` et le clic
+    // traverse jusqu'à la boîte du centre, qui porte la sienne.
+    .attr(REPR_KIND_ATTR, 'background')
   const g = svg.append('g').attr('transform', `translate(${MARGIN_PX},${MARGIN_PX})`)
 
   // ── Rubans ──────────────────────────────────────────────────────────────────────
