@@ -25,11 +25,14 @@ import {
   default_scale_legend_unit, default_display_legend_scale,
   default_info_link_value_void, default_width
 } from './ElementsAttributesConfig'
+import type { Type_HatchOrientation } from './ElementsAttributesConfig'
 import { LEGEND_FRAME_ID, isLegendChildId } from './legendIds'
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems, renderableLegendItems,
-  SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem, Type_SankeyForLegend
+  computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
+  renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
+  Type_SankeyForLegend
 } from './legendItems'
+import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
 
 // Ré-exports : les identifiants (legendIds) et la partie pure du générateur
 // (legendItems) vivent dans des modules feuilles — testables sans tirer le
@@ -47,6 +50,93 @@ import type { Class_NodeBase } from './NodeBase'
 
 // Marge interne du cadre autour des zones générées (px monde)
 const LEGEND_PADDING = 10
+
+// SA#545 — clés de mise en forme que SEUL le style d'une étiquette fait poser sur une zone
+// générée. Elles sont effacées à chaque régénération avant d'être reposées : la zone est
+// réutilisée par id ET persistée avec la légende, si bien qu'une mise en forme posée par un
+// style depuis retiré survivrait sinon — au rechargement comme en session.
+// Relevé du 2026-09-14 sur les 30 zones de légende du corpus SankeyData : aucune ne porte
+// l'une de ces clés, les effacer ne change donc l'aspect d'aucun diagramme existant.
+// `shape_border_thickness` n'y figure pas pour cette raison (8 zones du corpus la portent) :
+// elle ne se voit qu'avec une bordure, que le générateur éteint hors style.
+const TEXT_FORMAT_ONLY_KEYS = [
+  'name_label_font_family', 'name_label_italic', 'name_label_uppercase', 'name_label_color'
+] as const
+const SHAPE_FORMAT_ONLY_KEYS = [
+  'shape_border_color', 'shape_border_color_sustainable', 'shape_border_dashed', 'shape_hatch'
+] as const
+
+/** SA#545 — texte d'une zone (nom de l'entrée, ou valeur d'exemple) mis en forme par le style. */
+function applyTextFormat(
+  zone: Class_ContainerElement,
+  format: Type_LegendTextFormat | undefined,
+  bold_default: boolean
+) {
+  TEXT_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
+  zone.name_label_bold = format?.bold ?? bold_default
+  if (format === undefined) return
+  if (format.font_family !== undefined) zone.name_label_font_family = format.font_family
+  if (format.italic !== undefined) zone.name_label_italic = format.italic
+  if (format.uppercase !== undefined) zone.name_label_uppercase = format.uppercase
+  if (format.color !== undefined) zone.name_label_color = format.color
+}
+
+/**
+ * SA#545 — nom et carré d'une zone d'entrée, d'après le style de son étiquette. Appelée APRÈS
+ * la mise en forme par défaut de la zone (pastille pleine, sans bordure), qu'elle complète.
+ */
+function applyEntryFormat(zone: Class_ContainerElement, item: Type_LegendItem) {
+  applyTextFormat(zone, item.format?.name, item.bold ?? false)
+  SHAPE_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
+  const format = item.format
+  if (format === undefined || item.swatch_color === undefined) return
+  const swatch = format.swatch
+  if (swatch === undefined) {
+    // Valeur sans forme : la valeur d'exemple s'écrit dans un carré transparent.
+    zone.shape_color_visible = false
+    return
+  }
+  if (swatch.opacity !== undefined) zone.shape_opacity = swatch.opacity
+  if (swatch.border_visible !== undefined) zone.shape_border_visible = swatch.border_visible
+  if (swatch.border_color !== undefined) {
+    // Sans son cadenas, la bordure d'une forme suit la couleur de la forme (NodeDrawShape).
+    zone.shape_border_color = swatch.border_color
+    zone.shape_border_color_sustainable = true
+  }
+  if (swatch.border_thickness !== undefined) zone.shape_border_thickness = swatch.border_thickness
+  if (swatch.border_dashed !== undefined) zone.shape_border_dashed = swatch.border_dashed
+  if (swatch.hatch !== undefined) zone.shape_hatch = swatch.hatch as Type_HatchOrientation
+}
+
+/**
+ * SA#545 — zone qui écrit la valeur d'exemple DANS le carré d'une entrée : même position et même
+ * largeur que le carré, forme invisible, texte centré dedans. Une zone de texte ne porte qu'un
+ * libellé — celui de l'entrée est son nom —, d'où cette seconde zone.
+ */
+function configureSampleZone(
+  zone: Class_ContainerElement,
+  item: Type_LegendItem,
+  police: number,
+  layout_police: number
+) {
+  const width = legendSwatchWidth(item, layout_police)
+  zone.name_label_source = 'custom'
+  zone.name_label_text = LEGEND_SAMPLE_VALUE
+  zone.name_label_is_visible = true
+  zone.name_label_font_size = police * LEGEND_SAMPLE_FONT_EM
+  applyTextFormat(zone, item.format?.value, false)
+  zone.tooltip_text = item.description ?? ''
+  zone.name_label_box_width = width
+  zone.shape_visible = true
+  zone.shape_color_visible = false
+  zone.shape_border_visible = false
+  zone.shape_min_width = width
+  zone.shape_min_height = layout_police
+  zone.name_label_horiz = 'middle'
+  zone.name_label_vert = 'middle'
+  zone.name_label_inside_horiz = true
+  zone.name_label_inside_vert = true
+}
 
 
 // CONFIG + FAÇADE ====================================================================
@@ -364,7 +454,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         has_interval_values,
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
-        t_scale: t('scale')
+        t_scale: t('scale'),
+        t_untagged: t('MEP.legend_untagged')
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
@@ -397,7 +488,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     }
     const positions = new Map(layoutLegendItems(items, layout_values).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
-    items.forEach(i => { if (i.block_id) desired_ids.add(i.block_id) })
+    items.forEach(i => {
+      if (i.block_id) desired_ids.add(i.block_id)
+      // SA#545 — zone de la valeur d'exemple écrite dans le carré
+      const sample_id = legendSampleZoneId(i)
+      if (sample_id !== undefined) desired_ids.add(sample_id)
+    })
 
     const existing_frame = sankey.containers_dict[LEGEND_FRAME_ID]
 
@@ -486,6 +582,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       zone.shape_border_visible = false
       zone.shape_border_radius = 3
+      // SA#545 — mise en forme venue du style de l'étiquette (et effacement de celle
+      // qu'un style retiré aurait laissée sur cette zone réutilisée).
+      applyEntryFormat(zone, item)
       if (item.scale_bar) {
         // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.
         // Hauteur en px MONDE bruts (PAS multipliée par la police ni par la
@@ -497,8 +596,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         zone.shape_min_width = Math.max(2, layout_values.police / 8)
         zone.shape_min_height = SCALE_BAR_HEIGHT_PX
       } else if (item.swatch_color !== undefined) {
-        // Pastille en px monde effectifs (suit la compensation de police)
-        zone.shape_min_width = layout_values.police
+        // Pastille en px monde effectifs (suit la compensation de police) ; SA#545 : élargie
+        // quand elle porte la valeur d'exemple.
+        zone.shape_min_width = legendSwatchWidth(item, layout_values.police)
         zone.shape_min_height = layout_values.police
       } else {
         // Pas de pastille (titre de groupe, ligne d'info, rappel de data tag) :
@@ -527,6 +627,22 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (item.tag_group_id && item.tag_id) {
         wireTagHover(drawing_area, zone, item.tag_group_id, item.tag_id)
       }
+      // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
+      // créée après elle (donc dessinée par-dessus), attachée au même cadre et au même bloc.
+      const sample_id = legendSampleZoneId(item)
+      if (sample_id !== undefined) {
+        const sample = sankey.containers_dict[sample_id] ?? sankey.addNewContainer(sample_id, LEGEND_SAMPLE_VALUE)
+        configureSampleZone(sample, item, values.police, layout_values.police)
+        sample.setPosXY(origin.x + pos.x, origin.y + pos.y)
+        if (!frame.attached_node.includes(sample)) {
+          frame.attachNodeToCont(sample)
+        }
+        sample.draw()
+        sample.setEventsListeners()
+        if (item.tag_group_id && item.tag_id) {
+          wireTagHover(drawing_area, sample, item.tag_group_id, item.tag_id)
+        }
+      }
     })
 
     // Blocs de groupe : un cadre invisible par groupe de tags (titre + entrées)
@@ -538,6 +654,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (!zone) return
       if (!block_members.has(item.block_id)) block_members.set(item.block_id, [])
       block_members.get(item.block_id)?.push(zone)
+      // SA#545 — la valeur d'exemple suit son entrée dans le bloc
+      const sample_id = legendSampleZoneId(item)
+      const sample = sample_id !== undefined ? sankey.containers_dict[sample_id] : undefined
+      if (sample) block_members.get(item.block_id)?.push(sample)
     })
     block_members.forEach((members, block_id) => {
       // Nom lisible = le titre du groupe (item own_line du bloc)

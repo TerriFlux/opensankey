@@ -12,6 +12,10 @@
 
 import { LEGEND_CHILD_PREFIX } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
+import {
+  LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
+  Type_LegendEntryFormat, Type_StyleForLegend
+} from './legendTagStyle'
 
 // ITEMS (pur) ========================================================================
 
@@ -47,6 +51,14 @@ export type Type_LegendItem = {
   // générateur qui la recopie dans le texte libre de la zone, lu au survol par le
   // bloc INFOS de la présentation.
   description?: string
+  // SA#545 — parties de l'entrée que définit le style de l'étiquette (nom, carré,
+  // valeur d'exemple), cf. legendTagStyle.ts. Posé seulement quand le groupe
+  // fonctionne par styles d'étiquette ET que le style définit quelque chose : les
+  // entrées ordinaires restent structurellement identiques à avant.
+  format?: Type_LegendEntryFormat
+  // SA#545 — entrée « sans étiquette » : le groupe porte un style et des éléments
+  // visibles n'ont aucune de ses étiquettes.
+  untagged?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -67,6 +79,8 @@ export type Type_LegendEnv = {
   t_free_value?: string
   t_dashed_links?: string
   t_scale?: string
+  // SA#545 — libellé de l'entrée « sans étiquette » d'un groupe à style
+  t_untagged?: string
 }
 
 // Sous-ensemble du modèle utilisé par le calcul du contenu (structurellement
@@ -86,6 +100,9 @@ type Type_TagForLegend = {
   // #542 — `Class_ProtoTag.description` : définition résolue dans la langue
   // courante ('' sans définition). Optionnel pour garder les mocks triviaux.
   description?: string
+  // SA#545 — `Class_ProtoTag.style_id` (SA#541) : id du style nommé que l'étiquette
+  // impose. Absent = aucun style.
+  style_id?: string
 }
 type Type_TagGroupForLegend = {
   id: string
@@ -100,6 +117,12 @@ type Type_TagGroupForLegend = {
   // pas persisté en tant que tel — il dérive de `style_patch`, écrit seulement
   // quand il porte quelque chose : aucun fichier existant ne l'allume.
   has_style_patch?: boolean
+  // SA#545 — `Class_TagGroup.style_id` et `uses_tag_styles` (SA#541) : style imposé
+  // aux éléments qui ne portent aucune étiquette du groupe, et « le groupe ou une
+  // de ses étiquettes porte un style utilisable ». Absents sur les groupes de data
+  // tags, qui n'ont pas de styles d'étiquette.
+  style_id?: string
+  uses_tag_styles?: boolean
   selected_tags_list: Type_TagForLegend[]
   // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
   // absent, le calcul retombe sur `selected_tags_list` (comportement d'avant
@@ -122,6 +145,10 @@ export type Type_SankeyForLegend = {
   // porteur (sinon c'est une étiquette morte du fichier, pas une porte de retour).
   nodes_list?: { hasGivenTag(t: Type_TagForLegend): boolean }[]
   links_list?: { hasGivenTag(t: Type_TagForLegend): boolean }[]
+  // SA#545 — styles nommés (`Class_Sankey.styles_dict`), lus pour mettre en forme les
+  // entrées des groupes à styles d'étiquette. Optionnel : absent, aucune entrée n'est
+  // mise en forme (mocks des tests antérieurs).
+  styles_dict?: { [style_id: string]: Type_StyleForLegend & { is_default_style?: boolean } }
 }
 
 export type Type_LegendConfigValues = {
@@ -222,6 +249,55 @@ export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): bo
 }
 
 /**
+ * SA#545 — couleur du carré de l'entrée « sans étiquette » quand le style du groupe définit la
+ * forme sans en fixer la couleur : un groupe n'a pas de couleur propre. Valeur de
+ * `default_element_color` (ElementsAttributesConfig), recopiée pour garder ce module feuille.
+ */
+const UNTAGGED_SWATCH_COLOR = '#a9a9a9'
+
+/**
+ * SA#545 — style nommé qu'impose un id, s'il est utilisable. Même règle que la cascade
+ * (Element.resolveTagStyleLayers) : un id inconnu ou le style `default` — pré-rempli de TOUS les
+ * défauts usine, il définirait chaque partie de chaque entrée — ne sont jamais des styles.
+ */
+function usableStyle(sankey: Type_SankeyForLegend, style_id: string | undefined): Type_StyleForLegend | undefined {
+  if (!style_id) return undefined
+  const style = sankey.styles_dict?.[style_id]
+  return (style !== undefined && style.is_default_style !== true) ? style : undefined
+}
+
+/**
+ * SA#545 — pose sur une entrée les parties que définit le style. Rien de défini : l'entrée reste
+ * son nom seul (ni `format` ni carré). Le carré garde `fallback_color` quand le style définit la
+ * forme sans sa couleur, ou la seule valeur (carré alors transparent au rendu).
+ */
+function applyTagStyleFormat(item: Type_LegendItem, style: Type_StyleForLegend | undefined, fallback_color: string) {
+  const format = legendEntryFormat(style)
+  if (Object.keys(format).length === 0) return
+  item.format = format
+  if (legendEntryHasSwatch(format)) item.swatch_color = format.swatch?.color ?? fallback_color
+}
+
+/**
+ * SA#545 — style de l'entrée « sans étiquette » d'un groupe, ou `undefined` s'il n'y en a pas :
+ * le groupe porte un style utilisable ET au moins un élément visible de sa famille (nœuds pour un
+ * groupe de nœuds, flux sinon) ne porte aucune de ses étiquettes — exactement les éléments
+ * auxquels la cascade impose le style du groupe (tagStyles.tagStyleLayers).
+ */
+function untaggedEntryStyle(
+  sankey: Type_SankeyForLegend,
+  tag_group: Type_TagGroupForLegend,
+  is_node_group: boolean
+): Type_StyleForLegend | undefined {
+  const style = usableStyle(sankey, tag_group.style_id)
+  if (style === undefined) return undefined
+  const tags = tag_group.tags_list ?? tag_group.selected_tags_list
+  const elements: { hasGivenTag(t: Type_TagForLegend): boolean }[] =
+    is_node_group ? sankey.visible_nodes_list : sankey.visible_links_list
+  return elements.some(element => !tags.some(tag => element.hasGivenTag(tag))) ? style : undefined
+}
+
+/**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
  * moins un élément visible (ou data tags, toujours montrés).
@@ -280,7 +356,15 @@ export function computeLegendItems(
         return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
           sankey.visible_links_list.some(f => f.hasGivenTag(tag))
       })
-      if (displayed_tags.length === 0) return
+      // SA#545 — groupe qui fonctionne par styles d'étiquette : ses entrées prennent la forme
+      // du style de leur étiquette, et le style du groupe s'annonce par une entrée « sans
+      // étiquette ». Même condition que la cascade (Element.resolveTagStyleLayers) : sans son
+      // interrupteur (`use_colors`), un groupe n'impose aucun style, la légende n'en montre pas.
+      const styled = !is_data_tagg && tag_group.use_colors && tag_group.uses_tag_styles === true
+      const untagged_style = styled
+        ? untaggedEntryStyle(sankey, tag_group, sankey.node_taggs_list.includes(tag_group))
+        : undefined
+      if (displayed_tags.length === 0 && untagged_style === undefined) return
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       const title: Type_LegendItem = {
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
@@ -297,10 +381,15 @@ export function computeLegendItems(
         const item: Type_LegendItem = {
           id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
           text: legendEntryText(tag, tag_group, config.entry_template),
-          swatch_color: tag.color,
           tag_group_id: tag_group.id,
           tag_id: tag.id,
           block_id
+        }
+        if (styled) {
+          // SA#545 — le carré n'existe que si le style définit la forme ou la valeur.
+          applyTagStyleFormat(item, usableStyle(sankey, tag.style_id), tag.color)
+        } else {
+          item.swatch_color = tag.color
         }
         // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
         // entrées ordinaires restent structurellement identiques à avant.
@@ -309,6 +398,17 @@ export function computeLegendItems(
         if (tag_description !== undefined) item.description = tag_description
         items.push(item)
       })
+      if (untagged_style !== undefined) {
+        // SA#545 — après les étiquettes du groupe, dont elle est le complément.
+        const untagged: Type_LegendItem = {
+          id: LEGEND_CHILD_PREFIX + 'untagged-' + slug(tag_group.id),
+          text: env.t_untagged ?? '',
+          untagged: true,
+          block_id
+        }
+        applyTagStyleFormat(untagged, untagged_style, UNTAGGED_SWATCH_COLOR)
+        items.push(untagged)
+      }
     })
 
   // Rappel des data tags sélectionnés par groupe
@@ -381,10 +481,31 @@ export const RENDER_DIMMED_LEGEND_ENTRIES: boolean = false
 export function renderableLegendItems(items: Type_LegendItem[]): Type_LegendItem[] {
   if (RENDER_DIMMED_LEGEND_ENTRIES) return items
   const kept = items.filter(i => !i.dimmed)
+  // SA#545 — l'entrée « sans étiquette » est une entrée à part entière : un groupe
+  // dont seuls des éléments sans étiquette sont visibles garde son titre.
   const blocks_with_entry = new Set(
-    kept.filter(i => i.tag_id !== undefined && i.block_id !== undefined).map(i => i.block_id as string)
+    kept.filter(i => (i.tag_id !== undefined || i.untagged === true) && i.block_id !== undefined)
+      .map(i => i.block_id as string)
   )
   return kept.filter(i => i.block_id === undefined || blocks_with_entry.has(i.block_id))
+}
+
+/**
+ * SA#545 — largeur (px monde, police effective) du carré d'une entrée : une pastille
+ * carrée, ou un carré élargi quand il porte la valeur d'exemple.
+ */
+export function legendSwatchWidth(item: Type_LegendItem, police: number): number {
+  return item.format?.value !== undefined ? police * LEGEND_SAMPLE_SWATCH_EM : police
+}
+
+/**
+ * SA#545 — id de la zone générée qui écrit la valeur d'exemple dans le carré d'une
+ * entrée, ou `undefined` si l'entrée n'en a pas. Préfixe `sample-` : aucune autre
+ * famille d'ids de légende ne l'emploie.
+ */
+export function legendSampleZoneId(item: Type_LegendItem): string | undefined {
+  if (item.format?.value === undefined) return undefined
+  return LEGEND_CHILD_PREFIX + 'sample-' + item.id.slice(LEGEND_CHILD_PREFIX.length)
 }
 
 /**
@@ -482,7 +603,7 @@ export function layoutLegendItems(
         x = 0
         y += item.scale_bar ? bar_row_height : line_height
       } else {
-        const swatch = item.swatch_color !== undefined ? police + 5 : 0
+        const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
         x += swatch + estimateTextWidth(item.text, police) + 14
       }
     } else {
@@ -491,7 +612,7 @@ export function layoutLegendItems(
         y += bar_row_height
       } else {
         // Estimation du nombre de lignes après retour à la ligne (box_width)
-        const swatch = item.swatch_color !== undefined ? police + 5 : 0
+        const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
         const n_lines = Math.max(1, Math.ceil(estimateTextWidth(item.text, police) / Math.max(wrap_width - swatch, police)))
         y += n_lines * line_height
       }
