@@ -200,4 +200,47 @@ describe('attachRepresentationContextMenu', () => {
     expect(rightClick(container.querySelector(`[${REPR_KIND_ATTR}="ribbon"]`)!)).toBe(true)
     expect(currentRepresentationContextMenu()).toBeNull()
   })
+
+  it('os#1397 : le conteneur EST le fond, sans que le moteur de dessin y soit pour rien', () => {
+    // Une representation qui ne dessine rien de particulier : ce qui compte est qu un clic droit
+    // n importe ou dans sa case soit vu comme le fond, donc que ses reglages soient joignables.
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const seen: string[] = []
+    const detach = attachRepresentationContextMenu(
+      container,
+      entryDeclaring(({ target }) => {
+        seen.push(target.kind)
+        return { config: {}, modifier: {}, path: target.kind }
+      }),
+      fakeContext()
+    )
+    expect(container.getAttribute(REPR_KIND_ATTR)).toBe('background')
+    rightClick(container)
+    expect(seen).toEqual(['background'])
+    expect(currentRepresentationContextMenu()?.path).toBe('background')
+    detach()
+  })
+
+  it('os#1397 : le conteneur est RENDU comme il a ete prete', () => {
+    // Il appartient a l hote : une etiquette laissee derriere ferait repondre au clic droit une
+    // case qui ne montre plus rien, ou qui montre autre chose.
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const detach = attachRepresentationContextMenu(
+      container, entryDeclaring(() => ({ config: {}, modifier: {}, path: 'x' })), fakeContext()
+    )
+    detach()
+    expect(container.hasAttribute(REPR_KIND_ATTR)).toBe(false)
+  })
+
+  it('os#1397 : une representation sans menu ne prend pas le fond', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const detach = attachRepresentationContextMenu(
+      container, entryDeclaring(undefined), fakeContext()
+    )
+    expect(container.hasAttribute(REPR_KIND_ATTR)).toBe(false)
+    detach()
+  })
 })
