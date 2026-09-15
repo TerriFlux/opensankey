@@ -219,6 +219,42 @@ describe('SA#549 — clic sur une entrée de légende', () => {
   })
 })
 
+describe('SA#549 — renommer une entrée de légende au double-clic', () => {
+  // La saisie inline (DrawLabel) : `onInputChange` à chaque frappe, `setInputLabelInvisible` en fin.
+  type Type_NameLabel = { onInputChange(value: string): void, setInputLabelInvisible(): void }
+  const nameLabel = (app: Class_ApplicationData, id: string): Type_NameLabel =>
+    (app.drawing_area.sankey.containers_dict[id] as unknown as { _nodeDrawNameLabel: Type_NameLabel })._nodeDrawNameLabel
+
+  it('renomme l\'étiquette, sans figer la légende : le clic bascule encore', () => {
+    const { host, app, indic } = makeLegend()
+    const label = nameLabel(app, 'legend-tag-fiab-indic')
+    label.onInputChange('Indic.')
+    // Pendant la frappe : rien d'appliqué, légende toujours gérée
+    expect(indic.display_name).toBe('Indicative')
+    expect(app.drawing_area.legend.managed).toBe(true)
+    label.setInputLabelInvisible()
+    expect(indic.display_name).toBe('Indic.')
+    expect(app.drawing_area.legend.managed).toBe(true)
+    click(host, app, 'legend-tag-fiab-indic')
+    expect(indic.is_selected).toBe(false)
+  })
+
+  it('titre de groupe : renomme le groupe', () => {
+    const { app } = makeLegend()
+    const label = nameLabel(app, 'legend-group-fiab')
+    label.onInputChange('Fiabilité des données')
+    label.setInputLabelInvisible()
+    expect(app.drawing_area.sankey.node_taggs_list.find(g => g.id === 'fiab')?.name).toBe('Fiabilité des données')
+    expect(app.drawing_area.legend.managed).toBe(true)
+  })
+
+  it('légende figée par une autre retouche : la main disparaît des entrées', () => {
+    const { host, app } = makeLegend()
+    app.drawing_area.legend.markBroken()
+    expect(zoneG(host, app, 'legend-tag-fiab-indic').classList.contains('legend_toggle_entry')).toBe(false)
+  })
+})
+
 describe('SA#549 — réglage « étiquettes masquées » : rétro-compatibilité', () => {
   it('éteint : une étiquette masquée par ailleurs n\'apparaît pas (légende d\'avant)', () => {
     const { app, indic } = makeLegend()
