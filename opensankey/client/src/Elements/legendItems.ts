@@ -60,12 +60,15 @@ export type Type_LegendItem = {
   // SA#545 — entrée « sans étiquette » : le groupe porte un style et des éléments
   // visibles n'ont aucune de ses étiquettes.
   untagged?: boolean
-  // SA#550 — zone d'un groupe ÉPINGLÉ fermé, en bas de légende (titre ou définition) :
-  // le bloc se rend sans aucune entrée d'étiquette.
+  // SA#550 — ligne d'un groupe ÉPINGLÉ fermé, en bas de légende : le bloc se rend sans
+  // aucune entrée d'étiquette.
   pinned?: boolean
   // SA#550 — texte enveloppé à la largeur de la légende, même en disposition horizontale
-  // (définition d'un groupe épinglé : jusqu'à 677 caractères sur le Lait).
+  // (description d'un groupe épinglé : jusqu'à 677 caractères sur le Lait).
   wrap?: boolean
+  // SA#550 — nom du groupe épinglé, en tête de `text` : écrit en italique souligné, suivi de
+  // « : » et de la description (retour du test local du 2026-09-15 : sur la même ligne).
+  pinned_name?: string
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -476,27 +479,19 @@ export function computeLegendItems(
     })
   }
 
-  // SA#550 — groupes épinglés FERMÉS, tout en bas : nom, puis définition enveloppée.
+  // SA#550 — groupes épinglés FERMÉS, tout en bas : une ligne « Nom : description »,
+  // enveloppée, le nom mis en valeur au rendu (`pinned_name`).
   pinnedLegendGroups(all_taggs).forEach(tag_group => {
-    const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
+    const description = definitionOf(tag_group)
     items.push({
       id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
-      text: tag_group.name,
-      bold: true,
+      text: description === undefined ? tag_group.name : tag_group.name + ' : ' + description,
       starts_group: true,
       own_line: true,
-      block_id,
-      pinned: true
-    })
-    const definition = definitionOf(tag_group)
-    if (definition === undefined) return
-    items.push({
-      id: LEGEND_CHILD_PREFIX + 'definition-' + slug(tag_group.id),
-      text: definition,
-      own_line: true,
-      block_id,
+      block_id: LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id),
       pinned: true,
-      wrap: true
+      wrap: true,
+      pinned_name: tag_group.name
     })
   })
 
