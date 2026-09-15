@@ -381,25 +381,42 @@ export class Class_LegendConfig {
       .find(g => g.id === target.tag_group_id)
     const tag = group?.tags_list.find(t => t.id === target.tag_id)
     if (group === undefined || tag === undefined) return false
-    const was_selected = tag.is_selected
-    const had_hidden_tags = this._show_hidden_tags
     const apply = (selected: boolean, show_hidden_tags: boolean) => {
       // La surbrillance du survol a atténué les autres éléments : la lever avant que ceux qui
       // réapparaissent ne la gardent.
       clearLegendHighlight(drawing_area)
       this._show_hidden_tags = show_hidden_tags
+      // L'entrée cliquée doit rester SOUS LE CURSEUR : allumer `show_hidden_tags` fait apparaître
+      // d'autres entrées au-dessus d'elle (sur le Lait, « Probable », sans flux visible), et le
+      // reclic tombait sur la voisine. On relève sa position pour recaler la légende après.
+      const clicked = sankey.containers_dict[zone_id]
+      const anchor = clicked ? { x: clicked.position_x, y: clicked.position_y } : undefined
       if (selected) tag.setSelected(false)
       else tag.setUnSelected(false)
-      // Même séquence que TagGroup.selectTagsFromId
       drawing_area.application_data.after_tag_selection_change?.()
-      group.updateTagsReferences()
-      this.draw()
+      // UN dessin complet, qui régénère aussi la légende — même geste que le filtre de la barre
+      // d'outils. `group.updateTagsReferences()` redessinait chaque référence de CHAQUE étiquette
+      // du groupe : mesuré sur le Lait (821 flux, 9 796 références), 8 s en jsdom contre 5,9 s
+      // pour le dessin complet, plus 1,9 s de légende par-dessus (retour du test local).
+      drawing_area.draw()
+      drawing_area.orderElementOnDA()
+      const redrawn = sankey.containers_dict[zone_id]
+      if (anchor !== undefined && redrawn !== undefined) {
+        this._moveLegend(anchor.x - redrawn.position_x, anchor.y - redrawn.position_y)
+      }
       drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
     }
-    const history = drawing_area.application_data.history
-    history.saveUndo(() => apply(was_selected, had_hidden_tags))
-    history.saveRedo(() => apply(!was_selected, true))
-    apply(!was_selected, true)
+    // Geste d'utilisateur : voile et cession d'une frame avant le calcul, comme le filtre. L'état est
+    // lu DANS le travail : deux clics rapides sont mis en file, et le second doit voir le premier —
+    // lu au clic, les deux basculeraient dans le même sens.
+    drawing_area.application_data.runHeavyGesture(() => {
+      const was_selected = tag.is_selected
+      const had_hidden_tags = this._show_hidden_tags
+      const history = drawing_area.application_data.history
+      history.saveUndo(() => apply(was_selected, had_hidden_tags))
+      history.saveRedo(() => apply(!was_selected, true))
+      apply(!was_selected, true)
+    })
     return true
   }
 

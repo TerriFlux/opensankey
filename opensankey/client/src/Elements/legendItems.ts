@@ -349,10 +349,19 @@ export function computeLegendItems(
         : (tag_group.tags_list ?? tag_group.selected_tags_list)
       const displayed_tags = candidate_tags.filter(tag => {
         if (is_data_tagg) return true
-        if (tag.is_selected === false) {
+        // SA#549 — réglage « étiquettes masquées » allumé : une étiquette SÉLECTIONNÉE dont
+        // les porteurs sont masqués par une autre étiquette garde elle aussi son entrée.
+        // Sinon masquer « Indicative » retirait « Eau » et 5 sources de la légende du Lait :
+        // tout ce qui suit remontait d'une ligne, et le reclic tombait sur l'entrée voisine
+        // (retour du test local). Réglage éteint : contenu inchangé.
+        if (tag.is_selected === false || config.show_hidden_tags === true) {
           // Étiquette masquée : ses porteurs sont invisibles PAR SA FAUTE, donc on
           // la cherche parmi tous les éléments du diagramme. Listes absentes (mock,
           // appelant historique) → on la retient, faute de pouvoir la réfuter.
+          if (tag.is_selected !== false && sankey.nodes_list === undefined && sankey.links_list === undefined) {
+            return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
+              sankey.visible_links_list.some(f => f.hasGivenTag(tag))
+          }
           if (sankey.nodes_list === undefined && sankey.links_list === undefined) return true
           return (sankey.nodes_list ?? []).some(n => n.hasGivenTag(tag)) ||
             (sankey.links_list ?? []).some(f => f.hasGivenTag(tag))

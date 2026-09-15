@@ -12,9 +12,16 @@ import { LegendPersistence } from '../Persistence/SankeyPersistence'
 
 installJsdomRenderStubs()
 
-function makeLegend(published_mode: boolean = false) {
+type Type_GestureProgress = { indicator: unknown }
+const gestureProgress = (app: Class_ApplicationData) =>
+  (app as unknown as { _views_reader: { gesture_progress: Type_GestureProgress } })._views_reader.gesture_progress
+
+function makeLegend(published_mode: boolean = false, deferred: boolean = false) {
   const host = resetHost()
   const app = new Class_ApplicationData(published_mode)
+  // La bascule est un geste lourd (voile + cession d'une frame). Sans indicateur, l'ordonnanceur
+  // travaille en synchrone : les tests lisent l'état au retour du clic.
+  if (!deferred) gestureProgress(app).indicator = undefined
   const sankey = app.drawing_area.sankey
   const a = sankey.addNewNodeWithName('A')
   const b = sankey.addNewNodeWithName('B')
@@ -94,6 +101,90 @@ describe('SA#549 — clic sur une entrée de légende', () => {
     expect(indic.is_selected).toBe(false)
     expect(visibleNodes(app)).toEqual(['A', 'B'])
     expect(isStruck(host, app, 'legend-tag-fiab-indic')).toBe(true)
+  })
+
+  it('bascule immédiate : deux clics rapides font deux bascules, jamais un double-clic', () => {
+    const { host, app, indic } = makeLegend()
+    const clickNow = () => zoneG(host, app, 'legend-tag-fiab-indic')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
+    clickNow()
+    expect(indic.is_selected).toBe(false)
+    clickNow()
+    expect(indic.is_selected).toBe(true)
+    jest.advanceTimersByTime(400)
+    expect(indic.is_selected).toBe(true)
+  })
+
+  it('geste différé (voile) : le second de deux clics rapides voit le premier', async () => {
+    jest.useRealTimers()
+    const { host, app, indic } = makeLegend(false, true)
+    expect(gestureProgress(app).indicator).toBeDefined()
+    const clickNow = () => zoneG(host, app, 'legend-tag-fiab-indic')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
+    const settle = () => new Promise(resolve => setTimeout(resolve, 300))
+    clickNow()
+    await settle()
+    expect(indic.is_selected).toBe(false)
+    // Deux clics mis en file pendant le voile : masqué → rétabli → masqué ? Non : rétabli puis masqué
+    // exigerait que chacun lise l'état laissé par le précédent. Lus au clic, les deux rétabliraient.
+    clickNow()
+    clickNow()
+    await settle()
+    expect(indic.is_selected).toBe(false)
+    clickNow()
+    await settle()
+    expect(indic.is_selected).toBe(true)
+  })
+
+  it('premier clic : l\'entrée cliquée reste sous le curseur quand d\'autres entrées apparaissent', () => {
+    const host = resetHost()
+    const app = new Class_ApplicationData(false)
+    gestureProgress(app).indicator = undefined
+    const sankey = app.drawing_area.sankey
+    const a = sankey.addNewNodeWithName('A')
+    const b = sankey.addNewNodeWithName('B')
+    const c = sankey.addNewNodeWithName('C')
+    const d = sankey.addNewNodeWithName('D')
+    sankey.addNewLink(a, b).valueCurrent = 100
+    sankey.addNewLink(b, c).valueCurrent = 50
+    sankey.addNewLink(c, d).valueCurrent = 20
+    const fiab = sankey.addNodeTagGroup('fiab', 'Fiabilite', false)
+    fiab.use_colors = true
+    const full = fiab.addTag('Full', 'full') as Class_Tag
+    // Étiquette sélectionnée, mais portée par le seul nœud D, masqué par une AUTRE étiquette : absente
+    // de la légende réglage éteint, elle apparaît au-dessus d'« Indicative » quand il s'allume.
+    const ghost = fiab.addTag('Ghost', 'ghost') as Class_Tag
+    const indic = fiab.addTag('Indicative', 'indic') as Class_Tag
+    a.addTag(full)
+    b.addTag(full)
+    c.addTag(indic)
+    d.addTag(ghost)
+    const masque = sankey.addNodeTagGroup('masque', 'Masque', false)
+    const cache = masque.addTag('Cache', 'cache') as Class_Tag
+    d.addTag(cache)
+    cache.setUnSelected()
+    app.drawing_area.legend.masked = false
+    app.drawing_area.draw()
+    const ids = () => sankey.containers_list.map(z => z.id)
+    // Montage : D masqué, « Ghost » absente de la légende
+    expect(sankey.visible_nodes_list.map(n => n.name)).not.toContain('D')
+    expect(ids()).not.toContain('legend-tag-fiab-ghost')
+    const y = () => Math.round(sankey.containers_dict['legend-tag-fiab-indic'].position_y)
+    const y_before = y()
+    zoneG(host, app, 'legend-tag-fiab-indic').dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
+    expect(indic.is_selected).toBe(false)
+    expect(ids()).toContain('legend-tag-fiab-ghost')
+    expect(y()).toBe(y_before)
+  })
+
+  it('les entrées restent à leur place quand on masque puis rétablit', () => {
+    const { app } = makeLegend()
+    const ys = () => app.drawing_area.sankey.containers_list
+      .filter(c => c.id.startsWith('legend-tag-')).map(c => c.id + '@' + Math.round(c.position_y))
+    app.drawing_area.legend.show_hidden_tags = true
+    const before = ys()
+    app.drawing_area.legend.toggleEntryTag('legend-tag-fiab-full')
+    expect(ys()).toEqual(before)
   })
 
   it('Ctrl+clic garde la sélection de la zone, sans rien basculer', () => {
