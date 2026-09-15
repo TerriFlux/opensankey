@@ -51,6 +51,12 @@ import type { Class_NodeBase } from './NodeBase'
 // Marge interne du cadre autour des zones générées (px monde)
 const LEGEND_PADDING = 10
 
+// SA#549 — facteur d'opacité du carré d'une entrée d'étiquette masquée
+const LEGEND_DIMMED_SWATCH_OPACITY = 0.3
+
+// SA#549 — classe des zones qu'un clic bascule : curseur main (css/main.css)
+const LEGEND_TOGGLE_ENTRY_CLASS = 'legend_toggle_entry'
+
 // SA#545 — clés de mise en forme que SEUL le style d'une étiquette fait poser sur une zone
 // générée. Elles sont effacées à chaque régénération avant d'être reposées : la zone est
 // réutilisée par id ET persistée avec la légende, si bien qu'une mise en forme posée par un
@@ -240,6 +246,15 @@ export class Class_LegendConfig {
   // OS#1314 — gabarit du texte des entrées de tag (jetons {Name}, {Unit},
   // {Group}). Vide = nom long du tag seul (comportement historique).
   private _entry_template: string = ''
+  // SA#549 — les étiquettes masquées restent dans la légende, rayées (cf. renderableLegendItems).
+  // Éteint par défaut ; le premier clic sur une entrée l'allume.
+  private _show_hidden_tags: boolean = false
+
+  // SA#549 — étiquette que désigne chaque zone d'entrée cliquable (entrée et valeur d'exemple),
+  // relevée à chaque régénération : les ids de zone sont des slugs, ils ne se relisent pas.
+  private _entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
+  // SA#549 — groupe que désigne chaque titre de groupe (renommer au double-clic renomme le groupe)
+  private _entry_groups = new Map<string, string>()
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -280,7 +295,8 @@ export class Class_LegendConfig {
       show_constraints: this._legend_show_constraints,
       show_data_type: this._legend_show_data_type,
       info_link_value_void: this._info_link_value_void,
-      entry_template: this._entry_template
+      entry_template: this._entry_template,
+      show_hidden_tags: this._show_hidden_tags
     }
   }
 
@@ -308,6 +324,12 @@ export class Class_LegendConfig {
     if (this._generating) return
     if (!this._managed) return
     this._managed = false
+    // SA#549 — une légende figée ne bascule plus rien au clic : la main ne doit plus le promettre
+    // (la classe, posée à la régénération, survivrait sinon jusqu'à « Régénérer »).
+    const containers = this._drawing_area.sankey.containers_dict
+    this._entry_tags.forEach((_, id) => containers[id]?.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, false))
+    this._entry_tags = new Map()
+    this._entry_groups = new Map()
   }
 
   public get managed(): boolean { return this._managed }
@@ -338,6 +360,7 @@ export class Class_LegendConfig {
     this._legend_show_data_type = other._legend_show_data_type
     this._info_link_value_void = other._info_link_value_void
     this._entry_template = other._entry_template
+    this._show_hidden_tags = other._show_hidden_tags
     this._initial_position = { ...other._initial_position }
   }
 
@@ -385,6 +408,119 @@ export class Class_LegendConfig {
   // OS#1314 — gabarit des entrées de tag (« {Name} [{Unit}] »).
   public get entry_template(): string { return this._entry_template }
   public set entry_template(_: string) { this._entry_template = _; this.draw() }
+
+  // SA#549 — étiquettes masquées gardées dans la légende, rayées.
+  public get show_hidden_tags(): boolean { return this._show_hidden_tags }
+  public set show_hidden_tags(_: boolean) { this._show_hidden_tags = _; this.draw() }
+
+  /** SA#549 — relevé des zones cliquables, posé par regenerateLegend. */
+  public set entry_tags(_: Map<string, { tag_group_id: string, tag_id: string }>) { this._entry_tags = _ }
+
+  /** SA#549 — relevé des titres de groupe, posé par regenerateLegend. */
+  public set entry_groups(_: Map<string, string>) { this._entry_groups = _ }
+
+  /**
+   * SA#549 — la saisie inline de cette zone renomme-t-elle une étiquette ou un groupe ? Oui pour
+   * une entrée d'étiquette de nœuds ou de flux (sauf gabarit d'entrée : le texte y compose plus que
+   * le nom) et pour un titre de groupe, tant que la légende est gérée. Non : la saisie personnalise
+   * la zone et fige la légende, comme avant.
+   */
+  public canRenameEntry(zone_id: string): boolean {
+    if (!this._managed) return false
+    if (this._entry_tags.has(zone_id)) return this._entry_template === ''
+    return this._entry_groups.has(zone_id)
+  }
+
+  /**
+   * SA#549 — renomme l'étiquette ou le groupe que désigne la zone, puis régénère la légende. Pour
+   * une étiquette, c'est le nom AFFICHÉ qui change : le nom long s'il est posé, sinon le nom — ce que
+   * lisent la légende et le menu Filtres (`display_name`).
+   */
+  public renameEntry(zone_id: string, value: string): boolean {
+    if (!this.canRenameEntry(zone_id)) return false
+    const sankey = this._drawing_area.sankey
+    const tag_target = this._entry_tags.get(zone_id)
+    if (tag_target !== undefined) {
+      const tag = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
+        .find(g => g.id === tag_target.tag_group_id)?.tags_list
+        .find(t => t.id === tag_target.tag_id)
+      if (tag === undefined) return false
+      if (tag.display_name !== value) {
+        if (tag.long_name !== '') tag.long_name = value
+        else tag.name = value
+      }
+    } else {
+      const group_id = this._entry_groups.get(zone_id)
+      const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
+        .find(g => g.id === group_id)
+      if (group === undefined) return false
+      group.name = value
+    }
+    this.draw()
+    this._drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    return true
+  }
+
+  /**
+   * SA#549 — clic sur une zone de la légende : si elle désigne une étiquette de nœuds ou de
+   * flux, bascule sa sélection (masque ou rétablit ses éléments), avec annuler/rétablir, et
+   * renvoie `true`. Toute autre zone renvoie `false` et garde son clic ordinaire.
+   *
+   * Les étiquettes de données sont exclues au relevé (regenerateLegend) : les désélectionner
+   * change la valeur affichée sans rien masquer (`checkSelectionCoherence`).
+   *
+   * Le premier clic allume `show_hidden_tags` : sans lui, l'entrée cliquée disparaîtrait et plus
+   * rien dans la légende ne permettrait de la rétablir. L'annulation le rend dans son état.
+   */
+  public toggleEntryTag(zone_id: string): boolean {
+    // Légende personnalisée à la main : plus régénérée, l'entrée ne se rayerait pas.
+    if (!this._managed || this._masked) return false
+    const target = this._entry_tags.get(zone_id)
+    if (target === undefined) return false
+    const drawing_area = this._drawing_area
+    const sankey = drawing_area.sankey
+    const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
+      .find(g => g.id === target.tag_group_id)
+    const tag = group?.tags_list.find(t => t.id === target.tag_id)
+    if (group === undefined || tag === undefined) return false
+    const apply = (selected: boolean, show_hidden_tags: boolean) => {
+      // La surbrillance du survol a atténué les autres éléments : la lever avant que ceux qui
+      // réapparaissent ne la gardent.
+      clearLegendHighlight(drawing_area)
+      this._show_hidden_tags = show_hidden_tags
+      // L'entrée cliquée doit rester SOUS LE CURSEUR : allumer `show_hidden_tags` fait apparaître
+      // d'autres entrées au-dessus d'elle (sur le Lait, « Probable », sans flux visible), et le
+      // reclic tombait sur la voisine. On relève sa position pour recaler la légende après.
+      const clicked = sankey.containers_dict[zone_id]
+      const anchor = clicked ? { x: clicked.position_x, y: clicked.position_y } : undefined
+      if (selected) tag.setSelected(false)
+      else tag.setUnSelected(false)
+      drawing_area.application_data.after_tag_selection_change?.()
+      // UN dessin complet, qui régénère aussi la légende — même geste que le filtre de la barre
+      // d'outils. `group.updateTagsReferences()` redessinait chaque référence de CHAQUE étiquette
+      // du groupe : mesuré sur le Lait (821 flux, 9 796 références), 8 s en jsdom contre 5,9 s
+      // pour le dessin complet, plus 1,9 s de légende par-dessus (retour du test local).
+      drawing_area.draw()
+      drawing_area.orderElementOnDA()
+      const redrawn = sankey.containers_dict[zone_id]
+      if (anchor !== undefined && redrawn !== undefined) {
+        this._moveLegend(anchor.x - redrawn.position_x, anchor.y - redrawn.position_y)
+      }
+      drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    }
+    // Geste d'utilisateur : voile et cession d'une frame avant le calcul, comme le filtre. L'état est
+    // lu DANS le travail : deux clics rapides sont mis en file, et le second doit voir le premier —
+    // lu au clic, les deux basculeraient dans le même sens.
+    drawing_area.application_data.runHeavyGesture(() => {
+      const was_selected = tag.is_selected
+      const had_hidden_tags = this._show_hidden_tags
+      const history = drawing_area.application_data.history
+      history.saveUndo(() => apply(was_selected, had_hidden_tags))
+      history.saveRedo(() => apply(!was_selected, true))
+      apply(!was_selected, true)
+    })
+    return true
+  }
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_: boolean) { this._info_link_value_void = _; this.draw() }
@@ -447,6 +583,9 @@ function hoverPredicate(
   if (target.tag_id !== undefined) {
     const tag = tags.find(t => t.id === target.tag_id)
     if (!tag) return undefined
+    // SA#549 — étiquette masquée : ses éléments sont invisibles, la surbrillance atténuerait tout
+    // le diagramme sans rien désigner. Le survol garde sa définition (#542).
+    if (!tag.is_selected) return undefined
     return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band: carried => carried.includes(tag) }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
@@ -519,13 +658,18 @@ function wireLegendHover(
         }
       })
     })
-    .on('mouseout.legend_highlight', () => {
-      drawing_area.sankey.visible_nodes_list.forEach(n => n.d3_selection?.attr('opacity', ''))
-      drawing_area.sankey.visible_links_list.forEach(l => {
-        l.d3_selection?.attr('opacity', '')
-        l.d3_selection?.selectAll('.link_band').attr('opacity', '')
-      })
-    })
+    .on('mouseout.legend_highlight', () => clearLegendHighlight(drawing_area))
+}
+
+// Lève la surbrillance du survol. SA#549 — sur TOUS les éléments, pas les seuls visibles : un clic
+// sur l'entrée survolée masque ou rétablit des éléments, et ceux qui réapparaissent ne doivent pas
+// garder l'atténuation posée avant le clic.
+function clearLegendHighlight(drawing_area: Class_DrawingArea) {
+  drawing_area.sankey.nodes_list.forEach(n => n.d3_selection?.attr('opacity', ''))
+  drawing_area.sankey.links_list.forEach(l => {
+    l.d3_selection?.attr('opacity', '')
+    l.d3_selection?.selectAll('.link_band').attr('opacity', '')
+  })
 }
 
 /**
@@ -576,12 +720,41 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // sa#532 — `computeLegendItems` décrit aussi les étiquettes DÉSÉLECTIONNÉES
       // (marquées `dimmed`), pour que la légende puisse devenir une porte de retour ;
       // `renderableLegendItems` dit ce qui est effectivement posé sur le diagramme.
-      // Tant que rien ne permet de les réactiver, il les écarte : l'aspect des
-      // diagrammes existants est inchangé (golden de rendu #530).
+      // SA#549 — il les garde, rayées, quand le réglage `show_hidden_tags` est allumé ;
+      // éteint (défaut, fichiers existants), l'aspect est inchangé (golden de rendu #530).
       items = renderableLegendItems(
-        computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
+        computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text),
+        values.show_hidden_tags === true
       )
     }
+
+    // SA#549 — zones qu'un clic bascule : entrées (et leur valeur d'exemple) des étiquettes de
+    // NŒUDS et de FLUX. Les étiquettes de données en sont exclues : les désélectionner change la
+    // valeur affichée, sans rien masquer.
+    const filter_group_ids = new Set([...sankey.node_taggs_list, ...sankey.flux_taggs_list].map(g => g.id))
+    const entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
+    items.forEach(item => {
+      if (item.tag_group_id === undefined || item.tag_id === undefined) return
+      if (!filter_group_ids.has(item.tag_group_id)) return
+      const target = { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
+      entry_tags.set(item.id, target)
+      const sample_id = legendSampleZoneId(item)
+      if (sample_id !== undefined) entry_tags.set(sample_id, target)
+    })
+    config.entry_tags = entry_tags
+    // SA#549 — titres de groupe (renommer au double-clic renomme le groupe) : le groupe d'un bloc
+    // se relève sur ses entrées, le titre étant l'item « sur sa ligne » du bloc sans étiquette.
+    const group_of_block = new Map<string, string>()
+    items.forEach(item => {
+      if (item.block_id !== undefined && item.tag_group_id !== undefined) group_of_block.set(item.block_id, item.tag_group_id)
+    })
+    const entry_groups = new Map<string, string>()
+    items.forEach(item => {
+      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+      const group_id = group_of_block.get(item.block_id)
+      if (group_id !== undefined) entry_groups.set(item.id, group_id)
+    })
+    config.entry_groups = entry_groups
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
@@ -735,6 +908,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // SA#545 — mise en forme venue du style de l'étiquette (et effacement de celle
       // qu'un style retiré aurait laissée sur cette zone réutilisée).
       applyEntryFormat(zone, item)
+      // SA#549 — étiquette masquée : nom rayé (DrawLabel), carré atténué. Reposé à chaque
+      // régénération, par-dessus la mise en forme du style (SA#545) : la zone est réutilisée par id.
+      zone.legend_entry_dimmed = item.dimmed === true
+      if (item.dimmed === true && item.swatch_color !== undefined) {
+        zone.shape_opacity = zone.shape_opacity * LEGEND_DIMMED_SWATCH_OPACITY
+      }
       if (item.scale_bar) {
         // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.
         // Hauteur en px MONDE bruts (PAS multipliée par la police ni par la
@@ -778,6 +957,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       zone.draw()
       zone.setEventsListeners()
+      // SA#549 — entrée cliquable : curseur main (règle CSS `legend_toggle_entry`, qui l'emporte
+      // sur le curseur texte que DrawLabel pose sur le libellé en édition).
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id))
       const hover_target = hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
@@ -792,6 +974,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         }
         sample.draw()
         sample.setEventsListeners()
+        sample.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(sample_id))
         wireLegendHover(drawing_area, sample, hover_target)
       }
     })
