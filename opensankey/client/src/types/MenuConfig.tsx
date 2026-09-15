@@ -523,6 +523,19 @@ export class Class_MenuConfig {
   // et volontairement minimale : ce n'est pas un système de focus, juste la dernière vignette
   // avec laquelle l'utilisateur a interagi. `null` = la première vignette de la fenêtre.
   protected _main_zone_active_pane_key: string | null = null
+  // os#1394 — CE QUE L'AUTEUR A TOUCHÉ EN DERNIER, et donc ce dont le menu de configuration doit
+  // parler. TRANSITOIRE.
+  //
+  // La règle posée au départ était « une sélection dans le diagramme gagne toujours sur la
+  // représentation active ». L'usage l'a démentie : après avoir sélectionné un nœud, cliquer sur
+  // la fenêtre d'une étoile pour en régler l'affichage ne donnait rien, le nœud gardait
+  // l'inspecteur, et il fallait d'abord le désélectionner. Ce n'est pas une hiérarchie entre
+  // sélection et représentation qu'il faut, c'est la RÉCENCE du geste : le dernier gagne.
+  //
+  // Aucun ordre subtil à maintenir : un clic sur un nœud du canevas active d'abord le canevas
+  // (qui n'a rien à régler, donc ne prend pas l'inspecteur) puis pose la sélection, qui repasse
+  // le drapeau à 'selection'.
+  protected _inspector_focus: 'selection' | 'representation' = 'selection'
   // os#1394 — LE RÉGLAGE PAR DÉFAUT D'UNE NATURE DE REPRÉSENTATION, indexé par son identifiant
   // de registre, persisté avec le document (clé racine `representation_defaults`).
   //
@@ -943,10 +956,23 @@ export class Class_MenuConfig {
   public get main_zone_active_pane_key(): string | null { return this._main_zone_active_pane_key }
   /** Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette). */
   public setMainZoneActivePane(id: string, pane_key: string | null): void {
+    // Toucher une figure est une demande de parler d'ELLE, même quand un nœud reste sélectionné
+    // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle.
+    this._inspector_focus = 'representation'
     if (this._main_zone_active_id === id && this._main_zone_active_pane_key === pane_key) return
     this._main_zone_active_id = id
     this._main_zone_active_pane_key = pane_key
     this._notifyMainZone()
+  }
+  /**
+   * os#1394 — De quoi le menu de configuration doit parler : de la figure qu'on vient de toucher,
+   * ou de la sélection. `true` seulement si le dernier geste visait une représentation.
+   *
+   * Le résolveur d'inspecteur en fait ce qu'il veut : une fenêtre sans réglages ne prend pas
+   * l'inspecteur pour autant (cf. InspectorResolver et activeRepresentation).
+   */
+  public get inspector_focus_is_representation(): boolean {
+    return this._inspector_focus === 'representation'
   }
   /**
    * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
@@ -2388,6 +2414,10 @@ export class Class_MenuConfig {
   // sur chaque changement de composition de sélection. Debouncé comme les autres
   // updaters pour absorber les rafales (sélection au lasso, add/remove multiples).
   public updateInspector() {
+    // os#1394 — LA SÉLECTION REPREND LA MAIN sur l'inspecteur. Le drapeau est posé ici et non
+    // dans le processus différé : il doit valoir dès le geste, pas un tour de boucle plus tard,
+    // sans quoi un clic sur une fenêtre juste après une sélection serait jugé dans le désordre.
+    this._inspector_focus = 'selection'
     this._add_waiting_process(
       'updateInspector',
       (_this: Class_MenuConfig) => {
