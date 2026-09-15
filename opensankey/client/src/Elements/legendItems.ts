@@ -259,6 +259,19 @@ export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): bo
 }
 
 /**
+ * SA#550 — groupes qui s'affichent en bas de la légende : épinglés et FERMÉS, c'est-à-dire
+ * qui ne mettent rien en forme (tagGroupCarriesFormatting). Un groupe épinglé qui met en
+ * forme garde sa place et ses entrées ordinaires — l'ouvrir en tête relève du #551.
+ * Ordre : celui des listes de groupes (nœuds, flux, données), comme les autres blocs.
+ *
+ * Ni entrée d'étiquette ni info-bulle : le nom et la définition sont écrits en toutes
+ * lettres. Aucun fichier existant n'épingle de groupe : aucune légende ne change.
+ */
+export function pinnedLegendGroups(tag_groups: Type_TagGroupForLegend[]): Type_TagGroupForLegend[] {
+  return tag_groups.filter(g => g.pinned_in_legend === true && !tagGroupCarriesFormatting(g))
+}
+
+/**
  * SA#545 — couleur du carré de l'entrée « sans étiquette » quand le style du groupe définit la
  * forme sans en fixer la couleur : un groupe n'a pas de couleur propre. Valeur de
  * `default_element_color` (ElementsAttributesConfig), recopiée pour garder ce module feuille.
@@ -488,19 +501,6 @@ export function computeLegendItems(
   })
 
   return items
-}
-
-/**
- * SA#550 — groupes qui s'affichent en bas de la légende : épinglés et FERMÉS, c'est-à-dire
- * qui ne mettent rien en forme (tagGroupCarriesFormatting). Un groupe épinglé qui met en
- * forme garde sa place et ses entrées ordinaires — l'ouvrir en tête relève du #551.
- * Ordre : celui des listes de groupes (nœuds, flux, données), comme les autres blocs.
- *
- * Ni entrée d'étiquette ni info-bulle : le nom et la définition sont écrits en toutes
- * lettres. Aucun fichier existant n'épingle de groupe : aucune légende ne change.
- */
-export function pinnedLegendGroups(tag_groups: Type_TagGroupForLegend[]): Type_TagGroupForLegend[] {
-  return tag_groups.filter(g => g.pinned_in_legend === true && !tagGroupCarriesFormatting(g))
 }
 
 /**
