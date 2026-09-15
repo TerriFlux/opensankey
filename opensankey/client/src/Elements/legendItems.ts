@@ -60,6 +60,12 @@ export type Type_LegendItem = {
   // SA#545 — entrée « sans étiquette » : le groupe porte un style et des éléments
   // visibles n'ont aucune de ses étiquettes.
   untagged?: boolean
+  // SA#550 — zone d'un groupe ÉPINGLÉ fermé, en bas de légende (titre ou définition) :
+  // le bloc se rend sans aucune entrée d'étiquette.
+  pinned?: boolean
+  // SA#550 — texte enveloppé à la largeur de la légende, même en disposition horizontale
+  // (définition d'un groupe épinglé : jusqu'à 677 caractères sur le Lait).
+  wrap?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -124,6 +130,9 @@ type Type_TagGroupForLegend = {
   // tags, qui n'ont pas de styles d'étiquette.
   style_id?: string
   uses_tag_styles?: boolean
+  // SA#550 — `Class_ProtoTagGroup.pinned_in_legend` (socle #537) : le groupe reste en bas
+  // de la légende même quand il ne met rien en forme. Absent = non épinglé.
+  pinned_in_legend?: boolean
   selected_tags_list: Type_TagForLegend[]
   // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
   // absent, le calcul retombe sur `selected_tags_list` (comportement d'avant
@@ -454,7 +463,44 @@ export function computeLegendItems(
     })
   }
 
+  // SA#550 — groupes épinglés FERMÉS, tout en bas : nom, puis définition enveloppée.
+  pinnedLegendGroups(all_taggs).forEach(tag_group => {
+    const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
+    items.push({
+      id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
+      text: tag_group.name,
+      bold: true,
+      starts_group: true,
+      own_line: true,
+      block_id,
+      pinned: true
+    })
+    const definition = definitionOf(tag_group)
+    if (definition === undefined) return
+    items.push({
+      id: LEGEND_CHILD_PREFIX + 'definition-' + slug(tag_group.id),
+      text: definition,
+      own_line: true,
+      block_id,
+      pinned: true,
+      wrap: true
+    })
+  })
+
   return items
+}
+
+/**
+ * SA#550 — groupes qui s'affichent en bas de la légende : épinglés et FERMÉS, c'est-à-dire
+ * qui ne mettent rien en forme (tagGroupCarriesFormatting). Un groupe épinglé qui met en
+ * forme garde sa place et ses entrées ordinaires — l'ouvrir en tête relève du #551.
+ * Ordre : celui des listes de groupes (nœuds, flux, données), comme les autres blocs.
+ *
+ * Ni entrée d'étiquette ni info-bulle : le nom et la définition sont écrits en toutes
+ * lettres. Aucun fichier existant n'épingle de groupe : aucune légende ne change.
+ */
+export function pinnedLegendGroups(tag_groups: Type_TagGroupForLegend[]): Type_TagGroupForLegend[] {
+  return tag_groups.filter(g => g.pinned_in_legend === true && !tagGroupCarriesFormatting(g))
 }
 
 /**
@@ -487,7 +533,7 @@ export function renderableLegendItems(items: Type_LegendItem[]): Type_LegendItem
   // SA#545 — l'entrée « sans étiquette » est une entrée à part entière : un groupe
   // dont seuls des éléments sans étiquette sont visibles garde son titre.
   const blocks_with_entry = new Set(
-    kept.filter(i => (i.tag_id !== undefined || i.untagged === true) && i.block_id !== undefined)
+    kept.filter(i => (i.tag_id !== undefined || i.untagged === true || i.pinned === true) && i.block_id !== undefined)
       .map(i => i.block_id as string)
   )
   return kept.filter(i => i.block_id === undefined || blocks_with_entry.has(i.block_id))
@@ -584,13 +630,42 @@ function estimateTextWidth(text: string, font_size: number): number {
 }
 
 /**
+ * SA#550 — nombre de lignes d'une zone enveloppée (`wrap`) : celui qu'a MESURÉ le rendu
+ * s'il est connu (`line_counts`, relevé par le générateur sur le texte dessiné — la
+ * césure réelle mesure les glyphes), sinon l'estimation sans DOM.
+ */
+export function legendWrappedLineCount(
+  item: Type_LegendItem,
+  config: Type_LegendConfigValues,
+  line_counts?: Map<string, number>
+): number {
+  const measured = line_counts?.get(item.id)
+  if (measured !== undefined && measured > 0) return measured
+  const wrap_width = Math.max(config.width, 4 * config.police)
+  return Math.max(1, Math.ceil(estimateTextWidth(item.text, config.police) / wrap_width))
+}
+
+/**
+ * SA#550 — hauteur de la forme d'ancrage d'une zone enveloppée sur `n_lines` lignes : le
+ * libellé y est centré, la rangée fait `n_lines` interlignes, et la marge du haut reste
+ * celle d'une ligne seule (forme d'une `police` de haut dans une rangée de 1,5 `police`).
+ */
+export function legendWrappedShapeHeight(n_lines: number, police: number): number {
+  return (1.5 * n_lines - 0.5) * police
+}
+
+/**
  * Positions relatives (px monde, origine = coin haut-gauche du contenu) des
  * zones générées. Vertical par défaut ; en horizontal les entrées d'un même
  * groupe se suivent sur une ligne, chaque groupe repart à la ligne.
+ *
+ * SA#550 — `line_counts` : lignes mesurées des zones enveloppées (`wrap`), cf.
+ * legendWrappedLineCount.
  */
 export function layoutLegendItems(
   items: Type_LegendItem[],
-  config: Type_LegendConfigValues
+  config: Type_LegendConfigValues,
+  line_counts?: Map<string, number>
 ): Type_LegendItemPosition[] {
   const positions: Type_LegendItemPosition[] = []
   const police = config.police
@@ -601,6 +676,16 @@ export function layoutLegendItems(
   items.forEach(item => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
     const bar_row_height = SCALE_BAR_HEIGHT_PX + 0.5 * police
+    if (item.wrap === true) {
+      // SA#550 — seule sur sa ligne et enveloppée, dans les deux dispositions
+      if (x > 0) {
+        x = 0
+        y += line_height
+      }
+      positions.push({ id: item.id, x: 0, y })
+      y += legendWrappedLineCount(item, config, line_counts) * line_height
+      return
+    }
     if (config.horizontal) {
       if ((item.starts_group || item.own_line) && x > 0) {
         x = 0
