@@ -50,11 +50,12 @@ describe('SA#550 — légende réelle d\'un groupe épinglé', () => {
     const legend = app.drawing_area.legend
     expect(source.name_label_text).toBe('Source : ' + LONG_DESCRIPTION)
     expect(source.name_label_has_fo).toBe(true)
-    // Nom en italique souligné, puis « : » et la description, échappée
+    // Toute la ligne en italique, le nom souligné, puis « : » et la description, échappée
+    expect(source.name_label_fo_content).toMatch(/^<p style="[^"]*font-style:italic[^"]*">/)
     expect(source.name_label_fo_content).toContain(
-      '<span style="font-style:italic;text-decoration:underline">Source</span> : Organisme producteur, publication &amp; millésime')
+      '<span style="text-decoration:underline">Source</span> : Organisme producteur, publication &amp; millésime')
     expect(zoneOf(app, 'legend-group-methode').name_label_fo_content)
-      .toContain('<span style="font-style:italic;text-decoration:underline">Methode</span></p>')
+      .toContain('<span style="text-decoration:underline">Methode</span></p>')
     // Rendu par le texte riche
     const g = document.getElementById(source.svg_group)
     expect(g?.querySelector('foreignObject span')?.textContent).toBe('Source')

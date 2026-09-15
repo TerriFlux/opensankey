@@ -111,11 +111,11 @@ function applyPinnedLabel(zone: Class_ContainerElement, item: Type_LegendItem, p
   const rest = item.text.slice(name.length)
   const style = [
     `margin:${-padding.top}px ${-padding.right}px ${-padding.bottom}px ${-padding.left}px`,
-    `font-size:${police}px`, 'line-height:1.25', 'white-space:normal'
+    `font-size:${police}px`, 'line-height:1.25', 'white-space:normal', 'font-style:italic'
   ].join(';')
   zone.name_label_has_fo = true
   zone.name_label_fo_content =
-    `<p style="${style}"><span style="font-style:italic;text-decoration:underline">${escapeHtml(name)}</span>${escapeHtml(rest)}</p>`
+    `<p style="${style}"><span style="text-decoration:underline">${escapeHtml(name)}</span>${escapeHtml(rest)}</p>`
 }
 
 /** SA#545 — texte d'une zone (nom de l'entrée, ou valeur d'exemple) mis en forme par le style. */
