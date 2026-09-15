@@ -26,6 +26,7 @@
 
 import { Class_NodeBase } from './NodeBase'
 import { effectiveOpacity } from './elementOpacity'
+import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
 import type { Class_NodeElement } from './Node'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 
@@ -234,9 +235,14 @@ export class NodeDrawShape {
     // (et non à la bordure), selon l'orientation choisie. Le motif reprend la
     // couleur du nœud sur fond transparent, façon flux hachuré.
     const hatch = this._node.shape_hatch
-    const fill_to_use = (hatch && hatch !== 'none')
-      ? this.applyHatchPattern(color, hatch)
-      : color
+    // SA#545 — carré de légende d'un style de flux « Hachuré » : les tirets du tracé de flux.
+    const link_dashed =
+      (this._node as unknown as { legend_swatch_link_dashed?: boolean }).legend_swatch_link_dashed === true
+    const fill_to_use = link_dashed
+      ? this.applyLinkDashPattern(color)
+      : (hatch && hatch !== 'none')
+        ? this.applyHatchPattern(color, hatch)
+        : color
 
     // IID=152 — inner-stroke clip: confine the node border strictly inside the
     // fill area so it never bleeds outward over adjacent flow bands.
@@ -371,6 +377,33 @@ export class NodeDrawShape {
       .attr('y2', 8)
       .attr('stroke', color)
       .attr('stroke-width', 2)
+    return 'url(#' + pattern_id + ')'
+  }
+
+  /**
+   * SA#545 — carré de légende d'un style de flux « Hachuré » : reproduit les tirets du tracé de
+   * flux (LINK_DASH_LENGTH plein, LINK_DASH_GAP vide, cf. LinkDrawShape) tels qu'ils se voient sur
+   * un flux horizontal — des bandes pleines verticales séparées de fins vides.
+   */
+  private applyLinkDashPattern(color: string): string {
+    const defs = this._node.drawing_area.d3_selection_def_gradient
+    if (!defs) return color
+    const pattern_id = 'legend-dash-' + this._node.id
+    defs.select('#def_' + pattern_id).remove()
+    const period = LINK_DASH_LENGTH + LINK_DASH_GAP
+    const pattern = defs.append('defs')
+      .attr('id', 'def_' + pattern_id)
+      .append('pattern')
+      .attr('id', pattern_id)
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('width', period)
+      .attr('height', period)
+    pattern.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', LINK_DASH_LENGTH)
+      .attr('height', period)
+      .attr('fill', color)
     return 'url(#' + pattern_id + ')'
   }
 

@@ -18,6 +18,11 @@
  * Les autres combinaisons suivent la même logique famille par famille : une famille définie par le
  * style fait apparaître la partie correspondante de l'entrée.
  *
+ * Retour du test local (2026-09-15) :
+ *  - le carré reproduit EXACTEMENT les hachures du diagramme : celles d'un nœud dans l'orientation
+ *    choisie par le style, les tirets du tracé d'un flux « Hachuré » ;
+ *  - l'icône ou l'image d'un style s'affiche dans le carré.
+ *
  * Une famille est « définie » quand le style porte explicitement au moins un des paramètres que la
  * légende sait reproduire. Un style qui ne règle que la POSITION d'un libellé ne définit donc rien
  * de visible ici : la légende a sa propre mise en page, qu'aucun style d'étiquette ne pilote (la
@@ -51,7 +56,19 @@ export type Type_LegendSwatchFormat = {
   border_color?: string
   border_thickness?: number
   border_dashed?: boolean
+  /** Hachures d'un NŒUD (`shape_hatch`), dans l'orientation du style. */
   hatch?: string
+  /** Flux « Hachuré » (`shape_is_dashed`) : le carré reprend les tirets du tracé de flux. */
+  link_dashed?: boolean
+}
+
+/** Icône ou image du style, dessinée dans le carré. */
+export type Type_LegendIconFormat = {
+  is_image: boolean
+  icon_name?: string
+  image_src?: string
+  view_box?: string
+  color?: string
 }
 
 /** Parties de l'entrée que le style définit ; une partie absente n'est pas définie. */
@@ -59,6 +76,7 @@ export type Type_LegendEntryFormat = {
   name?: Type_LegendTextFormat
   swatch?: Type_LegendSwatchFormat
   value?: Type_LegendTextFormat
+  icon?: Type_LegendIconFormat
 }
 
 /** Valeur d'exemple écrite dans le carré : un nombre neutre, identique pour toutes les entrées. */
@@ -70,11 +88,11 @@ export const LEGEND_SAMPLE_SWATCH_EM = 2.2
 /** Taille de la valeur d'exemple, en multiple de la police de la légende (elle tient dans le carré). */
 export const LEGEND_SAMPLE_FONT_EM = 0.7
 
-/** Orientation de hachure appliquée au carré d'un style de flux « Hachuré » (`shape_is_dashed`). */
-const LINK_DASHED_HATCH = 'vertical'
-
 function stringOf(v: unknown): string | undefined {
   return typeof v === 'string' ? v : undefined
+}
+function nonEmptyStringOf(v: unknown): string | undefined {
+  return typeof v === 'string' && v !== '' ? v : undefined
 }
 function booleanOf(v: unknown): boolean | undefined {
   return typeof v === 'boolean' ? v : undefined
@@ -106,11 +124,9 @@ function textFormat(style: Type_StyleForLegend, prefix: 'name_label' | 'value_la
 }
 
 function swatchFormat(style: Type_StyleForLegend): Type_LegendSwatchFormat | undefined {
-  // Nœuds : `shape_hatch` porte l'orientation. Flux : `shape_is_dashed` (« Hachuré ») n'a pas
-  // d'orientation ; le carré en reçoit une fixe. Un style qui porte les deux garde celle du nœud.
-  const node_hatch = stringOf(style.getElementProperty('shape_hatch'))
-  const link_dashed = booleanOf(style.getElementProperty('shape_is_dashed'))
-  const hatch = node_hatch ?? (link_dashed === undefined ? undefined : (link_dashed ? LINK_DASHED_HATCH : 'none'))
+  // « Pas de hachure » ne se voit pas : seule une hachure effective définit quelque chose.
+  const hatch = stringOf(style.getElementProperty('shape_hatch'))
+  const link_dashed = style.getElementProperty('shape_is_dashed') === true
   return defined<Type_LegendSwatchFormat>({
     color: stringOf(style.getElementProperty('shape_color')),
     opacity: numberOf(style.getElementProperty('shape_opacity')),
@@ -118,8 +134,31 @@ function swatchFormat(style: Type_StyleForLegend): Type_LegendSwatchFormat | und
     border_color: stringOf(style.getElementProperty('shape_border_color')),
     border_thickness: numberOf(style.getElementProperty('shape_border_thickness')),
     border_dashed: booleanOf(style.getElementProperty('shape_border_dashed')),
-    hatch
+    hatch: hatch !== undefined && hatch !== 'none' ? hatch : undefined,
+    link_dashed: link_dashed ? true : undefined
   })
+}
+
+/**
+ * Icône ou image : définie dès que le style désigne quoi dessiner (un nom d'icône ou une source
+ * d'image) sans l'éteindre explicitement. Une image l'emporte quand le style la choisit
+ * (`icon_is_image`), ou quand il ne porte qu'une source d'image.
+ */
+function iconFormat(style: Type_StyleForLegend): Type_LegendIconFormat | undefined {
+  if (style.getElementProperty('icon_is_visible') === false) return undefined
+  const icon_name = nonEmptyStringOf(style.getElementProperty('icon_icon_name'))
+  const image_src = nonEmptyStringOf(style.getElementProperty('icon_image_src'))
+  const is_image = image_src !== undefined &&
+    (style.getElementProperty('icon_is_image') === true || icon_name === undefined)
+  if (!is_image && icon_name === undefined) return undefined
+  const format: Type_LegendIconFormat = { is_image }
+  if (is_image) format.image_src = image_src
+  else format.icon_name = icon_name
+  const view_box = nonEmptyStringOf(style.getElementProperty('icon_view_box'))
+  if (view_box !== undefined) format.view_box = view_box
+  const color = stringOf(style.getElementProperty('icon_color'))
+  if (color !== undefined) format.color = color
+  return format
 }
 
 /**
@@ -131,11 +170,12 @@ export function legendEntryFormat(style: Type_StyleForLegend | undefined): Type_
   return defined<Type_LegendEntryFormat>({
     name: textFormat(style, 'name_label'),
     swatch: swatchFormat(style),
-    value: textFormat(style, 'value_label')
+    value: textFormat(style, 'value_label'),
+    icon: iconFormat(style)
   }) ?? {}
 }
 
-/** L'entrée a-t-elle un carré ? Oui dès que le style définit la forme OU la valeur (écrite dedans). */
+/** L'entrée a-t-elle un carré ? Dès que le style définit la forme, la valeur ou l'icône (dessinées dedans). */
 export function legendEntryHasSwatch(format: Type_LegendEntryFormat): boolean {
-  return format.swatch !== undefined || format.value !== undefined
+  return format.swatch !== undefined || format.value !== undefined || format.icon !== undefined
 }
