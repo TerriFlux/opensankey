@@ -211,10 +211,13 @@ export const resources_spreadsheet = {
           make_main: 'Make it the main window',
           close: 'Close',
           main_window: 'Main window',
-          // os#1387 — infobulle du bouton unique qui tient lieu d'en-tête de la fenêtre
-          // principale : elle porte le mot « fenêtre principale » que la barre étroite ne peut
-          // plus écrire, et annonce les deux gestes que le menu réunit.
-          main_window_menu: 'Main window: change its representation, or open a new window',
+          // Le nom COURT de la fenêtre principale, pour le bouton de la barre du haut : celui-ci
+          // écrit la nature puis le nom de la fenêtre ACTIVE, et « Fenêtre principale » en toutes
+          // lettres y prendrait à lui seul la place des deux.
+          main_window_short: 'Main',
+          // Infobulle du bouton unique : le texte long y nomme la fenêtre visée et sa nature (le
+          // bouton, lui, tronque), et cette phrase annonce les deux gestes que le menu réunit.
+          active_window_menu: 'Change this window representation, or open a new one',
           new_window: 'New window',
           on_diagram: 'On the diagram',
           on_selection: 'On the selected element',
@@ -451,7 +454,8 @@ export const resources_spreadsheet = {
           make_main: 'En faire la fenêtre principale',
           close: 'Fermer',
           main_window: 'Fenêtre principale',
-          main_window_menu: 'Fenêtre principale : changer sa représentation, ou ouvrir une nouvelle fenêtre',
+          main_window_short: 'Principale',
+          active_window_menu: 'Changer la représentation de cette fenêtre, ou en ouvrir une nouvelle',
           new_window: 'Nouvelle fenêtre',
           on_diagram: 'Sur le diagramme',
           on_selection: 'Sur l’élément sélectionné',
@@ -679,7 +683,8 @@ export const resources_spreadsheet = {
           make_main: 'Convertir en ventana principal',
           close: 'Cerrar',
           main_window: 'Ventana principal',
-          main_window_menu: 'Ventana principal: cambiar su representación o abrir una nueva ventana',
+          main_window_short: 'Principal',
+          active_window_menu: 'Cambiar la representación de esta ventana o abrir una nueva',
           new_window: 'Nueva ventana',
           on_diagram: 'Sobre el diagrama',
           on_selection: 'Sobre el elemento seleccionado',
@@ -907,7 +912,8 @@ export const resources_spreadsheet = {
           make_main: 'Zum Hauptfenster machen',
           close: 'Schließen',
           main_window: 'Hauptfenster',
-          main_window_menu: 'Hauptfenster: Darstellung ändern oder ein neues Fenster öffnen',
+          main_window_short: 'Haupt',
+          active_window_menu: 'Darstellung dieses Fensters ändern oder ein neues Fenster öffnen',
           new_window: 'Neues Fenster',
           on_diagram: 'Auf das Diagramm',
           on_selection: 'Auf das ausgewählte Element',
@@ -1135,7 +1141,8 @@ export const resources_spreadsheet = {
           make_main: 'Rendila la finestra principale',
           close: 'Chiudi',
           main_window: 'Finestra principale',
-          main_window_menu: 'Finestra principale: cambiare la sua rappresentazione o aprire una nuova finestra',
+          main_window_short: 'Principale',
+          active_window_menu: 'Cambiare la rappresentazione di questa finestra o aprirne una nuova',
           new_window: 'Nuova finestra',
           on_diagram: 'Sul diagramma',
           on_selection: 'Sull’elemento selezionato',
@@ -1368,7 +1375,8 @@ export const resources_spreadsheet = {
           make_main: '设为主窗口',
           close: '关闭',
           main_window: '主窗口',
-          main_window_menu: '主窗口：更改其表示方式，或打开新窗口',
+          main_window_short: '主',
+          active_window_menu: '更改此窗口的表示方式，或打开新窗口',
           new_window: '新建窗口',
           on_diagram: '针对图表',
           on_selection: '针对所选元素',
@@ -1602,7 +1610,8 @@ export const resources_spreadsheet = {
           make_main: 'メインウィンドウにする',
           close: '閉じる',
           main_window: 'メインウィンドウ',
-          main_window_menu: 'メインウィンドウ：表示形式を変更、または新しいウィンドウを開く',
+          main_window_short: 'メイン',
+          active_window_menu: 'このウィンドウの表示形式を変更、または新しいウィンドウを開く',
           new_window: '新しいウィンドウ',
           on_diagram: '図全体に',
           on_selection: '選択した要素に',
