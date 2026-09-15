@@ -682,6 +682,8 @@ export const resources_app_elements = {
         tool_lock_hint: 'double-click to lock',
         // os#1401 — pourquoi un outil de dessin est grisé : la fenêtre active ne peut pas le servir.
         tool_out_of_scope: 'no effect here: the active window shows "{{window}}", and this gesture only exists in the diagram',
+        // os#1409 — pourquoi le contrôle de zoom est grisé : la nature active n'en déclare pas.
+        zoom_out_of_scope: 'no zoom here: the active window shows "{{window}}", and that view has no scale of its own to change',
         select_sibling: 'Select siblings',
         fullscreen: 'Put the window in fullscreen',
         quit_fullscreen: 'Exit the fullscreen',
@@ -1450,6 +1452,8 @@ export const resources_app_elements = {
         tool_lock_hint: 'double-clic pour verrouiller',
         // os#1401 — pourquoi un outil de dessin est grisé : la fenêtre active ne peut pas le servir.
         tool_out_of_scope: 'sans effet ici : la fenêtre active montre « {{window}} », et ce geste n\'existe que dans le diagramme',
+        // os#1409 — pourquoi le contrôle de zoom est grisé : la nature active n'en déclare pas.
+        zoom_out_of_scope: 'pas de zoom ici : la fenêtre active montre « {{window}} », et cette vue n\'a pas d\'échelle propre à changer',
         select_sibling: 'Selectionner ses frères ',
         fullscreen: 'Passer en mode mode plein écran',
         quit_fullscreen: 'Quitter le mode plein écran',
@@ -2176,6 +2180,7 @@ export const resources_app_elements = {
         tool_style_paint: 'Aplicar el estilo del elemento seleccionado a los elementos que se pulsen después',
         tool_lock_hint: 'doble clic para bloquear',
         tool_out_of_scope: 'sin efecto aquí: la ventana activa muestra «{{window}}», y este gesto solo existe en el diagrama',
+        zoom_out_of_scope: 'sin zoom aquí: la ventana activa muestra «{{window}}», y esa vista no tiene una escala propia que cambiar',
         tooltipAjoutNode: 'Añade un nodo con un clic del ratón',
         select_sibling: 'Seleccionar hermanos',
         fullscreen: 'Activar modo pantalla completa',
@@ -2902,6 +2907,7 @@ export const resources_app_elements = {
         tool_style_paint: 'Den Stil des ausgewählten Elements auf die anschließend angeklickten Elemente übertragen',
         tool_lock_hint: 'Doppelklick zum Feststellen',
         tool_out_of_scope: 'hier ohne Wirkung: das aktive Fenster zeigt „{{window}}“, und diese Geste gibt es nur im Diagramm',
+        zoom_out_of_scope: 'hier kein Zoom: das aktive Fenster zeigt „{{window}}“, und diese Ansicht hat keine eigene Skala, die sich ändern ließe',
         tooltipAjoutNode: 'Fügt einen Knoten per Mausklick hinzu',
         select_sibling: 'Geschwister auswählen',
         fullscreen: 'Vollbildmodus aktivieren',
@@ -3628,6 +3634,7 @@ export const resources_app_elements = {
         tool_style_paint: 'Applicare lo stile dell\'elemento selezionato agli elementi cliccati in seguito',
         tool_lock_hint: 'doppio clic per bloccare',
         tool_out_of_scope: 'senza effetto qui: la finestra attiva mostra «{{window}}», e questo gesto esiste solo nel diagramma',
+        zoom_out_of_scope: 'nessuno zoom qui: la finestra attiva mostra «{{window}}», e questa vista non ha una scala propria da cambiare',
         tooltipAjoutNode: 'Aggiunge un nodo con un clic del mouse',
         select_sibling: 'Selezionare fratelli',
         fullscreen: 'Attivare modalità schermo intero',
@@ -4342,6 +4349,7 @@ export const resources_app_elements = {
         tool_style_paint: '将所选元素的样式应用到随后点击的元素',
         tool_lock_hint: '双击可锁定',
         tool_out_of_scope: '在此处无效：当前活动窗口显示「{{window}}」，该操作只存在于图中',
+        zoom_out_of_scope: '此处无法缩放：当前活动窗口显示「{{window}}」，该视图没有可供改变的自有缩放比例',
         select_sibling: '选择同级元素',
         fullscreen: '将窗口切换为全屏',
         quit_fullscreen: '退出全屏',
@@ -5075,6 +5083,7 @@ export const resources_app_elements = {
         tool_style_paint: '選択中の要素のスタイルを、その後クリックした要素に適用します',
         tool_lock_hint: 'ダブルクリックで固定',
         tool_out_of_scope: 'ここでは効果がありません：アクティブなウィンドウは「{{window}}」を表示しており、この操作は図の中にしか存在しません',
+        zoom_out_of_scope: 'ここではズームできません：アクティブなウィンドウは「{{window}}」を表示しており、このビューには変更できる独自の尺度がありません',
         select_sibling: '兄弟要素を選択',
         fullscreen: 'ウィンドウを全画面にします',
         quit_fullscreen: '全画面を終了します',
