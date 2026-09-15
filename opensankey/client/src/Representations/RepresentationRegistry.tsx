@@ -100,6 +100,10 @@ import {
   type Type_RepresentationMenu,
   type Type_RepresentationTarget
 } from './RepresentationContextMenu'
+// os#1399 - la cible partagée par les trois familles de commandes. Import de TYPE seulement :
+// `WindowTarget` lit les types d'ici, ce fichier lit les siens, et rien de tout cela ne survit à
+// la compilation - aucun cycle à l'exécution.
+import type { Type_ElementTargetResolver } from './WindowTarget'
 
 /**
  * Les deux échelles que le code confondait (§3.2 de la note). Une entrée en
@@ -222,6 +226,20 @@ type Type_RepresentationCommon = {
     target: Type_RepresentationTarget
     ctx: Type_RepresentationContext
   }) => Type_RepresentationMenu | null
+  /**
+   * os#1399 - LA CIBLE D'UN ÉLÉMENT POINTÉ dans cette représentation : ce que les trois familles
+   * de commandes (configurer, naviguer, éditer) visent quand l'auteur clique là.
+   *
+   * Une FONCTION, et non un champ déclaratif, parce que la réponse dépend du contexte : la part
+   * d'une couronne est un flux, un nœud enfant ou un tag SELON L'AXE DE DÉCOMPOSITION, et l'axe
+   * se règle. Le Sankey, lui, a des types fixes - c'est ce qui a masqué le besoin jusqu'ici.
+   *
+   * Reçoit ce que l'étiquetage `data-*` a désigné (cf. `RepresentationContextMenu`) et le contexte
+   * de la figure. Rend `null` là où elle n'a rien à dire - le fond, une zone sans homologue dans
+   * le modèle -, et une nature qui ne la déclare pas garde le comportement d'aujourd'hui : c'est
+   * de la figure entière qu'on parle (cf. `resolveRepresentationElementTarget`).
+   */
+  resolveElementTarget?: Type_ElementTargetResolver
   /** Refus fin sur CE sujet ; absent = toujours applicable. */
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
   /**
