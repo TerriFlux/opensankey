@@ -365,6 +365,10 @@ export const resources_inspector = {
         // It makes parts come in and go out, and it even changes the NATURE of what can be
         // pointed at (a part is a flow, a child node or a tag depending on the axis).
         analysis_axis: 'Analysis axis',
+        // os#1406 — the JSON view's tabs. Deliberately named after the ROOT KEYS of the saved
+        // file: the spreadsheet asks the same question about TABLES, and one name for both
+        // would suggest they follow one another.
+        json_root_key: 'JSON root key',
         short: {
           node: 'Nodes',
           link: 'Flows',
@@ -720,6 +724,10 @@ export const resources_inspector = {
         nothing_for_representation: 'Aucun filtre ne s\'applique à « {{representation}} » : cette fenêtre se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la fenêtre active.',
         active_window: 'cette fenêtre',
         analysis_axis: 'Axe d\'analyse',
+        // os#1406 — les onglets de la vue JSON. Nommés d'après les CLÉS RACINE du fichier
+        // enregistré, et pas d'un mot générique : le tableur pose la même question sur des
+        // TABLES, et un nom commun laisserait croire que les deux se suivent.
+        json_root_key: 'Clé racine du JSON',
         short: {
           node: 'Nœuds',
           link: 'Flux',
@@ -1071,6 +1079,7 @@ export const resources_inspector = {
         nothing_for_representation: 'Ningún filtro se aplica a «{{representation}}»: esta ventana se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la ventana activa.',
         active_window: 'esta ventana',
         analysis_axis: 'Eje de análisis',
+        json_root_key: 'Clave raíz del JSON',
         short: {
           node: 'Nodos',
           link: 'Flujos',
@@ -1422,6 +1431,7 @@ export const resources_inspector = {
         nothing_for_representation: 'Kein Filter gilt für „{{representation}}“: Dieses Fenster wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm das aktive Fenster ist.',
         active_window: 'dieses Fenster',
         analysis_axis: 'Analyseachse',
+        json_root_key: 'JSON-Stammschlüssel',
         short: {
           node: 'Knoten',
           link: 'Flüsse',
@@ -1773,6 +1783,7 @@ export const resources_inspector = {
         nothing_for_representation: 'Nessun filtro si applica a «{{representation}}»: questa finestra si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la finestra attiva.',
         active_window: 'questa finestra',
         analysis_axis: 'Asse di analisi',
+        json_root_key: 'Chiave radice del JSON',
         short: {
           node: 'Nodi',
           link: 'Flussi',
@@ -2128,6 +2139,7 @@ export const resources_inspector = {
         nothing_for_representation: '没有筛选项适用于{{representation}}：该窗口在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗口时，阈值、层级和标签会重新出现。',
         active_window: '该窗口',
         analysis_axis: '分析轴',
+        json_root_key: 'JSON 根键',
         short: {
           node: '节点',
           link: '流量',
@@ -2483,6 +2495,7 @@ export const resources_inspector = {
         nothing_for_representation: '{{representation}} に適用される絞り込みはありません。このウィンドウはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなウィンドウになれば、しきい値・階層・タグは戻ります。',
         active_window: 'このウィンドウ',
         analysis_axis: '分析の軸',
+        json_root_key: 'JSON のルートキー',
         short: {
           node: 'ノード',
           link: 'フロー',
