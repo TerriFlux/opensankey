@@ -207,6 +207,8 @@ export class Class_LegendConfig {
   // SA#549 — étiquette que désigne chaque zone d'entrée cliquable (entrée et valeur d'exemple),
   // relevée à chaque régénération : les ids de zone sont des slugs, ils ne se relisent pas.
   private _entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
+  // SA#549 — groupe que désigne chaque titre de groupe (renommer au double-clic renomme le groupe)
+  private _entry_groups = new Map<string, string>()
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -276,6 +278,12 @@ export class Class_LegendConfig {
     if (this._generating) return
     if (!this._managed) return
     this._managed = false
+    // SA#549 — une légende figée ne bascule plus rien au clic : la main ne doit plus le promettre
+    // (la classe, posée à la régénération, survivrait sinon jusqu'à « Régénérer »).
+    const containers = this._drawing_area.sankey.containers_dict
+    this._entry_tags.forEach((_, id) => containers[id]?.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, false))
+    this._entry_tags = new Map()
+    this._entry_groups = new Map()
   }
 
   public get managed(): boolean { return this._managed }
@@ -361,6 +369,51 @@ export class Class_LegendConfig {
 
   /** SA#549 — relevé des zones cliquables, posé par regenerateLegend. */
   public set entry_tags(_: Map<string, { tag_group_id: string, tag_id: string }>) { this._entry_tags = _ }
+
+  /** SA#549 — relevé des titres de groupe, posé par regenerateLegend. */
+  public set entry_groups(_: Map<string, string>) { this._entry_groups = _ }
+
+  /**
+   * SA#549 — la saisie inline de cette zone renomme-t-elle une étiquette ou un groupe ? Oui pour
+   * une entrée d'étiquette de nœuds ou de flux (sauf gabarit d'entrée : le texte y compose plus que
+   * le nom) et pour un titre de groupe, tant que la légende est gérée. Non : la saisie personnalise
+   * la zone et fige la légende, comme avant.
+   */
+  public canRenameEntry(zone_id: string): boolean {
+    if (!this._managed) return false
+    if (this._entry_tags.has(zone_id)) return this._entry_template === ''
+    return this._entry_groups.has(zone_id)
+  }
+
+  /**
+   * SA#549 — renomme l'étiquette ou le groupe que désigne la zone, puis régénère la légende. Pour
+   * une étiquette, c'est le nom AFFICHÉ qui change : le nom long s'il est posé, sinon le nom — ce que
+   * lisent la légende et le menu Filtres (`display_name`).
+   */
+  public renameEntry(zone_id: string, value: string): boolean {
+    if (!this.canRenameEntry(zone_id)) return false
+    const sankey = this._drawing_area.sankey
+    const tag_target = this._entry_tags.get(zone_id)
+    if (tag_target !== undefined) {
+      const tag = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
+        .find(g => g.id === tag_target.tag_group_id)?.tags_list
+        .find(t => t.id === tag_target.tag_id)
+      if (tag === undefined) return false
+      if (tag.display_name !== value) {
+        if (tag.long_name !== '') tag.long_name = value
+        else tag.name = value
+      }
+    } else {
+      const group_id = this._entry_groups.get(zone_id)
+      const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
+        .find(g => g.id === group_id)
+      if (group === undefined) return false
+      group.name = value
+    }
+    this.draw()
+    this._drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    return true
+  }
 
   /**
    * SA#549 — clic sur une zone de la légende : si elle désigne une étiquette de nœuds ou de
@@ -643,6 +696,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (sample_id !== undefined) entry_tags.set(sample_id, target)
     })
     config.entry_tags = entry_tags
+    // SA#549 — titres de groupe (renommer au double-clic renomme le groupe) : le groupe d'un bloc
+    // se relève sur ses entrées, le titre étant l'item « sur sa ligne » du bloc sans étiquette.
+    const group_of_block = new Map<string, string>()
+    items.forEach(item => {
+      if (item.block_id !== undefined && item.tag_group_id !== undefined) group_of_block.set(item.block_id, item.tag_group_id)
+    })
+    const entry_groups = new Map<string, string>()
+    items.forEach(item => {
+      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+      const group_id = group_of_block.get(item.block_id)
+      if (group_id !== undefined) entry_groups.set(item.id, group_id)
+    })
+    config.entry_groups = entry_groups
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
