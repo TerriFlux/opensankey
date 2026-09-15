@@ -66,6 +66,20 @@ export class Class_DrawingAreaInteractions {
    * ne sont branchés qu'en mode éditable ; le zoom/pan l'est toujours.
    */
   public setEventsListeners(da: Class_DrawingArea) {
+    // os#1397 - TOUCHER LE DESSIN LE DÉSIGNE comme fenêtre active, exactement comme toucher une
+    // fenêtre hébergée la désigne. Posé sur la zone de ZOOM et non sur le groupe de dessin : le
+    // canevas, c'est aussi le blanc autour du diagramme, et un clic dans ce blanc est autant un
+    // « je regarde le diagramme » qu'un clic sur un nœud.
+    //
+    // Inconditionnel, alors que les gestes d'édition ci-dessous ne sont branchés qu'en mode
+    // éditable : désigner ce qu'on regarde n'est pas une édition. Nommé (`.mainzone`) pour ne
+    // remplacer aucun autre écouteur de `mousedown`, ce fichier en posant déjà un.
+    //
+    // Une fenêtre de feuille dessine, elle, DANS un div que React positionne : son propre
+    // `onMouseDown` passe après celui-ci et repose son identifiant. L'ordre joue en notre faveur.
+    da.d3_selection_zoom_area?.on(
+      'mousedown.mainzone',
+      () => da.application_data.menu_configuration.activateMainZoneCanvas())
     if (da.d3_selection !== null) {
       da.d3_selection?.on(
         'click',
