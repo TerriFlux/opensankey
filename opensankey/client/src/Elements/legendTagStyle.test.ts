@@ -87,8 +87,32 @@ describe('SA#545 — familles définies par un style', () => {
     expect(legendEntryFormat(undefined)).toEqual({})
   })
 
-  it('flux « Hachuré » : le carré reçoit une hachure verticale', () => {
-    expect(legendEntryFormat(makeStyle({ shape_is_dashed: true }))).toEqual({ swatch: { hatch: 'vertical' } })
+  it('flux « Hachuré » : le carré reprend les tirets du tracé de flux', () => {
+    expect(legendEntryFormat(makeStyle({ shape_is_dashed: true }))).toEqual({ swatch: { link_dashed: true } })
+  })
+
+  it('hachures de nœud : le carré garde l\'orientation choisie par le style', () => {
+    expect(legendEntryFormat(makeStyle({ shape_hatch: 'horizontal' }))).toEqual({ swatch: { hatch: 'horizontal' } })
+    expect(legendEntryFormat(makeStyle({ shape_hatch: 'diagonal' }))).toEqual({ swatch: { hatch: 'diagonal' } })
+  })
+
+  it('« pas de hachure » et « non hachuré » ne définissent rien de visible', () => {
+    expect(legendEntryFormat(makeStyle({ shape_hatch: 'none', shape_is_dashed: false }))).toEqual({})
+  })
+
+  it('icône du style : elle définit une partie, et fait apparaître le carré', () => {
+    const format = legendEntryFormat(makeStyle({ icon_is_visible: true, icon_icon_name: 'factory', icon_color: '#123456' }))
+    expect(format).toEqual({ icon: { is_image: false, icon_name: 'factory', color: '#123456' } })
+  })
+
+  it('image du style : choisie par `icon_is_image`, ou seule source donnée', () => {
+    expect(legendEntryFormat(makeStyle({ icon_is_image: true, icon_icon_name: 'factory', icon_image_src: 'data:x' })))
+      .toEqual({ icon: { is_image: true, image_src: 'data:x' } })
+    expect(legendEntryFormat(makeStyle({ icon_image_src: 'data:x' }))).toEqual({ icon: { is_image: true, image_src: 'data:x' } })
+  })
+
+  it('icône éteinte explicitement : rien', () => {
+    expect(legendEntryFormat(makeStyle({ icon_is_visible: false, icon_icon_name: 'factory' }))).toEqual({})
   })
 })
 

@@ -2,6 +2,7 @@ import { Class_ApplicationData } from './ApplicationData'
 import type { Class_Tag } from './Tag'
 import type { Class_ElementStyle } from '../Elements/Element'
 import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerprint'
+import { LINK_DASH_GAP, LINK_DASH_LENGTH } from '../Elements/linkDash'
 
 /**
  * SA#545 — légende mise en forme par les styles d'étiquette, sur de vraies classes dessinées (jsdom).
@@ -108,5 +109,76 @@ describe('SA#545 — survol des zones de la légende', () => {
   it('« sans étiquette » : les éléments du groupe qui n\'en portent aucune', () => {
     const { host, app } = makeLegend()
     expect(dimmedWhileHovering(host, app, 'legend-untagged-fiab')).toEqual(['A', 'B', 'D'])
+  })
+})
+
+describe('SA#545 — le carré reproduit les hachures et l\'icône du diagramme', () => {
+  function legendWith(full_attrs: { [k: string]: string | number | boolean }, col_attrs: { [k: string]: string | number | boolean }) {
+    const host = resetHost()
+    const app = new Class_ApplicationData(false)
+    const sankey = app.drawing_area.sankey
+    const a = sankey.addNewNodeWithName('A')
+    const b = sankey.addNewNodeWithName('B')
+    sankey.addNewLink(a, b).valueCurrent = 100
+    const makeStyle = (name: string, attrs: { [k: string]: string | number | boolean }): Class_ElementStyle => {
+      const style = sankey.addNewDefaultElementStyle()
+      style.name = name
+      Object.entries(attrs).forEach(([k, v]) => { (style as unknown as { [k: string]: unknown })[k] = v })
+      return style
+    }
+    const fiab = sankey.addNodeTagGroup('fiab', 'Fiabilite', false)
+    fiab.use_colors = true
+    const full = fiab.addTag('Full', 'full') as Class_Tag
+    const col = fiab.addTag('Col', 'col') as Class_Tag
+    a.addTag(full)
+    b.addTag(col)
+    app.drawing_area.legend.masked = false
+    app.drawing_area.draw()
+    full.style_id = makeStyle('F', full_attrs).id
+    col.style_id = makeStyle('C', col_attrs).id
+    app.drawing_area.legend.draw()
+    return { host, app, full, col }
+  }
+
+  const swatchFill = (host: HTMLElement, app: Class_ApplicationData, id: string) =>
+    zone(host, app, id).querySelector('.node_shape')?.getAttribute('fill') ?? ''
+
+  it('flux « Hachuré » : les tirets du tracé de flux (trait plein, puis vide)', () => {
+    const { host, app } = legendWith({ shape_color: '#ff0000', shape_is_dashed: true }, { shape_color: '#00ff00' })
+    expect(swatchFill(host, app, 'legend-tag-fiab-full')).toBe('url(#legend-dash-legend-tag-fiab-full)')
+    const pattern = document.getElementById('legend-dash-legend-tag-fiab-full')
+    expect(pattern?.getAttribute('width')).toBe(String(LINK_DASH_LENGTH + LINK_DASH_GAP))
+    expect(pattern?.querySelector('rect')?.getAttribute('width')).toBe(String(LINK_DASH_LENGTH))
+    expect(pattern?.querySelector('rect')?.getAttribute('fill')).toBe('#ff0000')
+    // Le carré sans hachure reste plein
+    expect(swatchFill(host, app, 'legend-tag-fiab-col')).toBe('#00ff00')
+  })
+
+  it('hachures de nœud : le motif du nœud, dans l\'orientation du style', () => {
+    const { host, app } = legendWith({ shape_color: '#ff0000', shape_hatch: 'horizontal' }, { shape_color: '#00ff00' })
+    expect(swatchFill(host, app, 'legend-tag-fiab-full')).toBe('url(#hatch-legend-tag-fiab-full)')
+    expect(document.getElementById('hatch-legend-tag-fiab-full')?.getAttribute('patternTransform')).toBe('rotate(90)')
+  })
+
+  it('image du style : dessinée dans le carré, qui apparaît même sans couleur', () => {
+    const src = 'data:image/png;base64,AAAA'
+    const { host, app } = legendWith({ icon_is_visible: true, icon_is_image: true, icon_image_src: src }, { shape_color: '#00ff00' })
+    const image = zone(host, app, 'legend-tag-fiab-full').querySelector('image')
+    expect(image).not.toBeNull()
+    expect(image?.getAttribute('xlink:href') ?? image?.getAttribute('href')).toBe(src)
+  })
+
+  it('retirer les styles retire tirets et image du carré', () => {
+    const { host, app, full, col } = legendWith(
+      { shape_color: '#ff0000', shape_is_dashed: true, icon_is_visible: true, icon_is_image: true, icon_image_src: 'data:x' },
+      { shape_color: '#00ff00', shape_hatch: 'diagonal' }
+    )
+    full.style_id = undefined
+    col.style_id = undefined
+    app.drawing_area.legend.draw()
+    ;['legend-tag-fiab-full', 'legend-tag-fiab-col'].forEach(id => {
+      expect(swatchFill(host, app, id)).not.toMatch(/^url\(/)
+      expect(zone(host, app, id).querySelector('image')).toBeNull()
+    })
   })
 })

@@ -65,6 +65,12 @@ const TEXT_FORMAT_ONLY_KEYS = [
 const SHAPE_FORMAT_ONLY_KEYS = [
   'shape_border_color', 'shape_border_color_sustainable', 'shape_border_dashed', 'shape_hatch'
 ] as const
+// Icône ou image du style dans le carré (retour du test local du 2026-09-15). Même relevé :
+// aucune zone de légende du corpus ne porte de clé `icon_*`.
+const ICON_FORMAT_ONLY_KEYS = [
+  'icon_is_visible', 'icon_is_icon', 'icon_is_image', 'icon_icon_name', 'icon_image_src',
+  'icon_view_box', 'icon_color', 'icon_inside_horiz', 'icon_inside_vert'
+] as const
 
 /** SA#545 — texte d'une zone (nom de l'entrée, ou valeur d'exemple) mis en forme par le style. */
 function applyTextFormat(
@@ -88,14 +94,32 @@ function applyTextFormat(
 function applyEntryFormat(zone: Class_ContainerElement, item: Type_LegendItem) {
   applyTextFormat(zone, item.format?.name, item.bold ?? false)
   SHAPE_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
+  ICON_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
+  zone.legend_swatch_link_dashed = false
   const format = item.format
   if (format === undefined || item.swatch_color === undefined) return
+  const icon = format.icon
+  if (icon !== undefined) {
+    // Icône ou image du style, étirée à la forme : même dessin que sur un nœud (DrawLabel). Le
+    // mode icône l'emporte sur le mode image tant que `is_icon` reste allumé (défaut `true`).
+    zone.icon_is_visible = true
+    zone.attributes['icon_is_icon'] = !icon.is_image
+    zone.icon_is_image = icon.is_image
+    if (icon.icon_name !== undefined) zone.icon_icon_name = icon.icon_name
+    if (icon.image_src !== undefined) zone.icon_image_src = icon.image_src
+    if (icon.view_box !== undefined) zone.icon_view_box = icon.view_box
+    if (icon.color !== undefined) zone.icon_color = icon.color
+    zone.icon_inside_horiz = true
+    zone.icon_inside_vert = true
+  }
   const swatch = format.swatch
   if (swatch === undefined) {
-    // Valeur sans forme : la valeur d'exemple s'écrit dans un carré transparent.
+    // Valeur ou icône sans forme : elles s'écrivent dans un carré transparent.
     zone.shape_color_visible = false
     return
   }
+  // Flux « Hachuré » : les tirets du tracé de flux (NodeDrawShape.applyLinkDashPattern)
+  if (swatch.link_dashed === true) zone.legend_swatch_link_dashed = true
   if (swatch.opacity !== undefined) zone.shape_opacity = swatch.opacity
   if (swatch.border_visible !== undefined) zone.shape_border_visible = swatch.border_visible
   if (swatch.border_color !== undefined) {
