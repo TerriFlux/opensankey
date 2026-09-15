@@ -142,7 +142,8 @@ describe('sa#396 ViewsQuery — labels de vues', () => {
     const views = { v1: view('Vue 1') }
     const vm = new ViewsQuery(makeHost({ views }))
     vm.parseViewExtraFields('v1', { view_labels: ['Résultats', 'Méthode', 'Résultats', '', 42, null] as never })
-    expect(views.v1.labels).toEqual(['Résultats', 'Méthode'])
+    // os#1357 — la vue référence des IDENTIFIANTS : les noms lus sont migrés dans l'annuaire.
+    expect(views.v1.labels?.map(id => vm.labelNameOf(id))).toEqual(['Résultats', 'Méthode'])
   })
 
   it('parseViewExtraFields : fichier ancien SANS view_labels → entrée sans labels, sans bruit', () => {
