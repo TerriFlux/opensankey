@@ -103,16 +103,22 @@ describe('SA#549 — clic sur une entrée de légende', () => {
     expect(isStruck(host, app, 'legend-tag-fiab-indic')).toBe(true)
   })
 
-  it('bascule immédiate : deux clics rapides font deux bascules, jamais un double-clic', () => {
-    const { host, app, indic } = makeLegend()
+  it('double-clic : ne bascule rien (il sert à renommer la zone)', () => {
+    // Lecture : le double-clic n'y ouvre pas d'éditeur, le test ne dépend que du discriminateur.
+    const { host, app, indic } = makeLegend(true)
     const clickNow = () => zoneG(host, app, 'legend-tag-fiab-indic')
       .dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
     clickNow()
-    expect(indic.is_selected).toBe(false)
+    jest.advanceTimersByTime(100)
     clickNow()
-    expect(indic.is_selected).toBe(true)
     jest.advanceTimersByTime(400)
     expect(indic.is_selected).toBe(true)
+  })
+
+  it('curseur main : seules les entrées d\'étiquette portent la classe cliquable', () => {
+    const { host, app } = makeLegend()
+    expect(zoneG(host, app, 'legend-tag-fiab-indic').classList.contains('legend_toggle_entry')).toBe(true)
+    expect(zoneG(host, app, 'legend-group-fiab').classList.contains('legend_toggle_entry')).toBe(false)
   })
 
   it('geste différé (voile) : le second de deux clics rapides voit le premier', async () => {
@@ -121,19 +127,17 @@ describe('SA#549 — clic sur une entrée de légende', () => {
     expect(gestureProgress(app).indicator).toBeDefined()
     const clickNow = () => zoneG(host, app, 'legend-tag-fiab-indic')
       .dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
-    const settle = () => new Promise(resolve => setTimeout(resolve, 300))
+    const settle = () => new Promise(resolve => setTimeout(resolve, 600))
+    // Clic simple confirmé (après le délai du double-clic), puis le voile
     clickNow()
     await settle()
     expect(indic.is_selected).toBe(false)
-    // Deux clics mis en file pendant le voile : masqué → rétabli → masqué ? Non : rétabli puis masqué
-    // exigerait que chacun lise l'état laissé par le précédent. Lus au clic, les deux rétabliraient.
-    clickNow()
-    clickNow()
+    // Deux bascules mises en file pendant le voile : chacune doit lire l'état laissé par la
+    // précédente (rétablir puis masquer). Lues au moment de la demande, les deux rétabliraient.
+    app.drawing_area.legend.toggleEntryTag('legend-tag-fiab-indic')
+    app.drawing_area.legend.toggleEntryTag('legend-tag-fiab-indic')
     await settle()
     expect(indic.is_selected).toBe(false)
-    clickNow()
-    await settle()
-    expect(indic.is_selected).toBe(true)
   })
 
   it('premier clic : l\'entrée cliquée reste sous le curseur quand d\'autres entrées apparaissent', () => {
@@ -171,7 +175,7 @@ describe('SA#549 — clic sur une entrée de légende', () => {
     expect(ids()).not.toContain('legend-tag-fiab-ghost')
     const y = () => Math.round(sankey.containers_dict['legend-tag-fiab-indic'].position_y)
     const y_before = y()
-    zoneG(host, app, 'legend-tag-fiab-indic').dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
+    click(host, app, 'legend-tag-fiab-indic')
     expect(indic.is_selected).toBe(false)
     expect(ids()).toContain('legend-tag-fiab-ghost')
     expect(y()).toBe(y_before)

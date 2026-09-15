@@ -122,6 +122,14 @@ body {
   cursor: default;
 }
 
+/* SA#549 — entrée de légende qu'un clic bascule (masque ou rétablit l'étiquette) : main, en
+   lecture comme en édition. !important : doit gagner sur les curseurs de mode, sur celui de
+   l'info-bulle et sur le curseur texte que DrawLabel pose en style inline sur le libellé. */
+.legend_toggle_entry,
+.legend_toggle_entry * {
+  cursor: pointer !important;
+}
+
 /* os#1344 — Création connectée : flèches directionnelles au survol d'un nœud.
    Discrètes par défaut, pleines au survol de la flèche elle-même. */
 .connection_arrow path {
