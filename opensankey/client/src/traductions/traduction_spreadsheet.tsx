@@ -137,7 +137,12 @@ export const resources_spreadsheet = {
           placement_tip: 'How to position a node created by adding a flow: auto (full layout), none (default position), incremental (guesses the spot without moving others)',
           matrix_cross: 'Matrix: cross',
           matrix_value: 'Matrix: value',
-          matrix_tip: 'Matrix cell content: cross (the flow exists) or flow value for the selected data_type'
+          matrix_tip: 'Matrix cell content: cross (the flow exists) or flow value for the selected data_type',
+          // os#1405 — la barre s'est vidée : ces clés servent la section du panneau de
+          // navigation (panel_title, rows) et le volet de réglages (matrix_label).
+          matrix_label: 'Matrix display',
+          panel_title: 'What the spreadsheet shows',
+          rows: 'Rows'
         },
         // --- Modale « Ajouter une contrainte » ---
         constraint: {
@@ -383,7 +388,10 @@ export const resources_spreadsheet = {
           placement_tip: 'Comment positionner un nœud créé en ajoutant un flux : auto (disposition complète), aucun (position par défaut), incrémental (devine la place sans bouger les autres)',
           matrix_cross: 'Matrice : croix',
           matrix_value: 'Matrice : valeur',
-          matrix_tip: 'Contenu des cellules de la matrice : croix (le flux existe) ou valeur du flux pour le data_type sélectionné'
+          matrix_tip: 'Contenu des cellules de la matrice : croix (le flux existe) ou valeur du flux pour le data_type sélectionné',
+          matrix_label: 'Affichage des matrices',
+          panel_title: 'Ce que le tableur montre',
+          rows: 'Lignes'
         },
         constraint: {
           title: 'Ajouter une contrainte',
@@ -612,7 +620,10 @@ export const resources_spreadsheet = {
           placement_tip: 'Cómo colocar un nodo creado al añadir un flujo: auto (disposición completa), ninguna (posición por defecto), incremental (adivina el sitio sin mover los demás)',
           matrix_cross: 'Matriz: cruz',
           matrix_value: 'Matriz: valor',
-          matrix_tip: 'Contenido de las celdas de la matriz: cruz (el flujo existe) o valor del flujo para el data_type seleccionado'
+          matrix_tip: 'Contenido de las celdas de la matriz: cruz (el flujo existe) o valor del flujo para el data_type seleccionado',
+          matrix_label: 'Visualización de las matrices',
+          panel_title: 'Lo que muestra la hoja',
+          rows: 'Filas'
         },
         constraint: {
           title: 'Añadir una restricción',
@@ -841,7 +852,10 @@ export const resources_spreadsheet = {
           placement_tip: 'Wie ein durch Hinzufügen eines Flusses erstellter Knoten positioniert wird: auto (vollständige Anordnung), keine (Standardposition), inkrementell (errät den Platz, ohne die anderen zu verschieben)',
           matrix_cross: 'Matrix: Kreuz',
           matrix_value: 'Matrix: Wert',
-          matrix_tip: 'Inhalt der Matrixzellen: Kreuz (der Fluss existiert) oder Flusswert für den ausgewählten data_type'
+          matrix_tip: 'Inhalt der Matrixzellen: Kreuz (der Fluss existiert) oder Flusswert für den ausgewählten data_type',
+          matrix_label: 'Anzeige der Matrizen',
+          panel_title: 'Was die Tabelle zeigt',
+          rows: 'Zeilen'
         },
         constraint: {
           title: 'Eine Bedingung hinzufügen',
@@ -1070,7 +1084,10 @@ export const resources_spreadsheet = {
           placement_tip: 'Come posizionare un nodo creato aggiungendo un flusso: auto (disposizione completa), nessuno (posizione predefinita), incrementale (indovina il posto senza spostare gli altri)',
           matrix_cross: 'Matrice: croce',
           matrix_value: 'Matrice: valore',
-          matrix_tip: 'Contenuto delle celle della matrice: croce (il flusso esiste) o valore del flusso per il data_type selezionato'
+          matrix_tip: 'Contenuto delle celle della matrice: croce (il flusso esiste) o valore del flusso per il data_type selezionato',
+          matrix_label: 'Visualizzazione delle matrici',
+          panel_title: 'Cosa mostra il foglio',
+          rows: 'Righe'
         },
         constraint: {
           title: 'Aggiungere un vincolo',
@@ -1301,7 +1318,10 @@ export const resources_spreadsheet = {
           placement_tip: '添加流量时新建节点的定位方式：自动（完整布局）、无（默认位置）、增量（推测位置且不移动其他节点）',
           matrix_cross: '矩阵：叉号',
           matrix_value: '矩阵：数值',
-          matrix_tip: '矩阵单元格内容：叉号（表示该流量存在）或所选 data_type 的流量数值'
+          matrix_tip: '矩阵单元格内容：叉号（表示该流量存在）或所选 data_type 的流量数值',
+          matrix_label: '矩阵显示方式',
+          panel_title: '电子表格显示的内容',
+          rows: '行'
         },
         // --- Modale « Ajouter une contrainte » ---
         constraint: {
@@ -1536,7 +1556,10 @@ export const resources_spreadsheet = {
           placement_tip: 'フローの追加で作成されたノードをどう配置するか：自動（レイアウト全体を計算）、なし（既定位置）、追加のみ（他を動かさずに位置を推定）',
           matrix_cross: '行列：クロス',
           matrix_value: '行列：値',
-          matrix_tip: '行列セルの内容：クロス（そのフローが存在する）、または選択中の data_type におけるフローの値'
+          matrix_tip: '行列セルの内容：クロス（そのフローが存在する）、または選択中の data_type におけるフローの値',
+          matrix_label: '行列の表示',
+          panel_title: 'スプレッドシートが表示する内容',
+          rows: '行'
         },
         // --- Modale « Ajouter une contrainte » ---
         constraint: {
