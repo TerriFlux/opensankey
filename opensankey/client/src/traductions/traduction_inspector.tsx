@@ -353,6 +353,11 @@ export const resources_inspector = {
         select_elements: 'Select elements',
         deselect_all: 'Deselect all',
         selection_summary: 'Selection: {{summary}}',
+        // os#1400 — a nature can legitimately have NO navigation section (the radial zoom of a
+        // sunburst is a click in the figure, the sorting of a sheet belongs to the component).
+        // An empty panel is not a gap, but it must SAY so rather than look broken.
+        nothing_for_representation: 'No filter applies to “{{representation}}”: this window is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active window.',
+        active_window: 'this window',
         short: {
           node: 'Nodes',
           link: 'Flows',
@@ -702,6 +707,8 @@ export const resources_inspector = {
         select_elements: 'Sélectionner des éléments',
         deselect_all: 'Tout désélectionner',
         selection_summary: 'Sélection : {{summary}}',
+        nothing_for_representation: 'Aucun filtre ne s\'applique à « {{representation}} » : cette fenêtre se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la fenêtre active.',
+        active_window: 'cette fenêtre',
         short: {
           node: 'Nœuds',
           link: 'Flux',
@@ -1049,6 +1056,8 @@ export const resources_inspector = {
         select_elements: 'Seleccionar elementos',
         deselect_all: 'Deseleccionar todo',
         selection_summary: 'Selección: {{summary}}',
+        nothing_for_representation: 'Ningún filtro se aplica a «{{representation}}»: esta ventana se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la ventana activa.',
+        active_window: 'esta ventana',
         short: {
           node: 'Nodos',
           link: 'Flujos',
@@ -1396,6 +1405,8 @@ export const resources_inspector = {
         select_elements: 'Elemente auswählen',
         deselect_all: 'Auswahl aufheben',
         selection_summary: 'Auswahl: {{summary}}',
+        nothing_for_representation: 'Kein Filter gilt für „{{representation}}“: Dieses Fenster wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm das aktive Fenster ist.',
+        active_window: 'dieses Fenster',
         short: {
           node: 'Knoten',
           link: 'Flüsse',
@@ -1743,6 +1754,8 @@ export const resources_inspector = {
         select_elements: 'Selezionare elementi',
         deselect_all: 'Deselezionare tutto',
         selection_summary: 'Selezione: {{summary}}',
+        nothing_for_representation: 'Nessun filtro si applica a «{{representation}}»: questa finestra si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la finestra attiva.',
+        active_window: 'questa finestra',
         short: {
           node: 'Nodi',
           link: 'Flussi',
@@ -2094,6 +2107,8 @@ export const resources_inspector = {
         select_elements: '选择元素',
         deselect_all: '取消全选',
         selection_summary: '所选：{{summary}}',
+        nothing_for_representation: '没有筛选项适用于{{representation}}：该窗口在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗口时，阈值、层级和标签会重新出现。',
+        active_window: '该窗口',
         short: {
           node: '节点',
           link: '流量',
@@ -2445,6 +2460,8 @@ export const resources_inspector = {
         select_elements: '要素を選択',
         deselect_all: '選択をすべて解除',
         selection_summary: '選択：{{summary}}',
+        nothing_for_representation: '{{representation}} に適用される絞り込みはありません。このウィンドウはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなウィンドウになれば、しきい値・階層・タグは戻ります。',
+        active_window: 'このウィンドウ',
         short: {
           node: 'ノード',
           link: 'フロー',
