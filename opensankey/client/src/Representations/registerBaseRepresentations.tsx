@@ -27,6 +27,7 @@
 import React from 'react'
 import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
 import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
+import { SpreadsheetRepresentationOptions } from './SpreadsheetRepresentationOptions'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
@@ -60,6 +61,12 @@ export const registerBaseRepresentations = (): void => {
     // altérer. Et plomber Univer interdirait du même coup les gestes qui font
     // l'intérêt du tableur pour un lecteur : trier une colonne, copier une
     // plage. Le trou n'est pas un oubli, ne le bouchez pas.
+    //
+    // os#1405 — le tableur A DÉSORMAIS DES RÉGLAGES : l'affichage des matrices TES/TER, qui
+    // occupait une place dans la barre au-dessus de la grille. Conséquence attendue de cet
+    // ajout : la nature « tableur » compte maintenant pour `activeRepresentation`, donc le
+    // volet de représentation de l'inspecteur s'ouvre sur elle au lieu de rester vide.
+    renderOptions: ({ app_data }) => <SpreadsheetRepresentationOptions app_data={app_data} />,
     host: 'component'
   })
 
