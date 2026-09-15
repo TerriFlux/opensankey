@@ -129,6 +129,58 @@ export type Type_RepresentationCapabilities = {
   geography: boolean
 }
 
+/**
+ * os#1409 - LE ZOOM, capacite DECLAREE par la nature, au meme titre que `renderOptions` ou
+ * `contextMenu`.
+ *
+ * Le controle de la colonne d'outils etait cable EN DUR sur `app_data.drawing_area` : il ne
+ * zoomait que le diagramme, quelle que soit la fenetre regardee, pendant que la grille portait
+ * le sien en bas. Une commande unique en apparence, qui ne servait qu'une seule vue, doublee
+ * d'une autre dans la vue voisine. La bascule est celle du selecteur de nature (os#1399) : le
+ * controle vise la FENETRE ACTIVE, et c'est la nature de celle-ci qui dit comment on y zoome.
+ *
+ * QUATRE CHOSES A DIRE, et rien de plus : lire l'echelle, la poser, le pas, les bornes.
+ *
+ * 100 % NE VEUT PAS DIRE LA MEME CHOSE PARTOUT. Pour le diagramme c'est l'echelle d'une page
+ * vide (k = 1) ; pour la grille c'est le ratio 1 d'Univer. Chaque nature nomme son echelle
+ * NEUTRE (`neutral`) ; le controle affiche un pourcentage rapporte a elle, il n'en impose pas
+ * la definition.
+ *
+ * LE CONTRAT DE L'INDICATEUR : le controle s'abonne a `ZOOM_TOPIC` pour suivre le zoom en
+ * direct (molette comprise). Une nature dont l'echelle peut changer SANS passer par `setScale`
+ * (une molette sur la grille, une molette sur le dessin) doit donc notifier `ZOOM_TOPIC` sur
+ * son propre canal - le diagramme le fait depuis toujours dans `DrawingArea`, la grille le fait
+ * depuis l'evenement de zoom d'Univer. Sans cela l'indicateur resterait fige sur la derniere
+ * valeur posee par les boutons, en mentant sur ce que montre l'ecran.
+ */
+export type Type_RepresentationZoom = {
+  /** L'echelle courante, dans l'unite de CETTE nature (cf. `neutral`). */
+  getScale: (ctx: Type_RepresentationContext) => number
+  /** Pose une echelle ABSOLUE. Libre a la nature de la borner elle-meme. */
+  setScale: (scale: number, ctx: Type_RepresentationContext) => void
+  /**
+   * Multiplier l'echelle en UN geste, quand la nature sait le faire mieux que la composition
+   * `getScale` x facteur -> `setScale`. Le diagramme le declare : son `zoomByFactor` passe par
+   * `zoomListener.scaleBy`, qui lit le transform EN COURS D'ANIMATION la ou `getScale` ne lit
+   * que le transform deja pose - deux clics rapides sur « + » n'en perdraient un sinon. Absent,
+   * le controle compose, ce qui suffit partout ailleurs.
+   */
+  scaleBy?: (factor: number, ctx: Type_RepresentationContext) => void
+  /** Facteur multiplicatif d'un cran des boutons -/+. Defaut : DEFAULT_ZOOM_STEP. */
+  step?: number
+  /** Bornes de l'echelle. Le controle s'y tient ; la nature reste libre de re-borner. */
+  min?: number
+  max?: number
+  /** L'echelle NEUTRE, celle que le pourcentage prend pour 100 %. Defaut : 1. */
+  neutral?: number
+  /**
+   * Refus FIN : la nature sait zoomer, mais pas maintenant. La grille ne le peut que pendant
+   * que son composant est monte - sinon il n'y a personne a qui parler, et le controle se grise
+   * en le disant plutot que d'avaler les clics.
+   */
+  isAvailable?: (ctx: Type_RepresentationContext) => boolean
+}
+
 /** Ce qu'une représentation reçoit en entrée. */
 export type Type_RepresentationContext = {
   app_data: Class_ApplicationData
@@ -242,6 +294,17 @@ type Type_RepresentationCommon = {
   resolveElementTarget?: Type_ElementTargetResolver
   /** Refus fin sur CE sujet ; absent = toujours applicable. */
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
+  /**
+   * os#1409 - COMMENT ON ZOOME DANS CETTE NATURE (cf. Type_RepresentationZoom).
+   *
+   * ABSENT = cette nature ne zoome pas, et c'est une reponse, pas un oubli : l'etoile, la
+   * couronne, les histogrammes et le sunburst se dessinent a la taille de leur conteneur. Le
+   * controle de la colonne se grise alors EN DISANT POURQUOI - un garde-fou n'est jamais muet.
+   * La documentation et le JSON zoomeraient legitimement (la taille du texte), mais rien
+   * n'existe encore pour cela : le jour ou ce sera ecrit, la ligne s'ajoute ici, et nulle part
+   * ailleurs.
+   */
+  zoom?: Type_RepresentationZoom
   /**
    * Réglages propres à la représentation, ÉDITÉS PAR L'AUTEUR. `setOptions`
    * reçoit l'objet complet : c'est l'appelant qui le persiste.
