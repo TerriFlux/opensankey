@@ -4,9 +4,10 @@
 // d'imports cycliques que LegendGenerator.test.ts).
 
 import {
-  computeLegendItems, layoutLegendItems, renderableLegendItems,
+  computeLegendItems, layoutLegendItems, legendSwatchWidth, renderableLegendItems,
   Type_LegendConfigValues, Type_SankeyForLegend
 } from './legendItems'
+import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
 import { LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat } from './legendTagStyle'
 
 const base_config: Type_LegendConfigValues = {
@@ -199,6 +200,22 @@ describe('SA#545 — entrée « sans étiquette »', () => {
     sankey.node_taggs_list[0].style_id = 'S_color'
     const rendered = renderableLegendItems(computeLegendItems(sankey, base_config, { t_untagged }))
     expect(rendered.map(i => i.id)).toEqual(['legend-group-fiab', 'legend-untagged-fiab'])
+  })
+})
+
+describe('SA#545 — carré d\'un flux « Hachuré »', () => {
+  it('assez large pour montrer au moins deux vides entiers de tirets', () => {
+    const item = { id: 'legend-tag-g-t', text: 'T', swatch_color: '#f00', format: { swatch: { link_dashed: true } } }
+    const width = legendSwatchWidth(item, base_config.police)
+    const period = LINK_DASH_LENGTH + LINK_DASH_GAP
+    // Vides en [k·période − vide, k·période[ : il faut atteindre la fin du 2ᵉ
+    expect(width).toBeGreaterThanOrEqual(2 * period)
+    expect(Math.floor(width / period)).toBeGreaterThanOrEqual(2)
+  })
+
+  it('le carré d\'une valeur d\'exemple, déjà plus large, n\'est pas réduit', () => {
+    const item = { id: 'legend-tag-g-t', text: 'T', swatch_color: '#f00', format: { swatch: { link_dashed: true }, value: { bold: true } } }
+    expect(legendSwatchWidth(item, 40)).toBe(40 * LEGEND_SAMPLE_SWATCH_EM)
   })
 })
 

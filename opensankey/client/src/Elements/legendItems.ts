@@ -12,6 +12,7 @@
 
 import { LEGEND_CHILD_PREFIX } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
+import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
 import {
   LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
   Type_LegendEntryFormat, Type_StyleForLegend
@@ -497,8 +498,15 @@ export function renderableLegendItems(items: Type_LegendItem[]): Type_LegendItem
  * carrée, ou un carré élargi quand il porte la valeur d'exemple.
  */
 export function legendSwatchWidth(item: Type_LegendItem, police: number): number {
-  return item.format?.value !== undefined ? police * LEGEND_SAMPLE_SWATCH_EM : police
+  const base = item.format?.value !== undefined ? police * LEGEND_SAMPLE_SWATCH_EM : police
+  // Flux « Hachuré » : les tirets gardent la taille du diagramme, c'est le carré qui s'élargit
+  // pour en montrer au moins deux vides — un seul ne se lit pas comme des hachures (retour du
+  // test local du 2026-09-15).
+  return item.format?.swatch?.link_dashed === true ? Math.max(base, LEGEND_DASHED_SWATCH_MIN_WIDTH) : base
 }
+
+/** Trait, vide, trait, vide, trait : la plus petite largeur qui montre deux vides entiers. */
+export const LEGEND_DASHED_SWATCH_MIN_WIDTH = 2 * (LINK_DASH_LENGTH + LINK_DASH_GAP) + LINK_DASH_LENGTH
 
 /**
  * SA#545 — id de la zone générée qui écrit la valeur d'exemple dans le carré d'une
