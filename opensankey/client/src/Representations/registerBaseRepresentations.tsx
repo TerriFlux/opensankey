@@ -35,6 +35,9 @@ import {
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
 import { representationOptionsMenu } from './RepresentationContextMenu'
+// os#1409 - le zoom est une capacite declaree par la nature (cf. Type_RepresentationZoom).
+import { DIAGRAM_ZOOM } from './RepresentationZoom'
+import { spreadsheetZoomHandle } from './SpreadsheetZoomBridge'
 
 export const registerBaseRepresentations = (): void => {
   representation_registry.register({
@@ -45,7 +48,10 @@ export const registerBaseRepresentations = (): void => {
     icon: <FaProjectDiagram />,
     // Le SVG sous tout le reste : la grande zone lui réserve ce que les autres
     // occupants ne prennent pas, et c'est tout ce qu'il lui faut.
-    host: 'canvas'
+    host: 'canvas',
+    // os#1409 — la transformation d3 existante, DÉCLARÉE et non plus câblée dans le contrôle.
+    // Rien ne change pour le diagramme : c'est le cas de non-régression du lot.
+    zoom: DIAGRAM_ZOOM
   })
 
   representation_registry.register({
@@ -67,6 +73,28 @@ export const registerBaseRepresentations = (): void => {
     // ajout : la nature « tableur » compte maintenant pour `activeRepresentation`, donc le
     // volet de représentation de l'inspecteur s'ouvre sur elle au lieu de rester vide.
     renderOptions: ({ app_data }) => <SpreadsheetRepresentationOptions app_data={app_data} />,
+    // os#1409 — LE ZOOM D'UNIVER, pilote par le controle de la colonne. Son API l'expose
+    // vraiment (`FWorksheet.zoom` / `getZoom`, ratio 0,1 a 4) : c'est un zoom du MOTEUR de la
+    // grille, qui recalcule ses cellules — et non une transformation posee par-dessus, qui
+    // aurait fausse ses mesures. Conséquence assumée et voulue par l'issue : le curseur de zoom
+    // du pied de la grille DISPARAIT (`footer.zoomSlider: false`, cf. UniverSpreadSheet) — deux
+    // commandes pour un même geste sont exactement ce que ce chantier défait.
+    //
+    // Le pas n'est PAS celui du diagramme : racine de deux double l'échelle en deux crans, ce
+    // qui est brutal sur des cellules dont on veut lire le texte. Un quart de plus par cran.
+    zoom: {
+      // La grille prête ses deux gestes en se montant (cf. SpreadsheetZoomBridge) ; hors
+      // montage il n'y a personne à qui parler, et 1 est ce que montrerait une grille neuve.
+      getScale: () => spreadsheetZoomHandle()?.getZoom() ?? 1,
+      setScale: (ratio) => spreadsheetZoomHandle()?.setZoom(ratio),
+      step: 1.25,
+      min: 0.1,
+      max: 4,
+      neutral: 1,
+      // Pas de grille montée = pas de zoom : le contrôle se grise en le disant, plutôt que
+      // d'avaler les clics.
+      isAvailable: () => spreadsheetZoomHandle() !== null
+    },
     host: 'component'
   })
 
@@ -76,6 +104,10 @@ export const registerBaseRepresentations = (): void => {
   // grille. Pas de `publish_option` propre : comme le tableur, elle est offerte au lecteur sauf
   // si la liste blanche `PublishOptions.representations` la retire — c'est exactement ce que
   // valait le sous-onglet, atteignable dès que le tableur l'était.
+  // os#1409 — la vue JSON et la documentation NE DÉCLARENT PAS de zoom, et c'est un constat
+  // daté, pas une propriété : leur zoom légitime serait la taille du texte, et rien n'existe
+  // aujourd'hui pour la régler. Le contrôle de la colonne se grise donc en le disant. Le jour
+  // où ce réglage sera écrit, il s'ajoute ici, sur la ligne de sa nature, et nulle part ailleurs.
   representation_registry.register({
     id: MAIN_ZONE_JSON_ID,
     scale: 'diagram',
