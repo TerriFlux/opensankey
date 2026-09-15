@@ -78,6 +78,8 @@ import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
 // par le même geste que ceux du diagramme : un seul menu à l'écran, une seule commande pour
 // tout refermer (le clic extérieur passe déjà par `closeAllContextMenus`).
 import { closeRepresentationContextMenu } from '../Representations/RepresentationContextMenu'
+// os#1401 - la portée d'un outil (dans quelles natures de fenêtre son geste existe).
+import { toolAppliesToActiveWindow } from './CreationToolScope'
 
 /**
  * os#1387 — Cadre du canevas dans la grande zone : sa case (coordonnées viewport) quand le
@@ -3875,6 +3877,12 @@ export class Class_DrawingArea {
    * bon mode moteur et remet à zéro l'état de l'outil précédent.
    */
   public setCreationTool(tool: Type_CreationTool | null, sticky = false): void {
+    // os#1401 — LE REFUS EST ICI, dans le modèle, et pas seulement dans la colonne d'outils.
+    // Un bouton grisé dont l'action reste atteignable par un autre chemin (raccourci, tour
+    // guidé, appel d'une couche supérieure) est un garde-fou en trompe-l'œil : c'est le point
+    // d'entrée unique des quatre outils, donc c'est ici que la fenêtre active a le dernier mot.
+    // DÉSARMER reste toujours permis — c'est la sortie, elle ne produit rien.
+    if (tool !== null && !toolAppliesToActiveWindow(this.application_data, tool)) return
     this._tool_sticky = sticky
     if (tool === null) {
       if (this.isInPlaceContainerMode()) this.exitPlaceContainerMode()
@@ -3894,6 +3902,23 @@ export class Class_DrawingArea {
     this.setEditionMode()
     this.refreshModeEventsListeners()
     this.notifyToolsColumn()
+  }
+
+  /**
+   * os#1401 — Relâche l'outil armé quand la fenêtre active vient de changer pour une nature
+   * qui ne peut pas le servir (on arme le crayon sur le diagramme, puis on ouvre le tableur).
+   * `setCreationTool` refuse d'ARMER hors de portée ; celle-ci défait ce qui l'était déjà,
+   * pour que la colonne ne montre pas un outil allumé au-dessus d'une grille de cellules.
+   * Appelée par la colonne d'outils au changement de fenêtre — la règle, elle, reste ici.
+   */
+  public releaseCreationToolOutOfScope(): void {
+    const tool = this.active_creation_tool
+    if (tool !== null && !toolAppliesToActiveWindow(this.application_data, tool)) {
+      this.setCreationTool(null)
+    }
+    if (this.isInStylePaintMode() && !toolAppliesToActiveWindow(this.application_data, 'style_paint')) {
+      this.exitStylePaintMode()
+    }
   }
 
   /**
