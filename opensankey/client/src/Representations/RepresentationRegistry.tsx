@@ -306,6 +306,29 @@ type Type_RepresentationCommon = {
    */
   zoom?: Type_RepresentationZoom
   /**
+   * 15/09/2026 — CE QUE CETTE FENÊTRE MONTRE, en plus de son sujet : un texte COURT, écrit par
+   * l'en-tête à côté du fil d'Ariane.
+   *
+   * La règle qui l'a fait naître (Julien, 15/09) : **pas de barres empilées les unes sous les
+   * autres**. Ce qu'une barre portait trouve sa place ailleurs, ou disparaît si ce n'est pas
+   * utile. La vue JSON y est passée — sa barre entière est partie —, mais une information
+   * qu'elle portait reste utile : la CLÉ RACINE regardée (`nodes`, `links`, « Autres »). Sans
+   * elle, deux fenêtres JSON côte à côte seraient indiscernables, et une seule ne dirait pas de
+   * quelle partie du document elle montre le texte. Sa place est l'en-tête, là où une fenêtre
+   * dit déjà ce qu'elle montre, et non une bande à elle.
+   *
+   * ABSENT = la fenêtre garde exactement l'en-tête qu'elle a, et c'est le cas de presque toutes.
+   * Une nature ne déclare ceci que si elle montre UNE PARTIE de son sujet, choisie, que rien
+   * d'autre à l'écran ne nomme. Le canevas montre le diagramme entier ; une figure d'élément a
+   * déjà son objet dans le fil d'Ariane ; le tableur affiche ses propres onglets de feuille dans
+   * sa grille. Remplir pour remplir ajouterait du bruit à la seule ligne dont dispose une
+   * fenêtre pour se nommer.
+   *
+   * Rendre `''` est légitime et veut dire « rien à ajouter MAINTENANT » (la fenêtre n'a pas
+   * encore choisi, le document n'offre rien) : l'en-tête n'écrit alors rien du tout.
+   */
+  describeContent?: (ctx: Type_RepresentationContext) => string
+  /**
    * Réglages propres à la représentation, ÉDITÉS PAR L'AUTEUR. `setOptions`
    * reçoit l'objet complet : c'est l'appelant qui le persiste.
    */
