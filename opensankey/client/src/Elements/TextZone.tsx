@@ -116,6 +116,18 @@ export class Class_ContainerElement extends Class_NodeBase {
     }
   }
 
+  // SA#549 — entrée de légende d'une étiquette de nœuds ou de flux : le clic bascule l'étiquette
+  // TOUT DE SUITE, en lecture comme en édition, sans le délai qui départage simple et double clic.
+  // Avec ce délai, la bascule tardait d'un quart de seconde et un reclic rapide devenait un
+  // double-clic (édition du texte de la zone) : retour du test local. Ctrl/Cmd garde la sélection.
+  public override eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    if (!event.ctrlKey && !event.metaKey && this.drawing_area.legend.toggleEntryTag(this.id)) {
+      d3.selectAll('.sankey-tooltip').remove()
+      return
+    }
+    super.eventSimpleLMBClick(event)
+  }
+
   public eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
