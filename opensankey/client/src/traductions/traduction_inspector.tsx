@@ -36,7 +36,10 @@ export const resources_inspector = {
         nothing_here: 'No settings available for: {{target}}.',
         // os#1394 — settings of the active representation of the main zone.
         representation: {
-          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.'
+          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          // os#1402 — a setting that has moved must say where it went, otherwise the author
+          // keeps looking for it where it used to be.
+          axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Filters and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.'
         },
         // Portée & cascade de styles
         selection: 'Selection',
@@ -353,6 +356,15 @@ export const resources_inspector = {
         select_elements: 'Select elements',
         deselect_all: 'Deselect all',
         selection_summary: 'Selection: {{summary}}',
+        // os#1400 — a nature can legitimately have NO navigation section (the radial zoom of a
+        // sunburst is a click in the figure, the sorting of a sheet belongs to the component).
+        // An empty panel is not a gap, but it must SAY so rather than look broken.
+        nothing_for_representation: 'No filter applies to “{{representation}}”: this window is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active window.',
+        active_window: 'this window',
+        // os#1402 — the analysis axis of a donut or a histogram: navigation, not configuration.
+        // It makes parts come in and go out, and it even changes the NATURE of what can be
+        // pointed at (a part is a flow, a child node or a tag depending on the axis).
+        analysis_axis: 'Analysis axis',
         short: {
           node: 'Nodes',
           link: 'Flows',
@@ -392,7 +404,10 @@ export const resources_inspector = {
         nothing_here: 'Aucun réglage disponible pour : {{target}}.',
         // os#1394 — réglages de la représentation active de la grande zone.
         representation: {
-          none: 'Aucune représentation active : ouvrez une fenêtre sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.'
+          none: 'Aucune représentation active : ouvrez une fenêtre sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
+          // os#1402 — un réglage qui a déménagé doit dire où il est parti, sinon l'auteur le
+          // cherche là où il l'avait laissé.
+          axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Filtres et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.'
         },
         selection: 'Sélection',
         selection_count: 'Sélection ({{count}})',
@@ -702,6 +717,9 @@ export const resources_inspector = {
         select_elements: 'Sélectionner des éléments',
         deselect_all: 'Tout désélectionner',
         selection_summary: 'Sélection : {{summary}}',
+        nothing_for_representation: 'Aucun filtre ne s\'applique à « {{representation}} » : cette fenêtre se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la fenêtre active.',
+        active_window: 'cette fenêtre',
+        analysis_axis: 'Axe d\'analyse',
         short: {
           node: 'Nœuds',
           link: 'Flux',
@@ -739,7 +757,8 @@ export const resources_inspector = {
         },
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
         representation: {
-          none: 'Ninguna representación activa: abra una ventana sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.'
+          none: 'Ninguna representación activa: abra una ventana sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
+          axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Filtros y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.'
         },
         selection: 'Selección',
         selection_count: 'Selección ({{count}})',
@@ -1049,6 +1068,9 @@ export const resources_inspector = {
         select_elements: 'Seleccionar elementos',
         deselect_all: 'Deseleccionar todo',
         selection_summary: 'Selección: {{summary}}',
+        nothing_for_representation: 'Ningún filtro se aplica a «{{representation}}»: esta ventana se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la ventana activa.',
+        active_window: 'esta ventana',
+        analysis_axis: 'Eje de análisis',
         short: {
           node: 'Nodos',
           link: 'Flujos',
@@ -1086,7 +1108,8 @@ export const resources_inspector = {
         },
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
         representation: {
-          none: 'Keine aktive Darstellung: Öffnen Sie ein Fenster auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.'
+          none: 'Keine aktive Darstellung: Öffnen Sie ein Fenster auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
+          axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Filter und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.'
         },
         selection: 'Auswahl',
         selection_count: 'Auswahl ({{count}})',
@@ -1396,6 +1419,9 @@ export const resources_inspector = {
         select_elements: 'Elemente auswählen',
         deselect_all: 'Auswahl aufheben',
         selection_summary: 'Auswahl: {{summary}}',
+        nothing_for_representation: 'Kein Filter gilt für „{{representation}}“: Dieses Fenster wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm das aktive Fenster ist.',
+        active_window: 'dieses Fenster',
+        analysis_axis: 'Analyseachse',
         short: {
           node: 'Knoten',
           link: 'Flüsse',
@@ -1433,7 +1459,8 @@ export const resources_inspector = {
         },
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
         representation: {
-          none: 'Nessuna rappresentazione attiva: aprite una finestra su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.'
+          none: 'Nessuna rappresentazione attiva: aprite una finestra su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
+          axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Filtri e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.'
         },
         selection: 'Selezione',
         selection_count: 'Selezione ({{count}})',
@@ -1743,6 +1770,9 @@ export const resources_inspector = {
         select_elements: 'Selezionare elementi',
         deselect_all: 'Deselezionare tutto',
         selection_summary: 'Selezione: {{summary}}',
+        nothing_for_representation: 'Nessun filtro si applica a «{{representation}}»: questa finestra si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la finestra attiva.',
+        active_window: 'questa finestra',
+        analysis_axis: 'Asse di analisi',
         short: {
           node: 'Nodi',
           link: 'Flussi',
@@ -1779,7 +1809,8 @@ export const resources_inspector = {
         },
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
         representation: {
-          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.'
+          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          axis_in_navigation: '分析轴（按此分解、按此比较）在「筛选与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。'
         },
         // Portée & cascade de styles
         selection: '选择',
@@ -2094,6 +2125,9 @@ export const resources_inspector = {
         select_elements: '选择元素',
         deselect_all: '取消全选',
         selection_summary: '所选：{{summary}}',
+        nothing_for_representation: '没有筛选项适用于{{representation}}：该窗口在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗口时，阈值、层级和标签会重新出现。',
+        active_window: '该窗口',
+        analysis_axis: '分析轴',
         short: {
           node: '节点',
           link: '流量',
@@ -2130,7 +2164,8 @@ export const resources_inspector = {
         },
         nothing_here: '{{target}} に利用できる設定はありません。',
         representation: {
-          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.'
+          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「絞り込みと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。'
         },
         // Portée & cascade de styles
         selection: '選択',
@@ -2445,6 +2480,9 @@ export const resources_inspector = {
         select_elements: '要素を選択',
         deselect_all: '選択をすべて解除',
         selection_summary: '選択：{{summary}}',
+        nothing_for_representation: '{{representation}} に適用される絞り込みはありません。このウィンドウはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなウィンドウになれば、しきい値・階層・タグは戻ります。',
+        active_window: 'このウィンドウ',
+        analysis_axis: '分析の軸',
         short: {
           node: 'ノード',
           link: 'フロー',
