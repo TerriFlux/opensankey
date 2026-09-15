@@ -236,6 +236,36 @@ export const ownMainZonePaneOptions = (options: Type_JSON | undefined, key: stri
 /** Les réglages EFFECTIFS d'une vignette : les siens, ou — à défaut — ceux de la fenêtre. */
 export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string): Type_JSON =>
   ownMainZonePaneOptions(options, key) ?? mainZoneWindowLevelOptions(options)
+
+/**
+ * os#1394 — LES RÉGLAGES QUI DÉSIGNENT UN OBJET DU SUJET NE SONT JAMAIS UN DÉFAUT DE NATURE.
+ *
+ * Un réglage de représentation vaut pour toutes les figures de sa nature : afficher des valeurs
+ * plutôt que des pourcentages, colorer comme le diagramme. Mais certains ne nomment pas une
+ * FAÇON de regarder, ils nomment un OBJET : le flux de référence d'un Sankey unitaire
+ * (`normalize_link_id`), l'axe de décomposition d'une analyse (`descriptor`), la racine d'un
+ * sunburst (`root_ids`). Ceux-là n'ont aucun sens hors de leur sujet, et le fichier de la grande
+ * zone le disait déjà : « un flux de référence n'existe pas dans l'étoile d'un autre nœud ».
+ *
+ * Les propager ferait rapporter l'étoile d'un nœud à un flux qui ne lui appartient pas, ou
+ * décomposer une couronne selon une dimension étrangère. Ils restent donc là où ils ont été
+ * posés, sur leur vignette.
+ *
+ * La liste vit ICI et non dans le registre de représentations parce que c'est ici qu'on écrit le
+ * défaut, et qu'un filtre posé ailleurs laisserait passer les écritures des autres appelants.
+ */
+const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
+  'normalize_link_id', 'descriptor', 'root_ids'
+]
+
+/** Les réglages, débarrassés de ceux qui désignent un objet du sujet. */
+const withoutSubjectBoundOptions = (options: Type_JSON | undefined): Type_JSON => {
+  const out: Type_JSON = {}
+  Object.entries(options ?? {}).forEach(([key, value]) => {
+    if (!SUBJECT_BOUND_OPTION_KEYS.includes(key)) out[key] = value
+  })
+  return out
+}
 /** Les réglages de la fenêtre, une vignette mise à jour. Les autres vignettes ne bougent pas. */
 export const withMainZonePaneOptions = (
   options: Type_JSON | undefined, key: string, next: Type_JSON
@@ -726,8 +756,8 @@ export class Class_MenuConfig {
     // os#1394 — une fenêtre NAÎT réglée comme sa nature l'est dans ce document : c'est le seul
     // endroit où toute fenêtre se crée, ouverture de fenêtre d'élément comprise. Rien à écrire
     // quand la nature n'a pas encore de défaut, pour ne pas semer des `options: {}` vides.
-    const defaults = this._representation_defaults[o.representation]
-    const options = (defaults && Object.keys(defaults).length > 0) ? { ...defaults } : undefined
+    const defaults = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
+    const options = Object.keys(defaults).length > 0 ? defaults : undefined
     this._main_zone_occupants.push(options
       ? { ...o, place: wanted, size, options }
       : { ...o, place: wanted, size })
@@ -816,7 +846,7 @@ export class Class_MenuConfig {
     // étoile devient le réglage des étoiles qu'il ouvrira ensuite. Sans cette écriture, chaque
     // nouvelle fenêtre repartirait des valeurs d'usine et il faudrait refaire le même réglage
     // autant de fois qu'on ouvre de vignettes.
-    this._representation_defaults[o.representation] = { ...options }
+    this._representation_defaults[o.representation] = withoutSubjectBoundOptions(options)
     this._notifyMainZone()
   }
   /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
@@ -826,7 +856,8 @@ export class Class_MenuConfig {
     o.options = { ...options }
     // os#1394 — même règle qu'au niveau vignette. Le dictionnaire des vignettes, lui, n'a rien
     // à faire dans un défaut de nature : il désigne des objets de CETTE fenêtre.
-    this._representation_defaults[o.representation] = mainZoneWindowLevelOptions(options)
+    this._representation_defaults[o.representation] =
+      withoutSubjectBoundOptions(mainZoneWindowLevelOptions(options))
     this._notifyMainZone()
   }
   // --- os#1394 : le réglage par défaut d'une NATURE de représentation ------------------------
@@ -853,8 +884,11 @@ export class Class_MenuConfig {
     if (!o) return {}
     const own = ownMainZonePaneOptions(o.options, pane_key)
     if (own) return own
-    const def = this._representation_defaults[o.representation]
-    if (def && Object.keys(def).length > 0) return { ...def }
+    // Filtré aussi À LA LECTURE, pas seulement à l'écriture : un document enregistré avant ce
+    // correctif porte un défaut pollué, et le rouvrir rapporterait ses étoiles au flux de
+    // référence d'un nœud qu'on ne regarde plus.
+    const def = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
+    if (Object.keys(def).length > 0) return def
     return mainZoneWindowLevelOptions(o.options)
   }
   /**
