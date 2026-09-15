@@ -30,7 +30,7 @@ import { LEGEND_FRAME_ID, isLegendChildId } from './legendIds'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
-  Type_SankeyForLegend
+  Type_SankeyForLegend, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
 import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
 
@@ -548,7 +548,25 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       police: values.police * font_comp,
       width: values.width * font_comp
     }
-    const positions = new Map(layoutLegendItems(items, layout_values).map(p => [p.id, p]))
+    // SA#550 — lignes RÉELLES des zones enveloppées (définition d'un groupe épinglé) : la
+    // césure du rendu mesure les glyphes (DrawLabel), l'estimation sans DOM s'en écarte vite
+    // sur un texte long. La zone est dessinée une première fois pour compter ses lignes ; elle
+    // est reconfigurée et placée avec les autres ci-dessous. Sans DOM : estimation.
+    const line_counts = new Map<string, number>()
+    items.forEach(item => {
+      if (item.wrap !== true) return
+      const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
+      zone.name_label_source = 'custom'
+      zone.name_label_text = item.text
+      zone.name_label_is_visible = true
+      zone.name_label_font_size = values.police
+      zone.name_label_bold = false
+      zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+      zone.draw()
+      const n_lines = zone.d3_selection?.select('text').selectAll('tspan').size() ?? 0
+      if (n_lines > 0) line_counts.set(item.id, n_lines)
+    })
+    const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
     items.forEach(i => {
       if (i.block_id) desired_ids.add(i.block_id)
@@ -638,8 +656,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // la zone est réutilisée par id, l'ancienne survivrait sinon. Écriture
       // faite sous `_generating`, comme tout ce que le générateur pose.
       zone.tooltip_text = item.description ?? ''
-      // En horizontal les entrées restent sur une ligne (pas de wrap)
-      zone.name_label_box_width = values.horizontal ? 4000 : Math.max(values.width, 4 * values.police)
+      // En horizontal les entrées restent sur une ligne (pas de wrap) — sauf SA#550 la
+      // définition d'un groupe épinglé, enveloppée à la largeur de la légende.
+      zone.name_label_box_width = (values.horizontal && item.wrap !== true) ? 4000 : Math.max(values.width, 4 * values.police)
       // Toutes les zones partagent la même géométrie : une petite boîte
       // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
       // avec le label à sa droite, centré verticalement → tout s'aligne à
@@ -679,7 +698,11 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         // conservée pour garder le rythme vertical et le centrage du libellé
         // cohérents avec les lignes à pastille.
         zone.shape_min_width = 0
-        zone.shape_min_height = layout_values.police
+        // SA#550 — zone enveloppée : la forme couvre ses lignes, pour que le libellé centré
+        // dessus ne déborde ni sur la rangée d'avant ni sur celle d'après.
+        zone.shape_min_height = item.wrap === true
+          ? legendWrappedShapeHeight(legendWrappedLineCount(item, layout_values, line_counts), layout_values.police)
+          : layout_values.police
       }
       zone.name_label_horiz = 'right'
       zone.name_label_vert = 'middle'
