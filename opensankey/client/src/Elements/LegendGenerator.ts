@@ -54,6 +54,9 @@ const LEGEND_PADDING = 10
 // SA#549 — facteur d'opacité du carré d'une entrée d'étiquette masquée
 const LEGEND_DIMMED_SWATCH_OPACITY = 0.3
 
+// SA#549 — classe des zones qu'un clic bascule : curseur main (css/main.css)
+const LEGEND_TOGGLE_ENTRY_CLASS = 'legend_toggle_entry'
+
 // SA#545 — clés de mise en forme que SEUL le style d'une étiquette fait poser sur une zone
 // générée. Elles sont effacées à chaque régénération avant d'être reposées : la zone est
 // réutilisée par id ET persistée avec la légende, si bien qu'une mise en forme posée par un
@@ -804,6 +807,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       zone.draw()
       zone.setEventsListeners()
+      // SA#549 — entrée cliquable : curseur main (règle CSS `legend_toggle_entry`, qui l'emporte
+      // sur le curseur texte que DrawLabel pose sur le libellé en édition).
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id))
       const hover_target = hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
@@ -818,6 +824,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         }
         sample.draw()
         sample.setEventsListeners()
+        sample.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(sample_id))
         wireLegendHover(drawing_area, sample, hover_target)
       }
     })
