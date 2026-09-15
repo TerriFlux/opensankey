@@ -35,6 +35,10 @@ import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import { PresentationPopup } from './PresentationPopup'
+import { LegendDimensionChoice } from './LegendDimensionPanel'
+import {
+  findLegendDimension, groupIdOfLegendDimensionPanel, isLegendDimensionPanelId
+} from './legendDimensionChoice'
 import {
   isPresentationPanelId, elementIdOfPanel, compositionOf, type Type_Presentable,
   cancelPresentationHoverClose, schedulePresentationHoverClose, releasePresentationHover,
@@ -49,6 +53,8 @@ registerBasePresentationBlocks()
 
 // Contenants offerts à un élément : jamais la barre latérale (réservée aux menus).
 const ELEMENT_MODES: Type_PanelMode[] = ['tooltip', 'popup']
+// SA#552 — la liste d'une dimension s'ouvre au clic : une pop-up, rien d'autre.
+const DIMENSION_MODES: Type_PanelMode[] = ['popup']
 
 type Presentable = Type_Presentable
 
@@ -123,7 +129,10 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
   )
   const panels = app_data.menu_configuration.panels
   const ids = panels.open_ids.filter(isPresentationPanelId)
-  if (ids.length === 0) return null
+  // SA#552 — listes de dimension ouvertes depuis la légende : même montage, donc présentes
+  // partout où la présentation l'est (éditeur, lecteur, diagramme publié).
+  const dimension_ids = panels.open_ids.filter(isLegendDimensionPanelId)
+  if (ids.length === 0 && dimension_ids.length === 0) return null
 
   // PORTAIL vers <body> : les panneaux de présentation (position:fixed) doivent
   // vivre HORS de #sankey_app. Un diagramme unitaire dessine une DA détachée dont
@@ -165,6 +174,25 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
             {mode === 'popup'
               ? <PresentationPopup app_data={app_data} element={element} />
               : <TooltipContent app_data={app_data} element={element} />}
+          </PanelShell>
+        )
+      })}
+      {dimension_ids.map(id => {
+        const group = findLegendDimension(app_data, groupIdOfLegendDimensionPanel(id))
+        // Dimension disparue (supprimée entre-temps) : on referme proprement.
+        if (!group) {
+          panels.close(id)
+          return null
+        }
+        return (
+          <PanelShell
+            key={id}
+            app_data={app_data}
+            id={id}
+            title={group.name}
+            allowedModes={DIMENSION_MODES}
+          >
+            <LegendDimensionChoice app_data={app_data} group={group} />
           </PanelShell>
         )
       })}
