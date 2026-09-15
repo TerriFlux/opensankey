@@ -51,6 +51,9 @@ import type { Class_NodeBase } from './NodeBase'
 // Marge interne du cadre autour des zones générées (px monde)
 const LEGEND_PADDING = 10
 
+// SA#549 — facteur d'opacité du carré d'une entrée d'étiquette masquée
+const LEGEND_DIMMED_SWATCH_OPACITY = 0.3
+
 // SA#545 — clés de mise en forme que SEUL le style d'une étiquette fait poser sur une zone
 // générée. Elles sont effacées à chaque régénération avant d'être reposées : la zone est
 // réutilisée par id ET persistée avec la légende, si bien qu'une mise en forme posée par un
@@ -194,6 +197,13 @@ export class Class_LegendConfig {
   // OS#1314 — gabarit du texte des entrées de tag (jetons {Name}, {Unit},
   // {Group}). Vide = nom long du tag seul (comportement historique).
   private _entry_template: string = ''
+  // SA#549 — les étiquettes masquées restent dans la légende, rayées (cf. renderableLegendItems).
+  // Éteint par défaut ; le premier clic sur une entrée l'allume.
+  private _show_hidden_tags: boolean = false
+
+  // SA#549 — étiquette que désigne chaque zone d'entrée cliquable (entrée et valeur d'exemple),
+  // relevée à chaque régénération : les ids de zone sont des slugs, ils ne se relisent pas.
+  private _entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -234,7 +244,8 @@ export class Class_LegendConfig {
       show_constraints: this._legend_show_constraints,
       show_data_type: this._legend_show_data_type,
       info_link_value_void: this._info_link_value_void,
-      entry_template: this._entry_template
+      entry_template: this._entry_template,
+      show_hidden_tags: this._show_hidden_tags
     }
   }
 
@@ -292,6 +303,7 @@ export class Class_LegendConfig {
     this._legend_show_data_type = other._legend_show_data_type
     this._info_link_value_void = other._info_link_value_void
     this._entry_template = other._entry_template
+    this._show_hidden_tags = other._show_hidden_tags
     this._initial_position = { ...other._initial_position }
   }
 
@@ -339,6 +351,57 @@ export class Class_LegendConfig {
   // OS#1314 — gabarit des entrées de tag (« {Name} [{Unit}] »).
   public get entry_template(): string { return this._entry_template }
   public set entry_template(_: string) { this._entry_template = _; this.draw() }
+
+  // SA#549 — étiquettes masquées gardées dans la légende, rayées.
+  public get show_hidden_tags(): boolean { return this._show_hidden_tags }
+  public set show_hidden_tags(_: boolean) { this._show_hidden_tags = _; this.draw() }
+
+  /** SA#549 — relevé des zones cliquables, posé par regenerateLegend. */
+  public set entry_tags(_: Map<string, { tag_group_id: string, tag_id: string }>) { this._entry_tags = _ }
+
+  /**
+   * SA#549 — clic sur une zone de la légende : si elle désigne une étiquette de nœuds ou de
+   * flux, bascule sa sélection (masque ou rétablit ses éléments), avec annuler/rétablir, et
+   * renvoie `true`. Toute autre zone renvoie `false` et garde son clic ordinaire.
+   *
+   * Les étiquettes de données sont exclues au relevé (regenerateLegend) : les désélectionner
+   * change la valeur affichée sans rien masquer (`checkSelectionCoherence`).
+   *
+   * Le premier clic allume `show_hidden_tags` : sans lui, l'entrée cliquée disparaîtrait et plus
+   * rien dans la légende ne permettrait de la rétablir. L'annulation le rend dans son état.
+   */
+  public toggleEntryTag(zone_id: string): boolean {
+    // Légende personnalisée à la main : plus régénérée, l'entrée ne se rayerait pas.
+    if (!this._managed || this._masked) return false
+    const target = this._entry_tags.get(zone_id)
+    if (target === undefined) return false
+    const drawing_area = this._drawing_area
+    const sankey = drawing_area.sankey
+    const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
+      .find(g => g.id === target.tag_group_id)
+    const tag = group?.tags_list.find(t => t.id === target.tag_id)
+    if (group === undefined || tag === undefined) return false
+    const was_selected = tag.is_selected
+    const had_hidden_tags = this._show_hidden_tags
+    const apply = (selected: boolean, show_hidden_tags: boolean) => {
+      // La surbrillance du survol a atténué les autres éléments : la lever avant que ceux qui
+      // réapparaissent ne la gardent.
+      clearLegendHighlight(drawing_area)
+      this._show_hidden_tags = show_hidden_tags
+      if (selected) tag.setSelected(false)
+      else tag.setUnSelected(false)
+      // Même séquence que TagGroup.selectTagsFromId
+      drawing_area.application_data.after_tag_selection_change?.()
+      group.updateTagsReferences()
+      this.draw()
+      drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    }
+    const history = drawing_area.application_data.history
+    history.saveUndo(() => apply(was_selected, had_hidden_tags))
+    history.saveRedo(() => apply(!was_selected, true))
+    apply(!was_selected, true)
+    return true
+  }
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_: boolean) { this._info_link_value_void = _; this.draw() }
@@ -401,6 +464,9 @@ function hoverPredicate(
   if (target.tag_id !== undefined) {
     const tag = tags.find(t => t.id === target.tag_id)
     if (!tag) return undefined
+    // SA#549 — étiquette masquée : ses éléments sont invisibles, la surbrillance atténuerait tout
+    // le diagramme sans rien désigner. Le survol garde sa définition (#542).
+    if (!tag.is_selected) return undefined
     return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band: carried => carried.includes(tag) }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
@@ -473,13 +539,18 @@ function wireLegendHover(
         }
       })
     })
-    .on('mouseout.legend_highlight', () => {
-      drawing_area.sankey.visible_nodes_list.forEach(n => n.d3_selection?.attr('opacity', ''))
-      drawing_area.sankey.visible_links_list.forEach(l => {
-        l.d3_selection?.attr('opacity', '')
-        l.d3_selection?.selectAll('.link_band').attr('opacity', '')
-      })
-    })
+    .on('mouseout.legend_highlight', () => clearLegendHighlight(drawing_area))
+}
+
+// Lève la surbrillance du survol. SA#549 — sur TOUS les éléments, pas les seuls visibles : un clic
+// sur l'entrée survolée masque ou rétablit des éléments, et ceux qui réapparaissent ne doivent pas
+// garder l'atténuation posée avant le clic.
+function clearLegendHighlight(drawing_area: Class_DrawingArea) {
+  drawing_area.sankey.nodes_list.forEach(n => n.d3_selection?.attr('opacity', ''))
+  drawing_area.sankey.links_list.forEach(l => {
+    l.d3_selection?.attr('opacity', '')
+    l.d3_selection?.selectAll('.link_band').attr('opacity', '')
+  })
 }
 
 /**
@@ -530,12 +601,28 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // sa#532 — `computeLegendItems` décrit aussi les étiquettes DÉSÉLECTIONNÉES
       // (marquées `dimmed`), pour que la légende puisse devenir une porte de retour ;
       // `renderableLegendItems` dit ce qui est effectivement posé sur le diagramme.
-      // Tant que rien ne permet de les réactiver, il les écarte : l'aspect des
-      // diagrammes existants est inchangé (golden de rendu #530).
+      // SA#549 — il les garde, rayées, quand le réglage `show_hidden_tags` est allumé ;
+      // éteint (défaut, fichiers existants), l'aspect est inchangé (golden de rendu #530).
       items = renderableLegendItems(
-        computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
+        computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text),
+        values.show_hidden_tags === true
       )
     }
+
+    // SA#549 — zones qu'un clic bascule : entrées (et leur valeur d'exemple) des étiquettes de
+    // NŒUDS et de FLUX. Les étiquettes de données en sont exclues : les désélectionner change la
+    // valeur affichée, sans rien masquer.
+    const filter_group_ids = new Set([...sankey.node_taggs_list, ...sankey.flux_taggs_list].map(g => g.id))
+    const entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
+    items.forEach(item => {
+      if (item.tag_group_id === undefined || item.tag_id === undefined) return
+      if (!filter_group_ids.has(item.tag_group_id)) return
+      const target = { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
+      entry_tags.set(item.id, target)
+      const sample_id = legendSampleZoneId(item)
+      if (sample_id !== undefined) entry_tags.set(sample_id, target)
+    })
+    config.entry_tags = entry_tags
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
@@ -655,6 +742,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // SA#545 — mise en forme venue du style de l'étiquette (et effacement de celle
       // qu'un style retiré aurait laissée sur cette zone réutilisée).
       applyEntryFormat(zone, item)
+      // SA#549 — étiquette masquée : nom rayé (DrawLabel), carré atténué. Reposé à chaque
+      // régénération, par-dessus la mise en forme du style (SA#545) : la zone est réutilisée par id.
+      zone.legend_entry_dimmed = item.dimmed === true
+      if (item.dimmed === true && item.swatch_color !== undefined) {
+        zone.shape_opacity = zone.shape_opacity * LEGEND_DIMMED_SWATCH_OPACITY
+      }
       if (item.scale_bar) {
         // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.
         // Hauteur en px MONDE bruts (PAS multipliée par la police ni par la

@@ -1142,6 +1142,8 @@ export class LegendPersistence {
     if (legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
     // OS#1314 — gabarit des entrées de tag, absent tant qu'il n'est pas utilisé.
     if (legend.entry_template !== '') json_legend['legend_entry_template'] = legend.entry_template
+    // SA#549 — étiquettes masquées rendues rayées, absent tant que le réglage est éteint.
+    if (legend.show_hidden_tags) json_legend['legend_show_hidden_tags'] = true
     return json_object
   }
 
@@ -1188,6 +1190,8 @@ export class LegendPersistence {
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
     legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
     legend['_entry_template'] = getStringFromJSON(json_legend, 'legend_entry_template', legend.entry_template)
+    // SA#549 — clé absente (tous les fichiers antérieurs) = réglage éteint.
+    legend['_show_hidden_tags'] = getBooleanFromJSON(json_legend, 'legend_show_hidden_tags', false)
   }
 }
 

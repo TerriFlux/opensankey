@@ -2170,6 +2170,13 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       .attr('font-family', this._label_values.font_family)
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
       .attr('stroke', 'none')
+    // SA#549 — entrée de légende d'une étiquette masquée : nom rayé. Aucun autre élément ne
+    // porte le drapeau, la propriété y reste absente.
+    if ((this.node as unknown as { legend_entry_dimmed?: boolean }).legend_entry_dimmed === true) {
+      selection?.style('text-decoration', 'line-through')
+    } else {
+      selection?.style('text-decoration', null)
+    }
   }
   protected override getImageDimensions(
     icon_pos_x: number,
