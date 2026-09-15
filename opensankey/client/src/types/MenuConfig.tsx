@@ -236,6 +236,36 @@ export const ownMainZonePaneOptions = (options: Type_JSON | undefined, key: stri
 /** Les réglages EFFECTIFS d'une vignette : les siens, ou — à défaut — ceux de la fenêtre. */
 export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string): Type_JSON =>
   ownMainZonePaneOptions(options, key) ?? mainZoneWindowLevelOptions(options)
+
+/**
+ * os#1394 — LES RÉGLAGES QUI DÉSIGNENT UN OBJET DU SUJET NE SONT JAMAIS UN DÉFAUT DE NATURE.
+ *
+ * Un réglage de représentation vaut pour toutes les figures de sa nature : afficher des valeurs
+ * plutôt que des pourcentages, colorer comme le diagramme. Mais certains ne nomment pas une
+ * FAÇON de regarder, ils nomment un OBJET : le flux de référence d'un Sankey unitaire
+ * (`normalize_link_id`), l'axe de décomposition d'une analyse (`descriptor`), la racine d'un
+ * sunburst (`root_ids`). Ceux-là n'ont aucun sens hors de leur sujet, et le fichier de la grande
+ * zone le disait déjà : « un flux de référence n'existe pas dans l'étoile d'un autre nœud ».
+ *
+ * Les propager ferait rapporter l'étoile d'un nœud à un flux qui ne lui appartient pas, ou
+ * décomposer une couronne selon une dimension étrangère. Ils restent donc là où ils ont été
+ * posés, sur leur vignette.
+ *
+ * La liste vit ICI et non dans le registre de représentations parce que c'est ici qu'on écrit le
+ * défaut, et qu'un filtre posé ailleurs laisserait passer les écritures des autres appelants.
+ */
+const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
+  'normalize_link_id', 'descriptor', 'root_ids'
+]
+
+/** Les réglages, débarrassés de ceux qui désignent un objet du sujet. */
+const withoutSubjectBoundOptions = (options: Type_JSON | undefined): Type_JSON => {
+  const out: Type_JSON = {}
+  Object.entries(options ?? {}).forEach(([key, value]) => {
+    if (!SUBJECT_BOUND_OPTION_KEYS.includes(key)) out[key] = value
+  })
+  return out
+}
 /** Les réglages de la fenêtre, une vignette mise à jour. Les autres vignettes ne bougent pas. */
 export const withMainZonePaneOptions = (
   options: Type_JSON | undefined, key: string, next: Type_JSON
@@ -493,6 +523,19 @@ export class Class_MenuConfig {
   // et volontairement minimale : ce n'est pas un système de focus, juste la dernière vignette
   // avec laquelle l'utilisateur a interagi. `null` = la première vignette de la fenêtre.
   protected _main_zone_active_pane_key: string | null = null
+  // os#1394 — CE QUE L'AUTEUR A TOUCHÉ EN DERNIER, et donc ce dont le menu de configuration doit
+  // parler. TRANSITOIRE.
+  //
+  // La règle posée au départ était « une sélection dans le diagramme gagne toujours sur la
+  // représentation active ». L'usage l'a démentie : après avoir sélectionné un nœud, cliquer sur
+  // la fenêtre d'une étoile pour en régler l'affichage ne donnait rien, le nœud gardait
+  // l'inspecteur, et il fallait d'abord le désélectionner. Ce n'est pas une hiérarchie entre
+  // sélection et représentation qu'il faut, c'est la RÉCENCE du geste : le dernier gagne.
+  //
+  // Aucun ordre subtil à maintenir : un clic sur un nœud du canevas active d'abord le canevas
+  // (qui n'a rien à régler, donc ne prend pas l'inspecteur) puis pose la sélection, qui repasse
+  // le drapeau à 'selection'.
+  protected _inspector_focus: 'selection' | 'representation' = 'selection'
   // os#1394 — LE RÉGLAGE PAR DÉFAUT D'UNE NATURE DE REPRÉSENTATION, indexé par son identifiant
   // de registre, persisté avec le document (clé racine `representation_defaults`).
   //
@@ -726,8 +769,8 @@ export class Class_MenuConfig {
     // os#1394 — une fenêtre NAÎT réglée comme sa nature l'est dans ce document : c'est le seul
     // endroit où toute fenêtre se crée, ouverture de fenêtre d'élément comprise. Rien à écrire
     // quand la nature n'a pas encore de défaut, pour ne pas semer des `options: {}` vides.
-    const defaults = this._representation_defaults[o.representation]
-    const options = (defaults && Object.keys(defaults).length > 0) ? { ...defaults } : undefined
+    const defaults = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
+    const options = Object.keys(defaults).length > 0 ? defaults : undefined
     this._main_zone_occupants.push(options
       ? { ...o, place: wanted, size, options }
       : { ...o, place: wanted, size })
@@ -816,7 +859,7 @@ export class Class_MenuConfig {
     // étoile devient le réglage des étoiles qu'il ouvrira ensuite. Sans cette écriture, chaque
     // nouvelle fenêtre repartirait des valeurs d'usine et il faudrait refaire le même réglage
     // autant de fois qu'on ouvre de vignettes.
-    this._representation_defaults[o.representation] = { ...options }
+    this._representation_defaults[o.representation] = withoutSubjectBoundOptions(options)
     this._notifyMainZone()
   }
   /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
@@ -826,7 +869,8 @@ export class Class_MenuConfig {
     o.options = { ...options }
     // os#1394 — même règle qu'au niveau vignette. Le dictionnaire des vignettes, lui, n'a rien
     // à faire dans un défaut de nature : il désigne des objets de CETTE fenêtre.
-    this._representation_defaults[o.representation] = mainZoneWindowLevelOptions(options)
+    this._representation_defaults[o.representation] =
+      withoutSubjectBoundOptions(mainZoneWindowLevelOptions(options))
     this._notifyMainZone()
   }
   // --- os#1394 : le réglage par défaut d'une NATURE de représentation ------------------------
@@ -853,8 +897,11 @@ export class Class_MenuConfig {
     if (!o) return {}
     const own = ownMainZonePaneOptions(o.options, pane_key)
     if (own) return own
-    const def = this._representation_defaults[o.representation]
-    if (def && Object.keys(def).length > 0) return { ...def }
+    // Filtré aussi À LA LECTURE, pas seulement à l'écriture : un document enregistré avant ce
+    // correctif porte un défaut pollué, et le rouvrir rapporterait ses étoiles au flux de
+    // référence d'un nœud qu'on ne regarde plus.
+    const def = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
+    if (Object.keys(def).length > 0) return def
     return mainZoneWindowLevelOptions(o.options)
   }
   /**
@@ -926,10 +973,23 @@ export class Class_MenuConfig {
   }
   /** Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette). */
   public setMainZoneActivePane(id: string, pane_key: string | null): void {
+    // Toucher une figure est une demande de parler d'ELLE, même quand un nœud reste sélectionné
+    // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle.
+    this._inspector_focus = 'representation'
     if (this._main_zone_active_id === id && this._main_zone_active_pane_key === pane_key) return
     this._main_zone_active_id = id
     this._main_zone_active_pane_key = pane_key
     this._notifyMainZone()
+  }
+  /**
+   * os#1394 — De quoi le menu de configuration doit parler : de la figure qu'on vient de toucher,
+   * ou de la sélection. `true` seulement si le dernier geste visait une représentation.
+   *
+   * Le résolveur d'inspecteur en fait ce qu'il veut : une fenêtre sans réglages ne prend pas
+   * l'inspecteur pour autant (cf. InspectorResolver et activeRepresentation).
+   */
+  public get inspector_focus_is_representation(): boolean {
+    return this._inspector_focus === 'representation'
   }
   /**
    * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
@@ -2371,6 +2431,10 @@ export class Class_MenuConfig {
   // sur chaque changement de composition de sélection. Debouncé comme les autres
   // updaters pour absorber les rafales (sélection au lasso, add/remove multiples).
   public updateInspector() {
+    // os#1394 — LA SÉLECTION REPREND LA MAIN sur l'inspecteur. Le drapeau est posé ici et non
+    // dans le processus différé : il doit valoir dès le geste, pas un tour de boucle plus tard,
+    // sans quoi un clic sur une fenêtre juste après une sélection serait jugé dans le désordre.
+    this._inspector_focus = 'selection'
     this._add_waiting_process(
       'updateInspector',
       (_this: Class_MenuConfig) => {
