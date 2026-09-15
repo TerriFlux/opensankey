@@ -907,6 +907,23 @@ export class Class_MenuConfig {
   }
   /** os#1394 — La vignette active de la fenêtre active ; `null` = la première de la fenêtre. */
   public get main_zone_active_pane_key(): string | null { return this._main_zone_active_pane_key }
+  /**
+   * os#1397 - LE CANEVAS DEVIENT LA FENÊTRE ACTIVE, comme n'importe quelle autre.
+   *
+   * Il ne pouvait pas, et c'est une asymétrie qui se voyait à l'usage : les fenêtres hébergées
+   * portent un `onMouseDown` qui les désigne, mais le canevas principal est dessiné HORS de
+   * l'arbre React, en coordonnées d'écran, et se trouve écarté du composant qui porte ce geste.
+   * Une fois une étoile touchée, elle restait donc active jusqu'à sa fermeture : le liséré ne
+   * revenait pas, et le menu de configuration continuait de montrer ses réglages au lieu de ceux
+   * de la vue. Il n'y avait aucun moyen de désélectionner, seulement des contournements.
+   *
+   * Sans effet quand le canevas n'est pas dans la grande zone (masqué, ou remplacé par une autre
+   * fenêtre principale) : on n'active pas ce qui ne s'affiche pas.
+   */
+  public activateMainZoneCanvas(): void {
+    if (this.mainZonePlaceOf(MAIN_ZONE_CANVAS_ID) === null) return
+    this.main_zone_active_id = MAIN_ZONE_CANVAS_ID
+  }
   /** Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette). */
   public setMainZoneActivePane(id: string, pane_key: string | null): void {
     if (this._main_zone_active_id === id && this._main_zone_active_pane_key === pane_key) return
