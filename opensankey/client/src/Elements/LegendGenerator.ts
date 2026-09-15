@@ -104,8 +104,8 @@ function escapeHtml(s: string): string {
 }
 
 /**
- * SA#550 — ligne d'un groupe épinglé : « Nom : description » en texte riche, le nom en italique
- * souligné. Toute autre zone perd le texte riche qu'une ligne épinglée aurait laissé sur elle.
+ * SA#550 — ligne d'un groupe épinglé : « Nom : description » en texte riche, toute en italique, le
+ * nom souligné. Toute autre zone perd le texte riche qu'une ligne épinglée aurait laissé sur elle.
  */
 function applyPinnedLabel(zone: Class_ContainerElement, item: Type_LegendItem, police: number, padding: Type_RichPadding) {
   if (item.pinned_name === undefined) {

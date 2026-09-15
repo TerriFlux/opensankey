@@ -66,8 +66,8 @@ export type Type_LegendItem = {
   // SA#550 — texte enveloppé à la largeur de la légende, même en disposition horizontale
   // (description d'un groupe épinglé : jusqu'à 677 caractères sur le Lait).
   wrap?: boolean
-  // SA#550 — nom du groupe épinglé, en tête de `text` : écrit en italique souligné, suivi de
-  // « : » et de la description (retour du test local du 2026-09-15 : sur la même ligne).
+  // SA#550 — nom du groupe épinglé, en tête de `text` : souligné, suivi de « : » et de la
+  // description, toute la ligne en italique (retours du test local du 2026-09-15).
   pinned_name?: string
 }
 
