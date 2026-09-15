@@ -151,7 +151,13 @@ export class NodeEventsHandler {
  */
   public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     const drawing_area = this._node.drawing_area
-  
+
+    // SA#549 — entrée de légende d'une étiquette de nœuds ou de flux : le clic simple CONFIRMÉ
+    // bascule l'étiquette, en lecture comme en édition. Le délai du discriminateur simple/double
+    // clic est gardé : le double-clic renomme la zone (arbitrage d'Alexandre, 2026-09-15).
+    // Ctrl/Cmd garde la sélection de la zone.
+    if (!event.ctrlKey && !event.metaKey && drawing_area.legend.toggleEntryTag(this._node.id)) return
+
     if (!drawing_area.application_data.is_editable) {
       // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée par
       // l'auteur, dans le contenant que sa politique désigne. Si rien n'a été

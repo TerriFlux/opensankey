@@ -7,7 +7,6 @@
 
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, renderableLegendItems,
-  RENDER_DIMMED_LEGEND_ENTRIES,
   Type_LegendConfigValues, Type_SankeyForLegend
 } from './legendItems'
 import { isLegendChildId, isLegendElementId, isLegendFrameId } from './legendIds'
@@ -233,13 +232,57 @@ describe('sa#532 — étiquettes désélectionnées : l\'état est représentabl
 })
 
 describe('sa#532 — renderableLegendItems : ce qui est effectivement posé', () => {
-  it('la porte est fermée tant que le clic n\'existe pas', () => {
-    // Témoin du choix, pas une vérité éternelle : le ticket qui pose le clic passe la
-    // constante à true, ce test à revoir avec lui.
-    expect(RENDER_DIMMED_LEGEND_ENTRIES).toBe(false)
+  it('SA#549 — réglage allumé : les entrées atténuées sont rendues, à leur place', () => {
+    const t1 = { ...makeTag('t1'), is_selected: true }
+    const t2 = { ...makeTag('t2'), is_selected: false }
+    const t3 = { ...makeTag('t3'), is_selected: false }
+    const visible = [makeElement(['t1'])]
+    const sankey = makeSankey({
+      node_taggs_list: [{
+        id: 'g1', name: 'Groupe 1', use_colors: true,
+        selected_tags_list: [t1], tags_list: [t2, t1, t3]
+      }],
+      visible_nodes_list: visible,
+      nodes_list: [...visible, makeElement(['t2', 't3'])]
+    })
+    const items = computeLegendItems(sankey, base_config)
+    const rendered = renderableLegendItems(items, true)
+    expect(rendered.map(i => i.id)).toEqual(['legend-group-g1', 'legend-tag-g1-t2', 'legend-tag-g1-t1', 'legend-tag-g1-t3'])
+    expect(rendered.map(i => i.dimmed)).toEqual([undefined, true, undefined, true])
   })
 
-  it('écarte les entrées atténuées — le contenu rendu est celui d\'avant sa#532', () => {
+  it('SA#549 — réglage allumé : un groupe entièrement masqué garde son titre et ses entrées', () => {
+    const t1 = { ...makeTag('t1'), is_selected: false }
+    const sankey = makeSankey({
+      node_taggs_list: [{
+        id: 'g1', name: 'Groupe 1', use_colors: true,
+        selected_tags_list: [], tags_list: [t1]
+      }],
+      visible_nodes_list: [],
+      nodes_list: [makeElement(['t1'])]
+    })
+    const rendered = renderableLegendItems(computeLegendItems(sankey, base_config), true)
+    expect(rendered.map(i => i.id)).toEqual(['legend-group-g1', 'legend-tag-g1-t1'])
+  })
+
+  it('SA#549 — réglage allumé : une étiquette dont les éléments sont masqués par une autre garde sa place', () => {
+    // Retour du test local : masquer « Indicative » retirait d'autres entrées, la légende
+    // remontait sous le curseur et le reclic tombait sur l'entrée voisine.
+    const a = { ...makeTag('a'), is_selected: true }
+    const b = { ...makeTag('b'), is_selected: true }
+    const all = [makeElement(['a']), makeElement(['b'])]
+    const sankey = makeSankey({
+      node_taggs_list: [{ id: 'g1', name: 'G1', use_colors: true, selected_tags_list: [a, b], tags_list: [a, b] }],
+      visible_nodes_list: [all[0]],
+      nodes_list: all
+    })
+    const ids = (show: boolean) =>
+      renderableLegendItems(computeLegendItems(sankey, { ...base_config, show_hidden_tags: show }), show).map(i => i.id)
+    expect(ids(false)).toEqual(['legend-group-g1', 'legend-tag-g1-a'])
+    expect(ids(true)).toEqual(['legend-group-g1', 'legend-tag-g1-a', 'legend-tag-g1-b'])
+  })
+
+  it('écarte les entrées atténuées par défaut — le contenu rendu est celui d\'avant sa#532', () => {
     const t1 = { ...makeTag('t1'), is_selected: true }
     const t2 = { ...makeTag('t2'), is_selected: false }
     const visible = [makeElement(['t1'])]

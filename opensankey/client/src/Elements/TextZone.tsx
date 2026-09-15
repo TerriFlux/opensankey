@@ -25,6 +25,10 @@ export class Class_ContainerElement extends Class_NodeBase {
   // le générateur à chaque régénération, NI persisté NI copié.
   protected _legend_swatch_link_dashed: boolean = false
 
+  // SA#549 — entrée de légende d'une étiquette masquée : nom rayé (DrawLabel). Même contrat :
+  // posé par le générateur à chaque régénération, NI persisté NI copié.
+  protected _legend_entry_dimmed: boolean = false
+
   constructor(
     id: string,
     name: string,
@@ -103,12 +107,14 @@ export class Class_ContainerElement extends Class_NodeBase {
   public get legend_swatch_link_dashed(): boolean { return this._legend_swatch_link_dashed }
   public set legend_swatch_link_dashed(_: boolean) { this._legend_swatch_link_dashed = _ }
 
+  public get legend_entry_dimmed(): boolean { return this._legend_entry_dimmed }
+  public set legend_entry_dimmed(_: boolean) { this._legend_entry_dimmed = _ }
+
   public setEventsListeners() {
     if (this.drawing_area.sankey.container_activated) {
       super.setEventsListeners()
     }
   }
-
   public eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {

@@ -183,6 +183,9 @@ export type Type_LegendConfigValues = {
   // OS#1314 — gabarit du texte des ENTRÉES de tag (jetons {Name}, {Unit},
   // {Group}). Vide = comportement historique (le nom long du tag seul).
   entry_template: string
+  // SA#549 — les étiquettes masquées sont RENDUES, rayées (cf. renderableLegendItems).
+  // Optionnel pour garder les configurations des tests antérieurs valides.
+  show_hidden_tags?: boolean
 }
 
 // Id stable et sûr pour un id HTML à partir d'un id de tag/groupe
@@ -371,10 +374,19 @@ export function computeLegendItems(
         : (tag_group.tags_list ?? tag_group.selected_tags_list)
       const displayed_tags = candidate_tags.filter(tag => {
         if (is_data_tagg) return true
-        if (tag.is_selected === false) {
+        // SA#549 — réglage « étiquettes masquées » allumé : une étiquette SÉLECTIONNÉE dont
+        // les porteurs sont masqués par une autre étiquette garde elle aussi son entrée.
+        // Sinon masquer « Indicative » retirait « Eau » et 5 sources de la légende du Lait :
+        // tout ce qui suit remontait d'une ligne, et le reclic tombait sur l'entrée voisine
+        // (retour du test local). Réglage éteint : contenu inchangé.
+        if (tag.is_selected === false || config.show_hidden_tags === true) {
           // Étiquette masquée : ses porteurs sont invisibles PAR SA FAUTE, donc on
           // la cherche parmi tous les éléments du diagramme. Listes absentes (mock,
           // appelant historique) → on la retient, faute de pouvoir la réfuter.
+          if (tag.is_selected !== false && sankey.nodes_list === undefined && sankey.links_list === undefined) {
+            return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
+              sankey.visible_links_list.some(f => f.hasGivenTag(tag))
+          }
           if (sankey.nodes_list === undefined && sankey.links_list === undefined) return true
           return (sankey.nodes_list ?? []).some(n => n.hasGivenTag(tag)) ||
             (sankey.links_list ?? []).some(f => f.hasGivenTag(tag))
@@ -499,31 +511,23 @@ export function computeLegendItems(
 }
 
 /**
- * sa#532 — les entrées atténuées sont-elles RENDUES ?
- *
- * `false` tant que rien ne permet de les réactiver : une entrée grise que le clic
- * n'atteint pas n'informerait de rien et allongerait la légende pour rien —
- * mesuré sur le corpus, la légende de « Vue d'ensemble du métabolisme
- * énergétique » (Metabol'Heat) passerait de 4 à 84 lignes, dont 80 grises.
- *
- * Le ticket qui posera le clic sur une entrée de légende met ceci à `true`, décide
- * de l'aspect des atténuées, et tranche le PLAFOND que ce chiffrage impose (les
- * groupes colorés du corpus vont jusqu'à 84 étiquettes ; aucun au-delà de 200 —
- * les groupes à 449/494/577 de Fruits et légumes ne portent pas la couleur et
- * n'entrent donc pas dans la légende).
- */
-export const RENDER_DIMMED_LEGEND_ENTRIES: boolean = false
-
-/**
  * sa#532 — ce que le générateur de zones doit réellement poser sur le diagramme.
  *
- * Écarte les entrées atténuées, puis les titres de groupe et cadres de bloc restés
- * sans aucune entrée : un groupe entièrement désélectionné n'émettait AUCUN item
- * avant sa#532 (`displayed_tags.length === 0`), il ne doit pas se mettre à afficher
- * un titre orphelin.
+ * SA#549 — les entrées atténuées (étiquettes masquées) sont rendues, rayées, quand le
+ * réglage de légende `show_hidden_tags` est allumé : cliquer une entrée masque ses
+ * éléments, et l'entrée rayée reste là pour les rétablir. Le réglage est ÉTEINT par
+ * défaut, et absent de tous les fichiers existants : leurs légendes sont inchangées
+ * (mesure du sa#532 : jusqu'à +8 lignes sur un diagramme vivant, +80 sur une archive
+ * Metabol'Heat). Le premier clic dans une légende l'allume — sans quoi l'entrée
+ * cliquée disparaîtrait, et la légende redeviendrait une porte à sens unique.
+ *
+ * Réglage éteint : écarte les entrées atténuées, puis les titres de groupe et cadres
+ * de bloc restés sans aucune entrée — un groupe entièrement désélectionné n'émettait
+ * AUCUN item avant sa#532 (`displayed_tags.length === 0`), il ne doit pas se mettre
+ * à afficher un titre orphelin.
  */
-export function renderableLegendItems(items: Type_LegendItem[]): Type_LegendItem[] {
-  if (RENDER_DIMMED_LEGEND_ENTRIES) return items
+export function renderableLegendItems(items: Type_LegendItem[], show_hidden_tags: boolean = false): Type_LegendItem[] {
+  if (show_hidden_tags) return items
   const kept = items.filter(i => !i.dimmed)
   // SA#545 — l'entrée « sans étiquette » est une entrée à part entière : un groupe
   // dont seuls des éléments sans étiquette sont visibles garde son titre.

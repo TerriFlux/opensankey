@@ -2170,6 +2170,13 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       .attr('font-family', this._label_values.font_family)
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
       .attr('stroke', 'none')
+    // SA#549 — entrée de légende d'une étiquette masquée : nom rayé. Aucun autre élément ne
+    // porte le drapeau, la propriété y reste absente.
+    if ((this.node as unknown as { legend_entry_dimmed?: boolean }).legend_entry_dimmed === true) {
+      selection?.style('text-decoration', 'line-through')
+    } else {
+      selection?.style('text-decoration', null)
+    }
   }
   protected override getImageDimensions(
     icon_pos_x: number,
@@ -2292,7 +2299,29 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
     return this.enableEditing && !(this.prefix === 'name_label' && this._label_values.is_value)
   }
 
+  // SA#549 — nom saisi dans une entrée de légende, appliqué à l'étiquette (ou au groupe) en fin de
+  // saisie par setInputLabelInvisible. `null` : aucun renommage en cours.
+  private _legend_rename: string | null = null
+
+  public override setInputLabelInvisible() {
+    super.setInputLabelInvisible()
+    const value = this._legend_rename
+    if (value === null) return
+    this._legend_rename = null
+    this.node.drawing_area.legend.renameEntry(this.node.id, value)
+  }
+
   protected onInputChange(value: string): void {
+    // SA#549 — entrée d'étiquette ou titre de groupe de la légende : la saisie renomme l'ÉTIQUETTE
+    // ou le GROUPE (légende, menu Filtres…) sans figer la légende. Le nom n'est appliqué qu'en fin
+    // de saisie : la régénération qu'il déclenche détruirait le champ pendant la frappe. D'ici là
+    // la zone montre la frappe. Avant, la saisie ne renommait que la zone et figeait la légende :
+    // plus de bascule au clic, alors que la main restait affichée (retour du test local).
+    if (isLegendChildId(this.node.id) && this.node.drawing_area.legend.canRenameEntry(this.node.id)) {
+      this.node.name_label_text = value
+      this._legend_rename = value
+      return
+    }
     // En mode label personnalisé, l'édition inline écrit dans le champ de label
     // indépendant (le nœud n'est PAS renommé) ; en mode 'name' elle renomme le
     // nœud (historique) ; pour les sources dérivées (tag/ancestor) le label ne
