@@ -138,6 +138,45 @@ export const deduceRepr = (d: Type_AnalysisDescriptor): 'donut' | 'bars' => {
   return d.compare ? 'bars' : 'donut'
 }
 
+// os#1399 — LA NATURE D'UNE PART, qui dépend de l'axe et non de la figure.
+//
+// C'est le cas qui a imposé qu'une représentation RÉSOLVE sa cible d'élément au lieu de la
+// DÉCLARER (cf. `Representations/WindowTarget`). Les trois branches de `decomposeSubject`
+// (OS+, AnalysisChartData) produisent des parts dont l'identifiant est tantôt celui d'un flux,
+// tantôt celui d'un nœud, tantôt celui d'un tag :
+//   - `inputs` / `outputs` sans groupement : une part par FLUX visible du nœud ;
+//   - `inputs` / `outputs` groupés par un groupe d'étiquettes de flux : une part par TAG ;
+//   - `node_children` : une part par NŒUD enfant, le long d'une dimension ;
+//   - `flux_children` : une part par FLUX enfant.
+//
+// Point de vérité unique : c'est ici, avec le descripteur, et non dans chaque moteur de dessin —
+// couronne et histogramme montrent le même axe, ils ne peuvent pas en tirer deux réponses.
+export const decomposedPartKind = (
+  spec: Type_DecomposeSpec | null | undefined
+): 'link' | 'node' | 'tag' | null => {
+  if (!spec) return null
+  if (spec.kind === 'inputs' || spec.kind === 'outputs') {
+    return spec.group_by_flux_tagg_id ? 'tag' : 'link'
+  }
+  if (spec.kind === 'node_children') return 'node'
+  if (spec.kind === 'flux_children') return 'link'
+  return null
+}
+
+// La nature d'une part pour un descripteur COMPLET. L'axe additif commande quand il y en a un
+// d'effectif (une part est alors une portion du tout) ; sinon c'est l'axe de comparaison qui dit
+// ce qu'est une barre — un FLUX quand on compare selon les flux (#389, une barre par flux), un
+// TAG quand on compare selon un groupe d'étiquettes de données (une barre par millésime).
+// `null` = un descripteur sans aucun axe, qui ne dessine rien.
+export const analysisPartKind = (
+  d: Type_AnalysisDescriptor
+): 'link' | 'node' | 'tag' | null => {
+  const decompose = effectiveDecompose(d)
+  if (decompose) return decomposedPartKind(decompose)
+  if (d.compare) return isFluxCompare(d.compare) ? 'link' : 'tag'
+  return null
+}
+
 // Un descripteur est-il « vide » (aucun axe) ? Sert à ne pas persister un
 // descripteur sans contenu.
 export const isDescriptorEmpty = (d: Type_AnalysisDescriptor | undefined): boolean =>
