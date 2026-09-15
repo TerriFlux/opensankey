@@ -30,6 +30,7 @@ import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
 import { effectiveOpacity, Type_OpacityGuards } from './elementOpacity'
+import { LINK_DASH_ARRAY } from './linkDash'
 
 /**
  * Sur-pente de la bézier par rapport à la corde (cf. drawShape).
@@ -286,7 +287,7 @@ export class LinkDrawShape {
               .attr('stroke', shape_color)
               .attr('stroke-width', uncertainty_bands.maxPx)
               .attr('stroke-opacity', Math.min(1, shape_opacity * UNCERTAINTY_MAX_OPACITY_FACTOR))
-              .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+              .attr('stroke-dasharray', show_as_dash ? LINK_DASH_ARRAY : '')
               .attr('pointer-events', 'none')
           } else {
             this.appendUncertaintyFilledBand(
@@ -315,7 +316,7 @@ export class LinkDrawShape {
           .attr('stroke-width', is_stroke ? thickness : '0')
           .attr('stroke-linejoin', has_waypoints ? 'round' : null)
           .attr('stroke-linecap', has_waypoints ? 'butt' : null)
-          .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+          .attr('stroke-dasharray', show_as_dash ? LINK_DASH_ARRAY : '')
           .attr('filter', this._link.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
 
         // Cœur MIN — devant le path principal
@@ -329,7 +330,7 @@ export class LinkDrawShape {
               .attr('stroke', shape_color)
               .attr('stroke-width', uncertainty_bands.minPx)
               .attr('stroke-opacity', Math.min(1, shape_opacity * UNCERTAINTY_MIN_OPACITY_FACTOR))
-              .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+              .attr('stroke-dasharray', show_as_dash ? LINK_DASH_ARRAY : '')
               .attr('pointer-events', 'none')
           } else {
             this.appendUncertaintyFilledBand(
@@ -344,7 +345,7 @@ export class LinkDrawShape {
           this._link.d3_selection?.selectAll('.link_path')
             // SA#534 — seul site à estomper AUSSI les flux qui ont des données ('always').
             .attr('fill-opacity', effectiveOpacity(this._link, { dim: 'always', hidden: !this._link.shape_color_visible }))
-            .attr('dasharray', show_as_dash ? '10,2' : '')
+            .attr('dasharray', show_as_dash ? LINK_DASH_ARRAY : '')
         }
       }
       // #285 — bandes internes : les valeurs coordonnées visibles subdivisent
