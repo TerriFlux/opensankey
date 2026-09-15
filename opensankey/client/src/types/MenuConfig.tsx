@@ -1117,6 +1117,17 @@ export class Class_MenuConfig {
   // --- Compatibilité : les quatre occupants historiques par leur ancien nom -----------------
   // Conservés parce que dix appelants (OS+, éditeur, état d'URL) les écrivent encore, et que
   // le geste qu'ils expriment — « montre le tableur » — est exactement `showMainZoneOccupant`.
+  //
+  // os#1404 — LES TROIS PREMIERS DÉSIGNENT LEUR FENÊTRE PAR SON IDENTIFIANT, ET C'EST POUR ÇA
+  // QU'ILS N'ONT PAS L'ASYMÉTRIE DE L'UNITAIRE. Diagramme, tableur et documentation sont des
+  // natures d'échelle DIAGRAMME (cf. registerBaseRepresentations) : leur sujet est le document
+  // entier, il n'y a rien à y épingler, et l'invariant `id === representation` fait que getter
+  // et setter parlent de la même et unique fenêtre. Une fenêtre de ces natures DÉPAYSÉE sur une
+  // autre feuille porte un id propre `w_N` : le getter l'ignore et le setter en ouvre une pour
+  // la feuille courante — ce qui est exactement ce qu'on veut, la fenêtre de la feuille B n'étant
+  // pas celle qu'on demande. Vérifié, rien à corriger : l'asymétrie était propre à l'unitaire,
+  // seul accesseur à chercher par NATURE au travers de fenêtres qui peuvent avoir des sujets
+  // différents.
   public get main_zone_show_diagram() { return this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID) }
   public set main_zone_show_diagram(v: boolean) {
     if (v) this.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID); else this.hideMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
@@ -1129,17 +1140,33 @@ export class Class_MenuConfig {
   public set main_zone_show_doc(v: boolean) {
     if (v) this.showMainZoneOccupant(MAIN_ZONE_DOC_ID); else this.hideMainZoneOccupant(MAIN_ZONE_DOC_ID)
   }
-  // os#1387 — « montrer l'unitaire » ouvre désormais une FENÊTRE D'ÉLÉMENT « Unit. » qui suit la
-  // sélection (le panneau OS+ à hôte externe n'est plus offert) ; la masquer ferme les fenêtres
-  // Unit. ouvertes. Les appelants OS+ (bouton, clic droit) gardent leur geste.
+  // os#1387 — « montrer l'unitaire » ouvre une FENÊTRE D'ÉLÉMENT « Unit. » qui suit la sélection
+  // (le panneau OS+ à hôte externe n'est plus offert). Les appelants OS+ (bouton, clic droit)
+  // gardent leur geste.
+  //
+  // os#1404 — L'ACCESSEUR NE PARLE QUE DES FENÊTRES QUI SUIVENT, JAMAIS DES ÉPINGLÉES.
+  //
+  // Il regardait la seule NATURE de l'occupant, sans son sujet : une fenêtre Unit. épinglée sur
+  // un nœud suffisait donc à le dire « montré », et le garde `if (!this.main_zone_show_unitary)`
+  // rendait alors le bouton muet. Deux portes, et la première fermait la seconde : la fenêtre
+  // épinglée ignorait la sélection — ce qui est son rôle — et le geste qui aurait ouvert une
+  // fenêtre vivante était devenu inopérant précisément parce qu'elle existait.
+  //
+  // Une fenêtre épinglée et une fenêtre qui suit sont deux objets différents, et les avoir
+  // toutes deux est un usage légitime (c'est ainsi qu'on compare). Le bouton ouvre donc TOUJOURS
+  // une fenêtre qui suit, quel que soit le nombre d'épinglées ; et la fermeture ne touche que
+  // celles qui suivent — refermer une fenêtre que l'auteur a composée et épinglée serait pire
+  // que le défaut qu'on corrige.
   public get main_zone_show_unitary() {
-    return this._main_zone_occupants.some(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID)
+    return this._main_zone_occupants
+      .some(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID && o.subject.kind === 'selection')
   }
   public set main_zone_show_unitary(v: boolean) {
     if (v) {
       if (!this.main_zone_show_unitary) this.openMainZoneWindow({ kind: 'selection' }, MAIN_ZONE_UNIT_WINDOW_ID)
     } else {
-      this._main_zone_occupants.filter(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID)
+      this._main_zone_occupants
+        .filter(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID && o.subject.kind === 'selection')
         .forEach(o => this.hideMainZoneOccupant(o.id))
     }
   }
