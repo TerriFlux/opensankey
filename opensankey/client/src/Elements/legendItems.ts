@@ -10,7 +10,7 @@
 // LegendGenerator.ts, qui ré-exporte tout ce module.
 // ==================================================================================================
 
-import { LEGEND_CHILD_PREFIX } from './legendIds'
+import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
 import {
@@ -69,6 +69,10 @@ export type Type_LegendItem = {
   // SA#550 — nom du groupe épinglé, en tête de `text` : souligné, suivi de « : » et de la
   // description, toute la ligne en italique (retours du test local du 2026-09-15).
   pinned_name?: string
+  // SA#552 — ligne de rappel d'une dimension dont la tranche se CHOISIT depuis la légende :
+  // groupe d'au moins deux étiquettes. Une dimension à étiquette unique (Territoire, Filière)
+  // ne promet rien : ni main, ni flèche, ni info-bulle, ni liste.
+  dimension_choice?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -91,6 +95,8 @@ export type Type_LegendEnv = {
   t_scale?: string
   // SA#545 — libellé de l'entrée « sans étiquette » d'un groupe à style
   t_untagged?: string
+  // SA#552 — info-bulle de la ligne de rappel d'une dimension : elle se modifie au clic
+  t_dimension_change?: string
 }
 
 // Sous-ensemble du modèle utilisé par le calcul du contenu (structurellement
@@ -186,11 +192,6 @@ export type Type_LegendConfigValues = {
   // SA#549 — les étiquettes masquées sont RENDUES, rayées (cf. renderableLegendItems).
   // Optionnel pour garder les configurations des tests antérieurs valides.
   show_hidden_tags?: boolean
-}
-
-// Id stable et sûr pour un id HTML à partir d'un id de tag/groupe
-function slug(s: string): string {
-  return s.replaceAll(/[^a-zA-Z0-9_-]/g, '_')
 }
 
 // Reprend les 6 lignes du tableau des contraintes de l'ancienne légende
@@ -454,12 +455,20 @@ export function computeLegendItems(
   // Rappel des data tags sélectionnés par groupe
   if (config.show_dataTags) {
     data_taggs.forEach(tag_group => {
-      items.push({
-        id: LEGEND_CHILD_PREFIX + 'datatag-' + slug(tag_group.id),
+      const item: Type_LegendItem = {
+        // SA#552 — id partagé avec le clic qui ouvre la liste de la dimension
+        id: legendDataTagZoneId(tag_group.id),
         text: tag_group.name + ' : ' + tag_group.selected_tags_list.map(t => t.display_name).join(', '),
         starts_group: true,
         own_line: true
-      })
+      }
+      // SA#552 — tranche modifiable depuis la légende : au moins deux étiquettes. Alors seulement,
+      // info-bulle « cliquer pour modifier », lue au survol comme une définition (#542).
+      if ((tag_group.tags_list ?? tag_group.selected_tags_list).length > 1) {
+        item.dimension_choice = true
+        if (env.t_dimension_change) item.description = env.t_dimension_change
+      }
+      items.push(item)
     })
   }
 
