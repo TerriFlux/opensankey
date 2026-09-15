@@ -130,16 +130,6 @@ body {
   cursor: pointer !important;
 }
 
-/* SA#552 — flèche de liste de la ligne de rappel d'une dimension : visible au survol seulement
-   (retour du test local). Transparente plutôt que masquée : elle reste cliquable. */
-.legend_dimension_caret {
-  opacity: 0;
-  transition: opacity 0.1s ease-in;
-}
-.legend_toggle_entry:hover .legend_dimension_caret {
-  opacity: 1;
-}
-
 /* os#1344 — Création connectée : flèches directionnelles au survol d'un nœud.
    Discrètes par défaut, pleines au survol de la flèche elle-même. */
 .connection_arrow path {

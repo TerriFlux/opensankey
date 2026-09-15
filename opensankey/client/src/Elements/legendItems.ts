@@ -69,6 +69,10 @@ export type Type_LegendItem = {
   // SA#550 — nom du groupe épinglé, en tête de `text` : souligné, suivi de « : » et de la
   // description, toute la ligne en italique (retours du test local du 2026-09-15).
   pinned_name?: string
+  // SA#552 — ligne de rappel d'une dimension dont la tranche se CHOISIT depuis la légende :
+  // groupe d'au moins deux étiquettes. Une dimension à étiquette unique (Territoire, Filière)
+  // ne promet rien : ni main, ni flèche, ni info-bulle, ni liste.
+  dimension_choice?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -458,8 +462,12 @@ export function computeLegendItems(
         starts_group: true,
         own_line: true
       }
-      // SA#552 — info-bulle « cliquer pour modifier », lue au survol comme une définition (#542)
-      if (env.t_dimension_change) item.description = env.t_dimension_change
+      // SA#552 — tranche modifiable depuis la légende : au moins deux étiquettes. Alors seulement,
+      // info-bulle « cliquer pour modifier », lue au survol comme une définition (#542).
+      if ((tag_group.tags_list ?? tag_group.selected_tags_list).length > 1) {
+        item.dimension_choice = true
+        if (env.t_dimension_change) item.description = env.t_dimension_change
+      }
       items.push(item)
     })
   }
