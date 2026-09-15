@@ -24,7 +24,38 @@
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { isLegendDataTagZoneId, legendDataTagZoneId } from '../../../Elements/legendIds'
-import { placePopupNear } from './openPresentation'
+import { closePresentationTooltip } from './openPresentation'
+import type { Type_PopupGeometry } from '../../../types/PanelManager'
+
+// Liste déroulante : hauteur d'une ligne et marge verticale (px écran), plafond de hauteur
+// au-delà duquel elle défile, largeur minimale.
+const ROW_HEIGHT_PX = 28
+const LIST_PADDING_PX = 8
+const LIST_MAX_HEIGHT_PX = 288
+const LIST_MIN_WIDTH_PX = 120
+
+/**
+ * Place la liste JUSTE SOUS la ligne de légende, alignée sur son bord gauche et au moins aussi
+ * large qu'elle — comme une liste déroulante sous son champ. Au-dessus si elle déborde du bas de la
+ * fenêtre. Sans rectangle mesurable (jsdom, zone absente), au point du clic.
+ */
+export const legendDimensionListGeometry = (
+  rows: number,
+  zone_rect: { left: number, top: number, bottom: number, width: number } | undefined,
+  anchor: { x: number, y: number } | undefined
+): Type_PopupGeometry => {
+  const vw = window.innerWidth || 1280
+  const vh = window.innerHeight || 720
+  const h = Math.min(LIST_MAX_HEIGHT_PX, rows * ROW_HEIGHT_PX + LIST_PADDING_PX)
+  const measurable = zone_rect !== undefined && zone_rect.width > 0
+  const w = Math.max(LIST_MIN_WIDTH_PX, measurable ? zone_rect.width : 0)
+  let x = measurable ? zone_rect.left : (anchor?.x ?? 0)
+  let y = measurable ? zone_rect.bottom + 2 : (anchor?.y ?? 0)
+  if (measurable && y + h > vh - 4) y = zone_rect.top - 2 - h
+  x = Math.max(4, Math.min(x, vw - w - 4))
+  y = Math.max(4, Math.min(y, vh - h - 4))
+  return { x, y, w, h }
+}
 
 const DIMENSION_PREFIX = 'legend-dimension:'
 
@@ -71,9 +102,16 @@ export const openLegendDimensionChoice = (
   if (group === undefined || group.tags_list.length === 0) return false
   const panels = app_data.menu_configuration.panels
   const id = legendDimensionPanelId(group.id)
+  // L'info-bulle « cliquer pour modifier » a dit ce qu'elle avait à dire : la liste la remplace.
+  closePresentationTooltip(app_data)
   if (panels.consumeJustDismissed(id)) return false
   if (panels.getMode(id) === 'popup') return true
-  panels.setMode(id, 'popup', { geometry: placePopupNear(app_data, anchor, id), pinned: false })
+  const zone_node = app_data.drawing_area.sankey.containers_dict?.[zone_id]?.d3_selection?.node() as Element | null | undefined
+  const zone_rect = zone_node?.getBoundingClientRect?.()
+  panels.setMode(id, 'popup', {
+    geometry: legendDimensionListGeometry(group.tags_list.length, zone_rect, anchor),
+    pinned: false
+  })
   return true
 }
 

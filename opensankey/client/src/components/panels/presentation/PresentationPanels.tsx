@@ -53,9 +53,6 @@ registerBasePresentationBlocks()
 
 // Contenants offerts à un élément : jamais la barre latérale (réservée aux menus).
 const ELEMENT_MODES: Type_PanelMode[] = ['tooltip', 'popup']
-// SA#552 — la liste d'une dimension s'ouvre au clic : une pop-up, rien d'autre.
-const DIMENSION_MODES: Type_PanelMode[] = ['popup']
-
 type Presentable = Type_Presentable
 
 /** Retrouve un élément par son id, tous types confondus. */
@@ -184,17 +181,8 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
           panels.close(id)
           return null
         }
-        return (
-          <PanelShell
-            key={id}
-            app_data={app_data}
-            id={id}
-            title={group.name}
-            allowedModes={DIMENSION_MODES}
-          >
-            <LegendDimensionChoice app_data={app_data} group={group} />
-          </PanelShell>
-        )
+        return <LegendDimensionChoice key={id} app_data={app_data} group={group} />
+
       })}
     </>,
     document.body

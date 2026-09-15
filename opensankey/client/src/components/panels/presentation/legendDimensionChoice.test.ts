@@ -1,7 +1,8 @@
 import {
   chooseLegendDimensionTag, dimensionOfLegendZone, isLegendDimensionPanelId, isLegendDimensionZoneId,
-  legendDimensionPanelId, openLegendDimensionChoice
+  legendDimensionListGeometry, legendDimensionPanelId, openLegendDimensionChoice
 } from './legendDimensionChoice'
+import { LEGEND_DIMENSION_CARET, LEGEND_DIMENSION_CARET_CLASS } from '../../../Elements/legendDimensionCaret'
 import { isPresentationPanelId } from './openPresentation'
 import { Class_PanelManager } from '../../../types/PanelManager'
 import { Class_EventBus } from '../../../types/EventBus'
@@ -134,6 +135,30 @@ describe('SA#552 — choix d\'une étiquette', () => {
   })
 })
 
+describe('SA#552 — placement de la liste déroulante', () => {
+  const rect = { left: 100, top: 200, bottom: 220, width: 150 }
+
+  it('juste sous la ligne, alignée à gauche, au moins aussi large qu\'elle', () => {
+    const g = legendDimensionListGeometry(4, rect, { x: 999, y: 999 })
+    expect(g.x).toBe(100)
+    expect(g.y).toBe(222)
+    expect(g.w).toBe(150)
+    expect(g.h).toBeGreaterThan(0)
+  })
+
+  it('au-dessus de la ligne quand elle déborderait du bas de la fenêtre', () => {
+    const low = { left: 100, top: window.innerHeight - 30, bottom: window.innerHeight - 10, width: 150 }
+    const g = legendDimensionListGeometry(4, low, undefined)
+    expect(g.y + g.h).toBeLessThanOrEqual(low.top)
+  })
+
+  it('sans rectangle mesurable (zone absente, jsdom) : au point du clic', () => {
+    const g = legendDimensionListGeometry(2, { left: 0, top: 0, bottom: 0, width: 0 }, { x: 40, y: 60 })
+    expect(g.x).toBe(40)
+    expect(g.y).toBe(60)
+  })
+})
+
 // GESTE RÉEL =======================================================================================
 
 // Le SVG est réellement construit, zones de texte comprises : mêmes prothèses jsdom que les
@@ -144,6 +169,9 @@ installJsdomRenderStubs()
 function buildDrawnApp(published: boolean) {
   resetHost()
   const app = new Class_ApplicationData(published)
+  // Sans i18n initialisé, la traduction par défaut rend `null` : on lui fait rendre la clé, pour
+  // voir passer les libellés que la légende pose (info-bulle de la ligne de rappel).
+  app.t = ((key: string) => key) as unknown as typeof app.t
   const drawing_area = app.drawing_area
   const { sankey } = drawing_area
   const source = sankey.addNewNode('source', 'Source')
@@ -182,6 +210,24 @@ describe.each([
     const { app, group } = buildDrawnApp(published)
     expect(app.is_editable).toBe(!published)
     expect(zoneText(app)).toBe('Unité : kt PB')
+
+    // Indices : main, flèche VOISINE du libellé (son texte, figé par l'empreinte #530, est
+    // inchangé), info-bulle « cliquer pour modifier » lue au survol.
+    const zone = app.drawing_area.sankey.containers_dict[legendDataTagZoneId('unite')]
+    const group_node = zone.d3_selection?.node() as SVGGElement
+    // Main : la classe des zones cliquables de la légende (règle CSS du SA#549)
+    expect(group_node.classList.contains('legend_toggle_entry')).toBe(true)
+    const caret = group_node.querySelector('.' + LEGEND_DIMENSION_CARET_CLASS)
+    expect(caret?.textContent).toBe(LEGEND_DIMENSION_CARET)
+    // (espace de tête laissé par le découpage en tspans du libellé : sans rapport avec la flèche)
+    expect(group_node.querySelector('.name_label_text')?.textContent?.trim()).toBe('Unité : kt PB')
+    expect(zone.tooltip_text).not.toBe('')
+
+    // Cliquer la FLÈCHE, c'est cliquer la ligne.
+    const text_clicks = jest.fn()
+    group_node.querySelector('.name_label_text')?.addEventListener('click', text_clicks)
+    caret?.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 40, clientY: 40 }))
+    expect(text_clicks).toHaveBeenCalledTimes(1)
 
     clickZone(app, legendDataTagZoneId('unite'))
     const panels = app.menu_configuration.panels

@@ -91,6 +91,8 @@ export type Type_LegendEnv = {
   t_scale?: string
   // SA#545 — libellé de l'entrée « sans étiquette » d'un groupe à style
   t_untagged?: string
+  // SA#552 — info-bulle de la ligne de rappel d'une dimension : elle se modifie au clic
+  t_dimension_change?: string
 }
 
 // Sous-ensemble du modèle utilisé par le calcul du contenu (structurellement
@@ -449,13 +451,16 @@ export function computeLegendItems(
   // Rappel des data tags sélectionnés par groupe
   if (config.show_dataTags) {
     data_taggs.forEach(tag_group => {
-      items.push({
+      const item: Type_LegendItem = {
         // SA#552 — id partagé avec le clic qui ouvre la liste de la dimension
         id: legendDataTagZoneId(tag_group.id),
         text: tag_group.name + ' : ' + tag_group.selected_tags_list.map(t => t.display_name).join(', '),
         starts_group: true,
         own_line: true
-      })
+      }
+      // SA#552 — info-bulle « cliquer pour modifier », lue au survol comme une définition (#542)
+      if (env.t_dimension_change) item.description = env.t_dimension_change
+      items.push(item)
     })
   }
 

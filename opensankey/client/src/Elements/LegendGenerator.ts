@@ -26,7 +26,8 @@ import {
   default_info_link_value_void, default_width
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
-import { LEGEND_FRAME_ID, isLegendChildId } from './legendIds'
+import { LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId } from './legendIds'
+import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
@@ -707,7 +708,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
-        t_untagged: t('MEP.legend_untagged')
+        t_untagged: t('MEP.legend_untagged'),
+        t_dimension_change: t('MEP.legend_dimension_change')
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
@@ -959,7 +961,11 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       zone.setEventsListeners()
       // SA#549 — entrée cliquable : curseur main (règle CSS `legend_toggle_entry`, qui l'emporte
       // sur le curseur texte que DrawLabel pose sur le libellé en édition).
-      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id))
+      // SA#552 — la ligne de rappel d'une dimension est cliquable elle aussi (elle ouvre la liste
+      // de ses étiquettes) : même main, plus la flèche de liste.
+      const is_dimension_zone = isLegendDataTagZoneId(item.id)
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_zone)
+      if (is_dimension_zone) decorateLegendDimensionZone(zone)
       const hover_target = hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
