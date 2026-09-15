@@ -20,6 +20,11 @@ export class Class_ContainerElement extends Class_NodeBase {
   // d'étiquettes, et le figer dans le fichier garderait une définition périmée.
   protected _tooltip_text: string = ''
 
+  // SA#545 — le carré d'une entrée de légende reproduit un flux « Hachuré » (tirets
+  // du tracé de flux, cf. NodeDrawShape). Même contrat que `_tooltip_text` : posé par
+  // le générateur à chaque régénération, NI persisté NI copié.
+  protected _legend_swatch_link_dashed: boolean = false
+
   constructor(
     id: string,
     name: string,
@@ -94,6 +99,9 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   public get tooltip_text(): string { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
+
+  public get legend_swatch_link_dashed(): boolean { return this._legend_swatch_link_dashed }
+  public set legend_swatch_link_dashed(_: boolean) { this._legend_swatch_link_dashed = _ }
 
   public setEventsListeners() {
     if (this.drawing_area.sankey.container_activated) {
