@@ -181,6 +181,9 @@ function buildDrawnApp(published: boolean) {
   const pb = group.addTag('kt PB', 'pb')
   group.addTag('kt MG', 'mg')
   pb.setSelected()
+  // Dimension à étiquette UNIQUE : rien à choisir, rien à promettre.
+  const territoire = sankey.addDataTagGroup('territoire', 'Territoire', false) as Class_DataTagGroup
+  territoire.addTag('France entière', 'fr').setSelected()
   drawing_area.legend.masked = false
   drawing_area.legend.legend_show_dataTags = true
   drawing_area.draw()
@@ -217,8 +220,28 @@ describe.each([
     const group_node = zone.d3_selection?.node() as SVGGElement
     // Main : la classe des zones cliquables de la légende (règle CSS du SA#549)
     expect(group_node.classList.contains('legend_toggle_entry')).toBe(true)
-    const caret = group_node.querySelector('.' + LEGEND_DIMENSION_CARET_CLASS)
+    const caret = group_node.querySelector('.' + LEGEND_DIMENSION_CARET_CLASS) as SVGTextElement | null
     expect(caret?.textContent).toBe(LEGEND_DIMENSION_CARET)
+    // Flèche visible au SURVOL seulement ; reposée si un redessin du libellé l'a retirée.
+    expect(caret?.style.opacity).toBe('0')
+    group_node.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    expect(caret?.style.opacity).toBe('1')
+    group_node.dispatchEvent(new MouseEvent('mouseleave'))
+    expect(caret?.style.opacity).toBe('0')
+    caret?.remove()
+    group_node.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    const reposed = group_node.querySelector('.' + LEGEND_DIMENSION_CARET_CLASS) as SVGTextElement | null
+    expect(reposed?.style.opacity).toBe('1')
+
+    // Dimension à étiquette UNIQUE : ni main, ni flèche, ni info-bulle, ni liste.
+    const single_id = legendDataTagZoneId('territoire')
+    const single = app.drawing_area.sankey.containers_dict[single_id]
+    const single_node = single.d3_selection?.node() as SVGGElement
+    expect(single_node.classList.contains('legend_toggle_entry')).toBe(false)
+    single_node.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    expect(single_node.querySelector('.' + LEGEND_DIMENSION_CARET_CLASS)).toBeNull()
+    expect(single.tooltip_text).toBe('')
+    expect(openLegendDimensionChoice(app, single_id)).toBe(false)
     // (espace de tête laissé par le découpage en tspans du libellé : sans rapport avec la flèche)
     expect(group_node.querySelector('.name_label_text')?.textContent?.trim()).toBe('Unité : kt PB')
     expect(zone.tooltip_text).not.toBe('')

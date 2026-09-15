@@ -99,7 +99,8 @@ export const openLegendDimensionChoice = (
   anchor?: { x: number, y: number }
 ): boolean => {
   const group = dimensionOfLegendZone(app_data, zone_id)
-  if (group === undefined || group.tags_list.length === 0) return false
+  // Une seule étiquette : rien à choisir (cf. Type_LegendItem.dimension_choice).
+  if (group === undefined || group.tags_list.length < 2) return false
   const panels = app_data.menu_configuration.panels
   const id = legendDimensionPanelId(group.id)
   // L'info-bulle « cliquer pour modifier » a dit ce qu'elle avait à dire : la liste la remplace.

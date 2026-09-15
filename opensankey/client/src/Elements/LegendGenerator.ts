@@ -963,9 +963,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // sur le curseur texte que DrawLabel pose sur le libellé en édition).
       // SA#552 — la ligne de rappel d'une dimension est cliquable elle aussi (elle ouvre la liste
       // de ses étiquettes) : même main, plus la flèche de liste.
-      const is_dimension_zone = isLegendDataTagZoneId(item.id)
-      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_zone)
-      if (is_dimension_zone) decorateLegendDimensionZone(zone)
+      // Dimension à étiquette unique : rien à choisir, rien à promettre.
+      const is_dimension_choice = item.dimension_choice === true
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice)
+      if (isLegendDataTagZoneId(item.id)) decorateLegendDimensionZone(zone, is_dimension_choice)
       const hover_target = hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
