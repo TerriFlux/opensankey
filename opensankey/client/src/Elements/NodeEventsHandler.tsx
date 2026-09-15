@@ -38,6 +38,9 @@ import {
   matchesPresentationTrigger,
   schedulePresentationHover, schedulePresentationHoverClose, hoverOnTextOpensPresentation
 } from '../components/panels/presentation/openPresentation'
+import {
+  isLegendDimensionZoneId, openLegendDimensionChoice
+} from '../components/panels/presentation/legendDimensionChoice'
 
 export class NodeEventsHandler {
 
@@ -163,11 +166,17 @@ export class NodeEventsHandler {
       // l'auteur, dans le contenant que sa politique désigne. Si rien n'a été
       // composé, openPresentationFor n'ouvre rien et on retombe sur le
       // comportement historique (purge) — jamais l'inspecteur d'édition.
-      openPresentationFor(
-        drawing_area.application_data,
-        this._node as unknown as Parameters<typeof openPresentationFor>[1],
-        { x: event.clientX, y: event.clientY }
-      )
+      // SA#552 — la ligne de rappel d'une dimension ouvre la liste de ses étiquettes, et
+      // pas en plus la présentation de la zone (#542).
+      if (isLegendDimensionZoneId(this._node.id)) {
+        openLegendDimensionChoice(drawing_area.application_data, this._node.id, { x: event.clientX, y: event.clientY })
+      } else {
+        openPresentationFor(
+          drawing_area.application_data,
+          this._node as unknown as Parameters<typeof openPresentationFor>[1],
+          { x: event.clientX, y: event.clientY }
+        )
+      }
       drawing_area.purgeSelection()
       return
     }
@@ -185,6 +194,12 @@ export class NodeEventsHandler {
       const labelType = this.getClickedLabelType(clickedElement)
 
       if (!labelType) return
+
+      // SA#552 — en édition aussi, la ligne de rappel d'une dimension ouvre la liste de ses
+      // étiquettes ; la sélection de la zone suit son cours (déplacer, régler).
+      if (!event.ctrlKey && !event.metaKey && isLegendDimensionZoneId(this._node.id)) {
+        openLegendDimensionChoice(drawing_area.application_data, this._node.id, { x: event.clientX, y: event.clientY })
+      }
 
       // OS#1259 — clic « façon PowerPoint » par CLICS SUCCESSIFS sur un groupe de
       // zones de texte : 1er clic = groupe le plus englobant, chaque clic suivant

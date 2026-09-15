@@ -35,10 +35,14 @@ import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import { PresentationPopup } from './PresentationPopup'
+import { LegendDimensionChoice } from './LegendDimensionPanel'
+import {
+  findLegendDimension, groupIdOfLegendDimensionPanel, isLegendDimensionPanelId
+} from './legendDimensionChoice'
 import {
   isPresentationPanelId, elementIdOfPanel, compositionOf, type Type_Presentable,
   cancelPresentationHoverClose, schedulePresentationHoverClose, releasePresentationHover,
-  presentationPanelId
+  presentationPanelId, presentationTitleOf
 } from './openPresentation'
 
 registerBasePresentationBlocks()
@@ -49,7 +53,6 @@ registerBasePresentationBlocks()
 
 // Contenants offerts à un élément : jamais la barre latérale (réservée aux menus).
 const ELEMENT_MODES: Type_PanelMode[] = ['tooltip', 'popup']
-
 type Presentable = Type_Presentable
 
 /** Retrouve un élément par son id, tous types confondus. */
@@ -64,18 +67,8 @@ const findElementById = (
   return (found ?? null) as unknown as Presentable | null
 }
 
-/** Titre du panneau : le nom de l'élément (origine → destination pour un flux). */
-const titleOf = (element: Presentable): string => {
-  const raw = element as unknown as Record<string, unknown>
-  const src = raw['source'] as Record<string, unknown> | undefined
-  const tgt = raw['target'] as Record<string, unknown> | undefined
-  if (src && tgt) {
-    const s = typeof src['name'] === 'string' ? src['name'] : ''
-    const t = typeof tgt['name'] === 'string' ? tgt['name'] : ''
-    if (s || t) return `${s} → ${t}`
-  }
-  return element.name ?? ''
-}
+/** Titre du panneau (cf. presentationTitleOf, qui traite aussi les zones de légende). */
+const titleOf = (element: Presentable): string => presentationTitleOf(element)
 
 /** Info-bulle : la PILE des blocs cochés, dans l'ordre du patron. Les blocs sans
  *  contenu (et ceux qu'on ne sait pas dessiner) sont sautés. */
@@ -123,7 +116,10 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
   )
   const panels = app_data.menu_configuration.panels
   const ids = panels.open_ids.filter(isPresentationPanelId)
-  if (ids.length === 0) return null
+  // SA#552 — listes de dimension ouvertes depuis la légende : même montage, donc présentes
+  // partout où la présentation l'est (éditeur, lecteur, diagramme publié).
+  const dimension_ids = panels.open_ids.filter(isLegendDimensionPanelId)
+  if (ids.length === 0 && dimension_ids.length === 0) return null
 
   // PORTAIL vers <body> : les panneaux de présentation (position:fixed) doivent
   // vivre HORS de #sankey_app. Un diagramme unitaire dessine une DA détachée dont
@@ -167,6 +163,16 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
               : <TooltipContent app_data={app_data} element={element} />}
           </PanelShell>
         )
+      })}
+      {dimension_ids.map(id => {
+        const group = findLegendDimension(app_data, groupIdOfLegendDimensionPanel(id))
+        // Dimension disparue (supprimée entre-temps) : on referme proprement.
+        if (!group) {
+          panels.close(id)
+          return null
+        }
+        return <LegendDimensionChoice key={id} app_data={app_data} group={group} />
+
       })}
     </>,
     document.body

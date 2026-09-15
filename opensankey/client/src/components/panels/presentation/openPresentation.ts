@@ -102,6 +102,26 @@ export type Type_Presentable = {
   getElementProperty: (k: string) => unknown
 }
 
+/**
+ * Titre de la présentation d'un élément : le nom de l'élément, origine → destination pour un flux.
+ *
+ * SA#552 — zone de la légende : son TEXTE affiché. Son nom est celui de sa création
+ * (`addNewContainer(id, texte)`) et aucune régénération ne le remet à jour : l'info-bulle de la ligne
+ * « Année : 2023 » titrait encore « Année : 2015 » après un changement de tranche.
+ */
+export const presentationTitleOf = (element: Type_Presentable): string => {
+  const raw = element as unknown as Record<string, unknown>
+  if (isLegendEntry(element) && typeof raw['name_label_text'] === 'string') return raw['name_label_text']
+  const src = raw['source'] as Record<string, unknown> | undefined
+  const tgt = raw['target'] as Record<string, unknown> | undefined
+  if (src && tgt) {
+    const s = typeof src['name'] === 'string' ? src['name'] : ''
+    const t = typeof tgt['name'] === 'string' ? tgt['name'] : ''
+    if (s || t) return `${s} → ${t}`
+  }
+  return element.name ?? ''
+}
+
 /** Id de panneau d'un élément, reconnaissable parmi les panneaux ouverts. */
 export const presentationPanelId = (element_id: string): string =>
   PRESENTATION_PREFIX + element_id
