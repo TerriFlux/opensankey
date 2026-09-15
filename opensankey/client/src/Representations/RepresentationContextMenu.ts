@@ -207,12 +207,22 @@ export const attachRepresentationContextMenu = (
  * vignette, le volet du menu de configuration et ce menu-ci - trois chemins, aucune divergence
  * possible, et c'est la condition posée pour retirer la barre.
  */
-export const representationOptionsMenu = (): Type_RepresentationMenu => ({
-  config: {
-    structure: [{ type: 'widget', widgetName: REPRESENTATION_OPTIONS_WIDGET }],
-    actions: {},
-    sectionTitles: {}
-  },
-  modifier: {},
-  path: 'ContextMenuRepresentation'
-})
+export const representationOptionsMenu = (
+  ctx?: Type_RepresentationContext
+): Type_RepresentationMenu | null => {
+  // HORS D'UNE FENÊTRE, on ne propose rien. Le widget montre les réglages de la représentation
+  // ACTIVE de la grande zone ; une figure montée ailleurs - la pop-up de présentation d'un
+  // élément - n'en est pas une, et le menu afficherait alors les réglages d'une AUTRE figure,
+  // voire d'aucune. Montrer le mauvais réglage est pire que de ne rien montrer : le clic droit
+  // y reste celui du navigateur, comme avant, et ces pop-ups n'ont jamais eu de réglages.
+  if (ctx && !ctx.window_id) return null
+  return {
+    config: {
+      structure: [{ type: 'widget', widgetName: REPRESENTATION_OPTIONS_WIDGET }],
+      actions: {},
+      sectionTitles: {}
+    },
+    modifier: {},
+    path: 'ContextMenuRepresentation'
+  }
+}

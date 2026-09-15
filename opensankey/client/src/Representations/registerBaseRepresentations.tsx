@@ -123,7 +123,7 @@ export const registerBaseRepresentations = (): void => {
     // n'ont pas encore de menu : leur clic gauche zoome déjà dans l'anneau, et décider ce que le
     // clic droit y ajoute demande de trancher ce qu'on vise, le nœud du secteur ou la branche
     // entière. À faire quand la question se posera vraiment, pas d'avance.
-    contextMenu: ({ target }) => target.kind === 'background' ? representationOptionsMenu() : null,
+    contextMenu: ({ target, ctx }) => target.kind === 'background' ? representationOptionsMenu(ctx) : null,
     draw: (container, ctx) => drawSunburstRepresentation(container, {
       ...ctx,
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
