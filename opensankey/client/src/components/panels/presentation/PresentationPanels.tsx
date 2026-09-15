@@ -42,7 +42,7 @@ import {
 import {
   isPresentationPanelId, elementIdOfPanel, compositionOf, type Type_Presentable,
   cancelPresentationHoverClose, schedulePresentationHoverClose, releasePresentationHover,
-  presentationPanelId
+  presentationPanelId, presentationTitleOf
 } from './openPresentation'
 
 registerBasePresentationBlocks()
@@ -67,18 +67,8 @@ const findElementById = (
   return (found ?? null) as unknown as Presentable | null
 }
 
-/** Titre du panneau : le nom de l'élément (origine → destination pour un flux). */
-const titleOf = (element: Presentable): string => {
-  const raw = element as unknown as Record<string, unknown>
-  const src = raw['source'] as Record<string, unknown> | undefined
-  const tgt = raw['target'] as Record<string, unknown> | undefined
-  if (src && tgt) {
-    const s = typeof src['name'] === 'string' ? src['name'] : ''
-    const t = typeof tgt['name'] === 'string' ? tgt['name'] : ''
-    if (s || t) return `${s} → ${t}`
-  }
-  return element.name ?? ''
-}
+/** Titre du panneau (cf. presentationTitleOf, qui traite aussi les zones de légende). */
+const titleOf = (element: Presentable): string => presentationTitleOf(element)
 
 /** Info-bulle : la PILE des blocs cochés, dans l'ordre du patron. Les blocs sans
  *  contenu (et ceux qu'on ne sait pas dessiner) sont sautés. */

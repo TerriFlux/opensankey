@@ -3,7 +3,7 @@ import {
   legendDimensionListGeometry, legendDimensionPanelId, openLegendDimensionChoice
 } from './legendDimensionChoice'
 import { LEGEND_DIMENSION_CARET, LEGEND_DIMENSION_CARET_CLASS } from '../../../Elements/legendDimensionCaret'
-import { isPresentationPanelId } from './openPresentation'
+import { isPresentationPanelId, presentationTitleOf } from './openPresentation'
 import { Class_PanelManager } from '../../../types/PanelManager'
 import { Class_EventBus } from '../../../types/EventBus'
 import { Class_ApplicationData } from '../../../types/ApplicationData'
@@ -237,6 +237,8 @@ describe.each([
     chooseLegendDimensionTag(app, group, 'mg')
     expect(group.selected_tags_list.map(t => t.id)).toEqual(['mg'])
     expect(zoneText(app)).toBe('Unité : kt MG')
+    // L'info-bulle de la ligne titre la tranche AFFICHÉE, pas celle de la création de la zone.
+    expect(presentationTitleOf(zone as unknown as Parameters<typeof presentationTitleOf>[0])).toBe('Unité : kt MG')
 
     app.history.applyUndo()
     expect(group.selected_tags_list.map(t => t.id)).toEqual(['pb'])
