@@ -30,7 +30,7 @@ import { LEGEND_FRAME_ID, isLegendChildId } from './legendIds'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
-  Type_SankeyForLegend
+  Type_SankeyForLegend, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
 import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
 
@@ -77,6 +77,52 @@ const ICON_FORMAT_ONLY_KEYS = [
   'icon_is_visible', 'icon_is_icon', 'icon_is_image', 'icon_icon_name', 'icon_image_src',
   'icon_view_box', 'icon_color', 'icon_inside_horiz', 'icon_inside_vert'
 ] as const
+
+// SA#550 — marge interne du conteneur de texte riche (`.ql-editor`, feuille de l'éditeur Quill :
+// 12 px × 15 px quand elle est chargée, rien sinon), relevée sur le rendu puis annulée par une
+// marge négative du paragraphe : la ligne épinglée s'aligne alors sur les autres zones.
+type Type_RichPadding = { top: number, right: number, bottom: number, left: number }
+const NO_PADDING: Type_RichPadding = { top: 0, right: 0, bottom: 0, left: 0 }
+
+function richDiv(zone: Class_ContainerElement): HTMLDivElement | null {
+  return (zone.d3_selection?.select('foreignObject div').node() as HTMLDivElement | null | undefined) ?? null
+}
+
+function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
+  const div = richDiv(zone)
+  if (div === null || typeof window === 'undefined') return NO_PADDING
+  const style = window.getComputedStyle(div)
+  const px = (v: string) => parseFloat(v) || 0
+  const padding = {
+    top: px(style.paddingTop), right: px(style.paddingRight), bottom: px(style.paddingBottom), left: px(style.paddingLeft)
+  }
+  return Object.values(padding).every(v => v === 0) ? NO_PADDING : padding
+}
+
+function escapeHtml(s: string): string {
+  return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+}
+
+/**
+ * SA#550 — ligne d'un groupe épinglé : « Nom : description » en texte riche, toute en italique, le
+ * nom souligné. Toute autre zone perd le texte riche qu'une ligne épinglée aurait laissé sur elle.
+ */
+function applyPinnedLabel(zone: Class_ContainerElement, item: Type_LegendItem, police: number, padding: Type_RichPadding) {
+  if (item.pinned_name === undefined) {
+    zone.delete_attribute('name_label_has_fo')
+    zone.delete_attribute('name_label_fo_content')
+    return
+  }
+  const name = item.pinned_name
+  const rest = item.text.slice(name.length)
+  const style = [
+    `margin:${-padding.top}px ${-padding.right}px ${-padding.bottom}px ${-padding.left}px`,
+    `font-size:${police}px`, 'line-height:1.25', 'white-space:normal', 'font-style:italic'
+  ].join(';')
+  zone.name_label_has_fo = true
+  zone.name_label_fo_content =
+    `<p style="${style}"><span style="text-decoration:underline">${escapeHtml(name)}</span>${escapeHtml(rest)}</p>`
+}
 
 /** SA#545 — texte d'une zone (nom de l'entrée, ou valeur d'exemple) mis en forme par le style. */
 function applyTextFormat(
@@ -721,7 +767,37 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       police: values.police * font_comp,
       width: values.width * font_comp
     }
-    const positions = new Map(layoutLegendItems(items, layout_values).map(p => [p.id, p]))
+    // SA#550 — hauteur RÉELLE des lignes de groupes épinglés (« Nom : description », en texte
+    // riche) : le navigateur enveloppe le texte, l'estimation sans DOM s'en écarte vite sur un
+    // texte long. La zone est dessinée une première fois pour relever la marge interne de
+    // l'éditeur de texte riche (retirée ensuite) et la hauteur du texte ; elle est placée avec
+    // les autres ci-dessous. Sans DOM (hauteur nulle) : estimation.
+    const line_counts = new Map<string, number>()
+    const rich_paddings = new Map<string, Type_RichPadding>()
+    items.forEach(item => {
+      if (item.pinned_name === undefined) return
+      const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
+      zone.name_label_source = 'custom'
+      zone.name_label_text = item.text
+      zone.name_label_is_visible = true
+      zone.name_label_font_size = values.police
+      zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+      applyPinnedLabel(zone, item, values.police, NO_PADDING)
+      zone.draw()
+      const padding = richPaddingOf(zone)
+      rich_paddings.set(item.id, padding)
+      if (padding !== NO_PADDING) {
+        applyPinnedLabel(zone, item, values.police, padding)
+        zone.draw()
+      }
+      const height = richDiv(zone)?.offsetHeight ?? 0
+      if (height > 0) {
+        // Hauteur native → px monde, puis en interlignes de légende : la rangée garde sous le
+        // texte la demi-police qui sépare les lignes ordinaires (cf. legendWrappedShapeHeight).
+        line_counts.set(item.id, (height * font_comp + 0.5 * layout_values.police) / (1.5 * layout_values.police))
+      }
+    })
+    const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
     items.forEach(i => {
       if (i.block_id) desired_ids.add(i.block_id)
@@ -811,8 +887,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // la zone est réutilisée par id, l'ancienne survivrait sinon. Écriture
       // faite sous `_generating`, comme tout ce que le générateur pose.
       zone.tooltip_text = item.description ?? ''
-      // En horizontal les entrées restent sur une ligne (pas de wrap)
-      zone.name_label_box_width = values.horizontal ? 4000 : Math.max(values.width, 4 * values.police)
+      // En horizontal les entrées restent sur une ligne (pas de wrap) — sauf SA#550 la
+      // définition d'un groupe épinglé, enveloppée à la largeur de la légende.
+      zone.name_label_box_width = (values.horizontal && item.wrap !== true) ? 4000 : Math.max(values.width, 4 * values.police)
+      // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
+      // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
+      applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)
       // Toutes les zones partagent la même géométrie : une petite boîte
       // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
       // avec le label à sa droite, centré verticalement → tout s'aligne à
@@ -858,7 +938,11 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         // conservée pour garder le rythme vertical et le centrage du libellé
         // cohérents avec les lignes à pastille.
         zone.shape_min_width = 0
-        zone.shape_min_height = layout_values.police
+        // SA#550 — zone enveloppée : la forme couvre ses lignes, pour que le libellé centré
+        // dessus ne déborde ni sur la rangée d'avant ni sur celle d'après.
+        zone.shape_min_height = item.wrap === true
+          ? legendWrappedShapeHeight(legendWrappedLineCount(item, layout_values, line_counts), layout_values.police)
+          : layout_values.police
       }
       zone.name_label_horiz = 'right'
       zone.name_label_vert = 'middle'
