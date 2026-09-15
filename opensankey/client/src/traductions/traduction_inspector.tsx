@@ -369,7 +369,9 @@ export const resources_inspector = {
         // file: the spreadsheet asks the same question about TABLES, and one name for both
         // would suggest they follow one another.
         json_root_key: 'JSON root key',
+        window_subject: 'Window subject',
         short: {
+          subject: 'Subject',
           node: 'Nodes',
           link: 'Flows',
           data: 'Data',
@@ -728,7 +730,12 @@ export const resources_inspector = {
         // enregistré, et pas d'un mot générique : le tableur pose la même question sur des
         // TABLES, et un nom commun laisserait croire que les deux se suivent.
         json_root_key: 'Clé racine du JSON',
+        // os#1411 — le choix du sujet d'une figure d'élément, venu de la barre des sujets qui
+        // vivait au bord de la fenêtre. « De quoi » est la première question de navigation d'une
+        // figure d'élément, et elle se pose désormais ici, avec les autres.
+        window_subject: 'Sujet de la fenêtre',
         short: {
+          subject: 'Sujet',
           node: 'Nœuds',
           link: 'Flux',
           data: 'Données',
@@ -1080,7 +1087,9 @@ export const resources_inspector = {
         active_window: 'esta ventana',
         analysis_axis: 'Eje de análisis',
         json_root_key: 'Clave raíz del JSON',
+        window_subject: 'Sujeto de la ventana',
         short: {
+          subject: 'Sujeto',
           node: 'Nodos',
           link: 'Flujos',
           data: 'Datos',
@@ -1432,7 +1441,9 @@ export const resources_inspector = {
         active_window: 'dieses Fenster',
         analysis_axis: 'Analyseachse',
         json_root_key: 'JSON-Stammschlüssel',
+        window_subject: 'Gegenstand des Fensters',
         short: {
+          subject: 'Gegenstand',
           node: 'Knoten',
           link: 'Flüsse',
           data: 'Daten',
@@ -1784,7 +1795,9 @@ export const resources_inspector = {
         active_window: 'questa finestra',
         analysis_axis: 'Asse di analisi',
         json_root_key: 'Chiave radice del JSON',
+        window_subject: 'Soggetto della finestra',
         short: {
+          subject: 'Soggetto',
           node: 'Nodi',
           link: 'Flussi',
           data: 'Dati',
@@ -2140,7 +2153,9 @@ export const resources_inspector = {
         active_window: '该窗口',
         analysis_axis: '分析轴',
         json_root_key: 'JSON 根键',
+        window_subject: '窗口主体',
         short: {
+          subject: '主体',
           node: '节点',
           link: '流量',
           data: '数据',
@@ -2496,7 +2511,9 @@ export const resources_inspector = {
         active_window: 'このウィンドウ',
         analysis_axis: '分析の軸',
         json_root_key: 'JSON のルートキー',
+        window_subject: 'ウィンドウの対象',
         short: {
+          subject: '対象',
           node: 'ノード',
           link: 'フロー',
           data: 'データ',
