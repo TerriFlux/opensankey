@@ -10,7 +10,7 @@
 // LegendGenerator.ts, qui ré-exporte tout ce module.
 // ==================================================================================================
 
-import { LEGEND_CHILD_PREFIX } from './legendIds'
+import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
 import {
@@ -186,11 +186,6 @@ export type Type_LegendConfigValues = {
   // SA#549 — les étiquettes masquées sont RENDUES, rayées (cf. renderableLegendItems).
   // Optionnel pour garder les configurations des tests antérieurs valides.
   show_hidden_tags?: boolean
-}
-
-// Id stable et sûr pour un id HTML à partir d'un id de tag/groupe
-function slug(s: string): string {
-  return s.replaceAll(/[^a-zA-Z0-9_-]/g, '_')
 }
 
 // Reprend les 6 lignes du tableau des contraintes de l'ancienne légende
@@ -455,7 +450,8 @@ export function computeLegendItems(
   if (config.show_dataTags) {
     data_taggs.forEach(tag_group => {
       items.push({
-        id: LEGEND_CHILD_PREFIX + 'datatag-' + slug(tag_group.id),
+        // SA#552 — id partagé avec le clic qui ouvre la liste de la dimension
+        id: legendDataTagZoneId(tag_group.id),
         text: tag_group.name + ' : ' + tag_group.selected_tags_list.map(t => t.display_name).join(', '),
         starts_group: true,
         own_line: true
