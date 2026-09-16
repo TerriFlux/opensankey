@@ -39,7 +39,15 @@ export const resources_inspector = {
           none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
           // os#1402 — a setting that has moved must say where it went, otherwise the author
           // keeps looking for it where it used to be.
-          axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Filters and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.'
+          axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Filters and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.',
+          // os#1416 — the scope of a figure setting. Only shown when the window holds more than
+          // one figure: with a single one, both scopes name the same drawing.
+          scope: 'Apply to',
+          scope_pane: 'This figure',
+          scope_all: 'All ({{count}})',
+          // A setting that stays on its own figure while the others travel must say so, rather
+          // than let the author believe it went along with them.
+          this_pane_only: '(this figure)'
         },
         // Portée & cascade de styles
         selection: 'Selection',
@@ -416,7 +424,15 @@ export const resources_inspector = {
           none: 'Aucune représentation active : ouvrez une fenêtre sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
           // os#1402 — un réglage qui a déménagé doit dire où il est parti, sinon l'auteur le
           // cherche là où il l'avait laissé.
-          axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Filtres et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.'
+          axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Filtres et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.',
+          // os#1416 — la portée d'un réglage de figure. Offerte seulement quand la fenêtre
+          // montre plus d'une vignette : à une seule, les deux portées désignent le même dessin.
+          scope: 'Appliquer à',
+          scope_pane: 'Cette vignette',
+          scope_all: 'Toutes ({{count}})',
+          // Un réglage qui reste sur sa vignette pendant que les autres voyagent doit le dire,
+          // plutôt que de laisser croire qu'il est parti avec eux.
+          this_pane_only: '(cette vignette)'
         },
         selection: 'Sélection',
         selection_count: 'Sélection ({{count}})',
@@ -779,7 +795,11 @@ export const resources_inspector = {
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
         representation: {
           none: 'Ninguna representación activa: abra una ventana sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
-          axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Filtros y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.'
+          axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Filtros y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
+          scope: 'Aplicar a',
+          scope_pane: 'Esta figura',
+          scope_all: 'Todas ({{count}})',
+          this_pane_only: '(esta figura)'
         },
         selection: 'Selección',
         selection_count: 'Selección ({{count}})',
@@ -1134,7 +1154,11 @@ export const resources_inspector = {
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
         representation: {
           none: 'Keine aktive Darstellung: Öffnen Sie ein Fenster auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
-          axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Filter und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.'
+          axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Filter und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
+          scope: 'Anwenden auf',
+          scope_pane: 'Diese Abbildung',
+          scope_all: 'Alle ({{count}})',
+          this_pane_only: '(diese Abbildung)'
         },
         selection: 'Auswahl',
         selection_count: 'Auswahl ({{count}})',
@@ -1489,7 +1513,11 @@ export const resources_inspector = {
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
         representation: {
           none: 'Nessuna rappresentazione attiva: aprite una finestra su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
-          axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Filtri e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.'
+          axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Filtri e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
+          scope: 'Applicare a',
+          scope_pane: 'Questa figura',
+          scope_all: 'Tutte ({{count}})',
+          this_pane_only: '(questa figura)'
         },
         selection: 'Selezione',
         selection_count: 'Selezione ({{count}})',
@@ -1843,7 +1871,11 @@ export const resources_inspector = {
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
         representation: {
           none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
-          axis_in_navigation: '分析轴（按此分解、按此比较）在「筛选与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。'
+          axis_in_navigation: '分析轴（按此分解、按此比较）在「筛选与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
+          scope: '应用于',
+          scope_pane: '本图',
+          scope_all: '全部（{{count}}）',
+          this_pane_only: '（仅本图）'
         },
         // Portée & cascade de styles
         selection: '选择',
@@ -2202,7 +2234,11 @@ export const resources_inspector = {
         nothing_here: '{{target}} に利用できる設定はありません。',
         representation: {
           none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
-          axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「絞り込みと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。'
+          axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「絞り込みと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
+          scope: '適用先',
+          scope_pane: 'この図',
+          scope_all: 'すべて（{{count}}）',
+          this_pane_only: '（この図のみ）'
         },
         // Portée & cascade de styles
         selection: '選択',

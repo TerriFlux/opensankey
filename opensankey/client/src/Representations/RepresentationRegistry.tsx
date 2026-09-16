@@ -104,6 +104,10 @@ import {
 // `WindowTarget` lit les types d'ici, ce fichier lit les siens, et rien de tout cela ne survit à
 // la compilation - aucun cycle à l'exécution.
 import type { Type_ElementTargetResolver } from './WindowTarget'
+// os#1416 - la portée d'un réglage de figure. Import de TYPE seulement, et dans ce sens-là
+// uniquement : `MenuConfig` ne connaît pas le registre, la portée vit auprès de la liste des
+// réglages liés au sujet, qui est ce qui la borne.
+import type { Type_RepresentationOptionScope } from '../types/MenuConfig'
 
 /**
  * Les deux échelles que le code confondait (§3.2 de la note). Une entrée en
@@ -343,6 +347,17 @@ type Type_RepresentationCommon = {
      * contexte et les réglages de celle-là. Absent à l'échelle diagramme (rien à pointer).
      */
     ctx?: Type_RepresentationContext
+    /**
+     * os#1416 — LA PORTÉE que l'auteur a choisie pour ce qu'il règle : cette vignette, ou
+     * toutes celles de la fenêtre. Absente = 'pane', ce que voit toute surface qui ne l'offre
+     * pas (le menu contextuel d'une figure, une fenêtre à une seule vignette).
+     *
+     * L'entrée n'a RIEN à faire de la propagation — l'hôte s'en charge, et il refuse de lui-même
+     * de transposer un réglage lié au sujet (cf. `transposableChanges`). Ce qu'elle a à en
+     * faire, c'est le DIRE : sous une portée « toutes », un réglage qui, lui, restera sur sa
+     * vignette doit s'annoncer tel quel, sinon l'auteur croit l'appliquer partout.
+     */
+    scope?: Type_RepresentationOptionScope
   }) => React.ReactNode
 }
 

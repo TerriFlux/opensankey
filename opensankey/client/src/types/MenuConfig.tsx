@@ -258,6 +258,58 @@ const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
   'normalize_link_id', 'descriptor', 'root_ids'
 ]
 
+/**
+ * os#1416 — LA PORTÉE D'UN RÉGLAGE DE FIGURE : cette vignette, ou toutes celles de la fenêtre.
+ *
+ * Une fenêtre d'élément porte N vignettes, et le volet de représentation ne réglait que
+ * l'active, sans le dire. « Régler cette vignette » et « régler toutes les vignettes » sont
+ * deux portées, comme l'édition d'un élément en a déjà une dans l'inspecteur (la sélection, ou
+ * le style qu'elle suit) : ce n'est pas une case de plus, c'est la réponse à « à quoi ce que je
+ * règle s'applique-t-il ».
+ *
+ * L'union est OUVERTE par construction : le jour où les vignettes seront sélectionnables, une
+ * portée « la sélection » s'ajoute ici et tout ce qui la lit la traite comme les deux autres.
+ */
+export type Type_RepresentationOptionScope = 'pane' | 'all'
+
+/**
+ * os#1416 — UN RÉGLAGE EST-IL TRANSPOSABLE, c'est-à-dire a-t-il un sens sur la figure voisine ?
+ *
+ * C'est la MÊME question que celle du défaut par nature juste au-dessus, posée d'un autre côté :
+ * un réglage qui nomme une façon de regarder (mode de valeur, gris ou couleurs) se transpose à
+ * n'importe quelle figure ; un réglage qui nomme un objet du sujet ne se transpose à aucune. La
+ * liste reste donc unique — deux listes de la même chose finiraient par diverger, et la seconde
+ * rendrait « toutes les vignettes » possible là où le défaut par nature l'interdit déjà.
+ */
+export const isTransposableOption = (key: string): boolean =>
+  !SUBJECT_BOUND_OPTION_KEYS.includes(key)
+
+/**
+ * os#1416 — CE QU'UNE PORTÉE « TOUTES » A LE DROIT DE PORTER : ce qui vient de changer, moins
+ * ce qui est lié au sujet.
+ *
+ * Le diff, et non les réglages entiers : recopier tout le jeu de l'auteur sur ses voisines
+ * écraserait ce qu'elles disent par ailleurs — deux étoiles peuvent partager un mode de valeur
+ * et garder chacune sa référence de normalisation. Seul le geste qu'on vient de faire voyage.
+ *
+ * Une clé RETIRÉE ne voyage pas : aucun réglage ne se supprime aujourd'hui (tous réécrivent
+ * `{ ...options, clé: valeur }`), et propager une absence demanderait de distinguer « effacé »
+ * de « jamais dit », ce que le porteur de la portée n'a pas à trancher.
+ */
+export const transposableChanges = (
+  prev: { [key: string]: unknown } | undefined,
+  next: { [key: string]: unknown } | undefined
+): { [key: string]: unknown } => {
+  const out: { [key: string]: unknown } = {}
+  Object.entries(next ?? {}).forEach(([key, value]) => {
+    if (!isTransposableOption(key)) return
+    // Comparaison par sérialisation : un descripteur ou une liste sont des valeurs composées,
+    // et l'égalité de référence rapporterait un changement à chaque rendu du volet.
+    if (JSON.stringify((prev ?? {})[key]) !== JSON.stringify(value)) out[key] = value
+  })
+  return out
+}
+
 /** Les réglages, débarrassés de ceux qui désignent un objet du sujet. */
 const withoutSubjectBoundOptions = (options: Type_JSON | undefined): Type_JSON => {
   const out: Type_JSON = {}
