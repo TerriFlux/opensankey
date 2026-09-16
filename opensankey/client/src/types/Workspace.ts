@@ -1,0 +1,434 @@
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// ==================================================================================================
+// Author        : Julien Alapetite & Vincent LE DOZE & Vincent CLAVEL for TerriFlux
+// ==================================================================================================
+
+import { CreateToastFnReturn } from '@chakra-ui/react'
+import { TFunction, i18n } from 'i18next'
+
+import { Class_MenuConfig } from './MenuConfig'
+import { Class_ApplicationData } from './ApplicationData'
+import type { Type_ElementAnalysis, Type_TextForToastPromise } from './ApplicationData'
+import type { Class_DrawingArea } from './DrawingArea'
+import { getPublishOptions, PublishOptions } from './PublishOptions'
+import {
+  default_toast_duration, default_toast_waiting_delay, randomId, toast_bypass, Type_JSON
+} from './Utils'
+import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_LinkElement } from '../Elements/Link'
+
+/**
+ * os#1385 — Conteneur de dessin d'un document HORS ÉCRAN : un sélecteur qui ne peut désigner
+ * aucun élément réel de la page.
+ *
+ * Ce n'est pas une précaution de style. Une `Class_DrawingArea` naît avec
+ * `container_selector = '#sankey_app'`, c'est-à-dire le conteneur du diagramme AFFICHÉ, et
+ * tout chemin qui dessine commence par `selectAll('#draw_zoom').remove()` dedans : un document
+ * hors écran qu'on laisserait avec le sélecteur par défaut EFFACERAIT le diagramme de
+ * l'utilisateur au premier calcul de placement. Le board unitaire a payé ce défaut jusqu'en
+ * septembre 2026 (cf. `UnitaryBoard.buildUnitaryDrawingArea`, « LE CONTENEUR, TOUT DE SUITE »),
+ * au prix d'un redessin complet du diagramme principal après chaque vignette. On ne le refait pas.
+ *
+ * Le nom est volontairement imprononçable : aucune feuille de style, aucun composant ne peut
+ * le poser par mégarde sur un vrai nœud du DOM. Il remplace les deux sélecteurs jumeaux
+ * d'avant (`#os1386_sheet_snapshot_offscreen_never_in_dom` pour les instantanés de feuille,
+ * `#os_detached_app_offscreen_never_in_dom` pour l'extraction unitaire) : il n'y a qu'une
+ * notion, « ce document n'a pas d'écran », et elle se pose désormais par `detachOffscreen()`.
+ */
+export const OFFSCREEN_CONTAINER_SELECTOR = '#os1385_offscreen_document_never_in_dom'
+
+/** Options de naissance d'un document (cf. `Class_Workspace.createDocument`). */
+export type Type_DocumentOptions = {
+  /**
+   * Le document n'a pas d'écran : TOUTE zone de dessin qu'il créera naîtra dans
+   * `OFFSCREEN_CONTAINER_SELECTOR`. Il n'est pas candidat à être le document `main`.
+   */
+  offscreen?: boolean
+}
+
+/**
+ * os#1385 — L'ESPACE DE TRAVAIL : ce qui est UNIQUE quel que soit le nombre de documents ouverts.
+ *
+ * `Class_ApplicationData` est le DOCUMENT (un sankey, sa zone de dessin, ses vues, sa doc, ses
+ * feuilles, sa sélection, son historique). Tout ce qui n'a de sens qu'en un exemplaire — la
+ * licence du compte, la langue de l'interface, les logos, la file de toasts, les options de la
+ * page publiée, les crochets que la couche OS+ injecte une fois, la configuration de menus de
+ * l'hôte — vit ICI, et le document y accède par des accesseurs délégués. Les cinq cents sites
+ * d'appel (`app_data.t`, `app_data.has_sankey_plus`, `app_data.publish_options`…) ne bougent
+ * donc pas : seule la source de vérité change.
+ *
+ * AVANT, ces champs étaient posés sur l'application principale et RECOPIÉS À LA MAIN sur les
+ * autres (instantané de feuille, source Excel unitaire, extraction de brique, application
+ * fantôme des préférences) : la liste de ce que ces quatre applications devaient contourner
+ * était exactement la liste de ce qui était mal placé (cf. NOTE-APPLI-D-APPLIS.md §1, fait 2).
+ */
+export class Class_Workspace {
+
+  // PAGE ===============================================================================
+
+  /**
+   * Mode de PAGE : vrai dans un viewer de publication, faux dans l'éditeur. Source UNIQUE de
+   * `Class_ApplicationData.is_static`, qui vivait jusqu'ici sur la zone de dessin — laquelle est
+   * recréée à chaque `reset()`, d'où les réalignements à la main qui disparaissent avec ce champ.
+   */
+  public readonly published_mode: boolean
+
+  /**
+   * Options de la page publiée (`window.sankey`), lues UNE fois par espace de travail.
+   *
+   * Un seul objet, et c'est essentiel : les viewers React MUTENT ses champs
+   * (`po.data_tag_selection = …`, cf. `useViewerAppData`) et attendent que la mutation soit
+   * visible du document. Un getter qui reconstruirait l'objet à chaque lecture les perdrait.
+   */
+  public readonly publish_options: PublishOptions = getPublishOptions()
+
+  /** Options d'instanciation de l'application (`no_key_event`…). */
+  public readonly options: { [_: string]: boolean | string }
+
+  // COMPTE =============================================================================
+  // Licences BRUTES du compte : `is_static` n'entre PAS dans le calcul ici. C'est le document
+  // qui mélange les deux (`has_sankey_plus => workspace.has_sankey_plus || is_static`), parce
+  // que c'est lui qui sait s'il est affiché dans une page publiée.
+
+  protected _has_sankey_dev: boolean = false
+  protected _has_sankey_plus: boolean = false
+  protected _has_sankey_afm: boolean = false
+
+  public get has_sankey_dev(): boolean { return this._has_sankey_dev }
+  public set has_sankey_dev(_: boolean) { this._has_sankey_dev = _ }
+  public get has_sankey_plus(): boolean { return this._has_sankey_plus }
+  public set has_sankey_plus(_: boolean) { this._has_sankey_plus = _ }
+  public get has_sankey_afm(): boolean { return this._has_sankey_afm }
+  public set has_sankey_afm(_: boolean) { this._has_sankey_afm = _ }
+
+  // LANGUE DE L'INTERFACE ==============================================================
+
+  //@ts-expect-error xxx
+  protected _t: TFunction = () => null
+  //@ts-expect-error xxx
+  protected _i18n: i18n = () => null
+
+  public get t(): TFunction { return this._t }
+  public set t(_: TFunction) { this._t = _ }
+  public get i18n(): i18n { return this._i18n }
+  public set i18n(_: i18n) { this._i18n = _ }
+
+  // TOASTS =============================================================================
+  // File d'attente UNIQUE : deux documents qui enregistrent en même temps ne doivent pas se
+  // voler leur spinner.
+
+  protected _toast: CreateToastFnReturn | null = null
+  public get toast(): CreateToastFnReturn | null { return this._toast }
+  public set toast(_: CreateToastFnReturn | null) { this._toast = _ }
+
+  /** Queue of waiting processes for toast */
+  private _toast_processes: string[] = []
+
+  /** Force bypassing waiting toast */
+  private _toast_bypass: boolean = toast_bypass
+
+  /** os#1359 — Ce qui a déjà été dit une fois n'est pas redit. Voir `notifyUser`. */
+  private _notified_once: Set<string> = new Set()
+
+  /**
+   * Create a waiting toast and add function to waiting queue.
+   * @param {() => void} funct
+   * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
+   */
+  public sendWaitingToast(
+    funct: () => void | Promise<void>,  // Accepte async
+    intake?: Type_TextForToastPromise
+  ) {
+    const funct_id = randomId()
+    this._toast_processes.push(funct_id)
+    if (this._toast_bypass)
+      funct()
+    else
+      this._sendWaitingToast(funct, funct_id, intake)
+  }
+
+  /**
+   * Allows to create a waiting toast for given function.
+   * Use a functions queue to ensure that all function that call always run in the calling order.
+   */
+  protected _sendWaitingToast(
+    funct: () => void | Promise<void>,
+    funct_id: string,
+    intake?: Type_TextForToastPromise
+  ) {
+    if (this._toast_processes[0] !== funct_id) {
+      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
+    } else {
+      const task_promise = (async () => {
+        try {
+          await new Promise(r => setTimeout(r, 500)) // Attendre 500ms pour le spinner
+          await funct()  // Attendre la fin de la fonction (sync ou async)
+          return 200
+        } finally {
+          this._toast_processes.splice(0, 1)
+        }
+      })()
+      this._toast!.promise(
+        task_promise,
+        {
+          success: {
+            title: intake?.success?.title ?? this.t('toast.default.success.title'),
+            description: intake?.success?.desc ?? this.t('toast.default.success.desc'),
+            duration: default_toast_duration
+          },
+          loading: {
+            title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
+            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
+            duration: default_toast_duration
+          },
+          // La raison du rejet était JETÉE : l'utilisateur voyait un titre
+          // générique, la console ne montrait rien, et un échec survenu sur une
+          // autre machine restait indiagnosticable — c'est exactement ce qui a
+          // fait perdre une semaine sur l'export PNG. Chakra accepte une
+          // fonction ici : on y récupère l'erreur, on la trace et on la montre.
+          // L'erreur reste affichée (duration null) et refermable : c'est un
+          // message que l'utilisateur doit pouvoir lire et recopier.
+          error: (err: Error) => {
+            console.error('[toast] tache en echec :', err)
+            const detail = err?.message ? String(err.message) : ''
+            const base = intake?.error?.desc
+            const description = [base, detail].filter(Boolean).join(' — ')
+            return {
+              title: intake?.error?.title ?? this.t('toast.default.error.title'),
+              description: description || this.t('toast.default.error.desc'),
+              duration: detail ? null : default_toast_duration,
+              isClosable: true
+            }
+          },
+        }
+      )
+    }
+  }
+
+  /**
+   * os#1359 — un mot bref, non bloquant, sur une conséquence que la saisie ne montre pas
+   * d'elle-même (typiquement : quelle couche de données vient d'être écrite, et laquelle
+   * vient d'être périmée).
+   *
+   * `once` vaut pour une règle de fonctionnement, qui ne change pas d'une saisie à l'autre :
+   * la répéter à chaque valeur corrigée transformerait l'explication en gêne, et l'utilisateur
+   * apprendrait surtout à ne plus lire les bandeaux. L'`id` dédoublonne aussi le reste, sans
+   * quoi corriger vingt flux sélectionnés empilerait vingt fois le même message.
+   *
+   * Silencieux tant qu'aucun toast n'est monté (rendu hors React, tests, mode publié sans
+   * ChakraProvider) : c'est un confort de lecture, jamais une condition d'exécution.
+   */
+  public notifyUser(
+    id: string,
+    title: string,
+    description?: string,
+    status: 'info' | 'warning' = 'info',
+    once: boolean = false
+  ): void {
+    if (!this._toast) return
+    if (once) {
+      if (this._notified_once.has(id)) return
+      this._notified_once.add(id)
+    } else if (this._toast.isActive(id)) return
+    this._toast({
+      id,
+      title,
+      description,
+      status,
+      duration: default_toast_duration,
+      isClosable: true
+    })
+  }
+
+  // MARQUES ============================================================================
+
+  /** Path to OpenSankey logo */
+  protected _logo_opensankey: string = 'logos/logo_opensankey.png'
+  /** Path to Terriflux logo (le chemin dépend du mode de page) */
+  protected _logo_terriflux: string = 'logos/logo_terriflux.png'
+  /** Width of logo */
+  protected _logo_width: number = 100
+  /** Application name */
+  protected _app_name: string = 'MFASankey'
+  /** Path prefix for backend server requests */
+  protected _url_prefix: string = '/opensankey/'
+
+  public get logo_opensankey(): string { return this._logo_opensankey }
+  public get logo_terriflux(): string { return this._logo_terriflux }
+  public get logo_width(): number { return this._logo_width }
+  public set logo_width(value: number) { this._logo_width = value }
+  public get app_name(): string { return this._app_name }
+  public set app_name(value: string) { this._app_name = value }
+  public get url_prefix(): string { return this._url_prefix }
+
+  // RÉGLAGES DE SESSION ================================================================
+
+  /**
+   * Session-only horizontal spacing for auto-layout. `null` = use style default.
+   * Shared between the auto-layout context menu widget and the Excel import dialog.
+   */
+  public layout_h_spacing: number | null = null
+
+  /**
+   * Session-only vertical spacing for auto-layout. `null` = use style default.
+   * Shared between the auto-layout context menu widget and the Excel import dialog.
+   */
+  public layout_v_spacing: number | null = null
+
+  /**
+   * Session-only placement mode for nodes without incoming flows (auto-layout).
+   * 'before_neighbor' = one column before the earliest successor (default),
+   * 'left_extremity' = pinned to the leftmost column (index 0).
+   */
+  public layout_sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor'
+
+  /**
+   * Session-only placement mode for nodes without outgoing flows (auto-layout).
+   * 'after_neighbor' = one column after the latest predecessor (default),
+   * 'right_extremity' = pinned to the rightmost column.
+   */
+  public layout_sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+
+  /**
+   * Session-only mode for the auto-layout: whether to minimize link crossings.
+   * `true` = "Minimiser les croisements", `false` = "Centrer les nœuds".
+   * Used by the Excel import dialog; the right-click menu exposes the choice via two buttons instead.
+   */
+  public layout_optimize_crossing: boolean = true
+
+  /** Attributes to transfer between sankeys (réglage de session du dialogue de transfert). */
+  public data_var_to_update: string[] = []
+
+  // CROCHETS INJECTÉS PAR OS+ ==========================================================
+  // Posés UNE fois par la couche supérieure : un document secondaire en héritait jusqu'ici
+  // par rien du tout, d'où des fenêtres muettes selon le document qu'elles regardaient.
+
+  /** Called after applying a layout from an external source.
+   * tmp_DA is the already-converted source DrawingArea.
+   * json is the raw source file JSON (null for view sources).
+   * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
+  public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
+
+  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le sankey unitaire
+   * focalisé sur `node` dans le conteneur DOM `container_selector`, EN PLUS du
+   * diagramme principal. Retourne un handle pour le redessiner (resize) et le
+   * nettoyer. Alimente l'onglet « Sankey unitaire » du tooltip de nœud
+   * (NodeTooltip). Absent hors OS+. */
+  public draw_unitary_in_container?: (
+    node: Class_NodeElement,
+    container_selector: string
+  ) => { redraw: () => void, cleanup: () => void } | void = undefined
+
+  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le GRAPHIQUE
+   * D'ANALYSE (couronne / histogramme) décrit par l'attribut analysis_descriptor
+   * de l'élément (nœud OU flux) dans le conteneur DOM `container_selector`.
+   * Alimente l'onglet « Analyse » des tooltips de nœud et de flux quand
+   * surfaces.tooltip est activé (OS#1278). Absent hors OS+. */
+  public draw_analysis_in_container?: (
+    element: Class_NodeElement | Class_LinkElement,
+    container_selector: string
+  ) => { redraw: () => void, cleanup: () => void } | void = undefined
+
+  /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
+   * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
+   * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
+   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+. */
+  public draw_node_analysis_overlay?: (
+    node: Class_NodeElement,
+    group_el: SVGGElement,
+    width: number,
+    height: number
+  ) => boolean = undefined
+
+  /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
+   * (colonne de boutons Unit. / Couronne / Barres). Chacune sait se dessiner dans un
+   * conteneur DOM. Absent hors OS+ (pas de colonne d'analyses). */
+  public element_analyses_for?: (
+    element: Class_NodeElement | Class_LinkElement
+  ) => Type_ElementAnalysis[] = undefined
+
+  // CONFIGURATION DE MENUS HÔTE ========================================================
+
+  /**
+   * La configuration de menus de l'HÔTE : panneaux, colonne d'outils, dialogues, injections
+   * de menus, ordre des menus du haut. Celle de chaque DOCUMENT lui est adossée
+   * (`new Class_MenuConfig(host)`) et n'en porte que les emplacements liés au contenu.
+   *
+   * Stable pour la vie de l'espace de travail : `createNewMenuConfiguration(toast)` recrée
+   * celle du document (c'est ce que `useMenuConfiguration` demande au montage), jamais celle-ci
+   * — sans quoi les composants d'interface, abonnés au montage, deviendraient sourds.
+   */
+  public readonly menu_configuration: Class_MenuConfig
+
+  /** Virtuelle : OS+ et la couche SaaS fournissent leur propre sous-classe. */
+  protected createMenuConfiguration(): Class_MenuConfig { return new Class_MenuConfig() }
+
+  // DOCUMENTS ==========================================================================
+
+  protected _documents: Class_ApplicationData[] = []
+  protected _main: Class_ApplicationData | null = null
+
+  /** Les documents vivants de cet espace de travail, hors écran compris. */
+  public get documents(): readonly Class_ApplicationData[] { return this._documents }
+
+  /**
+   * Le document PRINCIPAL : le premier document affichable enregistré. C'est lui, et lui seul,
+   * qui a le droit d'écrire la disposition de l'hôte (panneaux, langue de l'interface) et de
+   * repeindre les menus — un document secondaire n'avait jusqu'ici qu'une configuration
+   * orpheline, et ce qui suit reproduit ce comportement au lieu de le subir.
+   */
+  public get main(): Class_ApplicationData | null { return this._main }
+
+  /**
+   * Fabrique LE geste normal : un document naît DANS un espace de travail, qui lui donne d'un
+   * coup la langue, les licences, le mode de page, les logos, la file de toasts, les crochets
+   * et la configuration de menus hôte. Plus aucune recopie à la main.
+   */
+  public createDocument(options: Type_DocumentOptions = {}): Class_ApplicationData {
+    const doc = this.instantiateDocument()
+    if (options.offscreen) doc.detachOffscreen()
+    this.registerDocument(doc, options)
+    return doc
+  }
+
+  /** Virtuelle : OS+ et la couche SaaS construisent leur propre sous-classe de document. */
+  protected instantiateDocument(): Class_ApplicationData { return new Class_ApplicationData(this) }
+
+  /**
+   * Enregistre un document dans l'espace de travail. Appelé par `createDocument`, et aussi par
+   * le constructeur BOOLÉEN du document (`new Class_ApplicationData(true)`), qui se crée un
+   * espace de travail privé dont il est le `main` — c'est ce qui garde valides les soixante
+   * fichiers de tests et les consommateurs npm.
+   */
+  public registerDocument(doc: Class_ApplicationData, options: Type_DocumentOptions = {}): void {
+    if (!this._documents.includes(doc)) this._documents.push(doc)
+    // Un document hors écran n'est candidat à rien : il n'a pas de place à l'écran, donc pas
+    // de disposition à écrire ni de menus à repeindre.
+    if (!options.offscreen && this._main === null) this._main = doc
+  }
+
+  /** Retire un document (instantané de feuille périmé, source Excel remplacée…). */
+  public forgetDocument(doc: Class_ApplicationData): void {
+    const idx = this._documents.indexOf(doc)
+    if (idx >= 0) this._documents.splice(idx, 1)
+    if (this._main === doc) this._main = null
+  }
+
+  // CONSTRUCTOR ========================================================================
+
+  constructor(
+    published_mode: boolean,
+    options: { [_: string]: boolean | string } = {}
+  ) {
+    this.published_mode = published_mode
+    this.options = options
+    // Get TerriFlux logo — le viewer d'une publication sert ses images à plat.
+    if (published_mode) this._logo_terriflux = 'logo_terriflux.png'
+    // Dispatch virtuel, comme la fabrique de documents : la configuration HÔTE est celle de
+    // la couche la plus haute (MenuConfigOSP / MenuConfigSA).
+    this.menu_configuration = this.createMenuConfiguration()
+  }
+}

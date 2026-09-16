@@ -91,6 +91,28 @@ export const IMPORT_TOPIC = 'import'
  */
 export const SAVE_TOPIC = 'save'
 
+/**
+ * os#1385 — LES TOPICS DE L'ESPACE DE TRAVAIL, par opposition à ceux du document.
+ *
+ * Le critère est celui de l'inventaire hôte/document : un topic est d'HÔTE quand ce qu'il
+ * annonce est unique quel que soit le nombre de documents ouverts. La grande zone
+ * (`MAIN_ZONE`) est la disposition de l'écran, les panneaux (`PANELS`) la barre latérale et
+ * les pop-ups, la bibliothèque (`LIBRARY`) le compte, l'import (`IMPORT`) et
+ * l'enregistrement (`SAVE`) des gestes de l'application qui font réagir la couche
+ * applicative (proposition d'essai, proposition de compte) — aucun de ces cinq ne parle du
+ * CONTENU d'un diagramme.
+ *
+ * Les quatre autres en parlent, et seulement de lui : `DRAW` (ce diagramme vient d'être
+ * dessiné), `SELECTION` (ce qui est sélectionné DEDANS), `ZOOM` (l'échelle de SA caméra) et
+ * `MINIMAP` (le repli de la vignette de SA zone de dessin, état porté par
+ * `Class_DrawingArea.minimap_open`). Ils restent donc sur le bus de leur document.
+ *
+ * Lu par `Class_MenuConfig.subscribe` / `notify` pour router chaque signal vers le bon bus.
+ */
+export const HOST_TOPICS: ReadonlySet<string> = new Set([
+  MAIN_ZONE_TOPIC, PANELS_TOPIC, LIBRARY_TOPIC, IMPORT_TOPIC, SAVE_TOPIC
+])
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 
