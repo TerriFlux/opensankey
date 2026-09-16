@@ -258,6 +258,10 @@ export const resources_inspector = {
           scale_per_group_hint: 'One scale per cluster — a cluster is one label of “Compare across”',
           show_in_tooltip: 'Show in tooltip',
           show_on_node: 'Show on the node (donut / histogram)',
+          // os#1421 — a figure PLACED from a window replaces the checkbox above: the node draws
+          // that figure, which is settled in its own window, not here.
+          placed_figure: 'This node draws a figure placed from a window',
+          unplace: 'Remove',
           select_subject: 'Select a node or a flow.'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
@@ -648,6 +652,8 @@ export const resources_inspector = {
           scale_per_group_hint: 'Une échelle par grappe — une grappe = une étiquette de « Comparer selon »',
           show_in_tooltip: 'Afficher dans l’info-bulle',
           show_on_node: 'Afficher sur le nœud (couronne / histogramme)',
+          placed_figure: 'Ce nœud dessine une figure posée depuis une fenêtre',
+          unplace: 'Retirer',
           select_subject: 'Sélectionner un nœud ou un flux.'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
@@ -1023,6 +1029,8 @@ export const resources_inspector = {
           scale_per_group_hint: 'Una escala por grupo — un grupo es una etiqueta de «Comparar según»',
           show_in_tooltip: 'Mostrar en el tooltip',
           show_on_node: 'Mostrar en el nodo (anillo / histograma)',
+          placed_figure: 'Este nodo dibuja una figura colocada desde una ventana',
+          unplace: 'Quitar',
           select_subject: 'Seleccione un nodo o un flujo.'
         },
         // OS#1285 — visibilidad de los bloques del tooltip.
@@ -1387,6 +1395,8 @@ export const resources_inspector = {
           scale_per_group_hint: 'Ein Maßstab je Gruppe — eine Gruppe ist ein Label von „Vergleichen über“',
           show_in_tooltip: 'Im Tooltip anzeigen',
           show_on_node: 'Am Knoten anzeigen (Ring / Histogramm)',
+          placed_figure: 'Dieser Knoten zeichnet eine aus einem Fenster platzierte Figur',
+          unplace: 'Entfernen',
           select_subject: 'Wählen Sie einen Knoten oder einen Fluss.'
         },
         // OS#1285 — Sichtbarkeit der Tooltip-Blöcke.
@@ -1751,6 +1761,8 @@ export const resources_inspector = {
           scale_per_group_hint: 'Una scala per gruppo — un gruppo è un’etichetta di «Confrontare per»',
           show_in_tooltip: 'Mostra nel tooltip',
           show_on_node: 'Mostra sul nodo (anello / istogramma)',
+          placed_figure: 'Questo nodo disegna una figura posata da una finestra',
+          unplace: 'Rimuovi',
           select_subject: 'Seleziona un nodo o un flusso.'
         },
         // OS#1285 — visibilità dei blocchi del tooltip.
@@ -2119,6 +2131,8 @@ export const resources_inspector = {
           scale_per_group_hint: '每组一个刻度——一组即“按此比较”的一个标签',
           show_in_tooltip: '在提示框中显示',
           show_on_node: '在节点上显示（环形图 / 直方图）',
+          placed_figure: '此节点绘制的是从窗口放置的图形',
+          unplace: '移除',
           select_subject: '请选择一个节点或一条流量。'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
@@ -2487,6 +2501,8 @@ export const resources_inspector = {
           scale_per_group_hint: 'グループごとに 1 スケール — グループは「比較の軸」の 1 ラベル',
           show_in_tooltip: 'ツールチップに表示',
           show_on_node: 'ノード上に表示（ドーナツ／ヒストグラム）',
+          placed_figure: 'このノードはウィンドウから配置された図を描画しています',
+          unplace: '削除',
           select_subject: 'ノードまたはフローを選択してください。'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
