@@ -26,7 +26,7 @@ import {
   default_info_link_value_void, default_width
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
-import { LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId } from './legendIds'
+import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
@@ -45,6 +45,7 @@ export * from './legendItems'
 // DrawingArea (hooks de cassure) — aucune dépendance runtime vers eux pour ne
 // pas créer de cycle à l'initialisation des modules.
 import type { Class_Tag } from '../types/Tag'
+import type { Class_TagGroup } from '../types/TagGroup'
 import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_ContainerElement } from './TextZone'
 import type { Class_NodeBase } from './NodeBase'
@@ -256,6 +257,9 @@ export class Class_LegendConfig {
   private _entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
   // SA#549 — groupe que désigne chaque titre de groupe (renommer au double-clic renomme le groupe)
   private _entry_groups = new Map<string, string>()
+  // SA#551 — groupe de nœuds ou de flux que désigne chaque titre de groupe, ligne épinglée comprise :
+  // cliquer le titre ouvre ou ferme le groupe.
+  private _group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs' }>()
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -420,6 +424,9 @@ export class Class_LegendConfig {
   /** SA#549 — relevé des titres de groupe, posé par regenerateLegend. */
   public set entry_groups(_: Map<string, string>) { this._entry_groups = _ }
 
+  /** SA#551 — relevé des titres de groupe cliquables, posé par regenerateLegend. */
+  public set group_titles(_: Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs' }>) { this._group_titles = _ }
+
   /**
    * SA#549 — la saisie inline de cette zone renomme-t-elle une étiquette ou un groupe ? Oui pour
    * une entrée d'étiquette de nœuds ou de flux (sauf gabarit d'entrée : le texte y compose plus que
@@ -519,6 +526,59 @@ export class Class_LegendConfig {
       history.saveUndo(() => apply(was_selected, had_hidden_tags))
       history.saveRedo(() => apply(!was_selected, true))
       apply(!was_selected, true)
+    })
+    return true
+  }
+
+  /**
+   * SA#551 — clic sur le TITRE d'un groupe de nœuds ou de flux (ligne épinglée comprise) : un groupe
+   * fermé s'OUVRE — interrupteur « Appliquer les styles associés » allumé, et groupe placé en
+   * dernière position de sa liste, la plus prioritaire (ses styles l'emportent, il passe en tête de
+   * légende) ; un groupe ouvert se FERME — interrupteur éteint, sa place dans la liste est gardée.
+   * Aucun autre groupe n'est touché. Annuler/rétablir en lecture comme en édition. Renvoie `false`
+   * pour toute autre zone, qui garde son clic ordinaire.
+   *
+   * Les groupes de données sont exclus au relevé (regenerateLegend) : leur ordre porte aussi
+   * l'échelle affichée (computeScaleText), les réordonner changerait autre chose qu'un style.
+   */
+  public toggleGroup(zone_id: string): boolean {
+    if (!this._managed || this._masked) return false
+    const target = this._group_titles.get(zone_id)
+    if (target === undefined) return false
+    const drawing_area = this._drawing_area
+    const sankey = drawing_area.sankey
+    const group = sankey.getTagGroupsAsList(target.type_group).find(g => g.id === target.tag_group_id) as Class_TagGroup | undefined
+    if (group === undefined) return false
+    const apply = (open: boolean, order: string[], rank: number) => {
+      clearLegendHighlight(drawing_area)
+      // Ordre d'abord : le dessin qui suit résout les styles dans le nouvel ordre.
+      if (open && rank < 0) {
+        sankey.giveTagGroupTopPriority(target.type_group, group.id)
+      } else {
+        sankey.setTagGroupsOrder(target.type_group, [...order])
+        sankey.setTagGroupOpenedRank(group.id, rank)
+        sankey.tagStylesUpdated()
+      }
+      group.setUseColors(open, false)
+      // UN dessin complet, qui régénère aussi la légende (cf. toggleEntryTag).
+      drawing_area.draw()
+      drawing_area.orderElementOnDA()
+      drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    }
+    // Geste lourd, état lu DANS le travail (deux clics en file : cf. toggleEntryTag).
+    drawing_area.application_data.runHeavyGesture(() => {
+      const was_open = group.use_colors
+      const order = [...sankey.getTagGroupsOrder(target.type_group)]
+      const rank = sankey.tagGroupOpenedRank(group.id)
+      let redo_order: string[] = order
+      let redo_rank = rank
+      const history = drawing_area.application_data.history
+      history.saveUndo(() => apply(was_open, order, rank))
+      history.saveRedo(() => apply(!was_open, redo_order, redo_rank))
+      // Ouvrir : rang neuf (-1) au premier passage ; rétablir remet exactement l'état obtenu.
+      apply(!was_open, order, was_open ? rank : -1)
+      redo_order = [...sankey.getTagGroupsOrder(target.type_group)]
+      redo_rank = sankey.tagGroupOpenedRank(group.id)
     })
     return true
   }
@@ -757,6 +817,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (group_id !== undefined) entry_groups.set(item.id, group_id)
     })
     config.entry_groups = entry_groups
+    // SA#551 — titres de groupe de nœuds ou de flux, lignes épinglées comprises (sans entrée, leur
+    // groupe se retrouve par l'id de bloc) : un clic ouvre ou ferme le groupe.
+    const group_of_block_id = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs' }>()
+    const blockIdOf = (group_id: string) => LEGEND_CHILD_PREFIX + 'block-' + legendSlug(group_id)
+    sankey.node_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'node_taggs' }))
+    sankey.flux_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'flux_taggs' }))
+    const group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs' }>()
+    items.forEach(item => {
+      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+      const target = group_of_block_id.get(item.block_id)
+      if (target !== undefined) group_titles.set(item.id, target)
+    })
+    config.group_titles = group_titles
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
@@ -871,6 +944,14 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         block_groups.set(i.block_id, i.tag_group_id)
       }
     })
+    // SA#551 — ligne d'un groupe épinglé FERMÉ : aucune entrée ne donne son groupe, on le prend du
+    // relevé des titres. Son survol projette le groupe en surbrillance.
+    items.forEach(i => {
+      const target = group_titles.get(i.id)
+      if (i.block_id !== undefined && target !== undefined && !block_groups.has(i.block_id)) {
+        block_groups.set(i.block_id, target.tag_group_id)
+      }
+    })
 
     // Zones de contenu : réutilisation par id
     items.forEach(item => {
@@ -965,7 +1046,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // de ses étiquettes) : même main, plus la flèche de liste.
       // Dimension à étiquette unique : rien à choisir, rien à promettre.
       const is_dimension_choice = item.dimension_choice === true
-      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice)
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice || group_titles.has(item.id))
       if (isLegendDataTagZoneId(item.id)) decorateLegendDimensionZone(zone, is_dimension_choice)
       const hover_target = hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)

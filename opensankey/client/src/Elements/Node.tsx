@@ -763,7 +763,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected override computeTagStyleLayers() {
     if (!this._nodeTagsManager) return null
     return this.resolveTagStyleLayers(
-      this.sankey.getTagGroupsAsList('node_taggs'),
+      this.sankey.tagGroupsInPriorityOrder('node_taggs'),
       tag => this.hasGivenTag(tag as Class_Tag)
     )
   }

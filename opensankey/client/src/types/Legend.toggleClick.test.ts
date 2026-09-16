@@ -115,10 +115,10 @@ describe('SA#549 — clic sur une entrée de légende', () => {
     expect(indic.is_selected).toBe(true)
   })
 
-  it('curseur main : seules les entrées d\'étiquette portent la classe cliquable', () => {
+  it('curseur main : les entrées d\'étiquette portent la classe cliquable (SA#551 : le titre aussi)', () => {
     const { host, app } = makeLegend()
     expect(zoneG(host, app, 'legend-tag-fiab-indic').classList.contains('legend_toggle_entry')).toBe(true)
-    expect(zoneG(host, app, 'legend-group-fiab').classList.contains('legend_toggle_entry')).toBe(false)
+    expect(zoneG(host, app, 'legend-group-fiab').classList.contains('legend_toggle_entry')).toBe(true)
   })
 
   it('geste différé (voile) : le second de deux clics rapides voit le premier', async () => {

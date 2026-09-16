@@ -160,6 +160,9 @@ export class NodeEventsHandler {
     // clic est gardé : le double-clic renomme la zone (arbitrage d'Alexandre, 2026-09-15).
     // Ctrl/Cmd garde la sélection de la zone.
     if (!event.ctrlKey && !event.metaKey && drawing_area.legend.toggleEntryTag(this._node.id)) return
+    // SA#551 — titre d'un groupe (ligne épinglée comprise) : le clic ouvre ou ferme le groupe, même
+    // geste et même discriminateur.
+    if (!event.ctrlKey && !event.metaKey && drawing_area.legend.toggleGroup(this._node.id)) return
 
     if (!drawing_area.application_data.is_editable) {
       // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée par
