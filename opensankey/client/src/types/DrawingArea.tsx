@@ -190,7 +190,17 @@ export class Class_DrawingArea {
   private _connection_gesture = new Class_ConnectionGestureHandler()
 
 
-  public static: boolean = !!window.sankey?.publish
+  /**
+   * Mode de PAGE (viewer d'une publication). LU du document, donc de l'espace de travail
+   * (os#1385) : il n'y a plus de champ ici, et plus de setter.
+   *
+   * Le champ d'avant valait `!!window.sankey?.publish` et vivait sur CETTE zone, laquelle est
+   * remplacée à chaque `reset()` : le drapeau retombait donc sur le global au moindre
+   * chargement, et chaque application hors écran devait le réaligner à la main après coup
+   * (`_loadSheetSnapshotApplication`, viewtagTopbarArbitration). Le mode de page est une
+   * propriété de la PAGE, pas d'un canevas : il n'a rien à faire ici.
+   */
+  public get static(): boolean { return this.application_data.is_static }
   public is_unitary = false
 
   /**
@@ -1163,7 +1173,8 @@ export class Class_DrawingArea {
 
   public _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
     // Copy All attributes
-    this.static = drawing_area_to_copy.static
+    // os#1385 — `static` ne se copie plus : c'est un getter vers le mode de page de l'espace
+    // de travail, commun aux deux zones par construction.
     this._color = drawing_area_to_copy._color
     this._filter_label = drawing_area_to_copy._filter_label
     this._filter_link_value = drawing_area_to_copy._filter_link_value
