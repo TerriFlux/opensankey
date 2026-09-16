@@ -488,7 +488,14 @@ export class Class_ApplicationData {
   /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
    * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
    * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
-   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+. */
+   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+.
+   *
+   * os#1421 — `figure_options` : le sac EFFECTIF de la FIGURE posée sur le nœud (placement,
+   * cf. Representations/Placement), quand il y en a une : descripteur, étiquette de données
+   * épinglée… Le hook dessine alors CETTE figure — un lien vers la fenêtre où on l'a réglée —
+   * et non une couronne recalculée depuis l'attribut du nœud. Absent = chemin hérité
+   * `surfaces.on_node`, qui relit `analysis_descriptor` sur le nœud.
+   * os#1385 — le crochet vit dans l'espace de travail (sa signature est dans `Class_Workspace`). */
   public get draw_node_analysis_overlay() { return this.workspace.draw_node_analysis_overlay }
   public set draw_node_analysis_overlay(_) { this.workspace.draw_node_analysis_overlay = _ }
 
@@ -1255,6 +1262,12 @@ export class Class_ApplicationData {
     // que la lecture sait encore migrer.
     const figure_styles = this.menu_configuration.figureStylesToJSON()
     if (figure_styles) json_object['figure_styles'] = figure_styles
+    // os#1421 — LE REGISTRE DES FIGURES DU DOCUMENT (celles qu'un placement cite), clé racine
+    // ADDITIVE elle aussi : absente tant qu'aucune figure n'a été POSÉE. Racine et non `main_zone`,
+    // parce qu'une figure posée sur un nœud survit à la fenêtre où on l'a réglée — l'écrire dans
+    // la fenêtre la perdrait précisément dans le cas où elle compte.
+    const figures = this.menu_configuration.figuresToJSON()
+    if (figures) json_object['figures'] = figures
     // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
     // os#1385 — les panneaux sont de l'HÔTE, et l'hôte est partagé : seul le document
     // principal les écrit. Un instantané de feuille resérialisé embarquerait sinon la
@@ -1420,6 +1433,14 @@ export class Class_ApplicationData {
     const repr_defaults = json_object['representation_defaults']
     if (repr_defaults && typeof repr_defaults === 'object') {
       this.menu_configuration?.representationDefaultsFromJSON(repr_defaults)
+    }
+    // os#1421 — LE REGISTRE DES FIGURES SE LIT AVANT `main_zone`, ET APRÈS LES STYLES. Après les
+    // styles parce qu'une figure suit des styles qu'il faut avoir lus ; avant la grande zone parce
+    // que les vignettes CITENT le registre (`figures[clé] = { ref: 'f_N' }`), et qu'une vignette
+    // lue d'abord ne trouverait qu'un renvoi dans le vide. Clé absente = registre préservé.
+    const figures = json_object['figures']
+    if (figures && typeof figures === 'object') {
+      this.menu_configuration?.figuresFromJSON(figures)
     }
     const mz = json_object['main_zone']
     // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si

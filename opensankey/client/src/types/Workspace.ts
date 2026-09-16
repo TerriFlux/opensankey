@@ -340,7 +340,9 @@ export class Class_Workspace {
     node: Class_NodeElement,
     group_el: SVGGElement,
     width: number,
-    height: number
+    height: number,
+    // os#1421 — le sac EFFECTIF de la figure posée sur le nœud (cf. le commentaire du document).
+    figure_options?: { [key: string]: unknown }
   ) => boolean = undefined
 
   /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
