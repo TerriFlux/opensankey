@@ -114,6 +114,50 @@ describe('os#1421 registre des figures et placements', () => {
     expect(mc.figureById(id)?.getElementProperty('value_mode')).toBe('value')
   })
 
+  it('promoteStandaloneFigure cree une figure du document que personne ne montre', () => {
+    // Le cas d une MIGRATION : le reglage vient d un noeud d un fichier d avant, aucune fenetre
+    // n est ouverte a quoi le rattacher, et il faut pourtant une figure nommee a poser.
+    const mc = newConfig()
+    const id = mc.promoteStandaloneFigure(NATURE, { value_mode: 'value' })
+
+    expect(id).toBe('f_1')
+    expect(mc.figureById(id)?.getElementProperty('value_mode')).toBe('value')
+    expect(mc.figuresToJSON()).toEqual({
+      f_1: { id: 'f_1', nature: NATURE, attributes: { value_mode: 'value' } }
+    })
+    // Elle n est la vignette de personne : la fenetre garde la sienne.
+    expect(mc.figureOf('w_1', 'n1')).not.toBe(mc.figureById(id))
+    // Un seul compteur : la promotion suivante ne reprend pas un nom deja pris.
+    expect(mc.figureIdOf('w_1', 'n1')).toBe('f_2')
+  })
+
+  it('placeFigureIdOnNode pose une figure deja nommee, sans rien promouvoir', () => {
+    const mc = newConfig()
+    const { node, attributes, state } = fakeNode()
+    const id = mc.promoteStandaloneFigure(NATURE, {})
+
+    mc.placeFigureIdOnNode(id, node)
+
+    expect(attributes['figure_placements'])
+      .toEqual([{ figure: id, host: 'node', frame: 'bounds' }])
+    expect(mc.nodePlacedFigure(node)).toBe(mc.figureById(id))
+    expect(state.draws).toBe(1)
+  })
+
+  it('en mode silencieux le placement n ecrit que l attribut', () => {
+    // Ce que demande le CHARGEMENT : ni redessin par noeud (un dessin complet suit, ou aucun
+    // n a encore eu lieu), ni pas d annulation (un Ctrl+Z apres ouverture defairait la migration).
+    const mc = newConfig()
+    const { node, attributes, state } = fakeNode()
+    const id = mc.promoteStandaloneFigure(NATURE, {})
+
+    mc.placeFigureIdOnNode(id, node, { silent: true })
+
+    expect(attributes['figure_placements'])
+      .toEqual([{ figure: id, host: 'node', frame: 'bounds' }])
+    expect(state.draws).toBe(0)
+  })
+
   // --- (b) la duree de vie ------------------------------------------------------------------
 
   it('fermer la fenetre ne detruit pas une figure promue', () => {
@@ -154,6 +198,48 @@ describe('os#1421 registre des figures et placements', () => {
     // L appelant sait les placements : ici, seul `kept` est pose quelque part.
     expect(mc.pruneUnreferencedFigures(new Set([kept]))).toEqual([lost])
     expect(mc.figureById(kept)).toBeDefined()
+    expect(mc.figureById(lost)).toBeUndefined()
+  })
+
+  it('le balayage garde la figure POSEE dont la fenetre est fermee, et solde l autre', () => {
+    const mc = newConfig()
+    const { node } = fakeNode()
+    const placed = mc.placeFigureOnNode('w_1', 'n1', node)
+    const orphan = mc.figureIdOf('w_1', 'n2')
+    // La fenetre s en va : les deux figures n ont plus de vignette VIVANTE.
+    mc.hideMainZoneOccupant('w_1')
+
+    expect(mc.pruneUnreferencedFigures(mc.placedFigureIds([node]))).toEqual([orphan])
+    expect(mc.figureById(placed)).toBeDefined()
+    expect(mc.nodePlacedFigure(node)).toBe(mc.figureById(placed))
+    expect(mc.figureById(orphan)).toBeUndefined()
+  })
+
+  it('le balayage epargne une figure MONTREE par une fenetre vivante', () => {
+    const mc = newConfig()
+    const standalone = mc.promoteStandaloneFigure(NATURE, {})
+    const vignette = mc.figureIdOf('w_1', 'n1')
+
+    // Aucun placement nulle part : seule la vignette d une fenetre encore ouverte est epargnee.
+    expect(mc.pruneUnreferencedFigures(new Set())).toEqual([standalone])
+    expect(mc.figureById(vignette)).toBeDefined()
+  })
+
+  // --- (b bis) le balayage a l ENREGISTREMENT ------------------------------------------------
+
+  it('enregistrer solde les figures promues que plus rien ne cite', () => {
+    const app = new Class_ApplicationData(false)
+    const mc = app.menu_configuration
+    mc.mainZoneStateFromJSON(twoWindows())
+    const lost = mc.figureIdOf('w_1', 'n1')
+    mc.setMainZonePaneOptions('w_1', 'n1', { value_mode: 'value' })
+    mc.hideMainZoneOccupant('w_1')
+
+    const saved = app.toJSON() as Type_JSON
+
+    // Ni dans le fichier, ni dans le registre de la session : une figure nommee pour etre posee,
+    // puis deposee, n a plus aucun referent.
+    expect(saved['figures']).toBeUndefined()
     expect(mc.figureById(lost)).toBeUndefined()
   })
 

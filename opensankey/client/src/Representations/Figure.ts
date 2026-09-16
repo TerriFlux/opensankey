@@ -84,7 +84,17 @@ export type Type_FigureMigrationNote = {
   key: string
   /** Où on l'a trouvée : `options` de la fenêtre w_3, `panes[chene]`, `representation_defaults`… */
   where: string
-  reason: 'unknown_key' | 'not_transposable'
+  /**
+   * - `'unknown_key'` : aucune nature ne déclare cette clé ; elle est GARDÉE telle quelle.
+   * - `'not_transposable'` : clé déclarée d'une sorte qu'un style n'a pas le droit de porter
+   *   (identité, navigation) ; elle est ÉCARTÉE.
+   * - `'legacy_on_node'` (os#1421) : un `surfaces.on_node` d'avant les placements (OS#1278) qu'on
+   *   n'a pas pu porter en figure — un descripteur sans aucun axe ne dessine rien, donc il n'y a
+   *   rien à poser sur le nœud. Le booléen est retiré, et c'est dit plutôt que passé sous silence :
+   *   ni 'unknown_key' (la clé est connue, elle n'a simplement plus de preneur) ni
+   *   'not_transposable' (rien ne se transpose ici) ne décrivaient ce cas.
+   */
+  reason: 'unknown_key' | 'not_transposable' | 'legacy_on_node'
 }
 
 export class Class_FigureMigrationReport {
