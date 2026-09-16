@@ -44,6 +44,8 @@ export const resources_inspector = {
           // one figure: with a single one, both scopes name the same drawing.
           scope: 'Apply to',
           scope_pane: 'This figure',
+          // os#1423 — the scope is the SELECTION of figures; “All” is now a selection gesture.
+          scope_selection: 'Selection ({{count}})',
           scope_all: 'All ({{count}})',
           // os#1417 — the third scope: the style of the kind, hence every figure of that kind
           // in the document that follows it, open or not. Always offered, unlike “All”.
@@ -262,6 +264,10 @@ export const resources_inspector = {
           // that figure, which is settled in its own window, not here.
           placed_figure: 'This node draws a figure placed from a window',
           unplace: 'Remove',
+          // 16/09/2026 — the tab no longer edits the axes, the shape or the two surfaces: it
+          // states what the node draws and opens the window where the figure is settled.
+          no_placed_figure: 'No figure placed on this node',
+          open_in_window: 'Open in a window',
           select_subject: 'Select a node or a flow.'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
@@ -442,6 +448,9 @@ export const resources_inspector = {
           // montre plus d'une vignette : à une seule, les deux portées désignent le même dessin.
           scope: 'Appliquer à',
           scope_pane: 'Cette vignette',
+          // os#1423 — la portée est la SÉLECTION de figures ; « Toutes » est devenu un geste de
+          // sélection, et non plus une portée.
+          scope_selection: 'Sélection ({{count}})',
           scope_all: 'Toutes ({{count}})',
           // os#1417 — la troisième portée : le style de la nature, donc toutes les figures de
           // cette nature du document qui le suivent, ouvertes ou non. Toujours offerte, elle,
@@ -654,6 +663,8 @@ export const resources_inspector = {
           show_on_node: 'Afficher sur le nœud (couronne / histogramme)',
           placed_figure: 'Ce nœud dessine une figure posée depuis une fenêtre',
           unplace: 'Retirer',
+          no_placed_figure: 'Aucune figure posée sur ce nœud',
+          open_in_window: 'Ouvrir dans une fenêtre',
           select_subject: 'Sélectionner un nœud ou un flux.'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
@@ -824,6 +835,7 @@ export const resources_inspector = {
           axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Filtros y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
           scope: 'Aplicar a',
           scope_pane: 'Esta figura',
+          scope_selection: 'Selección ({{count}})',
           scope_all: 'Todas ({{count}})',
           scope_style: 'El estilo',
           scope_style_hint: 'Todas las figuras de esta clase del documento que siguen el estilo',
@@ -1031,6 +1043,8 @@ export const resources_inspector = {
           show_on_node: 'Mostrar en el nodo (anillo / histograma)',
           placed_figure: 'Este nodo dibuja una figura colocada desde una ventana',
           unplace: 'Quitar',
+          no_placed_figure: 'Ninguna figura colocada en este nodo',
+          open_in_window: 'Abrir en una ventana',
           select_subject: 'Seleccione un nodo o un flujo.'
         },
         // OS#1285 — visibilidad de los bloques del tooltip.
@@ -1190,6 +1204,7 @@ export const resources_inspector = {
           axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Filter und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
           scope: 'Anwenden auf',
           scope_pane: 'Diese Abbildung',
+          scope_selection: 'Auswahl ({{count}})',
           scope_all: 'Alle ({{count}})',
           scope_style: 'Der Stil',
           scope_style_hint: 'Alle Abbildungen dieser Art im Dokument, die dem Stil folgen',
@@ -1397,6 +1412,8 @@ export const resources_inspector = {
           show_on_node: 'Am Knoten anzeigen (Ring / Histogramm)',
           placed_figure: 'Dieser Knoten zeichnet eine aus einem Fenster platzierte Figur',
           unplace: 'Entfernen',
+          no_placed_figure: 'Keine Figur auf diesem Knoten platziert',
+          open_in_window: 'In einem Fenster öffnen',
           select_subject: 'Wählen Sie einen Knoten oder einen Fluss.'
         },
         // OS#1285 — Sichtbarkeit der Tooltip-Blöcke.
@@ -1556,6 +1573,7 @@ export const resources_inspector = {
           axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Filtri e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
           scope: 'Applicare a',
           scope_pane: 'Questa figura',
+          scope_selection: 'Selezione ({{count}})',
           scope_all: 'Tutte ({{count}})',
           scope_style: 'Lo stile',
           scope_style_hint: 'Tutte le figure di questa natura nel documento che seguono lo stile',
@@ -1763,6 +1781,8 @@ export const resources_inspector = {
           show_on_node: 'Mostra sul nodo (anello / istogramma)',
           placed_figure: 'Questo nodo disegna una figura posata da una finestra',
           unplace: 'Rimuovi',
+          no_placed_figure: 'Nessuna figura posata su questo nodo',
+          open_in_window: 'Apri in una finestra',
           select_subject: 'Seleziona un nodo o un flusso.'
         },
         // OS#1285 — visibilità dei blocchi del tooltip.
@@ -1921,6 +1941,7 @@ export const resources_inspector = {
           axis_in_navigation: '分析轴（按此分解、按此比较）在「筛选与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
           scope: '应用于',
           scope_pane: '本图',
+          scope_selection: '选择（{{count}}）',
           scope_all: '全部（{{count}}）',
           scope_style: '样式',
           scope_style_hint: '文档中遵循该样式的所有同类图形',
@@ -2133,6 +2154,8 @@ export const resources_inspector = {
           show_on_node: '在节点上显示（环形图 / 直方图）',
           placed_figure: '此节点绘制的是从窗口放置的图形',
           unplace: '移除',
+          no_placed_figure: '此节点上未放置图形',
+          open_in_window: '在窗口中打开',
           select_subject: '请选择一个节点或一条流量。'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
@@ -2291,6 +2314,7 @@ export const resources_inspector = {
           axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「絞り込みと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
           scope: '適用先',
           scope_pane: 'この図',
+          scope_selection: '選択（{{count}}）',
           scope_all: 'すべて（{{count}}）',
           scope_style: 'スタイル',
           scope_style_hint: 'このスタイルに従う、文書内の同種のすべての図',
@@ -2503,6 +2527,8 @@ export const resources_inspector = {
           show_on_node: 'ノード上に表示（ドーナツ／ヒストグラム）',
           placed_figure: 'このノードはウィンドウから配置された図を描画しています',
           unplace: '削除',
+          no_placed_figure: 'このノードに配置された図はありません',
+          open_in_window: 'ウィンドウで開く',
           select_subject: 'ノードまたはフローを選択してください。'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
