@@ -34,6 +34,10 @@ import { figureAttribute } from './figureAttribute'
 // La valeur d'usine de la profondeur vient de là où le sunburst la lit (`readSunburstOptions`) :
 // une seconde écriture du nombre finirait par diverger de la première.
 import { SUNBURST_DEFAULT_MAX_DEPTH } from '../Charts/SunburstHierarchy'
+// os#1420 — la clé d'épinglage de l'étiquette de données vient de là où elle est LUE
+// (`readFigureDataTagPins`) : deux écritures de la chaîne finiraient par diverger.
+import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
+import type { Type_FigureDataTagPins } from '../Charts/FigureNavigation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
@@ -207,6 +211,13 @@ export const registerBaseRepresentations = (): void => {
     // La RACINE nomme le sujet, elle ne se transpose à rien — et elle est même posée par le
     // `draw` ci-dessous depuis l'élément de la fenêtre, pas par l'auteur : la déclarer 'identity'
     // est ce qui interdit qu'un style ou une figure voisine vienne l'écraser.
+    //
+    // os#1420 — CINQUIÈME CLÉ : l'ÉTIQUETTE DE DONNÉES ÉPINGLÉE. Absente (le défaut), la
+    // couronne suit le diagramme ; posée, elle lit ses valeurs sous l'étiquette nommée, quoi
+    // que le diagramme montre — « cette couronne, en 2019 », à côté d'une autre en 2021. C'est
+    // donc de la 'navigation' et jamais du 'style' : un style qui l'alignerait détruirait
+    // exactement l'usage. La valeur est un dictionnaire `{ id de groupe: id d'étiquette }`,
+    // un groupe absent suivant le diagramme (cf. Type_FigureDataTagPins).
     attributes: {
       dimension_id: figureAttribute<string | undefined>(undefined, 'navigation', {
         en: 'Dimension',
@@ -243,7 +254,17 @@ export const registerBaseRepresentations = (): void => {
         it: 'Radice',
         'zh-CN': '根节点',
         ja: 'ルート'
-      })
+      }),
+      [FIGURE_DATA_TAGS_KEY]: figureAttribute<Type_FigureDataTagPins | undefined>(
+        undefined, 'navigation', {
+          en: 'Pinned data tag',
+          fr: 'Étiquette de données épinglée',
+          es: 'Etiqueta de datos fijada',
+          de: 'Angeheftete Datenkennzeichnung',
+          it: 'Etichetta di dati fissata',
+          'zh-CN': '固定的数据标签',
+          ja: '固定されたデータタグ'
+        })
     },
     renderOptions: (args) => <SunburstRepresentationOptions {...args} />,
     // os#1397 - le clic droit sur le fond ouvre les réglages de la figure. Les SECTEURS, eux,

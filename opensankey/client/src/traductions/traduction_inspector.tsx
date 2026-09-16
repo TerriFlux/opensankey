@@ -380,6 +380,11 @@ export const resources_inspector = {
         // It makes parts come in and go out, and it even changes the NATURE of what can be
         // pointed at (a part is a flow, a child node or a tag depending on the axis).
         analysis_axis: 'Analysis axis',
+        // os#1420 — the coordinates a figure reads its values under. A figure follows the
+        // diagram by default and pins in one gesture: two donuts side by side, two years.
+        figure_data_tags: 'Figure coordinates',
+        figure_data_tag_follow: 'Follows the diagram ({{current}})',
+        figure_data_tag_pinned_hint: 'This figure reads {{pinned}}, the diagram shows {{current}}',
         // os#1406 — the JSON view's tabs. Deliberately named after the ROOT KEYS of the saved
         // file: the spreadsheet asks the same question about TABLES, and one name for both
         // would suggest they follow one another.
@@ -757,6 +762,12 @@ export const resources_inspector = {
         // pas pour ce qu'on regarde. Un garde-fou n'est jamais muet.
         no_section_for_window: 'Filtres et coordonnées : rien pour « {{representation}} », qui se navigue en elle-même. Ils reviennent dès que le diagramme est la fenêtre active.',
         analysis_axis: 'Axe d\'analyse',
+        // os#1420 — les coordonnées sous lesquelles une figure lit ses valeurs. Une figure suit
+        // le diagramme par défaut et s'épingle d'un geste : deux couronnes côte à côte, deux
+        // années. L'axe dit quoi montrer, les coordonnées à quelle date : deux questions.
+        figure_data_tags: 'Coordonnées de la figure',
+        figure_data_tag_follow: 'Suit le diagramme ({{current}})',
+        figure_data_tag_pinned_hint: 'Cette figure lit {{pinned}}, le diagramme montre {{current}}',
         // os#1406 — les onglets de la vue JSON. Nommés d'après les CLÉS RACINE du fichier
         // enregistré, et pas d'un mot générique : le tableur pose la même question sur des
         // TABLES, et un nom commun laisserait croire que les deux se suivent.
@@ -1124,6 +1135,9 @@ export const resources_inspector = {
         active_window: 'esta ventana',
         no_section_for_window: 'Filtros y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es la ventana activa.',
         analysis_axis: 'Eje de análisis',
+        figure_data_tags: 'Coordenadas de la figura',
+        figure_data_tag_follow: 'Sigue el diagrama ({{current}})',
+        figure_data_tag_pinned_hint: 'Esta figura lee {{pinned}}, el diagrama muestra {{current}}',
         json_root_key: 'Clave raíz del JSON',
         window_subject: 'Sujeto de la ventana',
         short: {
@@ -1485,6 +1499,9 @@ export const resources_inspector = {
         active_window: 'dieses Fenster',
         no_section_for_window: 'Filter und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm das aktive Fenster ist.',
         analysis_axis: 'Analyseachse',
+        figure_data_tags: 'Koordinaten der Abbildung',
+        figure_data_tag_follow: 'Folgt dem Diagramm ({{current}})',
+        figure_data_tag_pinned_hint: 'Diese Abbildung liest {{pinned}}, das Diagramm zeigt {{current}}',
         json_root_key: 'JSON-Stammschlüssel',
         window_subject: 'Gegenstand des Fensters',
         short: {
@@ -1846,6 +1863,9 @@ export const resources_inspector = {
         active_window: 'questa finestra',
         no_section_for_window: 'Filtri e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è la finestra attiva.',
         analysis_axis: 'Asse di analisi',
+        figure_data_tags: 'Coordinate della figura',
+        figure_data_tag_follow: 'Segue il diagramma ({{current}})',
+        figure_data_tag_pinned_hint: 'Questa figura legge {{pinned}}, il diagramma mostra {{current}}',
         json_root_key: 'Chiave radice del JSON',
         window_subject: 'Soggetto della finestra',
         short: {
@@ -2211,6 +2231,9 @@ export const resources_inspector = {
         active_window: '该窗口',
         no_section_for_window: '筛选与坐标：{{representation}} 没有可用项，该窗口在其内部导航。当图表成为活动窗口时，它们会重新出现。',
         analysis_axis: '分析轴',
+        figure_data_tags: '图形坐标',
+        figure_data_tag_follow: '跟随图表（{{current}}）',
+        figure_data_tag_pinned_hint: '该图形读取 {{pinned}}，图表显示 {{current}}',
         json_root_key: 'JSON 根键',
         window_subject: '窗口主体',
         short: {
@@ -2576,6 +2599,9 @@ export const resources_inspector = {
         active_window: 'このウィンドウ',
         no_section_for_window: '絞り込みと座標：{{representation}} には該当するものがありません。このウィンドウはそれ自体の中で操作します。ダイアグラムがアクティブなウィンドウになれば戻ります。',
         analysis_axis: '分析の軸',
+        figure_data_tags: '図の座標',
+        figure_data_tag_follow: 'ダイアグラムに従う（{{current}}）',
+        figure_data_tag_pinned_hint: 'この図は {{pinned}} を読み、ダイアグラムは {{current}} を表示しています',
         json_root_key: 'JSON のルートキー',
         window_subject: 'ウィンドウの対象',
         short: {
