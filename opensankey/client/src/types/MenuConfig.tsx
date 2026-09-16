@@ -55,6 +55,16 @@ import {
 // (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
 // prend lui-même que des types. Aucun cycle à l'exécution.
 import { representation_registry } from '../Representations/RepresentationRegistry'
+// os#1421 — LE PLACEMENT : le TYPE et les helpers purs vivent dans `Placement.ts`, le REGISTRE des
+// figures par identifiant de document vit ici (c'est lui qui sait quelle figure un placement cite).
+import {
+  FIGURE_PLACEMENTS_ATTR, readFigurePlacements, withFigurePlacement, withoutFigure,
+  nodePlacementFigureId, type Type_FigurePlacement
+} from '../Representations/Placement'
+// `import type` : l'hôte d'un placement est un NŒUD, mais ce fichier n'a aucune arête d'exécution
+// vers les éléments de dessin (il n'en prend que la forme), et `Class_NodeElement` importé en
+// valeur ferait remonter toute la zone de dessin dans le menu.
+import type { Class_NodeElement } from '../Elements/Node'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -770,6 +780,24 @@ export class Class_MenuConfig {
   // Créées paresseusement elles aussi : une figure qui n'a rien à dire n'existe pas, et donc ne
   // s'écrit pas — c'est ce qui garde les fichiers d'aujourd'hui octet pour octet identiques.
   protected _figures: { [occupant_id: string]: { [pane_key: string]: Class_Figure } } = {}
+  // os#1421 — LE REGISTRE DES FIGURES DU DOCUMENT, indexé par identifiant `f_N` (clé racine
+  // `figures`). C'est le SECOND annuaire, et il ne fait pas double emploi avec le premier :
+  //
+  //   - `_figures[fenêtre][vignette]` dit OÙ une figure se montre. Il suit la grande zone, il se
+  //     vide quand une fenêtre se ferme, et ses clés n'ont de sens que dans la session courante.
+  //   - `_figures_by_id[f_N]` dit QUI une figure est. Il ne suit rien : un placement sur un nœud
+  //     cite un `f_N`, et ce nom doit survivre à la fermeture de la fenêtre où la figure a été
+  //     réglée — sans quoi poser une figure sur un nœud puis refermer sa fenêtre effacerait le
+  //     dessin du nœud.
+  //
+  // L'OBJET EST LE MÊME dans les deux : promouvoir n'en recopie pas un second (c'est tout le sens
+  // du placement — un LIEN, pas une copie), ça lui donne un nom et l'indexe une fois de plus.
+  // Rerégler la vignette change donc ce que le nœud montre, immédiatement.
+  protected _figures_by_id: { [figure_id: string]: Class_Figure } = {}
+  // Compteur des identifiants de figure (`f_N`). Réaligné à la lecture d'un fichier sur le plus
+  // grand N rencontré, comme `_main_zone_window_seq` : sans cela une figure neuve prendrait le nom
+  // d'une figure du fichier, et un placement se retrouverait à citer le mauvais dessin.
+  protected _figure_seq: number = 0
   // os#1419 — CE QUE LA MIGRATION N'A PAS SU PORTER. Accumulé par les trois lecteurs (styles,
   // défauts hérités, grande zone) et VIDÉ par `flushFigureMigrationReport`, que la persistance
   // appelle une fois les trois lectures faites : la vider à la fin de chacune la rendrait
@@ -1183,24 +1211,214 @@ export class Class_MenuConfig {
   public isTransposableFigureOption(nature_id: string, key: string): boolean {
     return this.figureNature(nature_id).isTransposable(key, isTransposableOption)
   }
-  /** Toutes les figures d'une fenêtre s'en vont (fenêtre fermée, nature changée). */
+  /**
+   * os#1421 — UNE FIGURE PROMUE NE SE JETTE PAS AVEC SA VIGNETTE.
+   *
+   * Les trois ménages ci-dessous (fenêtre fermée, nature changée, vignette retirée) ont été écrits
+   * quand une figure n'existait QUE pour sa vignette : la jeter avec elle était exact. Depuis
+   * qu'un nœud peut en poser une, ce n'est plus vrai — la figure a un second référent, que cette
+   * classe ne voit pas, et la jeter viderait le dessin d'un nœud parce qu'on a fermé une fenêtre.
+   *
+   * Règle unique, ici et nulle part ailleurs : on ne jette qu'une figure que le registre ne
+   * connaît pas. Une figure promue reste indexée, et c'est `_pruneUnreferencedFigures` — appelé
+   * par qui SAIT les placements — qui la solde quand elle n'a plus ni vignette ni hôte.
+   */
+  protected _isDroppableFigure(fig: Class_Figure): boolean { return fig.id === null }
+  /** Les figures NON PROMUES d'une fenêtre s'en vont (fenêtre fermée, nature changée). */
   protected _dropFigures(occupant_id: string): void {
-    delete this._figures[occupant_id]
+    const by_key = this._figures[occupant_id]
+    if (!by_key) return
+    Object.keys(by_key).forEach(k => { if (this._isDroppableFigure(by_key[k])) delete by_key[k] })
+    if (Object.keys(by_key).length === 0) delete this._figures[occupant_id]
   }
-  /** Les figures d'une fenêtre, débarrassées des vignettes qui n'existent plus. */
+  /** Les figures d'une fenêtre, débarrassées des vignettes NON PROMUES qui n'existent plus. */
   protected _pruneFigures(occupant_id: string, live_keys: string[]): void {
     const by_key = this._figures[occupant_id]
     if (!by_key) return
     Object.keys(by_key).forEach(k => {
       // La figure de la fenêtre à sujet diagramme ('') n'est jamais dans `keys` : elle ne
       // désigne pas un objet, elle EST la fenêtre.
-      if (k !== FIGURE_DIAGRAM_PANE_KEY && !live_keys.includes(k)) delete by_key[k]
+      if (k === FIGURE_DIAGRAM_PANE_KEY || live_keys.includes(k)) return
+      if (this._isDroppableFigure(by_key[k])) delete by_key[k]
     })
   }
   /** Les figures des fenêtres qui n'existent plus (toute voie de fermeture confondue). */
   protected _pruneOrphanFigures(): void {
     const live = new Set(this._main_zone_occupants.map(o => o.id))
-    Object.keys(this._figures).forEach(id => { if (!live.has(id)) delete this._figures[id] })
+    Object.keys(this._figures).forEach(id => { if (!live.has(id)) this._dropFigures(id) })
+  }
+
+  // --- os#1421 : le REGISTRE des figures du document et les PLACEMENTS -------------------------
+
+  /**
+   * L'IDENTIFIANT DE DOCUMENT de la figure d'une vignette — et, du même geste, sa PROMOTION.
+   *
+   * C'est le seul point d'entrée du registre, et c'est délibéré : on ne promeut pas « au cas où »,
+   * on promeut parce que quelqu'un a besoin de NOMMER cette figure (la poser sur un nœud, demain
+   * l'annoncer dans une info-bulle ou sur le canevas). Une figure qu'on se contente de regarder
+   * n'entre jamais dans le registre, et le fichier ne porte donc que ce qui est cité.
+   *
+   * Idempotent : la même vignette rend toujours le même `f_N`.
+   */
+  public figureIdOf(occupant_id: string, pane_key: string): string {
+    return this._promoteFigure(this.figureOf(occupant_id, pane_key))
+  }
+  /** Donne un nom libre à une figure qui n'en a pas, et l'indexe. Rend son nom. */
+  protected _promoteFigure(fig: Class_Figure): string {
+    if (fig.id !== null) {
+      // Déjà nommée : on ré-indexe sans discuter. Une figure relue du fichier porte son id avant
+      // que le registre ne la connaisse (`Class_Figure.fromJSON`), et sans cette ligne elle
+      // resterait invisible de `figureById` — donc d'un placement qui la cite.
+      this._figures_by_id[fig.id] = fig
+      return fig.id
+    }
+    let id = ''
+    do { this._figure_seq += 1; id = `f_${this._figure_seq}` } while (this._figures_by_id[id])
+    fig.id = id
+    this._figures_by_id[id] = fig
+    return id
+  }
+  /** La figure que porte cet identifiant de document, ou `undefined` (placement orphelin). */
+  public figureById(figure_id: string): Class_Figure | undefined {
+    return this._figures_by_id[figure_id]
+  }
+
+  /**
+   * POSE la figure d'une vignette SUR UN NŒUD : « ce dessin est le dessin de ce nœud ».
+   *
+   * Un LIEN, pas une copie (cf. `Representations/Placement`) : le nœud n'apprend que le NOM de la
+   * figure, et rerégler la vignette change ce qu'il montre. Rend l'identifiant posé, pour que
+   * l'appelant sache quoi retirer.
+   */
+  public placeFigureOnNode(occupant_id: string, pane_key: string, node: Class_NodeElement): string {
+    const figure_id = this.figureIdOf(occupant_id, pane_key)
+    // UN NŒUD NE PORTE QU'UNE FIGURE, et c'est ici qu'on le garantit. `withFigurePlacement` ne
+    // déduplique que le COUPLE (figure, hôte) : poser B sur un nœud qui porte déjà A donnerait une
+    // liste de deux, dont `nodePlacementFigureId` — qui prend la première — ne rendrait que A. La
+    // figure qu'on vient de poser serait ignorée sans que rien ne le dise. On retire donc ce que
+    // l'hôte 'node' portait avant d'y poser la nouvelle.
+    const others = readFigurePlacements(node).filter(p => p.host !== 'node')
+    this._writeNodePlacements(node, withFigurePlacement(
+      others, { figure: figure_id, host: 'node', frame: 'bounds' }
+    ))
+    this._notifyMainZone()
+    return figure_id
+  }
+  /** RETIRE une figure d'un nœud. La figure n'est pas détruite : elle reste sa vignette. */
+  public unplaceFigureFromNode(figure_id: string, node: Class_NodeElement): void {
+    const before = readFigurePlacements(node)
+    const next = withoutFigure(before, figure_id)
+    // Rien posé : ne rien écrire du tout, plutôt qu'un undo vide et un redessin pour rien.
+    if (next.length === before.length) return
+    this._writeNodePlacements(node, next)
+    this._notifyMainZone()
+  }
+  /** La figure POSÉE sur ce nœud, ou `null` (rien de posé, ou référent perdu). */
+  public nodePlacedFigure(node: Class_NodeElement): Class_Figure | null {
+    const id = nodePlacementFigureId(readFigurePlacements(node))
+    return id === null ? null : (this._figures_by_id[id] ?? null)
+  }
+  /**
+   * Écrit la liste des placements sur le nœud, undo compris.
+   *
+   * ÉCRITURE DIRECTE `attributes[clé] = valeur`, le patron d'`AnalysisChartInspector` : le setter
+   * dynamique de `Class_ProtoElement` redessinerait à chaque pas d'un geste groupé, et l'undo doit
+   * pouvoir reposer l'ancienne valeur SANS relancer d'action. On redessine donc nous-mêmes, une
+   * fois — et le NŒUD seulement : un placement ne change que ce qui est dessiné dans sa boîte.
+   *
+   * LISTE VIDE = ATTRIBUT EFFACÉ. `readFigurePlacements` rend `[]` dans les deux cas, et laisser
+   * un tableau vide ferait écrire la clé dans le fichier pour ne rien dire.
+   *
+   * L'undo est OPTIONNEL parce que l'historique l'est : un nœud de test, ou un nœud d'une zone de
+   * dessin détachée, n'a pas de `application_data.history`. On écrit alors sans pile d'annulation
+   * plutôt que de lever.
+   */
+  protected _writeNodePlacements(node: Class_NodeElement, next: Type_FigurePlacement[]): void {
+    const host = node as unknown as {
+      attributes: { [key: string]: unknown }
+      draw?: () => void
+      drawing_area?: {
+        draw?: () => void
+        application_data?: {
+          history?: { saveUndo?: (f: () => void) => void, saveRedo?: (f: () => void) => void }
+        }
+      }
+    }
+    const attrs = host.attributes
+    const before = attrs[FIGURE_PLACEMENTS_ATTR]
+    const value = next.length > 0 ? next : undefined
+    const redraw = () => {
+      if (host.draw) host.draw()
+      else host.drawing_area?.draw?.()
+    }
+    const apply = () => { attrs[FIGURE_PLACEMENTS_ATTR] = value; redraw() }
+    const undo = () => { attrs[FIGURE_PLACEMENTS_ATTR] = before; redraw() }
+    const history = host.drawing_area?.application_data?.history
+    history?.saveUndo?.(undo)
+    history?.saveRedo?.(apply)
+    apply()
+  }
+
+  /**
+   * LES FIGURES POSÉES, d'après les nœuds qu'on lui donne.
+   *
+   * Prend la liste en PARAMÈTRE, et ce n'est pas une facilité : `Class_MenuConfig` ne connaît ni
+   * la zone de dessin ni le diagramme (elle n'a aucune référence vers `application_data`), donc
+   * elle ne peut pas aller chercher les nœuds elle-même. L'appelant qui les a — la persistance, un
+   * ménage — les passe ; personne ne les a, personne ne balaie, et le registre garde tout. C'est
+   * l'arbitrage assumé de ce lot : un registre qui grossit d'une figure oubliée est moins grave
+   * qu'un placement qui perd son référent.
+   */
+  public placedFigureIds(nodes: Iterable<{ getElementProperty: (k: string) => unknown }>): Set<string> {
+    const out = new Set<string>()
+    for (const n of nodes) readFigurePlacements(n).forEach(p => out.add(p.figure))
+    return out
+  }
+  /** Cette figure est-elle posée quelque part, parmi les nœuds donnés ? (cf. `placedFigureIds`) */
+  public figureHasPlacement(
+    figure_id: string, nodes: Iterable<{ getElementProperty: (k: string) => unknown }>
+  ): boolean {
+    return this.placedFigureIds(nodes).has(figure_id)
+  }
+  /**
+   * SOLDE les figures du registre que plus rien ne cite : ni vignette VIVANTE, ni placement.
+   *
+   * N'est JAMAIS appelée d'office, et c'est le point délicat de ce lot. Les deux erreurs possibles
+   * ne se valent pas : garder une figure que personne ne regarde coûte quelques octets dans le
+   * fichier, tandis que jeter une figure encore posée vide le dessin d'un nœud sans rien dire.
+   * Seul un appelant qui SAIT les placements (il a les nœuds) peut trancher — d'où le paramètre,
+   * et d'où le fait que `_pruneOrphanFigures`, qui ne sait rien d'eux, ne l'appelle pas.
+   *
+   * Rend les identifiants soldés.
+   */
+  protected _pruneUnreferencedFigures(placed_ids: Set<string>): string[] {
+    // Une vignette ne compte que si sa FENÊTRE existe encore : l'annuaire garde les figures
+    // promues des fenêtres fermées (cf. `_dropFigures`), et les compter ici rendrait le ménage
+    // inopérant — précisément sur les figures qu'il est censé solder.
+    const live = new Set(this._main_zone_occupants.map(o => o.id))
+    const shown = new Set<string>()
+    Object.entries(this._figures).forEach(([occupant_id, by_key]) => {
+      if (!live.has(occupant_id)) return
+      Object.values(by_key).forEach(f => { if (f.id !== null) shown.add(f.id) })
+    })
+    const dropped: string[] = []
+    Object.keys(this._figures_by_id).forEach(id => {
+      if (shown.has(id) || placed_ids.has(id)) return
+      const fig = this._figures_by_id[id]
+      delete this._figures_by_id[id]
+      // Dénommée : elle redevient une figure de vignette ordinaire, donc `_pruneOrphanFigures`
+      // sait de nouveau la jeter de l'annuaire d'une fenêtre morte.
+      fig.id = null
+      dropped.push(id)
+    })
+    if (dropped.length > 0) this._pruneOrphanFigures()
+    return dropped
+  }
+  /** `_pruneUnreferencedFigures` pour l'extérieur (cf. `placedFigureIds` pour les placements). */
+  public pruneUnreferencedFigures(placed_ids: Set<string>): string[] {
+    const dropped = this._pruneUnreferencedFigures(placed_ids)
+    if (dropped.length > 0) this._notifyMainZone()
+    return dropped
   }
 
   /**
@@ -1289,6 +1507,63 @@ export class Class_MenuConfig {
       if (json) out[id] = json
     })
     return Object.keys(out).length > 0 ? out : undefined
+  }
+  /**
+   * os#1421 — SÉRIALISE LE REGISTRE DES FIGURES (clé racine `figures`).
+   *
+   * Dictionnaire `f_N → { id, nature, attributes?, styles? }`. Clé ADDITIVE : tant que personne n'a
+   * posé de figure nulle part, rien n'est promu, et le fichier est identique à ce qu'il était.
+   *
+   * Pourquoi une clé RACINE et non les fenêtres : une figure promue survit à sa fenêtre — c'est
+   * tout l'intérêt — donc l'écrire dans `main_zone.occupants[…]` la perdrait exactement dans le cas
+   * où elle compte. La vignette, elle, n'écrit plus qu'un renvoi (`{ ref: 'f_N' }`, cf.
+   * `mainZoneStateToJSON`) : une seule copie des réglages, à un seul endroit.
+   */
+  public figuresToJSON(): Type_JSON | undefined {
+    const out: Type_JSON = {}
+    Object.entries(this._figures_by_id).forEach(([id, fig]) => {
+      const json = fig.toJSON()
+      // Une figure promue écrit toujours au moins `id` et `nature` : ce `if` n'est là que pour le
+      // type, et une entrée vide ne partirait de toute façon pas dans le fichier.
+      if (json) out[id] = json
+    })
+    return Object.keys(out).length > 0 ? out : undefined
+  }
+  /**
+   * Relit le registre. À lire AVANT `main_zone` : les vignettes citent le registre par `ref`, et
+   * une vignette lue d'abord ne trouverait qu'un renvoi dans le vide.
+   *
+   * REMPLACE le registre de la session — le registre appartient au DOCUMENT, et deux documents ne
+   * partagent pas leurs `f_N`. Un fichier qui ne porte PAS la clé ne remplace rien (même règle que
+   * `figure_styles`) : un basculement de vue ne porte pas les métadonnées du document.
+   */
+  public figuresFromJSON(json: unknown): void {
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return
+    // Les figures de la session PERDENT LEUR NOM avec l'ancien registre. Sans cela, une vignette
+    // restée en place (lecture partielle qui ne referait pas la grande zone) écrirait `{ ref }`
+    // vers un identifiant que le nouveau registre ne porte plus : un renvoi dans le vide, alors
+    // qu'une figure dénommée réécrit simplement ses réglages en clair.
+    Object.values(this._figures).forEach(by_key => Object.values(by_key).forEach(f => { f.id = null }))
+    this._figures_by_id = {}
+    this._figure_seq = 0
+    Object.entries(json as Type_JSON).forEach(([id, v]) => {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return
+      const entry = v as Type_JSON
+      const raw_nature = entry['nature']
+      const nature_id = (typeof raw_nature === 'string' && raw_nature !== '')
+        ? raw_nature : Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID
+      // La CLÉ DE VIGNETTE d'une figure du registre n'est pas dans le fichier, et ne peut pas y
+      // être : la même figure peut être posée sur un nœud et n'être montrée dans AUCUNE fenêtre.
+      // On lui donne son identifiant de document comme clé — `Class_Figure.key` n'est lue nulle
+      // part ailleurs que dans ses tests, et l'annuaire (`_figures`) reste seul à dire où elle se
+      // montre. C'est la vignette qui rejoint la figure (`ref`), pas l'inverse.
+      const fig = new Class_Figure(this.figureNature(nature_id), id)
+      fig.fromJSON(entry, this._figure_report, `figures[${id}]`)
+      fig.id = id
+      this._figures_by_id[id] = fig
+      const m = /^f_(\d+)$/.exec(id)
+      if (m) this._figure_seq = Math.max(this._figure_seq, Number(m[1]))
+    })
   }
   /** Relit les styles de figure. Entrée malformée ignorée (fichier fabriqué à la main). */
   public figureStylesFromJSON(json: unknown): void {
@@ -1703,10 +1978,17 @@ export class Class_MenuConfig {
       // ne dit rien n'écrit pas la clé `figures` du tout. C'est ce qui rend un fichier
       // d'aujourd'hui — où personne n'a réglé de vignette — identique OCTET POUR OCTET à celui
       // qu'écrivait la version d'avant.
+      //
+      // os#1421 — UNE FIGURE PROMUE N'EST PAS ÉCRITE DEUX FOIS. Elle vit dans la clé racine
+      // `figures` (le registre), et sa vignette n'écrit qu'un RENVOI `{ ref: 'f_N' }`. Deux copies
+      // des mêmes réglages divergeraient à la première relecture partielle, et surtout la vignette
+      // n'est plus la propriétaire : la même figure peut être posée sur un nœud et n'être montrée
+      // dans aucune fenêtre.
       const figs = this._figures[o.id]
       if (figs) {
         const figures: Type_JSON = {}
         Object.entries(figs).forEach(([key, fig]) => {
+          if (fig.id !== null) { figures[key] = { ref: fig.id }; return }
           const json = fig.toJSON()
           if (json) figures[key] = json
         })
@@ -1892,6 +2174,29 @@ export class Class_MenuConfig {
       if (!o) return
       if (entry.figures) {
         Object.entries(entry.figures).forEach(([key, v]) => {
+          // os#1421 — DEUX FORMES sous `figures[clé]` : un RENVOI au registre (`{ ref: 'f_N' }`,
+          // ce qu'on écrit depuis qu'une figure peut être posée ailleurs) ou le sac INLINE (une
+          // figure qui n'a jamais été promue, hier comme aujourd'hui).
+          const ref = (v && typeof v === 'object' && !Array.isArray(v)) ? (v as Type_JSON)['ref'] : undefined
+          if (typeof ref === 'string' && ref !== '') {
+            const fig = this._figures_by_id[ref]
+            if (fig) {
+              // L'INSTANCE DU REGISTRE rejoint l'annuaire : c'est le même objet des deux côtés,
+              // donc régler la vignette règle ce que montre le nœud qui la cite.
+              const by_key = this._figures[id] ?? (this._figures[id] = {})
+              by_key[key] = fig
+              return
+            }
+            // Renvoi dans le vide (registre tronqué, fichier recomposé à la main) : on le DIT, et
+            // la vignette repart d'une figure neuve qui suit le style de sa nature — plutôt qu'une
+            // vignette muette dont personne ne saurait dire pourquoi elle a perdu ses réglages.
+            this._figure_report.add({
+              nature: o.representation, key: ref,
+              where: `main_zone[${id}].figures[${key}].ref`, reason: 'unknown_key'
+            })
+            this.figureOf(id, key)
+            return
+          }
           this.figureOf(id, key).fromJSON(v, this._figure_report, `main_zone[${id}].figures[${key}]`)
         })
         return
