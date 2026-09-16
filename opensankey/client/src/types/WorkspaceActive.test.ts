@@ -1,0 +1,279 @@
+// os#1385 lot 2 — LE DOCUMENT ACTIF, et ce qui s'y adresse.
+//
+// Le critère d'écran du plan (« cliquer un nœud de B rend B actif, Ctrl+Z annule dans B ») ne
+// sera vérifiable qu'au lot 3, quand un second document deviendra éditable. Ce fichier verrouille
+// le MÉCANISME que le lot 2 livre, et dont tout le reste dépend : qui est l'actif, quand on
+// l'annonce, à qui la frappe est adressée, d'où vient le presse-papiers, où va le cache, et qui
+// a le droit d'écrire dans la barre d'adresse.
+
+import { Class_Workspace } from './Workspace'
+import { Class_ApplicationData } from './ApplicationData'
+import { ACTIVE_DOCUMENT_TOPIC, HISTORY_TOPIC } from './EventBus'
+import { MAIN_ZONE_CANVAS_ID } from './MenuConfig'
+
+if (typeof globalThis.structuredClone !== 'function') {
+  globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
+}
+
+/**
+ * Un espace de travail de BASE, un document principal à DEUX feuilles, et une fenêtre canevas
+ * ouverte sur la feuille qu'on n'édite pas — la scène du lot 0, en modèle pur.
+ *
+ * `createNewSheet(false)` : sans dessin. La feuille d'avant devient un instantané, donc
+ * chargeable à part par `sheetApplication`.
+ */
+function buildTwoSheetWorkspace() {
+  const ws = new Class_Workspace(false)
+  const main = ws.createDocument()
+  main.createNewSheet(false)
+  const other_sheet = main.sheets_order[0]
+  const mc = main.menu_configuration
+  return { ws, main, mc, other_sheet }
+}
+
+/** Une frappe telle que jsdom la fabrique (le modèle ne lit que `key` et les modificateurs). */
+const keystroke = (key: string, ctrl = true) =>
+  new KeyboardEvent('keydown', { key, ctrlKey: ctrl, bubbles: true })
+
+describe('os#1385 lot 2 — qui est le document actif', () => {
+
+  it('lactif est le document principal par defaut', () => {
+    const ws = new Class_Workspace(false)
+    expect(ws.active).toBeNull()
+    const main = ws.createDocument()
+    expect(ws.active).toBe(main)
+  })
+
+  it('une fenetre canevas sur une autre feuille rend lapplication de cette feuille', () => {
+    const { ws, main, mc, other_sheet } = buildTwoSheetWorkspace()
+    expect(ws.active).toBe(main)
+
+    const window_id = mc.openMainZoneWindow({ kind: 'diagram', sheet: other_sheet }, MAIN_ZONE_CANVAS_ID)
+    mc.main_zone_active_id = window_id
+
+    const sheet_app = main.sheetApplication(other_sheet)
+    expect(sheet_app).not.toBeNull()
+    expect(sheet_app).not.toBe(main)
+    expect(ws.active).toBe(sheet_app)
+  })
+
+  it('refermer la fenetre rend lactif au document principal', () => {
+    const { ws, main, mc, other_sheet } = buildTwoSheetWorkspace()
+    const window_id = mc.openMainZoneWindow({ kind: 'diagram', sheet: other_sheet }, MAIN_ZONE_CANVAS_ID)
+    mc.main_zone_active_id = window_id
+    expect(ws.active).not.toBe(main)
+
+    mc.hideMainZoneOccupant(window_id)
+    expect(ws.active).toBe(main)
+  })
+
+  it('ACTIVE_DOCUMENT_TOPIC est notifie une fois par bascule, et pas autrement', () => {
+    const { ws, mc, other_sheet } = buildTwoSheetWorkspace()
+    let heard = 0
+    // Abonnement par la configuration de l'HOTE : le topic est d'espace de travail.
+    ws.menu_configuration.subscribe(ACTIVE_DOCUMENT_TOPIC, () => { heard++ })
+
+    const window_id = mc.openMainZoneWindow({ kind: 'diagram', sheet: other_sheet }, MAIN_ZONE_CANVAS_ID)
+    mc.main_zone_active_id = window_id
+    expect(heard).toBe(1)
+
+    // Un signal de grande zone qui ne change pas l'actif ne doit rien annoncer.
+    mc.notifyMainZone()
+    expect(heard).toBe(1)
+
+    mc.hideMainZoneOccupant(window_id)
+    expect(heard).toBe(2)
+  })
+})
+
+describe('os#1385 lot 2 — le clavier est de lespace de travail', () => {
+
+  it('Ctrl+Z frappe lhistorique de lACTIF, pas celui du principal', () => {
+    const { ws, main, mc, other_sheet } = buildTwoSheetWorkspace()
+    const sheet_app = main.sheetApplication(other_sheet)!
+
+    const undo_main = jest.spyOn(main.history, 'applyUndo')
+    const undo_sheet = jest.spyOn(sheet_app.history, 'applyUndo')
+
+    ws.dispatchKeyboardEvent(keystroke('z'))
+    expect(undo_main).toHaveBeenCalledTimes(1)
+    expect(undo_sheet).not.toHaveBeenCalled()
+
+    const window_id = mc.openMainZoneWindow({ kind: 'diagram', sheet: other_sheet }, MAIN_ZONE_CANVAS_ID)
+    mc.main_zone_active_id = window_id
+
+    ws.dispatchKeyboardEvent(keystroke('z'))
+    expect(undo_sheet).toHaveBeenCalledTimes(1)
+    // Le document principal n'entend plus rien : c'est tout l'objet du lot.
+    expect(undo_main).toHaveBeenCalledTimes(1)
+  })
+
+  it('installKeyboardListener pose lecouteur de la page et sait le retirer', () => {
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    const undo = jest.spyOn(main.history, 'applyUndo')
+
+    const uninstall = ws.installKeyboardListener()
+    expect(typeof document.onkeydown).toBe('function')
+    const installed = document.onkeydown as unknown as (evt: KeyboardEvent) => void
+    installed(keystroke('z'))
+    expect(undo).toHaveBeenCalledTimes(1)
+
+    uninstall()
+    expect(document.onkeydown).toBeNull()
+  })
+})
+
+describe('os#1385 lot 2 — lhistorique annonce ses mouvements', () => {
+
+  it('saveUndo notifie HISTORY_TOPIC sur le bus du document', () => {
+    const ws = new Class_Workspace(false)
+    const doc_a = ws.createDocument()
+    const doc_b = ws.createDocument()
+
+    let heard_a = 0
+    let heard_b = 0
+    doc_a.menu_configuration.subscribe(HISTORY_TOPIC, () => { heard_a++ })
+    doc_b.menu_configuration.subscribe(HISTORY_TOPIC, () => { heard_b++ })
+
+    doc_a.history.saveUndo(() => { /* rien a defaire */ })
+    expect(heard_a).toBe(1)
+    // Topic de DOCUMENT : la pile de A ne regarde pas B.
+    expect(heard_b).toBe(0)
+  })
+})
+
+describe('os#1385 lot 2 — le presse-papiers est de lespace de travail', () => {
+
+  /** Deux nœuds sélectionnés dans le document principal, prêts à être copiés. */
+  const selectTwoNodes = (doc: Class_ApplicationData) => {
+    const sankey = doc.drawing_area.sankey
+    const a = sankey.addNewNode('a', 'A')
+    const b = sankey.addNewNode('b', 'B')
+    doc.drawing_area.addElementToSelection(a)
+    doc.drawing_area.addElementToSelection(b)
+  }
+
+  it('Ctrl+C puis Ctrl+V dans le meme document colle', () => {
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    selectTwoNodes(main)
+    const copyNodes = jest.spyOn(main.drawing_area, 'copyNodes').mockImplementation(() => undefined)
+    jest.spyOn(main, 'saveInCache').mockImplementation(() => undefined)
+
+    main.handleKeyboardEvent(keystroke('c'))
+    expect(ws.clipboard).not.toBeNull()
+    expect(ws.clipboard!.source).toBe(main)
+    expect(ws.clipboard!.node_ids.slice().sort()).toEqual(['a', 'b'])
+    const copied = ws.clipboard!.node_ids
+
+    main.handleKeyboardEvent(keystroke('v'))
+    expect(copyNodes).toHaveBeenCalledWith(copied)
+  })
+
+  it('Ctrl+V dans un AUTRE document ne colle pas, et le dit', () => {
+    const { ws, main, other_sheet } = buildTwoSheetWorkspace()
+    selectTwoNodes(main)
+    jest.spyOn(main, 'saveInCache').mockImplementation(() => undefined)
+    main.handleKeyboardEvent(keystroke('c'))
+
+    const sheet_app = main.sheetApplication(other_sheet)!
+    const copyNodes = jest.spyOn(sheet_app.drawing_area, 'copyNodes').mockImplementation(() => undefined)
+    const notify = jest.spyOn(ws, 'notifyUser').mockImplementation(() => undefined)
+
+    sheet_app.handleKeyboardEvent(keystroke('v'))
+    // Les identifiants de A ne designent rien dans B : coller entre documents demande une
+    // serialisation, c'est le lot 3. En attendant, on refuse ET on explique.
+    expect(copyNodes).not.toHaveBeenCalled()
+    expect(notify).toHaveBeenCalledTimes(1)
+    expect(notify.mock.calls[0][0]).toBe('clipboard_cross_document')
+  })
+})
+
+describe('os#1385 lot 2 — un emplacement de cache par document', () => {
+
+  it('un document secondaire necrase pas la cle data du principal', () => {
+    localStorage.clear()
+    const { main, other_sheet } = buildTwoSheetWorkspace()
+    const sheet_app = main.sheetApplication(other_sheet)!
+    // Le principal garde la cle historique, celle que lit la reprise de session.
+    localStorage.setItem('data', 'TRAVAIL_EN_COURS')
+
+    jest.spyOn(sheet_app, 'sendWaitingToast').mockImplementation((f) => { f() })
+    sheet_app.saveInCache()
+
+    expect(localStorage.getItem('data')).toBe('TRAVAIL_EN_COURS')
+    expect(sheet_app.document_id).toBe('sheet:' + other_sheet)
+    expect(localStorage.getItem('data:sheet:' + other_sheet)).not.toBeNull()
+  })
+
+  it('reinitialization retire aussi les emplacements des autres documents', () => {
+    localStorage.clear()
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    localStorage.setItem('data', 'X')
+    localStorage.setItem('data:sheet:s_1', 'Y')
+    localStorage.setItem('autre_cle', 'Z')
+
+    main.reinitialization(false)
+
+    expect(localStorage.getItem('data')).toBeNull()
+    expect(localStorage.getItem('data:sheet:s_1')).toBeNull()
+    // Ce qui n'est pas un document reste : « tout effacer » vise les diagrammes.
+    expect(localStorage.getItem('autre_cle')).toBe('Z')
+  })
+})
+
+describe('os#1385 lot 2 — une seule barre dadresse, ecrite par le seul actif', () => {
+
+  it('un document non actif nappelle pas replaceState', () => {
+    const { ws, main, other_sheet } = buildTwoSheetWorkspace()
+    const sheet_app = main.sheetApplication(other_sheet)!
+    ws.enableUrlStateSync()
+    const replaceState = jest.spyOn(window.history, 'replaceState').mockImplementation(() => undefined)
+
+    // L'actif est le principal : lui seul decrit l'ecran.
+    sheet_app.syncUrlState()
+    expect(replaceState).not.toHaveBeenCalled()
+
+    main.syncUrlState()
+    expect(replaceState).toHaveBeenCalled()
+  })
+
+  it('larmement de la synchronisation est celui de lespace de travail', () => {
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    expect(ws.url_sync_enabled).toBe(false)
+    main.enableUrlStateSync()
+    expect(ws.url_sync_enabled).toBe(true)
+  })
+
+  it('la feuille ouverte voyage dans ladresse, sauf quand cest la premiere', () => {
+    const { main } = buildTwoSheetWorkspace()
+    // La feuille courante est la SECONDE (createNewSheet bascule dessus).
+    expect(main.current_sheet_id).not.toBe(main.sheets_order[0])
+    expect(main.getUrlStateParams().get('sheet')).toBe(main.current_sheet_id)
+
+    main.switchToSheet(main.sheets_order[0], false)
+    expect(main.getUrlStateParams().get('sheet')).toBeNull()
+  })
+
+  it('applyUrlStateParams ouvre la feuille demandee AVANT la vue', () => {
+    const { main } = buildTwoSheetWorkspace()
+    const first_sheet = main.sheets_order[0]
+    // La bascule elle-meme est testee ailleurs (sheets.roundtrip) : ce qui compte ici est
+    // qu'elle soit DEMANDEE, avec le dessin, depuis les parametres d'adresse.
+    const switchTo = jest.spyOn(main, 'switchToSheet').mockImplementation(() => undefined)
+
+    main.applyUrlStateParams(new URLSearchParams('sheet=' + first_sheet))
+    expect(switchTo).toHaveBeenCalledWith(first_sheet, true)
+  })
+
+  it('une feuille inconnue est refusee en silence', () => {
+    const { main } = buildTwoSheetWorkspace()
+    const before = main.current_sheet_id
+    // Une adresse ecrite pour un autre fichier ouvre le fichier tel quel : elle ne casse rien.
+    main.switchToSheet('feuille_qui_nexiste_pas', false)
+    expect(main.current_sheet_id).toBe(before)
+  })
+})

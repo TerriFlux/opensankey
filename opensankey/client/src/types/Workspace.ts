@@ -9,10 +9,11 @@
 import { CreateToastFnReturn } from '@chakra-ui/react'
 import { TFunction, i18n } from 'i18next'
 
-import { Class_MenuConfig } from './MenuConfig'
+import { Class_MenuConfig, mainZoneSubjectSheet } from './MenuConfig'
 import { Class_ApplicationData } from './ApplicationData'
 import type { Type_ElementAnalysis, Type_TextForToastPromise } from './ApplicationData'
 import type { Class_DrawingArea } from './DrawingArea'
+import { ACTIVE_DOCUMENT_TOPIC, MAIN_ZONE_TOPIC } from './EventBus'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import {
   default_toast_duration, default_toast_waiting_delay, randomId, toast_bypass, Type_JSON
@@ -47,6 +48,29 @@ export type Type_DocumentOptions = {
    * `OFFSCREEN_CONTAINER_SELECTOR`. Il n'est pas candidat à être le document `main`.
    */
   offscreen?: boolean
+  /**
+   * os#1385 (lot 2) — Identifiant IMPOSÉ du document, au lieu d'un `makeId('doc')`.
+   *
+   * Il n'a qu'un usage aujourd'hui, et c'est celui qui compte : l'application de lecture d'une
+   * feuille (`sheetApplication`) le fixe à `'sheet:<id de feuille>'`, pour que l'emplacement de
+   * cache d'une feuille soit STABLE d'un chargement d'instantané au suivant. Un identifiant
+   * tiré au hasard donnerait une clé neuve à chaque invalidation, et le stockage local
+   * accumulerait des documents morts.
+   */
+  id?: string
+}
+
+/**
+ * os#1385 (lot 2) — LE PRESSE-PAPIERS, qui est de l'espace de travail et non du document.
+ *
+ * Il porte sa SOURCE, et pas seulement des identifiants : deux documents ouverts ont deux jeux
+ * d'identifiants sans rapport, et coller dans B des `node_id` copiés dans A y désignerait au
+ * mieux rien, au pire d'autres nœuds. Tant que la sérialisation du contenu n'est pas là (lot 3,
+ * avec l'éditabilité d'un second document), coller HORS de sa source est refusé et dit.
+ */
+export type Type_Clipboard = {
+  source: Class_ApplicationData
+  node_ids: string[]
 }
 
 /**
@@ -385,6 +409,131 @@ export class Class_Workspace {
   public get main(): Class_ApplicationData | null { return this._main }
 
   /**
+   * os#1385 (lot 2, D5) — LE DOCUMENT ACTIF : celui que l'utilisateur édite.
+   *
+   * RÉSOLU À L'APPEL, JAMAIS CAPTURÉ. C'est tout le contrat : une commande de l'espace de travail
+   * (le clavier, un bouton de menu, l'inspecteur) demande « quel document, maintenant ? » au
+   * moment où elle s'exécute. Une capture — un `app_data` mémorisé au montage d'un composant, une
+   * closure passée à `onkeydown` — fige le document d'il y a deux minutes, et c'est très
+   * exactement la panne que ce lot solde.
+   *
+   * COMMENT IL SE DÉSIGNE. Sans geste nouveau : la fenêtre active de la grande zone porte déjà
+   * l'intention de l'utilisateur (un mousedown dans une fenêtre la rend active, os#1397 l'a même
+   * rendu vrai pour le canevas principal), et le sujet d'une fenêtre dit quelle FEUILLE il
+   * regarde. L'actif est donc le document qui possède ce sujet — celui de la feuille courante,
+   * c'est-à-dire le `main`, ou l'application de lecture d'une autre feuille.
+   *
+   * EFFET DE BORD ASSUMÉ : `sheetApplication` charge paresseusement l'instantané, en O(feuille),
+   * la PREMIÈRE fois. Lire `active` peut donc payer ce chargement. En pratique il est déjà payé —
+   * une fenêtre ne devient active qu'après s'être affichée, donc après avoir demandé la même
+   * application — et l'alternative (un actif mémorisé à la bascule) rouvrirait la porte à la
+   * capture. Le fallback `?? main` couvre la feuille supprimée : une fenêtre orpheline ne doit
+   * pas rendre l'espace de travail sans actif.
+   */
+  public get active(): Class_ApplicationData | null {
+    const main = this._main
+    if (!main) return null
+    // Un document en cours de construction n'a pas encore sa configuration de menus : le
+    // constructeur BOOLÉEN appelle `registerDocument` avant `createNewMenuConfiguration`.
+    const mc: Class_MenuConfig | undefined = main.menu_configuration
+    if (mc === undefined) return main
+    const active_id = mc.main_zone_active_id
+    const occupant = active_id === null ? undefined : mc.mainZoneOccupantById(active_id)
+    const sheet = occupant ? mainZoneSubjectSheet(occupant.subject) : ''
+    if (sheet === '' || sheet === main.current_sheet_id) return main
+    return main.sheetApplication(sheet) ?? main
+  }
+
+  /** Dernière identité annoncée de l'actif — sert à ne notifier que les VRAIES bascules. */
+  protected _last_active: Class_ApplicationData | null = null
+
+  /** Verrou de ré-entrance, cf. `refreshActive`. */
+  protected _refreshing_active: boolean = false
+
+  /**
+   * Recalcule l'actif et, si son identité a changé, l'annonce sur le bus de l'hôte.
+   *
+   * Appelé sur `MAIN_ZONE_TOPIC` (le setter de `main_zone_active_id` y notifie), et à chaque
+   * document enregistré ou oublié — ouvrir le premier document, ou fermer celui qu'on regardait,
+   * change l'actif sans passer par la grande zone.
+   *
+   * Tolérant à l'absence de `main` (espace de travail vide, document en construction) : cette
+   * méthode est branchée sur un bus, et un bus ne doit jamais lever.
+   *
+   * RÉ-ENTRANCE, et ce n'est pas théorique : résoudre l'actif peut CHARGER un document
+   * (`sheetApplication`, premier appel), dont l'enregistrement rappelle cette méthode — alors
+   * que le cache d'instantané n'est posé qu'au retour. Sans verrou, la première activation
+   * d'une fenêtre de feuille chargerait la feuille en boucle.
+   */
+  public refreshActive(): void {
+    if (this._refreshing_active) return
+    this._refreshing_active = true
+    try {
+      const next = this.active
+      if (next === this._last_active) return
+      this._last_active = next
+      this.menu_configuration.notify(ACTIVE_DOCUMENT_TOPIC)
+    } finally {
+      this._refreshing_active = false
+    }
+  }
+
+  // CLAVIER ============================================================================
+  // os#1385 (lot 2, D7) — UN SEUL écouteur, posé par l'espace de travail, qui résout l'actif
+  // À CHAQUE FRAPPE. Les quatre sites qui posaient `document.onkeydown =
+  // app.keyboardEventListener(app)` capturaient l'application du moment : la frappe partait
+  // toujours au même document, quelle que soit la fenêtre regardée.
+
+  /**
+   * Pose l'écouteur clavier de la page et rend la fonction qui le retire (pour un `useEffect`).
+   */
+  public installKeyboardListener(): () => void {
+    const listener = (evt: KeyboardEvent) => this.dispatchKeyboardEvent(evt)
+    document.onkeydown = listener
+    return () => { if (document.onkeydown === listener) document.onkeydown = null }
+  }
+
+  /**
+   * Route une frappe vers le document ACTIF (le `main` tant qu'il n'y a pas d'autre fenêtre).
+   *
+   * On ne trie PAS ici les touches d'espace de travail (Tab, Échap, Ctrl+F, Ctrl+B) : elles
+   * traversent le document comme les autres et atteignent l'hôte par la DÉLÉGATION de sa
+   * configuration de menus (lot 1 — `ref_menu_opened`, `closeAllMenus`, `panels`,
+   * `ref_toggle_search` sont des membres d'hôte, quel que soit le document qui les lit). La
+   * séparation est donc structurelle, une fois pour toutes ; la dupliquer ici en ferait deux
+   * listes à tenir d'accord.
+   */
+  public dispatchKeyboardEvent(evt: KeyboardEvent): void {
+    const doc = this.active ?? this._main
+    doc?.handleKeyboardEvent(evt)
+  }
+
+  // PRESSE-PAPIERS =====================================================================
+
+  /**
+   * Ce qui a été copié, avec le document d'où il vient (cf. `Type_Clipboard`). Vivait sur le
+   * document (`_clipboard_node_ids`), où il n'avait aucun sens : copier dans A puis coller dans
+   * B ne trouvait rien, sans un mot.
+   */
+  public clipboard: Type_Clipboard | null = null
+
+  // BARRE D'ADRESSE ====================================================================
+  // Il n'y a qu'UNE barre d'adresse pour toute la page : l'armement de la synchronisation est
+  // donc de l'espace de travail, et seul l'ACTIF y écrit (cf. `Class_ApplicationData.syncUrlState`).
+
+  protected _url_sync_enabled: boolean = false
+
+  /**
+   * Tant que l'état initial de l'URL n'a pas été appliqué, on n'écrit pas : sinon le premier
+   * dessin écraserait les paramètres qu'on s'apprête tout juste à lire.
+   */
+  public get url_sync_enabled(): boolean { return this._url_sync_enabled }
+  public set url_sync_enabled(_: boolean) { this._url_sync_enabled = _ }
+
+  /** Arme la synchronisation sans rien appliquer (reprise du cache, page vierge, diagramme inline). */
+  public enableUrlStateSync(): void { this._url_sync_enabled = true }
+
+  /**
    * Fabrique LE geste normal : un document naît DANS un espace de travail, qui lui donne d'un
    * coup la langue, les licences, le mode de page, les logos, la file de toasts, les crochets
    * et la configuration de menus hôte. Plus aucune recopie à la main.
@@ -407,9 +556,14 @@ export class Class_Workspace {
    */
   public registerDocument(doc: Class_ApplicationData, options: Type_DocumentOptions = {}): void {
     if (!this._documents.includes(doc)) this._documents.push(doc)
+    // os#1385 (lot 2) — L'IDENTITÉ du document, posée ici et une seule fois : c'est elle qui
+    // nomme son emplacement de cache (`cache_key`). Un document n'en a pas avant d'appartenir à
+    // un espace de travail — c'est l'espace qui sait ce qui est unique en son sein.
+    doc.assignDocumentId(options.id)
     // Un document hors écran n'est candidat à rien : il n'a pas de place à l'écran, donc pas
     // de disposition à écrire ni de menus à repeindre.
     if (!options.offscreen && this._main === null) this._main = doc
+    this.refreshActive()
   }
 
   /** Retire un document (instantané de feuille périmé, source Excel remplacée…). */
@@ -417,6 +571,9 @@ export class Class_Workspace {
     const idx = this._documents.indexOf(doc)
     if (idx >= 0) this._documents.splice(idx, 1)
     if (this._main === doc) this._main = null
+    // Le presse-papiers ne survit pas à son document : ses identifiants ne désignent plus rien.
+    if (this.clipboard?.source === doc) this.clipboard = null
+    this.refreshActive()
   }
 
   // CONSTRUCTOR ========================================================================
@@ -432,5 +589,9 @@ export class Class_Workspace {
     // Dispatch virtuel, comme la fabrique de documents : la configuration HÔTE est celle de
     // la couche la plus haute (MenuConfigOSP / MenuConfigSA).
     this.menu_configuration = this.createMenuConfiguration()
+    // os#1385 (lot 2) — CHANGER DE FENÊTRE ACTIVE PEUT CHANGER DE DOCUMENT ACTIF. Le setter de
+    // `main_zone_active_id` notifie déjà la grande zone ; on s'y branche plutôt que d'ajouter un
+    // geste, parce que c'est littéralement le même (D5, « toucher rend actif »).
+    this.menu_configuration.subscribe(MAIN_ZONE_TOPIC, () => this.refreshActive())
   }
 }
