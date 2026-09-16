@@ -1429,9 +1429,11 @@ export class Class_ApplicationData {
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     // sa#399 — Référence de brique de bibliothèque, clé racine persistée avec le diagramme.
     if (this._library_ref) json_object['library_ref'] = { ...this._library_ref }
-    // La grande zone reste, au lot 1, une disposition PAR DOCUMENT (cf. contrat §0) : tous
-    // l'écrivent.
-    json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    // os#1385 (lot 3) — LA GRANDE ZONE EST DE L'HÔTE, comme les panneaux : une seule disposition
+    // à l'écran quel que soit le nombre de documents ouverts, donc seul le PRINCIPAL l'écrit.
+    // Sans cette garde, chaque document secondaire (feuille vivante, source Excel, brique)
+    // recopierait la disposition de l'utilisateur dans sa propre entrée du fichier.
+    if (this.is_main) json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     // os#1418 — STYLES DES NATURES DE FIGURE (étoile unitaire, couronne, histogrammes,
     // sunburst), clé racine ADDITIVE : absente tant qu'aucun style n'a été réglé, donc un
     // fichier antérieur se relit à l'identique. Remplace `representation_defaults` (os#1394),
@@ -1629,7 +1631,14 @@ export class Class_ApplicationData {
     // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
     // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
-    if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
+    //
+    // os#1385 (lot 3) — et SEULEMENT pour le document principal, même raison que les panneaux
+    // ci-dessous : la disposition est celle de l'HÔTE. Un document secondaire qui se charge
+    // (feuille B ouverte dans une fenêtre, source Excel, brique) réécrirait sinon la grande zone
+    // de l'écran avec celle enregistrée dans SON entrée du fichier.
+    if (this.is_main && mz && typeof mz === 'object') {
+      this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
+    }
     // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
     this.menu_configuration?.flushFigureMigrationReport()
     // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
