@@ -133,6 +133,12 @@ export const resources_loading_toasts = {
             title: 'Reconciled result dropped',
             desc: 'The collected datum of this flow has changed: its reconciled result no longer follows from it and has been removed. Run the reconciliation again to obtain a new one.'
           }
+        },
+        clipboard: {
+          cross_document: {
+            title: 'Paste across documents',
+            desc: 'What you copied comes from another document. Pasting from one document into another is not possible yet: copy it again from within this document.'
+          }
         }
       },
     }
@@ -270,6 +276,12 @@ export const resources_loading_toasts = {
           result_dropped: {
             title: 'Résultat réconcilié périmé',
             desc: 'La donnée collectée de ce flux a changé : son résultat réconcilié n\'en découle plus et a été retiré. Relancez la réconciliation pour en obtenir un nouveau.'
+          }
+        },
+        clipboard: {
+          cross_document: {
+            title: 'Coller entre documents',
+            desc: 'Ce que vous avez copié vient d\'un autre document. Coller d\'un document à l\'autre n\'est pas encore possible : recopiez-le depuis ce document.'
           }
         }
       },
@@ -409,6 +421,12 @@ export const resources_loading_toasts = {
             title: 'Resultado reconciliado descartado',
             desc: 'El dato recopilado de este flujo ha cambiado: su resultado reconciliado ya no se deriva de él y se ha retirado. Vuelva a ejecutar la reconciliación para obtener uno nuevo.'
           }
+        },
+        clipboard: {
+          cross_document: {
+            title: 'Pegar entre documentos',
+            desc: 'Lo que ha copiado procede de otro documento. Pegar de un documento a otro todavía no es posible: cópielo de nuevo desde este documento.'
+          }
         }
       },
     }
@@ -546,6 +564,12 @@ export const resources_loading_toasts = {
           result_dropped: {
             title: 'Abgeglichenes Ergebnis verworfen',
             desc: 'Der erfasste Wert dieses Flusses hat sich geändert: sein abgeglichenes Ergebnis folgt nicht mehr daraus und wurde entfernt. Führen Sie den Abgleich erneut aus, um ein neues zu erhalten.'
+          }
+        },
+        clipboard: {
+          cross_document: {
+            title: 'Zwischen Dokumenten einfügen',
+            desc: 'Das Kopierte stammt aus einem anderen Dokument. Das Einfügen von einem Dokument in ein anderes ist noch nicht möglich: Kopieren Sie es erneut aus diesem Dokument.'
           }
         }
       },
@@ -685,6 +709,12 @@ export const resources_loading_toasts = {
             title: 'Risultato riconciliato scartato',
             desc: 'Il dato raccolto di questo flusso è cambiato: il suo risultato riconciliato non ne deriva più ed è stato rimosso. Rilancia la riconciliazione per ottenerne uno nuovo.'
           }
+        },
+        clipboard: {
+          cross_document: {
+            title: 'Incollare tra documenti',
+            desc: 'Ciò che avete copiato proviene da un altro documento. Incollare da un documento all\'altro non è ancora possibile: copiatelo di nuovo da questo documento.'
+          }
         }
       },
     }
@@ -820,6 +850,12 @@ export const resources_loading_toasts = {
             title: '协调结果已作废',
             desc: '该流量的采集数据已变更：其协调结果不再由其推导，已被移除。请重新运行协调以获得新结果。'
           }
+        },
+        clipboard: {
+          cross_document: {
+            title: '跨文档粘贴',
+            desc: '您复制的内容来自另一个文档。目前还无法在两个文档之间粘贴：请在当前文档中重新复制。'
+          }
         }
       },
     }
@@ -954,6 +990,12 @@ export const resources_loading_toasts = {
           result_dropped: {
             title: '調整結果を破棄しました',
             desc: 'このフローの収集データが変わったため、調整結果はそれに由来しなくなり削除されました。新しい結果を得るには調整を再実行してください。'
+          }
+        },
+        clipboard: {
+          cross_document: {
+            title: '文書間の貼り付け',
+            desc: 'コピーした内容は別の文書のものです。文書間での貼り付けはまだできません。この文書内でコピーし直してください。'
           }
         }
       },

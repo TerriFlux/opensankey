@@ -27,8 +27,16 @@ type Slots<F extends AnyFn> = Slot<F> | Array<Slot<F>>
  *
  * À utiliser quand le handler fait autre chose que forcer un re-render (ex. re-synchroniser un
  * état local avant de rafraîchir) ; pour un simple re-render, préférer {@link useModelBinding}.
+ *
+ * @param deps  os#1385 (lot 2) — quand le MODÈLE change d'identité (le document ACTIF bascule),
+ *              la liaison doit être refaite : l'ancien slot est relâché, le nouveau pris. Passer
+ *              `[app_data]`. Vide (défaut) = comportement d'avant, une liaison au montage.
  */
-export function useModelSlot<F extends AnyFn = () => void>(slot: Slots<F>, handler: F): void {
+export function useModelSlot<F extends AnyFn = () => void>(
+  slot: Slots<F>,
+  handler: F,
+  deps: unknown[] = []
+): void {
   const latest_handler = useRef(handler)
   latest_handler.current = handler
   useEffect(() => {
@@ -40,8 +48,10 @@ export function useModelSlot<F extends AnyFn = () => void>(slot: Slots<F>, handl
       // Ne relâcher que nos propres liaisons : un composant monté après nous a pu reprendre le slot.
       slots.forEach(s => { if (s.current === bound) s.current = NOOP as unknown as F })
     }
-    // Slots (refs) ont une identité stable : on lie une seule fois au montage.
-  }, [])
+    // Les slots (refs) ont une identité stable : sans `deps`, on lie une seule fois au montage.
+    // `deps` est une variable et non un littéral : c'est voulu (le tableau vient de l'appelant),
+    // et c'est pourquoi la vérification des dépendances ne s'applique pas ici.
+  }, deps)
 }
 
 /**
@@ -69,12 +79,22 @@ export function useModelSlot<F extends AnyFn = () => void>(slot: Slots<F>, handl
  *              (cas `addMainZoneListener` sans slot ref propre).
  * @param subscribe  optionnel : reçoit la fonction de re-render, renvoie éventuellement une
  *              fonction de désabonnement (ex. valeur de retour d'`addMainZoneListener`).
+ * @param deps  os#1385 (lot 2) — quand le MODÈLE change d'identité (le document ACTIF bascule),
+ *              l'effet se rejoue : désabonnement de l'ancien bus et relâchement de l'ancien slot,
+ *              puis liaison au nouveau. Passer `[app_data]` dès qu'un composant lit l'actif
+ *              (`useActiveDocument`). Vide (défaut) = comportement d'avant, inchangé.
  * @returns la fonction de re-render forcé (stable), utilisable pour un abonnement custom.
  */
 export function useModelBinding<F extends AnyFn = () => void>(
   slot?: Slots<F>,
-  subscribe?: (rerender: () => void) => (() => void) | void
+  subscribe?: (rerender: () => void) => (() => void) | void,
+  deps: unknown[] = []
 ): () => void {
+  // `subscribe` est recréée à chaque rendu (closure sur les props) : la lire par une ref évite
+  // de faire de l'effet un abonné/désabonné à chaque frame, tout en gardant la closure fraîche
+  // au moment où l'effet se rejoue vraiment (changement de `deps`).
+  const latest_subscribe = useRef(subscribe)
+  latest_subscribe.current = subscribe
   const [, forceRerender] = useReducer((x: number) => x + 1, 0)
   useEffect(() => {
     const slots = slot === undefined ? [] : (Array.isArray(slot) ? slot : [slot])
@@ -82,12 +102,14 @@ export function useModelBinding<F extends AnyFn = () => void>(
     // les ignore, d'où le cast.
     const bound = forceRerender as unknown as F
     slots.forEach(s => { s.current = bound })
-    const unsubscribe = subscribe?.(forceRerender)
+    const unsubscribe = latest_subscribe.current?.(forceRerender)
     return () => {
       slots.forEach(s => { if (s.current === bound) s.current = NOOP as unknown as F })
       if (typeof unsubscribe === 'function') unsubscribe()
     }
-    // Slots (refs) et forceRerender ont une identité stable : on lie une seule fois au montage.
-  }, [])
+    // Slots (refs) et forceRerender ont une identité stable : sans `deps`, on lie une seule
+    // fois au montage. `deps` est une variable et non un littéral (le tableau vient de
+    // l'appelant) : la vérification des dépendances ne s'applique pas ici.
+  }, deps)
   return forceRerender
 }
