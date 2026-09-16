@@ -33,7 +33,7 @@ import {
 } from '../types/Utils'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
-import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
+import { Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
@@ -519,15 +519,128 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
+/**
+ * sa#283 lot 2 — Le créneau d'enregistrement de vue contextuelle, nommé.
+ *
+ * Nommé (et non écrit en place) depuis os#1385 : le membre est délégué à l'hôte, donc son
+ * type s'écrit maintenant trois fois — champ, getter, setter — et trois copies d'une même
+ * forme d'objet finiraient par diverger.
+ */
+export type Type_ContextRecordingUI = {
+  armed: (group_id: string) => string | null
+  arm: (group_id: string, tag_id: string) => void
+  disarm: () => void
+}
+
+/**
+ * os#1385 — LES POINTS D'INJECTION DE MENUS, nommés.
+ *
+ * Mêmes formes qu'avant, sorties de la classe pour la même raison que
+ * `Type_ContextRecordingUI` : délégués à l'hôte, ils s'écrivent désormais en champ, en
+ * getter et en setter, et trois copies d'une union de dix lignes divergeraient.
+ */
+/** Optional extra tab injected into UpdateModeGrid by OSP or other extensions */
+export type Type_ExtraApplyLayoutTab = {
+  label: string
+  /** If provided and returns true: tab header is greyed and content disabled */
+  disabled?: () => boolean
+  render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
+}
+/** Entrées supplémentaires du menu Exporter (liste plate, ou section titrée avec enfants). */
+export type Type_ExtraExportMenuItems = Array<
+  | {
+      // Optional discriminator. Absent or 'item' => flat menu entry; 'group' => titled section with children.
+      type?: 'item'
+      key: string
+      label: string
+      icon?: React.ReactNode
+      onClick: () => void
+      disabled?: () => boolean
+      // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+      tooltip?: () => string
+    }
+  | {
+      type: 'group'
+      key: string
+      label: string
+      children: Array<{
+        key: string
+        label: string
+        icon?: React.ReactNode
+        onClick: () => void
+        disabled?: () => boolean
+        tooltip?: () => string
+      }>
+    }
+>
+/**
+ * Entrées à libellé ÉVALUÉ AU RENDU (menus Enregistrer et Fichier) : l'entrée suit la langue
+ * active et peut n'apparaître que pour un compte connecté (une entrée `hidden` n'est pas
+ * rendue du tout, contrairement à `disabled`).
+ */
+export type Type_LazyLabelMenuItems = Array<{
+  key: string
+  label: () => string
+  icon?: React.ReactNode
+  onClick: () => void
+  disabled?: () => boolean
+  // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+  tooltip?: () => string
+  hidden?: () => boolean
+}>
+/** Entrées supplémentaires du menu « Aide ». */
+export type Type_ExtraHelpMenuItems = Array<{
+  key: string
+  // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
+  // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
+  // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
+  // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
+  // dépôt passent une chaîne).
+  label: string | (() => string)
+  icon?: React.ReactNode
+  onClick: () => void
+  disabled?: () => boolean
+  // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+  tooltip?: () => string
+}>
+
 // CLASS MENU CONFIG *******************************************************************/
 /**
  * Define shortcut to update menu components
+ *
+ * os#1385 — UNE CLASSE, DEUX RÔLES, SÉPARÉS PAR DÉLÉGATION.
+ *
+ *  - `new Class_MenuConfig()` : la configuration de l'HÔTE (l'espace de travail). Elle porte
+ *    le STOCKAGE de tout ce qui est unique quel que soit le nombre de documents ouverts :
+ *    les panneaux, la colonne d'outils, les dialogues, les injections de menus, les refs de
+ *    l'interface (barre d'outils, préférences, page d'accueil…).
+ *  - `new Class_MenuConfig(host)` : la configuration d'un DOCUMENT. Elle porte ce qui est par
+ *    document (refs de contenu, séquence de dataTags, tableur, feuilles…) et DÉLÈGUE à `host`
+ *    tout membre d'hôte — le champ de stockage existe encore sur elle, il n'est simplement
+ *    jamais lu : l'API publique passe par `this._host`.
+ *
+ * Les sites d'appel ne changent pas : `mc.panels`, `mc.ref_toolbar`, `mc.tools_column_open`
+ * disent la même chose qu'avant, sur l'unique exemplaire de l'hôte.
+ *
+ * LA GRANDE ZONE (occupants, figures, `doc_external`, ratios) est encore PAR DOCUMENT au lot
+ * 1, et c'est voulu : sa montée dans l'espace de travail est le dernier geste du chantier.
+ *
  * @export
  * @class Class_MenuConfig
  */
 export class Class_MenuConfig {
 
   // PROTECTED  ATTRIBUTES ==============================================================
+
+  /**
+   * os#1385 — L'HÔTE de cette configuration : l'espace de travail, ou soi-même quand on EST
+   * l'hôte. Posé par le constructeur, jamais réassigné.
+   */
+  protected _host: Class_MenuConfig
+  /** L'hôte auquel les membres d'espace de travail sont délégués (soi-même si on est l'hôte). */
+  public get host(): Class_MenuConfig { return this._host }
+  /** Cette configuration EST-elle celle de l'espace de travail ? */
+  public get is_host(): boolean { return this._host === this }
 
   /* ========================================
     Configuration menu
@@ -593,8 +706,8 @@ export class Class_MenuConfig {
   // `_elements_configurable_selected` étaient l'état de la MATRICE type×élément :
   // déposés avec elle. L'inspecteur dérive sa cible de la sélection.
   protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock' = 'shape'
-  public get tab_selected() { return this._tab_selected }
-  public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
+  public get tab_selected() { return this._host._tab_selected }
+  public set tab_selected(tab_selected) { this._host._tab_selected = tab_selected }
 
   // ---------------------------------------------------------------------------------------
   // GRANDE ZONE — os#1355/1361 : N OCCUPANTS venus du registre des représentations, plus
@@ -723,25 +836,36 @@ export class Class_MenuConfig {
   // rendu, et notifier inconditionnellement ferait boucler le rendu sur
   // lui-même.
   protected _tools_column_enabled: boolean = false
-  public get tools_column_enabled() { return this._tools_column_enabled }
+  public get tools_column_enabled() { return this._host._tools_column_enabled }
   public set tools_column_enabled(v: boolean) {
-    if (this._tools_column_enabled === v) return
-    this._tools_column_enabled = v
+    if (this._host._tools_column_enabled === v) return
+    this._host._tools_column_enabled = v
     this._notifyMainZone()
   }
   protected _filter_bar_available: boolean = false
-  public get filter_bar_available() { return this._filter_bar_available }
+  public get filter_bar_available() { return this._host._filter_bar_available }
   public set filter_bar_available(v: boolean) {
-    if (this._filter_bar_available === v) return
-    this._filter_bar_available = v
+    if (this._host._filter_bar_available === v) return
+    this._host._filter_bar_available = v
     this._notifyMainZone()
   }
   protected _tools_column_open: boolean = true
   // #248 — bus pub/sub générique par topic (remplace la liste plate `_main_zone_listeners`).
+  //
+  // os#1385 — UN BUS PAR INSTANCE, mais deux destinations. Les signaux d'ESPACE DE TRAVAIL
+  // (cf. HOST_TOPICS) montent sur le bus de l'hôte, les signaux de CONTENU restent sur celui
+  // du document. Pour le document principal, hôte et document partagent de fait le même bus
+  // qu'aujourd'hui — rien ne change à l'écran. Pour un document secondaire, ses signaux de
+  // contenu restent chez lui (le lot 2 les rebranchera à l'actif) et ses signaux d'espace de
+  // travail montent, de sorte qu'un panneau ouvert par lui repeint bien la barre latérale.
   protected _event_bus: Class_EventBus = new Class_EventBus()
-  protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
-  public get tools_column_open() { return this._tools_column_open }
-  public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
+  /** Le bus qui porte ce topic : celui de l'hôte pour un signal d'espace de travail, le sien sinon. */
+  protected _busFor(topic: string): Class_EventBus {
+    return HOST_TOPICS.has(topic) ? this._host._event_bus : this._event_bus
+  }
+  protected _notifyMainZone() { this._host._event_bus.notify(MAIN_ZONE_TOPIC) }
+  public get tools_column_open() { return this._host._tools_column_open }
+  public set tools_column_open(v: boolean) { this._host._tools_column_open = v; this._notifyMainZone() }
   /** Largeur (px) réservée à droite par la colonne d'outils.
    *
    *  Nulle quand la colonne est REPLIÉE (07/08) : repliée, elle ne laisse
@@ -749,7 +873,7 @@ export class Class_MenuConfig {
    *  tout l'intérêt de la replier sur une page publiée, où chaque pixel de
    *  diagramme compte. */
   public getToolsColumnWidthPx(): number {
-    return (this.tools_column_enabled && this._tools_column_open)
+    return (this.tools_column_enabled && this.tools_column_open)
       ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
@@ -757,8 +881,15 @@ export class Class_MenuConfig {
   // le filtre dans OS base). Le filtre appelle ce renderer pour déplier l'édition
   // d'un groupe EN PLACE, sous sa rangée de filtre (fusion usage/édition). Null
   // en OS pur / sans licence : le crayon d'édition ne s'affiche pas.
-  public render_tag_group_editor:
+  protected _render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
+  public get render_tag_group_editor():
+    ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null {
+    return this._host._render_tag_group_editor
+  }
+  public set render_tag_group_editor(
+    v: ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null
+  ) { this._host._render_tag_group_editor = v }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
   // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
@@ -769,16 +900,23 @@ export class Class_MenuConfig {
   //  - `arm(group_id, tag_id)` : arme (désarme AVEC capture un éventuel autre) ;
   //  - `disarm()` : désarme AVEC capture.
   // Null en OS pur : la feature n'existe pas sans la couche OSP.
-  public context_recording_ui: {
-    armed: (group_id: string) => string | null
-    arm: (group_id: string, tag_id: string) => void
-    disarm: () => void
-  } | null = null
+  protected _context_recording_ui: Type_ContextRecordingUI | null = null
+  public get context_recording_ui(): Type_ContextRecordingUI | null {
+    return this._host._context_recording_ui
+  }
+  public set context_recording_ui(v: Type_ContextRecordingUI | null) {
+    this._host._context_recording_ui = v
+  }
 
   // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
   // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
   // que les coquilles PanelShell s'abonnent via `subscribe(PANELS_TOPIC, …)`.
-  public panels!: Class_PanelManager
+  //
+  // os#1385 — UN SEUL PanelManager pour tout l'espace de travail : il n'est construit que
+  // sur l'hôte (cf. constructeur), sur le bus de l'hôte, et un document rend le sien. C'est
+  // ce qui fait que la barre latérale ouverte depuis un document est LA barre latérale.
+  protected _panels!: Class_PanelManager
+  public get panels(): Class_PanelManager { return this._host._panels }
 
   // OS#300 — Le panneau de Configuration est désormais un « panneau » unifié
   // (id 'config') piloté par `panels`. `config_panel_pinned` (lu par
@@ -790,13 +928,13 @@ export class Class_MenuConfig {
   // DrawingAreaInteractions) ne doit jamais recadrer le dessin — invariant
   // historique. L'ancrage en barre latérale reste un choix délibéré (en-tête).
   protected _config_last_container: Type_PanelMode = 'popup'
-  public get config_last_container(): Type_PanelMode { return this._config_last_container }
+  public get config_last_container(): Type_PanelMode { return this._host._config_last_container }
   public get config_panel_pinned() { return this.panels.getMode('config') === 'sidebar' }
   public set config_panel_pinned(v: boolean) {
-    this._config_last_container = v ? 'sidebar' : 'popup'
+    this._host._config_last_container = v ? 'sidebar' : 'popup'
     // Ne re-router que si la config est ouverte : sinon on ne fait que mémoriser
     // le mode de réouverture (l'ouverture elle-même passe par setConfigOpen).
-    if (this.panels.isOpen('config')) this.panels.setMode('config', this._config_last_container)
+    if (this.panels.isOpen('config')) this.panels.setMode('config', this.config_last_container)
   }
   /** Largeur (px) réservée à droite par la config quand elle est la barre
    *  latérale (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
@@ -814,28 +952,38 @@ export class Class_MenuConfig {
   // Dernier contenant mémorisé pour la réouverture ; défaut = pop-up (comme la
   // config), superposée sans recadrer le dessin.
   protected _filter_last_container: Type_PanelMode = 'popup'
-  public get filter_last_container(): Type_PanelMode { return this._filter_last_container }
+  public get filter_last_container(): Type_PanelMode { return this._host._filter_last_container }
   /** Une page PUBLIÉE ouvre ce panneau ANCRÉ (07/08) : c'est sa légende, elle
    *  accompagne la lecture au lieu de flotter par-dessus le diagramme. Posé UNE
    *  fois par chargement — `filter_panel_docked_by_default` retient que le
    *  défaut a été appliqué, pour qu'un lecteur qui dépingle ne se le voie pas
    *  ré-imposer au rendu suivant. En édition, rien ne change : le filtre reste
    *  une pop-up tant qu'on ne l'ancre pas. */
-  public filter_panel_docked_by_default = false
+  protected _filter_panel_docked_by_default = false
+  public get filter_panel_docked_by_default(): boolean {
+    return this._host._filter_panel_docked_by_default
+  }
+  public set filter_panel_docked_by_default(v: boolean) {
+    this._host._filter_panel_docked_by_default = v
+  }
   public applyPublishedFilterDock() {
     if (this.filter_panel_docked_by_default) return
     this.filter_panel_docked_by_default = true
-    this._filter_last_container = 'sidebar'
+    this._host._filter_last_container = 'sidebar'
   }
   public get filter_panel_pinned() { return this.panels.getMode('filter') === 'sidebar' }
   public set filter_panel_pinned(v: boolean) {
-    this._filter_last_container = v ? 'sidebar' : 'popup'
-    if (this.panels.isOpen('filter')) this.panels.setMode('filter', this._filter_last_container)
+    this._host._filter_last_container = v ? 'sidebar' : 'popup'
+    if (this.panels.isOpen('filter')) this.panels.setMode('filter', this.filter_last_container)
   }
   // Largeur publiée par la Toolbar (informative ; la réserve passe désormais par
   // la largeur partagée de la barre latérale de `panels`).
-  public filter_drawer_open: boolean = false
-  public filter_drawer_width_px: number = 0
+  protected _filter_drawer_open: boolean = false
+  public get filter_drawer_open(): boolean { return this._host._filter_drawer_open }
+  public set filter_drawer_open(v: boolean) { this._host._filter_drawer_open = v }
+  protected _filter_drawer_width_px: number = 0
+  public get filter_drawer_width_px(): number { return this._host._filter_drawer_width_px }
+  public set filter_drawer_width_px(v: number) { this._host._filter_drawer_width_px = v }
   /** Largeur (px) réservée à droite par le filtre quand il est la barre latérale
    *  (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
    *  ⚠️ OS#388 — Même mise en garde que getConfigPanelPinnedReservedPx : ce n'est
@@ -1717,7 +1865,7 @@ export class Class_MenuConfig {
   public get main_zone_bottom_px() { return this._main_zone_bottom_px }
   public set main_zone_bottom_px(v: number) { this._main_zone_bottom_px = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
-    return this._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
+    return this._host._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }
   /** Notifie les abonnés de la grande zone (barre du haut + MainZoneTabs). Exposé pour
    *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
@@ -1726,11 +1874,16 @@ export class Class_MenuConfig {
   // #248 — API pub/sub générique par topic. Toute nouvelle feature s'abonne à son topic via
   // `subscribe(topic, listener)` (désabonnement au démontage, cf. useModelBinding) et notifie via
   // `notify(topic)`, plutôt qu'une ref nue ou la liste globale de la grande zone.
+  //
+  // os#1385 — ROUTÉ PAR TOPIC (cf. `_busFor`) : un signal d'espace de travail part sur le bus
+  // de l'hôte, un signal de contenu sur celui de ce document. Le `PanelManager` de l'hôte
+  // notifie donc le même bus que celui où les composants s'abonnent par la configuration du
+  // document principal — c'est exactement le comportement d'aujourd'hui.
   public subscribe(topic: string, l: () => void): () => void {
-    return this._event_bus.subscribe(topic, l)
+    return this._busFor(topic).subscribe(topic, l)
   }
   public notify(topic: string): void {
-    this._event_bus.notify(topic)
+    this._busFor(topic).notify(topic)
   }
 
   // Panneau « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
@@ -1738,12 +1891,16 @@ export class Class_MenuConfig {
   // Le bouton de la topbar n'apparaît que si disponible et son état ouvert/surligné suit désormais
   // `main_zone_show_unitary` (le panneau est un membre de la grande zone, persisté). `toggleUnitaryTab`
   // reste exposé pour les points d'entrée OS+ (clic droit / onglet tooltip de nœud).
-  public unitary_tab_available: boolean = false
+  protected _unitary_tab_available: boolean = false
+  public get unitary_tab_available(): boolean { return this._host._unitary_tab_available }
+  public set unitary_tab_available(v: boolean) { this._host._unitary_tab_available = v }
 
   // sa#508 — dernier import réussi (format d'entrée du dialogue de persistance :
   // 'excel', 'json'…), posé juste avant la notification IMPORT_TOPIC. Lu par
   // les abonnés du topic ; jamais persisté.
-  public last_import: { format: string } | null = null
+  protected _last_import: { format: string } | null = null
+  public get last_import(): { format: string } | null { return this._host._last_import }
+  public set last_import(v: { format: string } | null) { this._host._last_import = v }
 
   // sa#1354 — Applicateur de NIVEAU, injecté par la couche éditeur.
   //
@@ -1756,8 +1913,16 @@ export class Class_MenuConfig {
   //
   // Absent (viewer OS pur, tests), `applyUrlStateParams` ignore le niveau sans
   // erreur : l'URL reste lisible, elle restaure simplement un axe de moins.
-  public level_selection_applier: ((tagg_id: string, tag_id: string) => void) | null = null
-  public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
+  protected _level_selection_applier: ((tagg_id: string, tag_id: string) => void) | null = null
+  public get level_selection_applier(): ((tagg_id: string, tag_id: string) => void) | null {
+    return this._host._level_selection_applier
+  }
+  public set level_selection_applier(v: ((tagg_id: string, tag_id: string) => void) | null) {
+    this._host._level_selection_applier = v
+  }
+  protected _toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
+  public get toggleUnitaryTab(): () => void { return this._host._toggleUnitaryTab }
+  public set toggleUnitaryTab(v: () => void) { this._host._toggleUnitaryTab = v }
   /**
    * Largeur (px) réservée à droite par la colonne d'occupants (chrome droit compris). Source
    * unique de vérité : calculée depuis les occupants et window.innerWidth, donc valable pour
@@ -2188,42 +2353,34 @@ export class Class_MenuConfig {
   private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean, default_solver_options?: { with_reconciled?: boolean, with_completed?: boolean }) => void>
 
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
+  // os#1385 — LES SEPT POINTS D'INJECTION DE MENUS SONT DE L'ESPACE DE TRAVAIL : les menus
+  // qu'ils garnissent sont ceux de la barre du haut, unique, et les fermetures qu'on y pose
+  // capturent UNE application (cf. UnitaryExcelSourceOSP). Leurs formes vivent au-dessus de
+  // la classe (Type_ExtraApplyLayoutTab & co.), le stockage n'a de sens que sur l'hôte.
   /** If provided, row keys returning true will be greyed in UpdateModeGrid */
-  public apply_layout_is_row_disabled?: (key: string) => boolean = undefined
+  protected _apply_layout_is_row_disabled?: (key: string) => boolean = undefined
+  public get apply_layout_is_row_disabled(): ((key: string) => boolean) | undefined {
+    return this._host._apply_layout_is_row_disabled
+  }
+  public set apply_layout_is_row_disabled(v: ((key: string) => boolean) | undefined) {
+    this._host._apply_layout_is_row_disabled = v
+  }
   /** Optional extra tab injected into UpdateModeGrid by OSP or other extensions */
-  public extra_apply_layout_tab?: {
-    label: string
-    /** If provided and returns true: tab header is greyed and content disabled */
-    disabled?: () => boolean
-    render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
-  } = undefined
+  protected _extra_apply_layout_tab?: Type_ExtraApplyLayoutTab = undefined
+  public get extra_apply_layout_tab(): Type_ExtraApplyLayoutTab | undefined {
+    return this._host._extra_apply_layout_tab
+  }
+  public set extra_apply_layout_tab(v: Type_ExtraApplyLayoutTab | undefined) {
+    this._host._extra_apply_layout_tab = v
+  }
   /** Optional extra menu items appended to the top export dropdown (PNG/PDF/SVG list). Injected by OSP or other extensions. */
-  public extra_export_menu_items?: Array<
-    | {
-        // Optional discriminator. Absent or 'item' => flat menu entry; 'group' => titled section with children.
-        type?: 'item'
-        key: string
-        label: string
-        icon?: React.ReactNode
-        onClick: () => void
-        disabled?: () => boolean
-        // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
-        tooltip?: () => string
-      }
-    | {
-        type: 'group'
-        key: string
-        label: string
-        children: Array<{
-          key: string
-          label: string
-          icon?: React.ReactNode
-          onClick: () => void
-          disabled?: () => boolean
-          tooltip?: () => string
-        }>
-      }
-  > = undefined
+  protected _extra_export_menu_items?: Type_ExtraExportMenuItems = undefined
+  public get extra_export_menu_items(): Type_ExtraExportMenuItems | undefined {
+    return this._host._extra_export_menu_items
+  }
+  public set extra_export_menu_items(v: Type_ExtraExportMenuItems | undefined) {
+    this._host._extra_export_menu_items = v
+  }
   /**
    * sa#399 — Entrées supplémentaires du menu « Enregistrer » (dropdown dédié + groupe
    * Enregistrer du menu Fichier). Injectées par OSP (dépôt dans la bibliothèque de
@@ -2231,16 +2388,13 @@ export class Class_MenuConfig {
    * au rendu : l'entrée suit la langue active et peut n'apparaître que pour un compte
    * connecté (une entrée cachée n'est pas rendue du tout, contrairement à `disabled`).
    */
-  public extra_save_menu_items?: Array<{
-    key: string
-    label: () => string
-    icon?: React.ReactNode
-    onClick: () => void
-    disabled?: () => boolean
-    // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
-    tooltip?: () => string
-    hidden?: () => boolean
-  }> = undefined
+  protected _extra_save_menu_items?: Type_LazyLabelMenuItems = undefined
+  public get extra_save_menu_items(): Type_LazyLabelMenuItems | undefined {
+    return this._host._extra_save_menu_items
+  }
+  public set extra_save_menu_items(v: Type_LazyLabelMenuItems | undefined) {
+    this._host._extra_save_menu_items = v
+  }
   /**
    * sa#424 (lot 5) — Commandes ajoutées EN BAS du menu Fichier, après le dernier
    * séparateur. Sert au « Partager… » que la couche SaaS y pose : partager n'est
@@ -2251,39 +2405,34 @@ export class Class_MenuConfig {
    * Même contrat que `extra_save_menu_items` — `label` et `hidden` évalués au
    * rendu, pour suivre la langue et l'état de connexion.
    */
-  public extra_file_menu_items?: Array<{
-    key: string
-    label: () => string
-    icon?: React.ReactNode
-    onClick: () => void
-    disabled?: () => boolean
-    tooltip?: () => string
-    hidden?: () => boolean
-  }> = undefined
+  protected _extra_file_menu_items?: Type_LazyLabelMenuItems = undefined
+  public get extra_file_menu_items(): Type_LazyLabelMenuItems | undefined {
+    return this._host._extra_file_menu_items
+  }
+  public set extra_file_menu_items(v: Type_LazyLabelMenuItems | undefined) {
+    this._host._extra_file_menu_items = v
+  }
   /**
    * Optional handler that saves one standalone JSON file per view, packaged in a
    * single zip. Injected by OSP (views are an OSP feature). When set, the
    * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
    * blob→json save through this instead of the single-file saveToJSON.
    */
-  public save_all_views_as_json?: (kwargs: Type_JSON) => Promise<void> | void = undefined
+  protected _save_all_views_as_json?: (kwargs: Type_JSON) => Promise<void> | void = undefined
+  public get save_all_views_as_json(): ((kwargs: Type_JSON) => Promise<void> | void) | undefined {
+    return this._host._save_all_views_as_json
+  }
+  public set save_all_views_as_json(v: ((kwargs: Type_JSON) => Promise<void> | void) | undefined) {
+    this._host._save_all_views_as_json = v
+  }
   /** Optional extra menu items appended to the top "Aide" dropdown (after Visite guidée / Tutoriels). Injected by SA (e.g. Sankeythèque) or other extensions. */
-  public extra_help_menu_items?: Array<
-    {
-      key: string
-      // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
-      // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
-      // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
-      // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
-      // dépôt passent une chaîne).
-      label: string | (() => string)
-      icon?: React.ReactNode
-      onClick: () => void
-      disabled?: () => boolean
-      // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
-      tooltip?: () => string
-    }
-  > = undefined
+  protected _extra_help_menu_items?: Type_ExtraHelpMenuItems = undefined
+  public get extra_help_menu_items(): Type_ExtraHelpMenuItems | undefined {
+    return this._host._extra_help_menu_items
+  }
+  public set extra_help_menu_items(v: Type_ExtraHelpMenuItems | undefined) {
+    this._host._extra_help_menu_items = v
+  }
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
   // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
@@ -2322,10 +2471,21 @@ export class Class_MenuConfig {
     template_module_key: ['essential'],
   } }
 
-  constructor() {
+  /**
+   * os#1385 — SANS ARGUMENT : la configuration de l'ESPACE DE TRAVAIL (elle est son propre
+   * hôte). AVEC `host` : la configuration d'un DOCUMENT, qui délègue à `host` tout ce qui
+   * est unique par espace de travail.
+   */
+  constructor(host?: Class_MenuConfig) {
+    this._host = host ?? this
     // OS#300 — modèle des panneaux, partageant le bus de ce menu (créé en
     // initialiseur de champ, donc déjà disponible ici).
-    this.panels = new Class_PanelManager(this._event_bus)
+    //
+    // os#1385 — CONSTRUIT SEULEMENT PAR L'HÔTE : un document rend celui de son espace de
+    // travail (cf. `get panels`), sur le bus de l'hôte, donc les coquilles PanelShell
+    // s'abonnent toutes au bus où le gestionnaire notifie — quel que soit le document par
+    // lequel elles y arrivent.
+    if (host === undefined) this._panels = new Class_PanelManager(this._event_bus)
     this._ref_to_drawer_sequence_data_tag_updater = { current: () => null }
     // Init menu component updater ------------------------------------------------------
     this._ref_rerender_submodules_menus = { current: () => null }
@@ -2481,29 +2641,31 @@ export class Class_MenuConfig {
 
   public closeAllMenus() {
     this.closeConfigMenu()
-    this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_unitary_process_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_lca_catalog_explorer.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_gallery_source.current(null)
-    this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
-    this._ref_close_filter_drawer.current(false)
+    // os#1385 — par l'accesseur : les dialogues sont ceux de l'espace de travail.
+    const dialogs = this.dict_setter_show_dialog
+    dialogs.ref_setter_show_modal_welcome.current(false)
+    dialogs.ref_setter_show_modal_support.current(false)
+    dialogs.ref_setter_show_modal_file_converter.current(false)
+    dialogs.ref_setter_show_modal_rich_text_editor.current(false)
+    dialogs.ref_setter_show_shape_attribute_editor.current(false)
+    dialogs.ref_setter_show_value_type_editor.current(false)
+    dialogs.ref_setter_show_tooltip_editor.current(false)
+    dialogs.ref_setter_show_units_editor.current(false)
+    dialogs.ref_setter_show_unitary_process_editor.current(false)
+    dialogs.ref_setter_show_lca_catalog_explorer.current(false)
+    dialogs.ref_setter_show_sankeymatic_editor.current(false)
+    dialogs.ref_setter_show_modal_export.current(false)
+    dialogs.ref_setter_show_modal_new_document.current(false)
+    dialogs.ref_setter_show_modal_png_saver.current(false)
+    dialogs.ref_setter_show_modal_pdf_saver.current(false)
+    dialogs.ref_setter_show_modal_styles.current(false)
+    dialogs.ref_setter_show_modal_apply_layout.current(false)
+    dialogs.ref_setter_show_modal_styles_containers.current(false)
+    dialogs.ref_setter_show_modal_preference.current(false)
+    dialogs.ref_setter_show_modal_templates_lib.current(false)
+    dialogs.ref_setter_show_gallery_source.current(null)
+    dialogs.ref_setter_show_spreadsheet.current(false)
+    this.ref_close_filter_drawer.current(false)
     // OS#321 — la RECHERCHE et la GALERIE DE MODÈLES sont des menus comme les
     // autres : Échap les referme, qu'elles soient en pop-up ou ancrées en barre
     // latérale (où plus aucune croix ne les ferme). Par leur porte propre, pour
@@ -2522,11 +2684,12 @@ export class Class_MenuConfig {
     // le refermerait (colonne droite partagée). L'ouverture MANUELLE passe par
     // setConfigOpen (bouton) et reste possible — elle ferme alors le tableur.
     if (this.main_zone_show_spreadsheet) return
+    const opened = this.ref_menu_opened
     if (
-      this._ref_menu_opened.current &&
-      this._ref_menu_opened.current[0] === false
+      opened.current &&
+      opened.current[0] === false
     ) {
-      this._ref_menu_opened.current[1](true)
+      opened.current[1](true)
     }
   }
 
@@ -2535,11 +2698,12 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public closeConfigMenu() {
+    const opened = this.ref_menu_opened
     if (
-      this._ref_menu_opened.current &&
-      this._ref_menu_opened.current[0] === true
+      opened.current &&
+      opened.current[0] === true
     ) {
-      this._ref_menu_opened.current[1](false)
+      opened.current[1](false)
     }
   }
 
@@ -2707,7 +2871,7 @@ export class Class_MenuConfig {
     // évalués à la construction. Sans ce rerender, un changement de langue ne les met pas à jour
     // (ils restaient dans la langue initiale). Le re-render est porté par un setState de composant
     // (WrapperInitializeAdditionalMenus), donc dans le bon scope React.
-    this._ref_rerender_submodules_menus.current()
+    this.ref_rerender_submodules_menus.current()
     // TDODO : to have an updater in OpenSankeyMenusDictBuilder so if we cahnge language it update language of submenus,
     //  for now OpenSankeyMenusDictBuilder is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
@@ -2732,11 +2896,11 @@ export class Class_MenuConfig {
   }
 
   public updateComponentPref() {
-    this._ref_to_modal_pref_updater.current()
+    this.ref_to_modal_pref_updater.current()
   }
 
   public updateMenuConfigComponent() {
-    this._ref_to_menu_config_updater.current()
+    this.ref_to_menu_config_updater.current()
   }
 
   /**
@@ -2939,7 +3103,7 @@ export class Class_MenuConfig {
   }
 
   public toggle_selector_on_visible_elements() {
-    this._selector_only_visible_elements = !this._selector_only_visible_elements
+    this._host._selector_only_visible_elements = !this._host._selector_only_visible_elements
     this.updateAllComponentsRelatedToNodes()
   }
 
@@ -2949,7 +3113,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentSaveDiagramJSON() {
-    this._ref_to_save_diagram_updater.current()
+    this.ref_to_save_diagram_updater.current()
   }
   /**
    * Update modal Load diagram JSON
@@ -2957,7 +3121,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentLoadDiagramJSON() {
-    this._ref_to_load_diagram_updater.current()
+    this.ref_to_load_diagram_updater.current()
   }
 
   /**
@@ -2967,7 +3131,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentApplyLayout() {
-    this._ref_to_updater_modal_apply_layout.current()
+    this.ref_to_updater_modal_apply_layout.current()
   }
 
   // PROTECTED METHODS ==================================================================
@@ -3071,15 +3235,17 @@ export class Class_MenuConfig {
   public get timeout_sequence(): number { return this._timeout_sequence }
   public set timeout_sequence(value: number) { this._timeout_sequence = value }
 
+  // os#1385 — les refs ci-dessous marquées « hôte » rendent l'objet de l'ESPACE DE TRAVAIL :
+  // un document secondaire repeint la même barre du haut, les mêmes dialogues.
   public get ref_rerender_submodules_menus() {
-    return this._ref_rerender_submodules_menus
+    return this._host._ref_rerender_submodules_menus
   }
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
   }
 
   public get ref_to_submenu_updater(): MutableRefObject<() => void> {
-    return this._ref_to_submenu_updater
+    return this._host._ref_to_submenu_updater
   }
 
   public get ref_to_spreadsheet(): MutableRefObject<(() => void)> {
@@ -3091,42 +3257,42 @@ export class Class_MenuConfig {
   }
 
   public get ref_menu_opened(): MutableRefObject<[boolean, (b: boolean) => void]> {
-    return this._ref_menu_opened
+    return this._host._ref_menu_opened
   }
 
   public get ref_to_splashscreen_updater(): MutableRefObject<() => void> {
-    return this._ref_to_splashscreen_updater
+    return this._host._ref_to_splashscreen_updater
   }
 
   public get never_see_again(): MutableRefObject<boolean> {
-    return this._never_see_again
+    return this._host._never_see_again
   }
 
   public get show_splashscreen(): boolean {
-    return this._show_splashscreen
+    return this._host._show_splashscreen
   }
 
   public set show_splashscreen(_: boolean) {
-    this._show_splashscreen = _
-    this._ref_to_splashscreen_updater?.current()
+    this._host._show_splashscreen = _
+    this.ref_to_splashscreen_updater?.current()
     this._ref_to_toolbar_updater?.current()
-    this._ref_to_submenu_updater?.current()
+    this.ref_to_submenu_updater?.current()
     this._ref_to_menu_updater?.current()
   }
 
   // Top menu components ----------------------------------------------------------------
 
   public init_refs_to_btn_toogle_top_menus(id: string) {
-    this._refs_to_btn_toogle_top_menus[id] = { current: null }
+    this._host._refs_to_btn_toogle_top_menus[id] = { current: null }
   }
 
   public get refs_to_btn_toogle_top_menus(): { [id: string]: RefObject<HTMLButtonElement> } {
-    return this._refs_to_btn_toogle_top_menus
+    return this._host._refs_to_btn_toogle_top_menus
   }
 
 
   public get ref_to_menu_config_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_updater
+    return this._host._ref_to_menu_config_updater
   }
 
   // #1243 — Slot de re-render de l'inspecteur piloté par la sélection.
@@ -3145,8 +3311,12 @@ export class Class_MenuConfig {
    * un onglet la lève (il reprend la main), tout comme la fin de l'étape ou du tour.
    */
   private _inspector_requested_tab_id: string | null = null
-  public get inspector_requested_tab_id(): string | null { return this._inspector_requested_tab_id }
-  public set inspector_requested_tab_id(_: string | null) { this._inspector_requested_tab_id = _ }
+  public get inspector_requested_tab_id(): string | null {
+    return this._host._inspector_requested_tab_id
+  }
+  public set inspector_requested_tab_id(_: string | null) {
+    this._host._inspector_requested_tab_id = _
+  }
 
   // #1243 — Déclenche un re-render de l'inspecteur (résolution de cible). Appelé
   // sur chaque changement de composition de sélection. Debouncé comme les autres
@@ -3168,7 +3338,7 @@ export class Class_MenuConfig {
   }
 
   public get ref_universal_converter_set_config() {
-    return this._ref_universal_converter_set_config
+    return this._host._ref_universal_converter_set_config
   }
 
   // Layout  menus ----------------------------------------------------------------------
@@ -3317,7 +3487,7 @@ export class Class_MenuConfig {
 
   // Getter dict of ref setter show dialog
   public get dict_setter_show_dialog(): IType_DictHookRefSetterShowDialogComponents {
-    return this._dict_setter_show_dialog
+    return this._host._dict_setter_show_dialog
   }
 
   public get ref_selected_style(): MutableRefObject<string> {
@@ -3331,28 +3501,28 @@ export class Class_MenuConfig {
   // qui se remonte à chaque changement de sélection.
   protected _presentation_composer_mode: Type_PanelMode = 'tooltip'
   public get presentation_composer_mode(): Type_PanelMode {
-    return this._presentation_composer_mode
+    return this._host._presentation_composer_mode
   }
   public set presentation_composer_mode(mode: Type_PanelMode) {
-    this._presentation_composer_mode = mode
+    this._host._presentation_composer_mode = mode
     this.updateInspector()
   }
 
 
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
-    return this._ref_to_save_diagram_updater
+    return this._host._ref_to_save_diagram_updater
   }
   public get ref_to_load_diagram_updater(): MutableRefObject<() => void> {
-    return this._ref_to_load_diagram_updater
+    return this._host._ref_to_load_diagram_updater
   }
 
   // Getter ref updater ApplyLayoutDialog OS component
   public get ref_to_updater_modal_apply_layout(): MutableRefObject<() => void> {
-    return this._ref_to_updater_modal_apply_layout
+    return this._host._ref_to_updater_modal_apply_layout
   }
 
   public get ref_to_modal_pref_updater() {
-    return this._ref_to_modal_pref_updater
+    return this._host._ref_to_modal_pref_updater
   }
 
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
@@ -3365,12 +3535,14 @@ export class Class_MenuConfig {
   }
 
   /** OS#85 — la barre des feuilles est-elle dépliée ? */
-  public get sheet_tabs_visible(): boolean { return this._sheet_tabs_visible }
+  public get sheet_tabs_visible(): boolean { return this._host._sheet_tabs_visible }
   /** Replie / déplie la barre des feuilles. Le recadrage du dessin (la barre du bas change
    *  de hauteur) est déclenché par la barre elle-même, une fois le DOM à jour — la hauteur
    *  réservée est LUE dans le DOM (DrawingArea.getBottomBarHeight). */
   public toggleSheetTabs(): void {
-    this._sheet_tabs_visible = !this._sheet_tabs_visible
+    // Le PLI est de l'espace de travail (une seule barre à l'écran) ; l'updater qui la
+    // repeint est du document — ce sont ses feuilles qu'elle liste.
+    this._host._sheet_tabs_visible = !this._host._sheet_tabs_visible
     this._ref_to_sheet_tabs_updater.current()
   }
 
@@ -3392,10 +3564,10 @@ export class Class_MenuConfig {
 
   public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
-  public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
-  public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._ref_toggle_filter_drawer }
-  public get ref_toggle_search(): MutableRefObject<(() => void)> { return this._ref_toggle_search }
-  public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
+  public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._host._ref_close_filter_drawer }
+  public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._host._ref_toggle_filter_drawer }
+  public get ref_toggle_search(): MutableRefObject<(() => void)> { return this._host._ref_toggle_search }
+  public get ref_toolbar(): MutableRefObject<(() => void)> { return this._host._ref_toolbar }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
   public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_data_tag_updater }
@@ -3427,7 +3599,7 @@ export class Class_MenuConfig {
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get shape_type(): string[] { return this._shape_type }
 
-  public get additionalMenus() { return this._additionalMenus }
+  public get additionalMenus() { return this._host._additionalMenus }
 
   /* ========================================
   Updater of component for containers related menus
