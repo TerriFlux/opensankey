@@ -62,6 +62,31 @@ const KNOWN_TAG_JSON_KEYS = new Set([
   'style_id',
 ])
 
+// SA#553 - ETIQUETTE GENEREE « Sans [nom du groupe] » ************************************
+
+// Suffixe de l'identifiant de l'etiquette generee : derive de l'id du groupe, donc stable et
+// independant de son nom (les vues designent une etiquette par id ou par nom).
+export const UNTAGGED_TAG_ID_SUFFIX = '__untagged'
+export const untaggedTagId = (group_id: string) => group_id + UNTAGGED_TAG_ID_SUFFIX
+
+// Traduction avec repli francais : hors application (tests, rendu jsdom), i18next n'est pas
+// initialise et rendrait la cle.
+const translateOr = (key: string, fallback: string, options?: { [_: string]: string }) => {
+  const text = i18next.t(key, options) as unknown
+  return (typeof text === 'string' && text !== '' && text !== key) ? text : fallback
+}
+
+/** Nom automatique de l'etiquette generee d'un groupe (« Sans Source »), langue active. */
+export const untaggedTagAutoName = (group_name: string) =>
+  translateOr('Tags.untagged_name', 'Sans ' + group_name, { group: group_name })
+
+/** Description par defaut de l'etiquette generee, langue active. */
+export const untaggedTagDefaultDescription = () =>
+  translateOr('Tags.untagged_description', 'Aucune étiquette attribuée à cet élément.')
+
+// Cles de la cle JSON `untagged_tag` que le front modelise : le reste traverse a l'identique.
+const KNOWN_UNTAGGED_TAG_JSON_KEYS = new Set(['name', 'description', 'style_id', 'selected'])
+
 // CLASS PROTO TAG ***********************************************************************
 
 /**
@@ -124,6 +149,13 @@ export abstract class Class_ProtoTag {
    */
   private _is_currently_deleted = false
 
+  // SA#553 - etiquette GENEREE « Sans [nom du groupe] » (une par groupe de noeuds et de flux) :
+  // portee par les elements qui ne portent aucune autre etiquette du groupe. Ce port se CALCULE
+  // (cf. `hasGivenTag` des noeuds et des flux) : elle n'a jamais de reference et ne s'ecrit sur
+  // aucun element. Elle n'est pas dans `tags_list` du groupe (qui garde exactement son sens pour
+  // tous les consommateurs existants) mais dans `tags_list_with_untagged`.
+  private _is_untagged = false
+
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -158,6 +190,8 @@ export abstract class Class_ProtoTag {
    * @memberof Class_Tag
    */
   public delete() {
+    // SA#553 - l'etiquette generee ne se supprime pas : elle vit et meurt avec son groupe
+    if (this._is_untagged) return
     if (!this._is_currently_deleted) {
       // Set as currently deleted
       this._is_currently_deleted = true
@@ -322,6 +356,70 @@ export abstract class Class_ProtoTag {
     }
   }
 
+  // SA#553 - ETIQUETTE GENEREE ========================================================
+
+  /**
+   * Fait de cette etiquette l'etiquette generee de son groupe : nom automatique, selectionnee.
+   * Pose l'etat directement, sans signal ni redessin : elle est creee a la volee par le groupe,
+   * parfois en plein dessin.
+   */
+  public markAsUntagged() {
+    this._is_untagged = true
+    this._name_map = {}
+    this._is_selected = true
+  }
+
+  public get is_untagged() { return this._is_untagged }
+
+  /** Pose un style sans redessiner (report du style de groupe a la lecture d'un fichier). */
+  public adoptStyleId(style_id: string | undefined) {
+    if (this._style_id === style_id) return
+    this._style_id = style_id
+    this._ref_sankey.tagStylesConfigUpdated?.()
+  }
+
+  /** Nom SAISI (au moins une langue non vide). Faux = nom automatique pour l'etiquette generee. */
+  public get has_own_name(): boolean {
+    return Object.values(this._name_map ?? {}).some(value => value !== '')
+  }
+
+  /**
+   * Cle JSON `untagged_tag` du groupe, ou undefined : ne s'ecrivent qu'un nom saisi, une
+   * definition saisie, un style et une deselection. Rien de saisi = aucun fichier ne change.
+   */
+  public toUntaggedJSON(): Type_JSON | undefined {
+    const json_object: Type_JSON = { ...this._json_extras }
+    if (this.has_own_name) json_object['name'] = serializeLangMap(this._name_map) ?? ''
+    const description = serializeLangMap(this._description_map)
+    if (description !== undefined) json_object['description'] = description
+    if (this._style_id !== undefined) json_object['style_id'] = this._style_id
+    if (!this._is_selected) json_object['selected'] = false
+    return Object.keys(json_object).length > 0 ? json_object : undefined
+  }
+
+  /**
+   * Relit la cle JSON `untagged_tag`. Absente = etat par defaut (nom automatique, selectionnee,
+   * sans definition ni style) : c'est un etat COMPLET, comme la selection d'une etiquette
+   * ordinaire, sans quoi passer d'une vue qui la decoche a une vue muette la laisserait decochee.
+   */
+  public fromUntaggedJSON(json_object: Type_JSON | undefined) {
+    const json = (json_object !== null && typeof json_object === 'object') ? json_object : {}
+    const file_lang = this._ref_sankey.drawing_area.application_data.language
+    this._json_extras = {}
+    Object.keys(json)
+      .filter(key => !KNOWN_UNTAGGED_TAG_JSON_KEYS.has(key))
+      .forEach(key => { this._json_extras[key] = json[key] })
+    this._name_map = json['name'] !== undefined ? parseLangMap(json['name'], file_lang) : {}
+    this._description_map = json['description'] !== undefined ? parseLangMap(json['description'], file_lang) : {}
+    this._is_selected = json['selected'] !== false
+    const style_id = json['style_id']
+    const next_style_id = (typeof style_id === 'string' && style_id !== '') ? style_id : undefined
+    if (next_style_id !== this._style_id) {
+      this._style_id = next_style_id
+      this._ref_sankey.tagStylesConfigUpdated?.()
+    }
+  }
+
   // PUBLIC METHODES ==================================================================
 
   public setSelected(
@@ -355,6 +453,9 @@ export abstract class Class_ProtoTag {
   public toogleSelected() {
     // Set attributes
     this._is_selected = !this._is_selected
+    // SA#553 - les porteurs de l'etiquette generee n'ont pas de reference a redessiner : leur
+    // visibilite, memorisee sur l'empreinte d'etiquettes, doit etre recalculee.
+    if (this._is_untagged) this.updateFingerprint()
     // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement, AVANT le
     // redraw d'update() (slot optionnel enregistré par OSP).
     this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
@@ -373,10 +474,19 @@ export abstract class Class_ProtoTag {
   public get id() { return this._id }
 
   // Nom résolu pour la langue active de l'app (repli en→fr→première dispo).
-  public get name() { return resolveLangMap(this._name_map ?? {}, i18next.language) }
+  // SA#553 - etiquette generee sans nom saisi : nom automatique, qui suit donc le nom du groupe.
+  public get name() {
+    if (this._is_untagged && !this.has_own_name) return untaggedTagAutoName(this.group.name)
+    return resolveLangMap(this._name_map ?? {}, i18next.language)
+  }
   public set name(value: string) {
     const lang = normalizeLang(i18next.language)
     if (!this._name_map) this._name_map = {}
+    // SA#553 - effacer le nom de l'etiquette generee le rend automatique (dans cette langue)
+    if (this._is_untagged && value === '') {
+      delete this._name_map[lang]
+      return
+    }
     // Vider dans une langue alors que d'autres existent = supprimer la traduction.
     if (value === '' && Object.keys(this._name_map).some(l => l !== lang)) delete this._name_map[lang]
     else this._name_map[lang] = value
@@ -403,7 +513,12 @@ export abstract class Class_ProtoTag {
 
   // #537 - Definition resolue pour la langue active (repli en->fr->premiere
   // disponible), destinee a l'info-bulle. JAMAIS affichee a la place du nom.
-  public get description() { return resolveLangMap(this._description_map ?? {}, i18next.language) }
+  // SA#553 - etiquette generee sans definition saisie : texte par defaut traduit.
+  public get description() {
+    const description = resolveLangMap(this._description_map ?? {}, i18next.language)
+    if (this._is_untagged && description === '') return untaggedTagDefaultDescription()
+    return description
+  }
   public set description(value: string) {
     // Avoid useless updates
     if (this.description !== value) {
@@ -516,6 +631,13 @@ export abstract class Class_Tag extends Class_ProtoTag {
   // PUBLIC METHODS =====================================================================
 
   public update() {
+    // SA#553 - l'etiquette generee n'a pas de references : ses porteurs se calculent, et peuvent
+    // etre n'importe quel element de sa famille. On les redessine tous.
+    if (this.is_untagged) {
+      this._group.drawFamilyElements()
+      this._ref_sankey.drawing_area.legend.draw()
+      return
+    }
     // Redraw elements
     Object.values(this._references)
       .forEach(element => {
@@ -530,6 +652,8 @@ export abstract class Class_Tag extends Class_ProtoTag {
   }
 
   public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
+    // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
+    if (this.is_untagged) return
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       // SA#541 - ce que porte l'element change : ses couches de style sont a recalculer.

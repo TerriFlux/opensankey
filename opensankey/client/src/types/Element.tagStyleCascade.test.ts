@@ -305,7 +305,9 @@ describe('SA#541 — format : style_id écrit seulement quand il est posé', () 
     robuste.style_id = style.id
     fiab.style_id = style.id
     const json = fiab.toJSON()
-    expect(json['style_id']).toBe(style.id)
+    // SA#553 - le style des elements sans etiquette est celui de l'etiquette generee du groupe
+    expect(json['style_id']).toBeUndefined()
+    expect((json['untagged_tag'] as { [_: string]: unknown })['style_id']).toBe(style.id)
     expect(robuste.toJSON()['style_id']).toBe(style.id)
     expect(fiable.toJSON()['style_id']).toBeUndefined()
 
