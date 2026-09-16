@@ -704,7 +704,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this._values === undefined) return null
     const carried = valueTags(this.value)
     return this.resolveTagStyleLayers(
-      this.sankey.getTagGroupsAsList('flux_taggs'),
+      this.sankey.tagGroupsInPriorityOrder('flux_taggs'),
       tag => carried.includes(tag as Class_Tag)
     )
   }
@@ -993,7 +993,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const band_style = (tags: Class_Tag[]): { color?: string, opacity?: number } => {
       if (!this.sankey.has_tag_styles) return {}
       const layers = this.resolveTagStyleLayers(
-        this.sankey.getTagGroupsAsList('flux_taggs'),
+        this.sankey.tagGroupsInPriorityOrder('flux_taggs'),
         tag => tags.includes(tag as Class_Tag)
       )
       const out: { color?: string, opacity?: number } = {}

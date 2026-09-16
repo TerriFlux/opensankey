@@ -13,6 +13,7 @@
 import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
+import { legendGroupsByPriority } from './tagGroupPriority'
 import {
   LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
   Type_LegendEntryFormat, Type_StyleForLegend
@@ -168,6 +169,11 @@ export type Type_SankeyForLegend = {
   // entrées des groupes à styles d'étiquette. Optionnel : absent, aucune entrée n'est
   // mise en forme (mocks des tests antérieurs).
   styles_dict?: { [style_id: string]: Type_StyleForLegend & { is_default_style?: boolean } }
+  // SA#551 — ordre de priorité des groupes (Class_Sankey.tagGroupsInPriorityOrder, du moins au plus
+  // prioritaire) et rang d'ouverture depuis la légende. Optionnels : absents (mocks des tests
+  // antérieurs), les groupes gardent l'ordre de `node_taggs_list` puis `flux_taggs_list`.
+  tagGroupsInPriorityOrder?(type_group: 'node_taggs' | 'flux_taggs'): Type_TagGroupForLegend[]
+  tagGroupOpenedRank?(id: string): number
 }
 
 export type Type_LegendConfigValues = {
@@ -328,6 +334,24 @@ function untaggedEntryStyle(
 }
 
 /**
+ * SA#551 — ordre des groupes dans la légende : groupes de nœuds et de flux du PLUS prioritaire au
+ * moins prioritaire — la tête de légende est le groupe dont les styles gagnent (cf.
+ * tagGroupPriority.ts, qui lit le même ordre que la cascade) —, puis les groupes de données dans leur
+ * ordre. Aucun diagramme existant n'allume deux groupes d'une même famille (relevé du corpus et des
+ * 123 diagrammes SOCLE, 2026-09-16, hors pilote Lait) : leurs légendes ne changent pas d'ordre.
+ */
+export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGroupForLegend[] {
+  const by_priority = sankey.tagGroupsInPriorityOrder
+  const node_and_flux = by_priority === undefined
+    ? [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
+    : legendGroupsByPriority(
+      [by_priority.call(sankey, 'node_taggs'), by_priority.call(sankey, 'flux_taggs')],
+      id => sankey.tagGroupOpenedRank?.(id) ?? 0
+    )
+  return [...node_and_flux, ...sankey.data_taggs_list]
+}
+
+/**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
  * moins un élément visible (ou data tags, toujours montrés).
@@ -362,7 +386,7 @@ export function computeLegendItems(
   // Groupes de tags porteurs d'une mise en forme (#533)
   const all_taggs = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
   const data_taggs = sankey.data_taggs_list as Type_TagGroupForLegend[]
-  all_taggs
+  legendTagGroupsOrder(sankey)
     .filter(tagGroupCarriesFormatting)
     .forEach(tag_group => {
       const is_data_tagg = data_taggs.includes(tag_group)
