@@ -257,9 +257,17 @@ export class Class_DrawingArea {
       .querySelector(this.container_selector) as HTMLElement | null
   }
 
-  /** True quand la DA n'est pas la zone de dessin principale (rendue dans un
-   * modal/panneau détaché). Sert à neutraliser les offsets liés aux menus
-   * (navbar/footer) qui n'existent pas autour du conteneur détaché. */
+  /**
+   * True quand la DA n'est pas la zone de dessin du conteneur principal (rendue dans un
+   * modal/panneau détaché, dans la case d'une fenêtre, hors écran).
+   *
+   * os#1385 (lot 3, D4) — ELLE NE PARLE QUE DE GÉOMÉTRIE : « autour de mon conteneur, il n'y a
+   * ni barre du haut ni barre du bas, et je ne dois pas retrancher les réserves de la page ».
+   * Rien d'autre ne s'en déduit. En particulier PAS « lecture seule » : un document affiché
+   * ailleurs que dans `#sankey_app` peut être parfaitement éditable — c'est `editable` qui le
+   * dit, en interrogeant le DOCUMENT (droit de la page × droit du document), jamais la place
+   * à l'écran. Et pas non plus « non cadrable » : `canvas_frame` ne la consulte plus.
+   */
   public get is_detached(): boolean { return this.container_selector !== '#sankey_app' }
 
   /**
@@ -278,10 +286,16 @@ export class Class_DrawingArea {
   /**
    * os#1387 — Le cadre que la grande zone donne au canevas quand le diagramme n'est PAS sa
    * fenêtre principale (cf. ApplicationData.main_zone_canvas_frame). Ne vaut que pour la
-   * drawing area AFFICHÉE : un board unitaire, une vue en coulisse n'en ont pas.
+   * drawing area AFFICHÉE de son document : un board unitaire, une vue en coulisse n'en ont pas.
+   *
+   * os#1385 (lot 3, D4) — LE CADRE EST UNE PROPRIÉTÉ DU DOCUMENT, PAS DE SA PLACE. La condition
+   * `is_detached` est tombée : un document dessiné dans la case d'une fenêtre est justement
+   * celui qui a le plus besoin d'un cadre, et le refuser lui faisait prendre la fenêtre du
+   * navigateur pour repère. Reste la seule condition qui a un sens — « je suis la zone vivante
+   * de mon document » — celle qui écarte les zones fabriquées à côté.
    */
   public get canvas_frame(): Type_CanvasFrame | null {
-    if (this.is_detached || this.application_data.drawing_area !== this) return null
+    if (this.application_data.drawing_area !== this) return null
     return this.application_data.main_zone_canvas_frame ?? null
   }
   /**
@@ -313,6 +327,34 @@ export class Class_DrawingArea {
    */
   public get dom_id_prefix(): string {
     return this.is_in_main_container ? '' : this.id + '__'
+  }
+
+  /**
+   * os#1385 (lot 3, D4) — Identifiant DOM d'un élément STRUCTUREL de cette zone (`draw_zoom`,
+   * `g_drawing`, `g_elements_sankey`, `viewport_border`, `os_drop_shadow`…). C'est le seul
+   * endroit où ces noms se fabriquent : les poser en dur créait autant de doublons que de
+   * canevas dessinés dans la page (quatorze, mesurés au lot 0), et la première référence
+   * `url(#…)` ou `getElementById` à en croiser deux résolvait au premier du document.
+   *
+   * ÉCART ASSUMÉ AVEC LE PLAN (« toujours préfixé, y compris pour l'actif »). Le préfixe du
+   * canevas du CONTENEUR PRINCIPAL reste VIDE : `domId('g_drawing')` y rend `'g_drawing'`, pas
+   * un octet ne change. Préfixer aussi le principal réécrirait les identifiants des exports
+   * SVG, des empreintes de rendu de corpus (`corpusRenderFingerprint`), des sondes et des
+   * cibles du tour guidé — pour un bénéfice nul : la collision qu'on corrige est entre le
+   * principal et les AUTRES, et préfixer les autres suffit à la faire disparaître.
+   */
+  public domId(name: string): string { return this.dom_id_prefix + name }
+
+  /**
+   * Sélecteur CSS visant l'élément structurel `name` de CETTE zone.
+   *
+   * Sélection par ATTRIBUT et non par `#…` : le préfixe contient l'identifiant du diagramme,
+   * qui vient du fichier de l'utilisateur (identifiant de vue, nom de brique) et peut donc
+   * porter un `:`, un espace ou un point — tous légaux dans un `id`, tous cassants dans un
+   * sélecteur `#…`. `CSS.escape` n'est pas garanti sous jsdom ; la forme `[id="…"]` l'est.
+   */
+  public domIdSelector(name: string): string {
+    return '[id="' + this.domId(name).replace(/(["\\])/g, '\\$1') + '"]'
   }
 
   /** Le canevas est cadré dans une case (colonne droite, bandeau du bas) : il se cadre alors
@@ -350,10 +392,21 @@ export class Class_DrawingArea {
       .attr('width', f.width).attr('height', f.height)
   }
 
-  /** True quand l'utilisateur peut interagir (édition normale, ou publish + editable).
-   * Une DA détachée (sankey unitaire en modal) est en lecture seule : pas d'édition,
-   * et la grille ne se dessine pas (drawGrid teste grid_visible && editable). */
-  public get editable(): boolean { return this.application_data.is_editable && !this.is_detached }
+  /**
+   * True quand l'utilisateur peut interagir (édition normale, ou publish + editable).
+   * La grille ne se dessine que là (drawGrid teste grid_visible && editable).
+   *
+   * os#1385 (lot 3, D4/D5) — LA PLACE À L'ÉCRAN NE DÉCIDE PLUS. Le droit d'éditer se lit sur le
+   * DOCUMENT (`application_data.editable` = droit de la page × droit du document) : une feuille
+   * ouverte dans la case d'une fenêtre s'édite comme celle du conteneur principal, dès qu'on
+   * le lui permet. Reste la condition qui parle de l'objet et non du lieu : « je suis la zone
+   * VIVANTE de mon document » — celle qui écarte les zones que le code fabrique à côté (board
+   * unitaire `is_unitary`, source de mise en page, vue extraite en coulisse), exactement comme
+   * `canvas_frame` et `_is_preview_area` le font déjà.
+   */
+  public get editable(): boolean {
+    return this.application_data.editable && this.application_data.drawing_area === this
+  }
 
   public drawing_link = false
   public bypass_redraws: boolean = false
@@ -1610,11 +1663,14 @@ export class Class_DrawingArea {
     // DA détachée (modal) : on remplit le conteneur hôte ('100%') plutôt que
     // d'imposer window.innerHeight (qui déborderait le modal).
     const height = this._svgDefaultHeight()
-    // _initDraw est l'UNIQUE point de création de #draw_zoom : on le rend idempotent en
-    // retirant tout #draw_zoom préexistant avant d'en append un nouveau. unDraw() ne
+    // _initDraw est l'UNIQUE point de création du SVG de zoom : on le rend idempotent en
+    // retirant tout SVG préexistant de CETTE zone avant d'en append un nouveau. unDraw() ne
     // supprime que le nœud référencé par this.d3_selection_zoom_area ; un orphelin laissé
     // par un autre chemin (double-mount StrictMode, édition tableur → redraw, etc.) lui
     // échappe et se dédoublait à chaque draw. Ce remove centralisé couvre tous les chemins.
+    // os#1385 (lot 3) — il vise `domId('draw_zoom')`, donc le SVG de cette zone et de nulle
+    // autre : deux documents dessinés dans le MÊME conteneur (une case de fenêtre qui change
+    // de sujet) ne s'effacent plus l'un l'autre par homonymie.
     // Conteneur résolu dans le bon document (fenêtre fille si DA détachée en PiP).
     // Sélection par NŒUD (vs sélecteur string) : d3 type alors le parent à `null` ; on
     // recaste vers le parent `HTMLElement` attendu par d3_selection_zoom_area (phantom
@@ -1622,11 +1678,11 @@ export class Class_DrawingArea {
     const container_node = this.getContainerNode()
     const container_sel = d3.select(container_node as HTMLElement) as unknown as
       d3.Selection<HTMLElement, unknown, HTMLElement, unknown>
-    container_sel.selectAll('#draw_zoom').remove()
+    container_sel.selectAll(this.domIdSelector('draw_zoom')).remove()
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = container_sel
       .append('svg')
-      .attr('id', 'draw_zoom')
+      .attr('id', this.domId('draw_zoom'))
       .attr('width', '100%')
       .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
@@ -1646,20 +1702,20 @@ export class Class_DrawingArea {
     this.viewport_clip_id = 'viewport_clip_' + randomId()
     const g_clip = this.d3_selection_zoom_area
       .append('g')
-      .attr('id', 'g_clip')
+      .attr('id', this.domId('g_clip'))
       .attr('clip-path', 'url(#' + this.viewport_clip_id + ')')
     this.d3_selection = g_clip
       .append('g')
-      .attr('id', 'g_drawing')
+      .attr('id', this.domId('g_drawing'))
       .attr('transform', 'translate(' + x + ',' + y + ')')
 
     // Add specific groups for drawing background
-    this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
-    this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
-    this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
+    this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', this.domId('g_background'))
+    this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', this.domId('g_color_bg'))
+    this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', this.domId('g_grid'))
 
     // Add specific groups for nodes, link and others
-    this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
+    this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', this.domId('g_elements'))
     // OS#1246 — persistance du sous-arbre nœuds/flux. unDraw() ne détache que
     // #draw_zoom (et NE remet PAS d3_selection_elements_sankey_group à null) :
     // le <g id=g_elements_sankey> précédent survit donc, détaché mais intact
@@ -1668,6 +1724,12 @@ export class Class_DrawingArea {
     // (Element._initDraw) retrouve les <g> et que le DOM persiste entre draws.
     // Reste inerte au 1er draw (ref null) et au changement de vue
     // (createNewDrawingArea → nouvelle instance, ref null) : build frais.
+    // os#1385 (lot 3) — la ré-attache reste valable une fois les identifiants préfixés, à une
+    // précaution près : le préfixe d'une zone dépend de son CONTENEUR, et une même zone peut
+    // changer de conteneur au cours de sa vie (un document hors écran qu'on repointe sur la
+    // case d'une fenêtre). On réécrit donc l'id du sous-arbre conservé au lieu de le supposer
+    // à jour — sans quoi `Element._initDraw`, qui cherche le groupe par son id préfixé, ne le
+    // retrouverait plus et repartirait sur un sous-arbre vide.
     const preserved_sankey_group = this.d3_selection_elements_sankey_group?.node() ?? null
     const new_elements_group_node = this.d3_selection_elements_group.node()
     if (
@@ -1680,25 +1742,26 @@ export class Class_DrawingArea {
       // HTMLElement du champ (phantom type sans incidence runtime — même motif que
       // pour d3_selection_zoom_area plus haut dans _initDraw).
       this.d3_selection_elements_sankey_group =
-        d3.select(preserved_sankey_group) as unknown as
-          d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
+        (d3.select(preserved_sankey_group) as unknown as
+          d3.Selection<SVGGElement, unknown, HTMLElement, unknown>)
+          .attr('id', this.domId('g_elements_sankey'))
     } else {
       this.d3_selection_elements_sankey_group =
-        this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
+        this.d3_selection_elements_group.append('g').attr('id', this.domId('g_elements_sankey'))
     }
-    this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
-    this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
+    this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', this.domId('g_handlers'))
+    this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', this.domId('g_select_zone'))
 
-    this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
+    this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', this.domId('def_gradient')) ?? null
 
     // Filtre d'ombre portée partagé, référencé par les éléments dont
     // shape_shadow_visible est vrai (cf. NodeDrawShape / LinkDrawShape).
     // Région élargie pour ne pas rogner l'ombre (offset + flou).
     if (this.d3_selection_def_gradient) {
-      this.d3_selection_def_gradient.select('#os_drop_shadow').remove()
+      this.d3_selection_def_gradient.select(this.domIdSelector('os_drop_shadow')).remove()
       const shadow_filter = this.d3_selection_def_gradient.append('defs')
         .append('filter')
-        .attr('id', 'os_drop_shadow')
+        .attr('id', this.domId('os_drop_shadow'))
         .attr('x', '-40%')
         .attr('y', '-40%')
         .attr('width', '180%')
@@ -1732,7 +1795,7 @@ export class Class_DrawingArea {
       for (let row = 0; row < number_of_horizontal_lines; row++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-horiz')
-          .attr('id', 'line_horiz_drawing_area_' + String(row))
+          .attr('id', this.domId('line_horiz_drawing_area_' + String(row)))
           .attr('x1', '0')
           .attr('x2', b.w)
           .attr('y1', row * this.grid_size)
@@ -1745,7 +1808,7 @@ export class Class_DrawingArea {
       for (let column = 0; column < number_of_vertical_lines; column++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-vert')
-          .attr('id', 'line_horiz_drawing_area_' + String(column))
+          .attr('id', this.domId('line_horiz_drawing_area_' + String(column)))
           .attr('x1', column * this.grid_size)
           .attr('x2', column * this.grid_size)
           .attr('y1', 0)
@@ -3666,7 +3729,7 @@ export class Class_DrawingArea {
     // and doesn't slide off-screen when the user pans content).
     this.d3_selection_bg?.append('rect')
       .attr('class', 'bg')
-      .attr('id', 'bg_drawing_area')
+      .attr('id', this.domId('bg_drawing_area'))
       .attr('fill', this.color)
       .attr('width', b.w)
       .attr('height', b.h)
@@ -4393,8 +4456,10 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
-    // DA détachée, ou canevas cadré dans sa case : aucun menu autour du conteneur → pas d'offset.
-    if (this.is_detached || this.is_framed) {
+    // Hors du conteneur principal, ou canevas cadré dans sa case : aucun menu autour du
+    // conteneur → pas d'offset. (os#1385 : lecture explicite de la géométrie, même sémantique
+    // qu'avant — `is_detached` est exactement `!is_in_main_container`.)
+    if (!this.is_in_main_container || this.is_framed) {
       return 0
     }
     if (this.static && !this.application_data.publish_options.topbar) {
@@ -4410,8 +4475,9 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getBottomBarHeight() {
-    // DA détachée, ou canevas cadré dans sa case : aucun menu autour du conteneur → pas d'offset.
-    if (this.is_detached || this.is_framed) {
+    // Hors du conteneur principal, ou canevas cadré dans sa case : aucun menu autour du
+    // conteneur → pas d'offset (même lecture explicite que getNavBarHeight).
+    if (!this.is_in_main_container || this.is_framed) {
       return 0
     }
     return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
@@ -4864,7 +4930,7 @@ export class Class_DrawingArea {
   // doit pas avoir (cf. `fitGeoReference`, qui impose une échelle unique aux deux axes).
   private _geo_reference: Type_GeoReference | null = null
   public drawBgImage() {
-    this.d3_selection_bg?.select('#bg_image').remove()
+    this.d3_selection_bg?.select(this.domIdSelector('bg_image')).remove()
 
     if (this._show_background_image) {
       const x_align = this._bg_image_horizontal_align === 'right'
@@ -4874,7 +4940,7 @@ export class Class_DrawingArea {
           : 'xMin'
       this.d3_selection_bg
         ?.append('image')
-        .attr('id', 'bg_image')
+        .attr('id', this.domId('bg_image'))
         .attr('width', this._zoom_width)
         .attr('height', this._zoom_height)
         .attr('preserveAspectRatio', x_align + 'YMin meet')

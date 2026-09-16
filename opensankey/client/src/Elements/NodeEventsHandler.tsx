@@ -161,7 +161,11 @@ export class NodeEventsHandler {
     // Ctrl/Cmd garde la sélection de la zone.
     if (!event.ctrlKey && !event.metaKey && drawing_area.legend.toggleEntryTag(this._node.id)) return
 
-    if (!drawing_area.application_data.is_editable) {
+    // os#1385 (lot 3, D4) — c'est la ZONE qui dit si on édite ici, pas le droit de la page :
+    // `da.editable` croise le droit du document et « je suis la zone vivante de mon
+    // document ». Lire `application_data.is_editable` ouvrait l'inspecteur d'édition depuis
+    // un aperçu unitaire, et le refusera demain dans une feuille ouverte en lecture.
+    if (!drawing_area.editable) {
       // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée par
       // l'auteur, dans le contenant que sa politique désigne. Si rien n'a été
       // composé, openPresentationFor n'ouvre rien et on retombe sur le
@@ -410,7 +414,8 @@ export class NodeEventsHandler {
     // fois) ; Alt pendant le drag débraye le snap ponctuellement.
     this._smart_guides?.clear()
     this._smart_guides = null
-    if (da.smart_guides && !da.magnetic_nodes && da.isInSelectionMode() && da.application_data.is_editable) {
+    // os#1385 (lot 3) — même lecture qu'au clic : le droit d'éditer est celui de la ZONE.
+    if (da.smart_guides && !da.magnetic_nodes && da.isInSelectionMode() && da.editable) {
       this._smart_guides = new Class_SmartGuides(da, new Set(Object.keys(dict_old_pos)), seed_nodes)
     }
   }

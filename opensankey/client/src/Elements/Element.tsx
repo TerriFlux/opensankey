@@ -293,7 +293,13 @@ export abstract class Class_BaseElement {
       // drawing_area est relue en live (jamais capturée en closure) : au
       // reset()/changement de vue (createNewDrawingArea) le parent ci-dessous
       // est le nouveau groupe, donc select() ne trouve rien et on re-append.
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
+      // os#1385 (lot 3) — `_svg_parent_group` nomme le groupe STRUCTUREL de la zone
+      // (`g_elements_sankey`, `g_handlers`, `g_select_zone`) ; son identifiant DOM réel est
+      // préfixé par la zone hors du conteneur principal (cf. DrawingArea.domId). On le résout
+      // donc par la zone, sans quoi l'élément ne trouverait plus son groupe et ne se
+      // dessinerait pas du tout dans une fenêtre de feuille.
+      const d3_drawing_area_selection = d3_drawing_area
+        .selectAll(this.drawing_area.domIdSelector(this._svg_parent_group))
       if (d3_drawing_area_selection.nodes().length > 0) {
         // Data-join keyé par id : on réutilise le <g> racine existant s'il est
         // déjà dans le DOM (enter/update), sinon on l'append (enter). Le <g>

@@ -194,17 +194,22 @@ describe('os#1385 lot 2 — un emplacement de cache par document', () => {
 
   it('un document secondaire necrase pas la cle data du principal', () => {
     localStorage.clear()
-    const { main, other_sheet } = buildTwoSheetWorkspace()
-    const sheet_app = main.sheetApplication(other_sheet)!
+    const { ws, main, other_sheet } = buildTwoSheetWorkspace()
+    // L'identite d'un document de feuille est celle de la FEUILLE : son emplacement de cache
+    // est stable d'un chargement d'instantane au suivant.
+    expect(main.sheetApplication(other_sheet)!.document_id).toBe('sheet:' + other_sheet)
     // Le principal garde la cle historique, celle que lit la reprise de session.
     localStorage.setItem('data', 'TRAVAIL_EN_COURS')
 
-    jest.spyOn(sheet_app, 'sendWaitingToast').mockImplementation((f) => { f() })
-    sheet_app.saveInCache()
+    // os#1385 (lot 3) — un document de FEUILLE enregistre desormais le FICHIER dont il fait
+    // partie (cf. `file_holder`, et WorkspaceSheets.test.ts). Ce qui exerce l'emplacement PAR
+    // DOCUMENT est donc le document sans porteur : source Excel unitaire, brique extraite.
+    const standalone = ws.createDocument({ offscreen: true })
+    jest.spyOn(standalone, 'sendWaitingToast').mockImplementation((f) => { f() })
+    standalone.saveInCache()
 
     expect(localStorage.getItem('data')).toBe('TRAVAIL_EN_COURS')
-    expect(sheet_app.document_id).toBe('sheet:' + other_sheet)
-    expect(localStorage.getItem('data:sheet:' + other_sheet)).not.toBeNull()
+    expect(localStorage.getItem('data:' + standalone.document_id)).not.toBeNull()
   })
 
   it('reinitialization retire aussi les emplacements des autres documents', () => {

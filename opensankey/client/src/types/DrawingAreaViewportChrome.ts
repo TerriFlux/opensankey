@@ -427,7 +427,9 @@ export class Class_ViewportChrome {
     if (!da.d3_selection_zoom_area) return
     // Viewport border (outside g_drawing → fixed frame, unaffected by pan/zoom)
     this._d3_viewport_border = da.d3_selection_zoom_area.append('rect')
-      .attr('id', 'viewport_border')
+      // os#1385 (lot 3) — identifiant structurel : préfixé par la zone (vide pour celle du
+      // conteneur principal, cf. Class_DrawingArea.domId).
+      .attr('id', da.domId('viewport_border'))
       .attr('fill', 'none')
       .style('pointer-events', 'none')
       .style('shape-rendering', 'crispEdges')
