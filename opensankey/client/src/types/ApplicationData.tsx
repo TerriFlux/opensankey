@@ -504,22 +504,6 @@ export class Class_ApplicationData {
   public get post_apply_layout_callback() { return this.workspace.post_apply_layout_callback }
   public set post_apply_layout_callback(_) { this.workspace.post_apply_layout_callback = _ }
 
-  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le sankey unitaire
-   * focalisé sur `node` dans le conteneur DOM `container_selector`, EN PLUS du
-   * diagramme principal. Retourne un handle pour le redessiner (resize) et le
-   * nettoyer. Alimente l'onglet « Sankey unitaire » du tooltip de nœud
-   * (NodeTooltip). Absent hors OS+. */
-  public get draw_unitary_in_container() { return this.workspace.draw_unitary_in_container }
-  public set draw_unitary_in_container(_) { this.workspace.draw_unitary_in_container = _ }
-
-  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le GRAPHIQUE
-   * D'ANALYSE (couronne / histogramme) décrit par l'attribut analysis_descriptor
-   * de l'élément (nœud OU flux) dans le conteneur DOM `container_selector`.
-   * Alimente l'onglet « Analyse » des tooltips de nœud et de flux quand
-   * surfaces.tooltip est activé (OS#1278). Absent hors OS+. */
-  public get draw_analysis_in_container() { return this.workspace.draw_analysis_in_container }
-  public set draw_analysis_in_container(_) { this.workspace.draw_analysis_in_container = _ }
-
   /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
    * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
    * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
@@ -1286,6 +1270,23 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1421 — SOLDE LES FIGURES PROMUES QUE PLUS RIEN NE CITE, avant de sérialiser le registre.
+   *
+   * VIRTUELLE, et c'est ce qui la rend sûre : une application à VUES (OS+) travaille sur une zone
+   * de dessin qui n'est pas celle qu'elle sérialise, et ne regarder que l'une des deux solderait
+   * une figure posée dans l'autre. Elle y surcharge donc ce point unique, et tous les chemins
+   * d'écriture — y compris ceux qui passent par `super._toJSON` — en bénéficient.
+   *
+   * `?.` sur la zone de dessin : une application de feuille, ou un document lu hors écran, peut
+   * n'en avoir aucune, et un balayage n'est jamais une raison de faire échouer une écriture.
+   */
+  protected _pruneUnreferencedFiguresBeforeWrite(): void {
+    const mc = this.menu_configuration
+    if (!mc) return
+    mc.pruneUnreferencedFigures(mc.placedFigureIds(this.drawing_area?.sankey?.nodes_list ?? []))
+  }
+
+  /**
    * Create json file that contains all application datas
    * @memberof Class_ApplicationData
    */
@@ -1309,6 +1310,13 @@ export class Class_ApplicationData {
     // que la lecture sait encore migrer.
     const figure_styles = this.menu_configuration.figureStylesToJSON()
     if (figure_styles) json_object['figure_styles'] = figure_styles
+    // os#1421 — LE BALAYAGE, JUSTE AVANT D'ÉCRIRE LE REGISTRE. Une figure promue que plus rien ne
+    // cite — ni vignette d'une fenêtre VIVANTE, ni placement sur un nœud — a été nommée pour être
+    // posée puis dépossée : plus personne ne la regarde, et la garder ne ferait que grossir le
+    // fichier. L'enregistrement est le seul moment où quelqu'un SAIT les placements (il a les
+    // nœuds), d'où l'appel ici et non dans `Class_MenuConfig`. Idempotent : la seconde passe ne
+    // trouve plus rien à solder.
+    this._pruneUnreferencedFiguresBeforeWrite()
     // os#1421 — LE REGISTRE DES FIGURES DU DOCUMENT (celles qu'un placement cite), clé racine
     // ADDITIVE elle aussi : absente tant qu'aucune figure n'a été POSÉE. Racine et non `main_zone`,
     // parce qu'une figure posée sur un nœud survit à la fenêtre où on l'a réglée — l'écrire dans
