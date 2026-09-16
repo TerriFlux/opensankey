@@ -30,6 +30,7 @@ import i18next from 'i18next'
 import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
 
 import { Class_ApplicationData } from './types/ApplicationData'
+import { Class_Workspace } from './types/Workspace'
 import { Type_AnyJSON, Type_JSON } from './types/Utils'
 import { applyViewerOptions, ViewerSankeyOptions } from './types/PublishOptions'
 import { ComponentZoomControl } from './components/ui/ZoomControl'
@@ -142,7 +143,9 @@ export function useViewerAppData<T extends Class_ApplicationData>(
 }
 
 const ViewerInner: FC<ViewerOpenSankeyAppProps> = (props) => {
-  const app_data = useViewerAppData(props, () => new Class_ApplicationData(true), true)
+  // os#1385 — un espace de travail, puis SON document : c'est l'espace qui porte le mode de
+  // page, les options de publication, la langue et la configuration de menus de l'hôte.
+  const app_data = useViewerAppData(props, () => new Class_Workspace(true).createDocument(), true)
 
   // Le toast Chakra est un hook : acquis dans le corps du composant puis injecté dans la config.
   // UNE FOIS par montage : la remplacer à chaque rendu rendrait sourds les panneaux montés
