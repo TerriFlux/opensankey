@@ -1253,11 +1253,12 @@ export class Class_ApplicationData {
     // sa#399 — Référence de brique de bibliothèque, clé racine persistée avec le diagramme.
     if (this._library_ref) json_object['library_ref'] = { ...this._library_ref }
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
-    // os#1394 — Réglages PAR DÉFAUT des natures de représentation (étoile unitaire, couronne,
-    // histogrammes, sunburst), clé racine ADDITIVE : absente tant que rien n'a été réglé, donc
-    // un fichier antérieur se relit à l'identique.
-    const repr_defaults = this.menu_configuration.representationDefaultsToJSON()
-    if (repr_defaults) json_object['representation_defaults'] = repr_defaults
+    // os#1418 — STYLES DES NATURES DE FIGURE (étoile unitaire, couronne, histogrammes,
+    // sunburst), clé racine ADDITIVE : absente tant qu'aucun style n'a été réglé, donc un
+    // fichier antérieur se relit à l'identique. Remplace `representation_defaults` (os#1394),
+    // que la lecture sait encore migrer.
+    const figure_styles = this.menu_configuration.figureStylesToJSON()
+    if (figure_styles) json_object['figure_styles'] = figure_styles
     // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
     json_object['panels'] = this.menu_configuration.panels.toJSON()
     // OS#85 — Feuilles du document (clé racine `sheets`). La racine du fichier EST le
@@ -1401,18 +1402,33 @@ export class Class_ApplicationData {
     // sa#399 — Brique associée : relue du fichier ; absente ou malformée => null
     // (un fichier sans library_ref est une nouvelle brique, cf. reset()).
     this._library_ref = parseLibraryRef(json_object['library_ref'])
+    // os#1418 — LES STYLES DE FIGURE SE LISENT AVANT `main_zone`, ET L'ORDRE EST INVERSÉ EXPRÈS.
+    //
+    // La migration des fenêtres d'un fichier d'avant (sac `options` + `panes`) doit savoir si la
+    // nature a un style qui dit quelque chose : c'est ce qui décidait, dans la résolution de
+    // os#1394, entre « la figure suit le défaut » et « elle reprend le repli de la fenêtre ».
+    // Lire la grande zone d'abord, comme on le faisait, ferait migrer chaque vignette contre un
+    // style encore vide — et le repli gagnerait là où le défaut gagnait.
+    //
+    // Relus seulement si la clé est là : un fichier qui n'en porte pas ne doit pas effacer ce
+    // que la session a déjà appris.
+    const figure_styles = json_object['figure_styles']
+    if (figure_styles && typeof figure_styles === 'object') {
+      this.menu_configuration?.figureStylesFromJSON(figure_styles)
+    }
+    // os#1394 — défauts par nature de représentation, format HÉRITÉ : relu comme le style
+    // `default` de la nature, les clés liées au sujet étant écartées et rapportées.
+    const repr_defaults = json_object['representation_defaults']
+    if (repr_defaults && typeof repr_defaults === 'object') {
+      this.menu_configuration?.representationDefaultsFromJSON(repr_defaults)
+    }
     const mz = json_object['main_zone']
     // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
     // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
     if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
-    // os#1394 — défauts par nature de représentation. Relus seulement si la clé est là : un
-    // fichier qui n'en porte pas ne doit pas effacer ce que la session a déjà appris, même
-    // logique que `main_zone` juste au-dessus.
-    const repr_defaults = json_object['representation_defaults']
-    if (repr_defaults && typeof repr_defaults === 'object') {
-      this.menu_configuration?.representationDefaultsFromJSON(repr_defaults)
-    }
+    // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
+    this.menu_configuration?.flushFigureMigrationReport()
     // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
     const panels_json = json_object['panels']
     if (panels_json && typeof panels_json === 'object') {

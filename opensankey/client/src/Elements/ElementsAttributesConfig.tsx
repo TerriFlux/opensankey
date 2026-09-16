@@ -247,6 +247,13 @@ export interface AttributeConfig<T> {
   callback?: string
   setter?: string
   actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
+  /**
+   * os#1418 — la SORTE d'une clé de réglage de FIGURE (cf. Representations/Figure) : 'style'
+   * (transposable, portée par un style), 'navigation' (par figure, jamais par style) ou
+   * 'identity' (nomme le sujet, ne se transpose jamais). Absente = 'style'. Sans objet pour les
+   * attributs des nœuds et des flux, qui sont tous des attributs de style.
+   */
+  sort?: 'style' | 'navigation' | 'identity'
 }
 export type ConfigType = Record<string, AttributeConfig<unknown>>
 

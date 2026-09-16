@@ -1574,16 +1574,20 @@ export class Class_ElementStyle {
   private _name: string
   private _references: { [_: string]: Class_BaseElement } = {}
 
-  private _default_style: Class_ElementStyle
-  private _drawing_area: Class_DrawingArea
+  private _default_style: Class_ElementStyle | undefined
+  private _drawing_area: Class_DrawingArea | undefined
 
+  // os#1418 — `default_style` et `drawing_area` sont OPTIONNELS : un style de FIGURE (cf.
+  // Representations/Figure) n'a pas de zone de dessin, et le style `default` d'une nature n'a
+  // pas de style parent — exactement comme le `default` du diagramme, construit avant que
+  // `Class_Sankey.default_style` existe. Rien ne change pour les appelants qui les passent.
   constructor(
     config: Record<string, AttributeConfig<unknown>>,
     id: string,
     name: string,
     is_deletable: boolean,
-    default_style: Class_ElementStyle,
-    drawing_area: Class_DrawingArea
+    default_style?: Class_ElementStyle,
+    drawing_area?: Class_DrawingArea
   ) {
     this._config = config
     this._id = id
@@ -1715,5 +1719,7 @@ export class Class_ElementStyle {
   public get name() { return this._name }
   public set name(value: string) { this._name = value }
 
-  public get drawing_area() { return this._drawing_area }
+  // Typé plein pour les appelants du diagramme : un style de FIGURE (Representations/Figure)
+  // n'a pas de zone de dessin, mais personne ne la lui demande.
+  public get drawing_area(): Class_DrawingArea { return this._drawing_area as Class_DrawingArea }
 }
