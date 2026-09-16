@@ -341,8 +341,24 @@ const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
  *              à venir. Régler une figure n'écrit PLUS le défaut de sa nature : c'est la fin
  *              de l'écriture immédiate de os#1394, qui faisait qu'un réglage local devenait
  *              silencieusement le réglage de tout le monde.
+ *
+ * os#1423 — LE JOUR ANNONCÉ EST VENU : les vignettes sont SÉLECTIONNABLES (cf.
+ * `main_zone_selected_pane_keys`), et 'selection' s'ajoute comme le commentaire ci-dessus le
+ * prévoyait.
+ *  - 'selection' : les figures SÉLECTIONNÉES de la fenêtre active. Même diff transposable que
+ *                  'all', posé sur la sélection au lieu de la fenêtre entière. Sélection vide =
+ *                  la seule vignette active, donc cette portée DÉGÉNÈRE en 'pane' quand rien
+ *                  n'est sélectionné — et c'est pour cela qu'elle peut remplacer les deux
+ *                  premières dans le volet sans rien perdre.
+ *
+ * CE QUE LE VOLET OFFRE DÉSORMAIS : 'selection' et 'style'. 'pane' et 'all' restent DANS L'UNION
+ * — le menu contextuel des figures et les tests les passent encore, et un fichier de réglages
+ * peut les porter — mais le sélecteur de portée du volet de représentation ne les propose plus :
+ * « cette vignette » est la sélection réduite à elle-même, « toutes » est la sélection étendue à
+ * toute la fenêtre (`selectAllMainZonePanes`). Trois entrées pour deux gestes, c'était une de
+ * trop.
  */
-export type Type_RepresentationOptionScope = 'pane' | 'all' | 'style'
+export type Type_RepresentationOptionScope = 'pane' | 'selection' | 'all' | 'style'
 
 /**
  * os#1416 — UN RÉGLAGE EST-IL TRANSPOSABLE, c'est-à-dire a-t-il un sens sur la figure voisine ?
@@ -639,6 +655,19 @@ export class Class_MenuConfig {
   // et volontairement minimale : ce n'est pas un système de focus, juste la dernière vignette
   // avec laquelle l'utilisateur a interagi. `null` = la première vignette de la fenêtre.
   protected _main_zone_active_pane_key: string | null = null
+  // os#1423 — LA SÉLECTION DE VIGNETTES de la fenêtre active. TRANSITOIRE comme la vignette
+  // active, et jamais persistée : elle ne décrit pas le document, elle décrit le geste en cours.
+  //
+  // Elle vit TOUJOURS dans la fenêtre active — une sélection qui survivrait au changement de
+  // fenêtre désignerait des clés que la nouvelle fenêtre ne porte pas, ou pire, des clés
+  // homonymes qui y désignent d'autres objets. Elle se vide donc partout où la vignette active
+  // se vide, aux mêmes endroits et pour la même raison.
+  //
+  // INVARIANT : la vignette active fait partie de la sélection. Une liste VIDE ne veut pas dire
+  // « rien de sélectionné » mais « seulement l'active » (cf. `main_zone_selected_pane_keys`) :
+  // c'est ce qui permet à la portée 'selection' de dégénérer en 'pane' sans que personne ait à
+  // traiter le cas.
+  protected _main_zone_selected_pane_keys: string[] = []
   // os#1394 — CE QUE L'AUTEUR A TOUCHÉ EN DERNIER, et donc ce dont le menu de configuration doit
   // parler. TRANSITOIRE.
   //
@@ -944,6 +973,9 @@ export class Class_MenuConfig {
     // os#1394 — la fenêtre qu'on vient d'ouvrir devient l'active, sur sa PREMIÈRE vignette :
     // la clé de la vignette active d'une autre fenêtre n'a aucun sens ici.
     this._main_zone_active_pane_key = null
+    // os#1423 — et sur une sélection VIERGE, pour la même raison : les clés sélectionnées dans la
+    // fenêtre qu'on quitte ne nomment rien ici.
+    this._main_zone_selected_pane_keys = []
     this._notifyMainZone()
     return id
   }
@@ -983,6 +1015,11 @@ export class Class_MenuConfig {
       if (this._main_zone_active_id === id) this._main_zone_active_id = representation
     }
     this._normalizeMainZoneOccupants()
+    // os#1423 — la sélection est relue APRÈS la normalisation, et sur l'id COURANT de la fenêtre
+    // (la branche « remplacement en place » vient peut-être de le changer). Un sujet `elements`
+    // garde ses vignettes en changeant de nature — donc sa sélection ; un sujet à critère, dont
+    // les vignettes se redemandent au diagramme, la perd (cf. `_resyncMainZoneSelection`).
+    this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
   /**
@@ -1010,7 +1047,44 @@ export class Class_MenuConfig {
       // oubliés. La liste des clés VIVANTES est celle qu'on vient d'écrire.
       this._pruneFigures(o.id, o.subject.keys ?? [])
     } else o.subject = { ...subject }
+    // os#1423 — la sélection de vignettes suit le même ménage que les figures : une clé qui ne
+    // nomme plus de vignette ne peut pas rester sélectionnée.
+    this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
+  }
+
+  /**
+   * os#1423 — LA SÉLECTION APRÈS UN CHANGEMENT DE SUJET OU DE NATURE : on garde ce qui vit
+   * encore, et rien d'autre.
+   *
+   * Sans effet quand `id` n'est pas la fenêtre active : la sélection n'existe QUE là (cf.
+   * `_main_zone_selected_pane_keys`), régler une fenêtre voisine n'a donc rien à élaguer.
+   *
+   * Sujet `elements` : les clés vivantes sont celles que le sujet porte, la même liste qui sert
+   * au ménage des figures. Sujet `selection` ou `tag` : les vignettes sont les objets que le
+   * DIAGRAMME désigne à cet instant, et cette classe ne le connaît pas (même raison qu'en
+   * os#1420, où l'élagage des figures a été renoncé pour les sujets à critère). Ne sachant pas
+   * ce qui survit, on VIDE — ce qui, l'invariant aidant, revient à « seulement l'active » et non
+   * à « plus rien » : le geste perdu est une sélection multiple, pas la vignette qu'on regarde.
+   * C'est le choix prudent, l'autre étant de garder des clés qui ne désignent peut-être plus
+   * rien et de les propager au prochain réglage de portée 'selection'.
+   */
+  protected _resyncMainZoneSelection(id: string): void {
+    if (this.main_zone_active_id !== id) return
+    if (this._main_zone_selected_pane_keys.length === 0) return
+    const o = this._main_zone_occupants.find(x => x.id === id)
+    const alive: string[] = (o && o.subject.kind === 'elements') ? mainZonePaneKeys(o.subject) : []
+    const kept = this._main_zone_selected_pane_keys.filter(k => alive.includes(k))
+    this._main_zone_selected_pane_keys = kept
+    // La vignette active suit la sélection quand il en reste une — l'invariant veut qu'elle en
+    // fasse partie. Sélection VIDÉE, en revanche, on ne touche PAS à la vignette active : vide
+    // veut dire « seulement l'active », et l'effacer ici retirerait à l'inspecteur le dessin
+    // qu'il montre pour un changement de sujet qui ne le concerne pas forcément (le ménage de la
+    // vignette active, lui, se fait au changement de FENÊTRE).
+    if (kept.length > 0 && this._main_zone_active_pane_key !== null
+      && !kept.includes(this._main_zone_active_pane_key)) {
+      this._main_zone_active_pane_key = kept[0]
+    }
   }
 
   // --- os#1418 : les figures de la grande zone ------------------------------------------------
@@ -1477,10 +1551,38 @@ export class Class_MenuConfig {
     // revanche, on ne touche à rien : un clic sur une vignette active d'abord celle-ci, puis
     // remonte jusqu'à la fenêtre — l'effacer ici défairait le geste qu'on vient de faire.
     this._main_zone_active_pane_key = null
+    // os#1423 — et la SÉLECTION part avec elle, exactement pour la même raison : ses clés ne
+    // nomment rien dans la fenêtre qui devient active, et deux fenêtres peuvent nommer la même.
+    this._main_zone_selected_pane_keys = []
     this._notifyMainZone()
   }
   /** os#1394 — La vignette active de la fenêtre active ; `null` = la première de la fenêtre. */
   public get main_zone_active_pane_key(): string | null { return this._main_zone_active_pane_key }
+  /**
+   * os#1423 — LES VIGNETTES SÉLECTIONNÉES de la fenêtre active, la vignette active comprise.
+   *
+   * Rend TOUJOURS ce sur quoi un réglage de portée 'selection' doit tomber, et jamais une liste
+   * qu'il faudrait interpréter : sélection explicite si elle existe, sinon la seule vignette
+   * active, sinon rien (aucune vignette touchée — la fenêtre n'en porte peut-être qu'une, dont
+   * la clé est `null` par convention historique, et l'appelant retombe alors sur la première).
+   *
+   * C'est ici que l'invariant « l'active fait partie de la sélection » se paie une fois pour
+   * toutes : personne d'autre n'a à se demander si une sélection vide veut dire « rien » ou
+   * « celle-là ».
+   */
+  public get main_zone_selected_pane_keys(): string[] {
+    if (this._main_zone_selected_pane_keys.length > 0) return [...this._main_zone_selected_pane_keys]
+    return this._main_zone_active_pane_key !== null ? [this._main_zone_active_pane_key] : []
+  }
+  /**
+   * os#1423 — Cette vignette est-elle sélectionnée ? Faux dès que `id` n'est PAS la fenêtre
+   * active : la sélection n'existe que là, et un liséré posé sur la vignette d'une fenêtre
+   * voisine mentirait sur ce que le prochain réglage touchera.
+   */
+  public isMainZonePaneSelected(id: string, pane_key: string): boolean {
+    if (this.main_zone_active_id !== id) return false
+    return this.main_zone_selected_pane_keys.includes(pane_key)
+  }
   /**
    * os#1397 - LE CANEVAS DEVIENT LA FENÊTRE ACTIVE, comme n'importe quelle autre.
    *
@@ -1498,14 +1600,86 @@ export class Class_MenuConfig {
     if (this.mainZonePlaceOf(MAIN_ZONE_CANVAS_ID) === null) return
     this.main_zone_active_id = MAIN_ZONE_CANVAS_ID
   }
-  /** Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette). */
-  public setMainZoneActivePane(id: string, pane_key: string | null): void {
+  /**
+   * Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette).
+   *
+   * os#1423 — `extend` est le Ctrl/Cmd+clic, et il ne fait qu'une chose : BASCULER la vignette
+   * dans la sélection de la fenêtre active. Le clic simple, lui, REFAIT la sélection autour de
+   * ce qu'on vient de toucher — c'est le geste de toutes les listes, et c'est ce qui garantit
+   * qu'un clic ordinaire ne traîne jamais une sélection oubliée jusqu'au prochain réglage.
+   *
+   * Deux garde-fous, et ce sont les seuls :
+   *  - étendre dans une AUTRE fenêtre que l'active n'étend rien : on ne sélectionne pas à cheval
+   *    sur deux fenêtres (la sélection vit dans l'active), donc le Ctrl+clic y vaut clic simple ;
+   *  - retirer la DERNIÈRE vignette sélectionnée ne fait rien. Une sélection vide se lit
+   *    « seulement l'active » (cf. `main_zone_selected_pane_keys`), donc tout désélectionner ne
+   *    mènerait nulle part : le volet parlerait quand même de la dernière touchée, mais sans
+   *    liséré pour le dire.
+   */
+  public setMainZoneActivePane(id: string, pane_key: string | null, extend: boolean = false): void {
     // Toucher une figure est une demande de parler d'ELLE, même quand un nœud reste sélectionné
-    // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle.
+    // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle. Vrai du
+    // Ctrl+clic comme du clic simple, et même quand rien d'autre ne bouge — c'est la RÉCENCE du
+    // geste qu'il note, pas son effet.
     this._inspector_focus = 'representation'
-    if (this._main_zone_active_id === id && this._main_zone_active_pane_key === pane_key) return
+    // Fenêtre active lue par l'ACCESSEUR : une fenêtre principale que personne n'a encore
+    // désignée est déjà l'active pour tout le reste de l'interface (le liséré, les raccourcis),
+    // et un Ctrl+clic dedans doit donc étendre, pas repartir de zéro.
+    if (extend && this.main_zone_active_id === id && pane_key !== null) {
+      this._main_zone_active_id = id
+      const current = this._main_zone_selected_pane_keys.length > 0
+        ? [...this._main_zone_selected_pane_keys]
+        : (this._main_zone_active_pane_key !== null ? [this._main_zone_active_pane_key] : [])
+      const at = current.indexOf(pane_key)
+      if (at === -1) {
+        current.push(pane_key)
+        this._main_zone_selected_pane_keys = current
+        this._main_zone_active_pane_key = pane_key
+      } else {
+        // Le seul sélectionné : on ne désélectionne pas tout (cf. en-tête).
+        if (current.length === 1) return
+        current.splice(at, 1)
+        this._main_zone_selected_pane_keys = current
+        // L'active s'en allait : la première restante prend sa place, l'invariant tient.
+        if (this._main_zone_active_pane_key === pane_key) this._main_zone_active_pane_key = current[0]
+      }
+      this._notifyMainZone()
+      return
+    }
+    // Clic simple, ou Ctrl+clic dans une fenêtre qui n'était pas active : la sélection REPART de
+    // la vignette touchée. Écrit même quand la vignette active ne change pas — la fenêtre, elle,
+    // vient peut-être de changer, et une sélection héritée n'y voudrait rien dire.
+    const selection = pane_key !== null ? [pane_key] : []
+    const unchanged = this._main_zone_active_id === id
+      && this._main_zone_active_pane_key === pane_key
+      && this._main_zone_selected_pane_keys.length === selection.length
+      && this._main_zone_selected_pane_keys.every((k, i) => k === selection[i])
+    if (unchanged) return
     this._main_zone_active_id = id
     this._main_zone_active_pane_key = pane_key
+    this._main_zone_selected_pane_keys = selection
+    this._notifyMainZone()
+  }
+  /**
+   * os#1423 — SÉLECTIONNE LES VIGNETTES DONNÉES d'une fenêtre, qui devient active (« tout
+   * sélectionner » de la fenêtre, Ctrl+A, glissé de cadre).
+   *
+   * Dédoublonne en gardant l'ORDRE donné : c'est celui des vignettes à l'écran, et un réglage de
+   * portée 'selection' les parcourt dans cet ordre. La vignette active est CONSERVÉE si elle est
+   * dans le lot — sélectionner tout ne doit pas déplacer ce dont le volet parle — et devient la
+   * première sinon. Liste vide : sélection vide et plus de vignette active, la fenêtre redevient
+   * ce qu'elle est à son ouverture.
+   */
+  public selectAllMainZonePanes(id: string, pane_keys: string[]): void {
+    this._inspector_focus = 'representation'
+    const unique = pane_keys.filter((k, i) => pane_keys.indexOf(k) === i)
+    this._main_zone_active_id = id
+    this._main_zone_selected_pane_keys = unique
+    if (unique.length === 0) this._main_zone_active_pane_key = null
+    else if (this._main_zone_active_pane_key === null
+      || !unique.includes(this._main_zone_active_pane_key)) {
+      this._main_zone_active_pane_key = unique[0]
+    }
     this._notifyMainZone()
   }
   /**
@@ -1611,6 +1785,8 @@ export class Class_MenuConfig {
       this._main_zone_active_id = null
       // os#1394 — la vignette active appartenait à cette fenêtre : elle part avec elle.
       this._main_zone_active_pane_key = null
+      // os#1423 — la sélection aussi : elle ne vit que dans la fenêtre active, qui n'est plus là.
+      this._main_zone_selected_pane_keys = []
     }
     const mains = list.filter(o => o.place === 'main')
     if (mains.length === 0) {
