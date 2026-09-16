@@ -42,6 +42,19 @@ import type { Type_TemplateSource } from './TemplateSource'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
+// os#1418 — LES FIGURES SONT DES ÉLÉMENTS. `Figure.ts` porte la nature, ses styles, la cascade
+// et le rapport de migration ; ce fichier n'en garde que l'ANNUAIRE (quelle figure pour quelle
+// vignette) et les gestes de la grande zone.
+import {
+  Class_Figure, Class_FigureNature, Class_FigureMigrationReport,
+  FIGURE_DIAGRAM_PANE_KEY, transposableBagChanges,
+  type Type_FigureAttributesConfig, type Type_OptionBag
+} from '../Representations/Figure'
+// os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
+// VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
+// (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
+// prend lui-même que des types. Aucun cycle à l'exécution.
+import { representation_registry } from '../Representations/RepresentationRegistry'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -123,9 +136,10 @@ export type Type_MainZoneOccupant = {
   representation: string
   place: Type_MainZonePlace
   size: number
-  // Réglages de la représentation, PAR FENÊTRE (décomposer par…, mode des valeurs…), opaques
-  // ici : c'est l'entrée de registre qui les lit. Persistés avec la fenêtre.
-  options?: Type_JSON
+  // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
+  // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
+  // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
+  // au lieu d'en recevoir une copie au moment de sa création.
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
 /**
@@ -194,6 +208,16 @@ export const freshMainZonePaneKey = (id: string, used: string[]): string => {
 }
 
 /**
+ * ⚠️ os#1418 — LES CINQ HELPERS QUI SUIVENT SONT UN FORMAT DE LECTURE HÉRITÉE.
+ *
+ * Ils décrivent `occupant.options` : le sac par fenêtre, son sous-dictionnaire `panes`, et le
+ * repli de l'un sur l'autre. Ce format N'EST PLUS ÉCRIT depuis os#1418 — les réglages sont des
+ * FIGURES (`Class_Figure`) — et ces fonctions ne servent plus qu'à MIGRER un fichier d'avant
+ * (cf. `mainZoneStateFromJSON`). Elles restent exportées parce que la migration n'est pas le
+ * seul lecteur possible d'un fichier ancien, et pures parce qu'elles ne lisent rien d'autre que
+ * le JSON qu'on leur donne. N'en câblez PAS de nouveau code : `figureOf(id, key).attributes`
+ * est la seule lecture vivante.
+ *
  * os#1387 (10/09/2026) — LES RÉGLAGES SONT PAR VIGNETTE, PAS PAR FENÊTRE.
  *
  * « Pour normaliser il faut le faire par diagramme » (Julien) : le mode de valeur et le flux
@@ -251,8 +275,12 @@ export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string)
  * décomposer une couronne selon une dimension étrangère. Ils restent donc là où ils ont été
  * posés, sur leur vignette.
  *
- * La liste vit ICI et non dans le registre de représentations parce que c'est ici qu'on écrit le
- * défaut, et qu'un filtre posé ailleurs laisserait passer les écritures des autres appelants.
+ * os#1418 — CETTE LISTE EST DEVENUE UN REPLI. La règle vit désormais dans la DÉCLARATION de la
+ * nature (`sort: 'identity' | 'navigation'`, cf. `Figure.ts`), c'est-à-dire auprès de la clé
+ * qu'elle qualifie et non dans un fichier qui ne sait rien d'elle. La liste ne sert plus qu'aux
+ * clés qu'AUCUNE nature ne déclare — celles des natures pas encore portées sur le nouveau
+ * contrat, et celles d'un fichier écrit par une version qui les offrait. La résorber plutôt que
+ * l'allonger : une clé de plus ici est une déclaration qui manque là-bas.
  */
 const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
   'normalize_link_id', 'descriptor', 'root_ids'
@@ -269,8 +297,19 @@ const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
  *
  * L'union est OUVERTE par construction : le jour où les vignettes seront sélectionnables, une
  * portée « la sélection » s'ajoute ici et tout ce qui la lit la traite comme les deux autres.
+ *
+ * os#1418 — TROIS PORTÉES (arbitrage Julien du 16/09/2026), et la troisième est celle qui
+ * manquait :
+ *  - 'pane'  : CETTE figure. Surcharge propre, et rien d'autre — c'est le défaut.
+ *  - 'all'   : les figures de CETTE FENÊTRE. Le diff transposable, posé sur chacune (cf.
+ *              `transposableChanges`) ; les voisines gardent ce qu'elles disent par ailleurs.
+ *  - 'style' : LE STYLE de la nature (`default`). Seule portée qui écrit un style, et donc
+ *              seule façon de régler d'un geste toutes les figures d'une nature, ouvertes ou
+ *              à venir. Régler une figure n'écrit PLUS le défaut de sa nature : c'est la fin
+ *              de l'écriture immédiate de os#1394, qui faisait qu'un réglage local devenait
+ *              silencieusement le réglage de tout le monde.
  */
-export type Type_RepresentationOptionScope = 'pane' | 'all'
+export type Type_RepresentationOptionScope = 'pane' | 'all' | 'style'
 
 /**
  * os#1416 — UN RÉGLAGE EST-IL TRANSPOSABLE, c'est-à-dire a-t-il un sens sur la figure voisine ?
@@ -295,29 +334,21 @@ export const isTransposableOption = (key: string): boolean =>
  * Une clé RETIRÉE ne voyage pas : aucun réglage ne se supprime aujourd'hui (tous réécrivent
  * `{ ...options, clé: valeur }`), et propager une absence demanderait de distinguer « effacé »
  * de « jamais dit », ce que le porteur de la portée n'a pas à trancher.
+ *
+ * os#1418 — LA TRANSPOSABILITÉ VIENT MAINTENANT DE LA NATURE, pas de la liste en dur : le
+ * troisième paramètre reçoit `figureNature(id).isTransposable`, qui lit la SORTE déclarée de la
+ * clé et ne retombe sur `isTransposableOption` que pour une clé qu'aucune nature ne déclare.
+ * Absent, on garde exactement le comportement d'avant — les appelants qui ne connaissent pas la
+ * nature de la figure (et il y en a) n'ont rien à changer.
+ *
+ * Le corps, lui, vit dans `Figure.ts` (`transposableBagChanges`) : c'est là que se décide ce
+ * qu'un réglage de figure a le droit de faire, et deux copies de la même règle divergeraient.
  */
 export const transposableChanges = (
   prev: { [key: string]: unknown } | undefined,
-  next: { [key: string]: unknown } | undefined
-): { [key: string]: unknown } => {
-  const out: { [key: string]: unknown } = {}
-  Object.entries(next ?? {}).forEach(([key, value]) => {
-    if (!isTransposableOption(key)) return
-    // Comparaison par sérialisation : un descripteur ou une liste sont des valeurs composées,
-    // et l'égalité de référence rapporterait un changement à chaque rendu du volet.
-    if (JSON.stringify((prev ?? {})[key]) !== JSON.stringify(value)) out[key] = value
-  })
-  return out
-}
-
-/** Les réglages, débarrassés de ceux qui désignent un objet du sujet. */
-const withoutSubjectBoundOptions = (options: Type_JSON | undefined): Type_JSON => {
-  const out: Type_JSON = {}
-  Object.entries(options ?? {}).forEach(([key, value]) => {
-    if (!SUBJECT_BOUND_OPTION_KEYS.includes(key)) out[key] = value
-  })
-  return out
-}
+  next: { [key: string]: unknown } | undefined,
+  isTransposable: (key: string) => boolean = isTransposableOption
+): { [key: string]: unknown } => transposableBagChanges(prev, next, isTransposable)
 /** Les réglages de la fenêtre, une vignette mise à jour. Les autres vignettes ne bougent pas. */
 export const withMainZonePaneOptions = (
   options: Type_JSON | undefined, key: string, next: Type_JSON
@@ -588,14 +619,26 @@ export class Class_MenuConfig {
   // (qui n'a rien à régler, donc ne prend pas l'inspecteur) puis pose la sélection, qui repasse
   // le drapeau à 'selection'.
   protected _inspector_focus: 'selection' | 'representation' = 'selection'
-  // os#1394 — LE RÉGLAGE PAR DÉFAUT D'UNE NATURE DE REPRÉSENTATION, indexé par son identifiant
-  // de registre, persisté avec le document (clé racine `representation_defaults`).
+  // os#1418 — LES NATURES DE FIGURE ET LEURS STYLES, indexées par identifiant de registre,
+  // persistées avec le document (clé racine `figure_styles`). Une nature naît PARESSEUSEMENT, au
+  // premier besoin (cf. `figureNature`) : le document ne porte que ce qu'on a réglé.
   //
-  // Arbitrage : un réglage de représentation est un défaut PAR NATURE, pas par fenêtre ni par
-  // sujet. Toutes les étoiles unitaires d'une étude se règlent donc du même geste — celui qu'on
-  // fait sur l'une d'elles — tant que l'auteur n'a pas décidé autrement sur une vignette
-  // précise, auquel cas c'est la vignette qui gagne (cf. `mainZonePaneOptionsOf`).
-  protected _representation_defaults: { [representation_id: string]: Type_JSON } = {}
+  // Ce qui a changé par rapport au « défaut par nature » de os#1394, qu'elles remplacent : le
+  // style `default` ne s'écrit plus tout seul quand on règle une figure (arbitrage Julien du
+  // 16/09/2026), il s'écrit en portée « style » et seulement là — et une figure qui n'a rien
+  // surchargé le SUIT, au lieu d'en avoir reçu une copie à sa naissance. Changer le style change
+  // donc ce que montrent les figures déjà ouvertes, ce que le défaut recopié ne savait pas faire.
+  protected _figure_natures: { [nature_id: string]: Class_FigureNature } = {}
+  // os#1418 — L'ANNUAIRE DES FIGURES : une par (fenêtre, clé de vignette). La clé de vignette
+  // est `FIGURE_DIAGRAM_PANE_KEY` ('') pour une fenêtre à sujet diagramme, qui n'en a qu'une.
+  // Créées paresseusement elles aussi : une figure qui n'a rien à dire n'existe pas, et donc ne
+  // s'écrit pas — c'est ce qui garde les fichiers d'aujourd'hui octet pour octet identiques.
+  protected _figures: { [occupant_id: string]: { [pane_key: string]: Class_Figure } } = {}
+  // os#1419 — CE QUE LA MIGRATION N'A PAS SU PORTER. Accumulé par les trois lecteurs (styles,
+  // défauts hérités, grande zone) et VIDÉ par `flushFigureMigrationReport`, que la persistance
+  // appelle une fois les trois lectures faites : la vider à la fin de chacune la rendrait
+  // illisible aux tests et dirait trois fois la moitié de l'histoire (cf. la méthode).
+  protected _figure_report: Class_FigureMigrationReport = new Class_FigureMigrationReport()
   // Document EXTERNE affiché à la place de la documentation du diagramme : présentation d'une
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
@@ -818,14 +861,12 @@ export class Class_MenuConfig {
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
     const peers = this._main_zone_occupants.filter(x => x.place === wanted)
     const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
-    // os#1394 — une fenêtre NAÎT réglée comme sa nature l'est dans ce document : c'est le seul
-    // endroit où toute fenêtre se crée, ouverture de fenêtre d'élément comprise. Rien à écrire
-    // quand la nature n'a pas encore de défaut, pour ne pas semer des `options: {}` vides.
-    const defaults = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
-    const options = Object.keys(defaults).length > 0 ? defaults : undefined
-    this._main_zone_occupants.push(options
-      ? { ...o, place: wanted, size, options }
-      : { ...o, place: wanted, size })
+    // os#1418 — PLUS AUCUN DÉFAUT RECOPIÉ ICI. Une fenêtre neuve naît sans réglages, et ses
+    // figures SUIVENT le style `default` de leur nature (cf. `Class_Figure`) : elle est donc
+    // réglée comme les autres sans qu'on lui ait rien écrit, et elle le restera si l'auteur
+    // change le style ensuite. La recopie de os#1394 figeait au contraire l'état du style à
+    // l'instant de l'ouverture.
+    this._main_zone_occupants.push({ ...o, place: wanted, size })
   }
 
   // --- os#1387 : fenêtres = (sujet, représentation) ------------------------------------------
@@ -865,10 +906,21 @@ export class Class_MenuConfig {
    * Le remplacement en place ne vaut QUE pour ce dernier cas : appliqué à une fenêtre de
    * feuille, il lui donnerait l'identifiant de la représentation — donc celui du canevas de la
    * feuille courante — et les deux canevas fusionneraient en un seul (os#1385 lot 0).
+   *
+   * os#1418 — CHANGER DE NATURE JETTE LES FIGURES DE LA FENÊTRE, et c'est un changement
+   * OBSERVABLE : passer une fenêtre de l'étoile à la couronne puis revenir à l'étoile ne
+   * retrouve plus les réglages qu'on y avait faits. C'est délibéré — les réglages d'une nature
+   * n'ont pas de sens dans une autre (un flux de référence d'étoile dans un sunburst, un axe de
+   * décomposition dans le tableur) — et c'est aussi ce que faisait l'ancien mécanisme, qui
+   * gardait certes le sac `options` mais le donnait à lire à une entrée de registre qui n'y
+   * reconnaissait rien. La différence est qu'on le dit, et qu'on ne traîne plus les clés mortes.
    */
   public setMainZoneWindowRepresentation(id: string, representation: string): void {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o || o.representation === representation) return
+    // Jeté AVANT la mutation : dans la branche « remplacement en place » l'occupant change d'id,
+    // et ses figures resteraient sinon indexées sous l'ancien — orphelines et persistées.
+    this._dropFigures(id)
     if (mainZoneSubjectUsesOwnWindowId(o.subject)) {
       o.representation = representation
     } else if (this.isMainZoneOccupant(representation)) {
@@ -892,101 +944,216 @@ export class Class_MenuConfig {
       // vignettes — donc leurs réglages — sur les objets voisins.
       o.subject = { ...subject, ids: [...subject.ids], keys: mainZonePaneKeys(subject) }
       // os#1387 — les réglages des vignettes qui ne sont PLUS là s'en vont avec elles. Sans ce
-      // ménage, `options.panes` grossirait à chaque objet ajouté puis retiré, et — plus
+      // ménage, l'annuaire des figures grossirait à chaque objet ajouté puis retiré, et — plus
       // gênant — un objet remis dans la fenêtre ressusciterait des réglages que l'auteur avait
       // oubliés. La liste des clés VIVANTES est celle qu'on vient d'écrire.
-      o.options = this._prunedPaneOptions(o.options, o.subject.keys ?? [])
+      this._pruneFigures(o.id, o.subject.keys ?? [])
     } else o.subject = { ...subject }
     this._notifyMainZone()
   }
-  /**
-   * os#1387 — Réglages d'UNE VIGNETTE d'une fenêtre (cf. mainZonePaneOptions pour le pourquoi
-   * du découpage). Les autres vignettes, et le repli au niveau de la fenêtre, ne bougent pas.
-   */
-  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
-    if (!o) return
-    o.options = withMainZonePaneOptions(o.options, pane_key, options)
-    // os#1394 — le geste vaut aussi pour la NATURE : ce que l'auteur vient de régler sur cette
-    // étoile devient le réglage des étoiles qu'il ouvrira ensuite. Sans cette écriture, chaque
-    // nouvelle fenêtre repartirait des valeurs d'usine et il faudrait refaire le même réglage
-    // autant de fois qu'on ouvre de vignettes.
-    this._representation_defaults[o.representation] = withoutSubjectBoundOptions(options)
-    this._notifyMainZone()
-  }
-  /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
-  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
-    if (!o) return
-    o.options = { ...options }
-    // os#1394 — même règle qu'au niveau vignette. Le dictionnaire des vignettes, lui, n'a rien
-    // à faire dans un défaut de nature : il désigne des objets de CETTE fenêtre.
-    this._representation_defaults[o.representation] =
-      withoutSubjectBoundOptions(mainZoneWindowLevelOptions(options))
-    this._notifyMainZone()
-  }
-  // --- os#1394 : le réglage par défaut d'une NATURE de représentation ------------------------
+
+  // --- os#1418 : les figures de la grande zone ------------------------------------------------
 
   /**
-   * Le défaut de cette nature ; objet vide quand le document n'en porte pas. Lecture seule :
-   * le défaut s'ÉCRIT en réglant une fenêtre ou une vignette (cf. les deux setters ci-dessus),
-   * jamais par un geste à part — sinon il y aurait deux façons de dire la même chose.
+   * LA NATURE d'un identifiant de registre, créée au premier besoin.
+   *
+   * Sa déclaration d'attributs vient de l'ENTRÉE DE REGISTRE (`attributes`) : c'est là qu'une
+   * représentation dit ce qu'elle se laisse régler, comme un nœud le dit dans
+   * `ALL_ATTRIBUTES_CONFIG`. Une nature inconnue du registre (fichier plus récent, module non
+   * chargé) obtient une déclaration VIDE plutôt qu'une erreur : ses réglages restent lisibles et
+   * persistés en tant que clés non déclarées, et redeviennent des attributs le jour où le module
+   * qui les déclare est là.
    */
-  public representationDefaultOptions(representation_id: string): Type_JSON {
-    return { ...(this._representation_defaults[representation_id] ?? {}) }
+  public figureNature(nature_id: string): Class_FigureNature {
+    const existing = this._figure_natures[nature_id]
+    if (existing) return existing
+    const entry = representation_registry.get(nature_id)
+    // Lu par indexation défensive : le champ `attributes` arrive avec le lot 1 de os#1418, et
+    // ce fichier doit compiler quel que soit l'ordre des merges.
+    const config = (entry as { attributes?: Type_FigureAttributesConfig } | undefined)?.attributes ?? {}
+    const nature = new Class_FigureNature(nature_id, config)
+    this._figure_natures[nature_id] = nature
+    return nature
+  }
+  /** La nature de repli d'une figure ORPHELINE (fenêtre disparue) : déclare zéro attribut. */
+  public static readonly UNKNOWN_FIGURE_NATURE_ID = 'unknown'
+  /**
+   * LA FIGURE d'une vignette, créée au premier besoin.
+   *
+   * Paresseuse des deux côtés, et c'est ce qui garde les fichiers propres : lire les réglages
+   * d'une vignette crée une figure qui ne porte rien, donc qui ne s'écrit pas (`toJSON()` rend
+   * `undefined`). Une fenêtre inconnue rend une figure ORPHELINE, sur une nature sans attributs,
+   * plutôt que de lever : les appelants d'avant retournaient silencieusement sur un occupant
+   * absent, et une figure vide se comporte exactement comme ce retour — on peut lui écrire sans
+   * rien casser, elle n'est simplement rattachée à rien.
+   */
+  public figureOf(occupant_id: string, pane_key: string): Class_Figure {
+    const o = this._main_zone_occupants.find(x => x.id === occupant_id)
+    const nature = this.figureNature(o?.representation ?? Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID)
+    if (!o) return new Class_Figure(nature, pane_key)
+    const by_key = this._figures[occupant_id] ?? (this._figures[occupant_id] = {})
+    const existing = by_key[pane_key]
+    if (existing && existing.nature === nature) return existing
+    const fig = new Class_Figure(nature, pane_key)
+    by_key[pane_key] = fig
+    return fig
+  }
+  /** Un réglage de CETTE nature a-t-il un sens sur la figure voisine ? (cf. `isTransposableOption`) */
+  public isTransposableFigureOption(nature_id: string, key: string): boolean {
+    return this.figureNature(nature_id).isTransposable(key, isTransposableOption)
+  }
+  /** Toutes les figures d'une fenêtre s'en vont (fenêtre fermée, nature changée). */
+  protected _dropFigures(occupant_id: string): void {
+    delete this._figures[occupant_id]
+  }
+  /** Les figures d'une fenêtre, débarrassées des vignettes qui n'existent plus. */
+  protected _pruneFigures(occupant_id: string, live_keys: string[]): void {
+    const by_key = this._figures[occupant_id]
+    if (!by_key) return
+    Object.keys(by_key).forEach(k => {
+      // La figure de la fenêtre à sujet diagramme ('') n'est jamais dans `keys` : elle ne
+      // désigne pas un objet, elle EST la fenêtre.
+      if (k !== FIGURE_DIAGRAM_PANE_KEY && !live_keys.includes(k)) delete by_key[k]
+    })
+  }
+  /** Les figures des fenêtres qui n'existent plus (toute voie de fermeture confondue). */
+  protected _pruneOrphanFigures(): void {
+    const live = new Set(this._main_zone_occupants.map(o => o.id))
+    Object.keys(this._figures).forEach(id => { if (!live.has(id)) delete this._figures[id] })
+  }
+
+  /**
+   * os#1387 — Réglages d'UNE VIGNETTE d'une fenêtre. Sac COMPLET (cf. `Class_Figure.assign`) :
+   * une clé absente est retirée, une valeur égale à ce que le style dit déjà n'est pas posée.
+   *
+   * os#1418 — N'ÉCRIT QUE CETTE FIGURE (arbitrage Julien du 16/09/2026). L'écriture immédiate du
+   * défaut de nature (os#1394) est terminée : elle faisait qu'un réglage posé sur une étoile
+   * devenait, sans que rien ne le dise, le réglage de toutes les étoiles à venir — et l'auteur ne
+   * découvrait la propagation qu'en ouvrant la suivante. Régler toutes les figures d'une nature
+   * se demande désormais, en portée « style » (`setRepresentationStyleOptions`).
+   */
+  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
+    if (!this._main_zone_occupants.some(x => x.id === id)) return
+    this.figureOf(id, pane_key).assign(options as Type_OptionBag)
+    this._notifyMainZone()
   }
   /**
-   * Les réglages EFFECTIFS d'une vignette, défaut de nature compris.
+   * Réglages d'une fenêtre à sujet DIAGRAMME, qui n'a qu'une figure (clé `''`). Même contrat
+   * que ci-dessus : sac complet, et rien d'autre que cette figure n'est touché.
+   */
+  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
+    if (!this._main_zone_occupants.some(x => x.id === id)) return
+    this.figureOf(id, FIGURE_DIAGRAM_PANE_KEY).assign(options as Type_OptionBag)
+    this._notifyMainZone()
+  }
+
+  // --- os#1418 : le STYLE d'une nature de figure ----------------------------------------------
+
+  /**
+   * ÉCRIT LE STYLE `default` d'une nature — la portée « style », et la seule qui l'écrive.
    *
-   * Trois sources, de la plus précise à la plus générale, et l'ordre est le sens de la
-   * décision : ce que l'auteur a dit SUR CETTE VIGNETTE gagne toujours ; sinon le réglage de
-   * la NATURE dans ce document, qui est le geste qu'il a fait ailleurs sur une étoile ou une
-   * couronne ; sinon seulement le repli au niveau de la fenêtre, qui n'existe que pour rouvrir
-   * à l'identique un fichier écrit du temps de la barre partagée (cf. mainZonePaneOptions).
+   * Sac COMPLET : une clé absente reprend sa valeur d'usine (c'est un style `default`, il est
+   * pré-rempli). Rend les clés REFUSÉES, celles que la nature déclare d'une autre sorte que
+   * 'style' — un axe de décomposition ou un flux de référence n'entre pas dans un style, quelle
+   * que soit la surface qui le propose (garde-fou à l'écriture, os#1416). À l'appelant de les
+   * poser sur la figure active, ou de les dire.
+   *
+   * Les figures qui n'ont rien surchargé suivent immédiatement, celles qui ont surchargé gardent
+   * leur surcharge : c'est la cascade des éléments, et rien n'est recopié nulle part.
+   */
+  public setRepresentationStyleOptions(nature_id: string, options: Type_OptionBag): string[] {
+    const nature = this.figureNature(nature_id)
+    const refused = nature.assignStyle(nature.default_style, options)
+    this._notifyMainZone()
+    return refused
+  }
+  /** Ce que le style `default` de cette nature dit, clé par clé (ce que montre la portée « style »). */
+  public representationStyleOptions(nature_id: string): Type_OptionBag {
+    const nature = this.figureNature(nature_id)
+    return nature.styleBag(nature.default_style)
+  }
+  /**
+   * ALIAS HÉRITÉ de `representationStyleOptions` : « le défaut de la nature » et « son style
+   * `default` » sont devenus le même objet. Conservé parce que plusieurs appelants (et les
+   * tests) le nomment ainsi, et parce que le mot reste juste.
+   */
+  public representationDefaultOptions(nature_id: string): Type_OptionBag {
+    return this.representationStyleOptions(nature_id)
+  }
+  /**
+   * Les réglages EFFECTIFS d'une vignette : LA CASCADE de la figure (surcharge propre, styles
+   * suivis, usine), et plus une résolution maison à trois sources.
+   *
+   * Ce qui change par rapport à os#1394, clé par clé et non plus en bloc : une vignette qui
+   * surchargeait le mode de valeur n'effaçait plus, pour elle, tout le reste du défaut de sa
+   * nature — elle prenait son propre sac ENTIER, défaut compris ou non. La cascade répond
+   * attribut par attribut, comme pour un nœud.
    */
   public mainZonePaneOptionsOf(id: string, pane_key: string): Type_JSON {
-    const o = this._main_zone_occupants.find(x => x.id === id)
-    if (!o) return {}
-    const own = ownMainZonePaneOptions(o.options, pane_key)
-    if (own) return own
-    // Filtré aussi À LA LECTURE, pas seulement à l'écriture : un document enregistré avant ce
-    // correctif porte un défaut pollué, et le rouvrir rapporterait ses étoiles au flux de
-    // référence d'un nœud qu'on ne regarde plus.
-    const def = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
-    if (Object.keys(def).length > 0) return def
-    return mainZoneWindowLevelOptions(o.options)
+    if (!this._main_zone_occupants.some(x => x.id === id)) return {}
+    return this.figureOf(id, pane_key).attributes as Type_JSON
   }
+
+  // --- os#1418 : persistance des styles de figure ---------------------------------------------
+
   /**
-   * Sérialise les défauts par nature (clé racine `representation_defaults`). Dictionnaire
-   * indexé par identifiant de registre — la forme que `Type_JSON` sait porter, et l'unicité de
-   * la nature y devient structurelle. Clé ADDITIVE : rien à écrire tant que rien n'a été réglé.
+   * Sérialise les styles de figure (clé racine `figure_styles`). Dictionnaire indexé par
+   * identifiant de nature — la forme que `Type_JSON` sait porter, et l'unicité de la nature y
+   * devient structurelle. Clé ADDITIVE : rien à écrire tant que rien n'a été réglé.
    */
-  public representationDefaultsToJSON(): Type_JSON | undefined {
+  public figureStylesToJSON(): Type_JSON | undefined {
     const out: Type_JSON = {}
-    Object.entries(this._representation_defaults).forEach(([id, opts]) => {
-      if (opts && Object.keys(opts).length > 0) out[id] = { ...opts }
+    Object.entries(this._figure_natures).forEach(([id, nature]) => {
+      const json = nature.toJSON()
+      if (json) out[id] = json
     })
     return Object.keys(out).length > 0 ? out : undefined
   }
-  /** Relit les défauts par nature. Entrée malformée ignorée (fichier fabriqué à la main). */
-  public representationDefaultsFromJSON(json: unknown): void {
-    this._representation_defaults = {}
+  /** Relit les styles de figure. Entrée malformée ignorée (fichier fabriqué à la main). */
+  public figureStylesFromJSON(json: unknown): void {
     if (!json || typeof json !== 'object' || Array.isArray(json)) return
     Object.entries(json as Type_JSON).forEach(([id, v]) => {
-      if (v && typeof v === 'object' && !Array.isArray(v)) {
-        this._representation_defaults[id] = { ...(v as Type_JSON) }
-      }
+      this.figureNature(id).fromJSON(v, this._figure_report, 'figure_styles')
     })
   }
-  /** Les réglages d'une fenêtre, débarrassés des vignettes qui n'existent plus. */
-  protected _prunedPaneOptions(options: Type_JSON | undefined, live_keys: string[]): Type_JSON | undefined {
-    if (!options) return options
-    const panes = options[MAIN_ZONE_PANES_KEY]
-    if (!panes || typeof panes !== 'object' || Array.isArray(panes)) return options
-    const kept: Type_JSON = {}
-    Object.entries(panes as Type_JSON).forEach(([k, v]) => { if (live_keys.includes(k)) kept[k] = v })
-    return { ...options, [MAIN_ZONE_PANES_KEY]: kept }
+  /**
+   * LECTEUR HÉRITÉ des défauts par nature de os#1394 (clé racine `representation_defaults`).
+   *
+   * Un défaut d'alors est exactement ce qu'est aujourd'hui le style `default` : on le lui donne
+   * à lire sous cette forme, et c'est `Class_FigureNature.fromJSON` qui FILTRE — seules les clés
+   * de sorte 'style' entrent dans le style, les autres sont ÉCARTÉES et rapportées
+   * ('not_transposable'). Ce filtre remplace le nettoyage à la lecture de os#1394 : les
+   * documents écrits entre la livraison du défaut par nature et son correctif portent des flux
+   * de référence étrangers, et les relire referait la figure fausse à chaque ouverture.
+   */
+  public representationDefaultsFromJSON(json: unknown): void {
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return
+    Object.entries(json as Type_JSON).forEach(([id, v]) => {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return
+      this.figureNature(id).fromJSON(
+        { default: { attributes: v } }, this._figure_report, 'representation_defaults'
+      )
+    })
   }
+  /**
+   * os#1419 — CE QUE LA MIGRATION N'A PAS PORTÉ, dit une fois pour tout le chargement.
+   *
+   * Vidé ICI et non à la fin de chaque lecteur, et c'est un choix : styles, défauts hérités et
+   * grande zone se lisent à la suite, et trois `console.warn` successifs raconteraient trois
+   * fois un tiers de l'histoire — le lecteur ne saurait pas si la clé qu'on lui signale a été
+   * reprise par la passe suivante. La persistance appelle donc cette méthode une fois les trois
+   * faites ; les tests, eux, lisent `figure_migration_report` avant.
+   *
+   * Rend le résumé (et l'écrit en console), ou `null` s'il n'y a rien à dire.
+   */
+  public flushFigureMigrationReport(): string | null {
+    const summary = this._figure_report.summary()
+    if (summary) console.warn(summary)
+    this._figure_report.reset()
+    return summary
+  }
+  /** Le rapport de migration EN COURS, avant qu'il ne soit vidé (tests, diagnostic). */
+  public get figure_migration_report(): Class_FigureMigrationReport { return this._figure_report }
   public mainZoneOccupantById(id: string): Type_MainZoneOccupant | undefined {
     const o = this._main_zone_occupants.find(x => x.id === id)
     return o ? { ...o, subject: { ...o.subject } } : undefined
@@ -1147,6 +1314,11 @@ export class Class_MenuConfig {
     } else mains.slice(1).forEach(o => { o.place = 'right' })
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
     this._main_zone_occupants = list
+    // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
+    // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
+    // le changement de nature en place et la déduplication mènent tous ici, et un seul ménage
+    // vaut mieux que quatre qu'il faudrait penser à ajouter au cinquième appelant.
+    this._pruneOrphanFigures()
   }
 
   /**
@@ -1323,7 +1495,20 @@ export class Class_MenuConfig {
       if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
       if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
       const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
-      if (o.options && Object.keys(o.options).length > 0) entry['options'] = { ...o.options }
+      // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
+      // style de sa nature) rend `undefined` et ne s'écrit pas ; une fenêtre dont aucune figure
+      // ne dit rien n'écrit pas la clé `figures` du tout. C'est ce qui rend un fichier
+      // d'aujourd'hui — où personne n'a réglé de vignette — identique OCTET POUR OCTET à celui
+      // qu'écrivait la version d'avant.
+      const figs = this._figures[o.id]
+      if (figs) {
+        const figures: Type_JSON = {}
+        Object.entries(figs).forEach(([key, fig]) => {
+          const json = fig.toJSON()
+          if (json) figures[key] = json
+        })
+        if (Object.keys(figures).length > 0) entry['figures'] = figures
+      }
       occupants[o.id] = entry
     })
     return {
@@ -1369,6 +1554,13 @@ export class Class_MenuConfig {
           else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
           else if (kind === 'elements') subject = { kind: 'elements', ids, keys: mainZonePaneKeys({ ids, keys }) }
           if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
+          // os#1418 — DEUX FORMATS DE RÉGLAGES, et un seul des deux par fenêtre : `figures` (le
+          // format d'aujourd'hui, une entrée par vignette) ou `options` (celui d'avant, un sac
+          // par fenêtre avec son sous-dictionnaire `panes`). Tous deux gardés BRUTS ici : la
+          // migration a besoin des styles déjà lus, et des identifiants DÉFINITIFS, donc elle
+          // n'a pas lieu avant que les deux soient établis (cf. `_loadFiguresFromJSON`).
+          const figs = e['figures']
+          const figures = (figs && typeof figs === 'object' && !Array.isArray(figs)) ? figs as Type_JSON : undefined
           const opts = e['options']
           const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
           return {
@@ -1378,20 +1570,43 @@ export class Class_MenuConfig {
             place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
             size: getNumberFromJSON(e, 'size', 1),
             order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),
+            figures,
             options
           }
         })
         .sort((a, b) => a.order - b.order)
-      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size, options }) =>
-        (options ? { id, subject, representation, place, size, options } : { id, subject, representation, place, size }))
+      // os#1418 — l'annuaire des figures repart de zéro avec la grande zone qu'il décrit : ses
+      // clés sont des identifiants de fenêtres, et celles du fichier qu'on ouvre ne sont pas
+      // celles de la session qui s'achève.
+      this._figures = {}
+      // Les réglages BRUTS, indexés par l'identifiant du fichier. Ils suivront les remaniements
+      // d'identifiants ci-dessous, pour que la migration travaille sur l'id DÉFINITIF.
+      const raw_figures = new Map<string, { figures?: Type_JSON, options?: Type_JSON }>()
+      entries.forEach(({ id, figures, options }) => {
+        if (figures || options) raw_figures.set(id, { figures, options })
+      })
+      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
+        ({ id, subject, representation, place, size }))
       // os#1387 — un fichier écrit avec le panneau unitaire à hôte externe : sa fenêtre devient
       // une fenêtre d'élément « Unit. » qui suit la sélection, même place, même poids.
-      this._main_zone_occupants = this._main_zone_occupants.map(o => o.id === MAIN_ZONE_UNITARY_ID
-        ? { ...o, id: `w_${++this._main_zone_window_seq}`, subject: { kind: 'selection' }, representation: MAIN_ZONE_UNIT_WINDOW_ID }
-        : o)
+      this._main_zone_occupants = this._main_zone_occupants.map(o => {
+        if (o.id !== MAIN_ZONE_UNITARY_ID) return o
+        const new_id = `w_${++this._main_zone_window_seq}`
+        // Les réglages SUIVENT la fenêtre renommée : sans ce transfert, un fichier d'avant
+        // rouvrirait son unitaire aux valeurs d'usine — la migration ne trouverait plus rien
+        // sous le nouvel identifiant.
+        const raw = raw_figures.get(o.id)
+        if (raw) { raw_figures.delete(o.id); raw_figures.set(new_id, raw) }
+        return { ...o, id: new_id, subject: { kind: 'selection' } as Type_MainZoneSubject, representation: MAIN_ZONE_UNIT_WINDOW_ID }
+      })
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
       this._main_zone_window_seq = Math.max(this._main_zone_window_seq, ...this._main_zone_occupants
         .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
+      // La normalisation AVANT la migration : elle peut écarter une fenêtre (doublon, place
+      // inconnue), et migrer les réglages d'une fenêtre qui n'existera pas les sèmerait sous un
+      // identifiant orphelin — que `figureOf` refuserait d'ailleurs d'indexer.
+      this._normalizeMainZoneOccupants()
+      this._loadFiguresFromJSON(raw_figures)
     } else if ('show_diagram' in json || 'show_spreadsheet' in json || 'show_doc' in json || 'show_unitary' in json) {
       const show_diagram = getBooleanFromJSON(json, 'show_diagram', true)
       const show_sheet = getBooleanFromJSON(json, 'show_spreadsheet', false)
@@ -1430,6 +1645,81 @@ export class Class_MenuConfig {
       json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_bottom_px)
     )
     this._notifyMainZone()
+  }
+
+  /**
+   * os#1418/1419 — LES RÉGLAGES DES FENÊTRES, relus ou MIGRÉS.
+   *
+   * Deux formats, un seul par fenêtre :
+   *
+   *  - `figures` : le format d'aujourd'hui. Une entrée par clé de vignette, relue telle quelle
+   *    par `Class_Figure.fromJSON` (qui rapporte les clés qu'aucune nature ne déclare).
+   *
+   *  - `options` : le format d'avant (sac par fenêtre + sous-dictionnaire `panes`). MIGRÉ en
+   *    reproduisant EXACTEMENT la résolution qui avait cours, vignette par vignette :
+   *      1. ce que LA VIGNETTE disait (`panes[clé]`) gagne toujours ;
+   *      2. sinon, si la nature a un défaut non vide, la figure le SUIT — on n'écrit donc rien,
+   *         ce qui est mieux que ce que faisait l'ancien code : la figure suivra le style même
+   *         s'il change ensuite, là où la résolution d'avant refigeait le défaut de l'instant ;
+   *      3. sinon, le repli au niveau de la FENÊTRE devient une surcharge propre.
+   *    L'ordre de ces trois sources est celui de `mainZonePaneOptionsOf` d'avant os#1418, et il
+   *    est reproduit EN BLOC (et non clé par clé) parce que c'est ainsi qu'il décidait : une
+   *    vignette qui disait quoi que ce soit ne voyait plus rien du défaut ni du repli.
+   *
+   * QUELLES CLÉS DE VIGNETTE ? Celles du sujet : `keys` pour un sujet `elements`, l'identifiant
+   * de l'objet pour `node`/`link`, `FIGURE_DIAGRAM_PANE_KEY` pour un sujet diagramme. Un sujet
+   * 'selection' n'en a AUCUNE de connue à ce moment — il suit le dessin, et rien n'est encore
+   * sélectionné : on migre alors les vignettes que `panes` nomme (ce sont les objets que
+   * l'auteur avait regardés) et on met le repli de la fenêtre dans la figure de clé `''`. Ce
+   * choix est un compromis assumé : une fenêtre qui suit n'a pas de vignette stable à qui donner
+   * le repli, et la figure `''` est la seule adresse qui survive au changement de sélection.
+   */
+  protected _loadFiguresFromJSON(raw: Map<string, { figures?: Type_JSON, options?: Type_JSON }>): void {
+    raw.forEach((entry, id) => {
+      const o = this._main_zone_occupants.find(x => x.id === id)
+      if (!o) return
+      if (entry.figures) {
+        Object.entries(entry.figures).forEach(([key, v]) => {
+          this.figureOf(id, key).fromJSON(v, this._figure_report, `main_zone[${id}].figures[${key}]`)
+        })
+        return
+      }
+      const options = entry.options
+      if (!options) return
+      const nature = this.figureNature(o.representation)
+      const win = mainZoneWindowLevelOptions(options)
+      const win_has_something = Object.keys(win).length > 0
+      // « Le défaut de la nature dit quelque chose » : son style `default` s'écarte de l'usine.
+      const default_says_something = nature.toJSON() !== undefined
+      const load = (key: string, bag: Type_JSON, where: string) => {
+        Object.keys(bag).forEach(k => {
+          if (!nature.isDeclared(k)) {
+            this._figure_report.add({ nature: nature.id, key: k, where, reason: 'unknown_key' })
+          }
+          this._figure_report.countMigrated()
+        })
+        this.figureOf(id, key).loadOwn(bag as Type_OptionBag)
+      }
+      const migratePane = (key: string) => {
+        const own = ownMainZonePaneOptions(options, key)
+        if (own) load(key, own, `main_zone[${id}].options.panes[${key}]`)
+        else if (default_says_something) { /* la figure suit le style : rien à écrire */ }
+        else if (win_has_something) load(key, win, `main_zone[${id}].options`)
+      }
+      const subject: Type_MainZoneSubject = o.subject
+      if (subject.kind === 'elements') (subject.keys ?? []).forEach(migratePane)
+      else if (subject.kind === 'node' || subject.kind === 'link') migratePane(subject.id)
+      else if (subject.kind === 'selection') {
+        const panes = options[MAIN_ZONE_PANES_KEY]
+        if (panes && typeof panes === 'object' && !Array.isArray(panes)) {
+          Object.keys(panes as Type_JSON).forEach(migratePane)
+        }
+        if (win_has_something) load(FIGURE_DIAGRAM_PANE_KEY, win, `main_zone[${id}].options`)
+      } else if (win_has_something) {
+        // Sujet diagramme : une seule figure, et le sac de la fenêtre EST ce qu'elle disait.
+        load(FIGURE_DIAGRAM_PANE_KEY, win, `main_zone[${id}].options`)
+      }
+    })
   }
 
   /* ========================================

@@ -45,6 +45,10 @@ export const resources_inspector = {
           scope: 'Apply to',
           scope_pane: 'This figure',
           scope_all: 'All ({{count}})',
+          // os#1417 — the third scope: the style of the kind, hence every figure of that kind
+          // in the document that follows it, open or not. Always offered, unlike “All”.
+          scope_style: 'Style',
+          scope_style_hint: 'All figures of this kind in the document that follow the style',
           // A setting that stays on its own figure while the others travel must say so, rather
           // than let the author believe it went along with them.
           this_pane_only: '(this figure)'
@@ -430,6 +434,11 @@ export const resources_inspector = {
           scope: 'Appliquer à',
           scope_pane: 'Cette vignette',
           scope_all: 'Toutes ({{count}})',
+          // os#1417 — la troisième portée : le style de la nature, donc toutes les figures de
+          // cette nature du document qui le suivent, ouvertes ou non. Toujours offerte, elle,
+          // là où « Toutes » n'a de sens qu'à partir de deux vignettes.
+          scope_style: 'Le style',
+          scope_style_hint: 'Toutes les figures de cette nature du document qui suivent le style',
           // Un réglage qui reste sur sa vignette pendant que les autres voyagent doit le dire,
           // plutôt que de laisser croire qu'il est parti avec eux.
           this_pane_only: '(cette vignette)'
@@ -799,6 +808,8 @@ export const resources_inspector = {
           scope: 'Aplicar a',
           scope_pane: 'Esta figura',
           scope_all: 'Todas ({{count}})',
+          scope_style: 'El estilo',
+          scope_style_hint: 'Todas las figuras de esta clase del documento que siguen el estilo',
           this_pane_only: '(esta figura)'
         },
         selection: 'Selección',
@@ -1158,6 +1169,8 @@ export const resources_inspector = {
           scope: 'Anwenden auf',
           scope_pane: 'Diese Abbildung',
           scope_all: 'Alle ({{count}})',
+          scope_style: 'Der Stil',
+          scope_style_hint: 'Alle Abbildungen dieser Art im Dokument, die dem Stil folgen',
           this_pane_only: '(diese Abbildung)'
         },
         selection: 'Auswahl',
@@ -1517,6 +1530,8 @@ export const resources_inspector = {
           scope: 'Applicare a',
           scope_pane: 'Questa figura',
           scope_all: 'Tutte ({{count}})',
+          scope_style: 'Lo stile',
+          scope_style_hint: 'Tutte le figure di questa natura nel documento che seguono lo stile',
           this_pane_only: '(questa figura)'
         },
         selection: 'Selezione',
@@ -1875,6 +1890,8 @@ export const resources_inspector = {
           scope: '应用于',
           scope_pane: '本图',
           scope_all: '全部（{{count}}）',
+          scope_style: '样式',
+          scope_style_hint: '文档中遵循该样式的所有同类图形',
           this_pane_only: '（仅本图）'
         },
         // Portée & cascade de styles
@@ -2238,6 +2255,8 @@ export const resources_inspector = {
           scope: '適用先',
           scope_pane: 'この図',
           scope_all: 'すべて（{{count}}）',
+          scope_style: 'スタイル',
+          scope_style_hint: 'このスタイルに従う、文書内の同種のすべての図',
           this_pane_only: '（この図のみ）'
         },
         // Portée & cascade de styles

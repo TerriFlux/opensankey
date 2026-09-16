@@ -9,6 +9,7 @@ import {
   representation_registry,
   type Type_RepresentationEntry
 } from './RepresentationRegistry'
+import { figureAttribute } from './figureAttribute'
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_Presentable } from '../components/panels/presentation/openPresentation'
 
@@ -116,6 +117,42 @@ describe('os#1361 Class_RepresentationRegistry', () => {
       isAvailable: () => { throw new Error('descripteur absent') }
     }))
     expect(registry.list(diagramContext(app())).map(x => x.id)).toEqual(['ok'])
+  })
+
+  // os#1418 — une nature DECLARE ses attributs de reglage, et le registre les transporte sans
+  // jamais les lire. `{}` pour un id inconnu comme pour une nature qui ne declare rien : le
+  // meme mot, parce que c est la meme reponse - rien a dire de particulier sur ces cles la.
+  it('une entree declare ses attributs et attributesOf les rend', () => {
+    const labels = {
+      en: 'Value mode', fr: 'Mode de valeur', es: 'Modo de valor', de: 'Wertmodus',
+      it: 'Modalita dei valori', 'zh-CN': '数值模式', ja: '値の表示モード'
+    }
+    const roots = {
+      en: 'Root', fr: 'Racine', es: 'Raiz', de: 'Wurzel',
+      it: 'Radice', 'zh-CN': '根节点', ja: 'ルート'
+    }
+    registry.register(entry({
+      id: 'avec',
+      attributes: {
+        value_mode: figureAttribute<string>('percent', 'style', labels),
+        root_ids: figureAttribute<string[] | undefined>(undefined, 'identity', roots)
+      }
+    }))
+    registry.register(entry({ id: 'sans' }))
+
+    const declared = registry.attributesOf('avec')
+    expect(Object.keys(declared).sort()).toEqual(['root_ids', 'value_mode'])
+    expect(declared.value_mode.default).toBe('percent')
+    expect(declared.value_mode.sort).toBe('style')
+    expect(declared.value_mode.category).toBe('figure')
+    expect(declared.value_mode.labels.fr).toBe('Mode de valeur')
+    // Infobulles absentes = les libelles servent des deux cotes.
+    expect(declared.value_mode.tooltips.ja).toBe('値の表示モード')
+    expect(declared.root_ids.default).toBeUndefined()
+    expect(declared.root_ids.sort).toBe('identity')
+
+    expect(registry.attributesOf('sans')).toEqual({})
+    expect(registry.attributesOf('jamais.vu')).toEqual({})
   })
 
   it('all() ne filtre rien : l auteur doit voir ce qu il retire', () => {

@@ -108,6 +108,10 @@ import type { Type_ElementTargetResolver } from './WindowTarget'
 // uniquement : `MenuConfig` ne connaît pas le registre, la portée vit auprès de la liste des
 // réglages liés au sujet, qui est ce qui la borne.
 import type { Type_RepresentationOptionScope } from '../types/MenuConfig'
+// os#1418 - ce qu'une nature DÉCLARE de ses réglages (cf. `attributes` plus bas). Import de TYPE
+// seulement : `Figure` ne connaît pas le registre, et le registre ne fait que transporter la
+// déclaration - il ne l'interprète jamais lui-même.
+import type { Type_FigureAttributesConfig } from './Figure'
 
 /**
  * Les deux échelles que le code confondait (§3.2 de la note). Une entrée en
@@ -333,6 +337,28 @@ type Type_RepresentationCommon = {
    */
   describeContent?: (ctx: Type_RepresentationContext) => string
   /**
+   * os#1418 — CE QUE CETTE NATURE RÈGLE, déclaré clé par clé (cf. Representations/Figure).
+   *
+   * Le patron est celui des nœuds et des flux, `AttributeConfig` d'`ALL_ATTRIBUTES_CONFIG` :
+   * valeur d'usine, type, catégorie, libellés et infobulles dans les sept langues — plus la
+   * SORTE de la clé, qui est ce que les éléments n'avaient pas besoin de dire (les leurs sont
+   * toutes des clés de style). `figureAttribute` écrit tout cela en une ligne.
+   *
+   * POURQUOI DÉCLARER. La déclaration est ce qui fait exister la CASCADE DES STYLES sur une
+   * figure : la nature en tire son style `default` pré-rempli d'usine, `Class_Figure` en tire
+   * les clés qu'elle compose dans `attributes` (le sac que `ctx.options` reçoit), et les trois
+   * sortes décident de ce qu'un style a le droit de porter — 'style' seulement, jamais
+   * 'navigation' (l'axe de décomposition est par figure : Julien a refusé sa propagation,
+   * os#1414) ni 'identity' (le flux de référence d'une étoile, la racine d'un sunburst, qui
+   * n'ont pas d'homologue sur la figure voisine).
+   *
+   * ABSENT, OU CLÉ NON DÉCLARÉE : rien ne casse et rien ne se perd. Une clé qu'aucune nature
+   * ne déclare reste lisible et persistée telle quelle (elle est rapportée, cf.
+   * `Class_FigureMigrationReport`), et sa transposabilité retombe sur la règle d'avant —
+   * `isTransposableOption` de MenuConfig, la liste des réglages liés au sujet.
+   */
+  attributes?: Type_FigureAttributesConfig
+  /**
    * Réglages propres à la représentation, ÉDITÉS PAR L'AUTEUR. `setOptions`
    * reçoit l'objet complet : c'est l'appelant qui le persiste.
    */
@@ -348,14 +374,21 @@ type Type_RepresentationCommon = {
      */
     ctx?: Type_RepresentationContext
     /**
-     * os#1416 — LA PORTÉE que l'auteur a choisie pour ce qu'il règle : cette vignette, ou
-     * toutes celles de la fenêtre. Absente = 'pane', ce que voit toute surface qui ne l'offre
-     * pas (le menu contextuel d'une figure, une fenêtre à une seule vignette).
+     * os#1416 / os#1418 — LA PORTÉE que l'auteur a choisie pour ce qu'il règle. TROIS, depuis
+     * que les figures sont des éléments : cette figure, toutes les figures de la fenêtre, ou
+     * LE STYLE. Absente = 'pane', ce que voit toute surface qui ne l'offre pas (le menu
+     * contextuel d'une figure, une fenêtre à une seule vignette).
      *
-     * L'entrée n'a RIEN à faire de la propagation — l'hôte s'en charge, et il refuse de lui-même
-     * de transposer un réglage lié au sujet (cf. `transposableChanges`). Ce qu'elle a à en
-     * faire, c'est le DIRE : sous une portée « toutes », un réglage qui, lui, restera sur sa
-     * vignette doit s'annoncer tel quel, sinon l'auteur croit l'appliquer partout.
+     * SOUS 'style', CE N'EST PLUS LA FIGURE QU'ON RÈGLE : le volet montre le sac du style
+     * `default` de la nature (cf. `Class_FigureNature.styleBag`) et `setOptions` écrit ce
+     * style, donc toutes les figures qui le suivent sans le surcharger. C'est la portée des
+     * éléments, à l'identique — régler la sélection ou régler le style qu'elle suit.
+     *
+     * L'entrée n'a RIEN à faire de la propagation ni de l'écriture — l'hôte s'en charge, et il
+     * refuse de lui-même ce qui ne se transpose pas (la sorte déclarée par `attributes`, ou à
+     * défaut `isTransposableOption`). Ce qu'elle a à en faire, c'est le DIRE : sous 'all' comme
+     * sous 'style', un réglage qui, lui, restera sur sa figure doit s'annoncer tel quel, sinon
+     * l'auteur croit l'appliquer partout.
      */
     scope?: Type_RepresentationOptionScope
   }) => React.ReactNode
@@ -469,6 +502,18 @@ export class Class_RepresentationRegistry {
 
   public has(id: string): boolean {
     return this._entries.has(id)
+  }
+
+  /**
+   * os#1418 — CE QUE LA NATURE `id` DÉCLARE RÉGLER (cf. le champ `attributes`).
+   *
+   * `{}` pour un id inconnu comme pour une nature qui ne déclare rien, et c'est la MÊME réponse
+   * à dessein : une nature sans déclaration se comporte exactement comme avant ce chantier —
+   * ses clés restent lisibles et persistées, leur transposabilité retombant sur la règle
+   * d'avant. L'appelant n'a donc pas à distinguer les deux cas, ni à se garder d'un `undefined`.
+   */
+  public attributesOf(id: string): Type_FigureAttributesConfig {
+    return this._entries.get(id)?.attributes ?? {}
   }
 
   public get size(): number {
