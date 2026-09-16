@@ -26,14 +26,28 @@
 // donc leurs flux invisibles, donc une valeur nulle. Un sunburst qui lirait `data_value`
 // serait vide partout sauf sur l'anneau affiché — l'exact inverse de ce qu'on lui demande,
 // qui est de montrer d'un coup les niveaux que le Sankey ne donne qu'en dépliant. On
-// somme donc les flux INDÉPENDAMMENT de l'affichage, en gardant la convention de
+// somme donc les flux INDÉPENDAMMENT de l'ÉTAT D'AGRÉGATION, en gardant la convention de
 // `data_value` : max(Σ entrées, Σ sorties), au tag data courant.
+//
+// os#1420 — CE RAISONNEMENT NE VAUT QUE POUR L'AGRÉGATION. Il est resté vrai d'elle et
+// faux de tout le reste : une couronne ignorait AUSSI les filtres d'étiquettes, si bien
+// qu'un anneau continuait de montrer un nœud que l'utilisateur venait d'écarter d'un clic
+// dans la légende, et de compter des flux que le diagramme ne trace plus. La figure SUIT
+// désormais la navigation du diagramme : `passesNodeTagFilters` / `passesLinkTagFilters`
+// (cf. Charts/FigureNavigation) appliquent les filtres d'étiquettes SANS l'agrégation,
+// c'est-à-dire exactement la moitié de `is_visible` qui manquait. Et elle peut ÉPINGLER
+// son étiquette de données : `nav` dit sous quelles coordonnées lire les valeurs — deux
+// couronnes côte à côte, deux millésimes.
 
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_LevelTagGroup } from '../types/TagGroup'
 import { displayedNameOf } from '../Elements/ElementNaming'
+import {
+  FOLLOWING_NAVIGATION, linkValueUnder, passesLinkTagFilters, passesNodeTagFilters
+} from './FigureNavigation'
+import type { Type_FigureNavigation } from './FigureNavigation'
 
 // Registre minimal attendu du diagramme. Structurel plutôt que nominal : le module
 // n'a besoin que de ces deux entrées, et rester sur une forme évite d'attacher le
@@ -126,22 +140,41 @@ export const sunburstDimensions = (
   return [...seen.entries()].map(([id, label]) => ({ id, label }))
 }
 
-// Valeur STRUCTURELLE d'un nœud : max(Σ entrées, Σ sorties) sur TOUS ses flux, au tag
-// data courant. Les liens d'expansion sont exclus — parent↔enfant, ils redisent la même
-// quantité une seconde fois et gonfleraient les deux extrémités.
-export const sunburstNodeValue = (node: Class_NodeElement): number => {
+// Valeur STRUCTURELLE d'un nœud : max(Σ entrées, Σ sorties) sur ses flux que les FILTRES
+// D'ÉTIQUETTES retiennent, quel que soit l'état d'agrégation. Les liens d'expansion sont
+// exclus — parent↔enfant, ils redisent la même quantité une seconde fois et gonfleraient
+// les deux extrémités.
+//
+// LA PRÉFÉRENCE `valueCurrentTarget` (ce qui ARRIVE à un nœud, quand un flux s'effile) est
+// gardée telle quelle quand la figure suit le diagramme. Elle disparaît sous une étiquette
+// épinglée, et c'est un manque assumé : `Link.valueForDataTags` est la seule lecture
+// paramétrée du modèle, et elle ne dit que la valeur SOURCE (il n'existe pas de
+// `valueForDataTagsTarget`). Une couronne épinglée sur un diagramme à flux effilés lira
+// donc la valeur d'émission plutôt que celle de réception — visible seulement sur les
+// diagrammes qui s'en servent, et préférable à une valeur au mauvais millésime.
+export const sunburstNodeValue = (
+  node: Class_NodeElement,
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+): number => {
+  const valueOf = (l: Class_LinkElement, on_target: boolean) => {
+    if (nav.data_tags) return linkValueUnder(l, nav)
+    return on_target ? (l.valueCurrentTarget ?? l.valueCurrent) : l.valueCurrent
+  }
   const sum = (links: Class_LinkElement[], on_target: boolean) => links
-    .filter(l => !l.is_expansion_link)
-    .reduce((acc, l) => acc + ((on_target ? (l.valueCurrentTarget ?? l.valueCurrent) : l.valueCurrent) ?? 0), 0)
+    .filter(l => !l.is_expansion_link && passesLinkTagFilters(l))
+    .reduce((acc, l) => acc + (valueOf(l, on_target) ?? 0), 0)
   return Math.max(
     sum(node.input_links_list as Class_LinkElement[], true),
     sum(node.output_links_list as Class_LinkElement[], false)
   )
 }
 
+// Les enfants de la dimension que les filtres d'étiquettes retiennent. Un enfant écarté
+// par un filtre n'est pas un anneau ; un enfant caché par l'AGRÉGATION en est un — c'est
+// tout le propos de la figure (cf. l'en-tête).
 const childrenOf = (node: Class_NodeElement, dimension_id: string): Class_NodeElement[] => {
   const dim = node.dimensions_as_parent.find((d: Class_NodeDimension) => d.id === dimension_id)
-  return dim ? (dim.children as Class_NodeElement[]) : []
+  return dim ? (dim.children as Class_NodeElement[]).filter(passesNodeTagFilters) : []
 }
 
 const isDisaggregated = (node: Class_NodeElement, dimension_id: string): boolean => {
@@ -158,6 +191,7 @@ const hierarchyRoots = (
   dimension_id: string
 ): Class_NodeElement[] =>
   sankey.nodes_list.filter(node =>
+    passesNodeTagFilters(node) &&
     node.dimensions_as_parent.some((d: Class_NodeDimension) => d.id === dimension_id) &&
     !node.dimensions_as_child.some((d: Class_NodeDimension) => d.id === dimension_id)
   )
@@ -183,6 +217,8 @@ const selectedLevelIndex = (sankey: Type_SunburstSankey, dimension_id: string): 
 interface Type_BuildState {
   dimension_id: string
   value_mode: 'sum' | 'declared'
+  // Sous quelles étiquettes de données lire les valeurs (cf. Charts/FigureNavigation).
+  nav: Type_FigureNavigation
   max_depth: number
   mismatch_count: number
   is_truncated: boolean
@@ -197,7 +233,7 @@ const buildNode = (
   depth: number,
   state: Type_BuildState
 ): Type_SunburstNode => {
-  const declared = sunburstNodeValue(node)
+  const declared = sunburstNodeValue(node, state.nav)
   const base: Type_SunburstNode = {
     id: node.id,
     // Le nom TEL QUE LE DIAGRAMME LE PRODUIT (gabarit, tag, nœud ancêtre) : une couronne
@@ -264,11 +300,16 @@ const buildNode = (
  * @param options axe, périmètre, régime de valeur, profondeur — cf. Type_SunburstOptions
  * @param residual_label libellé du secteur « non réparti » (mode 'declared'), traduit
  *        par l'appelant : ce module ne connaît pas i18n.
+ * @param nav navigation de la FIGURE (os#1420) : sous quelles étiquettes de données lire
+ *        les valeurs. Par défaut elle suit le diagramme, et l'appel à trois arguments
+ *        d'avant ce lot donne alors ce qu'il donnait — aux filtres d'étiquettes près,
+ *        qui s'appliquent désormais dans tous les cas (cf. l'en-tête).
  */
 export const buildSunburstTree = (
   sankey: Type_SunburstSankey,
   options: Type_SunburstOptions = {},
-  residual_label = 'Unallocated'
+  residual_label = 'Unallocated',
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
 ): Type_SunburstTree | null => {
   const dimensions = sunburstDimensions(sankey)
   if (dimensions.length === 0) return null
@@ -282,6 +323,7 @@ export const buildSunburstTree = (
   const state: Type_BuildState = {
     dimension_id: dimension.id,
     value_mode: options.value_mode ?? 'sum',
+    nav,
     max_depth: Math.max(1, options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH),
     mismatch_count: 0,
     is_truncated: false,
