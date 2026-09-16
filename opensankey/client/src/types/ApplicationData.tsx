@@ -252,6 +252,41 @@ export class Class_ApplicationData {
   public get is_main(): boolean { return this.workspace.main === this }
 
   /**
+   * os#1385 (lot 2) — L'IDENTITÉ du document dans son espace de travail.
+   *
+   * Vide tant que le document n'est enregistré nulle part (le temps d'un constructeur), puis
+   * posé une fois pour toutes par `Class_Workspace.registerDocument`. Il nomme l'emplacement de
+   * cache du document (`cache_key`) : c'est son seul lecteur au lot 2, et c'est ce qui permet à
+   * deux documents ouverts d'écrire Ctrl+S sans s'écraser l'un l'autre.
+   */
+  protected _document_id: string = ''
+  public get document_id(): string { return this._document_id }
+
+  /**
+   * Posé par l'espace de travail à l'enregistrement, jamais par le document lui-même — c'est
+   * l'espace qui sait ce qui est unique en son sein. Sans effet si le document en a déjà un :
+   * un identifiant ne change pas en cours de vie, le cache qu'il nomme deviendrait orphelin.
+   */
+  public assignDocumentId(id?: string): void {
+    if (this._document_id !== '') return
+    this._document_id = (id !== undefined && id !== '') ? id : makeId('doc')
+  }
+
+  /**
+   * os#1385 (lot 2) — L'EMPLACEMENT DE CACHE de ce document dans le stockage local.
+   *
+   * Le principal garde `'data'`, mot pour mot : c'est la clé que lit la reprise de session
+   * (`App.tsx`), celle qu'écrivent toutes les versions publiées, et la casser rendrait
+   * inaccessible le travail en cours de tous les utilisateurs au premier déploiement. Les autres
+   * documents écrivent à côté, sous `data:<identifiant>` — l'index qui permettra de les rouvrir
+   * est le lot 3 ; au lot 2 ils sont écrits sans être relus, ce qui est déjà mieux que de voir
+   * un document secondaire écraser le travail du principal.
+   */
+  protected get cache_key(): string {
+    return this.is_main ? 'data' : 'data:' + this._document_id
+  }
+
+  /**
    * Options de la page publiée : lues UNE fois par espace de travail (`window.sankey`), donc
    * communes à tous ses documents. L'objet doit rester le MÊME à chaque lecture : les viewers
    * React mutent ses champs.
@@ -694,7 +729,9 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _history?: Class_ApplicationHistory
-  protected _clipboard_node_ids: string[] = []
+  // os#1385 (lot 2) — `_clipboard_node_ids` a migré dans l'espace de travail
+  // (`Class_Workspace.clipboard`) : un presse-papiers par document ne permettait pas de coller
+  // ce qu'on venait de copier ailleurs, et ne le disait pas.
 
   /**
    * Configuration Menu
@@ -972,6 +1009,13 @@ export class Class_ApplicationData {
   public reinitialization(redraw: boolean = true) {
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
+    // os#1385 (lot 2) — ET LES EMPLACEMENTS DES AUTRES DOCUMENTS. « Tout effacer » ne peut pas
+    // laisser derrière lui les feuilles et les briques écrites à côté (`cache_key`) : elles
+    // reviendraient au prochain index de documents (lot 3) comme des fantômes d'un diagramme
+    // que l'utilisateur croit avoir jeté.
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('data:'))
+      .forEach(k => localStorage.removeItem(k))
     localStorage.removeItem('last_save')
     localStorage.removeItem('initial_data')
     localStorage.removeItem('icon_imported')
@@ -1020,8 +1064,11 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _saveInCache() {
-    // Push to storage
-    localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
+    // Push to storage — os#1385 (lot 2) : à l'emplacement de CE document (cf. `cache_key`).
+    localStorage.setItem(this.cache_key, LZString.compress(JSON.stringify(this._toJSON())))
+    // `last_save` et `last_save_at` restent GLOBAUX, délibérément : il n'y a qu'un bouton
+    // Enregistrer et qu'un horodatage à montrer au survol. Les distinguer par document
+    // demanderait d'abord de montrer lequel, ce que l'écran ne fait pas encore.
     localStorage.setItem('last_save', 'true')
     // sa#424 (lot 4) — HORODATAGE de l'enregistrement, pas seulement son
     // existence : « enregistré » sans date ne dit pas si cela remonte à une
@@ -1730,11 +1777,32 @@ export class Class_ApplicationData {
     if (!sheet || !sheet.json) return null
     const cached = this._sheet_apps[sheet_id]
     if (cached && cached.snapshot === sheet.json) return cached.app
+    // os#1385 (lot 2) — RÉ-ENTRANCE PENDANT LE CHARGEMENT. Depuis que `workspace.active` passe
+    // par ici, un chemin appelé DANS le chargement de l'instantané (l'enregistrement du
+    // document, une synchronisation d'URL) peut redemander la même feuille avant que le cache
+    // ne soit posé — et repartirait pour un chargement, sans fin. Pendant cette fenêtre on
+    // rend la feuille vivante : ce n'est pas le bon modèle, mais c'en est un, et l'appelant
+    // suivant aura le bon.
+    if (this._sheet_apps_loading.has(sheet_id)) return this
+    // L'ANCIENNE APPLICATION S'EN VA D'ABORD. Un instantané périmé laissait
+    // son document dans la liste de l'espace de travail : il n'était plus joignable par
+    // personne, mais comptait encore comme document ouvert (et deux documents auraient porté
+    // le même `document_id`, donc le même emplacement de cache).
+    if (cached) this.workspace.forgetDocument(cached.app)
     const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
-    const app = this._loadSheetSnapshotApplication(json)
+    this._sheet_apps_loading.add(sheet_id)
+    let app: Class_ApplicationData
+    try {
+      app = this._loadSheetSnapshotApplication(json, sheet_id)
+    } finally {
+      this._sheet_apps_loading.delete(sheet_id)
+    }
     this._sheet_apps[sheet_id] = { snapshot: sheet.json, app }
     return app
   }
+
+  /** Feuilles dont l'application de lecture est EN COURS de chargement (cf. `sheetApplication`). */
+  protected _sheet_apps_loading: Set<string> = new Set()
 
   /**
    * Charge un instantané de feuille dans un DOCUMENT HORS ÉCRAN de l'espace de travail.
@@ -1759,9 +1827,15 @@ export class Class_ApplicationData {
    *
    * `draw = false` : ce document n'a pas d'écran. Ce sont les représentations qui dessinent,
    * chacune dans le conteneur que son hôte lui donne.
+   *
+   * os#1385 (lot 2) — L'IDENTIFIANT est celui de la FEUILLE, pas un tirage au sort : son
+   * emplacement de cache doit être le même d'un chargement d'instantané au suivant.
    */
-  protected _loadSheetSnapshotApplication(json_object: Type_JSON): Class_ApplicationData {
-    const app = this.workspace.createDocument({ offscreen: true })
+  protected _loadSheetSnapshotApplication(json_object: Type_JSON, sheet_id?: string): Class_ApplicationData {
+    const app = this.workspace.createDocument({
+      offscreen: true,
+      id: sheet_id !== undefined ? 'sheet:' + sheet_id : undefined
+    })
     app.fromJSON(json_object, {}, false)
     return app
   }
@@ -2370,16 +2444,12 @@ export class Class_ApplicationData {
   // os#1354 — Clés d'état de lecture portées par l'URL. Listées ici parce que la
   // synchronisation doit RETIRER les anciennes avant de reposer les nouvelles : sans ça,
   // désélectionner un axe laisserait sa clé dans l'adresse.
-  private static readonly URL_STATE_KEYS = ['view', 'dt', 'vt', 'lvl', 'ds', 'iv', 'rep']
+  // os#1385 (lot 2) — `sheet` les rejoint : quand un document a plusieurs feuilles, laquelle
+  // est ouverte fait partie de l'état partageable, au même titre que la vue.
+  private static readonly URL_STATE_KEYS = ['view', 'dt', 'vt', 'lvl', 'ds', 'iv', 'rep', 'sheet']
 
   /** Signature du dernier état écrit dans la barre d'adresse — évite un `replaceState` inutile. */
   private _url_state_signature: string | null = null
-
-  /**
-   * Tant que l'état initial de l'URL n'a pas été appliqué, on n'écrit pas : sinon le premier
-   * dessin écraserait les paramètres qu'on s'apprête tout juste à lire.
-   */
-  private _url_sync_enabled: boolean = false
 
   /**
    * Reporte l'état de lecture courant dans la barre d'adresse, sans entrée d'historique
@@ -2396,10 +2466,15 @@ export class Class_ApplicationData {
    * état à lire, mais l'adresse doit tout de même devenir vivante.
    * @memberof Class_ApplicationData
    */
-  public enableUrlStateSync(): void { this._url_sync_enabled = true }
+  public enableUrlStateSync(): void { this.workspace.enableUrlStateSync() }
 
   public syncUrlState(): void {
-    if (!this._url_sync_enabled) return
+    if (!this.workspace.url_sync_enabled) return
+    // os#1385 (lot 2) — SEUL L'ACTIF ÉCRIT DANS L'ADRESSE. Il n'y a qu'une barre d'adresse pour
+    // toute la page : deux documents qui s'y synchronisent se réécrivent l'un l'autre, et
+    // l'adresse finit par décrire le document que l'utilisateur ne regarde pas. Un document
+    // hors écran (instantané de feuille, brique extraite) dessine pourtant, donc appelle ceci.
+    if (this.workspace.active !== this) return
     if (typeof window === 'undefined' || !window.history?.replaceState) return
     const next = this.getUrlStateParams()
     const signature = next.toString()
@@ -2414,13 +2489,21 @@ export class Class_ApplicationData {
       // Une URL exotique (blob:, data:) ne se réécrit pas : l'application continue.
       // eslint-disable-next-line no-console
       console.warn('[OpenSankey] synchronisation de l\'URL impossible', e)
-      this._url_sync_enabled = false
+      this.workspace.url_sync_enabled = false
     }
   }
 
   public getUrlStateParams(): URLSearchParams {
     const params = new URLSearchParams()
     const sankey = this._drawing_area.sankey
+    // os#1385 (lot 2) — LA FEUILLE OUVERTE, quand elle n'est pas celle par défaut. Écrite
+    // seulement par un document qui A des feuilles : l'application de lecture d'une feuille est
+    // mono-feuille (son `current_sheet_id` vaut `''`), donc une fenêtre de feuille devenue
+    // active n'écrit rien — cohérent avec le lot 0, où ces fenêtres ne s'écrivent déjà pas dans
+    // l'adresse (leur identifiant est propre à la session).
+    if (this.has_sheets && this._current_sheet_id !== this._sheets_order[0]) {
+      params.set('sheet', this._current_sheet_id)
+    }
     if (this._current_view_id !== default_main_sankey_id) {
       params.set('view', this._current_view_id)
     }
@@ -2496,6 +2579,7 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public applyUrlStateParams(params: URLSearchParams): void {
+    const sheet_selection = params.get('sheet')
     const view_selection = params.get('view')
     const data_tag_selection = parseJSONRecordParam(params.get('dt'), 'dt')
     const view_tag_selection = parseJSONRecordParam(params.get('vt'), 'vt')
@@ -2507,12 +2591,20 @@ export class Class_ApplicationData {
     // os#1354 — L'état initial de l'URL est LU : à partir d'ici, les dessins suivants peuvent
     // la réécrire sans risque d'écraser ce qu'on n'aurait pas encore appliqué. Posé avant le
     // retour anticipé : une URL sans paramètre doit elle aussi devenir vivante.
-    this._url_sync_enabled = true
+    this.workspace.url_sync_enabled = true
     if (
-      !view_selection && !data_tag_selection && !view_tag_selection &&
+      !sheet_selection && !view_selection && !data_tag_selection && !view_tag_selection &&
       !level_tag_selection && !data_source && !interval_display && representation === null
     ) return
-    // La vue d'abord : le switch reconstruit la drawing area (vue heavy) et applique la
+    // os#1385 (lot 2) — LA FEUILLE AVANT TOUT LE RESTE : basculer de feuille REMPLACE la zone de
+    // dessin (même mécanique qu'une vue lourde), et poser une vue ou des tags avant la bascule
+    // les poserait sur le diagramme qu'on s'apprête à ranger. `switchToSheet` refuse en silence
+    // une feuille qu'il ne connaît pas : une adresse écrite pour un autre fichier ouvre le
+    // fichier tel quel, elle ne casse rien.
+    // `draw = true` : le diagramme est déjà à l'écran quand on arrive ici (`readUrlJSON` l'a
+    // dessiné), et une bascule sans dessin laisserait l'ancienne feuille affichée.
+    if (sheet_selection) this.switchToSheet(sheet_selection, true)
+    // La vue ensuite : le switch reconstruit la drawing area (vue heavy) et applique la
     // visibilité propre de la vue — les sélections de tags se posent PAR-DESSUS.
     if (view_selection) {
       const view_id = this._views_reader.resolveViewIdFromSelection(view_selection)
@@ -2765,29 +2857,44 @@ export class Class_ApplicationData {
   // PROTECTED METHODS ==================================================================
 
   /**
-   * Function to create custom application behavior when we press a key,
+   * FAÇADE DÉPRÉCIÉE (os#1385 lot 2). Poser `document.onkeydown = app.keyboardEventListener(app)`
+   * CAPTURAIT l'application : la frappe partait toujours au même document, quelle que soit la
+   * fenêtre regardée. L'écouteur s'installe désormais par l'espace de travail
+   * (`app.workspace.installKeyboardListener()`), qui résout l'actif à chaque frappe.
    *
-   * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
+   * Conservée pour les consommateurs npm : le paramètre est ignoré, et la fonction rendue fait
+   * la bonne chose (elle passe par l'espace de travail).
    *
-   * @protected
-   * @param {Class_ApplicationData} app_ref
-   * @return {*}
+   * @deprecated cf. `Class_Workspace.installKeyboardListener`
    * @memberof Class_ApplicationData
    */
   public keyboardEventListener(
-    app_ref: Class_ApplicationData
+    _app_ref?: Class_ApplicationData
   ) {
-    return (evt: KeyboardEvent) => { this._keyboardEventProcessing(evt, app_ref) }
+    return (evt: KeyboardEvent) => { this.workspace.dispatchKeyboardEvent(evt) }
   }
 
   /**
-   * Process all keyboard events on application
+   * os#1385 (lot 2) — LE POINT D'ENTRÉE CLAVIER D'UN DOCUMENT. Appelé par
+   * `Class_Workspace.dispatchKeyboardEvent` sur le document ACTIF, résolu à la frappe.
+   * @memberof Class_ApplicationData
+   */
+  public handleKeyboardEvent(evt: KeyboardEvent): void {
+    this._keyboardEventProcessing(evt)
+  }
+
+  /**
+   * Process all keyboard events on application.
+   *
+   * os#1385 (lot 2) — `app_ref` a disparu : il valait TOUJOURS `this` aux quatre sites d'appel,
+   * et la note qui le justifiait (« 'this' prend une autre portée quand on est appelé depuis
+   * onkeydown ») décrivait un problème que la fonction fléchée de l'écouteur règle depuis
+   * longtemps. Le garder était pire qu'inutile : il laissait croire qu'une frappe pouvait viser
+   * un autre document que celui qui la traite, alors que c'est l'espace de travail qui choisit.
    * @param evt
-   * @param app_ref
    */
   protected _keyboardEventProcessing(
-    evt: KeyboardEvent,
-    app_ref: Class_ApplicationData) {
+    evt: KeyboardEvent) {
     // Events booleans ----------------------------------------------------------------
     const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const isMac = navigator.platform.toUpperCase().includes('MAC')
@@ -2833,9 +2940,9 @@ export class Class_ApplicationData {
     // os#1340 — F2 ouvre l'édition inline du nom (comme la frappe directe, mais
     // sans injecter de caractère : le texte existant est sélectionné en entier).
     const evtIsRename = (evt.key === 'F2')
-    const selectedNodes = app_ref.drawing_area.selected_nodes_list
-    const selectedLinks = app_ref.drawing_area.selected_links_list
-    const selectedContainers = app_ref.drawing_area.selected_containers_list
+    const selectedNodes = this.drawing_area.selected_nodes_list
+    const selectedLinks = this.drawing_area.selected_links_list
+    const selectedContainers = this.drawing_area.selected_containers_list
     if (
       (evtIsPrintable || evtIsRename) &&
       evtOnDrawingArea &&
@@ -2863,13 +2970,17 @@ export class Class_ApplicationData {
       evtOnDrawingArea // Avoid using this hotkey in text-inputs
     ) {
       const moved = [
-        ...app_ref.drawing_area.selected_nodes_list,
-        ...app_ref.drawing_area.selected_containers_list
+        ...this.drawing_area.selected_nodes_list,
+        ...this.drawing_area.selected_containers_list
       ]
       if (moved.length > 0) {
+        // os#1385 (lot 2) — DÉPLACER, C'EST ÉDITER : une zone non éditable (page publiée,
+        // document regardé dans une fenêtre) refuse. Rien ne le testait jusqu'ici, parce que
+        // la frappe ne pouvait atteindre qu'un seul document, forcément celui qu'on édite.
+        if (!this.drawing_area.editable) return
         // Ne pas laisser la page défiler pendant qu'on déplace la sélection.
         evt.preventDefault()
-        const step = evt.shiftKey ? app_ref.drawing_area.grid_size : 1
+        const step = evt.shiftKey ? this.drawing_area.grid_size : 1
         const dx = evt.key === 'ArrowLeft' ? -step : (evt.key === 'ArrowRight' ? step : 0)
         const dy = evt.key === 'ArrowUp' ? -step : (evt.key === 'ArrowDown' ? step : 0)
         // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
@@ -2901,34 +3012,36 @@ export class Class_ApplicationData {
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
-      app_ref.menu_configuration.ref_menu_opened.current[1](!app_ref.menu_configuration.ref_menu_opened.current[0])
+      this.menu_configuration.ref_menu_opened.current[1](!this.menu_configuration.ref_menu_opened.current[0])
     }
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
       // Exit style paint mode if active
-      if (app_ref.drawing_area.isInStylePaintMode())
-        app_ref.drawing_area.exitStylePaintMode()
+      if (this.drawing_area.isInStylePaintMode())
+        this.drawing_area.exitStylePaintMode()
       // Échap relâche l'outil de création actif (nœud, flux, zone de texte, ligne),
       // verrouillé ou non, et rend la main à la sélection.
-      else if (app_ref.drawing_area.active_creation_tool !== null)
-        app_ref.drawing_area.setCreationTool(null)
+      else if (this.drawing_area.active_creation_tool !== null)
+        this.drawing_area.setCreationTool(null)
 
       // Deselect all element
-      app_ref.drawing_area.purgeSelection()
+      this.drawing_area.purgeSelection()
 
       // Close all menus
-      app_ref.menu_configuration.closeAllMenus()
-      app_ref.drawing_area.closeAllContextMenus()
+      this.menu_configuration.closeAllMenus()
+      this.drawing_area.closeAllContextMenus()
       // OS#321 — et TOUTES les pop-ups, épinglées ou non : Échap est la demande
       // explicite de rendre l'écran au neutre, l'épingle ne s'y oppose pas (elle
       // ne protège que du clic posé ailleurs). Couvre aussi les présentations
       // d'éléments, que closeAllMenus ne connaît pas.
-      app_ref.menu_configuration.panels.closeAllPopups()
+      this.menu_configuration.panels.closeAllPopups()
     }
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
+      // os#1385 (lot 2) — supprimer, c'est éditer (cf. le nudge plus haut).
+      if (!this.drawing_area.editable) return
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection()
+      this.drawing_area.deleteSelection()
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -2947,21 +3060,21 @@ export class Class_ApplicationData {
 
       // Select all node & links (les zones de la légende sont des conteneurs,
       // déjà couvertes par addAllVisibleElementsToSelection — OS#1254)
-      app_ref.drawing_area.addAllVisibleElementsToSelection()
+      this.drawing_area.addAllVisibleElementsToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------
     else if (evtCtrlS) {
       // Prevent default event on ctrl + s
       evt.preventDefault()
       // Save in cache
-      app_ref.saveInCache()
+      this.saveInCache()
     }
     // event to download current sankey in JSON --------------------------------------
     else if (evtCtrlShiftS) {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via JSON saving button
-      app_ref.saveToJSON()
+      this.saveToJSON()
     }
     // event to download current sankey in Excel -------------------------------------
     else if (evtCtrlAltS) {
@@ -2975,12 +3088,12 @@ export class Class_ApplicationData {
       // Prevent default event (browser find bar)
       evt.preventDefault()
       // Toggle the element search bar (registered by ElementSearchOverlay)
-      app_ref.menu_configuration.ref_toggle_search.current()
+      this.menu_configuration.ref_toggle_search.current()
     }
     // OS#300 Lot 2 — Afficher/masquer la barre latérale (Ctrl+B) --------------------
     else if (evtCtrlB) {
       evt.preventDefault()
-      app_ref.menu_configuration.panels.toggleSidebar()
+      this.menu_configuration.panels.toggleSidebar()
     }
     // Undo
     else if (evtCtrlZ) {
@@ -2996,24 +3109,52 @@ export class Class_ApplicationData {
     else if (evtCtrl && evtKeyD) {
       // Prevent default event on ctrl + d (marque-page navigateur)
       evt.preventDefault()
-      if (app_ref.drawing_area.selected_nodes_list.length > 0 ||
-        app_ref.drawing_area.selected_containers_list.length > 0) {
-        app_ref.drawing_area.duplicateSelection()
-        app_ref.saveInCache()
+      // os#1385 (lot 2) — dupliquer, c'est éditer (cf. le nudge plus haut).
+      if (!this.drawing_area.editable) return
+      if (this.drawing_area.selected_nodes_list.length > 0 ||
+        this.drawing_area.selected_containers_list.length > 0) {
+        this.drawing_area.duplicateSelection()
+        this.saveInCache()
       }
     }
-    // Copy selected nodes
+    // Copy selected nodes — os#1385 (lot 2) : le presse-papiers est de l'ESPACE DE TRAVAIL,
+    // et porte le document d'où le contenu vient. Copier n'est pas éditer : permis partout,
+    // y compris depuis une fenêtre qui regarde une autre feuille.
     else if (evtCtrl && evtKeyC) {
       evt.preventDefault()
-      this._clipboard_node_ids = app_ref.drawing_area.selected_nodes_list.map(n => n.id)
+      this.workspace.clipboard = {
+        source: this,
+        node_ids: this.drawing_area.selected_nodes_list.map(n => n.id)
+      }
     }
     // Paste copied nodes
     else if (evtCtrl && evtKeyV) {
       evt.preventDefault()
-      if (this._clipboard_node_ids.length > 0) {
-        app_ref.drawing_area.copyNodes(this._clipboard_node_ids)
-        app_ref.saveInCache()
+      const clipboard = this.workspace.clipboard
+      if (!clipboard || clipboard.node_ids.length === 0) return
+      if (clipboard.source !== this) {
+        // COLLER ENTRE DOCUMENTS demande une SÉRIALISATION du contenu copié, pas des
+        // identifiants : ceux de A ne désignent rien dans B. C'est le lot 3, avec
+        // l'éditabilité d'un second document. En attendant on le DIT — jusqu'ici, un Ctrl+V
+        // venu d'un autre document ne collait rien et ne disait rien.
+        //
+        // DIT AVANT la garde d'éditabilité, et c'est délibéré : au lot 2, un second document
+        // affiché est précisément NON éditable (`editable` vaut `!is_detached`), donc la garde
+        // avalerait toujours l'explication et l'utilisateur retomberait sur le silence qu'on
+        // vient de corriger. Expliquer n'écrit rien.
+        this.notifyUser(
+          'clipboard_cross_document',
+          this.t('toast.clipboard.cross_document.title'),
+          this.t('toast.clipboard.cross_document.desc'),
+          'info',
+          true
+        )
+        return
       }
+      // os#1385 (lot 2) — coller, c'est éditer (cf. le nudge plus haut).
+      if (!this.drawing_area.editable) return
+      this.drawing_area.copyNodes(clipboard.node_ids)
+      this.saveInCache()
     }
   }
 

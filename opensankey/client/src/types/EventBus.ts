@@ -92,6 +92,32 @@ export const IMPORT_TOPIC = 'import'
 export const SAVE_TOPIC = 'save'
 
 /**
+ * os#1385 (lot 2) — Topic « le document ACTIF vient de changer ».
+ *
+ * Topic d'HÔTE : il n'y a qu'un actif dans l'espace de travail, et son identité est ce que la
+ * moitié des composants d'interface doit suivre (inspecteur, filtres, recherche, barre du bas,
+ * annuler/enregistrer, bannières de vues). Notifié par `Class_Workspace.refreshActive()`, lui-même
+ * abonné à `MAIN_ZONE_TOPIC` : c'est le même geste qui désigne la fenêtre active et le document
+ * qu'elle regarde (D5, « toucher rend actif »).
+ *
+ * Abonné canonique : le crochet `useActiveDocument`. Un composant ne s'abonne pas à ce topic pour
+ * lui-même : il l'appelle et se relie ensuite au document qu'il rend, avec `[app_data]` en
+ * dépendance.
+ */
+export const ACTIVE_DOCUMENT_TOPIC = 'active_document'
+
+/**
+ * os#1385 (lot 2) — Topic « l'historique annuler/rétablir de CE document vient de changer ».
+ *
+ * Topic de DOCUMENT : chaque document a son `Class_ApplicationHistory`, et deux documents ouverts
+ * ont deux piles indépendantes. Notifié par l'historique après chaque appel au slot
+ * `ref_to_menu_updater`, qui garde son titulaire unique (SankeyMenu) ; un topic accepte N abonnés,
+ * et c'est ce qui permet aux boutons annuler/rétablir de suivre l'ACTIF sans voler le slot au
+ * squelette de menus.
+ */
+export const HISTORY_TOPIC = 'history'
+
+/**
  * os#1385 — LES TOPICS DE L'ESPACE DE TRAVAIL, par opposition à ceux du document.
  *
  * Le critère est celui de l'inventaire hôte/document : un topic est d'HÔTE quand ce qu'il
@@ -102,15 +128,20 @@ export const SAVE_TOPIC = 'save'
  * applicative (proposition d'essai, proposition de compte) — aucun de ces cinq ne parle du
  * CONTENU d'un diagramme.
  *
- * Les quatre autres en parlent, et seulement de lui : `DRAW` (ce diagramme vient d'être
- * dessiné), `SELECTION` (ce qui est sélectionné DEDANS), `ZOOM` (l'échelle de SA caméra) et
+ * os#1385 lot 2 — `ACTIVE_DOCUMENT` les rejoint : « quel document est actif » est une propriété
+ * de l'espace de travail, pas d'un document, et l'abonné doit l'entendre quel que soit le document
+ * par la configuration duquel il s'est abonné.
+ *
+ * Les cinq autres en parlent, et seulement de lui : `DRAW` (ce diagramme vient d'être
+ * dessiné), `SELECTION` (ce qui est sélectionné DEDANS), `ZOOM` (l'échelle de SA caméra),
  * `MINIMAP` (le repli de la vignette de SA zone de dessin, état porté par
- * `Class_DrawingArea.minimap_open`). Ils restent donc sur le bus de leur document.
+ * `Class_DrawingArea.minimap_open`) et `HISTORY` (SA pile d'annulation). Ils restent donc sur
+ * le bus de leur document.
  *
  * Lu par `Class_MenuConfig.subscribe` / `notify` pour router chaque signal vers le bon bus.
  */
 export const HOST_TOPICS: ReadonlySet<string> = new Set([
-  MAIN_ZONE_TOPIC, PANELS_TOPIC, LIBRARY_TOPIC, IMPORT_TOPIC, SAVE_TOPIC
+  MAIN_ZONE_TOPIC, PANELS_TOPIC, LIBRARY_TOPIC, IMPORT_TOPIC, SAVE_TOPIC, ACTIVE_DOCUMENT_TOPIC
 ])
 
 export class Class_EventBus {
