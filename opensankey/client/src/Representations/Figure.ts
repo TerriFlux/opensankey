@@ -313,6 +313,20 @@ export class Class_FigureNature {
 export class Class_Figure {
   public readonly key: string
   public readonly nature: Class_FigureNature
+  /**
+   * os#1421 — L'IDENTIFIANT DE DOCUMENT, `null` tant que la figure n'est qu'une vignette.
+   *
+   * Une figure de vignette se nomme par (fenêtre, clé) et MEURT avec sa fenêtre : c'est très bien
+   * pour un réglage qu'on ne voit que là, et impossible à CITER depuis ailleurs. Un placement sur
+   * un nœud cite une figure et doit lui survivre — d'où un second nom, stable et propre au
+   * document (`f_N`), donné par le REGISTRE (`Class_MenuConfig.figureIdOf`) au moment où on pose
+   * la figure quelque part, et à ce moment-là seulement.
+   *
+   * Une figure qui n'a jamais été posée garde donc `null`, ne s'indexe nulle part, et s'écrit
+   * EXACTEMENT comme avant ce lot (les goldens ne bougent pas). C'est la PROMOTION qui coûte deux
+   * clés de plus, et elle n'a lieu que si quelqu'un a besoin de nommer la figure.
+   */
+  public id: string | null = null
   private _storage: Type_OptionBag = {}
   private _style: Class_ElementStyle[]
 
@@ -443,13 +457,29 @@ export class Class_Figure {
 
   // --- persistance ---
 
-  /** `{ attributes?, styles? }`, ou `undefined` quand la figure n'a rien à dire (elle suit le défaut). */
+  /**
+   * `{ attributes?, styles? }`, ou `undefined` quand la figure n'a rien à dire (elle suit le défaut).
+   *
+   * os#1421 — UNE FIGURE PROMUE SE NOMME ELLE-MÊME : `id` et `nature` s'ajoutent, et UNIQUEMENT
+   * pour elle. Deux raisons de ne les écrire qu'alors : une figure de vignette n'en a pas besoin
+   * (sa fenêtre dit sa nature, sa clé dit qui elle est), et les écrire quand même changerait tous
+   * les fichiers d'aujourd'hui. Pour une entrée de REGISTRE, au contraire, ce sont les deux seules
+   * choses qui la rattachent à quelque chose : elle est écrite hors de toute fenêtre, et rien
+   * d'autre ne dirait de quelle nature elle est au moment de la relire.
+   *
+   * Conséquence voulue : une figure promue n'est JAMAIS `undefined`, même vide. Elle a un
+   * référent — un placement la cite — et disparaître du fichier lui ferait perdre ce lien.
+   */
   public toJSON(): Type_JSON | undefined {
     const out: Type_JSON = {}
     const own = this.own
     if (Object.keys(own).length > 0) out['attributes'] = own as Type_JSON
     const followed = this._style.slice(1).map(s => s.id)
     if (followed.length > 0) out['styles'] = followed
+    if (this.id !== null) {
+      out['id'] = this.id
+      out['nature'] = this.nature.id
+    }
     return Object.keys(out).length > 0 ? out : undefined
   }
 
@@ -461,6 +491,11 @@ export class Class_Figure {
   public fromJSON(json: unknown, report: Class_FigureMigrationReport, where: string): void {
     if (!json || typeof json !== 'object' || Array.isArray(json)) return
     const entry = json as Type_JSON
+    // os#1421 — l'identifiant de document, s'il est là. Absent = figure de vignette : `id` reste
+    // `null` et rien ne change. Le registre, lui, repose l'id qu'il a lu de sa clé — ici on ne
+    // fait que ne PAS le perdre quand l'entrée se relit seule.
+    const doc_id = entry['id']
+    if (typeof doc_id === 'string' && doc_id !== '') this.id = doc_id
     const attrs = entry['attributes']
     if (attrs && typeof attrs === 'object' && !Array.isArray(attrs)) {
       const own: Type_OptionBag = {}
