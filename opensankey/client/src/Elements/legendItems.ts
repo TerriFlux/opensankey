@@ -307,6 +307,9 @@ function applyTagStyleFormat(item: Type_LegendItem, style: Type_StyleForLegend |
   if (legendEntryHasSwatch(format)) item.swatch_color = format.swatch?.color ?? fallback_color
 }
 
+// SA#553 — l'entrée « sans étiquette » du #545 n'existe plus : c'est désormais l'entrée ordinaire de
+// l'étiquette générée « Sans [nom du groupe] », que composent les règles de `computeLegendItems`.
+
 /**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
