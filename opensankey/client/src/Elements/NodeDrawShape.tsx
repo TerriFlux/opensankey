@@ -116,20 +116,38 @@ export class NodeDrawShape {
     const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom
     const color = this._node.getShapeColorToUse()
 
-    // OS#1278 — GRAPHIQUE SUR LE NŒUD : si le descripteur du nœud a surfaces.on_node,
-    // le nœud EST une couronne / un histogramme (dessiné par le hook OS+ avec les
-    // couleurs du modèle). On saute alors la forme normale — SAUF si le hook n'a
-    // rien pu dessiner (données vides : dimension/tag supprimé), auquel cas on
-    // retombe sur la forme normale pour ne pas laisser le nœud invisible. Gardé aux
-    // VRAIS nœuds (pas les zones) : la décomposition lit input/output_links_list.
+    // OS#1278 / os#1421 — CE QUE LE NŒUD DESSINE À LA PLACE DE SA FORME.
+    //
+    // Deux façons d'y arriver, et c'est tout ce que ce bloc décide :
+    //   - un PLACEMENT (os#1421) : une figure réglée dans une fenêtre de la grande zone a été
+    //     POSÉE sur ce nœud. C'est un LIEN, pas une copie — changer l'axe de la figure dans
+    //     « Filtres et coordonnées », ou y épingler une étiquette de données, change ce que le
+    //     nœud montre, sans qu'aucun attribut du nœud ne soit réécrit ;
+    //   - le chemin HÉRITÉ d'OS#1278 : la case « afficher sur le nœud » de l'inspecteur, un
+    //     booléen sur le descripteur du nœud, qui fait recalculer une couronne depuis cet attribut.
+    //
+    // On saute la forme normale — SAUF si le hook n'a rien pu dessiner (données vides :
+    // dimension/tag supprimé, figure dont l'axe ne désigne plus rien), auquel cas on retombe sur
+    // la forme normale pour ne pas laisser le nœud invisible. Gardé aux VRAIS nœuds (pas les
+    // zones) : la décomposition lit input/output_links_list.
     const app_data = this._node.drawing_area.application_data
     const analysis = this._node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+    // L'annuaire des figures vit dans la configuration des menus (`Class_MenuConfig`). Interrogé
+    // seulement pour un VRAI nœud : les placements ne se lisent que là où ils peuvent se dessiner.
+    const placed = 'input_links_list' in this._node
+      ? app_data.menu_configuration?.nodePlacedFigure(this._node as unknown as Class_NodeElement)
+      : null
     const g_shape_el = this._node.d3_selection_g_shape?.node() as SVGGElement | null
     if (g_shape_el
-      && analysis?.surfaces?.on_node && (analysis.decompose || analysis.compare)
+      && (placed || (analysis?.surfaces?.on_node && (analysis.decompose || analysis.compare)))
       && typeof app_data.draw_node_analysis_overlay === 'function'
       && 'input_links_list' in this._node) {
-      const drew = app_data.draw_node_analysis_overlay(this._node as unknown as Class_NodeElement, g_shape_el, width, height)
+      // Le sac EFFECTIF de la figure posée est passé au hook, qui n'en fait aujourd'hui rien —
+      // il rejoue la même résolution pour rester le seul point de vérité (cf. `nodeFigureOverlay`,
+      // OS+). Il est au contrat parce qu'un hôte sans annuaire (info-bulle, page) en aura besoin.
+      const drew = app_data.draw_node_analysis_overlay(
+        this._node as unknown as Class_NodeElement, g_shape_el, width, height, placed?.attributes
+      )
       if (drew) return
     }
 
