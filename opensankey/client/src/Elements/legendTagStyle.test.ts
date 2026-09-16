@@ -38,8 +38,17 @@ function makeTag(id: string, style_id?: string, color = '#123456') {
   return { id, name: id, display_name: id.toUpperCase(), color, style_id }
 }
 
+// SA#553 — l'étiquette générée est portée par les éléments sans aucune autre étiquette (du groupe
+// unique de ces tests), comme le calcule `hasGivenTag` des vrais éléments.
 function makeElement(tag_ids: string[]) {
-  return { valueCurrent: 1, hasGivenTag(t: { id: string }) { return tag_ids.includes(t.id) } }
+  return {
+    valueCurrent: 1,
+    hasGivenTag(t: { id: string, is_untagged?: boolean }) { return t.is_untagged ? tag_ids.length === 0 : tag_ids.includes(t.id) }
+  }
+}
+
+function makeUntaggedTag(style_id?: string) {
+  return { id: 'fiab__untagged', name: 'Sans Fiabilité', display_name: 'Sans Fiabilité', color: '#a9a9a9', style_id, is_untagged: true }
 }
 
 const FULL = makeStyle({
@@ -170,36 +179,63 @@ describe('SA#545 — composition d\'une entrée de légende', () => {
   })
 })
 
-describe('SA#545 — entrée « sans étiquette »', () => {
-  const t_untagged = 'Sans étiquette'
+describe('SA#553 — entrée de l\'étiquette générée « Sans [groupe] »', () => {
+  function withUntagged(sankey: Type_SankeyForLegend, style_id?: string) {
+    const group = sankey.node_taggs_list[0]
+    group.tags_list_with_untagged = [...group.selected_tags_list, makeUntaggedTag(style_id)]
+    return sankey
+  }
 
-  it('le groupe porte un style et un élément visible n\'a aucune de ses étiquettes', () => {
-    const sankey = styledSankey({ visible_nodes_list: [makeElement(['full']), makeElement([])] })
-    sankey.node_taggs_list[0].style_id = 'S_color'
-    const items = computeLegendItems(sankey, base_config, { t_untagged })
-    const untagged = items.find(i => i.untagged)
-    expect(untagged).toMatchObject({ text: t_untagged, swatch_color: '#00ff00', block_id: 'legend-block-fiab' })
-    expect(untagged?.format).toEqual({ swatch: { color: '#00ff00' } })
-    // Placée après les étiquettes du groupe
+  it('entrée ordinaire, en dernier : son nom et la forme de son style', () => {
+    const sankey = withUntagged(styledSankey({ visible_nodes_list: [makeElement(['full']), makeElement([])] }), 'S_color')
+    const items = computeLegendItems(sankey, base_config)
+    const untagged = entry(items, 'fiab__untagged')
+    expect(untagged).toMatchObject({
+      id: 'legend-tag-fiab-fiab__untagged', text: 'Sans Fiabilité', swatch_color: '#00ff00',
+      tag_group_id: 'fiab', block_id: 'legend-block-fiab'
+    })
+    expect(untagged.format).toEqual({ swatch: { color: '#00ff00' } })
     expect(items[items.length - 1]).toBe(untagged)
   })
 
-  it('aucune entrée quand tous les éléments visibles portent une étiquette du groupe', () => {
-    const sankey = styledSankey()
-    sankey.node_taggs_list[0].style_id = 'S_color'
-    expect(computeLegendItems(sankey, base_config, { t_untagged }).some(i => i.untagged)).toBe(false)
+  it('sans style : le nom seul, comme toute étiquette sans style d\'un groupe à styles', () => {
+    const sankey = withUntagged(styledSankey({ visible_nodes_list: [makeElement(['full']), makeElement([])] }))
+    const untagged = entry(computeLegendItems(sankey, base_config), 'fiab__untagged')
+    expect(untagged.format).toBeUndefined()
+    expect(untagged.swatch_color).toBeUndefined()
   })
 
-  it('aucune entrée quand le groupe ne porte pas de style', () => {
-    const sankey = styledSankey({ visible_nodes_list: [makeElement([])] })
-    expect(computeLegendItems(sankey, base_config, { t_untagged })).toEqual([])
+  it('forme sans couleur : carré gris, l\'étiquette générée n\'a pas de couleur propre', () => {
+    const sankey = withUntagged(styledSankey({
+      visible_nodes_list: [makeElement([])],
+      styles_dict: { S_shape: makeStyle({ shape_opacity: 0.5 }) }
+    }), 'S_shape')
+    expect(entry(computeLegendItems(sankey, base_config), 'fiab__untagged').swatch_color).toBe('#a9a9a9')
+  })
+
+  it('aucune entrée quand tous les éléments visibles portent une étiquette du groupe', () => {
+    const sankey = withUntagged(styledSankey(), 'S_color')
+    expect(computeLegendItems(sankey, base_config).some(i => i.tag_id === 'fiab__untagged')).toBe(false)
+  })
+
+  it('désélectionnée : entrée atténuée, portée par un élément du diagramme', () => {
+    const sankey = withUntagged(styledSankey({ nodes_list: [makeElement([])], links_list: [] }), 'S_color')
+    const group = sankey.node_taggs_list[0]
+    const untagged = { ...makeUntaggedTag('S_color'), is_selected: false }
+    group.tags_list_with_untagged = [...group.selected_tags_list, untagged]
+    expect(entry(computeLegendItems(sankey, base_config), 'fiab__untagged').dimmed).toBe(true)
+  })
+
+  it('groupe qui colore par couleur d\'étiquette : pas d\'entrée, la légende est inchangée', () => {
+    const sankey = withUntagged(styledSankey({ visible_nodes_list: [makeElement(['full']), makeElement([])] }))
+    sankey.node_taggs_list[0].uses_tag_styles = false
+    expect(computeLegendItems(sankey, base_config).some(i => i.tag_id === 'fiab__untagged')).toBe(false)
   })
 
   it('un groupe dont seuls des éléments SANS étiquette sont visibles garde son titre et son entrée au rendu', () => {
-    const sankey = styledSankey({ visible_nodes_list: [makeElement([])] })
-    sankey.node_taggs_list[0].style_id = 'S_color'
-    const rendered = renderableLegendItems(computeLegendItems(sankey, base_config, { t_untagged }))
-    expect(rendered.map(i => i.id)).toEqual(['legend-group-fiab', 'legend-untagged-fiab'])
+    const sankey = withUntagged(styledSankey({ visible_nodes_list: [makeElement([])] }), 'S_color')
+    const rendered = renderableLegendItems(computeLegendItems(sankey, base_config))
+    expect(rendered.map(i => i.id)).toEqual(['legend-group-fiab', 'legend-tag-fiab-fiab__untagged'])
   })
 })
 
