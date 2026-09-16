@@ -190,7 +190,7 @@ export type Type_SheetEntry = {
   name: string
   /**
    * Snapshot gzip du diagramme complet de la feuille (JSON du document SANS la clé
-   * racine `sheets` — cf. `_currentDiagramAsSheetJSON`). `undefined` pour la feuille
+   * racine `sheets` — cf. `toSheetContentJSON`). `undefined` pour la feuille
    * COURANTE : son contenu est l'état vivant (drawing_area + vues), rafraîchi ici à
    * chaque bascule / sauvegarde.
    */
@@ -311,6 +311,93 @@ export class Class_ApplicationData {
 
   /** True hors mode publish, ou en publish si l'option `editable` est activée. */
   public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
+
+  /**
+   * os#1385 (lot 3, D4) — LE DROIT D'ÉDITION DE CE DOCUMENT-CI.
+   *
+   * `is_editable` dit ce que la PAGE permet (éditeur, ou page publiée avec l'option
+   * `editable`) : c'est une propriété de l'espace de travail, la même pour tous ses documents.
+   * Ce drapeau-ci dit ce que CE document permet, et c'est une notion distincte : deux documents
+   * ouverts côte à côte dans la même page n'ont aucune raison d'être modifiables tous les deux
+   * au même instant.
+   *
+   * Vrai par défaut — un document qu'on ouvre, on l'édite. Faux pour un document créé HORS
+   * ÉCRAN (cf. `Class_Workspace.createDocument`), qui n'a personne devant lui. La phase B le
+   * repasse à vrai quand elle donne un cadre à la feuille, et à faux quand elle le lui retire.
+   *
+   * Ce qui compte est ce qu'on ne lit PLUS : la PLACE à l'écran ne décide plus du droit
+   * d'éditer (`DrawingArea.is_detached` ne parle que de géométrie, cf. D4). Un document peut
+   * être affiché hors du conteneur principal et modifiable ; un autre peut être dans le
+   * conteneur principal et en lecture seule.
+   */
+  protected _edition_allowed: boolean = true
+  public get edition_allowed(): boolean { return this._edition_allowed }
+  public set edition_allowed(_: boolean) { this._edition_allowed = _ }
+
+  /**
+   * os#1385 (lot 3, D4) — CE DOCUMENT EST-IL MODIFIABLE, MAINTENANT ? Droit de la PAGE ×
+   * droit du DOCUMENT. C'est ce que lit `Class_DrawingArea.editable`, qui y ajoute la seule
+   * question qui reste de son ressort : « suis-je la zone VIVANTE de ce document ? » (une zone
+   * fabriquée à côté — board unitaire, source de mise en page, vue extraite en coulisse — ne
+   * s'édite pas, quel que soit le droit du document).
+   */
+  public get editable(): boolean { return this.is_editable && this._edition_allowed }
+
+  /**
+   * os#1385 (lot 3, D6) — LE DOCUMENT QUI PORTE LE FICHIER DONT CELUI-CI EST UNE FEUILLE.
+   *
+   * Posé par `sheetApplication` sur le document de feuille, null partout ailleurs (un document
+   * ouvert depuis un fichier est son propre porteur). Il n'a qu'un rôle, mais il est central :
+   * ENREGISTRER DEPUIS LA FEUILLE B ENREGISTRE LE FICHIER, dont B fait partie (cf. `saveInCache`
+   * et `saveToJSON`). Une feuille n'est pas un fichier.
+   */
+  protected _file_holder: Class_ApplicationData | null = null
+  public get file_holder(): Class_ApplicationData | null { return this._file_holder }
+  public set file_holder(_: Class_ApplicationData | null) { this._file_holder = _ }
+
+  /**
+   * os#1385 (lot 3, D6) — CE DOCUMENT A CESSÉ DE VIVRE (cf. `dispose()`).
+   *
+   * Un document disposé n'est plus la vérité de quoi que ce soit : `sheetsToJSON` ne le
+   * sérialise pas, l'espace de travail l'a oublié, et sa zone de dessin est démontée. Le
+   * drapeau existe pour que les détenteurs d'une référence tardive — une fenêtre en cours de
+   * fermeture, un effet React qui se dénoue — puissent le constater sans jeter.
+   */
+  protected _disposed: boolean = false
+  public get disposed(): boolean { return this._disposed }
+
+  /**
+   * os#1385 (lot 3, D6) — FAIRE CESSER DE VIVRE CE DOCUMENT : il n'est plus affiché, plus
+   * joignable, et ce qu'il portait a déjà été remis en instantané par l'appelant s'il y avait
+   * lieu (cf. `releaseSheetDocument`).
+   *
+   * IDEMPOTENT, et ce n'est pas une politesse : les trois chemins qui en appellent — la
+   * bascule d'onglet vers la feuille, la suppression de la feuille, le chargement d'un autre
+   * fichier — peuvent se croiser sur la même feuille.
+   *
+   * LE DOCUMENT PRINCIPAL NE SE DISPOSE PAS : il est l'application elle-même, sa zone de
+   * dessin est celle de l'écran, et la démonter reviendrait à effacer le diagramme de
+   * l'utilisateur. On refuse plutôt que de faire confiance à l'appelant.
+   */
+  public dispose(): void {
+    if (this._disposed || this.is_main) return
+    this._disposed = true
+    // La zone de dessin d'abord : `unDraw` retire son SVG du conteneur (vide, pour un
+    // document hors écran — d3 travaille alors sur une sélection vide, cf. `detachOffscreen`),
+    // `delete` purge la sélection, le lien fantôme et les éléments contextualisés, c'est-à-dire
+    // les références croisées qui retiendraient tout le modèle en mémoire.
+    this._drawing_area?.unDraw()
+    this._drawing_area?.delete()
+    // Un historique neuf : chaque entrée est une FERMETURE qui capture des nœuds, des flux et
+    // une zone de dessin morts. Les garder ne servirait qu'à les empêcher d'être collectés.
+    if (this._menu_configuration) this._history = new Class_ApplicationHistory(this._menu_configuration)
+    // Plus d'écran, donc plus de droit d'édition : une référence tardive (un effet React qui
+    // se dénoue, une fenêtre en cours de fermeture) ne doit pas écrire dans un modèle mort.
+    // `_file_holder` est GARDÉ : un « Enregistrer » parti juste avant doit encore savoir
+    // quel fichier il visait.
+    this._edition_allowed = false
+    this.workspace.forgetDocument(this)
+  }
 
   /**
    * os#1365 — ARBITRE UNIQUE entre les deux sélecteurs de la topbar : la navigation entre
@@ -685,18 +772,18 @@ export class Class_ApplicationData {
 
   /** Id de la feuille courante ('' tant que le document n'a pas de feuilles). */
   protected _current_sheet_id: string = ''
-  // Vrai pendant qu'un contenu de feuille se charge via fromJSON (cf. _loadSheetContent) :
-  // coupe la redirection « fichier sans feuilles -> feuille courante » de fromJSON.
-  protected _loading_into_sheet: boolean = false
+  // os#1385 (lot 3) — `_loading_into_sheet` a disparu : le fait qu'il portait (« ce
+  // chargement-ci reste dans le fichier ouvert ») est désormais une OPTION du chargement,
+  // `keep_file_state`, lue par `fromJSON` et par `_loadSheetContent`.
   public get current_sheet_id() { return this._current_sheet_id }
 
   /** True dès que le document porte des feuilles nommées (au moins une entrée). */
   public get has_sheets(): boolean { return this._sheets_order.length > 0 }
 
   /**
-   * os#1386 — Applications de LECTURE des feuilles NON courantes, par id de feuille, avec
-   * l'instantané dont elles sont issues. Voir `sheetApplication` pour le pourquoi, la
-   * politique d'invalidation et le contrat de lecture seule.
+   * os#1386 / os#1385 (lot 3) — DOCUMENTS VIVANTS des feuilles NON courantes, par id de
+   * feuille, avec l'instantané dont ils sont issus. Voir `sheetApplication` pour le pourquoi
+   * et la politique d'invalidation, `releaseSheetDocument` pour la sortie.
    */
   protected _sheet_apps: { [id: string]: { snapshot: Uint8Array, app: Class_ApplicationData } } = {}
 
@@ -967,14 +1054,53 @@ export class Class_ApplicationData {
    * @protected
    * @memberof Class_ApplicationData
    */
-  public reset(_?: Type_JSON) {
-    // Reset drawing area
-    const by_pass_redraw = this._drawing_area.bypass_redraws
-    this._file_name = default_file_name
+  public reset(kwargs?: Type_JSON) {
+    // os#1385 (lot 3, D6) — `reset()` DISAIT DEUX CHOSES À LA FOIS : « oublie le FICHIER »
+    // (les feuilles, leurs documents, la provenance) et « repars d'un DIAGRAMME neuf » (la
+    // zone de dessin, l'historique, la doc, les réglages de publication). Charger le contenu
+    // d'une feuille n'a besoin que du second, d'où le stash/restore que `_loadSheetContent`
+    // faisait autour de l'appel — et d'où la provenance perdue à chaque bascule d'onglet
+    // (inventaire 4 §2, « ce qui est PERDU »). Les deux gestes sont maintenant nommés.
+    //
+    // `only_current_view` SAUTE le premier : c'est un rafraîchissement de la vue courante
+    // (réconciliation dans une vue, « vider la vue ») et la branche OSP correspondante ne
+    // touchait déjà ni au fichier ni au reste du document. Le fichier n'est pas concerné.
+    if (!(kwargs && kwargs['only_current_view'])) this.resetFile()
+    this.resetDocument(kwargs)
+  }
+
+  /**
+   * os#1385 (lot 3, D6) — OUBLIER LE FICHIER : ses feuilles, les documents vivants qui les
+   * portent, et sa provenance. C'est la moitié de l'ancien `reset()` qu'une bascule de feuille
+   * ne doit PAS faire — elle reste dans le même fichier.
+   */
+  public resetFile(): void {
+    // OS#85 — Les feuilles appartiennent au FICHIER : en charger un autre les efface.
+    this._sheets = {}
+    this._sheets_order = []
+    this._current_sheet_id = ''
+    // os#1386/os#1385 — et donc les documents qui les portent : ils sont le modèle d'un
+    // fichier qui n'est plus ouvert. `dispose()` démonte leur zone de dessin et les retire
+    // de l'espace de travail (cf. `sheetApplication`).
+    this._clearSheetApplications()
     // Provenance sankeythèque : un autre diagramme est chargé, celui d'avant n'est
     // plus à l'écran — le réenregistrement en place doit donc redevenir impossible.
     // (Le chargement d'une étude la repose juste après, cf. loadJsonTemplate.)
+    // Ici, et non dans `resetDocument` : une bascule de feuille reste DANS l'étude ouverte,
+    // et lui faire perdre son « réenregistrer en place » n'avait aucune raison d'être.
     this._sankeytheque_origin = null
+  }
+
+  /**
+   * os#1385 (lot 3, D6) — REPARTIR D'UN DIAGRAMME NEUF, sans rien dire du fichier : zone de
+   * dessin, historique, nom, brique, doc, réglages de publication. C'est ce que fait un
+   * chargement de contenu de feuille, et c'est ce que surcharge OpenSankey+ (vues, contextes,
+   * vignettes — y compris la branche `only_current_view`, qui ne recrée que la zone).
+   */
+  public resetDocument(_?: Type_JSON): void {
+    // Reset drawing area
+    const by_pass_redraw = this._drawing_area.bypass_redraws
+    this._file_name = default_file_name
     // sa#399 — Nouveau document = nouvelle brique : la référence bibliothèque ne survit
     // qu'au travers du JSON (fromJSON la repose juste après si le fichier la porte).
     this._library_ref = null
@@ -983,15 +1109,6 @@ export class Class_ApplicationData {
     this._documentation_images = {}
     // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
     this._publish_settings = {}
-    // OS#85 — Les feuilles appartiennent au DOCUMENT : en charger un autre les efface.
-    // Les bascules de feuille, qui passent par fromJSON (donc par ici), préservent
-    // l'état autour de l'appel (cf. _loadSheetContent).
-    this._sheets = {}
-    this._sheets_order = []
-    this._current_sheet_id = ''
-    // os#1386 — et donc leurs applications de lecture : elles portent le modèle d'un
-    // document qui n'est plus ouvert (cf. `sheetApplication`).
-    this._clearSheetApplications()
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -1046,7 +1163,14 @@ export class Class_ApplicationData {
    *
    * @memberof Class_ApplicationData
    */
-  public saveInCache() {
+  public saveInCache(): void {
+    // os#1385 (lot 3, D6) — ENREGISTRER DEPUIS LA FEUILLE B ENREGISTRE LE FICHIER, dont B fait
+    // partie. Une feuille n'est pas un fichier : son document est une PARTIE du document
+    // porteur, et c'est le porteur qui sait écrire les autres feuilles à côté d'elle. Le
+    // détour n'est pas une perte de fidélité, c'est le contraire : `sheetsToJSON` du porteur
+    // sérialise B EN L'APPELANT tant qu'elle est vivante — l'état à l'écran part dans le
+    // fichier, pas l'instantané d'avant. C'est très exactement le point de D6.
+    if (this._file_holder) return this._file_holder.saveInCache()
     this.sendWaitingToast(
       () => {
         // Read json file
@@ -1154,7 +1278,12 @@ export class Class_ApplicationData {
    *
    * @memberof Class_ApplicationData
    */
-  public saveToJSON(kwargs?: Type_JSON) {
+  public saveToJSON(kwargs?: Type_JSON): void {
+    // os#1385 (lot 3, D6) — même règle qu'`saveInCache` : « Enregistrer sous » depuis une
+    // fenêtre ouverte sur la feuille B écrit LE FICHIER, feuilles comprises, et non le
+    // diagramme de B tout seul. Exporter B seule reste possible, mais c'est un autre geste
+    // (« exporter cette feuille »), qui devra le dire.
+    if (this._file_holder) return this._file_holder.saveToJSON(kwargs)
     this.sendWaitingToast(
       async () => {
         await this.beforeSaveToJSON()
@@ -1356,11 +1485,15 @@ export class Class_ApplicationData {
     // « ouvrir dans une nouvelle feuille » (bibliothèque) la posent, eux, à `true`.
     //
     // Un fichier AVEC feuilles reste un DOCUMENT complet : il remplace tout, feuilles
-    // comprises — même quand l'option est demandée. La garde `_loading_into_sheet` coupe
-    // la récursion : _loadSheetContent repasse par fromJSON pour poser le contenu, et lui
-    // seul doit faire le vrai reset.
+    // comprises — même quand l'option est demandée.
+    //
+    // os#1385 (lot 3) — la garde qui coupe la récursion n'est plus un drapeau d'instance
+    // (`_loading_into_sheet`) mais l'option qui la décrit : `keep_file_state`. C'est le même
+    // fait dit une seule fois — « ce chargement-ci n'ouvre pas un autre fichier, il pose un
+    // contenu dans le fichier déjà ouvert » — et il sert aussi, plus bas, à sauter `resetFile`.
     const into_current_sheet = Boolean(kwargs && kwargs['into_current_sheet'])
-    if (into_current_sheet && this.has_sheets && !this._loading_into_sheet && !json_object['sheets']) {
+    const keep_file_state = Boolean(kwargs && kwargs['keep_file_state'])
+    if (into_current_sheet && this.has_sheets && !keep_file_state && !json_object['sheets']) {
       this._loadSheetContent(json_object, draw)
       this.menu_configuration?.ref_to_sheet_tabs_updater.current()
       return
@@ -1369,8 +1502,11 @@ export class Class_ApplicationData {
     //   () => {
     // Always bypass redrawings
     this._drawing_area.bypass_redraws = true
-    // Reset everything
-    this.reset(kwargs)
+    // Reset everything — os#1385 (lot 3) : le FICHIER n'est oublié que si on en ouvre un autre.
+    // `keep_file_state` = « je charge un contenu DANS le fichier ouvert » (bascule de feuille,
+    // nouvelle feuille) : les feuilles, leurs documents vivants et la provenance traversent.
+    if (!keep_file_state) this.resetFile()
+    this.resetDocument(kwargs)
     this._drawing_area.bypass_redraws = true
     // Read json file
     // os#1377 — le temps de la lecture, on annonce à qui lit le fichier qu'un dessin complet
@@ -1538,8 +1674,22 @@ export class Class_ApplicationData {
       const sheet = this._sheets[id]
       if (!sheet) return
       const entry = { name: sheet.name } as Type_JSON
-      if (id !== this._current_sheet_id && sheet.json) {
-        entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+      if (id !== this._current_sheet_id) {
+        // os#1385 (lot 3, D6) — UN DOCUMENT VIVANT EST LA VÉRITÉ, son instantané ne l'est
+        // plus. Depuis qu'une feuille ouverte dans une fenêtre est ÉDITABLE, son instantané
+        // date du moment où elle a cessé d'être courante : l'enregistrer reviendrait à jeter
+        // tout ce que l'utilisateur vient d'y faire. On la sérialise donc EN L'APPELANT.
+        //
+        // `toSheetContentJSON()` enveloppe SA zone de dessin dans `withBypassRedraws`, pas
+        // celle du porteur : la sérialisation OSP d'un document à vues recapture la vue
+        // courante depuis la zone vivante, et c'est la zone de CE document-là qu'il ne faut
+        // pas laisser redessiner pendant qu'on la lit.
+        const live = this._sheet_apps[id]?.app
+        if (live && !live.disposed) {
+          entry['json'] = live.toSheetContentJSON()
+        } else if (sheet.json) {
+          entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+        }
       }
       entries[id] = entry
     })
@@ -1596,39 +1746,37 @@ export class Class_ApplicationData {
   }
 
   /**
-   * Contenu de la feuille courante = sérialisation COMPLÈTE du document (diagramme + vues +
-   * doc + réglages) SANS la clé racine `sheets` — c'est exactement ce que serait le fichier
-   * si cette feuille était seule.
+   * Contenu de CE document comme contenu de feuille : sérialisation COMPLÈTE (diagramme +
+   * vues + doc + réglages) SANS la clé racine `sheets` — c'est exactement ce que serait le
+   * fichier si cette feuille était seule.
+   *
+   * PUBLIQUE depuis os#1385 (lot 3) : ce n'est plus seulement « ma feuille courante », c'est
+   * « mon contenu, vu comme une feuille » — et c'est ce que le document PORTEUR demande à
+   * chaque document de feuille vivant quand il sérialise le fichier (cf. `sheetsToJSON`).
    */
-  protected _currentDiagramAsSheetJSON(): Type_JSON {
+  public toSheetContentJSON(): Type_JSON {
     return this.drawing_area.withBypassRedraws(() => this._toJSON({ without_sheets: true }) as Type_JSON)
   }
 
   /**
-   * Charge le contenu d'une feuille via fromJSON en PRÉSERVANT l'état feuilles : fromJSON
-   * passe par reset(), qui efface `_sheets` (sémantique « nouveau document ») et REMPLACE
-   * la drawing_area — d'où le stash/restore, et l'usage exclusif des accesseurs ensuite.
+   * Charge le contenu d'une feuille dans CE document, en restant DANS le fichier ouvert.
+   *
+   * os#1385 (lot 3) — PLUS DE STASH/RESTORE. `fromJSON` passait par `reset()`, qui effaçait
+   * les feuilles (sémantique « j'ouvre un autre fichier »), et il fallait sauver puis
+   * replacer `_sheets`, `_sheets_order`, `_current_sheet_id` et `_sheet_apps` autour de
+   * l'appel. La séparation `resetFile()` / `resetDocument()` rend le contournement inutile :
+   * `keep_file_state` dit que le fichier n'est pas concerné, et rien n'est effacé.
+   *
+   * Ce que le contournement ne rattrapait PAS, et qui est réparé du même coup : la provenance
+   * sankeythèque, qu'il n'avait pas pensé à sauver — une étude ouverte depuis la galerie
+   * perdait son « réenregistrer en place » à la première bascule d'onglet (inventaire 4 §2).
    */
   protected _loadSheetContent(json_object: Type_JSON, draw: boolean): void {
-    const sheets = this._sheets
-    const order = this._sheets_order
-    const current = this._current_sheet_id
-    // os#1386 — les applications de lecture des AUTRES feuilles traversent l'opération :
-    // une bascule de feuille ne change pas leurs instantanés, donc les recharger serait
-    // payer O(feuille) pour un modèle identique. Celle de la feuille qu'on vient de quitter
-    // s'invalide toute seule, parce que `_snapshotCurrentSheet` a réécrit son instantané et
-    // que le cache compare la RÉFÉRENCE (cf. `sheetApplication`).
-    const sheet_apps = this._sheet_apps
-    this._loading_into_sheet = true
-    try {
-      this.fromJSON(json_object, undefined, draw)
-    } finally {
-      this._loading_into_sheet = false
-    }
-    this._sheets = sheets
-    this._sheets_order = order
-    this._current_sheet_id = current
-    this._sheet_apps = sheet_apps
+    // os#1386 — les documents des AUTRES feuilles traversent l'opération : une bascule de
+    // feuille ne change pas leurs instantanés, donc les recharger serait payer O(feuille)
+    // pour un modèle identique. La feuille CIBLE, elle, a été libérée par `switchToSheet`
+    // avant qu'on n'en lise l'instantané : son document ne peut plus être périmé.
+    this.fromJSON(json_object, { keep_file_state: true } as Type_JSON, draw)
   }
 
   /**
@@ -1646,7 +1794,7 @@ export class Class_ApplicationData {
   /** Rafraîchit le snapshot gzip de la feuille courante depuis l'état vivant. */
   protected _snapshotCurrentSheet(): void {
     const current = this._sheets[this._current_sheet_id]
-    if (current) current.json = compressJSONToGzip(this._currentDiagramAsSheetJSON())
+    if (current) current.json = compressJSONToGzip(this.toSheetContentJSON())
   }
 
   /**
@@ -1706,8 +1854,17 @@ export class Class_ApplicationData {
     if (!this.has_sheets || id === this._current_sheet_id) return
     const target = this._sheets[id]
     if (!target || !target.json) return
+    // os#1385 (lot 3, D6) — LA CIBLE CESSE DE VIVRE AVANT QU'ON N'EN LISE L'INSTANTANÉ.
+    // Si une fenêtre l'avait ouverte et qu'on y a travaillé, son instantané date d'avant :
+    // le charger tel quel afficherait un diagramme périmé et perdrait le travail. On le
+    // réécrit donc depuis le document vivant, puis on dispose celui-ci — la feuille devient
+    // courante, elle EST l'état vivant, il n'y a plus de second document à tenir.
+    this.releaseSheetDocument(id)
+    // Relu APRÈS la libération : c'est elle qui vient, le cas échéant, de réécrire l'instantané.
+    const target_snapshot = this._sheets[id]?.json
+    if (!target_snapshot) return
     this._snapshotCurrentSheet()
-    const target_json = JSON.parse(pako.inflate(target.json, { to: 'string' })) as Type_JSON
+    const target_json = JSON.parse(pako.inflate(target_snapshot, { to: 'string' })) as Type_JSON
     this._loadSheetContent(target_json, draw)
     this._current_sheet_id = id
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
@@ -1735,11 +1892,12 @@ export class Class_ApplicationData {
       this.switchToSheet(fallback, draw)
     }
     delete this._sheets[id]
-    // os#1386 — plus d'instantané, donc plus d'application de lecture. Les fenêtres qui
+    // os#1386 — plus d'instantané, donc plus de document de feuille. Les fenêtres qui
     // pointaient cette feuille le découvriront par `sheetApplication`, qui rend `null`,
-    // et le diront à l'écran. os#1385 — et l'espace de travail cesse de la compter.
-    const dropped = this._sheet_apps[id]
-    if (dropped) this.workspace.forgetDocument(dropped.app)
+    // et le diront à l'écran. os#1385 (lot 3) — `dispose()` et NON `releaseSheetDocument` :
+    // la feuille n'existe plus, il n'y a aucun instantané à réécrire, seulement un document
+    // à démonter et à retirer de l'espace de travail.
+    this._sheet_apps[id]?.app.dispose()
     delete this._sheet_apps[id]
     const idx = this._sheets_order.indexOf(id)
     if (idx >= 0) this._sheets_order.splice(idx, 1)
@@ -1759,9 +1917,46 @@ export class Class_ApplicationData {
   // sankey — et rien dans l'arbre ne sait tracer une couronne depuis un dictionnaire JSON.
   // L'instantané d'une feuille doit donc être CHARGÉ, dans une application à part, et c'est
   // très exactement ce que l'issue demande : « rendre depuis l'instantané ».
+  //
+  // os#1385 (lot 3, D6) — CE N'EST PLUS UNE APPLICATION DE LECTURE, C'EST UN DOCUMENT VIVANT.
+  // Le contrat « lecture seule » d'os#1386 tombe : le document d'une feuille ouverte dans une
+  // fenêtre s'édite dès qu'on lui en donne le droit (`edition_allowed`), et c'est LUI la
+  // vérité de cette feuille tant qu'il vit — `sheetsToJSON` le sérialise en l'appelant, et
+  // l'instantané n'est réécrit qu'au moment où il cesse de vivre (`releaseSheetDocument`).
 
   /**
-   * L'application qui porte le modèle d'une feuille, prête à être lue.
+   * os#1385 (lot 3, D6) — REMETTRE UNE FEUILLE EN INSTANTANÉ ET LIBÉRER SON DOCUMENT.
+   *
+   * Le geste symétrique de `sheetApplication` : « cette feuille cesse de vivre ». On écrit
+   * d'abord l'instantané DEPUIS le document vivant — c'est lui la vérité, celui d'avant est
+   * périmé de tout ce qu'on y a fait —, puis on démonte le document.
+   *
+   * Publique parce que c'est la phase B qui l'appellera en fermant la fenêtre d'une feuille.
+   * Sans effet quand la feuille n'a pas de document vivant, ou quand c'est la feuille
+   * courante (elle EST l'état vivant, il n'y a rien à libérer).
+   */
+  public releaseSheetDocument(sheet_id: string): void {
+    const entry = this._sheet_apps[sheet_id]
+    if (!entry) return
+    delete this._sheet_apps[sheet_id]
+    const sheet = this._sheets[sheet_id]
+    if (sheet && !entry.app.disposed) {
+      sheet.json = compressJSONToGzip(entry.app.toSheetContentJSON())
+    }
+    // Le verrou du chargement, posé ici pour la raison SYMÉTRIQUE : `dispose()` retire le
+    // document de l'espace de travail, ce qui recalcule l'ACTIF — et si une fenêtre regarde
+    // encore cette feuille, résoudre l'actif repasse par `sheetApplication`, qui rechargerait
+    // à l'instant le document qu'on est en train de libérer.
+    this._sheet_apps_loading.add(sheet_id)
+    try {
+      entry.app.dispose()
+    } finally {
+      this._sheet_apps_loading.delete(sheet_id)
+    }
+  }
+
+  /**
+   * Le DOCUMENT qui porte le modèle d'une feuille.
    *
    * Rend `this` pour la feuille COURANTE (elle est l'état vivant, il n'y a rien à charger)
    * et pour un `sheet_id` vide (un sujet sans feuille désigne la feuille courante, c'est la
@@ -1778,19 +1973,22 @@ export class Class_ApplicationData {
    *  - L'INSTANTANÉ LUI-MÊME est la clé, par l'identité de son `Uint8Array` et non par un
    *    hachage : `_snapshotCurrentSheet` REMPLACE le tableau chaque fois qu'une feuille
    *    cesse d'être courante, et `sheetsFromJSON` les recrée tous. Comparer la référence
-   *    suffit donc à voir « cette feuille a changé », pour un coût nul. C'est aussi ce qui
-   *    rend une BASCULE de feuille correcte sans traitement particulier : les feuilles qu'on
-   *    ne quitte pas gardent leur instantané, donc leur application ; celle qu'on vient de
-   *    quitter est réécrite, donc sa référence change, donc elle se recharge.
-   *  - `reset()` vide le cache : les feuilles appartiennent au DOCUMENT (cf. son commentaire),
-   *    charger un autre document les efface toutes, et leurs applications avec.
+   *    suffit donc à voir « cette feuille a changé », pour un coût nul.
+   *  - `resetFile()` vide le cache : les feuilles appartiennent au FICHIER, charger un autre
+   *    fichier les efface toutes, et dispose leurs documents avec.
    *  - `deleteSheet` retire l'entrée de la feuille supprimée.
    *
-   * LECTURE SEULE, ET C'EST UN CONTRAT. Rien de ce qui vit dans cette application ne
-   * remonte : on ne la resérialise jamais vers `_sheets[id].json`, et aucun geste de la
-   * fenêtre n'écrit dans le document. Si une représentation mute son modèle — le clic
-   * d'agrégation du sunburst le fait —, elle ne mute que cette copie, qui meurt avec le
-   * cache. Une fenêtre sur une autre feuille MONTRE ; elle ne modifie pas.
+   * os#1385 (lot 3) — LA CLÉ NE CHANGE PAS, ET C'EST COHÉRENT AVEC LE DOCUMENT VIVANT. Un
+   * instantané n'est réécrit que dans deux cas : la feuille était courante (elle n'avait donc
+   * pas de document vivant à elle), ou un fichier vient d'être chargé (tout a été disposé).
+   * Jamais pendant qu'un document vivant porte la feuille — c'est `releaseSheetDocument` qui
+   * écrit, et il dispose dans le même geste. L'invariant « le vivant est la vérité » tient
+   * donc sans que le cache ait à savoir quoi que ce soit de plus.
+   *
+   * CE DOCUMENT S'ÉDITE (lot 3, D6). Le contrat « lecture seule » d'os#1386 est levé : le
+   * document est VIVANT, et modifiable dès que `edition_allowed` lui est donné. Ce qu'on y
+   * fait remonte au fichier, parce que `sheetsToJSON` le sérialise en l'appelant, et parce
+   * qu'« enregistrer » depuis sa fenêtre enregistre le fichier (cf. `file_holder`).
    */
   public sheetApplication(sheet_id: string): Class_ApplicationData | null {
     if (sheet_id === '' || sheet_id === this._current_sheet_id) return this
@@ -1805,24 +2003,33 @@ export class Class_ApplicationData {
     // rend la feuille vivante : ce n'est pas le bon modèle, mais c'en est un, et l'appelant
     // suivant aura le bon.
     if (this._sheet_apps_loading.has(sheet_id)) return this
-    // L'ANCIENNE APPLICATION S'EN VA D'ABORD. Un instantané périmé laissait
-    // son document dans la liste de l'espace de travail : il n'était plus joignable par
-    // personne, mais comptait encore comme document ouvert (et deux documents auraient porté
-    // le même `document_id`, donc le même emplacement de cache).
-    if (cached) this.workspace.forgetDocument(cached.app)
-    const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+    // Le verrou est posé AVANT la libération de l'ancien document, et pas seulement autour du
+    // chargement : `dispose()` recalcule l'actif, qui peut repasser par ici (os#1385, lot 3).
     this._sheet_apps_loading.add(sheet_id)
     let app: Class_ApplicationData
     try {
+      // L'ANCIEN DOCUMENT S'EN VA D'ABORD. Un instantané périmé laissait
+      // son document dans la liste de l'espace de travail : il n'était plus joignable par
+      // personne, mais comptait encore comme document ouvert (et deux documents auraient porté
+      // le même `document_id`, donc le même emplacement de cache).
+      // os#1385 (lot 3) — `dispose()` et non `forgetDocument` : il faut aussi démonter sa zone
+      // de dessin. Rien à réécrire dans l'instantané : s'il est ici, c'est que l'instantané
+      // vient de changer sous lui, donc qu'un autre écrivain a déjà fait foi.
+      if (cached) cached.app.dispose()
+      const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
       app = this._loadSheetSnapshotApplication(json, sheet_id)
     } finally {
       this._sheet_apps_loading.delete(sheet_id)
     }
+    // os#1385 (lot 3, D6) — LE PORTEUR DU FICHIER. Ce document est une feuille de CE
+    // fichier-ci : « enregistrer » depuis sa fenêtre doit écrire le fichier entier, feuilles
+    // comprises, et non le diagramme de la feuille tout seul (cf. `file_holder`).
+    app.file_holder = this
     this._sheet_apps[sheet_id] = { snapshot: sheet.json, app }
     return app
   }
 
-  /** Feuilles dont l'application de lecture est EN COURS de chargement (cf. `sheetApplication`). */
+  /** Feuilles dont le document est EN COURS de chargement (cf. `sheetApplication`). */
   protected _sheet_apps_loading: Set<string> = new Set()
 
   /**
@@ -1846,8 +2053,9 @@ export class Class_ApplicationData {
    * `offscreen: true` : cf. `detachOffscreen()`, qui explique pourquoi le conteneur se pose
    * sur la FABRIQUE et pas seulement sur la première zone.
    *
-   * `draw = false` : ce document n'a pas d'écran. Ce sont les représentations qui dessinent,
-   * chacune dans le conteneur que son hôte lui donne.
+   * `draw = false` : ce document n'a pas ENCORE d'écran. Ce sont les représentations qui
+   * dessinent, chacune dans le conteneur que son hôte lui donne — et, depuis le lot 3, une
+   * fenêtre canevas peut lui donner un vrai cadre et le droit d'éditer (phase B).
    *
    * os#1385 (lot 2) — L'IDENTIFIANT est celui de la FEUILLE, pas un tirage au sort : son
    * emplacement de cache doit être le même d'un chargement d'instantané au suivant.
@@ -1861,9 +2069,15 @@ export class Class_ApplicationData {
     return app
   }
 
-  /** Oublie les applications de lecture des feuilles (cf. `sheetApplication`). */
+  /**
+   * Fait cesser de vivre TOUS les documents de feuille (cf. `sheetApplication`).
+   *
+   * Sans réécrire d'instantané, et c'est voulu : le seul appelant est `resetFile()`, donc un
+   * autre fichier s'ouvre — les feuilles d'avant n'existent plus, il n'y a rien à conserver.
+   * Écrire dans `_sheets` ici serait écrire dans un dictionnaire que l'appelant vide juste après.
+   */
   protected _clearSheetApplications(): void {
-    Object.values(this._sheet_apps).forEach(entry => this.workspace.forgetDocument(entry.app))
+    Object.values(this._sheet_apps).forEach(entry => entry.app.dispose())
     this._sheet_apps = {}
   }
 
@@ -3159,10 +3373,10 @@ export class Class_ApplicationData {
         // l'éditabilité d'un second document. En attendant on le DIT — jusqu'ici, un Ctrl+V
         // venu d'un autre document ne collait rien et ne disait rien.
         //
-        // DIT AVANT la garde d'éditabilité, et c'est délibéré : au lot 2, un second document
-        // affiché est précisément NON éditable (`editable` vaut `!is_detached`), donc la garde
-        // avalerait toujours l'explication et l'utilisateur retomberait sur le silence qu'on
-        // vient de corriger. Expliquer n'écrit rien.
+        // DIT AVANT la garde d'éditabilité, et c'est délibéré : un second document n'est
+        // éditable que si on lui en a donné le droit (`edition_allowed`, os#1385 lot 3), et
+        // sinon la garde avalerait l'explication — l'utilisateur retomberait sur le silence
+        // qu'on vient de corriger. Expliquer n'écrit rien.
         this.notifyUser(
           'clipboard_cross_document',
           this.t('toast.clipboard.cross_document.title'),
@@ -3246,7 +3460,11 @@ export class Class_ApplicationData {
     const origin_y = this.drawing_area.is_paper_mode ? 0 : (export_bounds?.y ?? 0)
     const tx = -origin_x * scale_da + Class_ApplicationData.export_edge_padding
     const ty = -origin_y * scale_da + Class_ApplicationData.export_edge_padding
-    svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
+    // os#1385 (lot 3) — les identifiants structurels du SVG sont ceux de la ZONE exportée
+    // (préfixés hors du conteneur principal, donc inchangés pour l'export du diagramme que
+    // l'utilisateur édite) : on les demande à la zone plutôt que de les écrire en dur.
+    svg_clone?.select(this.drawing_area.domIdSelector('g_drawing'))
+      .attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 
     // Drop editor-only chrome from the export. The editable-area frame (#viewport_border)
@@ -3254,12 +3472,12 @@ export class Class_ApplicationData {
     // (offset by the nav bar height) instead of following the re-anchored diagram —
     // it would otherwise be baked into the SVG/PNG/PDF as a stray border cutting across
     // the export, shifted down by the top menu height.
-    svg_clone?.select('#viewport_border').remove()
+    svg_clone?.select(this.drawing_area.domIdSelector('viewport_border')).remove()
 
     // #291 — Le clip du contenu (groupe #g_clip enveloppant g_drawing) découpe l'affichage éditeur
     // au cadre de la fenêtre. À l'export, on veut le diagramme COMPLET (le contenu peut vivre
     // hors de la fenêtre courante après un pan/zoom) : on neutralise donc le clip-path sur le clone.
-    svg_clone?.select('#g_clip').attr('clip-path', null)
+    svg_clone?.select(this.drawing_area.domIdSelector('g_clip')).attr('clip-path', null)
 
     // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
     // render fine but link labels collide with their value-label sibling. We

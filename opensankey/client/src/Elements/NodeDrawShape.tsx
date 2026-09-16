@@ -318,8 +318,15 @@ export class NodeDrawShape {
       .attr('pointer-events', frame_blocks_interior ? 'visibleStroke' : null)
     // Ombre portée : appliquée sur le groupe g_node_shape (pas sur .node_shape)
     // pour que le clip de bordure interne ne rogne pas l'ombre.
+    // os#1385 (lot 3) — le filtre visé est celui de CETTE zone : son identifiant est préfixé
+    // hors du conteneur principal (cf. DrawingArea.domId), sinon l'ombre irait chercher le
+    // filtre homonyme d'un autre canevas de la page.
     this._node.d3_selection_g_shape
-      ?.attr('filter', this._node.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
+      ?.attr(
+        'filter',
+        this._node.shape_shadow_visible
+          ? 'url(#' + this._node.drawing_area.domId('os_drop_shadow') + ')'
+          : null)
     if (acts_as_frame && sel) {
       // OS#1259 — survol d'un cadre de groupe : léger épaississement pour le
       // rendre saisissable, mais DISCRET (l'ancien max(base*3, base+6) donnait

@@ -401,6 +401,19 @@ export class Class_Workspace {
   public get documents(): readonly Class_ApplicationData[] { return this._documents }
 
   /**
+   * os#1385 (lot 3, D6) — LE DOCUMENT VIVANT qui porte cet identifiant, ou `null`.
+   *
+   * C'est l'annuaire que D6 demandait : une feuille ouverte dans une fenêtre est un document
+   * de l'espace de travail (`'sheet:<id de feuille>'`), et la retrouver ne doit plus passer
+   * par le document qui la porte. `null` ne veut pas dire « cette feuille n'existe pas » mais
+   * « aucun document vivant ne la porte » : l'instantané, lui, est toujours là, et
+   * `Class_ApplicationData.sheetApplication` sait le charger.
+   */
+  public document(id: string): Class_ApplicationData | null {
+    return this._documents.find(doc => doc.document_id === id) ?? null
+  }
+
+  /**
    * Le document PRINCIPAL : le premier document affichable enregistré. C'est lui, et lui seul,
    * qui a le droit d'écrire la disposition de l'hôte (panneaux, langue de l'interface) et de
    * repeindre les menus — un document secondaire n'avait jusqu'ici qu'une configuration
@@ -540,7 +553,15 @@ export class Class_Workspace {
    */
   public createDocument(options: Type_DocumentOptions = {}): Class_ApplicationData {
     const doc = this.instantiateDocument()
-    if (options.offscreen) doc.detachOffscreen()
+    if (options.offscreen) {
+      doc.detachOffscreen()
+      // os#1385 (lot 3, D4) — UN DOCUMENT SANS ÉCRAN N'ÉDITE PAS. Le droit d'édition est une
+      // propriété du DOCUMENT et non plus de sa place à l'écran ; un document qui naît hors
+      // écran (instantané de feuille, source Excel unitaire, brique extraite) n'a personne
+      // devant lui, donc rien à autoriser. C'est la phase B — celle qui lui donne un cadre
+      // dans la grande zone — qui le repassera à vrai, et la fermeture de la fenêtre à faux.
+      doc.edition_allowed = false
+    }
     this.registerDocument(doc, options)
     return doc
   }

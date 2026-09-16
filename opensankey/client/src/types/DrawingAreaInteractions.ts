@@ -648,8 +648,11 @@ export class Class_DrawingAreaInteractions {
     da.selection_zone.reset()
     if (!da.isInSelectionMode() || !da.eventsEnabled()) return
     const target = event.target as Element | null
-    // Le fond (rect de couleur) et la grille vivent tous deux sous #g_background.
-    if (!target || !target.closest('#g_background')) return
+    // Le fond (rect de couleur) et la grille vivent tous deux sous le groupe de fond.
+    // os#1385 (lot 3) — son identifiant est préfixé hors du conteneur principal : on le
+    // demande à la zone (cf. DrawingArea.domIdSelector) au lieu de l'écrire en dur, sinon le
+    // double-clic « créer un nœud » resterait mort dans une fenêtre de feuille.
+    if (!target || !target.closest(da.domIdSelector('g_background'))) return
     const mouse_position = d3.pointer(event)
     const node = this._createNodeAtPoint(da, mouse_position[0], mouse_position[1])
     // Nom en édition inline immédiate (hors transaction : un redo ne rouvre pas l'éditeur).
