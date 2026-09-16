@@ -1387,7 +1387,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     const drawing_area = this.drawing_area
-    if (!drawing_area.application_data.is_editable) {
+    // os#1385 (lot 3, D4) — c'est la ZONE qui dit si on édite ici, pas le droit de la page :
+    // `da.editable` croise le droit du DOCUMENT et « je suis la zone vivante de mon document »
+    // (même correction qu'au clic sur un nœud, cf. NodeEventsHandler). Conséquence visible :
+    // sur un board unitaire — une zone fabriquée à côté, donc non éditable — un clic sur un
+    // FLUX prend désormais le chemin lecteur (présentation composée, puis purge de la
+    // sélection), exactement comme un clic sur un nœud ; il ouvrait jusqu'ici l'inspecteur
+    // d'édition du document principal depuis un aperçu qu'on ne peut pas modifier.
+    if (!drawing_area.editable) {
       // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée (rien
       // ne s'ouvre si l'auteur n'a rien composé pour ce flux).
       openPresentationFor(
@@ -1433,7 +1440,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected eventSimpleRMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if (!this.drawing_area.application_data.is_editable) {
+    // os#1385 (lot 3, D4) — même lecture qu'au clic simple : la ZONE, pas la page. Un clic
+    // droit sur un flux d'une zone non éditable (board unitaire, aperçu) n'ouvre plus le menu
+    // contextuel d'édition ; dans la fenêtre d'une feuille, à qui le document donne le droit
+    // d'éditer, il l'ouvre comme dans le canevas principal.
+    if (!this.drawing_area.editable) {
       return
     }
     // Apply parent behavior first

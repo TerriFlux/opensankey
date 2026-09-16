@@ -638,8 +638,9 @@ export type Type_ExtraHelpMenuItems = Array<{
  * Les sites d'appel ne changent pas : `mc.panels`, `mc.ref_toolbar`, `mc.tools_column_open`
  * disent la même chose qu'avant, sur l'unique exemplaire de l'hôte.
  *
- * LA GRANDE ZONE (occupants, figures, `doc_external`, ratios) est encore PAR DOCUMENT au lot
- * 1, et c'est voulu : sa montée dans l'espace de travail est le dernier geste du chantier.
+ * LA GRANDE ZONE (occupants, fenêtre active, sélection de vignettes, `doc_external`, ratios) est
+ * MONTÉE à l'hôte au dernier geste du chantier : il n'y a qu'un écran. Les FIGURES sont restées
+ * au document — ce sont des objets du fichier (cf. l'en-tête du bloc grande zone).
  *
  * @export
  * @class Class_MenuConfig
@@ -726,8 +727,19 @@ export class Class_MenuConfig {
   public set tab_selected(tab_selected) { this._host._tab_selected = tab_selected }
 
   // ---------------------------------------------------------------------------------------
-  // GRANDE ZONE — os#1355/1361 : N OCCUPANTS venus du registre des représentations, plus
-  // quatre noms en dur.
+  // GRANDE ZONE — os#1385 : ELLE EST DE L'ESPACE DE TRAVAIL, PAS DU DOCUMENT.
+  //
+  // Il n'y a qu'UNE grande zone à l'écran quel que soit le nombre de documents ouverts : la
+  // disposition (occupants, places, poids, détachements, ratios), la SÉLECTION de vignettes et
+  // la FENÊTRE ACTIVE décrivent cet écran unique, pas un fichier. Elles montent donc à l'hôte
+  // comme les panneaux au lot 1 : le stockage reste un champ de cette classe, mais toute lecture
+  // et toute écriture passent par `this._host` (dix champs, cf. lot-3-contrat §5).
+  // Les FIGURES, elles, restent au DOCUMENT (`_figures`, `_figures_by_id`, `_figure_natures`,
+  // `_figure_seq`, `_figure_report`) : ce sont des objets du fichier, deux documents ne
+  // partagent ni leurs `f_N` ni leurs styles. `figureOf` indexe donc les figures du document par
+  // une fenêtre de l'hôte, et la persistance ne lit/écrit `main_zone` que `if (is_main)`.
+  // ---------------------------------------------------------------------------------------
+  // os#1355/1361 : N OCCUPANTS venus du registre des représentations, plus quatre noms en dur.
   //
   // Jusqu'ici la grande zone connaissait quatre occupants nommés (diagramme, tableur, doc,
   // unitaire), chacun avec son booléen, son ratio, son drapeau de détachement, et quatre
@@ -1040,23 +1052,23 @@ export class Class_MenuConfig {
 
   /** Les occupants dans l'ordre des piles. COPIE : les mutations passent par les méthodes. */
   public get main_zone_occupants(): Type_MainZoneOccupant[] {
-    return this._main_zone_occupants.map(o => ({ ...o }))
+    return this._host._main_zone_occupants.map(o => ({ ...o }))
   }
   public isMainZoneOccupant(id: string): boolean {
-    return this._main_zone_occupants.some(o => o.id === id)
+    return this._host._main_zone_occupants.some(o => o.id === id)
   }
   /** Occupants EFFECTIFS d'une pile : présents et non détachés (un détaché ne réserve rien). */
   public mainZoneOccupantsIn(place: Type_MainZonePlace): Type_MainZoneOccupant[] {
-    return this._main_zone_occupants
-      .filter(o => o.place === place && !this._main_zone_detached.has(o.id))
+    return this._host._main_zone_occupants
+      .filter(o => o.place === place && !this._host._main_zone_detached.has(o.id))
       .map(o => ({ ...o }))
   }
   /** L'occupant principal, ou null (jamais après normalisation, sauf liste vide transitoire). */
   public get main_zone_main_id(): string | null {
-    return this._main_zone_occupants.find(o => o.place === 'main')?.id ?? null
+    return this._host._main_zone_occupants.find(o => o.place === 'main')?.id ?? null
   }
   public mainZonePlaceOf(id: string): Type_MainZonePlace | null {
-    return this._main_zone_occupants.find(o => o.id === id)?.place ?? null
+    return this._host._main_zone_occupants.find(o => o.id === id)?.place ?? null
   }
 
   /**
@@ -1065,7 +1077,7 @@ export class Class_MenuConfig {
    * change de place que si on la demande.
    */
   public showMainZoneOccupant(id: string, place?: Type_MainZonePlace): void {
-    const existing = this._main_zone_occupants.find(o => o.id === id)
+    const existing = this._host._main_zone_occupants.find(o => o.id === id)
     if (existing) {
       if (place && existing.place !== place) existing.place = place
     } else if (id === MAIN_ZONE_CANVAS_ID && !place) {
@@ -1087,14 +1099,14 @@ export class Class_MenuConfig {
   ): void {
     const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
-    const peers = this._main_zone_occupants.filter(x => x.place === wanted)
+    const peers = this._host._main_zone_occupants.filter(x => x.place === wanted)
     const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
     // os#1418 — PLUS AUCUN DÉFAUT RECOPIÉ ICI. Une fenêtre neuve naît sans réglages, et ses
     // figures SUIVENT le style `default` de leur nature (cf. `Class_Figure`) : elle est donc
     // réglée comme les autres sans qu'on lui ait rien écrit, et elle le restera si l'auteur
     // change le style ensuite. La recopie de os#1394 figeait au contraire l'état du style à
     // l'instant de l'ouverture.
-    this._main_zone_occupants.push({ ...o, place: wanted, size })
+    this._host._main_zone_occupants.push({ ...o, place: wanted, size })
   }
 
   // --- os#1387 : fenêtres = (sujet, représentation) ------------------------------------------
@@ -1114,16 +1126,19 @@ export class Class_MenuConfig {
       return representation
     }
     let id = ''
-    do { this._main_zone_window_seq += 1; id = `w_${this._main_zone_window_seq}` } while (this.isMainZoneOccupant(id))
+    do {
+      this._host._main_zone_window_seq += 1
+      id = `w_${this._host._main_zone_window_seq}`
+    } while (this.isMainZoneOccupant(id))
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
     this._normalizeMainZoneOccupants()
-    this._main_zone_active_id = id
+    this._host._main_zone_active_id = id
     // os#1394 — la fenêtre qu'on vient d'ouvrir devient l'active, sur sa PREMIÈRE vignette :
     // la clé de la vignette active d'une autre fenêtre n'a aucun sens ici.
-    this._main_zone_active_pane_key = null
+    this._host._main_zone_active_pane_key = null
     // os#1423 — et sur une sélection VIERGE, pour la même raison : les clés sélectionnées dans la
     // fenêtre qu'on quitte ne nomment rien ici.
-    this._main_zone_selected_pane_keys = []
+    this._host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
     return id
   }
@@ -1147,7 +1162,7 @@ export class Class_MenuConfig {
    * reconnaissait rien. La différence est qu'on le dit, et qu'on ne traîne plus les clés mortes.
    */
   public setMainZoneWindowRepresentation(id: string, representation: string): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.representation === representation) return
     // Jeté AVANT la mutation : dans la branche « remplacement en place » l'occupant change d'id,
     // et ses figures resteraient sinon indexées sous l'ancien — orphelines et persistées.
@@ -1155,12 +1170,12 @@ export class Class_MenuConfig {
     if (mainZoneSubjectUsesOwnWindowId(o.subject)) {
       o.representation = representation
     } else if (this.isMainZoneOccupant(representation)) {
-      this._main_zone_occupants = this._main_zone_occupants.filter(x => x.id !== id)
-      this._main_zone_detached.delete(id)
+      this._host._main_zone_occupants = this._host._main_zone_occupants.filter(x => x.id !== id)
+      this._host._main_zone_detached.delete(id)
     } else {
       o.id = representation
       o.representation = representation
-      if (this._main_zone_active_id === id) this._main_zone_active_id = representation
+      if (this._host._main_zone_active_id === id) this._host._main_zone_active_id = representation
     }
     this._normalizeMainZoneOccupants()
     // os#1423 — la sélection est relue APRÈS la normalisation, et sur l'id COURANT de la fenêtre
@@ -1182,7 +1197,7 @@ export class Class_MenuConfig {
    * comportement attendu d'un critère : ce n'est pas l'auteur qui a retiré la vignette.
    */
   public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
     if (subject.kind === 'elements') {
       // Les deux tableaux sont RECOPIÉS ensemble : ils sont parallèles, et n'en recopier qu'un
@@ -1219,19 +1234,19 @@ export class Class_MenuConfig {
    */
   protected _resyncMainZoneSelection(id: string): void {
     if (this.main_zone_active_id !== id) return
-    if (this._main_zone_selected_pane_keys.length === 0) return
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    if (this._host._main_zone_selected_pane_keys.length === 0) return
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     const alive: string[] = (o && o.subject.kind === 'elements') ? mainZonePaneKeys(o.subject) : []
-    const kept = this._main_zone_selected_pane_keys.filter(k => alive.includes(k))
-    this._main_zone_selected_pane_keys = kept
+    const kept = this._host._main_zone_selected_pane_keys.filter(k => alive.includes(k))
+    this._host._main_zone_selected_pane_keys = kept
     // La vignette active suit la sélection quand il en reste une — l'invariant veut qu'elle en
     // fasse partie. Sélection VIDÉE, en revanche, on ne touche PAS à la vignette active : vide
     // veut dire « seulement l'active », et l'effacer ici retirerait à l'inspecteur le dessin
     // qu'il montre pour un changement de sujet qui ne le concerne pas forcément (le ménage de la
     // vignette active, lui, se fait au changement de FENÊTRE).
-    if (kept.length > 0 && this._main_zone_active_pane_key !== null
-      && !kept.includes(this._main_zone_active_pane_key)) {
-      this._main_zone_active_pane_key = kept[0]
+    if (kept.length > 0 && this._host._main_zone_active_pane_key !== null
+      && !kept.includes(this._host._main_zone_active_pane_key)) {
+      this._host._main_zone_active_pane_key = kept[0]
     }
   }
 
@@ -1269,9 +1284,16 @@ export class Class_MenuConfig {
    * plutôt que de lever : les appelants d'avant retournaient silencieusement sur un occupant
    * absent, et une figure vide se comporte exactement comme ce retour — on peut lui écrire sans
    * rien casser, elle n'est simplement rattachée à rien.
+   *
+   * os#1385 — LES DEUX ÉTAGES SE CROISENT ICI, et c'est voulu : la FENÊTRE est de l'hôte (une
+   * seule grande zone à l'écran), la FIGURE est du DOCUMENT (elle s'écrit dans le fichier). Cette
+   * méthode indexe donc les figures de `this` par un identifiant de fenêtre de `this._host`. Le
+   * couplage ne change pas avec la montée : les fenêtres vivaient déjà dans la configuration du
+   * principal, les figures aussi, et l'appelant reste `MainZoneTabs` avec la configuration du
+   * document principal — pour qui hôte et document sont la même grande zone qu'hier.
    */
   public figureOf(occupant_id: string, pane_key: string): Class_Figure {
-    const o = this._main_zone_occupants.find(x => x.id === occupant_id)
+    const o = this._host._main_zone_occupants.find(x => x.id === occupant_id)
     const nature = this.figureNature(o?.representation ?? Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID)
     if (!o) return new Class_Figure(nature, pane_key)
     const by_key = this._figures[occupant_id] ?? (this._figures[occupant_id] = {})
@@ -1318,7 +1340,10 @@ export class Class_MenuConfig {
   }
   /** Les figures des fenêtres qui n'existent plus (toute voie de fermeture confondue). */
   protected _pruneOrphanFigures(): void {
-    const live = new Set(this._main_zone_occupants.map(o => o.id))
+    // os#1385 — les fenêtres VIVANTES sont celles de l'hôte, les figures élaguées celles de CE
+    // document : pour le principal c'est exactement le ménage d'hier. Un document secondaire n'y
+    // passe que par `mainZoneStateFromJSON`, que la persistance garde désormais par `is_main`.
+    const live = new Set(this._host._main_zone_occupants.map(o => o.id))
     Object.keys(this._figures).forEach(id => { if (!live.has(id)) this._dropFigures(id) })
   }
 
@@ -1469,7 +1494,7 @@ export class Class_MenuConfig {
     // Une vignette ne compte que si sa FENÊTRE existe encore : l'annuaire garde les figures
     // promues des fenêtres fermées (cf. `_dropFigures`), et les compter ici rendrait le ménage
     // inopérant — précisément sur les figures qu'il est censé solder.
-    const live = new Set(this._main_zone_occupants.map(o => o.id))
+    const live = new Set(this._host._main_zone_occupants.map(o => o.id))
     const shown = new Set<string>()
     Object.entries(this._figures).forEach(([occupant_id, by_key]) => {
       if (!live.has(occupant_id)) return
@@ -1506,7 +1531,7 @@ export class Class_MenuConfig {
    * se demande désormais, en portée « style » (`setRepresentationStyleOptions`).
    */
   public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
-    if (!this._main_zone_occupants.some(x => x.id === id)) return
+    if (!this.isMainZoneOccupant(id)) return
     this.figureOf(id, pane_key).assign(options as Type_OptionBag)
     this._notifyMainZone()
   }
@@ -1515,7 +1540,7 @@ export class Class_MenuConfig {
    * que ci-dessus : sac complet, et rien d'autre que cette figure n'est touché.
    */
   public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
-    if (!this._main_zone_occupants.some(x => x.id === id)) return
+    if (!this.isMainZoneOccupant(id)) return
     this.figureOf(id, FIGURE_DIAGRAM_PANE_KEY).assign(options as Type_OptionBag)
     this._notifyMainZone()
   }
@@ -1563,7 +1588,7 @@ export class Class_MenuConfig {
    * attribut par attribut, comme pour un nœud.
    */
   public mainZonePaneOptionsOf(id: string, pane_key: string): Type_JSON {
-    if (!this._main_zone_occupants.some(x => x.id === id)) return {}
+    if (!this.isMainZoneOccupant(id)) return {}
     return this.figureOf(id, pane_key).attributes as Type_JSON
   }
 
@@ -1685,27 +1710,29 @@ export class Class_MenuConfig {
   /** Le rapport de migration EN COURS, avant qu'il ne soit vidé (tests, diagnostic). */
   public get figure_migration_report(): Class_FigureMigrationReport { return this._figure_report }
   public mainZoneOccupantById(id: string): Type_MainZoneOccupant | undefined {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     return o ? { ...o, subject: { ...o.subject } } : undefined
   }
   public get main_zone_active_id(): string | null {
-    return this._main_zone_active_id ?? this.main_zone_main_id
+    return this._host._main_zone_active_id ?? this.main_zone_main_id
   }
   public set main_zone_active_id(id: string | null) {
-    if (this._main_zone_active_id === id) return
-    this._main_zone_active_id = id
+    if (this._host._main_zone_active_id === id) return
+    this._host._main_zone_active_id = id
     // os#1394 — changer de fenêtre PÉRIME la vignette active : sa clé n'a de sens que dans la
     // fenêtre qui la porte, et deux fenêtres peuvent nommer la même. À id inchangé, en
     // revanche, on ne touche à rien : un clic sur une vignette active d'abord celle-ci, puis
     // remonte jusqu'à la fenêtre — l'effacer ici défairait le geste qu'on vient de faire.
-    this._main_zone_active_pane_key = null
+    this._host._main_zone_active_pane_key = null
     // os#1423 — et la SÉLECTION part avec elle, exactement pour la même raison : ses clés ne
     // nomment rien dans la fenêtre qui devient active, et deux fenêtres peuvent nommer la même.
-    this._main_zone_selected_pane_keys = []
+    this._host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
   }
   /** os#1394 — La vignette active de la fenêtre active ; `null` = la première de la fenêtre. */
-  public get main_zone_active_pane_key(): string | null { return this._main_zone_active_pane_key }
+  public get main_zone_active_pane_key(): string | null {
+    return this._host._main_zone_active_pane_key
+  }
   /**
    * os#1423 — LES VIGNETTES SÉLECTIONNÉES de la fenêtre active, la vignette active comprise.
    *
@@ -1719,8 +1746,10 @@ export class Class_MenuConfig {
    * « celle-là ».
    */
   public get main_zone_selected_pane_keys(): string[] {
-    if (this._main_zone_selected_pane_keys.length > 0) return [...this._main_zone_selected_pane_keys]
-    return this._main_zone_active_pane_key !== null ? [this._main_zone_active_pane_key] : []
+    const selected = this._host._main_zone_selected_pane_keys
+    if (selected.length > 0) return [...selected]
+    const active = this._host._main_zone_active_pane_key
+    return active !== null ? [active] : []
   }
   /**
    * os#1423 — Cette vignette est-elle sélectionnée ? Faux dès que `id` n'est PAS la fenêtre
@@ -1769,27 +1798,31 @@ export class Class_MenuConfig {
     // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle. Vrai du
     // Ctrl+clic comme du clic simple, et même quand rien d'autre ne bouge — c'est la RÉCENCE du
     // geste qu'il note, pas son effet.
-    this._inspector_focus = 'representation'
+    this._host._inspector_focus = 'representation'
     // Fenêtre active lue par l'ACCESSEUR : une fenêtre principale que personne n'a encore
     // désignée est déjà l'active pour tout le reste de l'interface (le liséré, les raccourcis),
     // et un Ctrl+clic dedans doit donc étendre, pas repartir de zéro.
     if (extend && this.main_zone_active_id === id && pane_key !== null) {
-      this._main_zone_active_id = id
-      const current = this._main_zone_selected_pane_keys.length > 0
-        ? [...this._main_zone_selected_pane_keys]
-        : (this._main_zone_active_pane_key !== null ? [this._main_zone_active_pane_key] : [])
+      this._host._main_zone_active_id = id
+      const current = this._host._main_zone_selected_pane_keys.length > 0
+        ? [...this._host._main_zone_selected_pane_keys]
+        : (this._host._main_zone_active_pane_key !== null
+          ? [this._host._main_zone_active_pane_key]
+          : [])
       const at = current.indexOf(pane_key)
       if (at === -1) {
         current.push(pane_key)
-        this._main_zone_selected_pane_keys = current
-        this._main_zone_active_pane_key = pane_key
+        this._host._main_zone_selected_pane_keys = current
+        this._host._main_zone_active_pane_key = pane_key
       } else {
         // Le seul sélectionné : on ne désélectionne pas tout (cf. en-tête).
         if (current.length === 1) return
         current.splice(at, 1)
-        this._main_zone_selected_pane_keys = current
+        this._host._main_zone_selected_pane_keys = current
         // L'active s'en allait : la première restante prend sa place, l'invariant tient.
-        if (this._main_zone_active_pane_key === pane_key) this._main_zone_active_pane_key = current[0]
+        if (this._host._main_zone_active_pane_key === pane_key) {
+          this._host._main_zone_active_pane_key = current[0]
+        }
       }
       this._notifyMainZone()
       return
@@ -1798,14 +1831,14 @@ export class Class_MenuConfig {
     // la vignette touchée. Écrit même quand la vignette active ne change pas — la fenêtre, elle,
     // vient peut-être de changer, et une sélection héritée n'y voudrait rien dire.
     const selection = pane_key !== null ? [pane_key] : []
-    const unchanged = this._main_zone_active_id === id
-      && this._main_zone_active_pane_key === pane_key
-      && this._main_zone_selected_pane_keys.length === selection.length
-      && this._main_zone_selected_pane_keys.every((k, i) => k === selection[i])
+    const unchanged = this._host._main_zone_active_id === id
+      && this._host._main_zone_active_pane_key === pane_key
+      && this._host._main_zone_selected_pane_keys.length === selection.length
+      && this._host._main_zone_selected_pane_keys.every((k, i) => k === selection[i])
     if (unchanged) return
-    this._main_zone_active_id = id
-    this._main_zone_active_pane_key = pane_key
-    this._main_zone_selected_pane_keys = selection
+    this._host._main_zone_active_id = id
+    this._host._main_zone_active_pane_key = pane_key
+    this._host._main_zone_selected_pane_keys = selection
     this._notifyMainZone()
   }
   /**
@@ -1819,14 +1852,14 @@ export class Class_MenuConfig {
    * ce qu'elle est à son ouverture.
    */
   public selectAllMainZonePanes(id: string, pane_keys: string[]): void {
-    this._inspector_focus = 'representation'
+    this._host._inspector_focus = 'representation'
     const unique = pane_keys.filter((k, i) => pane_keys.indexOf(k) === i)
-    this._main_zone_active_id = id
-    this._main_zone_selected_pane_keys = unique
-    if (unique.length === 0) this._main_zone_active_pane_key = null
-    else if (this._main_zone_active_pane_key === null
-      || !unique.includes(this._main_zone_active_pane_key)) {
-      this._main_zone_active_pane_key = unique[0]
+    this._host._main_zone_active_id = id
+    this._host._main_zone_selected_pane_keys = unique
+    if (unique.length === 0) this._host._main_zone_active_pane_key = null
+    else if (this._host._main_zone_active_pane_key === null
+      || !unique.includes(this._host._main_zone_active_pane_key)) {
+      this._host._main_zone_active_pane_key = unique[0]
     }
     this._notifyMainZone()
   }
@@ -1838,7 +1871,7 @@ export class Class_MenuConfig {
    * l'inspecteur pour autant (cf. InspectorResolver et activeRepresentation).
    */
   public get inspector_focus_is_representation(): boolean {
-    return this._inspector_focus === 'representation'
+    return this._host._inspector_focus === 'representation'
   }
   /**
    * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
@@ -1846,9 +1879,9 @@ export class Class_MenuConfig {
    * cède la place au premier de la colonne droite (cf. normalisation).
    */
   public hideMainZoneOccupant(id: string): boolean {
-    if (this._main_zone_occupants.length <= 1 && this.isMainZoneOccupant(id)) return false
-    this._main_zone_occupants = this._main_zone_occupants.filter(o => o.id !== id)
-    this._main_zone_detached.delete(id)
+    if (this._host._main_zone_occupants.length <= 1 && this.isMainZoneOccupant(id)) return false
+    this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
+    this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
     return true
@@ -1858,7 +1891,7 @@ export class Class_MenuConfig {
     else this.showMainZoneOccupant(id)
   }
   public setMainZoneOccupantPlace(id: string, place: Type_MainZonePlace): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === place) return
     o.place = place
     this._normalizeMainZoneOccupants()
@@ -1874,32 +1907,33 @@ export class Class_MenuConfig {
    * transformerait en fenêtres diagramme vides sur une nature inconnue.
    */
   public setMainZoneOccupantIds(ids: string[]): void {
-    const kept = new Map(this._main_zone_occupants.map(o => [o.id, o]))
-    const own_id_windows = this._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
-    this._main_zone_occupants = []
+    const host = this._host
+    const kept = new Map(host._main_zone_occupants.map(o => [o.id, o]))
+    const own_id_windows = host._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
+    host._main_zone_occupants = []
     ids.forEach(id => {
       const prev = kept.get(id)
-      this._main_zone_occupants.push(prev
+      host._main_zone_occupants.push(prev
         ? { ...prev }
         : { id, subject: { kind: 'diagram' }, representation: id, place: 'right', size: 1 })
     })
-    this._main_zone_occupants.push(...own_id_windows)
+    host._main_zone_occupants.push(...own_id_windows)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
   /** Poids des occupants d'une pile, écrits par ses poignées de redimensionnement. */
   public setMainZoneStackSizes(sizes: { [id: string]: number }): void {
-    this._main_zone_occupants.forEach(o => {
+    this._host._main_zone_occupants.forEach(o => {
       const s = sizes[o.id]
       if (typeof s === 'number' && Number.isFinite(s) && s > 0) o.size = s
     })
     this._notifyMainZone()
   }
-  public isMainZoneDetached(id: string): boolean { return this._main_zone_detached.has(id) }
+  public isMainZoneDetached(id: string): boolean { return this._host._main_zone_detached.has(id) }
   public setMainZoneDetached(id: string, detached: boolean): void {
-    if (detached === this._main_zone_detached.has(id)) return
-    if (detached) this._main_zone_detached.add(id)
-    else this._main_zone_detached.delete(id)
+    if (detached === this._host._main_zone_detached.has(id)) return
+    if (detached) this._host._main_zone_detached.add(id)
+    else this._host._main_zone_detached.delete(id)
     this._notifyMainZone()
   }
   /**
@@ -1908,8 +1942,9 @@ export class Class_MenuConfig {
    * tête) ; pas de doublon ; des poids finis et positifs.
    */
   protected _normalizeMainZoneOccupants(): void {
+    const host = this._host
     const seen = new Set<string>()
-    let list = this._main_zone_occupants.filter(o => {
+    let list = host._main_zone_occupants.filter(o => {
       if (seen.has(o.id) || !MAIN_ZONE_PLACES.includes(o.place)) return false
       seen.add(o.id)
       return true
@@ -1929,12 +1964,12 @@ export class Class_MenuConfig {
     if (list.length === 0) {
       list = [{ id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
     }
-    if (this._main_zone_active_id !== null && !list.some(o => o.id === this._main_zone_active_id)) {
-      this._main_zone_active_id = null
+    if (host._main_zone_active_id !== null && !list.some(o => o.id === host._main_zone_active_id)) {
+      host._main_zone_active_id = null
       // os#1394 — la vignette active appartenait à cette fenêtre : elle part avec elle.
-      this._main_zone_active_pane_key = null
+      host._main_zone_active_pane_key = null
       // os#1423 — la sélection aussi : elle ne vit que dans la fenêtre active, qui n'est plus là.
-      this._main_zone_selected_pane_keys = []
+      host._main_zone_selected_pane_keys = []
     }
     const mains = list.filter(o => o.place === 'main')
     if (mains.length === 0) {
@@ -1945,7 +1980,7 @@ export class Class_MenuConfig {
       promoted.place = 'main'
     } else mains.slice(1).forEach(o => { o.place = 'right' })
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
-    this._main_zone_occupants = list
+    host._main_zone_occupants = list
     // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
     // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
     // le changement de nature en place et la déduplication mènent tous ici, et un seul ménage
@@ -1959,13 +1994,13 @@ export class Class_MenuConfig {
    * sans qu'aucune fenêtre ne disparaisse. Une fenêtre détachée se ré-attache pour cela.
    */
   public makeMainZoneOccupantMain(id: string): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === 'main') return
-    const main = this._main_zone_occupants.find(x => x.place === 'main')
+    const main = this._host._main_zone_occupants.find(x => x.place === 'main')
     if (main) { main.place = o.place; main.size = o.size }
     o.place = 'main'
     o.size = 1
-    this._main_zone_detached.delete(id)
+    this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
@@ -2014,14 +2049,14 @@ export class Class_MenuConfig {
   // celles qui suivent — refermer une fenêtre que l'auteur a composée et épinglée serait pire
   // que le défaut qu'on corrige.
   public get main_zone_show_unitary() {
-    return this._main_zone_occupants
+    return this._host._main_zone_occupants
       .some(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID && o.subject.kind === 'selection')
   }
   public set main_zone_show_unitary(v: boolean) {
     if (v) {
       if (!this.main_zone_show_unitary) this.openMainZoneWindow({ kind: 'selection' }, MAIN_ZONE_UNIT_WINDOW_ID)
     } else {
-      this._main_zone_occupants
+      this._host._main_zone_occupants
         .filter(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID && o.subject.kind === 'selection')
         .forEach(o => this.hideMainZoneOccupant(o.id))
     }
@@ -2031,15 +2066,21 @@ export class Class_MenuConfig {
   public get main_zone_unitary_detached() { return this.isMainZoneDetached(MAIN_ZONE_UNITARY_ID) }
   public set main_zone_unitary_detached(v: boolean) { this.setMainZoneDetached(MAIN_ZONE_UNITARY_ID, v) }
 
-  public get doc_external() { return this._doc_external }
+  public get doc_external() { return this._host._doc_external }
   public set doc_external(v: { title: string, markdown: string } | null) {
-    this._doc_external = v
+    this._host._doc_external = v
     this._notifyMainZone()
   }
-  public get main_zone_split_ratio() { return this._main_zone_split_ratio }
-  public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
-  public get main_zone_bottom_px() { return this._main_zone_bottom_px }
-  public set main_zone_bottom_px(v: number) { this._main_zone_bottom_px = v; this._notifyMainZone() }
+  public get main_zone_split_ratio() { return this._host._main_zone_split_ratio }
+  public set main_zone_split_ratio(v: number) {
+    this._host._main_zone_split_ratio = v
+    this._notifyMainZone()
+  }
+  public get main_zone_bottom_px() { return this._host._main_zone_bottom_px }
+  public set main_zone_bottom_px(v: number) {
+    this._host._main_zone_bottom_px = v
+    this._notifyMainZone()
+  }
   public addMainZoneListener(l: () => void): () => void {
     return this._host._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }
@@ -2112,7 +2153,7 @@ export class Class_MenuConfig {
     // La colonne droite n'existe que si quelque chose y vit ET qu'une zone principale la borde ;
     // un occupant détaché n'y compte pas (cf. mainZoneOccupantsIn).
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('right').length === 0) return tools
-    return mainZoneRightColumnWidthPx(this._main_zone_split_ratio) + tools
+    return mainZoneRightColumnWidthPx(this._host._main_zone_split_ratio) + tools
   }
 
   /**
@@ -2122,17 +2163,23 @@ export class Class_MenuConfig {
    */
   public getMainZoneBottomReservedPx(): number {
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('bottom').length === 0) return 0
-    return mainZoneBottomBandHeightPx(this._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX)
+    return mainZoneBottomBandHeightPx(
+      this._host._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX
+    )
   }
 
   /**
    * Sérialise l'état de la grande zone (clé `main_zone` du fichier). Les occupants vont dans un
    * DICTIONNAIRE indexé par id — la seule forme d'objet que `Type_JSON` sait porter — avec leur
    * rang, puisque l'ordre des piles compte et que l'ordre des clés JSON n'est pas un contrat.
+   *
+   * os#1385 — LES FENÊTRES viennent de l'hôte, LES FIGURES du document : seul le document
+   * PRINCIPAL écrit cette clé (garde `is_main` dans `_toJSON`), sinon chaque document du même
+   * espace écrirait la même disposition dans son entrée.
    */
   public mainZoneStateToJSON(): Type_JSON {
     const occupants: Type_JSON = {}
-    this._main_zone_occupants.forEach((o, order) => {
+    this._host._main_zone_occupants.forEach((o, order) => {
       // os#1387 — le sujet est un objet imbriqué (kind, id, sheet), la représentation une
       // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
       const subject: Type_JSON = { kind: o.subject.kind }
@@ -2174,8 +2221,8 @@ export class Class_MenuConfig {
     })
     return {
       occupants,
-      split_ratio: this._main_zone_split_ratio,
-      bottom_px: this._main_zone_bottom_px
+      split_ratio: this._host._main_zone_split_ratio,
+      bottom_px: this._host._main_zone_bottom_px
     }
   }
 
@@ -2187,8 +2234,13 @@ export class Class_MenuConfig {
    * dans la colonne droite (avant lui pour sheet-top/left), la doc « en bas » va au bandeau, et
    * les ratios historiques deviennent des poids de pile. Un fichier ancien s'ouvre donc comme
    * avant, à la simplification près qu'on a arbitrée.
+   *
+   * os#1385 — ÉCRIT LA DISPOSITION DE L'HÔTE : seul le document PRINCIPAL la relit (garde
+   * `is_main` dans `_fromJSON`). Sans cette garde, ouvrir une feuille B dans une fenêtre
+   * réécrirait la grande zone de l'écran avec celle enregistrée dans l'entrée de B.
    */
   public mainZoneStateFromJSON(json: Type_JSON) {
+    const host = this._host
     const raw = json['occupants']
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       const entries = Object.entries(raw as Type_JSON)
@@ -2255,13 +2307,13 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
         ({ id, subject, representation, place, size }))
       // os#1387 — un fichier écrit avec le panneau unitaire à hôte externe : sa fenêtre devient
       // une fenêtre d'élément « Unit. » qui suit la sélection, même place, même poids.
-      this._main_zone_occupants = this._main_zone_occupants.map(o => {
+      host._main_zone_occupants = host._main_zone_occupants.map(o => {
         if (o.id !== MAIN_ZONE_UNITARY_ID) return o
-        const new_id = `w_${++this._main_zone_window_seq}`
+        const new_id = `w_${++host._main_zone_window_seq}`
         // Les réglages SUIVENT la fenêtre renommée : sans ce transfert, un fichier d'avant
         // rouvrirait son unitaire aux valeurs d'usine — la migration ne trouverait plus rien
         // sous le nouvel identifiant.
@@ -2270,7 +2322,7 @@ export class Class_MenuConfig {
         return { ...o, id: new_id, subject: { kind: 'selection' } as Type_MainZoneSubject, representation: MAIN_ZONE_UNIT_WINDOW_ID }
       })
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
-      this._main_zone_window_seq = Math.max(this._main_zone_window_seq, ...this._main_zone_occupants
+      host._main_zone_window_seq = Math.max(host._main_zone_window_seq, ...host._main_zone_occupants
         .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
       // La normalisation AVANT la migration : elle peut écarter une fenêtre (doublon, place
       // inconnue), et migrer les réglages d'une fenêtre qui n'existera pas les sèmerait sous un
@@ -2302,17 +2354,17 @@ export class Class_MenuConfig {
       if (doc_in_column && !doc_first) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'right', doc_size))
       if (show_unit) {
         list.push({
-          id: `w_${++this._main_zone_window_seq}`, subject: { kind: 'selection' },
+          id: `w_${++host._main_zone_window_seq}`, subject: { kind: 'selection' },
           representation: MAIN_ZONE_UNIT_WINDOW_ID, place: 'right', size: 1 - unitary_ratio
         })
       }
       if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
-      this._main_zone_occupants = list
+      host._main_zone_occupants = list
     }
     this._normalizeMainZoneOccupants()
-    this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
-    this._main_zone_bottom_px = getNumberFromJSON(
-      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_bottom_px)
+    host._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', host._main_zone_split_ratio)
+    host._main_zone_bottom_px = getNumberFromJSON(
+      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', host._main_zone_bottom_px)
     )
     this._notifyMainZone()
   }
@@ -2346,7 +2398,8 @@ export class Class_MenuConfig {
    */
   protected _loadFiguresFromJSON(raw: Map<string, { figures?: Type_JSON, options?: Type_JSON }>): void {
     raw.forEach((entry, id) => {
-      const o = this._main_zone_occupants.find(x => x.id === id)
+      // os#1385 — la FENÊTRE est de l'hôte, la FIGURE qu'on lui attache est de ce document.
+      const o = this._host._main_zone_occupants.find(x => x.id === id)
       if (!o) return
       if (entry.figures) {
         Object.entries(entry.figures).forEach(([key, v]) => {
@@ -3501,7 +3554,7 @@ export class Class_MenuConfig {
     // os#1394 — LA SÉLECTION REPREND LA MAIN sur l'inspecteur. Le drapeau est posé ici et non
     // dans le processus différé : il doit valoir dès le geste, pas un tour de boucle plus tard,
     // sans quoi un clic sur une fenêtre juste après une sélection serait jugé dans le désordre.
-    this._inspector_focus = 'selection'
+    this._host._inspector_focus = 'selection'
     this._add_waiting_process(
       'updateInspector',
       (_this: Class_MenuConfig) => {

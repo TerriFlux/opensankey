@@ -188,6 +188,28 @@ export abstract class DrawLabelBase {
 
   // =================== MÉTHODES COMMUNES ===================
 
+  /**
+   * os#1385 (lot 3, D4) — IDENTIFIANT DOM D'UN OBJET DE CE LIBELLÉ, préfixé par sa zone.
+   *
+   * Un identifiant DOM doit être unique dans le DOCUMENT, et les nôtres ne le sont que dans
+   * LEUR canevas : `name_label_fo_<id du nœud>` est le même mot dans le diagramme qu'on édite
+   * et dans la feuille ouverte à côté, puisque les deux portent les mêmes objets de modèle.
+   * Tant que chaque zone ne cherchait ses objets que dans SA sélection d3, le doublon ne
+   * coûtait rien ; il coûte dès qu'un lecteur passe par le DOCUMENT :
+   * `foreignObjectToSvgText.ts` retrouve le foreignObject VIVANT d'un clone par
+   * `document.getElementById(foNode.id)` — pour mesurer le retour à la ligne sur un nœud qui a
+   * une boîte de rendu —, et sans préfixe il mesurerait l'homonyme du premier canevas de la
+   * page. L'export d'une feuille ouverte en fenêtre prendrait ainsi la mise en ligne du
+   * diagramme d'à côté. Même raison pour l'éditeur en ligne (`getElementById(inputId)`) : la
+   * frappe irait dans l'input homonyme de l'autre canevas.
+   *
+   * Vide pour le canevas du conteneur principal (cf. `DrawingArea.dom_id_prefix`) : pas un
+   * octet ne change pour le diagramme qu'on édite, ses exports et ses sondes.
+   */
+  protected domId(name: string): string {
+    return (this._element.drawing_area?.dom_id_prefix ?? '') + name
+  }
+
   protected getTextSelector(): string {
     return `.${this.prefix}_text`
   }
@@ -380,7 +402,7 @@ export abstract class DrawLabelBase {
       .classed(`${this.prefix}_bg`, true)
       .classed(this.prefix, true)
       .classed(className, true)
-      .attr('id', `${className}_${this.getElementId()}`)
+      .attr('id', this.domId(`${className}_${this.getElementId()}`))
       .attr('fill', bgValues.color_visible ? (bgValues.color_sustainable ? bgValues.color : this._element.getShapeColorToUse()) : 'none')
       .attr('fill-opacity', bgValues.opacity)
       .attr('stroke', bgValues.border_visible ? (bgValues.border_color_sustainable ? bgValues.border_color : this._element.getShapeColorToUse()) : 'none')
@@ -553,8 +575,11 @@ export abstract class DrawLabelBase {
       fullRedraw()
     }
 
+    // Préfixées comme les autres : l'identifiant d'un Class_Handler devient son identifiant DOM
+    // (`svg_group` = `gg_` + identifiant nettoyé), et deux canevas affichant le même nœud
+    // poseraient sinon deux poignées homonymes dans le même document.
     this._resize_handle_left = new Class_LabelResizeHandler(
-      `label_resize_${this.prefix}_left_${this.getElementId()}`,
+      this.domId(`label_resize_${this.prefix}_left_${this.getElementId()}`),
       this._element.drawing_area,
       this._element,
       dragStart(),
@@ -563,7 +588,7 @@ export abstract class DrawLabelBase {
       { class: 'label_resize_handle label_resize_handle_left' }
     )
     this._resize_handle_right = new Class_LabelResizeHandler(
-      `label_resize_${this.prefix}_right_${this.getElementId()}`,
+      this.domId(`label_resize_${this.prefix}_right_${this.getElementId()}`),
       this._element.drawing_area,
       this._element,
       dragStart(),
@@ -872,10 +897,13 @@ export abstract class DrawLabelBase {
     const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
 
     this.d3_selection = d3_selection.append('g')
-      .attr('id', `g_fo_${this.prefix}_${this.getElementId()}`)
+      .attr('id', this.domId(`g_fo_${this.prefix}_${this.getElementId()}`))
 
     const d3_selection_g_FO = this.d3_selection.append('foreignObject')
-      .attr('id', `${this.prefix}_fo_${this.getElementId()}`)
+      // Celui-ci est relu PAR LE DOCUMENT à l'export (`convertForeignObjectsInPlace` cherche
+      // l'original vivant du clone pour mesurer son retour à la ligne) : c'est l'identifiant
+      // du fichier qui rend cette recherche juste hors du conteneur principal.
+      .attr('id', this.domId(`${this.prefix}_fo_${this.getElementId()}`))
       .attr('class', 'element_fo')
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
@@ -1066,7 +1094,7 @@ export abstract class DrawLabelBase {
 
     // Créer le groupe
     this.d3_selection = this._element.d3_selection.append('g')
-      .attr('id', `g_image_${this.prefix}_${this.getElementId()}`)
+      .attr('id', this.domId(`g_image_${this.prefix}_${this.getElementId()}`))
       .classed('illustration', true)
       .classed(`illustration_${this.prefix}`, true)
 
@@ -1088,7 +1116,7 @@ export abstract class DrawLabelBase {
 
     // Dessiner l'image
     const _imageElement = this.d3_selection.append('image')
-      .attr('id', `image_${this.prefix}_${this.getElementId()}`)
+      .attr('id', this.domId(`image_${this.prefix}_${this.getElementId()}`))
       .attr('class', 'illustration image')
       .attr('xlink:href', this._label_values.image_src)
       .attr('x', final_x)
@@ -1141,7 +1169,7 @@ export abstract class DrawLabelBase {
     const [icon_width, icon_height] = this.getIconSize()
 
     this.d3_selection = this._element.d3_selection.append('g')
-      .attr('id', `g_icon_${this.prefix}_${this.getElementId()}`)
+      .attr('id', this.domId(`g_icon_${this.prefix}_${this.getElementId()}`))
       .classed('illustration', true)
       .classed(`illustration_${this.prefix}`, true)
 
@@ -1159,7 +1187,7 @@ export abstract class DrawLabelBase {
     )
 
     const d3_selection_icon_svg = this.d3_selection.append('svg')
-      .attr('id', `icon_svg_${this.prefix}_${this.getElementId()}`)
+      .attr('id', this.domId(`icon_svg_${this.prefix}_${this.getElementId()}`))
       .attr('class', 'illustration_svg')
       .attr('viewBox', this._label_values.view_box ? this._label_values.view_box : '0 0 1000 1000')
       .attr('x', icon_pos_x)
@@ -1367,7 +1395,9 @@ export abstract class DrawLabelBase {
     const foSel = this.d3_selection?.select(`.${this.prefix}_fo_input`)
     foSel?.style('display', null)
     this.d3_selection?.select(`.${this.prefix}_text`).style('display', 'none')
-    const inputId = `${this.prefix}_input_${this.getElementId()}`
+    // Recherche PAR LE DOCUMENT : l'identifiant doit donc être celui de CETTE zone (cf.
+    // `domId`), sinon la frappe irait dans l'input homonyme d'un autre canevas de la page.
+    const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
     const input = document.getElementById(inputId) as HTMLElement | null
     if (!input) return
     // Capturé AVANT toute réécriture du contenu : c'est la valeur que l'undo restaure.
@@ -1419,7 +1449,7 @@ export abstract class DrawLabelBase {
     const before = this._edit_value_before
     this._edit_value_before = null
     if (before === null || !this.onInputChange) return
-    const inputId = `${this.prefix}_input_${this.getElementId()}`
+    const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
     const input = document.getElementById(inputId) as HTMLElement | null
     // Lu avant setInputLabelInvisible : le redraw détruit l'input.
     const after = input?.innerText ?? before
@@ -1441,7 +1471,7 @@ export abstract class DrawLabelBase {
    */
   public openInlineEditor() {
     if (!this._element.drawing_area.editable || !this.enableEditing) return
-    const inputId = `${this.prefix}_input_${this.getElementId()}`
+    const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
     if (!document.getElementById(inputId)) {
       this._force_editable_draw = true
       this.drawGenericLabel()
@@ -1506,7 +1536,9 @@ export abstract class DrawLabelBase {
     const div = fo.append('xhtml:div')
       .classed(this.prefix, true)
       .classed(`${this.prefix}_input`, true)
-      .attr('id', `${this.prefix}_input_${this._element.id}`)
+      // Même identifiant que celui que `setInputLabelVisible` / `openInlineEditor` cherchent
+      // par le document : préfixé par la zone (`getElementId()` vaut `_element.id`).
+      .attr('id', this.domId(`${this.prefix}_input_${this.getElementId()}`))
       .attr('contenteditable', 'true')
       .style('display', 'inline-block')
       .style('min-height', `${line_height}px`)
@@ -1648,12 +1680,20 @@ export abstract class DrawLabelBase {
     if (!labelText && !this._force_editable_draw) return
 
     this.d3_selection = d3_selection.append('g')
+      // NON préfixé, et délibérément : ce nom ne porte pas l'élément (`g_name_label` est posé
+      // à l'identique sur CHAQUE nœud du même diagramme). Il est déjà multiple à l'intérieur
+      // d'un canevas, personne ne le cherche par identifiant, et le préfixer ne le rendrait
+      // unique nulle part — cf. `domId` pour ceux qui, eux, doivent l'être.
       .attr('id', `g_${this.prefix}`)
 
     const additionalClasses = this.getTextClasses()
 
     const textElement = this.d3_selection.append('text')
-      .attr('id', this.getTextElementId())
+      // Préfixé au SEUL endroit qui le pose : les deux sous-classes le composent à partir de
+      // l'identifiant de l'élément, donc il est homonyme d'un canevas à l'autre. Personne ne le
+      // cherche par le document aujourd'hui (le positionnement passe par les classes), mais un
+      // identifiant dupliqué dans la page est un piège qu'on ne laisse pas derrière soi.
+      .attr('id', this.domId(this.getTextElementId()))
 
     additionalClasses.forEach(cls => textElement.classed(cls, true))
     textElement.classed(`${this.prefix}_text`, true)
