@@ -119,7 +119,30 @@ export type Type_MainZoneSubject =
   // Absent (fichiers d'avant cette date, où les doublons étaient impossibles) : la clé VAUT
   // l'identifiant de l'élément — cf. mainZonePaneKeyAt.
   | { kind: 'elements', ids: string[], keys?: string[], sheet?: string }
-export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements']
+  /**
+   * os#1420 (16/09/2026) — LE TROISIÈME SUJET : ÉPINGLÉ À UN CRITÈRE, et non à des objets.
+   *
+   * « Les nœuds portant l'étiquette Importations » — le groupe d'étiquettes `tagg_id`, l'étiquette
+   * `tag_id`, et c'est le diagramme qui dit, à chaque instant, quels nœuds cela fait.
+   *
+   * POURQUOI un troisième sujet plutôt qu'une liste d'ids bien remplie : une liste (`elements`) est
+   * figée sur des IDENTIFIANTS, et une figure qui suit la navigation change de nœuds sous elle — un
+   * changement de niveau en fait disparaître une partie, et le groupe se vide à moitié pendant que
+   * la fenêtre garde son titre. Elle annonce alors quelque chose qu'elle ne montre plus. Un critère,
+   * lui, se REPOSE à chaque résolution : il désigne toujours ce qu'il dit.
+   *
+   * POURQUOI SEULEMENT LES ÉTIQUETTES DE NŒUDS, pour l'instant : une étiquette de nœuds est un
+   * critère au sens strict — un nœud la porte ou non (`Class_NodeTag._references`). Une étiquette de
+   * DONNÉES n'en est pas un : `Class_DataTag._references` vaut `sankey.links_dict`, donc TOUS les
+   * flux — elle ne sélectionne rien, elle nomme une lecture des valeurs. Une dimension (niveau,
+   * ancêtre) ferait un critère recevable et viendra si l'usage le demande ; on n'ouvre pas deux
+   * formes à la fois pour une seule dont on sait ce qu'elle doit faire.
+   *
+   * `sheet` s'y lit comme sur les autres sujets épinglés : le critère s'applique à la feuille
+   * nommée, sinon à la feuille courante.
+   */
+  | { kind: 'tag', tagg_id: string, tag_id: string, sheet?: string }
+export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements', 'tag']
 /**
  * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
  * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME sur la feuille courante,
@@ -934,7 +957,17 @@ export class Class_MenuConfig {
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
-  /** Épingle (node/link/elements) ou remet à suivre (selection) une fenêtre à sujet élément. */
+  /**
+   * Épingle (node/link/elements/tag) ou remet à suivre (selection) une fenêtre à sujet élément.
+   *
+   * os#1420 — UN SUJET À CRITÈRE N'ÉLAGUE PAS LES FIGURES, et c'est délibéré. Le ménage de
+   * `elements` s'appuie sur la liste des clés VIVANTES, que le sujet porte ; un critère ne la porte
+   * pas — les clés sont les nœuds que le diagramme désigne à cet instant, et cette classe ne
+   * connaît pas le diagramme. Élaguer sur ce qu'on sait ici reviendrait à tout jeter. Le coût de ne
+   * pas élaguer est qu'une figure réglée sur un nœud qui cesse de porter l'étiquette survit dans
+   * l'annuaire, et se retrouve telle quelle si le nœud la porte à nouveau — ce qui est plutôt le
+   * comportement attendu d'un critère : ce n'est pas l'auteur qui a retiré la vignette.
+   */
   public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
     const o = this._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
@@ -1493,6 +1526,11 @@ export class Class_MenuConfig {
       // valent leurs identifiants : c'est ce qui rend le fichier relisable tel quel quand deux
       // vignettes montrent le même nœud, cas où `ids` seul ne dit plus laquelle est laquelle.
       if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
+      // os#1420 — un sujet à CRITÈRE n'écrit que le critère (groupe + étiquette) : les nœuds qu'il
+      // désigne se redemandent au diagramme à l'ouverture, et les écrire ici les figerait — ce qui
+      // est exactement ce à quoi ce sujet sert à échapper.
+      if ('tagg_id' in o.subject) subject['tagg_id'] = o.subject.tagg_id
+      if ('tag_id' in o.subject) subject['tag_id'] = o.subject.tag_id
       if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
       const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
       // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
@@ -1549,10 +1587,19 @@ export class Class_MenuConfig {
           // quoi une clé orpheline décalerait toutes les suivantes d'un cran.
           const raw_keys = sj['keys']
           const keys = Array.isArray(raw_keys) ? raw_keys.map(x => (typeof x === 'string' ? x : '')) : []
+          // os#1420 — le critère d'un sujet épinglé à une étiquette : GROUPE et ÉTIQUETTE, les deux
+          // ou rien. Une moitié de critère ne désigne pas « moins de nœuds », elle n'en désigne
+          // aucun tout en prétendant le contraire : la fenêtre retombe alors sur le défaut du
+          // jalon — elle SUIT la sélection —, ce qui la rend immédiatement utile plutôt que muette.
+          const tagg_id = getStringFromJSON(sj, 'tagg_id', '')
+          const tag_id = getStringFromJSON(sj, 'tag_id', '')
           let subject: Type_MainZoneSubject = { kind: 'diagram' }
           if (kind === 'selection') subject = { kind: 'selection' }
           else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
           else if (kind === 'elements') subject = { kind: 'elements', ids, keys: mainZonePaneKeys({ ids, keys }) }
+          else if (kind === 'tag') {
+            subject = (tagg_id !== '' && tag_id !== '') ? { kind: 'tag', tagg_id, tag_id } : { kind: 'selection' }
+          }
           if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
           // os#1418 — DEUX FORMATS DE RÉGLAGES, et un seul des deux par fenêtre : `figures` (le
           // format d'aujourd'hui, une entrée par vignette) ou `options` (celui d'avant, un sac

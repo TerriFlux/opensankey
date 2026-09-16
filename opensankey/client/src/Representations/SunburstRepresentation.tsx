@@ -36,6 +36,8 @@ import {
   Type_SunburstOptions
 } from '../Charts/SunburstHierarchy'
 import { drawSunburstChart } from '../Charts/SunburstChart'
+// os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
+import { figureNavigationOf } from '../Charts/FigureNavigation'
 
 // Ce que le sunburst lit du contexte du registre.
 export interface Type_SunburstDrawContext {
@@ -46,6 +48,11 @@ export interface Type_SunburstDrawContext {
 // Options du registre (sac de clés) → options typées du sunburst. Toute clé absente ou
 // mal typée retombe sur le défaut : un réglage persisté par une version ultérieure ne
 // doit pas casser le rendu, il doit être ignoré.
+//
+// os#1420 — `data_tags` N'EST PAS LU ICI, et ce n'est pas un oubli : l'étiquette de
+// données épinglée ne règle pas le DESSIN de la couronne (ni son axe, ni son régime de
+// valeur, ni sa profondeur), elle dit sous quelles coordonnées lire le modèle. C'est de
+// la navigation, et elle se résout par `figureNavigationOf` dans `draw`.
 export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_SunburstOptions => {
   const value_mode = raw.value_mode === 'declared' ? 'declared' : 'sum'
   const max_depth = typeof raw.max_depth === 'number' && raw.max_depth > 0
@@ -105,11 +112,15 @@ export const drawSunburstRepresentation = (
   const t = app_data.t
   const sankey = app_data.drawing_area.sankey
   const options = readSunburstOptions(ctx.options ?? {})
+  // La navigation de CETTE figure : l'étiquette de données épinglée si elle en a une,
+  // sinon celle du diagramme (cf. Charts/FigureNavigation).
+  const nav = figureNavigationOf(sankey, ctx.options ?? {})
 
   const tree = buildSunburstTree(
     sankey,
     options,
-    t('sunburst.unallocated') as string
+    t('sunburst.unallocated') as string,
+    nav
   )
   if (!tree) {
     container.textContent = t('sunburst.empty') as string
