@@ -189,12 +189,67 @@ export type Type_SheetEntry = {
   /** Nom affiché dans l'onglet (bas de la grande zone). */
   name: string
   /**
+   * os#1385 (lot 4, D8) — TYPE du document que porte la feuille. ABSENT vaut
+   * `'sankey'` : tout fichier écrit avant ce champ se relit à l'identique, et tout
+   * fichier qui n'a que des feuilles Sankey se réécrit sans gagner une seule clé.
+   *
+   * Un type INCONNU se conserve tel quel, sans jamais être chargé : le registre des
+   * types arrive au lot 5, et d'ici là une feuille d'un autre type est une entrée
+   * OPAQUE (`{ name, type, json }`) qu'on transporte sans la comprendre — la perdre à
+   * la première sauvegarde serait bien pire que ne pas savoir l'afficher.
+   */
+  type?: string
+  /**
    * Snapshot gzip du diagramme complet de la feuille (JSON du document SANS la clé
    * racine `sheets` — cf. `toSheetContentJSON`). `undefined` pour la feuille
-   * COURANTE : son contenu est l'état vivant (drawing_area + vues), rafraîchi ici à
-   * chaque bascule / sauvegarde.
+   * COURANTE quand elle porte un Sankey : son contenu est l'état vivant
+   * (drawing_area + vues), rafraîchi ici à chaque bascule / sauvegarde.
+   *
+   * os#1385 (lot 4, D8) — RÈGLE DE LA RACINE, transitoire : « la racine du fichier
+   * porte toujours un Sankey, le courant s'il en est un, sinon le dernier Sankey
+   * actif ». Une feuille courante d'un AUTRE type garde donc son `json` à elle, la
+   * racine restant lisible par tous les lecteurs qui supposent un Sankey (viewer,
+   * parc publié, serveur, SEP, cartofob).
    */
   json?: Uint8Array
+}
+
+/** os#1385 (lot 4, D8) — le type d'une feuille qui porte un diagramme Sankey. */
+export const SHEET_TYPE_SANKEY = 'sankey'
+
+/**
+ * os#1385 (lot 4, D8) — « cette feuille porte-t-elle un Sankey ? ». Dit à un seul
+ * endroit que l'ABSENCE de type vaut `'sankey'` : c'est cette équivalence qui fait
+ * qu'aucun fichier antérieur n'a besoin de migration.
+ */
+export const isSankeySheetType = (type?: string): boolean =>
+  type === undefined || type === SHEET_TYPE_SANKEY
+
+/**
+ * os#1385 (lot 4, D8) — L'ÉTAT DE L'ESPACE DE TRAVAIL, LU DEPUIS UN FICHIER.
+ *
+ * `language` et `panels` ne décrivent pas le diagramme : ce sont des préférences
+ * d'INTERFACE, partagées par tous les documents ouverts (inventaire 4 §1.2, « trois
+ * clés d'hôte rangées dans le document »). Elles vivent désormais sous la clé racine
+ * `workspace`, écrite par le document PRINCIPAL seulement.
+ *
+ * REPLI SUR LA RACINE, dit ici UNE fois pour les deux `_fromJSON` (OS et OS+) : un
+ * fichier antérieur porte `language` et `panels` à la racine et doit se relire tel
+ * quel — aucune migration, aucun incrément de `format_version`.
+ */
+export const workspaceStateFromJSON = (
+  json_object: Type_JSON
+): { language?: string, panels?: Type_JSON } => {
+  const raw = json_object['workspace']
+  const workspace = (raw && typeof raw === 'object' && !Array.isArray(raw))
+    ? raw as Type_JSON
+    : undefined
+  const state: { language?: string, panels?: Type_JSON } = {}
+  const language = workspace?.['language'] ?? json_object['language']
+  if (typeof language === 'string' && language !== '') state.language = language
+  const panels = workspace?.['panels'] ?? json_object['panels']
+  if (panels && typeof panels === 'object' && !Array.isArray(panels)) state.panels = panels as Type_JSON
+  return state
 }
 
 /**
@@ -1421,8 +1476,9 @@ export class Class_ApplicationData {
    */
   protected _toJSON(kwargs?: Type_JSON) {
     const json_object = {} as Type_JSON
-    if (this._language !== undefined)
-      json_object['language'] = this._language
+    // os#1385 (lot 4, D8) — LA LANGUE ET LES PANNEAUX SONT DE L'ESPACE DE TRAVAIL, et
+    // partent ensemble sous la clé racine `workspace` (cf. `workspaceToJSON`).
+    this.workspaceToJSON(json_object, kwargs)
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     const doc_serialized = serializeDocMarkdown(this._documentation_markdown)
     if (doc_serialized !== undefined) json_object['documentation_markdown'] = doc_serialized
@@ -1454,11 +1510,6 @@ export class Class_ApplicationData {
     // la fenêtre la perdrait précisément dans le cas où elle compte.
     const figures = this.menu_configuration.figuresToJSON()
     if (figures) json_object['figures'] = figures
-    // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
-    // os#1385 — les panneaux sont de l'HÔTE, et l'hôte est partagé : seul le document
-    // principal les écrit. Un instantané de feuille resérialisé embarquerait sinon la
-    // disposition de l'utilisateur, qui n'est pas une propriété de cette feuille.
-    if (this.is_main) json_object['panels'] = this.menu_configuration.panels.toJSON()
     // OS#85 — Feuilles du document (clé racine `sheets`). La racine du fichier EST le
     // contenu de la feuille courante (compat : un ancien lecteur l'affiche telle quelle).
     this.sheetsToJSON(json_object, kwargs)
@@ -1592,12 +1643,20 @@ export class Class_ApplicationData {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    // os#1385 (lot 4, D8) — LA LANGUE D'AVANT, retenue pour `workspaceFromJSON` : la
+    // relecture de la zone de dessin écrase `language` depuis la clé RACINE du même nom
+    // (`SankeyPersistence.fromJSON`), et un contenu de feuille n'en porte plus.
+    const language_before = this._language
     // Update drawing area
     DrawingAreaPersistence.fromJSON(this._drawing_area, json_object, kwargs)
+    // os#1385 (lot 4, D8) — Langue et panneaux : clé racine `workspace`, repli sur la
+    // racine pour les fichiers antérieurs. Lu AVANT la documentation, qui range une doc
+    // historique en chaîne sous la langue déclarée du fichier.
+    this.workspaceFromJSON(json_object, kwargs, language_before)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
     this._documentation_markdown = parseDocMarkdown(
       json_object['documentation_markdown'],
-      json_object['language'] as string | undefined
+      workspaceStateFromJSON(json_object).language
     )
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
@@ -1649,22 +1708,91 @@ export class Class_ApplicationData {
     }
     // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
     this.menu_configuration?.flushFigureMigrationReport()
-    // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
-    // os#1385 — et SEULEMENT pour le document principal : les panneaux sont ceux de l'HÔTE,
-    // partagés par tous les documents. Ouvrir une fenêtre sur une autre feuille remplacerait
-    // sinon la barre latérale et les pop-ups de l'utilisateur par celles enregistrées dans
-    // cette feuille-là. Avant le lot 1, la configuration d'un document secondaire était
-    // orpheline : rien n'arrivait, et c'est ce que cette garde reproduit.
-    const panels_json = json_object['panels']
-    if (this.is_main && panels_json && typeof panels_json === 'object') {
-      this.menu_configuration?.panels.fromJSON(panels_json as Type_JSON)
-    }
     // #1316 — Viewer intégral : lit le bloc `views` (+ delta __patch) et rouvre sur la vue active.
     // No-op si le fichier n'a pas de clé `views`. OpenSankey+ réimplémente `_fromJSON` (sans super)
     // et pilote ses propres appels vues + migration viewtag ; ce chemin ne sert qu'au viewer OS pur.
     this._views_reader.viewsFromJSON(json_object)
     // OS#85 — Feuilles du document. No-op (silencieux) si le fichier n'a pas de clé `sheets`.
     this.sheetsFromJSON(json_object)
+  }
+
+  // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
+
+  /**
+   * Sérialise la clé racine `workspace` : `{ language?, panels? }`.
+   *
+   * POURQUOI UNE CLÉ À PART. La langue de l'interface et la disposition des panneaux
+   * étaient rangées à la racine, au milieu des clés du diagramme, alors qu'elles ne
+   * décrivent pas le diagramme : ce sont des préférences de l'ESPACE DE TRAVAIL,
+   * partagées par tous les documents ouverts (inventaire 4 §1.2). Les laisser au
+   * niveau du document, c'était laisser la feuille B décider de la langue de
+   * l'interface et de la largeur de la barre latérale de l'utilisateur.
+   *
+   * ÉCRITE PAR LE PRINCIPAL SEULEMENT, et jamais dans un contenu de feuille
+   * (`without_sheets`) — les deux disent la même chose : il n'y a qu'un espace de
+   * travail à l'écran, il n'a donc qu'un seul écrivain, et une feuille n'en est pas un.
+   * C'est la garde `is_main` du lot 1 (panneaux) et du lot 3 (grande zone), REMPLACÉE
+   * ici et non empilée.
+   *
+   * LA LISTE DES FENÊTRES N'Y ENTRE PAS À CE LOT : depuis le lot 3, `main_zone` (clé
+   * racine, écrite par le principal) EST la disposition de l'espace de travail —
+   * l'écrire une seconde fois sous `workspace` serait une copie, donc deux vérités.
+   * Elle rejoindra `workspace` quand elle se distinguera de la disposition par DÉFAUT
+   * du document (lot 6), à côté de `view_main_zone` qui est, elle, par vue.
+   *
+   * /!\ Clé RACINE : chez OpenSankey+ (fichier avec vues) elle doit être posée AVANT
+   * `encodeViewsAsDelta`, comme `sheets`, `library_ref` et `contexts` — la base du
+   * delta est « la racine privée de `views` », strictement identique à l'écriture et à
+   * la lecture (cf. `sheetsToJSON`).
+   */
+  protected workspaceToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+    if (kwargs && kwargs['without_sheets'] === true) return
+    if (!this.is_main) return
+    const workspace = {} as Type_JSON
+    if (this._language !== undefined) workspace['language'] = this._language
+    // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
+    workspace['panels'] = this.menu_configuration.panels.toJSON()
+    json_object['workspace'] = workspace
+  }
+
+  /**
+   * Relit la clé racine `workspace` (repli sur la racine : `workspaceStateFromJSON`).
+   *
+   * PAR LE PRINCIPAL SEULEMENT, symétrique de l'écriture : un document secondaire qui
+   * se charge (feuille ouverte dans une fenêtre, source Excel, brique) remplacerait
+   * sinon la langue et les panneaux de l'utilisateur par ceux enregistrés dans SON
+   * entrée du fichier.
+   *
+   * ET PAS QUAND LE FICHIER NE CHANGE PAS. Deux chargements posent un contenu DANS le
+   * fichier déjà ouvert plutôt que d'en ouvrir un autre : `keep_file_state` (bascule de
+   * feuille, nouvelle feuille) et `only_current_view` (bascule de vue). L'espace de
+   * travail ne change donc pas non plus — et la langue est REPOSÉE telle qu'elle était,
+   * parce que la relecture de la zone de dessin vient de l'écraser depuis la clé racine
+   * `language` que ni un contenu de feuille ni une entrée de vue ne portent.
+   *
+   * Lire l'espace de travail sur ces chemins-là serait pire qu'inutile : une entrée de
+   * vue DÉCODÉE porte la base du delta, donc les clés racines d'un fichier ANTÉRIEUR —
+   * chaque bascule de vue rejouerait la barre latérale du fichier par-dessus celle de
+   * l'utilisateur.
+   *
+   * `language` n'est posée que si le fichier en dit une : sinon on garde ce que la
+   * zone de dessin a lu (fichier antérieur), et donc l'état d'avant.
+   */
+  protected workspaceFromJSON(
+    json_object: Type_JSON,
+    kwargs: Type_JSON | undefined,
+    language_before: string | undefined
+  ): void {
+    if (kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])) {
+      this._language = language_before
+      return
+    }
+    if (!this.is_main) return
+    const state = workspaceStateFromJSON(json_object)
+    if (state.language !== undefined) this._language = state.language
+    // Garde défensive `?.` : `menu_configuration` n'est posée que par
+    // `createNewMenuConfiguration` (cf. `main_zone` ci-dessus).
+    if (state.panels) this.menu_configuration?.panels.fromJSON(state.panels)
   }
 
   // FEUILLES DE DESSIN (OS#85) =========================================================
@@ -1691,6 +1819,11 @@ export class Class_ApplicationData {
       const sheet = this._sheets[id]
       if (!sheet) return
       const entry = { name: sheet.name } as Type_JSON
+      const is_sankey = isSankeySheetType(sheet.type)
+      // os#1385 (lot 4, D8) — LE TYPE, écrit seulement s'il dit autre chose que `'sankey'` :
+      // un document qui n'a que des feuilles Sankey — c'est-à-dire tous ceux d'aujourd'hui —
+      // se réécrit octet pour octet identique, et aucun lecteur antérieur ne voit rien changer.
+      if (!is_sankey) entry['type'] = sheet.type as string
       if (id !== this._current_sheet_id) {
         // os#1385 (lot 3, D6) — UN DOCUMENT VIVANT EST LA VÉRITÉ, son instantané ne l'est
         // plus. Depuis qu'une feuille ouverte dans une fenêtre est ÉDITABLE, son instantané
@@ -1707,6 +1840,13 @@ export class Class_ApplicationData {
         } else if (sheet.json) {
           entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
         }
+      } else if (!is_sankey && sheet.json) {
+        // os#1385 (lot 4, D8) — RÈGLE DE LA RACINE. La feuille courante n'a d'ordinaire pas
+        // de `json` : la racine du fichier EST son contenu. Mais la racine doit rester un
+        // SANKEY — tous les lecteurs hors éditeur en supposent un (viewer, parc publié,
+        // serveur, SEP, cartofob) —, donc une feuille courante d'un autre type porte son
+        // contenu ICI, et la racine garde le dernier Sankey actif.
+        entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
       }
       entries[id] = entry
     })
@@ -1738,16 +1878,25 @@ export class Class_ApplicationData {
     valid_order.forEach(id => {
       const entry = entries_json[id] as Type_JSON
       const name = typeof entry['name'] === 'string' && entry['name'] !== '' ? entry['name'] as string : this._defaultSheetName(1)
+      // os#1385 (lot 4, D8) — le TYPE est CONSERVÉ tel quel, même inconnu de cette version :
+      // le registre des types arrive au lot 5, et transporter une entrée qu'on ne sait pas
+      // afficher vaut infiniment mieux que la perdre à la première sauvegarde.
+      const raw_type = entry['type']
+      const type = (typeof raw_type === 'string' && raw_type !== '') ? raw_type : undefined
       const content = entry['json']
       let json: Uint8Array | undefined = undefined
-      if (id !== current && content && typeof content === 'object' && !Array.isArray(content)) {
+      // os#1385 (lot 4, D8) — LA COURANTE AUSSI, quand elle en porte un. Jusqu'ici le `json`
+      // d'une entrée courante était ignoré (la racine était forcément son contenu) ; avec la
+      // règle de la racine, une feuille courante d'un autre type porte le sien, et l'ignorer
+      // reviendrait à jeter son contenu à la relecture.
+      if (content && typeof content === 'object' && !Array.isArray(content)) {
         // Défense en profondeur : le contenu d'une feuille ne doit jamais porter lui-même
         // une clé `sheets` (pas de récursion) — on la retire si un fichier bricolé en a une.
         const content_json = { ...(content as Type_JSON) }
         delete content_json['sheets']
         json = compressJSONToGzip(content_json)
       }
-      sheets[id] = { name, json }
+      sheets[id] = { name, type, json }
     })
     // La feuille courante est portée par la racine du fichier (état vivant) : pas de snapshot.
     this._sheets = sheets
@@ -1871,6 +2020,17 @@ export class Class_ApplicationData {
     if (!this.has_sheets || id === this._current_sheet_id) return
     const target = this._sheets[id]
     if (!target || !target.json) return
+    // os#1385 (lot 4, D8) — ON NE BASCULE PAS SUR UN TYPE QU'ON NE SAIT PAS CHARGER. La
+    // bascule passe par `fromJSON`, qui lit un Sankey : y envoyer le contenu d'un autre type
+    // afficherait un diagramme vide et écraserait la feuille. Le registre des types (lot 5)
+    // lèvera ce refus ; jusque-là l'entrée est transportée, pas ouverte.
+    if (!isSankeySheetType(target.type)) {
+      console.warn(
+        'os#1385 — la feuille « ' + target.name + ' » est de type « ' + target.type +
+        ' » : aucun lecteur pour ce type, bascule refusée.'
+      )
+      return
+    }
     // os#1385 (lot 3, D6) — LA CIBLE CESSE DE VIVRE AVANT QU'ON N'EN LISE L'INSTANTANÉ.
     // Si une fenêtre l'avait ouverte et qu'on y a travaillé, son instantané date d'avant :
     // le charger tel quel afficherait un diagramme périmé et perdrait le travail. On le
@@ -2008,6 +2168,11 @@ export class Class_ApplicationData {
    * qu'« enregistrer » depuis sa fenêtre enregistre le fichier (cf. `file_holder`).
    */
   public sheetApplication(sheet_id: string): Class_ApplicationData | null {
+    // os#1385 (lot 4, D8) — UN AUTRE TYPE N'EST PAS UN DOCUMENT SANKEY, et c'est vrai même
+    // pour la feuille COURANTE : sous la règle de la racine, `this` porte alors le dernier
+    // Sankey actif, pas cette feuille-là. Rendre `this` montrerait le mauvais diagramme, en
+    // silence — `null` fait dire à la fenêtre qu'elle n'a pas de sujet, ce qui est exact.
+    if (!isSankeySheetType(this._sheets[sheet_id]?.type)) return null
     if (sheet_id === '' || sheet_id === this._current_sheet_id) return this
     const sheet = this._sheets[sheet_id]
     if (!sheet || !sheet.json) return null

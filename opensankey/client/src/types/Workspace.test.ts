@@ -154,9 +154,15 @@ describe('os#1385 — la configuration de menus : hote partage, document propre'
 
 describe('os#1385 — persistance : seul le document principal ecrit la disposition de lhote', () => {
 
-  /** Un fichier valide, avec un bloc `panels` qui demande une barre latérale large. */
+  /**
+   * Un fichier valide, avec un bloc `panels` qui demande une barre latérale large.
+   *
+   * os#1385 (lot 4) — À LA RACINE, donc un fichier ANTÉRIEUR à la clé `workspace` : c'est
+   * exactement la forme dont la relecture doit rester capable (repli racine).
+   */
   const fileWithPanels = (source: Class_ApplicationData, width_px: number): Type_JSON => {
     const file = source.toJSON() as Type_JSON
+    delete file['workspace']
     file['panels'] = {
       sidebar_id: '', sidebar_width_px: width_px, sidebar_open: false, popups: {}
     } as unknown as Type_JSON
@@ -186,8 +192,11 @@ describe('os#1385 — persistance : seul le document principal ecrit la disposit
     const ws = new Class_Workspace(false)
     ws.createDocument()
     const second = ws.createDocument({ offscreen: true })
-    expect('panels' in (second.toJSON() as Type_JSON)).toBe(false)
-    expect('panels' in (ws.main!.toJSON() as Type_JSON)).toBe(true)
+    // os#1385 (lot 4) — les panneaux sont sous la clé racine `workspace`, plus à la racine.
+    expect('workspace' in (second.toJSON() as Type_JSON)).toBe(false)
+    const main_json = ws.main!.toJSON() as Type_JSON
+    expect('panels' in main_json).toBe(false)
+    expect('panels' in (main_json['workspace'] as Type_JSON)).toBe(true)
   })
 })
 
