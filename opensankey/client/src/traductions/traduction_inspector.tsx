@@ -11,6 +11,10 @@ export const resources_inspector = {
   //=======================================================
   en: {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: 'Select all'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
@@ -397,6 +401,10 @@ export const resources_inspector = {
   //=======================================================
   fr: {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: 'Tout sélectionner'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
@@ -771,6 +779,10 @@ export const resources_inspector = {
   //=======================================================
   es: {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: 'Seleccionar todo'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
@@ -1121,6 +1133,10 @@ export const resources_inspector = {
   //=======================================================
   de: {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: 'Alle auswählen'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
@@ -1471,6 +1487,10 @@ export const resources_inspector = {
   //=======================================================
   it: {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: 'Seleziona tutto'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
@@ -1818,6 +1838,10 @@ export const resources_inspector = {
   },
   'zh-CN': {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: '全选'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
@@ -2172,6 +2196,10 @@ export const resources_inspector = {
   },
   ja: {
     translation: {
+      // #555 — case « tout cocher » d'OSMultiSelect : générique (nœuds, flux, étiquettes…).
+      multi_select: {
+        select_all: 'すべて選択'
+      },
       inspector: {
         // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
         // unitaire). Elle porte sur UN nœud ou UN flux, là où

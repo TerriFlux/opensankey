@@ -1494,17 +1494,29 @@ export const menuStyles = {
   menu_select_elements: menu.definePartsStyle({
     item: {
       display: 'grid',
-      gridTemplateColumns: '1fr 9fr',
+      // #555 — colonne d'icône à sa taille, libellé dans le reste : un libellé long passe à la
+      // ligne au lieu d'élargir la liste au-delà de l'écran.
+      gridTemplateColumns: '1rem minmax(0, 1fr)',
       gridColumnGap: '0.25rem',
       fontSize: 'default_font_size',
+      textAlign: 'start',
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
       span: { margin: 0, padding: 0 },
       'span.chakra-menu__icon-wrapper': { margin: 'auto' },
       svg: { width: '0.8rem', height: '0.8rem' },
       _hover: { bg: 'lightgrey' }
     },
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      // #555 — la liste tient dans l'écran. Hauteur : place réellement disponible du côté où elle
+      // s'ouvre, posée par OSMultiSelect (`--os-menu-select-max-h`) et recalculée à chaque
+      // repositionnement ; repli sur la hauteur de la fenêtre, exprimée en `vh` pour suivre un
+      // redimensionnement (l'ancienne valeur en pixels était figée au chargement du thème).
+      // Largeur bornée : les libellés longs vont à la ligne (cf. `item`).
+      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
+      maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
+      overflowX: 'hidden',
       border: 'solid 1px',
       borderColor: 'primaire.5'
     }
@@ -1512,7 +1524,7 @@ export const menuStyles = {
 
   menu_select_style: menu.definePartsStyle({
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
       borderColor: 'primaire.5'
@@ -2492,17 +2504,29 @@ export const tabsStyles = {
   menu_select_elements: menu.definePartsStyle({
     item: {
       display: 'grid',
-      gridTemplateColumns: '1fr 9fr',
+      // #555 — colonne d'icône à sa taille, libellé dans le reste : un libellé long passe à la
+      // ligne au lieu d'élargir la liste au-delà de l'écran.
+      gridTemplateColumns: '1rem minmax(0, 1fr)',
       gridColumnGap: '0.25rem',
       fontSize: default_font_size,
+      textAlign: 'start',
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
       span: { margin: 0, padding: 0 },
       'span.chakra-menu__icon-wrapper': { margin: 'auto' },
       svg: { width: '0.8rem', height: '0.8rem' },
       _hover: { bg: 'lightgrey' }
     },
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      // #555 — la liste tient dans l'écran. Hauteur : place réellement disponible du côté où elle
+      // s'ouvre, posée par OSMultiSelect (`--os-menu-select-max-h`) et recalculée à chaque
+      // repositionnement ; repli sur la hauteur de la fenêtre, exprimée en `vh` pour suivre un
+      // redimensionnement (l'ancienne valeur en pixels était figée au chargement du thème).
+      // Largeur bornée : les libellés longs vont à la ligne (cf. `item`).
+      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
+      maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
+      overflowX: 'hidden',
       border: 'solid 1px',
       borderColor: 'primaire.5'
     }
@@ -2510,7 +2534,7 @@ export const tabsStyles = {
 
   menu_select_style: menu.definePartsStyle({
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
       borderColor: 'primaire.5'

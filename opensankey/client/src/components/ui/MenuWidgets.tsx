@@ -194,6 +194,44 @@ export type typeElementSelectable = {
 
 
 /**
+ * #555 — Borne la HAUTEUR de la liste d'un menu à la place disponible dans l'écran.
+ *
+ * Popper choisit le côté d'ouverture (placement 'auto') et recale la liste le long de son bouton,
+ * mais ne limite jamais sa taille : une longue liste ouverte sous un bouton à mi-écran sortait par
+ * le bas de la fenêtre, sans barre de défilement. À chaque calcul de position (ouverture,
+ * défilement, redimensionnement), ce modificateur mesure la place du côté retenu et la pose dans
+ * la variable CSS `--os-menu-select-max-h`, lue par les variantes de thème `menu_select_*` ;
+ * au-delà, la liste défile.
+ */
+const MENU_LIST_SCREEN_MARGIN_PX = 16
+const MENU_LIST_MIN_HEIGHT_PX = 80
+export const fitMenuListToViewport = {
+  name: 'fitMenuListToViewport',
+  enabled: true,
+  phase: 'beforeWrite' as const,
+  requires: ['computeStyles'],
+  fn: ({ state, instance }: {
+    state: { placement: string, elements: { reference: { getBoundingClientRect: () => DOMRect }, popper: HTMLElement } },
+    instance: { update: () => unknown }
+  }) => {
+    const side = state.placement.split('-')[0]
+    const ref = state.elements.reference.getBoundingClientRect()
+    const room = side === 'top'
+      ? ref.top
+      : side === 'bottom' ? window.innerHeight - ref.bottom : window.innerHeight
+    const max_h = Math.max(MENU_LIST_MIN_HEIGHT_PX, Math.floor(room - MENU_LIST_SCREEN_MARGIN_PX)) + 'px'
+    const popper = state.elements.popper
+    if (popper.style.getPropertyValue('--os-menu-select-max-h') !== max_h) {
+      popper.style.setProperty('--os-menu-select-max-h', max_h)
+      // La taille de la liste vient de changer : repositionner avec la nouvelle hauteur (sinon une
+      // liste ouverte vers le haut resterait décollée de son bouton). Pas de boucle : au passage
+      // suivant la valeur est identique.
+      instance.update()
+    }
+  }
+}
+
+/**
  * Component to select multple element from a list passed in parameter
  *
  * @param {*} {
@@ -236,7 +274,7 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
         setMenuListItems(renderMenu())
-      }}>{t('Noeud.TS')}</MenuItem>
+      }}>{t('multi_select.select_all')}</MenuItem>
     <MenuDivider />
   </> : <></>
 
@@ -271,6 +309,7 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
 
   return <Menu isLazy
     placement='auto'
+    modifiers={[fitMenuListToViewport]}
     variant={'menu_select_elements'}
     closeOnSelect={false}
     isOpen={displayBgOverlay}
