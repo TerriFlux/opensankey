@@ -42,7 +42,9 @@ export interface Type_SunburstChartOptions {
   theme?: 'light' | 'dark'
   // Clic sur un secteur. L'appelant décide ce que ça veut dire côté diagramme
   // (désagréger le nœud, le sélectionner…) ; le zoom radial, lui, est géré ici.
-  on_arc_click?: (node_id: string, is_disaggregated: boolean) => void
+  // `dimension_id` est l'axe QUE CE SECTEUR COMMANDE : avec des axes enchaînés
+  // (os#1424) il change d'un anneau à l'autre, et c'est lui qu'il faut agréger.
+  on_arc_click?: (node_id: string, is_disaggregated: boolean, dimension_id: string) => void
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -126,6 +128,8 @@ export interface Type_SunburstSlice {
   color: string
   is_residual: boolean
   is_disaggregated: boolean
+  // L'axe que ce secteur commande (os#1424).
+  dimension_id: string
   // Nombre d'enfants DESSINÉS sous ce secteur : c'est lui qui dit si le zoom radial a
   // quelque chose à montrer, donc si le secteur est cliquable.
   children_count: number
@@ -155,7 +159,8 @@ export const foldNarrowChildren = (
     color: null,
     depth: children[0].depth,
     children: [],
-    is_residual: true
+    is_residual: true,
+    dimension_id: ''
   }]
 }
 
@@ -199,6 +204,7 @@ export const partitionSunburst = (
       color: node.is_residual ? others_color : shadeForDepth(base, depth, theme),
       is_residual: !!node.is_residual,
       is_disaggregated: !!node.is_disaggregated,
+      dimension_id: node.dimension_id,
       children_count: children.length,
       path
     })
@@ -243,7 +249,8 @@ export const capBranches = (
     color: null,
     depth: 0,
     children: [],
-    is_residual: true
+    is_residual: true,
+    dimension_id: ''
   }]
 }
 
@@ -453,7 +460,7 @@ export const drawSunburstChart = (
       })
       .on('click', (_, d) => {
         if (d.is_residual) return
-        opts.on_arc_click?.(d.id, d.is_disaggregated)
+        opts.on_arc_click?.(d.id, d.is_disaggregated, d.dimension_id)
         if (d.children_count > 0) { focus_id = d.id; render() }
       })
     paths.append('title').text(sliceTitle)
@@ -493,13 +500,23 @@ export const drawSunburstChart = (
       .style('color', palette.ink)
 
     // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
-    // et sans ce rappel un anneau n'est qu'un cercle de plus.
-    legend.append('div')
-      .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
-      .text(tree.dimension_label)
+    // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
+    // répète pas d'un anneau à l'autre : il s'écrit quand il change, et un changement
+    // d'axe est justement ce qu'il faut voir sur une couronne enchaînée (os#1424).
+    let previous_axis: string | null = null
     for (let d = 0; d < rings; d++) {
       const level = d + level_offset
-      const name = tree.level_labels[level] ??
+      const ring = tree.rings[level]
+      if (ring && ring.dimension_id !== previous_axis) {
+        legend.append('div')
+          .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
+          .style('overflow', 'hidden').style('text-overflow', 'ellipsis')
+          .style('white-space', 'nowrap')
+          .attr('title', ring.dimension_label)
+          .text(ring.dimension_label)
+        previous_axis = ring.dimension_id
+      }
+      const name = ring?.level_label ||
         (opts.level_label ? opts.level_label(level + 1) : String(level + 1))
       const row = legend.append('div')
         .style('display', 'flex').style('align-items', 'center')
@@ -514,7 +531,7 @@ export const drawSunburstChart = (
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
         // Le niveau SÉLECTIONNÉ dans le contrôleur est celui que le Sankey montre à
         // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
-        .style('font-weight', level === tree.selected_level_index ? 'bold' : 'normal')
+        .style('font-weight', ring?.is_selected_level ? 'bold' : 'normal')
         .text(name)
     }
 

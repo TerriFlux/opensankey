@@ -202,7 +202,7 @@ export const registerBaseRepresentations = (): void => {
     icon: <FaBullseye />,
     needs: { hierarchy: true },
     isAvailable: (ctx) => !!ctx.element && Array.isArray((ctx.element as { output_links_list?: unknown }).output_links_list),
-    // os#1418 — CE QUE RÈGLE LE SUNBURST, déclaré : quatre clés, trois sortes.
+    // os#1418 — CE QUE RÈGLE LE SUNBURST, déclaré : six clés, trois sortes.
     //
     // La DIMENSION est l'axe de décomposition des anneaux — la même question que le descripteur
     // d'une couronne, donc la même réponse : 'navigation', par figure et jamais par style.
@@ -227,6 +227,19 @@ export const registerBaseRepresentations = (): void => {
         it: 'Dimensione',
         'zh-CN': '维度',
         ja: 'ディメンション'
+      }),
+      // os#1424 — SIXIÈME CLÉ : ENCHAÎNER LES AXES. Elle ne dit pas QUEL axe on regarde
+      // (ça, c'est `dimension_id`) mais JUSQU'OÙ la décomposition continue quand l'axe
+      // courant n'a plus d'enfants à donner : même famille que la profondeur, donc 'style'
+      // — deux couronnes d'un même style se lisent aussi loin l'une que l'autre.
+      chain_axes: figureAttribute<boolean>(true, 'style', {
+        en: 'Chain the hierarchies',
+        fr: 'Enchaîner les hiérarchies',
+        es: 'Encadenar las jerarquías',
+        de: 'Hierarchien verketten',
+        it: 'Concatenare le gerarchie',
+        'zh-CN': '串联各层级',
+        ja: '階層を連結する'
       }),
       value_mode: figureAttribute<'sum' | 'declared'>('sum', 'style', {
         en: 'Ring values',
