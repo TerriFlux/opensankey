@@ -1371,9 +1371,41 @@ export class Class_MenuConfig {
       this._figures_by_id[fig.id] = fig
       return fig.id
     }
+    const id = this._nextFigureId()
+    fig.id = id
+    this._figures_by_id[id] = fig
+    return id
+  }
+  /** Le prochain nom libre du registre (`f_N`), sans rien indexer. */
+  protected _nextFigureId(): string {
     let id = ''
     do { this._figure_seq += 1; id = `f_${this._figure_seq}` } while (this._figures_by_id[id])
+    return id
+  }
+  /**
+   * os#1421 — UNE FIGURE DU DOCUMENT QUI N'EST LA VIGNETTE DE PERSONNE.
+   *
+   * `figureIdOf` promeut la figure d'une VIGNETTE : elle existe déjà, la grande zone la montre, on
+   * lui donne un nom. Il faut aussi savoir en CRÉER une qui n'est montrée nulle part — c'est le cas
+   * d'une migration, qui reprend un réglage posé sur un nœud d'un fichier d'avant et n'a aucune
+   * fenêtre ouverte à quoi la rattacher.
+   *
+   * API GÉNÉRIQUE, et c'est délibéré : la nature arrive par son identifiant (`osp.repr.donut`…),
+   * la surcharge propre par un sac. `Class_MenuConfig` vit dans OS et ne connaît aucune nature
+   * d'OS+ ; c'est la couche qui les déclare qui sait laquelle choisir.
+   *
+   * La figure est promue d'emblée (`id` posé, indexée) et sa CLÉ de vignette vaut son identifiant
+   * de document, comme pour une figure relue du registre (cf. `figuresFromJSON`) : elle n'est dans
+   * `_figures` d'aucune fenêtre, donc `_pruneUnreferencedFigures` la soldera dès que plus aucun
+   * placement ne la citera. Rend son identifiant.
+   */
+  public promoteStandaloneFigure(nature_id: string, own: Type_OptionBag): string {
+    const id = this._nextFigureId()
+    const fig = new Class_Figure(this.figureNature(nature_id), id)
     fig.id = id
+    // `loadOwn` et non `assign` : une migration reprend TELLE QUELLE la valeur d'avant, sans
+    // minimisation — ce que le fichier portait doit se retrouver dans le fichier d'après.
+    fig.loadOwn(own)
     this._figures_by_id[id] = fig
     return id
   }
@@ -1391,17 +1423,39 @@ export class Class_MenuConfig {
    */
   public placeFigureOnNode(occupant_id: string, pane_key: string, node: Class_NodeElement): string {
     const figure_id = this.figureIdOf(occupant_id, pane_key)
+    this.placeFigureIdOnNode(figure_id, node)
+    return figure_id
+  }
+  /**
+   * LE PLACEMENT SEUL : pose une figure DÉJÀ NOMMÉE sur un nœud, sans rien promouvoir.
+   *
+   * Séparé de `placeFigureOnNode` (qui n'est plus que « promouvoir la vignette, puis appeler
+   * ceci ») pour l'appelant qui tient déjà un identifiant : une migration qui vient de créer une
+   * figure hors vignette (`promoteStandaloneFigure`), demain un glisser-déposer d'une figure du
+   * registre sur un autre nœud.
+   *
+   * `silent` — pour le CHARGEMENT : n'écrit ni pas d'annulation, ni redessin, ni notification de
+   * la grande zone. Un geste de l'auteur doit être annulable et se voir tout de suite ; une
+   * migration qui s'exécute au milieu d'une lecture de fichier, non — une pile d'annulation
+   * pré-remplie ferait qu'un Ctrl+Z après ouverture défait un bout de migration, et le dessin
+   * complet qui suit le chargement (ou le premier dessin tout court) rend le redessin par nœud
+   * inutile.
+   */
+  public placeFigureIdOnNode(
+    figure_id: string, node: Class_NodeElement, opts?: { silent?: boolean }
+  ): void {
     // UN NŒUD NE PORTE QU'UNE FIGURE, et c'est ici qu'on le garantit. `withFigurePlacement` ne
     // déduplique que le COUPLE (figure, hôte) : poser B sur un nœud qui porte déjà A donnerait une
     // liste de deux, dont `nodePlacementFigureId` — qui prend la première — ne rendrait que A. La
     // figure qu'on vient de poser serait ignorée sans que rien ne le dise. On retire donc ce que
     // l'hôte 'node' portait avant d'y poser la nouvelle.
     const others = readFigurePlacements(node).filter(p => p.host !== 'node')
-    this._writeNodePlacements(node, withFigurePlacement(
-      others, { figure: figure_id, host: 'node', frame: 'bounds' }
-    ))
-    this._notifyMainZone()
-    return figure_id
+    this._writeNodePlacements(
+      node,
+      withFigurePlacement(others, { figure: figure_id, host: 'node', frame: 'bounds' }),
+      opts?.silent === true
+    )
+    if (opts?.silent !== true) this._notifyMainZone()
   }
   /** RETIRE une figure d'un nœud. La figure n'est pas détruite : elle reste sa vignette. */
   public unplaceFigureFromNode(figure_id: string, node: Class_NodeElement): void {
@@ -1420,7 +1474,7 @@ export class Class_MenuConfig {
   /**
    * Écrit la liste des placements sur le nœud, undo compris.
    *
-   * ÉCRITURE DIRECTE `attributes[clé] = valeur`, le patron d'`AnalysisChartInspector` : le setter
+   * ÉCRITURE DIRECTE `attributes[clé] = valeur`, le patron de l'ancien onglet Analyse : le setter
    * dynamique de `Class_ProtoElement` redessinerait à chaque pas d'un geste groupé, et l'undo doit
    * pouvoir reposer l'ancienne valeur SANS relancer d'action. On redessine donc nous-mêmes, une
    * fois — et le NŒUD seulement : un placement ne change que ce qui est dessiné dans sa boîte.
@@ -1431,8 +1485,13 @@ export class Class_MenuConfig {
    * L'undo est OPTIONNEL parce que l'historique l'est : un nœud de test, ou un nœud d'une zone de
    * dessin détachée, n'a pas de `application_data.history`. On écrit alors sans pile d'annulation
    * plutôt que de lever.
+   *
+   * `silent` — l'écriture NUE : l'attribut, et rien d'autre. Réservée au chargement (cf.
+   * `placeFigureIdOnNode`), où l'annulation n'a pas de sens et où le dessin n'a pas encore eu lieu.
    */
-  protected _writeNodePlacements(node: Class_NodeElement, next: Type_FigurePlacement[]): void {
+  protected _writeNodePlacements(
+    node: Class_NodeElement, next: Type_FigurePlacement[], silent = false
+  ): void {
     const host = node as unknown as {
       attributes: { [key: string]: unknown }
       draw?: () => void
@@ -1446,6 +1505,7 @@ export class Class_MenuConfig {
     const attrs = host.attributes
     const before = attrs[FIGURE_PLACEMENTS_ATTR]
     const value = next.length > 0 ? next : undefined
+    if (silent) { attrs[FIGURE_PLACEMENTS_ATTR] = value; return }
     const redraw = () => {
       if (host.draw) host.draw()
       else host.drawing_area?.draw?.()

@@ -16,8 +16,8 @@
 // hérité par la cascade. La LOGIQUE d'extraction (lecture du modèle) reste en OS+
 // (AnalysisChartData), qui importe ce type.
 //
-// Un même descripteur pilote les quatre surfaces : inspecteur, info-bulle, camembert
-// sur le nœud, zone sur le canevas.
+// Un même descripteur pilote les figures qui le lisent : la vignette d'une fenêtre (couronne,
+// histogramme) et le camembert dessiné sur le nœud (chemin hérité, cf. Type_AnalysisSurfaces).
 
 // Axe additif (les parts somment au total). `inputs`/`outputs` (sujet nœud) : un
 // secteur par flux, regroupables par fluxTag. `node_children` (sujet nœud) : total
@@ -50,9 +50,18 @@ export const isFluxCompare = (
 ): spec is { kind: 'inputs' | 'outputs' } =>
   !!spec && (spec.kind === 'inputs' || spec.kind === 'outputs')
 
-// Surfaces où le graphique est publié (au-delà de l'inspecteur, toujours dispo).
+// Surfaces où le graphique est publié.
+//
+// `on_node` est le chemin HÉRITÉ du placement (os#1421) : un booléen écrit sur le nœud par
+// l'onglet Analyse d'OS#1278, relu tel quel par `nodeFigureOverlay` pour que les fichiers
+// d'avant le placement dessinent encore. Rien ne l'écrit plus ; la migration vers un
+// placement se fait au chargement.
+//
+// `tooltip` a existé ici et en a été RETIRÉ : plus personne ne le lisait (la pop-up de
+// présentation passe par `element_analyses_for`) ni ne l'écrivait. Un fichier qui le porte
+// encore reste lisible — le descripteur est un objet lu tel quel, et une clé de plus n'a
+// jamais été validée par personne (cf. `isDescriptorEmpty`, qui ne regarde que les axes).
 export interface Type_AnalysisSurfaces {
-  tooltip?: boolean
   on_node?: boolean
 }
 
