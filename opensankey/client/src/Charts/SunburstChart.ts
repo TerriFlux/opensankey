@@ -70,6 +70,15 @@ const THEME = {
 } as const
 
 const MAX_BRANCHES = THEME.light.palette.length
+
+/**
+ * La couleur d'une BRANCHE, par son rang — l'ordre fixe de la palette, jamais recyclé
+ * (cf. `capBranches`, qui garantit qu'on ne dépasse pas). Exportée parce que la couronne se
+ * dessine à deux endroits : dans une fenêtre et SUR UN NŒUD (cf. NodeStatsCharts), et que
+ * deux palettes feraient de la même figure deux figures.
+ */
+export const sunburstBranchColor = (theme: 'light' | 'dark' = 'light') =>
+  (index: number): string => THEME[theme].palette[index % MAX_BRANCHES]
 // Un secteur plus étroit que ça ne se voit ni ne se survole : on l'agrège au « Autres »
 // de sa fratrie plutôt que de laisser un cheveu passer pour une part.
 const MIN_ARC_ANGLE = 0.015
@@ -175,8 +184,11 @@ export const partitionSunburst = (
   branch_color: (index: number) => string,
   others_label: string,
   theme: 'light' | 'dark' = 'light',
-  others_color = '#CFD0CB'
+  // Teinte neutre des secteurs de complément. Celle du thème par défaut : un appelant qui
+  // dit déjà son thème n'a pas à la redire.
+  others_color = ''
 ): Type_SunburstSlice[] => {
+  const others = others_color || THEME[theme].others
   const total = roots.reduce((acc, r) => acc + r.value, 0)
   if (total <= 0) return []
   const slices: Type_SunburstSlice[] = []
@@ -201,7 +213,7 @@ export const partitionSunburst = (
       a1,
       // Un secteur de complément (« non réparti », « autres ») n'est pas une branche :
       // il prend la teinte neutre plutôt que de se faire passer pour un nœud du modèle.
-      color: node.is_residual ? others_color : shadeForDepth(base, depth, theme),
+      color: node.is_residual ? others : shadeForDepth(base, depth, theme),
       is_residual: !!node.is_residual,
       is_disaggregated: !!node.is_disaggregated,
       dimension_id: node.dimension_id,
@@ -382,9 +394,8 @@ export const drawSunburstChart = (
     }
 
     // Couleur de BRANCHE, ordre fixe. Une branche = un secteur du premier anneau, quel
-    // que soit ce qu'il y a au centre. `capBranches` garantit qu'on ne dépasse jamais la
-    // palette : plus besoin de recycler ni de retomber sur une teinte neutre partagée.
-    const branchColor = (index: number) => palette.palette[index % MAX_BRANCHES]
+    // que soit ce qu'il y a au centre.
+    const branchColor = sunburstBranchColor(theme)
     // Rang du niveau porté par le PREMIER anneau : le centre a mangé les niveaux qui le
     // précèdent, la légende doit nommer les anneaux restants sans décalage.
     const level_offset = centre_node ? centre_node.depth + 1 : 0
