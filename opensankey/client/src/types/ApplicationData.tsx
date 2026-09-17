@@ -72,6 +72,11 @@ import {
 // Module FEUILLE sans aucun import (cf. legendIds.ts) : sûr à tirer ici, où
 // tout autre chemin vers LegendGenerator créerait un cycle à l'initialisation.
 import { isLegendElementId } from '../Elements/legendIds'
+// os#1385 (lot 5, D9) — LE REGISTRE DES TYPES DE DOCUMENTS. Import en VALEUR dans ce sens-là
+// SEULEMENT : le registre, lui, ne prend d'ici que des TYPES (effacés à la compilation), donc
+// aucun cycle à l'exécution.
+import { document_type_registry, SANKEY_DOCUMENT_TYPE } from './DocumentTypeRegistry'
+import type { Type_DocumentType } from './DocumentTypeRegistry'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -214,8 +219,15 @@ export type Type_SheetEntry = {
   json?: Uint8Array
 }
 
-/** os#1385 (lot 4, D8) — le type d'une feuille qui porte un diagramme Sankey. */
-export const SHEET_TYPE_SANKEY = 'sankey'
+/**
+ * os#1385 (lot 4, D8) — le type d'une feuille qui porte un diagramme Sankey.
+ *
+ * os#1385 (lot 5, D9) — UNE SEULE ÉCRITURE DE LA CHAÎNE, désormais celle du registre des types
+ * (`SANKEY_DOCUMENT_TYPE`) : deux constantes indépendantes portant le même identifiant de format
+ * finiraient par diverger. Ce nom-ci reste exporté parce qu'il est celui que lit le code du
+ * format (lot 4) et ses tests.
+ */
+export const SHEET_TYPE_SANKEY = SANKEY_DOCUMENT_TYPE
 
 /**
  * os#1385 (lot 4, D8) — « cette feuille porte-t-elle un Sankey ? ». Dit à un seul
@@ -1834,9 +1846,16 @@ export class Class_ApplicationData {
         // celle du porteur : la sérialisation OSP d'un document à vues recapture la vue
         // courante depuis la zone vivante, et c'est la zone de CE document-là qu'il ne faut
         // pas laisser redessiner pendant qu'on la lit.
+        //
+        // os#1385 (lot 5, D9) — PAR LE TYPE, et non plus par un appel câblé : c'est le type qui
+        // sait comment SON document redevient un contenu d'entrée. Le défaut (sankey) est
+        // exactement l'appel d'avant, et un type inconnu n'a de toute façon jamais de document
+        // vivant (`sheetApplication` rend `null`) : son instantané passe par la branche suivante,
+        // intact.
         const live = this._sheet_apps[id]?.app
-        if (live && !live.disposed) {
-          entry['json'] = live.toSheetContentJSON()
+        const live_type = document_type_registry.typeOf(sheet)
+        if (live && !live.disposed && live_type) {
+          entry['json'] = live_type.serialize(live)
         } else if (sheet.json) {
           entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
         }
@@ -2012,6 +2031,60 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1385 (lot 5, D9) — AJOUTE UNE FEUILLE DEPUIS UN JSON DÉJÀ CONSTRUIT, SANS BASCULER.
+   *
+   * Le geste d'IMPORT : un classeur Excel converti, un diagramme reçu d'ailleurs, arrive comme
+   * une feuille DE PLUS du document ouvert. Trois différences avec `createNewSheet`, et elles
+   * sont toutes les trois le sujet du lot :
+   *  - le contenu vient du DEHORS (il n'est pas une zone de dessin vierge) ;
+   *  - la feuille porte un TYPE, qui peut n'être pas un Sankey ;
+   *  - **on ne bascule pas** : la feuille courante ne change pas, la racine du fichier non plus
+   *    (règle de la racine, D8), et un type sans canevas ne pourrait de toute façon pas devenir
+   *    courant. L'appelant OUVRE ensuite une FENÊTRE sur elle, par la fenêtre par défaut de son
+   *    type (`sheetType(id)?.defaultWindow`).
+   *
+   * @param json contenu de la feuille (JSON d'un document, tel que `toSheetContentJSON`).
+   * @param options `name` : nom de l'onglet (vide = nom par défaut) ; `type` : type du document
+   *   porté (absent ou `'sankey'` = un Sankey, et l'entrée ne gagne alors aucune clé).
+   * @returns l'id de la feuille créée.
+   */
+  public addSheetFromJSON(json: Type_JSON, options?: { name?: string, type?: string }): string {
+    // Le document mono-feuille devient multi-feuilles : sa feuille 1, c'est ce qu'on a sous les
+    // yeux, et elle doit exister AVANT qu'on en ajoute une seconde.
+    this._ensureSheetsInitialized()
+    // Défense en profondeur, comme à la relecture (`sheetsFromJSON`) : le contenu d'une feuille
+    // ne porte jamais lui-même une clé `sheets` — sinon chaque feuille embarquerait les autres.
+    const content = { ...json }
+    delete content['sheets']
+    const id = makeId('sheet')
+    const raw_name = (options?.name ?? '').trim()
+    const name = raw_name !== '' ? raw_name : this._defaultSheetName(this._sheets_order.length + 1)
+    const type = options?.type
+    // `type` écrit seulement s'il dit autre chose que `'sankey'` (lot 4) : un document qui
+    // n'ajoute que des feuilles Sankey se réécrit sans gagner une seule clé.
+    this._sheets[id] = (type !== undefined && type !== SANKEY_DOCUMENT_TYPE)
+      ? { name, type, json: compressJSONToGzip(content) }
+      : { name, json: compressJSONToGzip(content) }
+    this._sheets_order.push(id)
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+    return id
+  }
+
+  /**
+   * os#1385 (lot 5, D9) — LE TYPE DE DOCUMENT d'une feuille (cf. `DocumentTypeRegistry`).
+   *
+   * `null` pour une feuille inconnue, et pour une feuille d'un type que cette version ne connaît
+   * pas : son entrée se transporte sans se comprendre (lot 4). L'appelant le DIT à l'écran.
+   * Le point d'entrée unique de l'écran vers le registre — `has_canvas`, `defaultWindow`,
+   * `offers` et `icon` se lisent tous à travers lui.
+   */
+  public sheetType(id: string): Type_DocumentType | null {
+    const entry = this._sheets[id]
+    return entry ? document_type_registry.typeOf(entry) : null
+  }
+
+  /**
    * Bascule vers une autre feuille : snapshot de la courante, puis chargement du snapshot
    * de la cible (même mécanique que les vues : unDraw + remplacement de la drawing_area,
    * via fromJSON/reset). L'historique undo/redo repart de zéro (comme à tout chargement).
@@ -2020,14 +2093,22 @@ export class Class_ApplicationData {
     if (!this.has_sheets || id === this._current_sheet_id) return
     const target = this._sheets[id]
     if (!target || !target.json) return
-    // os#1385 (lot 4, D8) — ON NE BASCULE PAS SUR UN TYPE QU'ON NE SAIT PAS CHARGER. La
-    // bascule passe par `fromJSON`, qui lit un Sankey : y envoyer le contenu d'un autre type
-    // afficherait un diagramme vide et écraserait la feuille. Le registre des types (lot 5)
-    // lèvera ce refus ; jusque-là l'entrée est transportée, pas ouverte.
-    if (!isSankeySheetType(target.type)) {
+    // os#1385 (lot 4, D8) — ON NE BASCULE PAS SUR UN DOCUMENT QUI N'A PAS DE CANEVAS. Basculer,
+    // c'est faire de cette feuille la RACINE du fichier et charger son contenu dans la zone de
+    // dessin : un document qui ne se montre pas dans un canevas (un classeur et ses graphiques)
+    // n'a rien à y mettre, et la racine doit rester un Sankey pour tous les lecteurs qui en
+    // supposent un (viewer, parc publié, serveur, SEP, cartofob).
+    //
+    // os#1385 (lot 5, D9) — la question posée n'est plus « est-ce un Sankey ? » mais « ce type
+    // a-t-il un canevas ? » (`has_canvas`), et un type INCONNU se refuse comme avant : on
+    // transporte son entrée, on ne l'ouvre pas. Sa feuille s'ouvre en FENÊTRE, par la fenêtre
+    // par défaut de son type (cf. `Type_DocumentType.defaultWindow`).
+    const target_type = document_type_registry.typeOf(target)
+    if (!target_type || !target_type.has_canvas) {
       console.warn(
-        'os#1385 — la feuille « ' + target.name + ' » est de type « ' + target.type +
-        ' » : aucun lecteur pour ce type, bascule refusée.'
+        'os#1385 — la feuille « ' + target.name + ' » est de type « ' + (target.type ?? SHEET_TYPE_SANKEY) +
+        ' » : ' + (target_type ? 'ce type n\'a pas de canevas' : 'aucun lecteur pour ce type') +
+        ', bascule refusée.'
       )
       return
     }
@@ -2058,14 +2139,50 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1385 (lot 5, D9) — LA VOISINE SUR LAQUELLE ON PEUT ATTERRIR : la plus proche qui ait un
+   * CANEVAS (précédente d'abord, puis suivante), en s'éloignant d'un cran à la fois.
+   *
+   * Depuis qu'une feuille peut porter un document sans canevas (un classeur), « la voisine de
+   * gauche » n'est plus une réponse : `switchToSheet` la refuserait, et la feuille courante
+   * resterait celle qu'on vient de supprimer — un document dont la racine pointe une feuille
+   * disparue. `null` = aucune feuille de ce fichier ne peut devenir la racine (cas théorique
+   * tant que la règle de la racine tient : le fichier en contient forcément un, puisque la
+   * racine EN EST un).
+   */
+  protected _neighbourSheetWithCanvas(id: string): string | null {
+    const idx = this._sheets_order.indexOf(id)
+    if (idx < 0) return null
+    const hasCanvas = (sheet_id: string): boolean => {
+      const entry = this._sheets[sheet_id]
+      return !!entry && (document_type_registry.typeOf(entry)?.has_canvas ?? false)
+    }
+    for (let d = 1; d < this._sheets_order.length; d++) {
+      const before = idx - d
+      if (before >= 0 && hasCanvas(this._sheets_order[before])) return this._sheets_order[before]
+      const after = idx + d
+      if (after < this._sheets_order.length && hasCanvas(this._sheets_order[after])) return this._sheets_order[after]
+    }
+    return null
+  }
+
+  /**
    * Supprime une feuille (jamais la dernière). Si c'est la courante, bascule d'abord sur
-   * sa voisine (précédente, sinon suivante).
+   * sa voisine (précédente, sinon suivante) — la plus proche qui ait un CANEVAS.
    */
   public deleteSheet(id: string, draw: boolean = true): void {
     if (!this._sheets[id] || this._sheets_order.length < 2) return
     if (id === this._current_sheet_id) {
-      const idx = this._sheets_order.indexOf(id)
-      const fallback = this._sheets_order[idx > 0 ? idx - 1 : 1]
+      const fallback = this._neighbourSheetWithCanvas(id)
+      if (!fallback) {
+        // os#1385 (lot 5, D9) — REFUS PLUTÔT QU'UN FICHIER SANS RACINE. Supprimer la courante
+        // sans pouvoir atterrir laisserait `_current_sheet_id` sur une feuille qui n'existe
+        // plus. Théorique sous la règle de la racine ; dit à voix haute plutôt que subi.
+        console.warn(
+          'os#1385 — suppression refusée : aucune autre feuille de ce document n\'a de canevas ' +
+          'où atterrir après « ' + this._sheets[id].name + ' ».'
+        )
+        return
+      }
       this.switchToSheet(fallback, draw)
     }
     delete this._sheets[id]
@@ -2168,14 +2285,23 @@ export class Class_ApplicationData {
    * qu'« enregistrer » depuis sa fenêtre enregistre le fichier (cf. `file_holder`).
    */
   public sheetApplication(sheet_id: string): Class_ApplicationData | null {
-    // os#1385 (lot 4, D8) — UN AUTRE TYPE N'EST PAS UN DOCUMENT SANKEY, et c'est vrai même
-    // pour la feuille COURANTE : sous la règle de la racine, `this` porte alors le dernier
-    // Sankey actif, pas cette feuille-là. Rendre `this` montrerait le mauvais diagramme, en
-    // silence — `null` fait dire à la fenêtre qu'elle n'a pas de sujet, ce qui est exact.
-    if (!isSankeySheetType(this._sheets[sheet_id]?.type)) return null
-    if (sheet_id === '' || sheet_id === this._current_sheet_id) return this
     const sheet = this._sheets[sheet_id]
-    if (!sheet || !sheet.json) return null
+    // os#1385 (lot 5, D9) — C'EST LE TYPE QUI CHARGE. Un type INCONNU de cette version n'a aucun
+    // chargeur : son entrée reste OPAQUE, transportée et jamais ouverte (lot 4), et `null` fait
+    // dire à la fenêtre qu'elle n'a pas de sujet — ce qui est exact.
+    const type = sheet ? document_type_registry.typeOf(sheet) : null
+    if (sheet && !type) return null
+    // La feuille COURANTE est l'état vivant : il n'y a rien à charger. Un `sheet_id` vide
+    // désigne la feuille courante (convention de `Type_MainZoneSubject`).
+    //
+    // …SAUF pour un type SANS CANEVAS : sous la règle de la racine (D8), `this` porte alors le
+    // dernier Sankey actif et NON cette feuille-là — rendre `this` montrerait le mauvais
+    // diagramme, en silence. Son contenu est dans son propre `json` (c'est très exactement ce
+    // que la règle de la racine y met), on le charge donc comme celui de n'importe quelle autre
+    // feuille. Cas théorique — `switchToSheet` refuse de rendre une telle feuille courante —,
+    // mais un fichier bricolé le pose, et il vaut mieux le lire que le mentir.
+    if (sheet_id === '' || (sheet_id === this._current_sheet_id && (!type || type.has_canvas))) return this
+    if (!sheet || !sheet.json || !type) return null
     const cached = this._sheet_apps[sheet_id]
     if (cached && cached.snapshot === sheet.json) return cached.app
     // os#1385 (lot 2) — RÉ-ENTRANCE PENDANT LE CHARGEMENT. Depuis que `workspace.active` passe
@@ -2199,7 +2325,7 @@ export class Class_ApplicationData {
       // vient de changer sous lui, donc qu'un autre écrivain a déjà fait foi.
       if (cached) cached.app.dispose()
       const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
-      app = this._loadSheetSnapshotApplication(json, sheet_id)
+      app = type.load(this, json, sheet_id)
     } finally {
       this._sheet_apps_loading.delete(sheet_id)
     }
@@ -2214,42 +2340,12 @@ export class Class_ApplicationData {
   /** Feuilles dont le document est EN COURS de chargement (cf. `sheetApplication`). */
   protected _sheet_apps_loading: Set<string> = new Set()
 
-  /**
-   * Charge un instantané de feuille dans un DOCUMENT HORS ÉCRAN de l'espace de travail.
-   *
-   * CE QUE L'ESPACE DE TRAVAIL LUI DONNE. Le registre des représentations filtre ses entrées
-   * sur l'application du CONTEXTE — `isOfferedToReader` lit `is_static` et les options de
-   * publication, les `gate` lisent les licences, les libellés passent par `t`. Sans ces
-   * quatre-là, une fenêtre sur une autre feuille proposerait une autre liste de natures que la
-   * même fenêtre sur la feuille courante, et l'écrirait sans traduction. Jusqu'au lot 1
-   * d'os#1385, ils étaient RECOPIÉS À LA MAIN ici, un par un, et tout le reste manquait
-   * (langue, crochets OS+, injections de menus). Le document naît maintenant DANS l'espace de
-   * travail, qui les lui donne tous d'un coup : il n'y a plus rien à recopier.
-   *
-   * LA MÊME CLASSE QUE L'HÔTE, toujours : `createDocument` passe par `instantiateDocument`,
-   * virtuelle, donc c'est l'espace de travail OSP/SA qui construit son propre type de
-   * document. En OpenSankey+ le modèle, la persistance (vues, view tags) et le rendu unitaire
-   * sont ceux d'`ApplicationDataOSP`, et un document de base relirait de travers un fichier
-   * qu'OSP a écrit.
-   *
-   * `offscreen: true` : cf. `detachOffscreen()`, qui explique pourquoi le conteneur se pose
-   * sur la FABRIQUE et pas seulement sur la première zone.
-   *
-   * `draw = false` : ce document n'a pas ENCORE d'écran. Ce sont les représentations qui
-   * dessinent, chacune dans le conteneur que son hôte lui donne — et, depuis le lot 3, une
-   * fenêtre canevas peut lui donner un vrai cadre et le droit d'éditer (phase B).
-   *
-   * os#1385 (lot 2) — L'IDENTIFIANT est celui de la FEUILLE, pas un tirage au sort : son
-   * emplacement de cache doit être le même d'un chargement d'instantané au suivant.
-   */
-  protected _loadSheetSnapshotApplication(json_object: Type_JSON, sheet_id?: string): Class_ApplicationData {
-    const app = this.workspace.createDocument({
-      offscreen: true,
-      id: sheet_id !== undefined ? 'sheet:' + sheet_id : undefined
-    })
-    app.fromJSON(json_object, {}, false)
-    return app
-  }
+  // os#1385 (lot 5, D9) — `_loadSheetSnapshotApplication` A DÉMÉNAGÉ, et c'est tout ce qui lui
+  // est arrivé : son corps et son commentaire sont devenus le `load` du type `sankey`
+  // (`loadSheetDocumentByDefault`, DocumentTypeRegistry.ts). Une seule vérité, et le chargement
+  // d'une feuille passe désormais par le TYPE de cette feuille-là, quel qu'il soit. Les
+  // commentaires qui citent encore l'ancien nom (DrawingArea, MainZoneTabs, mainZoneWindow)
+  // parlent de ce chargement-là : c'est la même chose, sous son nouveau nom.
 
   /**
    * Fait cesser de vivre TOUS les documents de feuille (cf. `sheetApplication`).
@@ -2528,6 +2624,50 @@ export class Class_ApplicationData {
   public main_zone_canvas_frame: Type_CanvasFrame | null = null
 
   /**
+   * os#1385 (lot 6, D8/D10) — OUVRIR LA PAGE SUR UNE FEUILLE (`window.sankey.sheet`).
+   *
+   * Un document à plusieurs feuilles se publie ENTIER : la page porte le fichier, et son
+   * visiteur navigue d'un onglet à l'autre. L'option dit sur laquelle elle s'OUVRE — par id ou
+   * par NOM d'onglet, comme `view` pour les vues, parce qu'une page publiée s'écrit aussi à la
+   * main et qu'un nom y est lisible là où un identifiant tiré au sort ne l'est pas.
+   *
+   * EN PREMIER, avant `view_label` et `view` : basculer de feuille REMPLACE la zone de dessin et
+   * le jeu de vues du document. C'est pour cela que c'est une méthode à part et non trois lignes
+   * dans `applyPublishStateOptions` — la surcharge d'OpenSankey+ ouvre une vue AVANT d'appeler
+   * `super`, et doit donc l'appeler en tête elle aussi.
+   *
+   * IDEMPOTENTE : les viewers React rappellent `applyPublishStateOptions` à chaque changement de
+   * leurs props (os#1372). La feuille déjà courante ne se recharge pas — sinon chaque
+   * ré-application jetterait la navigation du visiteur pour le remettre au point de départ.
+   *
+   * Tolérante comme ses voisines : feuille inconnue => warn, rien. Feuille sans canevas =>
+   * `switchToSheet` refuse et le dit (règle de la racine, D8).
+   */
+  protected applyPublishSheetOption(): void {
+    const wanted = this.publish_options.sheet
+    if (!wanted) return
+    // Les options de publication sont celles de la PAGE, donc partagées par tous les documents
+    // de l'espace de travail : seul celui qui porte le FICHIER a des feuilles à ouvrir. Un
+    // document de feuille qui repasserait par ici n'aurait rien à dire, et le dirait en boucle.
+    if (!this.is_main) return
+    if (!this.has_sheets) {
+      // eslint-disable-next-line no-console
+      console.warn(`[OpenSankey] sheet : ce document n'a pas de feuilles « ${wanted} »`)
+      return
+    }
+    const id = this._sheets[wanted]
+      ? wanted
+      : this._sheets_order.find(sheet_id => this._sheets[sheet_id]?.name === wanted)
+    if (!id) {
+      // eslint-disable-next-line no-console
+      console.warn(`[OpenSankey] sheet : feuille introuvable « ${wanted} »`)
+      return
+    }
+    if (id === this._current_sheet_id) return
+    this.switchToSheet(id, true)
+  }
+
+  /**
    * Applique l'état initial demandé par les options de publication (`publish_options`) :
    * présélection d'un data tag dans un ou plusieurs groupes, puis mode de navigation
    * (absolu / proportionnel / échelle adaptée). À appeler APRÈS le chargement du diagramme
@@ -2545,6 +2685,10 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public applyPublishStateOptions(): void {
+    // os#1385 (lot 6) — LA FEUILLE D'ABORD, avant toute vue : une bascule de feuille REMPLACE la
+    // zone de dessin et le jeu de vues (cf. `_loadSheetContent`). Poser une vue puis changer de
+    // feuille l'aurait posée sur le document qu'on quitte.
+    this.applyPublishSheetOption()
     const opts = this.publish_options
     // sa#409 — crochet d'upgrade headless : exposé D'ABORD (la suite de la méthode a une sortie
     // anticipée), et idempotent (les viewers React repassent ici à chaque ré-application).
