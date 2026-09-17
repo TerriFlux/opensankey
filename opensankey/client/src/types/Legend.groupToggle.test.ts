@@ -8,6 +8,10 @@ import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerp
  * prioritaires, en tête de légende) ; recliquer le FERME. Sur de vraies classes dessinées (jsdom),
  * par le vrai chemin du clic : écouteur `click` de la zone, discriminateur simple/double clic, puis
  * NodeEventsHandler.
+ *
+ * Retours du test local du 2026-09-17 : un groupe ouvert que le dernier ouvert supplante partout se
+ * ferme ; survoler un groupe fermé montre ses éléments avec ses seuls styles ; damier sous le carré
+ * d'un style d'opacité sans couleur.
  */
 
 installJsdomRenderStubs()
@@ -93,62 +97,75 @@ describe('SA#551 — ordre de priorité unique', () => {
 })
 
 describe('SA#551 — clic sur le nom d\'un groupe', () => {
-  it('ouvrir un groupe épinglé : en tête de légende, prioritaire sur la même couleur, opacité gardée', () => {
-    const { host, app, a, source, type } = makeLegend()
+  it('ouvrir un groupe épinglé : en tête, prioritaire ; le groupe qu\'il supplante partout se ferme, l\'autre reste', () => {
+    const { host, app, a, source, type, fiab } = makeLegend()
     click(host, app, 'legend-group-source')
     expect(source.use_colors).toBe(true)
-    expect(order(app)).toEqual(['fiab', 'type', 'source'].filter(id => id !== 'source').concat('source'))
-    expect(titlesTopDown(app)).toEqual(['legend-group-source', 'legend-group-type', 'legend-group-fiab'])
-    // Même paramètre : seul le groupe prioritaire s'affiche ; aucun autre groupe n'est fermé
+    expect(order(app)).toEqual(['fiab', 'type', 'source'])
+    // « Type » ne règle que la couleur, que « Source » redéfinit sur tous ses éléments : il se ferme.
+    // « Fiabilité » règle l'opacité : elle reste ouverte et s'applique.
+    expect(type.use_colors).toBe(false)
+    expect(fiab.use_colors).toBe(true)
+    expect(titlesTopDown(app)).toEqual(['legend-group-source', 'legend-group-fiab'])
     expect(a.shape_color).toBe('#ff0000')
     expect(a.shape_opacity).toBe(0.4)
-    expect(type.use_colors).toBe(true)
     // Ses entrées sont déroulées
     expect(app.drawing_area.sankey.containers_dict['legend-tag-source-agreste']).toBeDefined()
   })
 
-  it('recliquer ferme : retour à l\'état d\'avant, la ligne épinglée revient en bas', () => {
+  it('un groupe encore en vigueur ailleurs reste ouvert ; seule l\'étiquette supplantée partout se ferme', () => {
+    const { host, app, b, sankey, type } = makeLegend()
+    const viande = type.addTag('Viande', 'viande') as Class_Tag
+    const style = sankey.addNewDefaultElementStyle()
+    ;(style as unknown as { shape_color: string }).shape_color = '#00ff00'
+    viande.style_id = style.id
+    b.addTag(viande)
+    app.drawing_area.draw()
+    click(host, app, 'legend-group-source')
+    expect(type.use_colors).toBe(true)
+    expect(b.shape_color).toBe('#00ff00')
+    expect(sankey.containers_dict['legend-tag-type-viande']).toBeDefined()
+    // « Lait » n'est porté que par A, dont « Agreste » redéfinit la couleur
+    expect(sankey.containers_dict['legend-tag-type-lait']).toBeUndefined()
+  })
+
+  it('recliquer ferme : les entrées disparaissent, la ligne épinglée revient en bas', () => {
     const { host, app, a, source } = makeLegend()
     click(host, app, 'legend-group-source')
     click(host, app, 'legend-group-source')
     expect(source.use_colors).toBe(false)
-    expect(a.shape_color).toBe('#0000ff')
+    expect(a.shape_color).not.toBe('#ff0000')
     expect(a.shape_opacity).toBe(0.4)
-    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
+    expect(titlesTopDown(app)).toEqual(['legend-group-fiab', 'legend-group-source'])
     expect(app.drawing_area.sankey.containers_dict['legend-tag-source-agreste']).toBeUndefined()
   })
 
-  it('ouvrir un groupe placé plus haut le rend prioritaire : il passe en dernière position de la liste', () => {
-    const { host, app, a, fiab, type } = makeLegend()
-    // Fermer « Fiabilité » (non épinglée) : elle sort de la légende, sa place est gardée
-    click(host, app, 'legend-group-fiab')
-    expect(fiab.use_colors).toBe(false)
-    expect(order(app)).toEqual(['fiab', 'type', 'source'])
-    expect(app.drawing_area.sankey.containers_dict['legend-group-fiab']).toBeUndefined()
-    expect(a.shape_opacity).not.toBe(0.4)
-    // « Type » épinglé puis fermé : sa ligne reste en bas, d'où on le rouvre après « Source »
+  it('le dernier ouvert passe en tête et devient prioritaire', () => {
+    const { host, app, a, type } = makeLegend()
     type.pinned_in_legend = true
-    click(host, app, 'legend-group-type')
-    expect(type.use_colors).toBe(false)
+    app.drawing_area.legend.draw()
     click(host, app, 'legend-group-source')
+    expect(type.use_colors).toBe(false)
     click(host, app, 'legend-group-type')
     expect(order(app)).toEqual(['fiab', 'source', 'type'])
     expect(a.shape_color).toBe('#0000ff')
-    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-source'])
+    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
   })
 
-  it('annuler rétablit interrupteur, ordre et place en légende ; rétablir rouvre', () => {
-    const { host, app, a, source } = makeLegend()
+  it('annuler rétablit interrupteurs (groupe fermé d\'office compris), ordre et légende ; rétablir rouvre', () => {
+    const { host, app, a, source, type } = makeLegend()
     click(host, app, 'legend-group-source')
     app.history.applyUndo()
     expect(source.use_colors).toBe(false)
+    expect(type.use_colors).toBe(true)
     expect(order(app)).toEqual(['fiab', 'type', 'source'])
     expect(a.shape_color).toBe('#0000ff')
     expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
     app.history.applyRedo()
     expect(source.use_colors).toBe(true)
+    expect(type.use_colors).toBe(false)
     expect(a.shape_color).toBe('#ff0000')
-    expect(titlesTopDown(app)).toEqual(['legend-group-source', 'legend-group-type', 'legend-group-fiab'])
+    expect(titlesTopDown(app)).toEqual(['legend-group-source', 'legend-group-fiab'])
   })
 
   it('lecture : même geste', () => {
@@ -177,15 +194,43 @@ describe('SA#551 — clic sur le nom d\'un groupe', () => {
 })
 
 describe('SA#551 — survol d\'un groupe fermé', () => {
-  it('la ligne épinglée projette ses éléments en surbrillance, sans rien recalculer', () => {
-    const { host, app, a, c } = makeLegend()
-    const epoch = app.drawing_area.sankey.tag_styles_epoch
-    zoneG(host, app, 'legend-group-source').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  const hover = (host: HTMLElement, app: Class_ApplicationData, type: 'mouseover' | 'mouseout') =>
+    zoneG(host, app, 'legend-group-source').dispatchEvent(new MouseEvent(type, { bubbles: true }))
+
+  it('met ses éléments en valeur, avec les SEULS styles de ses étiquettes, puis rétablit', () => {
+    const { host, app, a, c, source } = makeLegend()
+    hover(host, app, 'mouseover')
     // A porte « Agreste » ; C n'est l'extrémité d'aucun flux désigné
     expect(a.d3_selection?.attr('opacity')).not.toBe('0.1')
     expect(c.d3_selection?.attr('opacity')).toBe('0.1')
-    expect(app.drawing_area.sankey.tag_styles_epoch).toBe(epoch)
-    zoneG(host, app, 'legend-group-source').dispatchEvent(new MouseEvent('mouseout', { bubbles: true }))
+    // Un passage de souris ne change rien au dessin
+    expect(a.shape_color).toBe('#0000ff')
+    jest.advanceTimersByTime(300)
+    expect(a.shape_color).toBe('#ff0000')
+    expect(a.shape_opacity).not.toBe(0.4)
+    expect(source.use_colors).toBe(false)
+    expect(c.d3_selection?.attr('opacity')).toBe('0.1')
+    hover(host, app, 'mouseout')
+    expect(a.shape_color).toBe('#0000ff')
+    expect(a.shape_opacity).toBe(0.4)
     expect(c.d3_selection?.attr('opacity')).toBe('')
+  })
+
+  it('quitter avant le délai : aucun aperçu', () => {
+    const { host, app, a } = makeLegend()
+    hover(host, app, 'mouseover')
+    jest.advanceTimersByTime(100)
+    hover(host, app, 'mouseout')
+    jest.advanceTimersByTime(400)
+    expect(a.shape_color).toBe('#0000ff')
+    expect(app.drawing_area.sankey.tag_style_preview_group_id).toBeUndefined()
+  })
+})
+
+describe('SA#551 — carré d\'un style d\'opacité', () => {
+  it('damier sous le carré d\'un style sans couleur, pas sous celui d\'un style de couleur', () => {
+    const { host, app } = makeLegend()
+    expect(zoneG(host, app, 'legend-tag-fiab-robuste').querySelector('.legend_swatch_checker')).not.toBeNull()
+    expect(zoneG(host, app, 'legend-tag-type-lait').querySelector('.legend_swatch_checker')).toBeNull()
   })
 })

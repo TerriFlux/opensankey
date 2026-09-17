@@ -64,6 +64,8 @@ import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, def
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { withTopPriority } from '../Elements/tagGroupPriority'
+import { layerOwnersInEffect } from '../Elements/tagStyles'
+import type { Type_ElementTagStyleLayer } from '../Elements/Element'
 // os#1378 — section `process` (brique Sankey unitaire). Module FEUILLE : import
 // de valeur sans risque de cycle, il ne dépend lui-même de rien à l'exécution.
 import { unitaryProcessClone } from './UnitaryProcess'
@@ -166,6 +168,8 @@ export class Class_Sankey {
   // Présentation seulement, non persisté : la priorité elle-même vit dans `_taggs_order`.
   private _tag_group_opened_rank = new Map<string, number>()
   private _tag_group_opened_counter: number = 0
+  // SA#551 — groupe dont la légende montre l'aperçu au survol (seuls ses styles s'appliquent)
+  private _tag_style_preview_group_id: string | undefined = undefined
   private _tag_styles_epoch: number = 0
   private _tag_styles_config_epoch: number = 0
   private _has_tag_styles: boolean = false
@@ -1748,6 +1752,34 @@ export class Class_Sankey {
     this.tagStylesUpdated()
   }
 
+  /** SA#551 — groupe en aperçu au survol de la légende, ou `undefined`. */
+  public get tag_style_preview_group_id(): string | undefined { return this._tag_style_preview_group_id }
+
+  /**
+   * SA#551 — pose ou lève l'aperçu d'un groupe : tant qu'il dure, les éléments de sa famille ne
+   * reçoivent que les styles de ce groupe. L'appelant redessine. Renvoie `false` si rien ne change.
+   */
+  public setTagStylePreview(group_id: string | undefined): boolean {
+    if (this._tag_style_preview_group_id === group_id) return false
+    this._tag_style_preview_group_id = group_id
+    this.tagStylesConfigUpdated()
+    return true
+  }
+
+  /**
+   * SA#551 — étiquettes et groupes (style des éléments sans étiquette) dont un style est EN VIGUEUR
+   * sur au moins un élément visible de la famille : ni supplanté partout par des groupes plus
+   * prioritaires (cf. tagStyles.layerOwnersInEffect), ni sans porteur visible.
+   */
+  public tagStyleOwnersInEffect(type_group: 'node_taggs' | 'flux_taggs'): Set<unknown> {
+    const owners = new Set<unknown>()
+    if (!this.has_tag_styles) return owners
+    const elements: { tag_style_layers: readonly Type_ElementTagStyleLayer[] }[] =
+      type_group === 'node_taggs' ? this.visible_nodes_list : this.visible_links_list
+    elements.forEach(element => layerOwnersInEffect(element.tag_style_layers, style => style.explicit_attributes, owners))
+    return owners
+  }
+
   /** SA#551 — rang d'ouverture d'un groupe depuis la légende (0 = jamais ouvert). Non persisté. */
   public tagGroupOpenedRank(id: string): number {
     return this._tag_group_opened_rank.get(id) ?? 0
@@ -1793,7 +1825,7 @@ export class Class_Sankey {
         id !== undefined && styles[id] !== undefined && !styles[id].is_default_style
       this._has_tag_styles = [...this.getTagGroupsAsList('node_taggs'), ...this.getTagGroupsAsList('flux_taggs')]
         // Un groupe dont l'interrupteur « Appliquer les styles associés » est fermé n'impose rien
-        .some(group => (group as { use_colors?: boolean }).use_colors === true && (usable(group.style_id) ||
+        .some(group => ((group as { use_colors?: boolean }).use_colors === true || group.id === this._tag_style_preview_group_id) && (usable(group.style_id) ||
           (group.tags_list as { style_id?: string }[]).some(tag => usable(tag.style_id))))
       this._has_tag_styles_epoch = this._tag_styles_config_epoch
     }
