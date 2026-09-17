@@ -13,6 +13,7 @@
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
 import { buildSunburstTree } from './SunburstHierarchy'
+import type { Type_SunburstNode } from './SunburstHierarchy'
 import { FIGURE_DATA_TAGS_KEY, figureNavigationOf } from './FigureNavigation'
 import type { Class_DataTag, Class_NodeTag } from '../types/Tag'
 import type { Class_LinkElement } from '../Elements/Link'
@@ -166,6 +167,141 @@ describe('os#1420 — la couronne peut epingler son etiquette de donnees', () =>
     // Le diagramme n a pas bouge : epingler une figure ne mute pas le modele.
     const suivie = buildSunburstTree(sankey)
     expect(ringValue(suivie!.roots, 'EnfantA')).toBe(6)
+  })
+})
+
+// os#1424 — LE TREILLIS DU TUTORIEL AFM FILIERES (vue « Solution 7b »), reduit au strict
+// necessaire : deux decoupages independants du meme tout, chacun a deux niveaux. Les
+// feuilles se rejoignent par les deux routes — Ble Bio est enfant de Ble dans « mode » et
+// de Cereales Bio dans « especes ». Une couronne tenue a un seul axe s arrete au premier
+// cran ; c est exactement ce que ce fichier garde.
+const lattice = (): Type_JSON => {
+  const nodes: { [id: string]: unknown } = {
+    Amont: { idNode: 'Amont', name: 'Amont' },
+    Cereales: { idNode: 'Cereales', name: 'Cereales' },
+    Ble: { idNode: 'Ble', name: 'Ble', dimensions: { especes: { parent_name: 'Cereales' } } },
+    Mais: { idNode: 'Mais', name: 'Mais', dimensions: { especes: { parent_name: 'Cereales' } } },
+    CerealesBio: {
+      idNode: 'CerealesBio', name: 'Cereales Bio',
+      dimensions: { mode: { parent_name: 'Cereales' } }
+    },
+    CerealesConv: {
+      idNode: 'CerealesConv', name: 'Cereales Conventionnel',
+      dimensions: { mode: { parent_name: 'Cereales' } }
+    },
+    BleBio: {
+      idNode: 'BleBio', name: 'Ble Bio',
+      dimensions: { especes: { parent_name: 'CerealesBio' }, mode: { parent_name: 'Ble' } }
+    },
+    BleConv: {
+      idNode: 'BleConv', name: 'Ble Conventionnel',
+      dimensions: { especes: { parent_name: 'CerealesConv' }, mode: { parent_name: 'Ble' } }
+    },
+    MaisBio: {
+      idNode: 'MaisBio', name: 'Mais Bio',
+      dimensions: { especes: { parent_name: 'CerealesBio' }, mode: { parent_name: 'Mais' } }
+    },
+    MaisConv: {
+      idNode: 'MaisConv', name: 'Mais Conventionnel',
+      dimensions: { especes: { parent_name: 'CerealesConv' }, mode: { parent_name: 'Mais' } }
+    }
+  }
+  // Chaque noeud porte son propre flux : les deux decoupages bouclent sur 100.
+  const values: { [id: string]: number } = {
+    Cereales: 100,
+    Ble: 30, Mais: 70,
+    CerealesBio: 40, CerealesConv: 60,
+    BleBio: 10, BleConv: 20, MaisBio: 30, MaisConv: 40
+  }
+  const links: { [id: string]: unknown } = {}
+  Object.entries(values).forEach(([id, value]) => {
+    links['amont_' + id] = {
+      idLink: 'amont_' + id, idSource: 'Amont', idTarget: id, value: { value }
+    }
+  })
+  const tagg = (name: string) => ({
+    group_name: name, banner: 'one', activated: true, siblings: [],
+    tags: { '1': { name: '1', selected: true }, '2': { name: '2', selected: false } }
+  })
+  return {
+    version: '1.3.0',
+    format_version: CURRENT_FORMAT_VERSION,
+    nodes, links,
+    levelTags: { especes: tagg('Especes'), mode: tagg('Mode de production') }
+  } as unknown as Type_JSON
+}
+
+const loadLattice = () => {
+  const app = new Class_ApplicationData(false)
+  app.fromJSON(JSON.parse(JSON.stringify(lattice())) as never, {}, false)
+  app.drawing_area.bypass_redraws = true
+  return app.drawing_area.sankey
+}
+
+/** Les enfants d un secteur, par identifiant, dans l ordre alphabetique. */
+const childIds = (node: Type_SunburstNode | undefined): string[] =>
+  (node?.children ?? []).map(c => c.id).sort()
+
+const childOf = (node: Type_SunburstNode, id: string): Type_SunburstNode | undefined =>
+  node.children.find(c => c.id === id)
+
+describe('os#1424 — les axes d agregation s enchainent', () => {
+  it('descend jusqu aux feuilles en passant d un axe a l autre', () => {
+    const sankey = loadLattice()
+    const tree = buildSunburstTree(sankey, { dimension_id: 'mode' })
+    expect(tree).not.toBeNull()
+    // Un seul sommet : Cereales est parent dans les deux axes et enfant dans aucun.
+    expect(tree!.roots.map(r => r.id)).toEqual(['Cereales'])
+    // Premier cran : l axe regle. Second cran : l autre axe prend le relais, la ou le
+    // premier n a plus d enfants a donner.
+    expect(ringIds(tree!.roots)).toEqual(['CerealesBio', 'CerealesConv'])
+    expect(childIds(childOf(tree!.roots[0], 'CerealesBio'))).toEqual(['BleBio', 'MaisBio'])
+    expect(childIds(childOf(tree!.roots[0], 'CerealesConv'))).toEqual(['BleConv', 'MaisConv'])
+  })
+
+  it('lit le meme treillis dans l autre sens quand on change le premier axe', () => {
+    const sankey = loadLattice()
+    const tree = buildSunburstTree(sankey, { dimension_id: 'especes' })
+    expect(ringIds(tree!.roots)).toEqual(['Ble', 'Mais'])
+    expect(childIds(childOf(tree!.roots[0], 'Ble'))).toEqual(['BleBio', 'BleConv'])
+    expect(childIds(childOf(tree!.roots[0], 'Mais'))).toEqual(['MaisBio', 'MaisConv'])
+  })
+
+  it('s arrete au premier cran quand on refuse l enchainement', () => {
+    const sankey = loadLattice()
+    const tree = buildSunburstTree(sankey, { dimension_id: 'mode', chain_axes: false })
+    expect(ringIds(tree!.roots)).toEqual(['CerealesBio', 'CerealesConv'])
+    expect(childIds(childOf(tree!.roots[0], 'CerealesBio'))).toEqual([])
+  })
+
+  it('chaque secteur retient l axe qui le commande, pour que le clic parle du bon', () => {
+    const sankey = loadLattice()
+    const tree = buildSunburstTree(sankey, { dimension_id: 'mode' })
+    expect(tree!.roots[0].dimension_id).toBe('mode')
+    const bio = childOf(tree!.roots[0], 'CerealesBio')!
+    expect(bio.dimension_id).toBe('especes')
+    // Une feuille garde l axe par lequel on l a atteinte : c est dans ce parent-la
+    // qu elle se replie.
+    expect(childOf(bio, 'BleBio')!.dimension_id).toBe('especes')
+  })
+
+  it('nomme chaque anneau par son axe et son niveau', () => {
+    const sankey = loadLattice()
+    const tree = buildSunburstTree(sankey, { dimension_id: 'mode' })
+    expect(tree!.rings.map(r => r.dimension_id)).toEqual(['mode', 'mode', 'especes'])
+    expect(tree!.rings.map(r => r.level_label)).toEqual(['1', '2', '2'])
+    // Le niveau selectionne dans le controleur est le 1 : c est l anneau du centre.
+    expect(tree!.rings.map(r => r.is_selected_level)).toEqual([true, false, false])
+  })
+
+  it('les valeurs restent celles du modele, les deux lectures bouclent sur le meme tout', () => {
+    const sankey = loadLattice()
+    const par_mode = buildSunburstTree(sankey, { dimension_id: 'mode' })
+    const par_especes = buildSunburstTree(sankey, { dimension_id: 'especes' })
+    expect(par_mode!.total).toBe(100)
+    expect(par_especes!.total).toBe(100)
+    expect(ringValue(par_mode!.roots, 'CerealesBio')).toBe(40)
+    expect(ringValue(par_especes!.roots, 'Ble')).toBe(30)
   })
 })
 

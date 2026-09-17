@@ -23,7 +23,7 @@
 // plus riche reste assignable à un paramètre plus pauvre.
 
 import React from 'react'
-import { Box, Select, Text } from '@chakra-ui/react'
+import { Box, Checkbox, Select, Text } from '@chakra-ui/react'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
@@ -60,6 +60,9 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
     : SUNBURST_DEFAULT_MAX_DEPTH
   return {
     dimension_id: typeof raw.dimension_id === 'string' ? raw.dimension_id : undefined,
+    // os#1424 — enchaîné par défaut : sur un treillis, s'en tenir à un axe arrête la
+    // couronne au premier cran, et c'est la figure elle-même qui semble incomplète.
+    chain_axes: raw.chain_axes !== false,
     root_ids: Array.isArray(raw.root_ids) ? raw.root_ids.filter((v): v is string => typeof v === 'string') : undefined,
     value_mode,
     max_depth
@@ -70,6 +73,9 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
 // l'issue : le sunburst et le niveau d'agrégation parlent de la même chose, naviguer
 // dans l'un doit bouger l'autre. Aucune coordonnée de dessin n'est touchée — c'est
 // `disaggregate`/`aggregate` qui repositionnent, comme depuis le menu contextuel.
+//
+// `dimension_id` vient DU SECTEUR, pas de la figure : avec des axes enchaînés (os#1424),
+// l'anneau extérieur ne parle plus du même axe que l'intérieur.
 const toggleAggregation = (
   app_data: Class_ApplicationData,
   dimension_id: string,
@@ -136,7 +142,8 @@ export const drawSunburstRepresentation = (
     truncated_label: t('sunburst.truncated') as string,
     back_label: t('sunburst.back') as string,
     level_label: (index: number) => t('sunburst.level', { index }) as string,
-    on_arc_click: (node_id: string) => toggleAggregation(app_data, tree.dimension_id, node_id)
+    on_arc_click: (node_id: string, _is_disaggregated: boolean, dimension_id: string) =>
+      toggleAggregation(app_data, dimension_id || tree.dimension_id, node_id)
   })
 }
 
@@ -170,6 +177,17 @@ export const SunburstRepresentationOptions = ({
           {dimensions.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
         </Select>
       </Box>
+      {
+        // Le choix ne se pose que s'il y a un autre axe à enchaîner (os#1424).
+        dimensions.length > 1 &&
+        <Checkbox
+          size="sm"
+          isChecked={current.chain_axes !== false}
+          onChange={e => patch({ chain_axes: e.target.checked })}
+        >
+          <Text style={{ fontSize: '0.7rem' }}>{t('sunburst.opt_chain_axes')}</Text>
+        </Checkbox>
+      }
       <Box>
         <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>{t('sunburst.opt_value_mode')}</Text>
         <Select

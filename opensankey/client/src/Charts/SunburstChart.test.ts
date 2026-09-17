@@ -5,9 +5,10 @@ const node = (
   id: string,
   value: number,
   children: Type_SunburstNode[] = [],
-  depth = 0
+  depth = 0,
+  dimension_id = 'dim'
 ): Type_SunburstNode => ({
-  id, label: id, value, declared: value, color: null, depth, children
+  id, label: id, value, declared: value, color: null, depth, children, dimension_id
 })
 
 const BLUE = () => '#2a78d6'
@@ -43,6 +44,17 @@ describe('partitionSunburst', () => {
     const parent = slices.find(s => s.id === 'p')!
     const covered = slices.filter(s => s.depth === 1).reduce((acc, k) => acc + (k.a1 - k.a0), 0)
     expect(covered).toBeCloseTo(parent.a1 - parent.a0)
+  })
+
+  it('porte sur chaque secteur l axe qui le commande', () => {
+    // Axes enchaines : l anneau exterieur ne parle plus du meme axe que l interieur,
+    // et c est ce que le clic doit agreger.
+    const tree = node('Cereales', 10, [
+      node('Cereales Bio', 10, [node('Ble Bio', 10, [], 2, 'especes')], 1, 'especes')
+    ], 0, 'mode')
+    const slices = partitionSunburst([tree], BLUE, 'autres')
+    expect(slices.find(s => s.id === 'Cereales')!.dimension_id).toBe('mode')
+    expect(slices.find(s => s.id === 'Ble Bio')!.dimension_id).toBe('especes')
   })
 
   it('porte le fil d Ariane du centre jusqu au secteur', () => {
