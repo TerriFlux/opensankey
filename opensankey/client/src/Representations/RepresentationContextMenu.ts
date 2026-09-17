@@ -52,9 +52,21 @@
 
 import type { Type_RepresentationContext, Type_RepresentationEntry } from './RepresentationRegistry'
 
-/** Nature de l'élément cliqué, posée par le moteur de dessin ('ribbon', 'center', 'background'…). */
+/**
+ * Nature de l'élément cliqué, posée par le moteur de dessin ('ribbon', 'center', 'branch_node',
+ * 'background'…). Le vocabulaire appartient à la représentation : celui de l'étoile est décrit
+ * dans `UnitaryStarChart`, celui du sunburst dans le sien.
+ */
 export const REPR_KIND_ATTR = 'data-repr-kind'
-/** Identifiant DU MODÈLE de l'élément cliqué (flux, nœud…) ; absent quand il n'y en a pas. */
+/**
+ * Identifiant DU MODÈLE de l'élément cliqué (flux, nœud…) ; absent quand il n'y en a pas.
+ *
+ * L'identifiant est celui de l'objet PAR LEQUEL la représentation connaît ce qu'elle dessine, et
+ * pas forcément celui de ce que le lecteur y voit : os#1422 - le libellé d'une branche d'étoile
+ * ('branch_node') nomme le nœud d'en face, mais porte l'identifiant du FLUX, le seul que l'étoile
+ * transporte. C'est à la couche qui déclare le menu, elle qui connaît le modèle, de remonter du
+ * flux au nœud.
+ */
 export const REPR_ID_ATTR = 'data-repr-id'
 /**
  * os#1397 - Nom du widget qui rend LES RÉGLAGES de la représentation dans un menu contextuel,
@@ -67,7 +79,11 @@ export const REPRESENTATION_OPTIONS_WIDGET = 'RepresentationOptions'
 
 /** Ce qu'un clic droit a désigné dans une représentation. */
 export type Type_RepresentationTarget = {
-  /** Valeur de `data-repr-kind` - le vocabulaire est celui de la représentation. */
+  /**
+   * Valeur de `data-repr-kind` - le vocabulaire est celui de la représentation, et il reste
+   * OUVERT : une nature nouvelle ('branch_node', os#1422) s'ajoute sans qu'aucune déclaration de
+   * menu existante ait à changer, puisqu'elles testent l'égalité sur ce qu'elles connaissent.
+   */
   kind: string
   /** Valeur de `data-repr-id`, ou `null` : tout élément n'a pas d'homologue dans le modèle. */
   id: string | null
@@ -79,11 +95,13 @@ export type Type_RepresentationTarget = {
  * Remonte au plus proche ancêtre étiqueté : les moteurs dessinent souvent plusieurs formes pour
  * un même objet (le ruban, son talon, son libellé), et toutes portent alors la même étiquette.
  * `container` borne la recherche - sans elle, un conteneur imbriqué dans un autre répondrait
- * pour son voisin, ce qui est exactement le piège que l'étiquetage par `data-*` évite.
+ * pour son voisin, ce qui est exactement le piège que l'étiquetage par `data-*` évite. C'est un
+ * `Element` quelconque et non le conteneur HTML de la représentation : os#1422 - les gestes de
+ * l'étoile bornent la leur au SVG de LA figure dessinée, qui est refait à chaque tracé.
  */
 export const representationTargetAt = (
   node: EventTarget | null,
-  container?: HTMLElement | null
+  container?: Element | null
 ): Type_RepresentationTarget | null => {
   if (!node || !(node instanceof Element)) return null
   const hit = node.closest(`[${REPR_KIND_ATTR}]`)
