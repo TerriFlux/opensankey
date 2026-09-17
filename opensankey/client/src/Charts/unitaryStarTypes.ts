@@ -68,6 +68,55 @@ export type Type_UnitaryStar = {
   is_empty: boolean
 }
 
+/**
+ * os#1422 — CIBLE D'UN GESTE dans l'étoile.
+ *
+ * `branch_node` est le nœud à l'AUTRE bout d'une branche — c'est ce que son libellé écrit, et
+ * donc ce qu'on vise en le cliquant. Il est identifié par l'identifiant du FLUX de la branche,
+ * le seul que l'étoile transporte (`Type_UnitaryStarBranch.id`) : l'appelant retrouve le nœud
+ * par le flux, ce que le moteur ne saurait pas faire sans connaître le modèle.
+ *
+ * Le centre, lui, n'a pas d'identifiant du tout (cf. `Type_UnitaryStar`, qui n'en porte que le
+ * nom affiché) : celui qui a monté la figure sait quel nœud elle montre, puisqu'il le lui a donné.
+ */
+export type Type_UnitaryStarGestureTarget =
+  | { kind: 'center' }
+  | { kind: 'ribbon', link_id: string }
+  | { kind: 'branch_node', link_id: string }
+
+/**
+ * os#1422 — LES GESTES QUE L'ÉTOILE EXPOSE, et rien de ce qu'ils déclenchent.
+ *
+ * Le moteur ne sait ni renommer, ni sélectionner, ni agréger : il dit CE QU'ON A VISÉ, l'appelant
+ * agit sur le document. C'est la même frontière que le clic droit (`Type_RepresentationMenu`) et
+ * c'est ce qui permet à ce fichier de rester sans React et sans import du modèle.
+ */
+export type Type_UnitaryStarInteractions = {
+  /** Clic gauche (pas de glissement) sur le centre, un ruban, ou le libellé d'une branche. */
+  onClick?: (target: Type_UnitaryStarGestureTarget) => void
+  /**
+   * Renommage EN PLACE. Absent, ni le double-clic ni `beginRename` ne font quoi que ce soit —
+   * et le clic simple part alors sans délai, puisque aucun double-clic n'est attendu.
+   */
+  rename?: {
+    canRename: (target: Type_UnitaryStarGestureTarget) => boolean
+    current: (target: Type_UnitaryStarGestureTarget) => string
+    commit: (target: Type_UnitaryStarGestureTarget, value: string) => void
+  }
+}
+
+/**
+ * La poignée d'une étoile dessinée : ce que l'hôte peut lui demander APRÈS le tracé.
+ *
+ * Une seule entrée, et c'est voulu : le renommage est le seul geste qu'un menu contextuel ne
+ * peut pas accomplir tout seul, puisqu'il a besoin d'un champ de saisie POSÉ SUR LA FIGURE —
+ * l'endroit du libellé n'est connu que du moteur qui l'a écrit.
+ */
+export type Type_UnitaryStarHandle = {
+  /** Ouvre la saisie sur le libellé visé ; ne fait rien si la cible n'en porte pas. */
+  beginRename: (target: Type_UnitaryStarGestureTarget) => void
+}
+
 /** Habillage du dessin, traduit par l'appelant (le moteur ne connaît pas i18n). */
 export type Type_UnitaryStarOptions = {
   /** Texte affiché quand l'étoile est vide. */
@@ -81,4 +130,9 @@ export type Type_UnitaryStarOptions = {
    * là où la couleur se pose.
    */
   neutral_colors?: boolean
+  /**
+   * os#1422 — les gestes de l'appelant. Absents, le dessin est INERTE, exactement comme avant :
+   * aucun écouteur n'est posé, et l'étoile reste une image.
+   */
+  interactions?: Type_UnitaryStarInteractions
 }

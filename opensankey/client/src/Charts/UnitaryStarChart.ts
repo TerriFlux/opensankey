@@ -31,6 +31,12 @@
 // ne se lit qu'en remontant depuis l'élément cliqué, à l'intérieur du conteneur de CETTE étoile.
 // Deux étoiles côte à côte continuent donc de répondre chacune pour elle-même.
 //
+// os#1422 - DES GESTES, ET TOUJOURS AUCUN MODÈLE. Le dessin sait maintenant qu'on l'a cliqué, et
+// sait ouvrir un champ de saisie sur un libellé ; il ne sait toujours pas ce qu'est un nœud. Les
+// gestes rendent une CIBLE (`Type_UnitaryStarGestureTarget`) à l'appelant, qui agit, lui, sur le
+// document - une seule instance, un seul historique. La frontière est la même que pour le clic
+// droit : ici on désigne, ailleurs on modifie.
+//
 // AUCUN IDENTIFIANT DOM N'EST POSÉ ICI, ET C'EST DÉLIBÉRÉ. Une référence `url(#id)` (dégradé, masque,
 // clip) résout au PREMIER élément du document portant cet identifiant, jamais à celui du sous-arbre
 // courant : deux étoiles côte à côte dans la même page — deux vignettes, une fenêtre et son aperçu —
@@ -44,11 +50,25 @@ import * as d3 from '../d3Modules'
 // Ce module reste sans dépendance au modèle ni à React ; les nommer ici en dur les ferait diverger
 // du lecteur qui les relit (cf. `representationTargetAt`), et la panne serait muette - le menu du
 // navigateur reviendrait, sans erreur.
-import { REPR_ID_ATTR, REPR_KIND_ATTR } from '../Representations/RepresentationContextMenu'
+import {
+  REPR_ID_ATTR, REPR_KIND_ATTR, representationTargetAt
+} from '../Representations/RepresentationContextMenu'
 import type {
   Type_UnitaryStar,
   Type_UnitaryStarBranch,
+  Type_UnitaryStarGestureTarget,
+  Type_UnitaryStarHandle,
+  Type_UnitaryStarInteractions,
   Type_UnitaryStarOptions
+} from './unitaryStarTypes'
+
+// Les types du CONTRAT DE GESTES se relisent naturellement depuis le moteur qui les honore, alors
+// qu'ils vivent avec les options qu'ils complètent. Un seul endroit où ils sont écrits, deux
+// chemins pour les importer.
+export type {
+  Type_UnitaryStarGestureTarget,
+  Type_UnitaryStarHandle,
+  Type_UnitaryStarInteractions
 } from './unitaryStarTypes'
 
 // ==================================================================================================
@@ -144,6 +164,22 @@ const CHAR_WIDTH_RATIO = 0.58
 // Bande réservée en bas à la mention du flux de référence (mode normalisé).
 const MENTION_BAND_PX = 13
 const MARGIN_PX = 8
+
+// Délai d'attente d'un second clic, en millisecondes. Le clic simple ne part qu'une fois ce délai
+// écoulé, SEULEMENT là où un double-clic veut dire quelque chose (un libellé renommable) : ailleurs
+// il part sans attendre. Payer 250 ms sur chaque sélection pour un geste qui n'existe pas à cet
+// endroit rendrait la figure poisseuse partout pour la rendre juste à deux endroits.
+const DOUBLE_CLICK_MS = 250
+// Tolérance de tremblement, en pixels de fenêtre. Au-delà, le geste était un GLISSEMENT et le clic
+// que le navigateur émet quand même ne doit rien déclencher — sélectionner un flux parce qu'on a
+// voulu faire défiler la case serait une action non demandée.
+const DRAG_SLOP_PX = 4
+// Hauteur minimale d'un champ de saisie. Un libellé de branche fait 10 px de haut : poser la boîte
+// à la taille du texte donnerait un champ où l'on ne voit pas ce qu'on tape.
+const RENAME_MIN_H_PX = 18
+// Largeur minimale du même champ, pour les cas où la gouttière est étroite : on préfère déborder
+// un peu sur le ruban pendant la saisie que d'offrir un champ de six pixels.
+const RENAME_MIN_W_PX = 60
 
 // Encres — celles des graphiques voisins, pour que trois représentations d'une même fenêtre ne
 // paraissent pas venir de trois applications différentes.
@@ -436,6 +472,211 @@ const drawEmptyLabel = (
 }
 
 // ==================================================================================================
+// LES GESTES — désigner, renommer. Rien d'autre ne sort d'ici.
+// ==================================================================================================
+
+/**
+ * Où poser le champ de saisie d'un libellé, dans le repère du groupe de dessin (marges comprises).
+ *
+ * C'est le moteur qui l'enregistre en ÉCRIVANT le libellé, et personne d'autre ne pourrait :
+ * l'emplacement d'un nom dépend du repli, de la troncature, de l'épaisseur du ruban et de la
+ * gouttière disponible. Le relire après coup depuis le DOM (`getBBox`) coûterait un reflow par
+ * ouverture et rendrait la boîte du texte ÉCRIT — donc tronqué — plutôt que la place qu'il occupe.
+ */
+type Type_RenameAnchor = {
+  x: number
+  y: number
+  w: number
+  h: number
+  font: number
+  bold: boolean
+  align: 'left' | 'right' | 'center'
+}
+
+/** Les endroits renommables d'une étoile dessinée, remplis au fil du tracé. */
+type Type_RenameAnchors = {
+  center: Type_RenameAnchor | null
+  /**
+   * Par identifiant de FLUX (le seul que l'étoile porte). Une boucle sur soi figure des deux
+   * côtés sous le même identifiant : la dernière écrite l'emporte, ce qui est sans conséquence
+   * puisque les deux libellés nomment alors le même nœud — le centre lui-même.
+   */
+  branches: Map<string, Type_RenameAnchor>
+}
+
+/** Poignée d'une étoile SANS gestes : elle répond à tout, et ne fait rien. */
+const NO_GESTURES: Type_UnitaryStarHandle = { beginRename: () => { /* rien à renommer */ } }
+
+/**
+ * Ce qu'un geste a désigné, lu sur les étiquettes `data-*` que le tracé a posées.
+ *
+ * Le lecteur est celui du clic droit (`representationTargetAt`), et c'est la même remontée au plus
+ * proche ancêtre étiqueté : viser un ruban ou son info-bulle désigne le même flux. Ce qui n'est
+ * rien en particulier — le fond, les marges — ne rend pas de cible : on ne déclenche rien.
+ */
+const gestureTargetAt = (
+  node: EventTarget | null,
+  root: SVGSVGElement
+): Type_UnitaryStarGestureTarget | null => {
+  const hit = representationTargetAt(node, root)
+  if (!hit) return null
+  if (hit.kind === 'center') return { kind: 'center' }
+  if (!hit.id) return null
+  if (hit.kind === 'ribbon') return { kind: 'ribbon', link_id: hit.id }
+  if (hit.kind === 'branch_node') return { kind: 'branch_node', link_id: hit.id }
+  return null
+}
+
+/**
+ * Branche les gestes sur une étoile qu'on vient de dessiner ; rend sa poignée.
+ *
+ * DEUX ÉCOUTEURS, POSÉS SUR LE SVG DE CETTE FIGURE — pas sur le conteneur, qui est PRÊTÉ par
+ * l'hôte et survit aux redessins : un écouteur posé dessus à chaque tracé s'y empilerait. Le SVG,
+ * lui, est refait à chaque fois et emporte ses écouteurs en disparaissant. Pas d'écouteur par
+ * ruban non plus, pour la raison habituelle : la délégation ne s'oublie pas.
+ *
+ * L'appelant qui ne déclare AUCUN geste ne reçoit aucun écouteur : la figure reste exactement
+ * l'image inerte qu'elle était, et une vignette d'aperçu ne paie rien.
+ */
+const attachStarGestures = (
+  svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+  overlay: d3.Selection<SVGGElement, unknown, null, undefined>,
+  anchors: Type_RenameAnchors,
+  interactions: Type_UnitaryStarInteractions | undefined
+): Type_UnitaryStarHandle => {
+  const root = svg.node()
+  if (!root || !interactions) return NO_GESTURES
+  const { onClick, rename } = interactions
+  if (!onClick && !rename) return NO_GESTURES
+
+  const anchorOf = (target: Type_UnitaryStarGestureTarget): Type_RenameAnchor | null => {
+    if (target.kind === 'center') return anchors.center
+    if (target.kind === 'branch_node') return anchors.branches.get(target.link_id) ?? null
+    return null
+  }
+  // Renommable = l'appelant l'accepte ET le dessin a écrit ce libellé quelque part. La seconde
+  // condition n'est pas une formalité : sous `MIN_W_FOR_LABELS_PX`, ou sur un ruban trop fin, il
+  // n'y a aucun texte à l'écran, donc rien sur quoi poser un champ.
+  //
+  // Un `canRename` qui lève vaut refus et n'emporte pas le geste : c'est ce qui décide du délai
+  // du clic simple, donc une exception y ferait perdre la SÉLECTION, un geste sans rapport.
+  const canRename = (target: Type_UnitaryStarGestureTarget): boolean => {
+    if (!rename || !anchorOf(target)) return false
+    try { return rename.canRename(target) } catch { return false }
+  }
+
+  // ── Saisie en place ─────────────────────────────────────────────────────────────
+  // Le champ est un <input> HTML posé dans un `foreignObject` du SVG. Deux raisons : il se place
+  // dans les coordonnées du dessin, sans dépendre du positionnement CSS du conteneur (que nous
+  // n'avons pas le droit de modifier - il appartient à l'hôte) ; et il disparaît AVEC la figure,
+  // au redessin comme au démontage, sans que personne ait à s'en souvenir. Et il n'a pas d'`id`,
+  // comme tout ce qui est dessiné ici : on le retrouve par référence.
+  let close_input: (() => void) | null = null
+
+  const beginRename = (target: Type_UnitaryStarGestureTarget) => {
+    const box = anchorOf(target)
+    if (!rename || !box || !canRename(target)) return
+    if (close_input) close_input()
+    const fo = overlay.append('foreignObject')
+      .attr('class', 'unitary_star_rename')
+      .attr('x', box.x)
+      .attr('y', box.y)
+      .attr('width', Math.max(box.w, RENAME_MIN_W_PX))
+      .attr('height', box.h)
+    const input = document.createElement('input')
+    input.type = 'text'
+    const before = rename.current(target)
+    input.value = before
+    input.style.cssText = 'width:100%;height:100%;box-sizing:border-box;padding:0 2px;margin:0;' +
+      `border:1px solid ${CENTER_STROKE};border-radius:2px;background:${SURFACE};color:${INK};` +
+      `font-size:${box.font}px;font-weight:${box.bold ? 'bold' : 'normal'};text-align:${box.align};`
+    // Un <input> HTML dans un `foreignObject` SVG : le DOM l'accepte, et c'est le seul moyen
+    // d'avoir un vrai champ de saisie aux coordonnées du dessin.
+    ;(fo.node() as Element | null)?.appendChild(input)
+
+    let closed = false
+    const close = () => {
+      if (closed) return
+      closed = true
+      close_input = null
+      fo.remove()
+    }
+    close_input = close
+    // VALIDER, c'est fermer PUIS écrire : l'appelant va modifier le document, donc redessiner
+    // cette étoile, et un champ encore ouvert se ferait emporter au milieu de son propre commit.
+    // Un nom inchangé ou vide n'est pas une modification : on referme, sans rien demander.
+    const commit = () => {
+      const value = input.value.trim()
+      close()
+      if (value !== '' && value !== before) rename.commit(target, value)
+    }
+    input.addEventListener('keydown', (event) => {
+      // LA BARRIÈRE. Le dessin vit dans l'application : sans elle, « Suppr » effacerait le nœud
+      // qu'on est en train de renommer et « Échap » fermerait la fenêtre autour du champ.
+      event.stopPropagation()
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        commit()
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        close()
+      }
+    })
+    // Perdre le focus ANNULE. C'est le contraire du tableur, et c'est délibéré : on renomme ici
+    // un objet du document, et un nom à moitié tapé qu'un clic ailleurs validerait en silence est
+    // une modification que personne n'a demandée. Valider se dit avec Entrée.
+    input.addEventListener('blur', close)
+    // Cliquer DANS le champ, c'est éditer, pas viser la figure : le geste ne doit ni sélectionner
+    // ce qu'il y a dessous, ni rouvrir une saisie.
+    input.addEventListener('mousedown', (event) => event.stopPropagation())
+    input.addEventListener('click', (event) => event.stopPropagation())
+    input.addEventListener('dblclick', (event) => event.stopPropagation())
+    input.focus()
+    input.select()
+  }
+
+  // ── Clic simple, double-clic ────────────────────────────────────────────────────
+  let pending: ReturnType<typeof setTimeout> | null = null
+  const cancelPending = () => {
+    if (pending === null) return
+    clearTimeout(pending)
+    pending = null
+  }
+  let press: { x: number, y: number } | null = null
+
+  svg.on('mousedown', (event: MouseEvent) => { press = { x: event.clientX, y: event.clientY } })
+  svg.on('click', (event: MouseEvent) => {
+    const dragged = press !== null &&
+      Math.abs(event.clientX - press.x) + Math.abs(event.clientY - press.y) > DRAG_SLOP_PX
+    press = null
+    if (dragged) return
+    // Le SECOND clic d'un double-clic : le premier a déjà décidé pour les deux.
+    if (event.detail >= 2) return
+    if (!onClick) return
+    const target = gestureTargetAt(event.target, root)
+    if (!target) return
+    if (!canRename(target)) {
+      onClick(target)
+      return
+    }
+    cancelPending()
+    pending = setTimeout(() => {
+      pending = null
+      // La figure a pu être démontée pendant l'attente (changement de sélection, redessin) : son
+      // SVG n'est alors plus dans le document, et agir pour elle serait agir pour un fantôme.
+      if (root.isConnected) onClick(target)
+    }, DOUBLE_CLICK_MS)
+  })
+  svg.on('dblclick', (event: MouseEvent) => {
+    cancelPending()
+    const target = gestureTargetAt(event.target, root)
+    if (target) beginRename(target)
+  })
+
+  return { beginRename }
+}
+
+// ==================================================================================================
 // L'ÉTOILE — entrées à gauche, nœud au milieu, sorties à droite
 // ==================================================================================================
 
@@ -443,7 +684,7 @@ export const drawUnitaryStar = (
   container: HTMLElement,
   star: Type_UnitaryStar,
   opts: Type_UnitaryStarOptions = {}
-) => {
+): Type_UnitaryStarHandle => {
   const { sel, width, height } = prepareContainer(container)
 
   // Les branches de valeur nulle ou négative sont ÉCARTÉES du dessin. Le plancher de visibilité ment
@@ -462,7 +703,8 @@ export const drawUnitaryStar = (
     width < MIN_W_PX || height < MIN_H_PX
   ) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
-    return
+    // Un message de vide n'offre AUCUNE prise : il n'y a ni ruban, ni centre, ni libellé à viser.
+    return NO_GESTURES
   }
 
   // ── Géométrie ───────────────────────────────────────────────────────────────────
@@ -471,7 +713,7 @@ export const drawUnitaryStar = (
   const H = height - 2 * MARGIN_PX - (has_mention ? MENTION_BAND_PX : 0)
   if (W <= 0 || H <= 0) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
-    return
+    return NO_GESTURES
   }
 
   const has_in = inputs.length > 0
@@ -525,6 +767,10 @@ export const drawUnitaryStar = (
   const in_rows = layoutStarRows(inputs, scale, gap, floor, H, center_top, center_h)
   const out_rows = layoutStarRows(outputs, scale, gap, floor, H, center_top, center_h)
 
+  // Les endroits renommables, enregistrés PAR LE TRACÉ des libellés, plus bas (cf.
+  // `Type_RenameAnchors` : personne d'autre ne sait où un nom a fini par s'écrire).
+  const anchors: Type_RenameAnchors = { center: null, branches: new Map() }
+
   // ── Racine SVG ──────────────────────────────────────────────────────────────────
   const svg = sel.append('svg')
     .attr('class', 'unitary_star')
@@ -558,8 +804,9 @@ export const drawUnitaryStar = (
     .attr('d', d => unitaryRibbonPath(outer_x, d.outer_y, inner_x, d.inner_y, d.thickness))
     .attr('fill', d => colorOf(d.branch))
     .attr('fill-opacity', RIBBON_OPACITY)
-    // os#1393 - le ruban, son talon et son libellé portent LA MÊME étiquette : ce sont trois
-    // formes d'un seul objet, et l'utilisateur ne vise pas un `path`, il vise un flux.
+    // os#1393 - le ruban et son talon portent LA MÊME étiquette : ce sont deux formes d'un seul
+    // objet, et l'utilisateur ne vise pas un `path`, il vise un flux. Le LIBELLÉ de la branche,
+    // lui, s'en est détaché à l'os#1422 : il écrit le nom du nœud d'en face, donc il le désigne.
     .attr(REPR_KIND_ATTR, 'ribbon')
     .attr(REPR_ID_ATTR, d => d.branch.id)
     .append('title')
@@ -598,11 +845,12 @@ export const drawUnitaryStar = (
     .attr('height', Math.max(center_h, 1))
     .attr('fill', CENTER_FILL)
     .attr('stroke', CENTER_STROKE)
-    // os#1393 - le centre n'a PAS de `data-repr-id` : l'étoile ne transporte pas l'identifiant
-    // de son nœud (cf. Type_UnitaryStar, qui n'en porte que le nom affiché), et la
-    // représentation qui déclare le menu connaît de toute façon son propre sujet. Inventer un
-    // identifiant ici l'obligerait à choisir entre celui du diagramme et celui de la source
-    // importée - deux fichiers, deux jeux d'identifiants.
+    // os#1393 / os#1422 - le centre porte une NATURE et n'a toujours PAS de `data-repr-id` :
+    // l'étoile ne transporte pas l'identifiant de son nœud (cf. Type_UnitaryStar, qui n'en porte
+    // que le nom affiché), et celui qui a monté la figure - menu contextuel comme gestes - connaît
+    // de toute façon son propre sujet, puisqu'il le lui a donné. Inventer un identifiant ici
+    // l'obligerait à choisir entre celui du diagramme et celui de la source importée - deux
+    // fichiers, deux jeux d'identifiants.
     .attr(REPR_KIND_ATTR, 'center')
     .append('title')
     .text(star.center_text ? `${star.center_label}\n${star.center_text}` : star.center_label)
@@ -626,6 +874,17 @@ export const drawUnitaryStar = (
     const lines = wrapToWidth(star.center_label, room, CENTER_FONT_PX, label_budget)
     const block = (lines.length + value_lines) * line_h
     const top = center_top + (center_h - block) / 2
+    // La saisie prend la place du NOM, pas celle de la valeur : on tape sur les lignes écrites,
+    // au centre de la boîte, là où le regard est déjà.
+    anchors.center = {
+      x: x_center + 2,
+      y: top,
+      w: center_w - 4,
+      h: Math.max(RENAME_MIN_H_PX, lines.length * line_h),
+      font: CENTER_FONT_PX,
+      bold: true,
+      align: 'center'
+    }
     const block_g = g.append('g').attr('class', 'unitary_star_center_text')
     lines.forEach((line, i) => {
       block_g.append('text')
@@ -655,10 +914,22 @@ export const drawUnitaryStar = (
   } else {
     const room = Math.min(W, center_w + span)
     const clampY = (y: number) => Math.max(CENTER_FONT_PX, Math.min(H - 2, y))
+    const label_y = clampY(center_top - 5)
+    // Boîte trop courte : le nom est écrit AU-DESSUS d'elle, et la saisie l'y suit. `label_y` est
+    // la ligne de base du texte, d'où la remontée d'une hauteur de police.
+    anchors.center = {
+      x: Math.max(0, cx - room / 2),
+      y: label_y - CENTER_FONT_PX - 3,
+      w: room,
+      h: RENAME_MIN_H_PX,
+      font: CENTER_FONT_PX,
+      bold: true,
+      align: 'center'
+    }
     g.append('text')
       .attr('class', 'unitary_star_center_label')
       .attr('x', cx)
-      .attr('y', clampY(center_top - 5))
+      .attr('y', label_y)
       .attr('text-anchor', 'middle')
       .attr('font-size', CENTER_FONT_PX)
       .attr('font-weight', 'bold')
@@ -685,8 +956,22 @@ export const drawUnitaryStar = (
   // permet pas.
   const branchLabels = (rows: Type_UnitaryStarRow[], x: number, anchor: 'start' | 'end') => {
     const room = (anchor === 'end' ? gutter_left : gutter_right) - 5
+    const shown = rows.filter(r => r.thickness >= MIN_ROW_FOR_LABEL_PX)
+    // os#1422 - CE LIBELLÉ NOMME LE NŒUD D'EN FACE, pas le flux : c'est son nom affiché qu'il
+    // écrit. Le viser, c'est donc viser ce nœud - d'où une nature à lui (`branch_node`), là où le
+    // ruban et son talon restent le FLUX. L'identifiant reste celui du flux, faute d'autre : le
+    // lecteur remonte au nœud par lui (cf. Type_UnitaryStarGestureTarget).
+    shown.forEach(row => anchors.branches.set(row.branch.id, {
+      x: anchor === 'end' ? x - room : x,
+      y: row.outer_y + row.thickness / 2 - RENAME_MIN_H_PX / 2,
+      w: room,
+      h: RENAME_MIN_H_PX,
+      font: LABEL_FONT_PX,
+      bold: false,
+      align: anchor === 'end' ? 'right' : 'left'
+    }))
     g.selectAll(null)
-      .data(rows.filter(r => r.thickness >= MIN_ROW_FOR_LABEL_PX))
+      .data(shown)
       .enter().append('text')
       .attr('class', 'unitary_star_branch_label')
       .attr('x', x)
@@ -695,7 +980,7 @@ export const drawUnitaryStar = (
       .attr('dominant-baseline', 'central')
       .attr('font-size', LABEL_FONT_PX)
       .attr('fill', INK)
-      .attr(REPR_KIND_ATTR, 'ribbon')
+      .attr(REPR_KIND_ATTR, 'branch_node')
       .attr(REPR_ID_ATTR, d => d.branch.id)
       .text(d => truncateToWidth(d.branch.label, room, LABEL_FONT_PX))
       .append('title')
@@ -753,4 +1038,9 @@ export const drawUnitaryStar = (
       .attr('fill', MUTED_INK)
       .text(truncateToWidth(opts.reference_label, W, MENTION_FONT_PX))
   }
+
+  // ── Gestes ──────────────────────────────────────────────────────────────────────
+  // EN DERNIER, parce que les endroits renommables ne sont connus qu'une fois les libellés
+  // écrits, et parce que le champ de saisie s'ajoute alors au-dessus de tout le reste.
+  return attachStarGestures(svg, g, anchors, opts.interactions)
 }

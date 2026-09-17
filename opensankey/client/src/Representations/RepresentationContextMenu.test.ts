@@ -85,6 +85,19 @@ describe('representationTargetAt', () => {
     expect(representationTargetAt(title, container)).toEqual({ kind: 'ribbon', id: 'a_in' })
   })
 
+  it('os#1422 : le libelle d une branche designe le NŒUD D EN FACE', () => {
+    // Le ruban et son talon sont le FLUX ; le libelle, lui, ecrit le nom de l autre extremite,
+    // donc le viser c est viser ce nœud. L identifiant reste celui du flux — le seul que
+    // l etoile transporte —, et c est la couche qui connait le modele qui remonte de l un a
+    // l autre. Sans cette nature a part, un clic droit sur un nom proposerait les gestes du flux.
+    const container = drawnStar('a')
+    const label = container.querySelector(`[${REPR_KIND_ATTR}="branch_node"]`)!
+    expect(representationTargetAt(label, container)).toEqual({ kind: 'branch_node', id: 'a_in' })
+    // Et les kinds existants n ont pas bouge : le ruban repond toujours pour le flux.
+    const ribbon = container.querySelector(`[${REPR_KIND_ATTR}="ribbon"]`)!
+    expect(representationTargetAt(ribbon, container)).toEqual({ kind: 'ribbon', id: 'a_in' })
+  })
+
   it('rend un identifiant nul quand l element n en porte pas', () => {
     // Le centre de l etoile : une nature, pas d identifiant de modele (l etoile ne transporte
     // pas celui de son nœud).
