@@ -23,7 +23,7 @@ import {
   default_legend_position_y, default_legend_show_constraints,
   default_legend_show_dataTags, default_masked, default_scale_legend_ratio,
   default_scale_legend_unit, default_display_legend_scale,
-  default_info_link_value_void, default_width
+  default_info_link_value_void, default_width, ALL_ATTRIBUTES_CONFIG
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
 import { LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId } from './legendIds'
@@ -708,7 +708,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
-        t_dimension_change: t('MEP.legend_dimension_change')
+        t_dimension_change: t('MEP.legend_dimension_change'),
+        // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
+        default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
