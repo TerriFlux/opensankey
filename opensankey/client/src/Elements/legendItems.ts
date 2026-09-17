@@ -13,11 +13,12 @@
 import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
-import { untaggedDefaultsStyle } from './tagStyles'
 import {
   LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
   Type_LegendEntryFormat, Type_StyleForLegend
 } from './legendTagStyle'
+// SA#553 — valeurs par défaut de l'étiquette générée (même règle que la cascade)
+import { untaggedDefaultsStyle } from './tagStyles'
 
 // ITEMS (pur) ========================================================================
 
