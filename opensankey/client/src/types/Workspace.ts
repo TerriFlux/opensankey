@@ -336,26 +336,6 @@ export class Class_Workspace {
    * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
   public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
 
-  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le sankey unitaire
-   * focalisé sur `node` dans le conteneur DOM `container_selector`, EN PLUS du
-   * diagramme principal. Retourne un handle pour le redessiner (resize) et le
-   * nettoyer. Alimente l'onglet « Sankey unitaire » du tooltip de nœud
-   * (NodeTooltip). Absent hors OS+. */
-  public draw_unitary_in_container?: (
-    node: Class_NodeElement,
-    container_selector: string
-  ) => { redraw: () => void, cleanup: () => void } | void = undefined
-
-  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le GRAPHIQUE
-   * D'ANALYSE (couronne / histogramme) décrit par l'attribut analysis_descriptor
-   * de l'élément (nœud OU flux) dans le conteneur DOM `container_selector`.
-   * Alimente l'onglet « Analyse » des tooltips de nœud et de flux quand
-   * surfaces.tooltip est activé (OS#1278). Absent hors OS+. */
-  public draw_analysis_in_container?: (
-    element: Class_NodeElement | Class_LinkElement,
-    container_selector: string
-  ) => { redraw: () => void, cleanup: () => void } | void = undefined
-
   /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
    * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
    * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
