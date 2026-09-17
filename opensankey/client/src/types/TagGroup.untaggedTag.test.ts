@@ -75,11 +75,12 @@ describe('SA#553 — existence et nom', () => {
     const { sankey } = makeApp()
     const source = sankey.addFluxTagGroup('source', 'Source', false)
     const sans = source.untagged_tag!
-    expect(sans.name).toBe('Sans Source')
+    // Nom du groupe en minuscule (retour d'Alexandre du 2026-09-17)
+    expect(sans.name).toBe('Sans source')
     expect(sans.has_own_name).toBe(false)
 
     source.name = 'Origine'
-    expect(sans.name).toBe('Sans Origine')
+    expect(sans.name).toBe('Sans origine')
 
     sans.name = 'Source inconnue'
     source.name = 'Provenance'
@@ -87,8 +88,12 @@ describe('SA#553 — existence et nom', () => {
     expect(sans.has_own_name).toBe(true)
 
     sans.name = ''
-    expect(sans.name).toBe('Sans Provenance')
+    expect(sans.name).toBe('Sans provenance')
     expect(sans.has_own_name).toBe(false)
+
+    // Un sigle garde sa casse
+    source.name = 'GEB'
+    expect(sans.name).toBe('Sans GEB')
   })
 
   it('définition par défaut, remplacée par une définition saisie', () => {
@@ -226,6 +231,63 @@ describe('SA#553 — couleurs historiques et styles', () => {
     expect(type.style_id).toBe(style.id)
     expect(laiteries.shape_opacity).toBe(0.5)
     expect(collecte.tagStyleLayerImposing('shape_opacity')).toBeUndefined()
+  })
+})
+
+describe('SA#553 — valeurs par défaut des paramètres réglés par les autres étiquettes', () => {
+  function makeFiabilite() {
+    const ctx = makeApp()
+    const { sankey, collecte, laiteries, makeStyle } = ctx
+    const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
+    const robuste = fiab.addTag('Robuste', 'robuste') as Class_Tag
+    collecte.addTag(robuste)
+    robuste.style_id = makeStyle('Robuste', { shape_color: '#ff0000', shape_opacity: 0.3 }).id
+    // Mise en forme locale du nœud sans étiquette : c'est elle que les défauts remplacent
+    laiteries.shape_color = '#00ff00'
+    laiteries.shape_opacity = 0.5
+    laiteries.shape_border_thickness = 7
+    return { ...ctx, fiab, robuste }
+  }
+
+  it('couleur et opacité réglées par les autres étiquettes : gris et 0,85 pour les éléments « Sans … »', () => {
+    const { collecte, laiteries } = makeFiabilite()
+    expect(collecte.shape_color).toBe('#ff0000')
+    expect(laiteries.shape_color).toBe('#a9a9a9')
+    expect(laiteries.shape_opacity).toBe(0.85)
+    // Un paramètre qu'aucune étiquette ne règle reste celui de l'élément
+    expect(laiteries.shape_border_thickness).toBe(7)
+    expect(laiteries.tagStyleLayerImposing('shape_color')).toMatchObject({ from_group: true })
+  })
+
+  it('le style propre de l étiquette générée l emporte sur les valeurs par défaut', () => {
+    const { laiteries, fiab, makeStyle } = makeFiabilite()
+    fiab.untagged_tag!.style_id = makeStyle('Sans fiabilité', { shape_opacity: 0.2 }).id
+    expect(laiteries.shape_opacity).toBe(0.2)
+    expect(laiteries.shape_color).toBe('#a9a9a9')
+  })
+
+  it('aucune étiquette du groupe n a de style : rien n est imposé', () => {
+    const { sankey, collecte, laiteries, makeStyle } = makeApp()
+    const fiab = sankey.addNodeTagGroup('fiabilite', 'Fiabilité', false)
+    fiab.use_colors = true
+    collecte.addTag(fiab.addTag('Robuste', 'robuste') as Class_Tag)
+    // Un style dans le diagramme, porté par un AUTRE groupe
+    const autre = sankey.addNodeTagGroup('autre', 'Autre', false)
+    autre.use_colors = true
+    const x = autre.addTag('X', 'x') as Class_Tag
+    collecte.addTag(x)
+    laiteries.addTag(x)
+    x.style_id = makeStyle('X', { shape_border_thickness: 3 }).id
+    laiteries.shape_opacity = 0.5
+    expect(laiteries.shape_opacity).toBe(0.5)
+  })
+
+  it('interrupteur du groupe fermé : aucune valeur par défaut imposée', () => {
+    const { laiteries, fiab } = makeFiabilite()
+    fiab.use_colors = false
+    expect(laiteries.shape_opacity).toBe(0.5)
+    expect(laiteries.shape_color).toBe('#00ff00')
   })
 })
 

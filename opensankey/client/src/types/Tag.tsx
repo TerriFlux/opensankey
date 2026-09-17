@@ -76,9 +76,23 @@ const translateOr = (key: string, fallback: string, options?: { [_: string]: str
   return (typeof text === 'string' && text !== '' && text !== key) ? text : fallback
 }
 
-/** Nom automatique de l'etiquette generee d'un groupe (« Sans Source »), langue active. */
-export const untaggedTagAutoName = (group_name: string) =>
-  translateOr('Tags.untagged_name', 'Sans ' + group_name, { group: group_name })
+/**
+ * Nom du groupe tel qu'il s'ecrit dans le nom automatique : initiale en minuscule (« Sans source »,
+ * retour d'Alexandre du 2026-09-17). Sauf un sigle (« GEB », deuxieme lettre majuscule) et en
+ * allemand, ou les noms communs prennent une majuscule.
+ */
+export const untaggedGroupNameInText = (group_name: string, lang: string = i18next.language) => {
+  if (normalizeLang(lang) === 'de' || group_name.length === 0) return group_name
+  const second = group_name.charAt(1)
+  if (second !== second.toLowerCase()) return group_name
+  return group_name.charAt(0).toLocaleLowerCase() + group_name.slice(1)
+}
+
+/** Nom automatique de l'etiquette generee d'un groupe (« Sans source »), langue active. */
+export const untaggedTagAutoName = (group_name: string) => {
+  const group = untaggedGroupNameInText(group_name)
+  return translateOr('Tags.untagged_name', 'Sans ' + group, { group })
+}
 
 /** Description par defaut de l'etiquette generee, langue active. */
 export const untaggedTagDefaultDescription = () =>

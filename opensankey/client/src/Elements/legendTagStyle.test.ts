@@ -205,6 +205,21 @@ describe('SA#553 — entrée de l\'étiquette générée « Sans [groupe] »', (
     expect(untagged.swatch_color).toBeUndefined()
   })
 
+  it('paramètres réglés par les autres étiquettes : valeurs par défaut sur son entrée, sous son propre style', () => {
+    const default_value = (k: string) => ({ shape_color: '#a9a9a9', shape_opacity: 0.85 } as { [k: string]: unknown })[k]
+    const sankey = withUntagged(styledSankey({ visible_nodes_list: [makeElement(['full']), makeElement([])] }))
+    // « full » règle couleur ET opacité, « color » la couleur : défauts gris et 0,85
+    expect(entry(computeLegendItems(sankey, base_config, { default_value }), 'fiab__untagged').format?.swatch)
+      .toEqual({ color: '#a9a9a9', opacity: 0.85 })
+    // Son propre style l'emporte
+    const own = withUntagged(styledSankey({
+      visible_nodes_list: [makeElement([])],
+      styles_dict: { S_full: FULL, S_color: COLOR_ONLY, S_label: LABEL_ONLY, S_own: makeStyle({ shape_opacity: 0.2 }) }
+    }), 'S_own')
+    expect(entry(computeLegendItems(own, base_config, { default_value }), 'fiab__untagged').format?.swatch)
+      .toEqual({ color: '#a9a9a9', opacity: 0.2 })
+  })
+
   it('forme sans couleur : carré gris, l\'étiquette générée n\'a pas de couleur propre', () => {
     const sankey = withUntagged(styledSankey({
       visible_nodes_list: [makeElement([])],

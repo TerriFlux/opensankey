@@ -13,6 +13,7 @@
 import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
+import { untaggedDefaultsStyle } from './tagStyles'
 import {
   LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
   Type_LegendEntryFormat, Type_StyleForLegend
@@ -92,6 +93,10 @@ export type Type_LegendEnv = {
   t_scale?: string
   // SA#552 — info-bulle de la ligne de rappel d'une dimension : elle se modifie au clic
   t_dimension_change?: string
+  // SA#553 — valeur par défaut (usine) d'un paramètre de mise en forme : celle que prend
+  // l'étiquette générée « Sans [groupe] » pour les paramètres que règlent les autres étiquettes.
+  // Absente (mocks), ces paramètres ne sont pas montrés sur son entrée.
+  default_value?: (k: string) => unknown
 }
 
 // Sous-ensemble du modèle utilisé par le calcul du contenu (structurellement
@@ -309,6 +314,24 @@ function applyTagStyleFormat(item: Type_LegendItem, style: Type_StyleForLegend |
 
 // SA#553 — l'entrée « sans étiquette » du #545 n'existe plus : c'est désormais l'entrée ordinaire de
 // l'étiquette générée « Sans [nom du groupe] », que composent les règles de `computeLegendItems`.
+// Son style : le sien, complété des valeurs par défaut des paramètres que règlent les styles des
+// autres étiquettes du groupe (même règle que la cascade, `tagStyles.untaggedDefaultsStyle`).
+function untaggedEntryStyle(
+  sankey: Type_SankeyForLegend,
+  tag_group: Type_TagGroupForLegend,
+  own_style: Type_StyleForLegend | undefined,
+  env: Type_LegendEnv
+): Type_StyleForLegend | undefined {
+  const default_value = env.default_value
+  const tag_styles = (tag_group.tags_list ?? tag_group.selected_tags_list)
+    .map(tag => usableStyle(sankey, tag.style_id))
+    .filter((style): style is Type_StyleForLegend => style !== undefined)
+  if (default_value === undefined || tag_styles.length === 0) return own_style
+  const defaults = untaggedDefaultsStyle(tag_styles, default_value)
+  return {
+    getElementProperty: (k: string) => own_style?.getElementProperty(k) ?? defaults.getElementProperty(k)
+  }
+}
 
 /**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
@@ -411,7 +434,14 @@ export function computeLegendItems(
         }
         if (styled) {
           // SA#545 — le carré n'existe que si le style définit la forme ou la valeur.
-          applyTagStyleFormat(item, usableStyle(sankey, tag.style_id), tag.is_untagged ? UNTAGGED_SWATCH_COLOR : tag.color)
+          const own_style = usableStyle(sankey, tag.style_id)
+          if (tag.is_untagged) {
+            // SA#553 — même style que dans la cascade (tagStyles.tagStyleLayers) : le sien, complété
+            // des valeurs par défaut des paramètres que règlent les autres étiquettes du groupe.
+            applyTagStyleFormat(item, untaggedEntryStyle(sankey, tag_group, own_style, env), UNTAGGED_SWATCH_COLOR)
+          } else {
+            applyTagStyleFormat(item, own_style, tag.color)
+          }
         } else {
           item.swatch_color = tag.color
         }
