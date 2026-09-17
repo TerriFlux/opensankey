@@ -300,22 +300,9 @@ function usableStyle(sankey: Type_SankeyForLegend, style_id: string | undefined)
   return (style !== undefined && style.is_default_style !== true) ? style : undefined
 }
 
-/**
- * SA#545 — pose sur une entrée les parties que définit le style. Rien de défini : l'entrée reste
- * son nom seul (ni `format` ni carré). Le carré garde `fallback_color` quand le style définit la
- * forme sans sa couleur, ou la seule valeur (carré alors transparent au rendu).
- */
-function applyTagStyleFormat(item: Type_LegendItem, style: Type_StyleForLegend | undefined, fallback_color: string) {
-  const format = legendEntryFormat(style)
-  if (Object.keys(format).length === 0) return
-  item.format = format
-  if (legendEntryHasSwatch(format)) item.swatch_color = format.swatch?.color ?? fallback_color
-}
-
-// SA#553 — l'entrée « sans étiquette » du #545 n'existe plus : c'est désormais l'entrée ordinaire de
-// l'étiquette générée « Sans [nom du groupe] », que composent les règles de `computeLegendItems`.
-// Son style : le sien, complété des valeurs par défaut des paramètres que règlent les styles des
-// autres étiquettes du groupe (même règle que la cascade, `tagStyles.untaggedDefaultsStyle`).
+// SA#553 — style de l'entrée de l'étiquette générée « Sans [groupe] » : le sien, complété des valeurs
+// par défaut des paramètres que règlent les styles des autres étiquettes du groupe (même règle que la
+// cascade, `tagStyles.untaggedDefaultsStyle`).
 function untaggedEntryStyle(
   sankey: Type_SankeyForLegend,
   tag_group: Type_TagGroupForLegend,
@@ -332,6 +319,21 @@ function untaggedEntryStyle(
     getElementProperty: (k: string) => own_style?.getElementProperty(k) ?? defaults.getElementProperty(k)
   }
 }
+
+/**
+ * SA#545 — pose sur une entrée les parties que définit le style. Rien de défini : l'entrée reste
+ * son nom seul (ni `format` ni carré). Le carré garde `fallback_color` quand le style définit la
+ * forme sans sa couleur, ou la seule valeur (carré alors transparent au rendu).
+ */
+function applyTagStyleFormat(item: Type_LegendItem, style: Type_StyleForLegend | undefined, fallback_color: string) {
+  const format = legendEntryFormat(style)
+  if (Object.keys(format).length === 0) return
+  item.format = format
+  if (legendEntryHasSwatch(format)) item.swatch_color = format.swatch?.color ?? fallback_color
+}
+
+// SA#553 — l'entrée « sans étiquette » du #545 n'existe plus : c'est désormais l'entrée ordinaire de
+// l'étiquette générée « Sans [nom du groupe] », que composent les règles de `computeLegendItems`.
 
 /**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
