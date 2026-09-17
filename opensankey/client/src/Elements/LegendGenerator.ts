@@ -31,7 +31,7 @@ import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
-  Type_SankeyForLegend, legendWrappedLineCount, legendWrappedShapeHeight
+  Type_SankeyForLegend, legendEntryLabelShift, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
 import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
 
@@ -98,6 +98,22 @@ function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
     top: px(style.paddingTop), right: px(style.paddingRight), bottom: px(style.paddingBottom), left: px(style.paddingLeft)
   }
   return Object.values(padding).every(v => v === 0) ? NO_PADDING : padding
+}
+
+/**
+ * #556 — entrée dont on mesure le nombre de lignes du nom dessiné : disposition verticale (en
+ * horizontal les noms ne sont pas enveloppés), hors barre d'échelle et hors ligne enveloppée
+ * (SA#550, qui a sa propre mesure).
+ */
+function hasMeasuredEntryLines(item: Type_LegendItem, horizontal: boolean): boolean {
+  return !horizontal && item.scale_bar !== true && item.wrap !== true && item.pinned_name === undefined
+}
+
+/** #556 — lignes du libellé dessiné d'une zone : tspans posés par d3-textwrap, 1 sans césure, 0 sans libellé. */
+function drawnLabelLineCount(zone: Class_ContainerElement): number {
+  const text = zone.d3_selection?.select('text.name_label_text')
+  if (text === undefined || text.empty()) return 0
+  return Math.max(1, text.selectAll('tspan').size())
 }
 
 function escapeHtml(s: string): string {
@@ -777,6 +793,24 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     const line_counts = new Map<string, number>()
     const rich_paddings = new Map<string, Type_RichPadding>()
     items.forEach(item => {
+      if (hasMeasuredEntryLines(item, values.horizontal)) {
+        // #556 — lignes RÉELLES du nom d'une entrée ordinaire en vertical : la césure du libellé
+        // (d3-textwrap) mesure les glyphes, l'estimation sans DOM s'en écarte dès qu'un nom est
+        // long. Seuls les réglages qui décident de la césure sont posés ici (texte, police,
+        // largeur, mise en forme du nom) ; la zone est placée et achevée avec les autres ci-dessous.
+        const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
+        zone.name_label_source = 'custom'
+        zone.name_label_text = item.text
+        zone.name_label_is_visible = true
+        zone.name_label_font_size = values.police
+        zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+        applyPinnedLabel(zone, item, values.police, NO_PADDING)
+        applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        zone.draw()
+        const n_lines = drawnLabelLineCount(zone)
+        if (n_lines > 0) line_counts.set(item.id, n_lines)
+        return
+      }
       if (item.pinned_name === undefined) return
       const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
       zone.name_label_source = 'custom'
@@ -895,6 +929,16 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
       // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
       applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)
+      // #556 — nom sur plusieurs lignes : sa première ligne reste en face du carré, les suivantes
+      // descendent dans la rangée (cf. legendEntryLabelShift). Effacé sinon : zone réutilisée par id.
+      const label_shift = hasMeasuredEntryLines(item, values.horizontal)
+        ? legendEntryLabelShift(line_counts.get(item.id) ?? 1, layout_values.police)
+        : 0
+      if (label_shift > 0) {
+        zone.name_label_vert_shift = label_shift
+      } else {
+        zone.delete_attribute('name_label_vert_shift')
+      }
       // Toutes les zones partagent la même géométrie : une petite boîte
       // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
       // avec le label à sa droite, centré verticalement → tout s'aligne à
@@ -1022,6 +1066,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
 
     // Le cadre épouse ses zones (fit exact, peut rétrécir)
     frame.computeSizeAndPositionFromAttachedNodes()
+    // #556 — l'enveloppe ne compte que les formes des zones : le nom sur plusieurs lignes d'une
+    // entrée à carré descend sous son carré, le cadre s'allonge jusqu'à sa dernière ligne.
+    let labels_bottom = -Infinity
+    items.forEach(item => {
+      const pos = positions.get(item.id)
+      const n_lines = line_counts.get(item.id)
+      if (pos === undefined || n_lines === undefined || !hasMeasuredEntryLines(item, values.horizontal)) return
+      labels_bottom = Math.max(labels_bottom, origin.y + pos.y + n_lines * layout_values.police)
+    })
+    const frame_bottom = frame.position_y + frame.shape_min_height - frame.shape_margin_bottom
+    if (labels_bottom > frame_bottom) {
+      frame.shape_min_height = frame.shape_min_height + labels_bottom - frame_bottom
+    }
     frame.draw()
     frame.setEventsListeners()
 
