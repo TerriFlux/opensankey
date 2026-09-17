@@ -174,6 +174,9 @@ export type Type_SankeyForLegend = {
   // antérieurs), les groupes gardent l'ordre de `node_taggs_list` puis `flux_taggs_list`.
   tagGroupsInPriorityOrder?(type_group: 'node_taggs' | 'flux_taggs'): Type_TagGroupForLegend[]
   tagGroupOpenedRank?(id: string): number
+  // SA#551 — étiquettes et groupes dont un style est en vigueur sur au moins un élément visible
+  // (Class_Sankey.tagStyleOwnersInEffect). Absent : aucune entrée n'est écartée.
+  tagStyleOwnersInEffect?(type_group: 'node_taggs' | 'flux_taggs'): Set<unknown>
 }
 
 export type Type_LegendConfigValues = {
@@ -280,8 +283,13 @@ export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): bo
  * Ni entrée d'étiquette ni info-bulle : le nom et la définition sont écrits en toutes
  * lettres. Aucun fichier existant n'épingle de groupe : aucune légende ne change.
  */
-export function pinnedLegendGroups(tag_groups: Type_TagGroupForLegend[]): Type_TagGroupForLegend[] {
-  return tag_groups.filter(g => g.pinned_in_legend === true && !tagGroupCarriesFormatting(g))
+export function pinnedLegendGroups(
+  tag_groups: Type_TagGroupForLegend[],
+  // SA#551 — groupes dont le bloc ouvert est émis. Absent : tout groupe qui met en forme en a un.
+  emitted_groups?: Set<Type_TagGroupForLegend>
+): Type_TagGroupForLegend[] {
+  return tag_groups.filter(g => g.pinned_in_legend === true &&
+    (!tagGroupCarriesFormatting(g) || (emitted_groups !== undefined && !emitted_groups.has(g))))
 }
 
 /**
@@ -386,6 +394,15 @@ export function computeLegendItems(
   // Groupes de tags porteurs d'une mise en forme (#533)
   const all_taggs = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
   const data_taggs = sankey.data_taggs_list as Type_TagGroupForLegend[]
+  // SA#551 — styles en vigueur par famille, calculés une fois, à la demande
+  const in_effect_cache = new Map<string, Set<unknown> | undefined>()
+  const inEffect = (type_group: 'node_taggs' | 'flux_taggs') => {
+    if (!in_effect_cache.has(type_group)) in_effect_cache.set(type_group, sankey.tagStyleOwnersInEffect?.(type_group))
+    return in_effect_cache.get(type_group)
+  }
+  // SA#551 — groupes dont le bloc est émis : un groupe épinglé ouvert mais entièrement supplanté
+  // n'en a pas, il retrouve sa ligne en bas.
+  const emitted_groups = new Set<Type_TagGroupForLegend>()
   legendTagGroupsOrder(sankey)
     .filter(tagGroupCarriesFormatting)
     .forEach(tag_group => {
@@ -424,10 +441,26 @@ export function computeLegendItems(
       // étiquette ». Même condition que la cascade (Element.resolveTagStyleLayers) : sans son
       // interrupteur (`use_colors`), un groupe n'impose aucun style, la légende n'en montre pas.
       const styled = !is_data_tagg && tag_group.use_colors && tag_group.uses_tag_styles === true
-      const untagged_style = styled
-        ? untaggedEntryStyle(sankey, tag_group, sankey.node_taggs_list.includes(tag_group))
+      const is_node_group = sankey.node_taggs_list.includes(tag_group)
+      let untagged_style = styled
+        ? untaggedEntryStyle(sankey, tag_group, is_node_group)
         : undefined
+      // SA#551 — un style supplanté sur TOUS les éléments visibles qui le portent ne s'affiche nulle
+      // part : son entrée se ferme (une étiquette masquée garde la sienne, SA#549).
+      const in_effect = styled ? inEffect(is_node_group ? 'node_taggs' : 'flux_taggs') : undefined
+      if (in_effect !== undefined) {
+        for (let i = displayed_tags.length - 1; i >= 0; i--) {
+          const tag = displayed_tags[i]
+          if (tag.is_selected === false || usableStyle(sankey, tag.style_id) === undefined || in_effect.has(tag)) continue
+          const carriers = is_node_group ? sankey.visible_nodes_list : sankey.visible_links_list
+          if (carriers.some(element => element.hasGivenTag(tag))) displayed_tags.splice(i, 1)
+        }
+        if (untagged_style !== undefined && !in_effect.has(tag_group)) untagged_style = undefined
+        const styled_left = displayed_tags.some(tag => tag.is_selected === false || usableStyle(sankey, tag.style_id) !== undefined)
+        if (!styled_left && untagged_style === undefined) return
+      }
       if (displayed_tags.length === 0 && untagged_style === undefined) return
+      emitted_groups.add(tag_group)
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       const title: Type_LegendItem = {
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
@@ -526,7 +559,7 @@ export function computeLegendItems(
 
   // SA#550 — groupes épinglés FERMÉS, tout en bas : une ligne « Nom : description »,
   // enveloppée, le nom mis en valeur au rendu (`pinned_name`).
-  pinnedLegendGroups(all_taggs).forEach(tag_group => {
+  pinnedLegendGroups(all_taggs, emitted_groups).forEach(tag_group => {
     const description = definitionOf(tag_group)
     items.push({
       id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),

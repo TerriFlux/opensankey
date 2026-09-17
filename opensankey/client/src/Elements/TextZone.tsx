@@ -29,6 +29,10 @@ export class Class_ContainerElement extends Class_NodeBase {
   // posé par le générateur à chaque régénération, NI persisté NI copié.
   protected _legend_entry_dimmed: boolean = false
 
+  // SA#551 — carré d'une entrée de légende dont le style règle l'opacité sans couleur : damier
+  // dessous (cf. NodeDrawShape). Même contrat : posé à chaque régénération, NI persisté NI copié.
+  protected _legend_swatch_checker: boolean = false
+
   constructor(
     id: string,
     name: string,
@@ -106,6 +110,9 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   public get legend_swatch_link_dashed(): boolean { return this._legend_swatch_link_dashed }
   public set legend_swatch_link_dashed(_: boolean) { this._legend_swatch_link_dashed = _ }
+
+  public get legend_swatch_checker(): boolean { return this._legend_swatch_checker }
+  public set legend_swatch_checker(_: boolean) { this._legend_swatch_checker = _ }
 
   public get legend_entry_dimmed(): boolean { return this._legend_entry_dimmed }
   public set legend_entry_dimmed(_: boolean) { this._legend_entry_dimmed = _ }

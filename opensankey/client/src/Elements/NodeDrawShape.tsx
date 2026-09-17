@@ -298,6 +298,21 @@ export class NodeDrawShape {
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
       .attr('clip-path', clip_attr)
       .attr('pointer-events', frame_blocks_interior ? 'visibleStroke' : null)
+    // SA#551 — carré de légende d'un style d'opacité sans couleur : damier SOUS la forme, pour que
+    // la transparence se lise comme telle et non comme un gris.
+    if ((this._node as unknown as { legend_swatch_checker?: boolean }).legend_swatch_checker === true && shape_type === 'rect') {
+      const checker_fill = this.applyCheckerPattern()
+      if (checker_fill !== undefined) {
+        this._node.d3_selection_g_shape?.insert('rect', '.node_shape')
+          .classed('legend_swatch_checker', true)
+          .attr('width', width)
+          .attr('height', height)
+          .attr('rx', this._node.shape_border_radius)
+          .attr('fill', checker_fill)
+          .attr('pointer-events', 'none')
+          .attr('transform', 'translate(' + -1 * margin_left + ',' + -1 * margin_top + ')')
+      }
+    }
     // Ombre portée : appliquée sur le groupe g_node_shape (pas sur .node_shape)
     // pour que le clip de bordure interne ne rogne pas l'ombre.
     this._node.d3_selection_g_shape
@@ -385,6 +400,27 @@ export class NodeDrawShape {
    * flux (LINK_DASH_LENGTH plein, LINK_DASH_GAP vide, cf. LinkDrawShape) tels qu'ils se voient sur
    * un flux horizontal — des bandes pleines verticales séparées de fins vides.
    */
+  /** SA#551 — damier gris et blanc partagé par les carrés de légende (défini une fois). */
+  private applyCheckerPattern(): string | undefined {
+    const defs = this._node.drawing_area.d3_selection_def_gradient
+    if (!defs) return undefined
+    const pattern_id = 'legend-checker'
+    if (defs.select('#' + pattern_id).empty()) {
+      const size = 4
+      const pattern = defs.append('defs')
+        .attr('id', 'def_' + pattern_id)
+        .append('pattern')
+        .attr('id', pattern_id)
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('width', 2 * size)
+        .attr('height', 2 * size)
+      pattern.append('rect').attr('width', 2 * size).attr('height', 2 * size).attr('fill', '#ffffff')
+      pattern.append('rect').attr('width', size).attr('height', size).attr('fill', '#c8c8c8')
+      pattern.append('rect').attr('x', size).attr('y', size).attr('width', size).attr('height', size).attr('fill', '#c8c8c8')
+    }
+    return 'url(#' + pattern_id + ')'
+  }
+
   private applyLinkDashPattern(color: string): string {
     const defs = this._node.drawing_area.d3_selection_def_gradient
     if (!defs) return color

@@ -698,13 +698,18 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
    * imposerait chaque paramètre du diagramme.
    */
   protected resolveTagStyleLayers(
-    groups: readonly (Type_ElementTagStyleOwner & { use_colors?: boolean, tags_list: readonly Type_ElementTagStyleOwner[] })[],
+    groups: readonly (Type_ElementTagStyleOwner & { id: string, use_colors?: boolean, tags_list: readonly Type_ElementTagStyleOwner[] })[],
     carries: (tag: Type_ElementTagStyleOwner) => boolean
   ): Type_ElementTagStyleLayer[] {
     const styles = this.sankey.styles_dict
     // Interrupteur du groupe « Appliquer les styles associés » (`use_colors`) : fermé, le groupe
     // n'impose rien — interrupteur par groupe, fermé par défaut (arbitrage du chantier).
-    const switched_on = groups.filter(group => group.use_colors === true)
+    // SA#551 — aperçu au survol d'un groupe de la légende : les seuls styles de ce groupe, ouvert ou
+    // non, s'appliquent aux éléments de sa famille.
+    const preview = this.sankey.tag_style_preview_group_id
+    const switched_on = (preview !== undefined && groups.some(group => group.id === preview))
+      ? groups.filter(group => group.id === preview)
+      : groups.filter(group => group.use_colors === true)
     return tagStyleLayers<Type_ElementTagStyleOwner, Type_ElementTagStyleOwner, Class_ElementStyle>(switched_on, carries, style_id => {
       const style = styles[style_id]
       return (style && !style.is_default_style) ? style : undefined
@@ -1647,6 +1652,11 @@ export class Class_ElementStyle {
    * valeurs de seed + chargées + posées par l'utilisateur, donc « explicites ». */
   public isAttributeExplicit(attr: keyof ConfigType): boolean {
     return this._storage[attr] !== undefined
+  }
+
+  /** SA#551 — paramètres que CE style définit (présents dans son storage). */
+  public get explicit_attributes(): string[] {
+    return Object.keys(this._storage).filter(key => this._storage[key as keyof ConfigType] !== undefined)
   }
 
   public isAttributeOverloaded(
