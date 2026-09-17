@@ -254,6 +254,28 @@ export const capBranches = (
   }]
 }
 
+/**
+ * Le texte qu'un secteur peut porter, ou `null` quand il n'y a pas la place.
+ *
+ * L'étiquette court RADIALEMENT, donc ses deux contraintes ne sont pas dans le même sens :
+ * la LONGUEUR du texte est bornée par l'épaisseur de l'anneau, la HAUTEUR des glyphes par
+ * la longueur de l'arc. Fonction PURE, et surtout ÉCRITE UNE FOIS : c'est elle qui dessine
+ * les étiquettes et c'est elle qui dit à la légende ce qui reste à nommer.
+ *
+ * @param label le nom du secteur
+ * @param arc_px longueur de l'arc au milieu de l'anneau, en pixels
+ * @param ring_px épaisseur de l'anneau, en pixels
+ */
+export const sunburstArcLabel = (
+  label: string,
+  arc_px: number,
+  ring_px: number
+): string | null => {
+  if (arc_px < MIN_LABEL_ARC_PX || ring_px < MIN_RING_FOR_LABEL_PX) return null
+  const room = Math.floor((ring_px - LABEL_RING_PADDING_PX) / LABEL_CHAR_PX)
+  return label.length > room ? label.slice(0, Math.max(1, room - 1)) + '…' : label
+}
+
 // Sous-arbre correspondant à un id : entrer dans un secteur, c'est redessiner l'arbre
 // à partir de ce nœud.
 export const findSunburstNode = (
@@ -375,12 +397,48 @@ export const drawSunburstChart = (
       .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
       .style('background', palette.surface)
 
-    const legend_width = Math.min(220, width * 0.32)
-    const side = Math.max(120, Math.min(width - legend_width - 12, height) - 8)
-    const outer_r = side / 2 - 2
-    // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
-    const inner_r = Math.max(28, outer_r * 0.22)
-    const ring = (outer_r - inner_r) / rings
+    // ── Combien de place pour la légende ? ────────────────────────────────────────
+    // Elle ne liste que ce que le DESSIN NE NOMME PAS (arbitrage Julien, 17/09/2026) :
+    // répéter à côté les noms déjà écrits dans les secteurs prenait un tiers de la largeur
+    // pour ne rien ajouter. Reste donc la colonne large quand des secteurs n'ont pas pu
+    // porter leur nom, et une colonne étroite sinon — la place revient au disque.
+    //
+    // La circularité (la largeur décide du rayon, le rayon décide des étiquettes, les
+    // étiquettes décident de la largeur) se dénoue par la MONOTONIE : élargir le disque ne
+    // peut qu'ajouter des étiquettes. On teste donc avec le GRAND disque (légende étroite) :
+    // si rien n'y manque de nom, la colonne étroite est la bonne ; s'il y manque quelque
+    // chose, la colonne large — qui rétrécit le disque — n'en manquera pas moins.
+    const geometryFor = (legend_width: number) => {
+      const side = Math.max(120, Math.min(width - legend_width - 12, height) - 8)
+      const outer_r = side / 2 - 2
+      // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
+      const inner_r = Math.max(28, outer_r * 0.22)
+      return { side, outer_r, inner_r, ring: (outer_r - inner_r) / rings }
+    }
+    type Type_Geometry = ReturnType<typeof geometryFor>
+
+    const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null =>
+      sunburstArcLabel(
+        d.label,
+        (d.a1 - d.a0) * (geo.inner_r + (d.depth + 0.5) * geo.ring),
+        geo.ring
+      )
+    // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches.
+    const namesItself = (d: Type_SunburstSlice, geo: Type_Geometry): boolean => {
+      const text = arcLabelOf(d, geo)
+      return text !== null && text === d.label
+    }
+    // Les secteurs du premier anneau que le dessin ne nomme pas. Ils portent déjà leur
+    // couleur de branche : la légende n'a qu'à la recopier.
+    const unnamedBranches = (geo: Type_Geometry) =>
+      slices.filter(s => s.depth === 0 && !namesItself(s, geo))
+
+    const wide = Math.min(220, width * 0.32)
+    const narrow = Math.min(150, width * 0.28)
+    const legend_width = unnamedBranches(geometryFor(narrow)).length > 0 ? wide : narrow
+    const geo = geometryFor(legend_width)
+    const { side, inner_r, ring } = geo
+    const unnamed_branches = unnamedBranches(geo)
 
     const svg = root_el.append('svg')
       .attr('width', side).attr('height', side)
@@ -468,10 +526,7 @@ export const drawSunburstChart = (
     // Étiquettes DANS les secteurs assez larges. Jamais sur tous : un secteur trop
     // étroit n'a que son info-bulle, et un texte tronqué à l'aveugle ne nomme rien.
     g.selectAll('text.sunburst_arc_label')
-      .data(slices.filter(d => {
-        const mid_r = inner_r + (d.depth + 0.5) * ring
-        return (d.a1 - d.a0) * mid_r >= MIN_LABEL_ARC_PX && ring >= MIN_RING_FOR_LABEL_PX
-      }))
+      .data(slices.filter(d => arcLabelOf(d, geo) !== null))
       .enter().append('text')
       .attr('class', 'sunburst_arc_label')
       .attr('transform', d => {
@@ -487,10 +542,7 @@ export const drawSunburstChart = (
       .attr('font-size', 10)
       .attr('fill', d => inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
-      .text(d => {
-        const room = Math.floor((ring - LABEL_RING_PADDING_PX) / LABEL_CHAR_PX)
-        return d.label.length > room ? d.label.slice(0, Math.max(1, room - 1)) + '…' : d.label
-      })
+      .text(d => arcLabelOf(d, geo) ?? '')
 
     // ── Légende ───────────────────────────────────────────────────────────────────
     const legend = root_el.append('div')
@@ -506,18 +558,23 @@ export const drawSunburstChart = (
     let previous_axis: string | null = null
     for (let d = 0; d < rings; d++) {
       const level = d + level_offset
-      const ring = tree.rings[level]
-      if (ring && ring.dimension_id !== previous_axis) {
+      const ring_info = tree.rings[level]
+      if (ring_info && ring_info.dimension_id !== previous_axis) {
         legend.append('div')
           .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
           .style('overflow', 'hidden').style('text-overflow', 'ellipsis')
           .style('white-space', 'nowrap')
-          .attr('title', ring.dimension_label)
-          .text(ring.dimension_label)
-        previous_axis = ring.dimension_id
+          .attr('title', ring_info.dimension_label)
+          .text(ring_info.dimension_label)
+        previous_axis = ring_info.dimension_id
       }
-      const name = ring?.level_label ||
-        (opts.level_label ? opts.level_label(level + 1) : String(level + 1))
+      // Les niveaux d'un axe s'appellent souvent « 1 », « 2 » dans le modèle. Seul, le
+      // chiffre ne dit rien — on lui remet son mot, sans toucher aux niveaux qui portent
+      // un vrai nom (« Produit fini », « Région »…).
+      const named = ring_info?.level_label ?? ''
+      const name = (named === '' || /^\d+$/.test(named)) && opts.level_label
+        ? opts.level_label(named === '' ? level + 1 : Number(named))
+        : (named || String(level + 1))
       const row = legend.append('div')
         .style('display', 'flex').style('align-items', 'center')
         .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
@@ -531,24 +588,26 @@ export const drawSunburstChart = (
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
         // Le niveau SÉLECTIONNÉ dans le contrôleur est celui que le Sankey montre à
         // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
-        .style('font-weight', ring?.is_selected_level ? 'bold' : 'normal')
+        .style('font-weight', ring_info?.is_selected_level ? 'bold' : 'normal')
         .text(name)
     }
 
-    // Puis les BRANCHES, quand il y en a plusieurs à distinguer — c'est-à-dire les
-    // secteurs du premier anneau, que le centre ne nomme pas (il nomme ce qu'on
-    // décompose, pas ses parts).
-    if (branches.length > 1) {
+    // Puis les BRANCHES QUE LE DESSIN NE NOMME PAS, et elles seules : un secteur assez
+    // large porte déjà son nom, le répéter à côté ne fait que prendre la place du disque.
+    // Un secteur trop étroit, ou dont le nom a été tronqué, n'existe en toutes lettres
+    // que dans son info-bulle — c'est là que la légende sert.
+    if (unnamed_branches.length > 0) {
       legend.append('div').style('height', '0.4rem')
       const items = legend.selectAll('div.sunburst_branch')
-        .data(branches).enter().append('div')
+        .data(unnamed_branches).enter().append('div')
         .attr('class', 'sunburst_branch')
         .style('display', 'flex').style('align-items', 'center')
         .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
       items.append('span')
         .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
         .style('border-radius', '2px')
-        .style('background', (b, i) => b.is_residual ? palette.others : branchColor(i))
+        // La pastille reprend la couleur DU SECTEUR, telle qu'elle est dessinée.
+        .style('background', b => b.color)
       items.append('span')
         .style('flex', '1 1 auto').style('overflow', 'hidden')
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')

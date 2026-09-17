@@ -1,4 +1,6 @@
-import { foldNarrowChildren, partitionSunburst, sunburstScope } from './SunburstChart'
+import {
+  foldNarrowChildren, partitionSunburst, sunburstArcLabel, sunburstScope
+} from './SunburstChart'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
 const node = (
@@ -100,6 +102,31 @@ describe('sunburstScope', () => {
   it('ne rend aucune branche pour une feuille : il n y a rien a decomposer', () => {
     const leaf = node('feuille', 12)
     expect(sunburstScope([leaf], null, 'autres').branches).toEqual([])
+  })
+})
+
+describe('sunburstArcLabel', () => {
+
+  it('ecrit le nom en entier quand l anneau est assez epais', () => {
+    // 90 px d anneau laissent treize caracteres : l etiquette court RADIALEMENT, c est
+    // l epaisseur de l anneau qui borne la longueur du texte.
+    expect(sunburstArcLabel('Cereales Bio', 120, 90)).toBe('Cereales Bio')
+  })
+
+  it('ne rend rien quand l arc est trop court pour la hauteur des glyphes', () => {
+    expect(sunburstArcLabel('Cereales Bio', 8, 60)).toBeNull()
+  })
+
+  it('ne rend rien quand l anneau est trop mince', () => {
+    expect(sunburstArcLabel('Cereales Bio', 200, 12)).toBeNull()
+  })
+
+  it('tronque quand le nom depasse l epaisseur de l anneau', () => {
+    // Un nom tronque ne nomme pas : c est la legende qui le dira en entier.
+    const text = sunburstArcLabel('Cereales Conventionnel', 200, 40)
+    expect(text).not.toBeNull()
+    expect(text).not.toBe('Cereales Conventionnel')
+    expect(text!.endsWith('…')).toBe(true)
   })
 })
 
