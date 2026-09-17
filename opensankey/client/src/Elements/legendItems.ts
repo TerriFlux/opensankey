@@ -663,12 +663,32 @@ export function legendWrappedShapeHeight(n_lines: number, police: number): numbe
 }
 
 /**
+ * #556 — hauteur de rangée d'une entrée ordinaire (disposition verticale) dont le nom tient sur
+ * `n_lines` lignes. Les lignes d'un libellé se suivent à 1 police (tspans d3-textwrap, dy = 1em) ;
+ * l'écart entre le nom d'une entrée et celui de la suivante reste celui de deux entrées d'une ligne
+ * (rangée de 1,5 police), quel que soit le nombre de lignes.
+ */
+export function legendEntryRowHeight(n_lines: number, police: number): number {
+  return (0.5 + Math.max(1, n_lines)) * police
+}
+
+/**
+ * #556 — décalage vertical du libellé d'une entrée ordinaire sur `n_lines` lignes. Le libellé est
+ * centré sur la forme d'ancrage (une police de haut) : sans décalage, un nom de n lignes déborde de
+ * (n − 1)/2 lignes sur l'entrée précédente. Décalé d'autant, sa PREMIÈRE ligne reste à la place
+ * d'un nom d'une ligne, en face du carré, et les suivantes descendent dans la rangée.
+ */
+export function legendEntryLabelShift(n_lines: number, police: number): number {
+  return (Math.max(1, n_lines) - 1) * police / 2
+}
+
+/**
  * Positions relatives (px monde, origine = coin haut-gauche du contenu) des
  * zones générées. Vertical par défaut ; en horizontal les entrées d'un même
  * groupe se suivent sur une ligne, chaque groupe repart à la ligne.
  *
- * SA#550 — `line_counts` : lignes mesurées des zones enveloppées (`wrap`), cf.
- * legendWrappedLineCount.
+ * `line_counts` : SA#550 — lignes mesurées des zones enveloppées (`wrap`), cf.
+ * legendWrappedLineCount ; #556 — lignes (tspans) mesurées des autres entrées en vertical.
  */
 export function layoutLegendItems(
   items: Type_LegendItem[],
@@ -714,10 +734,12 @@ export function layoutLegendItems(
       if (item.scale_bar) {
         y += bar_row_height
       } else {
-        // Estimation du nombre de lignes après retour à la ligne (box_width)
+        // #556 — lignes MESURÉES sur le libellé dessiné, sinon estimation après retour à la
+        // ligne (box_width)
         const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
-        const n_lines = Math.max(1, Math.ceil(estimateTextWidth(item.text, police) / Math.max(wrap_width - swatch, police)))
-        y += n_lines * line_height
+        const n_lines = line_counts?.get(item.id) ??
+          Math.max(1, Math.ceil(estimateTextWidth(item.text, police) / Math.max(wrap_width - swatch, police)))
+        y += legendEntryRowHeight(n_lines, police)
       }
     }
   })

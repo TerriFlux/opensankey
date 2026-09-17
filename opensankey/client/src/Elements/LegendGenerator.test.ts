@@ -6,7 +6,7 @@
 // ne supporte pas d'être chargé par cette porte d'entrée sous jest.
 
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems, renderableLegendItems,
+  computeLegendItems, computeScaleText, layoutLegendItems, legendEntryLabelShift, legendEntryRowHeight, renderableLegendItems,
   Type_LegendConfigValues, Type_SankeyForLegend
 } from './legendItems'
 import { isLegendChildId, isLegendElementId, isLegendFrameId } from './legendIds'
@@ -355,6 +355,28 @@ describe('OS#1254 — layoutLegendItems', () => {
     const pos = layoutLegendItems(long_items, base_config)
     const single_line = base_config.police * 1.5
     expect(pos[1].y).toBeGreaterThan(single_line)
+  })
+
+  it('#556 — vertical : même écart entre deux noms, qu\'ils tiennent sur une ligne ou plusieurs', () => {
+    const police = base_config.police
+    const entries = [
+      { id: 'un', text: 'Lait cru', swatch_color: '#f00' },
+      { id: 'deux', text: 'Equilibrage des process Lait en PB, MP et MG - Projet RefFlux', swatch_color: '#0f0' },
+      { id: 'trois', text: 'Hypothèse conditionné ne sert que les ménages', swatch_color: '#00f' },
+      { id: 'quatre', text: 'ONRB', swatch_color: '#ff0' }
+    ]
+    // Lignes MESURÉES : elles l'emportent sur l'estimation
+    const pos = layoutLegendItems(entries, base_config, new Map([['un', 1], ['deux', 2], ['trois', 3]]))
+    // Chaque rangée = ses lignes à 1 police + le même écart de 0,5 police qu'entre deux noms d'une ligne
+    expect(pos[1].y - pos[0].y).toBe(1.5 * police)
+    expect(pos[2].y - pos[1].y).toBe(1.5 * police + police)
+    expect(pos[3].y - pos[2].y).toBe(1.5 * police + 2 * police)
+    // La dernière ligne d'un nom décalé (legendEntryLabelShift) finit à n polices du haut de sa
+    // rangée : l'écart jusqu'au nom suivant vaut 0,5 police dans tous les cas.
+    expect(legendEntryLabelShift(1, police)).toBe(0)
+    expect(legendEntryLabelShift(3, police)).toBe(police)
+    expect(pos[3].y - (pos[2].y + 3 * police)).toBe(0.5 * police)
+    expect(legendEntryRowHeight(1, police)).toBe(1.5 * police)
   })
 
   it('horizontal : titre seul sur sa ligne, entrées enchaînées, nouveau groupe = nouvelle ligne', () => {
