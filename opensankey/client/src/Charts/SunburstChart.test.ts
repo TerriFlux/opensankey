@@ -1,4 +1,4 @@
-import { foldNarrowChildren, partitionSunburst } from './SunburstChart'
+import { foldNarrowChildren, partitionSunburst, sunburstScope } from './SunburstChart'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
 const node = (
@@ -53,6 +53,41 @@ describe('partitionSunburst', () => {
 
   it('ne rend rien quand tout est nul', () => {
     expect(partitionSunburst([node('a', 0)], BLUE, 'autres')).toEqual([])
+  })
+})
+
+describe('sunburstScope', () => {
+
+  it('met le noeud unique au centre et ouvre la couronne sur ses enfants', () => {
+    // Le centre nomme deja le perimetre et porte sa valeur : lui donner en plus le
+    // premier anneau redirait la meme chose sur un tour complet.
+    const tree = node('Cereales', 130, [node('Bio', 30, [], 1), node('Conventionnel', 100, [], 1)])
+    const { centre, branches } = sunburstScope([tree], null, 'autres')
+    expect(centre?.id).toBe('Cereales')
+    expect(branches.map(b => b.id)).toEqual(['Bio', 'Conventionnel'])
+  })
+
+  it('garde les racines sur le premier anneau quand il y en a plusieurs', () => {
+    // La ils ne se resument a aucun noeud : le centre en est une somme, chacune a
+    // besoin de son arc pour se nommer.
+    const roots = [node('a', 3), node('b', 1)]
+    const { centre, branches } = sunburstScope(roots, null, 'autres')
+    expect(centre).toBeNull()
+    expect(branches.map(b => b.id)).toEqual(['a', 'b'])
+  })
+
+  it('prend le secteur zoome comme centre, quel que soit le nombre de racines', () => {
+    const focused = node('b', 4, [node('b1', 4, [], 2)], 1)
+    const roots = [node('a', 3), node('parent', 4, [focused])]
+    expect(sunburstScope(roots, focused, 'autres')).toEqual({
+      centre: focused,
+      branches: [focused.children[0]]
+    })
+  })
+
+  it('ne rend aucune branche pour une feuille : il n y a rien a decomposer', () => {
+    const leaf = node('feuille', 12)
+    expect(sunburstScope([leaf], null, 'autres').branches).toEqual([])
   })
 })
 
