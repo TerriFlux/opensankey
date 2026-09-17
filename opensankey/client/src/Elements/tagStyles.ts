@@ -92,6 +92,24 @@ export function topLayerDefining<S, O>(
   return undefined
 }
 
+/** Suffixe des cadenas de couleur (`shape_color` → `shape_color_sustainable`). */
+export const COLOR_LOCK_SUFFIX = '_sustainable'
+
+/**
+ * Index « paramètre de couleur → son cadenas », construit depuis la liste des attributs connus :
+ * seuls les paramètres qui ont réellement un cadenas y figurent.
+ */
+export function buildColorLockIndex(attribute_keys: readonly string[]): { [attribute: string]: string } {
+  const known = new Set(attribute_keys)
+  const index: { [attribute: string]: string } = {}
+  attribute_keys.forEach(key => {
+    if (!key.endsWith(COLOR_LOCK_SUFFIX)) return
+    const locked = key.slice(0, -COLOR_LOCK_SUFFIX.length)
+    if (known.has(locked)) index[locked] = key
+  })
+  return index
+}
+
 /**
  * SA#551 — porteurs (étiquettes, ou groupe pour les éléments sans étiquette) dont la couche est EN
  * VIGUEUR sur un élément : elle est la plus prioritaire à définir au moins un de ses paramètres.
@@ -117,22 +135,4 @@ export function layerOwnersInEffect<S, O>(
     if (in_effect) into.add(layers[i].owner)
   }
   return into
-}
-
-/** Suffixe des cadenas de couleur (`shape_color` → `shape_color_sustainable`). */
-export const COLOR_LOCK_SUFFIX = '_sustainable'
-
-/**
- * Index « paramètre de couleur → son cadenas », construit depuis la liste des attributs connus :
- * seuls les paramètres qui ont réellement un cadenas y figurent.
- */
-export function buildColorLockIndex(attribute_keys: readonly string[]): { [attribute: string]: string } {
-  const known = new Set(attribute_keys)
-  const index: { [attribute: string]: string } = {}
-  attribute_keys.forEach(key => {
-    if (!key.endsWith(COLOR_LOCK_SUFFIX)) return
-    const locked = key.slice(0, -COLOR_LOCK_SUFFIX.length)
-    if (known.has(locked)) index[locked] = key
-  })
-  return index
 }
