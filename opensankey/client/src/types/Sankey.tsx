@@ -1776,7 +1776,19 @@ export class Class_Sankey {
     if (!this.has_tag_styles) return owners
     const elements: { tag_style_layers: readonly Type_ElementTagStyleLayer[] }[] =
       type_group === 'node_taggs' ? this.visible_nodes_list : this.visible_links_list
-    elements.forEach(element => layerOwnersInEffect(element.tag_style_layers, style => style.explicit_attributes, owners))
+    // Paramètres définis, relus par `getElementProperty` : certains styles de la cascade sont
+    // implicites et n'ont pas de stockage à parcourir. Mémorisés par style le temps de l'appel.
+    const attributes = Object.keys(ALL_ATTRIBUTES_CONFIG)
+    const keys_of = new Map<unknown, string[]>()
+    const definedKeys = (style: Class_ElementStyle) => {
+      let keys = keys_of.get(style)
+      if (keys === undefined) {
+        keys = attributes.filter(k => style.getElementProperty(k as keyof typeof ALL_ATTRIBUTES_CONFIG) !== undefined)
+        keys_of.set(style, keys)
+      }
+      return keys
+    }
+    elements.forEach(element => layerOwnersInEffect(element.tag_style_layers, definedKeys, owners))
     return owners
   }
 
