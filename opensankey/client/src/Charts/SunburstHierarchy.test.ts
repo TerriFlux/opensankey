@@ -168,3 +168,15 @@ describe('os#1420 — la couronne peut epingler son etiquette de donnees', () =>
     expect(ringValue(suivie!.roots, 'EnfantA')).toBe(6)
   })
 })
+
+describe('le reglage compte des ANNEAUX, pas des niveaux du modele', () => {
+  it('descend un cran de plus quand la racine unique part au centre', () => {
+    // Un seul sommet : il va au centre et ne prend aucun anneau (cf. sunburstScope).
+    // Un anneau demande doit donc rendre le cran des enfants, pas celui de la racine.
+    const app = loadApp()
+    const tree = buildSunburstTree(app.drawing_area.sankey, { max_depth: 1 })
+    expect(tree).not.toBeNull()
+    expect(ringIds(tree!.roots)).toEqual(['EnfantA', 'EnfantB'])
+    expect(tree!.is_truncated).toBe(false)
+  })
+})

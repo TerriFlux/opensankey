@@ -261,6 +261,37 @@ export const findSunburstNode = (
   return null
 }
 
+/**
+ * Ce que la couronne dessine : son CENTRE et ses branches.
+ *
+ * LE CENTRE EST UN NŒUD, LES ANNEAUX SONT SA DÉCOMPOSITION (arbitrage Julien,
+ * 17/09/2026). Quand le périmètre tient en un seul nœud — le cas d'une figure
+ * contextuelle « Nœud › X », et celui de tout zoom radial — le trou du milieu le nomme
+ * déjà et porte sa valeur : lui donner EN PLUS le premier anneau redit la même chose
+ * sur un tour complet, mange un anneau sur la profondeur disponible, et fait commencer
+ * la lecture un niveau trop tôt. Ses ENFANTS ouvrent donc la couronne.
+ *
+ * À plusieurs racines il n'y a pas de nœud à mettre au centre (c'en est une SOMME, cf.
+ * `roots_sum_hint`) : les racines gardent alors le premier anneau, qui les nomme.
+ *
+ * Conséquence voulue sur la couleur : les branches sont toujours les secteurs du premier
+ * anneau, donc un périmètre unitaire n'est plus une couronne d'une seule teinte éclaircie
+ * par anneau — chaque part du premier cran reçoit sa propre teinte, et la clarté continue
+ * de dire la profondeur SOUS elle.
+ */
+export const sunburstScope = (
+  roots: Type_SunburstNode[],
+  focused: Type_SunburstNode | null,
+  others_label: string,
+  max_branches = MAX_BRANCHES
+): { centre: Type_SunburstNode | null, branches: Type_SunburstNode[] } => {
+  const centre = focused ?? (roots.length === 1 ? roots[0] : null)
+  // Un centre sans enfants n'a rien à décomposer : plutôt que de le dessiner en anneau
+  // plein, on rend une couronne vide et l'appelant dit pourquoi.
+  if (centre) return { centre, branches: capBranches(centre.children, others_label, max_branches) }
+  return { centre: null, branches: capBranches(roots, others_label, max_branches) }
+}
+
 // ── Rendu ─────────────────────────────────────────────────────────────────────────
 
 const drawEmptyLabel = (
@@ -309,27 +340,27 @@ export const drawSunburstChart = (
     const width = container.clientWidth
     const height = container.clientHeight
 
-    const branches = capBranches(tree.roots, others_label, MAX_BRANCHES)
     const focused = focus_id ? findSunburstNode(tree.roots, focus_id) : null
-    const roots = focused ? [focused] : branches
-    const total = roots.reduce((acc, r) => acc + r.value, 0)
-    if (roots.length === 0 || total <= 0 || width < 120 || height < 120) {
+    // Le centre est un nœud (périmètre unitaire ou zoom), les anneaux sa décomposition.
+    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label)
+    // Le centre porte SA valeur, pas celle de ses parts : elles peuvent ne pas boucler
+    // avec lui (régime 'sum'), et c'est l'écart que la mention annonce.
+    const branches_total = branches.reduce((acc, r) => acc + r.value, 0)
+    const total = centre_node ? centre_node.value : branches_total
+    if (branches.length === 0 || branches_total <= 0 || width < 120 || height < 120) {
       drawEmptyLabel(sel, opts.empty_label ?? '', palette.muted)
       return
     }
 
-    // Couleur de BRANCHE, ordre fixe. Sous zoom, la branche unique garde la couleur
-    // qu'elle avait au niveau du dessus pour que l'œil suive d'une vue à l'autre.
-    const focus_branch = focused
-      ? Math.max(0, branches.findIndex(r => findSunburstNode([r], focused.id) !== null))
-      : 0
-    // `capBranches` garantit qu'on ne dépasse jamais la palette : plus besoin de recycler
-    // ni de retomber sur une teinte neutre partagée.
-    const branchColor = (index: number) => focused
-      ? palette.palette[focus_branch % MAX_BRANCHES]
-      : palette.palette[index % MAX_BRANCHES]
+    // Couleur de BRANCHE, ordre fixe. Une branche = un secteur du premier anneau, quel
+    // que soit ce qu'il y a au centre. `capBranches` garantit qu'on ne dépasse jamais la
+    // palette : plus besoin de recycler ni de retomber sur une teinte neutre partagée.
+    const branchColor = (index: number) => palette.palette[index % MAX_BRANCHES]
+    // Rang du niveau porté par le PREMIER anneau : le centre a mangé les niveaux qui le
+    // précèdent, la légende doit nommer les anneaux restants sans décalage.
+    const level_offset = centre_node ? centre_node.depth + 1 : 0
 
-    const slices = partitionSunburst(roots, branchColor, others_label, theme, palette.others)
+    const slices = partitionSunburst(branches, branchColor, others_label, theme, palette.others)
     const rings = slices.reduce((m, s) => Math.max(m, s.depth), 0) + 1
 
     const root_el = sel.append('div')
@@ -350,11 +381,9 @@ export const drawSunburstChart = (
     const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
-    const scope_title = focused
-      ? focused.label
-      : (tree.roots.length > 1 && opts.scope_label
-        ? opts.scope_label(tree.roots.length)
-        : (tree.roots[0]?.label ?? ''))
+    const scope_title = centre_node
+      ? centre_node.label
+      : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
     const centre = g.append('g')
       .style('cursor', focus_id ? 'pointer' : 'default')
       .on('click', () => { if (focus_id) { focus_id = null; render() } })
@@ -469,7 +498,9 @@ export const drawSunburstChart = (
       .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
       .text(tree.dimension_label)
     for (let d = 0; d < rings; d++) {
-      const name = tree.level_labels[d] ?? (opts.level_label ? opts.level_label(d + 1) : String(d + 1))
+      const level = d + level_offset
+      const name = tree.level_labels[level] ??
+        (opts.level_label ? opts.level_label(level + 1) : String(level + 1))
       const row = legend.append('div')
         .style('display', 'flex').style('align-items', 'center')
         .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
@@ -483,16 +514,17 @@ export const drawSunburstChart = (
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
         // Le niveau SÉLECTIONNÉ dans le contrôleur est celui que le Sankey montre à
         // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
-        .style('font-weight', d === tree.selected_level_index ? 'bold' : 'normal')
+        .style('font-weight', level === tree.selected_level_index ? 'bold' : 'normal')
         .text(name)
     }
 
-    // Puis les BRANCHES, quand il y en a plusieurs à distinguer. Sous zoom il n'y en a
-    // qu'une, et le centre la nomme déjà.
-    if (roots.length > 1) {
+    // Puis les BRANCHES, quand il y en a plusieurs à distinguer — c'est-à-dire les
+    // secteurs du premier anneau, que le centre ne nomme pas (il nomme ce qu'on
+    // décompose, pas ses parts).
+    if (branches.length > 1) {
       legend.append('div').style('height', '0.4rem')
       const items = legend.selectAll('div.sunburst_branch')
-        .data(roots).enter().append('div')
+        .data(branches).enter().append('div')
         .attr('class', 'sunburst_branch')
         .style('display', 'flex').style('align-items', 'center')
         .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
@@ -514,7 +546,7 @@ export const drawSunburstChart = (
     // Le centre d'un sunburst à plusieurs racines n'est pas « le total du diagramme » :
     // c'est une somme, juste seulement si les racines ne se recouvrent pas. Le taire
     // ferait lire un tout là où il y a un empilement.
-    if (!focused && tree.roots.length > 1 && opts.roots_sum_hint) mention(opts.roots_sum_hint)
+    if (!centre_node && opts.roots_sum_hint) mention(opts.roots_sum_hint)
     if (tree.mismatch_count > 0 && opts.mismatch_label) mention(opts.mismatch_label(tree.mismatch_count))
     if (tree.is_truncated && opts.truncated_label) mention(opts.truncated_label)
   }

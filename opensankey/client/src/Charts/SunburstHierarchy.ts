@@ -74,7 +74,11 @@ export interface Type_SunburstOptions {
   // couvrent pas devient un secteur « non réparti » — la lecture AFM d'un défaut de
   // bouclage parent ↔ Σ enfants.
   value_mode?: 'sum' | 'declared'
-  // Nombre d'anneaux au plus. Au-delà, le sous-arbre est coupé et la coupe annoncée.
+  // Nombre d'ANNEAUX au plus — pas de niveaux du modèle. Quand le périmètre tient en un
+  // seul nœud, celui-ci va au CENTRE et n'occupe aucun anneau (cf. Charts/SunburstChart,
+  // `sunburstScope`) : l'arbre est alors construit un cran plus profond, pour que le
+  // réglage « Anneaux » tienne sa promesse. Au-delà, le sous-arbre est coupé et la coupe
+  // annoncée.
   max_depth?: number
 }
 
@@ -320,11 +324,15 @@ export const buildSunburstTree = (
     ? options.root_ids.map(id => nodes_by_id.get(id)).filter((n): n is Class_NodeElement => !!n)
     : hierarchyRoots(sankey, dimension.id)
 
+  // Un périmètre unitaire part au centre et ne prend pas d'anneau : on descend d'un cran
+  // de plus pour que le nombre d'anneaux demandé soit celui qu'on voit.
+  const swallowed_by_centre = roots_source.length === 1 ? 1 : 0
+
   const state: Type_BuildState = {
     dimension_id: dimension.id,
     value_mode: options.value_mode ?? 'sum',
     nav,
-    max_depth: Math.max(1, options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH),
+    max_depth: Math.max(1, (options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH) + swallowed_by_centre),
     mismatch_count: 0,
     is_truncated: false,
     residual_label,
