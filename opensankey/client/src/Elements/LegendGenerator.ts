@@ -31,7 +31,7 @@ import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
-  Type_SankeyForLegend, legendEntryLabelShift, legendWrappedLineCount, legendWrappedShapeHeight
+  Type_SankeyForLegend, legendEntrySwatchShift, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
 import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
 
@@ -107,6 +107,22 @@ function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
  */
 function hasMeasuredEntryLines(item: Type_LegendItem, horizontal: boolean): boolean {
   return !horizontal && item.scale_bar !== true && item.wrap !== true && item.pinned_name === undefined
+}
+
+/**
+ * #556 — descente de la zone d'une entrée à carré dont le nom prend plusieurs lignes : le carré
+ * (une police de haut) se centre ainsi sur le nom entier. Les zones sans carré gardent leur place :
+ * leur forme, invisible, couvre déjà toutes les lignes du nom.
+ */
+function entryShiftOf(
+  item: Type_LegendItem,
+  horizontal: boolean,
+  line_counts: Map<string, number>,
+  police: number
+): number {
+  if (!hasMeasuredEntryLines(item, horizontal)) return 0
+  if (item.swatch_color === undefined) return 0
+  return legendEntrySwatchShift(line_counts.get(item.id) ?? 1, police)
 }
 
 /** #556 — lignes du libellé dessiné d'une zone : tspans posés par d3-textwrap, 1 sans césure, 0 sans libellé. */
@@ -828,9 +844,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       const height = richDiv(zone)?.offsetHeight ?? 0
       if (height > 0) {
-        // Hauteur native → px monde, puis en interlignes de légende : la rangée garde sous le
-        // texte la demi-police qui sépare les lignes ordinaires (cf. legendWrappedShapeHeight).
-        line_counts.set(item.id, (height * font_comp + 0.5 * layout_values.police) / (1.5 * layout_values.police))
+        // Hauteur native → px monde, puis en hauteurs de police : la rangée ajoute ensuite la
+        // demi-police qui sépare deux noms (legendEntryRowHeight), comme pour les autres entrées.
+        line_counts.set(item.id, height * font_comp / layout_values.police)
       }
     })
     const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
@@ -929,16 +945,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
       // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
       applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)
-      // #556 — nom sur plusieurs lignes : sa première ligne reste en face du carré, les suivantes
-      // descendent dans la rangée (cf. legendEntryLabelShift). Effacé sinon : zone réutilisée par id.
-      const label_shift = hasMeasuredEntryLines(item, values.horizontal)
-        ? legendEntryLabelShift(line_counts.get(item.id) ?? 1, layout_values.police)
-        : 0
-      if (label_shift > 0) {
-        zone.name_label_vert_shift = label_shift
-      } else {
-        zone.delete_attribute('name_label_vert_shift')
-      }
+      // #556 — le libellé reste centré sur la forme d'ancrage ; c'est la forme qui descend quand
+      // le nom prend plusieurs lignes (cf. entryShiftOf), pour que le carré se retrouve en face
+      // du nom entier et non de sa seule première ligne.
+      zone.delete_attribute('name_label_vert_shift')
       // Toutes les zones partagent la même géométrie : une petite boîte
       // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
       // avec le label à sa droite, centré verticalement → tout s'aligne à
@@ -984,17 +994,21 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         // conservée pour garder le rythme vertical et le centrage du libellé
         // cohérents avec les lignes à pastille.
         zone.shape_min_width = 0
-        // SA#550 — zone enveloppée : la forme couvre ses lignes, pour que le libellé centré
-        // dessus ne déborde ni sur la rangée d'avant ni sur celle d'après.
-        zone.shape_min_height = item.wrap === true
-          ? legendWrappedShapeHeight(legendWrappedLineCount(item, layout_values, line_counts), layout_values.police)
-          : layout_values.police
+        // SA#550 (ligne enveloppée) et #556 (nom long d'un titre ou d'une ligne d'info) : la forme
+        // couvre toutes les lignes du nom, pour que le libellé centré dessus ne déborde ni sur la
+        // rangée d'avant ni sur celle d'après — et que l'enveloppe du cadre le contienne.
+        zone.shape_min_height = legendWrappedShapeHeight(
+          item.wrap === true
+            ? legendWrappedLineCount(item, layout_values, line_counts)
+            : (line_counts.get(item.id) ?? 1),
+          layout_values.police
+        )
       }
       zone.name_label_horiz = 'right'
       zone.name_label_vert = 'middle'
       zone.name_label_inside_horiz = false
       zone.name_label_inside_vert = true
-      zone.setPosXY(origin.x + pos.x, origin.y + pos.y)
+      zone.setPosXY(origin.x + pos.x, origin.y + pos.y + entryShiftOf(item, values.horizontal, line_counts, layout_values.police))
       // Toujours attachée au cadre RACINE (le drag du cadre ne pousse que ses
       // attachés directs, pas les petits-enfants — l'attache est donc double :
       // racine + bloc de groupe le cas échéant).
@@ -1019,7 +1033,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (sample_id !== undefined) {
         const sample = sankey.containers_dict[sample_id] ?? sankey.addNewContainer(sample_id, LEGEND_SAMPLE_VALUE)
         configureSampleZone(sample, item, values.police, layout_values.police)
-        sample.setPosXY(origin.x + pos.x, origin.y + pos.y)
+        sample.setPosXY(
+          origin.x + pos.x,
+          origin.y + pos.y + entryShiftOf(item, values.horizontal, line_counts, layout_values.police)
+        )
         if (!frame.attached_node.includes(sample)) {
           frame.attachNodeToCont(sample)
         }

@@ -6,7 +6,7 @@
 // ne supporte pas d'être chargé par cette porte d'entrée sous jest.
 
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems, legendEntryLabelShift, legendEntryRowHeight, renderableLegendItems,
+  computeLegendItems, computeScaleText, layoutLegendItems, legendEntrySwatchShift, legendEntryRowHeight, renderableLegendItems,
   Type_LegendConfigValues, Type_SankeyForLegend
 } from './legendItems'
 import { isLegendChildId, isLegendElementId, isLegendFrameId } from './legendIds'
@@ -371,12 +371,45 @@ describe('OS#1254 — layoutLegendItems', () => {
     expect(pos[1].y - pos[0].y).toBe(1.5 * police)
     expect(pos[2].y - pos[1].y).toBe(1.5 * police + police)
     expect(pos[3].y - pos[2].y).toBe(1.5 * police + 2 * police)
-    // La dernière ligne d'un nom décalé (legendEntryLabelShift) finit à n polices du haut de sa
-    // rangée : l'écart jusqu'au nom suivant vaut 0,5 police dans tous les cas.
-    expect(legendEntryLabelShift(1, police)).toBe(0)
-    expect(legendEntryLabelShift(3, police)).toBe(police)
+    // Le nom occupe le haut de sa rangée : l'écart jusqu'au nom suivant vaut 0,5 police partout.
     expect(pos[3].y - (pos[2].y + 3 * police)).toBe(0.5 * police)
     expect(legendEntryRowHeight(1, police)).toBe(1.5 * police)
+    // Le CARRÉ, lui, descend d'une demi-ligne par ligne supplémentaire : il se centre sur le nom
+    // entier au lieu de n'être en face que de sa première ligne.
+    expect(legendEntrySwatchShift(1, police)).toBe(0)
+    expect(legendEntrySwatchShift(3, police)).toBe(police)
+  })
+
+  it('#556 — vertical : une ligne vide sépare les sections, jamais les entrées d\'une section', () => {
+    const police = base_config.police
+    const items_sections = [
+      { id: 'tg1', text: 'Forme de produit laitier', own_line: true, starts_group: true, block_id: 'b1' },
+      { id: 'e1', text: 'Lait cru', swatch_color: '#f00', block_id: 'b1' },
+      { id: 'e2', text: 'Eau', swatch_color: '#0f0', block_id: 'b1' },
+      { id: 'tg2', text: 'Méthode', own_line: true, starts_group: true, block_id: 'b2' },
+      { id: 'e3', text: 'Sans méthode', swatch_color: '#00f', block_id: 'b2' },
+      { id: 'legend-datatag-filiere', text: 'Filière : Lait de vache', own_line: true, starts_group: true },
+      { id: 'legend-datatag-unite', text: 'Unité : kt PB', own_line: true, starts_group: true },
+      { id: 'p1', text: 'Fiabilité des données : …', own_line: true, starts_group: true, block_id: 'b3', pinned: true, wrap: true },
+      { id: 'p2', text: 'Source : …', own_line: true, starts_group: true, block_id: 'b4', pinned: true, wrap: true }
+    ]
+    // Lignes mesurées de chaque nom : sans elles l'estimation sans DOM en compterait deux pour
+    // les titres longs, et le test mesurerait l'estimation plutôt que la règle de section.
+    const lines = new Map(items_sections.map(i => [i.id, 1] as [string, number]))
+    const pos = new Map(layoutLegendItems(items_sections, base_config, lines).map(p => [p.id, p.y]))
+    const gap = (from: string, to: string) => (pos.get(to) ?? 0) - (pos.get(from) ?? 0)
+    const row = 1.5 * police
+    // Dans une section, le rythme ordinaire
+    expect(gap('tg1', 'e1')).toBe(row)
+    expect(gap('e1', 'e2')).toBe(row)
+    expect(gap('legend-datatag-filiere', 'legend-datatag-unite')).toBe(row)
+    expect(gap('p1', 'p2')).toBe(row)
+    // Entre deux sections, une ligne de plus
+    expect(gap('e2', 'tg2')).toBe(row + police)
+    expect(gap('e3', 'legend-datatag-filiere')).toBe(row + police)
+    expect(gap('legend-datatag-unite', 'p1')).toBe(row + police)
+    // Et rien avant la première section
+    expect(pos.get('tg1')).toBe(0)
   })
 
   it('horizontal : titre seul sur sa ligne, entrées enchaînées, nouveau groupe = nouvelle ligne', () => {
