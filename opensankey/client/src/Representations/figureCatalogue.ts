@@ -376,6 +376,18 @@ export const FIGURE_LABEL_CONFIG = {
       choice('horizontal', { en: 'Horizontal', fr: 'Horizontale', es: 'Horizontal', de: 'Waagerecht', it: 'Orizzontale', 'zh-CN': '水平', ja: '水平' })
     ]
   }),
+  name_label_strip_parent: entry<boolean>(false, 'name_label', {
+    en: 'Drop what the previous ring says', fr: 'Ôter ce que l’anneau précédent dit déjà', es: 'Quitar lo que ya dice el anillo anterior',
+    de: 'Weglassen, was der vorige Ring schon sagt', it: 'Togliere ciò che l’anello precedente dice già', 'zh-CN': '省略上一环已写的部分', ja: '前の環がすでに示す語を省く'
+  }, {
+    en: 'Under “Maize”, “Maize Organic” reads “Organic”: the parent’s name is removed from the start or end of the part’s name.',
+    fr: 'Sous « Maïs », « Maïs Bio » s’écrit « Bio » : le nom du parent est ôté du début ou de la fin du nom de la part.',
+    es: 'Bajo «Maíz», «Maíz Bio» se escribe «Bio»: el nombre del padre se quita del inicio o del final del nombre de la parte.',
+    de: 'Unter „Mais“ wird „Mais Bio“ zu „Bio“: der Name des Elternteils wird am Anfang oder Ende des Teilnamens entfernt.',
+    it: 'Sotto «Mais», «Mais Bio» si scrive «Bio»: il nome del genitore è tolto dall’inizio o dalla fine del nome della parte.',
+    'zh-CN': '在“玉米”之下，“玉米 有机”写作“有机”：从部分名称的开头或末尾去掉父级名称。',
+    ja: '「トウモロコシ」の下では「トウモロコシ 有機」が「有機」になります。部分名の先頭または末尾から親の名前を除きます。'
+  }),
   name_label_follow_diagram: entry<boolean>(true, 'name_label', {
     en: 'Name as the diagram names it', fr: 'Nom tel que le diagramme le nomme', es: 'Nombre tal como lo nombra el diagrama',
     de: 'Name, wie das Diagramm ihn nennt', it: 'Nome come lo nomina il diagramma', 'zh-CN': '与图中名称一致', ja: '図と同じ名前を使う'
@@ -419,6 +431,14 @@ const ELEMENT_CONTROLS: { [key: string]: Type_FigureControl } = {
   shape_border_color: { kind: 'color' },
   shape_color: { kind: 'color' },
   name_label_font_size: { kind: 'number', min: 4, max: 48, step: 1 },
+  name_label_box_width: { kind: 'number', min: 20, max: 600, step: 10 },
+  name_label_separator_part: {
+    kind: 'select',
+    choices: [
+      choice('before', { en: 'Keep what is before', fr: 'Garder ce qui est avant', es: 'Conservar lo anterior', de: 'Behalten, was davor steht', it: 'Tenere ciò che precede', 'zh-CN': '保留分隔符之前', ja: '区切りの前を残す' }),
+      choice('after', { en: 'Keep what is after', fr: 'Garder ce qui est après', es: 'Conservar lo posterior', de: 'Behalten, was danach steht', it: 'Tenere ciò che segue', 'zh-CN': '保留分隔符之后', ja: '区切りの後を残す' })
+    ]
+  },
   value_label_font_size: { kind: 'number', min: 4, max: 48, step: 1 },
   value_label_nb_significant_digits: { kind: 'number', min: 1, max: 12, step: 1 },
   value_label_nb_digit: { kind: 'number', min: 0, max: 12, step: 1 },

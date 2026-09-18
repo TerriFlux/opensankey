@@ -45,6 +45,16 @@ export interface Type_SunburstStyle {
   others_threshold: number
   labels_mode: 'fit' | 'none' | 'always'
   label_orientation: 'radial' | 'tangential' | 'horizontal'
+  /**
+   * CE QU'UN SECTEUR ÉCRIT DE SON NOM (demande Julien, 18/09). `strip_parent` retire ce que
+   * l'anneau précédent dit déjà (« Maïs Bio » sous « Maïs » s'écrit « Bio ») ; le séparateur est
+   * celui des nœuds du diagramme (`name_label_separator`, même règle que `NodeBase.name_label`).
+   */
+  strip_parent: boolean
+  separator: string
+  separator_part: 'before' | 'after'
+  /** La largeur de la boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne. */
+  box_width: number
   /** Ceux-ci sont les attributs d'ÉTIQUETTE des éléments (`name_label_*`). */
   font_family: string
   font_size: number
@@ -93,6 +103,10 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   others_threshold: 0,
   labels_mode: 'fit',
   label_orientation: 'radial',
+  strip_parent: false,
+  separator: '',
+  separator_part: 'after',
+  box_width: 150,
   font_family: 'Arial,sans-serif',
   font_size: 10,
   bold: false,
@@ -419,12 +433,21 @@ export const sunburstArcLabel = (
     orientation?: 'radial' | 'tangential' | 'horizontal'
     mode?: 'fit' | 'always' | 'none'
     font_size?: number
+    /**
+     * La largeur de la boîte de texte (demande Julien, 18/09) : une ligne ne dépasse ni elle ni
+     * la place ; au-delà, le texte REVIENT À LA LIGNE, entre les mots, tant que la hauteur
+     * disponible tient les lignes. Un mot trop long pour une ligne, ou plus de lignes que de
+     * place : on retombe sur la troncature d'une ligne, et la légende nommera. Absente ou nulle :
+     * une seule ligne, comme avant.
+     */
+    box_px?: number
   } = {}
 ): string | null => {
   const mode = o.mode ?? 'fit'
   if (mode === 'none') return null
   const orientation = o.orientation ?? 'radial'
-  const char_px = ((o.font_size ?? 10) / 10) * LABEL_CHAR_PX
+  const font_size = o.font_size ?? 10
+  const char_px = (font_size / 10) * LABEL_CHAR_PX
   // Où le texte court, et donc ce qui borne sa longueur : l'épaisseur de l'anneau s'il est
   // radial, la longueur de l'arc s'il suit la courbe, le plus petit des deux à l'horizontale.
   const length_px = orientation === 'radial' ? ring_px
@@ -436,9 +459,78 @@ export const sunburstArcLabel = (
   if (mode !== 'always' && (height_px < MIN_LABEL_ARC_PX || length_px < MIN_RING_FOR_LABEL_PX)) {
     return null
   }
-  const room = Math.floor((length_px - LABEL_RING_PADDING_PX) / char_px)
+  const line_px = o.box_px && o.box_px > 0 ? Math.min(o.box_px, length_px) : length_px
+  const room = Math.floor((line_px - LABEL_RING_PADDING_PX) / char_px)
   if (room < 1) return null
-  return label.length > room ? label.slice(0, Math.max(1, room - 1)) + '…' : label
+  if (label.length <= room) return label
+  // Retour à la ligne : autant de lignes que la hauteur en tient, jamais moins d'une.
+  const max_lines = o.box_px && o.box_px > 0
+    ? Math.max(1, Math.floor(height_px / (font_size * LABEL_LINE_HEIGHT)))
+    : 1
+  const wrapped = max_lines > 1 ? wrapWords(label, room, max_lines) : null
+  return wrapped ? wrapped.join('\n') : label.slice(0, Math.max(1, room - 1)) + '…'
+}
+
+/** Interligne des étiquettes à plusieurs lignes, en multiples de la taille de police. */
+const LABEL_LINE_HEIGHT = 1.15
+
+/**
+ * Coupe entre les mots, `room` caractères par ligne au plus, `max_lines` lignes au plus. `null`
+ * quand ça ne se peut pas — un mot plus long qu'une ligne, ou trop de lignes : l'appelant tronque.
+ */
+const wrapWords = (text: string, room: number, max_lines: number): string[] | null => {
+  const lines: string[] = []
+  let line = ''
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    if (word.length > room) return null
+    if (line === '') line = word
+    else if (line.length + 1 + word.length <= room) line += ' ' + word
+    else { lines.push(line); line = word }
+    if (lines.length >= max_lines) return null
+  }
+  if (line) lines.push(line)
+  return lines.length <= max_lines ? lines : null
+}
+
+/**
+ * CE QU'UN SECTEUR ÉCRIT DE SON NOM (demande Julien, 18/09). Fonction PURE.
+ *
+ * `strip_parent` retire du nom ce que l'anneau précédent dit déjà : sous « Maïs », « Maïs Bio »
+ * s'écrit « Bio » — en tête ou en queue, ponctuation de liaison comprise, et jamais jusqu'à ne
+ * rien laisser. Le séparateur est celui des nœuds du diagramme (`name_label_separator`,
+ * `name_label_separator_part`) et suit la même règle que `NodeBase.name_label` : la partie avant
+ * la première occurrence, ou après la dernière.
+ */
+export const sunburstSectorName = (
+  label: string,
+  parent_label: string | null,
+  o: { strip_parent?: boolean, separator?: string, separator_part?: 'before' | 'after' } = {}
+): string => {
+  let name = label
+  if (o.strip_parent && parent_label) {
+    const n = name.trim()
+    const p = parent_label.trim()
+    const lower_n = n.toLocaleLowerCase()
+    const lower_p = p.toLocaleLowerCase()
+    if (p && n.length > p.length) {
+      if (lower_n.startsWith(lower_p)) {
+        const rest = n.slice(p.length).replace(/^[\s\-–—_:·,/()]+/, '')
+        if (rest) name = rest
+      } else if (lower_n.endsWith(lower_p)) {
+        const rest = n.slice(0, n.length - p.length).replace(/[\s\-–—_:·,/()]+$/, '')
+        if (rest) name = rest
+      }
+    }
+  }
+  const sep = o.separator ?? ''
+  if (sep !== '') {
+    const parts = name.split(sep)
+    if (parts.length > 1) {
+      const kept = (o.separator_part ?? 'after') === 'after' ? parts[parts.length - 1] : parts[0]
+      if (kept.trim()) name = kept.trim()
+    }
+  }
+  return name
 }
 
 // Sous-arbre correspondant à un id : entrer dans un secteur, c'est redessiner l'arbre
@@ -634,10 +726,20 @@ export const drawSunburstChart = (
      * composé AVANT la mesure — une valeur ajoutée doit tenir, sinon l'étiquette est tronquée ou
      * renoncée comme n'importe quelle autre.
      */
+    // Le nom que l'anneau précédent a déjà écrit : le secteur parent, ou le centre au premier
+    // anneau — c'est lui que `strip_parent` retire du nom du secteur.
+    const parentLabelOf = (d: Type_SunburstSlice): string | null => {
+      if (d.path.length >= 2) return slices.find(s => s.id === d.path[d.path.length - 2])?.label ?? null
+      return centre_node ? centre_node.label : null
+    }
+    const sectorName = (d: Type_SunburstSlice): string => sunburstSectorName(d.label, parentLabelOf(d), {
+      strip_parent: st.strip_parent, separator: st.separator, separator_part: st.separator_part
+    })
     const sectorText = (d: Type_SunburstSlice): string => {
       // La CASSE s'applique au texte et non au style : `text-transform` n'est pas honoré par
       // tous les moteurs SVG, et l'export PNG en dépend.
-      const parts: string[] = [st.uppercase ? d.label.toLocaleUpperCase() : d.label]
+      const name = sectorName(d)
+      const parts: string[] = [st.uppercase ? name.toLocaleUpperCase() : name]
       if (st.value_visible) parts.push(fmtUnit(d.value))
       if (st.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
       return parts.join(' · ')
@@ -651,13 +753,15 @@ export const drawSunburstChart = (
         {
           orientation: st.label_orientation,
           mode: st.labels_mode,
-          font_size: st.font_size
+          font_size: st.font_size,
+          box_px: st.box_width
         }
       )
-    // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches.
+    // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches. Un nom revenu
+    // à la ligne, lui, est écrit en entier.
     const namesItself = (d: Type_SunburstSlice, geo: Type_Geometry): boolean => {
       const text = arcLabelOf(d, geo)
-      return text !== null && text === sectorText(d)
+      return text !== null && text.replace(/\n/g, ' ') === sectorText(d)
     }
     // Les secteurs du premier anneau que le dessin ne nomme pas. Ils portent déjà leur
     // couleur de branche : la légende n'a qu'à la recopier.
@@ -792,7 +896,7 @@ export const drawSunburstChart = (
 
     // Étiquettes DANS les secteurs assez larges. Jamais sur tous : un secteur trop
     // étroit n'a que son info-bulle, et un texte tronqué à l'aveugle ne nomme rien.
-    g.selectAll('text.sunburst_arc_label')
+    const arc_labels = g.selectAll('text.sunburst_arc_label')
       .data(slices.filter(d => arcLabelOf(d, geo) !== null))
       .enter().append('text')
       .attr('class', 'sunburst_arc_label')
@@ -821,7 +925,19 @@ export const drawSunburstChart = (
       // illisible. L'auteur peut l'imposer, c'est alors son affaire.
       .attr('fill', d => st.color_mode === 'fixed' ? st.label_color : inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
-      .text(d => arcLabelOf(d, geo) ?? '')
+    // Une ligne par `tspan`, le bloc centré sur le milieu de l'anneau : la première ligne
+    // remonte de la moitié de la hauteur du bloc, les suivantes descendent d'un interligne.
+    const line_h = st.font_size * LABEL_LINE_HEIGHT
+    arc_labels.each(function (d) {
+      const lines = (arcLabelOf(d, geo) ?? '').split('\n')
+      const text = d3.select(this)
+      lines.forEach((line, i) => {
+        text.append('tspan')
+          .attr('x', 0)
+          .attr('dy', i === 0 ? -((lines.length - 1) / 2) * line_h : line_h)
+          .text(line)
+      })
+    })
 
     // ── Légende ───────────────────────────────────────────────────────────────────
     // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
