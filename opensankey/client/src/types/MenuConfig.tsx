@@ -1300,6 +1300,19 @@ export class Class_MenuConfig {
     const existing = by_key[pane_key]
     if (existing && existing.nature === nature) return existing
     const fig = new Class_Figure(nature, pane_key)
+    // os#1425 — CHANGER DE NATURE NE PERD PAS LES RÉGLAGES (arbitrage Julien, 18/09/2026).
+    //
+    // C'est le geste d'Excel : on change le type d'un graphique, la mise en forme reste. Elle le
+    // peut parce que les natures parlent le même vocabulaire — ce sont les attributs des nœuds et
+    // des flux (`name_label_font_size`, `value_label_unit_visible`, `shape_border_color`…), pas
+    // des clés inventées par chacune. Une couronne réglée en Arial 12 sans unité le reste en
+    // sunburst.
+    //
+    // Ce que la nouvelle nature ne déclare pas est GARDÉ sans être lu (la cascade ne rend que les
+    // clés déclarées) : revenir à la nature d'avant retrouve ses réglages. Les STYLES SUIVIS, eux,
+    // ne se transportent pas — un style appartient à une nature, celui d'une couronne n'existe pas
+    // pour un sunburst ; la figure repart donc sur le style d'usine de sa nouvelle nature.
+    if (existing) fig.loadOwn(existing.own)
     by_key[pane_key] = fig
     return fig
   }

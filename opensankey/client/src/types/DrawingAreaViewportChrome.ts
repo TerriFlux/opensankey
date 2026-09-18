@@ -122,15 +122,21 @@ export class Class_ViewportChrome {
       this._repeat_delay = setTimeout(() => {
         this._repeat_timer = setInterval(action, 60)
       }, 300)
+      // os#1385 — le relâché est guetté sur la fenêtre où vit la FLÈCHE, pas sur celle de la page.
+      // Un canevas détaché dessine ses barres dans une autre fenêtre de navigateur : le mouseup y
+      // reste, et guetter la fenêtre principale laissait la répétition au maintien tourner
+      // indéfiniment (le diagramme continuait de défiler bouton relâché). Résolu par le nœud
+      // plutôt que par la zone : la flèche sait toujours dans quel document elle est.
+      const win = sel.node()?.ownerDocument?.defaultView ?? window
       const stop = () => {
         this._clearRepeat()
-        window.removeEventListener('mouseup', stop)
-        window.removeEventListener('touchend', stop)
-        window.removeEventListener('touchcancel', stop)
+        win.removeEventListener('mouseup', stop)
+        win.removeEventListener('touchend', stop)
+        win.removeEventListener('touchcancel', stop)
       }
-      window.addEventListener('mouseup', stop)
-      window.addEventListener('touchend', stop)
-      window.addEventListener('touchcancel', stop)
+      win.addEventListener('mouseup', stop)
+      win.addEventListener('touchend', stop)
+      win.addEventListener('touchcancel', stop)
     }
     sel.on('mousedown', start).on('touchstart', start)
   }

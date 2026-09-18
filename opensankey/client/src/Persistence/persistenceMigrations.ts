@@ -247,6 +247,20 @@ export function validateSankeyRootJSON(json: unknown): string[] {
       problems.push(`version : attendu une chaîne (ou un nombre), reçu ${typeof value}`)
     } else if (key === 'format_version') {
       problems.push(`format_version : attendu un entier, reçu ${typeof value}`)
+    } else if (issue.path.length > 1) {
+      // os#1385 — L'ANOMALIE EST IMBRIQUÉE : on nomme le SOUS-CHAMP en cause, pas la
+      // racine. Le message générique décrivait la clé de premier niveau quelle que soit
+      // la profondeur du problème, ce qui donnait des phrases qui se contredisent :
+      // « sheets : attendu un objet, reçu object » — l'objet EST un objet, c'est son
+      // `order` qui n'est pas un tableau. Un message juste dit où regarder.
+      const path = issue.path.map(String).join('.')
+      const nested = issue.path.reduce<unknown>(
+        (node, step) => (node && typeof node === 'object')
+          ? (node as Record<string, unknown>)[String(step)]
+          : undefined,
+        json
+      )
+      problems.push(`${path} : ${issue.message.toLowerCase()} (reçu ${kindOf(nested)})`)
     } else {
       problems.push(`${key} : attendu un objet, reçu ${kindOf(value)}`)
     }
