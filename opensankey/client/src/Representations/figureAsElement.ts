@@ -54,23 +54,39 @@ export const figureAsElement = (
   figure: Class_Figure,
   host: Type_FigureElementHost
 ): object => {
+  // Le diagramme de la figure, là où un nœud porterait le sien : l'interface des éléments y prend
+  // les groupes d'étiquettes quand elle offre une couleur « durable » ou une unité.
+  const app = host.application_data as { drawing_area?: { sankey?: unknown } }
+  const sankey = app?.drawing_area?.sankey
   const base = {
     // Une figure de vignette n'a pas d'identifiant de document tant que personne ne l'a posée
     // quelque part : sa CLÉ de vignette la nomme alors, ce qui suffit à l'historique.
     id: figure.id ?? figure.key,
-    drawing_area: { application_data: host.application_data },
-    isAttributeOverloaded: (key: string) => figure.isAttributeOverloaded(key)
+    drawing_area: { application_data: host.application_data, sankey },
+    sankey
   }
   return new Proxy(base as Record<string, unknown>, {
     get: (target, prop) => {
       if (typeof prop !== 'string') return undefined
       if (prop in target) return target[prop]
-      // La valeur MONTRÉE par l'hôte d'abord : sous la portée « le style », c'est celle du style
+      // LES MÉTHODES DE LA FIGURE PASSENT, LIÉES À ELLE. L'interface des éléments n'interroge pas
+      // que des attributs : elle demande d'où vient une valeur (`getStyleWithAttr`), si elle est
+      // surchargée ici (`isAttributeOverloaded`)… Ces questions-là, une figure sait y répondre —
+      // elle a la même surface que `Class_ProtoElement`, c'est ce qui fonde tout ce lot. Les
+      // énumérer une à une reviendrait à refaire la liste à chaque fois que l'interface en pose
+      // une nouvelle, et à planter le jour où on l'oublie.
+      const member = Reflect.get(figure as unknown as object, prop)
+      if (typeof member === 'function') {
+        return (member as (...args: unknown[]) => unknown).bind(figure)
+      }
+      // Les STYLES SUIVIS, que l'interface lit pour nommer la provenance d'une valeur.
+      if (prop === 'style') return figure.style
+      // La valeur MONTRÉE par l'hôte ensuite : sous la portée « le style », c'est celle du style
       // et non celle de la figure, et l'interface doit afficher ce que le geste suivant écrira.
       if (prop in host.options) return host.options[prop]
       return figure.getElementProperty(prop)
     },
-    set: (target, prop, value) => {
+    set: (_target, prop, value) => {
       if (typeof prop !== 'string') return false
       host.setOptions({ ...host.options, [prop]: value })
       return true
