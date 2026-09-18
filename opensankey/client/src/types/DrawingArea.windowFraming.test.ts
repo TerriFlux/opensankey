@@ -1,4 +1,7 @@
+import * as d3 from '../d3Modules'
+
 import { Class_ApplicationData } from './ApplicationData'
+import type { Class_DrawingArea } from './DrawingArea'
 
 // ==================================================================================================
 // OS#388 — Un changement de la LARGEUR RÉSERVÉE du fenêtrage (barre latérale ouverte/fermée/
@@ -204,6 +207,121 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
   it('zone jamais dessinée : ne jette pas', () => {
     const app = new Class_ApplicationData(false)
     expect(() => app.refreshWindowFraming()).not.toThrow()
+  })
+})
+
+// ==================================================================================================
+// os#1429 — LA CASE CHANGE DE TAILLE, LE REGARD SUIT, L'ECHELLE NON.
+//
+// Constate par Julien : on ouvre une fenetre a cote, la grande zone se retrecit, et le Sankey
+// reste ou il etait — une bonne moitie passe derriere la fenetre qui vient de naitre. Son
+// diagnostic, « il manque un draw », designe le bon endroit mais pas la bonne cause : en mode
+// 'none', DESSINER NE RECADRE PAS (cf. _drawBody, qui y reapplique la camera telle quelle). Un
+// draw de plus n'aurait rien deplace.
+//
+// Ce que ces cas figent est la DISTINCTION qui rend le geste acceptable la ou un recadrage ne
+// le serait pas : on TRANSLATE de la moitie de la variation, on ne remet pas a l'echelle. Le
+// point qui etait au centre y reste, `k` ne bouge pas, et refermer rend la vue d'avant.
+//
+// Le `k` absent de la formule n'est pas un oubli : le point monde au centre vaut
+// ((W/2 - x)/k, (H/2 - y)/k), et l'y maintenir apres passage a W' donne x' = x + (W' - W)/2.
+// Une variation de case se rend en pixels d'ecran, a tout zoom.
+// ==================================================================================================
+
+describe('os#1429 — le diagramme se replace quand sa case change de taille', () => {
+
+  // Les cas d'au-dessus se contentent d'une selection d3, meme VIDE : ils comptent des appels.
+  // Ici on lit la camera, donc il faut le vrai noeud SVG, donc les deux protheses que jsdom
+  // n'offre pas et sans lesquelles le dessin s'arrete avant de le poser (memes que
+  // DrawingArea.domIds.test.ts).
+  beforeAll(() => {
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      configurable: true,
+      value: () => ({ font: '', measureText: (t: string) => ({ width: 8 * t.length }) })
+    })
+    ;(SVGElement.prototype as unknown as { getBBox: () => DOMRect }).getBBox =
+      () => ({ x: 0, y: 0, width: 50, height: 10 }) as DOMRect
+  })
+
+  // Et le conteneur d'accueil : sans lui la selection d3 est VIDE, son `node()` est null, et il
+  // n'y a aucune camera a lire. Les cas d'au-dessus s'en passaient sans le savoir.
+  beforeEach(() => { document.body.innerHTML = '<div id="sankey_app"></div>' })
+
+  const camera = (da: Class_DrawingArea) => d3.zoomTransform(da.d3_selection_zoom_area!.node()!)
+
+  /**
+   * Un diagramme dessine, avec un PREMIER fenetrage deja passe. Il est indispensable : c'est lui
+   * qui releve la taille de depart. Sans point de comparaison on ne bouge rien, et c'est voulu —
+   * une zone toute neuve n'a pas « varie », elle vient de naitre.
+   */
+  const buildFramedApp = () => {
+    const built = buildDrawnApp()
+    // Une camera POSEE, et non celle du cadrage d'arrivee : jsdom ne met rien en page, le
+    // cadrage initial y rend des NaN. Ce qu'on mesure est une DIFFERENCE, elle demande donc
+    // seulement un point de depart connu — et le poser rend la mesure independante du cadrage.
+    built.drawing_area.setCamera(d3.zoomIdentity.translate(100, 50).scale(2))
+    built.app.refreshWindowFraming()
+    return built
+  }
+
+  it('la case retrecit : la camera translate de la moitie, sans toucher a l echelle', () => {
+    const { app, drawing_area } = buildFramedApp()
+    expect(drawing_area.auto_fit_mode).toBe('none')
+    const avant = camera(drawing_area)
+
+    app.menu_configuration.panels.setMode('config', 'sidebar')
+    const reserve = app.menu_configuration.panels.getSidebarReservedPx()
+    expect(reserve).toBeGreaterThan(0)
+
+    app.refreshWindowFraming()
+
+    const apres = camera(drawing_area)
+    expect(apres.k).toBe(avant.k)
+    expect(apres.x).toBeCloseTo(avant.x - reserve / 2, 3)
+    // Rien n'a bouge en hauteur : on ne translate que de ce qui a varie.
+    expect(apres.y).toBeCloseTo(avant.y, 3)
+  })
+
+  it('refermer rend exactement la vue d avant : la translation est sa propre reciproque', () => {
+    const { app, drawing_area } = buildFramedApp()
+    const depart = camera(drawing_area)
+
+    app.menu_configuration.panels.setMode('config', 'sidebar')
+    app.refreshWindowFraming()
+    expect(camera(drawing_area).x).not.toBeCloseTo(depart.x, 3)
+
+    // Le panneau quitte la barre laterale pour la pop-up : il ne reserve plus rien, la case
+    // reprend sa largeur. C'est le retour en arriere du geste, vu par la zone de dessin.
+    app.menu_configuration.panels.setMode('config', 'popup')
+    expect(app.menu_configuration.panels.getSidebarReservedPx()).toBe(0)
+    app.refreshWindowFraming()
+
+    const retour = camera(drawing_area)
+    expect(retour.k).toBe(depart.k)
+    expect(retour.x).toBeCloseTo(depart.x, 3)
+    expect(retour.y).toBeCloseTo(depart.y, 3)
+  })
+
+  it('une case inchangee ne deplace rien, meme fenetree plusieurs fois', () => {
+    // Un re-rendu de React suffit a repasser par la : bouger pour rien ferait vibrer le dessin.
+    const { app, drawing_area } = buildFramedApp()
+    const avant = camera(drawing_area)
+    const set_camera = jest.spyOn(drawing_area, 'setCamera')
+
+    app.refreshWindowFraming()
+    app.refreshWindowFraming()
+
+    expect(set_camera).not.toHaveBeenCalled()
+    expect(camera(drawing_area).x).toBeCloseTo(avant.x, 3)
+  })
+
+  it('le tout premier fenetrage ne bouge rien : il n y a pas de case d avant', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    const set_camera = jest.spyOn(drawing_area, 'setCamera')
+
+    app.refreshWindowFraming()
+
+    expect(set_camera).not.toHaveBeenCalled()
   })
 })
 
