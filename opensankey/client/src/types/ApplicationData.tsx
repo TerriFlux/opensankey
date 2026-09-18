@@ -598,14 +598,52 @@ export class Class_ApplicationData {
    * board unitaire pour sa vignette, juste après l'avoir demandée.
    */
   public detachOffscreen(): void {
-    const create_drawing_area = this.createNewDrawingArea.bind(this)
-    this.createNewDrawingArea = (id?: string): Class_DrawingArea => {
-      const drawing_area = create_drawing_area(id)
-      drawing_area.container_selector = OFFSCREEN_CONTAINER_SELECTOR
-      return drawing_area
-    }
-    this._drawing_area.container_selector = OFFSCREEN_CONTAINER_SELECTOR
+    this.showIn(OFFSCREEN_CONTAINER_SELECTOR, null)
   }
+
+  /**
+   * os#1385 — LE LIEU D'ACCUEIL EST UNE PROPRIÉTÉ DU DOCUMENT, PAS DE SA ZONE DE DESSIN.
+   *
+   * `detachOffscreen` posait son sélecteur sur la FABRIQUE de zones, pour la raison expliquée
+   * ci-dessus : le chargement en crée d'autres en chemin, et l'une d'elles dessine. La même
+   * raison vaut, en sens inverse, pour un document qu'on MONTRE quelque part — le canevas d'une
+   * feuille ouvert dans une fenêtre de navigateur, sur un second écran. Sa zone est remplacée à
+   * chaque `resetDocument()` et à chaque bascule de vue : la neuve naissait avec le conteneur
+   * hors écran de son document, et la fenêtre se vidait au premier changement de vue, sans un
+   * mot. Le lieu d'accueil vit donc ici, une fois pour toutes, et la fabrique le réapplique.
+   *
+   * `owner_document` est le document DOM qui héberge le conteneur : celui de la page pour une
+   * case de la grande zone (`null`), celui de la fenêtre fille pour un canevas détaché. C'est
+   * lui qui décide où la zone cherche son conteneur, mesure, et construit son SVG.
+   */
+  public showIn(container_selector: string, owner_document: Document | null): void {
+    this._container_selector = container_selector
+    this._container_owner_document = owner_document
+    if (!this._wrapped_drawing_area_factory) {
+      const create_drawing_area = this.createNewDrawingArea.bind(this)
+      this.createNewDrawingArea = (id?: string): Class_DrawingArea => {
+        const drawing_area = create_drawing_area(id)
+        this._applyContainer(drawing_area)
+        return drawing_area
+      }
+      this._wrapped_drawing_area_factory = true
+    }
+    this._applyContainer(this._drawing_area)
+  }
+
+  /** Le lieu d'accueil du document, reporté sur une zone (la sienne, ou une neuve). */
+  protected _applyContainer(drawing_area: Class_DrawingArea): void {
+    if (this._container_selector === null) return
+    drawing_area.container_selector = this._container_selector
+    drawing_area.container_owner_document = this._container_owner_document
+  }
+
+  /** Sélecteur du conteneur où ce document se montre ; `null` = la zone décide (défaut). */
+  protected _container_selector: string | null = null
+  protected _container_owner_document: Document | null = null
+  private _wrapped_drawing_area_factory = false
+  public get container_selector(): string | null { return this._container_selector }
+  public get container_owner_document(): Document | null { return this._container_owner_document }
 
   public createNewDrawingArea(id?: string): Class_DrawingArea {
     const drawing_area = new Class_DrawingArea(
