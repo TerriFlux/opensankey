@@ -23,15 +23,15 @@ import {
   default_legend_position_y, default_legend_show_constraints,
   default_legend_show_dataTags, default_masked, default_scale_legend_ratio,
   default_scale_legend_unit, default_display_legend_scale,
-  default_info_link_value_void, default_width
+  default_info_link_value_void, default_width, ALL_ATTRIBUTES_CONFIG
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
-import { LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId } from './legendIds'
+import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
-  Type_SankeyForLegend, legendWrappedLineCount, legendWrappedShapeHeight
+  Type_SankeyForLegend, legendEntrySwatchShift, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
 import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
 
@@ -89,6 +89,32 @@ function richDiv(zone: Class_ContainerElement): HTMLDivElement | null {
   return (zone.d3_selection?.select('foreignObject div').node() as HTMLDivElement | null | undefined) ?? null
 }
 
+/**
+ * #556 — nombre de lignes du texte d'une ligne épinglée : les LIGNES DESSINÉES sont comptées une à
+ * une (une boîte de ligne par ordonnée distincte), et non déduites d'une hauteur de boîte.
+ *
+ * La hauteur de boîte s'était révélée trompeuse : celle du conteneur de l'éditeur de texte riche
+ * porte sa marge interne (`.ql-editor`, 12 px en haut et en bas), qui ajoutait près d'une ligne et
+ * écartait deux groupes épinglés davantage que deux étiquettes. Compter les lignes ne dépend ni de
+ * cette marge, ni de l'interligne, ni de l'échelle de rendu.
+ */
+function richTextLineCount(zone: Class_ContainerElement): number {
+  if (typeof document === 'undefined' || typeof document.createRange !== 'function') return 0
+  const selection = zone.d3_selection?.select('foreignObject div p')
+  const node = ((selection === undefined || selection.empty()) ? richDiv(zone) : selection.node()) as HTMLElement | null
+  if (node === null) return 0
+  const range = document.createRange()
+  // jsdom ne pose aucune géométrie : pas de `getClientRects` sur un Range. Sans mesure, la mise en
+  // page retombe sur l'estimation sans DOM, comme le reste du générateur.
+  if (typeof range.getClientRects !== 'function') return 0
+  range.selectNodeContents(node)
+  const tops = new Set<number>()
+  Array.from(range.getClientRects()).forEach(rect => {
+    if (rect.height > 0) tops.add(Math.round(rect.top))
+  })
+  return tops.size
+}
+
 function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
   const div = richDiv(zone)
   if (div === null || typeof window === 'undefined') return NO_PADDING
@@ -98,6 +124,38 @@ function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
     top: px(style.paddingTop), right: px(style.paddingRight), bottom: px(style.paddingBottom), left: px(style.paddingLeft)
   }
   return Object.values(padding).every(v => v === 0) ? NO_PADDING : padding
+}
+
+/**
+ * #556 — entrée dont on mesure le nombre de lignes du nom dessiné : disposition verticale (en
+ * horizontal les noms ne sont pas enveloppés), hors barre d'échelle et hors ligne enveloppée
+ * (SA#550, qui a sa propre mesure).
+ */
+function hasMeasuredEntryLines(item: Type_LegendItem, horizontal: boolean): boolean {
+  return !horizontal && item.scale_bar !== true && item.wrap !== true && item.pinned_name === undefined
+}
+
+/**
+ * #556 — descente de la zone d'une entrée à carré dont le nom prend plusieurs lignes : le carré
+ * (une police de haut) se centre ainsi sur le nom entier. Les zones sans carré gardent leur place :
+ * leur forme, invisible, couvre déjà toutes les lignes du nom.
+ */
+function entryShiftOf(
+  item: Type_LegendItem,
+  horizontal: boolean,
+  line_counts: Map<string, number>,
+  police: number
+): number {
+  if (!hasMeasuredEntryLines(item, horizontal)) return 0
+  if (item.swatch_color === undefined) return 0
+  return legendEntrySwatchShift(line_counts.get(item.id) ?? 1, police)
+}
+
+/** #556 — lignes du libellé dessiné d'une zone : tspans posés par d3-textwrap, 1 sans césure, 0 sans libellé. */
+function drawnLabelLineCount(zone: Class_ContainerElement): number {
+  const text = zone.d3_selection?.select('text.name_label_text')
+  if (text === undefined || text.empty()) return 0
+  return Math.max(1, text.selectAll('tspan').size())
 }
 
 function escapeHtml(s: string): string {
@@ -118,7 +176,9 @@ function applyPinnedLabel(zone: Class_ContainerElement, item: Type_LegendItem, p
   const rest = item.text.slice(name.length)
   const style = [
     `margin:${-padding.top}px ${-padding.right}px ${-padding.bottom}px ${-padding.left}px`,
-    `font-size:${police}px`, 'line-height:1.25', 'white-space:normal', 'font-style:italic'
+    // #556 — interligne d'une police, comme les lignes d'un nom ordinaire (tspans, dy = 1em) :
+    // deux groupes épinglés se suivent alors au même rythme que deux étiquettes.
+    `font-size:${police}px`, 'line-height:1', 'white-space:normal', 'font-style:italic'
   ].join(';')
   zone.name_label_has_fo = true
   zone.name_label_fo_content =
@@ -149,6 +209,7 @@ function applyEntryFormat(zone: Class_ContainerElement, item: Type_LegendItem) {
   SHAPE_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
   ICON_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
   zone.legend_swatch_link_dashed = false
+  zone.legend_swatch_checker = false
   const format = item.format
   if (format === undefined || item.swatch_color === undefined) return
   const icon = format.icon
@@ -174,6 +235,9 @@ function applyEntryFormat(zone: Class_ContainerElement, item: Type_LegendItem) {
   // Flux « Hachuré » : les tirets du tracé de flux (NodeDrawShape.applyLinkDashPattern)
   if (swatch.link_dashed === true) zone.legend_swatch_link_dashed = true
   if (swatch.opacity !== undefined) zone.shape_opacity = swatch.opacity
+  // SA#551 — opacité sans couleur : un damier sous le carré dit « transparence », pas « gris »
+  // (retour du test local du 2026-09-17). Avec une couleur, le carré de cette couleur suffit.
+  if (swatch.opacity !== undefined && swatch.color === undefined) zone.legend_swatch_checker = true
   if (swatch.border_visible !== undefined) zone.shape_border_visible = swatch.border_visible
   if (swatch.border_color !== undefined) {
     // Sans son cadenas, la bordure d'une forme suit la couleur de la forme (NodeDrawShape).
@@ -256,6 +320,9 @@ export class Class_LegendConfig {
   private _entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
   // SA#549 — groupe que désigne chaque titre de groupe (renommer au double-clic renomme le groupe)
   private _entry_groups = new Map<string, string>()
+  // SA#551 — groupe de nœuds ou de flux que désigne chaque titre de groupe, ligne épinglée comprise :
+  // cliquer le titre ouvre ou ferme le groupe.
+  private _group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -420,6 +487,14 @@ export class Class_LegendConfig {
   /** SA#549 — relevé des titres de groupe, posé par regenerateLegend. */
   public set entry_groups(_: Map<string, string>) { this._entry_groups = _ }
 
+  /** SA#551 — relevé des titres de groupe, posé par regenerateLegend. */
+  public set group_titles(_: Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>) { this._group_titles = _ }
+
+  /** SA#551 — groupe de nœuds ou de flux que désigne ce titre de légende, ou `undefined`. */
+  public tagGroupIdOfTitle(zone_id: string): string | undefined {
+    return this._group_titles.get(zone_id)?.tag_group_id
+  }
+
   /**
    * SA#549 — la saisie inline de cette zone renomme-t-elle une étiquette ou un groupe ? Oui pour
    * une entrée d'étiquette de nœuds ou de flux (sauf gabarit d'entrée : le texte y compose plus que
@@ -442,8 +517,9 @@ export class Class_LegendConfig {
     const sankey = this._drawing_area.sankey
     const tag_target = this._entry_tags.get(zone_id)
     if (tag_target !== undefined) {
+      // SA#553 — l'étiquette générée se renomme comme les autres (nom saisi)
       const tag = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
-        .find(g => g.id === tag_target.tag_group_id)?.tags_list
+        .find(g => g.id === tag_target.tag_group_id)?.tags_list_with_untagged
         .find(t => t.id === tag_target.tag_id)
       if (tag === undefined) return false
       if (tag.display_name !== value) {
@@ -482,7 +558,8 @@ export class Class_LegendConfig {
     const sankey = drawing_area.sankey
     const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
       .find(g => g.id === target.tag_group_id)
-    const tag = group?.tags_list.find(t => t.id === target.tag_id)
+    // SA#553 — l'étiquette générée se masque comme les autres
+    const tag = group?.tags_list_with_untagged.find(t => t.id === target.tag_id)
     if (group === undefined || tag === undefined) return false
     const apply = (selected: boolean, show_hidden_tags: boolean) => {
       // La surbrillance du survol a atténué les autres éléments : la lever avant que ceux qui
@@ -523,6 +600,17 @@ export class Class_LegendConfig {
     return true
   }
 
+  /**
+   * SA#551 — clic sur le TITRE d'un groupe de nœuds ou de flux (ligne épinglée comprise) : un groupe
+   * fermé s'OUVRE — interrupteur « Appliquer les styles associés » allumé, et groupe placé en
+   * dernière position de sa liste, la plus prioritaire (ses styles l'emportent, il passe en tête de
+   * légende) ; un groupe ouvert se FERME — interrupteur éteint, sa place dans la liste est gardée.
+   * Aucun autre groupe n'est touché. Annuler/rétablir en lecture comme en édition. Renvoie `false`
+   * pour toute autre zone, qui garde son clic ordinaire.
+   *
+   * Les groupes de données sont exclus au relevé (regenerateLegend) : leur ordre porte aussi
+   * l'échelle affichée (computeScaleText), les réordonner changerait autre chose qu'un style.
+   */
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_: boolean) { this._info_link_value_void = _; this.draw() }
 
@@ -559,10 +647,11 @@ export class Class_LegendConfig {
 
 // GÉNÉRATION (modèle + DOM) ==========================================================
 
-// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée, et depuis SA#545 le
-// TITRE d'un groupe (les porteurs d'une quelconque de ses étiquettes) et l'entrée « sans
-// étiquette » (les éléments de la famille du groupe qui n'en portent aucune).
-type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string, untagged?: boolean }
+// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée — dont, depuis SA#553,
+// l'étiquette générée « Sans [groupe] », que portent les éléments de la famille du groupe qui n'en
+// portent aucune autre —, et depuis SA#545 le TITRE d'un groupe (les porteurs d'une quelconque de
+// ses étiquettes).
+type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string }
 
 type Type_TagCarrier = { hasGivenTag(tag: Class_Tag): boolean }
 type Type_LegendHoverPredicate = {
@@ -582,31 +671,28 @@ function hoverPredicate(
   if (!group) return undefined
   const tags = group.tags_list as Class_Tag[]
   if (target.tag_id !== undefined) {
-    const tag = tags.find(t => t.id === target.tag_id)
+    const tag = (group.tags_list_with_untagged as Class_Tag[]).find(t => t.id === target.tag_id)
     if (!tag) return undefined
     // SA#549 — étiquette masquée : ses éléments sont invisibles, la surbrillance atténuerait tout
     // le diagramme sans rien désigner. Le survol garde sa définition (#542).
     if (!tag.is_selected) return undefined
-    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band: carried => carried.includes(tag) }
+    // SA#553 — bande d'un flux ventilé : l'étiquette générée désigne les bandes sans étiquette du groupe
+    const is_flux_group = tag.group.id in sankey.flux_taggs_dict
+    const band = tag.is_untagged
+      ? (carried: readonly Class_Tag[]) => is_flux_group && !carried.some(t => t.group === tag.group)
+      : (carried: readonly Class_Tag[]) => carried.includes(tag)
+    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
   const bandCarriesOne = (carried: readonly Class_Tag[]) => carried.some(t => tags.includes(t))
-  if (target.untagged !== true) return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
-  // « Sans étiquette » : seuls les éléments de la famille du groupe peuvent en relever, sinon un
-  // groupe de nœuds désignerait tous les flux (qui ne portent jamais d'étiquette de nœuds).
-  const is_node_group = (sankey.node_taggs_list as unknown[]).includes(group)
-  return {
-    node: n => is_node_group && !carriesOne(n),
-    link: l => !is_node_group && !carriesOne(l),
-    band: carried => !is_node_group && !bandCarriesOne(carried)
-  }
+  return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
 }
 
-// SA#545 — cible de survol d'un item : son étiquette, son entrée « sans étiquette », ou, pour un
-// titre de groupe, le groupe de son bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
+// SA#545 — cible de survol d'un item : son étiquette, ou, pour un titre de groupe, le groupe de son
+// bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
 function hoverTargetOf(item: Type_LegendItem, block_groups: Map<string, string>): Type_LegendHoverTarget | undefined {
   if (item.tag_group_id !== undefined) {
-    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id, untagged: item.untagged }
+    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
   }
   if (item.own_line && item.block_id !== undefined) {
     const tag_group_id = block_groups.get(item.block_id)
@@ -625,41 +711,58 @@ function wireLegendHover(
   const d3_sel = zone.d3_selection
   if (!d3_sel || target === undefined) return
   d3_sel
-    .on('mouseover.legend_highlight', () => {
-      const matches = hoverPredicate(drawing_area, target)
-      if (!matches) return
-      const flux_list = drawing_area.sankey.visible_links_list
-      const node_list = drawing_area.sankey.visible_nodes_list
-      const highlighted_nodes = new Set<Class_NodeBase>()
-      flux_list.forEach(l => {
-        if (matches.link(l) || matches.node(l.source) || matches.node(l.target)) {
-          highlighted_nodes.add(l.source)
-          highlighted_nodes.add(l.target)
-          // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
-          // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
-          const bands = l.d3_selection?.selectAll('.link_band')
-          if (bands && !bands.empty()) {
-            const matching = new Set(
-              (l.value?.tagged_values_list ?? [])
-                .filter(tv => matches.band(tv.tags_list as Class_Tag[]))
-                .map(tv => l.id + '_band_' + tv.id))
-            if (matching.size > 0) {
-              bands.attr('opacity', function () {
-                return matching.has((this as Element).getAttribute('id') ?? '') ? '' : 0.1
-              })
-            }
-          }
-        } else {
-          l.d3_selection?.attr('opacity', 0.1)
-        }
-      })
-      node_list.forEach(n => {
-        if (!highlighted_nodes.has(n) && !matches.node(n)) {
-          n.d3_selection?.attr('opacity', 0.1)
-        }
-      })
-    })
+    .on('mouseover.legend_highlight', () => applyLegendHighlight(drawing_area, target))
     .on('mouseout.legend_highlight', () => clearLegendHighlight(drawing_area))
+}
+
+/**
+ * SA#551 — redessine TOUT le dessin pour l'aperçu d'un groupe (`Class_Sankey.setTagStylePreview`, lu
+ * par la cascade et par la coloration historique). Sert à la VUE d'un groupe, dans sa pop-up.
+ *
+ * Nœuds ET flux, quelle que soit la famille du groupe montré : l'aperçu éteint aussi la mise en
+ * forme des AUTRES groupes, y compris celle d'un groupe de nœuds quand c'est un groupe de flux qu'on
+ * montre. Ne redessiner que la famille du groupe laissait les nœuds colorés par « Forme de produit
+ * laitier » dans la vue de « Fiabilité des données » (retour du test en ligne du 2026-09-18).
+ */
+export function redrawForTagStylePreview(drawing_area: Class_DrawingArea) {
+  const sankey = drawing_area.sankey
+  sankey.nodes_list.forEach(node => node.draw())
+  sankey.links_list.forEach(link => link.draw())
+}
+
+function applyLegendHighlight(drawing_area: Class_DrawingArea, target: Type_LegendHoverTarget) {
+  const matches = hoverPredicate(drawing_area, target)
+  if (!matches) return
+  const flux_list = drawing_area.sankey.visible_links_list
+  const node_list = drawing_area.sankey.visible_nodes_list
+  const highlighted_nodes = new Set<Class_NodeBase>()
+  flux_list.forEach(l => {
+    if (matches.link(l) || matches.node(l.source) || matches.node(l.target)) {
+      highlighted_nodes.add(l.source)
+      highlighted_nodes.add(l.target)
+      // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
+      // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
+      const bands = l.d3_selection?.selectAll('.link_band')
+      if (bands && !bands.empty()) {
+        const matching = new Set(
+          (l.value?.tagged_values_list ?? [])
+            .filter(tv => matches.band(tv.tags_list as Class_Tag[]))
+            .map(tv => l.id + '_band_' + tv.id))
+        if (matching.size > 0) {
+          bands.attr('opacity', function () {
+            return matching.has((this as Element).getAttribute('id') ?? '') ? '' : 0.1
+          })
+        }
+      }
+    } else {
+      l.d3_selection?.attr('opacity', 0.1)
+    }
+  })
+  node_list.forEach(n => {
+    if (!highlighted_nodes.has(n) && !matches.node(n)) {
+      n.d3_selection?.attr('opacity', 0.1)
+    }
+  })
 }
 
 // Lève la surbrillance du survol. SA#549 — sur TOUS les éléments, pas les seuls visibles : un clic
@@ -708,8 +811,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
-        t_untagged: t('MEP.legend_untagged'),
-        t_dimension_change: t('MEP.legend_dimension_change')
+        t_dimension_change: t('MEP.legend_dimension_change'),
+        // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
+        default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
@@ -757,6 +861,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (group_id !== undefined) entry_groups.set(item.id, group_id)
     })
     config.entry_groups = entry_groups
+    // SA#551 — titres de groupe de nœuds ou de flux, lignes épinglées comprises (sans entrée, leur
+    // groupe se retrouve par l'id de bloc) : un clic ouvre ou ferme le groupe.
+    const group_of_block_id = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+    const blockIdOf = (group_id: string) => LEGEND_CHILD_PREFIX + 'block-' + legendSlug(group_id)
+    sankey.node_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'node_taggs', pinned: false }))
+    sankey.flux_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'flux_taggs', pinned: false }))
+    const group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+    items.forEach(item => {
+      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+      const target = group_of_block_id.get(item.block_id)
+      if (target !== undefined) group_titles.set(item.id, { ...target, pinned: item.pinned === true })
+    })
+    config.group_titles = group_titles
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
@@ -777,6 +894,24 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     const line_counts = new Map<string, number>()
     const rich_paddings = new Map<string, Type_RichPadding>()
     items.forEach(item => {
+      if (hasMeasuredEntryLines(item, values.horizontal)) {
+        // #556 — lignes RÉELLES du nom d'une entrée ordinaire en vertical : la césure du libellé
+        // (d3-textwrap) mesure les glyphes, l'estimation sans DOM s'en écarte dès qu'un nom est
+        // long. Seuls les réglages qui décident de la césure sont posés ici (texte, police,
+        // largeur, mise en forme du nom) ; la zone est placée et achevée avec les autres ci-dessous.
+        const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
+        zone.name_label_source = 'custom'
+        zone.name_label_text = item.text
+        zone.name_label_is_visible = true
+        zone.name_label_font_size = values.police
+        zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+        applyPinnedLabel(zone, item, values.police, NO_PADDING)
+        applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        zone.draw()
+        const n_lines = drawnLabelLineCount(zone)
+        if (n_lines > 0) line_counts.set(item.id, n_lines)
+        return
+      }
       if (item.pinned_name === undefined) return
       const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
       zone.name_label_source = 'custom'
@@ -792,12 +927,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         applyPinnedLabel(zone, item, values.police, padding)
         zone.draw()
       }
-      const height = richDiv(zone)?.offsetHeight ?? 0
-      if (height > 0) {
-        // Hauteur native → px monde, puis en interlignes de légende : la rangée garde sous le
-        // texte la demi-police qui sépare les lignes ordinaires (cf. legendWrappedShapeHeight).
-        line_counts.set(item.id, (height * font_comp + 0.5 * layout_values.police) / (1.5 * layout_values.police))
-      }
+      // #556 — lignes DESSINÉES de la ligne épinglée : sa rangée fait alors ses lignes plus la
+      // demi-police qui sépare deux noms (legendEntryRowHeight), exactement comme une étiquette.
+      const n_pinned_lines = richTextLineCount(zone)
+      if (n_pinned_lines > 0) line_counts.set(item.id, n_pinned_lines)
     })
     const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
@@ -864,6 +997,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       frame.setPosXY(config.initial_position.x, config.initial_position.y)
     }
 
+
     // SA#545 — groupe de chaque bloc, relevé sur ses entrées : cible du survol de son titre
     const block_groups = new Map<string, string>()
     items.forEach(i => {
@@ -895,6 +1029,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
       // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
       applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)
+      // #556 — le libellé reste centré sur la forme d'ancrage ; c'est la forme qui descend quand
+      // le nom prend plusieurs lignes (cf. entryShiftOf), pour que le carré se retrouve en face
+      // du nom entier et non de sa seule première ligne.
+      zone.delete_attribute('name_label_vert_shift')
       // Toutes les zones partagent la même géométrie : une petite boîte
       // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
       // avec le label à sa droite, centré verticalement → tout s'aligne à
@@ -940,17 +1078,21 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         // conservée pour garder le rythme vertical et le centrage du libellé
         // cohérents avec les lignes à pastille.
         zone.shape_min_width = 0
-        // SA#550 — zone enveloppée : la forme couvre ses lignes, pour que le libellé centré
-        // dessus ne déborde ni sur la rangée d'avant ni sur celle d'après.
-        zone.shape_min_height = item.wrap === true
-          ? legendWrappedShapeHeight(legendWrappedLineCount(item, layout_values, line_counts), layout_values.police)
-          : layout_values.police
+        // SA#550 (ligne enveloppée) et #556 (nom long d'un titre ou d'une ligne d'info) : la forme
+        // couvre toutes les lignes du nom, pour que le libellé centré dessus ne déborde ni sur la
+        // rangée d'avant ni sur celle d'après — et que l'enveloppe du cadre le contienne.
+        zone.shape_min_height = legendWrappedShapeHeight(
+          item.wrap === true
+            ? legendWrappedLineCount(item, layout_values, line_counts)
+            : (line_counts.get(item.id) ?? 1),
+          layout_values.police
+        )
       }
       zone.name_label_horiz = 'right'
       zone.name_label_vert = 'middle'
       zone.name_label_inside_horiz = false
       zone.name_label_inside_vert = true
-      zone.setPosXY(origin.x + pos.x, origin.y + pos.y)
+      zone.setPosXY(origin.x + pos.x, origin.y + pos.y + entryShiftOf(item, values.horizontal, line_counts, layout_values.police))
       // Toujours attachée au cadre RACINE (le drag du cadre ne pousse que ses
       // attachés directs, pas les petits-enfants — l'attache est donc double :
       // racine + bloc de groupe le cas échéant).
@@ -965,9 +1107,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // de ses étiquettes) : même main, plus la flèche de liste.
       // Dimension à étiquette unique : rien à choisir, rien à promettre.
       const is_dimension_choice = item.dimension_choice === true
-      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice)
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice || group_titles.has(item.id))
       if (isLegendDataTagZoneId(item.id)) decorateLegendDimensionZone(zone, is_dimension_choice)
-      const hover_target = hoverTargetOf(item, block_groups)
+      // SA#551 — un TITRE de groupe ne met plus rien en surbrillance : il ouvre la pop-up du groupe,
+      // et seule une étiquette désigne des éléments (arbitrage d'Alexandre, 2026-09-18). Neutralisé
+      // ici plutôt que dans hoverTargetOf, que le ticket voisin #553 retouche.
+      const hover_target = group_titles.has(item.id) ? undefined : hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
       // créée après elle (donc dessinée par-dessus), attachée au même cadre et au même bloc.
@@ -975,7 +1120,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (sample_id !== undefined) {
         const sample = sankey.containers_dict[sample_id] ?? sankey.addNewContainer(sample_id, LEGEND_SAMPLE_VALUE)
         configureSampleZone(sample, item, values.police, layout_values.police)
-        sample.setPosXY(origin.x + pos.x, origin.y + pos.y)
+        sample.setPosXY(
+          origin.x + pos.x,
+          origin.y + pos.y + entryShiftOf(item, values.horizontal, line_counts, layout_values.police)
+        )
         if (!frame.attached_node.includes(sample)) {
           frame.attachNodeToCont(sample)
         }
@@ -1022,6 +1170,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
 
     // Le cadre épouse ses zones (fit exact, peut rétrécir)
     frame.computeSizeAndPositionFromAttachedNodes()
+    // #556 — l'enveloppe ne compte que les formes des zones : le nom sur plusieurs lignes d'une
+    // entrée à carré descend sous son carré, le cadre s'allonge jusqu'à sa dernière ligne.
+    let labels_bottom = -Infinity
+    items.forEach(item => {
+      const pos = positions.get(item.id)
+      const n_lines = line_counts.get(item.id)
+      if (pos === undefined || n_lines === undefined || !hasMeasuredEntryLines(item, values.horizontal)) return
+      labels_bottom = Math.max(labels_bottom, origin.y + pos.y + n_lines * layout_values.police)
+    })
+    const frame_bottom = frame.position_y + frame.shape_min_height - frame.shape_margin_bottom
+    if (labels_bottom > frame_bottom) {
+      frame.shape_min_height = frame.shape_min_height + labels_bottom - frame_bottom
+    }
     frame.draw()
     frame.setEventsListeners()
 

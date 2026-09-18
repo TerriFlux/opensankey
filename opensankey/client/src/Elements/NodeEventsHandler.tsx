@@ -41,6 +41,8 @@ import {
 import {
   isLegendDimensionZoneId, openLegendDimensionChoice
 } from '../components/panels/presentation/legendDimensionChoice'
+// Module FEUILLE (aucun import) : le prédicat de zone ne tire ni React ni le générateur.
+import { isLegendGroupZoneId } from './legendIds'
 
 export class NodeEventsHandler {
 
@@ -154,6 +156,23 @@ export class NodeEventsHandler {
  */
   public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     const drawing_area = this._node.drawing_area
+
+    // SA#551 — TITRE d'un groupe dans la légende : le clic ouvre la pop-up du groupe, en lecture
+    // comme EN ÉDITION. Exception assumée à la politique générale (en édition, le clic est le geste
+    // de travail de l'auteur, cf. opensPresentationOnClick) : une zone générée par la légende ne se
+    // règle pas, l'auteur n'a donc rien d'autre à en attendre — et sans cela « il ne se passe rien »
+    // quand on clique un nom de groupe dans l'éditeur (retour du test local du 2026-09-18).
+    // Ctrl/Cmd garde la sélection de la zone. Posé avant la bascule d'étiquette, qui ne répond
+    // pas pour un titre de groupe : les tickets voisins retouchent les lignes qui suivent.
+    if (!event.ctrlKey && !event.metaKey && isLegendGroupZoneId(this._node.id) &&
+      drawing_area.legend.tagGroupIdOfTitle(this._node.id) !== undefined) {
+      openPresentationFor(
+        drawing_area.application_data,
+        this._node as unknown as Parameters<typeof openPresentationFor>[1],
+        { x: event.clientX, y: event.clientY }
+      )
+      return
+    }
 
     // SA#549 — entrée de légende d'une étiquette de nœuds ou de flux : le clic simple CONFIRMÉ
     // bascule l'étiquette, en lecture comme en édition. Le délai du discriminateur simple/double

@@ -6,7 +6,7 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
-import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
+import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
 
@@ -40,6 +40,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'description', 'style_patch', 'pinned_in_legend',
   // SA#541 - style nomme impose aux elements sans etiquette du groupe.
   'style_id',
+  // SA#553 - etiquette generee « Sans [nom du groupe] », modelisee
+  'untagged_tag',
 ])
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -416,8 +418,20 @@ export abstract class Class_ProtoTagGroup {
    * groupe (id de la liste des Styles). Il touche potentiellement tous les
    * elements de la famille : on les redessine tous.
    */
-  public get style_id(): string | undefined { return this._style_id }
+  // SA#553 - le style des elements sans etiquette est desormais celui de l'ETIQUETTE GENEREE du
+  // groupe : groupe et etiquette generee sont deux portes vers le meme reglage (la cascade et la
+  // legende lisent le groupe, le menu l'etiquette). `_style_id` ne sert plus qu'aux groupes sans
+  // etiquette generee.
+  public get style_id(): string | undefined {
+    const untagged = this.untagged_tag
+    return untagged ? untagged.style_id : this._style_id
+  }
   public set style_id(value: string | undefined) {
+    const untagged = this.untagged_tag
+    if (untagged) {
+      untagged.style_id = value
+      return
+    }
     const next = value === '' ? undefined : value
     if (this._style_id === next) return
     this._style_id = next
@@ -438,7 +452,7 @@ export abstract class Class_ProtoTagGroup {
       const styles = this._ref_sankey.styles_dict
       const usable = (id: string | undefined) =>
         id !== undefined && styles[id] !== undefined && !styles[id].is_default_style
-      this._uses_tag_styles = usable(this._style_id) || this.tags_list.some(tag => usable(tag.style_id))
+      this._uses_tag_styles = usable(this.style_id) || this.tags_list.some(tag => usable(tag.style_id))
       this._uses_tag_styles_epoch = epoch
     }
     return this._uses_tag_styles
@@ -456,6 +470,31 @@ export abstract class Class_ProtoTagGroup {
    * Patch vide = false : aucun fichier existant ne change d'aspect.
    */
   public get has_style_patch(): boolean { return Object.keys(this._style_patch).length > 0 }
+
+  /**
+   * SA#553 - Etiquette generee « Sans [nom du groupe] », ou undefined pour les groupes qui n'en
+   * ont pas (donnees, niveaux, vues, flux « de type unite »). Elle n'est PAS dans `tags_list`.
+   */
+  public get untagged_tag(): Class_ProtoTag | undefined { return undefined }
+
+  /** SA#553 - Etiquettes du groupe suivies de son etiquette generee : ce que montrent menus, filtres et legende. */
+  public get tags_list_with_untagged(): Class_ProtoTag[] {
+    const untagged = this.untagged_tag
+    return untagged ? [...this.tags_list, untagged] : this.tags_list
+  }
+
+  /** SA#553 - Redessine les elements de la famille du groupe (porteurs possibles de son etiquette generee). */
+  public drawFamilyElements(): void { }
+
+  /**
+   * SA#553 - Retire et rend le style de groupe lu (ancien format du #541), pour le reporter sur
+   * l'etiquette generee.
+   */
+  protected takeGroupStyleId(): string | undefined {
+    const style_id = this._style_id
+    this._style_id = undefined
+    return style_id
+  }
 
   /** #537 - Groupe epingle en bas de legende (Source, Methode). */
   public get pinned_in_legend(): boolean { return this._pinned_in_legend }
@@ -518,7 +557,12 @@ export abstract class Class_ProtoTagGroup {
   public selectTagsFromId(
     id: string
   ) {
-    const _selectTagsFromId = (_: string) => {
+    // SA#553 - l'etiquette generee se choisit comme les autres : la choisir deselectionne toutes
+    // les etiquettes du groupe. Choisir une etiquette ordinaire la laisse en l'etat — comme avant
+    // elle, les elements sans etiquette restent visibles — sauf a l'annulation, qui rend l'etat
+    // exact d'avant le geste.
+    const untagged = this.untagged_tag
+    const _selectTagsFromId = (_: string, untagged_selected?: boolean) => {
       this.tags_list
         .forEach(tag => {
           if (tag.id === _) {
@@ -528,21 +572,34 @@ export abstract class Class_ProtoTagGroup {
             tag.setUnSelected()
           }
         })
+      if (untagged) {
+        if (untagged.id === _ || untagged_selected === true) untagged.setSelected(false)
+        else if (untagged_selected === false) untagged.setUnSelected(false)
+      }
       // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
       // AVANT le redraw d'updateTagsReferences (slot optionnel enregistré par OSP).
       this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
     }
-    
-    const old_selected = this.selected_tags_list.length>0 ? this.selected_tags_list[0].id : ''
-    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
+
+    const old_selected = this.selected_tags_list.length > 0
+      ? this.selected_tags_list[0].id
+      : ((untagged?.is_selected) ? untagged.id : '')
+    const old_untagged_selected = untagged?.is_selected
+    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected, old_untagged_selected))
     this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
     _selectTagsFromId(id)
   }
 
+  /**
+   * @param include_untagged SA#553 - vrai quand `ids` dit AUSSI l'etat de l'etiquette generee
+   * (filtres a choix multiple, qui la listent) ; faux pour les appelants historiques, qui ne la
+   * connaissent pas et la laissent en l'etat.
+   */
   public selectTagsFromIds(
-    ids: string[]
+    ids: string[],
+    include_untagged: boolean = false
   ) {
     this.tags_list
       .forEach(tag => {
@@ -553,6 +610,11 @@ export abstract class Class_ProtoTagGroup {
           tag.setUnSelected(false)
         }
       })
+    const untagged = this.untagged_tag
+    if (untagged && include_untagged) {
+      if (ids.includes(untagged.id)) untagged.setSelected(false)
+      else untagged.setUnSelected(false)
+    }
     // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
     this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     this.updateTagsReferences()
@@ -685,6 +747,9 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   // Display attributes
   private _use_colors: boolean = false
 
+  // SA#553 - etiquette generee, creee a la premiere demande (cf. `untagged_tag`)
+  private _untagged_tag: Class_Tag | undefined = undefined
+
   // CONSTRUCTOR ========================================================================
   /**
    * Creates an instance of Class_TagGroup.
@@ -710,6 +775,9 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   ) {
     super._toJSON(json_object, kwargs)
     json_object['use_colors'] = this._use_colors
+    // SA#553 - ecriture conditionnelle : rien de saisi, pas de cle
+    const untagged_json = this.untaggedTagObject().toUntaggedJSON()
+    if (untagged_json !== undefined) json_object['untagged_tag'] = untagged_json
   }
 
   protected _fromJSON(
@@ -718,6 +786,19 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   ) {
     super._fromJSON(json_object, kwargs)
     this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
+    // SA#553 - etat de l'etiquette generee. Un JSON de groupe complet (qui porte ses etiquettes)
+    // le decrit entierement, cle absente = etat par defaut ; une mise a jour partielle muette
+    // n'y touche pas.
+    const untagged = this.untaggedTagObject()
+    if (json_object['untagged_tag'] !== undefined || json_object['tags'] !== undefined) {
+      untagged.fromUntaggedJSON(json_object['untagged_tag'] as Type_JSON | undefined)
+    }
+    // SA#553 - le style de groupe du #541 (fichiers crees depuis le 2026-09-14) devient celui de
+    // l'etiquette generee : il ne s'ecrit plus sur le groupe.
+    if (this.supports_untagged_tag) {
+      const group_style_id = this.takeGroupStyleId()
+      if (group_style_id !== undefined && untagged.style_id === undefined) untagged.adoptStyleId(group_style_id)
+    }
     // SA#541 - l'interrupteur allume ou eteint les styles d'etiquette du groupe
     this._ref_sankey.tagStylesConfigUpdated?.()
   }
@@ -728,8 +809,42 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   ) {
     super._copyFrom(tagg_to_copy, matching_tags_id)
     this._use_colors = tagg_to_copy.use_colors
+    // SA#553 - nom, definition, style et selection de l'etiquette generee suivent le groupe
+    this.untaggedTagObject().copyFrom(tagg_to_copy.untaggedTagObject())
     // SA#541 - l'interrupteur allume ou eteint les styles d'etiquette du groupe
     this._ref_sankey.tagStylesConfigUpdated?.()
+  }
+
+  // SA#553 - ETIQUETTE GENEREE =========================================================
+
+  /** Le groupe a-t-il une etiquette generee ? Faux pour les niveaux et les vues. */
+  protected get supports_untagged_tag(): boolean { return true }
+
+  protected abstract createUntaggedTag(id: string): Class_Tag
+
+  /** L'objet etiquette generee, qu'elle s'applique ou non a ce groupe (son etat se persiste). */
+  public untaggedTagObject(): Class_Tag {
+    if (this._untagged_tag === undefined) {
+      this._untagged_tag = this.createUntaggedTag(untaggedTagId(this.id))
+      this._untagged_tag.markAsUntagged()
+    }
+    return this._untagged_tag
+  }
+
+  public get untagged_tag(): Class_Tag | undefined {
+    return this.supports_untagged_tag ? this.untaggedTagObject() : undefined
+  }
+
+  public get tags_list_with_untagged(): Class_Tag[] {
+    const untagged = this.untagged_tag
+    return untagged ? [...this.tags_list, untagged] : this.tags_list
+  }
+
+  /** Elements de la famille du groupe : les noeuds pour un groupe de noeuds, les flux sinon. */
+  protected abstract familyElements(): (Class_NodeElement | Class_LinkElement)[]
+
+  public drawFamilyElements(): void {
+    this.familyElements().forEach(element => element.draw())
   }
 
   // PUBLIC METHODS =====================================================================
@@ -745,6 +860,14 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
             }
           })
       })
+    // SA#553 - porteurs de l'etiquette generee : ils n'ont pas de reference, et leur visibilite
+    // depend de sa selection. Seuls les elements sans etiquette du groupe sont concernes.
+    const untagged = this.untagged_tag
+    if (untagged) {
+      this.familyElements()
+        .filter(element => element.hasGivenTag(untagged))
+        .forEach(element => element.draw())
+    }
     //this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
   }
 
@@ -880,6 +1003,13 @@ export class Class_NodeTagGroup extends Class_TagGroup {
     return tag
   }
 
+  // SA#553 - etiquette generee : un Class_NodeTag, sans signal a la creation (cf. markAsUntagged)
+  protected createUntaggedTag(id: string) {
+    return new Class_NodeTag('', this, this._ref_sankey, id)
+  }
+
+  protected familyElements() { return this._ref_sankey.nodes_list }
+
 }
 // CLASS FLUXTAGGROUP *******************************************************************
 /**
@@ -1012,6 +1142,16 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     tag.setSelected()
     return tag
   }
+
+  // SA#553 - etiquette generee : un Class_FluxTag, sans signal a la creation (cf. markAsUntagged)
+  protected createUntaggedTag(id: string) {
+    return new Class_FluxTag('', this, this._ref_sankey, id)
+  }
+
+  protected familyElements() { return this._ref_sankey.links_list }
+
+  // SA#553 - un groupe « de type unite » decrit une dimension, que toute valeur porte
+  protected get supports_untagged_tag(): boolean { return !this._is_unit_type }
 
 }
 // CLASS DATATAGGROUP *******************************************************************
@@ -1316,6 +1456,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
  */
 export class Class_LevelTagGroup  extends Class_NodeTagGroup{
 
+  // SA#553 - les niveaux decrivent la hierarchie : pas d'etiquette generee
+  protected get supports_untagged_tag(): boolean { return false }
+
   // Display attributes
   private _activated: boolean = false
   private _siblings: string[] = []
@@ -1507,6 +1650,8 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
  * @class Class_ViewTagGroup
  */
 export class Class_ViewTagGroup extends Class_NodeTagGroup {
+  // SA#553 - les vues designent des noeuds : pas d'etiquette generee
+  protected get supports_untagged_tag(): boolean { return false }
   private _activated: boolean = false
   private _siblings: string[] = []
   // Mode « filtre vue » : quand actif sur un groupe de view tags (banner 'one'),

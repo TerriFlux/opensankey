@@ -273,7 +273,13 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Make this sheet the active one',
           sheet_read_only: 'Read-only — editing happens in the tab',
           open_sheet_in_window: 'Open in a new window',
-          sheet_already_windowed: 'This sheet is already open in another window'
+          sheet_already_windowed: 'This sheet is already open in another window',
+          // os#1385 (lot 5, D9) — a sheet carries a TYPED document. `no_canvas_for_type` is what
+          // a canvas window says when its sheet is of a type that has no canvas (a workbook) ;
+          // `no_default_window` is what the gesture says when a sheet has nothing to open at all
+          // (an empty workbook, a type this version does not know).
+          no_canvas_for_type: 'No canvas for this kind of document',
+          no_default_window: 'Nothing to show for this sheet'
         }
       }
     }
@@ -510,7 +516,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Rendre cette feuille active',
           sheet_read_only: 'Lecture seule — c\'est l\'onglet qui édite',
           open_sheet_in_window: 'Ouvrir dans une nouvelle fenêtre',
-          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre'
+          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre',
+          no_canvas_for_type: 'Pas de canevas pour ce type de document',
+          no_default_window: 'Rien à montrer pour cette feuille'
         }
       }
     }
@@ -747,7 +755,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Activar esta hoja',
           sheet_read_only: 'Solo lectura — la edición se hace en la pestaña',
           open_sheet_in_window: 'Abrir en una ventana nueva',
-          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana'
+          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana',
+          no_canvas_for_type: 'No hay lienzo para este tipo de documento',
+          no_default_window: 'Nada que mostrar para esta hoja'
         }
       }
     }
@@ -984,7 +994,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Dieses Blatt aktivieren',
           sheet_read_only: 'Nur Lesen — bearbeitet wird über die Registerkarte',
           open_sheet_in_window: 'In einem neuen Fenster öffnen',
-          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet'
+          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet',
+          no_canvas_for_type: 'Kein Zeichenbereich für diese Art von Dokument',
+          no_default_window: 'Für dieses Blatt gibt es nichts zu zeigen'
         }
       }
     }
@@ -1221,7 +1233,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Rendi attivo questo foglio',
           sheet_read_only: 'Sola lettura — si modifica dalla scheda',
           open_sheet_in_window: 'Apri in una nuova finestra',
-          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra'
+          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra',
+          no_canvas_for_type: 'Nessuna area di disegno per questo tipo di documento',
+          no_default_window: 'Niente da mostrare per questo foglio'
         }
       }
     }
@@ -1464,7 +1478,9 @@ export const resources_spreadsheet = {
           make_sheet_active: '将此工作表设为当前工作表',
           sheet_read_only: '只读：编辑请在标签页中进行',
           open_sheet_in_window: '在新窗口中打开',
-          sheet_already_windowed: '该工作表已在另一个窗口中打开'
+          sheet_already_windowed: '该工作表已在另一个窗口中打开',
+          no_canvas_for_type: '该类型的文档没有画布',
+          no_default_window: '该工作表没有可显示的内容'
         }
       }
     }
@@ -1707,7 +1723,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'このシートをアクティブにする',
           sheet_read_only: '読み取り専用：編集はタブで行います',
           open_sheet_in_window: '新しいウィンドウで開く',
-          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています'
+          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています',
+          no_canvas_for_type: 'この種類のドキュメントにはキャンバスがありません',
+          no_default_window: 'このシートに表示できるものはありません'
         }
       }
     }

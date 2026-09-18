@@ -26,14 +26,14 @@
 
 import React from 'react'
 import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
-import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
-import { SpreadsheetRepresentationOptions } from './SpreadsheetRepresentationOptions'
+import { drawSunburstRepresentation, SUNBURST_ZOOM } from './SunburstRepresentation'
+// os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
+import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
 // cette déclaration qui lui donne la cascade des styles des nœuds et des flux.
 import { figureAttribute } from './figureAttribute'
 // La valeur d'usine de la profondeur vient de là où le sunburst la lit (`readSunburstOptions`) :
 // une seconde écriture du nombre finirait par diverger de la première.
-import { SUNBURST_DEFAULT_MAX_DEPTH } from '../Charts/SunburstHierarchy'
 // os#1420 — la clé d'épinglage de l'étiquette de données vient de là où elle est LUE
 // (`readFigureDataTagPins`) : deux écritures de la chaîne finiraient par diverger.
 import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
@@ -44,7 +44,6 @@ import {
   MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_JSON_ID
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
-import { representationOptionsMenu } from './RepresentationContextMenu'
 // os#1409 - le zoom est une capacite declaree par la nature (cf. Type_RepresentationZoom).
 import { DIAGRAM_ZOOM } from './RepresentationZoom'
 import { spreadsheetZoomHandle } from './SpreadsheetZoomBridge'
@@ -81,18 +80,20 @@ export const registerBaseRepresentations = (): void => {
     // l'intérêt du tableur pour un lecteur : trier une colonne, copier une
     // plage. Le trou n'est pas un oubli, ne le bouchez pas.
     //
-    // os#1405 — le tableur A DÉSORMAIS DES RÉGLAGES : l'affichage des matrices TES/TER, qui
-    // occupait une place dans la barre au-dessus de la grille. Conséquence attendue de cet
-    // ajout : la nature « tableur » compte maintenant pour `activeRepresentation`, donc le
-    // volet de représentation de l'inspecteur s'ouvre sur elle au lieu de rester vide.
+    // PAS DE `renderOptions`, ET C'EST UN RETOUR ASSUMÉ. os#1405 avait donné au tableur un
+    // réglage — l'écriture des matrices TES/TER, croix ou valeur — et l'avait posé ici, au motif
+    // que les mêmes cellules restent à l'écran, écrites autrement. L'usage a tranché autrement :
+    // on cherche les nombres de la matrice devant la matrice, dans le panneau qui porte déjà ce
+    // que le tableur montre (onglets, colonnes, lignes). La commande vit donc dans la section
+    // « tableur » de Filtres et coordonnées (cf. `SpreadsheetNavigationControls`), et nulle part
+    // ailleurs. Conséquence attendue : la nature « tableur » ne compte plus pour
+    // `activeRepresentation`, et le volet de représentation de l'inspecteur reste vide sur elle.
     //
-    // os#1418 — mais PAS d'`attributes` pour autant : ces réglages-là ne sont pas ceux d'une
-    // figure, ils vivent sur le document (cf. `SpreadsheetRepresentationOptions`, qui lit et
-    // écrit `app_data` directement). Deux tableurs côte à côte montreraient donc les mêmes
-    // matrices, et c'est bien ce qu'on veut : c'est une propriété du classeur, pas une façon de
-    // le regarder. Le jour où un réglage PAR FIGURE apparaît ici (une feuille épinglée, par
-    // exemple), il se déclare sur cette ligne.
-    renderOptions: ({ app_data }) => <SpreadsheetRepresentationOptions app_data={app_data} />,
+    // os#1418 — pas d'`attributes` non plus, pour la même raison de fond : ce réglage n'est pas
+    // celui d'une figure, il vit sur le document. Deux tableurs côte à côte montrent les mêmes
+    // matrices, et c'est voulu — c'est une propriété du classeur, pas une façon de le regarder.
+    // Le jour où un réglage PAR FIGURE apparaît (une feuille épinglée, par exemple), il se
+    // déclare sur cette ligne.
     // os#1409 — LE ZOOM D'UNIVER, pilote par le controle de la colonne. Son API l'expose
     // vraiment (`FWorksheet.zoom` / `getZoom`, ratio 0,1 a 4) : c'est un zoom du MOTEUR de la
     // grille, qui recalcule ses cellules — et non une transformation posee par-dessus, qui
@@ -201,51 +202,34 @@ export const registerBaseRepresentations = (): void => {
     label: (a) => a.t('sunburst.title'),
     icon: <FaBullseye />,
     needs: { hierarchy: true },
-    isAvailable: (ctx) => !!ctx.element && Array.isArray((ctx.element as { output_links_list?: unknown }).output_links_list),
-    // os#1418 — CE QUE RÈGLE LE SUNBURST, déclaré : quatre clés, trois sortes.
+    // Un NŒUD, et un nœud QUI A QUELQUE CHOSE À DÉCOMPOSER (os#1425). `needs.hierarchy` ne dit que
+    // ce que le DIAGRAMME déclare ; sur un diagramme qui en a une, la plupart des nœuds n'en font
+    // pas partie, et leur couronne n'était qu'une case portant « ce diagramme ne déclare aucune
+    // hiérarchie ». Une nature qui ne s'offre pas laisse la grille passer son tour, ce qui vaut
+    // mieux qu'une vignette vide (arbitrage Julien, 18/09/2026).
+    isAvailable: (ctx) => {
+      const el = ctx.element as {
+        output_links_list?: unknown
+        dimensions_as_parent?: { children?: unknown[] }[]
+      } | null
+      if (!el || !Array.isArray(el.output_links_list)) return false
+      return (el.dimensions_as_parent ?? []).some(d => (d.children?.length ?? 0) > 0)
+    },
+    // os#1418 / os#1425 — CE QUE RÈGLE LE SUNBURST, DÉCLARÉ ET NON PLUS DESSINÉ À LA MAIN.
     //
-    // La DIMENSION est l'axe de décomposition des anneaux — la même question que le descripteur
-    // d'une couronne, donc la même réponse : 'navigation', par figure et jamais par style.
-    // Le MODE DE VALEUR et la PROFONDEUR sont deux façons de regarder la même descendance : ils
-    // se transposent, un style a le droit de les porter.
-    // La RACINE nomme le sujet, elle ne se transpose à rien — et elle est même posée par le
-    // `draw` ci-dessous depuis l'élément de la fenêtre, pas par l'auteur : la déclarer 'identity'
-    // est ce qui interdit qu'un style ou une figure voisine vienne l'écraser.
+    // La nature n'écrit plus d'interface : elle déclare ses réglages (valeur d'usine, sorte,
+    // libellés des sept langues, contrôle et choix) et le formulaire générique les rend — dans
+    // l'inspecteur pour la mise en forme, dans « Filtres et coordonnées » pour ce qu'on regarde.
+    // La liste vit dans `sunburstAttributes` : elle y est longue, et la garder ici noierait les
+    // six autres natures de ce fichier.
     //
-    // os#1420 — CINQUIÈME CLÉ : l'ÉTIQUETTE DE DONNÉES ÉPINGLÉE. Absente (le défaut), la
-    // couronne suit le diagramme ; posée, elle lit ses valeurs sous l'étiquette nommée, quoi
-    // que le diagramme montre — « cette couronne, en 2019 », à côté d'une autre en 2021. C'est
-    // donc de la 'navigation' et jamais du 'style' : un style qui l'alignerait détruirait
-    // exactement l'usage. La valeur est un dictionnaire `{ id de groupe: id d'étiquette }`,
-    // un groupe absent suivant le diagramme (cf. Type_FigureDataTagPins).
+    // DEUX CLÉS RESTENT ICI parce qu'elles ne sont pas des réglages d'auteur :
+    //  - la RACINE nomme le sujet — elle est posée par le `draw` ci-dessous depuis l'élément de
+    //    la fenêtre, et 'identity' interdit qu'un style ou une figure voisine vienne l'écraser ;
+    //  - l'ÉTIQUETTE DE DONNÉES ÉPINGLÉE (os#1420) est un dictionnaire, réglé par sa propre
+    //    section du panneau de navigation (FigureDataTagsNavigation, OS+).
     attributes: {
-      dimension_id: figureAttribute<string | undefined>(undefined, 'navigation', {
-        en: 'Dimension',
-        fr: 'Dimension',
-        es: 'Dimensión',
-        de: 'Dimension',
-        it: 'Dimensione',
-        'zh-CN': '维度',
-        ja: 'ディメンション'
-      }),
-      value_mode: figureAttribute<'sum' | 'declared'>('sum', 'style', {
-        en: 'Ring values',
-        fr: 'Valeur des anneaux',
-        es: 'Valor de los anillos',
-        de: 'Wert der Ringe',
-        it: 'Valore degli anelli',
-        'zh-CN': '环的取值',
-        ja: 'リングの値'
-      }),
-      max_depth: figureAttribute<number>(SUNBURST_DEFAULT_MAX_DEPTH, 'style', {
-        en: 'Depth',
-        fr: 'Profondeur',
-        es: 'Profundidad',
-        de: 'Tiefe',
-        it: 'Profondità',
-        'zh-CN': '层级深度',
-        ja: '深さ'
-      }),
+      ...SUNBURST_ATTRIBUTES,
       root_ids: figureAttribute<string[] | undefined>(undefined, 'identity', {
         en: 'Root',
         fr: 'Racine',
@@ -266,12 +250,13 @@ export const registerBaseRepresentations = (): void => {
           ja: '固定されたデータタグ'
         })
     },
-    renderOptions: (args) => <SunburstRepresentationOptions {...args} />,
-    // os#1397 - le clic droit sur le fond ouvre les réglages de la figure. Les SECTEURS, eux,
-    // n'ont pas encore de menu : leur clic gauche zoome déjà dans l'anneau, et décider ce que le
-    // clic droit y ajoute demande de trancher ce qu'on vise, le nœud du secteur ou la branche
-    // entière. À faire quand la question se posera vraiment, pas d'avance.
-    contextMenu: ({ target, ctx }) => target.kind === 'background' ? representationOptionsMenu(ctx) : null,
+    // PAS DE MENU AU CLIC DROIT (os#1425). Le fond ouvrait les réglages de la figure (os#1397) ;
+    // c'est un geste que le diagramme principal n'a pas, et les réglages ont leur place dans
+    // l'inspecteur et « Filtres et coordonnées ». Le clic droit reste celui du navigateur.
+    //
+    // Le zoom, lui, est DÉCLARÉ (os#1409) : la colonne d'outils zoome le disque de la vignette
+    // active comme elle zoome le diagramme (demande Julien, 18/09).
+    zoom: SUNBURST_ZOOM,
     draw: (container, ctx) => drawSunburstRepresentation(container, {
       ...ctx,
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }

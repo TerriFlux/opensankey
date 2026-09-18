@@ -86,6 +86,99 @@ describe('os#1385 lot 2 — qui est le document actif', () => {
   })
 })
 
+describe('os#1422 lot 6 — une fenetre declare le document quelle montre', () => {
+
+  /**
+   * La scene du lot 6 : une fenetre ouverte, et un document qui n'est PAS une feuille — le
+   * document d'une vignette d'etoile, qui ne s'enregistre jamais et que la voie des feuilles ne
+   * peut donc pas trouver. Ici un simple document hors ecran : l'annuaire ne sait rien de plus.
+   */
+  function buildBoundWindow() {
+    const { ws, main, mc, other_sheet } = buildTwoSheetWorkspace()
+    const window_id = mc.openMainZoneWindow({ kind: 'diagram', sheet: other_sheet }, MAIN_ZONE_CANVAS_ID)
+    mc.main_zone_active_id = window_id
+    const sheet_app = main.sheetApplication(other_sheet)!
+    return { ws, main, mc, sheet_app, window_id }
+  }
+
+  it('une fenetre liee rend SON document actif, avant la voie des feuilles', () => {
+    const { ws, sheet_app, window_id } = buildBoundWindow()
+    expect(ws.active).toBe(sheet_app)
+
+    const star = ws.createDocument({ offscreen: true })
+    ws.bindWindowDocument(window_id, 'pane_1', star)
+    expect(ws.active).toBe(star)
+  })
+
+  it('deliee, la fenetre retombe sur la voie des feuilles', () => {
+    const { ws, sheet_app, window_id } = buildBoundWindow()
+    const star = ws.createDocument({ offscreen: true })
+    ws.bindWindowDocument(window_id, 'pane_1', star)
+    expect(ws.active).toBe(star)
+
+    ws.unbindWindowDocument(window_id, 'pane_1')
+    expect(ws.active).toBe(sheet_app)
+  })
+
+  it('une entree qui pointe sur un document dispose est ignoree', () => {
+    const { ws, sheet_app, window_id } = buildBoundWindow()
+    const star = ws.createDocument({ offscreen: true })
+    ws.bindWindowDocument(window_id, 'pane_1', star)
+
+    // Une vignette en cours de demontage garde sa reference le temps que l'effet se denoue :
+    // rendre actif un document mort ferait lire une zone de dessin qui n'existe plus.
+    star.dispose()
+    expect(ws.active).toBe(sheet_app)
+  })
+
+  it('cest la vignette ACTIVE de la fenetre qui designe le document', () => {
+    const { ws, sheet_app, mc, window_id } = buildBoundWindow()
+    const star_a = ws.createDocument({ offscreen: true })
+    const star_b = ws.createDocument({ offscreen: true })
+    ws.bindWindowDocument(window_id, 'pane_a', star_a)
+    ws.bindWindowDocument(window_id, 'pane_b', star_b)
+
+    // Deux vignettes, aucune touchee : la fenetre ne designe rien, et la voie des feuilles
+    // reprend la main plutot que de choisir a la place de l'utilisateur.
+    expect(ws.active).toBe(sheet_app)
+
+    mc.setMainZoneActivePane(window_id, 'pane_b')
+    expect(ws.active).toBe(star_b)
+    mc.setMainZoneActivePane(window_id, 'pane_a')
+    expect(ws.active).toBe(star_a)
+  })
+
+  it('une fenetre qui na quune vignette na pas besoin quon la touche', () => {
+    const { ws, mc, window_id } = buildBoundWindow()
+    const star = ws.createDocument({ offscreen: true })
+    ws.bindWindowDocument(window_id, 'pane_1', star)
+    // Convention de la grande zone : `null` = la premiere vignette de la fenetre.
+    expect(mc.main_zone_active_pane_key).toBeNull()
+    expect(ws.active).toBe(star)
+  })
+
+  it('lannuaire dune AUTRE fenetre ne change rien', () => {
+    const { ws, sheet_app, window_id } = buildBoundWindow()
+    const star = ws.createDocument({ offscreen: true })
+    ws.bindWindowDocument(window_id + '_voisine', 'pane_1', star)
+    expect(ws.active).toBe(sheet_app)
+  })
+
+  it('lier et delier annoncent la bascule, reposer le meme document nannonce rien', () => {
+    const { ws, window_id } = buildBoundWindow()
+    const star = ws.createDocument({ offscreen: true })
+    let heard = 0
+    ws.menu_configuration.subscribe(ACTIVE_DOCUMENT_TOPIC, () => { heard++ })
+
+    ws.bindWindowDocument(window_id, 'pane_1', star)
+    expect(heard).toBe(1)
+    ws.bindWindowDocument(window_id, 'pane_1', star)
+    expect(heard).toBe(1)
+    ws.unbindWindowDocument(window_id, 'pane_1')
+    expect(heard).toBe(2)
+  })
+})
+
 describe('os#1385 lot 2 — le clavier est de lespace de travail', () => {
 
   it('Ctrl+Z frappe lhistorique de lACTIF, pas celui du principal', () => {
@@ -251,6 +344,32 @@ describe('os#1385 lot 2 — une seule barre dadresse, ecrite par le seul actif',
     expect(ws.url_sync_enabled).toBe(false)
     main.enableUrlStateSync()
     expect(ws.url_sync_enabled).toBe(true)
+  })
+
+  // os#1428 — TANT QUE RIEN N ARME, L ADRESSE NE RECOIT RIEN, MEME DE L ACTIF.
+  //
+  // C est la propriete sur laquelle repose la garde posee dans App.tsx : l editeur n arme plus
+  // la synchronisation quand l adresse ne nomme pas le document (ni page publiee, ni ?url=).
+  // Cette garde ne vaut que si le desarmement est un silence COMPLET et non un simple defaut
+  // initial que le premier dessin leverait. Le test d a cote montre le cas arme ; celui-ci
+  // montre l autre moitie, qui n etait pas couverte.
+  it('sans armement ladresse ne recoit rien, meme du document actif', () => {
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    expect(ws.active).toBe(main)
+    const replaceState = jest.spyOn(window.history, 'replaceState').mockImplementation(() => undefined)
+
+    main.syncUrlState()
+    expect(replaceState).not.toHaveBeenCalled()
+
+    // Et le dessin ne change rien a ce silence : c est bien l armement qui commande, pas l etat.
+    main.drawing_area.sankey.addNewNode('n_a', 'Chene')
+    main.syncUrlState()
+    expect(replaceState).not.toHaveBeenCalled()
+
+    ws.enableUrlStateSync()
+    main.syncUrlState()
+    expect(replaceState).toHaveBeenCalled()
   })
 
   it('la feuille ouverte voyage dans ladresse, sauf quand cest la premiere', () => {

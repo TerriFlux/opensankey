@@ -210,8 +210,13 @@ export function convertForeignObjectsInPlace(root: Element): void {
   root.querySelectorAll('foreignObject').forEach((node) => {
     const foNode = node as SVGForeignObjectElement
     if (foNode.querySelector('[contenteditable]')) return
+    // os#1385 — l'original vivant est cherché dans le document du CLONE, donc dans celui de la
+    // zone exportée : un canevas détaché dans une autre fenêtre de navigateur n'a aucun de ses
+    // nœuds dans le document de la page, et la recherche globale y retombait sur le repli
+    // (le clone, sans boîte de rendu), ce qui perdait le retour à la ligne à l'export.
+    const doc = root.ownerDocument
     const originalFO = foNode.id
-      ? document.getElementById(foNode.id) as unknown as SVGForeignObjectElement | null
+      ? doc.getElementById(foNode.id) as unknown as SVGForeignObjectElement | null
       : null
     const measureDiv = (originalFO || foNode).querySelector('div') as HTMLElement | null
     if (!measureDiv) return

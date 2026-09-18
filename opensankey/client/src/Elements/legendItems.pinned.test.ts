@@ -139,13 +139,13 @@ describe('SA#550 — rendu et mise en page de la ligne épinglée', () => {
       const pos = new Map(layoutLegendItems(items, config).map(p => [p.id, p]))
       const source_y = pos.get('legend-group-source')?.y as number
       const next_y = pos.get('legend-group-methode')?.y as number
-      // Estimation : 690 × 16 × 0,55 / 180 px ≈ 34 lignes de 24 px
-      expect(next_y - source_y).toBeGreaterThanOrEqual(30 * 24)
+      // Estimation : 690 × 16 × 0,55 / 180 px ≈ 34 lignes de 16 px (#556 : interligne = 1 police)
+      expect(next_y - source_y).toBeGreaterThanOrEqual(30 * 16)
       expect(pos.get('legend-group-source')?.x).toBe(0)
     })
   })
 
-  it('la hauteur MESURÉE (en interlignes, éventuellement fractionnaire) l\'emporte sur l\'estimation', () => {
+  it('la hauteur MESURÉE (en hauteurs de police, éventuellement fractionnaire) l\'emporte sur l\'estimation', () => {
     const sankey = makeSankey({
       node_taggs_list: [
         group('source', { pinned_in_legend: true, description: SOURCE_DESCRIPTION }),
@@ -154,11 +154,11 @@ describe('SA#550 — rendu et mise en page de la ligne épinglée', () => {
     })
     const items = computeLegendItems(sankey, base_config)
     const pos = new Map(layoutLegendItems(items, base_config, new Map([['legend-group-source', 2.5]])).map(p => [p.id, p]))
-    expect((pos.get('legend-group-methode')?.y as number) - (pos.get('legend-group-source')?.y as number)).toBe(2.5 * 24)
+    expect((pos.get('legend-group-methode')?.y as number) - (pos.get('legend-group-source')?.y as number)).toBe((2.5 + 0.5) * 16)
   })
 
-  it('la forme d\'une zone enveloppée couvre ses lignes avec la marge d\'une ligne seule', () => {
+  it('la forme d\'une zone enveloppée épouse exactement ses lignes', () => {
     expect(legendWrappedShapeHeight(1, 16)).toBe(16)
-    expect(legendWrappedShapeHeight(3, 16)).toBe(64)
+    expect(legendWrappedShapeHeight(3, 16)).toBe(48)
   })
 })

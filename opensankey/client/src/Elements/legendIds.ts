@@ -22,3 +22,8 @@ export function legendSlug(s: string): string {
 export const LEGEND_DATATAG_PREFIX = LEGEND_CHILD_PREFIX + 'datatag-'
 export function legendDataTagZoneId(group_id: string): string { return LEGEND_DATATAG_PREFIX + legendSlug(group_id) }
 export function isLegendDataTagZoneId(id: string): boolean { return id.startsWith(LEGEND_DATATAG_PREFIX) }
+
+// SA#551 — titre d'un groupe d'étiquettes ('legend-group-<groupe>'), ligne épinglée comprise : son
+// clic ouvre la pop-up du groupe (cf. legendGroupPresentation).
+export const LEGEND_GROUP_PREFIX = LEGEND_CHILD_PREFIX + 'group-'
+export function isLegendGroupZoneId(id: string): boolean { return id.startsWith(LEGEND_GROUP_PREFIX) }
