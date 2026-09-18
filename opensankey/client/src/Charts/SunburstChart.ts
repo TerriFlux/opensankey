@@ -183,6 +183,11 @@ export interface Type_SunburstChartOptions {
     node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[]
   ) => void
   /**
+   * Clic sur le CENTRE, hors zoom radial (18/09) : le nœud central et l'axe de son premier
+   * anneau — de quoi le replier dans le diagramme. Rend vrai si le geste a fait quelque chose.
+   */
+  on_centre_click?: (node_id: string, dimension_id: string) => boolean
+  /**
    * LES ÉTIQUETTES POSÉES À LA MAIN (demande Julien, 18/09) : la position d'une étiquette sortie
    * du disque, par identifiant de secteur, en pixels depuis le centre et hors zoom. Absente : la
    * place que le tracé lui donne, dans l'axe de son secteur.
@@ -876,9 +881,17 @@ export const drawSunburstChart = (
     const scope_title = centre_node
       ? centre_node.label
       : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
+    // Sous le zoom radial, le clic sur le centre REMONTE d'un cran ; sinon il REPLIE le nœud
+    // central dans le diagramme (18/09) — l'inverse du clic sur un secteur, au même endroit.
+    const centre_folds = !focus_id && !!centre_node && !!opts.on_centre_click &&
+      st.click_action !== 'none' && st.click_action !== 'zoom'
+    const first_ring_axis = slices.find(s => s.depth === 0)?.dimension_id ?? ''
     const centre = g.append('g')
-      .style('cursor', focus_id ? 'pointer' : 'default')
-      .on('click', () => { if (focus_id) { focus_id = null; render() } })
+      .style('cursor', (focus_id || centre_folds) ? 'pointer' : 'default')
+      .on('click', () => {
+        if (focus_id) { focus_id = null; render(); return }
+        if (centre_folds && centre_node) opts.on_centre_click?.(centre_node.id, first_ring_axis)
+      })
     centre.append('circle').attr('r', inner_r - 2).attr('fill', palette.surface)
     // Ce que le centre écrit est réglé (os#1425). Les deux textes existent toujours — le survol
     // s'en sert pour écrire le fil d'Ariane — mais ils restent vides si l'auteur n'en veut pas.

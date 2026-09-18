@@ -379,6 +379,54 @@ export const aggregate = (
 
 
 /**
+ * LE GESTE LOCAL COMPLET (18/09, demande Julien) — ce que le clic droit fait AUTOUR de
+ * `disaggregate` / `aggregate`, et qu'une figure qui pilote la hiérarchie (le sunburst) doit
+ * faire aussi, sinon les deux chemins divergent : le diagramme se dépliait, mais le menu
+ * Hiérarchies ne le savait pas (pas de marqueur « local », pas de rafraîchissement) et
+ * l'indicateur d'enregistrement restait vert.
+ *
+ * Trois choses, et ce sont celles de `NodeActions` (éditeur) : le marqueur `forced_by_local_action`
+ * sur la dimension (c'est lui qui affiche « Réinitialiser la hiérarchie » et grise les listes du
+ * menu), le redessin de la zone, et le rafraîchissement des surfaces qui montrent l'état de la
+ * hiérarchie. `NodeActions` fait en plus le ré-empilement des cadres englobants, qui reste chez
+ * lui : il n'a de sens que sous un mode englobant, que le sunburst ne pose jamais.
+ */
+const refreshAfterLocalHierarchyGesture = (new_data: Class_ApplicationData) => {
+  new_data.drawing_area.draw()
+  const mc = new_data.menu_configuration
+  mc.ref_to_save_in_cache_indicator.current(false)
+  mc.ref_to_menu_context_nodes_updater.current()
+  mc.updateAllComponentsRelatedToLevelTags()
+}
+
+/** Déplie `parent` sur l'axe qui mène à `child_id`, comme le clic droit. Vrai si quelque chose a bougé. */
+export const disaggregateLocally = (
+  new_data: Class_ApplicationData,
+  parent: Class_NodeElement,
+  child_id: string
+): boolean => {
+  const dim = parent.dimensions_as_parent.find(d => d.children.some(c => c.id === child_id))
+  if (!dim || dim.force_show_children) return false
+  disaggregate(new_data, parent, child_id)
+  dim.forced_by_local_action = true
+  refreshAfterLocalHierarchyGesture(new_data)
+  return true
+}
+
+/** Replie `child` dans `parent_id`, comme le clic droit. Vrai si quelque chose a bougé. */
+export const aggregateLocally = (
+  new_data: Class_ApplicationData,
+  child: Class_NodeElement,
+  parent_id: string
+): boolean => {
+  const dim = child.dimensions_as_child.find(d => d.parent.id === parent_id)
+  if (!dim || !dim.force_show_children) return false
+  aggregate(new_data, child, parent_id)
+  refreshAfterLocalHierarchyGesture(new_data)
+  return true
+}
+
+/**
  * #1231 — Reset des désagrégations LOCALES (hybrides). Quand l'utilisateur a désagrégé
  * des nœuds au clic droit, le diagramme est en état HYBRIDE (niveaux mixtes) et le menu
  * Hiérarchies global ne doit plus agir. Ce reset ramène à l'état uniforme montré par le
