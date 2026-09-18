@@ -211,6 +211,22 @@ export type Type_RepresentationContext = {
    * transmettre, les gestes de fenêtre restant ceux de `Class_MenuConfig`.
    */
   window_id?: string
+  /**
+   * os#1422 (lot 6) - LA VIGNETTE, complément indispensable de `window_id`.
+   *
+   * Une fenêtre d'élément en porte N — une figure par objet regardé — et tout ce qui désigne une
+   * figure MONTÉE le fait par le couple (fenêtre, vignette) : les réglages
+   * (`mainZonePaneOptionsOf`), la figure (`figureOf`), et depuis ce lot l'annuaire des documents
+   * déclarés (`Class_Workspace.bindWindowDocument`). Une représentation qui monte un DOCUMENT —
+   * l'étoile unitaire, seule aujourd'hui — doit pouvoir dire lequel des deux est le sien ; la
+   * clé ne se déduit pas de l'élément (une liste épinglée peut porter deux fois le même nœud,
+   * cf. `mainZonePaneKeyAt`), elle ne peut donc venir que de l'hôte.
+   *
+   * Absent partout où `window_id` l'est (pop-up de présentation, sondes de disponibilité) : la
+   * représentation ne déclare alors aucun document, exactement comme elle n'offre aucun geste de
+   * fenêtre.
+   */
+  pane_key?: string
 }
 
 /** Démontage seul ; `void` quand il n'y a rien à défaire. */
@@ -614,13 +630,19 @@ export const diagramContext = (
   options: { [key: string]: unknown } = {}
 ): Type_RepresentationContext => ({ app_data, scale: 'diagram', element: null, options })
 
-/** Contexte d'échelle ÉLÉMENT. `window_id` : cf. Type_RepresentationContext (os#1393). */
+/**
+ * Contexte d'échelle ÉLÉMENT. `window_id` : cf. Type_RepresentationContext (os#1393) ;
+ * `pane_key`, la vignette de cette fenêtre-là (os#1422).
+ */
 export const elementContext = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
   options: { [key: string]: unknown } = {},
-  window_id?: string
-): Type_RepresentationContext => ({ app_data, scale: 'element', element, options, window_id })
+  window_id?: string,
+  pane_key?: string
+): Type_RepresentationContext => (
+  { app_data, scale: 'element', element, options, window_id, pane_key }
+)
 
 /**
  * Une représentation MONTÉE, vue par son hôte. Forme NORMALISÉE : quoi qu'ait
