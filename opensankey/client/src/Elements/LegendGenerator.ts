@@ -90,14 +90,29 @@ function richDiv(zone: Class_ContainerElement): HTMLDivElement | null {
 }
 
 /**
- * #556 — hauteur du TEXTE d'une ligne épinglée. Mesurée sur le paragraphe et non sur le div qui le
- * porte : celui-ci est le conteneur de l'éditeur de texte riche, dont la marge interne (`.ql-editor`)
- * s'ajouterait à la hauteur du texte et écarterait les groupes épinglés d'une ligne de trop.
+ * #556 — nombre de lignes du texte d'une ligne épinglée : les LIGNES DESSINÉES sont comptées une à
+ * une (une boîte de ligne par ordonnée distincte), et non déduites d'une hauteur de boîte.
+ *
+ * La hauteur de boîte s'était révélée trompeuse : celle du conteneur de l'éditeur de texte riche
+ * porte sa marge interne (`.ql-editor`, 12 px en haut et en bas), qui ajoutait près d'une ligne et
+ * écartait deux groupes épinglés davantage que deux étiquettes. Compter les lignes ne dépend ni de
+ * cette marge, ni de l'interligne, ni de l'échelle de rendu.
  */
-function richTextHeight(zone: Class_ContainerElement): number {
-  const paragraph = zone.d3_selection?.select('foreignObject div p').node() as HTMLElement | null | undefined
-  if (paragraph) return paragraph.offsetHeight
-  return richDiv(zone)?.offsetHeight ?? 0
+function richTextLineCount(zone: Class_ContainerElement): number {
+  if (typeof document === 'undefined' || typeof document.createRange !== 'function') return 0
+  const selection = zone.d3_selection?.select('foreignObject div p')
+  const node = ((selection === undefined || selection.empty()) ? richDiv(zone) : selection.node()) as HTMLElement | null
+  if (node === null) return 0
+  const range = document.createRange()
+  // jsdom ne pose aucune géométrie : pas de `getClientRects` sur un Range. Sans mesure, la mise en
+  // page retombe sur l'estimation sans DOM, comme le reste du générateur.
+  if (typeof range.getClientRects !== 'function') return 0
+  range.selectNodeContents(node)
+  const tops = new Set<number>()
+  Array.from(range.getClientRects()).forEach(rect => {
+    if (rect.height > 0) tops.add(Math.round(rect.top))
+  })
+  return tops.size
 }
 
 function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
@@ -855,12 +870,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         applyPinnedLabel(zone, item, values.police, padding)
         zone.draw()
       }
-      const height = richTextHeight(zone)
-      if (height > 0) {
-        // Hauteur native → px monde, puis en hauteurs de police : la rangée ajoute ensuite la
-        // demi-police qui sépare deux noms (legendEntryRowHeight), comme pour les autres entrées.
-        line_counts.set(item.id, height * font_comp / layout_values.police)
-      }
+      // #556 — lignes DESSINÉES de la ligne épinglée : sa rangée fait alors ses lignes plus la
+      // demi-police qui sépare deux noms (legendEntryRowHeight), exactement comme une étiquette.
+      const n_pinned_lines = richTextLineCount(zone)
+      if (n_pinned_lines > 0) line_counts.set(item.id, n_pinned_lines)
     })
     const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
