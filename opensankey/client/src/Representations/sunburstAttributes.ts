@@ -72,7 +72,28 @@ const labelled = (o: Type_OptionBag) => o['labels_mode'] !== 'none'
 const valued = (o: Type_OptionBag) =>
   labelled(o) && is(o, 'value_label_is_visible', false)
 
-export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
+/**
+ * L'ONGLET de chaque réglage PROPRE : c'est son groupe qui le dit. Les réglages repris des
+ * éléments, eux, portent leur famille dans leur nom (`name_label_*`) et n'ont rien à déclarer.
+ *
+ * Écrit une fois ici plutôt que répété sur chaque clé : le jour où un groupe change d'onglet, il
+ * change à un seul endroit, et aucune clé ne peut rester en arrière.
+ */
+const FAMILY_OF_GROUP: { [group: string]: 'shape' | 'name_label' | 'value_label' } = {
+  [G.shape]: 'shape',
+  [G.labels]: 'name_label',
+  [G.values]: 'value_label'
+}
+
+const withFamilies = (config: Type_FigureAttributesConfig): Type_FigureAttributesConfig => {
+  Object.values(config).forEach(attr => {
+    const family = attr.ui?.group ? FAMILY_OF_GROUP[attr.ui.group] : undefined
+    if (attr.ui && family && !attr.ui.family) attr.ui.family = family
+  })
+  return config
+}
+
+export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = withFamilies({
 
   // ── Ce qu'on lit ────────────────────────────────────────────────────────────── navigation ──
   dimension_id: figureAttribute<string | undefined>(undefined, 'navigation', {
@@ -424,7 +445,9 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
         it: 'Del suo genitore', 'zh-CN': '占父级', ja: '親に対して'
       })
     ],
-    group: G.labels,
+    // LE POURCENTAGE EST UNE FAÇON D'ÉCRIRE LA VALEUR : il se règle avec elle, dans l'onglet
+    // Valeur, et non dans un onglet à part où l'auteur aurait deux endroits pour une question.
+    group: G.values,
     visibleIf: labelled
   }),
 
@@ -613,4 +636,4 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     group: G.notes,
     advanced: true
   })
-}
+})

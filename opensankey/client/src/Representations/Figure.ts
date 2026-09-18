@@ -101,6 +101,18 @@ export type Type_FigureControl = {
   /** Le groupe visuel où ranger le contrôle ; clé i18n, cf. `figure.group.*`. */
   group?: string
   /**
+   * os#1425 — L'ONGLET où ce réglage PROPRE rejoint ceux des éléments.
+   *
+   * Une figure ajoute des questions que les nœuds et les flux ne se posent pas — le pourcentage
+   * écrit à côté d'une valeur, l'orientation d'une étiquette dans son secteur. Elles appartiennent
+   * pourtant à la MÊME famille que des réglages d'élément, et les laisser dans un onglet « Figure »
+   * à part obligerait l'auteur à régler l'affichage d'une valeur à deux endroits.
+   *
+   * Absent : le réglage reste dans l'onglet propre à la figure (le centre, la légende, le geste du
+   * clic — qui n'ont d'équivalent dans aucune famille).
+   */
+  family?: 'shape' | 'name_label' | 'value_label'
+  /**
    * os#1425 — UN RÉGLAGE AVANCÉ : vrai, mais rarement ce qu'on vient chercher.
    *
    * Il ne disparaît pas, il se replie — le formulaire le range sous un « Avancé » fermé. C'est la
