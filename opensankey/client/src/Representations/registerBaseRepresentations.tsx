@@ -44,7 +44,6 @@ import {
   MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_JSON_ID
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
-import { representationOptionsMenu } from './RepresentationContextMenu'
 // os#1409 - le zoom est une capacite declaree par la nature (cf. Type_RepresentationZoom).
 import { DIAGRAM_ZOOM } from './RepresentationZoom'
 import { spreadsheetZoomHandle } from './SpreadsheetZoomBridge'
@@ -251,11 +250,9 @@ export const registerBaseRepresentations = (): void => {
           ja: '固定されたデータタグ'
         })
     },
-    // os#1397 - le clic droit sur le fond ouvre les réglages de la figure. Les SECTEURS, eux,
-    // n'ont pas encore de menu : leur clic gauche zoome déjà dans l'anneau, et décider ce que le
-    // clic droit y ajoute demande de trancher ce qu'on vise, le nœud du secteur ou la branche
-    // entière. À faire quand la question se posera vraiment, pas d'avance.
-    contextMenu: ({ target, ctx }) => target.kind === 'background' ? representationOptionsMenu(ctx) : null,
+    // PAS DE MENU AU CLIC DROIT (os#1425). Le fond ouvrait les réglages de la figure (os#1397) ;
+    // c'est un geste que le diagramme principal n'a pas, et les réglages ont leur place dans
+    // l'inspecteur et « Filtres et coordonnées ». Le clic droit reste celui du navigateur.
     draw: (container, ctx) => drawSunburstRepresentation(container, {
       ...ctx,
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
