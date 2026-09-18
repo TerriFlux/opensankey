@@ -41,6 +41,12 @@ export interface Type_FigureAttributesFormProps {
   setOptions: (next: Type_OptionBag) => void
   /** Les sortes que cette surface rend. Absent : toutes. */
   sorts?: Type_AttributeSort[]
+  /**
+   * os#1425 — les clés que CETTE surface ne rend pas, parce qu'une autre les rend mieux : les
+   * attributs repris des éléments ont leurs propres onglets (cf. FigureAppearanceTabs), et les
+   * répéter ici ferait deux endroits pour un même réglage.
+   */
+  exclude?: (key: string) => boolean
   /** L'objet regardé, quand la figure en a un : certains choix viennent de son diagramme. */
   element?: unknown
 }
@@ -114,7 +120,7 @@ const FigureControl = (
 }
 
 export const FigureAttributesForm = ({
-  app_data, config, options, setOptions, sorts, element
+  app_data, config, options, setOptions, sorts, element, exclude
 }: Type_FigureAttributesFormProps) => {
   // Le tiroir « Avancé » est un état de l'OUTIL, pas du document : il se referme d'une figure à
   // l'autre, et rien n'est écrit quand on l'ouvre.
@@ -125,7 +131,7 @@ export const FigureAttributesForm = ({
   const items = figureControlsOf(
     config, options, sorts ?? ALL_SORTS, lang,
     { app_data: app_data as unknown as { drawing_area?: { sankey?: unknown } }, element }
-  )
+  ).filter(item => !exclude?.(item.key))
   if (items.length === 0) return null
   const set = (key: string, value: unknown) => setOptions({ ...options, [key]: value })
 
