@@ -853,15 +853,28 @@ export const drawSunburstChart = (
       // Le disque ne déborde jamais de sa case : ce qu'un zoom pousse dehors est coupé, pas
       // dessiné par-dessus la légende ou le voisin.
       .style('overflow', 'hidden')
-    const g = svg.append('g')
     // ZOOM ET DÉPLACEMENT (demande Julien, 18/09), comme sur le diagramme : molette pour zoomer,
     // glisser pour déplacer, double-clic pour recentrer. Le point de vue survit aux redessins
     // (redimensionnement, zoom radial) — c'est `view`, tenu hors de `render`.
+    //
+    // DEUX GROUPES, ET C'EST CE QUI FAIT QUE LE POINT SOUS LE CURSEUR NE BOUGE PAS. d3 calcule sa
+    // transformation dans les coordonnées du svg : le groupe qu'il pilote doit porter EXACTEMENT
+    // `translate(t.x,t.y) scale(t.k)`, rien de plus. Le recentrage du disque ajouté par-dessus
+    // décalait l'ancre d'un demi-cadre — on zoomait, et le point fixe était ailleurs (constaté
+    // par Julien, 18/09). Il vit donc DANS le groupe transformé, où il n'entre plus dans le calcul.
+    const zoom_layer = svg.append('g')
+    const g = zoom_layer.append('g').attr('transform', `translate(${box_w / 2},${box_h / 2})`)
     const place = (t: d3.ZoomTransform) =>
-      g.attr('transform', `translate(${box_w / 2 + t.x},${box_h / 2 + t.y}) scale(${t.k})`)
+      zoom_layer.attr('transform', `translate(${t.x},${t.y}) scale(${t.k})`)
     place(view)
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([ZOOM_MIN, ZOOM_MAX])
+      // LA MOLETTE, TROIS FOIS PLUS DOUCE que le défaut de d3 (0,002 par unité de `deltaY`) : sur
+      // une vignette de quelques centaines de pixels, un cran faisait un bond d'un quart et la
+      // couronne devenait impilotable. Environ 6 % par cran, une douzaine de crans pour doubler.
+      .wheelDelta(event => -event.deltaY * (
+        event.deltaMode === 1 ? 0.017 : event.deltaMode ? 0.33 : 0.00065
+      ))
       // Un clic qui a bougé de quelques pixels reste un clic sur le secteur, pas un déplacement.
       .clickDistance(4)
       .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
