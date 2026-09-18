@@ -29,10 +29,7 @@ import {
 } from './PresentationBlockRegistry'
 import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
 // Module feuille sans import : ne tire pas LegendGenerator (cf. son en-tête).
-import { isLegendChildId, LEGEND_CHILD_PREFIX } from '../../../Elements/legendIds'
-
-/** SA#551 — titre d'un groupe d'étiquettes ('legend-group-…'), cf. legendGroupPresentation. */
-const isLegendGroupZoneId = (id: string): boolean => id.startsWith(LEGEND_CHILD_PREFIX + 'group-')
+import { isLegendChildId, isLegendGroupZoneId } from '../../../Elements/legendIds'
 
 /**
  * #542 — l'élément est-il une zone générée par la légende ? Une entrée de légende
