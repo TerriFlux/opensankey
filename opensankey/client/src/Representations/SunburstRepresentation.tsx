@@ -213,48 +213,40 @@ const disaggregateAlong = (
   }
 }
 
-const toggleAggregation = (
-  app_data: Class_ApplicationData,
-  dimension_id: string,
-  node_id: string,
-  path: string[] = []
-) => {
-  const node = app_data.drawing_area.sankey.nodes_dict[node_id] as Class_NodeElement | undefined
-  if (!node) return
-  // La route d'abord : sans elle, déplier un nœud d'un anneau profond laisse ses ancêtres en
-  // place et le diagramme compte deux fois la même matière.
-  disaggregateAlong(app_data, path)
-  const as_parent = node.dimensions_as_parent
-    .find((d: Class_NodeDimension) => d.id === dimension_id)
-  if (as_parent && as_parent.children.length > 0) {
-    if (as_parent.force_show_children) {
-      // Déjà déplié : le geste referme, en repassant par le premier enfant — c'est
-      // l'enfant qui porte la dimension côté agrégation.
-      aggregateLocally(app_data, as_parent.children[0] as Class_NodeElement, node.id)
-    } else {
-      disaggregateLocally(app_data, node, as_parent.children[0].id)
-    }
-    return
-  }
-  // Feuille de la hiérarchie : le seul geste qui reste est de la replier dans son parent.
-  const as_child = node.dimensions_as_child
-    .find((d: Class_NodeDimension) => d.id === dimension_id)
-  if (as_child) aggregateLocally(app_data, node, as_child.parent.id)
+/**
+ * REPLIE UN NŒUD sur tous les axes où il est déplié : il redevient lui-même dans le diagramme,
+ * par son premier enfant sur chaque axe, comme le clic droit. Vrai si quelque chose a bougé.
+ */
+const foldNode = (app_data: Class_ApplicationData, node: Class_NodeElement): boolean => {
+  let moved = false
+  node.dimensions_as_parent
+    .filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
+    .forEach((d: Class_NodeDimension) => {
+      if (aggregateLocally(app_data, d.children[0] as Class_NodeElement, node.id)) moved = true
+    })
+  return moved
 }
 
 /**
- * LE CLIC SUR LE CENTRE REPLIE LE NŒUD CENTRAL (18/09, constaté par Julien : une fois déplié
- * depuis un secteur, rien ne permettait de le replier depuis la figure). Le centre est un nœud ;
- * s'il est déplié sur un axe — celui du premier anneau d'abord, n'importe lequel sinon — on le
- * replie par son premier enfant, comme le clic droit. Vrai si quelque chose a bougé.
+ * LE CLIC VEUT DIRE « MONTRE-MOI CE NŒUD » (arbitrage Julien, 18/09, Simplify1Level6 : cliquer
+ * « Carcasse froid » doit donner le niveau 2, pas le 3). Déplier le nœud cliqué montrait ses
+ * ENFANTS — un cran trop loin, et le centre et les anneaux ne parlaient pas de la même chose.
+ *
+ * Donc : la route dessinée jusqu'au secteur est dépliée (chaque cran dans l'axe que la couronne
+ * a emprunté), et le nœud cliqué lui-même est REPLIÉ s'il était ouvert — il apparaît tel quel.
+ * Le même geste au centre montre le nœud central. Idempotent : recliquer ne change rien.
  */
-const foldCentre = (app_data: Class_ApplicationData, node_id: string, dimension_id: string): boolean => {
+const showNodeOf = (
+  app_data: Class_ApplicationData,
+  node_id: string,
+  path: string[] = []
+): boolean => {
   const node = app_data.drawing_area.sankey.nodes_dict[node_id] as Class_NodeElement | undefined
   if (!node) return false
-  const open = node.dimensions_as_parent.filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
-  const dim = open.find((d: Class_NodeDimension) => d.id === dimension_id) ?? open[0]
-  if (!dim) return false
-  return aggregateLocally(app_data, dim.children[0] as Class_NodeElement, node.id)
+  // La route d'abord : sans elle, montrer un nœud d'un anneau profond laisse ses ancêtres en
+  // place et le diagramme compte deux fois la même matière.
+  disaggregateAlong(app_data, path)
+  return foldNode(app_data, node) || path.length > 1
 }
 
 /**
@@ -320,10 +312,9 @@ export const drawSunburstRepresentation = (
     back_label: t('sunburst.back') as string,
     level_label: (index: number) => t('sunburst.level', { index }) as string,
     on_arc_click: (
-      node_id: string, _is_disaggregated: boolean, dimension_id: string, path: string[]
-    ) => toggleAggregation(app_data, dimension_id || tree.dimension_id, node_id, path),
-    on_centre_click: (node_id: string, dimension_id: string) =>
-      foldCentre(app_data, node_id, dimension_id || tree.dimension_id)
+      node_id: string, _is_disaggregated: boolean, _dimension_id: string, path: string[]
+    ) => { showNodeOf(app_data, node_id, path) },
+    on_centre_click: (node_id: string) => showNodeOf(app_data, node_id)
   })
 }
 
