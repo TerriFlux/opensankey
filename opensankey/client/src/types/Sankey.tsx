@@ -1751,6 +1751,17 @@ export class Class_Sankey {
   }
 
   /**
+   * SA#551 — ce groupe met-il en forme le diagramme MAINTENANT ? C'est son interrupteur « Appliquer
+   * les styles associés », sauf pendant la VUE d'un groupe (pop-up de légende) : là, ce groupe est le
+   * seul à mettre en forme quoi que ce soit — y compris par la coloration historique, qui ne passe
+   * pas par les styles d'étiquette et resterait sinon visible sur le diagramme copié.
+   */
+  public tagGroupAppliesFormatting(group: { id: string, use_colors?: boolean }): boolean {
+    if (this._tag_style_preview_group_id !== undefined) return group.id === this._tag_style_preview_group_id
+    return group.use_colors === true
+  }
+
+  /**
    * SA#551 — étiquettes et groupes (style des éléments sans étiquette) dont un style est EN VIGUEUR
    * sur au moins un élément visible de la famille : ni supplanté partout par des groupes plus
    * prioritaires (cf. tagStyles.layerOwnersInEffect), ni sans porteur visible.
