@@ -1555,6 +1555,12 @@ export class Class_DrawingArea {
   public refreshWindowFraming() {
     // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
     if (!this.d3_selection_zoom_area) return
+    // os#1429 — LA CASE D'AVANT, relevée ici et nulle part ailleurs. Le cadre du canevas est
+    // déjà posé sur le modèle quand on entre (l'appelant l'écrit avant d'appeler), donc
+    // `window_fitting_*` rend DÉJÀ la nouvelle taille : la précédente ne peut venir que de ce
+    // qu'on a nous-même retenu au passage d'avant. Cf. `_recenterOnBoxChange`.
+    const box_before = this._framed_box
+    this._framed_box = this._measuredBox()
     // os#1387 — le cadre du canevas (case de la grande zone, masqué, ou ordinaire) AVANT tout
     // cadrage : c'est lui qui fixe window_fitting_* ci-dessous.
     this._applyCanvasFrameStyle()
@@ -1572,6 +1578,10 @@ export class Class_DrawingArea {
     //   sans que leur auteur l'ait jamais réglé : le régime doit rester invisible.
     if (this._auto_fit_mode === 'none' && !this.is_unitary) {
       this._refreshWindowChrome()
+      // os#1429 — MAIS LA CASE A CHANGÉ DE TAILLE, ET LE REGARD DOIT SUIVRE. Voir
+      // `_recenterOnBoxChange` : on translate, on ne recadre pas. La règle ci-dessus tient
+      // donc entière — l'échelle reste celle de l'utilisateur.
+      this._recenterOnBoxChange(box_before)
       return
     }
 
@@ -1675,6 +1685,87 @@ export class Class_DrawingArea {
     this.drawBackground()
     this.drawGrid()
     this._updateScrollbars()
+  }
+
+  /**
+   * os#1429 — LA TAILLE DE LA CASE AU DERNIER FENÊTRAGE. `null` tant qu'on n'a rien mesuré, et
+   * quand le canevas est masqué : une case cachée n'a pas de taille dont un retour puisse se
+   * déduire, et comparer la fenêtre entière à une case ferait sauter le diagramme au retour.
+   */
+  private _framed_box: { w: number | null, h: number | null } | null = null
+
+  /**
+   * La case visible, `null` quand le canevas est masqué — et CHAQUE AXE séparément `null` quand
+   * il ne se mesure pas.
+   *
+   * Les deux axes sont indépendants parce qu'ils ne se mesurent pas toujours ensemble :
+   * `window_fitting_height` retranche les hauteurs de barres, qui se lisent dans le DOM et
+   * peuvent manquer (une page pas encore montée, jsdom). Une hauteur indisponible ne doit pas
+   * emporter la largeur avec elle : c'est la largeur qui varie quand une fenêtre s'ouvre à
+   * côté, et c'est précisément le cas qu'on sert.
+   */
+  private _measuredBox(): { w: number | null, h: number | null } | null {
+    if (this.canvas_frame === 'hidden') return null
+    const measure = (v: number): number | null =>
+      (Number.isFinite(v) && v > 0) ? v : null
+    return { w: measure(this.window_fitting_width), h: measure(this.window_fitting_height) }
+  }
+
+  /**
+   * os#1429 — LE DIAGRAMME SE REPLACE DANS SA CASE QUAND ELLE CHANGE DE TAILLE, SANS CHANGER
+   * D'ÉCHELLE.
+   *
+   * Constaté par Julien : on ouvre une fenêtre sunburst à côté, la grande zone se rétrécit, et
+   * le Sankey reste où il était — une bonne moitié passe derrière la fenêtre qui vient de
+   * naître. Son diagnostic, « il manque un draw », désigne le bon endroit mais pas la bonne
+   * cause : en mode de cadrage 'none', DESSINER NE RECADRE PAS. `_drawBody` y réapplique la
+   * caméra telle quelle, et seul le tout premier dessin d'une zone encadre. Un `draw()` de plus
+   * n'aurait donc rien déplacé du tout.
+   *
+   * La vraie cause est le retour anticipé d'à côté, qui dit « aucun cadrage automatique, on ne
+   * touche à rien ». Cette règle est juste et reste en place : une page A3 ne doit pas se
+   * recentrer parce qu'une barre s'ouvre, et l'échelle appartient à l'utilisateur.
+   *
+   * CE QU'ON FAIT EST PLUS PETIT QU'UN RECADRAGE, et c'est ce qui le rend acceptable là où un
+   * recadrage ne le serait pas : une TRANSLATION de la moitié de la variation de taille. Le
+   * point du diagramme qui était au centre de la case y reste. L'échelle ne bouge pas d'un
+   * millième, rien n'est remis à plat, et refermer la fenêtre rend exactement la vue d'avant —
+   * la translation est sa propre réciproque.
+   *
+   * L'algèbre tient en une ligne et explique pourquoi `k` n'y figure pas. Le point monde au
+   * centre vaut ((W/2 - x)/k, (H/2 - y)/k) ; l'y maintenir après passage à W' donne
+   * x' = x + (W' - W)/2, sans `k`. Une variation de case se rend donc en pixels d'écran, quel
+   * que soit le zoom — c'est bien un déplacement du regard, pas une reprise de la caméra.
+   *
+   * Arbitrage de Julien (18/09/2026) entre trois conduites : recentrer sans changer de zoom
+   * (celle-ci), recadrer entièrement, ou ne bouger qu'en cas de débordement.
+   *
+   * @param before la case au fenêtrage précédent, `null` s'il n'y en a pas eu (premier
+   *   fenêtrage, retour d'un canevas masqué, zone de dessin toute neuve). On ne bouge alors
+   *   rien : il n'y a pas de variation, il y a une absence de point de comparaison.
+   */
+  private _recenterOnBoxChange(before: { w: number | null, h: number | null } | null): void {
+    if (!before) return
+    const now = this._framed_box
+    if (!now) return
+    // Axe par axe : un axe qui ne se mesurait pas des deux côtés ne varie pas, il ne se sait
+    // pas. On ne translate que ce qu'on a vu bouger.
+    const delta = (a: number | null, b: number | null): number =>
+      (a === null || b === null) ? 0 : a - b
+    const dw = delta(now.w, before.w)
+    const dh = delta(now.h, before.h)
+    // Moins d'un pixel de part et d'autre : la case n'a pas bougé (un re-rendu de React suffit
+    // à repasser ici). Bouger pour rien ferait vibrer le diagramme à chaque rendu.
+    if (Math.abs(dw) < 1 && Math.abs(dh) < 1) return
+    const zoom_node = this.d3_selection_zoom_area?.node()
+    if (!zoom_node) return
+    const t = d3.zoomTransform(zoom_node)
+    if (!Number.isFinite(t.k) || t.k === 0) return
+    this.setCamera(d3.zoomIdentity.translate(t.x + dw / 2, t.y + dh / 2).scale(t.k))
+    // La caméra a bougé APRÈS le chrome : fond, grille et barres se recalent sur elle. Le cadre
+    // et le translateExtent, eux, viennent d'être posés sur la nouvelle case — c'est pour cela
+    // que le chrome passe en premier et que la caméra vient ensuite, sous l'étendue à jour.
+    this._refreshWindowChrome()
   }
 
   /**
