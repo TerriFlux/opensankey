@@ -38,3 +38,23 @@ describe('fitMenuListToViewport', () => {
     expect(update).toHaveBeenCalledTimes(1)
   })
 })
+
+// #555 — deux pièges ont fait tomber ce réglage en silence avant d'être vus au navigateur :
+// une valeur numérique nulle est écartée par Chakra, et un raccourci (`minW`) ne remplace pas
+// la forme longue du style de base (`minWidth`) — les deux se retrouvaient dans la règle, et
+// `inherit` l'emportait. D'où ce contrôle sur la valeur exacte portée par la variante.
+describe('variantes de menu du thème', () => {
+  const variants = () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { opensankey_theme } = require('../../css/Theme')
+    return opensankey_theme.components.Menu.variants
+  }
+
+  it.each(['menu_select_elements', 'menu_select_style'])('%s : la largeur minimale est remise à zéro', name => {
+    const list = variants()[name].list
+    expect(list.minWidth).toBe('0px')
+    expect(list.minW).toBeUndefined()
+    expect(list.maxW).toBe('min(28rem, calc(100vw - 1rem))')
+    expect(list.maxH).toBe('var(--os-menu-select-max-h, calc(100vh - 2rem))')
+  })
+})
