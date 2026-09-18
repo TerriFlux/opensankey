@@ -401,6 +401,74 @@ export class Class_Workspace {
    */
   public get main(): Class_ApplicationData | null { return this._main }
 
+  // DOCUMENTS DÉCLARÉS PAR LES FENÊTRES ================================================
+  //
+  // os#1422 (lot 6) — L'ANNUAIRE (fenêtre, vignette) → document, consulté par `active`.
+  //
+  // Pourquoi il existe : `active` ne savait résoudre qu'une FEUILLE (le sujet d'une fenêtre dit
+  // quelle feuille elle regarde, cf. `mainZoneSubjectSheet`). Un document qui n'est pas une
+  // feuille — le document d'étoile d'une vignette unitaire, qui ne s'enregistre jamais — ne
+  // pouvait donc pas devenir l'actif, et tout ce qui s'adresse à l'actif (inspecteur, clavier,
+  // Ctrl+Z, menus contextuels) parlait d'un autre document que celui qu'on regardait.
+  //
+  // LA CLÉ EST LE COUPLE (occupant, vignette), pas la seule fenêtre : une fenêtre d'élément
+  // porte N vignettes — une étoile par nœud sélectionné — et chacune a son document.
+  //
+  // TRANSITOIRE, absolument : jamais sérialisé, jamais relu d'un fichier. Il décrit ce qui est
+  // monté à l'écran maintenant, et c'est la fenêtre qui le pose (`bindWindowDocument`) et le
+  // retire (`unbindWindowDocument`) — comme un `useEffect` pose et retire son abonnement.
+  protected _window_documents: { [occupant_id: string]: { [pane_key: string]: Class_ApplicationData } } = {}
+
+  /**
+   * LA FENÊTRE (occupant, vignette) MONTRE CE DOCUMENT : il devient l'actif quand elle l'est.
+   *
+   * Idempotent : reposer le même document ne notifie rien (une vignette qui se redessine ne doit
+   * pas faire croire à une bascule d'actif).
+   */
+  public bindWindowDocument(occupant_id: string, pane_key: string, doc: Class_ApplicationData): void {
+    const by_key = this._window_documents[occupant_id] ?? (this._window_documents[occupant_id] = {})
+    if (by_key[pane_key] === doc) return
+    by_key[pane_key] = doc
+    // Comme `registerDocument` / `forgetDocument` : ce qui change l'ensemble des documents
+    // joignables peut changer l'actif, et l'actif ne s'annonce que par là.
+    this.refreshActive()
+  }
+
+  /** La vignette n'est plus montée : son document n'est plus joignable par la grande zone. */
+  public unbindWindowDocument(occupant_id: string, pane_key: string): void {
+    const by_key = this._window_documents[occupant_id]
+    if (!by_key || !(pane_key in by_key)) return
+    delete by_key[pane_key]
+    if (Object.keys(by_key).length === 0) delete this._window_documents[occupant_id]
+    this.refreshActive()
+  }
+
+  /**
+   * Le document déclaré par la vignette `pane_key` de la fenêtre `occupant_id`, ou `null`.
+   *
+   * `pane_key` est la vignette ACTIVE de la grande zone (`main_zone_active_pane_key`), qui vaut
+   * `null` tant que l'utilisateur n'en a touché aucune. Dans ce cas — et dans ce cas seulement —
+   * on retombe sur l'unique entrée de la fenêtre quand elle n'en a qu'une : c'est la convention
+   * que la grande zone emploie déjà (« `null` = la première vignette de la fenêtre »), et une
+   * fenêtre qui en porte plusieurs sans qu'aucune ait été touchée ne désigne rien.
+   *
+   * Un document `disposé` est IGNORÉ plutôt que rendu : une vignette en cours de démontage garde
+   * sa référence le temps que l'effet se dénoue, et rendre actif un document démonté ferait lire
+   * une zone de dessin qui n'existe plus.
+   */
+  public boundWindowDocument(occupant_id: string, pane_key: string | null): Class_ApplicationData | null {
+    const by_key = this._window_documents[occupant_id]
+    if (!by_key) return null
+    const keys = Object.keys(by_key)
+    if (keys.length === 0) return null
+    const key = (pane_key !== null && pane_key in by_key)
+      ? pane_key
+      : (pane_key === null && keys.length === 1 ? keys[0] : null)
+    if (key === null) return null
+    const doc = by_key[key]
+    return (doc && !doc.disposed) ? doc : null
+  }
+
   /**
    * os#1385 (lot 2, D5) — LE DOCUMENT ACTIF : celui que l'utilisateur édite.
    *
@@ -422,6 +490,14 @@ export class Class_Workspace {
    * application — et l'alternative (un actif mémorisé à la bascule) rouvrirait la porte à la
    * capture. Le fallback `?? main` couvre la feuille supprimée : une fenêtre orpheline ne doit
    * pas rendre l'espace de travail sans actif.
+   *
+   * os#1422 (lot 6) — LA VOIE DES FEUILLES N'EST PLUS LA SEULE, et c'est un ajout, pas une
+   * correction : une fenêtre dont le sujet désigne une feuille continue de se résoudre
+   * exactement comme ci-dessus. Mais toutes les fenêtres ne montrent pas une feuille — le
+   * document d'étoile d'une vignette unitaire n'en est pas une, et n'en sera jamais une (il ne
+   * s'enregistre pas). Une telle fenêtre DÉCLARE son document (`bindWindowDocument`), et cet
+   * annuaire est consulté d'ABORD : sans lui, le document qu'on regarde ne peut pas devenir
+   * l'actif, donc pas d'inspecteur, pas de clavier, pas de Ctrl+Z dessus.
    */
   public get active(): Class_ApplicationData | null {
     const main = this._main
@@ -431,6 +507,12 @@ export class Class_Workspace {
     const mc: Class_MenuConfig | undefined = main.menu_configuration
     if (mc === undefined) return main
     const active_id = mc.main_zone_active_id
+    // os#1422 — l'annuaire AVANT la voie des feuilles (cf. en-tête). Une fenêtre qui n'a rien
+    // déclaré n'y trouve rien, et la résolution par sujet reprend sans rien savoir de tout ceci.
+    if (active_id !== null) {
+      const bound = this.boundWindowDocument(active_id, mc.main_zone_active_pane_key)
+      if (bound) return bound
+    }
     const occupant = active_id === null ? undefined : mc.mainZoneOccupantById(active_id)
     const sheet = occupant ? mainZoneSubjectSheet(occupant.subject) : ''
     if (sheet === '' || sheet === main.current_sheet_id) return main

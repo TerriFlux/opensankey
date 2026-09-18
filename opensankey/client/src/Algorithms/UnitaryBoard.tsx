@@ -4,9 +4,27 @@ import {
 } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_DataTagGroup } from '../types/TagGroup'
+import type { Class_NodeElement } from '../Elements/Node'
 
 /**
- * Pose styles, échelle et disposition du board unitaire autour d'UN nœud central.
+ * os#1422 — CE FICHIER DIT DEUX CHOSES, ET ELLES SONT MAINTENANT NOMMÉES.
+ *
+ * `applyUnitaryBoardStyles` pose l'HABILLAGE du board unitaire (styles centre /
+ * entrée / sortie / flux, capsules, marges, neutralisation du stock) ;
+ * `layoutUnitaryBoard` pose sa DISPOSITION (légende, échelle, disposition auto,
+ * ordre des flux E/S, mode absolu, ancre). `updateUnitaryStyles` appelle les deux
+ * dans cet ordre et reste le point d'entrée du board : son appelant
+ * (`opensankey-plus/components/UnitaryBoard.tsx`, `buildUnitaryDrawingArea`) ne
+ * voit aucune différence.
+ *
+ * POURQUOI LES SÉPARER : l'ÉTOILE VIVANTE (os#1422, `Representations/star/`) est
+ * un vrai Sankey construit avec le STYLE PAR DÉFAUT DU DIAGRAMME — c'est la
+ * demande. Elle veut la disposition unitaire et rien d'autre : elle n'appelle que
+ * la seconde moitié.
+ */
+
+/**
+ * Le nœud central d'un board unitaire, ou `undefined` s'il n'y en a pas.
  *
  * os#1382 (U5) — LE CENTRE EST DÉSORMAIS DONNÉ, plus deviné. Auparavant on le
  * dérivait des view tags `unitary` / `product_unitary` / `sector_unitary` que le
@@ -15,34 +33,46 @@ import { Class_DataTagGroup } from '../types/TagGroup'
  * centre dans sa section racine `process`. Deux sources, dans cet ordre :
  *   1. `center_node_id`, quand l'appelant sait de quel nœud il parle ;
  *   2. `drawing_area.sankey.unitary_process.central_node_id`, posé par l'extraction.
- * Sans ni l'un ni l'autre — ou si l'id ne désigne aucun nœud — on ne touche à rien.
+ * Sans ni l'un ni l'autre — ou si l'id ne désigne aucun nœud — il n'y a pas de board.
  */
-export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node_id?: string) => {
+export const resolveUnitaryCenterNode = (
+  drawing_area: Class_DrawingArea,
+  center_node_id?: string
+): Class_NodeElement | undefined => {
   const resolved_center_id = center_node_id ?? drawing_area.sankey.unitary_process?.central_node_id
-  const center_node = resolved_center_id !== undefined
+  return resolved_center_id !== undefined
     ? drawing_area.sankey.nodes_dict[resolved_center_id]
     : undefined
+}
+
+/**
+ * Pose styles, échelle et disposition du board unitaire autour d'UN nœud central.
+ */
+export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node_id?: string) => {
+  const center_node = resolveUnitaryCenterNode(drawing_area, center_node_id)
 
   // IMPORTANT : ne poser bypass_redraws qu'APRÈS ce garde. Sinon, pour un diagramme
   // sans nœud central unitaire, on return early en laissant bypass_redraws=true →
   // tous les draw()/recenter() suivants deviennent no-op (positions calculées mais
   // pas rendues : « il faut re-sélectionner pour voir »).
   if (center_node === undefined) return
-  const center_nodes = [center_node]
   drawing_area.bypass_redraws = true
 
-  // Mémoriser le nœud central : areaAutoFit (scopé is_unitary) cale ce nœud au centre
-  // de la fenêtre plutôt que la bbox, pour qu'il reste au même endroit d'un focus à
-  // l'autre (l'étoile est asymétrique → centrer la bbox ferait sauter le central).
-  drawing_area.unitary_center_node_id = center_nodes[0].id
+  applyUnitaryBoardStyles(drawing_area, center_node)
+  layoutUnitaryBoard(drawing_area, center_node)
+}
 
-  // Le repositionnement de la légende fait partie du layout du board unitaire :
-  // on ne le fait QUE quand des nœuds unitaires sont actifs. Le faire avant ce
-  // garde écrasait la position de la légende sur tout diagramme normal à chaque
-  // appel (ex. changement de niveau d'agrégation), la collant à gauche.
-  drawing_area.legend.position_x = 50
-  drawing_area.legend.position_y = 250
-  drawing_area.legend.stick_to_drawing = false
+/**
+ * MOITIÉ HABILLAGE — les styles unitaires posés sur les éléments du board.
+ *
+ * L'ÉTOILE VIVANTE NE L'APPELLE PAS : elle porte le style par défaut du diagramme
+ * dont elle montre le voisinage (demande de Julien, cf. `buildStarDocument`).
+ */
+export const applyUnitaryBoardStyles = (
+  drawing_area: Class_DrawingArea,
+  center_node: Class_NodeElement
+) => {
+  const center_nodes = [center_node]
   const node_type = drawing_area.sankey.node_taggs_dict['type de noeud']
   const productTag = node_type?.tags_dict['produit']
   const _sectorTag = node_type?.tags_dict['secteur']
@@ -93,27 +123,6 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node
     })
   })
 
-  const unit_taggs = drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-  if (unit_taggs.length > 0) {
-    const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
-    // Échelle par data tag = max de la valeur des nœuds centraux SOUS ce tag (data_value
-    // dépend du tag sélectionné). On garde l'invariant « un seul tag sélectionné » en
-    // (dé)sélectionnant au fil de l'itération — O(T) au lieu de l'ancienne double boucle
-    // O(T²) (qui ré-désélectionnait tous les tags à chaque itération).
-    unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
-    unit_taggs[0].tags_list.forEach(tag => {
-      tag.setSelected()
-      let linksMaxValue = 0
-      center_nodes.forEach(n => linksMaxValue = Math.max(linksMaxValue, n.data_value))
-      tag.scale = (linksMaxValue + 1) / 1.5
-      tag.setUnSelected()
-    })
-    selectedTag.setSelected()
-  } else {
-    let max_value = 0
-    center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
-    drawing_area.scale = max_value / 1.5
-  }
   // Appliquer formes et marges AVANT computeAutoSankey : elles modifient la HAUTEUR
   // des nœuds (capsule vs rect + marges), dont dépendent le placement vertical
   // symétrique et l'ordre des flux E/S. Si on les changeait après, les positions
@@ -138,6 +147,56 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node
         n.shape_margin_bottom = 20
       }
     })
+}
+
+/**
+ * MOITIÉ DISPOSITION — légende, échelle, disposition auto, ordre des flux E/S,
+ * mode absolu, ancre. C'est la seule moitié que l'ÉTOILE VIVANTE appelle.
+ *
+ * L'échelle était calculée AVANT les formes et les marges dans l'ancienne fonction
+ * unique ; elle est ici calculée après. C'est sans effet : `data_value` est une
+ * somme de valeurs de flux, elle ne lit ni la forme, ni les marges, ni le stock.
+ */
+export const layoutUnitaryBoard = (
+  drawing_area: Class_DrawingArea,
+  center_node: Class_NodeElement
+) => {
+  const center_nodes = [center_node]
+
+  // Mémoriser le nœud central : areaAutoFit (scopé is_unitary) cale ce nœud au centre
+  // de la fenêtre plutôt que la bbox, pour qu'il reste au même endroit d'un focus à
+  // l'autre (l'étoile est asymétrique → centrer la bbox ferait sauter le central).
+  drawing_area.unitary_center_node_id = center_nodes[0].id
+
+  // Le repositionnement de la légende fait partie du layout du board unitaire :
+  // on ne le fait QUE quand des nœuds unitaires sont actifs. Le faire avant le
+  // garde du centre écrasait la position de la légende sur tout diagramme normal à
+  // chaque appel (ex. changement de niveau d'agrégation), la collant à gauche.
+  drawing_area.legend.position_x = 50
+  drawing_area.legend.position_y = 250
+  drawing_area.legend.stick_to_drawing = false
+
+  const unit_taggs = drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  if (unit_taggs.length > 0) {
+    const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
+    // Échelle par data tag = max de la valeur des nœuds centraux SOUS ce tag (data_value
+    // dépend du tag sélectionné). On garde l'invariant « un seul tag sélectionné » en
+    // (dé)sélectionnant au fil de l'itération — O(T) au lieu de l'ancienne double boucle
+    // O(T²) (qui ré-désélectionnait tous les tags à chaque itération).
+    unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
+    unit_taggs[0].tags_list.forEach(tag => {
+      tag.setSelected()
+      let linksMaxValue = 0
+      center_nodes.forEach(n => linksMaxValue = Math.max(linksMaxValue, n.data_value))
+      tag.scale = (linksMaxValue + 1) / 1.5
+      tag.setUnSelected()
+    })
+    selectedTag.setSelected()
+  } else {
+    let max_value = 0
+    center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
+    drawing_area.scale = max_value / 1.5
+  }
   // Reproduire le pipeline du bouton « disposition auto » (computeAutoSankeyWithToast),
   // qui sort un résultat centré et sans croisement — sans le toast ni l'undo :
   //   1. computeAutoSankey (positions) avec les espacements par défaut
