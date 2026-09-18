@@ -64,7 +64,9 @@ describe('SA#541 — étiquettes de nœuds', () => {
 
     expect(collecte.shape_opacity).toBe(0.8)
     expect(effectiveOpacity(collecte)).toBe(0.8)
-    expect(laiteries.shape_opacity).toBe(0.3)
+    // SA#553 - nœud sans étiquette du groupe : l'opacité que règle « Robuste » y prend sa valeur
+    // par défaut (étiquette générée « Sans fiabilité »), et non plus sa mise en forme locale
+    expect(laiteries.shape_opacity).toBe(0.85)
     // La provenance nomme l'étiquette
     expect(collecte.tagStyleLayerImposing('shape_opacity')?.owner).toBe(robuste)
     // Un paramètre que le style ne définit pas reste celui de l'élément
@@ -132,7 +134,9 @@ describe('SA#541 — étiquettes de nœuds', () => {
     expect(collecte.shape_border_color).toBe('#123456')
     // Le cadenas que lit l'inspecteur n'est pas allumé pour autant
     expect(collecte.shape_border_color_sustainable).toBe(false)
-    expect(laiteries.keepsOwnColor('shape_border_color')).toBe(false)
+    // SA#553 - le nœud sans étiquette du groupe prend la couleur de bordure par défaut, imposée elle aussi
+    expect(laiteries.keepsOwnColor('shape_border_color')).toBe(true)
+    expect(laiteries.shape_border_color_sustainable).toBe(false)
   })
 
   it('libellés : une couleur de libellé imposée tient au dessin, le cadenas de l inspecteur reste éteint', () => {
@@ -305,7 +309,9 @@ describe('SA#541 — format : style_id écrit seulement quand il est posé', () 
     robuste.style_id = style.id
     fiab.style_id = style.id
     const json = fiab.toJSON()
-    expect(json['style_id']).toBe(style.id)
+    // SA#553 - le style des elements sans etiquette est celui de l'etiquette generee du groupe
+    expect(json['style_id']).toBeUndefined()
+    expect((json['untagged_tag'] as { [_: string]: unknown })['style_id']).toBe(style.id)
     expect(robuste.toJSON()['style_id']).toBe(style.id)
     expect(fiable.toJSON()['style_id']).toBeUndefined()
 

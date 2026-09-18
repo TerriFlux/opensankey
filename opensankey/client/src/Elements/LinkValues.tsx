@@ -866,11 +866,21 @@ export class Class_ElementValue {
     // sur un flux ventilé, par une de ses valeurs coordonnées. La légende et le
     // filtrage comptent l'usage via ce test : sans les tagged_values, un flux
     // fusionné (ex. import e!Sankey) ferait disparaître ses tags de la légende.
+    // SA#553 - etiquette generee : portee quand la valeur ne porte aucune autre etiquette du groupe
+    if (tag?.is_untagged) return !this.carriesTagOfGroup(tag.group.id)
     return this._flux_tags.includes(tag) ||
       this._tagged_values.some(tv => tv.tags_list.includes(tag))
   }
 
+  /** SA#553 - la valeur porte-t-elle une etiquette (ordinaire) du groupe, sur le flux ou une valeur coordonnee ? */
+  public carriesTagOfGroup(group_id: string): boolean {
+    return (this._taggs_dict[group_id]?.length ?? 0) > 0 ||
+      this._tagged_values.some(tv => tv.tags_list.some(tag => tag.group.id === group_id))
+  }
+
   public addTag(tag: Class_Tag) {
+    // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
+    if (tag?.is_untagged) return
     if (!this.hasGivenTag(tag)) {
       this._flux_tags.push(tag)
       this.addTagToGroupTagDict(tag)
@@ -1107,6 +1117,8 @@ export class Class_ElementTaggedValue {
    * groupe — un tag existant du même groupe est remplacé.
    */
   public addTag(tag: Class_Tag) {
+    // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
+    if (tag?.is_untagged) return
     if (!this.hasGivenTag(tag)) {
       this._tags
         .filter(t => t.group === tag.group)
