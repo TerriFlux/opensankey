@@ -628,12 +628,17 @@ function hoverPredicate(
   }
 }
 
-// SA#545 — cible de survol d'un item : son étiquette ou son entrée « sans étiquette ».
-// SA#551 — plus les TITRES de groupe : seule une étiquette met ses éléments en surbrillance
-// (arbitrage d'Alexandre, 2026-09-18 — un titre de groupe ouvre désormais une pop-up).
-function hoverTargetOf(item: Type_LegendItem): Type_LegendHoverTarget | undefined {
-  if (item.tag_group_id === undefined) return undefined
-  return { tag_group_id: item.tag_group_id, tag_id: item.tag_id, untagged: item.untagged }
+// SA#545 — cible de survol d'un item : son étiquette, son entrée « sans étiquette », ou, pour un
+// titre de groupe, le groupe de son bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
+function hoverTargetOf(item: Type_LegendItem, block_groups: Map<string, string>): Type_LegendHoverTarget | undefined {
+  if (item.tag_group_id !== undefined) {
+    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id, untagged: item.untagged }
+  }
+  if (item.own_line && item.block_id !== undefined) {
+    const tag_group_id = block_groups.get(item.block_id)
+    return tag_group_id === undefined ? undefined : { tag_group_id }
+  }
+  return undefined
 }
 
 // Survol d'une zone de la légende : atténue tous les éléments qu'elle ne désigne
@@ -915,6 +920,14 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     }
 
 
+    // SA#545 — groupe de chaque bloc, relevé sur ses entrées : cible du survol de son titre
+    const block_groups = new Map<string, string>()
+    items.forEach(i => {
+      if (i.block_id !== undefined && i.tag_group_id !== undefined && !block_groups.has(i.block_id)) {
+        block_groups.set(i.block_id, i.tag_group_id)
+      }
+    })
+
     // Zones de contenu : réutilisation par id
     items.forEach(item => {
       const pos = positions.get(item.id)
@@ -1010,7 +1023,10 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       const is_dimension_choice = item.dimension_choice === true
       zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice || group_titles.has(item.id))
       if (isLegendDataTagZoneId(item.id)) decorateLegendDimensionZone(zone, is_dimension_choice)
-      const hover_target = hoverTargetOf(item)
+      // SA#551 — un TITRE de groupe ne met plus rien en surbrillance : il ouvre la pop-up du groupe,
+      // et seule une étiquette désigne des éléments (arbitrage d'Alexandre, 2026-09-18). Neutralisé
+      // ici plutôt que dans hoverTargetOf, que le ticket voisin #553 retouche.
+      const hover_target = group_titles.has(item.id) ? undefined : hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
       // créée après elle (donc dessinée par-dessus), attachée au même cadre et au même bloc.
