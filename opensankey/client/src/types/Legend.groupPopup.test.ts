@@ -205,6 +205,38 @@ describe('SA#551 — la vue ne montre que son groupe', () => {
   })
 })
 
+describe('SA#551 — la vue n\'affiche QUE la mise en forme de son groupe', () => {
+  it('un groupe qui colore par les couleurs historiques de ses étiquettes ne s\'applique pas dans la vue', () => {
+    const { app, sankey, b, source } = makeLegend()
+    // Groupe à l'ancienne : pas de style, la couleur vient de l'étiquette (cf. « Forme de produit
+    // laitier » du pilote Lait). Il colore B tant qu'il est allumé.
+    const forme = sankey.addNodeTagGroup('forme', 'Forme', false)
+    const cru = forme.addTag('Cru', 'cru') as Class_Tag
+    cru.color = '#00ff00'
+    b.addTag(cru)
+    forme.use_colors = true
+    app.drawing_area.draw()
+    expect(b.getShapeColorToUse()).toBe('#00ff00')
+
+    const colors_during: string[] = []
+    const da = app.drawing_area as unknown as { contentBounds: () => unknown }
+    const real_bounds = da.contentBounds.bind(app.drawing_area)
+    da.contentBounds = () => {
+      colors_during.push(b.getShapeColorToUse())
+      return real_bounds()
+    }
+    renderLegendTagGroupView(app, source, document.createElement('div'))
+    da.contentBounds = real_bounds
+
+    // Pendant la copie, « Forme » ne colore plus rien : B garde sa couleur propre
+    expect(colors_during).toHaveLength(1)
+    expect(colors_during[0]).not.toBe('#00ff00')
+    // Après : tout est rétabli
+    expect(forme.use_colors).toBe(true)
+    expect(b.getShapeColorToUse()).toBe('#00ff00')
+  })
+})
+
 describe('SA#551 — survol', () => {
   const hover = (host: HTMLElement, app: Class_ApplicationData, id: string, type: 'mouseover' | 'mouseout') =>
     zoneG(host, app, id).dispatchEvent(new MouseEvent(type, { bubbles: true }))

@@ -842,11 +842,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
-    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors && !tagg.uses_tag_styles).length == 0) {
+    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => this.sankey.tagGroupAppliesFormatting(tagg) && !tagg.uses_tag_styles).length == 0) {
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
-      const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
-      const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+      const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && this.sankey.tagGroupAppliesFormatting(tag.group))
+      const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && this.sankey.tagGroupAppliesFormatting(tag.group))
 
       // 1. Common color tag between source and target → priority
       // (#1208) Only use the common-tag shortcut when each side has exactly one
@@ -894,11 +894,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Default color
     let shape_color = this.shape_color
     // Test if tagg of flow or data are activated, if so use color from tag associated to link
-    const dataTagColorActivated = this.selected_data_tags_list.filter(tag => tag.group.use_colors)
+    const dataTagColorActivated = this.selected_data_tags_list.filter(tag => this.sankey.tagGroupAppliesFormatting(tag.group))
     // Do we apply color of flux tags ?
     // SA#541 — un groupe qui fonctionne par styles ne colore plus par la couleur de ses étiquettes
     const flux_taggs_activated = this.flux_taggs_list
-      .filter(tagg => tagg.use_colors && !tagg.uses_tag_styles)
+      .filter(tagg => this.sankey.tagGroupAppliesFormatting(tagg) && !tagg.uses_tag_styles)
     if (flux_taggs_activated.length > 0) {
       const tagg_for_colormap = flux_taggs_activated[0]
       const tags_for_colormap = this.flux_tags_list
@@ -1074,7 +1074,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     const color_for = (tv: Class_ElementTaggedValue): string | null => {
       const colored_tag = tv.tags_list
-        .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tv.tags_list[0]
+        .find(tag => this.sankey.tagGroupAppliesFormatting(tag.group as Class_TagGroup)) ?? tv.tags_list[0]
       return colored_tag?.color ?? null
     }
     const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
