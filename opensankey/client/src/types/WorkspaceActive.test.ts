@@ -346,6 +346,32 @@ describe('os#1385 lot 2 — une seule barre dadresse, ecrite par le seul actif',
     expect(ws.url_sync_enabled).toBe(true)
   })
 
+  // os#1428 — TANT QUE RIEN N ARME, L ADRESSE NE RECOIT RIEN, MEME DE L ACTIF.
+  //
+  // C est la propriete sur laquelle repose la garde posee dans App.tsx : l editeur n arme plus
+  // la synchronisation quand l adresse ne nomme pas le document (ni page publiee, ni ?url=).
+  // Cette garde ne vaut que si le desarmement est un silence COMPLET et non un simple defaut
+  // initial que le premier dessin leverait. Le test d a cote montre le cas arme ; celui-ci
+  // montre l autre moitie, qui n etait pas couverte.
+  it('sans armement ladresse ne recoit rien, meme du document actif', () => {
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    expect(ws.active).toBe(main)
+    const replaceState = jest.spyOn(window.history, 'replaceState').mockImplementation(() => undefined)
+
+    main.syncUrlState()
+    expect(replaceState).not.toHaveBeenCalled()
+
+    // Et le dessin ne change rien a ce silence : c est bien l armement qui commande, pas l etat.
+    main.drawing_area.sankey.addNewNode('n_a', 'Chene')
+    main.syncUrlState()
+    expect(replaceState).not.toHaveBeenCalled()
+
+    ws.enableUrlStateSync()
+    main.syncUrlState()
+    expect(replaceState).toHaveBeenCalled()
+  })
+
   it('la feuille ouverte voyage dans ladresse, sauf quand cest la premiere', () => {
     const { main } = buildTwoSheetWorkspace()
     // La feuille courante est la SECONDE (createNewSheet bascule dessus).
