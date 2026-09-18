@@ -26,6 +26,7 @@ import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import { figureUnitOf } from './figureUnit'
+import { figureTitleOf } from '../Charts/figureChartStyle'
 import { aggregate, disaggregate } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
@@ -235,6 +236,7 @@ export const drawSunburstRepresentation = (
 
   return drawSunburstChart(container, tree, {
     style: readSunburstStyle(ctx.options ?? {}),
+    title: figureTitleOf(ctx.options ?? {}),
     // L'UNITÉ DU DIAGRAMME, lue sur un flux représentatif comme partout ailleurs
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.

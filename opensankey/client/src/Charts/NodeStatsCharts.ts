@@ -27,7 +27,8 @@ import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
 import type { Type_SunburstTree } from './SunburstHierarchy'
 // os#1425 — la mise en forme lue sur le catalogue des attributs de figure.
 import { BARS_STYLE_DEFAULTS, DONUT_STYLE_DEFAULTS } from './figureChartStyle'
-import type { Type_FigureChartStyle } from './figureChartStyle'
+import type { Type_FigureChartStyle, Type_FigureTitle } from './figureChartStyle'
+import { mountFigureTitle } from './figureTitle'
 
 export interface Type_StatSlice {
   id: string
@@ -63,6 +64,9 @@ export interface Type_ChartOptions {
   // os#1425 — LA MISE EN FORME, réglée par l'auteur sur les clés du catalogue (légende, parts,
   // centre, étiquettes, échelle, info-bulle, mentions). Absente : les défauts du tracé d'hier.
   style?: Type_FigureChartStyle
+  // Le titre de la figure (arbitrage du 18/09), et ce qu'il écrit quand son texte est vide.
+  title?: Type_FigureTitle
+  title_fallback?: string
 }
 
 /** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
@@ -167,10 +171,11 @@ export const countLifted = (bar_pixels: number[], floor_px: number = MIN_VISIBLE
   bar_pixels.filter(px => visibilityLift(px, floor_px) > 1).length
 
 // Vide le conteneur et renvoie sa sélection d3 + ses dimensions utiles.
-const prepareContainer = (container: HTMLElement) => {
-  const sel = d3.select(container)
-  sel.selectAll('*').remove()
-  return { sel, width: container.clientWidth, height: container.clientHeight }
+/** Vide le conteneur, pose le titre s'il y en a un, et rend où dessiner et sur quelle place. */
+const prepareContainer = (container: HTMLElement, opts: Type_ChartOptions = {}) => {
+  d3.select(container).selectAll('*').remove()
+  const host = mountFigureTitle(container, opts.title, opts.title_fallback ?? '')
+  return { sel: d3.select(host), width: host.clientWidth, height: host.clientHeight }
 }
 
 const drawEmptyLabel = (
@@ -203,7 +208,7 @@ export const drawDonutChart = (
 ) => {
   const st = opts.style ?? DONUT_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
-  const { sel, width, height } = prepareContainer(container)
+  const { sel, width, height } = prepareContainer(container, opts)
   const total = slices.reduce((s, d) => s + d.value, 0)
   if (slices.length === 0 || total <= 0 || width < 80 || height < 80) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
@@ -358,7 +363,7 @@ export const drawBarChart = (
 ) => {
   const st = opts.style ?? BARS_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
-  const { sel, width, height } = prepareContainer(container)
+  const { sel, width, height } = prepareContainer(container, opts)
   // L'ordre des barres (`parts_order`) ; 'model', le défaut, garde celui de l'analyse.
   const slices = orderParts(raw_slices, st.parts_order)
   const max_value = slices.reduce((m, d) => Math.max(m, d.value), 0)
@@ -488,7 +493,7 @@ export const drawStackedBarChart = (
 ) => {
   const st = opts.style ?? BARS_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
-  const { sel, width, height } = prepareContainer(container)
+  const { sel, width, height } = prepareContainer(container, opts)
   const series_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
   const max_total = series.reduce((m, s) => Math.max(m, series_total(s)), 0)
   if (series.length === 0 || max_total <= 0 || width < 80 || height < 80) {
@@ -644,7 +649,7 @@ export const drawGroupedBarChart = (
 ) => {
   const st = opts.style ?? BARS_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
-  const { sel, width, height } = prepareContainer(container)
+  const { sel, width, height } = prepareContainer(container, opts)
   const bar_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
 
   // Séries retenues : les MAX_GROUPED_SERIES plus grosses (par total sur toutes les

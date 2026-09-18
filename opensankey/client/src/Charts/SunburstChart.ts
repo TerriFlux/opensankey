@@ -21,6 +21,8 @@
 
 import * as d3 from '../d3Modules'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
+import type { Type_FigureTitle } from './figureChartStyle'
+import { mountFigureTitle } from './figureTitle'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -128,6 +130,8 @@ export interface Type_SunburstChartOptions {
   style?: Partial<Type_SunburstStyle>
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
+  /** Le titre de la figure (arbitrage du 18/09) ; vide, le nom de la racine. */
+  title?: Type_FigureTitle
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
@@ -545,10 +549,15 @@ export const drawSunburstChart = (
   let focus_id: string | null = null
 
   const render = () => {
-    const sel = d3.select(container)
-    sel.selectAll('*').remove()
-    const width = container.clientWidth
-    const height = container.clientHeight
+    d3.select(container).selectAll('*').remove()
+    // Le titre prend sa ligne, le disque et la légende se partagent le reste (cf. figureTitle).
+    const host = mountFigureTitle(
+      container, opts.title,
+      tree.roots.length === 1 ? tree.roots[0].label : (opts.scope_label?.(tree.roots.length) ?? '')
+    )
+    const sel = d3.select(host)
+    const width = host.clientWidth
+    const height = host.clientHeight
 
     const focused = focus_id ? findSunburstNode(tree.roots, focus_id) : null
     // Le centre est un nœud (périmètre unitaire ou zoom), les anneaux sa décomposition.
