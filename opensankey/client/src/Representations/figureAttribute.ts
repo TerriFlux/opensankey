@@ -30,7 +30,9 @@
 // yeux du contrôle `check:i18n`, qui tourne sur toute branche. Un libellé écrit en `{en, fr}`
 // seul fait rougir le pipeline — et, s'il passait, partirait en production en 2 langues sur 7.
 
-import type { Type_AttributeSort, Type_FigureAttributeConfig } from './Figure'
+import type {
+  Type_AttributeSort, Type_FigureAttributeConfig, Type_FigureControl
+} from './Figure'
 
 /** Un libellé dans les sept langues du dépôt. Aucune n'est optionnelle (cf. en-tête). */
 export type Labels7 = {
@@ -54,7 +56,11 @@ export const figureAttribute = <T>(
   default_value: T,
   sort: Type_AttributeSort,
   labels: Labels7,
-  tooltips?: Labels7
+  tooltips?: Labels7,
+  // os#1425 — COMMENT le réglage se règle. Absent : déduit du type de la valeur d'usine (booléen →
+  // case, nombre → champ, texte → champ). On ne l'écrit que pour ce qu'aucun type ne dit — une
+  // liste de choix, une couleur, ou l'absence d'interface.
+  ui?: Type_FigureControl
 ): Type_FigureAttributeConfig => ({
   default: default_value,
   // Le patron des éléments attend une fabrique : ici elle ne fait que porter le type du défaut,
@@ -65,5 +71,9 @@ export const figureAttribute = <T>(
   tooltips: tooltips ?? labels,
   // Rien à redessiner clé par clé : une figure se redessine entière (cf. `redrawMounted`).
   actions: undefined,
-  sort
+  sort,
+  ui
 })
+
+/** Un choix de liste, libellés des sept langues — le patron de `Type_FigureChoice`. */
+export const figureChoice = (value: string | number, labels: Labels7) => ({ value, labels })
