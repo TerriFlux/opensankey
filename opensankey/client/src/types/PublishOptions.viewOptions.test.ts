@@ -101,6 +101,42 @@ describe('sa#412 getPublishOptions — view_label en liste', () => {
   })
 })
 
+// os#1385 (lot 6) — `sheet` : la FEUILLE sur laquelle la page s'ouvre, par id ou par nom
+// d'onglet, exactement comme `view` pour les vues. Chaîne non vide, sinon null (une option qui
+// désigne quelque chose ne désigne rien quand elle est vide) ; l'application, elle, bascule
+// AVANT d'ouvrir une vue (cf. types/documentTypes.test.ts).
+describe('os#1385 getPublishOptions — sheet', () => {
+  afterEach(() => {
+    delete window.sankey
+  })
+
+  it('sans loption : null, la page souvre sur la feuille courante du fichier', () => {
+    expect(getPublishOptions().sheet).toBeNull()
+    window.sankey = { publish: true }
+    expect(getPublishOptions().sheet).toBeNull()
+  })
+
+  it('option posee : relue telle quelle (id ou nom donglet)', () => {
+    window.sankey = { publish: true, sheet: 'Bilan 2019' }
+    expect(getPublishOptions().sheet).toBe('Bilan 2019')
+    window.sankey = { publish: true, sheet: 'sheet_a1b2c3' }
+    expect(getPublishOptions().sheet).toBe('sheet_a1b2c3')
+  })
+
+  it('chaine vide ou valeur invalide : ignoree (null)', () => {
+    window.sankey = { publish: true, sheet: '   ' }
+    expect(getPublishOptions().sheet).toBeNull()
+    window.sankey = { publish: true, sheet: 42 as never }
+    expect(getPublishOptions().sheet).toBeNull()
+  })
+
+  it('applyViewerOptions : la prop viewer sheet arrive dans window.sankey', () => {
+    applyViewerOptions({ sheet: 'Bilan 2019' })
+    expect(window.sankey?.sheet).toBe('Bilan 2019')
+    expect(getPublishOptions().sheet).toBe('Bilan 2019')
+  })
+})
+
 describe('sa#398 diagramsListEntryFile — fichier d\'une entrée de diagrams_list', () => {
   it('chaîne historique : la chaîne elle-même', () => {
     expect(diagramsListEntryFile('FiliereBois')).toBe('FiliereBois')

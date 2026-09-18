@@ -175,6 +175,14 @@ export interface SankeyGlobals {
   // vues sont des étiquettes de SÉLECTION posées par l'auteur, PAS les view tags (qui génèrent
   // des vues — cf. view_tag_selection). Options additives : id/nom ou label inconnu => ignoré
   // (warn), affichage inchangé.
+  // os#1385 (lot 6, D8/D10) — LA FEUILLE sur laquelle la page s'ouvre, par id OU par nom
+  // d'onglet, exactement comme `view` pour les vues. Un document à plusieurs feuilles publie un
+  // fichier entier ; sans cette option, la page s'ouvre toujours sur la feuille qui était
+  // courante à la publication, et un emplacement de classeur de site (`WorkbookNode.sheet`) ne
+  // pourrait pas montrer la deuxième. Additive et tolérante : feuille inconnue => option ignorée
+  // (warn), la page s'ouvre comme aujourd'hui. Une feuille sans canevas se refuse, comme partout
+  // ailleurs (règle de la racine : la feuille courante porte un Sankey).
+  sheet?: string
   view?: string        // ouvre sur cette vue (id OU nom, comme le sélecteur de vues)
   // Restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la
   // première du groupe. sa#412 — accepte aussi une LISTE de labels : le filtre actif est posé
@@ -241,6 +249,8 @@ export interface PublishOptions {
   scale_adapted_reference: Type_ScaleAdaptedReference | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
+  // os#1385 (lot 6) — feuille d'ouverture (id OU nom) ; null = la feuille courante du fichier.
+  sheet: string | null
   view: string | null
   view_label: string | null
   // sa#412 — liste complète des labels de page déclarés par `view_label` (normalisée : une
@@ -272,6 +282,10 @@ declare global {
 
 const bool = (v: unknown, def: boolean): boolean => (typeof v === 'boolean' ? v : def)
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
+// os#1385 (lot 6) — chaîne NON VIDE : une option qui désigne quelque chose (une feuille) ne
+// désigne rien quand elle est vide, et « rien » se dit en omettant la clé.
+const strFilled = (v: unknown): string | null =>
+  (typeof v === 'string' && v.trim() !== '') ? v : null
 // sa#373 — nombre positif ou nul (0 = valeur légitime pour le plancher d'épaisseur).
 // Une chaîne numérique est acceptée : la page publiée est écrite à la main aussi souvent
 // qu'elle est générée.
@@ -488,6 +502,9 @@ export const getPublishOptions = (): PublishOptions => {
     scale_adapted_reference: scaleAdaptedRef(s.scale_adapted_reference),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
+    // os#1385 (lot 6) — la feuille est une option de PAGE, jamais par diagramme : `diagrams_list`
+    // désigne des FICHIERS, et chacun apporte les feuilles qu'il contient.
+    sheet: strFilled(s.sheet),
     view: view_value,
     view_label: view_label_value,
     view_labels: page_view_labels,
@@ -563,6 +580,7 @@ export type ViewerSankeyOptions = {
   scale_adapted_reference?: Type_ScaleAdaptedReference
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
+  sheet?: string       // os#1385 lot 6 : ouvre sur cette FEUILLE (id OU nom d'onglet)
   view?: string        // sa#397 : ouvre sur cette vue (id OU nom)
   // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396).
   // sa#412 : une LISTE rend en plus le sélecteur de label visible (cf. SankeyGlobals).
@@ -592,7 +610,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
-    'view', 'view_label', 'representations',
+    'sheet', 'view', 'view_label', 'representations',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {
