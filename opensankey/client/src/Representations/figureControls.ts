@@ -88,6 +88,10 @@ export const controlKindOf = (
  */
 export const FIGURE_FAMILY_PREFIXES: { family: string, prefix: string }[] = [
   { family: 'shape', prefix: 'shape_' },
+  // Les PARTS d'un tout et l'ÉCHELLE d'une figure sont de la forme : c'est l'onglet Forme qui
+  // dit comment un secteur se colore, s'ordonne et se replie (cf. figureCatalogue).
+  { family: 'shape', prefix: 'parts_' },
+  { family: 'shape', prefix: 'scale_' },
   { family: 'name_label', prefix: 'name_label_' },
   { family: 'value_label', prefix: 'value_label_' }
 ]
