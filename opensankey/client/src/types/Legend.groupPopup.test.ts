@@ -206,8 +206,16 @@ describe('SA#551 — la vue ne montre que son groupe', () => {
 })
 
 describe('SA#551 — la vue n\'affiche QUE la mise en forme de son groupe', () => {
-  it('un groupe qui colore par les couleurs historiques de ses étiquettes ne s\'applique pas dans la vue', () => {
-    const { app, sankey, b, source, type, fiab } = makeLegend()
+  it('un groupe de NŒUDS qui colore à l\'ancienne ne s\'applique pas dans la vue d\'un groupe de FLUX', () => {
+    const { app, sankey, b, type, fiab } = makeLegend()
+    // Groupe de FLUX montré (le pilote Lait montre « Fiabilité des données », un groupe de flux) :
+    // les NŒUDS doivent perdre eux aussi la mise en forme des autres groupes.
+    const flux_group = sankey.addFluxTagGroup('flux_fiab', 'Fiabilite du flux', false)
+    const sur = flux_group.addTag('Sure', 'sure') as Class_Tag
+    const flux_style = sankey.addNewDefaultElementStyle()
+    ;(flux_style as unknown as { shape_opacity: number }).shape_opacity = 0.5
+    sur.style_id = flux_style.id
+    flux_group.use_colors = true
     // Les autres groupes à styles sont fermés : depuis SA#553, leur étiquette générée
     // « Sans [groupe] » imposerait ses valeurs par défaut à B, qui ne porte aucune de leurs
     // étiquettes — ce n'est pas ce qu'on mesure ici.
@@ -221,24 +229,20 @@ describe('SA#551 — la vue n\'affiche QUE la mise en forme de son groupe', () =
     b.addTag(cru)
     forme.use_colors = true
     app.drawing_area.draw()
-    expect(b.getShapeColorToUse()).toBe('#00ff00')
+    // C'est bien la COULEUR DESSINÉE qu'on mesure : le modèle se recalcule à la demande, il dirait
+    // la bonne couleur même si le nœud n'avait pas été redessiné pour la copie.
+    const drawnColorOfB = () => b.d3_selection?.select('.node_shape').attr('fill')
+    expect(drawnColorOfB()).toBe('#00ff00')
 
-    const colors_during: string[] = []
-    const da = app.drawing_area as unknown as { contentBounds: () => unknown }
-    const real_bounds = da.contentBounds.bind(app.drawing_area)
-    da.contentBounds = () => {
-      colors_during.push(b.getShapeColorToUse())
-      return real_bounds()
-    }
-    renderLegendTagGroupView(app, source, document.createElement('div'))
-    da.contentBounds = real_bounds
+    const container = document.createElement('div')
+    renderLegendTagGroupView(app, flux_group as never, container)
 
-    // Pendant la copie, « Forme » ne colore plus rien : B garde sa couleur propre
-    expect(colors_during).toHaveLength(1)
-    expect(colors_during[0]).not.toBe('#00ff00')
-    // Après : tout est rétabli
+    // La copie ne porte plus la couleur de « Forme » nulle part
+    expect(container.innerHTML).not.toContain('#00ff00')
+    expect(container.querySelector('svg')).not.toBeNull()
+    // Après : tout est rétabli, dessin compris
     expect(forme.use_colors).toBe(true)
-    expect(b.getShapeColorToUse()).toBe('#00ff00')
+    expect(drawnColorOfB()).toBe('#00ff00')
   })
 })
 

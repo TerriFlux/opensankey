@@ -716,16 +716,17 @@ function wireLegendHover(
 }
 
 /**
- * SA#551 — redessine les éléments dont les styles d'étiquette changent avec l'aperçu d'un groupe
- * (`Class_Sankey.setTagStylePreview`, lu par la cascade) : ceux de sa famille, plus les flux pour un
- * groupe de nœuds — leur couleur peut dériver de leurs nœuds. Sert à la VUE d'un groupe, dessinée
- * dans sa pop-up de présentation.
+ * SA#551 — redessine TOUT le dessin pour l'aperçu d'un groupe (`Class_Sankey.setTagStylePreview`, lu
+ * par la cascade et par la coloration historique). Sert à la VUE d'un groupe, dans sa pop-up.
+ *
+ * Nœuds ET flux, quelle que soit la famille du groupe montré : l'aperçu éteint aussi la mise en
+ * forme des AUTRES groupes, y compris celle d'un groupe de nœuds quand c'est un groupe de flux qu'on
+ * montre. Ne redessiner que la famille du groupe laissait les nœuds colorés par « Forme de produit
+ * laitier » dans la vue de « Fiabilité des données » (retour du test en ligne du 2026-09-18).
  */
-export function redrawForTagStylePreview(drawing_area: Class_DrawingArea, group_id: string | undefined) {
+export function redrawForTagStylePreview(drawing_area: Class_DrawingArea, _group_id?: string) {
   const sankey = drawing_area.sankey
-  if (group_id === undefined || sankey.node_taggs_list.some(g => g.id === group_id)) {
-    sankey.nodes_list.forEach(node => node.draw())
-  }
+  sankey.nodes_list.forEach(node => node.draw())
   sankey.links_list.forEach(link => link.draw())
 }
 

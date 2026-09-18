@@ -201,7 +201,9 @@ export const renderLegendTagGroupView = (
   try {
     if (applied) {
       if (!was_switched_on) group.use_colors = true
-      else redrawForTagStylePreview(drawing_area, group.id)
+      // TOUT est redessiné, même quand l'interrupteur vient de le faire pour une partie : l'aperçu
+      // éteint la mise en forme des autres groupes, la leur comprise.
+      redrawForTagStylePreview(drawing_area)
       // La légende suit l'aperçu : elle ne montre plus que ce groupe (retour du test local du
       // 2026-09-18 — la vue doit faire lire CE groupe, pas ceux qui restent développés).
       drawing_area.legend.draw()
@@ -211,7 +213,7 @@ export const renderLegendTagGroupView = (
     if (applied) {
       sankey.setTagStylePreview(undefined)
       if (!was_switched_on) group.use_colors = false
-      else redrawForTagStylePreview(drawing_area, group.id)
+      redrawForTagStylePreview(drawing_area)
       drawing_area.legend.draw()
     }
   }
