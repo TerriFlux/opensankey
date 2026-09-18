@@ -23,7 +23,7 @@ import {
   default_legend_position_y, default_legend_show_constraints,
   default_legend_show_dataTags, default_masked, default_scale_legend_ratio,
   default_scale_legend_unit, default_display_legend_scale,
-  default_info_link_value_void, default_width
+  default_info_link_value_void, default_width, ALL_ATTRIBUTES_CONFIG
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
 import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
@@ -457,8 +457,9 @@ export class Class_LegendConfig {
     const sankey = this._drawing_area.sankey
     const tag_target = this._entry_tags.get(zone_id)
     if (tag_target !== undefined) {
+      // SA#553 — l'étiquette générée se renomme comme les autres (nom saisi)
       const tag = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
-        .find(g => g.id === tag_target.tag_group_id)?.tags_list
+        .find(g => g.id === tag_target.tag_group_id)?.tags_list_with_untagged
         .find(t => t.id === tag_target.tag_id)
       if (tag === undefined) return false
       if (tag.display_name !== value) {
@@ -497,7 +498,8 @@ export class Class_LegendConfig {
     const sankey = drawing_area.sankey
     const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
       .find(g => g.id === target.tag_group_id)
-    const tag = group?.tags_list.find(t => t.id === target.tag_id)
+    // SA#553 — l'étiquette générée se masque comme les autres
+    const tag = group?.tags_list_with_untagged.find(t => t.id === target.tag_id)
     if (group === undefined || tag === undefined) return false
     const apply = (selected: boolean, show_hidden_tags: boolean) => {
       // La surbrillance du survol a atténué les autres éléments : la lever avant que ceux qui
@@ -585,10 +587,11 @@ export class Class_LegendConfig {
 
 // GÉNÉRATION (modèle + DOM) ==========================================================
 
-// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée, et depuis SA#545 le
-// TITRE d'un groupe (les porteurs d'une quelconque de ses étiquettes) et l'entrée « sans
-// étiquette » (les éléments de la famille du groupe qui n'en portent aucune).
-type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string, untagged?: boolean }
+// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée — dont, depuis SA#553,
+// l'étiquette générée « Sans [groupe] », que portent les éléments de la famille du groupe qui n'en
+// portent aucune autre —, et depuis SA#545 le TITRE d'un groupe (les porteurs d'une quelconque de
+// ses étiquettes).
+type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string }
 
 type Type_TagCarrier = { hasGivenTag(tag: Class_Tag): boolean }
 type Type_LegendHoverPredicate = {
@@ -608,31 +611,28 @@ function hoverPredicate(
   if (!group) return undefined
   const tags = group.tags_list as Class_Tag[]
   if (target.tag_id !== undefined) {
-    const tag = tags.find(t => t.id === target.tag_id)
+    const tag = (group.tags_list_with_untagged as Class_Tag[]).find(t => t.id === target.tag_id)
     if (!tag) return undefined
     // SA#549 — étiquette masquée : ses éléments sont invisibles, la surbrillance atténuerait tout
     // le diagramme sans rien désigner. Le survol garde sa définition (#542).
     if (!tag.is_selected) return undefined
-    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band: carried => carried.includes(tag) }
+    // SA#553 — bande d'un flux ventilé : l'étiquette générée désigne les bandes sans étiquette du groupe
+    const is_flux_group = tag.group.id in sankey.flux_taggs_dict
+    const band = tag.is_untagged
+      ? (carried: readonly Class_Tag[]) => is_flux_group && !carried.some(t => t.group === tag.group)
+      : (carried: readonly Class_Tag[]) => carried.includes(tag)
+    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
   const bandCarriesOne = (carried: readonly Class_Tag[]) => carried.some(t => tags.includes(t))
-  if (target.untagged !== true) return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
-  // « Sans étiquette » : seuls les éléments de la famille du groupe peuvent en relever, sinon un
-  // groupe de nœuds désignerait tous les flux (qui ne portent jamais d'étiquette de nœuds).
-  const is_node_group = (sankey.node_taggs_list as unknown[]).includes(group)
-  return {
-    node: n => is_node_group && !carriesOne(n),
-    link: l => !is_node_group && !carriesOne(l),
-    band: carried => !is_node_group && !bandCarriesOne(carried)
-  }
+  return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
 }
 
-// SA#545 — cible de survol d'un item : son étiquette, son entrée « sans étiquette », ou, pour un
-// titre de groupe, le groupe de son bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
+// SA#545 — cible de survol d'un item : son étiquette, ou, pour un titre de groupe, le groupe de son
+// bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
 function hoverTargetOf(item: Type_LegendItem, block_groups: Map<string, string>): Type_LegendHoverTarget | undefined {
   if (item.tag_group_id !== undefined) {
-    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id, untagged: item.untagged }
+    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
   }
   if (item.own_line && item.block_id !== undefined) {
     const tag_group_id = block_groups.get(item.block_id)
@@ -750,8 +750,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
-        t_untagged: t('MEP.legend_untagged'),
-        t_dimension_change: t('MEP.legend_dimension_change')
+        t_dimension_change: t('MEP.legend_dimension_change'),
+        // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
+        default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
       }
       const scale_text = computeScaleText(
         drawing_area.scale,

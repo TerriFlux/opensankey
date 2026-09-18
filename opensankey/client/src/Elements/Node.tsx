@@ -2432,6 +2432,14 @@ export class Class_NodeElement extends Class_NodeBase {
       } else {
         are_related_node_tags_selected = true
       }
+      // SA#553 - un groupe que le noeud ne porte pas etait ignore : il ne l'est plus quand son
+      // etiquette generee est deselectionnee, le noeud en est alors un porteur masque.
+      if (are_related_node_tags_selected) {
+        are_related_node_tags_selected = !this.sankey.node_taggs_list.some(tagg => {
+          const untagged = tagg.untagged_tag
+          return untagged !== undefined && !untagged.is_selected && this.hasGivenTag(untagged)
+        })
+      }
 
       // Mode filtre vue : un groupe view tag en mode filtre cache un nœud
       // qui ne porte aucune de ses étiquettes sélectionnées.

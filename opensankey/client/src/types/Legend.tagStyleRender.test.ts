@@ -45,6 +45,8 @@ function makeLegend() {
   app.drawing_area.draw()
   // Geste de l'utilisateur APRÈS le dessin : poser des styles ne régénère que la légende.
   full.style_id = makeStyle('F', { shape_color: '#ff0000', value_label_bold: true }).id
+  // SA#553 — le style « des éléments sans étiquette » est celui de l'étiquette générée ; le poser par
+  // le groupe reste possible (même réglage).
   fiab.style_id = makeStyle('G', { shape_color: '#999999' }).id
   app.drawing_area.legend.draw()
   return { host, app }
@@ -80,7 +82,7 @@ describe('SA#545 — ordre Z de la légende après une régénération seule', (
     const depth = (id: string) => all.indexOf(zone(host, app, id))
     const members = [
       'legend-group-fiab', 'legend-tag-fiab-full', 'legend-tag-fiab-col',
-      'legend-untagged-fiab', 'legend-sample-tag-fiab-full'
+      'legend-tag-fiab-fiab__untagged', 'legend-sample-tag-fiab-full'
     ]
     members.forEach(id => {
       expect(depth(id)).toBeGreaterThan(depth('legend'))
@@ -108,9 +110,9 @@ describe('SA#545 — survol des zones de la légende', () => {
     expect(dimmedWhileHovering(host, app, 'legend-group-fiab')).toEqual([])
   })
 
-  it('« sans étiquette » : les éléments du groupe qui n\'en portent aucune', () => {
+  it('étiquette générée « Sans Fiabilite » : les éléments du groupe qui n\'en portent aucune', () => {
     const { host, app } = makeLegend()
-    expect(dimmedWhileHovering(host, app, 'legend-untagged-fiab')).toEqual(['A', 'B', 'D'])
+    expect(dimmedWhileHovering(host, app, 'legend-tag-fiab-fiab__untagged')).toEqual(['A', 'B', 'D'])
   })
 })
 

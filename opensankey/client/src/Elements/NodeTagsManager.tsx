@@ -366,6 +366,12 @@ export class NodeTagsManager {
    * Check if given tag is referenced by node
    */
   public hasGivenTag(tag: Class_Tag) {
+    // SA#553 - etiquette generee d'un groupe de noeuds : portee quand le noeud ne porte aucune
+    // autre etiquette du groupe (jamais par un noeud pour un groupe de flux)
+    if (tag?.is_untagged) {
+      if (!(tag.group.id in this._node.sankey.node_taggs_dict)) return false
+      return (this._node.internalTagsData.taggs_dict[tag.group.id]?.length ?? 0) === 0
+    }
     return this._node.internalTagsData.tags.includes(tag)
   }
 
@@ -373,6 +379,8 @@ export class NodeTagsManager {
    * Add and cross-reference a Tag with node
    */
   public addTag(tag: Class_Tag) {
+    // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
+    if (tag?.is_untagged) return
     const tagsData = this._node.internalTagsData
     if (!tagsData.tags.includes(tag)) {
       tagsData.tags.push(tag)

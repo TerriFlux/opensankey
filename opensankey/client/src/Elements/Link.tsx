@@ -689,6 +689,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public hasGivenTag(tag: Class_Tag) {
+    // SA#553 - l'etiquette generee d'un groupe de NOEUDS n'est jamais portee par un flux
+    if (tag?.is_untagged && !(tag.group.id in this.sankey.flux_taggs_dict)) return false
     const value = this.value
     if (value)
       return value.hasGivenTag(tag)
@@ -3239,6 +3241,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
       else {
         are_related_flux_tags_selected = true // if no tag associated to flux then ok to display
+      }
+      // SA#553 - un groupe que la valeur affichee ne porte pas etait ignore : il ne l'est plus
+      // quand son etiquette generee est deselectionnee, le flux en est alors un porteur masque.
+      if (are_related_flux_tags_selected && this.value) {
+        are_related_flux_tags_selected = !this.sankey.flux_taggs_list.some(tagg => {
+          const untagged = tagg.untagged_tag
+          return untagged !== undefined && !untagged.is_selected && this.hasGivenTag(untagged)
+        })
       }
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
