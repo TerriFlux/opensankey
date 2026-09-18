@@ -31,6 +31,24 @@ describe('fitMenuListToViewport', () => {
     expect(run('bottom', { top: 770, bottom: 790 }).max_h).toBe('80px')
   })
 
+  // #555 — garde-fou : une place disponible qui change à chaque passage (la borne de hauteur fait
+  // rebasculer Popper d'un côté à l'autre du bouton) ne doit jamais tourner en rond. C'est ce
+  // va-et-vient qui figeait l'appli sur une liste longue.
+  it('place instable : le nombre de repositionnements reste borné', () => {
+    const popper = document.createElement('div')
+    const update = jest.fn()
+    let pass = 0
+    const state = {
+      placement: 'bottom',
+      elements: {
+        reference: { getBoundingClientRect: () => ({ top: 100, bottom: 200 + (pass++ % 2) * 300 } as DOMRect) },
+        popper
+      }
+    }
+    for (let i = 0; i < 50; i++) fitMenuListToViewport.fn({ state, instance: { update } })
+    expect(update).toHaveBeenCalledTimes(3)
+  })
+
   it('repositionne une seule fois : pas de boucle quand la place ne change pas', () => {
     const { update, state } = run('bottom', { top: 380, bottom: 400 })
     expect(update).toHaveBeenCalledTimes(1)

@@ -205,6 +205,13 @@ export type typeElementSelectable = {
  */
 const MENU_LIST_SCREEN_MARGIN_PX = 16
 const MENU_LIST_MIN_HEIGHT_PX = 80
+// Nombre maximal de repositionnements demandés pour une même ouverture de liste. Borner est
+// indispensable : borner la hauteur change la taille de la liste, ce qui peut faire rebasculer
+// Popper de l'autre côté du bouton, donc changer la place disponible, donc la hauteur… Sur une
+// liste assez longue pour que la borne morde, ce va-et-vient ne se referme jamais et fige l'appli
+// (vécu au ticket #555, groupe d'étiquettes « Source » du modèle Lait). Passé ce nombre, la
+// dernière valeur posée reste : au pire quelques pixels de marge en trop, jamais un blocage.
+const MENU_LIST_MAX_REFLOWS = 3
 export const fitMenuListToViewport = {
   name: 'fitMenuListToViewport',
   enabled: true,
@@ -221,13 +228,15 @@ export const fitMenuListToViewport = {
       : side === 'bottom' ? window.innerHeight - ref.bottom : window.innerHeight
     const max_h = Math.max(MENU_LIST_MIN_HEIGHT_PX, Math.floor(room - MENU_LIST_SCREEN_MARGIN_PX)) + 'px'
     const popper = state.elements.popper
-    if (popper.style.getPropertyValue('--os-menu-select-max-h') !== max_h) {
-      popper.style.setProperty('--os-menu-select-max-h', max_h)
-      // La taille de la liste vient de changer : repositionner avec la nouvelle hauteur (sinon une
-      // liste ouverte vers le haut resterait décollée de son bouton). Pas de boucle : au passage
-      // suivant la valeur est identique.
-      instance.update()
-    }
+    if (popper.style.getPropertyValue('--os-menu-select-max-h') === max_h) return
+    popper.style.setProperty('--os-menu-select-max-h', max_h)
+    // La taille de la liste vient de changer : repositionner avec la nouvelle hauteur, sinon une
+    // liste ouverte vers le haut resterait décollée de son bouton. Le compteur vit sur l'élément,
+    // recréé à chaque ouverture (`isLazy`) : il repart donc à zéro à chaque fois.
+    const reflows = Number(popper.dataset.osMenuFitReflows ?? '0')
+    if (reflows >= MENU_LIST_MAX_REFLOWS) return
+    popper.dataset.osMenuFitReflows = String(reflows + 1)
+    instance.update()
   }
 }
 
