@@ -31,7 +31,7 @@
 
 import React from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
-import { FaInfoCircle, FaChevronDown, FaChevronRight } from 'react-icons/fa'
+import { FaInfoCircle, FaChevronDown, FaChevronRight, FaEye } from 'react-icons/fa'
 
 import type { Class_ApplicationData, Type_ElementAnalysis } from '../../../types/ApplicationData'
 import { default_font_size } from '../../../css/Theme'
@@ -39,6 +39,7 @@ import {
   renderPresentationBlock, presentationBlockLabel, presentationBlockSummary
 } from './PresentationBlockRegistry'
 import type { Type_Presentable } from './openPresentation'
+import { LegendTagGroupBlock, legendTagGroupOf, renderLegendTagGroupView } from './legendGroupPresentation'
 
 // Blocs de CONTENU (colonne gauche), patron fixe. Les diagrammes (unitaire /
 // analyse) n'y figurent pas : ils sont dans la colonne de droite.
@@ -155,6 +156,11 @@ export const PresentationPopup = ({ app_data, element }: {
 }) => {
   const { t } = app_data
 
+  // SA#551 — titre d'un groupe d'étiquettes dans la légende : la pop-up montre la définition du
+  // groupe et ses étiquettes, et sa colonne de droite une VUE du diagramme mis en forme par ce
+  // groupe, à la place des analyses d'un élément (qui n'ont pas de sens ici).
+  const tag_group = legendTagGroupOf(app_data, element)
+
   const block_ids = isLinkLike(element) ? POPUP_LINK_BLOCKS : POPUP_NODE_BLOCKS
   const content = block_ids
     .map(id => {
@@ -187,8 +193,15 @@ export const PresentationPopup = ({ app_data, element }: {
   // de NOUVEAUX objets d'analyse, et `ElementAnalysisHost` détruirait/recréerait
   // sa zone de dessin en boucle — laissant l'unitaire vide.
   const analyses: Type_ElementAnalysis[] = React.useMemo(
-    () => app_data.element_analyses_for?.(element as never) ?? [],
-    [element, app_data.element_analyses_for]
+    () => tag_group !== undefined
+      ? [{
+        id: 'os.group_view',
+        label: t('MEP.legend_group_view'),
+        icon: <FaEye />,
+        render: (node: HTMLElement) => renderLegendTagGroupView(app_data, tag_group, node)
+      }]
+      : app_data.element_analyses_for?.(element as never) ?? [],
+    [element, tag_group, app_data, t, app_data.element_analyses_for]
   )
 
   // Analyse active (null = on montre le contenu). État local : la pop-up ne
@@ -202,30 +215,32 @@ export const PresentationPopup = ({ app_data, element }: {
       <Box style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
         {active_analysis
           ? <ElementAnalysisHost key={active_analysis.id} analysis={active_analysis} />
-          : (content.length > 1
+          : tag_group !== undefined
+            ? <LegendTagGroupBlock app_data={app_data} group={tag_group} />
+            : (content.length > 1
             // Plusieurs blocs : chacun dans sa section repliable.
-            ? content.map((r, i) => (
-              <CollapsibleBlock
-                key={r.id}
-                title={r.title}
-                summary={r.summary}
-                is_open={isBlockOpen(r.id, i)}
-                onToggle={() => toggleBlock(r.id, i)}
-              >
-                {r.node}
-              </CollapsibleBlock>
-            ))
+              ? content.map((r, i) => (
+                <CollapsibleBlock
+                  key={r.id}
+                  title={r.title}
+                  summary={r.summary}
+                  is_open={isBlockOpen(r.id, i)}
+                  onToggle={() => toggleBlock(r.id, i)}
+                >
+                  {r.node}
+                </CollapsibleBlock>
+              ))
             // Un seul bloc : pas de section — un titre et un chevron pour replier
             // la seule chose que la pop-up ait à montrer n'apporteraient rien.
-            : content.length === 1
-              ? <React.Fragment key={content[0].id}>{content[0].node}</React.Fragment>
-              : (
-                <Box style={{ fontSize: default_font_size, opacity: 0.7, padding: '0.3rem 0.1rem' }}>
-                  <Text>{t('presentation.nothing_here', {
-                    defaultValue: 'Rien à afficher pour cet élément.'
-                  })}</Text>
-                </Box>
-              ))}
+              : content.length === 1
+                ? <React.Fragment key={content[0].id}>{content[0].node}</React.Fragment>
+                : (
+                  <Box style={{ fontSize: default_font_size, opacity: 0.7, padding: '0.3rem 0.1rem' }}>
+                    <Text>{t('presentation.nothing_here', {
+                      defaultValue: 'Rien à afficher pour cet élément.'
+                    })}</Text>
+                  </Box>
+                ))}
       </Box>
 
       {/* COLONNE D'ANALYSES DE L'ÉLÉMENT (droite) — seulement si OS+ en fournit.

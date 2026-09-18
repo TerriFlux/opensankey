@@ -29,7 +29,10 @@ import {
 } from './PresentationBlockRegistry'
 import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
 // Module feuille sans import : ne tire pas LegendGenerator (cf. son en-tête).
-import { isLegendChildId } from '../../../Elements/legendIds'
+import { isLegendChildId, LEGEND_CHILD_PREFIX } from '../../../Elements/legendIds'
+
+/** SA#551 — titre d'un groupe d'étiquettes ('legend-group-…'), cf. legendGroupPresentation. */
+const isLegendGroupZoneId = (id: string): boolean => id.startsWith(LEGEND_CHILD_PREFIX + 'group-')
 
 /**
  * #542 — l'élément est-il une zone générée par la légende ? Une entrée de légende
@@ -171,7 +174,10 @@ export const openPresentationFor = (
 ): boolean => {
   // #542 — une entrée de légende sans définition n'a rien à montrer : la
   // pop-up n'afficherait que « Rien à afficher pour cet élément ».
-  if (isLegendEntry(element) && !tooltipWouldRenderSomething(app_data, element)) return false
+  // SA#551 — sauf le TITRE d'un groupe : sa pop-up montre ses étiquettes et la vue du diagramme
+  // qu'il met en forme, définition ou pas.
+  if (isLegendEntry(element) && !isLegendGroupZoneId(element.id) &&
+    !tooltipWouldRenderSomething(app_data, element)) return false
   const panels = app_data.menu_configuration.panels
   const id = presentationPanelId(element.id)
   // BASCULE — ce même clic vient de refermer la pop-up de cet élément (couche

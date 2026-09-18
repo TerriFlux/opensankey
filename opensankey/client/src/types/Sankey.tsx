@@ -63,7 +63,6 @@ import { sortNodesElements } from '../Elements/NodeBase'
 import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, default_title_id, default_title_text } from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
-import { withTopPriority } from '../Elements/tagGroupPriority'
 import { layerOwnersInEffect } from '../Elements/tagStyles'
 import type { Type_ElementTagStyleLayer } from '../Elements/Element'
 // os#1378 — section `process` (brique Sankey unitaire). Module FEUILLE : import
@@ -164,10 +163,6 @@ export class Class_Sankey {
   // étiquette ou groupe supprimé) : il tient `has_tag_styles` à jour. `_tag_styles_epoch` bouge
   // en plus à chaque changement de ce que portent les éléments (étiquettes attachées, ordre des
   // listes) : il invalide les couches mémorisées par chaque élément.
-  // SA#551 — rang d'ouverture des groupes ouverts depuis la légende (le dernier ouvert en tête).
-  // Présentation seulement, non persisté : la priorité elle-même vit dans `_taggs_order`.
-  private _tag_group_opened_rank = new Map<string, number>()
-  private _tag_group_opened_counter: number = 0
   // SA#551 — groupe dont la légende montre l'aperçu au survol (seuls ses styles s'appliquent)
   private _tag_style_preview_group_id: string | undefined = undefined
   private _tag_styles_epoch: number = 0
@@ -331,7 +326,6 @@ export class Class_Sankey {
     this._level_taggs = {}
     this._view_taggs = {}  // NOUVEAU
     Object.keys(this._taggs_order).forEach(k => this._taggs_order[k] = [])
-    this._tag_group_opened_rank.clear()
     this.dimensions_list.forEach(dim => dim.delete())
   }
 
@@ -1742,16 +1736,6 @@ export class Class_Sankey {
     return this.getTagGroupsAsList(type_group)
   }
 
-  /**
-   * SA#551 — ouvrir un groupe depuis la légende : il passe en dernière position de sa liste, la plus
-   * prioritaire, et prend le rang d'ouverture le plus récent (tête de légende).
-   */
-  public giveTagGroupTopPriority(type_group: 'node_taggs' | 'flux_taggs', id: string) {
-    this._taggs_order[type_group] = withTopPriority(this.tagGroupsInPriorityOrder(type_group).map(g => g.id), id)
-    this._tag_group_opened_rank.set(id, ++this._tag_group_opened_counter)
-    this.tagStylesUpdated()
-  }
-
   /** SA#551 — groupe en aperçu au survol de la légende, ou `undefined`. */
   public get tag_style_preview_group_id(): string | undefined { return this._tag_style_preview_group_id }
 
@@ -1790,17 +1774,6 @@ export class Class_Sankey {
     }
     elements.forEach(element => layerOwnersInEffect(element.tag_style_layers, definedKeys, owners))
     return owners
-  }
-
-  /** SA#551 — rang d'ouverture d'un groupe depuis la légende (0 = jamais ouvert). Non persisté. */
-  public tagGroupOpenedRank(id: string): number {
-    return this._tag_group_opened_rank.get(id) ?? 0
-  }
-
-  /** SA#551 — remet un rang d'ouverture relevé plus tôt (annuler/rétablir). */
-  public setTagGroupOpenedRank(id: string, rank: number) {
-    if (rank > 0) this._tag_group_opened_rank.set(id, rank)
-    else this._tag_group_opened_rank.delete(id)
   }
 
   public getTagGroupsOrder(type_group: Type_MacroTagGroup) {
