@@ -639,6 +639,8 @@ export const drawSunburstChart = (
   const others_label = opts.others_label ?? '…'
   // Racine courante du zoom radial (null = la vue d'ensemble).
   let focus_id: string | null = null
+  // Le point de vue de l'auteur — zoom et déplacement — gardé d'un redessin à l'autre.
+  let view: d3.ZoomTransform = d3.zoomIdentity
 
   const render = () => {
     d3.select(container).selectAll('*').remove()
@@ -791,7 +793,25 @@ export const drawSunburstChart = (
     const svg = root_el.append('svg')
       .attr('width', side).attr('height', side)
       .style('flex', '0 0 auto')
-    const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
+      // Le disque ne déborde jamais de sa case : ce qu'un zoom pousse dehors est coupé, pas
+      // dessiné par-dessus la légende ou le voisin.
+      .style('overflow', 'hidden')
+    const g = svg.append('g')
+    // ZOOM ET DÉPLACEMENT (demande Julien, 18/09), comme sur le diagramme : molette pour zoomer,
+    // glisser pour déplacer, double-clic pour recentrer. Le point de vue survit aux redessins
+    // (redimensionnement, zoom radial) — c'est `view`, tenu hors de `render`.
+    const place = (t: d3.ZoomTransform) =>
+      g.attr('transform', `translate(${side / 2 + t.x},${side / 2 + t.y}) scale(${t.k})`)
+    place(view)
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 8])
+      // Un clic qui a bougé de quelques pixels reste un clic sur le secteur, pas un déplacement.
+      .clickDistance(4)
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => { view = event.transform; place(view) })
+    svg.call(zoom)
+      .call(zoom.transform, view)
+      .on('dblclick.zoom', null)
+      .on('dblclick', () => { svg.call(zoom.transform, d3.zoomIdentity) })
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
     const scope_title = centre_node
