@@ -98,7 +98,7 @@ export const figureChoice = (value: string | number, labels: Labels7) => ({ valu
  * @param ui le contrôle, quand le type de la valeur d'usine ne suffit pas à le dire
  */
 export const elementAttribute = (
-  source: { default: unknown, labels: unknown, tooltips: unknown },
+  source: { default: unknown, labels: unknown, tooltips: unknown, ui?: Type_FigureControl },
   sort: Type_AttributeSort,
   ui?: Type_FigureControl,
   /**
@@ -116,5 +116,61 @@ export const elementAttribute = (
   tooltips: (source.tooltips ?? source.labels) as Type_FigureAttributeConfig['tooltips'],
   actions: undefined,
   sort,
-  ui
+  // Le contrôle DU CATALOGUE, sauf si la nature en dit un autre : une police est un sélecteur
+  // de polices quelle que soit la figure qui l'honore.
+  ui: ui ?? source.ui
 })
+
+/**
+ * Ce qu'une nature peut dire d'une clé qu'elle PIQUE au catalogue : rien (la clé telle quelle),
+ * ou ce en quoi elle diffère chez elle — sa valeur d'usine, son rang (avancé), sa condition
+ * d'affichage, sa sorte. Jamais son libellé ni son contrôle : c'est le catalogue qui les tient,
+ * une fois pour toutes les natures.
+ */
+export type Type_HonourSpec = {
+  default?: unknown
+  sort?: Type_AttributeSort
+  advanced?: boolean
+  visibleIf?: Type_FigureControl['visibleIf']
+  group?: string
+}
+
+/**
+ * os#1425 — PIQUER UN SOUS-ENSEMBLE DU CATALOGUE.
+ *
+ * C'est la seconde moitié du modèle d'Excel (cf. NOTE-CATALOGUE-ATTRIBUTS.md) : le catalogue
+ * déclare toutes les questions une fois, et chaque nature NOMME celles qui ont un sens chez elle.
+ * Elle ne redéclare rien — ni libellé, ni contrôle —, elle dit au plus ce en quoi une clé diffère
+ * chez elle. Deux natures qui piquent la même clé partagent donc son mot, son widget et, par
+ * `figureOf` qui conserve la surcharge propre, son réglage quand on passe de l'une à l'autre.
+ *
+ * Une clé absente du catalogue est une FAUTE de déclaration, pas un cas : on la signale et on
+ * l'ignore, plutôt que de rendre un champ sans libellé.
+ *
+ * @param catalogue le jeu unique (`FIGURE_ATTRIBUTES_CONFIG`)
+ * @param spec les clés honorées, chacune avec ce en quoi elle diffère chez cette nature
+ */
+export const honours = (
+  catalogue: { [key: string]: { default: unknown, labels: unknown, tooltips: unknown, ui?: Type_FigureControl } },
+  spec: { [key: string]: Type_HonourSpec }
+): { [key: string]: Type_FigureAttributeConfig } => {
+  const out: { [key: string]: Type_FigureAttributeConfig } = {}
+  Object.entries(spec).forEach(([key, s]) => {
+    const source = catalogue[key]
+    if (!source) {
+      console.error(`[figures] '${key}' n'est pas au catalogue des attributs de figure : ignoré`)
+      return
+    }
+    const ui: Type_FigureControl | undefined =
+      (s.advanced !== undefined || s.visibleIf || s.group || source.ui)
+        ? {
+          ...(source.ui ?? {}),
+          ...(s.advanced !== undefined ? { advanced: s.advanced } : {}),
+          ...(s.visibleIf ? { visibleIf: s.visibleIf } : {}),
+          ...(s.group ? { group: s.group } : {})
+        }
+        : undefined
+    out[key] = elementAttribute(source, s.sort ?? 'style', ui, s.default)
+  })
+  return out
+}

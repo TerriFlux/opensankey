@@ -70,10 +70,12 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
     // os#1425 — ce que l'auteur règle de la LECTURE : de quel côté la valeur se lit, dans quel
     // ordre les secteurs se suivent, et sous quel nom.
     node_value_mode: one_of(raw.node_value_mode, ['max', 'inputs', 'outputs'] as const, 'max'),
+    // Les deux suivantes sont des clés DU CATALOGUE (figureCatalogue) : l'ordre des parts et le
+    // nom des secteurs se règlent sous les mêmes mots que sur toute autre figure.
     sort_order: one_of(
-      raw.sort_order, ['value_desc', 'value_asc', 'name', 'model'] as const, 'value_desc'
+      raw.parts_order, ['value_desc', 'value_asc', 'name', 'model'] as const, 'value_desc'
     ),
-    name_source: one_of(raw.name_source, ['displayed', 'own'] as const, 'displayed')
+    name_source: raw.name_label_follow_diagram === false ? 'own' : 'displayed'
   }
 }
 
@@ -87,32 +89,55 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
   const keep = (key: string, kind: 'string' | 'number' | 'boolean', as = key) => {
     if (typeof raw[key] === kind) out[as] = raw[key]
   }
-  // Les réglages PROPRES à la couronne.
-  ;['color_source', 'labels_mode', 'label_orientation', 'label_percent', 'centre_content',
-    'legend_mode', 'legend_position', 'click_action']
-    .forEach(k => keep(k, 'string'))
-  ;['others_threshold', 'centre_hole'].forEach(k => keep(k, 'number'))
-  ;['depth_shading', 'notes_visible', 'tooltip_visible'].forEach(k => keep(k, 'boolean'))
-  // Et ceux REPRIS DES ÉLÉMENTS, sous leurs noms d'éléments (os#1425) : la figure les lit là où
-  // un nœud ou un flux les lit, et le tracé les reçoit sous des noms courts.
+  // TOUTES LES CLÉS SONT CELLES DU CATALOGUE (figureCatalogue) : la couronne les lit là où toute
+  // autre figure — et un nœud ou un flux, quand la question est la même — les lit. Le tracé les
+  // reçoit sous des noms courts, les siens.
+  // Forme, parts, échelle.
   keep('shape_opacity', 'number', 'opacity')
   keep('shape_border_visible', 'boolean', 'border_visible')
   keep('shape_border_color', 'string', 'border_color')
   keep('shape_border_thickness', 'number', 'border_thickness')
+  keep('parts_color_source', 'string', 'color_source')
+  keep('parts_depth_shading', 'boolean', 'depth_shading')
+  keep('parts_group_under', 'number', 'others_threshold')
+  keep('parts_max', 'number', 'parts_max')
+  keep('scale_factor', 'number', 'scale_factor')
+  // Libellé. « Là où ça tient / toujours / jamais » se dit avec deux clés d'élément.
+  if (raw.name_label_is_visible === false) out.labels_mode = 'none'
+  else if (raw.name_label_prune_if_unfitting === false) out.labels_mode = 'always'
+  else if (typeof raw.name_label_is_visible === 'boolean' ||
+    typeof raw.name_label_prune_if_unfitting === 'boolean') out.labels_mode = 'fit'
+  keep('name_label_orientation', 'string', 'label_orientation')
   keep('name_label_font_family', 'string', 'font_family')
   keep('name_label_font_size', 'number', 'font_size')
   keep('name_label_bold', 'boolean', 'bold')
   keep('name_label_italic', 'boolean', 'italic')
   keep('name_label_uppercase', 'boolean', 'uppercase')
-  keep('label_color_mode', 'string', 'color_mode')
+  if (typeof raw.name_label_contrast_color === 'boolean') {
+    out.color_mode = raw.name_label_contrast_color ? 'auto' : 'fixed'
+  }
   keep('name_label_color', 'string', 'label_color')
+  // Valeur.
   keep('value_label_is_visible', 'boolean', 'value_visible')
   keep('value_label_unit_visible', 'boolean', 'unit_visible')
+  keep('value_label_percent', 'string', 'label_percent')
   keep('value_label_significant_digits', 'boolean', 'significant_digits')
   keep('value_label_nb_significant_digits', 'number', 'nb_significant_digits')
   keep('value_label_custom_digit', 'boolean', 'custom_digit')
   keep('value_label_nb_digit', 'number', 'nb_digit')
   keep('value_label_scientific_notation', 'boolean', 'scientific_notation')
+  // Centre, légende, mentions, gestes.
+  keep('centre_content', 'string', 'centre_content')
+  keep('centre_hole', 'number', 'centre_hole')
+  keep('legend_visible', 'boolean', 'legend_visible')
+  keep('legend_parts', 'string', 'legend_parts')
+  keep('legend_levels', 'boolean', 'legend_levels')
+  keep('legend_position', 'string', 'legend_position')
+  keep('legend_font_size', 'number', 'legend_font_size')
+  keep('legend_width', 'number', 'legend_width')
+  keep('notes_visible', 'boolean', 'notes_visible')
+  keep('interaction_tooltip', 'boolean', 'tooltip_visible')
+  keep('interaction_click', 'string', 'click_action')
   return out as Partial<Type_SunburstStyle>
 }
 

@@ -64,8 +64,17 @@ export interface Type_SunburstStyle {
   centre_content: 'both' | 'name' | 'value' | 'none'
   /** Rayon du trou, en pourcentage du rayon extérieur. */
   centre_hole: number
-  legend_mode: 'auto' | 'none' | 'rings' | 'branches' | 'both'
+  /** Parts au plus (au-delà : « Autres ») ; 0 = seulement le plafond de la palette. */
+  parts_max: number
+  /** La part de la place disponible que prend le disque, en %. */
+  scale_factor: number
+  /** La légende, en trois questions du catalogue : est-elle là, quelles parts, les niveaux ? */
+  legend_visible: boolean
+  legend_parts: 'auto' | 'all' | 'none'
+  legend_levels: boolean
   legend_position: 'right' | 'left' | 'bottom'
+  legend_font_size: number
+  legend_width: number
   notes_visible: boolean
   tooltip_visible: boolean
   click_action: 'both' | 'zoom' | 'aggregate' | 'none'
@@ -99,8 +108,14 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   label_percent: 'none',
   centre_content: 'both',
   centre_hole: 22,
-  legend_mode: 'auto',
+  parts_max: 0,
+  scale_factor: 100,
+  legend_visible: true,
+  legend_parts: 'auto',
+  legend_levels: true,
   legend_position: 'right',
+  legend_font_size: 12,
+  legend_width: 220,
   notes_visible: true,
   tooltip_visible: true,
   click_action: 'both'
@@ -457,7 +472,9 @@ export const sunburstScope = (
   roots: Type_SunburstNode[],
   focused: Type_SunburstNode | null,
   others_label: string,
-  max_branches = MAX_BRANCHES
+  // Typé en clair : `MAX_BRANCHES` est un littéral (longueur d'un tuple `as const`), et le
+  // laisser inférer figerait ce paramètre à « 8 » au lieu d'un nombre.
+  max_branches: number = MAX_BRANCHES
 ): { centre: Type_SunburstNode | null, branches: Type_SunburstNode[] } => {
   const centre = focused ?? (roots.length === 1 ? roots[0] : null)
   // Un centre sans enfants n'a rien à décomposer : plutôt que de le dessiner en anneau
@@ -534,7 +551,9 @@ export const drawSunburstChart = (
 
     const focused = focus_id ? findSunburstNode(tree.roots, focus_id) : null
     // Le centre est un nœud (périmètre unitaire ou zoom), les anneaux sa décomposition.
-    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label)
+    // Le plafond de parts : celui de la palette, ou plus bas si l'auteur le demande (`parts_max`).
+    const max_parts = st.parts_max > 0 ? Math.min(MAX_BRANCHES, Math.round(st.parts_max)) : MAX_BRANCHES
+    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label, max_parts)
     // Le centre porte SA valeur, pas celle de ses parts : elles peuvent ne pas boucler
     // avec lui (régime 'sum'), et c'est l'écart que la mention annonce.
     const branches_total = branches.reduce((acc, r) => acc + r.value, 0)
@@ -582,7 +601,8 @@ export const drawSunburstChart = (
       const side = legend_below
         ? Math.max(120, Math.min(width, height - legend_width - 12) - 8)
         : Math.max(120, Math.min(width - legend_width - 12, height) - 8)
-      const outer_r = side / 2 - 2
+      // L'ÉCHELLE (`scale_factor`) : la part de la place disponible que prend le disque.
+      const outer_r = (side / 2 - 2) * Math.max(10, Math.min(100, st.scale_factor)) / 100
       // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
       const inner_r = Math.max(14, outer_r * (st.centre_hole / 100))
       return { side, outer_r, inner_r, ring: (outer_r - inner_r) / rings }
@@ -636,20 +656,23 @@ export const drawSunburstChart = (
 
     // La légende demandée décide de la place qu'on lui réserve, avant même de la remplir :
     // « aucune » n'en prend aucune, « toutes les branches » en prend une large d'office.
-    const wide = Math.min(220, (legend_below ? height : width) * 0.32)
-    const narrow = Math.min(150, (legend_below ? height : width) * 0.28)
-    const legend_width = st.legend_mode === 'none'
+    // La largeur demandée (`legend_width`) plafonne la colonne large ; l'étroite en prend les
+    // deux tiers. Les deux restent bornées par la place disponible.
+    const room = legend_below ? height : width
+    const wide = Math.min(Math.max(80, st.legend_width), room * 0.32)
+    const narrow = Math.min(Math.max(60, st.legend_width * 0.68), room * 0.28)
+    const legend_width = !st.legend_visible
       ? 0
-      : (st.legend_mode === 'both' || st.legend_mode === 'branches')
+      : st.legend_parts === 'all'
         ? wide
         : unnamedBranches(geometryFor(narrow)).length > 0 ? wide : narrow
     const geo = geometryFor(legend_width)
     const { side, inner_r, ring } = geo
-    // Sous 'auto', la légende ne nomme que ce que le dessin n'a pas pu nommer ; sous 'both' et
-    // 'branches', elle les nomme toutes ; sous 'rings' et 'none', aucune.
-    const unnamed_branches = st.legend_mode === 'both' || st.legend_mode === 'branches'
-      ? slices.filter(s => s.depth === 0)
-      : st.legend_mode === 'auto' ? unnamedBranches(geo) : []
+    // Les PARTS dans la légende (`legend_parts`) : 'auto' ne nomme que ce que le dessin n'a pas
+    // pu nommer, 'all' les nomme toutes, 'none' aucune.
+    const unnamed_branches = !st.legend_visible || st.legend_parts === 'none'
+      ? []
+      : st.legend_parts === 'all' ? slices.filter(s => s.depth === 0) : unnamedBranches(geo)
 
     const svg = root_el.append('svg')
       .attr('width', side).attr('height', side)
@@ -797,11 +820,11 @@ export const drawSunburstChart = (
       .style('flex', legend_below ? '0 0 auto' : '1 1 0').style('min-width', '0')
       .style('align-self', 'center')
       .style('max-height', legend_below ? `${legend_width}px` : '100%')
-      .style('overflow-y', 'auto').style('font-size', '0.75rem')
+      .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
       .style('color', palette.ink)
-      .style('display', st.legend_mode === 'none' ? 'none' : 'block')
-    const show_rings = st.legend_mode === 'auto' || st.legend_mode === 'rings' ||
-      st.legend_mode === 'both'
+      .style('display', st.legend_visible ? 'block' : 'none')
+    // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
+    const show_rings = st.legend_visible && st.legend_levels
 
     // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
     // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
