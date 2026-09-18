@@ -13,6 +13,7 @@
 import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
+import { legendGroupsByPriority } from './tagGroupPriority'
 import {
   LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
   Type_LegendEntryFormat, Type_StyleForLegend
@@ -168,6 +169,16 @@ export type Type_SankeyForLegend = {
   // entrées des groupes à styles d'étiquette. Optionnel : absent, aucune entrée n'est
   // mise en forme (mocks des tests antérieurs).
   styles_dict?: { [style_id: string]: Type_StyleForLegend & { is_default_style?: boolean } }
+  // SA#551 — ordre de priorité des groupes (Class_Sankey.tagGroupsInPriorityOrder, du moins au plus
+  // prioritaire). Optionnel : absent (mocks des tests antérieurs), les groupes gardent l'ordre de
+  // `node_taggs_list` puis `flux_taggs_list`.
+  tagGroupsInPriorityOrder?(type_group: 'node_taggs' | 'flux_taggs'): Type_TagGroupForLegend[]
+  // SA#551 — groupe dont la VUE est en cours de dessin (pop-up d'un groupe) : la légende ne montre
+  // alors que ce groupe, pour ne faire lire que lui.
+  tag_style_preview_group_id?: string
+  // SA#551 — étiquettes et groupes dont un style est en vigueur sur au moins un élément visible
+  // (Class_Sankey.tagStyleOwnersInEffect). Absent : aucune entrée n'est écartée.
+  tagStyleOwnersInEffect?(type_group: 'node_taggs' | 'flux_taggs'): Set<unknown>
 }
 
 export type Type_LegendConfigValues = {
@@ -274,8 +285,13 @@ export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): bo
  * Ni entrée d'étiquette ni info-bulle : le nom et la définition sont écrits en toutes
  * lettres. Aucun fichier existant n'épingle de groupe : aucune légende ne change.
  */
-export function pinnedLegendGroups(tag_groups: Type_TagGroupForLegend[]): Type_TagGroupForLegend[] {
-  return tag_groups.filter(g => g.pinned_in_legend === true && !tagGroupCarriesFormatting(g))
+export function pinnedLegendGroups(
+  tag_groups: Type_TagGroupForLegend[],
+  // SA#551 — groupes dont le bloc ouvert est émis. Absent : tout groupe qui met en forme en a un.
+  emitted_groups?: Set<Type_TagGroupForLegend>
+): Type_TagGroupForLegend[] {
+  return tag_groups.filter(g => g.pinned_in_legend === true &&
+    (!tagGroupCarriesFormatting(g) || (emitted_groups !== undefined && !emitted_groups.has(g))))
 }
 
 /**
@@ -328,6 +344,80 @@ function untaggedEntryStyle(
 }
 
 /**
+ * SA#551 — ordre des groupes dans la légende : groupes de nœuds et de flux du PLUS prioritaire au
+ * moins prioritaire — la tête de légende est le groupe dont les styles gagnent (cf.
+ * tagGroupPriority.ts, qui lit le même ordre que la cascade) —, puis les groupes de données dans leur
+ * ordre. Aucun diagramme existant n'allume deux groupes d'une même famille (relevé du corpus et des
+ * 123 diagrammes SOCLE, 2026-09-16, hors pilote Lait) : leurs légendes ne changent pas d'ordre.
+ */
+export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGroupForLegend[] {
+  // SA#551 — vue d'un groupe : lui seul (les autres groupes développés sortent de la légende).
+  const previewed = sankey.tag_style_preview_group_id
+  if (previewed !== undefined) {
+    return [...sankey.node_taggs_list, ...sankey.flux_taggs_list].filter(group => group.id === previewed)
+  }
+  const by_priority = sankey.tagGroupsInPriorityOrder
+  const node_and_flux = by_priority === undefined
+    ? [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
+    : legendGroupsByPriority([by_priority.call(sankey, 'node_taggs'), by_priority.call(sankey, 'flux_taggs')])
+  return [...node_and_flux, ...sankey.data_taggs_list]
+}
+
+/**
+ * SA#551 — retire de `items` (en place) les entrées d'étiquette dont le style est supplanté sur TOUS
+ * les éléments visibles qui la portent — il ne s'affiche nulle part —, l'entrée « sans étiquette »
+ * d'un groupe dont le style n'est en vigueur nulle part, puis le bloc entier d'un groupe à styles à
+ * qui il ne reste aucune entrée stylée. Une étiquette masquée garde son entrée (SA#549), une
+ * étiquette sans style aussi (elle ne définit rien qui puisse être supplanté).
+ *
+ * Renvoie les groupes dont le bloc reste émis. Sans `tagStyleOwnersInEffect` (mocks) : rien n'est
+ * retiré.
+ */
+function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_SankeyForLegend): Set<Type_TagGroupForLegend> {
+  const families: ['node_taggs' | 'flux_taggs', Type_TagGroupForLegend[], { hasGivenTag(t: Type_TagForLegend): boolean }[]][] = [
+    ['node_taggs', sankey.node_taggs_list, sankey.visible_nodes_list],
+    ['flux_taggs', sankey.flux_taggs_list, sankey.visible_links_list]
+  ]
+  const all_groups = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
+  const drop = new Set<Type_LegendItem>()
+  families.forEach(([type_group, groups, carriers]) => {
+    const styled = groups.filter(g => g.use_colors && g.uses_tag_styles === true)
+    if (styled.length === 0) return
+    const in_effect = sankey.tagStyleOwnersInEffect?.(type_group)
+    if (in_effect === undefined) return
+    styled.forEach(group => {
+      const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(group.id)
+      const block = items.filter(i => i.block_id === block_id)
+      const entries = block.filter(i => i.tag_group_id === group.id)
+      if (entries.length === 0) return
+      const tags = group.tags_list ?? group.selected_tags_list
+      let styled_left = false
+      entries.forEach(entry => {
+        if (entry.untagged === true) {
+          if (in_effect.has(group)) styled_left = true
+          else drop.add(entry)
+          return
+        }
+        const tag = tags.find(t => t.id === entry.tag_id)
+        if (tag === undefined || tag.is_selected === false) {
+          styled_left = true
+          return
+        }
+        if (usableStyle(sankey, tag.style_id) === undefined) return
+        if (in_effect.has(tag) || !carriers.some(element => element.hasGivenTag(tag))) styled_left = true
+        else drop.add(entry)
+      })
+      if (!styled_left) block.forEach(i => drop.add(i))
+    })
+  })
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (drop.has(items[i])) items.splice(i, 1)
+  }
+  const emitted_blocks = new Set(items.map(i => i.block_id).filter(id => id !== undefined))
+  return new Set(all_groups.filter(g => emitted_blocks.has(LEGEND_CHILD_PREFIX + 'block-' + slug(g.id))))
+}
+
+/**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
  * moins un élément visible (ou data tags, toujours montrés).
@@ -362,7 +452,7 @@ export function computeLegendItems(
   // Groupes de tags porteurs d'une mise en forme (#533)
   const all_taggs = [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
   const data_taggs = sankey.data_taggs_list as Type_TagGroupForLegend[]
-  all_taggs
+  legendTagGroupsOrder(sankey)
     .filter(tagGroupCarriesFormatting)
     .forEach(tag_group => {
       const is_data_tagg = data_taggs.includes(tag_group)
@@ -502,7 +592,12 @@ export function computeLegendItems(
 
   // SA#550 — groupes épinglés FERMÉS, tout en bas : une ligne « Nom : description »,
   // enveloppée, le nom mis en valeur au rendu (`pinned_name`).
-  pinnedLegendGroups(all_taggs).forEach(tag_group => {
+  // SA#551 — entrées supplantées partout retirées ; un groupe épinglé ouvert mais entièrement
+  // supplanté n'a plus de bloc, il retrouve sa ligne en bas.
+  const emitted_groups = hideOverriddenLegendEntries(items, sankey)
+  // SA#551 — vue d'un groupe : pas de lignes épinglées non plus, seul le groupe montré compte.
+  const pinned = sankey.tag_style_preview_group_id !== undefined ? [] : pinnedLegendGroups(all_taggs, emitted_groups)
+  pinned.forEach(tag_group => {
     const description = definitionOf(tag_group)
     items.push({
       id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),

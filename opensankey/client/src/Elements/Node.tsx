@@ -233,12 +233,12 @@ export class Class_NodeElement extends Class_NodeBase {
       return this.shape_color
     }
     // SA#541 — un groupe qui fonctionne par styles ne colore plus par la couleur de ses étiquettes
-    if (!this.sankey.node_taggs_list.some(tagg => tagg.use_colors && !tagg.uses_tag_styles)) {
+    if (!this.sankey.node_taggs_list.some(tagg => this.sankey.tagGroupAppliesFormatting(tagg) && !tagg.uses_tag_styles)) {
       return this._ownShapeColor()
     }
     // Is the color defined by tags
     const taggs_activated = this.taggs_list
-      .filter(tagg => tagg.use_colors && !tagg.uses_tag_styles)
+      .filter(tagg => this.sankey.tagGroupAppliesFormatting(tagg) && !tagg.uses_tag_styles)
     if (taggs_activated.length > 0) {
       const tagg_for_colormap = taggs_activated[0]
       const tags_for_colormap = this.tags_list
@@ -763,7 +763,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected override computeTagStyleLayers() {
     if (!this._nodeTagsManager) return null
     return this.resolveTagStyleLayers(
-      this.sankey.getTagGroupsAsList('node_taggs'),
+      this.sankey.tagGroupsInPriorityOrder('node_taggs'),
       tag => this.hasGivenTag(tag as Class_Tag)
     )
   }

@@ -109,3 +109,30 @@ export function buildColorLockIndex(attribute_keys: readonly string[]): { [attri
   })
   return index
 }
+
+/**
+ * SA#551 — porteurs (étiquettes, ou groupe pour les éléments sans étiquette) dont la couche est EN
+ * VIGUEUR sur un élément : elle est la plus prioritaire à définir au moins un de ses paramètres.
+ * Une couche dont tous les paramètres sont redéfinis par des couches plus prioritaires n'affiche
+ * rien sur cet élément (arbitrage d'Alexandre, 2026-09-17 : Source ouverte au-dessus de Méthode
+ * supplante toutes les couleurs de Méthode).
+ *
+ * @param defined_keys paramètres que définit un style
+ */
+export function layerOwnersInEffect<S, O>(
+  layers: readonly Type_TagStyleLayer<S, O>[],
+  defined_keys: (style: S) => readonly string[],
+  into: Set<O> = new Set<O>()
+): Set<O> {
+  const taken = new Set<string>()
+  for (let i = layers.length - 1; i >= 0; i--) {
+    let in_effect = false
+    defined_keys(layers[i].style).forEach(key => {
+      if (taken.has(key)) return
+      taken.add(key)
+      in_effect = true
+    })
+    if (in_effect) into.add(layers[i].owner)
+  }
+  return into
+}
