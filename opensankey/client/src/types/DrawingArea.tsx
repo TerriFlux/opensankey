@@ -253,8 +253,30 @@ export class Class_DrawingArea {
    * la résolution du conteneur pour qu'une DA détachée dans une autre fenêtre s'y
    * dessine. Peut renvoyer null si le conteneur n'est pas (encore) monté. */
   protected getContainerNode(): HTMLElement | null {
-    return (this.container_owner_document ?? document)
+    return this.container_document
       .querySelector(this.container_selector) as HTMLElement | null
+  }
+
+  /** Document d'accueil de la zone : celui de la fenêtre fille quand elle est détachée, celui
+   *  de la page sinon. Seul point de résolution du document pour toute la zone. */
+  protected get container_document(): Document {
+    return this.container_owner_document ?? document
+  }
+
+  /**
+   * os#1385 — FENÊTRE d'accueil de la zone : celle du document hôte quand le canevas est dessiné
+   * dans une vraie fenêtre de navigateur (second écran), celle de la page sinon.
+   *
+   * Tout ce qui MESURE une fenêtre passe par ici. Mesurer `window` depuis un canevas posé sur
+   * l'autre écran donnerait la taille de la fenêtre PRINCIPALE, c'est-à-dire d'un écran que ce
+   * canevas n'occupe pas. En régime établi ces mesures sont des ceintures — une zone détachée se
+   * cadre sur son cadre (`canvas_frame`) ou sur le `clientWidth/clientHeight` de son conteneur
+   * hôte, et n'atteint le repli « fenêtre » que si ce conteneur ne mesure encore rien, c'est-à-dire
+   * pendant le tout premier dessin dans la fenêtre fille. C'est justement le dessin qui décide du
+   * cadrage initial : la ceinture sert.
+   */
+  protected get container_window(): Window {
+    return this.container_owner_document?.defaultView ?? window
   }
 
   /**
@@ -366,7 +388,7 @@ export class Class_DrawingArea {
   /** Hauteur du SVG en disposition ordinaire : celle du conteneur hôte quand il est cadré par
    *  lui (embarqué, détaché), la fenêtre sinon. */
   protected _svgDefaultHeight(): string | number {
-    return (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : window.innerHeight
+    return (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : this.container_window.innerHeight
   }
   /**
    * Pose sur le SVG le style de son cadre : position fixe sur sa case ; ou masqué quand le
@@ -4235,7 +4257,10 @@ export class Class_DrawingArea {
       const h = this.getContainerNode()?.clientHeight ?? 0
       if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
     }
-    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
+    // Repli : la fenêtre d'ACCUEIL (os#1385 — celle de la fenêtre fille si le canevas y vit, cf.
+    // `container_window`), atteinte par la zone du conteneur principal et, le temps du premier
+    // dessin, par une zone détachée dont le conteneur ne mesure encore rien.
+    return this.container_window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
   }
   // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
   // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
@@ -4341,7 +4366,8 @@ export class Class_DrawingArea {
       const w = this.getContainerNode()?.clientWidth ?? 0
       if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
     }
-    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
+    // Repli : la fenêtre d'ACCUEIL (cf. `window_fitting_height`, même raison).
+    return this.container_window.innerWidth - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
   }
 
   // Paper format getters/setters
@@ -4465,7 +4491,13 @@ export class Class_DrawingArea {
     if (this.static && !this.application_data.publish_options.topbar) {
       return 0
     }
-    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)
+    // os#1385 — barres CHERCHÉES DANS LE DOCUMENT D'ACCUEIL. Ceinture : le garde ci-dessus rend 0
+    // dès que la zone n'est pas celle du conteneur principal, et le conteneur principal vit dans
+    // le document de la page — les deux documents coïncident donc chaque fois qu'on arrive ici.
+    // On interroge quand même le bon document, pour qu'aucune mesure de la zone ne s'adresse à une
+    // autre fenêtre que la sienne.
+    const doc = this.container_document
+    return (doc.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(this.container_window.getComputedStyle(doc.documentElement).fontSize)
   }
 
   /**
@@ -4480,7 +4512,9 @@ export class Class_DrawingArea {
     if (!this.is_in_main_container || this.is_framed) {
       return 0
     }
-    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
+    // Document d'accueil, même ceinture que getNavBarHeight.
+    const doc = this.container_document
+    return (doc.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(this.container_window.getComputedStyle(doc.documentElement).fontSize)
   }
 
   // Color
