@@ -77,3 +77,44 @@ export const figureAttribute = <T>(
 
 /** Un choix de liste, libellés des sept langues — le patron de `Type_FigureChoice`. */
 export const figureChoice = (value: string | number, labels: Labels7) => ({ value, labels })
+
+/**
+ * os#1425 — REPRENDRE UN ATTRIBUT DES NŒUDS ET DES FLUX, tel quel.
+ *
+ * La police d'une étiquette, le nombre de chiffres significatifs, la visibilité d'une unité : ces
+ * questions sont DÉJÀ posées et traduites pour les éléments (`ALL_ATTRIBUTES_CONFIG`). Une figure
+ * qui les repose sous d'autres noms donnerait deux vocabulaires pour un même réglage, et deux
+ * endroits à tenir à jour. Elle reprend donc la déclaration de l'élément — sa valeur d'usine, ses
+ * libellés, son infobulle — et n'ajoute que ce qui lui est propre : la sorte (une figure n'a pas
+ * d'action à rejouer élément par élément) et le contrôle.
+ *
+ * CE QUI N'A PAS DE SENS NE SE DÉCLARE PAS. Une couronne ne reprend ni la position d'une
+ * étiquette, ni ses marges, ni l'icône : la nature liste ce qu'elle honore, le reste n'apparaît
+ * nulle part. C'est la règle « garder toute l'interface, cacher ce qui n'a pas de sens »
+ * (arbitrage Julien, 18/09/2026).
+ *
+ * @param source la déclaration de l'élément (`ALL_ATTRIBUTES_CONFIG['name_label_font_size']`)
+ * @param sort la sorte pour la figure — presque toujours 'style'
+ * @param ui le contrôle, quand le type de la valeur d'usine ne suffit pas à le dire
+ */
+export const elementAttribute = (
+  source: { default: unknown, labels: unknown, tooltips: unknown },
+  sort: Type_AttributeSort,
+  ui?: Type_FigureControl,
+  /**
+   * La valeur d'usine POUR CETTE FIGURE, quand celle de l'élément n'est pas celle que le tracé
+   * appliquait. Une étiquette de nœud s'écrit en 20 points, une étiquette de secteur en 10 : la
+   * question est la même, la réponse d'usine ne l'est pas. Ne se donne que là où les deux
+   * diffèrent — partout ailleurs, l'élément fait foi.
+   */
+  default_override?: unknown
+): Type_FigureAttributeConfig => ({
+  default: default_override !== undefined ? default_override : source.default,
+  type: () => (default_override !== undefined ? default_override : source.default),
+  category: 'figure',
+  labels: source.labels as Type_FigureAttributeConfig['labels'],
+  tooltips: (source.tooltips ?? source.labels) as Type_FigureAttributeConfig['tooltips'],
+  actions: undefined,
+  sort,
+  ui
+})

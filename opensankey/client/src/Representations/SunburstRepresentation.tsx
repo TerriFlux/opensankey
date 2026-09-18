@@ -84,17 +84,35 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
  */
 export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type_SunburstStyle> => {
   const out: { [key: string]: unknown } = {}
-  const keep = (key: string, kind: 'string' | 'number' | 'boolean') => {
-    if (typeof raw[key] === kind) out[key] = raw[key]
+  const keep = (key: string, kind: 'string' | 'number' | 'boolean', as = key) => {
+    if (typeof raw[key] === kind) out[as] = raw[key]
   }
+  // Les réglages PROPRES à la couronne.
   ;['color_source', 'labels_mode', 'label_orientation', 'label_percent', 'centre_content',
-    'legend_mode', 'legend_position', 'border_color', 'click_action']
+    'legend_mode', 'legend_position', 'click_action']
     .forEach(k => keep(k, 'string'))
-  ;['others_threshold', 'label_digits', 'label_font_size', 'centre_hole']
-    .forEach(k => keep(k, 'number'))
-  ;['depth_shading', 'border_visible', 'label_value_visible', 'label_unit_visible', 'label_bold',
-    'notes_visible', 'tooltip_visible']
-    .forEach(k => keep(k, 'boolean'))
+  ;['others_threshold', 'centre_hole'].forEach(k => keep(k, 'number'))
+  ;['depth_shading', 'notes_visible', 'tooltip_visible'].forEach(k => keep(k, 'boolean'))
+  // Et ceux REPRIS DES ÉLÉMENTS, sous leurs noms d'éléments (os#1425) : la figure les lit là où
+  // un nœud ou un flux les lit, et le tracé les reçoit sous des noms courts.
+  keep('shape_opacity', 'number', 'opacity')
+  keep('shape_border_visible', 'boolean', 'border_visible')
+  keep('shape_border_color', 'string', 'border_color')
+  keep('shape_border_thickness', 'number', 'border_thickness')
+  keep('name_label_font_family', 'string', 'font_family')
+  keep('name_label_font_size', 'number', 'font_size')
+  keep('name_label_bold', 'boolean', 'bold')
+  keep('name_label_italic', 'boolean', 'italic')
+  keep('name_label_uppercase', 'boolean', 'uppercase')
+  keep('label_color_mode', 'string', 'color_mode')
+  keep('name_label_color', 'string', 'label_color')
+  keep('value_label_is_visible', 'boolean', 'value_visible')
+  keep('value_label_unit_visible', 'boolean', 'unit_visible')
+  keep('value_label_significant_digits', 'boolean', 'significant_digits')
+  keep('value_label_nb_significant_digits', 'number', 'nb_significant_digits')
+  keep('value_label_custom_digit', 'boolean', 'custom_digit')
+  keep('value_label_nb_digit', 'number', 'nb_digit')
+  keep('value_label_scientific_notation', 'boolean', 'scientific_notation')
   return out as Partial<Type_SunburstStyle>
 }
 

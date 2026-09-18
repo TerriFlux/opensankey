@@ -34,18 +34,33 @@ export interface Type_SunburstStyle {
   color_source: 'palette' | 'model'
   /** La clarté dit la profondeur. Coupé, tous les anneaux d'une branche ont la même teinte. */
   depth_shading: boolean
+  /** Les trois suivants sont les attributs de FORME des éléments (`shape_*`). */
+  opacity: number
   border_visible: boolean
   border_color: string
+  border_thickness: number
   /** Regrouper AUSSI les parts sous ce pourcentage du tout. 0 : seulement l'invisible. */
   others_threshold: number
   labels_mode: 'fit' | 'none' | 'always'
   label_orientation: 'radial' | 'tangential' | 'horizontal'
-  label_value_visible: boolean
-  label_unit_visible: boolean
-  label_digits: number
+  /** Ceux-ci sont les attributs d'ÉTIQUETTE des éléments (`name_label_*`). */
+  font_family: string
+  font_size: number
+  bold: boolean
+  italic: boolean
+  uppercase: boolean
+  /** L'encre : par contraste avec le secteur (défaut), ou la couleur choisie. */
+  color_mode: 'auto' | 'fixed'
+  label_color: string
+  /** Et ceux-là les attributs de VALEUR des éléments (`value_label_*`). */
+  value_visible: boolean
+  unit_visible: boolean
+  significant_digits: boolean
+  nb_significant_digits: number
+  custom_digit: boolean
+  nb_digit: number
+  scientific_notation: boolean
   label_percent: 'none' | 'total' | 'parent'
-  label_font_size: number
-  label_bold: boolean
   centre_content: 'both' | 'name' | 'value' | 'none'
   /** Rayon du trou, en pourcentage du rayon extérieur. */
   centre_hole: number
@@ -60,17 +75,28 @@ export interface Type_SunburstStyle {
 export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   color_source: 'palette',
   depth_shading: true,
+  opacity: 1,
   border_visible: true,
   border_color: '#ffffff',
+  border_thickness: 1,
   others_threshold: 0,
   labels_mode: 'fit',
   label_orientation: 'radial',
-  label_value_visible: false,
-  label_unit_visible: false,
-  label_digits: 4,
+  font_family: 'Arial,sans-serif',
+  font_size: 10,
+  bold: false,
+  italic: false,
+  uppercase: false,
+  color_mode: 'auto',
+  label_color: 'black',
+  value_visible: false,
+  unit_visible: false,
+  significant_digits: true,
+  nb_significant_digits: 4,
+  custom_digit: false,
+  nb_digit: 0,
+  scientific_notation: false,
   label_percent: 'none',
-  label_font_size: 10,
-  label_bold: false,
   centre_content: 'both',
   centre_hole: 22,
   legend_mode: 'auto',
@@ -471,11 +497,22 @@ export const drawSunburstChart = (
   const palette = THEME[theme]
   // os#1425 — la mise en forme réglée par l'auteur, sur fond de ce que le tracé faisait avant.
   const st: Type_SunburstStyle = { ...SUNBURST_STYLE_DEFAULTS, ...(opts.style ?? {}) }
-  // Le format des valeurs suit les chiffres significatifs demandés, et l'unité quand on la veut.
-  const unit = st.label_unit_visible && opts.unit ? ' ' + opts.unit : ''
-  const fmt = opts.format ?? ((v: number) => new Intl.NumberFormat(undefined, {
-    maximumSignificantDigits: Math.max(1, Math.min(21, Math.round(st.label_digits)))
-  }).format(v))
+  // LE FORMAT DES VALEURS, exactement celui des étiquettes d'un flux (`formatElementValue`) :
+  // notation scientifique, chiffres significatifs, décimales imposées — dans cet ordre, parce
+  // qu'une notation scientifique ne se cumule pas avec un nombre de décimales.
+  const unit = st.unit_visible && opts.unit ? ' ' + opts.unit : ''
+  const digits = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
+  const fmt = opts.format ?? ((v: number) => {
+    if (st.scientific_notation) {
+      return st.significant_digits
+        ? v.toExponential(digits(st.nb_significant_digits - 1, 20))
+        : v.toExponential()
+    }
+    let text = v
+    if (st.significant_digits) text = parseFloat(v.toPrecision(digits(st.nb_significant_digits, 21) || 1))
+    if (st.custom_digit) text = parseFloat(text.toFixed(digits(st.nb_digit, 20)))
+    return new Intl.NumberFormat().format(text)
+  })
   const fmtUnit = (v: number) => fmt(v) + unit
   const others_label = opts.others_label ?? '…'
   // Racine courante du zoom radial (null = la vue d'ensemble).
@@ -560,8 +597,10 @@ export const drawSunburstChart = (
      * renoncée comme n'importe quelle autre.
      */
     const sectorText = (d: Type_SunburstSlice): string => {
-      const parts: string[] = [d.label]
-      if (st.label_value_visible) parts.push(fmtUnit(d.value))
+      // La CASSE s'applique au texte et non au style : `text-transform` n'est pas honoré par
+      // tous les moteurs SVG, et l'export PNG en dépend.
+      const parts: string[] = [st.uppercase ? d.label.toLocaleUpperCase() : d.label]
+      if (st.value_visible) parts.push(fmtUnit(d.value))
       if (st.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
       return parts.join(' · ')
     }
@@ -574,7 +613,7 @@ export const drawSunburstChart = (
         {
           orientation: st.label_orientation,
           mode: st.labels_mode,
-          font_size: st.label_font_size
+          font_size: st.font_size
         }
       )
     // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches.
@@ -667,7 +706,8 @@ export const drawSunburstChart = (
       .attr('d', d => arc(d))
       .attr('fill', d => d.color)
       .attr('stroke', st.border_visible ? st.border_color : 'none')
-      .attr('stroke-width', st.border_visible ? 1 : 0)
+      .attr('stroke-width', st.border_visible ? st.border_thickness : 0)
+      .attr('fill-opacity', st.opacity)
       // Le nœud DÉSAGRÉGÉ dans le diagramme se signale par un pointillé, pas par une
       // autre couleur : la couleur nomme déjà la branche, la lui reprendre casserait
       // la lecture radiale.
@@ -726,9 +766,14 @@ export const drawSunburstChart = (
       })
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', st.label_font_size)
-      .attr('font-weight', st.label_bold ? 'bold' : null)
-      .attr('fill', d => inkOn(d.color, palette.ink))
+      .attr('font-size', st.font_size)
+      .attr('font-family', st.font_family)
+      .attr('font-weight', st.bold ? 'bold' : null)
+      .attr('font-style', st.italic ? 'italic' : null)
+      // L'encre par CONTRASTE reste le défaut : un même bleu porte du blanc au centre et du gris
+      // foncé sur les anneaux éclaircis, et une couleur fixe rendrait la moitié des étiquettes
+      // illisible. L'auteur peut l'imposer, c'est alors son affaire.
+      .attr('fill', d => st.color_mode === 'fixed' ? st.label_color : inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
       .text(d => arcLabelOf(d, geo) ?? '')
 
