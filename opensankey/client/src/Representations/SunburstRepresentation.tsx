@@ -108,6 +108,10 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
   else if (typeof raw.name_label_is_visible === 'boolean' ||
     typeof raw.name_label_prune_if_unfitting === 'boolean') out.labels_mode = 'fit'
   keep('name_label_orientation', 'string', 'label_orientation')
+  keep('name_label_strip_parent', 'boolean', 'strip_parent')
+  keep('name_label_separator', 'string', 'separator')
+  keep('name_label_separator_part', 'string', 'separator_part')
+  keep('name_label_box_width', 'number', 'box_width')
   keep('name_label_font_family', 'string', 'font_family')
   keep('name_label_font_size', 'number', 'font_size')
   keep('name_label_bold', 'boolean', 'bold')

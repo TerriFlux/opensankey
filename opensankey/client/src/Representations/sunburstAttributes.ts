@@ -174,6 +174,13 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   name_label_is_visible: {},
   name_label_prune_if_unfitting: { visibleIf: labelled },
   name_label_orientation: { visibleIf: labelled },
+  // Ce qu'un secteur écrit de son nom (demande Julien, 18/09) : ôter ce que l'anneau précédent
+  // dit déjà, ou couper au séparateur comme sur un nœud ; et la largeur de boîte, au-delà de
+  // laquelle le texte revient à la ligne.
+  name_label_strip_parent: { visibleIf: labelled },
+  name_label_separator: { visibleIf: labelled },
+  name_label_separator_part: { visibleIf: (o) => labelled(o) && typeof o['name_label_separator'] === 'string' && o['name_label_separator'] !== '' },
+  name_label_box_width: { visibleIf: labelled },
   name_label_font_family: { visibleIf: labelled },
   name_label_font_size: { default: 10, visibleIf: labelled },
   name_label_bold: { visibleIf: labelled },
