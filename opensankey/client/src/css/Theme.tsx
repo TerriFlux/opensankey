@@ -1494,17 +1494,42 @@ export const menuStyles = {
   menu_select_elements: menu.definePartsStyle({
     item: {
       display: 'grid',
-      gridTemplateColumns: '1fr 9fr',
+      // #555 — colonne d'icône à sa taille, libellé dans le reste : un libellé long passe à la
+      // ligne au lieu d'élargir la liste au-delà de l'écran.
+      gridTemplateColumns: '1rem minmax(0, 1fr)',
       gridColumnGap: '0.25rem',
       fontSize: 'default_font_size',
+      textAlign: 'start',
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
       span: { margin: 0, padding: 0 },
       'span.chakra-menu__icon-wrapper': { margin: 'auto' },
       svg: { width: '0.8rem', height: '0.8rem' },
       _hover: { bg: 'lightgrey' }
     },
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      // #555 — la liste tient dans l'écran. Hauteur : place réellement disponible du côté où elle
+      // s'ouvre, posée par OSMultiSelect (`--os-menu-select-max-h`) et recalculée à chaque
+      // repositionnement ; repli sur la hauteur de la fenêtre, exprimée en `vh` pour suivre un
+      // redimensionnement (l'ancienne valeur en pixels était figée au chargement du thème).
+      // Largeur bornée : les libellés longs vont à la ligne (cf. `item`).
+      //
+      // `minW: 0` n'est pas décoratif : le style de base pose `minWidth: 'inherit'`, hérité du
+      // conteneur de Popper qui vaut `max-content`. Une largeur minimale l'emporte sur une
+      // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
+      // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
+      // texte était rognée hors de l'écran.
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
+      maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
+      overflowX: 'hidden',
       border: 'solid 1px',
       borderColor: 'primaire.5'
     }
@@ -1512,7 +1537,16 @@ export const menuStyles = {
 
   menu_select_style: menu.definePartsStyle({
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
+      maxW: 'min(28rem, calc(100vw - 1rem))',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
       borderColor: 'primaire.5'
@@ -2492,17 +2526,42 @@ export const tabsStyles = {
   menu_select_elements: menu.definePartsStyle({
     item: {
       display: 'grid',
-      gridTemplateColumns: '1fr 9fr',
+      // #555 — colonne d'icône à sa taille, libellé dans le reste : un libellé long passe à la
+      // ligne au lieu d'élargir la liste au-delà de l'écran.
+      gridTemplateColumns: '1rem minmax(0, 1fr)',
       gridColumnGap: '0.25rem',
       fontSize: default_font_size,
+      textAlign: 'start',
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
       span: { margin: 0, padding: 0 },
       'span.chakra-menu__icon-wrapper': { margin: 'auto' },
       svg: { width: '0.8rem', height: '0.8rem' },
       _hover: { bg: 'lightgrey' }
     },
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      // #555 — la liste tient dans l'écran. Hauteur : place réellement disponible du côté où elle
+      // s'ouvre, posée par OSMultiSelect (`--os-menu-select-max-h`) et recalculée à chaque
+      // repositionnement ; repli sur la hauteur de la fenêtre, exprimée en `vh` pour suivre un
+      // redimensionnement (l'ancienne valeur en pixels était figée au chargement du thème).
+      // Largeur bornée : les libellés longs vont à la ligne (cf. `item`).
+      //
+      // `minW: 0` n'est pas décoratif : le style de base pose `minWidth: 'inherit'`, hérité du
+      // conteneur de Popper qui vaut `max-content`. Une largeur minimale l'emporte sur une
+      // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
+      // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
+      // texte était rognée hors de l'écran.
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
+      maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
+      overflowX: 'hidden',
       border: 'solid 1px',
       borderColor: 'primaire.5'
     }
@@ -2510,7 +2569,16 @@ export const tabsStyles = {
 
   menu_select_style: menu.definePartsStyle({
     list: {
-      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
+      maxW: 'min(28rem, calc(100vw - 1rem))',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
       borderColor: 'primaire.5'
