@@ -5,6 +5,7 @@ import {
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_Sankey } from '../types/Sankey'
 
 /**
  * os#1422 — CE FICHIER DIT DEUX CHOSES, ET ELLES SONT MAINTENANT NOMMÉES.
@@ -17,10 +18,11 @@ import type { Class_NodeElement } from '../Elements/Node'
  * (`opensankey-plus/components/UnitaryBoard.tsx`, `buildUnitaryDrawingArea`) ne
  * voit aucune différence.
  *
- * POURQUOI LES SÉPARER : l'ÉTOILE VIVANTE (os#1422, `Representations/star/`) est
- * un vrai Sankey construit avec le STYLE PAR DÉFAUT DU DIAGRAMME — c'est la
- * demande. Elle veut la disposition unitaire et rien d'autre : elle n'appelle que
- * la seconde moitié.
+ * POURQUOI LES SÉPARER : l'ÉTOILE VIVANTE (os#1422, `Representations/star/`) veut
+ * les deux moitiés, mais pas dans les mêmes conditions que le board — le board
+ * REPART D'USINE (`resetBaseStylesToFactory`), l'étoile PART DU DIAGRAMME (son
+ * style par défaut est une copie de celui du diagramme). Elle a donc son propre
+ * enchaînement, qui sème d'abord puis habille : cf. `buildStarDocument`.
  */
 
 /**
@@ -65,15 +67,29 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node
 /**
  * MOITIÉ HABILLAGE — les styles unitaires posés sur les éléments du board.
  *
- * L'ÉTOILE VIVANTE NE L'APPELLE PAS : elle porte le style par défaut du diagramme
- * dont elle montre le voisinage (demande de Julien, cf. `buildStarDocument`).
+ * L'ÉTOILE VIVANTE L'APPELLE AUSSI (os#1422, retour de Julien du 18/09 : « ils n'ont
+ * pas leur style de sankey unitaire »). La demande « construit initialement avec le
+ * style par défaut de ce diagramme » disait d'où l'étoile PART, pas qu'elle renonce à
+ * ressembler à un tableau unitaire : le SEMIS est le style par défaut du diagramme
+ * (copié sur celui de l'étoile, cf. `buildStarDocument`), et les styles unitaires ne
+ * surchargent par-dessus que ce qui fait un tableau unitaire. Comme un style interne
+ * n'est PAS pré-rempli (`create_internal_style` → `createNewElementStyle(..., true)`),
+ * tout ce qu'il ne déclare pas retombe mécaniquement sur ce semis.
+ *
+ * `tags_sankey` — OÙ LIRE LE GROUPE D'ÉTIQUETTES « type de noeud ». Le board unitaire
+ * travaille sur un clone JSON du diagramme, qui porte donc ses propres étiquettes :
+ * son défaut (`drawing_area.sankey`) est juste. L'ÉTOILE, elle, n'a aucune étiquette à
+ * elle — ses nœuds délèguent `hasGivenTag` à leur sujet (règle 3 du contrat du lot 6) —
+ * et doit donc désigner le sankey SOURCE, sans quoi `productTag` serait `undefined` et
+ * aucun produit n'aurait sa capsule.
  */
 export const applyUnitaryBoardStyles = (
   drawing_area: Class_DrawingArea,
-  center_node: Class_NodeElement
+  center_node: Class_NodeElement,
+  tags_sankey: Class_Sankey = drawing_area.sankey
 ) => {
   const center_nodes = [center_node]
-  const node_type = drawing_area.sankey.node_taggs_dict['type de noeud']
+  const node_type = tags_sankey.node_taggs_dict['type de noeud']
   const productTag = node_type?.tags_dict['produit']
   const _sectorTag = node_type?.tags_dict['secteur']
 
@@ -151,7 +167,9 @@ export const applyUnitaryBoardStyles = (
 
 /**
  * MOITIÉ DISPOSITION — légende, échelle, disposition auto, ordre des flux E/S,
- * mode absolu, ancre. C'est la seule moitié que l'ÉTOILE VIVANTE appelle.
+ * mode absolu, ancre. TOUJOURS APPELÉE APRÈS L'HABILLAGE, par le board comme par
+ * l'étoile : elle lit les espacements sur `SankeyUnitaryNodeInputStyle` (cf. plus
+ * bas), qui n'existe qu'une fois les styles unitaires créés.
  *
  * L'échelle était calculée AVANT les formes et les marges dans l'ancienne fonction
  * unique ; elle est ici calculée après. C'est sans effet : `data_value` est une
