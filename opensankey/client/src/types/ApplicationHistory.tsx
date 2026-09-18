@@ -29,6 +29,7 @@
 
 // Local imports
 import { Class_MenuConfig } from './MenuConfig'
+import { HISTORY_TOPIC } from './EventBus'
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
@@ -121,6 +122,21 @@ export class Class_ApplicationHistory {
   // PUBLIC METHODS ===================================================================
 
   /**
+   * os#1385 (lot 2) — Le slot ET le topic, à chaque mouvement de la pile.
+   *
+   * Le slot `ref_to_menu_updater` garde son titulaire unique, le squelette de menus, qui se
+   * re-rend et re-rend ses enfants avec lui : c'est ce qui rafraîchissait les boutons
+   * annuler/rétablir jusqu'ici, par ricochet. Ce ricochet ne suffit plus dès que les boutons
+   * regardent l'historique de l'ACTIF et non plus celui du document principal — le squelette
+   * est celui de l'hôte, il ne se re-rend pas parce que le document B a empilé une action.
+   * D'où le topic, qui accepte N abonnés et n'enlève son emplacement à personne.
+   */
+  protected _notifyMenus() {
+    this._menu_config.ref_to_menu_updater.current()
+    this._menu_config.notify(HISTORY_TOPIC)
+  }
+
+  /**
    * Save undo function
    * @param f
    */
@@ -129,7 +145,7 @@ export class Class_ApplicationHistory {
   ) {
     this.increaseIndexes()
     this._transitions_table[this._index_table % history_size].toPrev = f
-    this._menu_config.ref_to_menu_updater.current()
+    this._notifyMenus()
   }
 
   /**
@@ -140,7 +156,7 @@ export class Class_ApplicationHistory {
     f: () => void
   ) {
     this._transitions_table[(this._index_table - 1) % history_size].toNext = f
-    this._menu_config.ref_to_menu_updater.current()
+    this._notifyMenus()
   }
 
   /**
@@ -150,7 +166,7 @@ export class Class_ApplicationHistory {
     if (this.can_undo) {
       this._transitions_table[this._index_table % history_size].toPrev()
       this._index_table = this._index_table - 1
-      this._menu_config.ref_to_menu_updater.current()
+      this._notifyMenus()
     }
   }
 
@@ -161,7 +177,7 @@ export class Class_ApplicationHistory {
     if (this.can_redo) {
       this._transitions_table[this._index_table % history_size].toNext()
       this._index_table = this._index_table + 1
-      this._menu_config.ref_to_menu_updater.current()
+      this._notifyMenus()
     }
   }
 

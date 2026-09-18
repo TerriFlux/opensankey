@@ -28,7 +28,7 @@
 //import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import pako from 'pako'
-import i18next, { TFunction, i18n } from 'i18next'
+import i18next from 'i18next'
 import * as d3 from '../d3Modules'
 
 import FileSaver from 'file-saver'
@@ -41,8 +41,13 @@ import {
   Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES,
   mainZoneSubjectUsesOwnWindowId
 } from '../types/MenuConfig'
-import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, makeId, randomId, toast_bypass, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
-import { getPublishOptions, PublishOptions } from './PublishOptions'
+import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, getStringFromJSON, makeId, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
+import { PublishOptions } from './PublishOptions'
+// os#1385 — L'ESPACE DE TRAVAIL. Import en VALEUR dans les deux sens (Workspace importe cette
+// classe pour sa fabrique de documents), mais aucun des deux fichiers n'utilise l'autre au
+// PREMIER NIVEAU du module : pas d'`extends`, pas d'appel top-level, seulement des corps de
+// méthodes. C'est le cas bénin du cycle ; le cas TDZ est l'héritage (cf. elementInitCycle.test).
+import { Class_Workspace, OFFSCREEN_CONTAINER_SELECTOR } from './Workspace'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
 import { afterViewChange } from './viewSwitchProgress'
@@ -64,11 +69,14 @@ import {
   Type_DocMarkdownMap, serializeDocMarkdown, parseDocMarkdown,
   resolveDocMarkdown, normalizeDocLang
 } from '../Persistence/persistenceMigrations'
-import type { Class_NodeElement } from '../Elements/Node'
-import type { Class_LinkElement } from '../Elements/Link'
 // Module FEUILLE sans aucun import (cf. legendIds.ts) : sûr à tirer ici, où
 // tout autre chemin vers LegendGenerator créerait un cycle à l'initialisation.
 import { isLegendElementId } from '../Elements/legendIds'
+// os#1385 (lot 5, D9) — LE REGISTRE DES TYPES DE DOCUMENTS. Import en VALEUR dans ce sens-là
+// SEULEMENT : le registre, lui, ne prend d'ici que des TYPES (effacés à la compilation), donc
+// aucun cycle à l'exécution.
+import { document_type_registry, SANKEY_DOCUMENT_TYPE } from './DocumentTypeRegistry'
+import type { Type_DocumentType } from './DocumentTypeRegistry'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -186,31 +194,75 @@ export type Type_SheetEntry = {
   /** Nom affiché dans l'onglet (bas de la grande zone). */
   name: string
   /**
+   * os#1385 (lot 4, D8) — TYPE du document que porte la feuille. ABSENT vaut
+   * `'sankey'` : tout fichier écrit avant ce champ se relit à l'identique, et tout
+   * fichier qui n'a que des feuilles Sankey se réécrit sans gagner une seule clé.
+   *
+   * Un type INCONNU se conserve tel quel, sans jamais être chargé : le registre des
+   * types arrive au lot 5, et d'ici là une feuille d'un autre type est une entrée
+   * OPAQUE (`{ name, type, json }`) qu'on transporte sans la comprendre — la perdre à
+   * la première sauvegarde serait bien pire que ne pas savoir l'afficher.
+   */
+  type?: string
+  /**
    * Snapshot gzip du diagramme complet de la feuille (JSON du document SANS la clé
-   * racine `sheets` — cf. `_currentDiagramAsSheetJSON`). `undefined` pour la feuille
-   * COURANTE : son contenu est l'état vivant (drawing_area + vues), rafraîchi ici à
-   * chaque bascule / sauvegarde.
+   * racine `sheets` — cf. `toSheetContentJSON`). `undefined` pour la feuille
+   * COURANTE quand elle porte un Sankey : son contenu est l'état vivant
+   * (drawing_area + vues), rafraîchi ici à chaque bascule / sauvegarde.
+   *
+   * os#1385 (lot 4, D8) — RÈGLE DE LA RACINE, transitoire : « la racine du fichier
+   * porte toujours un Sankey, le courant s'il en est un, sinon le dernier Sankey
+   * actif ». Une feuille courante d'un AUTRE type garde donc son `json` à elle, la
+   * racine restant lisible par tous les lecteurs qui supposent un Sankey (viewer,
+   * parc publié, serveur, SEP, cartofob).
    */
   json?: Uint8Array
 }
 
 /**
- * os#1386 — Conteneur de dessin d'une application de LECTURE de feuille : un sélecteur qui
- * ne peut désigner aucun élément réel de la page.
+ * os#1385 (lot 4, D8) — le type d'une feuille qui porte un diagramme Sankey.
  *
- * Ce n'est pas une précaution de style. Une `Class_DrawingArea` naît avec
- * `container_selector = '#sankey_app'`, c'est-à-dire le conteneur du diagramme AFFICHÉ, et
- * tout chemin qui dessine commence par `selectAll('#draw_zoom').remove()` dedans : une
- * application détachée qu'on laisserait avec le sélecteur par défaut EFFACERAIT le
- * diagramme de l'utilisateur au premier calcul de placement. Le board unitaire a payé ce
- * défaut jusqu'en septembre 2026 (cf. `UnitaryBoard.buildUnitaryDrawingArea`, « LE
- * CONTENEUR, TOUT DE SUITE »), au prix d'un redessin complet du diagramme principal après
- * chaque vignette. On ne le refait pas ici.
- *
- * Le nom est volontairement imprononçable : aucune feuille de style, aucun composant ne
- * peut le poser par mégarde sur un vrai nœud du DOM.
+ * os#1385 (lot 5, D9) — UNE SEULE ÉCRITURE DE LA CHAÎNE, désormais celle du registre des types
+ * (`SANKEY_DOCUMENT_TYPE`) : deux constantes indépendantes portant le même identifiant de format
+ * finiraient par diverger. Ce nom-ci reste exporté parce qu'il est celui que lit le code du
+ * format (lot 4) et ses tests.
  */
-const SHEET_SNAPSHOT_CONTAINER_SELECTOR = '#os1386_sheet_snapshot_offscreen_never_in_dom'
+export const SHEET_TYPE_SANKEY = SANKEY_DOCUMENT_TYPE
+
+/**
+ * os#1385 (lot 4, D8) — « cette feuille porte-t-elle un Sankey ? ». Dit à un seul
+ * endroit que l'ABSENCE de type vaut `'sankey'` : c'est cette équivalence qui fait
+ * qu'aucun fichier antérieur n'a besoin de migration.
+ */
+export const isSankeySheetType = (type?: string): boolean =>
+  type === undefined || type === SHEET_TYPE_SANKEY
+
+/**
+ * os#1385 (lot 4, D8) — L'ÉTAT DE L'ESPACE DE TRAVAIL, LU DEPUIS UN FICHIER.
+ *
+ * `language` et `panels` ne décrivent pas le diagramme : ce sont des préférences
+ * d'INTERFACE, partagées par tous les documents ouverts (inventaire 4 §1.2, « trois
+ * clés d'hôte rangées dans le document »). Elles vivent désormais sous la clé racine
+ * `workspace`, écrite par le document PRINCIPAL seulement.
+ *
+ * REPLI SUR LA RACINE, dit ici UNE fois pour les deux `_fromJSON` (OS et OS+) : un
+ * fichier antérieur porte `language` et `panels` à la racine et doit se relire tel
+ * quel — aucune migration, aucun incrément de `format_version`.
+ */
+export const workspaceStateFromJSON = (
+  json_object: Type_JSON
+): { language?: string, panels?: Type_JSON } => {
+  const raw = json_object['workspace']
+  const workspace = (raw && typeof raw === 'object' && !Array.isArray(raw))
+    ? raw as Type_JSON
+    : undefined
+  const state: { language?: string, panels?: Type_JSON } = {}
+  const language = workspace?.['language'] ?? json_object['language']
+  if (typeof language === 'string' && language !== '') state.language = language
+  const panels = workspace?.['panels'] ?? json_object['panels']
+  if (panels && typeof panels === 'object' && !Array.isArray(panels)) state.panels = panels as Type_JSON
+  return state
+}
 
 /**
  * Association du document ouvert à sa BRIQUE de bibliothèque (sa#399) : id du
@@ -246,18 +298,76 @@ export class Class_ApplicationData {
   // to absorb stroke-widths and font ascenders that getBBox doesn't include.
   public static readonly export_edge_padding: number = 5
 
-  protected _has_sankey_dev: boolean = false
-  protected _has_sankey_plus: boolean = false
-  protected _has_sankey_afm: boolean = false
+  /**
+   * os#1385 — L'ESPACE DE TRAVAIL qui porte ce document. Posé par le constructeur AVANT
+   * `createNewDrawingArea()` : la zone de dessin lit `is_static`, qui vient de lui.
+   * Déclaré sans initialiseur (`!`) pour cette raison — un initialiseur tournerait avant le
+   * corps du constructeur et écraserait ce que celui-ci vient de poser.
+   */
+  protected _workspace!: Class_Workspace
+  public get workspace(): Class_Workspace { return this._workspace }
 
-  public readonly publish_options: PublishOptions = getPublishOptions()
+  /**
+   * Ce document est-il LE document principal de son espace de travail ?
+   *
+   * Seul le principal écrit la disposition de l'hôte (panneaux), la langue de l'interface et
+   * repeint les menus. Un document secondaire (instantané de feuille, source Excel, brique
+   * extraite) n'avait jusqu'ici qu'une configuration de menus ORPHELINE : les gardes posées
+   * sur cette propriété reproduisent ce comportement, maintenant que la configuration est
+   * partagée avec l'hôte.
+   */
+  public get is_main(): boolean { return this.workspace.main === this }
 
-  public get has_sankey_dev() { return this._has_sankey_dev }
-  public set has_sankey_dev(_) { this._has_sankey_dev = _ }
-  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static }
-  public set has_sankey_plus(_) { this._has_sankey_plus = _ }
-  public get has_sankey_afm() { return this._has_sankey_afm || this.is_static }
-  public set has_sankey_afm(_) { this._has_sankey_afm = _ }
+  /**
+   * os#1385 (lot 2) — L'IDENTITÉ du document dans son espace de travail.
+   *
+   * Vide tant que le document n'est enregistré nulle part (le temps d'un constructeur), puis
+   * posé une fois pour toutes par `Class_Workspace.registerDocument`. Il nomme l'emplacement de
+   * cache du document (`cache_key`) : c'est son seul lecteur au lot 2, et c'est ce qui permet à
+   * deux documents ouverts d'écrire Ctrl+S sans s'écraser l'un l'autre.
+   */
+  protected _document_id: string = ''
+  public get document_id(): string { return this._document_id }
+
+  /**
+   * Posé par l'espace de travail à l'enregistrement, jamais par le document lui-même — c'est
+   * l'espace qui sait ce qui est unique en son sein. Sans effet si le document en a déjà un :
+   * un identifiant ne change pas en cours de vie, le cache qu'il nomme deviendrait orphelin.
+   */
+  public assignDocumentId(id?: string): void {
+    if (this._document_id !== '') return
+    this._document_id = (id !== undefined && id !== '') ? id : makeId('doc')
+  }
+
+  /**
+   * os#1385 (lot 2) — L'EMPLACEMENT DE CACHE de ce document dans le stockage local.
+   *
+   * Le principal garde `'data'`, mot pour mot : c'est la clé que lit la reprise de session
+   * (`App.tsx`), celle qu'écrivent toutes les versions publiées, et la casser rendrait
+   * inaccessible le travail en cours de tous les utilisateurs au premier déploiement. Les autres
+   * documents écrivent à côté, sous `data:<identifiant>` — l'index qui permettra de les rouvrir
+   * est le lot 3 ; au lot 2 ils sont écrits sans être relus, ce qui est déjà mieux que de voir
+   * un document secondaire écraser le travail du principal.
+   */
+  protected get cache_key(): string {
+    return this.is_main ? 'data' : 'data:' + this._document_id
+  }
+
+  /**
+   * Options de la page publiée : lues UNE fois par espace de travail (`window.sankey`), donc
+   * communes à tous ses documents. L'objet doit rester le MÊME à chaque lecture : les viewers
+   * React mutent ses champs.
+   */
+  public get publish_options(): PublishOptions { return this.workspace.publish_options }
+
+  // Licences : l'espace de travail porte la licence BRUTE du compte, le document y ajoute
+  // `is_static` — c'est lui qui sait s'il est affiché dans une page publiée.
+  public get has_sankey_dev() { return this.workspace.has_sankey_dev }
+  public set has_sankey_dev(_) { this.workspace.has_sankey_dev = _ }
+  public get has_sankey_plus() { return this.workspace.has_sankey_plus || this.is_static }
+  public set has_sankey_plus(_) { this.workspace.has_sankey_plus = _ }
+  public get has_sankey_afm() { return this.workspace.has_sankey_afm || this.is_static }
+  public set has_sankey_afm(_) { this.workspace.has_sankey_afm = _ }
 
   /**
    * Libellé de l'édition active, affiché en pastille à droite du logo de la barre
@@ -268,6 +378,93 @@ export class Class_ApplicationData {
 
   /** True hors mode publish, ou en publish si l'option `editable` est activée. */
   public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
+
+  /**
+   * os#1385 (lot 3, D4) — LE DROIT D'ÉDITION DE CE DOCUMENT-CI.
+   *
+   * `is_editable` dit ce que la PAGE permet (éditeur, ou page publiée avec l'option
+   * `editable`) : c'est une propriété de l'espace de travail, la même pour tous ses documents.
+   * Ce drapeau-ci dit ce que CE document permet, et c'est une notion distincte : deux documents
+   * ouverts côte à côte dans la même page n'ont aucune raison d'être modifiables tous les deux
+   * au même instant.
+   *
+   * Vrai par défaut — un document qu'on ouvre, on l'édite. Faux pour un document créé HORS
+   * ÉCRAN (cf. `Class_Workspace.createDocument`), qui n'a personne devant lui. La phase B le
+   * repasse à vrai quand elle donne un cadre à la feuille, et à faux quand elle le lui retire.
+   *
+   * Ce qui compte est ce qu'on ne lit PLUS : la PLACE à l'écran ne décide plus du droit
+   * d'éditer (`DrawingArea.is_detached` ne parle que de géométrie, cf. D4). Un document peut
+   * être affiché hors du conteneur principal et modifiable ; un autre peut être dans le
+   * conteneur principal et en lecture seule.
+   */
+  protected _edition_allowed: boolean = true
+  public get edition_allowed(): boolean { return this._edition_allowed }
+  public set edition_allowed(_: boolean) { this._edition_allowed = _ }
+
+  /**
+   * os#1385 (lot 3, D4) — CE DOCUMENT EST-IL MODIFIABLE, MAINTENANT ? Droit de la PAGE ×
+   * droit du DOCUMENT. C'est ce que lit `Class_DrawingArea.editable`, qui y ajoute la seule
+   * question qui reste de son ressort : « suis-je la zone VIVANTE de ce document ? » (une zone
+   * fabriquée à côté — board unitaire, source de mise en page, vue extraite en coulisse — ne
+   * s'édite pas, quel que soit le droit du document).
+   */
+  public get editable(): boolean { return this.is_editable && this._edition_allowed }
+
+  /**
+   * os#1385 (lot 3, D6) — LE DOCUMENT QUI PORTE LE FICHIER DONT CELUI-CI EST UNE FEUILLE.
+   *
+   * Posé par `sheetApplication` sur le document de feuille, null partout ailleurs (un document
+   * ouvert depuis un fichier est son propre porteur). Il n'a qu'un rôle, mais il est central :
+   * ENREGISTRER DEPUIS LA FEUILLE B ENREGISTRE LE FICHIER, dont B fait partie (cf. `saveInCache`
+   * et `saveToJSON`). Une feuille n'est pas un fichier.
+   */
+  protected _file_holder: Class_ApplicationData | null = null
+  public get file_holder(): Class_ApplicationData | null { return this._file_holder }
+  public set file_holder(_: Class_ApplicationData | null) { this._file_holder = _ }
+
+  /**
+   * os#1385 (lot 3, D6) — CE DOCUMENT A CESSÉ DE VIVRE (cf. `dispose()`).
+   *
+   * Un document disposé n'est plus la vérité de quoi que ce soit : `sheetsToJSON` ne le
+   * sérialise pas, l'espace de travail l'a oublié, et sa zone de dessin est démontée. Le
+   * drapeau existe pour que les détenteurs d'une référence tardive — une fenêtre en cours de
+   * fermeture, un effet React qui se dénoue — puissent le constater sans jeter.
+   */
+  protected _disposed: boolean = false
+  public get disposed(): boolean { return this._disposed }
+
+  /**
+   * os#1385 (lot 3, D6) — FAIRE CESSER DE VIVRE CE DOCUMENT : il n'est plus affiché, plus
+   * joignable, et ce qu'il portait a déjà été remis en instantané par l'appelant s'il y avait
+   * lieu (cf. `releaseSheetDocument`).
+   *
+   * IDEMPOTENT, et ce n'est pas une politesse : les trois chemins qui en appellent — la
+   * bascule d'onglet vers la feuille, la suppression de la feuille, le chargement d'un autre
+   * fichier — peuvent se croiser sur la même feuille.
+   *
+   * LE DOCUMENT PRINCIPAL NE SE DISPOSE PAS : il est l'application elle-même, sa zone de
+   * dessin est celle de l'écran, et la démonter reviendrait à effacer le diagramme de
+   * l'utilisateur. On refuse plutôt que de faire confiance à l'appelant.
+   */
+  public dispose(): void {
+    if (this._disposed || this.is_main) return
+    this._disposed = true
+    // La zone de dessin d'abord : `unDraw` retire son SVG du conteneur (vide, pour un
+    // document hors écran — d3 travaille alors sur une sélection vide, cf. `detachOffscreen`),
+    // `delete` purge la sélection, le lien fantôme et les éléments contextualisés, c'est-à-dire
+    // les références croisées qui retiendraient tout le modèle en mémoire.
+    this._drawing_area?.unDraw()
+    this._drawing_area?.delete()
+    // Un historique neuf : chaque entrée est une FERMETURE qui capture des nœuds, des flux et
+    // une zone de dessin morts. Les garder ne servirait qu'à les empêcher d'être collectés.
+    if (this._menu_configuration) this._history = new Class_ApplicationHistory(this._menu_configuration)
+    // Plus d'écran, donc plus de droit d'édition : une référence tardive (un effet React qui
+    // se dénoue, une fenêtre en cours de fermeture) ne doit pas écrire dans un modèle mort.
+    // `_file_holder` est GARDÉ : un « Enregistrer » parti juste avant doit encore savoir
+    // quel fichier il visait.
+    this._edition_allowed = false
+    this.workspace.forgetDocument(this)
+  }
 
   /**
    * os#1365 — ARBITRE UNIQUE entre les deux sélecteurs de la topbar : la navigation entre
@@ -349,22 +546,9 @@ export class Class_ApplicationData {
   public get from_json_will_draw(): boolean { return this._from_json_will_draw }
 
   /**
-   * os#1359 — Ce qui a déjà été dit une fois n'est pas redit. Voir `notifyUser`.
-   */
-  private _notified_once: Set<string> = new Set()
-
-  /**
    * os#1359 — un mot bref, non bloquant, sur une conséquence que la saisie ne montre pas
-   * d'elle-même (typiquement : quelle couche de données vient d'être écrite, et laquelle
-   * vient d'être périmée).
-   *
-   * `once` vaut pour une règle de fonctionnement, qui ne change pas d'une saisie à l'autre :
-   * la répéter à chaque valeur corrigée transformerait l'explication en gêne, et l'utilisateur
-   * apprendrait surtout à ne plus lire les bandeaux. L'`id` dédoublonne aussi le reste, sans
-   * quoi corriger vingt flux sélectionnés empilerait vingt fois le même message.
-   *
-   * Silencieux tant qu'aucun toast n'est monté (rendu hors React, tests, mode publié sans
-   * ChakraProvider) : c'est un confort de lecture, jamais une condition d'exécution.
+   * d'elle-même. Délégué à l'espace de travail : une seule file de messages à l'écran,
+   * quel que soit le document qui parle.
    */
   public notifyUser(
     id: string,
@@ -373,27 +557,93 @@ export class Class_ApplicationData {
     status: 'info' | 'warning' = 'info',
     once: boolean = false
   ): void {
-    if (!this._toast) return
-    if (once) {
-      if (this._notified_once.has(id)) return
-      this._notified_once.add(id)
-    } else if (this._toast.isActive(id)) return
-    this._toast({
-      id,
-      title,
-      description,
-      status,
-      duration: default_toast_duration,
-      isClosable: true
-    })
+    this.workspace.notifyUser(id, title, description, status, once)
   }
 
+  /**
+   * (Re)crée la configuration de menus DU DOCUMENT, adossée à celle de l'HÔTE.
+   *
+   * Appelée au montage par `useMenuConfiguration` : c'est ce qu'elle demandait — une
+   * configuration neuve pour le document, avec le toast Chakra acquis dans le rendu. Celle de
+   * l'hôte, elle, ne bouge pas : les composants d'interface s'y abonnent une fois pour toutes.
+   */
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
-    this._toast = toast
-    this._menu_configuration = new Class_MenuConfig()
+    this.workspace.toast = toast
+    this._menu_configuration = new Class_MenuConfig(this.workspace.menu_configuration)
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration
   }
+
+  /**
+   * Fait de ce document un document HORS ÉCRAN, définitivement.
+   *
+   * LE CONTENEUR EST POSÉ SUR LA FABRIQUE, ET PAS SEULEMENT SUR LA PREMIÈRE ZONE. Poser
+   * `container_selector` sur `drawing_area` avant `fromJSON` ne suffirait PAS, et pas
+   * seulement parce que `reset()` remplace la zone par une neuve : le chargement en crée
+   * d'autres en chemin — une par vue lourde extraite (`ViewsReader.extractViewFromJSON`,
+   * `ViewsManager`), une pour la source de mise en page — et l'une d'elles DESSINE. Le cas
+   * n'a rien de théorique : quand l'instantané a été enregistré sur une vue autre que le
+   * maître, `ViewsReader.viewsFromJSON` appelle `drawing_area.draw()` de sa propre autorité,
+   * précisément parce qu'on charge avec `draw = false` et que personne d'autre ne dessinera
+   * (os#1377). Et `draw()` remet `bypass_redraws` à `false` en entrant : ce drapeau ne
+   * protège de rien. Une seule ligne de défense tient donc : que TOUTE zone de dessin de ce
+   * document naisse hors écran, d'où l'enveloppe posée ici sur sa fabrique. Un dessin sur un
+   * conteneur introuvable est inoffensif — d3 travaille alors sur une sélection vide — là où
+   * un dessin sur `'#sankey_app'` effacerait le diagramme de l'utilisateur.
+   *
+   * L'enveloppe est posée sur l'INSTANCE, et c'est voulu : `createNewDrawingArea` est
+   * surchargée par OpenSankey+ (elle construit une `Class_DrawingAreaOSP`), et envelopper la
+   * méthode telle que la sous-classe la fournit garde ce dispatch intact. Elle n'empêche
+   * personne de repointer ensuite une zone vers un vrai conteneur — c'est ce que fait le
+   * board unitaire pour sa vignette, juste après l'avoir demandée.
+   */
+  public detachOffscreen(): void {
+    this.showIn(OFFSCREEN_CONTAINER_SELECTOR, null)
+  }
+
+  /**
+   * os#1385 — LE LIEU D'ACCUEIL EST UNE PROPRIÉTÉ DU DOCUMENT, PAS DE SA ZONE DE DESSIN.
+   *
+   * `detachOffscreen` posait son sélecteur sur la FABRIQUE de zones, pour la raison expliquée
+   * ci-dessus : le chargement en crée d'autres en chemin, et l'une d'elles dessine. La même
+   * raison vaut, en sens inverse, pour un document qu'on MONTRE quelque part — le canevas d'une
+   * feuille ouvert dans une fenêtre de navigateur, sur un second écran. Sa zone est remplacée à
+   * chaque `resetDocument()` et à chaque bascule de vue : la neuve naissait avec le conteneur
+   * hors écran de son document, et la fenêtre se vidait au premier changement de vue, sans un
+   * mot. Le lieu d'accueil vit donc ici, une fois pour toutes, et la fabrique le réapplique.
+   *
+   * `owner_document` est le document DOM qui héberge le conteneur : celui de la page pour une
+   * case de la grande zone (`null`), celui de la fenêtre fille pour un canevas détaché. C'est
+   * lui qui décide où la zone cherche son conteneur, mesure, et construit son SVG.
+   */
+  public showIn(container_selector: string, owner_document: Document | null): void {
+    this._container_selector = container_selector
+    this._container_owner_document = owner_document
+    if (!this._wrapped_drawing_area_factory) {
+      const create_drawing_area = this.createNewDrawingArea.bind(this)
+      this.createNewDrawingArea = (id?: string): Class_DrawingArea => {
+        const drawing_area = create_drawing_area(id)
+        this._applyContainer(drawing_area)
+        return drawing_area
+      }
+      this._wrapped_drawing_area_factory = true
+    }
+    this._applyContainer(this._drawing_area)
+  }
+
+  /** Le lieu d'accueil du document, reporté sur une zone (la sienne, ou une neuve). */
+  protected _applyContainer(drawing_area: Class_DrawingArea): void {
+    if (this._container_selector === null) return
+    drawing_area.container_selector = this._container_selector
+    drawing_area.container_owner_document = this._container_owner_document
+  }
+
+  /** Sélecteur du conteneur où ce document se montre ; `null` = la zone décide (défaut). */
+  protected _container_selector: string | null = null
+  protected _container_owner_document: Document | null = null
+  private _wrapped_drawing_area_factory = false
+  public get container_selector(): string | null { return this._container_selector }
+  public get container_owner_document(): Document | null { return this._container_owner_document }
 
   public createNewDrawingArea(id?: string): Class_DrawingArea {
     const drawing_area = new Class_DrawingArea(
@@ -427,53 +677,44 @@ export class Class_ApplicationData {
   public version: string = '1.3.5'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
-  public options: { [_: string]: boolean | string } = {}
 
-  // Attributes to transfer between sankeys
-  public data_var_to_update: string[] = []
+  /** Options d'instanciation de l'application : de l'espace de travail (`no_key_event`…). */
+  public get options(): { [_: string]: boolean | string } { return this.workspace.options }
+
+  // Attributes to transfer between sankeys — réglage de session partagé par deux dialogues,
+  // donc de l'espace de travail. Le tableau est muté EN PLACE par ses lecteurs : l'accesseur
+  // doit rendre le même objet à chaque lecture, ce que garantit la délégation.
+  public get data_var_to_update(): string[] { return this.workspace.data_var_to_update }
+  public set data_var_to_update(_: string[]) { this.workspace.data_var_to_update = _ }
+
+  // Crochets injectés par OS+ sur l'application : ils vivent dans l'espace de travail, donc
+  // TOUS les documents en héritent — y compris ceux qu'une fenêtre ouvre sur une autre feuille.
   /** Called after applying a layout from an external source.
    * tmp_DA is the already-converted source DrawingArea.
    * json is the raw source file JSON (null for view sources).
    * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
-  public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
-
-  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le sankey unitaire
-   * focalisé sur `node` dans le conteneur DOM `container_selector`, EN PLUS du
-   * diagramme principal. Retourne un handle pour le redessiner (resize) et le
-   * nettoyer. Alimente l'onglet « Sankey unitaire » du tooltip de nœud
-   * (NodeTooltip). Absent hors OS+. */
-  public draw_unitary_in_container?: (
-    node: Class_NodeElement,
-    container_selector: string
-  ) => { redraw: () => void, cleanup: () => void } | void = undefined
-
-  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le GRAPHIQUE
-   * D'ANALYSE (couronne / histogramme) décrit par l'attribut analysis_descriptor
-   * de l'élément (nœud OU flux) dans le conteneur DOM `container_selector`.
-   * Alimente l'onglet « Analyse » des tooltips de nœud et de flux quand
-   * surfaces.tooltip est activé (OS#1278). Absent hors OS+. */
-  public draw_analysis_in_container?: (
-    element: Class_NodeElement | Class_LinkElement,
-    container_selector: string
-  ) => { redraw: () => void, cleanup: () => void } | void = undefined
+  public get post_apply_layout_callback() { return this.workspace.post_apply_layout_callback }
+  public set post_apply_layout_callback(_) { this.workspace.post_apply_layout_callback = _ }
 
   /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
    * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
    * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
-   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+. */
-  public draw_node_analysis_overlay?: (
-    node: Class_NodeElement,
-    group_el: SVGGElement,
-    width: number,
-    height: number
-  ) => boolean = undefined
+   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+.
+   *
+   * os#1421 — `figure_options` : le sac EFFECTIF de la FIGURE posée sur le nœud (placement,
+   * cf. Representations/Placement), quand il y en a une : descripteur, étiquette de données
+   * épinglée… Le hook dessine alors CETTE figure — un lien vers la fenêtre où on l'a réglée —
+   * et non une couronne recalculée depuis l'attribut du nœud. Absent = chemin hérité
+   * `surfaces.on_node`, qui relit `analysis_descriptor` sur le nœud.
+   * os#1385 — le crochet vit dans l'espace de travail (sa signature est dans `Class_Workspace`). */
+  public get draw_node_analysis_overlay() { return this.workspace.draw_node_analysis_overlay }
+  public set draw_node_analysis_overlay(_) { this.workspace.draw_node_analysis_overlay = _ }
 
   /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
    * (colonne de boutons Unit. / Couronne / Barres). Chacune sait se dessiner dans un
    * conteneur DOM. Absent hors OS+ (pas de colonne d'analyses). */
-  public element_analyses_for?: (
-    element: Class_NodeElement | Class_LinkElement
-  ) => Type_ElementAnalysis[] = undefined
+  public get element_analyses_for() { return this.workspace.element_analyses_for }
+  public set element_analyses_for(_) { this.workspace.element_analyses_for = _ }
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -620,18 +861,18 @@ export class Class_ApplicationData {
 
   /** Id de la feuille courante ('' tant que le document n'a pas de feuilles). */
   protected _current_sheet_id: string = ''
-  // Vrai pendant qu'un contenu de feuille se charge via fromJSON (cf. _loadSheetContent) :
-  // coupe la redirection « fichier sans feuilles -> feuille courante » de fromJSON.
-  protected _loading_into_sheet: boolean = false
+  // os#1385 (lot 3) — `_loading_into_sheet` a disparu : le fait qu'il portait (« ce
+  // chargement-ci reste dans le fichier ouvert ») est désormais une OPTION du chargement,
+  // `keep_file_state`, lue par `fromJSON` et par `_loadSheetContent`.
   public get current_sheet_id() { return this._current_sheet_id }
 
   /** True dès que le document porte des feuilles nommées (au moins une entrée). */
   public get has_sheets(): boolean { return this._sheets_order.length > 0 }
 
   /**
-   * os#1386 — Applications de LECTURE des feuilles NON courantes, par id de feuille, avec
-   * l'instantané dont elles sont issues. Voir `sheetApplication` pour le pourquoi, la
-   * politique d'invalidation et le contrat de lecture seule.
+   * os#1386 / os#1385 (lot 3) — DOCUMENTS VIVANTS des feuilles NON courantes, par id de
+   * feuille, avec l'instantané dont ils sont issus. Voir `sheetApplication` pour le pourquoi
+   * et la politique d'invalidation, `releaseSheetDocument` pour la sortie.
    */
   protected _sheet_apps: { [id: string]: { snapshot: Uint8Array, app: Class_ApplicationData } } = {}
 
@@ -671,7 +912,9 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _history?: Class_ApplicationHistory
-  protected _clipboard_node_ids: string[] = []
+  // os#1385 (lot 2) — `_clipboard_node_ids` a migré dans l'espace de travail
+  // (`Class_Workspace.clipboard`) : un presse-papiers par document ne permettait pas de coller
+  // ce qu'on venait de copier ailleurs, et ne le disait pas.
 
   /**
    * Configuration Menu
@@ -706,50 +949,8 @@ export class Class_ApplicationData {
         'allStyles'])
   }
 
-  //@ts-expect-error xxx
-  protected _t: TFunction = () => null//useTranslation('translation', { useSuspense: false }).t //traductor
-  //@ts-expect-error xxx
-  protected _i18n: i18n = () => null//useTranslation('translation', { useSuspense: false }).i18n //traductor
-
-  /**
-   * Path to OpenSankey logo
-   * @private
-   * @type {string}
-   * @memberof Class_ApplicationData
-   */
-  private _logo_opensankey: string
-
-  /**
-   * Path to Terriflux logo
-   * @private
-   * @type {string}
-   * @memberof Class_ApplicationData
-   */
-  private _logo_terriflux: string
-
-  /**
-   * Width of logo
-   * @private
-   * @type {number}
-   * @memberof Class_ApplicationData
-   */
-  private _logo_width: number = 100
-
-  /**
-   * Application name
-   * @private
-   * @type {string}
-   * @memberof Class_ApplicationData
-   */
-  private _app_name: string = 'MFASankey'
-
-  /**
-   * Path prefix for backend server requests
-   * @private
-   * @type {string}
-   * @memberof Class_ApplicationData
-   */
-  private _url_prefix: string = '/opensankey/'
+  // Langue de l'interface, logos, préfixe d'URL : de l'espace de travail (cf. leurs accesseurs
+  // délégués dans la section GETTERS / SETTERS).
 
   /**
    * Varaible to save language selected
@@ -759,28 +960,8 @@ export class Class_ApplicationData {
    */
   private _language?: string | undefined
 
-  /**
-   * Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
-   * @private
-   * @memberof Class_ApplicationData
-   */
-  protected _toast: CreateToastFnReturn | null = null
-
-  /**
-   * Queue of waiting processes for toast
-   * @private
-   * @type {string[]}
-   * @memberof Class_ApplicationData
-   */
-  private _toast_processes: string[] = []
-
-  /**
-   * Force bypassing waiting toast
-   * @private
-   * @type {boolean}
-   * @memberof Class_ApplicationData
-   */
-  private _toast_bypass: boolean = toast_bypass
+  // Toasts : file d'attente UNIQUE, portée par l'espace de travail (`sendWaitingToast`,
+  // `notifyUser` délèguent). Deux documents ne se volent plus leur spinner.
 
   /**
    * Guided visite steps to show app
@@ -798,38 +979,46 @@ export class Class_ApplicationData {
    */
   private _guided_tour: Class_GuidedTour = new Class_GuidedTour(this)
 
+  // Réglages « de session » de la mise en page automatique : partagés par le menu contextuel et
+  // le dialogue d'import Excel, donc de l'espace de travail. Accesseurs délégués.
+
   /**
    * Session-only horizontal spacing for auto-layout. `null` = use style default.
    * Shared between the auto-layout context menu widget and the Excel import dialog.
    */
-  public layout_h_spacing: number | null = null
+  public get layout_h_spacing(): number | null { return this.workspace.layout_h_spacing }
+  public set layout_h_spacing(_: number | null) { this.workspace.layout_h_spacing = _ }
 
   /**
    * Session-only vertical spacing for auto-layout. `null` = use style default.
    * Shared between the auto-layout context menu widget and the Excel import dialog.
    */
-  public layout_v_spacing: number | null = null
+  public get layout_v_spacing(): number | null { return this.workspace.layout_v_spacing }
+  public set layout_v_spacing(_: number | null) { this.workspace.layout_v_spacing = _ }
 
   /**
    * Session-only placement mode for nodes without incoming flows (auto-layout).
    * 'before_neighbor' = one column before the earliest successor (default),
    * 'left_extremity' = pinned to the leftmost column (index 0).
    */
-  public layout_sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor'
+  public get layout_sources_mode(): 'before_neighbor' | 'left_extremity' { return this.workspace.layout_sources_mode }
+  public set layout_sources_mode(_: 'before_neighbor' | 'left_extremity') { this.workspace.layout_sources_mode = _ }
 
   /**
    * Session-only placement mode for nodes without outgoing flows (auto-layout).
    * 'after_neighbor' = one column after the latest predecessor (default),
    * 'right_extremity' = pinned to the rightmost column.
    */
-  public layout_sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+  public get layout_sinks_mode(): 'after_neighbor' | 'right_extremity' { return this.workspace.layout_sinks_mode }
+  public set layout_sinks_mode(_: 'after_neighbor' | 'right_extremity') { this.workspace.layout_sinks_mode = _ }
 
   /**
    * Session-only mode for the auto-layout: whether to minimize link crossings.
    * `true` = "Minimiser les croisements", `false` = "Centrer les nœuds".
    * Used by the Excel import dialog; the right-click menu exposes the choice via two buttons instead.
    */
-  public layout_optimize_crossing: boolean = true
+  public get layout_optimize_crossing(): boolean { return this.workspace.layout_optimize_crossing }
+  public set layout_optimize_crossing(_: boolean) { this.workspace.layout_optimize_crossing = _ }
 
   /**
    * sankeyapplication#153 — Recalcul automatique du statut recyclage après un déplacement
@@ -863,14 +1052,30 @@ export class Class_ApplicationData {
   // CONSTRUCTOR ========================================================================
 
   /**
-    * Creates an instance of Class_ApplicationData.
-    * @param {boolean} published_mode
-    * @memberof Class_ApplicationData
-    */
+   * Creates an instance of Class_ApplicationData — LE DOCUMENT (os#1385).
+   *
+   * Deux formes, et une seule vérité derrière :
+   *  - `new Class_ApplicationData(workspace)` : le geste normal, fait par
+   *    `Class_Workspace.createDocument()`, qui enregistre ensuite le document ;
+   *  - `new Class_ApplicationData(published_mode, options)` : la forme HISTORIQUE, toujours
+   *    valide (soixante fichiers de tests, consommateurs npm). Le document se crée alors son
+   *    PROPRE espace de travail, dont il est le document principal.
+   *
+   * @param {Class_Workspace | boolean} workspace_or_published_mode
+   * @memberof Class_ApplicationData
+   */
   constructor(
-    published_mode: boolean,
+    workspace_or_published_mode: Class_Workspace | boolean,
     options: { [_: string]: boolean | string } = {}
   ) {
+    // L'ESPACE DE TRAVAIL D'ABORD, AVANT TOUT LE RESTE : `createNewDrawingArea()` plus bas
+    // construit une zone de dessin qui lit `is_static`, lequel vient de lui.
+    if (typeof workspace_or_published_mode === 'boolean') {
+      this._workspace = this.createOwnWorkspace(workspace_or_published_mode, options)
+      this._workspace.registerDocument(this)
+    } else {
+      this._workspace = workspace_or_published_mode
+    }
     // super()
     // Initialiser le système de tooltip (idempotent ; appelé ici plutôt qu'au top-level
     // pour ne pas marquer le module comme side-effectful, ce qui casse l'analyse webpack
@@ -891,14 +1096,12 @@ export class Class_ApplicationData {
     // constructeur, et non au premier niveau du module : un appel exécutable au top-level
     // casse l'analyse webpack des consommateurs externes (même raison que ci-dessus).
     exposeDrawCounters()
-    // Options for application
-    this.options = options
     // Deals with UI menu updates / each modifications
     // Contains all drawn objects
     this._drawing_area = this.createNewDrawingArea()
-    // For published mode only
-    this.drawing_area.static = published_mode
-    this.fit_screen = published_mode
+    // For published mode only — `static` est désormais LU de l'espace de travail (getter de
+    // la zone de dessin) : il n'y a plus rien à poser, ni ici ni après un reset().
+    this.fit_screen = this.workspace.published_mode
     // menu_configuration : les constructeurs des classes modèle n'appellent plus de hooks
     // React (cf. #21), donc on peut la créer dès l'instanciation (sans toast). Sans ça,
     // un appel précoce (ex. checkTokens/setLicenses du LoginComponent avant le 1er render)
@@ -907,15 +1110,22 @@ export class Class_ApplicationData {
     this.createNewMenuConfiguration()
     // Librairie of icon
     this._icon_library = this.createNewIconLibrary()
-    // Get OpenSankey logo
-    this._logo_opensankey = 'logos/logo_opensankey.png'
-    // Get TerriFlux logo
-    if (published_mode) this._logo_terriflux = 'logo_terriflux.png'
-    else this._logo_terriflux = 'logos/logo_terriflux.png'
 
     if (this.options.no_key_event === true) {
       return
     }
+  }
+
+  /**
+   * L'espace de travail PRIVÉ que se donne un document construit par la forme historique
+   * `new Class_ApplicationData(published_mode, options)`. Virtuelle : OS+ et la couche SaaS
+   * la surchargent pour se donner le leur (essai, préférences, composant de connexion).
+   */
+  protected createOwnWorkspace(
+    published_mode: boolean,
+    options: { [_: string]: boolean | string }
+  ): Class_Workspace {
+    return new Class_Workspace(published_mode, options)
   }
 
   // // CLEANING METHODS ===================================================================
@@ -933,14 +1143,53 @@ export class Class_ApplicationData {
    * @protected
    * @memberof Class_ApplicationData
    */
-  public reset(_?: Type_JSON) {
-    // Reset drawing area
-    const by_pass_redraw = this._drawing_area.bypass_redraws
-    this._file_name = default_file_name
+  public reset(kwargs?: Type_JSON) {
+    // os#1385 (lot 3, D6) — `reset()` DISAIT DEUX CHOSES À LA FOIS : « oublie le FICHIER »
+    // (les feuilles, leurs documents, la provenance) et « repars d'un DIAGRAMME neuf » (la
+    // zone de dessin, l'historique, la doc, les réglages de publication). Charger le contenu
+    // d'une feuille n'a besoin que du second, d'où le stash/restore que `_loadSheetContent`
+    // faisait autour de l'appel — et d'où la provenance perdue à chaque bascule d'onglet
+    // (inventaire 4 §2, « ce qui est PERDU »). Les deux gestes sont maintenant nommés.
+    //
+    // `only_current_view` SAUTE le premier : c'est un rafraîchissement de la vue courante
+    // (réconciliation dans une vue, « vider la vue ») et la branche OSP correspondante ne
+    // touchait déjà ni au fichier ni au reste du document. Le fichier n'est pas concerné.
+    if (!(kwargs && kwargs['only_current_view'])) this.resetFile()
+    this.resetDocument(kwargs)
+  }
+
+  /**
+   * os#1385 (lot 3, D6) — OUBLIER LE FICHIER : ses feuilles, les documents vivants qui les
+   * portent, et sa provenance. C'est la moitié de l'ancien `reset()` qu'une bascule de feuille
+   * ne doit PAS faire — elle reste dans le même fichier.
+   */
+  public resetFile(): void {
+    // OS#85 — Les feuilles appartiennent au FICHIER : en charger un autre les efface.
+    this._sheets = {}
+    this._sheets_order = []
+    this._current_sheet_id = ''
+    // os#1386/os#1385 — et donc les documents qui les portent : ils sont le modèle d'un
+    // fichier qui n'est plus ouvert. `dispose()` démonte leur zone de dessin et les retire
+    // de l'espace de travail (cf. `sheetApplication`).
+    this._clearSheetApplications()
     // Provenance sankeythèque : un autre diagramme est chargé, celui d'avant n'est
     // plus à l'écran — le réenregistrement en place doit donc redevenir impossible.
     // (Le chargement d'une étude la repose juste après, cf. loadJsonTemplate.)
+    // Ici, et non dans `resetDocument` : une bascule de feuille reste DANS l'étude ouverte,
+    // et lui faire perdre son « réenregistrer en place » n'avait aucune raison d'être.
     this._sankeytheque_origin = null
+  }
+
+  /**
+   * os#1385 (lot 3, D6) — REPARTIR D'UN DIAGRAMME NEUF, sans rien dire du fichier : zone de
+   * dessin, historique, nom, brique, doc, réglages de publication. C'est ce que fait un
+   * chargement de contenu de feuille, et c'est ce que surcharge OpenSankey+ (vues, contextes,
+   * vignettes — y compris la branche `only_current_view`, qui ne recrée que la zone).
+   */
+  public resetDocument(_?: Type_JSON): void {
+    // Reset drawing area
+    const by_pass_redraw = this._drawing_area.bypass_redraws
+    this._file_name = default_file_name
     // sa#399 — Nouveau document = nouvelle brique : la référence bibliothèque ne survit
     // qu'au travers du JSON (fromJSON la repose juste après si le fichier la porte).
     this._library_ref = null
@@ -949,15 +1198,6 @@ export class Class_ApplicationData {
     this._documentation_images = {}
     // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
     this._publish_settings = {}
-    // OS#85 — Les feuilles appartiennent au DOCUMENT : en charger un autre les efface.
-    // Les bascules de feuille, qui passent par fromJSON (donc par ici), préservent
-    // l'état autour de l'appel (cf. _loadSheetContent).
-    this._sheets = {}
-    this._sheets_order = []
-    this._current_sheet_id = ''
-    // os#1386 — et donc leurs applications de lecture : elles portent le modèle d'un
-    // document qui n'est plus ouvert (cf. `sheetApplication`).
-    this._clearSheetApplications()
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -966,8 +1206,12 @@ export class Class_ApplicationData {
 
     // Reset Class_DataHistory
     this._history = new Class_ApplicationHistory(this._menu_configuration!)
-    // Update menus
-    this.menu_configuration?.updateAllMenuComponents()
+    // Update menus — SEULEMENT le document principal (os#1385). Les emplacements repeints ici
+    // sont ceux de l'HÔTE (sous-menus, préférences, page d'accueil) : les laisser à un document
+    // secondaire (instantané de feuille, source unitaire) ferait repeindre l'interface de
+    // l'utilisateur au chargement d'un document qu'il ne regarde pas. Avant le lot 1, cette
+    // configuration était simplement ORPHELINE : on reproduit ce comportement.
+    if (this.is_main) this.menu_configuration?.updateAllMenuComponents()
   }
 
   /**
@@ -978,6 +1222,13 @@ export class Class_ApplicationData {
   public reinitialization(redraw: boolean = true) {
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
+    // os#1385 (lot 2) — ET LES EMPLACEMENTS DES AUTRES DOCUMENTS. « Tout effacer » ne peut pas
+    // laisser derrière lui les feuilles et les briques écrites à côté (`cache_key`) : elles
+    // reviendraient au prochain index de documents (lot 3) comme des fantômes d'un diagramme
+    // que l'utilisateur croit avoir jeté.
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('data:'))
+      .forEach(k => localStorage.removeItem(k))
     localStorage.removeItem('last_save')
     localStorage.removeItem('initial_data')
     localStorage.removeItem('icon_imported')
@@ -1001,7 +1252,14 @@ export class Class_ApplicationData {
    *
    * @memberof Class_ApplicationData
    */
-  public saveInCache() {
+  public saveInCache(): void {
+    // os#1385 (lot 3, D6) — ENREGISTRER DEPUIS LA FEUILLE B ENREGISTRE LE FICHIER, dont B fait
+    // partie. Une feuille n'est pas un fichier : son document est une PARTIE du document
+    // porteur, et c'est le porteur qui sait écrire les autres feuilles à côté d'elle. Le
+    // détour n'est pas une perte de fidélité, c'est le contraire : `sheetsToJSON` du porteur
+    // sérialise B EN L'APPELANT tant qu'elle est vivante — l'état à l'écran part dans le
+    // fichier, pas l'instantané d'avant. C'est très exactement le point de D6.
+    if (this._file_holder) return this._file_holder.saveInCache()
     this.sendWaitingToast(
       () => {
         // Read json file
@@ -1026,8 +1284,11 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _saveInCache() {
-    // Push to storage
-    localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
+    // Push to storage — os#1385 (lot 2) : à l'emplacement de CE document (cf. `cache_key`).
+    localStorage.setItem(this.cache_key, LZString.compress(JSON.stringify(this._toJSON())))
+    // `last_save` et `last_save_at` restent GLOBAUX, délibérément : il n'y a qu'un bouton
+    // Enregistrer et qu'un horodatage à montrer au survol. Les distinguer par document
+    // demanderait d'abord de montrer lequel, ce que l'écran ne fait pas encore.
     localStorage.setItem('last_save', 'true')
     // sa#424 (lot 4) — HORODATAGE de l'enregistrement, pas seulement son
     // existence : « enregistré » sans date ne dit pas si cela remonte à une
@@ -1106,7 +1367,12 @@ export class Class_ApplicationData {
    *
    * @memberof Class_ApplicationData
    */
-  public saveToJSON(kwargs?: Type_JSON) {
+  public saveToJSON(kwargs?: Type_JSON): void {
+    // os#1385 (lot 3, D6) — même règle qu'`saveInCache` : « Enregistrer sous » depuis une
+    // fenêtre ouverte sur la feuille B écrit LE FICHIER, feuilles comprises, et non le
+    // diagramme de B tout seul. Exporter B seule reste possible, mais c'est un autre geste
+    // (« exporter cette feuille »), qui devra le dire.
+    if (this._file_holder) return this._file_holder.saveToJSON(kwargs)
     this.sendWaitingToast(
       async () => {
         await this.beforeSaveToJSON()
@@ -1238,13 +1504,31 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1421 — SOLDE LES FIGURES PROMUES QUE PLUS RIEN NE CITE, avant de sérialiser le registre.
+   *
+   * VIRTUELLE, et c'est ce qui la rend sûre : une application à VUES (OS+) travaille sur une zone
+   * de dessin qui n'est pas celle qu'elle sérialise, et ne regarder que l'une des deux solderait
+   * une figure posée dans l'autre. Elle y surcharge donc ce point unique, et tous les chemins
+   * d'écriture — y compris ceux qui passent par `super._toJSON` — en bénéficient.
+   *
+   * `?.` sur la zone de dessin : une application de feuille, ou un document lu hors écran, peut
+   * n'en avoir aucune, et un balayage n'est jamais une raison de faire échouer une écriture.
+   */
+  protected _pruneUnreferencedFiguresBeforeWrite(): void {
+    const mc = this.menu_configuration
+    if (!mc) return
+    mc.pruneUnreferencedFigures(mc.placedFigureIds(this.drawing_area?.sankey?.nodes_list ?? []))
+  }
+
+  /**
    * Create json file that contains all application datas
    * @memberof Class_ApplicationData
    */
   protected _toJSON(kwargs?: Type_JSON) {
     const json_object = {} as Type_JSON
-    if (this._language !== undefined)
-      json_object['language'] = this._language
+    // os#1385 (lot 4, D8) — LA LANGUE ET LES PANNEAUX SONT DE L'ESPACE DE TRAVAIL, et
+    // partent ensemble sous la clé racine `workspace` (cf. `workspaceToJSON`).
+    this.workspaceToJSON(json_object, kwargs)
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     const doc_serialized = serializeDocMarkdown(this._documentation_markdown)
     if (doc_serialized !== undefined) json_object['documentation_markdown'] = doc_serialized
@@ -1252,14 +1536,30 @@ export class Class_ApplicationData {
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     // sa#399 — Référence de brique de bibliothèque, clé racine persistée avec le diagramme.
     if (this._library_ref) json_object['library_ref'] = { ...this._library_ref }
-    json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
-    // os#1394 — Réglages PAR DÉFAUT des natures de représentation (étoile unitaire, couronne,
-    // histogrammes, sunburst), clé racine ADDITIVE : absente tant que rien n'a été réglé, donc
-    // un fichier antérieur se relit à l'identique.
-    const repr_defaults = this.menu_configuration.representationDefaultsToJSON()
-    if (repr_defaults) json_object['representation_defaults'] = repr_defaults
-    // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
-    json_object['panels'] = this.menu_configuration.panels.toJSON()
+    // os#1385 (lot 3) — LA GRANDE ZONE EST DE L'HÔTE, comme les panneaux : une seule disposition
+    // à l'écran quel que soit le nombre de documents ouverts, donc seul le PRINCIPAL l'écrit.
+    // Sans cette garde, chaque document secondaire (feuille vivante, source Excel, brique)
+    // recopierait la disposition de l'utilisateur dans sa propre entrée du fichier.
+    if (this.is_main) json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    // os#1418 — STYLES DES NATURES DE FIGURE (étoile unitaire, couronne, histogrammes,
+    // sunburst), clé racine ADDITIVE : absente tant qu'aucun style n'a été réglé, donc un
+    // fichier antérieur se relit à l'identique. Remplace `representation_defaults` (os#1394),
+    // que la lecture sait encore migrer.
+    const figure_styles = this.menu_configuration.figureStylesToJSON()
+    if (figure_styles) json_object['figure_styles'] = figure_styles
+    // os#1421 — LE BALAYAGE, JUSTE AVANT D'ÉCRIRE LE REGISTRE. Une figure promue que plus rien ne
+    // cite — ni vignette d'une fenêtre VIVANTE, ni placement sur un nœud — a été nommée pour être
+    // posée puis dépossée : plus personne ne la regarde, et la garder ne ferait que grossir le
+    // fichier. L'enregistrement est le seul moment où quelqu'un SAIT les placements (il a les
+    // nœuds), d'où l'appel ici et non dans `Class_MenuConfig`. Idempotent : la seconde passe ne
+    // trouve plus rien à solder.
+    this._pruneUnreferencedFiguresBeforeWrite()
+    // os#1421 — LE REGISTRE DES FIGURES DU DOCUMENT (celles qu'un placement cite), clé racine
+    // ADDITIVE elle aussi : absente tant qu'aucune figure n'a été POSÉE. Racine et non `main_zone`,
+    // parce qu'une figure posée sur un nœud survit à la fenêtre où on l'a réglée — l'écrire dans
+    // la fenêtre la perdrait précisément dans le cas où elle compte.
+    const figures = this.menu_configuration.figuresToJSON()
+    if (figures) json_object['figures'] = figures
     // OS#85 — Feuilles du document (clé racine `sheets`). La racine du fichier EST le
     // contenu de la feuille courante (compat : un ancien lecteur l'affiche telle quelle).
     this.sheetsToJSON(json_object, kwargs)
@@ -1296,11 +1596,15 @@ export class Class_ApplicationData {
     // « ouvrir dans une nouvelle feuille » (bibliothèque) la posent, eux, à `true`.
     //
     // Un fichier AVEC feuilles reste un DOCUMENT complet : il remplace tout, feuilles
-    // comprises — même quand l'option est demandée. La garde `_loading_into_sheet` coupe
-    // la récursion : _loadSheetContent repasse par fromJSON pour poser le contenu, et lui
-    // seul doit faire le vrai reset.
+    // comprises — même quand l'option est demandée.
+    //
+    // os#1385 (lot 3) — la garde qui coupe la récursion n'est plus un drapeau d'instance
+    // (`_loading_into_sheet`) mais l'option qui la décrit : `keep_file_state`. C'est le même
+    // fait dit une seule fois — « ce chargement-ci n'ouvre pas un autre fichier, il pose un
+    // contenu dans le fichier déjà ouvert » — et il sert aussi, plus bas, à sauter `resetFile`.
     const into_current_sheet = Boolean(kwargs && kwargs['into_current_sheet'])
-    if (into_current_sheet && this.has_sheets && !this._loading_into_sheet && !json_object['sheets']) {
+    const keep_file_state = Boolean(kwargs && kwargs['keep_file_state'])
+    if (into_current_sheet && this.has_sheets && !keep_file_state && !json_object['sheets']) {
       this._loadSheetContent(json_object, draw)
       this.menu_configuration?.ref_to_sheet_tabs_updater.current()
       return
@@ -1309,8 +1613,11 @@ export class Class_ApplicationData {
     //   () => {
     // Always bypass redrawings
     this._drawing_area.bypass_redraws = true
-    // Reset everything
-    this.reset(kwargs)
+    // Reset everything — os#1385 (lot 3) : le FICHIER n'est oublié que si on en ouvre un autre.
+    // `keep_file_state` = « je charge un contenu DANS le fichier ouvert » (bascule de feuille,
+    // nouvelle feuille) : les feuilles, leurs documents vivants et la provenance traversent.
+    if (!keep_file_state) this.resetFile()
+    this.resetDocument(kwargs)
     this._drawing_area.bypass_redraws = true
     // Read json file
     // os#1377 — le temps de la lecture, on annonce à qui lit le fichier qu'un dessin complet
@@ -1386,12 +1693,20 @@ export class Class_ApplicationData {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    // os#1385 (lot 4, D8) — LA LANGUE D'AVANT, retenue pour `workspaceFromJSON` : la
+    // relecture de la zone de dessin écrase `language` depuis la clé RACINE du même nom
+    // (`SankeyPersistence.fromJSON`), et un contenu de feuille n'en porte plus.
+    const language_before = this._language
     // Update drawing area
     DrawingAreaPersistence.fromJSON(this._drawing_area, json_object, kwargs)
+    // os#1385 (lot 4, D8) — Langue et panneaux : clé racine `workspace`, repli sur la
+    // racine pour les fichiers antérieurs. Lu AVANT la documentation, qui range une doc
+    // historique en chaîne sous la langue déclarée du fichier.
+    this.workspaceFromJSON(json_object, kwargs, language_before)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
     this._documentation_markdown = parseDocMarkdown(
       json_object['documentation_markdown'],
-      json_object['language'] as string | undefined
+      workspaceStateFromJSON(json_object).language
     )
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
@@ -1401,29 +1716,133 @@ export class Class_ApplicationData {
     // sa#399 — Brique associée : relue du fichier ; absente ou malformée => null
     // (un fichier sans library_ref est une nouvelle brique, cf. reset()).
     this._library_ref = parseLibraryRef(json_object['library_ref'])
-    const mz = json_object['main_zone']
-    // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
-    // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
-    // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
-    if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
-    // os#1394 — défauts par nature de représentation. Relus seulement si la clé est là : un
-    // fichier qui n'en porte pas ne doit pas effacer ce que la session a déjà appris, même
-    // logique que `main_zone` juste au-dessus.
+    // os#1418 — LES STYLES DE FIGURE SE LISENT AVANT `main_zone`, ET L'ORDRE EST INVERSÉ EXPRÈS.
+    //
+    // La migration des fenêtres d'un fichier d'avant (sac `options` + `panes`) doit savoir si la
+    // nature a un style qui dit quelque chose : c'est ce qui décidait, dans la résolution de
+    // os#1394, entre « la figure suit le défaut » et « elle reprend le repli de la fenêtre ».
+    // Lire la grande zone d'abord, comme on le faisait, ferait migrer chaque vignette contre un
+    // style encore vide — et le repli gagnerait là où le défaut gagnait.
+    //
+    // Relus seulement si la clé est là : un fichier qui n'en porte pas ne doit pas effacer ce
+    // que la session a déjà appris.
+    const figure_styles = json_object['figure_styles']
+    if (figure_styles && typeof figure_styles === 'object') {
+      this.menu_configuration?.figureStylesFromJSON(figure_styles)
+    }
+    // os#1394 — défauts par nature de représentation, format HÉRITÉ : relu comme le style
+    // `default` de la nature, les clés liées au sujet étant écartées et rapportées.
     const repr_defaults = json_object['representation_defaults']
     if (repr_defaults && typeof repr_defaults === 'object') {
       this.menu_configuration?.representationDefaultsFromJSON(repr_defaults)
     }
-    // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
-    const panels_json = json_object['panels']
-    if (panels_json && typeof panels_json === 'object') {
-      this.menu_configuration?.panels.fromJSON(panels_json as Type_JSON)
+    // os#1421 — LE REGISTRE DES FIGURES SE LIT AVANT `main_zone`, ET APRÈS LES STYLES. Après les
+    // styles parce qu'une figure suit des styles qu'il faut avoir lus ; avant la grande zone parce
+    // que les vignettes CITENT le registre (`figures[clé] = { ref: 'f_N' }`), et qu'une vignette
+    // lue d'abord ne trouverait qu'un renvoi dans le vide. Clé absente = registre préservé.
+    const figures = json_object['figures']
+    if (figures && typeof figures === 'object') {
+      this.menu_configuration?.figuresFromJSON(figures)
     }
+    const mz = json_object['main_zone']
+    // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
+    // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
+    // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
+    //
+    // os#1385 (lot 3) — et SEULEMENT pour le document principal, même raison que les panneaux
+    // ci-dessous : la disposition est celle de l'HÔTE. Un document secondaire qui se charge
+    // (feuille B ouverte dans une fenêtre, source Excel, brique) réécrirait sinon la grande zone
+    // de l'écran avec celle enregistrée dans SON entrée du fichier.
+    if (this.is_main && mz && typeof mz === 'object') {
+      this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
+    }
+    // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
+    this.menu_configuration?.flushFigureMigrationReport()
     // #1316 — Viewer intégral : lit le bloc `views` (+ delta __patch) et rouvre sur la vue active.
     // No-op si le fichier n'a pas de clé `views`. OpenSankey+ réimplémente `_fromJSON` (sans super)
     // et pilote ses propres appels vues + migration viewtag ; ce chemin ne sert qu'au viewer OS pur.
     this._views_reader.viewsFromJSON(json_object)
     // OS#85 — Feuilles du document. No-op (silencieux) si le fichier n'a pas de clé `sheets`.
     this.sheetsFromJSON(json_object)
+  }
+
+  // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
+
+  /**
+   * Sérialise la clé racine `workspace` : `{ language?, panels? }`.
+   *
+   * POURQUOI UNE CLÉ À PART. La langue de l'interface et la disposition des panneaux
+   * étaient rangées à la racine, au milieu des clés du diagramme, alors qu'elles ne
+   * décrivent pas le diagramme : ce sont des préférences de l'ESPACE DE TRAVAIL,
+   * partagées par tous les documents ouverts (inventaire 4 §1.2). Les laisser au
+   * niveau du document, c'était laisser la feuille B décider de la langue de
+   * l'interface et de la largeur de la barre latérale de l'utilisateur.
+   *
+   * ÉCRITE PAR LE PRINCIPAL SEULEMENT, et jamais dans un contenu de feuille
+   * (`without_sheets`) — les deux disent la même chose : il n'y a qu'un espace de
+   * travail à l'écran, il n'a donc qu'un seul écrivain, et une feuille n'en est pas un.
+   * C'est la garde `is_main` du lot 1 (panneaux) et du lot 3 (grande zone), REMPLACÉE
+   * ici et non empilée.
+   *
+   * LA LISTE DES FENÊTRES N'Y ENTRE PAS À CE LOT : depuis le lot 3, `main_zone` (clé
+   * racine, écrite par le principal) EST la disposition de l'espace de travail —
+   * l'écrire une seconde fois sous `workspace` serait une copie, donc deux vérités.
+   * Elle rejoindra `workspace` quand elle se distinguera de la disposition par DÉFAUT
+   * du document (lot 6), à côté de `view_main_zone` qui est, elle, par vue.
+   *
+   * /!\ Clé RACINE : chez OpenSankey+ (fichier avec vues) elle doit être posée AVANT
+   * `encodeViewsAsDelta`, comme `sheets`, `library_ref` et `contexts` — la base du
+   * delta est « la racine privée de `views` », strictement identique à l'écriture et à
+   * la lecture (cf. `sheetsToJSON`).
+   */
+  protected workspaceToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+    if (kwargs && kwargs['without_sheets'] === true) return
+    if (!this.is_main) return
+    const workspace = {} as Type_JSON
+    if (this._language !== undefined) workspace['language'] = this._language
+    // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
+    workspace['panels'] = this.menu_configuration.panels.toJSON()
+    json_object['workspace'] = workspace
+  }
+
+  /**
+   * Relit la clé racine `workspace` (repli sur la racine : `workspaceStateFromJSON`).
+   *
+   * PAR LE PRINCIPAL SEULEMENT, symétrique de l'écriture : un document secondaire qui
+   * se charge (feuille ouverte dans une fenêtre, source Excel, brique) remplacerait
+   * sinon la langue et les panneaux de l'utilisateur par ceux enregistrés dans SON
+   * entrée du fichier.
+   *
+   * ET PAS QUAND LE FICHIER NE CHANGE PAS. Deux chargements posent un contenu DANS le
+   * fichier déjà ouvert plutôt que d'en ouvrir un autre : `keep_file_state` (bascule de
+   * feuille, nouvelle feuille) et `only_current_view` (bascule de vue). L'espace de
+   * travail ne change donc pas non plus — et la langue est REPOSÉE telle qu'elle était,
+   * parce que la relecture de la zone de dessin vient de l'écraser depuis la clé racine
+   * `language` que ni un contenu de feuille ni une entrée de vue ne portent.
+   *
+   * Lire l'espace de travail sur ces chemins-là serait pire qu'inutile : une entrée de
+   * vue DÉCODÉE porte la base du delta, donc les clés racines d'un fichier ANTÉRIEUR —
+   * chaque bascule de vue rejouerait la barre latérale du fichier par-dessus celle de
+   * l'utilisateur.
+   *
+   * `language` n'est posée que si le fichier en dit une : sinon on garde ce que la
+   * zone de dessin a lu (fichier antérieur), et donc l'état d'avant.
+   */
+  protected workspaceFromJSON(
+    json_object: Type_JSON,
+    kwargs: Type_JSON | undefined,
+    language_before: string | undefined
+  ): void {
+    if (kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])) {
+      this._language = language_before
+      return
+    }
+    if (!this.is_main) return
+    const state = workspaceStateFromJSON(json_object)
+    if (state.language !== undefined) this._language = state.language
+    // Garde défensive `?.` : `menu_configuration` n'est posée que par
+    // `createNewMenuConfiguration` (cf. `main_zone` ci-dessus).
+    if (state.panels) this.menu_configuration?.panels.fromJSON(state.panels)
   }
 
   // FEUILLES DE DESSIN (OS#85) =========================================================
@@ -1450,7 +1869,40 @@ export class Class_ApplicationData {
       const sheet = this._sheets[id]
       if (!sheet) return
       const entry = { name: sheet.name } as Type_JSON
-      if (id !== this._current_sheet_id && sheet.json) {
+      const is_sankey = isSankeySheetType(sheet.type)
+      // os#1385 (lot 4, D8) — LE TYPE, écrit seulement s'il dit autre chose que `'sankey'` :
+      // un document qui n'a que des feuilles Sankey — c'est-à-dire tous ceux d'aujourd'hui —
+      // se réécrit octet pour octet identique, et aucun lecteur antérieur ne voit rien changer.
+      if (!is_sankey) entry['type'] = sheet.type as string
+      if (id !== this._current_sheet_id) {
+        // os#1385 (lot 3, D6) — UN DOCUMENT VIVANT EST LA VÉRITÉ, son instantané ne l'est
+        // plus. Depuis qu'une feuille ouverte dans une fenêtre est ÉDITABLE, son instantané
+        // date du moment où elle a cessé d'être courante : l'enregistrer reviendrait à jeter
+        // tout ce que l'utilisateur vient d'y faire. On la sérialise donc EN L'APPELANT.
+        //
+        // `toSheetContentJSON()` enveloppe SA zone de dessin dans `withBypassRedraws`, pas
+        // celle du porteur : la sérialisation OSP d'un document à vues recapture la vue
+        // courante depuis la zone vivante, et c'est la zone de CE document-là qu'il ne faut
+        // pas laisser redessiner pendant qu'on la lit.
+        //
+        // os#1385 (lot 5, D9) — PAR LE TYPE, et non plus par un appel câblé : c'est le type qui
+        // sait comment SON document redevient un contenu d'entrée. Le défaut (sankey) est
+        // exactement l'appel d'avant, et un type inconnu n'a de toute façon jamais de document
+        // vivant (`sheetApplication` rend `null`) : son instantané passe par la branche suivante,
+        // intact.
+        const live = this._sheet_apps[id]?.app
+        const live_type = document_type_registry.typeOf(sheet)
+        if (live && !live.disposed && live_type) {
+          entry['json'] = live_type.serialize(live)
+        } else if (sheet.json) {
+          entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+        }
+      } else if (!is_sankey && sheet.json) {
+        // os#1385 (lot 4, D8) — RÈGLE DE LA RACINE. La feuille courante n'a d'ordinaire pas
+        // de `json` : la racine du fichier EST son contenu. Mais la racine doit rester un
+        // SANKEY — tous les lecteurs hors éditeur en supposent un (viewer, parc publié,
+        // serveur, SEP, cartofob) —, donc une feuille courante d'un autre type porte son
+        // contenu ICI, et la racine garde le dernier Sankey actif.
         entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
       }
       entries[id] = entry
@@ -1483,16 +1935,25 @@ export class Class_ApplicationData {
     valid_order.forEach(id => {
       const entry = entries_json[id] as Type_JSON
       const name = typeof entry['name'] === 'string' && entry['name'] !== '' ? entry['name'] as string : this._defaultSheetName(1)
+      // os#1385 (lot 4, D8) — le TYPE est CONSERVÉ tel quel, même inconnu de cette version :
+      // le registre des types arrive au lot 5, et transporter une entrée qu'on ne sait pas
+      // afficher vaut infiniment mieux que la perdre à la première sauvegarde.
+      const raw_type = entry['type']
+      const type = (typeof raw_type === 'string' && raw_type !== '') ? raw_type : undefined
       const content = entry['json']
       let json: Uint8Array | undefined = undefined
-      if (id !== current && content && typeof content === 'object' && !Array.isArray(content)) {
+      // os#1385 (lot 4, D8) — LA COURANTE AUSSI, quand elle en porte un. Jusqu'ici le `json`
+      // d'une entrée courante était ignoré (la racine était forcément son contenu) ; avec la
+      // règle de la racine, une feuille courante d'un autre type porte le sien, et l'ignorer
+      // reviendrait à jeter son contenu à la relecture.
+      if (content && typeof content === 'object' && !Array.isArray(content)) {
         // Défense en profondeur : le contenu d'une feuille ne doit jamais porter lui-même
         // une clé `sheets` (pas de récursion) — on la retire si un fichier bricolé en a une.
         const content_json = { ...(content as Type_JSON) }
         delete content_json['sheets']
         json = compressJSONToGzip(content_json)
       }
-      sheets[id] = { name, json }
+      sheets[id] = { name, type, json }
     })
     // La feuille courante est portée par la racine du fichier (état vivant) : pas de snapshot.
     this._sheets = sheets
@@ -1508,39 +1969,37 @@ export class Class_ApplicationData {
   }
 
   /**
-   * Contenu de la feuille courante = sérialisation COMPLÈTE du document (diagramme + vues +
-   * doc + réglages) SANS la clé racine `sheets` — c'est exactement ce que serait le fichier
-   * si cette feuille était seule.
+   * Contenu de CE document comme contenu de feuille : sérialisation COMPLÈTE (diagramme +
+   * vues + doc + réglages) SANS la clé racine `sheets` — c'est exactement ce que serait le
+   * fichier si cette feuille était seule.
+   *
+   * PUBLIQUE depuis os#1385 (lot 3) : ce n'est plus seulement « ma feuille courante », c'est
+   * « mon contenu, vu comme une feuille » — et c'est ce que le document PORTEUR demande à
+   * chaque document de feuille vivant quand il sérialise le fichier (cf. `sheetsToJSON`).
    */
-  protected _currentDiagramAsSheetJSON(): Type_JSON {
+  public toSheetContentJSON(): Type_JSON {
     return this.drawing_area.withBypassRedraws(() => this._toJSON({ without_sheets: true }) as Type_JSON)
   }
 
   /**
-   * Charge le contenu d'une feuille via fromJSON en PRÉSERVANT l'état feuilles : fromJSON
-   * passe par reset(), qui efface `_sheets` (sémantique « nouveau document ») et REMPLACE
-   * la drawing_area — d'où le stash/restore, et l'usage exclusif des accesseurs ensuite.
+   * Charge le contenu d'une feuille dans CE document, en restant DANS le fichier ouvert.
+   *
+   * os#1385 (lot 3) — PLUS DE STASH/RESTORE. `fromJSON` passait par `reset()`, qui effaçait
+   * les feuilles (sémantique « j'ouvre un autre fichier »), et il fallait sauver puis
+   * replacer `_sheets`, `_sheets_order`, `_current_sheet_id` et `_sheet_apps` autour de
+   * l'appel. La séparation `resetFile()` / `resetDocument()` rend le contournement inutile :
+   * `keep_file_state` dit que le fichier n'est pas concerné, et rien n'est effacé.
+   *
+   * Ce que le contournement ne rattrapait PAS, et qui est réparé du même coup : la provenance
+   * sankeythèque, qu'il n'avait pas pensé à sauver — une étude ouverte depuis la galerie
+   * perdait son « réenregistrer en place » à la première bascule d'onglet (inventaire 4 §2).
    */
   protected _loadSheetContent(json_object: Type_JSON, draw: boolean): void {
-    const sheets = this._sheets
-    const order = this._sheets_order
-    const current = this._current_sheet_id
-    // os#1386 — les applications de lecture des AUTRES feuilles traversent l'opération :
-    // une bascule de feuille ne change pas leurs instantanés, donc les recharger serait
-    // payer O(feuille) pour un modèle identique. Celle de la feuille qu'on vient de quitter
-    // s'invalide toute seule, parce que `_snapshotCurrentSheet` a réécrit son instantané et
-    // que le cache compare la RÉFÉRENCE (cf. `sheetApplication`).
-    const sheet_apps = this._sheet_apps
-    this._loading_into_sheet = true
-    try {
-      this.fromJSON(json_object, undefined, draw)
-    } finally {
-      this._loading_into_sheet = false
-    }
-    this._sheets = sheets
-    this._sheets_order = order
-    this._current_sheet_id = current
-    this._sheet_apps = sheet_apps
+    // os#1386 — les documents des AUTRES feuilles traversent l'opération : une bascule de
+    // feuille ne change pas leurs instantanés, donc les recharger serait payer O(feuille)
+    // pour un modèle identique. La feuille CIBLE, elle, a été libérée par `switchToSheet`
+    // avant qu'on n'en lise l'instantané : son document ne peut plus être périmé.
+    this.fromJSON(json_object, { keep_file_state: true } as Type_JSON, draw)
   }
 
   /**
@@ -1558,7 +2017,7 @@ export class Class_ApplicationData {
   /** Rafraîchit le snapshot gzip de la feuille courante depuis l'état vivant. */
   protected _snapshotCurrentSheet(): void {
     const current = this._sheets[this._current_sheet_id]
-    if (current) current.json = compressJSONToGzip(this._currentDiagramAsSheetJSON())
+    if (current) current.json = compressJSONToGzip(this.toSheetContentJSON())
   }
 
   /**
@@ -1610,6 +2069,60 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1385 (lot 5, D9) — AJOUTE UNE FEUILLE DEPUIS UN JSON DÉJÀ CONSTRUIT, SANS BASCULER.
+   *
+   * Le geste d'IMPORT : un classeur Excel converti, un diagramme reçu d'ailleurs, arrive comme
+   * une feuille DE PLUS du document ouvert. Trois différences avec `createNewSheet`, et elles
+   * sont toutes les trois le sujet du lot :
+   *  - le contenu vient du DEHORS (il n'est pas une zone de dessin vierge) ;
+   *  - la feuille porte un TYPE, qui peut n'être pas un Sankey ;
+   *  - **on ne bascule pas** : la feuille courante ne change pas, la racine du fichier non plus
+   *    (règle de la racine, D8), et un type sans canevas ne pourrait de toute façon pas devenir
+   *    courant. L'appelant OUVRE ensuite une FENÊTRE sur elle, par la fenêtre par défaut de son
+   *    type (`sheetType(id)?.defaultWindow`).
+   *
+   * @param json contenu de la feuille (JSON d'un document, tel que `toSheetContentJSON`).
+   * @param options `name` : nom de l'onglet (vide = nom par défaut) ; `type` : type du document
+   *   porté (absent ou `'sankey'` = un Sankey, et l'entrée ne gagne alors aucune clé).
+   * @returns l'id de la feuille créée.
+   */
+  public addSheetFromJSON(json: Type_JSON, options?: { name?: string, type?: string }): string {
+    // Le document mono-feuille devient multi-feuilles : sa feuille 1, c'est ce qu'on a sous les
+    // yeux, et elle doit exister AVANT qu'on en ajoute une seconde.
+    this._ensureSheetsInitialized()
+    // Défense en profondeur, comme à la relecture (`sheetsFromJSON`) : le contenu d'une feuille
+    // ne porte jamais lui-même une clé `sheets` — sinon chaque feuille embarquerait les autres.
+    const content = { ...json }
+    delete content['sheets']
+    const id = makeId('sheet')
+    const raw_name = (options?.name ?? '').trim()
+    const name = raw_name !== '' ? raw_name : this._defaultSheetName(this._sheets_order.length + 1)
+    const type = options?.type
+    // `type` écrit seulement s'il dit autre chose que `'sankey'` (lot 4) : un document qui
+    // n'ajoute que des feuilles Sankey se réécrit sans gagner une seule clé.
+    this._sheets[id] = (type !== undefined && type !== SANKEY_DOCUMENT_TYPE)
+      ? { name, type, json: compressJSONToGzip(content) }
+      : { name, json: compressJSONToGzip(content) }
+    this._sheets_order.push(id)
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+    return id
+  }
+
+  /**
+   * os#1385 (lot 5, D9) — LE TYPE DE DOCUMENT d'une feuille (cf. `DocumentTypeRegistry`).
+   *
+   * `null` pour une feuille inconnue, et pour une feuille d'un type que cette version ne connaît
+   * pas : son entrée se transporte sans se comprendre (lot 4). L'appelant le DIT à l'écran.
+   * Le point d'entrée unique de l'écran vers le registre — `has_canvas`, `defaultWindow`,
+   * `offers` et `icon` se lisent tous à travers lui.
+   */
+  public sheetType(id: string): Type_DocumentType | null {
+    const entry = this._sheets[id]
+    return entry ? document_type_registry.typeOf(entry) : null
+  }
+
+  /**
    * Bascule vers une autre feuille : snapshot de la courante, puis chargement du snapshot
    * de la cible (même mécanique que les vues : unDraw + remplacement de la drawing_area,
    * via fromJSON/reset). L'historique undo/redo repart de zéro (comme à tout chargement).
@@ -1618,8 +2131,36 @@ export class Class_ApplicationData {
     if (!this.has_sheets || id === this._current_sheet_id) return
     const target = this._sheets[id]
     if (!target || !target.json) return
+    // os#1385 (lot 4, D8) — ON NE BASCULE PAS SUR UN DOCUMENT QUI N'A PAS DE CANEVAS. Basculer,
+    // c'est faire de cette feuille la RACINE du fichier et charger son contenu dans la zone de
+    // dessin : un document qui ne se montre pas dans un canevas (un classeur et ses graphiques)
+    // n'a rien à y mettre, et la racine doit rester un Sankey pour tous les lecteurs qui en
+    // supposent un (viewer, parc publié, serveur, SEP, cartofob).
+    //
+    // os#1385 (lot 5, D9) — la question posée n'est plus « est-ce un Sankey ? » mais « ce type
+    // a-t-il un canevas ? » (`has_canvas`), et un type INCONNU se refuse comme avant : on
+    // transporte son entrée, on ne l'ouvre pas. Sa feuille s'ouvre en FENÊTRE, par la fenêtre
+    // par défaut de son type (cf. `Type_DocumentType.defaultWindow`).
+    const target_type = document_type_registry.typeOf(target)
+    if (!target_type || !target_type.has_canvas) {
+      console.warn(
+        'os#1385 — la feuille « ' + target.name + ' » est de type « ' + (target.type ?? SHEET_TYPE_SANKEY) +
+        ' » : ' + (target_type ? 'ce type n\'a pas de canevas' : 'aucun lecteur pour ce type') +
+        ', bascule refusée.'
+      )
+      return
+    }
+    // os#1385 (lot 3, D6) — LA CIBLE CESSE DE VIVRE AVANT QU'ON N'EN LISE L'INSTANTANÉ.
+    // Si une fenêtre l'avait ouverte et qu'on y a travaillé, son instantané date d'avant :
+    // le charger tel quel afficherait un diagramme périmé et perdrait le travail. On le
+    // réécrit donc depuis le document vivant, puis on dispose celui-ci — la feuille devient
+    // courante, elle EST l'état vivant, il n'y a plus de second document à tenir.
+    this.releaseSheetDocument(id)
+    // Relu APRÈS la libération : c'est elle qui vient, le cas échéant, de réécrire l'instantané.
+    const target_snapshot = this._sheets[id]?.json
+    if (!target_snapshot) return
     this._snapshotCurrentSheet()
-    const target_json = JSON.parse(pako.inflate(target.json, { to: 'string' })) as Type_JSON
+    const target_json = JSON.parse(pako.inflate(target_snapshot, { to: 'string' })) as Type_JSON
     this._loadSheetContent(target_json, draw)
     this._current_sheet_id = id
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
@@ -1636,20 +2177,59 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1385 (lot 5, D9) — LA VOISINE SUR LAQUELLE ON PEUT ATTERRIR : la plus proche qui ait un
+   * CANEVAS (précédente d'abord, puis suivante), en s'éloignant d'un cran à la fois.
+   *
+   * Depuis qu'une feuille peut porter un document sans canevas (un classeur), « la voisine de
+   * gauche » n'est plus une réponse : `switchToSheet` la refuserait, et la feuille courante
+   * resterait celle qu'on vient de supprimer — un document dont la racine pointe une feuille
+   * disparue. `null` = aucune feuille de ce fichier ne peut devenir la racine (cas théorique
+   * tant que la règle de la racine tient : le fichier en contient forcément un, puisque la
+   * racine EN EST un).
+   */
+  protected _neighbourSheetWithCanvas(id: string): string | null {
+    const idx = this._sheets_order.indexOf(id)
+    if (idx < 0) return null
+    const hasCanvas = (sheet_id: string): boolean => {
+      const entry = this._sheets[sheet_id]
+      return !!entry && (document_type_registry.typeOf(entry)?.has_canvas ?? false)
+    }
+    for (let d = 1; d < this._sheets_order.length; d++) {
+      const before = idx - d
+      if (before >= 0 && hasCanvas(this._sheets_order[before])) return this._sheets_order[before]
+      const after = idx + d
+      if (after < this._sheets_order.length && hasCanvas(this._sheets_order[after])) return this._sheets_order[after]
+    }
+    return null
+  }
+
+  /**
    * Supprime une feuille (jamais la dernière). Si c'est la courante, bascule d'abord sur
-   * sa voisine (précédente, sinon suivante).
+   * sa voisine (précédente, sinon suivante) — la plus proche qui ait un CANEVAS.
    */
   public deleteSheet(id: string, draw: boolean = true): void {
     if (!this._sheets[id] || this._sheets_order.length < 2) return
     if (id === this._current_sheet_id) {
-      const idx = this._sheets_order.indexOf(id)
-      const fallback = this._sheets_order[idx > 0 ? idx - 1 : 1]
+      const fallback = this._neighbourSheetWithCanvas(id)
+      if (!fallback) {
+        // os#1385 (lot 5, D9) — REFUS PLUTÔT QU'UN FICHIER SANS RACINE. Supprimer la courante
+        // sans pouvoir atterrir laisserait `_current_sheet_id` sur une feuille qui n'existe
+        // plus. Théorique sous la règle de la racine ; dit à voix haute plutôt que subi.
+        console.warn(
+          'os#1385 — suppression refusée : aucune autre feuille de ce document n\'a de canevas ' +
+          'où atterrir après « ' + this._sheets[id].name + ' ».'
+        )
+        return
+      }
       this.switchToSheet(fallback, draw)
     }
     delete this._sheets[id]
-    // os#1386 — plus d'instantané, donc plus d'application de lecture. Les fenêtres qui
+    // os#1386 — plus d'instantané, donc plus de document de feuille. Les fenêtres qui
     // pointaient cette feuille le découvriront par `sheetApplication`, qui rend `null`,
-    // et le diront à l'écran.
+    // et le diront à l'écran. os#1385 (lot 3) — `dispose()` et NON `releaseSheetDocument` :
+    // la feuille n'existe plus, il n'y a aucun instantané à réécrire, seulement un document
+    // à démonter et à retirer de l'espace de travail.
+    this._sheet_apps[id]?.app.dispose()
     delete this._sheet_apps[id]
     const idx = this._sheets_order.indexOf(id)
     if (idx >= 0) this._sheets_order.splice(idx, 1)
@@ -1669,9 +2249,46 @@ export class Class_ApplicationData {
   // sankey — et rien dans l'arbre ne sait tracer une couronne depuis un dictionnaire JSON.
   // L'instantané d'une feuille doit donc être CHARGÉ, dans une application à part, et c'est
   // très exactement ce que l'issue demande : « rendre depuis l'instantané ».
+  //
+  // os#1385 (lot 3, D6) — CE N'EST PLUS UNE APPLICATION DE LECTURE, C'EST UN DOCUMENT VIVANT.
+  // Le contrat « lecture seule » d'os#1386 tombe : le document d'une feuille ouverte dans une
+  // fenêtre s'édite dès qu'on lui en donne le droit (`edition_allowed`), et c'est LUI la
+  // vérité de cette feuille tant qu'il vit — `sheetsToJSON` le sérialise en l'appelant, et
+  // l'instantané n'est réécrit qu'au moment où il cesse de vivre (`releaseSheetDocument`).
 
   /**
-   * L'application qui porte le modèle d'une feuille, prête à être lue.
+   * os#1385 (lot 3, D6) — REMETTRE UNE FEUILLE EN INSTANTANÉ ET LIBÉRER SON DOCUMENT.
+   *
+   * Le geste symétrique de `sheetApplication` : « cette feuille cesse de vivre ». On écrit
+   * d'abord l'instantané DEPUIS le document vivant — c'est lui la vérité, celui d'avant est
+   * périmé de tout ce qu'on y a fait —, puis on démonte le document.
+   *
+   * Publique parce que c'est la phase B qui l'appellera en fermant la fenêtre d'une feuille.
+   * Sans effet quand la feuille n'a pas de document vivant, ou quand c'est la feuille
+   * courante (elle EST l'état vivant, il n'y a rien à libérer).
+   */
+  public releaseSheetDocument(sheet_id: string): void {
+    const entry = this._sheet_apps[sheet_id]
+    if (!entry) return
+    delete this._sheet_apps[sheet_id]
+    const sheet = this._sheets[sheet_id]
+    if (sheet && !entry.app.disposed) {
+      sheet.json = compressJSONToGzip(entry.app.toSheetContentJSON())
+    }
+    // Le verrou du chargement, posé ici pour la raison SYMÉTRIQUE : `dispose()` retire le
+    // document de l'espace de travail, ce qui recalcule l'ACTIF — et si une fenêtre regarde
+    // encore cette feuille, résoudre l'actif repasse par `sheetApplication`, qui rechargerait
+    // à l'instant le document qu'on est en train de libérer.
+    this._sheet_apps_loading.add(sheet_id)
+    try {
+      entry.app.dispose()
+    } finally {
+      this._sheet_apps_loading.delete(sheet_id)
+    }
+  }
+
+  /**
+   * Le DOCUMENT qui porte le modèle d'une feuille.
    *
    * Rend `this` pour la feuille COURANTE (elle est l'état vivant, il n'y a rien à charger)
    * et pour un `sheet_id` vide (un sujet sans feuille désigne la feuille courante, c'est la
@@ -1688,95 +2305,95 @@ export class Class_ApplicationData {
    *  - L'INSTANTANÉ LUI-MÊME est la clé, par l'identité de son `Uint8Array` et non par un
    *    hachage : `_snapshotCurrentSheet` REMPLACE le tableau chaque fois qu'une feuille
    *    cesse d'être courante, et `sheetsFromJSON` les recrée tous. Comparer la référence
-   *    suffit donc à voir « cette feuille a changé », pour un coût nul. C'est aussi ce qui
-   *    rend une BASCULE de feuille correcte sans traitement particulier : les feuilles qu'on
-   *    ne quitte pas gardent leur instantané, donc leur application ; celle qu'on vient de
-   *    quitter est réécrite, donc sa référence change, donc elle se recharge.
-   *  - `reset()` vide le cache : les feuilles appartiennent au DOCUMENT (cf. son commentaire),
-   *    charger un autre document les efface toutes, et leurs applications avec.
+   *    suffit donc à voir « cette feuille a changé », pour un coût nul.
+   *  - `resetFile()` vide le cache : les feuilles appartiennent au FICHIER, charger un autre
+   *    fichier les efface toutes, et dispose leurs documents avec.
    *  - `deleteSheet` retire l'entrée de la feuille supprimée.
    *
-   * LECTURE SEULE, ET C'EST UN CONTRAT. Rien de ce qui vit dans cette application ne
-   * remonte : on ne la resérialise jamais vers `_sheets[id].json`, et aucun geste de la
-   * fenêtre n'écrit dans le document. Si une représentation mute son modèle — le clic
-   * d'agrégation du sunburst le fait —, elle ne mute que cette copie, qui meurt avec le
-   * cache. Une fenêtre sur une autre feuille MONTRE ; elle ne modifie pas.
+   * os#1385 (lot 3) — LA CLÉ NE CHANGE PAS, ET C'EST COHÉRENT AVEC LE DOCUMENT VIVANT. Un
+   * instantané n'est réécrit que dans deux cas : la feuille était courante (elle n'avait donc
+   * pas de document vivant à elle), ou un fichier vient d'être chargé (tout a été disposé).
+   * Jamais pendant qu'un document vivant porte la feuille — c'est `releaseSheetDocument` qui
+   * écrit, et il dispose dans le même geste. L'invariant « le vivant est la vérité » tient
+   * donc sans que le cache ait à savoir quoi que ce soit de plus.
+   *
+   * CE DOCUMENT S'ÉDITE (lot 3, D6). Le contrat « lecture seule » d'os#1386 est levé : le
+   * document est VIVANT, et modifiable dès que `edition_allowed` lui est donné. Ce qu'on y
+   * fait remonte au fichier, parce que `sheetsToJSON` le sérialise en l'appelant, et parce
+   * qu'« enregistrer » depuis sa fenêtre enregistre le fichier (cf. `file_holder`).
    */
   public sheetApplication(sheet_id: string): Class_ApplicationData | null {
-    if (sheet_id === '' || sheet_id === this._current_sheet_id) return this
     const sheet = this._sheets[sheet_id]
-    if (!sheet || !sheet.json) return null
+    // os#1385 (lot 5, D9) — C'EST LE TYPE QUI CHARGE. Un type INCONNU de cette version n'a aucun
+    // chargeur : son entrée reste OPAQUE, transportée et jamais ouverte (lot 4), et `null` fait
+    // dire à la fenêtre qu'elle n'a pas de sujet — ce qui est exact.
+    const type = sheet ? document_type_registry.typeOf(sheet) : null
+    if (sheet && !type) return null
+    // La feuille COURANTE est l'état vivant : il n'y a rien à charger. Un `sheet_id` vide
+    // désigne la feuille courante (convention de `Type_MainZoneSubject`).
+    //
+    // …SAUF pour un type SANS CANEVAS : sous la règle de la racine (D8), `this` porte alors le
+    // dernier Sankey actif et NON cette feuille-là — rendre `this` montrerait le mauvais
+    // diagramme, en silence. Son contenu est dans son propre `json` (c'est très exactement ce
+    // que la règle de la racine y met), on le charge donc comme celui de n'importe quelle autre
+    // feuille. Cas théorique — `switchToSheet` refuse de rendre une telle feuille courante —,
+    // mais un fichier bricolé le pose, et il vaut mieux le lire que le mentir.
+    if (sheet_id === '' || (sheet_id === this._current_sheet_id && (!type || type.has_canvas))) return this
+    if (!sheet || !sheet.json || !type) return null
     const cached = this._sheet_apps[sheet_id]
     if (cached && cached.snapshot === sheet.json) return cached.app
-    const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
-    const app = this._loadSheetSnapshotApplication(json)
+    // os#1385 (lot 2) — RÉ-ENTRANCE PENDANT LE CHARGEMENT. Depuis que `workspace.active` passe
+    // par ici, un chemin appelé DANS le chargement de l'instantané (l'enregistrement du
+    // document, une synchronisation d'URL) peut redemander la même feuille avant que le cache
+    // ne soit posé — et repartirait pour un chargement, sans fin. Pendant cette fenêtre on
+    // rend la feuille vivante : ce n'est pas le bon modèle, mais c'en est un, et l'appelant
+    // suivant aura le bon.
+    if (this._sheet_apps_loading.has(sheet_id)) return this
+    // Le verrou est posé AVANT la libération de l'ancien document, et pas seulement autour du
+    // chargement : `dispose()` recalcule l'actif, qui peut repasser par ici (os#1385, lot 3).
+    this._sheet_apps_loading.add(sheet_id)
+    let app: Class_ApplicationData
+    try {
+      // L'ANCIEN DOCUMENT S'EN VA D'ABORD. Un instantané périmé laissait
+      // son document dans la liste de l'espace de travail : il n'était plus joignable par
+      // personne, mais comptait encore comme document ouvert (et deux documents auraient porté
+      // le même `document_id`, donc le même emplacement de cache).
+      // os#1385 (lot 3) — `dispose()` et non `forgetDocument` : il faut aussi démonter sa zone
+      // de dessin. Rien à réécrire dans l'instantané : s'il est ici, c'est que l'instantané
+      // vient de changer sous lui, donc qu'un autre écrivain a déjà fait foi.
+      if (cached) cached.app.dispose()
+      const json = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+      app = type.load(this, json, sheet_id)
+    } finally {
+      this._sheet_apps_loading.delete(sheet_id)
+    }
+    // os#1385 (lot 3, D6) — LE PORTEUR DU FICHIER. Ce document est une feuille de CE
+    // fichier-ci : « enregistrer » depuis sa fenêtre doit écrire le fichier entier, feuilles
+    // comprises, et non le diagramme de la feuille tout seul (cf. `file_holder`).
+    app.file_holder = this
     this._sheet_apps[sheet_id] = { snapshot: sheet.json, app }
     return app
   }
 
-  /**
-   * Charge un instantané de feuille dans une application HORS ÉCRAN.
-   *
-   * LA MÊME CLASSE QUE L'HÔTE — `new (this.constructor)` et non `new Class_ApplicationData` :
-   * en OpenSankey+ le modèle, la persistance (vues, view tags) et le rendu unitaire sont ceux
-   * d'`ApplicationDataOSP`, et une application de base relirait de travers un fichier qu'OSP a
-   * écrit. Le constructeur de la sous-classe est appelé sans que celle-ci ait rien à surcharger.
-   *
-   * LE CONTENEUR EST POSÉ SUR LA FABRIQUE, ET PAS SEULEMENT SUR LA PREMIÈRE ZONE. Poser
-   * `container_selector` sur `app.drawing_area` avant `fromJSON` ne suffirait PAS, et pas
-   * seulement parce que `reset()` remplace la zone par une neuve : le chargement en crée
-   * d'autres en chemin — une par vue lourde extraite (`ViewsReader.extractViewFromJSON`,
-   * `ViewsManager`), une pour la source de mise en page — et l'une d'elles DESSINE. Le cas
-   * n'a rien de théorique : quand l'instantané a été enregistré sur une vue autre que le
-   * maître, `ViewsReader.viewsFromJSON` appelle `drawing_area.draw()` de sa propre autorité,
-   * précisément parce qu'on charge avec `draw = false` et que personne d'autre ne dessinera
-   * (os#1377). Et `draw()` remet `bypass_redraws` à `false` en entrant : ce drapeau ne
-   * protège de rien. Une seule ligne de défense tient donc : que TOUTE zone de dessin de
-   * cette application naisse hors écran, d'où l'enveloppe posée ici sur sa fabrique. Un
-   * dessin sur un conteneur introuvable est inoffensif — d3 travaille alors sur une sélection
-   * vide — là où un dessin sur `'#sankey_app'` effacerait le diagramme de l'utilisateur.
-   *
-   * L'enveloppe est posée sur l'INSTANCE, et c'est voulu : `createNewDrawingArea` est
-   * surchargée par OpenSankey+ (elle construit une `Class_DrawingAreaOSP`), et envelopper la
-   * méthode telle que la sous-classe la fournit garde ce dispatch intact. Elle n'empêche
-   * personne de repointer ensuite une zone vers un vrai conteneur — c'est ce que fait le
-   * board unitaire pour sa vignette, juste après l'avoir demandée.
-   *
-   * CE QU'ON RECOPIE DE L'HÔTE, ET POURQUOI. Le registre des représentations filtre ses
-   * entrées sur l'application du CONTEXTE — `isOfferedToReader` lit `is_static` et les options
-   * de publication, les `gate` lisent les licences, les libellés passent par `t`. Sans ces
-   * quatre-là, une fenêtre sur une autre feuille proposerait une autre liste de natures que la
-   * même fenêtre sur la feuille courante, et l'écrirait sans traduction. `publish_options` n'a
-   * pas à être recopié : il est lu de `window.sankey`, donc déjà commun aux deux.
-   *
-   * `draw = false` : cette application n'a pas d'écran. Ce sont les représentations qui
-   * dessinent, chacune dans le conteneur que son hôte lui donne.
-   */
-  protected _loadSheetSnapshotApplication(json_object: Type_JSON): Class_ApplicationData {
-    const Ctor = this.constructor as new (
-      published_mode: boolean, options?: { [_: string]: boolean | string }
-    ) => Class_ApplicationData
-    const app = new Ctor(this.is_static, this.options)
-    app.t = this.t
-    app.has_sankey_plus = this.has_sankey_plus
-    app.has_sankey_afm = this.has_sankey_afm
-    const create_drawing_area = app.createNewDrawingArea.bind(app)
-    app.createNewDrawingArea = (id?: string): Class_DrawingArea => {
-      const drawing_area = create_drawing_area(id)
-      drawing_area.container_selector = SHEET_SNAPSHOT_CONTAINER_SELECTOR
-      return drawing_area
-    }
-    app.drawing_area.container_selector = SHEET_SNAPSHOT_CONTAINER_SELECTOR
-    app.fromJSON(json_object, {}, false)
-    // `reset()` a créé une drawing area neuve, dont `static` retombe sur le défaut global
-    // (`window.sankey?.publish`). On le réaligne sur l'hôte : c'est lui qui décide si l'on
-    // est dans une page publiée, et le registre s'en sert pour offrir ou retirer une nature.
-    app.drawing_area.static = this.is_static
-    return app
-  }
+  /** Feuilles dont le document est EN COURS de chargement (cf. `sheetApplication`). */
+  protected _sheet_apps_loading: Set<string> = new Set()
 
-  /** Oublie les applications de lecture des feuilles (cf. `sheetApplication`). */
+  // os#1385 (lot 5, D9) — `_loadSheetSnapshotApplication` A DÉMÉNAGÉ, et c'est tout ce qui lui
+  // est arrivé : son corps et son commentaire sont devenus le `load` du type `sankey`
+  // (`loadSheetDocumentByDefault`, DocumentTypeRegistry.ts). Une seule vérité, et le chargement
+  // d'une feuille passe désormais par le TYPE de cette feuille-là, quel qu'il soit. Les
+  // commentaires qui citent encore l'ancien nom (DrawingArea, MainZoneTabs, mainZoneWindow)
+  // parlent de ce chargement-là : c'est la même chose, sous son nouveau nom.
+
+  /**
+   * Fait cesser de vivre TOUS les documents de feuille (cf. `sheetApplication`).
+   *
+   * Sans réécrire d'instantané, et c'est voulu : le seul appelant est `resetFile()`, donc un
+   * autre fichier s'ouvre — les feuilles d'avant n'existent plus, il n'y a rien à conserver.
+   * Écrire dans `_sheets` ici serait écrire dans un dictionnaire que l'appelant vide juste après.
+   */
   protected _clearSheetApplications(): void {
+    Object.values(this._sheet_apps).forEach(entry => entry.app.dispose())
     this._sheet_apps = {}
   }
 
@@ -1910,7 +2527,10 @@ export class Class_ApplicationData {
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.afterFromJSON()
-    if (this._language !== undefined && i18next.language !== this.language)
+    // os#1385 — la langue de l'interface est celle de l'ESPACE DE TRAVAIL, et un seul document
+    // a le droit de la changer : le principal. Ouvrir une fenêtre sur une feuille écrite dans
+    // une autre langue basculait toute l'interface de l'utilisateur ; c'est corrigé ici.
+    if (this.is_main && this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
     // #370 — Pas de restitution du mode par les dimensions ici : c'est le #369 qui
@@ -1923,7 +2543,8 @@ export class Class_ApplicationData {
 
     // ?. : _afterFromJSON peut s'exécuter avant que menu_configuration soit prêt
     // (course à l'auto-chargement au montage en mode publish) — cf. l. 610. (#196)
-    this.menu_configuration?.updateAllMenuComponents()
+    // `is_main` : cf. `reset()` — les emplacements repeints sont ceux de l'hôte.
+    if (this.is_main) this.menu_configuration?.updateAllMenuComponents()
   }
 
   /**
@@ -1936,7 +2557,8 @@ export class Class_ApplicationData {
    */
   public updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     this._updateFromJSON(json_object, kwargs)
-    this._menu_configuration!.updateAllMenuComponents()
+    // `is_main` : cf. `reset()` — les emplacements repeints sont ceux de l'hôte.
+    if (this.is_main) this._menu_configuration!.updateAllMenuComponents()
   }
 
   /**
@@ -2040,6 +2662,50 @@ export class Class_ApplicationData {
   public main_zone_canvas_frame: Type_CanvasFrame | null = null
 
   /**
+   * os#1385 (lot 6, D8/D10) — OUVRIR LA PAGE SUR UNE FEUILLE (`window.sankey.sheet`).
+   *
+   * Un document à plusieurs feuilles se publie ENTIER : la page porte le fichier, et son
+   * visiteur navigue d'un onglet à l'autre. L'option dit sur laquelle elle s'OUVRE — par id ou
+   * par NOM d'onglet, comme `view` pour les vues, parce qu'une page publiée s'écrit aussi à la
+   * main et qu'un nom y est lisible là où un identifiant tiré au sort ne l'est pas.
+   *
+   * EN PREMIER, avant `view_label` et `view` : basculer de feuille REMPLACE la zone de dessin et
+   * le jeu de vues du document. C'est pour cela que c'est une méthode à part et non trois lignes
+   * dans `applyPublishStateOptions` — la surcharge d'OpenSankey+ ouvre une vue AVANT d'appeler
+   * `super`, et doit donc l'appeler en tête elle aussi.
+   *
+   * IDEMPOTENTE : les viewers React rappellent `applyPublishStateOptions` à chaque changement de
+   * leurs props (os#1372). La feuille déjà courante ne se recharge pas — sinon chaque
+   * ré-application jetterait la navigation du visiteur pour le remettre au point de départ.
+   *
+   * Tolérante comme ses voisines : feuille inconnue => warn, rien. Feuille sans canevas =>
+   * `switchToSheet` refuse et le dit (règle de la racine, D8).
+   */
+  protected applyPublishSheetOption(): void {
+    const wanted = this.publish_options.sheet
+    if (!wanted) return
+    // Les options de publication sont celles de la PAGE, donc partagées par tous les documents
+    // de l'espace de travail : seul celui qui porte le FICHIER a des feuilles à ouvrir. Un
+    // document de feuille qui repasserait par ici n'aurait rien à dire, et le dirait en boucle.
+    if (!this.is_main) return
+    if (!this.has_sheets) {
+      // eslint-disable-next-line no-console
+      console.warn(`[OpenSankey] sheet : ce document n'a pas de feuilles « ${wanted} »`)
+      return
+    }
+    const id = this._sheets[wanted]
+      ? wanted
+      : this._sheets_order.find(sheet_id => this._sheets[sheet_id]?.name === wanted)
+    if (!id) {
+      // eslint-disable-next-line no-console
+      console.warn(`[OpenSankey] sheet : feuille introuvable « ${wanted} »`)
+      return
+    }
+    if (id === this._current_sheet_id) return
+    this.switchToSheet(id, true)
+  }
+
+  /**
    * Applique l'état initial demandé par les options de publication (`publish_options`) :
    * présélection d'un data tag dans un ou plusieurs groupes, puis mode de navigation
    * (absolu / proportionnel / échelle adaptée). À appeler APRÈS le chargement du diagramme
@@ -2057,6 +2723,10 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public applyPublishStateOptions(): void {
+    // os#1385 (lot 6) — LA FEUILLE D'ABORD, avant toute vue : une bascule de feuille REMPLACE la
+    // zone de dessin et le jeu de vues (cf. `_loadSheetContent`). Poser une vue puis changer de
+    // feuille l'aurait posée sur le document qu'on quitte.
+    this.applyPublishSheetOption()
     const opts = this.publish_options
     // sa#409 — crochet d'upgrade headless : exposé D'ABORD (la suite de la méthode a une sortie
     // anticipée), et idempotent (les viewers React repassent ici à chaque ré-application).
@@ -2373,16 +3043,12 @@ export class Class_ApplicationData {
   // os#1354 — Clés d'état de lecture portées par l'URL. Listées ici parce que la
   // synchronisation doit RETIRER les anciennes avant de reposer les nouvelles : sans ça,
   // désélectionner un axe laisserait sa clé dans l'adresse.
-  private static readonly URL_STATE_KEYS = ['view', 'dt', 'vt', 'lvl', 'ds', 'iv', 'rep']
+  // os#1385 (lot 2) — `sheet` les rejoint : quand un document a plusieurs feuilles, laquelle
+  // est ouverte fait partie de l'état partageable, au même titre que la vue.
+  private static readonly URL_STATE_KEYS = ['view', 'dt', 'vt', 'lvl', 'ds', 'iv', 'rep', 'sheet']
 
   /** Signature du dernier état écrit dans la barre d'adresse — évite un `replaceState` inutile. */
   private _url_state_signature: string | null = null
-
-  /**
-   * Tant que l'état initial de l'URL n'a pas été appliqué, on n'écrit pas : sinon le premier
-   * dessin écraserait les paramètres qu'on s'apprête tout juste à lire.
-   */
-  private _url_sync_enabled: boolean = false
 
   /**
    * Reporte l'état de lecture courant dans la barre d'adresse, sans entrée d'historique
@@ -2399,10 +3065,15 @@ export class Class_ApplicationData {
    * état à lire, mais l'adresse doit tout de même devenir vivante.
    * @memberof Class_ApplicationData
    */
-  public enableUrlStateSync(): void { this._url_sync_enabled = true }
+  public enableUrlStateSync(): void { this.workspace.enableUrlStateSync() }
 
   public syncUrlState(): void {
-    if (!this._url_sync_enabled) return
+    if (!this.workspace.url_sync_enabled) return
+    // os#1385 (lot 2) — SEUL L'ACTIF ÉCRIT DANS L'ADRESSE. Il n'y a qu'une barre d'adresse pour
+    // toute la page : deux documents qui s'y synchronisent se réécrivent l'un l'autre, et
+    // l'adresse finit par décrire le document que l'utilisateur ne regarde pas. Un document
+    // hors écran (instantané de feuille, brique extraite) dessine pourtant, donc appelle ceci.
+    if (this.workspace.active !== this) return
     if (typeof window === 'undefined' || !window.history?.replaceState) return
     const next = this.getUrlStateParams()
     const signature = next.toString()
@@ -2417,13 +3088,21 @@ export class Class_ApplicationData {
       // Une URL exotique (blob:, data:) ne se réécrit pas : l'application continue.
       // eslint-disable-next-line no-console
       console.warn('[OpenSankey] synchronisation de l\'URL impossible', e)
-      this._url_sync_enabled = false
+      this.workspace.url_sync_enabled = false
     }
   }
 
   public getUrlStateParams(): URLSearchParams {
     const params = new URLSearchParams()
     const sankey = this._drawing_area.sankey
+    // os#1385 (lot 2) — LA FEUILLE OUVERTE, quand elle n'est pas celle par défaut. Écrite
+    // seulement par un document qui A des feuilles : l'application de lecture d'une feuille est
+    // mono-feuille (son `current_sheet_id` vaut `''`), donc une fenêtre de feuille devenue
+    // active n'écrit rien — cohérent avec le lot 0, où ces fenêtres ne s'écrivent déjà pas dans
+    // l'adresse (leur identifiant est propre à la session).
+    if (this.has_sheets && this._current_sheet_id !== this._sheets_order[0]) {
+      params.set('sheet', this._current_sheet_id)
+    }
     if (this._current_view_id !== default_main_sankey_id) {
       params.set('view', this._current_view_id)
     }
@@ -2499,6 +3178,7 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public applyUrlStateParams(params: URLSearchParams): void {
+    const sheet_selection = params.get('sheet')
     const view_selection = params.get('view')
     const data_tag_selection = parseJSONRecordParam(params.get('dt'), 'dt')
     const view_tag_selection = parseJSONRecordParam(params.get('vt'), 'vt')
@@ -2510,12 +3190,20 @@ export class Class_ApplicationData {
     // os#1354 — L'état initial de l'URL est LU : à partir d'ici, les dessins suivants peuvent
     // la réécrire sans risque d'écraser ce qu'on n'aurait pas encore appliqué. Posé avant le
     // retour anticipé : une URL sans paramètre doit elle aussi devenir vivante.
-    this._url_sync_enabled = true
+    this.workspace.url_sync_enabled = true
     if (
-      !view_selection && !data_tag_selection && !view_tag_selection &&
+      !sheet_selection && !view_selection && !data_tag_selection && !view_tag_selection &&
       !level_tag_selection && !data_source && !interval_display && representation === null
     ) return
-    // La vue d'abord : le switch reconstruit la drawing area (vue heavy) et applique la
+    // os#1385 (lot 2) — LA FEUILLE AVANT TOUT LE RESTE : basculer de feuille REMPLACE la zone de
+    // dessin (même mécanique qu'une vue lourde), et poser une vue ou des tags avant la bascule
+    // les poserait sur le diagramme qu'on s'apprête à ranger. `switchToSheet` refuse en silence
+    // une feuille qu'il ne connaît pas : une adresse écrite pour un autre fichier ouvre le
+    // fichier tel quel, elle ne casse rien.
+    // `draw = true` : le diagramme est déjà à l'écran quand on arrive ici (`readUrlJSON` l'a
+    // dessiné), et une bascule sans dessin laisserait l'ancienne feuille affichée.
+    if (sheet_selection) this.switchToSheet(sheet_selection, true)
+    // La vue ensuite : le switch reconstruit la drawing area (vue heavy) et applique la
     // visibilité propre de la vue — les sélections de tags se posent PAR-DESSUS.
     if (view_selection) {
       const view_id = this._views_reader.resolveViewIdFromSelection(view_selection)
@@ -2597,6 +3285,7 @@ export class Class_ApplicationData {
 
   /**
    * Create a waiting toast and add function to waiting queue.
+   * Délégué à l'espace de travail : UNE file d'attente pour toute la session.
    * @param {() => void} funct
    * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
    * @memberof Class_ApplicationData
@@ -2605,12 +3294,7 @@ export class Class_ApplicationData {
     funct: () => void | Promise<void>,  // Accepte async
     intake?: Type_TextForToastPromise
   ) {
-    const funct_id = randomId()
-    this._toast_processes.push(funct_id)
-    if (this._toast_bypass)
-      funct()
-    else
-      this._sendWaitingToast(funct, funct_id, intake)
+    this.workspace.sendWaitingToast(funct, intake)
   }
 
   public pre_process_export_svg(convert_fo: boolean = false) {
@@ -2772,29 +3456,44 @@ export class Class_ApplicationData {
   // PROTECTED METHODS ==================================================================
 
   /**
-   * Function to create custom application behavior when we press a key,
+   * FAÇADE DÉPRÉCIÉE (os#1385 lot 2). Poser `document.onkeydown = app.keyboardEventListener(app)`
+   * CAPTURAIT l'application : la frappe partait toujours au même document, quelle que soit la
+   * fenêtre regardée. L'écouteur s'installe désormais par l'espace de travail
+   * (`app.workspace.installKeyboardListener()`), qui résout l'actif à chaque frappe.
    *
-   * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
+   * Conservée pour les consommateurs npm : le paramètre est ignoré, et la fonction rendue fait
+   * la bonne chose (elle passe par l'espace de travail).
    *
-   * @protected
-   * @param {Class_ApplicationData} app_ref
-   * @return {*}
+   * @deprecated cf. `Class_Workspace.installKeyboardListener`
    * @memberof Class_ApplicationData
    */
   public keyboardEventListener(
-    app_ref: Class_ApplicationData
+    _app_ref?: Class_ApplicationData
   ) {
-    return (evt: KeyboardEvent) => { this._keyboardEventProcessing(evt, app_ref) }
+    return (evt: KeyboardEvent) => { this.workspace.dispatchKeyboardEvent(evt) }
   }
 
   /**
-   * Process all keyboard events on application
+   * os#1385 (lot 2) — LE POINT D'ENTRÉE CLAVIER D'UN DOCUMENT. Appelé par
+   * `Class_Workspace.dispatchKeyboardEvent` sur le document ACTIF, résolu à la frappe.
+   * @memberof Class_ApplicationData
+   */
+  public handleKeyboardEvent(evt: KeyboardEvent): void {
+    this._keyboardEventProcessing(evt)
+  }
+
+  /**
+   * Process all keyboard events on application.
+   *
+   * os#1385 (lot 2) — `app_ref` a disparu : il valait TOUJOURS `this` aux quatre sites d'appel,
+   * et la note qui le justifiait (« 'this' prend une autre portée quand on est appelé depuis
+   * onkeydown ») décrivait un problème que la fonction fléchée de l'écouteur règle depuis
+   * longtemps. Le garder était pire qu'inutile : il laissait croire qu'une frappe pouvait viser
+   * un autre document que celui qui la traite, alors que c'est l'espace de travail qui choisit.
    * @param evt
-   * @param app_ref
    */
   protected _keyboardEventProcessing(
-    evt: KeyboardEvent,
-    app_ref: Class_ApplicationData) {
+    evt: KeyboardEvent) {
     // Events booleans ----------------------------------------------------------------
     const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const isMac = navigator.platform.toUpperCase().includes('MAC')
@@ -2840,9 +3539,9 @@ export class Class_ApplicationData {
     // os#1340 — F2 ouvre l'édition inline du nom (comme la frappe directe, mais
     // sans injecter de caractère : le texte existant est sélectionné en entier).
     const evtIsRename = (evt.key === 'F2')
-    const selectedNodes = app_ref.drawing_area.selected_nodes_list
-    const selectedLinks = app_ref.drawing_area.selected_links_list
-    const selectedContainers = app_ref.drawing_area.selected_containers_list
+    const selectedNodes = this.drawing_area.selected_nodes_list
+    const selectedLinks = this.drawing_area.selected_links_list
+    const selectedContainers = this.drawing_area.selected_containers_list
     if (
       (evtIsPrintable || evtIsRename) &&
       evtOnDrawingArea &&
@@ -2870,13 +3569,17 @@ export class Class_ApplicationData {
       evtOnDrawingArea // Avoid using this hotkey in text-inputs
     ) {
       const moved = [
-        ...app_ref.drawing_area.selected_nodes_list,
-        ...app_ref.drawing_area.selected_containers_list
+        ...this.drawing_area.selected_nodes_list,
+        ...this.drawing_area.selected_containers_list
       ]
       if (moved.length > 0) {
+        // os#1385 (lot 2) — DÉPLACER, C'EST ÉDITER : une zone non éditable (page publiée,
+        // document regardé dans une fenêtre) refuse. Rien ne le testait jusqu'ici, parce que
+        // la frappe ne pouvait atteindre qu'un seul document, forcément celui qu'on édite.
+        if (!this.drawing_area.editable) return
         // Ne pas laisser la page défiler pendant qu'on déplace la sélection.
         evt.preventDefault()
-        const step = evt.shiftKey ? app_ref.drawing_area.grid_size : 1
+        const step = evt.shiftKey ? this.drawing_area.grid_size : 1
         const dx = evt.key === 'ArrowLeft' ? -step : (evt.key === 'ArrowRight' ? step : 0)
         const dy = evt.key === 'ArrowUp' ? -step : (evt.key === 'ArrowDown' ? step : 0)
         // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
@@ -2908,34 +3611,36 @@ export class Class_ApplicationData {
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
-      app_ref.menu_configuration.ref_menu_opened.current[1](!app_ref.menu_configuration.ref_menu_opened.current[0])
+      this.menu_configuration.ref_menu_opened.current[1](!this.menu_configuration.ref_menu_opened.current[0])
     }
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
       // Exit style paint mode if active
-      if (app_ref.drawing_area.isInStylePaintMode())
-        app_ref.drawing_area.exitStylePaintMode()
+      if (this.drawing_area.isInStylePaintMode())
+        this.drawing_area.exitStylePaintMode()
       // Échap relâche l'outil de création actif (nœud, flux, zone de texte, ligne),
       // verrouillé ou non, et rend la main à la sélection.
-      else if (app_ref.drawing_area.active_creation_tool !== null)
-        app_ref.drawing_area.setCreationTool(null)
+      else if (this.drawing_area.active_creation_tool !== null)
+        this.drawing_area.setCreationTool(null)
 
       // Deselect all element
-      app_ref.drawing_area.purgeSelection()
+      this.drawing_area.purgeSelection()
 
       // Close all menus
-      app_ref.menu_configuration.closeAllMenus()
-      app_ref.drawing_area.closeAllContextMenus()
+      this.menu_configuration.closeAllMenus()
+      this.drawing_area.closeAllContextMenus()
       // OS#321 — et TOUTES les pop-ups, épinglées ou non : Échap est la demande
       // explicite de rendre l'écran au neutre, l'épingle ne s'y oppose pas (elle
       // ne protège que du clic posé ailleurs). Couvre aussi les présentations
       // d'éléments, que closeAllMenus ne connaît pas.
-      app_ref.menu_configuration.panels.closeAllPopups()
+      this.menu_configuration.panels.closeAllPopups()
     }
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
+      // os#1385 (lot 2) — supprimer, c'est éditer (cf. le nudge plus haut).
+      if (!this.drawing_area.editable) return
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection()
+      this.drawing_area.deleteSelection()
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -2954,21 +3659,21 @@ export class Class_ApplicationData {
 
       // Select all node & links (les zones de la légende sont des conteneurs,
       // déjà couvertes par addAllVisibleElementsToSelection — OS#1254)
-      app_ref.drawing_area.addAllVisibleElementsToSelection()
+      this.drawing_area.addAllVisibleElementsToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------
     else if (evtCtrlS) {
       // Prevent default event on ctrl + s
       evt.preventDefault()
       // Save in cache
-      app_ref.saveInCache()
+      this.saveInCache()
     }
     // event to download current sankey in JSON --------------------------------------
     else if (evtCtrlShiftS) {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via JSON saving button
-      app_ref.saveToJSON()
+      this.saveToJSON()
     }
     // event to download current sankey in Excel -------------------------------------
     else if (evtCtrlAltS) {
@@ -2982,12 +3687,12 @@ export class Class_ApplicationData {
       // Prevent default event (browser find bar)
       evt.preventDefault()
       // Toggle the element search bar (registered by ElementSearchOverlay)
-      app_ref.menu_configuration.ref_toggle_search.current()
+      this.menu_configuration.ref_toggle_search.current()
     }
     // OS#300 Lot 2 — Afficher/masquer la barre latérale (Ctrl+B) --------------------
     else if (evtCtrlB) {
       evt.preventDefault()
-      app_ref.menu_configuration.panels.toggleSidebar()
+      this.menu_configuration.panels.toggleSidebar()
     }
     // Undo
     else if (evtCtrlZ) {
@@ -3003,24 +3708,52 @@ export class Class_ApplicationData {
     else if (evtCtrl && evtKeyD) {
       // Prevent default event on ctrl + d (marque-page navigateur)
       evt.preventDefault()
-      if (app_ref.drawing_area.selected_nodes_list.length > 0 ||
-        app_ref.drawing_area.selected_containers_list.length > 0) {
-        app_ref.drawing_area.duplicateSelection()
-        app_ref.saveInCache()
+      // os#1385 (lot 2) — dupliquer, c'est éditer (cf. le nudge plus haut).
+      if (!this.drawing_area.editable) return
+      if (this.drawing_area.selected_nodes_list.length > 0 ||
+        this.drawing_area.selected_containers_list.length > 0) {
+        this.drawing_area.duplicateSelection()
+        this.saveInCache()
       }
     }
-    // Copy selected nodes
+    // Copy selected nodes — os#1385 (lot 2) : le presse-papiers est de l'ESPACE DE TRAVAIL,
+    // et porte le document d'où le contenu vient. Copier n'est pas éditer : permis partout,
+    // y compris depuis une fenêtre qui regarde une autre feuille.
     else if (evtCtrl && evtKeyC) {
       evt.preventDefault()
-      this._clipboard_node_ids = app_ref.drawing_area.selected_nodes_list.map(n => n.id)
+      this.workspace.clipboard = {
+        source: this,
+        node_ids: this.drawing_area.selected_nodes_list.map(n => n.id)
+      }
     }
     // Paste copied nodes
     else if (evtCtrl && evtKeyV) {
       evt.preventDefault()
-      if (this._clipboard_node_ids.length > 0) {
-        app_ref.drawing_area.copyNodes(this._clipboard_node_ids)
-        app_ref.saveInCache()
+      const clipboard = this.workspace.clipboard
+      if (!clipboard || clipboard.node_ids.length === 0) return
+      if (clipboard.source !== this) {
+        // COLLER ENTRE DOCUMENTS demande une SÉRIALISATION du contenu copié, pas des
+        // identifiants : ceux de A ne désignent rien dans B. C'est le lot 3, avec
+        // l'éditabilité d'un second document. En attendant on le DIT — jusqu'ici, un Ctrl+V
+        // venu d'un autre document ne collait rien et ne disait rien.
+        //
+        // DIT AVANT la garde d'éditabilité, et c'est délibéré : un second document n'est
+        // éditable que si on lui en a donné le droit (`edition_allowed`, os#1385 lot 3), et
+        // sinon la garde avalerait l'explication — l'utilisateur retomberait sur le silence
+        // qu'on vient de corriger. Expliquer n'écrit rien.
+        this.notifyUser(
+          'clipboard_cross_document',
+          this.t('toast.clipboard.cross_document.title'),
+          this.t('toast.clipboard.cross_document.desc'),
+          'info',
+          true
+        )
+        return
       }
+      // os#1385 (lot 2) — coller, c'est éditer (cf. le nudge plus haut).
+      if (!this.drawing_area.editable) return
+      this.drawing_area.copyNodes(clipboard.node_ids)
+      this.saveInCache()
     }
   }
 
@@ -3043,69 +3776,8 @@ export class Class_ApplicationData {
     return true
   }
 
-  /**
-   * Allows to create a waiting toast for given function.
-   * Use a functions queue to ensure that all function that call always run in the calling order.
-   *
-   * @protected
-   * @param {() => void} funct
-   * @param {string} funct_id
-   * @param {Type_TextForToastPromise} [intake]
-   * @memberof Class_ApplicationData
-   */
-  protected _sendWaitingToast(
-    funct: () => void | Promise<void>,
-    funct_id: string,
-    intake?: Type_TextForToastPromise
-  ) {
-    if (this._toast_processes[0] !== funct_id) {
-      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
-    } else {
-      const task_promise = (async () => {
-        try {
-          await new Promise(r => setTimeout(r, 500)) // Attendre 500ms pour le spinner
-          await funct()  // Attendre la fin de la fonction (sync ou async)
-          return 200
-        } finally {
-          this._toast_processes.splice(0, 1)
-        }
-      })()
-      this._toast!.promise(
-        task_promise,
-        {
-          success: {
-            title: intake?.success?.title ?? this.t('toast.default.success.title'),
-            description: intake?.success?.desc ?? this.t('toast.default.success.desc'),
-            duration: default_toast_duration
-          },
-          loading: {
-            title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
-            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
-            duration: default_toast_duration
-          },
-          // La raison du rejet était JETÉE : l'utilisateur voyait un titre
-          // générique, la console ne montrait rien, et un échec survenu sur une
-          // autre machine restait indiagnosticable — c'est exactement ce qui a
-          // fait perdre une semaine sur l'export PNG. Chakra accepte une
-          // fonction ici : on y récupère l'erreur, on la trace et on la montre.
-          // L'erreur reste affichée (duration null) et refermable : c'est un
-          // message que l'utilisateur doit pouvoir lire et recopier.
-          error: (err: Error) => {
-            console.error('[toast] tache en echec :', err)
-            const detail = err?.message ? String(err.message) : ''
-            const base = intake?.error?.desc
-            const description = [base, detail].filter(Boolean).join(' — ')
-            return {
-              title: intake?.error?.title ?? this.t('toast.default.error.title'),
-              description: description || this.t('toast.default.error.desc'),
-              duration: detail ? null : default_toast_duration,
-              isClosable: true
-            }
-          },
-        }
-      )
-    }
-  }
+  // os#1385 — `_sendWaitingToast`, `_toast_processes` et `_toast_bypass` ont migré dans
+  // `Class_Workspace` : la file d'attente des toasts est UNE, comme l'écran.
 
   /**
    * Some pre-process to correct html we will send to converter
@@ -3152,7 +3824,11 @@ export class Class_ApplicationData {
     const origin_y = this.drawing_area.is_paper_mode ? 0 : (export_bounds?.y ?? 0)
     const tx = -origin_x * scale_da + Class_ApplicationData.export_edge_padding
     const ty = -origin_y * scale_da + Class_ApplicationData.export_edge_padding
-    svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
+    // os#1385 (lot 3) — les identifiants structurels du SVG sont ceux de la ZONE exportée
+    // (préfixés hors du conteneur principal, donc inchangés pour l'export du diagramme que
+    // l'utilisateur édite) : on les demande à la zone plutôt que de les écrire en dur.
+    svg_clone?.select(this.drawing_area.domIdSelector('g_drawing'))
+      .attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 
     // Drop editor-only chrome from the export. The editable-area frame (#viewport_border)
@@ -3160,12 +3836,12 @@ export class Class_ApplicationData {
     // (offset by the nav bar height) instead of following the re-anchored diagram —
     // it would otherwise be baked into the SVG/PNG/PDF as a stray border cutting across
     // the export, shifted down by the top menu height.
-    svg_clone?.select('#viewport_border').remove()
+    svg_clone?.select(this.drawing_area.domIdSelector('viewport_border')).remove()
 
     // #291 — Le clip du contenu (groupe #g_clip enveloppant g_drawing) découpe l'affichage éditeur
     // au cadre de la fenêtre. À l'export, on veut le diagramme COMPLET (le contenu peut vivre
     // hors de la fenêtre courante après un pan/zoom) : on neutralise donc le clip-path sur le clone.
-    svg_clone?.select('#g_clip').attr('clip-path', null)
+    svg_clone?.select(this.drawing_area.domIdSelector('g_clip')).attr('clip-path', null)
 
     // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
     // render fine but link labels collide with their value-label sibling. We
@@ -3201,12 +3877,17 @@ export class Class_ApplicationData {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get t() { return this._t }
-  public set t(_) { this._t = _ }
-  public get i18n() { return this._i18n }
-  public set i18n(_) { this._i18n = _ }
+  public get t() { return this.workspace.t }
+  public set t(_) { this.workspace.t = _ }
+  public get i18n() { return this.workspace.i18n }
+  public set i18n(_) { this.workspace.i18n = _ }
 
-  public get is_static(): boolean { return this._drawing_area.static }
+  /**
+   * Mode de PAGE. Lu de l'ESPACE DE TRAVAIL depuis os#1385, et non plus de la zone de dessin :
+   * celle-ci est remplacée à chaque `reset()`, et son défaut retombait sur `window.sankey`, ce
+   * qui obligeait chaque document hors écran à réaligner le drapeau APRÈS son chargement.
+   */
+  public get is_static(): boolean { return this.workspace.published_mode }
 
   public get history(): Class_ApplicationHistory { return this._history! }
 
@@ -3269,23 +3950,23 @@ export class Class_ApplicationData {
   public get menu_configuration(): Class_MenuConfig { return this._menu_configuration! }
   protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
-  public get url_prefix(): string { return this._url_prefix }
+  public get url_prefix(): string { return this.workspace.url_prefix }
 
   public get logo(): string {
     if (this.is_static && this.publish_options.logo !== null) {
       return this.publish_options.logo
     }
-    return this._logo_opensankey
+    return this.workspace.logo_opensankey
   }
 
-  public get logo_opensankey(): string { return this._logo_opensankey }
-  public get logo_terriflux(): string { return this._logo_terriflux }
+  public get logo_opensankey(): string { return this.workspace.logo_opensankey }
+  public get logo_terriflux(): string { return this.workspace.logo_terriflux }
 
-  public get logo_width(): number { return this._logo_width }
-  public set logo_width(value: number) { this._logo_width = value }
+  public get logo_width(): number { return this.workspace.logo_width }
+  public set logo_width(value: number) { this.workspace.logo_width = value }
 
-  public get app_name(): string { return this._app_name }
-  public set app_name(value: string) { this._app_name = value }
+  public get app_name(): string { return this.workspace.app_name }
+  public set app_name(value: string) { this.workspace.app_name = value }
 
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
 

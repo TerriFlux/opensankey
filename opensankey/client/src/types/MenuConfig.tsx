@@ -33,7 +33,7 @@ import {
 } from '../types/Utils'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
-import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
+import { Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
@@ -42,6 +42,29 @@ import type { Type_TemplateSource } from './TemplateSource'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
+// os#1418 — LES FIGURES SONT DES ÉLÉMENTS. `Figure.ts` porte la nature, ses styles, la cascade
+// et le rapport de migration ; ce fichier n'en garde que l'ANNUAIRE (quelle figure pour quelle
+// vignette) et les gestes de la grande zone.
+import {
+  Class_Figure, Class_FigureNature, Class_FigureMigrationReport,
+  FIGURE_DIAGRAM_PANE_KEY, transposableBagChanges,
+  type Type_FigureAttributesConfig, type Type_OptionBag
+} from '../Representations/Figure'
+// os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
+// VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
+// (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
+// prend lui-même que des types. Aucun cycle à l'exécution.
+import { representation_registry } from '../Representations/RepresentationRegistry'
+// os#1421 — LE PLACEMENT : le TYPE et les helpers purs vivent dans `Placement.ts`, le REGISTRE des
+// figures par identifiant de document vit ici (c'est lui qui sait quelle figure un placement cite).
+import {
+  FIGURE_PLACEMENTS_ATTR, readFigurePlacements, withFigurePlacement, withoutFigure,
+  nodePlacementFigureId, type Type_FigurePlacement
+} from '../Representations/Placement'
+// `import type` : l'hôte d'un placement est un NŒUD, mais ce fichier n'a aucune arête d'exécution
+// vers les éléments de dessin (il n'en prend que la forme), et `Class_NodeElement` importé en
+// valeur ferait remonter toute la zone de dessin dans le menu.
+import type { Class_NodeElement } from '../Elements/Node'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -106,7 +129,30 @@ export type Type_MainZoneSubject =
   // Absent (fichiers d'avant cette date, où les doublons étaient impossibles) : la clé VAUT
   // l'identifiant de l'élément — cf. mainZonePaneKeyAt.
   | { kind: 'elements', ids: string[], keys?: string[], sheet?: string }
-export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements']
+  /**
+   * os#1420 (16/09/2026) — LE TROISIÈME SUJET : ÉPINGLÉ À UN CRITÈRE, et non à des objets.
+   *
+   * « Les nœuds portant l'étiquette Importations » — le groupe d'étiquettes `tagg_id`, l'étiquette
+   * `tag_id`, et c'est le diagramme qui dit, à chaque instant, quels nœuds cela fait.
+   *
+   * POURQUOI un troisième sujet plutôt qu'une liste d'ids bien remplie : une liste (`elements`) est
+   * figée sur des IDENTIFIANTS, et une figure qui suit la navigation change de nœuds sous elle — un
+   * changement de niveau en fait disparaître une partie, et le groupe se vide à moitié pendant que
+   * la fenêtre garde son titre. Elle annonce alors quelque chose qu'elle ne montre plus. Un critère,
+   * lui, se REPOSE à chaque résolution : il désigne toujours ce qu'il dit.
+   *
+   * POURQUOI SEULEMENT LES ÉTIQUETTES DE NŒUDS, pour l'instant : une étiquette de nœuds est un
+   * critère au sens strict — un nœud la porte ou non (`Class_NodeTag._references`). Une étiquette de
+   * DONNÉES n'en est pas un : `Class_DataTag._references` vaut `sankey.links_dict`, donc TOUS les
+   * flux — elle ne sélectionne rien, elle nomme une lecture des valeurs. Une dimension (niveau,
+   * ancêtre) ferait un critère recevable et viendra si l'usage le demande ; on n'ouvre pas deux
+   * formes à la fois pour une seule dont on sait ce qu'elle doit faire.
+   *
+   * `sheet` s'y lit comme sur les autres sujets épinglés : le critère s'applique à la feuille
+   * nommée, sinon à la feuille courante.
+   */
+  | { kind: 'tag', tagg_id: string, tag_id: string, sheet?: string }
+export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements', 'tag']
 /**
  * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
  * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME sur la feuille courante,
@@ -123,9 +169,10 @@ export type Type_MainZoneOccupant = {
   representation: string
   place: Type_MainZonePlace
   size: number
-  // Réglages de la représentation, PAR FENÊTRE (décomposer par…, mode des valeurs…), opaques
-  // ici : c'est l'entrée de registre qui les lit. Persistés avec la fenêtre.
-  options?: Type_JSON
+  // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
+  // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
+  // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
+  // au lieu d'en recevoir une copie au moment de sa création.
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
 /**
@@ -194,6 +241,16 @@ export const freshMainZonePaneKey = (id: string, used: string[]): string => {
 }
 
 /**
+ * ⚠️ os#1418 — LES CINQ HELPERS QUI SUIVENT SONT UN FORMAT DE LECTURE HÉRITÉE.
+ *
+ * Ils décrivent `occupant.options` : le sac par fenêtre, son sous-dictionnaire `panes`, et le
+ * repli de l'un sur l'autre. Ce format N'EST PLUS ÉCRIT depuis os#1418 — les réglages sont des
+ * FIGURES (`Class_Figure`) — et ces fonctions ne servent plus qu'à MIGRER un fichier d'avant
+ * (cf. `mainZoneStateFromJSON`). Elles restent exportées parce que la migration n'est pas le
+ * seul lecteur possible d'un fichier ancien, et pures parce qu'elles ne lisent rien d'autre que
+ * le JSON qu'on leur donne. N'en câblez PAS de nouveau code : `figureOf(id, key).attributes`
+ * est la seule lecture vivante.
+ *
  * os#1387 (10/09/2026) — LES RÉGLAGES SONT PAR VIGNETTE, PAS PAR FENÊTRE.
  *
  * « Pour normaliser il faut le faire par diagramme » (Julien) : le mode de valeur et le flux
@@ -251,8 +308,12 @@ export const mainZonePaneOptions = (options: Type_JSON | undefined, key: string)
  * décomposer une couronne selon une dimension étrangère. Ils restent donc là où ils ont été
  * posés, sur leur vignette.
  *
- * La liste vit ICI et non dans le registre de représentations parce que c'est ici qu'on écrit le
- * défaut, et qu'un filtre posé ailleurs laisserait passer les écritures des autres appelants.
+ * os#1418 — CETTE LISTE EST DEVENUE UN REPLI. La règle vit désormais dans la DÉCLARATION de la
+ * nature (`sort: 'identity' | 'navigation'`, cf. `Figure.ts`), c'est-à-dire auprès de la clé
+ * qu'elle qualifie et non dans un fichier qui ne sait rien d'elle. La liste ne sert plus qu'aux
+ * clés qu'AUCUNE nature ne déclare — celles des natures pas encore portées sur le nouveau
+ * contrat, et celles d'un fichier écrit par une version qui les offrait. La résorber plutôt que
+ * l'allonger : une clé de plus ici est une déclaration qui manque là-bas.
  */
 const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
   'normalize_link_id', 'descriptor', 'root_ids'
@@ -269,8 +330,35 @@ const SUBJECT_BOUND_OPTION_KEYS: readonly string[] = [
  *
  * L'union est OUVERTE par construction : le jour où les vignettes seront sélectionnables, une
  * portée « la sélection » s'ajoute ici et tout ce qui la lit la traite comme les deux autres.
+ *
+ * os#1418 — TROIS PORTÉES (arbitrage Julien du 16/09/2026), et la troisième est celle qui
+ * manquait :
+ *  - 'pane'  : CETTE figure. Surcharge propre, et rien d'autre — c'est le défaut.
+ *  - 'all'   : les figures de CETTE FENÊTRE. Le diff transposable, posé sur chacune (cf.
+ *              `transposableChanges`) ; les voisines gardent ce qu'elles disent par ailleurs.
+ *  - 'style' : LE STYLE de la nature (`default`). Seule portée qui écrit un style, et donc
+ *              seule façon de régler d'un geste toutes les figures d'une nature, ouvertes ou
+ *              à venir. Régler une figure n'écrit PLUS le défaut de sa nature : c'est la fin
+ *              de l'écriture immédiate de os#1394, qui faisait qu'un réglage local devenait
+ *              silencieusement le réglage de tout le monde.
+ *
+ * os#1423 — LE JOUR ANNONCÉ EST VENU : les vignettes sont SÉLECTIONNABLES (cf.
+ * `main_zone_selected_pane_keys`), et 'selection' s'ajoute comme le commentaire ci-dessus le
+ * prévoyait.
+ *  - 'selection' : les figures SÉLECTIONNÉES de la fenêtre active. Même diff transposable que
+ *                  'all', posé sur la sélection au lieu de la fenêtre entière. Sélection vide =
+ *                  la seule vignette active, donc cette portée DÉGÉNÈRE en 'pane' quand rien
+ *                  n'est sélectionné — et c'est pour cela qu'elle peut remplacer les deux
+ *                  premières dans le volet sans rien perdre.
+ *
+ * CE QUE LE VOLET OFFRE DÉSORMAIS : 'selection' et 'style'. 'pane' et 'all' restent DANS L'UNION
+ * — le menu contextuel des figures et les tests les passent encore, et un fichier de réglages
+ * peut les porter — mais le sélecteur de portée du volet de représentation ne les propose plus :
+ * « cette vignette » est la sélection réduite à elle-même, « toutes » est la sélection étendue à
+ * toute la fenêtre (`selectAllMainZonePanes`). Trois entrées pour deux gestes, c'était une de
+ * trop.
  */
-export type Type_RepresentationOptionScope = 'pane' | 'all'
+export type Type_RepresentationOptionScope = 'pane' | 'selection' | 'all' | 'style'
 
 /**
  * os#1416 — UN RÉGLAGE EST-IL TRANSPOSABLE, c'est-à-dire a-t-il un sens sur la figure voisine ?
@@ -295,29 +383,21 @@ export const isTransposableOption = (key: string): boolean =>
  * Une clé RETIRÉE ne voyage pas : aucun réglage ne se supprime aujourd'hui (tous réécrivent
  * `{ ...options, clé: valeur }`), et propager une absence demanderait de distinguer « effacé »
  * de « jamais dit », ce que le porteur de la portée n'a pas à trancher.
+ *
+ * os#1418 — LA TRANSPOSABILITÉ VIENT MAINTENANT DE LA NATURE, pas de la liste en dur : le
+ * troisième paramètre reçoit `figureNature(id).isTransposable`, qui lit la SORTE déclarée de la
+ * clé et ne retombe sur `isTransposableOption` que pour une clé qu'aucune nature ne déclare.
+ * Absent, on garde exactement le comportement d'avant — les appelants qui ne connaissent pas la
+ * nature de la figure (et il y en a) n'ont rien à changer.
+ *
+ * Le corps, lui, vit dans `Figure.ts` (`transposableBagChanges`) : c'est là que se décide ce
+ * qu'un réglage de figure a le droit de faire, et deux copies de la même règle divergeraient.
  */
 export const transposableChanges = (
   prev: { [key: string]: unknown } | undefined,
-  next: { [key: string]: unknown } | undefined
-): { [key: string]: unknown } => {
-  const out: { [key: string]: unknown } = {}
-  Object.entries(next ?? {}).forEach(([key, value]) => {
-    if (!isTransposableOption(key)) return
-    // Comparaison par sérialisation : un descripteur ou une liste sont des valeurs composées,
-    // et l'égalité de référence rapporterait un changement à chaque rendu du volet.
-    if (JSON.stringify((prev ?? {})[key]) !== JSON.stringify(value)) out[key] = value
-  })
-  return out
-}
-
-/** Les réglages, débarrassés de ceux qui désignent un objet du sujet. */
-const withoutSubjectBoundOptions = (options: Type_JSON | undefined): Type_JSON => {
-  const out: Type_JSON = {}
-  Object.entries(options ?? {}).forEach(([key, value]) => {
-    if (!SUBJECT_BOUND_OPTION_KEYS.includes(key)) out[key] = value
-  })
-  return out
-}
+  next: { [key: string]: unknown } | undefined,
+  isTransposable: (key: string) => boolean = isTransposableOption
+): { [key: string]: unknown } => transposableBagChanges(prev, next, isTransposable)
 /** Les réglages de la fenêtre, une vignette mise à jour. Les autres vignettes ne bougent pas. */
 export const withMainZonePaneOptions = (
   options: Type_JSON | undefined, key: string, next: Type_JSON
@@ -455,15 +535,129 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
+/**
+ * sa#283 lot 2 — Le créneau d'enregistrement de vue contextuelle, nommé.
+ *
+ * Nommé (et non écrit en place) depuis os#1385 : le membre est délégué à l'hôte, donc son
+ * type s'écrit maintenant trois fois — champ, getter, setter — et trois copies d'une même
+ * forme d'objet finiraient par diverger.
+ */
+export type Type_ContextRecordingUI = {
+  armed: (group_id: string) => string | null
+  arm: (group_id: string, tag_id: string) => void
+  disarm: () => void
+}
+
+/**
+ * os#1385 — LES POINTS D'INJECTION DE MENUS, nommés.
+ *
+ * Mêmes formes qu'avant, sorties de la classe pour la même raison que
+ * `Type_ContextRecordingUI` : délégués à l'hôte, ils s'écrivent désormais en champ, en
+ * getter et en setter, et trois copies d'une union de dix lignes divergeraient.
+ */
+/** Optional extra tab injected into UpdateModeGrid by OSP or other extensions */
+export type Type_ExtraApplyLayoutTab = {
+  label: string
+  /** If provided and returns true: tab header is greyed and content disabled */
+  disabled?: () => boolean
+  render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
+}
+/** Entrées supplémentaires du menu Exporter (liste plate, ou section titrée avec enfants). */
+export type Type_ExtraExportMenuItems = Array<
+  | {
+      // Optional discriminator. Absent or 'item' => flat menu entry; 'group' => titled section with children.
+      type?: 'item'
+      key: string
+      label: string
+      icon?: React.ReactNode
+      onClick: () => void
+      disabled?: () => boolean
+      // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+      tooltip?: () => string
+    }
+  | {
+      type: 'group'
+      key: string
+      label: string
+      children: Array<{
+        key: string
+        label: string
+        icon?: React.ReactNode
+        onClick: () => void
+        disabled?: () => boolean
+        tooltip?: () => string
+      }>
+    }
+>
+/**
+ * Entrées à libellé ÉVALUÉ AU RENDU (menus Enregistrer et Fichier) : l'entrée suit la langue
+ * active et peut n'apparaître que pour un compte connecté (une entrée `hidden` n'est pas
+ * rendue du tout, contrairement à `disabled`).
+ */
+export type Type_LazyLabelMenuItems = Array<{
+  key: string
+  label: () => string
+  icon?: React.ReactNode
+  onClick: () => void
+  disabled?: () => boolean
+  // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+  tooltip?: () => string
+  hidden?: () => boolean
+}>
+/** Entrées supplémentaires du menu « Aide ». */
+export type Type_ExtraHelpMenuItems = Array<{
+  key: string
+  // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
+  // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
+  // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
+  // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
+  // dépôt passent une chaîne).
+  label: string | (() => string)
+  icon?: React.ReactNode
+  onClick: () => void
+  disabled?: () => boolean
+  // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+  tooltip?: () => string
+}>
+
 // CLASS MENU CONFIG *******************************************************************/
 /**
  * Define shortcut to update menu components
+ *
+ * os#1385 — UNE CLASSE, DEUX RÔLES, SÉPARÉS PAR DÉLÉGATION.
+ *
+ *  - `new Class_MenuConfig()` : la configuration de l'HÔTE (l'espace de travail). Elle porte
+ *    le STOCKAGE de tout ce qui est unique quel que soit le nombre de documents ouverts :
+ *    les panneaux, la colonne d'outils, les dialogues, les injections de menus, les refs de
+ *    l'interface (barre d'outils, préférences, page d'accueil…).
+ *  - `new Class_MenuConfig(host)` : la configuration d'un DOCUMENT. Elle porte ce qui est par
+ *    document (refs de contenu, séquence de dataTags, tableur, feuilles…) et DÉLÈGUE à `host`
+ *    tout membre d'hôte — le champ de stockage existe encore sur elle, il n'est simplement
+ *    jamais lu : l'API publique passe par `this._host`.
+ *
+ * Les sites d'appel ne changent pas : `mc.panels`, `mc.ref_toolbar`, `mc.tools_column_open`
+ * disent la même chose qu'avant, sur l'unique exemplaire de l'hôte.
+ *
+ * LA GRANDE ZONE (occupants, fenêtre active, sélection de vignettes, `doc_external`, ratios) est
+ * MONTÉE à l'hôte au dernier geste du chantier : il n'y a qu'un écran. Les FIGURES sont restées
+ * au document — ce sont des objets du fichier (cf. l'en-tête du bloc grande zone).
+ *
  * @export
  * @class Class_MenuConfig
  */
 export class Class_MenuConfig {
 
   // PROTECTED  ATTRIBUTES ==============================================================
+
+  /**
+   * os#1385 — L'HÔTE de cette configuration : l'espace de travail, ou soi-même quand on EST
+   * l'hôte. Posé par le constructeur, jamais réassigné.
+   */
+  protected _host: Class_MenuConfig
+  /** L'hôte auquel les membres d'espace de travail sont délégués (soi-même si on est l'hôte). */
+  public get host(): Class_MenuConfig { return this._host }
+  /** Cette configuration EST-elle celle de l'espace de travail ? */
+  public get is_host(): boolean { return this._host === this }
 
   /* ========================================
     Configuration menu
@@ -529,12 +723,23 @@ export class Class_MenuConfig {
   // `_elements_configurable_selected` étaient l'état de la MATRICE type×élément :
   // déposés avec elle. L'inspecteur dérive sa cible de la sélection.
   protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock' = 'shape'
-  public get tab_selected() { return this._tab_selected }
-  public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
+  public get tab_selected() { return this._host._tab_selected }
+  public set tab_selected(tab_selected) { this._host._tab_selected = tab_selected }
 
   // ---------------------------------------------------------------------------------------
-  // GRANDE ZONE — os#1355/1361 : N OCCUPANTS venus du registre des représentations, plus
-  // quatre noms en dur.
+  // GRANDE ZONE — os#1385 : ELLE EST DE L'ESPACE DE TRAVAIL, PAS DU DOCUMENT.
+  //
+  // Il n'y a qu'UNE grande zone à l'écran quel que soit le nombre de documents ouverts : la
+  // disposition (occupants, places, poids, détachements, ratios), la SÉLECTION de vignettes et
+  // la FENÊTRE ACTIVE décrivent cet écran unique, pas un fichier. Elles montent donc à l'hôte
+  // comme les panneaux au lot 1 : le stockage reste un champ de cette classe, mais toute lecture
+  // et toute écriture passent par `this._host` (dix champs, cf. lot-3-contrat §5).
+  // Les FIGURES, elles, restent au DOCUMENT (`_figures`, `_figures_by_id`, `_figure_natures`,
+  // `_figure_seq`, `_figure_report`) : ce sont des objets du fichier, deux documents ne
+  // partagent ni leurs `f_N` ni leurs styles. `figureOf` indexe donc les figures du document par
+  // une fenêtre de l'hôte, et la persistance ne lit/écrit `main_zone` que `if (is_main)`.
+  // ---------------------------------------------------------------------------------------
+  // os#1355/1361 : N OCCUPANTS venus du registre des représentations, plus quatre noms en dur.
   //
   // Jusqu'ici la grande zone connaissait quatre occupants nommés (diagramme, tableur, doc,
   // unitaire), chacun avec son booléen, son ratio, son drapeau de détachement, et quatre
@@ -575,6 +780,19 @@ export class Class_MenuConfig {
   // et volontairement minimale : ce n'est pas un système de focus, juste la dernière vignette
   // avec laquelle l'utilisateur a interagi. `null` = la première vignette de la fenêtre.
   protected _main_zone_active_pane_key: string | null = null
+  // os#1423 — LA SÉLECTION DE VIGNETTES de la fenêtre active. TRANSITOIRE comme la vignette
+  // active, et jamais persistée : elle ne décrit pas le document, elle décrit le geste en cours.
+  //
+  // Elle vit TOUJOURS dans la fenêtre active — une sélection qui survivrait au changement de
+  // fenêtre désignerait des clés que la nouvelle fenêtre ne porte pas, ou pire, des clés
+  // homonymes qui y désignent d'autres objets. Elle se vide donc partout où la vignette active
+  // se vide, aux mêmes endroits et pour la même raison.
+  //
+  // INVARIANT : la vignette active fait partie de la sélection. Une liste VIDE ne veut pas dire
+  // « rien de sélectionné » mais « seulement l'active » (cf. `main_zone_selected_pane_keys`) :
+  // c'est ce qui permet à la portée 'selection' de dégénérer en 'pane' sans que personne ait à
+  // traiter le cas.
+  protected _main_zone_selected_pane_keys: string[] = []
   // os#1394 — CE QUE L'AUTEUR A TOUCHÉ EN DERNIER, et donc ce dont le menu de configuration doit
   // parler. TRANSITOIRE.
   //
@@ -588,14 +806,44 @@ export class Class_MenuConfig {
   // (qui n'a rien à régler, donc ne prend pas l'inspecteur) puis pose la sélection, qui repasse
   // le drapeau à 'selection'.
   protected _inspector_focus: 'selection' | 'representation' = 'selection'
-  // os#1394 — LE RÉGLAGE PAR DÉFAUT D'UNE NATURE DE REPRÉSENTATION, indexé par son identifiant
-  // de registre, persisté avec le document (clé racine `representation_defaults`).
+  // os#1418 — LES NATURES DE FIGURE ET LEURS STYLES, indexées par identifiant de registre,
+  // persistées avec le document (clé racine `figure_styles`). Une nature naît PARESSEUSEMENT, au
+  // premier besoin (cf. `figureNature`) : le document ne porte que ce qu'on a réglé.
   //
-  // Arbitrage : un réglage de représentation est un défaut PAR NATURE, pas par fenêtre ni par
-  // sujet. Toutes les étoiles unitaires d'une étude se règlent donc du même geste — celui qu'on
-  // fait sur l'une d'elles — tant que l'auteur n'a pas décidé autrement sur une vignette
-  // précise, auquel cas c'est la vignette qui gagne (cf. `mainZonePaneOptionsOf`).
-  protected _representation_defaults: { [representation_id: string]: Type_JSON } = {}
+  // Ce qui a changé par rapport au « défaut par nature » de os#1394, qu'elles remplacent : le
+  // style `default` ne s'écrit plus tout seul quand on règle une figure (arbitrage Julien du
+  // 16/09/2026), il s'écrit en portée « style » et seulement là — et une figure qui n'a rien
+  // surchargé le SUIT, au lieu d'en avoir reçu une copie à sa naissance. Changer le style change
+  // donc ce que montrent les figures déjà ouvertes, ce que le défaut recopié ne savait pas faire.
+  protected _figure_natures: { [nature_id: string]: Class_FigureNature } = {}
+  // os#1418 — L'ANNUAIRE DES FIGURES : une par (fenêtre, clé de vignette). La clé de vignette
+  // est `FIGURE_DIAGRAM_PANE_KEY` ('') pour une fenêtre à sujet diagramme, qui n'en a qu'une.
+  // Créées paresseusement elles aussi : une figure qui n'a rien à dire n'existe pas, et donc ne
+  // s'écrit pas — c'est ce qui garde les fichiers d'aujourd'hui octet pour octet identiques.
+  protected _figures: { [occupant_id: string]: { [pane_key: string]: Class_Figure } } = {}
+  // os#1421 — LE REGISTRE DES FIGURES DU DOCUMENT, indexé par identifiant `f_N` (clé racine
+  // `figures`). C'est le SECOND annuaire, et il ne fait pas double emploi avec le premier :
+  //
+  //   - `_figures[fenêtre][vignette]` dit OÙ une figure se montre. Il suit la grande zone, il se
+  //     vide quand une fenêtre se ferme, et ses clés n'ont de sens que dans la session courante.
+  //   - `_figures_by_id[f_N]` dit QUI une figure est. Il ne suit rien : un placement sur un nœud
+  //     cite un `f_N`, et ce nom doit survivre à la fermeture de la fenêtre où la figure a été
+  //     réglée — sans quoi poser une figure sur un nœud puis refermer sa fenêtre effacerait le
+  //     dessin du nœud.
+  //
+  // L'OBJET EST LE MÊME dans les deux : promouvoir n'en recopie pas un second (c'est tout le sens
+  // du placement — un LIEN, pas une copie), ça lui donne un nom et l'indexe une fois de plus.
+  // Rerégler la vignette change donc ce que le nœud montre, immédiatement.
+  protected _figures_by_id: { [figure_id: string]: Class_Figure } = {}
+  // Compteur des identifiants de figure (`f_N`). Réaligné à la lecture d'un fichier sur le plus
+  // grand N rencontré, comme `_main_zone_window_seq` : sans cela une figure neuve prendrait le nom
+  // d'une figure du fichier, et un placement se retrouverait à citer le mauvais dessin.
+  protected _figure_seq: number = 0
+  // os#1419 — CE QUE LA MIGRATION N'A PAS SU PORTER. Accumulé par les trois lecteurs (styles,
+  // défauts hérités, grande zone) et VIDÉ par `flushFigureMigrationReport`, que la persistance
+  // appelle une fois les trois lectures faites : la vider à la fin de chacune la rendrait
+  // illisible aux tests et dirait trois fois la moitié de l'histoire (cf. la méthode).
+  protected _figure_report: Class_FigureMigrationReport = new Class_FigureMigrationReport()
   // Document EXTERNE affiché à la place de la documentation du diagramme : présentation d'une
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
@@ -629,25 +877,36 @@ export class Class_MenuConfig {
   // rendu, et notifier inconditionnellement ferait boucler le rendu sur
   // lui-même.
   protected _tools_column_enabled: boolean = false
-  public get tools_column_enabled() { return this._tools_column_enabled }
+  public get tools_column_enabled() { return this._host._tools_column_enabled }
   public set tools_column_enabled(v: boolean) {
-    if (this._tools_column_enabled === v) return
-    this._tools_column_enabled = v
+    if (this._host._tools_column_enabled === v) return
+    this._host._tools_column_enabled = v
     this._notifyMainZone()
   }
   protected _filter_bar_available: boolean = false
-  public get filter_bar_available() { return this._filter_bar_available }
+  public get filter_bar_available() { return this._host._filter_bar_available }
   public set filter_bar_available(v: boolean) {
-    if (this._filter_bar_available === v) return
-    this._filter_bar_available = v
+    if (this._host._filter_bar_available === v) return
+    this._host._filter_bar_available = v
     this._notifyMainZone()
   }
   protected _tools_column_open: boolean = true
   // #248 — bus pub/sub générique par topic (remplace la liste plate `_main_zone_listeners`).
+  //
+  // os#1385 — UN BUS PAR INSTANCE, mais deux destinations. Les signaux d'ESPACE DE TRAVAIL
+  // (cf. HOST_TOPICS) montent sur le bus de l'hôte, les signaux de CONTENU restent sur celui
+  // du document. Pour le document principal, hôte et document partagent de fait le même bus
+  // qu'aujourd'hui — rien ne change à l'écran. Pour un document secondaire, ses signaux de
+  // contenu restent chez lui (le lot 2 les rebranchera à l'actif) et ses signaux d'espace de
+  // travail montent, de sorte qu'un panneau ouvert par lui repeint bien la barre latérale.
   protected _event_bus: Class_EventBus = new Class_EventBus()
-  protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
-  public get tools_column_open() { return this._tools_column_open }
-  public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
+  /** Le bus qui porte ce topic : celui de l'hôte pour un signal d'espace de travail, le sien sinon. */
+  protected _busFor(topic: string): Class_EventBus {
+    return HOST_TOPICS.has(topic) ? this._host._event_bus : this._event_bus
+  }
+  protected _notifyMainZone() { this._host._event_bus.notify(MAIN_ZONE_TOPIC) }
+  public get tools_column_open() { return this._host._tools_column_open }
+  public set tools_column_open(v: boolean) { this._host._tools_column_open = v; this._notifyMainZone() }
   /** Largeur (px) réservée à droite par la colonne d'outils.
    *
    *  Nulle quand la colonne est REPLIÉE (07/08) : repliée, elle ne laisse
@@ -655,7 +914,7 @@ export class Class_MenuConfig {
    *  tout l'intérêt de la replier sur une page publiée, où chaque pixel de
    *  diagramme compte. */
   public getToolsColumnWidthPx(): number {
-    return (this.tools_column_enabled && this._tools_column_open)
+    return (this.tools_column_enabled && this.tools_column_open)
       ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
@@ -663,8 +922,15 @@ export class Class_MenuConfig {
   // le filtre dans OS base). Le filtre appelle ce renderer pour déplier l'édition
   // d'un groupe EN PLACE, sous sa rangée de filtre (fusion usage/édition). Null
   // en OS pur / sans licence : le crayon d'édition ne s'affiche pas.
-  public render_tag_group_editor:
+  protected _render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
+  public get render_tag_group_editor():
+    ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null {
+    return this._host._render_tag_group_editor
+  }
+  public set render_tag_group_editor(
+    v: ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null
+  ) { this._host._render_tag_group_editor = v }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
   // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
@@ -675,16 +941,23 @@ export class Class_MenuConfig {
   //  - `arm(group_id, tag_id)` : arme (désarme AVEC capture un éventuel autre) ;
   //  - `disarm()` : désarme AVEC capture.
   // Null en OS pur : la feature n'existe pas sans la couche OSP.
-  public context_recording_ui: {
-    armed: (group_id: string) => string | null
-    arm: (group_id: string, tag_id: string) => void
-    disarm: () => void
-  } | null = null
+  protected _context_recording_ui: Type_ContextRecordingUI | null = null
+  public get context_recording_ui(): Type_ContextRecordingUI | null {
+    return this._host._context_recording_ui
+  }
+  public set context_recording_ui(v: Type_ContextRecordingUI | null) {
+    this._host._context_recording_ui = v
+  }
 
   // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
   // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
   // que les coquilles PanelShell s'abonnent via `subscribe(PANELS_TOPIC, …)`.
-  public panels!: Class_PanelManager
+  //
+  // os#1385 — UN SEUL PanelManager pour tout l'espace de travail : il n'est construit que
+  // sur l'hôte (cf. constructeur), sur le bus de l'hôte, et un document rend le sien. C'est
+  // ce qui fait que la barre latérale ouverte depuis un document est LA barre latérale.
+  protected _panels!: Class_PanelManager
+  public get panels(): Class_PanelManager { return this._host._panels }
 
   // OS#300 — Le panneau de Configuration est désormais un « panneau » unifié
   // (id 'config') piloté par `panels`. `config_panel_pinned` (lu par
@@ -696,13 +969,13 @@ export class Class_MenuConfig {
   // DrawingAreaInteractions) ne doit jamais recadrer le dessin — invariant
   // historique. L'ancrage en barre latérale reste un choix délibéré (en-tête).
   protected _config_last_container: Type_PanelMode = 'popup'
-  public get config_last_container(): Type_PanelMode { return this._config_last_container }
+  public get config_last_container(): Type_PanelMode { return this._host._config_last_container }
   public get config_panel_pinned() { return this.panels.getMode('config') === 'sidebar' }
   public set config_panel_pinned(v: boolean) {
-    this._config_last_container = v ? 'sidebar' : 'popup'
+    this._host._config_last_container = v ? 'sidebar' : 'popup'
     // Ne re-router que si la config est ouverte : sinon on ne fait que mémoriser
     // le mode de réouverture (l'ouverture elle-même passe par setConfigOpen).
-    if (this.panels.isOpen('config')) this.panels.setMode('config', this._config_last_container)
+    if (this.panels.isOpen('config')) this.panels.setMode('config', this.config_last_container)
   }
   /** Largeur (px) réservée à droite par la config quand elle est la barre
    *  latérale (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
@@ -720,28 +993,38 @@ export class Class_MenuConfig {
   // Dernier contenant mémorisé pour la réouverture ; défaut = pop-up (comme la
   // config), superposée sans recadrer le dessin.
   protected _filter_last_container: Type_PanelMode = 'popup'
-  public get filter_last_container(): Type_PanelMode { return this._filter_last_container }
+  public get filter_last_container(): Type_PanelMode { return this._host._filter_last_container }
   /** Une page PUBLIÉE ouvre ce panneau ANCRÉ (07/08) : c'est sa légende, elle
    *  accompagne la lecture au lieu de flotter par-dessus le diagramme. Posé UNE
    *  fois par chargement — `filter_panel_docked_by_default` retient que le
    *  défaut a été appliqué, pour qu'un lecteur qui dépingle ne se le voie pas
    *  ré-imposer au rendu suivant. En édition, rien ne change : le filtre reste
    *  une pop-up tant qu'on ne l'ancre pas. */
-  public filter_panel_docked_by_default = false
+  protected _filter_panel_docked_by_default = false
+  public get filter_panel_docked_by_default(): boolean {
+    return this._host._filter_panel_docked_by_default
+  }
+  public set filter_panel_docked_by_default(v: boolean) {
+    this._host._filter_panel_docked_by_default = v
+  }
   public applyPublishedFilterDock() {
     if (this.filter_panel_docked_by_default) return
     this.filter_panel_docked_by_default = true
-    this._filter_last_container = 'sidebar'
+    this._host._filter_last_container = 'sidebar'
   }
   public get filter_panel_pinned() { return this.panels.getMode('filter') === 'sidebar' }
   public set filter_panel_pinned(v: boolean) {
-    this._filter_last_container = v ? 'sidebar' : 'popup'
-    if (this.panels.isOpen('filter')) this.panels.setMode('filter', this._filter_last_container)
+    this._host._filter_last_container = v ? 'sidebar' : 'popup'
+    if (this.panels.isOpen('filter')) this.panels.setMode('filter', this.filter_last_container)
   }
   // Largeur publiée par la Toolbar (informative ; la réserve passe désormais par
   // la largeur partagée de la barre latérale de `panels`).
-  public filter_drawer_open: boolean = false
-  public filter_drawer_width_px: number = 0
+  protected _filter_drawer_open: boolean = false
+  public get filter_drawer_open(): boolean { return this._host._filter_drawer_open }
+  public set filter_drawer_open(v: boolean) { this._host._filter_drawer_open = v }
+  protected _filter_drawer_width_px: number = 0
+  public get filter_drawer_width_px(): number { return this._host._filter_drawer_width_px }
+  public set filter_drawer_width_px(v: number) { this._host._filter_drawer_width_px = v }
   /** Largeur (px) réservée à droite par le filtre quand il est la barre latérale
    *  (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
    *  ⚠️ OS#388 — Même mise en garde que getConfigPanelPinnedReservedPx : ce n'est
@@ -769,23 +1052,23 @@ export class Class_MenuConfig {
 
   /** Les occupants dans l'ordre des piles. COPIE : les mutations passent par les méthodes. */
   public get main_zone_occupants(): Type_MainZoneOccupant[] {
-    return this._main_zone_occupants.map(o => ({ ...o }))
+    return this._host._main_zone_occupants.map(o => ({ ...o }))
   }
   public isMainZoneOccupant(id: string): boolean {
-    return this._main_zone_occupants.some(o => o.id === id)
+    return this._host._main_zone_occupants.some(o => o.id === id)
   }
   /** Occupants EFFECTIFS d'une pile : présents et non détachés (un détaché ne réserve rien). */
   public mainZoneOccupantsIn(place: Type_MainZonePlace): Type_MainZoneOccupant[] {
-    return this._main_zone_occupants
-      .filter(o => o.place === place && !this._main_zone_detached.has(o.id))
+    return this._host._main_zone_occupants
+      .filter(o => o.place === place && !this._host._main_zone_detached.has(o.id))
       .map(o => ({ ...o }))
   }
   /** L'occupant principal, ou null (jamais après normalisation, sauf liste vide transitoire). */
   public get main_zone_main_id(): string | null {
-    return this._main_zone_occupants.find(o => o.place === 'main')?.id ?? null
+    return this._host._main_zone_occupants.find(o => o.place === 'main')?.id ?? null
   }
   public mainZonePlaceOf(id: string): Type_MainZonePlace | null {
-    return this._main_zone_occupants.find(o => o.id === id)?.place ?? null
+    return this._host._main_zone_occupants.find(o => o.id === id)?.place ?? null
   }
 
   /**
@@ -794,7 +1077,7 @@ export class Class_MenuConfig {
    * change de place que si on la demande.
    */
   public showMainZoneOccupant(id: string, place?: Type_MainZonePlace): void {
-    const existing = this._main_zone_occupants.find(o => o.id === id)
+    const existing = this._host._main_zone_occupants.find(o => o.id === id)
     if (existing) {
       if (place && existing.place !== place) existing.place = place
     } else if (id === MAIN_ZONE_CANVAS_ID && !place) {
@@ -816,16 +1099,14 @@ export class Class_MenuConfig {
   ): void {
     const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
-    const peers = this._main_zone_occupants.filter(x => x.place === wanted)
+    const peers = this._host._main_zone_occupants.filter(x => x.place === wanted)
     const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
-    // os#1394 — une fenêtre NAÎT réglée comme sa nature l'est dans ce document : c'est le seul
-    // endroit où toute fenêtre se crée, ouverture de fenêtre d'élément comprise. Rien à écrire
-    // quand la nature n'a pas encore de défaut, pour ne pas semer des `options: {}` vides.
-    const defaults = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
-    const options = Object.keys(defaults).length > 0 ? defaults : undefined
-    this._main_zone_occupants.push(options
-      ? { ...o, place: wanted, size, options }
-      : { ...o, place: wanted, size })
+    // os#1418 — PLUS AUCUN DÉFAUT RECOPIÉ ICI. Une fenêtre neuve naît sans réglages, et ses
+    // figures SUIVENT le style `default` de leur nature (cf. `Class_Figure`) : elle est donc
+    // réglée comme les autres sans qu'on lui ait rien écrit, et elle le restera si l'auteur
+    // change le style ensuite. La recopie de os#1394 figeait au contraire l'état du style à
+    // l'instant de l'ouverture.
+    this._host._main_zone_occupants.push({ ...o, place: wanted, size })
   }
 
   // --- os#1387 : fenêtres = (sujet, représentation) ------------------------------------------
@@ -845,13 +1126,19 @@ export class Class_MenuConfig {
       return representation
     }
     let id = ''
-    do { this._main_zone_window_seq += 1; id = `w_${this._main_zone_window_seq}` } while (this.isMainZoneOccupant(id))
+    do {
+      this._host._main_zone_window_seq += 1
+      id = `w_${this._host._main_zone_window_seq}`
+    } while (this.isMainZoneOccupant(id))
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
     this._normalizeMainZoneOccupants()
-    this._main_zone_active_id = id
+    this._host._main_zone_active_id = id
     // os#1394 — la fenêtre qu'on vient d'ouvrir devient l'active, sur sa PREMIÈRE vignette :
     // la clé de la vignette active d'une autre fenêtre n'a aucun sens ici.
-    this._main_zone_active_pane_key = null
+    this._host._main_zone_active_pane_key = null
+    // os#1423 — et sur une sélection VIERGE, pour la même raison : les clés sélectionnées dans la
+    // fenêtre qu'on quitte ne nomment rien ici.
+    this._host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
     return id
   }
@@ -865,26 +1152,52 @@ export class Class_MenuConfig {
    * Le remplacement en place ne vaut QUE pour ce dernier cas : appliqué à une fenêtre de
    * feuille, il lui donnerait l'identifiant de la représentation — donc celui du canevas de la
    * feuille courante — et les deux canevas fusionneraient en un seul (os#1385 lot 0).
+   *
+   * os#1418 — CHANGER DE NATURE JETTE LES FIGURES DE LA FENÊTRE, et c'est un changement
+   * OBSERVABLE : passer une fenêtre de l'étoile à la couronne puis revenir à l'étoile ne
+   * retrouve plus les réglages qu'on y avait faits. C'est délibéré — les réglages d'une nature
+   * n'ont pas de sens dans une autre (un flux de référence d'étoile dans un sunburst, un axe de
+   * décomposition dans le tableur) — et c'est aussi ce que faisait l'ancien mécanisme, qui
+   * gardait certes le sac `options` mais le donnait à lire à une entrée de registre qui n'y
+   * reconnaissait rien. La différence est qu'on le dit, et qu'on ne traîne plus les clés mortes.
    */
   public setMainZoneWindowRepresentation(id: string, representation: string): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.representation === representation) return
+    // Jeté AVANT la mutation : dans la branche « remplacement en place » l'occupant change d'id,
+    // et ses figures resteraient sinon indexées sous l'ancien — orphelines et persistées.
+    this._dropFigures(id)
     if (mainZoneSubjectUsesOwnWindowId(o.subject)) {
       o.representation = representation
     } else if (this.isMainZoneOccupant(representation)) {
-      this._main_zone_occupants = this._main_zone_occupants.filter(x => x.id !== id)
-      this._main_zone_detached.delete(id)
+      this._host._main_zone_occupants = this._host._main_zone_occupants.filter(x => x.id !== id)
+      this._host._main_zone_detached.delete(id)
     } else {
       o.id = representation
       o.representation = representation
-      if (this._main_zone_active_id === id) this._main_zone_active_id = representation
+      if (this._host._main_zone_active_id === id) this._host._main_zone_active_id = representation
     }
     this._normalizeMainZoneOccupants()
+    // os#1423 — la sélection est relue APRÈS la normalisation, et sur l'id COURANT de la fenêtre
+    // (la branche « remplacement en place » vient peut-être de le changer). Un sujet `elements`
+    // garde ses vignettes en changeant de nature — donc sa sélection ; un sujet à critère, dont
+    // les vignettes se redemandent au diagramme, la perd (cf. `_resyncMainZoneSelection`).
+    this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
-  /** Épingle (node/link/elements) ou remet à suivre (selection) une fenêtre à sujet élément. */
+  /**
+   * Épingle (node/link/elements/tag) ou remet à suivre (selection) une fenêtre à sujet élément.
+   *
+   * os#1420 — UN SUJET À CRITÈRE N'ÉLAGUE PAS LES FIGURES, et c'est délibéré. Le ménage de
+   * `elements` s'appuie sur la liste des clés VIVANTES, que le sujet porte ; un critère ne la porte
+   * pas — les clés sont les nœuds que le diagramme désigne à cet instant, et cette classe ne
+   * connaît pas le diagramme. Élaguer sur ce qu'on sait ici reviendrait à tout jeter. Le coût de ne
+   * pas élaguer est qu'une figure réglée sur un nœud qui cesse de porter l'étiquette survit dans
+   * l'annuaire, et se retrouve telle quelle si le nœud la porte à nouveau — ce qui est plutôt le
+   * comportement attendu d'un critère : ce n'est pas l'auteur qui a retiré la vignette.
+   */
   public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
     if (subject.kind === 'elements') {
       // Les deux tableaux sont RECOPIÉS ensemble : ils sont parallèles, et n'en recopier qu'un
@@ -892,120 +1205,634 @@ export class Class_MenuConfig {
       // vignettes — donc leurs réglages — sur les objets voisins.
       o.subject = { ...subject, ids: [...subject.ids], keys: mainZonePaneKeys(subject) }
       // os#1387 — les réglages des vignettes qui ne sont PLUS là s'en vont avec elles. Sans ce
-      // ménage, `options.panes` grossirait à chaque objet ajouté puis retiré, et — plus
+      // ménage, l'annuaire des figures grossirait à chaque objet ajouté puis retiré, et — plus
       // gênant — un objet remis dans la fenêtre ressusciterait des réglages que l'auteur avait
       // oubliés. La liste des clés VIVANTES est celle qu'on vient d'écrire.
-      o.options = this._prunedPaneOptions(o.options, o.subject.keys ?? [])
+      this._pruneFigures(o.id, o.subject.keys ?? [])
     } else o.subject = { ...subject }
+    // os#1423 — la sélection de vignettes suit le même ménage que les figures : une clé qui ne
+    // nomme plus de vignette ne peut pas rester sélectionnée.
+    this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
-  /**
-   * os#1387 — Réglages d'UNE VIGNETTE d'une fenêtre (cf. mainZonePaneOptions pour le pourquoi
-   * du découpage). Les autres vignettes, et le repli au niveau de la fenêtre, ne bougent pas.
-   */
-  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
-    if (!o) return
-    o.options = withMainZonePaneOptions(o.options, pane_key, options)
-    // os#1394 — le geste vaut aussi pour la NATURE : ce que l'auteur vient de régler sur cette
-    // étoile devient le réglage des étoiles qu'il ouvrira ensuite. Sans cette écriture, chaque
-    // nouvelle fenêtre repartirait des valeurs d'usine et il faudrait refaire le même réglage
-    // autant de fois qu'on ouvre de vignettes.
-    this._representation_defaults[o.representation] = withoutSubjectBoundOptions(options)
-    this._notifyMainZone()
-  }
-  /** Réglages de la représentation d'une fenêtre (remplacés en bloc, l'entrée les possède). */
-  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
-    if (!o) return
-    o.options = { ...options }
-    // os#1394 — même règle qu'au niveau vignette. Le dictionnaire des vignettes, lui, n'a rien
-    // à faire dans un défaut de nature : il désigne des objets de CETTE fenêtre.
-    this._representation_defaults[o.representation] =
-      withoutSubjectBoundOptions(mainZoneWindowLevelOptions(options))
-    this._notifyMainZone()
-  }
-  // --- os#1394 : le réglage par défaut d'une NATURE de représentation ------------------------
 
   /**
-   * Le défaut de cette nature ; objet vide quand le document n'en porte pas. Lecture seule :
-   * le défaut s'ÉCRIT en réglant une fenêtre ou une vignette (cf. les deux setters ci-dessus),
-   * jamais par un geste à part — sinon il y aurait deux façons de dire la même chose.
+   * os#1423 — LA SÉLECTION APRÈS UN CHANGEMENT DE SUJET OU DE NATURE : on garde ce qui vit
+   * encore, et rien d'autre.
+   *
+   * Sans effet quand `id` n'est pas la fenêtre active : la sélection n'existe QUE là (cf.
+   * `_main_zone_selected_pane_keys`), régler une fenêtre voisine n'a donc rien à élaguer.
+   *
+   * Sujet `elements` : les clés vivantes sont celles que le sujet porte, la même liste qui sert
+   * au ménage des figures. Sujet `selection` ou `tag` : les vignettes sont les objets que le
+   * DIAGRAMME désigne à cet instant, et cette classe ne le connaît pas (même raison qu'en
+   * os#1420, où l'élagage des figures a été renoncé pour les sujets à critère). Ne sachant pas
+   * ce qui survit, on VIDE — ce qui, l'invariant aidant, revient à « seulement l'active » et non
+   * à « plus rien » : le geste perdu est une sélection multiple, pas la vignette qu'on regarde.
+   * C'est le choix prudent, l'autre étant de garder des clés qui ne désignent peut-être plus
+   * rien et de les propager au prochain réglage de portée 'selection'.
    */
-  public representationDefaultOptions(representation_id: string): Type_JSON {
-    return { ...(this._representation_defaults[representation_id] ?? {}) }
+  protected _resyncMainZoneSelection(id: string): void {
+    if (this.main_zone_active_id !== id) return
+    if (this._host._main_zone_selected_pane_keys.length === 0) return
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    const alive: string[] = (o && o.subject.kind === 'elements') ? mainZonePaneKeys(o.subject) : []
+    const kept = this._host._main_zone_selected_pane_keys.filter(k => alive.includes(k))
+    this._host._main_zone_selected_pane_keys = kept
+    // La vignette active suit la sélection quand il en reste une — l'invariant veut qu'elle en
+    // fasse partie. Sélection VIDÉE, en revanche, on ne touche PAS à la vignette active : vide
+    // veut dire « seulement l'active », et l'effacer ici retirerait à l'inspecteur le dessin
+    // qu'il montre pour un changement de sujet qui ne le concerne pas forcément (le ménage de la
+    // vignette active, lui, se fait au changement de FENÊTRE).
+    if (kept.length > 0 && this._host._main_zone_active_pane_key !== null
+      && !kept.includes(this._host._main_zone_active_pane_key)) {
+      this._host._main_zone_active_pane_key = kept[0]
+    }
+  }
+
+  // --- os#1418 : les figures de la grande zone ------------------------------------------------
+
+  /**
+   * LA NATURE d'un identifiant de registre, créée au premier besoin.
+   *
+   * Sa déclaration d'attributs vient de l'ENTRÉE DE REGISTRE (`attributes`) : c'est là qu'une
+   * représentation dit ce qu'elle se laisse régler, comme un nœud le dit dans
+   * `ALL_ATTRIBUTES_CONFIG`. Une nature inconnue du registre (fichier plus récent, module non
+   * chargé) obtient une déclaration VIDE plutôt qu'une erreur : ses réglages restent lisibles et
+   * persistés en tant que clés non déclarées, et redeviennent des attributs le jour où le module
+   * qui les déclare est là.
+   */
+  public figureNature(nature_id: string): Class_FigureNature {
+    const existing = this._figure_natures[nature_id]
+    if (existing) return existing
+    const entry = representation_registry.get(nature_id)
+    // Lu par indexation défensive : le champ `attributes` arrive avec le lot 1 de os#1418, et
+    // ce fichier doit compiler quel que soit l'ordre des merges.
+    const config = (entry as { attributes?: Type_FigureAttributesConfig } | undefined)?.attributes ?? {}
+    const nature = new Class_FigureNature(nature_id, config)
+    this._figure_natures[nature_id] = nature
+    return nature
+  }
+  /** La nature de repli d'une figure ORPHELINE (fenêtre disparue) : déclare zéro attribut. */
+  public static readonly UNKNOWN_FIGURE_NATURE_ID = 'unknown'
+  /**
+   * LA FIGURE d'une vignette, créée au premier besoin.
+   *
+   * Paresseuse des deux côtés, et c'est ce qui garde les fichiers propres : lire les réglages
+   * d'une vignette crée une figure qui ne porte rien, donc qui ne s'écrit pas (`toJSON()` rend
+   * `undefined`). Une fenêtre inconnue rend une figure ORPHELINE, sur une nature sans attributs,
+   * plutôt que de lever : les appelants d'avant retournaient silencieusement sur un occupant
+   * absent, et une figure vide se comporte exactement comme ce retour — on peut lui écrire sans
+   * rien casser, elle n'est simplement rattachée à rien.
+   *
+   * os#1385 — LES DEUX ÉTAGES SE CROISENT ICI, et c'est voulu : la FENÊTRE est de l'hôte (une
+   * seule grande zone à l'écran), la FIGURE est du DOCUMENT (elle s'écrit dans le fichier). Cette
+   * méthode indexe donc les figures de `this` par un identifiant de fenêtre de `this._host`. Le
+   * couplage ne change pas avec la montée : les fenêtres vivaient déjà dans la configuration du
+   * principal, les figures aussi, et l'appelant reste `MainZoneTabs` avec la configuration du
+   * document principal — pour qui hôte et document sont la même grande zone qu'hier.
+   */
+  public figureOf(occupant_id: string, pane_key: string): Class_Figure {
+    const o = this._host._main_zone_occupants.find(x => x.id === occupant_id)
+    const nature = this.figureNature(o?.representation ?? Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID)
+    if (!o) return new Class_Figure(nature, pane_key)
+    const by_key = this._figures[occupant_id] ?? (this._figures[occupant_id] = {})
+    const existing = by_key[pane_key]
+    if (existing && existing.nature === nature) return existing
+    const fig = new Class_Figure(nature, pane_key)
+    // os#1425 — CHANGER DE NATURE NE PERD PAS LES RÉGLAGES (arbitrage Julien, 18/09/2026).
+    //
+    // C'est le geste d'Excel : on change le type d'un graphique, la mise en forme reste. Elle le
+    // peut parce que les natures parlent le même vocabulaire — ce sont les attributs des nœuds et
+    // des flux (`name_label_font_size`, `value_label_unit_visible`, `shape_border_color`…), pas
+    // des clés inventées par chacune. Une couronne réglée en Arial 12 sans unité le reste en
+    // sunburst.
+    //
+    // Ce que la nouvelle nature ne déclare pas est GARDÉ sans être lu (la cascade ne rend que les
+    // clés déclarées) : revenir à la nature d'avant retrouve ses réglages. Les STYLES SUIVIS, eux,
+    // ne se transportent pas — un style appartient à une nature, celui d'une couronne n'existe pas
+    // pour un sunburst ; la figure repart donc sur le style d'usine de sa nouvelle nature.
+    if (existing) fig.loadOwn(existing.own)
+    by_key[pane_key] = fig
+    return fig
+  }
+  /** Un réglage de CETTE nature a-t-il un sens sur la figure voisine ? (cf. `isTransposableOption`) */
+  public isTransposableFigureOption(nature_id: string, key: string): boolean {
+    return this.figureNature(nature_id).isTransposable(key, isTransposableOption)
   }
   /**
-   * Les réglages EFFECTIFS d'une vignette, défaut de nature compris.
+   * os#1421 — UNE FIGURE PROMUE NE SE JETTE PAS AVEC SA VIGNETTE.
    *
-   * Trois sources, de la plus précise à la plus générale, et l'ordre est le sens de la
-   * décision : ce que l'auteur a dit SUR CETTE VIGNETTE gagne toujours ; sinon le réglage de
-   * la NATURE dans ce document, qui est le geste qu'il a fait ailleurs sur une étoile ou une
-   * couronne ; sinon seulement le repli au niveau de la fenêtre, qui n'existe que pour rouvrir
-   * à l'identique un fichier écrit du temps de la barre partagée (cf. mainZonePaneOptions).
+   * Les trois ménages ci-dessous (fenêtre fermée, nature changée, vignette retirée) ont été écrits
+   * quand une figure n'existait QUE pour sa vignette : la jeter avec elle était exact. Depuis
+   * qu'un nœud peut en poser une, ce n'est plus vrai — la figure a un second référent, que cette
+   * classe ne voit pas, et la jeter viderait le dessin d'un nœud parce qu'on a fermé une fenêtre.
+   *
+   * Règle unique, ici et nulle part ailleurs : on ne jette qu'une figure que le registre ne
+   * connaît pas. Une figure promue reste indexée, et c'est `_pruneUnreferencedFigures` — appelé
+   * par qui SAIT les placements — qui la solde quand elle n'a plus ni vignette ni hôte.
+   */
+  protected _isDroppableFigure(fig: Class_Figure): boolean { return fig.id === null }
+  /** Les figures NON PROMUES d'une fenêtre s'en vont (fenêtre fermée, nature changée). */
+  protected _dropFigures(occupant_id: string): void {
+    const by_key = this._figures[occupant_id]
+    if (!by_key) return
+    Object.keys(by_key).forEach(k => { if (this._isDroppableFigure(by_key[k])) delete by_key[k] })
+    if (Object.keys(by_key).length === 0) delete this._figures[occupant_id]
+  }
+  /** Les figures d'une fenêtre, débarrassées des vignettes NON PROMUES qui n'existent plus. */
+  protected _pruneFigures(occupant_id: string, live_keys: string[]): void {
+    const by_key = this._figures[occupant_id]
+    if (!by_key) return
+    Object.keys(by_key).forEach(k => {
+      // La figure de la fenêtre à sujet diagramme ('') n'est jamais dans `keys` : elle ne
+      // désigne pas un objet, elle EST la fenêtre.
+      if (k === FIGURE_DIAGRAM_PANE_KEY || live_keys.includes(k)) return
+      if (this._isDroppableFigure(by_key[k])) delete by_key[k]
+    })
+  }
+  /** Les figures des fenêtres qui n'existent plus (toute voie de fermeture confondue). */
+  protected _pruneOrphanFigures(): void {
+    // os#1385 — les fenêtres VIVANTES sont celles de l'hôte, les figures élaguées celles de CE
+    // document : pour le principal c'est exactement le ménage d'hier. Un document secondaire n'y
+    // passe que par `mainZoneStateFromJSON`, que la persistance garde désormais par `is_main`.
+    const live = new Set(this._host._main_zone_occupants.map(o => o.id))
+    Object.keys(this._figures).forEach(id => { if (!live.has(id)) this._dropFigures(id) })
+  }
+
+  // --- os#1421 : le REGISTRE des figures du document et les PLACEMENTS -------------------------
+
+  /**
+   * L'IDENTIFIANT DE DOCUMENT de la figure d'une vignette — et, du même geste, sa PROMOTION.
+   *
+   * C'est le seul point d'entrée du registre, et c'est délibéré : on ne promeut pas « au cas où »,
+   * on promeut parce que quelqu'un a besoin de NOMMER cette figure (la poser sur un nœud, demain
+   * l'annoncer dans une info-bulle ou sur le canevas). Une figure qu'on se contente de regarder
+   * n'entre jamais dans le registre, et le fichier ne porte donc que ce qui est cité.
+   *
+   * Idempotent : la même vignette rend toujours le même `f_N`.
+   */
+  public figureIdOf(occupant_id: string, pane_key: string): string {
+    return this._promoteFigure(this.figureOf(occupant_id, pane_key))
+  }
+  /** Donne un nom libre à une figure qui n'en a pas, et l'indexe. Rend son nom. */
+  protected _promoteFigure(fig: Class_Figure): string {
+    if (fig.id !== null) {
+      // Déjà nommée : on ré-indexe sans discuter. Une figure relue du fichier porte son id avant
+      // que le registre ne la connaisse (`Class_Figure.fromJSON`), et sans cette ligne elle
+      // resterait invisible de `figureById` — donc d'un placement qui la cite.
+      this._figures_by_id[fig.id] = fig
+      return fig.id
+    }
+    const id = this._nextFigureId()
+    fig.id = id
+    this._figures_by_id[id] = fig
+    return id
+  }
+  /** Le prochain nom libre du registre (`f_N`), sans rien indexer. */
+  protected _nextFigureId(): string {
+    let id = ''
+    do { this._figure_seq += 1; id = `f_${this._figure_seq}` } while (this._figures_by_id[id])
+    return id
+  }
+  /**
+   * os#1421 — UNE FIGURE DU DOCUMENT QUI N'EST LA VIGNETTE DE PERSONNE.
+   *
+   * `figureIdOf` promeut la figure d'une VIGNETTE : elle existe déjà, la grande zone la montre, on
+   * lui donne un nom. Il faut aussi savoir en CRÉER une qui n'est montrée nulle part — c'est le cas
+   * d'une migration, qui reprend un réglage posé sur un nœud d'un fichier d'avant et n'a aucune
+   * fenêtre ouverte à quoi la rattacher.
+   *
+   * API GÉNÉRIQUE, et c'est délibéré : la nature arrive par son identifiant (`osp.repr.donut`…),
+   * la surcharge propre par un sac. `Class_MenuConfig` vit dans OS et ne connaît aucune nature
+   * d'OS+ ; c'est la couche qui les déclare qui sait laquelle choisir.
+   *
+   * La figure est promue d'emblée (`id` posé, indexée) et sa CLÉ de vignette vaut son identifiant
+   * de document, comme pour une figure relue du registre (cf. `figuresFromJSON`) : elle n'est dans
+   * `_figures` d'aucune fenêtre, donc `_pruneUnreferencedFigures` la soldera dès que plus aucun
+   * placement ne la citera. Rend son identifiant.
+   */
+  public promoteStandaloneFigure(nature_id: string, own: Type_OptionBag): string {
+    const id = this._nextFigureId()
+    const fig = new Class_Figure(this.figureNature(nature_id), id)
+    fig.id = id
+    // `loadOwn` et non `assign` : une migration reprend TELLE QUELLE la valeur d'avant, sans
+    // minimisation — ce que le fichier portait doit se retrouver dans le fichier d'après.
+    fig.loadOwn(own)
+    this._figures_by_id[id] = fig
+    return id
+  }
+  /** La figure que porte cet identifiant de document, ou `undefined` (placement orphelin). */
+  public figureById(figure_id: string): Class_Figure | undefined {
+    return this._figures_by_id[figure_id]
+  }
+
+  /**
+   * POSE la figure d'une vignette SUR UN NŒUD : « ce dessin est le dessin de ce nœud ».
+   *
+   * Un LIEN, pas une copie (cf. `Representations/Placement`) : le nœud n'apprend que le NOM de la
+   * figure, et rerégler la vignette change ce qu'il montre. Rend l'identifiant posé, pour que
+   * l'appelant sache quoi retirer.
+   */
+  public placeFigureOnNode(occupant_id: string, pane_key: string, node: Class_NodeElement): string {
+    const figure_id = this.figureIdOf(occupant_id, pane_key)
+    this.placeFigureIdOnNode(figure_id, node)
+    return figure_id
+  }
+  /**
+   * LE PLACEMENT SEUL : pose une figure DÉJÀ NOMMÉE sur un nœud, sans rien promouvoir.
+   *
+   * Séparé de `placeFigureOnNode` (qui n'est plus que « promouvoir la vignette, puis appeler
+   * ceci ») pour l'appelant qui tient déjà un identifiant : une migration qui vient de créer une
+   * figure hors vignette (`promoteStandaloneFigure`), demain un glisser-déposer d'une figure du
+   * registre sur un autre nœud.
+   *
+   * `silent` — pour le CHARGEMENT : n'écrit ni pas d'annulation, ni redessin, ni notification de
+   * la grande zone. Un geste de l'auteur doit être annulable et se voir tout de suite ; une
+   * migration qui s'exécute au milieu d'une lecture de fichier, non — une pile d'annulation
+   * pré-remplie ferait qu'un Ctrl+Z après ouverture défait un bout de migration, et le dessin
+   * complet qui suit le chargement (ou le premier dessin tout court) rend le redessin par nœud
+   * inutile.
+   */
+  public placeFigureIdOnNode(
+    figure_id: string, node: Class_NodeElement, opts?: { silent?: boolean }
+  ): void {
+    // UN NŒUD NE PORTE QU'UNE FIGURE, et c'est ici qu'on le garantit. `withFigurePlacement` ne
+    // déduplique que le COUPLE (figure, hôte) : poser B sur un nœud qui porte déjà A donnerait une
+    // liste de deux, dont `nodePlacementFigureId` — qui prend la première — ne rendrait que A. La
+    // figure qu'on vient de poser serait ignorée sans que rien ne le dise. On retire donc ce que
+    // l'hôte 'node' portait avant d'y poser la nouvelle.
+    const others = readFigurePlacements(node).filter(p => p.host !== 'node')
+    this._writeNodePlacements(
+      node,
+      withFigurePlacement(others, { figure: figure_id, host: 'node', frame: 'bounds' }),
+      opts?.silent === true
+    )
+    if (opts?.silent !== true) this._notifyMainZone()
+  }
+  /** RETIRE une figure d'un nœud. La figure n'est pas détruite : elle reste sa vignette. */
+  public unplaceFigureFromNode(figure_id: string, node: Class_NodeElement): void {
+    const before = readFigurePlacements(node)
+    const next = withoutFigure(before, figure_id)
+    // Rien posé : ne rien écrire du tout, plutôt qu'un undo vide et un redessin pour rien.
+    if (next.length === before.length) return
+    this._writeNodePlacements(node, next)
+    this._notifyMainZone()
+  }
+  /** La figure POSÉE sur ce nœud, ou `null` (rien de posé, ou référent perdu). */
+  public nodePlacedFigure(node: Class_NodeElement): Class_Figure | null {
+    const id = nodePlacementFigureId(readFigurePlacements(node))
+    return id === null ? null : (this._figures_by_id[id] ?? null)
+  }
+  /**
+   * Écrit la liste des placements sur le nœud, undo compris.
+   *
+   * ÉCRITURE DIRECTE `attributes[clé] = valeur`, le patron de l'ancien onglet Analyse : le setter
+   * dynamique de `Class_ProtoElement` redessinerait à chaque pas d'un geste groupé, et l'undo doit
+   * pouvoir reposer l'ancienne valeur SANS relancer d'action. On redessine donc nous-mêmes, une
+   * fois — et le NŒUD seulement : un placement ne change que ce qui est dessiné dans sa boîte.
+   *
+   * LISTE VIDE = ATTRIBUT EFFACÉ. `readFigurePlacements` rend `[]` dans les deux cas, et laisser
+   * un tableau vide ferait écrire la clé dans le fichier pour ne rien dire.
+   *
+   * L'undo est OPTIONNEL parce que l'historique l'est : un nœud de test, ou un nœud d'une zone de
+   * dessin détachée, n'a pas de `application_data.history`. On écrit alors sans pile d'annulation
+   * plutôt que de lever.
+   *
+   * `silent` — l'écriture NUE : l'attribut, et rien d'autre. Réservée au chargement (cf.
+   * `placeFigureIdOnNode`), où l'annulation n'a pas de sens et où le dessin n'a pas encore eu lieu.
+   */
+  protected _writeNodePlacements(
+    node: Class_NodeElement, next: Type_FigurePlacement[], silent = false
+  ): void {
+    const host = node as unknown as {
+      attributes: { [key: string]: unknown }
+      draw?: () => void
+      drawing_area?: {
+        draw?: () => void
+        application_data?: {
+          history?: { saveUndo?: (f: () => void) => void, saveRedo?: (f: () => void) => void }
+        }
+      }
+    }
+    const attrs = host.attributes
+    const before = attrs[FIGURE_PLACEMENTS_ATTR]
+    const value = next.length > 0 ? next : undefined
+    if (silent) { attrs[FIGURE_PLACEMENTS_ATTR] = value; return }
+    const redraw = () => {
+      if (host.draw) host.draw()
+      else host.drawing_area?.draw?.()
+    }
+    const apply = () => { attrs[FIGURE_PLACEMENTS_ATTR] = value; redraw() }
+    const undo = () => { attrs[FIGURE_PLACEMENTS_ATTR] = before; redraw() }
+    const history = host.drawing_area?.application_data?.history
+    history?.saveUndo?.(undo)
+    history?.saveRedo?.(apply)
+    apply()
+  }
+
+  /**
+   * LES FIGURES POSÉES, d'après les nœuds qu'on lui donne.
+   *
+   * Prend la liste en PARAMÈTRE, et ce n'est pas une facilité : `Class_MenuConfig` ne connaît ni
+   * la zone de dessin ni le diagramme (elle n'a aucune référence vers `application_data`), donc
+   * elle ne peut pas aller chercher les nœuds elle-même. L'appelant qui les a — la persistance, un
+   * ménage — les passe ; personne ne les a, personne ne balaie, et le registre garde tout. C'est
+   * l'arbitrage assumé de ce lot : un registre qui grossit d'une figure oubliée est moins grave
+   * qu'un placement qui perd son référent.
+   */
+  public placedFigureIds(nodes: Iterable<{ getElementProperty: (k: string) => unknown }>): Set<string> {
+    const out = new Set<string>()
+    for (const n of nodes) readFigurePlacements(n).forEach(p => out.add(p.figure))
+    return out
+  }
+  /** Cette figure est-elle posée quelque part, parmi les nœuds donnés ? (cf. `placedFigureIds`) */
+  public figureHasPlacement(
+    figure_id: string, nodes: Iterable<{ getElementProperty: (k: string) => unknown }>
+  ): boolean {
+    return this.placedFigureIds(nodes).has(figure_id)
+  }
+  /**
+   * SOLDE les figures du registre que plus rien ne cite : ni vignette VIVANTE, ni placement.
+   *
+   * N'est JAMAIS appelée d'office, et c'est le point délicat de ce lot. Les deux erreurs possibles
+   * ne se valent pas : garder une figure que personne ne regarde coûte quelques octets dans le
+   * fichier, tandis que jeter une figure encore posée vide le dessin d'un nœud sans rien dire.
+   * Seul un appelant qui SAIT les placements (il a les nœuds) peut trancher — d'où le paramètre,
+   * et d'où le fait que `_pruneOrphanFigures`, qui ne sait rien d'eux, ne l'appelle pas.
+   *
+   * Rend les identifiants soldés.
+   */
+  protected _pruneUnreferencedFigures(placed_ids: Set<string>): string[] {
+    // Une vignette ne compte que si sa FENÊTRE existe encore : l'annuaire garde les figures
+    // promues des fenêtres fermées (cf. `_dropFigures`), et les compter ici rendrait le ménage
+    // inopérant — précisément sur les figures qu'il est censé solder.
+    const live = new Set(this._host._main_zone_occupants.map(o => o.id))
+    const shown = new Set<string>()
+    Object.entries(this._figures).forEach(([occupant_id, by_key]) => {
+      if (!live.has(occupant_id)) return
+      Object.values(by_key).forEach(f => { if (f.id !== null) shown.add(f.id) })
+    })
+    const dropped: string[] = []
+    Object.keys(this._figures_by_id).forEach(id => {
+      if (shown.has(id) || placed_ids.has(id)) return
+      const fig = this._figures_by_id[id]
+      delete this._figures_by_id[id]
+      // Dénommée : elle redevient une figure de vignette ordinaire, donc `_pruneOrphanFigures`
+      // sait de nouveau la jeter de l'annuaire d'une fenêtre morte.
+      fig.id = null
+      dropped.push(id)
+    })
+    if (dropped.length > 0) this._pruneOrphanFigures()
+    return dropped
+  }
+  /** `_pruneUnreferencedFigures` pour l'extérieur (cf. `placedFigureIds` pour les placements). */
+  public pruneUnreferencedFigures(placed_ids: Set<string>): string[] {
+    const dropped = this._pruneUnreferencedFigures(placed_ids)
+    if (dropped.length > 0) this._notifyMainZone()
+    return dropped
+  }
+
+  /**
+   * os#1387 — Réglages d'UNE VIGNETTE d'une fenêtre. Sac COMPLET (cf. `Class_Figure.assign`) :
+   * une clé absente est retirée, une valeur égale à ce que le style dit déjà n'est pas posée.
+   *
+   * os#1418 — N'ÉCRIT QUE CETTE FIGURE (arbitrage Julien du 16/09/2026). L'écriture immédiate du
+   * défaut de nature (os#1394) est terminée : elle faisait qu'un réglage posé sur une étoile
+   * devenait, sans que rien ne le dise, le réglage de toutes les étoiles à venir — et l'auteur ne
+   * découvrait la propagation qu'en ouvrant la suivante. Régler toutes les figures d'une nature
+   * se demande désormais, en portée « style » (`setRepresentationStyleOptions`).
+   */
+  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
+    if (!this.isMainZoneOccupant(id)) return
+    this.figureOf(id, pane_key).assign(options as Type_OptionBag)
+    this._notifyMainZone()
+  }
+  /**
+   * Réglages d'une fenêtre à sujet DIAGRAMME, qui n'a qu'une figure (clé `''`). Même contrat
+   * que ci-dessus : sac complet, et rien d'autre que cette figure n'est touché.
+   */
+  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
+    if (!this.isMainZoneOccupant(id)) return
+    this.figureOf(id, FIGURE_DIAGRAM_PANE_KEY).assign(options as Type_OptionBag)
+    this._notifyMainZone()
+  }
+
+  // --- os#1418 : le STYLE d'une nature de figure ----------------------------------------------
+
+  /**
+   * ÉCRIT LE STYLE `default` d'une nature — la portée « style », et la seule qui l'écrive.
+   *
+   * Sac COMPLET : une clé absente reprend sa valeur d'usine (c'est un style `default`, il est
+   * pré-rempli). Rend les clés REFUSÉES, celles que la nature déclare d'une autre sorte que
+   * 'style' — un axe de décomposition ou un flux de référence n'entre pas dans un style, quelle
+   * que soit la surface qui le propose (garde-fou à l'écriture, os#1416). À l'appelant de les
+   * poser sur la figure active, ou de les dire.
+   *
+   * Les figures qui n'ont rien surchargé suivent immédiatement, celles qui ont surchargé gardent
+   * leur surcharge : c'est la cascade des éléments, et rien n'est recopié nulle part.
+   */
+  public setRepresentationStyleOptions(nature_id: string, options: Type_OptionBag): string[] {
+    const nature = this.figureNature(nature_id)
+    const refused = nature.assignStyle(nature.default_style, options)
+    this._notifyMainZone()
+    return refused
+  }
+  /** Ce que le style `default` de cette nature dit, clé par clé (ce que montre la portée « style »). */
+  public representationStyleOptions(nature_id: string): Type_OptionBag {
+    const nature = this.figureNature(nature_id)
+    return nature.styleBag(nature.default_style)
+  }
+  /**
+   * ALIAS HÉRITÉ de `representationStyleOptions` : « le défaut de la nature » et « son style
+   * `default` » sont devenus le même objet. Conservé parce que plusieurs appelants (et les
+   * tests) le nomment ainsi, et parce que le mot reste juste.
+   */
+  public representationDefaultOptions(nature_id: string): Type_OptionBag {
+    return this.representationStyleOptions(nature_id)
+  }
+  /**
+   * Les réglages EFFECTIFS d'une vignette : LA CASCADE de la figure (surcharge propre, styles
+   * suivis, usine), et plus une résolution maison à trois sources.
+   *
+   * Ce qui change par rapport à os#1394, clé par clé et non plus en bloc : une vignette qui
+   * surchargeait le mode de valeur n'effaçait plus, pour elle, tout le reste du défaut de sa
+   * nature — elle prenait son propre sac ENTIER, défaut compris ou non. La cascade répond
+   * attribut par attribut, comme pour un nœud.
    */
   public mainZonePaneOptionsOf(id: string, pane_key: string): Type_JSON {
-    const o = this._main_zone_occupants.find(x => x.id === id)
-    if (!o) return {}
-    const own = ownMainZonePaneOptions(o.options, pane_key)
-    if (own) return own
-    // Filtré aussi À LA LECTURE, pas seulement à l'écriture : un document enregistré avant ce
-    // correctif porte un défaut pollué, et le rouvrir rapporterait ses étoiles au flux de
-    // référence d'un nœud qu'on ne regarde plus.
-    const def = withoutSubjectBoundOptions(this._representation_defaults[o.representation])
-    if (Object.keys(def).length > 0) return def
-    return mainZoneWindowLevelOptions(o.options)
+    if (!this.isMainZoneOccupant(id)) return {}
+    return this.figureOf(id, pane_key).attributes as Type_JSON
   }
+
+  // --- os#1418 : persistance des styles de figure ---------------------------------------------
+
   /**
-   * Sérialise les défauts par nature (clé racine `representation_defaults`). Dictionnaire
-   * indexé par identifiant de registre — la forme que `Type_JSON` sait porter, et l'unicité de
-   * la nature y devient structurelle. Clé ADDITIVE : rien à écrire tant que rien n'a été réglé.
+   * Sérialise les styles de figure (clé racine `figure_styles`). Dictionnaire indexé par
+   * identifiant de nature — la forme que `Type_JSON` sait porter, et l'unicité de la nature y
+   * devient structurelle. Clé ADDITIVE : rien à écrire tant que rien n'a été réglé.
    */
-  public representationDefaultsToJSON(): Type_JSON | undefined {
+  public figureStylesToJSON(): Type_JSON | undefined {
     const out: Type_JSON = {}
-    Object.entries(this._representation_defaults).forEach(([id, opts]) => {
-      if (opts && Object.keys(opts).length > 0) out[id] = { ...opts }
+    Object.entries(this._figure_natures).forEach(([id, nature]) => {
+      const json = nature.toJSON()
+      if (json) out[id] = json
     })
     return Object.keys(out).length > 0 ? out : undefined
   }
-  /** Relit les défauts par nature. Entrée malformée ignorée (fichier fabriqué à la main). */
-  public representationDefaultsFromJSON(json: unknown): void {
-    this._representation_defaults = {}
+  /**
+   * os#1421 — SÉRIALISE LE REGISTRE DES FIGURES (clé racine `figures`).
+   *
+   * Dictionnaire `f_N → { id, nature, attributes?, styles? }`. Clé ADDITIVE : tant que personne n'a
+   * posé de figure nulle part, rien n'est promu, et le fichier est identique à ce qu'il était.
+   *
+   * Pourquoi une clé RACINE et non les fenêtres : une figure promue survit à sa fenêtre — c'est
+   * tout l'intérêt — donc l'écrire dans `main_zone.occupants[…]` la perdrait exactement dans le cas
+   * où elle compte. La vignette, elle, n'écrit plus qu'un renvoi (`{ ref: 'f_N' }`, cf.
+   * `mainZoneStateToJSON`) : une seule copie des réglages, à un seul endroit.
+   */
+  public figuresToJSON(): Type_JSON | undefined {
+    const out: Type_JSON = {}
+    Object.entries(this._figures_by_id).forEach(([id, fig]) => {
+      const json = fig.toJSON()
+      // Une figure promue écrit toujours au moins `id` et `nature` : ce `if` n'est là que pour le
+      // type, et une entrée vide ne partirait de toute façon pas dans le fichier.
+      if (json) out[id] = json
+    })
+    return Object.keys(out).length > 0 ? out : undefined
+  }
+  /**
+   * Relit le registre. À lire AVANT `main_zone` : les vignettes citent le registre par `ref`, et
+   * une vignette lue d'abord ne trouverait qu'un renvoi dans le vide.
+   *
+   * REMPLACE le registre de la session — le registre appartient au DOCUMENT, et deux documents ne
+   * partagent pas leurs `f_N`. Un fichier qui ne porte PAS la clé ne remplace rien (même règle que
+   * `figure_styles`) : un basculement de vue ne porte pas les métadonnées du document.
+   */
+  public figuresFromJSON(json: unknown): void {
     if (!json || typeof json !== 'object' || Array.isArray(json)) return
+    // Les figures de la session PERDENT LEUR NOM avec l'ancien registre. Sans cela, une vignette
+    // restée en place (lecture partielle qui ne referait pas la grande zone) écrirait `{ ref }`
+    // vers un identifiant que le nouveau registre ne porte plus : un renvoi dans le vide, alors
+    // qu'une figure dénommée réécrit simplement ses réglages en clair.
+    Object.values(this._figures).forEach(by_key => Object.values(by_key).forEach(f => { f.id = null }))
+    this._figures_by_id = {}
+    this._figure_seq = 0
     Object.entries(json as Type_JSON).forEach(([id, v]) => {
-      if (v && typeof v === 'object' && !Array.isArray(v)) {
-        this._representation_defaults[id] = { ...(v as Type_JSON) }
-      }
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return
+      const entry = v as Type_JSON
+      const raw_nature = entry['nature']
+      const nature_id = (typeof raw_nature === 'string' && raw_nature !== '')
+        ? raw_nature : Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID
+      // La CLÉ DE VIGNETTE d'une figure du registre n'est pas dans le fichier, et ne peut pas y
+      // être : la même figure peut être posée sur un nœud et n'être montrée dans AUCUNE fenêtre.
+      // On lui donne son identifiant de document comme clé — `Class_Figure.key` n'est lue nulle
+      // part ailleurs que dans ses tests, et l'annuaire (`_figures`) reste seul à dire où elle se
+      // montre. C'est la vignette qui rejoint la figure (`ref`), pas l'inverse.
+      const fig = new Class_Figure(this.figureNature(nature_id), id)
+      fig.fromJSON(entry, this._figure_report, `figures[${id}]`)
+      fig.id = id
+      this._figures_by_id[id] = fig
+      const m = /^f_(\d+)$/.exec(id)
+      if (m) this._figure_seq = Math.max(this._figure_seq, Number(m[1]))
     })
   }
-  /** Les réglages d'une fenêtre, débarrassés des vignettes qui n'existent plus. */
-  protected _prunedPaneOptions(options: Type_JSON | undefined, live_keys: string[]): Type_JSON | undefined {
-    if (!options) return options
-    const panes = options[MAIN_ZONE_PANES_KEY]
-    if (!panes || typeof panes !== 'object' || Array.isArray(panes)) return options
-    const kept: Type_JSON = {}
-    Object.entries(panes as Type_JSON).forEach(([k, v]) => { if (live_keys.includes(k)) kept[k] = v })
-    return { ...options, [MAIN_ZONE_PANES_KEY]: kept }
+  /** Relit les styles de figure. Entrée malformée ignorée (fichier fabriqué à la main). */
+  public figureStylesFromJSON(json: unknown): void {
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return
+    Object.entries(json as Type_JSON).forEach(([id, v]) => {
+      this.figureNature(id).fromJSON(v, this._figure_report, 'figure_styles')
+    })
   }
+  /**
+   * LECTEUR HÉRITÉ des défauts par nature de os#1394 (clé racine `representation_defaults`).
+   *
+   * Un défaut d'alors est exactement ce qu'est aujourd'hui le style `default` : on le lui donne
+   * à lire sous cette forme, et c'est `Class_FigureNature.fromJSON` qui FILTRE — seules les clés
+   * de sorte 'style' entrent dans le style, les autres sont ÉCARTÉES et rapportées
+   * ('not_transposable'). Ce filtre remplace le nettoyage à la lecture de os#1394 : les
+   * documents écrits entre la livraison du défaut par nature et son correctif portent des flux
+   * de référence étrangers, et les relire referait la figure fausse à chaque ouverture.
+   */
+  public representationDefaultsFromJSON(json: unknown): void {
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return
+    Object.entries(json as Type_JSON).forEach(([id, v]) => {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return
+      this.figureNature(id).fromJSON(
+        { default: { attributes: v } }, this._figure_report, 'representation_defaults'
+      )
+    })
+  }
+  /**
+   * os#1419 — CE QUE LA MIGRATION N'A PAS PORTÉ, dit une fois pour tout le chargement.
+   *
+   * Vidé ICI et non à la fin de chaque lecteur, et c'est un choix : styles, défauts hérités et
+   * grande zone se lisent à la suite, et trois `console.warn` successifs raconteraient trois
+   * fois un tiers de l'histoire — le lecteur ne saurait pas si la clé qu'on lui signale a été
+   * reprise par la passe suivante. La persistance appelle donc cette méthode une fois les trois
+   * faites ; les tests, eux, lisent `figure_migration_report` avant.
+   *
+   * Rend le résumé (et l'écrit en console), ou `null` s'il n'y a rien à dire.
+   */
+  public flushFigureMigrationReport(): string | null {
+    const summary = this._figure_report.summary()
+    if (summary) console.warn(summary)
+    this._figure_report.reset()
+    return summary
+  }
+  /** Le rapport de migration EN COURS, avant qu'il ne soit vidé (tests, diagnostic). */
+  public get figure_migration_report(): Class_FigureMigrationReport { return this._figure_report }
   public mainZoneOccupantById(id: string): Type_MainZoneOccupant | undefined {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     return o ? { ...o, subject: { ...o.subject } } : undefined
   }
   public get main_zone_active_id(): string | null {
-    return this._main_zone_active_id ?? this.main_zone_main_id
+    return this._host._main_zone_active_id ?? this.main_zone_main_id
   }
   public set main_zone_active_id(id: string | null) {
-    if (this._main_zone_active_id === id) return
-    this._main_zone_active_id = id
+    if (this._host._main_zone_active_id === id) return
+    this._host._main_zone_active_id = id
     // os#1394 — changer de fenêtre PÉRIME la vignette active : sa clé n'a de sens que dans la
     // fenêtre qui la porte, et deux fenêtres peuvent nommer la même. À id inchangé, en
     // revanche, on ne touche à rien : un clic sur une vignette active d'abord celle-ci, puis
     // remonte jusqu'à la fenêtre — l'effacer ici défairait le geste qu'on vient de faire.
-    this._main_zone_active_pane_key = null
+    this._host._main_zone_active_pane_key = null
+    // os#1423 — et la SÉLECTION part avec elle, exactement pour la même raison : ses clés ne
+    // nomment rien dans la fenêtre qui devient active, et deux fenêtres peuvent nommer la même.
+    this._host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
   }
   /** os#1394 — La vignette active de la fenêtre active ; `null` = la première de la fenêtre. */
-  public get main_zone_active_pane_key(): string | null { return this._main_zone_active_pane_key }
+  public get main_zone_active_pane_key(): string | null {
+    return this._host._main_zone_active_pane_key
+  }
+  /**
+   * os#1423 — LES VIGNETTES SÉLECTIONNÉES de la fenêtre active, la vignette active comprise.
+   *
+   * Rend TOUJOURS ce sur quoi un réglage de portée 'selection' doit tomber, et jamais une liste
+   * qu'il faudrait interpréter : sélection explicite si elle existe, sinon la seule vignette
+   * active, sinon rien (aucune vignette touchée — la fenêtre n'en porte peut-être qu'une, dont
+   * la clé est `null` par convention historique, et l'appelant retombe alors sur la première).
+   *
+   * C'est ici que l'invariant « l'active fait partie de la sélection » se paie une fois pour
+   * toutes : personne d'autre n'a à se demander si une sélection vide veut dire « rien » ou
+   * « celle-là ».
+   */
+  public get main_zone_selected_pane_keys(): string[] {
+    const selected = this._host._main_zone_selected_pane_keys
+    if (selected.length > 0) return [...selected]
+    const active = this._host._main_zone_active_pane_key
+    return active !== null ? [active] : []
+  }
+  /**
+   * os#1423 — Cette vignette est-elle sélectionnée ? Faux dès que `id` n'est PAS la fenêtre
+   * active : la sélection n'existe que là, et un liséré posé sur la vignette d'une fenêtre
+   * voisine mentirait sur ce que le prochain réglage touchera.
+   */
+  public isMainZonePaneSelected(id: string, pane_key: string): boolean {
+    if (this.main_zone_active_id !== id) return false
+    return this.main_zone_selected_pane_keys.includes(pane_key)
+  }
   /**
    * os#1397 - LE CANEVAS DEVIENT LA FENÊTRE ACTIVE, comme n'importe quelle autre.
    *
@@ -1023,14 +1850,90 @@ export class Class_MenuConfig {
     if (this.mainZonePlaceOf(MAIN_ZONE_CANVAS_ID) === null) return
     this.main_zone_active_id = MAIN_ZONE_CANVAS_ID
   }
-  /** Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette). */
-  public setMainZoneActivePane(id: string, pane_key: string | null): void {
+  /**
+   * Active une fenêtre ET la vignette qu'on y a touchée (clic sur une vignette).
+   *
+   * os#1423 — `extend` est le Ctrl/Cmd+clic, et il ne fait qu'une chose : BASCULER la vignette
+   * dans la sélection de la fenêtre active. Le clic simple, lui, REFAIT la sélection autour de
+   * ce qu'on vient de toucher — c'est le geste de toutes les listes, et c'est ce qui garantit
+   * qu'un clic ordinaire ne traîne jamais une sélection oubliée jusqu'au prochain réglage.
+   *
+   * Deux garde-fous, et ce sont les seuls :
+   *  - étendre dans une AUTRE fenêtre que l'active n'étend rien : on ne sélectionne pas à cheval
+   *    sur deux fenêtres (la sélection vit dans l'active), donc le Ctrl+clic y vaut clic simple ;
+   *  - retirer la DERNIÈRE vignette sélectionnée ne fait rien. Une sélection vide se lit
+   *    « seulement l'active » (cf. `main_zone_selected_pane_keys`), donc tout désélectionner ne
+   *    mènerait nulle part : le volet parlerait quand même de la dernière touchée, mais sans
+   *    liséré pour le dire.
+   */
+  public setMainZoneActivePane(id: string, pane_key: string | null, extend: boolean = false): void {
     // Toucher une figure est une demande de parler d'ELLE, même quand un nœud reste sélectionné
-    // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle.
-    this._inspector_focus = 'representation'
-    if (this._main_zone_active_id === id && this._main_zone_active_pane_key === pane_key) return
-    this._main_zone_active_id = id
-    this._main_zone_active_pane_key = pane_key
+    // dans le diagramme : c'est le dernier geste qui dit de quoi l'inspecteur parle. Vrai du
+    // Ctrl+clic comme du clic simple, et même quand rien d'autre ne bouge — c'est la RÉCENCE du
+    // geste qu'il note, pas son effet.
+    this._host._inspector_focus = 'representation'
+    // Fenêtre active lue par l'ACCESSEUR : une fenêtre principale que personne n'a encore
+    // désignée est déjà l'active pour tout le reste de l'interface (le liséré, les raccourcis),
+    // et un Ctrl+clic dedans doit donc étendre, pas repartir de zéro.
+    if (extend && this.main_zone_active_id === id && pane_key !== null) {
+      this._host._main_zone_active_id = id
+      const current = this._host._main_zone_selected_pane_keys.length > 0
+        ? [...this._host._main_zone_selected_pane_keys]
+        : (this._host._main_zone_active_pane_key !== null
+          ? [this._host._main_zone_active_pane_key]
+          : [])
+      const at = current.indexOf(pane_key)
+      if (at === -1) {
+        current.push(pane_key)
+        this._host._main_zone_selected_pane_keys = current
+        this._host._main_zone_active_pane_key = pane_key
+      } else {
+        // Le seul sélectionné : on ne désélectionne pas tout (cf. en-tête).
+        if (current.length === 1) return
+        current.splice(at, 1)
+        this._host._main_zone_selected_pane_keys = current
+        // L'active s'en allait : la première restante prend sa place, l'invariant tient.
+        if (this._host._main_zone_active_pane_key === pane_key) {
+          this._host._main_zone_active_pane_key = current[0]
+        }
+      }
+      this._notifyMainZone()
+      return
+    }
+    // Clic simple, ou Ctrl+clic dans une fenêtre qui n'était pas active : la sélection REPART de
+    // la vignette touchée. Écrit même quand la vignette active ne change pas — la fenêtre, elle,
+    // vient peut-être de changer, et une sélection héritée n'y voudrait rien dire.
+    const selection = pane_key !== null ? [pane_key] : []
+    const unchanged = this._host._main_zone_active_id === id
+      && this._host._main_zone_active_pane_key === pane_key
+      && this._host._main_zone_selected_pane_keys.length === selection.length
+      && this._host._main_zone_selected_pane_keys.every((k, i) => k === selection[i])
+    if (unchanged) return
+    this._host._main_zone_active_id = id
+    this._host._main_zone_active_pane_key = pane_key
+    this._host._main_zone_selected_pane_keys = selection
+    this._notifyMainZone()
+  }
+  /**
+   * os#1423 — SÉLECTIONNE LES VIGNETTES DONNÉES d'une fenêtre, qui devient active (« tout
+   * sélectionner » de la fenêtre, Ctrl+A, glissé de cadre).
+   *
+   * Dédoublonne en gardant l'ORDRE donné : c'est celui des vignettes à l'écran, et un réglage de
+   * portée 'selection' les parcourt dans cet ordre. La vignette active est CONSERVÉE si elle est
+   * dans le lot — sélectionner tout ne doit pas déplacer ce dont le volet parle — et devient la
+   * première sinon. Liste vide : sélection vide et plus de vignette active, la fenêtre redevient
+   * ce qu'elle est à son ouverture.
+   */
+  public selectAllMainZonePanes(id: string, pane_keys: string[]): void {
+    this._host._inspector_focus = 'representation'
+    const unique = pane_keys.filter((k, i) => pane_keys.indexOf(k) === i)
+    this._host._main_zone_active_id = id
+    this._host._main_zone_selected_pane_keys = unique
+    if (unique.length === 0) this._host._main_zone_active_pane_key = null
+    else if (this._host._main_zone_active_pane_key === null
+      || !unique.includes(this._host._main_zone_active_pane_key)) {
+      this._host._main_zone_active_pane_key = unique[0]
+    }
     this._notifyMainZone()
   }
   /**
@@ -1041,7 +1944,7 @@ export class Class_MenuConfig {
    * l'inspecteur pour autant (cf. InspectorResolver et activeRepresentation).
    */
   public get inspector_focus_is_representation(): boolean {
-    return this._inspector_focus === 'representation'
+    return this._host._inspector_focus === 'representation'
   }
   /**
    * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
@@ -1049,9 +1952,9 @@ export class Class_MenuConfig {
    * cède la place au premier de la colonne droite (cf. normalisation).
    */
   public hideMainZoneOccupant(id: string): boolean {
-    if (this._main_zone_occupants.length <= 1 && this.isMainZoneOccupant(id)) return false
-    this._main_zone_occupants = this._main_zone_occupants.filter(o => o.id !== id)
-    this._main_zone_detached.delete(id)
+    if (this._host._main_zone_occupants.length <= 1 && this.isMainZoneOccupant(id)) return false
+    this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
+    this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
     return true
@@ -1061,7 +1964,7 @@ export class Class_MenuConfig {
     else this.showMainZoneOccupant(id)
   }
   public setMainZoneOccupantPlace(id: string, place: Type_MainZonePlace): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === place) return
     o.place = place
     this._normalizeMainZoneOccupants()
@@ -1077,32 +1980,33 @@ export class Class_MenuConfig {
    * transformerait en fenêtres diagramme vides sur une nature inconnue.
    */
   public setMainZoneOccupantIds(ids: string[]): void {
-    const kept = new Map(this._main_zone_occupants.map(o => [o.id, o]))
-    const own_id_windows = this._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
-    this._main_zone_occupants = []
+    const host = this._host
+    const kept = new Map(host._main_zone_occupants.map(o => [o.id, o]))
+    const own_id_windows = host._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
+    host._main_zone_occupants = []
     ids.forEach(id => {
       const prev = kept.get(id)
-      this._main_zone_occupants.push(prev
+      host._main_zone_occupants.push(prev
         ? { ...prev }
         : { id, subject: { kind: 'diagram' }, representation: id, place: 'right', size: 1 })
     })
-    this._main_zone_occupants.push(...own_id_windows)
+    host._main_zone_occupants.push(...own_id_windows)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
   /** Poids des occupants d'une pile, écrits par ses poignées de redimensionnement. */
   public setMainZoneStackSizes(sizes: { [id: string]: number }): void {
-    this._main_zone_occupants.forEach(o => {
+    this._host._main_zone_occupants.forEach(o => {
       const s = sizes[o.id]
       if (typeof s === 'number' && Number.isFinite(s) && s > 0) o.size = s
     })
     this._notifyMainZone()
   }
-  public isMainZoneDetached(id: string): boolean { return this._main_zone_detached.has(id) }
+  public isMainZoneDetached(id: string): boolean { return this._host._main_zone_detached.has(id) }
   public setMainZoneDetached(id: string, detached: boolean): void {
-    if (detached === this._main_zone_detached.has(id)) return
-    if (detached) this._main_zone_detached.add(id)
-    else this._main_zone_detached.delete(id)
+    if (detached === this._host._main_zone_detached.has(id)) return
+    if (detached) this._host._main_zone_detached.add(id)
+    else this._host._main_zone_detached.delete(id)
     this._notifyMainZone()
   }
   /**
@@ -1111,8 +2015,9 @@ export class Class_MenuConfig {
    * tête) ; pas de doublon ; des poids finis et positifs.
    */
   protected _normalizeMainZoneOccupants(): void {
+    const host = this._host
     const seen = new Set<string>()
-    let list = this._main_zone_occupants.filter(o => {
+    let list = host._main_zone_occupants.filter(o => {
       if (seen.has(o.id) || !MAIN_ZONE_PLACES.includes(o.place)) return false
       seen.add(o.id)
       return true
@@ -1132,10 +2037,12 @@ export class Class_MenuConfig {
     if (list.length === 0) {
       list = [{ id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
     }
-    if (this._main_zone_active_id !== null && !list.some(o => o.id === this._main_zone_active_id)) {
-      this._main_zone_active_id = null
+    if (host._main_zone_active_id !== null && !list.some(o => o.id === host._main_zone_active_id)) {
+      host._main_zone_active_id = null
       // os#1394 — la vignette active appartenait à cette fenêtre : elle part avec elle.
-      this._main_zone_active_pane_key = null
+      host._main_zone_active_pane_key = null
+      // os#1423 — la sélection aussi : elle ne vit que dans la fenêtre active, qui n'est plus là.
+      host._main_zone_selected_pane_keys = []
     }
     const mains = list.filter(o => o.place === 'main')
     if (mains.length === 0) {
@@ -1146,7 +2053,12 @@ export class Class_MenuConfig {
       promoted.place = 'main'
     } else mains.slice(1).forEach(o => { o.place = 'right' })
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
-    this._main_zone_occupants = list
+    host._main_zone_occupants = list
+    // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
+    // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
+    // le changement de nature en place et la déduplication mènent tous ici, et un seul ménage
+    // vaut mieux que quatre qu'il faudrait penser à ajouter au cinquième appelant.
+    this._pruneOrphanFigures()
   }
 
   /**
@@ -1155,13 +2067,13 @@ export class Class_MenuConfig {
    * sans qu'aucune fenêtre ne disparaisse. Une fenêtre détachée se ré-attache pour cela.
    */
   public makeMainZoneOccupantMain(id: string): void {
-    const o = this._main_zone_occupants.find(x => x.id === id)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === 'main') return
-    const main = this._main_zone_occupants.find(x => x.place === 'main')
+    const main = this._host._main_zone_occupants.find(x => x.place === 'main')
     if (main) { main.place = o.place; main.size = o.size }
     o.place = 'main'
     o.size = 1
-    this._main_zone_detached.delete(id)
+    this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
@@ -1210,14 +2122,14 @@ export class Class_MenuConfig {
   // celles qui suivent — refermer une fenêtre que l'auteur a composée et épinglée serait pire
   // que le défaut qu'on corrige.
   public get main_zone_show_unitary() {
-    return this._main_zone_occupants
+    return this._host._main_zone_occupants
       .some(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID && o.subject.kind === 'selection')
   }
   public set main_zone_show_unitary(v: boolean) {
     if (v) {
       if (!this.main_zone_show_unitary) this.openMainZoneWindow({ kind: 'selection' }, MAIN_ZONE_UNIT_WINDOW_ID)
     } else {
-      this._main_zone_occupants
+      this._host._main_zone_occupants
         .filter(o => o.representation === MAIN_ZONE_UNIT_WINDOW_ID && o.subject.kind === 'selection')
         .forEach(o => this.hideMainZoneOccupant(o.id))
     }
@@ -1227,17 +2139,23 @@ export class Class_MenuConfig {
   public get main_zone_unitary_detached() { return this.isMainZoneDetached(MAIN_ZONE_UNITARY_ID) }
   public set main_zone_unitary_detached(v: boolean) { this.setMainZoneDetached(MAIN_ZONE_UNITARY_ID, v) }
 
-  public get doc_external() { return this._doc_external }
+  public get doc_external() { return this._host._doc_external }
   public set doc_external(v: { title: string, markdown: string } | null) {
-    this._doc_external = v
+    this._host._doc_external = v
     this._notifyMainZone()
   }
-  public get main_zone_split_ratio() { return this._main_zone_split_ratio }
-  public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
-  public get main_zone_bottom_px() { return this._main_zone_bottom_px }
-  public set main_zone_bottom_px(v: number) { this._main_zone_bottom_px = v; this._notifyMainZone() }
+  public get main_zone_split_ratio() { return this._host._main_zone_split_ratio }
+  public set main_zone_split_ratio(v: number) {
+    this._host._main_zone_split_ratio = v
+    this._notifyMainZone()
+  }
+  public get main_zone_bottom_px() { return this._host._main_zone_bottom_px }
+  public set main_zone_bottom_px(v: number) {
+    this._host._main_zone_bottom_px = v
+    this._notifyMainZone()
+  }
   public addMainZoneListener(l: () => void): () => void {
-    return this._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
+    return this._host._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }
   /** Notifie les abonnés de la grande zone (barre du haut + MainZoneTabs). Exposé pour
    *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
@@ -1246,11 +2164,16 @@ export class Class_MenuConfig {
   // #248 — API pub/sub générique par topic. Toute nouvelle feature s'abonne à son topic via
   // `subscribe(topic, listener)` (désabonnement au démontage, cf. useModelBinding) et notifie via
   // `notify(topic)`, plutôt qu'une ref nue ou la liste globale de la grande zone.
+  //
+  // os#1385 — ROUTÉ PAR TOPIC (cf. `_busFor`) : un signal d'espace de travail part sur le bus
+  // de l'hôte, un signal de contenu sur celui de ce document. Le `PanelManager` de l'hôte
+  // notifie donc le même bus que celui où les composants s'abonnent par la configuration du
+  // document principal — c'est exactement le comportement d'aujourd'hui.
   public subscribe(topic: string, l: () => void): () => void {
-    return this._event_bus.subscribe(topic, l)
+    return this._busFor(topic).subscribe(topic, l)
   }
   public notify(topic: string): void {
-    this._event_bus.notify(topic)
+    this._busFor(topic).notify(topic)
   }
 
   // Panneau « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
@@ -1258,12 +2181,16 @@ export class Class_MenuConfig {
   // Le bouton de la topbar n'apparaît que si disponible et son état ouvert/surligné suit désormais
   // `main_zone_show_unitary` (le panneau est un membre de la grande zone, persisté). `toggleUnitaryTab`
   // reste exposé pour les points d'entrée OS+ (clic droit / onglet tooltip de nœud).
-  public unitary_tab_available: boolean = false
+  protected _unitary_tab_available: boolean = false
+  public get unitary_tab_available(): boolean { return this._host._unitary_tab_available }
+  public set unitary_tab_available(v: boolean) { this._host._unitary_tab_available = v }
 
   // sa#508 — dernier import réussi (format d'entrée du dialogue de persistance :
   // 'excel', 'json'…), posé juste avant la notification IMPORT_TOPIC. Lu par
   // les abonnés du topic ; jamais persisté.
-  public last_import: { format: string } | null = null
+  protected _last_import: { format: string } | null = null
+  public get last_import(): { format: string } | null { return this._host._last_import }
+  public set last_import(v: { format: string } | null) { this._host._last_import = v }
 
   // sa#1354 — Applicateur de NIVEAU, injecté par la couche éditeur.
   //
@@ -1276,8 +2203,16 @@ export class Class_MenuConfig {
   //
   // Absent (viewer OS pur, tests), `applyUrlStateParams` ignore le niveau sans
   // erreur : l'URL reste lisible, elle restaure simplement un axe de moins.
-  public level_selection_applier: ((tagg_id: string, tag_id: string) => void) | null = null
-  public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
+  protected _level_selection_applier: ((tagg_id: string, tag_id: string) => void) | null = null
+  public get level_selection_applier(): ((tagg_id: string, tag_id: string) => void) | null {
+    return this._host._level_selection_applier
+  }
+  public set level_selection_applier(v: ((tagg_id: string, tag_id: string) => void) | null) {
+    this._host._level_selection_applier = v
+  }
+  protected _toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
+  public get toggleUnitaryTab(): () => void { return this._host._toggleUnitaryTab }
+  public set toggleUnitaryTab(v: () => void) { this._host._toggleUnitaryTab = v }
   /**
    * Largeur (px) réservée à droite par la colonne d'occupants (chrome droit compris). Source
    * unique de vérité : calculée depuis les occupants et window.innerWidth, donc valable pour
@@ -1291,7 +2226,7 @@ export class Class_MenuConfig {
     // La colonne droite n'existe que si quelque chose y vit ET qu'une zone principale la borde ;
     // un occupant détaché n'y compte pas (cf. mainZoneOccupantsIn).
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('right').length === 0) return tools
-    return mainZoneRightColumnWidthPx(this._main_zone_split_ratio) + tools
+    return mainZoneRightColumnWidthPx(this._host._main_zone_split_ratio) + tools
   }
 
   /**
@@ -1301,17 +2236,23 @@ export class Class_MenuConfig {
    */
   public getMainZoneBottomReservedPx(): number {
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('bottom').length === 0) return 0
-    return mainZoneBottomBandHeightPx(this._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX)
+    return mainZoneBottomBandHeightPx(
+      this._host._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX
+    )
   }
 
   /**
    * Sérialise l'état de la grande zone (clé `main_zone` du fichier). Les occupants vont dans un
    * DICTIONNAIRE indexé par id — la seule forme d'objet que `Type_JSON` sait porter — avec leur
    * rang, puisque l'ordre des piles compte et que l'ordre des clés JSON n'est pas un contrat.
+   *
+   * os#1385 — LES FENÊTRES viennent de l'hôte, LES FIGURES du document : seul le document
+   * PRINCIPAL écrit cette clé (garde `is_main` dans `_toJSON`), sinon chaque document du même
+   * espace écrirait la même disposition dans son entrée.
    */
   public mainZoneStateToJSON(): Type_JSON {
     const occupants: Type_JSON = {}
-    this._main_zone_occupants.forEach((o, order) => {
+    this._host._main_zone_occupants.forEach((o, order) => {
       // os#1387 — le sujet est un objet imbriqué (kind, id, sheet), la représentation une
       // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
       const subject: Type_JSON = { kind: o.subject.kind }
@@ -1321,15 +2262,40 @@ export class Class_MenuConfig {
       // valent leurs identifiants : c'est ce qui rend le fichier relisable tel quel quand deux
       // vignettes montrent le même nœud, cas où `ids` seul ne dit plus laquelle est laquelle.
       if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
+      // os#1420 — un sujet à CRITÈRE n'écrit que le critère (groupe + étiquette) : les nœuds qu'il
+      // désigne se redemandent au diagramme à l'ouverture, et les écrire ici les figerait — ce qui
+      // est exactement ce à quoi ce sujet sert à échapper.
+      if ('tagg_id' in o.subject) subject['tagg_id'] = o.subject.tagg_id
+      if ('tag_id' in o.subject) subject['tag_id'] = o.subject.tag_id
       if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
       const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
-      if (o.options && Object.keys(o.options).length > 0) entry['options'] = { ...o.options }
+      // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
+      // style de sa nature) rend `undefined` et ne s'écrit pas ; une fenêtre dont aucune figure
+      // ne dit rien n'écrit pas la clé `figures` du tout. C'est ce qui rend un fichier
+      // d'aujourd'hui — où personne n'a réglé de vignette — identique OCTET POUR OCTET à celui
+      // qu'écrivait la version d'avant.
+      //
+      // os#1421 — UNE FIGURE PROMUE N'EST PAS ÉCRITE DEUX FOIS. Elle vit dans la clé racine
+      // `figures` (le registre), et sa vignette n'écrit qu'un RENVOI `{ ref: 'f_N' }`. Deux copies
+      // des mêmes réglages divergeraient à la première relecture partielle, et surtout la vignette
+      // n'est plus la propriétaire : la même figure peut être posée sur un nœud et n'être montrée
+      // dans aucune fenêtre.
+      const figs = this._figures[o.id]
+      if (figs) {
+        const figures: Type_JSON = {}
+        Object.entries(figs).forEach(([key, fig]) => {
+          if (fig.id !== null) { figures[key] = { ref: fig.id }; return }
+          const json = fig.toJSON()
+          if (json) figures[key] = json
+        })
+        if (Object.keys(figures).length > 0) entry['figures'] = figures
+      }
       occupants[o.id] = entry
     })
     return {
       occupants,
-      split_ratio: this._main_zone_split_ratio,
-      bottom_px: this._main_zone_bottom_px
+      split_ratio: this._host._main_zone_split_ratio,
+      bottom_px: this._host._main_zone_bottom_px
     }
   }
 
@@ -1341,8 +2307,13 @@ export class Class_MenuConfig {
    * dans la colonne droite (avant lui pour sheet-top/left), la doc « en bas » va au bandeau, et
    * les ratios historiques deviennent des poids de pile. Un fichier ancien s'ouvre donc comme
    * avant, à la simplification près qu'on a arbitrée.
+   *
+   * os#1385 — ÉCRIT LA DISPOSITION DE L'HÔTE : seul le document PRINCIPAL la relit (garde
+   * `is_main` dans `_fromJSON`). Sans cette garde, ouvrir une feuille B dans une fenêtre
+   * réécrirait la grande zone de l'écran avec celle enregistrée dans l'entrée de B.
    */
   public mainZoneStateFromJSON(json: Type_JSON) {
+    const host = this._host
     const raw = json['occupants']
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       const entries = Object.entries(raw as Type_JSON)
@@ -1364,11 +2335,27 @@ export class Class_MenuConfig {
           // quoi une clé orpheline décalerait toutes les suivantes d'un cran.
           const raw_keys = sj['keys']
           const keys = Array.isArray(raw_keys) ? raw_keys.map(x => (typeof x === 'string' ? x : '')) : []
+          // os#1420 — le critère d'un sujet épinglé à une étiquette : GROUPE et ÉTIQUETTE, les deux
+          // ou rien. Une moitié de critère ne désigne pas « moins de nœuds », elle n'en désigne
+          // aucun tout en prétendant le contraire : la fenêtre retombe alors sur le défaut du
+          // jalon — elle SUIT la sélection —, ce qui la rend immédiatement utile plutôt que muette.
+          const tagg_id = getStringFromJSON(sj, 'tagg_id', '')
+          const tag_id = getStringFromJSON(sj, 'tag_id', '')
           let subject: Type_MainZoneSubject = { kind: 'diagram' }
           if (kind === 'selection') subject = { kind: 'selection' }
           else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
           else if (kind === 'elements') subject = { kind: 'elements', ids, keys: mainZonePaneKeys({ ids, keys }) }
+          else if (kind === 'tag') {
+            subject = (tagg_id !== '' && tag_id !== '') ? { kind: 'tag', tagg_id, tag_id } : { kind: 'selection' }
+          }
           if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
+          // os#1418 — DEUX FORMATS DE RÉGLAGES, et un seul des deux par fenêtre : `figures` (le
+          // format d'aujourd'hui, une entrée par vignette) ou `options` (celui d'avant, un sac
+          // par fenêtre avec son sous-dictionnaire `panes`). Tous deux gardés BRUTS ici : la
+          // migration a besoin des styles déjà lus, et des identifiants DÉFINITIFS, donc elle
+          // n'a pas lieu avant que les deux soient établis (cf. `_loadFiguresFromJSON`).
+          const figs = e['figures']
+          const figures = (figs && typeof figs === 'object' && !Array.isArray(figs)) ? figs as Type_JSON : undefined
           const opts = e['options']
           const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
           return {
@@ -1378,20 +2365,43 @@ export class Class_MenuConfig {
             place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
             size: getNumberFromJSON(e, 'size', 1),
             order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),
+            figures,
             options
           }
         })
         .sort((a, b) => a.order - b.order)
-      this._main_zone_occupants = entries.map(({ id, subject, representation, place, size, options }) =>
-        (options ? { id, subject, representation, place, size, options } : { id, subject, representation, place, size }))
+      // os#1418 — l'annuaire des figures repart de zéro avec la grande zone qu'il décrit : ses
+      // clés sont des identifiants de fenêtres, et celles du fichier qu'on ouvre ne sont pas
+      // celles de la session qui s'achève.
+      this._figures = {}
+      // Les réglages BRUTS, indexés par l'identifiant du fichier. Ils suivront les remaniements
+      // d'identifiants ci-dessous, pour que la migration travaille sur l'id DÉFINITIF.
+      const raw_figures = new Map<string, { figures?: Type_JSON, options?: Type_JSON }>()
+      entries.forEach(({ id, figures, options }) => {
+        if (figures || options) raw_figures.set(id, { figures, options })
+      })
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
+        ({ id, subject, representation, place, size }))
       // os#1387 — un fichier écrit avec le panneau unitaire à hôte externe : sa fenêtre devient
       // une fenêtre d'élément « Unit. » qui suit la sélection, même place, même poids.
-      this._main_zone_occupants = this._main_zone_occupants.map(o => o.id === MAIN_ZONE_UNITARY_ID
-        ? { ...o, id: `w_${++this._main_zone_window_seq}`, subject: { kind: 'selection' }, representation: MAIN_ZONE_UNIT_WINDOW_ID }
-        : o)
+      host._main_zone_occupants = host._main_zone_occupants.map(o => {
+        if (o.id !== MAIN_ZONE_UNITARY_ID) return o
+        const new_id = `w_${++host._main_zone_window_seq}`
+        // Les réglages SUIVENT la fenêtre renommée : sans ce transfert, un fichier d'avant
+        // rouvrirait son unitaire aux valeurs d'usine — la migration ne trouverait plus rien
+        // sous le nouvel identifiant.
+        const raw = raw_figures.get(o.id)
+        if (raw) { raw_figures.delete(o.id); raw_figures.set(new_id, raw) }
+        return { ...o, id: new_id, subject: { kind: 'selection' } as Type_MainZoneSubject, representation: MAIN_ZONE_UNIT_WINDOW_ID }
+      })
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
-      this._main_zone_window_seq = Math.max(this._main_zone_window_seq, ...this._main_zone_occupants
+      host._main_zone_window_seq = Math.max(host._main_zone_window_seq, ...host._main_zone_occupants
         .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
+      // La normalisation AVANT la migration : elle peut écarter une fenêtre (doublon, place
+      // inconnue), et migrer les réglages d'une fenêtre qui n'existera pas les sèmerait sous un
+      // identifiant orphelin — que `figureOf` refuserait d'ailleurs d'indexer.
+      this._normalizeMainZoneOccupants()
+      this._loadFiguresFromJSON(raw_figures)
     } else if ('show_diagram' in json || 'show_spreadsheet' in json || 'show_doc' in json || 'show_unitary' in json) {
       const show_diagram = getBooleanFromJSON(json, 'show_diagram', true)
       const show_sheet = getBooleanFromJSON(json, 'show_spreadsheet', false)
@@ -1417,19 +2427,118 @@ export class Class_MenuConfig {
       if (doc_in_column && !doc_first) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'right', doc_size))
       if (show_unit) {
         list.push({
-          id: `w_${++this._main_zone_window_seq}`, subject: { kind: 'selection' },
+          id: `w_${++host._main_zone_window_seq}`, subject: { kind: 'selection' },
           representation: MAIN_ZONE_UNIT_WINDOW_ID, place: 'right', size: 1 - unitary_ratio
         })
       }
       if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
-      this._main_zone_occupants = list
+      host._main_zone_occupants = list
     }
     this._normalizeMainZoneOccupants()
-    this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
-    this._main_zone_bottom_px = getNumberFromJSON(
-      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_bottom_px)
+    host._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', host._main_zone_split_ratio)
+    host._main_zone_bottom_px = getNumberFromJSON(
+      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', host._main_zone_bottom_px)
     )
     this._notifyMainZone()
+  }
+
+  /**
+   * os#1418/1419 — LES RÉGLAGES DES FENÊTRES, relus ou MIGRÉS.
+   *
+   * Deux formats, un seul par fenêtre :
+   *
+   *  - `figures` : le format d'aujourd'hui. Une entrée par clé de vignette, relue telle quelle
+   *    par `Class_Figure.fromJSON` (qui rapporte les clés qu'aucune nature ne déclare).
+   *
+   *  - `options` : le format d'avant (sac par fenêtre + sous-dictionnaire `panes`). MIGRÉ en
+   *    reproduisant EXACTEMENT la résolution qui avait cours, vignette par vignette :
+   *      1. ce que LA VIGNETTE disait (`panes[clé]`) gagne toujours ;
+   *      2. sinon, si la nature a un défaut non vide, la figure le SUIT — on n'écrit donc rien,
+   *         ce qui est mieux que ce que faisait l'ancien code : la figure suivra le style même
+   *         s'il change ensuite, là où la résolution d'avant refigeait le défaut de l'instant ;
+   *      3. sinon, le repli au niveau de la FENÊTRE devient une surcharge propre.
+   *    L'ordre de ces trois sources est celui de `mainZonePaneOptionsOf` d'avant os#1418, et il
+   *    est reproduit EN BLOC (et non clé par clé) parce que c'est ainsi qu'il décidait : une
+   *    vignette qui disait quoi que ce soit ne voyait plus rien du défaut ni du repli.
+   *
+   * QUELLES CLÉS DE VIGNETTE ? Celles du sujet : `keys` pour un sujet `elements`, l'identifiant
+   * de l'objet pour `node`/`link`, `FIGURE_DIAGRAM_PANE_KEY` pour un sujet diagramme. Un sujet
+   * 'selection' n'en a AUCUNE de connue à ce moment — il suit le dessin, et rien n'est encore
+   * sélectionné : on migre alors les vignettes que `panes` nomme (ce sont les objets que
+   * l'auteur avait regardés) et on met le repli de la fenêtre dans la figure de clé `''`. Ce
+   * choix est un compromis assumé : une fenêtre qui suit n'a pas de vignette stable à qui donner
+   * le repli, et la figure `''` est la seule adresse qui survive au changement de sélection.
+   */
+  protected _loadFiguresFromJSON(raw: Map<string, { figures?: Type_JSON, options?: Type_JSON }>): void {
+    raw.forEach((entry, id) => {
+      // os#1385 — la FENÊTRE est de l'hôte, la FIGURE qu'on lui attache est de ce document.
+      const o = this._host._main_zone_occupants.find(x => x.id === id)
+      if (!o) return
+      if (entry.figures) {
+        Object.entries(entry.figures).forEach(([key, v]) => {
+          // os#1421 — DEUX FORMES sous `figures[clé]` : un RENVOI au registre (`{ ref: 'f_N' }`,
+          // ce qu'on écrit depuis qu'une figure peut être posée ailleurs) ou le sac INLINE (une
+          // figure qui n'a jamais été promue, hier comme aujourd'hui).
+          const ref = (v && typeof v === 'object' && !Array.isArray(v)) ? (v as Type_JSON)['ref'] : undefined
+          if (typeof ref === 'string' && ref !== '') {
+            const fig = this._figures_by_id[ref]
+            if (fig) {
+              // L'INSTANCE DU REGISTRE rejoint l'annuaire : c'est le même objet des deux côtés,
+              // donc régler la vignette règle ce que montre le nœud qui la cite.
+              const by_key = this._figures[id] ?? (this._figures[id] = {})
+              by_key[key] = fig
+              return
+            }
+            // Renvoi dans le vide (registre tronqué, fichier recomposé à la main) : on le DIT, et
+            // la vignette repart d'une figure neuve qui suit le style de sa nature — plutôt qu'une
+            // vignette muette dont personne ne saurait dire pourquoi elle a perdu ses réglages.
+            this._figure_report.add({
+              nature: o.representation, key: ref,
+              where: `main_zone[${id}].figures[${key}].ref`, reason: 'unknown_key'
+            })
+            this.figureOf(id, key)
+            return
+          }
+          this.figureOf(id, key).fromJSON(v, this._figure_report, `main_zone[${id}].figures[${key}]`)
+        })
+        return
+      }
+      const options = entry.options
+      if (!options) return
+      const nature = this.figureNature(o.representation)
+      const win = mainZoneWindowLevelOptions(options)
+      const win_has_something = Object.keys(win).length > 0
+      // « Le défaut de la nature dit quelque chose » : son style `default` s'écarte de l'usine.
+      const default_says_something = nature.toJSON() !== undefined
+      const load = (key: string, bag: Type_JSON, where: string) => {
+        Object.keys(bag).forEach(k => {
+          if (!nature.isDeclared(k)) {
+            this._figure_report.add({ nature: nature.id, key: k, where, reason: 'unknown_key' })
+          }
+          this._figure_report.countMigrated()
+        })
+        this.figureOf(id, key).loadOwn(bag as Type_OptionBag)
+      }
+      const migratePane = (key: string) => {
+        const own = ownMainZonePaneOptions(options, key)
+        if (own) load(key, own, `main_zone[${id}].options.panes[${key}]`)
+        else if (default_says_something) { /* la figure suit le style : rien à écrire */ }
+        else if (win_has_something) load(key, win, `main_zone[${id}].options`)
+      }
+      const subject: Type_MainZoneSubject = o.subject
+      if (subject.kind === 'elements') (subject.keys ?? []).forEach(migratePane)
+      else if (subject.kind === 'node' || subject.kind === 'link') migratePane(subject.id)
+      else if (subject.kind === 'selection') {
+        const panes = options[MAIN_ZONE_PANES_KEY]
+        if (panes && typeof panes === 'object' && !Array.isArray(panes)) {
+          Object.keys(panes as Type_JSON).forEach(migratePane)
+        }
+        if (win_has_something) load(FIGURE_DIAGRAM_PANE_KEY, win, `main_zone[${id}].options`)
+      } else if (win_has_something) {
+        // Sujet diagramme : une seule figure, et le sac de la fenêtre EST ce qu'elle disait.
+        load(FIGURE_DIAGRAM_PANE_KEY, win, `main_zone[${id}].options`)
+      }
+    })
   }
 
   /* ========================================
@@ -1546,42 +2655,34 @@ export class Class_MenuConfig {
   private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean, default_solver_options?: { with_reconciled?: boolean, with_completed?: boolean }) => void>
 
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
+  // os#1385 — LES SEPT POINTS D'INJECTION DE MENUS SONT DE L'ESPACE DE TRAVAIL : les menus
+  // qu'ils garnissent sont ceux de la barre du haut, unique, et les fermetures qu'on y pose
+  // capturent UNE application (cf. UnitaryExcelSourceOSP). Leurs formes vivent au-dessus de
+  // la classe (Type_ExtraApplyLayoutTab & co.), le stockage n'a de sens que sur l'hôte.
   /** If provided, row keys returning true will be greyed in UpdateModeGrid */
-  public apply_layout_is_row_disabled?: (key: string) => boolean = undefined
+  protected _apply_layout_is_row_disabled?: (key: string) => boolean = undefined
+  public get apply_layout_is_row_disabled(): ((key: string) => boolean) | undefined {
+    return this._host._apply_layout_is_row_disabled
+  }
+  public set apply_layout_is_row_disabled(v: ((key: string) => boolean) | undefined) {
+    this._host._apply_layout_is_row_disabled = v
+  }
   /** Optional extra tab injected into UpdateModeGrid by OSP or other extensions */
-  public extra_apply_layout_tab?: {
-    label: string
-    /** If provided and returns true: tab header is greyed and content disabled */
-    disabled?: () => boolean
-    render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
-  } = undefined
+  protected _extra_apply_layout_tab?: Type_ExtraApplyLayoutTab = undefined
+  public get extra_apply_layout_tab(): Type_ExtraApplyLayoutTab | undefined {
+    return this._host._extra_apply_layout_tab
+  }
+  public set extra_apply_layout_tab(v: Type_ExtraApplyLayoutTab | undefined) {
+    this._host._extra_apply_layout_tab = v
+  }
   /** Optional extra menu items appended to the top export dropdown (PNG/PDF/SVG list). Injected by OSP or other extensions. */
-  public extra_export_menu_items?: Array<
-    | {
-        // Optional discriminator. Absent or 'item' => flat menu entry; 'group' => titled section with children.
-        type?: 'item'
-        key: string
-        label: string
-        icon?: React.ReactNode
-        onClick: () => void
-        disabled?: () => boolean
-        // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
-        tooltip?: () => string
-      }
-    | {
-        type: 'group'
-        key: string
-        label: string
-        children: Array<{
-          key: string
-          label: string
-          icon?: React.ReactNode
-          onClick: () => void
-          disabled?: () => boolean
-          tooltip?: () => string
-        }>
-      }
-  > = undefined
+  protected _extra_export_menu_items?: Type_ExtraExportMenuItems = undefined
+  public get extra_export_menu_items(): Type_ExtraExportMenuItems | undefined {
+    return this._host._extra_export_menu_items
+  }
+  public set extra_export_menu_items(v: Type_ExtraExportMenuItems | undefined) {
+    this._host._extra_export_menu_items = v
+  }
   /**
    * sa#399 — Entrées supplémentaires du menu « Enregistrer » (dropdown dédié + groupe
    * Enregistrer du menu Fichier). Injectées par OSP (dépôt dans la bibliothèque de
@@ -1589,16 +2690,13 @@ export class Class_MenuConfig {
    * au rendu : l'entrée suit la langue active et peut n'apparaître que pour un compte
    * connecté (une entrée cachée n'est pas rendue du tout, contrairement à `disabled`).
    */
-  public extra_save_menu_items?: Array<{
-    key: string
-    label: () => string
-    icon?: React.ReactNode
-    onClick: () => void
-    disabled?: () => boolean
-    // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
-    tooltip?: () => string
-    hidden?: () => boolean
-  }> = undefined
+  protected _extra_save_menu_items?: Type_LazyLabelMenuItems = undefined
+  public get extra_save_menu_items(): Type_LazyLabelMenuItems | undefined {
+    return this._host._extra_save_menu_items
+  }
+  public set extra_save_menu_items(v: Type_LazyLabelMenuItems | undefined) {
+    this._host._extra_save_menu_items = v
+  }
   /**
    * sa#424 (lot 5) — Commandes ajoutées EN BAS du menu Fichier, après le dernier
    * séparateur. Sert au « Partager… » que la couche SaaS y pose : partager n'est
@@ -1609,39 +2707,34 @@ export class Class_MenuConfig {
    * Même contrat que `extra_save_menu_items` — `label` et `hidden` évalués au
    * rendu, pour suivre la langue et l'état de connexion.
    */
-  public extra_file_menu_items?: Array<{
-    key: string
-    label: () => string
-    icon?: React.ReactNode
-    onClick: () => void
-    disabled?: () => boolean
-    tooltip?: () => string
-    hidden?: () => boolean
-  }> = undefined
+  protected _extra_file_menu_items?: Type_LazyLabelMenuItems = undefined
+  public get extra_file_menu_items(): Type_LazyLabelMenuItems | undefined {
+    return this._host._extra_file_menu_items
+  }
+  public set extra_file_menu_items(v: Type_LazyLabelMenuItems | undefined) {
+    this._host._extra_file_menu_items = v
+  }
   /**
    * Optional handler that saves one standalone JSON file per view, packaged in a
    * single zip. Injected by OSP (views are an OSP feature). When set, the
    * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
    * blob→json save through this instead of the single-file saveToJSON.
    */
-  public save_all_views_as_json?: (kwargs: Type_JSON) => Promise<void> | void = undefined
+  protected _save_all_views_as_json?: (kwargs: Type_JSON) => Promise<void> | void = undefined
+  public get save_all_views_as_json(): ((kwargs: Type_JSON) => Promise<void> | void) | undefined {
+    return this._host._save_all_views_as_json
+  }
+  public set save_all_views_as_json(v: ((kwargs: Type_JSON) => Promise<void> | void) | undefined) {
+    this._host._save_all_views_as_json = v
+  }
   /** Optional extra menu items appended to the top "Aide" dropdown (after Visite guidée / Tutoriels). Injected by SA (e.g. Sankeythèque) or other extensions. */
-  public extra_help_menu_items?: Array<
-    {
-      key: string
-      // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
-      // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
-      // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
-      // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
-      // dépôt passent une chaîne).
-      label: string | (() => string)
-      icon?: React.ReactNode
-      onClick: () => void
-      disabled?: () => boolean
-      // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
-      tooltip?: () => string
-    }
-  > = undefined
+  protected _extra_help_menu_items?: Type_ExtraHelpMenuItems = undefined
+  public get extra_help_menu_items(): Type_ExtraHelpMenuItems | undefined {
+    return this._host._extra_help_menu_items
+  }
+  public set extra_help_menu_items(v: Type_ExtraHelpMenuItems | undefined) {
+    this._host._extra_help_menu_items = v
+  }
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
   // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
@@ -1680,10 +2773,21 @@ export class Class_MenuConfig {
     template_module_key: ['essential'],
   } }
 
-  constructor() {
+  /**
+   * os#1385 — SANS ARGUMENT : la configuration de l'ESPACE DE TRAVAIL (elle est son propre
+   * hôte). AVEC `host` : la configuration d'un DOCUMENT, qui délègue à `host` tout ce qui
+   * est unique par espace de travail.
+   */
+  constructor(host?: Class_MenuConfig) {
+    this._host = host ?? this
     // OS#300 — modèle des panneaux, partageant le bus de ce menu (créé en
     // initialiseur de champ, donc déjà disponible ici).
-    this.panels = new Class_PanelManager(this._event_bus)
+    //
+    // os#1385 — CONSTRUIT SEULEMENT PAR L'HÔTE : un document rend celui de son espace de
+    // travail (cf. `get panels`), sur le bus de l'hôte, donc les coquilles PanelShell
+    // s'abonnent toutes au bus où le gestionnaire notifie — quel que soit le document par
+    // lequel elles y arrivent.
+    if (host === undefined) this._panels = new Class_PanelManager(this._event_bus)
     this._ref_to_drawer_sequence_data_tag_updater = { current: () => null }
     // Init menu component updater ------------------------------------------------------
     this._ref_rerender_submodules_menus = { current: () => null }
@@ -1839,29 +2943,31 @@ export class Class_MenuConfig {
 
   public closeAllMenus() {
     this.closeConfigMenu()
-    this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_unitary_process_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_lca_catalog_explorer.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_gallery_source.current(null)
-    this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
-    this._ref_close_filter_drawer.current(false)
+    // os#1385 — par l'accesseur : les dialogues sont ceux de l'espace de travail.
+    const dialogs = this.dict_setter_show_dialog
+    dialogs.ref_setter_show_modal_welcome.current(false)
+    dialogs.ref_setter_show_modal_support.current(false)
+    dialogs.ref_setter_show_modal_file_converter.current(false)
+    dialogs.ref_setter_show_modal_rich_text_editor.current(false)
+    dialogs.ref_setter_show_shape_attribute_editor.current(false)
+    dialogs.ref_setter_show_value_type_editor.current(false)
+    dialogs.ref_setter_show_tooltip_editor.current(false)
+    dialogs.ref_setter_show_units_editor.current(false)
+    dialogs.ref_setter_show_unitary_process_editor.current(false)
+    dialogs.ref_setter_show_lca_catalog_explorer.current(false)
+    dialogs.ref_setter_show_sankeymatic_editor.current(false)
+    dialogs.ref_setter_show_modal_export.current(false)
+    dialogs.ref_setter_show_modal_new_document.current(false)
+    dialogs.ref_setter_show_modal_png_saver.current(false)
+    dialogs.ref_setter_show_modal_pdf_saver.current(false)
+    dialogs.ref_setter_show_modal_styles.current(false)
+    dialogs.ref_setter_show_modal_apply_layout.current(false)
+    dialogs.ref_setter_show_modal_styles_containers.current(false)
+    dialogs.ref_setter_show_modal_preference.current(false)
+    dialogs.ref_setter_show_modal_templates_lib.current(false)
+    dialogs.ref_setter_show_gallery_source.current(null)
+    dialogs.ref_setter_show_spreadsheet.current(false)
+    this.ref_close_filter_drawer.current(false)
     // OS#321 — la RECHERCHE et la GALERIE DE MODÈLES sont des menus comme les
     // autres : Échap les referme, qu'elles soient en pop-up ou ancrées en barre
     // latérale (où plus aucune croix ne les ferme). Par leur porte propre, pour
@@ -1880,11 +2986,12 @@ export class Class_MenuConfig {
     // le refermerait (colonne droite partagée). L'ouverture MANUELLE passe par
     // setConfigOpen (bouton) et reste possible — elle ferme alors le tableur.
     if (this.main_zone_show_spreadsheet) return
+    const opened = this.ref_menu_opened
     if (
-      this._ref_menu_opened.current &&
-      this._ref_menu_opened.current[0] === false
+      opened.current &&
+      opened.current[0] === false
     ) {
-      this._ref_menu_opened.current[1](true)
+      opened.current[1](true)
     }
   }
 
@@ -1893,11 +3000,12 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public closeConfigMenu() {
+    const opened = this.ref_menu_opened
     if (
-      this._ref_menu_opened.current &&
-      this._ref_menu_opened.current[0] === true
+      opened.current &&
+      opened.current[0] === true
     ) {
-      this._ref_menu_opened.current[1](false)
+      opened.current[1](false)
     }
   }
 
@@ -2065,7 +3173,7 @@ export class Class_MenuConfig {
     // évalués à la construction. Sans ce rerender, un changement de langue ne les met pas à jour
     // (ils restaient dans la langue initiale). Le re-render est porté par un setState de composant
     // (WrapperInitializeAdditionalMenus), donc dans le bon scope React.
-    this._ref_rerender_submodules_menus.current()
+    this.ref_rerender_submodules_menus.current()
     // TDODO : to have an updater in OpenSankeyMenusDictBuilder so if we cahnge language it update language of submenus,
     //  for now OpenSankeyMenusDictBuilder is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
@@ -2090,11 +3198,11 @@ export class Class_MenuConfig {
   }
 
   public updateComponentPref() {
-    this._ref_to_modal_pref_updater.current()
+    this.ref_to_modal_pref_updater.current()
   }
 
   public updateMenuConfigComponent() {
-    this._ref_to_menu_config_updater.current()
+    this.ref_to_menu_config_updater.current()
   }
 
   /**
@@ -2297,7 +3405,7 @@ export class Class_MenuConfig {
   }
 
   public toggle_selector_on_visible_elements() {
-    this._selector_only_visible_elements = !this._selector_only_visible_elements
+    this._host._selector_only_visible_elements = !this._host._selector_only_visible_elements
     this.updateAllComponentsRelatedToNodes()
   }
 
@@ -2307,7 +3415,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentSaveDiagramJSON() {
-    this._ref_to_save_diagram_updater.current()
+    this.ref_to_save_diagram_updater.current()
   }
   /**
    * Update modal Load diagram JSON
@@ -2315,7 +3423,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentLoadDiagramJSON() {
-    this._ref_to_load_diagram_updater.current()
+    this.ref_to_load_diagram_updater.current()
   }
 
   /**
@@ -2325,7 +3433,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentApplyLayout() {
-    this._ref_to_updater_modal_apply_layout.current()
+    this.ref_to_updater_modal_apply_layout.current()
   }
 
   // PROTECTED METHODS ==================================================================
@@ -2429,15 +3537,17 @@ export class Class_MenuConfig {
   public get timeout_sequence(): number { return this._timeout_sequence }
   public set timeout_sequence(value: number) { this._timeout_sequence = value }
 
+  // os#1385 — les refs ci-dessous marquées « hôte » rendent l'objet de l'ESPACE DE TRAVAIL :
+  // un document secondaire repeint la même barre du haut, les mêmes dialogues.
   public get ref_rerender_submodules_menus() {
-    return this._ref_rerender_submodules_menus
+    return this._host._ref_rerender_submodules_menus
   }
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
   }
 
   public get ref_to_submenu_updater(): MutableRefObject<() => void> {
-    return this._ref_to_submenu_updater
+    return this._host._ref_to_submenu_updater
   }
 
   public get ref_to_spreadsheet(): MutableRefObject<(() => void)> {
@@ -2449,42 +3559,42 @@ export class Class_MenuConfig {
   }
 
   public get ref_menu_opened(): MutableRefObject<[boolean, (b: boolean) => void]> {
-    return this._ref_menu_opened
+    return this._host._ref_menu_opened
   }
 
   public get ref_to_splashscreen_updater(): MutableRefObject<() => void> {
-    return this._ref_to_splashscreen_updater
+    return this._host._ref_to_splashscreen_updater
   }
 
   public get never_see_again(): MutableRefObject<boolean> {
-    return this._never_see_again
+    return this._host._never_see_again
   }
 
   public get show_splashscreen(): boolean {
-    return this._show_splashscreen
+    return this._host._show_splashscreen
   }
 
   public set show_splashscreen(_: boolean) {
-    this._show_splashscreen = _
-    this._ref_to_splashscreen_updater?.current()
+    this._host._show_splashscreen = _
+    this.ref_to_splashscreen_updater?.current()
     this._ref_to_toolbar_updater?.current()
-    this._ref_to_submenu_updater?.current()
+    this.ref_to_submenu_updater?.current()
     this._ref_to_menu_updater?.current()
   }
 
   // Top menu components ----------------------------------------------------------------
 
   public init_refs_to_btn_toogle_top_menus(id: string) {
-    this._refs_to_btn_toogle_top_menus[id] = { current: null }
+    this._host._refs_to_btn_toogle_top_menus[id] = { current: null }
   }
 
   public get refs_to_btn_toogle_top_menus(): { [id: string]: RefObject<HTMLButtonElement> } {
-    return this._refs_to_btn_toogle_top_menus
+    return this._host._refs_to_btn_toogle_top_menus
   }
 
 
   public get ref_to_menu_config_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_updater
+    return this._host._ref_to_menu_config_updater
   }
 
   // #1243 — Slot de re-render de l'inspecteur piloté par la sélection.
@@ -2503,8 +3613,12 @@ export class Class_MenuConfig {
    * un onglet la lève (il reprend la main), tout comme la fin de l'étape ou du tour.
    */
   private _inspector_requested_tab_id: string | null = null
-  public get inspector_requested_tab_id(): string | null { return this._inspector_requested_tab_id }
-  public set inspector_requested_tab_id(_: string | null) { this._inspector_requested_tab_id = _ }
+  public get inspector_requested_tab_id(): string | null {
+    return this._host._inspector_requested_tab_id
+  }
+  public set inspector_requested_tab_id(_: string | null) {
+    this._host._inspector_requested_tab_id = _
+  }
 
   // #1243 — Déclenche un re-render de l'inspecteur (résolution de cible). Appelé
   // sur chaque changement de composition de sélection. Debouncé comme les autres
@@ -2513,7 +3627,7 @@ export class Class_MenuConfig {
     // os#1394 — LA SÉLECTION REPREND LA MAIN sur l'inspecteur. Le drapeau est posé ici et non
     // dans le processus différé : il doit valoir dès le geste, pas un tour de boucle plus tard,
     // sans quoi un clic sur une fenêtre juste après une sélection serait jugé dans le désordre.
-    this._inspector_focus = 'selection'
+    this._host._inspector_focus = 'selection'
     this._add_waiting_process(
       'updateInspector',
       (_this: Class_MenuConfig) => {
@@ -2526,7 +3640,7 @@ export class Class_MenuConfig {
   }
 
   public get ref_universal_converter_set_config() {
-    return this._ref_universal_converter_set_config
+    return this._host._ref_universal_converter_set_config
   }
 
   // Layout  menus ----------------------------------------------------------------------
@@ -2675,7 +3789,7 @@ export class Class_MenuConfig {
 
   // Getter dict of ref setter show dialog
   public get dict_setter_show_dialog(): IType_DictHookRefSetterShowDialogComponents {
-    return this._dict_setter_show_dialog
+    return this._host._dict_setter_show_dialog
   }
 
   public get ref_selected_style(): MutableRefObject<string> {
@@ -2689,28 +3803,28 @@ export class Class_MenuConfig {
   // qui se remonte à chaque changement de sélection.
   protected _presentation_composer_mode: Type_PanelMode = 'tooltip'
   public get presentation_composer_mode(): Type_PanelMode {
-    return this._presentation_composer_mode
+    return this._host._presentation_composer_mode
   }
   public set presentation_composer_mode(mode: Type_PanelMode) {
-    this._presentation_composer_mode = mode
+    this._host._presentation_composer_mode = mode
     this.updateInspector()
   }
 
 
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
-    return this._ref_to_save_diagram_updater
+    return this._host._ref_to_save_diagram_updater
   }
   public get ref_to_load_diagram_updater(): MutableRefObject<() => void> {
-    return this._ref_to_load_diagram_updater
+    return this._host._ref_to_load_diagram_updater
   }
 
   // Getter ref updater ApplyLayoutDialog OS component
   public get ref_to_updater_modal_apply_layout(): MutableRefObject<() => void> {
-    return this._ref_to_updater_modal_apply_layout
+    return this._host._ref_to_updater_modal_apply_layout
   }
 
   public get ref_to_modal_pref_updater() {
-    return this._ref_to_modal_pref_updater
+    return this._host._ref_to_modal_pref_updater
   }
 
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
@@ -2723,12 +3837,14 @@ export class Class_MenuConfig {
   }
 
   /** OS#85 — la barre des feuilles est-elle dépliée ? */
-  public get sheet_tabs_visible(): boolean { return this._sheet_tabs_visible }
+  public get sheet_tabs_visible(): boolean { return this._host._sheet_tabs_visible }
   /** Replie / déplie la barre des feuilles. Le recadrage du dessin (la barre du bas change
    *  de hauteur) est déclenché par la barre elle-même, une fois le DOM à jour — la hauteur
    *  réservée est LUE dans le DOM (DrawingArea.getBottomBarHeight). */
   public toggleSheetTabs(): void {
-    this._sheet_tabs_visible = !this._sheet_tabs_visible
+    // Le PLI est de l'espace de travail (une seule barre à l'écran) ; l'updater qui la
+    // repeint est du document — ce sont ses feuilles qu'elle liste.
+    this._host._sheet_tabs_visible = !this._host._sheet_tabs_visible
     this._ref_to_sheet_tabs_updater.current()
   }
 
@@ -2750,10 +3866,10 @@ export class Class_MenuConfig {
 
   public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
-  public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
-  public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._ref_toggle_filter_drawer }
-  public get ref_toggle_search(): MutableRefObject<(() => void)> { return this._ref_toggle_search }
-  public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
+  public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._host._ref_close_filter_drawer }
+  public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._host._ref_toggle_filter_drawer }
+  public get ref_toggle_search(): MutableRefObject<(() => void)> { return this._host._ref_toggle_search }
+  public get ref_toolbar(): MutableRefObject<(() => void)> { return this._host._ref_toolbar }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
   public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_data_tag_updater }
@@ -2785,7 +3901,7 @@ export class Class_MenuConfig {
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get shape_type(): string[] { return this._shape_type }
 
-  public get additionalMenus() { return this._additionalMenus }
+  public get additionalMenus() { return this._host._additionalMenus }
 
   /* ========================================
   Updater of component for containers related menus

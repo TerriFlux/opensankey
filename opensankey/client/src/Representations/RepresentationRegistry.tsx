@@ -108,6 +108,13 @@ import type { Type_ElementTargetResolver } from './WindowTarget'
 // uniquement : `MenuConfig` ne connaît pas le registre, la portée vit auprès de la liste des
 // réglages liés au sujet, qui est ce qui la borne.
 import type { Type_RepresentationOptionScope } from '../types/MenuConfig'
+// os#1418 - ce qu'une nature DÉCLARE de ses réglages (cf. `attributes` plus bas). Import de TYPE
+// seulement : `Figure` ne connaît pas le registre, et le registre ne fait que transporter la
+// déclaration - il ne l'interprète jamais lui-même.
+import type { Type_AttributeSort, Type_FigureAttributesConfig } from './Figure'
+// os#1425 — le formulaire générique, rendu depuis la déclaration d'une nature. Import VALEUR :
+// c'est le `renderOptions` par défaut de toute entrée qui déclare des attributs sans en écrire un.
+import { FigureAttributesForm } from './FigureAttributesForm'
 
 /**
  * Les deux échelles que le code confondait (§3.2 de la note). Une entrée en
@@ -204,6 +211,22 @@ export type Type_RepresentationContext = {
    * transmettre, les gestes de fenêtre restant ceux de `Class_MenuConfig`.
    */
   window_id?: string
+  /**
+   * os#1422 (lot 6) - LA VIGNETTE, complément indispensable de `window_id`.
+   *
+   * Une fenêtre d'élément en porte N — une figure par objet regardé — et tout ce qui désigne une
+   * figure MONTÉE le fait par le couple (fenêtre, vignette) : les réglages
+   * (`mainZonePaneOptionsOf`), la figure (`figureOf`), et depuis ce lot l'annuaire des documents
+   * déclarés (`Class_Workspace.bindWindowDocument`). Une représentation qui monte un DOCUMENT —
+   * l'étoile unitaire, seule aujourd'hui — doit pouvoir dire lequel des deux est le sien ; la
+   * clé ne se déduit pas de l'élément (une liste épinglée peut porter deux fois le même nœud,
+   * cf. `mainZonePaneKeyAt`), elle ne peut donc venir que de l'hôte.
+   *
+   * Absent partout où `window_id` l'est (pop-up de présentation, sondes de disponibilité) : la
+   * représentation ne déclare alors aucun document, exactement comme elle n'offre aucun geste de
+   * fenêtre.
+   */
+  pane_key?: string
 }
 
 /** Démontage seul ; `void` quand il n'y a rien à défaire. */
@@ -333,6 +356,28 @@ type Type_RepresentationCommon = {
    */
   describeContent?: (ctx: Type_RepresentationContext) => string
   /**
+   * os#1418 — CE QUE CETTE NATURE RÈGLE, déclaré clé par clé (cf. Representations/Figure).
+   *
+   * Le patron est celui des nœuds et des flux, `AttributeConfig` d'`ALL_ATTRIBUTES_CONFIG` :
+   * valeur d'usine, type, catégorie, libellés et infobulles dans les sept langues — plus la
+   * SORTE de la clé, qui est ce que les éléments n'avaient pas besoin de dire (les leurs sont
+   * toutes des clés de style). `figureAttribute` écrit tout cela en une ligne.
+   *
+   * POURQUOI DÉCLARER. La déclaration est ce qui fait exister la CASCADE DES STYLES sur une
+   * figure : la nature en tire son style `default` pré-rempli d'usine, `Class_Figure` en tire
+   * les clés qu'elle compose dans `attributes` (le sac que `ctx.options` reçoit), et les trois
+   * sortes décident de ce qu'un style a le droit de porter — 'style' seulement, jamais
+   * 'navigation' (l'axe de décomposition est par figure : Julien a refusé sa propagation,
+   * os#1414) ni 'identity' (le flux de référence d'une étoile, la racine d'un sunburst, qui
+   * n'ont pas d'homologue sur la figure voisine).
+   *
+   * ABSENT, OU CLÉ NON DÉCLARÉE : rien ne casse et rien ne se perd. Une clé qu'aucune nature
+   * ne déclare reste lisible et persistée telle quelle (elle est rapportée, cf.
+   * `Class_FigureMigrationReport`), et sa transposabilité retombe sur la règle d'avant —
+   * `isTransposableOption` de MenuConfig, la liste des réglages liés au sujet.
+   */
+  attributes?: Type_FigureAttributesConfig
+  /**
    * Réglages propres à la représentation, ÉDITÉS PAR L'AUTEUR. `setOptions`
    * reçoit l'objet complet : c'est l'appelant qui le persiste.
    */
@@ -341,6 +386,16 @@ type Type_RepresentationCommon = {
     options: { [key: string]: unknown }
     setOptions: (next: { [key: string]: unknown }) => void
     /**
+     * os#1425 — LES SORTES que cette surface rend. L'inspecteur demande 'style' (comment ça se
+     * dessine), le panneau de navigation 'navigation' (ce qu'on regarde) : la répartition n'est
+     * pas un choix d'interface, c'est la sorte déjà déclarée par `attributes`.
+     *
+     * Absente = toutes, ce que voit une surface qui ne trie pas. Une nature qui écrit encore son
+     * interface à la main peut l'ignorer : elle rendra alors la même chose partout, comme avant
+     * ce lot.
+     */
+    sorts?: Type_AttributeSort[]
+    /**
      * os#1387 — le contexte de la VIGNETTE que ces réglages commandent : les réglages d'une
      * analyse d'élément (décomposer par…, normaliser sur…) se construisent sur l'objet regardé,
      * et depuis le 10/09/2026 l'hôte appelle `renderOptions` une fois PAR VIGNETTE, avec le
@@ -348,17 +403,67 @@ type Type_RepresentationCommon = {
      */
     ctx?: Type_RepresentationContext
     /**
-     * os#1416 — LA PORTÉE que l'auteur a choisie pour ce qu'il règle : cette vignette, ou
-     * toutes celles de la fenêtre. Absente = 'pane', ce que voit toute surface qui ne l'offre
-     * pas (le menu contextuel d'une figure, une fenêtre à une seule vignette).
+     * os#1416 / os#1418 — LA PORTÉE que l'auteur a choisie pour ce qu'il règle. TROIS, depuis
+     * que les figures sont des éléments : cette figure, toutes les figures de la fenêtre, ou
+     * LE STYLE. Absente = 'pane', ce que voit toute surface qui ne l'offre pas (le menu
+     * contextuel d'une figure, une fenêtre à une seule vignette).
      *
-     * L'entrée n'a RIEN à faire de la propagation — l'hôte s'en charge, et il refuse de lui-même
-     * de transposer un réglage lié au sujet (cf. `transposableChanges`). Ce qu'elle a à en
-     * faire, c'est le DIRE : sous une portée « toutes », un réglage qui, lui, restera sur sa
-     * vignette doit s'annoncer tel quel, sinon l'auteur croit l'appliquer partout.
+     * SOUS 'style', CE N'EST PLUS LA FIGURE QU'ON RÈGLE : le volet montre le sac du style
+     * `default` de la nature (cf. `Class_FigureNature.styleBag`) et `setOptions` écrit ce
+     * style, donc toutes les figures qui le suivent sans le surcharger. C'est la portée des
+     * éléments, à l'identique — régler la sélection ou régler le style qu'elle suit.
+     *
+     * L'entrée n'a RIEN à faire de la propagation ni de l'écriture — l'hôte s'en charge, et il
+     * refuse de lui-même ce qui ne se transpose pas (la sorte déclarée par `attributes`, ou à
+     * défaut `isTransposableOption`). Ce qu'elle a à en faire, c'est le DIRE : sous 'all' comme
+     * sous 'style', un réglage qui, lui, restera sur sa figure doit s'annoncer tel quel, sinon
+     * l'auteur croit l'appliquer partout.
      */
     scope?: Type_RepresentationOptionScope
   }) => React.ReactNode
+}
+
+/**
+ * os#1425 — LE `renderOptions` D'UNE ENTRÉE, QU'ELLE EN ÉCRIVE UN OU NON.
+ *
+ * Une nature qui déclare ses attributs n'a plus d'interface à écrire : le formulaire générique
+ * les rend depuis leur déclaration (`FigureAttributesForm`). Celle qui en écrit un garde le sien —
+ * il reste des réglages qu'aucune déclaration ne dit encore (un sélecteur d'axe d'analyse à deux
+ * étages, par exemple), et c'est la seule raison qui vaille d'en écrire un.
+ *
+ * TOUTES LES SURFACES PASSENT PAR ICI (l'inspecteur, le panneau de navigation, le menu contextuel
+ * d'une figure) : c'est ce qui fait qu'aucune ne peut montrer autre chose qu'une autre, et qu'une
+ * nature ajoutée demain apparaît partout sans une ligne d'interface.
+ *
+ * `null` quand il n'y a rien à régler — ni interface écrite, ni attribut déclaré : l'appelant en
+ * tire que cette nature ne compte pas comme réglable (cf. `activeRepresentation`, éditeur).
+ */
+export const representationOptionsRenderer = (
+  entry: Type_RepresentationEntry
+): NonNullable<Type_RepresentationEntry['renderOptions']> | null =>
+  entry.renderOptions ?? figureGenericOptionsRenderer(entry)
+
+/**
+ * Le formulaire GÉNÉRIQUE d'une entrée, ou `null` si elle écrit encore son interface à la main.
+ *
+ * La distinction compte pour les surfaces qui trient par sorte : une interface écrite à la main
+ * ne sait pas ce qu'est une sorte et rendrait TOUT ce qu'elle connaît, si bien qu'une nature non
+ * encore migrée verrait ses réglages de mise en forme apparaître dans le panneau de navigation.
+ * Ces natures-là gardent leurs sections propres, et ce renderer ne les concerne pas.
+ */
+export const figureGenericOptionsRenderer = (
+  entry: Type_RepresentationEntry
+): NonNullable<Type_RepresentationEntry['renderOptions']> | null => {
+  const config = entry.attributes
+  if (!config || Object.keys(config).length === 0) return null
+  return (args) => <FigureAttributesForm
+    app_data={args.app_data}
+    config={config}
+    options={args.options}
+    setOptions={args.setOptions}
+    sorts={args.sorts}
+    element={args.ctx?.element}
+  />
 }
 
 /**
@@ -471,6 +576,18 @@ export class Class_RepresentationRegistry {
     return this._entries.has(id)
   }
 
+  /**
+   * os#1418 — CE QUE LA NATURE `id` DÉCLARE RÉGLER (cf. le champ `attributes`).
+   *
+   * `{}` pour un id inconnu comme pour une nature qui ne déclare rien, et c'est la MÊME réponse
+   * à dessein : une nature sans déclaration se comporte exactement comme avant ce chantier —
+   * ses clés restent lisibles et persistées, leur transposabilité retombant sur la règle
+   * d'avant. L'appelant n'a donc pas à distinguer les deux cas, ni à se garder d'un `undefined`.
+   */
+  public attributesOf(id: string): Type_FigureAttributesConfig {
+    return this._entries.get(id)?.attributes ?? {}
+  }
+
   public get size(): number {
     return this._entries.size
   }
@@ -513,13 +630,19 @@ export const diagramContext = (
   options: { [key: string]: unknown } = {}
 ): Type_RepresentationContext => ({ app_data, scale: 'diagram', element: null, options })
 
-/** Contexte d'échelle ÉLÉMENT. `window_id` : cf. Type_RepresentationContext (os#1393). */
+/**
+ * Contexte d'échelle ÉLÉMENT. `window_id` : cf. Type_RepresentationContext (os#1393) ;
+ * `pane_key`, la vignette de cette fenêtre-là (os#1422).
+ */
 export const elementContext = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
   options: { [key: string]: unknown } = {},
-  window_id?: string
-): Type_RepresentationContext => ({ app_data, scale: 'element', element, options, window_id })
+  window_id?: string,
+  pane_key?: string
+): Type_RepresentationContext => (
+  { app_data, scale: 'element', element, options, window_id, pane_key }
+)
 
 /**
  * Une représentation MONTÉE, vue par son hôte. Forme NORMALISÉE : quoi qu'ait

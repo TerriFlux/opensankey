@@ -37,6 +37,7 @@ import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
 
 import { OSTooltip } from './OSTooltip'
 import { useModelBinding } from '../../hooks/useModelBinding'
+import { useActiveDocument } from '../../hooks/useActiveDocument'
 import { ZOOM_TOPIC, MAIN_ZONE_TOPIC } from '../../types/EventBus'
 import { representationLabel } from '../../Representations/RepresentationRegistry'
 import {
@@ -53,21 +54,27 @@ import type { Class_ApplicationData } from '../../types/ApplicationData'
  */
 export const ZOOM_STEP_FACTOR = DEFAULT_ZOOM_STEP
 
-export const ComponentZoomControl = ({ app_data, variant = 'toolbar_button_6', size }: {
+export const ComponentZoomControl = ({ app_data: host_app_data, variant = 'toolbar_button_6', size }: {
   app_data: Class_ApplicationData,
   variant?: string,
   size?: string
 }) => {
+  // os#1385 (D3/D5) — LE CONTRÔLE ZOOME LE DOCUMENT ACTIF. Sans grande zone (viewer MIT, plateau
+  // unitaire, tests) il n'y a qu'un document et le crochet rend celui qu'on lui passe : rien ne
+  // change là-bas. Avec deux canevas à l'écran, il vise celui qu'on regarde — la colonne
+  // d'outils qui le rend appartient à l'hôte et ne bascule pas, elle.
+  const app_data = useActiveDocument(host_app_data)
   const { t } = app_data
   // Re-render à chaque tick de zoom (molette / boutons / recadrages) via le bus. Le contrat des
   // capacités (cf. Type_RepresentationZoom) veut que TOUTE nature notifie ce sujet quand son
   // échelle bouge, y compris hors de ce contrôle — sinon l'indicateur resterait figé sur la
   // dernière valeur posée par les boutons en mentant sur ce que montre l'écran. Le diagramme le
   // fait depuis toujours ; la grille le fait depuis l'événement de zoom d'Univer.
-  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(ZOOM_TOPIC, r))
+  // os#1385 — ZOOM_TOPIC est un topic de DOCUMENT : on se réabonne au bus de l'actif.
+  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(ZOOM_TOPIC, r), [app_data])
   // Et un re-render quand on CHANGE de fenêtre : la cible du contrôle change alors, ainsi que
   // son pourcentage. Même abonnement que la colonne d'outils (os#1401).
-  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(MAIN_ZONE_TOPIC, r))
+  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(MAIN_ZONE_TOPIC, r), [app_data])
   const btn_size = size ?? (app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton')
 
   const target = activeWindowZoom(app_data)

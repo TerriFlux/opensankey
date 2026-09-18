@@ -46,6 +46,8 @@ import type { Class_NodeBase } from './NodeBase'
 import { Class_ElementStyle } from './Element'
 import { isLegendElementId } from './legendIds'
 import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+// os#1421 — type seul : la liste des placements d'un nœud (cf. Representations/Placement).
+import type { Type_FigurePlacement } from '../Representations/Placement'
 import type { Type_TooltipHiddenBlocks } from './TooltipBlocks'
 
 // Types spécifiques
@@ -247,6 +249,13 @@ export interface AttributeConfig<T> {
   callback?: string
   setter?: string
   actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
+  /**
+   * os#1418 — la SORTE d'une clé de réglage de FIGURE (cf. Representations/Figure) : 'style'
+   * (transposable, portée par un style), 'navigation' (par figure, jamais par style) ou
+   * 'identity' (nomme le sujet, ne se transpose jamais). Absente = 'style'. Sans objet pour les
+   * attributs des nœuds et des flux, qui sont tous des attributs de style.
+   */
+  sort?: 'style' | 'navigation' | 'identity'
 }
 export type ConfigType = Record<string, AttributeConfig<unknown>>
 
@@ -2549,7 +2558,38 @@ export const ANALYSIS_CONFIG = {
       'zh-CN': '分析图表描述符（环形图 / 直方图）',
       ja: '分析チャートの定義（ドーナツ／ヒストグラム）'
     }
-  } satisfies AttributeConfig<Type_AnalysisDescriptor | undefined>
+  } satisfies AttributeConfig<Type_AnalysisDescriptor | undefined>,
+  // os#1421 — LES PLACEMENTS DE FIGURES portés par un nœud (cf. Representations/Placement) : la
+  // liste des figures du document posées sur lui (`{ figure, host: 'node', frame: 'bounds' }`).
+  // Remplace, pour ce qui est posé depuis une fenêtre, le booléen `surfaces.on_node` du
+  // descripteur : un placement CITE une figure réglée ailleurs, il ne la recopie pas. Valeur
+  // objet, même règle de surcharge par présence que `analysis_descriptor`. De fait une DONNÉE du
+  // nœud (elle nomme des figures), même si elle vit dans la liste des attributs : un style qui la
+  // porterait poserait la même figure sur tous ses suiveurs, ce qu'aucune surface ne propose.
+  figure_placements: {
+    default: undefined as Type_FigurePlacement[] | undefined,
+    type: (() => undefined) as (() => Type_FigurePlacement[] | undefined),
+    category: 'analysis' as const,
+    actions: undefined,
+    labels: {
+      en: 'Placed figures',
+      fr: 'Figures posées',
+      es: 'Figuras colocadas',
+      de: 'Platzierte Abbildungen',
+      it: 'Figure collocate',
+      'zh-CN': '放置的图形',
+      ja: '配置された図'
+    },
+    tooltips: {
+      en: 'Figures from the document windows drawn on this node',
+      fr: 'Figures des fenêtres du document dessinées sur ce nœud',
+      es: 'Figuras de las ventanas del documento dibujadas en este nodo',
+      de: 'Abbildungen aus den Fenstern des Dokuments, auf diesem Knoten gezeichnet',
+      it: 'Figure delle finestre del documento disegnate su questo nodo',
+      'zh-CN': '文档窗口中绘制在此节点上的图形',
+      ja: 'このノードに描かれる、文書のウィンドウの図'
+    }
+  } satisfies AttributeConfig<Type_FigurePlacement[] | undefined>
 } as const
 
 // OS#1285 — visibilité des blocs d'info-bulle (record des blocs masqués). Attribut

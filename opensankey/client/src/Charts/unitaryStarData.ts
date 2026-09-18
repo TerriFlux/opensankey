@@ -33,12 +33,39 @@
 // à `format_value` (le mécanisme d'`overrides` d'OS#1314), et le rapport du mode
 // normalisé est calculé ici, à partir du flux de référence que l'appelant DONNE —
 // la référence de l'aperçu n'est pas celle du diagramme.
+//
+// ── os#1420 — SUIVRE, ÉPINGLER : ce que ces deux mots veulent dire ICI ───────────
+//
+// SUIVRE, c'est le défaut, et l'étoile le fait déjà sans rien demander à personne :
+// son PÉRIMÈTRE est `unitaryStarLinks`, donc les flux VISIBLES du nœud, donc le
+// niveau d'agrégation du diagramme ET ses filtres d'étiquettes (un flux écarté par
+// un filtre d'étiquettes de flux, un voisin écarté par un filtre d'étiquettes de
+// nœuds, ne sont pas des branches). Rien n'est à ajouter pour cela : ce fichier ne
+// relit pas le périmètre, il le reçoit (cf. la condition de non-divergence).
+//
+// ÉPINGLER, c'est lire les VALEURS sous d'autres étiquettes de données que celles
+// que le diagramme montre — « cette étoile en 2019, pendant que le diagramme est en
+// 2021 ». C'est tout ce que `nav` porte (cf. Charts/FigureNavigation), et c'est la
+// seule coordonnée épinglable dans cet état du code. Trois lectures passent donc par
+// `linkValueUnder` / `nodeValueUnder` : l'ÉPAISSEUR d'une branche, le TEXTE du
+// centre, et le DÉNOMINATEUR du mode normalisé.
+//
+// UNE EXCEPTION, ET ELLE EST DANS LA NATURE DU MODE : le mode POURCENTAGE ne
+// s'épingle pas. Son calcul n'est pas fait ici — `format_value` resomme lui-même les
+// flux visibles du nœud central, à la sélection COURANTE, et aucune évaluation
+// paramétrée n'existe de ce côté-là. Épingler le seul numérateur donnerait une part
+// de 2019 rapportée au total de 2021, c'est-à-dire un nombre faux ; on lui laisse
+// donc `valueCurrent`, quitte à ce que le texte d'une étoile épinglée en mode % dise
+// ce que montre le diagramme. Le jour où `format_value` saura lire sous une
+// sélection donnée, c'est ici que la ligne change, et nulle part ailleurs.
 
 import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
 import { displayedNameOf } from '../Elements/ElementNaming'
 import { unit_stock_percent_constants, value_option_percent_constants } from '../Elements/LinkValues'
 import { format_value } from '../types/Utils'
 import { unitaryStarLinks } from '../Algorithms/UnitaryExtraction'
+import { FOLLOWING_NAVIGATION, linkValueUnder, nodeValueUnder } from './FigureNavigation'
+import type { Type_FigureNavigation } from './FigureNavigation'
 import type { NameLabelAttributeTypes } from '../Elements/ElementsAttributesConfig'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
@@ -170,17 +197,29 @@ const RATIO_OVERRIDES: Partial<NameLabelAttributeTypes> = {
  * On lit la valeur exactement comme le fait `format_value` pour son mode
  * `normalized` (résultat réconcilié s'il existe, donnée collectée sinon), pour que
  * les deux chemins rapportent au même dénominateur.
+ *
+ * os#1420 — SOUS UNE ÉTIQUETTE ÉPINGLÉE, la lecture passe par
+ * `Link.valueForDataTags`, qui applique exactement la même règle de couche que la
+ * ligne ci-dessus (réconcilié s'il existe, collecté sinon), mais à la tranche
+ * demandée. Sans cela, une étoile épinglée en 2019 rapporterait ses branches de 2019
+ * à un dénominateur de 2021 : tous ses rapports seraient faux d'un facteur.
  */
 const referenceValue = (
   app_data: Class_ApplicationData,
-  normalize_link_id: string | null
+  normalize_link_id: string | null,
+  nav: Type_FigureNavigation
 ): number | null => {
   if (normalize_link_id === null || normalize_link_id === '') return null
   const reference = app_data.drawing_area.sankey.links_dict[normalize_link_id] as
     Class_LinkElement | undefined
-  const value = reference?.value
-  if (!value) return null
-  const raw = value.valueResult ?? value.valueData
+  if (!reference) return null
+  let raw: number | null | undefined
+  if (nav.data_tags) raw = reference.valueForDataTags(nav.data_tags)
+  else {
+    const value = reference.value
+    if (!value) return null
+    raw = value.valueResult ?? value.valueData
+  }
   if (raw === null || raw === undefined || raw === 0) return null
   return raw
 }
@@ -209,11 +248,19 @@ const branchColor = (link: Class_LinkElement, other: Class_NodeElement): string 
   return (typeof own === 'string' && own.trim() !== '') ? own : other.getShapeColorToUse()
 }
 
-/** Le texte d'une branche, dans le mode courant. */
+/**
+ * Le texte d'une branche, dans le mode courant.
+ *
+ * `value` est la valeur de la branche SOUS LA NAVIGATION (cf. l'en-tête) ; le mode
+ * pourcentage est le seul à ne pas s'en servir, parce que son calcul appartient à
+ * `format_value` et se fait à la sélection courante — cf. l'exception documentée en
+ * tête de fichier.
+ */
 const branchText = (
   link: Class_LinkElement,
   side: Type_StarSide,
   mode: Type_UnitaryValueMode,
+  value: number | null,
   reference_value: number | null,
   type_data: Type_Structure
 ): string => {
@@ -225,11 +272,10 @@ const branchText = (
   }
   if (mode === 'value') {
     return format_value(
-      type_data, link.valueCurrent, link, link.unit_name('value_label'),
+      type_data, value, link, link.unit_name('value_label'),
       'value_label', valueOverrides(link)
     )
   }
-  const value = link.valueCurrent
   // Sans référence exploitable, le mode normalisé n'a rien à écrire — et surtout
   // pas la valeur brute, qu'on lirait alors comme un rapport (c'est aussi ce que
   // fait le board : sans flux de référence, ses libellés sortent vides).
@@ -250,15 +296,20 @@ const branchText = (
  * grandeur que le board unitaire utilise pour caler son échelle, et la seule qui
  * ait un sens sur un nœud déséquilibré (source, puits, import/export), où choisir
  * les entrées ou les sorties reviendrait à afficher zéro une fois sur deux.
+ *
+ * os#1420 — cette grandeur se lit SOUS LA NAVIGATION : `nodeValueUnder` refait
+ * exactement le calcul de `data_value` (mêmes flux retenus, même max des deux
+ * totaux), mais en lisant chaque flux à l'étiquette épinglée quand il y en a une.
  */
 const centerText = (
   node: Class_NodeElement,
   mode: Type_UnitaryValueMode,
   reference_value: number | null,
-  type_data: Type_Structure
+  type_data: Type_Structure,
+  nav: Type_FigureNavigation
 ): string => {
   if (mode === 'percent') return ''
-  const value = node.data_value
+  const value = nodeValueUnder(node, nav)
   if (mode === 'value') {
     return format_value(type_data, value, node, node.value_label_unit, 'value_label', valueOverrides(node))
   }
@@ -284,12 +335,17 @@ const centerText = (
  * `mode` et `normalize_link_id` sont des réglages de la FENÊTRE, pas du diagramme :
  * rien de ce qui est lu ici n'est écrit nulle part, et deux fenêtres ouvertes sur
  * le même nœud dans deux modes différents ne se marchent pas dessus.
+ *
+ * `nav` (os#1420) est de la même famille : la navigation de la FIGURE. Par défaut
+ * elle suit le diagramme, et l'appel à quatre arguments d'avant ce lot donne alors
+ * exactement ce qu'il donnait — c'est la non-régression du lot.
  */
 export const buildUnitaryStar = (
   node: Class_NodeElement,
   mode: Type_UnitaryValueMode,
   normalize_link_id: string | null,
-  app_data: Class_ApplicationData
+  app_data: Class_ApplicationData,
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
 ): Type_UnitaryStar => {
   // Le périmètre PARTAGÉ avec la brique — cf. `unitaryStarLinks`.
   const { inputs, outputs } = unitaryStarLinks(node)
@@ -298,27 +354,32 @@ export const buildUnitaryStar = (
   // `format_value` s'en sert pour refuser d'écrire un pourcentage sur des données
   // collectées — des sommes incomplètes donneraient des parts trompeuses.
   const type_data = app_data.drawing_area.type_data
-  const reference_value = mode === 'normalized' ? referenceValue(app_data, normalize_link_id) : null
+  const reference_value = mode === 'normalized'
+    ? referenceValue(app_data, normalize_link_id, nav)
+    : null
 
   const branch = (link: Class_LinkElement, side: Type_StarSide): Type_UnitaryStarBranch => {
     const other = (side === 'inputs' ? link.source : link.target) as Class_NodeElement
+    // La valeur BRUTE, SOUS LA NAVIGATION : c'est elle qui donne l'épaisseur, et
+    // c'est elle que le texte formate (sauf en mode %, cf. l'en-tête).
+    const value = linkValueUnder(link, nav)
     return {
       id: link.id,
       // Le nom AFFICHÉ du voisin, pas son `name` : un nœud peut se nommer par un
       // tag, par son ancêtre de dimension ou par un gabarit à jetons (OS#1314), et
       // l'étoile citerait sinon un nom que le diagramme ne montre nulle part.
       label: displayedNameOf(other),
-      // La valeur BRUTE, pour l'épaisseur seule : le texte, lui, peut être un
-      // pourcentage ou un rapport, dont l'épaisseur ne doit rien savoir.
-      value: link.valueCurrent ?? 0,
-      text: branchText(link, side, mode, reference_value, type_data),
+      // Le texte, lui, peut être un pourcentage ou un rapport, dont l'épaisseur ne
+      // doit rien savoir.
+      value: value ?? 0,
+      text: branchText(link, side, mode, value, reference_value, type_data),
       color: branchColor(link, other)
     }
   }
 
   return {
     center_label: displayedNameOf(node),
-    center_text: centerText(node, mode, reference_value, type_data),
+    center_text: centerText(node, mode, reference_value, type_data, nav),
     inputs: inputs.map(link => branch(link, 'inputs')),
     outputs: outputs.map(link => branch(link, 'outputs')),
     is_empty: inputs.length === 0 && outputs.length === 0

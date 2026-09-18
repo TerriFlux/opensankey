@@ -317,7 +317,13 @@ export class LinkDrawShape {
           .attr('stroke-linejoin', has_waypoints ? 'round' : null)
           .attr('stroke-linecap', has_waypoints ? 'butt' : null)
           .attr('stroke-dasharray', show_as_dash ? LINK_DASH_ARRAY : '')
-          .attr('filter', this._link.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
+          // os#1385 (lot 3) — filtre d'ombre de CETTE zone (identifiant préfixé hors du
+          // conteneur principal, cf. DrawingArea.domId).
+          .attr(
+            'filter',
+            this._link.shape_shadow_visible
+              ? 'url(#' + this._link.drawing_area.domId('os_drop_shadow') + ')'
+              : null)
 
         // Cœur MIN — devant le path principal
         if (uncertainty_bands && uncertainty_bands.meanPx > 0 && uncertainty_bands.minPx < uncertainty_bands.meanPx) {

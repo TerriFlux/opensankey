@@ -26,8 +26,18 @@
 
 import React from 'react'
 import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
-import { drawSunburstRepresentation, SunburstRepresentationOptions } from './SunburstRepresentation'
-import { SpreadsheetRepresentationOptions } from './SpreadsheetRepresentationOptions'
+import { drawSunburstRepresentation } from './SunburstRepresentation'
+// os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
+import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
+// os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
+// cette déclaration qui lui donne la cascade des styles des nœuds et des flux.
+import { figureAttribute } from './figureAttribute'
+// La valeur d'usine de la profondeur vient de là où le sunburst la lit (`readSunburstOptions`) :
+// une seconde écriture du nombre finirait par diverger de la première.
+// os#1420 — la clé d'épinglage de l'étiquette de données vient de là où elle est LUE
+// (`readFigureDataTagPins`) : deux écritures de la chaîne finiraient par diverger.
+import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
+import type { Type_FigureDataTagPins } from '../Charts/FigureNavigation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
@@ -52,6 +62,9 @@ export const registerBaseRepresentations = (): void => {
     // os#1409 — la transformation d3 existante, DÉCLARÉE et non plus câblée dans le contrôle.
     // Rien ne change pour le diagramme : c'est le cas de non-régression du lot.
     zoom: DIAGRAM_ZOOM
+    // os#1418 — PAS D'`attributes`, et ce n'est pas un oubli : ce que le canevas montre se règle
+    // sur le diagramme lui-même (l'inspecteur, les vues, les tags), pas sur la figure qui le
+    // cadre. Une figure de canevas n'a donc rien en propre à porter.
   })
 
   representation_registry.register({
@@ -68,11 +81,20 @@ export const registerBaseRepresentations = (): void => {
     // l'intérêt du tableur pour un lecteur : trier une colonne, copier une
     // plage. Le trou n'est pas un oubli, ne le bouchez pas.
     //
-    // os#1405 — le tableur A DÉSORMAIS DES RÉGLAGES : l'affichage des matrices TES/TER, qui
-    // occupait une place dans la barre au-dessus de la grille. Conséquence attendue de cet
-    // ajout : la nature « tableur » compte maintenant pour `activeRepresentation`, donc le
-    // volet de représentation de l'inspecteur s'ouvre sur elle au lieu de rester vide.
-    renderOptions: ({ app_data }) => <SpreadsheetRepresentationOptions app_data={app_data} />,
+    // PAS DE `renderOptions`, ET C'EST UN RETOUR ASSUMÉ. os#1405 avait donné au tableur un
+    // réglage — l'écriture des matrices TES/TER, croix ou valeur — et l'avait posé ici, au motif
+    // que les mêmes cellules restent à l'écran, écrites autrement. L'usage a tranché autrement :
+    // on cherche les nombres de la matrice devant la matrice, dans le panneau qui porte déjà ce
+    // que le tableur montre (onglets, colonnes, lignes). La commande vit donc dans la section
+    // « tableur » de Filtres et coordonnées (cf. `SpreadsheetNavigationControls`), et nulle part
+    // ailleurs. Conséquence attendue : la nature « tableur » ne compte plus pour
+    // `activeRepresentation`, et le volet de représentation de l'inspecteur reste vide sur elle.
+    //
+    // os#1418 — pas d'`attributes` non plus, pour la même raison de fond : ce réglage n'est pas
+    // celui d'une figure, il vit sur le document. Deux tableurs côte à côte montrent les mêmes
+    // matrices, et c'est voulu — c'est une propriété du classeur, pas une façon de le regarder.
+    // Le jour où un réglage PAR FIGURE apparaît (une feuille épinglée, par exemple), il se
+    // déclare sur cette ligne.
     // os#1409 — LE ZOOM D'UNIVER, pilote par le controle de la colonne. Son API l'expose
     // vraiment (`FWorksheet.zoom` / `getZoom`, ratio 0,1 a 4) : c'est un zoom du MOTEUR de la
     // grille, qui recalcule ses cellules — et non une transformation posee par-dessus, qui
@@ -114,6 +136,28 @@ export const registerBaseRepresentations = (): void => {
     order: 25,
     label: (a) => a.t('Spreadsheet.zone.json'),
     icon: <FaCode />,
+    // os#1418 — LA CLÉ RACINE REGARDÉE, déclarée ici bien que l'onglet vive dans l'éditeur.
+    //
+    // Elle est de sorte 'navigation' et pas 'style' : changer de clé racine ne change pas la
+    // façon de lire le document, il change CE QU'ON LIT — `nodes` puis `links` ne sont pas deux
+    // apparences du même texte. Deux fenêtres JSON côte à côte sur deux clés sont exactement
+    // l'usage (cf. `describeContent`), et un style qui les alignerait le détruirait.
+    //
+    // LA CHAÎNE EST ÉCRITE EN DUR, et c'est la seule entorse du fichier : la constante est
+    // `JSON_TAB_OPTION_KEY` de `packages/opensankey-editor/.../spreadsheet/jsonDocumentTabs.ts`,
+    // et OS base ne remonte pas vers l'éditeur. Les deux doivent rester d'accord ; le jour où la
+    // déclaration descend avec le reste, c'est l'import qui reprend sa place.
+    attributes: {
+      json_tab: figureAttribute<string | undefined>(undefined, 'navigation', {
+        en: 'Root key shown',
+        fr: 'Clé racine affichée',
+        es: 'Clave raíz mostrada',
+        de: 'Angezeigter Wurzelschlüssel',
+        it: 'Chiave radice mostrata',
+        'zh-CN': '显示的根键',
+        ja: '表示するルートキー'
+      })
+    },
     host: 'component'
   })
 
@@ -135,6 +179,9 @@ export const registerBaseRepresentations = (): void => {
       !app_data.is_static ||
       app_data.documentation_markdown !== '' ||
       app_data.menu_configuration.doc_external !== null,
+    // os#1418 — RIEN À DÉCLARER : la documentation montre le document entier, sans réglage. Ce
+    // qui s'y règlerait un jour (la taille du texte, cf. la note sur le zoom plus haut) n'existe
+    // pas encore ; c'est ici que la ligne s'écrira, et nulle part ailleurs.
     host: 'component'
   })
 
@@ -156,8 +203,54 @@ export const registerBaseRepresentations = (): void => {
     label: (a) => a.t('sunburst.title'),
     icon: <FaBullseye />,
     needs: { hierarchy: true },
-    isAvailable: (ctx) => !!ctx.element && Array.isArray((ctx.element as { output_links_list?: unknown }).output_links_list),
-    renderOptions: (args) => <SunburstRepresentationOptions {...args} />,
+    // Un NŒUD, et un nœud QUI A QUELQUE CHOSE À DÉCOMPOSER (os#1425). `needs.hierarchy` ne dit que
+    // ce que le DIAGRAMME déclare ; sur un diagramme qui en a une, la plupart des nœuds n'en font
+    // pas partie, et leur couronne n'était qu'une case portant « ce diagramme ne déclare aucune
+    // hiérarchie ». Une nature qui ne s'offre pas laisse la grille passer son tour, ce qui vaut
+    // mieux qu'une vignette vide (arbitrage Julien, 18/09/2026).
+    isAvailable: (ctx) => {
+      const el = ctx.element as {
+        output_links_list?: unknown
+        dimensions_as_parent?: { children?: unknown[] }[]
+      } | null
+      if (!el || !Array.isArray(el.output_links_list)) return false
+      return (el.dimensions_as_parent ?? []).some(d => (d.children?.length ?? 0) > 0)
+    },
+    // os#1418 / os#1425 — CE QUE RÈGLE LE SUNBURST, DÉCLARÉ ET NON PLUS DESSINÉ À LA MAIN.
+    //
+    // La nature n'écrit plus d'interface : elle déclare ses réglages (valeur d'usine, sorte,
+    // libellés des sept langues, contrôle et choix) et le formulaire générique les rend — dans
+    // l'inspecteur pour la mise en forme, dans « Filtres et coordonnées » pour ce qu'on regarde.
+    // La liste vit dans `sunburstAttributes` : elle y est longue, et la garder ici noierait les
+    // six autres natures de ce fichier.
+    //
+    // DEUX CLÉS RESTENT ICI parce qu'elles ne sont pas des réglages d'auteur :
+    //  - la RACINE nomme le sujet — elle est posée par le `draw` ci-dessous depuis l'élément de
+    //    la fenêtre, et 'identity' interdit qu'un style ou une figure voisine vienne l'écraser ;
+    //  - l'ÉTIQUETTE DE DONNÉES ÉPINGLÉE (os#1420) est un dictionnaire, réglé par sa propre
+    //    section du panneau de navigation (FigureDataTagsNavigation, OS+).
+    attributes: {
+      ...SUNBURST_ATTRIBUTES,
+      root_ids: figureAttribute<string[] | undefined>(undefined, 'identity', {
+        en: 'Root',
+        fr: 'Racine',
+        es: 'Raíz',
+        de: 'Wurzel',
+        it: 'Radice',
+        'zh-CN': '根节点',
+        ja: 'ルート'
+      }),
+      [FIGURE_DATA_TAGS_KEY]: figureAttribute<Type_FigureDataTagPins | undefined>(
+        undefined, 'navigation', {
+          en: 'Pinned data tag',
+          fr: 'Étiquette de données épinglée',
+          es: 'Etiqueta de datos fijada',
+          de: 'Angeheftete Datenkennzeichnung',
+          it: 'Etichetta di dati fissata',
+          'zh-CN': '固定的数据标签',
+          ja: '固定されたデータタグ'
+        })
+    },
     // os#1397 - le clic droit sur le fond ouvre les réglages de la figure. Les SECTEURS, eux,
     // n'ont pas encore de menu : leur clic gauche zoome déjà dans l'anneau, et décider ce que le
     // clic droit y ajoute demande de trancher ce qu'on vise, le nœud du secteur ou la branche

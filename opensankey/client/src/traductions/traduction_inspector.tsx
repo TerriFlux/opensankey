@@ -44,7 +44,13 @@ export const resources_inspector = {
           // one figure: with a single one, both scopes name the same drawing.
           scope: 'Apply to',
           scope_pane: 'This figure',
+          // os#1423 — the scope is the SELECTION of figures; “All” is now a selection gesture.
+          scope_selection: 'Selection ({{count}})',
           scope_all: 'All ({{count}})',
+          // os#1417 — the third scope: the style of the kind, hence every figure of that kind
+          // in the document that follows it, open or not. Always offered, unlike “All”.
+          scope_style: 'Style',
+          scope_style_hint: 'All figures of this kind in the document that follow the style',
           // A setting that stays on its own figure while the others travel must say so, rather
           // than let the author believe it went along with them.
           this_pane_only: '(this figure)'
@@ -76,7 +82,6 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Tooltip',
           tags: 'Tags',
-          analysis: 'Analysis',
           title: 'Title',
           mfa: 'MFA',
           styles: 'Styles',
@@ -230,31 +235,21 @@ export const resources_inspector = {
         advanced_editor: 'Advanced editor…',
         open_editor: 'Open the editor…',
         tags_assign_hint: 'Assignment (groups are edited in Filters)',
-        // OS#1278 — section « Analyse » (graphiques couronne / histogramme).
+        // OS#1278 — les AXES d'une figure d'analyse (décomposer par / comparer selon). Le
+        // préfixe reste `inspector.analysis` bien que l'onglet Analyse de l'inspecteur ait été
+        // supprimé (16/09/2026) : ces libellés servent maintenant le panneau de navigation
+        // (AnalysisAxisNavigation), qui est le seul endroit où l'axe se règle. Renommer le
+        // préfixe casserait les sept blocs pour rien.
         analysis: {
           decompose_by: 'Decompose by',
           compare_by: 'Compare across',
-          compare_by_secondary: 'Then across (series)',
           none: '— none —',
           inputs: 'Incoming flows',
           outputs: 'Outgoing flows',
           inputs_by: 'Incoming flows by {{group}}',
           outputs_by: 'Outgoing flows by {{group}}',
           node_children: 'Child nodes ({{dim}})',
-          flux_children: 'Child flows ({{dim}})',
-          repr_auto: 'Auto',
-          repr_donut: 'Donut',
-          repr_bars: 'Bars',
-          scale: 'Scale',
-          scale_auto: 'Auto',
-          scale_shared: 'Shared',
-          scale_per_group: 'Per cluster',
-          scale_auto_hint: 'Shared scale, unless a cluster becomes unreadable',
-          scale_shared_hint: 'One scale for the whole chart',
-          scale_per_group_hint: 'One scale per cluster — a cluster is one label of “Compare across”',
-          show_in_tooltip: 'Show in tooltip',
-          show_on_node: 'Show on the node (donut / histogram)',
-          select_subject: 'Select a node or a flow.'
+          flux_children: 'Child flows ({{dim}})'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
         tooltip_blocks: {
@@ -376,6 +371,14 @@ export const resources_inspector = {
         // It makes parts come in and go out, and it even changes the NATURE of what can be
         // pointed at (a part is a flow, a child node or a tag depending on the axis).
         analysis_axis: 'Analysis axis',
+        // os#1420 — the coordinates a figure reads its values under. A figure follows the
+        // diagram by default and pins in one gesture: two donuts side by side, two years.
+        figure_data_tags: 'Figure coordinates',
+        figure_settings: 'What the figure shows',
+        figure_advanced: 'Advanced',
+        tab_figure: 'Figure',
+        figure_data_tag_follow: 'Follows the diagram ({{current}})',
+        figure_data_tag_pinned_hint: 'This figure reads {{pinned}}, the diagram shows {{current}}',
         // os#1406 — the JSON view's tabs. Deliberately named after the ROOT KEYS of the saved
         // file: the spreadsheet asks the same question about TABLES, and one name for both
         // would suggest they follow one another.
@@ -429,7 +432,15 @@ export const resources_inspector = {
           // montre plus d'une vignette : à une seule, les deux portées désignent le même dessin.
           scope: 'Appliquer à',
           scope_pane: 'Cette vignette',
+          // os#1423 — la portée est la SÉLECTION de figures ; « Toutes » est devenu un geste de
+          // sélection, et non plus une portée.
+          scope_selection: 'Sélection ({{count}})',
           scope_all: 'Toutes ({{count}})',
+          // os#1417 — la troisième portée : le style de la nature, donc toutes les figures de
+          // cette nature du document qui le suivent, ouvertes ou non. Toujours offerte, elle,
+          // là où « Toutes » n'a de sens qu'à partir de deux vignettes.
+          scope_style: 'Le style',
+          scope_style_hint: 'Toutes les figures de cette nature du document qui suivent le style',
           // Un réglage qui reste sur sa vignette pendant que les autres voyagent doit le dire,
           // plutôt que de laisser croire qu'il est parti avec eux.
           this_pane_only: '(cette vignette)'
@@ -459,7 +470,6 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Infobulle',
           tags: 'Tags',
-          analysis: 'Analyse',
           title: 'Titre',
           mfa: 'AFM',
           styles: 'Styles',
@@ -614,27 +624,13 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Décomposer par',
           compare_by: 'Comparer selon',
-          compare_by_secondary: 'Puis selon (séries)',
           none: '— aucune —',
           inputs: 'Flux entrants',
           outputs: 'Flux sortants',
           inputs_by: 'Flux entrants par {{group}}',
           outputs_by: 'Flux sortants par {{group}}',
           node_children: 'Nœuds enfants ({{dim}})',
-          flux_children: 'Flux enfants ({{dim}})',
-          repr_auto: 'Auto',
-          repr_donut: 'Couronne',
-          repr_bars: 'Barres',
-          scale: 'Échelle',
-          scale_auto: 'Auto',
-          scale_shared: 'Partagée',
-          scale_per_group: 'Par grappe',
-          scale_auto_hint: 'Échelle partagée, sauf si une grappe y devient illisible',
-          scale_shared_hint: 'Une seule échelle pour tout le graphique',
-          scale_per_group_hint: 'Une échelle par grappe — une grappe = une étiquette de « Comparer selon »',
-          show_in_tooltip: 'Afficher dans l’info-bulle',
-          show_on_node: 'Afficher sur le nœud (couronne / histogramme)',
-          select_subject: 'Sélectionner un nœud ou un flux.'
+          flux_children: 'Flux enfants ({{dim}})'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
         tooltip_blocks: {
@@ -748,6 +744,15 @@ export const resources_inspector = {
         // pas pour ce qu'on regarde. Un garde-fou n'est jamais muet.
         no_section_for_window: 'Filtres et coordonnées : rien pour « {{representation}} », qui se navigue en elle-même. Ils reviennent dès que le diagramme est la fenêtre active.',
         analysis_axis: 'Axe d\'analyse',
+        // os#1420 — les coordonnées sous lesquelles une figure lit ses valeurs. Une figure suit
+        // le diagramme par défaut et s'épingle d'un geste : deux couronnes côte à côte, deux
+        // années. L'axe dit quoi montrer, les coordonnées à quelle date : deux questions.
+        figure_data_tags: 'Coordonnées de la figure',
+        figure_settings: 'Ce que la figure montre',
+        figure_advanced: 'Avancé',
+        tab_figure: 'Figure',
+        figure_data_tag_follow: 'Suit le diagramme ({{current}})',
+        figure_data_tag_pinned_hint: 'Cette figure lit {{pinned}}, le diagramme montre {{current}}',
         // os#1406 — les onglets de la vue JSON. Nommés d'après les CLÉS RACINE du fichier
         // enregistré, et pas d'un mot générique : le tableur pose la même question sur des
         // TABLES, et un nom commun laisserait croire que les deux se suivent.
@@ -798,7 +803,10 @@ export const resources_inspector = {
           axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Filtros y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
           scope: 'Aplicar a',
           scope_pane: 'Esta figura',
+          scope_selection: 'Selección ({{count}})',
           scope_all: 'Todas ({{count}})',
+          scope_style: 'El estilo',
+          scope_style_hint: 'Todas las figuras de esta clase del documento que siguen el estilo',
           this_pane_only: '(esta figura)'
         },
         selection: 'Selección',
@@ -826,7 +834,6 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Información',
           tags: 'Etiquetas',
-          analysis: 'Análisis',
           title: 'Título',
           mfa: 'AFM',
           styles: 'Estilos',
@@ -981,27 +988,13 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Descomponer por',
           compare_by: 'Comparar según',
-          compare_by_secondary: 'Luego según (series)',
           none: '— ninguna —',
           inputs: 'Flujos entrantes',
           outputs: 'Flujos salientes',
           inputs_by: 'Flujos entrantes por {{group}}',
           outputs_by: 'Flujos salientes por {{group}}',
           node_children: 'Nodos hijos ({{dim}})',
-          flux_children: 'Flujos hijos ({{dim}})',
-          repr_auto: 'Auto',
-          repr_donut: 'Anillo',
-          repr_bars: 'Barras',
-          scale: 'Escala',
-          scale_auto: 'Auto',
-          scale_shared: 'Compartida',
-          scale_per_group: 'Por grupo',
-          scale_auto_hint: 'Escala compartida, salvo si un grupo se vuelve ilegible',
-          scale_shared_hint: 'Una sola escala para todo el gráfico',
-          scale_per_group_hint: 'Una escala por grupo — un grupo es una etiqueta de «Comparar según»',
-          show_in_tooltip: 'Mostrar en el tooltip',
-          show_on_node: 'Mostrar en el nodo (anillo / histograma)',
-          select_subject: 'Seleccione un nodo o un flujo.'
+          flux_children: 'Flujos hijos ({{dim}})'
         },
         // OS#1285 — visibilidad de los bloques del tooltip.
         tooltip_blocks: {
@@ -1113,6 +1106,12 @@ export const resources_inspector = {
         active_window: 'esta ventana',
         no_section_for_window: 'Filtros y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es la ventana activa.',
         analysis_axis: 'Eje de análisis',
+        figure_data_tags: 'Coordenadas de la figura',
+        figure_settings: 'Lo que muestra la figura',
+        figure_advanced: 'Avanzado',
+        tab_figure: 'Figura',
+        figure_data_tag_follow: 'Sigue el diagrama ({{current}})',
+        figure_data_tag_pinned_hint: 'Esta figura lee {{pinned}}, el diagrama muestra {{current}}',
         json_root_key: 'Clave raíz del JSON',
         window_subject: 'Sujeto de la ventana',
         short: {
@@ -1157,7 +1156,10 @@ export const resources_inspector = {
           axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Filter und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
           scope: 'Anwenden auf',
           scope_pane: 'Diese Abbildung',
+          scope_selection: 'Auswahl ({{count}})',
           scope_all: 'Alle ({{count}})',
+          scope_style: 'Der Stil',
+          scope_style_hint: 'Alle Abbildungen dieser Art im Dokument, die dem Stil folgen',
           this_pane_only: '(diese Abbildung)'
         },
         selection: 'Auswahl',
@@ -1185,7 +1187,6 @@ export const resources_inspector = {
           stock: 'Bestand',
           tooltip: 'Tooltip',
           tags: 'Tags',
-          analysis: 'Analyse',
           title: 'Titel',
           mfa: 'MFA',
           styles: 'Stile',
@@ -1340,27 +1341,13 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Zerlegen nach',
           compare_by: 'Vergleichen über',
-          compare_by_secondary: 'Dann über (Reihen)',
           none: '— keine —',
           inputs: 'Eingehende Flüsse',
           outputs: 'Ausgehende Flüsse',
           inputs_by: 'Eingehende Flüsse nach {{group}}',
           outputs_by: 'Ausgehende Flüsse nach {{group}}',
           node_children: 'Kindknoten ({{dim}})',
-          flux_children: 'Kindflüsse ({{dim}})',
-          repr_auto: 'Auto',
-          repr_donut: 'Ring',
-          repr_bars: 'Balken',
-          scale: 'Skala',
-          scale_auto: 'Auto',
-          scale_shared: 'Gemeinsam',
-          scale_per_group: 'Pro Gruppe',
-          scale_auto_hint: 'Gemeinsamer Maßstab, außer wenn eine Gruppe unlesbar wird',
-          scale_shared_hint: 'Ein einziger Maßstab für das ganze Diagramm',
-          scale_per_group_hint: 'Ein Maßstab je Gruppe — eine Gruppe ist ein Label von „Vergleichen über“',
-          show_in_tooltip: 'Im Tooltip anzeigen',
-          show_on_node: 'Am Knoten anzeigen (Ring / Histogramm)',
-          select_subject: 'Wählen Sie einen Knoten oder einen Fluss.'
+          flux_children: 'Kindflüsse ({{dim}})'
         },
         // OS#1285 — Sichtbarkeit der Tooltip-Blöcke.
         tooltip_blocks: {
@@ -1472,6 +1459,12 @@ export const resources_inspector = {
         active_window: 'dieses Fenster',
         no_section_for_window: 'Filter und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm das aktive Fenster ist.',
         analysis_axis: 'Analyseachse',
+        figure_data_tags: 'Koordinaten der Abbildung',
+        figure_settings: 'Was die Abbildung zeigt',
+        figure_advanced: 'Erweitert',
+        tab_figure: 'Abbildung',
+        figure_data_tag_follow: 'Folgt dem Diagramm ({{current}})',
+        figure_data_tag_pinned_hint: 'Diese Abbildung liest {{pinned}}, das Diagramm zeigt {{current}}',
         json_root_key: 'JSON-Stammschlüssel',
         window_subject: 'Gegenstand des Fensters',
         short: {
@@ -1516,7 +1509,10 @@ export const resources_inspector = {
           axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Filtri e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
           scope: 'Applicare a',
           scope_pane: 'Questa figura',
+          scope_selection: 'Selezione ({{count}})',
           scope_all: 'Tutte ({{count}})',
+          scope_style: 'Lo stile',
+          scope_style_hint: 'Tutte le figure di questa natura nel documento che seguono lo stile',
           this_pane_only: '(questa figura)'
         },
         selection: 'Selezione',
@@ -1544,7 +1540,6 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Tooltip',
           tags: 'Tag',
-          analysis: 'Analisi',
           title: 'Titolo',
           mfa: 'AFM',
           styles: 'Stili',
@@ -1699,27 +1694,13 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Scomporre per',
           compare_by: 'Confrontare per',
-          compare_by_secondary: 'Poi per (serie)',
           none: '— nessuna —',
           inputs: 'Flussi entranti',
           outputs: 'Flussi uscenti',
           inputs_by: 'Flussi entranti per {{group}}',
           outputs_by: 'Flussi uscenti per {{group}}',
           node_children: 'Nodi figli ({{dim}})',
-          flux_children: 'Flussi figli ({{dim}})',
-          repr_auto: 'Auto',
-          repr_donut: 'Anello',
-          repr_bars: 'Barre',
-          scale: 'Scala',
-          scale_auto: 'Auto',
-          scale_shared: 'Condivisa',
-          scale_per_group: 'Per gruppo',
-          scale_auto_hint: 'Scala condivisa, salvo se un gruppo diventa illeggibile',
-          scale_shared_hint: 'Una sola scala per tutto il grafico',
-          scale_per_group_hint: 'Una scala per gruppo — un gruppo è un’etichetta di «Confrontare per»',
-          show_in_tooltip: 'Mostra nel tooltip',
-          show_on_node: 'Mostra sul nodo (anello / istogramma)',
-          select_subject: 'Seleziona un nodo o un flusso.'
+          flux_children: 'Flussi figli ({{dim}})'
         },
         // OS#1285 — visibilità dei blocchi del tooltip.
         tooltip_blocks: {
@@ -1831,6 +1812,12 @@ export const resources_inspector = {
         active_window: 'questa finestra',
         no_section_for_window: 'Filtri e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è la finestra attiva.',
         analysis_axis: 'Asse di analisi',
+        figure_data_tags: 'Coordinate della figura',
+        figure_settings: 'Ciò che la figura mostra',
+        figure_advanced: 'Avanzate',
+        tab_figure: 'Figura',
+        figure_data_tag_follow: 'Segue il diagramma ({{current}})',
+        figure_data_tag_pinned_hint: 'Questa figura legge {{pinned}}, il diagramma mostra {{current}}',
         json_root_key: 'Chiave radice del JSON',
         window_subject: 'Soggetto della finestra',
         short: {
@@ -1874,7 +1861,10 @@ export const resources_inspector = {
           axis_in_navigation: '分析轴（按此分解、按此比较）在「筛选与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
           scope: '应用于',
           scope_pane: '本图',
+          scope_selection: '选择（{{count}}）',
           scope_all: '全部（{{count}}）',
+          scope_style: '样式',
+          scope_style_hint: '文档中遵循该样式的所有同类图形',
           this_pane_only: '（仅本图）'
         },
         // Portée & cascade de styles
@@ -1904,7 +1894,6 @@ export const resources_inspector = {
           stock: '存量',
           tooltip: '提示框',
           tags: '标签',
-          analysis: '分析',
           title: '标题',
           mfa: 'MFA',
           styles: '样式',
@@ -2062,27 +2051,13 @@ export const resources_inspector = {
         analysis: {
           decompose_by: '按此分解',
           compare_by: '按此比较',
-          compare_by_secondary: '再按此比较（系列）',
           none: '— 无 —',
           inputs: '进入的流量',
           outputs: '流出的流量',
           inputs_by: '按 {{group}} 划分的进入流量',
           outputs_by: '按 {{group}} 划分的流出流量',
           node_children: '子节点（{{dim}}）',
-          flux_children: '子流量（{{dim}}）',
-          repr_auto: '自动',
-          repr_donut: '环形图',
-          repr_bars: '条形图',
-          scale: '刻度',
-          scale_auto: '自动',
-          scale_shared: '共享',
-          scale_per_group: '按组',
-          scale_auto_hint: '共享刻度，除非某一组变得不可读',
-          scale_shared_hint: '整个图表使用同一刻度',
-          scale_per_group_hint: '每组一个刻度——一组即“按此比较”的一个标签',
-          show_in_tooltip: '在提示框中显示',
-          show_on_node: '在节点上显示（环形图 / 直方图）',
-          select_subject: '请选择一个节点或一条流量。'
+          flux_children: '子流量（{{dim}}）'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
         tooltip_blocks: {
@@ -2194,6 +2169,12 @@ export const resources_inspector = {
         active_window: '该窗口',
         no_section_for_window: '筛选与坐标：{{representation}} 没有可用项，该窗口在其内部导航。当图表成为活动窗口时，它们会重新出现。',
         analysis_axis: '分析轴',
+        figure_data_tags: '图形坐标',
+        figure_settings: '图形展示的内容',
+        figure_advanced: '高级',
+        tab_figure: '图形',
+        figure_data_tag_follow: '跟随图表（{{current}}）',
+        figure_data_tag_pinned_hint: '该图形读取 {{pinned}}，图表显示 {{current}}',
         json_root_key: 'JSON 根键',
         window_subject: '窗口主体',
         short: {
@@ -2237,7 +2218,10 @@ export const resources_inspector = {
           axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「絞り込みと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
           scope: '適用先',
           scope_pane: 'この図',
+          scope_selection: '選択（{{count}}）',
           scope_all: 'すべて（{{count}}）',
+          scope_style: 'スタイル',
+          scope_style_hint: 'このスタイルに従う、文書内の同種のすべての図',
           this_pane_only: '（この図のみ）'
         },
         // Portée & cascade de styles
@@ -2267,7 +2251,6 @@ export const resources_inspector = {
           stock: 'ストック',
           tooltip: 'ツールチップ',
           tags: 'タグ',
-          analysis: '分析',
           title: 'タイトル',
           mfa: 'MFA',
           styles: 'スタイル',
@@ -2425,27 +2408,13 @@ export const resources_inspector = {
         analysis: {
           decompose_by: '分解の軸',
           compare_by: '比較の軸',
-          compare_by_secondary: '第2の比較の軸（系列）',
           none: '— なし —',
           inputs: '入ってくるフロー',
           outputs: '出ていくフロー',
           inputs_by: '{{group}} 別の入ってくるフロー',
           outputs_by: '{{group}} 別の出ていくフロー',
           node_children: '子ノード（{{dim}}）',
-          flux_children: '子フロー（{{dim}}）',
-          repr_auto: '自動',
-          repr_donut: 'ドーナツ',
-          repr_bars: '棒',
-          scale: 'スケール',
-          scale_auto: '自動',
-          scale_shared: '共通',
-          scale_per_group: 'グループごと',
-          scale_auto_hint: '共通スケール、ただしグループが読めなくなる場合を除く',
-          scale_shared_hint: 'グラフ全体で 1 つのスケール',
-          scale_per_group_hint: 'グループごとに 1 スケール — グループは「比較の軸」の 1 ラベル',
-          show_in_tooltip: 'ツールチップに表示',
-          show_on_node: 'ノード上に表示（ドーナツ／ヒストグラム）',
-          select_subject: 'ノードまたはフローを選択してください。'
+          flux_children: '子フロー（{{dim}}）'
         },
         // OS#1285 — visibilité des blocs d'info-bulle.
         tooltip_blocks: {
@@ -2557,6 +2526,12 @@ export const resources_inspector = {
         active_window: 'このウィンドウ',
         no_section_for_window: '絞り込みと座標：{{representation}} には該当するものがありません。このウィンドウはそれ自体の中で操作します。ダイアグラムがアクティブなウィンドウになれば戻ります。',
         analysis_axis: '分析の軸',
+        figure_data_tags: '図の座標',
+        figure_settings: '図が示すもの',
+        figure_advanced: '詳細設定',
+        tab_figure: '図',
+        figure_data_tag_follow: 'ダイアグラムに従う（{{current}}）',
+        figure_data_tag_pinned_hint: 'この図は {{pinned}} を読み、ダイアグラムは {{current}} を表示しています',
         json_root_key: 'JSON のルートキー',
         window_subject: 'ウィンドウの対象',
         short: {

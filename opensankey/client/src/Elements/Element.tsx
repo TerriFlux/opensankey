@@ -295,7 +295,13 @@ export abstract class Class_BaseElement {
       // drawing_area est relue en live (jamais capturée en closure) : au
       // reset()/changement de vue (createNewDrawingArea) le parent ci-dessous
       // est le nouveau groupe, donc select() ne trouve rien et on re-append.
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
+      // os#1385 (lot 3) — `_svg_parent_group` nomme le groupe STRUCTUREL de la zone
+      // (`g_elements_sankey`, `g_handlers`, `g_select_zone`) ; son identifiant DOM réel est
+      // préfixé par la zone hors du conteneur principal (cf. DrawingArea.domId). On le résout
+      // donc par la zone, sans quoi l'élément ne trouverait plus son groupe et ne se
+      // dessinerait pas du tout dans une fenêtre de feuille.
+      const d3_drawing_area_selection = d3_drawing_area
+        .selectAll(this.drawing_area.domIdSelector(this._svg_parent_group))
       if (d3_drawing_area_selection.nodes().length > 0) {
         // Data-join keyé par id : on réutilise le <g> racine existant s'il est
         // déjà dans le DOM (enter/update), sinon on l'append (enter). Le <g>
@@ -1579,16 +1585,20 @@ export class Class_ElementStyle {
   private _name: string
   private _references: { [_: string]: Class_BaseElement } = {}
 
-  private _default_style: Class_ElementStyle
-  private _drawing_area: Class_DrawingArea
+  private _default_style: Class_ElementStyle | undefined
+  private _drawing_area: Class_DrawingArea | undefined
 
+  // os#1418 — `default_style` et `drawing_area` sont OPTIONNELS : un style de FIGURE (cf.
+  // Representations/Figure) n'a pas de zone de dessin, et le style `default` d'une nature n'a
+  // pas de style parent — exactement comme le `default` du diagramme, construit avant que
+  // `Class_Sankey.default_style` existe. Rien ne change pour les appelants qui les passent.
   constructor(
     config: Record<string, AttributeConfig<unknown>>,
     id: string,
     name: string,
     is_deletable: boolean,
-    default_style: Class_ElementStyle,
-    drawing_area: Class_DrawingArea
+    default_style?: Class_ElementStyle,
+    drawing_area?: Class_DrawingArea
   ) {
     this._config = config
     this._id = id
@@ -1721,5 +1731,7 @@ export class Class_ElementStyle {
   public get name() { return this._name }
   public set name(value: string) { this._name = value }
 
-  public get drawing_area() { return this._drawing_area }
+  // Typé plein pour les appelants du diagramme : un style de FIGURE (Representations/Figure)
+  // n'a pas de zone de dessin, mais personne ne la lui demande.
+  public get drawing_area(): Class_DrawingArea { return this._drawing_area as Class_DrawingArea }
 }
