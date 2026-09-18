@@ -19,13 +19,15 @@ export const resources_sunburst = {
         truncated: 'Depth truncated',
         back: 'back',
         level: 'Level {{index}}',
-        opt_dimension: 'Hierarchy',
-        opt_value_mode: 'Arc value',
-        opt_value_sum: 'Sum of children',
-        opt_value_declared: 'Node value',
-        opt_max_depth: 'Rings',
-        hint_sum: 'Each arc is worth the sum of its children; the gap with the node value is reported.',
-        hint_declared: 'Each arc is worth its node value; what the children do not cover becomes an “Unallocated” sector.'
+        group: {
+          read: 'What it reads',
+          shape: 'Shape',
+          values: 'Value',
+          labels: 'Labels',
+          centre: 'Centre',
+          legend: 'Legend',
+          notes: 'Notes and gestures'
+        },
       }
     }
   },
@@ -45,13 +47,15 @@ export const resources_sunburst = {
         truncated: 'Profondeur tronquée',
         back: 'remonter',
         level: 'Niveau {{index}}',
-        opt_dimension: 'Hiérarchie',
-        opt_value_mode: 'Valeur de l’arc',
-        opt_value_sum: 'Somme des enfants',
-        opt_value_declared: 'Valeur du nœud',
-        opt_max_depth: 'Anneaux',
-        hint_sum: 'Chaque arc vaut la somme de ses enfants ; l’écart avec la valeur du nœud est signalé.',
-        hint_declared: 'Chaque arc vaut la valeur de son nœud ; ce que les enfants ne couvrent pas devient un secteur « Non réparti ».'
+        group: {
+          read: 'Ce qu’elle lit',
+          shape: 'Forme',
+          values: 'Valeur',
+          labels: 'Étiquettes',
+          centre: 'Centre',
+          legend: 'Légende',
+          notes: 'Mentions et gestes'
+        },
       }
     }
   },
@@ -71,13 +75,15 @@ export const resources_sunburst = {
         truncated: 'Profundidad truncada',
         back: 'volver',
         level: 'Nivel {{index}}',
-        opt_dimension: 'Jerarquía',
-        opt_value_mode: 'Valor del arco',
-        opt_value_sum: 'Suma de los hijos',
-        opt_value_declared: 'Valor del nodo',
-        opt_max_depth: 'Anillos',
-        hint_sum: 'Cada arco vale la suma de sus hijos; se indica la diferencia con el valor del nodo.',
-        hint_declared: 'Cada arco vale el valor de su nodo; lo que los hijos no cubren se vuelve un sector «Sin asignar».'
+        group: {
+          read: 'Lo que lee',
+          shape: 'Forma',
+          values: 'Valor',
+          labels: 'Etiquetas',
+          centre: 'Centro',
+          legend: 'Leyenda',
+          notes: 'Avisos y gestos'
+        },
       }
     }
   },
@@ -97,13 +103,15 @@ export const resources_sunburst = {
         truncated: 'Tiefe abgeschnitten',
         back: 'zurück',
         level: 'Ebene {{index}}',
-        opt_dimension: 'Hierarchie',
-        opt_value_mode: 'Wert des Bogens',
-        opt_value_sum: 'Summe der Kinder',
-        opt_value_declared: 'Knotenwert',
-        opt_max_depth: 'Ringe',
-        hint_sum: 'Jeder Bogen entspricht der Summe seiner Kinder; die Abweichung zum Knotenwert wird gemeldet.',
-        hint_declared: 'Jeder Bogen entspricht seinem Knotenwert; was die Kinder nicht abdecken, wird zum Sektor „Nicht zugeordnet“.'
+        group: {
+          read: 'Was sie liest',
+          shape: 'Form',
+          values: 'Wert',
+          labels: 'Beschriftungen',
+          centre: 'Mitte',
+          legend: 'Legende',
+          notes: 'Hinweise und Gesten'
+        },
       }
     }
   },
@@ -123,13 +131,15 @@ export const resources_sunburst = {
         truncated: 'Profondità troncata',
         back: 'risalire',
         level: 'Livello {{index}}',
-        opt_dimension: 'Gerarchia',
-        opt_value_mode: 'Valore dell’arco',
-        opt_value_sum: 'Somma dei figli',
-        opt_value_declared: 'Valore del nodo',
-        opt_max_depth: 'Anelli',
-        hint_sum: 'Ogni arco vale la somma dei suoi figli; lo scarto con il valore del nodo viene segnalato.',
-        hint_declared: 'Ogni arco vale il valore del suo nodo; ciò che i figli non coprono diventa un settore «Non assegnato».'
+        group: {
+          read: 'Ciò che legge',
+          shape: 'Forma',
+          values: 'Valore',
+          labels: 'Etichette',
+          centre: 'Centro',
+          legend: 'Legenda',
+          notes: 'Avvisi e gesti'
+        },
       }
     }
   },
@@ -149,13 +159,15 @@ export const resources_sunburst = {
         truncated: '层级已截断',
         back: '返回',
         level: '第 {{index}} 层',
-        opt_dimension: '层级',
-        opt_value_mode: '扇区取值',
-        opt_value_sum: '子节点之和',
-        opt_value_declared: '节点自身值',
-        opt_max_depth: '环数',
-        hint_sum: '每个扇区等于其子节点之和；与节点自身值的差异会被标注。',
-        hint_declared: '每个扇区等于其节点自身值；子节点未覆盖的部分成为「未分配」扇区。'
+        group: {
+          read: '读取内容',
+          shape: '形状',
+          values: '数值',
+          labels: '标签',
+          centre: '中心',
+          legend: '图例',
+          notes: '提示与操作'
+        },
       }
     }
   },
@@ -175,13 +187,15 @@ export const resources_sunburst = {
         truncated: '深さを打ち切りました',
         back: '戻る',
         level: 'レベル {{index}}',
-        opt_dimension: '階層',
-        opt_value_mode: '扇形の値',
-        opt_value_sum: '子ノードの合計',
-        opt_value_declared: 'ノードの値',
-        opt_max_depth: 'リング数',
-        hint_sum: '各扇形は子ノードの合計です。ノードの値との差は注記されます。',
-        hint_declared: '各扇形はノードの値です。子ノードが覆わない分は「未割当」の扇形になります。'
+        group: {
+          read: '読み取る内容',
+          shape: '形',
+          values: '値',
+          labels: 'ラベル',
+          centre: '中心',
+          legend: '凡例',
+          notes: '注記と操作'
+        },
       }
     }
   }

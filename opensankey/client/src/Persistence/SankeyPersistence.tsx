@@ -2588,7 +2588,14 @@ export class DrawingAreaPersistence {
     // #153 — Cf. toJSON : clé écrite seulement quand l'utilisateur a figé le recyclage.
     drawing_area.application_data.layout_auto_recycling = getBooleanFromJSON(json_object, 'layout_auto_recycling', true)
 
-    drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
+    // os#1385 (lot 4) — la langue du fichier vit sous la clé racine `workspace` ; la clé racine
+    // `language` est la forme antérieure, toujours lue. Posée ICI, avant la lecture des nœuds :
+    // c'est elle qui range une doc multilingue écrite en chaîne historique sous sa langue.
+    const workspace_json = json_object['workspace']
+    const workspace_language = (workspace_json && typeof workspace_json === 'object' && !Array.isArray(workspace_json))
+      ? getStringOrUndefinedFromJSON(workspace_json as Type_JSON, 'language')
+      : undefined
+    drawing_area.application_data.language = workspace_language ?? getStringOrUndefinedFromJSON(json_object, 'language')
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
     drawing_area['_filter_label'] = getNumberFromJSON(json_object, 'filter_label', 0)
     drawing_area['_filter_link_value'] = getNumberFromJSON(json_object, 'filter_link_value', 0)

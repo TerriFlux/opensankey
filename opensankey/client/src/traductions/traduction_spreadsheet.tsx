@@ -233,8 +233,22 @@ export const resources_spreadsheet = {
           no_representation: 'No representation for this element',
           node: 'Node',
           link: 'Flow',
+          // os#1420 — le TROISIÈME sujet d'une fenêtre : épinglée à un CRITÈRE (les nœuds portant
+          // une étiquette) plutôt qu'à des identifiants. `tag` est le mot du fil d'Ariane
+          // (« Étiquette › Importations (4) »), au même titre que `node` et `link` ; `pin_to_tag`
+          // nomme le geste, `pin_to_tag_none` l'entrée vide de son sélecteur.
+          tag: 'Tag',
           add_subject: 'Add a node or a flow',
           pin_subject: 'Look at a node or a flow',
+          pin_to_tag: 'Pin to a tag',
+          pin_to_tag_none: 'Choose a tag',
+          // os#1421 lot 5 — POSER une figure réglée dans cette fenêtre SUR le nœud du diagramme :
+          // le nœud dessine alors cette figure, et la rerégler ici change le nœud (un LIEN, pas
+          // une copie). Un nœud n'en porte qu'une : poser sur un nœud qui en porte déjà une autre
+          // la remplace, et le libellé reste « Poser » — c'est bien ce que l'auteur demande.
+          // `unplace_from_node` est le même bouton quand c'est CETTE figure qui est posée.
+          place_on_node: 'Place on the node',
+          unplace_from_node: 'Remove from the node',
           remove_subject: 'Remove',
           pin_all: 'Pin the selected elements',
           value_mode: 'Values',
@@ -259,7 +273,13 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Make this sheet the active one',
           sheet_read_only: 'Read-only — editing happens in the tab',
           open_sheet_in_window: 'Open in a new window',
-          sheet_already_windowed: 'This sheet is already open in another window'
+          sheet_already_windowed: 'This sheet is already open in another window',
+          // os#1385 (lot 5, D9) — a sheet carries a TYPED document. `no_canvas_for_type` is what
+          // a canvas window says when its sheet is of a type that has no canvas (a workbook) ;
+          // `no_default_window` is what the gesture says when a sheet has nothing to open at all
+          // (an empty workbook, a type this version does not know).
+          no_canvas_for_type: 'No canvas for this kind of document',
+          no_default_window: 'Nothing to show for this sheet'
         }
       }
     }
@@ -474,8 +494,13 @@ export const resources_spreadsheet = {
           no_representation: 'Aucune représentation pour cet élément',
           node: 'Nœud',
           link: 'Flux',
+          tag: 'Étiquette',
           add_subject: 'Ajouter un nœud ou un flux',
           pin_subject: 'Regarder un nœud ou un flux',
+          pin_to_tag: 'Épingler à une étiquette',
+          pin_to_tag_none: 'Choisir une étiquette',
+          place_on_node: 'Poser sur le nœud',
+          unplace_from_node: 'Retirer du nœud',
           remove_subject: 'Retirer',
           pin_all: 'Épingler les éléments sélectionnés',
           value_mode: 'Valeurs',
@@ -491,7 +516,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Rendre cette feuille active',
           sheet_read_only: 'Lecture seule — c\'est l\'onglet qui édite',
           open_sheet_in_window: 'Ouvrir dans une nouvelle fenêtre',
-          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre'
+          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre',
+          no_canvas_for_type: 'Pas de canevas pour ce type de document',
+          no_default_window: 'Rien à montrer pour cette feuille'
         }
       }
     }
@@ -706,8 +733,13 @@ export const resources_spreadsheet = {
           no_representation: 'Ninguna representación para este elemento',
           node: 'Nodo',
           link: 'Flujo',
+          tag: 'Etiqueta',
           add_subject: 'Añadir un nodo o un flujo',
           pin_subject: 'Ver un nodo o un flujo',
+          pin_to_tag: 'Fijar en una etiqueta',
+          pin_to_tag_none: 'Elegir una etiqueta',
+          place_on_node: 'Colocar en el nodo',
+          unplace_from_node: 'Quitar del nodo',
           remove_subject: 'Quitar',
           pin_all: 'Fijar los elementos seleccionados',
           value_mode: 'Valores',
@@ -723,7 +755,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Activar esta hoja',
           sheet_read_only: 'Solo lectura — la edición se hace en la pestaña',
           open_sheet_in_window: 'Abrir en una ventana nueva',
-          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana'
+          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana',
+          no_canvas_for_type: 'No hay lienzo para este tipo de documento',
+          no_default_window: 'Nada que mostrar para esta hoja'
         }
       }
     }
@@ -938,8 +972,13 @@ export const resources_spreadsheet = {
           no_representation: 'Keine Darstellung für dieses Element',
           node: 'Knoten',
           link: 'Fluss',
+          tag: 'Etikett',
           add_subject: 'Knoten oder Fluss hinzufügen',
           pin_subject: 'Knoten oder Fluss ansehen',
+          pin_to_tag: 'An ein Etikett heften',
+          pin_to_tag_none: 'Etikett auswählen',
+          place_on_node: 'Auf dem Knoten platzieren',
+          unplace_from_node: 'Vom Knoten entfernen',
           remove_subject: 'Entfernen',
           pin_all: 'Ausgewählte Elemente anheften',
           value_mode: 'Werte',
@@ -955,7 +994,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Dieses Blatt aktivieren',
           sheet_read_only: 'Nur Lesen — bearbeitet wird über die Registerkarte',
           open_sheet_in_window: 'In einem neuen Fenster öffnen',
-          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet'
+          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet',
+          no_canvas_for_type: 'Kein Zeichenbereich für diese Art von Dokument',
+          no_default_window: 'Für dieses Blatt gibt es nichts zu zeigen'
         }
       }
     }
@@ -1170,8 +1211,13 @@ export const resources_spreadsheet = {
           no_representation: 'Nessuna rappresentazione per questo elemento',
           node: 'Nodo',
           link: 'Flusso',
+          tag: 'Etichetta',
           add_subject: 'Aggiungi un nodo o un flusso',
           pin_subject: 'Guarda un nodo o un flusso',
+          pin_to_tag: 'Fissa a un\'etichetta',
+          pin_to_tag_none: 'Scegli un\'etichetta',
+          place_on_node: 'Posiziona sul nodo',
+          unplace_from_node: 'Rimuovi dal nodo',
           remove_subject: 'Rimuovi',
           pin_all: 'Fissa gli elementi selezionati',
           value_mode: 'Valori',
@@ -1187,7 +1233,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'Rendi attivo questo foglio',
           sheet_read_only: 'Sola lettura — si modifica dalla scheda',
           open_sheet_in_window: 'Apri in una nuova finestra',
-          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra'
+          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra',
+          no_canvas_for_type: 'Nessuna area di disegno per questo tipo di documento',
+          no_default_window: 'Niente da mostrare per questo foglio'
         }
       }
     }
@@ -1407,8 +1455,13 @@ export const resources_spreadsheet = {
           no_representation: '此元素没有可用的表示',
           node: '节点',
           link: '流',
+          tag: '标签',
           add_subject: '添加节点或流',
           pin_subject: '查看节点或流',
+          pin_to_tag: '固定到标签',
+          pin_to_tag_none: '选择一个标签',
+          place_on_node: '放置到节点上',
+          unplace_from_node: '从节点移除',
           remove_subject: '移除',
           pin_all: '固定所选元素',
           value_mode: '数值',
@@ -1425,7 +1478,9 @@ export const resources_spreadsheet = {
           make_sheet_active: '将此工作表设为当前工作表',
           sheet_read_only: '只读：编辑请在标签页中进行',
           open_sheet_in_window: '在新窗口中打开',
-          sheet_already_windowed: '该工作表已在另一个窗口中打开'
+          sheet_already_windowed: '该工作表已在另一个窗口中打开',
+          no_canvas_for_type: '该类型的文档没有画布',
+          no_default_window: '该工作表没有可显示的内容'
         }
       }
     }
@@ -1645,8 +1700,13 @@ export const resources_spreadsheet = {
           no_representation: 'この要素の表現はありません',
           node: 'ノード',
           link: 'フロー',
+          tag: 'タグ',
           add_subject: 'ノードまたはフローを追加',
           pin_subject: 'ノードまたはフローを見る',
+          pin_to_tag: 'タグに固定',
+          pin_to_tag_none: 'タグを選択',
+          place_on_node: 'ノードに配置',
+          unplace_from_node: 'ノードから外す',
           remove_subject: '削除',
           pin_all: '選択した要素を固定',
           value_mode: '値',
@@ -1663,7 +1723,9 @@ export const resources_spreadsheet = {
           make_sheet_active: 'このシートをアクティブにする',
           sheet_read_only: '読み取り専用：編集はタブで行います',
           open_sheet_in_window: '新しいウィンドウで開く',
-          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています'
+          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています',
+          no_canvas_for_type: 'この種類のドキュメントにはキャンバスがありません',
+          no_default_window: 'このシートに表示できるものはありません'
         }
       }
     }

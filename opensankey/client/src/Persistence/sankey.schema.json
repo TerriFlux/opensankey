@@ -143,6 +143,63 @@
             "central_node_id"
           ],
           "additionalProperties": true
+        },
+        "sheets": {
+          "type": "object",
+          "properties": {
+            "current": {
+              "type": "string"
+            },
+            "order": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "entries": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "json": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "current",
+            "order",
+            "entries"
+          ],
+          "additionalProperties": true
+        },
+        "workspace": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string"
+            },
+            "panels": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

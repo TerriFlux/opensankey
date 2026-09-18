@@ -85,6 +85,49 @@ const unitaryProcessSchema = z
   .passthrough()
 
 /**
+ * OS#85 puis os#1385 (lot 4, D8) — une FEUILLE du document : un autre diagramme,
+ * indépendant, dans le même fichier. `type` est ADDITIF : absent vaut `'sankey'`,
+ * ce qui fait que tout fichier antérieur se relit et se réécrit à l'identique.
+ * `json` (le contenu de la feuille) reste en `passthrough` : c'est un document
+ * complet, décrit par ce même schéma, et l'imbriquer ici ne dirait rien de plus.
+ */
+const sheetEntrySchema = z
+  .object({
+    name: z.string(),
+    type: z.string().optional(),
+    // Absent pour la feuille COURANTE quand elle porte un Sankey : la racine du
+    // fichier EST son contenu (règle de la racine, cf. FORMAT.md).
+    json: jsonObjectBag.optional(),
+  })
+  .passthrough()
+
+/**
+ * OS#85 — la section racine `sheets` : le CONTENEUR de feuilles. Clé existante
+ * (elle n'avait simplement jamais été décrite), additive : un document
+ * mono-feuille ne la porte pas.
+ */
+const sheetsSchema = z
+  .object({
+    current: z.string(),
+    order: z.array(z.string()),
+    entries: z.record(sheetEntrySchema),
+  })
+  .passthrough()
+
+/**
+ * os#1385 (lot 4, D8) — la section racine `workspace` : ce qui appartient à
+ * l'ESPACE DE TRAVAIL et non au diagramme. Écrite par le document PRINCIPAL
+ * seulement ; un fichier antérieur porte les mêmes valeurs aux clés racines
+ * `language` et `panels`, qui restent lues en repli.
+ */
+const workspaceSchema = z
+  .object({
+    language: z.string().optional(),
+    panels: jsonObjectBag.optional(),
+  })
+  .passthrough()
+
+/**
  * Schéma de la racine du document Sankey. `.passthrough()` : toute clé non listée
  * (theme, ratio_*_constraints, réglages de drawing area, etc.) est acceptée telle
  * quelle — on ne valide que l'enveloppe.
@@ -118,6 +161,23 @@ export const sankeyRootSchema = z
     // en entier et rend `null`. La valeur de repli n'est jamais consommée :
     // `validateSankeyRootJSON` ne lit que les erreurs, jamais la donnée parsée.
     process: unitaryProcessSchema.catch({ central_node_id: '' }).optional(),
+    // OS#85 — feuilles du document, absentes d'un fichier mono-feuille.
+    //
+    // `.catch()`, pour la RAISON EXACTE de `process` ci-dessus, et parce qu'un
+    // contrat de tolérance existait AVANT que cette clé ne soit décrite ici :
+    // `sheetsFromJSON` ignore SANS BRUIT une section `sheets` abîmée et ouvre le
+    // document en mono-feuille (`sheets.test.ts`, « clé sheets malformée »).
+    // Décrite sans `.catch()`, la clé devenait un barrage : un `order` qui n'est
+    // pas un tableau — ce qu'une version intermédiaire a pu écrire — rendait le
+    // fichier ENTIER inouvrable, alors que son diagramme est parfaitement
+    // lisible. Décrire le format ne doit jamais retirer un droit à la lecture.
+    sheets: sheetsSchema.catch({ current: '', order: [], entries: {} }).optional(),
+    // os#1385 (lot 4, D8) — préférences de l'espace de travail, absentes d'un
+    // contenu de feuille et de tout document secondaire. `.catch()` pour la même
+    // raison : `workspaceStateFromJSON` se contente de ce qu'elle sait lire, et
+    // une préférence d'interface abîmée n'est pas un motif de refuser un
+    // diagramme.
+    workspace: workspaceSchema.catch({}).optional(),
   })
   .passthrough()
 

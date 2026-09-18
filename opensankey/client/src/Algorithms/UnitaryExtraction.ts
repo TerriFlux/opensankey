@@ -45,6 +45,7 @@
 // qui fait qu'une brique est un fichier OpenSankey ordinaire.
 
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { Class_Workspace } from '../types/Workspace'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { link_ratio_constraint } from '../types/Utils'
 import { unitaryAssemblyToJSON, unitaryAssemblyFromJSON } from '../types/UnitaryAssembly'
@@ -111,23 +112,27 @@ const cloneJSON = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T
  * procédé PLUS une fois pour le shell : il garde le défaut.
  */
 const loadDetachedApp = (json: Type_JSON, consume_json: boolean = false): Class_ApplicationData => {
-  const app = new Class_ApplicationData(false)
-  // HORS ÉCRAN, POUR DE BON. Une Class_DrawingArea naît avec `container_selector = '#sankey_app'`,
-  // le conteneur du diagramme AFFICHÉ, et tout chemin qui dessine commence par y retirer le
-  // `#draw_zoom` qu'il trouve : une application détachée qui dessine EFFACE le diagramme de
-  // l'utilisateur. On l'a payé sur le board unitaire (os#1387). Ici rien ne dessine
-  // aujourd'hui — les JSON de brique ne portent ni vues ni vue courante, et c'est la lecture
-  // des vues qui déclenche un dessin d'autorité — mais l'invariant ne doit pas dépendre de la
-  // forme du JSON qu'on nous donne. La fabrique est enveloppée sur l'instance, pour que TOUTE
-  // zone créée ensuite (un `reset()` en construit une neuve) hérite du même conteneur : un
-  // sélecteur qui ne peut désigner aucun élément, où d3 travaille sur une sélection vide.
-  const create = app.createNewDrawingArea.bind(app)
-  app.createNewDrawingArea = (id?: string) => {
-    const da = create(id)
-    da.container_selector = '#os_detached_app_offscreen_never_in_dom'
-    return da
-  }
-  app.drawing_area.container_selector = '#os_detached_app_offscreen_never_in_dom'
+  // UN ESPACE DE TRAVAIL JETABLE, ET LA CLASSE DE BASE — délibérément, dans les deux cas.
+  //
+  // Jetable : cette extraction ne partage rien avec la session de l'utilisateur (ni langue,
+  // ni licences, ni toasts, ni menus), elle produit des fichiers. L'accrocher à l'espace de
+  // travail courant ferait vivre dans celui-ci un document de plus par brique extraite, pour
+  // rien, et n'apporterait aucun des services qu'un espace de travail rend.
+  //
+  // Classe de BASE (`Class_Workspace`, donc `Class_ApplicationData`) et non celle de l'hôte :
+  // une brique doit se sérialiser SANS les migrations de vues d'OS+ — un document OSP
+  // relirait ce JSON en lui appliquant sa propre lecture de vues et de view tags, là où une
+  // brique n'en porte aucune.
+  //
+  // HORS ÉCRAN, POUR DE BON (`offscreen: true`, cf. `Class_ApplicationData.detachOffscreen`).
+  // Une Class_DrawingArea naît avec `container_selector = '#sankey_app'`, le conteneur du
+  // diagramme AFFICHÉ, et tout chemin qui dessine commence par y retirer le `#draw_zoom`
+  // qu'il trouve : un document détaché qui dessine EFFACE le diagramme de l'utilisateur. On
+  // l'a payé sur le board unitaire (os#1387). Ici rien ne dessine aujourd'hui — les JSON de
+  // brique ne portent ni vues ni vue courante, et c'est la lecture des vues qui déclenche un
+  // dessin d'autorité — mais l'invariant ne doit pas dépendre de la forme du JSON qu'on nous
+  // donne.
+  const app = new Class_Workspace(false).createDocument({ offscreen: true })
   app.fromJSON((consume_json ? json : cloneJSON(json)) as never, {}, false)
   return app
 }
