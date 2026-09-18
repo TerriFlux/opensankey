@@ -55,6 +55,8 @@ import {
 // SA#541 — module FEUILLE (aucun import) : il ne rouvre pas le cycle décrit plus haut.
 import { buildColorLockIndex, tagStyleLayers, topLayerDefining } from './tagStyles'
 import type { Type_TagStyleLayer, Type_TagStyleOwner } from './tagStyles'
+// SA#551 — module FEUILLE lui aussi
+import { previewedTagGroups } from './tagGroupPriority'
 
 // SA#541 — index « couleur → cadenas », calculé au PREMIER usage : `ElementsAttributesConfig` et
 // `Element` se chargent en cycle, la config peut ne pas exister encore à l'évaluation du module.
@@ -704,9 +706,12 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
    * imposerait chaque paramètre du diagramme.
    */
   protected resolveTagStyleLayers(
-    groups: readonly (Type_ElementTagStyleOwner & { use_colors?: boolean, tags_list: readonly Type_ElementTagStyleOwner[] })[],
+    groups: readonly (Type_ElementTagStyleOwner & { id: string, use_colors?: boolean, tags_list: readonly Type_ElementTagStyleOwner[] })[],
     carries: (tag: Type_ElementTagStyleOwner) => boolean
   ): Type_ElementTagStyleLayer[] {
+    // SA#551 — aperçu au survol d'un groupe de la légende : les seuls styles de ce groupe, ouvert ou
+    // non, s'appliquent aux éléments de sa famille (cf. tagGroupPriority.previewedTagGroups).
+    groups = previewedTagGroups(groups, this.sankey.tag_style_preview_group_id)
     const styles = this.sankey.styles_dict
     // Interrupteur du groupe « Appliquer les styles associés » (`use_colors`) : fermé, le groupe
     // n'impose rien — interrupteur par groupe, fermé par défaut (arbitrage du chantier).
@@ -1658,6 +1663,7 @@ export class Class_ElementStyle {
   public isAttributeExplicit(attr: keyof ConfigType): boolean {
     return this._storage[attr] !== undefined
   }
+
 
   public isAttributeOverloaded(
     attr: keyof ConfigType
