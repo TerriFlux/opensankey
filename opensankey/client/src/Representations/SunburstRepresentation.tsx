@@ -33,7 +33,7 @@ import {
 import { ZOOM_TOPIC } from '../types/EventBus'
 import type { Type_JSON } from '../types/Utils'
 import type { Type_RepresentationContext, Type_RepresentationZoom } from './RepresentationRegistry'
-import { aggregate, disaggregate } from '../Algorithms/Hierarchies'
+import { aggregateLocally, disaggregateLocally } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
   SUNBURST_DEFAULT_MAX_DEPTH,
@@ -197,6 +197,10 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
 // deux fois. On déplie donc toute la route dessinée, du centre au secteur, chaque cran dans
 // l'axe qui le relie au suivant — et c'est bien la route DESSINÉE : sur un treillis, deux
 // chemins mènent au même nœud sans déplier la même chose.
+//
+// 18/09 — ET C'EST LE GESTE DU CLIC DROIT, EN ENTIER (`disaggregateLocally` / `aggregateLocally`,
+// Hierarchies) : marqueur « local » sur la dimension, redessin, menu Hiérarchies rafraîchi. À sec,
+// `disaggregate` dépliait le diagramme sans que le menu le sache — deux mécanismes pour un geste.
 const disaggregateAlong = (
   app_data: Class_ApplicationData,
   path: string[]
@@ -204,14 +208,8 @@ const disaggregateAlong = (
   const nodes = app_data.drawing_area.sankey.nodes_dict
   for (let i = 0; i + 1 < path.length; i++) {
     const parent = nodes[path[i]] as Class_NodeElement | undefined
-    const child_id = path[i + 1]
-    if (!parent) continue
-    // L'axe qui relie CE parent à CET enfant — celui que la couronne a emprunté.
-    const dim = parent.dimensions_as_parent.find((d: Class_NodeDimension) =>
-      d.children.some((c: { id: string }) => c.id === child_id))
-    // Déjà déplié : rien à faire, et surtout pas à le replier au passage.
-    if (!dim || dim.force_show_children) continue
-    disaggregate(app_data, parent, child_id)
+    // Déjà déplié : `disaggregateLocally` ne fait rien, et surtout ne replie pas au passage.
+    if (parent) disaggregateLocally(app_data, parent, path[i + 1])
   }
 }
 
@@ -232,16 +230,31 @@ const toggleAggregation = (
     if (as_parent.force_show_children) {
       // Déjà déplié : le geste referme, en repassant par le premier enfant — c'est
       // l'enfant qui porte la dimension côté agrégation.
-      aggregate(app_data, as_parent.children[0] as Class_NodeElement, node.id)
+      aggregateLocally(app_data, as_parent.children[0] as Class_NodeElement, node.id)
     } else {
-      disaggregate(app_data, node, as_parent.children[0].id)
+      disaggregateLocally(app_data, node, as_parent.children[0].id)
     }
     return
   }
   // Feuille de la hiérarchie : le seul geste qui reste est de la replier dans son parent.
   const as_child = node.dimensions_as_child
     .find((d: Class_NodeDimension) => d.id === dimension_id)
-  if (as_child) aggregate(app_data, node, as_child.parent.id)
+  if (as_child) aggregateLocally(app_data, node, as_child.parent.id)
+}
+
+/**
+ * LE CLIC SUR LE CENTRE REPLIE LE NŒUD CENTRAL (18/09, constaté par Julien : une fois déplié
+ * depuis un secteur, rien ne permettait de le replier depuis la figure). Le centre est un nœud ;
+ * s'il est déplié sur un axe — celui du premier anneau d'abord, n'importe lequel sinon — on le
+ * replie par son premier enfant, comme le clic droit. Vrai si quelque chose a bougé.
+ */
+const foldCentre = (app_data: Class_ApplicationData, node_id: string, dimension_id: string): boolean => {
+  const node = app_data.drawing_area.sankey.nodes_dict[node_id] as Class_NodeElement | undefined
+  if (!node) return false
+  const open = node.dimensions_as_parent.filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
+  const dim = open.find((d: Class_NodeDimension) => d.id === dimension_id) ?? open[0]
+  if (!dim) return false
+  return aggregateLocally(app_data, dim.children[0] as Class_NodeElement, node.id)
 }
 
 /**
@@ -308,7 +321,9 @@ export const drawSunburstRepresentation = (
     level_label: (index: number) => t('sunburst.level', { index }) as string,
     on_arc_click: (
       node_id: string, _is_disaggregated: boolean, dimension_id: string, path: string[]
-    ) => toggleAggregation(app_data, dimension_id || tree.dimension_id, node_id, path)
+    ) => toggleAggregation(app_data, dimension_id || tree.dimension_id, node_id, path),
+    on_centre_click: (node_id: string, dimension_id: string) =>
+      foldCentre(app_data, node_id, dimension_id || tree.dimension_id)
   })
 }
 
