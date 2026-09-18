@@ -724,7 +724,7 @@ function wireLegendHover(
  * montre. Ne redessiner que la famille du groupe laissait les nœuds colorés par « Forme de produit
  * laitier » dans la vue de « Fiabilité des données » (retour du test en ligne du 2026-09-18).
  */
-export function redrawForTagStylePreview(drawing_area: Class_DrawingArea, _group_id?: string) {
+export function redrawForTagStylePreview(drawing_area: Class_DrawingArea) {
   const sankey = drawing_area.sankey
   sankey.nodes_list.forEach(node => node.draw())
   sankey.links_list.forEach(link => link.draw())
