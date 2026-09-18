@@ -173,6 +173,9 @@ export type Type_SankeyForLegend = {
   // prioritaire). Optionnel : absent (mocks des tests antérieurs), les groupes gardent l'ordre de
   // `node_taggs_list` puis `flux_taggs_list`.
   tagGroupsInPriorityOrder?(type_group: 'node_taggs' | 'flux_taggs'): Type_TagGroupForLegend[]
+  // SA#551 — groupe dont la VUE est en cours de dessin (pop-up d'un groupe) : la légende ne montre
+  // alors que ce groupe, pour ne faire lire que lui.
+  tag_style_preview_group_id?: string
   // SA#551 — étiquettes et groupes dont un style est en vigueur sur au moins un élément visible
   // (Class_Sankey.tagStyleOwnersInEffect). Absent : aucune entrée n'est écartée.
   tagStyleOwnersInEffect?(type_group: 'node_taggs' | 'flux_taggs'): Set<unknown>
@@ -348,6 +351,11 @@ function untaggedEntryStyle(
  * 123 diagrammes SOCLE, 2026-09-16, hors pilote Lait) : leurs légendes ne changent pas d'ordre.
  */
 export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGroupForLegend[] {
+  // SA#551 — vue d'un groupe : lui seul (les autres groupes développés sortent de la légende).
+  const previewed = sankey.tag_style_preview_group_id
+  if (previewed !== undefined) {
+    return [...sankey.node_taggs_list, ...sankey.flux_taggs_list].filter(group => group.id === previewed)
+  }
   const by_priority = sankey.tagGroupsInPriorityOrder
   const node_and_flux = by_priority === undefined
     ? [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
@@ -587,7 +595,9 @@ export function computeLegendItems(
   // SA#551 — entrées supplantées partout retirées ; un groupe épinglé ouvert mais entièrement
   // supplanté n'a plus de bloc, il retrouve sa ligne en bas.
   const emitted_groups = hideOverriddenLegendEntries(items, sankey)
-  pinnedLegendGroups(all_taggs, emitted_groups).forEach(tag_group => {
+  // SA#551 — vue d'un groupe : pas de lignes épinglées non plus, seul le groupe montré compte.
+  const pinned = sankey.tag_style_preview_group_id !== undefined ? [] : pinnedLegendGroups(all_taggs, emitted_groups)
+  pinned.forEach(tag_group => {
     const description = definitionOf(tag_group)
     items.push({
       id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),

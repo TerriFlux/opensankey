@@ -35,6 +35,7 @@ import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import { PresentationPopup } from './PresentationPopup'
+import { legendTagGroupOf } from './legendGroupPresentation'
 import { LegendDimensionChoice } from './LegendDimensionPanel'
 import {
   findLegendDimension, groupIdOfLegendDimensionPanel, isLegendDimensionPanelId
@@ -67,8 +68,15 @@ const findElementById = (
   return (found ?? null) as unknown as Presentable | null
 }
 
-/** Titre du panneau (cf. presentationTitleOf, qui traite aussi les zones de légende). */
-const titleOf = (element: Presentable): string => presentationTitleOf(element)
+/**
+ * Titre du panneau (cf. presentationTitleOf, qui traite aussi les zones de légende).
+ *
+ * SA#551 — titre d'un GROUPE : son nom seul. Le texte de la zone porte, pour un groupe épinglé,
+ * « Nom : description » (SA#550) — toute la définition se retrouvait alors dans la barre de titre,
+ * puis répétée dans le contenu (retour du test local du 2026-09-18).
+ */
+const titleOf = (app_data: Class_ApplicationData, element: Presentable): string =>
+  legendTagGroupOf(app_data, element)?.name ?? presentationTitleOf(element)
 
 /** Info-bulle : la PILE des blocs cochés, dans l'ordre du patron. Les blocs sans
  *  contenu (et ceux qu'on ne sait pas dessiner) sont sautés. */
@@ -142,7 +150,7 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
             key={id}
             app_data={app_data}
             id={id}
-            title={titleOf(element)}
+            title={titleOf(app_data, element)}
             allowedModes={ELEMENT_MODES}
             // Intention de survol : entrer dans l'info-bulle annule la fermeture
             // programmée par l'élément ; en sortir la reprogramme.

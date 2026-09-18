@@ -176,6 +176,35 @@ describe('SA#551 — vue du groupe dans sa pop-up', () => {
   })
 })
 
+describe('SA#551 — la vue ne montre que son groupe', () => {
+  it('la légende de la copie ne garde que le groupe montré, développé, sans ligne épinglée', () => {
+    const { app, sankey, source } = makeLegend()
+    // « Source » est fermée : la vue la présente développée, puis rend son interrupteur
+    expect(source.use_colors).toBe(false)
+    const container = document.createElement('div')
+    const zones_during: string[] = []
+    const original_draw = sankey.containers_list
+    expect(original_draw.length).toBeGreaterThan(0)
+    // On relève la légende PENDANT la copie, par le hook de dessin de la zone de travail
+    const da = app.drawing_area as unknown as { contentBounds: () => unknown }
+    const real_bounds = da.contentBounds.bind(app.drawing_area)
+    da.contentBounds = () => {
+      zones_during.push(...sankey.containers_list.map(c => c.id).filter(id => id.startsWith('legend-')))
+      return real_bounds()
+    }
+    renderLegendTagGroupView(app, source, container)
+    da.contentBounds = real_bounds
+
+    const groups_during = zones_during.filter(id => id.startsWith('legend-group-'))
+    expect(groups_during).toEqual(['legend-group-source'])
+    expect(zones_during).toContain('legend-tag-source-agreste')
+    expect(zones_during.some(id => id.startsWith('legend-tag-fiab'))).toBe(false)
+    // Après la copie : interrupteur rendu, légende d'origine rétablie
+    expect(source.use_colors).toBe(false)
+    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
+  })
+})
+
 describe('SA#551 — survol', () => {
   const hover = (host: HTMLElement, app: Class_ApplicationData, id: string, type: 'mouseover' | 'mouseout') =>
     zoneG(host, app, id).dispatchEvent(new MouseEvent(type, { bubbles: true }))

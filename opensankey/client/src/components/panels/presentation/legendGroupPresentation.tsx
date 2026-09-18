@@ -64,6 +64,37 @@ const definitionOf = (owner: { description?: string }): string | undefined => {
   return typeof description === 'string' && description.trim() !== '' ? description : undefined
 }
 
+/** Damier gris et blanc du carré d'un style d'opacité, en CSS (même code que la légende du dessin). */
+const CHECKER_BACKGROUND = {
+  backgroundImage:
+    'linear-gradient(45deg, #c8c8c8 25%, transparent 25%, transparent 75%, #c8c8c8 75%),' +
+    'linear-gradient(45deg, #c8c8c8 25%, transparent 25%, transparent 75%, #c8c8c8 75%)',
+  backgroundSize: '0.3rem 0.3rem',
+  backgroundPosition: '0 0, 0.15rem 0.15rem',
+  backgroundColor: '#ffffff'
+}
+
+/** Carré d'une étiquette : sa couleur à son opacité, sur un damier quand le style ne fixe que celle-ci. */
+const TagSwatch = ({ color, opacity, checker }: { color: string, opacity: number, checker: boolean }) => (
+  <Box
+    as='span'
+    className={checker ? 'legend_swatch_checker' : undefined}
+    style={{
+      flex: 'none', width: '0.6rem', height: '0.6rem', borderRadius: '2px',
+      border: '1px solid #cbd5e0', display: 'inline-block',
+      ...(checker ? CHECKER_BACKGROUND : {})
+    }}
+  >
+    <Box
+      as='span'
+      style={{
+        display: 'block', width: '100%', height: '100%', borderRadius: '1px',
+        backgroundColor: color, opacity
+      }}
+    />
+  </Box>
+)
+
 /**
  * Définition du groupe puis ses étiquettes, chacune avec sa pastille (couleur de son style, sinon sa
  * couleur historique) et sa propre définition. C'est ce qu'un lecteur attend d'un groupe : ce qu'il
@@ -79,10 +110,18 @@ export const LegendTagGroupBlock = ({ app_data, group }: {
   const tags = group.tags_list as unknown as {
     id: string, display_name: string, color: string, style_id?: string, description?: string
   }[]
-  const swatchOf = (tag: { color: string, style_id?: string }): string => {
+  // Carré d'une étiquette : sa couleur de style, sinon sa couleur historique ; et, comme dans la
+  // légende du diagramme, un DAMIER sous un style qui règle l'opacité sans couleur — sans quoi la
+  // pop-up montrait des gris là où la légende montre une transparence (retour du 2026-09-18).
+  const swatchOf = (tag: { color: string, style_id?: string }): { color: string, opacity: number, checker: boolean } => {
     const style = tag.style_id ? styles[tag.style_id] : undefined
     const color = style?.getElementProperty('shape_color')
-    return typeof color === 'string' ? color : tag.color
+    const opacity = style?.getElementProperty('shape_opacity')
+    return {
+      color: typeof color === 'string' ? color : tag.color,
+      opacity: typeof opacity === 'number' ? opacity : 1,
+      checker: typeof opacity === 'number' && typeof color !== 'string'
+    }
   }
   return (
     <Box style={{ fontSize: default_font_size, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -92,13 +131,7 @@ export const LegendTagGroupBlock = ({ app_data, group }: {
       </Text>
       {tags.map(tag => (
         <Box key={tag.id} style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem' }}>
-          <Box
-            as='span'
-            style={{
-              flex: 'none', width: '0.6rem', height: '0.6rem', borderRadius: '2px',
-              backgroundColor: swatchOf(tag), border: '1px solid #cbd5e0'
-            }}
-          />
+          <TagSwatch {...swatchOf(tag)} />
           <Text as='span'>
             {tag.display_name}
             {definitionOf(tag) && <Text as='span' style={{ opacity: 0.7 }}>{' — ' + definitionOf(tag)}</Text>}
@@ -160,14 +193,26 @@ export const renderLegendTagGroupView = (
   const drawing_area = app_data.drawing_area
   const sankey = drawing_area.sankey
   const applied = sankey.setTagStylePreview(group.id)
+  // Un groupe FERMÉ ne met rien en forme et n'a pas de bloc dans la légende : le temps de la copie,
+  // il est présenté comme développé (son interrupteur retrouve sa valeur juste après, dans la même
+  // tâche — le document n'en garde rien).
+  const was_switched_on = group.use_colors
   let svg: string | null = null
   try {
-    if (applied) redrawForTagStylePreview(drawing_area, group.id)
+    if (applied) {
+      if (!was_switched_on) group.use_colors = true
+      else redrawForTagStylePreview(drawing_area, group.id)
+      // La légende suit l'aperçu : elle ne montre plus que ce groupe (retour du test local du
+      // 2026-09-18 — la vue doit faire lire CE groupe, pas ceux qui restent développés).
+      drawing_area.legend.draw()
+    }
     svg = currentDrawingAsSvg(drawing_area, '-groupview')
   } finally {
     if (applied) {
       sankey.setTagStylePreview(undefined)
-      redrawForTagStylePreview(drawing_area, group.id)
+      if (!was_switched_on) group.use_colors = false
+      else redrawForTagStylePreview(drawing_area, group.id)
+      drawing_area.legend.draw()
     }
   }
   container.innerHTML = svg ?? ''
