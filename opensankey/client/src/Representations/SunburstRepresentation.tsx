@@ -123,13 +123,42 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
 //
 // `dimension_id` vient DU SECTEUR, pas de la figure : avec des axes enchaînés (os#1424),
 // l'anneau extérieur ne parle plus du même axe que l'intérieur.
+//
+// os#1425 — ET L'ASCENDANCE SE DÉPLIE D'ABORD. Cliquer « Céréales Bio » au deuxième anneau
+// dépliait ce nœud-là sans toucher à « Céréales », qui n'est son parent que dans UN AUTRE AXE :
+// le diagramme montrait alors le parent ET ses parts côte à côte, c'est-à-dire la même matière
+// deux fois. On déplie donc toute la route dessinée, du centre au secteur, chaque cran dans
+// l'axe qui le relie au suivant — et c'est bien la route DESSINÉE : sur un treillis, deux
+// chemins mènent au même nœud sans déplier la même chose.
+const disaggregateAlong = (
+  app_data: Class_ApplicationData,
+  path: string[]
+) => {
+  const nodes = app_data.drawing_area.sankey.nodes_dict
+  for (let i = 0; i + 1 < path.length; i++) {
+    const parent = nodes[path[i]] as Class_NodeElement | undefined
+    const child_id = path[i + 1]
+    if (!parent) continue
+    // L'axe qui relie CE parent à CET enfant — celui que la couronne a emprunté.
+    const dim = parent.dimensions_as_parent.find((d: Class_NodeDimension) =>
+      d.children.some((c: { id: string }) => c.id === child_id))
+    // Déjà déplié : rien à faire, et surtout pas à le replier au passage.
+    if (!dim || dim.force_show_children) continue
+    disaggregate(app_data, parent, child_id)
+  }
+}
+
 const toggleAggregation = (
   app_data: Class_ApplicationData,
   dimension_id: string,
-  node_id: string
+  node_id: string,
+  path: string[] = []
 ) => {
   const node = app_data.drawing_area.sankey.nodes_dict[node_id] as Class_NodeElement | undefined
   if (!node) return
+  // La route d'abord : sans elle, déplier un nœud d'un anneau profond laisse ses ancêtres en
+  // place et le diagramme compte deux fois la même matière.
+  disaggregateAlong(app_data, path)
   const as_parent = node.dimensions_as_parent
     .find((d: Class_NodeDimension) => d.id === dimension_id)
   if (as_parent && as_parent.children.length > 0) {
@@ -200,8 +229,9 @@ export const drawSunburstRepresentation = (
     truncated_label: t('sunburst.truncated') as string,
     back_label: t('sunburst.back') as string,
     level_label: (index: number) => t('sunburst.level', { index }) as string,
-    on_arc_click: (node_id: string, _is_disaggregated: boolean, dimension_id: string) =>
-      toggleAggregation(app_data, dimension_id || tree.dimension_id, node_id)
+    on_arc_click: (
+      node_id: string, _is_disaggregated: boolean, dimension_id: string, path: string[]
+    ) => toggleAggregation(app_data, dimension_id || tree.dimension_id, node_id, path)
   })
 }
 

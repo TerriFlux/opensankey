@@ -52,6 +52,8 @@ export interface Type_FigureControlItem {
   sort: Type_AttributeSort
   /** Rarement ce qu'on vient chercher : le formulaire le range sous un « Avancé » replié. */
   advanced: boolean
+  /** L'onglet de famille où ce réglage rejoint ceux des éléments ; `''` = l'onglet de la figure. */
+  family: string
 }
 
 /** Un groupe de contrôles, dans l'ordre où les clés ont été déclarées. */
@@ -79,6 +81,20 @@ export const controlKindOf = (
   if (typeof factory_default === 'string') return 'text'
   return 'none'
 }
+
+/**
+ * LES FAMILLES D'ATTRIBUTS reprises des éléments, et le préfixe qui les nomme. Une clé reprise
+ * porte sa famille dans son nom : c'est ce qui la range dans le bon onglet sans rien déclarer.
+ */
+export const FIGURE_FAMILY_PREFIXES: { family: string, prefix: string }[] = [
+  { family: 'shape', prefix: 'shape_' },
+  { family: 'name_label', prefix: 'name_label_' },
+  { family: 'value_label', prefix: 'value_label_' }
+]
+
+/** La famille que le NOM d'une clé annonce, `''` pour une clé propre à la figure. */
+export const familyOfKey = (key: string): string =>
+  FIGURE_FAMILY_PREFIXES.find(f => key.startsWith(f.prefix))?.family ?? ''
 
 /** Le libellé d'un catalogue 7 langues, avec repli sur l'anglais puis sur la clé. */
 const inLang = (labels: { [lang: string]: string } | undefined, lang: string, key: string): string =>
@@ -133,7 +149,11 @@ export const figureControlsOf = (
       step: ui?.step,
       group: ui?.group ?? '',
       sort,
-      advanced: ui?.advanced === true
+      advanced: ui?.advanced === true,
+      // Un réglage REPRIS d'un élément porte sa famille dans son nom : `name_label_font_size`
+      // appartient à l'onglet Libellé sans avoir à le déclarer. Un réglage propre à la figure le
+      // dit (cf. `Type_FigureControl.family`), ou reste dans l'onglet de la figure.
+      family: ui?.family ?? familyOfKey(key)
     })
   })
   return out

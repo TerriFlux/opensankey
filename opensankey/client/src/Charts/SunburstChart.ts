@@ -132,7 +132,15 @@ export interface Type_SunburstChartOptions {
   // (désagréger le nœud, le sélectionner…) ; le zoom radial, lui, est géré ici.
   // `dimension_id` est l'axe QUE CE SECTEUR COMMANDE : avec des axes enchaînés
   // (os#1424) il change d'un anneau à l'autre, et c'est lui qu'il faut agréger.
-  on_arc_click?: (node_id: string, is_disaggregated: boolean, dimension_id: string) => void
+  //
+  // `path` est L'ASCENDANCE DESSINÉE, du nœud au centre jusqu'au secteur cliqué inclus. Elle est
+  // indispensable au-delà du premier anneau : déplier « Céréales Bio » dans le diagramme suppose
+  // que « Céréales » y soit déjà dépliée, sans quoi le diagramme montre les deux — le parent ET
+  // ses parts. C'est la route DESSINÉE, pas une route possible : sur un treillis, deux chemins
+  // mènent au même nœud et ils ne déplient pas la même chose.
+  on_arc_click?: (
+    node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[]
+  ) => void
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -735,7 +743,12 @@ export const drawSunburstChart = (
       .on('click', (_, d) => {
         if (d.is_residual || st.click_action === 'none') return
         if (st.click_action !== 'zoom') {
-          opts.on_arc_click?.(d.id, d.is_disaggregated, d.dimension_id)
+          // L'ascendance part du CENTRE, qui n'est pas dans le fil d'Ariane des secteurs : c'est
+          // lui le nœud déjà déplié dans le diagramme, et le premier à déplier quand il ne l'est
+          // pas. Sous un zoom radial, le centre est le secteur où l'on est entré, et la chaîne
+          // reste juste — elle repart simplement d'un cran plus bas.
+          const ancestry = centre_node ? [centre_node.id, ...d.path] : [...d.path]
+          opts.on_arc_click?.(d.id, d.is_disaggregated, d.dimension_id, ancestry)
         }
         if (st.click_action !== 'aggregate' && d.children_count > 0) {
           focus_id = d.id

@@ -47,6 +47,12 @@ export interface Type_FigureAttributesFormProps {
    * répéter ici ferait deux endroits pour un même réglage.
    */
   exclude?: (key: string) => boolean
+  /**
+   * L'onglet de famille que cette surface rend : `'value_label'` pour ce que la figure AJOUTE à
+   * l'affichage des valeurs, `''` pour ce qui n'appartient à aucune famille (le centre, la
+   * légende). Absent : tout, quelle que soit la famille.
+   */
+  family?: string
   /** L'objet regardé, quand la figure en a un : certains choix viennent de son diagramme. */
   element?: unknown
 }
@@ -120,7 +126,7 @@ const FigureControl = (
 }
 
 export const FigureAttributesForm = ({
-  app_data, config, options, setOptions, sorts, element, exclude
+  app_data, config, options, setOptions, sorts, element, exclude, family
 }: Type_FigureAttributesFormProps) => {
   // Le tiroir « Avancé » est un état de l'OUTIL, pas du document : il se referme d'une figure à
   // l'autre, et rien n'est écrit quand on l'ouvre.
@@ -131,7 +137,9 @@ export const FigureAttributesForm = ({
   const items = figureControlsOf(
     config, options, sorts ?? ALL_SORTS, lang,
     { app_data: app_data as unknown as { drawing_area?: { sankey?: unknown } }, element }
-  ).filter(item => !exclude?.(item.key))
+  )
+    .filter(item => !exclude?.(item.key))
+    .filter(item => family === undefined || item.family === family)
   if (items.length === 0) return null
   const set = (key: string, value: unknown) => setOptions({ ...options, [key]: value })
 
