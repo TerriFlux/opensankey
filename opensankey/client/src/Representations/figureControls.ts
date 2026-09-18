@@ -50,6 +50,8 @@ export interface Type_FigureControlItem {
   /** Le groupe visuel (clé i18n déclarée), `''` quand la nature n'en dit rien. */
   group: string
   sort: Type_AttributeSort
+  /** Rarement ce qu'on vient chercher : le formulaire le range sous un « Avancé » replié. */
+  advanced: boolean
 }
 
 /** Un groupe de contrôles, dans l'ordre où les clés ont été déclarées. */
@@ -130,7 +132,8 @@ export const figureControlsOf = (
       max: ui?.max,
       step: ui?.step,
       group: ui?.group ?? '',
-      sort
+      sort,
+      advanced: ui?.advanced === true
     })
   })
   return out
