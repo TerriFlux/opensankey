@@ -322,7 +322,14 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
     // est la plus grande ; elle prenait alors toute la hauteur de la fenêtre et en dépassait
     // par le bas, sans que la borne de hauteur ci-dessous puisse y faire quoi que ce soit.
     placement='bottom-start'
-    modifiers={[fitMenuListToViewport]}
+    // Deux garde-fous qui ne dépendent PAS du calcul ci-dessus : le thème plafonne de toute façon
+    // la liste à la hauteur de la fenêtre, et `altAxis` autorise Popper à la faire GLISSER le long
+    // du bouton pour la ramener dans l'écran. Même si la mesure de place se trompe ou reste en
+    // retard, la liste reste visible et défilable — elle ne peut plus sortir par le haut.
+    modifiers={[
+      fitMenuListToViewport,
+      { name: 'preventOverflow', options: { altAxis: true, tether: false, padding: 8 } }
+    ]}
     variant={'menu_select_elements'}
     closeOnSelect={false}
     isOpen={displayBgOverlay}

@@ -1524,7 +1524,9 @@ export const menuStyles = {
       // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
       // Chakra écarte silencieusement une valeur numérique nulle.
       minWidth: '0px',
-      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
       overflowX: 'hidden',
@@ -1542,7 +1544,9 @@ export const menuStyles = {
       // Chakra écarte silencieusement une valeur numérique nulle.
       minWidth: '0px',
       maxW: 'min(28rem, calc(100vw - 1rem))',
-      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
       borderColor: 'primaire.5'
@@ -2552,7 +2556,9 @@ export const tabsStyles = {
       // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
       // Chakra écarte silencieusement une valeur numérique nulle.
       minWidth: '0px',
-      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
       overflowX: 'hidden',
@@ -2570,7 +2576,9 @@ export const tabsStyles = {
       // Chakra écarte silencieusement une valeur numérique nulle.
       minWidth: '0px',
       maxW: 'min(28rem, calc(100vw - 1rem))',
-      maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
+      // `min(...)` : même si la place mesurée est fausse ou périmée, la liste ne dépasse jamais
+      // la hauteur de la fenêtre — donc elle défile toujours plutôt que de sortir de l'écran.
+      maxH: 'min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
       borderColor: 'primaire.5'

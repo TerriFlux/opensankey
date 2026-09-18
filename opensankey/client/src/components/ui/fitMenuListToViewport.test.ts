@@ -73,6 +73,6 @@ describe('variantes de menu du thème', () => {
     expect(list.minWidth).toBe('0px')
     expect(list.minW).toBeUndefined()
     expect(list.maxW).toBe('min(28rem, calc(100vw - 1rem))')
-    expect(list.maxH).toBe('var(--os-menu-select-max-h, calc(100vh - 2rem))')
+    expect(list.maxH).toBe('min(var(--os-menu-select-max-h, 100vh), calc(100vh - 2rem))')
   })
 })
