@@ -118,7 +118,8 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   legend_width: 220,
   notes_visible: true,
   tooltip_visible: true,
-  click_action: 'both'
+  // Déplier seulement : le zoom radial n'est plus le défaut (cf. figureCatalogue).
+  click_action: 'aggregate'
 }
 
 export interface Type_SunburstChartOptions {
@@ -762,7 +763,7 @@ export const drawSunburstChart = (
       })
       // DEUX GESTES DANS UN, ET ILS SE SÉPARENT (os#1425). Le clic zoomait dans l'anneau ET
       // dépliait le nœud dans le diagramme, sans que rien ne le dise. L'auteur choisit ce qu'il
-      // veut — les deux restent le défaut, c'est le comportement d'avant.
+      // veut — déplier seul est le défaut, le zoom radial un choix.
       .on('click', (_, d) => {
         if (d.is_residual || st.click_action === 'none') return
         if (st.click_action !== 'zoom') {

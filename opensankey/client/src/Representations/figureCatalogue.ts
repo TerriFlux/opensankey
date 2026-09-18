@@ -245,7 +245,10 @@ export const CENTRE_CONFIG = {
 
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────
 export const INTERACTION_CONFIG = {
-  interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('both', 'interaction', {
+  // Le défaut est DÉPLIER SEULEMENT : le zoom radial — le secteur cliqué passe au centre — a été
+  // jugé déroutant (il change ce que la figure montre sans qu'on l'ait demandé) ; il reste là
+  // pour qui le veut, sous « Avancé ».
+  interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('aggregate', 'interaction', {
     en: 'Clicking a part', fr: 'Le clic sur une part', es: 'Al hacer clic en una parte',
     de: 'Klick auf einen Teil', it: 'Il clic su una parte', 'zh-CN': '点击某部分时', ja: '部分をクリックすると'
   }, {
@@ -255,9 +258,9 @@ export const INTERACTION_CONFIG = {
   }, {
     kind: 'select',
     choices: [
-      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et le déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' }),
+      choice('aggregate', { en: 'Expands it in the diagram', fr: 'Le déplie dans le diagramme', es: 'Lo despliega en el diagrama', de: 'Klappt ihn im Diagramm auf', it: 'Lo espande nel diagramma', 'zh-CN': '在图中展开', ja: '図で展開する' }),
       choice('zoom', { en: 'Zooms in only', fr: 'Zoome dedans seulement', es: 'Solo hace zoom', de: 'Zoomt nur hinein', it: 'Ingrandisce soltanto', 'zh-CN': '仅放大', ja: 'ズームのみ' }),
-      choice('aggregate', { en: 'Expands it in the diagram only', fr: 'Le déplie dans le diagramme seulement', es: 'Solo lo despliega en el diagrama', de: 'Klappt ihn nur im Diagramm auf', it: 'Lo espande solo nel diagramma', 'zh-CN': '仅在图中展开', ja: '図での展開のみ' }),
+      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et le déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' }),
       choice('none', { en: 'Does nothing', fr: 'Ne fait rien', es: 'No hace nada', de: 'Tut nichts', it: 'Non fa nulla', 'zh-CN': '无操作', ja: '何もしない' })
     ],
     advanced: true
