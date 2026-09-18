@@ -17,6 +17,12 @@
 // (Type_StatSlice), ce module ne fait que dessiner dans le conteneur DOM fourni.
 
 import * as d3 from '../d3Modules'
+// os#1424 — la couronne À N ANNEAUX se dessine aussi SUR UN NŒUD. La partition angulaire et
+// le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
+// de la figure de la fenêtre et de celle du nœud deux figures différentes.
+import { partitionSunburst, sunburstBranchColor, sunburstScope } from './SunburstChart'
+import type { Type_SunburstSlice } from './SunburstChart'
+import type { Type_SunburstTree } from './SunburstHierarchy'
 
 export interface Type_StatSlice {
   id: string
@@ -846,6 +852,67 @@ export const drawNodeDonutOnGroup = (
       .attr('pointer-events', 'none')
       .text(DEFAULT_FORMAT(total))
   }
+  return true
+}
+
+// SUNBURST (os#1424) : la COURONNE À N ANNEAUX, dans les bornes du nœud. Le donut ci-dessus
+// est le même geste à un seul anneau, sur une décomposition plate ; celui-ci décompose la
+// HIÉRARCHIE du nœud, cran par cran, et c'est ce qui manquait pour qu'une couronne réglée
+// dans une fenêtre puisse être POSÉE sur son nœud (cf. placeFigureAction, OS+).
+//
+// Le nœud EST le centre — il se nomme déjà lui-même sur le diagramme — donc le premier
+// anneau est son premier cran de décomposition (`sunburstScope`), jamais lui-même. Et rien
+// n'est écrit dans les secteurs : à la taille d'un nœud, un texte radial n'est pas lisible,
+// c'est l'info-bulle qui nomme.
+//
+// L'arbre arrive DÉJÀ CONSTRUIT (`buildSunburstTree`), comme les parts du donut arrivent
+// déjà extraites : ce module ne lit pas le modèle.
+export const drawNodeSunburstOnGroup = (
+  group_el: SVGGElement,
+  tree: Type_SunburstTree,
+  geom: Type_NodeChartGeom,
+  opts: { others_label?: string, theme?: 'light' | 'dark' } = {}
+): boolean => {
+  const sel = d3.select(group_el)
+  sel.selectAll('.' + NODE_CHART_CLASS).remove()
+  const radius = Math.min(geom.width, geom.height) / 2
+  if (radius <= 0) return false
+
+  const others_label = opts.others_label ?? '…'
+  const { centre, branches } = sunburstScope(tree.roots, null, others_label)
+  // Rien à décomposer : l'appelant retombe sur la forme normale plutôt que de laisser un
+  // nœud vide. C'est le cas d'un nœud sans hiérarchie, ou dont les enfants sont filtrés.
+  if (branches.length === 0) return false
+  const slices = partitionSunburst(
+    branches, sunburstBranchColor(opts.theme ?? 'light'), others_label, opts.theme ?? 'light'
+  )
+  if (slices.length === 0) return false
+
+  const rings = slices.reduce((m, s) => Math.max(m, s.depth), 0) + 1
+  const outer = sel.append('g').classed(NODE_CHART_CLASS, true).attr('transform', chartOrigin(geom))
+  const g = outer.append('g').attr('transform', `translate(${geom.width / 2},${geom.height / 2})`)
+  // Trou plus petit que celui du donut : il n'y a pas de total à y écrire, et chaque
+  // pixel de rayon rendu aux anneaux compte quand il y en a trois.
+  const inner_r = radius * 0.24
+  const ring = (radius - inner_r) / rings
+  const total = centre?.value ?? branches.reduce((s, b) => s + b.value, 0)
+
+  const arc = d3.arc<Type_SunburstSlice>()
+    .startAngle(d => d.a0)
+    .endAngle(d => d.a1)
+    .innerRadius(d => inner_r + d.depth * ring)
+    .outerRadius(d => inner_r + (d.depth + 1) * ring)
+    .padAngle(0.004)
+    .padRadius(inner_r)
+  g.selectAll('path')
+    .data(slices)
+    .enter().append('path')
+    .attr('d', d => arc(d))
+    .attr('fill', d => d.color)
+    .attr('stroke', 'white')
+    .attr('stroke-width', ring > 6 ? 1 : 0.5)
+    .append('title')
+    .text(d => `${d.label}\n${DEFAULT_FORMAT(d.value)} (${pctText(d.value, total)})`)
   return true
 }
 
