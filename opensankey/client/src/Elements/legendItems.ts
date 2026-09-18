@@ -638,9 +638,10 @@ function estimateTextWidth(text: string, font_size: number): number {
 }
 
 /**
- * SA#550 — nombre de lignes d'une zone enveloppée (`wrap`) : celui qu'a MESURÉ le rendu
- * s'il est connu (`line_counts`, relevé par le générateur sur le texte dessiné — la
- * césure réelle mesure les glyphes), sinon l'estimation sans DOM.
+ * SA#550 — hauteur du texte d'une zone enveloppée (`wrap`), en hauteurs de police : celle qu'a
+ * MESURÉE le rendu si elle est connue (`line_counts`, relevée par le générateur sur le texte
+ * dessiné — la césure réelle mesure les glyphes, et l'interligne du texte riche vaut 1,25 police),
+ * sinon l'estimation sans DOM, en lignes entières.
  */
 export function legendWrappedLineCount(
   item: Type_LegendItem,
@@ -654,18 +655,18 @@ export function legendWrappedLineCount(
 }
 
 /**
- * SA#550 — hauteur de la forme d'ancrage d'une zone enveloppée sur `n_lines` lignes : le
- * libellé y est centré, la rangée fait `n_lines` interlignes, et la marge du haut reste
- * celle d'une ligne seule (forme d'une `police` de haut dans une rangée de 1,5 `police`).
+ * Hauteur de la forme d'ancrage d'une zone SANS carré (titre, ligne d'info, groupe épinglé) dont
+ * le nom tient sur `n_lines` lignes : le libellé y est centré, la forme épouse donc exactement son
+ * texte — c'est elle, et non le libellé, que voient l'enveloppe du cadre et des blocs.
  */
 export function legendWrappedShapeHeight(n_lines: number, police: number): number {
-  return (1.5 * n_lines - 0.5) * police
+  return Math.max(1, n_lines) * police
 }
 
 /**
- * #556 — hauteur de rangée d'une entrée ordinaire (disposition verticale) dont le nom tient sur
- * `n_lines` lignes. Les lignes d'un libellé se suivent à 1 police (tspans d3-textwrap, dy = 1em) ;
- * l'écart entre le nom d'une entrée et celui de la suivante reste celui de deux entrées d'une ligne
+ * #556 — hauteur de rangée d'une entrée (disposition verticale) dont le nom tient sur `n_lines`
+ * lignes. Les lignes d'un libellé se suivent à 1 police (tspans d3-textwrap, dy = 1em) ; l'écart
+ * entre le nom d'une entrée et celui de la suivante reste celui de deux entrées d'une ligne
  * (rangée de 1,5 police), quel que soit le nombre de lignes.
  */
 export function legendEntryRowHeight(n_lines: number, police: number): number {
@@ -673,13 +674,24 @@ export function legendEntryRowHeight(n_lines: number, police: number): number {
 }
 
 /**
- * #556 — décalage vertical du libellé d'une entrée ordinaire sur `n_lines` lignes. Le libellé est
- * centré sur la forme d'ancrage (une police de haut) : sans décalage, un nom de n lignes déborde de
- * (n − 1)/2 lignes sur l'entrée précédente. Décalé d'autant, sa PREMIÈRE ligne reste à la place
- * d'un nom d'une ligne, en face du carré, et les suivantes descendent dans la rangée.
+ * #556 — descente du CARRÉ d'une entrée dont le nom tient sur `n_lines` lignes. Le carré fait une
+ * police de haut et le libellé est centré dessus : posé en haut de la rangée, il se retrouverait
+ * en face de la seule première ligne. Descendu d'autant, il se centre sur le nom entier (et la
+ * valeur d'exemple écrite dedans le suit).
  */
-export function legendEntryLabelShift(n_lines: number, police: number): number {
+export function legendEntrySwatchShift(n_lines: number, police: number): number {
   return (Math.max(1, n_lines) - 1) * police / 2
+}
+
+/**
+ * #556 — section d'une entrée en disposition verticale : un groupe de tags développé (son titre et
+ * ses entrées), l'ensemble des lignes de données (rappels de dimension, infos, échelle,
+ * contraintes) ou l'ensemble des groupes épinglés. Une ligne vide sépare deux sections — pas les
+ * entrées d'une même section.
+ */
+function legendSectionOf(item: Type_LegendItem): string {
+  if (item.pinned === true) return 'pinned'
+  return item.block_id ?? 'data'
 }
 
 /**
@@ -701,9 +713,18 @@ export function layoutLegendItems(
   const wrap_width = Math.max(config.width, 4 * police)
   let x = 0
   let y = 0
+  let previous_section: string | undefined
   items.forEach(item => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
     const bar_row_height = SCALE_BAR_HEIGHT_PX + 0.5 * police
+    // #556 — ligne vide entre deux sections (un groupe développé et le suivant, le dernier groupe
+    // et les lignes de données, les données et les groupes épinglés) : la légende se lit par
+    // blocs. Jamais avant la première section, ni entre les entrées d'une même section.
+    if (!config.horizontal) {
+      const section = legendSectionOf(item)
+      if (previous_section !== undefined && section !== previous_section) y += police
+      previous_section = section
+    }
     if (item.wrap === true) {
       // SA#550 — seule sur sa ligne et enveloppée, dans les deux dispositions
       if (x > 0) {
@@ -711,7 +732,7 @@ export function layoutLegendItems(
         y += line_height
       }
       positions.push({ id: item.id, x: 0, y })
-      y += legendWrappedLineCount(item, config, line_counts) * line_height
+      y += legendEntryRowHeight(legendWrappedLineCount(item, config, line_counts), police)
       return
     }
     if (config.horizontal) {
