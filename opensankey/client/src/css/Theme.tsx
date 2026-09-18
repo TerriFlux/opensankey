@@ -1519,8 +1519,11 @@ export const menuStyles = {
       // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
       // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
       // texte était rognée hors de l'écran.
-      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
-      minW: '0px',
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
@@ -1533,8 +1536,11 @@ export const menuStyles = {
   menu_select_style: menu.definePartsStyle({
     list: {
       // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
-      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
-      minW: '0px',
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
@@ -2541,8 +2547,11 @@ export const tabsStyles = {
       // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
       // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
       // texte était rognée hors de l'écran.
-      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
-      minW: '0px',
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
@@ -2555,8 +2564,11 @@ export const tabsStyles = {
   menu_select_style: menu.definePartsStyle({
     list: {
       // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
-      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
-      minW: '0px',
+      // Écrit avec la MÊME clé que le style de base (`minWidth`, pas le raccourci `minW`) : la
+      // fusion des styles se fait clé à clé, si bien qu'un raccourci ne remplace pas la forme
+      // longue et les deux se retrouvaient dans la règle, `inherit` l'emportant. En chaîne aussi :
+      // Chakra écarte silencieusement une valeur numérique nulle.
+      minWidth: '0px',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
