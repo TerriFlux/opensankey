@@ -20,13 +20,7 @@ export const resources_sunburst = {
         back: 'back',
         level: 'Level {{index}}',
         group: {
-          read: 'What it reads',
-          shape: 'Shape',
-          values: 'Value',
-          labels: 'Labels',
-          centre: 'Centre',
-          legend: 'Legend',
-          notes: 'Notes and gestures'
+          read: 'What it reads'
         },
       }
     }
@@ -48,13 +42,7 @@ export const resources_sunburst = {
         back: 'remonter',
         level: 'Niveau {{index}}',
         group: {
-          read: 'Ce qu’elle lit',
-          shape: 'Forme',
-          values: 'Valeur',
-          labels: 'Étiquettes',
-          centre: 'Centre',
-          legend: 'Légende',
-          notes: 'Mentions et gestes'
+          read: 'Ce qu’elle lit'
         },
       }
     }
@@ -76,13 +64,7 @@ export const resources_sunburst = {
         back: 'volver',
         level: 'Nivel {{index}}',
         group: {
-          read: 'Lo que lee',
-          shape: 'Forma',
-          values: 'Valor',
-          labels: 'Etiquetas',
-          centre: 'Centro',
-          legend: 'Leyenda',
-          notes: 'Avisos y gestos'
+          read: 'Lo que lee'
         },
       }
     }
@@ -104,13 +86,7 @@ export const resources_sunburst = {
         back: 'zurück',
         level: 'Ebene {{index}}',
         group: {
-          read: 'Was sie liest',
-          shape: 'Form',
-          values: 'Wert',
-          labels: 'Beschriftungen',
-          centre: 'Mitte',
-          legend: 'Legende',
-          notes: 'Hinweise und Gesten'
+          read: 'Was sie liest'
         },
       }
     }
@@ -132,13 +108,7 @@ export const resources_sunburst = {
         back: 'risalire',
         level: 'Livello {{index}}',
         group: {
-          read: 'Ciò che legge',
-          shape: 'Forma',
-          values: 'Valore',
-          labels: 'Etichette',
-          centre: 'Centro',
-          legend: 'Legenda',
-          notes: 'Avvisi e gesti'
+          read: 'Ciò che legge'
         },
       }
     }
@@ -160,13 +130,7 @@ export const resources_sunburst = {
         back: '返回',
         level: '第 {{index}} 层',
         group: {
-          read: '读取内容',
-          shape: '形状',
-          values: '数值',
-          labels: '标签',
-          centre: '中心',
-          legend: '图例',
-          notes: '提示与操作'
+          read: '读取内容'
         },
       }
     }
@@ -188,13 +152,7 @@ export const resources_sunburst = {
         back: '戻る',
         level: 'レベル {{index}}',
         group: {
-          read: '読み取る内容',
-          shape: '形',
-          values: '値',
-          labels: 'ラベル',
-          centre: '中心',
-          legend: '凡例',
-          notes: '注記と操作'
+          read: '読み取る内容'
         },
       }
     }

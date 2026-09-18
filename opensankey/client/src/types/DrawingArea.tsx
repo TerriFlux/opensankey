@@ -1515,6 +1515,7 @@ export class Class_DrawingArea {
     this._refitTiedFramesToLabels()
     this._legend.draw()
     this._sendLegendFramesBehindMembers()
+    this._sendLegendAboveZones()
     // Added events listeners
     this.setEventsListeners()
 
@@ -3353,6 +3354,50 @@ export class Class_DrawingArea {
       .filter(child => child.tied_to_nodes)
       .forEach(block => this.sendFrameBehindMembers(block))
     this.sendFrameBehindMembers(frame)
+  }
+
+  /**
+   * La LÉGENDE passe devant les ZONES du document (18/09).
+   *
+   * Une zone — zone de texte à fond coloré, cadre de groupe — est un FOND ; la légende est une
+   * surcouche de lecture. Rien ne les départageait. L'ordre Z suit l'ordre de création, et la
+   * légende est GÉNÉRÉE (au dessin, ou après un chargement qui ne la porte pas) : ses zones sont
+   * donc poussées en fin de `_list_g_element_id`, c'est-à-dire tout au FOND, sous les fonds déjà
+   * là. Vu en production sur la filière bois BACCFIRE — fichier 0.91 dont l'ordre sauvegardé ne
+   * contient aucun identifiant de légende : les entrées « Sous-filière » et la zone
+   * « Territoire / Année / Unité » s'effaçaient sous le pavé orange « FIN DE VIE », lui-même une
+   * zone de texte. Le défaut était masqué tant que le panneau de filtres rognait la droite du
+   * dessin ; il saute aux yeux depuis qu'une page publiée s'ouvre sur toute la largeur.
+   *
+   * On insère donc le bloc de légende JUSTE DEVANT la zone la plus en avant. Les NŒUDS et les FLUX
+   * ne bougent pas — une légende n'a pas à les masquer, et sur ce diagramme elle est posée dans un
+   * espace libre, pas sur un flux. L'ordre INTERNE de la légende, que
+   * `_sendLegendFramesBehindMembers` vient de poser, est conservé : le bloc est déplacé d'un seul
+   * tenant. Idempotent : rien ne bouge si la légende est déjà devant toutes les zones.
+   *
+   * Convention de la liste (cf. sendFrameBehindMembers) : indice PLUS BAS = plus en AVANT.
+   */
+  private _sendLegendAboveZones() {
+    if (!this._legend.frame) return
+    const list = dedupeZOrderKeepFirst(this._list_g_element_id)
+    const legend_ids = list.filter(id => isLegendElementId(id))
+    if (legend_ids.length === 0) return
+    const zoneIndexIn = (order: string[]): number[] => this.sankey.containers_list
+      .filter(c => !isLegendElementId(c.id))
+      .map(c => order.indexOf(c.id))
+      .filter(i => i >= 0)
+    const zones_idx = zoneIndexIn(list)
+    if (zones_idx.length === 0) return
+    // La plus en avant des zones ; si toute la légende lui est déjà antérieure, rien à faire.
+    const front_zone_idx = Math.min(...zones_idx)
+    const legend_back_idx = Math.max(...legend_ids.map(id => list.indexOf(id)))
+    if (legend_back_idx < front_zone_idx) return
+    const rest = list.filter(id => !isLegendElementId(id))
+    const insert_at = Math.min(...zoneIndexIn(rest))
+    this._list_g_element_id = [
+      ...rest.slice(0, insert_at), ...legend_ids, ...rest.slice(insert_at)
+    ]
+    this.orderElementOnDA()
   }
 
   /**

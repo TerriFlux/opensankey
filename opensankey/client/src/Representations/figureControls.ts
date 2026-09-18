@@ -86,10 +86,25 @@ export const controlKindOf = (
  * LES FAMILLES D'ATTRIBUTS reprises des éléments, et le préfixe qui les nomme. Une clé reprise
  * porte sa famille dans son nom : c'est ce qui la range dans le bon onglet sans rien déclarer.
  */
-export const FIGURE_FAMILY_PREFIXES: { family: string, prefix: string }[] = [
-  { family: 'shape', prefix: 'shape_' },
-  { family: 'name_label', prefix: 'name_label_' },
-  { family: 'value_label', prefix: 'value_label_' }
+export const FIGURE_FAMILY_PREFIXES: {
+  family: string
+  prefix: string
+  /**
+   * OÙ LA FAMILLE SE RÈGLE (os#1425, arbitrage du 18/09) : `'tab'`, un onglet Forme / Libellé /
+   * Valeur sous l'onglet Graphe de la figure ; `'section'`, un onglet DE L'INSPECTEUR à côté de
+   * Graphe — Titre et Légende, les mêmes que ceux de la Vue pour le diagramme.
+   */
+  placement: 'tab' | 'section'
+}[] = [
+  { family: 'shape', prefix: 'shape_', placement: 'tab' },
+  // Les PARTS d'un tout et l'ÉCHELLE d'une figure sont de la forme : c'est l'onglet Forme qui
+  // dit comment un secteur se colore, s'ordonne et se replie (cf. figureCatalogue).
+  { family: 'shape', prefix: 'parts_', placement: 'tab' },
+  { family: 'shape', prefix: 'scale_', placement: 'tab' },
+  { family: 'name_label', prefix: 'name_label_', placement: 'tab' },
+  { family: 'value_label', prefix: 'value_label_', placement: 'tab' },
+  { family: 'title', prefix: 'title_', placement: 'section' },
+  { family: 'legend', prefix: 'legend_', placement: 'section' }
 ]
 
 /** La famille que le NOM d'une clé annonce, `''` pour une clé propre à la figure. */

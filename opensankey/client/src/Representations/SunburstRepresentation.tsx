@@ -24,9 +24,13 @@
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
-import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
-import { resolveValueUnit } from '../Elements/ValueFormatting'
+import { figureUnitOf } from './figureUnit'
+import { figureTitleOf } from '../Charts/figureChartStyle'
+import { figureZoomHandle, publishFigureZoom } from '../Charts/figureZoomBridge'
+import { ZOOM_TOPIC } from '../types/EventBus'
+import type { Type_JSON } from '../types/Utils'
+import type { Type_RepresentationContext, Type_RepresentationZoom } from './RepresentationRegistry'
 import { aggregate, disaggregate } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
@@ -38,11 +42,42 @@ import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 
-// Ce que le sunburst lit du contexte du registre.
+// Ce que le sunburst lit du contexte du registre. La fenêtre et la vignette, quand il y en a :
+// c'est sous elles qu'une étiquette déposée à la main s'écrit, et que le zoom se prête.
 export interface Type_SunburstDrawContext {
   app_data: Class_ApplicationData
   options: { [key: string]: unknown }
+  window_id?: string
+  pane_key?: string
 }
+
+/** La position des étiquettes sorties du disque, lue du sac ; rien d'autre qu'un dictionnaire. */
+const readLabelPositions = (raw: unknown): { [id: string]: { x: number, y: number } } => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: { [id: string]: { x: number, y: number } } = {}
+  Object.entries(raw as { [id: string]: unknown }).forEach(([id, p]) => {
+    const pos = p as { x?: unknown, y?: unknown } | null
+    if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') out[id] = { x: pos.x, y: pos.y }
+  })
+  return out
+}
+
+/**
+ * LE ZOOM DU SUNBURST, capacité déclarée (os#1409) : les boutons −/+/% de la colonne d'outils
+ * parlent au dessin monté dans la vignette active de la fenêtre active (cf. figureZoomBridge).
+ * Bornes et pas : ceux du `d3.zoom` du tracé.
+ */
+export const SUNBURST_ZOOM: Type_RepresentationZoom = {
+  getScale: (ctx) => handleOf(ctx)?.getScale() ?? 1,
+  setScale: (k, ctx) => handleOf(ctx)?.setScale(k),
+  scaleBy: (factor, ctx) => handleOf(ctx)?.scaleBy(factor),
+  min: 0.5,
+  max: 8,
+  neutral: 1,
+  isAvailable: (ctx) => handleOf(ctx) !== null
+}
+const handleOf = (ctx: Type_RepresentationContext) =>
+  figureZoomHandle(ctx.window_id, ctx.app_data.menu_configuration?.main_zone_active_pane_key)
 
 // Options du registre (sac de clés) → options typées du sunburst. Toute clé absente ou
 // mal typée retombe sur le défaut : un réglage persisté par une version ultérieure ne
@@ -70,10 +105,12 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
     // os#1425 — ce que l'auteur règle de la LECTURE : de quel côté la valeur se lit, dans quel
     // ordre les secteurs se suivent, et sous quel nom.
     node_value_mode: one_of(raw.node_value_mode, ['max', 'inputs', 'outputs'] as const, 'max'),
+    // Les deux suivantes sont des clés DU CATALOGUE (figureCatalogue) : l'ordre des parts et le
+    // nom des secteurs se règlent sous les mêmes mots que sur toute autre figure.
     sort_order: one_of(
-      raw.sort_order, ['value_desc', 'value_asc', 'name', 'model'] as const, 'value_desc'
+      raw.parts_order, ['value_desc', 'value_asc', 'name', 'model'] as const, 'value_desc'
     ),
-    name_source: one_of(raw.name_source, ['displayed', 'own'] as const, 'displayed')
+    name_source: raw.name_label_follow_diagram === false ? 'own' : 'displayed'
   }
 }
 
@@ -87,32 +124,60 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
   const keep = (key: string, kind: 'string' | 'number' | 'boolean', as = key) => {
     if (typeof raw[key] === kind) out[as] = raw[key]
   }
-  // Les réglages PROPRES à la couronne.
-  ;['color_source', 'labels_mode', 'label_orientation', 'label_percent', 'centre_content',
-    'legend_mode', 'legend_position', 'click_action']
-    .forEach(k => keep(k, 'string'))
-  ;['others_threshold', 'centre_hole'].forEach(k => keep(k, 'number'))
-  ;['depth_shading', 'notes_visible', 'tooltip_visible'].forEach(k => keep(k, 'boolean'))
-  // Et ceux REPRIS DES ÉLÉMENTS, sous leurs noms d'éléments (os#1425) : la figure les lit là où
-  // un nœud ou un flux les lit, et le tracé les reçoit sous des noms courts.
+  // TOUTES LES CLÉS SONT CELLES DU CATALOGUE (figureCatalogue) : la couronne les lit là où toute
+  // autre figure — et un nœud ou un flux, quand la question est la même — les lit. Le tracé les
+  // reçoit sous des noms courts, les siens.
+  // Forme, parts, échelle.
   keep('shape_opacity', 'number', 'opacity')
   keep('shape_border_visible', 'boolean', 'border_visible')
   keep('shape_border_color', 'string', 'border_color')
   keep('shape_border_thickness', 'number', 'border_thickness')
+  keep('parts_color_source', 'string', 'color_source')
+  keep('parts_depth_shading', 'boolean', 'depth_shading')
+  keep('parts_group_under', 'number', 'others_threshold')
+  keep('parts_max', 'number', 'parts_max')
+  keep('scale_factor', 'number', 'scale_factor')
+  // Libellé. « Là où ça tient / toujours / jamais » se dit avec deux clés d'élément.
+  if (raw.name_label_is_visible === false) out.labels_mode = 'none'
+  else if (raw.name_label_prune_if_unfitting === false) out.labels_mode = 'always'
+  else if (typeof raw.name_label_is_visible === 'boolean' ||
+    typeof raw.name_label_prune_if_unfitting === 'boolean') out.labels_mode = 'fit'
+  keep('name_label_orientation', 'string', 'label_orientation')
+  keep('name_label_strip_parent', 'boolean', 'strip_parent')
+  keep('name_label_separator', 'string', 'separator')
+  keep('name_label_separator_part', 'string', 'separator_part')
+  keep('name_label_box_width', 'number', 'box_width')
+  keep('name_label_callout', 'boolean', 'callout')
   keep('name_label_font_family', 'string', 'font_family')
   keep('name_label_font_size', 'number', 'font_size')
   keep('name_label_bold', 'boolean', 'bold')
   keep('name_label_italic', 'boolean', 'italic')
   keep('name_label_uppercase', 'boolean', 'uppercase')
-  keep('label_color_mode', 'string', 'color_mode')
+  if (typeof raw.name_label_contrast_color === 'boolean') {
+    out.color_mode = raw.name_label_contrast_color ? 'auto' : 'fixed'
+  }
   keep('name_label_color', 'string', 'label_color')
+  // Valeur.
   keep('value_label_is_visible', 'boolean', 'value_visible')
   keep('value_label_unit_visible', 'boolean', 'unit_visible')
+  keep('value_label_percent', 'string', 'label_percent')
   keep('value_label_significant_digits', 'boolean', 'significant_digits')
   keep('value_label_nb_significant_digits', 'number', 'nb_significant_digits')
   keep('value_label_custom_digit', 'boolean', 'custom_digit')
   keep('value_label_nb_digit', 'number', 'nb_digit')
   keep('value_label_scientific_notation', 'boolean', 'scientific_notation')
+  // Centre, légende, mentions, gestes.
+  keep('centre_content', 'string', 'centre_content')
+  keep('centre_hole', 'number', 'centre_hole')
+  keep('legend_visible', 'boolean', 'legend_visible')
+  keep('legend_parts', 'string', 'legend_parts')
+  keep('legend_levels', 'boolean', 'legend_levels')
+  keep('legend_position', 'string', 'legend_position')
+  keep('legend_font_size', 'number', 'legend_font_size')
+  keep('legend_width', 'number', 'legend_width')
+  keep('notes_visible', 'boolean', 'notes_visible')
+  keep('interaction_tooltip', 'boolean', 'tooltip_visible')
+  keep('interaction_click', 'string', 'click_action')
   return out as Partial<Type_SunburstStyle>
 }
 
@@ -177,12 +242,6 @@ const toggleAggregation = (
   if (as_child) aggregate(app_data, node, as_child.parent.id)
 }
 
-/** L'unité à écrire à côté des valeurs, ou `''`. Le premier flux fait foi, comme ailleurs. */
-const sunburstUnit = (sankey: { links_list?: Class_LinkElement[] }): string => {
-  const link = sankey.links_list?.[0]
-  return link ? resolveValueUnit(link) : ''
-}
-
 /**
  * `draw` du registre : dessine le sunburst dans le conteneur et rend le « défaire ».
  *
@@ -215,12 +274,26 @@ export const drawSunburstRepresentation = (
     return () => { container.textContent = '' }
   }
 
+  const mc = app_data.menu_configuration
+  const { window_id, pane_key } = ctx
   return drawSunburstChart(container, tree, {
     style: readSunburstStyle(ctx.options ?? {}),
+    title: figureTitleOf(ctx.options ?? {}),
+    label_positions: readLabelPositions(ctx.options?.['label_positions']),
+    // Une étiquette déposée s'écrit sur LA FIGURE de la vignette — hors fenêtre (pop-up de
+    // présentation), il n'y a personne à qui l'écrire et le geste reste à l'écran.
+    on_label_move: window_id !== undefined && pane_key !== undefined
+      ? (id, position) => {
+        const positions = { ...readLabelPositions(ctx.options?.['label_positions']), [id]: position }
+        mc.setMainZonePaneOptions(window_id, pane_key, { ...ctx.options, label_positions: positions } as Type_JSON)
+      }
+      : undefined,
+    zoom_handle: (handle) => publishFigureZoom(window_id, pane_key, handle),
+    on_zoom: () => mc.notify(ZOOM_TOPIC),
     // L'UNITÉ DU DIAGRAMME, lue sur un flux représentatif comme partout ailleurs
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.
-    unit: sunburstUnit(sankey),
+    unit: figureUnitOf(sankey),
     empty_label: t('sunburst.empty') as string,
     others_label: t('sunburst.others') as string,
     scope_label: (count: number) => t('sunburst.scope', { count }) as string,
