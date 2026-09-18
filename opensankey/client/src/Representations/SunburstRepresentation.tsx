@@ -24,9 +24,8 @@
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
-import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
-import { resolveValueUnit } from '../Elements/ValueFormatting'
+import { figureUnitOf } from './figureUnit'
 import { aggregate, disaggregate } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
@@ -202,12 +201,6 @@ const toggleAggregation = (
   if (as_child) aggregate(app_data, node, as_child.parent.id)
 }
 
-/** L'unité à écrire à côté des valeurs, ou `''`. Le premier flux fait foi, comme ailleurs. */
-const sunburstUnit = (sankey: { links_list?: Class_LinkElement[] }): string => {
-  const link = sankey.links_list?.[0]
-  return link ? resolveValueUnit(link) : ''
-}
-
 /**
  * `draw` du registre : dessine le sunburst dans le conteneur et rend le « défaire ».
  *
@@ -245,7 +238,7 @@ export const drawSunburstRepresentation = (
     // L'UNITÉ DU DIAGRAMME, lue sur un flux représentatif comme partout ailleurs
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.
-    unit: sunburstUnit(sankey),
+    unit: figureUnitOf(sankey),
     empty_label: t('sunburst.empty') as string,
     others_label: t('sunburst.others') as string,
     scope_label: (count: number) => t('sunburst.scope', { count }) as string,

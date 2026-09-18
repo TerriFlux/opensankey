@@ -25,6 +25,9 @@ import {
 } from './SunburstChart'
 import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
 import type { Type_SunburstTree } from './SunburstHierarchy'
+// os#1425 — la mise en forme lue sur le catalogue des attributs de figure.
+import { BARS_STYLE_DEFAULTS, DONUT_STYLE_DEFAULTS } from './figureChartStyle'
+import type { Type_FigureChartStyle } from './figureChartStyle'
 
 export interface Type_StatSlice {
   id: string
@@ -57,7 +60,29 @@ export interface Type_ChartOptions {
   // Mention affichée quand l'échelle est PAR GRAPPE (#393) : les hauteurs ne sont
   // alors plus comparables d'une grappe à l'autre, et le taire serait un mensonge.
   independent_scales_label?: string
+  // os#1425 — LA MISE EN FORME, réglée par l'auteur sur les clés du catalogue (légende, parts,
+  // centre, étiquettes, échelle, info-bulle, mentions). Absente : les défauts du tracé d'hier.
+  style?: Type_FigureChartStyle
 }
+
+/** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
+export const orderParts = <T extends { label: string, value: number }>(
+  parts: T[], order: Type_FigureChartStyle['parts_order']
+): T[] => {
+  if (order === 'model') return parts
+  const out = [...parts]
+  if (order === 'name') out.sort((a, b) => a.label.localeCompare(b.label))
+  else if (order === 'value_asc') out.sort((a, b) => a.value - b.value)
+  else out.sort((a, b) => b.value - a.value)
+  return out
+}
+
+/** L'échelle (`scale_factor`), bornée : jamais moins d'un dixième du cadre. */
+const scaleOf = (st: Type_FigureChartStyle) => Math.max(10, Math.min(100, st.scale_factor)) / 100
+
+/** La disposition légende / dessin selon `legend_position`. */
+const flexDirection = (st: Type_FigureChartStyle) =>
+  st.legend_position === 'bottom' ? 'column' : st.legend_position === 'left' ? 'row-reverse' : 'row'
 
 // Régime d'échelle demandé (#393). 'auto' laisse la MESURE trancher : c'est le seul
 // déclencheur honnête, la nature du groupe de tags n'en étant pas un (deux unités
@@ -67,10 +92,9 @@ export type Type_ScaleMode = 'auto' | 'shared' | 'per_group'
 const DEFAULT_FORMAT = (v: number) =>
   new Intl.NumberFormat(undefined, { maximumSignificantDigits: 4 }).format(v)
 
-// Regroupement « Autres » (cf. ecodata historique) : parts < 0,5 % du total ou
-// au-delà de 20 secteurs — un donut à 50 secteurs est illisible.
-const MAX_SLICES = 20
-const MIN_SHARE = 0.005
+// Regroupement « Autres » (cf. ecodata historique) : parts < 0,5 % du total ou au-delà de 20
+// secteurs — un donut à 50 secteurs est illisible. Les deux seuils sont désormais des RÉGLAGES
+// (`parts_group_under`, `parts_max`, cf. figureChartStyle) dont ils restent la valeur d'usine.
 const OTHERS_COLOR = '#CFD0CB'
 // Part angulaire minimale pour afficher le label % sur un secteur.
 const MIN_LABEL_SHARE = 0.03
@@ -177,6 +201,7 @@ export const drawDonutChart = (
   slices: Type_StatSlice[],
   opts: Type_ChartOptions = {}
 ) => {
+  const st = opts.style ?? DONUT_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container)
   const total = slices.reduce((s, d) => s + d.value, 0)
@@ -185,29 +210,41 @@ export const drawDonutChart = (
     return
   }
 
-  // Regroupement des petites parts en « Autres ».
-  const sorted = [...slices].sort((a, b) => b.value - a.value)
+  // Ordre des parts, puis repli des petites en « Autres » : sous le seuil (`parts_group_under`,
+  // en % du tout) ou au-delà du plafond (`parts_max`). Les deux à zéro ne replient rien.
+  const ordered = orderParts(slices, st.parts_order)
   const kept: Type_StatSlice[] = []
   let others = 0
-  sorted.forEach((s, i) => {
-    if (i < MAX_SLICES && s.value / total >= MIN_SHARE) kept.push(s)
+  ordered.forEach((s, i) => {
+    const under = st.parts_group_under > 0 && s.value / total < st.parts_group_under / 100
+    const over = st.parts_max > 0 && i >= st.parts_max
+    if (!under && !over) kept.push(s)
     else others += s.value
   })
   if (others > 0) {
     kept.push({ id: '__others__', label: opts.others_label ?? 'Others', value: others, color: OTHERS_COLOR })
   }
+  // La couleur : celle du modèle quand la donnée la porte et que l'auteur la veut, la palette sinon.
+  const colorOf = (d: Type_StatSlice, i: number) =>
+    d.id === '__others__' ? OTHERS_COLOR
+      : (st.parts_color_source === 'model' && d.color) ? d.color : paletteColor(i)
 
-  // Mise en page : svg carré à gauche, légende HTML scrollable à droite.
+  // Mise en page : svg carré d'un côté, légende HTML scrollable de l'autre (ou dessous).
+  const legend_shown = st.legend_visible && st.legend_parts !== 'none'
+  const below = st.legend_position === 'bottom'
   const root = sel.append('div')
     .style('display', 'flex')
+    .style('flex-direction', flexDirection(st))
     .style('align-items', 'center')
     .style('gap', '0.5rem')
     .style('width', '100%')
     .style('height', '100%')
-  const legend_width = Math.min(230, width * 0.42)
-  const side = Math.max(100, Math.min(width - legend_width - 12, height) - 8)
-  const radius = side / 2 - 2
-  const inner = radius * 0.55
+  const legend_room = legend_shown ? Math.min(st.legend_width, (below ? height : width) * 0.42) : 0
+  const side = below
+    ? Math.max(100, Math.min(width, height - legend_room - 12) - 8)
+    : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
+  const radius = (side / 2 - 2) * scaleOf(st)
+  const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
 
   const svg = root.append('svg')
     .attr('width', side)
@@ -224,47 +261,58 @@ export const drawDonutChart = (
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
     `${d.data.label}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
-  g.selectAll('path')
+  const paths = g.selectAll('path')
     .data(arcs)
     .enter().append('path')
     .attr('class', 'node_stats_arc')
     .attr('id', d => 'node_stats_arc_' + d.index)
     .attr('d', arc)
-    .attr('fill', d => d.data.color ?? paletteColor(d.index))
+    .attr('fill', d => colorOf(d.data, d.index))
     .attr('stroke', 'white')
     .attr('stroke-width', 1)
-    .append('title')
-    .text(slice_title)
+  if (st.interaction_tooltip) paths.append('title').text(slice_title)
 
-  // Labels % sur les secteurs suffisamment larges.
-  g.selectAll('text.node_stats_pct')
-    .data(arcs.filter(d => (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE))
-    .enter().append('text')
-    .attr('class', 'node_stats_pct')
-    .attr('transform', d => `translate(${label_arc.centroid(d)})`)
-    .attr('text-anchor', 'middle')
-    .attr('dominant-baseline', 'central')
-    .attr('font-size', 11)
-    .attr('fill', 'white')
-    .attr('pointer-events', 'none')
-    .text(d => Math.round(d.data.value / total * 100) + '%')
+  // CE QUE PORTE UN SECTEUR : la valeur si on la veut, le pourcentage si on le veut — hier, le
+  // pourcentage seul. Sur les secteurs assez larges pour le tenir, et si les étiquettes sont là.
+  const sector_text = (d: d3.PieArcDatum<Type_StatSlice>): string => {
+    const parts: string[] = []
+    if (st.value_label_is_visible) parts.push(fmt(d.data.value))
+    if (st.value_label_percent !== 'none') parts.push(Math.round(d.data.value / total * 100) + '%')
+    return parts.join(' ')
+  }
+  if (st.name_label_is_visible) {
+    g.selectAll('text.node_stats_pct')
+      .data(arcs.filter(d => (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE))
+      .enter().append('text')
+      .attr('class', 'node_stats_pct')
+      .attr('transform', d => `translate(${label_arc.centroid(d)})`)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-size', st.name_label_font_size)
+      .attr('fill', 'white')
+      .attr('pointer-events', 'none')
+      .text(sector_text)
+  }
 
-  // Total au centre du donut.
-  g.append('text')
-    .attr('text-anchor', 'middle')
-    .attr('dominant-baseline', 'central')
-    .attr('font-size', Math.max(11, inner * 0.28))
-    .attr('font-weight', 'bold')
-    .attr('fill', '#2D3748')
-    .text(fmt(total))
+  // Le centre : le total, quand l'auteur le demande (`centre_content`) et que le trou le tient.
+  if ((st.centre_content === 'value' || st.centre_content === 'both') && inner >= 12) {
+    g.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-size', Math.max(11, inner * 0.28))
+      .attr('font-weight', 'bold')
+      .attr('fill', '#2D3748')
+      .text(fmt(total))
+  }
 
-  // Légende HTML : puce colorée + libellé + valeur ; survol → mise en avant du secteur.
+  // Légende HTML : puce colorée + libellé + part ; survol → mise en avant du secteur.
+  if (!legend_shown) return
   const legend = root.append('div')
-    .style('flex', '1 1 0')
+    .style('flex', below ? '0 0 auto' : '1 1 0')
     .style('min-width', '0')
-    .style('max-height', '100%')
+    .style('max-height', below ? `${legend_room}px` : '100%')
     .style('overflow-y', 'auto')
-    .style('font-size', '0.75rem')
+    .style('font-size', `${st.legend_font_size}px`)
   const items = legend.selectAll('div')
     .data(arcs)
     .enter().append('div')
@@ -286,7 +334,7 @@ export const drawDonutChart = (
     .style('width', '0.7rem')
     .style('height', '0.7rem')
     .style('border-radius', '2px')
-    .style('background', d => d.data.color ?? paletteColor(d.index))
+    .style('background', d => colorOf(d.data, d.index))
   items.append('span')
     .style('flex', '1 1 auto')
     .style('overflow', 'hidden')
@@ -305,11 +353,14 @@ export const drawDonutChart = (
 
 export const drawBarChart = (
   container: HTMLElement,
-  slices: Type_StatSlice[],
+  raw_slices: Type_StatSlice[],
   opts: Type_ChartOptions = {}
 ) => {
+  const st = opts.style ?? BARS_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container)
+  // L'ordre des barres (`parts_order`) ; 'model', le défaut, garde celui de l'analyse.
+  const slices = orderParts(raw_slices, st.parts_order)
   const max_value = slices.reduce((m, d) => Math.max(m, d.value), 0)
   if (slices.length === 0 || max_value <= 0 || width < 80 || height < 80) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
@@ -329,7 +380,8 @@ export const drawBarChart = (
   const liftedAt = (avail: number) => countLifted(slices.map(s => (s.value / max_value) * avail))
   const margin = { top: 18 + (liftedAt(probe_h) > 0 ? MENTION_BAND_PX : 0), right: 8, bottom, left: 8 }
   const w = width - margin.left - margin.right
-  const h = height - margin.top - margin.bottom
+  // L'échelle (`scale_factor`) : le dessin prend cette part de la hauteur, le reste est laissé.
+  const h = (height - margin.top - margin.bottom) * scaleOf(st)
   const lifted = liftedAt(h)
 
   const x = d3.scaleBand<string>()
@@ -339,64 +391,71 @@ export const drawBarChart = (
   const y = d3.scaleLinear().domain([0, max_value]).range([h, 0])
 
   const svg = sel.append('svg').attr('width', width).attr('height', height)
-  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+  // Sous une échelle réduite, le dessin reste posé sur sa ligne de base : le vide est en haut.
+  const g = svg.append('g')
+    .attr('transform', `translate(${margin.left},${margin.top + (height - margin.top - margin.bottom) - h})`)
 
   const bar_title = (d: Type_StatSlice) => `${d.label}\n${fmt(d.value)}`
+  const colorOf = (d: Type_StatSlice, i: number) =>
+    (st.parts_color_source === 'model' && d.color) ? d.color : paletteColor(i)
   // Hauteur DESSINÉE : celle de l'échelle, relevée au plancher de visibilité (#393).
   const barPx = (v: number) => {
     const px = h - y(v)
     return px * visibilityLift(px)
   }
 
-  g.selectAll('rect')
+  const rects = g.selectAll('rect')
     .data(slices)
     .enter().append('rect')
     .attr('x', d => x(d.id) ?? 0)
     .attr('y', d => h - barPx(d.value))
     .attr('width', x.bandwidth())
     .attr('height', d => barPx(d.value))
-    .attr('fill', (d, i) => d.color ?? paletteColor(i))
-    .append('title')
-    .text(bar_title)
+    .attr('fill', (d, i) => colorOf(d, i))
+  if (st.interaction_tooltip) rects.append('title').text(bar_title)
 
-  // Valeur au-dessus de chaque barre.
-  g.selectAll('text.node_stats_bar_value')
-    .data(slices)
-    .enter().append('text')
-    .attr('class', 'node_stats_bar_value')
-    .attr('x', d => (x(d.id) ?? 0) + x.bandwidth() / 2)
-    .attr('y', d => h - barPx(d.value) - 4)
-    .attr('text-anchor', 'middle')
-    .attr('font-size', 10)
-    .attr('fill', '#2D3748')
-    .text(d => fmt(d.value))
+  // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`).
+  if (st.value_label_is_visible) {
+    g.selectAll('text.node_stats_bar_value')
+      .data(slices)
+      .enter().append('text')
+      .attr('class', 'node_stats_bar_value')
+      .attr('x', d => (x(d.id) ?? 0) + x.bandwidth() / 2)
+      .attr('y', d => h - barPx(d.value) - 4)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', st.name_label_font_size)
+      .attr('fill', '#2D3748')
+      .text(d => fmt(d.value))
+  }
 
   // Ligne de base + labels de catégorie.
   g.append('line')
     .attr('x1', 0).attr('x2', w)
     .attr('y1', h).attr('y2', h)
     .attr('stroke', '#CBD5E0')
-  g.selectAll('text.node_stats_bar_label')
-    .data(slices)
-    .enter().append('text')
-    .attr('class', 'node_stats_bar_label')
-    .attr('font-size', 10)
-    .attr('fill', '#4A5568')
-    .attr('transform', d => {
-      const cx = (x(d.id) ?? 0) + x.bandwidth() / 2
-      return rotate_labels
-        ? `translate(${cx},${h + 8}) rotate(-35)`
-        : `translate(${cx},${h + 14})`
-    })
-    .attr('text-anchor', rotate_labels ? 'end' : 'middle')
-    .text(d => d.label.length > 14 ? d.label.slice(0, 13) + '…' : d.label)
-    .append('title')
-    .text(bar_title)
+  if (st.name_label_is_visible) {
+    g.selectAll('text.node_stats_bar_label')
+      .data(slices)
+      .enter().append('text')
+      .attr('class', 'node_stats_bar_label')
+      .attr('font-size', st.name_label_font_size)
+      .attr('fill', '#4A5568')
+      .attr('transform', d => {
+        const cx = (x(d.id) ?? 0) + x.bandwidth() / 2
+        return rotate_labels
+          ? `translate(${cx},${h + 8}) rotate(-35)`
+          : `translate(${cx},${h + 14})`
+      })
+      .attr('text-anchor', rotate_labels ? 'end' : 'middle')
+      .text(d => d.label.length > 14 ? d.label.slice(0, 13) + '…' : d.label)
+      .append('title')
+      .text(bar_title)
+  }
 
   // Mention d'ÉCRASEMENT (#393) : ces barres sont au plancher, leur hauteur ne dit
   // plus rien de leur valeur. Le taire laisserait lire « négligeable » là où la donnée
-  // est seulement d'un autre ordre de grandeur.
-  if (lifted > 0) {
+  // est seulement d'un autre ordre de grandeur. Sauf si l'auteur a coupé les mentions.
+  if (lifted > 0 && st.notes_visible) {
     g.append('text')
       .attr('class', 'node_stats_out_of_scale')
       .attr('x', 0).attr('y', -(margin.top) + 10)
@@ -427,6 +486,7 @@ export const drawStackedBarChart = (
   series: Type_StatSeries[],
   opts: Type_ChartOptions = {}
 ) => {
+  const st = opts.style ?? BARS_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container)
   const series_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
@@ -444,24 +504,31 @@ export const drawStackedBarChart = (
     if (acc) acc.value += p.value
     else totals.set(p.id, { label: p.label, value: p.value, color: p.color })
   }))
-  const ordered = [...totals.entries()].sort((a, b) => b[1].value - a[1].value)
-  const kept = ordered.slice(0, MAX_SLICES)
-  const has_others = ordered.length > MAX_SLICES
-  const category_order: { id: string, label: string, color: string }[] = kept.map(([id, v], i) => ({
-    id,
+  // L'ordre des CATÉGORIES : `parts_order`, sauf 'model' — le défaut des barres, qui vaut pour
+  // les barres elles-mêmes — où l'on garde l'ordre d'hier, par total décroissant.
+  const by_total = [...totals.entries()].map(([id, v]) => ({ id, label: v.label, value: v.value, color: v.color }))
+  const ordered = st.parts_order === 'model'
+    ? by_total.sort((a, b) => b.value - a.value)
+    : orderParts(by_total, st.parts_order)
+  const cap = st.parts_max > 0 ? st.parts_max : ordered.length
+  const kept = ordered.slice(0, cap)
+  const has_others = ordered.length > cap
+  const category_order: { id: string, label: string, color: string }[] = kept.map((v, i) => ({
+    id: v.id,
     label: v.label,
-    color: v.color ?? paletteColor(i)
+    color: (st.parts_color_source === 'model' && v.color) ? v.color : paletteColor(i)
   }))
   if (has_others) {
     category_order.push({ id: '__others__', label: opts.others_label ?? 'Others', color: OTHERS_COLOR })
   }
-  const kept_ids = new Set(kept.map(([id]) => id))
+  const kept_ids = new Set(kept.map(k => k.id))
 
-  // Mise en page : barres à gauche, légende des catégories à droite (comme le donut).
+  // Mise en page : barres d'un côté, légende des catégories de l'autre (comme le donut).
+  const legend_shown = st.legend_visible && st.legend_parts !== 'none'
   const root = sel.append('div')
-    .style('display', 'flex').style('align-items', 'stretch')
+    .style('display', 'flex').style('flex-direction', flexDirection(st)).style('align-items', 'stretch')
     .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
-  const legend_width = Math.min(200, width * 0.35)
+  const legend_width = legend_shown ? Math.min(st.legend_width, width * 0.35) : 0
   const chart_width = Math.max(80, width - legend_width - 12)
 
   const rotate_labels = series.length > 6 || series.some(s => s.label.length > 8)
@@ -500,18 +567,20 @@ export const drawStackedBarChart = (
       if (value <= 0) return
       const y0 = yPx(acc)
       const y1 = yPx(acc + value)
-      g.append('rect')
+      const rect = g.append('rect')
         .attr('x', bx).attr('y', y1)
         .attr('width', x.bandwidth()).attr('height', Math.max(0, y0 - y1))
         .attr('fill', cat.color).attr('stroke', 'white').attr('stroke-width', 0.5)
-        .append('title').text(`${s.label} · ${cat.label}\n${fmt(value)}`)
+      if (st.interaction_tooltip) rect.append('title').text(`${s.label} · ${cat.label}\n${fmt(value)}`)
       acc += value
     })
-    // Total au-dessus de la barre.
-    g.append('text')
-      .attr('x', bx + x.bandwidth() / 2).attr('y', yPx(acc) - 4)
-      .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#2D3748')
-      .text(fmt(acc))
+    // Total au-dessus de la barre, quand l'auteur le veut.
+    if (st.value_label_is_visible) {
+      g.append('text')
+        .attr('x', bx + x.bandwidth() / 2).attr('y', yPx(acc) - 4)
+        .attr('text-anchor', 'middle').attr('font-size', st.name_label_font_size).attr('fill', '#2D3748')
+        .text(fmt(acc))
+    }
   })
 
   // Ligne de base + labels de série.
@@ -526,11 +595,12 @@ export const drawStackedBarChart = (
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')
     .text(s => s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label)
 
-  // Légende des catégories (parts).
+  // Légende des catégories (parts), quand l'auteur la veut.
+  if (!legend_shown) return
   const legend = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
-    .style('overflow-y', 'auto').style('font-size', '0.75rem')
+    .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
   const items = legend.selectAll('div').data(category_order).enter().append('div')
     .style('display', 'flex').style('align-items', 'center')
     .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
@@ -543,7 +613,7 @@ export const drawStackedBarChart = (
     .attr('title', c => c.label).text(c => c.label)
 
   // Mention d'ÉCRASEMENT (#393), au pied de la légende des catégories.
-  if (lifted > 0) {
+  if (lifted > 0 && st.notes_visible) {
     legend.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
@@ -572,6 +642,7 @@ export const drawGroupedBarChart = (
   groups: Type_StatGroup[],
   opts: Type_ChartOptions = {}
 ) => {
+  const st = opts.style ?? BARS_STYLE_DEFAULTS
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container)
   const bar_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
@@ -748,7 +819,8 @@ export const drawGroupedBarChart = (
   const legend = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
-    .style('overflow-y', 'auto').style('font-size', '0.75rem')
+    .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
+    .style('display', st.legend_visible ? 'block' : 'none')
   const items = legend.selectAll('div.node_stats_legend_item')
     .data(legend_data).enter().append('div')
     .attr('class', 'node_stats_legend_item')
@@ -764,7 +836,7 @@ export const drawGroupedBarChart = (
 
   // Troncature ANNONCÉE : une grappe muette sur ce qu'elle omet ferait lire un
   // sous-ensemble pour le tout.
-  if (dropped > 0) {
+  if (dropped > 0 && st.notes_visible) {
     legend.append('div')
       .attr('class', 'node_stats_legend_truncated')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
@@ -776,13 +848,13 @@ export const drawGroupedBarChart = (
   // comparent alors plus d'une grappe à l'autre) ET des barres tenir malgré tout au
   // plancher. Taire l'une des deux laisserait une moitié du graphique se faire lire de
   // travers.
-  if (per_group) {
+  if (per_group && st.notes_visible) {
     legend.append('div')
       .attr('class', 'node_stats_legend_independent_scales')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.independent_scales_label ?? 'independent scales')
   }
-  if (lifted > 0) {
+  if (lifted > 0 && st.notes_visible) {
     legend.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
