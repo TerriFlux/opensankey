@@ -27,7 +27,7 @@ import React, { FC, useRef, useState, ChangeEvent, useEffect, MutableRefObject, 
 import { ColorResult, SketchPicker } from 'react-color'
 import {
   Box, Button, Collapse, Input, InputGroup, Menu, MenuButton, MenuDivider, MenuItem, MenuList,
-  Text, useDisclosure,
+  Portal, Text, useDisclosure,
 } from '@chakra-ui/react'
 import type { CheckboxProps } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -40,6 +40,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { AttributeConfig, ElementsType, ShapePrefix } from '../../Elements/ElementsAttributesConfig'
 import type { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { OSTooltip } from './OSTooltip'
+import { TOPBAR_MENU_Z } from './TopMenuList'
 
 export const InputIndicatorWrapper = ({
   isOverloaded,
@@ -336,10 +337,21 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
     onOpen={() => setMenuListItems(renderMenu())}>
     <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'} onClick={() => setDisplayBgOverlay(!displayBgOverlay)}> {textBtn}</MenuButton>
     {backgroundOverlay}
-    <MenuList>
-      {selecAll}
-      {menuListItems}
-    </MenuList>
+    {/**
+      * #555 — PORTAIL, comme pour les déroulants de la barre du haut (cf. `TopMenuList`, dont on
+      * reprend la hauteur d'empilement). Le panneau Filtres est un `position: fixed; zIndex: 40`
+      * avec transformation : un CONTEXTE D'EMPILEMENT. La liste rendue dedans restait donc
+      * empilée AVEC le panneau, quel que soit son z-index, et la colonne d'outils de droite lui
+      * passait par-dessus — masquant la fin des libellés ET sa barre de défilement, qui longe
+      * justement son bord droit. D'où l'impression, mesures à l'appui pourtant, qu'il n'y avait
+      * pas de barre de défilement.
+      */}
+    <Portal>
+      <MenuList zIndex={TOPBAR_MENU_Z}>
+        {selecAll}
+        {menuListItems}
+      </MenuList>
+    </Portal>
   </Menu>
 }
 
