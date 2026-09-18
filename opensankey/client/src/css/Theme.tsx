@@ -1519,7 +1519,8 @@ export const menuStyles = {
       // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
       // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
       // texte était rognée hors de l'écran.
-      minW: 0,
+      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
+      minW: '0px',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
@@ -1532,7 +1533,8 @@ export const menuStyles = {
   menu_select_style: menu.definePartsStyle({
     list: {
       // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
-      minW: 0,
+      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
+      minW: '0px',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
@@ -2539,7 +2541,8 @@ export const tabsStyles = {
       // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
       // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
       // texte était rognée hors de l'écran.
-      minW: 0,
+      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
+      minW: '0px',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
@@ -2552,7 +2555,8 @@ export const tabsStyles = {
   menu_select_style: menu.definePartsStyle({
     list: {
       // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
-      minW: 0,
+      // (en chaîne : Chakra écarte silencieusement une valeur numérique nulle)
+      minW: '0px',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
