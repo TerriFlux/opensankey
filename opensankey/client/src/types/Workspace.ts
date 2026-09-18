@@ -478,12 +478,27 @@ export class Class_Workspace {
   // toujours au même document, quelle que soit la fenêtre regardée.
 
   /**
-   * Pose l'écouteur clavier de la page et rend la fonction qui le retire (pour un `useEffect`).
+   * Pose un écouteur clavier sur UN document et rend la fonction qui le retire (pour un
+   * `useEffect`). Sans argument : la page, et le document ACTIF — c'est l'appel des quatre sites
+   * de démarrage, inchangé.
+   *
+   * os#1385 — DEUX QUESTIONS, DEUX PARAMÈTRES : *où* j'écoute, et *pour qui*. Une fenêtre de
+   * navigateur détachée (canevas d'une autre feuille posé sur un second écran) a son propre
+   * `document` : l'écouteur de la page ne l'atteint jamais, d'où le premier paramètre. Mais elle
+   * ne doit surtout pas router vers `active` — l'actif suit la dernière vignette touchée dans la
+   * fenêtre PRINCIPALE, donc taper dans la fenêtre détachée piloterait le diagramme d'en face.
+   * Ce qu'il lui faut, c'est le document qu'ELLE montre, d'où le second paramètre.
+   *
+   * @param host_document le document qui écoute (celui de la page par défaut)
+   * @param resolve       le document métier que ses frappes pilotent (l'actif par défaut)
    */
-  public installKeyboardListener(): () => void {
-    const listener = (evt: KeyboardEvent) => this.dispatchKeyboardEvent(evt)
-    document.onkeydown = listener
-    return () => { if (document.onkeydown === listener) document.onkeydown = null }
+  public installKeyboardListener(
+    host_document: Document = document,
+    resolve: () => Class_ApplicationData | null = () => this.active
+  ): () => void {
+    const listener = (evt: KeyboardEvent) => this.dispatchKeyboardEvent(evt, resolve)
+    host_document.onkeydown = listener
+    return () => { if (host_document.onkeydown === listener) host_document.onkeydown = null }
   }
 
   /**
@@ -496,8 +511,14 @@ export class Class_Workspace {
    * séparation est donc structurelle, une fois pour toutes ; la dupliquer ici en ferait deux
    * listes à tenir d'accord.
    */
-  public dispatchKeyboardEvent(evt: KeyboardEvent): void {
-    const doc = this.active ?? this._main
+  public dispatchKeyboardEvent(
+    evt: KeyboardEvent,
+    resolve: () => Class_ApplicationData | null = () => this.active
+  ): void {
+    // Le repli sur le `main` vaut pour TOUTE résolution, y compris celle d'une fenêtre
+    // détachée dont le document aurait été libéré (feuille redevenue courante) : une frappe
+    // sans destinataire ne doit pas se perdre en silence.
+    const doc = resolve() ?? this._main
     doc?.handleKeyboardEvent(evt)
   }
 
