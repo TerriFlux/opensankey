@@ -23,10 +23,10 @@ import {
   default_legend_position_y, default_legend_show_constraints,
   default_legend_show_dataTags, default_masked, default_scale_legend_ratio,
   default_scale_legend_unit, default_display_legend_scale,
-  default_info_link_value_void, default_width
+  default_info_link_value_void, default_width, ALL_ATTRIBUTES_CONFIG
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
-import { LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId } from './legendIds'
+import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
@@ -209,6 +209,7 @@ function applyEntryFormat(zone: Class_ContainerElement, item: Type_LegendItem) {
   SHAPE_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
   ICON_FORMAT_ONLY_KEYS.forEach(key => zone.delete_attribute(key))
   zone.legend_swatch_link_dashed = false
+  zone.legend_swatch_checker = false
   const format = item.format
   if (format === undefined || item.swatch_color === undefined) return
   const icon = format.icon
@@ -234,6 +235,9 @@ function applyEntryFormat(zone: Class_ContainerElement, item: Type_LegendItem) {
   // Flux « Hachuré » : les tirets du tracé de flux (NodeDrawShape.applyLinkDashPattern)
   if (swatch.link_dashed === true) zone.legend_swatch_link_dashed = true
   if (swatch.opacity !== undefined) zone.shape_opacity = swatch.opacity
+  // SA#551 — opacité sans couleur : un damier sous le carré dit « transparence », pas « gris »
+  // (retour du test local du 2026-09-17). Avec une couleur, le carré de cette couleur suffit.
+  if (swatch.opacity !== undefined && swatch.color === undefined) zone.legend_swatch_checker = true
   if (swatch.border_visible !== undefined) zone.shape_border_visible = swatch.border_visible
   if (swatch.border_color !== undefined) {
     // Sans son cadenas, la bordure d'une forme suit la couleur de la forme (NodeDrawShape).
@@ -316,6 +320,9 @@ export class Class_LegendConfig {
   private _entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
   // SA#549 — groupe que désigne chaque titre de groupe (renommer au double-clic renomme le groupe)
   private _entry_groups = new Map<string, string>()
+  // SA#551 — groupe de nœuds ou de flux que désigne chaque titre de groupe, ligne épinglée comprise :
+  // cliquer le titre ouvre ou ferme le groupe.
+  private _group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -480,6 +487,14 @@ export class Class_LegendConfig {
   /** SA#549 — relevé des titres de groupe, posé par regenerateLegend. */
   public set entry_groups(_: Map<string, string>) { this._entry_groups = _ }
 
+  /** SA#551 — relevé des titres de groupe, posé par regenerateLegend. */
+  public set group_titles(_: Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>) { this._group_titles = _ }
+
+  /** SA#551 — groupe de nœuds ou de flux que désigne ce titre de légende, ou `undefined`. */
+  public tagGroupIdOfTitle(zone_id: string): string | undefined {
+    return this._group_titles.get(zone_id)?.tag_group_id
+  }
+
   /**
    * SA#549 — la saisie inline de cette zone renomme-t-elle une étiquette ou un groupe ? Oui pour
    * une entrée d'étiquette de nœuds ou de flux (sauf gabarit d'entrée : le texte y compose plus que
@@ -502,8 +517,9 @@ export class Class_LegendConfig {
     const sankey = this._drawing_area.sankey
     const tag_target = this._entry_tags.get(zone_id)
     if (tag_target !== undefined) {
+      // SA#553 — l'étiquette générée se renomme comme les autres (nom saisi)
       const tag = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
-        .find(g => g.id === tag_target.tag_group_id)?.tags_list
+        .find(g => g.id === tag_target.tag_group_id)?.tags_list_with_untagged
         .find(t => t.id === tag_target.tag_id)
       if (tag === undefined) return false
       if (tag.display_name !== value) {
@@ -542,7 +558,8 @@ export class Class_LegendConfig {
     const sankey = drawing_area.sankey
     const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
       .find(g => g.id === target.tag_group_id)
-    const tag = group?.tags_list.find(t => t.id === target.tag_id)
+    // SA#553 — l'étiquette générée se masque comme les autres
+    const tag = group?.tags_list_with_untagged.find(t => t.id === target.tag_id)
     if (group === undefined || tag === undefined) return false
     const apply = (selected: boolean, show_hidden_tags: boolean) => {
       // La surbrillance du survol a atténué les autres éléments : la lever avant que ceux qui
@@ -583,6 +600,17 @@ export class Class_LegendConfig {
     return true
   }
 
+  /**
+   * SA#551 — clic sur le TITRE d'un groupe de nœuds ou de flux (ligne épinglée comprise) : un groupe
+   * fermé s'OUVRE — interrupteur « Appliquer les styles associés » allumé, et groupe placé en
+   * dernière position de sa liste, la plus prioritaire (ses styles l'emportent, il passe en tête de
+   * légende) ; un groupe ouvert se FERME — interrupteur éteint, sa place dans la liste est gardée.
+   * Aucun autre groupe n'est touché. Annuler/rétablir en lecture comme en édition. Renvoie `false`
+   * pour toute autre zone, qui garde son clic ordinaire.
+   *
+   * Les groupes de données sont exclus au relevé (regenerateLegend) : leur ordre porte aussi
+   * l'échelle affichée (computeScaleText), les réordonner changerait autre chose qu'un style.
+   */
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_: boolean) { this._info_link_value_void = _; this.draw() }
 
@@ -619,10 +647,11 @@ export class Class_LegendConfig {
 
 // GÉNÉRATION (modèle + DOM) ==========================================================
 
-// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée, et depuis SA#545 le
-// TITRE d'un groupe (les porteurs d'une quelconque de ses étiquettes) et l'entrée « sans
-// étiquette » (les éléments de la famille du groupe qui n'en portent aucune).
-type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string, untagged?: boolean }
+// Ce que désigne une zone de la légende au survol : l'étiquette d'une entrée — dont, depuis SA#553,
+// l'étiquette générée « Sans [groupe] », que portent les éléments de la famille du groupe qui n'en
+// portent aucune autre —, et depuis SA#545 le TITRE d'un groupe (les porteurs d'une quelconque de
+// ses étiquettes).
+type Type_LegendHoverTarget = { tag_group_id: string, tag_id?: string }
 
 type Type_TagCarrier = { hasGivenTag(tag: Class_Tag): boolean }
 type Type_LegendHoverPredicate = {
@@ -642,31 +671,28 @@ function hoverPredicate(
   if (!group) return undefined
   const tags = group.tags_list as Class_Tag[]
   if (target.tag_id !== undefined) {
-    const tag = tags.find(t => t.id === target.tag_id)
+    const tag = (group.tags_list_with_untagged as Class_Tag[]).find(t => t.id === target.tag_id)
     if (!tag) return undefined
     // SA#549 — étiquette masquée : ses éléments sont invisibles, la surbrillance atténuerait tout
     // le diagramme sans rien désigner. Le survol garde sa définition (#542).
     if (!tag.is_selected) return undefined
-    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band: carried => carried.includes(tag) }
+    // SA#553 — bande d'un flux ventilé : l'étiquette générée désigne les bandes sans étiquette du groupe
+    const is_flux_group = tag.group.id in sankey.flux_taggs_dict
+    const band = tag.is_untagged
+      ? (carried: readonly Class_Tag[]) => is_flux_group && !carried.some(t => t.group === tag.group)
+      : (carried: readonly Class_Tag[]) => carried.includes(tag)
+    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
   const bandCarriesOne = (carried: readonly Class_Tag[]) => carried.some(t => tags.includes(t))
-  if (target.untagged !== true) return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
-  // « Sans étiquette » : seuls les éléments de la famille du groupe peuvent en relever, sinon un
-  // groupe de nœuds désignerait tous les flux (qui ne portent jamais d'étiquette de nœuds).
-  const is_node_group = (sankey.node_taggs_list as unknown[]).includes(group)
-  return {
-    node: n => is_node_group && !carriesOne(n),
-    link: l => !is_node_group && !carriesOne(l),
-    band: carried => !is_node_group && !bandCarriesOne(carried)
-  }
+  return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
 }
 
-// SA#545 — cible de survol d'un item : son étiquette, son entrée « sans étiquette », ou, pour un
-// titre de groupe, le groupe de son bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
+// SA#545 — cible de survol d'un item : son étiquette, ou, pour un titre de groupe, le groupe de son
+// bloc (`block_groups` : bloc → groupe, relevé sur ses entrées).
 function hoverTargetOf(item: Type_LegendItem, block_groups: Map<string, string>): Type_LegendHoverTarget | undefined {
   if (item.tag_group_id !== undefined) {
-    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id, untagged: item.untagged }
+    return { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
   }
   if (item.own_line && item.block_id !== undefined) {
     const tag_group_id = block_groups.get(item.block_id)
@@ -685,41 +711,57 @@ function wireLegendHover(
   const d3_sel = zone.d3_selection
   if (!d3_sel || target === undefined) return
   d3_sel
-    .on('mouseover.legend_highlight', () => {
-      const matches = hoverPredicate(drawing_area, target)
-      if (!matches) return
-      const flux_list = drawing_area.sankey.visible_links_list
-      const node_list = drawing_area.sankey.visible_nodes_list
-      const highlighted_nodes = new Set<Class_NodeBase>()
-      flux_list.forEach(l => {
-        if (matches.link(l) || matches.node(l.source) || matches.node(l.target)) {
-          highlighted_nodes.add(l.source)
-          highlighted_nodes.add(l.target)
-          // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
-          // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
-          const bands = l.d3_selection?.selectAll('.link_band')
-          if (bands && !bands.empty()) {
-            const matching = new Set(
-              (l.value?.tagged_values_list ?? [])
-                .filter(tv => matches.band(tv.tags_list as Class_Tag[]))
-                .map(tv => l.id + '_band_' + tv.id))
-            if (matching.size > 0) {
-              bands.attr('opacity', function () {
-                return matching.has((this as Element).getAttribute('id') ?? '') ? '' : 0.1
-              })
-            }
-          }
-        } else {
-          l.d3_selection?.attr('opacity', 0.1)
-        }
-      })
-      node_list.forEach(n => {
-        if (!highlighted_nodes.has(n) && !matches.node(n)) {
-          n.d3_selection?.attr('opacity', 0.1)
-        }
-      })
-    })
+    .on('mouseover.legend_highlight', () => applyLegendHighlight(drawing_area, target))
     .on('mouseout.legend_highlight', () => clearLegendHighlight(drawing_area))
+}
+
+/**
+ * SA#551 — redessine les éléments dont les styles d'étiquette changent avec l'aperçu d'un groupe
+ * (`Class_Sankey.setTagStylePreview`, lu par la cascade) : ceux de sa famille, plus les flux pour un
+ * groupe de nœuds — leur couleur peut dériver de leurs nœuds. Sert à la VUE d'un groupe, dessinée
+ * dans sa pop-up de présentation.
+ */
+export function redrawForTagStylePreview(drawing_area: Class_DrawingArea, group_id: string | undefined) {
+  const sankey = drawing_area.sankey
+  if (group_id === undefined || sankey.node_taggs_list.some(g => g.id === group_id)) {
+    sankey.nodes_list.forEach(node => node.draw())
+  }
+  sankey.links_list.forEach(link => link.draw())
+}
+
+function applyLegendHighlight(drawing_area: Class_DrawingArea, target: Type_LegendHoverTarget) {
+  const matches = hoverPredicate(drawing_area, target)
+  if (!matches) return
+  const flux_list = drawing_area.sankey.visible_links_list
+  const node_list = drawing_area.sankey.visible_nodes_list
+  const highlighted_nodes = new Set<Class_NodeBase>()
+  flux_list.forEach(l => {
+    if (matches.link(l) || matches.node(l.source) || matches.node(l.target)) {
+      highlighted_nodes.add(l.source)
+      highlighted_nodes.add(l.target)
+      // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
+      // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
+      const bands = l.d3_selection?.selectAll('.link_band')
+      if (bands && !bands.empty()) {
+        const matching = new Set(
+          (l.value?.tagged_values_list ?? [])
+            .filter(tv => matches.band(tv.tags_list as Class_Tag[]))
+            .map(tv => l.id + '_band_' + tv.id))
+        if (matching.size > 0) {
+          bands.attr('opacity', function () {
+            return matching.has((this as Element).getAttribute('id') ?? '') ? '' : 0.1
+          })
+        }
+      }
+    } else {
+      l.d3_selection?.attr('opacity', 0.1)
+    }
+  })
+  node_list.forEach(n => {
+    if (!highlighted_nodes.has(n) && !matches.node(n)) {
+      n.d3_selection?.attr('opacity', 0.1)
+    }
+  })
 }
 
 // Lève la surbrillance du survol. SA#549 — sur TOUS les éléments, pas les seuls visibles : un clic
@@ -768,8 +810,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_free_value: t('MEP.use_colors_free_value'),
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
-        t_untagged: t('MEP.legend_untagged'),
-        t_dimension_change: t('MEP.legend_dimension_change')
+        t_dimension_change: t('MEP.legend_dimension_change'),
+        // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
+        default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
@@ -817,6 +860,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (group_id !== undefined) entry_groups.set(item.id, group_id)
     })
     config.entry_groups = entry_groups
+    // SA#551 — titres de groupe de nœuds ou de flux, lignes épinglées comprises (sans entrée, leur
+    // groupe se retrouve par l'id de bloc) : un clic ouvre ou ferme le groupe.
+    const group_of_block_id = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+    const blockIdOf = (group_id: string) => LEGEND_CHILD_PREFIX + 'block-' + legendSlug(group_id)
+    sankey.node_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'node_taggs', pinned: false }))
+    sankey.flux_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'flux_taggs', pinned: false }))
+    const group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+    items.forEach(item => {
+      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+      const target = group_of_block_id.get(item.block_id)
+      if (target !== undefined) group_titles.set(item.id, { ...target, pinned: item.pinned === true })
+    })
+    config.group_titles = group_titles
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
@@ -940,6 +996,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       frame.setPosXY(config.initial_position.x, config.initial_position.y)
     }
 
+
     // SA#545 — groupe de chaque bloc, relevé sur ses entrées : cible du survol de son titre
     const block_groups = new Map<string, string>()
     items.forEach(i => {
@@ -1049,9 +1106,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // de ses étiquettes) : même main, plus la flèche de liste.
       // Dimension à étiquette unique : rien à choisir, rien à promettre.
       const is_dimension_choice = item.dimension_choice === true
-      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice)
+      zone.d3_selection?.classed(LEGEND_TOGGLE_ENTRY_CLASS, entry_tags.has(item.id) || is_dimension_choice || group_titles.has(item.id))
       if (isLegendDataTagZoneId(item.id)) decorateLegendDimensionZone(zone, is_dimension_choice)
-      const hover_target = hoverTargetOf(item, block_groups)
+      // SA#551 — un TITRE de groupe ne met plus rien en surbrillance : il ouvre la pop-up du groupe,
+      // et seule une étiquette désigne des éléments (arbitrage d'Alexandre, 2026-09-18). Neutralisé
+      // ici plutôt que dans hoverTargetOf, que le ticket voisin #553 retouche.
+      const hover_target = group_titles.has(item.id) ? undefined : hoverTargetOf(item, block_groups)
       wireLegendHover(drawing_area, zone, hover_target)
       // SA#545 — valeur d'exemple écrite dans le carré : zone posée sur la zone d'entrée,
       // créée après elle (donc dessinée par-dessus), attachée au même cadre et au même bloc.

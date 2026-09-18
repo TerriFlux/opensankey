@@ -22,8 +22,96 @@
 import * as d3 from '../d3Modules'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 
+/**
+ * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
+ *
+ * Rien ici n'est nouveau dans le dessin : ce sont les valeurs qui étaient EN DUR dans ce fichier,
+ * rendues à l'auteur une par une. Les défauts reproduisent donc exactement ce que le tracé faisait
+ * avant ce lot — une couronne déjà enregistrée ne change pas d'aspect.
+ */
+export interface Type_SunburstStyle {
+  /** 'palette' : les teintes de la figure ; 'model' : la couleur du nœud dans le diagramme. */
+  color_source: 'palette' | 'model'
+  /** La clarté dit la profondeur. Coupé, tous les anneaux d'une branche ont la même teinte. */
+  depth_shading: boolean
+  /** Les trois suivants sont les attributs de FORME des éléments (`shape_*`). */
+  opacity: number
+  border_visible: boolean
+  border_color: string
+  border_thickness: number
+  /** Regrouper AUSSI les parts sous ce pourcentage du tout. 0 : seulement l'invisible. */
+  others_threshold: number
+  labels_mode: 'fit' | 'none' | 'always'
+  label_orientation: 'radial' | 'tangential' | 'horizontal'
+  /** Ceux-ci sont les attributs d'ÉTIQUETTE des éléments (`name_label_*`). */
+  font_family: string
+  font_size: number
+  bold: boolean
+  italic: boolean
+  uppercase: boolean
+  /** L'encre : par contraste avec le secteur (défaut), ou la couleur choisie. */
+  color_mode: 'auto' | 'fixed'
+  label_color: string
+  /** Et ceux-là les attributs de VALEUR des éléments (`value_label_*`). */
+  value_visible: boolean
+  unit_visible: boolean
+  significant_digits: boolean
+  nb_significant_digits: number
+  custom_digit: boolean
+  nb_digit: number
+  scientific_notation: boolean
+  label_percent: 'none' | 'total' | 'parent'
+  centre_content: 'both' | 'name' | 'value' | 'none'
+  /** Rayon du trou, en pourcentage du rayon extérieur. */
+  centre_hole: number
+  legend_mode: 'auto' | 'none' | 'rings' | 'branches' | 'both'
+  legend_position: 'right' | 'left' | 'bottom'
+  notes_visible: boolean
+  tooltip_visible: boolean
+  click_action: 'both' | 'zoom' | 'aggregate' | 'none'
+}
+
+/** Les défauts : ce que le tracé faisait avant que ces réglages existent. */
+export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
+  color_source: 'palette',
+  depth_shading: true,
+  opacity: 1,
+  border_visible: true,
+  border_color: '#ffffff',
+  border_thickness: 1,
+  others_threshold: 0,
+  labels_mode: 'fit',
+  label_orientation: 'radial',
+  font_family: 'Arial,sans-serif',
+  font_size: 10,
+  bold: false,
+  italic: false,
+  uppercase: false,
+  color_mode: 'auto',
+  label_color: 'black',
+  value_visible: false,
+  unit_visible: false,
+  significant_digits: true,
+  nb_significant_digits: 4,
+  custom_digit: false,
+  nb_digit: 0,
+  scientific_notation: false,
+  label_percent: 'none',
+  centre_content: 'both',
+  centre_hole: 22,
+  legend_mode: 'auto',
+  legend_position: 'right',
+  notes_visible: true,
+  tooltip_visible: true,
+  click_action: 'both'
+}
+
 export interface Type_SunburstChartOptions {
   format?: (value: number) => string
+  /** La mise en forme réglée par l'auteur ; absente, les défauts ci-dessus. */
+  style?: Partial<Type_SunburstStyle>
+  /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
+  unit?: string
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
@@ -42,7 +130,17 @@ export interface Type_SunburstChartOptions {
   theme?: 'light' | 'dark'
   // Clic sur un secteur. L'appelant décide ce que ça veut dire côté diagramme
   // (désagréger le nœud, le sélectionner…) ; le zoom radial, lui, est géré ici.
-  on_arc_click?: (node_id: string, is_disaggregated: boolean) => void
+  // `dimension_id` est l'axe QUE CE SECTEUR COMMANDE : avec des axes enchaînés
+  // (os#1424) il change d'un anneau à l'autre, et c'est lui qu'il faut agréger.
+  //
+  // `path` est L'ASCENDANCE DESSINÉE, du nœud au centre jusqu'au secteur cliqué inclus. Elle est
+  // indispensable au-delà du premier anneau : déplier « Céréales Bio » dans le diagramme suppose
+  // que « Céréales » y soit déjà dépliée, sans quoi le diagramme montre les deux — le parent ET
+  // ses parts. C'est la route DESSINÉE, pas une route possible : sur un treillis, deux chemins
+  // mènent au même nœud et ils ne déplient pas la même chose.
+  on_arc_click?: (
+    node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[]
+  ) => void
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -68,6 +166,15 @@ const THEME = {
 } as const
 
 const MAX_BRANCHES = THEME.light.palette.length
+
+/**
+ * La couleur d'une BRANCHE, par son rang — l'ordre fixe de la palette, jamais recyclé
+ * (cf. `capBranches`, qui garantit qu'on ne dépasse pas). Exportée parce que la couronne se
+ * dessine à deux endroits : dans une fenêtre et SUR UN NŒUD (cf. NodeStatsCharts), et que
+ * deux palettes feraient de la même figure deux figures.
+ */
+export const sunburstBranchColor = (theme: 'light' | 'dark' = 'light') =>
+  (index: number): string => THEME[theme].palette[index % MAX_BRANCHES]
 // Un secteur plus étroit que ça ne se voit ni ne se survole : on l'agrège au « Autres »
 // de sa fratrie plutôt que de laisser un cheveu passer pour une part.
 const MIN_ARC_ANGLE = 0.015
@@ -84,8 +191,6 @@ const LABEL_CHAR_PX = 6
 // Écart entre deux anneaux : un vide de la couleur du fond, pas un trait.
 const ARC_GAP_PX = 1.5
 
-const DEFAULT_FORMAT = (v: number) =>
-  new Intl.NumberFormat(undefined, { maximumSignificantDigits: 4 }).format(v)
 
 // Encre d'une étiquette POSÉE SUR un secteur : choisie sur la luminance du secteur, pas
 // sur le thème. Un même bleu porte du blanc au centre et du gris foncé sur les anneaux
@@ -126,6 +231,8 @@ export interface Type_SunburstSlice {
   color: string
   is_residual: boolean
   is_disaggregated: boolean
+  // L'axe que ce secteur commande (os#1424).
+  dimension_id: string
   // Nombre d'enfants DESSINÉS sous ce secteur : c'est lui qui dit si le zoom radial a
   // quelque chose à montrer, donc si le secteur est cliquable.
   children_count: number
@@ -139,11 +246,17 @@ export interface Type_SunburstSlice {
 export const foldNarrowChildren = (
   children: Type_SunburstNode[],
   span: number,
-  others_label: string
+  others_label: string,
+  // os#1425 — le seuil de l'AUTEUR, en pourcentage de la fratrie, en plus du plancher de
+  // visibilité. 0 : on ne replie que ce qui ne se voit pas, c'est-à-dire le comportement d'avant.
+  threshold_pct = 0
 ): Type_SunburstNode[] => {
   const total = children.reduce((acc, c) => acc + c.value, 0)
   if (total <= 0 || children.length === 0) return []
-  const kept = children.filter(c => (c.value / total) * span >= MIN_ARC_ANGLE)
+  const kept = children.filter(c =>
+    (c.value / total) * span >= MIN_ARC_ANGLE &&
+    (threshold_pct <= 0 || (c.value / total) * 100 >= threshold_pct)
+  )
   if (kept.length === children.length) return children
   const folded = total - kept.reduce((acc, c) => acc + c.value, 0)
   if (folded <= 0) return kept
@@ -155,7 +268,8 @@ export const foldNarrowChildren = (
     color: null,
     depth: children[0].depth,
     children: [],
-    is_residual: true
+    is_residual: true,
+    dimension_id: ''
   }]
 }
 
@@ -170,8 +284,16 @@ export const partitionSunburst = (
   branch_color: (index: number) => string,
   others_label: string,
   theme: 'light' | 'dark' = 'light',
-  others_color = '#CFD0CB'
+  // Teinte neutre des secteurs de complément. Celle du thème par défaut : un appelant qui
+  // dit déjà son thème n'a pas à la redire.
+  others_color = '',
+  // os#1425 — la mise en forme qui touche la COULEUR et le REGROUPEMENT ; le reste (étiquettes,
+  // centre, légende) appartient au rendu et n'entre pas dans une partition.
+  style: Pick<Type_SunburstStyle, 'color_source' | 'depth_shading' | 'others_threshold'> = {
+    color_source: 'palette', depth_shading: true, others_threshold: 0
+  }
 ): Type_SunburstSlice[] => {
+  const others = others_color || THEME[theme].others
   const total = roots.reduce((acc, r) => acc + r.value, 0)
   if (total <= 0) return []
   const slices: Type_SunburstSlice[] = []
@@ -185,7 +307,7 @@ export const partitionSunburst = (
     path: string[]
   ) => {
     const span = a1 - a0
-    const children = foldNarrowChildren(node.children, span, others_label)
+    const children = foldNarrowChildren(node.children, span, others_label, style.others_threshold)
     slices.push({
       id: node.id,
       label: node.label,
@@ -196,9 +318,16 @@ export const partitionSunburst = (
       a1,
       // Un secteur de complément (« non réparti », « autres ») n'est pas une branche :
       // il prend la teinte neutre plutôt que de se faire passer pour un nœud du modèle.
-      color: node.is_residual ? others_color : shadeForDepth(base, depth, theme),
+      // os#1425 — sous 'model', c'est la couleur du NŒUD qui commande, et le dégradé de
+      // profondeur ne s'applique pas : deux nœuds du modèle se distinguent déjà par elle.
+      color: node.is_residual
+        ? others
+        : (style.color_source === 'model' && node.color)
+          ? node.color
+          : (style.depth_shading ? shadeForDepth(base, depth, theme) : base),
       is_residual: !!node.is_residual,
       is_disaggregated: !!node.is_disaggregated,
+      dimension_id: node.dimension_id,
       children_count: children.length,
       path
     })
@@ -243,8 +372,53 @@ export const capBranches = (
     color: null,
     depth: 0,
     children: [],
-    is_residual: true
+    is_residual: true,
+    dimension_id: ''
   }]
+}
+
+/**
+ * Le texte qu'un secteur peut porter, ou `null` quand il n'y a pas la place.
+ *
+ * L'étiquette court RADIALEMENT, donc ses deux contraintes ne sont pas dans le même sens :
+ * la LONGUEUR du texte est bornée par l'épaisseur de l'anneau, la HAUTEUR des glyphes par
+ * la longueur de l'arc. Fonction PURE, et surtout ÉCRITE UNE FOIS : c'est elle qui dessine
+ * les étiquettes et c'est elle qui dit à la légende ce qui reste à nommer.
+ *
+ * @param label le nom du secteur
+ * @param arc_px longueur de l'arc au milieu de l'anneau, en pixels
+ * @param ring_px épaisseur de l'anneau, en pixels
+ */
+export const sunburstArcLabel = (
+  label: string,
+  arc_px: number,
+  ring_px: number,
+  // os#1425 — l'orientation ÉCHANGE les deux contraintes, et le mode décide si les planchers de
+  // lisibilité s'appliquent. Les défauts sont l'étiquette radiale d'avant ce lot.
+  o: {
+    orientation?: 'radial' | 'tangential' | 'horizontal'
+    mode?: 'fit' | 'always' | 'none'
+    font_size?: number
+  } = {}
+): string | null => {
+  const mode = o.mode ?? 'fit'
+  if (mode === 'none') return null
+  const orientation = o.orientation ?? 'radial'
+  const char_px = ((o.font_size ?? 10) / 10) * LABEL_CHAR_PX
+  // Où le texte court, et donc ce qui borne sa longueur : l'épaisseur de l'anneau s'il est
+  // radial, la longueur de l'arc s'il suit la courbe, le plus petit des deux à l'horizontale.
+  const length_px = orientation === 'radial' ? ring_px
+    : orientation === 'tangential' ? arc_px
+      : Math.min(arc_px, ring_px)
+  const height_px = orientation === 'radial' ? arc_px
+    : orientation === 'tangential' ? ring_px
+      : Math.min(arc_px, ring_px)
+  if (mode !== 'always' && (height_px < MIN_LABEL_ARC_PX || length_px < MIN_RING_FOR_LABEL_PX)) {
+    return null
+  }
+  const room = Math.floor((length_px - LABEL_RING_PADDING_PX) / char_px)
+  if (room < 1) return null
+  return label.length > room ? label.slice(0, Math.max(1, room - 1)) + '…' : label
 }
 
 // Sous-arbre correspondant à un id : entrer dans un secteur, c'est redessiner l'arbre
@@ -259,6 +433,37 @@ export const findSunburstNode = (
     if (found) return found
   }
   return null
+}
+
+/**
+ * Ce que la couronne dessine : son CENTRE et ses branches.
+ *
+ * LE CENTRE EST UN NŒUD, LES ANNEAUX SONT SA DÉCOMPOSITION (arbitrage Julien,
+ * 17/09/2026). Quand le périmètre tient en un seul nœud — le cas d'une figure
+ * contextuelle « Nœud › X », et celui de tout zoom radial — le trou du milieu le nomme
+ * déjà et porte sa valeur : lui donner EN PLUS le premier anneau redit la même chose
+ * sur un tour complet, mange un anneau sur la profondeur disponible, et fait commencer
+ * la lecture un niveau trop tôt. Ses ENFANTS ouvrent donc la couronne.
+ *
+ * À plusieurs racines il n'y a pas de nœud à mettre au centre (c'en est une SOMME, cf.
+ * `roots_sum_hint`) : les racines gardent alors le premier anneau, qui les nomme.
+ *
+ * Conséquence voulue sur la couleur : les branches sont toujours les secteurs du premier
+ * anneau, donc un périmètre unitaire n'est plus une couronne d'une seule teinte éclaircie
+ * par anneau — chaque part du premier cran reçoit sa propre teinte, et la clarté continue
+ * de dire la profondeur SOUS elle.
+ */
+export const sunburstScope = (
+  roots: Type_SunburstNode[],
+  focused: Type_SunburstNode | null,
+  others_label: string,
+  max_branches = MAX_BRANCHES
+): { centre: Type_SunburstNode | null, branches: Type_SunburstNode[] } => {
+  const centre = focused ?? (roots.length === 1 ? roots[0] : null)
+  // Un centre sans enfants n'a rien à décomposer : plutôt que de le dessiner en anneau
+  // plein, on rend une couronne vide et l'appelant dit pourquoi.
+  if (centre) return { centre, branches: capBranches(centre.children, others_label, max_branches) }
+  return { centre: null, branches: capBranches(roots, others_label, max_branches) }
 }
 
 // ── Rendu ─────────────────────────────────────────────────────────────────────────
@@ -298,7 +503,25 @@ export const drawSunburstChart = (
 ): (() => void) => {
   const theme = opts.theme ?? 'light'
   const palette = THEME[theme]
-  const fmt = opts.format ?? DEFAULT_FORMAT
+  // os#1425 — la mise en forme réglée par l'auteur, sur fond de ce que le tracé faisait avant.
+  const st: Type_SunburstStyle = { ...SUNBURST_STYLE_DEFAULTS, ...(opts.style ?? {}) }
+  // LE FORMAT DES VALEURS, exactement celui des étiquettes d'un flux (`formatElementValue`) :
+  // notation scientifique, chiffres significatifs, décimales imposées — dans cet ordre, parce
+  // qu'une notation scientifique ne se cumule pas avec un nombre de décimales.
+  const unit = st.unit_visible && opts.unit ? ' ' + opts.unit : ''
+  const digits = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
+  const fmt = opts.format ?? ((v: number) => {
+    if (st.scientific_notation) {
+      return st.significant_digits
+        ? v.toExponential(digits(st.nb_significant_digits - 1, 20))
+        : v.toExponential()
+    }
+    let text = v
+    if (st.significant_digits) text = parseFloat(v.toPrecision(digits(st.nb_significant_digits, 21) || 1))
+    if (st.custom_digit) text = parseFloat(text.toFixed(digits(st.nb_digit, 20)))
+    return new Intl.NumberFormat().format(text)
+  })
+  const fmtUnit = (v: number) => fmt(v) + unit
   const others_label = opts.others_label ?? '…'
   // Racine courante du zoom radial (null = la vue d'ensemble).
   let focus_id: string | null = null
@@ -309,40 +532,124 @@ export const drawSunburstChart = (
     const width = container.clientWidth
     const height = container.clientHeight
 
-    const branches = capBranches(tree.roots, others_label, MAX_BRANCHES)
     const focused = focus_id ? findSunburstNode(tree.roots, focus_id) : null
-    const roots = focused ? [focused] : branches
-    const total = roots.reduce((acc, r) => acc + r.value, 0)
-    if (roots.length === 0 || total <= 0 || width < 120 || height < 120) {
+    // Le centre est un nœud (périmètre unitaire ou zoom), les anneaux sa décomposition.
+    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label)
+    // Le centre porte SA valeur, pas celle de ses parts : elles peuvent ne pas boucler
+    // avec lui (régime 'sum'), et c'est l'écart que la mention annonce.
+    const branches_total = branches.reduce((acc, r) => acc + r.value, 0)
+    const total = centre_node ? centre_node.value : branches_total
+    if (branches.length === 0 || branches_total <= 0 || width < 120 || height < 120) {
       drawEmptyLabel(sel, opts.empty_label ?? '', palette.muted)
       return
     }
 
-    // Couleur de BRANCHE, ordre fixe. Sous zoom, la branche unique garde la couleur
-    // qu'elle avait au niveau du dessus pour que l'œil suive d'une vue à l'autre.
-    const focus_branch = focused
-      ? Math.max(0, branches.findIndex(r => findSunburstNode([r], focused.id) !== null))
-      : 0
-    // `capBranches` garantit qu'on ne dépasse jamais la palette : plus besoin de recycler
-    // ni de retomber sur une teinte neutre partagée.
-    const branchColor = (index: number) => focused
-      ? palette.palette[focus_branch % MAX_BRANCHES]
-      : palette.palette[index % MAX_BRANCHES]
+    // Couleur de BRANCHE, ordre fixe. Une branche = un secteur du premier anneau, quel
+    // que soit ce qu'il y a au centre.
+    const branchColor = sunburstBranchColor(theme)
+    // Rang du niveau porté par le PREMIER anneau : le centre a mangé les niveaux qui le
+    // précèdent, la légende doit nommer les anneaux restants sans décalage.
+    const level_offset = centre_node ? centre_node.depth + 1 : 0
 
-    const slices = partitionSunburst(roots, branchColor, others_label, theme, palette.others)
+    const slices = partitionSunburst(branches, branchColor, others_label, theme, palette.others, st)
     const rings = slices.reduce((m, s) => Math.max(m, s.depth), 0) + 1
 
+    // La légende se pose à droite (défaut), à gauche, ou dessous — auquel cas elle prend une
+    // bande sous le disque au lieu d'une colonne à côté.
+    const legend_below = st.legend_position === 'bottom'
     const root_el = sel.append('div')
-      .style('display', 'flex').style('align-items', 'stretch')
+      .style('display', 'flex')
+      .style('flex-direction', legend_below
+        ? 'column'
+        : st.legend_position === 'left' ? 'row-reverse' : 'row')
+      .style('align-items', legend_below ? 'center' : 'stretch')
       .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
       .style('background', palette.surface)
 
-    const legend_width = Math.min(220, width * 0.32)
-    const side = Math.max(120, Math.min(width - legend_width - 12, height) - 8)
-    const outer_r = side / 2 - 2
-    // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
-    const inner_r = Math.max(28, outer_r * 0.22)
-    const ring = (outer_r - inner_r) / rings
+    // ── Combien de place pour la légende ? ────────────────────────────────────────
+    // Elle ne liste que ce que le DESSIN NE NOMME PAS (arbitrage Julien, 17/09/2026) :
+    // répéter à côté les noms déjà écrits dans les secteurs prenait un tiers de la largeur
+    // pour ne rien ajouter. Reste donc la colonne large quand des secteurs n'ont pas pu
+    // porter leur nom, et une colonne étroite sinon — la place revient au disque.
+    //
+    // La circularité (la largeur décide du rayon, le rayon décide des étiquettes, les
+    // étiquettes décident de la largeur) se dénoue par la MONOTONIE : élargir le disque ne
+    // peut qu'ajouter des étiquettes. On teste donc avec le GRAND disque (légende étroite) :
+    // si rien n'y manque de nom, la colonne étroite est la bonne ; s'il y manque quelque
+    // chose, la colonne large — qui rétrécit le disque — n'en manquera pas moins.
+    const geometryFor = (legend_width: number) => {
+      // Sous la légende posée DESSOUS, c'est de la hauteur qu'elle prend, pas de la largeur.
+      const side = legend_below
+        ? Math.max(120, Math.min(width, height - legend_width - 12) - 8)
+        : Math.max(120, Math.min(width - legend_width - 12, height) - 8)
+      const outer_r = side / 2 - 2
+      // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
+      const inner_r = Math.max(14, outer_r * (st.centre_hole / 100))
+      return { side, outer_r, inner_r, ring: (outer_r - inner_r) / rings }
+    }
+    type Type_Geometry = ReturnType<typeof geometryFor>
+
+    /**
+     * SUR QUOI SE RAPPORTE UN POURCENTAGE : le tout, ou le secteur qui porte celui-ci. Le parent
+     * se lit dans le fil d'Ariane, pas dans l'angle — l'angle d'un parent en régime 'sum' vaut la
+     * somme de ses parts, ce qui ferait lire 100 % là où il y a un écart.
+     */
+    const baseOf = (d: Type_SunburstSlice): number => {
+      if (st.label_percent === 'total' || d.path.length < 2) return total
+      return slices.find(s => s.id === d.path[d.path.length - 2])?.value ?? total
+    }
+
+    /**
+     * CE QUE PORTE UN SECTEUR : son nom, et ce que l'auteur a demandé d'y ajouter. Le texte est
+     * composé AVANT la mesure — une valeur ajoutée doit tenir, sinon l'étiquette est tronquée ou
+     * renoncée comme n'importe quelle autre.
+     */
+    const sectorText = (d: Type_SunburstSlice): string => {
+      // La CASSE s'applique au texte et non au style : `text-transform` n'est pas honoré par
+      // tous les moteurs SVG, et l'export PNG en dépend.
+      const parts: string[] = [st.uppercase ? d.label.toLocaleUpperCase() : d.label]
+      if (st.value_visible) parts.push(fmtUnit(d.value))
+      if (st.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
+      return parts.join(' · ')
+    }
+
+    const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null =>
+      sunburstArcLabel(
+        sectorText(d),
+        (d.a1 - d.a0) * (geo.inner_r + (d.depth + 0.5) * geo.ring),
+        geo.ring,
+        {
+          orientation: st.label_orientation,
+          mode: st.labels_mode,
+          font_size: st.font_size
+        }
+      )
+    // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches.
+    const namesItself = (d: Type_SunburstSlice, geo: Type_Geometry): boolean => {
+      const text = arcLabelOf(d, geo)
+      return text !== null && text === sectorText(d)
+    }
+    // Les secteurs du premier anneau que le dessin ne nomme pas. Ils portent déjà leur
+    // couleur de branche : la légende n'a qu'à la recopier.
+    const unnamedBranches = (geo: Type_Geometry) =>
+      slices.filter(s => s.depth === 0 && !namesItself(s, geo))
+
+    // La légende demandée décide de la place qu'on lui réserve, avant même de la remplir :
+    // « aucune » n'en prend aucune, « toutes les branches » en prend une large d'office.
+    const wide = Math.min(220, (legend_below ? height : width) * 0.32)
+    const narrow = Math.min(150, (legend_below ? height : width) * 0.28)
+    const legend_width = st.legend_mode === 'none'
+      ? 0
+      : (st.legend_mode === 'both' || st.legend_mode === 'branches')
+        ? wide
+        : unnamedBranches(geometryFor(narrow)).length > 0 ? wide : narrow
+    const geo = geometryFor(legend_width)
+    const { side, inner_r, ring } = geo
+    // Sous 'auto', la légende ne nomme que ce que le dessin n'a pas pu nommer ; sous 'both' et
+    // 'branches', elle les nomme toutes ; sous 'rings' et 'none', aucune.
+    const unnamed_branches = st.legend_mode === 'both' || st.legend_mode === 'branches'
+      ? slices.filter(s => s.depth === 0)
+      : st.legend_mode === 'auto' ? unnamedBranches(geo) : []
 
     const svg = root_el.append('svg')
       .attr('width', side).attr('height', side)
@@ -350,28 +657,30 @@ export const drawSunburstChart = (
     const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
-    const scope_title = focused
-      ? focused.label
-      : (tree.roots.length > 1 && opts.scope_label
-        ? opts.scope_label(tree.roots.length)
-        : (tree.roots[0]?.label ?? ''))
+    const scope_title = centre_node
+      ? centre_node.label
+      : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
     const centre = g.append('g')
       .style('cursor', focus_id ? 'pointer' : 'default')
       .on('click', () => { if (focus_id) { focus_id = null; render() } })
     centre.append('circle').attr('r', inner_r - 2).attr('fill', palette.surface)
+    // Ce que le centre écrit est réglé (os#1425). Les deux textes existent toujours — le survol
+    // s'en sert pour écrire le fil d'Ariane — mais ils restent vides si l'auteur n'en veut pas.
+    const shows_name = st.centre_content === 'both' || st.centre_content === 'name'
+    const shows_value = st.centre_content === 'both' || st.centre_content === 'value'
     const centre_label = centre.append('text')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
-      .attr('y', -inner_r * 0.3)
+      .attr('y', shows_value ? -inner_r * 0.3 : 0)
       .attr('font-size', Math.max(9, Math.min(inner_r * 0.24, 12)))
       .attr('fill', palette.muted).attr('pointer-events', 'none')
-      .text(scope_title)
+      .text(shows_name ? scope_title : '')
     const centre_value = centre.append('text')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
-      .attr('y', inner_r * 0.1)
+      .attr('y', shows_name ? inner_r * 0.1 : 0)
       .attr('font-size', Math.max(11, Math.min(inner_r * 0.34, 18)))
       .attr('font-weight', 'bold')
       .attr('fill', palette.ink).attr('pointer-events', 'none')
-      .text(fmt(total))
+      .text(shows_value ? fmtUnit(total) : '')
     if (focus_id && opts.back_label) {
       centre.append('text')
         .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
@@ -389,7 +698,7 @@ export const drawSunburstChart = (
       .padRadius(inner_r)
 
     const sliceTitle = (d: Type_SunburstSlice) => {
-      const head = `${d.label}\n${fmt(d.value)} (${pctText(d.value, total)})`
+      const head = `${d.label}\n${fmtUnit(d.value)} (${pctText(d.value, total)})`
       // L'écart entre l'arc et la valeur propre du nœud n'est dit QUE là où il existe :
       // un parent dont les enfants ne bouclent pas, en régime 'sum'.
       const gap = Math.abs(d.declared - d.value)
@@ -404,38 +713,54 @@ export const drawSunburstChart = (
       .attr('class', 'sunburst_arc')
       .attr('d', d => arc(d))
       .attr('fill', d => d.color)
-      .attr('stroke', palette.surface)
-      .attr('stroke-width', 1)
+      .attr('stroke', st.border_visible ? st.border_color : 'none')
+      .attr('stroke-width', st.border_visible ? st.border_thickness : 0)
+      .attr('fill-opacity', st.opacity)
       // Le nœud DÉSAGRÉGÉ dans le diagramme se signale par un pointillé, pas par une
       // autre couleur : la couleur nomme déjà la branche, la lui reprendre casserait
       // la lecture radiale.
       .attr('stroke-dasharray', d => d.is_disaggregated ? '3 2' : null)
-      .style('cursor', d => (!d.is_residual && d.children_count > 0) ? 'pointer' : 'default')
+      // Le curseur ne promet que ce que le clic fait vraiment (os#1425) : sous « ne fait rien »,
+      // il n'y a rien à annoncer.
+      .style('cursor', d => (
+        st.click_action !== 'none' && !d.is_residual &&
+        (d.children_count > 0 || st.click_action !== 'zoom')
+      ) ? 'pointer' : 'default')
       .on('mouseover', (_, d) => {
         const ancestry = new Set(d.path)
         paths.attr('fill-opacity', s => (ancestry.has(s.id) || s.path.includes(d.id)) ? 1 : 0.3)
-        centre_label.text(d.label)
-        centre_value.text(fmt(d.value))
+        if (shows_name) centre_label.text(d.label)
+        if (shows_value) centre_value.text(fmtUnit(d.value))
       })
       .on('mouseout', () => {
         paths.attr('fill-opacity', 1)
-        centre_label.text(scope_title)
-        centre_value.text(fmt(total))
+        if (shows_name) centre_label.text(scope_title)
+        if (shows_value) centre_value.text(fmtUnit(total))
       })
+      // DEUX GESTES DANS UN, ET ILS SE SÉPARENT (os#1425). Le clic zoomait dans l'anneau ET
+      // dépliait le nœud dans le diagramme, sans que rien ne le dise. L'auteur choisit ce qu'il
+      // veut — les deux restent le défaut, c'est le comportement d'avant.
       .on('click', (_, d) => {
-        if (d.is_residual) return
-        opts.on_arc_click?.(d.id, d.is_disaggregated)
-        if (d.children_count > 0) { focus_id = d.id; render() }
+        if (d.is_residual || st.click_action === 'none') return
+        if (st.click_action !== 'zoom') {
+          // L'ascendance part du CENTRE, qui n'est pas dans le fil d'Ariane des secteurs : c'est
+          // lui le nœud déjà déplié dans le diagramme, et le premier à déplier quand il ne l'est
+          // pas. Sous un zoom radial, le centre est le secteur où l'on est entré, et la chaîne
+          // reste juste — elle repart simplement d'un cran plus bas.
+          const ancestry = centre_node ? [centre_node.id, ...d.path] : [...d.path]
+          opts.on_arc_click?.(d.id, d.is_disaggregated, d.dimension_id, ancestry)
+        }
+        if (st.click_action !== 'aggregate' && d.children_count > 0) {
+          focus_id = d.id
+          render()
+        }
       })
-    paths.append('title').text(sliceTitle)
+    if (st.tooltip_visible) paths.append('title').text(sliceTitle)
 
     // Étiquettes DANS les secteurs assez larges. Jamais sur tous : un secteur trop
     // étroit n'a que son info-bulle, et un texte tronqué à l'aveugle ne nomme rien.
     g.selectAll('text.sunburst_arc_label')
-      .data(slices.filter(d => {
-        const mid_r = inner_r + (d.depth + 0.5) * ring
-        return (d.a1 - d.a0) * mid_r >= MIN_LABEL_ARC_PX && ring >= MIN_RING_FOR_LABEL_PX
-      }))
+      .data(slices.filter(d => arcLabelOf(d, geo) !== null))
       .enter().append('text')
       .attr('class', 'sunburst_arc_label')
       .attr('transform', d => {
@@ -444,32 +769,64 @@ export const drawSunburstChart = (
         const deg = angle * 180 / Math.PI - 90
         // Au-delà du demi-tour, le texte se lirait la tête en bas.
         const flip = deg > 90 || deg < -90
-        return `rotate(${deg}) translate(${radius},0) rotate(${flip ? 180 : 0})`
+        const at = `rotate(${deg}) translate(${radius},0)`
+        // RADIALE : le texte suit le rayon (défaut). LE LONG DE L'ARC : un quart de tour de plus,
+        // dans le sens qui le garde lisible. HORIZONTALE : on défait la rotation du secteur, le
+        // texte reste droit quelle que soit sa place sur le tour.
+        if (st.label_orientation === 'tangential') return `${at} rotate(${flip ? 90 : -90})`
+        if (st.label_orientation === 'horizontal') return `${at} rotate(${-deg})`
+        return `${at} rotate(${flip ? 180 : 0})`
       })
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', 10)
-      .attr('fill', d => inkOn(d.color, palette.ink))
+      .attr('font-size', st.font_size)
+      .attr('font-family', st.font_family)
+      .attr('font-weight', st.bold ? 'bold' : null)
+      .attr('font-style', st.italic ? 'italic' : null)
+      // L'encre par CONTRASTE reste le défaut : un même bleu porte du blanc au centre et du gris
+      // foncé sur les anneaux éclaircis, et une couleur fixe rendrait la moitié des étiquettes
+      // illisible. L'auteur peut l'imposer, c'est alors son affaire.
+      .attr('fill', d => st.color_mode === 'fixed' ? st.label_color : inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
-      .text(d => {
-        const room = Math.floor((ring - LABEL_RING_PADDING_PX) / LABEL_CHAR_PX)
-        return d.label.length > room ? d.label.slice(0, Math.max(1, room - 1)) + '…' : d.label
-      })
+      .text(d => arcLabelOf(d, geo) ?? '')
 
     // ── Légende ───────────────────────────────────────────────────────────────────
+    // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
+    // un conteneur vide laisserait une gouttière.
     const legend = root_el.append('div')
-      .style('flex', '1 1 0').style('min-width', '0')
-      .style('align-self', 'center').style('max-height', '100%')
+      .style('flex', legend_below ? '0 0 auto' : '1 1 0').style('min-width', '0')
+      .style('align-self', 'center')
+      .style('max-height', legend_below ? `${legend_width}px` : '100%')
       .style('overflow-y', 'auto').style('font-size', '0.75rem')
       .style('color', palette.ink)
+      .style('display', st.legend_mode === 'none' ? 'none' : 'block')
+    const show_rings = st.legend_mode === 'auto' || st.legend_mode === 'rings' ||
+      st.legend_mode === 'both'
 
     // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
-    // et sans ce rappel un anneau n'est qu'un cercle de plus.
-    legend.append('div')
-      .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
-      .text(tree.dimension_label)
-    for (let d = 0; d < rings; d++) {
-      const name = tree.level_labels[d] ?? (opts.level_label ? opts.level_label(d + 1) : String(d + 1))
+    // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
+    // répète pas d'un anneau à l'autre : il s'écrit quand il change, et un changement
+    // d'axe est justement ce qu'il faut voir sur une couronne enchaînée (os#1424).
+    let previous_axis: string | null = null
+    for (let d = 0; show_rings && d < rings; d++) {
+      const level = d + level_offset
+      const ring_info = tree.rings[level]
+      if (ring_info && ring_info.dimension_id !== previous_axis) {
+        legend.append('div')
+          .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
+          .style('overflow', 'hidden').style('text-overflow', 'ellipsis')
+          .style('white-space', 'nowrap')
+          .attr('title', ring_info.dimension_label)
+          .text(ring_info.dimension_label)
+        previous_axis = ring_info.dimension_id
+      }
+      // Les niveaux d'un axe s'appellent souvent « 1 », « 2 » dans le modèle. Seul, le
+      // chiffre ne dit rien — on lui remet son mot, sans toucher aux niveaux qui portent
+      // un vrai nom (« Produit fini », « Région »…).
+      const named = ring_info?.level_label ?? ''
+      const name = (named === '' || /^\d+$/.test(named)) && opts.level_label
+        ? opts.level_label(named === '' ? level + 1 : Number(named))
+        : (named || String(level + 1))
       const row = legend.append('div')
         .style('display', 'flex').style('align-items', 'center')
         .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
@@ -483,23 +840,26 @@ export const drawSunburstChart = (
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
         // Le niveau SÉLECTIONNÉ dans le contrôleur est celui que le Sankey montre à
         // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
-        .style('font-weight', d === tree.selected_level_index ? 'bold' : 'normal')
+        .style('font-weight', ring_info?.is_selected_level ? 'bold' : 'normal')
         .text(name)
     }
 
-    // Puis les BRANCHES, quand il y en a plusieurs à distinguer. Sous zoom il n'y en a
-    // qu'une, et le centre la nomme déjà.
-    if (roots.length > 1) {
+    // Puis les BRANCHES QUE LE DESSIN NE NOMME PAS, et elles seules : un secteur assez
+    // large porte déjà son nom, le répéter à côté ne fait que prendre la place du disque.
+    // Un secteur trop étroit, ou dont le nom a été tronqué, n'existe en toutes lettres
+    // que dans son info-bulle — c'est là que la légende sert.
+    if (unnamed_branches.length > 0) {
       legend.append('div').style('height', '0.4rem')
       const items = legend.selectAll('div.sunburst_branch')
-        .data(roots).enter().append('div')
+        .data(unnamed_branches).enter().append('div')
         .attr('class', 'sunburst_branch')
         .style('display', 'flex').style('align-items', 'center')
         .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
       items.append('span')
         .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
         .style('border-radius', '2px')
-        .style('background', (b, i) => b.is_residual ? palette.others : branchColor(i))
+        // La pastille reprend la couleur DU SECTEUR, telle qu'elle est dessinée.
+        .style('background', b => b.color)
       items.append('span')
         .style('flex', '1 1 auto').style('overflow', 'hidden')
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
@@ -514,9 +874,13 @@ export const drawSunburstChart = (
     // Le centre d'un sunburst à plusieurs racines n'est pas « le total du diagramme » :
     // c'est une somme, juste seulement si les racines ne se recouvrent pas. Le taire
     // ferait lire un tout là où il y a un empilement.
-    if (!focused && tree.roots.length > 1 && opts.roots_sum_hint) mention(opts.roots_sum_hint)
-    if (tree.mismatch_count > 0 && opts.mismatch_label) mention(opts.mismatch_label(tree.mismatch_count))
-    if (tree.is_truncated && opts.truncated_label) mention(opts.truncated_label)
+    if (st.notes_visible) {
+      if (!centre_node && opts.roots_sum_hint) mention(opts.roots_sum_hint)
+      if (tree.mismatch_count > 0 && opts.mismatch_label) {
+        mention(opts.mismatch_label(tree.mismatch_count))
+      }
+      if (tree.is_truncated && opts.truncated_label) mention(opts.truncated_label)
+    }
   }
 
   render()

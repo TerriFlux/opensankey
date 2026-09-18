@@ -59,7 +59,8 @@ export function tagStyleLayers<T extends Type_TagStyleOwner, G extends Type_TagS
   // étiquettes (T) des groupes passés, et donc de typer `carries`.
   groups: readonly (G & Type_TagStyleGroup<T>)[],
   carries: (tag: T) => boolean,
-  lookup: (style_id: string) => S | undefined
+  lookup: (style_id: string) => S | undefined,
+  untagged_defaults?: (tag_styles: readonly S[]) => S | undefined
 ): Type_TagStyleLayer<S, G | T>[] {
   const layers: Type_TagStyleLayer<S, G | T>[] = []
   groups.forEach(group => {
@@ -70,7 +71,19 @@ export function tagStyleLayers<T extends Type_TagStyleOwner, G extends Type_TagS
       const style = tag.style_id ? lookup(tag.style_id) : undefined
       if (style !== undefined) layers.push({ style, owner: tag, from_group: false })
     })
-    if (carries_one || !group.style_id) return
+    if (carries_one) return
+    // SA#553 — élément de l'étiquette générée « Sans [groupe] » : les paramètres que règlent les
+    // styles des AUTRES étiquettes du groupe prennent leur valeur par défaut (retour d'Alexandre du
+    // 2026-09-17 : sinon un élément sans source garde, par exemple, la couleur d'une source). Sous
+    // le style propre de l'étiquette générée, qui l'emporte.
+    if (untagged_defaults !== undefined) {
+      const tag_styles = group.tags_list
+        .map(tag => tag.style_id ? lookup(tag.style_id) : undefined)
+        .filter((style): style is S => style !== undefined)
+      const defaults = tag_styles.length > 0 ? untagged_defaults(tag_styles) : undefined
+      if (defaults !== undefined) layers.push({ style: defaults, owner: group, from_group: true })
+    }
+    if (!group.style_id) return
     const style = lookup(group.style_id)
     if (style !== undefined) layers.push({ style, owner: group, from_group: true })
   })
@@ -92,6 +105,27 @@ export function topLayerDefining<S, O>(
   return undefined
 }
 
+/** Lecteur de paramètres d'un style : valeur définie, ou `undefined`. */
+export type Type_StylePropertyReader = { getElementProperty(k: string): unknown }
+
+/**
+ * SA#553 — style implicite de l'étiquette générée « Sans [groupe] » : pour chaque paramètre que
+ * définit au moins un style des autres étiquettes du groupe, sa valeur par défaut (`default_of`,
+ * défaut usine de l'attribut : gris, opacité 0,85…) ; les autres paramètres ne sont pas définis.
+ */
+export function untaggedDefaultsStyle(
+  tag_styles: readonly Type_StylePropertyReader[],
+  default_of: (k: string) => unknown
+): Type_StylePropertyReader & { id: string, name: string, is_default_style: false } {
+  return {
+    id: '',
+    name: 'Tags.untagged_defaults',
+    is_default_style: false,
+    getElementProperty: (k: string) =>
+      tag_styles.some(style => style.getElementProperty(k) !== undefined) ? default_of(k) : undefined
+  }
+}
+
 /** Suffixe des cadenas de couleur (`shape_color` → `shape_color_sustainable`). */
 export const COLOR_LOCK_SUFFIX = '_sustainable'
 
@@ -108,4 +142,31 @@ export function buildColorLockIndex(attribute_keys: readonly string[]): { [attri
     if (known.has(locked)) index[locked] = key
   })
   return index
+}
+
+/**
+ * SA#551 — porteurs (étiquettes, ou groupe pour les éléments sans étiquette) dont la couche est EN
+ * VIGUEUR sur un élément : elle est la plus prioritaire à définir au moins un de ses paramètres.
+ * Une couche dont tous les paramètres sont redéfinis par des couches plus prioritaires n'affiche
+ * rien sur cet élément (arbitrage d'Alexandre, 2026-09-17 : Source ouverte au-dessus de Méthode
+ * supplante toutes les couleurs de Méthode).
+ *
+ * @param defined_keys paramètres que définit un style
+ */
+export function layerOwnersInEffect<S, O>(
+  layers: readonly Type_TagStyleLayer<S, O>[],
+  defined_keys: (style: S) => readonly string[],
+  into: Set<O> = new Set<O>()
+): Set<O> {
+  const taken = new Set<string>()
+  for (let i = layers.length - 1; i >= 0; i--) {
+    let in_effect = false
+    defined_keys(layers[i].style).forEach(key => {
+      if (taken.has(key)) return
+      taken.add(key)
+      in_effect = true
+    })
+    if (in_effect) into.add(layers[i].owner)
+  }
+  return into
 }

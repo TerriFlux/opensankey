@@ -54,7 +54,10 @@ function getCanvasFontStringAtSize(
 ): string {
   const node = textElement.node()
   if (!node || typeof window === 'undefined') return `${fontSizePx}px sans-serif`
-  const computed = window.getComputedStyle(node)
+  // os#1385 — style calculé dans la VUE du nœud : un canevas détaché dessine son texte dans une
+  // autre fenêtre de navigateur, dont la feuille de style est la sienne. Retombe sur la fenêtre de
+  // la page pour tout le reste, qui y vit.
+  const computed = (node.ownerDocument.defaultView ?? window).getComputedStyle(node)
   return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${fontSizePx}px ${computed.fontFamily || 'sans-serif'}`
 }
 
@@ -208,6 +211,18 @@ export abstract class DrawLabelBase {
    */
   protected domId(name: string): string {
     return (this._element.drawing_area?.dom_id_prefix ?? '') + name
+  }
+
+  /**
+   * os#1385 — DOCUMENT où chercher les objets de ce libellé. Le préfixe ci-dessus lève
+   * l'ambiguïté entre deux canevas d'une MÊME page ; il ne dit rien quand le canevas vit dans une
+   * autre FENÊTRE de navigateur (feuille détachée sur le second écran) : son entrée d'édition en
+   * ligne n'est alors dans le document de la page à aucun identifiant. `getElementById` doit donc
+   * s'adresser au document d'accueil de la zone — qui est celui de la page dans le cas courant,
+   * où rien ne change.
+   */
+  protected labelDocument(): Document {
+    return this._element.drawing_area?.container_owner_document ?? document
   }
 
   protected getTextSelector(): string {
@@ -1398,13 +1413,17 @@ export abstract class DrawLabelBase {
     // Recherche PAR LE DOCUMENT : l'identifiant doit donc être celui de CETTE zone (cf.
     // `domId`), sinon la frappe irait dans l'input homonyme d'un autre canevas de la page.
     const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
-    const input = document.getElementById(inputId) as HTMLElement | null
+    // os#1385 — dans le document de la ZONE : une feuille détachée a son entrée dans sa fenêtre.
+    const doc = this.labelDocument()
+    const input = doc.getElementById(inputId) as HTMLElement | null
     if (!input) return
     // Capturé AVANT toute réécriture du contenu : c'est la valeur que l'undo restaure.
     this._edit_value_before = this.getInputInitialValue()
     input.focus()
-    const sel = window.getSelection()
-    const range = document.createRange()
+    // La SÉLECTION et le RANGE appartiennent au même document que l'entrée : celle de la fenêtre
+    // principale ne sait pas placer un curseur dans un nœud d'une autre fenêtre.
+    const sel = (doc.defaultView ?? window).getSelection()
+    const range = doc.createRange()
     // os#1340 — deux entrées en édition, deux intentions distinctes (convention
     // Excel / Explorateur Windows / draw.io) :
     //   - `initialValue` défini = frappe directe sur un élément sélectionné (#688)
@@ -1450,7 +1469,7 @@ export abstract class DrawLabelBase {
     this._edit_value_before = null
     if (before === null || !this.onInputChange) return
     const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
-    const input = document.getElementById(inputId) as HTMLElement | null
+    const input = this.labelDocument().getElementById(inputId) as HTMLElement | null
     // Lu avant setInputLabelInvisible : le redraw détruit l'input.
     const after = input?.innerText ?? before
     if (after === before) return
@@ -1472,7 +1491,7 @@ export abstract class DrawLabelBase {
   public openInlineEditor() {
     if (!this._element.drawing_area.editable || !this.enableEditing) return
     const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
-    if (!document.getElementById(inputId)) {
+    if (!this.labelDocument().getElementById(inputId)) {
       this._force_editable_draw = true
       this.drawGenericLabel()
       this._force_editable_draw = false

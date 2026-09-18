@@ -162,10 +162,22 @@ export const sankeyRootSchema = z
     // `validateSankeyRootJSON` ne lit que les erreurs, jamais la donnée parsée.
     process: unitaryProcessSchema.catch({ central_node_id: '' }).optional(),
     // OS#85 — feuilles du document, absentes d'un fichier mono-feuille.
-    sheets: sheetsSchema.optional(),
+    //
+    // `.catch()`, pour la RAISON EXACTE de `process` ci-dessus, et parce qu'un
+    // contrat de tolérance existait AVANT que cette clé ne soit décrite ici :
+    // `sheetsFromJSON` ignore SANS BRUIT une section `sheets` abîmée et ouvre le
+    // document en mono-feuille (`sheets.test.ts`, « clé sheets malformée »).
+    // Décrite sans `.catch()`, la clé devenait un barrage : un `order` qui n'est
+    // pas un tableau — ce qu'une version intermédiaire a pu écrire — rendait le
+    // fichier ENTIER inouvrable, alors que son diagramme est parfaitement
+    // lisible. Décrire le format ne doit jamais retirer un droit à la lecture.
+    sheets: sheetsSchema.catch({ current: '', order: [], entries: {} }).optional(),
     // os#1385 (lot 4, D8) — préférences de l'espace de travail, absentes d'un
-    // contenu de feuille et de tout document secondaire.
-    workspace: workspaceSchema.optional(),
+    // contenu de feuille et de tout document secondaire. `.catch()` pour la même
+    // raison : `workspaceStateFromJSON` se contente de ce qu'elle sait lire, et
+    // une préférence d'interface abîmée n'est pas un motif de refuser un
+    // diagramme.
+    workspace: workspaceSchema.catch({}).optional(),
   })
   .passthrough()
 
