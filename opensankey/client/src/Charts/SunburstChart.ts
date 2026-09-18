@@ -23,6 +23,7 @@ import * as d3 from '../d3Modules'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureTitle } from './figureChartStyle'
 import { mountFigureTitle } from './figureTitle'
+import type { Type_FigureZoomHandle } from './figureZoomBridge'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -55,6 +56,11 @@ export interface Type_SunburstStyle {
   separator_part: 'before' | 'after'
   /** La largeur de la boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne. */
   box_width: number
+  /**
+   * LES ÉTIQUETTES QUI NE TIENNENT PAS SORTENT DU DISQUE (demande Julien, 18/09), reliées à leur
+   * secteur par un trait, et se déplacent à la main (cf. `label_positions`).
+   */
+  callout: boolean
   /** Ceux-ci sont les attributs d'ÉTIQUETTE des éléments (`name_label_*`). */
   font_family: string
   font_size: number
@@ -107,6 +113,7 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   separator: '',
   separator_part: 'after',
   box_width: 150,
+  callout: false,
   font_family: 'Arial,sans-serif',
   font_size: 10,
   bold: false,
@@ -175,6 +182,21 @@ export interface Type_SunburstChartOptions {
   on_arc_click?: (
     node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[]
   ) => void
+  /**
+   * LES ÉTIQUETTES POSÉES À LA MAIN (demande Julien, 18/09) : la position d'une étiquette sortie
+   * du disque, par identifiant de secteur, en pixels depuis le centre et hors zoom. Absente : la
+   * place que le tracé lui donne, dans l'axe de son secteur.
+   */
+  label_positions?: { [sector_id: string]: { x: number, y: number } }
+  /** L'auteur vient de déposer une étiquette : à l'appelant de retenir où. */
+  on_label_move?: (sector_id: string, position: { x: number, y: number }) => void
+  /**
+   * CE QUE LE DESSIN PRÊTE AU CONTRÔLE DE ZOOM de la colonne d'outils (cf. figureZoomBridge) :
+   * appelé avec une poignée au premier dessin, avec `null` au démontage.
+   */
+  zoom_handle?: (handle: Type_FigureZoomHandle | null) => void
+  /** Le point de vue vient de changer (molette, glisser, boutons) : l'indicateur doit suivre. */
+  on_zoom?: (k: number) => void
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -222,6 +244,10 @@ const MIN_RING_FOR_LABEL_PX = 26
 const LABEL_RING_PADDING_PX = 8
 // Largeur moyenne d'un caractère à la taille d'étiquette retenue.
 const LABEL_CHAR_PX = 6
+// Bord d'arc minimal, en pixels, pour qu'une étiquette sortie du disque ait un secteur à montrer.
+const MIN_CALLOUT_EDGE_PX = 6
+// L'écart entre le disque et une étiquette sortie, quand l'auteur ne l'a pas encore déplacée.
+const CALLOUT_GAP_PX = 14
 // Écart entre deux anneaux : un vide de la couleur du fond, pas un trait.
 const ARC_GAP_PX = 1.5
 
@@ -641,6 +667,14 @@ export const drawSunburstChart = (
   let focus_id: string | null = null
   // Le point de vue de l'auteur — zoom et déplacement — gardé d'un redessin à l'autre.
   let view: d3.ZoomTransform = d3.zoomIdentity
+  // Le svg et son comportement de zoom DU DERNIER DESSIN : c'est à eux que parle la poignée
+  // prêtée au contrôle de la colonne d'outils, d'un redessin à l'autre.
+  let zoomer: {
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>
+    zoom: d3.ZoomBehavior<SVGSVGElement, unknown>
+  } | null = null
+  const ZOOM_MIN = 0.5
+  const ZOOM_MAX = 8
 
   const render = () => {
     d3.select(container).selectAll('*').remove()
@@ -765,10 +799,18 @@ export const drawSunburstChart = (
       const text = arcLabelOf(d, geo)
       return text !== null && text.replace(/\n/g, ' ') === sectorText(d)
     }
+    // Un secteur assez large pour qu'un trait de rappel désigne quelque chose : au-dessous, le
+    // rappel pointerait un fil, et cent rappels sur un anneau de miettes ne nommeraient rien.
+    const calloutable = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
+      st.callout && !d.is_residual &&
+      (d.a1 - d.a0) * (geo.inner_r + (d.depth + 1) * geo.ring) >= MIN_CALLOUT_EDGE_PX
+    // Sorti du disque avec son trait, un secteur est nommé aussi sûrement que dans son anneau.
+    const named = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
+      namesItself(d, geo) || calloutable(d, geo)
     // Les secteurs du premier anneau que le dessin ne nomme pas. Ils portent déjà leur
     // couleur de branche : la légende n'a qu'à la recopier.
     const unnamedBranches = (geo: Type_Geometry) =>
-      slices.filter(s => s.depth === 0 && !namesItself(s, geo))
+      slices.filter(s => s.depth === 0 && !named(s, geo))
 
     // La légende demandée décide de la place qu'on lui réserve, avant même de la remplir :
     // « aucune » n'en prend aucune, « toutes les branches » en prend une large d'office.
@@ -790,8 +832,13 @@ export const drawSunburstChart = (
       ? []
       : st.legend_parts === 'all' ? slices.filter(s => s.depth === 0) : unnamedBranches(geo)
 
+    // LE SVG PREND TOUTE LA CASE qui n'est pas à la légende, et le disque se centre dedans : un
+    // svg carré posé à gauche laissait à droite une bande morte de la largeur du cadre moins la
+    // hauteur (constaté par Julien, 18/09), où ni le disque ni le zoom ne pouvaient aller.
+    const box_w = legend_below ? width : Math.max(side, width - legend_width - (legend_width > 0 ? 12 : 0))
+    const box_h = legend_below ? Math.max(side, height - legend_width - (legend_width > 0 ? 12 : 0)) : height
     const svg = root_el.append('svg')
-      .attr('width', side).attr('height', side)
+      .attr('width', box_w).attr('height', box_h)
       .style('flex', '0 0 auto')
       // Le disque ne déborde jamais de sa case : ce qu'un zoom pousse dehors est coupé, pas
       // dessiné par-dessus la légende ou le voisin.
@@ -801,17 +848,23 @@ export const drawSunburstChart = (
     // glisser pour déplacer, double-clic pour recentrer. Le point de vue survit aux redessins
     // (redimensionnement, zoom radial) — c'est `view`, tenu hors de `render`.
     const place = (t: d3.ZoomTransform) =>
-      g.attr('transform', `translate(${side / 2 + t.x},${side / 2 + t.y}) scale(${t.k})`)
+      g.attr('transform', `translate(${box_w / 2 + t.x},${box_h / 2 + t.y}) scale(${t.k})`)
     place(view)
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 8])
+      .scaleExtent([ZOOM_MIN, ZOOM_MAX])
       // Un clic qui a bougé de quelques pixels reste un clic sur le secteur, pas un déplacement.
       .clickDistance(4)
-      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => { view = event.transform; place(view) })
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+        const changed = event.transform.k !== view.k
+        view = event.transform
+        place(view)
+        if (changed) opts.on_zoom?.(view.k)
+      })
     svg.call(zoom)
       .call(zoom.transform, view)
       .on('dblclick.zoom', null)
       .on('dblclick', () => { svg.call(zoom.transform, d3.zoomIdentity) })
+    zoomer = { svg, zoom }
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
     const scope_title = centre_node
@@ -959,6 +1012,58 @@ export const drawSunburstChart = (
       })
     })
 
+    // ── Étiquettes SORTIES DU DISQUE (demande Julien, 18/09) ─────────────────────────────
+    // Celles que leur secteur ne tient pas en entier, quand l'auteur le demande (`callout`) :
+    // posées hors du disque dans l'axe du secteur, reliées à son bord par un trait, et
+    // DÉPLAÇABLES — la position déposée est rendue à l'appelant, qui la retient par figure.
+    // Le zoom ne les touche pas autrement que le reste : elles vivent dans `g`, comme les arcs.
+    const callouts = slices.filter(d => !namesItself(d, geo) && calloutable(d, geo))
+    if (callouts.length > 0) {
+      const outer_r = geo.outer_r
+      const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
+      const edgeOf = (d: Type_SunburstSlice) =>
+        point(inner_r + (d.depth + 1) * ring - ARC_GAP_PX, (d.a0 + d.a1) / 2)
+      const defaultAt = (d: Type_SunburstSlice) => point(outer_r + CALLOUT_GAP_PX, (d.a0 + d.a1) / 2)
+      const positionOf = (d: Type_SunburstSlice) => opts.label_positions?.[d.id] ?? defaultAt(d)
+      const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
+      const layer = g.append('g').attr('class', 'sunburst_callouts')
+      const items = layer.selectAll<SVGGElement, Type_SunburstSlice>('g.sunburst_callout')
+        .data(callouts)
+        .enter().append('g')
+        .attr('class', 'sunburst_callout')
+        .style('cursor', 'move')
+      items.append('line')
+        .attr('class', 'sunburst_callout_line')
+        .attr('stroke', palette.muted).attr('stroke-width', 1)
+        .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
+        .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
+      items.append('text')
+        .attr('class', 'sunburst_callout_text')
+        .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
+        .attr('text-anchor', d => anchorOf(positionOf(d)))
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', st.font_size)
+        .attr('font-family', st.font_family)
+        .attr('font-weight', st.bold ? 'bold' : null)
+        .attr('font-style', st.italic ? 'italic' : null)
+        .attr('fill', st.color_mode === 'fixed' ? st.label_color : palette.ink)
+        .text(d => sectorText(d))
+      if (st.tooltip_visible) items.append('title').text(sliceTitle)
+      // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt. Les
+      // coordonnées sont celles de `g`, donc déjà hors zoom — c'est ce qu'on persiste.
+      items.call(d3.drag<SVGGElement, Type_SunburstSlice>()
+        .on('start', (event) => { event.sourceEvent?.stopPropagation() })
+        .on('drag', function (event) {
+          const p = { x: event.x, y: event.y }
+          const item = d3.select(this)
+          item.select('line').attr('x2', p.x).attr('y2', p.y)
+          item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', anchorOf(p))
+        })
+        .on('end', (event, d) => {
+          opts.on_label_move?.(d.id, { x: Math.round(event.x), y: Math.round(event.y) })
+        }))
+    }
+
     // ── Légende ───────────────────────────────────────────────────────────────────
     // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
     // un conteneur vide laisserait une gouttière.
@@ -1054,6 +1159,16 @@ export const drawSunburstChart = (
 
   render()
 
+  // La poignée prêtée au contrôle de zoom : elle parle toujours au svg du dernier dessin.
+  opts.zoom_handle?.({
+    getScale: () => view.k,
+    setScale: (k) => {
+      const bounded = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k))
+      zoomer?.svg.call(zoomer.zoom.scaleTo, bounded)
+    },
+    scaleBy: (factor) => { zoomer?.svg.call(zoomer.zoom.scaleBy, factor) }
+  })
+
   let raf = 0
   const ro = new ResizeObserver(() => {
     if (raf) cancelAnimationFrame(raf)
@@ -1063,6 +1178,7 @@ export const drawSunburstChart = (
   return () => {
     ro.disconnect()
     if (raf) cancelAnimationFrame(raf)
+    opts.zoom_handle?.(null)
     d3.select(container).selectAll('*').remove()
   }
 }

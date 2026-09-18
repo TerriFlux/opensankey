@@ -27,6 +27,10 @@ import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import { figureUnitOf } from './figureUnit'
 import { figureTitleOf } from '../Charts/figureChartStyle'
+import { figureZoomHandle, publishFigureZoom } from '../Charts/figureZoomBridge'
+import { ZOOM_TOPIC } from '../types/EventBus'
+import type { Type_JSON } from '../types/Utils'
+import type { Type_RepresentationContext, Type_RepresentationZoom } from './RepresentationRegistry'
 import { aggregate, disaggregate } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
@@ -38,11 +42,42 @@ import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 
-// Ce que le sunburst lit du contexte du registre.
+// Ce que le sunburst lit du contexte du registre. La fenêtre et la vignette, quand il y en a :
+// c'est sous elles qu'une étiquette déposée à la main s'écrit, et que le zoom se prête.
 export interface Type_SunburstDrawContext {
   app_data: Class_ApplicationData
   options: { [key: string]: unknown }
+  window_id?: string
+  pane_key?: string
 }
+
+/** La position des étiquettes sorties du disque, lue du sac ; rien d'autre qu'un dictionnaire. */
+const readLabelPositions = (raw: unknown): { [id: string]: { x: number, y: number } } => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: { [id: string]: { x: number, y: number } } = {}
+  Object.entries(raw as { [id: string]: unknown }).forEach(([id, p]) => {
+    const pos = p as { x?: unknown, y?: unknown } | null
+    if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') out[id] = { x: pos.x, y: pos.y }
+  })
+  return out
+}
+
+/**
+ * LE ZOOM DU SUNBURST, capacité déclarée (os#1409) : les boutons −/+/% de la colonne d'outils
+ * parlent au dessin monté dans la vignette active de la fenêtre active (cf. figureZoomBridge).
+ * Bornes et pas : ceux du `d3.zoom` du tracé.
+ */
+export const SUNBURST_ZOOM: Type_RepresentationZoom = {
+  getScale: (ctx) => handleOf(ctx)?.getScale() ?? 1,
+  setScale: (k, ctx) => handleOf(ctx)?.setScale(k),
+  scaleBy: (factor, ctx) => handleOf(ctx)?.scaleBy(factor),
+  min: 0.5,
+  max: 8,
+  neutral: 1,
+  isAvailable: (ctx) => handleOf(ctx) !== null
+}
+const handleOf = (ctx: Type_RepresentationContext) =>
+  figureZoomHandle(ctx.window_id, ctx.app_data.menu_configuration?.main_zone_active_pane_key)
 
 // Options du registre (sac de clés) → options typées du sunburst. Toute clé absente ou
 // mal typée retombe sur le défaut : un réglage persisté par une version ultérieure ne
@@ -112,6 +147,7 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
   keep('name_label_separator', 'string', 'separator')
   keep('name_label_separator_part', 'string', 'separator_part')
   keep('name_label_box_width', 'number', 'box_width')
+  keep('name_label_callout', 'boolean', 'callout')
   keep('name_label_font_family', 'string', 'font_family')
   keep('name_label_font_size', 'number', 'font_size')
   keep('name_label_bold', 'boolean', 'bold')
@@ -238,9 +274,22 @@ export const drawSunburstRepresentation = (
     return () => { container.textContent = '' }
   }
 
+  const mc = app_data.menu_configuration
+  const { window_id, pane_key } = ctx
   return drawSunburstChart(container, tree, {
     style: readSunburstStyle(ctx.options ?? {}),
     title: figureTitleOf(ctx.options ?? {}),
+    label_positions: readLabelPositions(ctx.options?.['label_positions']),
+    // Une étiquette déposée s'écrit sur LA FIGURE de la vignette — hors fenêtre (pop-up de
+    // présentation), il n'y a personne à qui l'écrire et le geste reste à l'écran.
+    on_label_move: window_id !== undefined && pane_key !== undefined
+      ? (id, position) => {
+        const positions = { ...readLabelPositions(ctx.options?.['label_positions']), [id]: position }
+        mc.setMainZonePaneOptions(window_id, pane_key, { ...ctx.options, label_positions: positions } as Type_JSON)
+      }
+      : undefined,
+    zoom_handle: (handle) => publishFigureZoom(window_id, pane_key, handle),
+    on_zoom: () => mc.notify(ZOOM_TOPIC),
     // L'UNITÉ DU DIAGRAMME, lue sur un flux représentatif comme partout ailleurs
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.

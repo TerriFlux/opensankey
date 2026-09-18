@@ -26,7 +26,7 @@
 
 import React from 'react'
 import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
-import { drawSunburstRepresentation } from './SunburstRepresentation'
+import { drawSunburstRepresentation, SUNBURST_ZOOM } from './SunburstRepresentation'
 // os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
 import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
@@ -253,6 +253,10 @@ export const registerBaseRepresentations = (): void => {
     // PAS DE MENU AU CLIC DROIT (os#1425). Le fond ouvrait les réglages de la figure (os#1397) ;
     // c'est un geste que le diagramme principal n'a pas, et les réglages ont leur place dans
     // l'inspecteur et « Filtres et coordonnées ». Le clic droit reste celui du navigateur.
+    //
+    // Le zoom, lui, est DÉCLARÉ (os#1409) : la colonne d'outils zoome le disque de la vignette
+    // active comme elle zoome le diagramme (demande Julien, 18/09).
+    zoom: SUNBURST_ZOOM,
     draw: (container, ctx) => drawSunburstRepresentation(container, {
       ...ctx,
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
