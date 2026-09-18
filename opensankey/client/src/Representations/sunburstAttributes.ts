@@ -16,27 +16,36 @@
 // des sept langues, sorte de contrôle et choix — et le formulaire générique les rend, dans
 // l'inspecteur pour la mise en forme, dans « Filtres et coordonnées » pour ce qu'on regarde.
 //
-// LA SORTE RÉPARTIT, et elle seule (cf. figureControls). D'où le classement ci-dessous :
-//  - 'navigation' : la hiérarchie de départ, l'enchaînement, la profondeur, le régime de valeur,
-//    la valeur d'un nœud, le seuil de regroupement — tout ce qui change CE QU'ON LIT ;
-//  - 'style' : couleurs, étiquettes, centre, légende, mentions, info-bulle, geste du clic — tout
-//    ce qui change COMMENT ça se dessine, et qu'un style a le droit de porter ;
+// LES RÉGLAGES DES NŒUDS ET DES FLUX SONT REPRIS TELS QUELS (arbitrage Julien, 18/09/2026) : la
+// police d'une étiquette, sa taille, son gras, le nombre de chiffres significatifs, la visibilité
+// de l'unité, l'opacité et la bordure d'une forme sont DÉJÀ déclarés et traduits pour les éléments
+// (`ALL_ATTRIBUTES_CONFIG`). Une couronne les reprend par `elementAttribute`, sous les mêmes noms
+// et les mêmes libellés, rangés dans les mêmes groupes — Forme, Libellé, Valeur. Ce qui n'a pas de
+// sens pour elle ne se déclare pas et n'apparaît donc nulle part : la position d'une étiquette
+// (elle suit son secteur), ses marges, son encadré, l'icône. Ce qui lui est propre s'ajoute.
+//
+// LA SORTE RÉPARTIT ENTRE LES DEUX PANNEAUX, et elle seule (cf. figureControls) :
+//  - 'navigation' : la hiérarchie de départ, l'enchaînement, la profondeur, le régime de valeur —
+//    tout ce qui change CE QU'ON LIT ;
+//  - 'style' : tout ce qui change COMMENT ça se dessine, et qu'un style a le droit de porter ;
 //  - 'identity' : la racine, posée par la fenêtre depuis son élément, jamais par l'auteur.
 //
-// Ce fichier ne contient AUCUNE valeur en dur du tracé : chaque défaut est celui que le dessin
-// appliquait avant ce lot, pour qu'aucune couronne déjà enregistrée ne change d'aspect.
+// Aucun défaut n'est inventé : chacun est celui que le dessin appliquait avant ce lot, pour
+// qu'aucune couronne déjà enregistrée ne change d'aspect.
 
-import { figureAttribute } from './figureAttribute'
+import { elementAttribute, figureAttribute } from './figureAttribute'
 import type { Labels7 } from './figureAttribute'
-import type { Type_FigureAttributesConfig, Type_FigureChoiceContext } from './Figure'
+import type { Type_FigureAttributesConfig, Type_FigureChoiceContext, Type_OptionBag } from './Figure'
+import { ALL_ATTRIBUTES_CONFIG, font_families } from '../Elements/ElementsAttributesConfig'
 import { sunburstDimensions } from '../Charts/SunburstHierarchy'
 import type { Type_SunburstSankey } from '../Charts/SunburstHierarchy'
 
-/** Groupes visuels du formulaire — clés i18n, cf. `sunburst.group.*`. */
+/** Groupes du formulaire — clés i18n. Les trois premiers sont ceux des nœuds et des flux. */
 const G = {
   read: 'sunburst.group.read',
-  colors: 'sunburst.group.colors',
+  shape: 'sunburst.group.shape',
   labels: 'sunburst.group.labels',
+  values: 'sunburst.group.values',
   centre: 'sunburst.group.centre',
   legend: 'sunburst.group.legend',
   notes: 'sunburst.group.notes'
@@ -51,12 +60,21 @@ const dimensionChoices = (ctx: Type_FigureChoiceContext) => {
   return sunburstDimensions(sankey).map(d => ({ value: d.id, label: d.label }))
 }
 
-const yes_no = (o: { [k: string]: unknown }, key: string, fallback: boolean): boolean =>
+/** Les polices du diagramme, la même liste que pour un nœud ou un flux. */
+const fontChoices = () => font_families.map(f => ({ value: f, label: f.split(',')[0] }))
+
+const is = (o: Type_OptionBag, key: string, fallback: boolean): boolean =>
   typeof o[key] === 'boolean' ? o[key] as boolean : fallback
+
+/** Les étiquettes sont-elles écrites du tout ? Rien de ce qui les règle n'a de sens sinon. */
+const labelled = (o: Type_OptionBag) => o['labels_mode'] !== 'none'
+/** La valeur est-elle écrite à côté du nom ? */
+const valued = (o: Type_OptionBag) =>
+  labelled(o) && is(o, 'value_label_is_visible', false)
 
 export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
 
-  // ── Ce qu'on lit ────────────────────────────────────────────────────────────────────────────
+  // ── Ce qu'on lit ────────────────────────────────────────────────────────────── navigation ──
   dimension_id: figureAttribute<string | undefined>(undefined, 'navigation', {
     en: 'First hierarchy', fr: 'Première hiérarchie', es: 'Primera jerarquía',
     de: 'Erste Hierarchie', it: 'Prima gerarchia', 'zh-CN': '首个层级', ja: '最初の階層'
@@ -105,12 +123,14 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     kind: 'select',
     choices: [
       choice('sum', {
-        en: 'Sum of children', fr: 'Somme des enfants', es: 'Suma de los hijos',
-        de: 'Summe der Kinder', it: 'Somma dei figli', 'zh-CN': '子节点之和', ja: '子ノードの合計'
+        en: 'the sum of its children', fr: 'la somme de ses enfants', es: 'la suma de sus hijos',
+        de: 'der Summe seiner Kinder', it: 'la somma dei suoi figli',
+        'zh-CN': '其子节点之和', ja: '子ノードの合計'
       }),
       choice('declared', {
-        en: 'Node value', fr: 'Valeur du nœud', es: 'Valor del nodo', de: 'Knotenwert',
-        it: 'Valore del nodo', 'zh-CN': '节点自身值', ja: 'ノードの値'
+        en: 'its own value', fr: 'sa valeur propre', es: 'su propio valor',
+        de: 'seinem eigenen Wert', it: 'il suo valore proprio',
+        'zh-CN': '其自身的值', ja: '自身の値'
       })
     ],
     group: G.read,
@@ -150,6 +170,57 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     advanced: true
   }),
 
+  // ── Forme ────────────────────────────────────────────────────────────────────────── style ──
+  color_source: figureAttribute<'palette' | 'model'>('palette', 'style', {
+    en: 'Sector colour', fr: 'Couleur des secteurs', es: 'Color de los sectores',
+    de: 'Farbe der Sektoren', it: 'Colore dei settori', 'zh-CN': '扇区颜色', ja: '扇形の色'
+  }, undefined, {
+    kind: 'select',
+    choices: [
+      choice('palette', {
+        en: 'Figure palette', fr: 'Palette de la figure', es: 'Paleta de la figura',
+        de: 'Palette der Abbildung', it: 'Tavolozza della figura',
+        'zh-CN': '图形调色板', ja: '図のパレット'
+      }),
+      choice('model', {
+        en: 'Node colour from the model', fr: 'Couleur du nœud dans le modèle',
+        es: 'Color del nodo en el modelo', de: 'Knotenfarbe aus dem Modell',
+        it: 'Colore del nodo nel modello', 'zh-CN': '模型中的节点颜色', ja: 'モデルのノード色'
+      })
+    ],
+    group: G.shape
+  }),
+
+  depth_shading: figureAttribute<boolean>(true, 'style', {
+    en: 'Lighten by depth', fr: 'Éclaircir selon la profondeur', es: 'Aclarar según la profundidad',
+    de: 'Nach Tiefe aufhellen', it: 'Schiarire in base alla profondità',
+    'zh-CN': '按层级深浅变化', ja: '深さに応じて明るくする'
+  }, {
+    en: 'Hue says the branch, lightness says the ring.',
+    fr: 'La teinte dit la branche, la clarté dit l’anneau.',
+    es: 'El tono dice la rama, la claridad dice el anillo.',
+    de: 'Der Farbton nennt den Zweig, die Helligkeit den Ring.',
+    it: 'La tinta dice il ramo, la chiarezza dice l’anello.',
+    'zh-CN': '色相表示分支，明度表示环层。',
+    ja: '色相が枝を、明度がリングを表します。'
+  }, { group: G.shape, visibleIf: (o) => o['color_source'] !== 'model' }),
+
+  // Repris des éléments : ce sont les mêmes questions, sous les mêmes noms. Les valeurs d'usine
+  // sont celles DU TRACÉ (un secteur est opaque, son liséré blanc et fin), pas celles d'un nœud.
+  shape_opacity: elementAttribute(ALL_ATTRIBUTES_CONFIG.shape_opacity, 'style', {
+    kind: 'number', min: 0, max: 1, step: 0.05, group: G.shape, advanced: true
+  }, 1),
+  shape_border_visible: elementAttribute(ALL_ATTRIBUTES_CONFIG.shape_border_visible, 'style', {
+    group: G.shape
+  }),
+  shape_border_color: elementAttribute(ALL_ATTRIBUTES_CONFIG.shape_border_color, 'style', {
+    kind: 'color', group: G.shape, visibleIf: (o) => is(o, 'shape_border_visible', true)
+  }, '#ffffff'),
+  shape_border_thickness: elementAttribute(ALL_ATTRIBUTES_CONFIG.shape_border_thickness, 'style', {
+    kind: 'number', min: 0, max: 8, step: 0.5, group: G.shape, advanced: true,
+    visibleIf: (o) => is(o, 'shape_border_visible', true)
+  }),
+
   sort_order: figureAttribute<'value_desc' | 'value_asc' | 'name' | 'model'>(
     'value_desc', 'style', {
       en: 'Sector order', fr: 'Ordre des secteurs', es: 'Orden de los sectores',
@@ -178,74 +249,28 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
           'zh-CN': '模型顺序', ja: 'モデルの順序'
         })
       ],
-      group: G.read
+      group: G.shape
     }),
 
-  others_threshold: figureAttribute<number>(1.5, 'style', {
-    en: 'Group parts under (% of the whole)', fr: 'Regrouper les parts sous (% du tout)',
-    es: 'Agrupar las partes por debajo de (% del total)',
-    de: 'Teile zusammenfassen unter (% des Ganzen)',
-    it: 'Raggruppare le parti sotto (% del totale)',
-    'zh-CN': '低于此占比的部分合并（占整体 %）', ja: '全体に対する割合がこの値未満の部分をまとめる（%）'
+  others_threshold: figureAttribute<number>(0, 'style', {
+    en: 'Also group parts under (% of the whole)',
+    fr: 'Regrouper aussi les parts sous (% du tout)',
+    es: 'Agrupar también las partes por debajo de (% del total)',
+    de: 'Teile auch zusammenfassen unter (% des Ganzen)',
+    it: 'Raggruppare anche le parti sotto (% del totale)',
+    'zh-CN': '另将低于此占比的部分合并（占整体 %）',
+    ja: '全体に対する割合がこの値未満の部分もまとめる（%）'
   }, {
-    en: 'Zero never groups. A sector too thin to be seen or hovered is folded into “Others”.',
-    fr: 'Zéro ne regroupe jamais. Un secteur trop étroit pour être vu ou survolé rejoint « Autres ».',
-    es: 'Cero no agrupa nunca. Un sector demasiado estrecho para verse pasa a «Otros».',
-    de: 'Null fasst nie zusammen. Ein zu schmaler Sektor wandert in „Andere“.',
-    it: 'Zero non raggruppa mai. Un settore troppo stretto finisce in «Altri».',
-    'zh-CN': '设为 0 则从不合并。过窄而无法查看或悬停的扇区会并入「其他」。',
-    ja: '0 なら決してまとめません。細すぎて見えない扇形は「その他」に入ります。'
-  }, { kind: 'number', min: 0, max: 25, step: 0.5, group: G.read, advanced: true }),
+    en: 'Zero only folds what cannot be seen at all. A folded sector joins “Others”.',
+    fr: 'Zéro ne replie que ce qui ne se voit pas du tout. Un secteur replié rejoint « Autres ».',
+    es: 'Cero solo pliega lo que no puede verse. Un sector plegado pasa a «Otros».',
+    de: 'Null faltet nur, was gar nicht sichtbar ist. Ein gefalteter Sektor wandert in „Andere“.',
+    it: 'Zero ripiega solo ciò che non si vede affatto. Un settore ripiegato finisce in «Altri».',
+    'zh-CN': '设为 0 时只合并完全看不见的部分，合并后归入「其他」。',
+    ja: '0 の場合は見えない分だけをまとめ、「その他」に入ります。'
+  }, { kind: 'number', min: 0, max: 25, step: 0.5, group: G.shape, advanced: true }),
 
-  // ── Couleurs ────────────────────────────────────────────────────────────────────────────────
-  color_source: figureAttribute<'palette' | 'model'>('palette', 'style', {
-    en: 'Sector colour', fr: 'Couleur des secteurs', es: 'Color de los sectores',
-    de: 'Farbe der Sektoren', it: 'Colore dei settori', 'zh-CN': '扇区颜色', ja: '扇形の色'
-  }, undefined, {
-    kind: 'select',
-    choices: [
-      choice('palette', {
-        en: 'Figure palette', fr: 'Palette de la figure', es: 'Paleta de la figura',
-        de: 'Palette der Abbildung', it: 'Tavolozza della figura',
-        'zh-CN': '图形调色板', ja: '図のパレット'
-      }),
-      choice('model', {
-        en: 'Node colour from the model', fr: 'Couleur du nœud dans le modèle',
-        es: 'Color del nodo en el modelo', de: 'Knotenfarbe aus dem Modell',
-        it: 'Colore del nodo nel modello', 'zh-CN': '模型中的节点颜色', ja: 'モデルのノード色'
-      })
-    ],
-    group: G.colors
-  }),
-
-  depth_shading: figureAttribute<boolean>(true, 'style', {
-    en: 'Lighten by depth', fr: 'Éclaircir selon la profondeur', es: 'Aclarar según la profundidad',
-    de: 'Nach Tiefe aufhellen', it: 'Schiarire in base alla profondità',
-    'zh-CN': '按层级深浅变化', ja: '深さに応じて明るくする'
-  }, {
-    en: 'Hue says the branch, lightness says the ring.',
-    fr: 'La teinte dit la branche, la clarté dit l’anneau.',
-    es: 'El tono dice la rama, la claridad dice el anillo.',
-    de: 'Der Farbton nennt den Zweig, die Helligkeit den Ring.',
-    it: 'La tinta dice il ramo, la chiarezza dice l’anello.',
-    'zh-CN': '色相表示分支，明度表示环层。',
-    ja: '色相が枝を、明度がリングを表します。'
-  }, { group: G.colors }),
-
-  border_visible: figureAttribute<boolean>(true, 'style', {
-    en: 'Sector border', fr: 'Bordure des secteurs', es: 'Borde de los sectores',
-    de: 'Rand der Sektoren', it: 'Bordo dei settori', 'zh-CN': '扇区描边', ja: '扇形の枠線'
-  }, undefined, { group: G.colors }),
-
-  border_color: figureAttribute<string>('#ffffff', 'style', {
-    en: 'Border colour', fr: 'Couleur de la bordure', es: 'Color del borde',
-    de: 'Randfarbe', it: 'Colore del bordo', 'zh-CN': '描边颜色', ja: '枠線の色'
-  }, undefined, {
-    kind: 'color', group: G.colors,
-    visibleIf: (o) => yes_no(o, 'border_visible', true)
-  }),
-
-  // ── Étiquettes ──────────────────────────────────────────────────────────────────────────────
+  // ── Libellé ──────────────────────────────────────────────────────────────────────── style ──
   labels_mode: figureAttribute<'fit' | 'none' | 'always'>('fit', 'style', {
     en: 'Show names', fr: 'Afficher les noms', es: 'Mostrar los nombres',
     de: 'Namen anzeigen', it: 'Mostrare i nomi', 'zh-CN': '显示名称', ja: '名前を表示'
@@ -290,7 +315,7 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
         })
       ],
       group: G.labels,
-      visibleIf: (o) => o['labels_mode'] !== 'none'
+      visibleIf: labelled
     }),
 
   label_name_source: figureAttribute<'displayed' | 'own'>('displayed', 'style', {
@@ -319,28 +344,64 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
       })
     ],
     group: G.labels,
-    visibleIf: (o) => o['labels_mode'] !== 'none'
+    visibleIf: labelled,
+    advanced: true
   }),
 
-  label_value_visible: figureAttribute<boolean>(false, 'style', {
-    en: 'Show the value', fr: 'Afficher la valeur', es: 'Mostrar el valor',
-    de: 'Wert anzeigen', it: 'Mostrare il valore', 'zh-CN': '显示数值', ja: '値を表示'
-  }, undefined, { group: G.labels, visibleIf: (o) => o['labels_mode'] !== 'none' }),
-
-  label_unit_visible: figureAttribute<boolean>(false, 'style', {
-    en: 'Show the unit', fr: 'Afficher l’unité', es: 'Mostrar la unidad',
-    de: 'Einheit anzeigen', it: 'Mostrare l’unità', 'zh-CN': '显示单位', ja: '単位を表示'
-  }, undefined, {
+  // Police, taille, casse, gras, italique : les attributs des éléments, tels quels.
+  name_label_font_family: elementAttribute(ALL_ATTRIBUTES_CONFIG.name_label_font_family, 'style', {
+    kind: 'select',
+    choicesOf: fontChoices,
     group: G.labels,
-    visibleIf: (o) => o['labels_mode'] !== 'none' && yes_no(o, 'label_value_visible', false)
+    visibleIf: labelled
+  }),
+  // Dix points, pas les vingt d'une étiquette de nœud : un secteur n'a que l'épaisseur d'un
+  // anneau pour écrire, et c'est la taille que le tracé appliquait.
+  name_label_font_size: elementAttribute(ALL_ATTRIBUTES_CONFIG.name_label_font_size, 'style', {
+    kind: 'number', min: 4, max: 48, step: 1, group: G.labels, visibleIf: labelled
+  }, 10),
+  name_label_bold: elementAttribute(ALL_ATTRIBUTES_CONFIG.name_label_bold, 'style', {
+    group: G.labels, visibleIf: labelled
+  }),
+  name_label_italic: elementAttribute(ALL_ATTRIBUTES_CONFIG.name_label_italic, 'style', {
+    group: G.labels, visibleIf: labelled, advanced: true
+  }),
+  name_label_uppercase: elementAttribute(ALL_ATTRIBUTES_CONFIG.name_label_uppercase, 'style', {
+    group: G.labels, visibleIf: labelled, advanced: true
   }),
 
-  label_digits: figureAttribute<number>(4, 'style', {
-    en: 'Significant digits', fr: 'Chiffres significatifs', es: 'Cifras significativas',
-    de: 'Signifikante Stellen', it: 'Cifre significative', 'zh-CN': '有效数字', ja: '有効数字'
+  /**
+   * L'ENCRE D'UNE ÉTIQUETTE POSÉE SUR UN SECTEUR se choisit par défaut sur la luminance du
+   * secteur, pas sur une couleur fixe : un même bleu porte du blanc au centre et du gris foncé
+   * sur les anneaux éclaircis. Imposer la couleur des éléments rendrait illisible la moitié des
+   * étiquettes — d'où ce choix explicite, et la couleur de l'élément derrière lui.
+   */
+  label_color_mode: figureAttribute<'auto' | 'fixed'>('auto', 'style', {
+    en: 'Label colour', fr: 'Couleur des étiquettes', es: 'Color de las etiquetas',
+    de: 'Farbe der Beschriftungen', it: 'Colore delle etichette',
+    'zh-CN': '标签颜色', ja: 'ラベルの色'
   }, undefined, {
-    kind: 'number', min: 1, max: 12, step: 1, group: G.labels,
-    visibleIf: (o) => o['labels_mode'] !== 'none' && yes_no(o, 'label_value_visible', false)
+    kind: 'select',
+    choices: [
+      choice('auto', {
+        en: 'Automatic (contrast)', fr: 'Automatique (contraste)', es: 'Automático (contraste)',
+        de: 'Automatisch (Kontrast)', it: 'Automatico (contrasto)',
+        'zh-CN': '自动（对比度）', ja: '自動（コントラスト）'
+      }),
+      choice('fixed', {
+        en: 'A colour', fr: 'Une couleur', es: 'Un color', de: 'Eine Farbe', it: 'Un colore',
+        'zh-CN': '指定颜色', ja: '指定の色'
+      })
+    ],
+    group: G.labels,
+    visibleIf: labelled,
+    advanced: true
+  }),
+  name_label_color: elementAttribute(ALL_ATTRIBUTES_CONFIG.name_label_color, 'style', {
+    kind: 'color',
+    group: G.labels,
+    visibleIf: (o) => labelled(o) && o['label_color_mode'] === 'fixed',
+    advanced: true
   }),
 
   label_percent: figureAttribute<'none' | 'total' | 'parent'>('none', 'style', {
@@ -364,25 +425,43 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
       })
     ],
     group: G.labels,
-    visibleIf: (o) => o['labels_mode'] !== 'none'
+    visibleIf: labelled
   }),
 
-  label_font_size: figureAttribute<number>(10, 'style', {
-    en: 'Label size', fr: 'Taille des étiquettes', es: 'Tamaño de las etiquetas',
-    de: 'Schriftgröße der Beschriftungen', it: 'Dimensione delle etichette',
-    'zh-CN': '标签字号', ja: 'ラベルの文字サイズ'
-  }, undefined, {
-    kind: 'number', min: 5, max: 24, step: 1, group: G.labels,
-    visibleIf: (o) => o['labels_mode'] !== 'none'
+  // ── Valeur ───────────────────────────────────────────────────────────────────────── style ──
+  // Les mêmes réglages que sur un flux : afficher la valeur, son unité, son format.
+  value_label_is_visible: elementAttribute(ALL_ATTRIBUTES_CONFIG.value_label_is_visible, 'style', {
+    group: G.values, visibleIf: labelled
   }),
+  value_label_unit_visible: elementAttribute(
+    ALL_ATTRIBUTES_CONFIG.value_label_unit_visible, 'style', { group: G.values, visibleIf: valued }
+  ),
+  // Le tracé écrivait quatre chiffres significatifs : c'est donc ce que ces deux-là valent
+  // d'usine ici, là où un flux n'en impose aucun.
+  value_label_significant_digits: elementAttribute(
+    ALL_ATTRIBUTES_CONFIG.value_label_significant_digits, 'style',
+    { group: G.values, visibleIf: valued }, true
+  ),
+  value_label_nb_significant_digits: elementAttribute(
+    ALL_ATTRIBUTES_CONFIG.value_label_nb_significant_digits, 'style', {
+      kind: 'number', min: 1, max: 12, step: 1, group: G.values,
+      visibleIf: (o) => valued(o) && is(o, 'value_label_significant_digits', true)
+    }, 4
+  ),
+  value_label_custom_digit: elementAttribute(
+    ALL_ATTRIBUTES_CONFIG.value_label_custom_digit, 'style',
+    { group: G.values, visibleIf: valued, advanced: true }
+  ),
+  value_label_nb_digit: elementAttribute(ALL_ATTRIBUTES_CONFIG.value_label_nb_digit, 'style', {
+    kind: 'number', min: 0, max: 12, step: 1, group: G.values, advanced: true,
+    visibleIf: (o) => valued(o) && is(o, 'value_label_custom_digit', false)
+  }),
+  value_label_scientific_notation: elementAttribute(
+    ALL_ATTRIBUTES_CONFIG.value_label_scientific_notation, 'style',
+    { group: G.values, visibleIf: valued, advanced: true }
+  ),
 
-  label_bold: figureAttribute<boolean>(false, 'style', {
-    en: 'Bold labels', fr: 'Étiquettes en gras', es: 'Etiquetas en negrita',
-    de: 'Fette Beschriftungen', it: 'Etichette in grassetto',
-    'zh-CN': '标签加粗', ja: 'ラベルを太字に'
-  }, undefined, { group: G.labels, visibleIf: (o) => o['labels_mode'] !== 'none' }),
-
-  // ── Le centre ───────────────────────────────────────────────────────────────────────────────
+  // ── Le centre ────────────────────────────────────────────────────────────────────── style ──
   centre_content: figureAttribute<'both' | 'name' | 'value' | 'none'>('both', 'style', {
     en: 'Centre shows', fr: 'Le centre affiche', es: 'El centro muestra',
     de: 'Die Mitte zeigt', it: 'Il centro mostra', 'zh-CN': '中心显示', ja: '中心の表示'
@@ -414,9 +493,9 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     es: 'Tamaño del hueco (% del radio)', de: 'Lochgröße (% des Radius)',
     it: 'Dimensione del foro (% del raggio)', 'zh-CN': '中心孔大小（半径 %）',
     ja: '中心の穴の大きさ（半径の %）'
-  }, undefined, { kind: 'number', min: 5, max: 60, step: 1, group: G.centre }),
+  }, undefined, { kind: 'number', min: 5, max: 60, step: 1, group: G.centre, advanced: true }),
 
-  // ── La légende ──────────────────────────────────────────────────────────────────────────────
+  // ── La légende ───────────────────────────────────────────────────────────────────── style ──
   legend_mode: figureAttribute<'auto' | 'none' | 'rings' | 'branches' | 'both'>(
     'auto', 'style', {
       en: 'Legend', fr: 'Légende', es: 'Leyenda', de: 'Legende', it: 'Legenda',
@@ -481,7 +560,7 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     visibleIf: (o) => o['legend_mode'] !== 'none'
   }),
 
-  // ── Mentions et info-bulle ──────────────────────────────────────────────────────────────────
+  // ── Mentions et gestes ───────────────────────────────────────────────────────────── style ──
   notes_visible: figureAttribute<boolean>(true, 'style', {
     en: 'Show warnings', fr: 'Afficher les avertissements', es: 'Mostrar las advertencias',
     de: 'Warnungen anzeigen', it: 'Mostrare gli avvisi', 'zh-CN': '显示提示', ja: '注意書きを表示'
@@ -531,6 +610,7 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
         it: 'Non fa nulla', 'zh-CN': '无操作', ja: '何もしない'
       })
     ],
-    group: G.notes
+    group: G.notes,
+    advanced: true
   })
 }

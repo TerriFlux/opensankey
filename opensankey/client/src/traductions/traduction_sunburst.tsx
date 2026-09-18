@@ -21,7 +21,8 @@ export const resources_sunburst = {
         level: 'Level {{index}}',
         group: {
           read: 'What it reads',
-          colors: 'Colours',
+          shape: 'Shape',
+          values: 'Value',
           labels: 'Labels',
           centre: 'Centre',
           legend: 'Legend',
@@ -48,7 +49,8 @@ export const resources_sunburst = {
         level: 'Niveau {{index}}',
         group: {
           read: 'Ce qu’elle lit',
-          colors: 'Couleurs',
+          shape: 'Forme',
+          values: 'Valeur',
           labels: 'Étiquettes',
           centre: 'Centre',
           legend: 'Légende',
@@ -75,7 +77,8 @@ export const resources_sunburst = {
         level: 'Nivel {{index}}',
         group: {
           read: 'Lo que lee',
-          colors: 'Colores',
+          shape: 'Forma',
+          values: 'Valor',
           labels: 'Etiquetas',
           centre: 'Centro',
           legend: 'Leyenda',
@@ -102,7 +105,8 @@ export const resources_sunburst = {
         level: 'Ebene {{index}}',
         group: {
           read: 'Was sie liest',
-          colors: 'Farben',
+          shape: 'Form',
+          values: 'Wert',
           labels: 'Beschriftungen',
           centre: 'Mitte',
           legend: 'Legende',
@@ -129,7 +133,8 @@ export const resources_sunburst = {
         level: 'Livello {{index}}',
         group: {
           read: 'Ciò che legge',
-          colors: 'Colori',
+          shape: 'Forma',
+          values: 'Valore',
           labels: 'Etichette',
           centre: 'Centro',
           legend: 'Legenda',
@@ -156,7 +161,8 @@ export const resources_sunburst = {
         level: '第 {{index}} 层',
         group: {
           read: '读取内容',
-          colors: '颜色',
+          shape: '形状',
+          values: '数值',
           labels: '标签',
           centre: '中心',
           legend: '图例',
@@ -183,7 +189,8 @@ export const resources_sunburst = {
         level: 'レベル {{index}}',
         group: {
           read: '読み取る内容',
-          colors: '色',
+          shape: '形',
+          values: '値',
           labels: 'ラベル',
           centre: '中心',
           legend: '凡例',
