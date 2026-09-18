@@ -1513,6 +1513,13 @@ export const menuStyles = {
       // repositionnement ; repli sur la hauteur de la fenêtre, exprimée en `vh` pour suivre un
       // redimensionnement (l'ancienne valeur en pixels était figée au chargement du thème).
       // Largeur bornée : les libellés longs vont à la ligne (cf. `item`).
+      //
+      // `minW: 0` n'est pas décoratif : le style de base pose `minWidth: 'inherit'`, hérité du
+      // conteneur de Popper qui vaut `max-content`. Une largeur minimale l'emporte sur une
+      // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
+      // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
+      // texte était rognée hors de l'écran.
+      minW: 0,
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
@@ -1524,6 +1531,9 @@ export const menuStyles = {
 
   menu_select_style: menu.definePartsStyle({
     list: {
+      // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
+      minW: 0,
+      maxW: 'min(28rem, calc(100vw - 1rem))',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
@@ -2523,6 +2533,13 @@ export const tabsStyles = {
       // repositionnement ; repli sur la hauteur de la fenêtre, exprimée en `vh` pour suivre un
       // redimensionnement (l'ancienne valeur en pixels était figée au chargement du thème).
       // Largeur bornée : les libellés longs vont à la ligne (cf. `item`).
+      //
+      // `minW: 0` n'est pas décoratif : le style de base pose `minWidth: 'inherit'`, hérité du
+      // conteneur de Popper qui vaut `max-content`. Une largeur minimale l'emporte sur une
+      // largeur maximale : sans cette remise à zéro, la liste s'étirait à la longueur du plus
+      // long libellé malgré `maxW`, les libellés ne revenaient jamais à la ligne et la fin du
+      // texte était rognée hors de l'écran.
+      minW: 0,
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       maxW: 'min(28rem, calc(100vw - 1rem))',
       overflowY: 'auto',
@@ -2534,6 +2551,9 @@ export const tabsStyles = {
 
   menu_select_style: menu.definePartsStyle({
     list: {
+      // Mêmes bornes que `menu_select_elements` (voir l'explication de `minW` ci-dessus).
+      minW: 0,
+      maxW: 'min(28rem, calc(100vw - 1rem))',
       maxH: 'var(--os-menu-select-max-h, calc(100vh - 2rem))',
       overflowY: 'auto',
       border: 'solid 1px',
