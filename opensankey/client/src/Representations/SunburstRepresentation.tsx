@@ -27,7 +27,9 @@ import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import { figureUnitOf } from './figureUnit'
 import { figureTitleOf } from '../Charts/figureChartStyle'
-import { figureZoomHandle, publishFigureZoom } from '../Charts/figureZoomBridge'
+import {
+  figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
+} from '../Charts/figureZoomBridge'
 import { ZOOM_TOPIC } from '../types/EventBus'
 import type { Type_JSON } from '../types/Utils'
 import type { Type_RepresentationContext, Type_RepresentationZoom } from './RepresentationRegistry'
@@ -290,6 +292,8 @@ export const drawSunburstRepresentation = (
       : undefined,
     zoom_handle: (handle) => publishFigureZoom(window_id, pane_key, handle),
     on_zoom: () => mc.notify(ZOOM_TOPIC),
+    initial_view: figureViewOf(window_id, pane_key),
+    on_view: (view) => rememberFigureView(window_id, pane_key, view),
     // L'UNITÉ DU DIAGRAMME, lue sur un flux représentatif comme partout ailleurs
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.
