@@ -74,17 +74,34 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     it: 'Un nodo senza figli nella gerarchia corrente prosegue nella successiva.',
     'zh-CN': '当前层级中已无子节点的节点，将在下一层级继续展开。',
     ja: '現在の階層で子を持たないノードは、次の階層で続きます。'
-  }, { group: G.read }),
+  }, { group: G.read, advanced: true }),
 
   max_depth: figureAttribute<number>(6, 'navigation', {
-    en: 'Rings', fr: 'Anneaux', es: 'Anillos', de: 'Ringe', it: 'Anelli',
-    'zh-CN': '环数', ja: 'リング数'
-  }, undefined, { kind: 'number', min: 1, max: 12, step: 1, group: G.read }),
+    en: 'Maximum depth', fr: 'Profondeur maximale', es: 'Profundidad máxima',
+    de: 'Maximale Tiefe', it: 'Profondità massima', 'zh-CN': '最大深度', ja: '最大の深さ'
+  }, {
+    en: 'How many rings at most. Beyond that the hierarchy is cut, and the cut is reported.',
+    fr: 'Combien d’anneaux au plus. Au-delà, la hiérarchie est coupée et la coupe est signalée.',
+    es: 'Cuántos anillos como máximo. Más allá, la jerarquía se corta y el corte se indica.',
+    de: 'Wie viele Ringe höchstens. Darüber hinaus wird die Hierarchie abgeschnitten.',
+    it: 'Quanti anelli al massimo. Oltre, la gerarchia viene tagliata e il taglio segnalato.',
+    'zh-CN': '最多绘制多少环。超出部分会被截断并加以提示。',
+    ja: 'リングは最大でいくつか。超えた分は打ち切られ、その旨が示されます。'
+  }, { kind: 'number', min: 1, max: 12, step: 1, group: G.read, advanced: true }),
 
   value_mode: figureAttribute<'sum' | 'declared'>('sum', 'navigation', {
-    en: 'Arc value', fr: 'Valeur de l’arc', es: 'Valor del arco', de: 'Wert des Bogens',
-    it: 'Valore dell’arco', 'zh-CN': '扇区取值', ja: '扇形の値'
-  }, undefined, {
+    en: 'A parent sector is worth', fr: 'Un secteur parent vaut',
+    es: 'Un sector padre vale', de: 'Ein Elternsektor entspricht',
+    it: 'Un settore padre vale', 'zh-CN': '父扇区的取值', ja: '親の扇形の値'
+  }, {
+    en: 'Sum of children: the geometry cannot lie, the gap is reported. Node value: what the children do not cover becomes an “Unallocated” sector.',
+    fr: 'Somme des enfants : la géométrie ne peut pas mentir, l’écart est signalé. Valeur du nœud : ce que les enfants ne couvrent pas devient un secteur « Non réparti ».',
+    es: 'Suma de los hijos: la geometría no puede mentir, la diferencia se indica. Valor del nodo: lo que los hijos no cubren se vuelve «Sin asignar».',
+    de: 'Summe der Kinder: die Geometrie kann nicht lügen, die Abweichung wird gemeldet. Knotenwert: was die Kinder nicht abdecken, wird „Nicht zugeordnet“.',
+    it: 'Somma dei figli: la geometria non può mentire, lo scarto è segnalato. Valore del nodo: ciò che i figli non coprono diventa «Non assegnato».',
+    'zh-CN': '子节点之和：几何关系必然成立，差异会被标注。节点自身值：子节点未覆盖的部分成为「未分配」扇区。',
+    ja: '子ノードの合計：図形は決して嘘をつかず、差は注記されます。ノードの値：子が覆わない分は「未割当」になります。'
+  }, {
     kind: 'select',
     choices: [
       choice('sum', {
@@ -96,21 +113,22 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
         it: 'Valore del nodo', 'zh-CN': '节点自身值', ja: 'ノードの値'
       })
     ],
-    group: G.read
+    group: G.read,
+    advanced: true
   }),
 
   node_value_mode: figureAttribute<'max' | 'inputs' | 'outputs'>('max', 'navigation', {
-    en: 'A node is worth', fr: 'La valeur d’un nœud', es: 'El valor de un nodo',
-    de: 'Der Wert eines Knotens', it: 'Il valore di un nodo',
-    'zh-CN': '节点的取值', ja: 'ノードの値の取り方'
+    en: 'A node is worth', fr: 'Un nœud vaut', es: 'Un nodo vale',
+    de: 'Ein Knoten entspricht', it: 'Un nodo vale',
+    'zh-CN': '节点的取值', ja: 'ノードの値'
   }, {
-    en: 'Which side of the node the value is read from. Historically the larger of the two.',
-    fr: 'De quel côté du nœud la valeur se lit. Historiquement le plus grand des deux.',
-    es: 'De qué lado del nodo se lee el valor. Históricamente el mayor de los dos.',
-    de: 'Auf welcher Seite des Knotens der Wert gelesen wird. Historisch der größere der beiden.',
-    it: 'Da quale lato del nodo si legge il valore. Storicamente il maggiore dei due.',
-    'zh-CN': '从节点的哪一侧读取数值。历史默认取两者中较大者。',
-    ja: 'ノードのどちら側から値を読むか。従来は大きい方。'
+    en: 'Which side of the node the value is read from. Often makes no difference: on a balanced diagram inflows equal outflows.',
+    fr: 'De quel côté du nœud la valeur se lit. Souvent sans effet : sur un diagramme bouclé, les entrées égalent les sorties.',
+    es: 'De qué lado del nodo se lee el valor. A menudo sin efecto: en un diagrama equilibrado las entradas igualan las salidas.',
+    de: 'Auf welcher Seite des Knotens der Wert gelesen wird. Meist ohne Wirkung: in einem ausgeglichenen Diagramm sind Zu- und Abflüsse gleich.',
+    it: 'Da quale lato del nodo si legge il valore. Spesso senza effetto: in un diagramma bilanciato gli ingressi eguagliano le uscite.',
+    'zh-CN': '从节点的哪一侧读取数值。通常没有差别：在平衡的图中流入等于流出。',
+    ja: 'ノードのどちら側から値を読むか。多くの場合は差が出ません（平衡した図では流入と流出は等しい）。'
   }, {
     kind: 'select',
     choices: [
@@ -128,7 +146,8 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
         it: 'le sue uscite', 'zh-CN': '流出量', ja: '流出量'
       })
     ],
-    group: G.read
+    group: G.read,
+    advanced: true
   }),
 
   sort_order: figureAttribute<'value_desc' | 'value_asc' | 'name' | 'model'>(
@@ -176,7 +195,7 @@ export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = {
     it: 'Zero non raggruppa mai. Un settore troppo stretto finisce in «Altri».',
     'zh-CN': '设为 0 则从不合并。过窄而无法查看或悬停的扇区会并入「其他」。',
     ja: '0 なら決してまとめません。細すぎて見えない扇形は「その他」に入ります。'
-  }, { kind: 'number', min: 0, max: 25, step: 0.5, group: G.read }),
+  }, { kind: 'number', min: 0, max: 25, step: 0.5, group: G.read, advanced: true }),
 
   // ── Couleurs ────────────────────────────────────────────────────────────────────────────────
   color_source: figureAttribute<'palette' | 'model'>('palette', 'style', {

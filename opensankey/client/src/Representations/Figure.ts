@@ -100,6 +100,16 @@ export type Type_FigureControl = {
   visibleIf?: (options: Type_OptionBag) => boolean
   /** Le groupe visuel où ranger le contrôle ; clé i18n, cf. `figure.group.*`. */
   group?: string
+  /**
+   * os#1425 — UN RÉGLAGE AVANCÉ : vrai, mais rarement ce qu'on vient chercher.
+   *
+   * Il ne disparaît pas, il se replie — le formulaire le range sous un « Avancé » fermé. C'est la
+   * réponse au reproche que la première version de ce formulaire a valu : tout mettre au même
+   * niveau fait lire quatre questions là où l'auteur n'en a qu'une, et les trois autres n'ont
+   * souvent aucun effet visible (le côté du nœud d'où la valeur se lit ne change rien sur un
+   * diagramme bouclé, où entrées et sorties sont égales).
+   */
+  advanced?: boolean
 }
 
 /** Un attribut déclaré par une nature : le patron des éléments, plus sa sorte et son contrôle. */

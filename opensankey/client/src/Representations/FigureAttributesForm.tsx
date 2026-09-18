@@ -31,6 +31,7 @@ import type { Type_AttributeSort, Type_OptionBag, Type_FigureAttributesConfig } 
 import { figureControlGroupsOf, figureControlsOf } from './figureControls'
 import type { Type_FigureControlItem } from './figureControls'
 
+
 export interface Type_FigureAttributesFormProps {
   app_data: Class_ApplicationData
   /** La déclaration de la nature (`entry.attributes`). */
@@ -115,6 +116,9 @@ const FigureControl = (
 export const FigureAttributesForm = ({
   app_data, config, options, setOptions, sorts, element
 }: Type_FigureAttributesFormProps) => {
+  // Le tiroir « Avancé » est un état de l'OUTIL, pas du document : il se referme d'une figure à
+  // l'autre, et rien n'est écrit quand on l'ouvre.
+  const [show_advanced, setShowAdvanced] = React.useState(false)
   // La langue de l'INTERFACE (celle d'i18next), pas celle du document : ces libellés sont ceux
   // des réglages, et ils suivent la langue dans laquelle l'auteur travaille.
   const lang = i18next.language || app_data.language || 'en'
@@ -123,10 +127,10 @@ export const FigureAttributesForm = ({
     { app_data: app_data as unknown as { drawing_area?: { sankey?: unknown } }, element }
   )
   if (items.length === 0) return null
-  const groups = figureControlGroupsOf(items)
   const set = (key: string, value: unknown) => setOptions({ ...options, [key]: value })
-  return <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.2rem' }}>
-    {groups.map(group => <Box
+
+  const renderGroups = (list: Type_FigureControlItem[]) =>
+    figureControlGroupsOf(list).map(group => <Box
       key={group.group || '_'}
       style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
     >
@@ -140,6 +144,32 @@ export const FigureAttributesForm = ({
       {group.items.map(item => <FigureControl
         key={item.key} item={item} onChange={value => set(item.key, value)}
       />)}
-    </Box>)}
+    </Box>)
+
+  // CE QU'ON VIENT CHERCHER D'ABORD, le reste replié. Un réglage avancé reste un réglage : il ne
+  // disparaît pas, il cesse d'occuper le même rang que la question qu'on se pose vraiment.
+  const plain = items.filter(i => !i.advanced)
+  const advanced = items.filter(i => i.advanced)
+  return <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.2rem' }}>
+    {renderGroups(plain)}
+    {advanced.length > 0
+      ? <Box>
+        <Text
+          as='button'
+          style={{
+            fontSize: '0.7rem', opacity: 0.7, marginTop: '0.2rem', cursor: 'pointer',
+            textAlign: 'left', background: 'none', border: 'none', padding: '0.1rem 0'
+          }}
+          onClick={() => setShowAdvanced(v => !v)}
+        >
+          {(show_advanced ? '▾ ' : '▸ ') + (app_data.t('filter_panel.figure_advanced') as string)}
+        </Text>
+        {show_advanced
+          ? <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            {renderGroups(advanced)}
+          </Box>
+          : null}
+      </Box>
+      : null}
   </Box>
 }

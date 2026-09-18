@@ -203,7 +203,19 @@ export const registerBaseRepresentations = (): void => {
     label: (a) => a.t('sunburst.title'),
     icon: <FaBullseye />,
     needs: { hierarchy: true },
-    isAvailable: (ctx) => !!ctx.element && Array.isArray((ctx.element as { output_links_list?: unknown }).output_links_list),
+    // Un NŒUD, et un nœud QUI A QUELQUE CHOSE À DÉCOMPOSER (os#1425). `needs.hierarchy` ne dit que
+    // ce que le DIAGRAMME déclare ; sur un diagramme qui en a une, la plupart des nœuds n'en font
+    // pas partie, et leur couronne n'était qu'une case portant « ce diagramme ne déclare aucune
+    // hiérarchie ». Une nature qui ne s'offre pas laisse la grille passer son tour, ce qui vaut
+    // mieux qu'une vignette vide (arbitrage Julien, 18/09/2026).
+    isAvailable: (ctx) => {
+      const el = ctx.element as {
+        output_links_list?: unknown
+        dimensions_as_parent?: { children?: unknown[] }[]
+      } | null
+      if (!el || !Array.isArray(el.output_links_list)) return false
+      return (el.dimensions_as_parent ?? []).some(d => (d.children?.length ?? 0) > 0)
+    },
     // os#1418 / os#1425 — CE QUE RÈGLE LE SUNBURST, DÉCLARÉ ET NON PLUS DESSINÉ À LA MAIN.
     //
     // La nature n'écrit plus d'interface : elle déclare ses réglages (valeur d'usine, sorte,
