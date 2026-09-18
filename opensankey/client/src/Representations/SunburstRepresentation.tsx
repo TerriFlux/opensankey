@@ -22,20 +22,19 @@
 // qu'importé du registre : les deux chantiers avancent en parallèle, et un contexte
 // plus riche reste assignable à un paramètre plus pauvre.
 
-import React from 'react'
-import { Box, Checkbox, Select, Text } from '@chakra-ui/react'
-
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
+import { resolveValueUnit } from '../Elements/ValueFormatting'
 import { aggregate, disaggregate } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
-  sunburstDimensions,
   SUNBURST_DEFAULT_MAX_DEPTH,
   Type_SunburstOptions
 } from '../Charts/SunburstHierarchy'
 import { drawSunburstChart } from '../Charts/SunburstChart'
+import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 
@@ -58,6 +57,8 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
   const max_depth = typeof raw.max_depth === 'number' && raw.max_depth > 0
     ? Math.floor(raw.max_depth)
     : SUNBURST_DEFAULT_MAX_DEPTH
+  const one_of = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
+    allowed.includes(value as T) ? value as T : fallback
   return {
     dimension_id: typeof raw.dimension_id === 'string' ? raw.dimension_id : undefined,
     // os#1424 — enchaîné par défaut : sur un treillis, s'en tenir à un axe arrête la
@@ -65,8 +66,36 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
     chain_axes: raw.chain_axes !== false,
     root_ids: Array.isArray(raw.root_ids) ? raw.root_ids.filter((v): v is string => typeof v === 'string') : undefined,
     value_mode,
-    max_depth
+    max_depth,
+    // os#1425 — ce que l'auteur règle de la LECTURE : de quel côté la valeur se lit, dans quel
+    // ordre les secteurs se suivent, et sous quel nom.
+    node_value_mode: one_of(raw.node_value_mode, ['max', 'inputs', 'outputs'] as const, 'max'),
+    sort_order: one_of(
+      raw.sort_order, ['value_desc', 'value_asc', 'name', 'model'] as const, 'value_desc'
+    ),
+    name_source: one_of(raw.name_source, ['displayed', 'own'] as const, 'displayed')
   }
+}
+
+/**
+ * os#1425 — LA MISE EN FORME, lue du même sac. Tout ce qui n'est pas dit retombe sur ce que le
+ * tracé faisait avant que ces réglages existent (`SUNBURST_STYLE_DEFAULTS`), et une valeur d'un
+ * type inattendu — persistée par une version ultérieure — est ignorée plutôt que de casser.
+ */
+export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type_SunburstStyle> => {
+  const out: { [key: string]: unknown } = {}
+  const keep = (key: string, kind: 'string' | 'number' | 'boolean') => {
+    if (typeof raw[key] === kind) out[key] = raw[key]
+  }
+  ;['color_source', 'labels_mode', 'label_orientation', 'label_percent', 'centre_content',
+    'legend_mode', 'legend_position', 'border_color', 'click_action']
+    .forEach(k => keep(k, 'string'))
+  ;['others_threshold', 'label_digits', 'label_font_size', 'centre_hole']
+    .forEach(k => keep(k, 'number'))
+  ;['depth_shading', 'border_visible', 'label_value_visible', 'label_unit_visible', 'label_bold',
+    'notes_visible', 'tooltip_visible']
+    .forEach(k => keep(k, 'boolean'))
+  return out as Partial<Type_SunburstStyle>
 }
 
 // Clic sur un secteur → l'axe NIVEAU bouge, et lui seul. C'est le pont demandé par
@@ -99,6 +128,12 @@ const toggleAggregation = (
   const as_child = node.dimensions_as_child
     .find((d: Class_NodeDimension) => d.id === dimension_id)
   if (as_child) aggregate(app_data, node, as_child.parent.id)
+}
+
+/** L'unité à écrire à côté des valeurs, ou `''`. Le premier flux fait foi, comme ailleurs. */
+const sunburstUnit = (sankey: { links_list?: Class_LinkElement[] }): string => {
+  const link = sankey.links_list?.[0]
+  return link ? resolveValueUnit(link) : ''
 }
 
 /**
@@ -134,6 +169,11 @@ export const drawSunburstRepresentation = (
   }
 
   return drawSunburstChart(container, tree, {
+    style: readSunburstStyle(ctx.options ?? {}),
+    // L'UNITÉ DU DIAGRAMME, lue sur un flux représentatif comme partout ailleurs
+    // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
+    // quand le diagramme n'en montre pas — une seule unité, une seule décision.
+    unit: sunburstUnit(sankey),
     empty_label: t('sunburst.empty') as string,
     others_label: t('sunburst.others') as string,
     scope_label: (count: number) => t('sunburst.scope', { count }) as string,
@@ -147,71 +187,11 @@ export const drawSunburstRepresentation = (
   })
 }
 
-// ── Réglages (`renderOptions` du registre) ────────────────────────────────────────
-
-export interface Type_SunburstOptionsProps {
-  app_data: Class_ApplicationData
-  options: { [key: string]: unknown }
-  setOptions: (options: { [key: string]: unknown }) => void
-}
-
-export const SunburstRepresentationOptions = ({
-  app_data, options, setOptions
-}: Type_SunburstOptionsProps) => {
-  const t = app_data.t
-  const current = readSunburstOptions(options ?? {})
-  const dimensions = sunburstDimensions(app_data.drawing_area.sankey)
-  const dimension_id = current.dimension_id ?? dimensions[0]?.id ?? ''
-
-  const patch = (delta: { [key: string]: unknown }) => setOptions({ ...options, ...delta })
-
-  return (
-    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.2rem' }}>
-      <Box>
-        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>{t('sunburst.opt_dimension')}</Text>
-        <Select
-          size="xs"
-          value={dimension_id}
-          onChange={e => patch({ dimension_id: e.target.value })}
-        >
-          {dimensions.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
-        </Select>
-      </Box>
-      {
-        // Le choix ne se pose que s'il y a un autre axe à enchaîner (os#1424).
-        dimensions.length > 1 &&
-        <Checkbox
-          size="sm"
-          isChecked={current.chain_axes !== false}
-          onChange={e => patch({ chain_axes: e.target.checked })}
-        >
-          <Text style={{ fontSize: '0.7rem' }}>{t('sunburst.opt_chain_axes')}</Text>
-        </Checkbox>
-      }
-      <Box>
-        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>{t('sunburst.opt_value_mode')}</Text>
-        <Select
-          size="xs"
-          value={current.value_mode}
-          onChange={e => patch({ value_mode: e.target.value })}
-        >
-          <option value="sum">{t('sunburst.opt_value_sum')}</option>
-          <option value="declared">{t('sunburst.opt_value_declared')}</option>
-        </Select>
-      </Box>
-      <Box>
-        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>{t('sunburst.opt_max_depth')}</Text>
-        <Select
-          size="xs"
-          value={String(current.max_depth)}
-          onChange={e => patch({ max_depth: Number(e.target.value) })}
-        >
-          {[2, 3, 4, 5, 6, 8].map(n => <option key={n} value={String(n)}>{n}</option>)}
-        </Select>
-      </Box>
-      <Text style={{ fontSize: '0.65rem', opacity: 0.6 }}>
-        {t(current.value_mode === 'declared' ? 'sunburst.hint_declared' : 'sunburst.hint_sum')}
-      </Text>
-    </Box>
-  )
-}
+// ── Réglages ──────────────────────────────────────────────────────────────────────
+//
+// os#1425 — IL N'Y A PLUS D'INTERFACE ICI, et c'est le point du lot. Les trois sélecteurs
+// écrits à la main sont devenus une DÉCLARATION (cf. Representations/sunburstAttributes) que le
+// formulaire générique rend : dans l'inspecteur pour la mise en forme, dans « Filtres et
+// coordonnées » pour ce qu'on regarde. La couronne y a gagné au passage tout ce qu'un réglage
+// écrit à la main coûtait trop cher pour offrir — couleurs, étiquettes, centre, légende,
+// mentions, geste du clic — sans qu'aucune ligne d'interface ne soit écrite pour eux.

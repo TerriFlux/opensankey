@@ -111,7 +111,10 @@ import type { Type_RepresentationOptionScope } from '../types/MenuConfig'
 // os#1418 - ce qu'une nature DÉCLARE de ses réglages (cf. `attributes` plus bas). Import de TYPE
 // seulement : `Figure` ne connaît pas le registre, et le registre ne fait que transporter la
 // déclaration - il ne l'interprète jamais lui-même.
-import type { Type_FigureAttributesConfig } from './Figure'
+import type { Type_AttributeSort, Type_FigureAttributesConfig } from './Figure'
+// os#1425 — le formulaire générique, rendu depuis la déclaration d'une nature. Import VALEUR :
+// c'est le `renderOptions` par défaut de toute entrée qui déclare des attributs sans en écrire un.
+import { FigureAttributesForm } from './FigureAttributesForm'
 
 /**
  * Les deux échelles que le code confondait (§3.2 de la note). Une entrée en
@@ -367,6 +370,16 @@ type Type_RepresentationCommon = {
     options: { [key: string]: unknown }
     setOptions: (next: { [key: string]: unknown }) => void
     /**
+     * os#1425 — LES SORTES que cette surface rend. L'inspecteur demande 'style' (comment ça se
+     * dessine), le panneau de navigation 'navigation' (ce qu'on regarde) : la répartition n'est
+     * pas un choix d'interface, c'est la sorte déjà déclarée par `attributes`.
+     *
+     * Absente = toutes, ce que voit une surface qui ne trie pas. Une nature qui écrit encore son
+     * interface à la main peut l'ignorer : elle rendra alors la même chose partout, comme avant
+     * ce lot.
+     */
+    sorts?: Type_AttributeSort[]
+    /**
      * os#1387 — le contexte de la VIGNETTE que ces réglages commandent : les réglages d'une
      * analyse d'élément (décomposer par…, normaliser sur…) se construisent sur l'objet regardé,
      * et depuis le 10/09/2026 l'hôte appelle `renderOptions` une fois PAR VIGNETTE, avec le
@@ -392,6 +405,49 @@ type Type_RepresentationCommon = {
      */
     scope?: Type_RepresentationOptionScope
   }) => React.ReactNode
+}
+
+/**
+ * os#1425 — LE `renderOptions` D'UNE ENTRÉE, QU'ELLE EN ÉCRIVE UN OU NON.
+ *
+ * Une nature qui déclare ses attributs n'a plus d'interface à écrire : le formulaire générique
+ * les rend depuis leur déclaration (`FigureAttributesForm`). Celle qui en écrit un garde le sien —
+ * il reste des réglages qu'aucune déclaration ne dit encore (un sélecteur d'axe d'analyse à deux
+ * étages, par exemple), et c'est la seule raison qui vaille d'en écrire un.
+ *
+ * TOUTES LES SURFACES PASSENT PAR ICI (l'inspecteur, le panneau de navigation, le menu contextuel
+ * d'une figure) : c'est ce qui fait qu'aucune ne peut montrer autre chose qu'une autre, et qu'une
+ * nature ajoutée demain apparaît partout sans une ligne d'interface.
+ *
+ * `null` quand il n'y a rien à régler — ni interface écrite, ni attribut déclaré : l'appelant en
+ * tire que cette nature ne compte pas comme réglable (cf. `activeRepresentation`, éditeur).
+ */
+export const representationOptionsRenderer = (
+  entry: Type_RepresentationEntry
+): NonNullable<Type_RepresentationEntry['renderOptions']> | null =>
+  entry.renderOptions ?? figureGenericOptionsRenderer(entry)
+
+/**
+ * Le formulaire GÉNÉRIQUE d'une entrée, ou `null` si elle écrit encore son interface à la main.
+ *
+ * La distinction compte pour les surfaces qui trient par sorte : une interface écrite à la main
+ * ne sait pas ce qu'est une sorte et rendrait TOUT ce qu'elle connaît, si bien qu'une nature non
+ * encore migrée verrait ses réglages de mise en forme apparaître dans le panneau de navigation.
+ * Ces natures-là gardent leurs sections propres, et ce renderer ne les concerne pas.
+ */
+export const figureGenericOptionsRenderer = (
+  entry: Type_RepresentationEntry
+): NonNullable<Type_RepresentationEntry['renderOptions']> | null => {
+  const config = entry.attributes
+  if (!config || Object.keys(config).length === 0) return null
+  return (args) => <FigureAttributesForm
+    app_data={args.app_data}
+    config={config}
+    options={args.options}
+    setOptions={args.setOptions}
+    sorts={args.sorts}
+    element={args.ctx?.element}
+  />
 }
 
 /**

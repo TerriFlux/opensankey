@@ -53,8 +53,60 @@ import type { Type_JSON } from '../types/Utils'
 /** La sorte d'une clé de réglage de figure (cf. en-tête). Absente dans une déclaration = 'style'. */
 export type Type_AttributeSort = 'style' | 'navigation' | 'identity'
 
-/** Un attribut déclaré par une nature : le patron des éléments, plus sa sorte. */
-export type Type_FigureAttributeConfig = AttributeConfig<unknown> & { sort?: Type_AttributeSort }
+/**
+ * os#1425 — COMMENT UN RÉGLAGE SE RÈGLE, déclaré avec lui.
+ *
+ * Une nature écrivait son interface à la main (`renderOptions`), et chacune réinventait la case à
+ * cocher, le sélecteur, l'indicateur de surcharge — une interface à part, à côté de celle des
+ * nœuds et des flux. Ce qu'un réglage a de particulier tient pourtant en peu de choses : la sorte
+ * de contrôle, et les valeurs qu'il accepte. Déclarées ici, elles suffisent à rendre l'interface,
+ * et les natures cessent d'en écrire.
+ *
+ * `kind` absent se DÉDUIT du type de la valeur d'usine — booléen, nombre, texte. Il ne se donne
+ * que pour ce qu'aucun type ne dit : une liste de choix, une couleur, ou `'none'` pour un réglage
+ * qui n'a pas d'interface (la racine d'une figure, posée par la fenêtre).
+ */
+export type Type_FigureControlKind = 'checkbox' | 'select' | 'number' | 'text' | 'color' | 'none'
+
+/** Un choix, avec son libellé dans les sept langues du dépôt (sa#531). */
+export type Type_FigureChoice = {
+  value: string | number
+  labels: { [lang: string]: string }
+}
+
+/** De quoi résoudre les choix qui viennent du MODÈLE : les axes du diagramme, ses étiquettes. */
+export type Type_FigureChoiceContext = {
+  app_data: { drawing_area?: { sankey?: unknown }, t?: unknown }
+  element?: unknown
+}
+
+export type Type_FigureControl = {
+  kind?: Type_FigureControlKind
+  /** Les choix FIXES (un régime de valeur, une orientation). */
+  choices?: Type_FigureChoice[]
+  /**
+   * Les choix qui viennent du diagramme (les hiérarchies déclarées, les groupes d'étiquettes) :
+   * résolus au moment de rendre, jamais figés dans la déclaration.
+   */
+  choicesOf?: (ctx: Type_FigureChoiceContext) => { value: string, label: string }[]
+  min?: number
+  max?: number
+  step?: number
+  /**
+   * Ne montrer ce réglage que si la condition tient : l'unité n'a de sens que si les valeurs
+   * s'affichent, le dégradé que si la couleur vient d'une palette. Un réglage caché garde sa
+   * valeur — il redevient visible dès que sa condition revient.
+   */
+  visibleIf?: (options: Type_OptionBag) => boolean
+  /** Le groupe visuel où ranger le contrôle ; clé i18n, cf. `figure.group.*`. */
+  group?: string
+}
+
+/** Un attribut déclaré par une nature : le patron des éléments, plus sa sorte et son contrôle. */
+export type Type_FigureAttributeConfig = AttributeConfig<unknown> & {
+  sort?: Type_AttributeSort
+  ui?: Type_FigureControl
+}
 export type Type_FigureAttributesConfig = Record<string, Type_FigureAttributeConfig>
 
 /** Un sac de réglages, la forme que les natures lisent (`ctx.options`) et écrivent (`setOptions`). */

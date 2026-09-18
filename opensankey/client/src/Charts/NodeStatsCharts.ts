@@ -20,8 +20,10 @@ import * as d3 from '../d3Modules'
 // os#1424 — la couronne À N ANNEAUX se dessine aussi SUR UN NŒUD. La partition angulaire et
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
-import { partitionSunburst, sunburstBranchColor, sunburstScope } from './SunburstChart'
-import type { Type_SunburstSlice } from './SunburstChart'
+import {
+  partitionSunburst, sunburstBranchColor, sunburstScope, SUNBURST_STYLE_DEFAULTS
+} from './SunburstChart'
+import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
 import type { Type_SunburstTree } from './SunburstHierarchy'
 
 export interface Type_StatSlice {
@@ -871,7 +873,14 @@ export const drawNodeSunburstOnGroup = (
   group_el: SVGGElement,
   tree: Type_SunburstTree,
   geom: Type_NodeChartGeom,
-  opts: { others_label?: string, theme?: 'light' | 'dark' } = {}
+  opts: {
+    others_label?: string
+    theme?: 'light' | 'dark'
+    // os#1425 — la mise en forme de la figure POSÉE : le nœud montre ce que la vignette montre,
+    // couleurs et regroupement compris. Le reste (étiquettes, centre, légende) n'a pas de place
+    // à cette taille et ne se dessine pas ici.
+    style?: Partial<Type_SunburstStyle>
+  } = {}
 ): boolean => {
   const sel = d3.select(group_el)
   sel.selectAll('.' + NODE_CHART_CLASS).remove()
@@ -883,8 +892,10 @@ export const drawNodeSunburstOnGroup = (
   // Rien à décomposer : l'appelant retombe sur la forme normale plutôt que de laisser un
   // nœud vide. C'est le cas d'un nœud sans hiérarchie, ou dont les enfants sont filtrés.
   if (branches.length === 0) return false
+  const theme = opts.theme ?? 'light'
   const slices = partitionSunburst(
-    branches, sunburstBranchColor(opts.theme ?? 'light'), others_label, opts.theme ?? 'light'
+    branches, sunburstBranchColor(theme), others_label, theme, '',
+    { ...SUNBURST_STYLE_DEFAULTS, ...(opts.style ?? {}) }
   )
   if (slices.length === 0) return false
 

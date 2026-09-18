@@ -89,6 +89,16 @@ export interface Type_SunburstOptions {
   // couvrent pas devient un secteur « non réparti » — la lecture AFM d'un défaut de
   // bouclage parent ↔ Σ enfants.
   value_mode?: 'sum' | 'declared'
+  // os#1425 — DE QUEL CÔTÉ DU NŒUD la valeur se lit. 'max' (défaut) est la convention héritée de
+  // `data_value` : le plus grand des deux côtés. Un diagramme où l'on suit une matière préfère
+  // souvent un côté, et le laisser en dur revenait à trancher pour l'auteur.
+  node_value_mode?: 'max' | 'inputs' | 'outputs'
+  // L'ordre des secteurs d'une même fratrie. 'model' garde celui du modèle — le seul qui ne
+  // dépende pas des valeurs, donc le seul qui ne bouge pas quand on change de millésime.
+  sort_order?: 'value_desc' | 'value_asc' | 'name' | 'model'
+  // Comment un secteur se nomme : comme le diagramme le nomme (gabarit, étiquette, nœud ancêtre)
+  // ou par le nom propre du nœud.
+  name_source?: 'displayed' | 'own'
   // Nombre d'ANNEAUX au plus — pas de niveaux du modèle. Quand le périmètre tient en un
   // seul nœud, celui-ci va au CENTRE et n'occupe aucun anneau (cf. Charts/SunburstChart,
   // `sunburstScope`) : l'arbre est alors construit un cran plus profond, pour que le
@@ -186,7 +196,10 @@ export const sunburstDimensions = (
 // diagrammes qui s'en servent, et préférable à une valeur au mauvais millésime.
 export const sunburstNodeValue = (
   node: Class_NodeElement,
-  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION,
+  // os#1425 — le côté lu. 'max' est la convention héritée ; les deux autres suivent la matière
+  // dans un sens, ce qu'un diagramme à pertes rend souvent plus juste.
+  mode: 'max' | 'inputs' | 'outputs' = 'max'
 ): number => {
   const valueOf = (l: Class_LinkElement, on_target: boolean) => {
     if (nav.data_tags) return linkValueUnder(l, nav)
@@ -195,10 +208,11 @@ export const sunburstNodeValue = (
   const sum = (links: Class_LinkElement[], on_target: boolean) => links
     .filter(l => !l.is_expansion_link && passesLinkTagFilters(l))
     .reduce((acc, l) => acc + (valueOf(l, on_target) ?? 0), 0)
-  return Math.max(
-    sum(node.input_links_list as Class_LinkElement[], true),
-    sum(node.output_links_list as Class_LinkElement[], false)
-  )
+  const inputs = () => sum(node.input_links_list as Class_LinkElement[], true)
+  const outputs = () => sum(node.output_links_list as Class_LinkElement[], false)
+  if (mode === 'inputs') return inputs()
+  if (mode === 'outputs') return outputs()
+  return Math.max(inputs(), outputs())
 }
 
 // Le cran suivant : le PREMIER axe de la liste où ce nœud a des enfants que les filtres
@@ -273,6 +287,9 @@ interface Type_BuildState {
   // Les mêmes, réduits à leurs ids : c'est ce que la descente manipule.
   axis_ids: string[]
   value_mode: 'sum' | 'declared'
+  node_value_mode: 'max' | 'inputs' | 'outputs'
+  sort_order: 'value_desc' | 'value_asc' | 'name' | 'model'
+  name_source: 'displayed' | 'own'
   // Sous quelles étiquettes de données lire les valeurs (cf. Charts/FigureNavigation).
   nav: Type_FigureNavigation
   max_depth: number
@@ -290,6 +307,23 @@ interface Type_BuildState {
   selected_level: { [dimension_id: string]: number | null }
 }
 
+/**
+ * L'ordre d'une fratrie. 'model' rend la liste telle que le modèle la donne — c'est le seul ordre
+ * qui ne bouge pas quand les valeurs changent, donc le seul sous lequel deux millésimes se
+ * comparent secteur à secteur.
+ */
+const sortSiblings = (
+  nodes: Type_SunburstNode[],
+  order: Type_BuildState['sort_order']
+): Type_SunburstNode[] => {
+  if (order === 'model') return nodes
+  const out = [...nodes]
+  if (order === 'name') out.sort((a, b) => a.label.localeCompare(b.label))
+  else if (order === 'value_asc') out.sort((a, b) => a.value - b.value)
+  else out.sort((a, b) => b.value - a.value)
+  return out
+}
+
 const ringOf = (state: Type_BuildState, step: Type_AxisStep): Type_SunburstRing => ({
   dimension_id: step.dimension_id,
   dimension_label: state.axes.find(a => a.id === step.dimension_id)?.label ?? step.dimension_id,
@@ -304,7 +338,7 @@ const buildNode = (
   // Par quel axe ce nœud a été atteint. Son anneau, donc.
   reached_by: Type_AxisStep
 ): Type_SunburstNode => {
-  const declared = sunburstNodeValue(node, state.nav)
+  const declared = sunburstNodeValue(node, state.nav, state.node_value_mode)
   if (!state.rings[depth]) state.rings[depth] = ringOf(state, reached_by)
   const next = childrenOf(node, state.axis_ids)
   // L'axe qui commande ce secteur : celui qui le déplie, ou à défaut celui qui l'a
@@ -314,8 +348,9 @@ const buildNode = (
     id: node.id,
     // Le nom TEL QUE LE DIAGRAMME LE PRODUIT (gabarit, tag, nœud ancêtre) : une couronne
     // nomme ses secteurs comme le dessin nomme ses nœuds, sinon le même objet porte deux
-    // noms à l'écran (arbitrage Julien, 09/09/2026).
-    label: displayedNameOf(node),
+    // noms à l'écran (arbitrage Julien, 09/09/2026). os#1425 — l'auteur peut demander le nom
+    // PROPRE du nœud, quand le gabarit du diagramme est trop long pour un secteur.
+    label: state.name_source === 'own' ? (node.name || displayedNameOf(node)) : displayedNameOf(node),
     value: declared,
     declared,
     color: node.getShapeColorToUse() ?? null,
@@ -337,10 +372,13 @@ const buildNode = (
     rank: next.dimension_id === reached_by.dimension_id ? reached_by.rank + 1 : 1
   }
   state.path.add(node.id)
-  const children = next.children
-    .filter(child => !state.path.has(child.id))
-    .map(child => buildNode(child, depth + 1, state, child_step))
-    .filter(child => child.value > 0)
+  const children = sortSiblings(
+    next.children
+      .filter(child => !state.path.has(child.id))
+      .map(child => buildNode(child, depth + 1, state, child_step))
+      .filter(child => child.value > 0),
+    state.sort_order
+  )
   state.path.delete(node.id)
 
   if (children.length === 0) return base
@@ -421,6 +459,9 @@ export const buildSunburstTree = (
     axes,
     axis_ids,
     value_mode: options.value_mode ?? 'sum',
+    node_value_mode: options.node_value_mode ?? 'max',
+    sort_order: options.sort_order ?? 'value_desc',
+    name_source: options.name_source ?? 'displayed',
     nav,
     max_depth: Math.max(1, (options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH) + swallowed_by_centre),
     mismatch_count: 0,
@@ -434,10 +475,12 @@ export const buildSunburstTree = (
 
   // Les racines ouvrent le premier axe : rang 0, le cran que le centre porte quand le
   // périmètre est unitaire.
-  const roots = roots_source
-    .map(node => buildNode(node, 0, state, { dimension_id: first.id, rank: 0 }))
-    .filter(root => root.value > 0)
-    .sort((a, b) => b.value - a.value)
+  const roots = sortSiblings(
+    roots_source
+      .map(node => buildNode(node, 0, state, { dimension_id: first.id, rank: 0 }))
+      .filter(root => root.value > 0),
+    state.sort_order
+  )
 
   return {
     dimension_id: first.id,
