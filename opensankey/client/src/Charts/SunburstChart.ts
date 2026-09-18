@@ -23,7 +23,7 @@ import * as d3 from '../d3Modules'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureTitle } from './figureChartStyle'
 import { mountFigureTitle } from './figureTitle'
-import type { Type_FigureZoomHandle } from './figureZoomBridge'
+import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -197,6 +197,9 @@ export interface Type_SunburstChartOptions {
   zoom_handle?: (handle: Type_FigureZoomHandle | null) => void
   /** Le point de vue vient de changer (molette, glisser, boutons) : l'indicateur doit suivre. */
   on_zoom?: (k: number) => void
+  /** Le point de vue au montage, et chaque changement : de quoi le retrouver après un remontage. */
+  initial_view?: Type_FigureView | null
+  on_view?: (view: Type_FigureView) => void
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -666,7 +669,9 @@ export const drawSunburstChart = (
   // Racine courante du zoom radial (null = la vue d'ensemble).
   let focus_id: string | null = null
   // Le point de vue de l'auteur — zoom et déplacement — gardé d'un redessin à l'autre.
-  let view: d3.ZoomTransform = d3.zoomIdentity
+  let view: d3.ZoomTransform = opts.initial_view
+    ? d3.zoomIdentity.translate(opts.initial_view.x, opts.initial_view.y).scale(opts.initial_view.k)
+    : d3.zoomIdentity
   // Le svg et son comportement de zoom DU DERNIER DESSIN : c'est à eux que parle la poignée
   // prêtée au contrôle de la colonne d'outils, d'un redessin à l'autre.
   let zoomer: {
@@ -858,6 +863,7 @@ export const drawSunburstChart = (
         const changed = event.transform.k !== view.k
         view = event.transform
         place(view)
+        opts.on_view?.({ x: view.x, y: view.y, k: view.k })
         if (changed) opts.on_zoom?.(view.k)
       })
     svg.call(zoom)
