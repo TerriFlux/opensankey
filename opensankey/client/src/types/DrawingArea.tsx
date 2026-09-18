@@ -1515,7 +1515,7 @@ export class Class_DrawingArea {
     this._refitTiedFramesToLabels()
     this._legend.draw()
     this._sendLegendFramesBehindMembers()
-    this._sendLegendAboveGroupFrames()
+    this._sendLegendAboveZones()
     // Added events listeners
     this.setEventsListeners()
 
@@ -3357,40 +3357,43 @@ export class Class_DrawingArea {
   }
 
   /**
-   * La LÉGENDE passe devant les CADRES DE GROUPE (18/09).
+   * La LÉGENDE passe devant les ZONES du document (18/09).
    *
-   * Un cadre de groupe est un FOND : le rectangle qui réunit visuellement ses membres. La légende,
-   * elle, est une surcouche de lecture. Rien ne les départageait — l'ordre Z suit l'ordre de
-   * création, et une légende posée avant les groupes (ou sur l'emprise de l'un d'eux) passait
-   * DESSOUS : sur la filière bois BACCFIRE, les entrées « Sous-filière » et la zone
-   * « Territoire / Année / Unité » s'effaçaient sous le fond du groupe « FIN DE VIE ». Le défaut
-   * était masqué tant que le panneau de filtres rognait la droite du dessin ; il saute aux yeux
-   * depuis qu'une page publiée s'ouvre sur toute la largeur.
+   * Une zone — zone de texte à fond coloré, cadre de groupe — est un FOND ; la légende est une
+   * surcouche de lecture. Rien ne les départageait. L'ordre Z suit l'ordre de création, et la
+   * légende est GÉNÉRÉE (au dessin, ou après un chargement qui ne la porte pas) : ses zones sont
+   * donc poussées en fin de `_list_g_element_id`, c'est-à-dire tout au FOND, sous les fonds déjà
+   * là. Vu en production sur la filière bois BACCFIRE — fichier 0.91 dont l'ordre sauvegardé ne
+   * contient aucun identifiant de légende : les entrées « Sous-filière » et la zone
+   * « Territoire / Année / Unité » s'effaçaient sous le pavé orange « FIN DE VIE », lui-même une
+   * zone de texte. Le défaut était masqué tant que le panneau de filtres rognait la droite du
+   * dessin ; il saute aux yeux depuis qu'une page publiée s'ouvre sur toute la largeur.
    *
-   * On insère donc le bloc de légende JUSTE DEVANT le cadre de groupe le plus en avant, sans
-   * toucher à rien d'autre : ni aux nœuds et flux (qu'une légende n'a pas à masquer), ni à l'ordre
-   * INTERNE de la légende, que `_sendLegendFramesBehindMembers` vient de poser — le bloc est
-   * déplacé d'un seul tenant. Idempotent : rien ne bouge si la légende est déjà devant.
+   * On insère donc le bloc de légende JUSTE DEVANT la zone la plus en avant. Les NŒUDS et les FLUX
+   * ne bougent pas — une légende n'a pas à les masquer, et sur ce diagramme elle est posée dans un
+   * espace libre, pas sur un flux. L'ordre INTERNE de la légende, que
+   * `_sendLegendFramesBehindMembers` vient de poser, est conservé : le bloc est déplacé d'un seul
+   * tenant. Idempotent : rien ne bouge si la légende est déjà devant toutes les zones.
    *
    * Convention de la liste (cf. sendFrameBehindMembers) : indice PLUS BAS = plus en AVANT.
    */
-  private _sendLegendAboveGroupFrames() {
+  private _sendLegendAboveZones() {
     if (!this._legend.frame) return
     const list = dedupeZOrderKeepFirst(this._list_g_element_id)
     const legend_ids = list.filter(id => isLegendElementId(id))
     if (legend_ids.length === 0) return
-    const groupFrameIndexIn = (order: string[]): number[] => this.sankey.containers_list
-      .filter(c => c.tied_to_nodes && !isLegendElementId(c.id))
+    const zoneIndexIn = (order: string[]): number[] => this.sankey.containers_list
+      .filter(c => !isLegendElementId(c.id))
       .map(c => order.indexOf(c.id))
       .filter(i => i >= 0)
-    const frames_idx = groupFrameIndexIn(list)
-    if (frames_idx.length === 0) return
-    // Le plus en avant des cadres ; si toute la légende lui est déjà antérieure, rien à faire.
-    const front_frame_idx = Math.min(...frames_idx)
+    const zones_idx = zoneIndexIn(list)
+    if (zones_idx.length === 0) return
+    // La plus en avant des zones ; si toute la légende lui est déjà antérieure, rien à faire.
+    const front_zone_idx = Math.min(...zones_idx)
     const legend_back_idx = Math.max(...legend_ids.map(id => list.indexOf(id)))
-    if (legend_back_idx < front_frame_idx) return
+    if (legend_back_idx < front_zone_idx) return
     const rest = list.filter(id => !isLegendElementId(id))
-    const insert_at = Math.min(...groupFrameIndexIn(rest))
+    const insert_at = Math.min(...zoneIndexIn(rest))
     this._list_g_element_id = [
       ...rest.slice(0, insert_at), ...legend_ids, ...rest.slice(insert_at)
     ]

@@ -4,22 +4,21 @@ import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerp
 import { isLegendElementId } from '../Elements/legendIds'
 
 /**
- * La LEGENDE passe devant les CADRES DE GROUPE (18/09).
+ * La LEGENDE passe devant les ZONES du document (18/09).
  *
- * Un cadre de groupe est un fond ; la legende une surcouche de lecture. Rien ne les departageait :
- * l ordre Z suit l ordre de creation, et la legende — generee au dessin, donc poussee en fin de
- * `list_g_element`, c est-a-dire au FOND — passait sous le fond d un groupe cree avant elle. Vu en
- * production sur la filiere bois BACCFIRE, ou les entrees de legende s effacaient sous le groupe
- * « FIN DE VIE ».
+ * Une zone — zone de texte a fond colore, cadre de groupe — est un fond ; la legende une surcouche
+ * de lecture. Rien ne les departageait : l ordre Z suit l ordre de creation, et la legende, generee
+ * au dessin, est poussee en fin de `list_g_element`, c est-a-dire au FOND. Vu en production sur la
+ * filiere bois BACCFIRE, ou les entrees de legende s effacaient sous le pave « FIN DE VIE » — qui
+ * n est PAS un cadre de groupe mais une simple zone de texte a fond, d ou les deux cas ci-dessous.
  *
- * Le montage reproduit exactement cette chronologie : le cadre de groupe existe AVANT le premier
- * dessin, la legende naît apres. Retirer `_sendLegendAboveGroupFrames` de `draw()` fait tomber le
- * premier cas.
+ * Le montage reproduit cette chronologie : les zones existent AVANT le premier dessin, la legende
+ * naît apres. Retirer `_sendLegendAboveZones` de `draw()` fait tomber les deux premiers cas.
  */
 
 installJsdomRenderStubs()
 
-function makeDiagramWithGroupAndLegend() {
+function makeDiagramWithZonesAndLegend() {
   resetHost()
   const app = new Class_ApplicationData(false)
   const sankey = app.drawing_area.sankey
@@ -30,31 +29,42 @@ function makeDiagramWithGroupAndLegend() {
   const couleur = sankey.addNodeTagGroup('couleur', 'Couleur', false)
   couleur.use_colors = true
   a.addTag(couleur.addTag('Rouge', 'rouge') as Class_Tag)
-  // Le cadre de groupe, cree AVANT que la legende n existe.
-  const frame = sankey.addNewContainer('groupe_fin_de_vie', 'FIN DE VIE')
+  // Les deux formes de fond, creees AVANT que la legende n existe. La zone de texte est le cas
+  // de BACCFIRE : un pave titre, sans aucun lien aux noeuds.
+  const zone = sankey.addNewContainer('zone_fin_de_vie', 'FIN DE VIE')
+  const frame = sankey.addNewContainer('groupe_fin_de_vie', 'Groupe')
   frame.tied_to_nodes = true
   frame.attachNodeToCont(b)
   app.drawing_area.legend.masked = false
   app.drawing_area.draw()
-  return { app, frame }
+  return { app, zone, frame }
 }
 
 const zIndexOf = (app: Class_ApplicationData, id: string) => app.drawing_area.list_g_element.indexOf(id)
 
-describe('ordre Z de la legende face aux cadres de groupe', () => {
-  it('toutes les zones de legende sont devant le cadre de groupe', () => {
-    const { app, frame } = makeDiagramWithGroupAndLegend()
+describe('ordre Z de la legende face aux zones du document', () => {
+  it('la legende est devant une zone de texte a fond, cas BACCFIRE', () => {
+    const { app, zone } = makeDiagramWithZonesAndLegend()
     const order = app.drawing_area.list_g_element
     const legend_ids = order.filter(id => isLegendElementId(id))
     expect(legend_ids.length).toBeGreaterThan(0)
+    const zone_idx = zIndexOf(app, zone.id)
+    expect(zone_idx).toBeGreaterThanOrEqual(0)
+    // Convention de la liste : indice PLUS BAS = plus en AVANT.
+    legend_ids.forEach(id => expect(zIndexOf(app, id)).toBeLessThan(zone_idx))
+  })
+
+  it('la legende est aussi devant un cadre de groupe', () => {
+    const { app, frame } = makeDiagramWithZonesAndLegend()
+    const order = app.drawing_area.list_g_element
+    const legend_ids = order.filter(id => isLegendElementId(id))
     const frame_idx = zIndexOf(app, frame.id)
     expect(frame_idx).toBeGreaterThanOrEqual(0)
-    // Convention de la liste : indice PLUS BAS = plus en AVANT.
     legend_ids.forEach(id => expect(zIndexOf(app, id)).toBeLessThan(frame_idx))
   })
 
   it('l ordre interne de la legende est preserve, cadre derriere ses entrees', () => {
-    const { app } = makeDiagramWithGroupAndLegend()
+    const { app } = makeDiagramWithZonesAndLegend()
     const order = app.drawing_area.list_g_element
     const legend_ids = order.filter(id => isLegendElementId(id))
     // Le bloc reste d un seul tenant : aucun element etranger intercale.
@@ -69,7 +79,7 @@ describe('ordre Z de la legende face aux cadres de groupe', () => {
   })
 
   it('un second dessin ne deplace plus rien', () => {
-    const { app } = makeDiagramWithGroupAndLegend()
+    const { app } = makeDiagramWithZonesAndLegend()
     const before = [...app.drawing_area.list_g_element]
     app.drawing_area.draw()
     expect(app.drawing_area.list_g_element).toEqual(before)
