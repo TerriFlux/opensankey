@@ -101,9 +101,11 @@ describe('SA#545 — survol des zones de la légende', () => {
     expect(dimmedWhileHovering(host, app, 'legend-sample-tag-fiab-full')).toEqual(['C', 'D'])
   })
 
-  it('titre de groupe : les porteurs de l\'une quelconque de ses étiquettes', () => {
+  // SA#551 (2026-09-18) — un TITRE de groupe ne met plus rien en surbrillance : il ouvre la pop-up
+  // du groupe, et seule une étiquette désigne des éléments (arbitrage d'Alexandre).
+  it('titre de groupe : plus aucune surbrillance', () => {
     const { host, app } = makeLegend()
-    expect(dimmedWhileHovering(host, app, 'legend-group-fiab')).toEqual(['C'])
+    expect(dimmedWhileHovering(host, app, 'legend-group-fiab')).toEqual([])
   })
 
   it('« sans étiquette » : les éléments du groupe qui n\'en portent aucune', () => {

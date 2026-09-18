@@ -786,15 +786,6 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // SETTER =============================================================================
   public set use_colors(value: boolean) {
-    this.setUseColors(value)
-  }
-
-  /**
-   * SA#551 — `redraw` faux : l'appelant fait lui-même UN dessin complet (ouvrir ou fermer un groupe
-   * depuis la légende). Les redessins par élément puis par référence coûtent plus cher que ce dessin
-   * sur un gros diagramme (Lait : 821 flux, 9 796 références — mesure du SA#549).
-   */
-  public setUseColors(value: boolean, redraw: boolean = true) {
     // Avoid useless updates
     if (this._use_colors !== value) {
       this._use_colors = value
@@ -804,7 +795,6 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
       // `?.()` dans tout ce fichier : ce ne sont que des invalidations de cache, et des tests
       // unitaires construisent des groupes sur un diagramme simule qui ne les porte pas.
       this._ref_sankey.tagStylesConfigUpdated?.()
-      if (!redraw) return
       if (this.uses_tag_styles) {
         this._ref_sankey.nodes_list.forEach(node => node.draw())
         this._ref_sankey.links_list.forEach(link => link.draw())

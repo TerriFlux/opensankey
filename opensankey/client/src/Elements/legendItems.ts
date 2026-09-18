@@ -170,10 +170,9 @@ export type Type_SankeyForLegend = {
   // mise en forme (mocks des tests antérieurs).
   styles_dict?: { [style_id: string]: Type_StyleForLegend & { is_default_style?: boolean } }
   // SA#551 — ordre de priorité des groupes (Class_Sankey.tagGroupsInPriorityOrder, du moins au plus
-  // prioritaire) et rang d'ouverture depuis la légende. Optionnels : absents (mocks des tests
-  // antérieurs), les groupes gardent l'ordre de `node_taggs_list` puis `flux_taggs_list`.
+  // prioritaire). Optionnel : absent (mocks des tests antérieurs), les groupes gardent l'ordre de
+  // `node_taggs_list` puis `flux_taggs_list`.
   tagGroupsInPriorityOrder?(type_group: 'node_taggs' | 'flux_taggs'): Type_TagGroupForLegend[]
-  tagGroupOpenedRank?(id: string): number
   // SA#551 — étiquettes et groupes dont un style est en vigueur sur au moins un élément visible
   // (Class_Sankey.tagStyleOwnersInEffect). Absent : aucune entrée n'est écartée.
   tagStyleOwnersInEffect?(type_group: 'node_taggs' | 'flux_taggs'): Set<unknown>
@@ -352,10 +351,7 @@ export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGrou
   const by_priority = sankey.tagGroupsInPriorityOrder
   const node_and_flux = by_priority === undefined
     ? [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
-    : legendGroupsByPriority(
-      [by_priority.call(sankey, 'node_taggs'), by_priority.call(sankey, 'flux_taggs')],
-      id => sankey.tagGroupOpenedRank?.(id) ?? 0
-    )
+    : legendGroupsByPriority([by_priority.call(sankey, 'node_taggs'), by_priority.call(sankey, 'flux_taggs')])
   return [...node_and_flux, ...sankey.data_taggs_list]
 }
 
