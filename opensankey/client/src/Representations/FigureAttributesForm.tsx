@@ -97,20 +97,29 @@ const FigureField = ({ app_data, item, is_overloaded, onChange }: {
   // Un booléen est un INTERRUPTEUR qui porte son propre libellé, comme dans les menus
   // d'éléments (`OverloadedCheckbox`) : le bouton dit ce qu'il règle, et sa teinte dit s'il
   // est actif. Pas de « oui / non » à traduire, pas de case suivie d'un texte.
+  //
+  // Le bouton prend TOUTE la rangée : dans la colonne du libellé (deux cinquièmes) il tronquait
+  // son texte des deux côtés (« veaux dans la lé… »). Un libellé encore trop long se coupe en
+  // fin de ligne, et l'infobulle le donne en entier — comme `OverloadedCheckbox` (OS#376).
   if (item.kind === 'checkbox') {
-    return <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+    return <Box as='span' sx={{ display: 'flex', width: '100%', minWidth: 0 }}>
       <InputIndicatorWrapper isOverloaded={is_overloaded} t={t}>
-        <OSTooltip label={item.tooltip}>
+        <OSTooltip label={item.tooltip || item.label}>
           <Button
             variant={item.value === true
               ? 'menuconfigpanel_option_button_activated'
               : 'menuconfigpanel_option_button'}
-            sx={{ minWidth: 0, flexShrink: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}
+            sx={{
+              width: '100%',
+              minWidth: 0,
+              flexShrink: 1,
+              overflow: 'hidden',
+              '& > *': { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+            }}
             onClick={() => onChange(item.value !== true)}
-          >{item.label}</Button>
+          ><span>{item.label}</span></Button>
         </OSTooltip>
       </InputIndicatorWrapper>
-      <Box />
     </Box>
   }
 

@@ -21,6 +21,9 @@
 
 import * as d3 from '../d3Modules'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
+import type { Type_FigureTitle } from './figureChartStyle'
+import { mountFigureTitle } from './figureTitle'
+import type { Type_FigureZoomHandle } from './figureZoomBridge'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -43,6 +46,21 @@ export interface Type_SunburstStyle {
   others_threshold: number
   labels_mode: 'fit' | 'none' | 'always'
   label_orientation: 'radial' | 'tangential' | 'horizontal'
+  /**
+   * CE QU'UN SECTEUR ÉCRIT DE SON NOM (demande Julien, 18/09). `strip_parent` retire ce que
+   * l'anneau précédent dit déjà (« Maïs Bio » sous « Maïs » s'écrit « Bio ») ; le séparateur est
+   * celui des nœuds du diagramme (`name_label_separator`, même règle que `NodeBase.name_label`).
+   */
+  strip_parent: boolean
+  separator: string
+  separator_part: 'before' | 'after'
+  /** La largeur de la boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne. */
+  box_width: number
+  /**
+   * LES ÉTIQUETTES QUI NE TIENNENT PAS SORTENT DU DISQUE (demande Julien, 18/09), reliées à leur
+   * secteur par un trait, et se déplacent à la main (cf. `label_positions`).
+   */
+  callout: boolean
   /** Ceux-ci sont les attributs d'ÉTIQUETTE des éléments (`name_label_*`). */
   font_family: string
   font_size: number
@@ -64,8 +82,17 @@ export interface Type_SunburstStyle {
   centre_content: 'both' | 'name' | 'value' | 'none'
   /** Rayon du trou, en pourcentage du rayon extérieur. */
   centre_hole: number
-  legend_mode: 'auto' | 'none' | 'rings' | 'branches' | 'both'
+  /** Parts au plus (au-delà : « Autres ») ; 0 = seulement le plafond de la palette. */
+  parts_max: number
+  /** La part de la place disponible que prend le disque, en %. */
+  scale_factor: number
+  /** La légende, en trois questions du catalogue : est-elle là, quelles parts, les niveaux ? */
+  legend_visible: boolean
+  legend_parts: 'auto' | 'all' | 'none'
+  legend_levels: boolean
   legend_position: 'right' | 'left' | 'bottom'
+  legend_font_size: number
+  legend_width: number
   notes_visible: boolean
   tooltip_visible: boolean
   click_action: 'both' | 'zoom' | 'aggregate' | 'none'
@@ -82,6 +109,11 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   others_threshold: 0,
   labels_mode: 'fit',
   label_orientation: 'radial',
+  strip_parent: false,
+  separator: '',
+  separator_part: 'after',
+  box_width: 150,
+  callout: false,
   font_family: 'Arial,sans-serif',
   font_size: 10,
   bold: false,
@@ -99,11 +131,18 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   label_percent: 'none',
   centre_content: 'both',
   centre_hole: 22,
-  legend_mode: 'auto',
+  parts_max: 0,
+  scale_factor: 100,
+  legend_visible: true,
+  legend_parts: 'auto',
+  legend_levels: true,
   legend_position: 'right',
+  legend_font_size: 12,
+  legend_width: 220,
   notes_visible: true,
   tooltip_visible: true,
-  click_action: 'both'
+  // Déplier seulement : le zoom radial n'est plus le défaut (cf. figureCatalogue).
+  click_action: 'aggregate'
 }
 
 export interface Type_SunburstChartOptions {
@@ -112,6 +151,8 @@ export interface Type_SunburstChartOptions {
   style?: Partial<Type_SunburstStyle>
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
+  /** Le titre de la figure (arbitrage du 18/09) ; vide, le nom de la racine. */
+  title?: Type_FigureTitle
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
@@ -141,6 +182,21 @@ export interface Type_SunburstChartOptions {
   on_arc_click?: (
     node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[]
   ) => void
+  /**
+   * LES ÉTIQUETTES POSÉES À LA MAIN (demande Julien, 18/09) : la position d'une étiquette sortie
+   * du disque, par identifiant de secteur, en pixels depuis le centre et hors zoom. Absente : la
+   * place que le tracé lui donne, dans l'axe de son secteur.
+   */
+  label_positions?: { [sector_id: string]: { x: number, y: number } }
+  /** L'auteur vient de déposer une étiquette : à l'appelant de retenir où. */
+  on_label_move?: (sector_id: string, position: { x: number, y: number }) => void
+  /**
+   * CE QUE LE DESSIN PRÊTE AU CONTRÔLE DE ZOOM de la colonne d'outils (cf. figureZoomBridge) :
+   * appelé avec une poignée au premier dessin, avec `null` au démontage.
+   */
+  zoom_handle?: (handle: Type_FigureZoomHandle | null) => void
+  /** Le point de vue vient de changer (molette, glisser, boutons) : l'indicateur doit suivre. */
+  on_zoom?: (k: number) => void
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -188,6 +244,10 @@ const MIN_RING_FOR_LABEL_PX = 26
 const LABEL_RING_PADDING_PX = 8
 // Largeur moyenne d'un caractère à la taille d'étiquette retenue.
 const LABEL_CHAR_PX = 6
+// Bord d'arc minimal, en pixels, pour qu'une étiquette sortie du disque ait un secteur à montrer.
+const MIN_CALLOUT_EDGE_PX = 6
+// L'écart entre le disque et une étiquette sortie, quand l'auteur ne l'a pas encore déplacée.
+const CALLOUT_GAP_PX = 14
 // Écart entre deux anneaux : un vide de la couleur du fond, pas un trait.
 const ARC_GAP_PX = 1.5
 
@@ -399,12 +459,21 @@ export const sunburstArcLabel = (
     orientation?: 'radial' | 'tangential' | 'horizontal'
     mode?: 'fit' | 'always' | 'none'
     font_size?: number
+    /**
+     * La largeur de la boîte de texte (demande Julien, 18/09) : une ligne ne dépasse ni elle ni
+     * la place ; au-delà, le texte REVIENT À LA LIGNE, entre les mots, tant que la hauteur
+     * disponible tient les lignes. Un mot trop long pour une ligne, ou plus de lignes que de
+     * place : on retombe sur la troncature d'une ligne, et la légende nommera. Absente ou nulle :
+     * une seule ligne, comme avant.
+     */
+    box_px?: number
   } = {}
 ): string | null => {
   const mode = o.mode ?? 'fit'
   if (mode === 'none') return null
   const orientation = o.orientation ?? 'radial'
-  const char_px = ((o.font_size ?? 10) / 10) * LABEL_CHAR_PX
+  const font_size = o.font_size ?? 10
+  const char_px = (font_size / 10) * LABEL_CHAR_PX
   // Où le texte court, et donc ce qui borne sa longueur : l'épaisseur de l'anneau s'il est
   // radial, la longueur de l'arc s'il suit la courbe, le plus petit des deux à l'horizontale.
   const length_px = orientation === 'radial' ? ring_px
@@ -416,9 +485,78 @@ export const sunburstArcLabel = (
   if (mode !== 'always' && (height_px < MIN_LABEL_ARC_PX || length_px < MIN_RING_FOR_LABEL_PX)) {
     return null
   }
-  const room = Math.floor((length_px - LABEL_RING_PADDING_PX) / char_px)
+  const line_px = o.box_px && o.box_px > 0 ? Math.min(o.box_px, length_px) : length_px
+  const room = Math.floor((line_px - LABEL_RING_PADDING_PX) / char_px)
   if (room < 1) return null
-  return label.length > room ? label.slice(0, Math.max(1, room - 1)) + '…' : label
+  if (label.length <= room) return label
+  // Retour à la ligne : autant de lignes que la hauteur en tient, jamais moins d'une.
+  const max_lines = o.box_px && o.box_px > 0
+    ? Math.max(1, Math.floor(height_px / (font_size * LABEL_LINE_HEIGHT)))
+    : 1
+  const wrapped = max_lines > 1 ? wrapWords(label, room, max_lines) : null
+  return wrapped ? wrapped.join('\n') : label.slice(0, Math.max(1, room - 1)) + '…'
+}
+
+/** Interligne des étiquettes à plusieurs lignes, en multiples de la taille de police. */
+const LABEL_LINE_HEIGHT = 1.15
+
+/**
+ * Coupe entre les mots, `room` caractères par ligne au plus, `max_lines` lignes au plus. `null`
+ * quand ça ne se peut pas — un mot plus long qu'une ligne, ou trop de lignes : l'appelant tronque.
+ */
+const wrapWords = (text: string, room: number, max_lines: number): string[] | null => {
+  const lines: string[] = []
+  let line = ''
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    if (word.length > room) return null
+    if (line === '') line = word
+    else if (line.length + 1 + word.length <= room) line += ' ' + word
+    else { lines.push(line); line = word }
+    if (lines.length >= max_lines) return null
+  }
+  if (line) lines.push(line)
+  return lines.length <= max_lines ? lines : null
+}
+
+/**
+ * CE QU'UN SECTEUR ÉCRIT DE SON NOM (demande Julien, 18/09). Fonction PURE.
+ *
+ * `strip_parent` retire du nom ce que l'anneau précédent dit déjà : sous « Maïs », « Maïs Bio »
+ * s'écrit « Bio » — en tête ou en queue, ponctuation de liaison comprise, et jamais jusqu'à ne
+ * rien laisser. Le séparateur est celui des nœuds du diagramme (`name_label_separator`,
+ * `name_label_separator_part`) et suit la même règle que `NodeBase.name_label` : la partie avant
+ * la première occurrence, ou après la dernière.
+ */
+export const sunburstSectorName = (
+  label: string,
+  parent_label: string | null,
+  o: { strip_parent?: boolean, separator?: string, separator_part?: 'before' | 'after' } = {}
+): string => {
+  let name = label
+  if (o.strip_parent && parent_label) {
+    const n = name.trim()
+    const p = parent_label.trim()
+    const lower_n = n.toLocaleLowerCase()
+    const lower_p = p.toLocaleLowerCase()
+    if (p && n.length > p.length) {
+      if (lower_n.startsWith(lower_p)) {
+        const rest = n.slice(p.length).replace(/^[\s\-–—_:·,/()]+/, '')
+        if (rest) name = rest
+      } else if (lower_n.endsWith(lower_p)) {
+        const rest = n.slice(0, n.length - p.length).replace(/[\s\-–—_:·,/()]+$/, '')
+        if (rest) name = rest
+      }
+    }
+  }
+  const sep = o.separator ?? ''
+  if (sep !== '') {
+    const parts = name.split(sep)
+    if (parts.length > 1) {
+      const kept = (o.separator_part ?? 'after') === 'after' ? parts[parts.length - 1] : parts[0]
+      if (kept.trim()) name = kept.trim()
+    }
+  }
+  return name
 }
 
 // Sous-arbre correspondant à un id : entrer dans un secteur, c'est redessiner l'arbre
@@ -457,7 +595,9 @@ export const sunburstScope = (
   roots: Type_SunburstNode[],
   focused: Type_SunburstNode | null,
   others_label: string,
-  max_branches = MAX_BRANCHES
+  // Typé en clair : `MAX_BRANCHES` est un littéral (longueur d'un tuple `as const`), et le
+  // laisser inférer figerait ce paramètre à « 8 » au lieu d'un nombre.
+  max_branches: number = MAX_BRANCHES
 ): { centre: Type_SunburstNode | null, branches: Type_SunburstNode[] } => {
   const centre = focused ?? (roots.length === 1 ? roots[0] : null)
   // Un centre sans enfants n'a rien à décomposer : plutôt que de le dessiner en anneau
@@ -525,16 +665,33 @@ export const drawSunburstChart = (
   const others_label = opts.others_label ?? '…'
   // Racine courante du zoom radial (null = la vue d'ensemble).
   let focus_id: string | null = null
+  // Le point de vue de l'auteur — zoom et déplacement — gardé d'un redessin à l'autre.
+  let view: d3.ZoomTransform = d3.zoomIdentity
+  // Le svg et son comportement de zoom DU DERNIER DESSIN : c'est à eux que parle la poignée
+  // prêtée au contrôle de la colonne d'outils, d'un redessin à l'autre.
+  let zoomer: {
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>
+    zoom: d3.ZoomBehavior<SVGSVGElement, unknown>
+  } | null = null
+  const ZOOM_MIN = 0.5
+  const ZOOM_MAX = 8
 
   const render = () => {
-    const sel = d3.select(container)
-    sel.selectAll('*').remove()
-    const width = container.clientWidth
-    const height = container.clientHeight
+    d3.select(container).selectAll('*').remove()
+    // Le titre prend sa ligne, le disque et la légende se partagent le reste (cf. figureTitle).
+    const host = mountFigureTitle(
+      container, opts.title,
+      tree.roots.length === 1 ? tree.roots[0].label : (opts.scope_label?.(tree.roots.length) ?? '')
+    )
+    const sel = d3.select(host)
+    const width = host.clientWidth
+    const height = host.clientHeight
 
     const focused = focus_id ? findSunburstNode(tree.roots, focus_id) : null
     // Le centre est un nœud (périmètre unitaire ou zoom), les anneaux sa décomposition.
-    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label)
+    // Le plafond de parts : celui de la palette, ou plus bas si l'auteur le demande (`parts_max`).
+    const max_parts = st.parts_max > 0 ? Math.min(MAX_BRANCHES, Math.round(st.parts_max)) : MAX_BRANCHES
+    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label, max_parts)
     // Le centre porte SA valeur, pas celle de ses parts : elles peuvent ne pas boucler
     // avec lui (régime 'sum'), et c'est l'écart que la mention annonce.
     const branches_total = branches.reduce((acc, r) => acc + r.value, 0)
@@ -582,7 +739,8 @@ export const drawSunburstChart = (
       const side = legend_below
         ? Math.max(120, Math.min(width, height - legend_width - 12) - 8)
         : Math.max(120, Math.min(width - legend_width - 12, height) - 8)
-      const outer_r = side / 2 - 2
+      // L'ÉCHELLE (`scale_factor`) : la part de la place disponible que prend le disque.
+      const outer_r = (side / 2 - 2) * Math.max(10, Math.min(100, st.scale_factor)) / 100
       // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
       const inner_r = Math.max(14, outer_r * (st.centre_hole / 100))
       return { side, outer_r, inner_r, ring: (outer_r - inner_r) / rings }
@@ -604,10 +762,20 @@ export const drawSunburstChart = (
      * composé AVANT la mesure — une valeur ajoutée doit tenir, sinon l'étiquette est tronquée ou
      * renoncée comme n'importe quelle autre.
      */
+    // Le nom que l'anneau précédent a déjà écrit : le secteur parent, ou le centre au premier
+    // anneau — c'est lui que `strip_parent` retire du nom du secteur.
+    const parentLabelOf = (d: Type_SunburstSlice): string | null => {
+      if (d.path.length >= 2) return slices.find(s => s.id === d.path[d.path.length - 2])?.label ?? null
+      return centre_node ? centre_node.label : null
+    }
+    const sectorName = (d: Type_SunburstSlice): string => sunburstSectorName(d.label, parentLabelOf(d), {
+      strip_parent: st.strip_parent, separator: st.separator, separator_part: st.separator_part
+    })
     const sectorText = (d: Type_SunburstSlice): string => {
       // La CASSE s'applique au texte et non au style : `text-transform` n'est pas honoré par
       // tous les moteurs SVG, et l'export PNG en dépend.
-      const parts: string[] = [st.uppercase ? d.label.toLocaleUpperCase() : d.label]
+      const name = sectorName(d)
+      const parts: string[] = [st.uppercase ? name.toLocaleUpperCase() : name]
       if (st.value_visible) parts.push(fmtUnit(d.value))
       if (st.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
       return parts.join(' · ')
@@ -621,40 +789,82 @@ export const drawSunburstChart = (
         {
           orientation: st.label_orientation,
           mode: st.labels_mode,
-          font_size: st.font_size
+          font_size: st.font_size,
+          box_px: st.box_width
         }
       )
-    // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches.
+    // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches. Un nom revenu
+    // à la ligne, lui, est écrit en entier.
     const namesItself = (d: Type_SunburstSlice, geo: Type_Geometry): boolean => {
       const text = arcLabelOf(d, geo)
-      return text !== null && text === sectorText(d)
+      return text !== null && text.replace(/\n/g, ' ') === sectorText(d)
     }
+    // Un secteur assez large pour qu'un trait de rappel désigne quelque chose : au-dessous, le
+    // rappel pointerait un fil, et cent rappels sur un anneau de miettes ne nommeraient rien.
+    const calloutable = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
+      st.callout && !d.is_residual &&
+      (d.a1 - d.a0) * (geo.inner_r + (d.depth + 1) * geo.ring) >= MIN_CALLOUT_EDGE_PX
+    // Sorti du disque avec son trait, un secteur est nommé aussi sûrement que dans son anneau.
+    const named = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
+      namesItself(d, geo) || calloutable(d, geo)
     // Les secteurs du premier anneau que le dessin ne nomme pas. Ils portent déjà leur
     // couleur de branche : la légende n'a qu'à la recopier.
     const unnamedBranches = (geo: Type_Geometry) =>
-      slices.filter(s => s.depth === 0 && !namesItself(s, geo))
+      slices.filter(s => s.depth === 0 && !named(s, geo))
 
     // La légende demandée décide de la place qu'on lui réserve, avant même de la remplir :
     // « aucune » n'en prend aucune, « toutes les branches » en prend une large d'office.
-    const wide = Math.min(220, (legend_below ? height : width) * 0.32)
-    const narrow = Math.min(150, (legend_below ? height : width) * 0.28)
-    const legend_width = st.legend_mode === 'none'
+    // La largeur demandée (`legend_width`) plafonne la colonne large ; l'étroite en prend les
+    // deux tiers. Les deux restent bornées par la place disponible.
+    const room = legend_below ? height : width
+    const wide = Math.min(Math.max(80, st.legend_width), room * 0.32)
+    const narrow = Math.min(Math.max(60, st.legend_width * 0.68), room * 0.28)
+    const legend_width = !st.legend_visible
       ? 0
-      : (st.legend_mode === 'both' || st.legend_mode === 'branches')
+      : st.legend_parts === 'all'
         ? wide
         : unnamedBranches(geometryFor(narrow)).length > 0 ? wide : narrow
     const geo = geometryFor(legend_width)
     const { side, inner_r, ring } = geo
-    // Sous 'auto', la légende ne nomme que ce que le dessin n'a pas pu nommer ; sous 'both' et
-    // 'branches', elle les nomme toutes ; sous 'rings' et 'none', aucune.
-    const unnamed_branches = st.legend_mode === 'both' || st.legend_mode === 'branches'
-      ? slices.filter(s => s.depth === 0)
-      : st.legend_mode === 'auto' ? unnamedBranches(geo) : []
+    // Les PARTS dans la légende (`legend_parts`) : 'auto' ne nomme que ce que le dessin n'a pas
+    // pu nommer, 'all' les nomme toutes, 'none' aucune.
+    const unnamed_branches = !st.legend_visible || st.legend_parts === 'none'
+      ? []
+      : st.legend_parts === 'all' ? slices.filter(s => s.depth === 0) : unnamedBranches(geo)
 
+    // LE SVG PREND TOUTE LA CASE qui n'est pas à la légende, et le disque se centre dedans : un
+    // svg carré posé à gauche laissait à droite une bande morte de la largeur du cadre moins la
+    // hauteur (constaté par Julien, 18/09), où ni le disque ni le zoom ne pouvaient aller.
+    const box_w = legend_below ? width : Math.max(side, width - legend_width - (legend_width > 0 ? 12 : 0))
+    const box_h = legend_below ? Math.max(side, height - legend_width - (legend_width > 0 ? 12 : 0)) : height
     const svg = root_el.append('svg')
-      .attr('width', side).attr('height', side)
+      .attr('width', box_w).attr('height', box_h)
       .style('flex', '0 0 auto')
-    const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
+      // Le disque ne déborde jamais de sa case : ce qu'un zoom pousse dehors est coupé, pas
+      // dessiné par-dessus la légende ou le voisin.
+      .style('overflow', 'hidden')
+    const g = svg.append('g')
+    // ZOOM ET DÉPLACEMENT (demande Julien, 18/09), comme sur le diagramme : molette pour zoomer,
+    // glisser pour déplacer, double-clic pour recentrer. Le point de vue survit aux redessins
+    // (redimensionnement, zoom radial) — c'est `view`, tenu hors de `render`.
+    const place = (t: d3.ZoomTransform) =>
+      g.attr('transform', `translate(${box_w / 2 + t.x},${box_h / 2 + t.y}) scale(${t.k})`)
+    place(view)
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([ZOOM_MIN, ZOOM_MAX])
+      // Un clic qui a bougé de quelques pixels reste un clic sur le secteur, pas un déplacement.
+      .clickDistance(4)
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+        const changed = event.transform.k !== view.k
+        view = event.transform
+        place(view)
+        if (changed) opts.on_zoom?.(view.k)
+      })
+    svg.call(zoom)
+      .call(zoom.transform, view)
+      .on('dblclick.zoom', null)
+      .on('dblclick', () => { svg.call(zoom.transform, d3.zoomIdentity) })
+    zoomer = { svg, zoom }
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
     const scope_title = centre_node
@@ -739,7 +949,7 @@ export const drawSunburstChart = (
       })
       // DEUX GESTES DANS UN, ET ILS SE SÉPARENT (os#1425). Le clic zoomait dans l'anneau ET
       // dépliait le nœud dans le diagramme, sans que rien ne le dise. L'auteur choisit ce qu'il
-      // veut — les deux restent le défaut, c'est le comportement d'avant.
+      // veut — déplier seul est le défaut, le zoom radial un choix.
       .on('click', (_, d) => {
         if (d.is_residual || st.click_action === 'none') return
         if (st.click_action !== 'zoom') {
@@ -759,7 +969,7 @@ export const drawSunburstChart = (
 
     // Étiquettes DANS les secteurs assez larges. Jamais sur tous : un secteur trop
     // étroit n'a que son info-bulle, et un texte tronqué à l'aveugle ne nomme rien.
-    g.selectAll('text.sunburst_arc_label')
+    const arc_labels = g.selectAll('text.sunburst_arc_label')
       .data(slices.filter(d => arcLabelOf(d, geo) !== null))
       .enter().append('text')
       .attr('class', 'sunburst_arc_label')
@@ -788,7 +998,71 @@ export const drawSunburstChart = (
       // illisible. L'auteur peut l'imposer, c'est alors son affaire.
       .attr('fill', d => st.color_mode === 'fixed' ? st.label_color : inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
-      .text(d => arcLabelOf(d, geo) ?? '')
+    // Une ligne par `tspan`, le bloc centré sur le milieu de l'anneau : la première ligne
+    // remonte de la moitié de la hauteur du bloc, les suivantes descendent d'un interligne.
+    const line_h = st.font_size * LABEL_LINE_HEIGHT
+    arc_labels.each(function (d) {
+      const lines = (arcLabelOf(d, geo) ?? '').split('\n')
+      const text = d3.select(this)
+      lines.forEach((line, i) => {
+        text.append('tspan')
+          .attr('x', 0)
+          .attr('dy', i === 0 ? -((lines.length - 1) / 2) * line_h : line_h)
+          .text(line)
+      })
+    })
+
+    // ── Étiquettes SORTIES DU DISQUE (demande Julien, 18/09) ─────────────────────────────
+    // Celles que leur secteur ne tient pas en entier, quand l'auteur le demande (`callout`) :
+    // posées hors du disque dans l'axe du secteur, reliées à son bord par un trait, et
+    // DÉPLAÇABLES — la position déposée est rendue à l'appelant, qui la retient par figure.
+    // Le zoom ne les touche pas autrement que le reste : elles vivent dans `g`, comme les arcs.
+    const callouts = slices.filter(d => !namesItself(d, geo) && calloutable(d, geo))
+    if (callouts.length > 0) {
+      const outer_r = geo.outer_r
+      const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
+      const edgeOf = (d: Type_SunburstSlice) =>
+        point(inner_r + (d.depth + 1) * ring - ARC_GAP_PX, (d.a0 + d.a1) / 2)
+      const defaultAt = (d: Type_SunburstSlice) => point(outer_r + CALLOUT_GAP_PX, (d.a0 + d.a1) / 2)
+      const positionOf = (d: Type_SunburstSlice) => opts.label_positions?.[d.id] ?? defaultAt(d)
+      const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
+      const layer = g.append('g').attr('class', 'sunburst_callouts')
+      const items = layer.selectAll<SVGGElement, Type_SunburstSlice>('g.sunburst_callout')
+        .data(callouts)
+        .enter().append('g')
+        .attr('class', 'sunburst_callout')
+        .style('cursor', 'move')
+      items.append('line')
+        .attr('class', 'sunburst_callout_line')
+        .attr('stroke', palette.muted).attr('stroke-width', 1)
+        .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
+        .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
+      items.append('text')
+        .attr('class', 'sunburst_callout_text')
+        .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
+        .attr('text-anchor', d => anchorOf(positionOf(d)))
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', st.font_size)
+        .attr('font-family', st.font_family)
+        .attr('font-weight', st.bold ? 'bold' : null)
+        .attr('font-style', st.italic ? 'italic' : null)
+        .attr('fill', st.color_mode === 'fixed' ? st.label_color : palette.ink)
+        .text(d => sectorText(d))
+      if (st.tooltip_visible) items.append('title').text(sliceTitle)
+      // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt. Les
+      // coordonnées sont celles de `g`, donc déjà hors zoom — c'est ce qu'on persiste.
+      items.call(d3.drag<SVGGElement, Type_SunburstSlice>()
+        .on('start', (event) => { event.sourceEvent?.stopPropagation() })
+        .on('drag', function (event) {
+          const p = { x: event.x, y: event.y }
+          const item = d3.select(this)
+          item.select('line').attr('x2', p.x).attr('y2', p.y)
+          item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', anchorOf(p))
+        })
+        .on('end', (event, d) => {
+          opts.on_label_move?.(d.id, { x: Math.round(event.x), y: Math.round(event.y) })
+        }))
+    }
 
     // ── Légende ───────────────────────────────────────────────────────────────────
     // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
@@ -797,11 +1071,11 @@ export const drawSunburstChart = (
       .style('flex', legend_below ? '0 0 auto' : '1 1 0').style('min-width', '0')
       .style('align-self', 'center')
       .style('max-height', legend_below ? `${legend_width}px` : '100%')
-      .style('overflow-y', 'auto').style('font-size', '0.75rem')
+      .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
       .style('color', palette.ink)
-      .style('display', st.legend_mode === 'none' ? 'none' : 'block')
-    const show_rings = st.legend_mode === 'auto' || st.legend_mode === 'rings' ||
-      st.legend_mode === 'both'
+      .style('display', st.legend_visible ? 'block' : 'none')
+    // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
+    const show_rings = st.legend_visible && st.legend_levels
 
     // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
     // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
@@ -885,6 +1159,16 @@ export const drawSunburstChart = (
 
   render()
 
+  // La poignée prêtée au contrôle de zoom : elle parle toujours au svg du dernier dessin.
+  opts.zoom_handle?.({
+    getScale: () => view.k,
+    setScale: (k) => {
+      const bounded = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k))
+      zoomer?.svg.call(zoomer.zoom.scaleTo, bounded)
+    },
+    scaleBy: (factor) => { zoomer?.svg.call(zoomer.zoom.scaleBy, factor) }
+  })
+
   let raf = 0
   const ro = new ResizeObserver(() => {
     if (raf) cancelAnimationFrame(raf)
@@ -894,6 +1178,7 @@ export const drawSunburstChart = (
   return () => {
     ro.disconnect()
     if (raf) cancelAnimationFrame(raf)
+    opts.zoom_handle?.(null)
     d3.select(container).selectAll('*').remove()
   }
 }

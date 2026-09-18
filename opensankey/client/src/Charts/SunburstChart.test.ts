@@ -1,5 +1,5 @@
 import {
-  foldNarrowChildren, partitionSunburst, sunburstArcLabel, sunburstScope
+  foldNarrowChildren, partitionSunburst, sunburstArcLabel, sunburstScope, sunburstSectorName
 } from './SunburstChart'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
@@ -127,6 +127,48 @@ describe('sunburstArcLabel', () => {
     expect(text).not.toBeNull()
     expect(text).not.toBe('Cereales Conventionnel')
     expect(text!.endsWith('…')).toBe(true)
+  })
+
+  it('revient a la ligne entre les mots quand la boite est plus etroite que l anneau', () => {
+    // 90 px d anneau mais une boite de 60 px : huit caracteres par ligne, et l arc de 120 px
+    // tient plusieurs lignes de 10 px.
+    expect(sunburstArcLabel('Cereales Bio', 120, 90, { box_px: 60 })).toBe('Cereales\nBio')
+  })
+
+  it('tronque plutot que de couper un mot, meme avec une boite', () => {
+    const text = sunburstArcLabel('Conventionnel Bio', 200, 40, { box_px: 150 })
+    expect(text!.endsWith('…')).toBe(true)
+    expect(text!.includes('\n')).toBe(false)
+  })
+
+  it('tronque quand l arc ne tient pas les lignes', () => {
+    // 20 px d arc : deux lignes de 11,5 px n y tiennent pas.
+    const text = sunburstArcLabel('Cereales Bio', 20, 90, { box_px: 60 })
+    expect(text!.endsWith('…')).toBe(true)
+  })
+})
+
+describe('sunburstSectorName', () => {
+
+  it('ote le nom du parent en tete, liaison comprise', () => {
+    expect(sunburstSectorName('Maïs Bio', 'Maïs', { strip_parent: true })).toBe('Bio')
+    expect(sunburstSectorName('Maïs - Bio', 'maïs', { strip_parent: true })).toBe('Bio')
+  })
+
+  it('ote le nom du parent en queue', () => {
+    expect(sunburstSectorName('Bio Maïs', 'Maïs', { strip_parent: true })).toBe('Bio')
+  })
+
+  it('ne laisse jamais un nom vide, et ne touche a rien sans parent', () => {
+    expect(sunburstSectorName('Maïs', 'Maïs', { strip_parent: true })).toBe('Maïs')
+    expect(sunburstSectorName('Maïs Bio', null, { strip_parent: true })).toBe('Maïs Bio')
+    expect(sunburstSectorName('Maïs Bio', 'Maïs')).toBe('Maïs Bio')
+  })
+
+  it('coupe au separateur comme un noeud du diagramme', () => {
+    expect(sunburstSectorName('Maïs Bio', null, { separator: ' ' })).toBe('Bio')
+    expect(sunburstSectorName('Maïs Bio', null, { separator: ' ', separator_part: 'before' })).toBe('Maïs')
+    expect(sunburstSectorName('Maïs Bio', null, { separator: '/' })).toBe('Maïs Bio')
   })
 })
 
