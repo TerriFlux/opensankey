@@ -528,6 +528,55 @@ export const applyContainerModeForDim = (
 }
 
 /**
+ * os#1425 — DÉBORDEMENT du slot de désagrégation : pousser ce qui est DESSOUS.
+ *
+ * Les enfants remplissent le slot vertical du parent (`layoutChildrenInParentSlot`), avec un
+ * écart qui se plaque à 0 dès que leur somme de hauteurs dépasse la hauteur du parent. Ce cas
+ * n'est pas exotique : il est la règle dès qu'une TAILLE MINIMALE de nœud est active et que les
+ * enfants sont plus fins que ce plancher — n enfants au plancher occupent n × plancher là où le
+ * parent, lui, ne mesure que la somme de ses flux. Les enfants débordaient alors SOUS le slot,
+ * sans que rien ne bouge dessous : au deuxième geste local, un enfant se posait exactement sur le
+ * voisin d'en dessous (même `position_y` au pixel près, nœuds superposés).
+ *
+ * On pousse donc le reste de la colonne du débordement — par simple TRANSLATION, pour garder les
+ * écarts que l'auteur a mis entre les nœuds du dessous. Aucun effet quand les enfants tiennent
+ * dans le slot (delta ≤ 0, personne ne bouge) : le cas nominal reste « aucun voisin poussé ».
+ *
+ * Le centre est re-capturé sur la position finale, comme dans `layoutChildrenInParentSlot` :
+ * le `setAbsoluteMode()` de fin d'opération restaurerait sinon le centre PÉRIMÉ des nœuds poussés.
+ */
+const pushColumnBelowDisaggregationOverflow = (
+  new_data: Class_ApplicationData,
+  parent: Class_NodeElement,
+  children: Class_NodeElement[],
+  parent_top: number,
+  parent_h: number
+) => {
+  if (children.length === 0) return
+  const slot_bottom = parent_top + parent_h
+  const children_bottom = Math.max(...children.map(c => c.position_y + c.getShapeHeightToUse()))
+  const delta = children_bottom - slot_bottom
+  if (delta <= 0) return
+  const sankey = new_data.drawing_area.sankey
+  const echange_tag = sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
+  const kin = new Set<Class_NodeElement>([parent, ...children])
+  // Colonne relue MAINTENANT (et pas sur un instantané d'avant l'opération) : en désagrégation
+  // globale, les voisins du dessous ont pu être remplacés par leurs propres enfants entre-temps.
+  sankey.visible_nodes_list.forEach(n => {
+    if (kin.has(n)) return
+    if (n.position_u !== parent.position_u) return
+    // Mêmes exclusions que les autres balayages de colonne : nœuds d'échange (placés au niveau de
+    // leur flux) et nœuds relatifs (collés à un voisin, qui les emmène). Les enfants de cadre
+    // englobant, eux, sont dans la colonne et suivent la même translation que leur cadre.
+    if (echange_tag && n.hasGivenTag(echange_tag)) return
+    if (n.shape_position_type === 'relative') return
+    if (n.position_y < slot_bottom) return
+    n.position_y += delta
+    n.captureCenterFromCorner()
+  })
+}
+
+/**
  * Désagrégation simple - descend d'un niveau hiérarchique
  */
 export const disaggregate = (
@@ -598,6 +647,12 @@ export const disaggregate = (
       n.position_x = aggregateNode.position_x
     })
     new_data.drawing_area.nodePositioning.layoutChildrenInParentSlot(new_nodes, parent_top, parent_h)
+    // os#1425 — si la pile d'enfants déborde du slot (taille minimale de nœud), pousser la
+    // colonne d'en dessous d'autant. En mode 'keep' les enfants n'ont pas été empilés depuis le
+    // haut du slot : leur étendue ne dit rien d'un débordement, on ne pousse personne.
+    if (new_data.drawing_area.effective_gap_mode !== 'keep') {
+      pushColumnBelowDisaggregationOverflow(new_data, aggregateNode, new_nodes, parent_top, parent_h)
+    }
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
       parent_dim.children.forEach(child => {
