@@ -27,16 +27,12 @@ import { Box, Text } from '@chakra-ui/react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_TagGroup } from '../../../types/TagGroup'
 import type { Class_DrawingArea } from '../../../types/DrawingArea'
-import { LEGEND_CHILD_PREFIX } from '../../../Elements/legendIds'
+import { isLegendGroupZoneId } from '../../../Elements/legendIds'
 import { redrawForTagStylePreview } from '../../../Elements/LegendGenerator'
 import { default_font_size } from '../../../css/Theme'
 import type { Type_Presentable } from './openPresentation'
 
-/** Id des zones de titre de groupe ('legend-group-<groupe>'), lignes épinglées comprises. */
-export const LEGEND_GROUP_PREFIX = LEGEND_CHILD_PREFIX + 'group-'
-
-/** La zone est-elle le titre d'un groupe d'étiquettes dans la légende ? */
-export const isLegendGroupZoneId = (id: string): boolean => id.startsWith(LEGEND_GROUP_PREFIX)
+export { isLegendGroupZoneId }
 
 /**
  * Groupe de nœuds ou de flux que désigne une zone de titre, ou `undefined`. Le relevé est tenu par

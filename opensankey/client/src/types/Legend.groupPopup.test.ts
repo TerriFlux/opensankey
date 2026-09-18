@@ -127,6 +127,14 @@ describe('SA#551 — clic sur le nom d\'un groupe', () => {
     expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
   })
 
+  it('EN ÉDITION aussi : une zone de légende ne se règle pas, le clic ouvre donc la pop-up', () => {
+    const { host, app, source } = makeLegend(false)
+    expect(app.is_editable).toBe(true)
+    click(host, app, 'legend-group-source')
+    expect(popupMode(app, 'legend-group-source')).toBe('popup')
+    expect(source.use_colors).toBe(false)
+  })
+
   it('le titre d\'un groupe DÉVELOPPÉ ouvre la même pop-up', () => {
     const { host, app, type } = makeLegend()
     click(host, app, 'legend-group-type')
