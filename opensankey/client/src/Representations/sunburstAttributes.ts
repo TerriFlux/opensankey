@@ -200,6 +200,13 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   },
   value_label_scientific_notation: { advanced: true, visibleIf: valued },
 
+  // Titre — l'onglet Titre de l'inspecteur, comme pour le diagramme (arbitrage du 18/09)
+  title_visible: {},
+  title_text: {},
+  title_position: {},
+  title_font_size: {},
+  title_bold: {},
+
   // Figure : centre, légende, mentions, gestes
   centre_content: {},
   centre_hole: {},

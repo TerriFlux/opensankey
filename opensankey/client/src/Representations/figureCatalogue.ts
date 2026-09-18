@@ -291,6 +291,53 @@ export const NOTES_CONFIG = {
   })
 } as const
 
+// ── title_* : le titre d'une figure ──────────────────────────────────────────────────────────
+// Arbitrage du 18/09 : une figure a un titre comme le diagramme a le sien, et il se règle sous
+// le même onglet « Titre » de l'inspecteur. Caché d'usine : aucune figure enregistrée ne change.
+// Un texte vide écrit le NOM DU SUJET (le nœud regardé) — c'est ce qu'on veut neuf fois sur dix.
+export const TITLE_CONFIG = {
+  title_visible: entry<boolean>(false, 'title', {
+    en: 'Show a title', fr: 'Afficher un titre', es: 'Mostrar un título',
+    de: 'Titel anzeigen', it: 'Mostrare un titolo', 'zh-CN': '显示标题', ja: 'タイトルを表示'
+  }, {
+    en: 'A title above or below the drawing, inside the figure.', fr: 'Un titre au-dessus ou au-dessous du dessin, dans la figure.',
+    es: 'Un título encima o debajo del dibujo, dentro de la figura.', de: 'Ein Titel über oder unter der Zeichnung, innerhalb der Abbildung.',
+    it: 'Un titolo sopra o sotto il disegno, dentro la figura.', 'zh-CN': '在图形内部、绘图上方或下方的标题。', ja: '図の内側、描画の上または下に置くタイトル。'
+  }),
+  title_text: entry<string>('', 'title', {
+    en: 'Text', fr: 'Texte', es: 'Texto', de: 'Text', it: 'Testo', 'zh-CN': '文本', ja: 'テキスト'
+  }, {
+    en: 'Empty: the name of what the figure shows.', fr: 'Vide : le nom de ce que la figure montre.',
+    es: 'Vacío: el nombre de lo que muestra la figura.', de: 'Leer: der Name dessen, was die Abbildung zeigt.',
+    it: 'Vuoto: il nome di ciò che la figura mostra.', 'zh-CN': '留空则显示图形所展示对象的名称。', ja: '空なら図が示す対象の名前。'
+  }, { kind: 'text', visibleIf: (o) => o['title_visible'] === true }),
+  title_position: entry<'top' | 'bottom'>('top', 'title', {
+    en: 'Position', fr: 'Position', es: 'Posición', de: 'Position', it: 'Posizione', 'zh-CN': '位置', ja: '位置'
+  }, {
+    en: 'Above or below the drawing.', fr: 'Au-dessus ou au-dessous du dessin.',
+    es: 'Encima o debajo del dibujo.', de: 'Über oder unter der Zeichnung.',
+    it: 'Sopra o sotto il disegno.', 'zh-CN': '绘图上方或下方。', ja: '描画の上か下か。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('top', { en: 'Above', fr: 'Au-dessus', es: 'Encima', de: 'Oben', it: 'Sopra', 'zh-CN': '上方', ja: '上' }),
+      choice('bottom', { en: 'Below', fr: 'Au-dessous', es: 'Debajo', de: 'Unten', it: 'Sotto', 'zh-CN': '下方', ja: '下' })
+    ],
+    visibleIf: (o) => o['title_visible'] === true
+  }),
+  title_font_size: entry<number>(14, 'title', {
+    en: 'Font size', fr: 'Taille de police', es: 'Tamaño de fuente', de: 'Schriftgröße', it: 'Dimensione del carattere', 'zh-CN': '字号', ja: 'フォントサイズ'
+  }, {
+    en: 'In pixels.', fr: 'En pixels.', es: 'En píxeles.', de: 'In Pixeln.', it: 'In pixel.', 'zh-CN': '以像素计。', ja: 'ピクセル単位。'
+  }, { kind: 'number', min: 8, max: 40, step: 1, visibleIf: (o) => o['title_visible'] === true }),
+  title_bold: entry<boolean>(true, 'title', {
+    en: 'Bold', fr: 'Gras', es: 'Negrita', de: 'Fett', it: 'Grassetto', 'zh-CN': '加粗', ja: '太字'
+  }, {
+    en: 'A bold title.', fr: 'Un titre en gras.', es: 'Un título en negrita.', de: 'Ein fetter Titel.',
+    it: 'Un titolo in grassetto.', 'zh-CN': '加粗的标题。', ja: '太字のタイトル。'
+  }, { visibleIf: (o) => o['title_visible'] === true })
+} as const
+
 // ── scale_* : l'échelle d'une figure dans sa vignette ────────────────────────────────────────
 // Arbitrage du 18/09 : un facteur en % de la place disponible, dès ce lot. Le diagramme, lui, a
 // `user_scale` ; les deux se rapprocheront au lot 4.
@@ -394,6 +441,7 @@ export const FIGURE_ATTRIBUTES_CONFIG: { [key: string]: Type_FigureCatalogueEntr
   ...CENTRE_CONFIG,
   ...INTERACTION_CONFIG,
   ...NOTES_CONFIG,
+  ...TITLE_CONFIG,
   ...SCALE_CONFIG,
   ...FIGURE_LABEL_CONFIG
 }

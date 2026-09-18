@@ -90,6 +90,16 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   value_label_percent: 'none'
 }
 
+/** Un sac lu clé à clé sur des défauts : une clé absente ou d'un autre type garde le défaut. */
+const readOver = <T extends object>(options: Type_OptionBag, defaults: T): T => {
+  const out = { ...defaults } as unknown as { [key: string]: unknown }
+  ;(Object.keys(defaults) as (keyof T & string)[]).forEach(key => {
+    const v = options[key]
+    if (v !== undefined && typeof v === typeof defaults[key]) out[key] = v
+  })
+  return out as unknown as T
+}
+
 /**
  * La mise en forme, lue sur le sac de réglages d'une figure. Une clé absente ou d'un type
  * inattendu — persistée par une version ultérieure — retombe sur le défaut plutôt que de casser.
@@ -97,12 +107,32 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
 export const figureChartStyleOf = (
   options: Type_OptionBag,
   defaults: Type_FigureChartStyle
-): Type_FigureChartStyle => {
-  const out = { ...defaults } as unknown as { [key: string]: unknown }
-  const same = (key: keyof Type_FigureChartStyle) => {
-    const v = options[key]
-    if (v !== undefined && typeof v === typeof defaults[key]) out[key] = v
-  }
-  ;(Object.keys(defaults) as (keyof Type_FigureChartStyle)[]).forEach(same)
-  return out as unknown as Type_FigureChartStyle
+): Type_FigureChartStyle => readOver(options, defaults)
+
+// ── title_* : le titre d'une figure (arbitrage du 18/09) ─────────────────────────────────────
+
+export interface Type_FigureTitle {
+  title_visible: boolean
+  /** `''` : le nom de ce que la figure montre (l'appelant le fournit en repli). */
+  title_text: string
+  title_position: 'top' | 'bottom'
+  title_font_size: number
+  title_bold: boolean
 }
+
+/** Les défauts du catalogue (`TITLE_CONFIG`) : caché, le nom du sujet, au-dessus, 14 px, gras. */
+export const FIGURE_TITLE_DEFAULTS: Type_FigureTitle = {
+  title_visible: false,
+  title_text: '',
+  title_position: 'top',
+  title_font_size: 14,
+  title_bold: true
+}
+
+/** Le titre d'une figure, lu sur son sac de réglages. */
+export const figureTitleOf = (options: Type_OptionBag): Type_FigureTitle =>
+  readOver(options, FIGURE_TITLE_DEFAULTS)
+
+/** Le texte que le titre écrit, ou `''` quand il n'y a rien à écrire. */
+export const figureTitleText = (title: Type_FigureTitle, fallback: string): string =>
+  title.title_visible ? (title.title_text.trim() || fallback.trim()) : ''
