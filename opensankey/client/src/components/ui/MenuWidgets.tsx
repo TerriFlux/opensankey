@@ -27,7 +27,7 @@ import React, { FC, useRef, useState, ChangeEvent, useEffect, MutableRefObject, 
 import { ColorResult, SketchPicker } from 'react-color'
 import {
   Box, Button, Collapse, Input, InputGroup, Menu, MenuButton, MenuDivider, MenuItem, MenuList,
-  Text, useDisclosure,
+  Portal, Text, useDisclosure,
 } from '@chakra-ui/react'
 import type { CheckboxProps } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -40,6 +40,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { AttributeConfig, ElementsType, ShapePrefix } from '../../Elements/ElementsAttributesConfig'
 import type { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { OSTooltip } from './OSTooltip'
+import { TOPBAR_MENU_Z } from './TopMenuList'
 
 export const InputIndicatorWrapper = ({
   isOverloaded,
@@ -194,6 +195,53 @@ export type typeElementSelectable = {
 
 
 /**
+ * #555 — Borne la HAUTEUR de la liste d'un menu à la place disponible dans l'écran.
+ *
+ * Popper choisit le côté d'ouverture (placement 'auto') et recale la liste le long de son bouton,
+ * mais ne limite jamais sa taille : une longue liste ouverte sous un bouton à mi-écran sortait par
+ * le bas de la fenêtre, sans barre de défilement. À chaque calcul de position (ouverture,
+ * défilement, redimensionnement), ce modificateur mesure la place du côté retenu et la pose dans
+ * la variable CSS `--os-menu-select-max-h`, lue par les variantes de thème `menu_select_*` ;
+ * au-delà, la liste défile.
+ */
+const MENU_LIST_SCREEN_MARGIN_PX = 16
+const MENU_LIST_MIN_HEIGHT_PX = 80
+// Nombre maximal de repositionnements demandés pour une même ouverture de liste. Borner est
+// indispensable : borner la hauteur change la taille de la liste, ce qui peut faire rebasculer
+// Popper de l'autre côté du bouton, donc changer la place disponible, donc la hauteur… Sur une
+// liste assez longue pour que la borne morde, ce va-et-vient ne se referme jamais et fige l'appli
+// (vécu au ticket #555, groupe d'étiquettes « Source » du modèle Lait). Passé ce nombre, la
+// dernière valeur posée reste : au pire quelques pixels de marge en trop, jamais un blocage.
+const MENU_LIST_MAX_REFLOWS = 3
+export const fitMenuListToViewport = {
+  name: 'fitMenuListToViewport',
+  enabled: true,
+  phase: 'beforeWrite' as const,
+  requires: ['computeStyles'],
+  fn: ({ state, instance }: {
+    state: { placement: string, elements: { reference: { getBoundingClientRect: () => DOMRect }, popper: HTMLElement } },
+    instance: { update: () => unknown }
+  }) => {
+    const side = state.placement.split('-')[0]
+    const ref = state.elements.reference.getBoundingClientRect()
+    const room = side === 'top'
+      ? ref.top
+      : side === 'bottom' ? window.innerHeight - ref.bottom : window.innerHeight
+    const max_h = Math.max(MENU_LIST_MIN_HEIGHT_PX, Math.floor(room - MENU_LIST_SCREEN_MARGIN_PX)) + 'px'
+    const popper = state.elements.popper
+    if (popper.style.getPropertyValue('--os-menu-select-max-h') === max_h) return
+    popper.style.setProperty('--os-menu-select-max-h', max_h)
+    // La taille de la liste vient de changer : repositionner avec la nouvelle hauteur, sinon une
+    // liste ouverte vers le haut resterait décollée de son bouton. Le compteur vit sur l'élément,
+    // recréé à chaque ouverture (`isLazy`) : il repart donc à zéro à chaque fois.
+    const reflows = Number(popper.dataset.osMenuFitReflows ?? '0')
+    if (reflows >= MENU_LIST_MAX_REFLOWS) return
+    popper.dataset.osMenuFitReflows = String(reflows + 1)
+    instance.update()
+  }
+}
+
+/**
  * Component to select multple element from a list passed in parameter
  *
  * @param {*} {
@@ -236,7 +284,7 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
         setMenuListItems(renderMenu())
-      }}>{t('Noeud.TS')}</MenuItem>
+      }}>{t('multi_select.select_all')}</MenuItem>
     <MenuDivider />
   </> : <></>
 
@@ -270,17 +318,40 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
   }} onClick={() => setDisplayBgOverlay(false)}></div>
 
   return <Menu isLazy
-    placement='auto'
+    // #555 — la liste s'ouvre SOUS le bouton (ou au-dessus s'il n'y a pas la place). En
+    // placement 'auto', Popper la mettait volontiers sur le CÔTÉ, là où la place horizontale
+    // est la plus grande ; elle prenait alors toute la hauteur de la fenêtre et en dépassait
+    // par le bas, sans que la borne de hauteur ci-dessous puisse y faire quoi que ce soit.
+    placement='bottom-start'
+    // Deux garde-fous qui ne dépendent PAS du calcul ci-dessus : le thème plafonne de toute façon
+    // la liste à la hauteur de la fenêtre, et `altAxis` autorise Popper à la faire GLISSER le long
+    // du bouton pour la ramener dans l'écran. Même si la mesure de place se trompe ou reste en
+    // retard, la liste reste visible et défilable — elle ne peut plus sortir par le haut.
+    modifiers={[
+      fitMenuListToViewport,
+      { name: 'preventOverflow', options: { altAxis: true, tether: false, padding: 8 } }
+    ]}
     variant={'menu_select_elements'}
     closeOnSelect={false}
     isOpen={displayBgOverlay}
     onOpen={() => setMenuListItems(renderMenu())}>
     <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'} onClick={() => setDisplayBgOverlay(!displayBgOverlay)}> {textBtn}</MenuButton>
     {backgroundOverlay}
-    <MenuList>
-      {selecAll}
-      {menuListItems}
-    </MenuList>
+    {/**
+      * #555 — PORTAIL, comme pour les déroulants de la barre du haut (cf. `TopMenuList`, dont on
+      * reprend la hauteur d'empilement). Le panneau Filtres est un `position: fixed; zIndex: 40`
+      * avec transformation : un CONTEXTE D'EMPILEMENT. La liste rendue dedans restait donc
+      * empilée AVEC le panneau, quel que soit son z-index, et la colonne d'outils de droite lui
+      * passait par-dessus — masquant la fin des libellés ET sa barre de défilement, qui longe
+      * justement son bord droit. D'où l'impression, mesures à l'appui pourtant, qu'il n'y avait
+      * pas de barre de défilement.
+      */}
+    <Portal>
+      <MenuList zIndex={TOPBAR_MENU_Z}>
+        {selecAll}
+        {menuListItems}
+      </MenuList>
+    </Portal>
   </Menu>
 }
 
