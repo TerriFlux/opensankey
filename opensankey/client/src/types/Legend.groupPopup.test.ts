@@ -111,6 +111,19 @@ describe('SA#551 — ordre de priorité unique', () => {
     // « Fiabilité » règle l'opacité : elle reste
     expect(sankey.containers_dict['legend-tag-fiab-robuste']).toBeDefined()
   })
+
+  it('une entrée « Sans [groupe] » sort elle aussi quand un groupe plus prioritaire règle la même chose partout', () => {
+    const { app, sankey, b, source } = makeLegend()
+    source.use_colors = true
+    app.drawing_area.draw()
+    // SA#553 — B et C ne portent aucune étiquette de « Type » ni de « Source » : les deux groupes
+    // leur imposent la valeur par défaut de la couleur, et « Source », plus bas, l'emporte partout.
+    expect(b.tagStyleLayerImposing('shape_color')).toMatchObject({ from_group: true })
+    expect(sankey.containers_dict['legend-tag-source-source__untagged']).toBeDefined()
+    expect(sankey.containers_dict['legend-tag-type-type__untagged']).toBeUndefined()
+    // Plus une seule entrée stylée dans « Type » : son bloc entier quitte la légende
+    expect(sankey.containers_dict['legend-group-type']).toBeUndefined()
+  })
 })
 
 describe('SA#551 — clic sur le nom d\'un groupe', () => {
