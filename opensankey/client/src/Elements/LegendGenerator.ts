@@ -89,6 +89,17 @@ function richDiv(zone: Class_ContainerElement): HTMLDivElement | null {
   return (zone.d3_selection?.select('foreignObject div').node() as HTMLDivElement | null | undefined) ?? null
 }
 
+/**
+ * #556 — hauteur du TEXTE d'une ligne épinglée. Mesurée sur le paragraphe et non sur le div qui le
+ * porte : celui-ci est le conteneur de l'éditeur de texte riche, dont la marge interne (`.ql-editor`)
+ * s'ajouterait à la hauteur du texte et écarterait les groupes épinglés d'une ligne de trop.
+ */
+function richTextHeight(zone: Class_ContainerElement): number {
+  const paragraph = zone.d3_selection?.select('foreignObject div p').node() as HTMLElement | null | undefined
+  if (paragraph) return paragraph.offsetHeight
+  return richDiv(zone)?.offsetHeight ?? 0
+}
+
 function richPaddingOf(zone: Class_ContainerElement): Type_RichPadding {
   const div = richDiv(zone)
   if (div === null || typeof window === 'undefined') return NO_PADDING
@@ -150,7 +161,9 @@ function applyPinnedLabel(zone: Class_ContainerElement, item: Type_LegendItem, p
   const rest = item.text.slice(name.length)
   const style = [
     `margin:${-padding.top}px ${-padding.right}px ${-padding.bottom}px ${-padding.left}px`,
-    `font-size:${police}px`, 'line-height:1.25', 'white-space:normal', 'font-style:italic'
+    // #556 — interligne d'une police, comme les lignes d'un nom ordinaire (tspans, dy = 1em) :
+    // deux groupes épinglés se suivent alors au même rythme que deux étiquettes.
+    `font-size:${police}px`, 'line-height:1', 'white-space:normal', 'font-style:italic'
   ].join(';')
   zone.name_label_has_fo = true
   zone.name_label_fo_content =
@@ -842,7 +855,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         applyPinnedLabel(zone, item, values.police, padding)
         zone.draw()
       }
-      const height = richDiv(zone)?.offsetHeight ?? 0
+      const height = richTextHeight(zone)
       if (height > 0) {
         // Hauteur native → px monde, puis en hauteurs de police : la rangée ajoute ensuite la
         // demi-police qui sépare deux noms (legendEntryRowHeight), comme pour les autres entrées.
