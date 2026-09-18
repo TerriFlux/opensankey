@@ -399,17 +399,19 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
       const block = items.filter(i => i.block_id === block_id)
       const entries = block.filter(i => i.tag_group_id === group.id)
       if (entries.length === 0) return
-      const tags = group.tags_list ?? group.selected_tags_list
+      const tags = group.tags_list_with_untagged ?? group.tags_list ?? group.selected_tags_list
       let styled_left = false
       entries.forEach(entry => {
-        if (entry.untagged === true) {
-          if (in_effect.has(group)) styled_left = true
-          else drop.add(entry)
-          return
-        }
         const tag = tags.find(t => t.id === entry.tag_id)
         if (tag === undefined || tag.is_selected === false) {
           styled_left = true
+          return
+        }
+        // SA#553 — étiquette générée « Sans [groupe] » : la cascade l'impose au nom du GROUPE
+        // (couche `from_group`), c'est donc lui qu'il faut chercher parmi les couches en vigueur.
+        if (tag.is_untagged === true) {
+          if (in_effect.has(group)) styled_left = true
+          else drop.add(entry)
           return
         }
         if (usableStyle(sankey, tag.style_id) === undefined) return

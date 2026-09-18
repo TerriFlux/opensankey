@@ -207,7 +207,12 @@ describe('SA#551 — la vue ne montre que son groupe', () => {
 
 describe('SA#551 — la vue n\'affiche QUE la mise en forme de son groupe', () => {
   it('un groupe qui colore par les couleurs historiques de ses étiquettes ne s\'applique pas dans la vue', () => {
-    const { app, sankey, b, source } = makeLegend()
+    const { app, sankey, b, source, type, fiab } = makeLegend()
+    // Les autres groupes à styles sont fermés : depuis SA#553, leur étiquette générée
+    // « Sans [groupe] » imposerait ses valeurs par défaut à B, qui ne porte aucune de leurs
+    // étiquettes — ce n'est pas ce qu'on mesure ici.
+    type.use_colors = false
+    fiab.use_colors = false
     // Groupe à l'ancienne : pas de style, la couleur vient de l'étiquette (cf. « Forme de produit
     // laitier » du pilote Lait). Il colore B tant qu'il est allumé.
     const forme = sankey.addNodeTagGroup('forme', 'Forme', false)
