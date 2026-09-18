@@ -308,7 +308,11 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
   }} onClick={() => setDisplayBgOverlay(false)}></div>
 
   return <Menu isLazy
-    placement='auto'
+    // #555 — la liste s'ouvre SOUS le bouton (ou au-dessus s'il n'y a pas la place). En
+    // placement 'auto', Popper la mettait volontiers sur le CÔTÉ, là où la place horizontale
+    // est la plus grande ; elle prenait alors toute la hauteur de la fenêtre et en dépassait
+    // par le bas, sans que la borne de hauteur ci-dessous puisse y faire quoi que ce soit.
+    placement='bottom-start'
     modifiers={[fitMenuListToViewport]}
     variant={'menu_select_elements'}
     closeOnSelect={false}
