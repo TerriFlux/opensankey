@@ -181,6 +181,7 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   name_label_separator: { visibleIf: labelled },
   name_label_separator_part: { visibleIf: (o) => labelled(o) && typeof o['name_label_separator'] === 'string' && o['name_label_separator'] !== '' },
   name_label_box_width: { visibleIf: labelled },
+  name_label_callout: { visibleIf: labelled },
   name_label_font_family: { visibleIf: labelled },
   name_label_font_size: { default: 10, visibleIf: labelled },
   name_label_bold: { visibleIf: labelled },
@@ -228,4 +229,16 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   interaction_click: {}
 })
 
-export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = { ...NAVIGATION, ...HONOURED }
+// ── 3. Ce que l'auteur pose À LA MAIN sur cette figure ────────────────────────────── identity ──
+// Les étiquettes sorties du disque et déposées ailleurs (demande Julien, 18/09) : un dictionnaire
+// par secteur, sans interface (la souris est l'interface), et de sorte 'identity' — la position
+// d'une étiquette de CE disque n'a pas d'homologue sur un autre, ni sa place dans un style.
+const PLACED: Type_FigureAttributesConfig = {
+  label_positions: figureAttribute<{ [sector_id: string]: { x: number, y: number } } | undefined>(
+    undefined, 'identity', {
+      en: 'Placed labels', fr: 'Étiquettes posées', es: 'Etiquetas colocadas', de: 'Platzierte Beschriftungen',
+      it: 'Etichette posizionate', 'zh-CN': '已放置的标签', ja: '配置したラベル'
+    })
+}
+
+export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = { ...NAVIGATION, ...HONOURED, ...PLACED }

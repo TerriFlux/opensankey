@@ -388,6 +388,19 @@ export const FIGURE_LABEL_CONFIG = {
     'zh-CN': '在“玉米”之下，“玉米 有机”写作“有机”：从部分名称的开头或末尾去掉父级名称。',
     ja: '「トウモロコシ」の下では「トウモロコシ 有機」が「有機」になります。部分名の先頭または末尾から親の名前を除きます。'
   }),
+  name_label_callout: entry<boolean>(false, 'name_label', {
+    en: 'Labels that do not fit: outside, with a line', fr: 'Étiquettes qui ne tiennent pas : dehors, reliées d’un trait',
+    es: 'Etiquetas que no caben: fuera, unidas por una línea', de: 'Beschriftungen ohne Platz: außen, mit Linie',
+    it: 'Etichette che non entrano: fuori, collegate da una linea', 'zh-CN': '放不下的标签：移到外部并用线连接', ja: '収まらないラベルは外に出して線で結ぶ'
+  }, {
+    en: 'A label its part cannot hold is placed outside the disc, linked to the part by a line. Drag it to place it where you want.',
+    fr: 'Une étiquette que sa part ne peut pas tenir est posée hors du disque, reliée à la part par un trait. Glissez-la pour la placer où vous voulez.',
+    es: 'Una etiqueta que su parte no puede contener se coloca fuera del disco, unida a la parte por una línea. Arrástrela para colocarla donde quiera.',
+    de: 'Eine Beschriftung, die nicht in ihren Teil passt, wird außerhalb der Scheibe platziert und mit einer Linie verbunden. Ziehen Sie sie an den gewünschten Ort.',
+    it: 'Un’etichetta che la sua parte non può contenere è posta fuori dal disco, collegata alla parte da una linea. Trascinala dove vuoi.',
+    'zh-CN': '部分放不下的标签会放到圆盘外，并用线连到该部分。拖动即可放到想要的位置。',
+    ja: '部分に収まらないラベルは円盤の外に置かれ、線で部分と結ばれます。ドラッグして好きな位置へ。'
+  }),
   name_label_follow_diagram: entry<boolean>(true, 'name_label', {
     en: 'Name as the diagram names it', fr: 'Nom tel que le diagramme le nomme', es: 'Nombre tal como lo nombra el diagrama',
     de: 'Name, wie das Diagramm ihn nennt', it: 'Nome come lo nomina il diagramma', 'zh-CN': '与图中名称一致', ja: '図と同じ名前を使う'
