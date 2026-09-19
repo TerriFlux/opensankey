@@ -675,8 +675,21 @@ export class Class_Workspace {
     const idx = this._documents.indexOf(doc)
     if (idx >= 0) this._documents.splice(idx, 1)
     if (this._main === doc) this._main = null
-    // Le presse-papiers ne survit pas à son document : ses identifiants ne désignent plus rien.
-    if (this.clipboard?.source === doc) this.clipboard = null
+    // os#1440 — LE PRESSE-PAPIERS SURVIT À SON DOCUMENT, EXPRÈS, ET NE SERT PLUS QU'À LE DIRE.
+    //
+    // Il était remis à `null` ici, avec pour raison « ses identifiants ne désignent plus rien ».
+    // C'était vrai tant que coller relisait ces identifiants dans le document d'arrivée, où ils
+    // ne pouvaient rien désigner. Depuis os#1440 coller LIT dans le document d'origine : ce qui
+    // compte n'est plus la validité des identifiants mais la VIE de la source.
+    //
+    // Et l'effacer coûtait la seule chose qu'on puisse encore faire d'utile. Copier dans la
+    // fenêtre d'une feuille, refermer cette fenêtre (`releaseSheetDocument`), puis coller :
+    // presse-papiers vide, donc Ctrl+V sans le moindre effet et sans un mot — l'utilisateur voit
+    // sa copie disparaître sans savoir pourquoi. En gardant l'entrée, le collage constate la
+    // source morte et l'explique (cf. le refus dans `handleKeyboardEvent`). C'est exactement
+    // l'usage prévu de `disposed` : « que les détenteurs d'une référence tardive puissent le
+    // constater sans jeter ». Ce qui reste retenu est une coquille — `dispose` a déjà purgé le
+    // modèle —, et le prochain Ctrl+C la remplace.
     this.refreshActive()
   }
 

@@ -3781,20 +3781,30 @@ export class Class_ApplicationData {
       evt.preventDefault()
       const clipboard = this.workspace.clipboard
       if (!clipboard || clipboard.node_ids.length === 0) return
-      if (clipboard.source !== this) {
-        // COLLER ENTRE DOCUMENTS demande une SÉRIALISATION du contenu copié, pas des
-        // identifiants : ceux de A ne désignent rien dans B. C'est le lot 3, avec
-        // l'éditabilité d'un second document. En attendant on le DIT — jusqu'ici, un Ctrl+V
-        // venu d'un autre document ne collait rien et ne disait rien.
-        //
-        // DIT AVANT la garde d'éditabilité, et c'est délibéré : un second document n'est
-        // éditable que si on lui en a donné le droit (`edition_allowed`, os#1385 lot 3), et
-        // sinon la garde avalerait l'explication — l'utilisateur retomberait sur le silence
-        // qu'on vient de corriger. Expliquer n'écrit rien.
+      // os#1440 (19/09/2026) — COLLER ENTRE DOCUMENTS, POUR DE BON.
+      //
+      // Le lot 2 avait posé ici un refus expliqué : « cela demande une sérialisation du contenu
+      // copié, pas des identifiants ; c'est le lot 3 ». Le lot 3 est passé — il a rendu un second
+      // document éditable — et la sérialisation n'a jamais été reprise. Le message renvoyait donc
+      // à une étape terminée, ce qui est la pire forme d'attente : elle promet ce qui est censé
+      // être déjà arrivé.
+      //
+      // ET LA SÉRIALISATION N'ÉTAIT PAS NÉCESSAIRE. La crainte était de transporter des
+      // références qui ne désignent rien ailleurs ; le code y répondait déjà. Les étiquettes se
+      // résolvent dans le diagramme d'ARRIVÉE et celles qui n'y existent pas sont ignorées
+      // (`addTagsReferencingFrom`) ; les styles ne suivent pas, seules les surcharges propres de
+      // l'élément voyagent (`copyAttrFrom`). Un nœud collé prend donc l'allure de son nouveau
+      // document et garde ce que son auteur avait réglé à la main — ce que font Excel et Figma.
+      //
+      // IL RESTE UN REFUS, ET UN SEUL : le document d'origine doit être VIVANT. Une feuille
+      // libérée (`releaseSheetDocument`, bascule d'onglet, fermeture de sa fenêtre) laisse un
+      // presse-papiers qui désigne un modèle mort. On le dit, plutôt que de coller le vide.
+      const from_elsewhere = clipboard.source !== this
+      if (from_elsewhere && clipboard.source.disposed) {
         this.notifyUser(
           'clipboard_cross_document',
-          this.t('toast.clipboard.cross_document.title'),
-          this.t('toast.clipboard.cross_document.desc'),
+          this.t('toast.clipboard.source_gone.title'),
+          this.t('toast.clipboard.source_gone.desc'),
           'info',
           true
         )
@@ -3802,7 +3812,8 @@ export class Class_ApplicationData {
       }
       // os#1385 (lot 2) — coller, c'est éditer (cf. le nudge plus haut).
       if (!this.drawing_area.editable) return
-      this.drawing_area.copyNodes(clipboard.node_ids)
+      if (from_elsewhere) this.drawing_area.copyNodesFrom(clipboard.source.drawing_area, clipboard.node_ids)
+      else this.drawing_area.copyNodes(clipboard.node_ids)
       this.saveInCache()
     }
   }
