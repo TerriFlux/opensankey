@@ -1540,7 +1540,23 @@ export class Class_ApplicationData {
     // à l'écran quel que soit le nombre de documents ouverts, donc seul le PRINCIPAL l'écrit.
     // Sans cette garde, chaque document secondaire (feuille vivante, source Excel, brique)
     // recopierait la disposition de l'utilisateur dans sa propre entrée du fichier.
-    if (this.is_main) json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    //
+    // os#1433 (19/09/2026) — ET JAMAIS DANS UN CONTENU DE FEUILLE, la seconde garde qui
+    // manquait. `is_main` seule ne suffit pas : c'est le document PRINCIPAL lui-même qui
+    // sérialise l'instantané de sa feuille courante (`toSheetContentJSON`, appelée à chaque
+    // bascule et à chaque enregistrement), donc `is_main` y est vraie et la disposition partait
+    // dans l'instantané. Chaque feuille emportait ainsi les fenêtres telles qu'on l'avait
+    // quittée, et y revenir les rejouait : la grande zone se mettait à appartenir à la feuille
+    // alors que D1 la déclare de l'espace de travail. Julien l'a vu par l'autre bout — une
+    // feuille neuve arrivait avec les fenêtres de la précédente (§5.1 de l'audit du 19/09).
+    //
+    // La règle est celle de `workspaceToJSON`, quatre clés plus bas, et elle est reprise MOT
+    // POUR MOT : il n'y a qu'un espace de travail à l'écran, il n'a donc qu'un seul écrivain,
+    // et une feuille n'en est pas un. `without_sheets` couvre du même coup la brique unitaire
+    // (`UnitaryExtraction`), qui est elle aussi le contenu d'une feuille.
+    if (this.is_main && !(kwargs && kwargs['without_sheets'] === true)) {
+      json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    }
     // os#1418 — STYLES DES NATURES DE FIGURE (étoile unitaire, couronne, histogrammes,
     // sunburst), clé racine ADDITIVE : absente tant qu'aucun style n'a été réglé, donc un
     // fichier antérieur se relit à l'identique. Remplace `representation_defaults` (os#1394),
@@ -1753,7 +1769,19 @@ export class Class_ApplicationData {
     // ci-dessous : la disposition est celle de l'HÔTE. Un document secondaire qui se charge
     // (feuille B ouverte dans une fenêtre, source Excel, brique) réécrirait sinon la grande zone
     // de l'écran avec celle enregistrée dans SON entrée du fichier.
-    if (this.is_main && mz && typeof mz === 'object') {
+    //
+    // os#1433 (19/09/2026) — ET PAS NON PLUS EN CHARGEANT LE CONTENU D'UNE FEUILLE, symétrique
+    // exact de la garde d'écriture posée plus haut. Deux raisons, et la seconde vaut pour
+    // toujours : les fichiers ÉCRITS AVANT ce correctif portent une disposition dans chacun de
+    // leurs instantanés de feuille, et la rejouer ferait encore changer les fenêtres à chaque
+    // bascule d'onglet ; et un contenu de feuille, par définition, ne décrit pas l'écran.
+    // Même condition que `workspaceFromJSON` : `keep_file_state` dit « je charge un contenu
+    // DANS le fichier ouvert » (bascule d'onglet, création de feuille), `only_current_view` un
+    // rafraîchissement de la vue courante.
+    const loading_into_open_file = Boolean(
+      kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])
+    )
+    if (this.is_main && !loading_into_open_file && mz && typeof mz === 'object') {
       this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
     }
     // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
@@ -2035,6 +2063,11 @@ export class Class_ApplicationData {
     const blank_json = this.dumpDrawingAreaToJSON(blank_da)
     blank_da.delete()
     const name = this._defaultSheetName(this._sheets_order.length + 1)
+    // os#1433 — même règle qu'à la bascule : une feuille NEUVE n'a aucun des éléments sur
+    // lesquels les fenêtres épinglées pointaient, et le diagramme vierge n'en aura jamais. Elles
+    // s'ouvraient vides en gardant le nom du nœud d'avant — le cas exact que Julien a signalé.
+    // La grille, elle, reste : on retrouve ses cases et ses natures sur la feuille neuve.
+    this.menu_configuration?.closeWindowsPinnedOnSheet(this._current_sheet_id)
     this._loadSheetContent(blank_json, draw)
     const id = makeId('sheet')
     this._sheets[id] = { name }
@@ -2160,6 +2193,11 @@ export class Class_ApplicationData {
     const target_snapshot = this._sheets[id]?.json
     if (!target_snapshot) return
     this._snapshotCurrentSheet()
+    // os#1433 — les fenêtres épinglées sur les éléments de la feuille qu'on QUITTE s'en vont
+    // avec elle (cf. `closeWindowsPinnedOnSheet`, qui dit ce qui survit et pourquoi). Fermées
+    // APRÈS l'instantané — il doit décrire la feuille telle qu'on l'a travaillée — et AVANT le
+    // chargement, pour qu'aucune d'elles ne tente de se résoudre sur le diagramme d'arrivée.
+    this.menu_configuration?.closeWindowsPinnedOnSheet(this._current_sheet_id)
     const target_json = JSON.parse(pako.inflate(target_snapshot, { to: 'string' })) as Type_JSON
     this._loadSheetContent(target_json, draw)
     this._current_sheet_id = id
