@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 import React from 'react'
-import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faArrowsToDot, faCloudArrowUp, faCompress, faDownload, faExpand,
@@ -1889,6 +1889,10 @@ export class Class_IconLibrary {
   // c'est le seul glyphe qui couvre aussi le déploiement d'un champ (arbitrage Julien, 19/09/2026,
   // sur planche comparée).
   protected _icon_coordinates = <FaCrosshairs />
+  // os#1431 — PLACEMENT AUTOMATIQUE : où vont les objets que l'application pose pour vous. Sert
+  // au mode de placement des nœuds créés depuis le tableur, et prévue pour les autres surfaces
+  // qui placeront sans qu'on clique (arbitrage Julien, 19/09).
+  protected _icon_auto_place = <FontAwesomeIcon icon={faWandMagicSparkles} />
 
   protected _icon_label_inside_horiz = logo_label_inside_horiz
   protected _icon_label_inside_vert = logo_label_inside_vert
@@ -2058,6 +2062,7 @@ export class Class_IconLibrary {
   public get icon_to_the_right() { return this._icon_to_the_right }
   public get icon_filter_tags() { return this._icon_filter_tags }
   public get icon_coordinates() { return this._icon_coordinates }
+  public get icon_auto_place() { return this._icon_auto_place }
 
 
 
