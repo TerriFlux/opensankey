@@ -2669,6 +2669,14 @@ export class Class_DrawingArea {
 
   public copyNodes(node_ids: string[]) { CopyPaste.copyNodes(this, node_ids) }
 
+  /**
+   * os#1440 — Colle ici des nœuds LUS dans une autre zone de dessin, donc dans un autre document.
+   * L historique est celui de CETTE zone : c est elle seule que le geste modifie.
+   */
+  public copyNodesFrom(source: Class_DrawingArea, node_ids: string[]) {
+    CopyPaste.copyNodesFrom(this, source, node_ids)
+  }
+
   /** os#1340 (Ctrl+D) — duplique la sélection courante (nœuds + liens internes + zones). */
   public duplicateSelection() { CopyPaste.duplicateSelection(this) }
 
