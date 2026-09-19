@@ -66,7 +66,7 @@ export type Type_AttributeSort = 'style' | 'navigation' | 'identity'
  * que pour ce qu'aucun type ne dit : une liste de choix, une couleur, ou `'none'` pour un réglage
  * qui n'a pas d'interface (la racine d'une figure, posée par la fenêtre).
  */
-export type Type_FigureControlKind = 'checkbox' | 'select' | 'number' | 'text' | 'color' | 'none'
+export type Type_FigureControlKind = 'checkbox' | 'select' | 'segmented' | 'number' | 'text' | 'color' | 'none'
 
 /** Un choix, avec son libellé dans les sept langues du dépôt (sa#531). */
 export type Type_FigureChoice = {

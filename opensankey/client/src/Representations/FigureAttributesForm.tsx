@@ -123,40 +123,62 @@ const FigureField = ({ app_data, item, is_overloaded, onChange }: {
     </Box>
   }
 
-  const control = item.kind === 'select'
-    ? <Select
-      variant='menuconfigpanel_option_select'
-      value={String(item.value ?? '')}
-      onChange={e => {
+  // os#1431 — TROIS CHOIX, TROIS BOUTONS (retour de Julien, 19/09 : « avant on avait un choix
+  // entre pourcentage et normalisé, c'est comme ça sur prod encore »). Un régime — le mode de
+  // valeur d'une étoile — se lit d'un coup d'œil quand ses options sont côte à côte, et se change
+  // en un clic au lieu de deux. La liste déroulante reste la forme des listes longues (un flux de
+  // référence, un axe) ; la forme segmentée est déclarée, jamais devinée.
+  const control = item.kind === 'segmented'
+    ? <Box display='flex' gap='0.15rem' flexWrap='wrap'>
+      {(item.choices ?? []).map(c => {
+        const on = String(item.value ?? '') === String(c.value)
+        return <Button
+          key={c.value}
+          size='xs'
+          variant={on ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          aria-pressed={on}
+          sx={{ flex: '1 1 auto', minWidth: 'auto', width: 'auto', paddingInline: '0.4rem', height: 'auto' }}
+          onClick={() => {
+            const numeric = item.choices?.every(x => String(Number(x.value)) === String(x.value))
+            onChange(numeric ? Number(c.value) : c.value)
+          }}
+        >{c.label}</Button>
+      })}
+    </Box>
+    : item.kind === 'select'
+      ? <Select
+        variant='menuconfigpanel_option_select'
+        value={String(item.value ?? '')}
+        onChange={e => {
         // Un choix numérique revient en texte du DOM : on rend à la valeur son type, sinon
         // « 6 » remplacerait 6 dans le sac et le réglage suivant lirait une chaîne.
-        const numeric = item.choices?.every(c => String(Number(c.value)) === c.value)
-        onChange(numeric ? Number(e.target.value) : e.target.value)
-      }}
-    >
-      {(item.choices ?? []).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-    </Select>
-    : item.kind === 'color'
-      ? <MenuColorPicker
-        initialColor={String(item.value ?? '#000000')}
-        onColorChange={(c: string) => onChange(c)}
-      />
-      : item.kind === 'number'
-        ? <Input
-          variant='menuconfigpanel_option_input'
-          type='number'
-          value={String(item.value ?? '')}
-          min={item.min} max={item.max} step={item.step}
-          onChange={e => {
-            const next = Number(e.target.value)
-            if (!Number.isNaN(next)) onChange(next)
-          }}
+          const numeric = item.choices?.every(c => String(Number(c.value)) === c.value)
+          onChange(numeric ? Number(e.target.value) : e.target.value)
+        }}
+      >
+        {(item.choices ?? []).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+      </Select>
+      : item.kind === 'color'
+        ? <MenuColorPicker
+          initialColor={String(item.value ?? '#000000')}
+          onColorChange={(c: string) => onChange(c)}
         />
-        : <Input
-          variant='menuconfigpanel_option_input'
-          value={String(item.value ?? '')}
-          onChange={e => onChange(e.target.value)}
-        />
+        : item.kind === 'number'
+          ? <Input
+            variant='menuconfigpanel_option_input'
+            type='number'
+            value={String(item.value ?? '')}
+            min={item.min} max={item.max} step={item.step}
+            onChange={e => {
+              const next = Number(e.target.value)
+              if (!Number.isNaN(next)) onChange(next)
+            }}
+          />
+          : <Input
+            variant='menuconfigpanel_option_input'
+            value={String(item.value ?? '')}
+            onChange={e => onChange(e.target.value)}
+          />
 
   return <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
     {label}
