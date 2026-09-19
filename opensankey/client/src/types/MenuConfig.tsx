@@ -1952,6 +1952,20 @@ export class Class_MenuConfig {
     return this._host._inspector_focus === 'representation'
   }
   /**
+   * os#1431 — ET ON PEUT LE DIRE EXPLICITEMENT (retour de Julien, 19/09 : « j'ai réussi à aller sur
+   * la figure et là je n'y arrive plus, je suis dans l'interface du diagramme »).
+   *
+   * Jusqu'ici le focus ne se posait que par RÉCENCE : toucher une vignette le mettait sur la
+   * figure, sélectionner un nœud le rendait à la sélection. Deux gestes implicites, et aucun
+   * chemin pour revenir à la figure sans re-cliquer dedans — or on clique dans le diagramme
+   * précisément pour y choisir ce qu'on veut régler. Le fil d'Ariane de l'inspecteur s'en sert
+   * pour offrir l'aller-retour, nommé.
+   */
+  public set inspector_focus_is_representation(v: boolean) {
+    this._host._inspector_focus = v ? 'representation' : 'selection'
+    this._ref_to_inspector_updater.current()
+  }
+  /**
    * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
    * rien pour se rallumer que le bouton qu'on vient de cliquer. Un occupant `main` qui part
    * cède la place au premier de la colonne droite (cf. normalisation).
@@ -3717,7 +3731,21 @@ export class Class_MenuConfig {
     // os#1394 — LA SÉLECTION REPREND LA MAIN sur l'inspecteur. Le drapeau est posé ici et non
     // dans le processus différé : il doit valoir dès le geste, pas un tour de boucle plus tard,
     // sans quoi un clic sur une fenêtre juste après une sélection serait jugé dans le désordre.
-    this._host._inspector_focus = 'selection'
+    //
+    // os#1431 — SAUF QUAND ON TRAVAILLE DANS UNE FIGURE (retour de Julien, 19/09 : « je clique sur
+    // le nœud central, l'interface du diagramme apparaît, puis celle de la figure apparaît et
+    // redisparaît »). Depuis qu'une étoile EST un Sankey (os#1422), cliquer dedans SÉLECTIONNE :
+    // deux gestes écrivaient donc ce drapeau en sens contraire — « tu touches une figure » puis,
+    // un tour de boucle plus tard, « une sélection a changé » —, d'où le clignotement.
+    //
+    // La fenêtre ACTIVE tranche, comme partout ailleurs dans le panneau et la colonne d'outils :
+    // tant qu'elle montre une figure d'élément, l'inspecteur parle de cette figure. Une sélection
+    // qui bouge dans le diagramme passe, elle, par un clic dans sa fenêtre — qui la rend active
+    // avant que la sélection ne notifie (cf. la capture posée sur les fenêtres hébergées).
+    const active = this._host._main_zone_active_id !== null
+      ? this._host._main_zone_occupants.find(o => o.id === this._host._main_zone_active_id)
+      : undefined
+    if (!active || active.subject.kind === 'diagram') this._host._inspector_focus = 'selection'
     this._add_waiting_process(
       'updateInspector',
       (_this: Class_MenuConfig) => {
