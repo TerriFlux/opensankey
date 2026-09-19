@@ -1090,6 +1090,11 @@ export class Class_MenuConfig {
       // Une fenêtre à sujet DIAGRAMME : son id est sa représentation (cf. Type_MainZoneOccupant).
       this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, place)
     }
+    // os#1431 — LA FENÊTRE QU'ON VIENT D'OUVRIR EST CELLE QU'ON REGARDE, comme le fait déjà
+    // `openMainZoneWindow` pour les fenêtres d'élément. Sans cela, elle naîtrait inactive : depuis
+    // que l'en-tête ne paraît que sur la fenêtre active (cf. `OccupantHeader`), elle n'aurait ni
+    // nom ni croix de fermeture tant qu'on n'aurait pas cliqué dedans.
+    this._host._main_zone_active_id = id
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
