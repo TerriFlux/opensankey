@@ -54,7 +54,12 @@ export interface Type_FigureChartStyle {
 
 /** Les défauts du DONUT d'hier : vingt parts, un demi pour cent, un trou à 55 %, % sur secteur. */
 export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
-  legend_visible: true,
+  // os#1431 — LÉGENDE CACHÉE PAR DÉFAUT (arbitrage Julien, 19/09). Elle redit ce que les secteurs
+  // et l'infobulle disent déjà, et elle trompe dès que deux parts partagent une couleur du modèle
+  // (deux jus « Product » sont du même orange : quatre lignes, deux teintes). Une figure qui n'a
+  // jamais réglé `legend_visible` la perd donc — c'est l'exception assumée à « aucune figure
+  // enregistrée ne change d'aspect » ; on la rallume dans l'inspecteur.
+  legend_visible: false,
   legend_parts: 'all',
   legend_position: 'right',
   legend_font_size: 12,
