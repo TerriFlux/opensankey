@@ -213,17 +213,17 @@ export const resources_spreadsheet = {
           unit: 'Unit.',
           move_right: 'Move to the right column',
           move_bottom: 'Move to the bottom band',
-          make_main: 'Make it the main window',
+          make_main: 'Make it the main pane',
           close: 'Close',
-          main_window: 'Main window',
+          main_window: 'Main pane',
           // Le nom COURT de la fenêtre principale, pour le bouton de la barre du haut : celui-ci
           // écrit la nature puis le nom de la fenêtre ACTIVE, et « Fenêtre principale » en toutes
           // lettres y prendrait à lui seul la place des deux.
           main_window_short: 'Main',
           // Infobulle du bouton unique : le texte long y nomme la fenêtre visée et sa nature (le
           // bouton, lui, tronque), et cette phrase annonce les deux gestes que le menu réunit.
-          active_window_menu: 'Change this window representation, or open a new one',
-          new_window: 'New window',
+          active_window_menu: 'Change this pane representation, or open a new one',
+          new_window: 'New pane',
           on_diagram: 'On the diagram',
           on_selection: 'On the selected element',
           follow: 'Follows the selection',
@@ -269,17 +269,27 @@ export const resources_spreadsheet = {
           // retour — rapatrier cette feuille dans l'onglet, là où on édite ; `sheet_read_only`
           // dit POURQUOI la fenêtre ne se laisse pas modifier, sans quoi elle passerait pour
           // cassée : une seule feuille est vivante à la fois, c'est celle de l'onglet.
-          sheet_window: 'Sheet in a window',
+          sheet_window: 'Sheet in a pane',
           make_sheet_active: 'Make this sheet the active one',
           sheet_read_only: 'Read-only — editing happens in the tab',
-          open_sheet_in_window: 'Open in a new window',
-          sheet_already_windowed: 'This sheet is already open in another window',
+          open_sheet_in_window: 'Open in a new pane',
+          sheet_already_windowed: 'This sheet is already open in another pane',
           // os#1385 (lot 5, D9) — a sheet carries a TYPED document. `no_canvas_for_type` is what
           // a canvas window says when its sheet is of a type that has no canvas (a workbook) ;
           // `no_default_window` is what the gesture says when a sheet has nothing to open at all
           // (an empty workbook, a type this version does not know).
           no_canvas_for_type: 'No canvas for this kind of document',
-          no_default_window: 'Nothing to show for this sheet'
+          no_default_window: 'Nothing to show for this sheet',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: 'This pane has nothing to show here',
+          unknown_representation: 'Pane nature unknown to this version',
+          orphan_hint: 'Change its nature, or close it'
         }
       }
     }
@@ -479,12 +489,12 @@ export const resources_spreadsheet = {
           unit: 'Unit.',
           move_right: 'Passer dans la colonne de droite',
           move_bottom: 'Passer dans le bandeau du bas',
-          make_main: 'En faire la fenêtre principale',
+          make_main: 'En faire le volet principal',
           close: 'Fermer',
-          main_window: 'Fenêtre principale',
-          main_window_short: 'Principale',
-          active_window_menu: 'Changer la représentation de cette fenêtre, ou en ouvrir une nouvelle',
-          new_window: 'Nouvelle fenêtre',
+          main_window: 'Volet principal',
+          main_window_short: 'Principal',
+          active_window_menu: 'Changer la représentation de ce volet, ou en ouvrir un nouveau',
+          new_window: 'Nouveau volet',
           on_diagram: 'Sur le diagramme',
           on_selection: 'Sur l’élément sélectionné',
           follow: 'Suit la sélection',
@@ -512,13 +522,23 @@ export const resources_spreadsheet = {
           subject_sheet: 'Feuille du sujet',
           sheet_gone: 'Cette feuille n\'existe plus',
           // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
-          sheet_window: 'Feuille dans une fenêtre',
+          sheet_window: 'Feuille dans un volet',
           make_sheet_active: 'Rendre cette feuille active',
           sheet_read_only: 'Lecture seule — c\'est l\'onglet qui édite',
-          open_sheet_in_window: 'Ouvrir dans une nouvelle fenêtre',
-          sheet_already_windowed: 'Cette feuille est déjà ouverte dans une autre fenêtre',
+          open_sheet_in_window: 'Ouvrir dans un nouveau volet',
+          sheet_already_windowed: 'Cette feuille est déjà ouverte dans un autre volet',
           no_canvas_for_type: 'Pas de canevas pour ce type de document',
-          no_default_window: 'Rien à montrer pour cette feuille'
+          no_default_window: 'Rien à montrer pour cette feuille',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: 'Ce volet n\'a pas de contenu à montrer ici',
+          unknown_representation: 'Nature de volet inconnue de cette version',
+          orphan_hint: 'Changez sa nature, ou fermez-le'
         }
       }
     }
@@ -718,12 +738,12 @@ export const resources_spreadsheet = {
           unit: 'Unit.',
           move_right: 'Mover a la columna derecha',
           move_bottom: 'Mover a la banda inferior',
-          make_main: 'Convertir en ventana principal',
+          make_main: 'Convertir en panel principal',
           close: 'Cerrar',
-          main_window: 'Ventana principal',
+          main_window: 'Panel principal',
           main_window_short: 'Principal',
-          active_window_menu: 'Cambiar la representación de esta ventana o abrir una nueva',
-          new_window: 'Nueva ventana',
+          active_window_menu: 'Cambiar la representación de este panel o abrir uno nuevo',
+          new_window: 'Nuevo panel',
           on_diagram: 'Sobre el diagrama',
           on_selection: 'Sobre el elemento seleccionado',
           follow: 'Sigue la selección',
@@ -751,13 +771,23 @@ export const resources_spreadsheet = {
           subject_sheet: 'Hoja del sujeto',
           sheet_gone: 'Esta hoja ya no existe',
           // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
-          sheet_window: 'Hoja en una ventana',
+          sheet_window: 'Hoja en un panel',
           make_sheet_active: 'Activar esta hoja',
           sheet_read_only: 'Solo lectura — la edición se hace en la pestaña',
-          open_sheet_in_window: 'Abrir en una ventana nueva',
-          sheet_already_windowed: 'Esta hoja ya está abierta en otra ventana',
+          open_sheet_in_window: 'Abrir en un panel nuevo',
+          sheet_already_windowed: 'Esta hoja ya está abierta en otro panel',
           no_canvas_for_type: 'No hay lienzo para este tipo de documento',
-          no_default_window: 'Nada que mostrar para esta hoja'
+          no_default_window: 'Nada que mostrar para esta hoja',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: 'Este panel no tiene nada que mostrar aquí',
+          unknown_representation: 'Naturaleza de panel desconocida para esta versión',
+          orphan_hint: 'Cambie su naturaleza o ciérrelo'
         }
       }
     }
@@ -957,12 +987,12 @@ export const resources_spreadsheet = {
           unit: 'Einh.',
           move_right: 'In die rechte Spalte verschieben',
           move_bottom: 'In das untere Band verschieben',
-          make_main: 'Zum Hauptfenster machen',
+          make_main: 'Zum Hauptbereich machen',
           close: 'Schließen',
-          main_window: 'Hauptfenster',
+          main_window: 'Hauptbereich',
           main_window_short: 'Haupt',
-          active_window_menu: 'Darstellung dieses Fensters ändern oder ein neues Fenster öffnen',
-          new_window: 'Neues Fenster',
+          active_window_menu: 'Darstellung dieses Bereichs ändern oder einen neuen Bereich öffnen',
+          new_window: 'Neuer Bereich',
           on_diagram: 'Auf das Diagramm',
           on_selection: 'Auf das ausgewählte Element',
           follow: 'Folgt der Auswahl',
@@ -990,13 +1020,23 @@ export const resources_spreadsheet = {
           subject_sheet: 'Blatt des Gegenstands',
           sheet_gone: 'Dieses Blatt existiert nicht mehr',
           // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
-          sheet_window: 'Blatt in einem Fenster',
+          sheet_window: 'Blatt in einem Bereich',
           make_sheet_active: 'Dieses Blatt aktivieren',
           sheet_read_only: 'Nur Lesen — bearbeitet wird über die Registerkarte',
-          open_sheet_in_window: 'In einem neuen Fenster öffnen',
-          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Fenster geöffnet',
+          open_sheet_in_window: 'In einem neuen Bereich öffnen',
+          sheet_already_windowed: 'Dieses Blatt ist bereits in einem anderen Bereich geöffnet',
           no_canvas_for_type: 'Kein Zeichenbereich für diese Art von Dokument',
-          no_default_window: 'Für dieses Blatt gibt es nichts zu zeigen'
+          no_default_window: 'Für dieses Blatt gibt es nichts zu zeigen',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: 'Dieser Bereich hat hier nichts zu zeigen',
+          unknown_representation: 'Bereichsart in dieser Version unbekannt',
+          orphan_hint: 'Ändern Sie seine Art oder schließen Sie ihn'
         }
       }
     }
@@ -1196,12 +1236,12 @@ export const resources_spreadsheet = {
           unit: 'Unit.',
           move_right: 'Sposta nella colonna destra',
           move_bottom: 'Sposta nella fascia inferiore',
-          make_main: 'Rendila la finestra principale',
+          make_main: 'Rendilo il riquadro principale',
           close: 'Chiudi',
-          main_window: 'Finestra principale',
+          main_window: 'Riquadro principale',
           main_window_short: 'Principale',
-          active_window_menu: 'Cambiare la rappresentazione di questa finestra o aprirne una nuova',
-          new_window: 'Nuova finestra',
+          active_window_menu: 'Cambiare la rappresentazione di questo riquadro o aprirne uno nuovo',
+          new_window: 'Nuovo riquadro',
           on_diagram: 'Sul diagramma',
           on_selection: 'Sull’elemento selezionato',
           follow: 'Segue la selezione',
@@ -1229,13 +1269,23 @@ export const resources_spreadsheet = {
           subject_sheet: 'Foglio del soggetto',
           sheet_gone: 'Questo foglio non esiste più',
           // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés.
-          sheet_window: 'Foglio in una finestra',
+          sheet_window: 'Foglio in un riquadro',
           make_sheet_active: 'Rendi attivo questo foglio',
           sheet_read_only: 'Sola lettura — si modifica dalla scheda',
-          open_sheet_in_window: 'Apri in una nuova finestra',
-          sheet_already_windowed: 'Questo foglio è già aperto in un altra finestra',
+          open_sheet_in_window: 'Apri in un nuovo riquadro',
+          sheet_already_windowed: 'Questo foglio è già aperto in un altro riquadro',
           no_canvas_for_type: 'Nessuna area di disegno per questo tipo di documento',
-          no_default_window: 'Niente da mostrare per questo foglio'
+          no_default_window: 'Niente da mostrare per questo foglio',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: 'Questo riquadro non ha nulla da mostrare qui',
+          unknown_representation: 'Natura di riquadro sconosciuta a questa versione',
+          orphan_hint: 'Cambiate la sua natura, oppure chiudetelo'
         }
       }
     }
@@ -1440,12 +1490,12 @@ export const resources_spreadsheet = {
           unit: '单位图',
           move_right: '移到右栏',
           move_bottom: '移到底栏',
-          make_main: '设为主窗口',
+          make_main: '设为主窗格',
           close: '关闭',
-          main_window: '主窗口',
+          main_window: '主窗格',
           main_window_short: '主',
-          active_window_menu: '更改此窗口的表示方式，或打开新窗口',
-          new_window: '新建窗口',
+          active_window_menu: '更改此窗格的表示方式，或打开新窗格',
+          new_window: '新建窗格',
           on_diagram: '针对图表',
           on_selection: '针对所选元素',
           follow: '跟随选择',
@@ -1474,13 +1524,23 @@ export const resources_spreadsheet = {
           sheet_gone: '该工作表已不存在',
           // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés. Le tiret
           // cadratin de `sheet_read_only` cède la place aux deux-points, seuls naturels ici.
-          sheet_window: '窗口中的工作表',
+          sheet_window: '窗格中的工作表',
           make_sheet_active: '将此工作表设为当前工作表',
           sheet_read_only: '只读：编辑请在标签页中进行',
-          open_sheet_in_window: '在新窗口中打开',
-          sheet_already_windowed: '该工作表已在另一个窗口中打开',
+          open_sheet_in_window: '在新窗格中打开',
+          sheet_already_windowed: '该工作表已在另一个窗格中打开',
           no_canvas_for_type: '该类型的文档没有画布',
-          no_default_window: '该工作表没有可显示的内容'
+          no_default_window: '该工作表没有可显示的内容',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: '该窗格在此处没有可显示的内容',
+          unknown_representation: '此版本无法识别的窗格类型',
+          orphan_hint: '请更改其类型，或将其关闭'
         }
       }
     }
@@ -1685,12 +1745,12 @@ export const resources_spreadsheet = {
           unit: '単位',
           move_right: '右の列へ移動',
           move_bottom: '下の帯へ移動',
-          make_main: 'メインウィンドウにする',
+          make_main: 'メインペインにする',
           close: '閉じる',
-          main_window: 'メインウィンドウ',
+          main_window: 'メインペイン',
           main_window_short: 'メイン',
-          active_window_menu: 'このウィンドウの表示形式を変更、または新しいウィンドウを開く',
-          new_window: '新しいウィンドウ',
+          active_window_menu: 'このペインの表示形式を変更、または新しいペインを開く',
+          new_window: '新しいペイン',
           on_diagram: '図全体に',
           on_selection: '選択した要素に',
           follow: '選択に追従',
@@ -1719,13 +1779,23 @@ export const resources_spreadsheet = {
           sheet_gone: 'このシートは存在しません',
           // os#1389 lot 1 — cf. le bloc anglais pour le pourquoi de ces quatre clés. Le tiret
           // cadratin de `sheet_read_only` cède la place aux deux-points, seuls naturels ici.
-          sheet_window: 'ウィンドウ内のシート',
+          sheet_window: 'ペイン内のシート',
           make_sheet_active: 'このシートをアクティブにする',
           sheet_read_only: '読み取り専用：編集はタブで行います',
-          open_sheet_in_window: '新しいウィンドウで開く',
-          sheet_already_windowed: 'このシートはすでに別のウィンドウで開いています',
+          open_sheet_in_window: '新しいペインで開く',
+          sheet_already_windowed: 'このシートはすでに別のペインで開いています',
           no_canvas_for_type: 'この種類のドキュメントにはキャンバスがありません',
-          no_default_window: 'このシートに表示できるものはありません'
+          no_default_window: 'このシートに表示できるものはありません',
+          // os#1436 — CE QU'UN VOLET ORPHELIN DIT. Un occupant qu'aucun rendu de la grande
+          // zone ne prend etait rendu NULLE PART : case blanche, sans en-tete, donc
+          // infermable. Il est desormais rattrape, et ces trois lignes sont ce qu'il ecrit.
+          // `orphan_window` parle d'un VOLET et non d'une feuille (a la difference de
+          // `no_default_window` juste au-dessus) : l'orphelin est une fenetre de la grille,
+          // pas un document. `orphan_hint` donne le geste, sans quoi le message dirait le
+          // manque sans dire quoi en faire.
+          orphan_window: 'このペインにはここで表示できるものがありません',
+          unknown_representation: 'このバージョンでは不明なペインの種類',
+          orphan_hint: '種類を変更するか、閉じてください'
         }
       }
     }
