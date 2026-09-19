@@ -28,6 +28,21 @@ export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
 }
 
 /**
+ * os#1440 — COLLER CE QUI VIENT D UN AUTRE DOCUMENT : mêmes nœuds, mêmes liens internes, lus
+ * ailleurs et créés ici.
+ *
+ * Le geste existait déjà pour un seul document ; ce qui manquait n était pas la mécanique mais
+ * la certitude que la copie n emporte rien qui n ait de sens ici. Cf. `copyElements` : les
+ * étiquettes se résolvent dans le diagramme d arrivée et celles qui n y existent pas sont
+ * ignorées, les styles restent ceux du document d accueil.
+ */
+export function copyNodesFrom(
+  da: Class_DrawingArea, source_da: Class_DrawingArea, node_ids: string[]
+) {
+  copyElements(da, node_ids, [], 50, source_da)
+}
+
+/**
  * os#1340 (Ctrl+D) — duplique la SÉLECTION courante : nœuds (+ liens internes) et zones de
  * texte, en une seule transition d'historique. Les copies deviennent la nouvelle sélection.
  */
@@ -56,8 +71,33 @@ export function cloneSelectionInPlace(da: Class_DrawingArea) {
  * Duplication unifiée nœuds + zones de texte (cf. copyNodes pour le contrat undo/redo).
  * `container_ids` : zones de texte à dupliquer avec le même offset que les nœuds.
  */
-export function copyElements(da: Class_DrawingArea, node_ids: string[], container_ids: string[], offset = 50) {
-  const sankey = da.sankey
+/**
+ * os#1440 (19/09/2026) — LA SOURCE PEUT ÊTRE UN AUTRE DOCUMENT.
+ *
+ * `source_da` vaut `da` dans le cas ordinaire — dupliquer, cloner, coller chez soi — et la zone
+ * d'un AUTRE document quand on colle ce qui vient d'une autre feuille. Rien d'autre ne change :
+ * on LIT dans la source, on CRÉE dans la cible, et l'historique reste celui de la cible, qui est
+ * le seul document que le geste modifie.
+ *
+ * CE QUE LA COPIE EMPORTE, ET CE QU'ELLE LAISSE — c'est la question qui avait fait remettre ce
+ * geste à plus tard, et la réponse était déjà dans le code :
+ *  - les ÉTIQUETTES se résolvent dans le diagramme d'ARRIVÉE, par identifiant, et celles qui n'y
+ *    existent pas sont ignorées en silence (`addTagsReferencingFrom`). Aucune référence pendante
+ *    n'est donc possible, et c'est ce qu'on craignait ;
+ *  - les STYLES ne suivent PAS : `copyAttrFrom` ne copie que les surcharges PROPRES de l'élément,
+ *    minimisées contre le style de la SOURCE. Un nœud collé prend donc l'allure du document
+ *    d'accueil et garde ce que son auteur avait réglé à la main. C'est ce que font Excel et Figma,
+ *    et c'est ce qu'on veut : coller un nœud ne doit pas importer la charte d'un autre fichier.
+ */
+export function copyElements(
+  da: Class_DrawingArea,
+  node_ids: string[],
+  container_ids: string[],
+  offset = 50,
+  source_da: Class_DrawingArea = da
+) {
+  const sankey = source_da.sankey
+  const target_sankey = da.sankey
   let created_nodes: Class_NodeElement[] = []
   let created_links: Class_LinkElement[] = []
   let created_containers: Class_ContainerElement[] = []
@@ -76,7 +116,7 @@ export function copyElements(da: Class_DrawingArea, node_ids: string[], containe
     const node_copy_map = new Map<string, Class_NodeElement>()
 
     source_nodes.forEach(node => {
-      const new_node = sankey.addNewNode(node.id + '_copy', node.name)
+      const new_node = target_sankey.addNewNode(node.id + '_copy', node.name)
       node_copy_map.set(node.id, new_node)
       new_node.copyFrom(node)
       new_node.position_x = node.position_x + offset
@@ -91,8 +131,12 @@ export function copyElements(da: Class_DrawingArea, node_ids: string[], containe
           const new_source = node_copy_map.get(node.id)
           const new_target = node_copy_map.get(link.target.id)
           if (new_source && new_target) {
-            const new_link = sankey.addNewLink(new_source, new_target)
-            new_link.copyFrom(link)
+            const new_link = target_sankey.addNewLink(new_source, new_target)
+            // os#1440 — on DIT à la copie où sont ses extrémités. Sans cette carte, `copyFrom`
+            // les cherche par l'identifiant d'origine dans le diagramme d'arrivée et les y CRÉE
+            // quand il ne les trouve pas : d'un document à l'autre, deux nœuds parasites par
+            // lien, qu'aucune annulation ne reprend. Cf. `Class_LinkElement.copyFrom`.
+            new_link.copyFrom(link, node_copy_map)
             new_link.source = new_source
             new_link.target = new_target
             matching_link_id[link.id] = new_link.id
@@ -110,7 +154,7 @@ export function copyElements(da: Class_DrawingArea, node_ids: string[], containe
 
     // os#1340 — zones de texte : même schéma que les nœuds (id + '_copy', copyFrom, offset).
     source_containers.forEach(container => {
-      const new_container = sankey.addNewContainer(container.id + '_copy', container.name)
+      const new_container = target_sankey.addNewContainer(container.id + '_copy', container.name)
       new_container.copyFrom(container)
       new_container.position_x = container.position_x + offset
       new_container.position_y = container.position_y + offset

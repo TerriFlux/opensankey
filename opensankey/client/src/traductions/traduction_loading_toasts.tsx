@@ -135,9 +135,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: 'Paste across documents',
-            desc: 'What you copied comes from another document. Pasting from one document into another is not possible yet: copy it again from within this document.'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: 'Copied content is gone',
+            desc: 'The document you copied from is no longer open, so there is nothing left to paste. Copy again from the document you want it from.'
           }
         }
       },
@@ -279,9 +285,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: 'Coller entre documents',
-            desc: 'Ce que vous avez copié vient d\'un autre document. Coller d\'un document à l\'autre n\'est pas encore possible : recopiez-le depuis ce document.'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: 'Ce qui a ete copie a disparu',
+            desc: 'Le document d\'ou vous avez copie n\'est plus ouvert : il ne reste rien a coller. Recopiez depuis le document voulu.'
           }
         }
       },
@@ -423,9 +435,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: 'Pegar entre documentos',
-            desc: 'Lo que ha copiado procede de otro documento. Pegar de un documento a otro todavía no es posible: cópielo de nuevo desde este documento.'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: 'Lo copiado ha desaparecido',
+            desc: 'El documento del que copio ya no esta abierto, asi que no queda nada que pegar. Vuelva a copiar desde el documento que quiera.'
           }
         }
       },
@@ -567,9 +585,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: 'Zwischen Dokumenten einfügen',
-            desc: 'Das Kopierte stammt aus einem anderen Dokument. Das Einfügen von einem Dokument in ein anderes ist noch nicht möglich: Kopieren Sie es erneut aus diesem Dokument.'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: 'Das Kopierte ist verschwunden',
+            desc: 'Das Dokument, aus dem Sie kopiert haben, ist nicht mehr geoffnet; es gibt nichts mehr einzufugen. Kopieren Sie erneut aus dem gewunschten Dokument.'
           }
         }
       },
@@ -711,9 +735,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: 'Incollare tra documenti',
-            desc: 'Ciò che avete copiato proviene da un altro documento. Incollare da un documento all\'altro non è ancora possibile: copiatelo di nuovo da questo documento.'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: 'Cio che e stato copiato e scomparso',
+            desc: 'Il documento da cui avete copiato non e piu aperto: non resta nulla da incollare. Copiate di nuovo dal documento desiderato.'
           }
         }
       },
@@ -852,9 +882,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: '跨文档粘贴',
-            desc: '您复制的内容来自另一个文档。目前还无法在两个文档之间粘贴：请在当前文档中重新复制。'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: '复制的内容已不存在',
+            desc: '您复制来源的文档已关闭，因此没有内容可粘贴。请从所需文档中重新复制。'
           }
         }
       },
@@ -993,9 +1029,15 @@ export const resources_loading_toasts = {
           }
         },
         clipboard: {
-          cross_document: {
-            title: '文書間の貼り付け',
-            desc: 'コピーした内容は別の文書のものです。文書間での貼り付けはまだできません。この文書内でコピーし直してください。'
+          // os#1440 — LE SEUL REFUS QUI RESTE. Ce bloc disait, depuis le lot 2, que coller
+          // d un document a l autre viendrait « au lot 3 ». Le lot 3 est passe, la
+          // fonctionnalite est la, et le message renvoyait donc a une etape terminee.
+          // Ce qui peut encore echouer est autre chose : le document d ou l on a copie a ete
+          // LIBERE entre-temps (bascule d onglet, fermeture de sa fenetre), et son modele n
+          // existe plus. On le dit, plutot que de coller le vide.
+          source_gone: {
+            title: 'コピーした内容がなくなりました',
+            desc: 'コピー元のドキュメントはもう開かれていないため、貼り付けるものが残っていません。目的のドキュメントからコピーし直してください。'
           }
         }
       },

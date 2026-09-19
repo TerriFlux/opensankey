@@ -410,11 +410,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
-  public copyFrom(_: Class_LinkElement) {
+  /**
+   * os#1440 — `node_map` : COMMENT RETROUVER LES EXTRÉMITÉS, quand elles ont changé de nom.
+   *
+   * Les deux blocs ci-dessous résolvent les extrémités par l'IDENTIFIANT de la source, cherché
+   * dans le diagramme d'ARRIVÉE, et CRÉENT le nœud quand il n'y est pas. C'est juste dans leur
+   * cas d'origine — appliquer une mise en page, synchroniser une vue —, où les deux diagrammes
+   * partagent leurs identifiants : ce qui manque est un nœud qu'il faut effectivement ajouter.
+   *
+   * Cela devient faux dès que la copie RENOMME ses nœuds, ce que fait toute duplication
+   * (`id + '_copy'`). Dans un même document le défaut ne se voyait pas : l'identifiant d'origine
+   * y existe toujours, la recherche le trouve, et l'appelant écrase aussitôt les deux extrémités
+   * par les bonnes copies. D'un document à l'autre il n'existe pas, et la ligne 419 plantait
+   * alors dans le document d'accueil un nœud parasite par extrémité — orphelin, jamais effacé
+   * par l'annulation qui ne connaît que les copies, et portant le nom d'un nœud de l'autre
+   * fichier. Un collage de deux nœuds reliés en déposait quatre.
+   *
+   * `node_map` dit « telle extrémité de la source EST telle copie ici », et la question de la
+   * création ne se pose plus. Omis, le comportement d'avant est inchangé.
+   */
+  public copyFrom(_: Class_LinkElement, node_map?: Map<string, Class_NodeElement>) {
     super.copyFrom(_)
     // Source relations
     if (this._source.id !== _._source.id) {
-      let source = this.sankey.nodes_dict[_._source.id] as Class_NodeElement
+      let source = node_map?.get(_._source.id) ?? this.sankey.nodes_dict[_._source.id] as Class_NodeElement
       if (source === undefined) {
         source = this.sankey.addNewNode(_._source.id, _._source.name) as Class_NodeElement
         // source.copyFrom(_._source)
@@ -423,7 +442,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // target relations
     if (this._target.id !== _._target.id) {
-      let target = this.sankey.nodes_dict[_._target.id] as Class_NodeElement
+      let target = node_map?.get(_._target.id) ?? this.sankey.nodes_dict[_._target.id] as Class_NodeElement
       if (target === undefined) {
         target = this.sankey.addNewNode(_._target.id, _._target.name) as Class_NodeElement
         // target.copyFrom(_._target)
