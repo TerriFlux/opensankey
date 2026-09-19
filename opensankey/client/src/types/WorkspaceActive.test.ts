@@ -264,22 +264,34 @@ describe('os#1385 lot 2 — le presse-papiers est de lespace de travail', () => 
     expect(copyNodes).toHaveBeenCalledWith(copied)
   })
 
-  it('Ctrl+V dans un AUTRE document ne colle pas, et le dit', () => {
+  // os#1440 — CE TEST DISAIT L INVERSE, ET IL AVAIT RAISON A L EPOQUE.
+  //
+  // Il verrouillait le refus du lot 2 : « les identifiants de A ne designent rien dans B, coller
+  // entre documents demande une serialisation, c est le lot 3 ». Le lot 3 est passe, la
+  // serialisation s est revelee inutile — on LIT dans le document d origine au lieu de relire ses
+  // identifiants dans celui d arrivee — et le geste marche. Le detail de ce qui voyage et de ce
+  // qui reste est dans clipboardCrossDocument.test.ts ; ici on ne garde que l aiguillage.
+  it('Ctrl+V dans un AUTRE document colle depuis celui dou lon vient', () => {
     const { ws, main, other_sheet } = buildTwoSheetWorkspace()
     selectTwoNodes(main)
     jest.spyOn(main, 'saveInCache').mockImplementation(() => undefined)
     main.handleKeyboardEvent(keystroke('c'))
 
     const sheet_app = main.sheetApplication(other_sheet)!
+    sheet_app.edition_allowed = true
+    jest.spyOn(sheet_app, 'saveInCache').mockImplementation(() => undefined)
     const copyNodes = jest.spyOn(sheet_app.drawing_area, 'copyNodes').mockImplementation(() => undefined)
+    const copyNodesFrom = jest.spyOn(sheet_app.drawing_area, 'copyNodesFrom').mockImplementation(() => undefined)
     const notify = jest.spyOn(ws, 'notifyUser').mockImplementation(() => undefined)
 
     sheet_app.handleKeyboardEvent(keystroke('v'))
-    // Les identifiants de A ne designent rien dans B : coller entre documents demande une
-    // serialisation, c'est le lot 3. En attendant, on refuse ET on explique.
+
+    // La voie d un AUTRE document, avec la zone de dessin de la SOURCE en premier argument :
+    // c est tout ce qui separe ce geste de la duplication chez soi.
+    expect(copyNodesFrom).toHaveBeenCalledWith(main.drawing_area, ws.clipboard!.node_ids)
     expect(copyNodes).not.toHaveBeenCalled()
-    expect(notify).toHaveBeenCalledTimes(1)
-    expect(notify.mock.calls[0][0]).toBe('clipboard_cross_document')
+    // Et plus de message : il n y a plus rien a excuser.
+    expect(notify).not.toHaveBeenCalled()
   })
 })
 
