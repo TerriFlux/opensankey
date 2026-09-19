@@ -1963,6 +1963,57 @@ export class Class_MenuConfig {
     if (this.isMainZoneOccupant(id)) this.hideMainZoneOccupant(id)
     else this.showMainZoneOccupant(id)
   }
+
+  /**
+   * os#1433 (19/09/2026) — QUITTER UNE FEUILLE FERME LES FENÊTRES ÉPINGLÉES SUR SES ÉLÉMENTS.
+   *
+   * C'est la seconde moitié de « à qui appartient la disposition », l'autre étant la garde
+   * d'écriture de `main_zone` (cf. `ApplicationData._toJSON`). La grille — les cases, leurs
+   * tailles, les fenêtres à sujet DIAGRAMME — est de l'espace de travail : elle survit au
+   * changement de feuille, et c'est un service (personne ne veut refaire sa mise en page à
+   * chaque onglet). Ce qu'une fenêtre REGARDE, lui, peut être de la feuille.
+   *
+   * Un sujet épinglé (`node`, `link`, `elements`, `tag`) nomme des identifiants ou un critère
+   * qui n'ont de sens que dans UN diagramme. Sans `sheet`, il désigne « la feuille courante » —
+   * donc, après une bascule, des identifiants de la feuille d'arrivée, qui n'existent pas. La
+   * fenêtre ne se trompait même pas bruyamment : elle s'ouvrait vide en continuant d'annoncer
+   * le nœud d'avant. Constaté par Julien le 19/09 : « on ouvre une feuille avec le +, ça vient
+   * avec les mêmes fenêtres — diagramme, doc et sunburst ».
+   *
+   * CE QUI SURVIT, ET POURQUOI :
+   *  - `diagram`, y compris sur une AUTRE feuille : c'est le geste du lot 0, une fenêtre qui
+   *    montre une feuille voisine, et il est délibéré ;
+   *  - `selection` : elle ne nomme rien, elle suit ce qu'on touche et se repointe seule ;
+   *  - un sujet épinglé qui NOMME une autre feuille que celle qu'on quitte : ses identifiants
+   *    sont ailleurs et restent valides. Une fenêtre sur le nœud « Blé » de la feuille B garde
+   *    son sens quand on passe de A à C — et quand on arrive SUR B, elle devient une fenêtre
+   *    sur la feuille courante, ce qu'elle disait déjà.
+   *
+   * @param sheet_id la feuille qu'on QUITTE. Un sujet sans `sheet` la désigne implicitement.
+   * @returns les identifiants des fenêtres fermées (pour les journaux et les tests).
+   */
+  public closeWindowsPinnedOnSheet(sheet_id: string): string[] {
+    const pinned = new Set(['node', 'link', 'elements', 'tag'])
+    const doomed = this._host._main_zone_occupants
+      .filter(o => {
+        if (!pinned.has(o.subject.kind)) return false
+        const on = mainZoneSubjectSheet(o.subject)
+        return on === '' || on === sheet_id
+      })
+      .map(o => o.id)
+    if (doomed.length === 0) return []
+    const condemned = new Set(doomed)
+    // Retrait en UN geste, et non `hideMainZoneOccupant` en boucle : celle-ci refuse de retirer
+    // la dernière fenêtre, garde juste pour un geste de l'utilisateur (on ne vide pas la grande
+    // zone d'un clic) et fausse ici — une feuille dont on ne garde aucune fenêtre doit pouvoir
+    // n'en garder aucune, le canevas de la feuille d'arrivée prenant la place au rendu suivant.
+    this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => !condemned.has(o.id))
+    condemned.forEach(id => this._host._main_zone_detached.delete(id))
+    // L'active a pu partir avec elles : `_normalizeMainZoneOccupants` la repose sur ce qui reste.
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+    return doomed
+  }
   public setMainZoneOccupantPlace(id: string, place: Type_MainZonePlace): void {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === place) return
