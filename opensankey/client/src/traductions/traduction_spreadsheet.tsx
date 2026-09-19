@@ -141,7 +141,7 @@ export const resources_spreadsheet = {
           // os#1405 — la barre s'est vidée : ces clés servent la section du panneau de
           // navigation (panel_title, rows) et le volet de réglages (matrix_label).
           matrix_label: 'Matrix display',
-          panel_title: 'What the spreadsheet shows',
+          panel_title: 'Spreadsheet',
           rows: 'Rows'
         },
         // --- Modale « Ajouter une contrainte » ---
@@ -410,7 +410,7 @@ export const resources_spreadsheet = {
           matrix_value: 'Matrice : valeur',
           matrix_tip: 'Contenu des cellules de la matrice : croix (le flux existe) ou valeur du flux pour le data_type sélectionné',
           matrix_label: 'Affichage des matrices',
-          panel_title: 'Ce que le tableur montre',
+          panel_title: 'Tableur',
           rows: 'Lignes'
         },
         constraint: {
@@ -649,7 +649,7 @@ export const resources_spreadsheet = {
           matrix_value: 'Matriz: valor',
           matrix_tip: 'Contenido de las celdas de la matriz: cruz (el flujo existe) o valor del flujo para el data_type seleccionado',
           matrix_label: 'Visualización de las matrices',
-          panel_title: 'Lo que muestra la hoja',
+          panel_title: 'Hoja de cálculo',
           rows: 'Filas'
         },
         constraint: {
@@ -888,7 +888,7 @@ export const resources_spreadsheet = {
           matrix_value: 'Matrix: Wert',
           matrix_tip: 'Inhalt der Matrixzellen: Kreuz (der Fluss existiert) oder Flusswert für den ausgewählten data_type',
           matrix_label: 'Anzeige der Matrizen',
-          panel_title: 'Was die Tabelle zeigt',
+          panel_title: 'Tabelle',
           rows: 'Zeilen'
         },
         constraint: {
@@ -1127,7 +1127,7 @@ export const resources_spreadsheet = {
           matrix_value: 'Matrice: valore',
           matrix_tip: 'Contenuto delle celle della matrice: croce (il flusso esiste) o valore del flusso per il data_type selezionato',
           matrix_label: 'Visualizzazione delle matrici',
-          panel_title: 'Cosa mostra il foglio',
+          panel_title: 'Foglio',
           rows: 'Righe'
         },
         constraint: {
@@ -1368,7 +1368,7 @@ export const resources_spreadsheet = {
           matrix_value: '矩阵：数值',
           matrix_tip: '矩阵单元格内容：叉号（表示该流量存在）或所选 data_type 的流量数值',
           matrix_label: '矩阵显示方式',
-          panel_title: '电子表格显示的内容',
+          panel_title: '电子表格',
           rows: '行'
         },
         // --- Modale « Ajouter une contrainte » ---
@@ -1613,7 +1613,7 @@ export const resources_spreadsheet = {
           matrix_value: '行列：値',
           matrix_tip: '行列セルの内容：クロス（そのフローが存在する）、または選択中の data_type におけるフローの値',
           matrix_label: '行列の表示',
-          panel_title: 'スプレッドシートが表示する内容',
+          panel_title: 'スプレッドシート',
           rows: '行'
         },
         // --- Modale « Ajouter une contrainte » ---
