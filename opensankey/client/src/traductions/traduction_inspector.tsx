@@ -292,7 +292,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: 'Brick',
           title: 'Unitary brick',
           intro: 'A brick is a unitary process: one central node, typed ports and exchange coefficients. This diagram is not one yet.',
           make_brick: 'Make this diagram a brick',
@@ -317,7 +316,6 @@ export const resources_inspector = {
           port_direction: 'Direction',
           quantity: 'Quantity',
           quantity_tooltip: 'Quantity this port measures — an id from the unit registry. Empty: the brick reference quantity (the one of its activity), which carries the convention that input coefficients sum to 1.',
-          quantity_default: 'diagram quantity',
           port_type: 'Port type',
           port_type_tooltip: 'Identifier of the port type in the referenced nomenclature. It is the typing, not the port itself, that makes two bricks connectable.',
           coefficient: 'Coefficient',
@@ -339,14 +337,6 @@ export const resources_inspector = {
           prefill: 'Prefill from the diagram',
           prefill_tooltip: 'Read the star of the central node: ports, directions and exchange coefficients. Merged line by line: the typing and units already entered are kept, and ports declared for another quantity are not swept away.',
           unknown_node: 'Unknown node',
-          summary_central: 'Central process: {{node}}',
-          summary_ports: 'Declared ports: {{n}}',
-          summary_activity: 'Reference activity: {{value}} {{unit}}',
-          selected_is_central: 'The selected node is the central process of this brick.',
-          selected_is_port: 'The selected node is a port of this brick:',
-          selected_port_line: '{{direction}}, {{quantity}}, type {{port_type}}',
-          port_untyped: 'not typed',
-          edit_brick: 'Edit the brick'
         }
       },
       filter_panel: {
@@ -680,7 +670,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: 'Brique',
           title: 'Brique unitaire',
           intro: 'Une brique est un procédé unitaire : un nœud central, des ports typés et des coefficients d\'échange. Ce diagramme n\'en est pas encore une.',
           make_brick: 'Faire de ce diagramme une brique',
@@ -705,7 +694,6 @@ export const resources_inspector = {
           port_direction: 'Sens',
           quantity: 'Grandeur',
           quantity_tooltip: 'Grandeur mesurée par ce port — un id du registre d\'unités. Vide : la grandeur de référence de la brique (celle de son activité), qui porte la convention « les coefficients d\'entrée somment à 1 ».',
-          quantity_default: 'grandeur du diagramme',
           port_type: 'Type de port',
           port_type_tooltip: 'Identifiant du type de port dans la nomenclature référencée. C\'est le typage, et non le port lui-même, qui rend deux briques raccordables.',
           coefficient: 'Coefficient',
@@ -727,14 +715,6 @@ export const resources_inspector = {
           prefill: 'Pré-remplir depuis le diagramme',
           prefill_tooltip: 'Lit l\'étoile du nœud central : ports, sens et coefficients d\'échange. Fusion ligne à ligne : le typage et les unités déjà saisis sont conservés, et les ports déclarés pour une autre grandeur ne sont pas balayés.',
           unknown_node: 'Nœud inconnu',
-          summary_central: 'Procédé central : {{node}}',
-          summary_ports: 'Ports déclarés : {{n}}',
-          summary_activity: 'Activité de référence : {{value}} {{unit}}',
-          selected_is_central: 'Le nœud sélectionné est le procédé central de cette brique.',
-          selected_is_port: 'Le nœud sélectionné est un port de cette brique :',
-          selected_port_line: '{{direction}}, {{quantity}}, type {{port_type}}',
-          port_untyped: 'non typé',
-          edit_brick: 'Éditer la brique'
         }
       },
       filter_panel: {
@@ -1049,7 +1029,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: 'Ladrillo',
           title: 'Ladrillo unitario',
           intro: 'Un ladrillo es un proceso unitario: un nodo central, puertos tipados y coeficientes de intercambio. Este diagrama todavía no lo es.',
           make_brick: 'Convertir este diagrama en un ladrillo',
@@ -1074,7 +1053,6 @@ export const resources_inspector = {
           port_direction: 'Sentido',
           quantity: 'Magnitud',
           quantity_tooltip: 'Magnitud medida por este puerto — un id del registro de unidades. Vacío: la magnitud de referencia del bloque (la de su actividad), que lleva la convención de que los coeficientes de entrada suman 1.',
-          quantity_default: 'magnitud del diagrama',
           port_type: 'Tipo de puerto',
           port_type_tooltip: 'Identificador del tipo de puerto en la nomenclatura referenciada. Es el tipado, y no el puerto en sí, lo que permite conectar dos ladrillos.',
           coefficient: 'Coeficiente',
@@ -1096,14 +1074,6 @@ export const resources_inspector = {
           prefill: 'Rellenar desde el diagrama',
           prefill_tooltip: 'Lee la estrella del nodo central: puertos, sentidos y coeficientes de intercambio. Fusión línea a línea: se conservan el tipado y las unidades ya introducidos, y los puertos declarados para otra magnitud no se borran.',
           unknown_node: 'Nodo desconocido',
-          summary_central: 'Proceso central: {{node}}',
-          summary_ports: 'Puertos declarados: {{n}}',
-          summary_activity: 'Actividad de referencia: {{value}} {{unit}}',
-          selected_is_central: 'El nodo seleccionado es el proceso central de este ladrillo.',
-          selected_is_port: 'El nodo seleccionado es un puerto de este ladrillo:',
-          selected_port_line: '{{direction}}, {{quantity}}, tipo {{port_type}}',
-          port_untyped: 'sin tipar',
-          edit_brick: 'Editar el ladrillo'
         }
       },
       filter_panel: {
@@ -1407,7 +1377,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: 'Baustein',
           title: 'Einheitlicher Baustein',
           intro: 'Ein Baustein ist ein Einzelprozess: ein zentraler Knoten, typisierte Ports und Austauschkoeffizienten. Dieses Diagramm ist noch keiner.',
           make_brick: 'Dieses Diagramm zu einem Baustein machen',
@@ -1432,7 +1401,6 @@ export const resources_inspector = {
           port_direction: 'Richtung',
           quantity: 'Größe',
           quantity_tooltip: 'Vom Port gemessene Größe — eine Id aus dem Einheitenregister. Leer: die Referenzgröße des Bausteins (die seiner Aktivität), die die Konvention trägt, dass die Eingangskoeffizienten sich zu 1 summieren.',
-          quantity_default: 'Größe des Diagramms',
           port_type: 'Port-Typ',
           port_type_tooltip: 'Kennung des Port-Typs in der referenzierten Nomenklatur. Erst die Typisierung, nicht der Port selbst, macht zwei Bausteine verbindbar.',
           coefficient: 'Koeffizient',
@@ -1454,14 +1422,6 @@ export const resources_inspector = {
           prefill: 'Aus dem Diagramm vorbelegen',
           prefill_tooltip: 'Liest den Stern des zentralen Knotens: Ports, Richtungen und Austauschkoeffizienten. Zusammenführung Zeile für Zeile: bereits erfasste Typisierung und Einheiten bleiben erhalten, und für eine andere Größe deklarierte Ports werden nicht überschrieben.',
           unknown_node: 'Unbekannter Knoten',
-          summary_central: 'Zentraler Prozess: {{node}}',
-          summary_ports: 'Deklarierte Ports: {{n}}',
-          summary_activity: 'Referenzaktivität: {{value}} {{unit}}',
-          selected_is_central: 'Der ausgewählte Knoten ist der zentrale Prozess dieses Bausteins.',
-          selected_is_port: 'Der ausgewählte Knoten ist ein Port dieses Bausteins:',
-          selected_port_line: '{{direction}}, {{quantity}}, Typ {{port_type}}',
-          port_untyped: 'nicht typisiert',
-          edit_brick: 'Baustein bearbeiten'
         }
       },
       filter_panel: {
@@ -1765,7 +1725,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: 'Mattone',
           title: 'Mattone unitario',
           intro: 'Un mattone è un processo unitario: un nodo centrale, porte tipizzate e coefficienti di scambio. Questo diagramma non lo è ancora.',
           make_brick: 'Fare di questo diagramma un mattone',
@@ -1790,7 +1749,6 @@ export const resources_inspector = {
           port_direction: 'Verso',
           quantity: 'Grandezza',
           quantity_tooltip: 'Grandezza misurata da questa porta — un id del registro delle unità. Vuoto: la grandezza di riferimento del mattone (quella della sua attività), che porta la convenzione per cui i coefficienti di ingresso sommano a 1.',
-          quantity_default: 'grandezza del diagramma',
           port_type: 'Tipo di porta',
           port_type_tooltip: 'Identificatore del tipo di porta nella nomenclatura di riferimento. È la tipizzazione, non la porta in sé, a rendere due mattoni collegabili.',
           coefficient: 'Coefficiente',
@@ -1812,14 +1770,6 @@ export const resources_inspector = {
           prefill: 'Precompilare dal diagramma',
           prefill_tooltip: 'Legge la stella del nodo centrale: porte, versi e coefficienti di scambio. Fusione riga per riga: la tipizzazione e le unità già inserite sono conservate, e le porte dichiarate per un\'altra grandezza non vengono cancellate.',
           unknown_node: 'Nodo sconosciuto',
-          summary_central: 'Processo centrale: {{node}}',
-          summary_ports: 'Porte dichiarate: {{n}}',
-          summary_activity: 'Attività di riferimento: {{value}} {{unit}}',
-          selected_is_central: 'Il nodo selezionato è il processo centrale di questo mattone.',
-          selected_is_port: 'Il nodo selezionato è una porta di questo mattone:',
-          selected_port_line: '{{direction}}, {{quantity}}, tipo {{port_type}}',
-          port_untyped: 'non tipizzata',
-          edit_brick: 'Modificare il mattone'
         }
       },
       filter_panel: {
@@ -2127,7 +2077,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: '构件',
           title: '单元构件',
           intro: '构件即一个单元工艺：一个中心节点、带类型的端口和交换系数。本图尚未成为构件。',
           make_brick: '将本图设为构件',
@@ -2152,7 +2101,6 @@ export const resources_inspector = {
           port_direction: '方向',
           quantity: '量纲',
           quantity_tooltip: '该端口度量的量纲——单位注册表中的量纲 id。留空：砖块的参考量纲（其活动的量纲），承载“输入系数之和为 1”的约定。',
-          quantity_default: '本图量纲',
           port_type: '端口类型',
           port_type_tooltip: '所引用命名法中的端口类型标识。让两个构件得以对接的是类型，而非端口本身。',
           coefficient: '系数',
@@ -2174,14 +2122,6 @@ export const resources_inspector = {
           prefill: '从图中预填',
           prefill_tooltip: '读取中心节点的星形结构：端口、方向和交换系数。逐行合并：已填写的端口类型和单位将保留，为其他量纲声明的端口也不会被清除。',
           unknown_node: '未知节点',
-          summary_central: '中心工艺：{{node}}',
-          summary_ports: '已声明端口：{{n}}',
-          summary_activity: '参考活动量：{{value}} {{unit}}',
-          selected_is_central: '所选节点是本构件的中心工艺。',
-          selected_is_port: '所选节点是本构件的端口：',
-          selected_port_line: '{{direction}}，{{quantity}}，类型 {{port_type}}',
-          port_untyped: '未定类型',
-          edit_brick: '编辑构件'
         }
       },
       filter_panel: {
@@ -2489,7 +2429,6 @@ export const resources_inspector = {
         // sa#503 (U1) — mode BRIQUE : la section `process` du diagramme
         // (nœud central, ports typés, coefficients d'échange).
         unitary_process: {
-          tab: 'ブリック',
           title: '単位ブリック',
           intro: 'ブリックとは単位プロセスのことです。中心ノード、型付けされたポート、交換係数から成ります。この図はまだブリックではありません。',
           make_brick: 'この図をブリックにする',
@@ -2514,7 +2453,6 @@ export const resources_inspector = {
           port_direction: '向き',
           quantity: '物理量',
           quantity_tooltip: 'このポートが測る量 — 単位レジストリの量の id。空欄：ブロックの基準量（そのアクティビティの量）であり、「入力係数の合計は 1」という規約を担う。',
-          quantity_default: '図の物理量',
           port_type: 'ポート型',
           port_type_tooltip: '参照する命名体系におけるポート型の識別子です。二つのブリックを接続可能にするのはポートそのものではなく型付けです。',
           coefficient: '係数',
@@ -2536,14 +2474,6 @@ export const resources_inspector = {
           prefill: '図から事前入力',
           prefill_tooltip: '中心ノードのスターを読み取り、ポート、向き、交換係数を取り込みます。行ごとに統合するため、入力済みの型付けと単位は保持され、別の物理量として宣言したポートも消えません。',
           unknown_node: '不明なノード',
-          summary_central: '中心プロセス：{{node}}',
-          summary_ports: '宣言済みポート：{{n}}',
-          summary_activity: '基準活動量：{{value}} {{unit}}',
-          selected_is_central: '選択中のノードはこのブリックの中心プロセスです。',
-          selected_is_port: '選択中のノードはこのブリックのポートです：',
-          selected_port_line: '{{direction}}、{{quantity}}、型 {{port_type}}',
-          port_untyped: '型なし',
-          edit_brick: 'ブリックを編集'
         }
       },
       filter_panel: {
