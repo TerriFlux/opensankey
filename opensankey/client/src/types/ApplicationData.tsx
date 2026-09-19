@@ -1233,6 +1233,17 @@ export class Class_ApplicationData {
     localStorage.removeItem('initial_data')
     localStorage.removeItem('icon_imported')
 
+    // os#1433 — ET LES FENÊTRES (arbitrage de Julien : « ça doit supprimer les fenêtres »).
+    //
+    // « Tout effacer » ne les touchait pas, et ce n'était pas un oubli mais une conséquence : la
+    // grande zone appartient à l'HÔTE depuis le lot 3, et `reset()` ne remet à zéro que le
+    // DOCUMENT. On repartait donc d'un diagramme vierge dans la mise en page du précédent, avec
+    // un tableur et une doc ouverts sur un modèle qui n'existait plus.
+    //
+    // Posé HORS du `if (redraw)`, contrairement au reste : la grande zone n'est pas un dessin,
+    // c'est l'état de l'écran, et les deux appelants qui ne redessinent pas (dialogue d'accueil,
+    // suppression de toutes les vues) doivent la voir revenir au diagramme comme les autres.
+    this.menu_configuration?.resetMainZoneToCanvas()
     // Reset Class_ApplicationData instance
     if (redraw) {
       this.reset({})
@@ -2063,11 +2074,12 @@ export class Class_ApplicationData {
     const blank_json = this.dumpDrawingAreaToJSON(blank_da)
     blank_da.delete()
     const name = this._defaultSheetName(this._sheets_order.length + 1)
-    // os#1433 — même règle qu'à la bascule : une feuille NEUVE n'a aucun des éléments sur
-    // lesquels les fenêtres épinglées pointaient, et le diagramme vierge n'en aura jamais. Elles
-    // s'ouvraient vides en gardant le nom du nœud d'avant — le cas exact que Julien a signalé.
-    // La grille, elle, reste : on retrouve ses cases et ses natures sur la feuille neuve.
-    this.menu_configuration?.closeWindowsPinnedOnSheet(this._current_sheet_id)
+    // os#1433 — UNE FEUILLE VIERGE N'A QU'UNE FENÊTRE, la zone de dessin (arbitrage de Julien).
+    // Pas seulement les épinglées : TOUTES. Une page blanche n'a rien dont un tableur, une doc
+    // ou une couronne puissent parler, et garder la mise en page devant elle oblige à fermer les
+    // fenêtres une par une avant de pouvoir travailler. Cf. `resetMainZoneToCanvas`, qui dit
+    // aussi pourquoi BASCULER vers une feuille qui existe, à l'inverse, garde la grille.
+    this.menu_configuration?.resetMainZoneToCanvas()
     this._loadSheetContent(blank_json, draw)
     const id = makeId('sheet')
     this._sheets[id] = { name }
