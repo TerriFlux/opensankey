@@ -136,6 +136,15 @@ export const figureControlsOf = (
     const sort: Type_AttributeSort = attr.sort ?? 'style'
     if (!sorts.includes(sort)) return
     const ui = attr.ui
+    // os#1431 — UN RÉGLAGE 'identity' QUI DÉCLARE SON CONTRÔLE EN A UN (retour de Julien, 19/09 :
+    // le flux de référence d'une étoile avait disparu). La règle d'os#1425 — « 'identity' nomme le
+    // sujet et n'a pas d'interface, c'est la fenêtre qui le pose » — vaut pour la racine d'un
+    // sunburst ou les étiquettes déposées à la souris, mais pas pour le flux de référence : c'est
+    // un choix que l'auteur fait dans une liste, à côté du mode de valeur qu'il complète. Ni
+    // l'inspecteur (sorts 'style') ni le panneau ('navigation') ne le rendaient : il était déclaré,
+    // traduit, lu par le moteur, et réglable NULLE PART. Ce qui déclare une interface en a une ;
+    // ce qui n'en déclare pas reste sans interface, comme avant.
+    if (sort === 'identity' && !ui) return
     // Un réglage conditionnel dont la condition ne tient pas ne se rend pas — mais sa valeur
     // reste écrite : il revient tel qu'il était dès que la condition revient.
     if (ui?.visibleIf && !ui.visibleIf(options)) return
