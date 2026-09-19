@@ -118,6 +118,25 @@ export const ACTIVE_DOCUMENT_TOPIC = 'active_document'
 export const HISTORY_TOPIC = 'history'
 
 /**
+ * os#1442 — Topic « tel document est passé de "enregistré" à "modifié", ou l'inverse ».
+ *
+ * Topic d'HÔTE, et c'est le point de tout le lot : ce qu'il annonce n'est PAS l'état d'un
+ * document en particulier mais le fait que la **liste** des documents modifiés a bougé. L'abonné
+ * type est la barre d'onglets de feuilles, qui porte une pastille par feuille : elle est unique,
+ * elle est montée une fois, et elle doit s'éveiller quand N'IMPORTE lequel des documents ouverts
+ * change d'état — y compris un document de feuille qui n'a aucun composant à lui.
+ *
+ * S'il était de document, chaque abonné devrait s'abonner aux N bus, et se réabonner à chaque
+ * ouverture ou fermeture de feuille. Sur le bus de l'hôte, un abonnement suffit et vaut pour les
+ * documents qui n'existent pas encore.
+ *
+ * Il se distingue de `SAVE_TOPIC`, qui annonce l'écriture d'un VRAI fichier et sur lequel la
+ * couche applicative propose le compte gratuit : le confondre avec un simple passage à
+ * « modifié » ferait surgir cette proposition à chaque frappe.
+ */
+export const SAVE_STATE_TOPIC = 'save_state'
+
+/**
  * os#1385 — LES TOPICS DE L'ESPACE DE TRAVAIL, par opposition à ceux du document.
  *
  * Le critère est celui de l'inventaire hôte/document : un topic est d'HÔTE quand ce qu'il
@@ -141,7 +160,10 @@ export const HISTORY_TOPIC = 'history'
  * Lu par `Class_MenuConfig.subscribe` / `notify` pour router chaque signal vers le bon bus.
  */
 export const HOST_TOPICS: ReadonlySet<string> = new Set([
-  MAIN_ZONE_TOPIC, PANELS_TOPIC, LIBRARY_TOPIC, IMPORT_TOPIC, SAVE_TOPIC, ACTIVE_DOCUMENT_TOPIC
+  MAIN_ZONE_TOPIC, PANELS_TOPIC, LIBRARY_TOPIC, IMPORT_TOPIC, SAVE_TOPIC, ACTIVE_DOCUMENT_TOPIC,
+  // os#1442 — « quels documents sont modifiés » est une propriété de l'espace de travail, pas
+  // d'un document : l'abonné est une barre unique qui les montre TOUS. Cf. SAVE_STATE_TOPIC.
+  SAVE_STATE_TOPIC
 ])
 
 export class Class_EventBus {

@@ -4,6 +4,7 @@ export const resources_app_elements = {
       // OS#85 — document sheets (independent diagrams, tabs at the bottom of the canvas).
       sheets: {
         sheet: 'Sheet',
+        modified: 'Unsaved changes',
         tab_menu: 'Sheet menu',
         new_sheet: 'New sheet — independent',
         new_sheet_tooltip: 'New sheet: another diagram, independent, in the same document. For another reading that follows the data, create a view instead.',
@@ -766,6 +767,7 @@ export const resources_app_elements = {
       // OS#85 — feuilles du document (diagrammes indépendants, onglets en bas du canvas).
       sheets: {
         sheet: 'Feuille',
+        modified: 'Modifications non enregistrees',
         tab_menu: 'Menu de la feuille',
         new_sheet: 'Nouvelle feuille — indépendante',
         new_sheet_tooltip: 'Nouvelle feuille : un autre diagramme, indépendant, dans le même document. Pour une autre lecture qui suit les données, créez plutôt une vue.',
@@ -1527,6 +1529,7 @@ export const resources_app_elements = {
       // OS#85 — hojas del documento (diagramas independientes, pestañas abajo del lienzo).
       sheets: {
         sheet: 'Hoja',
+        modified: 'Cambios sin guardar',
         tab_menu: 'Menú de la hoja',
         new_sheet: 'Nueva hoja — independiente',
         new_sheet_tooltip: 'Nueva hoja: otro diagrama, independiente, en el mismo documento. Para otra lectura que siga los datos, cree mejor una vista.',
@@ -2264,6 +2267,7 @@ export const resources_app_elements = {
       // OS#85 — Blätter des Dokuments (unabhängige Diagramme, Tabs unten am Canvas).
       sheets: {
         sheet: 'Blatt',
+        modified: 'Nicht gespeicherte Anderungen',
         tab_menu: 'Blattmenü',
         new_sheet: 'Neues Blatt — unabhängig',
         new_sheet_tooltip: 'Neues Blatt: ein anderes, unabhängiges Diagramm im selben Dokument. Für eine andere Lesart, die den Daten folgt, legen Sie stattdessen eine Ansicht an.',
@@ -3001,6 +3005,7 @@ export const resources_app_elements = {
       // OS#85 — fogli del documento (diagrammi indipendenti, schede in basso del canvas).
       sheets: {
         sheet: 'Foglio',
+        modified: 'Modifiche non salvate',
         tab_menu: 'Menu del foglio',
         new_sheet: 'Nuovo foglio — indipendente',
         new_sheet_tooltip: 'Nuovo foglio: un altro diagramma, indipendente, nello stesso documento. Per un\'altra lettura che segue i dati, create piuttosto una vista.',
@@ -3735,6 +3740,7 @@ export const resources_app_elements = {
       // OS#85 — 文档的工作表（相互独立的图表，画布底部的标签页）。
       sheets: {
         sheet: '工作表',
+        modified: '未保存的更改',
         tab_menu: '工作表菜单',
         new_sheet: '新建工作表 — 相互独立',
         new_sheet_tooltip: '新建工作表：同一文档中另一个独立的图表。若要创建跟随数据的另一种呈现，请改为创建视图。',
@@ -4479,6 +4485,7 @@ export const resources_app_elements = {
       // OS#85 — ドキュメントのシート（独立した図、キャンバス下部のタブ）。
       sheets: {
         sheet: 'シート',
+        modified: '未保存の変更',
         tab_menu: 'シートメニュー',
         new_sheet: '新しいシート — 独立',
         new_sheet_tooltip: '新しいシート：同じドキュメント内の、独立した別の図です。データに追従する別の見せ方が必要な場合は、代わりにビューを作成してください。',
