@@ -90,6 +90,31 @@ export class Class_GuidedTour {
    * `openTour` est fourni par l'appelant car ouvrir le tour passe par `useTour`, hors de portée
    * du modèle.
    */
+  /**
+   * os#1438 — LE SÉLECTEUR DU GROUPE DE DESSIN, tel que la zone le nomme ELLE-MÊME.
+   *
+   * `#g_drawing` était écrit en dur, et ne valait donc que pour le canevas du document principal
+   * posé dans la page : toute autre zone préfixe ses identifiants par son diagramme, et ce canevas
+   * peut maintenant se détacher dans une fenêtre de navigateur.
+   *
+   * QUAND LE DIAGRAMME N'EST PAS DANS LA PAGE, on rend un sélecteur qui ne désigne RIEN plutôt
+   * qu'un sélecteur qui désignerait autre chose. C'est la seule réponse honnête : la visite montre
+   * l'interface de la page, elle ne peut pas montrer une fenêtre posée sur l'autre écran, et une
+   * cible introuvable fait sauter l'étape là où une mauvaise cible poserait l'infobulle sur un
+   * élément qui n'a rien à voir.
+   *
+   * LE CRITÈRE EST LE DOCUMENT D'ACCUEIL, et non le sélecteur de conteneur : la question posée est
+   * « ce dessin est-il dans la page où je cherche mes cibles ? ». `is_in_main_container` répondrait
+   * non pour un canevas simplement CADRÉ dans une case de la grande zone, qui est pourtant bien
+   * dans la page — la visite y perdrait son étape sans raison.
+   */
+  private _diagramSelector(): string {
+    const da = this._app_data.drawing_area
+    const owner = da.container_owner_document
+    if (owner && owner !== document) return '[data-os-guide-absent]'
+    return da.domIdSelector('g_drawing')
+  }
+
   public start(openTour: () => void): void {
     if (this._sankey.nodes_list.length > 0
       && window.confirm(this._app_data.t('guide.confirm_clear'))) {
@@ -281,8 +306,20 @@ export class Class_GuidedTour {
 
     const steps: StepType[] = [
       // 1 — Tracer son premier flux (le geste fondamental de l'outil).
+      //
+      // os#1438 — LA CIBLE SE DEMANDE À LA ZONE, elle ne s'écrit plus en dur. Deux raisons, et la
+      // seconde est celle qui l'a rendue nécessaire : `#g_drawing` n'est le nom du groupe de
+      // dessin que pour le canevas du document PRINCIPAL (cf. `dom_id_prefix`), et ce canevas peut
+      // désormais vivre dans une fenêtre de navigateur détachée — auquel cas il n'est plus dans la
+      // page où la visite cherche ses cibles.
+      //
+      // La visite ne SUIT PAS le canevas sur le second écran, et c'est délibéré : une visite
+      // guidée montre l'interface à quelqu'un qui la découvre, et pointer une infobulle dans une
+      // fenêtre qu'il n'a peut-être même pas sous les yeux n'apprendrait rien. Elle vise ce qui est
+      // dans la page ; `_diagramSelector` rend une cible introuvable quand le diagramme est
+      // ailleurs, et la bibliothèque saute alors l'étape plutôt que de mesurer 0×0.
       {
-        selector: '#g_drawing',
+        selector: this._diagramSelector(),
         stepInteraction: true,
         content: this._started_empty ? t('guide.first_flow') : t('guide.drawing_area'),
         action: () => {
