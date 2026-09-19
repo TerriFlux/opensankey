@@ -387,6 +387,9 @@ export const resources_inspector = {
         // file: the spreadsheet asks the same question about TABLES, and one name for both
         // would suggest they follow one another.
         json_root_key: 'JSON root key',
+        // 19/09/2026 — the documentation panel lost its bar too: edit / side by side / preview
+        // is how the text is shown, i.e. navigation, so it lives here.
+        doc_mode: 'Documentation display',
         window_subject: 'Window subject',
         short: {
           subject: 'Subject',
@@ -765,6 +768,7 @@ export const resources_inspector = {
         // enregistré, et pas d'un mot générique : le tableur pose la même question sur des
         // TABLES, et un nom commun laisserait croire que les deux se suivent.
         json_root_key: 'Clé racine du JSON',
+        doc_mode: 'Affichage de la documentation',
         // os#1411 — le choix du sujet d'une figure d'élément, venu de la barre des sujets qui
         // vivait au bord de la fenêtre. « De quoi » est la première question de navigation d'une
         // figure d'élément, et elle se pose désormais ici, avec les autres.
@@ -1125,6 +1129,7 @@ export const resources_inspector = {
         figure_data_tag_follow: 'Sigue el diagrama ({{current}})',
         figure_data_tag_pinned_hint: 'Esta figura lee {{pinned}}, el diagrama muestra {{current}}',
         json_root_key: 'Clave raíz del JSON',
+        doc_mode: 'Visualización de la documentación',
         window_subject: 'Sujeto de la ventana',
         short: {
           subject: 'Sujeto',
@@ -1482,6 +1487,7 @@ export const resources_inspector = {
         figure_data_tag_follow: 'Folgt dem Diagramm ({{current}})',
         figure_data_tag_pinned_hint: 'Diese Abbildung liest {{pinned}}, das Diagramm zeigt {{current}}',
         json_root_key: 'JSON-Stammschlüssel',
+        doc_mode: 'Anzeige der Dokumentation',
         window_subject: 'Gegenstand des Fensters',
         short: {
           subject: 'Gegenstand',
@@ -1839,6 +1845,7 @@ export const resources_inspector = {
         figure_data_tag_follow: 'Segue il diagramma ({{current}})',
         figure_data_tag_pinned_hint: 'Questa figura legge {{pinned}}, il diagramma mostra {{current}}',
         json_root_key: 'Chiave radice del JSON',
+        doc_mode: 'Visualizzazione della documentazione',
         window_subject: 'Soggetto della finestra',
         short: {
           subject: 'Soggetto',
@@ -2200,6 +2207,7 @@ export const resources_inspector = {
         figure_data_tag_follow: '跟随图表（{{current}}）',
         figure_data_tag_pinned_hint: '该图形读取 {{pinned}}，图表显示 {{current}}',
         json_root_key: 'JSON 根键',
+        doc_mode: '文档显示',
         window_subject: '窗口主体',
         short: {
           subject: '主体',
@@ -2561,6 +2569,7 @@ export const resources_inspector = {
         figure_data_tag_follow: 'ダイアグラムに従う（{{current}}）',
         figure_data_tag_pinned_hint: 'この図は {{pinned}} を読み、ダイアグラムは {{current}} を表示しています',
         json_root_key: 'JSON のルートキー',
+        doc_mode: '文書の表示',
         window_subject: 'ウィンドウの対象',
         short: {
           subject: '対象',

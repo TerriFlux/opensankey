@@ -178,9 +178,29 @@ export const registerBaseRepresentations = (): void => {
       !app_data.is_static ||
       app_data.documentation_markdown !== '' ||
       app_data.menu_configuration.doc_external !== null,
-    // os#1418 — RIEN À DÉCLARER : la documentation montre le document entier, sans réglage. Ce
-    // qui s'y règlerait un jour (la taille du texte, cf. la note sur le zoom plus haut) n'existe
-    // pas encore ; c'est ici que la ligne s'écrira, et nulle part ailleurs.
+    // os#1418 — la documentation montre le document entier ; la taille du texte (cf. la note sur
+    // le zoom plus haut) n'existe toujours pas et s'écrirait ici, et nulle part ailleurs.
+    //
+    // 19/09/2026 — LE MODE DE LECTURE, déclaré ici bien que le choix vive dans l'éditeur (la
+    // section de navigation du panneau « Filtres et coordonnées », cf. docPanelMode.ts). De sorte
+    // 'navigation' et pas 'style', comme la clé racine du JSON juste au-dessus : édition, côte à
+    // côte ou aperçu ne sont pas trois apparences du même texte, ce sont trois choses différentes
+    // sous les yeux — les sources, le rendu, les deux.
+    //
+    // LA CHAÎNE EST ÉCRITE EN DUR, même entorse et même raison que `json_tab` : la constante est
+    // `DOC_MODE_OPTION_KEY` de `packages/opensankey-editor/.../spreadsheet/docPanelMode.ts`, et OS
+    // base ne remonte pas vers l'éditeur. Les deux doivent rester d'accord.
+    attributes: {
+      doc_mode: figureAttribute<string | undefined>(undefined, 'navigation', {
+        en: 'Display mode',
+        fr: 'Mode d\'affichage',
+        es: 'Modo de visualización',
+        de: 'Anzeigemodus',
+        it: 'Modalità di visualizzazione',
+        'zh-CN': '显示模式',
+        ja: '表示モード'
+      })
+    },
     host: 'component'
   })
 
