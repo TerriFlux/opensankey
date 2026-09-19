@@ -36,7 +36,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp,
   FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold,
-  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaFilter, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus
+  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaCrosshairs, FaEye, FaEyeSlash, FaFilter, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus
 } from 'react-icons/fa'
 import { FaPause, FaPlay } from 'react-icons/fa'
 
@@ -1880,6 +1880,13 @@ export class Class_IconLibrary {
   protected _icon_play = <FaPlay />
   protected _icon_pause = <FaPause />
   protected _icon_filter_tags = <FaFilter />
+  // os#1431 — LE PANNEAU NE RETRANCHE PAS, il dit où l'on se place et quel champ on déploie.
+  // L'entonnoir (`icon_filter_tags`) reste ce qu'il est — filtrer, enlever —, et sert toujours au
+  // badge des vignettes de vues, où il est juste. Le bouton et l'en-tête de « Filtres et
+  // coordonnées » prennent le réticule : viser une tranche et se placer sont le même geste, et
+  // c'est le seul glyphe qui couvre aussi le déploiement d'un champ (arbitrage Julien, 19/09/2026,
+  // sur planche comparée).
+  protected _icon_coordinates = <FaCrosshairs />
 
   protected _icon_label_inside_horiz = logo_label_inside_horiz
   protected _icon_label_inside_vert = logo_label_inside_vert
@@ -2048,6 +2055,7 @@ export class Class_IconLibrary {
   public get icon_to_the_left() { return this._icon_to_the_left }
   public get icon_to_the_right() { return this._icon_to_the_right }
   public get icon_filter_tags() { return this._icon_filter_tags }
+  public get icon_coordinates() { return this._icon_coordinates }
 
 
 
