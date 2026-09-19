@@ -20,7 +20,7 @@ export const resources_sunburst = {
         back: 'back',
         level: 'Level {{index}}',
         group: {
-          read: 'What it reads'
+          read: 'Hierarchy'
         },
       }
     }
@@ -42,7 +42,7 @@ export const resources_sunburst = {
         back: 'remonter',
         level: 'Niveau {{index}}',
         group: {
-          read: 'Ce qu’elle lit'
+          read: 'Hiérarchie'
         },
       }
     }
@@ -64,7 +64,7 @@ export const resources_sunburst = {
         back: 'volver',
         level: 'Nivel {{index}}',
         group: {
-          read: 'Lo que lee'
+          read: 'Jerarquía'
         },
       }
     }
@@ -86,7 +86,7 @@ export const resources_sunburst = {
         back: 'zurück',
         level: 'Ebene {{index}}',
         group: {
-          read: 'Was sie liest'
+          read: 'Hierarchie'
         },
       }
     }
@@ -108,7 +108,7 @@ export const resources_sunburst = {
         back: 'risalire',
         level: 'Livello {{index}}',
         group: {
-          read: 'Ciò che legge'
+          read: 'Gerarchia'
         },
       }
     }
@@ -130,7 +130,7 @@ export const resources_sunburst = {
         back: '返回',
         level: '第 {{index}} 层',
         group: {
-          read: '读取内容'
+          read: '层级'
         },
       }
     }
@@ -152,7 +152,7 @@ export const resources_sunburst = {
         back: '戻る',
         level: 'レベル {{index}}',
         group: {
-          read: '読み取る内容'
+          read: '階層'
         },
       }
     }
