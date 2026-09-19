@@ -40,7 +40,7 @@ export const resources_inspector = {
         nothing_here: 'No settings available for: {{target}}.',
         // os#1394 — settings of the active representation of the main zone.
         representation: {
-          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
           // os#1402 — a setting that has moved must say where it went, otherwise the author
           // keeps looking for it where it used to be.
           axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Navigation and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.',
@@ -356,11 +356,11 @@ export const resources_inspector = {
         // os#1400 — a nature can legitimately have NO navigation section (the radial zoom of a
         // sunburst is a click in the figure, the sorting of a sheet belongs to the component).
         // An empty panel is not a gap, but it must SAY so rather than look broken.
-        nothing_for_representation: 'Nothing applies to “{{representation}}”: this window is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active window.',
-        active_window: 'this window',
+        nothing_for_representation: 'Nothing applies to “{{representation}}”: this pane is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active pane.',
+        active_window: 'this pane',
         // os#1408 — the tools column button, greyed out: the panel exists somewhere, just not for
         // the window being looked at. A guardrail is never mute.
-        no_section_for_window: 'Navigation and coordinates: nothing for “{{representation}}”, which is navigated from within it. They come back as soon as the diagram is the active window.',
+        no_section_for_window: 'Navigation and coordinates: nothing for “{{representation}}”, which is navigated from within it. They come back as soon as the diagram is the active pane.',
         // os#1402 — the analysis axis of a donut or a histogram: navigation, not configuration.
         // It makes parts come in and go out, and it even changes the NATURE of what can be
         // pointed at (a part is a flow, a child node or a tag depending on the axis).
@@ -380,7 +380,7 @@ export const resources_inspector = {
         // 19/09/2026 — the documentation panel lost its bar too: edit / side by side / preview
         // is how the text is shown, i.e. navigation, so it lives here.
         doc_mode: 'Documentation display',
-        window_subject: 'Window subject',
+        window_subject: 'Pane subject',
         short: {
           subject: 'Subject',
           node: 'Nodes',
@@ -425,7 +425,7 @@ export const resources_inspector = {
         nothing_here: 'Aucun réglage disponible pour : {{target}}.',
         // os#1394 — réglages de la représentation active de la grande zone.
         representation: {
-          none: 'Aucune représentation active : ouvrez une fenêtre sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
+          none: 'Aucune représentation active : ouvrez un volet sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
           // os#1402 — un réglage qui a déménagé doit dire où il est parti, sinon l'auteur le
           // cherche là où il l'avait laissé.
           axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Navigation et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.',
@@ -729,11 +729,11 @@ export const resources_inspector = {
         select_elements: 'Sélectionner des éléments',
         deselect_all: 'Tout désélectionner',
         selection_summary: 'Sélection : {{summary}}',
-        nothing_for_representation: 'Rien ne s\'applique à « {{representation}} » : cette fenêtre se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la fenêtre active.',
-        active_window: 'cette fenêtre',
+        nothing_for_representation: 'Rien ne s\'applique à « {{representation}} » : ce volet se navigue en lui-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est le volet actif.',
+        active_window: 'ce volet',
         // os#1408 — le bouton grisé de la colonne d'outils : le panneau existe quelque part, mais
         // pas pour ce qu'on regarde. Un garde-fou n'est jamais muet.
-        no_section_for_window: 'Navigation et coordonnées : rien pour « {{representation}} », qui se navigue en elle-même. Elles reviennent dès que le diagramme est la fenêtre active.',
+        no_section_for_window: 'Navigation et coordonnées : rien pour « {{representation}} », qui se navigue en lui-même. Elles reviennent dès que le diagramme est le volet actif.',
         analysis_axis: 'Axe d\'analyse',
         // os#1420 — les coordonnées sous lesquelles une figure lit ses valeurs. Une figure suit
         // le diagramme par défaut et s'épingle d'un geste : deux couronnes côte à côte, deux
@@ -752,7 +752,7 @@ export const resources_inspector = {
         // os#1411 — le choix du sujet d'une figure d'élément, venu de la barre des sujets qui
         // vivait au bord de la fenêtre. « De quoi » est la première question de navigation d'une
         // figure d'élément, et elle se pose désormais ici, avec les autres.
-        window_subject: 'Sujet de la fenêtre',
+        window_subject: 'Sujet du volet',
         short: {
           subject: 'Sujet',
           node: 'Nœuds',
@@ -795,7 +795,7 @@ export const resources_inspector = {
         },
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
         representation: {
-          none: 'Ninguna representación activa: abra una ventana sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
+          none: 'Ninguna representación activa: abra un panel sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
           axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Navegación y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
           scope: 'Aplicar a',
           scope_pane: 'Esta figura',
@@ -1088,9 +1088,9 @@ export const resources_inspector = {
         select_elements: 'Seleccionar elementos',
         deselect_all: 'Deseleccionar todo',
         selection_summary: 'Selección: {{summary}}',
-        nothing_for_representation: 'Nada se aplica a «{{representation}}»: esta ventana se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la ventana activa.',
-        active_window: 'esta ventana',
-        no_section_for_window: 'Navegación y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es la ventana activa.',
+        nothing_for_representation: 'Nada se aplica a «{{representation}}»: este panel se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es el panel activo.',
+        active_window: 'este panel',
+        no_section_for_window: 'Navegación y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es el panel activo.',
         analysis_axis: 'Eje de análisis',
         figure_data_tags: 'Coordenadas de la figura',
         figure_settings: 'Coordenadas',
@@ -1100,7 +1100,7 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'Esta figura lee {{pinned}}, el diagrama muestra {{current}}',
         json_root_key: 'Clave raíz del JSON',
         doc_mode: 'Visualización de la documentación',
-        window_subject: 'Sujeto de la ventana',
+        window_subject: 'Sujeto del panel',
         short: {
           subject: 'Sujeto',
           node: 'Nodos',
@@ -1143,7 +1143,7 @@ export const resources_inspector = {
         },
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
         representation: {
-          none: 'Keine aktive Darstellung: Öffnen Sie ein Fenster auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
+          none: 'Keine aktive Darstellung: Öffnen Sie einen Bereich auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
           axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Navigation und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
           scope: 'Anwenden auf',
           scope_pane: 'Diese Abbildung',
@@ -1436,9 +1436,9 @@ export const resources_inspector = {
         select_elements: 'Elemente auswählen',
         deselect_all: 'Auswahl aufheben',
         selection_summary: 'Auswahl: {{summary}}',
-        nothing_for_representation: 'Nichts gilt für „{{representation}}“: Dieses Fenster wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm das aktive Fenster ist.',
-        active_window: 'dieses Fenster',
-        no_section_for_window: 'Navigation und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm das aktive Fenster ist.',
+        nothing_for_representation: 'Nichts gilt für „{{representation}}“: Dieser Bereich wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm der aktive Bereich ist.',
+        active_window: 'dieser Bereich',
+        no_section_for_window: 'Navigation und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm der aktive Bereich ist.',
         analysis_axis: 'Analyseachse',
         figure_data_tags: 'Koordinaten der Abbildung',
         figure_settings: 'Koordinaten',
@@ -1448,7 +1448,7 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'Diese Abbildung liest {{pinned}}, das Diagramm zeigt {{current}}',
         json_root_key: 'JSON-Stammschlüssel',
         doc_mode: 'Anzeige der Dokumentation',
-        window_subject: 'Gegenstand des Fensters',
+        window_subject: 'Gegenstand des Bereichs',
         short: {
           subject: 'Gegenstand',
           node: 'Knoten',
@@ -1491,7 +1491,7 @@ export const resources_inspector = {
         },
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
         representation: {
-          none: 'Nessuna rappresentazione attiva: aprite una finestra su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
+          none: 'Nessuna rappresentazione attiva: aprite un riquadro su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
           axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Navigazione e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
           scope: 'Applicare a',
           scope_pane: 'Questa figura',
@@ -1784,9 +1784,9 @@ export const resources_inspector = {
         select_elements: 'Selezionare elementi',
         deselect_all: 'Deselezionare tutto',
         selection_summary: 'Selezione: {{summary}}',
-        nothing_for_representation: 'Nulla si applica a «{{representation}}»: questa finestra si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la finestra attiva.',
-        active_window: 'questa finestra',
-        no_section_for_window: 'Navigazione e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è la finestra attiva.',
+        nothing_for_representation: 'Nulla si applica a «{{representation}}»: questo riquadro si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è il riquadro attivo.',
+        active_window: 'questo riquadro',
+        no_section_for_window: 'Navigazione e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è il riquadro attivo.',
         analysis_axis: 'Asse di analisi',
         figure_data_tags: 'Coordinate della figura',
         figure_settings: 'Coordinate',
@@ -1796,7 +1796,7 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'Questa figura legge {{pinned}}, il diagramma mostra {{current}}',
         json_root_key: 'Chiave radice del JSON',
         doc_mode: 'Visualizzazione della documentazione',
-        window_subject: 'Soggetto della finestra',
+        window_subject: 'Soggetto del riquadro',
         short: {
           subject: 'Soggetto',
           node: 'Nodi',
@@ -1838,7 +1838,7 @@ export const resources_inspector = {
         },
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
         representation: {
-          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
           axis_in_navigation: '分析轴（按此分解、按此比较）在「导航与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
           scope: '应用于',
           scope_pane: '本图',
@@ -2136,9 +2136,9 @@ export const resources_inspector = {
         select_elements: '选择元素',
         deselect_all: '取消全选',
         selection_summary: '所选：{{summary}}',
-        nothing_for_representation: '没有可用项适用于{{representation}}：该窗口在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗口时，阈值、层级和标签会重新出现。',
-        active_window: '该窗口',
-        no_section_for_window: '导航与坐标：{{representation}} 没有可用项，该窗口在其内部导航。当图表成为活动窗口时，它们会重新出现。',
+        nothing_for_representation: '没有可用项适用于{{representation}}：该窗格在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗格时，阈值、层级和标签会重新出现。',
+        active_window: '该窗格',
+        no_section_for_window: '导航与坐标：{{representation}} 没有可用项，该窗格在其内部导航。当图表成为活动窗格时，它们会重新出现。',
         analysis_axis: '分析轴',
         figure_data_tags: '图形坐标',
         figure_settings: '坐标',
@@ -2148,7 +2148,7 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: '该图形读取 {{pinned}}，图表显示 {{current}}',
         json_root_key: 'JSON 根键',
         doc_mode: '文档显示',
-        window_subject: '窗口主体',
+        window_subject: '窗格主体',
         short: {
           subject: '主体',
           node: '节点',
@@ -2190,7 +2190,7 @@ export const resources_inspector = {
         },
         nothing_here: '{{target}} に利用できる設定はありません。',
         representation: {
-          none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
           axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「ナビゲーションと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
           scope: '適用先',
           scope_pane: 'この図',
@@ -2488,9 +2488,9 @@ export const resources_inspector = {
         select_elements: '要素を選択',
         deselect_all: '選択をすべて解除',
         selection_summary: '選択：{{summary}}',
-        nothing_for_representation: '{{representation}} に適用されるものはありません。このウィンドウはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなウィンドウになれば、しきい値・階層・タグは戻ります。',
-        active_window: 'このウィンドウ',
-        no_section_for_window: 'ナビゲーションと座標：{{representation}} には該当するものがありません。このウィンドウはそれ自体の中で操作します。ダイアグラムがアクティブなウィンドウになれば戻ります。',
+        nothing_for_representation: '{{representation}} に適用されるものはありません。このペインはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなペインになれば、しきい値・階層・タグは戻ります。',
+        active_window: 'このペイン',
+        no_section_for_window: 'ナビゲーションと座標：{{representation}} には該当するものがありません。このペインはそれ自体の中で操作します。ダイアグラムがアクティブなペインになれば戻ります。',
         analysis_axis: '分析の軸',
         figure_data_tags: '図の座標',
         figure_settings: '座標',
@@ -2500,7 +2500,7 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'この図は {{pinned}} を読み、ダイアグラムは {{current}} を表示しています',
         json_root_key: 'JSON のルートキー',
         doc_mode: '文書の表示',
-        window_subject: 'ウィンドウの対象',
+        window_subject: 'ペインの対象',
         short: {
           subject: '対象',
           node: 'ノード',
