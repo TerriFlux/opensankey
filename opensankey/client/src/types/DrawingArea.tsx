@@ -201,7 +201,23 @@ export class Class_DrawingArea {
    * propriété de la PAGE, pas d'un canevas : il n'a rien à faire ici.
    */
   public get static(): boolean { return this.application_data.is_static }
-  public is_unitary = false
+  /**
+   * Cette zone est un APERÇU : le board unitaire, l'étoile d'une figure. Voir les appelants pour
+   * ce que la marque emporte (cadrage sur le nœud central, aucune écriture dans l'historique).
+   *
+   * os#1431 — ELLE EMPORTE AUSSI LE MODE DE SOURIS (retour de Julien, 19/09 : sur la zone du
+   * Sankey unitaire, le curseur était en « édition » et rien ne se sélectionnait). Une zone naît
+   * en mode 'edition' — le défaut du diagramme qu'on construit, que la colonne d'outils bascule en
+   * sélection —, mais un aperçu n'a pas de colonne d'outils : personne n'était là pour le faire
+   * passer en sélection, et il gardait le curseur de création à vie. La marque est donc le seul
+   * endroit qui sache que cette zone ne se dessine pas, elle se lit.
+   */
+  public get is_unitary(): boolean { return this._is_unitary }
+  public set is_unitary(v: boolean) {
+    this._is_unitary = v
+    if (v) this.setSelectionMode()
+  }
+  private _is_unitary = false
 
   /**
    * OS#1250 phase 2 — le fichier chargé est antérieur à 0.92 et ses coordonnées
