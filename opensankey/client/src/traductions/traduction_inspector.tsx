@@ -242,7 +242,7 @@ export const resources_inspector = {
         // OS#1278 — les AXES d'une figure d'analyse (décomposer par / comparer selon). Le
         // préfixe reste `inspector.analysis` bien que l'onglet Analyse de l'inspecteur ait été
         // supprimé (16/09/2026) : ces libellés servent maintenant le panneau de navigation
-        // (AnalysisAxisNavigation), qui est le seul endroit où l'axe se règle. Renommer le
+        // (CoordinatesNavigation), qui est le seul endroit où l'axe se règle. Renommer le
         // préfixe casserait les sept blocs pour rien.
         analysis: {
           decompose_by: 'Decompose by',

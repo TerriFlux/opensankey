@@ -227,7 +227,7 @@ export const registerBaseRepresentations = (): void => {
     //  - la RACINE nomme le sujet — elle est posée par le `draw` ci-dessous depuis l'élément de
     //    la fenêtre, et 'identity' interdit qu'un style ou une figure voisine vienne l'écraser ;
     //  - l'ÉTIQUETTE DE DONNÉES ÉPINGLÉE (os#1420) est un dictionnaire, réglé par sa propre
-    //    section du panneau de navigation (FigureDataTagsNavigation, OS+).
+    //    section du panneau de navigation (CoordinatesNavigation, OS+ — os#1431).
     attributes: {
       ...SUNBURST_ATTRIBUTES,
       root_ids: figureAttribute<string[] | undefined>(undefined, 'identity', {
