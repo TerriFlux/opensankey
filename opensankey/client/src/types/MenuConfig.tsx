@@ -1970,6 +1970,40 @@ export class Class_MenuConfig {
   }
 
   /**
+   * os#1433 (19/09/2026) — LA GRANDE ZONE REVIENT AU DIAGRAMME SEUL.
+   *
+   * Arbitrage de Julien : « quand on ouvre une feuille vierge, il n'y a plus qu'une seule
+   * fenêtre, la zone de dessin. Pareil quand on fait Nouveau diagramme : ça doit supprimer les
+   * fenêtres. »
+   *
+   * C'est la limite de la règle « la grille est de l'espace de travail », et elle est juste :
+   * garder sa mise en page d'un onglet à l'autre est un service, la garder devant une page
+   * BLANCHE n'en est pas un. Une feuille vierge n'a rien dont un tableur, une doc ou une
+   * couronne puissent parler ; les fenêtres y regardent toutes le vide, et il faut les fermer
+   * une par une avant de pouvoir travailler. Repartir du diagramme seul est le seul état qui ne
+   * demande rien à personne.
+   *
+   * La différence avec `closeWindowsPinnedOnSheet` est celle des deux gestes : BASCULER vers une
+   * feuille qui existe garde la grille (on retrouve sa mise en page, seuls les épinglages
+   * partent), CRÉER une feuille ou un diagramme la remet à zéro. Le premier reprend un travail,
+   * le second en commence un.
+   *
+   * On ne repose rien à la main : la liste vidée, `_normalizeMainZoneOccupants` y met le canevas
+   * en principale — c'est son cas « aucune fenêtre », déjà écrit et déjà le défaut d'un document
+   * neuf. Une règle, un seul endroit.
+   */
+  public resetMainZoneToCanvas(): void {
+    const host = this._host
+    host._main_zone_occupants = []
+    host._main_zone_detached.clear()
+    host._main_zone_active_id = null
+    host._main_zone_active_pane_key = null
+    host._main_zone_selected_pane_keys = []
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+
+  /**
    * os#1433 (19/09/2026) — QUITTER UNE FEUILLE FERME LES FENÊTRES ÉPINGLÉES SUR SES ÉLÉMENTS.
    *
    * C'est la seconde moitié de « à qui appartient la disposition », l'autre étant la garde

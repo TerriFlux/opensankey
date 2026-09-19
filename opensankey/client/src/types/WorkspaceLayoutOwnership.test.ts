@@ -73,14 +73,28 @@ describe('os#1433 la grille est de l espace de travail', () => {
     expect(windowIds(main)).toEqual(avant)
   })
 
-  it('une feuille neuve garde la grille', () => {
+  it('une feuille VIERGE n a qu une fenetre, la zone de dessin', () => {
+    // Arbitrage de Julien, et c est la limite de la regle du dessus : garder sa mise en page d un
+    // onglet a l autre est un service, la garder devant une page BLANCHE n en est pas un. Une
+    // feuille vierge n a rien dont un tableur ou une couronne puissent parler.
     const { main } = buildTwoSheets()
     main.menu_configuration.showMainZoneOccupant(MAIN_ZONE_JSON_ID, 'right')
 
     main.createNewSheet(false)
 
-    expect(windowIds(main)).toContain(MAIN_ZONE_JSON_ID)
-    expect(windowIds(main)).toContain(MAIN_ZONE_CANVAS_ID)
+    expect(windowIds(main)).toEqual([MAIN_ZONE_CANVAS_ID])
+  })
+
+  it('« Nouveau diagramme » supprime les fenetres, redessin ou pas', () => {
+    // Elles survivaient, et ce n etait pas un oubli mais une consequence : la grande zone est de
+    // l HOTE depuis le lot 3, et `reset()` ne remet a zero que le DOCUMENT. On repartait d un
+    // diagramme vierge dans la mise en page du precedent.
+    const { main } = buildTwoSheets()
+    main.menu_configuration.showMainZoneOccupant(MAIN_ZONE_JSON_ID, 'right')
+
+    main.reinitialization(false)
+
+    expect(windowIds(main)).toEqual([MAIN_ZONE_CANVAS_ID])
   })
 
   it('un fichier ecrit AVANT ce correctif ne rejoue plus la disposition de ses feuilles', () => {
@@ -112,43 +126,43 @@ describe('os#1433 la grille est de l espace de travail', () => {
 
 describe('os#1433 une fenetre epinglee appartient a sa feuille', () => {
 
-  it('quitter une feuille ferme la fenetre epinglee sur un de ses noeuds', () => {
-    // Le cas de Julien : le sunburst sur le noeud « Fruits » suivait sur la feuille neuve, ou ce
-    // noeud n existe pas. Il s ouvrait vide en continuant d annoncer le nom d avant.
-    const { main } = buildTwoSheets()
+  it('basculer vers une feuille qui existe ferme la fenetre epinglee sur celle qu on quitte', () => {
+    // Le cas de Julien vu par l autre bout : le sunburst sur le noeud « Fruits » suivait sur la
+    // feuille d arrivee, ou ce noeud n existe pas. Il s ouvrait vide en continuant d annoncer le
+    // nom d avant. La bascule, elle, GARDE la grille : on reprend un travail, on n en commence
+    // pas un (cf. la creation, plus haut, qui remet tout au diagramme seul).
+    const { main, sheet_b } = buildTwoSheets()
     const pinned = main.menu_configuration.openMainZoneWindow(
       { kind: 'node', id: 'n_a' }, MAIN_ZONE_JSON_ID, 'right'
     )
     expect(windowIds(main)).toContain(pinned)
 
-    main.createNewSheet(false)
+    main.switchToSheet(sheet_b, false)
 
     expect(windowIds(main)).not.toContain(pinned)
+    expect(windowIds(main)).toContain(MAIN_ZONE_CANVAS_ID)
   })
 
-  it('une fenetre a sujet diagramme survit, une fenetre qui SUIT la selection aussi', () => {
-    // Les deux ne nomment aucun identifiant : la premiere montre le diagramme quel qu il soit, la
-    // seconde se repointe sur ce qu on touche. Les fermer serait une perte sans raison.
+  it('a la bascule, un sujet diagramme survit, un sujet qui SUIT la selection aussi', () => {
+    // Les deux ne nomment aucun identifiant : le premier montre le diagramme quel qu il soit, le
+    // second se repointe sur ce qu on touche. Les fermer serait une perte sans raison.
     const { main, sheet_b } = buildTwoSheets()
     const suiveuse = main.menu_configuration.openMainZoneWindow({ kind: 'selection' }, MAIN_ZONE_JSON_ID, 'right')
-    const voisine = main.menu_configuration.openMainZoneWindow(
-      { kind: 'diagram', sheet: sheet_b }, MAIN_ZONE_CANVAS_ID, 'right'
-    )
 
-    main.createNewSheet(false)
+    main.switchToSheet(sheet_b, false)
 
     expect(windowIds(main)).toContain(suiveuse)
-    expect(windowIds(main)).toContain(voisine)
   })
 
-  it('une fenetre epinglee sur une AUTRE feuille survit : ses identifiants sont ailleurs', () => {
-    // On quitte A ; la fenetre nomme B. Ses objets ne bougent pas, elle garde son sens.
+  it('a la bascule, une fenetre epinglee sur une AUTRE feuille survit', () => {
+    // On quitte A vers B ; la fenetre nomme B. Ses objets ne bougent pas, elle garde son sens —
+    // et en arrivant sur B elle devient une fenetre sur la feuille courante, ce qu elle disait.
     const { main, sheet_b } = buildTwoSheets()
     const sur_b = main.menu_configuration.openMainZoneWindow(
       { kind: 'node', id: 'n_b', sheet: sheet_b }, MAIN_ZONE_JSON_ID, 'right'
     )
 
-    main.createNewSheet(false)
+    main.switchToSheet(sheet_b, false)
 
     expect(windowIds(main)).toContain(sur_b)
   })
