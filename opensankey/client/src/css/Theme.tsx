@@ -2331,17 +2331,23 @@ export const tagStyles = {
 // SIZES
 // ===============================
 export const sizes = {
+  // Les boutons de barre d'outils ne portent QUE des icônes : le `fontSize` du baseStyle
+  // (0.7rem, calibré pour des libellés) donnait 11 px de glyphe dans un bouton de 32 px —
+  // illisible, et plus petit que les logos d'élément voisins (shrinkLogo, 16 px). On ne touche
+  // pas à la taille du BOUTON, seulement à celle du dessin : 1rem, la même que ces logos.
   sizeToolbarButtonStatic: defineStyle({
     width: '3rem',
     height: '3rem',
     minW: 'unset',
     padding: '0.2rem',
+    fontSize: '1rem',
   }),
   sizeToolbarButton: defineStyle({
     width: '2rem',
     height: '2rem',
     minW: 'unset',
     padding: '0.2rem',
+    fontSize: '1rem',
   }),
   sizeConfigButton: defineStyle({
     width: '1.5rem',

@@ -660,11 +660,13 @@ const LineShapeIcon: React.FC<ShapeIconProps> = ({
 /**
  * Redessine un logo d'élément à la taille des glyphes de la colonne d'outils, en
  * conservant ses proportions. Les logos de menu sont posés en 22-26 px : dans un
- * bouton d'outil (1 rem de contenu) ils débordaient de leur cadre. On ne touche
+ * bouton d'outil (1 rem de contenu) ils débordaient de leur cadre. La cible suit le
+ * `fontSize` des tailles `sizeToolbarButton*` (1 rem = 16 px) : outil et glyphe
+ * FontAwesome voisins se lisent à la même échelle. On ne touche
  * qu'aux attributs de taille — le dessin, lui, reste celui que l'application
  * emploie partout ailleurs pour désigner ces mêmes objets.
  */
-const shrinkLogo = (logo: JSX.Element, target_height = 14): JSX.Element => {
+const shrinkLogo = (logo: JSX.Element, target_height = 16): JSX.Element => {
   const w = Number(logo.props.width)
   const h = Number(logo.props.height)
   const width = (Number.isFinite(w) && Number.isFinite(h) && h > 0)
