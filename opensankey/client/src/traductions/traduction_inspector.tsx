@@ -43,7 +43,7 @@ export const resources_inspector = {
           none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
           // os#1402 — a setting that has moved must say where it went, otherwise the author
           // keeps looking for it where it used to be.
-          axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Filters and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.',
+          axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Navigation and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.',
           // os#1416 — the scope of a figure setting. Only shown when the window holds more than
           // one figure: with a single one, both scopes name the same drawing.
           scope: 'Apply to',
@@ -352,7 +352,7 @@ export const resources_inspector = {
       filter_panel: {
         // Jalon 79 — « coordonnées » (année, scénario, géographie : mêmes nœuds,
         // d'autres chiffres), pas « légende » : ce panneau pilote la lecture.
-        title: 'Filters and coordinates',
+        title: 'Navigation and coordinates',
         filter: 'Filter',
         select: 'Select',
         select_tooltip: 'Select elements by type and tag (bulk operations)',
@@ -366,11 +366,11 @@ export const resources_inspector = {
         // os#1400 — a nature can legitimately have NO navigation section (the radial zoom of a
         // sunburst is a click in the figure, the sorting of a sheet belongs to the component).
         // An empty panel is not a gap, but it must SAY so rather than look broken.
-        nothing_for_representation: 'No filter applies to “{{representation}}”: this window is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active window.',
+        nothing_for_representation: 'Nothing applies to “{{representation}}”: this window is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active window.',
         active_window: 'this window',
         // os#1408 — the tools column button, greyed out: the panel exists somewhere, just not for
         // the window being looked at. A guardrail is never mute.
-        no_section_for_window: 'Filters and coordinates: nothing for “{{representation}}”, which is navigated from within it. They come back as soon as the diagram is the active window.',
+        no_section_for_window: 'Navigation and coordinates: nothing for “{{representation}}”, which is navigated from within it. They come back as soon as the diagram is the active window.',
         // os#1402 — the analysis axis of a donut or a histogram: navigation, not configuration.
         // It makes parts come in and go out, and it even changes the NATURE of what can be
         // pointed at (a part is a flow, a child node or a tag depending on the axis).
@@ -438,7 +438,7 @@ export const resources_inspector = {
           none: 'Aucune représentation active : ouvrez une fenêtre sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
           // os#1402 — un réglage qui a déménagé doit dire où il est parti, sinon l'auteur le
           // cherche là où il l'avait laissé.
-          axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Filtres et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.',
+          axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Navigation et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.',
           // os#1416 — la portée d'un réglage de figure. Offerte seulement quand la fenêtre
           // montre plus d'une vignette : à une seule, les deux portées désignent le même dessin.
           scope: 'Appliquer à',
@@ -738,7 +738,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Filtres et coordonnées',
+        title: 'Navigation et coordonnées',
         filter: 'Filtrer',
         select: 'Sélectionner',
         select_tooltip: 'Sélectionner des éléments par type et par tag (opérations groupées)',
@@ -749,11 +749,11 @@ export const resources_inspector = {
         select_elements: 'Sélectionner des éléments',
         deselect_all: 'Tout désélectionner',
         selection_summary: 'Sélection : {{summary}}',
-        nothing_for_representation: 'Aucun filtre ne s\'applique à « {{representation}} » : cette fenêtre se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la fenêtre active.',
+        nothing_for_representation: 'Rien ne s\'applique à « {{representation}} » : cette fenêtre se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la fenêtre active.',
         active_window: 'cette fenêtre',
         // os#1408 — le bouton grisé de la colonne d'outils : le panneau existe quelque part, mais
         // pas pour ce qu'on regarde. Un garde-fou n'est jamais muet.
-        no_section_for_window: 'Filtres et coordonnées : rien pour « {{representation}} », qui se navigue en elle-même. Ils reviennent dès que le diagramme est la fenêtre active.',
+        no_section_for_window: 'Navigation et coordonnées : rien pour « {{representation}} », qui se navigue en elle-même. Elles reviennent dès que le diagramme est la fenêtre active.',
         analysis_axis: 'Axe d\'analyse',
         // os#1420 — les coordonnées sous lesquelles une figure lit ses valeurs. Une figure suit
         // le diagramme par défaut et s'épingle d'un geste : deux couronnes côte à côte, deux
@@ -816,7 +816,7 @@ export const resources_inspector = {
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
         representation: {
           none: 'Ninguna representación activa: abra una ventana sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
-          axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Filtros y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
+          axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Navegación y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
           scope: 'Aplicar a',
           scope_pane: 'Esta figura',
           scope_selection: 'Selección ({{count}})',
@@ -1107,7 +1107,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Filtros y coordenadas',
+        title: 'Navegación y coordenadas',
         filter: 'Filtrar',
         select: 'Seleccionar',
         select_tooltip: 'Seleccionar elementos por tipo y etiqueta (operaciones en grupo)',
@@ -1118,9 +1118,9 @@ export const resources_inspector = {
         select_elements: 'Seleccionar elementos',
         deselect_all: 'Deseleccionar todo',
         selection_summary: 'Selección: {{summary}}',
-        nothing_for_representation: 'Ningún filtro se aplica a «{{representation}}»: esta ventana se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la ventana activa.',
+        nothing_for_representation: 'Nada se aplica a «{{representation}}»: esta ventana se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la ventana activa.',
         active_window: 'esta ventana',
-        no_section_for_window: 'Filtros y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es la ventana activa.',
+        no_section_for_window: 'Navegación y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es la ventana activa.',
         analysis_axis: 'Eje de análisis',
         figure_data_tags: 'Coordenadas de la figura',
         figure_settings: 'Lo que muestra la figura',
@@ -1174,7 +1174,7 @@ export const resources_inspector = {
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
         representation: {
           none: 'Keine aktive Darstellung: Öffnen Sie ein Fenster auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
-          axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Filter und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
+          axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Navigation und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
           scope: 'Anwenden auf',
           scope_pane: 'Diese Abbildung',
           scope_selection: 'Auswahl ({{count}})',
@@ -1465,7 +1465,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Filter und Koordinaten',
+        title: 'Navigation und Koordinaten',
         filter: 'Filtern',
         select: 'Auswählen',
         select_tooltip: 'Elemente nach Typ und Tag auswählen (Sammelvorgänge)',
@@ -1476,9 +1476,9 @@ export const resources_inspector = {
         select_elements: 'Elemente auswählen',
         deselect_all: 'Auswahl aufheben',
         selection_summary: 'Auswahl: {{summary}}',
-        nothing_for_representation: 'Kein Filter gilt für „{{representation}}“: Dieses Fenster wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm das aktive Fenster ist.',
+        nothing_for_representation: 'Nichts gilt für „{{representation}}“: Dieses Fenster wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm das aktive Fenster ist.',
         active_window: 'dieses Fenster',
-        no_section_for_window: 'Filter und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm das aktive Fenster ist.',
+        no_section_for_window: 'Navigation und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm das aktive Fenster ist.',
         analysis_axis: 'Analyseachse',
         figure_data_tags: 'Koordinaten der Abbildung',
         figure_settings: 'Was die Abbildung zeigt',
@@ -1532,7 +1532,7 @@ export const resources_inspector = {
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
         representation: {
           none: 'Nessuna rappresentazione attiva: aprite una finestra su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
-          axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Filtri e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
+          axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Navigazione e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
           scope: 'Applicare a',
           scope_pane: 'Questa figura',
           scope_selection: 'Selezione ({{count}})',
@@ -1823,7 +1823,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Filtri e coordinate',
+        title: 'Navigazione e coordinate',
         filter: 'Filtrare',
         select: 'Selezionare',
         select_tooltip: 'Selezionare elementi per tipo e tag (operazioni di gruppo)',
@@ -1834,9 +1834,9 @@ export const resources_inspector = {
         select_elements: 'Selezionare elementi',
         deselect_all: 'Deselezionare tutto',
         selection_summary: 'Selezione: {{summary}}',
-        nothing_for_representation: 'Nessun filtro si applica a «{{representation}}»: questa finestra si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la finestra attiva.',
+        nothing_for_representation: 'Nulla si applica a «{{representation}}»: questa finestra si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la finestra attiva.',
         active_window: 'questa finestra',
-        no_section_for_window: 'Filtri e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è la finestra attiva.',
+        no_section_for_window: 'Navigazione e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è la finestra attiva.',
         analysis_axis: 'Asse di analisi',
         figure_data_tags: 'Coordinate della figura',
         figure_settings: 'Ciò che la figura mostra',
@@ -1889,7 +1889,7 @@ export const resources_inspector = {
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
         representation: {
           none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
-          axis_in_navigation: '分析轴（按此分解、按此比较）在「筛选与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
+          axis_in_navigation: '分析轴（按此分解、按此比较）在「导航与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
           scope: '应用于',
           scope_pane: '本图',
           scope_selection: '选择（{{count}}）',
@@ -2185,7 +2185,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: '筛选与坐标',
+        title: '导航与坐标',
         filter: '筛选',
         select: '选择',
         select_tooltip: '按类型与标签选择元素（批量操作）',
@@ -2196,9 +2196,9 @@ export const resources_inspector = {
         select_elements: '选择元素',
         deselect_all: '取消全选',
         selection_summary: '所选：{{summary}}',
-        nothing_for_representation: '没有筛选项适用于{{representation}}：该窗口在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗口时，阈值、层级和标签会重新出现。',
+        nothing_for_representation: '没有可用项适用于{{representation}}：该窗口在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗口时，阈值、层级和标签会重新出现。',
         active_window: '该窗口',
-        no_section_for_window: '筛选与坐标：{{representation}} 没有可用项，该窗口在其内部导航。当图表成为活动窗口时，它们会重新出现。',
+        no_section_for_window: '导航与坐标：{{representation}} 没有可用项，该窗口在其内部导航。当图表成为活动窗口时，它们会重新出现。',
         analysis_axis: '分析轴',
         figure_data_tags: '图形坐标',
         figure_settings: '图形展示的内容',
@@ -2251,7 +2251,7 @@ export const resources_inspector = {
         nothing_here: '{{target}} に利用できる設定はありません。',
         representation: {
           none: 'No active representation: open a window on a node or a flow (star, donut, bars, sunburst) to set it here.',
-          axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「絞り込みと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
+          axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「ナビゲーションと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
           scope: '適用先',
           scope_pane: 'この図',
           scope_selection: '選択（{{count}}）',
@@ -2547,7 +2547,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: '絞り込みと座標',
+        title: 'ナビゲーションと座標',
         filter: '絞り込み',
         select: '選択',
         select_tooltip: '種類とタグで要素を選択します（一括操作）',
@@ -2558,9 +2558,9 @@ export const resources_inspector = {
         select_elements: '要素を選択',
         deselect_all: '選択をすべて解除',
         selection_summary: '選択：{{summary}}',
-        nothing_for_representation: '{{representation}} に適用される絞り込みはありません。このウィンドウはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなウィンドウになれば、しきい値・階層・タグは戻ります。',
+        nothing_for_representation: '{{representation}} に適用されるものはありません。このウィンドウはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなウィンドウになれば、しきい値・階層・タグは戻ります。',
         active_window: 'このウィンドウ',
-        no_section_for_window: '絞り込みと座標：{{representation}} には該当するものがありません。このウィンドウはそれ自体の中で操作します。ダイアグラムがアクティブなウィンドウになれば戻ります。',
+        no_section_for_window: 'ナビゲーションと座標：{{representation}} には該当するものがありません。このウィンドウはそれ自体の中で操作します。ダイアグラムがアクティブなウィンドウになれば戻ります。',
         analysis_axis: '分析の軸',
         figure_data_tags: '図の座標',
         figure_settings: '図が示すもの',
