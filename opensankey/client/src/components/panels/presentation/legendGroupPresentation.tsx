@@ -169,11 +169,20 @@ const currentDrawingAsSvg = (drawing_area: Class_DrawingArea, suffix: string): s
   const w = (drawing_area.is_paper_mode ? bounds.x + bounds.width : bounds.width) * scale + 2 * VIEW_PADDING
   const h = (drawing_area.is_paper_mode ? bounds.y + bounds.height : bounds.height) * scale + 2 * VIEW_PADDING
   const clone = node.cloneNode(true) as SVGSVGElement
-  clone.querySelector('#g_drawing')
+  // os#1438 — PAR LE SÉLECTEUR DE LA ZONE, et non par les noms nus. Ces trois identifiants ne
+  // sont nus QUE pour le canevas du document principal ; toute autre zone les préfixe par son
+  // identifiant de diagramme (cf. `dom_id_prefix`). Écrits en dur, ils ne trouvaient rien dès que
+  // la présentation portait sur une feuille voisine, un aperçu unitaire ou une vue en coulisse :
+  // le cadre de viewport restait dans l'image, la découpe rognait le dessin, et le recadrage ne
+  // s'appliquait pas — sans la moindre erreur, puisque `querySelector` rend simplement `null`.
+  //
+  // Le clone est SCOPÉ (on interroge le clone, pas le document), donc il n'y avait pas de risque
+  // de prendre le mauvais élément : seulement celui de n'en prendre aucun.
+  clone.querySelector(drawing_area.domIdSelector('g_drawing'))
     ?.setAttribute('transform', `translate(${-ox * scale + VIEW_PADDING},${-oy * scale + VIEW_PADDING}) scale(${scale})`)
   clone.querySelectorAll('input').forEach(input => input.remove())
-  clone.querySelector('#viewport_border')?.remove()
-  clone.querySelector('#g_clip')?.removeAttribute('clip-path')
+  clone.querySelector(drawing_area.domIdSelector('viewport_border'))?.remove()
+  clone.querySelector(drawing_area.domIdSelector('g_clip'))?.removeAttribute('clip-path')
   const inner = renameIds(clone.innerHTML, suffix)
   return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"' +
     ` viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +

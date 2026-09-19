@@ -50,6 +50,12 @@ const makeFakeAppData = (initial_node_ids: string[] = []) => {
   const drawing_area = {
     sankey,
     mouse_mode,
+    // os#1438 — la visite demande à la ZONE le sélecteur de son groupe de dessin, au lieu de
+    // l'écrire en dur : le canevas du principal le nomme `g_drawing`, toute autre zone le préfixe,
+    // et le principal peut désormais se détacher dans une fenêtre. `container_owner_document` nul
+    // vaut « dans la page », qui est le cas de tous les scénarios de ce fichier.
+    container_owner_document: null as Document | null,
+    domIdSelector: (name: string) => '[id="' + name + '"]',
     isInEditionMode: jest.fn(() => mouse_mode.current === 'edition'),
     setToModeEdition: jest.fn((_: boolean) => { mouse_mode.current = _ ? 'edition' : 'selection' }),
     areaAutoFit: jest.fn(),
@@ -262,8 +268,12 @@ describe('#1255 — visite guidée « premier geste »', () => {
     // `.tour_link_value` n'existait qu'une fois l'onglet Valeur ouvert — donc après le début de
     // l'étape : cible mesurée à 0×0. On vise le panneau, présent depuis la construction.
     expect(selectors).not.toContain('.tour_link_value')
+    // os#1438 — la cible du diagramme se demande à la ZONE (`domIdSelector`) au lieu de s'écrire
+    // en dur : elle vaut `[id="g_drawing"]` pour le canevas du principal, et le canevas peut
+    // désormais se détacher dans une fenêtre, auquel cas la visite saute l'étape (cf. le cas qui
+    // suit). Le sélecteur par attribut résout le MÊME élément que `#g_drawing`.
     expect(selectors).toEqual([
-      '#g_drawing',
+      '[id="g_drawing"]',
       '[data-panel-id="config"]',
       '.inspector_breadcrumb',
       '.topbar_button_save_in_cache',

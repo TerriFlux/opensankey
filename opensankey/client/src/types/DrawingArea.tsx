@@ -363,8 +363,56 @@ export class Class_DrawingArea {
    * sondes et tout ce qui les cite dehors sont inchangés. Même parade que `viewport_clip_id`,
    * qui se namespace déjà pour la même raison.
    */
+  /**
+   * os#1438 (19/09/2026) — LE PRÉFIXE EST UNE QUESTION D'IDENTITÉ, PLUS UNE QUESTION DE PLACE.
+   *
+   * Le préfixe existe pour UNE raison : deux canevas dans le MÊME document DOM se disputent
+   * `#g_drawing`, `#draw_zoom`, `#os_drop_shadow` — quatorze doublons mesurés au lot 0, et la
+   * première résolution GLOBALE à en croiser deux prend le premier venu.
+   *
+   * Le critère était la PLACE (`is_in_main_container`, donc `container_selector === '#sankey_app'`),
+   * et c'était le bon choix ALORS : le lot 0 avait montré que « je suis la zone affichée de mon
+   * application » ne distingue rien dès qu'il y a deux applications, puisque chacune a la sienne.
+   *
+   * Ce n'est plus vrai depuis le LOT 1 : l'espace de travail a un document principal unique
+   * (`workspace.main`, d'où `is_main`). « Je suis le document principal ET je suis sa zone
+   * affichée » est donc unique par construction, exactement comme `#sankey_app` — mais ce couple
+   * SURVIT AU DÉPLACEMENT DU CANEVAS, là où le sélecteur de conteneur, lui, change.
+   *
+   * CE QUE ÇA DÉBLOQUE : détacher le canevas principal dans une fenêtre de navigateur sans
+   * retourner à chaud les identifiants dont dépendent l'export SVG, les empreintes de rendu de
+   * corpus, les vignettes de vues et les cibles du tour guidé. Une fenêtre fille est un AUTRE
+   * document DOM : le canevas y est seul, il n'y a aucune collision à prévenir, et rien ne
+   * justifie de le renommer en chemin (cf. `notes/appli-d-applis/canevas-principal-detachable-contrat.md`).
+   *
+   * NEUTRALITÉ : aucun identifiant existant ne bouge. Une zone qui n'est pas celle du principal
+   * (feuille voisine, aperçu unitaire, vue en coulisse, brique, document hors écran) reste
+   * préfixée — elle l'était par sa place, elle l'est par son identité. Le seul cas qui change est
+   * celui qui n'existait pas : le canevas du principal, détaché.
+   *
+   * L'ÉCART AVEC LE PLAN RESTE (D4 : « identifiants DOM toujours préfixés, y compris pour
+   * l'actif »), et ce commentaire dit maintenant pourquoi il est SANS OBJET : la collision qu'on
+   * corrigeait ne peut pas se produire entre deux documents DOM distincts.
+   */
   public get dom_id_prefix(): string {
-    return this.is_in_main_container ? '' : this.id + '__'
+    return this.is_main_document_canvas ? '' : this.id + '__'
+  }
+
+  /**
+   * Cette zone est-elle LE canevas du document principal — celui que l'utilisateur édite ?
+   *
+   * Deux conditions, et il faut les deux. `is_main` écarte les autres documents (feuille ouverte
+   * en volet, source Excel, brique, instantané) ; l'identité de la zone écarte les autres zones du
+   * MÊME document (aperçu unitaire, vue en coulisse, zone de mise en page temporaire) — un
+   * document en a plusieurs, une seule est affichée.
+   *
+   * `_drawing_area` et non l'accesseur public : celui-ci passe par `application_data.drawing_area`,
+   * que rien n'interdit de surcharger, et la comparaison doit porter sur le champ que
+   * `replaceDrawingArea` écrit.
+   */
+  public get is_main_document_canvas(): boolean {
+    const app = this.application_data
+    return !!app && app.is_main && app.drawing_area === this
   }
 
   /**
