@@ -2372,6 +2372,38 @@ export class Class_ApplicationData {
    * fait remonte au fichier, parce que `sheetsToJSON` le sérialise en l'appelant, et parce
    * qu'« enregistrer » depuis sa fenêtre enregistre le fichier (cf. `file_holder`).
    */
+  /**
+   * os#1442 — LE DOCUMENT VIVANT DE CETTE FEUILLE, S'IL Y EN A UN, ET SANS EN CRÉER.
+   *
+   * `sheetApplication` CHARGE l'instantané quand la feuille n'a pas encore de document : c'est
+   * son office, et c'est ce qu'il faut quand on va montrer la feuille. C'est exactement ce qu'il
+   * ne faut PAS pour un affichage qui ne fait que *rendre compte* — la pastille « modifié » de
+   * la barre d'onglets, qui passe sur toutes les feuilles à chaque rendu. L'appeler là
+   * déserialiserait tout le fichier pour peindre des points.
+   *
+   * Et l'absence de document vivant est une réponse, pas un manque : une feuille qui n'en a pas
+   * n'a pas pu être modifiée depuis, puisque son contenu EST son instantané.
+   *
+   * La feuille courante fait exception, comme partout : c'est `this` qui la porte.
+   */
+  public liveSheetDocument(sheet_id: string): Class_ApplicationData | null {
+    if (sheet_id === '' || sheet_id === this._current_sheet_id) return this
+    const entry = this._sheet_apps[sheet_id]
+    return entry && !entry.app.disposed ? entry.app : null
+  }
+
+  /**
+   * os#1442 — CE DOCUMENT A-T-IL DES CHANGEMENTS NON ENREGISTRÉS ?
+   *
+   * La valeur vit dans `menu_configuration` depuis toujours, écrite par une quarantaine de
+   * gestes d'interface ; ce qui manquait n'était pas le fait mais un nom pour le lire. Le
+   * poser ici évite que chaque surface refasse le chemin par le slot — et dit que la question
+   * est du DOCUMENT, quand bien même la réponse transite encore par sa configuration de menus.
+   */
+  public get has_unsaved_changes(): boolean {
+    return !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
+  }
+
   public sheetApplication(sheet_id: string): Class_ApplicationData | null {
     const sheet = this._sheets[sheet_id]
     // os#1385 (lot 5, D9) — C'EST LE TYPE QUI CHARGE. Un type INCONNU de cette version n'a aucun

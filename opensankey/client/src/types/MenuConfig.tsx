@@ -33,7 +33,9 @@ import {
 } from '../types/Utils'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
-import { Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
+import {
+  Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
+} from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
@@ -2939,7 +2941,22 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_tags_updater['data_taggs'] = { current: () => null }
 
     // Toolbar+
-    this._ref_to_save_in_cache_indicator = { current: (_: boolean) => null }
+    // os#1442 — LE DÉFAUT N'EST PLUS UN TROU. Il valait `() => null` : un document dont aucun
+    // bouton d'enregistrement n'est monté — c'est-à-dire TOUT document de feuille, qui n'a pas
+    // de barre du haut à lui — voyait les quarante sites d'appel lui annoncer « modifié » et
+    // n'en gardait rien. Son `_value` restait à `true` pour toujours, et l'indicateur par
+    // document ne pouvait pas exister. Le défaut enregistre donc, et annonce.
+    //
+    // Quand une barre du haut EST montée, `useModelSlot` remplace ce défaut par son propre
+    // gestionnaire, qui écrit la même valeur et annonce le même topic (cf. MenuTop) : les deux
+    // chemins disent la même chose, et c'est `_value` qui fait foi dans les deux cas.
+    this._ref_to_save_in_cache_indicator = {
+      current: (b: boolean) => {
+        if (this._ref_to_save_in_cache_indicator_value.current === b) return
+        this._ref_to_save_in_cache_indicator_value.current = b
+        this.notify(SAVE_STATE_TOPIC)
+      }
+    }
     this._ref_to_save_in_cache_indicator_value = { current: true }
     this._ref_to_last_download_updater = { current: () => null }
     this._ref_to_never_save_view_session = { current: (_: boolean) => null }
