@@ -34,6 +34,7 @@
 // qu'une part porte déjà son ALIAS sans mécanisme neuf.
 
 import { Class_BaseShape } from '../../Elements/Element'
+import { DRAW_TOPIC } from '../../types/EventBus'
 import type { Class_DrawingArea } from '../../types/DrawingArea'
 import type { Class_ElementStyle } from '../../Elements/Element'
 import type { ConfigType } from '../../Elements/ElementsAttributesConfig'
@@ -162,6 +163,26 @@ export class Class_PartElement extends Class_BaseShape {
   // à `true` pour toujours : ce drapeau sert la chaîne de construction, le détourner cacherait
   // aussi les actions qu'on voudrait un jour.
 
-  public override draw(): void { /* le graphique trace, pas la part */ }
+  /**
+   * os#1457 — ELLE NE SE DESSINE PAS, MAIS ELLE DEMANDE QU'ON LA REDESSINE.
+   *
+   * Julien, à l'écran : « si on change les attributs ce n'est pas agissant ». C'était exact et
+   * c'était ici. Le tracé lit l'aspect des parts AU MOMENT où il dessine (`part_aspect`) ; poser
+   * une couleur sur une part changeait donc le modèle et rien à l'écran, jusqu'au prochain
+   * redessin provoqué par autre chose. Un réglage qui ne se voit pas est un réglage qu'on croit
+   * cassé.
+   *
+   * Une part n'a pas de représentation SVG à elle — c'est le graphique qui trace — donc elle ne
+   * peut pas se redessiner. Elle ANNONCE : `DRAW_TOPIC` sur le document SOURCE, celui que la
+   * vignette écoute déjà pour se rafraîchir (`MainZoneTabs`, abonnement du carreau). Rien de
+   * nouveau à câbler, et aucune boucle : le redessin reconstruit les parts par `restoreStorage`,
+   * qui écrit le sac sans passer par les setters dynamiques, donc sans redemander de dessin.
+   */
+  public override draw(): void {
+    const source = (this.drawing_area?.application_data as unknown as {
+      source?: { menu_configuration?: { notify?: (topic: string) => void } }
+    })?.source
+    source?.menu_configuration?.notify?.(DRAW_TOPIC)
+  }
   public override unDraw(): void { /* rien à retirer du DOM */ }
 }
