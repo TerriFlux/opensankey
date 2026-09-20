@@ -31,7 +31,7 @@ import { figurePartsFor } from './parts/figurePartsRegistry'
 import { analysisPartInputs } from './parts/analysisParts'
 import { BARS_ATTRIBUTES, DONUT_ATTRIBUTES } from './analysisFigureAttributes'
 import type { Type_ChartPart } from '../Charts/AnalysisChartData'
-import { barPartAspectResolver } from '../Charts/barPartStyle'
+import { partAspectResolver } from '../Charts/partAspect'
 import {
   representation_registry,
   type Type_RepresentationContext
@@ -224,7 +224,7 @@ const analysisPartsWiring = (
     }
     : undefined
   return {
-    part_aspect: barPartAspectResolver(base, figure_parts.by_id, part_context),
+    part_aspect: partAspectResolver(base, figure_parts.by_id, part_context),
     label_positions,
     on_label_move,
     on_part_select: (part_id: string) => {

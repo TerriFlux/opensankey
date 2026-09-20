@@ -22,6 +22,11 @@
 import * as d3 from '../d3Modules'
 // os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
 import { drawFigureLabelBackground } from './figureLabelBackground'
+// os#1474 — LE LECTEUR COMMUN. Le disque ne lit plus les cles lui-meme : il compose son style a
+// partir de ce que la part a dit, comme la couronne et les barres.
+import { partAspect } from './partAspect'
+import type { Type_FigurePart } from './partAspect'
+import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_FigureLabelBackground } from './figureLabelBackground'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureText } from './figureChartStyle'
@@ -237,11 +242,13 @@ export interface Type_SunburstPart {
   sankey?: { getIconFromCatalog(id_icon: string): string }
 }
 
-const numberSaid = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
-const booleanSaid = (v: unknown): boolean | undefined => typeof v === 'boolean' ? v : undefined
-const textSaid = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
-const oneOfSaid = <T extends string>(v: unknown, allowed: readonly T[]): T | undefined =>
-  allowed.includes(v as T) ? v as T : undefined
+// os#1474 — LES QUATRE LECTEURS DE CLÉS ONT ÉTÉ RETIRÉS D'ICI, et leur disparition est la mesure
+// du lot : ce fichier ne lit plus une seule clé de part. `numberSaid`, `booleanSaid`, `textSaid` et
+// `oneOfSaid` vivent dans `partAspect`, le lecteur unique, et `sunburstPartStyle` ne fait plus que
+// traduire ce qu'il rend dans le vocabulaire du disque.
+//
+// C'est le critère que le cap s'était donné : un pas qui ajoute du code sans en retirer est mal
+// fait. Le lint l'a prouvé avant moi — il a signalé ces quatre-là comme morts.
 
 /**
  * La mise en forme D'UN SECTEUR : celle de la figure, sauf ce que sa part dit d'elle-même.
@@ -256,92 +263,84 @@ export const sunburstPartStyle = (
   part?: Type_SunburstPart
 ): Type_SunburstStyle => {
   if (!part) return base
-  // LA PORTE. Une part qui n'a rien dit ne dit rien : le réglage de la figure tient.
-  const said = (attr: string): unknown =>
-    part.isAttributeOverloaded(attr) ? part.getElementProperty(attr) : undefined
+  // os#1474 — CETTE FONCTION NE LIT PLUS RIEN : elle COMPOSE.
+  //
+  // Elle relisait les mêmes clés que `partAspect`, avec la même porte, sous d'autres noms. Mesuré
+  // avant de les réunir : elle lisait 3 clés qu'il ignorait, et en ignorait 33 qu'il lisait —
+  // personne ne l'avait décidé, c'est ce qu'une seconde copie devient quand on l'enrichit d'un
+  // côté seulement.
+  //
+  // Ne reste ici que ce qui est VRAI D'UN DISQUE : les noms que son tracé donne aux choses, et
+  // deux replis qui se disent en deux clés d'élément et en une seule du tracé (le mode
+  // d'étiquette, le mode d'encre). C'est de la traduction, pas de la lecture.
+  // Le `style` que rend l aspect est celui d un histogramme : le disque ne le lit pas, il a le
+  // sien (`base`). Ce qui l interesse est ce que la PART a dit — le reste de cet objet.
+  const a = partAspect(BARS_STYLE_DEFAULTS, part as unknown as Type_FigurePart)
+  const n = a.name ?? {}
   const out: Type_SunburstStyle = { ...base }
   const put = <K extends keyof Type_SunburstStyle>(k: K, v: Type_SunburstStyle[K] | undefined) => {
     if (v !== undefined) out[k] = v
   }
 
-  // FORME (`shape_*`)
-  // os#1462 — la couleur et le fond, qui manquaient : un secteur se repeint et s'efface comme il
-  // change d'opacité ou de liséré. `shape_color_visible` est lu SÉPARÉMENT de `shape_color` — une
-  // part qui cache son fond sans avoir choisi de couleur ne dit rien de la seconde.
-  put('fill', textSaid(said('shape_color')))
-  put('background_visible', booleanSaid(said('shape_color_visible')))
-  put('opacity', numberSaid(said('shape_opacity')))
-  put('border_visible', booleanSaid(said('shape_border_visible')))
-  put('border_color', textSaid(said('shape_border_color')))
-  put('border_thickness', numberSaid(said('shape_border_thickness')))
+  // FORME — le secteur lui-même.
+  put('fill', a.fill)
+  put('background_visible', a.background_visible)
+  put('opacity', a.opacity)
+  put('border_visible', a.border_visible)
+  put('border_color', a.border_color)
+  put('border_thickness', a.border_thickness)
 
-  // ICÔNE (`icon_*`) — os#1465
-  //
-  // Le nom est lu PAR LA PORTE (`said`) et non résolu : le style par défaut d'un élément pourrait
-  // porter un nom d'icône, et toutes les couronnes du parc se couvriraient de pictogrammes que
-  // personne n'a demandés. Une part n'a d'icône que si elle le dit.
-  //
-  // `icon_is_visible` ne peut que RETIRER : une part qui nomme une icône et la cache n'en a pas.
-  // Il ne peut pas en ajouter une — sans nom, il n'y a rien à peindre.
-  const icon_name = textSaid(said('icon_icon_name'))
-  if (icon_name && part.getElementProperty('icon_is_visible') !== false) {
-    // La résolution se fait ICI, où la part connaît son document. Un catalogue absent (un test qui
-    // fabrique une part sans document) rend une chaîne vide : pas d'icône, et rien ne casse.
-    const path = part.sankey?.getIconFromCatalog(icon_name) ?? ''
-    if (path !== '') {
-      out.icon_path = path
-      put('icon_view_box', textSaid(said('icon_view_box')))
-      put('icon_color', textSaid(said('icon_color')))
-      put('icon_size', numberSaid(said('icon_box_width')))
-    }
-  }
+  // PICTOGRAMME — déjà résolu (le chemin sort du catalogue du document, pas d'ici).
+  put('icon_path', a.icon_path)
+  put('icon_view_box', a.icon_view_box)
+  put('icon_color', a.icon_color)
+  put('icon_size', a.icon_size)
 
-  // LIBELLÉ (`name_label_*`)
-  // « Là où ça tient / toujours / jamais » se dit avec DEUX clés d'élément : on décompose le repli
-  // dans ces deux clés, on remplace celle que la part dit, on recompose. Décomposer et recomposer
-  // rend l'identité quand la part ne dit rien — ce qui est la garantie du lot.
-  const labelled = booleanSaid(said('name_label_is_visible')) ?? base.labels_mode !== 'none'
-  const prune = booleanSaid(said('name_label_prune_if_unfitting')) ?? base.labels_mode !== 'always'
+  // LIBELLÉ — les noms du tracé pour ce que la part dit de son nom.
+  put('font_family', n.font_family)
+  put('font_size', n.font_size)
+  put('bold', n.bold)
+  put('italic', n.italic)
+  put('uppercase', n.uppercase)
+  put('label_color', n.color)
+  put('box_width', n.box_width)
+  put('separator', n.separator)
+  put('separator_part', n.separator_part)
+  put('callout', a.label_callout)
+  put('label_orientation', n.orientation)
+  put('strip_parent', n.strip_parent)
+
+  // LE CARTOUCHE, sous les mêmes noms des deux côtés.
+  put('bg_visible', n.bg_visible)
+  put('bg_color', n.bg_color)
+  put('bg_opacity', n.bg_opacity)
+  put('bg_border_visible', n.bg_border_visible)
+  put('bg_border_color', n.bg_border_color)
+  put('bg_border_thickness', n.bg_border_thickness)
+  put('bg_border_radius', n.bg_border_radius)
+
+  // LES DEUX REPLIS QUI DEMANDENT UNE TRADUCTION, et c'est tout ce qui reste de propre ici.
+  //
+  // « Là où ça tient / toujours / jamais » se dit avec DEUX clés d'élément et UN mode côté tracé :
+  // on décompose le repli dans ces deux clés, on remplace celle que la part dit, on recompose.
+  // Décomposer et recomposer rend l'identité quand la part ne dit rien — c'est la garantie du lot.
+  const labelled = n.is_visible ?? base.labels_mode !== 'none'
+  const prune = n.prune_if_unfitting ?? base.labels_mode !== 'always'
   out.labels_mode = !labelled ? 'none' : prune ? 'fit' : 'always'
-  put('label_orientation', oneOfSaid(
-    said('name_label_orientation'), ['radial', 'tangential', 'horizontal'] as const
-  ))
-  put('strip_parent', booleanSaid(said('name_label_strip_parent')))
-  put('separator', textSaid(said('name_label_separator')))
-  put('separator_part', oneOfSaid(said('name_label_separator_part'), ['before', 'after'] as const))
-  put('box_width', numberSaid(said('name_label_box_width')))
-  put('callout', booleanSaid(said('name_label_callout')))
-  put('font_family', textSaid(said('name_label_font_family')))
-  put('font_size', numberSaid(said('name_label_font_size')))
-  put('bold', booleanSaid(said('name_label_bold')))
-  put('italic', booleanSaid(said('name_label_italic')))
-  put('uppercase', booleanSaid(said('name_label_uppercase')))
   // Même procédé : l'encre par contraste est un booléen côté élément, un mode côté tracé.
-  const contrast = booleanSaid(said('name_label_contrast_color')) ?? base.color_mode === 'auto'
-  out.color_mode = contrast ? 'auto' : 'fixed'
-  put('label_color', textSaid(said('name_label_color')))
+  out.color_mode = (n.contrast ?? base.color_mode === 'auto') ? 'auto' : 'fixed'
 
-  // LE CARTOUCHE (os#1468) — `bg_visible` commande tout le reste : sans elle rien n'est peint, et
-  // aucune couronne enregistrée ne gagne un rectangle qu'on ne lui a pas demandé.
-  put('bg_visible', booleanSaid(said('name_label_background_visible')))
-  put('bg_color', textSaid(said('name_label_background_color')))
-  put('bg_opacity', numberSaid(said('name_label_background_opacity')))
-  put('bg_border_visible', booleanSaid(said('name_label_background_border_visible')))
-  put('bg_border_color', textSaid(said('name_label_background_border_color')))
-  put('bg_border_thickness', numberSaid(said('name_label_background_border_thickness')))
-  put('bg_border_radius', numberSaid(said('name_label_background_border_radius')))
-
-  // VALEUR (`value_label_*`)
-  put('value_visible', booleanSaid(said('value_label_is_visible')))
-  // os#1470 — lu par la porte : absent veut dire « colle », l'usage du trace, et non « decolle ».
-  put('value_attached', booleanSaid(said('value_label_stick_to_label')))
-  put('unit_visible', booleanSaid(said('value_label_unit_visible')))
-  put('label_percent', oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const))
-  put('significant_digits', booleanSaid(said('value_label_significant_digits')))
-  put('nb_significant_digits', numberSaid(said('value_label_nb_significant_digits')))
-  put('custom_digit', booleanSaid(said('value_label_custom_digit')))
-  put('nb_digit', numberSaid(said('value_label_nb_digit')))
-  put('scientific_notation', booleanSaid(said('value_label_scientific_notation')))
+  // VALEUR — ce que le nombre écrit, et comment.
+  const v = a.value ?? {}
+  put('value_visible', v.is_visible)
+  put('value_attached', a.value_attached)
+  put('unit_visible', a.unit_visible)
+  put('label_percent', a.value_percent)
+  put('significant_digits', a.significant_digits)
+  put('nb_significant_digits', a.nb_significant_digits)
+  put('custom_digit', a.custom_digit)
+  put('nb_digit', a.nb_digit)
+  put('scientific_notation', a.scientific_notation)
 
   return out
 }

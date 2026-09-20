@@ -202,6 +202,33 @@ export interface Type_FigurePartTextAspect extends Type_FigureLabelBackground {
    * dans la part, l'autre de quel côté le texte pend à partir de ce point.
    */
   text_align?: 'left' | 'middle' | 'right'
+
+  // ── CE QUE SEUL UN DISQUE LISAIT, ET QUI EST POURTANT DU TEXTE (os#1474) ───────────────────
+  //
+  // Ces trois clés n'étaient lues que par `sunburstPartStyle`. Elles décrivent bien un TEXTE DE
+  // PART — comment il court, ce qu'il écrit, de quelle encre — et rien n'interdit à une autre
+  // nature de les honorer un jour. Elles entrent donc dans le contrat commun ; une nature qui ne
+  // les dessine pas les ignore, ce qui ne coûte rien et ne ment pas.
+
+  /**
+   * `*_is_visible` — ce texte s ecrit-il ?
+   *
+   * Aussi porte par `style` pour les traces qui lisent une mise en forme de figure deja fusionnee.
+   * Les deux viennent du MEME `said()` : il n y a qu une lecture, donc pas deux verites.
+   */
+  is_visible?: boolean
+  /** `name_label_orientation` — comment le texte court dans sa part (radial, le long, droit). */
+  orientation?: 'radial' | 'tangential' | 'horizontal'
+  /** `name_label_strip_parent` — ôter du nom ce que la part englobante dit déjà. */
+  strip_parent?: boolean
+  /**
+   * `name_label_contrast_color` — l'encre se choisit par CONTRASTE sur le fond de la part.
+   *
+   * Distinct de `color` : celle-ci impose une teinte, celui-là dit « calcule-la ». Sur une couronne
+   * un même bleu porte du blanc au centre et du gris foncé sur les anneaux éclaircis ; une couleur
+   * fixe rendrait la moitié des étiquettes illisible.
+   */
+  contrast?: boolean
 }
 
 /** Ce qu'une part dit de ses deux textes, plus ce qui n'appartient à aucun des deux. */
@@ -245,6 +272,21 @@ export interface Type_FigurePartLabelAspect {
    * distinguer « réglé à la même valeur » de « pas réglé », ce qu'il ne peut pas voir.
    */
   value_format?: (value: number) => string
+  /**
+   * LES MEMES REGLAGES, BRUTS (os#1474).
+   *
+   * `value_format` est une fonction deja montee : c est ce qu un trace veut quand il se contente
+   * d ecrire un nombre. Un trace qui compose SON propre formateur — le disque, qui melange l unite
+   * et le pourcentage a sa facon — a besoin des valeurs, pas de la fonction. Les deux sortent du
+   * meme `said()` ; il n y a qu une lecture.
+   */
+  value_percent?: 'none' | 'total' | 'parent'
+  unit_visible?: boolean
+  scientific_notation?: boolean
+  significant_digits?: boolean
+  nb_significant_digits?: number
+  custom_digit?: boolean
+  nb_digit?: number
 
   // ── LE PICTOGRAMME (os#1465) ──────────────────────────────────────────────────────────────
   //

@@ -458,7 +458,7 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 //                      un histogramme n'a jamais eu de liséré.
 //
 // Ce partage n'est pas cosmétique : le liséré blanc était jusqu'ici dans l'étage générique, donc
-// hérité par les barres, et `barPartStyle` devait s'en défendre à la main (« le liséré se demande
+// hérité par les barres, et `partAspect` devait s'en défendre à la main (« le liséré se demande
 // en bloc »). Une valeur fausse qu'on neutralise en aval est une valeur fausse ; descendue d'un
 // étage, elle devient vraie là où elle est, et le contournement n'a plus lieu d'être.
 //
