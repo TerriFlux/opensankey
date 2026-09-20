@@ -402,6 +402,31 @@ export const TITLE_CONFIG = {
   }, { kind: 'color', advanced: true, visibleIf: (o) => o['title_visible'] === true })
 } as const
 
+// ── label_positions : LES ÉTIQUETTES DÉPOSÉES À LA MAIN ──────────────────────────────────────
+// os#1467 — REMONTÉE ICI DEPUIS LE SUNBURST, qui la déclarait chez lui. Depuis que la couronne et
+// les barres sortent aussi leurs étiquettes (os#1463), trois natures en ont besoin : une clé que
+// chacune redéclarerait serait trois clés, et le sac d une figure convertie d une nature à l autre
+// perdrait ses positions au passage.
+//
+// Un dépôt, pas un réglage : la souris est son interface (d où `kind: none`), et sa sorte est
+// 'identity' chez qui l honore — la position d une étiquette de CETTE figure n a pas d homologue
+// sur une autre, ni sa place dans un style.
+export const PLACED_LABELS_CONFIG = {
+  label_positions: entry<unknown>(undefined, 'title', {
+    en: 'Placed labels', fr: 'Étiquettes posées', es: 'Etiquetas colocadas',
+    de: 'Platzierte Beschriftungen', it: 'Etichette posizionate', 'zh-CN': '已放置的标签',
+    ja: '配置したラベル'
+  }, {
+    en: 'Where the author dragged each label that left the drawing.',
+    fr: 'Où l’auteur a déposé chaque étiquette sortie du dessin.',
+    es: 'Dónde ha colocado el autor cada etiqueta que salió del dibujo.',
+    de: 'Wohin der Autor jede aus der Zeichnung herausgezogene Beschriftung gelegt hat.',
+    it: 'Dove l’autore ha posato ogni etichetta uscita dal disegno.',
+    'zh-CN': '作者把每个移出绘图的标签放在何处。',
+    ja: '描画の外に出した各ラベルを作成者が置いた位置。'
+  }, { kind: 'none' })
+} as const
+
 // ── text_zones : LES TEXTES QUE L'AUTEUR AJOUTE À UNE FIGURE ─────────────────────────────────
 // os#1449, demande de Julien du 20/09 : « elles devraient pouvoir avoir aussi des zones de texte
 // et autres éléments additionnels ». Une LISTE et non des clés numérotées — leur nombre n'est pas
@@ -562,5 +587,6 @@ export const FIGURE_ATTRIBUTES_CONFIG: { [key: string]: Type_FigureCatalogueEntr
   ...TITLE_CONFIG,
   ...TEXTS_CONFIG,
   ...SCALE_CONFIG,
-  ...FIGURE_LABEL_CONFIG
+  ...FIGURE_LABEL_CONFIG,
+  ...PLACED_LABELS_CONFIG
 }

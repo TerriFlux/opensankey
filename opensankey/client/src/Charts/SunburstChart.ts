@@ -20,6 +20,9 @@
 // au bundle plus qu'elle ne ferait gagner.
 
 import * as d3 from '../d3Modules'
+// os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
+import { drawFigureLabelBackground } from './figureLabelBackground'
+import type { Type_FigureLabelBackground } from './figureLabelBackground'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureText } from './figureChartStyle'
 import { mountFigureTextZones } from '../Representations/figureTextZones'
@@ -32,7 +35,10 @@ import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
  * rendues à l'auteur une par une. Les défauts reproduisent donc exactement ce que le tracé faisait
  * avant ce lot — une couronne déjà enregistrée ne change pas d'aspect.
  */
-export interface Type_SunburstStyle {
+// os#1468 — LE CARTOUCHE D'UNE ÉTIQUETTE est décrit par le MÊME contrat que sur la couronne et les
+// barres (`Type_FigureLabelBackground`) : Julien veut « le même look and feel d'un graphe à
+// l'autre, comme sur Excel », et cela commence par ne pas redécrire la même chose trois fois.
+export interface Type_SunburstStyle extends Type_FigureLabelBackground {
   /** 'palette' : les teintes de la figure ; 'model' : la couleur du nœud dans le diagramme. */
   color_source: 'palette' | 'model'
   /** La clarté dit la profondeur. Coupé, tous les anneaux d'une branche ont la même teinte. */
@@ -304,6 +310,16 @@ export const sunburstPartStyle = (
   const contrast = booleanSaid(said('name_label_contrast_color')) ?? base.color_mode === 'auto'
   out.color_mode = contrast ? 'auto' : 'fixed'
   put('label_color', textSaid(said('name_label_color')))
+
+  // LE CARTOUCHE (os#1468) — `bg_visible` commande tout le reste : sans elle rien n'est peint, et
+  // aucune couronne enregistrée ne gagne un rectangle qu'on ne lui a pas demandé.
+  put('bg_visible', booleanSaid(said('name_label_background_visible')))
+  put('bg_color', textSaid(said('name_label_background_color')))
+  put('bg_opacity', numberSaid(said('name_label_background_opacity')))
+  put('bg_border_visible', booleanSaid(said('name_label_background_border_visible')))
+  put('bg_border_color', textSaid(said('name_label_background_border_color')))
+  put('bg_border_thickness', numberSaid(said('name_label_background_border_thickness')))
+  put('bg_border_radius', numberSaid(said('name_label_background_border_radius')))
 
   // VALEUR (`value_label_*`)
   put('value_visible', booleanSaid(said('value_label_is_visible')))
@@ -1301,6 +1317,8 @@ export const drawSunburstChart = (
           .attr('dy', i === 0 ? -((lines.length - 1) / 2) * line_h : line_h)
           .text(line)
       })
+      // os#1468 — LE CARTOUCHE, posé APRÈS le texte : il se mesure sur ce qui est écrit.
+      drawFigureLabelBackground(text, styleOf(d.id))
     })
 
     // ── PICTOGRAMMES (os#1465) ───────────────────────────────────────────────────────────
