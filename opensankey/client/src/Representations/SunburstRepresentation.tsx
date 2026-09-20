@@ -293,8 +293,32 @@ export const drawSunburstRepresentation = (
   const figure_parts = figurePartsFor(
     window_id, pane_key, app_data, sunburstPartInputs(sankey, tree)
   )
+  // os#1446 — LA FIGURE EST UN DOCUMENT, ET C'EST CE QUI OUVRE L'INSPECTEUR D'ÉLÉMENT.
+  //
+  // Lier la vignette à son document de parts fait de lui l'ACTIF dès qu'on touche la fenêtre
+  // (cf. `bindWindowDocument`, os#1422 lot 6 : c'est exactement ce que fait l'étoile). L'inspecteur
+  // suit alors la sélection de CE document — donc, quand une part est sélectionnée, il montre sa
+  // forme, son libellé et sa valeur, sans une ligne d'interface nouvelle. Et quand rien n'est
+  // sélectionné, il retombe sur les réglages de la figure : Graphe, Titre, Légende, Styles.
+  //
+  // C'est la demande de Julien telle qu'elle a été posée : « figure = graphe, et les trois autres
+  // parties dans forme / libellé / valeur de l'élément sélectionné ».
+  if (window_id !== undefined && pane_key !== undefined) {
+    app_data.workspace.bindWindowDocument(window_id, pane_key, figure_parts.document)
+  }
   const teardown_chart = drawSunburstChart(container, tree, {
     parts: figure_parts.by_id,
+    // Toucher un secteur le sélectionne. La sélection est PURGÉE d'abord : une couronne se lit
+    // un secteur à la fois, et garder l'ancien ferait montrer à l'inspecteur une sélection
+    // multiple que le geste n'a jamais demandée.
+    on_part_select: (sector_id: string) => {
+      const part = figure_parts.by_id[sector_id]
+      if (!part) return
+      const area = figure_parts.document.drawing_area
+      area.purgeSelection()
+      area.addElementToSelection(part)
+      mc.updateInspector()
+    },
     style: readSunburstStyle(ctx.options ?? {}),
     title: figureTitleOf(ctx.options ?? {}),
     label_positions: readLabelPositions(ctx.options?.['label_positions']),
@@ -330,6 +354,12 @@ export const drawSunburstRepresentation = (
 
   return () => {
     teardown_chart()
+    // os#1446 — la vignette ne montre plus ce document : l'actif doit repartir sur la voie
+    // ordinaire (la feuille que la fenêtre regarde), sinon l'inspecteur continuerait de parler
+    // d'une couronne démontée.
+    if (window_id !== undefined && pane_key !== undefined) {
+      app_data.workspace.unbindWindowDocument(window_id, pane_key)
+    }
     // HORS FENÊTRE SEULEMENT. Un jeu de parts sans (fenêtre, vignette) est jetable et personne
     // n'en garde la trace : c'est ici qu'il cesse de vivre. Dans une vignette, au contraire, le
     // dépôt le garde exprès — un démontage est le plus souvent un simple redessin, et libérer
