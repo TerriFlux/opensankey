@@ -10,84 +10,47 @@
 // Author        : Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// os#1451 — CE QU'UNE BARRE DIT DE SON ASPECT, et ce qu'elle ne dit pas.
+// os#1474 — CE QU'UNE PART DIT DE SON ASPECT. UN SEUL LECTEUR, POUR TOUTES LES NATURES.
 //
-// Pendant exact de `sunburstPartStyle` (OS, `Charts/SunburstChart`), procédé compris. Une barre
-// d'histogramme est une part, une part est un élément (`Class_PartElement`) : elle a sa forme, son
-// libellé et sa valeur, et le tracé les lit sur elle comme le rendu d'un nœud les lit — par
-// `getElementProperty`, au bout de la cascade des styles.
+// Julien : « je veux pouvoir te dire *je veux un nouveau graphe avec ces caractéristiques* et que
+// tu l'implémentes de A à Z avec le mécanisme générique ». Ce fichier est la première des quatre
+// choses qui étaient écrites deux fois et l'en empêchaient (cf. `notes/figures/figures-etat-et-cap`).
 //
-// ⚠️ LE REPLI EST PAR RÉGLAGE, ET C'EST CE QUI PROTÈGE LE PARC. Les valeurs d'usine d'un élément ne
-// sont PAS celles du tracé : un élément écrit en quatorze points et à 0,85 d'opacité, un
-// histogramme en dix points et à 1. Faire lire à une part tout son aspect changerait donc l'aspect
-// de TOUS les histogrammes enregistrés, en silence, et le parc entier avec. Une part n'est donc
+// ── CE QU'IL REMPLACE, ET CE QUE LA DUPLICATION COÛTAIT ──────────────────────────────────────
+//
+// Il y avait deux lecteurs : celui-ci (couronne et barres) et `sunburstPartStyle`. Tous deux
+// posaient la MÊME question à une part — « dis-tu quelque chose de cette clé ? » — sur les mêmes
+// noms, avec la même porte. Mesuré avant de les réunir : le sunburst lisait **3** clés que celui-ci
+// ignorait, et en ignorait **33** que celui-ci lisait. Personne ne l'avait décidé ; c'est ce
+// qu'une seconde copie devient quand on l'enrichit d'un côté seulement.
+//
+// `sunburstPartStyle` existe encore, mais il ne LIT plus rien : il COMPOSE le style de son tracé à
+// partir de l'aspect rendu ici. Une clé ajoutée dans ce fichier est donc lue par les trois natures
+// le jour où on l'écrit.
+//
+// ── LE REPLI EST PAR RÉGLAGE, ET C'EST CE QUI PROTÈGE LE PARC ────────────────────────────────
+//
+// Les valeurs d'usine d'un ÉLÉMENT ne sont PAS celles d'un tracé : un élément écrit en quatorze
+// points et à 0,85 d'opacité, un histogramme en dix points et à 1. Faire lire à une part tout son
+// aspect changerait donc l'aspect de TOUTES les figures enregistrées, en silence. Une part n'est
 // écoutée que sur ce qu'elle DIT EN PROPRE (`isAttributeOverloaded`) ; sur tout le reste, le
-// réglage de la figure tient — et c'est lui qui porte les valeurs d'usine des barres
-// (`BARS_STYLE_DEFAULTS`).
+// réglage de la figure tient.
 //
-// Un histogramme d'avant ce lot n'a aucune part qui dise quoi que ce soit : il se redessine donc
-// exactement comme avant, au pixel. Et c'est encore vrai d'un histogramme d'après, tant que
-// l'auteur n'a rien posé sur une barre.
-//
-// LA PORTE A DEUX BATTANTS DEPUIS os#1449, et ce module n'a pas à le savoir : une part « dit » une
-// clé quand son sac propre la porte OU quand l'un de ses styles la porte AU-DELÀ DE SON AMORCE
-// (cf. `Representations/parts/partStyle`). C'est ce qui fait marcher « régler toutes les barres
-// d'un coup » par les styles, et une amorce reste muette — elle écraserait sinon ce que l'auteur a
-// réglé sur sa figure. Tout cela est dans `isAttributeOverloaded` ; ici on ne fait que frapper.
+// LA PORTE A DEUX BATTANTS (os#1449) : une part « dit » une clé quand son sac propre la porte OU
+// quand l'un de ses styles la porte AU-DELÀ DE SON AMORCE. C'est ce qui fait marcher « régler
+// toutes les parts d'un coup » par les styles, et ce qui garde une amorce muette.
 //
 // ── LA FRONTIÈRE PART / GRAPHE ────────────────────────────────────────────────────────────────
 //
-// Ce qui décrit UNE barre est de la part ; ce qui décrit COMMENT LES BARRES SE RÉPARTISSENT ENTRE
-// ELLES reste un réglage de graphe. Le tri, explicitement :
+// Ce qui décrit UNE part est de la part ; ce qui décrit COMMENT LES PARTS SE RÉPARTISSENT ENTRE
+// ELLES reste un réglage de graphe : l'ordre, le repliement, la source des couleurs, l'échelle, la
+// légende, les mentions, l'info-bulle.
 //
-//   PART  — `shape_*` (le rectangle : sa couleur, son opacité, son liséré),
-//           `name_label_*` (l'étiquette sous CETTE barre : visible ? en quelle taille ?),
-//           `value_label_*` (le nombre écrit au-dessus de CETTE barre).
-//
-//   GRAPHE — `parts_order` (l'ordre des barres), `parts_max` / `parts_group_under` (lesquelles on
-//           replie), `parts_color_source` (d'où vient la couleur quand la part n'en impose pas),
-//           `scale_factor` et `scale_mode` (l'échelle, donc la comparaison des hauteurs entre
-//           elles), `legend_*`, `notes_visible`, `interaction_tooltip`, la grille et les axes.
-//
-// La règle qui trie : un réglage qui, posé sur une seule barre, rendrait le graphique FAUX ou
-// incohérent appartient au graphe. Une barre qui aurait son propre ordre ne veut rien dire ; une
-// barre qui aurait sa propre échelle mentirait sur sa hauteur ; une barre qui a son propre liséré
-// ne gêne personne.
-//
-// ── CE QUE os#1463 A AJOUTÉ DU CÔTÉ « PART » ──────────────────────────────────────────────────
-//
-// Ce module ne rendait de l'étiquette que sa VISIBILITÉ et sa TAILLE, et de la valeur que sa
-// visibilité et son pourcentage — quatre clés là où `sunburstPartStyle` en lit une vingtaine.
-// Régler la police, la casse, le séparateur ou les décimales d'un secteur de couronne était donc un
-// geste sans effet : l'inspecteur l'offrait, rien ne l'écoutait.
-//
-// Les clés portées depuis sont dans `Type_FigurePartLabelAspect` (OS, `figureChartStyle`) — la
-// typographie du nom, sa boîte de texte, son séparateur, et le format du nombre, UNITÉ COMPRISE.
-// Elles vivent HORS de `style`, et c'est délibéré : `Type_FigureChartStyle` ne les porte pas et ne
-// doit pas les porter, sans quoi elles se liraient aussi sur le sac de réglages de la figure, où
-// une clé homonyme écrite par une autre nature repeindrait le parc. La porte reste la même —
-// `said` — et c'est elle seule qui garantit qu'une figure enregistrée se rouvre au pixel.
-//
-// UNE SEULE EXCEPTION, ET ELLE EST ARBITRÉE : `value_label_unit_factor` reste au GRAPHE. Le
-// raisonnement est écrit à côté de `UNIT_NAME_KEYS`, avec le critère de la frontière ci-dessus.
-//
-// ── CE MODULE EST ICI FAUTE DE MIEUX, ET IL LE DIT ────────────────────────────────────────────
-//
-// Sa place est à côté du tracé, comme `sunburstPartStyle` est à côté de `drawSunburstChart`. Or le
-// tracé des barres vit en OS (`Charts/NodeStatsCharts`, `drawBarChart` / `drawStackedBarChart` /
-// `drawGroupedBarChart`) et ce lot n'avait pas le droit d'y toucher — trois autres travaux y
-// étaient. Ce qui manque côté OS, et rien d'autre :
-//
-//   1. `Type_ChartOptions` reçoit `part_aspect?: (part_id: string) => Type_BarPartAspect` — le
-//      pendant de `Type_SunburstOptions.parts`, en callback pour que la RÉSOLUTION reste où vivent
-//      les parts et que le tracé n'hérite d'aucune dépendance ;
-//   2. dans chaque dessin de barre, `const a = opts.part_aspect?.(d.id)` puis : `a.fill ?? colorOf`,
-//      `a.opacity`, `a.border_*`, et `a.style` à la place de `st` pour les deux étiquettes ;
-//   3. le rectangle porte enfin `data-repr-kind="bar"` / `data-repr-id` — sans quoi le clic ne
-//      désigne aucune part et `analysisPartTarget` (déjà branché) reste sans matière.
-//
-// Tant que ces trois points ne sont pas faits, une barre ne se règle pas à l'écran. Ce module, lui,
-// est complet et vérifié : c'est exactement ce que le tracé aura à appeler.
+// La règle qui trie : un réglage qui, posé sur une seule part, rendrait la figure FAUSSE ou
+// incohérente appartient au graphe. Une part qui aurait son propre ordre ne veut rien dire ; une
+// part qui aurait sa propre échelle mentirait sur sa taille ; une part qui a son propre liséré ne
+// gêne personne. C'est par ce critère que `value_label_unit_factor` est resté au graphe (cf.
+// l'arbitrage écrit à côté de `UNIT_NAME_KEYS`).
 
 import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
 import type {
@@ -106,7 +69,7 @@ import type { Type_FigureValueFormat } from './figureFormat'
  * NON NOMINAL, comme `Type_SunburstPart` — `Class_PartElement` y répond sans le savoir, et le tracé
  * reste sans dépendance aux classes du modèle.
  */
-export interface Type_BarPart {
+export interface Type_FigurePart {
   /** La part porte-t-elle une valeur À ELLE pour ce réglage ? (cf. `Elements/Element`) */
   isAttributeOverloaded(attr: string): boolean
   /** La valeur résolue par la cascade des styles, comme pour un nœud. */
@@ -130,7 +93,7 @@ export interface Type_BarPart {
  * eu de couleur ni de liséré RÉGLABLES, la couleur venant du modèle ou de la palette. ABSENTS, ils
  * veulent dire « la figure décide », c'est-à-dire exactement le tracé d'hier.
  */
-export interface Type_BarPartAspect extends Type_FigurePartLabelAspect {
+export interface Type_FigurePartAspect extends Type_FigurePartLabelAspect {
   style: Type_FigureChartStyle
   /** `shape_color` — le remplissage du rectangle. Absent : palette ou couleur du modèle. */
   fill?: string
@@ -225,7 +188,7 @@ const UNIT_NAME_KEYS = ['value_label_unit_type', 'value_label_unit']
  * Ce que l'appelant sait et que la part ne sait pas (os#1463). Tout est facultatif : sans rien, le
  * module se comporte comme avant ce lot.
  */
-export interface Type_BarPartContext {
+export interface Type_FigurePartContext {
   /**
    * LE FORMAT DE VALEUR DE LA FIGURE, repli d'une part qui n'en règle qu'une partie.
    *
@@ -261,13 +224,13 @@ export interface Type_BarPartContext {
  * repliement, l'échelle, la légende, les mentions, l'info-bulle — ne sont pas de son ressort et
  * restent ceux de la figure (cf. la frontière, en tête de module).
  */
-export const barPartAspect = (
+export const partAspect = (
   base: Type_FigureChartStyle = BARS_STYLE_DEFAULTS,
-  part?: Type_BarPart,
+  part?: Type_FigurePart,
   /** Ce que l'appelant sait et que la part ne sait pas : le format de la figure, son registre
    * d'unités (os#1463). */
-  context: Type_BarPartContext = {}
-): Type_BarPartAspect => {
+  context: Type_FigurePartContext = {}
+): Type_FigurePartAspect => {
   if (!part) return { style: base }
   const base_format = context.format ?? FIGURE_VALUE_FORMAT_DEFAULTS
   // LA PORTE. Une part qui n'a rien dit ne dit rien : le réglage de la figure tient.
@@ -404,6 +367,12 @@ export const barPartAspect = (
       shift_x: numberSaid(at('horiz_shift')),
       shift_y: numberSaid(at('vert_shift')),
       text_align: oneOfSaid(at('text_align'), ['left', 'middle', 'right'] as const),
+      // os#1474 — les trois que seul le sunburst lisait. Lues ici, elles valent pour toute nature
+      // qui voudra les dessiner ; celles qui ne les dessinent pas les ignorent.
+      is_visible: booleanSaid(at('is_visible')),
+      orientation: oneOfSaid(at('orientation'), ['radial', 'tangential', 'horizontal'] as const),
+      strip_parent: booleanSaid(at('strip_parent')),
+      contrast: booleanSaid(at('contrast_color')),
       // LE CARTOUCHE (os#1468). `bg_visible` commande tout le reste : sans elle rien n'est peint,
       // et aucune figure enregistrée ne gagne un rectangle qu'on ne lui a pas demandé.
       bg_visible: booleanSaid(at('background_visible')),
@@ -445,6 +414,14 @@ export const barPartAspect = (
     // os#1470 — COLLER LA VALEUR AU LIBELLE, ou l en detacher. Lu par la porte : absent veut dire
     // « le trace garde son usage », et non « decolle ».
     value_attached: booleanSaid(said('value_label_stick_to_label')),
+    // os#1474 — les memes reglages de format, BRUTS : le disque compose son propre formateur.
+    value_percent: oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const),
+    unit_visible: booleanSaid(said('value_label_unit_visible')),
+    scientific_notation: booleanSaid(said('value_label_scientific_notation')),
+    significant_digits: booleanSaid(said('value_label_significant_digits')),
+    nb_significant_digits: numberSaid(said('value_label_nb_significant_digits')),
+    custom_digit: booleanSaid(said('value_label_custom_digit')),
+    nb_digit: numberSaid(said('value_label_nb_digit')),
     // LE PICTOGRAMME (os#1465), résolu plus haut.
     icon_path,
     icon_view_box: icon_path !== undefined ? textSaid(said('icon_view_box')) : undefined,
@@ -478,10 +455,10 @@ export const barPartAspect = (
  * `drawSunburstChart` reçoit `parts` et appelle `sunburstPartStyle`. La résolution reste ici, où
  * vivent les parts ; le tracé n'hérite d'aucune dépendance.
  */
-export const barPartAspectResolver = (
+export const partAspectResolver = (
   base: Type_FigureChartStyle,
-  parts?: { [part_id: string]: Type_BarPart },
-  // os#1463 — le format de valeur de la figure et son registre d'unités (cf. `barPartAspect`).
+  parts?: { [part_id: string]: Type_FigurePart },
+  // os#1463 — le format de valeur de la figure et son registre d'unités (cf. `partAspect`).
   // Absents : le format du catalogue, et une part en `unit_model` garde l'unité de la figure.
-  context: Type_BarPartContext = {}
-) => (part_id: string): Type_BarPartAspect => barPartAspect(base, parts?.[part_id], context)
+  context: Type_FigurePartContext = {}
+) => (part_id: string): Type_FigurePartAspect => partAspect(base, parts?.[part_id], context)

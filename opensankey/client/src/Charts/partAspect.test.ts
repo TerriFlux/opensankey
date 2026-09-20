@@ -16,7 +16,7 @@ import type { Type_FigureValueFormat } from './figureFormat'
 import { buildParts } from '../Representations/parts/buildParts'
 import { Class_ApplicationData } from '../types/ApplicationData'
 
-import { barPartAspect, barPartAspectResolver } from './barPartStyle'
+import { partAspect, partAspectResolver } from './partAspect'
 
 if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
@@ -48,7 +48,7 @@ const twoParts = () => buildParts(buildSource(), [
 describe('os#1451 sans parts le trace est celui dhier', () => {
 
   it('aucune part : la mise en forme de la figure passe telle quelle', () => {
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS)
+    const aspect = partAspect(BARS_STYLE_DEFAULTS)
 
     expect(aspect.style).toBe(BARS_STYLE_DEFAULTS)
     expect(aspect.fill).toBeUndefined()
@@ -66,7 +66,7 @@ describe('os#1451 sans parts le trace est celui dhier', () => {
 
     expect(typeof part.getElementProperty('shape_color')).toBe('string')
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, part)
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, part)
 
     expect(aspect.style).toEqual(BARS_STYLE_DEFAULTS)
     expect(aspect.fill).toBeUndefined()
@@ -85,8 +85,8 @@ describe('os#1451 une barre peut differer des autres', () => {
     figure.by_id['l_ble'].shape_opacity = 0.5
     figure.by_id['l_ble'].shape_color = '#FF0000'
 
-    const reglee = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
-    const voisine = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'])
+    const reglee = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const voisine = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'])
 
     expect(reglee.style.name_label_font_size).toBe(22)
     expect(reglee.opacity).toBe(0.5)
@@ -108,8 +108,8 @@ describe('os#1451 une barre peut differer des autres', () => {
     const figure = twoParts()
     figure.by_id['l_ble'].shape_color_visible = false
 
-    const cachee = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
-    const voisine = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'])
+    const cachee = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const voisine = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'])
 
     expect(cachee.background_visible).toBe(false)
     expect(cachee.fill).toBeUndefined()
@@ -125,12 +125,12 @@ describe('os#1451 une barre peut differer des autres', () => {
     // COURONNE — mais une amorce est MUETTE (os#1449). Une barre fraiche n a donc pas de lisere,
     // et il n apparait que quand la part dit quelque chose de lui.
     const figure = twoParts()
-    const sans = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const sans = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
     expect(sans.border_color).toBeUndefined()
     expect(sans.border_thickness).toBeUndefined()
 
     figure.by_id['l_ble'].shape_border_color = '#00FF00'
-    const avec = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const avec = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
 
     expect(avec.border_color).toBe('#00FF00')
     expect(avec.border_thickness).toBeGreaterThan(0)
@@ -150,7 +150,7 @@ describe('os#1451 la frontiere part graphe', () => {
     figure.by_id['l_ble'].name_label_font_size = 22
     figure.by_id['l_ble'].shape_opacity = 0.5
 
-    const aspect = barPartAspect(base, figure.by_id['l_ble'])
+    const aspect = partAspect(base, figure.by_id['l_ble'])
 
     expect(aspect.style.parts_order).toBe('name')
     expect(aspect.style.scale_factor).toBe(60)
@@ -168,7 +168,7 @@ describe('os#1451 la frontiere part graphe', () => {
     // appliquer. Un identifiant qu aucune part ne porte retombe sur la figure.
     const figure = twoParts()
     figure.by_id['l_mais'].name_label_font_size = 33
-    const aspectOf = barPartAspectResolver(BARS_STYLE_DEFAULTS, figure.by_id)
+    const aspectOf = partAspectResolver(BARS_STYLE_DEFAULTS, figure.by_id)
 
     expect(aspectOf('l_mais').style.name_label_font_size).toBe(33)
     expect(aspectOf('l_ble').style).toEqual(BARS_STYLE_DEFAULTS)
@@ -189,7 +189,7 @@ describe('os#1462 le lisere dune part, dans les deux sens', () => {
   it('la part ne dit rien : la figure decide, et on ne dit rien pour elle', () => {
     const figure = twoParts()
 
-    expect(barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble']).border_visible)
+    expect(partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble']).border_visible)
       .toBeUndefined()
 
     figure.document.dispose()
@@ -200,7 +200,7 @@ describe('os#1462 le lisere dune part, dans les deux sens', () => {
     const figure = twoParts()
     figure.by_id['l_ble'].shape_border_visible = false
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
     expect(aspect.border_visible).toBe(false)
     expect(aspect.border_color).toBeUndefined()
 
@@ -213,7 +213,7 @@ describe('os#1462 le lisere dune part, dans les deux sens', () => {
     const figure = twoParts()
     figure.by_id['l_ble'].shape_border_color = '#00FF00'
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
     expect(aspect.border_visible).toBe(true)
     expect(aspect.border_color).toBe('#00FF00')
 
@@ -240,7 +240,7 @@ describe('os#1463 la typographie dune part', () => {
     expect(typeof part.getElementProperty('name_label_font_family')).toBe('string')
     expect(typeof part.getElementProperty('name_label_color')).toBe('string')
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, part)
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, part)
 
     expect(aspect.name?.font_family).toBeUndefined()
     expect(aspect.name?.bold).toBeUndefined()
@@ -262,8 +262,8 @@ describe('os#1463 la typographie dune part', () => {
     figure.by_id['l_ble'].name_label_uppercase = true
     figure.by_id['l_ble'].name_label_color = '#123456'
 
-    const reglee = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
-    const voisine = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'])
+    const reglee = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const voisine = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'])
 
     expect(reglee.name?.font_family).toBe('Georgia')
     expect(reglee.name?.bold).toBe(true)
@@ -281,19 +281,19 @@ describe('os#1463 la typographie dune part', () => {
     // Deux cles que le trace lit desormais, et deux fois la meme garantie : tant que la part ne les
     // dit pas, le trace fait ce qu il faisait — le mot deborde, rien ne se masque.
     const figure = twoParts()
-    const muette = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const muette = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
 
     expect(muette.name?.wrap_long_words).toBeUndefined()
     expect(muette.name?.prune_if_unfitting).toBeUndefined()
 
     setAttr(figure.by_id['l_ble'], 'name_label_wrap_long_words', true)
     setAttr(figure.by_id['l_ble'], 'name_label_prune_if_unfitting', true)
-    const reglee = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const reglee = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
 
     expect(reglee.name?.wrap_long_words).toBe(true)
     expect(reglee.name?.prune_if_unfitting).toBe(true)
     // La voisine n a rien demande.
-    expect(barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais']).name?.prune_if_unfitting)
+    expect(partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais']).name?.prune_if_unfitting)
       .toBeUndefined()
 
     figure.document.dispose()
@@ -307,7 +307,7 @@ describe('os#1463 la typographie dune part', () => {
     // changera de reponse et le trace, lui, n aura rien a apprendre.
     const figure = twoParts()
 
-    expect(barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble']).label_callout)
+    expect(partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble']).label_callout)
       .toBeUndefined()
 
     figure.document.dispose()
@@ -321,7 +321,7 @@ describe('os#1463 la typographie dune part', () => {
     figure.by_id['l_ble'].name_label_separator_part = 'before'
     figure.by_id['l_ble'].name_label_box_width = 80
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
 
     expect(aspect.name?.separator).toBe(' - ')
     expect(aspect.name?.separator_part).toBe('before')
@@ -378,9 +378,9 @@ describe('os#1463 le format de valeur dune part', () => {
     // Des cles recomposees l obligeraient a distinguer « regle a la meme valeur » de « pas regle ».
     const figure = twoParts()
 
-    expect(barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble']).value_format).toBeUndefined()
+    expect(partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble']).value_format).toBeUndefined()
     expect(
-      barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() })
+      partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() })
         .value_format
     ).toBeUndefined()
 
@@ -395,14 +395,14 @@ describe('os#1463 le format de valeur dune part', () => {
     figure.by_id['l_ble'].value_label_custom_digit = true
     figure.by_id['l_ble'].value_label_nb_digit = 0
 
-    const aspect = barPartAspect(
+    const aspect = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() }
     )
 
     expect(aspect.value_format?.(87.6)).toBe('90 kt')
     // Et la voisine n a rien dit : elle reste sans format propre.
     expect(
-      barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'], { format: figureFormat() })
+      partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_mais'], { format: figureFormat() })
         .value_format
     ).toBeUndefined()
 
@@ -419,7 +419,7 @@ describe('os#1463 le format de valeur dune part', () => {
     figure.by_id['l_ble'].value_label_custom_digit = true
     figure.by_id['l_ble'].value_label_nb_digit = 0
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
 
     expect(aspect.value_format?.(12345)).toBe('1.23e+4')
 
@@ -430,7 +430,7 @@ describe('os#1463 le format de valeur dune part', () => {
     const figure = twoParts()
     figure.by_id['l_ble'].value_label_unit_visible = false
 
-    const aspect = barPartAspect(
+    const aspect = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() }
     )
 
@@ -461,7 +461,7 @@ describe('os#1463 lunite dune part', () => {
     const figure = twoParts()
     figure.by_id['l_ble'].value_label_nb_digit = 2
 
-    const aspect = barPartAspect(
+    const aspect = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() }
     )
 
@@ -477,10 +477,10 @@ describe('os#1463 lunite dune part', () => {
     figure.by_id['l_ble'].value_label_unit_type = 'unit_name'
     figure.by_id['l_ble'].value_label_unit = 'GWh'
 
-    const reglee = barPartAspect(
+    const reglee = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() }
     )
-    const voisine = barPartAspect(
+    const voisine = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_mais'], { format: figureFormat() }
     )
 
@@ -499,7 +499,7 @@ describe('os#1463 lunite dune part', () => {
     figure.by_id['l_ble'].value_label_unit_type = 'unit_model'
     figure.by_id['l_ble'].value_label_unit = 'u_42'
 
-    const aspect = barPartAspect(
+    const aspect = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() }
     )
 
@@ -513,7 +513,7 @@ describe('os#1463 lunite dune part', () => {
     figure.by_id['l_ble'].value_label_unit_type = 'unit_model'
     figure.by_id['l_ble'].value_label_unit = 'u_42'
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], {
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], {
       format: figureFormat(),
       resolveUnit: (id) => id === 'u_42' ? 'GWh' : undefined
     })
@@ -530,7 +530,7 @@ describe('os#1463 lunite dune part', () => {
     const figure = twoParts()
     figure.by_id['l_ble'].value_label_unit_factor = 1000
 
-    const aspect = barPartAspect(
+    const aspect = partAspect(
       BARS_STYLE_DEFAULTS, figure.by_id['l_ble'], { format: figureFormat() }
     )
 
@@ -559,7 +559,7 @@ describe('os#1469 la valeur dune part sécrit comme son nom', () => {
     setAttr(part, 'value_label_italic', true)
     setAttr(part, 'value_label_color', '#FF0000')
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, part)
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, part)
 
     expect(aspect.name?.bold).toBe(true)
     expect(aspect.name?.italic).toBeUndefined()
@@ -583,7 +583,7 @@ describe('os#1469 la valeur dune part sécrit comme son nom', () => {
     setAttr(part, 'value_label_background_visible', true)
     setAttr(part, 'value_label_background_color', '#EEEEEE')
 
-    const v = barPartAspect(BARS_STYLE_DEFAULTS, part).value
+    const v = partAspect(BARS_STYLE_DEFAULTS, part).value
 
     expect(v?.font_family).toBe('Georgia')
     expect(v?.uppercase).toBe(true)
@@ -600,7 +600,7 @@ describe('os#1469 la valeur dune part sécrit comme son nom', () => {
     // La garantie du lot, inchangee : un histogramme enregistre se rouvre au pixel.
     const figure = twoParts()
 
-    const aspect = barPartAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
+    const aspect = partAspect(BARS_STYLE_DEFAULTS, figure.by_id['l_ble'])
 
     expect(aspect.name?.font_family).toBeUndefined()
     expect(aspect.value?.font_family).toBeUndefined()

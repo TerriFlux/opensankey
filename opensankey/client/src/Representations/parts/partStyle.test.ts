@@ -220,7 +220,7 @@ describe('os#1462 le generique en haut, la nature en bas', () => {
 
   it('le lisere blanc a QUITTE le generique pour la nature', () => {
     // LE PARTAGE, ET SA RAISON. Le lisere blanc separe des ANNEAUX : il etait dans l etage
-    // generique, donc herite par les barres, et `barPartStyle` devait s en defendre a la main.
+    // generique, donc herite par les barres, et `partAspect` devait s en defendre a la main.
     // Une valeur fausse qu on neutralise en aval reste une valeur fausse.
     const generique = elementStyleConfigs[FigurePartStyle].config as { [k: string]: unknown }
     const nature = elementStyleConfigs[SunburstPartStyle].config as { [k: string]: unknown }
