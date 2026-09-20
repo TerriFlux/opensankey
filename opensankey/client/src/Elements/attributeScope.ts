@@ -167,17 +167,31 @@ export const attributeScopeOf = (attr_key: string): Type_AttributeScope | undefi
  * Le registre (`inspector/registerBaseSections`) peut donc poser sa `gate` là-dessus au lieu de
  * réécrire la règle — une seule vérité, lue par l'onglet comme par le widget.
  */
-export const familyAppliesTo = (family: string, nature: Type_ElementNature | null): boolean =>
-  scopeSpeaksTo(ATTRIBUTE_FAMILY_SCOPES[family], nature)
+export const familyAppliesTo = (family: string, nature: Type_ElementNature | null): boolean => {
+  if (scopeSpeaksTo(ATTRIBUTE_FAMILY_SCOPES[family], nature)) return true
+  // os#1478 — UNE FAMILLE FERMÉE DONT UNE CLÉ RESSORT RESTE OUVERTE, et c'est un défaut qu'un test
+  // a attrapé avant l'écran : la famille `icon` est masquée en bloc (soixante-trois clés héritées
+  // d'une déclaration d'étiquette), mais cinq d'entre elles décrivent vraiment un pictogramme et
+  // sont ressorties une par une. Sans cette ligne, l'onglet ne s'ouvrait pas et les emportait avec
+  // les autres — on aurait retiré à une part l'icône qu'os#1465 venait de lui donner.
+  //
+  // La règle reste celle de l'en-tête de cette fonction, enfin vraie au pied de la lettre : si
+  // AUCUNE clé de la famille ne parle à cette nature, l'onglet ne s'ouvre pas.
+  return Object.keys(CATALOGUE).some(
+    key => CATALOGUE[key]?.category === family && attributeSpeaksTo(key, nature)
+  )
+}
 
 /** La même question, posée sur une sélection : oui dès qu'une des natures présentes la réclame. */
 export const familyAppliesToElements = (
   elements: readonly unknown[],
   family: string
 ): boolean => {
-  const scope = ATTRIBUTE_FAMILY_SCOPES[family]
-  if (scope === undefined || elements.length === 0) return true
-  return elements.some(el => scopeSpeaksTo(scope, natureOf(el)))
+  if (ATTRIBUTE_FAMILY_SCOPES[family] === undefined || elements.length === 0) return true
+  // os#1478 — par `familyAppliesTo`, pour que les clés RESSORTIES d'une famille fermée comptent
+  // (cf. son commentaire). Les deux portes doivent répondre pareil, sinon l'onglet et le champ se
+  // contredisent — et c'est l'onglet qui gagne, donc le champ qui disparaît.
+  return elements.some(el => familyAppliesTo(family, natureOf(el)))
 }
 
 /** Cet attribut s'adresse-t-il à cette nature ? */
