@@ -31,7 +31,6 @@ import {
   figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
 } from '../Charts/figureZoomBridge'
 import { ZOOM_TOPIC } from '../types/EventBus'
-import type { Type_JSON } from '../types/Utils'
 import type { Type_RepresentationContext, Type_RepresentationZoom } from './RepresentationRegistry'
 import { aggregateLocally, disaggregateLocally } from '../Algorithms/Hierarchies'
 import {
@@ -41,11 +40,11 @@ import {
 } from '../Charts/SunburstHierarchy'
 import { drawSunburstChart } from '../Charts/SunburstChart'
 import { sunburstPartInputs } from './parts/sunburstParts'
-import { figurePartsFor } from './parts/figurePartsRegistry'
+import { figurePartsWiring } from './parts/figurePartsWiring'
 import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
-import { readFigureLabelPositions } from '../Charts/figureChartStyle'
+import { BARS_STYLE_DEFAULTS } from '../Charts/figureChartStyle'
 
 // Ce que le sunburst lit du contexte du registre. La fenêtre et la vignette, quand il y en a :
 // c'est sous elles qu'une étiquette déposée à la main s'écrit, et que le zoom se prête.
@@ -55,11 +54,6 @@ export interface Type_SunburstDrawContext {
   window_id?: string
   pane_key?: string
 }
-
-// os#1463 — LA LECTURE DES POSITIONS DÉPOSÉES A ÉTÉ REMONTÉE dans `Charts/figureChartStyle`, d'où
-// la couronne et les barres la lisent aussi depuis qu'elles sortent leurs étiquettes. La garder ici
-// en double aurait suffi à ce que deux figures relisent différemment le même sac.
-const readLabelPositions = readFigureLabelPositions
 
 /**
  * LE ZOOM DU SUNBURST, capacité déclarée (os#1409) : les boutons −/+/% de la colonne d'outils
@@ -285,64 +279,28 @@ export const drawSunburstRepresentation = (
   // retombe sur le réglage de la figure pour tout le reste (cf. `sunburstPartStyle`). Le dépôt
   // par (fenêtre, vignette) est ce qui fait qu'un réglage posé sur un secteur survit au redessin
   // que provoque le geste suivant.
-  const figure_parts = figurePartsFor(
-    window_id, pane_key, app_data, sunburstPartInputs(sankey, tree), 'sunburst'
+  // os#1475 — LES CINQ GESTES DU BRANCHEMENT SONT ÉCRITS UNE FOIS (cf. `figurePartsWiring`) :
+  // construire les parts en reprenant celles du dessin précédent, déclarer leur document à la
+  // vignette, sélectionner au clic, dire que le geste visait la sélection, et libérer comme il
+  // faut. Ils étaient recopiés ici et dans les natures d'analyse, d'accord au mot près — ce qui
+  // n'est pas une preuve qu'ils le seraient restés.
+  //
+  // `base` : le sunburst a son propre vocabulaire de style (`Type_SunburstStyle`) et n'utilise pas
+  // `part_aspect` ; il lit `by_id` et compose lui-même (`sunburstPartStyle`). On passe donc les
+  // défauts d'un histogramme, que ce chemin-là ne lit jamais.
+  const wiring = figurePartsWiring(
+    ctx, sunburstPartInputs(sankey, tree), 'sunburst', BARS_STYLE_DEFAULTS
   )
-  // os#1446 — LA FIGURE EST UN DOCUMENT, ET C'EST CE QUI OUVRE L'INSPECTEUR D'ÉLÉMENT.
-  //
-  // Lier la vignette à son document de parts fait de lui l'ACTIF dès qu'on touche la fenêtre
-  // (cf. `bindWindowDocument`, os#1422 lot 6 : c'est exactement ce que fait l'étoile). L'inspecteur
-  // suit alors la sélection de CE document — donc, quand une part est sélectionnée, il montre sa
-  // forme, son libellé et sa valeur, sans une ligne d'interface nouvelle. Et quand rien n'est
-  // sélectionné, il retombe sur les réglages de la figure : Graphe, Titre, Légende, Styles.
-  //
-  // C'est la demande de Julien telle qu'elle a été posée : « figure = graphe, et les trois autres
-  // parties dans forme / libellé / valeur de l'élément sélectionné ».
-  if (window_id !== undefined && pane_key !== undefined) {
-    app_data.workspace.bindWindowDocument(window_id, pane_key, figure_parts.document)
-  }
   const teardown_chart = drawSunburstChart(container, tree, {
-    parts: figure_parts.by_id,
-    // Toucher un secteur le sélectionne. La sélection est PURGÉE d'abord : une couronne se lit
-    // un secteur à la fois, et garder l'ancien ferait montrer à l'inspecteur une sélection
-    // multiple que le geste n'a jamais demandée.
-    on_part_select: (sector_id: string) => {
-      const part = figure_parts.by_id[sector_id]
-      if (!part) return
-      const area = figure_parts.document.drawing_area
-      area.purgeSelection()
-      area.addElementToSelection(part)
-      // os#1455 — ET ON DIT QUE LE DERNIER GESTE VISAIT LA SELECTION.
-      //
-      // Sans cette ligne, selectionner une part ne se voyait PAS, et Julien l a constate a
-      // l ecran : « quand je selectionne une part je m attends a avoir des attributs a configurer
-      // pour cette part, comme quand je selectionne un noeud ; c est pas le cas ? ».
-      //
-      // La part etait bien selectionnee — mais toucher une vignette pose `_inspector_focus` sur
-      // « representation » (`setMainZoneActivePane`, au pointerdown), et la resolution de cible
-      // rend `representation` AVANT de regarder la selection : c est la regle de la recence du
-      // geste (os#1394), et elle etait juste tant que rien, DANS une figure, ne se selectionnait.
-      //
-      // Cliquer une part est precisement le contraire d un geste qui parle de la figure : c est
-      // choisir l element qu on veut regler. On remet donc le focus sur la selection, par le
-      // chemin nomme qu os#1431 a ouvert.
-      mc.inspector_focus_is_representation = false
-      mc.updateInspector()
-    },
+    parts: wiring.by_id,
+    on_part_select: wiring.on_part_select,
     style: readSunburstStyle(ctx.options ?? {}),
     // os#1449 — LE TITRE N'EST PLUS UN CAS À PART : c'est la première zone de texte de la figure,
     // et les suivantes sont celles que l'auteur a ajoutées. Le nom du sujet vient du tracé, seul
     // à savoir ce que la couronne montre en ce moment (racine unique ou périmètre).
     texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
-    label_positions: readLabelPositions(ctx.options?.['label_positions']),
-    // Une étiquette déposée s'écrit sur LA FIGURE de la vignette — hors fenêtre (pop-up de
-    // présentation), il n'y a personne à qui l'écrire et le geste reste à l'écran.
-    on_label_move: window_id !== undefined && pane_key !== undefined
-      ? (id, position) => {
-        const positions = { ...readLabelPositions(ctx.options?.['label_positions']), [id]: position }
-        mc.setMainZonePaneOptions(window_id, pane_key, { ...ctx.options, label_positions: positions } as Type_JSON)
-      }
-      : undefined,
+    label_positions: wiring.label_positions,
+    on_label_move: wiring.on_label_move,
     zoom_handle: (handle) => publishFigureZoom(window_id, pane_key, handle),
     on_zoom: () => mc.notify(ZOOM_TOPIC),
     initial_view: figureViewOf(window_id, pane_key),
@@ -367,18 +325,7 @@ export const drawSunburstRepresentation = (
 
   return () => {
     teardown_chart()
-    // os#1446 — la vignette ne montre plus ce document : l'actif doit repartir sur la voie
-    // ordinaire (la feuille que la fenêtre regarde), sinon l'inspecteur continuerait de parler
-    // d'une couronne démontée.
-    if (window_id !== undefined && pane_key !== undefined) {
-      app_data.workspace.unbindWindowDocument(window_id, pane_key)
-    }
-    // HORS FENÊTRE SEULEMENT. Un jeu de parts sans (fenêtre, vignette) est jetable et personne
-    // n'en garde la trace : c'est ici qu'il cesse de vivre. Dans une vignette, au contraire, le
-    // dépôt le garde exprès — un démontage est le plus souvent un simple redessin, et libérer
-    // ici perdrait à chaque geste les réglages que l'auteur vient de poser. C'est la fermeture de
-    // la vignette qui libère (`forgetFigureParts`).
-    if (window_id === undefined || pane_key === undefined) figure_parts.document.dispose()
+    wiring.release()
   }
 }
 

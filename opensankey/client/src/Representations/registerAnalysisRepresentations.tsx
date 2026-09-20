@@ -27,23 +27,20 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import { drawDonutChart, drawBarChart, drawGroupedBarChart } from '../Charts/NodeStatsCharts'
-import { figurePartsFor } from './parts/figurePartsRegistry'
+import { figurePartsWiring } from './parts/figurePartsWiring'
 import { analysisPartInputs } from './parts/analysisParts'
 import { BARS_ATTRIBUTES, DONUT_ATTRIBUTES } from './analysisFigureAttributes'
 import type { Type_ChartPart } from '../Charts/AnalysisChartData'
-import { partAspectResolver } from '../Charts/partAspect'
 import {
   representation_registry,
   type Type_RepresentationContext
 } from './RepresentationRegistry'
 import {
-  figureChartStyleOf, figureTitleOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS,
-  readFigureLabelPositions
+  figureChartStyleOf, figureTitleOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
 import { figureUnitOf, figureUnitOfNode } from './figureUnit'
-import type { Type_JSON } from '../types/Utils'
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
@@ -184,17 +181,9 @@ const analysisPartsWiring = (
   descriptor: Type_AnalysisDescriptor,
   parts: Type_ChartPart[],
   base: Type_FigureChartStyle,
-  // os#1462 — la sorte de figure, qui decide du second etage de styles des parts.
   nature: string
 ) => {
   const app_data = ctx.app_data
-  const { window_id, pane_key } = ctx
-  const figure_parts = figurePartsFor(
-    window_id, pane_key, app_data, analysisPartInputs(subject, descriptor, parts), nature
-  )
-  if (window_id !== undefined && pane_key !== undefined) {
-    app_data.workspace.bindWindowDocument(window_id, pane_key, figure_parts.document)
-  }
   // os#1463 — CE QUE LA PART NE PEUT PAS SAVOIR SEULE, et que l'aspect doit pourtant connaître.
   //
   // Le FORMAT DE LA FIGURE : une part qui règle deux décimales ne règle pas pour autant l'unité ni
@@ -206,61 +195,17 @@ const analysisPartsWiring = (
   const unit = subject?.kind === 'node'
     ? figureUnitOfNode(subject.node)
     : figureUnitOf(app_data.drawing_area.sankey)
-  const part_context = {
-    format: figureValueFormatOf(ctx.options, unit),
-    resolveUnit: (id: string) => app_data.drawing_area.sankey.units.resolve(id)?.unit.label
-  }
-  // os#1463 — LES ÉTIQUETTES SORTIES, DÉPOSÉES À LA MAIN. Même procédé qu'au sunburst : la
-  // position s'écrit sur LA FIGURE de la vignette. Hors fenêtre (pop-up de présentation), il n'y a
-  // personne à qui l'écrire et le geste reste à l'écran — ce qui est le comportement voulu, une
-  // pop-up ne modifiant rien.
-  const label_positions = readFigureLabelPositions(ctx.options?.['label_positions'])
-  const on_label_move = (window_id !== undefined && pane_key !== undefined)
-    ? (id: string, position: { x: number, y: number }) => {
-      const positions = { ...readFigureLabelPositions(ctx.options?.['label_positions']), [id]: position }
-      app_data.menu_configuration.setMainZonePaneOptions(
-        window_id, pane_key, { ...ctx.options, label_positions: positions } as Type_JSON
-      )
+  // os#1475 — LES CINQ GESTES SONT ÉCRITS UNE FOIS (cf. `figurePartsWiring`). Ce qui reste ici est
+  // ce qui est propre à une figure d'ANALYSE : de quoi décomposer, et l'unité du sujet regardé.
+  return figurePartsWiring(
+    ctx, analysisPartInputs(subject, descriptor, parts), nature, base,
+    {
+      format: figureValueFormatOf(ctx.options, unit),
+      resolveUnit: (id: string) => app_data.drawing_area.sankey.units.resolve(id)?.unit.label
     }
-    : undefined
-  return {
-    part_aspect: partAspectResolver(base, figure_parts.by_id, part_context),
-    label_positions,
-    on_label_move,
-    on_part_select: (part_id: string) => {
-      const part = figure_parts.by_id[part_id]
-      if (!part) return
-      // Une figure se lit une part à la fois : on purge, sinon l'inspecteur montrerait une
-      // sélection multiple que le geste n'a jamais demandée.
-      const area = figure_parts.document.drawing_area
-      area.purgeSelection()
-      area.addElementToSelection(part)
-      // os#1455 — ET ON DIT QUE LE DERNIER GESTE VISAIT LA SELECTION.
-      //
-      // Sans cette ligne, selectionner une part ne se voyait PAS, et Julien l a constate a
-      // l ecran : « quand je selectionne une part je m attends a avoir des attributs a configurer
-      // pour cette part, comme quand je selectionne un noeud ; c est pas le cas ? ».
-      //
-      // La part etait bien selectionnee — mais toucher une vignette pose `_inspector_focus` sur
-      // « representation » (`setMainZoneActivePane`, au pointerdown), et la resolution de cible
-      // rend `representation` AVANT de regarder la selection : c est la regle de la recence du
-      // geste (os#1394), et elle etait juste tant que rien, DANS une figure, ne se selectionnait.
-      //
-      // Cliquer une part est precisement le contraire d un geste qui parle de la figure : c est
-      // choisir l element qu on veut regler. On remet donc le focus sur la selection, par le
-      // chemin nomme qu os#1431 a ouvert.
-      app_data.menu_configuration.inspector_focus_is_representation = false
-      app_data.menu_configuration.updateInspector()
-    },
-    release: () => {
-      if (window_id !== undefined && pane_key !== undefined) {
-        app_data.workspace.unbindWindowDocument(window_id, pane_key)
-      } else {
-        figure_parts.document.dispose()
-      }
-    }
-  }
+  )
 }
+
 
 const chartOptions = (
   ctx: Type_RepresentationContext,
