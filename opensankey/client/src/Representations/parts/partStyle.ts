@@ -52,7 +52,9 @@
 // chose. Cocher le liséré sur UN secteur restait donc sans effet dès que la valeur cochée était
 // celle dont la part héritait. `Class_PartElement` lit son sac propre par simple présence.
 
-import { elementStyleConfigs, figure_part_styles, FigurePartStyle } from '../../Elements/ElementStyle'
+import {
+  elementStyleConfigs, figure_part_nature_styles, figure_part_styles, FigurePartStyle
+} from '../../Elements/ElementStyle'
 import type { Class_ElementStyle } from '../../Elements/Element'
 import type { Class_Sankey } from '../../types/Sankey'
 
@@ -79,14 +81,35 @@ export const partStyleSpeaksOf = (style: Class_ElementStyle, attr: string): bool
 /**
  * Créer les styles de part d'un document de figure. Idempotent : `create_internal_style` ne
  * réécrit pas un style existant.
+ *
+ * os#1462 — LE GÉNÉRIQUE, ET CELUI DE CETTE NATURE, ET EUX SEULS. Semer les trois natures d'un
+ * coup offrirait « Part de barres » dans la liste des styles d'une couronne : un réglage sans
+ * effet, ce qui est la pire chose à proposer à un auteur. Une figure ne voit donc que les deux
+ * étages qui la concernent.
  */
-export const seedPartStyles = (sankey: Class_Sankey): void => {
+export const seedPartStyles = (sankey: Class_Sankey, nature?: string): void => {
   figure_part_styles.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+  const nature_style = nature !== undefined ? figure_part_nature_styles[nature] : undefined
+  if (nature_style !== undefined) sankey.create_internal_style(nature_style, elementStyleConfigs)
 }
 
-/** Le style que portent les parts d'une figure. */
+/** Le style générique des parts d'une figure — celui qui vaut quelle que soit sa nature. */
 export const partStyleOf = (sankey: Class_Sankey): Class_ElementStyle =>
   sankey.styles_dict[FigurePartStyle]
+
+/**
+ * Le style de CETTE nature, s'il en existe un et qu'il a été semé.
+ *
+ * Rendu séparément du générique parce qu'il se pose autrement : le générique est le style de
+ * construction de la part (`new Class_PartElement(..., style)`), celui-ci s'empile par-dessus
+ * (`addStyle`) — c'est-à-dire qu'il gagne, ce qui est le sens de « ça se spécialise en bas ».
+ */
+export const partNatureStyleOf = (
+  sankey: Class_Sankey, nature?: string
+): Class_ElementStyle | undefined => {
+  const style_id = nature !== undefined ? figure_part_nature_styles[nature] : undefined
+  return style_id !== undefined ? sankey.styles_dict[style_id] : undefined
+}
 
 // `carryPartStyleOver` A ETE RETIRE (os#1453), et son absence est le signe que la correction a
 // porte. Il n'existait que pour rattraper un document qu'on jetait a chaque dessin : il reportait,
