@@ -42,6 +42,21 @@ export interface Type_SunburstStyle {
   border_visible: boolean
   border_color: string
   border_thickness: number
+  /**
+   * os#1462 — LA COULEUR ET LE FOND D'UNE PART, et eux seuls sont facultatifs ici.
+   *
+   * Julien, à l'écran : « Fond et Bordure n'agissent pas sur l'élément du sunburst ; y a-t-il un
+   * dessin du fond et de la bordure par part ? si ce n'est pas le cas il faut le faire, et cela
+   * pour tous les attributs pertinents — couleur, etc. » La bordure était lue ; la COULEUR et la
+   * VISIBILITÉ DU FOND non : l'arc se peignait de `d.color`, c'est-à-dire de la teinte que
+   * l'arbre lui donne, sans jamais demander à la part ce qu'elle en dit.
+   *
+   * FACULTATIFS parce qu'ils n'ont de sens que par part. Au niveau de la FIGURE, la couleur ne se
+   * choisit pas secteur par secteur : elle se décide par `color_source` et `depth_shading`.
+   * Absents, c'est donc « la figure décide » — l'aspect d'avant ce lot, au pixel.
+   */
+  fill?: string
+  background_visible?: boolean
   /** Regrouper AUSSI les parts sous ce pourcentage du tout. 0 : seulement l'invisible. */
   others_threshold: number
   labels_mode: 'fit' | 'none' | 'always'
@@ -206,6 +221,11 @@ export const sunburstPartStyle = (
   }
 
   // FORME (`shape_*`)
+  // os#1462 — la couleur et le fond, qui manquaient : un secteur se repeint et s'efface comme il
+  // change d'opacité ou de liséré. `shape_color_visible` est lu SÉPARÉMENT de `shape_color` — une
+  // part qui cache son fond sans avoir choisi de couleur ne dit rien de la seconde.
+  put('fill', textSaid(said('shape_color')))
+  put('background_visible', booleanSaid(said('shape_color_visible')))
   put('opacity', numberSaid(said('shape_opacity')))
   put('border_visible', booleanSaid(said('shape_border_visible')))
   put('border_color', textSaid(said('shape_border_color')))
@@ -1105,7 +1125,14 @@ export const drawSunburstChart = (
       .enter().append('path')
       .attr('class', 'sunburst_arc')
       .attr('d', d => arc(d))
-      .attr('fill', d => d.color)
+      // os#1462 — la couleur du secteur est CELLE DE LA PART quand elle en dit une, et « Fond »
+      // décoché l'emporte sur toute couleur : c'est le sens du réglage. Sinon, la teinte de
+      // l'arbre, exactement comme avant.
+      .attr('fill', d => {
+        const s = styleOf(d.id)
+        if (s.background_visible === false) return 'none'
+        return s.fill ?? d.color
+      })
       // os#1445 — LA FORME EST CELLE DE LA PART : opacité et liséré se règlent secteur par
       // secteur, et retombent sur le réglage de la figure pour tous ceux qui ne disent rien.
       .attr('stroke', d => styleOf(d.id).border_visible ? styleOf(d.id).border_color : 'none')

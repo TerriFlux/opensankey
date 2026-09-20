@@ -45,10 +45,11 @@ export const figurePartsFor = (
   window_id: string | undefined,
   pane_key: string | undefined,
   source: Class_ApplicationData,
-  inputs: Type_PartInput[]
+  inputs: Type_PartInput[],
+  nature?: string
 ): Type_FigureParts => {
   if (window_id === undefined || pane_key === undefined) {
-    return buildParts(source, inputs)
+    return buildParts(source, inputs, undefined, nature)
   }
   pruneClosedWindows(source)
   const key = keyOf(window_id, pane_key)
@@ -56,7 +57,7 @@ export const figurePartsFor = (
   // document, mêmes parts — au lieu de le remplacer. La libération se joue à la FERMETURE de la
   // vignette (`forgetFigureParts`, `pruneClosedWindows`), c'est-à-dire là où la figure cesse
   // vraiment d'exister.
-  const next = buildParts(source, inputs, _parts.get(key))
+  const next = buildParts(source, inputs, _parts.get(key), nature)
   _parts.set(key, next)
   return next
 }

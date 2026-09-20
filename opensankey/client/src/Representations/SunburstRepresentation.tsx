@@ -291,7 +291,7 @@ export const drawSunburstRepresentation = (
   // par (fenêtre, vignette) est ce qui fait qu'un réglage posé sur un secteur survit au redessin
   // que provoque le geste suivant.
   const figure_parts = figurePartsFor(
-    window_id, pane_key, app_data, sunburstPartInputs(sankey, tree)
+    window_id, pane_key, app_data, sunburstPartInputs(sankey, tree), 'sunburst'
   )
   // os#1446 — LA FIGURE EST UN DOCUMENT, ET C'EST CE QUI OUVRE L'INSPECTEUR D'ÉLÉMENT.
   //
