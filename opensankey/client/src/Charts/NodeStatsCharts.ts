@@ -68,7 +68,7 @@ export interface Type_ChartOptions {
   title?: Type_FigureTitle
   title_fallback?: string
   /**
-   * os#1453 — L'ASPECT D'UNE PART, quand elle en porte un.
+   * os#1460 — L'ASPECT D'UNE PART, quand elle en porte un.
    *
    * Depuis os#1445 un secteur de couronne, une barre, sont de vrais ÉLÉMENTS : on les touche, et
    * l'inspecteur montre leur Forme, leur Libellé, leur Valeur. Encore faut-il que le tracé les
@@ -82,14 +82,14 @@ export interface Type_ChartOptions {
    */
   part_aspect?: (part_id: string) => Type_ChartPartAspect | undefined
   /**
-   * os#1453 — le secteur ou la barre qu'on vient de toucher. L'hôte en fait ce qu'il veut : la
+   * os#1460 — le secteur ou la barre qu'on vient de toucher. L'hôte en fait ce qu'il veut : la
    * couronne sélectionne la part correspondante, et l'inspecteur répond.
    */
   on_part_select?: (part_id: string) => void
 }
 
 /**
- * os#1453 — ce qu'une part dit de son aspect, résolu ailleurs. Tout est optionnel : ce qui n'est
+ * os#1460 — ce qu'une part dit de son aspect, résolu ailleurs. Tout est optionnel : ce qui n'est
  * pas dit reste au style de la figure.
  */
 export interface Type_ChartPartAspect {
@@ -308,14 +308,14 @@ export const drawDonutChart = (
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
     `${d.data.label}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
-  // os#1453 — L'ASPECT DE CHAQUE SECTEUR, le sien s'il en a un, celui de la figure sinon.
+  // os#1460 — L'ASPECT DE CHAQUE SECTEUR, le sien s'il en a un, celui de la figure sinon.
   const aspectOf = (id: string) => opts.part_aspect?.(id)
   const paths = g.selectAll('path')
     .data(arcs)
     .enter().append('path')
     .attr('class', 'node_stats_arc')
     .attr('id', d => 'node_stats_arc_' + d.index)
-    // os#1453 — CE QUI REND LE SECTEUR CLIQUABLE ET NOMMÉ. Un `data-*` et jamais un `id` : les
+    // os#1460 — CE QUI REND LE SECTEUR CLIQUABLE ET NOMMÉ. Un `data-*` et jamais un `id` : les
     // `id` sont globaux, deux couronnes côte à côte se voleraient leurs dégradés (interdit
     // documenté dans `UnitaryStarChart`). La délégation se fait sur le conteneur, qui survit aux
     // redessins de d3.

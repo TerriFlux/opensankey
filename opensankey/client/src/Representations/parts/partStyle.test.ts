@@ -1,4 +1,4 @@
-// os#1448 — LES PARTS ONT LEURS STYLES.
+// os#1449 — LES PARTS ONT LEURS STYLES.
 //
 // « Ben ajoute des styles de part ? non » (Julien, 20/09). Les parts avaient depuis os#1445 un
 // document et une cascade, mais toutes accrochees au `default_style` : l onglet Styles de
@@ -35,7 +35,7 @@ const twoParts = (): Type_FigureParts => buildParts(buildSource(), [
   { id: 'n_mais', label: 'Mais', value: 4 }
 ])
 
-describe('os#1448 le style de part existe et se voit', () => {
+describe('os#1449 le style de part existe et se voit', () => {
 
   it('le document de parts porte un style de part, et il est liste', () => {
     // Sa simple PRESENCE dans `styles_list` est ce que le selecteur de styles de l inspecteur
@@ -72,7 +72,7 @@ describe('os#1448 le style de part existe et se voit', () => {
   })
 })
 
-describe('os#1448 le semis passe par la cascade, jamais par copyFrom', () => {
+describe('os#1449 le semis passe par la cascade, jamais par copyFrom', () => {
 
   it('le style ne porte QUE ses cles declarees', () => {
     // LE PIEGE QUI A DEJA COUTE UNE RECETTE. Un `copyFrom(default_style)` aurait recopie le sac
@@ -97,7 +97,7 @@ describe('os#1448 le semis passe par la cascade, jamais par copyFrom', () => {
   })
 })
 
-describe('os#1448 regler le style, ou regler une part', () => {
+describe('os#1449 regler le style, ou regler une part', () => {
 
   it('regler le style change TOUTES les parts', () => {
     // La seconde moitie de la demande : « pour editer globalement on le fait par les styles ».
@@ -166,7 +166,7 @@ describe('os#1448 regler le style, ou regler une part', () => {
   })
 })
 
-describe('os#1448 une couronne enregistree se rouvre a lidentique', () => {
+describe('os#1449 une couronne enregistree se rouvre a lidentique', () => {
 
   it('sans rien de dit, laspect de la figure tient — meme regle par lauteur', () => {
     // LE CAS QUI COMMANDE LE LOT, et celui que l amorce aurait pu casser. Une couronne dont
