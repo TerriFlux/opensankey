@@ -176,12 +176,20 @@ describe('os#1464 l autre sens : ce qu une nature declare pour elle seule', () =
     expect(attributeAppliesToElements([part], 'value_label_in_out_display_mode')).toBe(false)
   })
 
-  it('coller la valeur au libelle s adresse au noeud et au flux, et a eux seuls', () => {
+  it('coller la valeur au libelle s adresse au noeud, au flux ET A LA PART', () => {
+    // LA PART EST ENTREE APRES, et c est Julien qui l a demandee : « l option par defaut c est
+    // d avoir les deux attaches ; cette option existe pour les flux je crois, donc reutilisons-la »
+    // (os#1470). Elle dit deja la bonne chose dans les sept langues, et le trace d un secteur la
+    // lit depuis (`partAspect`, `value_attached`).
+    //
+    // Ce test affirmait le contraire — ecrit en os#1464, jamais relu quand os#1470 a elargi la
+    // portee. Il est corrige vers le REEL, pas vers le vert : la zone reste seule exclue, parce
+    // qu elle n ecrit pas de valeur.
     const { noeud, flux, zone, part } = buildScene()
     expect(attributeAppliesToElements([noeud], 'value_label_stick_to_label')).toBe(true)
     expect(attributeAppliesToElements([flux], 'value_label_stick_to_label')).toBe(true)
+    expect(attributeAppliesToElements([part], 'value_label_stick_to_label')).toBe(true)
     expect(attributeAppliesToElements([zone], 'value_label_stick_to_label')).toBe(false)
-    expect(attributeAppliesToElements([part], 'value_label_stick_to_label')).toBe(false)
   })
 
   it('une nature sait enumerer ce qui est a elle', () => {
