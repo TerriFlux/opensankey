@@ -6,7 +6,7 @@
 // Author        : Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// os#1448 — LE STYLE DES PARTS : le semer, et savoir quand il PARLE.
+// os#1449 — LE STYLE DES PARTS : le semer, et savoir quand il PARLE.
 //
 // « Pour éditer globalement on le fait par les styles » (Julien, 20/09). Les parts avaient un
 // document et une cascade depuis os#1445, mais elles étaient toutes accrochées au `default_style`

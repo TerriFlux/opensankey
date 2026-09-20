@@ -121,7 +121,7 @@ describe('os#1445 une couronne enregistree avant ce lot ne change pas daspect', 
     const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }])
     const part = figure.by_id['n_ble']
 
-    // os#1448 — CE QUE LA PART RESOUT A CHANGE, CE QU ELLE DIT NON. Depuis que les parts ont leur
+    // os#1449 — CE QUE LA PART RESOUT A CHANGE, CE QU ELLE DIT NON. Depuis que les parts ont leur
     // style, une part fraiche resout l aspect d usine d une FIGURE et non celui d un noeud : dix
     // points, opacite 1. C est ce que l inspecteur montre, et c est ce que la couronne dessine.
     expect(part.name_label_font_size).toBe(SUNBURST_STYLE_DEFAULTS.font_size)
