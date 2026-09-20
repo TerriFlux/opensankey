@@ -297,3 +297,43 @@ describe('os#1465 un secteur nomme sa filiere par son pictogramme', () => {
     expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, sans).icon_path).toBeUndefined()
   })
 })
+
+// os#1470 — COLLER LA VALEUR AU NOM, OU L EN DETACHER.
+//
+// Julien : « oui mais je crois qu il faut le faire ; l option par defaut c est d avoir les deux
+// attaches. Cette option existe pour les flux je crois, donc reutilisons-la. »
+//
+// C est `value_label_stick_to_label`, la cle des flux, avec son mot deja traduit en sept langues :
+// « Coller au libelle ». Rien a inventer, rien a declarer.
+describe('os#1470 le nombre dune part se colle au nom ou sen detache', () => {
+
+  const buildSource = () => {
+    const doc = new Class_ApplicationData(false)
+    doc.drawing_area.bypass_redraws = true
+    return doc
+  }
+  const unePart = () => buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }],
+    undefined, 'sunburst').by_id['n_ble']
+
+  it('par defaut la part ne dit rien, et le trace garde son usage', () => {
+    // LE POINT QUI PROTEGE LES DEUX PARCS. La cle vaut FAUX par defaut dans le catalogue, mais une
+    // part n est ecoutee que sur ce qu elle DIT : tant qu elle se tait, le secteur reste colle et
+    // l histogramme reste separe. Un defaut unique aurait change l aspect de l un des deux.
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, unePart()).value_attached).toBeUndefined()
+  })
+
+  it('la part peut detacher son nombre', () => {
+    const part = unePart()
+    part.value_label_stick_to_label = false
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part).value_attached).toBe(false)
+  })
+
+  it('et le recoller explicitement', () => {
+    // Distinct de « absent » : une part qui a dit non puis oui doit pouvoir revenir.
+    const part = unePart()
+    part.value_label_stick_to_label = true
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part).value_attached).toBe(true)
+  })
+})
