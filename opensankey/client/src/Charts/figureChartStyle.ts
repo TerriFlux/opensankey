@@ -140,132 +140,105 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   value_label_percent: 'none'
 }
 
-// ── os#1463 — CE QU'UNE PART DIT DE SA TYPOGRAPHIE ET DU FORMAT DE SA VALEUR ─────────────────
+// ── CE QU'UNE PART DIT DE SES TEXTES ─────────────────────────────────────────────────────────
 //
-// Le sunburst lisait déjà une vingtaine de clés sur un secteur (`sunburstPartStyle`) ; la couronne
-// d'OS+ et les barres n'en lisaient que QUATRE — le nom visible et sa taille, la valeur visible et
-// son pourcentage. Régler la police, la casse ou les décimales d'un secteur était donc un geste
-// sans effet : l'inspecteur offrait le réglage, rien ne l'écoutait.
+// os#1463 puis os#1469. Le sunburst lisait déjà une vingtaine de clés sur un secteur ; la couronne
+// et les barres n'en lisaient que quatre, et RIEN sur la valeur — le nombre écrit sous une barre ne
+// se mettait pas en forme du tout, alors que son nom le pouvait.
 //
-// ⚠️ CES CHAMPS SONT TOUS FACULTATIFS, ET C'EST TOUTE LA GARANTIE DU LOT. `Type_FigureChartStyle`
-// ne les porte délibérément PAS. Une couronne n'a jamais eu de police, de casse ni de séparateur
-// RÉGLABLES au niveau de la figure : son étiquette s'écrit en blanc, dans la police de la page,
-// sur une ligne. Les faire entrer dans le style de la figure les ferait lire sur son sac de
-// réglages par `readOver` — où une clé homonyme écrite par une AUTRE nature (une couronne
-// hiérarchique en porte neuf, cf. `sunburstAttributes`) repeindrait le parc en silence. Ils ne
-// valent donc QUE par surcharge de part : absents, le tracé est celui d'hier, au pixel.
-export interface Type_FigurePartLabelAspect extends Type_FigureLabelBackground {
-  /** `name_label_font_family` — absent ou vide : la police de la page, comme hier. */
-  label_font_family?: string
-  /** `name_label_bold` / `name_label_italic`. */
-  label_bold?: boolean
-  label_italic?: boolean
+// ⚠️ LA LEÇON DU CHANTIER EST APPLIQUÉE ICI : une part a DEUX textes, son nom et sa valeur, et ils
+// se décrivent par le MÊME type. La version d'avant décrivait le nom en quinze champs plats
+// (`label_font_family`, `label_bold`…) ; ajouter la valeur aurait voulu dire quinze champs de plus,
+// `value_font_family`, `value_bold`… — c'est-à-dire exactement la duplication qui a fait diverger
+// les natures entre elles, recommencée une famille plus bas. Deux moitiés du même type ne peuvent
+// pas diverger : ce qu'on ajoute à l'une, l'autre l'a.
+//
+// ⚠️ ET TOUT Y EST FACULTATIF, ce qui est la garantie du lot. `Type_FigureChartStyle` ne porte
+// délibérément pas ces clés au niveau de la part : absentes, le tracé est celui d'hier, au pixel.
+
+/** Ce qu'une part dit d'UN de ses textes — son nom, ou sa valeur. */
+export interface Type_FigurePartTextAspect extends Type_FigureLabelBackground {
+  /** `*_font_family` — absent ou vide : la police de la page, comme hier. */
+  font_family?: string
+  /** `*_font_size`, en points. */
+  font_size?: number
+  /** `*_bold` / `*_italic`. */
+  bold?: boolean
+  italic?: boolean
   /**
-   * `name_label_uppercase`. La casse s'applique AU TEXTE et non au style : `text-transform` n'est
-   * pas honoré par tous les moteurs SVG, et l'export PNG en dépend (même raison qu'au sunburst).
+   * `*_uppercase`. La casse s'applique AU TEXTE et non au style : `text-transform` n'est pas honoré
+   * par tous les moteurs SVG, et l'export PNG en dépend (même raison qu'au sunburst).
    */
-  label_uppercase?: boolean
-  /** `name_label_color` — l'encre de CE secteur. Absente : celle du tracé (blanc sur une couronne). */
-  label_color?: string
+  uppercase?: boolean
+  /** `*_color` — l'encre de CE texte. Absente : celle du tracé. */
+  color?: string
   /**
-   * `name_label_box_width`, en pixels : au-delà, le texte revient à la ligne entre les mots.
-   * Absente ou nulle : une seule ligne, c'est-à-dire toute couronne déjà enregistrée.
+   * `*_box_width`, en pixels : au-delà, le texte revient à la ligne entre les mots.
+   * Absente ou nulle : une seule ligne, c'est-à-dire toute figure déjà enregistrée.
    */
-  label_box_width?: number
-  /** `name_label_separator` / `_part` — le nom se réduit à ce qui suit (ou précède) le séparateur. */
-  label_separator?: string
-  label_separator_part?: 'before' | 'after'
+  box_width?: number
+  /** `*_wrap_long_words` — un mot plus long que la boîte se COUPE au lieu de déborder. */
+  wrap_long_words?: boolean
   /**
-   * `name_label_wrap_long_words` — un mot plus long que la boîte se COUPE au lieu de déborder.
-   * Absent : il déborde, comme hier (le réglage n'existait pas dans les figures).
+   * `*_prune_if_unfitting` — « Masquer si ça dépasse » : le texte qui ne tient pas dans sa part
+   * n'est pas écrit du tout, plutôt que de mordre sur ses voisines.
    */
-  label_wrap_long_words?: boolean
+  prune_if_unfitting?: boolean
+  /** `*_separator` / `*_separator_part` — le texte se réduit à ce qui suit (ou précède). */
+  separator?: string
+  separator_part?: 'before' | 'after'
+
+  // OÙ IL SE POSE (os#1466). Absents = le tracé d'hier : nom sous l'axe, valeur au-dessus.
+  /** `*_inside_vert` — DANS la part au lieu d'être à côté. Sur une barre : dans le rectangle. */
+  inside?: boolean
+  /** `*_vert` / `*_horiz` — en haut, au milieu, en bas ; à gauche, au milieu, à droite. */
+  vert?: 'top' | 'middle' | 'bottom'
+  horiz?: 'left' | 'middle' | 'right'
+  /** `*_horiz_shift` / `*_vert_shift` — le décalage fin, en pixels, appliqué en dernier. */
+  shift_x?: number
+  shift_y?: number
   /**
-   * `name_label_prune_if_unfitting` — « Masquer si ça dépasse ». L'étiquette qui ne tient pas dans
-   * sa part n'est pas écrite du tout, plutôt que de mordre sur ses voisines.
-   *
-   * Absent : elle s'écrit quoi qu'il arrive, et c'est le tracé d'hier — la couronne ne renonçait
-   * qu'aux secteurs trop étroits (`MIN_LABEL_SHARE`), jamais sur la longueur du texte.
+   * `*_text_align` — l'ancrage du texte. DISTINCT de `horiz` : l'un dit OÙ est le point d'ancrage
+   * dans la part, l'autre de quel côté le texte pend à partir de ce point.
    */
-  label_prune_if_unfitting?: boolean
+  text_align?: 'left' | 'middle' | 'right'
+}
+
+/** Ce qu'une part dit de ses deux textes, plus ce qui n'appartient à aucun des deux. */
+export interface Type_FigurePartLabelAspect {
+  /** Le NOM de la part. */
+  name?: Type_FigurePartTextAspect
+  /** La VALEUR de la part — mêmes réglages, puisque c'est un texte comme l'autre. */
+  value?: Type_FigurePartTextAspect
   /**
    * `name_label_callout` — L'ÉTIQUETTE DÉTACHÉE, RELIÉE À SA PART PAR UN TRAIT.
    *
-   * Le procédé est celui du sunburst (`Type_SunburstStyle.callout`, `calloutable`,
-   * `MIN_CALLOUT_EDGE_PX`, `label_positions`) : celle qui ne tient pas sort, dans l'axe de sa part,
-   * reliée au bord par un segment, et se déplace à la main.
-   *
-   * ⚠️ AUCUNE PART NE PEUT ENCORE LE DIRE, et c'est un manque du CATALOGUE, pas d'ici :
-   * `name_label_callout` est déclaré dans `figureCatalogue` (clé de figure) et non dans
-   * `ElementsAttributesConfig` (attribut d'élément) — exactement comme `name_label_contrast_color`.
-   * Le champ est donc lu par le tracé et posé par la figure ; il s'allumera part par part le jour
-   * où `callout` entrera dans le catalogue des éléments, sans que rien ne change ici.
+   * Le procédé est celui du sunburst : celle qui ne tient pas sort, dans l'axe de sa part, reliée
+   * au bord par un segment, et se déplace à la main. Hors des deux textes parce qu'il ne décrit pas
+   * une écriture mais un DÉPLACEMENT, et qu'il emporte le nom et la valeur ensemble.
    */
   label_callout?: boolean
   /**
-   * LE FORMAT DE LA VALEUR DE CETTE PART, quand elle en règle un (`value_label_scientific_notation`,
-   * `_significant_digits`, `_nb_significant_digits`, `_custom_digit`, `_nb_digit`,
-   * `_unit_visible`).
+   * LE FORMAT DE LA VALEUR DE CETTE PART, quand elle en règle un.
    *
    * UNE FONCTION DÉJÀ MONTÉE, et non les six clés : le tracé écrit alors `(aspect.value_format ??
    * format)(v)` — une ligne, et l'ABSENCE dit exactement « cette part n'a rien réglé, la figure
    * écrit ce nombre comme elle écrit les autres ». Six clés recomposées au tracé l'obligeraient à
    * distinguer « réglé à la même valeur » de « pas réglé », ce qu'il ne peut pas voir.
-   *
-   * Le procédé est celui de `figureFormat` — notation scientifique, puis chiffres significatifs,
-   * puis décimales imposées, dans cet ordre —, le même que `formatWith` dans `SunburstChart` et
-   * que les étiquettes d'un flux. Il n'est pas réécrit : il est appelé.
    */
   value_format?: (value: number) => string
 
-  // ── OÙ SE POSE L'ÉTIQUETTE (os#1466) ────────────────────────────────────────────────────────
+  // ── LE PICTOGRAMME (os#1465) ──────────────────────────────────────────────────────────────
   //
-  // Julien : « les options de placement ne marchent pas », puis « tout ce qui a du sens, il faut
-  // l'implémenter ». Elles ont du sens, et sur une barre elles en ont beaucoup : « au-dessus /
-  // dedans / en dessous » est le réglage le plus naturel d'un histogramme.
-  //
-  // CE SONT LES CLÉS D'ÉLÉMENT, et c'est l'arbitrage du lot. On aurait pu en faire des clés de
-  // FIGURE, comme `name_label_orientation` l'est pour le sunburst. Mais l'orientation décrit le
-  // TRACÉ — comment les étiquettes courent dans un disque —, alors que le placement décrit UNE
-  // étiquette : une barre au premier plan peut vouloir son nom dedans quand ses voisines le
-  // gardent dessous. C'est la définition même d'un réglage de part, et les clés existaient déjà.
-  //
-  // ABSENTS = LE TRACÉ D'HIER, au pixel : nom sous l'axe, valeur au-dessus de la barre.
+  // Au niveau de la PART et non d un de ses textes : une icone n est ni le nom ni la valeur, c est
+  // une troisieme chose que la part porte. Le chemin arrive DEJA RESOLU (sorti du catalogue du
+  // document) : le trace n a qu a le peindre, sans rien savoir du modele.
 
-  /**
-   * `name_label_inside_vert` — l'étiquette est DANS la part au lieu d'être à côté.
-   *
-   * Sur une barre : dans le rectangle, au lieu de sous l'axe. Sur une couronne, un secteur n'a pas
-   * de « dedans » et de « dehors » de même nature — sortir, c'est l'étiquette détachée reliée par
-   * un trait (`label_callout`), qui a son propre réglage parce qu'elle a besoin d'un trait.
-   */
-  label_inside?: boolean
-  /** `name_label_vert` — en haut, au milieu ou en bas de la part. */
-  label_vert?: 'top' | 'middle' | 'bottom'
-  /** `name_label_horiz` — à gauche, au milieu ou à droite. */
-  label_horiz?: 'left' | 'middle' | 'right'
-  /** `name_label_horiz_shift` / `_vert_shift` — le décalage fin, en pixels, appliqué en dernier. */
-  label_shift_x?: number
-  label_shift_y?: number
-  /**
-   * `name_label_text_align` — l'ancrage du texte. DISTINCT de `label_horiz` : l'un dit OÙ est le
-   * point d'ancrage dans la part, l'autre de quel côté le texte pend à partir de ce point. Les
-   * confondre interdirait « ancré à droite mais lu vers la droite », qui est ce qu'on veut d'une
-   * étiquette posée au bord.
-   */
-  label_text_align?: 'left' | 'middle' | 'right'
-
-  // ── LE PICTOGRAMME (os#1465) ────────────────────────────────────────────────────────────────
-  //
-  // Le pendant, pour la couronne et les barres, de ce que `Type_SunburstStyle` porte déjà. Le
-  // chemin est RÉSOLU (sorti du catalogue du document) avant d'arriver ici : le tracé n'a qu'à le
-  // peindre, sans rien savoir du modèle.
-
-  /** Le `d` d'un chemin SVG. Absent = pas d'icône, c'est-à-dire toutes les figures d'avant. */
+  /** Le `d` d un chemin SVG. Absent = pas d icone, c est-a-dire toutes les figures d avant. */
   icon_path?: string
   icon_view_box?: string
   icon_color?: string
-  /** `icon_box_width`. Absente : le tracé calcule ce qui tient dans la part. */
+  /** `icon_box_width`. Absente : le trace calcule ce qui tient dans la part. */
   icon_size?: number
 }
 

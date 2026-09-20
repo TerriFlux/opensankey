@@ -18,7 +18,7 @@
 
 import * as d3 from '../d3Modules'
 // os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
-import { drawFigureLabelBackground } from './figureLabelBackground'
+import { applyPartTextStyle, partTextCase, partTextPlacement } from './figurePartText'
 // os#1424 — la couronne À N ANNEAUX se dessine aussi SUR UN NŒUD. La partition angulaire et
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
@@ -424,10 +424,10 @@ export const drawDonutChart = (
   const sectorName = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const a = aspectOf(d.data.id)
     const name = sunburstSectorName(d.data.label, null, {
-      separator: a?.label_separator ?? '',
-      separator_part: a?.label_separator_part ?? 'after'
+      separator: a?.name?.separator ?? '',
+      separator_part: a?.name?.separator_part ?? 'after'
     })
-    return a?.label_uppercase ? name.toLocaleUpperCase() : name
+    return a?.name?.uppercase ? name.toLocaleUpperCase() : name
   }
   const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
     const s = styleOf(d)
@@ -444,7 +444,7 @@ export const drawDonutChart = (
     // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
     // toute couronne enregistrée —, chaque ligne ressort telle quelle.
     return lines.flatMap(line => wrapLabelToBox(
-      line, a?.label_box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.label_wrap_long_words ?? false
+      line, a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.name?.wrap_long_words ?? false
     ))
   }
   /**
@@ -484,7 +484,7 @@ export const drawDonutChart = (
     // règle qu'au sunburst, et que sur un nœud dont le libellé porte une icône.
     aspectOf(d.data.id)?.icon_path === undefined &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
-    (!(aspectOf(d.data.id)?.label_prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || sectorFits(d)))
+    (!(aspectOf(d.data.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || sectorFits(d)))
   if (labelled.length > 0) {
     g.selectAll('text.node_stats_pct')
       .data(labelled)
@@ -493,13 +493,6 @@ export const drawDonutChart = (
       .attr('transform', d => `translate(${label_arc.centroid(d)})`)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', d => styleOf(d).name_label_font_size)
-      // `null` RETIRE l'attribut chez d3 : une part muette laisse donc le texte exactement comme
-      // hier — sans famille, sans graisse, sans style déclarés, donc ceux de la page.
-      .attr('font-family', d => (aspectOf(d.data.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.data.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.data.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? (styleOf(d).name_label_color || 'white'))
       .attr('pointer-events', 'none')
       .each(function (d) {
         const lines = sector_lines(d)
@@ -513,8 +506,21 @@ export const drawDonutChart = (
           .attr('x', 0)
           .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
           .text(line => line)
-        // os#1468 — LE CARTOUCHE, posé APRÈS le texte : il se mesure sur ce qui est écrit.
-        drawFigureLabelBackground(text, aspectOf(d.data.id))
+        // os#1469 — LE STYLE ET LE CARTOUCHE, par le module commun, et APRÈS le texte : le
+        // cartouche se mesure sur ce qui est écrit.
+        //
+        // NOM ET VALEUR PARTAGENT CE BLOC, et c'est vrai du sunburst aussi : un secteur écrit son
+        // nom et son nombre l'un sous l'autre, dans le même texte. Ils ne peuvent donc pas avoir
+        // deux polices — contrairement à une barre, dont le nom vit sous l'axe et le nombre
+        // au-dessus. Ce n'est pas un oubli : les séparer demanderait deux textes, donc deux
+        // placements, dans un creux d'arc qui n'en a pas la place.
+        applyPartTextStyle(text, aspectOf(d.data.id)?.name, {
+          font_size: styleOf(d).name_label_font_size,
+          font_family: styleOf(d).name_label_font_family,
+          bold: styleOf(d).name_label_bold,
+          italic: styleOf(d).name_label_italic,
+          color: styleOf(d).name_label_color || 'white'
+        })
       })
   }
 
@@ -593,10 +599,10 @@ export const drawDonutChart = (
       // à un autre endroit. Seule l'encre change de repli — le blanc du secteur serait invisible
       // sur le fond de la figure.
       .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => (aspectOf(d.data.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.data.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.data.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? (styleOf(d).name_label_color || '#2D3748'))
+      .attr('font-family', d => (aspectOf(d.data.id)?.name?.font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.data.id)?.name?.bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.data.id)?.name?.italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.data.id)?.name?.color ?? (styleOf(d).name_label_color || '#2D3748'))
     texts.each(function (d) {
       const lines = sector_lines(d)
       const dy0 = -(lines.length - 1) * 0.55
@@ -782,10 +788,10 @@ export const drawBarChart = (
   const barName = (d: Type_StatSlice): string => {
     const a = aspectOf(d.id)
     const name = sunburstSectorName(d.label, null, {
-      separator: a?.label_separator ?? '',
-      separator_part: a?.label_separator_part ?? 'after'
+      separator: a?.name?.separator ?? '',
+      separator_part: a?.name?.separator_part ?? 'after'
     })
-    return a?.label_uppercase ? name.toLocaleUpperCase() : name
+    return a?.name?.uppercase ? name.toLocaleUpperCase() : name
   }
   /**
    * Les lignes du nom sous la barre. Sans boîte de texte — le cas de tout histogramme enregistré —
@@ -794,9 +800,9 @@ export const drawBarChart = (
   const barNameLines = (d: Type_StatSlice): string[] => {
     const a = aspectOf(d.id)
     const name = barName(d)
-    const box = a?.label_box_width ?? styleOf(d).name_label_box_width ?? 0
+    const box = a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0
     if (!(box > 0)) return [name.length > 14 ? name.slice(0, 13) + '…' : name]
-    return wrapLabelToBox(name, box, styleOf(d).name_label_font_size, a?.label_wrap_long_words ?? false)
+    return wrapLabelToBox(name, box, styleOf(d).name_label_font_size, a?.name?.wrap_long_words ?? false)
   }
   /** La valeur écrite au-dessus de la barre : le format de la part, celui de la figure sinon. */
   const barValueText = (d: Type_StatSlice): string => {
@@ -850,19 +856,47 @@ export const drawBarChart = (
   // la part quand elle les dit.
   const valued = slices.filter(d => styleOf(d).value_label_is_visible)
   if (valued.length > 0) {
+    // os#1469 — LA VALEUR A SA PROPRE ECRITURE, et c est une correction : ce bloc lisait la
+    // typographie du NOM (`name_label_font_size`, `name_label_font_family`...). Regler la police du
+    // nombre n avait donc aucun effet, et regler celle du nom deplacait aussi le nombre. Personne
+    // ne l avait ecrit expres — c est ce qui arrive quand on recopie un bloc en changeant une ligne.
     g.selectAll('text.node_stats_bar_value')
       .data(valued)
       .enter().append('text')
       .attr('class', 'node_stats_bar_value')
-      .attr('x', d => (x(d.id) ?? 0) + x.bandwidth() / 2)
-      .attr('y', d => h - barPx(d.value) - 4)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => (aspectOf(d.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.id)?.label_color ?? (styleOf(d).name_label_color || '#2D3748'))
-      .text(d => barValueText(d))
+      .text(d => partTextCase(barValueText(d), aspectOf(d.id)?.value))
+      .each(function (d) {
+        const a = aspectOf(d.id)?.value
+        const bar_h = barPx(d.value)
+        const top = h - bar_h
+        const size = a?.font_size ?? styleOf(d).name_label_font_size
+        // DEDANS : la valeur descend sous le sommet de la barre. DEHORS (le trace d hier) : elle
+        // se pose juste au-dessus. Le reste — decalages fins et ancrage — est commun a tous les
+        // textes de part, et vit dans `partTextPlacement`.
+        const inside = a?.inside === true
+        const vert = a?.vert ?? (inside ? 'top' : 'bottom')
+        const horiz = a?.horiz ?? 'middle'
+        const band_x = x(d.id) ?? 0
+        const at = partTextPlacement({
+          x: band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2),
+          y: inside
+            ? (vert === 'top' ? top + size + 2 : vert === 'middle' ? (top + h) / 2 : h - 4)
+            : top - 4,
+          anchor: 'middle',
+          rotate: false
+        }, a)
+        const text = d3.select(this)
+        text.attr('x', at.x).attr('y', at.y).attr('text-anchor', at.anchor)
+        // A l interieur d une barre, l encre par defaut est CLAIRE : le fond y est la couleur de la
+        // part, et l ardoise des valeurs ecrites au-dessus s y perdrait.
+        applyPartTextStyle(text, a, {
+          font_size: styleOf(d).name_label_font_size,
+          font_family: styleOf(d).name_label_font_family,
+          bold: styleOf(d).name_label_bold,
+          italic: styleOf(d).name_label_italic,
+          color: styleOf(d).name_label_color || (inside ? 'white' : '#2D3748')
+        })
+      })
   }
 
   // ── os#1465 — LE PICTOGRAMME D'UNE BARRE ────────────────────────────────────────────────────
@@ -923,7 +957,7 @@ export const drawBarChart = (
     (aspectOf(d.id)?.label_callout ?? st.name_label_callout) && barPx(d.value) >= MIN_CALLOUT_EDGE_PX
   const named = slices.filter(d => styleOf(d).name_label_is_visible)
   const under_axis = named.filter(d =>
-    !barCallsOut(d) && (!(aspectOf(d.id)?.label_prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || barNameFits(d)))
+    !barCallsOut(d) && (!(aspectOf(d.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || barNameFits(d)))
 
   // ── os#1466 — OÙ SE POSE LE NOM D'UNE BARRE ─────────────────────────────────────────────────
   //
@@ -945,22 +979,22 @@ export const drawBarChart = (
     const size = styleOf(d).name_label_font_size
     // L'ANCRE HORIZONTALE dans la bande : au milieu, sauf demande. Le pivot à -35° garde son
     // ancrage à droite — c'est lui qui fait que le texte s'éloigne de l'axe vers le bas-gauche.
-    const horiz = a?.label_horiz ?? 'middle'
+    const horiz = a?.name?.horiz ?? 'middle'
     const cx = band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2)
-    const inside = a?.label_inside === true
+    const inside = a?.name?.inside === true
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
-    const vert = a?.label_vert ?? (inside ? 'top' : 'bottom')
+    const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
     const cy = inside
       ? (vert === 'top' ? top + size + 2
         : vert === 'middle' ? (top + h) / 2
           : h - 4)
       : (rotate_labels ? h + 8 : h + 14)
-    const anchor = a?.label_text_align
+    const anchor = a?.name?.text_align
       ?? (inside ? 'middle' : (rotate_labels ? 'end' : 'middle'))
     return {
-      x: cx + (a?.label_shift_x ?? 0),
-      y: cy + (a?.label_shift_y ?? 0),
+      x: cx + (a?.name?.shift_x ?? 0),
+      y: cy + (a?.name?.shift_y ?? 0),
       // Pivoté seulement SOUS L'AXE : à l'intérieur d'une barre, un nom couché ne se lit plus.
       rotate: !inside && rotate_labels,
       anchor: anchor === 'left' ? 'start' : anchor === 'right' ? 'end' : 'middle'
@@ -972,14 +1006,6 @@ export const drawBarChart = (
       .data(under_axis)
       .enter().append('text')
       .attr('class', 'node_stats_bar_label')
-      .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => (aspectOf(d.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      // À l'intérieur d'une barre, l'encre par défaut est CLAIRE : le fond y est la couleur de la
-      // part, et le gris ardoise des noms sous l'axe s'y perdrait.
-      .attr('fill', d => aspectOf(d.id)?.label_color ?? (styleOf(d).name_label_color
-          || (aspectOf(d.id)?.label_inside === true ? 'white' : '#4A5568')))
       .attr('transform', d => {
         const at = barLabelAt(d)
         return at.rotate
@@ -1001,9 +1027,17 @@ export const drawBarChart = (
             .attr('dy', (_line, i) => (i === 0 ? '0em' : '1.1em'))
             .text(line => line)
         }
-        // os#1468 — LE CARTOUCHE, avant l'info-bulle : `title` n'est pas dessiné, mais il compte
-        // dans la boîte de certains moteurs, et un cartouche mesuré dessus serait trop grand.
-        drawFigureLabelBackground(text, aspectOf(d.id))
+        // os#1469 — LE STYLE ET LE CARTOUCHE, par le module commun, et AVANT l'info-bulle :
+        // `title` n'est pas dessiné, mais il compte dans la boîte de certains moteurs, et un
+        // cartouche mesuré dessus serait trop grand.
+        applyPartTextStyle(text, aspectOf(d.id)?.name, {
+          font_size: styleOf(d).name_label_font_size,
+          font_family: styleOf(d).name_label_font_family,
+          bold: styleOf(d).name_label_bold,
+          italic: styleOf(d).name_label_italic,
+          color: styleOf(d).name_label_color
+            || (aspectOf(d.id)?.name?.inside === true ? 'white' : '#4A5568')
+        })
         text.append('title').text(bar_title(d))
       })
   }
@@ -1047,10 +1081,10 @@ export const drawBarChart = (
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => (aspectOf(d.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.id)?.label_color ?? (styleOf(d).name_label_color || '#2D3748'))
+      .attr('font-family', d => (aspectOf(d.id)?.name?.font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.id)?.name?.bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.id)?.name?.italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.id)?.name?.color ?? (styleOf(d).name_label_color || '#2D3748'))
     texts.each(function (d) {
       const lines = barNameLines(d)
       const p = positionOf(d)
