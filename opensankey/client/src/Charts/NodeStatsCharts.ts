@@ -429,17 +429,42 @@ export const drawDonutChart = (
     })
     return a?.name?.uppercase ? name.toLocaleUpperCase() : name
   }
+  /**
+   * os#1470 — LA VALEUR EST-ELLE COLLÉE AU NOM ?
+   *
+   * Julien : « l'option par défaut c'est d'avoir les deux attachés ; cette option existe pour les
+   * flux, donc réutilisons-la ». C'est `value_label_stick_to_label`, la clé des flux, avec son mot
+   * déjà traduit : « Coller au libellé ».
+   *
+   * COLLÉE — l'usage d'un secteur, et son défaut ici : le nom et le nombre s'écrivent dans UN
+   * texte, l'un sous l'autre, donc avec une seule police et une seule encre.
+   *
+   * DÉCOLLÉE : le nombre devient son propre texte, avec la typographie et la place que la part lui
+   * donne (`aspect.value`).
+   *
+   * Le défaut est celui du TRACÉ et non celui de la clé : une part n'est écoutée que sur ce
+   * qu'elle dit, et une couronne enregistrée n'a rien dit. La même clé vaut donc `true` ici et
+   * `false` sur un histogramme — sans quoi l'un des deux parcs changerait d'aspect.
+   */
+  const valueAttached = (id: string): boolean => aspectOf(id)?.value_attached ?? true
+  /** Ce que le nombre écrit, collé ou non : la valeur formatée, puis le pourcentage demandé. */
+  const sectorValue = (d: d3.PieArcDatum<Type_StatSlice>): string => {
+    const s = styleOf(d)
+    const a = aspectOf(d.data.id)
+    const values: string[] = []
+    if (s.value_label_is_visible) values.push((a?.value_format ?? fmt)(d.data.value))
+    if (s.value_label_percent !== 'none') values.push(Math.round(d.data.value / total * 100) + '%')
+    return values.join(' ')
+  }
   const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
     const s = styleOf(d)
     const a = aspectOf(d.data.id)
     const lines: string[] = []
     if (s.name_label_is_visible) lines.push(sectorName(d))
-    const values: string[] = []
     // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
     // n'existe que si la part a dit quelque chose des six clés de format (cf. `barPartAspect`).
-    if (s.value_label_is_visible) values.push((a?.value_format ?? fmt)(d.data.value))
-    if (s.value_label_percent !== 'none') values.push(Math.round(d.data.value / total * 100) + '%')
-    if (values.length > 0) lines.push(values.join(' '))
+    const value = valueAttached(d.data.id) ? sectorValue(d) : ''
+    if (value !== '') lines.push(value)
     // La boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne entre les mots, et
     // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
     // toute couronne enregistrée —, chaque ligne ressort telle quelle.
@@ -515,6 +540,44 @@ export const drawDonutChart = (
         // au-dessus. Ce n'est pas un oubli : les séparer demanderait deux textes, donc deux
         // placements, dans un creux d'arc qui n'en a pas la place.
         applyPartTextStyle(text, aspectOf(d.data.id)?.name, {
+          font_size: styleOf(d).name_label_font_size,
+          font_family: styleOf(d).name_label_font_family,
+          bold: styleOf(d).name_label_bold,
+          italic: styleOf(d).name_label_italic,
+          color: styleOf(d).name_label_color || 'white'
+        })
+      })
+  }
+
+  // ── os#1470 — LE NOMBRE DÉTACHÉ DE SON NOM ──────────────────────────────────────────────────
+  //
+  // Son propre texte, donc sa propre police, sa propre encre et sa propre place — ce que le bloc
+  // collé ne peut pas offrir, puisqu'il n'y a qu'un texte. Posé sous le nom par défaut, d'une
+  // hauteur de ligne : c'est là qu'il était quand il y était collé, ce qui rend le passage de
+  // l'un à l'autre lisible plutôt que brutal.
+  const detached = arcs.filter(d =>
+    !valueAttached(d.data.id) &&
+    sectorValue(d) !== '' &&
+    (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
+    aspectOf(d.data.id)?.icon_path === undefined)
+  if (detached.length > 0) {
+    g.selectAll('text.node_stats_value')
+      .data(detached)
+      .enter().append('text')
+      .attr('class', 'node_stats_value')
+      .attr('dominant-baseline', 'central')
+      .attr('pointer-events', 'none')
+      .text(d => partTextCase(sectorValue(d), aspectOf(d.data.id)?.value))
+      .each(function (d) {
+        const a = aspectOf(d.data.id)?.value
+        const [cx, cy] = label_arc.centroid(d)
+        const size = a?.font_size ?? styleOf(d).name_label_font_size
+        const named = styleOf(d).name_label_is_visible
+        const at = partTextPlacement(
+          { x: cx, y: cy + (named ? size * 0.9 : 0), anchor: 'middle', rotate: false }, a)
+        const text = d3.select(this)
+        text.attr('x', at.x).attr('y', at.y).attr('text-anchor', at.anchor)
+        applyPartTextStyle(text, a, {
           font_size: styleOf(d).name_label_font_size,
           font_family: styleOf(d).name_label_font_family,
           bold: styleOf(d).name_label_bold,
@@ -797,12 +860,25 @@ export const drawBarChart = (
    * Les lignes du nom sous la barre. Sans boîte de texte — le cas de tout histogramme enregistré —
    * c'est la troncature d'hier, à quatorze caractères ; avec une boîte, le retour à la ligne.
    */
+  /**
+   * os#1470 — SUR UNE BARRE, LE DÉFAUT EST L'INVERSE : le nom vit sous l'axe et le nombre
+   * au-dessus de la barre depuis toujours, donc DÉCOLLÉS. La même clé, l'autre défaut — parce que
+   * le défaut appartient au tracé, pas à la clé, et qu'aucun histogramme enregistré ne doit bouger.
+   *
+   * Collée, la valeur rejoint le bloc du nom : un seul texte, une seule police, comme sur un
+   * secteur.
+   */
+  const barValueAttached = (d: Type_StatSlice): boolean => aspectOf(d.id)?.value_attached ?? false
   const barNameLines = (d: Type_StatSlice): string[] => {
     const a = aspectOf(d.id)
     const name = barName(d)
     const box = a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0
-    if (!(box > 0)) return [name.length > 14 ? name.slice(0, 13) + '…' : name]
-    return wrapLabelToBox(name, box, styleOf(d).name_label_font_size, a?.name?.wrap_long_words ?? false)
+    const lines = (box > 0)
+      ? wrapLabelToBox(name, box, styleOf(d).name_label_font_size, a?.name?.wrap_long_words ?? false)
+      : [name.length > 14 ? name.slice(0, 13) + '…' : name]
+    // Collée, la valeur s'écrit sous le nom, dans le même texte.
+    if (barValueAttached(d) && styleOf(d).value_label_is_visible) lines.push(barValueText(d))
+    return lines
   }
   /** La valeur écrite au-dessus de la barre : le format de la part, celui de la figure sinon. */
   const barValueText = (d: Type_StatSlice): string => {
@@ -854,7 +930,7 @@ export const drawBarChart = (
   // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`) — et
   // barre par barre depuis os#1463 : la visibilité, la taille, la police et le format sont ceux de
   // la part quand elle les dit.
-  const valued = slices.filter(d => styleOf(d).value_label_is_visible)
+  const valued = slices.filter(d => styleOf(d).value_label_is_visible && !barValueAttached(d))
   if (valued.length > 0) {
     // os#1469 — LA VALEUR A SA PROPRE ECRITURE, et c est une correction : ce bloc lisait la
     // typographie du NOM (`name_label_font_size`, `name_label_font_family`...). Regler la police du
