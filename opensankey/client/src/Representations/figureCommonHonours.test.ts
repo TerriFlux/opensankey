@@ -53,4 +53,21 @@ describe('os#1467 les trois natures servent le socle commun', () => {
     // verifier. Le nombre exact n est pas la question — qu il reste substantiel, si.
     expect(FIGURE_COMMON_HONOURS.length).toBeGreaterThan(30)
   })
+
+  it('os#1477 les six cles qui ATTENDAIENT y sont entrees', () => {
+    // Elles etaient tenues dehors expres (`FIGURE_COMMON_HONOURS_A_VENIR`, retiree depuis) : un
+    // socle qu on ne tient pas devient un test rouge qu on apprend a ignorer. Ce qui les retenait
+    // n etait pas une declaration mais du DESSIN — la couronne et les barres montaient leur titre
+    // par un traceur qui n en portait que cinq reglages sur onze.
+    const attendaient = [
+      'title_italic', 'title_font_family', 'title_color', 'title_align', 'title_wrap', 'text_zones'
+    ]
+    attendaient.forEach(cle => expect(FIGURE_COMMON_HONOURS).toContain(cle))
+    // Et la consequence, qui est le vrai sujet : les TROIS natures les servent. Les cas ci-dessus
+    // le disent deja pour le socle entier ; celui-ci nomme ce que ce lot a change.
+    NATURES.forEach(([nom, attributes]) => {
+      const manquantes = attendaient.filter(cle => attributes[cle] === undefined)
+      expect([nom, manquantes]).toEqual([nom, []])
+    })
+  })
 })
