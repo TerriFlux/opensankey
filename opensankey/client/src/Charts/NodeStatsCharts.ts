@@ -159,6 +159,16 @@ const DEFAULT_FORMAT = (v: number) =>
 const OTHERS_COLOR = '#CFD0CB'
 // Part angulaire minimale pour afficher le label % sur un secteur.
 const MIN_LABEL_SHARE = 0.03
+// os#1465 — la part de sa place qu'un pictogramme occupe quand l'auteur n'impose pas sa taille.
+// Pas 1 : une icône qui touche les bords de sa part se confond avec ses voisines.
+const PART_ICON_FILL_RATIO = 0.7
+// Le cadre d'un pictogramme du catalogue quand il n'en déclare pas — même valeur que le dessin
+// d'icône d'un nœud (`DrawLabel.drawIcon`) et que le sunburst, et pour la même raison : c'est le
+// cadre dans lequel le catalogue dessine.
+const PART_ICON_VIEW_BOX = '0 0 1000 1000'
+// Sous cette taille, un pictogramme ne se reconnaît plus : la part n'en porte pas plutôt que d'en
+// montrer une tache. Même esprit que `MIN_LABEL_SHARE` pour les étiquettes.
+const MIN_PART_ICON_PX = 8
 // os#1463 — LES DEUX MESURES DE L'ÉTIQUETTE SORTIE, reprises du sunburst et pour les mêmes
 // raisons : sous ce bord d'arc, en pixels, le trait de rappel pointerait un fil et cent rappels
 // sur une poussière de secteurs ne nommeraient rien ; et voici l'écart entre le disque et
@@ -467,6 +477,10 @@ export const drawDonutChart = (
   const callouts = with_text.filter(d => callsOut(d))
   const labelled = with_text.filter(d =>
     !callsOut(d) &&
+    // os#1465 — UN SECTEUR QUI PORTE UN PICTOGRAMME N'ÉCRIT PAS SON NOM DEDANS. Les deux se
+    // disputent le même creux d'arc : superposés, ils donneraient un dessin barré de lettres. Même
+    // règle qu'au sunburst, et que sur un nœud dont le libellé porte une icône.
+    aspectOf(d.data.id)?.icon_path === undefined &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
     (!(aspectOf(d.data.id)?.label_prune_if_unfitting) || sectorFits(d)))
   if (labelled.length > 0) {
@@ -496,6 +510,41 @@ export const drawDonutChart = (
           .attr('x', 0)
           .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
           .text(line => line)
+      })
+  }
+
+  // ── os#1465 — LE PICTOGRAMME D'UN SECTEUR ───────────────────────────────────────────────────
+  //
+  // Julien : « oui, on peut dessiner l'icône sur les parts ». Même contrat qu'au sunburst : le
+  // chemin arrive DÉJÀ RÉSOLU (sorti du catalogue du document), le tracé n'a qu'à le peindre.
+  //
+  // Il se pose au centroïde, là où le nom se serait écrit — c'est le sens de « il le remplace ».
+  // Et il reste DROIT : un texte suit son arc parce qu'il se lit dans un sens, un pictogramme
+  // couché ne se reconnaît plus.
+  const iconed = arcs.filter(d => aspectOf(d.data.id)?.icon_path !== undefined)
+  if (iconed.length > 0) {
+    g.selectAll<SVGSVGElement, d3.PieArcDatum<Type_StatSlice>>('svg.node_stats_arc_icon')
+      .data(iconed)
+      .enter().append('svg')
+      .attr('class', 'node_stats_arc_icon')
+      .each(function (d) {
+        const a = aspectOf(d.data.id) as Type_ChartPartAspect
+        const [cx, cy] = label_arc.centroid(d)
+        // Bornée par l'ÉPAISSEUR de l'anneau et par la corde du secteur : la plus petite des deux
+        // gagne, sinon l'icône déborde sur ses voisines. Ce que l'auteur impose est respecté, mais
+        // pas au-delà de ce qui tient.
+        const chord = (d.endAngle - d.startAngle) * radius
+        const room = Math.min(radius - inner, chord) * PART_ICON_FILL_RATIO
+        const size = Math.max(0, Math.min(a.icon_size ?? room, room))
+        d3.select(this)
+          .attr('viewBox', a.icon_view_box && a.icon_view_box !== '' ? a.icon_view_box : PART_ICON_VIEW_BOX)
+          .attr('width', size).attr('height', size)
+          .attr('x', cx - size / 2).attr('y', cy - size / 2)
+          .attr('pointer-events', 'none')
+          .append('path')
+          // L'encre par défaut est celle du texte qu'il remplace : blanche sur un secteur.
+          .attr('fill', a.icon_color && a.icon_color !== '' ? a.icon_color : 'white')
+          .attr('d', a.icon_path as string)
       })
   }
 
@@ -811,6 +860,43 @@ export const drawBarChart = (
       .text(d => barValueText(d))
   }
 
+  // ── os#1465 — LE PICTOGRAMME D'UNE BARRE ────────────────────────────────────────────────────
+  //
+  // DANS le rectangle, et il NE REMPLACE PAS le nom — c'est la différence avec la couronne, et
+  // elle se justifie par la place : dans un secteur, le nom et l'icône se disputent le même creux
+  // d'arc et l'un doit céder ; sur un histogramme le nom vit SOUS L'AXE, l'icône dans la barre, et
+  // les deux se lisent ensemble. Une barre qui porte son pictogramme et son nom est plus claire
+  // que l'une des deux seule.
+  //
+  // Une barre trop basse n'en porte pas : une icône écrasée ne se reconnaît plus, et la rogner
+  // jusqu'au trait vaudrait moins que rien.
+  const bar_iconed = slices.filter(d => aspectOf(d.id)?.icon_path !== undefined)
+  if (bar_iconed.length > 0) {
+    g.selectAll<SVGSVGElement, Type_StatSlice>('svg.node_stats_bar_icon')
+      .data(bar_iconed)
+      .enter().append('svg')
+      .attr('class', 'node_stats_bar_icon')
+      .each(function (d) {
+        const a = aspectOf(d.id) as Type_ChartPartAspect
+        const bar_h = barPx(d.value)
+        const room = Math.min(x.bandwidth(), bar_h) * PART_ICON_FILL_RATIO
+        const size = Math.max(0, Math.min(a.icon_size ?? room, room))
+        if (size < MIN_PART_ICON_PX) return
+        const cx = (x(d.id) ?? 0) + x.bandwidth() / 2
+        // Au tiers haut de la barre plutôt qu'au centre : la valeur s'écrit au-dessus du sommet,
+        // et le regard qui descend rencontre alors le pictogramme sans le chercher.
+        const cy = h - bar_h + Math.max(size / 2 + 4, bar_h / 3)
+        d3.select(this)
+          .attr('viewBox', a.icon_view_box && a.icon_view_box !== '' ? a.icon_view_box : PART_ICON_VIEW_BOX)
+          .attr('width', size).attr('height', size)
+          .attr('x', cx - size / 2).attr('y', cy - size / 2)
+          .attr('pointer-events', 'none')
+          .append('path')
+          .attr('fill', a.icon_color && a.icon_color !== '' ? a.icon_color : 'white')
+          .attr('d', a.icon_path as string)
+      })
+  }
+
   // Ligne de base + labels de catégorie.
   g.append('line')
     .attr('x1', 0).attr('x2', w)
@@ -833,6 +919,49 @@ export const drawBarChart = (
   const named = slices.filter(d => styleOf(d).name_label_is_visible)
   const under_axis = named.filter(d =>
     !barCallsOut(d) && (!(aspectOf(d.id)?.label_prune_if_unfitting) || barNameFits(d)))
+
+  // ── os#1466 — OÙ SE POSE LE NOM D'UNE BARRE ─────────────────────────────────────────────────
+  //
+  // Julien : « les options de placement ne marchent pas », puis « tout ce qui a du sens, il faut
+  // l'implémenter ». Sur un histogramme, « au-dessus / dedans / en dessous » est le réglage le
+  // plus naturel, et il était offert sans que rien ne l'écoute.
+  //
+  // LE REPLI EST LE TRACÉ D'HIER, AU PIXEL : une part qui ne dit rien garde son nom sous l'axe,
+  // centré, avec le pivot à -35° quand les noms sont trop serrés. Chaque réglage ne déplace que ce
+  // qu'il nomme.
+  //
+  // DEDANS, ÇA VEUT DIRE DANS LE RECTANGLE. `name_label_inside_vert` est la clé qui, sur un nœud,
+  // fait passer le libellé de l'extérieur de la boîte à l'intérieur : une barre EST cette boîte.
+  // On garde donc le même mot pour le même geste, plutôt qu'en inventer un pour les figures.
+  const barLabelAt = (d: Type_StatSlice) => {
+    const a = aspectOf(d.id)
+    const band_x = x(d.id) ?? 0
+    const top = h - barPx(d.value)
+    const size = styleOf(d).name_label_font_size
+    // L'ANCRE HORIZONTALE dans la bande : au milieu, sauf demande. Le pivot à -35° garde son
+    // ancrage à droite — c'est lui qui fait que le texte s'éloigne de l'axe vers le bas-gauche.
+    const horiz = a?.label_horiz ?? 'middle'
+    const cx = band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2)
+    const inside = a?.label_inside === true
+    // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
+    // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
+    const vert = a?.label_vert ?? (inside ? 'top' : 'bottom')
+    const cy = inside
+      ? (vert === 'top' ? top + size + 2
+        : vert === 'middle' ? (top + h) / 2
+          : h - 4)
+      : (rotate_labels ? h + 8 : h + 14)
+    const anchor = a?.label_text_align
+      ?? (inside ? 'middle' : (rotate_labels ? 'end' : 'middle'))
+    return {
+      x: cx + (a?.label_shift_x ?? 0),
+      y: cy + (a?.label_shift_y ?? 0),
+      // Pivoté seulement SOUS L'AXE : à l'intérieur d'une barre, un nom couché ne se lit plus.
+      rotate: !inside && rotate_labels,
+      anchor: anchor === 'left' ? 'start' : anchor === 'right' ? 'end' : 'middle'
+    }
+  }
+
   if (under_axis.length > 0) {
     g.selectAll('text.node_stats_bar_label')
       .data(under_axis)
@@ -842,14 +971,17 @@ export const drawBarChart = (
       .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
       .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
       .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.id)?.label_color ?? '#4A5568')
+      // À l'intérieur d'une barre, l'encre par défaut est CLAIRE : le fond y est la couleur de la
+      // part, et le gris ardoise des noms sous l'axe s'y perdrait.
+      .attr('fill', d => aspectOf(d.id)?.label_color
+        ?? (aspectOf(d.id)?.label_inside === true ? 'white' : '#4A5568'))
       .attr('transform', d => {
-        const cx = (x(d.id) ?? 0) + x.bandwidth() / 2
-        return rotate_labels
-          ? `translate(${cx},${h + 8}) rotate(-35)`
-          : `translate(${cx},${h + 14})`
+        const at = barLabelAt(d)
+        return at.rotate
+          ? `translate(${at.x},${at.y}) rotate(-35)`
+          : `translate(${at.x},${at.y})`
       })
-      .attr('text-anchor', rotate_labels ? 'end' : 'middle')
+      .attr('text-anchor', d => barLabelAt(d).anchor)
       .each(function (d) {
         const lines = barNameLines(d)
         const text = d3.select(this)
