@@ -21,6 +21,8 @@
 // Module PUR : un sac de réglages entre, une mise en forme typée sort.
 
 import type { Type_OptionBag } from '../Representations/Figure'
+// os#1468 — le cartouche derriere une etiquette de part : declare une fois, dessine une fois.
+import type { Type_FigureLabelBackground } from './figureLabelBackground'
 
 export interface Type_FigureChartStyle {
   /** legend_* */
@@ -43,6 +45,22 @@ export interface Type_FigureChartStyle {
   /** name_label_* : les étiquettes DANS le dessin (noms de barres, % des secteurs). */
   name_label_is_visible: boolean
   name_label_font_size: number
+  // os#1467 — LA TYPOGRAPHIE DU NOM AU NIVEAU DE LA FIGURE. Le sunburst la portait, la couronne et
+  // les barres non : on pouvait mettre en gras le nom d un secteur de sunburst et pas celui d une
+  // couronne. C est l ecart que Julien nomme — « le meme look and feel d un graphe a l autre ».
+  //
+  // Ce sont les MEMES cles qu une part peut surcharger : la figure donne le ton, la part en sort si
+  // elle le dit. Les valeurs ci-dessous sont celles du trace d hier, donc aucune figure enregistree
+  // ne change d aspect.
+  name_label_font_family: string
+  name_label_bold: boolean
+  name_label_italic: boolean
+  name_label_uppercase: boolean
+  name_label_color: string
+  name_label_box_width: number
+  name_label_separator: string
+  name_label_separator_part: 'before' | 'after'
+  name_label_prune_if_unfitting: boolean
   /**
    * os#1463 — L'ÉTIQUETTE SORT DU DESSIN, RELIÉE À SA PART PAR UN TRAIT, quand elle n'y tient pas.
    *
@@ -86,6 +104,17 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // chaque secteur de chaque couronne déjà enregistrée. C'est une option, elle s'active.
   name_label_is_visible: false,
   name_label_font_size: 11,
+  // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
+  // une seule ligne, aucun separateur, et rien ne se masque sur la longueur.
+  name_label_font_family: '',
+  name_label_bold: false,
+  name_label_italic: false,
+  name_label_uppercase: false,
+  name_label_color: '',
+  name_label_box_width: 0,
+  name_label_separator: '',
+  name_label_separator_part: 'after',
+  name_label_prune_if_unfitting: false,
   // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
   name_label_callout: false,
   value_label_is_visible: false,
@@ -125,7 +154,7 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
 // réglages par `readOver` — où une clé homonyme écrite par une AUTRE nature (une couronne
 // hiérarchique en porte neuf, cf. `sunburstAttributes`) repeindrait le parc en silence. Ils ne
 // valent donc QUE par surcharge de part : absents, le tracé est celui d'hier, au pixel.
-export interface Type_FigurePartLabelAspect {
+export interface Type_FigurePartLabelAspect extends Type_FigureLabelBackground {
   /** `name_label_font_family` — absent ou vide : la police de la page, comme hier. */
   label_font_family?: string
   /** `name_label_bold` / `name_label_italic`. */

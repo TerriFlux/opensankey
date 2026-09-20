@@ -17,6 +17,8 @@
 // (Type_StatSlice), ce module ne fait que dessiner dans le conteneur DOM fourni.
 
 import * as d3 from '../d3Modules'
+// os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
+import { drawFigureLabelBackground } from './figureLabelBackground'
 // os#1424 — la couronne À N ANNEAUX se dessine aussi SUR UN NŒUD. La partition angulaire et
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
@@ -442,7 +444,7 @@ export const drawDonutChart = (
     // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
     // toute couronne enregistrée —, chaque ligne ressort telle quelle.
     return lines.flatMap(line => wrapLabelToBox(
-      line, a?.label_box_width ?? 0, s.name_label_font_size, a?.label_wrap_long_words ?? false
+      line, a?.label_box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.label_wrap_long_words ?? false
     ))
   }
   /**
@@ -482,7 +484,7 @@ export const drawDonutChart = (
     // règle qu'au sunburst, et que sur un nœud dont le libellé porte une icône.
     aspectOf(d.data.id)?.icon_path === undefined &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
-    (!(aspectOf(d.data.id)?.label_prune_if_unfitting) || sectorFits(d)))
+    (!(aspectOf(d.data.id)?.label_prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || sectorFits(d)))
   if (labelled.length > 0) {
     g.selectAll('text.node_stats_pct')
       .data(labelled)
@@ -494,22 +496,25 @@ export const drawDonutChart = (
       .attr('font-size', d => styleOf(d).name_label_font_size)
       // `null` RETIRE l'attribut chez d3 : une part muette laisse donc le texte exactement comme
       // hier — sans famille, sans graisse, sans style déclarés, donc ceux de la page.
-      .attr('font-family', d => aspectOf(d.data.id)?.label_font_family || null)
-      .attr('font-weight', d => aspectOf(d.data.id)?.label_bold ? 'bold' : null)
-      .attr('font-style', d => aspectOf(d.data.id)?.label_italic ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? 'white')
+      .attr('font-family', d => (aspectOf(d.data.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.data.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.data.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? (styleOf(d).name_label_color || 'white'))
       .attr('pointer-events', 'none')
       .each(function (d) {
         const lines = sector_lines(d)
         // Le bloc reste CENTRÉ sur le centroïde : la première ligne remonte d'une demi-hauteur par
         // ligne supplémentaire, sinon l'étiquette dériverait vers le bord extérieur du secteur.
         const dy0 = -(lines.length - 1) * 0.55
-        d3.select(this).selectAll('tspan')
+        const text = d3.select(this)
+        text.selectAll('tspan')
           .data(lines)
           .enter().append('tspan')
           .attr('x', 0)
           .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
           .text(line => line)
+        // os#1468 — LE CARTOUCHE, posé APRÈS le texte : il se mesure sur ce qui est écrit.
+        drawFigureLabelBackground(text, aspectOf(d.data.id))
       })
   }
 
@@ -588,10 +593,10 @@ export const drawDonutChart = (
       // à un autre endroit. Seule l'encre change de repli — le blanc du secteur serait invisible
       // sur le fond de la figure.
       .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => aspectOf(d.data.id)?.label_font_family || null)
-      .attr('font-weight', d => aspectOf(d.data.id)?.label_bold ? 'bold' : null)
-      .attr('font-style', d => aspectOf(d.data.id)?.label_italic ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? '#2D3748')
+      .attr('font-family', d => (aspectOf(d.data.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.data.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.data.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? (styleOf(d).name_label_color || '#2D3748'))
     texts.each(function (d) {
       const lines = sector_lines(d)
       const dy0 = -(lines.length - 1) * 0.55
@@ -789,7 +794,7 @@ export const drawBarChart = (
   const barNameLines = (d: Type_StatSlice): string[] => {
     const a = aspectOf(d.id)
     const name = barName(d)
-    const box = a?.label_box_width ?? 0
+    const box = a?.label_box_width ?? styleOf(d).name_label_box_width ?? 0
     if (!(box > 0)) return [name.length > 14 ? name.slice(0, 13) + '…' : name]
     return wrapLabelToBox(name, box, styleOf(d).name_label_font_size, a?.label_wrap_long_words ?? false)
   }
@@ -853,10 +858,10 @@ export const drawBarChart = (
       .attr('y', d => h - barPx(d.value) - 4)
       .attr('text-anchor', 'middle')
       .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
-      .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
-      .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.id)?.label_color ?? '#2D3748')
+      .attr('font-family', d => (aspectOf(d.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.id)?.label_color ?? (styleOf(d).name_label_color || '#2D3748'))
       .text(d => barValueText(d))
   }
 
@@ -918,7 +923,7 @@ export const drawBarChart = (
     (aspectOf(d.id)?.label_callout ?? st.name_label_callout) && barPx(d.value) >= MIN_CALLOUT_EDGE_PX
   const named = slices.filter(d => styleOf(d).name_label_is_visible)
   const under_axis = named.filter(d =>
-    !barCallsOut(d) && (!(aspectOf(d.id)?.label_prune_if_unfitting) || barNameFits(d)))
+    !barCallsOut(d) && (!(aspectOf(d.id)?.label_prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || barNameFits(d)))
 
   // ── os#1466 — OÙ SE POSE LE NOM D'UNE BARRE ─────────────────────────────────────────────────
   //
@@ -968,13 +973,13 @@ export const drawBarChart = (
       .enter().append('text')
       .attr('class', 'node_stats_bar_label')
       .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
-      .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
-      .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
+      .attr('font-family', d => (aspectOf(d.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
       // À l'intérieur d'une barre, l'encre par défaut est CLAIRE : le fond y est la couleur de la
       // part, et le gris ardoise des noms sous l'axe s'y perdrait.
-      .attr('fill', d => aspectOf(d.id)?.label_color
-        ?? (aspectOf(d.id)?.label_inside === true ? 'white' : '#4A5568'))
+      .attr('fill', d => aspectOf(d.id)?.label_color ?? (styleOf(d).name_label_color
+          || (aspectOf(d.id)?.label_inside === true ? 'white' : '#4A5568')))
       .attr('transform', d => {
         const at = barLabelAt(d)
         return at.rotate
@@ -996,6 +1001,9 @@ export const drawBarChart = (
             .attr('dy', (_line, i) => (i === 0 ? '0em' : '1.1em'))
             .text(line => line)
         }
+        // os#1468 — LE CARTOUCHE, avant l'info-bulle : `title` n'est pas dessiné, mais il compte
+        // dans la boîte de certains moteurs, et un cartouche mesuré dessus serait trop grand.
+        drawFigureLabelBackground(text, aspectOf(d.id))
         text.append('title').text(bar_title(d))
       })
   }
@@ -1039,10 +1047,10 @@ export const drawBarChart = (
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
-      .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
-      .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.id)?.label_color ?? '#2D3748')
+      .attr('font-family', d => (aspectOf(d.id)?.label_font_family ?? styleOf(d).name_label_font_family) || null)
+      .attr('font-weight', d => (aspectOf(d.id)?.label_bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
+      .attr('font-style', d => (aspectOf(d.id)?.label_italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.id)?.label_color ?? (styleOf(d).name_label_color || '#2D3748'))
     texts.each(function (d) {
       const lines = barNameLines(d)
       const p = positionOf(d)

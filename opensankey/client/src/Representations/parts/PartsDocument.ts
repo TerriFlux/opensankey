@@ -64,6 +64,24 @@ export class Class_PartsDocument extends Class_ApplicationData {
     // Le droit d'écrire vient de la SOURCE : les parts d'une figure dans une page publiée ne se
     // repeignent pas.
     this.edition_allowed = source.edition_allowed
+
+    // (4) LE CATALOGUE D'ICÔNES EST CELUI DE LA SOURCE — os#1465, et c'est un défaut vécu.
+    //
+    // Julien, à l'écran : « pour l'instant l'icône ça ne marche pas sur le sunburst ». Le tracé
+    // était bon, la résolution aussi : c'est le CATALOGUE qui était vide. Un document de parts en
+    // fabrique un neuf comme tout document, et personne n'y avait jamais rien mis.
+    //
+    // La conséquence était double, et la première est la pire : le sélecteur d'icônes de
+    // l'inspecteur lit le catalogue du document ACTIF — donc celui des parts. Il n'avait rien à
+    // proposer. L'auteur ne pouvait même pas choisir, avant de ne pas voir.
+    //
+    // PARTAGÉ PAR RÉFÉRENCE, comme l'historique et le porteur de fichier juste au-dessus, et pour
+    // la même raison : un pictogramme nommé dans le diagramme doit désigner le même dessin dans
+    // la figure. Deux catalogues, c'est deux vérités — et celle de la figure serait vide.
+    const source_sankey = source.drawing_area?.sankey
+    if (source_sankey !== undefined && this.drawing_area !== undefined) {
+      this.drawing_area.sankey.icon_catalog = source_sankey.icon_catalog
+    }
   }
 
   /**
