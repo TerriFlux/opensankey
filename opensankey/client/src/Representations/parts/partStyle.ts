@@ -88,25 +88,7 @@ export const seedPartStyles = (sankey: Class_Sankey): void => {
 export const partStyleOf = (sankey: Class_Sankey): Class_ElementStyle =>
   sankey.styles_dict[FigurePartStyle]
 
-/**
- * REPORTER CE QUE L'AUTEUR A RÉGLÉ, d'un dessin au suivant.
- *
- * `buildParts` refabrique un document — donc un style neuf, à l'amorce — à chaque geste de
- * navigation. Sans ce report, régler « toutes les parts » ne survivrait pas au premier dépliage.
- * C'est le pendant, pour le style, du `copyAttrFrom` que les parts font déjà pour leur sac propre.
- *
- * ON NE REPORTE QUE CE QUI DIFFÈRE DE L'AMORCE, et non le sac entier : le style d'arrivée a déjà
- * la sienne, et recopier une amorce périmée y ferait traîner les valeurs d'une version d'avant.
- */
-export const carryPartStyleOver = (
-  previous: Class_ElementStyle | undefined,
-  next: Class_ElementStyle | undefined
-): void => {
-  if (!previous || !next) return
-  Object.keys(previous.attributes).forEach(attr => {
-    if (!partStyleSpeaksOf(previous, attr)) return
-    // Écriture directe dans le sac : le setter dynamique redessinerait les éléments qui
-    // référencent le style, alors qu'aucune part n'est encore construite à ce moment-là.
-    next.attributes[attr] = previous.attributes[attr]
-  })
-}
+// `carryPartStyleOver` A ETE RETIRE (os#1453), et son absence est le signe que la correction a
+// porte. Il n'existait que pour rattraper un document qu'on jetait a chaque dessin : il reportait,
+// d'un style neuf a l'autre, ce que l'auteur avait regle. Depuis que le document VIT d'un dessin au
+// suivant (`buildParts`), le style est le MEME objet — il n'y a plus rien a reporter.

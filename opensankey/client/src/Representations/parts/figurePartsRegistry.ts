@@ -52,8 +52,10 @@ export const figurePartsFor = (
   }
   pruneClosedWindows(source)
   const key = keyOf(window_id, pane_key)
-  // `buildParts` dispose lui-même le jeu précédent après en avoir repris les réglages : on ne
-  // libère donc rien ici, sous peine de le faire deux fois.
+  // On ne libère RIEN ici : depuis os#1453, `buildParts` réconcilie sur le jeu précédent — même
+  // document, mêmes parts — au lieu de le remplacer. La libération se joue à la FERMETURE de la
+  // vignette (`forgetFigureParts`, `pruneClosedWindows`), c'est-à-dire là où la figure cesse
+  // vraiment d'exister.
   const next = buildParts(source, inputs, _parts.get(key))
   _parts.set(key, next)
   return next
