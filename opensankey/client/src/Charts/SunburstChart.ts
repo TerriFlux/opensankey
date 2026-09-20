@@ -64,6 +64,16 @@ export interface Type_SunburstStyle extends Type_FigureLabelBackground {
   fill?: string
   background_visible?: boolean
   /**
+   * `value_label_stick_to_label` — « Coller au libelle » (os#1470), la cle des flux reutilisee.
+   *
+   * COLLE, et c'est l'usage d'un secteur : le nom et le nombre s'ecrivent dans UN texte, separes
+   * d'un point median. Une seule police, une seule encre — mettre le nom en gras met le nombre en
+   * gras. DECOLLE : le nombre devient son propre texte, sur sa propre ligne, dans l'axe du secteur.
+   *
+   * Absent = colle, c'est-a-dire toute couronne hierarchique deja enregistree.
+   */
+  value_attached?: boolean
+  /**
    * os#1465 — LE PICTOGRAMME D'UN SECTEUR, résolu et prêt à peindre.
    *
    * Julien : « oui, on peut dessiner l'icône sur les parts ». L'onglet Icône était servi aux parts
@@ -323,6 +333,8 @@ export const sunburstPartStyle = (
 
   // VALEUR (`value_label_*`)
   put('value_visible', booleanSaid(said('value_label_is_visible')))
+  // os#1470 — lu par la porte : absent veut dire « colle », l'usage du trace, et non « decolle ».
+  put('value_attached', booleanSaid(said('value_label_stick_to_label')))
   put('unit_visible', booleanSaid(said('value_label_unit_visible')))
   put('label_percent', oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const))
   put('significant_digits', booleanSaid(said('value_label_significant_digits')))
@@ -1024,10 +1036,20 @@ export const drawSunburstChart = (
       // tous les moteurs SVG, et l'export PNG en dépend.
       const name = sectorName(d)
       const parts: string[] = [s.uppercase ? name.toLocaleUpperCase() : name]
-      if (s.value_visible) parts.push(valueText(d.value, s))
-      if (s.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
+      // os#1470 — DECOLLE, le nombre n'est plus dans ce texte : il a le sien, ecrit plus bas.
+      if (s.value_attached !== false) parts.push(...sectorValueParts(d, s))
       return parts.join(' · ')
     }
+
+    /** Ce que le nombre d'un secteur ecrit, qu'il soit colle au nom ou detache de lui. */
+    const sectorValueParts = (d: Type_SunburstSlice, s: Type_SunburstStyle): string[] => {
+      const parts: string[] = []
+      if (s.value_visible) parts.push(valueText(d.value, s))
+      if (s.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
+      return parts
+    }
+    const sectorValueText = (d: Type_SunburstSlice): string =>
+      sectorValueParts(d, styleOf(d.id)).join(' · ')
 
     const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null => {
       const s = styleOf(d.id)
@@ -1271,25 +1293,35 @@ export const drawSunburstChart = (
 
     // Étiquettes DANS les secteurs assez larges. Jamais sur tous : un secteur trop
     // étroit n'a que son info-bulle, et un texte tronqué à l'aveugle ne nomme rien.
+    /**
+     * os#1470 — LA TRANSFORMATION D'UN TEXTE D'ARC, extraite pour etre PARTAGEE.
+     *
+     * Le nom et le nombre detache doivent l'appliquer tous les deux : un secteur dont le nom suit
+     * l'arc et dont le nombre resterait droit se lirait comme une erreur. Elle etait ecrite en
+     * ligne dans le seul endroit qui en avait besoin ; ils sont deux desormais.
+     *
+     * RADIALE : le texte suit le rayon (defaut). LE LONG DE L'ARC : un quart de tour de plus, dans
+     * le sens qui le garde lisible. HORIZONTALE : on defait la rotation du secteur, le texte reste
+     * droit quelle que soit sa place sur le tour.
+     */
+    const arcTextTransform = (d: Type_SunburstSlice): string => {
+      const angle = (d.a0 + d.a1) / 2
+      const radius = inner_r + (d.depth + 0.5) * ring
+      const deg = angle * 180 / Math.PI - 90
+      // Au-dela du demi-tour, le texte se lirait la tete en bas.
+      const flip = deg > 90 || deg < -90
+      const at = 'rotate(' + deg + ') translate(' + radius + ',0)'
+      const orientation = styleOf(d.id).label_orientation
+      if (orientation === 'tangential') return at + ' rotate(' + (flip ? 90 : -90) + ')'
+      if (orientation === 'horizontal') return at + ' rotate(' + (-deg) + ')'
+      return at + ' rotate(' + (flip ? 180 : 0) + ')'
+    }
+
     const arc_labels = g.selectAll('text.sunburst_arc_label')
       .data(slices.filter(d => arcLabelOf(d, geo) !== null))
       .enter().append('text')
       .attr('class', 'sunburst_arc_label')
-      .attr('transform', d => {
-        const angle = (d.a0 + d.a1) / 2
-        const radius = inner_r + (d.depth + 0.5) * ring
-        const deg = angle * 180 / Math.PI - 90
-        // Au-delà du demi-tour, le texte se lirait la tête en bas.
-        const flip = deg > 90 || deg < -90
-        const at = `rotate(${deg}) translate(${radius},0)`
-        // RADIALE : le texte suit le rayon (défaut). LE LONG DE L'ARC : un quart de tour de plus,
-        // dans le sens qui le garde lisible. HORIZONTALE : on défait la rotation du secteur, le
-        // texte reste droit quelle que soit sa place sur le tour.
-        const orientation = styleOf(d.id).label_orientation
-        if (orientation === 'tangential') return `${at} rotate(${flip ? 90 : -90})`
-        if (orientation === 'horizontal') return `${at} rotate(${-deg})`
-        return `${at} rotate(${flip ? 180 : 0})`
-      })
+      .attr('transform', d => arcTextTransform(d))
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       // os#1445 — LE LIBELLÉ EST CELUI DE LA PART : police, graisse, casse et encre se règlent
@@ -1320,6 +1352,37 @@ export const drawSunburstChart = (
       // os#1468 — LE CARTOUCHE, posé APRÈS le texte : il se mesure sur ce qui est écrit.
       drawFigureLabelBackground(text, styleOf(d.id))
     })
+
+    // -- os#1470 : LE NOMBRE DETACHE DE SON NOM ------------------------------------------
+    //
+    // Son propre texte, donc sa propre ligne — mais la MEME orientation que le nom : un secteur
+    // dont le nom court le long de l'arc et dont le nombre resterait droit se lirait comme une
+    // erreur. Pose une ligne plus bas, la ou il etait quand il y etait colle, ce qui rend le
+    // passage de l'un a l'autre lisible plutot que brutal.
+    const detached_values = slices.filter(d =>
+      styleOf(d.id).value_attached === false &&
+      sectorValueText(d) !== '' &&
+      styleOf(d.id).icon_path === undefined &&
+      arcLabelOf(d, geo) !== null)
+    if (detached_values.length > 0) {
+      g.selectAll('text.sunburst_arc_value')
+        .data(detached_values)
+        .enter().append('text')
+        .attr('class', 'sunburst_arc_value')
+        .attr('transform', d => arcTextTransform(d))
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('dy', d => styleOf(d.id).font_size * LABEL_LINE_HEIGHT)
+        .attr('font-size', d => styleOf(d.id).font_size)
+        .attr('font-family', d => styleOf(d.id).font_family || null)
+        .attr('font-weight', d => styleOf(d.id).bold ? 'bold' : null)
+        .attr('font-style', d => styleOf(d.id).italic ? 'italic' : null)
+        .attr('fill', d => styleOf(d.id).color_mode === 'fixed'
+          ? styleOf(d.id).label_color
+          : inkOn(d.color, palette.ink))
+        .attr('pointer-events', 'none')
+        .text(d => sectorValueText(d))
+    }
 
     // ── PICTOGRAMMES (os#1465) ───────────────────────────────────────────────────────────
     //

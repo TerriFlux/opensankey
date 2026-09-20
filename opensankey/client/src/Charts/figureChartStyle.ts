@@ -219,6 +219,24 @@ export interface Type_FigurePartLabelAspect {
    */
   label_callout?: boolean
   /**
+   * `value_label_stick_to_label` — « Coller au libellé » (os#1470).
+   *
+   * Julien : « oui mais je crois qu il faut le faire ; l option par defaut c est d avoir les deux
+   * attaches. Cette option existe pour les flux, donc reutilisons-la. » C est la meme cle que sur
+   * un flux, avec le meme mot dans les sept langues.
+   *
+   * COLLE (l usage d un secteur) : le nom et le nombre s ecrivent dans UN seul texte, l un sous
+   * l autre. Ils partagent donc une police, une encre, une place — mettre le nom en gras met le
+   * nombre en gras.
+   *
+   * DECOLLE (l usage d un histogramme) : deux textes, chacun avec sa typographie et sa place.
+   *
+   * ⚠️ ABSENT N EST PAS « FAUX ». Une part n est ecoutee que sur ce qu elle DIT ; tant qu elle se
+   * tait, chaque trace garde son usage — colle dans un secteur, separe sur une barre. Un defaut
+   * unique changerait l aspect de l un des deux parcs a la reouverture.
+   */
+  value_attached?: boolean
+  /**
    * LE FORMAT DE LA VALEUR DE CETTE PART, quand elle en règle un.
    *
    * UNE FONCTION DÉJÀ MONTÉE, et non les six clés : le tracé écrit alors `(aspect.value_format ??
