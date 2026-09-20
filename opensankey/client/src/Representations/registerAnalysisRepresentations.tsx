@@ -36,7 +36,7 @@ import {
   type Type_RepresentationContext
 } from './RepresentationRegistry'
 import {
-  figureChartStyleOf, figureTitleOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
+  figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
@@ -224,8 +224,9 @@ const chartOptions = (
     independent_scales_label: app_data.t('view.unit_chart_independent_scales'),
     style: figureChartStyleOf(ctx.options, defaults),
     format: figureValueFormatter(figureValueFormatOf(ctx.options, unit)),
-    // Le titre, et ce qu'il écrit à texte vide : le nom du sujet regardé.
-    title: figureTitleOf(ctx.options),
+    // os#1477 — TOUT LE TEXTE DE LA FIGURE, titre compris, comme pour le disque : le titre est la
+    // zone n° 0 depuis os#1449, et l'auteur peut en ajouter d'autres (`text_zones`).
+    texts: (subject_name: string) => figureTextsOf(ctx.options, subject_name),
     title_fallback: subject?.kind === 'node'
       ? subject.node.name
       : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : ''
