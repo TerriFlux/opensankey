@@ -2101,16 +2101,76 @@ export class Class_ApplicationData {
     this._snapshotCurrentSheet()
     const source = this._sheets[this._current_sheet_id]
     const id = makeId('sheet')
-    const copy_prefix_raw = this.t('sheets.copy_prefix') as unknown
-    const copy_prefix = (typeof copy_prefix_raw === 'string' && copy_prefix_raw !== 'sheets.copy_prefix') ? copy_prefix_raw : 'Copie de '
     // Insérée juste après la feuille source, comme draw.io.
     const idx = this._sheets_order.indexOf(this._current_sheet_id)
-    this._sheets[id] = { name: copy_prefix + source.name }
+    this._sheets[id] = { name: this._copyPrefix() + source.name }
     this._sheets_order.splice(idx + 1, 0, id)
     this._current_sheet_id = id
     this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
     return id
+  }
+
+  /**
+   * os#1443 — DUPLIQUER N'IMPORTE QUELLE FEUILLE, courante ou non.
+   *
+   * Ce corps vivait dans la barre d'onglets (`SheetTabs.tsx`), et l'audit du 19/09 le relevait :
+   * un composant y choisissait la SOURCE DE VÉRITÉ d'une feuille, décompressait un instantané et
+   * nommait la copie — trois décisions de modèle, invérifiables sans monter du React, et que la
+   * prochaine surface qui voudrait dupliquer aurait dû réécrire. Rien d'autre n'a changé : le
+   * comportement est celui d'avant, à la virgule près.
+   *
+   * `duplicateCurrentSheetAsNewSheet` ne sait partir que de la feuille VIVANTE : elle en prend
+   * l'instantané et le nomme. Une feuille classeur n'est JAMAIS la courante — elle n'a pas de
+   * canevas —, donc ce chemin ne l'aurait jamais atteinte. Pour les autres, on duplique ce que
+   * la feuille EST : son contenu et son TYPE (sans le type, la copie d'un classeur se relirait
+   * comme un Sankey de plus).
+   *
+   * LE CONTENU VIENT DU DOCUMENT VIVANT quand il y en a un (la feuille est ouverte dans une
+   * fenêtre et on y a travaillé) : c'est lui la vérité, l'instantané date de son ouverture
+   * (lot 3, D6). `sheetApplication` rend ce document, ou le charge depuis l'instantané — dans
+   * les deux cas, ce qu'il sérialise est à jour. L'instantané brut n'est le repli que pour un
+   * type sans chargeur, où il n'y a rien d'autre à copier.
+   *
+   * La copie est ajoutée EN FIN de barre (`addSheetFromJSON`), là où la duplication de la
+   * courante l'insère juste après sa source : différence assumée, `addSheetFromJSON` n'offre
+   * pas de position et un classeur n'a pas de voisinage qui veuille dire quelque chose.
+   *
+   * @returns l'id de la feuille créée, ou `null` quand il n'y a rien à dupliquer (feuille
+   *   inconnue, ou type sans chargeur et sans instantané).
+   */
+  public duplicateSheet(sheet_id: string): string | null {
+    if (!this.has_sheets) return null
+    if (sheet_id === '' || sheet_id === this._current_sheet_id) {
+      return this.duplicateCurrentSheetAsNewSheet()
+    }
+    const entry = this._sheets[sheet_id]
+    if (!entry) return null
+    const type = this.sheetType(sheet_id)
+    // Le document vivant s'il existe, chargé sinon — mais jamais `this` : la feuille courante
+    // est partie par la branche du dessus, et `sheetApplication` rend `this` en cas de
+    // ré-entrance (chargement en cours), ce qui sérialiserait le mauvais diagramme.
+    const doc = type ? this.sheetApplication(sheet_id) : null
+    let content: Type_JSON | null = null
+    if (type && doc && doc !== this) content = type.serialize(doc)
+    else if (entry.json) content = JSON.parse(pako.inflate(entry.json, { to: 'string' })) as Type_JSON
+    if (!content) return null
+    return this.addSheetFromJSON(content, {
+      name: this._copyPrefix() + entry.name,
+      type: entry.type
+    })
+  }
+
+  /**
+   * os#1443 — « Copie de », ou le repli quand les catalogues ne sont pas chargés.
+   *
+   * `t()` rend la CLÉ quand la traduction manque (et `null` sous jest, où rien n'est chargé) :
+   * sans ce garde-fou, une feuille dupliquée s'appellerait « sheets.copy_prefixVentes ». Le
+   * même repli existait aux deux endroits qui dupliquent ; il n'en existe plus qu'un.
+   */
+  protected _copyPrefix(): string {
+    const raw = this.t('sheets.copy_prefix') as unknown
+    return (typeof raw === 'string' && raw !== 'sheets.copy_prefix') ? raw : 'Copie de '
   }
 
   /**
