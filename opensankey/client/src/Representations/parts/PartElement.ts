@@ -103,15 +103,17 @@ export class Class_PartElement extends Class_BaseShape {
     this.name_label_text = _
   }
 
-  /**
-   * Ce que la part AFFICHE : son alias s'il y en a un, sinon le nom de son sujet. Même cascade que
-   * `Class_NodeBase.name_label_effective`, réduite aux deux sources qu'une part connaît — elle n'a
-   * ni tags assignés, ni dimensions, ni gabarit.
-   */
-  public get name_label_effective(): string {
-    const own = this.alias
-    return own.trim() !== '' ? own : this.name
-  }
+  // `name_label_effective` N'EST PLUS ÉCRIT ICI, et c'est le lot d'homogénéisation qui l'a retiré.
+  //
+  // Cette classe en portait une version à deux branches — alias, sinon le nom du sujet — parce que
+  // la cascade vivait sur `Class_NodeBase` et qu'une part n'en descend pas. Depuis qu'elle est
+  // remontée sur `Class_BaseShape`, la base répond, et mieux : elle applique aussi le séparateur de
+  // libellé, que ma version ignorait. Une quatrième implémentation du nommage aurait donc introduit
+  // une divergence dès le premier réglage de séparateur sur une couronne.
+  //
+  // Ce qui reste ici est ce qui est VRAI D'UNE PART et d'elle seule : son nom vient de son sujet
+  // (ci-dessus), et son alias porte un nom qui se lit (ci-dessus). Le reste est commun à tout
+  // élément, et c'est exactement le pas que Julien demandait.
 
   // CE QUI NE SE DESSINE PAS ===========================================================
   //
