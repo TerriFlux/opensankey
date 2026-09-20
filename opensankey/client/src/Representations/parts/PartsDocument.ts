@@ -89,3 +89,39 @@ export class Class_PartsDocument extends Class_ApplicationData {
    */
   public override syncUrlState(): void { /* rien : cf. l'en-tête, règle 2 */ }
 }
+
+// ── QUI FABRIQUE LE DOCUMENT DE PARTS ────────────────────────────────────────────────────────
+//
+// os#1454 — L'INVARIANT QUE LA PREMIÈRE VERSION A CASSÉ, ET QUI A PLANTÉ dev.
+//
+// `BannerViewsOSP` l'énonce noir sur blanc : « dans un espace de travail OS+, TOUT document est un
+// `Class_ApplicationDataOSP` — c'est sa fabrique qui les crée », et il en tire un resserrement de
+// type sans garde. La classe ci-dessus est un document d'OpenSankey : dès qu'elle devient l'ACTIF
+// — ce qui est tout l'objet du branchement de l'inspecteur (os#1446) — les bannières d'OS+ lisent
+// `menu_configuration_osp`, qui n'existe pas sur elle. Erreur à la première fenêtre touchée :
+//   TypeError: can't access property "ref_to_banner_views_updater", a is undefined
+//
+// On ne peut pas régler ça en sous-classant ici : `Representations/parts/` est en OpenSankey, et
+// OpenSankey ne connaît pas OpenSankey+. C'est donc la couche du dessus qui pose SA fabrique, au
+// même titre que `Class_WorkspaceOSP.instantiateDocument` pose la sienne — et pour exactement la
+// même raison.
+//
+// Le défaut reste la classe d'OpenSankey : un éditeur OS pur n'a pas de bannières de vues, et rien
+// à surcharger.
+
+export type Type_PartsDocumentFactory = (source: Class_ApplicationData) => Class_PartsDocument
+
+let _parts_document_factory: Type_PartsDocumentFactory = (source) => new Class_PartsDocument(source)
+
+/**
+ * Pose la fabrique de documents de parts. Appelée par la couche qui sait quelle classe de document
+ * son espace de travail exige — jamais au chargement du module (effet de bord), toujours depuis
+ * l'enregistrement de ses représentations.
+ */
+export const setPartsDocumentFactory = (factory: Type_PartsDocumentFactory): void => {
+  _parts_document_factory = factory
+}
+
+/** Le document de parts d'une figure, de la classe que la couche en place exige. */
+export const createPartsDocument = (source: Class_ApplicationData): Class_PartsDocument =>
+  _parts_document_factory(source)
