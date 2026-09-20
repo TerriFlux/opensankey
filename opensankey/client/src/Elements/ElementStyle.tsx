@@ -40,6 +40,11 @@ export const SankeyUnitaryNodeOutputStyle = 'SankeyUnitaryNodeOutputStyle' as co
 export const LinkInUnitaryStyle = 'LinkInUnitaryStyle' as const
 export const LinkOutUnitaryStyle = 'LinkOutUnitaryStyle' as const
 export const FigurePartStyle = 'FigurePartStyle' as const
+// os#1462 — LES TROIS NATURES DE PART. Cf. le bloc de déclaration plus bas : `FigurePartStyle` dit
+// ce qui est vrai de TOUTE part, ceux-ci ce qui est vrai de la sienne.
+export const SunburstPartStyle = 'SunburstPartStyle' as const
+export const DonutPartStyle = 'DonutPartStyle' as const
+export const BarPartStyle = 'BarPartStyle' as const
 
 // Type union de toutes les clés
 export type ElementStyleKey =
@@ -68,6 +73,9 @@ export type ElementStyleKey =
   | typeof LinkInUnitaryStyle
   | typeof LinkOutUnitaryStyle
   | typeof FigurePartStyle
+  | typeof SunburstPartStyle
+  | typeof DonutPartStyle
+  | typeof BarPartStyle
 
 export type ElementStyleConfigsDict = Record<ElementStyleKey, ElementStyleConfigItem>
 export const elementStyleConfigs = {} as ElementStyleConfigsDict
@@ -430,18 +438,36 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 // tracé n'écoute une part que sur ce qu'elle DIT (`isAttributeOverloaded`, cf.
 // `Charts/SunburstChart.sunburstPartStyle`), et `Class_PartElement` ne tient pour « dit » que ce
 // qu'un style de part porte AU-DELÀ de son amorce (cf. `Representations/parts/partStyle`). Les
-// neuf valeurs ci-dessous sont donc muettes tant que personne ne les touche ; elles ne servent
+// valeurs ci-dessous sont donc muettes tant que personne ne les touche ; elles ne servent
 // qu'à l'ŒIL — que l'inspecteur montre dix points et un liséré blanc, c'est-à-dire ce que la
 // figure dessine vraiment, et non les quatorze points d'un nœud.
+//
+// ── DEUX ÉTAGES, ET C'EST UNE DEMANDE DE JULIEN ───────────────────────────────────────────────
+//
+// os#1462 : « il faut créer des styles par défaut pour les parts — parts de sunburst, parts de
+// couronne, parts de barre… tu vois le truc ? » C'est le §5 du contrat appliqué aux parts : « en
+// haut c'est générique, et en bas ça se spécialise sur les éléments, puis sur certaines familles
+// parmi ces éléments ».
+//
+// LE PARTAGE, et il se lit à une question : « est-ce vrai de TOUTE part ? »
+//
+//   FigurePartStyle  — oui. Une part est un fragment d'une figure qui compare des ordres de
+//                      grandeur : dix points, un nom qui s'efface s'il ne tient pas, quatre
+//                      chiffres significatifs. Vrai d'un secteur comme d'une barre.
+//   ...PartStyle     — non. Le liséré blanc sépare des ANNEAUX ; une barre n'a rien à séparer, et
+//                      un histogramme n'a jamais eu de liséré.
+//
+// Ce partage n'est pas cosmétique : le liséré blanc était jusqu'ici dans l'étage générique, donc
+// hérité par les barres, et `barPartStyle` devait s'en défendre à la main (« le liséré se demande
+// en bloc »). Une valeur fausse qu'on neutralise en aval est une valeur fausse ; descendue d'un
+// étage, elle devient vraie là où elle est, et le contournement n'a plus lieu d'être.
+//
+// AUCUN MÉCANISME NOUVEAU. Un élément suit une LISTE ordonnée de styles et `getElementProperty` la
+// parcourt — le dernier qui parle gagne. La hiérarchie est donc la liste `[défaut, générique,
+// nature]`, et rien d'autre.
 elementStyleConfigs[FigurePartStyle] = {
   name: 'ElementStyle.FigurePartStyle',
   config: {
-    // Forme : une part est opaque et cernée de blanc — les anneaux se séparent par un vide clair,
-    // là où un nœud est translucide et cerné de noir.
-    shape_opacity: 1,
-    shape_border_visible: true,
-    shape_border_color: '#ffffff',
-
     // Libellé : dix points, et « là où ça tient » plutôt que « toujours » — une part trop étroite
     // ne porte pas son nom, alors qu'un nœud garde le sien quoi qu'il arrive.
     name_label_font_size: 10,
@@ -453,6 +479,41 @@ elementStyleConfigs[FigurePartStyle] = {
     value_label_nb_significant_digits: 4,
     value_label_custom_digit: false,
     value_label_nb_digit: 0
+  }
+} as const
+
+// L'ÉTOILE : des anneaux concentriques, séparés par un vide clair. Opaque, là où un nœud est
+// translucide ; cerné de blanc, là où un nœud est cerné de noir.
+elementStyleConfigs[SunburstPartStyle] = {
+  name: 'ElementStyle.SunburstPartStyle',
+  config: {
+    shape_opacity: 1,
+    shape_border_visible: true,
+    shape_border_color: '#ffffff'
+  }
+} as const
+
+// LA COURONNE : un seul anneau, mais des secteurs qui se touchent — la séparation claire vaut donc
+// pour la même raison. Déclarée À PART de l'étoile bien que de même contenu aujourd'hui : ce sont
+// deux natures, et les confondre interdirait de régler l'une sans l'autre. C'est très exactement
+// ce que ce lot existe pour rendre possible.
+elementStyleConfigs[DonutPartStyle] = {
+  name: 'ElementStyle.DonutPartStyle',
+  config: {
+    shape_opacity: 1,
+    shape_border_visible: true,
+    shape_border_color: '#ffffff'
+  }
+} as const
+
+// LES BARRES : rien à séparer, donc pas de liséré. Et il est déclaré ABSENT plutôt que laissé au
+// silence, pour que l'aspect d'une barre se lise ici en entier plutôt que de se déduire de ce qui
+// n'y est pas.
+elementStyleConfigs[BarPartStyle] = {
+  name: 'ElementStyle.BarPartStyle',
+  config: {
+    shape_opacity: 1,
+    shape_border_visible: false
   }
 } as const
 
@@ -481,10 +542,25 @@ export const node_unitary_styles: readonly ElementStyleKey[] = [
   SankeyUnitaryNodeOutputStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeStyle,
   LinkInUnitaryStyle, LinkOutUnitaryStyle
 ] as const
-// os#1449 — les styles que le document de parts d'une figure crée. Une liste d'un seul élément
-// aujourd'hui : les barres ajouteront le leur quand elles auront leurs parts, et le geste de semis
-// (`Representations/parts/partStyle.seedPartStyles`) n'aura pas à changer.
+// os#1449 — les styles que le document de parts d'une figure crée.
 export const figure_part_styles: readonly ElementStyleKey[] = [FigurePartStyle] as const
+
+/**
+ * os#1462 — LE STYLE DE NATURE D'UNE PART : celui qui se pose SOUS le générique et par-dessus le
+ * style par défaut.
+ *
+ * Une TABLE plutôt qu'un `switch` chez l'appelant, et c'est ce qui fait que le semis
+ * (`seedPartStyles`) n'a pas à connaître les natures : il lit ce qu'on lui donne. Une nature de
+ * plus est une ligne ici, et rien ailleurs.
+ *
+ * Une nature absente de cette table n'est pas une erreur : sa part s'en tient à l'étage générique,
+ * ce qui est exactement l'aspect d'avant ce lot. C'est ce qui permet d'en ajouter une à la fois.
+ */
+export const figure_part_nature_styles: { readonly [nature: string]: ElementStyleKey } = {
+  sunburst: SunburstPartStyle,
+  donut: DonutPartStyle,
+  bars: BarPartStyle
+} as const
 
 // ── L'HÔTE DE STYLES ─────────────────────────────────────────────────────────────────────────
 //

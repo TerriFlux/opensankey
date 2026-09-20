@@ -17,7 +17,7 @@ import { buildParts } from './buildParts'
 import type { Type_FigureParts } from './buildParts'
 import { partStyleOf } from './partStyle'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { elementStyleConfigs, FigurePartStyle } from '../../Elements/ElementStyle'
+import { BarPartStyle, DonutPartStyle, elementStyleConfigs, FigurePartStyle, SunburstPartStyle } from '../../Elements/ElementStyle'
 import { SUNBURST_STYLE_DEFAULTS, sunburstPartStyle } from '../../Charts/SunburstChart'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -30,10 +30,14 @@ const buildSource = () => {
   return doc
 }
 
+// os#1462 — LA NATURE EST DECLAREE, et ce n est pas un detail de mise en place : depuis que les
+// styles de part ont deux etages, l aspect d une couronne (opacite, lisere blanc) vit sur le style
+// de la NATURE et non sur le generique. Une part batie sans nature n a donc que l etage du haut —
+// ce qui est juste, et ce que verifie le test « sans nature » plus bas.
 const twoParts = (): Type_FigureParts => buildParts(buildSource(), [
   { id: 'n_ble', label: 'Ble', value: 6 },
   { id: 'n_mais', label: 'Mais', value: 4 }
-])
+], undefined, 'sunburst')
 
 describe('os#1449 le style de part existe et se voit', () => {
 
@@ -52,7 +56,7 @@ describe('os#1449 le style de part existe et se voit', () => {
     const part_style = partStyleOf(figure.document.drawing_area.sankey)
 
     figure.ordered.forEach(part => {
-      expect(part.style.map(s => s.id)).toEqual(['default', FigurePartStyle])
+      expect(part.style.map(s => s.id)).toEqual(['default', FigurePartStyle, SunburstPartStyle])
       // Et c est bien LA MEME instance : deux styles homonymes auraient deux sacs, et regler l un
       // ne se verrait pas sur les parts accrochees a l autre.
       expect(part.getCustomStyles()[0]).toBe(part_style)
@@ -194,5 +198,70 @@ describe('os#1449 une couronne enregistree se rouvre a lidentique', () => {
 
     expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, figure.by_id['n_ble']))
       .toEqual(SUNBURST_STYLE_DEFAULTS)
+  })
+})
+
+// os#1462 — LES STYLES DE PART ONT DEUX ETAGES.
+//
+// Julien : « il faut creer des styles par defaut pour les parts — parts de sunburst, parts de
+// couronne, parts de barre… tu vois le truc ? » C est le §5 du contrat applique aux parts : en
+// haut ce qui vaut pour TOUTE part, en bas ce qui vaut pour la sienne.
+//
+// CE QUI SE VERIFIE ICI N EST PAS LE CONTENU DES AMORCES mais la MECANIQUE : que la cascade ait
+// bien trois crans, que le cran du bas gagne, et qu une figure ne se voie offrir que les styles
+// qui la concernent. Les valeurs, elles, se relisent dans `ElementStyle`.
+describe('os#1462 le generique en haut, la nature en bas', () => {
+
+  it('une part de sunburst porte les deux etages, dans cet ordre', () => {
+    const part = twoParts().by_id['n_ble']
+
+    expect(part.style.map(s => s.id)).toEqual(['default', FigurePartStyle, SunburstPartStyle])
+  })
+
+  it('le lisere blanc a QUITTE le generique pour la nature', () => {
+    // LE PARTAGE, ET SA RAISON. Le lisere blanc separe des ANNEAUX : il etait dans l etage
+    // generique, donc herite par les barres, et `barPartStyle` devait s en defendre a la main.
+    // Une valeur fausse qu on neutralise en aval reste une valeur fausse.
+    const generique = elementStyleConfigs[FigurePartStyle].config as { [k: string]: unknown }
+    const nature = elementStyleConfigs[SunburstPartStyle].config as { [k: string]: unknown }
+
+    expect(generique.shape_border_visible).toBeUndefined()
+    expect(generique.shape_border_color).toBeUndefined()
+    expect(nature.shape_border_color).toBe('#ffffff')
+    // Et ce qui vaut pour TOUTE part est reste en haut : dix points, quatre chiffres.
+    expect(generique.name_label_font_size).toBe(10)
+  })
+
+  it('une part de barres ne porte PAS le lisere de la couronne', () => {
+    // La demande, en une assertion : deux natures, deux aspects d usine.
+    const barres = buildParts(buildSource(), [
+      { id: 'l_ble', label: 'Ble', value: 6 }
+    ], undefined, 'bars').by_id['l_ble']
+
+    expect(barres.style.map(s => s.id)).toEqual(['default', FigurePartStyle, BarPartStyle])
+    expect(barres.shape_border_visible).toBe(false)
+  })
+
+  it('une couronne ne se voit pas offrir le style des BARRES', () => {
+    // Semer les trois natures d un coup proposerait « Part de barres » dans la liste des styles
+    // d une couronne : un reglage sans effet, ce qui est la pire chose a offrir a un auteur.
+    const sankey = buildParts(buildSource(), [
+      { id: 'n_ble', label: 'Ble', value: 6 }
+    ], undefined, 'donut').document.drawing_area.sankey
+    const ids = sankey.styles_list.map(s => s.id)
+
+    expect(ids).toContain(DonutPartStyle)
+    expect(ids).not.toContain(BarPartStyle)
+    expect(ids).not.toContain(SunburstPartStyle)
+  })
+
+  it('une nature inconnue sen tient au generique, sans rien casser', () => {
+    // C est ce qui permet d ajouter les natures UNE A LA FOIS : celle qui n a pas encore son style
+    // garde exactement l aspect d avant ce lot.
+    const part = buildParts(buildSource(), [
+      { id: 'x', label: 'X', value: 1 }
+    ], undefined, 'nature_qui_nexiste_pas').by_id['x']
+
+    expect(part.style.map(s => s.id)).toEqual(['default', FigurePartStyle])
   })
 })
