@@ -4565,17 +4565,107 @@ const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: st
  * sous un préfixe de FOND d'étiquette (`name_label_background_*`) ne sont PAS concernées : un
  * cartouche derrière une étiquette de secteur a du sens, il reste donc offert.
  */
+/** « Pas pour une part » — la portée écrite une fois, citée partout ci-dessous. */
+const NOT_ON_A_PART: Type_AttributeScope = { except: ['part'] }
+
+/**
+ * « Pour tout le monde » — ce qui RÉ-AUTORISE une clé qu'une portée de catalogue ou de famille
+ * aurait emportée avec ses voisines. La règle de résolution fait le reste : la clé l'emporte sur la
+ * famille (cf. `attributeScopeOf`).
+ */
+const EVERYONE: Type_AttributeScope = { except: [] }
+
+/**
+ * os#1478 — LA PORTÉE D'UN CATALOGUE ENTIER, sous le ou les préfixes qui le dérivent.
+ *
+ * Certains catalogues de base ne décrivent qu'UNE nature, et le disent par leur nom :
+ * `NODE_SHAPE_SPECIFIC_CONFIG`, `LINK_SHAPE_SPECIFIC_CONFIG`, `LINKS_LABEL_SPECIFIC_CONFIG`. Poser
+ * la portée sur le catalogue plutôt que sur ses clés évite d'en énumérer cinquante-quatre — mais
+ * surtout, LA CLÉ QU'ON Y AJOUTERA DEMAIN L'HÉRITERA. C'est précisément le défaut que ce chantier
+ * répare : une liste tenue à la main diverge le jour où quelqu'un ajoute une entrée ailleurs.
+ */
+const catalogueScope = (
+  base_config: Record<string, unknown>,
+  scope: Type_AttributeScope,
+  ...prefixes: string[]
+): { [key: string]: Type_AttributeScope } => {
+  const out: { [key: string]: Type_AttributeScope } = {}
+  Object.keys(base_config).forEach(key => {
+    prefixes.forEach(prefix => { out[prefix ? `${prefix}_${key}` : key] = scope })
+  })
+  return out
+}
+
+/** Les mêmes suffixes sous un seul préfixe, quand c'est la COPIE préfixée qui n'a pas d'objet. */
+const prefixedScope = (
+  prefix: string,
+  keys: readonly string[],
+  scope: Type_AttributeScope
+): { [key: string]: Type_AttributeScope } => {
+  const out: { [key: string]: Type_AttributeScope } = {}
+  keys.forEach(key => { out[`${prefix}_${key}`] = scope })
+  return out
+}
+
 export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
-  shape_type: { except: ['part'] },
-  shape_min_width: { except: ['part'] },
-  shape_min_height: { except: ['part'] },
-  shape_width_locked: { except: ['part'] },
-  shape_box_width: { except: ['part'] },
-  shape_border_radius: { except: ['part'] },
-  shape_margin_left: { except: ['part'] },
-  shape_margin_right: { except: ['part'] },
-  shape_margin_top: { except: ['part'] },
-  shape_margin_bottom: { except: ['part'] }
+  shape_type: NOT_ON_A_PART,
+  shape_min_width: NOT_ON_A_PART,
+  shape_min_height: NOT_ON_A_PART,
+  shape_width_locked: NOT_ON_A_PART,
+  shape_box_width: NOT_ON_A_PART,
+  shape_border_radius: NOT_ON_A_PART,
+  shape_margin_left: NOT_ON_A_PART,
+  shape_margin_right: NOT_ON_A_PART,
+  shape_margin_top: NOT_ON_A_PART,
+  shape_margin_bottom: NOT_ON_A_PART,
+
+  // ── os#1478 — LA GÉOMÉTRIE D'UN NŒUD ET CELLE D'UN FLUX (54 clés) ───────────────────────────
+  //
+  // Ancrages, verrous de position, courbure, tangentes, flèches, encoches, points de passage,
+  // recyclage, hachures… Une part n'a rien de tout cela : SA FORME EST CALCULÉE À PARTIR DE SA
+  // VALEUR, c'est le graphique qui la place et la dimensionne. Ces deux catalogues ne décrivent
+  // qu'une nature — leur nom le dit — et c'est donc au catalogue que la portée se pose.
+  ...catalogueScope(NODE_SHAPE_SPECIFIC_CONFIG, NOT_ON_A_PART, 'shape'),
+  ...catalogueScope(LINK_SHAPE_SPECIFIC_CONFIG, NOT_ON_A_PART, 'shape'),
+
+  // ── CE QUI COUPLE UNE ÉTIQUETTE AU DIAGRAMME ────────────────────────────────────────────────
+  //
+  // « Sur le tracé », « position automatique », « groupe de tags de flux » : trois questions qui
+  // n'ont de réponse que dans un Sankey. Une figure n'a ni tracé de flux ni groupes de tags.
+  ...catalogueScope(LINKS_LABEL_SPECIFIC_CONFIG, NOT_ON_A_PART, 'name_label', 'value_label'),
+  // …SAUF la source du texte, qui décrit UN LIBELLÉ et pas un diagramme : écrire le nom d'une part
+  // depuis un attribut a du sens, et c'est une des cinquante-et-une à implémenter.
+  name_label_text_source: EVERYONE,
+  value_label_text_source: EVERYONE,
+  name_label_tag_group_id: NOT_ON_A_PART,
+  name_label_dimension_id: NOT_ON_A_PART,
+
+  // ── UN NOM N'A NI CHIFFRES NI UNITÉ (9 clés) ────────────────────────────────────────────────
+  //
+  // Notation scientifique, chiffres significatifs, décimales, unité et son facteur : ces clés
+  // existent sous le préfixe du NOM uniquement parce que la déclaration de base est partagée entre
+  // les deux familles d'étiquette. Elles décrivent l'écriture d'un NOMBRE, et le nom d'une part
+  // n'en est pas un. Sous `value_label_`, les mêmes sont lues par les trois natures.
+  ...prefixedScope('name_label', [
+    'scientific_notation', 'significant_digits', 'nb_significant_digits',
+    'custom_digit', 'nb_digit', 'unit_visible', 'unit_type', 'unit', 'unit_factor'
+  ], NOT_ON_A_PART),
+
+  // ── CE QUI COUPLE LA FIGURE AU NŒUD QUI LA PORTE (2 clés) ───────────────────────────────────
+  //
+  // L'axe d'analyse et les placements de figures sont des réglages du NŒUD regardé — ce qu'on
+  // décompose, et où les figures se posent autour de lui. Ce ne sont pas des aspects d'une part.
+  ...catalogueScope(ANALYSIS_CONFIG, NOT_ON_A_PART, ''),
+
+  // ── LES CINQ CLÉS QUI DÉCRIVENT VRAIMENT UN PICTOGRAMME ─────────────────────────────────────
+  //
+  // La famille `icon` est masquée en bloc (cf. `ATTRIBUTE_FAMILY_SCOPES`) ; ces cinq-là en sont
+  // ressorties, et elles sont LUES par les trois natures depuis os#1465.
+  icon_is_visible: EVERYONE,
+  icon_icon_name: EVERYONE,
+  icon_color: EVERYONE,
+  icon_box_width: EVERYONE,
+  icon_view_box: EVERYONE
 }
 
 /**
@@ -4588,7 +4678,18 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
  * famille (la boîte, son fond, ses marges) n'ont pas de sujet sur elle.
  */
 export const ATTRIBUTE_FAMILY_SCOPES: { [category: string]: Type_AttributeScope } = {
-  stock_label: { except: ['part'] }
+  stock_label: NOT_ON_A_PART,
+  // os#1478 — L'ICÔNE EST UN PICTOGRAMME, PAS UN TEXTE.
+  //
+  // Cette famille est dérivée de la machinerie d'ÉTIQUETTE (`ICON_LABEL_BASE_CONFIG`, préfixée
+  // `icon`), et en hérite soixante-trois clés dont cinquante-sept n'ont aucun sujet : une police,
+  // une graisse, une casse, un séparateur, un retour à la ligne, un cartouche… sur un dessin
+  // vectoriel. Ce n'est pas propre aux parts — c'est vrai partout —, mais la barre pour masquer
+  // reste haute et on ne retire que là où le constat a été fait.
+  //
+  // Les cinq clés qui décrivent réellement un pictogramme sont ressorties une par une
+  // (`ATTRIBUTE_KEY_SCOPES`) : la clé l'emporte sur la famille.
+  icon: NOT_ON_A_PART
 }
 
 export const ALL_ATTRIBUTES_CONFIG = {
