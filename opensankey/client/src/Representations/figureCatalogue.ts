@@ -335,7 +335,92 @@ export const TITLE_CONFIG = {
   }, {
     en: 'A bold title.', fr: 'Un titre en gras.', es: 'Un título en negrita.', de: 'Ein fetter Titel.',
     it: 'Un titolo in grassetto.', 'zh-CN': '加粗的标题。', ja: '太字のタイトル。'
-  }, { visibleIf: (o) => o['title_visible'] === true })
+  }, { visibleIf: (o) => o['title_visible'] === true }),
+  // os#1449 — CE QUE LE TITRE DU DIAGRAMME SAVAIT FAIRE ET PAS CELUI D'UNE FIGURE.
+  //
+  // Le titre du diagramme est une zone de texte : il a une police, une couleur, un alignement, il
+  // se met en italique et il revient à la ligne. Celui d'une figure avait cinq réglages et un
+  // traceur qui écrivait le reste EN DUR — centré, #2D3748, une ligne coupée aux points de
+  // suspension. Les valeurs d'usine ci-dessous sont exactement ce que ce dur écrivait : aucune
+  // figure enregistrée ne change d'aspect, et le mot manquant devient réglable.
+  title_italic: entry<boolean>(false, 'title', {
+    en: 'Italic', fr: 'Italique', es: 'Cursiva', de: 'Kursiv', it: 'Corsivo', 'zh-CN': '斜体', ja: '斜体'
+  }, {
+    en: 'A title in italics.', fr: 'Un titre en italique.', es: 'Un título en cursiva.',
+    de: 'Ein kursiver Titel.', it: 'Un titolo in corsivo.', 'zh-CN': '斜体的标题。', ja: '斜体のタイトル。'
+  }, { visibleIf: (o) => o['title_visible'] === true }),
+  title_align: entry<'left' | 'middle' | 'right'>('middle', 'title', {
+    en: 'Alignment', fr: 'Alignement', es: 'Alineación', de: 'Ausrichtung', it: 'Allineamento',
+    'zh-CN': '对齐', ja: '配置'
+  }, {
+    en: 'Where the text sits on its line.', fr: 'Où le texte se pose sur sa ligne.',
+    es: 'Dónde se sitúa el texto en su línea.', de: 'Wo der Text auf seiner Zeile steht.',
+    it: 'Dove si colloca il testo sulla sua riga.', 'zh-CN': '文本在行内的位置。',
+    ja: '行の中で文字が置かれる位置。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('left', { en: 'Left', fr: 'À gauche', es: 'A la izquierda', de: 'Links', it: 'A sinistra', 'zh-CN': '左对齐', ja: '左' }),
+      choice('middle', { en: 'Centred', fr: 'Centré', es: 'Centrado', de: 'Zentriert', it: 'Centrato', 'zh-CN': '居中', ja: '中央' }),
+      choice('right', { en: 'Right', fr: 'À droite', es: 'A la derecha', de: 'Rechts', it: 'A destra', 'zh-CN': '右对齐', ja: '右' })
+    ],
+    visibleIf: (o) => o['title_visible'] === true
+  }),
+  title_wrap: entry<boolean>(false, 'title', {
+    en: 'Wrap the text', fr: 'Revenir à la ligne', es: 'Ajustar el texto',
+    de: 'Text umbrechen', it: 'Mandare a capo', 'zh-CN': '自动换行', ja: '折り返す'
+  }, {
+    en: 'Otherwise a long title is cut with an ellipsis, on one line.',
+    fr: 'Sinon un titre long est coupé par des points de suspension, sur une seule ligne.',
+    es: 'De lo contrario, un título largo se corta con puntos suspensivos, en una sola línea.',
+    de: 'Sonst wird ein langer Titel einzeilig mit Auslassungspunkten abgeschnitten.',
+    it: 'Altrimenti un titolo lungo viene troncato con i puntini, su una sola riga.',
+    'zh-CN': '否则较长的标题会在一行内以省略号截断。',
+    ja: '折り返さない場合、長いタイトルは一行で省略記号により切り詰められます。'
+  }, { visibleIf: (o) => o['title_visible'] === true }),
+  title_font_family: entry<string>('', 'title', {
+    en: 'Font', fr: 'Police', es: 'Fuente', de: 'Schriftart', it: 'Carattere', 'zh-CN': '字体', ja: 'フォント'
+  }, {
+    en: 'Empty: the font of the page.', fr: 'Vide : la police de la page.',
+    es: 'Vacío: la fuente de la página.', de: 'Leer: die Schriftart der Seite.',
+    it: 'Vuoto: il carattere della pagina.', 'zh-CN': '留空则使用页面字体。', ja: '空ならページのフォント。'
+  }, {
+    kind: 'select',
+    choicesOf: () => [
+      { value: '', label: '—' },
+      ...font_families.map(f => ({ value: f, label: f.split(',')[0] }))
+    ],
+    advanced: true,
+    visibleIf: (o) => o['title_visible'] === true
+  }),
+  title_color: entry<string>('#2D3748', 'title', {
+    en: 'Colour', fr: 'Couleur', es: 'Color', de: 'Farbe', it: 'Colore', 'zh-CN': '颜色', ja: '色'
+  }, {
+    en: 'Colour of the title text.', fr: 'Couleur du texte du titre.',
+    es: 'Color del texto del título.', de: 'Farbe des Titeltextes.',
+    it: 'Colore del testo del titolo.', 'zh-CN': '标题文字的颜色。', ja: 'タイトル文字の色。'
+  }, { kind: 'color', advanced: true, visibleIf: (o) => o['title_visible'] === true })
+} as const
+
+// ── text_zones : LES TEXTES QUE L'AUTEUR AJOUTE À UNE FIGURE ─────────────────────────────────
+// os#1449, demande de Julien du 20/09 : « elles devraient pouvoir avoir aussi des zones de texte
+// et autres éléments additionnels ». Une LISTE et non des clés numérotées — leur nombre n'est pas
+// connu d'avance —, sur le patron de `label_positions` : un dépôt que la figure porte, sans
+// contrôle champ à champ (d'où `kind: 'none'`). Le titre est la zone n° 0, décrite par `title_*`
+// ci-dessus ; celles-ci sont les suivantes, et elles portent leur description en entier.
+export const TEXTS_CONFIG = {
+  text_zones: entry<unknown[]>([], 'title', {
+    en: 'Text zones', fr: 'Zones de texte', es: 'Zonas de texto', de: 'Textbereiche',
+    it: 'Zone di testo', 'zh-CN': '文本区域', ja: 'テキスト領域'
+  }, {
+    en: 'Text blocks the author adds above or below the drawing.',
+    fr: 'Les blocs de texte que l’auteur ajoute au-dessus ou au-dessous du dessin.',
+    es: 'Los bloques de texto que el autor añade encima o debajo del dibujo.',
+    de: 'Textblöcke, die der Autor über oder unter der Zeichnung hinzufügt.',
+    it: 'I blocchi di testo che l’autore aggiunge sopra o sotto il disegno.',
+    'zh-CN': '作者在绘图上方或下方添加的文本块。',
+    ja: '作成者が描画の上または下に追加するテキストの塊。'
+  }, { kind: 'none' })
 } as const
 
 // ── scale_* : l'échelle d'une figure dans sa vignette ────────────────────────────────────────
@@ -475,6 +560,7 @@ export const FIGURE_ATTRIBUTES_CONFIG: { [key: string]: Type_FigureCatalogueEntr
   ...INTERACTION_CONFIG,
   ...NOTES_CONFIG,
   ...TITLE_CONFIG,
+  ...TEXTS_CONFIG,
   ...SCALE_CONFIG,
   ...FIGURE_LABEL_CONFIG
 }

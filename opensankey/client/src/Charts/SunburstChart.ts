@@ -21,8 +21,8 @@
 
 import * as d3 from '../d3Modules'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
-import type { Type_FigureTitle } from './figureChartStyle'
-import { mountFigureTitle } from './figureTitle'
+import type { Type_FigureText } from './figureChartStyle'
+import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 
 /**
@@ -267,8 +267,15 @@ export interface Type_SunburstChartOptions {
   on_part_select?: (sector_id: string) => void
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
-  /** Le titre de la figure (arbitrage du 18/09) ; vide, le nom de la racine. */
-  title?: Type_FigureTitle
+  /**
+   * os#1449 — LES TEXTES DE LA FIGURE, dans l'ordre où ils se posent ; le titre est le premier.
+   *
+   * Le tracé ne connaît plus « le titre » : il connaît des blocs de texte, et il ne sait d'eux que
+   * ce qu'il faut pour leur réserver leur ligne (cf. `mountFigureTextZones`). Ce qu'il apporte,
+   * lui, est le NOM DU SUJET — la racine unique, ou la mention de périmètre quand il y en a
+   * plusieurs —, dont un titre sans texte propre se sert ; d'où la fonction plutôt que la liste.
+   */
+  texts?: (subject_name: string) => Type_FigureText[]
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
@@ -823,11 +830,12 @@ export const drawSunburstChart = (
 
   const render = () => {
     d3.select(container).selectAll('*').remove()
-    // Le titre prend sa ligne, le disque et la légende se partagent le reste (cf. figureTitle).
-    const host = mountFigureTitle(
-      container, opts.title,
-      tree.roots.length === 1 ? tree.roots[0].label : (opts.scope_label?.(tree.roots.length) ?? '')
-    )
+    // Chaque texte prend sa ligne, le disque et la légende se partagent le reste (cf.
+    // Representations/figureTextZones). Le nom du sujet sert de repli au titre sans texte propre.
+    const subject_name = tree.roots.length === 1
+      ? tree.roots[0].label
+      : (opts.scope_label?.(tree.roots.length) ?? '')
+    const host = mountFigureTextZones(container, opts.texts?.(subject_name) ?? [])
     const sel = d3.select(host)
     const width = host.clientWidth
     const height = host.clientHeight
