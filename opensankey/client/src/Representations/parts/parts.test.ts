@@ -182,7 +182,7 @@ describe('os#1445 la figure est propre a la part', () => {
     expect(part.isAttributeOverloaded('shape_color')).toBe(true)
   })
 
-  it('rebatir la figure GARDE les reglages poses a la main', () => {
+  it('redessiner la figure GARDE les reglages poses a la main', () => {
     // Les parts changent a chaque geste de navigation. Un reglage d auteur ne doit pas disparaitre
     // parce qu on a deplie un niveau.
     const source = buildSource()
@@ -195,8 +195,53 @@ describe('os#1445 la figure est propre a la part', () => {
     expect(second.by_id['n_ble'].shape_color).toBe('#123456')
     expect(second.by_id['n_ble'].name_label_effective).toBe('Toutes cereales')
     expect(second.by_id['l_1'].isAttributeOverloaded('shape_color')).toBe(false)
-    // Et l ancien document a cesse de vivre : une figure ne tient pas ses vieux modeles.
-    expect(premier.document.disposed).toBe(true)
+  })
+
+  it('os#1453 redessiner rend la MEME part et le MEME document', () => {
+    // CE TEST REMPLACE SON CONTRAIRE, et le renversement est le coeur de la correction : la
+    // version d avant affirmait que l ancien document avait « cesse de vivre ». C etait vrai, et
+    // c etait le defaut — trois choses pointent sur une part (la selection, le document actif,
+    // l inspecteur), et les jeter a chaque dessin detruisait l objet qu on etait en train de
+    // regler.
+    const source = buildSource()
+    const premier = buildParts(source, fourKinds())
+
+    const second = buildParts(source, fourKinds(), premier)
+
+    expect(second.document).toBe(premier.document)
+    expect(second.by_id['n_ble']).toBe(premier.by_id['n_ble'])
+    expect(premier.document.disposed).toBe(false)
+  })
+
+  it('os#1453 la SELECTION survit au redessin', () => {
+    // LE SYMPTOME, EN UNE ASSERTION. « Je clique sur une part, ca ramene sur Graphe » : le
+    // document actif etait remplace par un neuf, dont la selection etait vide, et l inspecteur
+    // retombait sur la figure faute de selection.
+    const source = buildSource()
+    const premier = buildParts(source, fourKinds())
+    const area = premier.document.drawing_area
+    area.addElementToSelection(premier.by_id['n_ble'])
+
+    const second = buildParts(source, fourKinds(), premier)
+
+    expect(second.document.drawing_area.selected_elements_list)
+      .toContain(second.by_id['n_ble'])
+  })
+
+  it('os#1453 une part que la decomposition ne cite plus quitte la selection', () => {
+    // La contre-epreuve. Garder l objet ne doit pas vouloir dire garder un secteur disparu :
+    // l inspecteur proposerait les reglages de quelque chose qui n est plus a l ecran, et
+    // l auteur les poserait sur rien.
+    const source = buildSource()
+    const premier = buildParts(source, fourKinds())
+    const area = premier.document.drawing_area
+    const partie = premier.by_id['l_1']
+    area.addElementToSelection(partie)
+
+    const second = buildParts(source, fourKinds().filter(_ => _.id !== 'l_1'), premier)
+
+    expect(second.by_id['l_1']).toBeUndefined()
+    expect(second.document.drawing_area.selected_elements_list).not.toContain(partie)
   })
 
   it('un identifiant vu deux fois ne donne quUNE part', () => {

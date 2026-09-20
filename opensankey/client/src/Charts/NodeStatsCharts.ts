@@ -94,6 +94,15 @@ export interface Type_ChartOptions {
  */
 export interface Type_ChartPartAspect {
   fill?: string
+  /**
+   * `shape_color_visible` — « Fond » dans l'inspecteur. `false` = le secteur n'est pas rempli.
+   *
+   * os#1453 — SÉPARÉ DE `fill`, ET IL LE FAUT. Une part qui cache son fond sans avoir choisi de
+   * couleur ne dit rien de `fill` : si la visibilité passait par `fill: undefined`, elle serait
+   * indistinguable de « la figure décide », et décocher « Fond » resterait sans effet — c'est très
+   * exactement ce que Julien a constaté.
+   */
+  background_visible?: boolean
   opacity?: number
   border_visible?: boolean
   border_color?: string
@@ -313,7 +322,12 @@ export const drawDonutChart = (
     .attr('data-repr-kind', 'part')
     .attr('data-repr-id', d => d.data.id)
     .attr('d', arc)
-    .attr('fill', d => aspectOf(d.data.id)?.fill ?? colorOf(d.data, d.index))
+    // « Fond » décoché l'emporte sur toute couleur : c'est le sens du réglage.
+    .attr('fill', d => {
+      const a = aspectOf(d.data.id)
+      if (a?.background_visible === false) return 'none'
+      return a?.fill ?? colorOf(d.data, d.index)
+    })
     .attr('fill-opacity', d => aspectOf(d.data.id)?.opacity ?? 1)
     // Le liséré se demande EN BLOC : une part qui n'a rien dit de lui garde celui du tracé (blanc,
     // 1 px), sans quoi une amorce de style le ferait disparaître partout.
