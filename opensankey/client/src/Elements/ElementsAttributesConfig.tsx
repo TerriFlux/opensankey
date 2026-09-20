@@ -2224,6 +2224,31 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
 }
 const NAME_LABEL_BASE_CONFIG = createLabelConfig('name_label', 'name_label', 'drawNameLabel')
 
+/**
+ * os#1451 — L'UNIQUE ÉNUMÉRATION DE SOURCE DE LIBELLÉ DE LA FAMILLE.
+ *
+ * POURQUOI ICI. Un nœud, une zone de texte, une part et un flux sont des éléments : ils choisissent
+ * tous ce que leur libellé affiche, et ils doivent le choisir dans la MÊME liste. Deux listes
+ * parallèles ont coexisté — `name_label_source` (nœuds, zones, parts) et `name_label_text_source`
+ * (flux seuls, lu par `LinkDrawNameLabel`) — et le déplacement du nommage sur `Class_BaseShape`
+ * (os#1445) a donné au flux une cascade que son dessin ignorait. L'énumération vit désormais avec
+ * l'attribut commun qui la porte, et le flux la lit (cf. `Class_LinkElement`).
+ *
+ *  · 'name'      — le nom de l'élément. Un FLUX n'a pas de nom propre — il se nomme par ses deux
+ *                  bouts — et cette valeur y désigne le texte qu'il porte (`text_value`).
+ *  · 'custom'    — un texte libre, indépendant du nom (`name_label_text` ; `text_value` pour un flux)
+ *  · 'tag'       — l'étiquette assignée dans le groupe choisi (groupe de nœuds, ou de flux)
+ *  · 'ancestor'  — le nom de l'ancêtre racine le long d'une dimension (nœuds seuls)
+ *  · 'template'  — gabarit à jetons (OS#1314), `name_label_template`
+ *  · 'none'      — ne rien afficher
+ *  · 'source' / 'target' / 'source_target' — le libellé affiché des extrémités (flux seuls)
+ *
+ * Une valeur sans objet pour une nature d'élément n'est pas une erreur : elle retombe sur une
+ * réponse (les `resolve*Label` de `Class_BaseShape`), jamais sur du vide.
+ */
+export type Type_NameLabelSource =
+  'name' | 'custom' | 'tag' | 'ancestor' | 'template' | 'none' | 'source' | 'target' | 'source_target'
+
 export const NAME_LABEL_CONFIG = {
   ...NAME_LABEL_BASE_CONFIG,
 
@@ -2277,14 +2302,11 @@ export const NAME_LABEL_CONFIG = {
     }
   } satisfies AttributeConfig<'before' | 'after'>,
 
-  // Source du contenu du label (cf. Type_NameLabelSource sur Class_NodeBase) :
-  // 'name' (défaut) = nom de l'élément, 'custom' = texte libre (name_label_text),
-  // 'tag' = tag assigné dans le groupe name_label_tag_group_id, 'ancestor' = nom
-  // de l'ancêtre racine le long de la dimension name_label_dimension_id,
-  // 'template' (OS#1314) = gabarit à jetons (name_label_template).
+  // Source du contenu du label : cf. Type_NameLabelSource juste au-dessus, qui porte la sémantique
+  // des valeurs pour TOUTES les natures d'élément (nœud, zone de texte, part, flux).
   source: {
-    default: 'name' as 'name' | 'custom' | 'tag' | 'ancestor' | 'template',
-    type: (() => 'name') as (() => 'name' | 'custom' | 'tag' | 'ancestor' | 'template'),
+    default: 'name' as Type_NameLabelSource,
+    type: (() => 'name') as (() => Type_NameLabelSource),
     category: 'name_label' as const,
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
@@ -2305,7 +2327,7 @@ export const NAME_LABEL_CONFIG = {
       'zh-CN': '标签文本的来源（元素名称、自定义文本、指派的标签、祖先名称）',
       ja: 'ラベル文字列の取得元（要素名、任意テキスト、割り当てタグ、祖先ノード名）'
     }
-  } satisfies AttributeConfig<'name' | 'custom' | 'tag' | 'ancestor' | 'template'>,
+  } satisfies AttributeConfig<Type_NameLabelSource>,
 
   // OS#1314 — gabarit à jetons du label, interpolé AU DESSIN (jetons {Value},
   // {Unit}, {Source}, {Tag:groupe}, {NomDuGroupeDeDataTags}…). Partagé par les
@@ -4414,14 +4436,16 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
-  // Source du texte du label de flux. 'custom' = comportement actuel (texte saisi
-  // via text_value). 'none' masque, 'source'/'target' affichent le nom du nœud
-  // amont/aval, 'source_target' affiche "source → target", 'template' (OS#1314)
-  // construit le texte depuis le gabarit à jetons name_label_template.
+  // Source du texte du label de flux — L'ÉCRITURE HISTORIQUE, PROPRE AU FLUX, de la source de
+  // libellé commune (Type_NameLabelSource, cf. NAME_LABEL_CONFIG.source). Elle reste le FORMAT
+  // ENREGISTRÉ et ce que l'inspecteur des flux écrit : les fichiers du parc et les imports
+  // e!Sankey la posent, et elle prime sur l'attribut commun dès qu'elle dit autre chose que son
+  // défaut (cf. `Class_LinkElement.name_label_source_effective`, os#1451).
+  // Le type reste `string` : le sélecteur de l'inspecteur y écrit la valeur brute du <select>.
   // Stocké aussi sur value_label par symétrie de createLinkLabelSpecificConfig
   // mais ignoré côté valeur.
   text_source: {
-    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target' | 'tag' | 'template',
+    default: 'custom' as Type_NameLabelSource,
     type: (() => 'custom') as (() => string),
     category: '',
     actions: [] as BaseActionType[],
