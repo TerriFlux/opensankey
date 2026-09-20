@@ -134,7 +134,7 @@ export class Class_PartElement extends Class_BaseShape {
 
   // CE QUE LA PART DIT — LA PORTE DU TRACÉ =============================================
   //
-  // os#1448. Le tracé ne lit sur une part que ce qu'elle DIT (`sunburstPartStyle`, dont la porte
+  // os#1449. Le tracé ne lit sur une part que ce qu'elle DIT (`sunburstPartStyle`, dont la porte
   // est cette méthode) ; sur tout le reste, c'est le réglage de la FIGURE qui tient — et c'est lui
   // qui porte l'aspect de toutes les couronnes enregistrées.
   //
