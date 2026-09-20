@@ -45,6 +45,16 @@ export class Class_PartElement extends Class_BaseShape {
    * Ce que cette part désigne dans le document : un nœud, un flux, une étiquette qui somme
    * plusieurs flux, ou rien (le secteur de complément). Cf. `PartSubject.ts`.
    */
+  /**
+   * os#1446 — LE MARQUEUR QUI DIT « JE SUIS UNE PART », lu structurellement.
+   *
+   * L'inspecteur compte la sélection par nature, et il vit dans l'éditeur, en aval. Lui faire
+   * importer cette classe pour un `instanceof` l'attacherait à une nature particulière — alors
+   * qu'il n'a besoin que de la question. C'est le procédé déjà en place pour les flux
+   * (`isLinkLikeElement`, `ElementNaming.ts`) et pour la même raison.
+   */
+  public readonly is_figure_part = true
+
   protected _subject: Type_PartSubject = NO_SUBJECT
   public get subject(): Type_PartSubject { return this._subject }
   public bindSubject(subject: Type_PartSubject): void { this._subject = subject }

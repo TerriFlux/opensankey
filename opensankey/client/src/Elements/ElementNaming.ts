@@ -39,6 +39,18 @@ export const isLinkLikeElement = (el: unknown): boolean => {
 }
 
 /**
+ * os#1446 — une PART de figure (secteur de couronne, barre) se reconnaît-elle ici ?
+ *
+ * Même procédé que `isLinkLikeElement` juste au-dessus, et pour la même raison : l'inspecteur et
+ * les surfaces qui comptent la sélection vivent en aval du modèle, et n'ont besoin que de la
+ * question — pas de la classe.
+ */
+export const isFigurePartElement = (el: unknown): boolean => {
+  const rec = asRecord(el)
+  return !!rec && rec['is_figure_part'] === true
+}
+
+/**
  * Libellé affiché d'un NŒUD (ou d'une zone de texte), SANS repli sur l'id.
  *
  * Le libellé effectif peut être vide de plein droit (texte libre effacé, gabarit
