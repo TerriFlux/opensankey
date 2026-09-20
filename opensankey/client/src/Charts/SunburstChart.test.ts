@@ -1,6 +1,8 @@
 import {
-  foldNarrowChildren, partitionSunburst, sunburstArcLabel, sunburstScope, sunburstSectorName
+  foldNarrowChildren, partitionSunburst, sunburstArcLabel, sunburstPartStyle, sunburstScope,
+  sunburstSectorName, SUNBURST_STYLE_DEFAULTS
 } from './SunburstChart'
+import type { Type_SunburstPart, Type_SunburstStyle } from './SunburstChart'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
 const node = (
@@ -169,6 +171,71 @@ describe('sunburstSectorName', () => {
     expect(sunburstSectorName('Maïs Bio', null, { separator: ' ' })).toBe('Bio')
     expect(sunburstSectorName('Maïs Bio', null, { separator: ' ', separator_part: 'before' })).toBe('Maïs')
     expect(sunburstSectorName('Maïs Bio', null, { separator: '/' })).toBe('Maïs Bio')
+  })
+})
+
+describe('sunburstPartStyle', () => {
+
+  // Une part, reduite a ce que le trace lui demande : dire ce qu elle porte EN PROPRE, et le
+  // rendre. Ce qui n est pas dans `dit` n est pas dit — c est exactement l etat d une part fraiche.
+  const part = (dit: { [attr: string]: unknown }): Type_SunburstPart => ({
+    isAttributeOverloaded: (attr: string) => dit[attr] !== undefined,
+    getElementProperty: (attr: string) => dit[attr]
+  })
+
+  it('sans part, le repli est rendu tel quel', () => {
+    // LE REPLI. Tant que l appelant ne fournit pas de parts, le trace est celui d avant ce lot.
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS)).toBe(SUNBURST_STYLE_DEFAULTS)
+  })
+
+  it('une part qui ne dit rien laisse la mise en forme de la figure intacte', () => {
+    // La garantie du lot : une couronne enregistree avant se rouvre a l identique. Y compris sous
+    // une mise en forme reglee par l auteur, et pas seulement sous les defauts.
+    const reglee: Type_SunburstStyle = {
+      ...SUNBURST_STYLE_DEFAULTS, font_size: 13, labels_mode: 'always', color_mode: 'fixed',
+      border_color: '#000000', label_percent: 'parent'
+    }
+
+    expect(sunburstPartStyle(reglee, part({}))).toEqual(reglee)
+  })
+
+  it('laspect dUN secteur peut differer de celui des autres', () => {
+    // C est tout l objet du lot : la forme, le libelle et la valeur sont des reglages d element.
+    const seule = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part({
+      shape_opacity: 0.4,
+      shape_border_color: '#ff0000',
+      name_label_font_size: 22,
+      value_label_is_visible: true
+    }))
+
+    expect(seule.opacity).toBe(0.4)
+    expect(seule.border_color).toBe('#ff0000')
+    expect(seule.font_size).toBe(22)
+    expect(seule.value_visible).toBe(true)
+    // Et rien d autre n a bouge : le voisinage de la figure tient.
+    expect(seule.legend_visible).toBe(SUNBURST_STYLE_DEFAULTS.legend_visible)
+    expect(seule.centre_hole).toBe(SUNBURST_STYLE_DEFAULTS.centre_hole)
+  })
+
+  it('une part muette sur les etiquettes garde le mode de la figure', () => {
+    // « La ou ca tient / toujours / jamais » se dit avec DEUX cles d element : on decompose, on
+    // remplace ce que la part dit, on recompose. Sans quoi une part muette ramenerait « toujours »
+    // a « la ou ca tient ».
+    const toujours: Type_SunburstStyle = { ...SUNBURST_STYLE_DEFAULTS, labels_mode: 'always' }
+
+    expect(sunburstPartStyle(toujours, part({})).labels_mode).toBe('always')
+    expect(sunburstPartStyle(toujours, part({ name_label_is_visible: false })).labels_mode).toBe('none')
+    expect(sunburstPartStyle(toujours, part({ name_label_prune_if_unfitting: true })).labels_mode).toBe('fit')
+  })
+
+  it('une valeur dun type inattendu est ignoree plutot que de casser le dessin', () => {
+    // Un reglage persiste par une version ulterieure ne doit pas faire disparaitre un secteur.
+    const bancale = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part({
+      shape_opacity: 'beaucoup', name_label_orientation: 'en biais'
+    }))
+
+    expect(bancale.opacity).toBe(SUNBURST_STYLE_DEFAULTS.opacity)
+    expect(bancale.label_orientation).toBe(SUNBURST_STYLE_DEFAULTS.label_orientation)
   })
 })
 

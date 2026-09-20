@@ -158,6 +158,12 @@ const NAVIGATION: Type_FigureAttributesConfig = {
 // Les valeurs d'usine données ici sont celles DU TRACÉ là où elles diffèrent de celles d'un nœud
 // ou d'une autre figure : dix points et non vingt, un liséré blanc et non noir, quatre chiffres
 // significatifs, un trou à 22 % du rayon. Aucune couronne enregistrée ne change d'aspect.
+//
+// os#1445 — ET C'EST CE QUI PROTÈGE LE PARC MAINTENANT QUE LE TRACÉ LIT LES PARTS. Depuis l'étape
+// 2, la forme, le libellé et la valeur d'un secteur se lisent d'abord sur SA part (cf.
+// `Charts/SunburstChart.sunburstPartStyle`) ; ce bloc est le REPLI de tous les secteurs qui ne
+// disent rien, c'est-à-dire de tous ceux de toutes les couronnes enregistrées. Les clés ne
+// partiront d'ici qu'à l'étape 4, avec la migration qui les pose comme style de part par défaut.
 const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   // Forme
   shape_opacity: { default: 1, advanced: true },

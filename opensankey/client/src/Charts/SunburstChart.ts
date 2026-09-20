@@ -145,10 +145,120 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   click_action: 'aggregate'
 }
 
+// ── Ce qu'une PART dit de son aspect (os#1445, étape 2) ───────────────────────────
+//
+// « Chaque graphe doit être vu comme un ensemble d'éléments avec ses réglages globaux » (Julien,
+// 20/09). Une part de couronne est un élément (`Representations/parts/PartElement`) : elle a sa
+// forme, son libellé et sa valeur. Le tracé les lit ici, secteur par secteur, comme le rendu d'un
+// nœud les lit — par `getElementProperty`, au bout de la cascade des styles.
+//
+// ⚠️ LE REPLI EST PAR RÉGLAGE, ET C'EST CE QUI PROTÈGE LE PARC. Les valeurs d'usine d'un élément
+// ne sont PAS celles du tracé : un nœud écrit en vingt points, une couronne en dix ; un nœud a un
+// liséré noir, une couronne un liséré blanc. Faire lire à une part tout son aspect changerait donc
+// l'aspect de TOUTES les couronnes enregistrées, en silence. Une part n'est donc écoutée que sur
+// ce qu'elle DIT en propre (`isAttributeOverloaded`) ; sur tout le reste, le réglage de la figure
+// tient — et c'est lui qui porte les valeurs d'usine de la couronne (cf. `sunburstAttributes`, §2).
+//
+// Une couronne d'avant ce lot n'a aucune part qui dise quoi que ce soit : elle se redessine donc
+// exactement comme avant, au pixel. Et c'est encore vrai d'une couronne d'après, tant que l'auteur
+// n'a rien posé sur un secteur.
+//
+// Ce que l'étape 4 aura à faire ici, quand elle migrera les clés enregistrées : décider si un
+// STYLE de part parle aussi — la porte est `said` plus bas, et elle seule.
+
+/**
+ * Ce que le tracé demande à une part : dire ce qu'elle porte en propre, et le rendre. Structurel
+ * et non nominal, comme tout ce que ce module reçoit — `Class_PartElement` y répond sans le savoir,
+ * et le tracé reste sans dépendance aux classes du modèle.
+ */
+export interface Type_SunburstPart {
+  /** La part porte-t-elle une valeur À ELLE pour ce réglage ? (cf. `Elements/Element`) */
+  isAttributeOverloaded(attr: string): boolean
+  /** La valeur résolue par la cascade des styles, comme pour un nœud. */
+  getElementProperty(attr: string): unknown
+}
+
+const numberSaid = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
+const booleanSaid = (v: unknown): boolean | undefined => typeof v === 'boolean' ? v : undefined
+const textSaid = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
+const oneOfSaid = <T extends string>(v: unknown, allowed: readonly T[]): T | undefined =>
+  allowed.includes(v as T) ? v as T : undefined
+
+/**
+ * La mise en forme D'UN SECTEUR : celle de la figure, sauf ce que sa part dit d'elle-même.
+ *
+ * Fonction PURE, et c'est elle qui porte la garantie du lot : sans part, ou avec une part qui ne
+ * dit rien, elle rend le repli TEL QUEL. Les réglages qui ne décrivent pas UN secteur — le trou du
+ * centre, la légende, l'ordre et le regroupement des parts, l'échelle, le geste du clic — ne sont
+ * pas de son ressort et restent ceux de la figure.
+ */
+export const sunburstPartStyle = (
+  base: Type_SunburstStyle,
+  part?: Type_SunburstPart
+): Type_SunburstStyle => {
+  if (!part) return base
+  // LA PORTE. Une part qui n'a rien dit ne dit rien : le réglage de la figure tient.
+  const said = (attr: string): unknown =>
+    part.isAttributeOverloaded(attr) ? part.getElementProperty(attr) : undefined
+  const out: Type_SunburstStyle = { ...base }
+  const put = <K extends keyof Type_SunburstStyle>(k: K, v: Type_SunburstStyle[K] | undefined) => {
+    if (v !== undefined) out[k] = v
+  }
+
+  // FORME (`shape_*`)
+  put('opacity', numberSaid(said('shape_opacity')))
+  put('border_visible', booleanSaid(said('shape_border_visible')))
+  put('border_color', textSaid(said('shape_border_color')))
+  put('border_thickness', numberSaid(said('shape_border_thickness')))
+
+  // LIBELLÉ (`name_label_*`)
+  // « Là où ça tient / toujours / jamais » se dit avec DEUX clés d'élément : on décompose le repli
+  // dans ces deux clés, on remplace celle que la part dit, on recompose. Décomposer et recomposer
+  // rend l'identité quand la part ne dit rien — ce qui est la garantie du lot.
+  const labelled = booleanSaid(said('name_label_is_visible')) ?? base.labels_mode !== 'none'
+  const prune = booleanSaid(said('name_label_prune_if_unfitting')) ?? base.labels_mode !== 'always'
+  out.labels_mode = !labelled ? 'none' : prune ? 'fit' : 'always'
+  put('label_orientation', oneOfSaid(
+    said('name_label_orientation'), ['radial', 'tangential', 'horizontal'] as const
+  ))
+  put('strip_parent', booleanSaid(said('name_label_strip_parent')))
+  put('separator', textSaid(said('name_label_separator')))
+  put('separator_part', oneOfSaid(said('name_label_separator_part'), ['before', 'after'] as const))
+  put('box_width', numberSaid(said('name_label_box_width')))
+  put('callout', booleanSaid(said('name_label_callout')))
+  put('font_family', textSaid(said('name_label_font_family')))
+  put('font_size', numberSaid(said('name_label_font_size')))
+  put('bold', booleanSaid(said('name_label_bold')))
+  put('italic', booleanSaid(said('name_label_italic')))
+  put('uppercase', booleanSaid(said('name_label_uppercase')))
+  // Même procédé : l'encre par contraste est un booléen côté élément, un mode côté tracé.
+  const contrast = booleanSaid(said('name_label_contrast_color')) ?? base.color_mode === 'auto'
+  out.color_mode = contrast ? 'auto' : 'fixed'
+  put('label_color', textSaid(said('name_label_color')))
+
+  // VALEUR (`value_label_*`)
+  put('value_visible', booleanSaid(said('value_label_is_visible')))
+  put('unit_visible', booleanSaid(said('value_label_unit_visible')))
+  put('label_percent', oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const))
+  put('significant_digits', booleanSaid(said('value_label_significant_digits')))
+  put('nb_significant_digits', numberSaid(said('value_label_nb_significant_digits')))
+  put('custom_digit', booleanSaid(said('value_label_custom_digit')))
+  put('nb_digit', numberSaid(said('value_label_nb_digit')))
+  put('scientific_notation', booleanSaid(said('value_label_scientific_notation')))
+
+  return out
+}
+
 export interface Type_SunburstChartOptions {
   format?: (value: number) => string
   /** La mise en forme réglée par l'auteur ; absente, les défauts ci-dessus. */
   style?: Partial<Type_SunburstStyle>
+  /**
+   * os#1445 — LES ÉLÉMENTS DE LA FIGURE, par identifiant de secteur (cf.
+   * `Representations/parts/sunburstParts`). Absents, ou muets : `style` tient pour tous les
+   * secteurs, et le dessin est celui d'avant ce lot.
+   */
+  parts?: { [sector_id: string]: Type_SunburstPart }
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
   /** Le titre de la figure (arbitrage du 18/09) ; vide, le nom de la racine. */
@@ -653,23 +763,42 @@ export const drawSunburstChart = (
   const palette = THEME[theme]
   // os#1425 — la mise en forme réglée par l'auteur, sur fond de ce que le tracé faisait avant.
   const st: Type_SunburstStyle = { ...SUNBURST_STYLE_DEFAULTS, ...(opts.style ?? {}) }
+  // os#1445 — LA MISE EN FORME D'UN SECTEUR : celle de la figure, sauf ce que sa part dit
+  // d'elle-même. Mémorisée par secteur : la mesure des étiquettes repasse plusieurs fois sur
+  // chacun (largeur de la légende, puis tracé), et résoudre la cascade à chaque fois se paierait.
+  const part_styles = new Map<string, Type_SunburstStyle>()
+  const styleOf = (sector_id: string): Type_SunburstStyle => {
+    const known = part_styles.get(sector_id)
+    if (known !== undefined) return known
+    const resolved = sunburstPartStyle(st, opts.parts?.[sector_id])
+    part_styles.set(sector_id, resolved)
+    return resolved
+  }
   // LE FORMAT DES VALEURS, exactement celui des étiquettes d'un flux (`formatElementValue`) :
   // notation scientifique, chiffres significatifs, décimales imposées — dans cet ordre, parce
-  // qu'une notation scientifique ne se cumule pas avec un nombre de décimales.
-  const unit = st.unit_visible && opts.unit ? ' ' + opts.unit : ''
+  // qu'une notation scientifique ne se cumule pas avec un nombre de décimales. Il est PARAMÉTRÉ
+  // par la mise en forme depuis os#1445 : les chiffres d'une valeur sont un réglage d'élément, et
+  // une part qui règle les siens écrit sa valeur autrement que ses voisines.
   const digits = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
-  const fmt = opts.format ?? ((v: number) => {
-    if (st.scientific_notation) {
-      return st.significant_digits
-        ? v.toExponential(digits(st.nb_significant_digits - 1, 20))
+  const formatWith = (s: Type_SunburstStyle) => (v: number): string => {
+    if (opts.format) return opts.format(v)
+    if (s.scientific_notation) {
+      return s.significant_digits
+        ? v.toExponential(digits(s.nb_significant_digits - 1, 20))
         : v.toExponential()
     }
     let text = v
-    if (st.significant_digits) text = parseFloat(v.toPrecision(digits(st.nb_significant_digits, 21) || 1))
-    if (st.custom_digit) text = parseFloat(text.toFixed(digits(st.nb_digit, 20)))
+    if (s.significant_digits) text = parseFloat(v.toPrecision(digits(s.nb_significant_digits, 21) || 1))
+    if (s.custom_digit) text = parseFloat(text.toFixed(digits(s.nb_digit, 20)))
     return new Intl.NumberFormat().format(text)
-  })
-  const fmtUnit = (v: number) => fmt(v) + unit
+  }
+  const unitOf = (s: Type_SunburstStyle) => s.unit_visible && opts.unit ? ' ' + opts.unit : ''
+  /** Une valeur écrite sous une mise en forme donnée : celle de la figure, ou celle d'une part. */
+  const valueText = (v: number, s: Type_SunburstStyle) => formatWith(s)(v) + unitOf(s)
+  // LE CENTRE ET LES TOTAUX RESTENT À LA FIGURE — y compris quand le centre relaie la valeur du
+  // secteur survolé : c'est le cadran de la figure, pas l'étiquette d'un secteur, et deux formats
+  // s'y succédant au gré de la souris se liraient comme une erreur.
+  const fmtUnit = (v: number) => valueText(v, st)
   const others_label = opts.others_label ?? '…'
   // Racine courante du zoom radial (null = la vue d'ensemble).
   let focus_id: string | null = null
@@ -763,7 +892,7 @@ export const drawSunburstChart = (
      * somme de ses parts, ce qui ferait lire 100 % là où il y a un écart.
      */
     const baseOf = (d: Type_SunburstSlice): number => {
-      if (st.label_percent === 'total' || d.path.length < 2) return total
+      if (styleOf(d.id).label_percent === 'total' || d.path.length < 2) return total
       return slices.find(s => s.id === d.path[d.path.length - 2])?.value ?? total
     }
 
@@ -778,31 +907,37 @@ export const drawSunburstChart = (
       if (d.path.length >= 2) return slices.find(s => s.id === d.path[d.path.length - 2])?.label ?? null
       return centre_node ? centre_node.label : null
     }
-    const sectorName = (d: Type_SunburstSlice): string => sunburstSectorName(d.label, parentLabelOf(d), {
-      strip_parent: st.strip_parent, separator: st.separator, separator_part: st.separator_part
-    })
+    const sectorName = (d: Type_SunburstSlice): string => {
+      const s = styleOf(d.id)
+      return sunburstSectorName(d.label, parentLabelOf(d), {
+        strip_parent: s.strip_parent, separator: s.separator, separator_part: s.separator_part
+      })
+    }
     const sectorText = (d: Type_SunburstSlice): string => {
+      const s = styleOf(d.id)
       // La CASSE s'applique au texte et non au style : `text-transform` n'est pas honoré par
       // tous les moteurs SVG, et l'export PNG en dépend.
       const name = sectorName(d)
-      const parts: string[] = [st.uppercase ? name.toLocaleUpperCase() : name]
-      if (st.value_visible) parts.push(fmtUnit(d.value))
-      if (st.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
+      const parts: string[] = [s.uppercase ? name.toLocaleUpperCase() : name]
+      if (s.value_visible) parts.push(valueText(d.value, s))
+      if (s.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
       return parts.join(' · ')
     }
 
-    const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null =>
-      sunburstArcLabel(
+    const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null => {
+      const s = styleOf(d.id)
+      return sunburstArcLabel(
         sectorText(d),
         (d.a1 - d.a0) * (geo.inner_r + (d.depth + 0.5) * geo.ring),
         geo.ring,
         {
-          orientation: st.label_orientation,
-          mode: st.labels_mode,
-          font_size: st.font_size,
-          box_px: st.box_width
+          orientation: s.label_orientation,
+          mode: s.labels_mode,
+          font_size: s.font_size,
+          box_px: s.box_width
         }
       )
+    }
     // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches. Un nom revenu
     // à la ligne, lui, est écrit en entier.
     const namesItself = (d: Type_SunburstSlice, geo: Type_Geometry): boolean => {
@@ -812,7 +947,7 @@ export const drawSunburstChart = (
     // Un secteur assez large pour qu'un trait de rappel désigne quelque chose : au-dessous, le
     // rappel pointerait un fil, et cent rappels sur un anneau de miettes ne nommeraient rien.
     const calloutable = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
-      st.callout && !d.is_residual &&
+      styleOf(d.id).callout && !d.is_residual &&
       (d.a1 - d.a0) * (geo.inner_r + (d.depth + 1) * geo.ring) >= MIN_CALLOUT_EDGE_PX
     // Sorti du disque avec son trait, un secteur est nommé aussi sûrement que dans son anneau.
     const named = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
@@ -940,12 +1075,14 @@ export const drawSunburstChart = (
       .padRadius(inner_r)
 
     const sliceTitle = (d: Type_SunburstSlice) => {
-      const head = `${d.label}\n${fmtUnit(d.value)} (${pctText(d.value, total)})`
+      // L'info-bulle écrit LA VALEUR DE CE SECTEUR : elle suit donc les chiffres que sa part règle.
+      const s = styleOf(d.id)
+      const head = `${d.label}\n${valueText(d.value, s)} (${pctText(d.value, total)})`
       // L'écart entre l'arc et la valeur propre du nœud n'est dit QUE là où il existe :
       // un parent dont les enfants ne bouclent pas, en régime 'sum'.
       const gap = Math.abs(d.declared - d.value)
       return (!d.is_residual && d.declared > 0 && gap > 1e-6 * d.declared)
-        ? `${head}\n≠ ${fmt(d.declared)}`
+        ? `${head}\n≠ ${formatWith(s)(d.declared)}`
         : head
     }
 
@@ -955,9 +1092,11 @@ export const drawSunburstChart = (
       .attr('class', 'sunburst_arc')
       .attr('d', d => arc(d))
       .attr('fill', d => d.color)
-      .attr('stroke', st.border_visible ? st.border_color : 'none')
-      .attr('stroke-width', st.border_visible ? st.border_thickness : 0)
-      .attr('fill-opacity', st.opacity)
+      // os#1445 — LA FORME EST CELLE DE LA PART : opacité et liséré se règlent secteur par
+      // secteur, et retombent sur le réglage de la figure pour tous ceux qui ne disent rien.
+      .attr('stroke', d => styleOf(d.id).border_visible ? styleOf(d.id).border_color : 'none')
+      .attr('stroke-width', d => styleOf(d.id).border_visible ? styleOf(d.id).border_thickness : 0)
+      .attr('fill-opacity', d => styleOf(d.id).opacity)
       // Le nœud DÉSAGRÉGÉ dans le diagramme se signale par un pointillé, pas par une
       // autre couleur : la couleur nomme déjà la branche, la lui reprendre casserait
       // la lecture radiale.
@@ -970,12 +1109,17 @@ export const drawSunburstChart = (
       ) ? 'pointer' : 'default')
       .on('mouseover', (_, d) => {
         const ancestry = new Set(d.path)
-        paths.attr('fill-opacity', s => (ancestry.has(s.id) || s.path.includes(d.id)) ? 1 : 0.3)
+        // Le survol ESTOMPE, il ne remet pas tout à l'opaque : reprendre l'opacité de chaque
+        // secteur — la sienne, ou celle de la figure — est ce qui fait qu'une couronne réglée
+        // translucide le reste après un passage de souris.
+        paths.attr('fill-opacity', s => (ancestry.has(s.id) || s.path.includes(d.id))
+          ? styleOf(s.id).opacity
+          : styleOf(s.id).opacity * 0.3)
         if (shows_name) centre_label.text(d.label)
         if (shows_value) centre_value.text(fmtUnit(d.value))
       })
       .on('mouseout', () => {
-        paths.attr('fill-opacity', 1)
+        paths.attr('fill-opacity', s => styleOf(s.id).opacity)
         if (shows_name) centre_label.text(scope_title)
         if (shows_value) centre_value.text(fmtUnit(total))
       })
@@ -1015,25 +1159,30 @@ export const drawSunburstChart = (
         // RADIALE : le texte suit le rayon (défaut). LE LONG DE L'ARC : un quart de tour de plus,
         // dans le sens qui le garde lisible. HORIZONTALE : on défait la rotation du secteur, le
         // texte reste droit quelle que soit sa place sur le tour.
-        if (st.label_orientation === 'tangential') return `${at} rotate(${flip ? 90 : -90})`
-        if (st.label_orientation === 'horizontal') return `${at} rotate(${-deg})`
+        const orientation = styleOf(d.id).label_orientation
+        if (orientation === 'tangential') return `${at} rotate(${flip ? 90 : -90})`
+        if (orientation === 'horizontal') return `${at} rotate(${-deg})`
         return `${at} rotate(${flip ? 180 : 0})`
       })
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', st.font_size)
-      .attr('font-family', st.font_family)
-      .attr('font-weight', st.bold ? 'bold' : null)
-      .attr('font-style', st.italic ? 'italic' : null)
+      // os#1445 — LE LIBELLÉ EST CELUI DE LA PART : police, graisse, casse et encre se règlent
+      // secteur par secteur.
+      .attr('font-size', d => styleOf(d.id).font_size)
+      .attr('font-family', d => styleOf(d.id).font_family)
+      .attr('font-weight', d => styleOf(d.id).bold ? 'bold' : null)
+      .attr('font-style', d => styleOf(d.id).italic ? 'italic' : null)
       // L'encre par CONTRASTE reste le défaut : un même bleu porte du blanc au centre et du gris
       // foncé sur les anneaux éclaircis, et une couleur fixe rendrait la moitié des étiquettes
       // illisible. L'auteur peut l'imposer, c'est alors son affaire.
-      .attr('fill', d => st.color_mode === 'fixed' ? st.label_color : inkOn(d.color, palette.ink))
+      .attr('fill', d => styleOf(d.id).color_mode === 'fixed'
+        ? styleOf(d.id).label_color
+        : inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
     // Une ligne par `tspan`, le bloc centré sur le milieu de l'anneau : la première ligne
     // remonte de la moitié de la hauteur du bloc, les suivantes descendent d'un interligne.
-    const line_h = st.font_size * LABEL_LINE_HEIGHT
     arc_labels.each(function (d) {
+      const line_h = styleOf(d.id).font_size * LABEL_LINE_HEIGHT
       const lines = (arcLabelOf(d, geo) ?? '').split('\n')
       const text = d3.select(this)
       lines.forEach((line, i) => {
@@ -1074,11 +1223,15 @@ export const drawSunburstChart = (
         .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
         .attr('text-anchor', d => anchorOf(positionOf(d)))
         .attr('dominant-baseline', 'central')
-        .attr('font-size', st.font_size)
-        .attr('font-family', st.font_family)
-        .attr('font-weight', st.bold ? 'bold' : null)
-        .attr('font-style', st.italic ? 'italic' : null)
-        .attr('fill', st.color_mode === 'fixed' ? st.label_color : palette.ink)
+        // Sortie du disque, l'étiquette garde la mise en forme de SA part : c'est la même
+        // étiquette, à un autre endroit.
+        .attr('font-size', d => styleOf(d.id).font_size)
+        .attr('font-family', d => styleOf(d.id).font_family)
+        .attr('font-weight', d => styleOf(d.id).bold ? 'bold' : null)
+        .attr('font-style', d => styleOf(d.id).italic ? 'italic' : null)
+        .attr('fill', d => styleOf(d.id).color_mode === 'fixed'
+          ? styleOf(d.id).label_color
+          : palette.ink)
         .text(d => sectorText(d))
       if (st.tooltip_visible) items.append('title').text(sliceTitle)
       // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt. Les
