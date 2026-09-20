@@ -215,11 +215,24 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   value_label_scientific_notation: { advanced: true, visibleIf: valued },
 
   // Titre — l'onglet Titre de l'inspecteur, comme pour le diagramme (arbitrage du 18/09)
+  //
+  // os#1449 — ET LE MÊME VOCABULAIRE QUE LE TITRE DU DIAGRAMME, qui est une zone de texte : police,
+  // couleur, alignement, italique, retour à la ligne. Les cinq clés du bas retombent sur ce que le
+  // traceur écrivait en dur, donc aucune couronne enregistrée ne change d'aspect.
   title_visible: {},
   title_text: {},
   title_position: {},
   title_font_size: {},
   title_bold: {},
+  title_italic: {},
+  title_align: {},
+  title_wrap: {},
+  title_font_family: {},
+  title_color: {},
+  // os#1449 — LES TEXTES QUE L'AUTEUR AJOUTE. De sorte 'identity' : le texte écrit sur CETTE
+  // couronne n'a pas d'homologue sur la voisine, et n'a donc rien à faire dans un style — c'est
+  // exactement la règle de `label_positions` ci-dessous.
+  text_zones: { sort: 'identity' },
 
   // Figure : centre, légende, mentions, gestes
   centre_content: {},
