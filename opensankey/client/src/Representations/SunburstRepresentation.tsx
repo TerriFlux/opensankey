@@ -317,6 +317,21 @@ export const drawSunburstRepresentation = (
       const area = figure_parts.document.drawing_area
       area.purgeSelection()
       area.addElementToSelection(part)
+      // os#1455 — ET ON DIT QUE LE DERNIER GESTE VISAIT LA SELECTION.
+      //
+      // Sans cette ligne, selectionner une part ne se voyait PAS, et Julien l a constate a
+      // l ecran : « quand je selectionne une part je m attends a avoir des attributs a configurer
+      // pour cette part, comme quand je selectionne un noeud ; c est pas le cas ? ».
+      //
+      // La part etait bien selectionnee — mais toucher une vignette pose `_inspector_focus` sur
+      // « representation » (`setMainZoneActivePane`, au pointerdown), et la resolution de cible
+      // rend `representation` AVANT de regarder la selection : c est la regle de la recence du
+      // geste (os#1394), et elle etait juste tant que rien, DANS une figure, ne se selectionnait.
+      //
+      // Cliquer une part est precisement le contraire d un geste qui parle de la figure : c est
+      // choisir l element qu on veut regler. On remet donc le focus sur la selection, par le
+      // chemin nomme qu os#1431 a ouvert.
+      mc.inspector_focus_is_representation = false
       mc.updateInspector()
     },
     style: readSunburstStyle(ctx.options ?? {}),

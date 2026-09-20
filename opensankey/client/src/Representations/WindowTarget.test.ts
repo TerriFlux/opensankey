@@ -167,3 +167,25 @@ describe('os#1446 une part est une cible comme les autres', () => {
     expect(resolveSelectionTarget({ title: true }).kind).toBe('title')
   })
 })
+
+describe('os#1455 une part selectionnee prend linspecteur', () => {
+
+  it('la regle de la recence rendait la part INVISIBLE, et cest ce qui se voyait a lecran', () => {
+    // Le defaut, en une assertion. Toucher une vignette pose le focus sur « representation »
+    // (setMainZoneActivePane, au pointerdown) ; la resolution rend alors `representation` AVANT
+    // de regarder la selection. Une part selectionnee n avait donc aucun moyen d etre vue.
+    expect(resolveSelectionTarget({ parts: 1 }, false, 'osp.repr.donut', true).kind)
+      .toBe('representation')
+  })
+
+  it('focus rendu a la SELECTION, la part est la cible', () => {
+    // Ce que fait desormais le clic sur une part : choisir l element qu on veut regler n est pas
+    // un geste qui parle de la figure, c est le contraire.
+    expect(resolveSelectionTarget({ parts: 1 }, false, 'osp.repr.donut', false).kind).toBe('part')
+  })
+
+  it('et la figure reste atteignable quand rien nest selectionne', () => {
+    // La contre-epreuve : rendre le focus a la selection ne doit pas confisquer la figure.
+    expect(resolveSelectionTarget({}, false, 'osp.repr.donut', false).kind).toBe('representation')
+  })
+})
