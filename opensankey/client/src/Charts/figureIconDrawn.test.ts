@@ -16,25 +16,22 @@
 //    arc, et un test qui cherche une icone passe au vert pour la mauvaise raison — la premiere
 //    version de ce fichier l a fait. D ou la taille posee a la main, et la contre-verification qui
 //    exige des arcs AVANT de chercher l icone.
-// 2. PAS DE VRAI SVG. `d3-zoom` lit `transform.baseVal` : le sunburst, qui se zoome, ne peut pas
-//    etre dessine ici du tout. Sa moitie se verifie donc au resolveur (`sunburstParts.test`) et a
-//    l ecran. C est une limite, elle est dite plutot que contournee.
+// 2. PAS DE GEOMETRIE SVG. `d3-zoom` lit `viewBox` / `width` / `height` au sens de l IDL, que jsdom
+//    declare sans les implementer : toute figure qui se zoome jetait avant d avoir dessine un arc,
+//    et le SUNBURST etait repute non testable ici.
+//
+//    ⚠️ CE N EST PLUS VRAI (os#1476). Trois accesseurs suffisent a lever ca
+//    (`figureDomHarness.test-utils`), et le disque est desormais dessine pour de vrai, ici comme
+//    dans `figurePartTextShared.test`. La limite qui reste est la mesure : `getBBox` rend une boite
+//    vide, donc un cartouche ne se pose pas et une etiquette ne se tronque pas pour de bon.
 
 import { drawDonutChart } from './NodeStatsCharts'
+import { drawSunburstChart } from './SunburstChart'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { buildParts } from '../Representations/parts/buildParts'
+import { givePlainDrawingEnvironment, plainSunburstTree } from './figureDomHarness.test-utils'
 
-if (typeof globalThis.structuredClone !== 'function') {
-  globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
-}
-// Le trace se redessine quand son cadre bouge ; jsdom n a pas de quoi l observer.
-if (typeof globalThis.ResizeObserver !== 'function') {
-  globalThis.ResizeObserver = class {
-    observe() { /* rien */ }
-    unobserve() { /* rien */ }
-    disconnect() { /* rien */ }
-  } as unknown as typeof ResizeObserver
-}
+givePlainDrawingEnvironment()
 
 const CHEMIN = 'M0 0 L10 10 Z'
 
@@ -90,6 +87,24 @@ describe('os#1465 le pictogramme dune part arrive jusquau dessin', () => {
 
     expect(el.querySelectorAll('path.node_stats_arc').length).toBeGreaterThan(0)
     expect(el.querySelectorAll('svg.node_stats_arc_icon').length).toBe(0)
+  })
+
+  it('LE DISQUE AUSSI, et c est ce qui manquait a ce fichier', () => {
+    // os#1476 — La moitie sunburst se verifiait au resolveur faute de pouvoir dessiner ici. C est
+    // precisement le genre de verification qui m a fait dire trois fois « c est corrige » alors que
+    // l ecran ne montrait rien. Elle se pose maintenant au DOM, comme celle de la couronne.
+    const figure = buildParts(source(), PARTS, undefined, 'sunburst')
+    const part = figure.by_id['a']
+    part.icon_is_visible = true
+    part.icon_icon_name = 'epi'
+    const el = conteneur()
+
+    drawSunburstChart(el, plainSunburstTree(PARTS), { parts: figure.by_id as never })
+
+    expect(el.querySelectorAll('path.sunburst_arc').length).toBe(2)
+    const icons = el.querySelectorAll('svg.sunburst_arc_icon')
+    expect(icons.length).toBe(1)
+    expect(icons[0].querySelector('path')?.getAttribute('d')).toBe(CHEMIN)
   })
 
   it('une part qui NOMME son icone la voit peinte : la chaine entiere', () => {
