@@ -192,6 +192,54 @@ describe('os#1440 coller ce qui vient d un autre document', () => {
     expect(nodeNames(a)).toEqual([])
   })
 
+  it('copier, CHANGER D ONGLET, coller', () => {
+    // LE GESTE ORDINAIRE, et celui que le lot os#1440 avait manque. Il ne couvrait que deux
+    // documents COTE A COTE — deux fenetres, deux modeles vivants. Ici il n y a qu UN document :
+    // changer d onglet ne cree pas un second modele, il RECHARGE le meme avec le contenu de
+    // l autre feuille. Le presse-papiers pointe donc le bon objet, `from_elsewhere` est faux,
+    // et le collage cherche les identifiants copies dans un diagramme ou ils n existent plus.
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    const sankey = main.drawing_area.sankey
+    const a = sankey.addNewNode('n_a', 'Amont')
+    const b = sankey.addNewNode('n_b', 'Aval')
+    sankey.addNewLink(a, b)
+    main.drawing_area.addElementToSelection(a)
+    main.drawing_area.addElementToSelection(b)
+    jest.spyOn(main, 'saveInCache').mockImplementation(() => undefined)
+
+    main.handleKeyboardEvent(keystroke('c'))
+    // L onglet « + » : la feuille d avant devient un instantane, celle-ci devient courante.
+    main.createNewSheet(false)
+    expect(nodeNames(main)).toEqual([])
+
+    main.handleKeyboardEvent(keystroke('v'))
+
+    expect(nodeNames(main)).toEqual(['Amont', 'Aval'])
+    expect(main.drawing_area.sankey.links_list.length).toBe(1)
+  })
+
+  it('copier, BASCULER par la barre donglets, coller', () => {
+    // Le meme geste par l autre chemin : les deux feuilles existent deja et on clique l onglet.
+    const ws = new Class_Workspace(false)
+    const main = ws.createDocument()
+    main.createNewSheet(false)
+    const sheet_b = main.current_sheet_id
+    const sheet_a = main.sheets_order[0]
+    main.switchToSheet(sheet_a, false)
+    const chene = main.drawing_area.sankey.addNewNode('n_chene', 'Chene')
+    main.drawing_area.addElementToSelection(chene)
+    jest.spyOn(main, 'saveInCache').mockImplementation(() => undefined)
+
+    main.handleKeyboardEvent(keystroke('c'))
+    main.switchToSheet(sheet_b, false)
+    expect(nodeNames(main)).toEqual([])
+
+    main.handleKeyboardEvent(keystroke('v'))
+
+    expect(nodeNames(main)).toEqual(['Chene'])
+  })
+
   it('coller chez soi n a pas change : la duplication ordinaire fonctionne toujours', () => {
     // La contre-epreuve. Le chemin d avant est celui de tous les jours ; il ne doit rien devoir
     // au nouveau.
