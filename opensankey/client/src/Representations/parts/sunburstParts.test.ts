@@ -121,11 +121,14 @@ describe('os#1445 une couronne enregistree avant ce lot ne change pas daspect', 
     const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }])
     const part = figure.by_id['n_ble']
 
-    // La preuve que le piege est reel : l element et la couronne n ont ni la meme police d usine
-    // (quatorze points contre dix) ni la meme opacite (0,85 contre 1).
-    expect(part.name_label_font_size).not.toBe(SUNBURST_STYLE_DEFAULTS.font_size)
-    expect(part.shape_opacity).not.toBe(SUNBURST_STYLE_DEFAULTS.opacity)
+    // os#1448 — CE QUE LA PART RESOUT A CHANGE, CE QU ELLE DIT NON. Depuis que les parts ont leur
+    // style, une part fraiche resout l aspect d usine d une FIGURE et non celui d un noeud : dix
+    // points, opacite 1. C est ce que l inspecteur montre, et c est ce que la couronne dessine.
+    expect(part.name_label_font_size).toBe(SUNBURST_STYLE_DEFAULTS.font_size)
+    expect(part.shape_opacity).toBe(SUNBURST_STYLE_DEFAULTS.opacity)
 
+    // Et la garantie du lot est intacte : une amorce est MUETTE, donc la mise en forme de la
+    // figure tient telle quelle — au pixel, et quel que soit ce que l auteur y avait regle.
     expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part)).toEqual(SUNBURST_STYLE_DEFAULTS)
   })
 

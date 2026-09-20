@@ -34,6 +34,7 @@ export const SankeyUnitaryNodeInputStyle = 'SankeyUnitaryNodeInputStyle' as cons
 export const SankeyUnitaryNodeOutputStyle = 'SankeyUnitaryNodeOutputStyle' as const
 export const LinkInUnitaryStyle = 'LinkInUnitaryStyle' as const
 export const LinkOutUnitaryStyle = 'LinkOutUnitaryStyle' as const
+export const FigurePartStyle = 'FigurePartStyle' as const
 
 // Type union de toutes les clés
 export type ElementStyleKey =
@@ -61,6 +62,7 @@ export type ElementStyleKey =
   | typeof SankeyUnitaryNodeOutputStyle
   | typeof LinkInUnitaryStyle
   | typeof LinkOutUnitaryStyle
+  | typeof FigurePartStyle
 
 export type ElementStyleConfigsDict = Record<ElementStyleKey, ElementStyleConfigItem>
 export const elementStyleConfigs = {} as ElementStyleConfigsDict
@@ -403,6 +405,52 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 } as const
 
 
+// os#1448 — LE STYLE DES PARTS D'UNE FIGURE : « pour éditer globalement on le fait par les styles »
+// (Julien, 20/09). Une part de couronne ou de barre est un élément
+// (`Representations/parts/PartElement`) ; sans un style à elle, l'onglet Styles de l'inspecteur
+// n'avait rien à régler et il fallait lui laisser une seconde barre d'onglets.
+//
+// CE QUE CETTE AMORCE PORTE, ET RIEN D'AUTRE : les valeurs d'usine D'UNE FIGURE là où elles
+// diffèrent de celles d'un nœud. C'est la même doctrine que `Representations/sunburstAttributes`
+// (« elle ne dit que ce en quoi une clé diffère chez elle ») et la même que les cinq styles
+// unitaires : neuf clés déclarées, pas un instantané du style par défaut.
+//
+// ⚠️ NE PAS SEMER CE STYLE PAR `copyFrom(default_style)`. Un style interne n'est PAS pré-rempli
+// (cf. `Class_ElementStyle`, branche `is_deletable`) : son sac ne contient que ces neuf clés, et
+// tout le reste — polices, couleurs, encadrés — se résout par la cascade
+// `élément → styles → sankey.default_style`. Copier le style par défaut figerait chaque clé et
+// l'inspecteur montrerait un liséré de surcharge partout.
+//
+// ET CETTE AMORCE NE PEUT PAS CHANGER L'ASPECT D'UNE COURONNE ENREGISTRÉE, par construction : le
+// tracé n'écoute une part que sur ce qu'elle DIT (`isAttributeOverloaded`, cf.
+// `Charts/SunburstChart.sunburstPartStyle`), et `Class_PartElement` ne tient pour « dit » que ce
+// qu'un style de part porte AU-DELÀ de son amorce (cf. `Representations/parts/partStyle`). Les
+// neuf valeurs ci-dessous sont donc muettes tant que personne ne les touche ; elles ne servent
+// qu'à l'ŒIL — que l'inspecteur montre dix points et un liséré blanc, c'est-à-dire ce que la
+// figure dessine vraiment, et non les quatorze points d'un nœud.
+elementStyleConfigs[FigurePartStyle] = {
+  name: 'ElementStyle.FigurePartStyle',
+  config: {
+    // Forme : une part est opaque et cernée de blanc — les anneaux se séparent par un vide clair,
+    // là où un nœud est translucide et cerné de noir.
+    shape_opacity: 1,
+    shape_border_visible: true,
+    shape_border_color: '#ffffff',
+
+    // Libellé : dix points, et « là où ça tient » plutôt que « toujours » — une part trop étroite
+    // ne porte pas son nom, alors qu'un nœud garde le sien quoi qu'il arrive.
+    name_label_font_size: 10,
+    name_label_prune_if_unfitting: true,
+
+    // Valeur : quatre chiffres significatifs, et pas d'arrondi à deux décimales — une figure
+    // compare des ordres de grandeur, un nœud affiche une quantité.
+    value_label_significant_digits: true,
+    value_label_nb_significant_digits: 4,
+    value_label_custom_digit: false,
+    value_label_nb_digit: 0
+  }
+} as const
+
 export const base_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle] as const
 // Styles STRUCTURELS : (re)attachés à la construction de l'élément selon son type
 // (NodeStyle->Node, LinkStyle->Link, ContainerStyle->TextZone). Eux seuls ne sont pas
@@ -428,3 +476,7 @@ export const node_unitary_styles: readonly ElementStyleKey[] = [
   SankeyUnitaryNodeOutputStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeStyle,
   LinkInUnitaryStyle, LinkOutUnitaryStyle
 ] as const
+// os#1448 — les styles que le document de parts d'une figure crée. Une liste d'un seul élément
+// aujourd'hui : les barres ajouteront le leur quand elles auront leurs parts, et le geste de semis
+// (`Representations/parts/partStyle.seedPartStyles`) n'aura pas à changer.
+export const figure_part_styles: readonly ElementStyleKey[] = [FigurePartStyle] as const
