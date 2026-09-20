@@ -188,6 +188,80 @@ export interface Type_FigurePartLabelAspect {
    * que les étiquettes d'un flux. Il n'est pas réécrit : il est appelé.
    */
   value_format?: (value: number) => string
+
+  // ── OÙ SE POSE L'ÉTIQUETTE (os#1466) ────────────────────────────────────────────────────────
+  //
+  // Julien : « les options de placement ne marchent pas », puis « tout ce qui a du sens, il faut
+  // l'implémenter ». Elles ont du sens, et sur une barre elles en ont beaucoup : « au-dessus /
+  // dedans / en dessous » est le réglage le plus naturel d'un histogramme.
+  //
+  // CE SONT LES CLÉS D'ÉLÉMENT, et c'est l'arbitrage du lot. On aurait pu en faire des clés de
+  // FIGURE, comme `name_label_orientation` l'est pour le sunburst. Mais l'orientation décrit le
+  // TRACÉ — comment les étiquettes courent dans un disque —, alors que le placement décrit UNE
+  // étiquette : une barre au premier plan peut vouloir son nom dedans quand ses voisines le
+  // gardent dessous. C'est la définition même d'un réglage de part, et les clés existaient déjà.
+  //
+  // ABSENTS = LE TRACÉ D'HIER, au pixel : nom sous l'axe, valeur au-dessus de la barre.
+
+  /**
+   * `name_label_inside_vert` — l'étiquette est DANS la part au lieu d'être à côté.
+   *
+   * Sur une barre : dans le rectangle, au lieu de sous l'axe. Sur une couronne, un secteur n'a pas
+   * de « dedans » et de « dehors » de même nature — sortir, c'est l'étiquette détachée reliée par
+   * un trait (`label_callout`), qui a son propre réglage parce qu'elle a besoin d'un trait.
+   */
+  label_inside?: boolean
+  /** `name_label_vert` — en haut, au milieu ou en bas de la part. */
+  label_vert?: 'top' | 'middle' | 'bottom'
+  /** `name_label_horiz` — à gauche, au milieu ou à droite. */
+  label_horiz?: 'left' | 'middle' | 'right'
+  /** `name_label_horiz_shift` / `_vert_shift` — le décalage fin, en pixels, appliqué en dernier. */
+  label_shift_x?: number
+  label_shift_y?: number
+  /**
+   * `name_label_text_align` — l'ancrage du texte. DISTINCT de `label_horiz` : l'un dit OÙ est le
+   * point d'ancrage dans la part, l'autre de quel côté le texte pend à partir de ce point. Les
+   * confondre interdirait « ancré à droite mais lu vers la droite », qui est ce qu'on veut d'une
+   * étiquette posée au bord.
+   */
+  label_text_align?: 'left' | 'middle' | 'right'
+
+  // ── LE PICTOGRAMME (os#1465) ────────────────────────────────────────────────────────────────
+  //
+  // Le pendant, pour la couronne et les barres, de ce que `Type_SunburstStyle` porte déjà. Le
+  // chemin est RÉSOLU (sorti du catalogue du document) avant d'arriver ici : le tracé n'a qu'à le
+  // peindre, sans rien savoir du modèle.
+
+  /** Le `d` d'un chemin SVG. Absent = pas d'icône, c'est-à-dire toutes les figures d'avant. */
+  icon_path?: string
+  icon_view_box?: string
+  icon_color?: string
+  /** `icon_box_width`. Absente : le tracé calcule ce qui tient dans la part. */
+  icon_size?: number
+}
+
+/**
+ * LES ÉTIQUETTES DÉPOSÉES À LA MAIN, lues du sac d'une figure.
+ *
+ * os#1463 — UNE SEULE DÉFINITION, et elle est ici parce que les trois natures en ont besoin : le
+ * sunburst la portait seul, la couronne et les barres sortent désormais leurs étiquettes de la
+ * même façon. La recopier aurait suffi à ce que deux figures relisent différemment le même sac.
+ *
+ * Défensive par construction : le sac vient d'un fichier que l'auteur a pu enregistrer avec une
+ * version d'avant. Une entrée qui n'est pas un point est ignorée plutôt que de faire tomber le
+ * dessin — une étiquette qui revient à sa place par défaut se corrige d'un geste, une figure qui
+ * ne s'affiche plus, non.
+ */
+export const readFigureLabelPositions = (
+  raw: unknown
+): { [id: string]: { x: number, y: number } } => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: { [id: string]: { x: number, y: number } } = {}
+  Object.entries(raw as { [id: string]: unknown }).forEach(([id, p]) => {
+    const pos = p as { x?: unknown, y?: unknown } | null
+    if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') out[id] = { x: pos.x, y: pos.y }
+  })
+  return out
 }
 
 /**
