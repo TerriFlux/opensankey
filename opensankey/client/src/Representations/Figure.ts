@@ -273,6 +273,53 @@ export class Class_FigureNature {
     delete this._styles[style_id]
   }
 
+  // ── HÔTE DE STYLES (os#1458) ────────────────────────────────────────────────────────────────
+  //
+  // Une nature de figure DÉTENAIT déjà une famille de styles nommés — créer, supprimer, un défaut.
+  // Ce qui lui manquait, c'était de le dire sous les mots que l'éditeur de styles emploie, lui qui
+  // sert les nœuds et les flux depuis toujours. Ces cinq membres ne sont donc que des SYNONYMES :
+  // aucune logique nouvelle, et c'est le signe que la factorisation était la bonne (« normalement,
+  // avec la factorisation, tout devient simple », Julien).
+  //
+  // Ce que ça débloque : l'onglet Styles d'une figure peut monter LE composant de styles — famille,
+  // liste, « + », renommage — au lieu de sa demi-interface. Une nature de plus ne coûtera plus une
+  // ligne d'interface.
+
+  public get styles_list(): Class_ElementStyle[] { return Object.values(this._styles) }
+
+  public addNewDefaultElementStyle(): Class_ElementStyle {
+    // Même façon de nommer que côté Sankey : le rang dans la famille, pas un identifiant à lire.
+    const rank = String(this.styles_list.length)
+    return this.createStyle(this.id + '_style_' + rank, 'Style ' + rank)
+  }
+
+  public deleteElementStyle(style: Class_ElementStyle): void { this.deleteStyle(style.id) }
+
+  /**
+   * Assigner le style AUX FIGURES CITÉES, et à elles seules.
+   *
+   * Une nature décrit une SORTE, pas un objet à l'écran : elle ne sait pas quelle figure l'auteur
+   * regarde, et l'inventer serait deviner. C'est pourquoi l'hôte de styles accepte une cible
+   * explicite — l'appelant tient déjà la liste de ce qu'il édite (cf. `Type_StyleHost`).
+   */
+  public switchElementStyle(style: Class_ElementStyle, add: boolean, targets?: unknown[]): void {
+    (targets ?? []).forEach(target => {
+      const figure = target as { addStyleId?: (id: string) => void, removeStyleId?: (id: string) => void }
+      if (add) figure.addStyleId?.(style.id)
+      else figure.removeStyleId?.(style.id)
+    })
+  }
+
+  /** Rendre au style ses valeurs d'usine : un sac vide, que `assignStyle` interprète ainsi. */
+  public resetAttrStyle(style: Class_ElementStyle): void { this.assignStyle(style, {}) }
+
+  /** Retirer UNE clé posée sur ce style ; elle repasse à ce dont elle hérite. */
+  public deleteLocalAttrStyle(style: Class_ElementStyle, key: string): void {
+    const next = { ...this.styleBag(style) }
+    delete next[key]
+    this.assignStyle(style, next)
+  }
+
   /**
    * LE SAC D'UN STYLE : ce qu'il dit, clé par clé. Pour `default`, toutes les clés déclarées de
    * sorte 'style' (il est pré-rempli d'usine) ; pour un autre style, ce qu'il porte explicitement.
