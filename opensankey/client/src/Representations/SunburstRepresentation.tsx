@@ -45,6 +45,7 @@ import { figurePartsFor } from './parts/figurePartsRegistry'
 import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
+import { readFigureLabelPositions } from '../Charts/figureChartStyle'
 
 // Ce que le sunburst lit du contexte du registre. La fenêtre et la vignette, quand il y en a :
 // c'est sous elles qu'une étiquette déposée à la main s'écrit, et que le zoom se prête.
@@ -55,16 +56,10 @@ export interface Type_SunburstDrawContext {
   pane_key?: string
 }
 
-/** La position des étiquettes sorties du disque, lue du sac ; rien d'autre qu'un dictionnaire. */
-const readLabelPositions = (raw: unknown): { [id: string]: { x: number, y: number } } => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
-  const out: { [id: string]: { x: number, y: number } } = {}
-  Object.entries(raw as { [id: string]: unknown }).forEach(([id, p]) => {
-    const pos = p as { x?: unknown, y?: unknown } | null
-    if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') out[id] = { x: pos.x, y: pos.y }
-  })
-  return out
-}
+// os#1463 — LA LECTURE DES POSITIONS DÉPOSÉES A ÉTÉ REMONTÉE dans `Charts/figureChartStyle`, d'où
+// la couronne et les barres la lisent aussi depuis qu'elles sortent leurs étiquettes. La garder ici
+// en double aurait suffi à ce que deux figures relisent différemment le même sac.
+const readLabelPositions = readFigureLabelPositions
 
 /**
  * LE ZOOM DU SUNBURST, capacité déclarée (os#1409) : les boutons −/+/% de la colonne d'outils
