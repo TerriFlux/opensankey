@@ -80,7 +80,7 @@ export interface Type_ChartOptions {
    * l'inspecteur montre leur Forme, leur Libellé, leur Valeur. Encore faut-il que le tracé les
    * LISE — c'est ce que fait ce rappel, et c'est ce qui manquait à la couronne et aux barres.
    *
-   * UN RAPPEL ET NON UN DICTIONNAIRE : la résolution vit là où vivent les parts (`barPartAspect`,
+   * UN RAPPEL ET NON UN DICTIONNAIRE : la résolution vit là où vivent les parts (`partAspect`,
    * OS+), et le tracé n'a pas à connaître les éléments du modèle.
    *
    * `undefined` — pas de part, ou une part qui n'a rien dit en propre — rend le style de la
@@ -462,7 +462,7 @@ export const drawDonutChart = (
     const lines: string[] = []
     if (s.name_label_is_visible) lines.push(sectorName(d))
     // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
-    // n'existe que si la part a dit quelque chose des six clés de format (cf. `barPartAspect`).
+    // n'existe que si la part a dit quelque chose des six clés de format (cf. `partAspect`).
     const value = valueAttached(d.data.id) ? sectorValue(d) : ''
     if (value !== '') lines.push(value)
     // La boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne entre les mots, et
