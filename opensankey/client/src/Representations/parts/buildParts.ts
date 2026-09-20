@@ -25,7 +25,8 @@
 // RÉGLAGES posés à la main — d'où `reuse`, qui les reprend par identifiant.
 
 import type { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_PartsDocument } from './PartsDocument'
+import { createPartsDocument } from './PartsDocument'
+import type { Class_PartsDocument } from './PartsDocument'
 import { Class_PartElement } from './PartElement'
 import { NO_SUBJECT } from './PartSubject'
 import type { Type_PartSubject } from './PartSubject'
@@ -62,7 +63,9 @@ export const buildParts = (
   parts: Type_PartInput[],
   reuse?: Type_FigureParts
 ): Type_FigureParts => {
-  const document = new Class_PartsDocument(source)
+  // os#1454 — PAR LA FABRIQUE, jamais par `new` : dans un espace de travail OS+, tout document
+  // doit etre un document OS+ (cf. l en-tete de PartsDocument, et le plantage qu il raconte).
+  const document = createPartsDocument(source)
   const drawing_area = document.drawing_area
 
   // os#1448 — LE STYLE DES PARTS, AVANT LA MOINDRE PART. Le constructeur d'un élément lit sa
