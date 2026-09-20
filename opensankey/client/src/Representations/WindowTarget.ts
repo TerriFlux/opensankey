@@ -52,6 +52,12 @@ export type Type_SelectionTargetKind =
   | 'container'
   | 'legend'
   | 'title'
+  // os#1446 — UNE PART EST UN ELEMENT, et elle se selectionne comme tel. Un secteur de couronne,
+  // une barre : depuis os#1445 ce sont de vrais elements (Class_PartElement, frere du noeud et du
+  // flux sous Class_BaseShape), et l inspecteur doit leur repondre par les MEMES onglets — forme,
+  // libelle, valeur. C est la demande de Julien : « figure = graphe, et les trois autres parties
+  // dans forme / libelle / valeur de l element selectionne ».
+  | 'part'
   | 'mixed'
   | 'representation'
 
@@ -68,6 +74,8 @@ export type Type_SelectionCounts = {
   nodes: number
   links: number
   containers: number
+  // os#1446 — les parts d'une figure (secteurs d'une couronne, barres) : de vrais éléments.
+  parts: number
   // La légende et le titre sont des objets uniques, donc booléens.
   legend: boolean
   title: boolean
@@ -94,7 +102,7 @@ export type Type_WindowTarget = {
 export type Type_SelectionTarget = Type_WindowTarget & { kind: Type_SelectionTargetKind }
 
 const EMPTY: Type_SelectionCounts = {
-  nodes: 0, links: 0, containers: 0, legend: false, title: false
+  nodes: 0, links: 0, containers: 0, parts: 0, legend: false, title: false
 }
 
 /** La vue : aucune sélection, aucune figure — les réglages de page, grille, échelle, fond. */
@@ -153,7 +161,7 @@ export function resolveSelectionTarget(
   }
 
   const total =
-    c.nodes + c.links + c.containers + (c.legend ? 1 : 0) + (c.title ? 1 : 0)
+    c.nodes + c.links + c.containers + c.parts + (c.legend ? 1 : 0) + (c.title ? 1 : 0)
 
   // Aucune sélection : la représentation active s'il y en a une, sinon les réglages de la vue.
   if (total === 0) {
@@ -166,6 +174,7 @@ export function resolveSelectionTarget(
     (c.nodes > 0 ? 1 : 0) +
     (c.links > 0 ? 1 : 0) +
     (c.containers > 0 ? 1 : 0) +
+    (c.parts > 0 ? 1 : 0) +
     (c.legend ? 1 : 0) +
     (c.title ? 1 : 0)
 
@@ -178,6 +187,9 @@ export function resolveSelectionTarget(
   if (c.nodes > 0) return selected('node', c.nodes)
   if (c.links > 0) return selected('link', c.links)
   if (c.containers > 0) return selected('container', c.containers)
+  // AVANT la légende et le titre, comme les trois autres natures d'éléments : une part est un
+  // élément sélectionné, pas un objet unique de la page.
+  if (c.parts > 0) return selected('part', c.parts)
   if (c.legend) return selected('legend', 1)
   return selected('title', 1)
 }

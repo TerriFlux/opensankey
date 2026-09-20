@@ -34,6 +34,7 @@ export const resources_inspector = {
           container: 'Area', containers: 'areas',
           legend: 'Legend', legends: 'legends',
           title: 'Title', titles: 'titles',
+          part: 'Part', parts: 'parts',
           mixed: 'Mixed selection', elements: 'elements',
           representation: 'Representation', representations: 'representations'
         },
@@ -419,6 +420,7 @@ export const resources_inspector = {
           container: 'Zone', containers: 'zones',
           legend: 'Légende', legends: 'légendes',
           title: 'Titre', titles: 'titres',
+          part: 'Part', parts: 'parts',
           mixed: 'Sélection mixte', elements: 'éléments',
           representation: 'Représentation', representations: 'représentations'
         },
@@ -790,6 +792,7 @@ export const resources_inspector = {
           container: 'Zona', containers: 'zonas',
           legend: 'Leyenda', legends: 'leyendas',
           title: 'Título', titles: 'títulos',
+          part: 'Parte', parts: 'partes',
           mixed: 'Selección mixta', elements: 'elementos',
           representation: 'Representación', representations: 'representaciones'
         },
@@ -1138,6 +1141,7 @@ export const resources_inspector = {
           container: 'Bereich', containers: 'Bereiche',
           legend: 'Legende', legends: 'Legenden',
           title: 'Titel', titles: 'Titel',
+          part: 'Teil', parts: 'Teile',
           mixed: 'Gemischte Auswahl', elements: 'Elemente',
           representation: 'Darstellung', representations: 'Darstellungen'
         },
@@ -1486,6 +1490,7 @@ export const resources_inspector = {
           container: 'Zona', containers: 'zone',
           legend: 'Legenda', legends: 'legende',
           title: 'Titolo', titles: 'titoli',
+          part: 'Parte', parts: 'parti',
           mixed: 'Selezione mista', elements: 'elementi',
           representation: 'Rappresentazione', representations: 'rappresentazioni'
         },
@@ -1833,6 +1838,7 @@ export const resources_inspector = {
           container: '区域', containers: '区域',
           legend: '图例', legends: '图例',
           title: '标题', titles: '标题',
+          part: '部分', parts: '个部分',
           mixed: '混合选择', elements: '元素',
           representation: 'Representation', representations: 'representations'
         },
@@ -2185,6 +2191,7 @@ export const resources_inspector = {
           container: 'エリア', containers: 'エリア',
           legend: '凡例', legends: '凡例',
           title: 'タイトル', titles: 'タイトル',
+          part: '部分', parts: '個の部分',
           mixed: '複数種類の選択', elements: '要素',
           representation: 'Representation', representations: 'representations'
         },
