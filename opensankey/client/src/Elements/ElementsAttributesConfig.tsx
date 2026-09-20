@@ -2504,10 +2504,20 @@ export const VALUE_LABEL_CONFIG = {
     type: (() => false) as (() => boolean),
     category: 'value_label' as const,
     actions: ['drawValueLabel', 'drawNameLabel'] as BaseActionType[],
-    // os#1464 — coller la valeur au libellé plutôt qu'à la forme suppose que l'auteur place les
-    // deux : c'est vrai d'un nœud et d'un flux. Une zone de texte n'affiche pas de valeur, et sur
-    // une part c'est le graphique qui place l'une et l'autre.
-    scope: { only: ['node', 'link'] } satisfies Type_AttributeScope,
+    // os#1470 — ET UNE PART, DEPUIS QUE JULIEN L A DEMANDE : « oui mais je crois qu il faut le
+    // faire ; l option par défaut c est d avoir les deux attachés. Cette option existe pour les
+    // flux je crois, donc réutilisons-la. »
+    //
+    // C est exactement la bonne clé, et elle dit déjà la bonne chose dans les sept langues :
+    // « Coller au libellé ». Sur un secteur de couronne, le nom et le nombre s écrivent dans UN
+    // seul texte, l un sous l autre — c est l état COLLÉ, et c est ce que fait le tracé depuis
+    // toujours. Le décoller en fait deux textes, chacun avec sa police, son encre et sa place.
+    //
+    // ⚠️ SON DÉFAUT DÉCLARÉ (faux) N EST PAS CE QUE VOIT UNE PART, et il ne peut pas l être : une
+    // part n est écoutée que sur ce qu elle DIT. Tant qu elle ne dit rien, chaque tracé garde son
+    // usage — collé dans un secteur, séparé sur un histogramme, où le nom vit sous l axe et le
+    // nombre au-dessus depuis toujours. Un défaut unique changerait l aspect de l un des deux parcs.
+    scope: { only: ['node', 'link', 'part'] } satisfies Type_AttributeScope,
     labels: {
       en: 'Stick to label',
       fr: 'Coller au libellé',
