@@ -410,7 +410,7 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 } as const
 
 
-// os#1448 — LE STYLE DES PARTS D'UNE FIGURE : « pour éditer globalement on le fait par les styles »
+// os#1449 — LE STYLE DES PARTS D'UNE FIGURE : « pour éditer globalement on le fait par les styles »
 // (Julien, 20/09). Une part de couronne ou de barre est un élément
 // (`Representations/parts/PartElement`) ; sans un style à elle, l'onglet Styles de l'inspecteur
 // n'avait rien à régler et il fallait lui laisser une seconde barre d'onglets.
@@ -481,7 +481,7 @@ export const node_unitary_styles: readonly ElementStyleKey[] = [
   SankeyUnitaryNodeOutputStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeStyle,
   LinkInUnitaryStyle, LinkOutUnitaryStyle
 ] as const
-// os#1448 — les styles que le document de parts d'une figure crée. Une liste d'un seul élément
+// os#1449 — les styles que le document de parts d'une figure crée. Une liste d'un seul élément
 // aujourd'hui : les barres ajouteront le leur quand elles auront leurs parts, et le geste de semis
 // (`Representations/parts/partStyle.seedPartStyles`) n'aura pas à changer.
 export const figure_part_styles: readonly ElementStyleKey[] = [FigurePartStyle] as const
