@@ -1622,11 +1622,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * Get name of link
+   * Le nom d'un flux, et c'est une SURCHARGE LÉGITIME du nom de l'élément (`Class_BaseShape.name`,
+   * os#1445) : un flux n'a pas de nom à lui, il se nomme par ses deux extrémités. Il est donc
+   * DÉRIVÉ, jamais écrit — renommer un flux n'a pas de sens, on renomme ses bouts. D'où l'accesseur
+   * en lecture seule, qui masque volontairement l'écriture offerte par la base.
+   *
+   * Tout le reste du nommage — `name_label`, `name_label_effective` et sa cascade — vient de la
+   * base sans une ligne ici : c'est exactement ce que l'homogénéisation a gagné.
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get name() {
+  public override get name() {
     return this.defaultLinkName(this._source, this._target)
   }
 
