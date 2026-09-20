@@ -17,6 +17,7 @@
 
 import { Class_Workspace } from '../types/Workspace'
 import { buildParts } from '../Representations/parts/buildParts'
+import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 import {
   attributeAppliesToElements,
   attributesOwnedBy,
@@ -201,6 +202,131 @@ describe('os#1464 l autre sens : ce qu une nature declare pour elle seule', () =
     // sauf une.
     expect(a_elle).not.toContain('shape_border_radius')
     expect(attributesOwnedBy('part')).not.toContain('value_label_in_out_display_mode')
+  })
+})
+
+describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une part', () => {
+
+  // L audit des 350 (`notes/figures/attributs-un-par-un.md`) a trie par REGLES, pas cle par cle.
+  // Ce qui suit prend un echantillon de chaque regle : si la portee est posee au bon endroit, tout
+  // le groupe suit ; si elle glisse, c est l echantillon qui tombe et il dit lequel.
+
+  it('LA GEOMETRIE D UN NOEUD ET CELLE D UN FLUX : la forme d une part est CALCULEE', () => {
+    const { part, noeud, flux } = buildScene()
+    const geometrie = [
+      // Catalogue du NOEUD : ancrages, verrous de position, hachures.
+      'shape_position_type', 'shape_anchor_align_vertical', 'shape_position_u_locked', 'shape_hatch',
+      // Catalogue du FLUX : courbure, tangentes, fleches, encoches, points de passage.
+      'shape_curvature', 'shape_starting_tangeant', 'shape_is_arrow', 'shape_source_notch',
+      'shape_waypoints', 'shape_link_caps'
+    ]
+    geometrie.forEach(cle => {
+      expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, false])
+      // ET LE GARDE-FOU, qui compte autant : ceux a qui elles s adressent les gardent.
+      expect([cle, attributeAppliesToElements([noeud, flux], cle)]).toEqual([cle, true])
+    })
+  })
+
+  it('LA MACHINERIE D ETIQUETTE HERITEE PAR L ICONE : une icone est un pictogramme', () => {
+    // Soixante-trois cles derivees d une declaration d ETIQUETTE, dont cinquante-sept n ont aucun
+    // sujet sur un dessin vectoriel : une police, une casse, un separateur, un cartouche.
+    const { part } = buildScene()
+    const heritage = [
+      'icon_font_family', 'icon_font_size', 'icon_bold', 'icon_uppercase',
+      'icon_text_align', 'icon_wrap_long_words', 'icon_unit_visible',
+      'icon_background_visible', 'icon_background_border_radius'
+    ]
+    heritage.forEach(cle => {
+      expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, false])
+    })
+    // LES CINQ QUI DECRIVENT VRAIMENT UN PICTOGRAMME RESSORTENT, et c est ce qui prouve que la
+    // regle « la cle l emporte sur la famille » tient. Elles sont LUES par les trois natures.
+    const pictogramme = [
+      'icon_is_visible', 'icon_icon_name', 'icon_color', 'icon_box_width', 'icon_view_box'
+    ]
+    pictogramme.forEach(cle => {
+      expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, true])
+    })
+  })
+
+  it('UN NOM N A NI CHIFFRES NI UNITE, mais une VALEUR si', () => {
+    // Ces cles n existent sous le prefixe du NOM que parce que la declaration de base est partagee
+    // entre les deux familles d etiquette. C est le meme suffixe, et il ne vaut pas des deux cotes.
+    const { part } = buildScene()
+    const chiffres = [
+      'scientific_notation', 'significant_digits', 'nb_digit', 'unit_visible', 'unit', 'unit_factor'
+    ]
+    chiffres.forEach(suffixe => {
+      expect([suffixe, attributeAppliesToElements([part], `name_label_${suffixe}`)])
+        .toEqual([suffixe, false])
+      expect([suffixe, attributeAppliesToElements([part], `value_label_${suffixe}`)])
+        .toEqual([suffixe, true])
+    })
+  })
+
+  it('CE QUI COUPLE UNE ETIQUETTE AU DIAGRAMME, sans objet dans une figure', () => {
+    const { part, flux } = buildScene()
+    const couple = [
+      'name_label_on_path', 'name_label_pos_auto', 'name_label_flux_tag_group_id',
+      'value_label_on_path', 'value_label_pos_auto', 'value_label_flux_tag_group_id',
+      'name_label_tag_group_id', 'name_label_dimension_id',
+      'analysis_descriptor', 'figure_placements'
+    ]
+    couple.forEach(cle => {
+      expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, false])
+    })
+    // La SOURCE DU TEXTE est ressortie du meme catalogue : elle decrit un libelle, pas un
+    // diagramme, et ecrire le nom d une part depuis un attribut a du sens.
+    expect(attributeAppliesToElements([part], 'name_label_text_source')).toBe(true)
+    expect(attributeAppliesToElements([flux], 'name_label_on_path')).toBe(true)
+  })
+
+  it('LE GARDE-FOU : tout ce que les traces LISENT reste offert', () => {
+    // Le vrai risque de ce lot n est pas de masquer trop peu, c est de masquer trop — et un reglage
+    // retire a tort ne se decouvre que des mois plus tard, a l ecran, sur une plainte.
+    const { part } = buildScene()
+    const lues = [
+      'shape_color_visible', 'shape_color', 'shape_opacity',
+      'shape_border_visible', 'shape_border_color', 'shape_border_thickness',
+      'name_label_is_visible', 'name_label_font_size', 'name_label_bold', 'name_label_color',
+      'name_label_background_visible', 'name_label_background_border_radius',
+      'name_label_horiz_shift', 'name_label_text_align', 'name_label_prune_if_unfitting',
+      'value_label_is_visible', 'value_label_font_size', 'value_label_unit', 'value_label_nb_digit',
+      'value_label_stick_to_label', 'value_label_percent'
+    ]
+    lues.forEach(cle => {
+      expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, true])
+    })
+  })
+
+  it('AUCUNE AUTRE NATURE NE PERD QUOI QUE CE SOIT', () => {
+    // Toutes les portees posees par ce lot sont des `except: ['part']` ou des re-autorisations : un
+    // noeud, un flux, une zone de texte voient exactement ce qu ils voyaient. Le risque de masquer
+    // trop est le seul vrai risque du lot, et il ne se decouvrirait qu a l ecran, des mois plus tard.
+    const { noeud, flux, zone } = buildScene()
+    const toutes = Object.keys(ALL_ATTRIBUTES_CONFIG)
+    const perdues = (el: unknown) => toutes.filter(cle => !attributeAppliesToElements([el], cle))
+    // Le NOEUD ne perd rien du tout — c est la nature de reference du catalogue.
+    expect(perdues(noeud)).toEqual([])
+    // Le flux et la zone ne perdent QUE des portees posees bien avant ce lot : les totaux
+    // entrants/sortants (`only: ['node']`, os#1464), qui n ont de sens que la ou des flux entrent et
+    // sortent, et pour la zone « coller au libelle » (os#1470) — elle n ecrit pas de valeur.
+    const totaux = [
+      'name_label_in_out_display_mode', 'value_label_in_out_display_mode',
+      'stock_label_in_out_display_mode', 'icon_in_out_display_mode'
+    ]
+    expect(perdues(flux).sort()).toEqual([...totaux].sort())
+    expect(perdues(zone).sort()).toEqual([...totaux, 'value_label_stick_to_label'].sort())
+  })
+
+  it('le compte : une part ne se voit plus offrir qu un tiers du catalogue', () => {
+    // Pas le chiffre exact — il bougera a chaque cle ajoutee, et ce test deviendrait un travail
+    // d entretien sans valeur. L ORDRE DE GRANDEUR, lui, dit si la porte s est refermee ou rouverte.
+    const { part } = buildScene()
+    const offertes = Object.keys(ALL_ATTRIBUTES_CONFIG)
+      .filter(cle => attributeAppliesToElements([part], cle))
+    expect(offertes.length).toBeGreaterThan(120)
+    expect(offertes.length).toBeLessThan(165)
   })
 })
 
