@@ -40,6 +40,8 @@ import {
   Type_SunburstOptions
 } from '../Charts/SunburstHierarchy'
 import { drawSunburstChart } from '../Charts/SunburstChart'
+import { sunburstPartInputs } from './parts/sunburstParts'
+import { figurePartsFor } from './parts/figurePartsRegistry'
 import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
@@ -283,7 +285,16 @@ export const drawSunburstRepresentation = (
 
   const mc = app_data.menu_configuration
   const { window_id, pane_key } = ctx
-  return drawSunburstChart(container, tree, {
+  // os#1445 (étape 3) — LES PARTS, ET QUI LES GARDE. Chaque secteur devient un élément, avec sa
+  // forme, son libellé et sa valeur propres ; le tracé lit sur lui ce qu'il porte EN PROPRE et
+  // retombe sur le réglage de la figure pour tout le reste (cf. `sunburstPartStyle`). Le dépôt
+  // par (fenêtre, vignette) est ce qui fait qu'un réglage posé sur un secteur survit au redessin
+  // que provoque le geste suivant.
+  const figure_parts = figurePartsFor(
+    window_id, pane_key, app_data, sunburstPartInputs(sankey, tree)
+  )
+  const teardown_chart = drawSunburstChart(container, tree, {
+    parts: figure_parts.by_id,
     style: readSunburstStyle(ctx.options ?? {}),
     title: figureTitleOf(ctx.options ?? {}),
     label_positions: readLabelPositions(ctx.options?.['label_positions']),
@@ -316,6 +327,16 @@ export const drawSunburstRepresentation = (
     ) => { showNodeOf(app_data, node_id, path) },
     on_centre_click: (node_id: string) => showNodeOf(app_data, node_id)
   })
+
+  return () => {
+    teardown_chart()
+    // HORS FENÊTRE SEULEMENT. Un jeu de parts sans (fenêtre, vignette) est jetable et personne
+    // n'en garde la trace : c'est ici qu'il cesse de vivre. Dans une vignette, au contraire, le
+    // dépôt le garde exprès — un démontage est le plus souvent un simple redessin, et libérer
+    // ici perdrait à chaque geste les réglages que l'auteur vient de poser. C'est la fermeture de
+    // la vignette qui libère (`forgetFigureParts`).
+    if (window_id === undefined || pane_key === undefined) figure_parts.document.dispose()
+  }
 }
 
 // ── Réglages ──────────────────────────────────────────────────────────────────────
