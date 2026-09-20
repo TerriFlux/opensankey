@@ -3069,6 +3069,19 @@ const layerStyles = {
     '& > *': { minWidth: 0 },
   },
 
+  // Même grille, mais l'en-tête (libellé + « Min / Max ») est écrit une seule
+  // fois et coiffe deux rangées de contrôles.
+  menuconfigpanel_3row_3cols: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1.25fr 1.75fr',
+    gridTemplateRows: '1fr 2fr 2fr',
+    gridColumnGap: '0',
+    gridRowGap: '0',
+    height: '5rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
+  },
+
   menutop_layout_style: {
     display: 'grid',
     gridColumnGap: '0.25rem',
