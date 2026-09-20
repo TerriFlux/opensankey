@@ -67,6 +67,39 @@ export interface Type_ChartOptions {
   // Le titre de la figure (arbitrage du 18/09), et ce qu'il écrit quand son texte est vide.
   title?: Type_FigureTitle
   title_fallback?: string
+  /**
+   * os#1453 — L'ASPECT D'UNE PART, quand elle en porte un.
+   *
+   * Depuis os#1445 un secteur de couronne, une barre, sont de vrais ÉLÉMENTS : on les touche, et
+   * l'inspecteur montre leur Forme, leur Libellé, leur Valeur. Encore faut-il que le tracé les
+   * LISE — c'est ce que fait ce rappel, et c'est ce qui manquait à la couronne et aux barres.
+   *
+   * UN RAPPEL ET NON UN DICTIONNAIRE : la résolution vit là où vivent les parts (`barPartAspect`,
+   * OS+), et le tracé n'a pas à connaître les éléments du modèle.
+   *
+   * `undefined` — pas de part, ou une part qui n'a rien dit en propre — rend le style de la
+   * figure TEL QUEL. C'est la garantie du lot : un graphique enregistré se rouvre à l'identique.
+   */
+  part_aspect?: (part_id: string) => Type_ChartPartAspect | undefined
+  /**
+   * os#1453 — le secteur ou la barre qu'on vient de toucher. L'hôte en fait ce qu'il veut : la
+   * couronne sélectionne la part correspondante, et l'inspecteur répond.
+   */
+  on_part_select?: (part_id: string) => void
+}
+
+/**
+ * os#1453 — ce qu'une part dit de son aspect, résolu ailleurs. Tout est optionnel : ce qui n'est
+ * pas dit reste au style de la figure.
+ */
+export interface Type_ChartPartAspect {
+  fill?: string
+  opacity?: number
+  border_visible?: boolean
+  border_color?: string
+  border_thickness?: number
+  /** Le style du texte de CETTE part — mêmes clés que celui de la figure. */
+  style?: Partial<Type_FigureChartStyle>
 }
 
 /** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
@@ -266,15 +299,40 @@ export const drawDonutChart = (
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
     `${d.data.label}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
+  // os#1453 — L'ASPECT DE CHAQUE SECTEUR, le sien s'il en a un, celui de la figure sinon.
+  const aspectOf = (id: string) => opts.part_aspect?.(id)
   const paths = g.selectAll('path')
     .data(arcs)
     .enter().append('path')
     .attr('class', 'node_stats_arc')
     .attr('id', d => 'node_stats_arc_' + d.index)
+    // os#1453 — CE QUI REND LE SECTEUR CLIQUABLE ET NOMMÉ. Un `data-*` et jamais un `id` : les
+    // `id` sont globaux, deux couronnes côte à côte se voleraient leurs dégradés (interdit
+    // documenté dans `UnitaryStarChart`). La délégation se fait sur le conteneur, qui survit aux
+    // redessins de d3.
+    .attr('data-repr-kind', 'part')
+    .attr('data-repr-id', d => d.data.id)
     .attr('d', arc)
-    .attr('fill', d => colorOf(d.data, d.index))
-    .attr('stroke', 'white')
-    .attr('stroke-width', 1)
+    .attr('fill', d => aspectOf(d.data.id)?.fill ?? colorOf(d.data, d.index))
+    .attr('fill-opacity', d => aspectOf(d.data.id)?.opacity ?? 1)
+    // Le liséré se demande EN BLOC : une part qui n'a rien dit de lui garde celui du tracé (blanc,
+    // 1 px), sans quoi une amorce de style le ferait disparaître partout.
+    .attr('stroke', d => {
+      const a = aspectOf(d.data.id)
+      if (!a || a.border_visible === undefined) return 'white'
+      return a.border_visible ? (a.border_color ?? 'white') : 'none'
+    })
+    .attr('stroke-width', d => {
+      const a = aspectOf(d.data.id)
+      if (!a || a.border_visible === undefined) return 1
+      return a.border_visible ? (a.border_thickness ?? 1) : 0
+    })
+    .style('cursor', opts.on_part_select ? 'pointer' : 'default')
+  if (opts.on_part_select) {
+    // TOUCHER SÉLECTIONNE, et c'est la règle de toute la maison : on clique un nœud, l'inspecteur
+    // montre sa forme, son libellé, sa valeur. Une part est un élément, elle répond pareil.
+    paths.on('click', (_evt, d) => opts.on_part_select?.(d.data.id))
+  }
   if (st.interaction_tooltip) paths.append('title').text(slice_title)
 
   // os#1431 — CE QUE PORTE UN SECTEUR : SON NOM, SA VALEUR, SON POURCENTAGE — chacun commandé par
