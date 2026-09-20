@@ -259,6 +259,12 @@ export interface Type_SunburstChartOptions {
    * secteurs, et le dessin est celui d'avant ce lot.
    */
   parts?: { [sector_id: string]: Type_SunburstPart }
+  /**
+   * os#1446 — le secteur qu on vient de toucher. L hote en fait ce qu il veut : la couronne
+   * selectionne la part correspondante, pour que l inspecteur montre sa forme, son libelle et sa
+   * valeur — comme pour un noeud du diagramme.
+   */
+  on_part_select?: (sector_id: string) => void
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
   /** Le titre de la figure (arbitrage du 18/09) ; vide, le nom de la racine. */
@@ -1127,6 +1133,14 @@ export const drawSunburstChart = (
       // dépliait le nœud dans le diagramme, sans que rien ne le dise. L'auteur choisit ce qu'il
       // veut — déplier seul est le défaut, le zoom radial un choix.
       .on('click', (_, d) => {
+        // os#1446 — TOUCHER SÉLECTIONNE, et cela s'ajoute sans rien retirer. C'est la règle de
+        // toute la maison : on clique un nœud, l'inspecteur montre sa forme, son libellé et sa
+        // valeur. Une part est un élément depuis os#1445, elle doit répondre pareil.
+        //
+        // AVANT le reste, et même quand le clic ne navigue pas (`none`) : un auteur qui a éteint
+        // la navigation veut d'autant plus pouvoir régler ses secteurs. Le secteur RÉSIDUEL se
+        // sélectionne aussi — il n'a pas de sujet, mais il a une figure, et c'est elle qu'on règle.
+        opts.on_part_select?.(d.id)
         if (d.is_residual || st.click_action === 'none') return
         if (st.click_action !== 'zoom') {
           // L'ascendance part du CENTRE, qui n'est pas dans le fil d'Ariane des secteurs : c'est

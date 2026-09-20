@@ -137,3 +137,33 @@ describe('resolveRepresentationElementTarget', () => {
       .toEqual(representationTarget(null))
   })
 })
+
+describe('os#1446 une part est une cible comme les autres', () => {
+
+  it('une part selectionnee donne la cible part, et non les reglages de figure', () => {
+    // LE DEFAUT QUE CE LOT FERME. Une part n est ni un noeud, ni un flux, ni une zone : sans son
+    // decompte, le total valait zero, l inspecteur croyait la selection VIDE et servait les
+    // reglages de la figure — pendant qu on venait de cliquer un secteur.
+    expect(resolveSelectionTarget({ parts: 1 }).kind).toBe('part')
+    expect(resolveSelectionTarget({ parts: 3 }).count).toBe(3)
+  })
+
+  it('une part gagne sur la representation active, comme toute selection', () => {
+    // La regle du dernier geste ne change pas : une selection presente l emporte tant que le
+    // dernier geste ne visait pas une figure.
+    expect(resolveSelectionTarget({ parts: 1 }, false, 'os.repr.donut', false).kind).toBe('part')
+    expect(resolveSelectionTarget({ parts: 1 }, false, 'os.repr.donut', true).kind).toBe('representation')
+  })
+
+  it('une part MELANGEE a un noeud donne mixed', () => {
+    expect(resolveSelectionTarget({ parts: 1, nodes: 1 }).kind).toBe('mixed')
+    expect(resolveSelectionTarget({ parts: 2, nodes: 1 }).count).toBe(3)
+  })
+
+  it('aucune part : rien ne change pour les natures d avant', () => {
+    // La contre-epreuve : ajouter un compte ne doit pas deplacer les cas existants.
+    expect(resolveSelectionTarget({ nodes: 2 }).kind).toBe('node')
+    expect(resolveSelectionTarget({}).kind).toBe('view')
+    expect(resolveSelectionTarget({ title: true }).kind).toBe('title')
+  })
+})
