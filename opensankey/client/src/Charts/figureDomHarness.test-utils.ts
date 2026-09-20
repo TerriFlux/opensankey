@@ -100,11 +100,55 @@ export const plainSunburstTree = (
   is_truncated: false
 })
 
-/** Les trois d'un coup : ce qu'un test de tracé pose en tête de fichier. */
+/** La marque d'un conteneur auquel un test a donné une taille (cf. `givePlainLayout`). */
+const PLAIN_SIZE = '__plain_size'
+
+/** La taille du plus proche ancêtre qu'un test a dimensionné, ou zéro. */
+const inheritedSize = (from: HTMLElement): number => {
+  let el: HTMLElement | null = from
+  while (el) {
+    const own = (el as unknown as { [k: string]: number })[PLAIN_SIZE]
+    if (own) return own
+    el = el.parentElement
+  }
+  return 0
+}
+
+/**
+ * FAIT DESCENDRE LA TAILLE D'UN CONTENEUR JUSQU'À SES ENFANTS.
+ *
+ * ⚠️ Ce n'est PAS une mise en page, et il ne faut pas le croire : jsdom n'en fait aucune, et tout ce
+ * qu'on peut honnêtement obtenir est « le cadre a une taille ». Sans cela, un tracé qui dessine dans
+ * un sous-élément — et c'est le cas dès qu'une figure porte un titre : le dessin descend d'un cran,
+ * dans `.figure_body` — mesure zéro, ne dessine rien, et le test qui cherche autre chose passe au
+ * vert pour la mauvaise raison. C'est le piège n° 1, déjà payé une fois.
+ *
+ * Un enfant hérite donc de la taille du plus proche ancêtre qu'un test a dimensionné, exactement
+ * comme le ferait un bloc en `width: 100%`. Ce qu'on ne modélise pas : la hauteur QUE PREND le titre.
+ * Un test qui voudrait vérifier qu'un dessin rétrécit quand le texte grandit ne peut pas se faire
+ * ici — ça se regarde à l'écran.
+ */
+export const givePlainLayout = (): void => {
+  const proto = HTMLElement.prototype as unknown as { [k: string]: unknown }
+  if (Object.getOwnPropertyDescriptor(proto, PLAIN_SIZE)) return
+  // La marque, posée une fois, sert aussi de garde de ré-entrance.
+  Object.defineProperty(proto, PLAIN_SIZE, { configurable: true, value: 0, writable: true })
+  ;(['clientWidth', 'clientHeight'] as const).forEach(name => {
+    Object.defineProperty(HTMLElement.prototype, name, {
+      configurable: true,
+      get(this: HTMLElement) {
+        return inheritedSize(this)
+      }
+    })
+  })
+}
+
+/** Les quatre d'un coup : ce qu'un test de tracé pose en tête de fichier. */
 export const givePlainDrawingEnvironment = (): void => {
   giveStructuredClone()
   giveResizeObserver()
   givePlainSvgGeometry()
+  givePlainLayout()
 }
 
 /**
@@ -115,8 +159,10 @@ export const givePlainDrawingEnvironment = (): void => {
  */
 export const sizedContainer = (side: number = 400): HTMLElement => {
   const el = document.createElement('div')
-  Object.defineProperty(el, 'clientWidth', { value: side, configurable: true })
-  Object.defineProperty(el, 'clientHeight', { value: side, configurable: true })
+  // La taille est posée SUR LE CONTENEUR et descend à ses enfants (cf. `givePlainLayout`) : sans
+  // cela, un tracé qui dessine dans `.figure_body` — dès qu'une figure porte un titre — mesurerait
+  // zéro et ne dessinerait rien.
+  ;(el as unknown as { [k: string]: number })[PLAIN_SIZE] = side
   el.getBoundingClientRect = () => ({
     width: side, height: side, top: 0, left: 0, right: side, bottom: side, x: 0, y: 0,
     toJSON: () => ({})

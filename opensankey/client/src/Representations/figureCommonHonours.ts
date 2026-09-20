@@ -60,6 +60,19 @@ export const FIGURE_COMMON_HONOURS: readonly string[] = [
   'title_position',
   'title_font_size',
   'title_bold',
+  // os#1477 — LES CINQ QUI ATTENDAIENT, entrées le jour où la couronne et les barres ont su les
+  // DESSINER. Elles étaient tenues dehors exprès : un socle qu'on ne tient pas devient un test
+  // rouge qu'on apprend à ignorer, ce qui est pire que pas de test.
+  'title_italic',
+  'title_font_family',
+  'title_color',
+  'title_align',
+  'title_wrap',
+
+  // LES ZONES DE TEXTE QUE L'AUTEUR AJOUTE. Le titre n'est plus un cas à part depuis os#1449 :
+  // c'est la première d'entre elles. Une figure qui ne déclare pas ce dépôt ne perd pas un réglage,
+  // elle perd du texte écrit par l'auteur — au premier rechargement.
+  'text_zones',
 
   // LA LÉGENDE.
   'legend_visible',
@@ -109,33 +122,17 @@ export const FIGURE_COMMON_HONOURS: readonly string[] = [
   'label_positions'
 ] as const
 
-/**
- * CE QUI DEVRAIT ÊTRE DANS LE SOCLE ET N'Y EST PAS ENCORE — os#1469.
- *
- * Ces clés sont communes par nature : le sunburst les sert, la couronne et les barres non. Elles ne
- * sont pas dans la liste ci-dessus parce qu'un socle qu'on ne tient pas n'est pas un socle — il
- * deviendrait un test rouge qu'on apprend à ignorer, ce qui est pire que pas de test.
- *
- * Les y faire entrer demande du DESSIN et pas seulement une déclaration, et c'est pour ça que ça
- * n'a pas été fait dans le même geste :
- *
- *   - la typographie du TITRE (police, italique, encre, alignement, retour à la ligne) : la
- *     couronne et les barres écrivent leur titre par `figureTitleOf`, qui n'en porte que cinq
- *     clés, là où le sunburst passe par les ZONES DE TEXTE et les porte toutes ;
- *   - `text_zones` : la conséquence de la même chose. Le titre n'est plus un cas à part depuis
- *     os#1449 — c'est la première zone de texte d'une figure, et l'auteur peut en ajouter
- *     d'autres. Le sunburst le fait ; les deux autres en sont restées au titre seul.
- *
- * Unifier les deux chemins de titre est le prochain pas, et il fera entrer les six d'un coup.
- */
-export const FIGURE_COMMON_HONOURS_A_VENIR: readonly string[] = [
-  'title_font_family',
-  'title_italic',
-  'title_color',
-  'title_align',
-  'title_wrap',
-  'text_zones'
-] as const
+// os#1477 — `FIGURE_COMMON_HONOURS_A_VENIR` A DISPARU, ET C'EST LE POINT DU LOT.
+//
+// Six clés y attendaient, communes par nature mais servies du seul disque : la typographie complète
+// du titre, et `text_zones`. Elles étaient tenues hors du socle EXPRÈS — un socle qu'on ne tient pas
+// devient un test rouge qu'on apprend à ignorer, ce qui est pire que pas de test.
+//
+// Ce qui les retenait n'était pas une déclaration mais du DESSIN : la couronne et les barres
+// écrivaient leur titre par un traceur qui ne savait poser qu'un bloc et n'en portait que cinq
+// réglages. Depuis qu'elles montent leurs textes comme le disque, les six sont entrées d'un coup et
+// la liste d'attente n'a plus d'objet. Si une septième devait attendre un jour, elle se réécrirait —
+// mais l'état sain est qu'il n'y en ait aucune.
 
 /**
  * Ce qui manque à une nature pour servir le socle, dans l'ordre de la liste.
