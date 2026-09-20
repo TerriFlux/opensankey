@@ -32,9 +32,10 @@ import {
   BARS_STYLE_DEFAULTS, DONUT_STYLE_DEFAULTS, labelTextWidthPx, wrapLabelToBox
 } from './figureChartStyle'
 import type {
-  Type_FigureChartStyle, Type_FigurePartLabelAspect, Type_FigureTitle
+  Type_FigureChartStyle, Type_FigurePartLabelAspect, Type_FigureText
 } from './figureChartStyle'
-import { mountFigureTitle } from './figureTitle'
+// os#1477 — LE MÊME TRACEUR DE TEXTE QUE LE DISQUE (cf. `prepareContainer`).
+import { mountFigureTextZones } from '../Representations/figureTextZones'
 
 export interface Type_StatSlice {
   id: string
@@ -70,8 +71,20 @@ export interface Type_ChartOptions {
   // os#1425 — LA MISE EN FORME, réglée par l'auteur sur les clés du catalogue (légende, parts,
   // centre, étiquettes, échelle, info-bulle, mentions). Absente : les défauts du tracé d'hier.
   style?: Type_FigureChartStyle
-  // Le titre de la figure (arbitrage du 18/09), et ce qu'il écrit quand son texte est vide.
-  title?: Type_FigureTitle
+  /**
+   * os#1477 — TOUT LE TEXTE QUE LA FIGURE ÉCRIT À CÔTÉ DE SON DESSIN, titre compris, dans l'ordre
+   * où il se pose. Même option que le disque, et pour la même raison : un titre est la zone n° 0.
+   *
+   * UNE FONCTION et non une liste, parce que le titre à texte vide écrit le NOM DU SUJET, et que
+   * l'appelant seul le connaît — c'est `title_fallback` qui le lui donne.
+   */
+  texts?: (subject_name: string) => Type_FigureText[]
+  /**
+   * Ce que le titre écrit quand son texte est vide : le nom du sujet regardé.
+   *
+   * Il ne sert PAS qu'au titre — le centre d'une couronne l'écrit aussi (`centre_content`), et
+   * c'est pourquoi il reste une option à part plutôt que d'être plié dans `texts`.
+   */
   title_fallback?: string
   /**
    * os#1460 — L'ASPECT D'UNE PART, quand elle en porte un.
@@ -246,10 +259,18 @@ export const countLifted = (bar_pixels: number[], floor_px: number = MIN_VISIBLE
   bar_pixels.filter(px => visibilityLift(px, floor_px) > 1).length
 
 // Vide le conteneur et renvoie sa sélection d3 + ses dimensions utiles.
-/** Vide le conteneur, pose le titre s'il y en a un, et rend où dessiner et sur quelle place. */
+/**
+ * Vide le conteneur, pose les zones de texte s'il y en a, et rend où dessiner et sur quelle place.
+ *
+ * os#1477 — LE MÊME TRACEUR QUE LE DISQUE. Le titre n'est plus un mécanisme à part depuis os#1449 :
+ * c'est la PREMIÈRE zone de texte d'une figure, et l'auteur peut en ajouter d'autres. La couronne
+ * et les barres en étaient restées à `mountFigureTitle`, qui ne savait poser qu'un bloc et n'en
+ * portait que cinq réglages sur onze — d'où six clés communes tenues hors du socle faute d'être
+ * servies ici.
+ */
 const prepareContainer = (container: HTMLElement, opts: Type_ChartOptions = {}) => {
   d3.select(container).selectAll('*').remove()
-  const host = mountFigureTitle(container, opts.title, opts.title_fallback ?? '')
+  const host = mountFigureTextZones(container, opts.texts?.(opts.title_fallback ?? '') ?? [])
   return { sel: d3.select(host), width: host.clientWidth, height: host.clientHeight }
 }
 

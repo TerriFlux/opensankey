@@ -127,11 +127,25 @@ export const SHARED_HONOURS = {
   legend_font_size: {},
   legend_width: {},
   // Le titre : l'onglet Titre de l'inspecteur, comme pour le diagramme (arbitrage du 18/09).
+  //
+  // os#1477 — ET TOUTE SA TYPOGRAPHIE, comme sur le disque. Ces cinq-là étaient les seules servies
+  // ici, parce que le tracé écrivait son titre par un traceur qui ne portait qu'elles. Depuis qu'il
+  // monte ses textes comme le disque (`mountFigureTextZones`), il n'y a plus de raison de proposer
+  // le gras et pas l'italique — c'est mot pour mot le « look and feel qui diverge » de Julien.
   title_visible: {},
   title_text: {},
   title_position: {},
   title_font_size: {},
   title_bold: {},
+  title_italic: {},
+  title_font_family: {},
+  title_color: {},
+  title_align: {},
+  title_wrap: {},
+  // LES ZONES DE TEXTE QUE L'AUTEUR AJOUTE (os#1449). Le titre est la première ; celles-ci sont les
+  // suivantes, et c'est un DÉPÔT — comme `label_positions`, aucun contrôle ne le rend champ à
+  // champ, mais une nature qui ne le déclare pas les perd au premier rechargement.
+  text_zones: { sort: 'identity' as const },
   notes_visible: {},
   interaction_tooltip: {}
 }
