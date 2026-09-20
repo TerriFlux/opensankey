@@ -31,6 +31,58 @@
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import type { CreateToastFnReturn } from '@chakra-ui/react'
 
+/**
+ * os#1471 — LES REGLES D'UN DOCUMENT DE PARTS, ECRITES UNE SEULE FOIS.
+ *
+ * ⚠️ CE MODULE EXISTE PARCE QUE LA DUPLICATION A MORDU DEUX FOIS, et la seconde etait annoncee.
+ *
+ * TypeScript n'a pas d'heritage multiple : `Class_PartsDocument` descend du document d'OpenSankey,
+ * `Class_PartsDocumentOSP` du document d'OpenSankey+ — et dans un espace de travail OS+, c'est la
+ * seconde qui sert (os#1454). Les deux portaient donc les MEMES regles, recopiees.
+ *
+ * Le test d'os#1454 le disait en toutes lettres : « la classe OS+ REECRIT ces regles ; si l'une
+ * d'elles etait oubliee ici, elle ne manquerait qu'en OS+, c'est-a-dire chez tous les
+ * utilisateurs ». C'est exactement ce qui est arrive a la cinquieme regle — le catalogue d'icones
+ * partage (os#1465) — posee cote OS seulement. Julien, deux fois : « l'icone ne marche toujours
+ * pas ». Elle marchait, dans la classe que personne n'utilise.
+ *
+ * Une regle ajoutee ici vaut desormais pour les deux, sans que personne ait a y penser.
+ */
+export const applyPartsDocumentRules = (
+  document: Class_ApplicationData,
+  source: Class_ApplicationData
+): void => {
+  // (1) UN SEUL HISTORIQUE — ET LE CHAMP, PAS SEULEMENT L'ACCESSEUR. `Class_ApplicationData` lit
+  // tantot `history`, tantot le champ directement : ne surcharger que le getter donnerait DEUX
+  // piles, divergentes en silence (piege vecu au lot 6 des figures).
+  ;(document as unknown as { _history: unknown })._history = source.history
+
+  // (2) TOUT GESTE D'ENREGISTREMENT PART A LA SOURCE.
+  document.file_holder = source
+
+  // (3) AUCUNE VIGNETTE NE REND CE DOCUMENT : il n'a pas de conteneur a lui.
+  document.detachOffscreen()
+
+  // (4) LE DROIT D'ECRIRE VIENT DE LA SOURCE : les parts d'une figure dans une page publiee ne se
+  // repeignent pas.
+  document.edition_allowed = source.edition_allowed
+
+  // (5) LE CATALOGUE D'ICONES EST CELUI DE LA SOURCE — os#1465, et c'est un defaut vecu.
+  //
+  // Un document de parts en fabrique un neuf comme tout document, et personne n'y avait jamais rien
+  // mis. La consequence etait double, et la premiere est la pire : le SELECTEUR d'icones de
+  // l'inspecteur lit le catalogue du document ACTIF — donc celui des parts. Il n'avait rien a
+  // proposer. L'auteur ne pouvait meme pas choisir, avant de ne pas voir.
+  //
+  // PARTAGE PAR REFERENCE, comme l'historique ci-dessus et pour la meme raison : un pictogramme
+  // nomme dans le diagramme doit designer le meme dessin dans la figure. Deux catalogues, c'est
+  // deux verites — et celle de la figure serait vide.
+  const source_sankey = source.drawing_area?.sankey
+  if (source_sankey !== undefined && document.drawing_area !== undefined) {
+    document.drawing_area.sankey.icon_catalog = source_sankey.icon_catalog
+  }
+}
+
 export class Class_PartsDocument extends Class_ApplicationData {
 
   /**
@@ -50,38 +102,10 @@ export class Class_PartsDocument extends Class_ApplicationData {
     super(source.workspace)
     this._source = source
 
-    // (1) UN SEUL HISTORIQUE — ET LE CHAMP, PAS SEULEMENT L'ACCESSEUR. `Class_ApplicationData` lit
-    // tantôt `history`, tantôt le champ `this._history!` directement. Ne surcharger que le getter
-    // donnerait DEUX piles, divergentes en silence : c'est le piège vécu au lot 6 des figures.
-    this._history = source.history
-
-    // (2) TOUT GESTE D'ENREGISTREMENT PART À LA SOURCE.
-    this.file_holder = source
-
-    // (3) AUCUNE VIGNETTE NE REND CE DOCUMENT : il n'a pas de conteneur à lui.
-    this.detachOffscreen()
-
-    // Le droit d'écrire vient de la SOURCE : les parts d'une figure dans une page publiée ne se
-    // repeignent pas.
-    this.edition_allowed = source.edition_allowed
-
-    // (4) LE CATALOGUE D'ICÔNES EST CELUI DE LA SOURCE — os#1465, et c'est un défaut vécu.
-    //
-    // Julien, à l'écran : « pour l'instant l'icône ça ne marche pas sur le sunburst ». Le tracé
-    // était bon, la résolution aussi : c'est le CATALOGUE qui était vide. Un document de parts en
-    // fabrique un neuf comme tout document, et personne n'y avait jamais rien mis.
-    //
-    // La conséquence était double, et la première est la pire : le sélecteur d'icônes de
-    // l'inspecteur lit le catalogue du document ACTIF — donc celui des parts. Il n'avait rien à
-    // proposer. L'auteur ne pouvait même pas choisir, avant de ne pas voir.
-    //
-    // PARTAGÉ PAR RÉFÉRENCE, comme l'historique et le porteur de fichier juste au-dessus, et pour
-    // la même raison : un pictogramme nommé dans le diagramme doit désigner le même dessin dans
-    // la figure. Deux catalogues, c'est deux vérités — et celle de la figure serait vide.
-    const source_sankey = source.drawing_area?.sankey
-    if (source_sankey !== undefined && this.drawing_area !== undefined) {
-      this.drawing_area.sankey.icon_catalog = source_sankey.icon_catalog
-    }
+    // os#1471 — LES CINQ REGLES SONT ECRITES UNE FOIS, ET LES DEUX CLASSES LES APPLIQUENT.
+    // Les recopier ici a coute deux defauts, dont un chez tous les utilisateurs d'OS+ : cf.
+    // l'en-tete de `applyPartsDocumentRules`.
+    applyPartsDocumentRules(this, source)
   }
 
   /**
@@ -136,6 +160,7 @@ let _parts_document_factory: Type_PartsDocumentFactory = (source) => new Class_P
  * son espace de travail exige — jamais au chargement du module (effet de bord), toujours depuis
  * l'enregistrement de ses représentations.
  */
+
 export const setPartsDocumentFactory = (factory: Type_PartsDocumentFactory): void => {
   _parts_document_factory = factory
 }
