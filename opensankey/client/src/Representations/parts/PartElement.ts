@@ -34,6 +34,7 @@
 // qu'une part porte déjà son ALIAS sans mécanisme neuf.
 
 import { Class_BaseShape } from '../../Elements/Element'
+import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { DRAW_TOPIC } from '../../types/EventBus'
 import type { Class_DrawingArea } from '../../types/DrawingArea'
 import type { Class_ElementStyle } from '../../Elements/Element'
@@ -69,6 +70,9 @@ export class Class_PartElement extends Class_BaseShape {
     parent_svg = 'g_elements_sankey'
   ) {
     super(id, drawing_area, parent_svg, default_style)
+    // AVANT de relâcher les actions : sinon la première écriture d'attribut chercherait une
+    // méthode qui n'existe pas encore.
+    this.installRedrawActions()
     // Les feuilles de la hiérarchie relâchent ce drapeau à la fin de leur constructeur (cf.
     // `Class_ProtoElement`) : sans cela, les setters dynamiques resteraient muets pour toujours.
     this._suspend_actions = false
@@ -164,25 +168,42 @@ export class Class_PartElement extends Class_BaseShape {
   // aussi les actions qu'on voudrait un jour.
 
   /**
-   * os#1457 — ELLE NE SE DESSINE PAS, MAIS ELLE DEMANDE QU'ON LA REDESSINE.
+   * os#1459 — ELLE NE SE DESSINE PAS, MAIS ELLE DEMANDE QU'ON LA REDESSINE.
    *
-   * Julien, à l'écran : « si on change les attributs ce n'est pas agissant ». C'était exact et
-   * c'était ici. Le tracé lit l'aspect des parts AU MOMENT où il dessine (`part_aspect`) ; poser
-   * une couleur sur une part changeait donc le modèle et rien à l'écran, jusqu'au prochain
-   * redessin provoqué par autre chose. Un réglage qui ne se voit pas est un réglage qu'on croit
-   * cassé.
+   * Julien, deux fois : « si on change les attributs ce n'est pas agissant », puis « les attributs
+   * ne sont toujours pas agissants sur les parts ». La seconde fois était de ma faute : j'avais
+   * surchargé `draw()`, et **un setter d'attribut n'appelle jamais `draw()`**. Il appelle les
+   * ACTIONS DÉCLARÉES à côté de l'attribut (`drawShape`, `drawNameLabel`, `drawValueLabel`…, cf.
+   * `createDynamicProperties` : `attribute.actions.forEach(...)`). Ma porte n'était jamais
+   * franchie.
    *
-   * Une part n'a pas de représentation SVG à elle — c'est le graphique qui trace — donc elle ne
-   * peut pas se redessiner. Elle ANNONCE : `DRAW_TOPIC` sur le document SOURCE, celui que la
-   * vignette écoute déjà pour se rafraîchir (`MainZoneTabs`, abonnement du carreau). Rien de
-   * nouveau à câbler, et aucune boucle : le redessin reconstruit les parts par `restoreStorage`,
-   * qui écrit le sac sans passer par les setters dynamiques, donc sans redemander de dessin.
+   * On installe donc TOUTES les actions du catalogue sur l'instance, chacune demandant le même
+   * redessin. Énumérées depuis `ALL_ATTRIBUTES_CONFIG` et non écrites à la main : une action
+   * ajoutée demain au catalogue sera servie sans que personne ait à y penser — c'est précisément
+   * la liste qu'on oublie de tenir à jour.
+   *
+   * Le redessin lui-même est une ANNONCE : `DRAW_TOPIC` sur le document source, celui que la
+   * vignette écoute déjà (`MainZoneTabs`). Pas de boucle : la reconstruction des parts écrit leur
+   * sac par `restoreStorage`, qui ne passe pas par les setters dynamiques.
    */
-  public override draw(): void {
+  protected requestFigureRedraw(): void {
     const source = (this.drawing_area?.application_data as unknown as {
       source?: { menu_configuration?: { notify?: (topic: string) => void } }
     })?.source
     source?.menu_configuration?.notify?.(DRAW_TOPIC)
   }
+
+  /** Installe les actions du catalogue sur cette part. Appelé une fois, au constructeur. */
+  protected installRedrawActions(): void {
+    const actions = new Set<string>()
+    Object.values(ALL_ATTRIBUTES_CONFIG).forEach(attr => {
+      (attr as { actions?: string[] }).actions?.forEach(a => actions.add(a))
+    })
+    actions.forEach(name => {
+      (this as unknown as { [k: string]: () => void })[name] = () => this.requestFigureRedraw()
+    })
+  }
+
+  public override draw(): void { this.requestFigureRedraw() }
   public override unDraw(): void { /* rien à retirer du DOM */ }
 }

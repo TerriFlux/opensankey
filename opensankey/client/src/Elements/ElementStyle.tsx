@@ -1,4 +1,9 @@
 import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue, default_element_color } from './ElementsAttributesConfig'
+// os#1458 — le TYPE seul : `Class_ElementStyle` vit dans `Element.tsx`, qui importe deja ce
+// module. Un import de VALEUR refermerait le cycle que `elementInitCycle.test.ts` garde ; un
+// import de type est efface a la compilation et n en cree aucun.
+import type { Class_ElementStyle } from './Element'
+
 
 type ElementStyleConfig = Partial<{
   [K in keyof typeof ALL_ATTRIBUTES_CONFIG]: ExtractConfigValue<typeof ALL_ATTRIBUTES_CONFIG[K]>
@@ -480,3 +485,56 @@ export const node_unitary_styles: readonly ElementStyleKey[] = [
 // aujourd'hui : les barres ajouteront le leur quand elles auront leurs parts, et le geste de semis
 // (`Representations/parts/partStyle.seedPartStyles`) n'aura pas à changer.
 export const figure_part_styles: readonly ElementStyleKey[] = [FigurePartStyle] as const
+
+// ── L'HÔTE DE STYLES ─────────────────────────────────────────────────────────────────────────
+//
+// os#1458 — CE QUI DÉTIENT UNE FAMILLE DE STYLES NOMMÉS.
+//
+// Julien : « un nœud, un flux, une ZDT, une part sont des éléments avec des attributs, et ces
+// attributs peuvent être gérés par une cascade de styles ; ce mécanisme doit être général. Et le
+// graphe a aussi des attributs, et je crois qu'on pourra dire aussi que le workspace a des
+// attributs. » Puis : « normalement, avec la factorisation, tout devient simple. »
+//
+// L'INVENTAIRE A MONTRÉ QUE LE MÉCANISME EXISTE DÉJÀ DEUX FOIS, et qu'il est le même : une figure
+// porte sa surcharge propre et ses styles nommés comme un élément, et résout par la MÊME cascade
+// (`Class_ProtoElement.getElementProperty`, cf. l'en-tête de `Representations/Figure.ts`). Ce qui
+// n'était pas général, ce sont deux choses seulement :
+//  - OÙ vivent les styles : `Class_Sankey._styles` d'un côté, `Class_FigureNature._styles` de
+//    l'autre ;
+//  - l'INTERFACE : l'éditeur de styles (famille, liste, « + », renommage) sait déjà recevoir ses
+//    attributs et ses catégories en paramètre, mais lisait `sankey.styles_list` EN DUR.
+//
+// Cette interface-ci est la couture. Elle ne décrit rien de neuf : c'est très exactement ce que
+// l'éditeur consommait déjà du Sankey, nommé. `Class_Sankey` la satisfait sans une ligne de plus ;
+// la nature d'une figure la satisfera au lot suivant ; l'espace de travail le jour où ses réglages
+// deviendront des attributs.
+//
+// LE CRITÈRE DE RÉUSSITE EST SOUSTRACTIF : une nature de plus ne doit coûter AUCUNE ligne
+// d'interface. Si on se met à écrire des `if` par nature, la factorisation n'a pas eu lieu.
+
+export interface Type_StyleHost {
+  /** Les styles de la famille, dans l'ordre d'affichage. */
+  readonly styles_list: Class_ElementStyle[]
+  /** Les mêmes, par identifiant. */
+  readonly styles_dict: { [id: string]: Class_ElementStyle }
+  /** Crée un style vide, nommé par défaut, et le rend. */
+  addNewDefaultElementStyle(): Class_ElementStyle
+  /** Retire un style de la famille ; ce qui le suivait retombe sur la cascade. */
+  deleteElementStyle(style: Class_ElementStyle): void
+  /**
+   * Assigne ou retire ce style à ce que l'auteur a sélectionné.
+   *
+   * `targets` est la CIBLE EXPLICITE, et elle n'est pas une commodité : un Sankey connaît sa
+   * sélection et la lit lui-même (c'est ce qu'il a toujours fait) ; une nature de figure, elle,
+   * ne sait pas quelle figure est active — elle décrit une sorte, pas un objet à l'écran. Le seul
+   * qui le sache est l'appelant, qui tient déjà la liste de ce qu'il édite.
+   *
+   * Absent : l'hôte se débrouille avec ce qu'il sait. C'est ce qui permet au Sankey de satisfaire
+   * cette interface sans une ligne de plus.
+   */
+  switchElementStyle(style: Class_ElementStyle, add: boolean, targets?: unknown[]): void
+  /** Rend au style ses valeurs d'usine, sans le supprimer. */
+  resetAttrStyle(style: Class_ElementStyle): void
+  /** Retire UNE clé posée sur ce style ; elle repasse à ce dont elle hérite. */
+  deleteLocalAttrStyle(style: Class_ElementStyle, key: string): void
+}
