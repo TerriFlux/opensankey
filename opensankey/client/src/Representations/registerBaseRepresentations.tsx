@@ -27,6 +27,8 @@
 import React from 'react'
 import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
 import { drawSunburstRepresentation, SUNBURST_ZOOM } from './SunburstRepresentation'
+// os#1473 — la couronne et les barres sont des natures d'OpenSankey, comme le sunburst.
+import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
 // os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
 import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
@@ -282,4 +284,8 @@ export const registerBaseRepresentations = (): void => {
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
     })
   })
+
+  // os#1473 — LA COURONNE ET LES BARRES, ici et non plus en OS+ : elles n'ont rien de
+  // particulier, et leurs tracés ont toujours vécu dans ce paquet.
+  registerAnalysisRepresentations()
 }
