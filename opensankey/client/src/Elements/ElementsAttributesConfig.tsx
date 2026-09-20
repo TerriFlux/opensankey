@@ -45,6 +45,9 @@ import type { Class_NodeBase } from './NodeBase'
 // consomme l'autre pendant son evaluation.
 import { Class_ElementStyle } from './Element'
 import { isLegendElementId } from './legendIds'
+// os#1464 — `import type` OBLIGATOIRE : `attributeScope` lit ALL_ATTRIBUTES_CONFIG, l'importer en
+// VALEUR ici refermerait le cycle. Un type s'efface à la compilation, il n'y a donc pas de cycle.
+import type { Type_AttributeScope } from './attributeScope'
 import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 // os#1421 — type seul : la liste des placements d'un nœud (cf. Representations/Placement).
 import type { Type_FigurePlacement } from '../Representations/Placement'
@@ -256,6 +259,15 @@ export interface AttributeConfig<T> {
    * attributs des nœuds et des flux, qui sont tous des attributs de style.
    */
   sort?: 'style' | 'navigation' | 'identity'
+  /**
+   * os#1464 — LES NATURES D'ÉLÉMENT À QUI CET ATTRIBUT S'ADRESSE. Absent = toutes, et c'est
+   * pourquoi l'ajout de ce champ ne change rien aux attributs qui ne le portent pas.
+   *
+   * Se lit `{ except: ['part'] }` (« pas pour les parts ») ou `{ only: ['node'] }` (« pour les
+   * nœuds seulement »). L'interface ne connaît aucune nature : elle demande, cette déclaration
+   * répond (cf. `attributeScope.ts`). C'est le `if` par nature qu'on n'écrira pas.
+   */
+  scope?: Type_AttributeScope
 }
 export type ConfigType = Record<string, AttributeConfig<unknown>>
 
@@ -1214,6 +1226,14 @@ export const BASE_LABEL_CONFIG = {
   } satisfies AttributeConfig<string>,
 
   // Position
+  //
+  // os#1464 — CE BLOC N'EST PAS MASQUÉ SUR UNE PART, ET C'EST UN ARBITRAGE. Aucun tracé de figure
+  // ne lit ces clés aujourd'hui : « les options de placement ne marchent pas » (Julien). Mais elles
+  // ont un SENS — « étiquette au-dessus, dedans, en dessous » pour une barre ; « dans l'anneau ou
+  // sortie du disque » pour un secteur, que la couronne sait déjà faire par `name_label_callout`.
+  // Un attribut qui a du sens se met en œuvre, il ne se cache pas : masquer ici retirerait un
+  // réglage que l'auteur redemandera, et le manque se découvrirait des mois plus tard. Ce qui
+  // manque est le TRACÉ, et c'est un autre lot.
   horiz: {
     default: 'middle' as Type_TextHPos,
     type: (() => 'middle') as (() => Type_TextHPos),
@@ -1966,6 +1986,10 @@ export const BASE_LABEL_CONFIG = {
     type: (() => 'in') as (() => 'both' | 'in' | 'out'),
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
+    // os#1464 — Σin → Σout n'a de sens que là où des flux ENTRENT et SORTENT : un nœud. Écrit en
+    // liste blanche et non « sauf flux, sauf zone, sauf part » : c'est la nature qui le réclame qui
+    // se nomme, et la nature suivante n'héritera pas d'un réglage qui ne la regarde pas.
+    scope: { only: ['node'] } satisfies Type_AttributeScope,
     labels: {
       en: 'In/Out totals',
       fr: 'Totaux entrants/sortants',
@@ -2480,6 +2504,10 @@ export const VALUE_LABEL_CONFIG = {
     type: (() => false) as (() => boolean),
     category: 'value_label' as const,
     actions: ['drawValueLabel', 'drawNameLabel'] as BaseActionType[],
+    // os#1464 — coller la valeur au libellé plutôt qu'à la forme suppose que l'auteur place les
+    // deux : c'est vrai d'un nœud et d'un flux. Une zone de texte n'affiche pas de valeur, et sur
+    // une part c'est le graphique qui place l'une et l'autre.
+    scope: { only: ['node', 'link'] } satisfies Type_AttributeScope,
     labels: {
       en: 'Stick to label',
       fr: 'Coller au libellé',
@@ -4492,6 +4520,65 @@ const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: st
         actions: [drawAction] as BaseActionType[],
       },
     })
+}
+
+// ==================================================================================================
+// os#1464 — OÙ SE DÉCLARE LA PORTÉE, ET POURQUOI À TROIS ENDROITS
+// ==================================================================================================
+//
+// Le catalogue porte environ 350 attributs — mesurés À L'EXÉCUTION, car il se CONSTRUIT par des
+// fonctions (`createLabelConfig`, `createConfigWithPrefix`) : aucune lecture du fichier ne le voit
+// en entier. Les tracés de figure en lisent vingt-quatre. Une déclaration par attribut ne suffit
+// donc pas à elle seule, et deux compléments sont nécessaires :
+//
+//  1. `AttributeConfig.scope`, à côté de l'attribut — le cas ordinaire, et le seul qui se lit en
+//     même temps que lui. Il vaut pour TOUTES les copies préfixées de cette déclaration.
+//  2. `ATTRIBUTE_KEY_SCOPES`, quand la portée dépend du PRÉFIXE : `border_radius` décrit les coins
+//     de la forme (`shape_border_radius`) autant que ceux du fond d'une étiquette
+//     (`name_label_background_border_radius`), et les deux ne se valent pas.
+//  3. `ATTRIBUTE_FAMILY_SCOPES`, quand c'est une famille entière qui n'a pas d'objet : « une part
+//     n'a pas de stock » s'écrit une fois, pas soixante-quatre.
+//
+// ET LA BARRE EST HAUTE POUR Y INSCRIRE QUOI QUE CE SOIT. Julien : « tous les attributs qui
+// existent et qui ont du sens, il faut les implémenter, sauf si c'est vraiment trop compliqué ».
+// Masquer est donc le DERNIER recours : un réglage qui n'a pas encore de tracé se corrige en
+// l'écrivant, un réglage retiré à tort ne se découvre que des mois plus tard. Ne sort de
+// l'interface que ce qui n'a AUCUN sens concevable pour la nature visée.
+
+/**
+ * La portée d'une clé PRÉFIXÉE, quand elle ne vaut pas pour les autres copies de sa déclaration.
+ *
+ * Toutes celles qui suivent disent la même chose, et c'est l'exemple de Julien : LA FORME D'UNE
+ * PART EST CALCULÉE À PARTIR DE SA VALEUR. Un secteur de couronne, une barre : c'est le graphique
+ * qui en fixe la géométrie, et aucun tracé ne pourra jamais honorer une taille minimale, une marge,
+ * une largeur fixe, un type de forme ni un rayon de coins posés à la main dessus. Les mêmes clés
+ * sous un préfixe de FOND d'étiquette (`name_label_background_*`) ne sont PAS concernées : un
+ * cartouche derrière une étiquette de secteur a du sens, il reste donc offert.
+ */
+export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
+  shape_type: { except: ['part'] },
+  shape_min_width: { except: ['part'] },
+  shape_min_height: { except: ['part'] },
+  shape_width_locked: { except: ['part'] },
+  shape_box_width: { except: ['part'] },
+  shape_border_radius: { except: ['part'] },
+  shape_margin_left: { except: ['part'] },
+  shape_margin_right: { except: ['part'] },
+  shape_margin_top: { except: ['part'] },
+  shape_margin_bottom: { except: ['part'] }
+}
+
+/**
+ * La portée d'une FAMILLE entière — la `category` de la déclaration, que les fabriques de préfixe
+ * posent sur chaque clé dérivée. Rien à tenir à jour ici quand une clé s'ajoute à une famille :
+ * elle hérite de la portée de la sienne.
+ *
+ * `stock_label` — un stock est une quantité qu'un NŒUD garde d'une période à l'autre. Une part de
+ * figure est une tranche de valeur : elle ne garde rien, et les soixante-quatre clés de cette
+ * famille (la boîte, son fond, ses marges) n'ont pas de sujet sur elle.
+ */
+export const ATTRIBUTE_FAMILY_SCOPES: { [category: string]: Type_AttributeScope } = {
+  stock_label: { except: ['part'] }
 }
 
 export const ALL_ATTRIBUTES_CONFIG = {
