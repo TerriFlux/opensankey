@@ -20,16 +20,18 @@
 // au bundle plus qu'elle ne ferait gagner.
 
 import * as d3 from '../d3Modules'
-// os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
-import { drawFigureLabelBackground } from './figureLabelBackground'
+// os#1476 — LE DESSIN COMMUN D'UN TEXTE DE PART : la typographie, le cartouche et le décalage fin
+// s'appliquent par le même module sur les trois natures (le cartouche y est posé, cf.
+// `applyPartTextStyle`). Ce qui reste au disque, c'est OÙ va un texte dans un repère qui tourne.
+import { applyPartTextStyle, partTextPlacement } from './figurePartText'
+import type { Type_FigureTextDefaults } from './figurePartText'
 // os#1474 — LE LECTEUR COMMUN. Le disque ne lit plus les cles lui-meme : il compose son style a
 // partir de ce que la part a dit, comme la couronne et les barres.
 import { partAspect } from './partAspect'
-import type { Type_FigurePart } from './partAspect'
+import type { Type_FigurePart, Type_FigurePartAspect } from './partAspect'
 import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
-import type { Type_FigureLabelBackground } from './figureLabelBackground'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
-import type { Type_FigureText } from './figureChartStyle'
+import type { Type_FigureText, Type_FigurePartTextAspect } from './figureChartStyle'
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 
@@ -40,10 +42,11 @@ import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
  * rendues à l'auteur une par une. Les défauts reproduisent donc exactement ce que le tracé faisait
  * avant ce lot — une couronne déjà enregistrée ne change pas d'aspect.
  */
-// os#1468 — LE CARTOUCHE D'UNE ÉTIQUETTE est décrit par le MÊME contrat que sur la couronne et les
-// barres (`Type_FigureLabelBackground`) : Julien veut « le même look and feel d'un graphe à
-// l'autre, comme sur Excel », et cela commence par ne pas redécrire la même chose trois fois.
-export interface Type_SunburstStyle extends Type_FigureLabelBackground {
+// os#1476 — LE CARTOUCHE N'EST PLUS DÉCRIT ICI, et c'est mieux ainsi : il n'a jamais été un
+// réglage de FIGURE — aucune couronne ne pose de fond derrière toutes ses étiquettes à la fois.
+// C'est une chose qu'une PART dit d'elle-même, et elle se lit maintenant là où elle est dite
+// (`Type_FigurePartTextAspect`), pour être dessinée par le module commun aux trois natures.
+export interface Type_SunburstStyle {
   /** 'palette' : les teintes de la figure ; 'model' : la couleur du nœud dans le diagramme. */
   color_source: 'palette' | 'model'
   /** La clarté dit la profondeur. Coupé, tous les anneaux d'une branche ont la même teinte. */
@@ -297,10 +300,16 @@ export const sunburstPartStyle = (
   put('icon_size', a.icon_size)
 
   // LIBELLÉ — les noms du tracé pour ce que la part dit de son nom.
-  put('font_family', n.font_family)
+  //
+  // os#1476 — LA TYPOGRAPHIE PROPREMENT DITE N'EST PLUS TRADUITE ICI : police, graisse, style et
+  // cartouche sont appliqués par `applyPartTextStyle`, qui lit l'aspect sous ses propres noms. Les
+  // traduire une seconde fois était devenu du travail que personne ne lisait — et c'est la mesure
+  // du pas : dix lignes retirées, pas une ajoutée.
+  //
+  // Ce qui reste est ce dont LE DISQUE a besoin pour autre chose que poser un attribut de texte :
+  // la taille pour l'interligne et pour décider si une étiquette tient, la casse et les séparateurs
+  // pour composer la chaîne, l'encre pour la règle de contraste qui lui est propre.
   put('font_size', n.font_size)
-  put('bold', n.bold)
-  put('italic', n.italic)
   put('uppercase', n.uppercase)
   put('label_color', n.color)
   put('box_width', n.box_width)
@@ -309,15 +318,6 @@ export const sunburstPartStyle = (
   put('callout', a.label_callout)
   put('label_orientation', n.orientation)
   put('strip_parent', n.strip_parent)
-
-  // LE CARTOUCHE, sous les mêmes noms des deux côtés.
-  put('bg_visible', n.bg_visible)
-  put('bg_color', n.bg_color)
-  put('bg_opacity', n.bg_opacity)
-  put('bg_border_visible', n.bg_border_visible)
-  put('bg_border_color', n.bg_border_color)
-  put('bg_border_thickness', n.bg_border_thickness)
-  put('bg_border_radius', n.bg_border_radius)
 
   // LES DEUX REPLIS QUI DEMANDENT UNE TRADUCTION, et c'est tout ce qui reste de propre ici.
   //
@@ -889,6 +889,57 @@ export const drawSunburstChart = (
     part_styles.set(sector_id, resolved)
     return resolved
   }
+  // os#1476 — ET CE QUE LA PART DIT DE SES DEUX TEXTES, sous les noms communs aux trois natures.
+  //
+  // `styleOf` traduit la même lecture dans le vocabulaire du disque, et continue de le faire pour
+  // tout ce qui n'est PAS de la typographie : la forme du secteur, le pictogramme, le format du
+  // nombre, l'orientation du texte. Ce que le dessin d'un texte demande — police, graisse, encre,
+  // cartouche, décalage fin — se lit ici, parce que `applyPartTextStyle` et `partTextPlacement`
+  // sont écrits sur ces noms-là et servent déjà la couronne et les barres.
+  //
+  // DEUX TEXTES ET NON UN : c'est tout l'intérêt. Le nombre détaché d'un secteur lisait jusqu'ici
+  // la typographie du NOM — régler la police du nombre n'avait aucun effet, et régler celle du nom
+  // déplaçait aussi le nombre. C'est mot pour mot le défaut qu'os#1469 a corrigé sur les barres.
+  const part_aspects = new Map<string, Type_FigurePartAspect>()
+  const aspectOf = (sector_id: string): Type_FigurePartAspect => {
+    const known = part_aspects.get(sector_id)
+    if (known !== undefined) return known
+    // Le `style` que rend l'aspect est celui d'un histogramme : le disque ne le lit pas, il a le
+    // sien (`st`). Ce qui l'intéresse est ce que la PART a dit — cf. `sunburstPartStyle`.
+    const resolved = partAspect(
+      BARS_STYLE_DEFAULTS, opts.parts?.[sector_id] as unknown as Type_FigurePart | undefined
+    )
+    part_aspects.set(sector_id, resolved)
+    return resolved
+  }
+  /**
+   * os#1476 — CE QUE LA FIGURE DIT D'UN TEXTE, QUAND LA PART NE DIT RIEN.
+   *
+   * C'est le second argument d'`applyPartTextStyle`, et le seul endroit où le disque garde quelque
+   * chose en propre sur la typographie : SON ENCRE.
+   *
+   * L'encre par CONTRASTE reste le défaut — un même bleu porte du blanc au centre et du gris foncé
+   * sur les anneaux éclaircis, et une couleur fixe rendrait la moitié des étiquettes illisible.
+   * Hors du disque (`on_disc` faux) il n'y a pas de fond à contraster : c'est l'encre du thème.
+   *
+   * ⚠️ UNE PART QUI NOMME SON ENCRE EST DÉSORMAIS ÉCOUTÉE, MÊME EN MODE CONTRASTE, et c'est une
+   * correction assumée, pas un effet de bord. Le contraste est ce que la FIGURE fait par défaut ;
+   * une couleur posée sur UNE part est un geste explicite de l'auteur, et le taire était un
+   * réglage offert dans l'inspecteur que personne n'écoutait. La couronne et les barres se
+   * comportent déjà ainsi (`applyPartTextStyle` y lit la même règle) : les trois natures
+   * s'accordent enfin. Une part qui veut le contraste le demande par sa propre clé.
+   */
+  const textDefaults = (
+    d: Type_SunburstSlice, on_disc: boolean
+  ): Type_FigureTextDefaults => ({
+    font_size: st.font_size,
+    font_family: st.font_family,
+    bold: st.bold,
+    italic: st.italic,
+    color: styleOf(d.id).color_mode === 'fixed'
+      ? styleOf(d.id).label_color
+      : (on_disc ? inkOn(d.color, palette.ink) : palette.ink)
+  })
   // LE FORMAT DES VALEURS, exactement celui des étiquettes d'un flux (`formatElementValue`) :
   // notation scientifique, chiffres significatifs, décimales imposées — dans cet ordre, parce
   // qu'une notation scientifique ne se cumule pas avec un nombre de décimales. Il est PARAMÉTRÉ
@@ -1303,7 +1354,21 @@ export const drawSunburstChart = (
      * le sens qui le garde lisible. HORIZONTALE : on defait la rotation du secteur, le texte reste
      * droit quelle que soit sa place sur le tour.
      */
-    const arcTextTransform = (d: Type_SunburstSlice): string => {
+    /**
+     * os#1476 — LE DÉCALAGE FIN D'UN TEXTE D'ARC, dans le repère du secteur.
+     *
+     * `partTextPlacement` est la règle commune aux trois natures : la position que le tracé propose,
+     * corrigée de ce que la part demande. Ici le point proposé est l'origine du repère TOURNÉ — le
+     * texte y est déjà amené par `arcTextTransform` —, si bien que « x » court le long du rayon et
+     * « y » en travers. C'est le sens qu'un décalage a dans un disque, et la seule raison pour
+     * laquelle le placement ne peut pas se faire en coordonnées de page comme sur un histogramme.
+     */
+    const arcTextShift = (aspect: Type_FigurePartTextAspect | undefined) =>
+      partTextPlacement({ x: 0, y: 0, anchor: 'middle', rotate: false }, aspect)
+
+    const arcTextTransform = (
+      d: Type_SunburstSlice, aspect: Type_FigurePartTextAspect | undefined
+    ): string => {
       const angle = (d.a0 + d.a1) / 2
       const radius = inner_r + (d.depth + 0.5) * ring
       const deg = angle * 180 / Math.PI - 90
@@ -1311,30 +1376,22 @@ export const drawSunburstChart = (
       const flip = deg > 90 || deg < -90
       const at = 'rotate(' + deg + ') translate(' + radius + ',0)'
       const orientation = styleOf(d.id).label_orientation
-      if (orientation === 'tangential') return at + ' rotate(' + (flip ? 90 : -90) + ')'
-      if (orientation === 'horizontal') return at + ' rotate(' + (-deg) + ')'
-      return at + ' rotate(' + (flip ? 180 : 0) + ')'
+      const p = arcTextShift(aspect)
+      // Le décalage s'ajoute APRÈS la rotation propre à l'orientation : il se lit alors dans le
+      // sens où le texte est écrit, ce qui est le seul sens utilisable à la main.
+      const by = (p.x !== 0 || p.y !== 0) ? ' translate(' + p.x + ',' + p.y + ')' : ''
+      if (orientation === 'tangential') return at + ' rotate(' + (flip ? 90 : -90) + ')' + by
+      if (orientation === 'horizontal') return at + ' rotate(' + (-deg) + ')' + by
+      return at + ' rotate(' + (flip ? 180 : 0) + ')' + by
     }
 
     const arc_labels = g.selectAll('text.sunburst_arc_label')
       .data(slices.filter(d => arcLabelOf(d, geo) !== null))
       .enter().append('text')
       .attr('class', 'sunburst_arc_label')
-      .attr('transform', d => arcTextTransform(d))
-      .attr('text-anchor', 'middle')
+      .attr('transform', d => arcTextTransform(d, aspectOf(d.id).name))
+      .attr('text-anchor', d => arcTextShift(aspectOf(d.id).name).anchor)
       .attr('dominant-baseline', 'central')
-      // os#1445 — LE LIBELLÉ EST CELUI DE LA PART : police, graisse, casse et encre se règlent
-      // secteur par secteur.
-      .attr('font-size', d => styleOf(d.id).font_size)
-      .attr('font-family', d => styleOf(d.id).font_family)
-      .attr('font-weight', d => styleOf(d.id).bold ? 'bold' : null)
-      .attr('font-style', d => styleOf(d.id).italic ? 'italic' : null)
-      // L'encre par CONTRASTE reste le défaut : un même bleu porte du blanc au centre et du gris
-      // foncé sur les anneaux éclaircis, et une couleur fixe rendrait la moitié des étiquettes
-      // illisible. L'auteur peut l'imposer, c'est alors son affaire.
-      .attr('fill', d => styleOf(d.id).color_mode === 'fixed'
-        ? styleOf(d.id).label_color
-        : inkOn(d.color, palette.ink))
       .attr('pointer-events', 'none')
     // Une ligne par `tspan`, le bloc centré sur le milieu de l'anneau : la première ligne
     // remonte de la moitié de la hauteur du bloc, les suivantes descendent d'un interligne.
@@ -1348,8 +1405,9 @@ export const drawSunburstChart = (
           .attr('dy', i === 0 ? -((lines.length - 1) / 2) * line_h : line_h)
           .text(line)
       })
-      // os#1468 — LE CARTOUCHE, posé APRÈS le texte : il se mesure sur ce qui est écrit.
-      drawFigureLabelBackground(text, styleOf(d.id))
+      // os#1476 — LA TYPOGRAPHIE ET LE CARTOUCHE, par le module commun aux trois natures. Le
+      // cartouche est posé là, APRÈS le texte : il se mesure sur ce qui est écrit (os#1468).
+      applyPartTextStyle(text, aspectOf(d.id).name, textDefaults(d, true))
     })
 
     // -- os#1470 : LE NOMBRE DETACHE DE SON NOM ------------------------------------------
@@ -1368,19 +1426,22 @@ export const drawSunburstChart = (
         .data(detached_values)
         .enter().append('text')
         .attr('class', 'sunburst_arc_value')
-        .attr('transform', d => arcTextTransform(d))
-        .attr('text-anchor', 'middle')
+        // os#1476 — SON ASPECT DE VALEUR, ET NON CELUI DU NOM. Ce texte lisait jusqu'ici la
+        // typographie du libellé : régler la police du nombre n'avait aucun effet, et régler celle
+        // du nom déplaçait aussi le nombre. C'est mot pour mot le défaut qu'os#1469 a corrigé sur
+        // les barres — la même recopie, le même résultat.
+        .attr('transform', d => arcTextTransform(d, aspectOf(d.id).value))
+        .attr('text-anchor', d => arcTextShift(aspectOf(d.id).value).anchor)
         .attr('dominant-baseline', 'central')
+        // L'INTERLIGNE RESTE CELUI DU NOM, et il le faut : ce `dy` pose le nombre UNE LIGNE SOUS
+        // le libellé, là où il était quand il y était collé. C'est la hauteur de ligne du nom qui
+        // dit où finit le nom.
         .attr('dy', d => styleOf(d.id).font_size * LABEL_LINE_HEIGHT)
-        .attr('font-size', d => styleOf(d.id).font_size)
-        .attr('font-family', d => styleOf(d.id).font_family || null)
-        .attr('font-weight', d => styleOf(d.id).bold ? 'bold' : null)
-        .attr('font-style', d => styleOf(d.id).italic ? 'italic' : null)
-        .attr('fill', d => styleOf(d.id).color_mode === 'fixed'
-          ? styleOf(d.id).label_color
-          : inkOn(d.color, palette.ink))
         .attr('pointer-events', 'none')
         .text(d => sectorValueText(d))
+        .each(function (d) {
+          applyPartTextStyle(d3.select(this), aspectOf(d.id).value, textDefaults(d, true))
+        })
     }
 
     // ── PICTOGRAMMES (os#1465) ───────────────────────────────────────────────────────────
@@ -1441,8 +1502,21 @@ export const drawSunburstChart = (
       const edgeOf = (d: Type_SunburstSlice) =>
         point(inner_r + (d.depth + 1) * ring - ARC_GAP_PX, (d.a0 + d.a1) / 2)
       const defaultAt = (d: Type_SunburstSlice) => point(outer_r + CALLOUT_GAP_PX, (d.a0 + d.a1) / 2)
-      const positionOf = (d: Type_SunburstSlice) => opts.label_positions?.[d.id] ?? defaultAt(d)
       const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
+      // os#1476 — LA PLACE PROPOSÉE PAR LE TRACÉ, CORRIGÉE DE CE QUE LA PART DEMANDE.
+      //
+      // Ici la règle commune s'applique telle quelle : hors du disque, le texte est posé en x/y de
+      // page, comme le nom d'une barre. Le décalage fin et l'alignement, offerts dans l'inspecteur,
+      // n'avaient aucun chemin jusqu'à cette étiquette-ci.
+      const placeOf = (d: Type_SunburstSlice) => {
+        const at = opts.label_positions?.[d.id] ?? defaultAt(d)
+        return partTextPlacement(
+          { x: at.x, y: at.y, anchor: anchorOf(at), rotate: false }, aspectOf(d.id).name
+        )
+      }
+      // LE TRAIT VISE LE TEXTE, donc la place CORRIGÉE : un rappel qui ne touche pas son étiquette
+      // se lit comme un défaut d'affichage, pas comme un réglage. La place NUE, elle, n'est que ce
+      // qu'on persiste au dépôt (cf. `on_label_move`, plus bas).
       const layer = g.append('g').attr('class', 'sunburst_callouts')
       const items = layer.selectAll<SVGGElement, Type_SunburstSlice>('g.sunburst_callout')
         .data(callouts)
@@ -1453,32 +1527,34 @@ export const drawSunburstChart = (
         .attr('class', 'sunburst_callout_line')
         .attr('stroke', palette.muted).attr('stroke-width', 1)
         .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
-        .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
+        .attr('x2', d => placeOf(d).x).attr('y2', d => placeOf(d).y)
       items.append('text')
         .attr('class', 'sunburst_callout_text')
-        .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
-        .attr('text-anchor', d => anchorOf(positionOf(d)))
+        .attr('x', d => placeOf(d).x).attr('y', d => placeOf(d).y)
+        .attr('text-anchor', d => placeOf(d).anchor)
         .attr('dominant-baseline', 'central')
-        // Sortie du disque, l'étiquette garde la mise en forme de SA part : c'est la même
-        // étiquette, à un autre endroit.
-        .attr('font-size', d => styleOf(d.id).font_size)
-        .attr('font-family', d => styleOf(d.id).font_family)
-        .attr('font-weight', d => styleOf(d.id).bold ? 'bold' : null)
-        .attr('font-style', d => styleOf(d.id).italic ? 'italic' : null)
-        .attr('fill', d => styleOf(d.id).color_mode === 'fixed'
-          ? styleOf(d.id).label_color
-          : palette.ink)
         .text(d => sectorText(d))
+        // Sortie du disque, l'étiquette garde la mise en forme de SA part : c'est la même
+        // étiquette, à un autre endroit. Hors du disque il n'y a pas de fond à contraster : l'encre
+        // par défaut est celle du thème (cf. `textDefaults`).
+        .each(function (d) {
+          applyPartTextStyle(d3.select(this), aspectOf(d.id).name, textDefaults(d, false))
+        })
       if (st.tooltip_visible) items.append('title').text(sliceTitle)
       // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt. Les
       // coordonnées sont celles de `g`, donc déjà hors zoom — c'est ce qu'on persiste.
       items.call(d3.drag<SVGGElement, Type_SunburstSlice>()
         .on('start', (event) => { event.sourceEvent?.stopPropagation() })
-        .on('drag', function (event) {
-          const p = { x: event.x, y: event.y }
+        .on('drag', function (event, d) {
+          // Le décalage fin de la part SUIT LE GESTE : sans lui, l'étiquette sauterait au dépôt,
+          // le dessin d'après la replaçant avec son décalage.
+          const p = partTextPlacement(
+            { x: event.x, y: event.y, anchor: anchorOf({ x: event.x }), rotate: false },
+            aspectOf(d.id).name
+          )
           const item = d3.select(this)
           item.select('line').attr('x2', p.x).attr('y2', p.y)
-          item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', anchorOf(p))
+          item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', p.anchor)
         })
         .on('end', (event, d) => {
           opts.on_label_move?.(d.id, { x: Math.round(event.x), y: Math.round(event.y) })

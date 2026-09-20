@@ -36,11 +36,18 @@ const partReglee = (reglages: { [attr: string]: unknown }) => {
 describe('os#1474 le disque ne lit plus : il compose', () => {
 
   it('ce que la part dit de son NOM arrive dans le style du disque', () => {
-    // Les memes cles, lues une fois, rendues sous les deux vocabulaires : `bold` cote aspect,
-    // `bold` cote disque ; `color` cote aspect, `label_color` cote disque. C est de la traduction.
+    // Les memes cles, lues une fois, rendues sous les deux vocabulaires : `color` cote aspect,
+    // `label_color` cote disque. C est de la traduction.
+    //
+    // os#1476 — ET LA TRADUCTION S EST RACCOURCIE, parce que le disque dessine desormais ses textes
+    // par le module commun (`applyPartTextStyle`), qui lit l aspect sous SES noms. Police, graisse,
+    // style et cartouche ne sont donc plus traduits : les traduire etait du travail que plus
+    // personne ne lisait. Ne reste ici que ce dont le DISQUE a besoin pour autre chose que poser un
+    // attribut de texte — la taille pour l interligne, la boite pour decider si ca tient, l encre
+    // pour sa regle de contraste.
     const part = partReglee({
       name_label_bold: true,
-      name_label_font_family: 'Georgia',
+      name_label_font_size: 17,
       name_label_color: '#FF0000',
       name_label_box_width: 120
     })
@@ -49,8 +56,7 @@ describe('os#1474 le disque ne lit plus : il compose', () => {
     const s = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part as unknown as Type_SunburstPart)
 
     expect(a.name?.bold).toBe(true)
-    expect(s.bold).toBe(true)
-    expect(s.font_family).toBe(a.name?.font_family)
+    expect(s.font_size).toBe(a.name?.font_size)
     expect(s.label_color).toBe(a.name?.color)
     expect(s.box_width).toBe(a.name?.box_width)
   })
@@ -84,6 +90,11 @@ describe('os#1474 le disque ne lit plus : il compose', () => {
     // LE GAIN DU LOT, en une assertion. Le cartouche et la mise en forme de la VALEUR n etaient
     // lus que par la couronne et les barres ; le disque les recoit sans qu on ait ecrit une ligne
     // pour lui.
+    //
+    // os#1476 — LE CARTOUCHE NE PASSE PLUS PAR LE STYLE DU DISQUE, et c est un progres, pas une
+    // perte : il n a jamais ete un reglage de FIGURE — aucune couronne ne pose un fond derriere
+    // toutes ses etiquettes a la fois. Il se lit la ou il est dit, et le module commun le dessine
+    // pour les trois natures.
     const part = partReglee({
       name_label_background_visible: true,
       name_label_background_color: '#EEEEEE',
@@ -94,8 +105,7 @@ describe('os#1474 le disque ne lit plus : il compose', () => {
     const s = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part as unknown as Type_SunburstPart)
 
     expect(a.name?.bg_visible).toBe(true)
-    expect(s.bg_visible).toBe(true)
-    expect(s.bg_color).toBe('#EEEEEE')
+    expect(a.name?.bg_color).toBe('#EEEEEE')
     expect(s.value_attached).toBe(false)
   })
 
