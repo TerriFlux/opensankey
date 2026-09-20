@@ -14,7 +14,7 @@
 
 import { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_StyleHost } from '../Elements/ElementStyle'
-import { Class_FigureNature } from './Figure'
+import { Class_Figure, Class_FigureNature } from './Figure'
 import type { Type_FigureAttributesConfig } from './Figure'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -82,20 +82,22 @@ describe('os#1458 le diagramme et la nature de figure sont le meme hote', () => 
   it('assigner un style de figure passe par la CIBLE, jamais par une devinette', () => {
     // Une nature decrit une SORTE, pas un objet a l ecran : elle ne sait pas quelle figure
     // l auteur regarde. L appelant, lui, tient deja la liste de ce qu il edite.
+    //
+    // SUR UNE VRAIE `Class_Figure`, ET C EST LA LECON. La premiere version de ce test se donnait
+    // un faux objet portant les noms que j avais inventes (`addStyleId`) : il passait au vert en
+    // ne validant que mon invention, alors que la vraie API est `addStyle` / `removeStyleById`.
+    // Un test qui fabrique sa cible ne verifie que lui-meme.
     const nature = new Class_FigureNature('essai', natureConfig())
     const style = nature.addNewDefaultElementStyle()
-    const poses: string[] = []
-    const retires: string[] = []
-    const figure = {
-      addStyleId: (id: string) => poses.push(id),
-      removeStyleId: (id: string) => retires.push(id)
-    }
+    const figure = new Class_Figure(nature, 'vignette_1')
+    expect(figure.hasStyle(style.id)).toBe(false)
 
     nature.switchElementStyle(style, true, [figure])
-    nature.switchElementStyle(style, false, [figure])
+    expect(figure.hasStyle(style.id)).toBe(true)
 
-    expect(poses).toEqual([style.id])
-    expect(retires).toEqual([style.id])
+    nature.switchElementStyle(style, false, [figure])
+    expect(figure.hasStyle(style.id)).toBe(false)
+
     // Sans cible, rien ne se passe — et surtout, rien n est devine.
     expect(() => nature.switchElementStyle(style, true)).not.toThrow()
   })
