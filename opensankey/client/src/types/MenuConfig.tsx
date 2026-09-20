@@ -3985,9 +3985,27 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
 
-  public get r_editor_content_set_elements() { return this._r_editor_content_set_elements }
-  public get r_rich_text_editor_refresh() { return this._r_rich_text_editor_refresh }
-  public get icon_selector_set_elements() { return this._icon_selector_set_elements }
+  /**
+   * os#1472 — CES TROIS REFS SONT DES MEMBRES D HOTE, et elles ne l etaient pas.
+   *
+   * Elles branchent une MODALE UNIQUE de l espace de travail — le catalogue d icones, l editeur de
+   * contenu, l editeur de texte riche — a ce qu elle doit editer. La modale est montee une fois,
+   * par le document hote : elle enregistre donc son  ref sur LA configuration de l hote.
+   *
+   * Lues sans passer par l hote, elles rendaient le ref du document COURANT. Or l inspecteur parle
+   * du document ACTIF, et depuis os#1446 ce peut etre un document de FIGURE — celui qui porte les
+   * parts. Sa ref a lui n avait jamais ete branchee : elle vaut `() => null`.
+   *
+   * Le symptome, vu par Julien trois fois : « l icone ne marche toujours pas ». La modale s ouvrait
+   * (son ouverture, elle, est deja deleguee a l hote par `dict_setter_show_dialog`), on y
+   * choisissait un pictogramme, et rien ne se passait — le catalogue avait recu une liste VIDE
+   * d elements a modifier, donc il ecrivait dans un objet jetable.
+   *
+   * C est la meme regle que pour les dialogues : ce qui est unique a l ecran vit sur l hote.
+   */
+  public get r_editor_content_set_elements() { return this._host._r_editor_content_set_elements }
+  public get r_rich_text_editor_refresh() { return this._host._r_rich_text_editor_refresh }
+  public get icon_selector_set_elements() { return this._host._icon_selector_set_elements }
 
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
@@ -4051,12 +4069,12 @@ export class Class_MenuConfig {
 
   // config ref related to node FO elements
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
-  private _r_editor_content_set_elements: MutableRefObject<((
+  protected _r_editor_content_set_elements: MutableRefObject<((
     _: Class_NodeBase[] | Class_LinkElement[],
     prefix: 'name_label' | 'value_label' | 'icon'
   ) => void)>
-  private _r_rich_text_editor_refresh: MutableRefObject<() => void>
-  private _icon_selector_set_elements: MutableRefObject<((
+  protected _r_rich_text_editor_refresh: MutableRefObject<() => void>
+  protected _icon_selector_set_elements: MutableRefObject<((
     _: Class_NodeBase[] | Class_LinkElement[],
     prefix: 'name_label' | 'value_label' | 'icon'
   ) => void)>
