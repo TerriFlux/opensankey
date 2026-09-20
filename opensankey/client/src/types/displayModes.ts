@@ -83,35 +83,6 @@ export function setParametricMode(da: Class_DrawingArea) {
   }, false)
 }
 
-/**
- * os#1364 — Mode GÉOGRAPHIQUE : les nœuds qui portent une latitude et une longitude sont posés sur
- * le fond calé, à chaque dessin (cf. `NodePositioningGeographic`).
- *
- * La bascule elle-même ne calcule RIEN : elle pose le mode, et le prochain dessin fait le
- * placement — comme le mode paramétrique, et pour la même raison, la position y étant dérivée
- * d'autre chose qu'elle-même.
- *
- * Le seul soin à prendre est celui que prennent déjà les autres bascules : si l'on vient d'un mode
- * d'AFFICHAGE (proportionnel, échelle adaptée), le coin courant est du scratch — comprimé ou
- * rescalé — et les nœuds SANS coordonnées, que le mode géographique ne touchera pas, resteraient
- * figés dans cet état. On les ramène donc d'abord à leurs vrais centres.
- *
- * Le retour, lui, n'a rien demandé de spécial : `setAbsoluteMode` traite `geographic` comme
- * l'absolu et le paramétrique — le coin courant EST la vérité, on le commit comme centre. Les
- * nœuds restent donc exactement là où la carte les a posés, ce qui est le comportement attendu
- * quand on quitte la carte pour retoucher une position à la main.
- */
-export function setGeographicMode(da: Class_DrawingArea) {
-  da.clearPositionModeSuspension()
-  const default_style = da.sankey.styles_dict['default']
-  const prev_mode = default_style.shape_position_type
-  if (prev_mode === 'proportional' || prev_mode === 'scale_adapted') {
-    da.nodePositioning.clearScaleAdaptation()
-    da.nodePositioning.deriveAbsoluteNodesFromCenter()
-  }
-  default_style.shape_position_type = 'geographic'
-}
-
 export function setAbsoluteMode(da: Class_DrawingArea) {
   da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
