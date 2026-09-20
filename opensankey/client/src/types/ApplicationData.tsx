@@ -47,7 +47,7 @@ import { PublishOptions } from './PublishOptions'
 // classe pour sa fabrique de documents), mais aucun des deux fichiers n'utilise l'autre au
 // PREMIER NIVEAU du module : pas d'`extends`, pas d'appel top-level, seulement des corps de
 // méthodes. C'est le cas bénin du cycle ; le cas TDZ est l'héritage (cf. elementInitCycle.test).
-import { Class_Workspace, OFFSCREEN_CONTAINER_SELECTOR } from './Workspace'
+import { Class_Workspace, OFFSCREEN_CONTAINER_SELECTOR, Type_Clipboard } from './Workspace'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
 import { afterViewChange } from './viewSwitchProgress'
@@ -2453,6 +2453,28 @@ export class Class_ApplicationData {
   }
 
   /**
+   * os#1444 — QUELLE FEUILLE CE DOCUMENT MONTRE-T-IL EN CE MOMENT ?
+   *
+   * Deux réponses possibles, et c'est tout l'intérêt de la question :
+   *  - un document de FEUILLE (né de `sheetApplication`) montre TOUJOURS la sienne, et elle ne
+   *    change pas de sa vie ;
+   *  - le document PORTEUR montre sa feuille courante, et celle-là change à chaque onglet cliqué.
+   *
+   * C'est la seconde qui rendait le presse-papiers faux (os#1444) : le document est une adresse
+   * STABLE, ce qu'il montre ne l'est pas. Chaîne vide quand il n'y a pas de feuilles du tout —
+   * le document mono-feuille historique, où la question ne se pose pas.
+   */
+  public get shown_sheet_id(): string {
+    const holder = this._file_holder
+    if (holder) {
+      // Je suis le document d'une feuille : laquelle, mon porteur le sait. Recherche et non
+      // champ mémorisé — l'annuaire du porteur est la seule vérité, et il est court.
+      return holder.sheets_order.find(id => holder.liveSheetDocument(id) === this) ?? ''
+    }
+    return this.has_sheets ? this._current_sheet_id : ''
+  }
+
+  /**
    * os#1442 — CE DOCUMENT A-T-IL DES CHANGEMENTS NON ENREGISTRÉS ?
    *
    * La valeur vit dans `menu_configuration` depuis toujours, écrite par une quarantaine de
@@ -3865,7 +3887,10 @@ export class Class_ApplicationData {
       evt.preventDefault()
       this.workspace.clipboard = {
         source: this,
-        node_ids: this.drawing_area.selected_nodes_list.map(n => n.id)
+        node_ids: this.drawing_area.selected_nodes_list.map(n => n.id),
+        // os#1444 — LA FEUILLE AUSSI. Le document est une adresse stable, ce qu'il MONTRE ne
+        // l'est pas : un onglet cliqué et le même document porte un autre diagramme.
+        sheet_id: this.shown_sheet_id
       }
     }
     // Paste copied nodes
@@ -3888,11 +3913,12 @@ export class Class_ApplicationData {
       // l'élément voyagent (`copyAttrFrom`). Un nœud collé prend donc l'allure de son nouveau
       // document et garde ce que son auteur avait réglé à la main — ce que font Excel et Figma.
       //
-      // IL RESTE UN REFUS, ET UN SEUL : le document d'origine doit être VIVANT. Une feuille
-      // libérée (`releaseSheetDocument`, bascule d'onglet, fermeture de sa fenêtre) laisse un
-      // presse-papiers qui désigne un modèle mort. On le dit, plutôt que de coller le vide.
-      const from_elsewhere = clipboard.source !== this
-      if (from_elsewhere && clipboard.source.disposed) {
+      // os#1444 — ON RETROUVE LA FEUILLE, PAS LE DOCUMENT. Voir `_clipboardSourceArea` : le
+      // document est une adresse stable, ce qu'il montre ne l'est pas, et os#1440 avait pris
+      // l'un pour l'autre. Un seul refus subsiste, quand la feuille d'origine n'est plus
+      // atteignable du tout (fichier refermé, feuille supprimée).
+      const source_area = this._clipboardSourceArea(clipboard)
+      if (!source_area) {
         this.notifyUser(
           'clipboard_cross_document',
           this.t('toast.clipboard.source_gone.title'),
@@ -3904,10 +3930,59 @@ export class Class_ApplicationData {
       }
       // os#1385 (lot 2) — coller, c'est éditer (cf. le nudge plus haut).
       if (!this.drawing_area.editable) return
-      if (from_elsewhere) this.drawing_area.copyNodesFrom(clipboard.source.drawing_area, clipboard.node_ids)
-      else this.drawing_area.copyNodes(clipboard.node_ids)
+      if (source_area === this.drawing_area) this.drawing_area.copyNodes(clipboard.node_ids)
+      else this.drawing_area.copyNodesFrom(source_area, clipboard.node_ids)
       this.saveInCache()
     }
+  }
+
+  /**
+   * os#1444 — LA ZONE DE DESSIN D'OÙ VIENT CE QUI A ÉTÉ COPIÉ, ou `null` si elle n'est plus
+   * atteignable.
+   *
+   * CE QUE os#1440 AVAIT MANQUÉ. Il traitait le DOCUMENT comme l'adresse du contenu copié :
+   * juste pour deux documents côte à côte (deux fenêtres, deux modèles vivants), faux pour le
+   * geste le plus ordinaire — copier dans une feuille, cliquer l'onglet d'une autre, coller.
+   * Changer d'onglet ne crée pas un second document : il RECHARGE le même. Le presse-papiers
+   * désignait donc toujours le bon objet, `source !== this` était faux, et le collage cherchait
+   * les identifiants copiés dans un diagramme où ils n'existaient plus. Résultat : rien, et
+   * sans un mot.
+   *
+   * Ce qui ne bouge pas, c'est la FEUILLE. Quitter une feuille en met le contenu en instantané
+   * avant toute autre chose (`_snapshotCurrentSheet`, appelé par `switchToSheet` comme par
+   * `createNewSheet`) : ce qu'on a copié y est, intact. Trois cas, dans l'ordre du moins cher :
+   *
+   *  1. le document d'origine montre ENCORE cette feuille — c'est le cas courant, y compris le
+   *     collage chez soi : on lui prend sa zone de dessin, telle quelle ;
+   *  2. c'est le PORTEUR du fichier qui la montre maintenant — on a copié depuis la fenêtre
+   *     d'une feuille, puis cette feuille est devenue courante ;
+   *  3. sinon on la redemande au porteur (`sheetApplication`), qui la rend vivante ou la
+   *     recharge depuis son instantané.
+   *
+   * `null` ne reste que pour ce qui n'existe vraiment plus : porteur disposé (un autre fichier
+   * a été chargé), ou feuille supprimée.
+   */
+  protected _clipboardSourceArea(clipboard: Type_Clipboard): Class_DrawingArea | null {
+    const source = clipboard.source
+    if (!source.disposed && source.shown_sheet_id === clipboard.sheet_id) {
+      return source.drawing_area
+    }
+    const holder = source.file_holder ?? source
+    if (holder.disposed) return null
+    if (holder.shown_sheet_id === clipboard.sheet_id) return holder.drawing_area
+    // LE DOCUMENT QUI GAGNE DES FEUILLES PENDANT QU'ON A QUELQUE CHOSE AU PRESSE-PAPIERS.
+    //
+    // Un document mono-feuille n'a pas d'identité de feuille : on a noté la chaîne vide. S'il
+    // en a depuis — c'est précisément ce que fait « nouvelle feuille » sur un document qui
+    // n'en avait pas —, son contenu d'alors est devenu la PREMIÈRE feuille
+    // (`_ensureSheetsInitialized` la crée pour lui, puis `createNewSheet` en prend
+    // l'instantané). Sans ce cas, la chaîne vide retomberait sur la convention « feuille
+    // courante » de `sheetApplication` et on chercherait les nœuds copiés dans la feuille
+    // neuve — c'est-à-dire dans la page blanche où l'on veut justement les coller.
+    if (clipboard.sheet_id === '' && holder.has_sheets) {
+      return holder.sheetApplication(holder.sheets_order[0])?.drawing_area ?? null
+    }
+    return holder.sheetApplication(clipboard.sheet_id)?.drawing_area ?? null
   }
 
   /**

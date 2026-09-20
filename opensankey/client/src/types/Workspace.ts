@@ -71,6 +71,20 @@ export type Type_DocumentOptions = {
 export type Type_Clipboard = {
   source: Class_ApplicationData
   node_ids: string[]
+  /**
+   * os#1444 — LA FEUILLE d'où le contenu vient, et non pas seulement le document.
+   *
+   * os#1440 avait pris le document pour l'adresse de ce qui a été copié. C'est vrai de deux
+   * documents CÔTE À CÔTE — deux fenêtres, deux modèles vivants —, et faux du geste le plus
+   * ordinaire : changer d'onglet ne crée pas un second document, il RECHARGE le même avec le
+   * contenu de l'autre feuille. Le presse-papiers désignait donc toujours le bon objet, et
+   * l'objet ne portait plus rien de ce qu'on avait copié.
+   *
+   * La feuille, elle, ne bouge pas : son contenu est mis en instantané avant la bascule
+   * (`_snapshotCurrentSheet`), et se retrouve par `sheetApplication`. Chaîne vide pour un
+   * document sans feuilles.
+   */
+  sheet_id: string
 }
 
 /**
