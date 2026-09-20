@@ -144,3 +144,131 @@ export const figureTitleOf = (options: Type_OptionBag): Type_FigureTitle =>
 /** Le texte que le titre écrit, ou `''` quand il n'y a rien à écrire. */
 export const figureTitleText = (title: Type_FigureTitle, fallback: string): string =>
   title.title_visible ? (title.title_text.trim() || fallback.trim()) : ''
+
+// ── LE TITRE EST UNE ZONE DE TEXTE, ET IL N'EST PAS LA SEULE ─────────────────────────────────
+//
+// os#1449 — « elles ont toutes un titre et une légende, et le code devrait implémenter de la même
+// manière. Elles devraient pouvoir avoir aussi des zones de texte et autres éléments
+// additionnels » (Julien, 20/09/2026).
+//
+// Le titre d'une figure était un sac de cinq clés (`title_*`) lu par un traceur écrit pour lui
+// seul : poser un second bloc de texte sur une figure aurait demandé un sixième réglage et un
+// second traceur. Il n'y a donc plus qu'UNE description — « du texte posé au-dessus ou au-dessous
+// du dessin » — dont le titre est la PREMIÈRE instance : ses clés `title_*` décrivent la zone
+// n° 0, les zones suivantes vivent dans `text_zones`, et un seul traceur les pose toutes (cf.
+// `Representations/figureTextZones`).
+//
+// C'EST LE PLUS GRAND PAS SÛR, ET PAS LA CIBLE. La cible serait que ce texte soit un
+// `Class_ContainerElement` comme le titre du diagramme : elle suppose que la figure ait une zone
+// de dessin SVG, ce qu'elle n'a pas (son dessin est un flux HTML de quelques centaines de pixels).
+// Ce qu'on livre ici est ce que cette cible aurait de vrai de toute façon : le titre cesse d'être
+// un mécanisme à part, et la figure sait porter du texte que l'auteur ajoute.
+//
+// RIEN NE CHANGE D'ASPECT. Les valeurs d'usine des champs neufs sont EXACTEMENT ce que le traceur
+// écrivait en dur : le noir bleuté #2D3748, le centrage, une ligne coupée aux points de
+// suspension, la police de la page, pas d'italique.
+
+export interface Type_FigureText {
+  /** Déjà résolu : un titre vide a reçu le nom du sujet, et une zone vide n'arrive pas ici. */
+  text: string
+  position: 'top' | 'bottom'
+  font_size: number
+  bold: boolean
+  italic: boolean
+  /** `''` : la police de la page. */
+  font_family: string
+  color: string
+  align: 'left' | 'middle' | 'right'
+  /** Faux : une ligne, coupée aux points de suspension — le titre d'hier. */
+  wrap: boolean
+}
+
+/** Ce que le traceur écrivait en dur : c'est ce qui garantit l'identité d'affichage. */
+export const FIGURE_TEXT_DEFAULTS: Type_FigureText = {
+  text: '',
+  position: 'top',
+  font_size: FIGURE_TITLE_DEFAULTS.title_font_size,
+  bold: false,
+  italic: false,
+  font_family: '',
+  color: '#2D3748',
+  align: 'middle',
+  wrap: false
+}
+
+const TEXT_POSITIONS = ['top', 'bottom'] as const
+const TEXT_ALIGNS = ['left', 'middle', 'right'] as const
+
+/** Une valeur du sac, ou le défaut quand elle manque ou n'est pas du type attendu. */
+const asString = (v: unknown, fallback: string): string => typeof v === 'string' ? v : fallback
+const asNumber = (v: unknown, fallback: number): number =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback
+const asBool = (v: unknown, fallback: boolean): boolean => typeof v === 'boolean' ? v : fallback
+const asOneOf = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
+  allowed.includes(v as T) ? v as T : fallback
+
+/**
+ * LE TITRE, DIT COMME UNE ZONE DE TEXTE — la zone n° 0 de la figure. `null` quand il n'y a rien à
+ * écrire (titre éteint, ou texte vide et sujet sans nom) : il ne prend alors pas de place.
+ */
+export const figureTitleTextZone = (
+  options: Type_OptionBag,
+  fallback: string
+): Type_FigureText | null => {
+  const title = figureTitleOf(options)
+  const text = figureTitleText(title, fallback)
+  if (!text) return null
+  return {
+    text,
+    position: title.title_position,
+    font_size: title.title_font_size,
+    bold: title.title_bold,
+    italic: asBool(options['title_italic'], FIGURE_TEXT_DEFAULTS.italic),
+    font_family: asString(options['title_font_family'], FIGURE_TEXT_DEFAULTS.font_family),
+    color: asString(options['title_color'], FIGURE_TEXT_DEFAULTS.color),
+    align: asOneOf(options['title_align'], TEXT_ALIGNS, FIGURE_TEXT_DEFAULTS.align),
+    wrap: asBool(options['title_wrap'], FIGURE_TEXT_DEFAULTS.wrap)
+  }
+}
+
+/**
+ * LES ZONES DE TEXTE QUE L'AUTEUR AJOUTE, lues de `text_zones`.
+ *
+ * Une liste et non des clés numérotées : leur nombre n'est pas connu d'avance, et c'est le même
+ * choix que `label_positions` — un dépôt que la figure porte et qu'aucun contrôle ne rend champ à
+ * champ. Une entrée qui n'écrit rien est écartée : une zone vide ne doit pas manger de la hauteur.
+ *
+ * Tout ce qui n'est pas du type attendu — un fichier d'une version ultérieure — retombe sur le
+ * défaut plutôt que de casser le dessin.
+ */
+export const figureExtraTextZones = (raw: unknown): Type_FigureText[] => {
+  if (!Array.isArray(raw)) return []
+  const out: Type_FigureText[] = []
+  raw.forEach(item => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return
+    const o = item as Type_OptionBag
+    const text = asString(o['text'], '').trim()
+    if (text === '') return
+    out.push({
+      text,
+      position: asOneOf(o['position'], TEXT_POSITIONS, FIGURE_TEXT_DEFAULTS.position),
+      font_size: asNumber(o['font_size'], FIGURE_TEXT_DEFAULTS.font_size),
+      bold: asBool(o['bold'], FIGURE_TEXT_DEFAULTS.bold),
+      italic: asBool(o['italic'], FIGURE_TEXT_DEFAULTS.italic),
+      font_family: asString(o['font_family'], FIGURE_TEXT_DEFAULTS.font_family),
+      color: asString(o['color'], FIGURE_TEXT_DEFAULTS.color),
+      align: asOneOf(o['align'], TEXT_ALIGNS, FIGURE_TEXT_DEFAULTS.align),
+      wrap: asBool(o['wrap'], FIGURE_TEXT_DEFAULTS.wrap)
+    })
+  })
+  return out
+}
+
+/**
+ * TOUT LE TEXTE D'UNE FIGURE, dans l'ordre où il se pose : le titre d'abord, puis les zones que
+ * l'auteur a ajoutées. `fallback` est le nom du sujet, que seul le traceur connaît.
+ */
+export const figureTextsOf = (options: Type_OptionBag, fallback: string): Type_FigureText[] => {
+  const title = figureTitleTextZone(options, fallback)
+  return [...(title ? [title] : []), ...figureExtraTextZones(options['text_zones'])]
+}
