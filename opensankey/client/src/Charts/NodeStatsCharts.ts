@@ -21,13 +21,17 @@ import * as d3 from '../d3Modules'
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
 import {
-  partitionSunburst, sunburstBranchColor, sunburstScope, SUNBURST_STYLE_DEFAULTS
+  partitionSunburst, sunburstBranchColor, sunburstScope, sunburstSectorName, SUNBURST_STYLE_DEFAULTS
 } from './SunburstChart'
 import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
 import type { Type_SunburstTree } from './SunburstHierarchy'
 // os#1425 — la mise en forme lue sur le catalogue des attributs de figure.
-import { BARS_STYLE_DEFAULTS, DONUT_STYLE_DEFAULTS } from './figureChartStyle'
-import type { Type_FigureChartStyle, Type_FigureTitle } from './figureChartStyle'
+import {
+  BARS_STYLE_DEFAULTS, DONUT_STYLE_DEFAULTS, labelTextWidthPx, wrapLabelToBox
+} from './figureChartStyle'
+import type {
+  Type_FigureChartStyle, Type_FigurePartLabelAspect, Type_FigureTitle
+} from './figureChartStyle'
 import { mountFigureTitle } from './figureTitle'
 
 export interface Type_StatSlice {
@@ -86,13 +90,24 @@ export interface Type_ChartOptions {
    * couronne sélectionne la part correspondante, et l'inspecteur répond.
    */
   on_part_select?: (part_id: string) => void
+  /**
+   * os#1463 — LES ÉTIQUETTES SORTIES, POSÉES À LA MAIN : la position d'une étiquette détachée, par
+   * identifiant de part, en pixels depuis le centre du dessin. Absente : la place que le tracé lui
+   * donne, dans l'axe de sa part.
+   *
+   * Mêmes noms et même contrat qu'au sunburst (`Type_SunburstChartOptions.label_positions`) : c'est
+   * la même question, et deux vocabulaires en feraient deux mécanismes.
+   */
+  label_positions?: { [part_id: string]: { x: number, y: number } }
+  /** L'auteur vient de déposer une étiquette : à l'appelant de retenir où. */
+  on_label_move?: (part_id: string, position: { x: number, y: number }) => void
 }
 
 /**
  * os#1460 — ce qu'une part dit de son aspect, résolu ailleurs. Tout est optionnel : ce qui n'est
  * pas dit reste au style de la figure.
  */
-export interface Type_ChartPartAspect {
+export interface Type_ChartPartAspect extends Type_FigurePartLabelAspect {
   fill?: string
   /**
    * `shape_color_visible` — « Fond » dans l'inspecteur. `false` = le secteur n'est pas rempli.
@@ -144,6 +159,12 @@ const DEFAULT_FORMAT = (v: number) =>
 const OTHERS_COLOR = '#CFD0CB'
 // Part angulaire minimale pour afficher le label % sur un secteur.
 const MIN_LABEL_SHARE = 0.03
+// os#1463 — LES DEUX MESURES DE L'ÉTIQUETTE SORTIE, reprises du sunburst et pour les mêmes
+// raisons : sous ce bord d'arc, en pixels, le trait de rappel pointerait un fil et cent rappels
+// sur une poussière de secteurs ne nommeraient rien ; et voici l'écart entre le disque et
+// l'étiquette tant que l'auteur ne l'a pas déplacée.
+const MIN_CALLOUT_EDGE_PX = 6
+const CALLOUT_GAP_PX = 14
 // Barres groupées (#390) : au-delà de ce nombre de séries, une grappe devient
 // illisible. On TRONQUE, on ne replie PAS dans un « Autres » : les deux axes croisés
 // sont non additifs — sommer les séries restantes serait exactement le contresens
@@ -309,7 +330,17 @@ export const drawDonutChart = (
     `${d.data.label}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
   // os#1460 — L'ASPECT DE CHAQUE SECTEUR, le sien s'il en a un, celui de la figure sinon.
-  const aspectOf = (id: string) => opts.part_aspect?.(id)
+  //
+  // MÉMORISÉ PAR SECTEUR depuis os#1463, comme le fait déjà le sunburst : le tracé repasse une
+  // dizaine de fois sur chaque identifiant (le fond, l'opacité, le liséré, puis chaque pièce de
+  // l'étiquette), et derrière ce rappel il y a une cascade de styles à résoudre à chaque appel.
+  const resolved_aspects = new Map<string, Type_ChartPartAspect | undefined>()
+  const aspectOf = (id: string): Type_ChartPartAspect | undefined => {
+    if (resolved_aspects.has(id)) return resolved_aspects.get(id)
+    const resolved = opts.part_aspect?.(id)
+    resolved_aspects.set(id, resolved)
+    return resolved
+  }
   const paths = g.selectAll('path')
     .data(arcs)
     .enter().append('path')
@@ -360,35 +391,105 @@ export const drawDonutChart = (
   //
   // DEUX LIGNES quand les deux sont demandés : le nom au-dessus, les chiffres en dessous. Une
   // seule ligne « Transformation 40 80 % » ne tiendrait dans aucun secteur.
-  const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
-    const lines: string[] = []
-    if (st.name_label_is_visible) lines.push(d.data.label)
-    const values: string[] = []
-    if (st.value_label_is_visible) values.push(fmt(d.data.value))
-    if (st.value_label_percent !== 'none') values.push(Math.round(d.data.value / total * 100) + '%')
-    if (values.length > 0) lines.push(values.join(' '))
-    return lines
+  //
+  // os#1463 — ET TOUT CELA SECTEUR PAR SECTEUR. Le sunburst savait déjà lire la typographie et le
+  // format d'une valeur sur la part qu'il dessine ; ici on n'en lisait que quatre clés, si bien que
+  // choisir la police ou les décimales d'un secteur ne faisait rien à l'écran. Ce qu'une part NE
+  // DIT PAS reste ce que le tracé écrivait en dur — la police de la page, l'encre blanche, une
+  // ligne, le format de la figure : une couronne enregistrée se rouvre au pixel.
+  /** La mise en forme de CE secteur : celle de la figure, sauf ce que sa part dit d'elle-même. */
+  const styleOf = (d: d3.PieArcDatum<Type_StatSlice>): Type_FigureChartStyle => {
+    const own = aspectOf(d.data.id)?.style
+    return own ? { ...st, ...own } : st
   }
-  const labels_wanted = st.name_label_is_visible
-    || st.value_label_is_visible
-    || st.value_label_percent !== 'none'
-  if (labels_wanted) {
+  /**
+   * Le nom écrit dans le secteur : réduit par le séparateur, puis mis dans la casse demandée.
+   *
+   * `sunburstSectorName` plutôt qu'une seconde règle de séparateur — c'est la même question que
+   * sur un nœud du diagramme, et deux implémentations divergeraient au premier réglage. Pas de
+   * parent à retirer : une couronne plate n'a pas d'anneau précédent qui dirait déjà quelque chose.
+   */
+  const sectorName = (d: d3.PieArcDatum<Type_StatSlice>): string => {
+    const a = aspectOf(d.data.id)
+    const name = sunburstSectorName(d.data.label, null, {
+      separator: a?.label_separator ?? '',
+      separator_part: a?.label_separator_part ?? 'after'
+    })
+    return a?.label_uppercase ? name.toLocaleUpperCase() : name
+  }
+  const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
+    const s = styleOf(d)
+    const a = aspectOf(d.data.id)
+    const lines: string[] = []
+    if (s.name_label_is_visible) lines.push(sectorName(d))
+    const values: string[] = []
+    // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
+    // n'existe que si la part a dit quelque chose des six clés de format (cf. `barPartAspect`).
+    if (s.value_label_is_visible) values.push((a?.value_format ?? fmt)(d.data.value))
+    if (s.value_label_percent !== 'none') values.push(Math.round(d.data.value / total * 100) + '%')
+    if (values.length > 0) lines.push(values.join(' '))
+    // La boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne entre les mots, et
+    // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
+    // toute couronne enregistrée —, chaque ligne ressort telle quelle.
+    return lines.flatMap(line => wrapLabelToBox(
+      line, a?.label_box_width ?? 0, s.name_label_font_size, a?.label_wrap_long_words ?? false
+    ))
+  }
+  /**
+   * `name_label_prune_if_unfitting` — « Masquer si ça dépasse ». La place d'un secteur est la
+   * CORDE à hauteur de son étiquette : c'est la largeur dont le texte dispose au milieu de
+   * l'anneau, et elle vaut 2·r·sin(angle/2).
+   *
+   * Faux par défaut, donc rien ne se masque tant que personne ne le demande : la couronne renonçait
+   * aux secteurs trop étroits (`MIN_LABEL_SHARE`) et jamais sur la longueur du texte, et c'est
+   * encore vrai.
+   */
+  const label_radius = (inner + radius) / 2
+  const sectorFits = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
+    const s = styleOf(d)
+    const chord_px = 2 * label_radius * Math.sin(Math.min(Math.PI, d.endAngle - d.startAngle) / 2)
+    return sector_lines(d).every(
+      line => labelTextWidthPx(line, s.name_label_font_size) <= chord_px
+    )
+  }
+  /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
+  const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean =>
+    (aspectOf(d.data.id)?.label_callout ?? st.name_label_callout)
+    && d.data.id !== '__others__'
+    && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+  // Ce qui porte une étiquette se décide SECTEUR PAR SECTEUR, et non plus par un drapeau de figure :
+  // une part peut demander son nom là où la figure n'en veut pas. Rien ne change quand personne ne
+  // dit rien — un secteur sans ligne n'avait déjà pas de texte.
+  //
+  // Un secteur qui SORT son étiquette ne l'écrit pas aussi dedans, et un secteur qui la masque
+  // parce qu'elle dépasse ne l'écrit nulle part.
+  const with_text = arcs.filter(d => sector_lines(d).length > 0)
+  const callouts = with_text.filter(d => callsOut(d))
+  const labelled = with_text.filter(d =>
+    !callsOut(d) &&
+    (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
+    (!(aspectOf(d.data.id)?.label_prune_if_unfitting) || sectorFits(d)))
+  if (labelled.length > 0) {
     g.selectAll('text.node_stats_pct')
-      .data(arcs.filter(d => (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE))
+      .data(labelled)
       .enter().append('text')
       .attr('class', 'node_stats_pct')
       .attr('transform', d => `translate(${label_arc.centroid(d)})`)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', st.name_label_font_size)
-      .attr('fill', 'white')
+      .attr('font-size', d => styleOf(d).name_label_font_size)
+      // `null` RETIRE l'attribut chez d3 : une part muette laisse donc le texte exactement comme
+      // hier — sans famille, sans graisse, sans style déclarés, donc ceux de la page.
+      .attr('font-family', d => aspectOf(d.data.id)?.label_font_family || null)
+      .attr('font-weight', d => aspectOf(d.data.id)?.label_bold ? 'bold' : null)
+      .attr('font-style', d => aspectOf(d.data.id)?.label_italic ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? 'white')
       .attr('pointer-events', 'none')
       .each(function (d) {
         const lines = sector_lines(d)
-        if (lines.length === 0) return
-        // Le bloc reste CENTRÉ sur le centroïde : la première ligne remonte d'une demi-hauteur
-        // quand il y en a deux, sinon l'étiquette dériverait vers le bord extérieur du secteur.
-        const dy0 = lines.length > 1 ? -0.55 : 0
+        // Le bloc reste CENTRÉ sur le centroïde : la première ligne remonte d'une demi-hauteur par
+        // ligne supplémentaire, sinon l'étiquette dériverait vers le bord extérieur du secteur.
+        const dy0 = -(lines.length - 1) * 0.55
         d3.select(this).selectAll('tspan')
           .data(lines)
           .enter().append('tspan')
@@ -396,6 +497,76 @@ export const drawDonutChart = (
           .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
           .text(line => line)
       })
+  }
+
+  // ── os#1463 — L'ÉTIQUETTE DÉTACHÉE, RELIÉE À SON SECTEUR PAR UN TRAIT ───────────────────────
+  //
+  // « Je pense par exemple au label qui peut être détaché de l'élément mais relié par un segment »
+  // (Julien). LE PROCÉDÉ N'EST PAS INVENTÉ ICI : c'est celui du sunburst (`drawSunburstChart`, la
+  // section « Étiquettes SORTIES DU DISQUE »), repris nom pour nom — le point du bord dans l'axe du
+  // secteur, l'écart `CALLOUT_GAP_PX`, le plancher `MIN_CALLOUT_EDGE_PX` sous lequel un trait
+  // pointerait un fil, l'ancrage du texte selon le côté, et le glisser dont la position déposée est
+  // rendue à l'appelant (`on_label_move`), qui la retient par figure (`label_positions`).
+  //
+  // Elles vivent dans `g`, comme les arcs : ce qui les déplace déplace le disque avec.
+  if (callouts.length > 0) {
+    const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
+    const midOf = (d: d3.PieArcDatum<Type_StatSlice>) => (d.startAngle + d.endAngle) / 2
+    const edgeOf = (d: d3.PieArcDatum<Type_StatSlice>) => point(radius, midOf(d))
+    const defaultAt = (d: d3.PieArcDatum<Type_StatSlice>) =>
+      point(radius + CALLOUT_GAP_PX, midOf(d))
+    const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
+      opts.label_positions?.[d.data.id] ?? defaultAt(d)
+    // Le texte s'écarte du disque : à droite il commence au trait, à gauche il y finit.
+    const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
+    const layer = g.append('g').attr('class', 'node_stats_callouts')
+    const items = layer.selectAll<SVGGElement, d3.PieArcDatum<Type_StatSlice>>('g.node_stats_callout')
+      .data(callouts)
+      .enter().append('g')
+      .attr('class', 'node_stats_callout')
+      .style('cursor', 'move')
+    items.append('line')
+      .attr('class', 'node_stats_callout_line')
+      .attr('stroke', '#718096').attr('stroke-width', 1)
+      .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
+      .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
+    const texts = items.append('text')
+      .attr('class', 'node_stats_callout_text')
+      .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
+      .attr('text-anchor', d => anchorOf(positionOf(d)))
+      .attr('dominant-baseline', 'central')
+      // Sortie du disque, l'étiquette garde la mise en forme de SA part : c'est la même étiquette,
+      // à un autre endroit. Seule l'encre change de repli — le blanc du secteur serait invisible
+      // sur le fond de la figure.
+      .attr('font-size', d => styleOf(d).name_label_font_size)
+      .attr('font-family', d => aspectOf(d.data.id)?.label_font_family || null)
+      .attr('font-weight', d => aspectOf(d.data.id)?.label_bold ? 'bold' : null)
+      .attr('font-style', d => aspectOf(d.data.id)?.label_italic ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.data.id)?.label_color ?? '#2D3748')
+    texts.each(function (d) {
+      const lines = sector_lines(d)
+      const dy0 = -(lines.length - 1) * 0.55
+      d3.select(this).selectAll('tspan')
+        .data(lines)
+        .enter().append('tspan')
+        .attr('x', positionOf(d).x)
+        .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
+        .text(line => line)
+    })
+    if (st.interaction_tooltip) items.append('title').text(slice_title)
+    // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
+    items.call(d3.drag<SVGGElement, d3.PieArcDatum<Type_StatSlice>>()
+      .on('start', (event) => { event.sourceEvent?.stopPropagation() })
+      .on('drag', function (event) {
+        const p = { x: event.x, y: event.y }
+        const item = d3.select(this)
+        item.select('line').attr('x2', p.x).attr('y2', p.y)
+        item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', anchorOf(p))
+        item.selectAll('tspan').attr('x', p.x)
+      })
+      .on('end', (event, d) => {
+        opts.on_label_move?.(d.data.id, { x: Math.round(event.x), y: Math.round(event.y) })
+      }))
   }
 
   // LE CENTRE : le nom de l'objet regardé, son total, ou les deux (`centre_content`) — et
@@ -534,28 +705,110 @@ export const drawBarChart = (
     return px * visibilityLift(px)
   }
 
+  // ── os#1463 — UNE BARRE EST UNE PART, ET ELLE NE L'ÉTAIT PAS ENCORE ──────────────────────────
+  //
+  // os#1460 avait branché la couronne et laissé l'histogramme : `drawBarChart` ne demandait RIEN à
+  // `opts.part_aspect`, si bien qu'aucun réglage posé sur une barre — ni sa couleur, ni son liséré,
+  // ni sa police — n'avait de chemin jusqu'au dessin. Et le rectangle ne portait pas ses `data-*` :
+  // le clic ne désignait aucune part, donc l'inspecteur n'avait rien à montrer.
+  //
+  // Mêmes procédés qu'à la couronne, aux mêmes noms. Une part muette rend le tracé d'hier, au pixel.
+  const resolved_aspects = new Map<string, Type_ChartPartAspect | undefined>()
+  const aspectOf = (id: string): Type_ChartPartAspect | undefined => {
+    if (resolved_aspects.has(id)) return resolved_aspects.get(id)
+    const resolved = opts.part_aspect?.(id)
+    resolved_aspects.set(id, resolved)
+    return resolved
+  }
+  const styleOf = (d: Type_StatSlice): Type_FigureChartStyle => {
+    const own = aspectOf(d.id)?.style
+    return own ? { ...st, ...own } : st
+  }
+  /** Le nom écrit sous la barre : réduit par le séparateur, puis mis dans la casse demandée. */
+  const barName = (d: Type_StatSlice): string => {
+    const a = aspectOf(d.id)
+    const name = sunburstSectorName(d.label, null, {
+      separator: a?.label_separator ?? '',
+      separator_part: a?.label_separator_part ?? 'after'
+    })
+    return a?.label_uppercase ? name.toLocaleUpperCase() : name
+  }
+  /**
+   * Les lignes du nom sous la barre. Sans boîte de texte — le cas de tout histogramme enregistré —
+   * c'est la troncature d'hier, à quatorze caractères ; avec une boîte, le retour à la ligne.
+   */
+  const barNameLines = (d: Type_StatSlice): string[] => {
+    const a = aspectOf(d.id)
+    const name = barName(d)
+    const box = a?.label_box_width ?? 0
+    if (!(box > 0)) return [name.length > 14 ? name.slice(0, 13) + '…' : name]
+    return wrapLabelToBox(name, box, styleOf(d).name_label_font_size, a?.label_wrap_long_words ?? false)
+  }
+  /** La valeur écrite au-dessus de la barre : le format de la part, celui de la figure sinon. */
+  const barValueText = (d: Type_StatSlice): string => {
+    const s = styleOf(d)
+    const a = aspectOf(d.id)
+    const out: string[] = [(a?.value_format ?? fmt)(d.value)]
+    // Le pourcentage du tout, quand l'auteur le demande — 'none' par défaut sur un histogramme,
+    // donc rien ne change tant que personne ne le réclame.
+    const total_value = slices.reduce((acc, s2) => acc + s2.value, 0)
+    if (s.value_label_percent !== 'none' && total_value > 0) {
+      out.push(Math.round(d.value / total_value * 100) + '%')
+    }
+    return out.join(' ')
+  }
+
   const rects = g.selectAll('rect')
     .data(slices)
     .enter().append('rect')
+    // CE QUI REND LA BARRE CLIQUABLE ET NOMMÉE, comme le secteur de couronne : un `data-*` et
+    // jamais un `id` (les `id` sont globaux, deux figures côte à côte se voleraient leurs dégradés).
+    .attr('data-repr-kind', 'part')
+    .attr('data-repr-id', d => d.id)
     .attr('x', d => x(d.id) ?? 0)
     .attr('y', d => h - barPx(d.value))
     .attr('width', x.bandwidth())
     .attr('height', d => barPx(d.value))
-    .attr('fill', (d, i) => colorOf(d, i))
+    // « Fond » décoché l'emporte sur toute couleur : c'est le sens du réglage.
+    .attr('fill', (d, i) => {
+      const a = aspectOf(d.id)
+      if (a?.background_visible === false) return 'none'
+      return a?.fill ?? colorOf(d, i)
+    })
+    .attr('fill-opacity', d => aspectOf(d.id)?.opacity ?? 1)
+    // Le liséré EN BLOC : un histogramme n'en a jamais eu, il n'apparaît que si la part en veut un.
+    .attr('stroke', d => {
+      const a = aspectOf(d.id)
+      return a?.border_visible ? (a.border_color ?? '#000000') : 'none'
+    })
+    .attr('stroke-width', d => {
+      const a = aspectOf(d.id)
+      return a?.border_visible ? (a.border_thickness ?? 1) : 0
+    })
+    .style('cursor', opts.on_part_select ? 'pointer' : 'default')
+  if (opts.on_part_select) {
+    rects.on('click', (_evt, d) => opts.on_part_select?.(d.id))
+  }
   if (st.interaction_tooltip) rects.append('title').text(bar_title)
 
-  // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`).
-  if (st.value_label_is_visible) {
+  // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`) — et
+  // barre par barre depuis os#1463 : la visibilité, la taille, la police et le format sont ceux de
+  // la part quand elle les dit.
+  const valued = slices.filter(d => styleOf(d).value_label_is_visible)
+  if (valued.length > 0) {
     g.selectAll('text.node_stats_bar_value')
-      .data(slices)
+      .data(valued)
       .enter().append('text')
       .attr('class', 'node_stats_bar_value')
       .attr('x', d => (x(d.id) ?? 0) + x.bandwidth() / 2)
       .attr('y', d => h - barPx(d.value) - 4)
       .attr('text-anchor', 'middle')
-      .attr('font-size', st.name_label_font_size)
-      .attr('fill', '#2D3748')
-      .text(d => fmt(d.value))
+      .attr('font-size', d => styleOf(d).name_label_font_size)
+      .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
+      .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
+      .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.id)?.label_color ?? '#2D3748')
+      .text(d => barValueText(d))
   }
 
   // Ligne de base + labels de catégorie.
@@ -563,13 +816,33 @@ export const drawBarChart = (
     .attr('x1', 0).attr('x2', w)
     .attr('y1', h).attr('y2', h)
     .attr('stroke', '#CBD5E0')
-  if (st.name_label_is_visible) {
+  // Le nom d'une barre, BARRE PAR BARRE (os#1463) : la visibilité, la typographie, la boîte de
+  // texte et « masquer si ça dépasse » sont ceux de la part quand elle les dit.
+  //
+  // « Ça dépasse » se mesure sur la LARGEUR DE BANDE, et seulement quand les noms ne sont pas
+  // pivotés : pivoté à -35°, le texte court en diagonale sous l'axe et n'empiète plus sur ses
+  // voisins — la question ne se pose pas. Faux par défaut : rien ne se masque.
+  const barNameFits = (d: Type_StatSlice): boolean => {
+    if (rotate_labels) return true
+    const size = styleOf(d).name_label_font_size
+    return barNameLines(d).every(line => labelTextWidthPx(line, size) <= x.bandwidth())
+  }
+  // L'étiquette DÉTACHÉE (cf. plus bas) ne s'écrit pas aussi sous l'axe.
+  const barCallsOut = (d: Type_StatSlice): boolean =>
+    (aspectOf(d.id)?.label_callout ?? st.name_label_callout) && barPx(d.value) >= MIN_CALLOUT_EDGE_PX
+  const named = slices.filter(d => styleOf(d).name_label_is_visible)
+  const under_axis = named.filter(d =>
+    !barCallsOut(d) && (!(aspectOf(d.id)?.label_prune_if_unfitting) || barNameFits(d)))
+  if (under_axis.length > 0) {
     g.selectAll('text.node_stats_bar_label')
-      .data(slices)
+      .data(under_axis)
       .enter().append('text')
       .attr('class', 'node_stats_bar_label')
-      .attr('font-size', st.name_label_font_size)
-      .attr('fill', '#4A5568')
+      .attr('font-size', d => styleOf(d).name_label_font_size)
+      .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
+      .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
+      .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.id)?.label_color ?? '#4A5568')
       .attr('transform', d => {
         const cx = (x(d.id) ?? 0) + x.bandwidth() / 2
         return rotate_labels
@@ -577,9 +850,90 @@ export const drawBarChart = (
           : `translate(${cx},${h + 14})`
       })
       .attr('text-anchor', rotate_labels ? 'end' : 'middle')
-      .text(d => d.label.length > 14 ? d.label.slice(0, 13) + '…' : d.label)
-      .append('title')
-      .text(bar_title)
+      .each(function (d) {
+        const lines = barNameLines(d)
+        const text = d3.select(this)
+        // Une seule ligne — le cas de tout histogramme enregistré — s'écrit comme hier, sans
+        // `tspan` : un décalage vertical, même nul, n'aurait pas la même origine.
+        if (lines.length === 1) text.text(lines[0])
+        else {
+          text.selectAll('tspan')
+            .data(lines)
+            .enter().append('tspan')
+            .attr('x', 0)
+            .attr('dy', (_line, i) => (i === 0 ? '0em' : '1.1em'))
+            .text(line => line)
+        }
+        text.append('title').text(bar_title(d))
+      })
+  }
+
+  // ── os#1463 — LE NOM DÉTACHÉ DE SA BARRE, RELIÉ PAR UN SEGMENT ──────────────────────────────
+  //
+  // Même procédé et mêmes noms qu'à la couronne, donc qu'au sunburst : un trait du bord de la part
+  // jusqu'à l'étiquette, une position par défaut dans son axe, et le glisser dont le dépôt est
+  // rendu à l'appelant (`on_label_move` / `label_positions`).
+  //
+  // Le bord d'une barre est le MILIEU DE SON SOMMET, et l'axe de sortie est la verticale : c'est la
+  // seule direction qui ne traverse pas les barres voisines. Le plancher `MIN_CALLOUT_EDGE_PX`
+  // s'applique à la HAUTEUR : un trait tiré d'une barre au ras de l'axe pointerait un trait.
+  const bar_callouts = named.filter(d => barCallsOut(d))
+  if (bar_callouts.length > 0) {
+    const edgeOf = (d: Type_StatSlice) => ({
+      x: (x(d.id) ?? 0) + x.bandwidth() / 2,
+      y: h - barPx(d.value)
+    })
+    // Au-dessus de la barre, et au-dessus de la valeur quand elle y est déjà écrite.
+    const defaultAt = (d: Type_StatSlice) => ({
+      x: edgeOf(d).x,
+      y: edgeOf(d).y - CALLOUT_GAP_PX
+        - (styleOf(d).value_label_is_visible ? styleOf(d).name_label_font_size + 4 : 0)
+    })
+    const positionOf = (d: Type_StatSlice) => opts.label_positions?.[d.id] ?? defaultAt(d)
+    const layer = g.append('g').attr('class', 'node_stats_callouts')
+    const items = layer.selectAll<SVGGElement, Type_StatSlice>('g.node_stats_callout')
+      .data(bar_callouts)
+      .enter().append('g')
+      .attr('class', 'node_stats_callout')
+      .style('cursor', 'move')
+    items.append('line')
+      .attr('class', 'node_stats_callout_line')
+      .attr('stroke', '#718096').attr('stroke-width', 1)
+      .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
+      .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
+    const texts = items.append('text')
+      .attr('class', 'node_stats_callout_text')
+      .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-size', d => styleOf(d).name_label_font_size)
+      .attr('font-family', d => aspectOf(d.id)?.label_font_family || null)
+      .attr('font-weight', d => aspectOf(d.id)?.label_bold ? 'bold' : null)
+      .attr('font-style', d => aspectOf(d.id)?.label_italic ? 'italic' : null)
+      .attr('fill', d => aspectOf(d.id)?.label_color ?? '#2D3748')
+    texts.each(function (d) {
+      const lines = barNameLines(d)
+      const p = positionOf(d)
+      d3.select(this).selectAll('tspan')
+        .data(lines)
+        .enter().append('tspan')
+        .attr('x', p.x)
+        .attr('dy', (_line, i) => (i === 0 ? `${-(lines.length - 1) * 0.55}em` : '1.1em'))
+        .text(line => line)
+    })
+    if (st.interaction_tooltip) items.append('title').text(bar_title)
+    items.call(d3.drag<SVGGElement, Type_StatSlice>()
+      .on('start', (event) => { event.sourceEvent?.stopPropagation() })
+      .on('drag', function (event) {
+        const p = { x: event.x, y: event.y }
+        const item = d3.select(this)
+        item.select('line').attr('x2', p.x).attr('y2', p.y)
+        item.select('text').attr('x', p.x).attr('y', p.y)
+        item.selectAll('tspan').attr('x', p.x)
+      })
+      .on('end', (event, d) => {
+        opts.on_label_move?.(d.id, { x: Math.round(event.x), y: Math.round(event.y) })
+      }))
   }
 
   // Mention d'ÉCRASEMENT (#393) : ces barres sont au plancher, leur hauteur ne dit

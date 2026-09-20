@@ -201,3 +201,99 @@ describe('os#1462 un secteur se repeint et seface', () => {
     expect(resolu.background_visible).toBeUndefined()
   })
 })
+
+// os#1465 — LE PICTOGRAMME DUN SECTEUR.
+//
+// Julien : « oui on peut dessiner l icone sur les parts ». L onglet Icone etait servi aux parts
+// depuis os#1456 — sur sa demande — SANS que rien ne les dessine : soixante-trois cles `icon_*`
+// offertes a l auteur, lues par aucun trace. Un onglet inerte est pire que pas d onglet.
+describe('os#1465 un secteur nomme sa filiere par son pictogramme', () => {
+
+  const buildSource = () => {
+    const doc = new Class_ApplicationData(false)
+    doc.drawing_area.bypass_redraws = true
+    return doc
+  }
+
+  /** Une figure dont le document connait un pictogramme, comme un vrai document en connait. */
+  //
+  // ⚠️ `icon_is_visible` est FAUX par defaut, et ce n est pas un oubli : c est la regle du
+  // diagramme. Sur un noeud aussi, `DrawLabel.drawIcon` exige la visibilite avant le nom — on
+  // ACTIVE l icone dans son onglet, puis on la choisit. Une part suit la meme regle, sans quoi
+  // deux objets du meme produit se regleraient autrement.
+  const figureAvecCatalogue = () => {
+    const source = buildSource()
+    const figure = buildParts(source, [{ id: 'n_ble', label: 'Ble', value: 6 }],
+      undefined, 'sunburst')
+    figure.document.drawing_area.sankey.icon_catalog = { epi: 'M0 0 L10 10' }
+    return figure
+  }
+
+  it('la part qui nomme une icone en resout le CHEMIN', () => {
+    // Le trace ne recoit jamais un nom : il recoit un `d` deja sorti du catalogue. C est ce qui le
+    // garde sans dependance au modele, comme pour tout le reste de l aspect.
+    const figure = figureAvecCatalogue()
+    const part = figure.by_id['n_ble']
+    part.icon_is_visible = true
+    part.icon_icon_name = 'epi'
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part).icon_path).toBe('M0 0 L10 10')
+  })
+
+  it('une part qui ne nomme rien na pas dicone', () => {
+    // LA GARANTIE DU LOT. Une couronne enregistree avant aujourd hui n a aucune part qui nomme une
+    // icone : elle se rouvre donc a l identique. Et le nom est lu PAR LA PORTE, jamais resolu —
+    // sans quoi un nom porte par le style par defaut couvrirait le parc de pictogrammes.
+    const figure = figureAvecCatalogue()
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, figure.by_id['n_ble']).icon_path)
+      .toBeUndefined()
+  })
+
+  it('un nom que le catalogue ne connait pas ne donne pas dicone', () => {
+    // `getIconFromCatalog` rend une chaine vide sur un nom inconnu : on ne pose pas un chemin vide
+    // dans l aspect, sinon le trace dessinerait un `path` sans `d` et le libelle aurait disparu
+    // pour rien.
+    const figure = figureAvecCatalogue()
+    figure.by_id['n_ble'].icon_is_visible = true
+    figure.by_id['n_ble'].icon_icon_name = 'pictogramme_absent'
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, figure.by_id['n_ble']).icon_path)
+      .toBeUndefined()
+  })
+
+  it('cacher licone la retire, meme nommee', () => {
+    const figure = figureAvecCatalogue()
+    const part = figure.by_id['n_ble']
+    part.icon_is_visible = true
+    part.icon_icon_name = 'epi'
+    part.icon_is_visible = false
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part).icon_path).toBeUndefined()
+  })
+
+  it('lauteur peut imposer lencre et la taille', () => {
+    const figure = figureAvecCatalogue()
+    const part = figure.by_id['n_ble']
+    part.icon_is_visible = true
+    part.icon_icon_name = 'epi'
+    part.icon_color = '#FF0000'
+    part.icon_box_width = 24
+
+    const resolu = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part)
+    expect(resolu.icon_color).toBe('#FF0000')
+    expect(resolu.icon_size).toBe(24)
+  })
+
+  it('sans document qui porte un catalogue, rien ne casse', () => {
+    // Le contrat de part est STRUCTUREL : `sankey` y est facultatif, et un appelant qui fabrique
+    // une part sans document doit obtenir « pas d icone », pas une exception.
+    const sans = {
+      isAttributeOverloaded: (a: string) => a === 'icon_icon_name',
+      getElementProperty: (a: string) => a === 'icon_icon_name' ? 'epi' : true
+    }
+
+    expect(() => sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, sans)).not.toThrow()
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, sans).icon_path).toBeUndefined()
+  })
+})

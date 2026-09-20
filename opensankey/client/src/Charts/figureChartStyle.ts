@@ -43,6 +43,17 @@ export interface Type_FigureChartStyle {
   /** name_label_* : les étiquettes DANS le dessin (noms de barres, % des secteurs). */
   name_label_is_visible: boolean
   name_label_font_size: number
+  /**
+   * os#1463 — L'ÉTIQUETTE SORT DU DESSIN, RELIÉE À SA PART PAR UN TRAIT, quand elle n'y tient pas.
+   *
+   * Réglage de FIGURE, comme au sunburst (`Type_SunburstStyle.callout`) : c'est une façon de poser
+   * toutes les étiquettes, pas l'aspect d'une part — une couronne dont un seul secteur sortirait
+   * son nom se lirait comme un défaut. Une part peut néanmoins le dire pour elle
+   * (`Type_FigurePartLabelAspect.label_callout`), le jour où le catalogue des éléments le portera.
+   *
+   * FAUX par défaut : aucune figure enregistrée ne voit ses étiquettes sortir.
+   */
+  name_label_callout: boolean
   /** value_label_* : la valeur écrite dans le dessin, et le pourcentage. */
   value_label_is_visible: boolean
   value_label_percent: 'none' | 'total' | 'parent'
@@ -75,6 +86,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // chaque secteur de chaque couronne déjà enregistrée. C'est une option, elle s'active.
   name_label_is_visible: false,
   name_label_font_size: 11,
+  // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
+  name_label_callout: false,
   value_label_is_visible: false,
   value_label_percent: 'total',
   scale_factor: 100,
@@ -97,6 +110,148 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   value_label_is_visible: true,
   value_label_percent: 'none'
 }
+
+// ── os#1463 — CE QU'UNE PART DIT DE SA TYPOGRAPHIE ET DU FORMAT DE SA VALEUR ─────────────────
+//
+// Le sunburst lisait déjà une vingtaine de clés sur un secteur (`sunburstPartStyle`) ; la couronne
+// d'OS+ et les barres n'en lisaient que QUATRE — le nom visible et sa taille, la valeur visible et
+// son pourcentage. Régler la police, la casse ou les décimales d'un secteur était donc un geste
+// sans effet : l'inspecteur offrait le réglage, rien ne l'écoutait.
+//
+// ⚠️ CES CHAMPS SONT TOUS FACULTATIFS, ET C'EST TOUTE LA GARANTIE DU LOT. `Type_FigureChartStyle`
+// ne les porte délibérément PAS. Une couronne n'a jamais eu de police, de casse ni de séparateur
+// RÉGLABLES au niveau de la figure : son étiquette s'écrit en blanc, dans la police de la page,
+// sur une ligne. Les faire entrer dans le style de la figure les ferait lire sur son sac de
+// réglages par `readOver` — où une clé homonyme écrite par une AUTRE nature (une couronne
+// hiérarchique en porte neuf, cf. `sunburstAttributes`) repeindrait le parc en silence. Ils ne
+// valent donc QUE par surcharge de part : absents, le tracé est celui d'hier, au pixel.
+export interface Type_FigurePartLabelAspect {
+  /** `name_label_font_family` — absent ou vide : la police de la page, comme hier. */
+  label_font_family?: string
+  /** `name_label_bold` / `name_label_italic`. */
+  label_bold?: boolean
+  label_italic?: boolean
+  /**
+   * `name_label_uppercase`. La casse s'applique AU TEXTE et non au style : `text-transform` n'est
+   * pas honoré par tous les moteurs SVG, et l'export PNG en dépend (même raison qu'au sunburst).
+   */
+  label_uppercase?: boolean
+  /** `name_label_color` — l'encre de CE secteur. Absente : celle du tracé (blanc sur une couronne). */
+  label_color?: string
+  /**
+   * `name_label_box_width`, en pixels : au-delà, le texte revient à la ligne entre les mots.
+   * Absente ou nulle : une seule ligne, c'est-à-dire toute couronne déjà enregistrée.
+   */
+  label_box_width?: number
+  /** `name_label_separator` / `_part` — le nom se réduit à ce qui suit (ou précède) le séparateur. */
+  label_separator?: string
+  label_separator_part?: 'before' | 'after'
+  /**
+   * `name_label_wrap_long_words` — un mot plus long que la boîte se COUPE au lieu de déborder.
+   * Absent : il déborde, comme hier (le réglage n'existait pas dans les figures).
+   */
+  label_wrap_long_words?: boolean
+  /**
+   * `name_label_prune_if_unfitting` — « Masquer si ça dépasse ». L'étiquette qui ne tient pas dans
+   * sa part n'est pas écrite du tout, plutôt que de mordre sur ses voisines.
+   *
+   * Absent : elle s'écrit quoi qu'il arrive, et c'est le tracé d'hier — la couronne ne renonçait
+   * qu'aux secteurs trop étroits (`MIN_LABEL_SHARE`), jamais sur la longueur du texte.
+   */
+  label_prune_if_unfitting?: boolean
+  /**
+   * `name_label_callout` — L'ÉTIQUETTE DÉTACHÉE, RELIÉE À SA PART PAR UN TRAIT.
+   *
+   * Le procédé est celui du sunburst (`Type_SunburstStyle.callout`, `calloutable`,
+   * `MIN_CALLOUT_EDGE_PX`, `label_positions`) : celle qui ne tient pas sort, dans l'axe de sa part,
+   * reliée au bord par un segment, et se déplace à la main.
+   *
+   * ⚠️ AUCUNE PART NE PEUT ENCORE LE DIRE, et c'est un manque du CATALOGUE, pas d'ici :
+   * `name_label_callout` est déclaré dans `figureCatalogue` (clé de figure) et non dans
+   * `ElementsAttributesConfig` (attribut d'élément) — exactement comme `name_label_contrast_color`.
+   * Le champ est donc lu par le tracé et posé par la figure ; il s'allumera part par part le jour
+   * où `callout` entrera dans le catalogue des éléments, sans que rien ne change ici.
+   */
+  label_callout?: boolean
+  /**
+   * LE FORMAT DE LA VALEUR DE CETTE PART, quand elle en règle un (`value_label_scientific_notation`,
+   * `_significant_digits`, `_nb_significant_digits`, `_custom_digit`, `_nb_digit`,
+   * `_unit_visible`).
+   *
+   * UNE FONCTION DÉJÀ MONTÉE, et non les six clés : le tracé écrit alors `(aspect.value_format ??
+   * format)(v)` — une ligne, et l'ABSENCE dit exactement « cette part n'a rien réglé, la figure
+   * écrit ce nombre comme elle écrit les autres ». Six clés recomposées au tracé l'obligeraient à
+   * distinguer « réglé à la même valeur » de « pas réglé », ce qu'il ne peut pas voir.
+   *
+   * Le procédé est celui de `figureFormat` — notation scientifique, puis chiffres significatifs,
+   * puis décimales imposées, dans cet ordre —, le même que `formatWith` dans `SunburstChart` et
+   * que les étiquettes d'un flux. Il n'est pas réécrit : il est appelé.
+   */
+  value_format?: (value: number) => string
+}
+
+/**
+ * Largeur moyenne d'un caractère, en fraction de la taille de police. La même mesure que celle des
+ * étiquettes de sunburst (`LABEL_CHAR_PX` = 6 px à 10 points) : une boîte de même largeur doit
+ * couper au même endroit d'une figure à l'autre, sinon le réglage ne veut rien dire.
+ */
+const LABEL_CHAR_RATIO = 0.6
+
+/**
+ * os#1463 — LE TEXTE COUPÉ ENTRE LES MOTS pour tenir dans une boîte de `box_px` de large.
+ * Fonction PURE.
+ *
+ * `box_px` nul ou négatif — le cas de toute figure enregistrée, la boîte n'ayant jamais existé
+ * ici — rend la ligne TELLE QUELLE : c'est ce qui garantit que le réglage ne change rien tant que
+ * personne ne le pose.
+ *
+ * Un mot plus long que la boîte n'est PAS coupé, et il déborde : le tronquer effacerait une
+ * information que rien ne rattraperait ici (un secteur de couronne n'a pas de légende obligatoire
+ * pour la redire, contrairement à un anneau de sunburst).
+ */
+export const wrapLabelToBox = (
+  text: string,
+  box_px: number,
+  font_size: number,
+  // `name_label_wrap_long_words` : couper un mot plus long qu'une ligne. Faux par défaut — le mot
+  // déborde, ce qui est ce que le tracé faisait quand la boîte n'existait pas.
+  break_long_words = false
+): string[] => {
+  if (!(box_px > 0) || !(font_size > 0)) return [text]
+  const room = Math.max(1, Math.floor(box_px / (font_size * LABEL_CHAR_RATIO)))
+  const lines: string[] = []
+  let line = ''
+  const push = () => { if (line !== '') { lines.push(line); line = '' } }
+  text.split(/\s+/).filter(Boolean).forEach(word => {
+    let rest = word
+    // Le mot trop long : coupé en tranches de la largeur de la boîte, ou laissé entier.
+    if (break_long_words) {
+      while (rest.length > room) {
+        push()
+        lines.push(rest.slice(0, room))
+        rest = rest.slice(room)
+      }
+      if (rest === '') return
+    }
+    if (line === '') line = rest
+    else if (line.length + 1 + rest.length <= room) line += ' ' + rest
+    else { push(); line = rest }
+  })
+  push()
+  // Un texte qui ne contenait que des espaces : on rend ce qu'on a reçu plutôt que rien.
+  return lines.length > 0 ? lines : [text]
+}
+
+/**
+ * os#1463 — LARGEUR APPROCHÉE D'UN TEXTE, en pixels, à la taille donnée. Fonction PURE.
+ *
+ * Une ESTIMATION et elle le dit : mesurer pour de vrai suppose un nœud posé dans le DOM, donc un
+ * reflow par étiquette — le tracé d'une couronne de vingt secteurs en ferait vingt. La même mesure
+ * que `sunburstArcLabel` (`LABEL_CHAR_PX`), pour que « ça dépasse » veuille dire la même chose
+ * d'une figure à l'autre. Sert à `name_label_prune_if_unfitting`, jamais à placer quoi que ce soit.
+ */
+export const labelTextWidthPx = (text: string, font_size: number): number =>
+  text.length * font_size * LABEL_CHAR_RATIO
 
 /** Un sac lu clé à clé sur des défauts : une clé absente ou d'un autre type garde le défaut. */
 const readOver = <T extends object>(options: Type_OptionBag, defaults: T): T => {
