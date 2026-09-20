@@ -49,13 +49,21 @@ describe('os#1445 le depot des parts par vignette', () => {
     expect(second.by_id['b'].isAttributeOverloaded('shape_color')).toBe(false)
   })
 
-  it('le document precedent cesse de vivre : aucune fuite', () => {
+  it('os#1453 la vignette garde SON document dun dessin au suivant', () => {
+    // CE TEST REMPLACE SON CONTRAIRE — « le document precedent cesse de vivre » — et le
+    // renversement est la correction. Un document neuf a chaque dessin voulait dire un document
+    // ACTIF neuf (`bindWindowDocument`), donc une selection vide, donc l inspecteur qui retombait
+    // sur la figure : le « ca ramene sur Graphe » de Julien.
+    //
+    // La fuite que l ancien test gardait est toujours gardee, mais la ou elle se joue vraiment :
+    // a la FERMETURE de la vignette (`forgetFigureParts`, `pruneClosedWindows`), verifiee plus bas.
     const source = buildSource()
     const premier = figurePartsFor('w1', 'p1', source, inputs())
 
-    figurePartsFor('w1', 'p1', source, inputs())
+    const second = figurePartsFor('w1', 'p1', source, inputs())
 
-    expect(premier.document.disposed).toBe(true)
+    expect(second.document).toBe(premier.document)
+    expect(premier.document.disposed).toBe(false)
   })
 
   it('deux vignettes ont deux jeux de parts, et ne se les empruntent pas', () => {

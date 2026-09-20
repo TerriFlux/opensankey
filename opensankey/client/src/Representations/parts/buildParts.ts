@@ -19,10 +19,25 @@
 // dépend de ce paquet et non l'inverse. Même procédé que `Type_SunburstSankey`, pour la même
 // raison.
 //
-// REBÂTIR PLUTÔT QUE SYNCHRONISER. Les parts changent à chaque geste de navigation (on déplie un
-// niveau, on filtre une étiquette, on change d'axe) : tenir un diff coûterait plus cher que de
-// refaire des éléments qui ne portent que leur figure. Ce qu'il faut préserver, ce sont les
-// RÉGLAGES posés à la main — d'où `reuse`, qui les reprend par identifiant.
+// RÉCONCILIER, ET NON REBÂTIR — os#1453, ET C'EST UN RETOURNEMENT ASSUMÉ.
+//
+// Ce fichier a d'abord rebâti : un document neuf et des éléments neufs à chaque dessin, les
+// réglages repris par identifiant. C'était défendable tant que RIEN NE POINTAIT SUR UNE PART.
+//
+// Depuis, trois choses pointent dessus : la SÉLECTION de la zone de dessin (os#1446), le DOCUMENT
+// ACTIF de l'espace de travail (`bindWindowDocument`), et l'INSPECTEUR qui lit l'un et l'autre. Et
+// depuis os#1459, écrire un attribut demande un redessin. Rebâtir revenait donc à détruire, à
+// chaque réglage, l'objet même qu'on était en train de régler. Julien l'a vu en trois symptômes
+// d'un seul défaut : « je clique sur une part, l'interface apparaît mais EN CLIQUANT DEUX FOIS ; je
+// clique sur Fond, ça ne fait rien ; et EN PLUS ça ramène sur Graphe ».
+//
+// Le « ça ramène sur Graphe » dit tout : le document actif était remplacé par un neuf, dont la
+// sélection était vide, et l'inspecteur retombait sur la figure faute de sélection.
+//
+// On réconcilie donc : le document VIT, les parts que la décomposition cite encore sont les MÊMES
+// objets, seules les nouvelles sont construites, et celles qui disparaissent quittent la sélection.
+// Ce n'est pas plus cher qu'avant — c'est le même parcours de la liste — et ça retire le report de
+// réglages, qui n'a plus rien à reporter.
 
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import { createPartsDocument } from './PartsDocument'
@@ -30,7 +45,7 @@ import type { Class_PartsDocument } from './PartsDocument'
 import { Class_PartElement } from './PartElement'
 import { NO_SUBJECT } from './PartSubject'
 import type { Type_PartSubject } from './PartSubject'
-import { carryPartStyleOver, partStyleOf, seedPartStyles } from './partStyle'
+import { partStyleOf, seedPartStyles } from './partStyle'
 
 /** Une part telle que les décompositions la produisent, quelle que soit la nature. */
 export interface Type_PartInput {
@@ -52,36 +67,38 @@ export interface Type_FigureParts {
 }
 
 /**
- * Construit les éléments d'une figure.
+ * Les éléments d'une figure, réconciliés sur les parts du moment.
  *
  * @param source le document dont les objets sont les sujets.
  * @param parts les parts de la figure, dans l'ordre du tracé.
- * @param reuse les parts d'un tracé précédent, dont on reprend les réglages posés à la main.
+ * @param reuse le jeu du dessin précédent. Son document et ses parts sont REPRIS, pas remplacés.
  */
 export const buildParts = (
   source: Class_ApplicationData,
   parts: Type_PartInput[],
   reuse?: Type_FigureParts
 ): Type_FigureParts => {
+  // LE DOCUMENT SURVIT AU DESSIN. C'est lui que la vignette a déclaré à l'espace de travail, et
+  // `bindWindowDocument` est idempotent : reposer le même ne fait basculer aucun actif. En poser un
+  // neuf, si — et c'était le « ça ramène sur Graphe ».
+  //
   // os#1454 — PAR LA FABRIQUE, jamais par `new` : dans un espace de travail OS+, tout document
   // doit etre un document OS+ (cf. l en-tete de PartsDocument, et le plantage qu il raconte).
-  const document = createPartsDocument(source)
+  const document = reuse?.document ?? createPartsDocument(source)
   const drawing_area = document.drawing_area
 
-  // os#1448 — LE STYLE DES PARTS, AVANT LA MOINDRE PART. Le constructeur d'un élément lit sa
+  // os#1449 — LE STYLE DES PARTS, AVANT LA MOINDRE PART. Le constructeur d'un élément lit sa
   // liste de styles et s'y enregistre : un style posé après coup ne serait pas celui sur lequel
   // la part a été construite. C'est l'ordre du semis de l'étoile, et pour la même raison.
   //
   // C'est aussi sa simple PRÉSENCE dans `sankey.styles_list` que l'onglet Styles de l'inspecteur
   // montre : sans elle, « éditer globalement » n'a rien à proposer.
-  seedPartStyles(drawing_area.sankey)
+  //
+  // UNE SEULE FOIS, au premier dessin : le document vivant garde son style, avec ce que l'auteur y
+  // a réglé. C'est ce qui a rendu `carryPartStyleOver` inutile — il n'existait que pour rattraper
+  // le document qu'on jetait.
+  if (reuse === undefined) seedPartStyles(drawing_area.sankey)
   const part_style = partStyleOf(drawing_area.sankey)
-  // Ce que l'auteur avait réglé sur le style au dessin précédent — sans ce report, « toutes les
-  // parts d'un coup » ne survivrait pas au premier dépliage (cf. `carryPartStyleOver`).
-  carryPartStyleOver(
-    reuse ? partStyleOf(reuse.document.drawing_area.sankey) : undefined,
-    part_style
-  )
 
   const by_id: { [part_id: string]: Class_PartElement } = {}
   const ordered: Class_PartElement[] = []
@@ -91,29 +108,30 @@ export const buildParts = (
     // On garde la PREMIÈRE : deux éléments pour une seule part auraient des réglages divergents,
     // et le second écraserait le premier dans le registre sans qu'on sache lequel est dessiné.
     if (by_id[input.id] !== undefined) return
-    // Le style de part, et non le style par défaut : c'est par lui que passe « toutes les parts
-    // d'un coup ». Le constructeur d'élément empile de toute façon le style par défaut en dessous.
-    const part = new Class_PartElement(input.id, drawing_area, part_style)
-    part.bindSubject(input.subject ?? NO_SUBJECT)
-
-    // Les réglages que l'auteur avait posés sur CETTE part, et eux seuls — VERBATIM.
+    // LA MÊME PART QU'AU DESSIN PRÉCÉDENT, quand la décomposition la cite encore. C'est toute la
+    // correction : l'objet que l'inspecteur tient, que la sélection désigne et que le tracé lit
+    // est un seul et même objet, d'un dessin à l'autre.
     //
-    // os#1448 : ce n'est plus `copyAttrFrom`, et c'est pour la même raison qui fait qu'une part
-    // lit son sac par simple présence (cf. `Class_PartElement.isAttributeOverloaded`).
-    // `copyAttrFrom` MINIMISE contre le style résolu de la source : une part qui porte la valeur
-    // que son style porte aussi y perdait son réglage — « cocher le liséré sur ce secteur »
-    // aurait tenu jusqu'au redessin suivant, puis disparu. La minimisation sert un autre cas (un
-    // transfert de disposition entre deux diagrammes dont les styles diffèrent) ; ici le style
-    // d'arrivée EST celui de départ, à l'amorce et au report près, et elle ne peut que perdre.
-    const previous = reuse?.by_id[input.id]
-    if (previous !== undefined) part.restoreStorage(previous.snapshotStorage())
+    // Le style de part, et non le style par défaut, pour celles qu'on construit : c'est par lui
+    // que passe « toutes les parts d'un coup ». Le constructeur empile le style par défaut dessous.
+    const part = reuse?.by_id[input.id]
+      ?? new Class_PartElement(input.id, drawing_area, part_style)
+    // Le SUJET se relie à chaque fois : une part peut garder son identifiant en changeant ce
+    // qu'elle désigne (un axe de comparaison qui bascule), et son nom en dépend.
+    part.bindSubject(input.subject ?? NO_SUBJECT)
 
     by_id[input.id] = part
     ordered.push(part)
   })
 
-  // L'ancien document a fini de servir : ses parts ont donné ce qu'elles portaient.
-  reuse?.document.dispose()
+  // LES PARTS QUE LA DÉCOMPOSITION NE CITE PLUS. Elles quittent la sélection avant d'être oubliées :
+  // sans cela l'inspecteur continuerait de proposer les réglages d'un secteur qui n'est plus à
+  // l'écran — et l'auteur les poserait sur rien.
+  Object.entries(reuse?.by_id ?? {}).forEach(([id, part]) => {
+    if (by_id[id] === part) return
+    drawing_area.removeElementFromSelection(part)
+    part.delete()
+  })
 
   // os#1456 — le document sait ce qu'il porte : c'est par là que le sélecteur d'éléments les
   // trouve, lui qui ne reçoit qu'un document (cf. `partsOfDocument`).

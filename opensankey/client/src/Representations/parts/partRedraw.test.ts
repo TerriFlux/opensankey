@@ -77,9 +77,10 @@ describe('os#1459 ecrire un attribut de part demande le redessin de sa figure', 
     expect(asked()).toBe(avant)
   })
 
-  it('REPRENDRE les reglages au rebatissage nen demande pas non plus', () => {
-    // `restoreStorage` ecrit le sac SANS passer par les setters dynamiques : c est ce qui ferme
-    // la boucle. Si un jour on repasse par `copyAttrFrom`, ce test tombe et dit pourquoi.
+  it('REDESSINER en gardant les reglages nen demande pas non plus', () => {
+    // C est ce qui ferme la boucle, et depuis os#1453 c est devenu evident : la reconciliation
+    // n ECRIT rien sur une part existante — c est le meme objet, il porte deja son reglage. Aucun
+    // setter n est appele, donc aucun redessin n est demande, donc pas de boucle.
     const { source, parts, asked } = buildScene()
     parts.by_id['a'].shape_color = '#123456'
     const avant = asked()
