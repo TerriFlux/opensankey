@@ -57,6 +57,23 @@ export interface Type_SunburstStyle {
    */
   fill?: string
   background_visible?: boolean
+  /**
+   * os#1465 — LE PICTOGRAMME D'UN SECTEUR, résolu et prêt à peindre.
+   *
+   * Julien : « oui, on peut dessiner l'icône sur les parts ». L'onglet Icône était servi aux parts
+   * depuis os#1456 — sur sa demande — SANS que rien ne les dessine : soixante-trois clés `icon_*`
+   * offertes à l'auteur et lues par aucun tracé. Un onglet inerte est pire que pas d'onglet : il
+   * promet.
+   *
+   * `icon_path` est le `d` d'un chemin SVG, déjà sorti du catalogue du document (cf.
+   * `Type_SunburstPart.sankey`) : le tracé n'a plus qu'à le peindre, sans rien savoir du modèle.
+   * Absent = pas d'icône, c'est-à-dire toutes les figures d'avant ce lot.
+   */
+  icon_path?: string
+  icon_view_box?: string
+  icon_color?: string
+  /** `icon_box_width` — la taille voulue par l'auteur. Absente : le tracé la calcule pour l'anneau. */
+  icon_size?: number
   /** Regrouper AUSSI les parts sous ce pourcentage du tout. 0 : seulement l'invisible. */
   others_threshold: number
   labels_mode: 'fit' | 'none' | 'always'
@@ -191,6 +208,17 @@ export interface Type_SunburstPart {
   isAttributeOverloaded(attr: string): boolean
   /** La valeur résolue par la cascade des styles, comme pour un nœud. */
   getElementProperty(attr: string): unknown
+  /**
+   * os#1465 — DE QUOI RÉSOUDRE UN PICTOGRAMME, et rien de plus.
+   *
+   * Une icône se désigne par un NOM (`icon_icon_name`) ; son tracé vit dans le catalogue du
+   * document. La résolution se fait donc ici, où la part est connue, et le tracé ne reçoit qu'un
+   * `d` de chemin SVG — il n'hérite d'aucune dépendance au modèle, comme pour tout le reste.
+   *
+   * Facultatif et STRUCTUREL : `Class_ProtoElement` expose déjà `sankey`, donc une part y répond
+   * sans le savoir ; et un test peut fabriquer une part sans catalogue, qui n'aura pas d'icône.
+   */
+  sankey?: { getIconFromCatalog(id_icon: string): string }
 }
 
 const numberSaid = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
@@ -230,6 +258,27 @@ export const sunburstPartStyle = (
   put('border_visible', booleanSaid(said('shape_border_visible')))
   put('border_color', textSaid(said('shape_border_color')))
   put('border_thickness', numberSaid(said('shape_border_thickness')))
+
+  // ICÔNE (`icon_*`) — os#1465
+  //
+  // Le nom est lu PAR LA PORTE (`said`) et non résolu : le style par défaut d'un élément pourrait
+  // porter un nom d'icône, et toutes les couronnes du parc se couvriraient de pictogrammes que
+  // personne n'a demandés. Une part n'a d'icône que si elle le dit.
+  //
+  // `icon_is_visible` ne peut que RETIRER : une part qui nomme une icône et la cache n'en a pas.
+  // Il ne peut pas en ajouter une — sans nom, il n'y a rien à peindre.
+  const icon_name = textSaid(said('icon_icon_name'))
+  if (icon_name && part.getElementProperty('icon_is_visible') !== false) {
+    // La résolution se fait ICI, où la part connaît son document. Un catalogue absent (un test qui
+    // fabrique une part sans document) rend une chaîne vide : pas d'icône, et rien ne casse.
+    const path = part.sankey?.getIconFromCatalog(icon_name) ?? ''
+    if (path !== '') {
+      out.icon_path = path
+      put('icon_view_box', textSaid(said('icon_view_box')))
+      put('icon_color', textSaid(said('icon_color')))
+      put('icon_size', numberSaid(said('icon_box_width')))
+    }
+  }
 
   // LIBELLÉ (`name_label_*`)
   // « Là où ça tient / toujours / jamais » se dit avec DEUX clés d'élément : on décompose le repli
@@ -401,6 +450,12 @@ const MIN_CALLOUT_EDGE_PX = 6
 const CALLOUT_GAP_PX = 14
 // Écart entre deux anneaux : un vide de la couleur du fond, pas un trait.
 const ARC_GAP_PX = 1.5
+// os#1465 — la part de son secteur qu'un pictogramme occupe quand l'auteur n'impose pas sa taille.
+// Pas 1 : une icône qui touche les bords de son anneau se confond avec ses voisines.
+const ICON_FILL_RATIO = 0.7
+// Le cadre d'un pictogramme du catalogue quand il n'en déclare pas — même valeur que le dessin
+// d'icône d'un nœud (`DrawLabel.drawIcon`), et pour la même raison : c'est celui du catalogue.
+const ICON_VIEW_BOX = '0 0 1000 1000'
 
 
 // Encre d'une étiquette POSÉE SUR un secteur : choisie sur la luminance du secteur, pas
@@ -960,6 +1015,12 @@ export const drawSunburstChart = (
 
     const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null => {
       const s = styleOf(d.id)
+      // os#1465 — L'ICÔNE PREND LA PLACE DU NOM, et c'est le procédé du diagramme : sur un nœud
+      // aussi, un libellé qui porte une icône n'écrit pas son texte (`DrawLabel`, quatre endroits
+      // qui rendent '' dès que `icon_name` est posé). Les superposer dans un secteur donnerait un
+      // pictogramme barré de lettres — et écrire les deux demanderait une mise en page que
+      // personne n'a demandée. L'auteur qui veut le nom ne met pas d'icône.
+      if (s.icon_path) return null
       return sunburstArcLabel(
         sectorText(d),
         (d.a1 - d.a0) * (geo.inner_r + (d.depth + 0.5) * geo.ring),
@@ -1241,6 +1302,52 @@ export const drawSunburstChart = (
           .text(line)
       })
     })
+
+    // ── PICTOGRAMMES (os#1465) ───────────────────────────────────────────────────────────
+    //
+    // Julien : « oui, on peut dessiner l'icône sur les parts ». Un secteur qui nomme sa filière
+    // par son pictogramme se lit d'un coup d'œil, là où un nom demande de le lire.
+    //
+    // CE QU'ON NE REPREND PAS DU DESSIN D'ICÔNE D'UN NŒUD (`DrawLabel.drawIcon`), et pourquoi :
+    // il est tissé avec la géométrie du nœud — largeur de forme, fond générique, poignée de
+    // déplacement. Un secteur n'a rien de tout cela : sa place et sa taille sont CALCULÉES à
+    // partir de sa valeur. Ce qui se reprend, c'est le fond de l'affaire, et il tient en trois
+    // choses : un `d` de chemin sorti du catalogue, un cadre, une encre.
+    //
+    // DROIT, JAMAIS TOURNÉ. Un texte suit le rayon ou l'arc parce qu'il se lit dans un sens ; un
+    // pictogramme couché ne se reconnaît plus. On défait donc la rotation du secteur.
+    const icons = slices.filter(d => styleOf(d.id).icon_path !== undefined)
+    if (icons.length > 0) {
+      g.selectAll<SVGSVGElement, Type_SunburstSlice>('svg.sunburst_arc_icon')
+        .data(icons)
+        .enter().append('svg')
+        .attr('class', 'sunburst_arc_icon')
+        .each(function (d) {
+          const s = styleOf(d.id)
+          const radius = inner_r + (d.depth + 0.5) * ring
+          // LA TAILLE TIENT DANS LE SECTEUR, sinon elle déborde sur ses voisins : bornée par la
+          // largeur de l'anneau ET par la corde du secteur, la plus petite des deux gagnant. Ce
+          // que l'auteur impose (`icon_box_width`) est respecté, mais pas au-delà de ce qui tient.
+          const chord = (d.a1 - d.a0) * radius
+          const room = Math.min(ring, chord) * ICON_FILL_RATIO
+          const size = Math.max(0, Math.min(s.icon_size ?? room, room))
+          const deg = ((d.a0 + d.a1) / 2) * 180 / Math.PI - 90
+          d3.select(this)
+            .attr('viewBox', s.icon_view_box && s.icon_view_box !== '' ? s.icon_view_box : ICON_VIEW_BOX)
+            .attr('width', size)
+            .attr('height', size)
+            .attr('x', -size / 2)
+            .attr('y', -size / 2)
+            .attr('transform', `rotate(${deg}) translate(${radius},0) rotate(${-deg})`)
+            .attr('pointer-events', 'none')
+            .append('path')
+            // L'encre par défaut est celle du texte qu'elle remplace : par CONTRASTE sur la
+            // couleur du secteur, sans quoi un pictogramme noir disparaîtrait sur un anneau
+            // sombre. L'auteur peut l'imposer, c'est alors son affaire.
+            .attr('fill', s.icon_color && s.icon_color !== '' ? s.icon_color : inkOn(d.color, palette.ink))
+            .attr('d', s.icon_path as string)
+        })
+    }
 
     // ── Étiquettes SORTIES DU DISQUE (demande Julien, 18/09) ─────────────────────────────
     // Celles que leur secteur ne tient pas en entier, quand l'auteur le demande (`callout`) :
