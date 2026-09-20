@@ -27,7 +27,7 @@
 import * as d3 from '../d3Modules'
 import i18next from 'i18next'
 
-import { Type_LangMap, normalizeLang, resolveLangMap } from '../Persistence/persistenceMigrations'
+import { normalizeLang } from '../Persistence/persistenceMigrations'
 import { Class_ElementStyle } from './Element'
 import { NodeDrawNameLabel } from './DrawLabel'
 import { Class_DrawingArea } from '../types/DrawingArea'
@@ -36,7 +36,6 @@ import { Class_Handler } from './Handler'
 import { Class_BaseShape } from './Element'
 import { NodeEventsHandler } from './NodeEventsHandler'
 import { isLegendElementId } from './legendIds'
-import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
 import { tiedFrameRefitLeft } from './tiedFrameRefit'
 import { envelopeBBoxOfMembers, Type_EnvelopeMember } from './envelopeBBox'
 
@@ -73,12 +72,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_u: number
   private _position_v: number
 
-  // OS#1299 — nom multilingue : map { langue -> nom }, comme la documentation
-  // markdown (cf. persistenceMigrations). Le getter/setter `name` expose une
-  // string résolue/écrite pour la langue ACTIVE de l'app (i18next) : traduire un
-  // diagramme = basculer la langue de l'app puis renommer. Une seule langue =
-  // comportement historique inchangé (sérialisée en string).
-  protected _name_map: Type_LangMap
+  // os#1445 — `_name_map` et tout le nommage (`name`, `name_label`,
+  // `name_label_effective`…) vivent désormais sur `Class_BaseShape` : ils
+  // décrivent l'ÉLÉMENT, pas le nœud. Ne restent ici que les conséquences
+  // proprement nodales d'un renommage (cf. `onNameChanged`).
   // Le contenu du label de nom (source, texte libre, groupe de tags, dimension)
   // est désormais porté par le système d'attributs/styles (_storage) :
   // name_label_source / name_label_text / name_label_tag_group_id /
@@ -731,98 +728,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.drawing_area.connection_gesture.onNodeOut(this)
   }
 
-  // Nom résolu pour la langue active de l'app (repli en→fr→première dispo).
-  // Avec une seule langue dans la map (cas historique), renvoie toujours cette
-  // valeur quelle que soit la langue active. Le `?? {}` protège les accès
-  // pendant la chaîne super() du constructeur (map pas encore assignée).
-  public get name() { return resolveLangMap(this._name_map ?? {}, i18next.language) }
-  public set name(_: string) {
-    const lang = normalizeLang(i18next.language)
-    if (!this._name_map) this._name_map = {}
-    // Vider le nom dans une langue alors que d'autres langues existent =
-    // SUPPRIMER cette traduction (le nom retombe sur l'autre langue). Vider le
-    // nom quand c'est la seule langue = nom vide (comportement historique).
-    const other_langs = Object.keys(this._name_map).filter(l => l !== lang)
-    if (_ === '' && other_langs.length > 0) delete this._name_map[lang]
-    else this._name_map[lang] = _
+  /**
+   * os#1445 — la SEULE part du nommage qui soit propre au nœud : ce qu'un renommage entraîne
+   * DANS LE DESSIN. L'écriture du nom, elle, est celle de `Class_BaseShape` — un flux et une part
+   * se nomment de la même façon, et rien ici ne les concerne.
+   */
+  protected override onNameChanged() {
     // Sous un thème à palette par nom, renommer périme la table des couleurs.
     // `Class_ContainerElement` hérite de cette classe sans être un nœud : c'est
     // `Sankey` qui filtre.
     this.sankey?.onNodeRenamed(this)
     this.drawNameLabel()
-  }
-  /** Map complète { langue -> nom } (persistance / copie). */
-  public get name_lang_map(): Type_LangMap { return this._name_map }
-  public set name_lang_map(_: Type_LangMap) { this._name_map = _ }
-  public get name_label() {
-    const resolved_name = this.name
-    if (this.name_label_separator !== '') {
-      const splitted_label = resolved_name.split(this.name_label_separator)
-      return (splitted_label.length > 1 && this.name_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
-    }
-    return resolved_name
-  }
-
-  // Compat historique : name_label_custom <=> source 'custom'. Conserve le
-  // comportement des appelants existants (édition inline/rich text, titre…).
-  // name_label_source est un attribut _storage (NAME_LABEL_CONFIG) ; l'affecter
-  // déclenche l'action drawNameLabel.
-  public get name_label_custom() { return this.name_label_source === 'custom' }
-  public set name_label_custom(_: boolean) { this.name_label_source = _ ? 'custom' : 'name' }
-
-  // Texte effectivement affiché par le name_label, selon la source choisie. Sert
-  // de source unique au rendu (getLabelText) et à l'init du rich text.
-  public get name_label_effective(): string {
-    switch (this.name_label_source) {
-    case 'custom': return this.name_label_text
-    case 'tag': return this.resolveTagLabel()
-    case 'ancestor': return this.resolveAncestorLabel()
-    case 'template': return this.resolveTemplateLabel()
-    default: return this.name_label
-    }
-  }
-
-  // Texte BRUT à éditer : identique au libellé effectif pour un élément normal,
-  // mais surchargé par le titre (Class_ContainerElement) pour préserver les
-  // jetons {Tag} au lieu de leur valeur interpolée. Sert aux chemins d'édition
-  // (input inline, init rich text) : on édite « {Month} », pas « January ».
-  public get name_label_effective_editable(): string {
-    // OS#1314 — un gabarit s'édite tel qu'il est écrit, jetons compris.
-    if (this.name_label_source === 'template') return this.name_label_template
-    return this.name_label_effective
-  }
-
-  // Sources 'tag' et 'ancestor' : surchargées par Class_NodeElement (qui porte
-  // les tags et les dimensions). Par défaut (zone de texte / base) → nom de
-  // l'élément, car un container n'a ni tags assignés ni dimensions.
-  protected resolveTagLabel(): string {
-    return this.name_label
-  }
-
-  // OS#1314 — source 'template' : gabarit à jetons interpolé au dessin. La base
-  // ne connaît que les jetons universels ({Name} + valeur sélectionnée des
-  // groupes de data/view tags, comme le titre) ; Class_NodeElement enrichit avec
-  // les valeurs, le bilan et les tags assignés.
-  protected resolveTemplateLabel(): string {
-    return applyTemplate(this.name_label_template, token => this.resolveTemplateToken(token))
-  }
-
-  /**
-   * Résolution d'UN jeton. Renvoie null pour un jeton inconnu (laissé tel quel
-   * dans le texte). Surchargé par les sous-classes, qui délèguent ici pour les
-   * jetons universels.
-   */
-  protected resolveTemplateToken(token: string): string | null {
-    if (token === 'Name') return this.name_label
-    return resolveTagGroupToken(
-      token,
-      this.sankey.data_taggs_list,
-      this.sankey.view_taggs_list
-    )
-  }
-
-  protected resolveAncestorLabel(): string {
-    return this.name_label
   }
 
   public get attached_container(): Class_NodeBase[] { return this._attached_container }
