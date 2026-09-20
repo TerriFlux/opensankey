@@ -57,6 +57,10 @@ import { buildColorLockIndex, tagStyleLayers, topLayerDefining, untaggedDefaults
 import type { Type_TagStyleLayer, Type_TagStyleOwner } from './tagStyles'
 // SA#551 — module FEUILLE lui aussi
 import { previewedTagGroups } from './tagGroupPriority'
+// os#1445 — module FEUILLE lui aussi (aucun import, cf. son en-tête) : le nommage remonte ici
+// SANS rouvrir le cycle Element → … → Handler, puisque le gabarit à jetons ne connaît pas le
+// modèle — ses résolveurs lui sont injectés sous forme de fonction.
+import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
 
 // SA#541 — index « couleur → cadenas », calculé au PREMIER usage : `ElementsAttributesConfig` et
 // `Element` se chargent en cycle, la config peut ne pas exister encore à l'évaluation du module.
@@ -954,6 +958,17 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   // null si aucun label n'est sub-sélectionné.
   public selected_label_prefix: 'name_label' | 'value_label' | 'icon' | null = null
 
+  // OS#1299 — nom multilingue : map { langue -> nom }, comme la documentation markdown (cf.
+  // persistenceMigrations). Le couple `name` expose une string résolue/écrite pour la langue
+  // ACTIVE de l'app (i18next) : traduire un diagramme = basculer la langue puis renommer. Une
+  // seule langue = comportement historique inchangé (sérialisée en string).
+  //
+  // DÉCLARÉE EN TÊTE, ET CE N'EST PAS DE LA COQUETTERIE. Babel émet, au début du constructeur de
+  // CETTE classe, un `this.prop = void 0` par déclaration `prop!:` ci-dessous, et chacun passe par
+  // le setter dynamique installé par `createDynamicProperties()`. Poser la map AVANT eux garantit
+  // qu'aucun de ces passages ne trouve `_name_map` indéfinie (cf. `_suspend_actions`).
+  protected _name_map: Type_LangMap = {}
+
   // =================== SHAPE ATTRIBUTES (shape_*) ===================
   shape_visible!: ShapeAttributeTypes['visible']
   shape_type!: ShapeAttributeTypes['type']
@@ -1221,6 +1236,129 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
   shape_link_caps!: LinkShapeSpecificValues['link_caps']
+
+  // ================= LE NOM, ET L'AFFICHAGE DU NOM (os#1445) =================
+  //
+  // Arbitrage de Julien (20/09) : « il faut une notion d'élément, et un nœud, un flux, une part
+  // sont des éléments », et « il y a le nom et le display du nom ».
+  //
+  // Le nommage vivait jusqu'ici sur les FEUILLES — écrit trois fois (`Class_NodeBase`,
+  // `Class_LinkElement`, la zone de texte) alors qu'il décrit l'ÉLÉMENT. `Class_BaseShape` est
+  // l'élément qui a une forme, un libellé et une valeur : c'est ici que « le nom » appartient, et
+  // les trois natures connues (nœud, flux, part) en héritent d'un seul jet.
+  //
+  // DEUX NOTIONS, ET ELLES NE SE CONFONDENT PAS :
+  //   · `name`                  — le NOM de l'élément, la donnée du document ;
+  //   · `name_label_effective`  — ce que le diagramme AFFICHE, qui peut être tout autre chose
+  //                               (texte libre, étiquette, ancêtre, gabarit à jetons).
+  // Renommer l'affichage n'écrit jamais le nom : c'est la règle qui tranche l'alias d'une part
+  // comme le titre d'une zone de texte.
+
+  /**
+   * Nom résolu pour la langue active de l'app (repli en→fr→première dispo). Avec une seule
+   * langue dans la map (cas historique), renvoie toujours cette valeur quelle que soit la langue
+   * active. Le `?? {}` protège les accès pendant la chaîne `super()` du constructeur.
+   */
+  public get name(): string { return resolveLangMap(this._name_map ?? {}, i18next.language) }
+  public set name(_: string) {
+    const lang = normalizeLang(i18next.language)
+    if (!this._name_map) this._name_map = {}
+    // Vider le nom dans une langue alors que d'autres langues existent = SUPPRIMER cette
+    // traduction (le nom retombe sur l'autre langue). Vider le nom quand c'est la seule langue =
+    // nom vide (comportement historique).
+    const other_langs = Object.keys(this._name_map).filter(l => l !== lang)
+    if (_ === '' && other_langs.length > 0) delete this._name_map[lang]
+    else this._name_map[lang] = _
+    this.onNameChanged()
+  }
+
+  /**
+   * Suite d'un renommage. La base n'a RIEN à faire : elle ne sait pas si l'élément se dessine, ni
+   * comment. Les feuilles qui ont une conséquence à en tirer (le nœud : périmer la palette par nom
+   * et redessiner son libellé) la posent ici — et non dans le setter, qui doit rester la seule
+   * écriture de la map quelle que soit la nature de l'élément.
+   */
+  protected onNameChanged() { /* rien à redessiner au niveau de l'élément */ }
+
+  /** Map complète { langue -> nom } (persistance / copie). */
+  public get name_lang_map(): Type_LangMap { return this._name_map }
+  public set name_lang_map(_: Type_LangMap) { this._name_map = _ }
+
+  /** Le nom tel que le libellé le montre par défaut : coupé au séparateur si l'auteur en a posé un. */
+  public get name_label(): string {
+    const resolved_name = this.name
+    if (this.name_label_separator !== '') {
+      const splitted_label = resolved_name.split(this.name_label_separator)
+      return (splitted_label.length > 1 && this.name_label_separator_part == 'after')
+        ? splitted_label[splitted_label.length - 1]
+        : splitted_label[0]
+    }
+    return resolved_name
+  }
+
+  // Compat historique : name_label_custom <=> source 'custom'. Conserve le comportement des
+  // appelants existants (édition inline/rich text, titre…). name_label_source est un attribut
+  // _storage (NAME_LABEL_CONFIG) ; l'affecter déclenche l'action drawNameLabel.
+  public get name_label_custom() { return this.name_label_source === 'custom' }
+  public set name_label_custom(_: boolean) { this.name_label_source = _ ? 'custom' : 'name' }
+
+  /**
+   * Texte effectivement affiché par le name_label, selon la source choisie. Source unique du rendu
+   * (getLabelText) et de l'init du rich text.
+   */
+  public get name_label_effective(): string {
+    switch (this.name_label_source) {
+    case 'custom': return this.name_label_text
+    case 'tag': return this.resolveTagLabel()
+    case 'ancestor': return this.resolveAncestorLabel()
+    case 'template': return this.resolveTemplateLabel()
+    default: return this.name_label
+    }
+  }
+
+  /**
+   * Texte BRUT à éditer : identique au libellé effectif pour un élément normal, mais surchargé par
+   * le titre (Class_ContainerElement) pour préserver les jetons {Tag} au lieu de leur valeur
+   * interpolée. Sert aux chemins d'édition (input inline, init rich text) : on édite « {Month} »,
+   * pas « January ».
+   */
+  public get name_label_effective_editable(): string {
+    // OS#1314 — un gabarit s'édite tel qu'il est écrit, jetons compris.
+    if (this.name_label_source === 'template') return this.name_label_template
+    return this.name_label_effective
+  }
+
+  // Sources 'tag' et 'ancestor' : elles demandent des ÉTIQUETTES ASSIGNÉES et des DIMENSIONS, que
+  // seul `Class_NodeElement` possède — il les surcharge. La base en donne une version neutre qui
+  // retombe sur le nom, car un flux, une part, une zone de texte ou un cadre n'ont ni l'une ni
+  // l'autre : le repli est une réponse, pas un manque.
+  protected resolveTagLabel(): string {
+    return this.name_label
+  }
+
+  protected resolveAncestorLabel(): string {
+    return this.name_label
+  }
+
+  // OS#1314 — source 'template' : gabarit à jetons interpolé au dessin. La base ne connaît que les
+  // jetons universels ({Name} + valeur sélectionnée des groupes de data/view tags, comme le titre) ;
+  // Class_NodeElement enrichit avec les valeurs, le bilan et les tags assignés.
+  protected resolveTemplateLabel(): string {
+    return applyTemplate(this.name_label_template, token => this.resolveTemplateToken(token))
+  }
+
+  /**
+   * Résolution d'UN jeton. Renvoie null pour un jeton inconnu (laissé tel quel dans le texte).
+   * Surchargé par les sous-classes, qui délèguent ici pour les jetons universels.
+   */
+  protected resolveTemplateToken(token: string): string | null {
+    if (token === 'Name') return this.name_label
+    return resolveTagGroupToken(
+      token,
+      this.sankey.data_taggs_list,
+      this.sankey.view_taggs_list
+    )
+  }
 
   public getShapeColorToUse() {
     return this.shape_color
