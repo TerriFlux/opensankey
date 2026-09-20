@@ -26,7 +26,7 @@ import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import { figureUnitOf } from './figureUnit'
-import { figureTitleOf } from '../Charts/figureChartStyle'
+import { figureTextsOf } from '../Charts/figureChartStyle'
 import {
   figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
 } from '../Charts/figureZoomBridge'
@@ -320,7 +320,10 @@ export const drawSunburstRepresentation = (
       mc.updateInspector()
     },
     style: readSunburstStyle(ctx.options ?? {}),
-    title: figureTitleOf(ctx.options ?? {}),
+    // os#1449 — LE TITRE N'EST PLUS UN CAS À PART : c'est la première zone de texte de la figure,
+    // et les suivantes sont celles que l'auteur a ajoutées. Le nom du sujet vient du tracé, seul
+    // à savoir ce que la couronne montre en ce moment (racine unique ou périmètre).
+    texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
     label_positions: readLabelPositions(ctx.options?.['label_positions']),
     // Une étiquette déposée s'écrit sur LA FIGURE de la vignette — hors fenêtre (pop-up de
     // présentation), il n'y a personne à qui l'écrire et le geste reste à l'écran.
