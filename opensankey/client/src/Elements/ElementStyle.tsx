@@ -521,8 +521,18 @@ export interface Type_StyleHost {
   addNewDefaultElementStyle(): Class_ElementStyle
   /** Retire un style de la famille ; ce qui le suivait retombe sur la cascade. */
   deleteElementStyle(style: Class_ElementStyle): void
-  /** Assigne ou retire ce style à ce que l'auteur a sélectionné. */
-  switchElementStyle(style: Class_ElementStyle, add: boolean): void
+  /**
+   * Assigne ou retire ce style à ce que l'auteur a sélectionné.
+   *
+   * `targets` est la CIBLE EXPLICITE, et elle n'est pas une commodité : un Sankey connaît sa
+   * sélection et la lit lui-même (c'est ce qu'il a toujours fait) ; une nature de figure, elle,
+   * ne sait pas quelle figure est active — elle décrit une sorte, pas un objet à l'écran. Le seul
+   * qui le sache est l'appelant, qui tient déjà la liste de ce qu'il édite.
+   *
+   * Absent : l'hôte se débrouille avec ce qu'il sait. C'est ce qui permet au Sankey de satisfaire
+   * cette interface sans une ligne de plus.
+   */
+  switchElementStyle(style: Class_ElementStyle, add: boolean, targets?: unknown[]): void
   /** Rend au style ses valeurs d'usine, sans le supprimer. */
   resetAttrStyle(style: Class_ElementStyle): void
   /** Retire UNE clé posée sur ce style ; elle repasse à ce dont elle hérite. */
