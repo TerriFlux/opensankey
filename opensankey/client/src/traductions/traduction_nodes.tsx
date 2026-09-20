@@ -266,6 +266,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: 'Unitary node output',
         LinkInUnitaryStyle: 'Unitary input link',
         LinkOutUnitaryStyle: 'Unitary output link',
+        FigurePartStyle: 'Figure part',
         family: 'Family',
         family_predefined: 'Application styles',
         family_user: 'User styles'
@@ -538,6 +539,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: 'Unitaire noeud sortie',
         LinkInUnitaryStyle: 'Unitaire flux entrée',
         LinkOutUnitaryStyle: 'Unitaire flux sortie',
+        FigurePartStyle: 'Part de figure',
         family: 'Famille',
         family_predefined: 'Styles de l\'application',
         family_user: 'Styles utilisateur'
@@ -805,6 +807,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: 'Nodo unitario salida',
         LinkInUnitaryStyle: 'Flujo unitario entrada',
         LinkOutUnitaryStyle: 'Flujo unitario salida',
+        FigurePartStyle: 'Parte de figura',
         family: 'Familia',
         family_predefined: 'Estilos de la aplicación',
         family_user: 'Estilos de usuario'
@@ -1072,6 +1075,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: 'Einheitsknoten Ausgang',
         LinkInUnitaryStyle: 'Einheitsfluss Eingang',
         LinkOutUnitaryStyle: 'Einheitsfluss Ausgang',
+        FigurePartStyle: 'Abbildungsteil',
         family: 'Familie',
         family_predefined: 'Anwendungsstile',
         family_user: 'Benutzerstile'
@@ -1339,6 +1343,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: 'Nodo unitario uscita',
         LinkInUnitaryStyle: 'Flusso unitario ingresso',
         LinkOutUnitaryStyle: 'Flusso unitario uscita',
+        FigurePartStyle: 'Parte di figura',
         family: 'Famiglia',
         family_predefined: 'Stili dell\'applicazione',
         family_user: 'Stili utente'
@@ -1612,6 +1617,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: '单位节点输出',
         LinkInUnitaryStyle: '单位输入流量',
         LinkOutUnitaryStyle: '单位输出流量',
+        FigurePartStyle: '图形部分',
         family: '系列',
         family_predefined: '应用样式',
         family_user: '用户样式'
@@ -1885,6 +1891,7 @@ export const resources_nodes = {
         SankeyUnitaryNodeOutputStyle: '単位ノードの出力',
         LinkInUnitaryStyle: '単位の入力フロー',
         LinkOutUnitaryStyle: '単位の出力フロー',
+        FigurePartStyle: '図の部分',
         family: '分類',
         family_predefined: 'アプリのスタイル',
         family_user: 'ユーザーのスタイル'
