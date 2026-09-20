@@ -304,9 +304,16 @@ export class Class_FigureNature {
    */
   public switchElementStyle(style: Class_ElementStyle, add: boolean, targets?: unknown[]): void {
     (targets ?? []).forEach(target => {
-      const figure = target as { addStyleId?: (id: string) => void, removeStyleId?: (id: string) => void }
-      if (add) figure.addStyleId?.(style.id)
-      else figure.removeStyleId?.(style.id)
+      // Les VRAIS noms de `Class_Figure` : `addStyle` prend le style, `removeStyleById`
+      // l'identifiant. Une première version avait inventé `addStyleId` des deux côtés, et le test
+      // l'avait laissée passer parce qu'il se donnait un faux objet portant ce nom-là — un vert
+      // qui ne validait que mon invention.
+      const figure = target as {
+        addStyle?: (style: Class_ElementStyle) => void
+        removeStyleById?: (id: string) => void
+      }
+      if (add) figure.addStyle?.(style)
+      else figure.removeStyleById?.(style.id)
     })
   }
 
