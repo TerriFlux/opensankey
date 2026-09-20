@@ -115,5 +115,28 @@ export const buildParts = (
   // L'ancien document a fini de servir : ses parts ont donné ce qu'elles portaient.
   reuse?.document.dispose()
 
+  // os#1456 — le document sait ce qu'il porte : c'est par là que le sélecteur d'éléments les
+  // trouve, lui qui ne reçoit qu'un document (cf. `partsOfDocument`).
+  _parts_of_document.set(document, ordered)
+
   return { document, by_id, ordered }
 }
+
+// ── LES PARTS D'UN DOCUMENT, POUR CEUX QUI NE CONNAISSENT QUE LUI ────────────────────────────
+//
+// os#1456 — Le sélecteur d'éléments de l'inspecteur (« Sélectionner des éléments : Nœuds, Flux,
+// Zones ») demande à chaque nature la liste de ce qu'elle contient, et il ne reçoit qu'un
+// DOCUMENT. Julien, à l'écran : « la sélection des éléments n'est pas pertinente puisqu'il n'y a
+// pas les parts » — et il a raison deux fois : elles manquaient, et les trois natures proposées
+// n'existent pas dans une figure.
+//
+// Les parts ne sont PAS dans `sankey.nodes_dict` — c'est tout le sens de la correction du 20/09,
+// une part n'est pas un nœud — donc rien ne les retrouve depuis le document. On tient donc le lien
+// ici, dans une table FAIBLE : la figure qui cesse de vivre emporte son entrée sans qu'on ait à
+// penser à la retirer.
+
+const _parts_of_document = new WeakMap<Class_PartsDocument, Class_PartElement[]>()
+
+/** Les parts que ce document porte, dans l'ordre du tracé. Vide pour tout autre document. */
+export const partsOfDocument = (document: unknown): Class_PartElement[] =>
+  _parts_of_document.get(document as Class_PartsDocument) ?? []
