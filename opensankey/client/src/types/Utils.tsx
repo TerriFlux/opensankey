@@ -71,12 +71,7 @@ export {
 }
 export type { Type_BaseElementPosition } from './elementBasics'
 
-// os#1364 — `geographic` : le nœud est posé d'après sa latitude/longitude, projetées puis calées
-// sur le fond de carte (cf. `NodePositioningGeographic`). Comme `parametric` dérive la position de
-// `u`/`v`, celui-ci la dérive de coordonnées terrestres — la position dessinée n'est jamais la
-// vérité, elle en est la conséquence.
-export type Type_Position =
-  'absolute' | 'relative' | 'parametric' | 'proportional' | 'scale_adapted' | 'geographic'
+export type Type_Position = 'absolute' | 'relative' | 'parametric' | 'proportional' | 'scale_adapted'
 
 /**
  * Mode d'écart vertical des enfants lors d'une opération structurelle

@@ -40,7 +40,6 @@ import { NodePositioningScaleAdapted } from './NodePositioningScaleAdapted'
 import { NodePositioningAutoSankey } from './NodePositioningAutoSankey'
 import { NodePositioningProportional } from './NodePositioningProportional'
 import { NodePositioningParametric } from './NodePositioningParametric'
-import { NodePositioningGeographic } from './NodePositioningGeographic'
 import * as StraightLinks from './NodePositioningStraightLinks'
 import * as Crossings from './NodePositioningCrossings'
 import * as Trade from './NodePositioningTrade'
@@ -106,8 +105,6 @@ export class NodePositioning {
   // #243 (split modes) — mode proportionnel (%) et mode parametrique/grille extraits.
   public readonly proportional: NodePositioningProportional
   private _parametric: NodePositioningParametric
-  // os#1364 — mode géographique : le nœud est posé d'après sa latitude/longitude.
-  public readonly geographic: NodePositioningGeographic
 
   // #366 — Haut de RÉFÉRENCE de chaque colonne (`position_u`), pour l'empilement en écartement :
   // c'est là que se cale la TÊTE de la colonne. Mémorisé au premier empilement sur la
@@ -136,7 +133,6 @@ export class NodePositioning {
     this._auto = new NodePositioningAutoSankey(this)
     this.proportional = new NodePositioningProportional(this)
     this._parametric = new NodePositioningParametric(this)
-    this.geographic = new NodePositioningGeographic(this)
   }
 
 

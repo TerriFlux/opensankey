@@ -58,7 +58,6 @@ import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
-import type { Type_GeoReference } from '../Algorithms/geoProjection'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
@@ -765,21 +764,8 @@ export class Class_DrawingArea {
       && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
       this._position_mode_suspended_selection = undefined
     }
-    // os#1364 — LA SUSPENSION NE CONCERNE PAS LE MODE GÉOGRAPHIQUE, et c'est le seul mode qu'elle
-    // épargne. Elle existe (#369) pour les modes d'AFFICHAGE, qui réagissent au changement de
-    // sélection de données : le fichier s'ouvre tel qu'il a été enregistré, et le mode ne se fait
-    // sentir qu'au premier changement de datatag — ce qu'il gouverne.
-    //
-    // Le mode géographique ne gouverne rien de tel : il dérive la position de coordonnées, qui ne
-    // changent pas avec la sélection. L'y soumettre avait une conséquence visible et absurde
-    // (constatée par Julien, 11/09/2026) : sur un document géographique fraîchement ouvert, la
-    // case « Poser les nœuds d'après leurs coordonnées » s'affichait DÉCOCHÉE et changer de
-    // projection ne déplaçait rien — la carte n'était pas vivante tant qu'on n'avait pas touché
-    // à un datatag qui n'a rien à voir avec elle.
-    const document_mode = this._sankey.styles_dict['default'].shape_position_type
-    if (document_mode === 'geographic') return document_mode
     if (this._position_mode_suspended_selection !== undefined) return 'absolute'
-    return document_mode
+    return this._sankey.styles_dict['default'].shape_position_type
   }
 
   // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
@@ -2167,17 +2153,6 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
-    } else if (_position_type === 'geographic') {
-      // os#1364 — Mode géographique : les nœuds qui portent des coordonnées sont posés sur le
-      // fond calé. Ici, comme le mode paramétrique juste au-dessus, parce que la position doit
-      // être à jour AVANT que le moindre nœud ne soit dessiné — et pour la même raison : elle
-      // est DÉRIVÉE d'autre chose que d'elle-même, donc elle se recalcule à chaque frame plutôt
-      // que de se traîner d'une frame à l'autre.
-      //
-      // Sans calage ou sans coordonnées, la méthode ne touche à rien : le diagramme reste
-      // exactement où il est, ce qui est la seule chose raisonnable à faire tant que la carte
-      // n'existe pas encore.
-      this.nodePositioning.geographic.applyGeographicLayout()
     } else if (_position_type === 'proportional') {
       // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
       // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
@@ -5158,19 +5133,6 @@ export class Class_DrawingArea {
   private _constrain_to_bg_image_ratio: boolean = false
   private _bg_image_natural_ratio: number = 0
   private _bg_image_horizontal_align: 'left' | 'center' | 'right' = 'left'
-
-  // os#1364 — CALAGE GÉOGRAPHIQUE du fond : la projection, et deux points dont on connaît à la
-  // fois la coordonnée terrestre et l'endroit où ils tombent dans le dessin. `null` = ce
-  // diagramme n'est pas géoréférencé, ce qui est le cas de tous sauf ceux qu'on géoréférence.
-  //
-  // PORTÉ PAR LA ZONE DE DESSIN, et non par le Sankey, exactement comme l'image de fond
-  // au-dessus, et pour la même raison : il ne parle pas des flux, il parle du support sur lequel
-  // on les pose. Un même modèle peut d'ailleurs se dessiner sur deux fonds différents.
-  //
-  // DEUX POINTS, ET PAS TROIS. Deux suffisent à une échelle et à une origine ; le troisième
-  // paierait une rotation et une déformation d'axes, c'est-à-dire justement ce qu'une carte ne
-  // doit pas avoir (cf. `fitGeoReference`, qui impose une échelle unique aux deux axes).
-  private _geo_reference: Type_GeoReference | null = null
   public drawBgImage() {
     this.d3_selection_bg?.select(this.domIdSelector('bg_image')).remove()
 
@@ -5277,9 +5239,6 @@ export class Class_DrawingArea {
 
   public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 
-  // os#1364 — Mode géographique : les nœuds coordonnés se posent sur le fond calé au prochain dessin.
-  public setGeographicMode() { DisplayModes.setGeographicMode(this) }
-
   public resetAllVerticalIntervals(v_spacing?: number) { DisplayModes.resetAllVerticalIntervals(this, v_spacing) }
 
   public get id() { return this._sankey.id }
@@ -5316,23 +5275,6 @@ export class Class_DrawingArea {
     } else {
       this._loadBgImageNaturalRatio(true)
     }
-  }
-
-  // os#1364 — Calage géographique du fond (cf. `_geo_reference`). Le poser ne déplace rien tout
-  // seul : c'est le mode de position `'geographic'` qui s'en sert, au prochain dessin.
-  public get geo_reference(): Type_GeoReference | null { return this._geo_reference }
-  public set geo_reference(value: Type_GeoReference | null) { this._geo_reference = value }
-
-  /**
-   * os#1364 — Ce diagramme est-il géoréférencé AU SENS UTILE : un fond calé, et au moins un nœud
-   * qui sait où il est ? Les deux, car ni l'un ni l'autre ne suffit — un calage sans coordonnées
-   * ne place personne, des coordonnées sans calage ne savent pas où tomber. C'est ce que lit la
-   * capacité `geography` du registre des représentations, qui n'offre pas une carte à un
-   * diagramme qui n'en a pas les moyens.
-   */
-  public get is_geo_referenced(): boolean {
-    if (this._geo_reference === null) return false
-    return this._sankey.nodes_list.some(n => n.has_geo_position)
   }
 
   public get bg_image_horizontal_align(): 'left' | 'center' | 'right' { return this._bg_image_horizontal_align }

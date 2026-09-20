@@ -21,16 +21,13 @@ type Fake = {
   is_static?: boolean
   publish_options?: Record<string, unknown>
   sankey?: { level_taggs_list: unknown[], nodes_list: { dimensions_as_parent: unknown[] }[] }
-  // os#1364 — un fond cale ET au moins un noeud coordonne, cf. `is_geo_referenced`.
-  is_geo_referenced?: boolean
 }
 
 const app = (over: Fake = {}): Class_ApplicationData => ({
   is_static: over.is_static ?? false,
   publish_options: over.publish_options ?? { representations: null },
   drawing_area: {
-    sankey: over.sankey ?? { level_taggs_list: [], nodes_list: [] },
-    is_geo_referenced: over.is_geo_referenced ?? false
+    sankey: over.sankey ?? { level_taggs_list: [], nodes_list: [] }
   }
 } as unknown as Class_ApplicationData)
 
@@ -96,17 +93,10 @@ describe('os#1361 Class_RepresentationRegistry', () => {
     expect(registry.list(diagramContext(with_levels))).toHaveLength(1)
   })
 
-  it('ecarte une entree qui exige la geographie sur un diagramme non georeference', () => {
+  it('ecarte une entree qui exige la geographie, tant qu aucune brique carto n existe', () => {
     registry.register(entry({ id: 'map', needs: { geography: true } }))
     const with_levels = app({ sankey: { level_taggs_list: [{}], nodes_list: [] } })
     expect(registry.list(diagramContext(with_levels))).toHaveLength(0)
-  })
-
-  // os#1364 — Le crochet laisse expres par os#1361 est desormais branche : la carte s ouvre des
-  // que le diagramme a LES DEUX MOYENS d en faire une, un fond cale et un noeud qui sait ou il est.
-  it('offre une entree qui exige la geographie des que le diagramme est georeference', () => {
-    registry.register(entry({ id: 'map', needs: { geography: true } }))
-    expect(registry.list(diagramContext(app({ is_geo_referenced: true })))).toHaveLength(1)
   })
 
   it('un isAvailable qui leve vaut refus, il n emporte pas le selecteur', () => {
