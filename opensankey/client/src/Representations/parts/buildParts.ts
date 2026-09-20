@@ -29,6 +29,7 @@ import { Class_PartsDocument } from './PartsDocument'
 import { Class_PartElement } from './PartElement'
 import { NO_SUBJECT } from './PartSubject'
 import type { Type_PartSubject } from './PartSubject'
+import { carryPartStyleOver, partStyleOf, seedPartStyles } from './partStyle'
 
 /** Une part telle que les décompositions la produisent, quelle que soit la nature. */
 export interface Type_PartInput {
@@ -63,7 +64,22 @@ export const buildParts = (
 ): Type_FigureParts => {
   const document = new Class_PartsDocument(source)
   const drawing_area = document.drawing_area
-  const default_style = drawing_area.sankey.default_style
+
+  // os#1448 — LE STYLE DES PARTS, AVANT LA MOINDRE PART. Le constructeur d'un élément lit sa
+  // liste de styles et s'y enregistre : un style posé après coup ne serait pas celui sur lequel
+  // la part a été construite. C'est l'ordre du semis de l'étoile, et pour la même raison.
+  //
+  // C'est aussi sa simple PRÉSENCE dans `sankey.styles_list` que l'onglet Styles de l'inspecteur
+  // montre : sans elle, « éditer globalement » n'a rien à proposer.
+  seedPartStyles(drawing_area.sankey)
+  const part_style = partStyleOf(drawing_area.sankey)
+  // Ce que l'auteur avait réglé sur le style au dessin précédent — sans ce report, « toutes les
+  // parts d'un coup » ne survivrait pas au premier dépliage (cf. `carryPartStyleOver`).
+  carryPartStyleOver(
+    reuse ? partStyleOf(reuse.document.drawing_area.sankey) : undefined,
+    part_style
+  )
+
   const by_id: { [part_id: string]: Class_PartElement } = {}
   const ordered: Class_PartElement[] = []
 
@@ -72,14 +88,22 @@ export const buildParts = (
     // On garde la PREMIÈRE : deux éléments pour une seule part auraient des réglages divergents,
     // et le second écraserait le premier dans le registre sans qu'on sache lequel est dessiné.
     if (by_id[input.id] !== undefined) return
-    const part = new Class_PartElement(input.id, drawing_area, default_style)
+    // Le style de part, et non le style par défaut : c'est par lui que passe « toutes les parts
+    // d'un coup ». Le constructeur d'élément empile de toute façon le style par défaut en dessous.
+    const part = new Class_PartElement(input.id, drawing_area, part_style)
     part.bindSubject(input.subject ?? NO_SUBJECT)
 
-    // Les réglages que l'auteur avait posés sur CETTE part, et eux seuls : `copyAttrFrom` ne
-    // transporte que les surcharges propres de l'élément, minimisées contre son style — ce qui est
-    // hérité le reste.
+    // Les réglages que l'auteur avait posés sur CETTE part, et eux seuls — VERBATIM.
+    //
+    // os#1448 : ce n'est plus `copyAttrFrom`, et c'est pour la même raison qui fait qu'une part
+    // lit son sac par simple présence (cf. `Class_PartElement.isAttributeOverloaded`).
+    // `copyAttrFrom` MINIMISE contre le style résolu de la source : une part qui porte la valeur
+    // que son style porte aussi y perdait son réglage — « cocher le liséré sur ce secteur »
+    // aurait tenu jusqu'au redessin suivant, puis disparu. La minimisation sert un autre cas (un
+    // transfert de disposition entre deux diagrammes dont les styles diffèrent) ; ici le style
+    // d'arrivée EST celui de départ, à l'amorce et au report près, et elle ne peut que perdre.
     const previous = reuse?.by_id[input.id]
-    if (previous !== undefined) part.copyAttrFrom(previous)
+    if (previous !== undefined) part.restoreStorage(previous.snapshotStorage())
 
     by_id[input.id] = part
     ordered.push(part)

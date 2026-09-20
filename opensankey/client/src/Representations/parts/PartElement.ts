@@ -36,8 +36,10 @@
 import { Class_BaseShape } from '../../Elements/Element'
 import type { Class_DrawingArea } from '../../types/DrawingArea'
 import type { Class_ElementStyle } from '../../Elements/Element'
+import type { ConfigType } from '../../Elements/ElementsAttributesConfig'
 import { NO_SUBJECT, subjectNameOf } from './PartSubject'
 import type { Type_PartSubject } from './PartSubject'
+import { partStyleSpeaksOf } from './partStyle'
 
 export class Class_PartElement extends Class_BaseShape {
 
@@ -124,6 +126,32 @@ export class Class_PartElement extends Class_BaseShape {
   // Ce qui reste ici est ce qui est VRAI D'UNE PART et d'elle seule : son nom vient de son sujet
   // (ci-dessus), et son alias porte un nom qui se lit (ci-dessus). Le reste est commun à tout
   // élément, et c'est exactement le pas que Julien demandait.
+
+  // CE QUE LA PART DIT — LA PORTE DU TRACÉ =============================================
+  //
+  // os#1448. Le tracé ne lit sur une part que ce qu'elle DIT (`sunburstPartStyle`, dont la porte
+  // est cette méthode) ; sur tout le reste, c'est le réglage de la FIGURE qui tient — et c'est lui
+  // qui porte l'aspect de toutes les couronnes enregistrées.
+  //
+  // La règle d'une part tient en trois lignes, et chacune se paie si on l'oublie :
+  //
+  //   1. SON SAC PROPRE PARLE TOUJOURS. La version héritée ne le tient pour une surcharge que s'il
+  //      DIFFÈRE du style résolu. Pour un nœud c'est sans conséquence — il rend la même valeur
+  //      dans les deux cas. Pour une part, non : ce qui l'attend derrière la porte fermée n'est
+  //      pas son style, c'est le réglage de la FIGURE, qui peut dire autre chose. Poser sur une
+  //      part la valeur que son style porte déjà doit donc compter, sans quoi « cocher le liséré
+  //      sur CE secteur » resterait sans effet dès que le style le coche aussi.
+  //   2. SES STYLES PARLENT AU-DELÀ DE LEUR AMORCE. C'est ce qui fait marcher « éditer globalement
+  //      par les styles » — la seconde moitié de la demande de Julien. Une amorce, elle, reste
+  //      muette : elle écraserait ce que l'auteur a réglé sur sa figure (cf. `partStyle.ts`).
+  //   3. JAMAIS LE STYLE PAR DÉFAUT (`getCustomStyles` l'écarte, c'est `_style[0]`). Lui seul est
+  //      pré-rempli des valeurs d'usine d'un NŒUD : l'écouter repeindrait tout le parc en quatorze
+  //      points, liséré noir.
+
+  public override isAttributeOverloaded(attr: keyof ConfigType): boolean {
+    if (this.attributes[attr] !== undefined) return true
+    return this.getCustomStyles().some(style => partStyleSpeaksOf(style, String(attr)))
+  }
 
   // CE QUI NE SE DESSINE PAS ===========================================================
   //
