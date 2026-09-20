@@ -118,7 +118,8 @@ describe('os#1445 une couronne enregistree avant ce lot ne change pas daspect', 
     // element, pas celles de la couronne. Si le trace lisait son aspect sans reserve, toutes les
     // couronnes du parc passeraient en quatorze points, lisere noir. La part n est donc ecoutee
     // que sur ce qu elle porte EN PROPRE.
-    const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }])
+    const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }],
+      undefined, 'sunburst')
     const part = figure.by_id['n_ble']
 
     // os#1449 — CE QUE LA PART RESOUT A CHANGE, CE QU ELLE DIT NON. Depuis que les parts ont leur
@@ -148,5 +149,55 @@ describe('os#1445 une couronne enregistree avant ce lot ne change pas daspect', 
     expect(reglee.opacity).toBe(0.5)
     // La voisine n a rien demande : elle garde la mise en forme de la figure.
     expect(voisine).toEqual(SUNBURST_STYLE_DEFAULTS)
+  })
+})
+
+// os#1462 — LA COULEUR ET LE FOND D UN SECTEUR.
+//
+// Julien, a l ecran : « Fond et Bordure n agissent pas sur l element du sunburst ; y a-t-il un
+// dessin du fond et de la bordure par part ? si ce n est pas le cas il faut le faire, et cela pour
+// tous les attributs pertinents — couleur, etc. »
+//
+// La bordure etait lue. La COULEUR ne l etait pas : l arc se peignait de la teinte que l arbre lui
+// donne, sans jamais demander a la part ce qu elle en dit. Et la VISIBILITE DU FOND n existait pas
+// du tout — la case etait offerte a l auteur sans que rien ne l ecoute.
+describe('os#1462 un secteur se repeint et seface', () => {
+
+  const buildSource = () => {
+    const doc = new Class_ApplicationData(false)
+    doc.drawing_area.bypass_redraws = true
+    return doc
+  }
+
+  it('la couleur de la part gagne sur la teinte de larbre', () => {
+    const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }],
+      undefined, 'sunburst')
+    const part = figure.by_id['n_ble']
+    part.shape_color = '#123456'
+
+    expect(sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part).fill).toBe('#123456')
+  })
+
+  it('Fond decoche se dit SEPAREMENT de la couleur', () => {
+    // Une part qui cache son fond sans avoir choisi de couleur ne dit rien de `fill` : passer par
+    // `fill` ne saurait donc pas distinguer « pas de fond » de « la figure decide ».
+    const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }],
+      undefined, 'sunburst')
+    const part = figure.by_id['n_ble']
+    part.shape_color_visible = false
+
+    const resolu = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, part)
+    expect(resolu.background_visible).toBe(false)
+    expect(resolu.fill).toBeUndefined()
+  })
+
+  it('une part qui na rien dit ne dit toujours rien', () => {
+    // La garantie du lot, intacte : deux cles de plus ne doivent repeindre aucune figure du parc.
+    const figure = buildParts(buildSource(), [{ id: 'n_ble', label: 'Ble', value: 6 }],
+      undefined, 'sunburst')
+
+    const resolu = sunburstPartStyle(SUNBURST_STYLE_DEFAULTS, figure.by_id['n_ble'])
+    expect(resolu.fill).toBeUndefined()
+    expect(resolu.background_visible).toBeUndefined()
   })
 })

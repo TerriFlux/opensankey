@@ -267,6 +267,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: 'Unitary input link',
         LinkOutUnitaryStyle: 'Unitary output link',
         FigurePartStyle: 'Figure part',
+        SunburstPartStyle: 'Sunburst part',
+        DonutPartStyle: 'Donut part',
+        BarPartStyle: 'Bar part',
         family: 'Family',
         family_predefined: 'Application styles',
         family_user: 'User styles'
@@ -540,6 +543,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: 'Unitaire flux entrée',
         LinkOutUnitaryStyle: 'Unitaire flux sortie',
         FigurePartStyle: 'Part de figure',
+        SunburstPartStyle: 'Part de sunburst',
+        DonutPartStyle: 'Part de couronne',
+        BarPartStyle: 'Part de barres',
         family: 'Famille',
         family_predefined: 'Styles de l\'application',
         family_user: 'Styles utilisateur'
@@ -808,6 +814,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: 'Flujo unitario entrada',
         LinkOutUnitaryStyle: 'Flujo unitario salida',
         FigurePartStyle: 'Parte de figura',
+        SunburstPartStyle: 'Parte de sunburst',
+        DonutPartStyle: 'Parte de corona',
+        BarPartStyle: 'Parte de barras',
         family: 'Familia',
         family_predefined: 'Estilos de la aplicación',
         family_user: 'Estilos de usuario'
@@ -1076,6 +1085,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: 'Einheitsfluss Eingang',
         LinkOutUnitaryStyle: 'Einheitsfluss Ausgang',
         FigurePartStyle: 'Abbildungsteil',
+        SunburstPartStyle: 'Sunburst-Teil',
+        DonutPartStyle: 'Ring-Teil',
+        BarPartStyle: 'Balken-Teil',
         family: 'Familie',
         family_predefined: 'Anwendungsstile',
         family_user: 'Benutzerstile'
@@ -1344,6 +1356,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: 'Flusso unitario ingresso',
         LinkOutUnitaryStyle: 'Flusso unitario uscita',
         FigurePartStyle: 'Parte di figura',
+        SunburstPartStyle: 'Parte di sunburst',
+        DonutPartStyle: 'Parte di corona',
+        BarPartStyle: 'Parte di barre',
         family: 'Famiglia',
         family_predefined: 'Stili dell\'applicazione',
         family_user: 'Stili utente'
@@ -1618,6 +1633,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: '单位输入流量',
         LinkOutUnitaryStyle: '单位输出流量',
         FigurePartStyle: '图形部分',
+        SunburstPartStyle: '旭日图部分',
+        DonutPartStyle: '环形图部分',
+        BarPartStyle: '柱形图部分',
         family: '系列',
         family_predefined: '应用样式',
         family_user: '用户样式'
@@ -1892,6 +1910,9 @@ export const resources_nodes = {
         LinkInUnitaryStyle: '単位の入力フロー',
         LinkOutUnitaryStyle: '単位の出力フロー',
         FigurePartStyle: '図の部分',
+        SunburstPartStyle: 'サンバーストの部分',
+        DonutPartStyle: 'ドーナツの部分',
+        BarPartStyle: '棒の部分',
         family: '分類',
         family_predefined: 'アプリのスタイル',
         family_user: 'ユーザーのスタイル'

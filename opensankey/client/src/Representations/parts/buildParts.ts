@@ -45,7 +45,7 @@ import type { Class_PartsDocument } from './PartsDocument'
 import { Class_PartElement } from './PartElement'
 import { NO_SUBJECT } from './PartSubject'
 import type { Type_PartSubject } from './PartSubject'
-import { partStyleOf, seedPartStyles } from './partStyle'
+import { partNatureStyleOf, partStyleOf, seedPartStyles } from './partStyle'
 
 /** Une part telle que les décompositions la produisent, quelle que soit la nature. */
 export interface Type_PartInput {
@@ -72,11 +72,14 @@ export interface Type_FigureParts {
  * @param source le document dont les objets sont les sujets.
  * @param parts les parts de la figure, dans l'ordre du tracé.
  * @param reuse le jeu du dessin précédent. Son document et ses parts sont REPRIS, pas remplacés.
+ * @param nature la sorte de figure (`sunburst`, `donut`, `bars`) — elle décide du second étage de
+ *   styles. Absente : les parts s'en tiennent au style générique.
  */
 export const buildParts = (
   source: Class_ApplicationData,
   parts: Type_PartInput[],
-  reuse?: Type_FigureParts
+  reuse?: Type_FigureParts,
+  nature?: string
 ): Type_FigureParts => {
   // LE DOCUMENT SURVIT AU DESSIN. C'est lui que la vignette a déclaré à l'espace de travail, et
   // `bindWindowDocument` est idempotent : reposer le même ne fait basculer aucun actif. En poser un
@@ -97,8 +100,12 @@ export const buildParts = (
   // UNE SEULE FOIS, au premier dessin : le document vivant garde son style, avec ce que l'auteur y
   // a réglé. C'est ce qui a rendu `carryPartStyleOver` inutile — il n'existait que pour rattraper
   // le document qu'on jetait.
-  if (reuse === undefined) seedPartStyles(drawing_area.sankey)
+  if (reuse === undefined) seedPartStyles(drawing_area.sankey, nature)
   const part_style = partStyleOf(drawing_area.sankey)
+  // os#1462 — L'ÉTAGE DE LA NATURE, qui se pose PAR-DESSUS le générique et gagne donc sur lui :
+  // « en haut c'est générique, et en bas ça se spécialise ». Absent pour une nature qu'aucun style
+  // ne décrit encore — la part s'en tient alors au générique, c'est-à-dire à l'aspect d'avant.
+  const nature_style = partNatureStyleOf(drawing_area.sankey, nature)
 
   const by_id: { [part_id: string]: Class_PartElement } = {}
   const ordered: Class_PartElement[] = []
@@ -114,8 +121,13 @@ export const buildParts = (
     //
     // Le style de part, et non le style par défaut, pour celles qu'on construit : c'est par lui
     // que passe « toutes les parts d'un coup ». Le constructeur empile le style par défaut dessous.
-    const part = reuse?.by_id[input.id]
-      ?? new Class_PartElement(input.id, drawing_area, part_style)
+    let part = reuse?.by_id[input.id]
+    if (part === undefined) {
+      part = new Class_PartElement(input.id, drawing_area, part_style)
+      // Empilé APRÈS la construction, car un élément ne se construit qu'avec un style : la cascade
+      // d'une part est donc `[défaut, générique, nature]`, dans cet ordre de priorité croissante.
+      if (nature_style !== undefined) part.addStyle(nature_style)
+    }
     // Le SUJET se relie à chaque fois : une part peut garder son identifiant en changeant ce
     // qu'elle désigne (un axe de comparaison qui bascule), et son nom en dépend.
     part.bindSubject(input.subject ?? NO_SUBJECT)
