@@ -70,7 +70,10 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_max: 20,
   centre_content: 'value',
   centre_hole: 55,
-  name_label_is_visible: true,
+  // os#1431 — LE NOM DE LA PART NE S'AFFICHE PLUS D'OFFICE. Il ne se dessinait pas du tout avant
+  // (ce drapeau commandait en réalité le pourcentage) : l'allumer par défaut écrirait un nom dans
+  // chaque secteur de chaque couronne déjà enregistrée. C'est une option, elle s'active.
+  name_label_is_visible: false,
   name_label_font_size: 11,
   value_label_is_visible: false,
   value_label_percent: 'total',

@@ -277,15 +277,30 @@ export const drawDonutChart = (
     .attr('stroke-width', 1)
   if (st.interaction_tooltip) paths.append('title').text(slice_title)
 
-  // CE QUE PORTE UN SECTEUR : la valeur si on la veut, le pourcentage si on le veut — hier, le
-  // pourcentage seul. Sur les secteurs assez larges pour le tenir, et si les étiquettes sont là.
-  const sector_text = (d: d3.PieArcDatum<Type_StatSlice>): string => {
-    const parts: string[] = []
-    if (st.value_label_is_visible) parts.push(fmt(d.data.value))
-    if (st.value_label_percent !== 'none') parts.push(Math.round(d.data.value / total * 100) + '%')
-    return parts.join(' ')
+  // os#1431 — CE QUE PORTE UN SECTEUR : SON NOM, SA VALEUR, SON POURCENTAGE — chacun commandé par
+  // ce qui le nomme (retour de Julien, 19/09 : « il faudrait pouvoir afficher le nom des
+  // destinations ; le % ne devrait pas être contrôlé dans Libellé mais dans Valeur »).
+  //
+  // Hier, `name_label_is_visible` — l'onglet LIBELLÉ — commandait un texte qui ne contenait que
+  // des VALEURS : le pourcentage, et la valeur si on la demandait. Le nom de la part, lui, ne se
+  // dessinait nulle part ; on ne savait ce qu'était un secteur qu'en le survolant. Les trois
+  // réglages disent maintenant chacun le leur, et se retrouvent dans l'onglet qui porte leur nom.
+  //
+  // DEUX LIGNES quand les deux sont demandés : le nom au-dessus, les chiffres en dessous. Une
+  // seule ligne « Transformation 40 80 % » ne tiendrait dans aucun secteur.
+  const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
+    const lines: string[] = []
+    if (st.name_label_is_visible) lines.push(d.data.label)
+    const values: string[] = []
+    if (st.value_label_is_visible) values.push(fmt(d.data.value))
+    if (st.value_label_percent !== 'none') values.push(Math.round(d.data.value / total * 100) + '%')
+    if (values.length > 0) lines.push(values.join(' '))
+    return lines
   }
-  if (st.name_label_is_visible) {
+  const labels_wanted = st.name_label_is_visible
+    || st.value_label_is_visible
+    || st.value_label_percent !== 'none'
+  if (labels_wanted) {
     g.selectAll('text.node_stats_pct')
       .data(arcs.filter(d => (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE))
       .enter().append('text')
@@ -296,18 +311,56 @@ export const drawDonutChart = (
       .attr('font-size', st.name_label_font_size)
       .attr('fill', 'white')
       .attr('pointer-events', 'none')
-      .text(sector_text)
+      .each(function (d) {
+        const lines = sector_lines(d)
+        if (lines.length === 0) return
+        // Le bloc reste CENTRÉ sur le centroïde : la première ligne remonte d'une demi-hauteur
+        // quand il y en a deux, sinon l'étiquette dériverait vers le bord extérieur du secteur.
+        const dy0 = lines.length > 1 ? -0.55 : 0
+        d3.select(this).selectAll('tspan')
+          .data(lines)
+          .enter().append('tspan')
+          .attr('x', 0)
+          .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
+          .text(line => line)
+      })
   }
 
-  // Le centre : le total, quand l'auteur le demande (`centre_content`) et que le trou le tient.
-  if ((st.centre_content === 'value' || st.centre_content === 'both') && inner >= 12) {
-    g.append('text')
+  // LE CENTRE : le nom de l'objet regardé, son total, ou les deux (`centre_content`) — et
+  // seulement si le trou les tient.
+  //
+  // os#1431 — « NOM SEUL » NE FAISAIT RIEN (retour de Julien, 19/09) : le centre ne savait
+  // dessiner que le total, et les deux choix qui demandaient le nom rendaient un trou vide. Le nom
+  // est celui que la figure porte déjà en titre de repli (`title_fallback`, le nom du nœud ou
+  // « source → cible » d'un flux) : le même mot que le fil d'Ariane de la fenêtre, pas un second
+  // vocabulaire.
+  const centre_name = opts.title_fallback ?? ''
+  const wants_name = (st.centre_content === 'name' || st.centre_content === 'both') && centre_name !== ''
+  const wants_value = st.centre_content === 'value' || st.centre_content === 'both'
+  if ((wants_name || wants_value) && inner >= 12) {
+    const value_size = Math.max(11, inner * 0.28)
+    // Le nom passe AU-DESSUS du total et plus petit : c'est le total qu'on lit de loin, le nom qui
+    // le qualifie. Seul, il prend la place centrale.
+    const name_size = wants_value ? Math.max(9, inner * 0.16) : Math.max(11, inner * 0.22)
+    const text = g.append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', Math.max(11, inner * 0.28))
-      .attr('font-weight', 'bold')
       .attr('fill', '#2D3748')
-      .text(fmt(total))
+    if (wants_name) {
+      text.append('tspan')
+        .attr('x', 0)
+        .attr('dy', wants_value ? `${-0.6}em` : '0em')
+        .attr('font-size', name_size)
+        .text(centre_name)
+    }
+    if (wants_value) {
+      text.append('tspan')
+        .attr('x', 0)
+        .attr('dy', wants_name ? '1.2em' : '0em')
+        .attr('font-size', value_size)
+        .attr('font-weight', 'bold')
+        .text(fmt(total))
+    }
   }
 
   // Légende HTML : puce colorée + libellé + part ; survol → mise en avant du secteur.
