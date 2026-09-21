@@ -37,6 +37,8 @@ import {
   Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
 } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
+// os#1482 — le magasin des scènes est PUR (aucune arête vers le dessin), comme `PanelManager`.
+import { Class_ScenesStore } from './Scenes'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
 import type { ConverterConfig } from './ConverterConfig'
@@ -115,8 +117,12 @@ export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom'
 //  - 'selection' : elle SUIT l'élément sélectionné dans le dessin (fil d'Ariane) ;
 //  - 'node' / 'link' : ÉPINGLÉE sur un objet, quoi qu'on sélectionne ensuite.
 // `sheet` (os#1386) : la feuille regardée ; absente = la feuille courante.
+// `view` (os#1482) : la VUE de cette feuille à montrer ; absente = la vue courante du document.
+//   Posée par une SCÈNE (cf. Scenes.ts) : c'est ce qui permet à une disposition de dire « la
+//   feuille B, dans sa vue Riz » — le couple (feuille, vue) est la seule extension du modèle des
+//   fenêtres qu'exigent les scènes. Une fenêtre ouverte à la main n'en porte pas.
 export type Type_MainZoneSubject =
-  | { kind: 'diagram', sheet?: string }
+  | { kind: 'diagram', sheet?: string, view?: string }
   | { kind: 'selection' }
   | { kind: 'node', id: string, sheet?: string }
   | { kind: 'link', id: string, sheet?: string }
@@ -187,6 +193,13 @@ export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind ===
  */
 export const mainZoneSubjectSheet = (s: Type_MainZoneSubject): string =>
   ('sheet' in s && typeof s.sheet === 'string') ? s.sheet : ''
+/**
+ * os#1482 — La VUE demandée par un sujet diagramme, ou `''` : « la vue courante du document ».
+ * Même règle de lecture que `mainZoneSubjectSheet` : l'absence de la clé et la chaîne vide
+ * disent la même chose, et un sujet qui n'est pas un diagramme n'en porte jamais.
+ */
+export const mainZoneSubjectView = (s: Type_MainZoneSubject): string =>
+  (s.kind === 'diagram' && typeof s.view === 'string') ? s.view : ''
 
 /**
  * os#1385 lot 0 — Cette fenêtre a-t-elle un identifiant PROPRE (`w_N`), plutôt que son
@@ -850,6 +863,11 @@ export class Class_MenuConfig {
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
   protected _doc_external: { title: string, markdown: string } | null = null
+  // os#1482 — LES SCÈNES : la vue de l'espace de travail (cf. Scenes.ts et NOTE-SCENES.md). De
+  // l'HÔTE, comme la liste des fenêtres qu'elles figent : un seul magasin par écran, lu et écrit
+  // par le document principal seul (clé racine `scenes`).
+  protected _scenes: Class_ScenesStore = new Class_ScenesStore()
+  public get scenes(): Class_ScenesStore { return this._host._scenes }
   // Part de la largeur donnée à la zone principale face à la colonne droite (0..1).
   protected _main_zone_split_ratio: number = 2 / 3
   // Hauteur (px) du bandeau du bas, réglée par sa poignée.
@@ -2374,6 +2392,10 @@ export class Class_MenuConfig {
       if ('tagg_id' in o.subject) subject['tagg_id'] = o.subject.tagg_id
       if ('tag_id' in o.subject) subject['tag_id'] = o.subject.tag_id
       if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
+      // os#1482 — la VUE demandée, seulement pour un sujet diagramme et seulement si elle est
+      // dite : une fenêtre ouverte à la main n'en porte pas, et le fichier reste identique.
+      const view = mainZoneSubjectView(o.subject)
+      if (view !== '') subject['view'] = view
       const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
       // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
       // style de sa nature) rend `undefined` et ne s'écrit pas ; une fenêtre dont aucune figure
@@ -2455,6 +2477,9 @@ export class Class_MenuConfig {
             subject = (tagg_id !== '' && tag_id !== '') ? { kind: 'tag', tagg_id, tag_id } : { kind: 'selection' }
           }
           if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
+          // os#1482 — la vue demandée ne vaut que pour un sujet diagramme (cf. `mainZoneSubjectView`).
+          const view = getStringFromJSON(sj, 'view', '')
+          if (subject.kind === 'diagram' && view !== '') subject = { ...subject, view }
           // os#1418 — DEUX FORMATS DE RÉGLAGES, et un seul des deux par fenêtre : `figures` (le
           // format d'aujourd'hui, une entrée par vignette) ou `options` (celui d'avant, un sac
           // par fenêtre avec son sous-dictionnaire `panes`). Tous deux gardés BRUTS ici : la
