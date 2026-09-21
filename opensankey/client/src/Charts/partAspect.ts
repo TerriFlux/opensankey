@@ -116,6 +116,15 @@ export interface Type_FigurePartAspect extends Type_FigurePartLabelAspect {
   /** `shape_border_*` — absents : pas de liséré, comme aujourd'hui. */
   border_color?: string
   border_thickness?: number
+  /**
+   * os#1481 — `shape_border_dashed` et `shape_shadow_visible`, cherchés par Julien à l'écran.
+   *
+   * Ils décrivent UNE part et rien d'autre — un secteur tireté à côté d'un secteur plein se lit
+   * très bien —, et ils ne rendraient aucune figure fausse : c'est le critère de la frontière
+   * écrite en tête de ce module. Ils vivent donc ici, pas au niveau du graphe.
+   */
+  border_dashed?: boolean
+  shadow_visible?: boolean
 }
 
 const numberSaid = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
@@ -409,6 +418,17 @@ export const partAspect = (
     border_thickness: border_on
       ? (numberSaid(part.getElementProperty('shape_border_thickness')) ?? 1)
       : undefined,
+    // os#1481 — LE TIRETÉ SUIT LE LISÉRÉ, l'OMBRE SE DIT SEULE.
+    //
+    // Le tireté n'a de sens que s'il y a un trait : il est donc lu DERRIÈRE la même porte que la
+    // couleur et l'épaisseur — c'est le procédé de `shape_border_color`, et il évite qu'une amorce
+    // de style vienne tireter un liséré que la part n'a jamais demandé.
+    //
+    // L'ombre, elle, ne dépend de rien : une forme sans liséré peut en porter une.
+    border_dashed: border_on
+      ? (booleanSaid(part.getElementProperty('shape_border_dashed')) ?? false)
+      : undefined,
+    shadow_visible: booleanSaid(said('shape_shadow_visible')),
     // LES DEUX TEXTES DE LA PART, lus par LA MÊME fonction (os#1469).
     //
     // C'est le point du lot. La version d'avant lisait quinze clés pour le nom, et RIEN pour la
