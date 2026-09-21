@@ -414,7 +414,15 @@ export const partAspect = (
       bg_border_visible: booleanSaid(at('background_border_visible')),
       bg_border_color: textSaid(at('background_border_color')),
       bg_border_thickness: numberSaid(at('background_border_thickness')),
-      bg_border_radius: numberSaid(at('background_border_radius'))
+      bg_border_radius: numberSaid(at('background_border_radius')),
+      // os#1488 — LA FORME DU CARTOUCHE ET SON LISERE TIRETE, que Julien a cherches a l ecran :
+      // « changer la forme ne fait rien sur le fond », « les pointilles non plus ».
+      //
+      // Les deux cases existaient dans l inspecteur depuis que le cartouche existe ; le traceur
+      // n en lisait aucune. C est le meme defaut que le tirete d une FORME (os#1481), une famille
+      // plus loin — et il se corrige pareil : la cle se lit ici, le dessin la suit.
+      bg_type: oneOfSaid(at('background_type'), ['rect', 'ellipse', 'capsule', 'capsule_h'] as const),
+      bg_border_dashed: booleanSaid(at('background_border_dashed'))
     }
   }
 
