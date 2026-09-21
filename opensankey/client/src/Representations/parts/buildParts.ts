@@ -124,6 +124,8 @@ export const buildParts = (
     let part = reuse?.by_id[input.id]
     if (part === undefined) {
       part = new Class_PartElement(input.id, drawing_area, part_style)
+      // os#1483 — la part sait de quelle FIGURE elle est une part (cf. `figure_nature`).
+      part.figure_nature = nature ?? ''
       // Empilé APRÈS la construction, car un élément ne se construit qu'avec un style : la cascade
       // d'une part est donc `[défaut, générique, nature]`, dans cet ordre de priorité croissante.
       if (nature_style !== undefined) part.addStyle(nature_style)

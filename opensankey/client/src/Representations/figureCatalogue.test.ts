@@ -48,8 +48,25 @@ describe('le catalogue des attributs de figure', () => {
 
   test('une cle de famille de figure ne cache aucune cle d element', () => {
     // Une figure « complete » le catalogue des elements ; elle ne le reecrit pas.
+    //
+    // os#1482 — DEUX CLES SONT DESORMAIS AUX DEUX ENDROITS, ET C EST VOULU. L orientation du texte
+    // et le detachement de l etiquette etaient des reglages de FIGURE — tout ou rien pour tous les
+    // secteurs. Julien les a demandes PAR PART (« les orientations pertinentes sur la couronne et
+    // le sunburst », « et aussi le detachement des labels relies par un segment »), et ils sont
+    // entres au catalogue des elements.
+    //
+    // Les deux niveaux ne se cachent pas : la FIGURE donne le ton, la PART en sort si elle le dit.
+    // C est la cascade habituelle, celle de la police et de la couleur, et elle ne demande aucun
+    // mecanisme — seulement que ce test dise le reel plutot que l etat d hier.
+    const AUX_DEUX_NIVEAUX = ['name_label_orientation', 'name_label_callout']
     Object.keys(FIGURE_FAMILIES).forEach(key => {
-      expect(key in ALL_ATTRIBUTES_CONFIG).toBe(false)
+      if (AUX_DEUX_NIVEAUX.includes(key)) return
+      expect([key, key in ALL_ATTRIBUTES_CONFIG]).toEqual([key, false])
+    })
+    // Et le garde-fou de l exception : ces deux-la sont bien aux deux endroits, pas seulement
+    // absentes de la liste.
+    AUX_DEUX_NIVEAUX.forEach(key => {
+      expect([key, key in ALL_ATTRIBUTES_CONFIG]).toEqual([key, true])
     })
   })
 

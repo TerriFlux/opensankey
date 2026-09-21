@@ -62,27 +62,30 @@ describe('os#1474 le disque ne lit plus : il compose', () => {
   })
 
   it('les TROIS cles que seul le disque lisait passent par le lecteur commun', () => {
-    // ⚠️ ET AUCUNE PART NE PEUT ENCORE LES DIRE — c est l etat reel, et le test le grave.
+    // ⚠️ CE CAS DISAIT LE CONTRAIRE, ET LE RENVERSEMENT EST LA CORRECTION.
     //
-    // `name_label_orientation`, `_strip_parent` et `_contrast_color` sont declarees dans le
-    // catalogue des FIGURES (`figureCatalogue.FIGURE_LABEL_CONFIG`), pas dans celui des ELEMENTS.
-    // Une part n a donc pas de propriete pour elles : ecrire dessus ne pose rien dans son sac, et
-    // la porte `said()` rend `undefined`. C etait DEJA vrai de l ancien lecteur du disque — cette
-    // lecture-la ne rendait jamais rien.
+    // Il gravait, en os#1474, qu aucune part ne POUVAIT dire ces cles : elles etaient declarees au
+    // catalogue des FIGURES et pas a celui des ELEMENTS, la porte rendait `undefined`, et le
+    // commentaire annoncait « ce test tombera le jour ou elles entreront au catalogue des
+    // elements, et il dira quoi retirer ».
     //
-    // Ce que le lot change : le chemin existe, et il est unique. Le jour ou ces cles entrent au
-    // catalogue des elements (os#1464, le second sens de la portee), les trois natures les liront
-    // sans qu on ecrive une ligne. Ce test tombera alors, et il dira quoi retirer de ce
-    // commentaire.
+    // Ce jour est venu (os#1482) : Julien a demande l orientation et le detachement PAR PART. Le
+    // chemin unique a tenu sa promesse — il n y a eu qu une declaration a ecrire, rien a changer
+    // dans le lecteur ni dans deux des trois traces.
+    //
+    // `strip_parent` reste, lui, une cle de figure seule : personne ne l a demandee par part.
     const part = partReglee({
       name_label_orientation: 'tangential',
+      name_label_callout: true,
       name_label_strip_parent: true
     })
 
     const a = partAspect(BARS_STYLE_DEFAULTS, part)
 
-    expect(part.isAttributeOverloaded('name_label_orientation' as never)).toBe(false)
-    expect(a.name?.orientation).toBeUndefined()
+    expect(a.name?.orientation).toBe('tangential')
+    expect(a.label_callout).toBe(true)
+    // Celle qui n est pas entree : la porte rend toujours `undefined`, et c est l etat reel.
+    expect(part.isAttributeOverloaded('name_label_strip_parent' as never)).toBe(false)
     expect(a.name?.strip_parent).toBeUndefined()
   })
 
