@@ -4593,6 +4593,18 @@ const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: st
 const NOT_ON_A_PART: Type_AttributeScope = { except: ['part'] }
 
 /**
+ * os#1480 — CE QUI FAIT D'UNE ÉTIQUETTE AUTRE CHOSE QU'UN TEXTE.
+ *
+ * Les deux premières sont le doublon du pictogramme (cf. plus bas) ; les six suivantes le rendent
+ * image ou HTML ; `is_value` en fait la valeur de l'élément, ce que la famille VALEUR dit déjà.
+ */
+const LABEL_AS_NOT_TEXT_KEYS = [
+  'icon_name', 'view_box',
+  'has_fo', 'fo_content', 'is_icon', 'is_image', 'image_src',
+  'is_value'
+] as const
+
+/**
  * « Pour tout le monde » — ce qui RÉ-AUTORISE une clé qu'une portée de catalogue ou de famille
  * aurait emportée avec ses voisines. La règle de résolution fait le reste : la clé l'emporte sur la
  * famille (cf. `attributeScopeOf`).
@@ -4680,6 +4692,35 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   // L'axe d'analyse et les placements de figures sont des réglages du NŒUD regardé — ce qu'on
   // décompose, et où les figures se posent autour de lui. Ce ne sont pas des aspects d'une part.
   ...catalogueScope(ANALYSIS_CONFIG, NOT_ON_A_PART, ''),
+
+  // ── os#1480 — L'ÉTIQUETTE QUI DEVIENDRAIT IMAGE, HTML OU ICÔNE (16 clés) ────────────────────
+  //
+  // Arbitrage de Julien, 21/09/2026. Ces clés font d'une étiquette autre chose qu'un texte : un
+  // pictogramme, une image, un bloc HTML (`foreignObject`), ou la valeur de l'élément.
+  //
+  // ⚠️ LES DEUX PREMIÈRES SONT UN DOUBLON DE CE QUI MARCHE. Le pictogramme d'une part se règle par
+  // la famille `icon` (`icon_icon_name`, `icon_view_box`), lue par les trois natures depuis
+  // os#1465. Offrir un second chemin vers le même réglage est exactement le défaut que ce chantier
+  // a passé sept lots à supprimer — et l'auteur ne saurait pas lequel des deux agit.
+  //
+  // LES QUATORZE AUTRES sont la machinerie d'étiquette d'un NŒUD. Personne ne les a demandées sur
+  // une figure, et les dessiner n'est pas rien : un `foreignObject` ne se mesure pas comme un
+  // texte, et l'export PNG ne le rend pas. Le jour où une part devra porter une vignette — un logo
+  // de filière, une photo —, ce sera un lot à part, avec sa source, son cadrage et son export ;
+  // pas une case cochée dans un onglet qui ne dessinerait rien.
+  ...prefixedScope('name_label', LABEL_AS_NOT_TEXT_KEYS, NOT_ON_A_PART),
+  ...prefixedScope('value_label', LABEL_AS_NOT_TEXT_KEYS, NOT_ON_A_PART),
+
+  // ── os#1480 — « COULEUR FIXE » SUR LA FORME D'UNE PART : la question se mord la queue ────────
+  //
+  // Le drapeau dit « garde TA couleur au lieu de suivre celle de la forme de l'élément »
+  // (cf. `getShapeColorToUse`, DrawLabel). Sur une part, la forme EST l'élément : décocher
+  // demanderait au secteur de suivre sa propre couleur. Il n'y a pas de réponse à donner.
+  //
+  // Les SIX copies sous un préfixe d'étiquette, elles, disent quelque chose : l'encre du nom suit
+  // la couleur du secteur. Celles-là sont IMPLÉMENTÉES (cf. `partAspect`, `ink_follows_shape`).
+  shape_color_sustainable: NOT_ON_A_PART,
+  shape_border_color_sustainable: NOT_ON_A_PART,
 
   // ── LES CINQ CLÉS QUI DÉCRIVENT VRAIMENT UN PICTOGRAMME ─────────────────────────────────────
   //
