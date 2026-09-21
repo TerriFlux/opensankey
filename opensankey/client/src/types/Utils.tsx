@@ -332,6 +332,7 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
     extra_background_element: <></>,
     additional_nav_item: [],
     additional_bottom_item: [],
+    additional_tools_item: [],
 
     formations_menu: {},
 
