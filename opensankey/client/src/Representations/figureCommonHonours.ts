@@ -134,6 +134,32 @@ export const FIGURE_COMMON_HONOURS: readonly string[] = [
 // la liste d'attente n'a plus d'objet. Si une septième devait attendre un jour, elle se réécrirait —
 // mais l'état sain est qu'il n'y en ait aucune.
 
+/** Une clé est-elle DU SOCLE ? Lu par ce qui trie une liste d'honneurs en deux tas. */
+export const isCommonHonour = (key: string): boolean => FIGURE_COMMON_HONOURS.includes(key)
+
+/**
+ * os#1479 — TRIER UNE LISTE D'HONNEURS EN DEUX TAS : ce qui surcharge le socle, ce qui est propre.
+ *
+ * Une nature déclare ses réglages en un seul objet — c'est ainsi qu'on les lit. Mais
+ * `registerFigureNature` a besoin des deux séparément : le socle est SERVI D'OFFICE et ce que la
+ * nature en dit n'est qu'une surcharge (une valeur d'usine, une condition d'affichage), tandis que
+ * le reste est ce qui n'existe que chez elle.
+ *
+ * Trier ICI plutôt qu'à la main dans chaque nature : une clé qui entrerait au socle demain
+ * changerait de tas toute seule, au lieu d'attendre qu'on s'en souvienne.
+ */
+export const splitByCommonHonours = <T>(
+  spec: { [key: string]: T }
+): { socle: { [key: string]: T }, own: { [key: string]: T } } => {
+  const socle: { [key: string]: T } = {}
+  const own: { [key: string]: T } = {}
+  Object.entries(spec).forEach(([key, value]) => {
+    if (isCommonHonour(key)) socle[key] = value
+    else own[key] = value
+  })
+  return { socle, own }
+}
+
 /**
  * Ce qui manque à une nature pour servir le socle, dans l'ordre de la liste.
  *

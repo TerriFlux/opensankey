@@ -27,14 +27,16 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import { drawDonutChart, drawBarChart, drawGroupedBarChart } from '../Charts/NodeStatsCharts'
-import { figurePartsWiring } from './parts/figurePartsWiring'
+import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
-import { BARS_ATTRIBUTES, DONUT_ATTRIBUTES } from './analysisFigureAttributes'
-import type { Type_ChartPart } from '../Charts/AnalysisChartData'
+import type { Type_PartInput } from './parts/buildParts'
+// os#1479 — LA PORTE UNIQUE d'une figure à parts : le socle, les styles, le câblage et les gardes
+// viennent avec la déclaration (cf. `figureNature`).
+import { registerFigureNature } from './figureNature'
 import {
-  representation_registry,
-  type Type_RepresentationContext
-} from './RepresentationRegistry'
+  ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_OWN, DONUT_SOCLE
+} from './analysisFigureAttributes'
+import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
@@ -175,35 +177,40 @@ export const descriptorInEffect = (
  * Hors fenêtre (pop-up de présentation, vignette d'aperçu), on ne lie rien : il n'y a personne à
  * qui attribuer une sélection, et le jeu de parts est jetable.
  */
-const analysisPartsWiring = (
-  ctx: Type_RepresentationContext,
-  subject: Type_ChartSubject,
-  descriptor: Type_AnalysisDescriptor,
-  parts: Type_ChartPart[],
-  base: Type_FigureChartStyle,
-  nature: string
-) => {
+/**
+ * os#1479 — LES PARTS D'UNE FIGURE D'ANALYSE, dans l'ordre du tracé. `null` : rien à décomposer,
+ * la figure ne s'affiche pas — et c'est une réponse, pas une panne.
+ *
+ * C'est l'une des trois choses qu'une nature écrit encore (cf. `figureNature`) : CE QU'ON
+ * DÉCOMPOSE. Les deux natures d'analyse partagent la même réponse, puisque c'est la même analyse
+ * vue autrement — le fond de os#1402.
+ */
+const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | null => {
+  const a = analysisOf(ctx)
+  if (!a) return null
+  return analysisPartInputs(a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav))
+}
+
+/**
+ * os#1463 — CE QUE LA PART NE PEUT PAS SAVOIR SEULE, et que l'aspect doit pourtant connaître.
+ *
+ * Le FORMAT DE LA FIGURE : une part qui règle deux décimales ne règle pas pour autant l'unité ni
+ * la notation ; elle se pose SUR le format de la figure, et il faut donc le lui donner.
+ *
+ * Le REGISTRE D'UNITÉS : en `unit_model` — le défaut du catalogue — `value_label_unit` porte un
+ * IDENTIFIANT, et le document de parts a son propre registre, vide. Sans ce résolveur, une part
+ * qui nomme une unité écrirait son id à la place de son symbole, ce qui est pire que rien.
+ */
+const analysisPartContext = (ctx: Type_RepresentationContext) => {
   const app_data = ctx.app_data
-  // os#1463 — CE QUE LA PART NE PEUT PAS SAVOIR SEULE, et que l'aspect doit pourtant connaître.
-  //
-  // Le FORMAT DE LA FIGURE : une part qui règle deux décimales ne règle pas pour autant l'unité ni
-  // la notation ; elle se pose SUR le format de la figure, et il faut donc le lui donner.
-  //
-  // Le REGISTRE D'UNITÉS : en `unit_model` — le défaut du catalogue — `value_label_unit` porte un
-  // IDENTIFIANT, et le document de parts a son propre registre, vide. Sans ce résolveur, une part
-  // qui nomme une unité écrirait son id à la place de son symbole, ce qui est pire que rien.
+  const subject = chartSubjectOf(ctx.element)
   const unit = subject?.kind === 'node'
     ? figureUnitOfNode(subject.node)
     : figureUnitOf(app_data.drawing_area.sankey)
-  // os#1475 — LES CINQ GESTES SONT ÉCRITS UNE FOIS (cf. `figurePartsWiring`). Ce qui reste ici est
-  // ce qui est propre à une figure d'ANALYSE : de quoi décomposer, et l'unité du sujet regardé.
-  return figurePartsWiring(
-    ctx, analysisPartInputs(subject, descriptor, parts), nature, base,
-    {
-      format: figureValueFormatOf(ctx.options, unit),
-      resolveUnit: (id: string) => app_data.drawing_area.sankey.units.resolve(id)?.unit.label
-    }
-  )
+  return {
+    format: figureValueFormatOf(ctx.options, unit),
+    resolveUnit: (id: string) => app_data.drawing_area.sankey.units.resolve(id)?.unit.label
+  }
 }
 
 
@@ -323,76 +330,85 @@ const flatParts = (
  * natures d'OpenSankey : elles n'ont plus rien de particulier.
  */
 export const registerAnalysisRepresentations = (): void => {
-  // Couronne — le graphique d'analyse en parts d'un tout, dessiné en d3 pur (sûr
-  // en panneau). Un croisement de deux axes de comparaison (#390) ne se replie
-  // sur AUCUNE liste plate de parts : rien n'y est part d'un tout, donc pas de
-  // couronne du tout.
-  representation_registry.register({
+  // ── os#1479 — CE QUE CES DEUX NATURES ONT EN PROPRE, ET RIEN D AUTRE ────────────────────────
+  //
+  // Le socle (42 cles), les deux etages de style de part, les cinq gestes du cablage, la selection
+  // qui ouvre l inspecteur, la liberation et les gardes viennent avec la declaration. Ce qui reste
+  // ecrit ici est ce qui distingue une couronne d un histogramme : ce qu on decompose, ce qu on
+  // dessine, et les reglages qui n ont de sens que la.
+  //
+  // C EST LA MESURE DU PAS : les deux `register` d avant portaient chacun leur cablage, leur
+  // liberation, leur liste d attributs et leur appel au trace. Ils etaient d accord au mot pres —
+  // ce qui, on le sait maintenant, n est pas une preuve qu ils le seraient restes.
+
+  // Couronne — le graphique d analyse en parts d un tout, dessine en d3 pur (sur en panneau).
+  registerFigureNature({
     id: 'osp.repr.donut',
-    scale: 'element',
+    nature: 'donut',
     order: 20,
     label: (a) => a.t('inspector.analysis.repr.donut', { defaultValue: 'Couronne' }),
     icon: <FaChartPie />,
-    attributes: DONUT_ATTRIBUTES,
-    // Pas de menu au clic droit (os#1425) : le fond ouvrait les réglages (os#1397), un geste que
-    // le diagramme principal n'a pas. Les réglages sont dans l'inspecteur.
-    // os#1399 - LA CIBLE D'UNE PART, résolue et non déclarée : selon l'axe de décomposition, un
-    // secteur est un flux, un nœud enfant ou un tag. Le descripteur EFFECTIF est celui que la
-    // figure dessine (réglage de vignette compris), donc celui qui dit ce qu'on vient de cliquer.
+    own: DONUT_OWN,
+    socle: DONUT_SOCLE,
+    extra_attributes: ANALYSIS_ATTRIBUTES,
+    // os#1399 — LA CIBLE D UNE PART, resolue et non declaree : selon l axe de decomposition, un
+    // secteur est un flux, un noeud enfant ou un tag. Le descripteur EFFECTIF est celui que la
+    // figure dessine (reglage de vignette compris), donc celui qui dit ce qu on vient de cliquer.
     resolveElementTarget: ({ target, ctx }) => analysisPartTarget(target, analysisOf(ctx)?.descriptor),
-    // LE REFUS, RÉTABLI (perdu le 15/09 quand os#1399 a écrit `contextMenu` et
-    // `resolveElementTarget` À LA PLACE de cette ligne, et non à côté).
-    //
-    // Ce n'est pas une précaution : sans lui, la couronne est PROPOSÉE sous un croisement de deux
-    // axes de comparaison, et `flatParts` lui rend alors `series[0].parts` — la PREMIÈRE GRAPPE
-    // seule, dessinée comme si elle était le tout. Une figure fausse se lit sans se voir, là où
-    // une nature absente se remarque : c'est pourquoi le refus vit ici, dans le registre, et pas
-    // dans un repli du moteur de dessin.
+    // LE REFUS. Sans lui, la couronne est PROPOSEE sous un croisement de deux axes de comparaison,
+    // et `flatParts` lui rend alors la PREMIERE GRAPPE seule, dessinee comme si elle etait le tout.
+    // Une figure fausse se lit sans se voir, la ou une nature absente se remarque.
     isAvailable: (ctx) => {
       const a = analysisOf(ctx)
       return !!a && !isGroupedCross(a.descriptor)
     },
-    draw: (container, ctx) => {
-      const a = analysisOf(ctx)
-      if (!a) return undefined
-      const parts = flatParts(a.subject, a.descriptor, a.nav)
-      const opts = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
-      // os#1460 — chaque secteur devient un élément : on le touche, l'inspecteur répond.
-      const wiring = analysisPartsWiring(ctx, a.subject, a.descriptor, parts, opts.style, 'donut')
-      drawDonutChart(container, parts, {
-        ...opts,
+    style: (ctx) => figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS),
+    part_context: analysisPartContext,
+    parts: (ctx) => analysisPartsOf(ctx),
+    draw: (container, parts, wiring, ctx) => {
+      drawDonutChart(container, parts as unknown as Type_StatSlice[], {
+        ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
         part_aspect: wiring.part_aspect,
         on_part_select: wiring.on_part_select,
         label_positions: wiring.label_positions,
         on_label_move: wiring.on_label_move
       })
-      return () => { container.innerHTML = ''; wiring.release() }
+      return () => { container.innerHTML = '' }
     }
   })
 
-  // Barres — toujours proposées quand il y a une analyse. Sous un croisement de
-  // deux axes de comparaison (#390), elles sont GROUPÉES : empiler deux axes non
-  // additifs mentirait, et des barres simples ne montreraient que la 1re grappe.
-  representation_registry.register({
+  // Barres — toujours proposees quand il y a une analyse.
+  registerFigureNature({
     id: 'osp.repr.bars',
-    scale: 'element',
+    nature: 'bars',
     order: 30,
     label: (a) => a.t('inspector.analysis.repr.bar', { defaultValue: 'Barres' }),
     icon: <FaChartBar />,
-    // La même déclaration que la couronne, et c'est le fond de os#1402 : c'est la même analyse,
-    // vue autrement. Un axe réglé sur l'une se lit donc de la même façon sur l'autre.
-    attributes: BARS_ATTRIBUTES,
-    // os#1399 - et la même cible de part, pour la même raison : une barre porte l'objet que
-    // l'axe désigne, exactement comme un secteur.
+    own: BARS_OWN,
+    socle: BARS_SOCLE,
+    extra_attributes: ANALYSIS_ATTRIBUTES,
+    // La meme cible de part que la couronne, et pour la meme raison : c est la meme analyse, vue
+    // autrement. Une barre porte l objet que l axe designe, exactement comme un secteur.
     resolveElementTarget: ({ target, ctx }) => analysisPartTarget(target, analysisOf(ctx)?.descriptor),
     isAvailable: (ctx) => !!analysisOf(ctx),
-    draw: (container, ctx) => {
+    style: (ctx) => figureChartStyleOf(ctx.options, BARS_STYLE_DEFAULTS),
+    part_context: analysisPartContext,
+    // LES BARRES GROUPEES N Y PASSENT PAS : une grappe porte plusieurs series, donc plusieurs parts
+    // par identifiant de categorie, et il faudrait une cle composee pour les distinguer. Les y
+    // forcer melerait les reglages de deux barres differentes. `parts` rend donc une liste VIDE
+    // dans ce cas — la figure se dessine, sans parts reglables (cf. `draw`).
+    parts: (ctx) => {
+      const a = analysisOf(ctx)
+      if (!a) return null
+      return isGroupedCross(a.descriptor) ? [] : analysisPartsOf(ctx)
+    },
+    draw: (container, parts, wiring, ctx) => {
       const a = analysisOf(ctx)
       if (!a) return undefined
       const opts = chartOptions(ctx, BARS_STYLE_DEFAULTS)
       if (isGroupedCross(a.descriptor)) {
-        // Régime d'échelle du DESCRIPTEUR (#393) : la pop-up de présentation lit
-        // la même analyse que l'inspecteur, elle doit en lire aussi l'échelle.
+        // Regime d echelle du DESCRIPTEUR (#393) : la pop-up de presentation lit la meme analyse
+        // que l inspecteur, elle doit en lire aussi l echelle.
         drawGroupedBarChart(
           container,
           buildAnalysisChartData(a.subject, a.descriptor, a.nav).groups ?? [],
@@ -400,21 +416,14 @@ export const registerAnalysisRepresentations = (): void => {
         )
         return () => { container.innerHTML = '' }
       }
-      // os#1460 — LES BARRES SIMPLES LISENT LEURS PARTS, comme la couronne. Les barres GROUPÉES
-      // n'y passent pas encore : une grappe porte plusieurs séries, donc plusieurs parts par
-      // identifiant de catégorie, et il faudrait une clé composée pour les distinguer. Les y
-      // forcer mêlerait les réglages de deux barres différentes — c'est un lot à part, et c'est
-      // dit ici plutôt que fait à moitié.
-      const parts = flatParts(a.subject, a.descriptor, a.nav)
-      const wiring = analysisPartsWiring(ctx, a.subject, a.descriptor, parts, opts.style, 'bars')
-      drawBarChart(container, parts, {
+      drawBarChart(container, parts as unknown as Type_StatSlice[], {
         ...opts,
         part_aspect: wiring.part_aspect,
         on_part_select: wiring.on_part_select,
         label_positions: wiring.label_positions,
         on_label_move: wiring.on_label_move
       })
-      return () => { container.innerHTML = ''; wiring.release() }
+      return () => { container.innerHTML = '' }
     }
   })
 }
