@@ -43,7 +43,7 @@ import { LinkControlPoints } from './LinkControlPoints'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
-import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
+import { Type_Side, getNameLabelValues, Type_NameLabelSource } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { effectiveOpacity } from './elementOpacity'
@@ -1634,6 +1634,62 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   public override get name() {
     return this.defaultLinkName(this._source, this._target)
+  }
+
+  /**
+   * os#1451 — LA SOURCE DE LIBELLÉ D'UN FLUX, DITE DANS L'ÉNUMÉRATION COMMUNE.
+   *
+   * Le flux a gardé une écriture à lui, `name_label_text_source` : c'est ce que l'inspecteur des
+   * flux écrit, ce que l'import e!Sankey pose, et surtout ce que les FICHIERS ENREGISTRÉS portent.
+   * Elle ne disparaît pas — on ne migre pas le parc pour une question de vocabulaire — mais elle
+   * cesse d'être une seconde énumération : ses valeurs SONT celles de `Type_NameLabelSource`, et
+   * c'est ici, sur l'élément, que les deux écritures s'arbitrent — plus dans le dessin.
+   *
+   * ARBITRAGE, ET IL EST À COMPORTEMENT CONSTANT :
+   *  · l'écriture propre au flux prime dès qu'elle dit autre chose que son défaut ('custom') —
+   *    tout fichier existant garde donc exactement le libellé qu'il affichait ;
+   *  · sinon l'attribut commun décide, ce qui ferme le piège laissé par os#1445 : régler la source
+   *    d'un flux depuis l'inspecteur générique ne restait plus sans effet ;
+   *  · 'name' — le DÉFAUT de l'attribut commun — et 'ancestor' désignent chez un flux le texte
+   *    qu'il porte : un flux n'a pas de nom propre (il se nomme par ses deux bouts) et n'a pas
+   *    d'ancêtre. C'est ce qu'il a toujours affiché, et c'est ce qui garantit qu'un diagramme
+   *    enregistré se rouvre à l'identique.
+   */
+  public override get name_label_source_effective(): Type_NameLabelSource {
+    const link_own_source = this.name_label_text_source as Type_NameLabelSource
+    if (link_own_source !== undefined && link_own_source !== 'custom') return link_own_source
+    const common_source = this.name_label_source
+    if (common_source === 'name' || common_source === 'ancestor') return 'custom'
+    return common_source
+  }
+
+  /** Le texte propre d'un flux n'est pas `name_label_text` : il est porté par sa VALEUR, donc par
+   * la combinaison d'étiquettes de données sélectionnée. */
+  protected override resolveCustomLabel(): string {
+    return this.text_value
+  }
+
+  /** Source 'tag' : l'étiquette de FLUX assignée dans le groupe choisi (la première si plusieurs).
+   * Sans groupe désigné, ou sans étiquette assignée, le flux dit son texte — jamais rien. */
+  protected override resolveTagLabel(): string {
+    const group_id = this.name_label_flux_tag_group_id
+    if (group_id === '') return this.text_value
+    const tag = this.flux_tags_list.find(t => t.group.id === group_id)
+    return tag ? tag.display_name : this.text_value
+  }
+
+  /** OS#1314 — le gabarit d'un flux connaît ses propres jetons ({Value}, {Source}, {EntryName}…). */
+  protected override resolveTemplateLabel(): string {
+    return this.template_label
+  }
+
+  /** Les seules sources que le flux est seul à pouvoir honorer : le libellé AFFICHÉ de ses bouts. */
+  protected override resolveEndpointLabel(which: 'source' | 'target' | 'source_target'): string {
+    const source_label = this.source?.name_label_effective ?? ''
+    const target_label = this.target?.name_label_effective ?? ''
+    if (which === 'source') return source_label
+    if (which === 'target') return target_label
+    return `${source_label} → ${target_label}`
   }
 
   public get has_result() {

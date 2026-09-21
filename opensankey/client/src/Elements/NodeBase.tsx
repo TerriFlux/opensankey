@@ -42,9 +42,10 @@ import { envelopeBBoxOfMembers, Type_EnvelopeMember } from './envelopeBBox'
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
 
-// Sources possibles pour le contenu du label de nom d'un nœud / d'une zone de
-// texte. Voir l'attribut de style name_label_source (NAME_LABEL_CONFIG).
-export type Type_NameLabelSource = 'name' | 'custom' | 'tag' | 'ancestor' | 'template'
+// os#1451 — l'énumération des sources de libellé a rejoint l'attribut qui la porte
+// (NAME_LABEL_CONFIG, ElementsAttributesConfig) : elle vaut pour TOUTE la famille — nœud, zone de
+// texte, part et flux — et non pour le seul nœud. Re-exportée ici pour les appelants historiques.
+export type { Type_NameLabelSource } from './ElementsAttributesConfig'
 
 export function sortNodesElements(
   a: Class_NodeBase | Class_ElementStyle,
