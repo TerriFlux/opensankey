@@ -153,6 +153,12 @@ export const resources_nodes = {
           labels: 'Name',
           node_value: 'Value',
           name_label_is_visible: 'Label',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: 'Text orientation',
+          name_label_callout: 'Detach the label',
+          orientation_radial: 'Radial',
+          orientation_tangential: 'Along arc',
+          orientation_horizontal: 'Horizontal',
           lb: 'White label',
           name_label_background: 'Background',
           name_label_background_color: 'Background color',
@@ -182,6 +188,9 @@ export const resources_nodes = {
 
           tooltips: {
             name_label_is_visible: 'Displays or not the label(s) attached to the selected node(s)',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: 'How the text runs inside a round part: along the radius, following the arc, or always upright.',
+            name_label_callout: 'Place this label outside its part, linked by a line. Drag it where you want.',
             name_label_text_source: 'Choose what the node label shows: the node name, or an independent custom text (edited without renaming the node)',
             name_label_template: 'Text built from tokens replaced at draw time, e.g. "{Name}: {Value} {Unit}"',
             lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
@@ -430,6 +439,12 @@ export const resources_nodes = {
           labels: 'Nom',
           node_value: 'Valeur',
           name_label_is_visible: 'Libellé',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: 'Orientation du texte',
+          name_label_callout: 'Détacher l\'étiquette',
+          orientation_radial: 'Radiale',
+          orientation_tangential: 'Le long de l\'arc',
+          orientation_horizontal: 'Horizontale',
           lb: 'Blanc',
           name_label_background: 'Fond',
           name_label_background_color: 'Couleur fond',
@@ -477,6 +492,9 @@ export const resources_nodes = {
             droite_val: 'Positionner l\'affichage de la valeur associée à droite du/des noeud(s) sélectionné(s)',
             name_label_background: 'Ajoute un fond au label pour une meilleure lisibilité lorsque le label passe devant un flux',
             name_label_is_visible: 'Affiche ou non le(s) label(s) attaché(s) au(x) nœud(s) sélectionné(s)',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: 'Comment le texte court dans un secteur : le long du rayon, en suivant l\'arc, ou toujours droit.',
+            name_label_callout: 'Poser cette étiquette hors de sa part, reliée par un trait. Glissez-la où vous voulez.',
             top: 'Affiche le(s) label(s) au dessus du/des nœud(s) sélectionné(s)',
           }
         },
@@ -701,6 +719,12 @@ export const resources_nodes = {
           labels: 'Nombre',
           node_value: 'Valor',
           name_label_is_visible: 'Etiqueta',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: 'Orientación del texto',
+          name_label_callout: 'Separar la etiqueta',
+          orientation_radial: 'Radial',
+          orientation_tangential: 'A lo largo del arco',
+          orientation_horizontal: 'Horizontal',
           lb: 'Etiqueta blanca',
           name_label_background: 'Fondo',
           name_label_background_color: 'Color de fondo',
@@ -731,6 +755,9 @@ export const resources_nodes = {
             name_label_text_source: 'Elegir lo que muestra la etiqueta del nodo: el nombre del nodo, o un texto personalizado independiente (editable sin renombrar el nodo)',
             name_label_template: 'Texto construido con marcadores sustituidos al dibujar, p. ej. «{Name}: {Value} {Unit}»',
             name_label_is_visible: 'Muestra u oculta la(s) etiqueta(s) asociada(s) al/a los nodo(s) seleccionado(s)',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: 'Cómo discurre el texto en una parte redonda: a lo largo del radio, siguiendo el arco, o siempre recto.',
+            name_label_callout: 'Colocar esta etiqueta fuera de su parte, unida por una línea. Arrástrela donde quiera.',
             lb: 'Muestra el texto de la(s) etiqueta(s) en blanco o negro (útil si la etiqueta está sobre el/los nodo(s))',
             name_label_background: 'Añade un fondo a la etiqueta para mejor visibilidad cuando está delante de un flujo',
             top: 'Muestra la(s) etiqueta(s) encima del/de los nodo(s) seleccionado(s)',
@@ -972,6 +999,12 @@ export const resources_nodes = {
           labels: 'Name',
           node_value: 'Wert',
           name_label_is_visible: 'Beschriftung',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: 'Textausrichtung',
+          name_label_callout: 'Beschriftung ablösen',
+          orientation_radial: 'Radial',
+          orientation_tangential: 'Entlang des Bogens',
+          orientation_horizontal: 'Horizontal',
           lb: 'Weiße Beschriftung',
           name_label_background: 'Hintergrund',
           name_label_background_color: 'Hintergrundfarbe',
@@ -1002,6 +1035,9 @@ export const resources_nodes = {
             name_label_text_source: 'Wählen, was die Knotenbeschriftung anzeigt: den Knotennamen oder einen unabhängigen benutzerdefinierten Text (bearbeitbar, ohne den Knoten umzubenennen)',
             name_label_template: 'Text aus Platzhaltern, die beim Zeichnen ersetzt werden, z. B. „{Name}: {Value} {Unit}“',
             name_label_is_visible: 'Zeigt oder verbirgt die Beschriftung(en) des/der ausgewählten Knoten(s)',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: 'Wie der Text in einem runden Teil verläuft: entlang des Radius, dem Bogen folgend oder immer aufrecht.',
+            name_label_callout: 'Diese Beschriftung außerhalb ihres Teils platzieren, mit einer Linie verbunden. Frei ziehbar.',
             lb: 'Zeigt den Text der Beschriftung(en) in Weiß oder Schwarz an (nützlich, wenn die Beschriftung auf dem/den Knoten positioniert ist)',
             name_label_background: 'Fügt einen Hintergrund zur Beschriftung hinzu für bessere Sichtbarkeit, wenn sie vor einem Fluss liegt',
             top: 'Zeigt die Beschriftung(en) oberhalb des/der ausgewählten Knoten(s) an',
@@ -1243,6 +1279,12 @@ export const resources_nodes = {
           labels: 'Nome',
           node_value: 'Valore',
           name_label_is_visible: 'Etichetta',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: 'Orientamento del testo',
+          name_label_callout: 'Staccare l\'etichetta',
+          orientation_radial: 'Radiale',
+          orientation_tangential: 'Lungo l\'arco',
+          orientation_horizontal: 'Orizzontale',
           lb: 'Etichetta bianca',
           name_label_background: 'Sfondo',
           name_label_background_color: 'Colore sfondo',
@@ -1273,6 +1315,9 @@ export const resources_nodes = {
             name_label_text_source: 'Scegli cosa mostra l\'etichetta del nodo: il nome del nodo, o un testo personalizzato indipendente (modificabile senza rinominare il nodo)',
             name_label_template: 'Testo costruito con segnaposto sostituiti al disegno, es. «{Name}: {Value} {Unit}»',
             name_label_is_visible: 'Mostra o nasconde l\'etichetta/e associata/e al/ai nodo/i selezionato/i',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: 'Come scorre il testo in una parte rotonda: lungo il raggio, seguendo l\'arco, o sempre dritto.',
+            name_label_callout: 'Porre questa etichetta fuori dalla sua parte, collegata da una linea. Trascinala dove vuoi.',
             lb: 'Mostra il testo dell\'etichetta/e in bianco o nero (utile se l\'etichetta è posizionata sul/sui nodo/i)',
             name_label_background: 'Aggiunge uno sfondo all\'etichetta per una migliore visibilità quando è davanti a un flusso',
             top: 'Mostra l\'etichetta/e sopra il/i nodo/i selezionato/i',
@@ -1519,6 +1564,12 @@ export const resources_nodes = {
           labels: '名称',
           node_value: '数值',
           name_label_is_visible: '标签',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: '文本方向',
+          name_label_callout: '分离标签',
+          orientation_radial: '径向',
+          orientation_tangential: '沿弧线',
+          orientation_horizontal: '水平',
           lb: '白色标签',
           name_label_background: '背景',
           name_label_background_color: '背景颜色',
@@ -1548,6 +1599,9 @@ export const resources_nodes = {
 
           tooltips: {
             name_label_is_visible: '是否显示附加在所选节点上的标签',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: '文本在圆形部分中的走向：沿半径、随弧线，或始终保持水平。',
+            name_label_callout: '把该标签放到其部分之外，用线相连。可拖动到任意位置。',
             name_label_text_source: '选择节点标签显示的内容：节点名称，或独立的自定义文本（编辑时不会重命名节点）',
             name_label_template: '由绘制时替换的占位符组成的文本，例如“{Name}: {Value} {Unit}”',
             lb: '以白色或黑色显示标签文本（当标签位于节点之上时很有用）',
@@ -1796,6 +1850,12 @@ export const resources_nodes = {
           labels: '名前',
           node_value: '値',
           name_label_is_visible: 'ラベル',
+          // os#1482 - orientation du texte dune part, et detachement de letiquette.
+          name_label_orientation: 'テキストの向き',
+          name_label_callout: 'ラベルを切り離す',
+          orientation_radial: '放射状',
+          orientation_tangential: '円弧に沿う',
+          orientation_horizontal: '水平',
           lb: '白いラベル',
           name_label_background: '背景',
           name_label_background_color: '背景色',
@@ -1825,6 +1885,9 @@ export const resources_nodes = {
 
           tooltips: {
             name_label_is_visible: '選択したノードに付いているラベルを表示するかどうかを設定します',
+            // os#1482 - orientation du texte dune part, et detachement de letiquette.
+            name_label_orientation: '円形パートの中でテキストが走る向き：半径に沿う、円弧に従う、または常に水平。',
+            name_label_callout: 'このラベルをパートの外に出し、線で結びます。任意の位置へドラッグできます。',
             name_label_text_source: 'ノードのラベルに表示する内容を選択：ノード名、またはノード名を変えずに編集できる任意のテキスト',
             name_label_template: '描画時に置き換えられるトークンで組み立てる文字列（例：「{Name}: {Value} {Unit}」）',
             lb: 'ラベルの文字を白または黒で表示します（ラベルをノードの上に配置する場合に便利です）',
