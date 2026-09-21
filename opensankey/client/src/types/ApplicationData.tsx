@@ -39,8 +39,13 @@ import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import {
   Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES,
-  mainZoneSubjectUsesOwnWindowId
+  mainZoneSubjectUsesOwnWindowId, mainZoneSubjectSheet, mainZoneSubjectView, MAIN_ZONE_CANVAS_ID
 } from '../types/MenuConfig'
+// os#1482 — les scènes (vue de l'espace de travail) : magasin pur + règles d'identifiants.
+import {
+  implicitSceneId, viewIdOfImplicitScene, migratedSceneId, mainZoneWithViewOnCurrentSheet,
+  sceneViewRefs, type Type_Scene
+} from './Scenes'
 import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, getStringFromJSON, makeId, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { PublishOptions } from './PublishOptions'
 // os#1385 — L'ESPACE DE TRAVAIL. Import en VALEUR dans les deux sens (Workspace importe cette
@@ -1568,6 +1573,9 @@ export class Class_ApplicationData {
     if (this.is_main && !(kwargs && kwargs['without_sheets'] === true)) {
       json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     }
+    // os#1482 — LES SCÈNES, clé racine `scenes`, sous la même garde que `main_zone` et pour la
+    // même raison : elles décrivent l'écran, un seul écrivain. Additive (absente sans scène).
+    this.scenesToJSON(json_object, kwargs)
     // os#1418 — STYLES DES NATURES DE FIGURE (étoile unitaire, couronne, histogrammes,
     // sunburst), clé racine ADDITIVE : absente tant qu'aucun style n'a été réglé, donc un
     // fichier antérieur se relit à l'identique. Remplace `representation_defaults` (os#1394),
@@ -1795,14 +1803,237 @@ export class Class_ApplicationData {
     if (this.is_main && !loading_into_open_file && mz && typeof mz === 'object') {
       this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
     }
+    // os#1482 — LES SCÈNES, sous la même garde (cf. `scenesFromJSON`).
+    this.scenesFromJSON(json_object, kwargs)
     // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
     this.menu_configuration?.flushFigureMigrationReport()
     // #1316 — Viewer intégral : lit le bloc `views` (+ delta __patch) et rouvre sur la vue active.
     // No-op si le fichier n'a pas de clé `views`. OpenSankey+ réimplémente `_fromJSON` (sans super)
     // et pilote ses propres appels vues + migration viewtag ; ce chemin ne sert qu'au viewer OS pur.
     this._views_reader.viewsFromJSON(json_object)
+    // os#1482 — et les dispositions figées par vue (`view_main_zone`) deviennent des scènes.
+    this.migrateViewMainZonesToScenes(kwargs)
     // OS#85 — Feuilles du document. No-op (silencieux) si le fichier n'a pas de clé `sheets`.
     this.sheetsFromJSON(json_object)
+  }
+
+  // SCÈNES (os#1482) ===================================================================
+  // La vue de l'ESPACE DE TRAVAIL (cf. NOTE-SCENES.md). Le magasin est de l'hôte
+  // (`menu_configuration.scenes`) ; ici vivent la persistance — mêmes gardes que `main_zone`
+  // et `workspace` — et les commandes qui opèrent les documents (activer, capturer).
+
+  /**
+   * Écrit la clé racine `scenes`. PAR LE PRINCIPAL SEULEMENT, et jamais dans un contenu de
+   * feuille (`without_sheets`) : les deux disent la même chose, il n'y a qu'un écran.
+   * Clé ADDITIVE : rien n'est écrit sans scène, un fichier d'aujourd'hui ne change pas.
+   *
+   * /!\ Clé RACINE : chez OpenSankey+ elle doit être posée AVANT `encodeViewsAsDelta`.
+   */
+  protected scenesToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+    if (kwargs && kwargs['without_sheets'] === true) return
+    if (!this.is_main) return
+    const scenes = this.menu_configuration?.scenes.toJSON()
+    if (scenes) json_object['scenes'] = scenes
+  }
+
+  /**
+   * Relit la clé racine `scenes`. Symétrique de l'écriture, et sous la condition de
+   * `workspaceFromJSON` : jamais en chargeant un contenu DANS le fichier ouvert
+   * (`keep_file_state`, `only_current_view`) — l'écran ne change pas de fichier. Clé absente
+   * sur un vrai chargement : le magasin est VIDÉ, c'est un autre fichier.
+   */
+  protected scenesFromJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+    if (kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])) return
+    if (!this.is_main) return
+    this.menu_configuration?.scenes.fromJSON(json_object['scenes'])
+  }
+
+  /**
+   * MIGRATION — chaque vue qui porte une disposition figée (`view_main_zone`, os#1355) devient
+   * une scène `scene_<vue>` du nom de la vue, dont les fenêtres diagramme de la feuille courante
+   * reçoivent `view: <vue>`. Idempotente : une scène déjà là sous cet identifiant n'est pas
+   * recréée. L'entrée de vue perd sa disposition en mémoire ; à l'enregistrement suivant le
+   * fichier est au format nouveau (`view_main_zone` n'est plus écrite, cf. ApplicationDataOSP).
+   *
+   * Appelée APRÈS la lecture des vues, sous la garde de `scenesFromJSON`. La scène courante, si
+   * rien ne l'a dite, est celle de la vue active : ce que le fichier rouvrait avant les scènes.
+   */
+  protected migrateViewMainZonesToScenes(kwargs?: Type_JSON): void {
+    if (kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])) return
+    if (!this.is_main) return
+    const scenes = this.menu_configuration?.scenes
+    if (!scenes) return
+    this._views_order.forEach(view_id => {
+      const entry = this._views[view_id]
+      if (!entry || !entry.main_zone) return
+      const id = migratedSceneId(view_id)
+      if (!scenes.byId(id)) {
+        scenes.add({ id, name: entry.name, main_zone: mainZoneWithViewOnCurrentSheet(entry.main_zone, view_id) })
+      }
+      delete entry.main_zone
+    })
+    if (scenes.current === null) {
+      const migrated = migratedSceneId(this._current_view_id)
+      scenes.current = scenes.byId(migrated) ? migrated : implicitSceneId(this._current_view_id)
+    }
+  }
+
+  /** L'identifiant de la scène ACTIVE : l'explicite posée, sinon l'implicite de la vue courante. */
+  public get current_scene_id(): string {
+    const current = this.menu_configuration.scenes.current
+    if (current !== null && (viewIdOfImplicitScene(current) !== null || this.menu_configuration.scenes.byId(current))) {
+      return current
+    }
+    return implicitSceneId(this._current_view_id)
+  }
+
+  /**
+   * L'ordre de navigation des SCÈNES : la seule liste du sélecteur, des flèches et de F8/F9
+   * (règle du repli automatique, cf. `Class_ScenesStore.navigationOrder`).
+   */
+  public get scene_navigation_order(): string[] {
+    return this.menu_configuration.scenes.navigationOrder(this.views_navigation_order, this._current_sheet_id)
+  }
+
+  public get has_scene_before(): boolean {
+    return this.scene_navigation_order.indexOf(this.current_scene_id) > 0
+  }
+
+  public get has_scene_after(): boolean {
+    const order = this.scene_navigation_order
+    // Courante hors liste (maître non affiché) => Suiv. va vers la première.
+    return order.length > 0 && order.indexOf(this.current_scene_id) < order.length - 1
+  }
+
+  /** Le libellé d'une scène : le sien, ou celui de la vue pour une implicite. */
+  public sceneName(id: string): string {
+    const view_id = viewIdOfImplicitScene(id)
+    if (view_id !== null) {
+      return view_id === default_main_sankey_id ? this._master_view_name : (this._views[view_id]?.name ?? view_id)
+    }
+    return this.menu_configuration.scenes.byId(id)?.name ?? id
+  }
+
+  /**
+   * LA VUE PRINCIPALE d'une scène (celle de son canevas sur la feuille courante, sinon de sa
+   * première fenêtre diagramme de la feuille courante), ou `null` : c'est elle dont la vignette
+   * représente la scène, et elle que le canevas principal reçoit à l'activation.
+   */
+  public sceneMainViewId(id: string): string | null {
+    const view_id = viewIdOfImplicitScene(id)
+    if (view_id !== null) return view_id
+    const scene = this.menu_configuration.scenes.byId(id)
+    if (!scene) return null
+    const refs = sceneViewRefs(scene.main_zone)
+      .filter(r => r.sheet === '' || r.sheet === this._current_sheet_id)
+    const canvas = refs.find(r => r.representation === MAIN_ZONE_CANVAS_ID)
+    return (canvas ?? refs[0])?.view ?? null
+  }
+
+  /**
+   * ACTIVER une scène. Implicite : la vue, sans toucher à la disposition — ce que faisait une
+   * vue sans `view_main_zone`. Explicite : la GRILLE d'abord (`mainZoneStateFromJSON`), pour que
+   * le dessin se cadre d'emblée dans la bonne géométrie, puis la vue demandée sur chaque
+   * document : le principal pour la feuille courante, le document de feuille pour une fenêtre
+   * dépaysée (`sheetApplication` le charge au besoin).
+   *
+   * `interactive` : le chemin du geste d'utilisateur (indicateur + cession de la main,
+   * `requestViewChange`) ; `false` = le chemin programmatique, strictement synchrone.
+   */
+  public activateScene(id: string, interactive: boolean = true): void | Promise<void> {
+    const scenes = this.menu_configuration.scenes
+    const switchTo = (view_id: string): void | Promise<void> =>
+      interactive ? this.requestViewChange(view_id) : this.setCurrentView(view_id)
+    const implicit_view = viewIdOfImplicitScene(id)
+    if (implicit_view !== null) {
+      if (implicit_view !== default_main_sankey_id && !this._views[implicit_view]) return
+      scenes.current = id
+      if (implicit_view === this._current_view_id) return
+      return switchTo(implicit_view)
+    }
+    const scene = scenes.byId(id)
+    if (!scene) return
+    scenes.current = id
+    scenes.activating = true
+    let result: void | Promise<void> = undefined
+    try {
+      this.menu_configuration.mainZoneStateFromJSON(scene.main_zone)
+      // Les fenêtres dépaysées d'abord, en synchrone : elles ne passent pas par le voile.
+      const refs = sceneViewRefs(scene.main_zone)
+      refs.filter(r => r.sheet !== '' && r.sheet !== this._current_sheet_id).forEach(r => {
+        const doc = this.sheetApplication(r.sheet)
+        if (!doc || doc === this) return
+        if (r.view !== default_main_sankey_id && !doc.views_dict[r.view]) return
+        if (doc.current_view_id !== r.view) doc.setCurrentView(r.view)
+      })
+      const main_view = this.sceneMainViewId(id)
+      if (main_view !== null && main_view !== this._current_view_id
+        && (main_view === default_main_sankey_id || this._views[main_view])) {
+        result = switchTo(main_view)
+      } else {
+        // Pas de bascule de vue : la grille vient de changer, le dessin doit se recadrer.
+        this.menu_configuration.updateAllMenuComponents()
+      }
+    } finally {
+      if (result) void Promise.resolve(result).finally(() => { scenes.activating = false })
+      else scenes.activating = false
+    }
+    return result
+  }
+
+  public setCurrentSceneToNext(): void | Promise<void> {
+    if (!this.has_scene_after) return
+    const order = this.scene_navigation_order
+    return this.activateScene(order[order.indexOf(this.current_scene_id) + 1])
+  }
+
+  public setCurrentSceneToPrev(): void | Promise<void> {
+    if (!this.has_scene_before) return
+    const order = this.scene_navigation_order
+    return this.activateScene(order[order.indexOf(this.current_scene_id) - 1])
+  }
+
+  /**
+   * CAPTURER L'ÉCRAN : la disposition de la grande zone, et pour chaque fenêtre diagramme la vue
+   * que son document montre en ce moment (le principal pour la feuille courante, le document de
+   * feuille pour une fenêtre dépaysée). C'est ce qu'une scène fige.
+   */
+  public captureSceneMainZone(): Type_JSON {
+    const main_zone = this.menu_configuration.mainZoneStateToJSON()
+    const raw = main_zone['occupants'] as Type_JSON
+    this.menu_configuration.main_zone_occupants.forEach(o => {
+      if (o.subject.kind !== 'diagram') return
+      const entry = raw[o.id] as Type_JSON | undefined
+      if (!entry) return
+      const sheet = mainZoneSubjectSheet(o.subject)
+      const doc = (sheet === '' || sheet === this._current_sheet_id) ? this : this.sheetApplication(sheet)
+      const view = doc ? doc.current_view_id : mainZoneSubjectView(o.subject)
+      if (view === '') return
+      const subject = { ...(entry['subject'] as Type_JSON ?? { kind: 'diagram' }), view }
+      entry['subject'] = subject
+    })
+    return main_zone
+  }
+
+  /** Crée une scène depuis l'écran, la rend courante, et la rend. */
+  public createSceneFromScreen(name: string): Type_Scene {
+    const scenes = this.menu_configuration.scenes
+    const scene: Type_Scene = { id: scenes.newId(), name: name.trim() || 'Scène', main_zone: this.captureSceneMainZone() }
+    scenes.add(scene)
+    scenes.current = scene.id
+    return scene
+  }
+
+  /** Recapture l'écran dans une scène existante. */
+  public updateSceneFromScreen(id: string): boolean {
+    const scene = this.menu_configuration.scenes.byId(id)
+    if (!scene) return false
+    scene.main_zone = this.captureSceneMainZone()
+    return true
+  }
+
+  public deleteScene(id: string): boolean {
+    return this.menu_configuration.scenes.remove(id)
   }
 
   // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
@@ -1827,7 +2058,7 @@ export class Class_ApplicationData {
    * racine, écrite par le principal) EST la disposition de l'espace de travail —
    * l'écrire une seconde fois sous `workspace` serait une copie, donc deux vérités.
    * Elle rejoindra `workspace` quand elle se distinguera de la disposition par DÉFAUT
-   * du document (lot 6), à côté de `view_main_zone` qui est, elle, par vue.
+   * du document (lot 6). Les dispositions NOMMÉES, elles, sont les `scenes` (os#1482).
    *
    * /!\ Clé RACINE : chez OpenSankey+ (fichier avec vues) elle doit être posée AVANT
    * `encodeViewsAsDelta`, comme `sheets`, `library_ref` et `contexts` — la base du
