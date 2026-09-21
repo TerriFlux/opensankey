@@ -110,7 +110,28 @@ const PROBE_BY_KEY: { [key: string]: string[] } = {
   value_label_percent: ['none', 'total', 'parent'],
   value_label_unit_type: ['unit_model', 'custom'],
   name_label_separator_part: ['before', 'after'],
-  value_label_separator_part: ['before', 'after']
+  value_label_separator_part: ['before', 'after'],
+  value_label_part_unit: ['value', 'percent_total', 'percent_parent', 'custom']
+}
+
+/**
+ * TOUTES les valeurs d'essai d'une clé, et pas seulement la première (os#1490).
+ *
+ * ⚠️ UN CHOIX PEUT ÊTRE SANS EFFET SUR UNE NATURE ET DÉCISIF SUR UNE AUTRE, parce que les figures
+ * n'ont pas les mêmes défauts. « % du tout » posé sur une part de COURONNE ne change rien — la
+ * couronne écrit déjà des pourcentages (os#1489) — quand il retourne l'étiquette d'une BARRE. Ne
+ * juger un réglage que sur sa première valeur, c'est déclarer mort ce qui marche partout ailleurs.
+ *
+ * La question posée est donc : ce réglage a-t-il AU MOINS UNE valeur qui change le dessin ? C'est
+ * la seule qui corresponde à ce que Julien vérifie à l'écran — il essaie les boutons du groupe.
+ */
+export const probeValues = (current: unknown, key?: string): unknown[] => {
+  if (typeof current === 'string' && key !== undefined && PROBE_BY_KEY[key] !== undefined) {
+    const others = PROBE_BY_KEY[key].filter(c => c !== current)
+    return others.length > 0 ? others : [PROBE_BY_KEY[key][0]]
+  }
+  const only = probeValue(current, key)
+  return only === undefined ? [] : [only]
 }
 
 /** Le résultat d'une interrogation, clé par clé. */
@@ -151,8 +172,8 @@ export const measureBites = (
     const probe = makeProbe()
     const part = probe.parts[probe.probe_id] as unknown as { [k: string]: unknown }
     const before = part[key]
-    const trial = probeValue(before, key)
-    if (trial === undefined) { out.unmeasurable.push(key); return }
+    const trials = probeValues(before, key)
+    if (trials.length === 0) { out.unmeasurable.push(key); return }
     // ⚠️ L'ÉTAT DE RÉFÉRENCE SE REMESURE AVANT CHAQUE ESSAI, et c'est ce qui a rendu la première
     // version de ce harnais MENTEUSE : elle comparait tout à un unique dessin initial.
     //
@@ -164,11 +185,16 @@ export const measureBites = (
     //
     // Un harnais de mesure qui ment est pire que pas de harnais : il endort exactement la
     // vérification qu'il prétend faire.
-    const plain = drawInto(probe.draw)
-    part[key] = trial
-    const after = drawInto(probe.draw)
-    if (after === plain) out.inert.push(key)
-    else out.bites.push(key)
+    // Chaque valeur d'essai repart d'une sonde neuve, pour la même raison que ci-dessus.
+    const bites = trials.some((trial, rank) => {
+      const fresh = rank === 0 ? probe : makeProbe()
+      const on = fresh.parts[fresh.probe_id] as unknown as { [k: string]: unknown }
+      const plain = drawInto(fresh.draw)
+      on[key] = trial
+      return drawInto(fresh.draw) !== plain
+    })
+    if (bites) out.bites.push(key)
+    else out.inert.push(key)
   })
   return out
 }
