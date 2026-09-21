@@ -160,10 +160,20 @@ export const SHARED_HONOURS = {
 const DONUT_HONOURS = {
   ...SHARED_HONOURS,
   parts_group_under: { default: 0.5 },
-  // os#1431 — sur une couronne, le nom de la part ne se dessinait pas : ce drapeau commandait en
-  // fait le pourcentage. Il commande désormais le NOM, et il est éteint par défaut — sans quoi
-  // toute couronne déjà enregistrée se couvrirait de noms (cf. DONUT_STYLE_DEFAULTS).
-  name_label_is_visible: { default: false },
+  // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE.
+  //
+  // Julien : « pour la couronne, par défaut il faut le libellé ON et les valeurs en % ON ».
+  //
+  // ⚠️ C'EST UN RENVERSEMENT ASSUMÉ. os#1431 avait éteint le nom par défaut, « sans quoi toute
+  // couronne déjà enregistrée se couvrirait de noms » — la prudence d'alors. Julien tranche
+  // l'inverse : une couronne muette ne dit rien de ce qu'elle montre, et c'est le premier réglage
+  // que tout le monde rallume. Les couronnes existantes gagneront donc leurs noms à la
+  // réouverture ; celles dont l'auteur avait explicitement décoché gardent leur réglage, la
+  // surcharge primant sur le défaut.
+  name_label_is_visible: { default: true },
+  // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
+  // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
+  value_label_is_visible: { default: true },
   name_label_font_size: { default: 11 },
   value_label_percent: { default: 'total' },
   centre_content: { default: 'value' },

@@ -99,10 +99,12 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_max: 20,
   centre_content: 'value',
   centre_hole: 55,
-  // os#1431 — LE NOM DE LA PART NE S'AFFICHE PLUS D'OFFICE. Il ne se dessinait pas du tout avant
-  // (ce drapeau commandait en réalité le pourcentage) : l'allumer par défaut écrirait un nom dans
-  // chaque secteur de chaque couronne déjà enregistrée. C'est une option, elle s'active.
-  name_label_is_visible: false,
+  // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE (demande de Julien).
+  //
+  // ⚠️ RENVERSEMENT ASSUMÉ. os#1431 les avait éteints « sans quoi toute couronne déjà
+  // enregistrée se couvrirait de noms ». Julien tranche l'inverse : une couronne muette ne dit
+  // rien de ce qu'elle montre, et c'est le premier réglage que tout le monde rallume.
+  name_label_is_visible: true,
   name_label_font_size: 11,
   // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
   // une seule ligne, aucun separateur, et rien ne se masque sur la longueur.
@@ -117,7 +119,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   name_label_prune_if_unfitting: false,
   // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
   name_label_callout: false,
-  value_label_is_visible: false,
+  value_label_is_visible: true,
   value_label_percent: 'total',
   scale_factor: 100,
   interaction_tooltip: true,
