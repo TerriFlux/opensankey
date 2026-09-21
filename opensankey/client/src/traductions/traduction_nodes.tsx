@@ -188,6 +188,8 @@ export const resources_nodes = {
 
           tooltips: {
             name_label_is_visible: 'Displays or not the label(s) attached to the selected node(s)',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: 'Shape of the box drawn behind the label: rectangle, ellipse or capsule.',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: 'How the text runs inside a round part: along the radius, following the arc, or always upright.',
             name_label_callout: 'Place this label outside its part, linked by a line. Drag it where you want.',
@@ -492,6 +494,8 @@ export const resources_nodes = {
             droite_val: 'Positionner l\'affichage de la valeur associée à droite du/des noeud(s) sélectionné(s)',
             name_label_background: 'Ajoute un fond au label pour une meilleure lisibilité lorsque le label passe devant un flux',
             name_label_is_visible: 'Affiche ou non le(s) label(s) attaché(s) au(x) nœud(s) sélectionné(s)',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: 'Forme du cartouche dessine derriere l\'etiquette : rectangle, ellipse ou capsule.',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: 'Comment le texte court dans un secteur : le long du rayon, en suivant l\'arc, ou toujours droit.',
             name_label_callout: 'Poser cette étiquette hors de sa part, reliée par un trait. Glissez-la où vous voulez.',
@@ -755,6 +759,8 @@ export const resources_nodes = {
             name_label_text_source: 'Elegir lo que muestra la etiqueta del nodo: el nombre del nodo, o un texto personalizado independiente (editable sin renombrar el nodo)',
             name_label_template: 'Texto construido con marcadores sustituidos al dibujar, p. ej. «{Name}: {Value} {Unit}»',
             name_label_is_visible: 'Muestra u oculta la(s) etiqueta(s) asociada(s) al/a los nodo(s) seleccionado(s)',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: 'Forma del recuadro dibujado detras de la etiqueta: rectangulo, elipse o capsula.',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: 'Cómo discurre el texto en una parte redonda: a lo largo del radio, siguiendo el arco, o siempre recto.',
             name_label_callout: 'Colocar esta etiqueta fuera de su parte, unida por una línea. Arrástrela donde quiera.',
@@ -1035,6 +1041,8 @@ export const resources_nodes = {
             name_label_text_source: 'Wählen, was die Knotenbeschriftung anzeigt: den Knotennamen oder einen unabhängigen benutzerdefinierten Text (bearbeitbar, ohne den Knoten umzubenennen)',
             name_label_template: 'Text aus Platzhaltern, die beim Zeichnen ersetzt werden, z. B. „{Name}: {Value} {Unit}“',
             name_label_is_visible: 'Zeigt oder verbirgt die Beschriftung(en) des/der ausgewählten Knoten(s)',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: 'Form des Rahmens hinter der Beschriftung: Rechteck, Ellipse oder Kapsel.',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: 'Wie der Text in einem runden Teil verläuft: entlang des Radius, dem Bogen folgend oder immer aufrecht.',
             name_label_callout: 'Diese Beschriftung außerhalb ihres Teils platzieren, mit einer Linie verbunden. Frei ziehbar.',
@@ -1315,6 +1323,8 @@ export const resources_nodes = {
             name_label_text_source: 'Scegli cosa mostra l\'etichetta del nodo: il nome del nodo, o un testo personalizzato indipendente (modificabile senza rinominare il nodo)',
             name_label_template: 'Testo costruito con segnaposto sostituiti al disegno, es. «{Name}: {Value} {Unit}»',
             name_label_is_visible: 'Mostra o nasconde l\'etichetta/e associata/e al/ai nodo/i selezionato/i',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: 'Forma del riquadro disegnato dietro l\'etichetta: rettangolo, ellisse o capsula.',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: 'Come scorre il testo in una parte rotonda: lungo il raggio, seguendo l\'arco, o sempre dritto.',
             name_label_callout: 'Porre questa etichetta fuori dalla sua parte, collegata da una linea. Trascinala dove vuoi.',
@@ -1599,6 +1609,8 @@ export const resources_nodes = {
 
           tooltips: {
             name_label_is_visible: '是否显示附加在所选节点上的标签',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: '标签背后所绘外框的形状：矩形、椭圆或胶囊。',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: '文本在圆形部分中的走向：沿半径、随弧线，或始终保持水平。',
             name_label_callout: '把该标签放到其部分之外，用线相连。可拖动到任意位置。',
@@ -1885,6 +1897,8 @@ export const resources_nodes = {
 
           tooltips: {
             name_label_is_visible: '選択したノードに付いているラベルを表示するかどうかを設定します',
+            // os#1488 - la forme du cartouche : la cle s affichait en clair a l ecran.
+            shape_type: 'ラベルの背後に描く枠の形：長方形、楕円、カプセル。',
             // os#1482 - orientation du texte dune part, et detachement de letiquette.
             name_label_orientation: '円形パートの中でテキストが走る向き：半径に沿う、円弧に従う、または常に水平。',
             name_label_callout: 'このラベルをパートの外に出し、線で結びます。任意の位置へドラッグできます。',

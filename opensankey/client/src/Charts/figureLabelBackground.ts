@@ -49,6 +49,18 @@ export interface Type_FigureLabelBackground {
   bg_border_color?: string
   bg_border_thickness?: number
   bg_border_radius?: number
+  /**
+   * os#1488 — `name_label_background_type` : LA FORME du cartouche.
+   *
+   * Julien : « changer la forme ne fait rien sur le fond ». La case existait, personne ne la lisait.
+   *
+   * Quatre formes seulement, et c est une decision : `rect`, `ellipse`, et les deux capsules. Le
+   * catalogue en declare huit, mais les quatre autres decrivent un FLUX (les beziers, la ligne) —
+   * elles n ont pas de boite, et un cartouche en est une par definition.
+   */
+  bg_type?: 'rect' | 'ellipse' | 'capsule' | 'capsule_h'
+  /** os#1488 — `name_label_background_border_dashed` : « les pointilles non plus » (Julien). */
+  bg_border_dashed?: boolean
 }
 
 /** La marge entre le texte et le bord de son cartouche, en pixels. */
@@ -81,26 +93,58 @@ export const drawFigureLabelBackground = (
 
   const parent = node.parentNode
   if (!parent) return
+  const x = box.x - LABEL_BG_PADDING_X
+  const y = box.y - LABEL_BG_PADDING_Y
+  const w = box.width + 2 * LABEL_BG_PADDING_X
+  const h = box.height + 2 * LABEL_BG_PADDING_Y
+
+  // os#1488 — LA FORME DU CARTOUCHE, que Julien a cherchée à l'écran : « changer la forme ne fait
+  // rien sur le fond ». La case existait depuis que le cartouche existe ; ce traceur ne posait
+  // qu'un `rect`, quoi qu'on demande.
+  //
+  // UNE ELLIPSE EST UN AUTRE ÉLÉMENT, pas un rectangle arrondi : `rx` sur un `rect` plafonne à la
+  // moitié du côté, et une étiquette large y garde des flancs droits. Le tracé choisit donc la
+  // balise, ce qui est la seule façon d'obtenir un ovale.
+  //
+  // LES CAPSULES sont un rectangle dont le rayon vaut la moitié du petit côté — verticalement pour
+  // `capsule`, horizontalement pour `capsule_h`. Elles ne demandent pas d'autre élément, seulement
+  // le bon rayon, et c'est pourquoi elles voyagent avec le rectangle.
+  const shape = bg.bg_type ?? 'rect'
   const rect = d3.select(parent as Element)
-    .insert('rect', () => node)
+    .insert(shape === 'ellipse' ? 'ellipse' : 'rect', () => node)
     .attr('class', 'figure_label_background')
-    .attr('x', box.x - LABEL_BG_PADDING_X)
-    .attr('y', box.y - LABEL_BG_PADDING_Y)
-    .attr('width', box.width + 2 * LABEL_BG_PADDING_X)
-    .attr('height', box.height + 2 * LABEL_BG_PADDING_Y)
     // Le cartouche ne prend pas le clic : c'est la part qu'on veut sélectionner en cliquant, pas
     // le rectangle qui traîne devant elle.
     .attr('pointer-events', 'none')
     .attr('fill', bg.bg_color ?? '#ffffff')
     .attr('fill-opacity', bg.bg_opacity ?? 1)
 
-  if (bg.bg_border_radius !== undefined && bg.bg_border_radius > 0) {
-    rect.attr('rx', bg.bg_border_radius).attr('ry', bg.bg_border_radius)
+  if (shape === 'ellipse') {
+    // Une ellipse se pose par son CENTRE et ses deux rayons, là où un rectangle se pose par son
+    // coin : la boîte du texte est la même, les quatre nombres qui la décrivent ne le sont pas.
+    rect.attr('cx', x + w / 2).attr('cy', y + h / 2).attr('rx', w / 2).attr('ry', h / 2)
+  } else {
+    rect.attr('x', x).attr('y', y).attr('width', w).attr('height', h)
+    const radius = shape === 'capsule'
+      ? h / 2
+      : shape === 'capsule_h'
+        ? w / 2
+        : (bg.bg_border_radius !== undefined && bg.bg_border_radius > 0 ? bg.bg_border_radius : 0)
+    if (radius > 0) rect.attr('rx', radius).attr('ry', radius)
   }
+
   if (bg.bg_border_visible) {
+    const thickness = bg.bg_border_thickness ?? 1
     rect
       .attr('stroke', bg.bg_border_color ?? '#000000')
-      .attr('stroke-width', bg.bg_border_thickness ?? 1)
+      .attr('stroke-width', thickness)
+    // os#1488 — « les pointillés non plus » (Julien). Le motif est celui d'une forme de part
+    // (`partDashArray`) et pour la même raison : un cartouche tireté doit ressembler à un secteur
+    // tireté, sinon le look and feel diverge d'un endroit à l'autre de la même figure.
+    if (bg.bg_border_dashed) {
+      const t = Math.max(1, thickness)
+      rect.attr('stroke-dasharray', `${t * 4} ${t * 2}`)
+    }
   }
 
   // LE MÊME `transform` QUE SON TEXTE. Le cartouche est inséré dans le même parent, juste avant
