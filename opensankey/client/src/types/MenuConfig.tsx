@@ -635,6 +635,26 @@ export type Type_ExtraHelpMenuItems = Array<{
   tooltip?: () => string
 }>
 
+/**
+ * sa#560 — geste de retour proposé quand un traitement ÉCHOUE (import, conversion).
+ *
+ * L'éditeur sait qu'un traitement a échoué et détient le journal ; il ne sait pas à
+ * qui l'envoyer. La couche SaaS sait (formulaire de retour, ticket, adresse de
+ * support) mais ne voit pas l'échec. Ce point d'extension les relie, dans le même
+ * esprit que `extra_help_menu_items` : posé par la couche haute, appelé par
+ * l'éditeur, absent en OpenSankey open-source — où le bouton ne s'affiche alors pas.
+ *
+ * Libellés en FONCTION, pour la même raison qu'au-dessus : la surface est
+ * enregistrée une fois, une chaîne y resterait figée dans la langue du démarrage.
+ */
+export type Type_ReportProcessFailure = {
+  label: () => string
+  tooltip?: () => string
+  // `title` = ce que l'utilisateur lit dans le bandeau d'échec ; `log` = le journal
+  // brut du traitement, tel que le Terminal l'affiche.
+  onClick: (failure: { title: string, log: string }) => void
+}
+
 // CLASS MENU CONFIG *******************************************************************/
 /**
  * Define shortcut to update menu components
@@ -2865,6 +2885,14 @@ export class Class_MenuConfig {
   }
   public set extra_help_menu_items(v: Type_ExtraHelpMenuItems | undefined) {
     this._host._extra_help_menu_items = v
+  }
+  /** sa#560 — surface de retour sur échec, posée par la couche SaaS (cf. Type_ReportProcessFailure). */
+  protected _report_process_failure?: Type_ReportProcessFailure = undefined
+  public get report_process_failure(): Type_ReportProcessFailure | undefined {
+    return this._host._report_process_failure
+  }
+  public set report_process_failure(v: Type_ReportProcessFailure | undefined) {
+    this._host._report_process_failure = v
   }
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
