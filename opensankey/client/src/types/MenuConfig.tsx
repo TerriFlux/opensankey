@@ -84,6 +84,15 @@ export type Type_AdditionalMenus = {
   extra_background_element: JSX.Element
   additional_nav_item: JSX.Element[],
   additional_bottom_item: JSX.Element[],
+  /**
+   * os#1488 — BOUTONS DE LA COLONNE D'OUTILS (droite), injectés par une couche supérieure.
+   *
+   * La colonne est rendue par l'éditeur (`SankeyMenus`), mais un panneau d'OpenSankey+ — la
+   * gestion des vues et des scènes — doit pouvoir y poser son bouton, comme l'Explorateur y a
+   * le sien. Sans ce créneau il fallait soit descendre le panneau dans l'éditeur, soit lui
+   * prendre une place dans la barre du haut, qui en porte déjà neuf.
+   */
+  additional_tools_item: JSX.Element[],
 
   formations_menu: object,
   template_module_key: string[]
@@ -2899,6 +2908,7 @@ export class Class_MenuConfig {
 
     additional_nav_item: [],
     additional_bottom_item: [],
+    additional_tools_item: [],
 
     formations_menu: {},
     template_module_key: ['essential'],
