@@ -19,7 +19,7 @@
 import * as d3 from '../d3Modules'
 // os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
 import {
-  applyPartTextStyle, calloutInk, partTextCase, partTextPlacement
+  applyPartTextStyle, calloutInk, partDashArray, partShadow, partTextCase, partTextPlacement
 } from './figurePartText'
 // os#1424 — la couronne À N ANNEAUX se dessine aussi SUR UN NŒUD. La partition angulaire et
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
@@ -139,6 +139,12 @@ export interface Type_ChartPartAspect extends Type_FigurePartLabelAspect {
   border_visible?: boolean
   border_color?: string
   border_thickness?: number
+  /**
+   * os#1481 — `shape_border_dashed` et `shape_shadow_visible`. Cherchés par Julien à l'écran
+   * (« ni tireté ni ombre ») ; ils n'étaient dessinés par aucune nature.
+   */
+  border_dashed?: boolean
+  shadow_visible?: boolean
   /** Le style du texte de CETTE part — mêmes clés que celui de la figure. */
   style?: Partial<Type_FigureChartStyle>
 }
@@ -354,6 +360,15 @@ export const drawDonutChart = (
     .attr('height', side)
     .style('flex', '0 0 auto')
   const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
+  // os#1481 — OÙ VIT LE FILTRE D'OMBRE. Un `<filter>` par secteur serait ruineux sur une couronne
+  // de cent parts, et l'ombre est la même pour toutes : `partShadow` la déclare ICI, à la demande.
+  const defs = svg.append('defs')
+  /**
+   * L'OPACITÉ D'UN SECTEUR, lue en un seul endroit — le tracé ET le survol de la légende s'en
+   * servent. C'est ce qui manquait : le survol la remettait à 1 pour tout le monde.
+   */
+  const arcOpacity = (d: d3.PieArcDatum<Type_StatSlice>): number =>
+    aspectOf(d.data.id)?.opacity ?? 1
 
   const pie = d3.pie<Type_StatSlice>().value(d => d.value).sort(null)
   const arc = d3.arc<d3.PieArcDatum<Type_StatSlice>>().innerRadius(inner).outerRadius(radius)
@@ -394,7 +409,7 @@ export const drawDonutChart = (
       if (a?.background_visible === false) return 'none'
       return a?.fill ?? colorOf(d.data, d.index)
     })
-    .attr('fill-opacity', d => aspectOf(d.data.id)?.opacity ?? 1)
+    .attr('fill-opacity', d => arcOpacity(d))
     // Le liséré se demande EN BLOC : une part qui n'a rien dit de lui garde celui du tracé (blanc,
     // 1 px), sans quoi une amorce de style le ferait disparaître partout.
     .attr('stroke', d => {
@@ -407,6 +422,9 @@ export const drawDonutChart = (
       if (!a || a.border_visible === undefined) return 1
       return a.border_visible ? (a.border_thickness ?? 1) : 0
     })
+    // os#1481 — LES TIRETÉS ET L'OMBRE, que Julien a cherchés à l'écran : « ni tireté ni ombre ».
+    .attr('stroke-dasharray', d => partDashArray(aspectOf(d.data.id)))
+    .attr('filter', d => partShadow(aspectOf(d.data.id), defs))
     .style('cursor', opts.on_part_select ? 'pointer' : 'default')
   if (opts.on_part_select) {
     // TOUCHER SÉLECTIONNE, et c'est la règle de toute la maison : on clique un nœud, l'inspecteur
@@ -774,12 +792,22 @@ export const drawDonutChart = (
     .style('padding', '0.1rem 0.2rem')
     .style('cursor', 'default')
     .attr('title', slice_title)
+    // os#1481 — LE SURVOL DE LA LÉGENDE NE MANGE PLUS L'OPACITÉ RÉGLÉE.
+    //
+    // Julien, à l'écran : « ni opacité ne marche ». Elle était pourtant LUE (cf. `fill-opacity`
+    // plus haut) — et c'est bien pire qu'un réglage jamais branché : elle marchait jusqu'au premier
+    // survol d'une entrée de légende, après quoi `mouseout` remettait **1** à tous les secteurs.
+    // L'opacité de l'auteur était alors perdue jusqu'au redessin suivant, sans que rien ne le dise.
+    //
+    // Un test de résolveur ne pouvait pas voir ça : l'aspect rendait la bonne valeur, et le tracé
+    // l'écrivait. C'est le geste d'APRÈS qui l'effaçait.
     .on('mouseover', (_, d) => {
       g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
-        .attr('fill-opacity', a => a.index === d.index ? 1 : 0.35)
+        .attr('fill-opacity', a => a.index === d.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
     })
     .on('mouseout', () => {
-      g.selectAll('path.node_stats_arc').attr('fill-opacity', 1)
+      g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
+        .attr('fill-opacity', a => arcOpacity(a))
     })
   items.append('span')
     .style('flex', '0 0 auto')
@@ -843,6 +871,8 @@ export const drawBarChart = (
   const y = d3.scaleLinear().domain([0, max_value]).range([h, 0])
 
   const svg = sel.append('svg').attr('width', width).attr('height', height)
+  // os#1481 — où vit le filtre d'ombre, déclaré à la demande (cf. `partShadow`).
+  const defs = svg.append('defs')
   // Sous une échelle réduite, le dessin reste posé sur sa ligne de base : le vide est en haut.
   const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top + (height - margin.top - margin.bottom) - h})`)
@@ -949,6 +979,10 @@ export const drawBarChart = (
       const a = aspectOf(d.id)
       return a?.border_visible ? (a.border_thickness ?? 1) : 0
     })
+    // os#1481 — LES MÊMES DEUX QUE LA COURONNE, par les mêmes aides : une barre tiretée ressemble à
+    // un secteur tireté, et c'est tout ce que « le même look and feel » demande.
+    .attr('stroke-dasharray', d => partDashArray(aspectOf(d.id)))
+    .attr('filter', d => partShadow(aspectOf(d.id), defs))
     .style('cursor', opts.on_part_select ? 'pointer' : 'default')
   if (opts.on_part_select) {
     rects.on('click', (_evt, d) => opts.on_part_select?.(d.id))

@@ -68,6 +68,61 @@ export const applyPartTextStyle = (
 }
 
 /**
+ * os#1481 — LE LISÉRÉ TIRETÉ D'UNE PART, et l'OMBRE PORTÉE sous sa forme.
+ *
+ * Julien, à l'écran : « ni opacité ne marche, ni tireté, ni ombre ». Les deux dernières n'étaient
+ * dessinées NULLE PART — l'audit les comptait parmi les cinquante-et-une « à implémenter », ce qui
+ * n'est une excuse pour personne : la case était offerte dans l'inspecteur.
+ *
+ * ÉCRITES ICI, avec les textes de part, parce que les trois natures dessinent des formes et que la
+ * même règle posée trois fois divergerait trois fois. C'est la leçon de tout ce chantier.
+ *
+ * Le motif reprend celui des nœuds et des flux (`4 2`, cf. `DrawNodes`) : un tireté d'une figure
+ * doit ressembler à un tireté du diagramme, sinon « le look and feel diverge d'un graphe à
+ * l'autre ». Il s'échelonne sur l'épaisseur du trait, sans quoi un liséré de 4 px tireté par 4 px
+ * paraît plein.
+ */
+export const partDashArray = (
+  aspect: { border_dashed?: boolean, border_thickness?: number } | undefined
+): string | null => {
+  if (!aspect?.border_dashed) return null
+  const w = Math.max(1, aspect.border_thickness ?? 1)
+  return `${w * 4} ${w * 2}`
+}
+
+/** L'identifiant du filtre d'ombre, posé une fois par dessin dans les `defs` du SVG. */
+const PART_SHADOW_ID = 'figure_part_shadow'
+
+/**
+ * L'OMBRE PORTÉE d'une part, rendue comme une référence de filtre — ou `null`.
+ *
+ * Le filtre lui-même est déclaré à la demande dans les `defs` du dessin : un `<filter>` par part
+ * serait ruineux sur une couronne de cent secteurs, et l'ombre est la même pour toutes. Elle est
+ * DOUCE et courte (2 px de flou, 1 px de décalage) : une ombre de figure souligne un relief, elle
+ * ne fait pas flotter le secteur au-dessus de la page.
+ *
+ * ⚠️ `filter` N'EST PAS RENDU PAR TOUS LES EXPORTS. L'export PNG passe par un rendu navigateur et
+ * l'honore ; un consommateur SVG qui ne suit pas la référence perdra l'ombre, pas la forme. C'est
+ * la raison pour laquelle l'ombre reste un ornement et jamais un porteur d'information.
+ */
+export const partShadow = (
+  aspect: { shadow_visible?: boolean } | undefined,
+  defs: d3.Selection<SVGDefsElement, unknown, null, undefined> | null
+): string | null => {
+  if (!aspect?.shadow_visible || !defs) return null
+  if (defs.select(`#${PART_SHADOW_ID}`).empty()) {
+    const filter = defs.append('filter')
+      .attr('id', PART_SHADOW_ID)
+      // Une ombre déborde de la boîte du dessin : sans marge, elle est coupée net.
+      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%')
+    filter.append('feDropShadow')
+      .attr('dx', 1).attr('dy', 1).attr('stdDeviation', 2)
+      .attr('flood-opacity', 0.35)
+  }
+  return `url(#${PART_SHADOW_ID})`
+}
+
+/**
  * os#1480 — L'ENCRE D'UNE ÉTIQUETTE SORTIE DE SA PART, en trois modes et pas un de plus.
  *
  * Arbitrage de Julien (21/09/2026) sur `*_color_sustainable`, une clé qui existait dans l'inspecteur
