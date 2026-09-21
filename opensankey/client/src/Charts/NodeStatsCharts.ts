@@ -541,6 +541,31 @@ export const drawDonutChart = (
   //
   // Un secteur qui SORT son étiquette ne l'écrit pas aussi dedans, et un secteur qui la masque
   // parce qu'elle dépasse ne l'écrit nulle part.
+  /**
+   * os#1482 — OÙ SE POSE LE TEXTE D'UN SECTEUR, ET COMMENT IL Y COURT.
+   *
+   * Même règle qu'au disque (`arcTextTransform`, SunburstChart), et c'est le point : un secteur de
+   * couronne et un secteur de sunburst sont la même forme, ils ne peuvent pas lire l'orientation
+   * autrement. Trois valeurs, et pas une de plus :
+   *
+   *   RADIALE (le défaut, et le dessin d'hier) — le texte reste droit, posé au centroïde ;
+   *   LE LONG DE L'ARC — il pivote d'un quart de tour dans le sens qui le garde lisible ;
+   *   HORIZONTALE — identique à radiale ici, la couronne n'ayant pas de repère tournant.
+   *
+   * ⚠️ « RADIALE » NE FAIT PAS TOURNER LE TEXTE SUR UNE COURONNE, et c'est voulu : un anneau de
+   * couronne est bien plus épais qu'un anneau de sunburst — le texte y tient à plat, et le coucher
+   * le long du rayon le rendrait illisible sans rien gagner. La valeur existe pour que le réglage
+   * dise la même chose des deux côtés, pas pour dessiner la même chose.
+   */
+  const arcLabelTransform = (d: d3.PieArcDatum<Type_StatSlice>): string => {
+    const at = `translate(${label_arc.centroid(d)})`
+    if (aspectOf(d.data.id)?.name?.orientation !== 'tangential') return at
+    const deg = ((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90
+    // Au-delà du demi-tour, le texte se lirait la tête en bas.
+    const flip = deg > 90 || deg < -90
+    return `${at} rotate(${deg + (flip ? -90 : 90)})`
+  }
+
   const with_text = arcs.filter(d => sector_lines(d).length > 0)
   const callouts = with_text.filter(d => callsOut(d))
   const labelled = with_text.filter(d =>
@@ -556,7 +581,12 @@ export const drawDonutChart = (
       .data(labelled)
       .enter().append('text')
       .attr('class', 'node_stats_pct')
-      .attr('transform', d => `translate(${label_arc.centroid(d)})`)
+      // os#1482 — L'ORIENTATION DU TEXTE DANS LE SECTEUR, comme sur le disque.
+      //
+      // Julien : « n'oublie pas d'ajouter les orientations pertinentes sur la couronne et le
+      // sunburst : horizontal, radial, ou le long de l'arc ». La couronne n'en avait AUCUNE : son
+      // nom restait droit au centroïde quoi qu'on règle.
+      .attr('transform', d => arcLabelTransform(d))
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('pointer-events', 'none')
@@ -1120,6 +1150,8 @@ export const drawBarChart = (
     const horiz = a?.name?.horiz ?? 'middle'
     const cx = band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2)
     const inside = a?.name?.inside === true
+    // os#1482 — ce que la part dit de l orientation de son nom (cf. `rotate`, plus bas).
+    const orientation = a?.name?.orientation
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
     const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
@@ -1134,7 +1166,24 @@ export const drawBarChart = (
       x: cx + (a?.name?.shift_x ?? 0),
       y: cy + (a?.name?.shift_y ?? 0),
       // Pivoté seulement SOUS L'AXE : à l'intérieur d'une barre, un nom couché ne se lit plus.
-      rotate: !inside && rotate_labels,
+      //
+      // os#1482 — ET L'AUTEUR PEUT TRANCHER. La même clé que sur une couronne, avec le sens qu'elle
+      // peut avoir ici : un histogramme n'a ni rayon ni arc, mais il a un nom qui tient ou non sous
+      // sa barre.
+      //
+      //   RADIALE (le défaut) — le tracé décide, comme depuis toujours : il couche le nom quand la
+      //                         bande est trop étroite pour lui ;
+      //   HORIZONTALE         — droit, quoi qu'il arrive, quitte à ce que les noms se chevauchent ;
+      //   LE LONG DE LA FORME — couché, quoi qu'il arrive.
+      //
+      // Offrir ce réglage sans lui donner de sens ici aurait fait un bouton mort de plus sur les
+      // barres : la portée d'un attribut distingue les natures d'ÉLÉMENT (nœud, flux, part), pas
+      // les natures de FIGURE — une part de barres et une part de couronne sont toutes deux 'part'.
+      rotate: !inside && (
+        orientation === 'horizontal' ? false
+          : orientation === 'tangential' ? true
+            : rotate_labels
+      ),
       anchor: anchor === 'left' ? 'start' : anchor === 'right' ? 'end' : 'middle'
     }
   }

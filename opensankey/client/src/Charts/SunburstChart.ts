@@ -1516,7 +1516,23 @@ export const drawSunburstChart = (
     // posées hors du disque dans l'axe du secteur, reliées à son bord par un trait, et
     // DÉPLAÇABLES — la position déposée est rendue à l'appelant, qui la retient par figure.
     // Le zoom ne les touche pas autrement que le reste : elles vivent dans `g`, comme les arcs.
-    const callouts = slices.filter(d => !namesItself(d, geo) && calloutable(d, geo))
+    // os#1482 — UN ORDRE DE LA PART SORT SON ETIQUETTE, MEME SI ELLE TIENT.
+    //
+    // Les deux sens de la meme cle, et ils ne se contredisent pas :
+    //
+    //   AU NIVEAU DE LA FIGURE, « Etiquettes qui ne tiennent pas : dehors » decrit un COMPORTEMENT
+    //   general — le disque sort celles qu il ne peut pas loger. C est ce que `calloutable` dit, et
+    //   ca ne change pas.
+    //
+    //   SUR UNE PART, c est un ORDRE de l auteur : « celle-ci, dehors ». Julien le demande pour un
+    //   secteur en particulier, pas pour la regle generale — il n aurait aucun moyen de sortir une
+    //   etiquette qui tient, alors que c est souvent ce qu on veut d une part qu on met en avant.
+    //
+    // La couronne et les barres se comportaient DEJA ainsi (`callsOut` lit l aspect avant le style
+    // de figure) : le disque etait le seul a n obeir qu a la regle generale.
+    const askedOut = (d: Type_SunburstSlice): boolean =>
+      aspectOf(d.id).label_callout === true && !d.is_residual
+    const callouts = slices.filter(d => askedOut(d) || (!namesItself(d, geo) && calloutable(d, geo)))
     if (callouts.length > 0) {
       const outer_r = geo.outer_r
       const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })

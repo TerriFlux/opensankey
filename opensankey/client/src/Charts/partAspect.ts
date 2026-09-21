@@ -438,10 +438,15 @@ export const partAspect = (
     // rien : c'est le même lecteur, avec l'autre préfixe.
     name: textAspect('name_label'),
     value: textAspect('value_label'),
-    // `name_label_callout` n'est PAS un attribut d'élément aujourd'hui (il vit dans
-    // `figureCatalogue`, comme `name_label_contrast_color`) : cette lecture ne rend donc jamais
-    // rien, et c'est voulu — elle s'allumera d'elle-même quand le catalogue des éléments le
-    // portera, sans rien à changer ici ni dans le tracé.
+    // os#1482 — ET ELLE S'EST ALLUMÉE D'ELLE-MÊME, exactement comme ce commentaire l'annonçait.
+    //
+    // Il disait, depuis os#1463 : « `name_label_callout` n'est PAS un attribut d'élément
+    // aujourd'hui, cette lecture ne rend donc jamais rien — elle s'allumera d'elle-même quand le
+    // catalogue des éléments le portera, sans rien à changer ici ni dans le tracé. »
+    //
+    // Julien l'a demandée (« et aussi le détachement des labels reliés par un segment »), la clé
+    // est entrée au catalogue des éléments, et il n'y a eu RIEN à changer ici ni dans deux des
+    // trois tracés. C'est ce que vaut un chemin unique : la dépense a été faite une fois.
     label_callout: booleanSaid(said('name_label_callout')),
     // os#1470 — COLLER LA VALEUR AU LIBELLE, ou l en detacher. Lu par la porte : absent veut dire
     // « le trace garde son usage », et non « decolle ».

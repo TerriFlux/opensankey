@@ -59,6 +59,23 @@ export class Class_PartElement extends Class_BaseShape {
    */
   public readonly is_figure_part = true
 
+  /**
+   * os#1483 — LA NATURE DE FIGURE QUI PORTE CETTE PART : 'donut', 'bars', 'sunburst'.
+   *
+   * Julien, devant une rangee de boutons de placement inerte sur une couronne : « il faudrait »
+   * pouvoir masquer un reglage selon la figure, et pas seulement selon la nature d element.
+   *
+   * POURQUOI LA PORTEE NE SUFFISAIT PAS. `Type_ElementNature` distingue le noeud, le flux, la zone
+   * de texte et la part — c est ce dont l inspecteur a besoin pour compter une selection. Mais une
+   * part de couronne et une part d histogramme sont toutes deux 'part' : rien ne permettait de dire
+   * « l orientation radiale, oui sur un rond, non sur des barres ».
+   *
+   * VIDE tant que personne ne la pose, et c est ce qui rend l ajout sans risque : une portee qui
+   * nomme des figures ne parle pas a une part qui ne dit pas la sienne — elle recoit tout, comme
+   * avant. Meme regle que « pas de nature = recoit tout ».
+   */
+  public figure_nature: string = ''
+
   protected _subject: Type_PartSubject = NO_SUBJECT
   public get subject(): Type_PartSubject { return this._subject }
   public bindSubject(subject: Type_PartSubject): void { this._subject = subject }

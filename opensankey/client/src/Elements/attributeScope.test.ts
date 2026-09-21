@@ -306,8 +306,11 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
     const { noeud, flux, zone } = buildScene()
     const toutes = Object.keys(ALL_ATTRIBUTES_CONFIG)
     const perdues = (el: unknown) => toutes.filter(cle => !attributeAppliesToElements([el], cle))
-    // Le NOEUD ne perd rien du tout — c est la nature de reference du catalogue.
-    expect(perdues(noeud)).toEqual([])
+    // Le NOEUD ne perd que ce qui est declare POUR UNE PART et elle seule (os#1482) : l orientation
+    // du texte dans une forme ronde, et le detachement de l etiquette. Un noeud a `text_angle`, qui
+    // fait mieux, et son libellé ne se detache pas de lui.
+    const A_LA_PART = ['name_label_orientation', 'name_label_callout']
+    expect(perdues(noeud).sort()).toEqual([...A_LA_PART].sort())
     // Le flux et la zone ne perdent QUE des portees posees bien avant ce lot : les totaux
     // entrants/sortants (`only: ['node']`, os#1464), qui n ont de sens que la ou des flux entrent et
     // sortent, et pour la zone « coller au libelle » (os#1470) — elle n ecrit pas de valeur.
@@ -315,8 +318,9 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
       'name_label_in_out_display_mode', 'value_label_in_out_display_mode',
       'stock_label_in_out_display_mode', 'icon_in_out_display_mode'
     ]
-    expect(perdues(flux).sort()).toEqual([...totaux].sort())
-    expect(perdues(zone).sort()).toEqual([...totaux, 'value_label_stick_to_label'].sort())
+    expect(perdues(flux).sort()).toEqual([...totaux, ...A_LA_PART].sort())
+    expect(perdues(zone).sort())
+      .toEqual([...totaux, ...A_LA_PART, 'value_label_stick_to_label'].sort())
   })
 
   it('le compte : une part ne se voit plus offrir qu un tiers du catalogue', () => {
