@@ -73,6 +73,7 @@
     "value_label_italic",
     "value_label_nb_digit",
     "value_label_nb_significant_digits",
+    "value_label_scientific_notation",
     "value_label_significant_digits",
     "value_label_stick_to_label",
     "value_label_text_source",
