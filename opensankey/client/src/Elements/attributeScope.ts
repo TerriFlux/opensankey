@@ -79,8 +79,25 @@ export type Type_ElementNature = 'node' | 'link' | 'container' | 'part'
  * qui disparaît. Le défaut reste « tout le monde ».
  */
 export type Type_AttributeScope =
-  | { only: readonly Type_ElementNature[] }
-  | { except: readonly Type_ElementNature[] }
+  | { only: readonly Type_ElementNature[], figures?: Type_FigureScope }
+  | { except: readonly Type_ElementNature[], figures?: Type_FigureScope }
+
+/**
+ * os#1483 — ET, POUR UNE PART, DE QUELLE FIGURE. Facultatif, et absent partout sauf là où il faut.
+ *
+ * Julien, devant une rangée de boutons de placement inerte sur une couronne : « il faudrait »
+ * pouvoir masquer selon la figure. `Type_ElementNature` n'y suffit pas — une part de couronne et
+ * une part d'histogramme sont toutes deux 'part' —, et le harnais d'os#1481 l'a rendu criant :
+ * l'orientation radiale offerte sur des barres était un bouton mort qu'aucune portée ne pouvait
+ * retirer sans retirer aussi celui de la couronne.
+ *
+ * NE RESTREINT QU'UNE PART. Un nœud, un flux, une zone de texte ne sont dans aucune figure : ce
+ * champ ne les concerne pas et ne les touche pas. Une part qui ne dit pas sa figure reçoit tout,
+ * comme une nature inconnue — c'est la même règle, et elle protège l'existant.
+ */
+export type Type_FigureScope =
+  | { only: readonly string[] }
+  | { except: readonly string[] }
 
 /** Un élément vu comme un sac de propriétés, ou rien du tout. */
 const asRecord = (el: unknown): Record<string, unknown> | null =>
@@ -109,14 +126,40 @@ export const natureOf = (el: unknown): Type_ElementNature | null => {
   return null
 }
 
-/** Cette portée parle-t-elle à cette nature ? Sans portée, ou sans nature : oui. */
+/**
+ * os#1483 — LA FIGURE QUI PORTE CET ÉLÉMENT, lue structurellement comme sa nature.
+ *
+ * `''` pour tout ce qui n'est pas une part, et pour une part qui ne dit pas d'où elle vient : la
+ * portée par figure ne s'applique alors pas, et l'élément reçoit tout — c'est ce qui rend ce
+ * second étage sans effet sur l'existant.
+ */
+export const figureNatureOf = (el: unknown): string => {
+  const rec = asRecord(el)
+  const nature = rec?.['figure_nature']
+  return typeof nature === 'string' ? nature : ''
+}
+
+/**
+ * Cette portée parle-t-elle à cette nature ? Sans portée, ou sans nature : oui.
+ *
+ * @param figure os#1483 — la nature de FIGURE, quand l'élément est une part et qu'il la dit.
+ *   Absente : le second étage de la portée ne s'applique pas, et la réponse est celle d'avant.
+ */
 export const scopeSpeaksTo = (
   scope: Type_AttributeScope | undefined,
-  nature: Type_ElementNature | null
+  nature: Type_ElementNature | null,
+  figure?: string
 ): boolean => {
   if (scope === undefined || nature === null) return true
-  if ('only' in scope) return scope.only.includes(nature)
-  return !scope.except.includes(nature)
+  const to_nature = 'only' in scope
+    ? scope.only.includes(nature)
+    : !scope.except.includes(nature)
+  if (!to_nature) return false
+  // LE SECOND ÉTAGE NE RESTREINT QU'UNE PART, et seulement quand elle nomme sa figure. Un nœud
+  // n'est dans aucune figure : lui appliquer ce filtre lui retirerait des réglages sans raison.
+  const figures = scope.figures
+  if (figures === undefined || nature !== 'part' || !figure) return true
+  return 'only' in figures ? figures.only.includes(figure) : !figures.except.includes(figure)
 }
 
 /** Le catalogue vu comme ce dont on a besoin ici : une portée et une famille par clé. */
@@ -214,7 +257,7 @@ export const attributeAppliesToElements = (
 ): boolean => {
   const scope = attributeScopeOf(attr_key)
   if (scope === undefined || elements.length === 0) return true
-  return elements.some(el => scopeSpeaksTo(scope, natureOf(el)))
+  return elements.some(el => scopeSpeaksTo(scope, natureOf(el), figureNatureOf(el)))
 }
 
 /**

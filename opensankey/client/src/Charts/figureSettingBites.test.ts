@@ -163,7 +163,10 @@ describe('os#1481 tout reglage offert a une part MORD sur le dessin', () => {
       // CONTRE-VERIFICATION D ABORD : sans cela, un dessin vide rendrait TOUT inerte et le test
       // dirait « rien ne mord » au lieu de « rien n est dessine ».
       expect(dom(sonde.draw).length).toBeGreaterThan(200)
-      expect(cles.length).toBeGreaterThan(60)
+      // Le seuil dit seulement « on interroge un jeu substantiel ». Il a baisse a os#1483, quand la
+      // portee par nature de FIGURE a retire d un coup une vingtaine de reglages qui n avaient pas
+      // de sens dans un rond — c est une bonne nouvelle, pas une regression.
+      expect(cles.length).toBeGreaterThan(35)
 
       const resultat = measureBites(
         { nature: sonde.nature, parts: sonde.parts, probe_id: 'a', draw: sonde.draw },

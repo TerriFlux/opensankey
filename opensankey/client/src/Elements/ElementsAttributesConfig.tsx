@@ -1440,6 +1440,81 @@ export const BASE_LABEL_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  // os#1482 — COMMENT LE TEXTE COURT DANS UNE PART RONDE, réglable PART PAR PART.
+  //
+  // Julien : « n'oublie pas d'ajouter les orientations pertinentes sur la couronne et le sunburst :
+  // horizontal, radial, ou le long de l'arc ».
+  //
+  // La clé existait au catalogue des FIGURES depuis os#1425, donc pour tout le disque à la fois.
+  // Une part ne pouvait pas la dire — un test le gravait même (os#1474) : la porte rendait
+  // `undefined`, et le chemin, tout unique qu'il était, ne charriait rien. La voici où il faut.
+  //
+  // ⚠️ SA PORTÉE EST POSÉE SUR LA CLÉ PRÉFIXÉE, PAS ICI, et le harnais d'os#1481 l'a montré dans la
+  // minute : un `scope` posé sur la déclaration de BASE vaut pour toutes ses copies préfixées, et
+  // une portée d'attribut l'emporte sur celle d'une FAMILLE. Écrite ici, elle ROUVRAIT donc les
+  // familles `stock_label` et `icon`, masquées en bloc depuis os#1478 — trois boutons morts créés
+  // en ajoutant une clé. C'est le genre d'effet de bord qu'aucune relecture ne voit.
+  orientation: {
+    default: 'radial' as string,
+    type: (() => 'radial') as (() => string),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Text orientation',
+      fr: 'Orientation du texte',
+      es: 'Orientación del texto',
+      de: 'Textausrichtung',
+      it: 'Orientamento del testo',
+      'zh-CN': '文本方向',
+      ja: 'テキストの向き'
+    },
+    tooltips: {
+      en: 'Radial: along the radius. Along arc: follows the curve. Horizontal: always upright.',
+      fr: 'Radiale : suit le rayon. Le long de l\'arc : suit la courbe. Horizontale : toujours droit.',
+      es: 'Radial: sigue el radio. A lo largo del arco: sigue la curva. Horizontal: siempre recto.',
+      de: 'Radial: entlang des Radius. Entlang des Bogens: folgt der Kurve. Horizontal: immer aufrecht.',
+      it: 'Radiale: segue il raggio. Lungo l\'arco: segue la curva. Orizzontale: sempre dritto.',
+      'zh-CN': '径向：沿半径。沿弧线：随曲线。水平：始终保持水平。',
+      ja: '放射状：半径に沿う。円弧に沿う：曲線に従う。水平：常に水平。'
+    }
+  } satisfies AttributeConfig<string>,
+  // os#1482 — L'ÉTIQUETTE DÉTACHÉE, RELIÉE À SA PART PAR UN TRAIT — PART PAR PART.
+  //
+  // Julien : « et aussi le détachement des labels reliés par un segment », en regardant l'onglet
+  // Libellé d'une PART.
+  //
+  // Le réglage existait, mais au niveau de la FIGURE : c'était tout ou rien pour tous les secteurs.
+  // Or c'est par part qu'il a du sens — CE secteur-là sort son étiquette parce qu'elle n'y tient
+  // pas, ses voisins gardent la leur dedans.
+  //
+  // ⚠️ LE TRACÉ SAVAIT DÉJÀ LE FAIRE. `partAspect` lit `name_label_callout` par la porte depuis
+  // os#1463, et les trois natures honorent `label_callout` — mais la clé n'existait pas au
+  // catalogue des ÉLÉMENTS, donc la porte rendait toujours `undefined`. Le chemin était complet et
+  // ne charriait rien : c'est exactement le second sens de la bijection que Julien demande.
+  callout: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Detach the label',
+      fr: 'Détacher l\'étiquette',
+      es: 'Separar la etiqueta',
+      de: 'Beschriftung ablösen',
+      it: 'Staccare l\'etichetta',
+      'zh-CN': '分离标签',
+      ja: 'ラベルを切り離す'
+    },
+    tooltips: {
+      en: 'Place this label outside its part, linked to it by a line. Drag it where you want.',
+      fr: 'Poser cette étiquette hors de sa part, reliée à elle par un trait. Glissez-la où vous voulez.',
+      es: 'Colocar esta etiqueta fuera de su parte, unida por una línea. Arrástrela donde quiera.',
+      de: 'Diese Beschriftung außerhalb ihres Teils platzieren, mit einer Linie verbunden. Frei ziehbar.',
+      it: 'Porre questa etichetta fuori dalla sua parte, collegata da una linea. Trascinala dove vuoi.',
+      'zh-CN': '把该标签放到其部分之外，用线相连。可拖动到任意位置。',
+      ja: 'このラベルをパートの外に出し、線で結びます。任意の位置へドラッグできます。'
+    }
+  } satisfies AttributeConfig<boolean>,
   vertical_text: {
     default: false as boolean,
     type: (() => false) as (() => boolean),
@@ -4612,6 +4687,36 @@ const LABEL_AS_NOT_TEXT_KEYS = [
 const EVERYONE: Type_AttributeScope = { except: [] }
 
 /**
+ * « Pour une part, et elle seule » — un nœud et un flux ont `text_angle`, qui fait mieux (n'importe
+ * quel angle). « Radial » et « le long de l'arc » n'ont de sens que dans une forme dont le tracé
+ * connaît le centre.
+ */
+const ONLY_A_PART: Type_AttributeScope = { only: ['part'] }
+
+/**
+ * os#1483 — « pour tout le monde, SAUF une part de figure ronde ».
+ *
+ * Un nœud, un flux, une zone de texte et une barre gardent le réglage ; un secteur de couronne ou
+ * de disque ne le voit pas. C'est le second étage de la portée, et il n'existe que pour ça.
+ */
+const NOT_ON_A_PART_FIGURE_ROUND: Type_AttributeScope = {
+  except: [], figures: { except: ['donut', 'sunburst'] }
+}
+
+/**
+ * LE PLACEMENT DANS UNE BOÎTE — ce qu'un arc n'a pas.
+ *
+ * `inside_*` dit « dedans ou à côté », `horiz`/`vert` disent dans quel coin, `text_align` de quel
+ * côté le texte pend, `position_*` impose des coordonnées, `vertical_text` et `text_angle`
+ * tournent. Toutes supposent une forme rectangulaire dont on connaît les bords.
+ */
+const PLACED_IN_A_BOX_KEYS = [
+  'horiz', 'vert', 'inside_horiz', 'inside_vert', 'text_align',
+  'vertical_text', 'text_angle',
+  'position_absolute', 'position_x', 'position_y', 'position_offset'
+] as const
+
+/**
  * os#1478 — LA PORTÉE D'UN CATALOGUE ENTIER, sous le ou les préfixes qui le dérivent.
  *
  * Certains catalogues de base ne décrivent qu'UNE nature, et le disent par leur nom :
@@ -4721,6 +4826,48 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   // la couleur du secteur. Celles-là sont IMPLÉMENTÉES (cf. `partAspect`, `ink_follows_shape`).
   shape_color_sustainable: NOT_ON_A_PART,
   shape_border_color_sustainable: NOT_ON_A_PART,
+
+  // ── os#1482 — L'ORIENTATION DU TEXTE N'A DE SENS QUE SUR LE NOM D'UNE PART ──────────────────
+  //
+  // Julien : « les orientations pertinentes sur la couronne et le sunburst : horizontal, radial, ou
+  // le long de l'arc ». C'est LE NOM qui court dans un secteur.
+  //
+  // La valeur suit celle du nom par construction — un secteur dont le nom épouse l'arc et dont le
+  // nombre resterait droit se lirait comme une erreur, et le tracé leur applique la même
+  // transformation depuis os#1470. Lui offrir un réglage séparé serait offrir de casser ça.
+  //
+  // Le stock et l'icône n'écrivent pas de texte de part : leurs copies sont muettes.
+  // ── os#1483 — CE QUI N'A DE SENS QUE DANS UNE FIGURE RONDE ──────────────────────────────────
+  //
+  // Julien, devant une rangée de boutons de placement inerte sur une couronne : « il faudrait »
+  // pouvoir masquer selon la figure. C'est ce second étage de portée.
+  //
+  // L'ORIENTATION : « radiale » et « le long de l'arc » nomment un rayon et une courbe. Un
+  // histogramme n'en a aucun ; lui offrir ces trois mots obligeait soit à leur donner un sens tordu
+  // (« le long de la forme »), soit à laisser un bouton mort. On les réserve donc aux ronds, et les
+  // mots gardent leur sens littéral — c'est l'arbitrage du 21/09.
+  name_label_orientation: { ...ONLY_A_PART, figures: { only: ['donut', 'sunburst'] } },
+  value_label_orientation: NOT_ON_A_PART,
+  stock_label_orientation: NOT_ON_A_PART,
+  icon_orientation: NOT_ON_A_PART,
+
+  // LE PLACEMENT DANS LA PART : « dedans / dehors », « haut / milieu / bas », l'ancrage, l'angle,
+  // les coordonnées absolues. Tout cela suppose une BOÎTE — une barre en a une, un secteur d'arc
+  // n'en a pas : sa place est un centroïde, et son texte y tient ou n'y tient pas.
+  //
+  // ⚠️ LES DEUX DÉCALAGES FINS NE SONT PAS DE CETTE LISTE. `horiz_shift` et `vert_shift` agissent
+  // sur un disque depuis os#1476 (dans le repère du secteur, qui a tourné avec lui) : les masquer
+  // retirerait un réglage qui marche. C'est la différence entre « placer dans une boîte » et
+  // « décaler un peu », et elle se voit à l'usage.
+  ...prefixedScope('name_label', PLACED_IN_A_BOX_KEYS, { ...NOT_ON_A_PART_FIGURE_ROUND }),
+  ...prefixedScope('value_label', PLACED_IN_A_BOX_KEYS, { ...NOT_ON_A_PART_FIGURE_ROUND }),
+
+  // L'étiquette DÉTACHÉE, même raisonnement : c'est le NOM qui sort de sa part. La valeur le suit
+  // (elle est écrite dans le même texte, ou juste dessous), le stock et l'icône n'en ont pas.
+  name_label_callout: ONLY_A_PART,
+  value_label_callout: NOT_ON_A_PART,
+  stock_label_callout: NOT_ON_A_PART,
+  icon_callout: NOT_ON_A_PART,
 
   // ── LES CINQ CLÉS QUI DÉCRIVENT VRAIMENT UN PICTOGRAMME ─────────────────────────────────────
   //
