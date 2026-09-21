@@ -134,7 +134,19 @@ const oneOfSaid = <T extends string>(v: unknown, allowed: readonly T[]): T | und
   allowed.includes(v as T) ? v as T : undefined
 
 /** Les trois clés qui décrivent le liséré d'une part ; il se demande en bloc (cf. plus bas). */
-const BORDER_KEYS = ['shape_border_visible', 'shape_border_color', 'shape_border_thickness']
+const BORDER_KEYS = [
+  'shape_border_visible', 'shape_border_color', 'shape_border_thickness',
+  // os#1481 — ET LE TIRETÉ, qui manquait à cette liste depuis qu'il existe (une demi-journée).
+  //
+  // C'est la doctrine écrite juste en dessous, cas 3 : « elle ne dit qu'une couleur ou une
+  // épaisseur → elle en veut un, le demander implicitement est le seul sens possible du geste ».
+  // Un tireté dit la même chose — on ne tirette pas un trait qu'on ne veut pas.
+  //
+  // Sans cette ligne, cocher « Tiretés » seul ne demandait aucun liséré : `border_on` restait
+  // indécis, donc `border_dashed` rendait `undefined`, et le tracé gardait son liséré plein. Le
+  // harnais d'os#1481 l'a vu le jour où il a cessé de se mentir à lui-même.
+  'shape_border_dashed'
+]
 
 /**
  * os#1463 — LES CLÉS QUI FONT LE FORMAT D'UN NOMBRE. Elles se demandent EN BLOC, et il le faut :

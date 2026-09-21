@@ -126,18 +126,30 @@ export interface Type_BiteResult {
 /**
  * Pose chaque clé, l'une après l'autre, et regarde si le dessin bouge.
  *
- * La part est remise dans son état d'origine après chaque essai : deux réglages posés ensemble
- * pourraient se masquer l'un l'autre (une couleur sous un fond caché), et on veut l'effet de
- * CHACUN.
+ * Chaque essai repart d'une figure NEUVE (cf. le commentaire dans le corps) : deux réglages posés
+ * ensemble se masqueraient l'un l'autre — une couleur sous un fond caché, une police sous un texte
+ * éteint — et c'est l'effet de CHACUN qu'on veut.
  */
 export const measureBites = (
-  probe: Type_BiteProbe,
+  makeProbe: () => Type_BiteProbe,
   keys: readonly string[],
   drawInto: (draw: (c: HTMLElement) => void) => string
 ): Type_BiteResult => {
-  const part = probe.parts[probe.probe_id] as unknown as { [k: string]: unknown }
   const out: Type_BiteResult = { bites: [], inert: [], unmeasurable: [] }
   keys.forEach(key => {
+    // ⚠️ UNE FIGURE NEUVE PAR ESSAI, et c'est le SECOND mensonge de ce harnais qu'il a fallu
+    // corriger — plus vicieux que le premier.
+    //
+    // Écrire une clé sur une part la rend SURCHARGÉE, et lui rendre sa valeur d'origine ne la fait
+    // pas se taire : elle DIT désormais cette valeur. Or certaines clés en éteignent d'autres —
+    // `value_label_is_visible` remis à `false` cache la valeur de cette part, et les trente clés
+    // `value_label_*` testées ensuite ne peuvent plus rien changer.
+    //
+    // Le harnais déclarait donc morte toute une famille qui marche, et la GELAIT dans sa liste :
+    // il fabriquait la dette qu'il prétendait mesurer. Une sonde neuve par essai coûte quelques
+    // centaines de millisecondes et supprime l'ordre des clés du raisonnement.
+    const probe = makeProbe()
+    const part = probe.parts[probe.probe_id] as unknown as { [k: string]: unknown }
     const before = part[key]
     const trial = probeValue(before, key)
     if (trial === undefined) { out.unmeasurable.push(key); return }
@@ -155,7 +167,6 @@ export const measureBites = (
     const plain = drawInto(probe.draw)
     part[key] = trial
     const after = drawInto(probe.draw)
-    part[key] = before
     if (after === plain) out.inert.push(key)
     else out.bites.push(key)
   })
