@@ -169,7 +169,10 @@ describe('os#1481 tout reglage offert a une part MORD sur le dessin', () => {
       expect(cles.length).toBeGreaterThan(35)
 
       const resultat = measureBites(
-        { nature: sonde.nature, parts: sonde.parts, probe_id: 'a', draw: sonde.draw },
+        () => {
+          const neuve = sondes().find(s2 => s2.nature === sonde.nature)!
+          return { nature: neuve.nature, parts: neuve.parts, probe_id: 'a', draw: neuve.draw }
+        },
         cles,
         dom
       )
