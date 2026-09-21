@@ -39,11 +39,11 @@ export type Type_ViewEntry = {
   // (`WorkbookNode.doc`, `Workbook.doc`) ; la vue, qui est pourtant l'unité publiable,
   // n'en avait pas. Candidat naturel au texte d'accompagnement d'une page publiée.
   description?: string
-  // os#1355 — LA REPRÉSENTATION de la vue : l'état de la grande zone (occupants, places,
-  // poids) figé avec elle. « Vue = diagramme + coordonnées figées » gagne « + représentation »,
-  // et une vue peut ainsi s'ouvrir sur un sunburst ou un tableur — donc devenir une page
-  // camembert publiée. Absent : la vue ne touche pas à la disposition courante (fichiers
-  // antérieurs, et vues dont l'auteur a retiré la mémoire de disposition).
+  // os#1355 — LA REPRÉSENTATION de la vue : l'état de la grande zone figé avec elle.
+  // os#1482 — HÉRITAGE, lu seulement : ce champ n'est plus ni posé ni écrit. Une disposition
+  // figée est une SCÈNE (Scenes.ts, clé racine `scenes`) ; `view_main_zone` d'un fichier
+  // antérieur est lue ici puis MIGRÉE en scène par `migrateViewMainZonesToScenes`, qui vide le
+  // champ. Un document secondaire (feuille vivante) peut le garder rempli : personne ne le lit.
   main_zone?: Type_JSON
 }
 
