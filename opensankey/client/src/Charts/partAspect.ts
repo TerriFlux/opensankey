@@ -373,6 +373,18 @@ export const partAspect = (
       orientation: oneOfSaid(at('orientation'), ['radial', 'tangential', 'horizontal'] as const),
       strip_parent: booleanSaid(at('strip_parent')),
       contrast: booleanSaid(at('contrast_color')),
+      // os#1480 — LE TROISIÈME MODE D'ENCRE, et c'est un arbitrage de Julien (21/09/2026) sur une
+      // clé qui existait sans que rien ne la lise.
+      //
+      // « Couleur fixe » DÉCOCHÉE veut dire : l'encre suit la couleur de la FORME (c'est ce que
+      // `getShapeColorToUse` fait pour un nœud, cf. `DrawLabel`). Sur une part, ça a un sens réel —
+      // le nom d'un secteur bleu s'écrit en bleu à côté de son trait de rappel — et c'est le seul
+      // des trois modes qui manquait : fixe, par contraste, ou la couleur de la part.
+      //
+      // ⚠️ LA POLARITÉ EST INVERSÉE, et il faut la lire deux fois : la clé dit « garde ta couleur »,
+      // donc c'est sa valeur FAUSSE qui demande de suivre la forme. Le repli n'est pas `false` mais
+      // `undefined` : une part qui ne dit rien laisse le tracé décider, comme partout ailleurs ici.
+      ink_follows_shape: booleanSaid(at('color_sustainable')) === false ? true : undefined,
       // LE CARTOUCHE (os#1468). `bg_visible` commande tout le reste : sans elle rien n'est peint,
       // et aucune figure enregistrée ne gagne un rectangle qu'on ne lui a pas demandé.
       bg_visible: booleanSaid(at('background_visible')),

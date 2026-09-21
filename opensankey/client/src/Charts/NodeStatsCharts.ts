@@ -18,7 +18,9 @@
 
 import * as d3 from '../d3Modules'
 // os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
-import { applyPartTextStyle, partTextCase, partTextPlacement } from './figurePartText'
+import {
+  applyPartTextStyle, calloutInk, partTextCase, partTextPlacement
+} from './figurePartText'
 // os#1424 — la couronne À N ANNEAUX se dessine aussi SUR UN NŒUD. La partition angulaire et
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
@@ -682,12 +684,17 @@ export const drawDonutChart = (
       // Sortie du disque, l'étiquette garde la mise en forme de SA part : c'est la même étiquette,
       // à un autre endroit. Seule l'encre change de repli — le blanc du secteur serait invisible
       // sur le fond de la figure.
-      .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => (aspectOf(d.data.id)?.name?.font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.data.id)?.name?.bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.data.id)?.name?.italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.data.id)?.name?.color ?? (styleOf(d).name_label_color || '#2D3748'))
+      //
+      // os#1480 — LA TYPOGRAPHIE PASSE PAR LE MODULE COMMUN, comme les étiquettes de l'anneau
+      // (os#1476 l'avait fait pour le disque, ce site-ci était resté en ligne).
     texts.each(function (d) {
+      applyPartTextStyle(d3.select(this), aspectOf(d.data.id)?.name, {
+        font_size: styleOf(d).name_label_font_size,
+        font_family: styleOf(d).name_label_font_family,
+        bold: styleOf(d).name_label_bold,
+        italic: styleOf(d).name_label_italic,
+        color: calloutInk(aspectOf(d.data.id)?.name, colorOf(d.data, d.index), styleOf(d))
+      })
       const lines = sector_lines(d)
       const dy0 = -(lines.length - 1) * 0.55
       d3.select(this).selectAll('tspan')
@@ -1177,12 +1184,15 @@ export const drawBarChart = (
       .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', d => styleOf(d).name_label_font_size)
-      .attr('font-family', d => (aspectOf(d.id)?.name?.font_family ?? styleOf(d).name_label_font_family) || null)
-      .attr('font-weight', d => (aspectOf(d.id)?.name?.bold ?? styleOf(d).name_label_bold) ? 'bold' : null)
-      .attr('font-style', d => (aspectOf(d.id)?.name?.italic ?? styleOf(d).name_label_italic) ? 'italic' : null)
-      .attr('fill', d => aspectOf(d.id)?.name?.color ?? (styleOf(d).name_label_color || '#2D3748'))
-    texts.each(function (d) {
+    texts.each(function (d, i) {
+      // os#1480 — par le module commun, comme la couronne et le disque.
+      applyPartTextStyle(d3.select(this), aspectOf(d.id)?.name, {
+        font_size: styleOf(d).name_label_font_size,
+        font_family: styleOf(d).name_label_font_family,
+        bold: styleOf(d).name_label_bold,
+        italic: styleOf(d).name_label_italic,
+        color: calloutInk(aspectOf(d.id)?.name, colorOf(d, i), styleOf(d))
+      })
       const lines = barNameLines(d)
       const p = positionOf(d)
       d3.select(this).selectAll('tspan')

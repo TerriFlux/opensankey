@@ -936,9 +936,17 @@ export const drawSunburstChart = (
     font_family: st.font_family,
     bold: st.bold,
     italic: st.italic,
-    color: styleOf(d.id).color_mode === 'fixed'
-      ? styleOf(d.id).label_color
-      : (on_disc ? inkOn(d.color, palette.ink) : palette.ink)
+    // os#1480 — L'ENCRE QUI SUIT LA COULEUR DE LA PART, et SEULEMENT HORS DU DISQUE.
+    //
+    // Dedans, écrire le nom d'un secteur dans la couleur de ce secteur le rend invisible : le tracé
+    // refuse, et c'est une réponse, pas un oubli (cf. `Type_FigurePartTextAspect.ink_follows_shape`).
+    // Dehors — au bout d'un trait de rappel —, c'est au contraire le mode le plus lisible : rien
+    // n'y sert de fond à contraster, et la couleur RATTACHE l'étiquette à son secteur.
+    color: (!on_disc && aspectOf(d.id).name?.ink_follows_shape === true)
+      ? d.color
+      : styleOf(d.id).color_mode === 'fixed'
+        ? styleOf(d.id).label_color
+        : (on_disc ? inkOn(d.color, palette.ink) : palette.ink)
   })
   // LE FORMAT DES VALEURS, exactement celui des étiquettes d'un flux (`formatElementValue`) :
   // notation scientifique, chiffres significatifs, décimales imposées — dans cet ordre, parce
