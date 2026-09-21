@@ -148,6 +148,26 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
+/**
+ * sa#560 — geste de retour proposé quand un traitement ÉCHOUE (import, conversion).
+ *
+ * L'éditeur sait qu'un traitement a échoué et détient le journal ; il ne sait pas à
+ * qui l'envoyer. La couche SaaS sait (formulaire de retour, ticket, adresse de
+ * support) mais ne voit pas l'échec. Ce point d'extension les relie, dans le même
+ * esprit que `extra_help_menu_items` : posé par la couche haute, appelé par
+ * l'éditeur, absent en OpenSankey open-source — où le bouton ne s'affiche alors pas.
+ *
+ * Libellés en FONCTION, pour la même raison : la surface est enregistrée une fois,
+ * une chaîne y resterait figée dans la langue du démarrage.
+ */
+export type Type_ReportProcessFailure = {
+  label: () => string
+  tooltip?: () => string
+  // `title` = ce que l'utilisateur lit dans le bandeau d'échec ; `log` = le journal
+  // brut du traitement, tel que le Terminal l'affiche.
+  onClick: (failure: { title: string, log: string }) => void
+}
+
 // CLASS MENU CONFIG *******************************************************************/
 /**
  * Define shortcut to update menu components
@@ -788,6 +808,8 @@ export class Class_MenuConfig {
       tooltip?: () => string
     }
   > = undefined
+  /** sa#560 — surface de retour sur échec, posée par la couche SaaS (cf. Type_ReportProcessFailure). */
+  public report_process_failure?: Type_ReportProcessFailure = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
   // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
