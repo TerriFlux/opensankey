@@ -23,7 +23,9 @@ import * as d3 from '../d3Modules'
 // os#1476 — LE DESSIN COMMUN D'UN TEXTE DE PART : la typographie, le cartouche et le décalage fin
 // s'appliquent par le même module sur les trois natures (le cartouche y est posé, cf.
 // `applyPartTextStyle`). Ce qui reste au disque, c'est OÙ va un texte dans un repère qui tourne.
-import { applyPartTextStyle, partTextPlacement } from './figurePartText'
+import {
+  applyPartTextStyle, partDashArray, partShadow, partTextPlacement
+} from './figurePartText'
 import type { Type_FigureTextDefaults } from './figurePartText'
 // os#1474 — LE LECTEUR COMMUN. Le disque ne lit plus les cles lui-meme : il compose son style a
 // partir de ce que la part a dit, comme la couronne et les barres.
@@ -1188,6 +1190,10 @@ export const drawSunburstChart = (
     // `translate(t.x,t.y) scale(t.k)`, rien de plus. Le recentrage du disque ajouté par-dessus
     // décalait l'ancre d'un demi-cadre — on zoomait, et le point fixe était ailleurs (constaté
     // par Julien, 18/09). Il vit donc DANS le groupe transformé, où il n'entre plus dans le calcul.
+    // os#1481 — où vit le filtre d'ombre, déclaré à la demande (cf. `partShadow`). HORS du groupe
+    // zoomé : un `defs` n'est pas dessiné, et l'y mettre le ferait suivre une transformation qui
+    // ne le concerne pas.
+    const defs = svg.append('defs')
     const zoom_layer = svg.append('g')
     const g = zoom_layer.append('g').attr('transform', `translate(${box_w / 2},${box_h / 2})`)
     const place = (t: d3.ZoomTransform) =>
@@ -1298,7 +1304,14 @@ export const drawSunburstChart = (
       // Le nœud DÉSAGRÉGÉ dans le diagramme se signale par un pointillé, pas par une
       // autre couleur : la couleur nomme déjà la branche, la lui reprendre casserait
       // la lecture radiale.
-      .attr('stroke-dasharray', d => d.is_disaggregated ? '3 2' : null)
+      //
+      // os#1481 — ET LE TIRETE QUE LA PART DEMANDE L EMPORTE. Les deux se disputent le meme
+      // attribut : quand l auteur tirete un secteur exprès, c est son geste qu on montre, et la
+      // marque de désagrégation cède. Elle reste visible partout ailleurs, ce qui suffit à la lire.
+      .attr('stroke-dasharray', d =>
+        partDashArray(aspectOf(d.id)) ?? (d.is_disaggregated ? '3 2' : null))
+      // os#1481 — L OMBRE PORTEE, par la meme aide que la couronne et les barres.
+      .attr('filter', d => partShadow(aspectOf(d.id), defs))
       // Le curseur ne promet que ce que le clic fait vraiment (os#1425) : sous « ne fait rien »,
       // il n'y a rien à annoncer.
       .style('cursor', d => (
