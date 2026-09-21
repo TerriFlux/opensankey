@@ -559,11 +559,31 @@ export const drawDonutChart = (
    */
   const arcLabelTransform = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const at = `translate(${label_arc.centroid(d)})`
-    if (aspectOf(d.data.id)?.name?.orientation !== 'tangential') return at
+    const orientation = aspectOf(d.data.id)?.name?.orientation
+    // HORIZONTALE, ou rien de dit : le texte reste droit, pose au centroide — le dessin d'hier.
+    if (orientation !== 'tangential' && orientation !== 'radial') return at
     const deg = ((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90
-    // Au-delà du demi-tour, le texte se lirait la tête en bas.
+    // Au-delà du demi-tour, le texte se lirait la tête en bas : on le retourne.
     const flip = deg > 90 || deg < -90
-    return `${at} rotate(${deg + (flip ? -90 : 90)})`
+    // os#1486 — LES MÊMES SIGNES QUE LE DISQUE, et c'est la correction.
+    //
+    // Julien, capture à l'appui : « le radial c'est un peu à l'envers :-) ». Il l'était deux fois.
+    //
+    //   1. LE FLIP ÉTAIT INVERSÉ. `arcTextTransform` (SunburstChart) applique `flip ? 90 : -90` ;
+    //      j'avais écrit `flip ? -90 : 90`, soit un demi-tour d'écart — le texte lisible devenait
+    //      celui qu'on lit la tête en bas, et réciproquement. Deux tracés qui font tourner le même
+    //      texte ne peuvent pas avoir deux conventions : ils partagent maintenant la sienne.
+    //
+    //   2. « RADIALE » NE TOURNAIT PAS DU TOUT. Elle tombait dans le cas « on ne fait rien », alors
+    //      que l'arbitrage disait l'inverse : plutôt que de tordre les mots pour une nature, on les
+    //      honore à la lettre — radiale suit le rayon, ici comme sur le disque.
+    //
+    // ⚠️ LE REPÈRE N'EST PAS LE MÊME QUE CELUI DU DISQUE, et c'est pourquoi `deg` s'ajoute ici. Le
+    // disque amène son texte par `rotate(deg) translate(radius,0)` — son repère a déjà tourné, il
+    // ne reste qu'à ajuster. La couronne pose au centroïde, dans un repère droit : elle doit donc
+    // tourner de `deg` ELLE-MÊME, puis appliquer le même ajustement.
+    if (orientation === 'radial') return `${at} rotate(${deg + (flip ? 180 : 0)})`
+    return `${at} rotate(${deg + (flip ? 90 : -90)})`
   }
 
   const with_text = arcs.filter(d => sector_lines(d).length > 0)
