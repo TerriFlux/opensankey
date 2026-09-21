@@ -229,6 +229,19 @@ export interface Type_FigurePartTextAspect extends Type_FigureLabelBackground {
    * fixe rendrait la moitié des étiquettes illisible.
    */
   contrast?: boolean
+  /**
+   * os#1480 — `*_color_sustainable` DÉCOCHÉE : l'encre suit la COULEUR DE LA PART.
+   *
+   * Le troisième mode, à côté de « une teinte imposée » (`color`) et « calcule-la par contraste »
+   * (`contrast`). C'est ce que le drapeau fait déjà sur un nœud (`getShapeColorToUse`) ; sur une
+   * part, il trouve son emploi HORS de la forme — le nom d'un secteur bleu écrit en bleu au bout de
+   * son trait de rappel, là où le contraste n'a pas de fond à contraster.
+   *
+   * ⚠️ DEDANS, LE TRACÉ A LE DERNIER MOT : écrire un nom dans la couleur du secteur qui le porte le
+   * rend invisible. Une nature qui dessine ses étiquettes DANS ses parts ignore donc ce mode, et
+   * c'est une réponse, pas un oubli.
+   */
+  ink_follows_shape?: boolean
 }
 
 /** Ce qu'une part dit de ses deux textes, plus ce qui n'appartient à aucun des deux. */

@@ -68,6 +68,46 @@ export const applyPartTextStyle = (
 }
 
 /**
+ * os#1480 — L'ENCRE D'UNE ÉTIQUETTE SORTIE DE SA PART, en trois modes et pas un de plus.
+ *
+ * Arbitrage de Julien (21/09/2026) sur `*_color_sustainable`, une clé qui existait dans l'inspecteur
+ * sans que rien ne la lise. Le drapeau dit « garde TA couleur au lieu de suivre celle de la forme » :
+ * décoché, il demande donc à l'encre de suivre la part.
+ *
+ *   1. la part impose une teinte (`color`)              → celle-là ;
+ *   2. elle décoche « Couleur fixe » (`ink_follows_shape`) → LA COULEUR DE LA PART ;
+ *   3. elle ne dit rien                                  → le repli du tracé.
+ *
+ * POURQUOI SEULEMENT DEHORS. Écrire le nom d'un secteur dans la couleur de ce secteur le rend
+ * invisible : dedans, les tracés gardent le contraste ou la teinte imposée. Au bout d'un trait de
+ * rappel, au contraire, c'est le mode le plus lisible — rien n'y sert de fond à contraster, et la
+ * couleur RATTACHE l'étiquette à la part qu'elle nomme.
+ *
+ * ÉCRITE ICI parce que les trois natures ont des étiquettes sorties, et que la même règle posée
+ * trois fois divergerait trois fois — c'est tout ce que ce chantier aura montré.
+ *
+ * @param aspect ce que la part dit de ce texte.
+ * @param part_color la couleur de la part telle que le tracé l'a résolue (palette, modèle, ou
+ *   surcharge de la part).
+ * @param fallback ce que le tracé écrirait sans rien de tout cela.
+ */
+export const calloutInk = (
+  aspect: Type_FigurePartTextAspect | undefined,
+  part_color: string | undefined,
+  fallback: { name_label_color?: string } | string
+): string => {
+  const plain = typeof fallback === 'string'
+    ? fallback
+    : (fallback.name_label_color || DEFAULT_CALLOUT_INK)
+  if (aspect?.color) return aspect.color
+  if (aspect?.ink_follows_shape === true && part_color) return part_color
+  return plain
+}
+
+/** L'encre d'une mention hors figure, telle que les tracés l'écrivaient en dur. */
+const DEFAULT_CALLOUT_INK = '#2D3748'
+
+/**
  * La CASSE d'un texte de part.
  *
  * Appliquée AU TEXTE et non par `text-transform` : tous les moteurs SVG ne l'honorent pas, et
