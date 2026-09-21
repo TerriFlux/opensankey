@@ -182,6 +182,14 @@ def _process_error_path(log_filename):
     return log_filename + ".error"
 
 
+# sa#560 — codes que CE serveur pose lui-même. Les autres (INFEASIBLE, UNBOUNDED, TIMEOUT…)
+# viennent de MFAProblem, par la couche SaaS. Sans code, le front n'a que son message
+# générique « Chargement échoué », qui ne dit à personne quoi regarder : c'est ce que voyait
+# un visiteur dont l'import échouait, alors que BAD_DATA porte déjà le bon texte en 7 langues.
+PROCESS_ERROR_BAD_DATA = "BAD_DATA"
+PROCESS_ERROR_INTERNAL = "INTERNAL"
+
+
 def write_process_error(log_filename, error):
     """
     Écrit la cause de l'échec. `error` est un dict sérialisable ({code, message, details}),
@@ -758,6 +766,10 @@ def conversion_thread(
                 trace.logger.error(
                     f"✗ {op_label} — échec après {t_total:.3f}s: {msg}"
                 )
+                write_process_error(
+                    log_filename,
+                    {"code": PROCESS_ERROR_BAD_DATA, "message": msg},
+                )
                 write_process_status(log_filename, PROCESS_STATUS_FAILED)
             trace.logger.info("=" * 80)
             return
@@ -785,6 +797,13 @@ def conversion_thread(
                     "présente que dans les fichiers exportés depuis l'application)"
                 )
                 trace.logger.error("=" * 80)
+                write_process_error(
+                    log_filename,
+                    {
+                        "code": PROCESS_ERROR_BAD_DATA,
+                        "message": "aucun onglet « layout » dans le fichier Excel",
+                    },
+                )
                 write_process_status(log_filename, PROCESS_STATUS_FAILED)
                 return
             # header=None : l'onglet « layout » est écrit en colonne A sans
@@ -901,6 +920,12 @@ def conversion_thread(
                 if line.strip():
                     trace.logger.error(f"  {line}")
             trace.logger.error("=" * 80)
+            # sa#560 — le fichier n'a pas pu être lu : c'est BAD_DATA, et le front sait le dire
+            # (« vérifiez le fichier d'entrée ») au lieu de son « Chargement échoué » muet.
+            write_process_error(
+                log_filename,
+                {"code": PROCESS_ERROR_BAD_DATA, "message": msg},
+            )
             write_process_status(log_filename, PROCESS_STATUS_FAILED)
             return
 
@@ -1018,6 +1043,13 @@ def conversion_thread(
         trace.logger.error("=" * 80)
         trace.logger.error(f"✗ {op_label} — échec après {t_total:.3f}s")
         trace.logger.error(f"Erreur: {str(e)}")
+        # sa#560 — une exception inattendue est de NOTRE côté : INTERNAL le dit, et invite à
+        # nous envoyer le journal. C'est ce que voyait l'utilisateur de sankeyexcelparser#129,
+        # dont l'import mourait sur « maximum recursion depth exceeded » sans rien d'autre.
+        write_process_error(
+            log_filename,
+            {"code": PROCESS_ERROR_INTERNAL, "message": str(e)},
+        )
         write_process_status(log_filename, PROCESS_STATUS_FAILED)
         trace.logger.error("=" * 80)
         raise
