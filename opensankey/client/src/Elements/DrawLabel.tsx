@@ -2985,36 +2985,20 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
     if (this._label_values.is_value) {
       return this.link.data_label(this.prefix as 'name_label')
     }
-    const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
-    switch (text_source) {
-    case 'none': return ''
-    case 'source': return this.link.source?.name_label_effective ?? ''
-    case 'target': return this.link.target?.name_label_effective ?? ''
-    case 'source_target': {
-      const s = this.link.source?.name_label_effective ?? ''
-      const t = this.link.target?.name_label_effective ?? ''
-      return `${s} → ${t}`
-    }
-    case 'tag': {
-      // Tag de flux assigné au lien dans le groupe choisi (premier si plusieurs).
-      const group_id = this.link.name_label_flux_tag_group_id
-      if (group_id === '') return this.link.text_value
-      const tag = this.link.flux_tags_list.find(t => t.group.id === group_id)
-      return tag ? tag.display_name : this.link.text_value
-    }
-    // OS#1314 — gabarit à jetons ({EntryName} : {Value} {Unit}…), interpolé à
-    // chaque dessin comme le titre du diagramme.
-    case 'template': return this.link.template_label
-    case 'custom':
-    default:
-      return this.link.text_value
-    }
+    // os#1451 — LE DESSIN NE DÉCIDE PLUS DU CONTENU. Il demande à l'élément ce qu'il affiche, comme
+    // le fait déjà le libellé d'un nœud (`NodeDrawNameLabel.getLabelText`) : la cascade et
+    // l'arbitrage des deux écritures de la source vivent sur `Class_LinkElement`. C'est ce qui rend
+    // la question « que montre cet élément ? » indépendante de sa nature.
+    // Le libellé d'ICÔNE, lui, n'a pas de source à choisir : il porte le texte du flux.
+    if (this.prefix !== 'name_label') return this.link.text_value
+    return this.link.name_label_effective
   }
 
   protected shouldDrawLabel(): boolean {
     const link_text = this.getLabelText()
     const link_val = this.link.valueCurrent
-    const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
+    // os#1451 — même source de vérité que le texte ci-dessus : la source EN VIGUEUR de l'élément.
+    const text_source = this.prefix === 'name_label' ? this.link.name_label_source_effective : 'custom'
     const da = this._element.drawing_area
 
     // Seuil d'affichage des étiquettes : en mode pixel (#seuil px) on compare

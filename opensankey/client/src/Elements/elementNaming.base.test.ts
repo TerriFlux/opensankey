@@ -176,8 +176,12 @@ describe('os#1445 le nom, et ce que l element AFFICHE, sont deux choses', () => 
     // Il est DERIVE : renommer un bout renomme le flux, sans que personne n'ecrive son nom.
     sankey.nodes_dict['Ble'].name = 'Ble tendre'
     expect(flux.name).toBe('Ble tendre---RHD')
-    // Sans source particuliere, ce qu'il afficherait est ce nom compose.
-    expect(flux.name_label_effective).toBe('Ble tendre---RHD')
+    // os#1451 — ce qu'il AFFICHE, en revanche, est le texte qu'il porte : un flux n'ecrit pas son
+    // nom compose sur le diagramme, il ecrit son libelle. Cette ligne disait « Ble tendre---RHD »
+    // tant que la cascade heritee restait inerte chez le flux — elle ne l'est plus, et c'est
+    // desormais le meme texte que le DESSIN (cf. elementLabelSource.test.ts).
+    flux.text_value = 'Ble panifiable'
+    expect(flux.name_label_effective).toBe('Ble panifiable')
   })
 
   it('renommer une zone de texte passe par le meme setter que renommer un noeud', () => {
@@ -208,17 +212,14 @@ describe('os#1445 les sources qui demandent des etiquettes ou des dimensions', (
   })
 
   it('sur un element SANS etiquettes ni dimensions, les deux retombent sur le nom', () => {
-    // Le repli de la base est une REPONSE, pas un manque : demander a un flux l'etiquette qui le
-    // nomme n'a pas de sens, et il vaut mieux qu'il dise son nom que rien du tout. C'est deja ce
-    // que faisait `Class_NodeBase` pour les zones de texte ; la base le fait pour tout le monde.
+    // Le repli de la base est une REPONSE, pas un manque : demander a une zone de texte l'etiquette
+    // qui la nomme n'a pas de sens, et il vaut mieux qu'elle dise son nom que rien du tout.
+    //
+    // os#1451 — le FLUX a quitte ce cas : 'tag' veut dire quelque chose chez lui (ses etiquettes de
+    // flux), et 'ancestor' y retombe sur le texte qu'il porte, pas sur son nom compose. Les deux
+    // sont figes dans `elementLabelSource.test.ts`, avec le reste de sa cascade.
     const sankey = loadFixture().drawing_area.sankey
-    const flux = sankey.links_dict['Ble---Rhd']
     const zone = sankey.addNewContainer('zdt_encart', 'Encart')
-
-    flux.name_label_source = 'tag'
-    expect(flux.name_label_effective).toBe('Ble---RHD')
-    flux.name_label_source = 'ancestor'
-    expect(flux.name_label_effective).toBe('Ble---RHD')
 
     zone.name_label_source = 'tag'
     expect(zone.name_label_effective).toBe('Encart')
@@ -227,14 +228,18 @@ describe('os#1445 les sources qui demandent des etiquettes ou des dimensions', (
   })
 
   it('le gabarit a jetons connait {Name} sur n importe quel element', () => {
-    // OS#1314 : les jetons universels sont ceux de l'element. Un flux en herite sans une ligne de
-    // code chez lui — et l'edition rend le gabarit tel qu'il est ecrit, pas sa valeur interpolee.
-    const flux = loadFixture().drawing_area.sankey.links_dict['Ble---Rhd']
+    // OS#1314 : les jetons universels sont ceux de l'element — et l'edition rend le gabarit tel
+    // qu'il est ecrit, pas sa valeur interpolee.
+    //
+    // os#1451 — monte ici sur une ZONE DE TEXTE. Le flux repond lui aussi au gabarit, mais avec SES
+    // jetons ({Value}, {Source}, {EntryName}…, cf. `link_template_label`) : c'est une resolution
+    // propre a sa nature, figee dans `elementLabelSource.test.ts`.
+    const zone = loadFixture().drawing_area.sankey.addNewContainer('zdt_encart', 'Encart')
 
-    flux.name_label_source = 'template'
-    flux.name_label_template = 'Flux : {Name}'
+    zone.name_label_source = 'template'
+    zone.name_label_template = 'Zone : {Name}'
 
-    expect(flux.name_label_effective).toBe('Flux : Ble---RHD')
-    expect(flux.name_label_effective_editable).toBe('Flux : {Name}')
+    expect(zone.name_label_effective).toBe('Zone : Encart')
+    expect(zone.name_label_effective_editable).toBe('Zone : {Name}')
   })
 })

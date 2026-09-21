@@ -50,7 +50,8 @@ import {
   LinkLabelSpecificValues, ALL_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
   NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes, StockLabelAttributeTypes,
   Type_Orientation, ValueLabelAttributeTypes,
-  ConfigType
+  ConfigType,
+  Type_NameLabelSource
 } from './ElementsAttributesConfig'
 // SA#541 — module FEUILLE (aucun import) : il ne rouvre pas le cycle décrit plus haut.
 import { buildColorLockIndex, tagStyleLayers, topLayerDefining, untaggedDefaultsStyle, Type_StylePropertyReader } from './tagStyles'
@@ -1303,15 +1304,32 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   public set name_label_custom(_: boolean) { this.name_label_source = _ ? 'custom' : 'name' }
 
   /**
+   * os#1451 — LA SOURCE DE LIBELLÉ RÉELLEMENT EN VIGUEUR, une seule énumération pour toute la
+   * famille (Type_NameLabelSource).
+   *
+   * La base répond l'attribut commun, et c'est tout. Le point d'entrée existe pour la seule nature
+   * qui a gardé une écriture à elle — le flux, dont le format enregistré dit `name_label_text_source`
+   * (cf. `Class_LinkElement`) : il arbitre ici entre les deux écritures au lieu que le DESSIN le
+   * fasse, ce qui laissait au flux une cascade héritée que rien ne lisait.
+   */
+  public get name_label_source_effective(): Type_NameLabelSource {
+    return this.name_label_source
+  }
+
+  /**
    * Texte effectivement affiché par le name_label, selon la source choisie. Source unique du rendu
    * (getLabelText) et de l'init du rich text.
    */
   public get name_label_effective(): string {
-    switch (this.name_label_source) {
-    case 'custom': return this.name_label_text
+    switch (this.name_label_source_effective) {
+    case 'none': return ''
+    case 'custom': return this.resolveCustomLabel()
     case 'tag': return this.resolveTagLabel()
     case 'ancestor': return this.resolveAncestorLabel()
     case 'template': return this.resolveTemplateLabel()
+    case 'source':
+    case 'target':
+    case 'source_target': return this.resolveEndpointLabel(this.name_label_source_effective)
     default: return this.name_label
     }
   }
@@ -1324,8 +1342,26 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
    */
   public get name_label_effective_editable(): string {
     // OS#1314 — un gabarit s'édite tel qu'il est écrit, jetons compris.
-    if (this.name_label_source === 'template') return this.name_label_template
+    if (this.name_label_source_effective === 'template') return this.name_label_template
     return this.name_label_effective
+  }
+
+  /**
+   * Source 'custom' : le texte libre du libellé, celui qu'on écrit sans renommer l'élément. La
+   * base répond l'attribut commun `name_label_text` ; le FLUX le surcharge, car son texte à lui est
+   * porté par sa valeur (`text_value`, un texte par combinaison d'étiquettes de données).
+   */
+  protected resolveCustomLabel(): string {
+    return this.name_label_text
+  }
+
+  /**
+   * os#1451 — sources 'source' / 'target' / 'source_target' : le libellé affiché des EXTRÉMITÉS.
+   * Elles ne veulent dire quelque chose que pour un élément qui a deux bouts — le flux les
+   * surcharge. Pour les autres, le repli est le nom, comme pour 'tag' et 'ancestor' ci-dessous.
+   */
+  protected resolveEndpointLabel(_which: 'source' | 'target' | 'source_target'): string {
+    return this.name_label
   }
 
   // Sources 'tag' et 'ancestor' : elles demandent des ÉTIQUETTES ASSIGNÉES et des DIMENSIONS, que
