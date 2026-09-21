@@ -33,6 +33,9 @@
 import type {
   Type_AttributeSort, Type_FigureAttributeConfig, Type_FigureControl
 } from './Figure'
+// os#1479 — le socle, servi d'office par `figureNatureAttributes` (plus bas).
+import { FIGURE_COMMON_HONOURS } from './figureCommonHonours'
+import { FIGURE_ATTRIBUTES_CONFIG } from './figureCatalogue'
 
 /** Un libellé dans les sept langues du dépôt. Aucune n'est optionnelle (cf. en-tête). */
 export type Labels7 = {
@@ -173,4 +176,31 @@ export const honours = (
     out[key] = elementAttribute(source, s.sort ?? 'style', ui, s.default)
   })
   return out
+}
+
+/**
+ * os#1479 — LES ATTRIBUTS D'UNE NATURE DE FIGURE : le socle, puis ce qui lui est propre.
+ *
+ * LE SOCLE EST SERVI D'OFFICE, et c'est le point. Une nature ne peut plus l'oublier — non parce
+ * qu'un test la rattrape après coup, mais parce qu'il n'y a plus de chemin pour l'oublier. Ce
+ * qu'elle en dit (`socle`) n'est qu'une SURCHARGE : une valeur d'usine, une condition d'affichage.
+ * Nommer une clé du socle ne la remplace pas, donc ne peut pas la faire disparaître.
+ *
+ * ICI ET NON DANS `figureNature` : ce module est sans React, et le garde du socle le lit
+ * (`figureCommonHonours.test`). Le jest de ce paquet ne sait pas lire les modules ESM, et importer
+ * un composant dans un test entraîne de proche en proche `react-markdown` — la suite échouerait au
+ * CHARGEMENT. Même précaution que `Elements/attributeScope`, dont l'en-tête raconte la même
+ * histoire. Une règle qu'on ne peut pas tester n'en est pas une.
+ */
+export const figureNatureAttributes = (spec: {
+  socle?: { [key: string]: Type_HonourSpec }
+  own?: { [key: string]: Type_HonourSpec }
+  extra_attributes?: { [key: string]: Type_FigureAttributeConfig }
+}): { [key: string]: Type_FigureAttributeConfig } => {
+  const socle: { [key: string]: Type_HonourSpec } = {}
+  FIGURE_COMMON_HONOURS.forEach(key => { socle[key] = spec.socle?.[key] ?? {} })
+  return {
+    ...honours(FIGURE_ATTRIBUTES_CONFIG, { ...socle, ...(spec.own ?? {}) }),
+    ...(spec.extra_attributes ?? {})
+  }
 }
