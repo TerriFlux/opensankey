@@ -29,7 +29,19 @@ if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
 }
 
-/** Les natures d OS+ qui dessinent des PARTS — celles que le socle engage. */
+/**
+ * Les natures qui dessinent des PARTS — celles que le socle engage.
+ *
+ * ⚠️ CETTE LISTE EST LE DERNIER ENDROIT OU L ON EN TIENT UNE, et elle est vouee a fondre. Depuis
+ * os#1479, une nature declaree par `registerFigureNature` sert le socle PAR CONSTRUCTION — il n y a
+ * plus de chemin pour l oublier — et c est `figureNature.test` qui le grave, sur une nature d essai
+ * qui ne nomme aucune cle du socle.
+ *
+ * Restent ici les natures qui declarent leurs attributs a la main. Le sunburst en est une : son
+ * trace ne lit pas `part_aspect`, il compose le style de ses secteurs lui-meme, et le faire passer
+ * par la porte unique demanderait de le reecrire. La couronne et les barres y sont encore parce que
+ * leurs jeux complets (`DONUT_ATTRIBUTES`, `BARS_ATTRIBUTES`) sont lus ailleurs qu au registre.
+ */
 const NATURES: [string, { [k: string]: unknown }][] = [
   ['sunburst', SUNBURST_ATTRIBUTES as unknown as { [k: string]: unknown }],
   ['couronne', DONUT_ATTRIBUTES as unknown as { [k: string]: unknown }],
