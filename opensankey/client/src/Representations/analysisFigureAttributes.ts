@@ -18,8 +18,9 @@
 // Le garde-fou du socle commun (`figureCommonHonours.test`) a besoin de cette liste, et de rien
 // d'autre. Une règle qu'on ne peut pas tester n'en est pas une — d'où la séparation.
 
-import { figureAttribute, honours } from './figureAttribute'
-import { FIGURE_ATTRIBUTES_CONFIG } from './figureCatalogue'
+import { figureAttribute, figureNatureAttributes } from './figureAttribute'
+// os#1479 — le tri « socle / propre », fait par la règle et non à la main (cf. son commentaire).
+import { splitByCommonHonours } from './figureCommonHonours'
 import type { Type_FigureAttributesConfig } from './Figure'
 import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
 import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
@@ -149,28 +150,46 @@ export const SHARED_HONOURS = {
   notes_visible: {},
   interaction_tooltip: {}
 }
+/**
+ * os#1479 — CE QUE CHAQUE NATURE DÉCLARE, EN UN SEUL OBJET, comme on le lit.
+ *
+ * Le tri en « ce qui surcharge le socle » et « ce qui lui est propre » est fait par
+ * `splitByCommonHonours`, pas à la main : une clé qui entrerait au socle demain changerait de tas
+ * toute seule, au lieu d'attendre qu'on s'en souvienne.
+ */
+const DONUT_HONOURS = {
+  ...SHARED_HONOURS,
+  parts_group_under: { default: 0.5 },
+  // os#1431 — sur une couronne, le nom de la part ne se dessinait pas : ce drapeau commandait en
+  // fait le pourcentage. Il commande désormais le NOM, et il est éteint par défaut — sans quoi
+  // toute couronne déjà enregistrée se couvrirait de noms (cf. DONUT_STYLE_DEFAULTS).
+  name_label_is_visible: { default: false },
+  name_label_font_size: { default: 11 },
+  value_label_percent: { default: 'total' },
+  centre_content: { default: 'value' },
+  centre_hole: { default: 55 },
+  legend_width: { default: 230 }
+}
+const BARS_HONOURS = {
+  ...SHARED_HONOURS,
+  parts_order: { default: 'model' },
+  value_label_is_visible: { default: true },
+  legend_width: { default: 200 }
+}
+
+/* eslint-disable-next-line */
+export const { socle: DONUT_SOCLE, own: DONUT_OWN } = splitByCommonHonours(DONUT_HONOURS)
+export const { socle: BARS_SOCLE, own: BARS_OWN } = splitByCommonHonours(BARS_HONOURS)
+
+// LES DEUX JEUX COMPLETS, construits par LE MÊME chemin que la déclaration (`registerFigureNature`
+// appelle `figureNatureAttributes` sur les mêmes morceaux). Deux constructions parallèles
+// finiraient par différer — et c'est précisément ce que le garde du socle ne verrait pas, puisqu'il
+// lit celles-ci.
 export const DONUT_ATTRIBUTES: Type_FigureAttributesConfig = {
-  ...ANALYSIS_ATTRIBUTES,
-  ...honours(FIGURE_ATTRIBUTES_CONFIG, {
-    ...SHARED_HONOURS,
-    parts_group_under: { default: 0.5 },
-    // os#1431 — sur une couronne, le nom de la part ne se dessinait pas : ce drapeau commandait en
-    // fait le pourcentage. Il commande désormais le NOM, et il est éteint par défaut — sans quoi
-    // toute couronne déjà enregistrée se couvrirait de noms (cf. DONUT_STYLE_DEFAULTS).
-    name_label_is_visible: { default: false },
-    name_label_font_size: { default: 11 },
-    value_label_percent: { default: 'total' },
-    centre_content: { default: 'value' },
-    centre_hole: { default: 55 },
-    legend_width: { default: 230 }
-  })
+  ...figureNatureAttributes({ socle: DONUT_SOCLE, own: DONUT_OWN }),
+  ...ANALYSIS_ATTRIBUTES
 }
 export const BARS_ATTRIBUTES: Type_FigureAttributesConfig = {
-  ...ANALYSIS_ATTRIBUTES,
-  ...honours(FIGURE_ATTRIBUTES_CONFIG, {
-    ...SHARED_HONOURS,
-    parts_order: { default: 'model' },
-    value_label_is_visible: { default: true },
-    legend_width: { default: 200 }
-  })
+  ...figureNatureAttributes({ socle: BARS_SOCLE, own: BARS_OWN }),
+  ...ANALYSIS_ATTRIBUTES
 }
