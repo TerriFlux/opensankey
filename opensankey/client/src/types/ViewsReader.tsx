@@ -12,6 +12,7 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON } fro
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { decodeViewsFromDelta } from './viewDelta'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
+import { implicitSceneId } from './Scenes'
 import type { Type_ViewLabelDef } from './ViewsQuery'
 import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
 import { createViewSwitchOverlay } from './viewSwitchOverlay'
@@ -369,14 +370,14 @@ export class ViewsReader {
     // Identité LOGIQUE de la vue courante (découplée de l'id du Sankey de la DA). Posée AVANT
     // applyViewTagSelection / les redraws.
     host.current_view_id = id
-    // os#1355 — la vue porte sa REPRÉSENTATION : si elle a figé une disposition de la grande
-    // zone, on la rejoue AVANT le dessin, pour que le diagramme se cadre d'emblée dans la bonne
-    // géométrie. Sans disposition figée (maître, fichiers antérieurs), la courante reste.
-    // os#1385 — la grande zone est celle de l'ÉCRAN (espace de travail) : seul le document
-    // principal la rejoue. Une vue d'un document SECONDAIRE (feuille vivante dans sa fenêtre)
-    // remplacerait sinon la disposition de l'utilisateur — et la fenêtre même où elle s'affiche.
-    const view_main_zone = id === MASTER_VIEW_ID ? undefined : host.views_dict[id]?.main_zone
-    if (view_main_zone && host.is_main) host.menu_configuration?.mainZoneStateFromJSON(view_main_zone)
+    // os#1482 — UNE VUE NE REJOUE PLUS DE DISPOSITION : c'est le rôle d'une SCÈNE (Scenes.ts), et
+    // les `view_main_zone` d'avant ont été migrées en scènes à la lecture. Une bascule de vue
+    // qui n'est pas commandée par une scène fait de la scène courante l'implicite de cette vue,
+    // pour que le sélecteur dise ce qu'on regarde — sauf pendant une activation, qui a déjà posé
+    // la sienne. Sur le principal seulement : la vue d'un document de feuille ne dit rien de
+    // l'écran.
+    const scenes = host.menu_configuration?.scenes
+    if (scenes && host.is_main && !scenes.activating) scenes.current = implicitSceneId(id)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {
