@@ -77,12 +77,22 @@ describe('os#1487 le pourcentage ne s ecrit pas quand la valeur est masquee', ()
     expect(texte).toContain('Ble')
   })
 
-  it('valeur VISIBLE : la valeur et son pourcentage s ecrivent tous les deux', () => {
-    // La garantie qui protege le parc : une couronne enregistree qui montrait « 6 75 % » continue.
+  it('os#1489 — LE POURCENTAGE REMPLACE LA VALEUR, il ne s y ajoute pas', () => {
+    // ⚠️ CE CAS DISAIT LE CONTRAIRE, ET LE RENVERSEMENT EST LA CORRECTION.
+    //
+    // Julien : « je mets Valeur on et ca met DEUX valeurs, la valeur absolue et le pourcentage. Or
+    // il faut faire comme sur un flux ou un noeud : c est l un ou l autre en fonction du choix ou
+    // pas de l unite. C est comme un label de flux. »
+    //
+    // Un pourcentage n est pas une seconde grandeur, c est une MANIERE d ecrire celle qu on a
+    // deja. Un flux ne montre jamais « 12 t 40 % ».
     const texte = couronne(true, 'total')
 
     expect(texte).toContain('%')
-    expect(texte).toContain('6')
+    // La valeur absolue N EST PLUS ecrite a cote : 6 sur 8 fait 75 %, et c est tout ce qu on lit.
+    expect(texte).toContain('75%')
+    // La valeur absolue (6) n est plus ecrite : le texte se reduit au nom et au pourcentage.
+    expect(texte.replace('75%', '')).not.toContain('6')
   })
 
   it('valeur visible SANS pourcentage : le chiffre seul', () => {

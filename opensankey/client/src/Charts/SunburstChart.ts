@@ -1115,10 +1115,21 @@ export const drawSunburstChart = (
       //
       // « Visible » commande donc les deux. C est la lecture de Julien, et c est la seule qui rende
       // la case coherente : on ne masque pas une valeur pour en voir une autre forme.
+      // os#1489 — LE POURCENTAGE REMPLACE LA VALEUR, il ne s y ajoute pas.
+      //
+      // Julien : « le truc bizarre, c est que je mets Valeur on et ca met DEUX valeurs, la valeur
+      // absolue et le pourcentage. Or il faut faire comme sur un flux ou un noeud : c est l un ou
+      // l autre en fonction du choix ou pas de l unite. C est comme un label de flux. »
+      //
+      // Il a raison, et c est la meme lecture que la veille (« pour moi c est l affichage de la
+      // valeur en unite pourcentage »). Un pourcentage n est pas une seconde grandeur : c est une
+      // MANIERE d ecrire celle qu on a deja. Un flux ne montre jamais « 12 t 40 % » ; il montre l un
+      // ou l autre, selon l unite choisie.
+      //
+      // « Aucun » veut donc dire « la valeur telle quelle », et non « pas de pourcentage en plus ».
       if (!s.value_visible) return []
-      const parts: string[] = [valueText(d.value, s)]
-      if (s.label_percent !== 'none') parts.push(pctText(d.value, baseOf(d)))
-      return parts
+      if (s.label_percent !== 'none') return [pctText(d.value, baseOf(d))]
+      return [valueText(d.value, s)]
     }
     const sectorValueText = (d: Type_SunburstSlice): string =>
       sectorValueParts(d, styleOf(d.id)).join(' · ')
