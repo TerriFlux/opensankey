@@ -492,8 +492,20 @@ export const drawDonutChart = (
   const sectorValue = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const s = styleOf(d)
     const a = aspectOf(d.data.id)
-    const values: string[] = []
-    if (s.value_label_is_visible) values.push((a?.value_format ?? fmt)(d.data.value))
+    // os#1487 — LE POURCENTAGE EST UNE FACON D ECRIRE LA VALEUR, PAS UNE LIGNE DE PLUS.
+    //
+    // Julien, capture a l appui : « ce que je ne comprends pas, c est que sur la couronne on a le
+    // % quoi qu il arrive. Or pour moi c est l affichage de la valeur en unite pourcentage. »
+    //
+    // Il avait « Visible » DECOCHE sur la Valeur, et le 13 % s ecrivait quand meme. Les deux
+    // lignes etaient independantes : l une regardait la visibilite, l autre non — et comme
+    // `value_label_percent` vaut « total » par defaut sur une couronne, TOUTE couronne ecrivait
+    // son pourcentage, y compris celles dont l auteur avait masque la valeur.
+    //
+    // « Visible » commande donc les deux. C est la lecture de Julien, et c est la seule qui rende
+    // la case coherente : on ne masque pas une valeur pour en voir une autre forme.
+    if (!s.value_label_is_visible) return ''
+    const values: string[] = [(a?.value_format ?? fmt)(d.data.value)]
     if (s.value_label_percent !== 'none') values.push(Math.round(d.data.value / total * 100) + '%')
     return values.join(' ')
   }
