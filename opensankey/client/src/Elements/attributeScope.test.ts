@@ -254,7 +254,7 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
     // entre les deux familles d etiquette. C est le meme suffixe, et il ne vaut pas des deux cotes.
     const { part } = buildScene()
     const chiffres = [
-      'scientific_notation', 'significant_digits', 'nb_digit', 'unit_visible', 'unit', 'unit_factor'
+      'scientific_notation', 'significant_digits', 'nb_digit', 'unit_visible', 'unit'
     ]
     chiffres.forEach(suffixe => {
       expect([suffixe, attributeAppliesToElements([part], `name_label_${suffixe}`)])
@@ -262,6 +262,21 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
       expect([suffixe, attributeAppliesToElements([part], `value_label_${suffixe}`)])
         .toEqual([suffixe, true])
     })
+    // os#1490 — DEUX EXCEPTIONS DU COTE DE LA VALEUR, et elles se disent :
+    //
+    //   `unit_type`   : c est le selecteur des FLUX, douze entrees dont « % de flux en entrees du
+    //                   noeud source ». Une part a le sien, `value_label_part_unit`, en quatre
+    //                   choix — « le selecteur d unite peut pas etre le meme sur un noeud, un flux,
+    //                   une part de figure » ;
+    //   `unit_factor` : l arbitrage d os#1463 l a laisse au graphe (il divise le nombre sans
+    //                   toucher a la geometrie), si bien qu aucun trace ne le lit. Un reglage que
+    //                   personne ne lit n a pas a s afficher.
+    const a_la_figure = ['unit_type', 'unit_factor']
+    a_la_figure.forEach(suffixe => {
+      expect([suffixe, attributeAppliesToElements([part], `value_label_${suffixe}`)])
+        .toEqual([suffixe, false])
+    })
+    expect(attributeAppliesToElements([part], 'value_label_part_unit')).toBe(true)
   })
 
   it('CE QUI COUPLE UNE ETIQUETTE AU DIAGRAMME, sans objet dans une figure', () => {
@@ -309,7 +324,8 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
     // Le NOEUD ne perd que ce qui est declare POUR UNE PART et elle seule (os#1482) : l orientation
     // du texte dans une forme ronde, et le detachement de l etiquette. Un noeud a `text_angle`, qui
     // fait mieux, et son libellé ne se detache pas de lui.
-    const A_LA_PART = ['name_label_orientation', 'name_label_callout']
+    // os#1490 y ajoute le selecteur d unite propre a une part : un noeud garde celui des flux.
+    const A_LA_PART = ['name_label_orientation', 'name_label_callout', 'value_label_part_unit']
     expect(perdues(noeud).sort()).toEqual([...A_LA_PART].sort())
     // Le flux et la zone ne perdent QUE des portees posees bien avant ce lot : les totaux
     // entrants/sortants (`only: ['node']`, os#1464), qui n ont de sens que la ou des flux entrent et
