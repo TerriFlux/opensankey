@@ -82,10 +82,22 @@ describe('l ordre de navigation : le repli automatique', () => {
     expect(store.navigationOrder(['riz'], 'S2')).toEqual(['s_1'])
   })
 
-  it('une scene qui ne cite que des vues HORS de l ordre (filtre de label) n apparait pas', () => {
+  it('une scene qui ne cite que des vues HORS de l ordre reste listee, en queue', () => {
+    // os#1492 — REGLE INVERSEE, et c est la correction d un bug : cette scene DISPARAISSAIT.
+    // Une scene appartient au CLASSEUR, pas a une feuille ni a un filtre de vues : la liste ne
+    // doit pas se vider quand on change d onglet. C etait mesure sur le classeur d exemple —
+    // deux des trois scenes s evaporaient sur la seconde feuille.
     const store = new Class_ScenesStore()
-    store.add({ id: 's_1', name: 'Filtree', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('z') }) })
-    expect(store.navigationOrder(['a'], '')).toEqual([implicitSceneId('a')])
+    store.add({ id: 's_1', name: 'Ailleurs', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('z') }) })
+    expect(store.navigationOrder(['a'], '')).toEqual([implicitSceneId('a'), 's_1'])
+  })
+
+  it('une scene citant une vue de la feuille courante prend SA place, pas la queue', () => {
+    const store = new Class_ScenesStore()
+    store.add({ id: 's_1', name: 'Sur b', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('b') }) })
+    store.add({ id: 's_2', name: 'Ailleurs', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('z') }) })
+    expect(store.navigationOrder(['a', 'b', 'c'], ''))
+      .toEqual([implicitSceneId('a'), 's_1', implicitSceneId('c'), 's_2'])
   })
 })
 
