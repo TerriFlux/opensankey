@@ -65,6 +65,10 @@ const PANEL_Z_TOOLTIP = 45
 // pousser franchement (une pop-up posée par défaut près du bord n'ancre pas).
 const DOCK_ZONE_PX = 120
 
+// os#1494 — Ce qu'on garde TOUJOURS visible d'une pop-up, en px : de quoi la voir et
+// la rattraper par son en-tête, même si sa position enregistrée la mettait dehors.
+const PANEL_GRAB_MARGIN_PX = 80
+
 const ALL_MODES: Type_PanelMode[] = ['tooltip', 'popup', 'sidebar']
 
 export type Type_PanelShellProps = {
@@ -414,8 +418,33 @@ const PanelFrame = ({
   // Position CONTRÔLÉE du wrapper : la géométrie de la pop-up en mode pop-up,
   // (0,0) sinon. Contrôlée (et non `defaultPosition`) parce qu'un même wrapper
   // sert les trois modes : sa position doit suivre le mode courant.
+  //
+  // os#1494 — LA BARRE DU HAUT EST UN PLANCHER, et il se pose ICI plutôt qu'à la
+  // lecture du fichier. Une pop-up posée à `y = 0` recouvre la barre : ses menus
+  // deviennent inatteignables, et l'utilisateur n'a aucun moyen de la redescendre
+  // puisque c'est justement la barre qu'elle masque. Le cas n'est pas théorique —
+  // constaté à l'écran sur « Navigation et coordonnées », barre mesurée à 40 px et
+  // panneau posé à 0, y compris après redémarrage du navigateur : la géométrie est
+  // relue du document (`PanelManager.fromJSON`) telle qu'elle a été écrite.
+  //
+  // Le plancher est appliqué à l'AFFICHAGE, et non en corrigeant la valeur stockée,
+  // pour deux raisons : il répare aussi les documents DÉJÀ enregistrés de travers,
+  // sans migration ; et il suit la barre, dont la hauteur se mesure au rendu et peut
+  // valoir 0 avant que le DOM ne soit monté — une correction figée au chargement
+  // graverait ce 0. Le glisser n'est pas contraint (`drag_pos` passe tel quel) :
+  // c'est `bounds` qui le borne, et `onStop` réécrit ensuite une valeur saine.
+  // ET ELLE RESTE À PORTÉE DE SOURIS. Une pop-up dont la position enregistrée tombe
+  // hors de l'écran ne se voit pas, ne se saisit pas, et passe pour disparue — alors
+  // qu'elle est bien là, ouverte, quelque part à droite ou en bas. Il suffit d'un
+  // enregistrement fait sur un écran plus grand, ou d'une géométrie écrite avant que
+  // la fenêtre ait sa taille. On garde toujours de quoi l'attraper par son en-tête.
+  const nav_floor = da.getNavBarHeight()
+  const vw_now = window.innerWidth || 1024
+  const vh_now = window.innerHeight || 768
+  const clampX = (x: number) => Math.max(0, Math.min(x, vw_now - PANEL_GRAB_MARGIN_PX))
+  const clampY = (y: number) => Math.max(nav_floor, Math.min(y, vh_now - PANEL_GRAB_MARGIN_PX))
   const position = is_popup
-    ? (drag_pos ?? { x: geom?.x ?? 0, y: geom?.y ?? 0 })
+    ? (drag_pos ?? { x: clampX(geom?.x ?? 0), y: clampY(geom?.y ?? nav_floor) })
     : { x: 0, y: 0 }
 
   // --- Ancrage par glisser (pop-up -> barre latérale) -------------------------
@@ -505,7 +534,10 @@ const PanelFrame = ({
         handle={'.' + handle_class}
         disabled={!is_popup}
         position={position}
-        bounds={{ left: 0, top: 0 }}
+        // os#1494 — on ne peut pas non plus GLISSER une pop-up sous la barre du haut :
+        // le plancher vaut pour le geste comme pour l'affichage, sans quoi on replacerait
+        // à la main ce que le rendu vient de redescendre.
+        bounds={{ left: 0, top: nav_floor }}
         onDrag={(_e, data) => {
           setDragPos({ x: data.x, y: data.y })
           if (can_dock) setInDockZone(inDockZone(data.x))
