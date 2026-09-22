@@ -581,7 +581,22 @@ export const drawDonutChart = (
    * dise la même chose des deux côtés, pas pour dessiner la même chose.
    */
   const arcLabelTransform = (d: d3.PieArcDatum<Type_StatSlice>): string => {
-    const at = `translate(${label_arc.centroid(d)})`
+    // os#1491 — LE DÉCALAGE FIN AGIT ICI, ET IL NE LE FAISAIT NULLE PART SUR UNE COURONNE.
+    //
+    // Julien : « toutes les interfaces doivent faire sens et s'adapter d'une figure à l'autre. Ça
+    // n'a pas l'air d'être encore le cas, vois sur le placement des labels qui n'ont aucun effet. »
+    //
+    // Les deux décalages sont OFFERTS partout — os#1483 les a délibérément exclus de
+    // `PLACED_IN_A_BOX_KEYS`, parce que « décaler un peu » a un sens dans un arc quand « dans quel
+    // coin » n'en a pas. Ils agissaient sur le disque depuis os#1476, et sur rien ici : le bloc du
+    // secteur est posé par un `transform`, où `partTextPlacement` n'a jamais de prise.
+    //
+    // POSÉ AVANT LA ROTATION, donc lu dans le repère de la page : « 10 px vers la droite » écarte
+    // l'étiquette vers la droite de l'écran, quelle que soit l'orientation du texte. C'est le sens
+    // que le geste a pour qui le fait — il regarde le dessin, pas le repère du secteur.
+    const a_name = aspectOf(d.data.id)?.name
+    const [ax, ay] = label_arc.centroid(d)
+    const at = `translate(${ax + (a_name?.shift_x ?? 0)},${ay + (a_name?.shift_y ?? 0)})`
     const orientation = aspectOf(d.data.id)?.name?.orientation
     // HORIZONTALE, ou rien de dit : le texte reste droit, pose au centroide — le dessin d'hier.
     if (orientation !== 'tangential' && orientation !== 'radial') return at
@@ -1067,6 +1082,30 @@ export const drawBarChart = (
   }
   if (st.interaction_tooltip) rects.append('title').text(bar_title)
 
+  /**
+   * os#1491 — LA HAUTEUR D'UN TEXTE DE BARRE, dedans comme dehors.
+   *
+   * ⚠️ `vert` NE SERVAIT QU'À L'INTÉRIEUR, et c'est ce qui en faisait un bouton mort : le harnais
+   * d'os#1481 le comptait inerte sur les barres, parce que le poser seul — sans cocher « dedans » —
+   * ne déplaçait rien. Trois boutons offerts pour un réglage qui en demandait un autre d'abord.
+   *
+   * LA RÈGLE, DÉSORMAIS : `vert` dit à QUELLE HAUTEUR le texte se pose, `inside` dit s'il est
+   * posé SUR la barre (encre claire, sous le sommet) ou À CÔTÉ d'elle. Les deux se combinent au
+   * lieu que l'un conditionne l'autre.
+   *
+   * Le défaut ne bouge pas : sans rien de dit, `vert` vaut « bas » et rend exactement la place
+   * d'hier — le nom sous l'axe, la valeur juste au-dessus du sommet.
+   *
+   * @param plain la place que le tracé donnait à ce texte hors de la barre.
+   */
+  const barTextY = (
+    vert: string, inside: boolean, top: number, size: number, plain: number
+  ): number => {
+    if (vert === 'top') return inside ? top + size + 2 : top - 4
+    if (vert === 'middle') return (top + h) / 2
+    return inside ? h - 4 : plain
+  }
+
   // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`) — et
   // barre par barre depuis os#1463 : la visibilité, la taille, la police et le format sont ceux de
   // la part quand elle les dit.
@@ -1095,9 +1134,7 @@ export const drawBarChart = (
         const band_x = x(d.id) ?? 0
         const at = partTextPlacement({
           x: band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2),
-          y: inside
-            ? (vert === 'top' ? top + size + 2 : vert === 'middle' ? (top + h) / 2 : h - 4)
-            : top - 4,
+          y: barTextY(vert, inside, top, size, top - 4),
           anchor: 'middle',
           rotate: false
         }, a)
@@ -1203,11 +1240,7 @@ export const drawBarChart = (
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
     const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
-    const cy = inside
-      ? (vert === 'top' ? top + size + 2
-        : vert === 'middle' ? (top + h) / 2
-          : h - 4)
-      : (rotate_labels ? h + 8 : h + 14)
+    const cy = barTextY(vert, inside, top, size, rotate_labels ? h + 8 : h + 14)
     const anchor = a?.name?.text_align
       ?? (inside ? 'middle' : (rotate_labels ? 'end' : 'middle'))
     return {

@@ -4908,6 +4908,15 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   // (elle est écrite dans le même texte, ou juste dessous), le stock et l'icône n'en ont pas.
   name_label_callout: ONLY_A_PART,
 
+  // os#1491 — « DEDANS » NE SE DIT QU'UNE FOIS SUR UNE PART, et c'est `inside_vert` qui le dit.
+  //
+  // Un nœud a deux « dedans » parce qu'il a deux dimensions réglables : son libellé peut passer à
+  // l'intérieur horizontalement, verticalement, ou les deux. Une part de figure n'en a qu'un — son
+  // texte est SUR la forme ou À CÔTÉ —, et les trois tracés lisent `inside_vert` pour le dire.
+  // `inside_horiz` n'est lu par aucun : c'était un bouton mort, et le harnais le disait.
+  name_label_inside_horiz: NOT_ON_A_PART,
+  value_label_inside_horiz: NOT_ON_A_PART,
+
   // ── os#1490 — L'UNITÉ D'UNE PART DE FIGURE, ET PAS CELLE D'UN FLUX ──────────────────────────
   //
   // Julien, capture à l'appui : « le sélecteur d'unité peut pas être le même sur un nœud, un flux,
