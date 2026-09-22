@@ -336,7 +336,15 @@ export const registerBaseRepresentations = (): void => {
     id: TAG_GROUP_VIEW_REPRESENTATION_ID,
     scale: 'diagram',
     order: 35,
-    label: (a) => a.t('MEP.legend_group_view'),
+    // « SANKEY », le MÊME libellé que le canevas, et c'est délibéré (arbitrage d'Alexandre,
+    // 22/09) : ces deux natures montrent la même chose — un Sankey —, l'une le document qu'on
+    // édite, l'autre ce même document vu au travers d'un seul groupe d'étiquettes. Leur donner
+    // deux noms aurait fait croire à deux espèces de dessin là où il n'y en a qu'une.
+    //
+    // CE QUI LES DISTINGUE EST ÉCRIT AILLEURS, et c'est le bon endroit : le nom du groupe, que
+    // l'en-tête pose à côté du libellé (`describeContent`, juste dessous). Une fenêtre dit donc
+    // « Sankey · Origine » là où le canevas dit « Sankey » tout court.
+    label: (a) => a.t('Spreadsheet.zone.diagram'),
     icon: <FaEye />,
     // Un diagramme SANS aucun groupe d'étiquettes n'a rien à mettre en forme : la nature ne se
     // propose pas, plutôt que d'offrir une vue qui serait la copie conforme du diagramme.

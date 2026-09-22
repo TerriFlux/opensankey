@@ -32,11 +32,13 @@
 // principal n'a pas bougé d'un pixel pendant l'opération ». Littéralement — il n'est ni lu en
 // écriture, ni redessiné.
 //
-// LA COPIE NE S'ÉDITE PAS, et c'est une réponse et non un manque. Ses nœuds ne délèguent rien à
-// ceux du diagramme (contrairement à l'étoile unitaire, os#1422, dont les proxys écrivent dans
-// leur source) : ce qu'on y déplacerait ne reviendrait nulle part et se perdrait au premier
-// redessin du parent. Mieux vaut une vue qu'on parcourt — on s'y déplace, on y zoome, on la
-// détache, on l'ancre — qu'une vue qui accepte des gestes et les oublie.
+// LA COPIE S'ÉDITE (retour d'Alexandre au test local du 22/09) : on y déplace ses nœuds, on y
+// règle ce qu'on veut, parce qu'une vue qu'on ne peut pas arranger n'est pas une vue, c'est une
+// image. Mais ses nœuds ne DÉLÈGUENT rien à ceux du diagramme, contrairement à ceux de l'étoile
+// unitaire (os#1422, dont les proxys écrivent dans leur source) : ce qu'on fait ici reste ici, et
+// un changement RÉEL du contenu du parent refait la copie à neuf. D'où la comparaison de contenu
+// de `rebuild` — un dessin complet du parent n'est pas un changement, et jeter l'arrangement de
+// l'auteur à chaque dessin serait lui reprendre d'une main ce qu'on vient de lui donner.
 //
 // LE PATRON EST CELUI DE `mountStarDocument` (registerOSPRepresentations, os#1422) : reconstruire
 // sur l'ÉPOQUE DE DESSIN de la source, ne dessiner que si la case mesure quelque chose, se
@@ -45,6 +47,7 @@
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_TagGroup } from '../types/TagGroup'
+import type { Type_JSON } from '../types/Utils'
 import { DRAW_TOPIC } from '../types/EventBus'
 import type {
   Type_RepresentationContext, Type_RepresentationMount
@@ -84,6 +87,25 @@ export const tagGroupOfContext = (ctx: Type_RepresentationContext): Class_TagGro
 }
 
 /**
+ * LE CONTENU DE LA SOURCE, lu sans la redessiner.
+ *
+ * ⚠️ SÉRIALISER UN DOCUMENT LE REDESSINE, et ce serait ici une BOUCLE SANS FIN.
+ *
+ * `toSheetContentJSON` enveloppe son travail dans `withBypassRedraws`, dont la sortie REDESSINE
+ * (`if (redraw && !previous) this.draw()`, DrawingArea) : un dessin complet de la source, donc
+ * une époque de plus, donc une notification `DRAW_TOPIC` — celle-là même à laquelle la vue
+ * s'abonne pour se reconstruire. La reconstruction déclencherait la suivante, indéfiniment, et le
+ * premier clic sur « Vue » figerait la page.
+ *
+ * Le `withBypassRedraws(…, false)` extérieur ferme les deux robinets d'un coup : l'intérieur voit
+ * `previous` déjà levé et ne redessine pas en sortant, et celui-ci ne redessine pas davantage.
+ * C'est aussi ce qui rend littéralement vrai le point 5 de la recette — le diagramme principal
+ * n'est ni relu en écriture, ni redessiné.
+ */
+export const readTagGroupViewSource = (source: Class_ApplicationData): Type_JSON =>
+  source.drawing_area.withBypassRedraws(() => source.toSheetContentJSON(), false)
+
+/**
  * sa#563 — LE DOCUMENT DE LA VUE : une copie du diagramme courant, dont seul `group_id` met en
  * forme. `null` si la copie retombait sur le document principal (garde ci-dessous).
  *
@@ -96,26 +118,13 @@ export const tagGroupOfContext = (ctx: Type_RepresentationContext): Class_TagGro
  * d'accueil (`showIn`) puis de le dessiner quand sa case mesure quelque chose.
  */
 export const buildTagGroupViewDocument = (
-  source: Class_ApplicationData, group_id: string | undefined
+  source: Class_ApplicationData, group_id: string | undefined,
+  json: Type_JSON = readTagGroupViewSource(source)
 ): Class_ApplicationData | null => {
   const doc = source.workspace.createDocument({ offscreen: true })
-  // ⚠️ SÉRIALISER LA SOURCE LA REDESSINE, et ce serait une BOUCLE SANS FIN.
-  //
-  // `toSheetContentJSON` enveloppe son travail dans `withBypassRedraws`, dont la sortie
-  // REDESSINE (`if (redraw && !previous) this.draw()`, DrawingArea) : un dessin complet de la
-  // source, donc une époque de plus, donc une notification `DRAW_TOPIC` — celle-là même à
-  // laquelle la vue s'abonne pour se reconstruire. La reconstruction déclencherait la suivante,
-  // indéfiniment, et le premier clic sur « Vue » figerait la page.
-  //
-  // Le `withBypassRedraws(…, false)` extérieur ferme les deux robinets d'un coup : l'intérieur
-  // voit `previous` déjà levé et ne redessine pas en sortant, et celui-ci ne redessine pas
-  // davantage. C'est aussi ce qui rend littéralement vrai le point 5 de la recette — le
-  // diagramme principal n'est ni relu en écriture, ni redessiné.
-  //
   // `false` au `fromJSON` : on ne dessine PAS la copie au chargement. Sa zone n'a pas encore son
   // conteneur, et un dessin hors écran se cadrerait sur la fenêtre du navigateur (cf.
   // `drawWhenMeasured`).
-  const json = source.drawing_area.withBypassRedraws(() => source.toSheetContentJSON(), false)
   doc.fromJSON(json, {}, false)
   // CEINTURE ET BRETELLES, celle de la fenêtre de feuille et de l'étoile : on ne repointe jamais
   // vers notre case une zone qui est celle du conteneur principal. Une case vide se voit et se
@@ -140,9 +149,19 @@ export const buildTagGroupViewDocument = (
     // dessiné — le dessin complet qui suivra peint les nœuds, les flux ET la légende, dans
     // l'état que l'aperçu vient de poser.
   }
-  // LA COPIE NE S'ÉDITE PAS (cf. l'en-tête du module) : ses nœuds ne délèguent rien à ceux du
-  // diagramme, donc ce qu'on y déplacerait se perdrait au premier redessin du parent.
-  doc.edition_allowed = false
+  // LA COPIE S'ÉDITE, comme le canevas d'une feuille voisine et comme l'étoile unitaire : on y
+  // déplace ses nœuds, on y règle ce qu'on veut, parce qu'une vue qu'on ne peut pas arranger
+  // n'est pas une vue, c'est une image (retour d'Alexandre au test local du 22/09).
+  //
+  // CE QU'ELLE NE FAIT PAS, ET IL FAUT LE SAVOIR : ses nœuds ne DÉLÈGUENT rien à ceux du
+  // diagramme, contrairement à ceux de l'étoile (os#1422). Ce qu'on fait ici reste ici, et un
+  // dessin COMPLET du parent — un filtre, un niveau, une étiquette de données, une
+  // réconciliation — refait la copie à neuf (cf. `mountTagGroupView`, qui ne la refait que si le
+  // contenu du parent a vraiment changé). C'est la limite d'une copie, et c'est très exactement
+  // la question qu'ouvre la fusion des vues et des volets : à qui appartient l'arrangement d'une
+  // fenêtre. Tant qu'elle n'est pas tranchée, mieux vaut une vue qu'on arrange et qui se
+  // rafraîchit qu'une vue qu'on regarde sans pouvoir y toucher.
+  doc.edition_allowed = source.editable
   return doc
 }
 
@@ -167,6 +186,8 @@ export const mountTagGroupView = (
 
   let view: Class_ApplicationData | null = null
   let last_epoch = -1
+  /** Le contenu du parent tel qu on l a lu la derniere fois (cf. `rebuild`). */
+  let last_key: string | null = null
   let last_w = -1
   let last_h = -1
   let draw_deferred = false
@@ -199,10 +220,19 @@ export const mountTagGroupView = (
     if (rebuilding) return
     rebuilding = true
     try {
+      const json = readTagGroupViewSource(source)
+      // LE CONTENU DU PARENT A-T-IL VRAIMENT CHANGÉ ? Un dessin complet n'est pas un changement :
+      // le parent en fait un pour bien des raisons qui ne touchent pas ce qu'on copie. Refaire la
+      // copie à chaque fois jetterait pour rien tout ce que l'auteur a arrangé DANS la vue —
+      // elle s'édite depuis le test local du 22/09 (cf. `buildTagGroupViewDocument`). On compare
+      // donc ce qu'on vient de lire à ce qu'on avait lu ; identique, on ne touche à rien.
+      const key = JSON.stringify(json)
+      if (view && !view.disposed && key === last_key) return
+      last_key = key
       // Le document d'AVANT s'en va d'abord : deux copies vivantes du même diagramme tiendraient
       // toutes deux une zone de dessin, et la seconde prendrait le conteneur de la première.
       disposeView()
-      const doc = buildTagGroupViewDocument(source, group_id)
+      const doc = buildTagGroupViewDocument(source, group_id, json)
       if (!doc) return
       view = doc
       doc.showIn(selector, owner_document)

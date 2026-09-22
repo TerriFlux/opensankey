@@ -204,7 +204,7 @@ export const resources_spreadsheet = {
         },
         // --- Boutons bascule de la grande zone (MenuTop) ---
         zone: {
-          diagram: 'Diagram',
+          diagram: 'Sankey',
           spreadsheet: 'Spreadsheet',
           json: 'JSON',
           doc: 'Doc',
@@ -483,7 +483,7 @@ export const resources_spreadsheet = {
           editor_placeholder: 'Rédigez la documentation de ce diagramme en markdown…\n\n# Titre\n\n- point 1\n- point 2'
         },
         zone: {
-          diagram: 'Diagramme',
+          diagram: 'Sankey',
           spreadsheet: 'Tableur',
           json: 'JSON',
           doc: 'Doc',
@@ -735,7 +735,7 @@ export const resources_spreadsheet = {
           editor_placeholder: 'Redacte la documentación de este diagrama en markdown…\n\n# Título\n\n- punto 1\n- punto 2'
         },
         zone: {
-          diagram: 'Diagrama',
+          diagram: 'Sankey',
           spreadsheet: 'Hoja de cálculo',
           json: 'JSON',
           doc: 'Doc',
@@ -987,7 +987,7 @@ export const resources_spreadsheet = {
           editor_placeholder: 'Verfassen Sie die Dokumentation dieses Diagramms in Markdown…\n\n# Titel\n\n- Punkt 1\n- Punkt 2'
         },
         zone: {
-          diagram: 'Diagramm',
+          diagram: 'Sankey',
           spreadsheet: 'Tabelle',
           json: 'JSON',
           doc: 'Doc',
@@ -1239,7 +1239,7 @@ export const resources_spreadsheet = {
           editor_placeholder: 'Redigi la documentazione di questo diagramma in markdown…\n\n# Titolo\n\n- punto 1\n- punto 2'
         },
         zone: {
-          diagram: 'Diagramma',
+          diagram: 'Sankey',
           spreadsheet: 'Foglio di calcolo',
           json: 'JSON',
           doc: 'Doc',
@@ -1496,7 +1496,7 @@ export const resources_spreadsheet = {
         },
         // --- Boutons bascule de la grande zone (MenuTop) ---
         zone: {
-          diagram: '图表',
+          diagram: 'Sankey',
           spreadsheet: '电子表格',
           json: 'JSON',
           doc: '文档',
@@ -1754,7 +1754,7 @@ export const resources_spreadsheet = {
         },
         // --- Boutons bascule de la grande zone (MenuTop) ---
         zone: {
-          diagram: '図',
+          diagram: 'Sankey',
           spreadsheet: 'スプレッドシート',
           json: 'JSON',
           doc: '文書',
