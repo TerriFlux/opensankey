@@ -268,11 +268,35 @@ export const partAspect = (
   put('name_label_is_visible', booleanSaid(said('name_label_is_visible')))
   put('name_label_font_size', numberSaid(said('name_label_font_size')))
 
+  // ── os#1490 — L'UNITÉ D'UNE PART : QUATRE CHOIX, ET LE POURCENTAGE EN EST UN ────────────────
+  //
+  // Julien : « le sélecteur d'unité peut pas être le même sur un nœud, un flux, une part de
+  // figure… dans le cas d'une figure ça va être beaucoup plus simple ». Sa part se voyait offrir
+  // « % de flux en entrées du nœud source » — un des douze choix du sélecteur des FLUX.
+  //
+  // Les quatre choix se traduisent dans les DEUX canaux qui existaient déjà, le pourcentage et le
+  // symbole, plutôt que d'ouvrir un troisième chemin dans les trois tracés :
+  //
+  //   'value'          → la valeur, avec l'unité de la figure si elle en montre une ;
+  //   'percent_total'  → `value_label_percent = 'total'`, et aucune unité par-dessus ;
+  //   'percent_parent' → le même, 'parent' ;
+  //   'custom'         → `value_label_unit` lu TEL QUEL, sans passer par le registre d'unités.
+  //
+  // ABSENT = la figure décide, comme partout sur une part : elle n'est écoutée que sur ce qu'elle
+  // DIT. Aucune figure enregistrée ne change d'aspect.
+  const part_unit = oneOfSaid(
+    said('value_label_part_unit'),
+    ['value', 'percent_total', 'percent_parent', 'custom'] as const
+  )
+  const part_percent = part_unit !== undefined
+    ? (part_unit === 'percent_total' ? 'total' : part_unit === 'percent_parent' ? 'parent' : 'none')
+    : oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const)
+  /** Vrai quand la part écrit un pourcentage : « 75 % t » n'aurait aucun sens (os#1489). */
+  const part_in_percent = part_percent !== undefined && part_percent !== 'none'
+
   // VALEUR (`value_label_*`) — le nombre écrit au-dessus de CETTE barre.
   put('value_label_is_visible', booleanSaid(said('value_label_is_visible')))
-  put('value_label_percent', oneOfSaid(
-    said('value_label_percent'), ['none', 'total', 'parent'] as const
-  ))
+  put('value_label_percent', part_percent)
 
   // FORME (`shape_*`) — le rectangle lui-même. Hors du sac de la figure : ces réglages n'existent
   // pas au niveau du graphe (la couleur y vient du modèle ou de la palette, le liséré n'existe
@@ -344,13 +368,25 @@ export const partAspect = (
   //      « Unité »
   //   3. elle NOMME une unité      → elle en veut une : cocher pour elle est le seul sens possible
   //                                  du geste, et c'est ce qui manquait à l'écran.
+  //
+  // os#1490 — ET UN CINQUIÈME CAS, QUI PRIME SUR LES QUATRE : une part qui écrit un POURCENTAGE ne
+  // porte aucune unité, même cochée. Le « % » est déjà l'unité de ce nombre ; y accoler celle de la
+  // figure écrirait « 75 % t » sous un secteur qui ne pèse pas 75 tonnes.
   const unit_named = UNIT_NAME_KEYS.some(key => part.isAttributeOverloaded(key))
-  const unit_on = booleanSaid(said('value_label_unit_visible'))
-    ?? (unit_named ? true : base_format.unit !== '')
+    || part_unit === 'custom'
+  const unit_on = part_in_percent
+    ? false
+    : booleanSaid(said('value_label_unit_visible'))
+      ?? (unit_named ? true : base_format.unit !== '')
   // Le symbole : celui que la part nomme, celui de la figure sinon. En `unit_model` — le défaut du
   // catalogue — `value_label_unit` porte un ID : sans registre pour le résoudre on garde celui de
   // la figure, plutôt que d'écrire un identifiant à la place d'une unité.
   const unitSymbol = (): string => {
+    // os#1490 — « Unité personnalisée » : le texte saisi EST le symbole. Pas de registre à
+    // consulter, et donc pas de `unit_type` à connaître : c'est tout l'intérêt du choix.
+    if (part_unit === 'custom') {
+      return (textSaid(part.getElementProperty('value_label_unit')) ?? '').trim()
+    }
     if (!unit_named) return base_format.unit
     const type = textSaid(part.getElementProperty('value_label_unit_type'))
     const named = (textSaid(part.getElementProperty('value_label_unit')) ?? '').trim()
@@ -472,7 +508,7 @@ export const partAspect = (
     // « le trace garde son usage », et non « decolle ».
     value_attached: booleanSaid(said('value_label_stick_to_label')),
     // os#1474 — les memes reglages de format, BRUTS : le disque compose son propre formateur.
-    value_percent: oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const),
+    value_percent: part_percent,
     unit_visible: booleanSaid(said('value_label_unit_visible')),
     scientific_notation: booleanSaid(said('value_label_scientific_notation')),
     significant_digits: booleanSaid(said('value_label_significant_digits')),
