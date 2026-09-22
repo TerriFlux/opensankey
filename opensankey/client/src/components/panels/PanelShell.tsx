@@ -69,6 +69,30 @@ const DOCK_ZONE_PX = 120
 // la rattraper par son en-tête, même si sa position enregistrée la mettait dehors.
 const PANEL_GRAB_MARGIN_PX = 80
 
+/**
+ * os#1494 — LA HAUTEUR DE LA BARRE DU HAUT, DEMANDÉE À LA PAGE, jamais à une zone de dessin.
+ *
+ * `Class_DrawingArea.getNavBarHeight()` rend **0** dès que la zone est CADRÉE (`is_framed`) ou
+ * hors du conteneur principal — ce qui est juste de son point de vue : une zone dessinée dans
+ * une case de la grande zone n'a aucune barre autour d'elle. Mais un PANNEAU n'appartient pas à
+ * une zone de dessin, il appartient à la PAGE : il flotte au-dessus de tout, et la barre qu'il
+ * ne doit pas recouvrir est celle de la page.
+ *
+ * `PanelShell` interrogeait `app_data.drawing_area`, c'est-à-dire la zone du document ACTIF.
+ * Dès que la fenêtre active était autre chose que le canevas principal — une couronne, un
+ * sunburst, le canevas d'une autre feuille —, la réponse tombait à 0 et TOUS les panneaux
+ * remontaient sur la barre du haut, jusqu'à la rendre inatteignable. Constaté à l'écran par
+ * Julien avec une fenêtre Couronne active ; invisible sur un profil neuf, où le canevas
+ * principal est actif et répond correctement.
+ *
+ * Repli sur 0 quand la barre n'existe pas : page publiée sans barre, tests hors DOM.
+ */
+const pageNavBarHeightPx = (): number => {
+  if (typeof document === 'undefined') return 0
+  const el = document.getElementsByClassName('TopMenu')[0]
+  return el ? el.getBoundingClientRect().height : 0
+}
+
 const ALL_MODES: Type_PanelMode[] = ['tooltip', 'popup', 'sidebar']
 
 export type Type_PanelShellProps = {
@@ -334,7 +358,9 @@ const DockHint = ({ app_data, width_px }: { app_data: Class_ApplicationData, wid
       className='panel_dock_hint'
       position='fixed'
       right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
-      top={da.getNavBarHeight() + 'px'}
+      // os#1494 — la barre de la PAGE (cf. `pageNavBarHeightPx`) : la zone de dessin active
+      // répond 0 dès qu'elle est cadrée, et la bande d'ancrage remontait alors sur la barre.
+      top={pageNavBarHeightPx() + 'px'}
       bottom={da.getBottomBarHeight() + 'px'}
       width={width_px + 'px'}
       zIndex={PANEL_Z_DOCK_HINT}
@@ -438,7 +464,7 @@ const PanelFrame = ({
   // qu'elle est bien là, ouverte, quelque part à droite ou en bas. Il suffit d'un
   // enregistrement fait sur un écran plus grand, ou d'une géométrie écrite avant que
   // la fenêtre ait sa taille. On garde toujours de quoi l'attraper par son en-tête.
-  const nav_floor = da.getNavBarHeight()
+  const nav_floor = pageNavBarHeightPx()
   const vw_now = window.innerWidth || 1024
   const vh_now = window.innerHeight || 768
   const clampX = (x: number) => Math.max(0, Math.min(x, vw_now - PANEL_GRAB_MARGIN_PX))
@@ -582,7 +608,10 @@ const PanelFrame = ({
           // que les panneaux sont portalés en fin de <body>, tombe tout en bas, d'où
           // une pop-up hors écran. `0,0` la rend indépendante de son emplacement DOM.
           left={is_tooltip ? tt_left + 'px' : (is_popup ? '0' : undefined)}
-          top={is_sidebar ? da.getNavBarHeight() + 'px' : (is_tooltip ? tt_top + 'px' : (is_popup ? '0' : undefined))}
+          // os#1494 — la barre de la PAGE, pas celle que croit voir la zone de dessin active
+          // (cf. `pageNavBarHeightPx`) : un panneau ancré se posait à 0 dès qu'une fenêtre
+          // cadrée était active, et recouvrait la barre du haut.
+          top={is_sidebar ? nav_floor + 'px' : (is_tooltip ? tt_top + 'px' : (is_popup ? '0' : undefined))}
           // Info-bulle : largeur au CONTENU (`max-content`), bornée — elle rétrécit
           // pour un seul mot, s'élargit pour un tableau serré, et varie donc d'un
           // élément à l'autre. Sidebar / pop-up gardent leur largeur explicite.
@@ -673,7 +702,9 @@ export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }
       className='panel_sidebar_surface'
       position='fixed'
       right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
-      top={da.getNavBarHeight() + 'px'}
+      // os#1494 — même correction que la coquille qu'il recouvre : sans elle, le fond blanc de
+      // la barre latérale montait sur la barre du haut pendant qu'un panneau s'y (re)montait.
+      top={pageNavBarHeightPx() + 'px'}
       bottom={da.getBottomBarHeight() + 'px'}
       width={panels.sidebar_width_px + 'px'}
       zIndex={PANEL_Z_SIDEBAR - 1}
