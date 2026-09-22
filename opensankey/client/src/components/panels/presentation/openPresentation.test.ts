@@ -5,6 +5,9 @@ import {
 } from './openPresentation'
 import { presentation_block_registry } from './PresentationBlockRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
+// sa#563 — le routage du clic se juge sur un VRAI document : c est le modele de la grande zone
+// qui decide, et un faux objet de panneaux ne saurait rien en dire.
+import { Class_ApplicationData as Class_ApplicationDataReal } from '../../../types/ApplicationData'
 import { Class_PanelManager, type Type_PopupGeometry } from '../../../types/PanelManager'
 import { Class_EventBus } from '../../../types/EventBus'
 
@@ -268,5 +271,68 @@ describe('#321 présentation au clic : transitoire et bascule', () => {
     openPresentationFor(app, element('n1'), { x: 700, y: 400 })
     expect(panels.getMode(id)).toBe('popup')
     expect(panels.getPopupGeometry(id)).toEqual(posee)
+  })
+})
+
+/**
+ * sa#563 (lots 1 a 3) — LE CLIC SUR UN ELEMENT OUVRE UN VOLET, pas un panneau.
+ *
+ * La pop-up de presentation etait un PANNEAU : un mecanisme parallele a celui des volets, ou rien
+ * n etait ni selectionnable, ni reglable, ni deplacable, et que la colonne d outils ignorait.
+ * Elle est devenue un occupant de la grande zone, place 'floating'.
+ *
+ * DEUX REPLIS SUBSISTENT, et ils ne sont pas des restes : une page SANS grande zone (le viewer du
+ * paquet MIT ne monte pas `MainZoneTabs`) et une ZONE DE LEGENDE (ni noeud ni flux, donc pas un
+ * sujet de volet) gardent la pop-up. Ces epreuves figent les trois chemins.
+ */
+describe('sa#563 le clic ouvre un volet flottant quand la grande zone est la', () => {
+  const node = (id: string) => ({ id, getElementProperty: () => undefined }) as never
+  const link = (id: string) => ({
+    id, source: { name: 'A' }, target: { name: 'B' }, getElementProperty: () => undefined
+  }) as never
+
+  const hostedApp = () => {
+    const app = new Class_ApplicationDataReal(false)
+    app.menu_configuration.main_zone_hosted = true
+    return app
+  }
+
+  it('un NOEUD : un volet flottant de nature « Infos », actif, et aucun panneau', () => {
+    const app = hostedApp()
+    expect(openPresentationFor(app, node('n1'), { x: 100, y: 100 })).toBe(true)
+    const mc = app.menu_configuration
+    const floating = mc.mainZoneOccupantsIn('floating')
+    expect(floating).toHaveLength(1)
+    expect(floating[0].subject).toEqual({ kind: 'node', id: 'n1' })
+    expect(floating[0].representation).toBe('os.repr.element_info')
+    expect(mc.main_zone_active_id).toBe(floating[0].id)
+    // Aucun panneau ouvert : le chemin parallele n est pas emprunte.
+    expect(mc.panels.open_ids).toHaveLength(0)
+  })
+
+  it('un FLUX : meme volet, sujet « link »', () => {
+    const app = hostedApp()
+    openPresentationFor(app, link('l1'), { x: 100, y: 100 })
+    expect(app.menu_configuration.mainZoneOccupantsIn('floating')[0].subject)
+      .toEqual({ kind: 'link', id: 'l1' })
+  })
+
+  it('recliquer le meme element DESIGNE son volet au lieu d en empiler un second', () => {
+    const app = hostedApp()
+    openPresentationFor(app, node('n1'), { x: 100, y: 100 })
+    const first = app.menu_configuration.mainZoneOccupantsIn('floating')[0].id
+    // On designe une autre fenetre entre-temps, pour verifier que le second clic la ramene.
+    app.menu_configuration.activateMainZoneCanvas()
+    openPresentationFor(app, node('n1'), { x: 700, y: 400 })
+    expect(app.menu_configuration.mainZoneOccupantsIn('floating')).toHaveLength(1)
+    expect(app.menu_configuration.main_zone_active_id).toBe(first)
+  })
+
+  it('SANS grande zone, la pop-up de panneau reste le contenant (viewer du paquet MIT)', () => {
+    const app = new Class_ApplicationDataReal(false)
+    expect(app.menu_configuration.main_zone_hosted).toBe(false)
+    openPresentationFor(app, node('n1'), { x: 100, y: 100 })
+    expect(app.menu_configuration.mainZoneOccupantsIn('floating')).toHaveLength(0)
+    expect(app.menu_configuration.panels.getMode(presentationPanelId('n1'))).toBe('popup')
   })
 })
