@@ -134,12 +134,19 @@ describe('os#1464 ce qui RESTE offert a une part, et doit le rester', () => {
     const { part } = buildScene()
     const a_implementer = [
       'name_label_horiz', 'name_label_vert', 'name_label_horiz_shift', 'name_label_vert_shift',
-      'name_label_text_align', 'name_label_inside_horiz', 'name_label_inside_vert',
+      'name_label_text_align', 'name_label_inside_vert',
       'name_label_position_absolute'
     ]
     a_implementer.forEach(cle => {
       expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, true])
     })
+    // os#1491 — SAUF `inside_horiz`, ET LE TRACE A TRANCHE POUR DE BON.
+    //
+    // Un noeud a deux « dedans » parce qu il a deux dimensions reglables. Une part n en a qu un :
+    // son texte est SUR la forme ou A COTE, et les trois traces lisent `inside_vert` pour le dire.
+    // `inside_horiz` n etait lu par aucun — ce n etait pas « pas encore implemente », c etait un
+    // doublon sans objet.
+    expect(attributeAppliesToElements([part], 'name_label_inside_horiz')).toBe(false)
   })
 
   it('l ICONE : elle se dessinera sur les parts, elle ne se masque pas', () => {

@@ -14,6 +14,18 @@
 // reglage neuf qui n agit pas fait rougir la suite le jour ou on l ajoute, et non le jour ou Julien
 // le trouve. C est tout ce que ce lot change de durable.
 //
+// ── CE QUI RESTE GELE, ET POURQUOI (os#1491) ─────────────────────────────────────────────────
+//
+// Une part des inertes restants n est pas un bouton mort mais un reglage QUI EN ATTEND UN AUTRE.
+// Le cas type : `value_label_horiz_shift` sur une couronne ou un disque. La valeur y est COLLEE au
+// nom par defaut (`value_label_stick_to_label`, os#1470) — elle n est alors pas un texte a elle,
+// mais une ligne du bloc du nom, et ce bloc suit les decalages DU NOM. Detachez la valeur, et ses
+// deux decalages agissent : c est le meme chemin que le nom, par `partTextPlacement`.
+//
+// Le harnais pose UNE cle a la fois, et il a raison de le faire : deux reglages poses ensemble se
+// masqueraient l un l autre. Il compte donc ces cles inertes, et c est un chiffre honnete tant que
+// la raison est ecrite ici plutot que devinee dans six mois.
+//
 // ⚠️ CE QUE JSDOM NE VOIT PAS. Il ne met rien en page : un reglage dont le seul effet est une
 // MESURE — « masquer si ca depasse », le retour a la ligne, la largeur de boite — ne bougera rien
 // ici alors qu il agit a l ecran. Ces cles sont NOMMEES plus bas, pas devinees, et elles sortent du
