@@ -2596,6 +2596,48 @@ export const STOCK_LABEL_CONFIG = {
 export const VALUE_LABEL_CONFIG = {
   ...VALUE_LABEL_BASE_CONFIG,
 
+  // os#1490 — CE QU'UNE PART DE FIGURE ÉCRIT À LA PLACE DE SA VALEUR : son unité, en QUATRE choix.
+  //
+  // Julien, capture à l'appui : « je vois ton problème pour Valeur, c'est que tu utilises un
+  // sélecteur d'unité qui est fait pour les flux. Dans le cas d'une figure ça va être beaucoup plus
+  // simple. Le sélecteur d'unité peut pas être le même sur un nœud, un flux, une part de figure… »
+  //
+  // Il avait raison, et sa capture le montrait sans appel : une part se voyait offrir « % de flux
+  // en entrées du nœud source ». Le sélecteur des flux compte douze entrées — unité de tag, ratio,
+  // normalisé, pourcentages de stock — dont presque aucune ne veut dire quoi que ce soit dans une
+  // figure. Le réutiliser tel quel, c'était offrir onze réglages inertes pour en servir un.
+  //
+  // LE POURCENTAGE EST UNE UNITÉ, et c'est la lecture que Julien a répétée trois fois : « pour moi
+  // c'est l'affichage de la valeur en unité pourcentage », « c'est l'un ou l'autre, comme sur un
+  // label de flux ». Il entre donc DANS ce sélecteur, au lieu d'être une case à côté.
+  //
+  // ABSENT = la figure décide (`value_label_percent`), comme partout ailleurs sur une part : elle
+  // n'est écoutée que sur ce qu'elle DIT. Aucune figure enregistrée ne change d'aspect.
+  part_unit: {
+    default: 'value' as string,
+    type: (() => 'value') as (() => string),
+    category: 'value_label' as const,
+    actions: ['drawValueLabel'] as BaseActionType[],
+    labels: {
+      en: 'Unit',
+      fr: 'Unité',
+      es: 'Unidad',
+      de: 'Einheit',
+      it: 'Unità',
+      'zh-CN': '单位',
+      ja: '単位'
+    },
+    tooltips: {
+      en: 'What this part writes instead of its raw value: the value, a share of the whole, a share of the part above it, or a unit you type.',
+      fr: 'Ce que cette part écrit à la place de sa valeur brute : la valeur, une part du tout, une part de la part qui la contient, ou une unité que vous saisissez.',
+      es: 'Lo que esta parte escribe en lugar de su valor bruto: el valor, una parte del total, una parte de la parte que la contiene, o una unidad que usted escribe.',
+      de: 'Was dieser Teil statt seines Rohwerts schreibt: den Wert, einen Anteil am Ganzen, einen Anteil am übergeordneten Teil oder eine selbst eingegebene Einheit.',
+      it: 'Ciò che questa parte scrive al posto del suo valore grezzo: il valore, una quota del totale, una quota della parte che la contiene, o un\'unità digitata da voi.',
+      'zh-CN': '该部分用什么代替其原始数值：数值本身、占整体的比例、占上级部分的比例，或您自行输入的单位。',
+      ja: 'このパートが生の値の代わりに書くもの：値そのもの、全体に対する割合、上位パートに対する割合、または自分で入力した単位。'
+    }
+  } satisfies AttributeConfig<string>,
+
   stick_to_label: {
     default: false,
     type: (() => false) as (() => boolean),
@@ -4865,6 +4907,29 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   // L'étiquette DÉTACHÉE, même raisonnement : c'est le NOM qui sort de sa part. La valeur le suit
   // (elle est écrite dans le même texte, ou juste dessous), le stock et l'icône n'en ont pas.
   name_label_callout: ONLY_A_PART,
+
+  // ── os#1490 — L'UNITÉ D'UNE PART DE FIGURE, ET PAS CELLE D'UN FLUX ──────────────────────────
+  //
+  // Julien, capture à l'appui : « le sélecteur d'unité peut pas être le même sur un nœud, un flux,
+  // une part de figure ». Sa part se voyait offrir « % de flux en entrées du nœud source ».
+  //
+  // Le SÉLECTEUR DES FLUX sort donc du panneau d'une part — douze entrées dont onze sans objet —,
+  // et le sien le remplace : quatre choix, dont le pourcentage, qui EST une unité (os#1489).
+  //
+  // `value_label_unit` RESTE, et c'est le quatrième choix : l'unité qu'on saisit à la main. Elle
+  // n'a plus besoin de `unit_type` pour être lue — le nouveau sélecteur dit quand elle s'applique.
+  value_label_part_unit: ONLY_A_PART,
+  name_label_part_unit: NOT_ON_A_PART,
+  stock_label_part_unit: NOT_ON_A_PART,
+  icon_part_unit: NOT_ON_A_PART,
+  value_label_unit_type: NOT_ON_A_PART,
+  // Et le FACTEUR part avec lui : l'arbitrage d'os#1463 l'a laissé au graphe (il divise le nombre
+  // sans toucher à la géométrie, donc posé sur une part il rendrait la figure fausse), si bien
+  // qu'aucun tracé ne le lit. Un réglage que personne ne lit n'a pas à s'afficher — c'est le sens
+  // que Julien donne à la bijection : « que tous les attributs visibles aient un code, et vice
+  // versa ».
+  value_label_unit_factor: NOT_ON_A_PART,
+
   value_label_callout: NOT_ON_A_PART,
   stock_label_callout: NOT_ON_A_PART,
   icon_callout: NOT_ON_A_PART,
