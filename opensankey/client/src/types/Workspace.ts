@@ -11,7 +11,7 @@ import { TFunction, i18n } from 'i18next'
 
 import { Class_MenuConfig, mainZoneSubjectSheet } from './MenuConfig'
 import { Class_ApplicationData } from './ApplicationData'
-import type { Type_ElementAnalysis, Type_TextForToastPromise } from './ApplicationData'
+import type { Type_TextForToastPromise } from './ApplicationData'
 import type { Class_DrawingArea } from './DrawingArea'
 import { ACTIVE_DOCUMENT_TOPIC, MAIN_ZONE_TOPIC } from './EventBus'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
@@ -19,7 +19,6 @@ import {
   default_toast_duration, default_toast_waiting_delay, randomId, toast_bypass, Type_JSON
 } from './Utils'
 import type { Class_NodeElement } from '../Elements/Node'
-import type { Class_LinkElement } from '../Elements/Link'
 
 /**
  * os#1385 — Conteneur de dessin d'un document HORS ÉCRAN : un sélecteur qui ne peut désigner
@@ -362,13 +361,6 @@ export class Class_Workspace {
     // os#1421 — le sac EFFECTIF de la figure posée sur le nœud (cf. le commentaire du document).
     figure_options?: { [key: string]: unknown }
   ) => boolean = undefined
-
-  /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
-   * (colonne de boutons Unit. / Couronne / Barres). Chacune sait se dessiner dans un
-   * conteneur DOM. Absent hors OS+ (pas de colonne d'analyses). */
-  public element_analyses_for?: (
-    element: Class_NodeElement | Class_LinkElement
-  ) => Type_ElementAnalysis[] = undefined
 
   // CONFIGURATION DE MENUS HÔTE ========================================================
 
