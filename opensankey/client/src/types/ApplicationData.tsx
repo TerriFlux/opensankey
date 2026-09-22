@@ -1868,7 +1868,13 @@ export class Class_ApplicationData {
       if (!entry || !entry.main_zone) return
       const id = migratedSceneId(view_id)
       if (!scenes.byId(id)) {
-        scenes.add({ id, name: entry.name, main_zone: mainZoneWithViewOnCurrentSheet(entry.main_zone, view_id) })
+        const migree: Type_Scene = {
+          id, name: entry.name, main_zone: mainZoneWithViewOnCurrentSheet(entry.main_zone, view_id)
+        }
+        // os#1492 — la disposition figée dans une vue décrivait forcément la feuille où cette
+        // vue vit, c'est-à-dire celle qu'on est en train de lire.
+        if (this._current_sheet_id !== '') migree.sheet = this._current_sheet_id
+        scenes.add(migree)
       }
       delete entry.main_zone
     })
@@ -1957,6 +1963,15 @@ export class Class_ApplicationData {
     scenes.activating = true
     let result: void | Promise<void> = undefined
     try {
+      // os#1492 — L'ONGLET D'ABORD. Une scène retient la feuille qui était au premier plan, et
+      // la rétablit avant tout le reste : basculer remplace la zone de dessin et ferme les
+      // fenêtres épinglées sur la feuille quittée (`switchToSheet`), donc le faire APRÈS aurait
+      // défait la grille qu'on vient de poser. Sans cette bascule, activer depuis un autre
+      // onglet ne rejouait qu'une moitié de la scène — ses fenêtres sans son diagramme.
+      // `scenes.activating` protège la scène courante : la bascule ne doit pas nous en sortir.
+      if (scene.sheet && scene.sheet !== this._current_sheet_id && this._sheets[scene.sheet]) {
+        this.switchToSheet(scene.sheet, false)
+      }
       this.menu_configuration.mainZoneStateFromJSON(scene.main_zone)
       // Les fenêtres dépaysées d'abord, en synchrone : elles ne passent pas par le voile.
       const refs = sceneViewRefs(scene.main_zone)
@@ -1998,6 +2013,23 @@ export class Class_ApplicationData {
    * que son document montre en ce moment (le principal pour la feuille courante, le document de
    * feuille pour une fenêtre dépaysée). C'est ce qu'une scène fige.
    */
+  /**
+   * os#1492 — SORTIR DE LA SCÈNE COURANTE, parce que l'écran ne lui ressemble plus.
+   *
+   * Appelé quand l'utilisateur change d'onglet lui-même : la scène décrivait une feuille au
+   * premier plan, ce n'est plus celle-là. La laisser marquée courante faisait mentir le
+   * sélecteur, qui affichait « 1. Lire la filière » alors qu'on regardait une autre feuille.
+   * Sans scène courante, `current_scene_id` retombe sur la scène implicite de la vue courante
+   * — donc sur ce qu'on regarde vraiment.
+   *
+   * Muet pendant une activation : c'est elle qui bascule l'onglet, et elle sait ce qu'elle fait.
+   */
+  public leaveCurrentScene(): void {
+    const scenes = this.menu_configuration?.scenes
+    if (!scenes || scenes.activating) return
+    scenes.current = null
+  }
+
   public captureSceneMainZone(): Type_JSON {
     const main_zone = this.menu_configuration.mainZoneStateToJSON()
     const raw = main_zone['occupants'] as Type_JSON
@@ -2019,6 +2051,8 @@ export class Class_ApplicationData {
   public createSceneFromScreen(name: string): Type_Scene {
     const scenes = this.menu_configuration.scenes
     const scene: Type_Scene = { id: scenes.newId(), name: name.trim() || 'Scène', main_zone: this.captureSceneMainZone() }
+    // os#1492 — l'onglet actif fait partie de ce qu'on capture (cf. `Type_Scene.sheet`).
+    if (this._current_sheet_id !== '') scene.sheet = this._current_sheet_id
     scenes.add(scene)
     scenes.current = scene.id
     return scene
@@ -2029,6 +2063,8 @@ export class Class_ApplicationData {
     const scene = this.menu_configuration.scenes.byId(id)
     if (!scene) return false
     scene.main_zone = this.captureSceneMainZone()
+    if (this._current_sheet_id !== '') scene.sheet = this._current_sheet_id
+    else delete scene.sheet
     return true
   }
 
@@ -2311,6 +2347,9 @@ export class Class_ApplicationData {
     // fenêtres une par une avant de pouvoir travailler. Cf. `resetMainZoneToCanvas`, qui dit
     // aussi pourquoi BASCULER vers une feuille qui existe, à l'inverse, garde la grille.
     this.menu_configuration?.resetMainZoneToCanvas()
+    // os#1492 — et on sort de la scène courante, pour la même raison qu'à la bascule : une page
+    // blanche, dont on vient de vider les fenêtres, ne ressemble à aucune scène composée.
+    this.leaveCurrentScene()
     this._loadSheetContent(blank_json, draw)
     const id = makeId('sheet')
     this._sheets[id] = { name }
@@ -2501,6 +2540,10 @@ export class Class_ApplicationData {
     // APRÈS l'instantané — il doit décrire la feuille telle qu'on l'a travaillée — et AVANT le
     // chargement, pour qu'aucune d'elles ne tente de se résoudre sur le diagramme d'arrivée.
     this.menu_configuration?.closeWindowsPinnedOnSheet(this._current_sheet_id)
+    // os#1492 — CHANGER D'ONGLET SORT DE LA SCÈNE. Une scène retient la feuille qui était au
+    // premier plan ; dès qu'on en change soi-même, elle ne décrit plus l'écran. No-op quand
+    // c'est une activation de scène qui bascule (cf. `leaveCurrentScene`).
+    this.leaveCurrentScene()
     const target_json = JSON.parse(pako.inflate(target_snapshot, { to: 'string' })) as Type_JSON
     this._loadSheetContent(target_json, draw)
     this._current_sheet_id = id

@@ -31,6 +31,18 @@ export type Type_Scene = {
   id: string
   name: string
   description?: string
+  /**
+   * os#1492 — LA FEUILLE AU PREMIER PLAN quand la scène a été composée.
+   *
+   * Une scène disait quelle feuille chaque FENÊTRE montre, mais pas laquelle est l'onglet
+   * actif. Changer d'onglet la laissait donc à moitié vraie — ses fenêtres en place, son
+   * diagramme principal ailleurs — sans que rien ne le signale. L'onglet actif fait partie de
+   * l'état de l'écran au même titre que les fenêtres : la scène le retient et le rétablit.
+   *
+   * Absente (scènes d'avant, document sans feuilles) : l'activation ne touche pas à l'onglet,
+   * exactement comme avant.
+   */
+  sheet?: string
   /** Le format de `mainZoneStateToJSON`, tel quel. */
   main_zone: Type_JSON
 }
@@ -222,12 +234,17 @@ export class Class_ScenesStore {
    *
    * Règle du repli automatique (NOTE-SCENES.md §3) : on parcourt l'ordre des vues ; une vue citée
    * par des scènes explicites est remplacée, À SA PLACE, par ces scènes ; une vue que personne ne
-   * cite devient une scène implicite. Les scènes qui ne citent aucune vue de la feuille courante
-   * (scènes d'autres feuilles seulement) viennent en queue. Une scène qui ne cite que des vues
-   * hors de `views_order` (filtre de label, sa#397) n'apparaît pas : elle mènerait hors du filtre.
+   * cite devient une scène implicite.
    *
-   * Un fichier migré garde ainsi l'ordre qu'il avait : la scène née d'une vue est là où la vue
-   * était.
+   * os#1492 — PUIS TOUTES LES SCÈNES QUI RESTENT, en queue. Les scènes appartiennent au
+   * CLASSEUR, pas à une feuille : la liste ne doit pas se vider quand on change d'onglet. Elle
+   * le faisait, et c'était un défaut mesuré (deux des trois scènes du classeur d'exemple
+   * disparaissaient sur la seconde feuille) : la queue écartait les scènes de
+   * `cites_current_sheet`, ensemble qui contient aussi celles citant une vue ABSENTE de
+   * `views_order` — celles-là n'étaient donc ni placées à une vue, ni mises en queue.
+   * `seen` suffit, et dit exactement ce qu'il faut : « déjà placée ».
+   *
+   * Un fichier migré garde l'ordre qu'il avait : la scène née d'une vue est là où la vue était.
    */
   public navigationOrder(views_order: readonly string[], current_sheet: string): string[] {
     const by_view = this.scenesByCitedView(current_sheet)
@@ -239,10 +256,8 @@ export class Class_ScenesStore {
         scenes.forEach(sid => { if (!seen.has(sid)) { seen.add(sid); result.push(sid) } })
       } else result.push(implicitSceneId(view_id))
     })
-    const cites_current_sheet = new Set<string>()
-    by_view.forEach(list => list.forEach(sid => cites_current_sheet.add(sid)))
     this._order.forEach(sid => {
-      if (seen.has(sid) || cites_current_sheet.has(sid)) return
+      if (seen.has(sid)) return
       seen.add(sid)
       result.push(sid)
     })
@@ -265,6 +280,9 @@ export class Class_ScenesStore {
       if (!s) return
       const e: Type_JSON = { name: s.name, main_zone: JSON.parse(JSON.stringify(s.main_zone)) as Type_JSON }
       if (s.description) e['description'] = s.description
+      // os#1492 — l'onglet actif de la scène. Additive : une scène composée dans un document
+      // sans feuilles n'en porte pas, et se relit comme avant.
+      if (s.sheet) e['sheet'] = s.sheet
       entries[id] = e
     })
     const json: Type_JSON = { order: [...this._order], entries }
@@ -288,6 +306,8 @@ export class Class_ScenesStore {
       const scene: Type_Scene = { id, name: getStringFromJSON(e, 'name', id), main_zone: mz as Type_JSON }
       const description = getStringFromJSON(e, 'description', '')
       if (description !== '') scene.description = description
+      const sheet = getStringFromJSON(e, 'sheet', '')
+      if (sheet !== '') scene.sheet = sheet
       entries[id] = scene
     })
     // Ordre explicite s'il est là, sinon celui des clés ; les absents de la liste en queue, les
