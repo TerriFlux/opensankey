@@ -1,14 +1,14 @@
-// os#1482 — LES SCENES, la vue de l espace de travail (cf. NOTE-SCENES.md).
+// os#1482 — LES TABLEAUX DE BORD, la vue de l espace de travail (cf. NOTE-TABLEAUX DE BORD.md).
 //
-// Ces tests figent le magasin pur : son format (clé racine `scenes`, additive), la regle du
-// repli automatique (une vue sans scene est une scene implicite, A SA PLACE), la migration
-// d une disposition figee par vue (`view_main_zone`) en scene, et le sujet de fenetre etendu
+// Ces tests figent le magasin pur : son format (clé racine `dashboards`, additive), la regle du
+// repli automatique (une vue sans tableau de bord est un tableau de bord implicite, A SA PLACE), la migration
+// d une disposition figee par vue (`view_main_zone`) en dashboard, et le sujet de fenetre etendu
 // `{ kind: 'diagram', sheet?, view? }` qui traverse `mainZoneStateToJSON` / `FromJSON`.
 
 import {
-  Class_ScenesStore, implicitSceneId, viewIdOfImplicitScene, migratedSceneId,
-  mainZoneWithViewOnCurrentSheet, sceneViewRefs
-} from './Scenes'
+  Class_DashboardsStore, implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId,
+  mainZoneWithViewOnCurrentSheet, dashboardViewRefs
+} from './Dashboards'
 import { Class_ApplicationData } from './ApplicationData'
 import { MAIN_ZONE_CANVAS_ID, mainZoneSubjectView } from './MenuConfig'
 import type { Type_JSON } from './Utils'
@@ -20,21 +20,21 @@ const canvasOn = (view: string, sheet?: string): Type_JSON => {
   return { place: 'main', size: 1, order: 0, representation: MAIN_ZONE_CANVAS_ID, subject }
 }
 
-describe('identifiants de scene', () => {
-  it('une scene implicite se reconnait et rend sa vue', () => {
-    expect(viewIdOfImplicitScene(implicitSceneId('v1'))).toBe('v1')
-    expect(viewIdOfImplicitScene('s_1')).toBeNull()
-    expect(migratedSceneId('v1')).toBe('scene_v1')
+describe('identifiants de tableau de bord', () => {
+  it('un tableau de bord implicite se reconnait et rend sa vue', () => {
+    expect(viewIdOfImplicitDashboard(implicitDashboardId('v1'))).toBe('v1')
+    expect(viewIdOfImplicitDashboard('s_1')).toBeNull()
+    expect(migratedDashboardId('v1')).toBe('dashboard_v1')
   })
 })
 
 describe('le magasin : format et aller-retour', () => {
-  it('sans scene, rien n est ecrit (cle additive)', () => {
-    expect(new Class_ScenesStore().toJSON()).toBeUndefined()
+  it('sans tableau de bord, rien n est ecrit (cle additive)', () => {
+    expect(new Class_DashboardsStore().toJSON()).toBeUndefined()
   })
 
-  it('l aller-retour rend les scenes, leur ordre, la courante explicite', () => {
-    const store = new Class_ScenesStore()
+  it('l aller-retour rend les tableaux de bord, leur ordre, la courante explicite', () => {
+    const store = new Class_DashboardsStore()
     store.add({ id: store.newId(), name: 'Bilan', description: 'd', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('v1') }) })
     store.add({ id: store.newId(), name: 'Riz', main_zone: layout({ w_2: canvasOn('riz', 'S2') }) })
     store.current = 's_2'
@@ -42,7 +42,7 @@ describe('le magasin : format et aller-retour', () => {
     expect(json['order']).toEqual(['s_1', 's_2'])
     expect(json['current']).toBe('s_2')
 
-    const relu = new Class_ScenesStore()
+    const relu = new Class_DashboardsStore()
     relu.fromJSON(json)
     expect(relu.order).toEqual(['s_1', 's_2'])
     expect(relu.byId('s_1')?.description).toBe('d')
@@ -53,51 +53,51 @@ describe('le magasin : format et aller-retour', () => {
   })
 
   it('une courante implicite n est pas ecrite : la vue courante la dit deja', () => {
-    const store = new Class_ScenesStore()
+    const store = new Class_DashboardsStore()
     store.add({ id: 's_1', name: 'A', main_zone: layout({}) })
-    store.current = implicitSceneId('v1')
+    store.current = implicitDashboardId('v1')
     expect('current' in store.toJSON()!).toBe(false)
   })
 
   it('la cle absente VIDE le magasin : c est un autre fichier', () => {
-    const store = new Class_ScenesStore()
+    const store = new Class_DashboardsStore()
     store.add({ id: 's_1', name: 'A', main_zone: layout({}) })
     store.fromJSON(undefined)
-    expect(store.has_scenes).toBe(false)
+    expect(store.has_dashboards).toBe(false)
   })
 })
 
 describe('l ordre de navigation : le repli automatique', () => {
-  it('une vue sans scene est une scene implicite, une vue citee est remplacee A SA PLACE', () => {
-    const store = new Class_ScenesStore()
-    store.add({ id: 'scene_b', name: 'B', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('b') }) })
-    expect(store.navigationOrder(['a', 'b', 'c'], '')).toEqual([implicitSceneId('a'), 'scene_b', implicitSceneId('c')])
+  it('une vue sans tableau de bord est un tableau de bord implicite, une vue citee est remplacee A SA PLACE', () => {
+    const store = new Class_DashboardsStore()
+    store.add({ id: 'dashboard_b', name: 'B', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('b') }) })
+    expect(store.navigationOrder(['a', 'b', 'c'], '')).toEqual([implicitDashboardId('a'), 'dashboard_b', implicitDashboardId('c')])
   })
 
-  it('une scene qui ne cite que d autres feuilles vient en queue', () => {
-    const store = new Class_ScenesStore()
+  it('un tableau de bord qui ne cite que d autres feuilles vient en queue', () => {
+    const store = new Class_DashboardsStore()
     store.add({ id: 's_1', name: 'Autre feuille', main_zone: layout({ w_1: canvasOn('riz', 'S2') }) })
-    expect(store.navigationOrder(['a'], 'S1')).toEqual([implicitSceneId('a'), 's_1'])
+    expect(store.navigationOrder(['a'], 'S1')).toEqual([implicitDashboardId('a'), 's_1'])
     // Sur la feuille S2, elle cite une vue : elle prend la place de cette vue.
     expect(store.navigationOrder(['riz'], 'S2')).toEqual(['s_1'])
   })
 
-  it('une scene qui ne cite que des vues HORS de l ordre reste listee, en queue', () => {
-    // os#1492 — REGLE INVERSEE, et c est la correction d un bug : cette scene DISPARAISSAIT.
-    // Une scene appartient au CLASSEUR, pas a une feuille ni a un filtre de vues : la liste ne
+  it('un tableau de bord qui ne cite que des vues HORS de l ordre reste listee, en queue', () => {
+    // os#1492 — REGLE INVERSEE, et c est la correction d un bug : ce tableau de bord DISPARAISSAIT.
+    // Un tableau de bord appartient au CLASSEUR, pas a une feuille ni a un filtre de vues : la liste ne
     // doit pas se vider quand on change d onglet. C etait mesure sur le classeur d exemple —
-    // deux des trois scenes s evaporaient sur la seconde feuille.
-    const store = new Class_ScenesStore()
+    // deux des trois tableaux de bord s evaporaient sur la seconde feuille.
+    const store = new Class_DashboardsStore()
     store.add({ id: 's_1', name: 'Ailleurs', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('z') }) })
-    expect(store.navigationOrder(['a'], '')).toEqual([implicitSceneId('a'), 's_1'])
+    expect(store.navigationOrder(['a'], '')).toEqual([implicitDashboardId('a'), 's_1'])
   })
 
-  it('une scene citant une vue de la feuille courante prend SA place, pas la queue', () => {
-    const store = new Class_ScenesStore()
+  it('un tableau de bord citant une vue de la feuille courante prend SA place, pas la queue', () => {
+    const store = new Class_DashboardsStore()
     store.add({ id: 's_1', name: 'Sur b', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('b') }) })
     store.add({ id: 's_2', name: 'Ailleurs', main_zone: layout({ [MAIN_ZONE_CANVAS_ID]: canvasOn('z') }) })
     expect(store.navigationOrder(['a', 'b', 'c'], ''))
-      .toEqual([implicitSceneId('a'), 's_1', implicitSceneId('c'), 's_2'])
+      .toEqual([implicitDashboardId('a'), 's_1', implicitDashboardId('c'), 's_2'])
   })
 })
 
@@ -111,12 +111,12 @@ describe('la migration d une disposition figee par vue', () => {
       'os.repr.sheet': { place: 'bottom', size: 1, order: 3, representation: 'os.repr.sheet' }
     })
     const after = mainZoneWithViewOnCurrentSheet(before, 'v1')
-    const refs = sceneViewRefs(after)
+    const refs = dashboardViewRefs(after)
     expect(refs.map(r => [r.occupant_id, r.sheet, r.view])).toEqual([
       [MAIN_ZONE_CANVAS_ID, '', 'v1'], ['os.repr.sheet', '', 'v1']
     ])
     // L original n est pas touche.
-    expect(sceneViewRefs(before)).toEqual([])
+    expect(dashboardViewRefs(before)).toEqual([])
   })
 })
 
