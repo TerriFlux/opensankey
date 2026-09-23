@@ -2155,7 +2155,7 @@ export class Class_ApplicationData {
     if (!window) return
     const open = mc.mainZoneOccupantOfSavedView(id)
     if (open) mc.main_zone_active_id = open.id
-    else mc.openMainZoneWindowFromJSON(window, id)
+    else mc.openMainZoneWindowFromJSON(window, id, beside)
   }
 
   /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
@@ -2166,17 +2166,19 @@ export class Class_ApplicationData {
   }
 
   /**
-   * « OUVRIR À CÔTÉ » : la vue devient courante et son volet se pose sans fermer celui de la vue
-   * quittée. Une feuille n'a qu'un état de lecture à la fois : les deux volets montrent donc celui
-   * de la vue d'arrivée, chacun avec sa nature et ses réglages.
+   * « ANCRER EN VOLET » depuis le sélecteur de vues — le geste qui porte ce nom sur un volet
+   * flottant, et c'est le même : la vue devient courante et son volet se pose DANS LA GRILLE, à
+   * côté des autres, sans fermer celui de la vue quittée. Une feuille n'a qu'un état de lecture à la
+   * fois : les deux volets montrent donc celui de la vue d'arrivée, chacun avec sa nature et ses
+   * réglages.
    */
   public openViewBeside(id: string): void | Promise<void> {
     if (!this._views[id]) return
+    this._open_view_beside = id
     if (id === this._current_view_id) {
       this.applySavedViewWindowsOnSwitch(id, id)
       return
     }
-    this._open_view_beside = id
     return this.requestViewChange(id)
   }
 

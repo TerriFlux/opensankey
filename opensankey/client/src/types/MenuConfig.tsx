@@ -981,6 +981,16 @@ export class Class_MenuConfig {
    * grande zone, qui ouvre un autre état.
    */
   protected _saved_window_snapshots: { [view_id: string]: Type_JSON } = {}
+  /**
+   * sa#566 — LE VOLET QUI PREND TOUTE LA GRANDE ZONE, ou `null`.
+   *
+   * Ni flottant, ni ancré : en plein écran. Le volet GARDE sa place (`main`, `right`, `bottom`,
+   * `floating`) — c'est elle qu'il retrouve en quittant le plein écran —, et les autres volets
+   * restent ouverts, simplement non dessinés tant qu'il l'occupe. Un état de la grille, écrit sous
+   * `main_zone.maximized` seulement quand il est posé (fichier inchangé sinon), et levé dès qu'un
+   * volet s'ouvre (il doit se voir) ou que le volet en plein écran se ferme.
+   */
+  protected _main_zone_maximized_id: string | null = null
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
   protected _main_zone_active_id: string | null = null
@@ -1352,6 +1362,8 @@ export class Class_MenuConfig {
   protected _pushMainZoneOccupant(
     o: { id: string, subject: Type_MainZoneSubject, representation: string }, place?: Type_MainZonePlace
   ): void {
+    // sa#566 — un volet qu'on ouvre doit se voir : le plein écran d'un autre cède.
+    this._host._main_zone_maximized_id = null
     const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
     const peers = this._host._main_zone_occupants.filter(x => x.place === wanted)
@@ -1425,6 +1437,24 @@ export class Class_MenuConfig {
   // forme sous laquelle une vue garde son volet ; les vues elles-mêmes sont au document
   // (`ApplicationData.views_dict`), qui porte l'autre moitié.
 
+  /**
+   * sa#566 — Le volet en plein écran, ou `null`. Un volet détaché ne l'est pas : il vit dans sa
+   * fenêtre du système, et la grande zone n'a rien à lui donner.
+   */
+  public get main_zone_maximized_id(): string | null {
+    const id = this._host._main_zone_maximized_id
+    if (id === null || !this.isMainZoneOccupant(id) || this.isMainZoneDetached(id)) return null
+    return id
+  }
+  /** Met un volet en plein écran, ou en fait sortir la grande zone (`null`). */
+  public setMainZoneMaximized(id: string | null): void {
+    const next = (id !== null && this.isMainZoneOccupant(id)) ? id : null
+    if (this._host._main_zone_maximized_id === next) return
+    this._host._main_zone_maximized_id = next
+    if (next !== null) this._host._main_zone_active_id = next
+    this._notifyMainZone()
+  }
+
   /** Le volet ouvert qui EST la vue `view_id`, s'il y en a un. */
   public mainZoneOccupantOfSavedView(view_id: string): Type_MainZoneOccupant | undefined {
     const o = this._host._main_zone_occupants.find(x => x.saved_view === view_id)
@@ -1481,8 +1511,19 @@ export class Class_MenuConfig {
    *
    * Rend l'identifiant du volet, ou `null` quand la forme ne nomme aucune nature.
    */
-  public openMainZoneWindowFromJSON(json: Type_JSON, view_id: string): string | null {
+  public openMainZoneWindowFromJSON(
+    json: Type_JSON, view_id: string,
+    /**
+     * « Ancrer en volet » depuis le sélecteur de vues : la vue se pose DANS LA GRILLE, à côté des
+     * autres, quelle que soit la place qu'elle retient — une vue principale ou flottante prend
+     * alors la colonne droite, une vue du bandeau du bas y reste.
+     */
+    dock: boolean = false
+  ): string | null {
     const e = this._parseMainZoneOccupantEntry('', json)
+    if (dock && (e.place === 'main' || e.place === 'floating')) e.place = 'right'
+    // La vue qu'on rappelle doit se voir : un autre volet en plein écran cède.
+    this._host._main_zone_maximized_id = null
     let id = ''
     if (!mainZoneSubjectUsesOwnWindowId(e.subject)) {
       id = e.representation
@@ -1515,6 +1556,8 @@ export class Class_MenuConfig {
     this._host._main_zone_active_pane_key = null
     this._host._main_zone_selected_pane_keys = []
     if (e.place === 'main') this.makeMainZoneOccupantMain(id)
+    // Une vue quittée en plein écran s'y rouvre — sauf ancrée, geste qui dit « à côté ».
+    if (e.maximized && !dock) this._host._main_zone_maximized_id = id
     this._notifyMainZone()
     return id
   }
@@ -2395,6 +2438,7 @@ export class Class_MenuConfig {
     this._snapshotSavedWindows(host._main_zone_occupants.map(o => o.id))
     host._main_zone_occupants = []
     host._main_zone_detached.clear()
+    host._main_zone_maximized_id = null
     host._main_zone_active_id = null
     host._main_zone_active_pane_key = null
     host._main_zone_selected_pane_keys = []
@@ -2627,6 +2671,10 @@ export class Class_MenuConfig {
       o.geometry = clampMainZoneFloatingGeometry(o.geometry ?? defaultMainZoneFloatingGeometry())
     })
     host._main_zone_occupants = list
+    // sa#566 — le plein écran part avec son volet.
+    if (host._main_zone_maximized_id !== null && !list.some(o => o.id === host._main_zone_maximized_id)) {
+      host._main_zone_maximized_id = null
+    }
     // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
     // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
     // le changement de nature en place et la déduplication mènent tous ici, et un seul ménage
@@ -2831,6 +2879,8 @@ export class Class_MenuConfig {
     // La colonne droite n'existe que si quelque chose y vit ET qu'une zone principale la borde ;
     // un occupant détaché n'y compte pas (cf. mainZoneOccupantsIn).
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('right').length === 0) return tools
+    // sa#566 — un volet en plein écran : la colonne n'est pas dessinée, elle ne réserve rien.
+    if (this.main_zone_maximized_id !== null) return tools
     return mainZoneRightColumnWidthPx(this._host._main_zone_split_ratio) + tools
   }
 
@@ -2841,6 +2891,7 @@ export class Class_MenuConfig {
    */
   public getMainZoneBottomReservedPx(): number {
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('bottom').length === 0) return 0
+    if (this.main_zone_maximized_id !== null) return 0
     return mainZoneBottomBandHeightPx(
       this._host._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX
     )
@@ -2909,6 +2960,9 @@ export class Class_MenuConfig {
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
     // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
     if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
+    // La forme d'une VUE retient qu'elle était en plein écran ; la grande zone, elle, le dit une
+    // fois pour toutes (`main_zone.maximized`), puisqu'un seul volet peut l'être.
+    if (order === undefined && this.main_zone_maximized_id === o.id) entry['maximized'] = true
     return entry
   }
 
@@ -2926,11 +2980,15 @@ export class Class_MenuConfig {
     this._host._main_zone_occupants.forEach((o, order) => {
       occupants[o.id] = this._mainZoneOccupantToJSON(o, order)
     })
-    return {
+    const state: Type_JSON = {
       occupants,
       split_ratio: this._host._main_zone_split_ratio,
       bottom_px: this._host._main_zone_bottom_px
     }
+    // sa#566 — seulement quand un volet est en plein écran : fichier inchangé sinon.
+    const maximized = this.main_zone_maximized_id
+    if (maximized !== null) state['maximized'] = maximized
+    return state
   }
 
   /**
@@ -3020,7 +3078,8 @@ export class Class_MenuConfig {
       geometry,
       figures,
       options,
-      saved_view: saved_view !== '' ? saved_view : undefined
+      saved_view: saved_view !== '' ? saved_view : undefined,
+      maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
 
@@ -3114,6 +3173,10 @@ export class Class_MenuConfig {
       if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
       host._main_zone_occupants = list
     }
+    // sa#566 — le volet en plein écran, s'il est encore là (`setMainZoneMaximized` le vérifie).
+    const maximized = getStringFromJSON(json, 'maximized', '')
+    host._main_zone_maximized_id = (maximized !== '' && host._main_zone_occupants.some(o => o.id === maximized))
+      ? maximized : null
     this._normalizeMainZoneOccupants()
     host._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', host._main_zone_split_ratio)
     host._main_zone_bottom_px = getNumberFromJSON(
