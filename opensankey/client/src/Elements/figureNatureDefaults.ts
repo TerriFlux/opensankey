@@ -77,6 +77,37 @@ export const figureNatureDefault = (nature: string, key: string): unknown =>
   nature ? _defaults[nature]?.[key] : undefined
 
 /**
+ * os#1502 — ET LA PART ELLE-MÊME, pour la même raison, dans l'autre sens.
+ *
+ * Julien, deux captures côte à côte : « le style a bien Valeur visible, mais si je vais sur la
+ * PART elle-même, elle n'a pas Valeur visible — or elle devrait l'avoir puisque le style le dit,
+ * et ce n'est pas une surcharge ».
+ *
+ * Une part résout ses attributs comme un élément : sa surcharge, ses styles, puis la valeur
+ * d'usine d'un ÉLÉMENT. Ce dernier étage est le mauvais — ce que fait une part quand personne ne
+ * dit rien, c'est ce que sa FIGURE fait. Le panneau montrait donc `false` pendant que le secteur
+ * écrivait sa valeur.
+ *
+ * ⚠️ UN STYLE QUI PORTE LA CLÉ EXPLICITEMENT GAGNE, et c'est ce qui rend la règle sûre : le défaut
+ * de nature n'arrive qu'en dernier, exactement là où la valeur d'usine d'élément arrivait.
+ */
+const figurePartElementDefault = (el: unknown, key: string): unknown => {
+  const rec = (typeof el === 'object' && el !== null) ? el as { [k: string]: unknown } : null
+  if (!rec || rec['is_figure_part'] !== true) return undefined
+  const nature = typeof rec['figure_nature'] === 'string' ? rec['figure_nature'] as string : ''
+  if (!nature) return undefined
+  // LA PORTE DU TRACE, ET PAS UNE AUTRE : `Class_PartElement.isAttributeOverloaded` est exactement
+  // ce que `partAspect` interroge pour savoir si la part DIT quelque chose — son sac propre, ou un
+  // style CUSTOM (jamais le style par defaut, pre-rempli des valeurs d'usine d'un noeud, ni une
+  // amorce). Poser la meme question ici fait converger le panneau et le dessin par construction :
+  // ils ne peuvent plus repondre differemment sans que ce soit un vrai desaccord.
+  const said = rec['isAttributeOverloaded']
+  if (typeof said !== 'function') return undefined
+  if ((said as (k: string) => boolean).call(el, key)) return undefined
+  return figureNatureDefault(nature, key)
+}
+
+/**
  * CE QUE MONTRE UN CHAMP D'INSPECTEUR QUAND IL ÉDITE UN STYLE DE PART QUI NE DIT RIEN.
  *
  * `undefined` dans tous les autres cas — le lecteur garde alors la règle d'avant, et aucun autre
@@ -87,6 +118,9 @@ export const figureNatureDefault = (nature: string, key: string): unknown =>
  * qui est ce que la cascade rendra faute de mieux.
  */
 export const figureStyleDefault = (el: unknown, key: string): unknown => {
+  // os#1502 — LA PART ET SON STYLE POSENT LA MÊME QUESTION, et reçoivent la même réponse.
+  const on_part = figurePartElementDefault(el, key)
+  if (on_part !== undefined) return on_part
   const nature = partStyleFigureNature(el)
   if (nature === null || nature === '') return undefined
   const explicit = (el as { isAttributeExplicit?: (k: string) => boolean }).isAttributeExplicit
