@@ -30,6 +30,7 @@ export const resources_template = {
         next: 'Next model',
         group_validated: 'Validated study (published on the website)',
         published_link: 'View the published diagram online',
+        download_xlsx: 'Download the Excel workbook that produced this diagram',
         publication: {
           online: 'Published online',
           open: 'Open the published page',
@@ -285,6 +286,7 @@ export const resources_template = {
         next: 'Modèle suivant',
         group_validated: 'Étude validée (publiée sur le site)',
         published_link: 'Voir le diagramme publié en ligne',
+        download_xlsx: 'Télécharger le classeur Excel qui a produit ce diagramme',
         publication: {
           online: 'Publié en ligne',
           open: 'Ouvrir la page publiée',
@@ -541,6 +543,7 @@ export const resources_template = {
         next: 'Modelo siguiente',
         group_validated: 'Estudio validado (publicado en el sitio web)',
         published_link: 'Ver el diagrama publicado en línea',
+        download_xlsx: 'Descargar el libro de Excel que produjo este diagrama',
         publication: {
           online: 'Publicado en línea',
           open: 'Abrir la página publicada',
@@ -792,6 +795,7 @@ export const resources_template = {
         next: 'Nächstes Modell',
         group_validated: 'Validierte Studie (auf der Website veröffentlicht)',
         published_link: 'Das veröffentlichte Diagramm online ansehen',
+        download_xlsx: 'Die Excel-Arbeitsmappe herunterladen, aus der dieses Diagramm entstanden ist',
         publication: {
           online: 'Online veröffentlicht',
           open: 'Die veröffentlichte Seite öffnen',
@@ -1043,6 +1047,7 @@ export const resources_template = {
         next: 'Modello successivo',
         group_validated: 'Studio validato (pubblicato sul sito)',
         published_link: 'Vedi il diagramma pubblicato online',
+        download_xlsx: 'Scarica la cartella di lavoro Excel che ha prodotto questo diagramma',
         publication: {
           online: 'Pubblicato online',
           open: 'Apri la pagina pubblicata',
@@ -1292,6 +1297,7 @@ export const resources_template = {
         next: '下一个模型',
         group_validated: '已验证的研究（已在网站发布）',
         published_link: '在线查看已发布的图表',
+        download_xlsx: '下载生成此图表的 Excel 工作簿',
         publication: {
           online: '已在线发布',
           open: '打开已发布页面',
@@ -1538,6 +1544,7 @@ export const resources_template = {
         next: '次のモデル',
         group_validated: '検証済みの研究事例（ウェブサイトで公開）',
         published_link: '公開された図をオンラインで見る',
+        download_xlsx: 'この図を作成した Excel ブックをダウンロード',
         publication: {
           online: 'オンラインで公開中',
           open: '公開ページを開く',
