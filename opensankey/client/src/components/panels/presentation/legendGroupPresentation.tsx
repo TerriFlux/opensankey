@@ -30,7 +30,12 @@ import type { Class_DrawingArea } from '../../../types/DrawingArea'
 import { isLegendGroupZoneId } from '../../../Elements/legendIds'
 import { redrawForTagStylePreview } from '../../../Elements/LegendGenerator'
 import { default_font_size } from '../../../css/Theme'
-import type { Type_Presentable } from './openPresentation'
+import { diagramContext, representation_registry } from '../../../Representations/RepresentationRegistry'
+// os#1498 (agent A) — identifiant de la nature « Vue par groupe », posé à côté de
+// `MAIN_ZONE_UNIT_WINDOW_ID` ; c'est OS+ qui l'enregistre, OS ne fait que le citer.
+import { MAIN_ZONE_GROUP_VIEW_ID } from '../../../types/MenuConfig'
+import type { Class_MenuConfig, Type_MainZoneSubject } from '../../../types/MenuConfig'
+import { presentationPanelId, type Type_Presentable } from './openPresentation'
 
 export { isLegendGroupZoneId }
 
@@ -228,4 +233,58 @@ export const renderLegendTagGroupView = (
   }
   container.innerHTML = svg ?? ''
   return () => { container.innerHTML = '' }
+}
+
+// OUVRIR LA VUE DU GROUPE DANS UN VOLET (os#1498) ===================================
+
+/**
+ * La vue de ce groupe peut-elle s'ouvrir dans un VOLET de la grande zone ?
+ *
+ * LA PHOTO CI-DESSUS EST UNE COPIE : on la regarde, on ne la touche pas. Le volet, lui, montre le
+ * diagramme vivant mis en forme par ce seul groupe — nœuds déplaçables, inspecteur, annulation. Ce
+ * n'est pas la même chose, et la photo reste le repli quand le volet n'est pas offert.
+ *
+ * LA GARDE EST CELLE DU « + » DE LA BARRE DU HAUT (`MenuTop`, os#1431), et c'est délibéré : on ne
+ * réécrit pas ici les conditions d'ouverture d'une fenêtre, on interroge le registre.
+ * `representation_registry.list(diagramContext(app_data))` applique déjà, dans cet ordre, le
+ * `gate` de la nature, les capacités du diagramme (`needs`) et — sur une page publiée — les deux
+ * verrous de `isOfferedToReader` : la liste blanche `publish_options.representations` et la clé
+ * booléenne que l'entrée désigne par `publish_option`. Une page publiée qui n'offre pas cette
+ * nature n'a donc pas ce bouton, sans qu'aucun test de mode publié soit écrit ici.
+ *
+ * S'y ajoute la SEULE chose que le registre ne sait pas : il faut une configuration de menus pour
+ * qu'il y ait une grande zone où poser le volet. Sans elle — et sans nature enregistrée, ce qui
+ * est le cas d'OpenSankey seul et du viewer, où OS+ n'est pas là — pas de bouton.
+ */
+export const canOpenTagGroupPane = (app_data: Class_ApplicationData): boolean => {
+  // Le getter est typé non nul mais ne l'est pas avant `createNewMenuConfiguration`
+  // (cf. ApplicationData) : un document hors écran n'en a pas.
+  const mc = app_data.menu_configuration as Class_MenuConfig | undefined
+  if (!mc) return false
+  if (!representation_registry.get(MAIN_ZONE_GROUP_VIEW_ID)) return false
+  return representation_registry.list(diagramContext(app_data))
+    .some(entry => entry.id === MAIN_ZONE_GROUP_VIEW_ID)
+}
+
+/**
+ * Ouvre le volet sur ce groupe et referme la pop-up ; rend l'identifiant de la fenêtre, ou `null`
+ * quand le volet n'est pas offert (cf. `canOpenTagGroupPane`).
+ *
+ * Trois gestes, dans cet ordre, et l'ordre compte : la fenêtre NAÎT d'abord (elle seule donne
+ * l'identifiant sous lequel sa figure se range), le groupe est posé ENSUITE sur sa figure de
+ * diagramme (clé `''`), et la pop-up ne se referme qu'après — sans quoi le clic ressemblerait à un
+ * clic sans effet si l'une des deux écritures échouait.
+ */
+export const openTagGroupPane = (
+  app_data: Class_ApplicationData,
+  group: Class_TagGroup,
+  element_id: string
+): string | null => {
+  if (!canOpenTagGroupPane(app_data)) return null
+  const mc = app_data.menu_configuration
+  const subject: Type_MainZoneSubject = { kind: 'diagram' }
+  const window_id = mc.openMainZoneWindow(subject, MAIN_ZONE_GROUP_VIEW_ID, 'right')
+  mc.setMainZoneWindowOptions(window_id, { tag_group_id: group.id })
+  mc.panels.close(presentationPanelId(element_id))
+  return window_id
 }

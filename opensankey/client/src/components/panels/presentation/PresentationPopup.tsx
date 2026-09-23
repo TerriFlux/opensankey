@@ -31,7 +31,7 @@
 
 import React from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
-import { FaInfoCircle, FaChevronDown, FaChevronRight, FaEye } from 'react-icons/fa'
+import { FaInfoCircle, FaChevronDown, FaChevronRight, FaEye, FaColumns } from 'react-icons/fa'
 
 import type { Class_ApplicationData, Type_ElementAnalysis } from '../../../types/ApplicationData'
 import { default_font_size } from '../../../css/Theme'
@@ -39,7 +39,10 @@ import {
   renderPresentationBlock, presentationBlockLabel, presentationBlockSummary
 } from './PresentationBlockRegistry'
 import type { Type_Presentable } from './openPresentation'
-import { LegendTagGroupBlock, legendTagGroupOf, renderLegendTagGroupView } from './legendGroupPresentation'
+import {
+  LegendTagGroupBlock, legendTagGroupOf, renderLegendTagGroupView,
+  canOpenTagGroupPane, openTagGroupPane
+} from './legendGroupPresentation'
 
 // Blocs de CONTENU (colonne gauche), patron fixe. Les diagrammes (unitaire /
 // analyse) n'y figurent pas : ils sont dans la colonne de droite.
@@ -124,14 +127,17 @@ const ElementAnalysisHost = ({ analysis }: { analysis: Type_ElementAnalysis }) =
 
 /** Bouton d'analyse : icône au-dessus, libellé dessous — même habillage que
  *  les onglets du menu de configuration (`inspector_tab`). */
-const ElementAnalysisButton = ({ icon, label, active, onClick }: {
+const ElementAnalysisButton = ({ icon, label, active, onClick, className }: {
   icon?: React.ReactNode
   label: string
   active: boolean
   onClick: () => void
+  /** Prise de main pour les tests de bout en bout ; absente sur les boutons d'analyse. */
+  className?: string
 }) => (
   <Button
     size='xs'
+    className={className}
     variant={active ? 'inspector_tab_activated' : 'inspector_tab'}
     title={label}
     onClick={onClick}
@@ -203,6 +209,12 @@ export const PresentationPopup = ({ app_data, element }: {
       : app_data.element_analyses_for?.(element as never) ?? [],
     [element, tag_group, app_data, t, app_data.element_analyses_for]
   )
+
+  // os#1498 — LE VOLET, à côté de la photo. La « Vue » ci-contre est une copie : elle se lit, elle
+  // ne se manipule pas. Le bouton ouvre la MÊME mise en forme dans un volet de la grande zone, où
+  // le diagramme est vivant. La garde vit dans `canOpenTagGroupPane` (registre + grande zone) :
+  // sans nature enregistrée — OpenSankey seul, viewer —, il n'y a pas de bouton et la photo reste.
+  const can_open_pane = tag_group !== undefined && canOpenTagGroupPane(app_data)
 
   // Analyse active (null = on montre le contenu). État local : la pop-up ne
   // change pas de contenant, donc pas de risque de remise à zéro intempestive.
@@ -284,6 +296,18 @@ export const PresentationPopup = ({ app_data, element }: {
               onClick={() => setActive(d.id)}
             />
           ))}
+          {/* os#1498 — sous la « Vue », le volet. Même habillage que les autres boutons de la
+              colonne, mais ce n'en est pas un de la même sorte : les autres CHANGENT ce que la
+              pop-up montre, celui-ci ouvre une fenêtre et referme la pop-up. */}
+          {can_open_pane && tag_group !== undefined && (
+            <ElementAnalysisButton
+              className='popup_group_open_pane'
+              icon={<FaColumns />}
+              label={t('MEP.legend_group_open_pane')}
+              active={false}
+              onClick={() => openTagGroupPane(app_data, tag_group, element.id)}
+            />
+          )}
         </Box>
       )}
     </Box>
