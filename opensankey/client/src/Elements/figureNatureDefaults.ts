@@ -104,7 +104,22 @@ const figurePartElementDefault = (el: unknown, key: string): unknown => {
   const said = rec['isAttributeOverloaded']
   if (typeof said !== 'function') return undefined
   if ((said as (k: string) => boolean).call(el, key)) return undefined
+  // os#1503 — L'UNITÉ D'UNE PART SE LIT SUR CE QUE LA FIGURE ÉCRIT, et non au catalogue.
+  //
+  // `value_label_part_unit` est une clé d'ÉLÉMENT : la figure ne la déclare pas, donc le défaut de
+  // nature n'a rien à en dire et l'inspecteur retombait sur celui d'un nœud — « Valeur », pendant
+  // que la couronne dessinait des pourcentages. Ce que la figure fait est pourtant connu : c'est
+  // son `value_label_percent`, stampé sur la part au câblage (`figurePartsWiring`).
+  if (key === 'value_label_part_unit') return partUnitOfPercent(rec['figure_value_percent'])
   return figureNatureDefault(nature, key)
+}
+
+/** Le choix du sélecteur d'unité qui correspond au pourcentage que la figure écrit. */
+const partUnitOfPercent = (percent: unknown): string | undefined => {
+  if (percent === 'total') return 'percent_total'
+  if (percent === 'parent') return 'percent_parent'
+  if (percent === 'none') return 'value'
+  return undefined
 }
 
 /**
