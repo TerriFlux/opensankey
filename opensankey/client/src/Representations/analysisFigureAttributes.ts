@@ -56,6 +56,32 @@ export const pinnedDataTagsAttribute = () => figureAttribute<Type_FigureDataTagP
  * Le volet, lui, ne le montre pas : l'axe se règle dans « Filtres et coordonnées » (os#1402, cf.
  * `AnalysisAppearanceOptions`). Déclarer n'est pas afficher — c'est dire ce que la figure porte.
  */
+/**
+ * 23/09/2026 — OÙ LA COURONNE EST DESCENDUE, quand elle est descendue.
+ *
+ * Le chemin des nœuds traversés depuis le sujet, du plus haut au plus bas ; vide (le défaut) = la
+ * figure regarde le sujet. C'est ce que `interaction_click: 'zoom'` écrit au clic, et ce que le
+ * centre dépile pour remonter.
+ *
+ * DE SORTE 'identity', et c'est ce qu'elle est : ce chemin NOMME des nœuds de CE diagramme. Il n'a
+ * aucun sens dans un style (deux couronnes sur deux nœuds ne sont pas descendues au même endroit),
+ * ni même transposé à une autre figure — c'est la règle que `Type_AttributeSort` pose pour la
+ * racine d'un sunburst, et c'est le même objet.
+ *
+ * SANS INTERFACE (`kind: 'none'`) : on y descend en cliquant, on en remonte par le centre. Un
+ * champ « chemin de nœuds » dans l'inspecteur ne se règle pas, il se subit.
+ *
+ * UNE FABRIQUE, comme `pinnedDataTagsAttribute` et pour la même raison : deux natures qui se
+ * passeraient le même objet de configuration partageraient un jour ce que l'une y écrirait.
+ */
+export const HIERARCHY_FOCUS_KEY = 'hierarchy_focus'
+export const hierarchyFocusAttribute = () => figureAttribute<string[] | undefined>(
+  undefined, 'identity', {
+    en: 'Drilled into', fr: 'Descendu dans', es: 'Profundizado en',
+    de: 'Hineingegangen in', it: 'Sceso dentro', 'zh-CN': '已下钻至', ja: '掘り下げ先'
+  }, undefined, { kind: 'none' }
+)
+
 export const ANALYSIS_ATTRIBUTES: Type_FigureAttributesConfig = {
   [FIGURE_DATA_TAGS_KEY]: pinnedDataTagsAttribute(),
   descriptor: figureAttribute<Type_AnalysisDescriptor | undefined>(undefined, 'navigation', {
@@ -163,6 +189,33 @@ export const SHARED_HONOURS = {
  */
 const DONUT_HONOURS = {
   ...SHARED_HONOURS,
+  // ── 23/09/2026 — LA COURONNE DESCEND LA HIÉRARCHIE, « IN PLACE » ────────────────────────────
+  //
+  // Julien : « je voudrais que la couronne fonctionne comme le sunburst sur la désagrégation des
+  // nœuds, mais au lieu de faire une couronne qui s'étend, le faire in place ; et que le nom des
+  // nœuds puisse se voir en légende ».
+  //
+  // TROIS CLÉS, ET AUCUNE N'EST NEUVE AU CATALOGUE sauf la première : c'est le point du mécanisme
+  // des figures — la couronne PIQUE ce que le disque honorait déjà, sous les mêmes mots et avec
+  // les mêmes traductions. Aucune ligne d'interface n'est écrite pour elles.
+  //
+  //  `parts_hierarchy`   — jusqu'où on descend. 'off' par défaut : le parc enregistré ne bouge pas.
+  //  `legend_levels`     — la légende dit de quel parent chaque part est la coupe. Elle n'a rien à
+  //                        dire sous un seul cran, d'où la condition.
+  //  `interaction_click` — ce que le clic fait EN PLUS de sélectionner. Sans hiérarchie il n'y a
+  //                        nulle part où descendre, et le proposer laisserait croire le contraire.
+  parts_hierarchy: {},
+  legend_levels: {
+    visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && o['parts_hierarchy'] !== 'off'
+  },
+  // `advanced: false` À DESSEIN, là où le disque la laisse sous « Avancé ». Sur un disque, le clic
+  // a toujours eu un effet par défaut et le réglage ne sert qu'à en changer ; ici c'est LE mode de
+  // descente — « un mode drill down à sélectionner quelque part », demande Julien — et un réglage
+  // qu'on ne trouve pas n'existe pas.
+  interaction_click: {
+    advanced: false,
+    visibleIf: (o: Type_Bag) => o['parts_hierarchy'] !== 'off'
+  },
   parts_group_under: { default: 0.5 },
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE.
   //
@@ -202,9 +255,19 @@ export const { socle: BARS_SOCLE, own: BARS_OWN } = splitByCommonHonours(BARS_HO
 // appelle `figureNatureAttributes` sur les mêmes morceaux). Deux constructions parallèles
 // finiraient par différer — et c'est précisément ce que le garde du socle ne verrait pas, puisqu'il
 // lit celles-ci.
+/**
+ * Ce que la COURONNE déclare en plus des clés du catalogue : l'axe et l'épingle comme les barres,
+ * plus l'endroit où elle est descendue — qui n'a de sens que chez elle (les barres ne descendent
+ * dans rien).
+ */
+export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
+  ...ANALYSIS_ATTRIBUTES,
+  [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute()
+}
+
 export const DONUT_ATTRIBUTES: Type_FigureAttributesConfig = {
   ...figureNatureAttributes({ socle: DONUT_SOCLE, own: DONUT_OWN }),
-  ...ANALYSIS_ATTRIBUTES
+  ...DONUT_EXTRA_ATTRIBUTES
 }
 export const BARS_ATTRIBUTES: Type_FigureAttributesConfig = {
   ...figureNatureAttributes({ socle: BARS_SOCLE, own: BARS_OWN }),

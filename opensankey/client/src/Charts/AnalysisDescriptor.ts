@@ -23,9 +23,26 @@
 // secteur par flux, regroupables par fluxTag. `node_children` (sujet nœud) : total
 // des nœuds enfants le long d'une dimension. `flux_children` (sujet flux) : les flux
 // enfant-à-enfant le long d'une dimension de nœud partagée source/cible.
+//
+// 23/09/2026 — `node_children` SAIT DESCENDRE, et c'est la demande de Julien : « que la couronne
+// fonctionne comme le sunburst sur la désagrégation des nœuds ». Deux champs FACULTATIFS, donc
+// aucune migration de fichier — un descripteur qui ne les porte pas décompose d'un cran, comme
+// depuis toujours :
+//   `hierarchy` — jusqu'où on descend (cf. `figureCatalogue.parts_hierarchy`) ;
+//   `focus_id`  — le nœud à la RACINE de la décomposition, quand la figure est descendue dedans
+//                 (drill-down). Absent : le sujet lui-même.
+//
+// Les deux viennent des réglages de la FIGURE, pas de l'inspecteur d'axes : c'est la couronne qui
+// les pose sur le descripteur qu'elle dessine (`analysisOf`). Le panneau « Filtres et coordonnées »
+// ne les écrit ni ne les lit — pour lui, une dimension déployée reste une dimension déployée.
 export type Type_DecomposeSpec =
   | { kind: 'inputs' | 'outputs', group_by_flux_tagg_id?: string }
-  | { kind: 'node_children', dimension_id: string }
+  | {
+    kind: 'node_children',
+    dimension_id: string,
+    hierarchy?: 'off' | 'diagram' | 'leaves',
+    focus_id?: string
+  }
   | { kind: 'flux_children', dimension_id: string }
 
 // Axe non-additif : la valeur du sujet pour chaque tag d'un groupe de data tags,

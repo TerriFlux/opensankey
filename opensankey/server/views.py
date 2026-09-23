@@ -267,6 +267,12 @@ def check_process():
                 # Cause de l'échec ({code, message, details}), quand le thread en a posé une
                 # (SA#249). None sinon : le client affiche alors son message générique.
                 "error": read_process_error(logname),
+                # Format d'ENTRÉE du traitement en cours. Le lancement dit ce
+                # qu'on a tenté ; seule cette réponse dit ce que ça a donné,
+                # et un échec sans le format ne se relit pas. Sert à la couche
+                # hôte (journal d'usage), qui lit la réponse plutôt que l'état
+                # de session interne d'OpenSankey.
+                "input_format": state.get("input_format"),
             }
             json_data = json.dumps(results_dict)
             # trace.logger.debug('dumps')
@@ -1537,6 +1543,57 @@ def templates_index_resolved(source):
         return index
 
 
+# Extensions du fichier de DONNEES d'un modele, testees dans cet ordre pour en
+# deduire le nom de base (l'index declare souvent "x.json" quand le disque ne
+# porte que "x.json.gz").
+TEMPLATE_DATA_SUFFIXES = (".json.gz", ".json")
+
+
+def template_xlsx_sibling(root, file_path):
+    """
+    Chemin relatif du classeur Excel SOURCE d'un modele, ou None s'il n'y en a pas.
+
+    Convention de nommage — "waste_recycling.json.gz" a pour source
+    "waste_recycling.xlsx", depose a cote de lui — plutot qu'une declaration
+    dans l'index : l'index vit dans un submodule (SankeyData), alors qu'une
+    paire posee cote a cote se voit d'un `ls` et suit le modele qu'elle a
+    produit. Deposer le .xlsx suffit a le proposer au telechargement.
+
+    Ce que ca sert : un visiteur qui veut importer SES donnees n'a aucun moyen
+    de deviner le format attendu par le parser. Lui donner le classeur qui a
+    produit le diagramme qu'il regarde, c'est lui donner le format sur un
+    exemple qui marche.
+    """
+    if not (root and file_path):
+        return None
+    relative = file_path.replace("\\", "/")
+    for suffix in TEMPLATE_DATA_SUFFIXES:
+        if relative.endswith(suffix):
+            candidate = relative[: -len(suffix)] + ".xlsx"
+            full_path = safe_join(root, candidate)
+            return candidate if (full_path and os.path.isfile(full_path)) else None
+    return None
+
+
+def templates_with_xlsx(source, index):
+    """Index enrichi, pour chaque modele qui en a un, du chemin de son classeur
+    Excel source (cf. template_xlsx_sibling).
+
+    Pose sur l'index RESOLU seulement : l'index brut reste la liste blanche
+    (templates_declared_assets), et on ne lui ajoute rien.
+    """
+    if index is None or source != "sankeydata":
+        return index
+    root = os.environ.get("SANKEY_DATA")
+    if not root:
+        return index
+    for template in (index.get("templates") or {}).values():
+        sibling = template_xlsx_sibling(root, template.get("file_path"))
+        if sibling:
+            template["xlsx_path"] = sibling
+    return index
+
+
 def external_gallery_asset(source, normalized):
     """Reponse du resolveur externe pour ce chemin, ou None si le chemin n'est
     pas de son ressort (l'appelant poursuit alors sa route disque)."""
@@ -1785,6 +1842,9 @@ def menus_templates():
         # Pas d'index pour cette source (ex. MFAData absent d'un deploiement) :
         # galerie vide plutot qu'une 500, le front n'affiche alors rien.
         data_index = {"categories": [], "templates": {}}
+    # Classeur Excel source, quand il est pose a cote du modele : le front en
+    # fait un bouton de telechargement sur la vignette.
+    data_index = templates_with_xlsx(source, data_index)
     response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
 

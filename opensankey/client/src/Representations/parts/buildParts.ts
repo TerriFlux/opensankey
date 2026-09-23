@@ -55,6 +55,22 @@ export interface Type_PartInput {
   color?: string
   /** Ce que la part désigne. Absent = elle ne désigne rien (secteur de complément). */
   subject?: Type_PartSubject
+  // ── CE QUE LA MONNAIE TRANSPORTE SANS LE DÉPENSER (23/09/2026) ──────────────────────────────
+  //
+  // Une décomposition HIÉRARCHIQUE met dans une même liste des parts venues de niveaux différents
+  // (cf. `decomposeNodeHierarchy`). Ces trois champs disent d'où chacune vient ; ils vont du
+  // décomposeur AU TRACÉ, qui reçoit précisément cette liste (`Type_FigureNatureSpec.draw`).
+  //
+  // ⚠️ CE FICHIER NE LES LIT PAS, et c'est voulu : un élément de part n'a ni profondeur ni parent
+  // — il a une forme, un libellé et une valeur. Les déclarer ici plutôt que de les faire voyager
+  // en douce est le prix honnête du passage ; les oublier les ferait disparaître au premier
+  // `map` qu'on écrirait sans y penser.
+  /** Rang sous la racine de la décomposition. 0 = enfant direct. */
+  depth?: number
+  /** Le nom du parent DESSINÉ, celui que la légende met devant. */
+  parent_label?: string
+  /** Reste-t-il quelque chose à déplier sous cette part ? */
+  has_children?: boolean
 }
 
 export interface Type_FigureParts {

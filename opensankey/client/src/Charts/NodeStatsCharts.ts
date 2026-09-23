@@ -46,6 +46,21 @@ export interface Type_StatSlice {
   // Couleur imposée ; sinon palette catégorielle du module (les graphiques ne
   // reprennent PAS les couleurs du diagramme principal — lisibilité d'abord).
   color?: string
+  // ── CE QUE SEULE UNE DÉCOMPOSITION HIÉRARCHIQUE RENSEIGNE (23/09/2026) ──────────────────────
+  //
+  // Une couronne « in place » met dans UN SEUL anneau des parts venues de niveaux différents : le
+  // secteur « Blé » (petit-fils) voisine « Viande » (fils), parce que l'un est déplié dans le
+  // diagramme et l'autre non. Le tracé ne peut pas le deviner de la valeur ni du nom — d'où ces
+  // deux champs, posés par `decomposeNodeHierarchy` et par personne d'autre.
+  //
+  // ABSENTS PARTOUT AILLEURS, et c'est la garantie : une couronne à un seul cran ne les voit pas,
+  // donc ne change ni d'aspect ni de légende.
+  /** Rang sous la racine de la décomposition. 0 = enfant direct. */
+  depth?: number
+  /** Le nom du parent DESSINÉ, celui que la légende met devant. */
+  parent_label?: string
+  /** Le nœud a-t-il encore des enfants sous lui ? C'est ce que le clic peut déplier. */
+  has_children?: boolean
 }
 
 export interface Type_ChartOptions {
@@ -107,6 +122,26 @@ export interface Type_ChartOptions {
    * couronne sélectionne la part correspondante, et l'inspecteur répond.
    */
   on_part_select?: (part_id: string) => void
+  /**
+   * 23/09/2026 — LE CLIC FAIT AUTRE CHOSE QUE SÉLECTIONNER, quand l'hôte le demande.
+   *
+   * Sélectionner reste la règle de la maison et se fait TOUJOURS (`on_part_select`) ; ceci s'y
+   * ajoute. Le tracé ne décide de rien — il ne sait pas ce qu'un secteur désigne, encore moins ce
+   * que « déplier » veut dire. Il rapporte le geste, et la nature en fait ce qu'elle a déclaré
+   * (déplier le nœud dans le diagramme, ou descendre dedans : cf. `interaction_click`).
+   *
+   * Absent : le clic ne fait que sélectionner, c'est-à-dire le geste de toute couronne enregistrée.
+   */
+  on_part_activate?: (part_id: string) => void
+  /**
+   * 23/09/2026 — LE CENTRE RAMÈNE EN ARRIÈRE, quand la figure est descendue dans un nœud.
+   *
+   * Fourni, le trou devient cliquable et porte une mention (`centre_back_label`). Absent, le
+   * centre est ce qu'il a toujours été : un nom, un total, ou les deux.
+   */
+  on_centre_click?: () => void
+  /** La mention du retour, écrite dans le trou. Traduite par l'appelant. */
+  centre_back_label?: string
   /**
    * os#1463 — LES ÉTIQUETTES SORTIES, POSÉES À LA MAIN : la position d'une étiquette détachée, par
    * identifiant de part, en pixels depuis le centre du dessin. Absente : la place que le tracé lui
@@ -376,8 +411,23 @@ export const drawDonutChart = (
     .innerRadius((inner + radius) / 2).outerRadius((inner + radius) / 2)
 
   const arcs = pie(kept)
+  /**
+   * 23/09/2026 — LE NOM DU NŒUD, TEL QUE LA LÉGENDE ET L'INFO-BULLE L'ÉCRIVENT.
+   *
+   * Julien : « et que le nom des nœuds puisse se voir en légende ».
+   *
+   * Sous une décomposition descendue (`parts_hierarchy`), le même anneau porte des parts venues de
+   * niveaux différents : « Blé » y côtoie « Viande » parce que l'un est déplié dans le diagramme et
+   * l'autre non. Le nom seul ne dit alors plus de quoi la part est la coupe — la légende écrit donc
+   * « Céréales › Blé ». C'est exactement ce que `legend_levels` demande, et le réglage porte déjà
+   * ces mots pour le disque.
+   *
+   * Sous un seul cran, aucune part ne porte de parent : la légende est celle d'hier, au caractère.
+   */
+  const legendLabel = (s: Type_StatSlice): string =>
+    (st.legend_levels && s.parent_label) ? `${s.parent_label} › ${s.label}` : s.label
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
-    `${d.data.label}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
+    `${legendLabel(d.data)}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
   // os#1460 — L'ASPECT DE CHAQUE SECTEUR, le sien s'il en a un, celui de la figure sinon.
   //
@@ -426,10 +476,18 @@ export const drawDonutChart = (
     .attr('stroke-dasharray', d => partDashArray(aspectOf(d.data.id)))
     .attr('filter', d => partShadow(aspectOf(d.data.id), defs))
     .style('cursor', opts.on_part_select ? 'pointer' : 'default')
-  if (opts.on_part_select) {
+  if (opts.on_part_select || opts.on_part_activate) {
     // TOUCHER SÉLECTIONNE, et c'est la règle de toute la maison : on clique un nœud, l'inspecteur
     // montre sa forme, son libellé, sa valeur. Une part est un élément, elle répond pareil.
-    paths.on('click', (_evt, d) => opts.on_part_select?.(d.data.id))
+    //
+    // 23/09/2026 — ET, SI L'HÔTE L'A DEMANDÉ, LE GESTE FAIT AUSSI SON EFFET (déplier, descendre).
+    // Dans cet ordre : on sélectionne d'abord, parce que l'effet peut faire disparaître la part
+    // qu'on vient de toucher (un nœud déplié cède la place à ses enfants) et qu'on veut alors que
+    // l'inspecteur ait eu le temps de la montrer.
+    paths.on('click', (_evt, d) => {
+      opts.on_part_select?.(d.data.id)
+      opts.on_part_activate?.(d.data.id)
+    })
   }
   if (st.interaction_tooltip) paths.append('title').text(slice_title)
 
@@ -860,6 +918,31 @@ export const drawDonutChart = (
   const centre_name = opts.title_fallback ?? ''
   const wants_name = (st.centre_content === 'name' || st.centre_content === 'both') && centre_name !== ''
   const wants_value = st.centre_content === 'value' || st.centre_content === 'both'
+  // 23/09/2026 — LE TROU RAMÈNE EN ARRIÈRE quand la figure est descendue dans un nœud.
+  //
+  // Un disque transparent AVANT le texte : il prend le clic sur toute la surface du trou, y compris
+  // entre les lignes. Le texte qui vient ensuite le laisse passer (`pointer-events: none`).
+  const centre_back = opts.on_centre_click !== undefined && inner >= 12
+  if (centre_back) {
+    g.append('circle')
+      .attr('class', 'node_stats_centre_back')
+      .attr('r', inner)
+      .attr('fill', 'transparent')
+      .style('cursor', 'pointer')
+      .on('click', () => opts.on_centre_click?.())
+      .append('title').text(opts.centre_back_label ?? '')
+    // Le chevron du retour, au pied du trou : c'est le seul signe que le centre est cliquable,
+    // et sans lui personne ne le devine.
+    g.append('text')
+      .attr('class', 'node_stats_centre_back_mark')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('y', inner * 0.58)
+      .attr('font-size', Math.max(9, inner * 0.18))
+      .attr('fill', '#718096')
+      .attr('pointer-events', 'none')
+      .text(`‹ ${opts.centre_back_label ?? ''}`.trim())
+  }
   if ((wants_name || wants_value) && inner >= 12) {
     const value_size = Math.max(11, inner * 0.28)
     // Le nom passe AU-DESSUS du total et plus petit : c'est le total qu'on lit de loin, le nom qui
@@ -869,6 +952,10 @@ export const drawDonutChart = (
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('fill', '#2D3748')
+      // Le texte du centre est DÉCORATIF : il laisse passer le clic vers le disque de retour posé
+      // dessous. Sans cette ligne, le nom écrit au milieu avalait le geste et le trou ne ramenait
+      // en arrière que sur ses bords.
+      .attr('pointer-events', 'none')
     if (wants_name) {
       text.append('tspan')
         .attr('x', 0)
@@ -931,7 +1018,7 @@ export const drawDonutChart = (
     .style('overflow', 'hidden')
     .style('text-overflow', 'ellipsis')
     .style('white-space', 'nowrap')
-    .text(d => d.data.label)
+    .text(d => legendLabel(d.data))
   items.append('span')
     .style('flex', '0 0 auto')
     .style('color', '#718096')

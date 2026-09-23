@@ -57,7 +57,8 @@ import {
 } from './FigureNavigation'
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
-import { sunburstNodeValue } from './SunburstHierarchy'
+import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
+import type { Type_SunburstNode, Type_SunburstSankey } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
 // AFFICHE : un nœud réglé sur « nom du nœud ancêtre » ou sur un gabarit à jetons
 // n'affiche pas son `name`, et la couronne le nommait autrement que le dessin.
@@ -273,6 +274,90 @@ const decomposeNodeChildren = (
     .filter(p => p.value > 0)
 }
 
+/**
+ * 23/09/2026 — LA DÉCOMPOSITION QUI DESCEND, DANS UN SEUL ANNEAU.
+ *
+ * Julien : « je voudrais que la couronne fonctionne comme le sunburst sur la désagrégation des
+ * nœuds, mais au lieu de faire une couronne qui s'étend, le faire in place. »
+ *
+ * ── CE QU'ELLE REND, ET POURQUOI C'EST UNE LISTE PLATE ───────────────────────────────────────
+ *
+ * La FRONTIÈRE de la descendance du sujet : on descend sous un nœud, et ce nœud disparaît derrière
+ * ses enfants. Exactement le geste du diagramme — déplier « Céréales » ne met pas ses enfants À
+ * CÔTÉ de lui, ça le REMPLACE. La liste reste donc plate et additive : elle somme au sujet, ce qui
+ * est la condition pour qu'une couronne dise la vérité.
+ *
+ * C'est là toute la différence avec le disque, qui répond à la même question en AJOUTANT un anneau
+ * par niveau. Les deux lectures sont justes ; celle-ci tient dans la place qu'elle avait.
+ *
+ * ── OÙ ON S'ARRÊTE ───────────────────────────────────────────────────────────────────────────
+ *
+ *  'diagram' — sous un nœud DÉPLIÉ dans le diagramme, et pas sous un nœud replié. La couronne
+ *              montre alors ce que le dessin montre, et le clic qui déplie la fait descendre.
+ *  'leaves'  — jusqu'au bout, quoi que le diagramme montre.
+ *
+ * ── L'ARBRE VIENT DU DISQUE, ET CE N'EST PAS UNE COMMODITÉ ───────────────────────────────────
+ *
+ * `buildSunburstTree` est déjà LA lecture de la hiérarchie du modèle : axes enchaînés d'un treillis
+ * (os#1424), valeur structurelle indépendante de l'agrégation, filtres d'étiquettes appliqués,
+ * cycles coupés, navigation épinglée honorée. En réécrire une seconde ici ferait deux réponses à
+ * « quels sont les enfants de ce nœud », et elles divergeraient — c'est la leçon que ce chantier a
+ * apprise trois fois.
+ *
+ * Régime 'sum' : l'arc d'un parent vaut la somme de ses enfants, donc la frontière somme EXACTEMENT
+ * à la racine, quel que soit le niveau où chaque part s'est arrêtée. Une frontière dont les parts
+ * ne bouclent pas serait une couronne fausse, et une couronne fausse se lit sans se voir.
+ *
+ * Ordre 'model' : le classement est un réglage du GRAPHE (`parts_order`), appliqué par le tracé.
+ */
+const decomposeNodeHierarchy = (
+  node: Class_NodeElement,
+  spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
+  nav: Type_FigureNavigation
+): Type_ChartPart[] => {
+  const sankey = node.sankey as unknown as Type_SunburstSankey
+  // LE FOYER, quand la figure est descendue dedans (drill-down) — et le sujet sinon. Un foyer qui
+  // nomme un nœud disparu n'est pas une erreur à signaler : c'est un réglage périmé, et la figure
+  // revient au sujet plutôt que de se vider.
+  const focus = spec.focus_id
+    ? (node.sankey.nodes_dict[spec.focus_id] as Class_NodeElement | undefined)
+    : undefined
+  const root_node = focus ?? node
+  const tree = buildSunburstTree(sankey, {
+    dimension_id: spec.dimension_id,
+    chain_axes: true,
+    root_ids: [root_node.id],
+    value_mode: 'sum',
+    sort_order: 'model',
+    name_source: 'displayed'
+  }, '', nav)
+  const root = tree?.roots[0]
+  if (!root) return []
+
+  const to_the_leaves = spec.hierarchy === 'leaves'
+  const walk = (
+    sector: Type_SunburstNode, parent_label: string, depth: number
+  ): Type_ChartPart[] => {
+    // ON DESCEND SI, ET SEULEMENT SI, LE DIAGRAMME DESCEND — sauf en 'leaves', qui ne lui demande
+    // rien. `is_disaggregated` est le pont que l'arbre pose déjà entre la figure et le dessin.
+    const descend = sector.children.length > 0 &&
+      (to_the_leaves || sector.is_disaggregated === true)
+    if (descend) return sector.children.flatMap(c => walk(c, sector.label, depth + 1))
+    return [{
+      id: sector.id,
+      label: sector.label,
+      value: sector.value,
+      color: sector.color ?? undefined,
+      depth,
+      parent_label,
+      has_children: sector.children.length > 0
+    }]
+  }
+  return root.children
+    .flatMap(child => walk(child, root.label, 0))
+    .filter(p => p.value > 0)
+}
+
 const decomposeFluxChildren = (
   link: Class_LinkElement,
   dimension_id: string,
@@ -340,7 +425,12 @@ const decomposeSubject = (
       return decomposeNodeFlows(node, spec.kind, group_by, nav)
     }
     if (spec.kind === 'node_children') {
-      return decomposeNodeChildren(node, spec.dimension_id, nav)
+      // La hiérarchie DESCENDUE n'est pas un autre axe : c'est le même, poussé plus bas. Un
+      // descripteur qui ne dit rien (tout le parc enregistré) passe par le chemin d'avant, ligne
+      // pour ligne.
+      return (spec.hierarchy && spec.hierarchy !== 'off')
+        ? decomposeNodeHierarchy(node, spec, nav)
+        : decomposeNodeChildren(node, spec.dimension_id, nav)
     }
     return []
   }

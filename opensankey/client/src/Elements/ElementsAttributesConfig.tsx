@@ -4926,6 +4926,17 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   name_label_inside_horiz: NOT_ON_A_PART,
   value_label_inside_horiz: NOT_ON_A_PART,
 
+  // os#1504 — L'ANGLE DU TEXTE PART AVEC EUX, et pour la meme raison exactement.
+  //
+  // Julien : « tu as laisse l'angle pour l'orientation du texte, et ca n'a pas d'effet ».
+  //
+  // Il etait deja masque sur les figures RONDES (`PLACED_IN_A_BOX_KEYS`, os#1483) ; il restait donc
+  // offert sur les barres, ou AUCUN trace ne le lit — `text_angle` n'apparait nulle part dans les
+  // Charts. C'est la moitie d'une bijection : une surface sans code. Elle part, comme l'orientation
+  // des barres a la meme demande (os#1497).
+  name_label_text_angle: NOT_ON_A_PART,
+  value_label_text_angle: NOT_ON_A_PART,
+
   // ── os#1490 — L'UNITÉ D'UNE PART DE FIGURE, ET PAS CELLE D'UN FLUX ──────────────────────────
   //
   // Julien, capture à l'appui : « le sélecteur d'unité peut pas être le même sur un nœud, un flux,
