@@ -168,6 +168,23 @@ export const PARTS_CONFIG = {
       choice('model', { en: 'Model order', fr: 'Ordre du modèle', es: 'Orden del modelo', de: 'Reihenfolge des Modells', it: 'Ordine del modello', 'zh-CN': '模型顺序', ja: 'モデルの順序' })
     ]
   }),
+  // os#1499 — EMPILER : la question de MISE EN FORME que « Disposer » promettait sans la tenir.
+  //
+  // Julien : « pour les barres, que veut dire ça ? Sur mon cas très simple, déjà ça n’agit pas. »
+  // Le sélecteur des coordonnées règle le régime d’ANALYSE — les flux s’additionnent ou non —, ce
+  // qui ne se voit qu’à l’échelle et au croisement d’un second axe. Empiler, ça se voit.
+  bars_stacked: entry<boolean>(false, 'parts', {
+    en: 'Stack the parts', fr: 'Empiler les parts', es: 'Apilar las partes',
+    de: 'Teile stapeln', it: 'Impilare le parti', 'zh-CN': '堆叠各部分', ja: 'パートを積み上げる'
+  }, {
+    en: 'One bar only, one segment per part — the total height is their sum. Otherwise one bar per part, side by side.',
+    fr: 'Une seule barre, un segment par part — la hauteur totale est leur somme. Sinon, une barre par part, côte à côte.',
+    es: 'Una sola barra, un segmento por parte: la altura total es su suma. Si no, una barra por parte, una al lado de la otra.',
+    de: 'Nur ein Balken, ein Segment je Teil — die Gesamthöhe ist ihre Summe. Sonst ein Balken je Teil, nebeneinander.',
+    it: 'Una sola barra, un segmento per parte: l’altezza totale è la loro somma. Altrimenti una barra per parte, affiancate.',
+    'zh-CN': '只有一根柱子，每个部分一段——总高度是它们的和。否则每个部分一根柱子，并排显示。',
+    ja: '棒は一本だけで、パートごとに一区画。全体の高さはその合計です。そうでなければパートごとに一本、横に並びます。'
+  }),
   parts_color_source: entry<'palette' | 'model'>('palette', 'parts', {
     en: 'Colour of the parts', fr: 'Couleur des parts', es: 'Color de las partes',
     de: 'Farbe der Teile', it: 'Colore delle parti', 'zh-CN': '各部分的颜色', ja: '部分の色'
