@@ -225,6 +225,12 @@ export const analysisPartInputs = (
     // La couleur que le modèle impose, quand il en impose une ; sinon rien, et c'est la palette de
     // la figure qui commande (cf. `parts_color_source`).
     color: part.color,
+    // 23/09/2026 — D'OÙ VIENT LA PART, quand la décomposition est descendue (`parts_hierarchy`).
+    // Recopié tel quel : cet adaptateur dit ce qu'une part DÉSIGNE, il ne juge pas ce qu'elle
+    // porte. Absents sous un seul cran, donc rien ne change pour le parc enregistré.
+    depth: part.depth,
+    parent_label: part.parent_label,
+    has_children: part.has_children,
     subject: resolve(part.id)
   }))
 }
