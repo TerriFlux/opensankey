@@ -31,6 +31,16 @@ export interface Type_FigureChartStyle {
   legend_position: 'right' | 'left' | 'bottom'
   legend_font_size: number
   legend_width: number
+  /**
+   * `legend_levels` — la légende dit DE QUOI chaque part est la coupe.
+   *
+   * Sur une couronne à un seul cran, elle n'a rien à dire de plus que le nom. Sous une
+   * décomposition hiérarchique (`parts_hierarchy`), elle porte le parent dessiné : « Céréales ›
+   * Blé ». C'est ce qui rend la figure lisible quand les secteurs sont devenus trop fins pour
+   * porter leur nom — la demande de Julien du 23/09 (« que le nom des nœuds puisse se voir en
+   * légende »).
+   */
+  legend_levels: boolean
   /** parts_* */
   parts_order: 'value_desc' | 'value_asc' | 'name' | 'model'
   /**
@@ -40,6 +50,14 @@ export interface Type_FigureChartStyle {
   bars_stacked: boolean
   /** 'model' : la couleur que l'objet a dans le diagramme quand la donnée la porte. */
   parts_color_source: 'palette' | 'model'
+  /**
+   * `parts_hierarchy` — JUSQU'OÙ LA DÉCOMPOSITION DESCEND, sans prendre d'anneau de plus.
+   *
+   * 'off' (le dessin d'hier) : les enfants directs de l'axe. 'diagram' : la frontière que le
+   * diagramme dessine — un enfant déplié est remplacé par les siens, DANS LE MÊME ANNEAU.
+   * 'leaves' : jusqu'aux feuilles. Cf. `figureCatalogue.parts_hierarchy`.
+   */
+  parts_hierarchy: 'off' | 'diagram' | 'leaves'
   /** En % du tout ; 0 = ne rien replier par la valeur. */
   parts_group_under: number
   /** Parts au plus ; 0 = sans limite. */
@@ -83,6 +101,18 @@ export interface Type_FigureChartStyle {
   /** scale_factor, en % du cadre. */
   scale_factor: number
   interaction_tooltip: boolean
+  /**
+   * `interaction_click` — CE QUE LE CLIC SUR UNE PART FAIT, en plus de la sélectionner.
+   *
+   * Même clé et mêmes quatre valeurs que sur le disque (`Type_SunburstStyle.click_action`) : c'est
+   * la même question, et deux vocabulaires en feraient deux mécanismes.
+   *
+   * ⚠️ N'AGIT QUE SOUS UNE DÉCOMPOSITION HIÉRARCHIQUE (`parts_hierarchy !== 'off'`). Une couronne
+   * à un seul cran n'a rien où descendre, et faire déplier le diagramme au clic changerait le
+   * geste de tout le parc enregistré. Toucher une part la sélectionne, toujours et partout — c'est
+   * la règle de la maison, et elle ne dépend d'aucun réglage.
+   */
+  interaction_click: 'both' | 'zoom' | 'aggregate' | 'none'
   notes_visible: boolean
 }
 
@@ -98,9 +128,15 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   legend_position: 'right',
   legend_font_size: 12,
   legend_width: 230,
+  // La légende nomme les parts sans dire leur parent : sous un seul cran il n'y en a pas à dire,
+  // et sous une hiérarchie c'est ce qui rend la liste lisible — donc vrai d'office, et sans effet
+  // tant que `parts_hierarchy` vaut 'off'.
+  legend_levels: true,
   parts_order: 'value_desc',
   bars_stacked: false,
   parts_color_source: 'model',
+  // Un seul cran : le dessin d'hier, au pixel.
+  parts_hierarchy: 'off',
   parts_group_under: 0.5,
   parts_max: 20,
   centre_content: 'value',
@@ -129,6 +165,9 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   value_label_percent: 'total',
   scale_factor: 100,
   interaction_tooltip: true,
+  // Déplier dans le diagramme, comme le disque — mais seulement quand il y a où descendre
+  // (cf. `interaction_click`). Sous 'off', qui est le défaut, le clic ne fait que sélectionner.
+  interaction_click: 'aggregate',
   notes_visible: true
 }
 

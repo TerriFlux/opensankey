@@ -17,7 +17,7 @@ import { buildParts } from '../Representations/parts/buildParts'
 import {
   registerAnalysisRepresentations
 } from '../Representations/registerAnalysisRepresentations'
-import { BASE_LABEL_CONFIG, getConfigValues } from './ElementsAttributesConfig'
+import { BASE_LABEL_CONFIG, BASE_SHAPE_CONFIG, getConfigValues } from './ElementsAttributesConfig'
 import type { ElementsType } from './ElementsAttributesConfig'
 import { figureStyleDefault } from './figureNatureDefaults'
 
@@ -110,6 +110,46 @@ describe('os#1501 le style dune part montre le defaut de sa figure', () => {
     part['value_label_is_visible'] = false
 
     expect(luSurLeStyle(part).is_visible).toBe(false)
+
+    figure.document.dispose()
+  })
+
+  it('os#1504 LE FOND : le panneau dit ce que le trace fait, cest-a-dire RIEN', () => {
+    // Julien : « le fond est selectionne alors qu on ne le voit pas ».
+    //
+    // `name_label_background_visible` vaut VRAI au catalogue des elements — un noeud dont on
+    // affiche le cartouche l affiche. Une part, non : le trace ne peint que ce qu elle DEMANDE, et
+    // aucune figure ne declare cette cle.
+    const figure = uneCouronne()
+    const part = figure.by_id['a']
+
+    expect(getConfigValues(
+      [part] as unknown as ElementsType, BASE_SHAPE_CONFIG, 'name_label_background', () => undefined
+    ).visible).toBe(false)
+
+    figure.document.dispose()
+  })
+
+  it('os#1504 ET SI LA PART LE DEMANDE, cest elle qui parle', () => {
+    const figure = uneCouronne()
+    const part = figure.by_id['a'] as unknown as { [k: string]: unknown }
+    part['name_label_background_visible'] = true
+
+    expect(getConfigValues(
+      [part] as unknown as ElementsType, BASE_SHAPE_CONFIG, 'name_label_background', () => undefined
+    ).visible).toBe(true)
+
+    figure.document.dispose()
+  })
+
+  it('os#1504 UN NOEUD garde son cartouche visible : la regle ne vaut que pour une part', () => {
+    // LA CONTRE-VERIFICATION. Sans elle, ce lot eteindrait le fond des etiquettes de tout le parc.
+    const figure = uneCouronne()
+    const node = figure.document.drawing_area.sankey.addNewDefaultNode()
+
+    expect(getConfigValues(
+      [node] as unknown as ElementsType, BASE_SHAPE_CONFIG, 'name_label_background', () => undefined
+    ).visible).toBe(true)
 
     figure.document.dispose()
   })
