@@ -120,6 +120,16 @@ export const natureOf = (el: unknown): Type_ElementNature | null => {
   const rec = asRecord(el)
   if (!rec) return null
   if (isFigurePartElement(rec)) return 'part'
+  // os#1497 — ET UN STYLE DE PART EST UNE PART, pour la question qui nous occupe.
+  //
+  // Julien, capture a l'appui : sur des barres, « il reste des choses qui ne devraient pas etre
+  // la, ca n'a de sens que pour couronne ». Les portees etaient pourtant justes ; c'est la
+  // question qui ne l'etait pas. L'inspecteur, en portee STYLES, ne tient plus l'element mais le
+  // STYLE qu'il edite — un objet sans nature, donc « recoit tout ». La bande Styles d'une part,
+  // livree la veille (os#1495), a donc rouvert d'un coup le catalogue entier.
+  //
+  // Un style de part, lui, SAIT de quoi il est le style : son identifiant le dit.
+  if (partStyleFigureNature(rec) !== null) return 'part'
   if (isLinkLikeElement(rec)) return 'link'
   if ('input_links_dict' in rec) return 'node'
   if ('attached_node' in rec) return 'container'
@@ -136,7 +146,35 @@ export const natureOf = (el: unknown): Type_ElementNature | null => {
 export const figureNatureOf = (el: unknown): string => {
   const rec = asRecord(el)
   const nature = rec?.['figure_nature']
-  return typeof nature === 'string' ? nature : ''
+  if (typeof nature === 'string' && nature !== '') return nature
+  // os#1497 — le style de part porte la sienne dans son nom (cf. `partStyleFigureNature`).
+  return partStyleFigureNature(rec) ?? ''
+}
+
+/**
+ * os#1497 — LA FIGURE DONT UN STYLE EST LE STYLE, lue sur son identifiant.
+ *
+ * Un style de part n'est pas un element : il n'a ni flux, ni parent, ni `is_figure_part`. Mais il
+ * y en a QUATRE et ils sont nommes — l'etage generique, et un par nature (os#1462). Editer le
+ * style des barres ne doit pas offrir l'orientation radiale, et editer le generique doit tout
+ * offrir : il sert les trois figures a la fois.
+ *
+ * Rend `null` pour tout le reste — un style de noeud, un objet quelconque —, ce qui laisse la
+ * reponse d'avant : pas de nature, donc tout.
+ *
+ * ⚠️ LES QUATRE NOMS SONT RECOPIES ICI, et c'est delibere : les importer depuis `ElementStyle`
+ * refermerait le cycle Element ↔ ElementsAttributesConfig ↔ ce module (cf. l'en-tete de
+ * `natureOf`, meme raison que la detection structurelle). Un test tient les deux listes ensemble,
+ * et rougit le jour ou une cinquieme nature s'ajoute d'un seul cote.
+ */
+export const partStyleFigureNature = (el: unknown): string | null => {
+  const id = asRecord(el)?.['id']
+  if (typeof id !== 'string') return null
+  if (id === 'FigurePartStyle') return ''
+  if (id === 'DonutPartStyle') return 'donut'
+  if (id === 'BarPartStyle') return 'bars'
+  if (id === 'SunburstPartStyle') return 'sunburst'
+  return null
 }
 
 /**

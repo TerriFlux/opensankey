@@ -4906,7 +4906,15 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
 
   // L'étiquette DÉTACHÉE, même raisonnement : c'est le NOM qui sort de sa part. La valeur le suit
   // (elle est écrite dans le même texte, ou juste dessous), le stock et l'icône n'en ont pas.
-  name_label_callout: ONLY_A_PART,
+  //
+  // os#1497 — ET SEULEMENT DANS UN ROND, comme l'orientation. Julien, sur des barres : « il reste
+  // des choses qui ne devraient pas être là, ça n'a de sens que pour couronne. »
+  //
+  // Il a raison deux fois : « détacher » répond à un problème de ROND — un secteur étroit n'a pas
+  // la place d'écrire son nom dedans, et le trait de rappel va le poser dehors. Une barre n'a pas
+  // ce problème : son nom est DÉJÀ dehors, sous l'axe. Et le tracé le dit aussi — `drawBarChart`
+  // ne lit pas `label_callout` et ne dessine aucun trait de rappel : la case était morte.
+  name_label_callout: { ...ONLY_A_PART, figures: { only: ['donut', 'sunburst'] } },
 
   // os#1491 — « DEDANS » NE SE DIT QU'UNE FOIS SUR UNE PART, et c'est `inside_vert` qui le dit.
   //
