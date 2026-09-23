@@ -785,6 +785,12 @@ export class Class_ApplicationData {
   protected _views_order: string[] = []
   public get views_order() { return this._views_order }
 
+  /**
+   * sa#566 — La vue qu'une bascule en cours doit ouvrir « à côté » : son volet se pose sans que
+   * celui de la vue quittée se ferme (cf. `openViewBeside`). Relu, puis effacé, par la bascule.
+   */
+  protected _open_view_beside: string | null = null
+
   // Affiche le Sankey maître comme une entrée à part entière dans la liste des vues
   // (sélecteur topbar + table de config). Par défaut masqué. Libellé éditable = _master_view_name.
   protected _show_master_in_views: boolean = false
@@ -1953,6 +1959,8 @@ export class Class_ApplicationData {
    * `requestViewChange`) ; `false` = le chemin programmatique, strictement synchrone.
    */
   public activateDashboard(id: string, interactive: boolean = true): void | Promise<void> {
+    // sa#566 — les volets des vues sont reversés AVANT que le tableau de bord remplace la grille.
+    this.captureSavedViewWindows()
     const dashboards = this.menu_configuration.dashboards
     const switchTo = (view_id: string): void | Promise<void> =>
       interactive ? this.requestViewChange(view_id) : this.setCurrentView(view_id)
@@ -2076,6 +2084,100 @@ export class Class_ApplicationData {
 
   public deleteDashboard(id: string): boolean {
     return this.menu_configuration.dashboards.remove(id)
+  }
+
+  // UNE VUE EST UN VOLET ENREGISTRÉ (sa#566) =============================================
+  //
+  // Une vue et un volet sont le même objet ; la seule différence est qu'une vue est enregistrée
+  // dans le fichier, là où un volet reste éphémère. La grande zone porte la moitié « volet » du
+  // lien (`Type_MainZoneOccupant.saved_view`), le document la moitié « vue »
+  // (`Type_ViewEntry.window`). Les gestes qui CRÉENT ou suppriment une vue sont d'OpenSankey+ (le
+  // viewer ne sait pas éditer de vues) : ils sont déclarés ici, et inertes.
+
+  /** OpenSankey+ : ce document sait-il enregistrer un volet comme vue ? */
+  public get can_save_window_as_view(): boolean { return false }
+
+  /**
+   * OpenSankey+ : fait du volet `occupant_id` une vue nommée `name`, sans rien changer à l'écran.
+   * Rend l'identifiant de la vue, ou `null` si le document ne sait pas le faire.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public saveWindowAsView(occupant_id: string, name: string): string | null { return null }
+
+  /** OpenSankey+ : le volet cesse d'être une vue ; il reste ouvert, devenu éphémère. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public unsaveWindowView(occupant_id: string): void { }
+
+  /**
+   * Reverse dans les vues l'état de leurs volets : celui des volets OUVERTS, et la note laissée par
+   * ceux qu'on a fermés (`takeSavedWindowSnapshots`). Appelé avant d'écrire le fichier et à chaque
+   * bascule de vue : c'est ce qui fait qu'une vue retrouve son volet tel qu'on l'a quitté — le
+   * statut d'une vue est vivant, on ne la « met pas à jour » à la main.
+   */
+  public captureSavedViewWindows(): void {
+    const mc = this.menu_configuration
+    if (!mc || !this.is_main) return
+    Object.entries(mc.takeSavedWindowSnapshots()).forEach(([view_id, window]) => {
+      const view = this._views[view_id]
+      if (view) view.window = window
+    })
+    mc.main_zone_occupants.forEach(o => {
+      if (!o.saved_view) return
+      const view = this._views[o.saved_view]
+      const window = mc.mainZoneWindowToJSON(o.id)
+      if (view && window) view.window = window
+    })
+  }
+
+  /**
+   * LA BASCULE DE VUE POSE LE VOLET DE LA VUE — appelée par `ViewsReader.applyViewChange`, une fois
+   * la nouvelle vue courante.
+   *
+   *  - UNE À LA FOIS : le volet de la vue quittée se ferme (elle reste dans la liste, et garde ce
+   *    volet pour la prochaine fois) — sauf s'il est le diagramme, qui ne se ferme pas, ou si la
+   *    vue d'arrivée s'ouvre « à côté » (`openViewBeside`).
+   *  - Une vue ÉPHÉMÈRE qu'on quitte est oubliée : on l'avait gardée le temps de la regarder.
+   *  - Le volet de la vue d'arrivée se pose à sa place, ou reprend la main s'il est déjà ouvert.
+   *    Une vue sans volet est le diagramme de la fenêtre principale : rien à poser.
+   */
+  public applySavedViewWindowsOnSwitch(prev_id: string, id: string): void {
+    const mc = this.menu_configuration
+    const beside = this._open_view_beside === id
+    this._open_view_beside = null
+    if (!mc || !this.is_main) return
+    this.captureSavedViewWindows()
+    if (prev_id !== id) {
+      const prev_window = beside ? undefined : mc.mainZoneOccupantOfSavedView(prev_id)
+      if (prev_window && prev_window.id !== MAIN_ZONE_CANVAS_ID) mc.hideMainZoneOccupant(prev_window.id)
+      if (this._views[prev_id]?.ephemeral) this.forgetEphemeralView(prev_id)
+    }
+    const window = this._views[id]?.window
+    if (!window) return
+    const open = mc.mainZoneOccupantOfSavedView(id)
+    if (open) mc.main_zone_active_id = open.id
+    else mc.openMainZoneWindowFromJSON(window, id)
+  }
+
+  /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
+  protected forgetEphemeralView(id: string): void {
+    delete this._views[id]
+    const at = this._views_order.indexOf(id)
+    if (at >= 0) this._views_order.splice(at, 1)
+  }
+
+  /**
+   * « OUVRIR À CÔTÉ » : la vue devient courante et son volet se pose sans fermer celui de la vue
+   * quittée. Une feuille n'a qu'un état de lecture à la fois : les deux volets montrent donc celui
+   * de la vue d'arrivée, chacun avec sa nature et ses réglages.
+   */
+  public openViewBeside(id: string): void | Promise<void> {
+    if (!this._views[id]) return
+    if (id === this._current_view_id) {
+      this.applySavedViewWindowsOnSwitch(id, id)
+      return
+    }
+    this._open_view_beside = id
+    return this.requestViewChange(id)
   }
 
   // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
