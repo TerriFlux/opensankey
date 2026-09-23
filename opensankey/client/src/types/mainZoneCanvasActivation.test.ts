@@ -1,5 +1,6 @@
 import { Class_ApplicationData } from './ApplicationData'
 import { MAIN_ZONE_CANVAS_ID } from './MenuConfig'
+import type { Class_Tag } from './Tag'
 import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerprint'
 import { buildTagGroupViewDocument } from '../Representations/TagGroupViewRepresentation'
 
@@ -62,7 +63,7 @@ describe('sa#563 une zone secondaire ne parle pas pour le canevas principal', ()
     // Un groupe d'étiquettes, pour que la vue ait quelque chose à montrer.
     const sankey = app.drawing_area.sankey
     const groupe = sankey.addNodeTagGroup('origine', 'Origine', false)
-    const local = groupe.addTag('Local', 'local')
+    const local = groupe.addTag('Local', 'local') as Class_Tag
     sankey.nodes_list[0].addTag(local)
     groupe.use_colors = true
 
