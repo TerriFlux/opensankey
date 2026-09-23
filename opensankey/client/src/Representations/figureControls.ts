@@ -155,7 +155,10 @@ export const figureControlsOf = (
     }))
     // Les choix du MODÈLE sont résolus maintenant : un axe ajouté au diagramme apparaît sans
     // qu'aucune déclaration ne bouge.
-    const model_choices = ui?.choicesOf ? ui.choicesOf(ctx) : undefined
+    // os#1498 — avec LES RÉGLAGES EFFECTIFS de la figure : une liste peut dépendre d'une autre
+    // clé de la même figure (les étiquettes du groupe choisi). Le sac est déjà là, `visibleIf`
+    // le reçoit depuis os#1425 ; on le passe aussi aux choix.
+    const model_choices = ui?.choicesOf ? ui.choicesOf({ ...ctx, options }) : undefined
     const choices = declared_choices ?? model_choices
     const kind = controlKindOf(ui?.kind, attr.default, !!choices && choices.length > 0)
     if (kind === 'none') return

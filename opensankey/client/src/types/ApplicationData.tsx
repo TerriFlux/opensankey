@@ -39,7 +39,7 @@ import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import {
   Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES,
-  mainZoneSubjectUsesOwnWindowId, mainZoneSubjectSheet, mainZoneSubjectView, MAIN_ZONE_CANVAS_ID
+  mainZoneOccupantUsesOwnWindowId, mainZoneSubjectSheet, mainZoneSubjectView, MAIN_ZONE_CANVAS_ID
 } from '../types/MenuConfig'
 // os#1482 — les scènes (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
@@ -3599,8 +3599,10 @@ export class Class_ApplicationData {
       // dans l'adresse y mettrait un nom qui ne désigne aucune représentation, et une session
       // neuve en ferait une fenêtre fantôme. Le prédicat du modèle dit lequel est lequel : une
       // fenêtre garde l'identifiant de sa représentation TANT QU'ELLE n'a pas de sujet propre.
+      // os#1498 — LE JUGE EST L'OCCUPANT, pas son seul sujet : une nature `allow_many` porte un
+      // identifiant propre `w_N` avec un sujet diagramme, et n'a rien à faire dans `rep`.
       const shown = mc.main_zone_occupants
-        .filter(o => !mainZoneSubjectUsesOwnWindowId(o.subject))
+        .filter(o => !mainZoneOccupantUsesOwnWindowId(o))
         .map(o => URL_MAIN_ZONE_SHORT_NAMES[o.id] ?? o.id)
       if (shown.join(',') !== 'diagram') {
         params.set('rep', shown.join(','))

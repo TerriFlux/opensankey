@@ -3,9 +3,13 @@ import type { Class_Tag } from './Tag'
 import type { Class_ElementStyle } from '../Elements/Element'
 import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerprint'
 import {
-  findLegendTagGroup, isLegendGroupZoneId, renderLegendTagGroupView
+  findLegendTagGroup, isLegendGroupZoneId, renderLegendTagGroupView,
+  canOpenTagGroupPane, openTagGroupPane
 } from '../components/panels/presentation/legendGroupPresentation'
 import { presentationPanelId } from '../components/panels/presentation/openPresentation'
+import { representation_registry } from '../Representations/RepresentationRegistry'
+// os#1498 (agent A) — la nature « Vue par groupe » de la grande zone.
+import { MAIN_ZONE_GROUP_VIEW_ID } from './MenuConfig'
 
 /**
  * SA#551 — la légende range les groupes du plus prioritaire au moins prioritaire ; cliquer le nom
@@ -273,6 +277,70 @@ describe('SA#551 — survol', () => {
     expect(c.d3_selection?.attr('opacity')).toBe('0.1')
     hover(host, app, 'legend-tag-fiab-robuste', 'mouseout')
     expect(c.d3_selection?.attr('opacity')).toBe('')
+  })
+})
+
+/**
+ * os#1498 — la photo de la pop-up se LIT ; le volet, lui, montre le diagramme VIVANT mis en forme
+ * par ce seul groupe. Le bouton n'apparaît que si la nature est enregistrée (OS+) et offerte à ce
+ * document-ci ; sinon la photo reste le seul chemin, exactement comme avant.
+ */
+describe('os#1498 — ouvrir la vue du groupe dans un volet', () => {
+  // `as never` : `allow_many` arrive avec l agent A de os#1498, ce test doit compiler quel que
+  // soit l ordre des merges (même précaution que figureStyles.test.ts pour `attributes`).
+  const registerGroupView = (extra: { [k: string]: unknown } = {}) =>
+    representation_registry.register({
+      id: MAIN_ZONE_GROUP_VIEW_ID,
+      scale: 'diagram',
+      order: 40,
+      allow_many: true,
+      label: () => 'Vue par groupe',
+      draw: () => undefined,
+      ...extra
+    } as never)
+
+  afterEach(() => { representation_registry.unregister(MAIN_ZONE_GROUP_VIEW_ID) })
+
+  it('sans nature enregistree, pas de bouton : la photo reste le seul chemin', () => {
+    const { app, source } = makeLegend(false)
+    expect(representation_registry.get(MAIN_ZONE_GROUP_VIEW_ID)).toBeUndefined()
+    expect(canOpenTagGroupPane(app)).toBe(false)
+    const before = app.menu_configuration.main_zone_occupants.length
+    expect(openTagGroupPane(app, source as never, 'legend-group-source')).toBeNull()
+    expect(app.menu_configuration.main_zone_occupants.length).toBe(before)
+  })
+
+  it('avec la nature enregistree, le volet naît sur le diagramme et porte CE groupe', () => {
+    registerGroupView()
+    const { host, app, source } = makeLegend(false)
+    expect(canOpenTagGroupPane(app)).toBe(true)
+    // La pop-up est ouverte par le vrai chemin du clic : c'est elle qui doit céder la place.
+    click(host, app, 'legend-group-source')
+    expect(popupMode(app, 'legend-group-source')).toBe('popup')
+
+    const mc = app.menu_configuration
+    const window_id = openTagGroupPane(app, source as never, 'legend-group-source')
+    expect(window_id).not.toBeNull()
+    const occupant = mc.mainZoneOccupantById(window_id as string)
+    expect(occupant).toBeDefined()
+    expect(occupant?.subject.kind).toBe('diagram')
+    expect(occupant?.representation).toBe(MAIN_ZONE_GROUP_VIEW_ID)
+    // Le groupe est posé sur la figure de diagramme de CETTE fenêtre (clé '')
+    expect(mc.figureOf(window_id as string, '').attributes.tag_group_id).toBe(source.id)
+    // ... et la pop-up s'est refermée derrière elle
+    expect(popupMode(app, 'legend-group-source')).not.toBe('popup')
+  })
+
+  it('page publiee qui n offre pas la nature : pas de bouton, et il revient si elle l offre', () => {
+    registerGroupView({ publish_option: 'unitary' })
+    const { app, source } = makeLegend(true)
+    expect(app.is_static).toBe(true)
+    expect(app.publish_options.unitary).toBe(false)
+    expect(canOpenTagGroupPane(app)).toBe(false)
+    expect(openTagGroupPane(app, source as never, 'legend-group-source')).toBeNull()
+    // La garde est celle du registre : la page qui offre la nature retrouve le bouton.
+    app.publish_options.unitary = true
+    expect(canOpenTagGroupPane(app)).toBe(true)
   })
 })
 

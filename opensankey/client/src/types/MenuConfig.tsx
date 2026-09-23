@@ -177,8 +177,12 @@ export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 
  * barre du haut, le paramètre d'URL `rep` et les accesseurs de compatibilité. Une fenêtre à
  * sujet ÉLÉMENT a un id propre (`w_N`) — on peut en ouvrir plusieurs sur la même
  * représentation, épinglées sur des objets différents ; une fenêtre à sujet DIAGRAMME qui nomme
- * une AUTRE FEUILLE aussi, pour la même raison (os#1385 lot 0). Cf.
- * `mainZoneSubjectUsesOwnWindowId`, seul juge de cette distinction.
+ * une AUTRE FEUILLE aussi, pour la même raison (os#1385 lot 0) ; et, depuis os#1498, une fenêtre
+ * dont la NATURE déclare `allow_many` — plusieurs vues de groupe sur la même feuille, une par
+ * groupe d'étiquettes regardé. Deux juges, et il faut prendre le bon :
+ * `mainZoneSubjectUsesOwnWindowId` avant qu'une fenêtre existe (on n'a qu'un sujet),
+ * `mainZoneOccupantUsesOwnWindowId` dès qu'on tient l'occupant — LUI SEUL voit le troisième cas,
+ * dont le sujet est un diagramme comme les autres.
  */
 export type Type_MainZoneOccupant = {
   id: string
@@ -225,13 +229,51 @@ export const mainZoneSubjectView = (s: Type_MainZoneSubject): string =>
  * Le cas SANS feuille, lui, ne bouge pas d'un iota, et c'est délibéré : c'est l'invariant que
  * lisent la barre du haut, le paramètre d'URL `rep` et les accesseurs de compatibilité
  * (`main_zone_show_spreadsheet`…), qui désignent tous une fenêtre par son identifiant de
- * registre. Un seul prédicat pour toute la règle, parce qu'elle se relit à quatre endroits
- * (ouverture, normalisation, changement de nature, état d'URL) et qu'ils DOIVENT s'accorder :
- * si l'un d'eux croyait qu'une fenêtre de feuille est nommée par sa représentation, il
- * l'écraserait avec le canevas de la feuille courante.
+ * registre. La règle se relit à quatre endroits (ouverture, normalisation, changement de nature,
+ * état d'URL) et ils DOIVENT s'accorder : si l'un d'eux croyait qu'une fenêtre de feuille est
+ * nommée par sa représentation, il l'écraserait avec le canevas de la feuille courante.
+ *
+ * os#1498 — CE PRÉDICAT NE VOIT QUE LE SUJET, et ne suffit donc plus à lui seul : une fenêtre de
+ * nature `allow_many` a un sujet diagramme de la feuille courante ET un identifiant propre. Il
+ * reste le juge de L'OUVERTURE, où il n'y a encore qu'un sujet ; partout où l'on tient une
+ * fenêtre, c'est `mainZoneOccupantUsesOwnWindowId` qui tranche.
  */
 export const mainZoneSubjectUsesOwnWindowId = (s: Type_MainZoneSubject): boolean =>
   s.kind !== 'diagram' || mainZoneSubjectSheet(s) !== ''
+
+/**
+ * LA GRAPHIE d'un identifiant propre — `w_` suivi du rang du compteur —, en un seul endroit.
+ *
+ * Elle n'était qu'une convention d'écriture (`w_${seq}`, relue à la volée pour réaligner le
+ * compteur à l'ouverture d'un fichier). Depuis os#1498 elle DÉCIDE : c'est à elle qu'on reconnaît
+ * une fenêtre à identifiant propre dont le sujet, lui, ne dit rien (cf.
+ * `mainZoneOccupantUsesOwnWindowId`). Deux graphies divergentes feraient prendre une telle fenêtre
+ * pour une fenêtre nommée par sa représentation, et la normalisation lui donnerait `w_N` pour
+ * nature.
+ */
+const OWN_MAIN_ZONE_WINDOW_ID = /^w_(\d+)$/
+/** Cet identifiant est-il un identifiant PROPRE (`w_N`), plutôt qu'un id du registre ? */
+export const isOwnMainZoneWindowId = (id: string): boolean => OWN_MAIN_ZONE_WINDOW_ID.test(id)
+
+/**
+ * os#1498 — CETTE FENÊTRE-CI A-T-ELLE UN IDENTIFIANT PROPRE ? LE SEUL JUGE QUAND ON TIENT
+ * L'OCCUPANT.
+ *
+ * `mainZoneSubjectUsesOwnWindowId` ne voit que le SUJET, et c'était assez tant que le sujet
+ * suffisait à trancher (élément, ou diagramme dépaysé sur une autre feuille). Une nature
+ * `allow_many` casse cette équivalence : son sujet est un diagramme sur la feuille courante — le
+ * prédicat de sujet répond donc « non » — alors que la fenêtre porte bel et bien un `w_N`, parce
+ * qu'on peut en ouvrir plusieurs sur cette même nature (cf. `Type_RepresentationEntry.allow_many`).
+ *
+ * D'où ce second prédicat, qui lit aussi l'IDENTIFIANT. Il ne dit jamais « non » là où celui du
+ * sujet dit « oui » : c'est un sur-ensemble, et aucune fenêtre d'aujourd'hui ne change de camp.
+ * Partout où un occupant est sous la main — normalisation, changement de nature, état d'URL —,
+ * c'est lui qu'on interroge ; le prédicat de sujet reste pour les décisions qui se prennent AVANT
+ * qu'une fenêtre existe (l'ouverture, où il n'y a encore qu'un sujet et une nature).
+ */
+export const mainZoneOccupantUsesOwnWindowId = (
+  o: { id: string, subject: Type_MainZoneSubject }
+): boolean => mainZoneSubjectUsesOwnWindowId(o.subject) || isOwnMainZoneWindowId(o.id)
 
 /**
  * os#1387 (10/09/2026) — LA CLÉ DE LA VIGNETTE de rang `i` d'un sujet `elements`.
@@ -448,6 +490,23 @@ export const MAIN_ZONE_JSON_ID = 'os.repr.json'
 // os#1387 — la représentation « Unit. » d'ÉLÉMENT (OS+), qui remplace le panneau unitaire à
 // hôte externe. Nommée ici pour que la grande zone sache y rediriger les anciens appels.
 export const MAIN_ZONE_UNIT_WINDOW_ID = 'osp.repr.unit'
+// os#1498 — la « Vue par groupe » (OS+) : le diagramme mis en forme par UN SEUL groupe
+// d'étiquettes, dans un volet. Nommée ici, comme l'unitaire, parce que deux couches qui ne se
+// connaissent pas la citent — OS+ l'enregistre, et la fiche d'un groupe (OS) l'ouvre quand elle
+// est là. C'est la première nature d'échelle DIAGRAMME à déclarer `allow_many` : plusieurs
+// fenêtres peuvent la porter sur la même feuille, une par groupe regardé.
+export const MAIN_ZONE_GROUP_VIEW_ID = 'osp.repr.group_view'
+/**
+ * CETTE NATURE ACCEPTE-T-ELLE PLUSIEURS FENÊTRES SUR LA FEUILLE COURANTE ?
+ *
+ * Lu au registre, et SEULEMENT à l'ouverture (cf. `openMainZoneWindow`) : ce que la réponse
+ * décide — un identifiant propre `w_N` — est ensuite porté par la fenêtre elle-même et persisté.
+ * Une nature inconnue (module non chargé, fichier plus récent) répond « non », donc le
+ * comportement d'aujourd'hui : on ne fabrique pas une fenêtre supplémentaire au nom d'une nature
+ * dont on ne sait rien.
+ */
+export const representationAllowsMany = (representation: string): boolean =>
+  representation_registry.get(representation)?.allow_many === true
 // Noms courts des quatre occupants historiques dans le paramètre d'URL `rep` (sa#1354) :
 // les adresses déjà partagées les portent, et un id de registre y serait moins lisible.
 export const URL_MAIN_ZONE_SHORT_NAMES: { [id: string]: string } = {
@@ -1171,11 +1230,19 @@ export class Class_MenuConfig {
    * fenêtre NEUVE à id propre, pour pouvoir en avoir plusieurs sur la même représentation —
    * épinglées sur des objets différents, ou pointées sur des feuilles différentes (os#1385
    * lot 0 : le canevas de la feuille B à côté de celui qu'on édite). Rend l'id de la fenêtre.
+   *
+   * os#1498 — TROISIÈME CAS D'IDENTIFIANT PROPRE : LA NATURE LE DEMANDE. Un sujet diagramme sur
+   * la feuille courante suffisait à dire « une seule fenêtre, nommée par sa représentation » tant
+   * que toute nature de cette échelle montrait LE document. Une nature qui déclare `allow_many`
+   * montre le document SOUS UN ANGLE que sa figure porte — le groupe d'étiquettes de la vue par
+   * groupe —, et deux angles côte à côte sont l'usage même : un id de registre ne peut pas nommer
+   * deux fenêtres, elle rejoint donc les fenêtres d'élément. Le registre n'est consulté QU'ICI
+   * (cf. `representationAllowsMany`) ; tout ce qui suit lit l'identifiant, pas la nature.
    */
   public openMainZoneWindow(
     subject: Type_MainZoneSubject, representation: string, place?: Type_MainZonePlace
   ): string {
-    if (!mainZoneSubjectUsesOwnWindowId(subject)) {
+    if (!mainZoneSubjectUsesOwnWindowId(subject) && !representationAllowsMany(representation)) {
       this.showMainZoneOccupant(representation, place)
       return representation
     }
@@ -1221,7 +1288,11 @@ export class Class_MenuConfig {
     // Jeté AVANT la mutation : dans la branche « remplacement en place » l'occupant change d'id,
     // et ses figures resteraient sinon indexées sous l'ancien — orphelines et persistées.
     this._dropFigures(id)
-    if (mainZoneSubjectUsesOwnWindowId(o.subject)) {
+    // os#1498 — LE JUGE EST L'OCCUPANT, PAS SON SUJET. Une fenêtre de nature `allow_many` a un
+    // sujet diagramme sans feuille mais un identifiant propre : la traiter par le remplacement en
+    // place la rebaptiserait du nom de sa nouvelle nature, et deux vues de groupe qui changent
+    // pour la même nature fusionneraient en une — exactement le piège d'os#1385 lot 0.
+    if (mainZoneOccupantUsesOwnWindowId(o)) {
       o.representation = representation
     } else if (this.isMainZoneOccupant(representation)) {
       this._host._main_zone_occupants = this._host._main_zone_occupants.filter(x => x.id !== id)
@@ -2131,13 +2202,21 @@ export class Class_MenuConfig {
    * fenêtre canevas sur une AUTRE FEUILLE, dont l'identifiant `w_N` ne nomme aucune
    * représentation du registre (os#1385 lot 0). Les recréer depuis la liste d'identifiants les
    * transformerait en fenêtres diagramme vides sur une nature inconnue.
+   *
+   * os#1498 — UNE FENÊTRE DE NATURE `allow_many` EST DE CELLES-LÀ, et le prédicat d'OCCUPANT est
+   * ce qui le dit : son sujet est un diagramme de la feuille courante, seul son `w_N` la trahit.
+   * Symétriquement, un `w_N` qui figurerait dans la liste donnée est IGNORÉ — il ne nomme aucune
+   * représentation, et le recréer fabriquerait une fenêtre fantôme sans rien à dessiner. Le cas
+   * n'arrive que d'une adresse écrite par une version qui l'y mettait ; la fenêtre qu'il désigne,
+   * si elle est encore là, est conservée plus bas avec les autres.
    */
   public setMainZoneOccupantIds(ids: string[]): void {
     const host = this._host
     const kept = new Map(host._main_zone_occupants.map(o => [o.id, o]))
-    const own_id_windows = host._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
+    const own_id_windows = host._main_zone_occupants.filter(mainZoneOccupantUsesOwnWindowId)
     host._main_zone_occupants = []
     ids.forEach(id => {
+      if (isOwnMainZoneWindowId(id)) return
       const prev = kept.get(id)
       host._main_zone_occupants.push(prev
         ? { ...prev }
@@ -2182,10 +2261,16 @@ export class Class_MenuConfig {
     // représentation. Une fenêtre canevas sur une autre feuille porte un `w_N` : lui appliquer
     // la règle lui donnerait `w_N` comme nature, que le registre ne connaît pas — la fenêtre
     // n'aurait plus rien à dessiner, et le fichier la rouvrirait vide (os#1385 lot 0).
+    //
+    // os#1498 — et pas davantage à une fenêtre de nature `allow_many` (la vue par groupe), dont
+    // le sujet EST un diagramme de la feuille courante : seul son identifiant `w_N` dit qu'elle a
+    // un id propre, d'où le prédicat d'OCCUPANT. Sans lui, la première normalisation venue —
+    // c'est-à-dire l'ouverture elle-même — lui donnerait sa clé de session pour nature, et la
+    // fenêtre s'ouvrirait vide.
     list.forEach(o => {
       if (!o.subject || !MAIN_ZONE_SUBJECT_KINDS.includes(o.subject.kind)) o.subject = { kind: 'diagram' }
       if (!o.representation) o.representation = o.id
-      if (!mainZoneSubjectUsesOwnWindowId(o.subject)) o.representation = o.id
+      if (!mainZoneOccupantUsesOwnWindowId(o)) o.representation = o.id
     })
     if (list.length === 0) {
       list = [{ id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
@@ -2556,7 +2641,7 @@ export class Class_MenuConfig {
       })
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
       host._main_zone_window_seq = Math.max(host._main_zone_window_seq, ...host._main_zone_occupants
-        .map(o => /^w_(\d+)$/.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
+        .map(o => OWN_MAIN_ZONE_WINDOW_ID.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
       // La normalisation AVANT la migration : elle peut écarter une fenêtre (doublon, place
       // inconnue), et migrer les réglages d'une fenêtre qui n'existera pas les sèmerait sous un
       // identifiant orphelin — que `figureOf` refuserait d'ailleurs d'indexer.
