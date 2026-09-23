@@ -86,6 +86,34 @@ describe('os#1501 le style dune part montre le defaut de sa figure', () => {
     figure.document.dispose()
   })
 
+  it('os#1502 LA PART ELLE-MEME montre aussi ce que sa figure fait', () => {
+    // Julien : « si je vais sur la PART elle-meme, elle n a pas Valeur visible — or elle devrait
+    // l avoir puisque le style le dit, et ce n est pas une surcharge ».
+    //
+    // Une part resout comme un element : sa surcharge, ses styles, puis la valeur d usine d un
+    // ELEMENT. Ce dernier etage etait le mauvais — ce qu une part fait quand personne ne dit rien,
+    // c est ce que sa FIGURE fait.
+    const figure = uneCouronne()
+    const part = figure.by_id['a']
+
+    expect(luSurLeStyle(part).is_visible).toBe(true)
+    // ET L UNITE AVEC, depuis que la declaration suit le trace (os#1500 : « s il y a une unite au
+    // depart dans le diagramme principal, elle devrait etre la aussi dans la charte »).
+    expect(luSurLeStyle(part).unit_visible).toBe(true)
+
+    figure.document.dispose()
+  })
+
+  it('os#1502 UNE SURCHARGE DE LA PART gagne, comme partout', () => {
+    const figure = uneCouronne()
+    const part = figure.by_id['a'] as unknown as { [k: string]: unknown }
+    part['value_label_is_visible'] = false
+
+    expect(luSurLeStyle(part).is_visible).toBe(false)
+
+    figure.document.dispose()
+  })
+
   it('LE STYLE GENERIQUE ne prend la figure daucune nature', () => {
     // `FigurePartStyle` sert les trois natures a la fois : montrer le defaut de l une mentirait
     // sur les deux autres. Il garde donc ce que la cascade rendait, comme avant ce lot.
