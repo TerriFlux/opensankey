@@ -75,11 +75,29 @@ export class Class_DrawingAreaInteractions {
     // éditable : désigner ce qu'on regarde n'est pas une édition. Nommé (`.mainzone`) pour ne
     // remplacer aucun autre écouteur de `mousedown`, ce fichier en posant déjà un.
     //
-    // Une fenêtre de feuille dessine, elle, DANS un div que React positionne : son propre
-    // `onMouseDown` passe après celui-ci et repose son identifiant. L'ordre joue en notre faveur.
+    // sa#563 — MAIS SEULE LA ZONE DU DOCUMENT PRINCIPAL DÉSIGNE LE CANEVAS PRINCIPAL.
+    //
+    // Cet écouteur est posé sur TOUTE zone de dessin, y compris celles qui ne sont pas le canevas
+    // principal : la feuille voisine, l'étoile unitaire, la vue d'un groupe d'étiquettes. Toutes
+    // partagent la configuration de menus de l'HÔTE — c'est elle qui porte la liste des fenêtres —,
+    // si bien qu'un clic dans l'une d'elles rendait le canevas principal actif.
+    //
+    // L'ordre le rendait inévitable et non rattrapable par l'hôte. Le commentaire d'origine
+    // comptait sur le `onMouseDown` de React pour repasser derrière et reposer le bon
+    // identifiant ; os#1431 a déplacé ce geste en phase de CAPTURE (pour que la grille d'Univer
+    // ne l'avale pas), donc il passe désormais AVANT celui-ci, qui a le dernier mot. Constaté au
+    // test local de sa#563 : cliquer dans la vue d'un groupe rendait le liséré au diagramme.
+    //
+    // La réponse n'est pas de rejouer l'ordre, c'est de ne pas parler pour les autres : une zone
+    // qui n'est pas celle du document principal a une fenêtre à elle, et c'est le composant qui
+    // la rend qui la désigne. `is_main` dit exactement cela, et il le dit par l'IDENTITÉ du
+    // document, donc il reste vrai quand le canevas part dans une fenêtre du système (os#1439).
     da.d3_selection_zoom_area?.on(
       'mousedown.mainzone',
-      () => da.application_data.menu_configuration.activateMainZoneCanvas())
+      () => {
+        if (!da.application_data.is_main) return
+        da.application_data.menu_configuration.activateMainZoneCanvas()
+      })
     if (da.d3_selection !== null) {
       da.d3_selection?.on(
         'click',
