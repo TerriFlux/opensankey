@@ -520,21 +520,32 @@ export const drawDonutChart = (
     if (s.value_label_percent !== 'none') return Math.round(d.data.value / total * 100) + '%'
     return (a?.value_format ?? fmt)(d.data.value)
   }
-  const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
+  /**
+   * os#1502 — UNE LIGNE DU BLOC, ET CE QU'ELLE EST : le nom, ou la valeur.
+   *
+   * Julien, capture à l'appui : « ces paramètres pour la valeur ne marchent pas — ni la police, ni
+   * bold, ni italique ». Le nom et la valeur partagent UN texte quand la valeur y est collée
+   * (os#1470), et ce texte portait la typographie du NOM : régler celle de la valeur était donc un
+   * geste sans effet. Savoir quelle ligne est laquelle suffit à le réparer.
+   */
+  const sector_lines = (
+    d: d3.PieArcDatum<Type_StatSlice>
+  ): { text: string, is_value: boolean }[] => {
     const s = styleOf(d)
     const a = aspectOf(d.data.id)
-    const lines: string[] = []
-    if (s.name_label_is_visible) lines.push(sectorName(d))
+    const lines: { text: string, is_value: boolean }[] = []
+    if (s.name_label_is_visible) lines.push({ text: sectorName(d), is_value: false })
     // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
     // n'existe que si la part a dit quelque chose des six clés de format (cf. `partAspect`).
-    const value = valueAttached(d.data.id) ? sectorValue(d) : ''
-    if (value !== '') lines.push(value)
+    // La CASSE est celle de la valeur, et non celle du nom : c'est son texte.
+    const value = valueAttached(d.data.id) ? partTextCase(sectorValue(d), a?.value) : ''
+    if (value !== '') lines.push({ text: value, is_value: true })
     // La boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne entre les mots, et
     // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
     // toute couronne enregistrée —, chaque ligne ressort telle quelle.
     return lines.flatMap(line => wrapLabelToBox(
-      line, a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.name?.wrap_long_words ?? false
-    ))
+      line.text, a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.name?.wrap_long_words ?? false
+    ).map(text => ({ text, is_value: line.is_value })))
   }
   /**
    * `name_label_prune_if_unfitting` — « Masquer si ça dépasse ». La place d'un secteur est la
@@ -550,7 +561,7 @@ export const drawDonutChart = (
     const s = styleOf(d)
     const chord_px = 2 * label_radius * Math.sin(Math.min(Math.PI, d.endAngle - d.startAngle) / 2)
     return sector_lines(d).every(
-      line => labelTextWidthPx(line, s.name_label_font_size) <= chord_px
+      line => labelTextWidthPx(line.text, s.name_label_font_size) <= chord_px
     )
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
@@ -654,12 +665,24 @@ export const drawDonutChart = (
         // ligne supplémentaire, sinon l'étiquette dériverait vers le bord extérieur du secteur.
         const dy0 = -(lines.length - 1) * 0.55
         const text = d3.select(this)
-        text.selectAll('tspan')
+        const tspans = text.selectAll('tspan')
           .data(lines)
           .enter().append('tspan')
           .attr('x', 0)
           .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
-          .text(line => line)
+          .text(line => line.text)
+        // os#1502 — LA LIGNE DE LA VALEUR PORTE SA PROPRE TYPOGRAPHIE, et seulement ce que la part
+        // en DIT. Un `tspan` accepte sa police, sa graisse, son style et son encre : le bloc
+        // partagé n'a jamais empêché cela — ce qui manquait était de savoir quelle ligne est la
+        // valeur. Rien de dit, rien de posé (`null` retire l'attribut chez d3) : une couronne
+        // enregistrée garde le texte d'hier, au pixel.
+        const av = aspectOf(d.data.id)?.value
+        tspans.filter(line => line.is_value)
+          .attr('font-size', av?.font_size ?? null)
+          .attr('font-family', av?.font_family ?? null)
+          .attr('font-weight', av?.bold === undefined ? null : (av.bold ? 'bold' : 'normal'))
+          .attr('font-style', av?.italic === undefined ? null : (av.italic ? 'italic' : 'normal'))
+          .attr('fill', av?.color ?? null)
         // os#1469 — LE STYLE ET LE CARTOUCHE, par le module commun, et APRÈS le texte : le
         // cartouche se mesure sur ce qui est écrit.
         //
@@ -808,7 +831,7 @@ export const drawDonutChart = (
         .enter().append('tspan')
         .attr('x', positionOf(d).x)
         .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
-        .text(line => line)
+        .text(line => line.text)
     })
     if (st.interaction_tooltip) items.append('title').text(slice_title)
     // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
