@@ -52,6 +52,7 @@ import {
   ALL_ATTRIBUTES_CONFIG, ATTRIBUTE_FAMILY_SCOPES, ATTRIBUTE_KEY_SCOPES
 } from './ElementsAttributesConfig'
 import { isFigurePartElement, isLinkLikeElement } from './ElementNaming'
+import { partStyleFigureNature } from './figureNatureDefaults'
 
 /**
  * Les natures d'élément que le modèle sait nommer.
@@ -159,23 +160,12 @@ export const figureNatureOf = (el: unknown): string => {
  * style des barres ne doit pas offrir l'orientation radiale, et editer le generique doit tout
  * offrir : il sert les trois figures a la fois.
  *
- * Rend `null` pour tout le reste — un style de noeud, un objet quelconque —, ce qui laisse la
- * reponse d'avant : pas de nature, donc tout.
- *
- * ⚠️ LES QUATRE NOMS SONT RECOPIES ICI, et c'est delibere : les importer depuis `ElementStyle`
- * refermerait le cycle Element ↔ ElementsAttributesConfig ↔ ce module (cf. l'en-tete de
- * `natureOf`, meme raison que la detection structurelle). Un test tient les deux listes ensemble,
- * et rougit le jour ou une cinquieme nature s'ajoute d'un seul cote.
+ * os#1501 — LA TABLE A DEMENAGE dans `figureNatureDefaults`, qui n'importe rien : l'inspecteur en
+ * a besoin pour une AUTRE question — ce que la figure fait quand le style ne dit rien — et deux
+ * copies auraient diverge a la cinquieme nature. Le nom reste exporte d'ici, ou vivent les autres
+ * questions de portee.
  */
-export const partStyleFigureNature = (el: unknown): string | null => {
-  const id = asRecord(el)?.['id']
-  if (typeof id !== 'string') return null
-  if (id === 'FigurePartStyle') return ''
-  if (id === 'DonutPartStyle') return 'donut'
-  if (id === 'BarPartStyle') return 'bars'
-  if (id === 'SunburstPartStyle') return 'sunburst'
-  return null
-}
+export { partStyleFigureNature } from './figureNatureDefaults'
 
 /**
  * Cette portée parle-t-elle à cette nature ? Sans portée, ou sans nature : oui.
