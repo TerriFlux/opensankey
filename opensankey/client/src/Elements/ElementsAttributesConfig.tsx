@@ -52,6 +52,7 @@ import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 // os#1421 — type seul : la liste des placements d'un nœud (cf. Representations/Placement).
 import type { Type_FigurePlacement } from '../Representations/Placement'
 import type { Type_TooltipHiddenBlocks } from './TooltipBlocks'
+import { figureStyleDefault } from './figureNatureDefaults'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
@@ -5128,6 +5129,19 @@ export function getConfigValues<
 
       Object.defineProperty(result, key, {
         get: () => {
+          // os#1501 — UN STYLE DE PART MONTRE CE QUE SA FIGURE FERAIT, pas ce qu'un nœud ferait.
+          //
+          // Julien, capture à l'appui dans la cascade d'une couronne : « même le style pour les
+          // couronnes ne reflète pas le dessin », « Valeur n'est pas mis en ON dans config ; si je
+          // manipule ensuite ça se synchronise, mais pas au début ».
+          //
+          // ⚠️ UN STYLE RÉPOND TOUJOURS, ET C'EST LE PIÈGE : interrogé sur une clé qu'il ne règle
+          // pas, il rend la valeur d'usine d'un ÉLÉMENT (par son style par défaut), jamais
+          // `undefined`. Or `value_label_is_visible` vaut `false` pour un nœud et `true` pour une
+          // couronne (os#1489) : le panneau montrait donc l'inverse du dessin, et les deux se
+          // « synchronisaient » au premier geste — parce qu'écrire la clé la rend explicite.
+          const figure_default = figureStyleDefault(elements[0], fullKey)
+          if (figure_default !== undefined) return figure_default
           return (elements.length > 0 && Reflect.get(elements[0], fullKey)) ?? config[configKey].default
         },
         set: (value: ExtractConfigValue<CONFIG[typeof configKey]>) => {
