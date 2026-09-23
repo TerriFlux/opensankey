@@ -478,7 +478,9 @@ export function registerBasePresentationBlocks(): void {
     }
   })
 
-  // Les DIAGRAMMES (Sankey unitaire / Analyse) ne sont plus des blocs de la
-  // composition : ils vivent dans la colonne de boutons de la POP-UP d'élément,
-  // fournis par OS+ (`element_analyses_for`) et rendus en ligne.
+  // Les DIAGRAMMES (Sankey unitaire / Analyse) ne sont pas des blocs de la composition, et
+  // depuis sa#563 ce ne sont plus non plus des boutons de pop-up : ce sont des NATURES du volet
+  // qu'un clic sur l'élément ouvre (registre des représentations, échelle « élément »). Ces
+  // blocs-ci restent ce qu'ils ont toujours été — le CONTENU de l'élément, que la nature
+  // « Infos » affiche à son tour.
 }

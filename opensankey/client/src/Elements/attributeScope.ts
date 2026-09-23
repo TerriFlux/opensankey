@@ -52,6 +52,7 @@ import {
   ALL_ATTRIBUTES_CONFIG, ATTRIBUTE_FAMILY_SCOPES, ATTRIBUTE_KEY_SCOPES
 } from './ElementsAttributesConfig'
 import { isFigurePartElement, isLinkLikeElement } from './ElementNaming'
+import { partStyleFigureNature } from './figureNatureDefaults'
 
 /**
  * Les natures d'élément que le modèle sait nommer.
@@ -120,6 +121,16 @@ export const natureOf = (el: unknown): Type_ElementNature | null => {
   const rec = asRecord(el)
   if (!rec) return null
   if (isFigurePartElement(rec)) return 'part'
+  // os#1497 — ET UN STYLE DE PART EST UNE PART, pour la question qui nous occupe.
+  //
+  // Julien, capture a l'appui : sur des barres, « il reste des choses qui ne devraient pas etre
+  // la, ca n'a de sens que pour couronne ». Les portees etaient pourtant justes ; c'est la
+  // question qui ne l'etait pas. L'inspecteur, en portee STYLES, ne tient plus l'element mais le
+  // STYLE qu'il edite — un objet sans nature, donc « recoit tout ». La bande Styles d'une part,
+  // livree la veille (os#1495), a donc rouvert d'un coup le catalogue entier.
+  //
+  // Un style de part, lui, SAIT de quoi il est le style : son identifiant le dit.
+  if (partStyleFigureNature(rec) !== null) return 'part'
   if (isLinkLikeElement(rec)) return 'link'
   if ('input_links_dict' in rec) return 'node'
   if ('attached_node' in rec) return 'container'
@@ -136,8 +147,25 @@ export const natureOf = (el: unknown): Type_ElementNature | null => {
 export const figureNatureOf = (el: unknown): string => {
   const rec = asRecord(el)
   const nature = rec?.['figure_nature']
-  return typeof nature === 'string' ? nature : ''
+  if (typeof nature === 'string' && nature !== '') return nature
+  // os#1497 — le style de part porte la sienne dans son nom (cf. `partStyleFigureNature`).
+  return partStyleFigureNature(rec) ?? ''
 }
+
+/**
+ * os#1497 — LA FIGURE DONT UN STYLE EST LE STYLE, lue sur son identifiant.
+ *
+ * Un style de part n'est pas un element : il n'a ni flux, ni parent, ni `is_figure_part`. Mais il
+ * y en a QUATRE et ils sont nommes — l'etage generique, et un par nature (os#1462). Editer le
+ * style des barres ne doit pas offrir l'orientation radiale, et editer le generique doit tout
+ * offrir : il sert les trois figures a la fois.
+ *
+ * os#1501 — LA TABLE A DEMENAGE dans `figureNatureDefaults`, qui n'importe rien : l'inspecteur en
+ * a besoin pour une AUTRE question — ce que la figure fait quand le style ne dit rien — et deux
+ * copies auraient diverge a la cinquieme nature. Le nom reste exporte d'ici, ou vivent les autres
+ * questions de portee.
+ */
+export { partStyleFigureNature } from './figureNatureDefaults'
 
 /**
  * Cette portée parle-t-elle à cette nature ? Sans portée, ou sans nature : oui.
