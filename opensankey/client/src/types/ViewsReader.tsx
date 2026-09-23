@@ -12,7 +12,7 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON } fro
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { decodeViewsFromDelta } from './viewDelta'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
-import { implicitSceneId } from './Scenes'
+import { implicitDashboardId } from './Dashboards'
 import type { Type_ViewLabelDef } from './ViewsQuery'
 import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
 import { createViewSwitchOverlay } from './viewSwitchOverlay'
@@ -370,14 +370,14 @@ export class ViewsReader {
     // Identité LOGIQUE de la vue courante (découplée de l'id du Sankey de la DA). Posée AVANT
     // applyViewTagSelection / les redraws.
     host.current_view_id = id
-    // os#1482 — UNE VUE NE REJOUE PLUS DE DISPOSITION : c'est le rôle d'une SCÈNE (Scenes.ts), et
-    // les `view_main_zone` d'avant ont été migrées en scènes à la lecture. Une bascule de vue
-    // qui n'est pas commandée par une scène fait de la scène courante l'implicite de cette vue,
+    // os#1482 — UNE VUE NE REJOUE PLUS DE DISPOSITION : c'est le rôle d'une TABLEAU DE BORD (Dashboards.ts), et
+    // les `view_main_zone` d'avant ont été migrées en tableaux de bord à la lecture. Une bascule de vue
+    // qui n'est pas commandée par un tableau de bord fait de le tableau de bord courante l'implicite de cette vue,
     // pour que le sélecteur dise ce qu'on regarde — sauf pendant une activation, qui a déjà posé
     // la sienne. Sur le principal seulement : la vue d'un document de feuille ne dit rien de
     // l'écran.
-    const scenes = host.menu_configuration?.scenes
-    if (scenes && host.is_main && !scenes.activating) scenes.current = implicitSceneId(id)
+    const dashboards = host.menu_configuration?.dashboards
+    if (dashboards && host.is_main && !dashboards.activating) dashboards.current = implicitDashboardId(id)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {

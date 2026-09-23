@@ -382,6 +382,8 @@ export const resources_inspector = {
         // is how the text is shown, i.e. navigation, so it lives here.
         doc_mode: 'Documentation display',
         window_subject: 'Pane subject',
+        subject_sheet_gone: 'The sheet this pane looks at is gone: its subject can no longer be set here.',
+        subject_nothing_to_offer: 'No visible node or flow can be shown as “{{representation}}”: nothing to offer here.',
         short: {
           subject: 'Subject',
           node: 'Nodes',
@@ -755,6 +757,8 @@ export const resources_inspector = {
         // vivait au bord de la fenêtre. « De quoi » est la première question de navigation d'une
         // figure d'élément, et elle se pose désormais ici, avec les autres.
         window_subject: 'Sujet du volet',
+        subject_sheet_gone: 'La feuille que ce volet regarde n\'existe plus : son sujet ne se règle plus d\'ici.',
+        subject_nothing_to_offer: 'Aucun nœud ni flux visible ne peut être montré en « {{representation}} » : rien à proposer ici.',
         short: {
           subject: 'Sujet',
           node: 'Nœuds',
@@ -1104,6 +1108,8 @@ export const resources_inspector = {
         json_root_key: 'Clave raíz del JSON',
         doc_mode: 'Visualización de la documentación',
         window_subject: 'Sujeto del panel',
+        subject_sheet_gone: 'La hoja que mira este panel ya no existe: su sujeto ya no se ajusta aquí.',
+        subject_nothing_to_offer: 'Ningún nodo ni flujo visible puede mostrarse como «{{representation}}»: nada que ofrecer aquí.',
         short: {
           subject: 'Sujeto',
           node: 'Nodos',
@@ -1453,6 +1459,8 @@ export const resources_inspector = {
         json_root_key: 'JSON-Stammschlüssel',
         doc_mode: 'Anzeige der Dokumentation',
         window_subject: 'Gegenstand des Bereichs',
+        subject_sheet_gone: 'Das Blatt, das dieser Bereich zeigt, existiert nicht mehr: sein Gegenstand lässt sich hier nicht mehr einstellen.',
+        subject_nothing_to_offer: 'Kein sichtbarer Knoten und kein sichtbarer Fluss lässt sich als „{{representation}}“ darstellen: hier gibt es nichts anzubieten.',
         short: {
           subject: 'Gegenstand',
           node: 'Knoten',
@@ -1802,6 +1810,8 @@ export const resources_inspector = {
         json_root_key: 'Chiave radice del JSON',
         doc_mode: 'Visualizzazione della documentazione',
         window_subject: 'Soggetto del riquadro',
+        subject_sheet_gone: 'Il foglio che questo riquadro guarda non esiste più: il suo soggetto non si imposta più da qui.',
+        subject_nothing_to_offer: 'Nessun nodo né flusso visibile può essere mostrato come «{{representation}}»: niente da proporre qui.',
         short: {
           subject: 'Soggetto',
           node: 'Nodi',
@@ -2155,6 +2165,8 @@ export const resources_inspector = {
         json_root_key: 'JSON 根键',
         doc_mode: '文档显示',
         window_subject: '窗格主体',
+        subject_sheet_gone: '该窗格所看的工作表已不存在：其主题无法再在此设置。',
+        subject_nothing_to_offer: '没有可见的节点或流可以用「{{representation}}」显示：此处无可选项。',
         short: {
           subject: '主体',
           node: '节点',
@@ -2508,6 +2520,8 @@ export const resources_inspector = {
         json_root_key: 'JSON のルートキー',
         doc_mode: '文書の表示',
         window_subject: 'ペインの対象',
+        subject_sheet_gone: 'このペインが見ているシートはもうありません。ここから主題を設定することはできません。',
+        subject_nothing_to_offer: '「{{representation}}」で表示できる可視のノードやフローがありません。ここに提示できるものはありません。',
         short: {
           subject: '対象',
           node: 'ノード',
