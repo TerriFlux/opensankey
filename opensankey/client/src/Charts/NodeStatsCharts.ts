@@ -1496,20 +1496,13 @@ export const drawStackedBarChart = (
   const root = sel.append('div')
     .style('display', 'flex').style('flex-direction', flexDirection(st)).style('align-items', 'stretch')
     .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
-  const legend_width = legend_shown ? Math.min(st.legend_width, width * 0.35) : 0
-  const chart_width = Math.max(80, width - legend_width - 12)
 
+  // La HAUTEUR d'abord, la largeur ensuite : la hauteur n'a jamais dépendu de la largeur,
+  // et c'est elle qui dit combien de piles sont au plancher — donc si la colonne latérale
+  // a quelque chose à porter, même légende coupée (voir plus bas).
   const rotate_labels = series.length > 6 || series.some(s => s.label.length > 8)
   const margin = { top: 18, right: 8, bottom: rotate_labels ? 46 : 22, left: 8 }
-  const w = chart_width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
-
-  const x = d3.scaleBand<string>().domain(series.map(s => s.id)).range([0, w]).padding(0.25)
-  const y = d3.scaleLinear().domain([0, max_total]).range([h, 0])
-
-  const svg = root.append('svg')
-    .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
-  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
   // Écrasement (#393) : ici non plus il n'y a pas de grappe — une barre par série, et
   // rien qui les regroupe. Une échelle logarithmique serait par ailleurs un contresens
@@ -1517,6 +1510,24 @@ export const drawStackedBarChart = (
   // plancher de visibilité, appliqué à la PILE ENTIÈRE : relever les segments un à un
   // décollerait le sommet de la barre de son total.
   const lifted = countLifted(series.map(s => (series_total(s) / max_total) * h))
+
+  // Largeur de la colonne latérale. Elle sert la légende, ET la mention à elle seule —
+  // sinon la mention n'aurait aucune place où s'écrire dès que la légende est coupée,
+  // c'est-à-dire par défaut depuis os#1431. Un filet suffit pour une ligne.
+  const notes_shown = lifted > 0 && st.notes_visible
+  const side_shown = legend_shown || notes_shown
+  const side_width = legend_shown
+    ? Math.min(st.legend_width, width * 0.35)
+    : (notes_shown ? Math.min(120, width * 0.25) : 0)
+  const chart_width = Math.max(80, width - side_width - 12)
+  const w = chart_width - margin.left - margin.right
+
+  const x = d3.scaleBand<string>().domain(series.map(s => s.id)).range([0, w]).padding(0.25)
+  const y = d3.scaleLinear().domain([0, max_total]).range([h, 0])
+
+  const svg = root.append('svg')
+    .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
   // Empilement d'une série dans l'ordre global des catégories.
   series.forEach(s => {
@@ -1563,26 +1574,32 @@ export const drawStackedBarChart = (
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')
     .text(s => s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label)
 
-  // Légende des catégories (parts), quand l'auteur la veut.
-  if (!legend_shown) return
-  const legend = root.append('div')
+  // Colonne latérale : la légende des catégories, et SOUS elle les mentions du dessin.
+  // Les deux ne se commandent pas ensemble — la raison est écrite en toutes lettres dans
+  // l'histogramme groupé, au même endroit (os#1431 × #393).
+  if (!side_shown) return
+  const aside = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
     .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
-  const items = legend.selectAll('div').data(category_order).enter().append('div')
-    .style('display', 'flex').style('align-items', 'center')
-    .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
-  items.append('span')
-    .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-    .style('border-radius', '2px').style('background', c => c.color)
-  items.append('span')
-    .style('flex', '1 1 auto').style('overflow', 'hidden')
-    .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-    .attr('title', c => c.label).text(c => c.label)
 
-  // Mention d'ÉCRASEMENT (#393), au pied de la légende des catégories.
-  if (lifted > 0 && st.notes_visible) {
-    legend.append('div')
+  // Légende des catégories (parts), quand l'auteur la veut.
+  if (legend_shown) {
+    const items = aside.selectAll('div').data(category_order).enter().append('div')
+      .style('display', 'flex').style('align-items', 'center')
+      .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
+    items.append('span')
+      .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+      .style('border-radius', '2px').style('background', c => c.color)
+    items.append('span')
+      .style('flex', '1 1 auto').style('overflow', 'hidden')
+      .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+      .attr('title', c => c.label).text(c => c.label)
+  }
+
+  // Mention d'ÉCRASEMENT (#393), au pied de la colonne.
+  if (notes_shown) {
+    aside.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
@@ -1784,10 +1801,21 @@ export const drawGroupedBarChart = (
   const legend_data = stacked
     ? [...categories.entries()].map(([id, v], i) => ({ id, label: v.label, color: v.color ?? paletteColor(i) }))
     : series_order
-  const legend = root.append('div')
+
+  // ⚠️ LA LÉGENDE SE CACHE, LES MENTIONS RESTENT (os#1431 × #393). Elles vivaient DANS la
+  // légende ; le jour où celle-ci est passée cachée par défaut, elles se sont tues avec
+  // elle — sans que personne le décide. Or les deux ne disent pas la même chose : la
+  // légende NOMME des couleurs (l'auteur peut la juger redondante, c'est son droit),
+  // la mention AVERTIT que les hauteurs ont cessé de porter les valeurs. Taire la
+  // seconde laisse lire « négligeable » là où la donnée est d'un autre ordre de
+  // grandeur — c'est-à-dire le défaut même que #393 était venu corriger.
+  // La colonne porte donc les deux, et seules les ENTRÉES obéissent à `legend_visible` ;
+  // les mentions n'obéissent qu'à `notes_visible`.
+  const aside = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
     .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
+  const legend = aside.append('div')
     .style('display', st.legend_visible ? 'block' : 'none')
   const items = legend.selectAll('div.node_stats_legend_item')
     .data(legend_data).enter().append('div')
@@ -1805,7 +1833,7 @@ export const drawGroupedBarChart = (
   // Troncature ANNONCÉE : une grappe muette sur ce qu'elle omet ferait lire un
   // sous-ensemble pour le tout.
   if (dropped > 0 && st.notes_visible) {
-    legend.append('div')
+    aside.append('div')
       .attr('class', 'node_stats_legend_truncated')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.truncated_label ? opts.truncated_label(dropped) : `+${dropped}`)
@@ -1817,13 +1845,13 @@ export const drawGroupedBarChart = (
   // plancher. Taire l'une des deux laisserait une moitié du graphique se faire lire de
   // travers.
   if (per_group && st.notes_visible) {
-    legend.append('div')
+    aside.append('div')
       .attr('class', 'node_stats_legend_independent_scales')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.independent_scales_label ?? 'independent scales')
   }
   if (lifted > 0 && st.notes_visible) {
-    legend.append('div')
+    aside.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
