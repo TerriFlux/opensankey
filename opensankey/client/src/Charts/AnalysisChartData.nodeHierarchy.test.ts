@@ -1,0 +1,194 @@
+// 23/09/2026 — LA COURONNE DESCEND LA HIERARCHIE, DANS UN SEUL ANNEAU.
+//
+// Julien : « je voudrais que la couronne fonctionne comme le sunburst sur la desagregation des
+// noeuds, mais au lieu de faire une couronne qui s etend, le faire in place. »
+//
+// Ce que ce fichier fige, c est la FRONTIERE : la liste plate des parts qu une couronne dessine
+// quand on lui demande de descendre. Un noeud deplie disparait derriere ses enfants, exactement
+// comme dans le Sankey — c est tout le sens de « in place », et c est la seule chose qui ne se
+// verifie pas a l oeil (les valeurs doivent continuer a boucler sur le sujet quel que soit le
+// niveau ou chaque part s est arretee).
+//
+// Le decor est celui de `AnalysisChartData.nodeChildren.test`, d un cran plus profond : Racine a
+// deux enfants, dont l un a lui-meme deux enfants. Sans ce troisieme etage il n y aurait rien a
+// descendre, et les trois modes rendraient la meme chose.
+
+import { Class_ApplicationData } from '../types/ApplicationData'
+import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
+import type { Type_JSON } from '../types/Utils'
+import { FOLLOWING_NAVIGATION } from './FigureNavigation'
+
+import { buildAnalysisChartData } from './AnalysisChartData'
+import type { Type_ChartPart, Type_ChartSubject } from './AnalysisChartData'
+
+if (typeof globalThis.structuredClone !== 'function') {
+  globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
+}
+
+// Amont alimente tout le monde, a tous les etages : c est ce qui donne a chaque noeud une valeur
+// STRUCTURELLE lisible quel que soit l etat d agregation (cf. `sunburstNodeValue`).
+//   Racine 14 = Cereales 10 (= Ble 6 + Mais 4) + Viande 4
+const file = (): Type_JSON => ({
+  version: '1.3.0',
+  format_version: CURRENT_FORMAT_VERSION,
+  nodes: {
+    Amont: { idNode: 'Amont', name: 'Amont' },
+    Racine: { idNode: 'Racine', name: 'Racine', tags: { dim: ['niveau1'] } },
+    Cereales: {
+      idNode: 'Cereales', name: 'Cereales',
+      tags: { dim: ['niveau2'] },
+      dimensions: { dim: { parent_name: 'Racine' } }
+    },
+    Viande: {
+      idNode: 'Viande', name: 'Viande',
+      tags: { dim: ['niveau2'] },
+      dimensions: { dim: { parent_name: 'Racine' } }
+    },
+    Ble: {
+      idNode: 'Ble', name: 'Ble',
+      tags: { dim: ['niveau3'] },
+      dimensions: { dim: { parent_name: 'Cereales' } }
+    },
+    Mais: {
+      idNode: 'Mais', name: 'Mais',
+      tags: { dim: ['niveau3'] },
+      dimensions: { dim: { parent_name: 'Cereales' } }
+    }
+  },
+  links: {
+    amont_racine: { idLink: 'amont_racine', idSource: 'Amont', idTarget: 'Racine', value: { value: 14 } },
+    amont_cereales: { idLink: 'amont_cereales', idSource: 'Amont', idTarget: 'Cereales', value: { value: 10 } },
+    amont_viande: { idLink: 'amont_viande', idSource: 'Amont', idTarget: 'Viande', value: { value: 4 } },
+    amont_ble: { idLink: 'amont_ble', idSource: 'Amont', idTarget: 'Ble', value: { value: 6 } },
+    amont_mais: { idLink: 'amont_mais', idSource: 'Amont', idTarget: 'Mais', value: { value: 4 } }
+  },
+  levelTags: {
+    dim: {
+      group_name: 'Dimension', banner: 'one', activated: true, siblings: [],
+      tags: {
+        niveau1: { name: 'niveau1', selected: true },
+        niveau2: { name: 'niveau2', selected: false },
+        niveau3: { name: 'niveau3', selected: false }
+      }
+    }
+  }
+} as unknown as Type_JSON)
+
+const loadApp = () => {
+  const app = new Class_ApplicationData(false)
+  // `fromJSON` MUTE son argument : on ne lui donne jamais l objet du test.
+  app.fromJSON(JSON.parse(JSON.stringify(file())) as never, {}, false)
+  app.drawing_area.bypass_redraws = true
+  return app
+}
+
+const partsOf = (
+  app: Class_ApplicationData,
+  spec: { hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string }
+): Type_ChartPart[] => {
+  const node = app.drawing_area.sankey.nodes_dict['Racine']
+  const subject = { kind: 'node', node } as unknown as Type_ChartSubject
+  return buildAnalysisChartData(
+    subject,
+    { decompose: { kind: 'node_children', dimension_id: 'dim', ...spec }, compare: null },
+    FOLLOWING_NAVIGATION
+  ).series[0]?.parts ?? []
+}
+
+const ids = (parts: Type_ChartPart[]) => parts.map(p => p.id).sort()
+const valueOf = (parts: Type_ChartPart[], id: string) => parts.find(p => p.id === id)?.value
+
+/** Ce que fait le clic droit du diagramme, par le geste du modele et non par un drapeau pose. */
+const deplier = (app: Class_ApplicationData, node_id: string) => {
+  app.drawing_area.sankey.nodes_dict[node_id].dimensions_as_parent
+    .find(d => d.id === 'dim')
+    ?.setForceToShowChildren()
+}
+
+describe('la decomposition hierarchique d un noeud', () => {
+
+  test('sans reglage, elle decompose d un cran — le dessin d hier', () => {
+    // LA GARANTIE DU LOT : un descripteur qui ne dit rien passe par le chemin d avant. Si ce cas
+    // tombait, tout le parc enregistre changerait d aspect.
+    const app = loadApp()
+
+    expect(ids(partsOf(app, {}))).toEqual(['Cereales', 'Viande'])
+    expect(ids(partsOf(app, { hierarchy: 'off' }))).toEqual(['Cereales', 'Viande'])
+  })
+
+  test('jusqu aux feuilles, les petits-enfants REMPLACENT leur parent', () => {
+    // « In place » : Cereales n est PAS dans la liste a cote de Ble et Mais. Un anneau qui
+    // porterait les trois compterait la meme matiere deux fois.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'leaves' })
+
+    expect(ids(parts)).toEqual(['Ble', 'Mais', 'Viande'])
+    expect(valueOf(parts, 'Ble')).toBe(6)
+    expect(valueOf(parts, 'Mais')).toBe(4)
+    // Viande n a pas d enfants : elle reste elle-meme, au premier cran, dans le meme anneau.
+    expect(valueOf(parts, 'Viande')).toBe(4)
+  })
+
+  test('la frontiere boucle sur le sujet, quel que soit le niveau de chaque part', () => {
+    // C est la condition pour qu une couronne dise la verite : les parts font un TOUT. Une
+    // frontiere qui ne boucle pas se lit sans se voir.
+    const app = loadApp()
+
+    const total = partsOf(app, { hierarchy: 'leaves' }).reduce((s, p) => s + p.value, 0)
+
+    expect(total).toBe(14)
+  })
+
+  test('« comme le diagramme » suit la desagregation, et rien d autre', () => {
+    const app = loadApp()
+
+    // Rien n est deplie : la couronne s arrete au premier cran, comme le dessin.
+    expect(ids(partsOf(app, { hierarchy: 'diagram' }))).toEqual(['Cereales', 'Viande'])
+
+    // On deplie Cereales : ses enfants prennent sa place, ici comme la-bas.
+    deplier(app, 'Cereales')
+    const parts = partsOf(app, { hierarchy: 'diagram' })
+
+    expect(ids(parts)).toEqual(['Ble', 'Mais', 'Viande'])
+    expect(parts.reduce((s, p) => s + p.value, 0)).toBe(14)
+  })
+
+  test('chaque part dit d ou elle vient : sa profondeur et son parent dessine', () => {
+    // Ce sont les deux champs que la LEGENDE lit (« Cereales > Ble ») — la demande de Julien :
+    // « que le nom des noeuds puisse se voir en legende ». Sans eux, un anneau qui melange deux
+    // niveaux ne dit plus de quoi chaque secteur est la coupe.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'leaves' })
+    const ble = parts.find(p => p.id === 'Ble')
+    const viande = parts.find(p => p.id === 'Viande')
+
+    expect(ble?.depth).toBe(1)
+    expect(ble?.parent_label).toBe('Cereales')
+    expect(viande?.depth).toBe(0)
+    expect(viande?.parent_label).toBe('Racine')
+  })
+
+  test('un foyer fait du noeud ou l on est descendu le TOUT', () => {
+    // Le drill-down : Cereales devient le tout, ses freres sortent de la figure, et les parts
+    // repartent du cran zero. C est ce que `hierarchy_focus` ecrit au clic.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'leaves', focus_id: 'Cereales' })
+
+    expect(ids(parts)).toEqual(['Ble', 'Mais'])
+    expect(parts.reduce((s, p) => s + p.value, 0)).toBe(10)
+    expect(parts.find(p => p.id === 'Ble')?.depth).toBe(0)
+    expect(parts.find(p => p.id === 'Ble')?.parent_label).toBe('Cereales')
+  })
+
+  test('un foyer qui nomme un noeud disparu revient au sujet', () => {
+    // Un reglage perime n est pas une panne : la figure montre son sujet plutot que de se vider.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'diagram', focus_id: 'Disparu' })
+
+    expect(ids(parts)).toEqual(['Cereales', 'Viande'])
+  })
+})

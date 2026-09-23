@@ -193,6 +193,41 @@ export const PARTS_CONFIG = {
     es: 'El tono dice la rama, la claridad dice el nivel.', de: 'Der Farbton nennt den Zweig, die Helligkeit die Ebene.',
     it: 'La tinta dice il ramo, la chiarezza dice il livello.', 'zh-CN': '色相表示分支，明度表示层级。', ja: '色相が枝を、明度が階層を表します。'
   }, { visibleIf: (o) => o['parts_color_source'] !== 'model' }),
+  // ── LA HIÉRARCHIE, DESCENDUE SANS PRENDRE UN ANNEAU DE PLUS (demande Julien, 23/09/2026) ───
+  //
+  // « Je voudrais que la couronne fonctionne comme le sunburst sur la désagrégation des nœuds,
+  // mais au lieu de faire une couronne qui s'étend, le faire in place. »
+  //
+  // Le disque répond déjà à la question — il la répond EN AJOUTANT UN ANNEAU par niveau. Ici on
+  // répond dans le MÊME anneau : un secteur déplié disparaît et ses enfants prennent son angle,
+  // exactement comme un nœud déplié disparaît du Sankey derrière les siens. La figure montre
+  // alors ce que le diagramme montre, au lieu de montrer ce qui existe.
+  //
+  // TROIS VALEURS, et la première est le dessin d'hier : une couronne enregistrée ne bouge pas.
+  //  - 'off'     : un seul cran, les enfants directs de l'axe ;
+  //  - 'diagram' : la FRONTIÈRE que le diagramme dessine — on descend sous un nœud déplié, on
+  //                s'arrête sous un nœud replié. C'est ce qui fait que cliquer pour déplier
+  //                change la couronne comme il change le dessin ;
+  //  - 'leaves'  : jusqu'aux feuilles de la hiérarchie, quoi que le diagramme montre.
+  parts_hierarchy: entry<'off' | 'diagram' | 'leaves'>('off', 'parts', {
+    en: 'Descend the hierarchy', fr: 'Descendre la hiérarchie', es: 'Bajar por la jerarquía',
+    de: 'Hierarchie absteigen', it: 'Scendere la gerarchia', 'zh-CN': '按层级下钻', ja: '階層を下る'
+  }, {
+    en: 'Children replace their parent in the same ring, instead of taking a ring of their own.',
+    fr: 'Les enfants remplacent leur parent dans le même anneau, au lieu de prendre un anneau à eux.',
+    es: 'Los hijos reemplazan a su padre en el mismo anillo, en vez de ocupar un anillo propio.',
+    de: 'Kinder ersetzen ihren Elternknoten im selben Ring, statt einen eigenen Ring zu belegen.',
+    it: 'I figli sostituiscono il genitore nello stesso anello, invece di prendersi un anello proprio.',
+    'zh-CN': '子节点在同一环内取代父节点，而不是另占一环。',
+    ja: '子は親と同じリングの中で親に置き換わり、独立したリングを取りません。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('off', { en: 'One level only', fr: 'Un seul niveau', es: 'Un solo nivel', de: 'Nur eine Ebene', it: 'Un solo livello', 'zh-CN': '仅一层', ja: '1 階層だけ' }),
+      choice('diagram', { en: 'As the diagram shows it', fr: 'Comme le diagramme le montre', es: 'Como lo muestra el diagrama', de: 'So wie das Diagramm es zeigt', it: 'Come lo mostra il diagramma', 'zh-CN': '与图中展开状态一致', ja: '図が見せているとおり' }),
+      choice('leaves', { en: 'Down to the leaves', fr: 'Jusqu’aux feuilles', es: 'Hasta las hojas', de: 'Bis zu den Blättern', it: 'Fino alle foglie', 'zh-CN': '直到叶节点', ja: '葉まで' })
+    ]
+  }),
   parts_group_under: entry<number>(0, 'parts', {
     en: 'Group parts under (% of the whole)', fr: 'Regrouper les parts sous (% du tout)',
     es: 'Agrupar las partes por debajo de (% del total)', de: 'Teile zusammenfassen unter (% des Ganzen)',

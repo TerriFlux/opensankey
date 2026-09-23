@@ -34,8 +34,14 @@ import type { Type_PartInput } from './parts/buildParts'
 // viennent avec la déclaration (cf. `figureNature`).
 import { registerFigureNature } from './figureNature'
 import {
-  ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_OWN, DONUT_SOCLE
+  ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
+  HIERARCHY_FOCUS_KEY
 } from './analysisFigureAttributes'
+// 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
+// rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
+import { disaggregateLocally } from '../Algorithms/Hierarchies'
+import type { Class_NodeDimension } from '../Elements/NodeDimension'
+import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
@@ -143,6 +149,12 @@ export const effectiveDescriptorOf = (
  * `override ?? effectiveDescriptorOf(...)` et montrait « pas dans la figure » sur une couronne qui
  * dessinait ses flux sortants. Deux surfaces qui lisent la même chose de deux façons finissent
  * toujours par se contredire ; celle qui dessine ne peut pas être celle qui a tort.
+ *
+ * 23/09/2026 — ET LA HIÉRARCHIE PASSE PAR ICI, POUR CETTE RAISON MÊME. « Descendre la hiérarchie »
+ * change l'axe que la couronne dessine (cf. `withHierarchy`) ; le poser dans la seule fonction de
+ * dessin aurait refait, mot pour mot, le défaut d'os#1431 — la carte « Coordonnées » aurait montré
+ * les flux sortants pendant que l'anneau décomposait les enfants. Un point de vérité unique n'en
+ * est un que tant qu'on y met TOUT ce qui décide.
  */
 export const descriptorInEffect = (
   element: { getElementProperty: (k: string) => unknown },
@@ -150,9 +162,66 @@ export const descriptorInEffect = (
   options: { [key: string]: unknown }
 ): Type_AnalysisDescriptor | null => {
   const override = options['descriptor'] as Type_AnalysisDescriptor | undefined
-  return (override && (override.decompose || override.compare))
+  const base = (override && (override.decompose || override.compare))
     ? override
     : effectiveDescriptorOf(element, subject)
+  return base ? withHierarchy(subject, base, options) : null
+}
+
+// ── 23/09/2026 — LA COURONNE DESCEND LA HIÉRARCHIE, SANS PRENDRE UN ANNEAU DE PLUS ────────────
+//
+// Julien : « je voudrais que la couronne fonctionne comme le sunburst sur la désagrégation des
+// nœuds, mais au lieu de faire une couronne qui s'étend, le faire in place. »
+//
+// Tout ce que ce lot ajoute à la figure tient dans le descripteur qu'elle DESSINE : deux champs
+// facultatifs sur l'axe `node_children` (cf. `Type_DecomposeSpec`). Rien n'est écrit sur l'élément,
+// rien n'est écrit dans le panneau des coordonnées — l'inspecteur reste le seul à poser un axe, et
+// la figure ne fait, comme depuis os#1387, que regarder autrement.
+
+/** Le chemin des nœuds où la figure est descendue. Vide = elle regarde son sujet. */
+const hierarchyPathOf = (options: { [key: string]: unknown }): string[] => {
+  const raw = options[HIERARCHY_FOCUS_KEY]
+  return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : []
+}
+
+/**
+ * LE DESCRIPTEUR, AUGMENTÉ DE CE QUE LA FIGURE RÈGLE — et rendu tel quel quand elle ne règle rien.
+ *
+ * ⚠️ LA HIÉRARCHIE CHOISIT L'AXE SI L'AXE N'EST PAS DÉJÀ LE SIEN, et c'est délibéré. Sans cette
+ * ligne, le réglage serait inerte sur presque tous les nœuds : `defaultDecomposeSpec` préfère les
+ * flux sortants dès qu'il y en a de visibles, et « descendre la hiérarchie » sur un axe de flux ne
+ * veut rien dire. L'auteur qui demande la hiérarchie demande la hiérarchie ; lui rendre une
+ * décomposition par flux inchangée serait un choix offert puis ignoré sans un mot.
+ *
+ * On prend la première dimension qui a VRAIMENT des enfants — le même critère que le sunburst, et
+ * que le repli de `defaultDecomposeSpec`. Aucune : le réglage reste sans effet, ce qui est la seule
+ * réponse honnête pour un nœud qui n'a pas de descendance.
+ */
+const withHierarchy = (
+  subject: Type_ChartSubject,
+  descriptor: Type_AnalysisDescriptor,
+  options: { [key: string]: unknown }
+): Type_AnalysisDescriptor => {
+  const mode = options['parts_hierarchy']
+  if (mode !== 'diagram' && mode !== 'leaves') return descriptor
+  if (subject.kind !== 'node') return descriptor
+  const current = descriptor.decompose
+  const dimension_id = current?.kind === 'node_children'
+    ? current.dimension_id
+    : subject.node.dimensions_as_parent.find(
+      (d: Class_NodeDimension) => (d.children?.length ?? 0) > 0
+    )?.id
+  if (dimension_id === undefined) return descriptor
+  const path = hierarchyPathOf(options)
+  return {
+    ...descriptor,
+    decompose: {
+      kind: 'node_children',
+      dimension_id,
+      hierarchy: mode,
+      focus_id: path[path.length - 1]
+    }
+  }
 }
 
 /**
@@ -234,10 +303,23 @@ const chartOptions = (
     // os#1477 — TOUT LE TEXTE DE LA FIGURE, titre compris, comme pour le disque : le titre est la
     // zone n° 0 depuis os#1449, et l'auteur peut en ajouter d'autres (`text_zones`).
     texts: (subject_name: string) => figureTextsOf(ctx.options, subject_name),
-    title_fallback: subject?.kind === 'node'
+    // 23/09/2026 — QUAND LA FIGURE EST DESCENDUE, ELLE NOMME CE QU'ELLE MONTRE.
+    //
+    // Le centre d'une couronne écrit ce nom (`centre_content`), et le titre s'en sert en repli :
+    // tous deux mentiraient en nommant le sujet pendant que l'anneau décompose son petit-fils. Le
+    // sujet reste le sujet — c'est le périmètre REGARDÉ qui a changé, et c'est lui qu'on lit.
+    title_fallback: focusedNodeOf(ctx)?.name ?? (subject?.kind === 'node'
       ? subject.node.name
-      : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : ''
+      : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : '')
   }
+}
+
+/** Le nœud dans lequel la couronne est descendue, ou `null` si elle regarde son sujet. */
+const focusedNodeOf = (ctx: Type_RepresentationContext): Class_NodeElement | null => {
+  const path = hierarchyPathOf(ctx.options)
+  const focus_id = path[path.length - 1]
+  if (focus_id === undefined) return null
+  return (ctx.app_data.drawing_area.sankey.nodes_dict[focus_id] as Class_NodeElement) ?? null
 }
 
 /**
@@ -265,6 +347,87 @@ const analysisOf = (
   if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return null
   const nav = figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options)
   return { subject, descriptor, nav }
+}
+
+/** La décomposition hiérarchique EN VIGUEUR sur cette figure, ou `null` si elle est à plat. */
+const hierarchyInEffect = (
+  ctx: Type_RepresentationContext
+): { dimension_id: string, path: string[] } | null => {
+  const decompose = analysisOf(ctx)?.descriptor.decompose
+  if (!decompose || decompose.kind !== 'node_children') return null
+  if (!decompose.hierarchy || decompose.hierarchy === 'off') return null
+  return { dimension_id: decompose.dimension_id, path: hierarchyPathOf(ctx.options) }
+}
+
+/**
+ * CE QUE LE CLIC FAIT EN PLUS DE SÉLECTIONNER, et le retour au centre avec.
+ *
+ * Deux gestes, et ce sont les deux que Julien a demandés d'un coup — « les deux premiers, mais avec
+ * un mode drill down à sélectionner quelque part » :
+ *
+ *   'aggregate' — DÉPLIER LE NŒUD DANS LE DIAGRAMME. La couronne suit alors toute seule, puisqu'en
+ *                 mode 'diagram' elle dessine la frontière que le dessin dessine : le secteur
+ *                 cliqué cède sa place à ses enfants, ici comme là-bas. C'est le pont du sunburst,
+ *                 et c'est le même appel (`disaggregateLocally`).
+ *   'zoom'      — DESCENDRE DANS LA FIGURE SEULE. Le nœud cliqué devient le tout, le diagramme ne
+ *                 bouge pas, et le centre ramène d'un cran. Le chemin est un RÉGLAGE de la figure
+ *                 (`hierarchy_focus`) et non un état du tracé : écrit là, il survit au redessin,
+ *                 l'inspecteur le voit, et les parts se reconstruisent sur le bon périmètre — un
+ *                 foyer gardé dans le dessin aurait laissé le document de parts sur l'ancien.
+ *
+ * HORS FENÊTRE (pop-up de présentation, aperçu), le drill-down ne se propose pas : il n'y a
+ * personne à qui écrire le chemin, et une pop-up ne modifie rien. Déplier, lui, agit sur le
+ * diagramme et reste offert.
+ */
+const donutClickGestures = (
+  ctx: Type_RepresentationContext,
+  style: Type_FigureChartStyle
+): { activate?: (part_id: string) => void, back?: () => void } => {
+  const hierarchy = hierarchyInEffect(ctx)
+  if (!hierarchy || style.interaction_click === 'none') return {}
+  const app_data = ctx.app_data
+  const sankey = app_data.drawing_area.sankey
+  const { window_id, pane_key } = ctx
+  const in_pane = window_id !== undefined && pane_key !== undefined
+  const wants_unfold = style.interaction_click === 'aggregate' || style.interaction_click === 'both'
+  const wants_drill = (style.interaction_click === 'zoom' || style.interaction_click === 'both')
+    && in_pane
+
+  const writePath = (path: string[]) => {
+    app_data.menu_configuration.setMainZonePaneOptions(
+      window_id as string, pane_key as string,
+      { ...ctx.options, [HIERARCHY_FOCUS_KEY]: path } as unknown as Type_JSON
+    )
+  }
+
+  const activate = (part_id: string) => {
+    // Un secteur replié par le tracé (« Autres ») ne désigne aucun nœud : il n'y a rien à déplier
+    // ni où descendre. On ne devine pas.
+    const node = sankey.nodes_dict[part_id] as Class_NodeElement | undefined
+    if (!node) return
+    if (wants_unfold) {
+      // L'axe qui porte SES enfants — celui du descripteur d'abord, puisque c'est lui qui a
+      // construit l'anneau ; le premier qui en a sinon (axes enchaînés d'un treillis).
+      const dim = node.dimensions_as_parent.find(
+        (d: Class_NodeDimension) => d.id === hierarchy.dimension_id && d.children.length > 0
+      ) ?? node.dimensions_as_parent.find((d: Class_NodeDimension) => d.children.length > 0)
+      if (dim) disaggregateLocally(app_data, node, (dim.children[0] as Class_NodeElement).id)
+    }
+    // Descendre ne se fait que s'il y a où descendre : un nœud sans enfant deviendrait un tout
+    // vide, et la couronne s'afficherait « rien à décomposer » sur un clic qui disait l'inverse.
+    if (wants_drill && node.dimensions_as_parent.some(
+      (d: Class_NodeDimension) => d.children.length > 0
+    )) {
+      writePath([...hierarchy.path, part_id])
+    }
+  }
+
+  return {
+    activate,
+    back: (wants_drill && hierarchy.path.length > 0)
+      ? () => writePath(hierarchy.path.slice(0, -1))
+      : undefined
+  }
 }
 
 // os#1425 — PLUS D'INTERFACE ÉCRITE À LA MAIN, pour aucune des trois natures.
@@ -350,7 +513,9 @@ export const registerAnalysisRepresentations = (): void => {
     icon: <FaChartPie />,
     own: DONUT_OWN,
     socle: DONUT_SOCLE,
-    extra_attributes: ANALYSIS_ATTRIBUTES,
+    // L axe et l epingle, comme les barres — plus l endroit ou la couronne est descendue, qui n a
+    // de sens que chez elle (23/09/2026).
+    extra_attributes: DONUT_EXTRA_ATTRIBUTES,
     // os#1399 — LA CIBLE D UNE PART, resolue et non declaree : selon l axe de decomposition, un
     // secteur est un flux, un noeud enfant ou un tag. Le descripteur EFFECTIF est celui que la
     // figure dessine (reglage de vignette compris), donc celui qui dit ce qu on vient de cliquer.
@@ -366,10 +531,18 @@ export const registerAnalysisRepresentations = (): void => {
     part_context: analysisPartContext,
     parts: (ctx) => analysisPartsOf(ctx),
     draw: (container, parts, wiring, ctx) => {
+      // 23/09/2026 — les deux gestes de la descente, quand la figure descend (cf.
+      // `donutClickGestures`). Absents sous un seul cran : le clic ne fait que sélectionner, comme
+      // depuis toujours.
+      const style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
+      const gestures = donutClickGestures(ctx, style)
       drawDonutChart(container, parts as unknown as Type_StatSlice[], {
         ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
         part_aspect: wiring.part_aspect,
         on_part_select: wiring.on_part_select,
+        on_part_activate: gestures.activate,
+        on_centre_click: gestures.back,
+        centre_back_label: ctx.app_data.t('sunburst.back') as string,
         label_positions: wiring.label_positions,
         on_label_move: wiring.on_label_move
       })
