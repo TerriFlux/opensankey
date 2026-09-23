@@ -525,6 +525,27 @@ export class Class_Workspace {
     return main.sheetApplication(sheet) ?? main
   }
 
+  /**
+   * sa#566 — LE DOCUMENT DE FEUILLE ACTIF : celui de la feuille que regarde la fenêtre active,
+   * SANS l'annuaire des documents de vignettes (cf. `active`, os#1422).
+   *
+   * Les vues appartiennent à une FEUILLE. Un volet dont la vignette monte son propre document
+   * (l'étoile d'un nœud) rend ce document actif — c'est juste pour l'inspecteur et le clavier —,
+   * mais ce document n'a pas de vues : la barre des vues, qui lisait l'actif, disparaissait dès
+   * qu'on touchait un tel volet. Elle lit celui-ci, qui reste la feuille.
+   */
+  public get active_sheet_document(): Class_ApplicationData | null {
+    const main = this._main
+    if (!main) return null
+    const mc: Class_MenuConfig | undefined = main.menu_configuration
+    if (mc === undefined) return main
+    const active_id = mc.main_zone_active_id
+    const occupant = active_id === null ? undefined : mc.mainZoneOccupantById(active_id)
+    const sheet = occupant ? mainZoneSubjectSheet(occupant.subject) : ''
+    if (sheet === '' || sheet === main.current_sheet_id) return main
+    return main.sheetApplication(sheet) ?? main
+  }
+
   /** Dernière identité annoncée de l'actif — sert à ne notifier que les VRAIES bascules. */
   protected _last_active: Class_ApplicationData | null = null
 
