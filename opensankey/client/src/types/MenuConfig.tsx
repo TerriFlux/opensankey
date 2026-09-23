@@ -37,8 +37,8 @@ import {
   Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
 } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
-// os#1482 — le magasin des scènes est PUR (aucune arête vers le dessin), comme `PanelManager`.
-import { Class_ScenesStore } from './Scenes'
+// os#1482 — le magasin des tableaux de bord est PUR (aucune arête vers le dessin), comme `PanelManager`.
+import { Class_DashboardsStore } from './Dashboards'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
 import type { ConverterConfig } from './ConverterConfig'
@@ -88,7 +88,7 @@ export type Type_AdditionalMenus = {
    * os#1488 — BOUTONS DE LA COLONNE D'OUTILS (droite), injectés par une couche supérieure.
    *
    * La colonne est rendue par l'éditeur (`SankeyMenus`), mais un panneau d'OpenSankey+ — la
-   * gestion des vues et des scènes — doit pouvoir y poser son bouton, comme l'Explorateur y a
+   * gestion des vues et des tableaux de bord — doit pouvoir y poser son bouton, comme l'Explorateur y a
    * le sien. Sans ce créneau il fallait soit descendre le panneau dans l'éditeur, soit lui
    * prendre une place dans la barre du haut, qui en porte déjà neuf.
    */
@@ -127,9 +127,9 @@ export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom'
 //  - 'node' / 'link' : ÉPINGLÉE sur un objet, quoi qu'on sélectionne ensuite.
 // `sheet` (os#1386) : la feuille regardée ; absente = la feuille courante.
 // `view` (os#1482) : la VUE de cette feuille à montrer ; absente = la vue courante du document.
-//   Posée par une SCÈNE (cf. Scenes.ts) : c'est ce qui permet à une disposition de dire « la
+//   Posée par une TABLEAU DE BORD (cf. Dashboards.ts) : c'est ce qui permet à une disposition de dire « la
 //   feuille B, dans sa vue Riz » — le couple (feuille, vue) est la seule extension du modèle des
-//   fenêtres qu'exigent les scènes. Une fenêtre ouverte à la main n'en porte pas.
+//   fenêtres qu'exigent les tableaux de bord. Une fenêtre ouverte à la main n'en porte pas.
 export type Type_MainZoneSubject =
   | { kind: 'diagram', sheet?: string, view?: string }
   | { kind: 'selection' }
@@ -892,11 +892,11 @@ export class Class_MenuConfig {
   // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
   // `documentation_markdown`, qui appartient au diagramme et serait persisté.
   protected _doc_external: { title: string, markdown: string } | null = null
-  // os#1482 — LES SCÈNES : la vue de l'espace de travail (cf. Scenes.ts et NOTE-SCENES.md). De
+  // os#1482 — LES TABLEAUX DE BORD : la vue de l'espace de travail (cf. Dashboards.ts et NOTE-TABLEAUX DE BORD.md). De
   // l'HÔTE, comme la liste des fenêtres qu'elles figent : un seul magasin par écran, lu et écrit
-  // par le document principal seul (clé racine `scenes`).
-  protected _scenes: Class_ScenesStore = new Class_ScenesStore()
-  public get scenes(): Class_ScenesStore { return this._host._scenes }
+  // par le document principal seul (clé racine `dashboards`).
+  protected _dashboards: Class_DashboardsStore = new Class_DashboardsStore()
+  public get dashboards(): Class_DashboardsStore { return this._host._dashboards }
   // Part de la largeur donnée à la zone principale face à la colonne droite (0..1).
   protected _main_zone_split_ratio: number = 2 / 3
   // Hauteur (px) du bandeau du bas, réglée par sa poignée.

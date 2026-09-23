@@ -41,8 +41,8 @@ export type Type_ViewEntry = {
   description?: string
   // os#1355 — LA REPRÉSENTATION de la vue : l'état de la grande zone figé avec elle.
   // os#1482 — HÉRITAGE, lu seulement : ce champ n'est plus ni posé ni écrit. Une disposition
-  // figée est une SCÈNE (Scenes.ts, clé racine `scenes`) ; `view_main_zone` d'un fichier
-  // antérieur est lue ici puis MIGRÉE en scène par `migrateViewMainZonesToScenes`, qui vide le
+  // figée est une TABLEAU DE BORD (Dashboards.ts, clé racine `dashboards`) ; `view_main_zone` d'un fichier
+  // antérieur est lue ici puis MIGRÉE en tableau de bord par `migrateViewMainZonesToDashboards`, qui vide le
   // champ. Un document secondaire (feuille vivante) peut le garder rempli : personne ne le lit.
   main_zone?: Type_JSON
 }
