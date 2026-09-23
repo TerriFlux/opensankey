@@ -24,7 +24,9 @@ export const resources_welcome = {
         8: 'Navigation menu to open,save, edit sankeys',
         9: 'Buttons to connect with an opensankey account and enable additional modules',
         10: 'Buttons to open the configuration menu to edit the elements of the sankey diagram',
-        excel: 'Button download the data used for the sankey in Excel format'
+        excel: 'Button download the data used for the sankey in Excel format',
+        carousel_previous: 'Previous image',
+        carousel_next: 'Next image'
       },
       carousel: {
         Image1: {
@@ -124,7 +126,9 @@ export const resources_welcome = {
         8: 'Menu de navigation permettant d\'ouvrir, enregistrer, éditer des sankeys',
         9: 'Bouton permettant de se connecter avec un compte opensankey et activer des modules supplémentaires',
         10: 'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
-        excel: 'Bouton permettant de télécharger les données au format Excel'
+        excel: 'Bouton permettant de télécharger les données au format Excel',
+        carousel_previous: 'Image précédente',
+        carousel_next: 'Image suivante'
       },
       carousel: {
         Image1: {
@@ -224,7 +228,9 @@ export const resources_welcome = {
         8: 'Menú de navegación para abrir, guardar y editar diagramas de Sankey',
         9: 'Botones para conectarse con una cuenta OpenSankey y activar módulos adicionales',
         10: 'Botones para abrir el menú de configuración para editar los elementos del diagrama de Sankey',
-        excel: 'Botón para descargar los datos utilizados para el Sankey en formato Excel'
+        excel: 'Botón para descargar los datos utilizados para el Sankey en formato Excel',
+        carousel_previous: 'Imagen anterior',
+        carousel_next: 'Imagen siguiente'
       },
       carousel: {
         Image1: {
@@ -324,7 +330,9 @@ export const resources_welcome = {
         8: 'Navigationsmenü zum Öffnen, Speichern und Bearbeiten von Sankey-Diagrammen',
         9: 'Schaltflächen zur Anmeldung mit einem OpenSankey-Konto und zur Aktivierung zusätzlicher Module',
         10: 'Schaltflächen zum Öffnen des Konfigurationsmenüs zur Bearbeitung der Elemente des Sankey-Diagramms',
-        excel: 'Schaltfläche zum Herunterladen der für das Sankey verwendeten Daten im Excel-Format'
+        excel: 'Schaltfläche zum Herunterladen der für das Sankey verwendeten Daten im Excel-Format',
+        carousel_previous: 'Vorheriges Bild',
+        carousel_next: 'Nächstes Bild'
       },
       carousel: {
         Image1: {
@@ -424,7 +432,9 @@ export const resources_welcome = {
         8: 'Menu di navigazione per aprire, salvare e modificare diagrammi di Sankey',
         9: 'Pulsanti per accedere con un account OpenSankey e attivare moduli aggiuntivi',
         10: 'Pulsanti per aprire il menu di configurazione per modificare gli elementi del diagramma di Sankey',
-        excel: 'Pulsante per scaricare i dati utilizzati per il Sankey in formato Excel'
+        excel: 'Pulsante per scaricare i dati utilizzati per il Sankey in formato Excel',
+        carousel_previous: 'Immagine precedente',
+        carousel_next: 'Immagine successiva'
       },
       carousel: {
         Image1: {
@@ -524,7 +534,9 @@ export const resources_welcome = {
         8: '用于打开、保存、编辑桑基图的导航菜单',
         9: '用于连接 OpenSankey 账号并启用附加模块的按钮',
         10: '用于打开配置菜单以编辑桑基图元素的按钮',
-        excel: '以 Excel 格式下载桑基图所用数据的按钮'
+        excel: '以 Excel 格式下载桑基图所用数据的按钮',
+        carousel_previous: '上一张图片',
+        carousel_next: '下一张图片'
       },
       carousel: {
         Image1: {
@@ -624,7 +636,9 @@ export const resources_welcome = {
         8: 'サンキーを開く・保存する・編集するためのナビゲーションメニュー',
         9: 'OpenSankey アカウントに接続し、追加モジュールを有効にするためのボタン',
         10: 'サンキーダイアグラムの要素を編集する設定メニューを開くボタン',
-        excel: 'サンキーで使っているデータを Excel 形式でダウンロードするボタン'
+        excel: 'サンキーで使っているデータを Excel 形式でダウンロードするボタン',
+        carousel_previous: '前の画像',
+        carousel_next: '次の画像'
       },
       carousel: {
         Image1: {
