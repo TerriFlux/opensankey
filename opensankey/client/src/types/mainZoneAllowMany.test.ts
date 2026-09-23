@@ -13,12 +13,12 @@
 import { Class_ApplicationData } from './ApplicationData'
 import { representation_registry } from '../Representations/RepresentationRegistry'
 import { FIGURE_DIAGRAM_PANE_KEY } from '../Representations/Figure'
-import { MAIN_ZONE_CANVAS_ID, MAIN_ZONE_GROUP_VIEW_ID } from './MenuConfig'
+import { MAIN_ZONE_CANVAS_ID } from './MenuConfig'
 
-// Une nature de test qui accepte plusieurs fenetres, sous l identifiant meme de la vue par groupe :
-// c est cet identifiant que la fiche d un groupe ouvrira, et le tester sous un autre nom ne dirait
-// rien de ce qui sera branche.
-const NATURE_MANY = MAIN_ZONE_GROUP_VIEW_ID
+// Une nature de test qui accepte plusieurs fenetres. Aucune nature livree ne declare `allow_many`
+// a ce jour (la vue d un groupe, sa#563, est une fenetre unique dont on change le reglage) : le
+// mecanisme est teste pour lui-meme, sous un identifiant de test.
+const NATURE_MANY = 'test.repr.plusieurs'
 // Une nature d echelle diagramme ordinaire, temoin de la non-regression.
 const NATURE_ONE = 'test.repr.une_seule'
 

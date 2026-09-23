@@ -19,11 +19,16 @@ import { Class_Workspace } from '../types/Workspace'
 import { buildParts } from '../Representations/parts/buildParts'
 import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 import {
+  BarPartStyle, DonutPartStyle, FigurePartStyle,
+  figure_part_nature_styles, figure_part_styles
+} from './ElementStyle'
+import {
   attributeAppliesToElements,
   attributesOwnedBy,
   attributeScopeOf,
   familyAppliesToElements,
   natureOf,
+  partStyleFigureNature,
   scopeSpeaksTo
 } from './attributeScope'
 
@@ -112,6 +117,73 @@ describe('os#1464 ce qui est masque sur une part', () => {
     expect(attributeAppliesToElements([noeud], 'stock_label_is_visible')).toBe(true)
     expect(familyAppliesToElements([part], 'stock_label')).toBe(false)
     expect(familyAppliesToElements([noeud], 'stock_label')).toBe(true)
+  })
+})
+
+// os#1497 — UN STYLE DE PART EST UNE PART, ET IL DIT DE QUELLE FIGURE.
+//
+// Julien, capture a l appui, sur des BARRES : « il reste des choses qui ne devraient pas etre la,
+// ca n a de sens que pour couronne » — l orientation radiale, le detachement de l etiquette. Puis :
+// « ca donne l impression que tu n as pas encore fini le travail systematique pour chaque
+// attribut. »
+//
+// LES PORTEES ETAIENT JUSTES ; C EST LA QUESTION QUI NE L ETAIT PAS. En portee STYLES — livree la
+// veille par os#1495 — l inspecteur ne tient plus l element mais le STYLE qu il edite. Un style n a
+// pas de nature, et « pas de nature = recoit tout » : la bande Styles d une part rouvrait donc le
+// catalogue entier, y compris ce qu une barre ne sait pas faire.
+//
+// Un style de part, lui, SAIT de quoi il est le style : il y en a quatre, ils sont nommes, et un
+// par nature (os#1462).
+describe('os#1497 un style de part porte la nature de sa figure', () => {
+
+  it('LE STYLE DES BARRES refuse ce qui n a de sens que dans un rond', () => {
+    const style_barres = { id: BarPartStyle }
+
+    expect(attributeAppliesToElements([style_barres], 'name_label_orientation')).toBe(false)
+    expect(attributeAppliesToElements([style_barres], 'name_label_callout')).toBe(false)
+    // CONTRE-VERIFICATION : il garde tout ce qu une part sait faire, sinon ce test passerait au
+    // vert sur une declaration qui masque tout.
+    expect(attributeAppliesToElements([style_barres], 'shape_color')).toBe(true)
+    expect(attributeAppliesToElements([style_barres], 'name_label_horiz')).toBe(true)
+  })
+
+  it('LE STYLE DE LA COURONNE les garde, et c est la meme cle', () => {
+    const style_couronne = { id: DonutPartStyle }
+
+    expect(attributeAppliesToElements([style_couronne], 'name_label_orientation')).toBe(true)
+    expect(attributeAppliesToElements([style_couronne], 'name_label_callout')).toBe(true)
+    // Et il perd le placement en boite, qu une barre garde : un arc n a pas de coins (os#1483).
+    expect(attributeAppliesToElements([style_couronne], 'name_label_horiz')).toBe(false)
+  })
+
+  it('LE STYLE GENERIQUE sert les trois figures, donc ne masque aucune figure', () => {
+    // `FigurePartStyle` se pose sous les trois : masquer chez lui ce qu une seule nature refuse
+    // rendrait le reglage inatteignable pour les deux autres.
+    const style_generique = { id: FigurePartStyle }
+
+    expect(attributeAppliesToElements([style_generique], 'name_label_orientation')).toBe(true)
+    expect(attributeAppliesToElements([style_generique], 'name_label_horiz')).toBe(true)
+    // Mais il reste une PART : ce qui ne s adresse a aucune part reste masque.
+    expect(attributeAppliesToElements([style_generique], 'value_label_unit_type')).toBe(false)
+  })
+
+  it('UN STYLE QUI N EST PAS CELUI D UNE PART recoit tout, comme avant', () => {
+    // La regle d origine ne bouge pas : un style nomme ne dit pas a quelle nature il servira, et
+    // masquer ses reglages le rendrait impossible a ecrire.
+    const style_noeud = { id: 'MonStyleDeNoeud' }
+
+    expect(attributeAppliesToElements([style_noeud], 'name_label_orientation')).toBe(true)
+    expect(attributeAppliesToElements([style_noeud], 'value_label_unit_type')).toBe(true)
+  })
+
+  it('LES QUATRE NOMS SONT LES MEMES DES DEUX COTES', () => {
+    // ⚠️ LE GARDE-FOU DE LA RECOPIE. `attributeScope` ne peut pas importer `ElementStyle` sans
+    // refermer un cycle de modules : les quatre identifiants y sont donc recopies. Ce cas tient
+    // les deux listes ensemble, et rougit le jour ou une cinquieme nature s ajoute d un cote.
+    expect(partStyleFigureNature({ id: figure_part_styles[0] })).toBe('')
+    Object.entries(figure_part_nature_styles).forEach(([nature, style_id]) => {
+      expect([style_id, partStyleFigureNature({ id: style_id })]).toEqual([style_id, nature])
+    })
   })
 })
 

@@ -520,21 +520,32 @@ export const drawDonutChart = (
     if (s.value_label_percent !== 'none') return Math.round(d.data.value / total * 100) + '%'
     return (a?.value_format ?? fmt)(d.data.value)
   }
-  const sector_lines = (d: d3.PieArcDatum<Type_StatSlice>): string[] => {
+  /**
+   * os#1502 — UNE LIGNE DU BLOC, ET CE QU'ELLE EST : le nom, ou la valeur.
+   *
+   * Julien, capture à l'appui : « ces paramètres pour la valeur ne marchent pas — ni la police, ni
+   * bold, ni italique ». Le nom et la valeur partagent UN texte quand la valeur y est collée
+   * (os#1470), et ce texte portait la typographie du NOM : régler celle de la valeur était donc un
+   * geste sans effet. Savoir quelle ligne est laquelle suffit à le réparer.
+   */
+  const sector_lines = (
+    d: d3.PieArcDatum<Type_StatSlice>
+  ): { text: string, is_value: boolean }[] => {
     const s = styleOf(d)
     const a = aspectOf(d.data.id)
-    const lines: string[] = []
-    if (s.name_label_is_visible) lines.push(sectorName(d))
+    const lines: { text: string, is_value: boolean }[] = []
+    if (s.name_label_is_visible) lines.push({ text: sectorName(d), is_value: false })
     // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
     // n'existe que si la part a dit quelque chose des six clés de format (cf. `partAspect`).
-    const value = valueAttached(d.data.id) ? sectorValue(d) : ''
-    if (value !== '') lines.push(value)
+    // La CASSE est celle de la valeur, et non celle du nom : c'est son texte.
+    const value = valueAttached(d.data.id) ? partTextCase(sectorValue(d), a?.value) : ''
+    if (value !== '') lines.push({ text: value, is_value: true })
     // La boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne entre les mots, et
     // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
     // toute couronne enregistrée —, chaque ligne ressort telle quelle.
     return lines.flatMap(line => wrapLabelToBox(
-      line, a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.name?.wrap_long_words ?? false
-    ))
+      line.text, a?.name?.box_width ?? styleOf(d).name_label_box_width ?? 0, s.name_label_font_size, a?.name?.wrap_long_words ?? false
+    ).map(text => ({ text, is_value: line.is_value })))
   }
   /**
    * `name_label_prune_if_unfitting` — « Masquer si ça dépasse ». La place d'un secteur est la
@@ -550,7 +561,7 @@ export const drawDonutChart = (
     const s = styleOf(d)
     const chord_px = 2 * label_radius * Math.sin(Math.min(Math.PI, d.endAngle - d.startAngle) / 2)
     return sector_lines(d).every(
-      line => labelTextWidthPx(line, s.name_label_font_size) <= chord_px
+      line => labelTextWidthPx(line.text, s.name_label_font_size) <= chord_px
     )
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
@@ -654,12 +665,24 @@ export const drawDonutChart = (
         // ligne supplémentaire, sinon l'étiquette dériverait vers le bord extérieur du secteur.
         const dy0 = -(lines.length - 1) * 0.55
         const text = d3.select(this)
-        text.selectAll('tspan')
+        const tspans = text.selectAll('tspan')
           .data(lines)
           .enter().append('tspan')
           .attr('x', 0)
           .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
-          .text(line => line)
+          .text(line => line.text)
+        // os#1502 — LA LIGNE DE LA VALEUR PORTE SA PROPRE TYPOGRAPHIE, et seulement ce que la part
+        // en DIT. Un `tspan` accepte sa police, sa graisse, son style et son encre : le bloc
+        // partagé n'a jamais empêché cela — ce qui manquait était de savoir quelle ligne est la
+        // valeur. Rien de dit, rien de posé (`null` retire l'attribut chez d3) : une couronne
+        // enregistrée garde le texte d'hier, au pixel.
+        const av = aspectOf(d.data.id)?.value
+        tspans.filter(line => line.is_value)
+          .attr('font-size', av?.font_size ?? null)
+          .attr('font-family', av?.font_family ?? null)
+          .attr('font-weight', av?.bold === undefined ? null : (av.bold ? 'bold' : 'normal'))
+          .attr('font-style', av?.italic === undefined ? null : (av.italic ? 'italic' : 'normal'))
+          .attr('fill', av?.color ?? null)
         // os#1469 — LE STYLE ET LE CARTOUCHE, par le module commun, et APRÈS le texte : le
         // cartouche se mesure sur ce qui est écrit.
         //
@@ -808,7 +831,7 @@ export const drawDonutChart = (
         .enter().append('tspan')
         .attr('x', positionOf(d).x)
         .attr('dy', (_line, i) => (i === 0 ? `${dy0}em` : '1.1em'))
-        .text(line => line)
+        .text(line => line.text)
     })
     if (st.interaction_tooltip) items.append('title').text(slice_title)
     // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
@@ -929,7 +952,21 @@ export const drawBarChart = (
   const { sel, width, height } = prepareContainer(container, opts)
   // L'ordre des barres (`parts_order`) ; 'model', le défaut, garde celui de l'analyse.
   const slices = orderParts(raw_slices, st.parts_order)
-  const max_value = slices.reduce((m, d) => Math.max(m, d.value), 0)
+  // ── os#1499 — EMPILER LES PARTS : UNE SEULE BARRE, UN SEGMENT PAR PART ──────────────────────
+  //
+  // Julien, devant le selecteur « Disposer » des coordonnees : « pour les barres, que veut dire
+  // ca ? Sur mon cas tres simple, deja ca n'agit pas. »
+  //
+  // Il avait raison deux fois. « En parts d'une barre » PROMETTAIT une barre unique a segments, et
+  // les deux choix dessinaient la meme chose — N barres — parce qu'aucun trace ne savait empiler
+  // des parts. Ce que le choix reglait vraiment etait le regime d'ANALYSE (les flux s'additionnent
+  // ou non), qui ne se voit qu'ailleurs : l'echelle, et le croisement avec un second axe.
+  //
+  // Les deux questions se separent donc : celle-ci est de la MISE EN FORME, elle se regle sur la
+  // figure et elle se voit. Defaut `false` — aucun histogramme enregistre ne change d'aspect.
+  const stacked = st.bars_stacked === true
+  const stack_total = slices.reduce((sum, d) => sum + Math.max(0, d.value), 0)
+  const max_value = stacked ? stack_total : slices.reduce((m, d) => Math.max(m, d.value), 0)
   if (slices.length === 0 || max_value <= 0 || width < 80 || height < 80) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
     return
@@ -972,6 +1009,36 @@ export const drawBarChart = (
   const barPx = (v: number) => {
     const px = h - y(v)
     return px * visibilityLift(px)
+  }
+
+  // Le bas de chaque segment, cumule dans l'ordre DESSINE : empiler, c'est poser chaque part sur
+  // le haut de la precedente, et `parts_order` a deja fixe cet ordre.
+  const stack_base = new Map<string, number>()
+  slices.reduce((base, d) => {
+    stack_base.set(d.id, base)
+    return base + Math.max(0, d.value)
+  }, 0)
+  // La barre unique prend la moitie centrale de la zone : plus large, elle ferait un bloc ; plus
+  // etroite, ses segments n'auraient plus la place d'ecrire leur nom.
+  const stack_x = w * 0.25
+  const stack_w = w * 0.5
+
+  /**
+   * LA BOITE D'UNE PART : sa colonne et ses deux bords. C'est le seul endroit qui sait si la
+   * figure est empilee — le rectangle, le nom et la valeur la demandent, et n'ont rien a savoir.
+   *
+   * Hors empilement, elle rend exactement la geometrie d'hier : la bande de l'echelle ordinale,
+   * du sommet de la barre au pied du dessin.
+   */
+  const boxOf = (d: Type_StatSlice): { x: number, w: number, top: number, bottom: number } => {
+    if (!stacked) {
+      return { x: x(d.id) ?? 0, w: x.bandwidth(), top: h - barPx(d.value), bottom: h }
+    }
+    // ⚠️ PAS DE PLANCHER DE VISIBILITE DANS UNE PILE (#393) : relever chaque segment ferait une
+    // pile plus haute que son total, et les parts ne s'additionneraient plus a l'ecran. Une part
+    // minuscule est ici lisible par sa place dans la pile, pas par sa hauteur propre.
+    const base = stack_base.get(d.id) ?? 0
+    return { x: stack_x, w: stack_w, top: y(base + Math.max(0, d.value)), bottom: y(base) }
   }
 
   // ── os#1463 — UNE BARRE EST UNE PART, ET ELLE NE L'ÉTAIT PAS ENCORE ──────────────────────────
@@ -1052,10 +1119,10 @@ export const drawBarChart = (
     // jamais un `id` (les `id` sont globaux, deux figures côte à côte se voleraient leurs dégradés).
     .attr('data-repr-kind', 'part')
     .attr('data-repr-id', d => d.id)
-    .attr('x', d => x(d.id) ?? 0)
-    .attr('y', d => h - barPx(d.value))
-    .attr('width', x.bandwidth())
-    .attr('height', d => barPx(d.value))
+    .attr('x', d => boxOf(d).x)
+    .attr('y', d => boxOf(d).top)
+    .attr('width', d => boxOf(d).w)
+    .attr('height', d => Math.max(0, boxOf(d).bottom - boxOf(d).top))
     // « Fond » décoché l'emporte sur toute couleur : c'est le sens du réglage.
     .attr('fill', (d, i) => {
       const a = aspectOf(d.id)
@@ -1099,11 +1166,11 @@ export const drawBarChart = (
    * @param plain la place que le tracé donnait à ce texte hors de la barre.
    */
   const barTextY = (
-    vert: string, inside: boolean, top: number, size: number, plain: number
+    vert: string, inside: boolean, box: { top: number, bottom: number }, size: number, plain: number
   ): number => {
-    if (vert === 'top') return inside ? top + size + 2 : top - 4
-    if (vert === 'middle') return (top + h) / 2
-    return inside ? h - 4 : plain
+    if (vert === 'top') return inside ? box.top + size + 2 : box.top - 4
+    if (vert === 'middle') return (box.top + box.bottom) / 2
+    return inside ? box.bottom - 4 : plain
   }
 
   // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`) — et
@@ -1122,19 +1189,19 @@ export const drawBarChart = (
       .text(d => partTextCase(barValueText(d), aspectOf(d.id)?.value))
       .each(function (d) {
         const a = aspectOf(d.id)?.value
-        const bar_h = barPx(d.value)
-        const top = h - bar_h
+        const box = boxOf(d)
         const size = a?.font_size ?? styleOf(d).name_label_font_size
         // DEDANS : la valeur descend sous le sommet de la barre. DEHORS (le trace d hier) : elle
         // se pose juste au-dessus. Le reste — decalages fins et ancrage — est commun a tous les
         // textes de part, et vit dans `partTextPlacement`.
-        const inside = a?.inside === true
+        // os#1499 — EMPILE, UN TEXTE EST DEDANS PAR DEFAUT : au-dessus de son segment, il
+        // s'ecrirait sur le segment du dessus. C'est la regle de la couronne, pour la meme raison.
+        const inside = (a?.inside ?? stacked) === true
         const vert = a?.vert ?? (inside ? 'top' : 'bottom')
         const horiz = a?.horiz ?? 'middle'
-        const band_x = x(d.id) ?? 0
         const at = partTextPlacement({
-          x: band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2),
-          y: barTextY(vert, inside, top, size, top - 4),
+          x: box.x + (horiz === 'left' ? 0 : horiz === 'right' ? box.w : box.w / 2),
+          y: barTextY(vert, inside, box, size, box.top - 4),
           anchor: 'middle',
           rotate: false
         }, a)
@@ -1227,20 +1294,19 @@ export const drawBarChart = (
   // On garde donc le même mot pour le même geste, plutôt qu'en inventer un pour les figures.
   const barLabelAt = (d: Type_StatSlice) => {
     const a = aspectOf(d.id)
-    const band_x = x(d.id) ?? 0
-    const top = h - barPx(d.value)
+    const box = boxOf(d)
     const size = styleOf(d).name_label_font_size
     // L'ANCRE HORIZONTALE dans la bande : au milieu, sauf demande. Le pivot à -35° garde son
     // ancrage à droite — c'est lui qui fait que le texte s'éloigne de l'axe vers le bas-gauche.
     const horiz = a?.name?.horiz ?? 'middle'
-    const cx = band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2)
-    const inside = a?.name?.inside === true
-    // os#1482 — ce que la part dit de l orientation de son nom (cf. `rotate`, plus bas).
-    const orientation = a?.name?.orientation
+    const cx = box.x + (horiz === 'left' ? 0 : horiz === 'right' ? box.w : box.w / 2)
+    // os#1499 — empile, le nom est DEDANS par defaut : sous l'axe, les noms de tous les segments
+    // se poseraient au meme endroit, puisqu'il n'y a qu'une barre.
+    const inside = (a?.name?.inside ?? stacked) === true
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
     const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
-    const cy = barTextY(vert, inside, top, size, rotate_labels ? h + 8 : h + 14)
+    const cy = barTextY(vert, inside, box, size, rotate_labels ? h + 8 : h + 14)
     const anchor = a?.name?.text_align
       ?? (inside ? 'middle' : (rotate_labels ? 'end' : 'middle'))
     return {
@@ -1248,23 +1314,19 @@ export const drawBarChart = (
       y: cy + (a?.name?.shift_y ?? 0),
       // Pivoté seulement SOUS L'AXE : à l'intérieur d'une barre, un nom couché ne se lit plus.
       //
-      // os#1482 — ET L'AUTEUR PEUT TRANCHER. La même clé que sur une couronne, avec le sens qu'elle
-      // peut avoir ici : un histogramme n'a ni rayon ni arc, mais il a un nom qui tient ou non sous
-      // sa barre.
+      // ⚠️ os#1497 — ET L'ORIENTATION DE LA PART NE SE LIT PLUS ICI, à la demande de Julien :
+      // « il reste des choses sur barres qui ne devraient pas être là, ça n'a de sens que pour
+      // couronne. »
       //
-      //   RADIALE (le défaut) — le tracé décide, comme depuis toujours : il couche le nom quand la
-      //                         bande est trop étroite pour lui ;
-      //   HORIZONTALE         — droit, quoi qu'il arrive, quitte à ce que les noms se chevauchent ;
-      //   LE LONG DE LA FORME — couché, quoi qu'il arrive.
+      // os#1482 lui avait donné un sens de barres — radiale = le tracé décide, horizontale =
+      // droit, le long de la forme = couché — en tordant trois mots de ROND pour un histogramme.
+      // C'était déjà la solution de repli de l'époque, et os#1483 a tranché l'autre sens en
+      // réservant la clé aux figures rondes (`figures: { only: ['donut', 'sunburst'] }`).
       //
-      // Offrir ce réglage sans lui donner de sens ici aurait fait un bouton mort de plus sur les
-      // barres : la portée d'un attribut distingue les natures d'ÉLÉMENT (nœud, flux, part), pas
-      // les natures de FIGURE — une part de barres et une part de couronne sont toutes deux 'part'.
-      rotate: !inside && (
-        orientation === 'horizontal' ? false
-          : orientation === 'tangential' ? true
-            : rotate_labels
-      ),
+      // Ce qui restait était la moitié d'une bijection : un code sans surface pour l'allumer. Il
+      // part avec elle, et les barres retrouvent leur règle — coucher le nom quand la bande est
+      // trop étroite, et pas autrement.
+      rotate: !inside && rotate_labels,
       anchor: anchor === 'left' ? 'start' : anchor === 'right' ? 'end' : 'middle'
     }
   }
@@ -1457,20 +1519,13 @@ export const drawStackedBarChart = (
   const root = sel.append('div')
     .style('display', 'flex').style('flex-direction', flexDirection(st)).style('align-items', 'stretch')
     .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
-  const legend_width = legend_shown ? Math.min(st.legend_width, width * 0.35) : 0
-  const chart_width = Math.max(80, width - legend_width - 12)
 
+  // La HAUTEUR d'abord, la largeur ensuite : la hauteur n'a jamais dépendu de la largeur,
+  // et c'est elle qui dit combien de piles sont au plancher — donc si la colonne latérale
+  // a quelque chose à porter, même légende coupée (voir plus bas).
   const rotate_labels = series.length > 6 || series.some(s => s.label.length > 8)
   const margin = { top: 18, right: 8, bottom: rotate_labels ? 46 : 22, left: 8 }
-  const w = chart_width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
-
-  const x = d3.scaleBand<string>().domain(series.map(s => s.id)).range([0, w]).padding(0.25)
-  const y = d3.scaleLinear().domain([0, max_total]).range([h, 0])
-
-  const svg = root.append('svg')
-    .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
-  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
   // Écrasement (#393) : ici non plus il n'y a pas de grappe — une barre par série, et
   // rien qui les regroupe. Une échelle logarithmique serait par ailleurs un contresens
@@ -1478,6 +1533,24 @@ export const drawStackedBarChart = (
   // plancher de visibilité, appliqué à la PILE ENTIÈRE : relever les segments un à un
   // décollerait le sommet de la barre de son total.
   const lifted = countLifted(series.map(s => (series_total(s) / max_total) * h))
+
+  // Largeur de la colonne latérale. Elle sert la légende, ET la mention à elle seule —
+  // sinon la mention n'aurait aucune place où s'écrire dès que la légende est coupée,
+  // c'est-à-dire par défaut depuis os#1431. Un filet suffit pour une ligne.
+  const notes_shown = lifted > 0 && st.notes_visible
+  const side_shown = legend_shown || notes_shown
+  const side_width = legend_shown
+    ? Math.min(st.legend_width, width * 0.35)
+    : (notes_shown ? Math.min(120, width * 0.25) : 0)
+  const chart_width = Math.max(80, width - side_width - 12)
+  const w = chart_width - margin.left - margin.right
+
+  const x = d3.scaleBand<string>().domain(series.map(s => s.id)).range([0, w]).padding(0.25)
+  const y = d3.scaleLinear().domain([0, max_total]).range([h, 0])
+
+  const svg = root.append('svg')
+    .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
   // Empilement d'une série dans l'ordre global des catégories.
   series.forEach(s => {
@@ -1524,26 +1597,32 @@ export const drawStackedBarChart = (
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')
     .text(s => s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label)
 
-  // Légende des catégories (parts), quand l'auteur la veut.
-  if (!legend_shown) return
-  const legend = root.append('div')
+  // Colonne latérale : la légende des catégories, et SOUS elle les mentions du dessin.
+  // Les deux ne se commandent pas ensemble — la raison est écrite en toutes lettres dans
+  // l'histogramme groupé, au même endroit (os#1431 × #393).
+  if (!side_shown) return
+  const aside = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
     .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
-  const items = legend.selectAll('div').data(category_order).enter().append('div')
-    .style('display', 'flex').style('align-items', 'center')
-    .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
-  items.append('span')
-    .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-    .style('border-radius', '2px').style('background', c => c.color)
-  items.append('span')
-    .style('flex', '1 1 auto').style('overflow', 'hidden')
-    .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-    .attr('title', c => c.label).text(c => c.label)
 
-  // Mention d'ÉCRASEMENT (#393), au pied de la légende des catégories.
-  if (lifted > 0 && st.notes_visible) {
-    legend.append('div')
+  // Légende des catégories (parts), quand l'auteur la veut.
+  if (legend_shown) {
+    const items = aside.selectAll('div').data(category_order).enter().append('div')
+      .style('display', 'flex').style('align-items', 'center')
+      .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
+    items.append('span')
+      .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+      .style('border-radius', '2px').style('background', c => c.color)
+    items.append('span')
+      .style('flex', '1 1 auto').style('overflow', 'hidden')
+      .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+      .attr('title', c => c.label).text(c => c.label)
+  }
+
+  // Mention d'ÉCRASEMENT (#393), au pied de la colonne.
+  if (notes_shown) {
+    aside.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
@@ -1745,10 +1824,21 @@ export const drawGroupedBarChart = (
   const legend_data = stacked
     ? [...categories.entries()].map(([id, v], i) => ({ id, label: v.label, color: v.color ?? paletteColor(i) }))
     : series_order
-  const legend = root.append('div')
+
+  // ⚠️ LA LÉGENDE SE CACHE, LES MENTIONS RESTENT (os#1431 × #393). Elles vivaient DANS la
+  // légende ; le jour où celle-ci est passée cachée par défaut, elles se sont tues avec
+  // elle — sans que personne le décide. Or les deux ne disent pas la même chose : la
+  // légende NOMME des couleurs (l'auteur peut la juger redondante, c'est son droit),
+  // la mention AVERTIT que les hauteurs ont cessé de porter les valeurs. Taire la
+  // seconde laisse lire « négligeable » là où la donnée est d'un autre ordre de
+  // grandeur — c'est-à-dire le défaut même que #393 était venu corriger.
+  // La colonne porte donc les deux, et seules les ENTRÉES obéissent à `legend_visible` ;
+  // les mentions n'obéissent qu'à `notes_visible`.
+  const aside = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
     .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
+  const legend = aside.append('div')
     .style('display', st.legend_visible ? 'block' : 'none')
   const items = legend.selectAll('div.node_stats_legend_item')
     .data(legend_data).enter().append('div')
@@ -1766,7 +1856,7 @@ export const drawGroupedBarChart = (
   // Troncature ANNONCÉE : une grappe muette sur ce qu'elle omet ferait lire un
   // sous-ensemble pour le tout.
   if (dropped > 0 && st.notes_visible) {
-    legend.append('div')
+    aside.append('div')
       .attr('class', 'node_stats_legend_truncated')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.truncated_label ? opts.truncated_label(dropped) : `+${dropped}`)
@@ -1778,13 +1868,13 @@ export const drawGroupedBarChart = (
   // plancher. Taire l'une des deux laisserait une moitié du graphique se faire lire de
   // travers.
   if (per_group && st.notes_visible) {
-    legend.append('div')
+    aside.append('div')
       .attr('class', 'node_stats_legend_independent_scales')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.independent_scales_label ?? 'independent scales')
   }
   if (lifted > 0 && st.notes_visible) {
-    legend.append('div')
+    aside.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)

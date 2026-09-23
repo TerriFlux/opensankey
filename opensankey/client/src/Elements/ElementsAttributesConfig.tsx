@@ -52,6 +52,7 @@ import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 // os#1421 — type seul : la liste des placements d'un nœud (cf. Representations/Placement).
 import type { Type_FigurePlacement } from '../Representations/Placement'
 import type { Type_TooltipHiddenBlocks } from './TooltipBlocks'
+import { figureStyleDefault } from './figureNatureDefaults'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
@@ -4906,7 +4907,15 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
 
   // L'étiquette DÉTACHÉE, même raisonnement : c'est le NOM qui sort de sa part. La valeur le suit
   // (elle est écrite dans le même texte, ou juste dessous), le stock et l'icône n'en ont pas.
-  name_label_callout: ONLY_A_PART,
+  //
+  // os#1497 — ET SEULEMENT DANS UN ROND, comme l'orientation. Julien, sur des barres : « il reste
+  // des choses qui ne devraient pas être là, ça n'a de sens que pour couronne. »
+  //
+  // Il a raison deux fois : « détacher » répond à un problème de ROND — un secteur étroit n'a pas
+  // la place d'écrire son nom dedans, et le trait de rappel va le poser dehors. Une barre n'a pas
+  // ce problème : son nom est DÉJÀ dehors, sous l'axe. Et le tracé le dit aussi — `drawBarChart`
+  // ne lit pas `label_callout` et ne dessine aucun trait de rappel : la case était morte.
+  name_label_callout: { ...ONLY_A_PART, figures: { only: ['donut', 'sunburst'] } },
 
   // os#1491 — « DEDANS » NE SE DIT QU'UNE FOIS SUR UNE PART, et c'est `inside_vert` qui le dit.
   //
@@ -4916,6 +4925,17 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   // `inside_horiz` n'est lu par aucun : c'était un bouton mort, et le harnais le disait.
   name_label_inside_horiz: NOT_ON_A_PART,
   value_label_inside_horiz: NOT_ON_A_PART,
+
+  // os#1504 — L'ANGLE DU TEXTE PART AVEC EUX, et pour la meme raison exactement.
+  //
+  // Julien : « tu as laisse l'angle pour l'orientation du texte, et ca n'a pas d'effet ».
+  //
+  // Il etait deja masque sur les figures RONDES (`PLACED_IN_A_BOX_KEYS`, os#1483) ; il restait donc
+  // offert sur les barres, ou AUCUN trace ne le lit — `text_angle` n'apparait nulle part dans les
+  // Charts. C'est la moitie d'une bijection : une surface sans code. Elle part, comme l'orientation
+  // des barres a la meme demande (os#1497).
+  name_label_text_angle: NOT_ON_A_PART,
+  value_label_text_angle: NOT_ON_A_PART,
 
   // ── os#1490 — L'UNITÉ D'UNE PART DE FIGURE, ET PAS CELLE D'UN FLUX ──────────────────────────
   //
@@ -5120,6 +5140,19 @@ export function getConfigValues<
 
       Object.defineProperty(result, key, {
         get: () => {
+          // os#1501 — UN STYLE DE PART MONTRE CE QUE SA FIGURE FERAIT, pas ce qu'un nœud ferait.
+          //
+          // Julien, capture à l'appui dans la cascade d'une couronne : « même le style pour les
+          // couronnes ne reflète pas le dessin », « Valeur n'est pas mis en ON dans config ; si je
+          // manipule ensuite ça se synchronise, mais pas au début ».
+          //
+          // ⚠️ UN STYLE RÉPOND TOUJOURS, ET C'EST LE PIÈGE : interrogé sur une clé qu'il ne règle
+          // pas, il rend la valeur d'usine d'un ÉLÉMENT (par son style par défaut), jamais
+          // `undefined`. Or `value_label_is_visible` vaut `false` pour un nœud et `true` pour une
+          // couronne (os#1489) : le panneau montrait donc l'inverse du dessin, et les deux se
+          // « synchronisaient » au premier geste — parce qu'écrire la clé la rend explicite.
+          const figure_default = figureStyleDefault(elements[0], fullKey)
+          if (figure_default !== undefined) return figure_default
           return (elements.length > 0 && Reflect.get(elements[0], fullKey)) ?? config[configKey].default
         },
         set: (value: ExtractConfigValue<CONFIG[typeof configKey]>) => {

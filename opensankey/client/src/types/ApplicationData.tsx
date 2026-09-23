@@ -41,11 +41,11 @@ import {
   Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES,
   mainZoneOccupantUsesOwnWindowId, mainZoneSubjectSheet, mainZoneSubjectView, MAIN_ZONE_CANVAS_ID
 } from '../types/MenuConfig'
-// os#1482 — les scènes (vue de l'espace de travail) : magasin pur + règles d'identifiants.
+// os#1482 — les tableaux de bord (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
-  implicitSceneId, viewIdOfImplicitScene, migratedSceneId, mainZoneWithViewOnCurrentSheet,
-  sceneViewRefs, type Type_Scene
-} from './Scenes'
+  implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId, mainZoneWithViewOnCurrentSheet,
+  dashboardViewRefs, type Type_Dashboard
+} from './Dashboards'
 import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, getStringFromJSON, makeId, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { PublishOptions } from './PublishOptions'
 // os#1385 — L'ESPACE DE TRAVAIL. Import en VALEUR dans les deux sens (Workspace importe cette
@@ -125,23 +125,18 @@ export type MenuColorPickerProps = {
   textDisabled?: string
 }
 
-/** Une ANALYSE D'UN ÉLÉMENT proposée dans sa pop-up (bouton + rendu) : couronne, barres,
- *  sankey unitaire. Fournie par OS+ via `Class_ApplicationData.element_analyses_for`.
- *
- *  os#1356 — s'appelait « diagramme de présentation », ce qui la confondait avec la
- *  REPRÉSENTATION DU DIAGRAMME ENTIER (Diagramme / Tableur / Doc / Unit., cf.
- *  `DiagramRepresentationButtons`). Deux échelles, deux sélecteurs : celle-ci porte sur UN
- *  nœud ou UN flux, l'autre sur tout le système. */
-export type Type_ElementAnalysis = {
-  /** Id stable ('unit' | 'donut' | 'bar'). */
-  id: string
-  /** Libellé du bouton (déjà traduit). */
-  label: string
-  /** Icône du bouton (au-dessus du libellé, comme les onglets de config). */
-  icon?: React.ReactNode
-  /** Dessine le diagramme dans le conteneur DOM ; rend un nettoyage optionnel. */
-  render: (container: HTMLElement) => (() => void) | void
-}
+// sa#563 (lot 5) — `Type_ElementAnalysis` A DISPARU, et c'etait le contrat du CHEMIN PARALLELE.
+//
+// Il decrivait les « analyses d'un element » de la colonne droite de la pop-up de presentation
+// (Unit. / Couronne / Barres) : un bouton, un libelle, et un `render(container) => cleanup` jete
+// dans un `div` de 260 px. Or ces trois dessins sont des entrees du REGISTRE DES REPRESENTATIONS
+// depuis os#1473 et os#1422 — la colonne les redemandait donc une seconde fois, sous un autre
+// contrat, a un autre hote, avec d'autres reglages. Elles sont desormais des natures du volet
+// qu'un clic sur l'element ouvre, et ce contrat-ci n'a plus d'appelant.
+//
+// Ne pas le rouvrir : un dessin d'element est une entree de `representation_registry`, et rien
+// d'autre. C'est la lecon du lot — tant que deux chemins coexistent, les reglages d'une meme
+// nature divergent entre les deux places.
 
 /**
  * sa#456 — PAGE PUBLIÉE d'où vient le diagramme affiché, quand il a été ouvert par
@@ -714,12 +709,6 @@ export class Class_ApplicationData {
    * os#1385 — le crochet vit dans l'espace de travail (sa signature est dans `Class_Workspace`). */
   public get draw_node_analysis_overlay() { return this.workspace.draw_node_analysis_overlay }
   public set draw_node_analysis_overlay(_) { this.workspace.draw_node_analysis_overlay = _ }
-
-  /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
-   * (colonne de boutons Unit. / Couronne / Barres). Chacune sait se dessiner dans un
-   * conteneur DOM. Absent hors OS+ (pas de colonne d'analyses). */
-  public get element_analyses_for() { return this.workspace.element_analyses_for }
-  public set element_analyses_for(_) { this.workspace.element_analyses_for = _ }
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -1573,9 +1562,9 @@ export class Class_ApplicationData {
     if (this.is_main && !(kwargs && kwargs['without_sheets'] === true)) {
       json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     }
-    // os#1482 — LES SCÈNES, clé racine `scenes`, sous la même garde que `main_zone` et pour la
-    // même raison : elles décrivent l'écran, un seul écrivain. Additive (absente sans scène).
-    this.scenesToJSON(json_object, kwargs)
+    // os#1482 — LES TABLEAUX DE BORD, clé racine `dashboards`, sous la même garde que `main_zone` et pour la
+    // même raison : elles décrivent l'écran, un seul écrivain. Additive (absente sans tableau de bord).
+    this.dashboardsToJSON(json_object, kwargs)
     // os#1418 — STYLES DES NATURES DE FIGURE (étoile unitaire, couronne, histogrammes,
     // sunburst), clé racine ADDITIVE : absente tant qu'aucun style n'a été réglé, donc un
     // fichier antérieur se relit à l'identique. Remplace `representation_defaults` (os#1394),
@@ -1803,141 +1792,141 @@ export class Class_ApplicationData {
     if (this.is_main && !loading_into_open_file && mz && typeof mz === 'object') {
       this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
     }
-    // os#1482 — LES SCÈNES, sous la même garde (cf. `scenesFromJSON`).
-    this.scenesFromJSON(json_object, kwargs)
+    // os#1482 — LES TABLEAUX DE BORD, sous la même garde (cf. `dashboardsFromJSON`).
+    this.dashboardsFromJSON(json_object, kwargs)
     // os#1419 — ce que la migration n'a pas su porter, dit UNE fois les trois lectures faites.
     this.menu_configuration?.flushFigureMigrationReport()
     // #1316 — Viewer intégral : lit le bloc `views` (+ delta __patch) et rouvre sur la vue active.
     // No-op si le fichier n'a pas de clé `views`. OpenSankey+ réimplémente `_fromJSON` (sans super)
     // et pilote ses propres appels vues + migration viewtag ; ce chemin ne sert qu'au viewer OS pur.
     this._views_reader.viewsFromJSON(json_object)
-    // os#1482 — et les dispositions figées par vue (`view_main_zone`) deviennent des scènes.
-    this.migrateViewMainZonesToScenes(kwargs)
+    // os#1482 — et les dispositions figées par vue (`view_main_zone`) deviennent des tableaux de bord.
+    this.migrateViewMainZonesToDashboards(kwargs)
     // OS#85 — Feuilles du document. No-op (silencieux) si le fichier n'a pas de clé `sheets`.
     this.sheetsFromJSON(json_object)
   }
 
-  // SCÈNES (os#1482) ===================================================================
-  // La vue de l'ESPACE DE TRAVAIL (cf. NOTE-SCENES.md). Le magasin est de l'hôte
-  // (`menu_configuration.scenes`) ; ici vivent la persistance — mêmes gardes que `main_zone`
+  // TABLEAUX DE BORD (os#1482) ===================================================================
+  // La vue de l'ESPACE DE TRAVAIL (cf. NOTE-TABLEAUX DE BORD.md). Le magasin est de l'hôte
+  // (`menu_configuration.dashboards`) ; ici vivent la persistance — mêmes gardes que `main_zone`
   // et `workspace` — et les commandes qui opèrent les documents (activer, capturer).
 
   /**
-   * Écrit la clé racine `scenes`. PAR LE PRINCIPAL SEULEMENT, et jamais dans un contenu de
+   * Écrit la clé racine `dashboards`. PAR LE PRINCIPAL SEULEMENT, et jamais dans un contenu de
    * feuille (`without_sheets`) : les deux disent la même chose, il n'y a qu'un écran.
-   * Clé ADDITIVE : rien n'est écrit sans scène, un fichier d'aujourd'hui ne change pas.
+   * Clé ADDITIVE : rien n'est écrit sans tableau de bord, un fichier d'aujourd'hui ne change pas.
    *
    * /!\ Clé RACINE : chez OpenSankey+ elle doit être posée AVANT `encodeViewsAsDelta`.
    */
-  protected scenesToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+  protected dashboardsToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
     if (kwargs && kwargs['without_sheets'] === true) return
     if (!this.is_main) return
-    const scenes = this.menu_configuration?.scenes.toJSON()
-    if (scenes) json_object['scenes'] = scenes
+    const dashboards = this.menu_configuration?.dashboards.toJSON()
+    if (dashboards) json_object['dashboards'] = dashboards
   }
 
   /**
-   * Relit la clé racine `scenes`. Symétrique de l'écriture, et sous la condition de
+   * Relit la clé racine `dashboards`. Symétrique de l'écriture, et sous la condition de
    * `workspaceFromJSON` : jamais en chargeant un contenu DANS le fichier ouvert
    * (`keep_file_state`, `only_current_view`) — l'écran ne change pas de fichier. Clé absente
    * sur un vrai chargement : le magasin est VIDÉ, c'est un autre fichier.
    */
-  protected scenesFromJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+  protected dashboardsFromJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
     if (kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])) return
     if (!this.is_main) return
-    this.menu_configuration?.scenes.fromJSON(json_object['scenes'])
+    this.menu_configuration?.dashboards.fromJSON(json_object['dashboards'])
   }
 
   /**
    * MIGRATION — chaque vue qui porte une disposition figée (`view_main_zone`, os#1355) devient
-   * une scène `scene_<vue>` du nom de la vue, dont les fenêtres diagramme de la feuille courante
-   * reçoivent `view: <vue>`. Idempotente : une scène déjà là sous cet identifiant n'est pas
+   * un tableau de bord `dashboard_<vue>` du nom de la vue, dont les fenêtres diagramme de la feuille courante
+   * reçoivent `view: <vue>`. Idempotente : un tableau de bord déjà là sous cet identifiant n'est pas
    * recréée. L'entrée de vue perd sa disposition en mémoire ; à l'enregistrement suivant le
    * fichier est au format nouveau (`view_main_zone` n'est plus écrite, cf. ApplicationDataOSP).
    *
-   * Appelée APRÈS la lecture des vues, sous la garde de `scenesFromJSON`. La scène courante, si
-   * rien ne l'a dite, est celle de la vue active : ce que le fichier rouvrait avant les scènes.
+   * Appelée APRÈS la lecture des vues, sous la garde de `dashboardsFromJSON`. Le tableau de bord courante, si
+   * rien ne l'a dite, est celle de la vue active : ce que le fichier rouvrait avant les tableaux de bord.
    */
-  protected migrateViewMainZonesToScenes(kwargs?: Type_JSON): void {
+  protected migrateViewMainZonesToDashboards(kwargs?: Type_JSON): void {
     if (kwargs && (kwargs['keep_file_state'] === true || kwargs['only_current_view'])) return
     if (!this.is_main) return
-    const scenes = this.menu_configuration?.scenes
-    if (!scenes) return
+    const dashboards = this.menu_configuration?.dashboards
+    if (!dashboards) return
     this._views_order.forEach(view_id => {
       const entry = this._views[view_id]
       if (!entry || !entry.main_zone) return
-      const id = migratedSceneId(view_id)
-      if (!scenes.byId(id)) {
-        const migree: Type_Scene = {
+      const id = migratedDashboardId(view_id)
+      if (!dashboards.byId(id)) {
+        const migree: Type_Dashboard = {
           id, name: entry.name, main_zone: mainZoneWithViewOnCurrentSheet(entry.main_zone, view_id)
         }
         // os#1492 — la disposition figée dans une vue décrivait forcément la feuille où cette
         // vue vit, c'est-à-dire celle qu'on est en train de lire.
         if (this._current_sheet_id !== '') migree.sheet = this._current_sheet_id
-        scenes.add(migree)
+        dashboards.add(migree)
       }
       delete entry.main_zone
     })
-    if (scenes.current === null) {
-      const migrated = migratedSceneId(this._current_view_id)
-      scenes.current = scenes.byId(migrated) ? migrated : implicitSceneId(this._current_view_id)
+    if (dashboards.current === null) {
+      const migrated = migratedDashboardId(this._current_view_id)
+      dashboards.current = dashboards.byId(migrated) ? migrated : implicitDashboardId(this._current_view_id)
     }
   }
 
-  /** L'identifiant de la scène ACTIVE : l'explicite posée, sinon l'implicite de la vue courante. */
-  public get current_scene_id(): string {
-    const current = this.menu_configuration.scenes.current
-    if (current !== null && (viewIdOfImplicitScene(current) !== null || this.menu_configuration.scenes.byId(current))) {
+  /** L'identifiant de le tableau de bord ACTIVE : l'explicite posée, sinon l'implicite de la vue courante. */
+  public get current_dashboard_id(): string {
+    const current = this.menu_configuration.dashboards.current
+    if (current !== null && (viewIdOfImplicitDashboard(current) !== null || this.menu_configuration.dashboards.byId(current))) {
       return current
     }
-    return implicitSceneId(this._current_view_id)
+    return implicitDashboardId(this._current_view_id)
   }
 
   /**
-   * L'ordre de navigation des SCÈNES : la seule liste du sélecteur, des flèches et de F8/F9
-   * (règle du repli automatique, cf. `Class_ScenesStore.navigationOrder`).
+   * L'ordre de navigation des TABLEAUX DE BORD : la seule liste du sélecteur, des flèches et de F8/F9
+   * (règle du repli automatique, cf. `Class_DashboardsStore.navigationOrder`).
    */
-  public get scene_navigation_order(): string[] {
-    return this.menu_configuration.scenes.navigationOrder(this.views_navigation_order, this._current_sheet_id)
+  public get dashboard_navigation_order(): string[] {
+    return this.menu_configuration.dashboards.navigationOrder(this.views_navigation_order, this._current_sheet_id)
   }
 
-  public get has_scene_before(): boolean {
-    return this.scene_navigation_order.indexOf(this.current_scene_id) > 0
+  public get has_dashboard_before(): boolean {
+    return this.dashboard_navigation_order.indexOf(this.current_dashboard_id) > 0
   }
 
-  public get has_scene_after(): boolean {
-    const order = this.scene_navigation_order
+  public get has_dashboard_after(): boolean {
+    const order = this.dashboard_navigation_order
     // Courante hors liste (maître non affiché) => Suiv. va vers la première.
-    return order.length > 0 && order.indexOf(this.current_scene_id) < order.length - 1
+    return order.length > 0 && order.indexOf(this.current_dashboard_id) < order.length - 1
   }
 
-  /** Le libellé d'une scène : le sien, ou celui de la vue pour une implicite. */
-  public sceneName(id: string): string {
-    const view_id = viewIdOfImplicitScene(id)
+  /** Le libellé d'un tableau de bord : le sien, ou celui de la vue pour une implicite. */
+  public dashboardName(id: string): string {
+    const view_id = viewIdOfImplicitDashboard(id)
     if (view_id !== null) {
       return view_id === default_main_sankey_id ? this._master_view_name : (this._views[view_id]?.name ?? view_id)
     }
-    return this.menu_configuration.scenes.byId(id)?.name ?? id
+    return this.menu_configuration.dashboards.byId(id)?.name ?? id
   }
 
   /**
-   * LA VUE PRINCIPALE d'une scène (celle de son canevas sur la feuille courante, sinon de sa
+   * LA VUE PRINCIPALE d'un tableau de bord (celle de son canevas sur la feuille courante, sinon de sa
    * première fenêtre diagramme de la feuille courante), ou `null` : c'est elle dont la vignette
-   * représente la scène, et elle que le canevas principal reçoit à l'activation.
+   * représente le tableau de bord, et elle que le canevas principal reçoit à l'activation.
    */
-  public sceneMainViewId(id: string): string | null {
-    const view_id = viewIdOfImplicitScene(id)
+  public dashboardMainViewId(id: string): string | null {
+    const view_id = viewIdOfImplicitDashboard(id)
     if (view_id !== null) return view_id
-    const scene = this.menu_configuration.scenes.byId(id)
-    if (!scene) return null
-    const refs = sceneViewRefs(scene.main_zone)
+    const dashboard = this.menu_configuration.dashboards.byId(id)
+    if (!dashboard) return null
+    const refs = dashboardViewRefs(dashboard.main_zone)
       .filter(r => r.sheet === '' || r.sheet === this._current_sheet_id)
     const canvas = refs.find(r => r.representation === MAIN_ZONE_CANVAS_ID)
     return (canvas ?? refs[0])?.view ?? null
   }
 
   /**
-   * ACTIVER une scène. Implicite : la vue, sans toucher à la disposition — ce que faisait une
+   * ACTIVER un tableau de bord. Implicite : la vue, sans toucher à la disposition — ce que faisait une
    * vue sans `view_main_zone`. Explicite : la GRILLE d'abord (`mainZoneStateFromJSON`), pour que
    * le dessin se cadre d'emblée dans la bonne géométrie, puis la vue demandée sur chaque
    * document : le principal pour la feuille courante, le document de feuille pour une fenêtre
@@ -1946,42 +1935,42 @@ export class Class_ApplicationData {
    * `interactive` : le chemin du geste d'utilisateur (indicateur + cession de la main,
    * `requestViewChange`) ; `false` = le chemin programmatique, strictement synchrone.
    */
-  public activateScene(id: string, interactive: boolean = true): void | Promise<void> {
-    const scenes = this.menu_configuration.scenes
+  public activateDashboard(id: string, interactive: boolean = true): void | Promise<void> {
+    const dashboards = this.menu_configuration.dashboards
     const switchTo = (view_id: string): void | Promise<void> =>
       interactive ? this.requestViewChange(view_id) : this.setCurrentView(view_id)
-    const implicit_view = viewIdOfImplicitScene(id)
+    const implicit_view = viewIdOfImplicitDashboard(id)
     if (implicit_view !== null) {
       if (implicit_view !== default_main_sankey_id && !this._views[implicit_view]) return
-      scenes.current = id
+      dashboards.current = id
       if (implicit_view === this._current_view_id) return
       return switchTo(implicit_view)
     }
-    const scene = scenes.byId(id)
-    if (!scene) return
-    scenes.current = id
-    scenes.activating = true
+    const dashboard = dashboards.byId(id)
+    if (!dashboard) return
+    dashboards.current = id
+    dashboards.activating = true
     let result: void | Promise<void> = undefined
     try {
-      // os#1492 — L'ONGLET D'ABORD. Une scène retient la feuille qui était au premier plan, et
+      // os#1492 — L'ONGLET D'ABORD. Un tableau de bord retient la feuille qui était au premier plan, et
       // la rétablit avant tout le reste : basculer remplace la zone de dessin et ferme les
       // fenêtres épinglées sur la feuille quittée (`switchToSheet`), donc le faire APRÈS aurait
       // défait la grille qu'on vient de poser. Sans cette bascule, activer depuis un autre
-      // onglet ne rejouait qu'une moitié de la scène — ses fenêtres sans son diagramme.
-      // `scenes.activating` protège la scène courante : la bascule ne doit pas nous en sortir.
-      if (scene.sheet && scene.sheet !== this._current_sheet_id && this._sheets[scene.sheet]) {
-        this.switchToSheet(scene.sheet, false)
+      // onglet ne rejouait qu'une moitié de le tableau de bord — ses fenêtres sans son diagramme.
+      // `dashboards.activating` protège le tableau de bord courante : la bascule ne doit pas nous en sortir.
+      if (dashboard.sheet && dashboard.sheet !== this._current_sheet_id && this._sheets[dashboard.sheet]) {
+        this.switchToSheet(dashboard.sheet, false)
       }
-      this.menu_configuration.mainZoneStateFromJSON(scene.main_zone)
+      this.menu_configuration.mainZoneStateFromJSON(dashboard.main_zone)
       // Les fenêtres dépaysées d'abord, en synchrone : elles ne passent pas par le voile.
-      const refs = sceneViewRefs(scene.main_zone)
+      const refs = dashboardViewRefs(dashboard.main_zone)
       refs.filter(r => r.sheet !== '' && r.sheet !== this._current_sheet_id).forEach(r => {
         const doc = this.sheetApplication(r.sheet)
         if (!doc || doc === this) return
         if (r.view !== default_main_sankey_id && !doc.views_dict[r.view]) return
         if (doc.current_view_id !== r.view) doc.setCurrentView(r.view)
       })
-      const main_view = this.sceneMainViewId(id)
+      const main_view = this.dashboardMainViewId(id)
       if (main_view !== null && main_view !== this._current_view_id
         && (main_view === default_main_sankey_id || this._views[main_view])) {
         result = switchTo(main_view)
@@ -1990,47 +1979,47 @@ export class Class_ApplicationData {
         this.menu_configuration.updateAllMenuComponents()
       }
     } finally {
-      if (result) void Promise.resolve(result).finally(() => { scenes.activating = false })
-      else scenes.activating = false
+      if (result) void Promise.resolve(result).finally(() => { dashboards.activating = false })
+      else dashboards.activating = false
     }
     return result
   }
 
-  public setCurrentSceneToNext(): void | Promise<void> {
-    if (!this.has_scene_after) return
-    const order = this.scene_navigation_order
-    return this.activateScene(order[order.indexOf(this.current_scene_id) + 1])
+  public setCurrentDashboardToNext(): void | Promise<void> {
+    if (!this.has_dashboard_after) return
+    const order = this.dashboard_navigation_order
+    return this.activateDashboard(order[order.indexOf(this.current_dashboard_id) + 1])
   }
 
-  public setCurrentSceneToPrev(): void | Promise<void> {
-    if (!this.has_scene_before) return
-    const order = this.scene_navigation_order
-    return this.activateScene(order[order.indexOf(this.current_scene_id) - 1])
+  public setCurrentDashboardToPrev(): void | Promise<void> {
+    if (!this.has_dashboard_before) return
+    const order = this.dashboard_navigation_order
+    return this.activateDashboard(order[order.indexOf(this.current_dashboard_id) - 1])
   }
 
   /**
    * CAPTURER L'ÉCRAN : la disposition de la grande zone, et pour chaque fenêtre diagramme la vue
    * que son document montre en ce moment (le principal pour la feuille courante, le document de
-   * feuille pour une fenêtre dépaysée). C'est ce qu'une scène fige.
+   * feuille pour une fenêtre dépaysée). C'est ce qu'un tableau de bord fige.
    */
   /**
-   * os#1492 — SORTIR DE LA SCÈNE COURANTE, parce que l'écran ne lui ressemble plus.
+   * os#1492 — SORTIR DE LE TABLEAU DE BORD COURANTE, parce que l'écran ne lui ressemble plus.
    *
-   * Appelé quand l'utilisateur change d'onglet lui-même : la scène décrivait une feuille au
+   * Appelé quand l'utilisateur change d'onglet lui-même : le tableau de bord décrivait une feuille au
    * premier plan, ce n'est plus celle-là. La laisser marquée courante faisait mentir le
    * sélecteur, qui affichait « 1. Lire la filière » alors qu'on regardait une autre feuille.
-   * Sans scène courante, `current_scene_id` retombe sur la scène implicite de la vue courante
+   * Sans tableau de bord courante, `current_dashboard_id` retombe sur le tableau de bord implicite de la vue courante
    * — donc sur ce qu'on regarde vraiment.
    *
    * Muet pendant une activation : c'est elle qui bascule l'onglet, et elle sait ce qu'elle fait.
    */
-  public leaveCurrentScene(): void {
-    const scenes = this.menu_configuration?.scenes
-    if (!scenes || scenes.activating) return
-    scenes.current = null
+  public leaveCurrentDashboard(): void {
+    const dashboards = this.menu_configuration?.dashboards
+    if (!dashboards || dashboards.activating) return
+    dashboards.current = null
   }
 
-  public captureSceneMainZone(): Type_JSON {
+  public captureDashboardMainZone(): Type_JSON {
     const main_zone = this.menu_configuration.mainZoneStateToJSON()
     const raw = main_zone['occupants'] as Type_JSON
     this.menu_configuration.main_zone_occupants.forEach(o => {
@@ -2047,29 +2036,29 @@ export class Class_ApplicationData {
     return main_zone
   }
 
-  /** Crée une scène depuis l'écran, la rend courante, et la rend. */
-  public createSceneFromScreen(name: string): Type_Scene {
-    const scenes = this.menu_configuration.scenes
-    const scene: Type_Scene = { id: scenes.newId(), name: name.trim() || 'Scène', main_zone: this.captureSceneMainZone() }
-    // os#1492 — l'onglet actif fait partie de ce qu'on capture (cf. `Type_Scene.sheet`).
-    if (this._current_sheet_id !== '') scene.sheet = this._current_sheet_id
-    scenes.add(scene)
-    scenes.current = scene.id
-    return scene
+  /** Crée un tableau de bord depuis l'écran, la rend courante, et la rend. */
+  public createDashboardFromScreen(name: string): Type_Dashboard {
+    const dashboards = this.menu_configuration.dashboards
+    const dashboard: Type_Dashboard = { id: dashboards.newId(), name: name.trim() || 'Tableau de bord', main_zone: this.captureDashboardMainZone() }
+    // os#1492 — l'onglet actif fait partie de ce qu'on capture (cf. `Type_Dashboard.sheet`).
+    if (this._current_sheet_id !== '') dashboard.sheet = this._current_sheet_id
+    dashboards.add(dashboard)
+    dashboards.current = dashboard.id
+    return dashboard
   }
 
-  /** Recapture l'écran dans une scène existante. */
-  public updateSceneFromScreen(id: string): boolean {
-    const scene = this.menu_configuration.scenes.byId(id)
-    if (!scene) return false
-    scene.main_zone = this.captureSceneMainZone()
-    if (this._current_sheet_id !== '') scene.sheet = this._current_sheet_id
-    else delete scene.sheet
+  /** Recapture l'écran dans un tableau de bord existante. */
+  public updateDashboardFromScreen(id: string): boolean {
+    const dashboard = this.menu_configuration.dashboards.byId(id)
+    if (!dashboard) return false
+    dashboard.main_zone = this.captureDashboardMainZone()
+    if (this._current_sheet_id !== '') dashboard.sheet = this._current_sheet_id
+    else delete dashboard.sheet
     return true
   }
 
-  public deleteScene(id: string): boolean {
-    return this.menu_configuration.scenes.remove(id)
+  public deleteDashboard(id: string): boolean {
+    return this.menu_configuration.dashboards.remove(id)
   }
 
   // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
@@ -2094,7 +2083,7 @@ export class Class_ApplicationData {
    * racine, écrite par le principal) EST la disposition de l'espace de travail —
    * l'écrire une seconde fois sous `workspace` serait une copie, donc deux vérités.
    * Elle rejoindra `workspace` quand elle se distinguera de la disposition par DÉFAUT
-   * du document (lot 6). Les dispositions NOMMÉES, elles, sont les `scenes` (os#1482).
+   * du document (lot 6). Les dispositions NOMMÉES, elles, sont les `dashboards` (os#1482).
    *
    * /!\ Clé RACINE : chez OpenSankey+ (fichier avec vues) elle doit être posée AVANT
    * `encodeViewsAsDelta`, comme `sheets`, `library_ref` et `contexts` — la base du
@@ -2347,9 +2336,9 @@ export class Class_ApplicationData {
     // fenêtres une par une avant de pouvoir travailler. Cf. `resetMainZoneToCanvas`, qui dit
     // aussi pourquoi BASCULER vers une feuille qui existe, à l'inverse, garde la grille.
     this.menu_configuration?.resetMainZoneToCanvas()
-    // os#1492 — et on sort de la scène courante, pour la même raison qu'à la bascule : une page
-    // blanche, dont on vient de vider les fenêtres, ne ressemble à aucune scène composée.
-    this.leaveCurrentScene()
+    // os#1492 — et on sort de le tableau de bord courante, pour la même raison qu'à la bascule : une page
+    // blanche, dont on vient de vider les fenêtres, ne ressemble à aucun tableau de bord composée.
+    this.leaveCurrentDashboard()
     this._loadSheetContent(blank_json, draw)
     const id = makeId('sheet')
     this._sheets[id] = { name }
@@ -2540,10 +2529,10 @@ export class Class_ApplicationData {
     // APRÈS l'instantané — il doit décrire la feuille telle qu'on l'a travaillée — et AVANT le
     // chargement, pour qu'aucune d'elles ne tente de se résoudre sur le diagramme d'arrivée.
     this.menu_configuration?.closeWindowsPinnedOnSheet(this._current_sheet_id)
-    // os#1492 — CHANGER D'ONGLET SORT DE LA SCÈNE. Une scène retient la feuille qui était au
+    // os#1492 — CHANGER D'ONGLET SORT DE LE TABLEAU DE BORD. Un tableau de bord retient la feuille qui était au
     // premier plan ; dès qu'on en change soi-même, elle ne décrit plus l'écran. No-op quand
-    // c'est une activation de scène qui bascule (cf. `leaveCurrentScene`).
-    this.leaveCurrentScene()
+    // c'est une activation de tableau de bord qui bascule (cf. `leaveCurrentDashboard`).
+    this.leaveCurrentDashboard()
     const target_json = JSON.parse(pako.inflate(target_snapshot, { to: 'string' })) as Type_JSON
     this._loadSheetContent(target_json, draw)
     this._current_sheet_id = id
