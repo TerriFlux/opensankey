@@ -125,23 +125,18 @@ export type MenuColorPickerProps = {
   textDisabled?: string
 }
 
-/** Une ANALYSE D'UN ÉLÉMENT proposée dans sa pop-up (bouton + rendu) : couronne, barres,
- *  sankey unitaire. Fournie par OS+ via `Class_ApplicationData.element_analyses_for`.
- *
- *  os#1356 — s'appelait « diagramme de présentation », ce qui la confondait avec la
- *  REPRÉSENTATION DU DIAGRAMME ENTIER (Diagramme / Tableur / Doc / Unit., cf.
- *  `DiagramRepresentationButtons`). Deux échelles, deux sélecteurs : celle-ci porte sur UN
- *  nœud ou UN flux, l'autre sur tout le système. */
-export type Type_ElementAnalysis = {
-  /** Id stable ('unit' | 'donut' | 'bar'). */
-  id: string
-  /** Libellé du bouton (déjà traduit). */
-  label: string
-  /** Icône du bouton (au-dessus du libellé, comme les onglets de config). */
-  icon?: React.ReactNode
-  /** Dessine le diagramme dans le conteneur DOM ; rend un nettoyage optionnel. */
-  render: (container: HTMLElement) => (() => void) | void
-}
+// sa#563 (lot 5) — `Type_ElementAnalysis` A DISPARU, et c'etait le contrat du CHEMIN PARALLELE.
+//
+// Il decrivait les « analyses d'un element » de la colonne droite de la pop-up de presentation
+// (Unit. / Couronne / Barres) : un bouton, un libelle, et un `render(container) => cleanup` jete
+// dans un `div` de 260 px. Or ces trois dessins sont des entrees du REGISTRE DES REPRESENTATIONS
+// depuis os#1473 et os#1422 — la colonne les redemandait donc une seconde fois, sous un autre
+// contrat, a un autre hote, avec d'autres reglages. Elles sont desormais des natures du volet
+// qu'un clic sur l'element ouvre, et ce contrat-ci n'a plus d'appelant.
+//
+// Ne pas le rouvrir : un dessin d'element est une entree de `representation_registry`, et rien
+// d'autre. C'est la lecon du lot — tant que deux chemins coexistent, les reglages d'une meme
+// nature divergent entre les deux places.
 
 /**
  * sa#456 — PAGE PUBLIÉE d'où vient le diagramme affiché, quand il a été ouvert par
@@ -714,12 +709,6 @@ export class Class_ApplicationData {
    * os#1385 — le crochet vit dans l'espace de travail (sa signature est dans `Class_Workspace`). */
   public get draw_node_analysis_overlay() { return this.workspace.draw_node_analysis_overlay }
   public set draw_node_analysis_overlay(_) { this.workspace.draw_node_analysis_overlay = _ }
-
-  /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
-   * (colonne de boutons Unit. / Couronne / Barres). Chacune sait se dessiner dans un
-   * conteneur DOM. Absent hors OS+ (pas de colonne d'analyses). */
-  public get element_analyses_for() { return this.workspace.element_analyses_for }
-  public set element_analyses_for(_) { this.workspace.element_analyses_for = _ }
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms

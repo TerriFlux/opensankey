@@ -10,39 +10,44 @@
 // Author        : TerriFlux
 // ==================================================================================================
 
-// Pop-up d'élément à STRUCTURE FIXE (retour à un patron imposé, post-#305).
+// LE CONTENU DE PRÉSENTATION d'un élément, à STRUCTURE FIXE (patron imposé, post-#305) :
+// « Description » (texte libre) puis le bilan des flux (nœud) ou les caractéristiques (flux) —
+// ce qu'affichait l'info-bulle historique, en sections repliables.
 //
-// Plus de composition libre : la pop-up d'un nœud / flux a toujours la même
-// forme —
-//  - à GAUCHE, le contenu : « Description » (texte libre) puis le bilan des flux
-//    (nœud) ou les caractéristiques (flux) — ce qui était affiché jusqu'ici dans
-//    l'info-bulle ;
-//  - à DROITE, une colonne d'ANALYSES DE L'ÉLÉMENT (Unit. / Couronne / Barres)
-//    fournies par OS+ ; cliquer un bouton dessine l'analyse dans la zone de
-//    gauche, à la place du contenu. Un bouton « Infos » y ramène.
+// sa#563 (lots 1 et 5) — LA COLONNE D'ANALYSES A DISPARU, et avec elle le second mécanisme.
 //
-// os#1356 — « analyse de l'élément », et non « représentation » : la
-// représentation, c'est l'échelle du DIAGRAMME ENTIER (Diagramme / Tableur /
-// Doc / Unit., cf. DiagramRepresentationButtons). Les deux échelles portaient le
-// même mot sans jamais être distinguées ; elles ne partagent aucun sélecteur.
+// Elle portait « Unit. », la couronne et les barres, servies par un chemin PARALLÈLE à celui de
+// la grande zone : `element_analyses_for`, contrat `render(container) => cleanup`, un dessin jeté
+// dans un `div` de 260 px de haut (`ElementAnalysisHost`). Rien n'y était sélectionnable,
+// réglable ni déplaçable, et la colonne d'outils ne savait pas qu'il existait. Or ces trois
+// dessins SONT des entrées du registre des représentations depuis os#1473/os#1422 : la colonne
+// les redemandait sous un autre nom, à un autre hôte, avec d'autres réglages.
 //
-// Sans OS+, `element_analyses_for` est absent : pas de colonne de droite,
-// la pop-up n'affiche que le contenu.
+// Elles sont désormais des NATURES du volet, choisies par le sélecteur de son en-tête, et ce
+// contenu-ci en est une lui aussi — « Infos » (`ELEMENT_INFO_REPRESENTATION_ID`), montée par la
+// grande zone comme le tableur ou la documentation. D'où le découpage de ce fichier :
+//
+//  - `PresentationContent` : le contenu, et rien d'autre. Deux hôtes le servent — le volet
+//    flottant (via la nature « Infos ») et la pop-up / l'info-bulle de panneau —, donc un seul
+//    composant, donc aucun réglage qui puisse diverger d'une place à l'autre. C'était la raison
+//    d'être du lot 5 ;
+//  - `PresentationPopup` : ce que la POP-UP ajoute autour, c'est-à-dire une seule chose — le
+//    bouton « Vue » de la fiche d'un groupe d'étiquettes, qui ouvre la vue en volet.
 
 import React from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
-import { FaInfoCircle, FaChevronDown, FaChevronRight, FaEye } from 'react-icons/fa'
+import { FaChevronDown, FaChevronRight, FaEye } from 'react-icons/fa'
 
-import type { Class_ApplicationData, Type_ElementAnalysis } from '../../../types/ApplicationData'
+import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { default_font_size } from '../../../css/Theme'
 import {
   renderPresentationBlock, presentationBlockLabel, presentationBlockSummary
 } from './PresentationBlockRegistry'
 import type { Type_Presentable } from './openPresentation'
-import { LegendTagGroupBlock, legendTagGroupOf, renderLegendTagGroupView } from './legendGroupPresentation'
+import { LegendTagGroupBlock, legendTagGroupOf, openTagGroupView } from './legendGroupPresentation'
 
-// Blocs de CONTENU (colonne gauche), patron fixe. Les diagrammes (unitaire /
-// analyse) n'y figurent pas : ils sont dans la colonne de droite.
+// Blocs de CONTENU, patron fixe. Les diagrammes (unitaire / analyse) n'y figurent pas : ce sont
+// des natures du volet, pas des blocs de présentation (cf. l'en-tête).
 const POPUP_NODE_BLOCKS = ['os.block.free_text', 'os.block.balance', 'os.block.flux_tags']
 const POPUP_LINK_BLOCKS = [
   'os.block.free_text', 'os.block.link_flux', 'os.block.link_series_flux',
@@ -107,58 +112,22 @@ const CollapsibleBlock = ({ title, summary, is_open, onToggle, children }: React
   </Box>
 )
 
-/** Zone de rendu d'une analyse : appelle son `render` au montage, nettoie au
- *  démontage / changement d'analyse. Le conteneur a une hauteur DÉFINIE (les
- *  graphiques qui se dimensionnent en `100%` en ont besoin). */
-const ElementAnalysisHost = ({ analysis }: { analysis: Type_ElementAnalysis }) => {
-  const ref = React.useRef<HTMLDivElement>(null)
-  React.useEffect(() => {
-    const node = ref.current
-    if (!node) return
-    node.innerHTML = ''
-    const cleanup = analysis.render(node)
-    return () => { if (typeof cleanup === 'function') cleanup() }
-  }, [analysis])
-  return <Box ref={ref} style={{ width: '100%', height: '260px', minHeight: '260px' }} />
-}
-
-/** Bouton d'analyse : icône au-dessus, libellé dessous — même habillage que
- *  les onglets du menu de configuration (`inspector_tab`). */
-const ElementAnalysisButton = ({ icon, label, active, onClick }: {
-  icon?: React.ReactNode
-  label: string
-  active: boolean
-  onClick: () => void
-}) => (
-  <Button
-    size='xs'
-    variant={active ? 'inspector_tab_activated' : 'inspector_tab'}
-    title={label}
-    onClick={onClick}
-    sx={{ display: 'flex', flexDirection: 'column', height: 'auto', paddingBlock: '0.3rem', gap: '0.15rem' }}
-  >
-    {icon}
-    <Box
-      as='span'
-      style={{
-        fontSize: '0.62rem', lineHeight: 1, maxWidth: '100%',
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-      }}
-    >
-      {label}
-    </Box>
-  </Button>
-)
-
-export const PresentationPopup = ({ app_data, element }: {
+/**
+ * sa#563 — LE CONTENU DE PRÉSENTATION D'UN ÉLÉMENT, sans rien autour.
+ *
+ * Servi à l'identique par ses deux hôtes : le volet flottant, par la nature « Infos » que la
+ * grande zone monte (`elementComponentFor`, MainZoneTabs), et la pop-up / l'info-bulle de
+ * panneau. UN seul composant, parce que deux rendus du même contenu finiraient par ne plus dire
+ * la même chose — c'est très exactement ce que le lot 5 de l'issue vient défaire.
+ *
+ * SA#551 — le titre d'un groupe d'étiquettes de la légende n'est pas un élément du diagramme :
+ * son contenu est la FICHE du groupe (sa définition, ses étiquettes), et non un bilan de flux.
+ */
+export const PresentationContent = ({ app_data, element }: {
   app_data: Class_ApplicationData
   element: Type_Presentable
 }) => {
   const { t } = app_data
-
-  // SA#551 — titre d'un groupe d'étiquettes dans la légende : la pop-up montre la définition du
-  // groupe et ses étiquettes, et sa colonne de droite une VUE du diagramme mis en forme par ce
-  // groupe, à la place des analyses d'un élément (qui n'ont pas de sens ici).
   const tag_group = legendTagGroupOf(app_data, element)
 
   const block_ids = isLinkLike(element) ? POPUP_LINK_BLOCKS : POPUP_NODE_BLOCKS
@@ -187,104 +156,62 @@ export const PresentationPopup = ({ app_data, element }: {
     forceRender()
   }
 
-  // Analyses de l'élément fournies par OS+ (colonne de droite). Absent hors OS+.
-  // MÉMOÏSÉ par élément : sans cela, chaque re-rendu de la pop-up (les
-  // notifications de panneaux sont fréquentes) reconstruirait le tableau, donc
-  // de NOUVEAUX objets d'analyse, et `ElementAnalysisHost` détruirait/recréerait
-  // sa zone de dessin en boucle — laissant l'unitaire vide.
-  const analyses: Type_ElementAnalysis[] = React.useMemo(
-    () => tag_group !== undefined
-      ? [{
-        id: 'os.group_view',
-        label: t('MEP.legend_group_view'),
-        icon: <FaEye />,
-        render: (node: HTMLElement) => renderLegendTagGroupView(app_data, tag_group, node)
-      }]
-      : app_data.element_analyses_for?.(element as never) ?? [],
-    [element, tag_group, app_data, t, app_data.element_analyses_for]
-  )
-
-  // Analyse active (null = on montre le contenu). État local : la pop-up ne
-  // change pas de contenant, donc pas de risque de remise à zéro intempestive.
-  const [active, setActive] = React.useState<string | null>(null)
-  const active_analysis = analyses.find(d => d.id === active) ?? null
+  if (tag_group !== undefined) return <LegendTagGroupBlock app_data={app_data} group={tag_group} />
 
   return (
-    <Box style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
-      {/* CONTENU / ANALYSE (gauche) */}
-      <Box style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-        {active_analysis
-          ? <ElementAnalysisHost key={active_analysis.id} analysis={active_analysis} />
-          : tag_group !== undefined
-            ? <LegendTagGroupBlock app_data={app_data} group={tag_group} />
-            : (content.length > 1
-            // Plusieurs blocs : chacun dans sa section repliable.
-              ? content.map((r, i) => (
-                <CollapsibleBlock
-                  key={r.id}
-                  title={r.title}
-                  summary={r.summary}
-                  is_open={isBlockOpen(r.id, i)}
-                  onToggle={() => toggleBlock(r.id, i)}
-                >
-                  {r.node}
-                </CollapsibleBlock>
-              ))
-            // Un seul bloc : pas de section — un titre et un chevron pour replier
-            // la seule chose que la pop-up ait à montrer n'apporteraient rien.
-              : content.length === 1
-                ? <React.Fragment key={content[0].id}>{content[0].node}</React.Fragment>
-                : (
-                  <Box style={{ fontSize: default_font_size, opacity: 0.7, padding: '0.3rem 0.1rem' }}>
-                    <Text>{t('presentation.nothing_here', {
-                      defaultValue: 'Rien à afficher pour cet élément.'
-                    })}</Text>
-                  </Box>
-                ))}
-      </Box>
-
-      {/* COLONNE D'ANALYSES DE L'ÉLÉMENT (droite) — seulement si OS+ en fournit.
-          Boutons « icône au-dessus, libellé dessous », à l'image des onglets du
-          menu de configuration.
-
-          os#1356 — la colonne PORTE SON NOM. Sans titre, « Unit. » y voisinait
-          les mêmes mots que l'onglet « Unit. » de la barre du haut, qui lui ne
-          parle pas du même objet : ici c'est CET élément qu'on analyse, là-haut
-          c'est tout le diagramme qu'on représente autrement. */}
-      {analyses.length > 0 && (
-        <Box
-          role='group'
-          aria-label={t('inspector.element_analysis')}
-          style={{
-            flex: 'none', width: '4.5rem',
-            display: 'flex', flexDirection: 'column', gap: '0.2rem',
-            borderLeft: '1px solid #e2e8f0', paddingLeft: '0.35rem'
-          }}
-        >
-          <Text
-            style={{
-              fontSize: '0.55rem', lineHeight: 1.15, opacity: 0.65,
-              textTransform: 'uppercase', letterSpacing: '0.02em'
-            }}
+    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', minWidth: 0 }}>
+      {content.length > 1
+        // Plusieurs blocs : chacun dans sa section repliable.
+        ? content.map((r, i) => (
+          <CollapsibleBlock
+            key={r.id}
+            title={r.title}
+            summary={r.summary}
+            is_open={isBlockOpen(r.id, i)}
+            onToggle={() => toggleBlock(r.id, i)}
           >
-            {t('inspector.element_analysis')}
-          </Text>
-          <ElementAnalysisButton
-            icon={<FaInfoCircle />}
-            label={t('presentation.infos', { defaultValue: 'Infos' })}
-            active={active === null}
-            onClick={() => setActive(null)}
-          />
-          {analyses.map(d => (
-            <ElementAnalysisButton
-              key={d.id}
-              icon={d.icon}
-              label={d.label}
-              active={active === d.id}
-              onClick={() => setActive(d.id)}
-            />
-          ))}
-        </Box>
+            {r.node}
+          </CollapsibleBlock>
+        ))
+        // Un seul bloc : pas de section — un titre et un chevron pour replier
+        // la seule chose qu'il y ait à montrer n'apporteraient rien.
+        : content.length === 1
+          ? <React.Fragment key={content[0].id}>{content[0].node}</React.Fragment>
+          : (
+            <Box style={{ fontSize: default_font_size, opacity: 0.7, padding: '0.3rem 0.1rem' }}>
+              <Text>{t('presentation.nothing_here', {
+                defaultValue: 'Rien à afficher pour cet élément.'
+              })}</Text>
+            </Box>
+          )}
+    </Box>
+  )
+}
+
+export const PresentationPopup = ({ app_data, element }: {
+  app_data: Class_ApplicationData
+  element: Type_Presentable
+}) => {
+  const { t } = app_data
+  const tag_group = legendTagGroupOf(app_data, element)
+  // sa#563 — LE BOUTON « VUE » NE S'OFFRE QUE LÀ OÙ IL MÈNE QUELQUE PART : il ouvre un volet de
+  // la grande zone, et une page qui n'en a pas (le viewer du paquet MIT) n'aurait personne pour
+  // le dessiner. Un garde-fou muet vaut mieux qu'un bouton qui ne fait rien.
+  const can_view = tag_group !== undefined && app_data.menu_configuration.main_zone_hosted
+
+  return (
+    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: 0 }}>
+      <PresentationContent app_data={app_data} element={element} />
+      {can_view && tag_group !== undefined && (
+        <Button
+          size='xs'
+          variant='outline'
+          leftIcon={<FaEye />}
+          alignSelf='flex-start'
+          onClick={() => openTagGroupView(app_data, tag_group)}
+        >
+          {t('MEP.legend_group_view')}
+        </Button>
       )}
     </Box>
   )
