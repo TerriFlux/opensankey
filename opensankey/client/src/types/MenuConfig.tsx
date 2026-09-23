@@ -36,7 +36,7 @@ import { Class_DataTag } from './Tag'
 import {
   Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
 } from './EventBus'
-import { Class_PanelManager, Type_PanelMode } from './PanelManager'
+import { Class_PanelManager, Type_PanelMode, Type_PopupGeometry } from './PanelManager'
 // os#1482 — le magasin des tableaux de bord est PUR (aucune arête vers le dessin), comme `PanelManager`.
 import { Class_DashboardsStore } from './Dashboards'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
@@ -119,8 +119,65 @@ export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', '
 //  - 'bottom' : un bandeau en bas, occupants côte à côte.
 // `size` est un POIDS dans sa pile (normalisé à l'affichage), pas une fraction figée : ajouter
 // un occupant ne demande pas de recalculer les autres.
-export type Type_MainZonePlace = 'main' | 'right' | 'bottom'
-export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom']
+// os#1495 / sa#563 — LA TROISIÈME PLACE : 'floating', au-dessus de la grille et non dedans.
+//
+// Un volet flottant est un occupant ORDINAIRE — même sujet, même nature, même en-tête, même
+// liséré d'active — qui ne prend sa place à personne : il se pose sur la grande zone avec sa
+// propre géométrie (cf. `Type_MainZoneOccupant.geometry`) au lieu d'occuper une case calculée.
+// C'est ce que la pop-up de présentation d'un élément est devenue : un volet, à une troisième
+// place, et non un panneau qui ressemble à un volet.
+//
+// LES TROIS PLACES DE LA GRILLE gardent leur nom et leurs règles ; 'floating' n'entre dans
+// AUCUNE d'elles, et c'est ce que dit `MAIN_ZONE_GRID_PLACES`. Deux listes, parce que deux
+// questions différentes se posent : « cette place existe-t-elle ? » (lecture d'un fichier) et
+// « cette place occupe-t-elle une case ? » (disposition, réserve du dessin, invariant du `main`).
+export type Type_MainZonePlace = 'main' | 'right' | 'bottom' | 'floating'
+export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
+/** Les places qui prennent une CASE de la grille : celles dont la disposition se calcule. */
+export const MAIN_ZONE_GRID_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom']
+/** Taille de naissance d'un volet flottant, quand personne ne lui en donne une. */
+export const MAIN_ZONE_FLOATING_DEFAULT_SIZE = { w: 420, h: 360 }
+/** Bornes de redimensionnement d'un volet flottant. */
+export const MAIN_ZONE_FLOATING_MIN_SIZE = { w: 240, h: 160 }
+export const MAIN_ZONE_FLOATING_MAX_SIZE = { w: 1400, h: 1100 }
+/**
+ * sa#563 — LE PLAFOND DE VOLETS FLOTTANTS, repris tel quel de celui des pop-ups de présentation
+ * (`MAX_PRESENTATION_POPUPS`) : sur un diagramme dense, des volets accolés se recouvrent et
+ * masquent ce qu'ils décrivent. La règle n'a pas changé de raison en changeant de place.
+ */
+export const MAX_MAIN_ZONE_FLOATING = 5
+/**
+ * sa#563 — CE QU'ON GARDE TOUJOURS À PORTÉE DE SOURIS d'un volet flottant, en px.
+ * Même valeur et même raison que `PANEL_GRAB_MARGIN_PX` (os#1494) : de quoi voir le volet et le
+ * rattraper par son en-tête, quelle que soit la géométrie qu'un fichier lui donne.
+ */
+const MAIN_ZONE_FLOATING_GRAB_PX = 80
+
+/** Largeur/hauteur de la fenêtre, avec le repli des tests (pas de `window` sous Node). */
+const viewportSize = (): { w: number, h: number } => ({
+  w: (typeof window !== 'undefined' && window.innerWidth) || 1280,
+  h: (typeof window !== 'undefined' && window.innerHeight) || 720
+})
+
+/** Taille bornée, puis position bornée de façon qu'il reste toujours de quoi saisir le volet. */
+export const clampMainZoneFloatingGeometry = (g: Type_PopupGeometry): Type_PopupGeometry => {
+  const { w: vw, h: vh } = viewportSize()
+  const w = Math.max(MAIN_ZONE_FLOATING_MIN_SIZE.w, Math.min(MAIN_ZONE_FLOATING_MAX_SIZE.w, Math.round(g.w)))
+  const h = Math.max(MAIN_ZONE_FLOATING_MIN_SIZE.h, Math.min(MAIN_ZONE_FLOATING_MAX_SIZE.h, Math.round(g.h)))
+  return {
+    w,
+    h,
+    x: Math.max(0, Math.min(Math.round(g.x), vw - MAIN_ZONE_FLOATING_GRAB_PX)),
+    y: Math.max(0, Math.min(Math.round(g.y), vh - MAIN_ZONE_FLOATING_GRAB_PX))
+  }
+}
+
+/** Géométrie de naissance d'un volet flottant à qui personne n'en donne : centrée en haut. */
+export const defaultMainZoneFloatingGeometry = (): Type_PopupGeometry => {
+  const { w: vw } = viewportSize()
+  const { w, h } = MAIN_ZONE_FLOATING_DEFAULT_SIZE
+  return clampMainZoneFloatingGeometry({ x: Math.round(vw / 2 - w / 2), y: 120, w, h })
+}
 // os#1387 — LE SUJET d'une fenêtre : ce qu'elle regarde (NOTE-FENETRES-ET-POINTAGE.md).
 //  - 'diagram'   : le document ;
 //  - 'selection' : elle SUIT l'élément sélectionné dans le dessin (fil d'Ariane) ;
@@ -186,6 +243,20 @@ export type Type_MainZoneOccupant = {
   representation: string
   place: Type_MainZonePlace
   size: number
+  /**
+   * sa#563 — OÙ ET DE QUELLE TAILLE, quand la place est 'floating'.
+   *
+   * `size` est un POIDS dans une pile : il ne dit rien d'un volet qui n'est dans aucune pile.
+   * D'où ce champ, et d'où le fait qu'il SURVIVE à un aller-retour par la grille — « Ancrer en
+   * volet » puis « Faire flotter » repose le volet là où il était, au lieu de le renvoyer au
+   * milieu de l'écran. C'est la même mémoire que `Class_PanelManager._popup_geometry_memory`, et
+   * c'est le même type : une géométrie flottante est une géométrie flottante, qu'elle porte un
+   * menu ou un volet (pratique P1 — un mot par concept).
+   *
+   * Absent sur un volet de la grille qui n'a jamais flotté : la géométrie se pose alors à la
+   * première demande (cf. `setMainZoneOccupantPlace`).
+   */
+  geometry?: Type_PopupGeometry
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -812,6 +883,22 @@ export class Class_MenuConfig {
   // liste — la refermer les ré-attache là où ils étaient — mais ne réservent plus d'espace.
   // État TRANSITOIRE : une fenêtre détachée ne survit pas au fichier.
   protected _main_zone_detached: Set<string> = new Set()
+  /**
+   * sa#563 — LA GRANDE ZONE EST-ELLE RENDUE PAR CET HÔTE ?
+   *
+   * `false` par défaut, et ce n'est pas une précaution théorique : le viewer du paquet MIT
+   * (`ViewerOpenSankeyApp`, ViewApp.tsx) monte le dessin et `PresentationPanels`, mais PAS
+   * `MainZoneTabs`. Y ouvrir un volet flottant reviendrait à ouvrir une fenêtre que personne ne
+   * dessine — c'est-à-dire à perdre en silence la présentation d'un élément chez tous les
+   * intégrateurs du paquet.
+   *
+   * Un DRAPEAU DE L'HÔTE, posé par le composant qui rend la grande zone (au montage, retiré au
+   * démontage) et jamais persisté : c'est une propriété de la page, pas du document. Son seul
+   * lecteur est le geste d'ouverture d'une présentation (`openPresentationFor`), qui choisit
+   * entre le volet flottant — quand il y a une grande zone pour le porter — et la pop-up de
+   * panneau, qui reste le seul contenant des hôtes sans grande zone.
+   */
+  protected _main_zone_hosted: boolean = false
   // os#1387 — Compteur des ids de fenêtres à sujet élément (`w_N`). Réaligné à la lecture d'un
   // fichier sur le plus grand N rencontré, sinon une fenêtre nouvelle prendrait l'id d'une ancienne.
   protected _main_zone_window_seq: number = 0
@@ -1119,6 +1206,41 @@ export class Class_MenuConfig {
   public mainZonePlaceOf(id: string): Type_MainZonePlace | null {
     return this._host._main_zone_occupants.find(o => o.id === id)?.place ?? null
   }
+  /** sa#563 — Ce volet flotte-t-il au-dessus de la grille ? */
+  public isMainZoneFloating(id: string): boolean {
+    return this.mainZonePlaceOf(id) === 'floating'
+  }
+  /**
+   * sa#563 — Les occupants de la GRILLE : ceux qui prennent une case. Un volet flottant n'en
+   * prend aucune, et c'est la seule différence entre lui et ses voisins — d'où cette lecture,
+   * dont se servent l'invariant du `main`, la réserve du dessin et le refus de fermer le dernier.
+   */
+  public get main_zone_grid_occupants(): Type_MainZoneOccupant[] {
+    return this._host._main_zone_occupants
+      .filter(o => o.place !== 'floating')
+      .map(o => ({ ...o }))
+  }
+  /** sa#563 — cf. `_main_zone_hosted` : la grande zone est-elle rendue par cette page ? */
+  public get main_zone_hosted(): boolean { return this._host._main_zone_hosted }
+  public set main_zone_hosted(v: boolean) {
+    if (this._host._main_zone_hosted === v) return
+    this._host._main_zone_hosted = v
+    this._notifyMainZone()
+  }
+  /**
+   * sa#563 — LA GÉOMÉTRIE d'un volet flottant, bornée.
+   *
+   * Les bornes sont celles des pop-ups, à un détail près qui compte : la POSITION est bornée
+   * elle aussi, pour qu'un volet garde toujours de quoi être attrapé par son en-tête. Une
+   * géométrie enregistrée sur un écran plus large replaçait sinon le volet hors de la fenêtre,
+   * où il est ouvert, invisible et insaisissable (même défaut qu'os#1494 sur les panneaux).
+   */
+  public setMainZoneOccupantGeometry(id: string, geometry: Type_PopupGeometry): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    o.geometry = clampMainZoneFloatingGeometry(geometry)
+    this._notifyMainZone()
+  }
 
   /**
    * Affiche un occupant. Sans `place`, il va en `main` si la zone principale est libre, sinon
@@ -1173,10 +1295,21 @@ export class Class_MenuConfig {
    * lot 0 : le canevas de la feuille B à côté de celui qu'on édite). Rend l'id de la fenêtre.
    */
   public openMainZoneWindow(
-    subject: Type_MainZoneSubject, representation: string, place?: Type_MainZonePlace
+    subject: Type_MainZoneSubject, representation: string, place?: Type_MainZonePlace,
+    /**
+     * sa#563 — La géométrie du volet quand `place` vaut 'floating' : elle vient de l'APPELANT,
+     * qui seul sait à côté de quoi poser le volet (l'élément cliqué, cf. `placeFloatingNear`).
+     * Absente, la naissance se fait au centre — c'est le cas d'un geste qui ne désigne rien.
+     */
+    geometry?: Type_PopupGeometry
   ): string {
     if (!mainZoneSubjectUsesOwnWindowId(subject)) {
-      this.showMainZoneOccupant(representation, place)
+      // sa#563 — une fenêtre DÉJÀ ouverte ne se fait pas déménager par un second geste
+      // d'ouverture : si l'auteur l'a ancrée en volet, la rouvrir depuis la légende ne doit pas
+      // la ré-arracher à la grille. Seule une fenêtre NEUVE reçoit la place demandée.
+      const known = this.isMainZoneOccupant(representation)
+      this.showMainZoneOccupant(representation, known ? undefined : place)
+      if (!known && place === 'floating') this._ensureFloatingGeometry(representation, geometry)
       return representation
     }
     let id = ''
@@ -1185,6 +1318,7 @@ export class Class_MenuConfig {
       id = `w_${this._host._main_zone_window_seq}`
     } while (this.isMainZoneOccupant(id))
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
+    if (place === 'floating') this._ensureFloatingGeometry(id, geometry)
     this._normalizeMainZoneOccupants()
     this._host._main_zone_active_id = id
     // os#1394 — la fenêtre qu'on vient d'ouvrir devient l'active, sur sa PREMIÈRE vignette :
@@ -2020,7 +2154,13 @@ export class Class_MenuConfig {
    * cède la place au premier de la colonne droite (cf. normalisation).
    */
   public hideMainZoneOccupant(id: string): boolean {
-    if (this._host._main_zone_occupants.length <= 1 && this.isMainZoneOccupant(id)) return false
+    // sa#563 — LE REFUS NE PORTE QUE SUR LA GRILLE. Il existe parce qu'une grande zone vide n'a
+    // rien pour se rallumer que le bouton qu'on vient de cliquer ; un volet FLOTTANT, lui, se
+    // ferme toujours — il ne laisse aucune case vide derrière lui, et sa croix est le seul moyen
+    // de s'en débarrasser. Le compte porte donc sur les occupants de la grille, et le volet
+    // flottant qu'on ferme n'en fait pas partie.
+    const grid = this._host._main_zone_occupants.filter(o => o.place !== 'floating')
+    if (grid.length <= 1 && grid.some(o => o.id === id)) return false
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
     this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
@@ -2116,12 +2256,45 @@ export class Class_MenuConfig {
     this._notifyMainZone()
     return doomed
   }
+  /**
+   * sa#563 — LES DEUX DÉPLACEMENTS ENTRE LA GRILLE ET LA PLACE FLOTTANTE, et rien d'autre : le
+   * volet garde son sujet, sa nature, ses figures et sa sélection — `setMainZoneOccupantPlace`
+   * n'écrit QUE `place`. C'est la promesse du point 4 de la recette, et elle tient parce qu'il
+   * n'y a rien à transporter : un occupant flottant et un occupant de la grille sont le même
+   * objet à deux endroits.
+   *
+   * La GÉOMÉTRIE, elle, se garde des deux côtés : elle n'est reposée que si le volet n'en a
+   * jamais eu, de sorte qu'un aller-retour repose le volet exactement là où il flottait.
+   */
   public setMainZoneOccupantPlace(id: string, place: Type_MainZonePlace): void {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === place) return
     o.place = place
+    if (place === 'floating') this._ensureFloatingGeometry(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
+  }
+  /** Donne au volet une géométrie s'il n'en a pas — la demandée, la sienne, ou celle par défaut. */
+  protected _ensureFloatingGeometry(id: string, geometry?: Type_PopupGeometry): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    if (geometry === undefined && o.geometry !== undefined) return
+    o.geometry = clampMainZoneFloatingGeometry(geometry ?? defaultMainZoneFloatingGeometry())
+  }
+  /**
+   * sa#563 — FERME LE PLUS ANCIEN VOLET FLOTTANT tant que le plafond est dépassé.
+   *
+   * `incoming_id` est celui qu'on s'apprête à ouvrir : il ne compte pas dans les anciens, mais
+   * il compte dans le total. L'ordre de la liste d'occupants est celui des ouvertures, donc le
+   * premier trouvé est le plus ancien — même règle qu'`enforcePopupCap`, dont ce geste reprend
+   * la place.
+   */
+  public enforceMainZoneFloatingCap(incoming_id: string): void {
+    const opened = this._host._main_zone_occupants
+      .filter(o => o.place === 'floating' && o.id !== incoming_id)
+      .map(o => o.id)
+    let excess = opened.length - (MAX_MAIN_ZONE_FLOATING - 1)
+    for (let i = 0; i < opened.length && excess > 0; i++, excess--) this.hideMainZoneOccupant(opened[i])
   }
   /**
    * Remplace la liste des fenêtres à sujet DIAGRAMME SUR LA FEUILLE COURANTE (état d'URL) : les
@@ -2135,7 +2308,13 @@ export class Class_MenuConfig {
   public setMainZoneOccupantIds(ids: string[]): void {
     const host = this._host
     const kept = new Map(host._main_zone_occupants.map(o => [o.id, o]))
-    const own_id_windows = host._main_zone_occupants.filter(o => mainZoneSubjectUsesOwnWindowId(o.subject))
+    // sa#563 — LES VOLETS FLOTTANTS SONT CONSERVÉS EUX AUSSI, et pour la même raison que les
+    // fenêtres à identifiant propre : l'URL décrit la GRILLE — ce qui partage l'écran —, pas ce
+    // qui flotte au-dessus. Un volet flottant peut par ailleurs porter un sujet diagramme sur la
+    // feuille courante (la vue d'un groupe d'étiquettes, dont l'identifiant EST sa nature) : sans
+    // cette ligne, il tomberait dans la liste reconstruite et disparaîtrait sans un mot.
+    const conserved = host._main_zone_occupants.filter(
+      o => mainZoneSubjectUsesOwnWindowId(o.subject) || o.place === 'floating')
     host._main_zone_occupants = []
     ids.forEach(id => {
       const prev = kept.get(id)
@@ -2143,7 +2322,10 @@ export class Class_MenuConfig {
         ? { ...prev }
         : { id, subject: { kind: 'diagram' }, representation: id, place: 'right', size: 1 })
     })
-    host._main_zone_occupants.push(...own_id_windows)
+    // Un identifiant CITÉ PAR L'URL qui désigne aussi un volet conservé est déjà dans la liste :
+    // la déduplication de la normalisation garde le premier, c'est-à-dire celui qu'on vient de
+    // reprendre tel quel — donc sa place, flottante le cas échéant.
+    host._main_zone_occupants.push(...conserved)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
@@ -2187,8 +2369,23 @@ export class Class_MenuConfig {
       if (!o.representation) o.representation = o.id
       if (!mainZoneSubjectUsesOwnWindowId(o.subject)) o.representation = o.id
     })
-    if (list.length === 0) {
-      list = [{ id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }]
+    // sa#563 — IL FAUT TOUJOURS UN OCCUPANT DE LA GRILLE, et pas seulement un occupant.
+    //
+    // La liste vide rallumait le canevas ; une liste qui ne contient QUE des volets flottants
+    // pose exactement le même problème sous un autre visage — la grille n'a plus de `main`, donc
+    // la promotion ci-dessous happerait un volet flottant pour lui donner toute la page. Un volet
+    // qu'on vient d'ouvrir au-dessus du diagramme ne doit pas devenir le diagramme.
+    if (list.filter(o => o.place !== 'floating').length === 0) {
+      // Le canevas peut DÉJÀ être là, flottant : on le fait redescendre dans la grille plutôt que
+      // d'en poser un second, qui porterait le même identifiant.
+      const canvas = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
+      if (canvas) canvas.place = 'main'
+      else {
+        list = [
+          { id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 },
+          ...list
+        ]
+      }
     }
     if (host._main_zone_active_id !== null && !list.some(o => o.id === host._main_zone_active_id)) {
       host._main_zone_active_id = null
@@ -2200,12 +2397,22 @@ export class Class_MenuConfig {
     const mains = list.filter(o => o.place === 'main')
     if (mains.length === 0) {
       // Personne en principale : le diagramme s'il est là, sinon le premier de la colonne
-      // droite, sinon le premier venu.
-      const promoted = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
-        ?? list.find(o => o.place === 'right') ?? list[0]
+      // droite, sinon le premier venu DE LA GRILLE. sa#563 — jamais un flottant : la garde
+      // ci-dessus a assuré qu'il en reste au moins un, et happer un volet flottant pour lui
+      // donner toute la page défierait le geste qui vient de le faire flotter.
+      const grid = list.filter(o => o.place !== 'floating')
+      const promoted = grid.find(o => o.id === MAIN_ZONE_CANVAS_ID)
+        ?? grid.find(o => o.place === 'right') ?? grid[0]
       promoted.place = 'main'
     } else mains.slice(1).forEach(o => { o.place = 'right' })
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
+    // sa#563 — un volet flottant a TOUJOURS une géométrie : l'hôte n'a alors aucun cas de
+    // « cadre manquant » à traiter, et un fichier qui l'aurait perdue se rouvre au centre plutôt
+    // qu'invisible. Bornée, pour la même raison qu'à l'écriture (cf. `setMainZoneOccupantGeometry`).
+    list.forEach(o => {
+      if (o.place !== 'floating') return
+      o.geometry = clampMainZoneFloatingGeometry(o.geometry ?? defaultMainZoneFloatingGeometry())
+    })
     host._main_zone_occupants = list
     // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
     // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
@@ -2223,7 +2430,11 @@ export class Class_MenuConfig {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === 'main') return
     const main = this._host._main_zone_occupants.find(x => x.place === 'main')
-    if (main) { main.place = o.place; main.size = o.size }
+    // sa#563 — L'ÉCHANGE NE REND PAS LE DIAGRAMME FLOTTANT. Promouvoir un volet flottant en
+    // fenêtre principale est un geste sur LUI ; renvoyer l'ancienne principale flotter à sa
+    // place ferait décoller le diagramme d'un clic qui ne parlait pas de lui. Elle prend la
+    // colonne droite, comme elle le ferait pour n'importe quelle autre promotion.
+    if (main) { main.place = o.place === 'floating' ? 'right' : o.place; main.size = o.size }
     o.place = 'main'
     o.size = 1
     this._host._main_zone_detached.delete(id)
@@ -2426,6 +2637,12 @@ export class Class_MenuConfig {
       const view = mainZoneSubjectView(o.subject)
       if (view !== '') subject['view'] = view
       const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
+      // sa#563 — LA GÉOMÉTRIE, seulement quand il y en a une. Un volet qui n'a jamais flotté
+      // n'écrit pas la clé, et le fichier d'un document sans volet flottant reste identique
+      // octet pour octet à celui qu'écrivait la version d'avant (même règle que `figures`).
+      if (o.geometry) {
+        entry['geometry'] = { x: o.geometry.x, y: o.geometry.y, w: o.geometry.w, h: o.geometry.h }
+      }
       // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
       // style de sa nature) rend `undefined` et ne s'écrit pas ; une fenêtre dont aucune figure
       // ne dit rien n'écrit pas la clé `figures` du tout. C'est ce qui rend un fichier
@@ -2518,6 +2735,17 @@ export class Class_MenuConfig {
           const figures = (figs && typeof figs === 'object' && !Array.isArray(figs)) ? figs as Type_JSON : undefined
           const opts = e['options']
           const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
+          // sa#563 — la géométrie d'un volet flottant. Absente d'un fichier antérieur, et d'un
+          // volet qui n'a jamais flotté : la normalisation en pose une si la place l'exige.
+          const geo = e['geometry']
+          const geometry = (geo && typeof geo === 'object' && !Array.isArray(geo))
+            ? clampMainZoneFloatingGeometry({
+              x: getNumberFromJSON(geo as Type_JSON, 'x', 0),
+              y: getNumberFromJSON(geo as Type_JSON, 'y', 0),
+              w: getNumberFromJSON(geo as Type_JSON, 'w', MAIN_ZONE_FLOATING_DEFAULT_SIZE.w),
+              h: getNumberFromJSON(geo as Type_JSON, 'h', MAIN_ZONE_FLOATING_DEFAULT_SIZE.h)
+            })
+            : undefined
           return {
             id,
             subject,
@@ -2525,6 +2753,7 @@ export class Class_MenuConfig {
             place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
             size: getNumberFromJSON(e, 'size', 1),
             order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),
+            geometry,
             figures,
             options
           }
@@ -2540,8 +2769,8 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size }) =>
-        ({ id, subject, representation, place, size }))
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry }) =>
+        (geometry ? { id, subject, representation, place, size, geometry } : { id, subject, representation, place, size }))
       // os#1387 — un fichier écrit avec le panneau unitaire à hôte externe : sa fenêtre devient
       // une fenêtre d'élément « Unit. » qui suit la sélection, même place, même poids.
       host._main_zone_occupants = host._main_zone_occupants.map(o => {

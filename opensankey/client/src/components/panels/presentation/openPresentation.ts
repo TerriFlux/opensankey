@@ -21,6 +21,13 @@
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
+// sa#563 — le volet flottant d'un élément. `Type_MainZoneSubject` est un TYPE (effacé à la
+// compilation) et `MAIN_ZONE_FLOATING_DEFAULT_SIZE` une constante : ce module reste léger, comme
+// son en-tête l'exige — rien ici ne tire le rendu.
+import type { Type_MainZoneSubject } from '../../../types/MenuConfig'
+import { MAIN_ZONE_FLOATING_DEFAULT_SIZE } from '../../../types/MenuConfig'
+// Module feuille sans import (cf. son en-tête) : la nature « Infos » se nomme sans tirer le registre.
+import { ELEMENT_INFO_REPRESENTATION_ID } from '../../../Representations/representationIds'
 import {
   hasContentFor, blocksFor, DEFAULT_BLOCK_VISIBILITY, type Type_Composition
 } from '../../../types/PresentationComposition'
@@ -175,6 +182,9 @@ export const openPresentationFor = (
   // qu'il met en forme, définition ou pas.
   if (isLegendEntry(element) && !isLegendGroupZoneId(element.id) &&
     !tooltipWouldRenderSomething(app_data, element)) return false
+  // sa#563 — LE CLIC SUR UN NŒUD OU UN FLUX OUVRE UN VOLET, plus un panneau.
+  const floating = openPresentationPane(app_data, element, anchor)
+  if (floating !== null) return floating
   const panels = app_data.menu_configuration.panels
   const id = presentationPanelId(element.id)
   // BASCULE — ce même clic vient de refermer la pop-up de cet élément (couche
@@ -192,7 +202,55 @@ export const openPresentationFor = (
   return true
 }
 
-// PLACEMENT DES POP-UPS ============================================================
+/**
+ * sa#563 (lots 1 à 3) — LE VOLET FLOTTANT D'UN ÉLÉMENT, ou `null` quand ce chemin ne s'applique
+ * pas et que l'appelant doit retomber sur la pop-up de panneau.
+ *
+ * `null` couvre DEUX cas, et ils n'ont rien en commun sinon la réponse :
+ *
+ *  - LA PAGE N'A PAS DE GRANDE ZONE. Le viewer du paquet MIT (`ViewerOpenSankeyApp`) monte le
+ *    dessin et les panneaux de présentation, mais pas `MainZoneTabs` : y ouvrir un volet serait
+ *    ouvrir une fenêtre que personne ne dessine, c'est-à-dire perdre la présentation en silence
+ *    chez tous les intégrateurs du paquet. Le drapeau est posé par l'hôte qui rend la grande
+ *    zone (cf. `Class_MenuConfig.main_zone_hosted`).
+ *  - L'ÉLÉMENT N'EST PAS UN SUJET DE VOLET. Une fenêtre d'élément résout ses vignettes dans les
+ *    nœuds et les flux du diagramme (`resolveMainZoneSubjects`) ; une ZONE de légende — une
+ *    entrée d'étiquette, un titre de groupe — n'est ni l'un ni l'autre. Sa définition reste ce
+ *    qu'elle est : une fiche, que la pop-up montre, et d'où un bouton ouvre la VUE du groupe en
+ *    volet (cf. `openTagGroupView`).
+ *
+ * `true` quand le volet est là : il devient l'occupant ACTIF (`openMainZoneWindow`), donc il
+ * porte le liséré vert dès son ouverture et la colonne d'outils le vise (lot 3).
+ */
+const openPresentationPane = (
+  app_data: Class_ApplicationData,
+  element: Type_Presentable,
+  anchor?: { x: number, y: number }
+): boolean | null => {
+  const mc = app_data.menu_configuration
+  if (!mc.main_zone_hosted) return null
+  if (isLegendEntry(element)) return null
+  const subject: Type_MainZoneSubject = isLinkLike(element)
+    ? { kind: 'link', id: element.id }
+    : { kind: 'node', id: element.id }
+  // DÉJÀ POSÉ : on ne rouvre pas, on désigne. Recliquer l'élément qui porte son volet doit le
+  // ramener sous les yeux (et sous la colonne d'outils), pas en empiler un second sur le premier.
+  const existing = mc.main_zone_occupants.find(o =>
+    o.place === 'floating' && o.subject.kind === subject.kind &&
+    'id' in o.subject && o.subject.id === element.id)
+  if (existing) {
+    mc.main_zone_active_id = existing.id
+    return true
+  }
+  mc.enforceMainZoneFloatingCap('')
+  mc.openMainZoneWindow(
+    subject, ELEMENT_INFO_REPRESENTATION_ID, 'floating',
+    placeFloatingNear(app_data, anchor, '')
+  )
+  return true
+}
+
+// PLACEMENT DES POP-UPS ET DES VOLETS FLOTTANTS ====================================
 
 const overlaps = (a: Type_PopupGeometry, b: Type_PopupGeometry): boolean =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
@@ -218,10 +276,43 @@ export const placePopupNear = (
   app_data: Class_ApplicationData,
   anchor: { x: number, y: number } | undefined,
   except_id: string
+): Type_PopupGeometry =>
+  placeNear(anchor, POPUP_SIZE, otherPopupGeometries(app_data, except_id))
+
+/**
+ * sa#563 — LA MÊME POSE, POUR UN VOLET FLOTTANT : juxtaposé à l'élément, borné dans la fenêtre,
+ * décalé en escalier tant qu'il recouvre un volet déjà posé.
+ *
+ * C'est la règle de l'issue — « l'anti-collision vaut pour les flottantes » —, et c'est bien la
+ * MÊME : ce qui change entre une pop-up et un volet flottant, c'est la taille de naissance et la
+ * liste de ce qu'il ne faut pas recouvrir. La géométrie, elle, est une géométrie (d'où
+ * `placeNear`, à qui les deux la demandent).
+ */
+export const placeFloatingNear = (
+  app_data: Class_ApplicationData,
+  anchor: { x: number, y: number } | undefined,
+  except_id: string
+): Type_PopupGeometry => {
+  const others = app_data.menu_configuration.main_zone_occupants
+    .filter(o => o.place === 'floating' && o.id !== except_id)
+    .map(o => o.geometry)
+    .filter((g): g is Type_PopupGeometry => g !== undefined)
+  return placeNear(anchor, MAIN_ZONE_FLOATING_DEFAULT_SIZE, others)
+}
+
+/**
+ * Pose une fenêtre de taille `size` JUXTAPOSÉE au point d'ancrage (à sa droite), bornée dans la
+ * fenêtre du navigateur, puis décalée en escalier tant qu'elle recouvre l'une de `others`. Sans
+ * ancre, on retombe sur un placement centré.
+ */
+const placeNear = (
+  anchor: { x: number, y: number } | undefined,
+  size: { w: number, h: number },
+  others: Type_PopupGeometry[]
 ): Type_PopupGeometry => {
   const vw = window.innerWidth || 1280
   const vh = window.innerHeight || 720
-  const { w, h } = POPUP_SIZE
+  const { w, h } = size
   const clamp = (g: Type_PopupGeometry): Type_PopupGeometry => ({
     ...g,
     x: Math.max(4, Math.min(g.x, vw - w - 4)),
@@ -233,7 +324,6 @@ export const placePopupNear = (
   if (anchor && x + w > vw - 4) x = anchor.x - POPUP_GAP - w
   let geometry = clamp({ x, y, w, h })
 
-  const others = otherPopupGeometries(app_data, except_id)
   for (let i = 0; i < MAX_COLLISION_TRIES; i++) {
     if (!others.some(o => overlaps(geometry, o))) break
     geometry = clamp({

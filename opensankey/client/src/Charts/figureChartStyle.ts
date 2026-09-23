@@ -43,6 +43,11 @@ export interface Type_FigureChartStyle {
   legend_levels: boolean
   /** parts_* */
   parts_order: 'value_desc' | 'value_asc' | 'name' | 'model'
+  /**
+   * os#1499 — UNE SEULE BARRE, UN SEGMENT PAR PART. Propre a l'histogramme : une couronne empile
+   * deja, c'est ce qu'un anneau EST. Faux par defaut — aucune figure enregistree ne change.
+   */
+  bars_stacked: boolean
   /** 'model' : la couleur que l'objet a dans le diagramme quand la donnée la porte. */
   parts_color_source: 'palette' | 'model'
   /**
@@ -128,6 +133,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // tant que `parts_hierarchy` vaut 'off'.
   legend_levels: true,
   parts_order: 'value_desc',
+  bars_stacked: false,
   parts_color_source: 'model',
   // Un seul cran : le dessin d'hier, au pixel.
   parts_hierarchy: 'off',
