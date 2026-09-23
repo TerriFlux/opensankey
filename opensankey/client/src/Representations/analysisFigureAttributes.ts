@@ -183,6 +183,9 @@ const DONUT_HONOURS = {
 const BARS_HONOURS = {
   ...SHARED_HONOURS,
   parts_order: { default: 'model' },
+  // os#1499 — L’EMPILEMENT N’EST DÉCLARÉ QUE PAR LES BARRES : une couronne empile déjà, c’est ce
+  // qu’un anneau EST. L’offrir des deux côtés ferait une case morte sur la couronne.
+  bars_stacked: {},
   value_label_is_visible: { default: true },
   legend_width: { default: 200 }
 }
