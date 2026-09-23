@@ -202,7 +202,11 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
 
   // Valeur
   value_label_is_visible: { visibleIf: labelled },
-  value_label_unit_visible: { visibleIf: valued },
+  // os#1502 — DECLARE VRAI, parce que le TRACE l'ecrit (os#1500) : « s'il y a une unite au
+  // depart dans le diagramme principal, elle devrait etre la aussi dans la charte ». Le
+  // panneau lisait encore `false` — la declaration disait l'inverse du dessin, et c'est elle
+  // que l'inspecteur montre. Sans unite au diagramme, le symbole vaut '' et rien ne s'ecrit.
+  value_label_unit_visible: { default: true, visibleIf: valued },
   value_label_percent: { visibleIf: labelled },
   value_label_significant_digits: { default: true, visibleIf: valued },
   value_label_nb_significant_digits: {
