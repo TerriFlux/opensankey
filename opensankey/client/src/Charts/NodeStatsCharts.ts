@@ -1235,8 +1235,6 @@ export const drawBarChart = (
     const horiz = a?.name?.horiz ?? 'middle'
     const cx = band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2)
     const inside = a?.name?.inside === true
-    // os#1482 — ce que la part dit de l orientation de son nom (cf. `rotate`, plus bas).
-    const orientation = a?.name?.orientation
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
     const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
@@ -1248,23 +1246,19 @@ export const drawBarChart = (
       y: cy + (a?.name?.shift_y ?? 0),
       // Pivoté seulement SOUS L'AXE : à l'intérieur d'une barre, un nom couché ne se lit plus.
       //
-      // os#1482 — ET L'AUTEUR PEUT TRANCHER. La même clé que sur une couronne, avec le sens qu'elle
-      // peut avoir ici : un histogramme n'a ni rayon ni arc, mais il a un nom qui tient ou non sous
-      // sa barre.
+      // ⚠️ os#1497 — ET L'ORIENTATION DE LA PART NE SE LIT PLUS ICI, à la demande de Julien :
+      // « il reste des choses sur barres qui ne devraient pas être là, ça n'a de sens que pour
+      // couronne. »
       //
-      //   RADIALE (le défaut) — le tracé décide, comme depuis toujours : il couche le nom quand la
-      //                         bande est trop étroite pour lui ;
-      //   HORIZONTALE         — droit, quoi qu'il arrive, quitte à ce que les noms se chevauchent ;
-      //   LE LONG DE LA FORME — couché, quoi qu'il arrive.
+      // os#1482 lui avait donné un sens de barres — radiale = le tracé décide, horizontale =
+      // droit, le long de la forme = couché — en tordant trois mots de ROND pour un histogramme.
+      // C'était déjà la solution de repli de l'époque, et os#1483 a tranché l'autre sens en
+      // réservant la clé aux figures rondes (`figures: { only: ['donut', 'sunburst'] }`).
       //
-      // Offrir ce réglage sans lui donner de sens ici aurait fait un bouton mort de plus sur les
-      // barres : la portée d'un attribut distingue les natures d'ÉLÉMENT (nœud, flux, part), pas
-      // les natures de FIGURE — une part de barres et une part de couronne sont toutes deux 'part'.
-      rotate: !inside && (
-        orientation === 'horizontal' ? false
-          : orientation === 'tangential' ? true
-            : rotate_labels
-      ),
+      // Ce qui restait était la moitié d'une bijection : un code sans surface pour l'allumer. Il
+      // part avec elle, et les barres retrouvent leur règle — coucher le nom quand la bande est
+      // trop étroite, et pas autrement.
+      rotate: !inside && rotate_labels,
       anchor: anchor === 'left' ? 'start' : anchor === 'right' ? 'end' : 'middle'
     }
   }
