@@ -61,6 +61,7 @@ import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_FigureAttributesConfig } from './Figure'
 import { figureNatureAttributes, type Type_HonourSpec } from './figureAttribute'
 import { figurePartsWiring, type Type_PartsWiring } from './parts/figurePartsWiring'
+import { rememberFigureNatureDefaults } from '../Elements/figureNatureDefaults'
 import type { Type_PartInput } from './parts/buildParts'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import type { Type_FigurePartContext } from '../Charts/partAspect'
@@ -146,6 +147,11 @@ export const figureNatures = (): readonly Type_FigureNatureSpec[] => _natures
  */
 export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
   _natures.push(spec)
+  // os#1501 — CE QUE LA NATURE DECLARE EST RETENU ICI, une fois pour toutes : l'inspecteur en a
+  // besoin pour montrer, dans un STYLE DE PART, ce que la figure ferait quand le style ne dit
+  // rien. Une nature de plus est couverte le jour ou on l'ecrit, sans penser a ce module.
+  const attributes = figureNatureAttributes(spec)
+  rememberFigureNatureDefaults(spec.nature, attributes as { [k: string]: { default?: unknown } })
   representation_registry.register({
     id: spec.id,
     scale: spec.scale ?? 'element',
@@ -155,7 +161,7 @@ export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
     zoom: spec.zoom,
     isAvailable: spec.isAvailable,
     resolveElementTarget: spec.resolveElementTarget,
-    attributes: figureNatureAttributes(spec),
+    attributes,
     draw: (container, ctx) => {
       const parts = spec.parts(ctx)
       if (parts === null) return undefined

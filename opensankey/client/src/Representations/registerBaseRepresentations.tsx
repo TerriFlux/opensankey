@@ -31,6 +31,7 @@ import { drawSunburstRepresentation, SUNBURST_ZOOM } from './SunburstRepresentat
 import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
 // os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
 import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
+import { rememberFigureNatureDefaults } from '../Elements/figureNatureDefaults'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
 // cette déclaration qui lui donne la cascade des styles des nœuds et des flux.
 import { figureAttribute } from './figureAttribute'
@@ -226,6 +227,9 @@ export const registerBaseRepresentations = (): void => {
   // 08/09/2026 : pas de statistiques sur le diagramme entier), donc à l'échelle ÉLÉMENT :
   // ses anneaux sont la descendance du nœud sujet. `root_ids` est posé depuis le sujet — le
   // module ne sait pas qu'il vit dans une fenêtre. Un flux n'a pas de descendance : refusé.
+  // os#1501 — LE DISQUE N'ENTRE PAS PAR `registerFigureNature` (il a son propre cablage) : ses
+  // defauts se retiennent donc ici, pour que le style de ses parts montre ce que la figure fait.
+  rememberFigureNatureDefaults('sunburst', SUNBURST_ATTRIBUTES as { [k: string]: { default?: unknown } })
   representation_registry.register({
     id: 'os.repr.sunburst',
     scale: 'element',
