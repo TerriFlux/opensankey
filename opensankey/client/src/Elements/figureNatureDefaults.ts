@@ -104,7 +104,46 @@ const figurePartElementDefault = (el: unknown, key: string): unknown => {
   const said = rec['isAttributeOverloaded']
   if (typeof said !== 'function') return undefined
   if ((said as (k: string) => boolean).call(el, key)) return undefined
-  return figureNatureDefault(nature, key)
+  // os#1503 — L'UNITÉ D'UNE PART SE LIT SUR CE QUE LA FIGURE ÉCRIT, et non au catalogue.
+  //
+  // `value_label_part_unit` est une clé d'ÉLÉMENT : la figure ne la déclare pas, donc le défaut de
+  // nature n'a rien à en dire et l'inspecteur retombait sur celui d'un nœud — « Valeur », pendant
+  // que la couronne dessinait des pourcentages. Ce que la figure fait est pourtant connu : c'est
+  // son `value_label_percent`, stampé sur la part au câblage (`figurePartsWiring`).
+  if (key === 'value_label_part_unit') return partUnitOfPercent(rec['figure_value_percent'])
+  // LA DÉCLARATION DE LA FIGURE D'ABORD : elle seule peut dire qu'une couronne écrit sa valeur.
+  const declared = figureNatureDefault(nature, key)
+  if (declared !== undefined) return declared
+  // os#1504 — SINON, CE QUE LE TRACÉ FAIT QUAND LA PART NE DIT RIEN, pour les rares clés qu'aucune
+  // figure ne déclare. Julien : « le fond est sélectionné alors qu'on ne le voit pas ».
+  return PART_NEUTRAL_DEFAULTS[key]
+}
+
+/**
+ * os#1504 — LE CARTOUCHE NE SE PEINT PAS SANS QU'ON LE DEMANDE, et le panneau doit le dire.
+ *
+ * Julien, capture à l'appui : « le fond est sélectionné alors qu'on ne le voit pas ».
+ *
+ * `name_label_background_visible` vaut VRAI au catalogue des éléments — un nœud dont on affiche le
+ * cartouche l'affiche. Une part, non : `drawFigureLabelBackground` ne peint que ce que la part
+ * DEMANDE (os#1468), et aucune figure ne déclare cette clé. Le panneau montrait donc « Fond »
+ * coché devant un dessin qui n'en a pas.
+ *
+ * ⚠️ CE N'EST PAS UNE LISTE DE RATTRAPAGE : elle dit ce que le TRACÉ fait, clé par clé, là où la
+ * figure n'a rien à déclarer. Le jour où une figure voudra un cartouche pour toutes ses étiquettes,
+ * elle déclarera la clé — et cette table n'aura plus à en parler (le défaut de nature passe avant).
+ */
+const PART_NEUTRAL_DEFAULTS: { readonly [key: string]: unknown } = {
+  name_label_background_visible: false,
+  value_label_background_visible: false
+}
+
+/** Le choix du sélecteur d'unité qui correspond au pourcentage que la figure écrit. */
+const partUnitOfPercent = (percent: unknown): string | undefined => {
+  if (percent === 'total') return 'percent_total'
+  if (percent === 'parent') return 'percent_parent'
+  if (percent === 'none') return 'value'
+  return undefined
 }
 
 /**
