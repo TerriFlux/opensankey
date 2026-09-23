@@ -102,6 +102,23 @@ export const figurePartsWiring = (
   // posé sur une part survit au redessin que provoque le geste suivant.
   const figure_parts = figurePartsFor(window_id, pane_key, app_data, inputs, nature)
 
+  // ── os#1503 — CE QUE LA FIGURE ÉCRIT À LA PLACE DE SA VALEUR, STAMPÉ SUR CHAQUE PART ─────────
+  //
+  // Julien, capture à l'appui : le sélecteur d'unité d'une part affichait « Valeur » pendant que
+  // la couronne dessinait des pourcentages.
+  //
+  // `value_label_part_unit` (os#1490) est une clé d'ÉLÉMENT : la figure ne la déclare pas, donc le
+  // défaut de nature — celui qui a réparé le reste du panneau (os#1502) — n'a rien à en dire, et
+  // l'inspecteur retombait sur la valeur d'usine d'un nœud, « Valeur ».
+  //
+  // Or ce que la figure fait est connu : c'est `value_label_percent`, RÉSOLU (réglage de la
+  // figure, sinon défaut de sa nature). On le pose sur la part, comme `figure_nature` l'est depuis
+  // os#1483 — même procédé, même raison : une part doit pouvoir répondre sur ce que fait sa figure
+  // sans avoir à la connaître.
+  Object.values(figure_parts.by_id).forEach(part => {
+    (part as unknown as { [k: string]: unknown })['figure_value_percent'] = base.value_label_percent
+  })
+
   // (2) LA FIGURE EST UN DOCUMENT, ET C'EST CE QUI OUVRE L'INSPECTEUR D'ÉLÉMENT.
   //
   // Lier la vignette à son document de parts en fait l'ACTIF dès qu'on touche la fenêtre

@@ -56,7 +56,19 @@ export const figureValueFormatOf = (
     custom_digit: bool('value_label_custom_digit', fallback.custom_digit),
     nb_digit: num('value_label_nb_digit', fallback.nb_digit),
     scientific_notation: bool('value_label_scientific_notation', fallback.scientific_notation),
-    unit: bool('value_label_unit_visible', fallback.unit !== '') ? unit : ''
+    // os#1500 — L'UNITÉ DU DIAGRAMME S'ÉCRIT SANS QU'ON AIT À LA COCHER.
+    //
+    // Julien : « je trouve que s'il y a une unité au départ dans le diagramme principal, elle
+    // devrait être là aussi dans la charte (barre ou couronne) ».
+    //
+    // La figure savait déjà la LIRE — `figureUnitOf`, sur un flux représentatif, exactement comme
+    // les étiquettes du dessin — mais ne l'écrivait que sur demande. Une couronne posée sur un
+    // diagramme en kt montrait donc des nombres nus à côté d'un dessin qui dit « kt » partout.
+    //
+    // ⚠️ CE N'EST PAS UN RENVERSEMENT RISQUÉ : quand le diagramme n'a pas d'unité, `unit` vaut ''
+    // et rien ne change. C'est la même condition qu'avant, lue au bon endroit — et un auteur qui
+    // avait décoché garde son réglage, la surcharge primant sur le défaut.
+    unit: bool('value_label_unit_visible', true) ? unit : ''
   }
 }
 

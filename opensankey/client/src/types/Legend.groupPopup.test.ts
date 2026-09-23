@@ -3,13 +3,11 @@ import type { Class_Tag } from './Tag'
 import type { Class_ElementStyle } from '../Elements/Element'
 import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerprint'
 import {
-  findLegendTagGroup, isLegendGroupZoneId, renderLegendTagGroupView,
-  canOpenTagGroupPane, openTagGroupPane
+  findLegendTagGroup, isLegendGroupZoneId
 } from '../components/panels/presentation/legendGroupPresentation'
+// sa#563 — la vue d'un groupe est une NATURE : ce qu'on éprouve est le document qu'elle bâtit.
+import { buildTagGroupViewDocument } from '../Representations/TagGroupViewRepresentation'
 import { presentationPanelId } from '../components/panels/presentation/openPresentation'
-import { representation_registry } from '../Representations/RepresentationRegistry'
-// os#1498 (agent A) — la nature « Vue par groupe » de la grande zone.
-import { MAIN_ZONE_GROUP_VIEW_ID } from './MenuConfig'
 
 /**
  * SA#551 — la légende range les groupes du plus prioritaire au moins prioritaire ; cliquer le nom
@@ -174,56 +172,65 @@ describe('SA#551 — clic sur le nom d\'un groupe', () => {
   })
 })
 
-describe('SA#551 — vue du groupe dans sa pop-up', () => {
-  it('dessine le diagramme mis en forme par ce groupe, et laisse le diagramme intact', () => {
+/**
+ * sa#563 (lot 4) — LA VUE D'UN GROUPE EST DEVENUE UNE NATURE, et ces trois épreuves sont celles
+ * de SA#551, reportées sur elle.
+ *
+ * Elles portaient sur `renderLegendTagGroupView`, qui mettait le dessin VIVANT en aperçu, en
+ * clonait le SVG et rétablissait tout : il fallait donc vérifier que le diagramme de l'auteur
+ * était bien rendu à son état. Elles portent désormais sur `buildTagGroupViewDocument`, et la
+ * question a changé de nature : le diagramme de l'auteur n'est plus touché du tout, ni lu en
+ * écriture ni redessiné — ce qu'on vérifie ici est que la COPIE dit ce qu'elle doit dire.
+ *
+ * Sur le MODÈLE de la copie et non sur son dessin : le document rendu est hors écran et non
+ * dessiné (c'est son hôte qui le dessine, quand sa case mesure quelque chose), ce qui rend ces
+ * épreuves indépendantes de ce que jsdom sait mesurer.
+ */
+describe('sa#563 — la vue d\'un groupe est une copie, et l\'original n\'est pas touché', () => {
+  it('la copie porte l\'aperçu du groupe ; la source n\'en garde rien et n\'est pas redessinée', () => {
     const { app, a, source } = makeLegend()
-    const before = { color: a.shape_color, opacity: a.shape_opacity }
-    const container = document.createElement('div')
-    const cleanup = renderLegendTagGroupView(app, source, container)
-    const svg = container.querySelector('svg')
-    expect(svg).not.toBeNull()
-    // Copie : les ids y sont renommés, aucune référence ne retombe sur le dessin vivant
-    expect(container.innerHTML).not.toContain('id="g_drawing"')
-    // Le diagramme vivant a retrouvé son état
-    expect(app.drawing_area.sankey.tag_style_preview_group_id).toBeUndefined()
-    expect(a.shape_color).toBe(before.color)
-    expect(a.shape_opacity).toBe(before.opacity)
-    cleanup()
-    expect(container.querySelector('svg')).toBeNull()
-  })
-})
-
-describe('SA#551 — la vue ne montre que son groupe', () => {
-  it('la légende de la copie ne garde que le groupe montré, développé, sans ligne épinglée', () => {
-    const { app, sankey, source } = makeLegend()
-    // « Source » est fermée : la vue la présente développée, puis rend son interrupteur
-    expect(source.use_colors).toBe(false)
-    const container = document.createElement('div')
-    const zones_during: string[] = []
-    const original_draw = sankey.containers_list
-    expect(original_draw.length).toBeGreaterThan(0)
-    // On relève la légende PENDANT la copie, par le hook de dessin de la zone de travail
-    const da = app.drawing_area as unknown as { contentBounds: () => unknown }
-    const real_bounds = da.contentBounds.bind(app.drawing_area)
-    da.contentBounds = () => {
-      zones_during.push(...sankey.containers_list.map(c => c.id).filter(id => id.startsWith('legend-')))
-      return real_bounds()
+    const before = { color: a.shape_color, opacity: a.shape_opacity, epoch: app.draw_epoch }
+    const view = buildTagGroupViewDocument(app, source.id)
+    expect(view).not.toBeNull()
+    const doc = view as Class_ApplicationData
+    try {
+      // La COPIE est en aperçu sur ce groupe, et c'est un AUTRE document.
+      expect(doc).not.toBe(app)
+      expect(doc.drawing_area.sankey.tag_style_preview_group_id).toBe('source')
+      // On ne l'édite pas : ses nœuds ne délèguent rien, ce qu'on y déplacerait se perdrait.
+      expect(doc.editable).toBe(false)
+      // LA SOURCE N'A RIEN VU. Ni aperçu posé puis retiré, ni couleur touchée, ni dessin de plus
+      // — c'est le point 5 de la recette, « le diagramme principal n'a pas bougé d'un pixel ».
+      expect(app.drawing_area.sankey.tag_style_preview_group_id).toBeUndefined()
+      expect(a.shape_color).toBe(before.color)
+      expect(a.shape_opacity).toBe(before.opacity)
+      // ET PAS UN DESSIN DE PLUS. La copie se lit par `toSheetContentJSON`, dont la sortie
+      // REDESSINE le document qu'elle sérialise (`withBypassRedraws`) : sans le garde-fou posé
+      // dans `buildTagGroupViewDocument`, ce dessin notifierait `DRAW_TOPIC`, la vue se
+      // reconstruirait, resérialiserait — et la page se figerait au premier clic sur « Vue ».
+      expect(app.draw_epoch).toBe(before.epoch)
+    } finally {
+      doc.dispose()
     }
-    renderLegendTagGroupView(app, source, container)
-    da.contentBounds = real_bounds
-
-    const groups_during = zones_during.filter(id => id.startsWith('legend-group-'))
-    expect(groups_during).toEqual(['legend-group-source'])
-    expect(zones_during).toContain('legend-tag-source-agreste')
-    expect(zones_during.some(id => id.startsWith('legend-tag-fiab'))).toBe(false)
-    // Après la copie : interrupteur rendu, légende d'origine rétablie
-    expect(source.use_colors).toBe(false)
-    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
   })
-})
 
-describe('SA#551 — la vue n\'affiche QUE la mise en forme de son groupe', () => {
-  it('un groupe de NŒUDS qui colore à l\'ancienne ne s\'applique pas dans la vue d\'un groupe de FLUX', () => {
+  it('le groupe montré est présenté DÉVELOPPÉ dans la copie, et son interrupteur d\'origine ne bouge pas', () => {
+    const { app, source } = makeLegend()
+    // « Source » est fermée : sans bloc dans la légende, la vue n'aurait rien à faire lire.
+    expect(source.use_colors).toBe(false)
+    const doc = buildTagGroupViewDocument(app, source.id) as Class_ApplicationData
+    try {
+      const copied = doc.drawing_area.sankey.node_taggs_dict['source']
+      expect(copied).toBeDefined()
+      expect(copied.use_colors).toBe(true)
+      // L'interrupteur de l'AUTEUR, lui, est resté fermé.
+      expect(source.use_colors).toBe(false)
+    } finally {
+      doc.dispose()
+    }
+  })
+
+  it('un groupe de NŒUDS qui colore à l\'ancienne ne met plus rien en forme dans la vue d\'un groupe de FLUX', () => {
     const { app, sankey, b, type, fiab } = makeLegend()
     // Groupe de FLUX montré (le pilote Lait montre « Fiabilité des données », un groupe de flux) :
     // les NŒUDS doivent perdre eux aussi la mise en forme des autres groupes.
@@ -233,33 +240,38 @@ describe('SA#551 — la vue n\'affiche QUE la mise en forme de son groupe', () =
     ;(flux_style as unknown as { shape_opacity: number }).shape_opacity = 0.5
     sur.style_id = flux_style.id
     flux_group.use_colors = true
-    // Les autres groupes à styles sont fermés : depuis SA#553, leur étiquette générée
-    // « Sans [groupe] » imposerait ses valeurs par défaut à B, qui ne porte aucune de leurs
-    // étiquettes — ce n'est pas ce qu'on mesure ici.
     type.use_colors = false
     fiab.use_colors = false
     // Groupe à l'ancienne : pas de style, la couleur vient de l'étiquette (cf. « Forme de produit
-    // laitier » du pilote Lait). Il colore B tant qu'il est allumé.
+    // laitier » du pilote Lait). Elle ne passe PAS par la cascade des styles — donc pas par
+    // `shape_color` — mais par le dessin, qui demande au sankey si le groupe met en forme.
     const forme = sankey.addNodeTagGroup('forme', 'Forme', false)
     const cru = forme.addTag('Cru', 'cru') as Class_Tag
     cru.color = '#00ff00'
     b.addTag(cru)
     forme.use_colors = true
     app.drawing_area.draw()
-    // C'est bien la COULEUR DESSINÉE qu'on mesure : le modèle se recalcule à la demande, il dirait
-    // la bonne couleur même si le nœud n'avait pas été redessiné pour la copie.
-    const drawnColorOfB = () => b.d3_selection?.select('.node_shape').attr('fill')
-    expect(drawnColorOfB()).toBe('#00ff00')
+    expect(b.d3_selection?.select('.node_shape').attr('fill')).toBe('#00ff00')
+    // C'est CE prédicat que lit la coloration historique, et c'est lui qu'il faut mesurer : le
+    // modèle du nœud, lui, ne dit rien de cette couleur-là (leçon de SA#551).
+    expect(sankey.tagGroupAppliesFormatting(forme)).toBe(true)
 
-    const container = document.createElement('div')
-    renderLegendTagGroupView(app, flux_group as never, container)
-
-    // La copie ne porte plus la couleur de « Forme » nulle part
-    expect(container.innerHTML).not.toContain('#00ff00')
-    expect(container.querySelector('svg')).not.toBeNull()
-    // Après : tout est rétabli, dessin compris
-    expect(forme.use_colors).toBe(true)
-    expect(drawnColorOfB()).toBe('#00ff00')
+    const doc = buildTagGroupViewDocument(app, 'flux_fiab') as Class_ApplicationData
+    try {
+      const copied = doc.drawing_area.sankey
+      const copied_forme = copied.node_taggs_dict['forme']
+      expect(copied_forme).toBeDefined()
+      // Dans la copie, « Forme » est bien toujours allumé — et il ne met pourtant plus rien en
+      // forme : l'aperçu n'en laisse qu'un seul, et c'est le groupe de FLUX.
+      expect(copied_forme.use_colors).toBe(true)
+      expect(copied.tagGroupAppliesFormatting(copied_forme)).toBe(false)
+      expect(copied.tagGroupAppliesFormatting(copied.flux_taggs_dict['flux_fiab'])).toBe(true)
+      // Et la source garde la sienne, sans qu'on ait eu à la rétablir.
+      expect(sankey.tagGroupAppliesFormatting(forme)).toBe(true)
+      expect(b.d3_selection?.select('.node_shape').attr('fill')).toBe('#00ff00')
+    } finally {
+      doc.dispose()
+    }
   })
 })
 
@@ -277,70 +289,6 @@ describe('SA#551 — survol', () => {
     expect(c.d3_selection?.attr('opacity')).toBe('0.1')
     hover(host, app, 'legend-tag-fiab-robuste', 'mouseout')
     expect(c.d3_selection?.attr('opacity')).toBe('')
-  })
-})
-
-/**
- * os#1498 — la photo de la pop-up se LIT ; le volet, lui, montre le diagramme VIVANT mis en forme
- * par ce seul groupe. Le bouton n'apparaît que si la nature est enregistrée (OS+) et offerte à ce
- * document-ci ; sinon la photo reste le seul chemin, exactement comme avant.
- */
-describe('os#1498 — ouvrir la vue du groupe dans un volet', () => {
-  // `as never` : `allow_many` arrive avec l agent A de os#1498, ce test doit compiler quel que
-  // soit l ordre des merges (même précaution que figureStyles.test.ts pour `attributes`).
-  const registerGroupView = (extra: { [k: string]: unknown } = {}) =>
-    representation_registry.register({
-      id: MAIN_ZONE_GROUP_VIEW_ID,
-      scale: 'diagram',
-      order: 40,
-      allow_many: true,
-      label: () => 'Vue par groupe',
-      draw: () => undefined,
-      ...extra
-    } as never)
-
-  afterEach(() => { representation_registry.unregister(MAIN_ZONE_GROUP_VIEW_ID) })
-
-  it('sans nature enregistree, pas de bouton : la photo reste le seul chemin', () => {
-    const { app, source } = makeLegend(false)
-    expect(representation_registry.get(MAIN_ZONE_GROUP_VIEW_ID)).toBeUndefined()
-    expect(canOpenTagGroupPane(app)).toBe(false)
-    const before = app.menu_configuration.main_zone_occupants.length
-    expect(openTagGroupPane(app, source as never, 'legend-group-source')).toBeNull()
-    expect(app.menu_configuration.main_zone_occupants.length).toBe(before)
-  })
-
-  it('avec la nature enregistree, le volet naît sur le diagramme et porte CE groupe', () => {
-    registerGroupView()
-    const { host, app, source } = makeLegend(false)
-    expect(canOpenTagGroupPane(app)).toBe(true)
-    // La pop-up est ouverte par le vrai chemin du clic : c'est elle qui doit céder la place.
-    click(host, app, 'legend-group-source')
-    expect(popupMode(app, 'legend-group-source')).toBe('popup')
-
-    const mc = app.menu_configuration
-    const window_id = openTagGroupPane(app, source as never, 'legend-group-source')
-    expect(window_id).not.toBeNull()
-    const occupant = mc.mainZoneOccupantById(window_id as string)
-    expect(occupant).toBeDefined()
-    expect(occupant?.subject.kind).toBe('diagram')
-    expect(occupant?.representation).toBe(MAIN_ZONE_GROUP_VIEW_ID)
-    // Le groupe est posé sur la figure de diagramme de CETTE fenêtre (clé '')
-    expect(mc.figureOf(window_id as string, '').attributes.tag_group_id).toBe(source.id)
-    // ... et la pop-up s'est refermée derrière elle
-    expect(popupMode(app, 'legend-group-source')).not.toBe('popup')
-  })
-
-  it('page publiee qui n offre pas la nature : pas de bouton, et il revient si elle l offre', () => {
-    registerGroupView({ publish_option: 'unitary' })
-    const { app, source } = makeLegend(true)
-    expect(app.is_static).toBe(true)
-    expect(app.publish_options.unitary).toBe(false)
-    expect(canOpenTagGroupPane(app)).toBe(false)
-    expect(openTagGroupPane(app, source as never, 'legend-group-source')).toBeNull()
-    // La garde est celle du registre : la page qui offre la nature retrouve le bouton.
-    app.publish_options.unitary = true
-    expect(canOpenTagGroupPane(app)).toBe(true)
   })
 })
 

@@ -1,4 +1,5 @@
 import { buildAnalysisChartData, Type_AnalysisDescriptor, Type_ChartSubject } from './AnalysisChartData'
+import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
 import {
   countLifted,
   drawBarChart,
@@ -150,6 +151,18 @@ const heightsByFill = (el: HTMLElement, fill: string) =>
     .filter(r => r.getAttribute('fill') === fill)
     .map(r => Number(r.getAttribute('height')))
 
+// « AFFICHÉ » ET NON « PRÉSENT » — et c'est toute la différence qui a laissé passer le
+// défaut d'os#1431 du côté groupé : la mention était bien dans le DOM, sous le
+// `display:none` de la légende. `querySelector` la trouvait, l'écran ne la montrait plus,
+// et le test restait vert. jsdom ne fait pas cascader `display` : on remonte les parents.
+const estAffiche = (el: Element | null | undefined): boolean => {
+  if (!el) return false
+  for (let n: Element | null = el; n && n !== document.body; n = n.parentElement) {
+    if ((n as HTMLElement).style?.display === 'none') return false
+  }
+  return true
+}
+
 // « Blé tendre » vers deux modes de production, mesuré dans DEUX unités : le tonnage
 // et le rendement. Sept ordres de grandeur les séparent — c'est le cas du ticket.
 const BIO = '#2e8b57'
@@ -163,6 +176,25 @@ const buildFluxUniteFixture = (ha_bio = 0.0012, ha_conv = 0.0032) => {
   linkPerTag('l_bio', ble, bio, unites, { u_kt: 12000, u_ha: ha_bio })
   linkPerTag('l_conv', ble, conv, unites, { u_kt: 28000, u_ha: ha_conv })
   return { ble }
+}
+
+// Les deux mêmes flux sortants, mesurés sur DEUX ANNÉES dont la seconde vaut un
+// millionième de la première : l'empilé y met une pile par année, et celle de 2020 ne
+// tient qu'au plancher de visibilité.
+const buildPileAnneesFixture = () => {
+  const annees = makeTagg('tagg_annee', [['t_2019', '2019', '#1f77b4'], ['t_2020', '2020', '#ff7f0e']])
+  const sankey: Sankey = { data_taggs_dict: { tagg_annee: annees } }
+  const ble = makeNode(sankey, 'n_ble', 'Blé tendre', '#c8b400')
+  const bio = makeNode(sankey, 'n_bio', 'Bio', BIO)
+  const conv = makeNode(sankey, 'n_conv', 'Conventionnel', CONV)
+  linkPerTag('l_bio', ble, bio, annees, { t_2019: 12000, t_2020: 0.001 })
+  linkPerTag('l_conv', ble, conv, annees, { t_2019: 28000, t_2020: 0.003 })
+  return { ble }
+}
+
+const PILE_ANNEES = {
+  decompose: { kind: 'outputs' as const },
+  compare: { data_tagg_id: 'tagg_annee' }
 }
 
 // LA configuration visée : une grappe par UNITÉ (abscisse), une barre par FLUX SORTANT
@@ -339,19 +371,9 @@ describe('#393 — hors du croisement, le plancher de visibilité seul', () => {
   it('un histogramme empilé relève la PILE ENTIÈRE, pas ses segments un à un', () => {
     // Relever les segments séparément décollerait le sommet de la barre de son total :
     // l'empilement porte une addition, elle doit rester vraie.
-    const annees = makeTagg('tagg_annee', [['t_2019', '2019', '#1f77b4'], ['t_2020', '2020', '#ff7f0e']])
-    const sankey: Sankey = { data_taggs_dict: { tagg_annee: annees } }
-    const ble = makeNode(sankey, 'n_ble', 'Blé tendre', '#c8b400')
-    const bio = makeNode(sankey, 'n_bio', 'Bio', BIO)
-    const conv = makeNode(sankey, 'n_conv', 'Conventionnel', CONV)
-    linkPerTag('l_bio', ble, bio, annees, { t_2019: 12000, t_2020: 0.001 })
-    linkPerTag('l_conv', ble, conv, annees, { t_2019: 28000, t_2020: 0.003 })
-
+    const { ble } = buildPileAnneesFixture()
     const el = sizedContainer()
-    drawStacked(el, subjectOf(ble), {
-      decompose: { kind: 'outputs' },
-      compare: { data_tagg_id: 'tagg_annee' }
-    })
+    drawStacked(el, subjectOf(ble), PILE_ANNEES)
     // Deux barres × deux segments. Celle de 2020 est au plancher : ses deux segments
     // s'additionnent EXACTEMENT à la hauteur plancher, dans le rapport 1/3.
     const rects = [...el.querySelectorAll('svg rect')]
@@ -360,5 +382,77 @@ describe('#393 — hors du croisement, le plancher de visibilité seul', () => {
     expect(small[0] + small[1]).toBeCloseTo(2, 5)
     expect(small[1] / (small[0] + small[1])).toBeCloseTo(0.25, 5)
     expect(el.querySelector('div.node_stats_legend_out_of_scale')?.textContent).toBe('plancher:1')
+  })
+})
+
+// ── os#1431 × #393 — LA LÉGENDE SE CACHE, LES MENTIONS RESTENT ───────────────────────
+//
+// `ade42a9c2` (os#1431, 19/09) a fait passer `legend_visible` à `false` par défaut. La
+// décision porte sur la LÉGENDE — elle redit ce que les secteurs disent déjà — et elle
+// est légitime. Mais les mentions de #393 vivaient DANS cette légende : elles se sont
+// tues avec elle, sans que personne le décide.
+//
+// Les deux natures ne l'ont pas dit de la même façon, et c'est la leçon du lot :
+//   • l'EMPILÉ sortait par un `return` avant la légende → la mention disparaissait du
+//     DOM, le test ci-dessus est passé au rouge (et y est resté trois jours) ;
+//   • le GROUPÉ gardait la mention dans le DOM sous un `display:none` → présente pour
+//     `querySelector`, invisible à l'écran : le test est resté VERT sur le même défaut.
+//
+// D'où ce bloc, qui mesure l'AFFICHAGE et non la présence.
+describe('os#1431 × #393 — la légende se cache par défaut, les mentions restent', () => {
+  it('GROUPÉ : l’écrasement reste annoncé à l’ÉCRAN, légende éteinte comprise', () => {
+    const { ble } = buildFluxUniteFixture()
+    const el = sizedContainer()
+    drawGrouped(el, subjectOf(ble), FLUX_X_UNITE)
+    // Le défaut du jour, vérifié ici même : sans lui, le test ne prouverait rien.
+    expect(estAffiche(el.querySelector('div.node_stats_legend_item'))).toBe(false)
+    // La mention, elle, doit rester lisible — sinon deux filets de 2 px passent pour
+    // une mesure, ce que #393 était venu empêcher.
+    const mention = el.querySelector('div.node_stats_legend_out_of_scale')
+    expect(mention?.textContent).toBe('plancher:2')
+    expect(estAffiche(mention)).toBe(true)
+  })
+
+  it('GROUPÉ : les échelles séparées s’annoncent aussi', () => {
+    const { ble } = buildFluxUniteFixture()
+    const el = sizedContainer()
+    drawGrouped(el, subjectOf(ble), UNITE_X_FLUX)
+    const mention = el.querySelector('div.node_stats_legend_independent_scales')
+    expect(mention?.textContent).toBe('echelles-par-grappe')
+    expect(estAffiche(mention)).toBe(true)
+  })
+
+  it('EMPILÉ : la mention s’écrit sans la légende des catégories', () => {
+    const { ble } = buildPileAnneesFixture()
+    const el = sizedContainer()
+    drawStacked(el, subjectOf(ble), PILE_ANNEES)
+    const mention = el.querySelector('div.node_stats_legend_out_of_scale')
+    expect(mention?.textContent).toBe('plancher:1')
+    expect(estAffiche(mention)).toBe(true)
+  })
+
+  it('couper les MENTIONS les coupe vraiment, sur les deux natures', () => {
+    // Le pendant des trois tests ci-dessus. `notes_visible` reste le seul interrupteur
+    // des mentions : « toujours les afficher » serait une correction aussi fausse que
+    // « ne jamais les afficher ».
+    const muet = { ...BARS_STYLE_DEFAULTS, notes_visible: false }
+
+    const { ble } = buildFluxUniteFixture()
+    const groupe = sizedContainer()
+    drawGroupedBarChart(
+      groupe,
+      buildAnalysisChartData(subjectOf(ble), FLUX_X_UNITE).groups ?? [],
+      { ...LABELS, style: muet }
+    )
+    expect(groupe.querySelector('div.node_stats_legend_out_of_scale')).toBeNull()
+
+    const pile = buildPileAnneesFixture()
+    const empile = sizedContainer()
+    drawStackedBarChart(
+      empile,
+      buildAnalysisChartData(subjectOf(pile.ble), PILE_ANNEES).series,
+      { ...LABELS, style: muet }
+    )
+    expect(empile.querySelector('div.node_stats_legend_out_of_scale')).toBeNull()
   })
 })

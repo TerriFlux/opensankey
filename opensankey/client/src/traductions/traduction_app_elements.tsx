@@ -459,7 +459,6 @@ export const resources_app_elements = {
         legend_dimension_change: 'Click to change',
         legend_group_tags: 'Tags in this group',
         legend_group_view: 'View',
-        legend_group_open_pane: 'Open in a pane',
         hide_leg: 'Hide the legend',
         show_leg: 'Show the legend',
         tooltips: {
@@ -1234,7 +1233,6 @@ export const resources_app_elements = {
         legend_dimension_change: 'Cliquer pour modifier',
         legend_group_tags: 'Étiquettes du groupe',
         legend_group_view: 'Vue',
-        legend_group_open_pane: 'Ouvrir dans un volet',
         hide_leg: 'Masquer la légende',
         show_leg: 'Afficher la légende',
         tooltips: {
@@ -1977,7 +1975,6 @@ export const resources_app_elements = {
         legend_dimension_change: 'Haga clic para cambiar',
         legend_group_tags: 'Etiquetas del grupo',
         legend_group_view: 'Vista',
-        legend_group_open_pane: 'Abrir en un panel',
         hide_leg: 'Ocultar la leyenda',
         show_leg: 'Mostrar la leyenda',
         tooltips: {
@@ -2717,7 +2714,6 @@ export const resources_app_elements = {
         legend_dimension_change: 'Zum Ändern klicken',
         legend_group_tags: 'Tags dieser Gruppe',
         legend_group_view: 'Ansicht',
-        legend_group_open_pane: 'In einem Bereich öffnen',
         hide_leg: 'Legende ausblenden',
         show_leg: 'Legende einblenden',
         tooltips: {
@@ -3457,7 +3453,6 @@ export const resources_app_elements = {
         legend_dimension_change: 'Clicca per modificare',
         legend_group_tags: 'Etichette del gruppo',
         legend_group_view: 'Vista',
-        legend_group_open_pane: 'Apri in un riquadro',
         hide_leg: 'Nascondi la legenda',
         show_leg: 'Mostra la legenda',
         tooltips: {
@@ -4200,7 +4195,6 @@ export const resources_app_elements = {
         legend_dimension_change: '点击以更改',
         legend_group_tags: '该组的标签',
         legend_group_view: '视图',
-        legend_group_open_pane: '在窗格中打开',
         hide_leg: '隐藏图例',
         show_leg: '显示图例',
         tooltips: {
@@ -4947,7 +4941,6 @@ export const resources_app_elements = {
         legend_dimension_change: 'クリックして変更',
         legend_group_tags: 'このグループのタグ',
         legend_group_view: 'ビュー',
-        legend_group_open_pane: 'ペインで開く',
         hide_leg: '凡例を隠す',
         show_leg: '凡例を表示',
         tooltips: {

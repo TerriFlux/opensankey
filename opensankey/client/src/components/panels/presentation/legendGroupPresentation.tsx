@@ -14,28 +14,27 @@
 //
 // Cliquer le nom d'un groupe dans la légende ouvre la même pop-up que n'importe quel élément du
 // diagramme (arbitrage d'Alexandre, 2026-09-18 — le clic n'ouvre plus le groupe). Elle montre la
-// définition du groupe et ses étiquettes, et sa colonne de droite porte, à la place des analyses
-// d'un élément, une VUE : le diagramme mis en forme par les seules étiquettes de ce groupe.
+// définition du groupe et ses étiquettes, et un bouton « Vue » ouvre le diagramme mis en forme
+// par les seules étiquettes de ce groupe.
 //
-// La vue est une COPIE du dessin courant, prise pendant que la cascade est mise en aperçu
-// (`Class_Sankey.setTagStylePreview`) puis rendue telle quelle : le diagramme lui-même n'est pas
-// modifié — deux dessins successifs dans la même tâche, donc rien ne clignote.
+// sa#563 (lot 4) — LA VUE N'EST PLUS UNE PHOTO. `renderLegendTagGroupView` clonait le SVG du
+// dessin vivant en chaîne de caractères pendant que la cascade était en aperçu : une image, dans
+// un `div` de 260 px, où rien ne se déplaçait ni ne se réglait. La vue est devenue une NATURE de
+// la grande zone (`TagGroupViewRepresentation`), et ce bouton ne fait plus que l'ouvrir — dans un
+// volet flottant, réglable par la colonne d'outils comme n'importe quel autre volet.
 
 import React from 'react'
 import { Box, Text } from '@chakra-ui/react'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_TagGroup } from '../../../types/TagGroup'
-import type { Class_DrawingArea } from '../../../types/DrawingArea'
 import { isLegendGroupZoneId } from '../../../Elements/legendIds'
-import { redrawForTagStylePreview } from '../../../Elements/LegendGenerator'
 import { default_font_size } from '../../../css/Theme'
-import { diagramContext, representation_registry } from '../../../Representations/RepresentationRegistry'
-// os#1498 (agent A) — identifiant de la nature « Vue par groupe », posé à côté de
-// `MAIN_ZONE_UNIT_WINDOW_ID` ; c'est OS+ qui l'enregistre, OS ne fait que le citer.
-import { MAIN_ZONE_GROUP_VIEW_ID } from '../../../types/MenuConfig'
-import type { Class_MenuConfig, Type_MainZoneSubject } from '../../../types/MenuConfig'
-import { presentationPanelId, type Type_Presentable } from './openPresentation'
+import { FIGURE_DIAGRAM_PANE_KEY } from '../../../Representations/Figure'
+import { TAG_GROUP_VIEW_REPRESENTATION_ID } from '../../../Representations/representationIds'
+import { TAG_GROUP_VIEW_OPTION_KEY } from '../../../Representations/TagGroupViewRepresentation'
+import type { Type_Presentable } from './openPresentation'
+import { placeFloatingNear } from './openPresentation'
 
 export { isLegendGroupZoneId }
 
@@ -147,144 +146,37 @@ export const LegendTagGroupBlock = ({ app_data, group }: {
   )
 }
 
-// VUE DU GROUPE (colonne de droite) =================================================
-
-/** Marge autour du contenu dans la copie, en px écran. */
-const VIEW_PADDING = 5
+// VUE DU GROUPE — L'OUVERTURE, et plus le dessin ===================================
 
 /**
- * Renomme les identifiants de la copie : un clone du SVG vivant porterait les MÊMES ids, et une
- * référence interne (`url(#hatch-xxx)`, `clip-path`) se résoudrait alors sur l'élément du diagramme
- * vivant — c'est-à-dire sur le motif REMIS dans son état normal après l'aperçu.
+ * sa#563 — OUVRE LA « VUE » DE CE GROUPE dans un volet flottant de la grande zone.
+ *
+ * UNE SEULE FENÊTRE DE CETTE NATURE, et c'est voulu : le groupe est un RÉGLAGE de la vue (cf.
+ * `TagGroupViewRepresentation`), pas son sujet. Demander la vue d'un second groupe change donc
+ * le réglage de la fenêtre qui est déjà là, au lieu d'en ouvrir une de plus — exactement comme
+ * on ne rouvre pas un tableur pour regarder une autre feuille.
+ *
+ * ET ON NE LA DÉMÉNAGE PAS. Si l'auteur l'a ancrée en volet dans la grande zone, un nouveau clic
+ * dans la légende doit la remplir, pas l'en arracher : `openMainZoneWindow` ne pose la place
+ * demandée que sur une fenêtre NEUVE.
  */
-const renameIds = (svg: string, suffix: string): string => svg
-  .replaceAll(/\bid="([^"]+)"/g, (_m, id: string) => `id="${id}${suffix}"`)
-  .replaceAll(/url\(#([^)]+)\)/g, (_m, id: string) => `url(#${id}${suffix})`)
-  .replaceAll(/\bhref="#([^"]+)"/g, (_m, id: string) => `href="#${id}${suffix}"`)
-
-/** Copie du dessin courant, recadrée sur le contenu (même recette que les vignettes de vue). */
-const currentDrawingAsSvg = (drawing_area: Class_DrawingArea, suffix: string): string | null => {
-  const svg_sel = drawing_area.d3_selection_zoom_area
-  const node = svg_sel?.node()
-  const bounds = drawing_area.contentBounds()
-  if (!node || !bounds || bounds.width <= 0 || bounds.height <= 0) return null
-  const scale = drawing_area.is_paper_mode ? 1 : drawing_area.getZoomScale()
-  const ox = drawing_area.is_paper_mode ? 0 : bounds.x
-  const oy = drawing_area.is_paper_mode ? 0 : bounds.y
-  const w = (drawing_area.is_paper_mode ? bounds.x + bounds.width : bounds.width) * scale + 2 * VIEW_PADDING
-  const h = (drawing_area.is_paper_mode ? bounds.y + bounds.height : bounds.height) * scale + 2 * VIEW_PADDING
-  const clone = node.cloneNode(true) as SVGSVGElement
-  // os#1438 — PAR LE SÉLECTEUR DE LA ZONE, et non par les noms nus. Ces trois identifiants ne
-  // sont nus QUE pour le canevas du document principal ; toute autre zone les préfixe par son
-  // identifiant de diagramme (cf. `dom_id_prefix`). Écrits en dur, ils ne trouvaient rien dès que
-  // la présentation portait sur une feuille voisine, un aperçu unitaire ou une vue en coulisse :
-  // le cadre de viewport restait dans l'image, la découpe rognait le dessin, et le recadrage ne
-  // s'appliquait pas — sans la moindre erreur, puisque `querySelector` rend simplement `null`.
-  //
-  // Le clone est SCOPÉ (on interroge le clone, pas le document), donc il n'y avait pas de risque
-  // de prendre le mauvais élément : seulement celui de n'en prendre aucun.
-  clone.querySelector(drawing_area.domIdSelector('g_drawing'))
-    ?.setAttribute('transform', `translate(${-ox * scale + VIEW_PADDING},${-oy * scale + VIEW_PADDING}) scale(${scale})`)
-  clone.querySelectorAll('input').forEach(input => input.remove())
-  clone.querySelector(drawing_area.domIdSelector('viewport_border'))?.remove()
-  clone.querySelector(drawing_area.domIdSelector('g_clip'))?.removeAttribute('clip-path')
-  const inner = renameIds(clone.innerHTML, suffix)
-  return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"' +
-    ` viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    inner + '</svg>'
-}
-
-/**
- * Dessine dans `container` le diagramme mis en forme par les seules étiquettes du groupe. L'aperçu
- * est posé sur la cascade, les éléments redessinés, la copie prise, puis TOUT est rétabli : le
- * diagramme vivant retrouve son état avant la fin de la tâche, donc sans clignoter.
- */
-export const renderLegendTagGroupView = (
+export const openTagGroupView = (
   app_data: Class_ApplicationData,
   group: Class_TagGroup,
-  container: HTMLElement
-): (() => void) => {
-  const drawing_area = app_data.drawing_area
-  const sankey = drawing_area.sankey
-  const applied = sankey.setTagStylePreview(group.id)
-  // Un groupe FERMÉ ne met rien en forme et n'a pas de bloc dans la légende : le temps de la copie,
-  // il est présenté comme développé (son interrupteur retrouve sa valeur juste après, dans la même
-  // tâche — le document n'en garde rien).
-  const was_switched_on = group.use_colors
-  let svg: string | null = null
-  try {
-    if (applied) {
-      if (!was_switched_on) group.use_colors = true
-      // TOUT est redessiné, même quand l'interrupteur vient de le faire pour une partie : l'aperçu
-      // éteint la mise en forme des autres groupes, la leur comprise.
-      redrawForTagStylePreview(drawing_area)
-      // La légende suit l'aperçu : elle ne montre plus que ce groupe (retour du test local du
-      // 2026-09-18 — la vue doit faire lire CE groupe, pas ceux qui restent développés).
-      drawing_area.legend.draw()
-    }
-    svg = currentDrawingAsSvg(drawing_area, '-groupview')
-  } finally {
-    if (applied) {
-      sankey.setTagStylePreview(undefined)
-      if (!was_switched_on) group.use_colors = false
-      redrawForTagStylePreview(drawing_area)
-      drawing_area.legend.draw()
-    }
-  }
-  container.innerHTML = svg ?? ''
-  return () => { container.innerHTML = '' }
-}
-
-// OUVRIR LA VUE DU GROUPE DANS UN VOLET (os#1498) ===================================
-
-/**
- * La vue de ce groupe peut-elle s'ouvrir dans un VOLET de la grande zone ?
- *
- * LA PHOTO CI-DESSUS EST UNE COPIE : on la regarde, on ne la touche pas. Le volet, lui, montre le
- * diagramme vivant mis en forme par ce seul groupe — nœuds déplaçables, inspecteur, annulation. Ce
- * n'est pas la même chose, et la photo reste le repli quand le volet n'est pas offert.
- *
- * LA GARDE EST CELLE DU « + » DE LA BARRE DU HAUT (`MenuTop`, os#1431), et c'est délibéré : on ne
- * réécrit pas ici les conditions d'ouverture d'une fenêtre, on interroge le registre.
- * `representation_registry.list(diagramContext(app_data))` applique déjà, dans cet ordre, le
- * `gate` de la nature, les capacités du diagramme (`needs`) et — sur une page publiée — les deux
- * verrous de `isOfferedToReader` : la liste blanche `publish_options.representations` et la clé
- * booléenne que l'entrée désigne par `publish_option`. Une page publiée qui n'offre pas cette
- * nature n'a donc pas ce bouton, sans qu'aucun test de mode publié soit écrit ici.
- *
- * S'y ajoute la SEULE chose que le registre ne sait pas : il faut une configuration de menus pour
- * qu'il y ait une grande zone où poser le volet. Sans elle — et sans nature enregistrée, ce qui
- * est le cas d'OpenSankey seul et du viewer, où OS+ n'est pas là — pas de bouton.
- */
-export const canOpenTagGroupPane = (app_data: Class_ApplicationData): boolean => {
-  // Le getter est typé non nul mais ne l'est pas avant `createNewMenuConfiguration`
-  // (cf. ApplicationData) : un document hors écran n'en a pas.
-  const mc = app_data.menu_configuration as Class_MenuConfig | undefined
-  if (!mc) return false
-  if (!representation_registry.get(MAIN_ZONE_GROUP_VIEW_ID)) return false
-  return representation_registry.list(diagramContext(app_data))
-    .some(entry => entry.id === MAIN_ZONE_GROUP_VIEW_ID)
-}
-
-/**
- * Ouvre le volet sur ce groupe et referme la pop-up ; rend l'identifiant de la fenêtre, ou `null`
- * quand le volet n'est pas offert (cf. `canOpenTagGroupPane`).
- *
- * Trois gestes, dans cet ordre, et l'ordre compte : la fenêtre NAÎT d'abord (elle seule donne
- * l'identifiant sous lequel sa figure se range), le groupe est posé ENSUITE sur sa figure de
- * diagramme (clé `''`), et la pop-up ne se referme qu'après — sans quoi le clic ressemblerait à un
- * clic sans effet si l'une des deux écritures échouait.
- */
-export const openTagGroupPane = (
-  app_data: Class_ApplicationData,
-  group: Class_TagGroup,
-  element_id: string
-): string | null => {
-  if (!canOpenTagGroupPane(app_data)) return null
+  anchor?: { x: number, y: number }
+): void => {
   const mc = app_data.menu_configuration
-  const subject: Type_MainZoneSubject = { kind: 'diagram' }
-  const window_id = mc.openMainZoneWindow(subject, MAIN_ZONE_GROUP_VIEW_ID, 'right')
-  mc.setMainZoneWindowOptions(window_id, { tag_group_id: group.id })
-  mc.panels.close(presentationPanelId(element_id))
-  return window_id
+  const known = mc.isMainZoneOccupant(TAG_GROUP_VIEW_REPRESENTATION_ID)
+  if (!known) mc.enforceMainZoneFloatingCap(TAG_GROUP_VIEW_REPRESENTATION_ID)
+  const id = mc.openMainZoneWindow(
+    { kind: 'diagram' }, TAG_GROUP_VIEW_REPRESENTATION_ID, 'floating',
+    known ? undefined : placeFloatingNear(app_data, anchor, TAG_GROUP_VIEW_REPRESENTATION_ID)
+  )
+  // Le sac COMPLET de la figure (cf. `setMainZoneWindowOptions`) : on part des réglages
+  // EFFECTIFS pour ne pas effacer ce que l'auteur aurait posé à côté, et on n'y change que le
+  // groupe. `assign` ne pose rien qui vaille déjà ce que le style dit, donc rien ne se fige.
+  mc.setMainZoneWindowOptions(id, {
+    ...mc.mainZonePaneOptionsOf(id, FIGURE_DIAGRAM_PANE_KEY),
+    [TAG_GROUP_VIEW_OPTION_KEY]: group.id
+  })
 }
