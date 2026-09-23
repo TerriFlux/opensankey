@@ -19,11 +19,16 @@ import { Class_Workspace } from '../types/Workspace'
 import { buildParts } from '../Representations/parts/buildParts'
 import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 import {
+  BarPartStyle, DonutPartStyle, FigurePartStyle,
+  figure_part_nature_styles, figure_part_styles
+} from './ElementStyle'
+import {
   attributeAppliesToElements,
   attributesOwnedBy,
   attributeScopeOf,
   familyAppliesToElements,
   natureOf,
+  partStyleFigureNature,
   scopeSpeaksTo
 } from './attributeScope'
 
@@ -115,6 +120,73 @@ describe('os#1464 ce qui est masque sur une part', () => {
   })
 })
 
+// os#1497 — UN STYLE DE PART EST UNE PART, ET IL DIT DE QUELLE FIGURE.
+//
+// Julien, capture a l appui, sur des BARRES : « il reste des choses qui ne devraient pas etre la,
+// ca n a de sens que pour couronne » — l orientation radiale, le detachement de l etiquette. Puis :
+// « ca donne l impression que tu n as pas encore fini le travail systematique pour chaque
+// attribut. »
+//
+// LES PORTEES ETAIENT JUSTES ; C EST LA QUESTION QUI NE L ETAIT PAS. En portee STYLES — livree la
+// veille par os#1495 — l inspecteur ne tient plus l element mais le STYLE qu il edite. Un style n a
+// pas de nature, et « pas de nature = recoit tout » : la bande Styles d une part rouvrait donc le
+// catalogue entier, y compris ce qu une barre ne sait pas faire.
+//
+// Un style de part, lui, SAIT de quoi il est le style : il y en a quatre, ils sont nommes, et un
+// par nature (os#1462).
+describe('os#1497 un style de part porte la nature de sa figure', () => {
+
+  it('LE STYLE DES BARRES refuse ce qui n a de sens que dans un rond', () => {
+    const style_barres = { id: BarPartStyle }
+
+    expect(attributeAppliesToElements([style_barres], 'name_label_orientation')).toBe(false)
+    expect(attributeAppliesToElements([style_barres], 'name_label_callout')).toBe(false)
+    // CONTRE-VERIFICATION : il garde tout ce qu une part sait faire, sinon ce test passerait au
+    // vert sur une declaration qui masque tout.
+    expect(attributeAppliesToElements([style_barres], 'shape_color')).toBe(true)
+    expect(attributeAppliesToElements([style_barres], 'name_label_horiz')).toBe(true)
+  })
+
+  it('LE STYLE DE LA COURONNE les garde, et c est la meme cle', () => {
+    const style_couronne = { id: DonutPartStyle }
+
+    expect(attributeAppliesToElements([style_couronne], 'name_label_orientation')).toBe(true)
+    expect(attributeAppliesToElements([style_couronne], 'name_label_callout')).toBe(true)
+    // Et il perd le placement en boite, qu une barre garde : un arc n a pas de coins (os#1483).
+    expect(attributeAppliesToElements([style_couronne], 'name_label_horiz')).toBe(false)
+  })
+
+  it('LE STYLE GENERIQUE sert les trois figures, donc ne masque aucune figure', () => {
+    // `FigurePartStyle` se pose sous les trois : masquer chez lui ce qu une seule nature refuse
+    // rendrait le reglage inatteignable pour les deux autres.
+    const style_generique = { id: FigurePartStyle }
+
+    expect(attributeAppliesToElements([style_generique], 'name_label_orientation')).toBe(true)
+    expect(attributeAppliesToElements([style_generique], 'name_label_horiz')).toBe(true)
+    // Mais il reste une PART : ce qui ne s adresse a aucune part reste masque.
+    expect(attributeAppliesToElements([style_generique], 'value_label_unit_type')).toBe(false)
+  })
+
+  it('UN STYLE QUI N EST PAS CELUI D UNE PART recoit tout, comme avant', () => {
+    // La regle d origine ne bouge pas : un style nomme ne dit pas a quelle nature il servira, et
+    // masquer ses reglages le rendrait impossible a ecrire.
+    const style_noeud = { id: 'MonStyleDeNoeud' }
+
+    expect(attributeAppliesToElements([style_noeud], 'name_label_orientation')).toBe(true)
+    expect(attributeAppliesToElements([style_noeud], 'value_label_unit_type')).toBe(true)
+  })
+
+  it('LES QUATRE NOMS SONT LES MEMES DES DEUX COTES', () => {
+    // ⚠️ LE GARDE-FOU DE LA RECOPIE. `attributeScope` ne peut pas importer `ElementStyle` sans
+    // refermer un cycle de modules : les quatre identifiants y sont donc recopies. Ce cas tient
+    // les deux listes ensemble, et rougit le jour ou une cinquieme nature s ajoute d un cote.
+    expect(partStyleFigureNature({ id: figure_part_styles[0] })).toBe('')
+    Object.entries(figure_part_nature_styles).forEach(([nature, style_id]) => {
+      expect([style_id, partStyleFigureNature({ id: style_id })]).toEqual([style_id, nature])
+    })
+  })
+})
+
 describe('os#1464 ce qui RESTE offert a une part, et doit le rester', () => {
 
   it('la couleur, le fond et le lisere : le trace les lit', () => {
@@ -134,12 +206,19 @@ describe('os#1464 ce qui RESTE offert a une part, et doit le rester', () => {
     const { part } = buildScene()
     const a_implementer = [
       'name_label_horiz', 'name_label_vert', 'name_label_horiz_shift', 'name_label_vert_shift',
-      'name_label_text_align', 'name_label_inside_horiz', 'name_label_inside_vert',
+      'name_label_text_align', 'name_label_inside_vert',
       'name_label_position_absolute'
     ]
     a_implementer.forEach(cle => {
       expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, true])
     })
+    // os#1491 — SAUF `inside_horiz`, ET LE TRACE A TRANCHE POUR DE BON.
+    //
+    // Un noeud a deux « dedans » parce qu il a deux dimensions reglables. Une part n en a qu un :
+    // son texte est SUR la forme ou A COTE, et les trois traces lisent `inside_vert` pour le dire.
+    // `inside_horiz` n etait lu par aucun — ce n etait pas « pas encore implemente », c etait un
+    // doublon sans objet.
+    expect(attributeAppliesToElements([part], 'name_label_inside_horiz')).toBe(false)
   })
 
   it('l ICONE : elle se dessinera sur les parts, elle ne se masque pas', () => {
@@ -254,7 +333,7 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
     // entre les deux familles d etiquette. C est le meme suffixe, et il ne vaut pas des deux cotes.
     const { part } = buildScene()
     const chiffres = [
-      'scientific_notation', 'significant_digits', 'nb_digit', 'unit_visible', 'unit', 'unit_factor'
+      'scientific_notation', 'significant_digits', 'nb_digit', 'unit_visible', 'unit'
     ]
     chiffres.forEach(suffixe => {
       expect([suffixe, attributeAppliesToElements([part], `name_label_${suffixe}`)])
@@ -262,6 +341,21 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
       expect([suffixe, attributeAppliesToElements([part], `value_label_${suffixe}`)])
         .toEqual([suffixe, true])
     })
+    // os#1490 — DEUX EXCEPTIONS DU COTE DE LA VALEUR, et elles se disent :
+    //
+    //   `unit_type`   : c est le selecteur des FLUX, douze entrees dont « % de flux en entrees du
+    //                   noeud source ». Une part a le sien, `value_label_part_unit`, en quatre
+    //                   choix — « le selecteur d unite peut pas etre le meme sur un noeud, un flux,
+    //                   une part de figure » ;
+    //   `unit_factor` : l arbitrage d os#1463 l a laisse au graphe (il divise le nombre sans
+    //                   toucher a la geometrie), si bien qu aucun trace ne le lit. Un reglage que
+    //                   personne ne lit n a pas a s afficher.
+    const a_la_figure = ['unit_type', 'unit_factor']
+    a_la_figure.forEach(suffixe => {
+      expect([suffixe, attributeAppliesToElements([part], `value_label_${suffixe}`)])
+        .toEqual([suffixe, false])
+    })
+    expect(attributeAppliesToElements([part], 'value_label_part_unit')).toBe(true)
   })
 
   it('CE QUI COUPLE UNE ETIQUETTE AU DIAGRAMME, sans objet dans une figure', () => {
@@ -309,7 +403,8 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
     // Le NOEUD ne perd que ce qui est declare POUR UNE PART et elle seule (os#1482) : l orientation
     // du texte dans une forme ronde, et le detachement de l etiquette. Un noeud a `text_angle`, qui
     // fait mieux, et son libellé ne se detache pas de lui.
-    const A_LA_PART = ['name_label_orientation', 'name_label_callout']
+    // os#1490 y ajoute le selecteur d unite propre a une part : un noeud garde celui des flux.
+    const A_LA_PART = ['name_label_orientation', 'name_label_callout', 'value_label_part_unit']
     expect(perdues(noeud).sort()).toEqual([...A_LA_PART].sort())
     // Le flux et la zone ne perdent QUE des portees posees bien avant ce lot : les totaux
     // entrants/sortants (`only: ['node']`, os#1464), qui n ont de sens que la ou des flux entrent et

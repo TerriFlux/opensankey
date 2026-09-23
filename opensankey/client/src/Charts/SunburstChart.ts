@@ -180,7 +180,9 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   color_mode: 'auto',
   label_color: 'black',
   value_visible: false,
-  unit_visible: false,
+  // os#1500 — VRAI, comme la couronne et les barres : le disque écrit l'unité du diagramme sans
+  // qu'on ait à la cocher. Sans unité au diagramme, `opts.unit` vaut '' et rien ne s'écrit.
+  unit_visible: true,
   significant_digits: true,
   nb_significant_digits: 4,
   custom_digit: false,

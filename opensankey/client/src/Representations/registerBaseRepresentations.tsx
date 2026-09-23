@@ -25,12 +25,13 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode } from 'react-icons/fa'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode, FaInfoCircle, FaEye } from 'react-icons/fa'
 import { drawSunburstRepresentation, SUNBURST_ZOOM } from './SunburstRepresentation'
 // os#1473 — la couronne et les barres sont des natures d'OpenSankey, comme le sunburst.
 import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
 // os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
 import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
+import { rememberFigureNatureDefaults } from '../Elements/figureNatureDefaults'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
 // cette déclaration qui lui donne la cascade des styles des nœuds et des flux.
 import { figureAttribute } from './figureAttribute'
@@ -46,6 +47,15 @@ import {
   MAIN_ZONE_CANVAS_ID, MAIN_ZONE_SPREADSHEET_ID, MAIN_ZONE_DOC_ID, MAIN_ZONE_JSON_ID
 } from '../types/MenuConfig'
 import { representation_registry } from './RepresentationRegistry'
+// sa#563 — la vue d'un groupe d'étiquettes : un document copié, mis en forme par le seul groupe.
+import {
+  mountTagGroupView, tagGroupsOf, tagGroupOfContext, TAG_GROUP_VIEW_OPTION_KEY
+} from './TagGroupViewRepresentation'
+// Les identifiants des deux natures de sa#563, dans leur module feuille : ils se citent depuis
+// des modules qui ne peuvent pas tirer le registre (cf. son en-tête).
+import {
+  ELEMENT_INFO_REPRESENTATION_ID, TAG_GROUP_VIEW_REPRESENTATION_ID
+} from './representationIds'
 // os#1409 - le zoom est une capacite declaree par la nature (cf. Type_RepresentationZoom).
 import { DIAGRAM_ZOOM } from './RepresentationZoom'
 import { spreadsheetZoomHandle } from './SpreadsheetZoomBridge'
@@ -217,6 +227,9 @@ export const registerBaseRepresentations = (): void => {
   // 08/09/2026 : pas de statistiques sur le diagramme entier), donc à l'échelle ÉLÉMENT :
   // ses anneaux sont la descendance du nœud sujet. `root_ids` est posé depuis le sujet — le
   // module ne sait pas qu'il vit dans une fenêtre. Un flux n'a pas de descendance : refusé.
+  // os#1501 — LE DISQUE N'ENTRE PAS PAR `registerFigureNature` (il a son propre cablage) : ses
+  // defauts se retiennent donc ici, pour que le style de ses parts montre ce que la figure fait.
+  rememberFigureNatureDefaults('sunburst', SUNBURST_ATTRIBUTES as { [k: string]: { default?: unknown } })
   representation_registry.register({
     id: 'os.repr.sunburst',
     scale: 'element',
@@ -283,6 +296,87 @@ export const registerBaseRepresentations = (): void => {
       ...ctx,
       options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
     })
+  })
+
+  // sa#563 (lot 1) — « INFOS » : CE QUE LA POP-UP DE PRÉSENTATION MONTRAIT DANS SA COLONNE
+  // GAUCHE, devenu une nature comme les autres.
+  //
+  // C'est la pièce qui manquait pour que la pop-up d'un élément DEVIENNE un volet. Un volet est
+  // un couple (sujet, nature) : le sujet était déjà là (le nœud, le flux), la nature non — les
+  // blocs de présentation n'étaient atteignables que par la pop-up, qui les câblait elle-même.
+  // Déclarés ici, ils prennent leur place dans le sélecteur de nature à côté d'« Unit. », de la
+  // couronne et des barres, c'est-à-dire exactement là où l'issue les attend.
+  //
+  // `host: 'component'` et non `draw` : ces blocs sont du React — du texte libre, un bilan de
+  // flux, des étiquettes —, et la couche éditeur les monte (cf. `elementComponentFor`,
+  // MainZoneTabs). Les dessiner dans un conteneur aurait demandé une seconde racine React, donc
+  // un arbre sans contexte : sans le thème Chakra dont ces blocs se servent à chaque ligne.
+  //
+  // PAS D'`attributes` : « Infos » ne règle rien. Ce qu'elle montre se règle sur l'ÉLÉMENT (le
+  // sous-menu Info-bulle décide des blocs, la description est un attribut du nœud), pas sur la
+  // figure qui l'affiche. La colonne d'outils reste donc vide sur elle, et c'est exact.
+  representation_registry.register({
+    id: ELEMENT_INFO_REPRESENTATION_ID,
+    scale: 'element',
+    order: 5,
+    // La clé vit avec les autres natures de fenêtre (`Spreadsheet.zone.diagram`, `.spreadsheet`,
+    // `.json`, `.doc`, `.unit`) et non sous `presentation.*`, qui n'a aucun catalogue : la
+    // colonne de la pop-up se contentait d'un `defaultValue`, donc d'un libellé français pour
+    // les sept langues. Une nature qui paraît dans le sélecteur de la barre du haut se traduit.
+    label: (a) => a.t('Spreadsheet.zone.infos'),
+    icon: <FaInfoCircle />,
+    host: 'component'
+  })
+
+  // sa#563 (lot 4) — LA « VUE » D'UN GROUPE D'ÉTIQUETTES : le diagramme, mis en forme par le
+  // seul groupe désigné. Le pourquoi et le comment sont dans `TagGroupViewRepresentation`.
+  //
+  // À L'ÉCHELLE DIAGRAMME, donc une fenêtre par document et non une par groupe : le groupe est
+  // un RÉGLAGE, et changer de groupe se fait dans la colonne d'outils sans ouvrir de fenêtre de
+  // plus. C'est aussi ce qui fait que son identifiant de fenêtre est son identifiant de nature,
+  // l'invariant que lisent la barre du haut et le paramètre d'URL (cf.
+  // `mainZoneSubjectUsesOwnWindowId`) — la nature n'avait donc rien à demander au modèle.
+  representation_registry.register({
+    id: TAG_GROUP_VIEW_REPRESENTATION_ID,
+    scale: 'diagram',
+    order: 35,
+    // « SANKEY », le MÊME libellé que le canevas, et c'est délibéré (arbitrage d'Alexandre,
+    // 22/09) : ces deux natures montrent la même chose — un Sankey —, l'une le document qu'on
+    // édite, l'autre ce même document vu au travers d'un seul groupe d'étiquettes. Leur donner
+    // deux noms aurait fait croire à deux espèces de dessin là où il n'y en a qu'une.
+    //
+    // CE QUI LES DISTINGUE EST ÉCRIT AILLEURS, et c'est le bon endroit : le nom du groupe, que
+    // l'en-tête pose à côté du libellé (`describeContent`, juste dessous). Une fenêtre dit donc
+    // « Sankey · Origine » là où le canevas dit « Sankey » tout court.
+    label: (a) => a.t('Spreadsheet.zone.diagram'),
+    icon: <FaEye />,
+    // Un diagramme SANS aucun groupe d'étiquettes n'a rien à mettre en forme : la nature ne se
+    // propose pas, plutôt que d'offrir une vue qui serait la copie conforme du diagramme.
+    isAvailable: (ctx) => tagGroupsOf(ctx.app_data).length > 0,
+    // CE QUE CE VOLET MONTRE, dans son en-tête : le NOM DU GROUPE. C'est le cas d'école du
+    // contrat (cf. `describeContent`) — la nature montre une partie CHOISIE de son sujet, et
+    // rien d'autre à l'écran ne la nomme. Sans lui, un volet « Vue » ne dirait pas de quel
+    // groupe il parle, et le seul moyen de le savoir serait d'ouvrir la colonne d'outils.
+    describeContent: (ctx) => tagGroupOfContext(ctx)?.name ?? '',
+    attributes: {
+      // De sorte 'identity' : ce réglage nomme un OBJET du document, pas une façon de dessiner.
+      // Il ne part donc ni sur une figure voisine ni dans un style — la vue du groupe « Origine »
+      // et celle du groupe « Usage » ne sont pas deux apparences de la même chose.
+      [TAG_GROUP_VIEW_OPTION_KEY]: figureAttribute<string | undefined>(undefined, 'identity', {
+        en: 'Tag group shown',
+        fr: 'Groupe d\'étiquettes montré',
+        es: 'Grupo de etiquetas mostrado',
+        de: 'Angezeigte Etikettengruppe',
+        it: 'Gruppo di etichette mostrato',
+        'zh-CN': '显示的标签组',
+        ja: '表示するタググループ'
+      }, undefined, {
+        kind: 'select',
+        choicesOf: (ctx) => tagGroupsOf(ctx.app_data as unknown as Class_ApplicationData)
+          .map(g => ({ value: g.id, label: g.name }))
+      })
+    },
+    draw: mountTagGroupView
   })
 
   // os#1473 — LA COURONNE ET LES BARRES, ici et non plus en OS+ : elles n'ont rien de
