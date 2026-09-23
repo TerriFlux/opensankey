@@ -929,7 +929,21 @@ export const drawBarChart = (
   const { sel, width, height } = prepareContainer(container, opts)
   // L'ordre des barres (`parts_order`) ; 'model', le défaut, garde celui de l'analyse.
   const slices = orderParts(raw_slices, st.parts_order)
-  const max_value = slices.reduce((m, d) => Math.max(m, d.value), 0)
+  // ── os#1499 — EMPILER LES PARTS : UNE SEULE BARRE, UN SEGMENT PAR PART ──────────────────────
+  //
+  // Julien, devant le selecteur « Disposer » des coordonnees : « pour les barres, que veut dire
+  // ca ? Sur mon cas tres simple, deja ca n'agit pas. »
+  //
+  // Il avait raison deux fois. « En parts d'une barre » PROMETTAIT une barre unique a segments, et
+  // les deux choix dessinaient la meme chose — N barres — parce qu'aucun trace ne savait empiler
+  // des parts. Ce que le choix reglait vraiment etait le regime d'ANALYSE (les flux s'additionnent
+  // ou non), qui ne se voit qu'ailleurs : l'echelle, et le croisement avec un second axe.
+  //
+  // Les deux questions se separent donc : celle-ci est de la MISE EN FORME, elle se regle sur la
+  // figure et elle se voit. Defaut `false` — aucun histogramme enregistre ne change d'aspect.
+  const stacked = st.bars_stacked === true
+  const stack_total = slices.reduce((sum, d) => sum + Math.max(0, d.value), 0)
+  const max_value = stacked ? stack_total : slices.reduce((m, d) => Math.max(m, d.value), 0)
   if (slices.length === 0 || max_value <= 0 || width < 80 || height < 80) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
     return
@@ -972,6 +986,36 @@ export const drawBarChart = (
   const barPx = (v: number) => {
     const px = h - y(v)
     return px * visibilityLift(px)
+  }
+
+  // Le bas de chaque segment, cumule dans l'ordre DESSINE : empiler, c'est poser chaque part sur
+  // le haut de la precedente, et `parts_order` a deja fixe cet ordre.
+  const stack_base = new Map<string, number>()
+  slices.reduce((base, d) => {
+    stack_base.set(d.id, base)
+    return base + Math.max(0, d.value)
+  }, 0)
+  // La barre unique prend la moitie centrale de la zone : plus large, elle ferait un bloc ; plus
+  // etroite, ses segments n'auraient plus la place d'ecrire leur nom.
+  const stack_x = w * 0.25
+  const stack_w = w * 0.5
+
+  /**
+   * LA BOITE D'UNE PART : sa colonne et ses deux bords. C'est le seul endroit qui sait si la
+   * figure est empilee — le rectangle, le nom et la valeur la demandent, et n'ont rien a savoir.
+   *
+   * Hors empilement, elle rend exactement la geometrie d'hier : la bande de l'echelle ordinale,
+   * du sommet de la barre au pied du dessin.
+   */
+  const boxOf = (d: Type_StatSlice): { x: number, w: number, top: number, bottom: number } => {
+    if (!stacked) {
+      return { x: x(d.id) ?? 0, w: x.bandwidth(), top: h - barPx(d.value), bottom: h }
+    }
+    // ⚠️ PAS DE PLANCHER DE VISIBILITE DANS UNE PILE (#393) : relever chaque segment ferait une
+    // pile plus haute que son total, et les parts ne s'additionneraient plus a l'ecran. Une part
+    // minuscule est ici lisible par sa place dans la pile, pas par sa hauteur propre.
+    const base = stack_base.get(d.id) ?? 0
+    return { x: stack_x, w: stack_w, top: y(base + Math.max(0, d.value)), bottom: y(base) }
   }
 
   // ── os#1463 — UNE BARRE EST UNE PART, ET ELLE NE L'ÉTAIT PAS ENCORE ──────────────────────────
@@ -1052,10 +1096,10 @@ export const drawBarChart = (
     // jamais un `id` (les `id` sont globaux, deux figures côte à côte se voleraient leurs dégradés).
     .attr('data-repr-kind', 'part')
     .attr('data-repr-id', d => d.id)
-    .attr('x', d => x(d.id) ?? 0)
-    .attr('y', d => h - barPx(d.value))
-    .attr('width', x.bandwidth())
-    .attr('height', d => barPx(d.value))
+    .attr('x', d => boxOf(d).x)
+    .attr('y', d => boxOf(d).top)
+    .attr('width', d => boxOf(d).w)
+    .attr('height', d => Math.max(0, boxOf(d).bottom - boxOf(d).top))
     // « Fond » décoché l'emporte sur toute couleur : c'est le sens du réglage.
     .attr('fill', (d, i) => {
       const a = aspectOf(d.id)
@@ -1099,11 +1143,11 @@ export const drawBarChart = (
    * @param plain la place que le tracé donnait à ce texte hors de la barre.
    */
   const barTextY = (
-    vert: string, inside: boolean, top: number, size: number, plain: number
+    vert: string, inside: boolean, box: { top: number, bottom: number }, size: number, plain: number
   ): number => {
-    if (vert === 'top') return inside ? top + size + 2 : top - 4
-    if (vert === 'middle') return (top + h) / 2
-    return inside ? h - 4 : plain
+    if (vert === 'top') return inside ? box.top + size + 2 : box.top - 4
+    if (vert === 'middle') return (box.top + box.bottom) / 2
+    return inside ? box.bottom - 4 : plain
   }
 
   // Valeur au-dessus de chaque barre, quand l'auteur la veut (`value_label_is_visible`) — et
@@ -1122,19 +1166,19 @@ export const drawBarChart = (
       .text(d => partTextCase(barValueText(d), aspectOf(d.id)?.value))
       .each(function (d) {
         const a = aspectOf(d.id)?.value
-        const bar_h = barPx(d.value)
-        const top = h - bar_h
+        const box = boxOf(d)
         const size = a?.font_size ?? styleOf(d).name_label_font_size
         // DEDANS : la valeur descend sous le sommet de la barre. DEHORS (le trace d hier) : elle
         // se pose juste au-dessus. Le reste — decalages fins et ancrage — est commun a tous les
         // textes de part, et vit dans `partTextPlacement`.
-        const inside = a?.inside === true
+        // os#1499 — EMPILE, UN TEXTE EST DEDANS PAR DEFAUT : au-dessus de son segment, il
+        // s'ecrirait sur le segment du dessus. C'est la regle de la couronne, pour la meme raison.
+        const inside = (a?.inside ?? stacked) === true
         const vert = a?.vert ?? (inside ? 'top' : 'bottom')
         const horiz = a?.horiz ?? 'middle'
-        const band_x = x(d.id) ?? 0
         const at = partTextPlacement({
-          x: band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2),
-          y: barTextY(vert, inside, top, size, top - 4),
+          x: box.x + (horiz === 'left' ? 0 : horiz === 'right' ? box.w : box.w / 2),
+          y: barTextY(vert, inside, box, size, box.top - 4),
           anchor: 'middle',
           rotate: false
         }, a)
@@ -1227,18 +1271,19 @@ export const drawBarChart = (
   // On garde donc le même mot pour le même geste, plutôt qu'en inventer un pour les figures.
   const barLabelAt = (d: Type_StatSlice) => {
     const a = aspectOf(d.id)
-    const band_x = x(d.id) ?? 0
-    const top = h - barPx(d.value)
+    const box = boxOf(d)
     const size = styleOf(d).name_label_font_size
     // L'ANCRE HORIZONTALE dans la bande : au milieu, sauf demande. Le pivot à -35° garde son
     // ancrage à droite — c'est lui qui fait que le texte s'éloigne de l'axe vers le bas-gauche.
     const horiz = a?.name?.horiz ?? 'middle'
-    const cx = band_x + (horiz === 'left' ? 0 : horiz === 'right' ? x.bandwidth() : x.bandwidth() / 2)
-    const inside = a?.name?.inside === true
+    const cx = box.x + (horiz === 'left' ? 0 : horiz === 'right' ? box.w : box.w / 2)
+    // os#1499 — empile, le nom est DEDANS par defaut : sous l'axe, les noms de tous les segments
+    // se poseraient au meme endroit, puisqu'il n'y a qu'une barre.
+    const inside = (a?.name?.inside ?? stacked) === true
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
     const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
-    const cy = barTextY(vert, inside, top, size, rotate_labels ? h + 8 : h + 14)
+    const cy = barTextY(vert, inside, box, size, rotate_labels ? h + 8 : h + 14)
     const anchor = a?.name?.text_align
       ?? (inside ? 'middle' : (rotate_labels ? 'end' : 'middle'))
     return {
