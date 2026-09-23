@@ -267,6 +267,12 @@ def check_process():
                 # Cause de l'échec ({code, message, details}), quand le thread en a posé une
                 # (SA#249). None sinon : le client affiche alors son message générique.
                 "error": read_process_error(logname),
+                # Format d'ENTRÉE du traitement en cours. Le lancement dit ce
+                # qu'on a tenté ; seule cette réponse dit ce que ça a donné,
+                # et un échec sans le format ne se relit pas. Sert à la couche
+                # hôte (journal d'usage), qui lit la réponse plutôt que l'état
+                # de session interne d'OpenSankey.
+                "input_format": state.get("input_format"),
             }
             json_data = json.dumps(results_dict)
             # trace.logger.debug('dumps')
