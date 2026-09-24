@@ -462,6 +462,45 @@ const decomposeNodeHierarchy = (
 }
 
 /**
+ * 24/09/2026 — LE SÉLECTEUR DE NIVEAU, COMME SUR LE SANKEY.
+ *
+ * Julien : « il faut faire la même interface que pour le Sankey : sur la dimension choisie, un
+ * sélecteur de niveau ». Le diagramme a deux commandes de hiérarchie — un niveau GLOBAL sur tous
+ * les nœuds, et le clic droit LOCAL sur un nœud. La figure n'avait que la seconde.
+ *
+ * ⚠️ CE N'EST PAS UNE SECONDE RÈGLE, C'EST UN RACCOURCI QUI ÉCRIT LA PREMIÈRE. Le niveau REMPLIT
+ * l'ensemble des nœuds ouverts ; il ne s'y superpose pas. C'est ce qui fait que les deux commandes
+ * coopèrent au lieu de se disputer : après « niveau 3 », shift+clic referme une branche et le reste
+ * tient — là où deux règles auraient rouvert ce que le clic venait de fermer, sans un mot.
+ *
+ * @param depth combien de crans ouvrir sous le sujet. 0 : rien (un seul anneau). 1 : les enfants
+ *   du sujet sont ouverts, donc ses petits-enfants paraissent. Etc.
+ */
+export const expandedDownToLevel = (
+  node: Class_NodeElement,
+  dimension_id: string,
+  depth: number
+): Set<string> => {
+  const out = new Set<string>()
+  const walk = (current: Class_NodeElement, remaining: number) => {
+    if (remaining <= 0) return
+    // L'axe de la couronne d'abord, le premier qui porte des enfants sinon : c'est la règle que
+    // suit déjà la descente elle-même (`childrenOf`, SunburstHierarchy), et deux règles de
+    // chaînage feraient s'ouvrir autre chose que ce que la figure dessine.
+    const dim = current.dimensions_as_parent.find(d => d.id === dimension_id && d.children.length > 0)
+      ?? current.dimensions_as_parent.find(d => d.children.length > 0)
+    if (!dim) return
+    out.add(current.id)
+    ;(dim.children as Class_NodeElement[]).forEach(child => walk(child, remaining - 1))
+  }
+  // La RACINE est ouverte d'office (c'est le sujet) : on ne la compte pas, on part de ses enfants.
+  const root_dim = node.dimensions_as_parent.find(d => d.id === dimension_id && d.children.length > 0)
+    ?? node.dimensions_as_parent.find(d => d.children.length > 0)
+  ;(root_dim?.children as Class_NodeElement[] | undefined)?.forEach(child => walk(child, depth))
+  return out
+}
+
+/**
  * L'ARBRE de la descente, pour le rendu « un anneau par niveau ». Même descente, même élagage,
  * même valeurs que la frontière ci-dessus : c'est le point de la fusion.
  */

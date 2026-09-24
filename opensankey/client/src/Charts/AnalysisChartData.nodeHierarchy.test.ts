@@ -25,7 +25,9 @@ import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
 import type { Type_JSON } from '../types/Utils'
 import { FOLLOWING_NAVIGATION } from './FigureNavigation'
 
-import { analysisHierarchyTree, buildAnalysisChartData } from './AnalysisChartData'
+import {
+  analysisHierarchyTree, buildAnalysisChartData, expandedDownToLevel
+} from './AnalysisChartData'
 import type { Type_ChartPart, Type_ChartSubject } from './AnalysisChartData'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
@@ -259,5 +261,54 @@ describe('l arbre de la descente, celui que les deux modes partagent', () => {
 
     expect(ids(frontier)).toEqual(['Cereales', 'Viande'])
     expect(tree!.roots[0].children.flatMap(leaves).sort()).toEqual(['Cereales', 'Viande'])
+  })
+})
+
+// ── LE SELECTEUR DE NIVEAU, COMME SUR LE SANKEY ──────────────────────────────────────────────
+//
+// Julien : « il faut faire la meme interface que pour le Sankey : sur la dimension choisie, un
+// selecteur de niveau ». Le diagramme a deux commandes de hierarchie — un niveau GLOBAL sur tous
+// les noeuds, et le clic droit LOCAL sur un noeud. La figure n avait que la seconde.
+//
+// Ce que ce bloc fige : le niveau ECRIT l ensemble des noeuds ouverts, il ne s y superpose pas.
+// C est ce qui fait que les deux commandes cooperent — apres « niveau 3 », shift+clic referme une
+// branche et le reste tient. Deux regles auraient rouvert ce que le clic venait de fermer.
+describe('le niveau, raccourci qui remplit l ensemble ouvert', () => {
+
+  const levelOf = (app: Class_ApplicationData, depth: number) =>
+    [...expandedDownToLevel(app.drawing_area.sankey.nodes_dict['Racine'], 'dim', depth)].sort()
+
+  test('niveau 0 n ouvre rien : la couronne montre un cran', () => {
+    const app = loadApp()
+
+    expect(levelOf(app, 0)).toEqual([])
+    expect(ids(partsOf(app, levelOf(app, 0)))).toEqual(['Cereales', 'Viande'])
+  })
+
+  test('niveau 1 ouvre les enfants du sujet, donc les petits-enfants paraissent', () => {
+    // « Cereales » s ouvre ; « Viande », qui n a pas d enfants, n entre pas dans l ensemble — on
+    // n ouvre jamais ce qui ne contient rien.
+    const app = loadApp()
+
+    expect(levelOf(app, 1)).toEqual(['Cereales'])
+    expect(ids(partsOf(app, levelOf(app, 1)))).toEqual(['Ble', 'Mais', 'Viande'])
+  })
+
+  test('au-dela du dernier niveau, l ensemble ne grandit plus', () => {
+    // La hierarchie du decor a deux etages : demander le troisieme ne peut rien ouvrir de plus,
+    // et le selecteur doit rendre le meme ensemble plutot que de fabriquer des identifiants.
+    const app = loadApp()
+
+    expect(levelOf(app, 5)).toEqual(['Cereales'])
+  })
+
+  test('le clic reste maitre : refermer apres un niveau tient', () => {
+    // C est la raison d avoir UN SEUL etat. Le niveau remplit l ensemble, shift+clic en retire un
+    // noeud, et rien ne le rouvre dans le dos de l auteur.
+    const app = loadApp()
+    const after_level = new Set(levelOf(app, 1))
+    after_level.delete('Cereales')
+
+    expect(ids(partsOf(app, [...after_level]))).toEqual(['Cereales', 'Viande'])
   })
 })
