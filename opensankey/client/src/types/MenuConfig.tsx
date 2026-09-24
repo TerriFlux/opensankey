@@ -607,12 +607,36 @@ export const MAIN_ZONE_MIN_RIGHT_PX = 320
 export const MAIN_ZONE_MIN_MAIN_PX = 160
 export const MAIN_ZONE_MIN_BOTTOM_PX = 120
 /** Largeur (px) de la colonne droite pour une part `split_ratio` donnée à la zone principale. */
-export const mainZoneRightColumnWidthPx = (split_ratio: number): number => {
-  const W = window.innerWidth
+export const mainZoneRightColumnWidthPx = (split_ratio: number, window_w?: number): number => {
+  const W = window_w ?? window.innerWidth
   let w = (1 - split_ratio) * W
   w = Math.max(MAIN_ZONE_MIN_RIGHT_PX, w)
   w = Math.min(w, Math.max(MAIN_ZONE_MIN_RIGHT_PX, W - MAIN_ZONE_MIN_MAIN_PX))
   return w
+}
+/**
+ * os#1507 — L'INVERSE DE LA PRÉCÉDENTE, ET C'EST POUR ÇA QU'ELLE VIT ICI.
+ *
+ * La poignée du séparateur est DESSINÉE dans la zone de contenu — son bord gauche vaut
+ * `content_w - mainZoneRightColumnWidthPx(ratio)` — et elle était PILOTÉE par rapport à la
+ * fenêtre (`clientX / innerWidth`). Les deux repères diffèrent de la réserve de droite
+ * (`getRightChromeReservedPx`), si bien que la poignée se posait à `clientX - reserve` : 48 px
+ * de côté avec la seule colonne d'outils, près de 500 avec un panneau épinglé. Julien, 24/09 :
+ * « ça ne suit pas du tout la souris ».
+ *
+ * La conversion est donc écrite À CÔTÉ de celle qu'elle doit annuler : les deux se lisent
+ * ensemble, et une correction de l'une sans l'autre se voit. `split_ratio` garde son sens (une
+ * fraction de la largeur de la FENÊTRE) — rien à migrer dans les fichiers déjà écrits.
+ *
+ * @param client_x abscisse du curseur, dans le repère de la page
+ * @param content_w largeur de la zone de contenu (`window.innerWidth` moins la réserve de droite)
+ */
+export const mainZoneSplitRatioForPointer = (
+  client_x: number, content_w: number, window_w?: number
+): number => {
+  const W = window_w ?? window.innerWidth
+  if (W <= 0) return 0.5
+  return 1 - (content_w - client_x) / W
 }
 /** Hauteur (px) du bandeau du bas pour une hauteur demandée, bornée par ce que l'écran laisse. */
 export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number): number =>
