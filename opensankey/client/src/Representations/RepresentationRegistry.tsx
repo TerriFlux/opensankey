@@ -273,6 +273,49 @@ type Type_RepresentationCommon = {
   short_label?: (app_data: Class_ApplicationData) => string
   /** Icône du bouton du sélecteur. */
   icon?: React.ReactNode
+  /**
+   * os#1498 — PLUSIEURS FENÊTRES DE CETTE NATURE PEUVENT COEXISTER SUR LA FEUILLE COURANTE.
+   *
+   * La règle de la grande zone veut qu'une fenêtre à sujet DIAGRAMME sur la feuille courante soit
+   * NOMMÉE PAR SA REPRÉSENTATION (`id === representation`, cf. `Type_MainZoneOccupant`) : il n'y a
+   * qu'un tableur, qu'une doc, qu'un JSON, et redemander la nature montre celle qui est déjà là.
+   * C'est juste tant que la nature montre LE document entier — deux fenêtres identiques côte à
+   * côte n'apprendraient rien.
+   *
+   * La « Vue par groupe » montre le même document MIS EN FORME PAR UN SEUL GROUPE D'ÉTIQUETTES, et
+   * le groupe est un réglage de la FIGURE de la fenêtre : deux groupes côte à côte est précisément
+   * l'usage demandé. Un identifiant de registre ne peut pas nommer deux fenêtres ; une nature qui
+   * le déclare reçoit donc, à L'OUVERTURE, un identifiant propre `w_N` — le même générateur que
+   * les fenêtres d'élément (cf. `Class_MenuConfig.openMainZoneWindow`). La nature n'est interrogée
+   * QU'À CE MOMENT-LÀ : l'identifiant est ensuite persisté, et plus rien n'a besoin du registre
+   * pour savoir que cette fenêtre a un id propre.
+   *
+   * CE QUI NE S'APPLIQUE PLUS À UNE TELLE FENÊTRE (sites relus, os#1498) :
+   *  - `mainZoneSubjectUsesOwnWindowId` juge sur le SEUL SUJET, et le sujet d'une vue de groupe
+   *    est un diagramme sans feuille : il répond donc « non » alors que la fenêtre a bien un id
+   *    propre. Là où un OCCUPANT est sous la main, c'est `mainZoneOccupantUsesOwnWindowId` qui
+   *    tranche — il lit aussi l'identifiant.
+   *  - `showMainZoneOccupant` : jamais atteinte, `openMainZoneWindow` bifurque avant.
+   *  - la ré-affirmation `representation = id` de `_normalizeMainZoneOccupants` : appliquée ici,
+   *    elle donnerait `w_7` pour nature et la fenêtre n'aurait plus rien à dessiner.
+   *  - le remplacement EN PLACE de `setMainZoneWindowRepresentation` : il rebaptiserait la fenêtre
+   *    du nom de sa nouvelle nature — même piège que la fenêtre de feuille (os#1385 lot 0).
+   *  - les accesseurs de compatibilité (`main_zone_show_diagram`, `…_spreadsheet`, `…_doc`) et la
+   *    rangée d'interrupteurs de la barre du haut, qui désignent une fenêtre par son identifiant
+   *    de registre : une nature `allow_many` n'y paraît pas, et c'est voulu — elle s'ouvre depuis
+   *    la surface qui la nomme (la fiche d'un groupe), pas depuis un interrupteur global.
+   *  - le paramètre d'URL `rep` (`ApplicationData.getUrlStateParams`), qui ne sait écrire que des
+   *    identifiants de registre. Une telle fenêtre n'a pas sa place dans une adresse ; un `w_N`
+   *    qui s'y glisserait est IGNORÉ à la relecture (cf. `setMainZoneOccupantIds`).
+   *
+   * CE QUI S'APPLIQUE ENCORE, MOT POUR MOT : la persistance (`main_zone` écrit `representation` à
+   * part de l'id et réaligne le compteur `w_N`), la figure de clé `''` — `figureOf(id, '')`, ce
+   * qui porte le groupe choisi —, et la survie au changement de feuille (un sujet diagramme n'est
+   * pas épinglé, cf. `closeWindowsPinnedOnSheet`).
+   *
+   * ABSENT = le comportement d'aujourd'hui, une fenêtre par représentation.
+   */
+  allow_many?: boolean
   /** Exigences sur le DIAGRAMME (cf. Type_RepresentationNeeds). */
   needs?: Type_RepresentationNeeds
   /**
@@ -621,11 +664,27 @@ export class Class_RepresentationRegistry {
 /** Instance unique partagée par toutes les couches. */
 export const representation_registry = new Class_RepresentationRegistry()
 
-/** Contexte d'échelle DIAGRAMME (pas de sujet, pas de réglages par défaut). */
+/**
+ * Contexte d'échelle DIAGRAMME (pas de sujet, pas de réglages par défaut). `window_id` : cf.
+ * Type_RepresentationContext (os#1393) ; `pane_key`, la vignette de cette fenêtre-là (os#1422) —
+ * une fenêtre à sujet diagramme n'en a qu'une, sous la clé vide (`FIGURE_DIAGRAM_PANE_KEY`).
+ *
+ * os#1498 — UNE NATURE D'ÉCHELLE DIAGRAMME MONTE, ELLE AUSSI, UN DOCUMENT. C'était vrai de la
+ * seule échelle élément tant que l'étoile unitaire était la seule à le faire ; la vue par groupe
+ * monte un diagramme dérivé dans une fenêtre à sujet diagramme, et sans ce couple elle ne peut pas
+ * se déclarer à l'espace de travail (`bindWindowDocument`) — donc ne devient jamais l'active, et
+ * n'a ni inspecteur, ni clavier, ni Ctrl+Z. Les deux restent FACULTATIFS, et absents là où ils
+ * l'étaient déjà : la pop-up de présentation et les sondes de disponibilité montent les mêmes
+ * entrées sans fenêtre.
+ */
 export const diagramContext = (
   app_data: Class_ApplicationData,
-  options: { [key: string]: unknown } = {}
-): Type_RepresentationContext => ({ app_data, scale: 'diagram', element: null, options })
+  options: { [key: string]: unknown } = {},
+  window_id?: string,
+  pane_key?: string
+): Type_RepresentationContext => (
+  { app_data, scale: 'diagram', element: null, options, window_id, pane_key }
+)
 
 /**
  * Contexte d'échelle ÉLÉMENT. `window_id` : cf. Type_RepresentationContext (os#1393) ;
