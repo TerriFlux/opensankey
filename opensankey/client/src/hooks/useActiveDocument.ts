@@ -46,3 +46,14 @@ export function useActiveDocument(app_data: Class_ApplicationData): Class_Applic
   useModelBinding(undefined, r => app_data.menu_configuration.subscribe(ACTIVE_DOCUMENT_TOPIC, r))
   return app_data.workspace.active ?? app_data
 }
+
+/**
+ * sa#566 — LE DOCUMENT DE FEUILLE ACTIF (cf. `Class_Workspace.active_sheet_document`) : même
+ * patron que `useActiveDocument`, pour ce qui appartient à une FEUILLE — ses vues au premier chef.
+ * Un volet qui monte son propre document (l'étoile d'un nœud) ne fait pas disparaître la barre
+ * des vues de la feuille qu'il regarde.
+ */
+export function useActiveSheetDocument(app_data: Class_ApplicationData): Class_ApplicationData {
+  useModelBinding(undefined, r => app_data.menu_configuration.subscribe(ACTIVE_DOCUMENT_TOPIC, r))
+  return app_data.workspace.active_sheet_document ?? app_data
+}
