@@ -991,6 +991,15 @@ export class Class_MenuConfig {
    * volet s'ouvre (il doit se voir) ou que le volet en plein écran se ferme.
    */
   protected _main_zone_maximized_id: string | null = null
+  /**
+   * sa#566 — LE VOLET RAMENÉ AU PREMIER PLAN par le choix de sa vue, ou `null`.
+   *
+   * Choisir une vue doit la montrer PAR-DESSUS tout ce qui est à l'écran, quel que soit son
+   * affichage : un volet ancré ou en plein écran passe alors devant les volets flottants, qui sans
+   * cela le recouvraient (ils sont peints au-dessus de la grille). Le premier plan dure jusqu'à ce
+   * qu'on désigne un autre volet — comme une fenêtre du système jusqu'au clic suivant. TRANSITOIRE.
+   */
+  protected _main_zone_front_id: string | null = null
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
   protected _main_zone_active_id: string | null = null
@@ -1463,6 +1472,12 @@ export class Class_MenuConfig {
    * un AUTRE volet qui le cacherait. Sa place, elle, ne change pas : c'est dans son bandeau qu'on
    * la change ensuite.
    */
+  /** sa#566 — Le volet au premier plan (cf. `_main_zone_front_id`), s'il est encore ouvert. */
+  public get main_zone_front_id(): string | null {
+    const id = this._host._main_zone_front_id
+    return (id !== null && this.isMainZoneOccupant(id)) ? id : null
+  }
+
   public bringMainZoneOccupantForward(id: string): void {
     const host = this._host
     const at = host._main_zone_occupants.findIndex(o => o.id === id)
@@ -1475,6 +1490,7 @@ export class Class_MenuConfig {
       host._main_zone_maximized_id = null
     }
     host._main_zone_active_id = id
+    host._main_zone_front_id = id
     host._main_zone_active_pane_key = null
     host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
@@ -1570,6 +1586,8 @@ export class Class_MenuConfig {
     this._normalizeMainZoneOccupants()
     this._loadFiguresFromJSON(new Map([[id, { figures: e.figures, options: e.options }]]))
     this._host._main_zone_active_id = id
+    // Une vue qu'on rappelle se montre par-dessus tout (cf. `_main_zone_front_id`).
+    this._host._main_zone_front_id = id
     this._host._main_zone_active_pane_key = null
     this._host._main_zone_selected_pane_keys = []
     if (e.place === 'main') this.makeMainZoneOccupantMain(id)
@@ -2233,6 +2251,8 @@ export class Class_MenuConfig {
   public set main_zone_active_id(id: string | null) {
     if (this._host._main_zone_active_id === id) return
     this._host._main_zone_active_id = id
+    // sa#566 — désigner un autre volet lui rend la main : le premier plan d'une vue choisie cesse.
+    if (this._host._main_zone_front_id !== id) this._host._main_zone_front_id = null
     // os#1394 — changer de fenêtre PÉRIME la vignette active : sa clé n'a de sens que dans la
     // fenêtre qui la porte, et deux fenêtres peuvent nommer la même. À id inchangé, en
     // revanche, on ne touche à rien : un clic sur une vignette active d'abord celle-ci, puis
