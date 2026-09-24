@@ -2159,7 +2159,12 @@ export class Class_ApplicationData {
     this.captureSavedViewWindows()
     if (prev_id !== id && this._views[prev_id]?.ephemeral) this.forgetEphemeralView(prev_id)
     const window = this._views[id]?.window
-    if (!window) return
+    if (!window) {
+      // Une vue sans volet est le diagramme : un autre volet en plein écran le cacherait.
+      const maximized = mc.main_zone_maximized_id
+      if (maximized !== null && maximized !== MAIN_ZONE_CANVAS_ID) mc.setMainZoneMaximized(null)
+      return
+    }
     const open = mc.mainZoneOccupantOfSavedView(id)
     if (open) mc.bringMainZoneOccupantForward(open.id)
     else mc.openMainZoneWindowFromJSON(window, id)
