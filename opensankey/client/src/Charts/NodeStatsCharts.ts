@@ -134,8 +134,14 @@ export interface Type_ChartOptions {
    * (déplier le nœud dans le diagramme, ou descendre dedans : cf. `interaction_click`).
    *
    * Absent : le clic ne fait que sélectionner, c'est-à-dire le geste de toute couronne enregistrée.
+   *
+   * 24/09/2026 — ET LE GESTE DIT SON SENS. Julien : « on peut pas imaginer des combinaisons de
+   * touches, shift+clic / clic, un pour remonter un pour descendre ? ». C'est la bonne réponse au
+   * trou qu'il avait relevé — une couronne qui déplie et ne sait pas replier. Le tracé RAPPORTE la
+   * touche, il ne l'interprète pas : « remonter » ne veut pas dire la même chose selon qu'on
+   * déplie le diagramme ou qu'on descend dans la figure, et c'est la nature qui le sait.
    */
-  on_part_activate?: (part_id: string) => void
+  on_part_activate?: (part_id: string, gesture: { shift: boolean }) => void
   /**
    * 23/09/2026 — LE CENTRE RAMÈNE EN ARRIÈRE, quand la figure est descendue dans un nœud.
    *
@@ -524,9 +530,9 @@ export const drawDonutChart = (
     // Dans cet ordre : on sélectionne d'abord, parce que l'effet peut faire disparaître la part
     // qu'on vient de toucher (un nœud déplié cède la place à ses enfants) et qu'on veut alors que
     // l'inspecteur ait eu le temps de la montrer.
-    paths.on('click', (_evt, d) => {
+    paths.on('click', (evt: MouseEvent, d) => {
       opts.on_part_select?.(d.data.id)
-      opts.on_part_activate?.(d.data.id)
+      opts.on_part_activate?.(d.data.id, { shift: evt.shiftKey === true })
     })
   }
   if (st.interaction_tooltip) paths.append('title').text(slice_title)
