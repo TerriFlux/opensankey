@@ -413,6 +413,59 @@ export const disaggregateLocally = (
   return true
 }
 
+/**
+ * 24/09/2026 — DÉPLIER TOUTE UNE ROUTE, ET NON SON DERNIER CRAN.
+ *
+ * Julien, capture à l'appui : « ça marche pas aussi bien que le sunburst ; sur le sunburst ça
+ * lance effectivement la commande désagréger qui met tout en place et contrôle la visibilité ;
+ * d'où l'intérêt d'aller vers la fusion, ça évite de développer du code similaire sur les deux
+ * mais différent. »
+ *
+ * Il avait raison sur les deux points. La fonction VIVAIT DÉJÀ, mais dans `SunburstRepresentation`,
+ * où la couronne ne pouvait pas l'atteindre : elle s'était donc écrit un demi-geste à elle, qui
+ * dépliait le nœud cliqué SANS déplier ses ancêtres. Résultat, sur un nœud profond : le diagramme
+ * montrait le parent ET ses parts — la même matière deux fois. C'est très exactement le défaut
+ * qu'os#1425 avait corrigé pour le disque, refait ailleurs six mois plus tard parce que le geste
+ * n'était pas à un endroit où on le trouve.
+ *
+ * Elle est donc ici, avec `disaggregateLocally` qu'elle appelle — et les deux figures l'appellent.
+ *
+ * @param path les nœuds traversés, du plus haut au plus bas, le dernier étant celui qu'on veut
+ *   voir déplié. Sur un treillis, c'est la route DESSINÉE : deux chemins mènent au même nœud et
+ *   ils ne déplient pas la même chose.
+ */
+export const disaggregateAlong = (
+  new_data: Class_ApplicationData,
+  path: string[]
+): void => {
+  const nodes = new_data.drawing_area.sankey.nodes_dict
+  for (let i = 0; i + 1 < path.length; i++) {
+    const parent = nodes[path[i]] as Class_NodeElement | undefined
+    // Déjà déplié : `disaggregateLocally` ne fait rien, et surtout ne replie pas au passage.
+    if (parent) disaggregateLocally(new_data, parent, path[i + 1])
+  }
+}
+
+/**
+ * REPLIE UN NŒUD sur tous les axes où il est déplié : il redevient lui-même dans le diagramme, par
+ * son premier enfant sur chaque axe, comme le clic droit. Vrai si quelque chose a bougé.
+ *
+ * Déménagée ici le 24/09/2026 avec `disaggregateAlong`, et pour la même raison : c'est un geste du
+ * modèle, pas un geste d'une figure.
+ */
+export const foldNodeEverywhere = (
+  new_data: Class_ApplicationData,
+  node: Class_NodeElement
+): boolean => {
+  let moved = false
+  node.dimensions_as_parent
+    .filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
+    .forEach((d: Class_NodeDimension) => {
+      if (aggregateLocally(new_data, d.children[0] as Class_NodeElement, node.id)) moved = true
+    })
+  return moved
+}
+
 /** Replie `child` dans `parent_id`, comme le clic droit. Vrai si quelque chose a bougé. */
 export const aggregateLocally = (
   new_data: Class_ApplicationData,
