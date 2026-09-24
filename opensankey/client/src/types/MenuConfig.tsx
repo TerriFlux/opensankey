@@ -502,33 +502,22 @@ export class Class_MenuConfig {
   // les abonnés du topic ; jamais persisté.
   public last_import: { format: string } | null = null
 
-  // sa#531 — dernier export d'image ('png', 'svg', 'pdf'), posé juste avant la
+  // sa#531 — dernier export d'image ('png', 'svg', 'pdf'), pose juste avant la
   // notification EXPORT_TOPIC. Même contrat que `last_import` : lu par les
   // abonnés du topic, jamais persisté.
-  protected _last_export: { format: string } | null = null
-  public get last_export(): { format: string } | null { return this._host._last_export }
-  public set last_export(v: { format: string } | null) { this._host._last_export = v }
+  public last_export: { format: string } | null = null
 
   // sa#531 — FICHIER DU TUTORIEL OUVERT, posé au chargement depuis le menu Aide
   // et remis à null dès qu'un autre document est chargé. C'est ce qui permet de
   // dire qu'un changement de vue est un passage d'ÉTAPE : sans lui, les deux
   // gestes sont le même clic. Jamais persisté — rouvrir son propre diagramme ne
   // recommence pas une leçon.
-  protected _current_tutorial: string | null = null
-  public get current_tutorial(): string | null { return this._host._current_tutorial }
-  public set current_tutorial(v: string | null) { this._host._current_tutorial = v }
+  public current_tutorial: string | null = null
 
   // sa#531 — dernière étape franchie, posée juste avant TUTORIAL_TOPIC : le
   // fichier, le rang de la vue dans l'ordre du document, et si c'est la
   // dernière. Lu par les abonnés du topic.
-  protected _last_tutorial_step: { file: string, rank: number, last: boolean } | null = null
-  public get last_tutorial_step(): { file: string, rank: number, last: boolean } | null {
-    return this._host._last_tutorial_step
-  }
-
-  public set last_tutorial_step(v: { file: string, rank: number, last: boolean } | null) {
-    this._host._last_tutorial_step = v
-  }
+  public last_tutorial_step: { file: string, rank: number, last: boolean } | null = null
 
   // sa#1354 — Applicateur de NIVEAU, injecté par la couche éditeur.
   //
