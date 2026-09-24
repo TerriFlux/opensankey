@@ -413,6 +413,17 @@ export interface Type_SunburstChartOptions {
     gesture?: { shift: boolean }
   ) => void
   /**
+   * 24/09/2026 — LA PALETTE DES BRANCHES, quand l'appelant en impose une.
+   *
+   * Le disque est devenu un MODE de la couronne, et Julien l'a vu tout de suite : « quand je passe
+   * de en place à un anneau par niveau, ça change les couleurs, comme un autre système ». C'était
+   * vrai au sens propre — ce tracé avait sa palette à lui. Deux modes d'une même figure ne peuvent
+   * pas en avoir deux : changer de mode change le dessin, pas les couleurs.
+   *
+   * Absente, c'est la palette du disque, et rien ne change pour un appelant qui ne dit rien.
+   */
+  branch_color?: (index: number) => string
+  /**
    * Clic sur le CENTRE, hors zoom radial (18/09) : le nœud central et l'axe de son premier
    * anneau — de quoi le replier dans le diagramme. Rend vrai si le geste a fait quelque chose.
    */
@@ -1034,7 +1045,7 @@ export const drawSunburstChart = (
 
     // Couleur de BRANCHE, ordre fixe. Une branche = un secteur du premier anneau, quel
     // que soit ce qu'il y a au centre.
-    const branchColor = sunburstBranchColor(theme)
+    const branchColor = opts.branch_color ?? sunburstBranchColor(theme)
     // Rang du niveau porté par le PREMIER anneau : le centre a mangé les niveaux qui le
     // précèdent, la légende doit nommer les anneaux restants sans décalage.
     const level_offset = centre_node ? centre_node.depth + 1 : 0
@@ -1356,19 +1367,22 @@ export const drawSunburstChart = (
         st.click_action !== 'none' && !d.is_residual &&
         (d.children_count > 0 || st.click_action !== 'zoom')
       ) ? 'pointer' : 'default')
+      // 24/09/2026 — LE SURVOL N'ESTOMPE PLUS LES AUTRES SECTEURS.
+      //
+      // Julien : « ça change la sélection : la part survolée est en exergue et les autres en
+      // opacité basse ; il faut homogénéiser dans les deux modes ». Le disque estompait tout ce
+      // qui n'était pas sur la route du secteur survolé ; la couronne, elle, ne l'a jamais fait.
+      // Depuis que les deux sont UNE figure, cet écart ne se lit plus comme une richesse du disque
+      // mais comme une incohérence : passer de « en place » à « un anneau par niveau » changeait
+      // la façon dont la figure répond à la souris.
+      //
+      // Le CENTRE, lui, continue de nommer ce qu'on survole : ce n'est pas une mise en exergue,
+      // c'est une lecture — il dit ce que le secteur vaut, là où l'anneau n'a pas la place.
       .on('mouseover', (_, d) => {
-        const ancestry = new Set(d.path)
-        // Le survol ESTOMPE, il ne remet pas tout à l'opaque : reprendre l'opacité de chaque
-        // secteur — la sienne, ou celle de la figure — est ce qui fait qu'une couronne réglée
-        // translucide le reste après un passage de souris.
-        paths.attr('fill-opacity', s => (ancestry.has(s.id) || s.path.includes(d.id))
-          ? styleOf(s.id).opacity
-          : styleOf(s.id).opacity * 0.3)
         if (shows_name) centre_label.text(d.label)
         if (shows_value) centre_value.text(fmtUnit(d.value))
       })
       .on('mouseout', () => {
-        paths.attr('fill-opacity', s => styleOf(s.id).opacity)
         if (shows_name) centre_label.text(scope_title)
         if (shows_value) centre_value.text(fmtUnit(total))
       })

@@ -25,7 +25,7 @@ import {
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
 import {
-  partitionSunburst, shadeForDepth, sunburstBranchColor, sunburstScope, sunburstSectorName,
+  partitionSunburst, shadeForDepth, sunburstScope, sunburstSectorName,
   SUNBURST_STYLE_DEFAULTS
 } from './SunburstChart'
 import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
@@ -277,7 +277,16 @@ const NODE_MIN_BAR_FRACTION = 0.01
 // Palette catégorielle propre aux graphiques (délibérément indépendante des
 // couleurs du diagramme principal, souvent peu contrastées entre flux voisins).
 const PALETTE: readonly string[] = d3.schemeTableau10
-const paletteColor = (i: number) => PALETTE[i % PALETTE.length]
+/**
+ * LA PALETTE DE LA COURONNE, par rang.
+ *
+ * 24/09/2026 — EXPORTÉE, parce qu'elle est devenue celle des DEUX modes. Julien : « quand je passe
+ * de en place à un anneau par niveau, ça change les couleurs, comme un autre système ». C'était
+ * vrai au sens propre : le tracé à anneaux avait sa palette à lui (`sunburstBranchColor`). Deux
+ * modes d'une même figure ne peuvent pas avoir deux palettes — changer de mode change le dessin,
+ * pas les couleurs.
+ */
+export const paletteColor = (i: number) => PALETTE[i % PALETTE.length]
 
 // ==================================================================================================
 // Échelle des séries (#393) — fonctions PURES, testables sans DOM
@@ -2154,7 +2163,9 @@ export const drawNodeSunburstOnGroup = (
   if (branches.length === 0) return false
   const theme = opts.theme ?? 'light'
   const slices = partitionSunburst(
-    branches, sunburstBranchColor(theme), others_label, theme, '',
+    // La palette de la COURONNE ici aussi : ce tracé est celui d'une couronne posée sur un
+    // nœud, et elle ne change pas de teintes parce qu'elle a des anneaux (24/09/2026).
+    branches, paletteColor, others_label, theme, '',
     { ...SUNBURST_STYLE_DEFAULTS, ...(opts.style ?? {}) }
   )
   if (slices.length === 0) return false
