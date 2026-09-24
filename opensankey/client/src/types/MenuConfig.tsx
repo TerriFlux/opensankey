@@ -58,6 +58,9 @@ import {
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
 // (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
 // prend lui-même que des types. Aucun cycle à l'exécution.
+import {
+  canonicalRepresentationId, retiredRepresentationOptions
+} from '../Representations/retiredRepresentations'
 import { representation_registry } from '../Representations/RepresentationRegistry'
 // os#1421 — LE PLACEMENT : le TYPE et les helpers purs vivent dans `Placement.ts`, le REGISTRE des
 // figures par identifiant de document vit ici (c'est lui qui sait quelle figure un placement cite).
@@ -2855,10 +2858,24 @@ export class Class_MenuConfig {
               h: getNumberFromJSON(geo as Type_JSON, 'h', MAIN_ZONE_FLOATING_DEFAULT_SIZE.h)
             })
             : undefined
+          // 24/09/2026 — UNE NATURE RETIREE SE RELIT COMME CE QU'ELLE EST DEVENUE. Le disque a
+          // fusionne avec la couronne ; son identifiant est pourtant ecrit dans tout classeur ou
+          // l'auteur en avait ouvert un. On traduit ICI, a la lecture, et on POSE ce qu'il faut
+          // pour que le dessin soit le meme (les anneaux) — cf. `retiredRepresentations`.
+          const stored_repr = getStringFromJSON(e, 'representation', id)
+          const representation = canonicalRepresentationId(stored_repr)
+          const retired_options = retiredRepresentationOptions(stored_repr)
+          if (Object.keys(retired_options).length > 0 && figures && typeof figures === 'object') {
+            Object.values(figures as Type_JSON).forEach(f => {
+              if (f && typeof f === 'object' && !Array.isArray(f)) {
+                Object.assign(f as Type_JSON, retired_options)
+              }
+            })
+          }
           return {
             id,
             subject,
-            representation: getStringFromJSON(e, 'representation', id),
+            representation,
             place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
             size: getNumberFromJSON(e, 'size', 1),
             order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),

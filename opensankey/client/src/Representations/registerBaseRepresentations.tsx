@@ -25,22 +25,12 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaBullseye, FaCode, FaInfoCircle, FaEye } from 'react-icons/fa'
-import { drawSunburstRepresentation, SUNBURST_ZOOM } from './SunburstRepresentation'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaCode, FaInfoCircle, FaEye } from 'react-icons/fa'
 // os#1473 — la couronne et les barres sont des natures d'OpenSankey, comme le sunburst.
 import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
-// os#1425 — les réglages de la couronne, DÉCLARÉS : c'est le formulaire générique qui les rend.
-import { SUNBURST_ATTRIBUTES } from './sunburstAttributes'
-import { rememberFigureNatureDefaults } from '../Elements/figureNatureDefaults'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
 // cette déclaration qui lui donne la cascade des styles des nœuds et des flux.
 import { figureAttribute } from './figureAttribute'
-// La valeur d'usine de la profondeur vient de là où le sunburst la lit (`readSunburstOptions`) :
-// une seconde écriture du nombre finirait par diverger de la première.
-// os#1420 — la clé d'épinglage de l'étiquette de données vient de là où elle est LUE
-// (`readFigureDataTagPins`) : deux écritures de la chaîne finiraient par diverger.
-import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
-import type { Type_FigureDataTagPins } from '../Charts/FigureNavigation'
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import {
@@ -223,80 +213,21 @@ export const registerBaseRepresentations = (): void => {
   // Les fichiers qui portent encore `os.repr.unitary` dans leur grande zone se relisent en
   // fenêtre « Unit. » sur la sélection (cf. mainZoneStateFromJSON).
 
-  // os#1363 / os#1387 — Le sunburst est une représentation d'UN NŒUD (arbitrage Julien,
-  // 08/09/2026 : pas de statistiques sur le diagramme entier), donc à l'échelle ÉLÉMENT :
-  // ses anneaux sont la descendance du nœud sujet. `root_ids` est posé depuis le sujet — le
-  // module ne sait pas qu'il vit dans une fenêtre. Un flux n'a pas de descendance : refusé.
-  // os#1501 — LE DISQUE N'ENTRE PAS PAR `registerFigureNature` (il a son propre cablage) : ses
-  // defauts se retiennent donc ici, pour que le style de ses parts montre ce que la figure fait.
-  rememberFigureNatureDefaults('sunburst', SUNBURST_ATTRIBUTES as { [k: string]: { default?: unknown } })
-  representation_registry.register({
-    id: 'os.repr.sunburst',
-    scale: 'element',
-    order: 40,
-    label: (a) => a.t('sunburst.title'),
-    icon: <FaBullseye />,
-    needs: { hierarchy: true },
-    // Un NŒUD, et un nœud QUI A QUELQUE CHOSE À DÉCOMPOSER (os#1425). `needs.hierarchy` ne dit que
-    // ce que le DIAGRAMME déclare ; sur un diagramme qui en a une, la plupart des nœuds n'en font
-    // pas partie, et leur couronne n'était qu'une case portant « ce diagramme ne déclare aucune
-    // hiérarchie ». Une nature qui ne s'offre pas laisse la grille passer son tour, ce qui vaut
-    // mieux qu'une vignette vide (arbitrage Julien, 18/09/2026).
-    isAvailable: (ctx) => {
-      const el = ctx.element as {
-        output_links_list?: unknown
-        dimensions_as_parent?: { children?: unknown[] }[]
-      } | null
-      if (!el || !Array.isArray(el.output_links_list)) return false
-      return (el.dimensions_as_parent ?? []).some(d => (d.children?.length ?? 0) > 0)
-    },
-    // os#1418 / os#1425 — CE QUE RÈGLE LE SUNBURST, DÉCLARÉ ET NON PLUS DESSINÉ À LA MAIN.
-    //
-    // La nature n'écrit plus d'interface : elle déclare ses réglages (valeur d'usine, sorte,
-    // libellés des sept langues, contrôle et choix) et le formulaire générique les rend — dans
-    // l'inspecteur pour la mise en forme, dans « Filtres et coordonnées » pour ce qu'on regarde.
-    // La liste vit dans `sunburstAttributes` : elle y est longue, et la garder ici noierait les
-    // six autres natures de ce fichier.
-    //
-    // DEUX CLÉS RESTENT ICI parce qu'elles ne sont pas des réglages d'auteur :
-    //  - la RACINE nomme le sujet — elle est posée par le `draw` ci-dessous depuis l'élément de
-    //    la fenêtre, et 'identity' interdit qu'un style ou une figure voisine vienne l'écraser ;
-    //  - l'ÉTIQUETTE DE DONNÉES ÉPINGLÉE (os#1420) est un dictionnaire, réglé par sa propre
-    //    section du panneau de navigation (CoordinatesNavigation, OS+ — os#1431).
-    attributes: {
-      ...SUNBURST_ATTRIBUTES,
-      root_ids: figureAttribute<string[] | undefined>(undefined, 'identity', {
-        en: 'Root',
-        fr: 'Racine',
-        es: 'Raíz',
-        de: 'Wurzel',
-        it: 'Radice',
-        'zh-CN': '根节点',
-        ja: 'ルート'
-      }),
-      [FIGURE_DATA_TAGS_KEY]: figureAttribute<Type_FigureDataTagPins | undefined>(
-        undefined, 'navigation', {
-          en: 'Pinned data tag',
-          fr: 'Étiquette de données épinglée',
-          es: 'Etiqueta de datos fijada',
-          de: 'Angeheftete Datenkennzeichnung',
-          it: 'Etichetta di dati fissata',
-          'zh-CN': '固定的数据标签',
-          ja: '固定されたデータタグ'
-        })
-    },
-    // PAS DE MENU AU CLIC DROIT (os#1425). Le fond ouvrait les réglages de la figure (os#1397) ;
-    // c'est un geste que le diagramme principal n'a pas, et les réglages ont leur place dans
-    // l'inspecteur et « Filtres et coordonnées ». Le clic droit reste celui du navigateur.
-    //
-    // Le zoom, lui, est DÉCLARÉ (os#1409) : la colonne d'outils zoome le disque de la vignette
-    // active comme elle zoome le diagramme (demande Julien, 18/09).
-    zoom: SUNBURST_ZOOM,
-    draw: (container, ctx) => drawSunburstRepresentation(container, {
-      ...ctx,
-      options: { ...ctx.options, root_ids: ctx.element ? [ctx.element.id] : [] }
-    })
-  })
+  // ── 24/09/2026 — LE DISQUE N'EST PLUS UNE NATURE, C'EST UN MODE DE LA COURONNE ─────────────
+  //
+  // Julien : « tu peux enlever le sunburst maintenant je pense ». La couronne sait tout ce que le
+  // disque savait — la descente, ses quatre réglages de lecture, ses anneaux
+  // (`levels_display: 'rings'`), son zoom, ses parts réglables — et le geste de désagrégation est
+  // le MÊME appel des deux côtés (`disaggregateAlong`). Deux entrées pour une figure, c'était une
+  // de trop : on n'ajoutait plus rien à l'une sans devoir y penser pour l'autre.
+  //
+  // Son identifiant, lui, est dans des fichiers. Il se relit comme la couronne, avec le mode
+  // anneaux posé pour que le dessin soit le même (cf. `retiredRepresentations`) : un classeur
+  // enregistré avec un disque s'ouvre donc sur le dessin qu'il portait, indéfiniment.
+  //
+  // Le TRACÉ reste — c'est lui qui dessine les anneaux (`drawSunburstChart`), appelé désormais par
+  // la couronne. Ce qui s'en va est l'entrée du sélecteur, et elle seule.
+
 
   // sa#563 (lot 1) — « INFOS » : CE QUE LA POP-UP DE PRÉSENTATION MONTRAIT DANS SA COLONNE
   // GAUCHE, devenu une nature comme les autres.
