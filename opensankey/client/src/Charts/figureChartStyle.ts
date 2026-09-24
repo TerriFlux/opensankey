@@ -187,9 +187,10 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   value_label_percent: 'total',
   scale_factor: 100,
   interaction_tooltip: true,
-  // Déplier dans le diagramme, comme le disque — mais seulement quand il y a où descendre
-  // (cf. `interaction_click`). Sous 'off', qui est le défaut, le clic ne fait que sélectionner.
-  interaction_click: 'aggregate',
+  // RIEN DE PLUS : le clic ouvre l'anneau dans la figure, et s'arrête là. Déplier aussi le
+  // diagramme est un choix, pas un défaut — explorer ne doit pas modifier le document sans qu'on
+  // l'ait demandé (arbitrage Julien, 24/09/2026).
+  interaction_click: 'none',
   notes_visible: true
 }
 

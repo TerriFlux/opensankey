@@ -346,9 +346,10 @@ export interface Type_HierarchyReading {
  */
 const hierarchyTreeOf = (
   node: Class_NodeElement,
-  spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
+  spec: { dimension_id: string, focus_id?: string },
   nav: Type_FigureNavigation,
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   const sankey = node.sankey as unknown as Type_SunburstSankey
   // LE FOYER, quand la figure est descendue dedans (drill-down) — et le sujet sinon. Un foyer qui
@@ -377,13 +378,27 @@ const hierarchyTreeOf = (
     max_depth: reading.max_depth
   }, reading.residual_label ?? '', nav)
   if (!tree) return null
-  // 'leaves' ne demande rien au diagramme : on garde l'arbre entier.
-  if (spec.hierarchy === 'leaves') return tree
-  // 'diagram' s'arrête où le dessin s'arrête. `is_disaggregated` est le pont que l'arbre pose déjà
-  // entre la figure et le diagramme ; la RACINE est toujours dépliée, sans quoi une couronne
-  // pointée sur un nœud replié n'aurait rien du tout à montrer.
+  // ── L'ARBRE S'ARRÊTE OÙ L'AUTEUR A ARRÊTÉ DE CLIQUER (24/09/2026) ─────────────────────────
+  //
+  // Julien : « je voudrais que le sunburst apparaisse progressivement avec les clics. Si je clique
+  // sur Maïs, ça ouvre une nouvelle couronne, Maïs Bio et Maïs Conventionnel. Et si je fais
+  // shift+clic ça l'enlève. »
+  //
+  // ⚠️ CE QUE CE MODÈLE REMPLACE, ET POURQUOI L'ANCIEN ÉTAIT FAUX. La figure avait un mode qui
+  // décidait D'AVANCE jusqu'où descendre (« un seul niveau », « comme le diagramme », « jusqu'aux
+  // feuilles »). Sous « jusqu'aux feuilles », la figure montrait déjà tout : cliquer demandait de
+  // déplier un nœud qui n'avait plus rien en dessous, et le geste était INERTE par construction.
+  // Julien l'a constaté sous la forme « le clic ne marche plus » ; ce n'était pas un défaut de
+  // code, c'était le modèle.
+  //
+  // Un ENSEMBLE de nœuds ouverts absorbe les trois modes : vide, c'est « un seul niveau » ; plein,
+  // c'est « jusqu'aux feuilles » ; et entre les deux, c'est ce que l'auteur a ouvert lui-même. La
+  // figure ne décide plus de rien, elle retient.
+  //
+  // La RACINE est toujours ouverte, sans quoi une couronne n'aurait rien du tout à montrer : c'est
+  // le sujet, et le décomposer est sa raison d'être.
   const prune = (sector: Type_SunburstNode, is_root: boolean) => {
-    if (!is_root && sector.is_disaggregated !== true) {
+    if (!is_root && !expanded.has(sector.id)) {
       sector.children = []
       return
     }
@@ -399,11 +414,12 @@ const hierarchyTreeOf = (
  */
 const decomposeNodeHierarchy = (
   node: Class_NodeElement,
-  spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
+  spec: { dimension_id: string, focus_id?: string },
   nav: Type_FigureNavigation,
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ): Type_ChartPart[] => {
-  const root = hierarchyTreeOf(node, spec, nav, reading)?.roots[0]
+  const root = hierarchyTreeOf(node, spec, nav, reading, expanded)?.roots[0]
   if (!root) return []
   const walk = (
     sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string,
@@ -453,12 +469,12 @@ export const analysisHierarchyTree = (
   subject: Type_ChartSubject,
   descriptor: Type_AnalysisDescriptor,
   nav: Type_FigureNavigation = FOLLOWING_NAVIGATION,
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   const decompose = effectiveDecompose(descriptor)
   if (subject.kind !== 'node' || decompose?.kind !== 'node_children') return null
-  if (!decompose.hierarchy || decompose.hierarchy === 'off') return null
-  return hierarchyTreeOf(subject.node, decompose, nav, reading)
+  return hierarchyTreeOf(subject.node, decompose, nav, reading, expanded)
 }
 
 const decomposeFluxChildren = (
@@ -518,7 +534,8 @@ const decomposeSubject = (
   subject: Type_ChartSubject,
   spec: Type_DecomposeSpec,
   nav: Type_FigureNavigation = FOLLOWING_NAVIGATION,
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ): Type_ChartPart[] => {
   if (subject.kind === 'node') {
     const node = subject.node
@@ -529,11 +546,19 @@ const decomposeSubject = (
       return decomposeNodeFlows(node, spec.kind, group_by, nav)
     }
     if (spec.kind === 'node_children') {
-      // La hiérarchie DESCENDUE n'est pas un autre axe : c'est le même, poussé plus bas. Un
-      // descripteur qui ne dit rien (tout le parc enregistré) passe par le chemin d'avant, ligne
-      // pour ligne.
-      return (spec.hierarchy && spec.hierarchy !== 'off')
-        ? decomposeNodeHierarchy(node, spec, nav, reading)
+      // ⚠️ DEUX CHEMINS, ET LA COUTURE EST ASSUMÉE. Rien d'ouvert : le chemin d'avant, ligne pour
+      // ligne — c'est tout le parc enregistré, et ses valeurs ne bougent pas. Dès qu'un nœud est
+      // ouvert, l'arbre commande, et il lit les valeurs comme le disque les lit (filtres
+      // d'étiquettes de FLUX compris, ce que `decomposeNodeChildren` ne fait pas : cf. le cas
+      // « Seigle » de crossCompare.test, une règle que personne n'a demandé de changer).
+      //
+      // La couture existait déjà — c'était le mode « jusqu'aux feuilles » qui la franchissait. Elle
+      // se franchit maintenant au premier clic, ce qui ne la déplace pas : ça la rend visible.
+      // LE FOYER COMPTE AUTANT QU'UN NŒUD OUVERT : descendre dans « Céréales » fait d'elle le tout,
+      // et le chemin plat, qui ne connaît que le SUJET, rendrait les enfants de la racine. Le test
+      // « un foyer fait du nœud où l'on est descendu le TOUT » l'a attrapé.
+      return (expanded.size > 0 || spec.focus_id !== undefined)
+        ? decomposeNodeHierarchy(node, spec, nav, reading, expanded)
         : decomposeNodeChildren(node, spec.dimension_id, nav)
     }
     return []
@@ -655,7 +680,8 @@ const buildCrossGroups = (
   // Threadée jusqu'ici comme partout ailleurs : une grappe qui décompose par hiérarchie doit la
   // lire sous les mêmes réglages que la figure qui la porte, sans quoi deux barres de la même
   // figure compteraient leurs parts autrement.
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ): Type_ChartGroup[] => {
   const sankey = subject.kind === 'node' ? subject.node.sankey : subject.link.sankey
   const entries_p = compareAxisEntries(subject, primary)
@@ -697,7 +723,7 @@ const buildCrossGroups = (
       const value = link ? linkValue(link, pass_nav) : 0
       return [{ id: es.id, label: es.label, value, color: es.color }]
     }
-    if (decompose) return decomposeSubject(subject, decompose, pass_nav, reading)
+    if (decompose) return decomposeSubject(subject, decompose, pass_nav, reading, expanded)
     // La barre porte la couleur de SA SÉRIE (2nd axe) : c'est elle que la légende
     // nomme, et elle doit rester la même d'une grappe à l'autre.
     return [{ id: es.id, label: es.label, value: subjectValue(subject, pass_nav), color: es.color }]
@@ -775,7 +801,10 @@ export const buildAnalysisChartData = (
   // Absent, les défauts de `buildSunburstTree` s'appliquent, c'est-à-dire le comportement d'avant
   // ce lot : aucun appelant existant ne change de résultat. Seule la couronne le renseigne, et
   // elle le fait pour SES DEUX MODES — même descente, même arbre, même valeurs.
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  // 24/09/2026 — LES NŒUDS QUE L'AUTEUR A OUVERTS dans cette figure. Vide : la décomposition
+  // s'arrête au premier cran, c'est-à-dire le dessin de tout le parc enregistré.
+  expanded: ReadonlySet<string> = new Set()
 ): Type_AnalysisChartData => {
   const sankey = subject.kind === 'node' ? subject.node.sankey : subject.link.sankey
   // Décomposition EFFECTIVE : neutralisée quand on compare selon les flux (#389)
@@ -790,7 +819,7 @@ export const buildAnalysisChartData = (
   // valeur du sujet (comparaison pure).
   const partsUnder = (pass_nav: Type_FigureNavigation): Type_ChartPart[] => {
     if (decompose) {
-      return decomposeSubject(subject, decompose, pass_nav, reading)
+      return decomposeSubject(subject, decompose, pass_nav, reading, expanded)
     }
     const v = subjectValue(subject, pass_nav)
     return v > 0 ? [{ id: subject.kind === 'node' ? subject.node.id : subject.link.id, label: subjectLabel(subject), value: v }] : []
@@ -804,7 +833,9 @@ export const buildAnalysisChartData = (
   // Croisement de deux axes de comparaison (#390) : grappes × barres, chaque barre
   // empilée par la décomposition EFFECTIVE s'il en reste une.
   if (secondary) {
-    const groups = buildCrossGroups(subject, descriptor.compare, secondary, decompose, nav, reading)
+    const groups = buildCrossGroups(
+      subject, descriptor.compare, secondary, decompose, nav, reading, expanded
+    )
     return { series: flattenCrossGroups(groups), groups, has_decompose, has_compare, is_grouped_cross }
   }
 
