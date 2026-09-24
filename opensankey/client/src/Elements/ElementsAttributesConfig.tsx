@@ -4926,16 +4926,23 @@ export const ATTRIBUTE_KEY_SCOPES: { [key: string]: Type_AttributeScope } = {
   name_label_inside_horiz: NOT_ON_A_PART,
   value_label_inside_horiz: NOT_ON_A_PART,
 
-  // os#1504 — L'ANGLE DU TEXTE PART AVEC EUX, et pour la meme raison exactement.
+  // ── L'ANGLE DU TEXTE : RETIRE PAR os#1504, RENDU LE 24/09/2026 ─────────────────────────────
   //
-  // Julien : « tu as laisse l'angle pour l'orientation du texte, et ca n'a pas d'effet ».
+  // os#1504 l'avait retire des parts, et pour une bonne raison : « tu as laisse l'angle pour
+  // l'orientation du texte, et ca n'a pas d'effet » (Julien). AUCUN trace ne le lisait — la moitie
+  // d'une bijection, une surface sans code, exactement ce que ce chantier traque.
   //
-  // Il etait deja masque sur les figures RONDES (`PLACED_IN_A_BOX_KEYS`, os#1483) ; il restait donc
-  // offert sur les barres, ou AUCUN trace ne le lit — `text_angle` n'apparait nulle part dans les
-  // Charts. C'est la moitie d'une bijection : une surface sans code. Elle part, comme l'orientation
-  // des barres a la meme demande (os#1497).
-  name_label_text_angle: NOT_ON_A_PART,
-  value_label_text_angle: NOT_ON_A_PART,
+  // LA RAISON EST TOMBEE : le trace des barres le lit depuis ce matin. Julien : « l'angle est de la
+  // part — c'est son texte ; pour les regler tous, le style de part. La regle automatique devient
+  // un simple repli quand aucune part ne dit rien. » Le repli est `autoBarLabelAngle`, et la part a
+  // le dernier mot des qu'elle parle.
+  //
+  // ⚠️ PAS SUR UNE FIGURE RONDE, et c'est le meme mot que pour ses voisines de
+  // `PLACED_IN_A_BOX_KEYS` : un secteur d'anneau n'a pas de boite dont on connaisse les bords, et
+  // ce qu'on veut y dire se dit par `name_label_orientation` — radial, le long de l'arc, droit.
+  // Un nombre de degres y serait un troisieme vocabulaire pour la meme question.
+  name_label_text_angle: NOT_ON_A_PART_FIGURE_ROUND,
+  value_label_text_angle: NOT_ON_A_PART_FIGURE_ROUND,
 
   // ── os#1490 — L'UNITÉ D'UNE PART DE FIGURE, ET PAS CELLE D'UN FLUX ──────────────────────────
   //
