@@ -35,7 +35,7 @@ import type { Type_PartInput } from './parts/buildParts'
 import { registerFigureNature } from './figureNature'
 import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
-  HIERARCHY_FOCUS_KEY
+  HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY
 } from './analysisFigureAttributes'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
@@ -189,6 +189,15 @@ export const descriptorInEffect = (
 // rien n'est écrit dans le panneau des coordonnées — l'inspecteur reste le seul à poser un axe, et
 // la figure ne fait, comme depuis os#1387, que regarder autrement.
 
+/**
+ * LES NŒUDS QUE L'AUTEUR A OUVERTS dans cette figure. Vide = la couronne décompose d'un cran,
+ * c'est-à-dire le dessin de tout le parc enregistré (24/09/2026).
+ */
+const expandedOf = (options: { [key: string]: unknown }): Set<string> => {
+  const raw = options[HIERARCHY_EXPANDED_KEY]
+  return new Set(Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : [])
+}
+
 /** Le chemin des nœuds où la figure est descendue. Vide = elle regarde son sujet. */
 const hierarchyPathOf = (options: { [key: string]: unknown }): string[] => {
   const raw = options[HIERARCHY_FOCUS_KEY]
@@ -213,7 +222,6 @@ const withHierarchy = (
 ): Type_AnalysisDescriptor => {
   const decompose = descriptor.decompose
   if (decompose?.kind !== 'node_children') return descriptor
-  if (!decompose.hierarchy || decompose.hierarchy === 'off') return descriptor
   const focus_id = hierarchyPathOf(options).slice(-1)[0]
   if (focus_id === undefined) return descriptor
   return { ...descriptor, decompose: { ...decompose, focus_id } }
@@ -283,10 +291,11 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
   // `by_id` et compose lui-même ; lui rendre la frontière laisserait les anneaux intérieurs sans
   // part, donc sans réglage et sans sélection.
   const reading = hierarchyReadingOf(ctx)
-  const tree = ringsTreeOf(ctx, a, reading)
+  const expanded = expandedOf(ctx.options)
+  const tree = ringsTreeOf(ctx, a, reading, expanded)
   if (tree) return sunburstPartInputs(ctx.app_data.drawing_area.sankey, tree)
   return analysisPartInputs(
-    a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav, reading)
+    a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav, reading, expanded)
   )
 }
 
@@ -294,12 +303,13 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
 const ringsTreeOf = (
   ctx: Type_RepresentationContext,
   a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor, nav: Type_FigureNavigation },
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   // `figureChartStyleOf` et non `donutStyleOf` : celui-ci demande la descente, qui demanderait
   // l'arbre — on tournerait en rond. Le mode de dessin, lui, se lit sur le sac tel quel.
   if (figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS).levels_display !== 'rings') return null
-  return analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading)
+  return analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading, expanded)
 }
 
 /**
@@ -422,14 +432,53 @@ const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle =>
   return { ...style, parts_color_source: 'palette' }
 }
 
-/** La décomposition hiérarchique EN VIGUEUR sur cette figure, ou `null` si elle est à plat. */
+/**
+ * LA DESCENTE EST POSSIBLE, ou `null` si la figure ne décompose pas par nœuds enfants.
+ *
+ * ⚠️ IL N'Y A PLUS DE MODE À VÉRIFIER (24/09/2026). Une couronne posée sur « les enfants »
+ * descend, point : elle commence à un cran et grandit sous les clics. C'est ce qui a remplacé les
+ * trois modes dont deux rendaient le clic inerte.
+ */
 const hierarchyInEffect = (
   ctx: Type_RepresentationContext
-): { dimension_id: string, path: string[] } | null => {
+): { dimension_id: string, path: string[], expanded: Set<string> } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (!decompose || decompose.kind !== 'node_children') return null
-  if (!decompose.hierarchy || decompose.hierarchy === 'off') return null
-  return { dimension_id: decompose.dimension_id, path: hierarchyPathOf(ctx.options) }
+  return {
+    dimension_id: decompose.dimension_id,
+    path: hierarchyPathOf(ctx.options),
+    expanded: expandedOf(ctx.options)
+  }
+}
+
+/**
+ * `descendant` est-il SOUS `ancestor` dans la hiérarchie ? Remonté par les parents DÉCLARÉS, tous
+ * axes confondus — sur un treillis un nœud en a plusieurs, et il suffit qu'UNE route passe par
+ * l'ancêtre pour que refermer celui-ci le referme aussi.
+ *
+ * Sert au shift+clic : refermer « Céréales » referme tout ce qu'elle portait, sans quoi la rouvrir
+ * ferait réapparaître d'un coup des niveaux ouverts dix minutes plus tôt.
+ *
+ * Borné par les nœuds déjà vus : une hiérarchie mal formée ne doit pas faire tourner un geste
+ * d'interface à l'infini.
+ */
+const isBelow = (
+  sankey: { nodes_dict: { [id: string]: unknown } },
+  descendant: string,
+  ancestor: string
+): boolean => {
+  const seen = new Set<string>([descendant])
+  const queue = [descendant]
+  while (queue.length > 0) {
+    const current = sankey.nodes_dict[queue.shift() as string] as Class_NodeElement | undefined
+    if (!current) continue
+    for (const dim of current.dimensions_as_child as Class_NodeDimension[]) {
+      const parent_id = dim.parent.id
+      if (parent_id === ancestor) return true
+      if (!seen.has(parent_id)) { seen.add(parent_id); queue.push(parent_id) }
+    }
+  }
+  return false
 }
 
 /**
@@ -468,8 +517,12 @@ const donutClickGestures = (
   activate?: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void
   back?: () => void
 } => {
+  // ⚠️ PLUS DE SORTIE SUR `interaction_click === 'none'`, et c'est le cœur du modèle : OUVRIR
+  // L'ANNEAU EST LE GESTE DE BASE, il ne se règle pas. Le réglage ne dit que ce qui s'y AJOUTE
+  // (déplier le diagramme, descendre dedans). Y sortir ici éteignait le geste même qu'on venait
+  // de rendre inconditionnel.
   const hierarchy = hierarchyInEffect(ctx)
-  if (!hierarchy || style.interaction_click === 'none') return {}
+  if (!hierarchy) return {}
   const app_data = ctx.app_data
   const sankey = app_data.drawing_area.sankey
   const { window_id, pane_key } = ctx
@@ -491,20 +544,57 @@ const donutClickGestures = (
       (d: Class_NodeDimension) => d.id === hierarchy.dimension_id && d.children.length > 0
     ) ?? node.dimensions_as_parent.find((d: Class_NodeDimension) => d.children.length > 0)
 
+  const writeExpanded = (ids: Set<string>) => {
+    app_data.menu_configuration.setMainZonePaneOptions(
+      window_id as string, pane_key as string,
+      { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...ids] } as unknown as Type_JSON
+    )
+  }
+
   const activate = (
     part_id: string, gesture: { shift: boolean }, route: string[] = []
   ) => {
-    // Un secteur replié par le tracé (« Autres ») ne désigne aucun nœud : il n'y a rien à déplier
+    // Un secteur replié par le tracé (« Autres ») ne désigne aucun nœud : il n'y a rien à ouvrir
     // ni où descendre. On ne devine pas.
     const node = sankey.nodes_dict[part_id] as Class_NodeElement | undefined
     if (!node) return
 
+    // ── LE GESTE DE BASE : OUVRIR, REFERMER ─────────────────────────────────────────────────
+    //
+    // Julien : « si je clique sur Maïs, ça ouvre une nouvelle couronne, Maïs Bio et Maïs
+    // Conventionnel ; et si je fais shift+clic ça l'enlève ».
+    //
+    // Il se fait DANS LA FIGURE et n'y touche à rien d'autre : explorer une hiérarchie cesse
+    // d'être un geste qui modifie le document. Ce qui suit — déplier le diagramme, descendre
+    // dedans — s'y AJOUTE quand l'auteur l'a demandé (`interaction_click`).
+    if (in_pane) {
+      const next = new Set(hierarchy.expanded)
+      if (gesture.shift) {
+        // Refermer une branche referme TOUT CE QU'ELLE PORTAIT : rouvrir « Maïs » ne doit pas
+        // faire réapparaître d'un coup trois niveaux ouverts il y a dix minutes. Un nœud est
+        // dessous s'il porte la part dans sa route — c'est la même route que le clic déplie.
+        next.delete(part_id)
+        // Refermer une branche referme TOUT CE QU'ELLE PORTAIT. Sans ça, rouvrir « Maïs » ferait
+        // réapparaître d'un coup trois niveaux ouverts dix minutes plus tôt — la figure se
+        // souviendrait d'un état que l'auteur croyait avoir refermé.
+        ;[...next]
+          .filter(id => isBelow(sankey, id, part_id))
+          .forEach(id => next.delete(id))
+      } else if (node.dimensions_as_parent.some(
+        (d: Class_NodeDimension) => d.children.length > 0
+      )) {
+        // On n'ouvre que ce qui a quelque chose dedans : un nœud sans enfant donnerait un anneau
+        // vide, et la figure dirait le contraire du geste.
+        next.add(part_id)
+      }
+      if (next.size !== hierarchy.expanded.size) writeExpanded(next)
+    }
+
     if (gesture.shift) {
-      // REPLIER LA BRANCHE QU'ON DÉSIGNE. Le parent est celui de LA ROUTE DESSINÉE quand on la
-      // connaît — sur un treillis, un nœud a plusieurs parents et seul le chemin par lequel on l'a
-      // atteint dit lequel replier. À défaut, l'axe de la couronne, puis le premier venu.
-      // `aggregateLocally` refuse tout seul si le couple n'est pas déplié, donc un shift+clic sur
-      // un nœud de premier rang ne fait rien.
+      // REPLIER AUSSI DANS LE DIAGRAMME, quand l'auteur l'a demandé. Le parent est celui de LA
+      // ROUTE DESSINÉE quand on la connaît — sur un treillis, un nœud a plusieurs parents et seul
+      // le chemin par lequel on l'a atteint dit lequel replier. `aggregateLocally` refuse tout
+      // seul si le couple n'est pas déplié.
       if (wants_unfold) {
         const drawn_parent = route.length >= 2 ? route[route.length - 2] : undefined
         const up = drawn_parent ?? (node.dimensions_as_child.find(
@@ -518,27 +608,20 @@ const donutClickGestures = (
     }
 
     if (wants_unfold) {
-      // ── TOUTE LA ROUTE, ET PAS SON DERNIER CRAN (24/09/2026) ────────────────────────────────
+      // ── TOUTE LA ROUTE, ET PAS SON DERNIER CRAN ─────────────────────────────────────────────
       //
-      // Julien, capture à l'appui : « ça marche pas aussi bien que le sunburst ; sur le sunburst
-      // ça lance effectivement la commande désagréger qui met tout en place ».
-      //
-      // La couronne n'appelait `disaggregateLocally` que sur le nœud cliqué. Sur un nœud profond —
-      // le cas de « jusqu'aux feuilles », et de tout secteur d'un anneau extérieur — ses ancêtres
-      // restaient repliés, et le diagramme montrait le parent ET ses parts : la même matière deux
-      // fois. C'est le défaut qu'os#1425 avait corrigé POUR LE DISQUE, refait ici parce que le
-      // geste vivait dans le fichier du disque au lieu de vivre dans le modèle.
-      //
-      // `disaggregateAlong` est maintenant partagée (cf. Algorithms/Hierarchies), et on lui donne
-      // la route PLUS le premier enfant : déplier jusqu'au nœud, puis le nœud lui-même.
+      // Julien : « sur le sunburst ça lance effectivement la commande désagréger qui met tout en
+      // place ». La couronne n'appelait `disaggregateLocally` que sur le nœud cliqué : sur un nœud
+      // profond, ses ancêtres restaient repliés et le diagramme montrait le parent ET ses parts.
+      // `disaggregateAlong` est partagée avec le disque (cf. Algorithms/Hierarchies), et on lui
+      // donne la route PLUS le premier enfant : déplier jusqu'au nœud, puis le nœud lui-même.
       const dim = dimensionOf(node)
       const first_child = dim ? (dim.children[0] as Class_NodeElement).id : undefined
       const route_down = route.length > 0 ? [...route] : [part_id]
       if (first_child !== undefined) route_down.push(first_child)
       disaggregateAlong(app_data, route_down)
     }
-    // Descendre ne se fait que s'il y a où descendre : un nœud sans enfant deviendrait un tout
-    // vide, et la couronne s'afficherait « rien à décomposer » sur un clic qui disait l'inverse.
+    // Descendre DANS LA FIGURE (drill-down) : un choix à part, qui re-enracine au lieu d'ouvrir.
     if (wants_drill && node.dimensions_as_parent.some(
       (d: Class_NodeDimension) => d.children.length > 0
     )) {
@@ -577,9 +660,10 @@ const flatParts = (
   subject: Type_ChartSubject,
   desc: Type_AnalysisDescriptor,
   nav: Type_FigureNavigation,
-  reading: Type_HierarchyReading = {}
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
 ) => {
-  const data = buildAnalysisChartData(subject, desc, nav, reading)
+  const data = buildAnalysisChartData(subject, desc, nav, reading, expanded)
   if (isFluxCompare(desc.compare)) return data.series.map(s => s.parts[0]).filter(Boolean)
   return data.series[0]?.parts ?? []
 }
@@ -676,12 +760,19 @@ export const registerAnalysisRepresentations = (): void => {
       // parts et SES réglages. Rien n'est recopié : `drawSunburstChart` lit les mêmes clés de
       // catalogue (`readSunburstStyle`), et le clic y fait le même geste qu'ici.
       const a = analysisOf(ctx)
-      const rings = a ? ringsTreeOf(ctx, a, hierarchyReadingOf(ctx)) : null
+      const rings = a
+        ? ringsTreeOf(ctx, a, hierarchyReadingOf(ctx), expandedOf(ctx.options))
+        : null
       if (rings) {
         const teardown = drawSunburstChart(container, rings, {
           parts: wiring.by_id,
           on_part_select: wiring.on_part_select,
-          style: readSunburstStyle(ctx.options ?? {}),
+          // ⚠️ `click_action` EST FORCÉ, et ce n'est pas ignorer le réglage de l'auteur : le tracé
+          // du disque se sert de cette clé pour décider s'il RAPPORTE le clic (`on_arc_click`), et
+          // sous 'none' il l'avale. Or la couronne a besoin de tous les clics — c'est eux qui
+          // ouvrent les anneaux. Ce que l'auteur a réglé est lu, lui, par `donutClickGestures`,
+          // qui décide ce que le geste fait EN PLUS.
+          style: { ...readSunburstStyle(ctx.options ?? {}), click_action: 'aggregate' },
           texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,

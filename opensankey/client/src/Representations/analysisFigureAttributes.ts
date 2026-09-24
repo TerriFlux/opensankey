@@ -78,6 +78,31 @@ export const pinnedDataTagsAttribute = () => figureAttribute<Type_FigureDataTagP
  * passeraient le même objet de configuration partageraient un jour ce que l'une y écrirait.
  */
 export const HIERARCHY_FOCUS_KEY = 'hierarchy_focus'
+/**
+ * 24/09/2026 — LES NŒUDS QUE L'AUTEUR A OUVERTS dans cette figure.
+ *
+ * Julien : « je voudrais que le sunburst apparaisse progressivement avec les clics. Si je clique
+ * sur Maïs, ça ouvre une nouvelle couronne, Maïs Bio et Maïs Conventionnel. Et si je fais
+ * shift+clic ça l'enlève. »
+ *
+ * C'est tout l'état de la descente, et il tient dans une liste d'identifiants. Vide — le défaut,
+ * et tout le parc enregistré — la couronne décompose d'un cran. Chaque clic en ajoute un, chaque
+ * shift+clic en retire un.
+ *
+ * ⚠️ CE QU'IL REMPLACE : un mode qui décidait D'AVANCE jusqu'où descendre. Sous « jusqu'aux
+ * feuilles », la figure montrait déjà tout et le clic était inerte par construction — le défaut
+ * que Julien a rapporté sous « le clic ne marche plus ».
+ *
+ * Même sorte et même absence d'interface que le foyer : ce sont des nœuds de CE diagramme, et on
+ * les ouvre en cliquant, pas en remplissant un champ.
+ */
+export const HIERARCHY_EXPANDED_KEY = 'hierarchy_expanded'
+export const hierarchyExpandedAttribute = () => figureAttribute<string[] | undefined>(
+  undefined, 'identity', {
+    en: 'Opened nodes', fr: 'Nœuds ouverts', es: 'Nodos abiertos',
+    de: 'Geöffnete Knoten', it: 'Nodi aperti', 'zh-CN': '已展开的节点', ja: '開いたノード'
+  }, undefined, { kind: 'none' }
+)
 export const hierarchyFocusAttribute = () => figureAttribute<string[] | undefined>(
   undefined, 'identity', {
     en: 'Drilled into', fr: 'Descendu dans', es: 'Profundizado en',
@@ -315,7 +340,8 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   // décomposition. L'axe, lui, ne vient pas : la couronne le tient des coordonnées, et deux
   // adresses pour le même choix, c'est une de trop (cf. `hierarchyReadingAttributes`).
   ...hierarchyReadingAttributes(),
-  [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute()
+  [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute(),
+  [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute()
 }
 
 export const DONUT_ATTRIBUTES: Type_FigureAttributesConfig = {

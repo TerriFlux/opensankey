@@ -310,23 +310,35 @@ export const LEVELS_CONFIG = {
 
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────
 export const INTERACTION_CONFIG = {
-  // Le défaut est DÉPLIER SEULEMENT : le zoom radial — le secteur cliqué passe au centre — a été
-  // jugé déroutant (il change ce que la figure montre sans qu'on l'ait demandé) ; il reste là
-  // pour qui le veut, sous « Avancé ».
-  interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('aggregate', 'interaction', {
-    en: 'Clicking a part', fr: 'Le clic sur une part', es: 'Al hacer clic en una parte',
-    de: 'Klick auf einen Teil', it: 'Il clic su una parte', 'zh-CN': '点击某部分时', ja: '部分をクリックすると'
+  // ── 24/09/2026 — LE CLIC OUVRE L'ANNEAU, TOUJOURS. CE RÉGLAGE DIT CE QU'IL FAIT EN PLUS ─────
+  //
+  // Julien : « si je clique sur Maïs, ça ouvre une nouvelle couronne, Maïs Bio et Maïs
+  // Conventionnel ; et si je fais shift+clic ça l'enlève ». Ce geste-là est le SOCLE : il se fait
+  // dans la figure, il ne touche à rien d'autre, et aucun réglage ne l'éteint — explorer une
+  // hiérarchie ne doit pas demander la permission.
+  //
+  // Ce que ce réglage choisit, c'est ce qui S'AJOUTE : déplier aussi le nœud dans le diagramme
+  // (ce que le disque fait depuis toujours), ou re-enraciner la figure sur lui (le drill-down).
+  // D'où les libellés : ils disent le SUPPLÉMENT, pas le geste.
+  interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('none', 'interaction', {
+    en: 'Clicking a part also', fr: 'Le clic sur une part, en plus', es: 'Al hacer clic, además',
+    de: 'Klick auf einen Teil zusätzlich', it: 'Il clic su una parte, in più',
+    'zh-CN': '点击某部分时，另外', ja: '部分をクリックしたとき、さらに'
   }, {
-    en: 'Zoom stays inside the figure; expanding acts on the diagram.', fr: 'Le zoom reste dans la figure ; déplier agit sur le diagramme.',
-    es: 'El zoom se queda en la figura; desplegar actúa sobre el diagrama.', de: 'Zoom bleibt in der Abbildung; Aufklappen wirkt auf das Diagramm.',
-    it: 'Lo zoom resta nella figura; espandere agisce sul diagramma.', 'zh-CN': '放大只在图形内；展开会作用于主图。', ja: 'ズームは図の中だけ、展開は図全体に作用します。'
+    en: 'Clicking always opens the ring in the figure. This says what else it does.',
+    fr: 'Le clic ouvre toujours l’anneau dans la figure. Ceci dit ce qu’il fait en plus.',
+    es: 'El clic siempre abre el anillo en la figura. Esto dice qué hace además.',
+    de: 'Der Klick öffnet immer den Ring in der Abbildung. Dies sagt, was er zusätzlich tut.',
+    it: 'Il clic apre sempre l’anello nella figura. Questo dice cosa fa in più.',
+    'zh-CN': '点击总是在图形内展开该环，此项决定它额外做什么。',
+    ja: 'クリックは必ず図の中でリングを開きます。ここでは、それに加えて何をするかを選びます。'
   }, {
     kind: 'select',
     choices: [
+      choice('none', { en: 'Nothing else', fr: 'Rien de plus', es: 'Nada más', de: 'Nichts weiter', it: 'Nulla di più', 'zh-CN': '不做别的', ja: '他には何もしない' }),
       choice('aggregate', { en: 'Expands it in the diagram', fr: 'Le déplie dans le diagramme', es: 'Lo despliega en el diagrama', de: 'Klappt ihn im Diagramm auf', it: 'Lo espande nel diagramma', 'zh-CN': '在图中展开', ja: '図で展開する' }),
       choice('zoom', { en: 'Zooms in only', fr: 'Zoome dedans seulement', es: 'Solo hace zoom', de: 'Zoomt nur hinein', it: 'Ingrandisce soltanto', 'zh-CN': '仅放大', ja: 'ズームのみ' }),
-      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et le déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' }),
-      choice('none', { en: 'Does nothing', fr: 'Ne fait rien', es: 'No hace nada', de: 'Tut nichts', it: 'Non fa nulla', 'zh-CN': '无操作', ja: '何もしない' })
+      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et le déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' })
     ],
     advanced: true
   }),

@@ -24,17 +24,20 @@
 // des nœuds enfants le long d'une dimension. `flux_children` (sujet flux) : les flux
 // enfant-à-enfant le long d'une dimension de nœud partagée source/cible.
 //
-// 23/09/2026 — `node_children` SAIT DESCENDRE, et c'est la demande de Julien : « que la couronne
-// fonctionne comme le sunburst sur la désagrégation des nœuds ». Deux champs FACULTATIFS, donc
-// aucune migration de fichier — un descripteur qui ne les porte pas décompose d'un cran, comme
-// depuis toujours :
-//   `hierarchy` — jusqu'où on descend : un seul cran, la frontière du diagramme, ou les feuilles ;
-//   `focus_id`  — le nœud à la RACINE de la décomposition, quand la figure est descendue dedans
-//                 (drill-down). Absent : le sujet lui-même.
+// 23-24/09/2026 — `node_children` SAIT DESCENDRE : « que la couronne fonctionne comme le sunburst
+// sur la désagrégation des nœuds » (Julien). Un seul champ facultatif ici, donc aucune migration —
+// un descripteur qui ne le porte pas décompose d'un cran, comme depuis toujours :
+//   `focus_id` — le nœud à la RACINE de la décomposition, quand la figure est descendue dedans
+//                (drill-down). Absent : le sujet lui-même.
 //
-// ⚠️ COMMENT LES NIVEAUX SE DESSINENT N'EST PAS ICI, et ça l'a été une demi-journée. C'est un
-// STYLE (`levels_display`, onglet Graphe) : l'arbre est identique dans les deux modes, seul le
-// tracé change — et un réglage qui ne change pas les données n'a rien à faire dans un descripteur.
+// ⚠️ JUSQU'OÙ ON DESCEND N'EST PAS ICI NON PLUS, et ça l'a été un jour. C'était un MODE, décidé
+// d'avance (« un seul niveau », « comme le diagramme », « jusqu'aux feuilles »), et deux de ses
+// trois valeurs rendaient le clic inerte : sous « jusqu'aux feuilles » la figure montrait déjà
+// tout, cliquer ne pouvait rien ouvrir. La descente est désormais un ÉTAT DE LA FIGURE — les nœuds
+// que l'auteur a ouverts en cliquant (`hierarchy_expanded`) — et non une propriété de l'axe.
+//
+// ⚠️ COMMENT LES NIVEAUX SE DESSINENT n'est pas ici davantage : c'est un style (`levels_display`).
+// L'arbre est identique dans les deux modes, seul le tracé change.
 //
 // Les deux viennent des réglages de la FIGURE, pas de l'inspecteur d'axes : c'est la couronne qui
 // les pose sur le descripteur qu'elle dessine (`analysisOf`). Le panneau « Filtres et coordonnées »
@@ -44,7 +47,6 @@ export type Type_DecomposeSpec =
   | {
     kind: 'node_children',
     dimension_id: string,
-    hierarchy?: 'off' | 'diagram' | 'leaves',
     focus_id?: string
   }
   | { kind: 'flux_children', dimension_id: string }

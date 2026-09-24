@@ -1,17 +1,24 @@
-// 23/09/2026 — LA COURONNE DESCEND LA HIERARCHIE, DANS UN SEUL ANNEAU.
+// LA COURONNE DESCEND LA HIERARCHIE, ET ELLE DESCEND AU CLIC.
 //
-// Julien : « je voudrais que la couronne fonctionne comme le sunburst sur la desagregation des
-// noeuds, mais au lieu de faire une couronne qui s etend, le faire in place. »
+// 23/09 — « que la couronne fonctionne comme le sunburst sur la desagregation des noeuds, mais au
+// lieu de faire une couronne qui s etend, le faire in place » (Julien).
+// 24/09 — « je voudrais que le sunburst apparaisse progressivement avec les clics : si je clique
+// sur Mais, ca ouvre une nouvelle couronne, Mais Bio et Mais Conventionnel ; et si je fais
+// shift+clic ca l enleve ».
 //
-// Ce que ce fichier fige, c est la FRONTIERE : la liste plate des parts qu une couronne dessine
-// quand on lui demande de descendre. Un noeud deplie disparait derriere ses enfants, exactement
-// comme dans le Sankey — c est tout le sens de « in place », et c est la seule chose qui ne se
-// verifie pas a l oeil (les valeurs doivent continuer a boucler sur le sujet quel que soit le
-// niveau ou chaque part s est arretee).
+// ── CE QUE CE FICHIER FIGE, ET POURQUOI LE MODELE A CHANGE ───────────────────────────────────
 //
-// Le decor est celui de `AnalysisChartData.nodeChildren.test`, d un cran plus profond : Racine a
-// deux enfants, dont l un a lui-meme deux enfants. Sans ce troisieme etage il n y aurait rien a
-// descendre, et les trois modes rendraient la meme chose.
+// La descente a d abord ete un MODE, decide d avance : un seul niveau, comme le diagramme, jusqu
+// aux feuilles. Deux de ces trois valeurs rendaient le clic INERTE — sous « jusqu aux feuilles »
+// la figure montrait deja tout, cliquer ne pouvait rien ouvrir. Julien l a rapporte sous « le clic
+// ne marche plus » : ce n etait pas le code, c etait le modele.
+//
+// La descente est donc un ENSEMBLE DE NOEUDS OUVERTS, que la figure retient. Vide, c est « un seul
+// niveau » ; plein, c est « jusqu aux feuilles » ; entre les deux, c est ce que l auteur a ouvert
+// lui-meme. Les trois modes en sont des cas particuliers, et plus aucun ne rend le geste inerte.
+//
+// Le decor : Racine a deux enfants, dont l un a lui-meme deux enfants. Sans ce troisieme etage il
+// n y aurait rien a ouvrir.
 
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
@@ -83,117 +90,86 @@ const loadApp = () => {
   return app
 }
 
+const subjectOf = (app: Class_ApplicationData, id = 'Racine') =>
+  ({ kind: 'node', node: app.drawing_area.sankey.nodes_dict[id] } as unknown as Type_ChartSubject)
+
+const descriptorOf = (focus_id?: string) =>
+  ({ decompose: { kind: 'node_children' as const, dimension_id: 'dim', focus_id }, compare: null })
+
+/** Les parts dessinees « en place », avec les noeuds qu on a ouverts. */
 const partsOf = (
-  app: Class_ApplicationData,
-  spec: { hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string }
-): Type_ChartPart[] => {
-  const node = app.drawing_area.sankey.nodes_dict['Racine']
-  const subject = { kind: 'node', node } as unknown as Type_ChartSubject
-  return buildAnalysisChartData(
-    subject,
-    { decompose: { kind: 'node_children', dimension_id: 'dim', ...spec }, compare: null },
-    FOLLOWING_NAVIGATION
-  ).series[0]?.parts ?? []
-}
+  app: Class_ApplicationData, opened: string[] = [], focus_id?: string
+): Type_ChartPart[] => buildAnalysisChartData(
+  subjectOf(app), descriptorOf(focus_id), FOLLOWING_NAVIGATION, {}, new Set(opened)
+).series[0]?.parts ?? []
 
 const ids = (parts: Type_ChartPart[]) => parts.map(p => p.id).sort()
 const valueOf = (parts: Type_ChartPart[], id: string) => parts.find(p => p.id === id)?.value
 
-/** Ce que fait le clic droit du diagramme, par le geste du modele et non par un drapeau pose. */
-const deplier = (app: Class_ApplicationData, node_id: string) => {
-  app.drawing_area.sankey.nodes_dict[node_id].dimensions_as_parent
-    .find(d => d.id === 'dim')
-    ?.setForceToShowChildren()
-}
+describe('la decomposition d un noeud, ouverte au clic', () => {
 
-describe('la decomposition hierarchique d un noeud', () => {
-
-  test('sans reglage, elle decompose d un cran — le dessin d hier', () => {
+  test('rien d ouvert : elle decompose d un cran — le dessin d hier', () => {
     // LA GARANTIE DU LOT : un descripteur qui ne dit rien passe par le chemin d avant. Si ce cas
     // tombait, tout le parc enregistre changerait d aspect.
     const app = loadApp()
 
-    expect(ids(partsOf(app, {}))).toEqual(['Cereales', 'Viande'])
-    expect(ids(partsOf(app, { hierarchy: 'off' }))).toEqual(['Cereales', 'Viande'])
+    expect(ids(partsOf(app))).toEqual(['Cereales', 'Viande'])
   })
 
-  test('jusqu aux feuilles, les petits-enfants REMPLACENT leur parent', () => {
+  test('un noeud ouvert : ses enfants REMPLACENT leur parent, dans le meme anneau', () => {
     // « In place » : Cereales n est PAS dans la liste a cote de Ble et Mais. Un anneau qui
     // porterait les trois compterait la meme matiere deux fois.
     const app = loadApp()
 
-    const parts = partsOf(app, { hierarchy: 'leaves' })
+    const parts = partsOf(app, ['Cereales'])
 
     expect(ids(parts)).toEqual(['Ble', 'Mais', 'Viande'])
     expect(valueOf(parts, 'Ble')).toBe(6)
     expect(valueOf(parts, 'Mais')).toBe(4)
-    // Viande n a pas d enfants : elle reste elle-meme, au premier cran, dans le meme anneau.
+    // Viande n est pas ouverte : elle reste elle-meme, au premier cran, dans le meme anneau.
     expect(valueOf(parts, 'Viande')).toBe(4)
   })
 
-  test('la frontiere boucle sur le sujet, quel que soit le niveau de chaque part', () => {
+  test('la frontiere boucle sur le sujet, quel que soit ce qui est ouvert', () => {
     // C est la condition pour qu une couronne dise la verite : les parts font un TOUT. Une
     // frontiere qui ne boucle pas se lit sans se voir.
     const app = loadApp()
 
-    const total = partsOf(app, { hierarchy: 'leaves' }).reduce((s, p) => s + p.value, 0)
-
-    expect(total).toBe(14)
+    expect(partsOf(app).reduce((s, p) => s + p.value, 0)).toBe(14)
+    expect(partsOf(app, ['Cereales']).reduce((s, p) => s + p.value, 0)).toBe(14)
   })
 
-  test('« comme le diagramme » suit la desagregation, et rien d autre', () => {
+  test('ouvrir un noeud SANS enfant ne change rien', () => {
+    // Le geste ne peut pas fabriquer un anneau vide : la figure dirait le contraire du clic.
     const app = loadApp()
 
-    // Rien n est deplie : la couronne s arrete au premier cran, comme le dessin.
-    expect(ids(partsOf(app, { hierarchy: 'diagram' }))).toEqual(['Cereales', 'Viande'])
-
-    // On deplie Cereales : ses enfants prennent sa place, ici comme la-bas.
-    deplier(app, 'Cereales')
-    const parts = partsOf(app, { hierarchy: 'diagram' })
-
-    expect(ids(parts)).toEqual(['Ble', 'Mais', 'Viande'])
-    expect(parts.reduce((s, p) => s + p.value, 0)).toBe(14)
+    expect(ids(partsOf(app, ['Viande']))).toEqual(['Cereales', 'Viande'])
   })
 
   test('chaque part porte SA ROUTE, celle que le clic deplie', () => {
-    // 24/09/2026 — Julien : « ca marche pas aussi bien que le sunburst ; sur le sunburst ca lance
-    // effectivement la commande desagreger qui met tout en place ». La couronne ne depliait que le
-    // noeud clique : sur un noeud profond, ses ancetres restaient replies et le diagramme montrait
-    // le parent ET ses parts. La route est ce qui manquait, et c est `disaggregateAlong` — partagee
-    // avec le disque — qui la consomme.
+    // La couronne ne depliait que le noeud clique : sur un noeud profond, ses ancetres restaient
+    // replies et le diagramme montrait le parent ET ses parts. La route est ce qui manquait, et c
+    // est `disaggregateAlong` — partagee avec le disque — qui la consomme.
     const app = loadApp()
 
-    const parts = partsOf(app, { hierarchy: 'leaves' })
+    const parts = partsOf(app, ['Cereales'])
 
     expect(parts.find(p => p.id === 'Ble')?.path).toEqual(['Racine', 'Cereales', 'Ble'])
     // Un enfant direct a une route de deux crans : la racine, puis lui.
     expect(parts.find(p => p.id === 'Viande')?.path).toEqual(['Racine', 'Viande'])
   })
 
-  test('sous un foyer, la route repart du foyer', () => {
-    // C est le noeud deja deplie dans le diagramme, donc le bon point de depart : deplier au-dessus
-    // de lui ne regarde pas cette figure.
-    const app = loadApp()
-
-    const parts = partsOf(app, { hierarchy: 'leaves', focus_id: 'Cereales' })
-
-    expect(parts.find(p => p.id === 'Ble')?.path).toEqual(['Cereales', 'Ble'])
-  })
-
   test('chaque part dit d ou elle vient : sa profondeur et son parent dessine', () => {
-    // Ce sont les deux champs que la LEGENDE lit (« Cereales > Ble ») — la demande de Julien :
-    // « que le nom des noeuds puisse se voir en legende ». Sans eux, un anneau qui melange deux
-    // niveaux ne dit plus de quoi chaque secteur est la coupe.
+    // Les deux champs que la LEGENDE lit (« Cereales > Ble ») : sans eux, un anneau qui melange
+    // deux niveaux ne dit plus de quoi chaque secteur est la coupe.
     const app = loadApp()
 
-    const parts = partsOf(app, { hierarchy: 'leaves' })
-    const ble = parts.find(p => p.id === 'Ble')
-    const viande = parts.find(p => p.id === 'Viande')
+    const parts = partsOf(app, ['Cereales'])
 
-    expect(ble?.depth).toBe(1)
-    expect(ble?.parent_label).toBe('Cereales')
-    expect(viande?.depth).toBe(0)
-    expect(viande?.parent_label).toBe('Racine')
+    expect(parts.find(p => p.id === 'Ble')?.depth).toBe(1)
+    expect(parts.find(p => p.id === 'Ble')?.parent_label).toBe('Cereales')
+    expect(parts.find(p => p.id === 'Viande')?.depth).toBe(0)
+    expect(parts.find(p => p.id === 'Viande')?.parent_label).toBe('Racine')
   })
 
   test('un foyer fait du noeud ou l on est descendu le TOUT', () => {
@@ -201,42 +177,34 @@ describe('la decomposition hierarchique d un noeud', () => {
     // repartent du cran zero. C est ce que `hierarchy_focus` ecrit au clic.
     const app = loadApp()
 
-    const parts = partsOf(app, { hierarchy: 'leaves', focus_id: 'Cereales' })
+    const parts = partsOf(app, [], 'Cereales')
 
     expect(ids(parts)).toEqual(['Ble', 'Mais'])
     expect(parts.reduce((s, p) => s + p.value, 0)).toBe(10)
     expect(parts.find(p => p.id === 'Ble')?.depth).toBe(0)
-    expect(parts.find(p => p.id === 'Ble')?.parent_label).toBe('Cereales')
+    expect(parts.find(p => p.id === 'Ble')?.path).toEqual(['Cereales', 'Ble'])
   })
 
   test('un foyer qui nomme un noeud disparu revient au sujet', () => {
     // Un reglage perime n est pas une panne : la figure montre son sujet plutot que de se vider.
     const app = loadApp()
 
-    const parts = partsOf(app, { hierarchy: 'diagram', focus_id: 'Disparu' })
-
-    expect(ids(parts)).toEqual(['Cereales', 'Viande'])
+    expect(ids(partsOf(app, [], 'Disparu'))).toEqual(['Cereales', 'Viande'])
   })
 })
 
-// ── 24/09/2026 — « LE SUNBURST C EST JUSTE UN MODE DE PLUS » ─────────────────────────────────
+// ── « LE SUNBURST C EST JUSTE UN MODE DE PLUS » ──────────────────────────────────────────────
 //
 // Julien : « quand on desagrege, ca ajoute pour chaque niveau une couronne ». Ce que ce bloc fige
-// est la condition pour que ce soit vrai : LES DEUX RENDUS LISENT LE MEME ARBRE. Si la descente
-// donnait un arbre aux anneaux et un autre a la frontiere, les deux modes montreraient deux
-// decompositions differentes du meme noeud — et changer de mode cesserait d etre un changement de
+// est la condition pour que ce soit vrai : LES DEUX RENDUS LISENT LE MEME ARBRE. Si les anneaux et
+// la frontiere partaient d arbres differents, changer de mode cesserait d etre un changement de
 // dessin pour devenir un changement de sujet.
 describe('l arbre de la descente, celui que les deux modes partagent', () => {
 
-  const treeOf = (app: Class_ApplicationData, hierarchy: 'diagram' | 'leaves') => {
-    const node = app.drawing_area.sankey.nodes_dict['Racine']
-    const subject = { kind: 'node', node } as unknown as Type_ChartSubject
-    return analysisHierarchyTree(
-      subject,
-      { decompose: { kind: 'node_children', dimension_id: 'dim', hierarchy }, compare: null },
-      FOLLOWING_NAVIGATION
+  const treeOf = (app: Class_ApplicationData, opened: string[] = []) =>
+    analysisHierarchyTree(
+      subjectOf(app), descriptorOf(), FOLLOWING_NAVIGATION, {}, new Set(opened)
     )
-  }
 
   /** Les feuilles de l arbre, a plat — ce que le mode « en place » dessine. */
   const leaves = (sector: Type_SunburstNode): string[] =>
@@ -244,89 +212,52 @@ describe('l arbre de la descente, celui que les deux modes partagent', () => {
 
   test('ses feuilles sont EXACTEMENT les parts du mode en place', () => {
     const app = loadApp()
-    deplier(app, 'Cereales')
 
-    const root = treeOf(app, 'diagram')!.roots[0]
+    const root = treeOf(app, ['Cereales'])!.roots[0]
 
-    expect(root.children.flatMap(leaves).sort()).toEqual(ids(partsOf(app, { hierarchy: 'diagram' })))
+    expect(root.children.flatMap(leaves).sort()).toEqual(ids(partsOf(app, ['Cereales'])))
   })
 
-  test('« comme le diagramme » elague sous ce que le dessin ne deplie pas', () => {
-    // C est l elagage qui fait les anneaux : un niveau replie ne prend pas d anneau, exactement
-    // comme il ne prend pas de secteur en place.
+  test('il s arrete sous ce qui n est pas ouvert : un anneau par noeud ouvert, pas plus', () => {
     const app = loadApp()
-    const root = treeOf(app, 'diagram')!.roots[0]
 
-    expect(root.children.map(c => c.id).sort()).toEqual(['Cereales', 'Viande'])
-    expect(root.children.find(c => c.id === 'Cereales')?.children).toEqual([])
+    const closed = treeOf(app)!.roots[0]
+    expect(closed.children.map(c => c.id).sort()).toEqual(['Cereales', 'Viande'])
+    expect(closed.children.find(c => c.id === 'Cereales')?.children).toEqual([])
+
+    const opened = treeOf(app, ['Cereales'])!.roots[0]
+    expect(opened.children.find(c => c.id === 'Cereales')?.children.map(c => c.id).sort())
+      .toEqual(['Ble', 'Mais'])
   })
 
-  test('jusqu aux feuilles, l arbre garde ses deux etages', () => {
-    const app = loadApp()
-    const cereales = treeOf(app, 'leaves')!.roots[0].children.find(c => c.id === 'Cereales')
-
-    expect(cereales?.children.map(c => c.id).sort()).toEqual(['Ble', 'Mais'])
-    // Et la valeur du parent reste la somme des siens : un anneau ne peut pas etre plus petit que
-    // ce qu il contient.
-    expect(cereales?.value).toBe(10)
-  })
-
-  test('elaguer ne change pas les valeurs : un noeud elague vaut tout ce qu il contient', () => {
-    // La raison d elaguer APRES la construction et non pendant. Sans elle, « Cereales » replie
+  test('elaguer ne change pas les valeurs : un noeud ferme vaut tout ce qu il contient', () => {
+    // La raison d elaguer APRES la construction et non pendant. Sans elle, « Cereales » ferme
     // vaudrait sa valeur propre et non celle de Ble + Mais, et les deux modes ne boucleraient pas
     // sur le meme total.
     const app = loadApp()
-    const replie = treeOf(app, 'diagram')!.roots[0].children.find(c => c.id === 'Cereales')
 
-    expect(replie?.value).toBe(10)
+    expect(treeOf(app)!.roots[0].children.find(c => c.id === 'Cereales')?.value).toBe(10)
   })
 
   test('la lecture reglee par l auteur s applique aux DEUX modes', () => {
-    // 24/09/2026 — les quatre cles que la nature « Sunburst » portait en propre (combien
-    // d anneaux, ce que vaut un noeud, de quel cote, le non reparti) sont maintenant lues par la
-    // couronne. Elles changent l ARBRE, pas son dessin : si elles ne valaient que pour les
-    // anneaux, la meme descente montrerait deux decompositions selon le mode choisi.
+    // Les quatre cles que la nature « Sunburst » portait en propre (combien d anneaux, ce que vaut
+    // un noeud, de quel cote, le non reparti) sont lues par la couronne. Elles changent l ARBRE,
+    // pas son dessin : si elles ne valaient que pour les anneaux, la meme descente montrerait deux
+    // decompositions selon le mode choisi.
     const app = loadApp()
-    const node = app.drawing_area.sankey.nodes_dict['Racine']
-    const subject = { kind: 'node', node } as unknown as Type_ChartSubject
-    const descriptor = {
-      decompose: { kind: 'node_children' as const, dimension_id: 'dim', hierarchy: 'leaves' as const },
-      compare: null
-    }
-
-    // Un seul anneau demande : « Ble » et « Mais » sont hors de portee, meme en « jusqu aux
-    // feuilles ». La racine occupant le centre, la profondeur utile part d un cran plus bas.
+    // Un seul anneau demande : « Ble » et « Mais » sont hors de portee, meme ouverts. La racine
+    // occupant le centre, la profondeur utile part d un cran plus bas.
     const shallow = { max_depth: 1 }
+    const opened = new Set(['Cereales'])
 
-    const frontier = buildAnalysisChartData(subject, descriptor, FOLLOWING_NAVIGATION, shallow)
-      .series[0]?.parts ?? []
-    const tree = analysisHierarchyTree(subject, descriptor, FOLLOWING_NAVIGATION, shallow)
+    const frontier = buildAnalysisChartData(
+      subjectOf(app), descriptorOf(), FOLLOWING_NAVIGATION, shallow, opened
+    ).series[0]?.parts ?? []
+    const tree = analysisHierarchyTree(
+      subjectOf(app), descriptorOf(), FOLLOWING_NAVIGATION, shallow, opened
+    )
 
     expect(ids(frontier)).toEqual(['Cereales', 'Viande'])
     expect(tree!.roots[0].children.flatMap(leaves).sort()).toEqual(['Cereales', 'Viande'])
-  })
-
-  test('sans descente, il n y a pas d arbre du tout', () => {
-    const app = loadApp()
-    const node = app.drawing_area.sankey.nodes_dict['Racine']
-    const subject = { kind: 'node', node } as unknown as Type_ChartSubject
-
-    expect(analysisHierarchyTree(
-      subject,
-      { decompose: { kind: 'node_children', dimension_id: 'dim' }, compare: null },
-      FOLLOWING_NAVIGATION
-    )).toBeNull()
-  })
-})
-
-describe('les cas ecartes', () => {
-
-  test('un foyer qui nomme un noeud disparu revient au sujet, en anneaux aussi', () => {
-    // Un reglage perime n est pas une panne : la figure montre son sujet plutot que de se vider.
-    const app = loadApp()
-
-    const parts = partsOf(app, { hierarchy: 'diagram', focus_id: 'Disparu' })
-
-    expect(ids(parts)).toEqual(['Cereales', 'Viande'])
   })
 })
