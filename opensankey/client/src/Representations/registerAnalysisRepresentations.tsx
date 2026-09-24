@@ -39,7 +39,7 @@ import {
 } from './analysisFigureAttributes'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
-import { aggregateLocally, disaggregateLocally } from '../Algorithms/Hierarchies'
+import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
@@ -428,7 +428,7 @@ const donutClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
 ): {
-  activate?: (part_id: string, gesture: { shift: boolean }) => void
+  activate?: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void
   back?: () => void
 } => {
   const hierarchy = hierarchyInEffect(ctx)
@@ -454,21 +454,26 @@ const donutClickGestures = (
       (d: Class_NodeDimension) => d.id === hierarchy.dimension_id && d.children.length > 0
     ) ?? node.dimensions_as_parent.find((d: Class_NodeDimension) => d.children.length > 0)
 
-  const activate = (part_id: string, gesture: { shift: boolean }) => {
+  const activate = (
+    part_id: string, gesture: { shift: boolean }, route: string[] = []
+  ) => {
     // Un secteur replié par le tracé (« Autres ») ne désigne aucun nœud : il n'y a rien à déplier
     // ni où descendre. On ne devine pas.
     const node = sankey.nodes_dict[part_id] as Class_NodeElement | undefined
     if (!node) return
 
     if (gesture.shift) {
-      // REPLIER LA BRANCHE QU'ON DÉSIGNE. Le parent est celui de l'axe de la couronne, ou celui
-      // par lequel le nœud a été atteint (treillis) : `aggregateLocally` refuse tout seul si le
-      // couple n'est pas déplié, donc un shift+clic sur un nœud de premier rang ne fait rien.
+      // REPLIER LA BRANCHE QU'ON DÉSIGNE. Le parent est celui de LA ROUTE DESSINÉE quand on la
+      // connaît — sur un treillis, un nœud a plusieurs parents et seul le chemin par lequel on l'a
+      // atteint dit lequel replier. À défaut, l'axe de la couronne, puis le premier venu.
+      // `aggregateLocally` refuse tout seul si le couple n'est pas déplié, donc un shift+clic sur
+      // un nœud de premier rang ne fait rien.
       if (wants_unfold) {
-        const up = node.dimensions_as_child.find(
+        const drawn_parent = route.length >= 2 ? route[route.length - 2] : undefined
+        const up = drawn_parent ?? (node.dimensions_as_child.find(
           (d: Class_NodeDimension) => d.id === hierarchy.dimension_id
-        ) ?? node.dimensions_as_child[0]
-        if (up) aggregateLocally(app_data, node, up.parent.id)
+        ) ?? node.dimensions_as_child[0])?.parent.id
+        if (up) aggregateLocally(app_data, node, up)
       }
       // En descente dans la figure, remonter c'est dépiler — le même effet que le centre.
       if (wants_drill && hierarchy.path.length > 0) writePath(hierarchy.path.slice(0, -1))
@@ -476,8 +481,24 @@ const donutClickGestures = (
     }
 
     if (wants_unfold) {
+      // ── TOUTE LA ROUTE, ET PAS SON DERNIER CRAN (24/09/2026) ────────────────────────────────
+      //
+      // Julien, capture à l'appui : « ça marche pas aussi bien que le sunburst ; sur le sunburst
+      // ça lance effectivement la commande désagréger qui met tout en place ».
+      //
+      // La couronne n'appelait `disaggregateLocally` que sur le nœud cliqué. Sur un nœud profond —
+      // le cas de « jusqu'aux feuilles », et de tout secteur d'un anneau extérieur — ses ancêtres
+      // restaient repliés, et le diagramme montrait le parent ET ses parts : la même matière deux
+      // fois. C'est le défaut qu'os#1425 avait corrigé POUR LE DISQUE, refait ici parce que le
+      // geste vivait dans le fichier du disque au lieu de vivre dans le modèle.
+      //
+      // `disaggregateAlong` est maintenant partagée (cf. Algorithms/Hierarchies), et on lui donne
+      // la route PLUS le premier enfant : déplier jusqu'au nœud, puis le nœud lui-même.
       const dim = dimensionOf(node)
-      if (dim) disaggregateLocally(app_data, node, (dim.children[0] as Class_NodeElement).id)
+      const first_child = dim ? (dim.children[0] as Class_NodeElement).id : undefined
+      const route_down = route.length > 0 ? [...route] : [part_id]
+      if (first_child !== undefined) route_down.push(first_child)
+      disaggregateAlong(app_data, route_down)
     }
     // Descendre ne se fait que s'il y a où descendre : un nœud sans enfant deviendrait un tout
     // vide, et la couronne s'afficherait « rien à décomposer » sur un clic qui disait l'inverse.
@@ -632,10 +653,14 @@ export const registerAnalysisRepresentations = (): void => {
           // ⚠️ LA TOUCHE VIENT DU TRACÉ, elle n'est pas supposée. La première version passait
           // `{ shift: false }` en dur : le geste inverse était annoncé et ne marchait pas en
           // anneaux — exactement le genre d'écart qu'on ne voit qu'en essayant.
+          //
+          // ET LA ROUTE AVEC : le disque la tient déjà (c'est son `ancestry`, du centre au secteur
+          // cliqué), et c'est exactement ce que `disaggregateAlong` attend. Un secteur d'anneau
+          // extérieur est profond par nature — sans elle, on dépliait son dernier cran seul.
           on_arc_click: (
-            node_id: string, _is: boolean, _dim: string, _path: string[],
+            node_id: string, _is: boolean, _dim: string, path: string[],
             gesture?: { shift: boolean }
-          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true })
+          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true }, path)
         })
         return () => { teardown() }
       }

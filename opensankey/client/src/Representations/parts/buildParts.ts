@@ -71,6 +71,8 @@ export interface Type_PartInput {
   parent_label?: string
   /** L'ancêtre de premier rang : c'est lui qui donne la TEINTE, la profondeur donnant la clarté. */
   branch_id?: string
+  /** La route DESSINÉE jusqu'à cette part, racine comprise : c'est elle que le clic déplie. */
+  path?: string[]
   /** Reste-t-il quelque chose à déplier sous cette part ? */
   has_children?: boolean
 }

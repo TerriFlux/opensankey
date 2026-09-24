@@ -375,12 +375,20 @@ const decomposeNodeHierarchy = (
   const root = hierarchyTreeOf(node, spec, nav)?.roots[0]
   if (!root) return []
   const walk = (
-    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string
+    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string,
+    // LA ROUTE DESSINÉE jusqu'à ce secteur, racine comprise. C'est elle que le clic déplie, et
+    // elle seule : sur un treillis, deux chemins mènent au même nœud sans déplier la même chose
+    // (cf. `disaggregateAlong`). La couronne la calculait AUTREMENT — elle ne dépliait que le
+    // nœud cliqué —, et le diagramme montrait alors le parent ET ses parts.
+    path: string[]
   ): Type_ChartPart[] => {
     if (sector.children.length > 0) {
-      return sector.children.flatMap(c => walk(c, sector.label, depth + 1, branch_id))
+      return sector.children.flatMap(
+        c => walk(c, sector.label, depth + 1, branch_id, [...path, c.id])
+      )
     }
     return [{
+      path,
       id: sector.id,
       label: sector.label,
       value: sector.value,
@@ -399,8 +407,10 @@ const decomposeNodeHierarchy = (
           .dimensions_as_parent.some(d => d.children.length > 0)
     }]
   }
+  // La route part de la RACINE dessinée — le sujet, ou le nœud où la figure est descendue : c'est
+  // le nœud déjà déplié dans le diagramme, et le premier à déplier quand il ne l'est pas.
   return root.children
-    .flatMap(child => walk(child, root.label, 0, child.id))
+    .flatMap(child => walk(child, root.label, 0, child.id, [root.id, child.id]))
     .filter(p => p.value > 0)
 }
 

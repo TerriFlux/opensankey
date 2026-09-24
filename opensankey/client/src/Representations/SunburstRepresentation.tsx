@@ -24,7 +24,6 @@
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
-import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import { figureUnitOf } from './figureUnit'
 import { figureTextsOf } from '../Charts/figureChartStyle'
 import {
@@ -32,7 +31,7 @@ import {
 } from '../Charts/figureZoomBridge'
 import { ZOOM_TOPIC } from '../types/EventBus'
 import type { Type_RepresentationContext, Type_RepresentationZoom } from './RepresentationRegistry'
-import { aggregateLocally, disaggregateLocally } from '../Algorithms/Hierarchies'
+import { disaggregateAlong, foldNodeEverywhere } from '../Algorithms/Hierarchies'
 import {
   buildSunburstTree,
   SUNBURST_DEFAULT_MAX_DEPTH,
@@ -192,31 +191,11 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
 // 18/09 — ET C'EST LE GESTE DU CLIC DROIT, EN ENTIER (`disaggregateLocally` / `aggregateLocally`,
 // Hierarchies) : marqueur « local » sur la dimension, redessin, menu Hiérarchies rafraîchi. À sec,
 // `disaggregate` dépliait le diagramme sans que le menu le sache — deux mécanismes pour un geste.
-const disaggregateAlong = (
-  app_data: Class_ApplicationData,
-  path: string[]
-) => {
-  const nodes = app_data.drawing_area.sankey.nodes_dict
-  for (let i = 0; i + 1 < path.length; i++) {
-    const parent = nodes[path[i]] as Class_NodeElement | undefined
-    // Déjà déplié : `disaggregateLocally` ne fait rien, et surtout ne replie pas au passage.
-    if (parent) disaggregateLocally(app_data, parent, path[i + 1])
-  }
-}
-
-/**
- * REPLIE UN NŒUD sur tous les axes où il est déplié : il redevient lui-même dans le diagramme,
- * par son premier enfant sur chaque axe, comme le clic droit. Vrai si quelque chose a bougé.
- */
-const foldNode = (app_data: Class_ApplicationData, node: Class_NodeElement): boolean => {
-  let moved = false
-  node.dimensions_as_parent
-    .filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
-    .forEach((d: Class_NodeDimension) => {
-      if (aggregateLocally(app_data, d.children[0] as Class_NodeElement, node.id)) moved = true
-    })
-  return moved
-}
+// 24/09/2026 — LES DEUX GESTES ONT DÉMÉNAGÉ DANS `Algorithms/Hierarchies`, avec
+// `disaggregateLocally` qu'ils appellent. Ils vivaient ici, donc la couronne ne pouvait pas les
+// atteindre et s'en était écrit une demi-copie — c'est le « code similaire sur les deux mais
+// différent » que Julien a vu à l'écran. Un geste du MODÈLE n'a pas sa place dans le fichier d'une
+// figure ; il n'y était que parce que le disque en avait eu besoin le premier.
 
 /**
  * LE CLIC VEUT DIRE « MONTRE-MOI CE NŒUD » (arbitrage Julien, 18/09, Simplify1Level6 : cliquer
@@ -237,7 +216,7 @@ const showNodeOf = (
   // La route d'abord : sans elle, montrer un nœud d'un anneau profond laisse ses ancêtres en
   // place et le diagramme compte deux fois la même matière.
   disaggregateAlong(app_data, path)
-  return foldNode(app_data, node) || path.length > 1
+  return foldNodeEverywhere(app_data, node) || path.length > 1
 }
 
 /**

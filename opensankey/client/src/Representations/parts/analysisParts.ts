@@ -231,6 +231,7 @@ export const analysisPartInputs = (
     depth: part.depth,
     parent_label: part.parent_label,
     branch_id: part.branch_id,
+    path: part.path,
     has_children: part.has_children,
     subject: resolve(part.id)
   }))

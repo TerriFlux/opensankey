@@ -155,6 +155,31 @@ describe('la decomposition hierarchique d un noeud', () => {
     expect(parts.reduce((s, p) => s + p.value, 0)).toBe(14)
   })
 
+  test('chaque part porte SA ROUTE, celle que le clic deplie', () => {
+    // 24/09/2026 — Julien : « ca marche pas aussi bien que le sunburst ; sur le sunburst ca lance
+    // effectivement la commande desagreger qui met tout en place ». La couronne ne depliait que le
+    // noeud clique : sur un noeud profond, ses ancetres restaient replies et le diagramme montrait
+    // le parent ET ses parts. La route est ce qui manquait, et c est `disaggregateAlong` — partagee
+    // avec le disque — qui la consomme.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'leaves' })
+
+    expect(parts.find(p => p.id === 'Ble')?.path).toEqual(['Racine', 'Cereales', 'Ble'])
+    // Un enfant direct a une route de deux crans : la racine, puis lui.
+    expect(parts.find(p => p.id === 'Viande')?.path).toEqual(['Racine', 'Viande'])
+  })
+
+  test('sous un foyer, la route repart du foyer', () => {
+    // C est le noeud deja deplie dans le diagramme, donc le bon point de depart : deplier au-dessus
+    // de lui ne regarde pas cette figure.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'leaves', focus_id: 'Cereales' })
+
+    expect(parts.find(p => p.id === 'Ble')?.path).toEqual(['Cereales', 'Ble'])
+  })
+
   test('chaque part dit d ou elle vient : sa profondeur et son parent dessine', () => {
     // Ce sont les deux champs que la LEGENDE lit (« Cereales > Ble ») — la demande de Julien :
     // « que le nom des noeuds puisse se voir en legende ». Sans eux, un anneau qui melange deux

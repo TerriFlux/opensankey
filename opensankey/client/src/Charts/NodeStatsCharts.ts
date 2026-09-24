@@ -62,6 +62,8 @@ export interface Type_StatSlice {
   parent_label?: string
   /** L'ancêtre de premier rang : c'est LUI qui donne la teinte, la profondeur ne donnant que la clarté. */
   branch_id?: string
+  /** La route DESSINÉE jusqu'à cette part, racine comprise : c'est elle que le clic déplie. */
+  path?: string[]
   /** Le nœud a-t-il encore des enfants sous lui ? C'est ce que le clic peut déplier. */
   has_children?: boolean
 }
@@ -141,7 +143,13 @@ export interface Type_ChartOptions {
    * touche, il ne l'interprète pas : « remonter » ne veut pas dire la même chose selon qu'on
    * déplie le diagramme ou qu'on descend dans la figure, et c'est la nature qui le sait.
    */
-  on_part_activate?: (part_id: string, gesture: { shift: boolean }) => void
+  on_part_activate?: (
+    part_id: string, gesture: { shift: boolean },
+    // LA ROUTE DESSINÉE jusqu'à la part (`Type_StatSlice.path`), quand elle en a une : c'est elle
+    // que l'hôte déplie, et pas seulement son dernier cran. Le tracé la rend telle qu'il l'a
+    // reçue — il ne la calcule pas, il ne connaît pas la hiérarchie.
+    route?: string[]
+  ) => void
   /**
    * 23/09/2026 — LE CENTRE RAMÈNE EN ARRIÈRE, quand la figure est descendue dans un nœud.
    *
@@ -532,7 +540,7 @@ export const drawDonutChart = (
     // l'inspecteur ait eu le temps de la montrer.
     paths.on('click', (evt: MouseEvent, d) => {
       opts.on_part_select?.(d.data.id)
-      opts.on_part_activate?.(d.data.id, { shift: evt.shiftKey === true })
+      opts.on_part_activate?.(d.data.id, { shift: evt.shiftKey === true }, d.data.path)
     })
   }
   if (st.interaction_tooltip) paths.append('title').text(slice_title)
