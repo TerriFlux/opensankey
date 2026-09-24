@@ -65,6 +65,17 @@ export interface Type_FigureChartStyle {
   parts_group_under: number
   /** Parts au plus ; 0 = sans limite. */
   parts_max: number
+  /**
+   * `levels_display` — COMMENT LES NIVEAUX D'UNE DESCENTE SE DISPOSENT.
+   *
+   * 'in_place' (le défaut) : les enfants remplacent leur parent dans un seul anneau.
+   * 'rings' : chaque niveau prend un anneau à lui — c'est le dessin qu'on appelait « sunburst »,
+   * et c'en est un MODE, pas une autre figure.
+   *
+   * L'arbre ne change pas d'un mode à l'autre (cf. `analysisHierarchyTree`) : seul le tracé
+   * change. C'est pour cela que ce réglage est un STYLE, et non une coordonnée.
+   */
+  levels_display: 'in_place' | 'rings'
   /** centre_* (couronne) */
   centre_content: 'both' | 'name' | 'value' | 'none'
   centre_hole: number
@@ -149,6 +160,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_depth_shading: true,
   parts_group_under: 0.5,
   parts_max: 20,
+  levels_display: 'in_place',
   centre_content: 'value',
   centre_hole: 55,
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE (demande de Julien).

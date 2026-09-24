@@ -240,6 +240,9 @@ const DONUT_HONOURS = {
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
+  // 24/09/2026 — « OK mais où est le mode sunburst ? ». Ici, dans l'onglet Graphe, à côté du clic
+  // et du centre : ce réglage change l'ASPECT et rien d'autre (cf. `LEVELS_CONFIG`).
+  levels_display: {},
   interaction_click: { advanced: false },
   parts_group_under: { default: 0.5 },
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE.

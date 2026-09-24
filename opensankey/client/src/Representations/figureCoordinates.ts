@@ -106,15 +106,7 @@ export type Type_CoordState =
   | {
     mode: 'parts',
     group_by_flux_tagg_id?: string,
-    hierarchy?: 'off' | 'diagram' | 'leaves',
-    /**
-     * COMMENT les niveaux se dessinent — « en place » (les enfants remplacent leur parent) ou
-     * « un anneau par niveau ». C'est la seule chose de cette carte qui ne dise pas CE QU'ON
-     * MONTRE mais comment, et elle est ici quand même : elle ne se comprend qu'à côté de la
-     * descente qu'elle met en forme, et la séparer les mettrait à deux adresses — l'erreur que
-     * l'onglet Forme avait déjà faite la veille.
-     */
-    levels?: 'in_place' | 'rings'
+    hierarchy?: 'off' | 'diagram' | 'leaves'
   }
   | { mode: 'series', rank: 1 | 2 }
 
@@ -139,18 +131,12 @@ const decomposeEntry = (spec: Type_DecomposeSpec): [string, Type_CoordState] => 
     return [`flows:${spec.kind}`, spec.group_by_flux_tagg_id
       ? { mode: 'parts', group_by_flux_tagg_id: spec.group_by_flux_tagg_id }
       : { mode: 'parts' }]
-  case 'node_children': {
+  case 'node_children':
     // La descente est la granularité de ce champ-là : elle se relit avec lui, sans quoi le panneau
-    // montrerait « un seul niveau » sur une figure qui descend. Le mode de dessin la suit — il n'a
-    // de sens que sous elle, et il n'est jamais écrit sans elle.
-    if (!spec.hierarchy || spec.hierarchy === 'off') {
-      return [`dim:${spec.dimension_id}`, { mode: 'parts' }]
-    }
-    const state: Type_CoordState = spec.levels === 'rings'
-      ? { mode: 'parts', hierarchy: spec.hierarchy, levels: 'rings' }
-      : { mode: 'parts', hierarchy: spec.hierarchy }
-    return [`dim:${spec.dimension_id}`, state]
-  }
+    // montrerait « un seul niveau » sur une figure qui descend.
+    return [`dim:${spec.dimension_id}`, spec.hierarchy && spec.hierarchy !== 'off'
+      ? { mode: 'parts', hierarchy: spec.hierarchy }
+      : { mode: 'parts' }]
   case 'flux_children':
     // Un flux n'a pas de descendance à parcourir : ses enfants sont un cran, et un seul.
     return [`dim:${spec.dimension_id}`, { mode: 'parts' }]
@@ -216,13 +202,10 @@ const decomposeSpecOf = (
     if (subject_kind !== 'node') return { kind: 'flux_children', dimension_id: id }
     const hierarchy = state.mode === 'parts' ? state.hierarchy : undefined
     // 'off' NE S'ÉCRIT PAS : c'est le comportement de toujours, et une clé qui vaut son défaut
-    // serait une différence de fichier sans différence de dessin. Même règle pour 'in_place', qui
-    // est le dessin de la couronne — seul « un anneau par niveau » laisse une trace.
-    if (!hierarchy || hierarchy === 'off') return { kind: 'node_children', dimension_id: id }
-    const levels = state.mode === 'parts' ? state.levels : undefined
-    return levels === 'rings'
-      ? { kind: 'node_children', dimension_id: id, hierarchy, levels: 'rings' }
-      : { kind: 'node_children', dimension_id: id, hierarchy }
+    // serait une différence de fichier sans différence de dessin.
+    return (hierarchy && hierarchy !== 'off')
+      ? { kind: 'node_children', dimension_id: id, hierarchy }
+      : { kind: 'node_children', dimension_id: id }
   }
   // Un groupe d'étiquettes de données ne décompose RIEN : deux années ne font pas un tout. Le cas
   // n'arrive pas par la surface (`setCoordState` l'interdit), il est tenu ici aussi parce qu'un sac

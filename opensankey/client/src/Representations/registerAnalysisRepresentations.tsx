@@ -283,7 +283,7 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
   // `by_id` et compose lui-même ; lui rendre la frontière laisserait les anneaux intérieurs sans
   // part, donc sans réglage et sans sélection.
   const reading = hierarchyReadingOf(ctx)
-  const tree = ringsTreeOf(a, reading)
+  const tree = ringsTreeOf(ctx, a, reading)
   if (tree) return sunburstPartInputs(ctx.app_data.drawing_area.sankey, tree)
   return analysisPartInputs(
     a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav, reading)
@@ -292,11 +292,13 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
 
 /** L'arbre à dessiner en anneaux, ou `null` quand la figure est « en place » (ou à plat). */
 const ringsTreeOf = (
+  ctx: Type_RepresentationContext,
   a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor, nav: Type_FigureNavigation },
   reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
-  const decompose = a.descriptor.decompose
-  if (decompose?.kind !== 'node_children' || decompose.levels !== 'rings') return null
+  // `figureChartStyleOf` et non `donutStyleOf` : celui-ci demande la descente, qui demanderait
+  // l'arbre — on tournerait en rond. Le mode de dessin, lui, se lit sur le sac tel quel.
+  if (figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS).levels_display !== 'rings') return null
   return analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading)
 }
 
@@ -674,7 +676,7 @@ export const registerAnalysisRepresentations = (): void => {
       // parts et SES réglages. Rien n'est recopié : `drawSunburstChart` lit les mêmes clés de
       // catalogue (`readSunburstStyle`), et le clic y fait le même geste qu'ici.
       const a = analysisOf(ctx)
-      const rings = a ? ringsTreeOf(a, hierarchyReadingOf(ctx)) : null
+      const rings = a ? ringsTreeOf(ctx, a, hierarchyReadingOf(ctx)) : null
       if (rings) {
         const teardown = drawSunburstChart(container, rings, {
           parts: wiring.by_id,
