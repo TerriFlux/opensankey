@@ -1362,9 +1362,10 @@ export class Class_MenuConfig {
   protected _pushMainZoneOccupant(
     o: { id: string, subject: Type_MainZoneSubject, representation: string }, place?: Type_MainZonePlace
   ): void {
-    // sa#566 — un volet qu'on ouvre doit se voir : le plein écran d'un autre cède.
-    this._host._main_zone_maximized_id = null
     const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
+    // sa#566 — un volet qu'on ouvre doit se voir : le plein écran d'un autre cède, sauf devant un
+    // volet FLOTTANT, qui se pose par-dessus (cf. `mainZoneLayout`).
+    if (wanted !== 'floating') this._host._main_zone_maximized_id = null
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
     const peers = this._host._main_zone_occupants.filter(x => x.place === wanted)
     const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
@@ -1455,6 +1456,30 @@ export class Class_MenuConfig {
     this._notifyMainZone()
   }
 
+  /**
+   * sa#566 — RAMÈNE UN VOLET AU PREMIER PLAN, dans l'affichage où il est, comme on sélectionne
+   * une fenêtre du système : il devient actif ; flottant, il passe devant les autres flottants
+   * (leur ordre de rendu est celui de la liste) ; dans la grille, il fait sortir du plein écran
+   * un AUTRE volet qui le cacherait. Sa place, elle, ne change pas : c'est dans son bandeau qu'on
+   * la change ensuite.
+   */
+  public bringMainZoneOccupantForward(id: string): void {
+    const host = this._host
+    const at = host._main_zone_occupants.findIndex(o => o.id === id)
+    if (at < 0) return
+    const o = host._main_zone_occupants[at]
+    if (o.place === 'floating') {
+      host._main_zone_occupants.splice(at, 1)
+      host._main_zone_occupants.push(o)
+    } else if (host._main_zone_maximized_id !== null && host._main_zone_maximized_id !== id) {
+      host._main_zone_maximized_id = null
+    }
+    host._main_zone_active_id = id
+    host._main_zone_active_pane_key = null
+    host._main_zone_selected_pane_keys = []
+    this._notifyMainZone()
+  }
+
   /** Le volet ouvert qui EST la vue `view_id`, s'il y en a un. */
   public mainZoneOccupantOfSavedView(view_id: string): Type_MainZoneOccupant | undefined {
     const o = this._host._main_zone_occupants.find(x => x.saved_view === view_id)
@@ -1511,19 +1536,11 @@ export class Class_MenuConfig {
    *
    * Rend l'identifiant du volet, ou `null` quand la forme ne nomme aucune nature.
    */
-  public openMainZoneWindowFromJSON(
-    json: Type_JSON, view_id: string,
-    /**
-     * « Ancrer en volet » depuis le sélecteur de vues : la vue se pose DANS LA GRILLE, à côté des
-     * autres, quelle que soit la place qu'elle retient — une vue principale ou flottante prend
-     * alors la colonne droite, une vue du bandeau du bas y reste.
-     */
-    dock: boolean = false
-  ): string | null {
+  public openMainZoneWindowFromJSON(json: Type_JSON, view_id: string): string | null {
     const e = this._parseMainZoneOccupantEntry('', json)
-    if (dock && (e.place === 'main' || e.place === 'floating')) e.place = 'right'
-    // La vue qu'on rappelle doit se voir : un autre volet en plein écran cède.
-    this._host._main_zone_maximized_id = null
+    // La vue qu'on rappelle doit se voir : un autre volet en plein écran cède — sauf si elle
+    // flotte, auquel cas elle se pose par-dessus, comme une fenêtre qu'on ramène au premier plan.
+    if (e.place !== 'floating' || e.maximized) this._host._main_zone_maximized_id = null
     let id = ''
     if (!mainZoneSubjectUsesOwnWindowId(e.subject)) {
       id = e.representation
@@ -1556,8 +1573,8 @@ export class Class_MenuConfig {
     this._host._main_zone_active_pane_key = null
     this._host._main_zone_selected_pane_keys = []
     if (e.place === 'main') this.makeMainZoneOccupantMain(id)
-    // Une vue quittée en plein écran s'y rouvre — sauf ancrée, geste qui dit « à côté ».
-    if (e.maximized && !dock) this._host._main_zone_maximized_id = id
+    // Une vue quittée en plein écran s'y rouvre.
+    if (e.maximized) this._host._main_zone_maximized_id = id
     this._notifyMainZone()
     return id
   }

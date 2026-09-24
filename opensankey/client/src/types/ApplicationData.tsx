@@ -785,12 +785,6 @@ export class Class_ApplicationData {
   protected _views_order: string[] = []
   public get views_order() { return this._views_order }
 
-  /**
-   * sa#566 — La vue qu'une bascule en cours doit ouvrir « à côté » : son volet se pose sans que
-   * celui de la vue quittée se ferme (cf. `openViewBeside`). Relu, puis effacé, par la bascule.
-   */
-  protected _open_view_beside: string | null = null
-
   // Affiche le Sankey maître comme une entrée à part entière dans la liste des vues
   // (sélecteur topbar + table de config). Par défaut masqué. Libellé éditable = _master_view_name.
   protected _show_master_in_views: boolean = false
@@ -2148,29 +2142,27 @@ export class Class_ApplicationData {
    * LA BASCULE DE VUE POSE LE VOLET DE LA VUE — appelée par `ViewsReader.applyViewChange`, une fois
    * la nouvelle vue courante.
    *
-   *  - UNE À LA FOIS : le volet de la vue quittée se ferme (elle reste dans la liste, et garde ce
-   *    volet pour la prochaine fois) — sauf s'il est le diagramme, qui ne se ferme pas, ou si la
-   *    vue d'arrivée s'ouvre « à côté » (`openViewBeside`).
+   * COMME UNE FENÊTRE DU SYSTÈME (arbitrage Alexandre, 24/09) : choisir une vue la ramène au premier
+   * plan, PAR-DESSUS ce qu'on voit, dans l'affichage où on l'a laissée — flottante, ancrée ou en
+   * plein écran. Rien ne se ferme : les autres volets restent où ils sont, et c'est dans le bandeau
+   * de la vue qu'on change ensuite son affichage.
+   *
+   *  - Le volet de la vue est déjà ouvert : il passe au premier plan (`bringMainZoneOccupantForward`).
+   *  - Il est fermé : il se rouvre depuis la forme que la vue en garde, à sa place et, s'il y était,
+   *    en plein écran.
+   *  - Une vue sans volet est le diagramme de la fenêtre principale : rien à poser.
    *  - Une vue ÉPHÉMÈRE qu'on quitte est oubliée : on l'avait gardée le temps de la regarder.
-   *  - Le volet de la vue d'arrivée se pose à sa place, ou reprend la main s'il est déjà ouvert.
-   *    Une vue sans volet est le diagramme de la fenêtre principale : rien à poser.
    */
   public applySavedViewWindowsOnSwitch(prev_id: string, id: string): void {
     const mc = this.menu_configuration
-    const beside = this._open_view_beside === id
-    this._open_view_beside = null
     if (!mc || !this.is_main) return
     this.captureSavedViewWindows()
-    if (prev_id !== id) {
-      const prev_window = beside ? undefined : mc.mainZoneOccupantOfSavedView(prev_id)
-      if (prev_window && prev_window.id !== MAIN_ZONE_CANVAS_ID) mc.hideMainZoneOccupant(prev_window.id)
-      if (this._views[prev_id]?.ephemeral) this.forgetEphemeralView(prev_id)
-    }
+    if (prev_id !== id && this._views[prev_id]?.ephemeral) this.forgetEphemeralView(prev_id)
     const window = this._views[id]?.window
     if (!window) return
     const open = mc.mainZoneOccupantOfSavedView(id)
-    if (open) mc.main_zone_active_id = open.id
-    else mc.openMainZoneWindowFromJSON(window, id, beside)
+    if (open) mc.bringMainZoneOccupantForward(open.id)
+    else mc.openMainZoneWindowFromJSON(window, id)
   }
 
   /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
@@ -2178,23 +2170,6 @@ export class Class_ApplicationData {
     delete this._views[id]
     const at = this._views_order.indexOf(id)
     if (at >= 0) this._views_order.splice(at, 1)
-  }
-
-  /**
-   * « ANCRER EN VOLET » depuis le sélecteur de vues — le geste qui porte ce nom sur un volet
-   * flottant, et c'est le même : la vue devient courante et son volet se pose DANS LA GRILLE, à
-   * côté des autres, sans fermer celui de la vue quittée. Une feuille n'a qu'un état de lecture à la
-   * fois : les deux volets montrent donc celui de la vue d'arrivée, chacun avec sa nature et ses
-   * réglages.
-   */
-  public openViewBeside(id: string): void | Promise<void> {
-    if (!this._views[id]) return
-    this._open_view_beside = id
-    if (id === this._current_view_id) {
-      this.applySavedViewWindowsOnSwitch(id, id)
-      return
-    }
-    return this.requestViewChange(id)
   }
 
   // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
