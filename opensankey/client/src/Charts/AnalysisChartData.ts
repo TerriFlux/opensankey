@@ -58,7 +58,7 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
-import type { Type_SunburstNode, Type_SunburstSankey } from './SunburstHierarchy'
+import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
 // AFFICHE : un nœud réglé sur « nom du nœud ancêtre » ou sur un gabarit à jetons
 // n'affiche pas son `name`, et la couronne le nommait autrement que le dessin.
@@ -310,11 +310,27 @@ const decomposeNodeChildren = (
  *
  * Ordre 'model' : le classement est un réglage du GRAPHE (`parts_order`), appliqué par le tracé.
  */
-const decomposeNodeHierarchy = (
+/**
+ * L'ARBRE DE LA DESCENTE — UN SEUL, POUR LES DEUX RENDUS (24/09/2026).
+ *
+ * Julien : « pour moi le sunburst c'est juste un mode de plus : quand on désagrège, ça ajoute pour
+ * chaque niveau une couronne. » Il a raison, et c'est ce que cette fonction rend vrai : la descente
+ * décide de CE QU'ON MONTRE — quels nœuds, jusqu'où —, le mode de dessin décide seulement si les
+ * niveaux se remplacent dans un anneau ou s'en prennent un chacun. Deux arbres différents auraient
+ * fait deux figures différentes ; il n'y en a qu'un.
+ *
+ * ── LA TAILLE, PUIS LA LECTURE ───────────────────────────────────────────────────────────────
+ *
+ * `buildSunburstTree` bâtit toute la descendance ; en mode 'diagram' on ÉLAGUE ensuite sous les
+ * nœuds que le diagramme ne déplie pas. Élaguer APRÈS et non pendant n'est pas un détail : en
+ * régime 'sum', la valeur d'un nœud est déjà la somme de ses enfants, donc un nœud élagué garde la
+ * valeur juste — celle de tout ce qu'il contient, y compris ce qu'on vient de lui retirer.
+ */
+const hierarchyTreeOf = (
   node: Class_NodeElement,
   spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
   nav: Type_FigureNavigation
-): Type_ChartPart[] => {
+): Type_SunburstTree | null => {
   const sankey = node.sankey as unknown as Type_SunburstSankey
   // LE FOYER, quand la figure est descendue dedans (drill-down) — et le sujet sinon. Un foyer qui
   // nomme un nœud disparu n'est pas une erreur à signaler : c'est un réglage périmé, et la figure
@@ -322,27 +338,46 @@ const decomposeNodeHierarchy = (
   const focus = spec.focus_id
     ? (node.sankey.nodes_dict[spec.focus_id] as Class_NodeElement | undefined)
     : undefined
-  const root_node = focus ?? node
   const tree = buildSunburstTree(sankey, {
     dimension_id: spec.dimension_id,
     chain_axes: true,
-    root_ids: [root_node.id],
+    root_ids: [(focus ?? node).id],
     value_mode: 'sum',
     sort_order: 'model',
     name_source: 'displayed'
   }, '', nav)
-  const root = tree?.roots[0]
-  if (!root) return []
+  if (!tree) return null
+  // 'leaves' ne demande rien au diagramme : on garde l'arbre entier.
+  if (spec.hierarchy === 'leaves') return tree
+  // 'diagram' s'arrête où le dessin s'arrête. `is_disaggregated` est le pont que l'arbre pose déjà
+  // entre la figure et le diagramme ; la RACINE est toujours dépliée, sans quoi une couronne
+  // pointée sur un nœud replié n'aurait rien du tout à montrer.
+  const prune = (sector: Type_SunburstNode, is_root: boolean) => {
+    if (!is_root && sector.is_disaggregated !== true) {
+      sector.children = []
+      return
+    }
+    sector.children.forEach(c => prune(c, false))
+  }
+  tree.roots.forEach(r => prune(r, true))
+  return tree
+}
 
-  const to_the_leaves = spec.hierarchy === 'leaves'
+/**
+ * LA FRONTIÈRE de l'arbre : ses feuilles, à plat. C'est ce que dessine le mode « en place » — un
+ * nœud déplié disparaît derrière ses enfants, comme dans le Sankey, et la liste somme au sujet.
+ */
+const decomposeNodeHierarchy = (
+  node: Class_NodeElement,
+  spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
+  nav: Type_FigureNavigation
+): Type_ChartPart[] => {
+  const root = hierarchyTreeOf(node, spec, nav)?.roots[0]
+  if (!root) return []
   const walk = (
     sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string
   ): Type_ChartPart[] => {
-    // ON DESCEND SI, ET SEULEMENT SI, LE DIAGRAMME DESCEND — sauf en 'leaves', qui ne lui demande
-    // rien. `is_disaggregated` est le pont que l'arbre pose déjà entre la figure et le dessin.
-    const descend = sector.children.length > 0 &&
-      (to_the_leaves || sector.is_disaggregated === true)
-    if (descend) {
+    if (sector.children.length > 0) {
       return sector.children.flatMap(c => walk(c, sector.label, depth + 1, branch_id))
     }
     return [{
@@ -357,12 +392,31 @@ const decomposeNodeHierarchy = (
       // le tracé ne pourrait pas savoir que « Blé » et « Maïs » sont deux nuances de « Céréales » —
       // l'ordre des parts, une fois trié par valeur, ne le dit plus.
       branch_id,
-      has_children: sector.children.length > 0
+      // L'arbre est élagué : un nœud sans enfant ICI peut en avoir dans le modèle, et c'est
+      // justement ce que le clic peut déplier.
+      has_children: node.sankey.nodes_dict[sector.id] !== undefined &&
+        (node.sankey.nodes_dict[sector.id] as Class_NodeElement)
+          .dimensions_as_parent.some(d => d.children.length > 0)
     }]
   }
   return root.children
     .flatMap(child => walk(child, root.label, 0, child.id))
     .filter(p => p.value > 0)
+}
+
+/**
+ * L'ARBRE de la descente, pour le rendu « un anneau par niveau ». Même descente, même élagage,
+ * même valeurs que la frontière ci-dessus : c'est le point de la fusion.
+ */
+export const analysisHierarchyTree = (
+  subject: Type_ChartSubject,
+  descriptor: Type_AnalysisDescriptor,
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+): Type_SunburstTree | null => {
+  const decompose = effectiveDecompose(descriptor)
+  if (subject.kind !== 'node' || decompose?.kind !== 'node_children') return null
+  if (!decompose.hierarchy || decompose.hierarchy === 'off') return null
+  return hierarchyTreeOf(subject.node, decompose, nav)
 }
 
 const decomposeFluxChildren = (

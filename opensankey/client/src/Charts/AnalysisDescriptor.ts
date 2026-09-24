@@ -28,7 +28,13 @@
 // fonctionne comme le sunburst sur la désagrégation des nœuds ». Deux champs FACULTATIFS, donc
 // aucune migration de fichier — un descripteur qui ne les porte pas décompose d'un cran, comme
 // depuis toujours :
-//   `hierarchy` — jusqu'où on descend (cf. `figureCatalogue.parts_hierarchy`) ;
+//   `hierarchy` — jusqu'où on descend : un seul cran, la frontière du diagramme, ou les feuilles ;
+//   `levels`    — COMMENT les niveaux se dessinent. 24/09/2026, Julien : « pour moi le sunburst
+//                 c'est juste un mode de plus : quand on désagrège, ça ajoute pour chaque niveau
+//                 une couronne. » D'où deux valeurs, et pas deux figures : 'in_place' (défaut, les
+//                 enfants remplacent leur parent dans le même anneau) et 'rings' (un anneau par
+//                 niveau). La DESCENTE ne change pas d'un mode à l'autre — c'est le même arbre,
+//                 lu deux fois (cf. `analysisHierarchyTree`) ;
 //   `focus_id`  — le nœud à la RACINE de la décomposition, quand la figure est descendue dedans
 //                 (drill-down). Absent : le sujet lui-même.
 //
@@ -41,6 +47,7 @@ export type Type_DecomposeSpec =
     kind: 'node_children',
     dimension_id: string,
     hierarchy?: 'off' | 'diagram' | 'leaves',
+    levels?: 'in_place' | 'rings',
     focus_id?: string
   }
   | { kind: 'flux_children', dimension_id: string }

@@ -56,8 +56,14 @@ import {
 } from '../Charts/AnalysisDescriptor'
 import { analysisPartTarget } from './AnalysisPartTarget'
 import {
-  buildAnalysisChartData, isFluxCompare, Type_DecomposeSpec, Type_ChartSubject
+  analysisHierarchyTree, buildAnalysisChartData, isFluxCompare, Type_DecomposeSpec, Type_ChartSubject
 } from '../Charts/AnalysisChartData'
+// 24/09/2026 — le tracé à anneaux et sa lecture de style, appelés par la couronne quand le mode
+// « un anneau par niveau » le demande. Le disque n'est plus une autre figure, c'en est un mode.
+import { drawSunburstChart } from '../Charts/SunburstChart'
+import { readSunburstStyle } from './SunburstRepresentation'
+import { sunburstPartInputs } from './parts/sunburstParts'
+import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 
 /**
  * Sujet d'analyse d'un élément PRÉSENTABLE. La pop-up de présentation s'ouvre pour
@@ -241,7 +247,22 @@ const withHierarchy = (
 const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | null => {
   const a = analysisOf(ctx)
   if (!a) return null
+  // 24/09/2026 — EN ANNEAUX, LES PARTS SONT TOUT L'ARBRE et non sa seule frontière : chaque
+  // secteur de chaque anneau est un élément qu'on touche et qu'on règle. Le tracé du disque lit
+  // `by_id` et compose lui-même ; lui rendre la frontière laisserait les anneaux intérieurs sans
+  // part, donc sans réglage et sans sélection.
+  const tree = ringsTreeOf(a)
+  if (tree) return sunburstPartInputs(ctx.app_data.drawing_area.sankey, tree)
   return analysisPartInputs(a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav))
+}
+
+/** L'arbre à dessiner en anneaux, ou `null` quand la figure est « en place » (ou à plat). */
+const ringsTreeOf = (
+  a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor, nav: Type_FigureNavigation }
+): Type_SunburstTree | null => {
+  const decompose = a.descriptor.decompose
+  if (decompose?.kind !== 'node_children' || decompose.levels !== 'rings') return null
+  return analysisHierarchyTree(a.subject, a.descriptor, a.nav)
 }
 
 /**
@@ -581,6 +602,37 @@ export const registerAnalysisRepresentations = (): void => {
       // depuis toujours.
       const style = donutStyleOf(ctx)
       const gestures = donutClickGestures(ctx, style)
+      const t = ctx.app_data.t
+
+      // 24/09/2026 — UN ANNEAU PAR NIVEAU : LE MÊME ARBRE, DESSINÉ AUTREMENT.
+      //
+      // Julien : « pour moi le sunburst c'est juste un mode de plus ». C'est cette ligne qui le
+      // rend vrai — la couronne appelle le tracé à anneaux sur l'arbre de SA descente, avec SES
+      // parts et SES réglages. Rien n'est recopié : `drawSunburstChart` lit les mêmes clés de
+      // catalogue (`readSunburstStyle`), et le clic y fait le même geste qu'ici.
+      const a = analysisOf(ctx)
+      const rings = a ? ringsTreeOf(a) : null
+      if (rings) {
+        const teardown = drawSunburstChart(container, rings, {
+          parts: wiring.by_id,
+          on_part_select: wiring.on_part_select,
+          style: readSunburstStyle(ctx.options ?? {}),
+          texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
+          label_positions: wiring.label_positions,
+          on_label_move: wiring.on_label_move,
+          unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
+          empty_label: t('sunburst.empty') as string,
+          others_label: t('sunburst.others') as string,
+          truncated_label: t('sunburst.truncated') as string,
+          back_label: t('sunburst.back') as string,
+          level_label: (index: number) => t('sunburst.level', { index }) as string,
+          // LE MÊME GESTE QUE DANS L'ANNEAU UNIQUE, et c'est ce qui fait que les deux modes sont
+          // une seule figure : un clic déplie, shift+clic replie (cf. `donutClickGestures`).
+          on_arc_click: (node_id: string) => gestures.activate?.(node_id, { shift: false })
+        })
+        return () => { teardown() }
+      }
+
       drawDonutChart(container, parts as unknown as Type_StatSlice[], {
         ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
         style,
@@ -588,7 +640,7 @@ export const registerAnalysisRepresentations = (): void => {
         on_part_select: wiring.on_part_select,
         on_part_activate: gestures.activate,
         on_centre_click: gestures.back,
-        centre_back_label: ctx.app_data.t('sunburst.back') as string,
+        centre_back_label: t('sunburst.back') as string,
         label_positions: wiring.label_positions,
         on_label_move: wiring.on_label_move
       })

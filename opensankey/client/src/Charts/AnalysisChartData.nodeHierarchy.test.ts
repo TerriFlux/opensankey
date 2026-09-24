@@ -18,8 +18,9 @@ import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
 import type { Type_JSON } from '../types/Utils'
 import { FOLLOWING_NAVIGATION } from './FigureNavigation'
 
-import { buildAnalysisChartData } from './AnalysisChartData'
+import { analysisHierarchyTree, buildAnalysisChartData } from './AnalysisChartData'
 import type { Type_ChartPart, Type_ChartSubject } from './AnalysisChartData'
+import type { Type_SunburstNode } from './SunburstHierarchy'
 
 if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
@@ -184,6 +185,93 @@ describe('la decomposition hierarchique d un noeud', () => {
   })
 
   test('un foyer qui nomme un noeud disparu revient au sujet', () => {
+    // Un reglage perime n est pas une panne : la figure montre son sujet plutot que de se vider.
+    const app = loadApp()
+
+    const parts = partsOf(app, { hierarchy: 'diagram', focus_id: 'Disparu' })
+
+    expect(ids(parts)).toEqual(['Cereales', 'Viande'])
+  })
+})
+
+// ── 24/09/2026 — « LE SUNBURST C EST JUSTE UN MODE DE PLUS » ─────────────────────────────────
+//
+// Julien : « quand on desagrege, ca ajoute pour chaque niveau une couronne ». Ce que ce bloc fige
+// est la condition pour que ce soit vrai : LES DEUX RENDUS LISENT LE MEME ARBRE. Si la descente
+// donnait un arbre aux anneaux et un autre a la frontiere, les deux modes montreraient deux
+// decompositions differentes du meme noeud — et changer de mode cesserait d etre un changement de
+// dessin pour devenir un changement de sujet.
+describe('l arbre de la descente, celui que les deux modes partagent', () => {
+
+  const treeOf = (app: Class_ApplicationData, hierarchy: 'diagram' | 'leaves') => {
+    const node = app.drawing_area.sankey.nodes_dict['Racine']
+    const subject = { kind: 'node', node } as unknown as Type_ChartSubject
+    return analysisHierarchyTree(
+      subject,
+      { decompose: { kind: 'node_children', dimension_id: 'dim', hierarchy }, compare: null },
+      FOLLOWING_NAVIGATION
+    )
+  }
+
+  /** Les feuilles de l arbre, a plat — ce que le mode « en place » dessine. */
+  const leaves = (sector: Type_SunburstNode): string[] =>
+    sector.children.length === 0 ? [sector.id] : sector.children.flatMap(leaves)
+
+  test('ses feuilles sont EXACTEMENT les parts du mode en place', () => {
+    const app = loadApp()
+    deplier(app, 'Cereales')
+
+    const root = treeOf(app, 'diagram')!.roots[0]
+
+    expect(root.children.flatMap(leaves).sort()).toEqual(ids(partsOf(app, { hierarchy: 'diagram' })))
+  })
+
+  test('« comme le diagramme » elague sous ce que le dessin ne deplie pas', () => {
+    // C est l elagage qui fait les anneaux : un niveau replie ne prend pas d anneau, exactement
+    // comme il ne prend pas de secteur en place.
+    const app = loadApp()
+    const root = treeOf(app, 'diagram')!.roots[0]
+
+    expect(root.children.map(c => c.id).sort()).toEqual(['Cereales', 'Viande'])
+    expect(root.children.find(c => c.id === 'Cereales')?.children).toEqual([])
+  })
+
+  test('jusqu aux feuilles, l arbre garde ses deux etages', () => {
+    const app = loadApp()
+    const cereales = treeOf(app, 'leaves')!.roots[0].children.find(c => c.id === 'Cereales')
+
+    expect(cereales?.children.map(c => c.id).sort()).toEqual(['Ble', 'Mais'])
+    // Et la valeur du parent reste la somme des siens : un anneau ne peut pas etre plus petit que
+    // ce qu il contient.
+    expect(cereales?.value).toBe(10)
+  })
+
+  test('elaguer ne change pas les valeurs : un noeud elague vaut tout ce qu il contient', () => {
+    // La raison d elaguer APRES la construction et non pendant. Sans elle, « Cereales » replie
+    // vaudrait sa valeur propre et non celle de Ble + Mais, et les deux modes ne boucleraient pas
+    // sur le meme total.
+    const app = loadApp()
+    const replie = treeOf(app, 'diagram')!.roots[0].children.find(c => c.id === 'Cereales')
+
+    expect(replie?.value).toBe(10)
+  })
+
+  test('sans descente, il n y a pas d arbre du tout', () => {
+    const app = loadApp()
+    const node = app.drawing_area.sankey.nodes_dict['Racine']
+    const subject = { kind: 'node', node } as unknown as Type_ChartSubject
+
+    expect(analysisHierarchyTree(
+      subject,
+      { decompose: { kind: 'node_children', dimension_id: 'dim' }, compare: null },
+      FOLLOWING_NAVIGATION
+    )).toBeNull()
+  })
+})
+
+describe('les cas ecartes', () => {
+
+  test('un foyer qui nomme un noeud disparu revient au sujet, en anneaux aussi', () => {
     // Un reglage perime n est pas une panne : la figure montre son sujet plutot que de se vider.
     const app = loadApp()
 

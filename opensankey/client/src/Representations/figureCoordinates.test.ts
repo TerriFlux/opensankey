@@ -50,6 +50,14 @@ describe('lire un descripteur', () => {
     expect(Object.keys(coords)).toHaveLength(1)
   })
 
+  test('le mode de dessin se relit avec la descente', () => {
+    const coords = coordinatesOf({
+      decompose: { kind: 'node_children', dimension_id: 'produit', hierarchy: 'leaves', levels: 'rings' },
+      compare: null
+    }, null)
+    expect(coords['dim:produit']).toEqual({ mode: 'parts', hierarchy: 'leaves', levels: 'rings' })
+  })
+
   test('un seul niveau ne se relit pas comme une descente', () => {
     // Tout le parc enregistre est dans ce cas : sans la cle, le panneau doit montrer « un seul
     // niveau » et non un etat qui n a jamais ete pose.
@@ -114,6 +122,33 @@ describe('ecrire un descripteur', () => {
 
     const flat: Type_FigureCoordinates = { 'dim:produit': { mode: 'parts', hierarchy: 'off' } }
     expect(applyCoordinates(flat, 'node').descriptor.decompose)
+      .toEqual({ kind: 'node_children', dimension_id: 'produit' })
+  })
+
+  test('« un anneau par niveau » s ecrit sur l axe, « en place » ne s ecrit pas', () => {
+    // 24/09/2026 — le sunburst devient un MODE de la couronne, pas une autre figure. « En place »
+    // est le dessin de la couronne : l ecrire serait une difference de fichier sans difference de
+    // dessin, comme 'off' juste au-dessus.
+    const rings: Type_FigureCoordinates = {
+      'dim:produit': { mode: 'parts', hierarchy: 'leaves', levels: 'rings' }
+    }
+    expect(applyCoordinates(rings, 'node').descriptor.decompose)
+      .toEqual({ kind: 'node_children', dimension_id: 'produit', hierarchy: 'leaves', levels: 'rings' })
+
+    const in_place: Type_FigureCoordinates = {
+      'dim:produit': { mode: 'parts', hierarchy: 'leaves', levels: 'in_place' }
+    }
+    expect(applyCoordinates(in_place, 'node').descriptor.decompose)
+      .toEqual({ kind: 'node_children', dimension_id: 'produit', hierarchy: 'leaves' })
+  })
+
+  test('le mode de dessin ne s ecrit jamais sans la descente qu il met en forme', () => {
+    // Un anneau par niveau sur une decomposition a UN niveau ne veut rien dire : la cle serait un
+    // reglage mort dans le fichier, et le panneau le relirait comme un etat qu on n a pas pose.
+    const coords: Type_FigureCoordinates = {
+      'dim:produit': { mode: 'parts', hierarchy: 'off', levels: 'rings' }
+    }
+    expect(applyCoordinates(coords, 'node').descriptor.decompose)
       .toEqual({ kind: 'node_children', dimension_id: 'produit' })
   })
 
