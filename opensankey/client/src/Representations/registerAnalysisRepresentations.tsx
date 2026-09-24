@@ -165,7 +165,7 @@ export const descriptorInEffect = (
   const base = (override && (override.decompose || override.compare))
     ? override
     : effectiveDescriptorOf(element, subject)
-  return base ? withHierarchy(subject, base, options) : null
+  return base ? withHierarchy(base, options) : null
 }
 
 // ── 23/09/2026 — LA COURONNE DESCEND LA HIÉRARCHIE, SANS PRENDRE UN ANNEAU DE PLUS ────────────
@@ -185,43 +185,27 @@ const hierarchyPathOf = (options: { [key: string]: unknown }): string[] => {
 }
 
 /**
- * LE DESCRIPTEUR, AUGMENTÉ DE CE QUE LA FIGURE RÈGLE — et rendu tel quel quand elle ne règle rien.
+ * LE DESCRIPTEUR, AUGMENTÉ DE L'ENDROIT OÙ LA FIGURE EST DESCENDUE — et rendu tel quel sinon.
  *
- * ⚠️ LA HIÉRARCHIE CHOISIT L'AXE SI L'AXE N'EST PAS DÉJÀ LE SIEN, et c'est délibéré. Sans cette
- * ligne, le réglage serait inerte sur presque tous les nœuds : `defaultDecomposeSpec` préfère les
- * flux sortants dès qu'il y en a de visibles, et « descendre la hiérarchie » sur un axe de flux ne
- * veut rien dire. L'auteur qui demande la hiérarchie demande la hiérarchie ; lui rendre une
- * décomposition par flux inchangée serait un choix offert puis ignoré sans un mot.
+ * ⚠️ IL N'Y A PLUS QUE LE FOYER ICI, et c'est l'arbitrage du 24/09. Jusqu'où on descend est une
+ * COORDONNÉE, écrite sur l'axe lui-même par « Filtres et coordonnées » (`Type_CoordState.hierarchy`)
+ * : le descripteur la porte déjà quand il arrive, et cette fonction n'a plus à la deviner ni à
+ * choisir un axe à la place de l'auteur.
  *
- * On prend la première dimension qui a VRAIMENT des enfants — le même critère que le sunburst, et
- * que le repli de `defaultDecomposeSpec`. Aucune : le réglage reste sans effet, ce qui est la seule
- * réponse honnête pour un nœud qui n'a pas de descendance.
+ * Le FOYER, lui, reste un réglage de figure : ce n'est pas ce que l'auteur a demandé de voir, c'est
+ * l'endroit où il est allé en cliquant. Deux vignettes sur le même axe peuvent être descendues dans
+ * deux nœuds différents — c'est pourquoi il vit par figure et non sur l'élément.
  */
 const withHierarchy = (
-  subject: Type_ChartSubject,
   descriptor: Type_AnalysisDescriptor,
   options: { [key: string]: unknown }
 ): Type_AnalysisDescriptor => {
-  const mode = options['parts_hierarchy']
-  if (mode !== 'diagram' && mode !== 'leaves') return descriptor
-  if (subject.kind !== 'node') return descriptor
-  const current = descriptor.decompose
-  const dimension_id = current?.kind === 'node_children'
-    ? current.dimension_id
-    : subject.node.dimensions_as_parent.find(
-      (d: Class_NodeDimension) => (d.children?.length ?? 0) > 0
-    )?.id
-  if (dimension_id === undefined) return descriptor
-  const path = hierarchyPathOf(options)
-  return {
-    ...descriptor,
-    decompose: {
-      kind: 'node_children',
-      dimension_id,
-      hierarchy: mode,
-      focus_id: path[path.length - 1]
-    }
-  }
+  const decompose = descriptor.decompose
+  if (decompose?.kind !== 'node_children') return descriptor
+  if (!decompose.hierarchy || decompose.hierarchy === 'off') return descriptor
+  const focus_id = hierarchyPathOf(options).slice(-1)[0]
+  if (focus_id === undefined) return descriptor
+  return { ...descriptor, decompose: { ...decompose, focus_id } }
 }
 
 /**

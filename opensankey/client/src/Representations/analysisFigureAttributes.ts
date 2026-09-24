@@ -103,6 +103,20 @@ export const ANALYSIS_ATTRIBUTES: Type_FigureAttributesConfig = {
 type Type_Bag = { [k: string]: unknown }
 const valued = (o: Type_Bag) => o['value_label_is_visible'] === true
 const named = (o: Type_Bag) => o['name_label_is_visible'] === true
+/**
+ * 24/09/2026 — CETTE FIGURE DESCEND-ELLE LA HIÉRARCHIE ?
+ *
+ * Lu sur le DESCRIPTEUR du sac, parce que c'est là que la descente vit depuis qu'elle est une
+ * coordonnée (`Type_CoordState.hierarchy` → `Type_DecomposeSpec.hierarchy`) : le panneau « Filtres
+ * et coordonnées » écrit `options.descriptor` à chaque geste, donc la question a sa réponse dès
+ * que l'auteur a répondu. Un sac sans descripteur — une figure qui suit l'axe de son élément —
+ * répond non, et les deux réglages ne paraissent pas : ils n'auraient rien à régler.
+ */
+const descendsHierarchy = (o: Type_Bag): boolean => {
+  const decompose = (o['descriptor'] as Type_AnalysisDescriptor | undefined)?.decompose
+  return decompose?.kind === 'node_children'
+    && decompose.hierarchy !== undefined && decompose.hierarchy !== 'off'
+}
 export const SHARED_HONOURS = {
   parts_order: {},
   parts_color_source: { default: 'model' },
@@ -195,27 +209,30 @@ const DONUT_HONOURS = {
   // nœuds, mais au lieu de faire une couronne qui s'étend, le faire in place ; et que le nom des
   // nœuds puisse se voir en légende ».
   //
-  // TROIS CLÉS, ET AUCUNE N'EST NEUVE AU CATALOGUE sauf la première : c'est le point du mécanisme
-  // des figures — la couronne PIQUE ce que le disque honorait déjà, sous les mêmes mots et avec
-  // les mêmes traductions. Aucune ligne d'interface n'est écrite pour elles.
+  // ⚠️ JUSQU'OÙ ON DESCEND N'EST PAS DÉCLARÉ ICI, et c'est l'arbitrage du 24/09 : « pour moi c'est
+  // dans mes coordonnées qu'il devrait y avoir la hiérarchie ». C'est une COORDONNÉE — ce que la
+  // figure MONTRE —, posée sur le champ dimension du panneau « Filtres et coordonnées » (cf.
+  // `Type_CoordState.hierarchy`). La première version en avait fait une clé de style,
+  // `parts_hierarchy`, que son préfixe rangeait dans l'onglet Forme à côté de la couleur des
+  // secteurs : à trois onglets de l'axe qu'elle modifie, et introuvable.
   //
-  //  `parts_hierarchy`   — jusqu'où on descend. 'off' par défaut : le parc enregistré ne bouge pas.
-  //  `legend_levels`     — la légende dit de quel parent chaque part est la coupe. Elle n'a rien à
-  //                        dire sous un seul cran, d'où la condition.
-  //  `interaction_click` — ce que le clic fait EN PLUS de sélectionner. Sans hiérarchie il n'y a
-  //                        nulle part où descendre, et le proposer laisserait croire le contraire.
-  parts_hierarchy: {},
+  // Restent ici les deux clés qui décrivent bien la FIGURE, et toutes deux existaient déjà au
+  // catalogue pour le disque — la couronne ne fait que les piquer, avec leurs sept langues.
+  //
+  //  `legend_levels`     — la légende dit de quel parent chaque part est la coupe.
+  //  `interaction_click` — ce que le clic fait EN PLUS de sélectionner.
+  //
+  // LES DEUX NE PARAISSENT QUE SOUS UNE DESCENTE : sans elle il n'y a ni niveau à nommer ni endroit
+  // où descendre, et les proposer laisserait croire le contraire (règle du 19/09 : une option qui
+  // ne peut rien changer se cache). La condition lit le DESCRIPTEUR du sac — ce que les
+  // coordonnées viennent d'y écrire.
   legend_levels: {
-    visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && o['parts_hierarchy'] !== 'off'
+    visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && descendsHierarchy(o)
   },
-  // `advanced: false` À DESSEIN, là où le disque la laisse sous « Avancé ». Sur un disque, le clic
-  // a toujours eu un effet par défaut et le réglage ne sert qu'à en changer ; ici c'est LE mode de
-  // descente — « un mode drill down à sélectionner quelque part », demande Julien — et un réglage
-  // qu'on ne trouve pas n'existe pas.
-  interaction_click: {
-    advanced: false,
-    visibleIf: (o: Type_Bag) => o['parts_hierarchy'] !== 'off'
-  },
+  // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
+  // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
+  // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
+  interaction_click: { advanced: false, visibleIf: (o: Type_Bag) => descendsHierarchy(o) },
   parts_group_under: { default: 0.5 },
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE.
   //
