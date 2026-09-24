@@ -15,6 +15,7 @@ import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
 import { implicitDashboardId } from './Dashboards'
 import type { Type_ViewLabelDef } from './ViewsQuery'
 import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
+import { TUTORIAL_TOPIC } from './EventBus'
 import { createViewSwitchOverlay } from './viewSwitchOverlay'
 import type { Class_DrawingArea } from './DrawingArea'
 import type { Type_JSON } from './Utils'
@@ -341,7 +342,31 @@ export class ViewsReader {
   public requestViewChange(id: string): void | Promise<void> {
     if (this.interceptViewChange(id)) return
     const path = viewSwitchPath(id, MASTER_VIEW_ID, this.host.views_dict)
-    return this.switch_progress.run(path, () => this.applyViewChange(id))
+    return this.switch_progress.run(path, () => {
+      this.applyViewChange(id)
+      this.noteTutorialStep(id)
+    })
+  }
+
+  /**
+   * sa#531 — Quand le document ouvert vient de `tutorials/`, un changement de vue n'est pas un
+   * changement de vue : c'est le passage à l'étape suivante d'une leçon. Signalé ici et NULLE PART
+   * ailleurs — sur le chemin INTERACTIF seulement, jamais sur `setCurrentView`, qui sert aussi à
+   * l'export de toutes les vues et aux tests : y compter des étapes ferait « suivre » un tutoriel
+   * à un export.
+   *
+   * Ne journalise pas : il signale. C'est la couche applicative qui décide (cf. TUTORIAL_TOPIC).
+   */
+  protected noteTutorialStep(id: string) {
+    const file = this.host.menu_configuration.current_tutorial
+    if (!file) return
+    const order = this.host.views_order
+    const rank = order.indexOf(id)
+    if (rank < 0) return
+    this.host.menu_configuration.last_tutorial_step = {
+      file, rank, last: rank === order.length - 1,
+    }
+    this.host.menu_configuration.notify(TUTORIAL_TOPIC)
   }
 
   /** Corps du switch : pose la nouvelle vue (light/heavy), la visibilité, la caméra et redessine. */

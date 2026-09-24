@@ -92,6 +92,34 @@ export const IMPORT_TOPIC = 'import'
 export const SAVE_TOPIC = 'save'
 
 /**
+ * sa#531 — Topic « une image vient d'être exportée » (PNG, SVG, PDF), le format
+ * étant posé dans `Class_MenuConfig.last_export`. Distinct de SAVE_TOPIC, qui
+ * annonce un fichier RÉOUVRABLE : un export est un rendu figé, et les deux
+ * gestes ne se confondent ni pour l'utilisateur ni dans la mesure.
+ *
+ * Il existe parce que l'export ne passe plus par le serveur depuis qu'il est
+ * rasterisé dans le navigateur (cf. SankeyExports, « Replaces the previous
+ * /opensankey/save/png round-trip ») : sans ce signal, le geste qui CLÔT la
+ * plupart des visites n'apparaît nulle part. Même contrat que les deux autres —
+ * l'éditeur signale, la couche applicative décide quoi en faire.
+ */
+export const EXPORT_TOPIC = 'export'
+
+/**
+ * sa#531 — Topic « on vient d'avancer dans un TUTORIEL ». Notifié par le switch de vue
+ * INTERACTIF (`ViewsReader.requestViewChange`) et seulement quand le document ouvert vient de
+ * `tutorials/` — c'est-à-dire quand un changement de vue N'EST PAS un changement de vue mais le
+ * passage à l'étape suivante d'une leçon (cf. les tutoriels, dont chaque étape EST une vue).
+ * Le rang et le fichier sont posés dans `Class_MenuConfig.last_tutorial_step`.
+ *
+ * Topic d'HÔTE bien que les vues appartiennent au document : ce qu'il annonce est le geste d'un
+ * VISITEUR qui apprend l'outil, unique par définition, et son seul abonné est la couche
+ * applicative. Le mettre sur le bus du document obligerait cet abonné à suivre le document actif
+ * pour entendre une leçon qui, elle, ne change pas.
+ */
+export const TUTORIAL_TOPIC = 'tutorial'
+
+/**
  * os#1385 (lot 2) — Topic « le document ACTIF vient de changer ».
  *
  * Topic d'HÔTE : il n'y a qu'un actif dans l'espace de travail, et son identité est ce que la
@@ -163,7 +191,13 @@ export const HOST_TOPICS: ReadonlySet<string> = new Set([
   MAIN_ZONE_TOPIC, PANELS_TOPIC, LIBRARY_TOPIC, IMPORT_TOPIC, SAVE_TOPIC, ACTIVE_DOCUMENT_TOPIC,
   // os#1442 — « quels documents sont modifiés » est une propriété de l'espace de travail, pas
   // d'un document : l'abonné est une barre unique qui les montre TOUS. Cf. SAVE_STATE_TOPIC.
-  SAVE_STATE_TOPIC
+  SAVE_STATE_TOPIC,
+  // sa#531 — l'export rejoint l'import et l'enregistrement pour la même raison : un geste de
+  // l'application auquel la couche applicative réagit, et dont l'abonné est unique.
+  EXPORT_TOPIC,
+  // sa#531 — l'avancée dans un tutoriel : un geste d'apprentissage, pas une propriété du
+  // diagramme sur lequel il s'exerce (cf. TUTORIAL_TOPIC).
+  TUTORIAL_TOPIC
 ])
 
 export class Class_EventBus {

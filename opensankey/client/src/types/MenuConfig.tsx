@@ -2556,6 +2556,34 @@ export class Class_MenuConfig {
   public get last_import(): { format: string } | null { return this._host._last_import }
   public set last_import(v: { format: string } | null) { this._host._last_import = v }
 
+  // sa#531 — dernier export d'image ('png', 'svg', 'pdf'), posé juste avant la
+  // notification EXPORT_TOPIC. Même contrat que `last_import` : lu par les
+  // abonnés du topic, jamais persisté.
+  protected _last_export: { format: string } | null = null
+  public get last_export(): { format: string } | null { return this._host._last_export }
+  public set last_export(v: { format: string } | null) { this._host._last_export = v }
+
+  // sa#531 — FICHIER DU TUTORIEL OUVERT, posé au chargement depuis le menu Aide
+  // et remis à null dès qu'un autre document est chargé. C'est ce qui permet de
+  // dire qu'un changement de vue est un passage d'ÉTAPE : sans lui, les deux
+  // gestes sont le même clic. Jamais persisté — rouvrir son propre diagramme ne
+  // recommence pas une leçon.
+  protected _current_tutorial: string | null = null
+  public get current_tutorial(): string | null { return this._host._current_tutorial }
+  public set current_tutorial(v: string | null) { this._host._current_tutorial = v }
+
+  // sa#531 — dernière étape franchie, posée juste avant TUTORIAL_TOPIC : le
+  // fichier, le rang de la vue dans l'ordre du document, et si c'est la
+  // dernière. Lu par les abonnés du topic.
+  protected _last_tutorial_step: { file: string, rank: number, last: boolean } | null = null
+  public get last_tutorial_step(): { file: string, rank: number, last: boolean } | null {
+    return this._host._last_tutorial_step
+  }
+
+  public set last_tutorial_step(v: { file: string, rank: number, last: boolean } | null) {
+    this._host._last_tutorial_step = v
+  }
+
   // sa#1354 — Applicateur de NIVEAU, injecté par la couche éditeur.
   //
   // Les autres axes du contrôleur se restaurent par un simple setter ; le niveau
