@@ -19,6 +19,9 @@
 // d'autre. Une règle qu'on ne peut pas tester n'en est pas une — d'où la séparation.
 
 import { figureAttribute, figureNatureAttributes } from './figureAttribute'
+// 24/09/2026 — la lecture de la hiérarchie, partagée avec le disque dont la couronne est devenue
+// le porteur (« un anneau par niveau »).
+import { hierarchyReadingAttributes } from './sunburstAttributes'
 // os#1479 — le tri « socle / propre », fait par la règle et non à la main (cf. son commentaire).
 import { splitByCommonHonours } from './figureCommonHonours'
 import type { Type_FigureAttributesConfig } from './Figure'
@@ -291,6 +294,13 @@ export const { socle: BARS_SOCLE, own: BARS_OWN } = splitByCommonHonours(BARS_HO
  */
 export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   ...ANALYSIS_ATTRIBUTES,
+  // 24/09/2026 — CE QU'ELLE REPREND DE LA LECTURE DU DISQUE, le jour où elle sait dessiner ses
+  // anneaux : combien d'anneaux, ce que vaut un nœud, de quel côté on le lit, et ce qu'on fait de
+  // ce que ses enfants ne couvrent pas. Ces quatre-là changent l'ARBRE, donc LES DEUX MODES —
+  // c'est la condition pour que « en place » et « un anneau par niveau » montrent la même
+  // décomposition. L'axe, lui, ne vient pas : la couronne le tient des coordonnées, et deux
+  // adresses pour le même choix, c'est une de trop (cf. `hierarchyReadingAttributes`).
+  ...hierarchyReadingAttributes(),
   [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute()
 }
 

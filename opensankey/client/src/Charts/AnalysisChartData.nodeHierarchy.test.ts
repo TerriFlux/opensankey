@@ -281,6 +281,31 @@ describe('l arbre de la descente, celui que les deux modes partagent', () => {
     expect(replie?.value).toBe(10)
   })
 
+  test('la lecture reglee par l auteur s applique aux DEUX modes', () => {
+    // 24/09/2026 — les quatre cles que la nature « Sunburst » portait en propre (combien
+    // d anneaux, ce que vaut un noeud, de quel cote, le non reparti) sont maintenant lues par la
+    // couronne. Elles changent l ARBRE, pas son dessin : si elles ne valaient que pour les
+    // anneaux, la meme descente montrerait deux decompositions selon le mode choisi.
+    const app = loadApp()
+    const node = app.drawing_area.sankey.nodes_dict['Racine']
+    const subject = { kind: 'node', node } as unknown as Type_ChartSubject
+    const descriptor = {
+      decompose: { kind: 'node_children' as const, dimension_id: 'dim', hierarchy: 'leaves' as const },
+      compare: null
+    }
+
+    // Un seul anneau demande : « Ble » et « Mais » sont hors de portee, meme en « jusqu aux
+    // feuilles ». La racine occupant le centre, la profondeur utile part d un cran plus bas.
+    const shallow = { max_depth: 1 }
+
+    const frontier = buildAnalysisChartData(subject, descriptor, FOLLOWING_NAVIGATION, shallow)
+      .series[0]?.parts ?? []
+    const tree = analysisHierarchyTree(subject, descriptor, FOLLOWING_NAVIGATION, shallow)
+
+    expect(ids(frontier)).toEqual(['Cereales', 'Viande'])
+    expect(tree!.roots[0].children.flatMap(leaves).sort()).toEqual(['Cereales', 'Viande'])
+  })
+
   test('sans descente, il n y a pas d arbre du tout', () => {
     const app = loadApp()
     const node = app.drawing_area.sankey.nodes_dict['Racine']

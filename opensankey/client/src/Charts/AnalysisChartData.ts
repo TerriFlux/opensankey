@@ -311,6 +311,24 @@ const decomposeNodeChildren = (
  * Ordre 'model' : le classement est un réglage du GRAPHE (`parts_order`), appliqué par le tracé.
  */
 /**
+ * CE QUE L'AUTEUR RÈGLE DE LA LECTURE DE LA HIÉRARCHIE (24/09/2026).
+ *
+ * Les quatre clés que la nature « Sunburst » portait en propre, et que la couronne reprend en
+ * devenant capable de dessiner ses anneaux. Elles changent l'ARBRE — quels nœuds existent, ce
+ * qu'ils valent —, pas seulement son dessin : c'est pour ça qu'elles voyagent jusqu'ici plutôt que
+ * de rester au tracé. Toutes facultatives : absentes, `buildSunburstTree` applique ses propres
+ * défauts, qui sont ceux d'aujourd'hui.
+ */
+export interface Type_HierarchyReading {
+  chain_axes?: boolean
+  value_mode?: 'sum' | 'declared'
+  node_value_mode?: 'max' | 'inputs' | 'outputs'
+  max_depth?: number
+  /** Le libellé du secteur « non réparti » (mode 'declared'), traduit par l'appelant. */
+  residual_label?: string
+}
+
+/**
  * L'ARBRE DE LA DESCENTE — UN SEUL, POUR LES DEUX RENDUS (24/09/2026).
  *
  * Julien : « pour moi le sunburst c'est juste un mode de plus : quand on désagrège, ça ajoute pour
@@ -329,7 +347,8 @@ const decomposeNodeChildren = (
 const hierarchyTreeOf = (
   node: Class_NodeElement,
   spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
-  nav: Type_FigureNavigation
+  nav: Type_FigureNavigation,
+  reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
   const sankey = node.sankey as unknown as Type_SunburstSankey
   // LE FOYER, quand la figure est descendue dedans (drill-down) — et le sujet sinon. Un foyer qui
@@ -340,12 +359,23 @@ const hierarchyTreeOf = (
     : undefined
   const tree = buildSunburstTree(sankey, {
     dimension_id: spec.dimension_id,
-    chain_axes: true,
     root_ids: [(focus ?? node).id],
-    value_mode: 'sum',
+    // L'ordre reste celui du MODÈLE : le classement est un réglage du graphe (`parts_order`),
+    // appliqué par le tracé. Le nom reste celui que le diagramme affiche.
     sort_order: 'model',
-    name_source: 'displayed'
-  }, '', nav)
+    name_source: 'displayed',
+    // ── CE QUE L'AUTEUR RÈGLE DE LA LECTURE (24/09/2026) ────────────────────────────────────
+    //
+    // Les quatre réglages que la nature « Sunburst » portait en propre, désormais lus par la
+    // couronne aussi (`hierarchyReadingAttributes`). Ils ne sont PAS un détail de rendu : ils
+    // changent quels nœuds existent et ce qu'ils valent, donc l'ARBRE — et c'est pourquoi ils
+    // entrent ici, en amont des deux modes. Les leur donner au seul mode « anneaux » aurait fait
+    // dire deux choses différentes à la même descente selon le dessin choisi.
+    chain_axes: reading.chain_axes,
+    value_mode: reading.value_mode,
+    node_value_mode: reading.node_value_mode,
+    max_depth: reading.max_depth
+  }, reading.residual_label ?? '', nav)
   if (!tree) return null
   // 'leaves' ne demande rien au diagramme : on garde l'arbre entier.
   if (spec.hierarchy === 'leaves') return tree
@@ -370,9 +400,10 @@ const hierarchyTreeOf = (
 const decomposeNodeHierarchy = (
   node: Class_NodeElement,
   spec: { dimension_id: string, hierarchy?: 'off' | 'diagram' | 'leaves', focus_id?: string },
-  nav: Type_FigureNavigation
+  nav: Type_FigureNavigation,
+  reading: Type_HierarchyReading = {}
 ): Type_ChartPart[] => {
-  const root = hierarchyTreeOf(node, spec, nav)?.roots[0]
+  const root = hierarchyTreeOf(node, spec, nav, reading)?.roots[0]
   if (!root) return []
   const walk = (
     sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string,
@@ -421,12 +452,13 @@ const decomposeNodeHierarchy = (
 export const analysisHierarchyTree = (
   subject: Type_ChartSubject,
   descriptor: Type_AnalysisDescriptor,
-  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION,
+  reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
   const decompose = effectiveDecompose(descriptor)
   if (subject.kind !== 'node' || decompose?.kind !== 'node_children') return null
   if (!decompose.hierarchy || decompose.hierarchy === 'off') return null
-  return hierarchyTreeOf(subject.node, decompose, nav)
+  return hierarchyTreeOf(subject.node, decompose, nav, reading)
 }
 
 const decomposeFluxChildren = (
@@ -485,7 +517,8 @@ const decomposeFluxChildren = (
 const decomposeSubject = (
   subject: Type_ChartSubject,
   spec: Type_DecomposeSpec,
-  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION,
+  reading: Type_HierarchyReading = {}
 ): Type_ChartPart[] => {
   if (subject.kind === 'node') {
     const node = subject.node
@@ -500,7 +533,7 @@ const decomposeSubject = (
       // descripteur qui ne dit rien (tout le parc enregistré) passe par le chemin d'avant, ligne
       // pour ligne.
       return (spec.hierarchy && spec.hierarchy !== 'off')
-        ? decomposeNodeHierarchy(node, spec, nav)
+        ? decomposeNodeHierarchy(node, spec, nav, reading)
         : decomposeNodeChildren(node, spec.dimension_id, nav)
     }
     return []
@@ -618,7 +651,11 @@ const buildCrossGroups = (
   primary: Type_CompareSpec,
   secondary: Type_CompareSpec,
   decompose: Type_DecomposeSpec | null,
-  nav: Type_FigureNavigation
+  nav: Type_FigureNavigation,
+  // Threadée jusqu'ici comme partout ailleurs : une grappe qui décompose par hiérarchie doit la
+  // lire sous les mêmes réglages que la figure qui la porte, sans quoi deux barres de la même
+  // figure compteraient leurs parts autrement.
+  reading: Type_HierarchyReading = {}
 ): Type_ChartGroup[] => {
   const sankey = subject.kind === 'node' ? subject.node.sankey : subject.link.sankey
   const entries_p = compareAxisEntries(subject, primary)
@@ -660,7 +697,7 @@ const buildCrossGroups = (
       const value = link ? linkValue(link, pass_nav) : 0
       return [{ id: es.id, label: es.label, value, color: es.color }]
     }
-    if (decompose) return decomposeSubject(subject, decompose, pass_nav)
+    if (decompose) return decomposeSubject(subject, decompose, pass_nav, reading)
     // La barre porte la couleur de SA SÉRIE (2nd axe) : c'est elle que la légende
     // nomme, et elle doit rester la même d'une grappe à l'autre.
     return [{ id: es.id, label: es.label, value: subjectValue(subject, pass_nav), color: es.color }]
@@ -733,7 +770,12 @@ const flattenCrossGroups = (groups: Type_ChartGroup[]): Type_ChartSerie[] =>
 export const buildAnalysisChartData = (
   subject: Type_ChartSubject,
   descriptor: Type_AnalysisDescriptor,
-  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION,
+  // 24/09/2026 — CE QUE L'AUTEUR RÈGLE DE LA LECTURE D'UNE HIÉRARCHIE (cf. `Type_HierarchyReading`).
+  // Absent, les défauts de `buildSunburstTree` s'appliquent, c'est-à-dire le comportement d'avant
+  // ce lot : aucun appelant existant ne change de résultat. Seule la couronne le renseigne, et
+  // elle le fait pour SES DEUX MODES — même descente, même arbre, même valeurs.
+  reading: Type_HierarchyReading = {}
 ): Type_AnalysisChartData => {
   const sankey = subject.kind === 'node' ? subject.node.sankey : subject.link.sankey
   // Décomposition EFFECTIVE : neutralisée quand on compare selon les flux (#389)
@@ -748,7 +790,7 @@ export const buildAnalysisChartData = (
   // valeur du sujet (comparaison pure).
   const partsUnder = (pass_nav: Type_FigureNavigation): Type_ChartPart[] => {
     if (decompose) {
-      return decomposeSubject(subject, decompose, pass_nav)
+      return decomposeSubject(subject, decompose, pass_nav, reading)
     }
     const v = subjectValue(subject, pass_nav)
     return v > 0 ? [{ id: subject.kind === 'node' ? subject.node.id : subject.link.id, label: subjectLabel(subject), value: v }] : []
@@ -762,7 +804,7 @@ export const buildAnalysisChartData = (
   // Croisement de deux axes de comparaison (#390) : grappes × barres, chaque barre
   // empilée par la décomposition EFFECTIVE s'il en reste une.
   if (secondary) {
-    const groups = buildCrossGroups(subject, descriptor.compare, secondary, decompose, nav)
+    const groups = buildCrossGroups(subject, descriptor.compare, secondary, decompose, nav, reading)
     return { series: flattenCrossGroups(groups), groups, has_decompose, has_compare, is_grouped_cross }
   }
 

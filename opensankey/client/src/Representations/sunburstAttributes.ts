@@ -58,7 +58,18 @@ const labelled = (o: Type_OptionBag) => is(o, 'name_label_is_visible', true)
 const valued = (o: Type_OptionBag) => labelled(o) && is(o, 'value_label_is_visible', false)
 
 // ── 1. Ce qu'on lit — propre à la couronne ────────────────────────────────────── navigation ──
-const NAVIGATION: Type_FigureAttributesConfig = {
+//
+// 24/09/2026 — UNE FABRIQUE, ET NON UNE CONSTANTE, parce que ces clés sont maintenant PARTAGÉES.
+//
+// Le disque est devenu un mode de la couronne (« un anneau par niveau ») : les deux lisent donc la
+// même hiérarchie, et doivent la lire sous les mêmes réglages — sans quoi la même descente rendrait
+// deux arbres selon le mode, ce qui est très exactement ce que la fusion supprime.
+//
+// Elles ne peuvent pas pour autant se passer le même OBJET : une nature construit son propre
+// `Class_ElementStyle` à partir de sa configuration, et deux natures qui partageraient l'objet
+// partageraient un jour ce que l'une y écrirait. C'est la règle que `pinnedDataTagsAttribute` pose
+// déjà, appliquée ici — d'où l'appel, et non l'étalement d'une constante.
+const navigationAttributes = (): Type_FigureAttributesConfig => ({
   dimension_id: figureAttribute<string | undefined>(undefined, 'navigation', {
     en: 'First hierarchy', fr: 'Première hiérarchie', es: 'Primera jerarquía',
     de: 'Erste Hierarchie', it: 'Prima gerarchia', 'zh-CN': '首个层级', ja: '最初の階層'
@@ -152,6 +163,23 @@ const NAVIGATION: Type_FigureAttributesConfig = {
     group: G_READ,
     advanced: true
   })
+})
+
+/**
+ * CE QUE LA COURONNE REPREND DE CETTE LECTURE, quand elle descend la hiérarchie : tout, SAUF
+ * l'axe de départ.
+ *
+ * `dimension_id` ne vient pas ici parce que la couronne le tient déjà d'ailleurs — c'est le champ
+ * qu'on a mis « en parts » dans les coordonnées (`node_children.dimension_id`). L'offrir une
+ * seconde fois donnerait deux adresses au même choix, et l'auteur ne saurait pas laquelle fait foi.
+ *
+ * Les quatre autres n'ont pas d'équivalent ailleurs : combien d'anneaux, ce que vaut un nœud, de
+ * quel côté on le lit, et ce qu'on fait de ce que ses enfants ne couvrent pas.
+ */
+export const hierarchyReadingAttributes = (): Type_FigureAttributesConfig => {
+  const { dimension_id: _axis, ...rest } = navigationAttributes()
+  void _axis
+  return rest
 }
 
 // ── 2. Ce qu'elle pique au catalogue ───────────────────────────────────────────────── style ──
@@ -264,4 +292,5 @@ const PLACED: Type_FigureAttributesConfig = {
     })
 }
 
-export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig = { ...NAVIGATION, ...HONOURED, ...PLACED }
+export const SUNBURST_ATTRIBUTES: Type_FigureAttributesConfig =
+  { ...navigationAttributes(), ...HONOURED, ...PLACED }

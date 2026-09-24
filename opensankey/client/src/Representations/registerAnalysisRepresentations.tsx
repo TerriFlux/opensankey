@@ -58,10 +58,15 @@ import { analysisPartTarget } from './AnalysisPartTarget'
 import {
   analysisHierarchyTree, buildAnalysisChartData, isFluxCompare, Type_DecomposeSpec, Type_ChartSubject
 } from '../Charts/AnalysisChartData'
+import type { Type_HierarchyReading } from '../Charts/AnalysisChartData'
 // 24/09/2026 — le tracé à anneaux et sa lecture de style, appelés par la couronne quand le mode
 // « un anneau par niveau » le demande. Le disque n'est plus une autre figure, c'en est un mode.
 import { drawSunburstChart } from '../Charts/SunburstChart'
-import { readSunburstStyle } from './SunburstRepresentation'
+import {
+  figureViewOf, publishFigureZoom, rememberFigureView
+} from '../Charts/figureZoomBridge'
+import { ZOOM_TOPIC } from '../types/EventBus'
+import { readSunburstStyle, SUNBURST_ZOOM } from './SunburstRepresentation'
 import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 
@@ -244,6 +249,32 @@ const withHierarchy = (
  * DÉCOMPOSE. Les deux natures d'analyse partagent la même réponse, puisque c'est la même analyse
  * vue autrement — le fond de os#1402.
  */
+/**
+ * 24/09/2026 — CE QUE L'AUTEUR RÈGLE DE LA LECTURE DE LA HIÉRARCHIE, lu sur la figure.
+ *
+ * Les quatre clés que la nature « Sunburst » portait en propre (`hierarchyReadingAttributes`),
+ * reprises par la couronne le jour où elle a su dessiner ses anneaux. Elles ne règlent pas le
+ * DESSIN mais l'ARBRE — combien d'anneaux, ce que vaut un nœud, de quel côté on le lit, et ce
+ * qu'on fait de ce que ses enfants ne couvrent pas —, donc elles s'appliquent AUX DEUX MODES.
+ *
+ * Une valeur d'un type inattendu est ignorée plutôt que de casser : un réglage persisté par une
+ * version ultérieure ne doit pas vider une figure.
+ */
+const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyReading => {
+  const raw = ctx.options ?? {}
+  const one_of = <T extends string>(v: unknown, allowed: readonly T[]): T | undefined =>
+    allowed.includes(v as T) ? v as T : undefined
+  return {
+    chain_axes: typeof raw['chain_axes'] === 'boolean' ? raw['chain_axes'] : undefined,
+    value_mode: one_of(raw['value_mode'], ['sum', 'declared'] as const),
+    node_value_mode: one_of(raw['node_value_mode'], ['max', 'inputs', 'outputs'] as const),
+    max_depth: typeof raw['max_depth'] === 'number' && raw['max_depth'] > 0
+      ? Math.floor(raw['max_depth'])
+      : undefined,
+    residual_label: ctx.app_data.t('sunburst.unallocated') as string
+  }
+}
+
 const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | null => {
   const a = analysisOf(ctx)
   if (!a) return null
@@ -251,18 +282,22 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
   // secteur de chaque anneau est un élément qu'on touche et qu'on règle. Le tracé du disque lit
   // `by_id` et compose lui-même ; lui rendre la frontière laisserait les anneaux intérieurs sans
   // part, donc sans réglage et sans sélection.
-  const tree = ringsTreeOf(a)
+  const reading = hierarchyReadingOf(ctx)
+  const tree = ringsTreeOf(a, reading)
   if (tree) return sunburstPartInputs(ctx.app_data.drawing_area.sankey, tree)
-  return analysisPartInputs(a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav))
+  return analysisPartInputs(
+    a.subject, a.descriptor, flatParts(a.subject, a.descriptor, a.nav, reading)
+  )
 }
 
 /** L'arbre à dessiner en anneaux, ou `null` quand la figure est « en place » (ou à plat). */
 const ringsTreeOf = (
-  a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor, nav: Type_FigureNavigation }
+  a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor, nav: Type_FigureNavigation },
+  reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
   const decompose = a.descriptor.decompose
   if (decompose?.kind !== 'node_children' || decompose.levels !== 'rings') return null
-  return analysisHierarchyTree(a.subject, a.descriptor, a.nav)
+  return analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading)
 }
 
 /**
@@ -539,9 +574,10 @@ const donutClickGestures = (
 const flatParts = (
   subject: Type_ChartSubject,
   desc: Type_AnalysisDescriptor,
-  nav: Type_FigureNavigation
+  nav: Type_FigureNavigation,
+  reading: Type_HierarchyReading = {}
 ) => {
-  const data = buildAnalysisChartData(subject, desc, nav)
+  const data = buildAnalysisChartData(subject, desc, nav, reading)
   if (isFluxCompare(desc.compare)) return data.series.map(s => s.parts[0]).filter(Boolean)
   return data.series[0]?.parts ?? []
 }
@@ -600,6 +636,12 @@ export const registerAnalysisRepresentations = (): void => {
     icon: <FaChartPie />,
     own: DONUT_OWN,
     socle: DONUT_SOCLE,
+    // 24/09/2026 — LE ZOOM, quand elle dessine ses anneaux. Les boutons −/+/% de la colonne
+    // d'outils parlent au tracé monté dans la vignette active, et c'est le MÊME pont que celui du
+    // disque (`figureZoomBridge`) : le tracé à anneaux publie sa poignée, qu'il soit monté par la
+    // nature « Sunburst » ou par la couronne. `isAvailable` répond donc « non » sur une couronne
+    // à plat — il n'y a personne à qui parler, et le contrôle se grise au lieu d'avaler les clics.
+    zoom: SUNBURST_ZOOM,
     // L axe et l epingle, comme les barres — plus l endroit ou la couronne est descendue, qui n a
     // de sens que chez elle (23/09/2026).
     extra_attributes: DONUT_EXTRA_ATTRIBUTES,
@@ -632,7 +674,7 @@ export const registerAnalysisRepresentations = (): void => {
       // parts et SES réglages. Rien n'est recopié : `drawSunburstChart` lit les mêmes clés de
       // catalogue (`readSunburstStyle`), et le clic y fait le même geste qu'ici.
       const a = analysisOf(ctx)
-      const rings = a ? ringsTreeOf(a) : null
+      const rings = a ? ringsTreeOf(a, hierarchyReadingOf(ctx)) : null
       if (rings) {
         const teardown = drawSunburstChart(container, rings, {
           parts: wiring.by_id,
@@ -660,7 +702,13 @@ export const registerAnalysisRepresentations = (): void => {
           on_arc_click: (
             node_id: string, _is: boolean, _dim: string, path: string[],
             gesture?: { shift: boolean }
-          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true }, path)
+          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true }, path),
+          // LE ZOOM, prêté à la colonne d'outils par le même pont que le disque : c'est ce qui
+          // rend `SUNBURST_ZOOM` vrai sur une couronne en anneaux (cf. la déclaration `zoom`).
+          zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),
+          on_zoom: () => ctx.app_data.menu_configuration.notify(ZOOM_TOPIC),
+          initial_view: figureViewOf(ctx.window_id, ctx.pane_key),
+          on_view: (view) => rememberFigureView(ctx.window_id, ctx.pane_key, view)
         })
         return () => { teardown() }
       }
