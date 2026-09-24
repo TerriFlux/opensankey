@@ -201,6 +201,35 @@ export interface Type_ChartPartAspect extends Type_FigurePartLabelAspect {
   style?: Partial<Type_FigureChartStyle>
 }
 
+/**
+ * 24/09/2026 — DE QUEL ANGLE LES ÉTIQUETTES D'ABSCISSE S'INCLINENT.
+ *
+ * Julien : « sur les barres il y a quelque chose qui se passe qui ne semble pas configurable, le
+ * label se met de travers. C'est pas l'esprit de notre appli : les choses doivent être
+ * configurables. »
+ *
+ * La règle vivait EN DUR dans quatre traceurs — « plus de six barres OU un libellé de plus de huit
+ * caractères » — et l'auteur n'avait aucun endroit où dire non. Elle est ici, une fois, derrière un
+ * réglage (`name_label_angle`) dont 'auto' est exactement cette règle : aucun histogramme
+ * enregistré ne change d'aspect.
+ */
+export const barLabelAngle = (
+  st: Type_FigureChartStyle,
+  labels: readonly { label: string }[]
+): 0 | -35 | -90 => {
+  switch (st.name_label_angle) {
+  case 'horizontal': return 0
+  case 'tilted': return -35
+  case 'vertical': return -90
+  default:
+    return (labels.length > 6 || labels.some(s => s.label.length > 8)) ? -35 : 0
+  }
+}
+
+/** La bande que l'abscisse réserve sous le dessin, selon l'angle de ses étiquettes. */
+export const barLabelBottom = (angle: 0 | -35 | -90): number =>
+  angle === 0 ? 22 : angle === -35 ? 46 : 60
+
 /** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
 export const orderParts = <T extends { label: string, value: number }>(
   parts: T[], order: Type_FigureChartStyle['parts_order']
@@ -1152,8 +1181,9 @@ export const drawBarChart = (
 
   // Marges : place pour les labels de valeur (haut) et de catégorie (bas, pivotés
   // quand ils sont nombreux/longs).
-  const rotate_labels = slices.length > 6 || slices.some(s => s.label.length > 8)
-  const bottom = rotate_labels ? 46 : 22
+  const label_angle = barLabelAngle(st, slices)
+  const rotate_labels = label_angle !== 0
+  const bottom = barLabelBottom(label_angle)
   // Écrasement (#393) : ici il n'y a pas de grappe — chaque barre est seule de son
   // espèce, et leur donner à chacune son échelle les mettrait TOUTES au plafond, ce
   // qui n'est plus un graphique. On garde donc l'échelle partagée et on se borne au
@@ -1517,7 +1547,7 @@ export const drawBarChart = (
       .attr('transform', d => {
         const at = barLabelAt(d)
         return at.rotate
-          ? `translate(${at.x},${at.y}) rotate(-35)`
+          ? `translate(${at.x},${at.y}) rotate(${label_angle})`
           : `translate(${at.x},${at.y})`
       })
       .attr('text-anchor', d => barLabelAt(d).anchor)
@@ -1701,8 +1731,9 @@ export const drawStackedBarChart = (
   // La HAUTEUR d'abord, la largeur ensuite : la hauteur n'a jamais dépendu de la largeur,
   // et c'est elle qui dit combien de piles sont au plancher — donc si la colonne latérale
   // a quelque chose à porter, même légende coupée (voir plus bas).
-  const rotate_labels = series.length > 6 || series.some(s => s.label.length > 8)
-  const margin = { top: 18, right: 8, bottom: rotate_labels ? 46 : 22, left: 8 }
+  const label_angle = barLabelAngle(st, series)
+  const rotate_labels = label_angle !== 0
+  const margin = { top: 18, right: 8, bottom: barLabelBottom(label_angle), left: 8 }
   const h = height - margin.top - margin.bottom
 
   // Écrasement (#393) : ici non plus il n'y a pas de grappe — une barre par série, et
@@ -1770,7 +1801,9 @@ export const drawStackedBarChart = (
     .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', '#4A5568')
     .attr('transform', s => {
       const cx = (x(s.id) ?? 0) + x.bandwidth() / 2
-      return rotate_labels ? `translate(${cx},${h + 8}) rotate(-35)` : `translate(${cx},${h + 14})`
+      return rotate_labels
+        ? `translate(${cx},${h + 8}) rotate(${label_angle})`
+        : `translate(${cx},${h + 14})`
     })
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')
     .text(s => s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label)
@@ -1883,8 +1916,9 @@ export const drawGroupedBarChart = (
   const legend_width = Math.min(200, width * 0.35)
   const chart_width = Math.max(80, width - legend_width - 12)
 
-  const rotate_labels = groups.length > 6 || groups.some(g => g.label.length > 8)
-  const bottom = (rotate_labels ? 46 : 22) + (stacked ? 30 : 0)
+  const label_angle = barLabelAngle(st, groups)
+  const rotate_labels = label_angle !== 0
+  const bottom = barLabelBottom(label_angle) + (stacked ? 30 : 0)
   const margin = { top: 18, right: 8, bottom, left: 8 }
   const w = chart_width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
@@ -1985,7 +2019,7 @@ export const drawGroupedBarChart = (
     .attr('transform', grp => {
       const cx = (x_group(grp.id) ?? 0) + x_group.bandwidth() / 2
       return rotate_labels
-        ? `translate(${cx},${group_label_y + 8}) rotate(-35)`
+        ? `translate(${cx},${group_label_y + 8}) rotate(${label_angle})`
         : `translate(${cx},${group_label_y + 14})`
     })
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')

@@ -14,7 +14,7 @@
 
 import * as d3 from '../d3Modules'
 
-import { drawDonutChart } from './NodeStatsCharts'
+import { barLabelAngle, barLabelBottom, drawDonutChart } from './NodeStatsCharts'
 import type { Type_StatSlice } from './NodeStatsCharts'
 import { DONUT_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_FigureChartStyle } from './figureChartStyle'
@@ -138,5 +138,49 @@ describe('les couleurs d une couronne descendue', () => {
     const [first, second] = fills(el)
 
     expect(first).not.toBe(second)
+  })
+})
+
+// ── 24/09/2026 — L INCLINAISON DES ETIQUETTES D UN HISTOGRAMME EST UN REGLAGE ────────────────
+//
+// Julien, capture a l appui : « sur les barres il y a quelque chose qui se passe qui ne semble pas
+// configurable, le label se met de travers. C est pas l esprit de notre appli : les choses doivent
+// etre configurables. »
+//
+// La regle vivait EN DUR dans quatre traceurs — « plus de six barres OU un libelle de plus de huit
+// caracteres » — et rien ne pouvait la contredire. Ce bloc fige les deux moities du correctif :
+// 'auto' EST cette regle (donc aucun histogramme enregistre ne change), et les trois autres
+// valeurs la remplacent.
+describe('l inclinaison des etiquettes d un histogramme', () => {
+
+  const COURTES = [{ id: 'a', label: 'Ble', value: 3 }, { id: 'b', label: 'Mais', value: 2 }]
+  const LONGUES = [{ id: 'a', label: 'Consommation', value: 3 }, { id: 'b', label: 'Production', value: 2 }]
+
+  test('automatique : a plat tant que les libelles tiennent', () => {
+    expect(barLabelAngle(styleOf({}), COURTES)).toBe(0)
+  })
+
+  test('automatique : incline des qu un libelle est long', () => {
+    // C est le cas de la capture : deux barres seulement, mais « Consommation » depasse.
+    expect(barLabelAngle(styleOf({}), LONGUES)).toBe(-35)
+  })
+
+  test('automatique : incline des qu il y a plus de six barres', () => {
+    const sept = Array.from({ length: 7 }, (_, i) => ({ id: String(i), label: 'x', value: 1 }))
+    expect(barLabelAngle(styleOf({}), sept)).toBe(-35)
+  })
+
+  test('l auteur peut contredire la regle, dans les deux sens', () => {
+    // C est tout l objet du lot : la regle automatique n a plus le dernier mot.
+    expect(barLabelAngle(styleOf({ name_label_angle: 'horizontal' }), LONGUES)).toBe(0)
+    expect(barLabelAngle(styleOf({ name_label_angle: 'tilted' }), COURTES)).toBe(-35)
+    expect(barLabelAngle(styleOf({ name_label_angle: 'vertical' }), COURTES)).toBe(-90)
+  })
+
+  test('la bande reservee sous l abscisse suit l angle', () => {
+    // Sans quoi des etiquettes verticales deborderaient du cadre, ou une ligne a plat laisserait
+    // une bande vide de 46 px.
+    expect(barLabelBottom(0)).toBeLessThan(barLabelBottom(-35))
+    expect(barLabelBottom(-35)).toBeLessThan(barLabelBottom(-90))
   })
 })

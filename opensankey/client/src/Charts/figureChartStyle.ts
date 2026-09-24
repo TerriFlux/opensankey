@@ -99,6 +99,14 @@ export interface Type_FigureChartStyle {
   name_label_separator_part: 'before' | 'after'
   name_label_prune_if_unfitting: boolean
   /**
+   * `name_label_angle` — L'INCLINAISON DES ÉTIQUETTES D'ABSCISSE d'un histogramme.
+   *
+   * 'auto' (le défaut, et le tracé d'hier) : inclinées dès qu'elles se chevaucheraient. Les trois
+   * autres valeurs remplacent la règle par un choix — c'était une règle en dur, que rien ne
+   * pouvait contredire (demande de Julien, 24/09/2026).
+   */
+  name_label_angle: 'auto' | 'horizontal' | 'tilted' | 'vertical'
+  /**
    * os#1463 — L'ÉTIQUETTE SORT DU DESSIN, RELIÉE À SA PART PAR UN TRAIT, quand elle n'y tient pas.
    *
    * Réglage de FIGURE, comme au sunburst (`Type_SunburstStyle.callout`) : c'est une façon de poser
@@ -181,6 +189,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   name_label_separator: '',
   name_label_separator_part: 'after',
   name_label_prune_if_unfitting: false,
+  // Le tracé d'hier : la règle automatique, inchangée.
+  name_label_angle: 'auto',
   // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
   name_label_callout: false,
   value_label_is_visible: true,

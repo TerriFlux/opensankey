@@ -548,6 +548,39 @@ export const SCALE_CONFIG = {
 // n'a pas d'étiquette radiale, et un flux dit déjà son pourcentage par `value_label_unit_type`
 // (`%IS`, `%OS`, `%ID`…). Une figure, elle, n'a ni source ni destination.
 export const FIGURE_LABEL_CONFIG = {
+  // ── 24/09/2026 — L'INCLINAISON DES ÉTIQUETTES D'UN HISTOGRAMME, ENFIN RÉGLABLE ──────────────
+  //
+  // Julien, capture à l'appui : « sur les barres il y a quelque chose qui se passe qui ne semble
+  // pas configurable, le label se met de travers. C'est pas l'esprit de notre appli : les choses
+  // doivent être configurables. »
+  //
+  // Le tracé inclinait à −35° dès que les barres étaient plus de six OU qu'un libellé dépassait
+  // huit caractères. Une règle écrite en dur dans QUATRE traceurs, que rien ne pouvait contredire
+  // — l'auteur voyait son étiquette basculer et n'avait aucun endroit où dire « non ».
+  //
+  // 'auto' garde exactement cette règle : aucun histogramme enregistré ne change d'aspect. Les
+  // trois autres valeurs la remplacent par un choix.
+  name_label_angle: entry<'auto' | 'horizontal' | 'tilted' | 'vertical'>('auto', 'name_label', {
+    en: 'Label tilt', fr: 'Inclinaison des étiquettes', es: 'Inclinación de las etiquetas',
+    de: 'Neigung der Beschriftungen', it: 'Inclinazione delle etichette',
+    'zh-CN': '标签倾斜', ja: 'ラベルの傾き'
+  }, {
+    en: 'Automatic tilts them as soon as they would overlap.',
+    fr: 'Automatique les incline dès qu’elles se chevaucheraient.',
+    es: 'Automática las inclina en cuanto se solaparían.',
+    de: 'Automatisch neigt sie, sobald sie sich überlappen würden.',
+    it: 'Automatica le inclina non appena si sovrapporrebbero.',
+    'zh-CN': '自动模式会在标签可能重叠时将其倾斜。',
+    ja: '自動では、重なりそうになった時点で傾けます。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('auto', { en: 'Automatic', fr: 'Automatique', es: 'Automática', de: 'Automatisch', it: 'Automatica', 'zh-CN': '自动', ja: '自動' }),
+      choice('horizontal', { en: 'Always flat', fr: 'Toujours à plat', es: 'Siempre en horizontal', de: 'Immer waagerecht', it: 'Sempre in piano', 'zh-CN': '始终水平', ja: '常に水平' }),
+      choice('tilted', { en: 'Always tilted', fr: 'Toujours inclinées', es: 'Siempre inclinadas', de: 'Immer geneigt', it: 'Sempre inclinate', 'zh-CN': '始终倾斜', ja: '常に傾ける' }),
+      choice('vertical', { en: 'Upright', fr: 'À la verticale', es: 'En vertical', de: 'Senkrecht', it: 'In verticale', 'zh-CN': '竖排', ja: '縦書き' })
+    ]
+  }),
   name_label_orientation: entry<'radial' | 'tangential' | 'horizontal'>('radial', 'name_label', {
     en: 'Label orientation', fr: 'Orientation des étiquettes', es: 'Orientación de las etiquetas',
     de: 'Ausrichtung der Beschriftungen', it: 'Orientamento delle etichette', 'zh-CN': '标签方向', ja: 'ラベルの向き'
