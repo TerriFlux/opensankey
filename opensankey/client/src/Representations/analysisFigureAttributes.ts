@@ -240,10 +240,28 @@ const DONUT_HONOURS = {
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
-  // 24/09/2026 — « OK mais où est le mode sunburst ? ». Ici, dans l'onglet Graphe, à côté du clic
-  // et du centre : ce réglage change l'ASPECT et rien d'autre (cf. `LEVELS_CONFIG`).
-  levels_display: {},
-  interaction_click: { advanced: false },
+  // ── 24/09/2026 — LES DEUX SE RÈGLENT DANS « FILTRES ET COORDONNÉES », SOUS « DESCENDRE » ────
+  //
+  // Julien : « je ne suis pas sûr que cette partie ne doive pas être plutôt dans navigation /
+  // coordonnées ; en tout cas, spontanément, c'est là que je cherche ».
+  //
+  // C'est l'arbitrage, et il a une raison au-delà de l'habitude : ces deux réglages ne décrivent
+  // pas l'ASPECT de la figure. Le clic AGIT sur le diagramme — il change son niveau d'agrégation ;
+  // la disposition dit sous quelle forme la descente se montre. Ni l'un ni l'autre n'est une
+  // couleur ou une police. Ce sont des réglages de ce qu'on REGARDE, et ils se lisent à côté de la
+  // descente qui les rend possibles.
+  //
+  // `sort: 'navigation'` suffit à les y mettre : la carte « Coordonnées » rend les clés de cette
+  // sorte juste sous ses propres lignes (`FigureSettingsControls`), avec leurs libellés du
+  // catalogue dans les sept langues. Aucune interface n'est écrite pour eux — c'est tout l'intérêt
+  // de déclarer plutôt que de dessiner.
+  //
+  // ⚠️ CONSÉQUENCE ASSUMÉE : une clé de navigation ne se transpose pas par un style (elle est
+  // REFUSÉE à l'écriture, cf. `Class_Figure.assignStyle`). Deux couronnes n'hériteront donc pas
+  // l'une de l'autre le geste du clic. C'est cohérent avec ce qu'elles sont — ce que CETTE figure
+  // montre, et ce que le clic y fait — et c'est la règle qu'os#1414 a posée pour l'axe.
+  levels_display: { sort: 'navigation' as const },
+  interaction_click: { advanced: false, sort: 'navigation' as const },
   parts_group_under: { default: 0.5 },
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE.
   //
