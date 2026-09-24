@@ -114,17 +114,6 @@ export interface Type_FigureChartStyle {
   value_label_percent: 'none' | 'total' | 'parent'
   /** scale_factor, en % du cadre. */
   scale_factor: number
-  /**
-   * `axis_label_angle` — L'INCLINAISON DES ÉTIQUETTES D'ABSCISSE d'un histogramme.
-   *
-   * 'auto' (le défaut, et le tracé d'hier) : inclinées dès qu'elles se chevaucheraient. Les trois
-   * autres valeurs remplacent la règle par un choix — c'était une règle en dur, que rien ne
-   * pouvait contredire (demande de Julien, 24/09/2026).
-   *
-   * `axis_` et non `name_label_` : elle règle l'ABSCISSE, pas le libellé d'une part, et le préfixe
-   * est ce qui la range dans l'onglet Graphe plutôt que dans Libellé.
-   */
-  axis_label_angle: 'auto' | 'horizontal' | 'tilted' | 'vertical'
   interaction_tooltip: boolean
   /**
    * `interaction_click` — CE QUE LE CLIC SUR UNE PART FAIT, en plus de la sélectionner.
@@ -198,8 +187,6 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   value_label_is_visible: true,
   value_label_percent: 'total',
   scale_factor: 100,
-  // Le tracé d'hier : la règle automatique, inchangée.
-  axis_label_angle: 'auto',
   interaction_tooltip: true,
   // RIEN DE PLUS : le clic ouvre l'anneau dans la figure, et s'arrête là. Déplier aussi le
   // diagramme est un choix, pas un défaut — explorer ne doit pas modifier le document sans qu'on
@@ -286,6 +273,15 @@ export interface Type_FigurePartTextAspect extends Type_FigureLabelBackground {
    * dans la part, l'autre de quel côté le texte pend à partir de ce point.
    */
   text_align?: 'left' | 'middle' | 'right'
+  /**
+   * `*_text_angle` — L'ANGLE DE CE TEXTE, en degrés (négatif = sens antihoraire).
+   *
+   * 24/09/2026, arbitrage de Julien : « l'angle est de la part — c'est son texte ; pour les régler
+   * tous, le style de part ». Absent, le tracé décide : sous l'axe d'un histogramme, il incline
+   * les étiquettes dès qu'elles se chevaucheraient. Cette règle n'est donc PAS un réglage, c'est
+   * le repli — et la part a le dernier mot dès qu'elle parle.
+   */
+  text_angle?: number
 
   // ── CE QUE SEUL UN DISQUE LISAIT, ET QUI EST POURTANT DU TEXTE (os#1474) ───────────────────
   //

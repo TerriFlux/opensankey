@@ -424,6 +424,11 @@ export const partAspect = (
       shift_x: numberSaid(at('horiz_shift')),
       shift_y: numberSaid(at('vert_shift')),
       text_align: oneOfSaid(at('text_align'), ['left', 'middle', 'right'] as const),
+      // 24/09/2026 — L'ANGLE DE CE TEXTE, en degrés. Arbitrage de Julien : « l'angle est de la
+      // part — c'est son texte ; pour les régler tous, le style de part ». La clé existait au
+      // catalogue des éléments (un nœud tourne son nom depuis l'import e!Sankey) et n'était lue
+      // par aucune figure : le tracé des barres décidait seul, et rien ne pouvait le contredire.
+      text_angle: numberSaid(at('text_angle')),
       // os#1474 — les trois que seul le sunburst lisait. Lues ici, elles valent pour toute nature
       // qui voudra les dessiner ; celles qui ne les dessinent pas les ignorent.
       is_visible: booleanSaid(at('is_visible')),
