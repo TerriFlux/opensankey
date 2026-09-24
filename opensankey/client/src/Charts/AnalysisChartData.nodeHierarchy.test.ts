@@ -148,6 +148,22 @@ describe('la decomposition d un noeud, ouverte au clic', () => {
     expect(ids(partsOf(app, ['Viande']))).toEqual(['Cereales', 'Viande'])
   })
 
+  test('une part porte sa route MEME quand rien n est ouvert', () => {
+    // 24/09/2026 — Julien : « en place, quand je clique sur Mais, le diagramme donne Cereales +
+    // Mais Bio + Mais Conventionnel ; en anneaux ca desagrege correctement ».
+    //
+    // C est ce cas-ci qui manquait. Rien d ouvert, les parts viennent du chemin PLAT, et il ne
+    // posait pas de route : le clic ne depliait que le noeud touche, jamais le chemin qui y mene.
+    // Le sujet restait replie, et le diagramme montrait le parent A COTE des petits-enfants. Le
+    // mode anneaux tenait sa route du trace, d ou l ecart entre les deux modes.
+    const app = loadApp()
+
+    const parts = partsOf(app)
+
+    expect(parts.find(p => p.id === 'Cereales')?.path).toEqual(['Racine', 'Cereales'])
+    expect(parts.find(p => p.id === 'Viande')?.path).toEqual(['Racine', 'Viande'])
+  })
+
   test('chaque part porte SA ROUTE, celle que le clic deplie', () => {
     // La couronne ne depliait que le noeud clique : sur un noeud profond, ses ancetres restaient
     // replies et le diagramme montrait le parent ET ses parts. La route est ce qui manquait, et c
