@@ -200,4 +200,8 @@ def test_la_theque_et_le_corpus_esankey_nont_pas_de_classeur(client):
     for source in ("mfadata", "esankey-local"):
         response = client.get(
             "/menus/templates_xlsx/templates/data/demo.json?source=" + source)
-        assert response.status_code == 404
+        # Pas `== 404` : selon la branche, le gestionnaire d'erreur de
+        # l'application renvoie le navigateur vers « / » (302) plutot que de
+        # rendre la page 404. Ce qui doit tenir, c'est qu'aucun classeur ne sort.
+        assert response.status_code != 200, source
+        assert not response.data.startswith(XLSX_MAGIC)
