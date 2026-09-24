@@ -39,7 +39,7 @@ import {
 } from './analysisFigureAttributes'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
-import { disaggregateLocally } from '../Algorithms/Hierarchies'
+import { aggregateLocally, disaggregateLocally } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
@@ -333,6 +333,37 @@ const analysisOf = (
   return { subject, descriptor, nav }
 }
 
+/**
+ * LA MISE EN FORME D'UNE COURONNE — et le seul défaut qui dépend de ce qu'elle montre.
+ *
+ * 24/09/2026, arbitrage de Julien : « bascule en palette d'office dès qu'elle descend ».
+ *
+ * POURQUOI ÇA NE POUVAIT PAS ÊTRE UN DÉFAUT DÉCLARÉ. Une couronne colore ses parts avec LA COULEUR
+ * DU DIAGRAMME (`parts_color_source: 'model'`), et c'est le bon défaut à plat : un secteur y porte
+ * la teinte du nœud qu'il désigne, comme le dessin. Sous une descente, ce défaut tombe à plat au
+ * sens propre — un même anneau mélange deux niveaux, et rien ne dit plus quelle part sort de
+ * quelle branche. Il faut la règle du disque, qui ne s'applique que sous 'palette'. Or un défaut
+ * déclaré est une valeur, pas une condition : le catalogue ne sait pas dire « model à plat,
+ * palette en descente ».
+ *
+ * ⚠️ ET UN CHOIX EXPLICITE CONTINUE DE GAGNER, ce qui est toute la différence entre changer un
+ * DÉFAUT et forcer une valeur. On ne bascule que si l'auteur n'a jamais touché la clé
+ * (`isAttributeOverloaded`) : celui qui a demandé « couleur du diagramme » la garde en descendant,
+ * et le sélecteur de l'inspecteur continue de dire la vérité sur ce qui est dessiné.
+ *
+ * Hors fenêtre (pop-up de présentation, aperçu), il n'y a pas de figure à interroger : on lit le
+ * sac tel quel, comme avant.
+ */
+const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle => {
+  const style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
+  if (style.parts_color_source !== 'model' || !hierarchyInEffect(ctx)) return style
+  const { window_id, pane_key } = ctx
+  if (window_id === undefined || pane_key === undefined) return style
+  const figure = ctx.app_data.menu_configuration.figureOf(window_id, pane_key)
+  if (figure.isAttributeOverloaded('parts_color_source')) return style
+  return { ...style, parts_color_source: 'palette' }
+}
+
 /** La décomposition hiérarchique EN VIGUEUR sur cette figure, ou `null` si elle est à plat. */
 const hierarchyInEffect = (
   ctx: Type_RepresentationContext
@@ -354,19 +385,31 @@ const hierarchyInEffect = (
  *                 cliqué cède sa place à ses enfants, ici comme là-bas. C'est le pont du sunburst,
  *                 et c'est le même appel (`disaggregateLocally`).
  *   'zoom'      — DESCENDRE DANS LA FIGURE SEULE. Le nœud cliqué devient le tout, le diagramme ne
- *                 bouge pas, et le centre ramène d'un cran. Le chemin est un RÉGLAGE de la figure
- *                 (`hierarchy_focus`) et non un état du tracé : écrit là, il survit au redessin,
- *                 l'inspecteur le voit, et les parts se reconstruisent sur le bon périmètre — un
- *                 foyer gardé dans le dessin aurait laissé le document de parts sur l'ancien.
+ *                 bouge pas. Le chemin est un RÉGLAGE de la figure (`hierarchy_focus`) et non un
+ *                 état du tracé : écrit là, il survit au redessin, l'inspecteur le voit, et les
+ *                 parts se reconstruisent sur le bon périmètre — un foyer gardé dans le dessin
+ *                 aurait laissé le document de parts sur l'ancien.
  *
- * HORS FENÊTRE (pop-up de présentation, aperçu), le drill-down ne se propose pas : il n'y a
- * personne à qui écrire le chemin, et une pop-up ne modifie rien. Déplier, lui, agit sur le
- * diagramme et reste offert.
+ * ── SHIFT+CLIC REMONTE, ET C'EST LE MÊME GESTE À L'ENVERS (Julien, 24/09/2026) ────────────────
+ *
+ * « On peut pas imaginer des combinaisons de touches, shift+clic / clic, un pour remonter un pour
+ * descendre ? » C'est la réponse au trou qu'il avait relevé la minute d'avant : une couronne qui
+ * déplie et ne sait pas replier oblige à ressortir de la figure pour revenir en arrière.
+ *
+ * Le sens de « remonter » n'est pas le même des deux côtés, et c'est pour ça que le tracé se
+ * contente de rapporter la touche :
+ *   en 'aggregate', shift+clic REPLIE LE SECTEUR DANS SON PARENT — cliquer « Blé » avec shift fait
+ *     réapparaître « Céréales » à la place de « Blé » et « Maïs ». Le geste est LOCAL, comme
+ *     déplier l'est : il ne touche que la branche qu'on désigne ;
+ *   en 'zoom', il dépile le foyer d'un cran — le même effet que le centre, sous le doigt.
  */
 const donutClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
-): { activate?: (part_id: string) => void, back?: () => void } => {
+): {
+  activate?: (part_id: string, gesture: { shift: boolean }) => void
+  back?: () => void
+} => {
   const hierarchy = hierarchyInEffect(ctx)
   if (!hierarchy || style.interaction_click === 'none') return {}
   const app_data = ctx.app_data
@@ -384,17 +427,35 @@ const donutClickGestures = (
     )
   }
 
-  const activate = (part_id: string) => {
+  /** L'axe qui porte les enfants de ce nœud : celui de la couronne d'abord, le premier sinon. */
+  const dimensionOf = (node: Class_NodeElement) =>
+    node.dimensions_as_parent.find(
+      (d: Class_NodeDimension) => d.id === hierarchy.dimension_id && d.children.length > 0
+    ) ?? node.dimensions_as_parent.find((d: Class_NodeDimension) => d.children.length > 0)
+
+  const activate = (part_id: string, gesture: { shift: boolean }) => {
     // Un secteur replié par le tracé (« Autres ») ne désigne aucun nœud : il n'y a rien à déplier
     // ni où descendre. On ne devine pas.
     const node = sankey.nodes_dict[part_id] as Class_NodeElement | undefined
     if (!node) return
+
+    if (gesture.shift) {
+      // REPLIER LA BRANCHE QU'ON DÉSIGNE. Le parent est celui de l'axe de la couronne, ou celui
+      // par lequel le nœud a été atteint (treillis) : `aggregateLocally` refuse tout seul si le
+      // couple n'est pas déplié, donc un shift+clic sur un nœud de premier rang ne fait rien.
+      if (wants_unfold) {
+        const up = node.dimensions_as_child.find(
+          (d: Class_NodeDimension) => d.id === hierarchy.dimension_id
+        ) ?? node.dimensions_as_child[0]
+        if (up) aggregateLocally(app_data, node, up.parent.id)
+      }
+      // En descente dans la figure, remonter c'est dépiler — le même effet que le centre.
+      if (wants_drill && hierarchy.path.length > 0) writePath(hierarchy.path.slice(0, -1))
+      return
+    }
+
     if (wants_unfold) {
-      // L'axe qui porte SES enfants — celui du descripteur d'abord, puisque c'est lui qui a
-      // construit l'anneau ; le premier qui en a sinon (axes enchaînés d'un treillis).
-      const dim = node.dimensions_as_parent.find(
-        (d: Class_NodeDimension) => d.id === hierarchy.dimension_id && d.children.length > 0
-      ) ?? node.dimensions_as_parent.find((d: Class_NodeDimension) => d.children.length > 0)
+      const dim = dimensionOf(node)
       if (dim) disaggregateLocally(app_data, node, (dim.children[0] as Class_NodeElement).id)
     }
     // Descendre ne se fait que s'il y a où descendre : un nœud sans enfant deviendrait un tout
@@ -511,17 +572,18 @@ export const registerAnalysisRepresentations = (): void => {
       const a = analysisOf(ctx)
       return !!a && !isGroupedCross(a.descriptor)
     },
-    style: (ctx) => figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS),
+    style: (ctx) => donutStyleOf(ctx),
     part_context: analysisPartContext,
     parts: (ctx) => analysisPartsOf(ctx),
     draw: (container, parts, wiring, ctx) => {
       // 23/09/2026 — les deux gestes de la descente, quand la figure descend (cf.
       // `donutClickGestures`). Absents sous un seul cran : le clic ne fait que sélectionner, comme
       // depuis toujours.
-      const style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
+      const style = donutStyleOf(ctx)
       const gestures = donutClickGestures(ctx, style)
       drawDonutChart(container, parts as unknown as Type_StatSlice[], {
         ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
+        style,
         part_aspect: wiring.part_aspect,
         on_part_select: wiring.on_part_select,
         on_part_activate: gestures.activate,
