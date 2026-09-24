@@ -62,7 +62,7 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import type { Type_CanvasFrame } from './DrawingArea'
 import { exposeDrawCounters } from './DrawCounters'
-import { SAVE_TOPIC } from './EventBus'
+import { EXPORT_TOPIC, SAVE_TOPIC } from './EventBus'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -1347,6 +1347,23 @@ export class Class_ApplicationData {
     // sa#524 — un vrai fichier vient d'être écrit : signalé aux couches qui
     // veulent y réagir (la couche applicative y propose le compte gratuit).
     this.menu_configuration.notify(SAVE_TOPIC)
+  }
+
+  /**
+   * sa#531 — UNE IMAGE VIENT D'ÊTRE EXPORTÉE (PNG, SVG, PDF).
+   *
+   * Volontairement séparé de `noteDocumentDownloaded` : un export est un rendu
+   * figé, pas un fichier réouvrable, et il ne doit donc RIEN changer à la date
+   * du dernier enregistrement — sinon l'avertissement de perte de travail
+   * mentirait à quelqu'un qui n'a exporté qu'une image.
+   *
+   * Ne fait que signaler : c'est la couche applicative qui journalise. Depuis
+   * que le rendu est rasterisé dans le navigateur, aucune route serveur ne voit
+   * plus passer un export.
+   */
+  public noteImageExported(format: string) {
+    this.menu_configuration.last_export = { format }
+    this.menu_configuration.notify(EXPORT_TOPIC)
   }
 
   public get last_document_download(): Date | null {
