@@ -35,6 +35,7 @@ import socket
 import subprocess
 import tempfile
 import gzip
+import hashlib
 import os
 import posixpath
 import json
@@ -1626,23 +1627,11 @@ def template_xlsx_sibling(root, file_path):
     return None
 
 
-def templates_with_xlsx(source, index):
-    """Index enrichi, pour chaque modele qui en a un, du chemin de son classeur
-    Excel source (cf. template_xlsx_sibling).
-
-    Pose sur l'index RESOLU seulement : l'index brut reste la liste blanche
-    (templates_declared_assets), et on ne lui ajoute rien.
-    """
-    if index is None or source != "sankeydata":
-        return index
-    root = os.environ.get("SANKEY_DATA")
-    if not root:
-        return index
-    for template in (index.get("templates") or {}).values():
-        sibling = template_xlsx_sibling(root, template.get("file_path"))
-        if sibling:
-            template["xlsx_path"] = sibling
-    return index
+# `templates_with_xlsx` est RETIRE : il posait `xlsx_path` sur les seuls modeles
+# accompagnes d'un classeur, et le front n'affichait la pastille que pour eux —
+# trois vignettes sur trente-six. La pastille vaut maintenant pour tout modele et
+# pointe droit sur menus_templates_xlsx, qui choisit lui-meme entre le classeur
+# pose a cote et la conversion a la volee. L'index n'a plus rien a annoncer.
 
 
 def external_gallery_asset(source, normalized):
@@ -1893,9 +1882,6 @@ def menus_templates():
         # Pas d'index pour cette source (ex. MFAData absent d'un deploiement) :
         # galerie vide plutot qu'une 500, le front n'affiche alors rien.
         data_index = {"categories": [], "templates": {}}
-    # Classeur Excel source, quand il est pose a cote du modele : le front en
-    # fait un bouton de telechargement sur la vignette.
-    data_index = templates_with_xlsx(source, data_index)
     response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
 
@@ -2010,6 +1996,116 @@ def menus_templates_asset(asset):
         # navigateur a deja le modele.
         return send_file(resolved, mimetype="application/gzip", conditional=True)
     return send_from_directory(root, normalized)
+
+
+# Classeurs fabriques a la volee : <cache>/<empreinte du modele>.xlsx. Un fichier
+# par (modele, mtime) : un `git pull` qui met a jour le .json change l'empreinte,
+# l'ancien classeur n'est plus jamais servi. Le dossier est temporaire — le perdre
+# ne coute qu'une reconversion.
+_TEMPLATE_XLSX_CACHE_LOCK = Lock()
+
+
+def _template_xlsx_cache_path(json_abs):
+    """Chemin du classeur de cache pour ce .json, empreinte mtime/taille comprise."""
+    stat = os.stat(json_abs)
+    stamp = "{}-{}-{}".format(os.path.abspath(json_abs), stat.st_mtime_ns, stat.st_size)
+    digest = hashlib.sha1(stamp.encode("utf-8")).hexdigest()
+    cache_dir = os.path.join(tempfile.gettempdir(), "opensankey_templates_xlsx")
+    os.makedirs(cache_dir, exist_ok=True)
+    return os.path.join(cache_dir, digest + ".xlsx")
+
+
+def template_xlsx_build(json_abs, xlsx_abs):
+    """Ecrit le classeur Excel d'un modele a partir de son JSON.
+
+    Exactement ce que fait « Enregistrer sous > Excel » sur un diagramme ouvert
+    (IOJson en lecture, IOExcel en ecriture) : c'est la meme mecanique, prise
+    sans passer par le dialogue ni par le thread de conversion, pour qu'un
+    simple lien suffise a l'obtenir.
+    """
+    io_input = IOJson()
+    ok, msg = io_input.load_sankey(json_abs)
+    if not ok:
+        raise ValueError(msg or "lecture du modele impossible")
+    IOExcel(io_input.sankey).write_sankey(xlsx_abs)
+
+
+@opensankey.route("/menus/templates_xlsx/<path:asset>", methods=["GET"])
+def menus_templates_xlsx(asset):
+    """
+    Le classeur Excel d'un modele de la galerie — celui qui est pose a cote de
+    lui quand il y en a un, sinon converti a la volee depuis son JSON.
+
+    Pourquoi la conversion : un visiteur qui vient avec SES donnees n'a aucun
+    moyen de deviner le format d'onglets attendu par le parser, et c'est la
+    qu'on le perd (11 IP sur 28 arretees par « aucun onglet au format » sur
+    30 jours). Le format, l'application sait deja l'ecrire. Le faire dependre
+    d'un .xlsx depose a la main limitait la porte a 3 modeles sur 36 ; ici tout
+    modele lisible ouvre la meme porte.
+
+    Liste blanche : le chemin doit etre un modele DECLARE par l'index
+    (templates_declared_json), comme pour /menus/templates_asset.
+    """
+    requested = request.args.get("source")
+    # Seule la galerie des modeles : la sankeytheque n'a plus de disque (sa#457)
+    # et le corpus e!Sankey est un format proprietaire, pas un Sankey a reecrire.
+    if requested not in (None, "", "sankeydata"):
+        abort(404)
+    root = os.environ.get("SANKEY_DATA")
+    if not root:
+        abort(404)
+    normalized = posixpath.normpath(asset.replace("\\", "/"))
+    if not normalized.startswith("templates/"):
+        abort(404)
+    json_rel = templates_declared_json("sankeydata", normalized)
+    if not json_rel:
+        abort(404)
+    download_name = posixpath.basename(json_rel)[: -len(".json")] + ".xlsx"
+    # Un classeur SOURCE depose a cote du modele fait toujours foi : il porte la
+    # mise en forme et les commentaires de son auteur, qu'une reecriture perdrait.
+    sibling = template_xlsx_sibling(root, json_rel)
+    if sibling:
+        return send_from_directory(root, sibling, as_attachment=True,
+                                   download_name=download_name)
+    json_abs = safe_join(root, json_rel)
+    if json_abs is None:
+        abort(404)
+    # L'index declare souvent "x.json" quand le disque ne porte que "x.json.gz".
+    # Le parser JSON, lui, ouvre le fichier en texte : le .gz doit etre detendu
+    # d'abord (handle_json_or_compressed, lui, sert le .gz TEL QUEL — c'est ce
+    # qu'attend le navigateur, pas ce qu'attend IOJson).
+    source_abs, temp_json = json_abs, None
+    if not os.path.isfile(json_abs):
+        if not os.path.isfile(json_abs + ".gz"):
+            abort(404)
+        source_abs = json_abs + ".gz"
+    try:
+        cache_path = _template_xlsx_cache_path(source_abs)
+        with _TEMPLATE_XLSX_CACHE_LOCK:
+            if not os.path.isfile(cache_path):
+                if source_abs.endswith(".gz"):
+                    handle, temp_json = tempfile.mkstemp(suffix=".json")
+                    os.close(handle)
+                    with gzip.open(source_abs, "rb") as packed:
+                        with open(temp_json, "wb") as plain:
+                            shutil.copyfileobj(packed, plain)
+                template_xlsx_build(temp_json or source_abs, cache_path)
+    except Exception:
+        # Un modele qui ne se reecrit pas ne doit pas faire une 500 : la vignette
+        # perd son classeur, la galerie reste entiere.
+        current_app.logger.exception(
+            "Classeur Excel du modele « %s » : conversion en echec", json_rel)
+        abort(404)
+    finally:
+        if temp_json:
+            try:
+                os.unlink(temp_json)
+            except OSError:
+                pass
+    return send_file(
+        cache_path, as_attachment=True, download_name=download_name,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 
 def is_developer_user():
