@@ -356,17 +356,24 @@ export class ViewsReader {
    * à un export.
    *
    * Ne journalise pas : il signale. C'est la couche applicative qui décide (cf. TUTORIAL_TOPIC).
+   *
+   * ENTIÈREMENT DÉFENSIF, et c'est le point : ce n'est pas le switch de vue, c'est une mesure
+   * greffée dessus. Elle s'exécute DANS le corps du switch interactif, donc tout ce qu'elle
+   * laisserait passer casserait le geste de l'utilisateur — un tutoriel non mesuré est un
+   * inconvénient, un changement de vue qui échoue est un bug. Le `menu_configuration` absent n'est
+   * pas theorique : les doubles de test de `requestViewChange` n'en ont pas.
    */
   protected noteTutorialStep(id: string) {
-    const file = this.host.menu_configuration.current_tutorial
-    if (!file) return
-    const order = this.host.views_order
-    const rank = order.indexOf(id)
-    if (rank < 0) return
-    this.host.menu_configuration.last_tutorial_step = {
-      file, rank, last: rank === order.length - 1,
-    }
-    this.host.menu_configuration.notify(TUTORIAL_TOPIC)
+    try {
+      const menu = this.host.menu_configuration
+      const file = menu?.current_tutorial
+      if (!file) return
+      const order = this.host.views_order ?? []
+      const rank = order.indexOf(id)
+      if (rank < 0) return
+      menu.last_tutorial_step = { file, rank, last: rank === order.length - 1 }
+      menu.notify(TUTORIAL_TOPIC)
+    } catch { /* une mesure ne casse jamais le geste qu'elle observe */ }
   }
 
   /** Corps du switch : pose la nouvelle vue (light/heavy), la visibilité, la caméra et redessine. */
