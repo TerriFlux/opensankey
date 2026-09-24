@@ -23,7 +23,11 @@ export const resources_inspector = {
         view: 'View',
         back_to_selection: 'Back to selection',
         // os#1394 — same crumb, when there is no selection but an active representation.
-        back_to_representation: 'Back to the representation',
+        back_to_representation: 'Back to the figure',
+        // 24/09/2026 — SYMETRIQUE DU RETOUR. Le fil d'Ariane offrait ici un NOM (« Figure »), ce
+        // qui le faisait lire comme un cran de hierarchie a cote de « Part » alors que c'est une
+        // BASCULE vers l'autre cote. Un verbe le dit, comme « Retour a la selection » en face.
+        go_to_figure: 'Go to the figure',
         pin: 'Pin the panel (the drawing resizes to its left)',
         unpin: 'Unpin the panel (floats over the drawing)',
         // Cibles : singulier / pluriel (fil d'Ariane).
@@ -36,7 +40,7 @@ export const resources_inspector = {
           title: 'Title', titles: 'titles',
           part: 'Part', parts: 'parts',
           mixed: 'Mixed selection', elements: 'elements',
-          representation: 'Representation', representations: 'representations'
+          representation: 'Figure', representations: 'figures'
         },
         nothing_here: 'No settings available for: {{target}}.',
         // os#1394 — settings of the active representation of the main zone.
@@ -412,7 +416,8 @@ export const resources_inspector = {
         view: 'Vue',
         back_to_selection: 'Retour à la sélection',
         // os#1394 — le même retour, quand il n'y a pas de sélection mais une représentation active.
-        back_to_representation: 'Retour à la représentation',
+        back_to_representation: 'Retour à la figure',
+        go_to_figure: 'Aller à la figure',
         pin: 'Épingler le panneau (le dessin se recadre à gauche)',
         unpin: 'Détacher le panneau (survol du dessin)',
         target: {
@@ -424,7 +429,7 @@ export const resources_inspector = {
           title: 'Titre', titles: 'titres',
           part: 'Part', parts: 'parts',
           mixed: 'Sélection mixte', elements: 'éléments',
-          representation: 'Représentation', representations: 'représentations'
+          representation: 'Figure', representations: 'figures'
         },
         nothing_here: 'Aucun réglage disponible pour : {{target}}.',
         // os#1394 — réglages de la représentation active de la grande zone.
@@ -786,7 +791,8 @@ export const resources_inspector = {
         element_analysis: 'Análisis del elemento',
         view: 'Vista',
         back_to_selection: 'Volver a la selección',
-        back_to_representation: 'Volver a la representación',
+        back_to_representation: 'Volver a la figura',
+        go_to_figure: 'Ir a la figura',
         pin: 'Fijar el panel (el dibujo se reajusta a su izquierda)',
         unpin: 'Desacoplar el panel (flota sobre el dibujo)',
         target: {
@@ -798,7 +804,7 @@ export const resources_inspector = {
           title: 'Título', titles: 'títulos',
           part: 'Parte', parts: 'partes',
           mixed: 'Selección mixta', elements: 'elementos',
-          representation: 'Representación', representations: 'representaciones'
+          representation: 'Figura', representations: 'figuras'
         },
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
         representation: {
@@ -1137,7 +1143,8 @@ export const resources_inspector = {
         element_analysis: 'Analyse des Elements',
         view: 'Ansicht',
         back_to_selection: 'Zurück zur Auswahl',
-        back_to_representation: 'Zurück zur Darstellung',
+        back_to_representation: 'Zurück zur Abbildung',
+        go_to_figure: 'Zur Abbildung',
         pin: 'Panel anheften (die Zeichnung wird links davon neu angepasst)',
         unpin: 'Panel lösen (schwebt über der Zeichnung)',
         target: {
@@ -1149,7 +1156,7 @@ export const resources_inspector = {
           title: 'Titel', titles: 'Titel',
           part: 'Teil', parts: 'Teile',
           mixed: 'Gemischte Auswahl', elements: 'Elemente',
-          representation: 'Darstellung', representations: 'Darstellungen'
+          representation: 'Abbildung', representations: 'Abbildungen'
         },
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
         representation: {
@@ -1488,7 +1495,8 @@ export const resources_inspector = {
         element_analysis: 'Analisi dell’elemento',
         view: 'Vista',
         back_to_selection: 'Torna alla selezione',
-        back_to_representation: 'Torna alla rappresentazione',
+        back_to_representation: 'Torna alla figura',
+        go_to_figure: 'Vai alla figura',
         pin: 'Fissa il pannello (il disegno si ridimensiona alla sua sinistra)',
         unpin: 'Sgancia il pannello (fluttua sopra il disegno)',
         target: {
@@ -1500,7 +1508,7 @@ export const resources_inspector = {
           title: 'Titolo', titles: 'titoli',
           part: 'Parte', parts: 'parti',
           mixed: 'Selezione mista', elements: 'elementi',
-          representation: 'Rappresentazione', representations: 'rappresentazioni'
+          representation: 'Figura', representations: 'figure'
         },
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
         representation: {
@@ -1837,7 +1845,8 @@ export const resources_inspector = {
         view: '视图',
         back_to_selection: '返回所选内容',
         // os#1394 — anglais en attendant une relecture native (comme d'autres clés récentes).
-        back_to_representation: 'Back to the representation',
+        back_to_representation: '返回图形',
+        go_to_figure: '前往图形',
         pin: '固定面板（绘图区在其左侧重新调整大小）',
         unpin: '取消固定面板（浮于绘图之上）',
         // Cibles : singulier / pluriel (fil d'Ariane).
@@ -1850,7 +1859,7 @@ export const resources_inspector = {
           title: '标题', titles: '标题',
           part: '部分', parts: '个部分',
           mixed: '混合选择', elements: '元素',
-          representation: 'Representation', representations: 'representations'
+          representation: '图形', representations: '图形'
         },
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
         representation: {
@@ -2192,7 +2201,8 @@ export const resources_inspector = {
         view: 'ビュー',
         back_to_selection: '選択に戻る',
         // os#1394 — anglais en attendant une relecture native (comme d'autres clés récentes).
-        back_to_representation: 'Back to the representation',
+        back_to_representation: '図に戻る',
+        go_to_figure: '図へ移動',
         pin: 'パネルを固定（描画エリアがその左側でサイズ調整されます）',
         unpin: 'パネルの固定を解除（描画の上に浮かびます）',
         // Cibles : singulier / pluriel (fil d'Ariane).
@@ -2205,7 +2215,7 @@ export const resources_inspector = {
           title: 'タイトル', titles: 'タイトル',
           part: '部分', parts: '個の部分',
           mixed: '複数種類の選択', elements: '要素',
-          representation: 'Representation', representations: 'representations'
+          representation: '図', representations: '図'
         },
         nothing_here: '{{target}} に利用できる設定はありません。',
         representation: {
