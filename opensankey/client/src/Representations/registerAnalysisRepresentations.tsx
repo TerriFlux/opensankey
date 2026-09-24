@@ -628,7 +628,14 @@ export const registerAnalysisRepresentations = (): void => {
           level_label: (index: number) => t('sunburst.level', { index }) as string,
           // LE MÊME GESTE QUE DANS L'ANNEAU UNIQUE, et c'est ce qui fait que les deux modes sont
           // une seule figure : un clic déplie, shift+clic replie (cf. `donutClickGestures`).
-          on_arc_click: (node_id: string) => gestures.activate?.(node_id, { shift: false })
+          //
+          // ⚠️ LA TOUCHE VIENT DU TRACÉ, elle n'est pas supposée. La première version passait
+          // `{ shift: false }` en dur : le geste inverse était annoncé et ne marchait pas en
+          // anneaux — exactement le genre d'écart qu'on ne voit qu'en essayant.
+          on_arc_click: (
+            node_id: string, _is: boolean, _dim: string, _path: string[],
+            gesture?: { shift: boolean }
+          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true })
         })
         return () => { teardown() }
       }

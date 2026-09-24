@@ -402,8 +402,15 @@ export interface Type_SunburstChartOptions {
   // que « Céréales » y soit déjà dépliée, sans quoi le diagramme montre les deux — le parent ET
   // ses parts. C'est la route DESSINÉE, pas une route possible : sur un treillis, deux chemins
   // mènent au même nœud et ils ne déplient pas la même chose.
+  //
+  // 24/09/2026 — ET LA TOUCHE AVEC. Le disque est devenu un MODE de la couronne (« un anneau par
+  // niveau »), et la couronne fait du shift+clic le geste inverse du clic : un déplie, l'autre
+  // replie. Le tracé RAPPORTE la touche sans l'interpréter — c'est l'appelant qui sait ce que
+  // « remonter » veut dire chez lui. Cinquième argument, donc facultatif : le consommateur
+  // historique (la nature « Sunburst ») l'ignore et ne change pas de comportement.
   on_arc_click?: (
-    node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[]
+    node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[],
+    gesture?: { shift: boolean }
   ) => void
   /**
    * Clic sur le CENTRE, hors zoom radial (18/09) : le nœud central et l'axe de son premier
@@ -1368,7 +1375,7 @@ export const drawSunburstChart = (
       // DEUX GESTES DANS UN, ET ILS SE SÉPARENT (os#1425). Le clic zoomait dans l'anneau ET
       // dépliait le nœud dans le diagramme, sans que rien ne le dise. L'auteur choisit ce qu'il
       // veut — déplier seul est le défaut, le zoom radial un choix.
-      .on('click', (_, d) => {
+      .on('click', (evt: MouseEvent, d) => {
         // os#1446 — TOUCHER SÉLECTIONNE, et cela s'ajoute sans rien retirer. C'est la règle de
         // toute la maison : on clique un nœud, l'inspecteur montre sa forme, son libellé et sa
         // valeur. Une part est un élément depuis os#1445, elle doit répondre pareil.
@@ -1384,7 +1391,9 @@ export const drawSunburstChart = (
           // pas. Sous un zoom radial, le centre est le secteur où l'on est entré, et la chaîne
           // reste juste — elle repart simplement d'un cran plus bas.
           const ancestry = centre_node ? [centre_node.id, ...d.path] : [...d.path]
-          opts.on_arc_click?.(d.id, d.is_disaggregated, d.dimension_id, ancestry)
+          opts.on_arc_click?.(
+            d.id, d.is_disaggregated, d.dimension_id, ancestry, { shift: evt.shiftKey === true }
+          )
         }
         if (st.click_action !== 'aggregate' && d.children_count > 0) {
           focus_id = d.id
