@@ -26,7 +26,9 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
-import { drawDonutChart, drawBarChart, drawGroupedBarChart } from '../Charts/NodeStatsCharts'
+import {
+  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor
+} from '../Charts/NodeStatsCharts'
 import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
 import type { Type_PartInput } from './parts/buildParts'
@@ -780,6 +782,9 @@ export const registerAnalysisRepresentations = (): void => {
         const teardown = drawSunburstChart(container, rings, {
           parts: wiring.by_id,
           on_part_select: wiring.on_part_select,
+          // LA PALETTE DE LA COURONNE, et non celle du disque : les deux modes sont une seule
+          // figure, ils ne peuvent pas avoir deux jeux de teintes (cf. `branch_color`).
+          branch_color: paletteColor,
           // ⚠️ `click_action` EST FORCÉ, et ce n'est pas ignorer le réglage de l'auteur : le tracé
           // du disque se sert de cette clé pour décider s'il RAPPORTE le clic (`on_arc_click`), et
           // sous 'none' il l'avale. Or la couronne a besoin de tous les clics — c'est eux qui
