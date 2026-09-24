@@ -270,6 +270,44 @@ export const CENTRE_CONFIG = {
   }, { kind: 'number', min: 5, max: 80, step: 1, advanced: true })
 } as const
 
+// ── levels_* : comment les niveaux d'une descente se disposent ───────────────────────────────
+//
+// 24/09/2026 — « OK mais où est le mode sunburst ? » (Julien, dans l'onglet Graphe).
+//
+// Il le cherchait là, et il avait raison : ce réglage change l'ASPECT de la figure et rien
+// d'autre. La descente — jusqu'où on va — est une coordonnée, elle vit dans « Filtres et
+// coordonnées » ; la DISPOSITION des niveaux qu'elle a trouvés est une question de dessin, au
+// même titre que « Le centre affiche » ou « Le clic sur une part ».
+//
+// Une première version l'avait posé sur le descripteur, à côté de la descente, « parce qu'il ne
+// se comprend qu'avec elle ». C'était confondre ce qui se LIT ensemble avec ce qui se RANGE
+// ensemble. Et c'est mesurable : l'arbre est identique dans les deux modes (cf.
+// `analysisHierarchyTree`) — seul le tracé change. Un réglage qui ne change pas les données n'a
+// rien à faire dans un descripteur.
+//
+// SANS PRÉFIXE DE FAMILLE, donc dans l'onglet Graphe (cf. `FIGURE_FAMILY_PREFIXES`) : c'est
+// exactement ce qu'on veut ici, et c'est ce que `parts_` aurait empêché en l'envoyant dans Forme.
+export const LEVELS_CONFIG = {
+  levels_display: entry<'in_place' | 'rings'>('in_place', 'levels', {
+    en: 'The levels', fr: 'Les niveaux', es: 'Los niveles', de: 'Die Ebenen',
+    it: 'I livelli', 'zh-CN': '各层级', ja: '階層の表示'
+  }, {
+    en: 'In place, children replace their parent in one ring. Otherwise each level takes a ring of its own.',
+    fr: 'En place, les enfants remplacent leur parent dans un seul anneau. Sinon chaque niveau prend un anneau à lui.',
+    es: 'En su lugar, los hijos reemplazan al padre en un solo anillo. Si no, cada nivel ocupa un anillo propio.',
+    de: 'An Ort und Stelle ersetzen Kinder ihren Elternknoten in einem Ring. Sonst belegt jede Ebene einen eigenen Ring.',
+    it: 'Sul posto, i figli sostituiscono il genitore in un solo anello. Altrimenti ogni livello prende un anello proprio.',
+    'zh-CN': '就地显示时子节点在同一环内取代父节点；否则每层各占一环。',
+    ja: 'その場で表示すると子が親と同じリング内で置き換わります。そうでなければ各階層が独立したリングを取ります。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('in_place', { en: 'In place', fr: 'En place', es: 'En su lugar', de: 'An Ort und Stelle', it: 'Sul posto', 'zh-CN': '就地显示', ja: 'その場で' }),
+      choice('rings', { en: 'One ring per level', fr: 'Un anneau par niveau', es: 'Un anillo por nivel', de: 'Ein Ring pro Ebene', it: 'Un anello per livello', 'zh-CN': '每层一环', ja: '階層ごとに 1 リング' })
+    ]
+  })
+} as const
+
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────
 export const INTERACTION_CONFIG = {
   // Le défaut est DÉPLIER SEULEMENT : le zoom radial — le secteur cliqué passe au centre — a été
@@ -609,6 +647,7 @@ export const FIGURE_ATTRIBUTES_CONFIG: { [key: string]: Type_FigureCatalogueEntr
   ...LEGEND_CONFIG,
   ...PARTS_CONFIG,
   ...CENTRE_CONFIG,
+  ...LEVELS_CONFIG,
   ...INTERACTION_CONFIG,
   ...NOTES_CONFIG,
   ...TITLE_CONFIG,
