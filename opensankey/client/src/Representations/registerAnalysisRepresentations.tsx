@@ -570,16 +570,29 @@ const donutClickGestures = (
     if (in_pane) {
       const next = new Set(hierarchy.expanded)
       if (gesture.shift) {
-        // Refermer une branche referme TOUT CE QU'ELLE PORTAIT : rouvrir « Maïs » ne doit pas
-        // faire réapparaître d'un coup trois niveaux ouverts il y a dix minutes. Un nœud est
-        // dessous s'il porte la part dans sa route — c'est la même route que le clic déplie.
-        next.delete(part_id)
-        // Refermer une branche referme TOUT CE QU'ELLE PORTAIT. Sans ça, rouvrir « Maïs » ferait
-        // réapparaître d'un coup trois niveaux ouverts dix minutes plus tôt — la figure se
-        // souviendrait d'un état que l'auteur croyait avoir refermé.
-        ;[...next]
-          .filter(id => isBelow(sankey, id, part_id))
-          .forEach(id => next.delete(id))
+        // ── CE QU'ON REFERME QUAND ON SHIFT+CLIQUE (24/09/2026) ─────────────────────────────
+        //
+        // ⚠️ PAS FORCÉMENT LA PART TOUCHÉE, et c'était le trou : Julien « le shift+clic ne semble
+        // pas marcher ». En place, ouvrir « Maïs » le fait DISPARAÎTRE derrière Maïs Bio et Maïs
+        // Conventionnel — le nœud ouvert n'est plus à l'écran, et il n'y avait donc plus rien à
+        // shift+cliquer pour le refermer. Le geste ne pouvait pas fonctionner.
+        //
+        // On referme donc la part si elle est ouverte, SINON LE PARENT PAR LEQUEL ON LA VOIT.
+        // Shift+clic sur « Maïs Bio » referme « Maïs » : c'est ce que le geste veut dire pour qui
+        // le fait — « enlève cet anneau-là ».
+        const drawn_parent = route.length >= 2 ? route[route.length - 2] : undefined
+        const target = next.has(part_id)
+          ? part_id
+          : (drawn_parent !== undefined && next.has(drawn_parent) ? drawn_parent : undefined)
+        if (target !== undefined) {
+          next.delete(target)
+          // Refermer une branche referme TOUT CE QU'ELLE PORTAIT. Sans ça, rouvrir « Maïs » ferait
+          // réapparaître d'un coup trois niveaux ouverts dix minutes plus tôt — la figure se
+          // souviendrait d'un état que l'auteur croyait avoir refermé.
+          ;[...next]
+            .filter(id => isBelow(sankey, id, target))
+            .forEach(id => next.delete(id))
+        }
       } else if (node.dimensions_as_parent.some(
         (d: Class_NodeDimension) => d.children.length > 0
       )) {
@@ -772,7 +785,20 @@ export const registerAnalysisRepresentations = (): void => {
           // sous 'none' il l'avale. Or la couronne a besoin de tous les clics — c'est eux qui
           // ouvrent les anneaux. Ce que l'auteur a réglé est lu, lui, par `donutClickGestures`,
           // qui décide ce que le geste fait EN PLUS.
-          style: { ...readSunburstStyle(ctx.options ?? {}), click_action: 'aggregate' },
+          style: {
+            ...readSunburstStyle(ctx.options ?? {}),
+            // ⚠️ LA COULEUR SE DECIDE COMME DANS L'ANNEAU UNIQUE, et c'est ce qui manquait.
+            //
+            // Julien : « quand ça dit un anneau par niveau, y a plus de couleurs ». Le tracé du
+            // disque lisait `parts_color_source` SUR LE SAC BRUT, donc « couleur du diagramme » —
+            // le défaut d'une couronne. Il ne voyait pas la bascule en palette que `donutStyleOf`
+            // fait sous une descente, et un anneau de nœuds sans couleur propre devenait un aplat.
+            // Les deux modes lisent maintenant la MÊME décision, ce qui est la définition de la
+            // fusion : changer de mode change le dessin, pas les couleurs.
+            color_source: style.parts_color_source,
+            depth_shading: style.parts_depth_shading,
+            click_action: 'aggregate'
+          },
           texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
