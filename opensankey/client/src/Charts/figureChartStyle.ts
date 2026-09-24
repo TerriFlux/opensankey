@@ -50,6 +50,17 @@ export interface Type_FigureChartStyle {
   bars_stacked: boolean
   /** 'model' : la couleur que l'objet a dans le diagramme quand la donnée la porte. */
   parts_color_source: 'palette' | 'model'
+  /**
+   * `parts_depth_shading` — LA TEINTE DIT LA BRANCHE, LA CLARTÉ DIT LE NIVEAU.
+   *
+   * La règle du disque (`shadeForDepth`, SunburstChart), reprise telle quelle par la couronne
+   * quand elle descend la hiérarchie : un même anneau y porte des parts venues de niveaux
+   * différents, et sans dégradé rien ne dit que deux secteurs voisins sortent de la même branche.
+   *
+   * Sans objet à plat (aucune part n'a de profondeur) et sous `parts_color_source: 'model'` (la
+   * couleur du nœud commande, l'éclaircir la trahirait).
+   */
+  parts_depth_shading: boolean
   /** En % du tout ; 0 = ne rien replier par la valeur. */
   parts_group_under: number
   /** Parts au plus ; 0 = sans limite. */
@@ -118,7 +129,12 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // enregistrée ne change d'aspect » ; on la rallume dans l'inspecteur.
   legend_visible: false,
   legend_parts: 'all',
-  legend_position: 'right',
+  // 24/09/2026 — DESSOUS, ET C'EST UN CHANGEMENT DE DÉFAUT ASSUMÉ (demande de Julien : « la
+  // position par défaut devrait être en dessous »). À côté, la légende prend une colonne sur la
+  // largeur, c'est-à-dire sur le diamètre du disque ; dessous, elle prend un bandeau qui revient
+  // à la ligne et laisse le rond plus grand. Une couronne qui n'a jamais réglé sa position suivra
+  // donc ; celle qui l'a réglée garde son réglage, la surcharge primant sur le défaut.
+  legend_position: 'bottom',
   legend_font_size: 12,
   legend_width: 230,
   // La légende nomme les parts sans dire leur parent : sous un seul cran il n'y en a pas à dire,
@@ -128,6 +144,9 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_order: 'value_desc',
   bars_stacked: false,
   parts_color_source: 'model',
+  // Sans objet à plat et sous 'model' : vrai d'office ne change donc aucune figure enregistrée, et
+  // la descente arrive colorée comme le disque plutôt qu'en aplats indistincts.
+  parts_depth_shading: true,
   parts_group_under: 0.5,
   parts_max: 20,
   centre_content: 'value',

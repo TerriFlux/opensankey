@@ -230,6 +230,7 @@ export const analysisPartInputs = (
     // porte. Absents sous un seul cran, donc rien ne change pour le parc enregistré.
     depth: part.depth,
     parent_label: part.parent_label,
+    branch_id: part.branch_id,
     has_children: part.has_children,
     subject: resolve(part.id)
   }))
