@@ -172,9 +172,9 @@ describe('l inclinaison des etiquettes d un histogramme', () => {
 
   test('l auteur peut contredire la regle, dans les deux sens', () => {
     // C est tout l objet du lot : la regle automatique n a plus le dernier mot.
-    expect(barLabelAngle(styleOf({ name_label_angle: 'horizontal' }), LONGUES)).toBe(0)
-    expect(barLabelAngle(styleOf({ name_label_angle: 'tilted' }), COURTES)).toBe(-35)
-    expect(barLabelAngle(styleOf({ name_label_angle: 'vertical' }), COURTES)).toBe(-90)
+    expect(barLabelAngle(styleOf({ axis_label_angle: 'horizontal' }), LONGUES)).toBe(0)
+    expect(barLabelAngle(styleOf({ axis_label_angle: 'tilted' }), COURTES)).toBe(-35)
+    expect(barLabelAngle(styleOf({ axis_label_angle: 'vertical' }), COURTES)).toBe(-90)
   })
 
   test('la bande reservee sous l abscisse suit l angle', () => {

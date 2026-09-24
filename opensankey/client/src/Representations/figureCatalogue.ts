@@ -548,7 +548,7 @@ export const SCALE_CONFIG = {
 // n'a pas d'étiquette radiale, et un flux dit déjà son pourcentage par `value_label_unit_type`
 // (`%IS`, `%OS`, `%ID`…). Une figure, elle, n'a ni source ni destination.
 export const FIGURE_LABEL_CONFIG = {
-  // ── 24/09/2026 — L'INCLINAISON DES ÉTIQUETTES D'UN HISTOGRAMME, ENFIN RÉGLABLE ──────────────
+  // ── 24/09/2026 — L'INCLINAISON DES ÉTIQUETTES D'ABSCISSE, ET POURQUOI ELLE EST DANS GRAPHE ──
   //
   // Julien, capture à l'appui : « sur les barres il y a quelque chose qui se passe qui ne semble
   // pas configurable, le label se met de travers. C'est pas l'esprit de notre appli : les choses
@@ -560,7 +560,16 @@ export const FIGURE_LABEL_CONFIG = {
   //
   // 'auto' garde exactement cette règle : aucun histogramme enregistré ne change d'aspect. Les
   // trois autres valeurs la remplacent par un choix.
-  name_label_angle: entry<'auto' | 'horizontal' | 'tilted' | 'vertical'>('auto', 'name_label', {
+  //
+  // ⚠️ `axis_` ET NON `name_label_`, ET C'EST TOUT LE SUJET. Le préfixe décide de l'onglet
+  // (`FIGURE_FAMILY_PREFIXES`) : sous `name_label_`, ce réglage partait dans l'onglet Libellé, et
+  // Julien l'a cherché sur la PART qu'il venait de cliquer. Or il ne règle pas le libellé d'une
+  // part, il règle l'ABSCISSE — le graphe dans son ensemble. Sa place est donc l'onglet Graphe,
+  // qu'un préfixe sans famille lui donne.
+  //
+  // C'est la règle que Julien pose, et elle vaut au-delà de cette clé : ce qui touche UNE part est
+  // dans le style de la part ; ce qui touche le graphe est dans Graphe.
+  axis_label_angle: entry<'auto' | 'horizontal' | 'tilted' | 'vertical'>('auto', 'axis', {
     en: 'Label tilt', fr: 'Inclinaison des étiquettes', es: 'Inclinación de las etiquetas',
     de: 'Neigung der Beschriftungen', it: 'Inclinazione delle etichette',
     'zh-CN': '标签倾斜', ja: 'ラベルの傾き'
