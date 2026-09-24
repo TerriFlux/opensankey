@@ -548,48 +548,16 @@ export const SCALE_CONFIG = {
 // n'a pas d'étiquette radiale, et un flux dit déjà son pourcentage par `value_label_unit_type`
 // (`%IS`, `%OS`, `%ID`…). Une figure, elle, n'a ni source ni destination.
 export const FIGURE_LABEL_CONFIG = {
-  // ── 24/09/2026 — L'INCLINAISON DES ÉTIQUETTES D'ABSCISSE, ET POURQUOI ELLE EST DANS GRAPHE ──
+  // ⚠️ L'INCLINAISON D'UNE ÉTIQUETTE N'EST PAS ICI, ET ELLE Y A VÉCU DEUX HEURES (24/09/2026).
   //
-  // Julien, capture à l'appui : « sur les barres il y a quelque chose qui se passe qui ne semble
-  // pas configurable, le label se met de travers. C'est pas l'esprit de notre appli : les choses
-  // doivent être configurables. »
+  // Elle a été une clé de LIBELLÉ (`name_label_angle`), puis une clé de GRAPHE
+  // (`axis_label_angle`). Les deux étaient fausses : un libellé d'abscisse EST le libellé de sa
+  // barre, donc son angle appartient à la PART — arbitrage de Julien, « l'angle est de la part,
+  // c'est son texte ; pour les régler tous, le style de part ».
   //
-  // Le tracé inclinait à −35° dès que les barres étaient plus de six OU qu'un libellé dépassait
-  // huit caractères. Une règle écrite en dur dans QUATRE traceurs, que rien ne pouvait contredire
-  // — l'auteur voyait son étiquette basculer et n'avait aucun endroit où dire « non ».
-  //
-  // 'auto' garde exactement cette règle : aucun histogramme enregistré ne change d'aspect. Les
-  // trois autres valeurs la remplacent par un choix.
-  //
-  // ⚠️ `axis_` ET NON `name_label_`, ET C'EST TOUT LE SUJET. Le préfixe décide de l'onglet
-  // (`FIGURE_FAMILY_PREFIXES`) : sous `name_label_`, ce réglage partait dans l'onglet Libellé, et
-  // Julien l'a cherché sur la PART qu'il venait de cliquer. Or il ne règle pas le libellé d'une
-  // part, il règle l'ABSCISSE — le graphe dans son ensemble. Sa place est donc l'onglet Graphe,
-  // qu'un préfixe sans famille lui donne.
-  //
-  // C'est la règle que Julien pose, et elle vaut au-delà de cette clé : ce qui touche UNE part est
-  // dans le style de la part ; ce qui touche le graphe est dans Graphe.
-  axis_label_angle: entry<'auto' | 'horizontal' | 'tilted' | 'vertical'>('auto', 'axis', {
-    en: 'Label tilt', fr: 'Inclinaison des étiquettes', es: 'Inclinación de las etiquetas',
-    de: 'Neigung der Beschriftungen', it: 'Inclinazione delle etichette',
-    'zh-CN': '标签倾斜', ja: 'ラベルの傾き'
-  }, {
-    en: 'Automatic tilts them as soon as they would overlap.',
-    fr: 'Automatique les incline dès qu’elles se chevaucheraient.',
-    es: 'Automática las inclina en cuanto se solaparían.',
-    de: 'Automatisch neigt sie, sobald sie sich überlappen würden.',
-    it: 'Automatica le inclina non appena si sovrapporrebbero.',
-    'zh-CN': '自动模式会在标签可能重叠时将其倾斜。',
-    ja: '自動では、重なりそうになった時点で傾けます。'
-  }, {
-    kind: 'select',
-    choices: [
-      choice('auto', { en: 'Automatic', fr: 'Automatique', es: 'Automática', de: 'Automatisch', it: 'Automatica', 'zh-CN': '自动', ja: '自動' }),
-      choice('horizontal', { en: 'Always flat', fr: 'Toujours à plat', es: 'Siempre en horizontal', de: 'Immer waagerecht', it: 'Sempre in piano', 'zh-CN': '始终水平', ja: '常に水平' }),
-      choice('tilted', { en: 'Always tilted', fr: 'Toujours inclinées', es: 'Siempre inclinadas', de: 'Immer geneigt', it: 'Sempre inclinate', 'zh-CN': '始终倾斜', ja: '常に傾ける' }),
-      choice('vertical', { en: 'Upright', fr: 'À la verticale', es: 'En vertical', de: 'Senkrecht', it: 'In verticale', 'zh-CN': '竖排', ja: '縦書き' })
-    ]
-  }),
+  // Elle est donc `name_label_text_angle`, au catalogue des ÉLÉMENTS, là où un nœud tourne déjà
+  // son nom. La règle du tracé — coucher quand ça se chevaucherait — n'est plus un réglage mais un
+  // REPLI, appliqué quand la part se tait (cf. `autoBarLabelAngle`).
   name_label_orientation: entry<'radial' | 'tangential' | 'horizontal'>('radial', 'name_label', {
     en: 'Label orientation', fr: 'Orientation des étiquettes', es: 'Orientación de las etiquetas',
     de: 'Ausrichtung der Beschriftungen', it: 'Orientamento delle etichette', 'zh-CN': '标签方向', ja: 'ラベルの向き'

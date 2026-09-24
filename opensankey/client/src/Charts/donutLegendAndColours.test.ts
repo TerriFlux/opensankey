@@ -14,7 +14,7 @@
 
 import * as d3 from '../d3Modules'
 
-import { barLabelAngle, barLabelBottom, drawDonutChart } from './NodeStatsCharts'
+import { autoBarLabelAngle, barLabelBottom, drawDonutChart } from './NodeStatsCharts'
 import type { Type_StatSlice } from './NodeStatsCharts'
 import { DONUT_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_FigureChartStyle } from './figureChartStyle'
@@ -141,46 +141,46 @@ describe('les couleurs d une couronne descendue', () => {
   })
 })
 
-// ── 24/09/2026 — L INCLINAISON DES ETIQUETTES D UN HISTOGRAMME EST UN REGLAGE ────────────────
+// ── 24/09/2026 — L INCLINAISON D UNE ETIQUETTE EST UN REGLAGE DE LA PART ────────────────────
 //
 // Julien, capture a l appui : « sur les barres il y a quelque chose qui se passe qui ne semble pas
 // configurable, le label se met de travers. C est pas l esprit de notre appli : les choses doivent
-// etre configurables. »
+// etre configurables. » — puis, sur le bon niveau : « l angle est de la part, c est son texte ;
+// pour les regler tous, le style de part. La regle automatique devient un simple repli quand
+// aucune part ne dit rien. »
 //
 // La regle vivait EN DUR dans quatre traceurs — « plus de six barres OU un libelle de plus de huit
-// caracteres » — et rien ne pouvait la contredire. Ce bloc fige les deux moities du correctif :
-// 'auto' EST cette regle (donc aucun histogramme enregistre ne change), et les trois autres
-// valeurs la remplacent.
+// caracteres » — et rien ne pouvait la contredire. Elle est desormais un REPLI, et ce bloc fige
+// les deux moities : le repli est la regle d hier au caractere pres, et la bande reservee suit le
+// plus incline, sans quoi une seule etiquette couchee sortirait du cadre.
 describe('l inclinaison des etiquettes d un histogramme', () => {
 
   const COURTES = [{ id: 'a', label: 'Ble', value: 3 }, { id: 'b', label: 'Mais', value: 2 }]
   const LONGUES = [{ id: 'a', label: 'Consommation', value: 3 }, { id: 'b', label: 'Production', value: 2 }]
 
-  test('automatique : a plat tant que les libelles tiennent', () => {
-    expect(barLabelAngle(styleOf({}), COURTES)).toBe(0)
+  test('le repli laisse a plat tant que les libelles tiennent', () => {
+    expect(autoBarLabelAngle(COURTES)).toBe(0)
   })
 
-  test('automatique : incline des qu un libelle est long', () => {
+  test('le repli incline des qu un libelle est long', () => {
     // C est le cas de la capture : deux barres seulement, mais « Consommation » depasse.
-    expect(barLabelAngle(styleOf({}), LONGUES)).toBe(-35)
+    expect(autoBarLabelAngle(LONGUES)).toBe(-35)
   })
 
-  test('automatique : incline des qu il y a plus de six barres', () => {
+  test('le repli incline des qu il y a plus de six barres', () => {
     const sept = Array.from({ length: 7 }, (_, i) => ({ id: String(i), label: 'x', value: 1 }))
-    expect(barLabelAngle(styleOf({}), sept)).toBe(-35)
+    expect(autoBarLabelAngle(sept)).toBe(-35)
   })
 
-  test('l auteur peut contredire la regle, dans les deux sens', () => {
-    // C est tout l objet du lot : la regle automatique n a plus le dernier mot.
-    expect(barLabelAngle(styleOf({ axis_label_angle: 'horizontal' }), LONGUES)).toBe(0)
-    expect(barLabelAngle(styleOf({ axis_label_angle: 'tilted' }), COURTES)).toBe(-35)
-    expect(barLabelAngle(styleOf({ axis_label_angle: 'vertical' }), COURTES)).toBe(-90)
+  test('la bande reservee suit LE PLUS INCLINE, pas le premier venu', () => {
+    // Depuis que chaque part donne son angle, une seule etiquette couchee doit suffire a faire de
+    // la place — sans quoi elle sortirait du cadre pendant que ses voisines, a plat, laisseraient
+    // la bande vide.
+    expect(barLabelBottom([0, 0])).toBeLessThan(barLabelBottom([0, -35]))
+    expect(barLabelBottom([0, -35])).toBeLessThan(barLabelBottom([-90, 0]))
   })
 
-  test('la bande reservee sous l abscisse suit l angle', () => {
-    // Sans quoi des etiquettes verticales deborderaient du cadre, ou une ligne a plat laisserait
-    // une bande vide de 46 px.
-    expect(barLabelBottom(0)).toBeLessThan(barLabelBottom(-35))
-    expect(barLabelBottom(-35)).toBeLessThan(barLabelBottom(-90))
+  test('sans aucune etiquette inclinee, la bande est la plus mince', () => {
+    expect(barLabelBottom([])).toBe(barLabelBottom([0]))
   })
 })

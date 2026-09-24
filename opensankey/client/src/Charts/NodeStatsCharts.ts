@@ -202,33 +202,34 @@ export interface Type_ChartPartAspect extends Type_FigurePartLabelAspect {
 }
 
 /**
- * 24/09/2026 — DE QUEL ANGLE LES ÉTIQUETTES D'ABSCISSE S'INCLINENT.
+ * 24/09/2026 — L'ANGLE QUE LE TRACÉ CHOISIT QUAND LA PART NE DIT RIEN.
  *
  * Julien : « sur les barres il y a quelque chose qui se passe qui ne semble pas configurable, le
- * label se met de travers. C'est pas l'esprit de notre appli : les choses doivent être
- * configurables. »
+ * label se met de travers » — puis, sur le bon niveau : « l'angle est de la part, c'est son
+ * texte ; pour les régler tous, le style de part. La règle automatique devient un simple repli
+ * quand aucune part ne dit rien. »
  *
- * La règle vivait EN DUR dans quatre traceurs — « plus de six barres OU un libellé de plus de huit
- * caractères » — et l'auteur n'avait aucun endroit où dire non. Elle est ici, une fois, derrière un
- * réglage (`name_label_angle`) dont 'auto' est exactement cette règle : aucun histogramme
- * enregistré ne change d'aspect.
+ * ⚠️ CE N'EST DONC PAS UN RÉGLAGE, C'EST UN REPLI. La règle vivait EN DUR dans quatre traceurs et
+ * rien ne pouvait la contredire ; elle vit maintenant en un seul endroit, et la part a le dernier
+ * mot dès qu'elle parle (`name_label_text_angle`). Un premier essai en avait fait une clé de
+ * FIGURE (`axis_label_angle`) : c'était encore le mauvais niveau — un libellé d'abscisse EST le
+ * libellé de sa barre.
  */
-export const barLabelAngle = (
-  st: Type_FigureChartStyle,
-  labels: readonly { label: string }[]
-): 0 | -35 | -90 => {
-  switch (st.axis_label_angle) {
-  case 'horizontal': return 0
-  case 'tilted': return -35
-  case 'vertical': return -90
-  default:
-    return (labels.length > 6 || labels.some(s => s.label.length > 8)) ? -35 : 0
-  }
-}
+export const autoBarLabelAngle = (labels: readonly { label: string }[]): 0 | -35 =>
+  (labels.length > 6 || labels.some(s => s.label.length > 8)) ? -35 : 0
 
-/** La bande que l'abscisse réserve sous le dessin, selon l'angle de ses étiquettes. */
-export const barLabelBottom = (angle: 0 | -35 | -90): number =>
-  angle === 0 ? 22 : angle === -35 ? 46 : 60
+/**
+ * La bande que l'abscisse réserve sous le dessin, pour l'angle le plus incliné qu'elle porte.
+ *
+ * LE PLUS INCLINÉ, et non celui du tracé : depuis que chaque part peut donner le sien, une seule
+ * étiquette couchée doit suffire à faire de la place. Sans ça, elle sortirait du cadre pendant que
+ * ses voisines, à plat, laisseraient la bande vide.
+ */
+export const barLabelBottom = (angles: readonly number[]): number => {
+  const steepest = angles.reduce((m, a) => Math.max(m, Math.abs(a)), 0)
+  if (steepest === 0) return 22
+  return steepest >= 70 ? 60 : 46
+}
 
 /** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
 export const orderParts = <T extends { label: string, value: number }>(
@@ -1181,9 +1182,14 @@ export const drawBarChart = (
 
   // Marges : place pour les labels de valeur (haut) et de catégorie (bas, pivotés
   // quand ils sont nombreux/longs).
-  const label_angle = barLabelAngle(st, slices)
-  const rotate_labels = label_angle !== 0
-  const bottom = barLabelBottom(label_angle)
+  // L'ANGLE, PART PAR PART : ce qu'elle dit, sinon le repli du tracé. `aspectOf` n'est pas encore
+  // déclaré ici (il l'est plus bas, avec le reste du câblage) : on lit donc l'aspect une première
+  // fois par `opts.part_aspect`, qui est la même source.
+  const auto_angle = autoBarLabelAngle(slices)
+  const angleOf = (id: string): number =>
+    opts.part_aspect?.(id)?.name?.text_angle ?? auto_angle
+  const label_angles = slices.map(sl => angleOf(sl.id))
+  const bottom = barLabelBottom(label_angles)
   // Écrasement (#393) : ici il n'y a pas de grappe — chaque barre est seule de son
   // espèce, et leur donner à chacune son échelle les mettrait TOUTES au plafond, ce
   // qui n'est plus un graphique. On garde donc l'échelle partagée et on se borne au
@@ -1476,7 +1482,8 @@ export const drawBarChart = (
   // pivotés : pivoté à -35°, le texte court en diagonale sous l'axe et n'empiète plus sur ses
   // voisins — la question ne se pose pas. Faux par défaut : rien ne se masque.
   const barNameFits = (d: Type_StatSlice): boolean => {
-    if (rotate_labels) return true
+    // Couché, un nom ne se mesure plus sur la largeur de sa bande : il court vers le bas.
+    if (angleOf(d.id) !== 0) return true
     const size = styleOf(d).name_label_font_size
     return barNameLines(d).every(line => labelTextWidthPx(line, size) <= x.bandwidth())
   }
@@ -1514,9 +1521,10 @@ export const drawBarChart = (
     // À L'INTÉRIEUR : `top` colle sous le sommet (d'où la descente d'une hauteur de ligne, sans
     // quoi le texte mordrait le bord), `bottom` remonte du pied, `middle` se centre.
     const vert = a?.name?.vert ?? (inside ? 'top' : 'bottom')
-    const cy = barTextY(vert, inside, box, size, rotate_labels ? h + 8 : h + 14)
+    const tilted = angleOf(d.id) !== 0
+    const cy = barTextY(vert, inside, box, size, tilted ? h + 8 : h + 14)
     const anchor = a?.name?.text_align
-      ?? (inside ? 'middle' : (rotate_labels ? 'end' : 'middle'))
+      ?? (inside ? 'middle' : (tilted ? 'end' : 'middle'))
     return {
       x: cx + (a?.name?.shift_x ?? 0),
       y: cy + (a?.name?.shift_y ?? 0),
@@ -1532,9 +1540,13 @@ export const drawBarChart = (
       // réservant la clé aux figures rondes (`figures: { only: ['donut', 'sunburst'] }`).
       //
       // Ce qui restait était la moitié d'une bijection : un code sans surface pour l'allumer. Il
-      // part avec elle, et les barres retrouvent leur règle — coucher le nom quand la bande est
-      // trop étroite, et pas autrement.
-      rotate: !inside && rotate_labels,
+      // part avec elle.
+      //
+      // 24/09/2026 — L'ANGLE, LUI, REVIENT À LA PART, et par la bonne porte cette fois :
+      // `name_label_text_angle`, un NOMBRE de degrés, et non trois mots de rond. La règle du
+      // tracé — coucher quand la bande est trop étroite — n'est plus qu'un repli quand la part se
+      // tait (cf. `autoBarLabelAngle`).
+      rotate: !inside && tilted,
       anchor: anchor === 'left' ? 'start' : anchor === 'right' ? 'end' : 'middle'
     }
   }
@@ -1547,7 +1559,7 @@ export const drawBarChart = (
       .attr('transform', d => {
         const at = barLabelAt(d)
         return at.rotate
-          ? `translate(${at.x},${at.y}) rotate(${label_angle})`
+          ? `translate(${at.x},${at.y}) rotate(${angleOf(d.id)})`
           : `translate(${at.x},${at.y})`
       })
       .attr('text-anchor', d => barLabelAt(d).anchor)
@@ -1731,9 +1743,9 @@ export const drawStackedBarChart = (
   // La HAUTEUR d'abord, la largeur ensuite : la hauteur n'a jamais dépendu de la largeur,
   // et c'est elle qui dit combien de piles sont au plancher — donc si la colonne latérale
   // a quelque chose à porter, même légende coupée (voir plus bas).
-  const label_angle = barLabelAngle(st, series)
+  const label_angle = autoBarLabelAngle(series)
   const rotate_labels = label_angle !== 0
-  const margin = { top: 18, right: 8, bottom: barLabelBottom(label_angle), left: 8 }
+  const margin = { top: 18, right: 8, bottom: barLabelBottom([label_angle]), left: 8 }
   const h = height - margin.top - margin.bottom
 
   // Écrasement (#393) : ici non plus il n'y a pas de grappe — une barre par série, et
@@ -1916,9 +1928,9 @@ export const drawGroupedBarChart = (
   const legend_width = Math.min(200, width * 0.35)
   const chart_width = Math.max(80, width - legend_width - 12)
 
-  const label_angle = barLabelAngle(st, groups)
+  const label_angle = autoBarLabelAngle(groups)
   const rotate_labels = label_angle !== 0
-  const bottom = barLabelBottom(label_angle) + (stacked ? 30 : 0)
+  const bottom = barLabelBottom([label_angle]) + (stacked ? 30 : 0)
   const margin = { top: 18, right: 8, bottom, left: 8 }
   const w = chart_width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
