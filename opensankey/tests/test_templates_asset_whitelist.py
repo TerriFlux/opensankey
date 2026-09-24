@@ -145,3 +145,59 @@ def test_la_source_mfadata_ne_sert_plus_le_disque(client, sankey_data,
     gallery = client.post("/menus/templates", json={"source": "mfadata"})
     assert gallery.status_code == 200
     assert gallery.get_json()["templates"] == {}
+
+
+# --- /menus/templates_xlsx : le classeur Excel d'un modele -------------------
+#
+# Un visiteur qui vient avec SES donnees n'a aucun moyen de deviner le format
+# d'onglets du parser : c'est la qu'on le perd (11 IP sur 28 arretees par
+# « aucun onglet au format » sur 30 jours, mesure du 24/09/2026). La galerie lui
+# donne donc le classeur de n'importe quel modele — pose a cote quand il existe,
+# converti a la volee sinon, comme « Enregistrer sous > Excel » le fait deja sur
+# un diagramme ouvert.
+
+XLSX_MAGIC = b"PK\x03\x04"
+
+
+def test_convertit_le_modele_en_classeur_quand_aucun_nest_pose_a_cote(client):
+    response = client.get("/menus/templates_xlsx/templates/data/demo.json")
+
+    assert response.status_code == 200
+    assert response.data.startswith(XLSX_MAGIC)
+    assert "demo.xlsx" in response.headers.get("Content-Disposition", "")
+
+
+def test_un_classeur_pose_a_cote_prime_sur_la_conversion(client, sankey_data):
+    """Il porte la mise en forme et les commentaires de son auteur : une
+    reecriture les perdrait."""
+    (sankey_data / "templates" / "data" / "demo.xlsx").write_bytes(
+        XLSX_MAGIC + b"classeur-de-l-auteur")
+
+    response = client.get("/menus/templates_xlsx/templates/data/demo.json")
+
+    assert response.status_code == 200
+    assert b"classeur-de-l-auteur" in response.data
+
+
+@pytest.mark.parametrize(
+    "asset",
+    [
+        "templates/../prive/secret.json",   # sort de templates/ en restant sous la racine
+        "prive/secret.json",                # sans le prefixe publie
+        "templates/data/inconnu.json",      # sous templates/, mais non declare par l'index
+        "templates/image/demo.png",         # declare, mais ce n'est pas un modele
+    ],
+)
+def test_ne_convertit_que_les_modeles_declares(client, asset):
+    response = client.get("/menus/templates_xlsx/" + asset)
+
+    assert response.status_code != 200, f"{asset} ne doit pas etre converti"
+
+
+def test_la_theque_et_le_corpus_esankey_nont_pas_de_classeur(client):
+    """Pas de disque pour l'une, format proprietaire pour l'autre : ni l'une ni
+    l'autre n'est un Sankey que l'on sait reecrire."""
+    for source in ("mfadata", "esankey-local"):
+        response = client.get(
+            "/menus/templates_xlsx/templates/data/demo.json?source=" + source)
+        assert response.status_code == 404
