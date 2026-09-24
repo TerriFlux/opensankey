@@ -2104,6 +2104,21 @@ export class Class_ApplicationData {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public saveWindowAsView(occupant_id: string, name: string): string | null { return null }
 
+  /**
+   * Renomme une vue — le double-clic sur son nom, dans le bandeau de son volet. Un nom vide est
+   * refusé : une vue sans nom ne se retrouverait plus dans le sélecteur. Rend `true` si c'est fait.
+   */
+  public renameView(id: string, name: string): boolean {
+    const view = this._views[id]
+    const clean = name.trim()
+    if (!view || clean === '') return false
+    if (view.name !== clean) {
+      view.name = clean
+      this.menu_configuration?.notifyMainZone()
+    }
+    return true
+  }
+
   /** OpenSankey+ : le volet cesse d'être une vue ; il reste ouvert, devenu éphémère. */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public unsaveWindowView(occupant_id: string): void { }
