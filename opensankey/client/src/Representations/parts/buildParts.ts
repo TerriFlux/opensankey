@@ -69,6 +69,8 @@ export interface Type_PartInput {
   depth?: number
   /** Le nom du parent DESSINÉ, celui que la légende met devant. */
   parent_label?: string
+  /** L'ancêtre de premier rang : c'est lui qui donne la TEINTE, la profondeur donnant la clarté. */
+  branch_id?: string
   /** Reste-t-il quelque chose à déplier sous cette part ? */
   has_children?: boolean
 }

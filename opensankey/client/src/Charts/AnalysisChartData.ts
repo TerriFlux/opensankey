@@ -336,13 +336,15 @@ const decomposeNodeHierarchy = (
 
   const to_the_leaves = spec.hierarchy === 'leaves'
   const walk = (
-    sector: Type_SunburstNode, parent_label: string, depth: number
+    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string
   ): Type_ChartPart[] => {
     // ON DESCEND SI, ET SEULEMENT SI, LE DIAGRAMME DESCEND — sauf en 'leaves', qui ne lui demande
     // rien. `is_disaggregated` est le pont que l'arbre pose déjà entre la figure et le dessin.
     const descend = sector.children.length > 0 &&
       (to_the_leaves || sector.is_disaggregated === true)
-    if (descend) return sector.children.flatMap(c => walk(c, sector.label, depth + 1))
+    if (descend) {
+      return sector.children.flatMap(c => walk(c, sector.label, depth + 1, branch_id))
+    }
     return [{
       id: sector.id,
       label: sector.label,
@@ -350,11 +352,16 @@ const decomposeNodeHierarchy = (
       color: sector.color ?? undefined,
       depth,
       parent_label,
+      // LA BRANCHE, portée jusqu'en bas : c'est elle qui donne la TEINTE, la profondeur ne donnant
+      // que la clarté (24/09/2026, « une logique de couleur comme pour le sunburst »). Sans elle,
+      // le tracé ne pourrait pas savoir que « Blé » et « Maïs » sont deux nuances de « Céréales » —
+      // l'ordre des parts, une fois trié par valeur, ne le dit plus.
+      branch_id,
       has_children: sector.children.length > 0
     }]
   }
   return root.children
-    .flatMap(child => walk(child, root.label, 0))
+    .flatMap(child => walk(child, root.label, 0, child.id))
     .filter(p => p.value > 0)
 }
 

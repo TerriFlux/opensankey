@@ -505,7 +505,13 @@ const inkOn = (fill: string, ink: string): string => {
 // Éclaircissement par ANNEAU : la teinte dit la branche, la clarté dit la profondeur.
 // Deux anneaux voisins d'une même branche restent ainsi distincts sans que la couleur
 // cesse de nommer la branche. Plafonné pour ne pas fondre dans le fond.
-const shadeForDepth = (base: string, depth: number, theme: 'light' | 'dark'): string => {
+//
+// 24/09/2026 — EXPORTÉ, pour la même raison que `sunburstBranchColor` juste au-dessus : la
+// couronne « in place » met dans UN anneau des parts venues de niveaux différents, et Julien
+// demande « une logique de couleur comme pour le sunburst ». Deux implémentations du même
+// dégradé en feraient deux dégradés — celui du disque et celui de la couronne finiraient par
+// ne plus se ressembler, ce qui est exactement ce qu'on cherche à éviter.
+export const shadeForDepth = (base: string, depth: number, theme: 'light' | 'dark'): string => {
   const c = d3.hsl(base)
   if (isNaN(c.h)) return base
   const steps = Math.min(depth, 4)

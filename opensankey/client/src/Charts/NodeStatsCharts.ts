@@ -25,7 +25,8 @@ import {
 // le choix du centre viennent de là où ils sont déjà écrits : deux implémentations feraient
 // de la figure de la fenêtre et de celle du nœud deux figures différentes.
 import {
-  partitionSunburst, sunburstBranchColor, sunburstScope, sunburstSectorName, SUNBURST_STYLE_DEFAULTS
+  partitionSunburst, shadeForDepth, sunburstBranchColor, sunburstScope, sunburstSectorName,
+  SUNBURST_STYLE_DEFAULTS
 } from './SunburstChart'
 import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
 import type { Type_SunburstTree } from './SunburstHierarchy'
@@ -59,6 +60,8 @@ export interface Type_StatSlice {
   depth?: number
   /** Le nom du parent DESSINÉ, celui que la légende met devant. */
   parent_label?: string
+  /** L'ancêtre de premier rang : c'est LUI qui donne la teinte, la profondeur ne donnant que la clarté. */
+  branch_id?: string
   /** Le nœud a-t-il encore des enfants sous lui ? C'est ce que le clic peut déplier. */
   has_children?: boolean
 }
@@ -368,10 +371,40 @@ export const drawDonutChart = (
   if (others > 0) {
     kept.push({ id: '__others__', label: opts.others_label ?? 'Others', value: others, color: OTHERS_COLOR })
   }
-  // La couleur : celle du modèle quand la donnée la porte et que l'auteur la veut, la palette sinon.
-  const colorOf = (d: Type_StatSlice, i: number) =>
-    d.id === '__others__' ? OTHERS_COLOR
-      : (st.parts_color_source === 'model' && d.color) ? d.color : paletteColor(i)
+  // ── LA COULEUR D'UN SECTEUR, ET LA MÊME RÈGLE QUE LE DISQUE SOUS UNE DESCENTE ───────────────
+  //
+  // Julien, 24/09/2026 : « il faudrait une logique de couleur comme pour le sunburst ».
+  //
+  // À PLAT, rien ne change : la couleur du modèle si l'auteur la veut et que la donnée la porte,
+  // la palette du tracé sinon, dans l'ordre des secteurs. C'est le dessin de toute couronne
+  // enregistrée, au pixel.
+  //
+  // SOUS UNE DESCENTE, un même anneau porte des parts venues de niveaux différents, et l'ordre ne
+  // dit plus de quelle branche chacune sort. On reprend donc la règle du disque, mot pour mot :
+  // LA TEINTE DIT LA BRANCHE, LA CLARTÉ DIT LE NIVEAU (`shadeForDepth`, SunburstChart). Deux
+  // nuances d'un même bleu sont « Blé » et « Maïs » sous « Céréales » ; un orange à côté est une
+  // autre branche.
+  //
+  // ⚠️ LA TEINTE VIENT DE LA PALETTE DE LA COURONNE, pas de celle du disque, et c'est délibéré :
+  // ce qui est repris est la RÈGLE, pas les couleurs. Le premier rang garde ainsi exactement les
+  // teintes qu'il avait — allumer la descente n'a pas à repeindre ce qui était déjà là.
+  //
+  // ⚠️ ET PAS DE DÉGRADÉ SOUS 'model' : c'est la règle du disque aussi (`partitionSunburst`), et
+  // elle est juste — deux nœuds qui portent leur propre couleur se distinguent déjà par elle,
+  // l'éclaircir ne ferait que la trahir.
+  const branch_order = new Map<string, number>()
+  kept.forEach(s => {
+    const branch = s.branch_id ?? s.id
+    if (!branch_order.has(branch)) branch_order.set(branch, branch_order.size)
+  })
+  const colorOf = (d: Type_StatSlice, i: number) => {
+    if (d.id === '__others__') return OTHERS_COLOR
+    if (st.parts_color_source === 'model' && d.color) return d.color
+    // Hors descente, `branch_id` est absent : l'index du secteur commande, comme hier.
+    if (d.branch_id === undefined) return paletteColor(i)
+    const base = paletteColor(branch_order.get(d.branch_id) ?? i)
+    return st.parts_depth_shading ? shadeForDepth(base, d.depth ?? 0, 'light') : base
+  }
 
   // Mise en page : svg carré d'un côté, légende HTML scrollable de l'autre (ou dessous).
   const legend_shown = st.legend_visible && st.legend_parts !== 'none'
@@ -383,7 +416,14 @@ export const drawDonutChart = (
     .style('gap', '0.5rem')
     .style('width', '100%')
     .style('height', '100%')
-  const legend_room = legend_shown ? Math.min(st.legend_width, (below ? height : width) * 0.42) : 0
+  // La place que la légende prend au dessin. À CÔTÉ, c'est une largeur, et `legend_width` la dit.
+  // DESSOUS, c'est une hauteur, et `legend_width` n'en parle pas : un bandeau qui revient à la
+  // ligne tient en deux ou trois lignes, on lui réserve donc une bande, pas la moitié du cadre.
+  const legend_room = !legend_shown
+    ? 0
+    : below
+      ? Math.min(st.legend_width, height * 0.28, st.legend_font_size * 7)
+      : Math.min(st.legend_width, width * 0.42)
   const side = below
     ? Math.max(100, Math.min(width, height - legend_room - 12) - 8)
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
@@ -975,12 +1015,25 @@ export const drawDonutChart = (
 
   // Légende HTML : puce colorée + libellé + part ; survol → mise en avant du secteur.
   if (!legend_shown) return
+  // 24/09/2026 — DESSOUS, LA LÉGENDE EST UN BANDEAU, PAS UNE COLONNE COUCHÉE.
+  //
+  // C'est la contrepartie de la position par défaut (cf. `DONUT_STYLE_DEFAULTS.legend_position`) :
+  // une colonne sous le disque userait toute la hauteur pour trois entrées, alors qu'une bande qui
+  // revient à la ligne en met six par ligne et rend le disque plus grand, pas plus petit.
   const legend = root.append('div')
     .style('flex', below ? '0 0 auto' : '1 1 0')
     .style('min-width', '0')
     .style('max-height', below ? `${legend_room}px` : '100%')
     .style('overflow-y', 'auto')
     .style('font-size', `${st.legend_font_size}px`)
+  if (below) {
+    legend
+      .style('display', 'flex')
+      .style('flex-wrap', 'wrap')
+      .style('justify-content', 'center')
+      .style('column-gap', '0.8rem')
+      .style('width', '100%')
+  }
   const items = legend.selectAll('div')
     .data(arcs)
     .enter().append('div')
@@ -990,6 +1043,9 @@ export const drawDonutChart = (
     .style('padding', '0.1rem 0.2rem')
     .style('cursor', 'default')
     .attr('title', slice_title)
+  // Dans un bandeau, une entrée prend la largeur de son texte ; en colonne, elle prend sa ligne.
+  if (below) items.style('flex', '0 0 auto')
+  items
     // os#1481 — LE SURVOL DE LA LÉGENDE NE MANGE PLUS L'OPACITÉ RÉGLÉE.
     //
     // Julien, à l'écran : « ni opacité ne marche ». Elle était pourtant LUE (cf. `fill-opacity`
@@ -1019,10 +1075,22 @@ export const drawDonutChart = (
     .style('text-overflow', 'ellipsis')
     .style('white-space', 'nowrap')
     .text(d => legendLabel(d.data))
-  items.append('span')
-    .style('flex', '0 0 auto')
-    .style('color', '#718096')
-    .text(d => pctText(d.data.value, total))
+  // ── LE POURCENTAGE, SEULEMENT QUAND LE DESSIN NE LE DIT PAS (Julien, 24/09/2026) ────────────
+  //
+  // « Je vois pas trop l'intérêt de mettre les pourcentages qui sont déjà sur le graphe. » Il a
+  // raison : une couronne écrit son pourcentage dans le secteur d'office (`value_label_percent`
+  // vaut 'total' depuis os#1489), et la légende le redisait à côté — deux fois le même nombre,
+  // dans la même image.
+  //
+  // La règle est donc celle de `legend_parts: 'auto'`, un cran plus bas : LA LÉGENDE DIT CE QUE LE
+  // DESSIN N'A PAS DIT. Valeur masquée sur les secteurs, le nombre revient dans la légende, et
+  // rien n'est perdu.
+  if (!st.value_label_is_visible) {
+    items.append('span')
+      .style('flex', '0 0 auto')
+      .style('color', '#718096')
+      .text(d => pctText(d.data.value, total))
+  }
 }
 
 // ==================================================================================================

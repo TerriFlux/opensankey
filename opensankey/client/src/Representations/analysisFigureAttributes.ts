@@ -229,6 +229,18 @@ const DONUT_HONOURS = {
   legend_levels: {
     visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && descendsHierarchy(o)
   },
+  // LE DÉGRADÉ DE PROFONDEUR, la règle du disque reprise telle quelle : la teinte dit la branche,
+  // la clarté dit le niveau. Le catalogue la cache déjà sous `parts_color_source: 'model'` (où
+  // elle n'a pas de sens) ; on ajoute la seconde condition — sans descente, aucune part n'a de
+  // profondeur, et proposer un dégradé qui ne dégrade rien est un bouton mort.
+  parts_depth_shading: {
+    visibleIf: (o: Type_Bag) => o['parts_color_source'] !== 'model' && descendsHierarchy(o)
+  },
+  // « La position par défaut devrait être en dessous » (Julien, 24/09/2026) : un bandeau sous le
+  // disque plutôt qu'une colonne qui lui mange son diamètre. Cf. `DONUT_STYLE_DEFAULTS`, qui porte
+  // le même défaut côté tracé — les deux doivent dire la même chose, sinon l'inspecteur montre un
+  // réglage et le dessin en applique un autre.
+  legend_position: { default: 'bottom' },
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
