@@ -264,6 +264,19 @@ export type Type_MainZoneOccupant = {
    * première demande (cf. `setMainZoneOccupantPlace`).
    */
   geometry?: Type_PopupGeometry
+  /**
+   * sa#566 — LA VUE QUE CE VOLET EST, quand il est enregistré.
+   *
+   * Une vue et un volet sont le même objet ; la seule différence est qu'une vue est enregistrée
+   * dans le fichier et qu'un volet est éphémère. Ce champ est ce qui les distingue : présent, le
+   * volet EST la vue `saved_view` du document principal — sa nature, ses réglages, sa place et sa
+   * géométrie sont ceux de la vue, et fermer le volet ne l'efface pas (elle se rappelle depuis le
+   * sélecteur de vues). Absent, le volet est éphémère : le fermer le fait disparaître.
+   *
+   * Absent de tout fichier antérieur, et de tout volet qu'on n'a pas enregistré : la clé ne
+   * s'écrit que si elle est posée, et un document sans vue enregistrée garde son fichier d'avant.
+   */
+  saved_view?: string
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -958,6 +971,35 @@ export class Class_MenuConfig {
   // os#1387 — Compteur des ids de fenêtres à sujet élément (`w_N`). Réaligné à la lecture d'un
   // fichier sur le plus grand N rencontré, sinon une fenêtre nouvelle prendrait l'id d'une ancienne.
   protected _main_zone_window_seq: number = 0
+  /**
+   * sa#566 — LE DERNIER ÉTAT DES VOLETS ENREGISTRÉS QU'ON A FERMÉS, par identifiant de vue.
+   *
+   * Une vue retrouve son volet tel qu'on l'a quitté. Or la fermeture a lieu ici, et cette classe ne
+   * connaît pas les vues (elles sont au document) : elle note donc le volet au moment où il part, et
+   * c'est le document qui reverse la note dans la vue (`ApplicationData.captureSavedViewWindows`),
+   * à l'enregistrement du fichier comme au rappel de la vue. TRANSITOIRE : vidé à la lecture d'une
+   * grande zone, qui ouvre un autre état.
+   */
+  protected _saved_window_snapshots: { [view_id: string]: Type_JSON } = {}
+  /**
+   * sa#566 — LE VOLET QUI PREND TOUTE LA GRANDE ZONE, ou `null`.
+   *
+   * Ni flottant, ni ancré : en plein écran. Le volet GARDE sa place (`main`, `right`, `bottom`,
+   * `floating`) — c'est elle qu'il retrouve en quittant le plein écran —, et les autres volets
+   * restent ouverts, simplement non dessinés tant qu'il l'occupe. Un état de la grille, écrit sous
+   * `main_zone.maximized` seulement quand il est posé (fichier inchangé sinon), et levé dès qu'un
+   * volet s'ouvre (il doit se voir) ou que le volet en plein écran se ferme.
+   */
+  protected _main_zone_maximized_id: string | null = null
+  /**
+   * sa#566 — LE VOLET RAMENÉ AU PREMIER PLAN par le choix de sa vue, ou `null`.
+   *
+   * Choisir une vue doit la montrer PAR-DESSUS tout ce qui est à l'écran, quel que soit son
+   * affichage : un volet ancré ou en plein écran passe alors devant les volets flottants, qui sans
+   * cela le recouvraient (ils sont peints au-dessus de la grille). Le premier plan dure jusqu'à ce
+   * qu'on désigne un autre volet — comme une fenêtre du système jusqu'au clic suivant. TRANSITOIRE.
+   */
+  protected _main_zone_front_id: string | null = null
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
   protected _main_zone_active_id: string | null = null
@@ -1330,6 +1372,9 @@ export class Class_MenuConfig {
     o: { id: string, subject: Type_MainZoneSubject, representation: string }, place?: Type_MainZonePlace
   ): void {
     const wanted = place ?? (this.main_zone_main_id === null ? 'main' : 'right')
+    // sa#566 — un volet qu'on ouvre doit se voir : le plein écran d'un autre cède, sauf devant un
+    // volet FLOTTANT, qui se pose par-dessus (cf. `mainZoneLayout`).
+    if (wanted !== 'floating') this._host._main_zone_maximized_id = null
     // Poids d'arrivée = poids moyen de la pile, pour partager sans écraser les réglages.
     const peers = this._host._main_zone_occupants.filter(x => x.place === wanted)
     const size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
@@ -1394,6 +1439,164 @@ export class Class_MenuConfig {
     this._notifyMainZone()
     return id
   }
+  // --- sa#566 : un volet enregistré EST une vue --------------------------------------------
+  //
+  // Une vue et un volet sont le même objet : ils prennent la même forme, portent les mêmes
+  // réglages, et la seule différence est qu'une vue est enregistrée dans le fichier là où un volet
+  // est éphémère. Cette classe porte la moitié « volet » du lien — quel volet est quelle vue, et la
+  // forme sous laquelle une vue garde son volet ; les vues elles-mêmes sont au document
+  // (`ApplicationData.views_dict`), qui porte l'autre moitié.
+
+  /**
+   * sa#566 — Le volet en plein écran, ou `null`. Un volet détaché ne l'est pas : il vit dans sa
+   * fenêtre du système, et la grande zone n'a rien à lui donner.
+   */
+  public get main_zone_maximized_id(): string | null {
+    const id = this._host._main_zone_maximized_id
+    if (id === null || !this.isMainZoneOccupant(id) || this.isMainZoneDetached(id)) return null
+    return id
+  }
+  /** Met un volet en plein écran, ou en fait sortir la grande zone (`null`). */
+  public setMainZoneMaximized(id: string | null): void {
+    const next = (id !== null && this.isMainZoneOccupant(id)) ? id : null
+    if (this._host._main_zone_maximized_id === next) return
+    this._host._main_zone_maximized_id = next
+    if (next !== null) this._host._main_zone_active_id = next
+    this._notifyMainZone()
+  }
+
+  /**
+   * sa#566 — RAMÈNE UN VOLET AU PREMIER PLAN, dans l'affichage où il est, comme on sélectionne
+   * une fenêtre du système : il devient actif ; flottant, il passe devant les autres flottants
+   * (leur ordre de rendu est celui de la liste) ; dans la grille, il fait sortir du plein écran
+   * un AUTRE volet qui le cacherait. Sa place, elle, ne change pas : c'est dans son bandeau qu'on
+   * la change ensuite.
+   */
+  /** sa#566 — Le volet au premier plan (cf. `_main_zone_front_id`), s'il est encore ouvert. */
+  public get main_zone_front_id(): string | null {
+    const id = this._host._main_zone_front_id
+    return (id !== null && this.isMainZoneOccupant(id)) ? id : null
+  }
+
+  public bringMainZoneOccupantForward(id: string): void {
+    const host = this._host
+    const at = host._main_zone_occupants.findIndex(o => o.id === id)
+    if (at < 0) return
+    const o = host._main_zone_occupants[at]
+    if (o.place === 'floating') {
+      host._main_zone_occupants.splice(at, 1)
+      host._main_zone_occupants.push(o)
+    } else if (host._main_zone_maximized_id !== null && host._main_zone_maximized_id !== id) {
+      host._main_zone_maximized_id = null
+    }
+    host._main_zone_active_id = id
+    host._main_zone_front_id = id
+    host._main_zone_active_pane_key = null
+    host._main_zone_selected_pane_keys = []
+    this._notifyMainZone()
+  }
+
+  /** Le volet ouvert qui EST la vue `view_id`, s'il y en a un. */
+  public mainZoneOccupantOfSavedView(view_id: string): Type_MainZoneOccupant | undefined {
+    const o = this._host._main_zone_occupants.find(x => x.saved_view === view_id)
+    return o ? { ...o } : undefined
+  }
+
+  /**
+   * Relie un volet à une vue — il devient ce qu'elle est — ou l'en délie (`undefined`) : il
+   * redevient éphémère, sans que rien d'autre ne change à l'écran. Une vue n'a qu'un volet : le
+   * lier en délie tout autre qui la portait.
+   */
+  public setMainZoneOccupantSavedView(id: string, view_id: string | undefined): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    if (view_id) {
+      this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
+      o.saved_view = view_id
+    } else delete o.saved_view
+    this._notifyMainZone()
+  }
+
+  /**
+   * Le volet `id` sous la forme qu'en garde sa vue : une entrée de `main_zone.occupants`, sans rang
+   * ni lien (cf. `_mainZoneOccupantToJSON`). `undefined` si le volet n'est pas ouvert.
+   */
+  public mainZoneWindowToJSON(id: string): Type_JSON | undefined {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    return o ? this._mainZoneOccupantToJSON(o) : undefined
+  }
+
+  /** Note l'état des volets ENREGISTRÉS parmi `ids`, qui s'apprêtent à quitter la grande zone. */
+  protected _snapshotSavedWindows(ids: string[]): void {
+    ids.forEach(id => {
+      const o = this._host._main_zone_occupants.find(x => x.id === id)
+      if (o?.saved_view) this._host._saved_window_snapshots[o.saved_view] = this._mainZoneOccupantToJSON(o)
+    })
+  }
+
+  /** Rend, et oublie, les notes des volets enregistrés fermés depuis le dernier relevé. */
+  public takeSavedWindowSnapshots(): { [view_id: string]: Type_JSON } {
+    const notes = this._host._saved_window_snapshots
+    this._host._saved_window_snapshots = {}
+    return notes
+  }
+
+  /**
+   * Ouvre le volet d'une vue depuis la forme qu'elle en garde, et le relie à elle.
+   *
+   * Même règle d'identifiant qu'à l'ouverture d'un volet (`openMainZoneWindow`) : une nature
+   * d'échelle diagramme sur la feuille courante n'a qu'une fenêtre, qu'on RÉUTILISE si elle est déjà
+   * là — la vue lui rend sa place et ses réglages —, tout autre sujet prend un identifiant neuf. La
+   * place `main` s'obtient par l'échange ordinaire (`makeMainZoneOccupantMain`) : la principale du
+   * moment prend la place du volet, rien ne disparaît.
+   *
+   * Rend l'identifiant du volet, ou `null` quand la forme ne nomme aucune nature.
+   */
+  public openMainZoneWindowFromJSON(json: Type_JSON, view_id: string): string | null {
+    const e = this._parseMainZoneOccupantEntry('', json)
+    // La vue qu'on rappelle doit se voir : un autre volet en plein écran cède — sauf si elle
+    // flotte, auquel cas elle se pose par-dessus, comme une fenêtre qu'on ramène au premier plan.
+    if (e.place !== 'floating' || e.maximized) this._host._main_zone_maximized_id = null
+    let id = ''
+    if (!mainZoneSubjectUsesOwnWindowId(e.subject)) {
+      id = e.representation
+      if (id === '') return null
+      if (!this.isMainZoneOccupant(id)) {
+        this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, e.place)
+      }
+    } else {
+      if (e.representation === '') return null
+      do {
+        this._host._main_zone_window_seq += 1
+        id = `w_${this._host._main_zone_window_seq}`
+      } while (this.isMainZoneOccupant(id))
+      this._pushMainZoneOccupant({ id, subject: e.subject, representation: e.representation }, e.place)
+    }
+    const o = this._host._main_zone_occupants.find(x => x.id === id)!
+    // La place `main` est posée par l'échange, plus bas : l'écrire ici ferait deux principales.
+    if (e.place !== 'main') o.place = e.place
+    o.size = e.size
+    if (e.geometry) o.geometry = e.geometry
+    this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
+    o.saved_view = view_id
+    this._host._main_zone_detached.delete(id)
+    if (e.place === 'floating') this.enforceMainZoneFloatingCap(id)
+    // Les réglages de la VUE remplacent ceux que portait une fenêtre réutilisée.
+    this._dropFigures(id)
+    this._normalizeMainZoneOccupants()
+    this._loadFiguresFromJSON(new Map([[id, { figures: e.figures, options: e.options }]]))
+    this._host._main_zone_active_id = id
+    // Une vue qu'on rappelle se montre par-dessus tout (cf. `_main_zone_front_id`).
+    this._host._main_zone_front_id = id
+    this._host._main_zone_active_pane_key = null
+    this._host._main_zone_selected_pane_keys = []
+    if (e.place === 'main') this.makeMainZoneOccupantMain(id)
+    // Une vue quittée en plein écran s'y rouvre.
+    if (e.maximized) this._host._main_zone_maximized_id = id
+    this._notifyMainZone()
+    return id
+  }
+
   /**
    * Change la NATURE d'une fenêtre sur le même sujet — le geste « type de graphique » d'Excel.
    * Fenêtre à id propre (sujet élément, ou diagramme d'une autre feuille) : on change la
@@ -2048,6 +2251,8 @@ export class Class_MenuConfig {
   public set main_zone_active_id(id: string | null) {
     if (this._host._main_zone_active_id === id) return
     this._host._main_zone_active_id = id
+    // sa#566 — désigner un autre volet lui rend la main : le premier plan d'une vue choisie cesse.
+    if (this._host._main_zone_front_id !== id) this._host._main_zone_front_id = null
     // os#1394 — changer de fenêtre PÉRIME la vignette active : sa clé n'a de sens que dans la
     // fenêtre qui la porte, et deux fenêtres peuvent nommer la même. À id inchangé, en
     // revanche, on ne touche à rien : un clic sur une vignette active d'abord celle-ci, puis
@@ -2229,6 +2434,8 @@ export class Class_MenuConfig {
     // flottant qu'on ferme n'en fait pas partie.
     const grid = this._host._main_zone_occupants.filter(o => o.place !== 'floating')
     if (grid.length <= 1 && grid.some(o => o.id === id)) return false
+    // sa#566 — un volet ENREGISTRÉ qu'on ferme laisse son dernier état à sa vue.
+    this._snapshotSavedWindows([id])
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
     this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
@@ -2265,8 +2472,10 @@ export class Class_MenuConfig {
    */
   public resetMainZoneToCanvas(): void {
     const host = this._host
+    this._snapshotSavedWindows(host._main_zone_occupants.map(o => o.id))
     host._main_zone_occupants = []
     host._main_zone_detached.clear()
+    host._main_zone_maximized_id = null
     host._main_zone_active_id = null
     host._main_zone_active_pane_key = null
     host._main_zone_selected_pane_keys = []
@@ -2313,6 +2522,7 @@ export class Class_MenuConfig {
       .map(o => o.id)
     if (doomed.length === 0) return []
     const condemned = new Set(doomed)
+    this._snapshotSavedWindows(doomed)
     // Retrait en UN geste, et non `hideMainZoneOccupant` en boucle : celle-ci refuse de retirer
     // la dernière fenêtre, garde juste pour un geste de l'utilisateur (on ne vide pas la grande
     // zone d'un clic) et fausse ici — une feuille dont on ne garde aucune fenêtre doit pouvoir
@@ -2498,6 +2708,10 @@ export class Class_MenuConfig {
       o.geometry = clampMainZoneFloatingGeometry(o.geometry ?? defaultMainZoneFloatingGeometry())
     })
     host._main_zone_occupants = list
+    // sa#566 — le plein écran part avec son volet.
+    if (host._main_zone_maximized_id !== null && !list.some(o => o.id === host._main_zone_maximized_id)) {
+      host._main_zone_maximized_id = null
+    }
     // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
     // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
     // le changement de nature en place et la déduplication mènent tous ici, et un seul ménage
@@ -2702,6 +2916,8 @@ export class Class_MenuConfig {
     // La colonne droite n'existe que si quelque chose y vit ET qu'une zone principale la borde ;
     // un occupant détaché n'y compte pas (cf. mainZoneOccupantsIn).
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('right').length === 0) return tools
+    // sa#566 — un volet en plein écran : la colonne n'est pas dessinée, elle ne réserve rien.
+    if (this.main_zone_maximized_id !== null) return tools
     return mainZoneRightColumnWidthPx(this._host._main_zone_split_ratio) + tools
   }
 
@@ -2712,9 +2928,79 @@ export class Class_MenuConfig {
    */
   public getMainZoneBottomReservedPx(): number {
     if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('bottom').length === 0) return 0
+    if (this.main_zone_maximized_id !== null) return 0
     return mainZoneBottomBandHeightPx(
       this._host._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX
     )
+  }
+
+  /**
+   * sa#566 — UN VOLET, sérialisé seul : la forme d'une entrée de `main_zone.occupants`.
+   *
+   * Deux lecteurs, et une seule écriture pour qu'ils ne divergent jamais : la grande zone entière
+   * (`mainZoneStateToJSON`, avec le rang du volet) et le VOLET D'UNE VUE (`mainZoneWindowToJSON`,
+   * sans rang ni lien de vue — une vue sait qui elle est, et le rang d'un volet fermé ne dit rien).
+   */
+  protected _mainZoneOccupantToJSON(o: Type_MainZoneOccupant, order?: number): Type_JSON {
+    // os#1387 — le sujet est un objet imbriqué (kind, id, sheet), la représentation une
+    // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
+    const subject: Type_JSON = { kind: o.subject.kind }
+    if ('id' in o.subject) subject['id'] = o.subject.id
+    if ('ids' in o.subject) subject['ids'] = [...o.subject.ids]
+    // os#1387 — les clés de vignettes sont écrites DÈS QU'IL Y A DES OBJETS, même quand elles
+    // valent leurs identifiants : c'est ce qui rend le fichier relisable tel quel quand deux
+    // vignettes montrent le même nœud, cas où `ids` seul ne dit plus laquelle est laquelle.
+    if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
+    // os#1420 — un sujet à CRITÈRE n'écrit que le critère (groupe + étiquette) : les nœuds qu'il
+    // désigne se redemandent au diagramme à l'ouverture, et les écrire ici les figerait — ce qui
+    // est exactement ce à quoi ce sujet sert à échapper.
+    if ('tagg_id' in o.subject) subject['tagg_id'] = o.subject.tagg_id
+    if ('tag_id' in o.subject) subject['tag_id'] = o.subject.tag_id
+    if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
+    // os#1482 — la VUE demandée, seulement pour un sujet diagramme et seulement si elle est
+    // dite : une fenêtre ouverte à la main n'en porte pas, et le fichier reste identique.
+    const view = mainZoneSubjectView(o.subject)
+    if (view !== '') subject['view'] = view
+    // L'ordre des clés est celui d'avant sa#566 : `order` s'intercale entre le poids et la nature,
+    // et c'est ce qui garde le fichier d'un document sans vue enregistrée identique octet pour octet.
+    const entry: Type_JSON = { place: o.place, size: o.size }
+    if (order !== undefined) entry['order'] = order
+    entry['representation'] = o.representation
+    entry['subject'] = subject
+    // sa#563 — LA GÉOMÉTRIE, seulement quand il y en a une. Un volet qui n'a jamais flotté
+    // n'écrit pas la clé, et le fichier d'un document sans volet flottant reste identique
+    // octet pour octet à celui qu'écrivait la version d'avant (même règle que `figures`).
+    if (o.geometry) {
+      entry['geometry'] = { x: o.geometry.x, y: o.geometry.y, w: o.geometry.w, h: o.geometry.h }
+    }
+    // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
+    // style de sa nature) rend `undefined` et ne s'écrit pas ; une fenêtre dont aucune figure
+    // ne dit rien n'écrit pas la clé `figures` du tout. C'est ce qui rend un fichier
+    // d'aujourd'hui — où personne n'a réglé de vignette — identique OCTET POUR OCTET à celui
+    // qu'écrivait la version d'avant.
+    //
+    // os#1421 — UNE FIGURE PROMUE N'EST PAS ÉCRITE DEUX FOIS. Elle vit dans la clé racine
+    // `figures` (le registre), et sa vignette n'écrit qu'un RENVOI `{ ref: 'f_N' }`. Deux copies
+    // des mêmes réglages divergeraient à la première relecture partielle, et surtout la vignette
+    // n'est plus la propriétaire : la même figure peut être posée sur un nœud et n'être montrée
+    // dans aucune fenêtre.
+    const figs = this._figures[o.id]
+    if (figs) {
+      const figures: Type_JSON = {}
+      Object.entries(figs).forEach(([key, fig]) => {
+        if (fig.id !== null) { figures[key] = { ref: fig.id }; return }
+        const json = fig.toJSON()
+        if (json) figures[key] = json
+      })
+      if (Object.keys(figures).length > 0) entry['figures'] = figures
+    }
+    // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
+    // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
+    if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
+    // La forme d'une VUE retient qu'elle était en plein écran ; la grande zone, elle, le dit une
+    // fois pour toutes (`main_zone.maximized`), puisqu'un seul volet peut l'être.
+    if (order === undefined && this.main_zone_maximized_id === o.id) entry['maximized'] = true
+    return entry
   }
 
   /**
@@ -2729,59 +3015,108 @@ export class Class_MenuConfig {
   public mainZoneStateToJSON(): Type_JSON {
     const occupants: Type_JSON = {}
     this._host._main_zone_occupants.forEach((o, order) => {
-      // os#1387 — le sujet est un objet imbriqué (kind, id, sheet), la représentation une
-      // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
-      const subject: Type_JSON = { kind: o.subject.kind }
-      if ('id' in o.subject) subject['id'] = o.subject.id
-      if ('ids' in o.subject) subject['ids'] = [...o.subject.ids]
-      // os#1387 — les clés de vignettes sont écrites DÈS QU'IL Y A DES OBJETS, même quand elles
-      // valent leurs identifiants : c'est ce qui rend le fichier relisable tel quel quand deux
-      // vignettes montrent le même nœud, cas où `ids` seul ne dit plus laquelle est laquelle.
-      if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
-      // os#1420 — un sujet à CRITÈRE n'écrit que le critère (groupe + étiquette) : les nœuds qu'il
-      // désigne se redemandent au diagramme à l'ouverture, et les écrire ici les figerait — ce qui
-      // est exactement ce à quoi ce sujet sert à échapper.
-      if ('tagg_id' in o.subject) subject['tagg_id'] = o.subject.tagg_id
-      if ('tag_id' in o.subject) subject['tag_id'] = o.subject.tag_id
-      if ('sheet' in o.subject && o.subject.sheet) subject['sheet'] = o.subject.sheet
-      // os#1482 — la VUE demandée, seulement pour un sujet diagramme et seulement si elle est
-      // dite : une fenêtre ouverte à la main n'en porte pas, et le fichier reste identique.
-      const view = mainZoneSubjectView(o.subject)
-      if (view !== '') subject['view'] = view
-      const entry: Type_JSON = { place: o.place, size: o.size, order, representation: o.representation, subject }
-      // sa#563 — LA GÉOMÉTRIE, seulement quand il y en a une. Un volet qui n'a jamais flotté
-      // n'écrit pas la clé, et le fichier d'un document sans volet flottant reste identique
-      // octet pour octet à celui qu'écrivait la version d'avant (même règle que `figures`).
-      if (o.geometry) {
-        entry['geometry'] = { x: o.geometry.x, y: o.geometry.y, w: o.geometry.w, h: o.geometry.h }
-      }
-      // os#1418 — LES FIGURES remplacent `options`. Une figure qui n'a rien à dire (elle suit le
-      // style de sa nature) rend `undefined` et ne s'écrit pas ; une fenêtre dont aucune figure
-      // ne dit rien n'écrit pas la clé `figures` du tout. C'est ce qui rend un fichier
-      // d'aujourd'hui — où personne n'a réglé de vignette — identique OCTET POUR OCTET à celui
-      // qu'écrivait la version d'avant.
-      //
-      // os#1421 — UNE FIGURE PROMUE N'EST PAS ÉCRITE DEUX FOIS. Elle vit dans la clé racine
-      // `figures` (le registre), et sa vignette n'écrit qu'un RENVOI `{ ref: 'f_N' }`. Deux copies
-      // des mêmes réglages divergeraient à la première relecture partielle, et surtout la vignette
-      // n'est plus la propriétaire : la même figure peut être posée sur un nœud et n'être montrée
-      // dans aucune fenêtre.
-      const figs = this._figures[o.id]
-      if (figs) {
-        const figures: Type_JSON = {}
-        Object.entries(figs).forEach(([key, fig]) => {
-          if (fig.id !== null) { figures[key] = { ref: fig.id }; return }
-          const json = fig.toJSON()
-          if (json) figures[key] = json
-        })
-        if (Object.keys(figures).length > 0) entry['figures'] = figures
-      }
-      occupants[o.id] = entry
+      occupants[o.id] = this._mainZoneOccupantToJSON(o, order)
     })
-    return {
+    const state: Type_JSON = {
       occupants,
       split_ratio: this._host._main_zone_split_ratio,
       bottom_px: this._host._main_zone_bottom_px
+    }
+    // sa#566 — seulement quand un volet est en plein écran : fichier inchangé sinon.
+    const maximized = this.main_zone_maximized_id
+    if (maximized !== null) state['maximized'] = maximized
+    return state
+  }
+
+  /**
+   * sa#566 — UNE ENTRÉE DE `main_zone.occupants`, relue seule. Symétrique de
+   * `_mainZoneOccupantToJSON` : la grande zone entière et le volet d'une vue passent par elle.
+   * Les réglages sont rendus BRUTS (`figures`, ou `options` d'un fichier d'avant), leur lecture
+   * attendant les identifiants définitifs (cf. `_loadFiguresFromJSON`).
+   */
+  protected _parseMainZoneOccupantEntry(id: string, v: unknown) {
+    const e = (v && typeof v === 'object' && !Array.isArray(v)) ? v as Type_JSON : {}
+    const place = getStringFromJSON(e, 'place', 'right') as Type_MainZonePlace
+    // os#1387 — sujet et représentation ; absents (fichier d'avant) = fenêtre diagramme.
+    const s = e['subject']
+    const sj = (s && typeof s === 'object' && !Array.isArray(s)) ? s as Type_JSON : {}
+    const kind = getStringFromJSON(sj, 'kind', 'diagram')
+    const sheet = getStringFromJSON(sj, 'sheet', '')
+    const obj_id = getStringFromJSON(sj, 'id', '')
+    const raw_ids = sj['ids']
+    const ids = Array.isArray(raw_ids) ? raw_ids.filter((x): x is string => typeof x === 'string' && x !== '') : []
+    // os#1387 — les clés de vignettes, tableau PARALLÈLE à `ids`. Absentes (fichier
+    // antérieur, où un objet ne pouvait figurer qu'une fois) ou plus courtes qu'`ids`
+    // (fichier tronqué) : `mainZonePaneKeys` retombe sur les identifiants, exactement ce
+    // que ces fichiers voulaient dire. La liste est ramenée à la longueur d'`ids`, sans
+    // quoi une clé orpheline décalerait toutes les suivantes d'un cran.
+    const raw_keys = sj['keys']
+    const keys = Array.isArray(raw_keys) ? raw_keys.map(x => (typeof x === 'string' ? x : '')) : []
+    // os#1420 — le critère d'un sujet épinglé à une étiquette : GROUPE et ÉTIQUETTE, les deux
+    // ou rien. Une moitié de critère ne désigne pas « moins de nœuds », elle n'en désigne
+    // aucun tout en prétendant le contraire : la fenêtre retombe alors sur le défaut du
+    // jalon — elle SUIT la sélection —, ce qui la rend immédiatement utile plutôt que muette.
+    const tagg_id = getStringFromJSON(sj, 'tagg_id', '')
+    const tag_id = getStringFromJSON(sj, 'tag_id', '')
+    let subject: Type_MainZoneSubject = { kind: 'diagram' }
+    if (kind === 'selection') subject = { kind: 'selection' }
+    else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
+    else if (kind === 'elements') subject = { kind: 'elements', ids, keys: mainZonePaneKeys({ ids, keys }) }
+    else if (kind === 'tag') {
+      subject = (tagg_id !== '' && tag_id !== '') ? { kind: 'tag', tagg_id, tag_id } : { kind: 'selection' }
+    }
+    if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
+    // os#1482 — la vue demandée ne vaut que pour un sujet diagramme (cf. `mainZoneSubjectView`).
+    const view = getStringFromJSON(sj, 'view', '')
+    if (subject.kind === 'diagram' && view !== '') subject = { ...subject, view }
+    // os#1418 — DEUX FORMATS DE RÉGLAGES, et un seul des deux par fenêtre : `figures` (le
+    // format d'aujourd'hui, une entrée par vignette) ou `options` (celui d'avant, un sac
+    // par fenêtre avec son sous-dictionnaire `panes`). Tous deux gardés BRUTS ici : la
+    // migration a besoin des styles déjà lus, et des identifiants DÉFINITIFS, donc elle
+    // n'a pas lieu avant que les deux soient établis (cf. `_loadFiguresFromJSON`).
+    const figs = e['figures']
+    const figures = (figs && typeof figs === 'object' && !Array.isArray(figs)) ? figs as Type_JSON : undefined
+    const opts = e['options']
+    const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
+    // sa#563 — la géométrie d'un volet flottant. Absente d'un fichier antérieur, et d'un
+    // volet qui n'a jamais flotté : la normalisation en pose une si la place l'exige.
+    const geo = e['geometry']
+    const geometry = (geo && typeof geo === 'object' && !Array.isArray(geo))
+      ? clampMainZoneFloatingGeometry({
+        x: getNumberFromJSON(geo as Type_JSON, 'x', 0),
+        y: getNumberFromJSON(geo as Type_JSON, 'y', 0),
+        w: getNumberFromJSON(geo as Type_JSON, 'w', MAIN_ZONE_FLOATING_DEFAULT_SIZE.w),
+        h: getNumberFromJSON(geo as Type_JSON, 'h', MAIN_ZONE_FLOATING_DEFAULT_SIZE.h)
+      })
+      : undefined
+    // 24/09/2026 — UNE NATURE RETIREE SE RELIT COMME CE QU'ELLE EST DEVENUE. Le disque a
+    // fusionne avec la couronne ; son identifiant est pourtant ecrit dans tout classeur ou
+    // l'auteur en avait ouvert un. On traduit ICI, a la lecture, et on POSE ce qu'il faut
+    // pour que le dessin soit le meme (les anneaux) — cf. `retiredRepresentations`.
+    const stored_repr = getStringFromJSON(e, 'representation', id)
+    const representation = canonicalRepresentationId(stored_repr)
+    const retired_options = retiredRepresentationOptions(stored_repr)
+    if (Object.keys(retired_options).length > 0 && figures && typeof figures === 'object') {
+      Object.values(figures as Type_JSON).forEach(f => {
+        if (f && typeof f === 'object' && !Array.isArray(f)) {
+          Object.assign(f as Type_JSON, retired_options)
+        }
+      })
+    }
+    // sa#566 — la vue que ce volet EST, s'il est enregistré (cf. `Type_MainZoneOccupant.saved_view`).
+    const saved_view = getStringFromJSON(e, 'saved_view', '')
+    return {
+      id,
+      subject,
+      representation,
+      place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
+      size: getNumberFromJSON(e, 'size', 1),
+      order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),
+      geometry,
+      figures,
+      options,
+      saved_view: saved_view !== '' ? saved_view : undefined,
+      maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
 
@@ -2803,87 +3138,7 @@ export class Class_MenuConfig {
     const raw = json['occupants']
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       const entries = Object.entries(raw as Type_JSON)
-        .map(([id, v]) => {
-          const e = (v && typeof v === 'object' && !Array.isArray(v)) ? v as Type_JSON : {}
-          const place = getStringFromJSON(e, 'place', 'right') as Type_MainZonePlace
-          // os#1387 — sujet et représentation ; absents (fichier d'avant) = fenêtre diagramme.
-          const s = e['subject']
-          const sj = (s && typeof s === 'object' && !Array.isArray(s)) ? s as Type_JSON : {}
-          const kind = getStringFromJSON(sj, 'kind', 'diagram')
-          const sheet = getStringFromJSON(sj, 'sheet', '')
-          const obj_id = getStringFromJSON(sj, 'id', '')
-          const raw_ids = sj['ids']
-          const ids = Array.isArray(raw_ids) ? raw_ids.filter((x): x is string => typeof x === 'string' && x !== '') : []
-          // os#1387 — les clés de vignettes, tableau PARALLÈLE à `ids`. Absentes (fichier
-          // antérieur, où un objet ne pouvait figurer qu'une fois) ou plus courtes qu'`ids`
-          // (fichier tronqué) : `mainZonePaneKeys` retombe sur les identifiants, exactement ce
-          // que ces fichiers voulaient dire. La liste est ramenée à la longueur d'`ids`, sans
-          // quoi une clé orpheline décalerait toutes les suivantes d'un cran.
-          const raw_keys = sj['keys']
-          const keys = Array.isArray(raw_keys) ? raw_keys.map(x => (typeof x === 'string' ? x : '')) : []
-          // os#1420 — le critère d'un sujet épinglé à une étiquette : GROUPE et ÉTIQUETTE, les deux
-          // ou rien. Une moitié de critère ne désigne pas « moins de nœuds », elle n'en désigne
-          // aucun tout en prétendant le contraire : la fenêtre retombe alors sur le défaut du
-          // jalon — elle SUIT la sélection —, ce qui la rend immédiatement utile plutôt que muette.
-          const tagg_id = getStringFromJSON(sj, 'tagg_id', '')
-          const tag_id = getStringFromJSON(sj, 'tag_id', '')
-          let subject: Type_MainZoneSubject = { kind: 'diagram' }
-          if (kind === 'selection') subject = { kind: 'selection' }
-          else if ((kind === 'node' || kind === 'link') && obj_id !== '') subject = { kind, id: obj_id }
-          else if (kind === 'elements') subject = { kind: 'elements', ids, keys: mainZonePaneKeys({ ids, keys }) }
-          else if (kind === 'tag') {
-            subject = (tagg_id !== '' && tag_id !== '') ? { kind: 'tag', tagg_id, tag_id } : { kind: 'selection' }
-          }
-          if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
-          // os#1482 — la vue demandée ne vaut que pour un sujet diagramme (cf. `mainZoneSubjectView`).
-          const view = getStringFromJSON(sj, 'view', '')
-          if (subject.kind === 'diagram' && view !== '') subject = { ...subject, view }
-          // os#1418 — DEUX FORMATS DE RÉGLAGES, et un seul des deux par fenêtre : `figures` (le
-          // format d'aujourd'hui, une entrée par vignette) ou `options` (celui d'avant, un sac
-          // par fenêtre avec son sous-dictionnaire `panes`). Tous deux gardés BRUTS ici : la
-          // migration a besoin des styles déjà lus, et des identifiants DÉFINITIFS, donc elle
-          // n'a pas lieu avant que les deux soient établis (cf. `_loadFiguresFromJSON`).
-          const figs = e['figures']
-          const figures = (figs && typeof figs === 'object' && !Array.isArray(figs)) ? figs as Type_JSON : undefined
-          const opts = e['options']
-          const options = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? { ...(opts as Type_JSON) } : undefined
-          // sa#563 — la géométrie d'un volet flottant. Absente d'un fichier antérieur, et d'un
-          // volet qui n'a jamais flotté : la normalisation en pose une si la place l'exige.
-          const geo = e['geometry']
-          const geometry = (geo && typeof geo === 'object' && !Array.isArray(geo))
-            ? clampMainZoneFloatingGeometry({
-              x: getNumberFromJSON(geo as Type_JSON, 'x', 0),
-              y: getNumberFromJSON(geo as Type_JSON, 'y', 0),
-              w: getNumberFromJSON(geo as Type_JSON, 'w', MAIN_ZONE_FLOATING_DEFAULT_SIZE.w),
-              h: getNumberFromJSON(geo as Type_JSON, 'h', MAIN_ZONE_FLOATING_DEFAULT_SIZE.h)
-            })
-            : undefined
-          // 24/09/2026 — UNE NATURE RETIREE SE RELIT COMME CE QU'ELLE EST DEVENUE. Le disque a
-          // fusionne avec la couronne ; son identifiant est pourtant ecrit dans tout classeur ou
-          // l'auteur en avait ouvert un. On traduit ICI, a la lecture, et on POSE ce qu'il faut
-          // pour que le dessin soit le meme (les anneaux) — cf. `retiredRepresentations`.
-          const stored_repr = getStringFromJSON(e, 'representation', id)
-          const representation = canonicalRepresentationId(stored_repr)
-          const retired_options = retiredRepresentationOptions(stored_repr)
-          if (Object.keys(retired_options).length > 0 && figures && typeof figures === 'object') {
-            Object.values(figures as Type_JSON).forEach(f => {
-              if (f && typeof f === 'object' && !Array.isArray(f)) {
-                Object.assign(f as Type_JSON, retired_options)
-              }
-            })
-          }
-          return {
-            id,
-            subject,
-            representation,
-            place: MAIN_ZONE_PLACES.includes(place) ? place : 'right',
-            size: getNumberFromJSON(e, 'size', 1),
-            order: getNumberFromJSON(e, 'order', Number.MAX_SAFE_INTEGER),
-            geometry,
-            figures,
-            options
-          }
-        })
+        .map(([id, v]) => this._parseMainZoneOccupantEntry(id, v))
         .sort((a, b) => a.order - b.order)
       // os#1418 — l'annuaire des figures repart de zéro avec la grande zone qu'il décrit : ses
       // clés sont des identifiants de fenêtres, et celles du fichier qu'on ouvre ne sont pas
@@ -2895,8 +3150,14 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry }) =>
-        (geometry ? { id, subject, representation, place, size, geometry } : { id, subject, representation, place, size }))
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view }) => {
+        const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
+        if (geometry) o.geometry = geometry
+        if (saved_view) o.saved_view = saved_view
+        return o
+      })
+      // sa#566 — les notes de volets fermés parlaient de l'état qu'on quitte.
+      host._saved_window_snapshots = {}
       // os#1387 — un fichier écrit avec le panneau unitaire à hôte externe : sa fenêtre devient
       // une fenêtre d'élément « Unit. » qui suit la sélection, même place, même poids.
       host._main_zone_occupants = host._main_zone_occupants.map(o => {
@@ -2949,6 +3210,10 @@ export class Class_MenuConfig {
       if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
       host._main_zone_occupants = list
     }
+    // sa#566 — le volet en plein écran, s'il est encore là (`setMainZoneMaximized` le vérifie).
+    const maximized = getStringFromJSON(json, 'maximized', '')
+    host._main_zone_maximized_id = (maximized !== '' && host._main_zone_occupants.some(o => o.id === maximized))
+      ? maximized : null
     this._normalizeMainZoneOccupants()
     host._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', host._main_zone_split_ratio)
     host._main_zone_bottom_px = getNumberFromJSON(
