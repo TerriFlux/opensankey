@@ -34,6 +34,7 @@ import ipaddress
 import socket
 import subprocess
 import tempfile
+import getpass
 import gzip
 import hashlib
 import os
@@ -2003,6 +2004,43 @@ def menus_templates_asset(asset):
 # l'ancien classeur n'est plus jamais servi. Le dossier est temporaire — le perdre
 # ne coute qu'une reconversion.
 _TEMPLATE_XLSX_CACHE_LOCK = Lock()
+_TEMPLATE_XLSX_CACHE_DIR = None
+
+
+def _template_xlsx_cache_dir():
+    """Dossier de cache des classeurs, PROPRE a l'utilisateur qui sert l'appli.
+
+    /tmp est partage entre tous les comptes de la machine, et sur le VPS il y en
+    a deux qui font tourner ce code : le service (ubuntu) et le runner CI
+    (gitlab-runner). Un dossier au nom fixe cree par l'un n'est pas ecrivable par
+    l'autre — `os.makedirs(exist_ok=True)` passe, puis la premiere ecriture leve
+    PermissionError et TOUTES les pastilles tombent en 404. Constate au pipeline
+    du 24/09/2026, qui a barre la route au deploiement : c'est exactement ce que
+    ce barrage doit attraper.
+
+    Deux filets : le nom porte l'utilisateur, et si le dossier reste inecrivable
+    (droits exotiques, /tmp en lecture seule) on se rabat sur un dossier propre a
+    ce processus — le cache n'est plus partage entre workers, le service marche.
+    """
+    global _TEMPLATE_XLSX_CACHE_DIR
+    if _TEMPLATE_XLSX_CACHE_DIR and os.access(_TEMPLATE_XLSX_CACHE_DIR, os.W_OK):
+        return _TEMPLATE_XLSX_CACHE_DIR
+    try:
+        who = getpass.getuser()
+    except Exception:
+        # getuser() interroge l'environnement puis la base des comptes : sans
+        # l'un ni l'autre (conteneur nu), le pid isole tout aussi bien.
+        who = str(os.getpid())
+    cache_dir = os.path.join(
+        tempfile.gettempdir(), "opensankey_templates_xlsx_{}".format(who))
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+        if not os.access(cache_dir, os.W_OK):
+            raise OSError("dossier de cache non ecrivable : {}".format(cache_dir))
+    except OSError:
+        cache_dir = tempfile.mkdtemp(prefix="opensankey_templates_xlsx_")
+    _TEMPLATE_XLSX_CACHE_DIR = cache_dir
+    return cache_dir
 
 
 def _template_xlsx_cache_path(json_abs):
@@ -2010,9 +2048,7 @@ def _template_xlsx_cache_path(json_abs):
     stat = os.stat(json_abs)
     stamp = "{}-{}-{}".format(os.path.abspath(json_abs), stat.st_mtime_ns, stat.st_size)
     digest = hashlib.sha1(stamp.encode("utf-8")).hexdigest()
-    cache_dir = os.path.join(tempfile.gettempdir(), "opensankey_templates_xlsx")
-    os.makedirs(cache_dir, exist_ok=True)
-    return os.path.join(cache_dir, digest + ".xlsx")
+    return os.path.join(_template_xlsx_cache_dir(), digest + ".xlsx")
 
 
 def template_xlsx_build(json_abs, xlsx_abs):

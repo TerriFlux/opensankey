@@ -205,3 +205,32 @@ def test_la_theque_et_le_corpus_esankey_nont_pas_de_classeur(client):
         # rendre la page 404. Ce qui doit tenir, c'est qu'aucun classeur ne sort.
         assert response.status_code != 200, source
         assert not response.data.startswith(XLSX_MAGIC)
+
+
+def test_un_cache_inaccessible_ne_prive_pas_du_classeur(client, monkeypatch, tmp_path):
+    """/tmp est partage : le dossier de cache peut appartenir a quelqu'un d'autre.
+
+    Sur le VPS, le service (ubuntu) et le runner CI (gitlab-runner) tournent sur
+    la meme machine. Un dossier de cache au nom fixe cree par l'un n'est pas
+    ecrivable par l'autre : makedirs(exist_ok=True) passe, puis l'ecriture leve
+    PermissionError et toutes les pastilles tombent en 404 (pipeline du
+    24/09/2026). On simule l'inaccessible avec un « dossier » qui est un
+    FICHIER — makedirs echoue de la meme facon, sur toutes les plateformes.
+    """
+    import getpass
+
+    from opensankey.server import views
+
+    faux_temp = tmp_path / "temp"
+    faux_temp.mkdir()
+    # Le dossier attendu existe... en FICHIER : makedirs echoue exactement comme
+    # sur un dossier appartenant a un autre compte, et le repli doit prendre.
+    (faux_temp / "opensankey_templates_xlsx_{}".format(getpass.getuser())).write_text(
+        "", encoding="utf-8")
+    monkeypatch.setattr(views, "_TEMPLATE_XLSX_CACHE_DIR", None)
+    monkeypatch.setattr(views.tempfile, "gettempdir", lambda: str(faux_temp))
+
+    response = client.get("/menus/templates_xlsx/templates/data/demo.json")
+
+    assert response.status_code == 200
+    assert response.data.startswith(XLSX_MAGIC)
