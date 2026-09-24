@@ -269,7 +269,21 @@ const decomposeNodeChildren = (
       id: child.id,
       label: displayedNameOf(child),
       value: childValue(child),
-      color: child.getShapeColorToUse()
+      color: child.getShapeColorToUse(),
+      // ── LA ROUTE, MÊME QUAND ON NE DESCEND PAS (24/09/2026) ──────────────────────────────────
+      //
+      // Julien : « en place, quand je clique sur Maïs, le diagramme donne Céréales + Maïs Bio +
+      // Maïs Conventionnel ; en anneaux ça désagrège correctement ».
+      //
+      // C'était ce chemin-ci qui manquait. Rien d'ouvert, les parts viennent d'ici — et elles
+      // n'avaient PAS de route. Le clic ne dépliait alors que le nœud touché, jamais le chemin qui
+      // y mène : le sujet restait replié, et le diagramme montrait le parent À CÔTÉ des
+      // petits-enfants, c'est-à-dire la même matière deux fois. Le mode anneaux, lui, tenait sa
+      // route du tracé (`on_arc_click`), d'où l'écart entre les deux modes.
+      //
+      // Deux crans : le sujet, puis l'enfant. C'est exactement ce que `decomposeNodeHierarchy`
+      // pose pour un enfant direct, et c'est ce que `disaggregateAlong` attend.
+      path: [node.id, child.id]
     }))
     .filter(p => p.value > 0)
 }
