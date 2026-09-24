@@ -45,6 +45,29 @@ export type Type_ViewEntry = {
   // antérieur est lue ici puis MIGRÉE en tableau de bord par `migrateViewMainZonesToDashboards`, qui vide le
   // champ. Un document secondaire (feuille vivante) peut le garder rempli : personne ne le lit.
   main_zone?: Type_JSON
+  /**
+   * sa#566 — LE VOLET DE LA VUE : une vue et un volet sont le même objet, et une vue enregistrée
+   * garde donc la nature, les réglages, la place et la géométrie du volet qu'elle est — sous la
+   * forme d'une entrée de `main_zone.occupants` (cf. `Class_MenuConfig.mainZoneWindowToJSON`).
+   *
+   * À NE PAS CONFONDRE avec `main_zone` juste au-dessus : celle-là figeait TOUTE la grande zone
+   * avec la vue (une disposition, devenue un tableau de bord), celui-ci ne porte qu'UN volet —
+   * la vue elle-même. Rappeler la vue le pose à côté des autres ; rien d'autre ne bouge.
+   *
+   * Absent : la vue est le diagramme de la fenêtre principale, ce qu'étaient toutes les vues avant
+   * sa#566 — d'où un fichier inchangé pour qui n'enregistre aucun volet.
+   */
+  window?: Type_JSON
+  /**
+   * sa#566 — UNE VUE QU'ON A CESSÉ D'ENREGISTRER PENDANT QU'ON LA REGARDAIT.
+   *
+   * « Ne plus enregistrer » ne doit rien changer à l'écran. Or supprimer la vue COURANTE ramène au
+   * maître, donc repeint le diagramme. L'entrée reste donc en mémoire, le temps qu'on la regarde,
+   * mais elle quitte l'ordre des vues — ni sélecteur, ni navigation, ni fichier — et elle est
+   * oubliée dès qu'on bascule ailleurs (cf. `ApplicationData.applySavedViewWindowsOnSwitch`).
+   * C'est littéralement un volet éphémère. JAMAIS écrit.
+   */
+  ephemeral?: boolean
 }
 
 /**
@@ -187,6 +210,10 @@ export class ViewsQuery {
     // la vue. Même piège que `labels` et `description`, même parade.
     const mz = view_json['view_main_zone']
     if (mz && typeof mz === 'object' && !Array.isArray(mz)) entry.main_zone = mz as Type_JSON
+    // sa#566 — le volet de la vue. Clé `view_window`, PAS `window` : même parade que `view_main_zone`,
+    // la racine du JSON d'une vue est celle d'une DrawingArea et ne doit pas se faire prendre un nom.
+    const win = view_json['view_window']
+    if (win && typeof win === 'object' && !Array.isArray(win)) entry.window = win as Type_JSON
   }
 
   // --- Annuaire des labels (os#1357) -------------------------------------------------------
