@@ -217,7 +217,7 @@ export const barLabelAngle = (
   st: Type_FigureChartStyle,
   labels: readonly { label: string }[]
 ): 0 | -35 | -90 => {
-  switch (st.name_label_angle) {
+  switch (st.axis_label_angle) {
   case 'horizontal': return 0
   case 'tilted': return -35
   case 'vertical': return -90

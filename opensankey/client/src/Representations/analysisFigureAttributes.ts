@@ -316,7 +316,11 @@ const BARS_HONOURS = {
   //
   // AUX BARRES SEULES : une couronne n'a pas d'abscisse, et lui offrir « toujours à plat » serait
   // un bouton mort. Visible seulement quand le nom s'écrit — sans étiquette, rien à incliner.
-  name_label_angle: { visibleIf: named },
+  //
+  // DANS L'ONGLET GRAPHE (le préfixe `axis_` n'a pas de famille) : elle règle l'abscisse, pas le
+  // libellé d'une part. Julien l'avait cherchée sur la part qu'il venait de cliquer, et il avait
+  // raison de ne pas l'y trouver — mais je l'avais rangée dans Libellé, ce qui n'est pas mieux.
+  axis_label_angle: { visibleIf: named },
   parts_order: { default: 'model' },
   // os#1499 — L’EMPILEMENT N’EST DÉCLARÉ QUE PAR LES BARRES : une couronne empile déjà, c’est ce
   // qu’un anneau EST. L’offrir des deux côtés ferait une case morte sur la couronne.
