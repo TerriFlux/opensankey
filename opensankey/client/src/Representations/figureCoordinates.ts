@@ -90,12 +90,24 @@ const idOf = (key: string): string => key.slice(key.indexOf(':') + 1)
  * `group_by_flux_tagg_id` est la GRANULARITÉ du champ « flux », pas un champ de plus : « les sorties
  * par essence » reste le champ des sorties, lu plus gros. Un tableau croisé dirait une hiérarchie.
  *
+ * `hierarchy` est la GRANULARITÉ DU CHAMP « DIMENSION », et c'est le même raisonnement d'un cran
+ * plus bas (arbitrage Julien, 24/09/2026 : « pour moi c'est dans mes coordonnées qu'il devrait y
+ * avoir la hiérarchie »). « Les enfants de Produit » lus plus FIN, c'est encore le champ Produit :
+ * on descend sous les enfants qui sont eux-mêmes dépliés, au lieu de s'arrêter au premier cran.
+ * Ce n'est donc pas un champ de plus, et surtout pas un réglage de style — un premier essai
+ * l'avait posé en clé de mise en forme (`parts_hierarchy`), ce qui le rangeait dans l'onglet Forme
+ * à côté de la couleur des secteurs : à trois onglets de l'axe qu'il modifie, et introuvable.
+ *
  * `rank` ordonne les champs juxtaposés, et l'ordre est signifiant (#390) : le premier donne les
  * grappes de l'abscisse, le second les barres de chaque grappe.
  */
 export type Type_CoordState =
   | { mode: 'fixed', value_id: string }
-  | { mode: 'parts', group_by_flux_tagg_id?: string }
+  | {
+    mode: 'parts',
+    group_by_flux_tagg_id?: string,
+    hierarchy?: 'off' | 'diagram' | 'leaves'
+  }
   | { mode: 'series', rank: 1 | 2 }
 
 export type Type_FigureCoordinates = { [field_key: string]: Type_CoordState }
@@ -120,7 +132,13 @@ const decomposeEntry = (spec: Type_DecomposeSpec): [string, Type_CoordState] => 
       ? { mode: 'parts', group_by_flux_tagg_id: spec.group_by_flux_tagg_id }
       : { mode: 'parts' }]
   case 'node_children':
+    // La descente est la granularité de ce champ-là : elle se relit avec lui, sans quoi le panneau
+    // montrerait « un seul niveau » sur une figure qui descend.
+    return [`dim:${spec.dimension_id}`, spec.hierarchy && spec.hierarchy !== 'off'
+      ? { mode: 'parts', hierarchy: spec.hierarchy }
+      : { mode: 'parts' }]
   case 'flux_children':
+    // Un flux n'a pas de descendance à parcourir : ses enfants sont un cran, et un seul.
     return [`dim:${spec.dimension_id}`, { mode: 'parts' }]
   }
 }
@@ -180,10 +198,15 @@ const decomposeSpecOf = (
   }
   // Une dimension déployée décompose en nœuds enfants sous un nœud, en flux enfants sous un flux :
   // c'est le SEUL endroit où la nature du sujet change la traduction.
-  case 'dimension':
-    return subject_kind === 'node'
-      ? { kind: 'node_children', dimension_id: id }
-      : { kind: 'flux_children', dimension_id: id }
+  case 'dimension': {
+    if (subject_kind !== 'node') return { kind: 'flux_children', dimension_id: id }
+    const hierarchy = state.mode === 'parts' ? state.hierarchy : undefined
+    // 'off' NE S'ÉCRIT PAS : c'est le comportement de toujours, et une clé qui vaut son défaut
+    // serait une différence de fichier sans différence de dessin.
+    return (hierarchy && hierarchy !== 'off')
+      ? { kind: 'node_children', dimension_id: id, hierarchy }
+      : { kind: 'node_children', dimension_id: id }
+  }
   // Un groupe d'étiquettes de données ne décompose RIEN : deux années ne font pas un tout. Le cas
   // n'arrive pas par la surface (`setCoordState` l'interdit), il est tenu ici aussi parce qu'un sac
   // peut venir d'ailleurs.

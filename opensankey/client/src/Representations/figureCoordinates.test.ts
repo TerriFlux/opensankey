@@ -39,6 +39,25 @@ describe('lire un descripteur', () => {
     expect(Object.keys(coords)).toHaveLength(1)
   })
 
+  // 24/09/2026 — « pour moi c est dans mes coordonnees qu il devrait y avoir la hierarchie »
+  // (Julien). La descente est a la dimension ce que le regroupement est aux flux : la GRANULARITE
+  // du champ, pas un champ de plus. Ces deux cas le figent des deux cotes de la traduction.
+  test('la descente de la hierarchie est la granularite du champ dimension', () => {
+    const coords = coordinatesOf(
+      { decompose: { kind: 'node_children', dimension_id: 'produit', hierarchy: 'diagram' }, compare: null },
+      null)
+    expect(coords['dim:produit']).toEqual({ mode: 'parts', hierarchy: 'diagram' })
+    expect(Object.keys(coords)).toHaveLength(1)
+  })
+
+  test('un seul niveau ne se relit pas comme une descente', () => {
+    // Tout le parc enregistre est dans ce cas : sans la cle, le panneau doit montrer « un seul
+    // niveau » et non un etat qui n a jamais ete pose.
+    const coords = coordinatesOf(
+      { decompose: { kind: 'node_children', dimension_id: 'produit' }, compare: null }, null)
+    expect(coords['dim:produit']).toEqual({ mode: 'parts' })
+  })
+
   test('les deux axes de comparaison sont ordonnes par leur rang', () => {
     const coords = coordinatesOf({
       decompose: { kind: 'outputs' },
@@ -85,6 +104,25 @@ describe('ecrire un descripteur', () => {
       .toEqual({ kind: 'node_children', dimension_id: 'region' })
     expect(applyCoordinates(coords, 'flux').descriptor.decompose)
       .toEqual({ kind: 'flux_children', dimension_id: 'region' })
+  })
+
+  test('la descente s ecrit sur l axe, et « un seul niveau » ne s ecrit pas du tout', () => {
+    // 'off' vaut le defaut : l ecrire serait une difference de fichier sans difference de dessin.
+    const descend: Type_FigureCoordinates = { 'dim:produit': { mode: 'parts', hierarchy: 'leaves' } }
+    expect(applyCoordinates(descend, 'node').descriptor.decompose)
+      .toEqual({ kind: 'node_children', dimension_id: 'produit', hierarchy: 'leaves' })
+
+    const flat: Type_FigureCoordinates = { 'dim:produit': { mode: 'parts', hierarchy: 'off' } }
+    expect(applyCoordinates(flat, 'node').descriptor.decompose)
+      .toEqual({ kind: 'node_children', dimension_id: 'produit' })
+  })
+
+  test('un flux ne descend pas : ses enfants sont un cran, et un seul', () => {
+    // La descente parcourt la descendance d un NOEUD. Sous un flux, la meme case n aurait rien a
+    // parcourir — et l ecrire produirait un descripteur que le moteur ne lit pas.
+    const coords: Type_FigureCoordinates = { 'dim:produit': { mode: 'parts', hierarchy: 'leaves' } }
+    expect(applyCoordinates(coords, 'flux').descriptor.decompose)
+      .toEqual({ kind: 'flux_children', dimension_id: 'produit' })
   })
 
   test('les coordonnees fixees ressortent en epingles, les deployees non', () => {

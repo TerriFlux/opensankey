@@ -50,14 +50,6 @@ export interface Type_FigureChartStyle {
   bars_stacked: boolean
   /** 'model' : la couleur que l'objet a dans le diagramme quand la donnée la porte. */
   parts_color_source: 'palette' | 'model'
-  /**
-   * `parts_hierarchy` — JUSQU'OÙ LA DÉCOMPOSITION DESCEND, sans prendre d'anneau de plus.
-   *
-   * 'off' (le dessin d'hier) : les enfants directs de l'axe. 'diagram' : la frontière que le
-   * diagramme dessine — un enfant déplié est remplacé par les siens, DANS LE MÊME ANNEAU.
-   * 'leaves' : jusqu'aux feuilles. Cf. `figureCatalogue.parts_hierarchy`.
-   */
-  parts_hierarchy: 'off' | 'diagram' | 'leaves'
   /** En % du tout ; 0 = ne rien replier par la valeur. */
   parts_group_under: number
   /** Parts au plus ; 0 = sans limite. */
@@ -107,10 +99,11 @@ export interface Type_FigureChartStyle {
    * Même clé et mêmes quatre valeurs que sur le disque (`Type_SunburstStyle.click_action`) : c'est
    * la même question, et deux vocabulaires en feraient deux mécanismes.
    *
-   * ⚠️ N'AGIT QUE SOUS UNE DÉCOMPOSITION HIÉRARCHIQUE (`parts_hierarchy !== 'off'`). Une couronne
-   * à un seul cran n'a rien où descendre, et faire déplier le diagramme au clic changerait le
-   * geste de tout le parc enregistré. Toucher une part la sélectionne, toujours et partout — c'est
-   * la règle de la maison, et elle ne dépend d'aucun réglage.
+   * ⚠️ N'AGIT QUE SOUS UNE DÉCOMPOSITION HIÉRARCHIQUE — celle que les coordonnées posent sur le
+   * champ dimension (`Type_CoordState.hierarchy`). Une couronne à un seul cran n'a rien où
+   * descendre, et faire déplier le diagramme au clic changerait le geste de tout le parc
+   * enregistré. Toucher une part la sélectionne, toujours et partout — c'est la règle de la
+   * maison, et elle ne dépend d'aucun réglage.
    */
   interaction_click: 'both' | 'zoom' | 'aggregate' | 'none'
   notes_visible: boolean
@@ -135,8 +128,6 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_order: 'value_desc',
   bars_stacked: false,
   parts_color_source: 'model',
-  // Un seul cran : le dessin d'hier, au pixel.
-  parts_hierarchy: 'off',
   parts_group_under: 0.5,
   parts_max: 20,
   centre_content: 'value',
