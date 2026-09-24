@@ -379,6 +379,8 @@ export class ViewsReader {
   /** Corps du switch : pose la nouvelle vue (light/heavy), la visibilité, la caméra et redessine. */
   protected applyViewChange(id: string) {
     const host = this.host
+    // sa#566 — la vue qu'on quitte : son volet se ferme si celui de la vue d'arrivée le remplace.
+    const prev_id = host.current_view_id
     // Mode de position (absolu / proportionnel / échelle adaptée) = état d'affichage GLOBAL du
     // viewer, pas une géométrie propre à la vue : capturé sur la DA sortante, ré-appliqué plus bas.
     const prev_position_mode = host.drawing_area.sankey.styles_dict['default'].shape_position_type
@@ -410,6 +412,9 @@ export class ViewsReader {
     // l'écran.
     const dashboards = host.menu_configuration?.dashboards
     if (dashboards && host.is_main && !dashboards.activating) dashboards.current = implicitDashboardId(id)
+    // sa#566 — UNE VUE EST UN VOLET ENREGISTRÉ : la bascule pose le sien. Pas pendant l'activation
+    // d'un tableau de bord, qui pose lui-même toute la grille.
+    if (host.is_main && !dashboards?.activating) host.applySavedViewWindowsOnSwitch(prev_id, id)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {
