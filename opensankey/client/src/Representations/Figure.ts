@@ -78,6 +78,19 @@ export type Type_FigureChoice = {
 export type Type_FigureChoiceContext = {
   app_data: { drawing_area?: { sankey?: unknown }, t?: unknown }
   element?: unknown
+  /**
+   * os#1498 — LES RÉGLAGES EFFECTIFS DE LA FIGURE, quand une liste de choix dépend d'une AUTRE
+   * clé de la même figure.
+   *
+   * Le cas qui l'a fait naître : la vue d'un groupe d'étiquettes déclare `tag_group_id` puis
+   * `tag_id`, et les étiquettes proposées sont celles DU GROUPE CHOISI. Sans cela, la seconde
+   * liste devrait énumérer les étiquettes de tous les groupes, ce que personne ne veut lire ;
+   * `visibleIf` recevait déjà ce sac, `choicesOf` ne le recevait pas.
+   *
+   * ABSENT là où le contexte est construit sans figure (sondes, aperçus) : une liste qui en
+   * dépend rend alors ce qu'elle peut dire sans lui, jamais une erreur.
+   */
+  options?: Type_OptionBag
 }
 
 export type Type_FigureControl = {
