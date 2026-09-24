@@ -189,6 +189,38 @@ def _process_error_path(log_filename):
 PROCESS_ERROR_BAD_DATA = "BAD_DATA"
 PROCESS_ERROR_INTERNAL = "INTERNAL"
 
+# Deux familles d'échec de LECTURE que BAD_DATA confondait. « Vérifiez le fichier d'entrée :
+# valeurs manquantes ou mal formées » envoie chercher une cellule fautive : contresens quand le
+# classeur n'a AUCUN onglet au format attendu — il n'y a rien à corriger dans les cellules, il
+# faut partir d'un classeur d'exemple. Mesure du 24/09/2026 (journaux de prod, 30 jours) : sur
+# les 28 IP qui ont apporté un Excel, 11 butent sur ce seul cas — plus que les 10 qui ont
+# cliqué « Essayer » sur la même fenêtre.
+PROCESS_ERROR_SHEETS_UNKNOWN = "SHEETS_UNKNOWN"
+PROCESS_ERROR_MISSING_COLUMN = "MISSING_COLUMN"
+
+# Sentinelles du parser (SankeyExcelParser : io_base.load_sankey, sankey_pandas). Ce sont des
+# constantes ANGLAISES du code, jamais traduites — contrairement au log. Classer ici plutôt que
+# dans le parser évite de publier une wheel pour nommer une cause ; si l'une de ces phrases
+# change là-bas, on retombe sur BAD_DATA — jamais sur une erreur.
+_SHEETS_UNKNOWN_MARKERS = ("No sheets to parse", "Not enough sheets")
+_MISSING_COLUMN_MARKERS = ("column is missing", "Did not found the column")
+
+# Ce qu'il faut avoir dans son classeur, en clair, pour le terminal.
+EXPECTED_SHEETS_HINT = (
+    "au moins un onglet parmi : data (données), nodes (nœuds), "
+    "input_output, ter — ou bien dim_products ET dim_sectors"
+)
+
+
+def load_failure_code(msg):
+    """Famille d'échec de `load_sankey`, d'après son message. BAD_DATA à défaut."""
+    text = msg or ""
+    if any(marker in text for marker in _SHEETS_UNKNOWN_MARKERS):
+        return PROCESS_ERROR_SHEETS_UNKNOWN
+    if any(marker in text for marker in _MISSING_COLUMN_MARKERS):
+        return PROCESS_ERROR_MISSING_COLUMN
+    return PROCESS_ERROR_BAD_DATA
+
 
 def write_process_error(log_filename, error):
     """
@@ -925,12 +957,31 @@ def conversion_thread(
             for line in msg.split("\n"):
                 if line.strip():
                     trace.logger.error(f"  {line}")
+            # sa#560 — le fichier n'a pas pu être lu : le front sait dire quoi regarder au lieu
+            # de son « Chargement échoué » muet, à condition qu'on nomme la CAUSE.
+            failure_code = load_failure_code(msg)
+            if failure_code == PROCESS_ERROR_SHEETS_UNKNOWN:
+                # « No sheets to parse. » ne nomme rien : ni ce qu'on a lu, ni ce qu'on
+                # cherchait. Le terminal est la seule surface où l'utilisateur voit SON
+                # fichier — sans ces deux lignes, il n'a aucun moyen de comprendre que son
+                # tableur n'est pas au format, et il réimporte le même en boucle.
+                found = []
+                if input_format == 'excel':
+                    try:
+                        with pd.ExcelFile(input_file_name) as excel_file:
+                            found = list(excel_file.sheet_names)
+                    except Exception:
+                        found = []
+                trace.logger.error(
+                    "  Onglets trouvés dans le classeur : {}".format(
+                        ", ".join(found) if found else "(aucun onglet lisible)"
+                    )
+                )
+                trace.logger.error("  Onglets attendus : {}.".format(EXPECTED_SHEETS_HINT))
             trace.logger.error("=" * 80)
-            # sa#560 — le fichier n'a pas pu être lu : c'est BAD_DATA, et le front sait le dire
-            # (« vérifiez le fichier d'entrée ») au lieu de son « Chargement échoué » muet.
             write_process_error(
                 log_filename,
-                {"code": PROCESS_ERROR_BAD_DATA, "message": msg},
+                {"code": failure_code, "message": msg},
             )
             write_process_status(log_filename, PROCESS_STATUS_FAILED)
             return
