@@ -106,20 +106,6 @@ export const ANALYSIS_ATTRIBUTES: Type_FigureAttributesConfig = {
 type Type_Bag = { [k: string]: unknown }
 const valued = (o: Type_Bag) => o['value_label_is_visible'] === true
 const named = (o: Type_Bag) => o['name_label_is_visible'] === true
-/**
- * 24/09/2026 — CETTE FIGURE DESCEND-ELLE LA HIÉRARCHIE ?
- *
- * Lu sur le DESCRIPTEUR du sac, parce que c'est là que la descente vit depuis qu'elle est une
- * coordonnée (`Type_CoordState.hierarchy` → `Type_DecomposeSpec.hierarchy`) : le panneau « Filtres
- * et coordonnées » écrit `options.descriptor` à chaque geste, donc la question a sa réponse dès
- * que l'auteur a répondu. Un sac sans descripteur — une figure qui suit l'axe de son élément —
- * répond non, et les deux réglages ne paraissent pas : ils n'auraient rien à régler.
- */
-const descendsHierarchy = (o: Type_Bag): boolean => {
-  const decompose = (o['descriptor'] as Type_AnalysisDescriptor | undefined)?.decompose
-  return decompose?.kind === 'node_children'
-    && decompose.hierarchy !== undefined && decompose.hierarchy !== 'off'
-}
 export const SHARED_HONOURS = {
   parts_order: {},
   parts_color_source: { default: 'model' },
@@ -225,19 +211,26 @@ const DONUT_HONOURS = {
   //  `legend_levels`     — la légende dit de quel parent chaque part est la coupe.
   //  `interaction_click` — ce que le clic fait EN PLUS de sélectionner.
   //
-  // LES DEUX NE PARAISSENT QUE SOUS UNE DESCENTE : sans elle il n'y a ni niveau à nommer ni endroit
-  // où descendre, et les proposer laisserait croire le contraire (règle du 19/09 : une option qui
-  // ne peut rien changer se cache). La condition lit le DESCRIPTEUR du sac — ce que les
-  // coordonnées viennent d'y écrire.
-  legend_levels: {
-    visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && descendsHierarchy(o)
-  },
+  // ⚠️ ELLES NE SE CACHENT PLUS DERRIÈRE LA DESCENTE, et c'est la troisième fois qu'on l'apprend.
+  //
+  // Julien : « le clic marche plus sur la couronne et je vois pas où le configurer, ça a disparu
+  // du panneau de config ». Les deux ne paraissaient que sous une descente déjà posée — la règle
+  // du 19/09, « une option qui ne peut rien changer se cache ». Elle est juste pour un bouton MORT,
+  // et fausse ici : ces réglages se PRÉ-POSENT, comme on règle une police avant d'écrire. Les
+  // cacher jusqu'à ce que l'auteur ait deviné l'autre réglage, c'est le piège de l'onglet Forme
+  // (22/09) puis celui de « Les niveaux » (24/09), refait une troisième fois.
+  //
+  // Le coût d'une option visible qui n'agit pas encore est une ligne de plus ; le coût d'une
+  // option introuvable est que la fonction n'existe pas.
+  legend_levels: { visibleIf: (o: Type_Bag) => o['legend_visible'] !== false },
   // LE DÉGRADÉ DE PROFONDEUR, la règle du disque reprise telle quelle : la teinte dit la branche,
   // la clarté dit le niveau. Le catalogue la cache déjà sous `parts_color_source: 'model'` (où
   // elle n'a pas de sens) ; on ajoute la seconde condition — sans descente, aucune part n'a de
   // profondeur, et proposer un dégradé qui ne dégrade rien est un bouton mort.
   parts_depth_shading: {
-    visibleIf: (o: Type_Bag) => o['parts_color_source'] !== 'model' && descendsHierarchy(o)
+    // Même leçon qu'au-dessus : on ne le cache que sous « couleur du diagramme », où il n'a
+    // VRAIMENT aucun sens (le nœud commande sa teinte), et plus derrière la descente.
+    visibleIf: (o: Type_Bag) => o['parts_color_source'] !== 'model'
   },
   // « La position par défaut devrait être en dessous » (Julien, 24/09/2026) : un bandeau sous le
   // disque plutôt qu'une colonne qui lui mange son diamètre. Cf. `DONUT_STYLE_DEFAULTS`, qui porte
@@ -247,7 +240,7 @@ const DONUT_HONOURS = {
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
-  interaction_click: { advanced: false, visibleIf: (o: Type_Bag) => descendsHierarchy(o) },
+  interaction_click: { advanced: false },
   parts_group_under: { default: 0.5 },
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE.
   //
