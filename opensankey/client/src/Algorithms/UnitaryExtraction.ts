@@ -178,15 +178,44 @@ const listProcessNodes = (sankey: Class_Sankey): Class_NodeElement[] => {
  * pourcentage (`input_links_list.filter(is_visible)`, `types/Utils.tsx:717-733`),
  * donc les sommes de l'aperçu portent bien sur les flux que l'étoile contient.
  *
+ * ⚠️ SAUF QUAND LE NŒUD CENTRAL LUI-MÊME N'EST PAS MONTRÉ (25/09/2026).
+ *
+ * Julien : « si on est sur couronne sur le nœud Céréales, qu'en cliquant sur une
+ * part on désagrège Blé + Maïs, et qu'on revient sur la vue unitaire, ça
+ * dysfonctionne : ça ne reste pas sur Céréales. »
+ *
+ * Reproduit de bout en bout : le volet RESTE bien sur Céréales — sujet, vignettes
+ * et sélection ne bougent pas. Ce qui bouge est le diagramme. Désagréger Céréales
+ * le rend INVISIBLE et fait passer ses flux sur Blé et Maïs ; les deux listes
+ * ci-dessus se vident, et l'étoile n'a plus rien à dessiner. De l'extérieur ça se
+ * lit « ça n'est plus sur Céréales », alors que le modèle y est resté.
+ *
+ * La porte de visibilité existe pour ne pas DOUBLE-COMPTER un flux agrégé avec
+ * ses enfants, c'est-à-dire pour un nœud QUE LE DIAGRAMME MONTRE. Un nœud qu'il
+ * ne montre pas n'a pas ce problème : ses enfants portent leurs propres flux, et
+ * `_input_links` ne contient que les siens. Ses propres flux sont donc le seul
+ * périmètre cohérent — c'est le même raisonnement que la couronne applique déjà
+ * (« les nœuds sont pris tous, visibles ou non : le critère est l'étiquette, pas
+ * la visibilité »).
+ *
+ * UNE FENÊTRE QUI NOMME UN NŒUD TIENT SA PROMESSE. Un filtre, un niveau
+ * d'agrégation, cachent un nœud du DIAGRAMME ; ils ne sont pas une raison de
+ * vider une fenêtre qu'on a ouverte sur lui, et qui affiche son nom en titre.
+ *
+ * ⚠️ CE QUE ÇA NE RÉPARE PAS, et il faut le savoir : les modes en POURCENTAGE
+ * passent par `format_value`, qui refait sa propre somme sur
+ * `input_links_list.filter(is_visible)` (`types/Utils.tsx`). Sur un nœud agrégé,
+ * son dénominateur reste vide. Les branches et leurs valeurs absolues sont
+ * justes ; un pourcentage, lui, demandera d'ouvrir la même porte là-bas.
+ *
  * Fonction PURE : elle ne lit que le voisinage du nœud et ne touche à rien. Coût
  * proportionnel au DEGRÉ du nœud, pas à la taille du diagramme.
  */
 export const unitaryStarLinks = (node: Class_NodeElement): {
   inputs: Class_LinkElement[], outputs: Class_LinkElement[]
-} => ({
-  inputs: node.visible_input_links_list,
-  outputs: node.visible_output_links_list
-})
+} => node.is_visible
+  ? { inputs: node.visible_input_links_list, outputs: node.visible_output_links_list }
+  : { inputs: node.input_links_list, outputs: node.output_links_list }
 
 /**
  * L'ÉTOILE d'un procédé : lui-même, plus l'extrémité opposée de chacun de ses
