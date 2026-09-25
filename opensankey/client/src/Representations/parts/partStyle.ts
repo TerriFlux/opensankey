@@ -93,6 +93,16 @@ export const seedPartStyles = (sankey: Class_Sankey, nature?: string): void => {
   if (nature_style !== undefined) sankey.create_internal_style(nature_style, elementStyleConfigs)
 }
 
+/**
+ * L'identifiant du style de CETTE nature, sans rien exiger d'un document.
+ *
+ * Rendu à part de `partNatureStyleOf` parce qu'on en a besoin pour une nature qu'on QUITTE : le
+ * style à détacher d'une part est celui de son ancienne nature, et le document, lui, a déjà changé
+ * de figure (cf. `buildParts`, le changement de représentation).
+ */
+export const partNatureStyleIdOf = (nature?: string): string | undefined =>
+  nature !== undefined && nature !== '' ? figure_part_nature_styles[nature] : undefined
+
 /** Le style générique des parts d'une figure — celui qui vaut quelle que soit sa nature. */
 export const partStyleOf = (sankey: Class_Sankey): Class_ElementStyle =>
   sankey.styles_dict[FigurePartStyle]
