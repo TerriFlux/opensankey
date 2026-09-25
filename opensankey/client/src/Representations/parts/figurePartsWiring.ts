@@ -39,6 +39,8 @@ import type { Class_PartElement } from './PartElement'
 import type { Type_PartInput } from './buildParts'
 import { figurePartsFor } from './figurePartsRegistry'
 import { partAspectResolver } from '../../Charts/partAspect'
+import { autoBarLabelAngle } from '../../Charts/NodeStatsCharts'
+import { partStyleFigureNature } from '../../Elements/figureNatureDefaults'
 import type {
   Type_FigurePart, Type_FigurePartAspect, Type_FigurePartContext
 } from '../../Charts/partAspect'
@@ -115,8 +117,39 @@ export const figurePartsWiring = (
   // figure, sinon défaut de sa nature). On le pose sur la part, comme `figure_nature` l'est depuis
   // os#1483 — même procédé, même raison : une part doit pouvoir répondre sur ce que fait sa figure
   // sans avoir à la connaître.
+  // ── 24/09/2026 — ET L'ANGLE QUE LE TRACÉ VA DONNER AUX ÉTIQUETTES, POUR LA MÊME RAISON ───────
+  //
+  // Julien : « au début le texte est en diagonal alors que les angles sont mis à 0 ; si on édite ça
+  // marche, mais au début ça ne correspond pas. »
+  //
+  // `autoBarLabelAngle` est le REPLI du tracé quand la part ne dit rien (os#1505) — pas un réglage,
+  // et surtout pas une constante : il dépend du nombre de barres et de la longueur des libellés.
+  // Aucune déclaration de nature ne peut donc le porter. On le calcule ici, sur la liste MÊME que
+  // le tracé va recevoir (`draw(container, parts, …)`), et on le stampe.
+  //
+  // LES AUTRES NATURES N'EN ONT PAS : un secteur de couronne n'a pas d'abscisse à désencombrer, et
+  // la clé lui est d'ailleurs hors de portée (`NOT_ON_A_PART_FIGURE_ROUND`). `undefined` laisse
+  // alors le panneau sur ce qu'il rendait — c'est-à-dire zéro, qui est bien ce qui est dessiné.
+  const auto_label_angle = nature === 'bars' ? autoBarLabelAngle(inputs) : undefined
   Object.values(figure_parts.by_id).forEach(part => {
-    (part as unknown as { [k: string]: unknown })['figure_value_percent'] = base.value_label_percent
+    const rec = part as unknown as { [k: string]: unknown }
+    rec['figure_value_percent'] = base.value_label_percent
+    rec['figure_name_label_angle'] = auto_label_angle
+  })
+  // LE STYLE DE LA NATURE AUSSI : c'est l'autre panneau qui montre le même dessin — « régler toutes
+  // les parts d'un coup » doit partir de ce que les parts font, sinon le premier geste déplace
+  // quelque chose qu'on croyait à zéro (cf. `figureStyleDefault`).
+  // LES DEUX ÉTAGES, et c'est sans ambiguïté ici : un document de parts ne porte qu'UNE figure,
+  // donc ses styles — le générique comme celui de sa nature — ne servent qu'elle. C'est au
+  // CATALOGUE que le générique sert trois natures, pas dans cette instance.
+  //
+  // ⚠️ Ce sont des propriétés propres, jamais des attributs : `StylePersistence.toJSON` n'itère que
+  // le sac d'attributs, rien de ceci ne part donc en fichier.
+  Object.values(figure_parts.document.drawing_area.sankey.styles_dict).forEach(style => {
+    if (partStyleFigureNature(style) === null) return
+    const rec = style as unknown as { [k: string]: unknown }
+    rec['figure_value_percent'] = base.value_label_percent
+    rec['figure_name_label_angle'] = auto_label_angle
   })
 
   // (2) LA FIGURE EST UN DOCUMENT, ET C'EST CE QUI OUVRE L'INSPECTEUR D'ÉLÉMENT.
