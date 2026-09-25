@@ -331,10 +331,10 @@ describe('sa#532 — renderableLegendItems : ce qui est effectivement posé', ()
 
 describe('OS#1254 — layoutLegendItems', () => {
   const items = [
-    { id: 'a', text: 'Titre', bold: true, starts_group: true, own_line: true },
+    { id: 'a', text: 'Titre', bold: true, starts_group: true, own_line: true, group_title: true },
     { id: 'b', text: 'Entrée', swatch_color: '#f00' },
     { id: 'b2', text: 'Entrée 2', swatch_color: '#0f0' },
-    { id: 'c', text: 'Autre groupe', starts_group: true, own_line: true }
+    { id: 'c', text: 'Autre groupe', starts_group: true, own_line: true, group_title: true }
   ]
 
   it('vertical : empile, jamais de x', () => {
@@ -412,18 +412,31 @@ describe('OS#1254 — layoutLegendItems', () => {
     expect(pos.get('tg1')).toBe(0)
   })
 
-  it('horizontal : titre seul sur sa ligne, entrées enchaînées, nouveau groupe = nouvelle ligne', () => {
+  it('horizontal : le titre ouvre la ligne, ses entrées le suivent, nouveau groupe = nouvelle ligne', () => {
     const pos = layoutLegendItems(items, { ...base_config, horizontal: true })
     const line_height = base_config.police * 1.5
-    // Titre sur sa propre ligne
+    // Titre en tête de ligne
     expect(pos[0]).toMatchObject({ x: 0, y: 0 })
-    // Les deux entrées s'enchaînent sur la ligne suivante
+    // Les deux entrées s'enchaînent à sa droite, sur la MÊME ligne
+    expect(pos[1].x).toBeGreaterThan(0)
+    expect(pos[1].y).toBe(0)
+    expect(pos[2].x).toBeGreaterThan(pos[1].x)
+    expect(pos[2].y).toBe(0)
+    // Le titre du groupe suivant repart à la ligne, une seule ligne plus bas
+    expect(pos[3]).toMatchObject({ x: 0, y: line_height })
+  })
+
+  it('horizontal : une ligne d info (pas un titre de groupe) reste seule sur sa ligne', () => {
+    const with_info = [
+      { id: 'dt', text: 'Données collectées', bold: true, starts_group: true, own_line: true },
+      ...items
+    ]
+    const pos = layoutLegendItems(with_info, { ...base_config, horizontal: true })
+    const line_height = base_config.police * 1.5
+    expect(pos[0]).toMatchObject({ x: 0, y: 0 })
+    // Le titre du premier groupe commence une nouvelle ligne, ses entrées le suivent
     expect(pos[1]).toMatchObject({ x: 0, y: line_height })
-    expect(pos[2].x).toBeGreaterThan(0)
     expect(pos[2].y).toBe(line_height)
-    // Le titre du groupe suivant repart à la ligne
-    expect(pos[3].x).toBe(0)
-    expect(pos[3].y).toBeGreaterThan(line_height)
   })
 })
 
