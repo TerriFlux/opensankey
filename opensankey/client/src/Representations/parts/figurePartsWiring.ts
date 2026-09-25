@@ -39,6 +39,7 @@ import type { Class_PartElement } from './PartElement'
 import type { Type_PartInput } from './buildParts'
 import { figurePartsFor, figurePartsOf } from './figurePartsRegistry'
 import { isFigureCentrePart } from './centrePart'
+import type { Type_FigurePartResolved } from '../../Charts/NodeStatsCharts'
 import { partAspectResolver } from '../../Charts/partAspect'
 import { autoBarLabelAngle } from '../../Charts/NodeStatsCharts'
 import { partStyleFigureNature } from '../../Elements/figureNatureDefaults'
@@ -75,6 +76,15 @@ export interface Type_PartsWiring {
   on_label_move?: (id: string, position: { x: number, y: number }) => void
   /** Ce que le tracé appelle quand on touche une part. */
   on_part_select: (part_id: string) => void
+  /**
+   * 25/09/2026 — CE QUE LE TRACÉ RAPPORTE DE SES PROPRES DÉCISIONS, à lui passer tel quel.
+   *
+   * Le panneau montrait du NOIR — la valeur d'usine d'un nœud — devant un secteur bleu et son
+   * étiquette blanche : le style d'une figure porte `*_color` à la chaîne vide, qui veut dire « le
+   * tracé décide », et l'inspecteur n'avait rien d'autre à lire. On lui donne donc ce que le tracé
+   * a réellement appliqué, à l'endroit même où il l'applique.
+   */
+  on_parts_resolved: (resolved: { [part_id: string]: Type_FigurePartResolved }) => void
   /** À appeler au démontage du tracé. */
   release: () => void
 }
@@ -152,12 +162,32 @@ export const figurePartsWiring = (
     name_label_is_visible: base.centre_content === 'name' || base.centre_content === 'both',
     value_label_is_visible: base.centre_content === 'value' || base.centre_content === 'both'
   }
+  /** Le style que CETTE part annonce, avant ce que le tracé y ajoutera. */
+  const styleFor = (part_id: string) => isFigureCentrePart(part_id) ? centre_style : base
   Object.values(figure_parts.by_id).forEach(part => {
     const rec = part as unknown as { [k: string]: unknown }
     rec['figure_value_percent'] = base.value_label_percent
     rec['figure_name_label_angle'] = auto_label_angle
-    rec['figure_style'] = isFigureCentrePart(part.id) ? centre_style : base
+    rec['figure_style'] = styleFor(part.id)
   })
+
+  /**
+   * CE QUE LE TRACÉ RAPPORTE, POSÉ PAR-DESSUS.
+   *
+   * Il arrive APRÈS le stamp ci-dessus — le dessin suit le câblage — et c'est sans conséquence : le
+   * panneau lit à chaque rendu, et le premier rendu qui suit le premier dessin voit déjà la bonne
+   * encre. Poser par-dessus plutôt qu'à la place garde tout le reste du style de la figure.
+   */
+  const on_parts_resolved = (
+    resolved: { [part_id: string]: Type_FigurePartResolved }
+  ): void => {
+    Object.entries(resolved).forEach(([part_id, patch]) => {
+      const part = figure_parts.by_id[part_id]
+      if (part === undefined) return
+      const rec = part as unknown as { [k: string]: unknown }
+      rec['figure_style'] = { ...styleFor(part_id), ...patch }
+    })
+  }
   // LE STYLE DE LA NATURE AUSSI : c'est l'autre panneau qui montre le même dessin — « régler toutes
   // les parts d'un coup » doit partir de ce que les parts font, sinon le premier geste déplace
   // quelque chose qu'on croyait à zéro (cf. `figureStyleDefault`).
@@ -227,6 +257,7 @@ export const figurePartsWiring = (
     : undefined
 
   return {
+    on_parts_resolved,
     by_id: figure_parts.by_id,
     part_aspect: partAspectResolver(
       base, figure_parts.by_id as unknown as { [id: string]: Type_FigurePart }, context

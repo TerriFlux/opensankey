@@ -1,40 +1,34 @@
 {
   "_notes": {
-    "_": "25/09/2026 — LA DETTE DU TROISIEME SENS, GELEE POUR QU ELLE NE PUISSE QUE DECROITRE. Chaque cle ici est un panneau qui annonce autre chose que le dessin. Le cliquet interdit d en ajouter ; le but est de vider ces listes. Mesure initiale : 33 menteuses, ramenees a 29 par la regle generale (le reglage de la FIGURE est ce que la part annonce) et par l orientation d une couronne.",
-    "encre_et_police_choisies_par_le_trace": "shape_color, name_label_color, value_label_color, name_label_font_family, value_label_font_family. Le style d une figure porte ces cles a la CHAINE VIDE, qui veut dire « le trace decide » : il prend la couleur du modele, sinon la palette, sinon le contraste, et la police de la page. Le panneau retombe donc sur le catalogue d un NOEUD — noir, Arial. La reparation demande de STAMPER la valeur resolue PART PAR PART au moment du dessin (elle depend du rang dans la palette et de la couleur du fond), comme `figure_name_label_angle` le fait deja pour l angle. C est le plus gros des lots restants et le plus visible.",
+    "_": "25/09/2026 — LA DETTE DU TROISIEME SENS, GELEE POUR QU ELLE NE PUISSE QUE DECROITRE. Chaque cle ici est un panneau qui annonce autre chose que le dessin. Le cliquet interdit d en ajouter ; le but est de vider ces listes. Mesure initiale : 33 menteuses, ramenees a 29 par la regle generale (le reglage de la FIGURE est ce que la part annonce) et par l orientation d une couronne, puis a 23 par le RAPPORT DU TRACE (`on_parts_resolved`), qui a rendu les trois encres de la couronne et des barres.",
+    "encre_et_police_choisies_par_le_trace": "REPARE POUR L ENCRE le 25/09/2026 : `shape_color`, `name_label_color` et `value_label_color` ont quitte la couronne et les barres. Le trace RAPPORTE desormais ce qu il a applique, a l endroit meme ou il l applique (`applyPartTextStyle` rend son encre, `on_parts_resolved` la remonte au cablage, qui la stampe). Il RESTE `name_label_font_family` / `value_label_font_family` : la chaine vide du style d une figure veut dire « la police de la page », que le panneau ne peut pas nommer — la reparation n est pas une valeur a rapporter mais un selecteur qui sache dire « heritee ». Et `shape_color` sur le DISQUE, dont le trace ne rapporte pas encore.",
     "lisere_en_trois_cas": "shape_border_visible, shape_border_color, shape_border_thickness, shape_border_dashed. Ce n est PAS un mensonge mais la regle documentee d os#1462 : nommer une couleur ou une epaisseur veut dire « j en veux un », parce que c est le seul sens possible du geste. Ecrire la couleur annoncee fait donc apparaitre un lisere, et le harnais le compte menteur. A revoir seulement si on renonce a cette regle.",
-    "typographie_de_la_valeur": "value_label_font_size, value_label_bold, value_label_italic. Le style d une figure ne porte pas ces trois cles — la valeur herite de la mise en forme du nom dans les traces. Les ajouter a `Type_FigureChartStyle` les ferait entrer dans la regle generale sans table.",
+    "typographie_de_la_valeur": "value_label_font_size, value_label_bold, value_label_italic. Le style d une figure ne porte pas ces trois cles — la valeur herite de la mise en forme du nom dans les traces. Deux chemins possibles : les ajouter a `Type_FigureChartStyle` (elles entrent alors dans la regle generale sans table), ou les faire rapporter par le trace comme l encre vient de l etre. Le second est plus sur : c est le trace qui decide.",
     "alignement_sur_des_barres": "name_label_text_align, value_label_text_align. Le trace des barres centre sans lire la cle tant que l etiquette tient sur une ligne.",
     "valeur_collee_au_nom": "value_label_stick_to_label, value_label_part_unit. Deux cles dont l effet depend d une AUTRE (os#1470, os#1490) : le harnais en pose une a la fois, c est deliberе, et l annonce isolee ne peut pas etre juste.",
     "value_label_is_visible_sur_le_disque": "Le disque lit `value_visible` de SON style, pas la cle d element : les deux ne se rejoignent pas encore."
   },
   "couronne": [
-    "shape_color",
     "shape_border_visible",
     "shape_border_color",
     "shape_border_thickness",
     "shape_border_dashed",
     "name_label_font_family",
-    "name_label_color",
     "value_label_font_family",
     "value_label_font_size",
     "value_label_bold",
     "value_label_italic",
-    "value_label_color",
     "value_label_part_unit",
     "value_label_stick_to_label"
   ],
   "barres": [
-    "shape_color",
     "shape_border_color",
     "shape_border_thickness",
     "shape_border_dashed",
     "name_label_font_family",
-    "name_label_color",
     "name_label_text_align",
     "value_label_font_family",
     "value_label_font_size",
-    "value_label_color",
     "value_label_text_align"
   ],
   "disque": [

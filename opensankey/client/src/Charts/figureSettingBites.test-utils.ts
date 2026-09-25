@@ -192,10 +192,14 @@ export const measureAnnounce = (
   keys.forEach(key => {
     const probe = makeProbe()
     const part = probe.parts[probe.probe_id]
+    // ⚠️ ON DESSINE AVANT DE LIRE, et l'ordre n'est pas un détail : un tracé RAPPORTE ce qu'il a
+    // décidé (`on_parts_resolved`), et ce rapport n'existe qu'une fois le dessin fait. Lire le
+    // panneau d'abord mesurerait une figure que personne n'a encore dessinée — un état que
+    // l'inspecteur ne voit jamais, puisqu'il s'ouvre sur une figure déjà à l'écran.
+    const plain = drawInto(probe.draw)
     const value = announced(part, key)
     // Rien à écrire, rien à conclure : une clé sans valeur affichée ne peut ni mentir ni dire vrai.
     if (value === undefined || value === null) { out.unmeasurable.push(key); return }
-    const plain = drawInto(probe.draw)
     ;(part as unknown as { [k: string]: unknown })[key] = value
     if (drawInto(probe.draw) === plain) out.honest.push(key)
     else out.lying.push(key)
