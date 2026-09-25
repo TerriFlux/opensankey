@@ -43,6 +43,7 @@ import json
 import re
 import shutil
 import zipfile
+import time as time_module
 from time import perf_counter
 from urllib.parse import urlparse
 
@@ -118,6 +119,90 @@ def set_process_state(**kwargs):  # ← Plus de paramètre session_id
         session['process_state'] = {}
     session['process_state'].update(kwargs)
     session.modified = True  # ← IMPORTANT !
+
+
+# --- Dossiers de travail d'une conversion -------------------------------------
+# Chaque conversion écrit le fichier apporté (input.xlsx), le résultat
+# (output.json) et son journal dans des dossiers `mkdtemp()`. Personne ne les
+# supprimait : le 25/09/2026, le /tmp de prod portait 97 000 dossiers et 342
+# classeurs Excel de visiteurs des treize derniers jours, gardés jusqu'à la
+# purge système à 30 jours. Ce sont les données métier de gens qui ne savent
+# pas qu'on les garde — rien ne l'annonce, et le journal d'usage refuse exprès
+# jusqu'au nom de leur fichier. Un run vit donc dans un dossier à NOUS
+# (RUNS_DIR_NAME, sous le temp système), qu'on supprime dès que son résultat
+# est parti, ou au lancement suivant de la même session, ou passé RUN_MAX_AGE_S
+# s'il a été abandonné (conversion ratée jamais rechargée).
+RUNS_DIR_NAME = "opensankey_runs"
+RUN_MAX_AGE_S = 6 * 3600
+RUN_SWEEP_EVERY_S = 600
+_run_sweep_lock = Lock()
+_last_run_sweep = [0.0]
+
+
+def runs_root():
+    """Le dossier parent de tous les runs — créé au besoin, lisible par nous seuls."""
+    root = os.path.join(tempfile.gettempdir(), RUNS_DIR_NAME)
+    os.makedirs(root, mode=0o700, exist_ok=True)
+    return root
+
+
+def new_run_dir():
+    """Un dossier de travail neuf, que `discard_run` et `sweep_runs` sauront reprendre."""
+    return tempfile.mkdtemp(dir=runs_root())
+
+
+def is_run_dir(path):
+    """Vrai si `path` est un dossier créé par `new_run_dir` — et rien d'autre.
+
+    La garde compte : `output_file_name` peut désigner un modèle de la galerie
+    (SANKEY_DATA) ou un fichier posé par la couche hôte ; on ne supprime que ce
+    qu'on a créé nous-mêmes, jamais un chemin reçu.
+    """
+    if not path:
+        return False
+    real = os.path.realpath(path)
+    return os.path.dirname(real) == os.path.realpath(runs_root()) and os.path.isdir(real)
+
+
+def discard_run(state):
+    """Supprime les dossiers de travail (entrée, sortie, journal) d'un état de session."""
+    if not isinstance(state, dict):
+        return
+    seen = set()
+    for key in ("input_filename", "output_file_name", "logname"):
+        path = state.get(key)
+        folder = os.path.dirname(path) if path else None
+        if folder and folder not in seen and is_run_dir(folder):
+            seen.add(folder)
+            shutil.rmtree(folder, ignore_errors=True)
+
+
+def sweep_runs(now=None, force=False):
+    """Supprime les runs plus vieux que RUN_MAX_AGE_S. Au plus une fois par RUN_SWEEP_EVERY_S.
+
+    Le balayage ne regarde que sous `runs_root()` : les dossiers des autres
+    programmes du temp système ne sont pas notre affaire. Renvoie le nombre
+    de dossiers supprimés.
+    """
+    now = time_module.time() if now is None else now
+    with _run_sweep_lock:
+        if not force and now - _last_run_sweep[0] < RUN_SWEEP_EVERY_S:
+            return 0
+        _last_run_sweep[0] = now
+    removed = 0
+    try:
+        entries = os.listdir(runs_root())
+    except OSError:
+        return 0
+    for name in entries:
+        folder = os.path.join(runs_root(), name)
+        try:
+            if os.path.isdir(folder) and now - os.path.getmtime(folder) > RUN_MAX_AGE_S:
+                shutil.rmtree(folder, ignore_errors=True)
+                removed += 1
+        except OSError:
+            continue
+    return removed
 
 
 # --- Statut de traitement piloté par fichier (canal cross-thread) -----------
@@ -224,6 +309,87 @@ def load_failure_code(msg):
     return PROCESS_ERROR_BAD_DATA
 
 
+# --- Forme d'un diagramme converti ------------------------------------------
+# Ce qu'on peut savoir d'un import SANS lire son contenu. Question du 25/09/2026 :
+# les visiteurs qui apportent leur classeur viennent-ils dessiner un Sankey, ou
+# réconcilier des flux ? Le journal d'usage ne retient ni le fichier ni son nom ;
+# il peut retenir sa FORME — des comptes et des présences, calculés une fois sur
+# le résultat, puis le fichier disparaît (cf. discard_run). Deux familles :
+# `dessin` (des nœuds, des flux, des valeurs) et `analyse` (incertitudes,
+# contraintes, bilans matière, options de solveur — ce que le gratuit ne
+# résout pas tout seul).
+SHAPE_KIND_DRAWING = "dessin"
+SHAPE_KIND_ANALYSIS = "analyse"
+_SHAPE_ANALYSIS_VALUE_KEYS = ("data_uncertainty", "result_min", "result_max")
+
+
+def _link_value_has(value, keys, depth=0):
+    """Vrai si une des `keys` porte une valeur non nulle dans `value` (dict imbriqué par tags)."""
+    if not isinstance(value, dict) or depth > 4:
+        return False
+    for key, sub in value.items():
+        if key in keys and sub not in (None, 0, 0.0, "", [], {}):
+            return True
+        if isinstance(sub, dict) and _link_value_has(sub, keys, depth + 1):
+            return True
+    return False
+
+
+def diagram_shape(output_file_name):
+    """Forme du diagramme écrit dans `output_file_name` (JSON ou JSON.gz), ou None.
+
+    Dict à clés courtes, prêt pour une colonne de 96 caractères côté hôte :
+    k (famille), n (nœuds), l (flux), lv/nt/ft/dt (groupes d'étiquettes de
+    niveau, de nœud, de flux, de données), unc (incertitudes), cons
+    (contraintes), bal (nœuds à bilan matière). Best-effort : un fichier
+    illisible vaut None, jamais une erreur — la mesure ne doit pas casser
+    l'import qu'elle décrit.
+    """
+    if not output_file_name:
+        return None
+    try:
+        path = output_file_name
+        if not os.path.isfile(path):
+            path = output_file_name + ".gz"
+        opener = gzip.open if path.endswith(".gz") else open
+        with opener(path, "rt", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError, EOFError):
+        return None
+    if not isinstance(data, dict):
+        return None
+
+    def items(value):
+        if isinstance(value, dict):
+            return list(value.values())
+        return list(value) if isinstance(value, list) else []
+
+    def count(value):
+        return len(value) if isinstance(value, (dict, list)) else 0
+
+    links = items(data.get("links"))
+    nodes = items(data.get("nodes"))
+    uncertain = sum(
+        1 for link in links
+        if isinstance(link, dict) and _link_value_has(link.get("value"), _SHAPE_ANALYSIS_VALUE_KEYS)
+    )
+    constraints = count(data.get("ratio_flux_constraints"))
+    balanced = sum(1 for node in nodes if isinstance(node, dict) and node.get("has_material_balance"))
+    analysis = bool(uncertain or constraints or balanced or data.get("solver_options"))
+    return {
+        "k": SHAPE_KIND_ANALYSIS if analysis else SHAPE_KIND_DRAWING,
+        "n": len(nodes),
+        "l": len(links),
+        "lv": count(data.get("levelTags")),
+        "nt": count(data.get("nodeTags")),
+        "ft": count(data.get("fluxTags")),
+        "dt": count(data.get("dataTags")),
+        "unc": uncertain,
+        "cons": constraints,
+        "bal": balanced,
+    }
+
+
 def write_process_error(log_filename, error):
     """
     Écrit la cause de l'échec. `error` est un dict sérialisable ({code, message, details}),
@@ -291,13 +457,22 @@ def check_process():
             # → 500 en boucle, spinner client figé. On lit donc en UTF-8 tolérant.
             with open(logname, "r", encoding="utf-8", errors="replace") as f:
                 results = f.read()
+            status = read_process_status(logname)
             results_dict = {
                 "log_name": logname,
                 "output": results,
                 # Statut machine-lisible piloté par le thread via <logname>.status.
                 # None tant que le thread n'a rien écrit (= traitement en cours) ;
                 # le client s'arrête sur 'finished'/'failed', plus sur le texte.
-                "status": read_process_status(logname),
+                "status": status,
+                # Forme du diagramme obtenu (cf. diagram_shape), sur une fin
+                # réussie vers du JSON seulement : la couche hôte la journalise
+                # à la place du fichier, qu'elle ne verra jamais.
+                "shape": (
+                    diagram_shape(state.get("output_file_name"))
+                    if status == PROCESS_STATUS_FINISHED and state.get("output_format") == "json"
+                    else None
+                ),
                 # Cause de l'échec ({code, message, details}), quand le thread en a posé une
                 # (SA#249). None sinon : le client affiche alors son message générique.
                 "error": read_process_error(logname),
@@ -414,12 +589,18 @@ def retrieve_result():
         # both the reconciled file and constraints_summary.txt).
         if output_format == 'json' and ext != '.zip':
             output_file_name = handle_json_or_compressed(output_file_name)
-        return send_file(
+        response = send_file(
             output_file_name,
             as_attachment=True,
             download_name=download_name,
             mimetype=mimetype
         )
+        # Le résultat parti, le run n'a plus rien à garder : classeur apporté,
+        # résultat, journal. Après la fermeture de la réponse, parce que
+        # send_file lit le fichier pendant l'envoi. Un modèle de la galerie
+        # (SANKEY_DATA) n'est pas un run : `discard_run` ne le touche pas.
+        response.call_on_close(lambda: discard_run(state))
+        return response
 
     except Exception as excpt:
         trace.logger.error(f"retrieve_result failed: {str(excpt)}")
@@ -437,7 +618,7 @@ def retrieve_json():
     """
     state = get_process_state()
 
-    log_dir = tempfile.mkdtemp()
+    log_dir = new_run_dir()
     log_filename = log_dir + os.path.sep + "rollover.log"
     trace.logger_init(log_filename, "w")
 
@@ -578,8 +759,12 @@ def launch_conversion():
     - output_format : 'excel' ou 'json'
     """
     try:
-        tmp_dir = tempfile.mkdtemp()  # diff
-        log_dir = tempfile.mkdtemp()
+        # Le run précédent de cette session a fini de servir : son classeur et
+        # son résultat n'ont plus de raison de rester sur le disque.
+        discard_run(get_process_state())
+        sweep_runs()
+        tmp_dir = new_run_dir()
+        log_dir = new_run_dir()
         log_filename = log_dir + os.path.sep + "rollover.log"
         # session["logname"] = log_filename
         trace.logger_init(log_filename, "w")
@@ -1116,6 +1301,7 @@ def conversion_thread(
 
 @opensankey.route("/upload/clean", methods=["POST"])
 def clean():
+    discard_run(get_process_state())
     set_process_state(process_started=False)
     return Response(response="{}", status=200, mimetype="application/json")
 
