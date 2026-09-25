@@ -604,12 +604,14 @@ export class Class_NodeElement extends Class_NodeBase {
     let boxW = maxW + 2 * padding
 
     // Réduire pour tenir dans le nœud (stock_label_shrink_to_fit, cf. stockBoxFit).
-    // Une boite « intérieure » l'est par inside_* ou par un centrage (middle). Si
-    // pos_auto la repousse déjà hors du nœud, elle est libre : rien à réduire.
+    // Une boite « intérieure » l'est par inside_* ou par un centrage (middle). La
+    // réduction passe AVANT le repoussement de pos_auto (ci-dessous) : un nœud fin
+    // garde sa boite, réduite, au lieu de la voir posée dessous à pleine taille sur
+    // le nœud voisin (CARTOFOB, nœud Hêtre, 25/09). pos_auto ne joue plus que si la
+    // boite ne tient toujours pas une fois réduite.
     const inside_h = horiz === 'middle' || insideH
     const inside_v = vert === 'middle' || insideV
-    const pushed_out = this.stock_label_pos_auto && boxH > nodeH
-    if (this.stock_label_shrink_to_fit && !pushed_out && (inside_h || inside_v)) {
+    if (this.stock_label_shrink_to_fit && (inside_h || inside_v)) {
       const fitted = stockBoxFittedFontSize({
         font_size: fontSize,
         line_gap: 3,
