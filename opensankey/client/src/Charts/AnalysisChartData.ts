@@ -58,6 +58,7 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
+import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
 // AFFICHE : un nœud réglé sur « nom du nœud ancêtre » ou sur un gabarit à jetons
@@ -526,7 +527,13 @@ export const analysisHierarchyTree = (
   expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   const decompose = effectiveDecompose(descriptor)
-  if (subject.kind !== 'node' || decompose?.kind !== 'node_children') return null
+  if (subject.kind !== 'node') return null
+  // os#1509 — LE CROISEMENT descend aussi, et il a son propre arbre : ses secteurs sont des
+  // cases, pas des nœuds (cf. Charts/CrossHierarchy).
+  if (decompose?.kind === 'flux_cross') {
+    return buildCrossTree(subject.node, decompose, nav, expanded, { max_depth: reading.max_depth })?.tree ?? null
+  }
+  if (decompose?.kind !== 'node_children') return null
   return hierarchyTreeOf(subject.node, decompose, nav, reading, expanded)
 }
 
@@ -613,6 +620,11 @@ const decomposeSubject = (
       return (expanded.size > 0 || spec.focus_id !== undefined)
         ? decomposeNodeHierarchy(node, spec, nav, reading, expanded)
         : decomposeNodeChildren(node, spec.dimension_id, nav)
+    }
+    if (spec.kind === 'flux_cross') {
+      // os#1509 — la frontière des cases ouvertes, à plat : même contrat que la descente par nœuds.
+      const cross = buildCrossTree(node, spec, nav, expanded, { max_depth: reading.max_depth })
+      return cross ? crossFrontier(cross) : []
     }
     return []
   }
