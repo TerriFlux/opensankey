@@ -134,6 +134,75 @@ export const probeValues = (current: unknown, key?: string): unknown[] => {
   return only === undefined ? [] : [only]
 }
 
+// ── 25/09/2026 — LE TROISIÈME SENS DE LA BIJECTION ───────────────────────────────────────────
+//
+// Julien, excédé, après l'orientation d'un libellé de couronne affichée « Radiale » devant un texte
+// horizontal : « je sais plus quoi faire, ça fait cinquante fois que je te le dis. Reprends le
+// design s'il faut, mais fais quelque chose : c'est un mécanisme général qui doit marcher
+// systématiquement pour toutes les figures, tous les éléments. »
+//
+// Il a raison, et les deux sens d'os#1481 ne pouvaient pas l'attraper. Ils demandent si un réglage
+// MORD ; celui-ci mord parfaitement — poser « le long de l'arc » fait bien tourner le texte. Ce qui
+// est faux, c'est ce que le panneau ANNONCE avant qu'on y touche.
+//
+//   sens 3 — TOUT RÉGLAGE OFFERT ANNONCE CE QUI EST DESSINÉ : la valeur que l'inspecteur montre
+//            pour une part qui ne dit rien doit être celle que le tracé emploie déjà.
+//
+// ── COMMENT ON LE MESURE, ET POURQUOI C'EST LA BONNE MESURE ──────────────────────────────────
+//
+// Sans aucune table de correspondance entre une clé d'attribut et le champ d'aspect qu'elle nourrit
+// — une telle table serait une troisième vérité à tenir à jour, donc une quatrième occasion de
+// diverger. On pose la question comme l'auteur la pose à l'écran :
+//
+//   ÉCRIRE SUR LA PART LA VALEUR QUE LE PANNEAU AFFICHE NE DOIT RIEN CHANGER AU DESSIN.
+//
+// Si le panneau dit vrai, l'écrire est un geste sans effet : on rend explicite ce qui était déjà
+// fait. S'il ment, le dessin bouge — et c'est exactement le « si on édite ça marche, mais au début
+// ça ne correspond pas » que Julien a décrit trois fois de suite, sur trois clés différentes.
+//
+// C'est aussi la mesure la plus dure à truquer : elle ne lit ni le catalogue, ni les défauts de
+// nature, ni le code du tracé. Elle compare deux DOM.
+
+/** Ce que le panneau affiche pour cette clé sur cette part. Cf. `getConfigValues`. */
+export type Type_Announced = (part: Type_FigurePart, key: string) => unknown
+
+/** Le résultat de l'interrogation du sens 3. */
+export interface Type_AnnounceResult {
+  /** Les clés dont l'affichage correspond au dessin : l'écrire ne change rien. */
+  honest: string[]
+  /** Les clés dont l'affichage MENT : l'écrire déplace le dessin. */
+  lying: string[]
+  /** Les clés pour lesquelles le panneau n'affiche rien d'exploitable. */
+  unmeasurable: string[]
+}
+
+/**
+ * Pose sur la part la valeur que le panneau annonce, et regarde si le dessin bouge.
+ *
+ * Une sonde NEUVE par clé, pour la raison écrite dans `measureBites` : écrire une clé rend la part
+ * surchargée pour toujours, et les essais suivants s'en trouveraient faussés.
+ */
+export const measureAnnounce = (
+  makeProbe: () => Type_BiteProbe,
+  keys: readonly string[],
+  drawInto: (draw: (c: HTMLElement) => void) => string,
+  announced: Type_Announced
+): Type_AnnounceResult => {
+  const out: Type_AnnounceResult = { honest: [], lying: [], unmeasurable: [] }
+  keys.forEach(key => {
+    const probe = makeProbe()
+    const part = probe.parts[probe.probe_id]
+    const value = announced(part, key)
+    // Rien à écrire, rien à conclure : une clé sans valeur affichée ne peut ni mentir ni dire vrai.
+    if (value === undefined || value === null) { out.unmeasurable.push(key); return }
+    const plain = drawInto(probe.draw)
+    ;(part as unknown as { [k: string]: unknown })[key] = value
+    if (drawInto(probe.draw) === plain) out.honest.push(key)
+    else out.lying.push(key)
+  })
+  return out
+}
+
 /** Le résultat d'une interrogation, clé par clé. */
 export interface Type_BiteResult {
   /** Les clés dont le changement a bien changé le dessin. */

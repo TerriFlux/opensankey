@@ -110,9 +110,74 @@ const figurePartElementDefault = (el: unknown, key: string): unknown => {
   // LA DÉCLARATION DE LA FIGURE D'ABORD : elle seule peut dire qu'une couronne écrit sa valeur.
   const declared = figureNatureDefault(nature, key)
   if (declared !== undefined) return declared
-  // os#1504 — SINON, CE QUE LE TRACÉ FAIT QUAND LA PART NE DIT RIEN, pour les rares clés qu'aucune
-  // figure ne déclare. Julien : « le fond est sélectionné alors qu'on ne le voit pas ».
-  return PART_NEUTRAL_DEFAULTS[key]
+  // 25/09/2026 — PUIS LE RÉGLAGE DE LA FIGURE LUI-MÊME, et c'est la règle GÉNÉRALE du lot.
+  return figureStyleSaysFor(rec, key) ?? PART_DRAWING_DEFAULTS[nature]?.[key]
+    ?? PART_DRAWING_DEFAULTS['']?.[key]
+}
+
+/**
+ * 25/09/2026 — CE QUE LA FIGURE RÈGLE POUR TOUTES SES PARTS, SANS AUCUNE TABLE.
+ *
+ * LA RÈGLE, en une phrase : quand une part ne dit rien d'une clé que la FIGURE règle, ce qui est
+ * dessiné est le réglage de la figure — donc c'est lui que le panneau doit annoncer.
+ *
+ * Elle vaut pour toute clé que `Type_FigureChartStyle` porte, et elle les porte sous LE MÊME NOM
+ * que le catalogue des éléments (`name_label_font_size`, `value_label_is_visible`, …). Il n'y a
+ * donc rien à déclarer et rien à tenir à jour : une clé ajoutée au style d'une figure est couverte
+ * le jour où on l'écrit. C'est ce qui distingue cette règle des trois tables qui l'ont précédée —
+ * elles nommaient les clés une par une, et chacune en oubliait.
+ *
+ * Mesuré : une barre s'écrit en 10 points (`BARS_STYLE_DEFAULTS`), une couronne en 11, et le
+ * catalogue d'un NŒUD dit 11. Le panneau d'une barre annonçait donc 11 devant un dessin en 10.
+ *
+ * ⚠️ LA CHAÎNE VIDE N'EST PAS UNE VALEUR, c'est le marqueur « le tracé décide » du style d'une
+ * figure (`name_label_font_family: ''`, `name_label_color: ''`). L'annoncer viderait le sélecteur
+ * de police et le carré de couleur du panneau, ce qui serait un second mensonge à la place du
+ * premier. On la laisse passer, et la clé retombe sur les tables ci-dessous ou sur le catalogue.
+ */
+const figureStyleSaysFor = (rec: { [k: string]: unknown }, key: string): unknown => {
+  const style = rec['figure_style']
+  if (typeof style !== 'object' || style === null) return undefined
+  const value = (style as { [k: string]: unknown })[key]
+  return value === '' ? undefined : value
+}
+
+/**
+ * CE QUE LE TRACÉ D'UNE NATURE FAIT, là où ni la figure ni son catalogue ne le disent.
+ *
+ * La clé `''` vaut pour TOUTES les natures : elle dit ce que les tracés font tous pareil.
+ *
+ * ⚠️ CE N'EST PAS UNE LISTE DE RATTRAPAGE, et elle doit rester courte : une entrée ici est l'aveu
+ * qu'un tracé décide quelque chose que personne ne peut lire ailleurs. La bonne place d'un réglage
+ * est le style de la figure (ci-dessus, sans table) ou sa déclaration de nature.
+ */
+const PART_DRAWING_DEFAULTS: { readonly [nature: string]: { readonly [key: string]: unknown } } = {
+  // os#1504 — LE CARTOUCHE NE SE PEINT PAS SANS QU'ON LE DEMANDE, et le panneau doit le dire.
+  //
+  // Julien : « le fond est sélectionné alors qu'on ne le voit pas ». `name_label_background_visible`
+  // vaut VRAI au catalogue des éléments — un nœud qui affiche son cartouche l'affiche. Une part,
+  // non : `drawFigureLabelBackground` ne peint que ce qu'elle DEMANDE (os#1468).
+  '': {
+    name_label_background_visible: false,
+    value_label_background_visible: false
+  },
+  // 25/09/2026 — L'ORIENTATION D'UN LIBELLÉ DE COURONNE, ARBITRÉE PAR JULIEN.
+  //
+  // « Le défaut pour le libellé, il faut que ce soit horizontale avec un retour à la ligne
+  // (utiliser la largeur) ; le truc en diagonale c'est trop moche. »
+  //
+  // C'est déjà ce que le tracé en place DESSINE — `arcLabelTransform` ne tourne que sur 'radial' ou
+  // 'tangential' — pendant que le catalogue des éléments dit 'radial', parce qu'un disque, lui,
+  // couche son texte le long du rayon. Le panneau annonçait donc « Radiale » au-dessus d'un texte
+  // droit. Déclarer ici ne change aucun dessin : ça met le panneau d'accord avec lui.
+  donut: {
+    name_label_orientation: 'horizontal'
+  },
+  // Le disque, lui, tourne vraiment : c'est son défaut de tracé depuis toujours
+  // (`SUNBURST_STYLE_DEFAULTS.label_orientation`), et un anneau étroit ne se lit pas autrement.
+  sunburst: {
+    name_label_orientation: 'radial'
+  }
 }
 
 /**
@@ -149,25 +214,6 @@ const figureStampedDefault = (rec: { [k: string]: unknown }, key: string): unkno
   return undefined
 }
 
-/**
- * os#1504 — LE CARTOUCHE NE SE PEINT PAS SANS QU'ON LE DEMANDE, et le panneau doit le dire.
- *
- * Julien, capture à l'appui : « le fond est sélectionné alors qu'on ne le voit pas ».
- *
- * `name_label_background_visible` vaut VRAI au catalogue des éléments — un nœud dont on affiche le
- * cartouche l'affiche. Une part, non : `drawFigureLabelBackground` ne peint que ce que la part
- * DEMANDE (os#1468), et aucune figure ne déclare cette clé. Le panneau montrait donc « Fond »
- * coché devant un dessin qui n'en a pas.
- *
- * ⚠️ CE N'EST PAS UNE LISTE DE RATTRAPAGE : elle dit ce que le TRACÉ fait, clé par clé, là où la
- * figure n'a rien à déclarer. Le jour où une figure voudra un cartouche pour toutes ses étiquettes,
- * elle déclarera la clé — et cette table n'aura plus à en parler (le défaut de nature passe avant).
- */
-const PART_NEUTRAL_DEFAULTS: { readonly [key: string]: unknown } = {
-  name_label_background_visible: false,
-  value_label_background_visible: false
-}
-
 /** Le choix du sélecteur d'unité qui correspond au pourcentage que la figure écrit. */
 const partUnitOfPercent = (percent: unknown): string | undefined => {
   if (percent === 'total') return 'percent_total'
@@ -202,7 +248,7 @@ export const figureStyleDefault = (el: unknown, key: string): unknown => {
   // dépend d'aucune nature : elle dit ce que le tracé fait, et il le fait dans les trois.
   const declared = nature !== '' ? figureNatureDefault(nature, key) : undefined
   if (declared !== undefined) return declared
-  // 24/09/2026 — ET LA TABLE NEUTRE AUSSI POUR UN STYLE, ce qui manquait à os#1504.
+  // 24/09/2026 — ET LES MÊMES REPLIS QUE POUR UNE PART, ce qui manquait à os#1504.
   //
   // Julien : « pareil pour le fond, on a l'impression que ce n'est pas initialisé correctement — il
   // est montré ON alors qu'il est dessiné OFF ».
@@ -210,5 +256,7 @@ export const figureStyleDefault = (el: unknown, key: string): unknown => {
   // La règle ne valait que pour une PART : son style répondait donc `true` là où elle répondait
   // `false`. Or les deux panneaux montrent le même réglage du même dessin — c'est la divergence
   // qu'os#1501 avait fermée dans l'autre sens, rouverte ici par une branche oubliée.
-  return PART_NEUTRAL_DEFAULTS[key]
+  return figureStyleSaysFor(el as { [k: string]: unknown }, key)
+    ?? PART_DRAWING_DEFAULTS[nature]?.[key]
+    ?? PART_DRAWING_DEFAULTS['']?.[key]
 }
