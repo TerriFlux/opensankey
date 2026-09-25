@@ -35,8 +35,10 @@ import {
   BARS_STYLE_DEFAULTS, DONUT_STYLE_DEFAULTS, labelTextWidthPx, wrapLabelToBox
 } from './figureChartStyle'
 import type {
-  Type_FigureChartStyle, Type_FigurePartLabelAspect, Type_FigureText
+  Type_FigureChartStyle, Type_FigurePartLabelAspect, Type_FigurePartTextAspect, Type_FigureText
 } from './figureChartStyle'
+// 25/09/2026 — LE CENTRE EST UNE PART, et le tracé la cherche par son identifiant.
+import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
 // os#1477 — LE MÊME TRACEUR DE TEXTE QUE LE DISQUE (cf. `prepareContainer`).
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 
@@ -1008,9 +1010,20 @@ export const drawDonutChart = (
   // est celui que la figure porte déjà en titre de repli (`title_fallback`, le nom du nœud ou
   // « source → cible » d'un flux) : le même mot que le fil d'Ariane de la fenêtre, pas un second
   // vocabulaire.
+  // 25/09/2026 — ET LE CENTRE EST UNE PART, dont c'est ici l'aspect.
+  //
+  // Julien : « pour la couronne, il me semble que le centre peut aussi être considéré comme un
+  // élément, non ? » Cf. `Representations/parts/centrePart.ts` pour l'arbitrage.
+  //
+  // `centre_content` RESTE LE DÉFAUT — c'est lui que portent les couronnes enregistrées —, et la
+  // part le surcharge comme n'importe quel élément surcharge le réglage de sa figure. Aucune
+  // exception nouvelle : c'est la doctrine du lecteur commun, appliquée à un texte de plus.
+  const centre = opts.part_aspect?.(FIGURE_CENTRE_PART_ID)
   const centre_name = opts.title_fallback ?? ''
-  const wants_name = (st.centre_content === 'name' || st.centre_content === 'both') && centre_name !== ''
-  const wants_value = st.centre_content === 'value' || st.centre_content === 'both'
+  const wants_name = (centre?.name?.is_visible
+    ?? (st.centre_content === 'name' || st.centre_content === 'both')) && centre_name !== ''
+  const wants_value = centre?.value?.is_visible
+    ?? (st.centre_content === 'value' || st.centre_content === 'both')
   // 23/09/2026 — LE TROU RAMÈNE EN ARRIÈRE quand la figure est descendue dans un nœud.
   //
   // Un disque transparent AVANT le texte : il prend le clic sur toute la surface du trou, y compris
@@ -1037,10 +1050,14 @@ export const drawDonutChart = (
       .text(`‹ ${opts.centre_back_label ?? ''}`.trim())
   }
   if ((wants_name || wants_value) && inner >= 12) {
-    const value_size = Math.max(11, inner * 0.28)
+    // LA TAILLE SE MESURE SUR LE TROU, et c'est ce qui fait qu'un centre reste lisible quelle que
+    // soit la place : un nombre en points fixes déborderait d'un petit trou et se perdrait dans un
+    // grand. La part peut en imposer une — c'est son texte —, et alors c'est la sienne.
+    const value_size = centre?.value?.font_size ?? Math.max(11, inner * 0.28)
     // Le nom passe AU-DESSUS du total et plus petit : c'est le total qu'on lit de loin, le nom qui
     // le qualifie. Seul, il prend la place centrale.
-    const name_size = wants_value ? Math.max(9, inner * 0.16) : Math.max(11, inner * 0.22)
+    const name_size = centre?.name?.font_size
+      ?? (wants_value ? Math.max(9, inner * 0.16) : Math.max(11, inner * 0.22))
     const text = g.append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
@@ -1049,20 +1066,33 @@ export const drawDonutChart = (
       // dessous. Sans cette ligne, le nom écrit au milieu avalait le geste et le trou ne ramenait
       // en arrière que sur ses bords.
       .attr('pointer-events', 'none')
+    // CE QUE LA PART DIT DE CHACUN DE SES DEUX TEXTES. Absent, c'est le dessin d'hier au caractère
+    // près — une couronne enregistrée ne change pas d'aspect (cf. la doctrine de `partAspect`).
+    const dress = (
+      span: d3.Selection<SVGTSpanElement, unknown, null, undefined>,
+      a: Type_FigurePartTextAspect | undefined,
+      size: number,
+      bold: boolean
+    ) => {
+      span.attr('font-size', size)
+        .attr('font-weight', (a?.bold ?? bold) ? 'bold' : 'normal')
+      if (a?.italic) span.attr('font-style', 'italic')
+      if (a?.font_family) span.attr('font-family', a.font_family)
+      if (a?.color) span.attr('fill', a.color)
+    }
     if (wants_name) {
-      text.append('tspan')
+      const span = text.append('tspan')
         .attr('x', 0)
         .attr('dy', wants_value ? `${-0.6}em` : '0em')
-        .attr('font-size', name_size)
-        .text(centre_name)
+      dress(span, centre?.name, name_size, false)
+      span.text(centre?.name?.uppercase ? centre_name.toUpperCase() : centre_name)
     }
     if (wants_value) {
-      text.append('tspan')
+      const span = text.append('tspan')
         .attr('x', 0)
         .attr('dy', wants_name ? '1.2em' : '0em')
-        .attr('font-size', value_size)
-        .attr('font-weight', 'bold')
-        .text(fmt(total))
+      dress(span, centre?.value, value_size, true)
+      span.text(fmt(total))
     }
   }
 

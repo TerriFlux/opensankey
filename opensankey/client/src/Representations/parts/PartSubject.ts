@@ -36,6 +36,13 @@ export type Type_PartSubject =
   | { kind: 'node', node: Type_NamedSubject }
   | { kind: 'flux', link: Type_NamedSubject }
   | { kind: 'tag', tag: Type_NamedSubject }
+  // 25/09/2026 — LE TOUT, et c'est la cinquième sorte. Arbitrage de Julien : « pour la couronne, il
+  // me semble que le centre peut aussi être considéré comme un élément, non ? »
+  //
+  // Oui, et c'est le même mouvement que les quatre autres. Le centre d'une couronne écrit le nom de
+  // l'objet regardé et son total : il désigne donc ce dont la figure parle EN ENTIER, là où un
+  // secteur en désigne un morceau. C'est une part dont le sujet est la somme des autres.
+  | { kind: 'whole', whole: Type_NamedSubject }
   | { kind: 'none' }
 
 /** Tout ce qu'une part demande à son sujet : un nom, et de quoi le suivre s'il change. */
@@ -52,6 +59,7 @@ export const subjectObjectOf = (subject: Type_PartSubject): Type_NamedSubject | 
   case 'node': return subject.node
   case 'flux': return subject.link
   case 'tag': return subject.tag
+  case 'whole': return subject.whole
   default: return null
   }
 }
