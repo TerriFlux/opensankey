@@ -37,6 +37,11 @@ export type Type_LegendItem = {
   // (titres de groupe, lignes d'info, échelle...) — seules les entrées de tag
   // s'enchaînent sur une ligne.
   own_line?: boolean
+  // Titre d'un groupe DÉVELOPPÉ (suivi de ses entrées). En disposition horizontale il ouvre la
+  // ligne de ses étiquettes, à leur gauche, au lieu d'en occuper une à lui seul : une ligne de
+  // moins par groupe (25/09/2026, CARTOFOB : la légende horizontale montait sous le titre du
+  // diagramme). En vertical, rien ne change.
+  group_title?: boolean
   // Id du cadre de BLOC ('legend-block-<groupe>') qui regroupe le titre et les
   // entrées d'un même groupe de tags : déplacer le bloc déplace tout le groupe.
   block_id?: string
@@ -514,6 +519,7 @@ export function computeLegendItems(
         bold: true,
         starts_group: true,
         own_line: true,
+        group_title: true,
         block_id
       }
       const group_description = definitionOf(tag_group)
@@ -796,8 +802,8 @@ function legendSectionOf(item: Type_LegendItem): string {
 
 /**
  * Positions relatives (px monde, origine = coin haut-gauche du contenu) des
- * zones générées. Vertical par défaut ; en horizontal les entrées d'un même
- * groupe se suivent sur une ligne, chaque groupe repart à la ligne.
+ * zones générées. Vertical par défaut ; en horizontal le titre d'un groupe ouvre la ligne
+ * et ses entrées le suivent sur cette ligne, chaque groupe repart à la ligne.
  *
  * `line_counts` : SA#550 — lignes mesurées des zones enveloppées (`wrap`), cf.
  * legendWrappedLineCount ; #556 — lignes (tspans) mesurées des autres entrées en vertical.
@@ -841,9 +847,12 @@ export function layoutLegendItems(
         y += line_height
       }
       positions.push({ id: item.id, x, y })
-      if (item.own_line) {
-        // Titres de groupe / lignes d'info : seuls sur leur ligne, seules les
-        // entrées de tag s'enchaînent horizontalement.
+      if (item.group_title) {
+        // Titre d'un groupe développé : à gauche de ses entrées, sur leur ligne.
+        x += estimateTextWidth(item.text, police) + 14
+      } else if (item.own_line) {
+        // Lignes d'info, échelle, groupes épinglés : seuls sur leur ligne, seules
+        // les entrées de tag s'enchaînent horizontalement.
         x = 0
         y += item.scale_bar ? bar_row_height : line_height
       } else {
