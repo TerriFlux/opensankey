@@ -13,7 +13,6 @@
 import { LEGEND_CHILD_PREFIX, legendDataTagZoneId, legendSlug as slug } from './legendIds'
 import { applyTemplate } from './LabelTemplate'
 import { LINK_DASH_GAP, LINK_DASH_LENGTH } from './linkDash'
-import { legendGroupsByPriority } from './tagGroupPriority'
 import {
   LEGEND_SAMPLE_SWATCH_EM, legendEntryFormat, legendEntryHasSwatch,
   Type_LegendEntryFormat, Type_StyleForLegend
@@ -175,8 +174,8 @@ export type Type_SankeyForLegend = {
   // mise en forme (mocks des tests antérieurs).
   styles_dict?: { [style_id: string]: Type_StyleForLegend & { is_default_style?: boolean } }
   // SA#551 — ordre de priorité des groupes (Class_Sankey.tagGroupsInPriorityOrder, du moins au plus
-  // prioritaire). Optionnel : absent (mocks des tests antérieurs), les groupes gardent l'ordre de
-  // `node_taggs_list` puis `flux_taggs_list`.
+  // prioritaire). La légende ne le lit plus (25/09/2026 : ordre du fichier, cf.
+  // `legendTagGroupsOrder`) ; le contrat reste, la cascade et ses tests le nomment.
   tagGroupsInPriorityOrder?(type_group: 'node_taggs' | 'flux_taggs'): Type_TagGroupForLegend[]
   // SA#551 — groupe dont la VUE est en cours de dessin (pop-up d'un groupe) : la légende ne montre
   // alors que ce groupe, pour ne faire lire que lui.
@@ -353,11 +352,16 @@ function applyTagStyleFormat(item: Type_LegendItem, style: Type_StyleForLegend |
 // l'étiquette générée « Sans [nom du groupe] », que composent les règles de `computeLegendItems`.
 
 /**
- * SA#551 — ordre des groupes dans la légende : groupes de nœuds et de flux du PLUS prioritaire au
- * moins prioritaire — la tête de légende est le groupe dont les styles gagnent (cf.
- * tagGroupPriority.ts, qui lit le même ordre que la cascade) —, puis les groupes de données dans leur
- * ordre. Aucun diagramme existant n'allume deux groupes d'une même famille (relevé du corpus et des
- * 123 diagrammes SOCLE, 2026-09-16, hors pilote Lait) : leurs légendes ne changent pas d'ordre.
+ * Ordre des groupes dans la légende : celui du FICHIER (`taggs_order`, l'ordre du menu Étiquettes) —
+ * groupes de nœuds, puis de flux, puis de données.
+ *
+ * SA#551 (18/09/2026) l'avait retourné famille par famille, « tête de légende = groupe dont les
+ * styles gagnent », en relevant qu'aucun diagramme du corpus n'allumait deux groupes d'une même
+ * famille. CARTOFOB en allume quatre (« Type de bois », puis trois groupes générés) : sa légende
+ * publiée s'est lue à l'envers au banc du 25/09. L'ordre de lecture d'une légende est celui que
+ * l'auteur a donné à ses groupes ; la priorité de la cascade reste ce qu'elle est
+ * (`Class_Sankey.tagGroupsInPriorityOrder`), elle ne range plus la légende. Arbitrage de Julien,
+ * 2026-09-25.
  */
 export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGroupForLegend[] {
   // SA#551 — vue d'un groupe : lui seul (les autres groupes développés sortent de la légende).
@@ -365,11 +369,7 @@ export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGrou
   if (previewed !== undefined) {
     return [...sankey.node_taggs_list, ...sankey.flux_taggs_list].filter(group => group.id === previewed)
   }
-  const by_priority = sankey.tagGroupsInPriorityOrder
-  const node_and_flux = by_priority === undefined
-    ? [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
-    : legendGroupsByPriority([by_priority.call(sankey, 'node_taggs'), by_priority.call(sankey, 'flux_taggs')])
-  return [...node_and_flux, ...sankey.data_taggs_list]
+  return [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
 }
 
 /**

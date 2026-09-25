@@ -10,10 +10,11 @@ import { buildTagGroupViewDocument } from '../Representations/TagGroupViewRepres
 import { presentationPanelId } from '../components/panels/presentation/openPresentation'
 
 /**
- * SA#551 — la légende range les groupes du plus prioritaire au moins prioritaire ; cliquer le nom
- * d'un groupe ouvre sa POP-UP (définition, étiquettes, et une VUE du diagramme mis en forme par ce
- * groupe), sans rien ouvrir ni mettre en forme. Seule une étiquette met des éléments en
- * surbrillance au survol (arbitrages d'Alexandre, 2026-09-18).
+ * SA#551 — cliquer le nom d'un groupe de la légende ouvre sa POP-UP (définition, étiquettes, et une
+ * VUE du diagramme mis en forme par ce groupe), sans rien ouvrir ni mettre en forme. Seule une
+ * étiquette met des éléments en surbrillance au survol (arbitrages d'Alexandre, 2026-09-18).
+ * La légende, elle, garde l'ordre du fichier (arbitrage de Julien, 2026-09-25 : CARTOFOB se lisait
+ * à l'envers) ; la priorité de la cascade ne range plus ses groupes.
  *
  * Sur de vraies classes dessinées (jsdom), par le vrai chemin du clic : écouteur `click` de la
  * zone, discriminateur simple/double clic, puis NodeEventsHandler.
@@ -92,11 +93,11 @@ beforeEach(() => { jest.useFakeTimers() })
 afterEach(() => { jest.useRealTimers() })
 
 describe('SA#551 — ordre de priorité unique', () => {
-  it('la légende montre les groupes du plus prioritaire (le plus bas de la liste) au moins prioritaire', () => {
+  it('la légende montre les groupes dans l ordre du fichier, la cascade gardant sa priorité', () => {
     const { app, a } = makeLegend()
     expect(app.drawing_area.sankey.getTagGroupsOrder('node_taggs')).toEqual(['fiab', 'type', 'source'])
-    // « Type », plus bas que « Fiabilité », est en tête ; la ligne épinglée fermée ferme la marche
-    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
+    // L'ordre du fichier, de haut en bas ; la ligne épinglée fermée ferme la marche
+    expect(titlesTopDown(app)).toEqual(['legend-group-fiab', 'legend-group-type', 'legend-group-source'])
     // Paramètres différents : les deux s'appliquent
     expect(a.shape_color).toBe('#0000ff')
     expect(a.shape_opacity).toBe(0.4)

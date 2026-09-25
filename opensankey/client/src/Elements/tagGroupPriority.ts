@@ -7,30 +7,16 @@
 // ==================================================================================================
 
 /**
- * SA#551 — ORDRE DE PRIORITÉ des groupes d'étiquettes, servi à la fois à la cascade des styles
- * d'étiquette et à la légende. Il n'en existe qu'un : la liste des groupes de chaque famille
- * (`Class_Sankey.tagGroupsInPriorityOrder`, qui est aussi l'ordre du menu Étiquettes), du MOINS
- * prioritaire au PLUS prioritaire — le groupe le plus BAS gagne (SA#541). La légende le lit à
- * l'envers : le plus prioritaire en tête. Les deux sens ne peuvent donc pas diverger.
+ * SA#551 — ORDRE DE PRIORITÉ des groupes d'étiquettes, celui de la cascade des styles d'étiquette :
+ * la liste des groupes de chaque famille (`Class_Sankey.tagGroupsInPriorityOrder`, qui est aussi
+ * l'ordre du menu Étiquettes), du MOINS prioritaire au PLUS prioritaire — le groupe le plus BAS
+ * gagne (SA#541).
  *
- * Deux familles (nœuds, flux) ne se disputent aucun paramètre : un style de nœud ne s'applique
- * qu'aux nœuds. Dans la légende, elles gardent donc leur ordre historique : groupes de nœuds, puis
- * groupes de flux.
+ * La légende ne le lit PLUS à l'envers (25/09/2026) : elle garde l'ordre du fichier, cf.
+ * `legendTagGroupsOrder` (legendItems.ts). Il reste ici l'aperçu d'un groupe survolé.
  *
  * Module FEUILLE, sans import, testable sans diagramme (même parti pris que `tagStyles.ts`).
  */
-
-/**
- * Groupes de toutes les familles, du PLUS prioritaire au MOINS prioritaire, pour la légende.
- *
- * @param families groupes de chaque famille, chacune dans son ordre de priorité (du moins au plus
- *                 prioritaire), familles dans leur ordre d'affichage historique
- */
-export function legendGroupsByPriority<G extends { id: string }>(
-  families: readonly (readonly G[])[]
-): G[] {
-  return families.flatMap(family => [...family].reverse())
-}
 
 /**
  * SA#551 — groupes vus par la cascade pendant l'aperçu d'un groupe survolé dans la légende : ce seul
