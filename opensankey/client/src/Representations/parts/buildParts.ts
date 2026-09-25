@@ -45,7 +45,9 @@ import type { Class_PartsDocument } from './PartsDocument'
 import { Class_PartElement } from './PartElement'
 import { NO_SUBJECT } from './PartSubject'
 import type { Type_PartSubject } from './PartSubject'
-import { partNatureStyleOf, partStyleOf, seedPartStyles } from './partStyle'
+import {
+  partNatureStyleIdOf, partNatureStyleOf, partStyleOf, seedPartStyles
+} from './partStyle'
 
 /** Une part telle que les décompositions la produisent, quelle que soit la nature. */
 export interface Type_PartInput {
@@ -84,6 +86,15 @@ export interface Type_FigureParts {
   by_id: { [part_id: string]: Class_PartElement }
   /** Dans l'ordre où la décomposition les a données : c'est l'ordre du tracé. */
   ordered: Class_PartElement[]
+  /**
+   * 25/09/2026 — LA NATURE QUE CES PARTS SERVENT, et c'est ce qui manquait pour la reprise.
+   *
+   * Le dépôt est indexé par (fenêtre, vignette) — pas par nature (`figurePartsRegistry`). Changer
+   * la représentation d'un volet reprend donc le jeu précédent, ce qui est voulu : la sélection,
+   * le document actif et les réglages de l'auteur survivent au geste. Mais il faut alors savoir
+   * qu'on change de figure, sans quoi les parts restent celles de l'ancienne.
+   */
+  nature: string
 }
 
 /**
@@ -120,12 +131,27 @@ export const buildParts = (
   // UNE SEULE FOIS, au premier dessin : le document vivant garde son style, avec ce que l'auteur y
   // a réglé. C'est ce qui a rendu `carryPartStyleOver` inutile — il n'existait que pour rattraper
   // le document qu'on jetait.
-  if (reuse === undefined) seedPartStyles(drawing_area.sankey, nature)
+  //
+  // 25/09/2026 — ET AU CHANGEMENT DE REPRÉSENTATION AUSSI. Julien : « si je passe par Couronne et
+  // que je sélectionne Barres dans le sélecteur de la fenêtre, ça ne met pas à jour l'inspecteur. »
+  //
+  // Le volet garde son jeu de parts — c'est ce qui fait survivre la sélection et le document actif
+  // (os#1453) — mais la FIGURE, elle, a changé. Sans ce semis, `BarPartStyle` n'existait jamais :
+  // l'inspecteur continuait d'offrir « Part de couronne », de lire les défauts de la couronne, et
+  // de masquer ce que la portée réserve aux figures carrées.
+  const figure_nature = nature ?? ''
+  const nature_changed = reuse !== undefined && reuse.nature !== figure_nature
+  if (reuse === undefined || nature_changed) seedPartStyles(drawing_area.sankey, nature)
   const part_style = partStyleOf(drawing_area.sankey)
   // os#1462 — L'ÉTAGE DE LA NATURE, qui se pose PAR-DESSUS le générique et gagne donc sur lui :
   // « en haut c'est générique, et en bas ça se spécialise ». Absent pour une nature qu'aucun style
   // ne décrit encore — la part s'en tient alors au générique, c'est-à-dire à l'aspect d'avant.
   const nature_style = partNatureStyleOf(drawing_area.sankey, nature)
+  // Le style de la nature qu'on QUITTE : il reste au document — l'auteur peut revenir à la
+  // couronne, et ses réglages de secteur l'y attendent — mais il ne doit plus parler aux parts.
+  const former_nature_style_id = nature_changed
+    ? partNatureStyleIdOf(reuse?.nature)
+    : undefined
 
   const by_id: { [part_id: string]: Class_PartElement } = {}
   const ordered: Class_PartElement[] = []
@@ -145,9 +171,17 @@ export const buildParts = (
     if (part === undefined) {
       part = new Class_PartElement(input.id, drawing_area, part_style)
       // os#1483 — la part sait de quelle FIGURE elle est une part (cf. `figure_nature`).
-      part.figure_nature = nature ?? ''
+      part.figure_nature = figure_nature
       // Empilé APRÈS la construction, car un élément ne se construit qu'avec un style : la cascade
       // d'une part est donc `[défaut, générique, nature]`, dans cet ordre de priorité croissante.
+      if (nature_style !== undefined) part.addStyle(nature_style)
+    } else if (nature_changed) {
+      // LA MÊME PART, UNE AUTRE FIGURE. Elle garde son identifiant, son sujet et ce que l'auteur a
+      // posé en propre — un alias, une couleur : ce sont des réglages de CETTE part, et ils valent
+      // pour un secteur comme pour une barre. Ce qui change est ce qui dit de quelle figure elle
+      // est une part : sa nature, et l'étage de style qui va avec.
+      if (former_nature_style_id !== undefined) part.removeStyleById(former_nature_style_id)
+      part.figure_nature = figure_nature
       if (nature_style !== undefined) part.addStyle(nature_style)
     }
     // Le SUJET se relie à chaque fois : une part peut garder son identifiant en changeant ce
@@ -171,7 +205,7 @@ export const buildParts = (
   // trouve, lui qui ne reçoit qu'un document (cf. `partsOfDocument`).
   _parts_of_document.set(document, ordered)
 
-  return { document, by_id, ordered }
+  return { document, by_id, ordered, nature: figure_nature }
 }
 
 // ── LES PARTS D'UN DOCUMENT, POUR CEUX QUI NE CONNAISSENT QUE LUI ────────────────────────────
