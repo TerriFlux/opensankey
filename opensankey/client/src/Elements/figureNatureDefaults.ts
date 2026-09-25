@@ -104,19 +104,49 @@ const figurePartElementDefault = (el: unknown, key: string): unknown => {
   const said = rec['isAttributeOverloaded']
   if (typeof said !== 'function') return undefined
   if ((said as (k: string) => boolean).call(el, key)) return undefined
-  // os#1503 — L'UNITÉ D'UNE PART SE LIT SUR CE QUE LA FIGURE ÉCRIT, et non au catalogue.
-  //
-  // `value_label_part_unit` est une clé d'ÉLÉMENT : la figure ne la déclare pas, donc le défaut de
-  // nature n'a rien à en dire et l'inspecteur retombait sur celui d'un nœud — « Valeur », pendant
-  // que la couronne dessinait des pourcentages. Ce que la figure fait est pourtant connu : c'est
-  // son `value_label_percent`, stampé sur la part au câblage (`figurePartsWiring`).
-  if (key === 'value_label_part_unit') return partUnitOfPercent(rec['figure_value_percent'])
+  // CE QUE LA FIGURE A STAMPÉ SUR SES PARTS, quand la réponse dépend du dessin en cours.
+  const stamped = figureStampedDefault(rec, key)
+  if (stamped !== undefined) return stamped
   // LA DÉCLARATION DE LA FIGURE D'ABORD : elle seule peut dire qu'une couronne écrit sa valeur.
   const declared = figureNatureDefault(nature, key)
   if (declared !== undefined) return declared
   // os#1504 — SINON, CE QUE LE TRACÉ FAIT QUAND LA PART NE DIT RIEN, pour les rares clés qu'aucune
   // figure ne déclare. Julien : « le fond est sélectionné alors qu'on ne le voit pas ».
   return PART_NEUTRAL_DEFAULTS[key]
+}
+
+/**
+ * CE QUE LA FIGURE A STAMPÉ, pour les clés dont la réponse dépend du DESSIN EN COURS.
+ *
+ * Deux clés à ce jour, et le même procédé pour les deux : la figure pose sur ses parts, au câblage
+ * (`figurePartsWiring`), ce qu'elle est en train de faire ; on le relit ici. Ni la déclaration de la
+ * nature — qui est une constante — ni la table neutre — qui l'est aussi — ne peuvent répondre à une
+ * question dont la réponse change avec les données.
+ *
+ * ⚠️ LA TABLE NEUTRE NE SUFFIT PAS, et c'est ce qui justifie ce second étage : « sept barres OU un
+ * libellé de plus de huit caractères » n'est pas une valeur, c'est une RÈGLE. Deux histogrammes du
+ * même document répondent différemment.
+ */
+const figureStampedDefault = (rec: { [k: string]: unknown }, key: string): unknown => {
+  // os#1503 — L'UNITÉ D'UNE PART SE LIT SUR CE QUE LA FIGURE ÉCRIT, et non au catalogue.
+  //
+  // `value_label_part_unit` est une clé d'ÉLÉMENT : la figure ne la déclare pas, donc le défaut de
+  // nature n'a rien à en dire et l'inspecteur retombait sur celui d'un nœud — « Valeur », pendant
+  // que la couronne dessinait des pourcentages. Ce que la figure fait est pourtant connu : c'est
+  // son `value_label_percent`, stampé sur la part au câblage.
+  if (key === 'value_label_part_unit') return partUnitOfPercent(rec['figure_value_percent'])
+  // 24/09/2026 — L'ANGLE QUE LE TRACÉ VA DONNER À CETTE ÉTIQUETTE.
+  //
+  // Julien, l'ayant vu à l'écran : « au début le texte est en diagonal alors que les angles sont
+  // mis à 0. Si on édite ça marche, mais au début ça ne correspond pas. »
+  //
+  // Il a raison mot pour mot, et c'est le défaut d'os#1505 : le repli `autoBarLabelAngle` vit dans
+  // le TRACÉ, qui l'applique quand la part ne dit rien. Le panneau, lui, n'en savait rien et
+  // retombait sur la valeur d'usine d'un nœud — zéro. Le champ annonçait donc l'inverse du dessin,
+  // et les deux se « synchronisaient » au premier geste : écrire la clé la rend explicite des deux
+  // côtés. C'est EXACTEMENT le défaut d'os#1501, une famille plus loin.
+  if (key === 'name_label_text_angle') return rec['figure_name_label_angle']
+  return undefined
 }
 
 /**
@@ -161,8 +191,24 @@ export const figureStyleDefault = (el: unknown, key: string): unknown => {
   const on_part = figurePartElementDefault(el, key)
   if (on_part !== undefined) return on_part
   const nature = partStyleFigureNature(el)
-  if (nature === null || nature === '') return undefined
+  if (nature === null) return undefined
   const explicit = (el as { isAttributeExplicit?: (k: string) => boolean }).isAttributeExplicit
   if (typeof explicit === 'function' && explicit.call(el, key)) return undefined
-  return figureNatureDefault(nature, key)
+  // CE QUE LA FIGURE A STAMPÉ SUR SON STYLE, au câblage, comme sur ses parts.
+  const stamped = figureStampedDefault(el as { [k: string]: unknown }, key)
+  if (stamped !== undefined) return stamped
+  // LE STYLE GÉNÉRIQUE N'A PAS DE FIGURE : il sert les trois natures, et ce qu'elles déclarent
+  // diffère. On ne lui montre donc AUCUNE déclaration de nature — mais la table neutre, elle, ne
+  // dépend d'aucune nature : elle dit ce que le tracé fait, et il le fait dans les trois.
+  const declared = nature !== '' ? figureNatureDefault(nature, key) : undefined
+  if (declared !== undefined) return declared
+  // 24/09/2026 — ET LA TABLE NEUTRE AUSSI POUR UN STYLE, ce qui manquait à os#1504.
+  //
+  // Julien : « pareil pour le fond, on a l'impression que ce n'est pas initialisé correctement — il
+  // est montré ON alors qu'il est dessiné OFF ».
+  //
+  // La règle ne valait que pour une PART : son style répondait donc `true` là où elle répondait
+  // `false`. Or les deux panneaux montrent le même réglage du même dessin — c'est la divergence
+  // qu'os#1501 avait fermée dans l'autre sens, rouverte ici par une branche oubliée.
+  return PART_NEUTRAL_DEFAULTS[key]
 }
