@@ -77,6 +77,18 @@ export interface Type_PartInput {
   path?: string[]
   /** Reste-t-il quelque chose à déplier sous cette part ? */
   has_children?: boolean
+  /**
+   * 25/09/2026 — LA NATURE DE CETTE PART, quand elle n'est pas celle de sa figure.
+   *
+   * Une figure peut porter des parts de deux sortes : les secteurs d'une couronne et SON CENTRE
+   * (cf. `centrePart.ts`). Le centre n'a pas d'arc, donc pas d'orientation radiale, et n'a aucune
+   * raison d'hériter du style « Part de couronne ». Lui donner sa nature répond aux deux, sans une
+   * ligne de plus : la portée par nature de figure (os#1483) et le semis par nature (os#1462) en
+   * tirent les conséquences seuls.
+   *
+   * Absente — le cas de toutes les autres — la part prend la nature de sa figure.
+   */
+  part_nature?: string
 }
 
 export interface Type_FigureParts {
@@ -167,22 +179,27 @@ export const buildParts = (
     //
     // Le style de part, et non le style par défaut, pour celles qu'on construit : c'est par lui
     // que passe « toutes les parts d'un coup ». Le constructeur empile le style par défaut dessous.
+    // LA NATURE DE CETTE PART : la sienne quand elle en déclare une (le centre d'une couronne), et
+    // celle de la figure sinon. Le style de nature suit : une part qui n'est pas de la nature de sa
+    // figure ne prend pas son étage — elle s'en tient au générique.
+    const own_nature = input.part_nature ?? figure_nature
+    const own_style = own_nature === figure_nature ? nature_style : undefined
     let part = reuse?.by_id[input.id]
     if (part === undefined) {
       part = new Class_PartElement(input.id, drawing_area, part_style)
       // os#1483 — la part sait de quelle FIGURE elle est une part (cf. `figure_nature`).
-      part.figure_nature = figure_nature
+      part.figure_nature = own_nature
       // Empilé APRÈS la construction, car un élément ne se construit qu'avec un style : la cascade
       // d'une part est donc `[défaut, générique, nature]`, dans cet ordre de priorité croissante.
-      if (nature_style !== undefined) part.addStyle(nature_style)
+      if (own_style !== undefined) part.addStyle(own_style)
     } else if (nature_changed) {
       // LA MÊME PART, UNE AUTRE FIGURE. Elle garde son identifiant, son sujet et ce que l'auteur a
       // posé en propre — un alias, une couleur : ce sont des réglages de CETTE part, et ils valent
       // pour un secteur comme pour une barre. Ce qui change est ce qui dit de quelle figure elle
       // est une part : sa nature, et l'étage de style qui va avec.
       if (former_nature_style_id !== undefined) part.removeStyleById(former_nature_style_id)
-      part.figure_nature = figure_nature
-      if (nature_style !== undefined) part.addStyle(nature_style)
+      part.figure_nature = own_nature
+      if (own_style !== undefined) part.addStyle(own_style)
     }
     // Le SUJET se relie à chaque fois : une part peut garder son identifiant en changeant ce
     // qu'elle désigne (un axe de comparaison qui bascule), et son nom en dépend.

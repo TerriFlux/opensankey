@@ -31,6 +31,9 @@ import {
 } from '../Charts/NodeStatsCharts'
 import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
+import {
+  FIGURE_CENTRE_NATURE, FIGURE_CENTRE_PART_ID, isFigureCentrePart
+} from './parts/centrePart'
 import type { Type_PartInput } from './parts/buildParts'
 // os#1479 — LA PORTE UNIQUE d'une figure à parts : le socle, les styles, le câblage et les gardes
 // viennent avec la déclaration (cf. `figureNature`).
@@ -285,6 +288,31 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
   }
 }
 
+/**
+ * 25/09/2026 — LA PART DU CENTRE, posée à la fin de la liste.
+ *
+ * Julien : « pour la couronne, il me semble que le centre peut aussi être considéré comme un
+ * élément, non ? » Cf. `centrePart.ts` pour l'arbitrage.
+ *
+ * SON SUJET EST LE TOUT (`kind: 'whole'`) : le centre écrit le nom de l'objet regardé et son total,
+ * là où un secteur en désigne un morceau. Le nom est celui que la figure porte déjà en titre de
+ * repli — le même mot que le fil d'Ariane de la fenêtre, pas un second vocabulaire.
+ *
+ * À LA FIN, et non au début : l'ordre de cette liste est l'ordre du TRACÉ (`Type_FigureParts`), et
+ * les secteurs se dessinent dans l'ordre reçu. Le centre y est un passager — le tracé le cherche
+ * par son identifiant, pas par son rang.
+ */
+const centrePartInput = (ctx: Type_RepresentationContext, total: number): Type_PartInput => {
+  const name = figureTitleFallback(ctx)
+  return {
+    id: FIGURE_CENTRE_PART_ID,
+    label: name,
+    value: total,
+    part_nature: FIGURE_CENTRE_NATURE,
+    subject: { kind: 'whole', whole: { id: FIGURE_CENTRE_PART_ID, name } }
+  }
+}
+
 const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | null => {
   const a = analysisOf(ctx)
   if (!a) return null
@@ -362,10 +390,26 @@ const chartOptions = (
     // Le centre d'une couronne écrit ce nom (`centre_content`), et le titre s'en sert en repli :
     // tous deux mentiraient en nommant le sujet pendant que l'anneau décompose son petit-fils. Le
     // sujet reste le sujet — c'est le périmètre REGARDÉ qui a changé, et c'est lui qu'on lit.
-    title_fallback: focusedNodeOf(ctx)?.name ?? (subject?.kind === 'node'
-      ? subject.node.name
-      : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : '')
+    title_fallback: figureTitleFallback(ctx)
   }
+}
+
+/**
+ * LE NOM DE CE QUE LA FIGURE MONTRE — le titre de repli, et le nom que le centre écrit.
+ *
+ * Sorti de `chartOptions` le 25/09/2026 : la PART DU CENTRE le porte aussi désormais
+ * (`centrePartInput`), et deux endroits qui calculent le même nom finiraient par en dire deux.
+ *
+ * 23/09/2026 — QUAND LA FIGURE EST DESCENDUE, ELLE NOMME CE QU'ELLE MONTRE. Le centre d'une
+ * couronne écrit ce nom, et le titre s'en sert en repli : tous deux mentiraient en nommant le sujet
+ * pendant que l'anneau décompose son petit-fils. Le sujet reste le sujet — c'est le périmètre
+ * REGARDÉ qui a changé, et c'est lui qu'on lit.
+ */
+const figureTitleFallback = (ctx: Type_RepresentationContext): string => {
+  const subject = chartSubjectOf(ctx.element)
+  return focusedNodeOf(ctx)?.name ?? (subject?.kind === 'node'
+    ? subject.node.name
+    : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : '')
 }
 
 /** Le nœud dans lequel la couronne est descendue, ou `null` si elle regarde son sujet. */
@@ -759,7 +803,14 @@ export const registerAnalysisRepresentations = (): void => {
     },
     style: (ctx) => donutStyleOf(ctx),
     part_context: analysisPartContext,
-    parts: (ctx) => analysisPartsOf(ctx),
+    // 25/09/2026 — LES SECTEURS, PLUS LE CENTRE. La couronne est la seule à en avoir un : les
+    // barres n'ont pas de trou, et le disque écrit son centre par un autre chemin.
+    parts: (ctx) => {
+      const sectors = analysisPartsOf(ctx)
+      if (sectors === null) return null
+      const total = sectors.reduce((sum, p) => sum + (p.value ?? 0), 0)
+      return [...sectors, centrePartInput(ctx, total)]
+    },
     draw: (container, parts, wiring, ctx) => {
       // 23/09/2026 — les deux gestes de la descente, quand la figure descend (cf.
       // `donutClickGestures`). Absents sous un seul cran : le clic ne fait que sélectionner, comme
@@ -837,17 +888,24 @@ export const registerAnalysisRepresentations = (): void => {
         return () => { teardown() }
       }
 
-      drawDonutChart(container, parts as unknown as Type_StatSlice[], {
-        ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
-        style,
-        part_aspect: wiring.part_aspect,
-        on_part_select: wiring.on_part_select,
-        on_part_activate: gestures.activate,
-        on_centre_click: gestures.back,
-        centre_back_label: t('sunburst.back') as string,
-        label_positions: wiring.label_positions,
-        on_label_move: wiring.on_label_move
-      })
+      // LE CENTRE N'EST PAS UN SECTEUR : il voyage dans la même liste (c'est ce qui lui donne un
+      // élément, une sélection et un inspecteur) mais il ne se découpe pas en arc. Le tracé va le
+      // chercher par son identifiant, dans l'aspect (`FIGURE_CENTRE_PART_ID`).
+      drawDonutChart(
+        container,
+        (parts as unknown as Type_StatSlice[]).filter(p => !isFigureCentrePart(p.id)),
+        {
+          ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
+          style,
+          part_aspect: wiring.part_aspect,
+          on_part_select: wiring.on_part_select,
+          on_part_activate: gestures.activate,
+          on_centre_click: gestures.back,
+          centre_back_label: t('sunburst.back') as string,
+          label_positions: wiring.label_positions,
+          on_label_move: wiring.on_label_move
+        }
+      )
       return () => { container.innerHTML = '' }
     }
   })

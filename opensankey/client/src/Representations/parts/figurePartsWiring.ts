@@ -38,6 +38,7 @@ import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_PartElement } from './PartElement'
 import type { Type_PartInput } from './buildParts'
 import { figurePartsFor, figurePartsOf } from './figurePartsRegistry'
+import { isFigureCentrePart } from './centrePart'
 import { partAspectResolver } from '../../Charts/partAspect'
 import { autoBarLabelAngle } from '../../Charts/NodeStatsCharts'
 import { partStyleFigureNature } from '../../Elements/figureNatureDefaults'
@@ -136,11 +137,26 @@ export const figurePartsWiring = (
   // la clé lui est d'ailleurs hors de portée (`NOT_ON_A_PART_FIGURE_ROUND`). `undefined` laisse
   // alors le panneau sur ce qu'il rendait — c'est-à-dire zéro, qui est bien ce qui est dessiné.
   const auto_label_angle = nature === 'bars' ? autoBarLabelAngle(inputs) : undefined
+  // 25/09/2026 — ET LE CENTRE A LE SIEN, DÉRIVÉ DE `centre_content`.
+  //
+  // La part du centre n'obéit pas à `name_label_is_visible` / `value_label_is_visible` de la
+  // figure — ce sont ceux des SECTEURS — mais à `centre_content`, qui dit en un mot ce que le trou
+  // montre. On lui stampe donc un style où ces deux clés portent la traduction de ce mot.
+  //
+  // RIEN DE NEUF SOUS LE CAPOT : c'est la règle générale du 25/09 (le réglage de la FIGURE est ce
+  // que la part annonce), à qui l'on donne le bon style pour cette part-là. Sans ça, le panneau du
+  // centre annoncerait la visibilité des secteurs devant un trou qui montre autre chose — le
+  // mensonge que le harnais du troisième sens vient de rendre impossible ailleurs.
+  const centre_style = {
+    ...base,
+    name_label_is_visible: base.centre_content === 'name' || base.centre_content === 'both',
+    value_label_is_visible: base.centre_content === 'value' || base.centre_content === 'both'
+  }
   Object.values(figure_parts.by_id).forEach(part => {
     const rec = part as unknown as { [k: string]: unknown }
     rec['figure_value_percent'] = base.value_label_percent
     rec['figure_name_label_angle'] = auto_label_angle
-    rec['figure_style'] = base
+    rec['figure_style'] = isFigureCentrePart(part.id) ? centre_style : base
   })
   // LE STYLE DE LA NATURE AUSSI : c'est l'autre panneau qui montre le même dessin — « régler toutes
   // les parts d'un coup » doit partir de ce que les parts font, sinon le premier geste déplace
