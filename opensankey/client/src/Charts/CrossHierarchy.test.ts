@@ -1,0 +1,160 @@
+// LA COURONNE CROISEE : un secteur est une CASE (produit, partenaire), sa valeur le flux entre les
+// deux, et la case s ouvre par l un ou l autre axe (os#1509).
+//
+// Julien, 25/09/2026 : « partir de Produits agricoles et diviser soit par pays soit par type de
+// cereales, car ces flux ne representent pas des niveaux de desagregation par pays ou par type ».
+//
+// Le decor : un sujet P decoupe en A et B (axe « prod »), des partenaires Monde > Europe (FR, BE) et
+// Asie (axe « geo »), et un flux pour CHAQUE paire de niveaux, comme dans le fichier SOCLE :
+//   Monde -> P 100 = Europe 70 + Asie 30 ; Europe = FR 40 + BE 30 ; P = A 60 + B 40, etc.
+
+import { Class_ApplicationData } from '../types/ApplicationData'
+import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
+import type { Type_JSON } from '../types/Utils'
+import type { Class_NodeElement } from '../Elements/Node'
+import { FOLLOWING_NAVIGATION } from './FigureNavigation'
+import {
+  buildCrossTree, crossExpansionEntry, crossFrontier, crossIsOffered
+} from './CrossHierarchy'
+import { analysisHierarchyTree, buildAnalysisChartData } from './AnalysisChartData'
+import type { Type_ChartSubject } from './AnalysisChartData'
+
+if (typeof globalThis.structuredClone !== 'function') {
+  globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
+}
+
+const CELLS: [string, string, number][] = [
+  ['Monde', 'P', 100], ['Monde', 'A', 60], ['Monde', 'B', 40],
+  ['Europe', 'P', 70], ['Europe', 'A', 45], ['Europe', 'B', 25],
+  ['Asie', 'P', 30], ['Asie', 'A', 15], ['Asie', 'B', 15],
+  ['FR', 'P', 40], ['FR', 'A', 30], ['FR', 'B', 10],
+  ['BE', 'P', 30], ['BE', 'A', 15], ['BE', 'B', 15]
+]
+const linkId = (q: string, p: string) => `${q}_${p}`
+
+const file = (): Type_JSON => {
+  const links: { [id: string]: unknown } = {}
+  CELLS.forEach(([q, p, v]) => {
+    links[linkId(q, p)] = { idLink: linkId(q, p), idSource: q, idTarget: p, value: { value: v } }
+  })
+  return {
+    version: '1.3.0',
+    format_version: CURRENT_FORMAT_VERSION,
+    nodes: {
+      P: { idNode: 'P', name: 'Produits', tags: { prod: ['tout'] } },
+      A: { idNode: 'A', name: 'A', tags: { prod: ['produit'] }, dimensions: { prod: { parent_name: 'P' } } },
+      B: { idNode: 'B', name: 'B', tags: { prod: ['produit'] }, dimensions: { prod: { parent_name: 'P' } } },
+      Monde: { idNode: 'Monde', name: 'Monde', tags: { geo: ['monde'] } },
+      Europe: { idNode: 'Europe', name: 'Europe', tags: { geo: ['region'] }, dimensions: { geo: { parent_name: 'Monde' } } },
+      Asie: { idNode: 'Asie', name: 'Asie', tags: { geo: ['region'] }, dimensions: { geo: { parent_name: 'Monde' } } },
+      FR: { idNode: 'FR', name: 'France', tags: { geo: ['pays'] }, dimensions: { geo: { parent_name: 'Europe' } } },
+      BE: { idNode: 'BE', name: 'Belgique', tags: { geo: ['pays'] }, dimensions: { geo: { parent_name: 'Europe' } } }
+    },
+    links,
+    levelTags: {
+      prod: {
+        group_name: 'Produits', banner: 'one', activated: true, siblings: [],
+        tags: { tout: { name: 'Tout', selected: true }, produit: { name: 'Produit', selected: false } }
+      },
+      geo: {
+        group_name: 'Partenaires', banner: 'one', activated: true, siblings: [],
+        tags: {
+          monde: { name: 'Monde', selected: true }, region: { name: 'Region', selected: false },
+          pays: { name: 'Pays', selected: false }
+        }
+      }
+    }
+  } as unknown as Type_JSON
+}
+
+const loadApp = () => {
+  const app = new Class_ApplicationData(false)
+  app.fromJSON(JSON.parse(JSON.stringify(file())) as never, {}, false)
+  app.drawing_area.bypass_redraws = true
+  return app
+}
+const nodeOf = (app: Class_ApplicationData, id: string) =>
+  app.drawing_area.sankey.nodes_dict[id] as Class_NodeElement
+
+const spec = (first: 'self' | 'other') => ({ kind: 'flux_cross' as const, side: 'inputs' as const, first })
+
+const childIds = (children: { id: string }[]) => children.map(c => c.id)
+const valuesOf = (children: { id: string, value: number }[]) =>
+  Object.fromEntries(children.map(c => [c.id, c.value]))
+
+describe('la couronne croisee', () => {
+
+  test('le croisement est offert du cote ou les noeuds d en face portent une hierarchie', () => {
+    const app = loadApp()
+    expect(crossIsOffered(nodeOf(app, 'P'), 'inputs')).toBe(true)
+    expect(crossIsOffered(nodeOf(app, 'P'), 'outputs')).toBe(false)
+  })
+
+  test('la racine est la case (sujet, sommet d en face), et le premier anneau suit l axe choisi', () => {
+    const app = loadApp()
+    const by_other = buildCrossTree(nodeOf(app, 'P'), spec('other'))
+    expect(by_other).not.toBeNull()
+    const root = by_other!.tree.roots[0]
+    expect(by_other!.tree.roots).toHaveLength(1)
+    expect(root.id).toBe(linkId('Monde', 'P'))
+    expect(root.value).toBe(100)
+    // Par les noeuds d en face : Monde devient Europe et Asie.
+    expect(valuesOf(root.children)).toEqual({ [linkId('Europe', 'P')]: 70, [linkId('Asie', 'P')]: 30 })
+    expect(root.children.map(c => c.label)).toEqual(['Europe', 'Asie'])
+
+    // Par le sujet : Produits devient A et B, Monde reste.
+    const by_self = buildCrossTree(nodeOf(app, 'P'), spec('self'))!
+    expect(valuesOf(by_self.tree.roots[0].children)).toEqual({ [linkId('Monde', 'A')]: 60, [linkId('Monde', 'B')]: 40 })
+  })
+
+  test('une case ouverte descend par l axe de la figure, une case fermee reste une feuille', () => {
+    const app = loadApp()
+    const opened = new Set([linkId('Europe', 'P')])
+    const cross = buildCrossTree(nodeOf(app, 'P'), spec('other'), FOLLOWING_NAVIGATION, opened)!
+    const root = cross.tree.roots[0]
+    const europe = root.children.find(c => c.id === linkId('Europe', 'P'))!
+    const asie = root.children.find(c => c.id === linkId('Asie', 'P'))!
+    expect(valuesOf(europe.children)).toEqual({ [linkId('FR', 'P')]: 40, [linkId('BE', 'P')]: 30 })
+    expect(asie.children).toEqual([])
+    // Asie n a plus d enfant en face mais le sujet en a : elle peut encore s ouvrir.
+    expect(cross.expandable.has(asie.id)).toBe(true)
+    // La frontiere a plat : FR, BE et Asie, qui somment au sujet.
+    const frontier = crossFrontier(cross)
+    expect(frontier.map(p => p.id).sort()).toEqual([linkId('Asie', 'P'), linkId('BE', 'P'), linkId('FR', 'P')].sort())
+    expect(frontier.reduce((s, p) => s + p.value, 0)).toBe(100)
+    expect(frontier.find(p => p.id === linkId('FR', 'P'))!.path).toEqual([linkId('Monde', 'P'), linkId('Europe', 'P'), linkId('FR', 'P')])
+  })
+
+  test('l entree precise l axe : Europe ouverte par le sujet donne A et B en Europe', () => {
+    const app = loadApp()
+    const opened = new Set([crossExpansionEntry(linkId('Europe', 'P'), 'self')])
+    const cross = buildCrossTree(nodeOf(app, 'P'), spec('other'), FOLLOWING_NAVIGATION, opened)!
+    const europe = cross.tree.roots[0].children.find(c => c.id === linkId('Europe', 'P'))!
+    expect(valuesOf(europe.children)).toEqual({ [linkId('Europe', 'A')]: 45, [linkId('Europe', 'B')]: 25 })
+  })
+
+  test('quand le premier axe n a plus d enfants, l autre prend le relais', () => {
+    const app = loadApp()
+    // France n a pas d enfant en face : la case (P, France) s ouvre par les produits.
+    const opened = new Set([linkId('Europe', 'P'), linkId('FR', 'P')])
+    const cross = buildCrossTree(nodeOf(app, 'P'), spec('other'), FOLLOWING_NAVIGATION, opened)!
+    const europe = cross.tree.roots[0].children.find(c => c.id === linkId('Europe', 'P'))!
+    const fr = europe.children.find(c => c.id === linkId('FR', 'P'))!
+    expect(valuesOf(fr.children)).toEqual({ [linkId('FR', 'A')]: 30, [linkId('FR', 'B')]: 10 })
+    // (A, France) n a plus rien a ouvrir d aucun cote.
+    expect(cross.expandable.has(linkId('FR', 'A'))).toBe(false)
+    expect(childIds(fr.children)).toHaveLength(2)
+    expect(cross.tree.mismatch_count).toBe(0)
+  })
+
+  test('la couronne lit le croisement par ses deux chemins, arbre et frontiere', () => {
+    const app = loadApp()
+    const subject = { kind: 'node', node: nodeOf(app, 'P') } as unknown as Type_ChartSubject
+    const descriptor = { decompose: spec('other'), compare: null }
+    const tree = analysisHierarchyTree(subject, descriptor)
+    expect(tree?.roots[0].id).toBe(linkId('Monde', 'P'))
+    const parts = buildAnalysisChartData(subject, descriptor, FOLLOWING_NAVIGATION, {}, new Set()).series[0]?.parts ?? []
+    expect(parts.map(p => p.id).sort()).toEqual([linkId('Asie', 'P'), linkId('Europe', 'P')].sort())
+    expect(parts.every(p => p.has_children === true)).toBe(true)
+  })
+})

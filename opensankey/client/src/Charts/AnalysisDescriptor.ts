@@ -50,6 +50,11 @@ export type Type_DecomposeSpec =
     focus_id?: string
   }
   | { kind: 'flux_children', dimension_id: string }
+  // os#1509 — LE CROISEMENT (sujet nœud) : une part est une CASE (sujet ou descendant, nœud d'en
+  // face ou descendant), sa valeur le flux entre les deux, et elle s'ouvre par l'un ou l'autre
+  // axe (cf. Charts/CrossHierarchy). `first` : l'axe qui ouvre — la hiérarchie du sujet ('self')
+  // ou celle des nœuds d'en face ('other') —, l'autre prenant le relais.
+  | { kind: 'flux_cross', side: 'inputs' | 'outputs', first: 'self' | 'other' }
 
 // Axe non-additif : la valeur du sujet pour chaque tag d'un groupe de data tags,
 // OU (#389) pour chacun des flux entrants / sortants d'un nœud — une barre par
@@ -192,6 +197,8 @@ export const decomposedPartKind = (
   }
   if (spec.kind === 'node_children') return 'node'
   if (spec.kind === 'flux_children') return 'link'
+  // Une case du croisement EST un flux du document (os#1509).
+  if (spec.kind === 'flux_cross') return 'link'
   return null
 }
 

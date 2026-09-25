@@ -146,7 +146,7 @@ export interface Type_ChartOptions {
    * déplie le diagramme ou qu'on descend dans la figure, et c'est la nature qui le sait.
    */
   on_part_activate?: (
-    part_id: string, gesture: { shift: boolean },
+    part_id: string, gesture: { shift: boolean, alt?: boolean },
     // LA ROUTE DESSINÉE jusqu'à la part (`Type_StatSlice.path`), quand elle en a une : c'est elle
     // que l'hôte déplie, et pas seulement son dernier cran. Le tracé la rend telle qu'il l'a
     // reçue — il ne la calcule pas, il ne connaît pas la hiérarchie.
@@ -611,7 +611,9 @@ export const drawDonutChart = (
     // l'inspecteur ait eu le temps de la montrer.
     paths.on('click', (evt: MouseEvent, d) => {
       opts.on_part_select?.(d.data.id)
-      opts.on_part_activate?.(d.data.id, { shift: evt.shiftKey === true }, d.data.path)
+      opts.on_part_activate?.(
+        d.data.id, { shift: evt.shiftKey === true, alt: evt.altKey === true }, d.data.path
+      )
     })
   }
   if (st.interaction_tooltip) paths.append('title').text(slice_title)
