@@ -177,7 +177,22 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   name_label_italic: false,
   name_label_uppercase: false,
   name_label_color: '',
-  name_label_box_width: 0,
+  // 25/09/2026 — UNE COURONNE COUPE SES NOMS SUR LA LARGEUR, et c'est un arbitrage de Julien :
+  // « le défaut pour le libellé, il faut que ce soit horizontale avec un retour à la ligne
+  // (utiliser la largeur) ; le truc en diagonale c'est trop moche. »
+  //
+  // À zéro — le défaut d'hier — il n'y a pas de boîte, donc aucune coupure : un nom long sortait de
+  // son secteur en une seule ligne. Le tracé sait pourtant couper depuis toujours (`sector_lines`
+  // appelle `wrapLabelToBox`) ; il ne lui manquait qu'une largeur.
+  //
+  // 150 px, et le nombre n'est pas neutre : c'est celui que le catalogue des éléments porte déjà et
+  // que le panneau affichait — le dessin rejoint donc ce que l'écran annonçait, plutôt que
+  // l'inverse.
+  //
+  // ⚠️ LES BARRES LE REMETTENT À ZÉRO plus bas, et délibérément : un histogramme désencombre son
+  // abscisse en INCLINANT (`autoBarLabelAngle`, os#1505), pas en coupant. Deux mécanismes pour le
+  // même but se gêneraient, et Julien n'a parlé que de la couronne.
+  name_label_box_width: 150,
   name_label_separator: '',
   name_label_separator_part: 'after',
   name_label_prune_if_unfitting: false,
@@ -207,6 +222,9 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   centre_content: 'none',
   centre_hole: 0,
   name_label_font_size: 10,
+  // L'abscisse d'un histogramme se désencombre en INCLINANT, pas en coupant (cf. la largeur de la
+  // couronne, ci-dessus) : les deux ensemble donneraient des étiquettes courtes ET couchées.
+  name_label_box_width: 0,
   value_label_is_visible: true,
   value_label_percent: 'none'
 }
