@@ -74,6 +74,10 @@ import { ZOOM_TOPIC } from '../types/EventBus'
 import { readSunburstStyle, SUNBURST_ZOOM } from './SunburstRepresentation'
 import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
+import {
+  crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf
+} from '../Charts/CrossHierarchy'
+import type { Type_CrossAxis, Type_CrossSpec } from '../Charts/CrossHierarchy'
 
 /**
  * Sujet d'analyse d'un élément PRÉSENTABLE. La pop-up de présentation s'ouvre pour
@@ -487,9 +491,15 @@ const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle =>
  */
 const hierarchyInEffect = (
   ctx: Type_RepresentationContext
-): { dimension_id: string, path: string[], expanded: Set<string> } | null => {
+): { dimension_id: string, path: string[], expanded: Set<string>, cross?: Type_CrossSpec } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
-  if (!decompose || decompose.kind !== 'node_children') return null
+  if (!decompose) return null
+  // os#1509 — le croisement descend aussi : mêmes anneaux, même palette, même ensemble ouvert.
+  // Il n'a pas d'axe unique (il en enchaîne deux) ni de foyer.
+  if (decompose.kind === 'flux_cross') {
+    return { dimension_id: '', path: [], expanded: expandedOf(ctx.options), cross: decompose }
+  }
+  if (decompose.kind !== 'node_children') return null
   return {
     dimension_id: decompose.dimension_id,
     path: hierarchyPathOf(ctx.options),
@@ -595,6 +605,51 @@ const donutClickGestures = (
       window_id as string, pane_key as string,
       { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...ids] } as unknown as Type_JSON
     )
+  }
+
+  // ── os#1509 — LE CROISEMENT : ouvrir et refermer des CASES, et rien d'autre ──────────────────
+  //
+  // Une case est un flux du document, pas un nœud : le diagramme n'a rien à déplier pour elle, et
+  // la figure ne descend pas dedans. Reste le geste de base — un clic ouvre par l'axe de la
+  // figure, alt+clic par l'AUTRE axe (c'est ce qui permet « Céréales → Europe → Belgique → blé »),
+  // shift+clic referme la case, ou le parent par lequel on la voit, avec tout ce qu'ils portaient.
+  if (hierarchy.cross) {
+    const cross = hierarchy.cross
+    const cellBelow = (below_id: string, ancestor_id: string): boolean => {
+      const below = sankey.links_dict[below_id] as Class_LinkElement | undefined
+      const ancestor = sankey.links_dict[ancestor_id] as Class_LinkElement | undefined
+      if (!below || !ancestor || below === ancestor) return false
+      const b = crossEnds(below, cross.side)
+      const a = crossEnds(ancestor, cross.side)
+      const under = (n: Class_NodeElement, over: Class_NodeElement) => n === over || isBelow(sankey, n.id, over.id)
+      return under(b.p, a.p) && under(b.q, a.q)
+    }
+    const activate = (part_id: string, gesture: { shift: boolean, alt?: boolean }, route: string[] = []) => {
+      if (!in_pane || !sankey.links_dict[part_id]) return
+      const next = new Set(hierarchy.expanded)
+      if (gesture.shift) {
+        const drawn_parent = route.length >= 2 ? route[route.length - 2] : undefined
+        const target = crossExpansionOf(next, part_id).open
+          ? part_id
+          : (drawn_parent !== undefined && crossExpansionOf(next, drawn_parent).open ? drawn_parent : undefined)
+        if (target !== undefined) {
+          crossExpansionEntriesOf(target).forEach(e => next.delete(e))
+          ;[...next]
+            .filter(e => cellBelow(crossEntryLinkId(e), target))
+            .forEach(e => next.delete(e))
+        }
+      } else {
+        const axis: Type_CrossAxis | undefined = gesture.alt
+          ? (cross.first === 'self' ? 'other' : 'self')
+          : undefined
+        crossExpansionEntriesOf(part_id).forEach(e => next.delete(e))
+        next.add(crossExpansionEntry(part_id, axis))
+      }
+      if (next.size !== hierarchy.expanded.size || [...next].some(e => !hierarchy.expanded.has(e))) {
+        writeExpanded(next)
+      }
+    }
+    return { activate }
   }
 
   const activate = (

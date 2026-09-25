@@ -54,18 +54,21 @@ import {
  * même espace de noms : un groupe d'étiquettes et une dimension peuvent porter le même id, et
  * « les flux sortants » n'a pas d'id du tout.
  */
-export type Type_CoordFieldKind = 'data_tagg' | 'flows' | 'dimension'
+export type Type_CoordFieldKind = 'data_tagg' | 'flows' | 'dimension' | 'cross'
 
 export type Type_CoordField =
   | { kind: 'data_tagg', id: string, name: string }
   | { kind: 'flows', side: 'inputs' | 'outputs', name: string }
   | { kind: 'dimension', id: string, name: string }
+  // os#1509 — le CROISEMENT des flux d'un côté avec la hiérarchie des nœuds d'en face.
+  | { kind: 'cross', side: 'inputs' | 'outputs', name: string }
 
 export const coordFieldKey = (field: Type_CoordField): string => {
   switch (field.kind) {
   case 'data_tagg': return `dt:${field.id}`
   case 'flows': return `flows:${field.side}`
   case 'dimension': return `dim:${field.id}`
+  case 'cross': return `cross:${field.side}`
   }
 }
 
@@ -74,6 +77,7 @@ export const coordFieldKindOf = (key: string): Type_CoordFieldKind | null => {
   if (key.startsWith('dt:')) return 'data_tagg'
   if (key.startsWith('flows:')) return 'flows'
   if (key.startsWith('dim:')) return 'dimension'
+  if (key.startsWith('cross:')) return 'cross'
   return null
 }
 
@@ -100,7 +104,8 @@ const idOf = (key: string): string => key.slice(key.indexOf(':') + 1)
  */
 export type Type_CoordState =
   | { mode: 'fixed', value_id: string }
-  | { mode: 'parts', group_by_flux_tagg_id?: string }
+  // `cross_first` : sur un croisement, l'axe qui ouvre (os#1509) ; absent = les nœuds d'en face.
+  | { mode: 'parts', group_by_flux_tagg_id?: string, cross_first?: 'self' | 'other' }
   | { mode: 'series', rank: 1 | 2 }
 
 export type Type_FigureCoordinates = { [field_key: string]: Type_CoordState }
@@ -127,6 +132,8 @@ const decomposeEntry = (spec: Type_DecomposeSpec): [string, Type_CoordState] => 
   case 'node_children':
   case 'flux_children':
     return [`dim:${spec.dimension_id}`, { mode: 'parts' }]
+  case 'flux_cross':
+    return [`cross:${spec.side}`, { mode: 'parts', cross_first: spec.first }]
   }
 }
 
@@ -189,6 +196,12 @@ const decomposeSpecOf = (
     return subject_kind === 'node'
       ? { kind: 'node_children', dimension_id: id }
       : { kind: 'flux_children', dimension_id: id }
+  // os#1509 — le croisement n'a de sens que sous un nœud : c'est SES flux qu'on croise.
+  case 'cross': {
+    if (subject_kind !== 'node' || (id !== 'inputs' && id !== 'outputs')) return null
+    const first = state.mode === 'parts' && state.cross_first ? state.cross_first : 'other'
+    return { kind: 'flux_cross', side: id, first }
+  }
   // Un groupe d'étiquettes de données ne décompose RIEN : deux années ne font pas un tout. Le cas
   // n'arrive pas par la surface (`setCoordState` l'interdit), il est tenu ici aussi parce qu'un sac
   // peut venir d'ailleurs.

@@ -410,7 +410,8 @@ export interface Type_SunburstChartOptions {
   // historique (la nature « Sunburst ») l'ignore et ne change pas de comportement.
   on_arc_click?: (
     node_id: string, is_disaggregated: boolean, dimension_id: string, path: string[],
-    gesture?: { shift: boolean }
+    // os#1509 — `alt` : ouvrir par l'AUTRE axe, sur une couronne croisée. Rapporté, pas interprété.
+    gesture?: { shift: boolean, alt?: boolean }
   ) => void
   /**
    * 24/09/2026 — LA PALETTE DES BRANCHES, quand l'appelant en impose une.
@@ -1406,7 +1407,8 @@ export const drawSunburstChart = (
           // reste juste — elle repart simplement d'un cran plus bas.
           const ancestry = centre_node ? [centre_node.id, ...d.path] : [...d.path]
           opts.on_arc_click?.(
-            d.id, d.is_disaggregated, d.dimension_id, ancestry, { shift: evt.shiftKey === true }
+            d.id, d.is_disaggregated, d.dimension_id, ancestry,
+            { shift: evt.shiftKey === true, alt: evt.altKey === true }
           )
         }
         if (st.click_action !== 'aggregate' && d.children_count > 0) {
