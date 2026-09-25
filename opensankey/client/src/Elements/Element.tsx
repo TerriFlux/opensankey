@@ -454,6 +454,10 @@ export abstract class Class_BaseElement {
     /* TODO définir  */
   }
 }
+// Les accesseurs d'attributs sont posés sur le prototype au premier élément construit
+// (cf. `createDynamicProperties`).
+let dynamic_properties_on_prototype = false
+
 export abstract class Class_ProtoElement extends Class_BaseElement {
 
   protected _clickTimer: NodeJS.Timeout | null = null
@@ -542,11 +546,28 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     /* no-op par défaut */
   }
 
+  // Les accesseurs dynamiques sont les MÊMES pour tous les éléments (`_config` vaut
+  // ALL_ATTRIBUTES_CONFIG pour chacun) : ils sont installés UNE fois sur le prototype de
+  // Class_ProtoElement, pas sur chaque instance. Mesuré sur SOCLE pays partenaires (34 000 flux) :
+  // ~150 `defineProperty` et deux fermetures par attribut et par flux pesaient plusieurs secondes
+  // de construction, et autant de ramasse-miettes. Le comportement est inchangé : `this` est
+  // l'instance dans chaque accesseur, comme avant.
   protected createDynamicProperties() {
-    (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
+    if (this._config !== ALL_ATTRIBUTES_CONFIG) {
+      // Configuration propre à cet élément : accesseurs d'instance, comme avant.
+      Class_ProtoElement._defineDynamicProperties(this, this._config)
+      return
+    }
+    if (dynamic_properties_on_prototype) return
+    dynamic_properties_on_prototype = true
+    Class_ProtoElement._defineDynamicProperties(Class_ProtoElement.prototype, this._config)
+  }
+
+  private static _defineDynamicProperties(target: object, config: ConfigType) {
+    (Object.keys(config) as Array<keyof ConfigType>).forEach(key => {
       const is_translatable = TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string)
-      Object.defineProperty(this, key, {
-        get: () => {
+      Object.defineProperty(target, key, {
+        get: function (this: Class_ProtoElement) {
           const raw = this.getElementProperty(key as keyof ConfigType)
           // OS#1299 — texte traduisible : une map { langue -> texte } est résolue
           // pour la langue active (les strings historiques passent telles quelles).
@@ -555,7 +576,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
           }
           return raw
         },
-        set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
+        set: function (this: Class_ProtoElement, value: ExtractAttributeValue<ConfigType[typeof key]>) {
           const attribute = this._config[key]
           let store_value: unknown = value
 
@@ -574,8 +595,10 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
             store_value = map
           }
 
+          // Méthodes nommées par la configuration (setter, callback, actions), lues sur l'instance.
+          const self = this as unknown as Record<string, unknown>
           if (attribute.setter) {
-            const setter = this[attribute.setter as keyof this]
+            const setter = self[attribute.setter]
             if (typeof setter === 'function') {
               setter.call(this, store_value)
             }
@@ -584,14 +607,14 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
           }
 
           if (attribute.callback) {
-            const callback = this[attribute.callback as keyof this]
+            const callback = self[attribute.callback]
             if (typeof callback === 'function') {
               callback.call(this)
             }
           }
           if (attribute.actions && !this._suspend_actions) {
             attribute.actions.forEach(action => {
-              const actionMethod = this[action as keyof this]
+              const actionMethod = self[action]
               if (typeof actionMethod === 'function') {
                 actionMethod.call(this)
               }
@@ -610,8 +633,14 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   public set attributes(_) {
     this._storage = _
   }
-  public getStyleWithAttr(k: keyof ConfigType) {
-    return this._style.slice().reverse().find(s => s[k as keyof Class_ElementStyle] !== undefined) ?? this._style[0]
+  public getStyleWithAttr(k: keyof Class_ElementStyle | keyof ConfigType) {
+    // Parcours du dernier style au premier, sans recopier la liste : cette lecture est sur le
+    // chemin de chaque attribut résolu par le style, donc des millions de fois par dessin.
+    const styles = this._style
+    for (let i = styles.length - 1; i >= 0; i--) {
+      if (styles[i][k as keyof Class_ElementStyle] !== undefined) return styles[i]
+    }
+    return styles[0]
   }
 
   public getStylesWithAttr(k: keyof ConfigType) {

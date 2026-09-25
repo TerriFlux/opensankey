@@ -63,7 +63,7 @@ import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
-import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
+import { dedupeZOrderKeepFirst } from './zOrder'
 import { beginDrawPass, endDrawPass } from './DrawCounters'
 import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
@@ -95,13 +95,6 @@ import {
 } from '../Persistence/SankeyPersistence'
 
 
-
-function sortElementByIdOrder(
-  el_a: Class_NodeBase | Class_LinkElement,
-  el_b: Class_NodeBase | Class_LinkElement,
-  list: string[]) {
-  return compareZOrder(el_a.id, el_b.id, list)
-}
 
 /**
  * Board unitaire : hauteur écran VISÉE du nœud central, en fraction de la hauteur de la
@@ -3559,10 +3552,18 @@ export class Class_DrawingArea {
     if (list_element_id.length !== this._list_g_element_id.length)
       this._list_g_element_id = list_element_id
 
+    // Rang de chaque id calculé UNE fois (liste inversée : l'index 0 de `list_element_id` est au
+    // premier plan). Le comparateur d'avant recopiait et inversait la liste, puis faisait deux
+    // `indexOf`, À CHAQUE comparaison : sur SOCLE pays partenaires (34 000 ids), ce tri seul
+    // coûtait 4,5 s par dessin. Même sémantique : un id absent (rang -1) passe en premier.
+    const rank = new Map<string, number>()
+    const n = list_element_id.length
+    list_element_id.forEach((id, i) => rank.set(id, n - 1 - i))
+    const rankOf = (el: { id: string }) => rank.get(el.id) ?? -1
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
       //@ts-expect-error xxx
-      ?.sort((a, b) => { return sortElementByIdOrder(a, b, [...list_element_id].reverse()) })
+      ?.sort((a, b) => rankOf(a) - rankOf(b))
       .order()
   }
 

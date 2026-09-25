@@ -219,7 +219,12 @@ export class Class_Workspace {
           loading: {
             title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
             description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
-            duration: default_toast_duration
+            duration: default_toast_duration,
+            // Un « out of memory » de Firefox n'est PAS rattrapable : la tâche ne se règle
+            // jamais, ni en succès ni en échec, et le voile « Chargement… » restait à l'écran
+            // pour toujours (SOCLE pays partenaires, 34 000 flux). L'utilisateur peut au moins
+            // le refermer.
+            isClosable: true
           },
           // La raison du rejet était JETÉE : l'utilisateur voyait un titre
           // générique, la console ne montrait rien, et un échec survenu sur une

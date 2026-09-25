@@ -138,7 +138,22 @@ class Class_LabelResizeHandler extends Class_Handler {
 export abstract class DrawLabelBase {
   protected _element: Class_BaseShape
   protected readonly prefix: LabelPrefix
-  protected _label_values!: NameLabelAttributeTypes | ValueLabelAttributeTypes
+  // Vue des attributs du libellé, construite au PREMIER dessin et non à la construction :
+  // chaque flux porte trois dessinateurs de libellés, et bâtir leurs vues à la création des
+  // 34 000 flux de SOCLE pays partenaires pesait près de 2 s de chargement pour rien tant que
+  // le dessin est court-circuité (bypass_redraws).
+  private _label_values_cache: NameLabelAttributeTypes | ValueLabelAttributeTypes | undefined = undefined
+  protected get _label_values(): NameLabelAttributeTypes | ValueLabelAttributeTypes {
+    if (this._label_values_cache === undefined) {
+      this._label_values_cache = this.prefix === 'name_label'
+        ? getNameLabelValues(this._element as Class_LinkElement | Class_NodeBase, 'name_label')
+        : getValueLabelValues(this._element as Class_LinkElement | Class_NodeBase, this.prefix as 'value_label' | 'icon')
+    }
+    return this._label_values_cache
+  }
+  protected set _label_values(values: NameLabelAttributeTypes | ValueLabelAttributeTypes) {
+    this._label_values_cache = values
+  }
 
   // Flags de configuration
   protected enableEditing: boolean = false
@@ -1925,14 +1940,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
 
   constructor(node: Class_NodeBase, prefix: LabelPrefix) {
     super(node, prefix)
-
-    if (prefix === 'name_label') {
-      this._label_values = getNameLabelValues(this.node, prefix)
-    } else if (prefix === 'value_label') {
-      this._label_values = getValueLabelValues(this.node, prefix)
-    } else {
-      this._label_values = getValueLabelValues(this.node, prefix)
-    }
+    // `_label_values` est construit paresseusement par la classe de base.
   }
 
   protected override verticalText(tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
@@ -2457,8 +2465,6 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       is_dragged: boolean
     }
   }
-  private _specific_label_values: LinkLabelSpecificValues
-
   protected get link(): Class_LinkElement {
     return this._element as Class_LinkElement
   }
@@ -2469,17 +2475,20 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     prefix: LabelPrefix
   ) {
     super(link, prefix)
-    this._specific_label_values = getLinkLabelSpecificValue(link, prefix)
     this._link_control_points = link_control_points
     this._link_control_points_internal = {
       controlPoints: link_control_points.createInternalAccess().controlPoints()
     }
     this.displayPrefix = prefix === 'name_label' ? 'name' : 'value'
-    if (prefix === 'name_label') {
-      this._label_values = getNameLabelValues(this.link, prefix)
-    } else {
-      this._label_values = getValueLabelValues(this.link, prefix)
+    // `_label_values` et `_specific_label_values` sont construits paresseusement.
+  }
+
+  private _specific_label_values_cache: LinkLabelSpecificValues | undefined = undefined
+  private get _specific_label_values(): LinkLabelSpecificValues {
+    if (this._specific_label_values_cache === undefined) {
+      this._specific_label_values_cache = getLinkLabelSpecificValue(this.link, this.prefix)
     }
+    return this._specific_label_values_cache
   }
 
   /**
