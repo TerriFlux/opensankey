@@ -2954,34 +2954,54 @@ function sustainableForDrawing(element: unknown, fullKey: string, raw: unknown):
   return owner.tagStyleLayerImposing(fullKey.slice(0, -'_sustainable'.length)) !== undefined ? true : raw
 }
 
+// Les objets « facette » (valeurs d'un préfixe, ex. `name_label_*`) sont des VUES vivantes sur
+// l'élément : chaque accesseur relit l'attribut. Ils ne dépendent que du triplet
+// (élément, configuration, préfixe), donc la même instance sert à tous les appels — les
+// reconstruire à chaque lecture (une trentaine de `defineProperty` par appel, appelé à chaque
+// dessin de libellé, de forme et de formatage de valeur) pesait ~3 s sur SOCLE pays partenaires.
+const facet_cache = new WeakMap<object, WeakMap<object, Map<string, unknown>>>()
+function memoFacet<R>(element: object, config: object, prefix: string, build: () => R): R {
+  let by_config = facet_cache.get(element)
+  if (!by_config) { by_config = new WeakMap(); facet_cache.set(element, by_config) }
+  let by_prefix = by_config.get(config)
+  if (!by_prefix) { by_prefix = new Map(); by_config.set(config, by_prefix) }
+  const hit = by_prefix.get(prefix)
+  if (hit !== undefined) return hit as R
+  const built = build()
+  by_prefix.set(prefix, built)
+  return built
+}
+
 export function getShapeValue<T extends typeof BASE_SHAPE_CONFIG>(
   element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: ShapePrefix,
   config: T
 ) {
-  const result = {} as ShapeValues<T>
+  return memoFacet(element, config, prefix, () => {
+    const result = {} as ShapeValues<T>
 
-  // Créer des getters/setters pour chaque propriété
-  for (const key in config) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      const fullKey = `${prefix}_${key}`
+    // Créer des getters/setters pour chaque propriété
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        const fullKey = `${prefix}_${key}`
 
-      Object.defineProperty(result, key, {
-        get: () => {
+        Object.defineProperty(result, key, {
+          get: () => {
           //@ts-expect-error xxx
-          const raw = Reflect.get(element, fullKey) ?? config[key].default
-          return sustainableForDrawing(element, fullKey, raw)
-        },
-        set: (value: boolean | number | string) => {
-          Reflect.set(element, fullKey, value)
-        },
-        enumerable: true,
-        configurable: true
-      })
+            const raw = Reflect.get(element, fullKey) ?? config[key].default
+            return sustainableForDrawing(element, fullKey, raw)
+          },
+          set: (value: boolean | number | string) => {
+            Reflect.set(element, fullKey, value)
+          },
+          enumerable: true,
+          configurable: true
+        })
+      }
     }
-  }
 
-  return result
+    return result
+  })
 }
 
 export function getLabelValues<T extends typeof BASE_LABEL_CONFIG>(
@@ -2989,87 +3009,93 @@ export function getLabelValues<T extends typeof BASE_LABEL_CONFIG>(
   prefix: 'name_label' | 'value_label',
   config: T
 ): LabelValues<T> {
-  const result = {} as LabelValues<T>
+  return memoFacet(element, config, prefix, () => {
+    const result = {} as LabelValues<T>
 
-  // Créer des getters/setters pour chaque propriété
-  for (const key in config) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      const fullKey = `${prefix}_${key}`
+    // Créer des getters/setters pour chaque propriété
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        const fullKey = `${prefix}_${key}`
 
-      Object.defineProperty(result, key, {
-        get: () => {
+        Object.defineProperty(result, key, {
+          get: () => {
           //@ts-expect-error xxx
-          const raw = Reflect.get(element, fullKey) ?? config[key].default
-          return sustainableForDrawing(element, fullKey, raw)
-        },
-        set: (value: number | boolean | string) => {
-          Reflect.set(element, fullKey, value)
-        },
-        enumerable: true,
-        configurable: true
-      })
+            const raw = Reflect.get(element, fullKey) ?? config[key].default
+            return sustainableForDrawing(element, fullKey, raw)
+          },
+          set: (value: number | boolean | string) => {
+            Reflect.set(element, fullKey, value)
+          },
+          enumerable: true,
+          configurable: true
+        })
+      }
     }
-  }
 
-  return result
+    return result
+  })
 }
 
 export function getValueLabelValues(
   element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: 'name_label' | 'value_label' | 'icon'
 ) {
-  const result = {} as ValueLabelAttributeTypes
   const config = VALUE_LABEL_CONFIG
-  // Créer des getters/setters pour chaque propriété
-  for (const key in config) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      const fullKey = `${prefix}_${key}`
+  return memoFacet(element, config, 'value|' + prefix, () => {
+    const result = {} as ValueLabelAttributeTypes
+    // Créer des getters/setters pour chaque propriété
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        const fullKey = `${prefix}_${key}`
 
-      Object.defineProperty(result, key, {
-        get: () => {
+        Object.defineProperty(result, key, {
+          get: () => {
           //@ts-expect-error xxx
-          const raw = Reflect.get(element, fullKey) ?? config[key].default
-          return sustainableForDrawing(element, fullKey, raw)
-        },
-        set: (value: number | string | boolean) => {
-          Reflect.set(element, fullKey, value)
-        },
-        enumerable: true,
-        configurable: true
-      })
+            const raw = Reflect.get(element, fullKey) ?? config[key].default
+            return sustainableForDrawing(element, fullKey, raw)
+          },
+          set: (value: number | string | boolean) => {
+            Reflect.set(element, fullKey, value)
+          },
+          enumerable: true,
+          configurable: true
+        })
+      }
     }
-  }
 
-  return result
+    return result
+  })
 }
 
 export function getNameLabelValues(
   element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: 'name_label' | 'value_label' | 'stock_label'
 ) {
-  const result = {} as NameLabelAttributeTypes
   const config = VALUE_LABEL_CONFIG
-  // Créer des getters/setters pour chaque propriété
-  for (const key in config) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      const fullKey = `${prefix}_${key}`
+  return memoFacet(element, config, 'name|' + prefix, () => {
+    const result = {} as NameLabelAttributeTypes
+    // Créer des getters/setters pour chaque propriété
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        const fullKey = `${prefix}_${key}`
 
-      Object.defineProperty(result, key, {
-        get: () => {
+        Object.defineProperty(result, key, {
+          get: () => {
           //@ts-expect-error xxx
-          const raw = Reflect.get(element, fullKey) ?? config[key].default
-          return sustainableForDrawing(element, fullKey, raw)
-        },
-        set: (value: boolean | number | string) => {
-          Reflect.set(element, fullKey, value)
-        },
-        enumerable: true,
-        configurable: true
-      })
+            const raw = Reflect.get(element, fullKey) ?? config[key].default
+            return sustainableForDrawing(element, fullKey, raw)
+          },
+          set: (value: boolean | number | string) => {
+            Reflect.set(element, fullKey, value)
+          },
+          enumerable: true,
+          configurable: true
+        })
+      }
     }
-  }
 
-  return result
+    return result
+  })
 }
 /**
  * Extrait les valeurs des attributs de shape spécifiques aux nodes

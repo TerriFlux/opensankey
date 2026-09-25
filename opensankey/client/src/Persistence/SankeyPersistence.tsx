@@ -233,8 +233,11 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     proto_element['_style'].forEach(style => style.addReference(proto_element))
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
-      (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
-        if (json_local_object[key as string] !== undefined) {
+      // Parcours des clés PRÉSENTES dans `local` (une dizaine), pas des ~150 attributs de la
+      // configuration : sur 34 000 flux, la boucle inverse pesait près d'une seconde au chargement.
+      const config = proto_element['_config'] as Record<string, unknown>
+      (Object.keys(json_local_object) as Array<keyof ConfigType>).forEach(key => {
+        if (config[key as string] !== undefined && json_local_object[key as string] !== undefined) {
           let value = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
           // OS#1299 — texte traduisible : accepte la string historique (rangée
           // sous la langue déclarée du fichier) ou la map { langue -> texte }.
