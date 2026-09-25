@@ -37,7 +37,7 @@
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_PartElement } from './PartElement'
 import type { Type_PartInput } from './buildParts'
-import { figurePartsFor } from './figurePartsRegistry'
+import { figurePartsFor, figurePartsOf } from './figurePartsRegistry'
 import { partAspectResolver } from '../../Charts/partAspect'
 import { autoBarLabelAngle } from '../../Charts/NodeStatsCharts'
 import { partStyleFigureNature } from '../../Elements/figureNatureDefaults'
@@ -102,7 +102,12 @@ export const figurePartsWiring = (
 
   // (1) LES PARTS, ET QUI LES GARDE. Le dépôt par (fenêtre, vignette) est ce qui fait qu'un réglage
   // posé sur une part survit au redessin que provoque le geste suivant.
+  //
+  // 25/09/2026 — LA NATURE D'AVANT, LUE AVANT DE LA REMPLACER. Cf. le rappel de l'inspecteur plus
+  // bas : c'est le seul endroit où l'on sache encore que la figure vient de changer de sorte.
+  const former_nature = figurePartsOf(window_id, pane_key)?.nature
   const figure_parts = figurePartsFor(window_id, pane_key, app_data, inputs, nature)
+  const nature_changed = former_nature !== undefined && former_nature !== figure_parts.nature
 
   // ── os#1503 — CE QUE LA FIGURE ÉCRIT À LA PLACE DE SA VALEUR, STAMPÉ SUR CHAQUE PART ─────────
   //
@@ -167,6 +172,25 @@ export const figurePartsWiring = (
       window_id as string, pane_key as string, figure_parts.document
     )
   }
+
+  // ── 25/09/2026 — ET SI LA FIGURE VIENT DE CHANGER DE SORTE, ON RAPPELLE L'INSPECTEUR ─────────
+  //
+  // Julien, deux fois : « si je passe par Couronne et si je sélectionne Barres dans le sélecteur de
+  // la fenêtre, ça ne met pas à jour l'inspecteur. »
+  //
+  // LE MAILLON QUI MANQUAIT, et il manquait POUR UNE BONNE RAISON. `setMainZoneWindowRepresentation`
+  // n'émet que `MAIN_ZONE_TOPIC` ; l'inspecteur s'y re-rend AUSSITÔT, c'est-à-dire AVANT que
+  // l'effet de la vignette n'ait redessiné quoi que ce soit. À ce rendu-là, la représentation
+  // active est déjà la neuve mais les parts portent encore l'ancienne nature : il montre donc
+  // fidèlement la couronne. Le rendu d'après devrait lever la contradiction — sauf qu'il n'arrive
+  // jamais, et c'est le prix d'os#1453 : le document de parts est délibérément LE MÊME objet d'une
+  // figure à l'autre, donc `Workspace.refreshActive` n'y voit aucun changement d'actif et
+  // n'annonce rien.
+  //
+  // On le dit donc nous-mêmes, ici, exactement comme le clic sur une part le fait déjà plus bas.
+  // C'est le seul endroit qui sache les deux choses à la fois : que la nature a changé, et que les
+  // parts sont désormais à jour.
+  if (nature_changed) app_data.menu_configuration.updateInspector()
 
   // LES ÉTIQUETTES SORTIES, DÉPOSÉES À LA MAIN. La position s'écrit sur LA FIGURE de la vignette.
   // Hors fenêtre — la pop-up de présentation —, il n'y a personne à qui l'écrire et le geste reste
