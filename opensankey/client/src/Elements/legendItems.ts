@@ -848,8 +848,11 @@ export function layoutLegendItems(
       }
       positions.push({ id: item.id, x, y })
       if (item.group_title) {
-        // Titre d'un groupe développé : à gauche de ses entrées, sur leur ligne.
-        x += estimateTextWidth(item.text, police) + 14
+        // Titre d'un groupe développé : à gauche de ses entrées, sur leur ligne. Le titre est en
+        // GRAS (glyphes ~10 % plus larges que l'estimation en romain), et l'écart qui le sépare de
+        // sa première entrée suit la police : un écart fixe en px monde disparaît en police
+        // verrouillée dès que le zoom baisse (CARTOFOB à 16 % : titre collé à l'entrée).
+        x += estimateTextWidth(item.text, police) * 1.1 + 0.6 * police
       } else if (item.own_line) {
         // Lignes d'info, échelle, groupes épinglés : seuls sur leur ligne, seules
         // les entrées de tag s'enchaînent horizontalement.
