@@ -2592,6 +2592,37 @@ export const STOCK_LABEL_CONFIG = {
       ja: 'ノードが細すぎてボックスが収まらない場合、重ねずにノードの上／下へ移動します'
     }
   } satisfies AttributeConfig<boolean>,
+
+  // Réduire pour tenir dans le nœud. En police verrouillée (CARTOFOB), l'encombrement de la
+  // boite en coordonnées diagramme vaut police / zoom : sur un petit écran le zoom
+  // d'ajustement baisse, la boite grandit et déborde du nœud en LARGEUR — `pos_auto` ne
+  // garde que la hauteur. Quand la boite est intérieure, on réduit la police jusqu'à ce
+  // qu'elle tienne, à chaque dessin, donc à chaque taille d'écran. Défaut vrai : une boite
+  // qui tenait déjà ne change pas, une boite qui débordait rentre.
+  shrink_to_fit: {
+    default: true,
+    type: (() => true) as (() => boolean),
+    category: 'stock_label' as const,
+    actions: ['drawStockBox'] as BaseActionType[],
+    labels: {
+      en: 'Shrink to fit the node',
+      fr: 'Réduire pour tenir dans le nœud',
+      es: 'Reducir para caber en el nodo',
+      de: 'Verkleinern, um in den Knoten zu passen',
+      it: 'Ridurre per stare nel nodo',
+      'zh-CN': '缩小以适应节点',
+      ja: 'ノードに収まるよう縮小'
+    },
+    tooltips: {
+      en: 'When the box sits inside the node, shrink its font until it fits the node width and height. Re-evaluated at every draw, so it follows the screen size when the font size is locked.',
+      fr: 'Quand la boite est à l\'intérieur du nœud, réduire sa police jusqu\'à ce qu\'elle tienne dans sa largeur et sa hauteur. Réévalué à chaque dessin : suit la taille d\'écran en police verrouillée.',
+      es: 'Cuando la caja está dentro del nodo, reducir su fuente hasta que quepa en su ancho y alto. Se reevalúa en cada dibujo, por lo que sigue el tamaño de pantalla con la fuente bloqueada.',
+      de: 'Liegt der Kasten im Knoten, wird seine Schrift verkleinert, bis sie in Breite und Höhe passt. Bei jedem Zeichnen neu bewertet, folgt also bei gesperrter Schriftgröße der Bildschirmgröße.',
+      it: 'Quando il riquadro è dentro il nodo, ridurre il carattere finché non sta in larghezza e altezza. Rivalutato a ogni disegno: segue la dimensione dello schermo con carattere bloccato.',
+      'zh-CN': '当文本框位于节点内部时，缩小字体直到适应节点的宽度和高度。每次绘制时重新计算，因此在锁定字号时会随屏幕尺寸变化。',
+      ja: 'ボックスがノード内にある場合、幅と高さに収まるまでフォントを縮小します。描画のたびに再計算されるため、フォントサイズ固定時は画面サイズに追従します。'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const VALUE_LABEL_CONFIG = {

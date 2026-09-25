@@ -54,6 +54,7 @@ import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
 import { clampBandThickness } from './nodeBandHeight'
+import { stockBoxFittedFontSize } from './stockBoxFit'
 import { countArrowFan } from '../types/DrawCounters'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
@@ -574,11 +575,12 @@ export class Class_NodeElement extends Class_NodeBase {
     }
     if (lines.length === 0) return
 
-    // Font size honoured as set (no auto-shrink). Lines are simply stacked and
-    // the box auto-sizes to the content (no wrap / box_width for now).
-    const fontSize = baseFontSize * k_inv
-    const lineH = fontSize + 3
-    const boxH = lines.length * lineH + padding * 2
+    // Font size honoured as set. Lines are simply stacked and the box auto-sizes
+    // to the content (no wrap / box_width for now). Only `shrink_to_fit` (below)
+    // may lower the font, and only when the box sits inside the node.
+    let fontSize = baseFontSize * k_inv
+    let lineH = fontSize + 3
+    let boxH = lines.length * lineH + padding * 2
 
     const g = this.d3_selection?.append('g').classed('stock_box', true)
     const content = g?.append('g')
@@ -599,7 +601,40 @@ export class Class_NodeElement extends Class_NodeBase {
       const w = t?.node()?.getBBox().width ?? 0
       if (w > maxW) maxW = w
     })
-    const boxW = maxW + 2 * padding
+    let boxW = maxW + 2 * padding
+
+    // Réduire pour tenir dans le nœud (stock_label_shrink_to_fit, cf. stockBoxFit).
+    // Une boite « intérieure » l'est par inside_* ou par un centrage (middle). Si
+    // pos_auto la repousse déjà hors du nœud, elle est libre : rien à réduire.
+    const inside_h = horiz === 'middle' || insideH
+    const inside_v = vert === 'middle' || insideV
+    const pushed_out = this.stock_label_pos_auto && boxH > nodeH
+    if (this.stock_label_shrink_to_fit && !pushed_out && (inside_h || inside_v)) {
+      const fitted = stockBoxFittedFontSize({
+        font_size: fontSize,
+        line_gap: 3,
+        nb_lines: lines.length,
+        text_width: maxW,
+        avail_width: nodeW - 2 * margin - 2 * padding,
+        avail_height: nodeH - 2 * margin - 2 * padding,
+        inside_h,
+        inside_v
+      })
+      if (fitted < fontSize) {
+        fontSize = fitted
+        lineH = fontSize + 3
+        boxH = lines.length * lineH + padding * 2
+        maxW = 0
+        content?.selectAll<SVGTextElement, unknown>('text')
+          .attr('font-size', fontSize)
+          .attr('y', (_d, i) => padding + (i + 1) * lineH - 2)
+          .each(function () {
+            const w = this.getBBox().width
+            if (w > maxW) maxW = w
+          })
+        boxW = maxW + 2 * padding
+      }
+    }
 
     // Box placement relative to the node (horiz / vert), same rules as before.
     let boxX = 0
