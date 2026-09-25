@@ -547,12 +547,21 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * les mêmes valeurs que `Class_NodeElement.drawLinksArrow` lit pour placer l'apex
    * (`bandTransversePos`), donc deux pointes d'ancres identiques ont la même géométrie.
    */
+  //
+  // Lue sur le NŒUD (`getInputLinkEndingPoint` / `getOutputLinkStartingPoint`, posés par
+  // `updateLinksPositions`), pas sur la copie que ce flux en garde : `_draw` ne recopie cette
+  // copie qu'au dessin du flux, donc un éventail calculé pour un nœud avant le dessin de ses
+  // autres flux se stampait avec leur ancre PÉRIMÉE, et chacun de ces flux, en se dessinant,
+  // voyait une ancre « nouvelle » et redemandait l'éventail entier. Mesuré : un éventail par
+  // flux (2 616 pour 2 616 flux sur SOCLE Toutes filières), soit le défaut qu'os#1374 corrigeait.
   private _targetAnchorKey(): string {
-    return this.position_x_end + '|' + this.position_y_end
+    const p = this.target?.getInputLinkEndingPoint(this)
+    return p ? p.x + '|' + p.y : this.position_x_end + '|' + this.position_y_end
   }
 
   private _sourceAnchorKey(): string {
-    return this.position_x_start + '|' + this.position_y_start
+    const p = this.source?.getOutputLinkStartingPoint(this)
+    return p ? p.x + '|' + p.y : this.position_x_start + '|' + this.position_y_start
   }
 
   /**

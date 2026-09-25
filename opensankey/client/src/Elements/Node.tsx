@@ -1198,13 +1198,15 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public getLinksOrdered(_: Type_Side) {
-    const doublon: Class_LinkElement[] = []
+    // Garde anti-doublon en Set, pas en tableau : `includes` sur le tableau rendait la
+    // fonction quadratique en nombre de flux du nœud. Mesuré sur SOCLE pays partenaires
+    // (nœuds à plusieurs centaines de flux) : 12 s des 34 s de dessin passaient ici.
+    const doublon = new Set<Class_LinkElement>()
     return this._links_order.filter(link => {
-      const check = !doublon.includes(link) &&
-        ((link.target === this && link.target_side === _) ||
-          (link.source === this && link.source_side === _))
-      doublon.push(link)
-      return (check)
+      if (doublon.has(link)) return false
+      doublon.add(link)
+      return (link.target === this && link.target_side === _) ||
+        (link.source === this && link.source_side === _)
     })
   }
 
@@ -1516,8 +1518,12 @@ export class Class_NodeElement extends Class_NodeBase {
         // opensankey#1301 — axe par extrémité (routé → suit source_side).
         is_horizontal_at_anchor: link.is_source_horizontal
       }))
+    // Rang de chaque flux lu UNE fois : `indexOf` dans le comparateur parcourait
+    // `_links_order` à chaque comparaison, soit K·k·log k par éventail sur un nœud à K flux.
+    const rank = new Map<Class_LinkElement, number>()
+    this._links_order.forEach((link, i) => rank.set(link, i))
     const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
-      .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
+      .sort((a, b) => (rank.get(a.link) ?? -1) - (rank.get(b.link) ?? -1))
 
     const node_height = this.getShapeHeightToUse()
     const node_width = this.getShapeWidthToUse()
