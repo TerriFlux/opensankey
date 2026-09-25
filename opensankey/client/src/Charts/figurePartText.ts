@@ -55,7 +55,19 @@ export const applyPartTextStyle = (
   text: d3.Selection<SVGTextElement, unknown, null, undefined>,
   aspect: Type_FigurePartTextAspect | undefined,
   defaults: Type_FigureTextDefaults
-): void => {
+): string => {
+  // 25/09/2026 — ET IL REND L'ENCRE QU'IL VIENT D'APPLIQUER.
+  //
+  // Le panneau montrait du NOIR — la valeur d'usine d'un nœud — devant un texte blanc ou coloré,
+  // parce que le style d'une figure porte `*_color` à la chaîne vide, qui veut dire « le tracé
+  // décide ». Le harnais du troisième sens comptait ces clés parmi les menteuses.
+  //
+  // ⚠️ C'EST LE TRACÉ QUI SAIT, ET LUI SEUL : l'encre dépend du rang dans la palette, de la
+  // branche, du fond à contraster, et de l'endroit où le texte se pose (dedans ou au bout d'un
+  // trait de rappel). La recalculer ailleurs serait une seconde vérité, qui dériverait — c'est la
+  // leçon de tout ce chantier. On RAPPORTE donc ce qui a été appliqué, à l'endroit même où il
+  // l'est : par construction, les deux ne peuvent plus différer.
+  const ink = aspect?.color || defaults.color
   text
     .attr('font-size', aspect?.font_size ?? defaults.font_size)
     // `null` RETIRE l'attribut chez d3 : un texte muet reste donc exactement comme hier — sans
@@ -63,8 +75,9 @@ export const applyPartTextStyle = (
     .attr('font-family', (aspect?.font_family ?? defaults.font_family) || null)
     .attr('font-weight', (aspect?.bold ?? defaults.bold) ? 'bold' : null)
     .attr('font-style', (aspect?.italic ?? defaults.italic) ? 'italic' : null)
-    .attr('fill', aspect?.color || defaults.color)
+    .attr('fill', ink)
   drawFigureLabelBackground(text, aspect)
+  return ink
 }
 
 /**

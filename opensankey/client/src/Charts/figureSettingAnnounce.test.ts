@@ -90,6 +90,21 @@ const stampe = (figure: Type_FigureParts, style: object): void => {
   })
 }
 
+/**
+ * ET CE QUE LE TRACE RAPPORTE, pose par-dessus — comme `figurePartsWiring.on_parts_resolved`.
+ *
+ * Sans lui la sonde mesurerait un monde ou le trace ne dit rien de ses propres decisions, et
+ * declarerait menteuses les cles d encre que ce rapport repare. Le harnais doit voir ce que
+ * l ecran voit.
+ */
+const rapporte = (figure: Type_FigureParts, style: object) =>
+  (resolved: { [id: string]: object }): void => {
+    Object.entries(resolved).forEach(([id, patch]) => {
+      const part = figure.by_id[id] as unknown as { [k: string]: unknown } | undefined
+      if (part) part['figure_style'] = { ...style, ...patch }
+    })
+  }
+
 const sondes = () => {
   const donut = figureDe('donut')
   const bars = figureDe('bars')
@@ -103,14 +118,16 @@ const sondes = () => {
       nature: 'couronne',
       parts: donut.by_id,
       draw: (c: HTMLElement) => drawDonutChart(c, PARTS, {
-        style: donut_style as never, part_aspect: resolveur(donut, donut_style)
+        style: donut_style as never, part_aspect: resolveur(donut, donut_style),
+        on_parts_resolved: rapporte(donut, donut_style) as never
       })
     },
     {
       nature: 'barres',
       parts: bars.by_id,
       draw: (c: HTMLElement) => drawBarChart(c, PARTS, {
-        style: bars_style as never, part_aspect: resolveur(bars, bars_style)
+        style: bars_style as never, part_aspect: resolveur(bars, bars_style),
+        on_parts_resolved: rapporte(bars, bars_style) as never
       })
     },
     {

@@ -899,6 +899,9 @@ export const registerAnalysisRepresentations = (): void => {
           style,
           part_aspect: wiring.part_aspect,
           on_part_select: wiring.on_part_select,
+          // 25/09/2026 — ET LE TRACÉ DIT CE QU'IL A DÉCIDÉ : c'est par là que le panneau apprend
+          // l'encre réelle d'un secteur et de son étiquette (cf. `on_parts_resolved`).
+          on_parts_resolved: wiring.on_parts_resolved,
           on_part_activate: gestures.activate,
           on_centre_click: gestures.back,
           centre_back_label: t('sunburst.back') as string,
@@ -953,6 +956,7 @@ export const registerAnalysisRepresentations = (): void => {
         ...opts,
         part_aspect: wiring.part_aspect,
         on_part_select: wiring.on_part_select,
+        on_parts_resolved: wiring.on_parts_resolved,
         label_positions: wiring.label_positions,
         on_label_move: wiring.on_label_move
       })

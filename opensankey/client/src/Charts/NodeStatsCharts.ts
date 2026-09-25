@@ -172,6 +172,30 @@ export interface Type_ChartOptions {
   label_positions?: { [part_id: string]: { x: number, y: number } }
   /** L'auteur vient de déposer une étiquette : à l'appelant de retenir où. */
   on_label_move?: (part_id: string, position: { x: number, y: number }) => void
+  /**
+   * 25/09/2026 — CE QUE LE TRACÉ VIENT DE DÉCIDER, PART PAR PART.
+   *
+   * Appelé UNE FOIS, à la fin du dessin, avec les couleurs réellement appliquées. C'est le canal
+   * qui manquait pour que le panneau dise vrai sur l'encre : le style d'une figure porte `*_color`
+   * à la chaîne vide — « le tracé décide » — et l'inspecteur retombait sur le noir d'un nœud
+   * pendant qu'un secteur était bleu et son étiquette blanche.
+   *
+   * ⚠️ LE TRACÉ EST LE SEUL À SAVOIR. La teinte dépend du rang dans la palette APRÈS tri et
+   * élagage (`kept`), de la branche, du fond à contraster, et de l'endroit où le texte se pose.
+   * Recalculer tout cela côté câblage serait une seconde vérité, qui dériverait au premier réglage
+   * ajouté d'un seul côté. On rapporte donc, on ne redevine pas.
+   */
+  on_parts_resolved?: (resolved: { [part_id: string]: Type_FigurePartResolved }) => void
+}
+
+/** Ce qu'un tracé a réellement appliqué à une part, et que le panneau doit annoncer. */
+export interface Type_FigurePartResolved {
+  /** La couleur de la forme : modèle, palette, ou surcharge de la part. */
+  shape_color?: string
+  /** L'encre du nom, telle qu'elle a été écrite (contraste et repli compris). */
+  name_label_color?: string
+  /** L'encre de la valeur, idem. */
+  value_label_color?: string
 }
 
 /**
@@ -460,6 +484,12 @@ export const drawDonutChart = (
     const base = paletteColor(branch_order.get(d.branch_id) ?? i)
     return st.parts_depth_shading ? shadeForDepth(base, d.depth ?? 0, 'light') : base
   }
+  // CE QUE LE TRACÉ AURA DÉCIDÉ, ramassé au fil du dessin (cf. `on_parts_resolved`).
+  const resolved: { [part_id: string]: Type_FigurePartResolved } = {}
+  const noted = (id: string, patch: Type_FigurePartResolved) => {
+    resolved[id] = { ...resolved[id], ...patch }
+  }
+  kept.forEach((d, i) => noted(d.id, { shape_color: opts.part_aspect?.(d.id)?.fill ?? colorOf(d, i) }))
 
   // Mise en page : svg carré d'un côté, légende HTML scrollable de l'autre (ou dessous).
   const legend_shown = st.legend_visible && st.legend_parts !== 'none'
@@ -830,12 +860,11 @@ export const drawDonutChart = (
         // valeur. Rien de dit, rien de posé (`null` retire l'attribut chez d3) : une couronne
         // enregistrée garde le texte d'hier, au pixel.
         const av = aspectOf(d.data.id)?.value
-        tspans.filter(line => line.is_value)
+        const value_spans = tspans.filter(line => line.is_value)
           .attr('font-size', av?.font_size ?? null)
           .attr('font-family', av?.font_family ?? null)
           .attr('font-weight', av?.bold === undefined ? null : (av.bold ? 'bold' : 'normal'))
           .attr('font-style', av?.italic === undefined ? null : (av.italic ? 'italic' : 'normal'))
-          .attr('fill', av?.color ?? null)
         // os#1469 — LE STYLE ET LE CARTOUCHE, par le module commun, et APRÈS le texte : le
         // cartouche se mesure sur ce qui est écrit.
         //
@@ -844,13 +873,23 @@ export const drawDonutChart = (
         // deux polices — contrairement à une barre, dont le nom vit sous l'axe et le nombre
         // au-dessus. Ce n'est pas un oubli : les séparer demanderait deux textes, donc deux
         // placements, dans un creux d'arc qui n'en a pas la place.
-        applyPartTextStyle(text, aspectOf(d.data.id)?.name, {
+        const ink = applyPartTextStyle(text, aspectOf(d.data.id)?.name, {
           font_size: styleOf(d).name_label_font_size,
           font_family: styleOf(d).name_label_font_family,
           bold: styleOf(d).name_label_bold,
           italic: styleOf(d).name_label_italic,
           color: styleOf(d).name_label_color || 'white'
         })
+        // 25/09/2026 — L'ENCRE DE LA VALEUR EST POSEE EXPLICITEMENT, et non laissee a l heritage.
+        //
+        // Elle vaut la meme chose qu'avant — celle du bloc, faute de mieux — mais ECRITE. La
+        // difference n'est pas cosmetique : tant qu'elle etait absente, ecrire dans le panneau la
+        // couleur qu'il affichait AJOUTAIT un attribut, donc changeait le dessin, et le harnais du
+        // troisieme sens comptait la cle menteuse a juste titre. Une valeur annoncee doit pouvoir
+        // etre reecrite sans rien deplacer.
+        const value_ink = av?.color ?? ink
+        value_spans.attr('fill', value_ink)
+        noted(d.data.id, { name_label_color: ink, value_label_color: value_ink })
       })
   }
 
@@ -882,12 +921,16 @@ export const drawDonutChart = (
           { x: cx, y: cy + (named ? size * 0.9 : 0), anchor: 'middle', rotate: false }, a)
         const text = d3.select(this)
         text.attr('x', at.x).attr('y', at.y).attr('text-anchor', at.anchor)
-        applyPartTextStyle(text, a, {
-          font_size: styleOf(d).name_label_font_size,
-          font_family: styleOf(d).name_label_font_family,
-          bold: styleOf(d).name_label_bold,
-          italic: styleOf(d).name_label_italic,
-          color: styleOf(d).name_label_color || 'white'
+        // LE NOMBRE DÉTACHÉ A SA PROPRE ENCRE : c'est tout l'intérêt du détachement, et le panneau
+        // doit donc annoncer CELLE-LÀ pour la valeur, pas celle du bloc collé.
+        noted(d.data.id, {
+          value_label_color: applyPartTextStyle(text, a, {
+            font_size: styleOf(d).name_label_font_size,
+            font_family: styleOf(d).name_label_font_family,
+            bold: styleOf(d).name_label_bold,
+            italic: styleOf(d).name_label_italic,
+            color: styleOf(d).name_label_color || 'white'
+          })
         })
       })
   }
@@ -970,13 +1013,16 @@ export const drawDonutChart = (
       // os#1480 — LA TYPOGRAPHIE PASSE PAR LE MODULE COMMUN, comme les étiquettes de l'anneau
       // (os#1476 l'avait fait pour le disque, ce site-ci était resté en ligne).
     texts.each(function (d) {
-      applyPartTextStyle(d3.select(this), aspectOf(d.data.id)?.name, {
+      // SORTIE, L'ÉTIQUETTE A UN AUTRE REPLI D'ENCRE (`calloutInk`) : c'est celle-là qu'il faut
+      // annoncer pour une part qui sort la sienne, et non le blanc de l'intérieur du secteur.
+      const ink = applyPartTextStyle(d3.select(this), aspectOf(d.data.id)?.name, {
         font_size: styleOf(d).name_label_font_size,
         font_family: styleOf(d).name_label_font_family,
         bold: styleOf(d).name_label_bold,
         italic: styleOf(d).name_label_italic,
         color: calloutInk(aspectOf(d.data.id)?.name, colorOf(d.data, d.index), styleOf(d))
       })
+      noted(d.data.id, { name_label_color: ink, value_label_color: ink })
       const lines = sector_lines(d)
       const dy0 = -(lines.length - 1) * 0.55
       d3.select(this).selectAll('tspan')
@@ -1097,6 +1143,10 @@ export const drawDonutChart = (
   }
 
   // Légende HTML : puce colorée + libellé + part ; survol → mise en avant du secteur.
+  // CE QUE LE TRACÉ A DÉCIDÉ, RAPPORTÉ UNE FOIS — ici, et non à la toute fin : la suite ne dessine
+  // que la légende, qui ne peint aucune part, et le corps sort plus bas par un retour anticipé.
+  opts.on_parts_resolved?.(resolved)
+
   if (!legend_shown) return
   // 24/09/2026 — DESSOUS, LA LÉGENDE EST UN BANDEAU, PAS UNE COLONNE COUCHÉE.
   //
@@ -1249,6 +1299,14 @@ export const drawBarChart = (
   const bar_title = (d: Type_StatSlice) => `${d.label}\n${fmt(d.value)}`
   const colorOf = (d: Type_StatSlice, i: number) =>
     (st.parts_color_source === 'model' && d.color) ? d.color : paletteColor(i)
+  // CE QUE LE TRACÉ AURA DÉCIDÉ, ramassé au fil du dessin (cf. `on_parts_resolved`).
+  const resolved: { [part_id: string]: Type_FigurePartResolved } = {}
+  const noted = (id: string, patch: Type_FigurePartResolved) => {
+    resolved[id] = { ...resolved[id], ...patch }
+  }
+  slices.forEach((d, i) => noted(d.id, {
+    shape_color: opts.part_aspect?.(d.id)?.fill ?? colorOf(d, i)
+  }))
   // Hauteur DESSINÉE : celle de l'échelle, relevée au plancher de visibilité (#393).
   const barPx = (v: number) => {
     const px = h - y(v)
@@ -1453,12 +1511,14 @@ export const drawBarChart = (
         text.attr('x', at.x).attr('y', at.y).attr('text-anchor', at.anchor)
         // A l interieur d une barre, l encre par defaut est CLAIRE : le fond y est la couleur de la
         // part, et l ardoise des valeurs ecrites au-dessus s y perdrait.
-        applyPartTextStyle(text, a, {
-          font_size: styleOf(d).name_label_font_size,
-          font_family: styleOf(d).name_label_font_family,
-          bold: styleOf(d).name_label_bold,
-          italic: styleOf(d).name_label_italic,
-          color: styleOf(d).name_label_color || (inside ? 'white' : '#2D3748')
+        noted(d.id, {
+          value_label_color: applyPartTextStyle(text, a, {
+            font_size: styleOf(d).name_label_font_size,
+            font_family: styleOf(d).name_label_font_family,
+            bold: styleOf(d).name_label_bold,
+            italic: styleOf(d).name_label_italic,
+            color: styleOf(d).name_label_color || (inside ? 'white' : '#2D3748')
+          })
         })
       })
   }
@@ -1610,13 +1670,15 @@ export const drawBarChart = (
         // os#1469 — LE STYLE ET LE CARTOUCHE, par le module commun, et AVANT l'info-bulle :
         // `title` n'est pas dessiné, mais il compte dans la boîte de certains moteurs, et un
         // cartouche mesuré dessus serait trop grand.
-        applyPartTextStyle(text, aspectOf(d.id)?.name, {
-          font_size: styleOf(d).name_label_font_size,
-          font_family: styleOf(d).name_label_font_family,
-          bold: styleOf(d).name_label_bold,
-          italic: styleOf(d).name_label_italic,
-          color: styleOf(d).name_label_color
-            || (aspectOf(d.id)?.name?.inside === true ? 'white' : '#4A5568')
+        noted(d.id, {
+          name_label_color: applyPartTextStyle(text, aspectOf(d.id)?.name, {
+            font_size: styleOf(d).name_label_font_size,
+            font_family: styleOf(d).name_label_font_family,
+            bold: styleOf(d).name_label_bold,
+            italic: styleOf(d).name_label_italic,
+            color: styleOf(d).name_label_color
+              || (aspectOf(d.id)?.name?.inside === true ? 'white' : '#4A5568')
+          })
         })
         text.append('title').text(bar_title(d))
       })
@@ -1662,12 +1724,14 @@ export const drawBarChart = (
       .attr('dominant-baseline', 'central')
     texts.each(function (d, i) {
       // os#1480 — par le module commun, comme la couronne et le disque.
-      applyPartTextStyle(d3.select(this), aspectOf(d.id)?.name, {
-        font_size: styleOf(d).name_label_font_size,
-        font_family: styleOf(d).name_label_font_family,
-        bold: styleOf(d).name_label_bold,
-        italic: styleOf(d).name_label_italic,
-        color: calloutInk(aspectOf(d.id)?.name, colorOf(d, i), styleOf(d))
+      noted(d.id, {
+        name_label_color: applyPartTextStyle(d3.select(this), aspectOf(d.id)?.name, {
+          font_size: styleOf(d).name_label_font_size,
+          font_family: styleOf(d).name_label_font_family,
+          bold: styleOf(d).name_label_bold,
+          italic: styleOf(d).name_label_italic,
+          color: calloutInk(aspectOf(d.id)?.name, colorOf(d, i), styleOf(d))
+        })
       })
       const lines = barNameLines(d)
       const p = positionOf(d)
@@ -1703,6 +1767,9 @@ export const drawBarChart = (
       .attr('font-size', 9).attr('font-style', 'italic').attr('fill', '#718096')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
+
+  // CE QUE LE TRACÉ A DÉCIDÉ, RAPPORTÉ UNE FOIS (cf. `on_parts_resolved`).
+  opts.on_parts_resolved?.(resolved)
 }
 
 // ==================================================================================================
