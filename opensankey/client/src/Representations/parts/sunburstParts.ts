@@ -36,6 +36,9 @@ import type { Type_NamedSubject, Type_PartSubject } from './PartSubject'
  */
 export interface Type_SunburstPartsSource {
   nodes_dict: { [node_id: string]: Type_NamedSubject }
+  // os#1509 — une couronne CROISÉE désigne des FLUX : ses secteurs portent l'id d'un flux du
+  // document, et c'est ici qu'on le retrouve quand aucun nœud ne porte cet id.
+  links_dict?: { [link_id: string]: Type_NamedSubject }
 }
 
 /** Le suffixe que `buildSunburstTree` donne au secteur de complément (mode « valeur propre »). */
@@ -57,11 +60,13 @@ export const sunburstPartSubject = (
   // suffixe, et un arbre relu d'un enregistrement porte le suffixe sans forcément le drapeau.
   if (sector.is_residual === true || sector.id.endsWith(SUNBURST_RESIDUAL_SUFFIX)) return NO_SUBJECT
   const node = source.nodes_dict[sector.id]
-  // Introuvable : aucune référence inventée. Cf. l'en-tête.
-  if (node === undefined) return NO_SUBJECT
   // Le nœud LUI-MÊME, pas une copie de son nom : la part suit ce que le document dit, et un
   // renommage ailleurs change ce qu'elle affiche tant qu'elle ne porte pas d'alias.
-  return { kind: 'node', node }
+  if (node !== undefined) return { kind: 'node', node }
+  const link = source.links_dict?.[sector.id]
+  if (link !== undefined) return { kind: 'flux', link }
+  // Introuvable : aucune référence inventée. Cf. l'en-tête.
+  return NO_SUBJECT
 }
 
 /**
