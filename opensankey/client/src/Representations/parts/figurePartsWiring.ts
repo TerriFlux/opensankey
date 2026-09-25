@@ -140,6 +140,7 @@ export const figurePartsWiring = (
     const rec = part as unknown as { [k: string]: unknown }
     rec['figure_value_percent'] = base.value_label_percent
     rec['figure_name_label_angle'] = auto_label_angle
+    rec['figure_style'] = base
   })
   // LE STYLE DE LA NATURE AUSSI : c'est l'autre panneau qui montre le même dessin — « régler toutes
   // les parts d'un coup » doit partir de ce que les parts font, sinon le premier geste déplace
@@ -155,6 +156,7 @@ export const figurePartsWiring = (
     const rec = style as unknown as { [k: string]: unknown }
     rec['figure_value_percent'] = base.value_label_percent
     rec['figure_name_label_angle'] = auto_label_angle
+    rec['figure_style'] = base
   })
 
   // (2) LA FIGURE EST UN DOCUMENT, ET C'EST CE QUI OUVRE L'INSPECTEUR D'ÉLÉMENT.
