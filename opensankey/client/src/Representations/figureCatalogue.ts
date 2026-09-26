@@ -232,36 +232,6 @@ export const PARTS_CONFIG = {
     it: 'Zero ripiega solo ciò che non si vede affatto. Una parte ripiegata finisce in «Altri».',
     'zh-CN': '设为 0 时只合并完全看不见的部分，合并后归入「其他」。', ja: '0 の場合は見えない分だけをまとめ、「その他」に入ります。'
   }, { kind: 'number', min: 0, max: 25, step: 0.5, advanced: true }),
-  // 26/09/2026 — LE SEUIL D'AFFICHAGE D'UNE ÉTIQUETTE, et c'est le geste du diagramme.
-  //
-  // Julien, capture du panneau « Affichage » du Sankey à l'appui : « pour les couronnes, un
-  // affichage des labels en fonction de la taille serait un plus, comme pour le diagramme de
-  // Sankey. » Le diagramme a son « Seuil d'affichage » ; la couronne avait la même règle EN DUR —
-  // `MIN_LABEL_SHARE = 0.03` — et rien ne pouvait la contredire.
-  //
-  // MÊME MOUVEMENT QUE SES DEUX VOISINES : `parts_group_under` et `parts_max` étaient aussi des
-  // constantes du tracé, et sont devenues des réglages dont elles restent la valeur d'usine. Une
-  // couronne enregistrée ne bouge donc pas d'un pixel.
-  //
-  // EN PART DU TOUT, comme `parts_group_under` et non comme le seuil du diagramme, qui est en
-  // unités : c'est un ANGLE que la règle mesure, et une couronne n'a pas d'échelle commune avec le
-  // Sankey. Zéro nomme tout, ce qui est le sens que l'auteur attend d'un seuil à zéro.
-  parts_label_min_share: entry<number>(3, 'parts', {
-    en: 'Label parts above (% of the whole)', fr: 'Nommer les parts au-dessus de (% du tout)',
-    es: 'Etiquetar las partes por encima de (% del total)',
-    de: 'Teile beschriften über (% des Ganzen)',
-    it: 'Etichettare le parti sopra (% del totale)',
-    'zh-CN': '占比高于此值的部分才显示标签（占整体 %）',
-    ja: '全体に対する割合がこの値を超える部分にラベルを付ける（%）'
-  }, {
-    en: 'Under it a part keeps its shape but writes nothing. Zero names them all.',
-    fr: 'En dessous, une part garde sa forme mais n\'écrit rien. Zéro les nomme toutes.',
-    es: 'Por debajo, una parte conserva su forma pero no escribe nada. Cero las nombra todas.',
-    de: 'Darunter behält ein Teil seine Form, schreibt aber nichts. Null benennt alle.',
-    it: 'Al di sotto, una parte conserva la sua forma ma non scrive nulla. Zero le nomina tutte.',
-    'zh-CN': '低于此值的部分保留形状但不显示文字。设为 0 则全部显示。',
-    ja: 'これを下回る部分は形だけ残り、文字は出ません。0 ならすべてに付きます。'
-  }, { kind: 'number', min: 0, max: 25, step: 0.5 }),
   parts_max: entry<number>(0, 'parts', {
     en: 'Parts at most', fr: 'Parts au plus', es: 'Partes como máximo', de: 'Höchstens Teile',
     it: 'Parti al massimo', 'zh-CN': '最多显示的部分数', ja: '部分の最大数'
@@ -335,7 +305,42 @@ export const LEVELS_CONFIG = {
       choice('in_place', { en: 'In place', fr: 'En place', es: 'En su lugar', de: 'An Ort und Stelle', it: 'Sul posto', 'zh-CN': '就地显示', ja: 'その場で' }),
       choice('rings', { en: 'One ring per level', fr: 'Un anneau par niveau', es: 'Un anillo por nivel', de: 'Ein Ring pro Ebene', it: 'Un anello per livello', 'zh-CN': '每层一环', ja: '階層ごとに 1 リング' })
     ]
-  })
+  }),
+  // ── 26/09/2026 — LE SEUIL D'AFFICHAGE D'UNE ÉTIQUETTE, ET IL EST ICI ─────────────────────────
+  //
+  // Julien, capture du panneau « Affichage » du diagramme à l'appui : « pour les couronnes, un
+  // affichage des labels en fonction de la taille serait un plus, comme pour le diagramme de
+  // Sankey. » La couronne applique cette règle depuis toujours, EN DUR (`MIN_LABEL_SHARE`), et
+  // rien ne pouvait la contredire — le défaut de `parts_group_under` et `parts_max` avant elle.
+  //
+  // ⚠️ ELLE A D'ABORD ÉTÉ POSÉE EN `parts_label_min_share`, ET C'ÉTAIT LA MÊME ERREUR QUE CELLE
+  // QUE CE FICHIER DOCUMENTE TRENTE LIGNES PLUS HAUT. Julien, une capture du panneau Coordonnées
+  // à l'appui : « je vois pas, désolé. » Le préfixe `parts_` range une clé dans l'onglet FORME de
+  // l'inspecteur, à côté de la couleur des secteurs — et il la cherchait là où il l'attendait :
+  // avec « Les niveaux » et « Le clic sur une part », c'est-à-dire dans les coordonnées.
+  //
+  // Il avait raison de l'y chercher, et pour la raison de nature : « quelles parts s'écrivent »
+  // ne décrit pas l'aspect d'un secteur, ça dit CE QUE LA FIGURE MONTRE. Donc une coordonnée
+  // (`sort: 'navigation'`, cf. DONUT_HONOURS), et un nom SANS PRÉFIXE DE FAMILLE.
+  //
+  // EN PART DU TOUT, et non en unités comme le seuil du diagramme : c'est un ANGLE que la règle
+  // mesure, et une couronne n'a pas d'échelle commune avec le Sankey. Zéro les nomme toutes.
+  labels_min_share: entry<number>(3, 'levels', {
+    en: 'Label parts above (% of the whole)', fr: 'Nommer les parts au-dessus de (% du tout)',
+    es: 'Etiquetar las partes por encima de (% del total)',
+    de: 'Teile beschriften über (% des Ganzen)',
+    it: 'Etichettare le parti sopra (% del totale)',
+    'zh-CN': '占比高于此值的部分才显示标签（占整体 %）',
+    ja: '全体に対する割合がこの値を超える部分にラベルを付ける（%）'
+  }, {
+    en: 'Under it a part keeps its shape but writes nothing. Zero names them all.',
+    fr: 'En dessous, une part garde sa forme mais n\'écrit rien. Zéro les nomme toutes.',
+    es: 'Por debajo, una parte conserva su forma pero no escribe nada. Cero las nombra todas.',
+    de: 'Darunter behält ein Teil seine Form, schreibt aber nichts. Null benennt alle.',
+    it: 'Al di sotto, una parte conserva la sua forma ma non scrive nulla. Zero le nomina tutte.',
+    'zh-CN': '低于此值的部分保留形状但不显示文字。设为 0 则全部显示。',
+    ja: 'これを下回る部分は形だけ残り、文字は出ません。0 ならすべてに付きます。'
+  }, { kind: 'number', min: 0, max: 25, step: 0.5 })
 } as const
 
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────
