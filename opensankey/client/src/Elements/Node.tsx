@@ -34,6 +34,8 @@ import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { reorderLinksByIds } from './linksOrderState'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
+// os#1510 — l'ancrage radial : rayon du disque et rangement des ancres sur le cercle.
+import { allocateRadialSlots, radialRadius, Type_RadialItem } from './radialAnchors'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -967,7 +969,48 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   // 🔄 SHAPE SIZE METHODS - RÉINTÉGRÉS DIRECTEMENT
+  // ── os#1510 — ANCRAGE RADIAL : le nœud est un disque, ses flux sortants se rangent sur le cercle ──
+  //
+  // Julien, sur la carte SOCLE : « utiliser tout le périmètre du pays pour faire les départs de
+  // flux, avec un angle ». Un côté n'offre que la hauteur du nœud et des départs parallèles ; le
+  // cercle offre 2πR dans toutes les directions. Lot 1 : la SOURCE seule. Les flux ENTRANTS d'un
+  // nœud radial s'accrochent encore par côté (lot 2), et le contour est un cercle (le polygone
+  // d'un territoire est le lot 3).
+
+  /** Les flux sortants concernés par l'ancrage radial : visibles, et pas une boucle sur soi. */
+  private _radialLinks(): Class_LinkElement[] {
+    return this.output_links_list.filter(l => l.is_visible && l.target !== this)
+  }
+
+  /**
+   * LE RAYON DU DISQUE : assez pour que toutes les épaisseurs tiennent sur la circonférence, et
+   * jamais moins que la boîte minimale. Ne dépend que des épaisseurs (donc de l'échelle), pas de
+   * la position — c'est ce qui permet de le lire depuis `getShapeWidthToUse` sans boucler.
+   */
+  private _radialRadius(): number {
+    const items = this._radialLinks().map(l => ({ id: l.id, angle: 0, thickness: l.thicknessSourceRaw }))
+    return radialRadius(items, Math.max(this.shape_min_width, this.shape_min_height) / 2)
+  }
+
+  /**
+   * Le disque et l'azimut de chaque cible vu de son centre. Le centre est le coin + le rayon :
+   * en mode géographique, c'est exactement le point projeté (cf. `applyGeographicLayout`).
+   */
+  private _radialLayout(): { radius: number, cx: number, cy: number, items: Type_RadialItem[] } {
+    const radius = this._radialRadius()
+    const cx = this.position_x + radius
+    const cy = this.position_y + radius
+    const items = this._radialLinks().map(l => {
+      const t = l.target
+      const tx = t.position_x + t.getShapeWidthToUse() / 2
+      const ty = t.position_y + t.getShapeHeightToUse() / 2
+      return { id: l.id, angle: Math.atan2(ty - cy, tx - cx), thickness: l.thicknessSourceRaw }
+    })
+    return { radius, cx, cy, items }
+  }
+
   public getShapeWidthToUse() {
+    if (this.shape_anchor_mode === 'radial') return 2 * this._radialRadius()
     // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
     // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
     // thickness inflated the node width to N × minimum_flux for N thin links;
@@ -1050,6 +1093,8 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private _getNaturalShapeHeight() {
+    // os#1510 — un nœud radial est un disque : aussi haut que large.
+    if (this.shape_anchor_mode === 'radial') return 2 * this._radialRadius()
     if (this.use_stock_for_height) {
       const si = this.currentStockInitialForHeight()
       if (si !== null) {
@@ -2116,6 +2161,12 @@ export class Class_NodeElement extends Class_NodeBase {
     const sourceOffCumul = new Map<number, number>()
     const targetOffCumul = new Map<number, number>()
 
+    // os#1510 — ANCRAGE RADIAL : les ancres de sortie se calculent toutes ensemble, sur le
+    // cercle, avant la boucle (l'allocation est globale : chaque flux prend la place que ses
+    // voisins lui laissent, cf. `allocateRadialSlots`). `null` = ancrage par côté, comme avant.
+    const radial = this.shape_anchor_mode === 'radial' ? this._radialLayout() : null
+    const radial_slots = radial ? allocateRadialSlots(radial.items, radial.radius) : null
+
     // Loop on all links to compute starting / ending position
     this._links_order
       .forEach(link => {
@@ -2145,25 +2196,45 @@ export class Class_NodeElement extends Class_NodeBase {
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           // User-set spacing inserted before this anchor (cf. "Ordre des flux E/S").
           const anchor_delta = link.source_anchor_delta
-          if (link.source_side === 'right') {
+          // os#1510 — sur le cercle : l'ancre est au point du contour que l'allocation lui a
+          // donné, la poignée et la NORMALE sortante avec (le tracé part le long de la normale,
+          // cf. LinkControlPoints). Aucune des mécaniques de côté ne s'applique (empilement,
+          // écart d'accroche, offset de port).
+          const radial_slot = radial_slots?.get(link.id)
+          const radial_here = radial !== null && radial_slot !== undefined
+          if (radial_here) {
+            const nx = Math.cos(radial_slot as number)
+            const ny = Math.sin(radial_slot as number)
+            link_starting_point = { x: radial.cx + radial.radius * nx, y: radial.cy + radial.radius * ny }
+            link_starting_handle_point = {
+              x: link_starting_point.x + handle_position_shift * nx,
+              y: link_starting_point.y + handle_position_shift * ny
+            }
+            link.source_anchor_normal = { x: nx, y: ny }
+          }
+          else if (link.source_side === 'right') {
+            link.source_anchor_normal = null
             dy_right = dy_right + anchor_delta
             link_starting_point = { x: (x0 + width - inset_x), y: (y0 + dy_right + thickness / 2) }
             link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
             dy_right = dy_right + thickness
           }
           else if (link.source_side === 'left') {
+            link.source_anchor_normal = null
             dy_left = dy_left + anchor_delta
             link_starting_point = { x: (x0 + inset_x), y: (y0 + dy_left + thickness / 2) }
             link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
             dy_left = dy_left + thickness
           }
           else if (link.source_side === 'top') {
+            link.source_anchor_normal = null
             dx_top = dx_top + anchor_delta
             link_starting_point = { x: (x0 + dx_top + thickness / 2), y: (y0 + inset_y) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
             dx_top = dx_top + thickness
           }
           else {  // link.source_side === 'bottom'
+            link.source_anchor_normal = null
             dx_bottom = dx_bottom + anchor_delta
             link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height - inset_y) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
@@ -2174,7 +2245,7 @@ export class Class_NodeElement extends Class_NodeBase {
           // offset) et empilée en épaisseur. Mono-flow → un flux pile au port ; multi-flow
           // → N flux empilés autour du port (au lieu de s'effondrer). `along` = position
           // dans la sous-bande relative au centre = port.
-          if (link.shape_source_anchor_offset !== undefined) {
+          if (link.shape_source_anchor_offset !== undefined && !radial_here) {
             const o = link.shape_source_anchor_offset
             const total = sourceOffTotals.get(o) ?? thickness
             const cumul = sourceOffCumul.get(o) ?? 0

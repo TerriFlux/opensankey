@@ -196,7 +196,10 @@ export class LinkDrawShape {
 
       // Show as full shape for specific shapes
       const is_outline_shape_type = this._link.shape_type === 'bezier_outline' || this._link.shape_type === 'bezier_outline_exact'
-      if (!show_as_path && !is_outline_shape_type && this._link.orientation_in_effect != 'vh' && this._link.orientation_in_effect != 'hv') {
+      // os#1510 — un départ radial n'est ni horizontal ni vertical : il passe par le contour
+      // générique (offsets perpendiculaires), comme vh/hv.
+      if (!show_as_path && !is_outline_shape_type && this._link.orientation_in_effect != 'vh' && this._link.orientation_in_effect != 'hv'
+        && !this._link.source_anchor_normal) {
         const shape = this.getBezierPath(true)
 
         // Incertitude (OS#189) — halo MAX régénéré en forme pleine, DERRIÈRE.
@@ -419,6 +422,7 @@ export class LinkDrawShape {
     // pendant un drag — passent par le constructeur générique ci-dessous.
     const use_exact = link.shape_is_curved
       && (link.orientation_in_effect === 'hh' || link.orientation_in_effect === 'vv')
+      && !link.source_anchor_normal
       && !this.isBeingDragged()
 
     // Contour approché d'une bande, générique : chaque groupe de points est
@@ -1155,8 +1159,11 @@ export class LinkDrawShape {
           + ' L ' + x6 + ',' + y6
       }
 
-      // Pour is_outline, différencier selon l'orientation
-      if (this._link.orientation_in_effect === 'hh' || this._link.orientation_in_effect === 'vv') {
+      // Pour is_outline, différencier selon l'orientation. os#1510 — un départ radial part en
+      // biais : son contour est celui des offsets perpendiculaires (branche vh/hv), pas un décalage
+      // sur un seul axe.
+      if ((this._link.orientation_in_effect === 'hh' || this._link.orientation_in_effect === 'vv')
+        && !this._link.source_anchor_normal) {
         // Source and target half-thicknesses (supports tapered/trapezoid links)
         const halfSrc = this._link.thicknessSource / 2
         const halfTgt = this._link.thicknessTarget / 2
