@@ -292,7 +292,14 @@ export const aggregate = (
     return
   }
   // const parent = child_dim.parent
-  const Do = () => {
+  // os#1508 — UN SEUL DESSIN, À LA FIN. Le corps redessinait chaque voisin du nœud agrégé
+  // (`l.source.draw()`, `l.target.draw()`), puis chacun encore par `reorganizeIOLinks` : sur SOCLE
+  // pays partenaires, agréger « Céréales » relie quelque 500 nœuds d'en face, soit un millier de
+  // dessins de nœud hors de toute passe avant le dessin complet qui suit de toute façon. Sous
+  // `withBypassRedraws`, ces dessins intermédiaires sont des no-op ; le dessin complet est fait par
+  // l'appelant quand il en fait un (clic droit, couronne, sélecteur de niveau), et par ce garde
+  // sinon (rejeu de l'historique).
+  const Do = () => new_data.drawing_area.withBypassRedraws(() => {
     // #1231 — Symétrique de la désagrégation : le parent reprend EXACTEMENT le slot
     // occupé par ses enfants (leur bord haut), avant de les masquer. Comme la hauteur
     // du parent = somme des hauteurs des enfants, il remplit leur place → aucun voisin
@@ -366,7 +373,7 @@ export const aggregate = (
     // ABSOLU (positions explicites). Le couple flux/datatag de référence reste persisté ;
     // setAbsoluteMode re-cale aussi les ancres de centre (#1230).
     new_data.drawing_area.setAbsoluteMode()
-  }
+  })
   const undo = () => {
     disaggregate(new_data, parent_node, contextualised_node.id, false)
   }
@@ -405,11 +412,23 @@ export const disaggregateLocally = (
   parent: Class_NodeElement,
   child_id: string
 ): boolean => {
+  const moved = new_data.drawing_area.withBypassRedraws(
+    () => disaggregateQuietly(new_data, parent, child_id), false
+  )
+  if (moved) refreshAfterLocalHierarchyGesture(new_data)
+  return moved
+}
+
+/** Le geste sans son rafraîchissement : ce qu'une route enchaîne avant de dessiner UNE fois. */
+const disaggregateQuietly = (
+  new_data: Class_ApplicationData,
+  parent: Class_NodeElement,
+  child_id: string
+): boolean => {
   const dim = parent.dimensions_as_parent.find(d => d.children.some(c => c.id === child_id))
   if (!dim || dim.force_show_children) return false
   disaggregate(new_data, parent, child_id)
   dim.forced_by_local_action = true
-  refreshAfterLocalHierarchyGesture(new_data)
   return true
 }
 
@@ -439,11 +458,17 @@ export const disaggregateAlong = (
   path: string[]
 ): void => {
   const nodes = new_data.drawing_area.sankey.nodes_dict
-  for (let i = 0; i + 1 < path.length; i++) {
-    const parent = nodes[path[i]] as Class_NodeElement | undefined
-    // Déjà déplié : `disaggregateLocally` ne fait rien, et surtout ne replie pas au passage.
-    if (parent) disaggregateLocally(new_data, parent, path[i + 1])
-  }
+  // os#1508 — toute la route sous bypass, un seul dessin à la fin : chaque cran redessinait tout.
+  const moved = new_data.drawing_area.withBypassRedraws(() => {
+    let any = false
+    for (let i = 0; i + 1 < path.length; i++) {
+      const parent = nodes[path[i]] as Class_NodeElement | undefined
+      // Déjà déplié : `disaggregateQuietly` ne fait rien, et surtout ne replie pas au passage.
+      if (parent && disaggregateQuietly(new_data, parent, path[i + 1])) any = true
+    }
+    return any
+  }, false)
+  if (moved) refreshAfterLocalHierarchyGesture(new_data)
 }
 
 /**
@@ -457,12 +482,17 @@ export const foldNodeEverywhere = (
   new_data: Class_ApplicationData,
   node: Class_NodeElement
 ): boolean => {
-  let moved = false
-  node.dimensions_as_parent
-    .filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
-    .forEach((d: Class_NodeDimension) => {
-      if (aggregateLocally(new_data, d.children[0] as Class_NodeElement, node.id)) moved = true
-    })
+  // os#1508 — tous les axes sous bypass, un seul dessin à la fin.
+  const moved = new_data.drawing_area.withBypassRedraws(() => {
+    let any = false
+    node.dimensions_as_parent
+      .filter((d: Class_NodeDimension) => d.force_show_children && d.children.length > 0)
+      .forEach((d: Class_NodeDimension) => {
+        if (aggregateQuietly(new_data, d.children[0] as Class_NodeElement, node.id)) any = true
+      })
+    return any
+  }, false)
+  if (moved) refreshAfterLocalHierarchyGesture(new_data)
   return moved
 }
 
@@ -472,10 +502,21 @@ export const aggregateLocally = (
   child: Class_NodeElement,
   parent_id: string
 ): boolean => {
+  const moved = new_data.drawing_area.withBypassRedraws(
+    () => aggregateQuietly(new_data, child, parent_id), false
+  )
+  if (moved) refreshAfterLocalHierarchyGesture(new_data)
+  return moved
+}
+
+const aggregateQuietly = (
+  new_data: Class_ApplicationData,
+  child: Class_NodeElement,
+  parent_id: string
+): boolean => {
   const dim = child.dimensions_as_child.find(d => d.parent.id === parent_id)
   if (!dim || !dim.force_show_children) return false
   aggregate(new_data, child, parent_id)
-  refreshAfterLocalHierarchyGesture(new_data)
   return true
 }
 
@@ -665,7 +706,8 @@ export const disaggregate = (
   column.sort((n1, n2) => n1.position_y - n2.position_y)
 
 
-  const Do = () => {
+  // os#1508 — même règle qu'`aggregate` : un seul dessin, à la fin (cf. le commentaire là-bas).
+  const Do = () => new_data.drawing_area.withBypassRedraws(() => {
     //let current_v = aggregateNode.position_v
     // column.forEach(n => {
     //   n.position_v = -1
@@ -769,7 +811,7 @@ export const disaggregate = (
 
     // #1231 — commande de positionnement (agrégation) → mode absolu (réf persistée conservée).
     new_data.drawing_area.setAbsoluteMode()
-  }
+  })
 
   const undo = () => {
     aggregate(new_data, child_node, parent_dim.parent.id, false)
