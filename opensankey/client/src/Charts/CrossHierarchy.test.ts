@@ -14,7 +14,8 @@ import type { Type_JSON } from '../types/Utils'
 import type { Class_NodeElement } from '../Elements/Node'
 import { FOLLOWING_NAVIGATION } from './FigureNavigation'
 import {
-  buildCrossTree, crossExpansionEntry, crossFrontier, crossIsOffered
+  buildCrossTree, crossAxesOf, crossExpandedDownToLevels, crossExpansionEntry, crossFrontier,
+  crossIsOffered, crossLevelsShown
 } from './CrossHierarchy'
 import { analysisHierarchyTree, buildAnalysisChartData } from './AnalysisChartData'
 import type { Type_ChartSubject } from './AnalysisChartData'
@@ -145,6 +146,34 @@ describe('la couronne croisee', () => {
     expect(cross.expandable.has(linkId('FR', 'A'))).toBe(false)
     expect(childIds(fr.children)).toHaveLength(2)
     expect(cross.tree.mismatch_count).toBe(0)
+  })
+
+  test('un niveau par axe ecrit l ensemble des cases ouvertes, et l ensemble redit ses niveaux', () => {
+    const app = loadApp()
+    const P = nodeOf(app, 'P')
+    expect(crossAxesOf(P, 'inputs')).toEqual({ self: 'prod', other: 'geo' })
+    // Rien : aucune entree, la racine s ouvre comme d habitude.
+    expect(crossExpandedDownToLevels(P, spec('other'), { self: 0, other: 0 }).size).toBe(0)
+    // Deux crans en face : Monde par regions, Europe par pays ; Asie n a pas d enfant en face et
+    // le sujet n est pas demande.
+    const two_other = crossExpandedDownToLevels(P, spec('other'), { self: 0, other: 2 })
+    expect([...two_other].sort()).toEqual([
+      crossExpansionEntry(linkId('Monde', 'P'), 'other'), crossExpansionEntry(linkId('Europe', 'P'), 'other')
+    ].sort())
+    // Un cran en face puis un cran par le sujet : Europe et Asie s ouvrent par les produits.
+    const one_one = crossExpandedDownToLevels(P, spec('other'), { self: 1, other: 1 })
+    expect([...one_one].sort()).toEqual([
+      crossExpansionEntry(linkId('Monde', 'P'), 'other'),
+      crossExpansionEntry(linkId('Europe', 'P'), 'self'), crossExpansionEntry(linkId('Asie', 'P'), 'self')
+    ].sort())
+    const tree = buildCrossTree(P, spec('other'), FOLLOWING_NAVIGATION, one_one)!.tree
+    const asie = tree.roots[0].children.find(c => c.id === linkId('Asie', 'P'))!
+    expect(valuesOf(asie.children)).toEqual({ [linkId('Asie', 'A')]: 15, [linkId('Asie', 'B')]: 15 })
+    // L ensemble redit ses niveaux, et ne dit rien d un ensemble retouche a la main.
+    const max = { self: 1, other: 2 }
+    expect(crossLevelsShown(one_one, P, spec('other'), max)).toEqual({ self: 1, other: 1 })
+    expect(crossLevelsShown(two_other, P, spec('other'), max)).toEqual({ self: 0, other: 2 })
+    expect(crossLevelsShown(new Set([linkId('Asie', 'P')]), P, spec('other'), max)).toBeNull()
   })
 
   test('la couronne lit le croisement par ses deux chemins, arbre et frontiere', () => {

@@ -39,6 +39,14 @@
 // (`hierarchy_expanded`) retient des ids de flux. Une entrée peut préciser l'axe par lequel la case
 // s'ouvre : `<id>#self` ou `<id>#other` ; sans suffixe, l'ordre de la figure décide.
 //
+// ── LES NIVEAUX, UN PAR AXE (26/09/2026) ─────────────────────────────────────────────────────────
+// Julien : « il manque le sélecteur de niveau dans les hiérarchies ». Comme pour une dimension
+// (`expandedDownToLevel`), un niveau n'est pas une seconde règle : il ÉCRIT l'ensemble des cases
+// ouvertes. Deux niveaux, un par axe, dans l'ordre de la figure : on descend d'abord le premier axe
+// jusqu'à son niveau, puis le second jusqu'au sien (`crossExpandedDownToLevels`), et l'ensemble
+// ouvert redit les niveaux qu'il montre, ou aucun dès qu'une branche a été refermée à la main
+// (`crossLevelsShown`).
+//
 // Module PUR : lit le modèle, ne dessine rien, n'importe ni React ni d3.
 
 import type { Class_NodeElement } from '../Elements/Node'
@@ -67,9 +75,14 @@ export interface Type_CrossOptions {
   max_depth?: number
 }
 
+/** Un niveau par axe : combien de crans ouvrir sous la racine le long de chacun. */
+export type Type_CrossLevels = { [axis in Type_CrossAxis]: number }
+
 const CROSS_DEFAULT_MAX_DEPTH = 6
 const BALANCE_TOLERANCE = 1e-6
 const AXIS_SEPARATOR = '#'
+
+const otherAxis = (axis: Type_CrossAxis): Type_CrossAxis => axis === 'self' ? 'other' : 'self'
 
 // ── L'ensemble des cases ouvertes ────────────────────────────────────────────────────────────────
 
@@ -159,11 +172,52 @@ const oppositeTops = (p: Class_NodeElement, side: 'inputs' | 'outputs'): Class_N
   return tops.length > 0 ? tops : opposites
 }
 
+/**
+ * Les deux axes du croisement : la dimension du sujet et celle des nœuds d'en face, `null` quand
+ * un côté n'a pas de hiérarchie. C'est ce que le sélecteur de niveau nomme, et ce dont il lit les
+ * niveaux.
+ */
+export const crossAxesOf = (
+  p: Class_NodeElement, side: 'inputs' | 'outputs'
+): { [axis in Type_CrossAxis]: string | null } => {
+  const first_with_children = (node: Class_NodeElement) =>
+    (node.dimensions_as_parent as Class_NodeDimension[]).find(d => d.children.length > 0)?.id ?? null
+  return {
+    self: first_with_children(p),
+    other: oppositeTops(p, side).map(first_with_children).find(id => id !== null) ?? null
+  }
+}
+
 /** Le nom du niveau que porte ce nœud dans le groupe de l'axe, vide s'il n'en porte pas. */
 const levelLabelOf = (node: Class_NodeElement, dimension_id: string): string =>
   node.tags_list.find(t => t.group.id === dimension_id)?.name ?? ''
 
 interface Type_Cell { p: Class_NodeElement, q: Class_NodeElement, link: Class_LinkElement }
+
+/** Les cases enfants d'une case le long d'un axe, celles qui ont une valeur ; `null` s'il n'y en a pas. */
+const cellsAlong = (
+  cell: Type_Cell, axis: Type_CrossAxis, side: 'inputs' | 'outputs', valueOf: (l: Class_LinkElement) => number
+): { dim_id: string, cells: Type_Cell[] } | null => {
+  const along = childrenAlong(axis === 'self' ? cell.p : cell.q)
+  if (!along) return null
+  const cells: Type_Cell[] = []
+  along.children.forEach(child => {
+    const cp = axis === 'self' ? child : cell.p
+    const cq = axis === 'self' ? cell.q : child
+    const link = linkBetween(cp, cq, side)
+    if (!link || !passesLinkTagFilters(link) || valueOf(link) <= 0) return
+    cells.push({ p: cp, q: cq, link })
+  })
+  return cells.length > 0 ? { dim_id: along.dim.id, cells } : null
+}
+
+/** Les racines : les cases (sujet, sommet d'en face) qui ont une valeur. */
+const rootCells = (
+  p: Class_NodeElement, side: 'inputs' | 'outputs', valueOf: (l: Class_LinkElement) => number
+): Type_Cell[] =>
+  oppositeTops(p, side)
+    .map(q => ({ p, q, link: linkBetween(p, q, side) }))
+    .filter((c): c is Type_Cell => c.link !== undefined && valueOf(c.link) > 0)
 
 export interface Type_CrossTree {
   tree: Type_SunburstTree
@@ -196,31 +250,14 @@ export const buildCrossTree = (
   let mismatch_count = 0
   let is_truncated = false
 
-  const cellsAlong = (cell: Type_Cell, axis: Type_CrossAxis): { dim_id: string, cells: Type_Cell[] } | null => {
-    const along = childrenAlong(axis === 'self' ? cell.p : cell.q)
-    if (!along) return null
-    const cells: Type_Cell[] = []
-    along.children.forEach(child => {
-      const cp = axis === 'self' ? child : cell.p
-      const cq = axis === 'self' ? cell.q : child
-      const link = linkBetween(cp, cq, side)
-      if (!link || !passesLinkTagFilters(link) || valueOf(link) <= 0) return
-      cells.push({ p: cp, q: cq, link })
-    })
-    return cells.length > 0 ? { dim_id: along.dim.id, cells } : null
-  }
-
   const axisOrder = (forced?: Type_CrossAxis): Type_CrossAxis[] => {
     const first = forced ?? spec.first
-    return [first, first === 'self' ? 'other' : 'self']
+    return [first, otherAxis(first)]
   }
-
   const canExpand = (cell: Type_Cell): boolean =>
-    axisOrder().some(axis => cellsAlong(cell, axis) !== null)
+    axisOrder().some(axis => cellsAlong(cell, axis, side, valueOf) !== null)
 
-  const roots_source = oppositeTops(p, side)
-    .map(q => ({ p, q, link: linkBetween(p, q, side) }))
-    .filter((c): c is Type_Cell => c.link !== undefined && valueOf(c.link) > 0)
+  const roots_source = rootCells(p, side, valueOf)
   if (roots_source.length === 0) return null
 
   // Un périmètre unitaire part au centre et ne prend pas d'anneau : un cran de plus pour que le
@@ -251,7 +288,9 @@ export const buildCrossTree = (
       is_disaggregated: false,
       dimension_id: changed_dim
     }
-    const opening = is_root ? { open: true, axis: undefined } : crossExpansionOf(expanded, cell.link.id)
+    // La racine est toujours ouverte ; son entrée, quand il y en a une, ne dit que l'axe.
+    const written = crossExpansionOf(expanded, cell.link.id)
+    const opening = is_root ? { open: true, axis: written.axis } : written
     if (!opening.open) {
       if (canExpand(cell)) expandable.add(node.id)
       return node
@@ -261,7 +300,7 @@ export const buildCrossTree = (
       return node
     }
     for (const axis of axisOrder(opening.axis)) {
-      const along = cellsAlong(cell, axis)
+      const along = cellsAlong(cell, axis, side, valueOf)
       if (!along) continue
       node.dimension_id = along.dim_id
       node.children = along.cells.map(c => build(c, depth + 1, axis, false))
@@ -289,6 +328,66 @@ export const buildCrossTree = (
     },
     expandable
   }
+}
+
+/**
+ * L'ENSEMBLE DES CASES OUVERTES qui montre un niveau par axe (26/09/2026).
+ *
+ * Même modèle que `expandedDownToLevel` sur une dimension : le niveau ÉCRIT l'ensemble ouvert, il
+ * ne s'y superpose pas. Dans l'ordre de la figure, une case s'ouvre par le premier axe tant qu'on
+ * n'a pas atteint son niveau, puis par le second jusqu'au sien. Chaque entrée porte son axe, pour
+ * que l'arbre reproduise exactement cette descente quel que soit le chaînage par défaut.
+ *
+ * @param levels combien de crans ouvrir le long de chaque axe, la découpe de la racine comptant
+ *   pour un cran : `{ other: 1, self: 0 }` = un anneau par les nœuds d'en face. 0 partout : aucune
+ *   entrée, la racine s'ouvre comme d'habitude, par le premier axe de la figure.
+ */
+export const crossExpandedDownToLevels = (
+  p: Class_NodeElement,
+  spec: Type_CrossSpec,
+  levels: Type_CrossLevels,
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+): Set<string> => {
+  const side = spec.side
+  const valueOf = (link: Class_LinkElement): number => linkValueUnder(link, nav) ?? 0
+  const order: Type_CrossAxis[] = [spec.first, otherAxis(spec.first)]
+  const out = new Set<string>()
+  // Par quel axe une case à ces profondeurs s'ouvre : le premier axe, dans l'ordre de la figure,
+  // qui n'a pas atteint son niveau et qui a des enfants.
+  const walk = (cell: Type_Cell, depths: Type_CrossLevels) => {
+    for (const axis of order) {
+      if (depths[axis] >= levels[axis]) continue
+      const along = cellsAlong(cell, axis, side, valueOf)
+      if (!along) continue
+      out.add(crossExpansionEntry(cell.link.id, axis))
+      along.cells.forEach(child => walk(child, { ...depths, [axis]: depths[axis] + 1 }))
+      return
+    }
+  }
+  rootCells(p, side, valueOf).forEach(root => walk(root, { self: 0, other: 0 }))
+  return out
+}
+
+/**
+ * Les niveaux que l'ensemble ouvert DIT, ou `null` quand il ne dit aucun couple en particulier —
+ * dès qu'une branche a été refermée ou ouverte à la main. Le sélecteur montre alors
+ * « personnalisé » plutôt que de nommer un niveau qu'on ne voit pas.
+ */
+export const crossLevelsShown = (
+  expanded: ReadonlySet<string>,
+  p: Class_NodeElement,
+  spec: Type_CrossSpec,
+  max_levels: Type_CrossLevels,
+  nav: Type_FigureNavigation = FOLLOWING_NAVIGATION
+): Type_CrossLevels | null => {
+  const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) =>
+    a.size === b.size && [...a].every(id => b.has(id))
+  for (let self = 0; self <= max_levels.self; self++) {
+    for (let other = 0; other <= max_levels.other; other++) {
+      if (sameSet(expanded, crossExpandedDownToLevels(p, spec, { self, other }, nav))) return { self, other }
+    }
+  }
+  return null
 }
 
 /**
