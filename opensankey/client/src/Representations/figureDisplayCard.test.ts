@@ -28,7 +28,7 @@ const couronne = () => (representation_registry.get('osp.repr.donut') as unknown
 }).attributes
 
 const controles = (sorts: string[]) => figureControlsOf(
-  couronne() as never, {} as never, sorts as never, 'fr'
+  couronne() as never, {} as never, sorts as never, 'fr', {} as never
 ) as unknown as { key: string, label: string, kind: string }[]
 
 describe('la carte Affichage d une couronne', () => {

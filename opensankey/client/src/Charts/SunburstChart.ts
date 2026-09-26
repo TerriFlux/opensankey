@@ -115,6 +115,22 @@ export interface Type_SunburstStyle {
   /** Regrouper AUSSI les parts sous ce pourcentage du tout. 0 : seulement l'invisible. */
   others_threshold: number
   labels_mode: 'fit' | 'none' | 'always'
+  /**
+   * 26/09/2026 — SOUS CETTE PART DU TOUT, UN SECTEUR N'ECRIT PAS (en %, 0 = les nommer tous).
+   *
+   * Julien, capture d'une couronne en anneaux avec le seuil a 6,5 et « Asie du... 3,8 % » ecrit
+   * quand meme : « pas sur que ca marche en mode un anneau par niveau ». Il avait raison — le
+   * trace du disque ne connaissait que des regles en PIXELS (`MIN_LABEL_ARC_PX`), et le seuil de
+   * la couronne s'arretait a la porte de son autre mode.
+   *
+   * LES DEUX REGLES COEXISTENT, et elles ne disent pas la meme chose : la regle en pixels dit
+   * « ca ne TIENDRAIT pas », celle-ci dit « ce n'est pas assez GROS pour meriter un nom ». Un
+   * secteur peut tenir son texte et rester sous le seuil — c'est precisement ce que Julien voyait.
+   *
+   * ZERO PAR DEFAUT : un disque enregistre nomme ce qu'il nommait. C'est la couronne qui passe le
+   * sien, et elle seule.
+   */
+  labels_min_share: number
   label_orientation: 'radial' | 'tangential' | 'horizontal'
   /**
    * CE QU'UN SECTEUR ÉCRIT DE SON NOM (demande Julien, 18/09). `strip_parent` retire ce que
@@ -180,6 +196,8 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   border_thickness: 1,
   others_threshold: 0,
   labels_mode: 'fit',
+  // Zero : un disque nomme ce qu'il nommait. C'est la couronne en anneaux qui passe le sien.
+  labels_min_share: 0,
   label_orientation: 'radial',
   strip_parent: false,
   separator: '',
@@ -1240,8 +1258,22 @@ export const drawSunburstChart = (
     const sectorValueText = (d: Type_SunburstSlice): string =>
       sectorValueParts(d, styleOf(d.id)).join(' · ')
 
+    /**
+     * 26/09/2026 — CE SECTEUR EST-IL ASSEZ GROS POUR MERITER UN NOM ?
+     *
+     * Le seuil d'affichage de la couronne, honore ICI AUSSI (cf. `labels_min_share`). Julien,
+     * capture a l appui : « pas sur que ca marche en mode un anneau par niveau » — ca ne marchait
+     * pas, le trace du disque ne connaissant que des regles en pixels.
+     *
+     * LA PART ANGULAIRE, exactement comme en place (`labelMinShare`, NodeStatsCharts) : les deux
+     * modes sont une seule figure, ils ne peuvent pas mesurer la meme chose de deux facons.
+     */
+    const bigEnoughToName = (d: Type_SunburstSlice): boolean =>
+      (d.a1 - d.a0) / (2 * Math.PI) >= Math.max(0, st.labels_min_share) / 100
+
     const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null => {
       const s = styleOf(d.id)
+      if (!bigEnoughToName(d)) return null
       // os#1465 — L'ICÔNE PREND LA PLACE DU NOM, et c'est le procédé du diagramme : sur un nœud
       // aussi, un libellé qui porte une icône n'écrit pas son texte (`DrawLabel`, quatre endroits
       // qui rendent '' dès que `icon_name` est posé). Les superposer dans un secteur donnerait un
@@ -1269,7 +1301,9 @@ export const drawSunburstChart = (
     // Un secteur assez large pour qu'un trait de rappel désigne quelque chose : au-dessous, le
     // rappel pointerait un fil, et cent rappels sur un anneau de miettes ne nommeraient rien.
     const calloutable = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
-      styleOf(d.id).callout && !d.is_residual &&
+      // LE SEUIL VAUT AUSSI POUR LE TRAIT DE RAPPEL : sortir une etiquette, c'est encore ecrire.
+      // Sans cette ligne, baisser le seuil taisait les secteurs et les rappels restaient.
+      styleOf(d.id).callout && !d.is_residual && bigEnoughToName(d) &&
       (d.a1 - d.a0) * (geo.inner_r + (d.depth + 1) * geo.ring) >= MIN_CALLOUT_EDGE_PX
     // Sorti du disque avec son trait, un secteur est nommé aussi sûrement que dans son anneau.
     const named = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
