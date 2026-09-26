@@ -38,7 +38,7 @@ import {
   default_margin_mm,
   initial_show_structure,
   PAPER_DIMENSIONS_MM,
-  Type_Orientation,
+  Type_OrientationSetting,
   Type_PaperFormat,
   Type_PaperOrientation,
   Type_Shape,
@@ -3179,7 +3179,9 @@ export class Class_DrawingArea {
       v === 'top' ? 'left' : v === 'bottom' ? 'right' : 'middle'
     const _vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
       h === 'left' ? 'top' : h === 'right' ? 'bottom' : 'middle'
-    const flipOrientation = (o: Type_Orientation): Type_Orientation => {
+    const flipOrientation = (o: Type_OrientationSetting): Type_OrientationSetting => {
+      // os#1364 — « auto » se retourne tout seul : il se rejuge sur les nouvelles positions.
+      if (o === 'auto') return 'auto'
       if (o === 'hh') return 'vv'
       if (o === 'vv') return 'hh'
       if (o === 'hv') return 'vh'
