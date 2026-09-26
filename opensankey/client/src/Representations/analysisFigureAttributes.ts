@@ -325,7 +325,10 @@ const DONUT_HONOURS = {
   // de taille sur les étiquettes, l'offrir là ferait une case morte. Le jour où un histogramme
   // saura taire les siennes, la clé s'ajoutera à `BARS_HONOURS` — et le harnais des « bites » le
   // remarquera le jour où on l'oubliera.
-  labels_min_share: { sort: 'navigation' as const },
+  // LA CARTE « AFFICHAGE », SŒUR DE CELLE DU DIAGRAMME. Les coordonnées disent OÙ l'on se place —
+  // quel objet, quelle année, quel niveau ; l'affichage dit CE QU'ON MONTRE de cet endroit-là.
+  // Julien, deux captures côte à côte : « y a coordonnées mais pas affichage ».
+  labels_min_share: { sort: 'display' as const },
   legend_width: { default: 230 }
 }
 const BARS_HONOURS = {

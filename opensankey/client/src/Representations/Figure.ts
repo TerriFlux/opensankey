@@ -51,7 +51,16 @@ import type { AttributeConfig, ConfigType } from '../Elements/ElementsAttributes
 import type { Type_JSON } from '../types/Utils'
 
 /** La sorte d'une clé de réglage de figure (cf. en-tête). Absente dans une déclaration = 'style'. */
-export type Type_AttributeSort = 'style' | 'navigation' | 'identity'
+// 26/09/2026 — `display` : CE QUI S AFFICHE, et ca a sa propre carte.
+//
+// Julien, deux captures cote a cote — la carte « Affichage » du diagramme, et son seuil perdu au
+// milieu des coordonnees d une figure : « y a coordonnees mais pas affichage », « je veux quelque
+// chose qui ressemble a ca ».
+//
+// LES COORDONNEES DISENT OU L ON SE PLACE (quel objet, quelle annee, quel niveau) ; L AFFICHAGE
+// DIT CE QU ON MONTRE DE CET ENDROIT-LA (a partir de quelle taille une etiquette s ecrit). Le
+// diagramme les separe depuis toujours, en deux cartes. Une figure les melangeait.
+export type Type_AttributeSort = 'style' | 'navigation' | 'display' | 'identity'
 
 /**
  * os#1425 — COMMENT UN RÉGLAGE SE RÈGLE, déclaré avec lui.

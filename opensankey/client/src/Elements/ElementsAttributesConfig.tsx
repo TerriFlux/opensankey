@@ -37,6 +37,8 @@ import { useMemo } from 'react'
 // facon pas tirer ApplicationData a l'execution.
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_Position } from '../types/Utils'
+// 26/09/2026 — LE VOCABULAIRE DES SORTES, ecrit UNE fois (cf. le champ `sort`, plus bas).
+import type { Type_AttributeSort } from '../Representations/Figure'
 import type { Class_LinkElement } from './Link'
 import type { UnitType } from './LinkValues'
 import type { Class_NodeBase } from './NodeBase'
@@ -255,11 +257,16 @@ export interface AttributeConfig<T> {
   actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
   /**
    * os#1418 — la SORTE d'une clé de réglage de FIGURE (cf. Representations/Figure) : 'style'
-   * (transposable, portée par un style), 'navigation' (par figure, jamais par style) ou
-   * 'identity' (nomme le sujet, ne se transpose jamais). Absente = 'style'. Sans objet pour les
-   * attributs des nœuds et des flux, qui sont tous des attributs de style.
+   * (transposable, portée par un style), 'navigation' (où l'on se place), 'display' (ce qu'on
+   * montre de cet endroit-là) ou 'identity' (nomme le sujet, ne se transpose jamais). Absente =
+   * 'style'. Sans objet pour les attributs des nœuds et des flux, qui sont tous de style.
+   *
+   * ⚠️ 26/09/2026 — LE VOCABULAIRE ÉTAIT ÉCRIT DEUX FOIS, ici en toutes lettres et dans
+   * `Representations/Figure`. Ajouter `display` d'un seul côté a fait rougir le compilateur, ce
+   * qui est la bonne nouvelle : la seconde copie se voyait. Elle POINTE désormais sur la
+   * première, et une sorte de plus n'aura plus qu'un seul endroit où naître.
    */
-  sort?: 'style' | 'navigation' | 'identity'
+  sort?: Type_AttributeSort
   /**
    * os#1464 — LES NATURES D'ÉLÉMENT À QUI CET ATTRIBUT S'ADRESSE. Absent = toutes, et c'est
    * pourquoi l'ajout de ce champ ne change rien aux attributs qui ne le portent pas.
