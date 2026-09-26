@@ -40,7 +40,8 @@ function settleCentersIfLaidOut(da: Class_DrawingArea) {
   // dans la vue agrégée, centre 353 → 143 à la bascule — puis dessiné 210 px trop haut dans sa
   // vue. Un nœud masqué garde son centre ; son coin sera redérivé quand il réapparaîtra
   // (`anchorByCenterIfResized`, taille changée).
-  da.sankey.nodes_list.forEach(n => { if (n.is_visible) n.settleCenterAnchor() })
+  // os#1508 — un lot : les tailles se lisent une fois par nœud (cf. DrawingArea.withNodeSizeMemo).
+  da.withNodeSizeMemo(() => da.sankey.nodes_list.forEach(n => { if (n.is_visible) n.settleCenterAnchor() }))
 }
 
 // #369 — Choisir un mode est un geste EXPLICITE : il lève la suspension d'ouverture (qui fait

@@ -14,5 +14,5 @@ export const applyEsankeyFile = async (data: ArrayBuffer, app_data: Class_Applic
   // déclenche l'AUTO-POSITIONNEMENT des E/S sur chaque nœud (reorganizeIOLinks :
   // tri des ancres depuis les positions relatives des nœuds), pour restituer le
   // rangement géométrique correct plutôt que de figer un ordre erroné à l'import.
-  app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+  app_data.drawing_area.reorganizeIOLinksOf(app_data.drawing_area.sankey.nodes_list)
 }
