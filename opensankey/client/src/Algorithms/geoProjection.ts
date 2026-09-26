@@ -28,10 +28,33 @@
  *   latitude l'ordonnée, sans déformation. C'est celle des fonds tracés à partir d'une grille
  *   lat/lon, et le repli le plus sûr quand on ignore d'où vient l'image : sur l'étendue d'un
  *   pays, l'écart entre les deux se compte en fractions de pour cent une fois le calage fait.
+ * - `natural_earth` : la projection des atlas (Šavrič, Jenny, Patterson 2011), pseudo-cylindrique
+ *   à méridiens courbes — ni l'aplatissement de la plate carrée ni le gonflement des pôles de
+ *   Mercator. Ajoutée le 26/09/2026 pour la carte du MONDE de SOCLE (Julien : « la carte est
+ *   étirée à l'horizontal », puis « pas Mercator ») : les deux premières sont faites pour un fond
+ *   d'un pays, pas pour la planète. Polynômes de d3-geo (`naturalEarth1Raw`).
  */
-export type Type_GeoProjection = 'mercator' | 'equirectangular'
+export type Type_GeoProjection = 'mercator' | 'equirectangular' | 'natural_earth'
 
-export const GEO_PROJECTIONS: readonly Type_GeoProjection[] = ['mercator', 'equirectangular'] as const
+export const GEO_PROJECTIONS: readonly Type_GeoProjection[] = ['mercator', 'equirectangular', 'natural_earth'] as const
+
+/** Natural Earth, φ en radians : le facteur qui multiplie λ pour donner x, et y lui-même. */
+const naturalEarthX = (phi: number): number => {
+  const phi2 = phi * phi
+  const phi4 = phi2 * phi2
+  return 0.8707 - 0.131979 * phi2 + phi4 * (-0.013791 + phi4 * (0.003971 * phi2 - 0.001529 * phi4))
+}
+const naturalEarthY = (phi: number): number => {
+  const phi2 = phi * phi
+  const phi4 = phi2 * phi2
+  return phi * (1.007226 + phi2 * (0.015085 + phi4 * (-0.044475 + 0.028874 * phi2 - 0.005916 * phi4)))
+}
+/** dy/dφ, pour la réciproque par Newton. */
+const naturalEarthDY = (phi: number): number => {
+  const phi2 = phi * phi
+  const phi4 = phi2 * phi2
+  return 1.007226 + phi2 * (0.015085 * 3 + phi4 * (-0.044475 * 7 + 0.028874 * 9 * phi2 - 0.005916 * 11 * phi4))
+}
 
 /** Un point du plan projeté — sans unité : seul le calage lui en donnera une. */
 export type Type_ProjectedPoint = { x: number, y: number }
@@ -75,6 +98,10 @@ export const projectGeoPoint = (
   const lon = longitude * DEG
   if (projection === 'equirectangular') {
     return { x: lon, y: -latitude * DEG }
+  }
+  if (projection === 'natural_earth') {
+    const phi = latitude * DEG
+    return { x: lon * naturalEarthX(phi), y: -naturalEarthY(phi) }
   }
   // Mercator : y = ln(tan(π/4 + φ/2)). Bornée, sinon un pôle rend ±Infinity et emporte tout le
   // calage avec lui (une seule coordonnée aberrante suffirait à faire disparaître la carte).
@@ -216,6 +243,18 @@ export const unplaceGeoPoint = (
   const modulus = fit.wx * fit.wx + fit.wy * fit.wy
   const px = (qx * fit.wx + qy * fit.wy) / modulus
   const py = (qy * fit.wx - qx * fit.wy) / modulus
+  if (reference.projection === 'natural_earth') {
+    // y(φ) n'a pas de réciproque fermée : Newton depuis φ = y, comme d3 (converge en quelques pas,
+    // la fonction est monotone et presque linéaire sur ±90°).
+    const y = -py
+    let phi = y
+    for (let i = 0; i < 25; i++) {
+      const delta = (naturalEarthY(phi) - y) / naturalEarthDY(phi)
+      phi -= delta
+      if (Math.abs(delta) < 1e-12) break
+    }
+    return { latitude: phi / DEG, longitude: px / naturalEarthX(phi) / DEG }
+  }
   const longitude = px / DEG
   if (reference.projection === 'equirectangular') return { latitude: -py / DEG, longitude }
   return { latitude: (2 * Math.atan(Math.exp(-py)) - Math.PI / 2) / DEG, longitude }

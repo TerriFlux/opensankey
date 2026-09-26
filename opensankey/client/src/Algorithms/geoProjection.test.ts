@@ -47,7 +47,21 @@ describe('projectGeoPoint', () => {
     expect(p.x / p.y).toBeCloseTo(-2, 12)
   })
 
-  it('les deux projections ne different que par l ordonnee', () => {
+  it('en Natural Earth, l equateur garde sa longueur relative et les poles ne partent pas a l infini', () => {
+    // Valeurs de reference de d3-geo (naturalEarth1Raw) : largeur a l equateur 0.8707 rad/rad,
+    // et une hauteur de pole finie, bien plus courte qu en Mercator.
+    const eq = projectGeoPoint(0, 90, 'natural_earth')
+    expect(eq.x).toBeCloseTo(Math.PI / 2 * 0.8707, 9)
+    expect(eq.y).toBeCloseTo(0, 12)
+    const pole = projectGeoPoint(90, 0, 'natural_earth')
+    expect(pole.x).toBeCloseTo(0, 12)
+    expect(-pole.y).toBeGreaterThan(1.3)
+    expect(-pole.y).toBeLessThan(1.5)
+    // Les meridiens se resserrent vers les poles : a 60 degres, un degre de longitude vaut moins.
+    expect(projectGeoPoint(60, 10, 'natural_earth').x).toBeLessThan(projectGeoPoint(0, 10, 'natural_earth').x)
+  })
+
+  it('les deux projections cylindriques ne different que par l ordonnee', () => {
     const m = projectGeoPoint(45, 12, 'mercator')
     const e = projectGeoPoint(45, 12, 'equirectangular')
     expect(m.x).toBeCloseTo(e.x, 12)
@@ -109,8 +123,8 @@ describe('fitGeoReference', () => {
 })
 
 describe('unplaceGeoPoint', () => {
-  it('est la reciproque exacte de placeGeoPoint, dans les deux projections', () => {
-    for (const projection of ['mercator', 'equirectangular'] as const) {
+  it('est la reciproque exacte de placeGeoPoint, dans les trois projections', () => {
+    for (const projection of ['mercator', 'equirectangular', 'natural_earth'] as const) {
       const ref: Type_GeoReference = { ...reference, projection }
       const fit = fitGeoReference(ref)!
       for (const [lat, lon] of [[48.86, 2.35], [-33.87, 151.21], [0, 0], [64.14, -21.94]]) {
