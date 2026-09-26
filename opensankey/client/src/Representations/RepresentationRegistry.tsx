@@ -554,9 +554,12 @@ export const diagramCapabilities = (
     sankey.level_taggs_list.length > 0 ||
     sankey.nodes_list.some(n => n.dimensions_as_parent.length > 0)
   )
-  // Aucune brique carto dans l'arbre à ce jour (ni leaflet, ni maplibre, ni
-  // geojson) : rien ne peut porter de coordonnées, donc rien n'est offert.
-  return { hierarchy, geography: false }
+  // os#1364 — La géographie est offerte quand le diagramme en a LES DEUX MOYENS : un fond calé,
+  // et au moins un nœud qui sait où il est. Ni l'un ni l'autre ne suffit — un calage sans
+  // coordonnées ne place personne, des coordonnées sans calage ne savent pas où tomber —, et une
+  // représentation qui s'ouvrirait sur l'un des deux ne montrerait rien en promettant une carte.
+  const geography = app_data.drawing_area?.is_geo_referenced ?? false
+  return { hierarchy, geography }
 }
 
 const meetsNeeds = (

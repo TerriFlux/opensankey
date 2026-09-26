@@ -26,7 +26,9 @@ type MockLink = {
   is_visible_ignoring_zero: boolean,
   shape_is_recycling_locked: boolean,
   shape_is_recycling: boolean,
-  shape_orientation: 'hh' | 'vv' | 'hv' | 'vh'
+  shape_orientation: 'hh' | 'vv' | 'hv' | 'vh',
+  // os#1364 — ce que le socle lit désormais (le réglage résolu) ; ici sans « auto », donc égal.
+  orientation_in_effect: 'hh' | 'vv' | 'hv' | 'vh'
 }
 
 type MockNode = {
@@ -70,7 +72,8 @@ function buildGraph(node_ids: string[], edges: Edge[]): Graph {
       is_visible_ignoring_zero: edge.structural !== false,
       shape_is_recycling_locked: edge.forced_recycling === true,
       shape_is_recycling: edge.forced_recycling === true,
-      shape_orientation: edge.orientation ?? 'hh'
+      shape_orientation: edge.orientation ?? 'hh',
+      orientation_in_effect: edge.orientation ?? 'hh'
     }
     links_dict[id] = link
     nodes_dict[edge.from].output_links_list.push(link)

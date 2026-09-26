@@ -96,6 +96,10 @@ export const default_auto_y = false
 export const default_dx = 200
 export const default_dy = 50
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+// os#1364 — ce que l'auteur RÈGLE : une orientation, ou « auto » (tranchée par le quadrant de la
+// cible, cf. `linkOrientation.ts`). Ce que le tracé LIT reste une `Type_Orientation`
+// (`Class_LinkElement.orientation_in_effect`) : aucun lecteur de géométrie ne voit « auto ».
+export type Type_OrientationSetting = Type_Orientation | 'auto'
 
 // Point de contrôle libre d'un flux (waypoint e!Sankey) : coordonnées MONDE
 // (mêmes unités que position_x/y des nœuds). La liste, vide par défaut, achemine
@@ -3982,8 +3986,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
   } satisfies AttributeConfig<boolean>,
 
   orientation: {
-    default: 'hh' as Type_Orientation,
-    type: (() => 'hh') as (() => Type_Orientation),
+    default: 'hh' as Type_OrientationSetting,
+    type: (() => 'hh') as (() => Type_OrientationSetting),
     callback: 'updateLinkAndSourceTarget',
     setter: 'customShapeOrientation',
     category: 'shape' as const,
@@ -4006,7 +4010,7 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       'zh-CN': '选择流量起点与终点的方向',
       ja: 'フローの始点と終点の向きを選択します'
     }
-  } satisfies AttributeConfig<Type_Orientation>,
+  } satisfies AttributeConfig<Type_OrientationSetting>,
 
   starting_curve: {
     default: 0.05,

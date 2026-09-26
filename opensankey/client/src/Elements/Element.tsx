@@ -49,7 +49,7 @@ import {
   IconLabelAttributeTypes,
   LinkLabelSpecificValues, ALL_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
   NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes, StockLabelAttributeTypes,
-  Type_Orientation, ValueLabelAttributeTypes,
+  Type_OrientationSetting, ValueLabelAttributeTypes,
   ConfigType,
   Type_NameLabelSource
 } from './ElementsAttributesConfig'
@@ -1448,7 +1448,7 @@ export abstract class Class_LinkAttribute extends Class_BaseShape {
   }
 
   // Setters personnalisés pour la logique complexe
-  private customShapeOrientation(value: Type_Orientation) {
+  private customShapeOrientation(value: Type_OrientationSetting) {
     if ((!this.shape_is_recycling) && (
       ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) &&
       ((value === 'hh') || (value === 'vv'))
