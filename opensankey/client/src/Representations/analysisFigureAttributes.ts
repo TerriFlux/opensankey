@@ -306,6 +306,19 @@ const DONUT_HONOURS = {
   value_label_percent: { default: 'total' },
   centre_content: { default: 'value' },
   centre_hole: { default: 55 },
+  // 26/09/2026 — LE SEUIL D'AFFICHAGE DES ÉTIQUETTES, ET SEULEMENT SUR LA COURONNE.
+  //
+  // Julien, capture du panneau « Affichage » du diagramme à l'appui : « pour les couronnes, un
+  // affichage des labels en fonction de la taille serait un plus, comme pour le diagramme de
+  // Sankey. » La couronne applique cette règle depuis toujours, en dur (`MIN_LABEL_SHARE`) ; elle
+  // devient un réglage dont c'est la valeur d'usine, comme `parts_group_under` et `parts_max`
+  // avant elle.
+  //
+  // ⚠️ PAS SUR LES BARRES, et c'est la règle d'os#1499 à la lettre : leur tracé n'a AUCUN filtre
+  // de taille sur les étiquettes, l'offrir là ferait une case morte. Le jour où un histogramme
+  // saura taire les siennes, la clé s'ajoutera à `BARS_HONOURS` — et le harnais des « bites » le
+  // remarquera le jour où on l'oubliera.
+  parts_label_min_share: {},
   legend_width: { default: 230 }
 }
 const BARS_HONOURS = {
