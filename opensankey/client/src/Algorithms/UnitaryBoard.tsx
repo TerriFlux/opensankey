@@ -254,7 +254,7 @@ export const layoutUnitaryBoard = (
   const unitary_dy = unitary_style?.shape_position_dy ?? default_style.shape_position_dy ?? 0
   drawing_area.nodePositioning.computeAutoSankey(false, true, unitary_dx, unitary_dy)
   //drawing_area.nodePositioning.computeParametrization(true)
-  drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+  drawing_area.reorganizeIOLinksOf(drawing_area.sankey.visible_nodes_list)
   // Rester en mode 'absolute' : les positions x/y calculées ci-dessus sont respectées
   // telles quelles au rendu. L'ancien mode 'parametric' rappelait
   // recomputeParametricLayout à chaque redraw, ré-empilant chaque colonne par le haut

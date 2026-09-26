@@ -968,6 +968,16 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 SHAPE SIZE METHODS - RÉINTÉGRÉS DIRECTEMENT
   public getShapeWidthToUse() {
+    // os#1508 — pendant un lot de réorganisations E/S, la taille est mémorisée (cf. DrawingArea).
+    const memo = this.drawing_area.node_size_memo
+    const hit = memo?.get(this)
+    if (hit?.w !== undefined) return hit.w
+    const w = this._computeShapeWidthToUse()
+    if (memo) memo.set(this, { ...hit, w })
+    return w
+  }
+
+  private _computeShapeWidthToUse() {
     // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
     // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
     // thickness inflated the node width to N × minimum_flux for N thin links;
@@ -1029,6 +1039,16 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public getShapeHeightToUse() {
+    // os#1508 — pendant un lot de réorganisations E/S, la taille est mémorisée (cf. DrawingArea).
+    const memo = this.drawing_area.node_size_memo
+    const hit = memo?.get(this)
+    if (hit?.h !== undefined) return hit.h
+    const h = this._computeShapeHeightToUse()
+    if (memo) memo.set(this, { ...hit, h })
+    return h
+  }
+
+  private _computeShapeHeightToUse() {
     const natural = this._getNaturalShapeHeight()
     // Global node size limit (in px, independent of the flux size limit):
     // cap then floor the rendered node height. Fixed px across views (does NOT
@@ -1327,7 +1347,8 @@ export class Class_NodeElement extends Class_NodeBase {
       // autres composantes de la clé sont égales. On signe un ordinal stable et partagé (index
       // global du lien) selon la géométrie du côté pour que la source et la cible ordonnent le
       // faisceau en miroir (CCW à la source, CW à la cible) → pas de croisement. cf. bundleTie.
-      const ord = this.sankey.links_list.indexOf(l)
+      // os#1508 — rang en O(1) (table sur le Sankey) : `links_list.indexOf(l)` par flux coûtait des secondes.
+      const ord = this.sankey.linkOrdinal(l)
       const [ox, oy] = centre(other)
       const geo: Type_IOGeo = { side, ox, oy, turning, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
       if (l.shape_is_recycling) {
@@ -1443,11 +1464,13 @@ export class Class_NodeElement extends Class_NodeBase {
           const source_node = input_link!.source
           this._position.x = source_node.position_x + this.shape_position_dx + source_node.getShapeWidthToUse()
           this._position.y = source_node.position_y + this.shape_position_dy + source_node.getShapeHeightToUse()
+          this._positionWritten() // os#1508
         } else if (this.hasOutputLinks()) {
           const output_link = this.getFirstOutputLink()
           const target_node = output_link!.target
           this._position.x = target_node.position_x + this.shape_position_dx - this.getShapeWidthToUse()
           this._position.y = target_node.position_y + this.shape_position_dy
+          this._positionWritten() // os#1508
         }
       }
       // Parametric positioning (PR 3): this used to walk the column to find
@@ -2321,12 +2344,11 @@ export class Class_NodeElement extends Class_NodeBase {
       this.drawing_area.deferLinkDraws(link_to_redraw)
       return
     }
-    link_to_redraw
-      .forEach(link => {
-        link.draw()
-        //if (link.source === this && this._output_links_handle[link.id]) this._output_links_handle[link.id].draw()
-        //if (link.target === this && this._input_links_handle[link.id]) this._input_links_handle[link.id].draw()
-      })
+    // os#1508 — un lot : une époque d'éventail (chaque pointe posée une fois, cf.
+    // DrawingArea.withArrowEpoch) et une mémo des tailles de nœuds (cf. withNodeSizeMemo).
+    this.drawing_area.withArrowEpoch(() => this.drawing_area.withNodeSizeMemo(() => {
+      link_to_redraw.forEach(link => link.draw())
+    }))
   }
 
   // 🔄 DRAG EVENT HANDLERS FOR LINK HANDLES - RÉINTÉGRÉS DIRECTEMENT =============
