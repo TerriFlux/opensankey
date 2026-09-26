@@ -126,6 +126,8 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
   keep('shape_border_thickness', 'number', 'border_thickness')
   keep('parts_color_source', 'string', 'color_source')
   keep('parts_depth_shading', 'boolean', 'depth_shading')
+  keep('parts_color_axis', 'string', 'color_axis')
+  keep('parts_texture_axis', 'string', 'texture_axis')
   keep('parts_group_under', 'number', 'others_threshold')
   keep('parts_max', 'number', 'parts_max')
   keep('scale_factor', 'number', 'scale_factor')
