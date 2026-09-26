@@ -74,6 +74,7 @@ import { ZOOM_TOPIC } from '../types/EventBus'
 import { readSunburstStyle, SUNBURST_ZOOM } from './SunburstRepresentation'
 import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
+import { sortSunburstTree } from '../Charts/SunburstHierarchy'
 import {
   crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf
 } from '../Charts/CrossHierarchy'
@@ -342,8 +343,14 @@ const ringsTreeOf = (
 ): Type_SunburstTree | null => {
   // `figureChartStyleOf` et non `donutStyleOf` : celui-ci demande la descente, qui demanderait
   // l'arbre — on tournerait en rond. Le mode de dessin, lui, se lit sur le sac tel quel.
-  if (figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS).levels_display !== 'rings') return null
-  return analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading, expanded)
+  const style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
+  if (style.levels_display !== 'rings') return null
+  const tree = analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading, expanded)
+  // 26/09/2026 — L'ORDRE DES PARTS S'APPLIQUE AUX ANNEAUX AUSSI. L'arbre est bâti en ordre 'model'
+  // (le classement est un réglage du graphe), et à plat `orderParts` l'applique ; en anneaux,
+  // personne ne le faisait — les secteurs sortaient dans l'ordre du fichier, à plat par valeur
+  // décroissante. Une seule figure, un seul ordre.
+  return tree ? sortSunburstTree(tree, style.parts_order) : null
 }
 
 /**

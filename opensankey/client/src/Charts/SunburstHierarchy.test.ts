@@ -12,8 +12,8 @@
 
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
-import { buildSunburstTree } from './SunburstHierarchy'
-import type { Type_SunburstNode } from './SunburstHierarchy'
+import { buildSunburstTree, sortSunburstTree } from './SunburstHierarchy'
+import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import { FIGURE_DATA_TAGS_KEY, figureNavigationOf } from './FigureNavigation'
 import type { Class_DataTag, Class_NodeTag } from '../types/Tag'
 import type { Class_LinkElement } from '../Elements/Link'
@@ -314,5 +314,22 @@ describe('le reglage compte des ANNEAUX, pas des niveaux du modele', () => {
     expect(tree).not.toBeNull()
     expect(ringIds(tree!.roots)).toEqual(['EnfantA', 'EnfantB'])
     expect(tree!.is_truncated).toBe(false)
+  })
+})
+
+describe('trier un arbre deja bati', () => {
+  const leaf = (id: string, value: number): Type_SunburstNode =>
+    ({ id, label: id, value, declared: value, color: null, depth: 1, children: [], dimension_id: 'd' })
+  const tree = (): Type_SunburstTree => ({
+    dimension_id: 'd', dimension_label: 'd', rings: [], total: 10, mismatch_count: 0, is_truncated: false,
+    roots: [{ id: 'r', label: 'r', value: 10, declared: 10, color: null, depth: 0, dimension_id: 'd',
+      children: [leaf('b', 3), leaf('a', 6), leaf('c', 1)] }]
+  })
+  test('par valeur decroissante, fratrie par fratrie', () => {
+    expect(sortSunburstTree(tree(), 'value_desc').roots[0].children.map(c => c.id)).toEqual(['a', 'b', 'c'])
+  })
+  test('par nom, et l ordre du modele ne bouge pas', () => {
+    expect(sortSunburstTree(tree(), 'name').roots[0].children.map(c => c.id)).toEqual(['a', 'b', 'c'])
+    expect(sortSunburstTree(tree(), 'model').roots[0].children.map(c => c.id)).toEqual(['b', 'a', 'c'])
   })
 })
