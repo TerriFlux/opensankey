@@ -288,8 +288,19 @@ const DEFAULT_FORMAT = (v: number) =>
 // secteurs — un donut à 50 secteurs est illisible. Les deux seuils sont désormais des RÉGLAGES
 // (`parts_group_under`, `parts_max`, cf. figureChartStyle) dont ils restent la valeur d'usine.
 const OTHERS_COLOR = '#CFD0CB'
-// Part angulaire minimale pour afficher le label % sur un secteur.
+// 26/09/2026 — LA PART ANGULAIRE MINIMALE POUR QU'UN SECTEUR S'ÉCRIVE EST UN RÉGLAGE.
+//
+// Julien, capture du panneau « Affichage » du diagramme a l appui : « pour les couronnes, un
+// affichage des labels en fonction de la taille serait un plus, comme pour le diagramme de
+// Sankey. » La regle vivait EN DUR ici, et rien ne pouvait la contredire — le meme defaut que
+// `parts_group_under` et `parts_max` avant qu ils ne deviennent des reglages.
+//
+// Ce qui reste ici en est la VALEUR D USINE, et c est ce qui protege le parc.
 const MIN_LABEL_SHARE = 0.03
+
+/** Le seuil d'ecriture d'une part, en part du tout : le reglage, sinon la valeur d'usine. */
+const labelMinShare = (st: Type_FigureChartStyle): number =>
+  Math.max(0, (st.parts_label_min_share ?? MIN_LABEL_SHARE * 100)) / 100
 // os#1465 — la part de sa place qu'un pictogramme occupe quand l'auteur n'impose pas sa taille.
 // Pas 1 : une icône qui touche les bords de sa part se confond avec ses voisines.
 const PART_ICON_FILL_RATIO = 0.7
@@ -828,7 +839,7 @@ export const drawDonutChart = (
     // disputent le même creux d'arc : superposés, ils donneraient un dessin barré de lettres. Même
     // règle qu'au sunburst, et que sur un nœud dont le libellé porte une icône.
     aspectOf(d.data.id)?.icon_path === undefined &&
-    (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
+    (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st) &&
     (!(aspectOf(d.data.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || sectorFits(d)))
   if (labelled.length > 0) {
     g.selectAll('text.node_stats_pct')
@@ -904,7 +915,7 @@ export const drawDonutChart = (
   const detached = arcs.filter(d =>
     !valueAttached(d.data.id) &&
     sectorValue(d) !== '' &&
-    (d.endAngle - d.startAngle) / (2 * Math.PI) >= MIN_LABEL_SHARE &&
+    (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st) &&
     aspectOf(d.data.id)?.icon_path === undefined)
   if (detached.length > 0) {
     g.selectAll('text.node_stats_value')

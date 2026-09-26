@@ -63,6 +63,17 @@ export interface Type_FigureChartStyle {
   parts_depth_shading: boolean
   /** En % du tout ; 0 = ne rien replier par la valeur. */
   parts_group_under: number
+  /**
+   * 26/09/2026 — SOUS CETTE PART DU TOUT, UNE PART NE S'ÉCRIT PAS (en %, 0 = les nommer toutes).
+   *
+   * Julien : « pour les couronnes, un affichage des labels en fonction de la taille serait un
+   * plus, comme pour le diagramme de Sankey. » Le diagramme a son « Seuil d'affichage » ; la
+   * couronne avait la même règle EN DUR (`MIN_LABEL_SHARE`), que rien ne pouvait contredire.
+   *
+   * ⚠️ ELLE NE REPLIE RIEN : la part garde sa forme, sa couleur et son info-bulle, elle n'écrit
+   * pas. C'est ce qui la distingue de `parts_group_under`, qui la fait disparaître dans « Autres ».
+   */
+  parts_label_min_share: number
   /** Parts au plus ; 0 = sans limite. */
   parts_max: number
   /**
@@ -159,6 +170,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // la descente arrive colorée comme le disque plutôt qu'en aplats indistincts.
   parts_depth_shading: true,
   parts_group_under: 0.5,
+  // La valeur que le tracé appliquait en dur : une couronne enregistrée ne change pas d'un pixel.
+  parts_label_min_share: 3,
   parts_max: 20,
   levels_display: 'in_place',
   centre_content: 'value',
