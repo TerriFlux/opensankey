@@ -176,6 +176,20 @@ describe('la couronne croisee', () => {
     expect(crossLevelsShown(new Set([linkId('Asie', 'P')]), P, spec('other'), max)).toBeNull()
   })
 
+  test('chaque case porte les branches de premier rang de ses deux axes', () => {
+    const app = loadApp()
+    const opened = new Set([crossExpansionEntry(linkId('Europe', 'P'), 'self')])
+    const tree = buildCrossTree(nodeOf(app, 'P'), spec('other'), FOLLOWING_NAVIGATION, opened)!.tree
+    const root = tree.roots[0]
+    expect(root.axis_branches).toEqual({})
+    const europe = root.children.find(c => c.id === linkId('Europe', 'P'))!
+    expect(europe.axis_branches?.other?.id).toBe('Europe')
+    expect(europe.axis_branches?.self).toBeUndefined()
+    const europe_a = europe.children.find(c => c.id === linkId('Europe', 'A'))!
+    expect(europe_a.axis_branches?.other?.id).toBe('Europe')
+    expect(europe_a.axis_branches?.self?.id).toBe('A')
+  })
+
   test('la couronne lit le croisement par ses deux chemins, arbre et frontiere', () => {
     const app = loadApp()
     const subject = { kind: 'node', node: nodeOf(app, 'P') } as unknown as Type_ChartSubject

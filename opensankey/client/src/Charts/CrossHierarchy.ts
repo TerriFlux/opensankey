@@ -57,7 +57,9 @@ import {
   FOLLOWING_NAVIGATION, linkValueUnder, passesLinkTagFilters, passesNodeTagFilters
 } from './FigureNavigation'
 import type { Type_FigureNavigation } from './FigureNavigation'
-import type { Type_SunburstNode, Type_SunburstRing, Type_SunburstTree } from './SunburstHierarchy'
+import type {
+  Type_AxisBranch, Type_SunburstNode, Type_SunburstRing, Type_SunburstTree
+} from './SunburstHierarchy'
 import type { Type_StatSlice } from './NodeStatsCharts'
 
 /** L'axe par lequel une case s'ouvre : la hiérarchie du sujet, ou celle des nœuds d'en face. */
@@ -265,7 +267,10 @@ export const buildCrossTree = (
   const swallowed_by_centre = roots_source.length === 1 ? 1 : 0
   const max_depth = Math.max(1, (options.max_depth ?? CROSS_DEFAULT_MAX_DEPTH) + swallowed_by_centre)
 
-  const build = (cell: Type_Cell, depth: number, reached_by: Type_CrossAxis, is_root: boolean): Type_SunburstNode => {
+  type Type_Branches = { self?: Type_AxisBranch, other?: Type_AxisBranch }
+  const build = (
+    cell: Type_Cell, depth: number, reached_by: Type_CrossAxis, is_root: boolean, branches: Type_Branches
+  ): Type_SunburstNode => {
     const changed = reached_by === 'self' ? cell.p : cell.q
     const declared = valueOf(cell.link)
     const changed_dim = (changed.dimensions_as_child as Class_NodeDimension[])[0]?.id ?? ''
@@ -286,7 +291,8 @@ export const buildCrossTree = (
       depth,
       children: [],
       is_disaggregated: false,
-      dimension_id: changed_dim
+      dimension_id: changed_dim,
+      axis_branches: branches
     }
     // La racine est toujours ouverte ; son entrée, quand il y en a une, ne dit que l'axe.
     const written = crossExpansionOf(expanded, cell.link.id)
@@ -303,7 +309,15 @@ export const buildCrossTree = (
       const along = cellsAlong(cell, axis, side, valueOf)
       if (!along) continue
       node.dimension_id = along.dim_id
-      node.children = along.cells.map(c => build(c, depth + 1, axis, false))
+      node.children = along.cells.map(c => {
+        // La branche d'un axe est son membre de PREMIER rang : posée au premier cran de cet axe,
+        // elle ne change plus en descendant.
+        const member = axis === 'self' ? c.p : c.q
+        const next: Type_Branches = branches[axis]
+          ? branches
+          : { ...branches, [axis]: { id: member.id, label: displayedNameOf(member), color: member.getShapeColorToUse() ?? null } }
+        return build(c, depth + 1, axis, false, next)
+      })
       break
     }
     if (node.children.length === 0) return node
@@ -314,7 +328,7 @@ export const buildCrossTree = (
     return node
   }
 
-  const roots = roots_source.map(c => build(c, 0, 'other', true))
+  const roots = roots_source.map(c => build(c, 0, 'other', true, {}))
   const first_ring = rings[0] ?? { dimension_id: '', dimension_label: '', level_label: '', is_selected_level: false }
   return {
     tree: {

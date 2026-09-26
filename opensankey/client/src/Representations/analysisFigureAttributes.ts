@@ -257,6 +257,9 @@ const DONUT_HONOURS = {
     // VRAIMENT aucun sens (le nœud commande sa teinte), et plus derrière la descente.
     visibleIf: (o: Type_Bag) => o['parts_color_source'] !== 'model'
   },
+  // os#1509 — couleur et texture par axe (couronne croisée).
+  parts_color_axis: {},
+  parts_texture_axis: {},
   // « La position par défaut devrait être en dessous » (Julien, 24/09/2026) : un bandeau sous le
   // disque plutôt qu'une colonne qui lui mange son diamètre. Cf. `DONUT_STYLE_DEFAULTS`, qui porte
   // le même défaut côté tracé — les deux doivent dire la même chose, sinon l'inspecteur montre un

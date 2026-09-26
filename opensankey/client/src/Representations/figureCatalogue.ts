@@ -210,6 +210,47 @@ export const PARTS_CONFIG = {
     es: 'El tono dice la rama, la claridad dice el nivel.', de: 'Der Farbton nennt den Zweig, die Helligkeit die Ebene.',
     it: 'La tinta dice il ramo, la chiarezza dice il livello.', 'zh-CN': '色相表示分支，明度表示层级。', ja: '色相が枝を、明度が階層を表します。'
   }, { visibleIf: (o) => o['parts_color_source'] !== 'model' }),
+  // os#1509 — SUR UNE COURONNE CROISÉE, deux axes se partagent la couleur et la texture (Julien :
+  // « les couleurs pour l'une, mais pour l'autre ? texture »). Sans croisement, « la branche » est
+  // le seul choix qui change quelque chose, et c'est le défaut.
+  parts_color_axis: entry<'branch' | 'self' | 'other'>('branch', 'parts', {
+    en: 'Colour by', fr: 'Couleur selon', es: 'Color según', de: 'Farbe nach', it: 'Colore secondo',
+    'zh-CN': '按…着色', ja: '色分けの基準'
+  }, {
+    en: 'Which axis the hue names on a crossed ring chart: the first-ring branch, the subject’s hierarchy, or the facing nodes’ hierarchy.',
+    fr: 'Quel axe la teinte nomme sur une couronne croisée : la branche du premier anneau, la hiérarchie du sujet, ou celle des nœuds d’en face.',
+    es: 'Qué eje nombra el tono en una corona cruzada: la rama del primer anillo, la jerarquía del sujeto o la de los nodos de enfrente.',
+    de: 'Welche Achse der Farbton auf einem gekreuzten Ring benennt: den Zweig des ersten Rings, die Hierarchie des Subjekts oder die der gegenüberliegenden Knoten.',
+    it: 'Quale asse la tinta nomina su una corona incrociata: il ramo del primo anello, la gerarchia del soggetto o quella dei nodi di fronte.',
+    'zh-CN': '交叉环图中色相所表示的轴：第一环的分支、主体的层级，或对面节点的层级。',
+    ja: '交差リングで色相が示す軸：最初のリングの枝、主体の階層、または向かい側ノードの階層。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('branch', { en: 'The branch', fr: 'La branche', es: 'La rama', de: 'Der Zweig', it: 'Il ramo', 'zh-CN': '分支', ja: '枝' }),
+      choice('self', { en: 'The subject’s hierarchy', fr: 'La hiérarchie du sujet', es: 'La jerarquía del sujeto', de: 'Die Hierarchie des Subjekts', it: 'La gerarchia del soggetto', 'zh-CN': '主体的层级', ja: '主体の階層' }),
+      choice('other', { en: 'The facing hierarchy', fr: 'La hiérarchie d’en face', es: 'La jerarquía de enfrente', de: 'Die gegenüberliegende Hierarchie', it: 'La gerarchia di fronte', 'zh-CN': '对面的层级', ja: '向かい側の階層' })
+    ]
+  }),
+  parts_texture_axis: entry<'none' | 'self' | 'other'>('none', 'parts', {
+    en: 'Texture by', fr: 'Texture selon', es: 'Textura según', de: 'Textur nach', it: 'Texture secondo',
+    'zh-CN': '按…加纹理', ja: 'テクスチャの基準'
+  }, {
+    en: 'Which axis the hatching names, over the colour: none, the subject’s hierarchy, or the facing nodes’ hierarchy.',
+    fr: 'Quel axe les hachures nomment, par-dessus la couleur : aucun, la hiérarchie du sujet, ou celle des nœuds d’en face.',
+    es: 'Qué eje nombran las tramas, sobre el color: ninguno, la jerarquía del sujeto o la de los nodos de enfrente.',
+    de: 'Welche Achse die Schraffur über der Farbe benennt: keine, die Hierarchie des Subjekts oder die der gegenüberliegenden Knoten.',
+    it: 'Quale asse le tratteggiature nominano, sopra il colore: nessuno, la gerarchia del soggetto o quella dei nodi di fronte.',
+    'zh-CN': '叠加在颜色之上的阴影线所表示的轴：无、主体的层级，或对面节点的层级。',
+    ja: '色の上の斜線が示す軸：なし、主体の階層、または向かい側ノードの階層。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('none', { en: 'None', fr: 'Aucune', es: 'Ninguna', de: 'Keine', it: 'Nessuna', 'zh-CN': '无', ja: 'なし' }),
+      choice('self', { en: 'The subject’s hierarchy', fr: 'La hiérarchie du sujet', es: 'La jerarquía del sujeto', de: 'Die Hierarchie des Subjekts', it: 'La gerarchia del soggetto', 'zh-CN': '主体的层级', ja: '主体の階層' }),
+      choice('other', { en: 'The facing hierarchy', fr: 'La hiérarchie d’en face', es: 'La jerarquía de enfrente', de: 'Die gegenüberliegende Hierarchie', it: 'La gerarchia di fronte', 'zh-CN': '对面的层级', ja: '向かい側の階層' })
+    ]
+  }),
   // ── OÙ LA DESCENTE DE LA HIÉRARCHIE N'EST PAS, ET POURQUOI (arbitrage Julien, 24/09/2026) ───
   //
   // Elle a d'abord été une clé d'ici, `parts_hierarchy`. C'était faux deux fois. Faux de PLACE :

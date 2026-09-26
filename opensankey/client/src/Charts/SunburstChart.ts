@@ -53,6 +53,18 @@ export interface Type_SunburstStyle {
   color_source: 'palette' | 'model'
   /** La clarté dit la profondeur. Coupé, tous les anneaux d'une branche ont la même teinte. */
   depth_shading: boolean
+  /**
+   * os#1509 — SUR UNE COURONNE CROISÉE, DEUX AXES SE PARTAGENT LA COULEUR ET LA TEXTURE.
+   *
+   * Julien : « quand y a deux dimensions on peut utiliser les couleurs pour l'une, mais pour
+   * l'autre ? texture ». La teinte de branche ne sait nommer qu'un axe : dès qu'ils alternent, les
+   * filières d'Europe et celles d'Asie ne se reconnaissent qu'au libellé. `color_axis` dit quel axe
+   * la couleur nomme — la branche du premier anneau (défaut, ce que le tracé a toujours fait), le
+   * sujet ou les nœuds d'en face — et `texture_axis` quel axe les hachures nomment. Sans branches
+   * par axe (couronne par nœuds enfants), l'un et l'autre retombent sur la branche.
+   */
+  color_axis: 'branch' | 'self' | 'other'
+  texture_axis: 'none' | 'self' | 'other'
   /** Les trois suivants sont les attributs de FORME des éléments (`shape_*`). */
   opacity: number
   border_visible: boolean
@@ -160,6 +172,8 @@ export interface Type_SunburstStyle {
 export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   color_source: 'palette',
   depth_shading: true,
+  color_axis: 'branch',
+  texture_axis: 'none',
   opacity: 1,
   border_visible: true,
   border_color: '#ffffff',
@@ -560,6 +574,10 @@ export interface Type_SunburstSlice {
   children_count: number
   // Fil d'Ariane, du centre jusqu'à ce secteur inclus.
   path: string[]
+  // os#1509 — la texture du secteur (rang du motif, cf. `TEXTURE_KINDS`) et ce qu'elle nomme ;
+  // `null` sans texture.
+  texture: number | null
+  texture_label: string
 }
 
 // Replie les enfants trop étroits pour être vus dans un « Autres » de fratrie. Le seuil
@@ -596,6 +614,38 @@ export const foldNarrowChildren = (
 }
 
 /**
+ * os#1509 — LES MOTIFS D'UNE TEXTURE, dans l'ordre où ils s'attribuent : hachures dans un sens,
+ * dans l'autre, lignes, points, croisillons, grille. Posés PAR-DESSUS la couleur du secteur, à
+ * l'encre du thème et translucides, pour qu'ils se lisent sur n'importe quelle teinte.
+ */
+export const TEXTURE_KINDS = 8
+export const defineTexturePattern = (
+  defs: d3.Selection<SVGDefsElement, unknown, null, undefined>,
+  id: string,
+  kind: number,
+  ink: string
+): void => {
+  const k = ((kind % TEXTURE_KINDS) + TEXTURE_KINDS) % TEXTURE_KINDS
+  const size = k === 6 ? 4 : 6
+  const pattern = defs.append('pattern')
+    .attr('id', id).attr('patternUnits', 'userSpaceOnUse')
+    .attr('width', size).attr('height', size)
+  const stroke = (d: string) => pattern.append('path').attr('d', d)
+    .attr('stroke', ink).attr('stroke-width', 1).attr('stroke-opacity', 0.45).attr('fill', 'none')
+  switch (k) {
+  case 0: stroke('M-1,1 L1,-1 M0,6 L6,0 M5,7 L7,5'); break
+  case 1: stroke('M-1,5 L1,7 M0,0 L6,6 M5,-1 L7,1'); break
+  case 2: stroke('M0,3 L6,3'); break
+  case 3: stroke('M3,0 L3,6'); break
+  case 4: pattern.append('circle').attr('cx', 3).attr('cy', 3).attr('r', 1.1)
+    .attr('fill', ink).attr('fill-opacity', 0.45); break
+  case 5: stroke('M-1,1 L1,-1 M0,6 L6,0 M5,7 L7,5 M-1,5 L1,7 M0,0 L6,6 M5,-1 L7,1'); break
+  case 6: stroke('M-1,1 L1,-1 M0,4 L4,0 M3,5 L5,3'); break
+  default: stroke('M0,3 L6,3 M3,0 L3,6'); break
+  }
+}
+
+/**
  * Aplatit l'arbre en secteurs portant chacun ses angles absolus. Les enfants d'un nœud
  * se partagent EXACTEMENT l'angle de leur parent, au prorata de leur valeur : la
  * cohérence géométrique ne dépend donc pas de la qualité du bouclage des données —
@@ -611,7 +661,8 @@ export const partitionSunburst = (
   others_color = '',
   // os#1425 — la mise en forme qui touche la COULEUR et le REGROUPEMENT ; le reste (étiquettes,
   // centre, légende) appartient au rendu et n'entre pas dans une partition.
-  style: Pick<Type_SunburstStyle, 'color_source' | 'depth_shading' | 'others_threshold'> = {
+  style: Pick<Type_SunburstStyle, 'color_source' | 'depth_shading' | 'others_threshold'>
+    & Partial<Pick<Type_SunburstStyle, 'color_axis' | 'texture_axis'>> = {
     color_source: 'palette', depth_shading: true, others_threshold: 0
   }
 ): Type_SunburstSlice[] => {
@@ -619,6 +670,13 @@ export const partitionSunburst = (
   const total = roots.reduce((acc, r) => acc + r.value, 0)
   if (total <= 0) return []
   const slices: Type_SunburstSlice[] = []
+  // os#1509 — LA COULEUR ET LA TEXTURE PAR AXE. Une teinte par branche de l'axe coloré, un motif
+  // par branche de l'axe texturé, attribués dans l'ordre de première rencontre — le même d'un
+  // dessin à l'autre tant que l'ordre des parts ne change pas.
+  const color_axis = style.color_axis ?? 'branch'
+  const texture_axis = style.texture_axis ?? 'none'
+  const axis_colors = new Map<string, string>()
+  const textures = new Map<string, number>()
 
   const walk = (
     node: Type_SunburstNode,
@@ -630,6 +688,23 @@ export const partitionSunburst = (
   ) => {
     const span = a1 - a0
     const children = foldNarrowChildren(node.children, span, others_label, style.others_threshold)
+    const color_branch = color_axis === 'branch' ? undefined : node.axis_branches?.[color_axis]
+    const axisColor = (): string => {
+      if (!color_branch) return style.depth_shading ? shadeForDepth(base, depth, theme) : base
+      let hue = axis_colors.get(color_branch.id)
+      if (hue === undefined) {
+        hue = (style.color_source === 'model' && color_branch.color) ? color_branch.color : branch_color(axis_colors.size)
+        axis_colors.set(color_branch.id, hue)
+      }
+      return style.depth_shading ? shadeForDepth(hue, depth, theme) : hue
+    }
+    const texture_branch = (texture_axis === 'none' || node.is_residual) ? undefined : node.axis_branches?.[texture_axis]
+    let texture: number | null = null
+    if (texture_branch) {
+      const known = textures.get(texture_branch.id)
+      texture = known ?? textures.size
+      if (known === undefined) textures.set(texture_branch.id, texture)
+    }
     slices.push({
       id: node.id,
       label: node.label,
@@ -644,14 +719,18 @@ export const partitionSunburst = (
       // profondeur ne s'applique pas : deux nœuds du modèle se distinguent déjà par elle.
       color: node.is_residual
         ? others
-        : (style.color_source === 'model' && node.color)
-          ? node.color
-          : (style.depth_shading ? shadeForDepth(base, depth, theme) : base),
+        : color_branch
+          ? axisColor()
+          : (style.color_source === 'model' && node.color)
+            ? node.color
+            : (style.depth_shading ? shadeForDepth(base, depth, theme) : base),
       is_residual: !!node.is_residual,
       is_disaggregated: !!node.is_disaggregated,
       dimension_id: node.dimension_id,
       children_count: children.length,
-      path
+      path,
+      texture,
+      texture_label: texture_branch?.label ?? ''
     })
     const sum = children.reduce((acc, c) => acc + c.value, 0)
     if (sum <= 0) return
@@ -1418,6 +1497,25 @@ export const drawSunburstChart = (
       })
     if (st.tooltip_visible) paths.append('title').text(sliceTitle)
 
+    // os#1509 — LA TEXTURE, PAR-DESSUS LA COULEUR. Un tracé de plus par secteur texturé, rempli du
+    // motif de sa branche, inerte au pointeur : le secteur en dessous garde le clic et le survol.
+    // Les motifs vivent dans `defs`, hors du groupe zoomé, avec un identifiant propre à ce dessin
+    // — deux couronnes sur une page ne se partagent pas un motif.
+    const textured = slices.filter(sl => sl.texture !== null)
+    if (textured.length > 0) {
+      const uid = `sunburst_tex_${Math.random().toString(36).slice(2, 8)}`
+      const kinds = new Set(textured.map(sl => sl.texture as number))
+      kinds.forEach(kind => defineTexturePattern(defs, `${uid}_${kind}`, kind, palette.ink))
+      g.selectAll<SVGPathElement, Type_SunburstSlice>('path.sunburst_texture')
+        .data(textured)
+        .enter().append('path')
+        .attr('class', 'sunburst_texture')
+        .attr('d', d => arc(d))
+        .attr('fill', d => `url(#${uid}_${d.texture})`)
+        .attr('stroke', 'none')
+        .attr('pointer-events', 'none')
+    }
+
     // Étiquettes DANS les secteurs assez larges. Jamais sur tous : un secteur trop
     // étroit n'a que son info-bulle, et un texte tronqué à l'aveugle ne nomme rien.
     /**
@@ -1706,6 +1804,35 @@ export const drawSunburstChart = (
         // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
         .style('font-weight', ring_info?.is_selected_level ? 'bold' : 'normal')
         .text(name)
+    }
+
+    // os#1509 — LES TEXTURES, ce que chaque motif nomme sur l'axe texturé : une pastille hachurée
+    // par branche, dans l'ordre d'attribution des motifs.
+    const texture_rows = [...new Map(
+      slices.filter(sl => sl.texture !== null).map(sl => [sl.texture as number, sl.texture_label])
+    ).entries()].sort((a, b) => a[0] - b[0])
+    if (st.legend_visible && texture_rows.length > 0) {
+      legend.append('div').style('height', '0.4rem')
+      const rows = legend.selectAll('div.sunburst_texture_row')
+        .data(texture_rows).enter().append('div')
+        .attr('class', 'sunburst_texture_row')
+        .style('display', 'flex').style('align-items', 'center')
+        .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
+      rows.each(function ([kind]) {
+        const swatch = d3.select(this).append('svg')
+          .attr('width', 14).attr('height', 14).style('flex', '0 0 auto')
+        const swatch_defs = swatch.append('defs') as unknown as d3.Selection<SVGDefsElement, unknown, null, undefined>
+        const id = `sunburst_tex_legend_${Math.random().toString(36).slice(2, 8)}_${kind}`
+        defineTexturePattern(swatch_defs, id, kind, palette.ink)
+        swatch.append('rect').attr('width', 14).attr('height', 14).attr('rx', 2)
+          .attr('fill', palette.others)
+        swatch.append('rect').attr('width', 14).attr('height', 14).attr('rx', 2)
+          .attr('fill', `url(#${id})`)
+      })
+      rows.append('span')
+        .style('flex', '1 1 auto').style('overflow', 'hidden')
+        .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+        .attr('title', ([, label]) => label).text(([, label]) => label)
     }
 
     // Puis les BRANCHES QUE LE DESSIN NE NOMME PAS, et elles seules : un secteur assez
