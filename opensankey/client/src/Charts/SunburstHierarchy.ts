@@ -114,6 +114,13 @@ export const SUNBURST_DEFAULT_MAX_DEPTH = 6
 // sur tous les diagrammes réconciliés.
 const BALANCE_TOLERANCE = 1e-6
 
+/**
+ * os#1509 — UN MEMBRE DE PREMIER RANG D'UN AXE, sur une couronne croisée : le continent, la
+ * filière par lesquels un secteur descend. C'est ce qui permet de colorer selon un axe et de
+ * texturer selon l'autre (cf. `partitionSunburst`).
+ */
+export interface Type_AxisBranch { id: string, label: string, color: string | null }
+
 // Un nœud de l'arbre du sunburst. Donnée PURE : le moteur de rendu ne connaît que ça,
 // jamais les classes du modèle.
 export interface Type_SunburstNode {
@@ -137,6 +144,9 @@ export interface Type_SunburstNode {
   // par lequel on l'a atteint. Avec des axes enchaînés, un même clic ne parle plus du
   // même axe selon l'anneau — c'est ce champ qui le dit au contrôleur.
   dimension_id: string
+  // os#1509 — les branches de chaque axe par lesquelles ce secteur descend (couronne croisée
+  // seulement ; absent ailleurs, et le tracé colore alors par branche comme toujours).
+  axis_branches?: { self?: Type_AxisBranch, other?: Type_AxisBranch }
 }
 
 // Un ANNEAU : de quel axe vient ce cran, et quel niveau il porte.

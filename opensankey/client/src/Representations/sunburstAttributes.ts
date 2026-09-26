@@ -200,6 +200,8 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   shape_border_thickness: { advanced: true, visibleIf: (o) => is(o, 'shape_border_visible', true) },
   parts_color_source: {},
   parts_depth_shading: {},
+  parts_color_axis: {},
+  parts_texture_axis: {},
   parts_order: {},
   parts_group_under: {},
   scale_factor: {},
