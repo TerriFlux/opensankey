@@ -43,7 +43,8 @@ import { LinkControlPoints } from './LinkControlPoints'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
-import { Type_Side, getNameLabelValues, Type_NameLabelSource } from './ElementsAttributesConfig'
+import { Type_Side, getNameLabelValues, Type_NameLabelSource, Type_Orientation } from './ElementsAttributesConfig'
+import { resolveLinkOrientation } from './linkOrientation'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { effectiveOpacity } from './elementOpacity'
@@ -957,7 +958,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
       const source_color = this.source.getShapeColorToUse()
       const target_color = this.target.getShapeColorToUse()
-      const shape_orientation = this.shape_orientation  // save to avoid recomputings
+      const shape_orientation = this.orientation_in_effect  // save to avoid recomputings
       const shape_is_recycling = this.shape_is_recycling  // save to avoid recomputings
       if (shape_orientation === 'hh' || shape_orientation === 'hv') {
         if (
@@ -1263,7 +1264,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const full = at_source ? this.thicknessSource : this.thicknessTarget
       const x_end = at_source ? this.position_x_start : this.position_x_end
       const y_end = at_source ? this.position_y_start : this.position_y_end
-      const is_hh = this.shape_orientation === 'hh'
+      const is_hh = this.orientation_in_effect === 'hh'
       const safe_id = this.id.replace(/[^a-zA-Z0-9_-]/g, '_')
       let cum = 0
       bands.forEach(({ color, share }, band_idx) => {
@@ -3246,10 +3247,29 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
 
   // Orientation
-  public get is_horizontal() { return this.shape_orientation === 'hh' }
-  public get is_vertical() { return this.shape_orientation === 'vv' }
-  public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
-  public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
+  /**
+   * os#1364 — L'ORIENTATION QUI S'APPLIQUE : le réglage, ou — s'il vaut « auto » — celle que le
+   * quadrant de la cible décide (cf. `linkOrientation.ts`). TOUT ce qui dessine ou ordonne lit
+   * ceci, jamais `shape_orientation` : l'inspecteur seul a besoin de voir « auto ».
+   *
+   * Centres estimés depuis la TAILLE BRUTE (`shape_min_*`), pas `getShapeWidthToUse()` : celle-ci
+   * dérive la bande des flux ordonnés, qui lit `source_side`, qui lit `is_horizontal`, qui
+   * reviendrait ici — même garde que `_waypointFacingSide`.
+   */
+  public get orientation_in_effect(): Type_Orientation {
+    const setting = this.shape_orientation
+    if (setting !== 'auto') return setting
+    if (this.source === undefined || this.target === undefined) return 'hh'
+    const dx = (this.target.position_x + this.target.shape_min_width / 2)
+      - (this.source.position_x + this.source.shape_min_width / 2)
+    const dy = (this.target.position_y + this.target.shape_min_height / 2)
+      - (this.source.position_y + this.source.shape_min_height / 2)
+    return resolveLinkOrientation(setting, dx, dy)
+  }
+  public get is_horizontal() { return this.orientation_in_effect === 'hh' }
+  public get is_vertical() { return this.orientation_in_effect === 'vv' }
+  public get is_horizontal_vertical() { return this.orientation_in_effect === 'hv' }
+  public get is_vertical_horizontal() { return this.orientation_in_effect === 'vh' }
 
   /**
    * opensankey#1301 — RÉGIME ROUTÉ : le flux a des points de contrôle libres et n'est

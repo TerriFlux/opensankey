@@ -158,7 +158,7 @@ export class NodePositioningCyclesCore {
     horizontal_indexes: { [node_id: string]: number },
     vertical_indexes?: { [node_id: string]: number }
   ): { [node_id: string]: number } | undefined {
-    const orientation = link.shape_orientation
+    const orientation = link.orientation_in_effect
     if (orientation === 'vv') return vertical_indexes
     if (orientation === 'hv' || orientation === 'vh') return undefined
     return horizontal_indexes

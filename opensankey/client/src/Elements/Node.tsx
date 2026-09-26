@@ -1322,7 +1322,7 @@ export class Class_NodeElement extends Class_NodeBase {
       const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
       // Seuls les flux qui changent d'axe ('vh'/'hv') reçoivent l'éventail split+hauteur ;
       // les flux droits ('hh'/'vv') gardent le tri par position opposée (cf. orderKey).
-      const turning = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
+      const turning = (l.orientation_in_effect === 'vh' || l.orientation_in_effect === 'hv')
       // Départage de faisceau : pour des flux parallèles (mêmes source/cible/côtés) toutes les
       // autres composantes de la clé sont égales. On signe un ordinal stable et partagé (index
       // global du lien) selon la géométrie du côté pour que la source et la cible ordonnent le
@@ -1337,7 +1337,7 @@ export class Class_NodeElement extends Class_NodeBase {
           sx, sy, tx, ty,
           l.shape_middle_recycling ?? 100, // 100 = middle_recycling config default
           l.thickness,
-          l.shape_orientation
+          l.orientation_in_effect
         )
         geo.stack_ref = (side === 'left' || side === 'right') ? belly.y : belly.x
       }
