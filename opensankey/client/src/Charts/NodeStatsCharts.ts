@@ -300,7 +300,7 @@ const MIN_LABEL_SHARE = 0.03
 
 /** Le seuil d'ecriture d'une part, en part du tout : le reglage, sinon la valeur d'usine. */
 const labelMinShare = (st: Type_FigureChartStyle): number =>
-  Math.max(0, (st.parts_label_min_share ?? MIN_LABEL_SHARE * 100)) / 100
+  Math.max(0, (st.labels_min_share ?? MIN_LABEL_SHARE * 100)) / 100
 // os#1465 — la part de sa place qu'un pictogramme occupe quand l'auteur n'impose pas sa taille.
 // Pas 1 : une icône qui touche les bords de sa part se confond avec ses voisines.
 const PART_ICON_FILL_RATIO = 0.7

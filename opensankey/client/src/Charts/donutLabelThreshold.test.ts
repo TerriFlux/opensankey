@@ -65,7 +65,7 @@ describe('le seuil d affichage des etiquettes', () => {
   })
 
   it('LE CAS DE JULIEN : baisser le seuil nomme les petites', () => {
-    const el = dessine({ parts_label_min_share: 0 })
+    const el = dessine({ labels_min_share: 0 })
 
     expect(dansLesSecteurs(el)).toContain('Miette')
   })
@@ -73,7 +73,7 @@ describe('le seuil d affichage des etiquettes', () => {
   it('ET LE MONTER TAIT LES GROSSES', () => {
     // L autre sens, qui prouve que c est bien un REGLAGE et pas un interrupteur : « Gros » pese
     // 99 %, il faut donc un seuil absurde pour le taire — et il se tait.
-    const el = dessine({ parts_label_min_share: 99.5 })
+    const el = dessine({ labels_min_share: 99.5 })
 
     expect(dansLesSecteurs(el)).not.toContain('Gros')
   })
@@ -81,8 +81,8 @@ describe('le seuil d affichage des etiquettes', () => {
   it('IL NE REPLIE RIEN : la part se tait, elle ne disparait pas', () => {
     // LA CONTRE-VERIFICATION QUI COMPTE, et elle dit la difference avec `parts_group_under` :
     // au-dessus comme en dessous du seuil, la couronne garde ses DEUX secteurs.
-    const nomme = dessine({ parts_label_min_share: 0 })
-    const muet = dessine({ parts_label_min_share: 10 })
+    const nomme = dessine({ labels_min_share: 0 })
+    const muet = dessine({ labels_min_share: 10 })
 
     expect(secteurs(nomme)).toBe(2)
     expect(secteurs(muet)).toBe(2)

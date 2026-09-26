@@ -314,11 +314,15 @@ const DONUT_HONOURS = {
   // devient un réglage dont c'est la valeur d'usine, comme `parts_group_under` et `parts_max`
   // avant elle.
   //
+  // ⚠️ UNE COORDONNÉE, PAS UN STYLE : « quelles parts s'écrivent » dit ce que la figure MONTRE.
+  // Elle se règle donc dans « Filtres et coordonnées », à côté des niveaux et du clic — là où
+  // Julien l'a cherchée (« je vois pas, désolé », capture du panneau Coordonnées à l'appui).
+  //
   // ⚠️ PAS SUR LES BARRES, et c'est la règle d'os#1499 à la lettre : leur tracé n'a AUCUN filtre
   // de taille sur les étiquettes, l'offrir là ferait une case morte. Le jour où un histogramme
   // saura taire les siennes, la clé s'ajoutera à `BARS_HONOURS` — et le harnais des « bites » le
   // remarquera le jour où on l'oubliera.
-  parts_label_min_share: {},
+  labels_min_share: { sort: 'navigation' as const },
   legend_width: { default: 230 }
 }
 const BARS_HONOURS = {
