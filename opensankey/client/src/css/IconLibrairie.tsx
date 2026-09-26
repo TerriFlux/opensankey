@@ -274,6 +274,20 @@ const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 // Ajout après logo_hh dans la section "Hand made icon"
 
+// os#1364 — Orientation « auto » : les quatre directions d'un coup, le flux choisit selon
+// le quadrant de sa cible (cf. linkOrientation.ts). Une croix fléchée, dans le même
+// gabarit que logo_hh / logo_vv.
+const logo_auto = <svg xmlns="http://www.w3.org/2000/svg"
+  width="1em"
+  height="1em"
+  viewBox="0 0 26 26"
+>
+  <g fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 13,3 V 23 M 3,13 H 23" />
+    <path d="M 9.5,6.5 13,3 16.5,6.5 M 9.5,19.5 13,23 16.5,19.5 M 6.5,9.5 3,13 6.5,16.5 M 19.5,9.5 23,13 19.5,16.5" />
+  </g>
+</svg>
+
 // Logo "Courbe" : une bézier en S avec tangentes horizontales aux extrémités,
 // qui évoque exactement la forme d'un flux courbé.
 const logo_courbe = <svg xmlns="http://www.w3.org/2000/svg"
@@ -1701,6 +1715,7 @@ export class Class_IconLibrary {
 
   protected _icon_open_selector = <FaChevronDown />
 
+  protected _icon_orientation_auto = logo_auto
   protected _icon_orientation_hh = logo_hh
   protected _icon_orientation_vv = logo_vv
   protected _icon_orientation_hv = logo_hv
@@ -2117,6 +2132,7 @@ export class Class_IconLibrary {
   public get icon_delete() { return this.normalizeIcon(this._icon_delete) }
   public get icon_locked() { return this._icon_locked }
   public get icon_unlocked() { return this._icon_unlocked }
+  public get icon_orientation_auto() { return this.normalizeIcon(this._icon_orientation_auto) }
   public get icon_orientation_hh() { return this.normalizeIcon(this._icon_orientation_hh) }
   public get icon_orientation_vv() { return this.normalizeIcon(this._icon_orientation_vv) }
   public get icon_orientation_hv() { return this.normalizeIcon(this._icon_orientation_hv) }

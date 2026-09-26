@@ -196,7 +196,7 @@ export class LinkDrawShape {
 
       // Show as full shape for specific shapes
       const is_outline_shape_type = this._link.shape_type === 'bezier_outline' || this._link.shape_type === 'bezier_outline_exact'
-      if (!show_as_path && !is_outline_shape_type && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
+      if (!show_as_path && !is_outline_shape_type && this._link.orientation_in_effect != 'vh' && this._link.orientation_in_effect != 'hv') {
         const shape = this.getBezierPath(true)
 
         // Incertitude (OS#189) — halo MAX régénéré en forme pleine, DERRIÈRE.
@@ -413,12 +413,12 @@ export class LinkDrawShape {
 
     const full_src = link.thicknessSource
     const full_tgt = link.thicknessTarget
-    const transverse = link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
+    const transverse = link.orientation_in_effect === 'hh' ? [0, 1] : [1, 0]
     // Contour exact réservé aux courbes hh/vv hors drag (comme le tracé
     // principal) ; tous les autres cas — flux droits, orientations vh/hv,
     // pendant un drag — passent par le constructeur générique ci-dessous.
     const use_exact = link.shape_is_curved
-      && (link.shape_orientation === 'hh' || link.shape_orientation === 'vv')
+      && (link.orientation_in_effect === 'hh' || link.orientation_in_effect === 'vv')
       && !this.isBeingDragged()
 
     // Contour approché d'une bande, générique : chaque groupe de points est
@@ -1156,7 +1156,7 @@ export class LinkDrawShape {
       }
 
       // Pour is_outline, différencier selon l'orientation
-      if (this._link.shape_orientation === 'hh' || this._link.shape_orientation === 'vv') {
+      if (this._link.orientation_in_effect === 'hh' || this._link.orientation_in_effect === 'vv') {
         // Source and target half-thicknesses (supports tapered/trapezoid links)
         const halfSrc = this._link.thicknessSource / 2
         const halfTgt = this._link.thicknessTarget / 2
@@ -1181,13 +1181,13 @@ export class LinkDrawShape {
           // (translation transverse) est visuellement identique et moins coûteux.
           // Avec des bandes : exact sans seuil (les frontières internes doivent
           // coïncider avec l'enveloppe).
-          const chord_axis = this._link.shape_orientation === 'hh' ? Math.abs(x5 - x1) : Math.abs(y5 - y1)
-          const chord_off = this._link.shape_orientation === 'hh' ? Math.abs(y5 - y1) : Math.abs(x5 - x1)
+          const chord_axis = this._link.orientation_in_effect === 'hh' ? Math.abs(x5 - x1) : Math.abs(y5 - y1)
+          const chord_off = this._link.orientation_in_effect === 'hh' ? Math.abs(y5 - y1) : Math.abs(x5 - x1)
           if (has_bands || chord_off > SIMPLE_OUTLINE_MAX_SLOPE * chord_axis) {
             return this.getExactBezierOutline(
               [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
               -halfSrc, -halfTgt, halfSrc, halfTgt,
-              this._link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
+              this._link.orientation_in_effect === 'hh' ? [0, 1] : [1, 0]
             )
           }
         }
@@ -1195,11 +1195,11 @@ export class LinkDrawShape {
         // Shift per axis: x2 control point is near source, x4 is near target
         let sx0 = 0, sx1 = 0, sx2 = 0, sx4 = 0, sx5 = 0, sx6 = 0
         let sy0 = 0, sy1 = 0, sy2 = 0, sy4 = 0, sy5 = 0, sy6 = 0
-        if (this._link.shape_orientation == 'vv') {
+        if (this._link.orientation_in_effect == 'vv') {
           sx0 = halfSrc; sx1 = halfSrc; sx2 = halfSrc
           sx4 = halfTgt; sx5 = halfTgt; sx6 = halfTgt
         }
-        if (this._link.shape_orientation == 'hh') {
+        if (this._link.orientation_in_effect == 'hh') {
           sy0 = halfSrc; sy1 = halfSrc; sy2 = halfSrc
           sy4 = halfTgt; sy5 = halfTgt; sy6 = halfTgt
         }
@@ -1238,10 +1238,10 @@ export class LinkDrawShape {
         const thickness = this._link.thickness
         if (is_outline) {
           // x5=x4
-          if (this._link.shape_orientation === 'hv') {
+          if (this._link.orientation_in_effect === 'hv') {
             if (y5 > y4) y5 = y4 + 2
             else y5 = y4 - 2
-          } else if (this._link.shape_orientation === 'vh') {
+          } else if (this._link.orientation_in_effect === 'vh') {
             y1 = y4
             y2 = y4
             y3 = y4
@@ -1506,14 +1506,14 @@ export class LinkDrawShape {
   private getParallelBandPath(): string | null {
     const link = this._link
     if (!link.source || !link.target) return null
-    const is_hh = link.shape_orientation === 'hh'
+    const is_hh = link.orientation_in_effect === 'hh'
     // Recherche restreinte aux sortants du nœud source (O(degré), pas O(liens))
     const group = link.source.visible_output_links_list.filter(l =>
       l.target?.id === link.target.id &&
       l.shape_type === 'bezier_outline_exact' &&
       l.shape_is_curved &&
       !l.shape_is_recycling &&
-      l.shape_orientation === link.shape_orientation
+      l.orientation_in_effect === link.orientation_in_effect
     )
     if (group.length < 2) return null
 
