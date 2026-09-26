@@ -72,6 +72,64 @@ describe('partitionSunburst', () => {
   })
 })
 
+describe('partitionSunburst, couleur et texture par axe (os#1509)', () => {
+  const branch = (id: string, color: string | null = null) => ({ id, label: id, color })
+  // Racine (P, Monde) ; premier anneau par les pays : Europe, Asie ; second par les produits : A, B.
+  const cell = (id: string, value: number, branches: { self?: { id: string, label: string, color: string | null }, other?: { id: string, label: string, color: string | null } }, children: ReturnType<typeof node>[] = [], depth = 0) =>
+    ({ ...node(id, value, children, depth), axis_branches: branches })
+  const tree = () => cell('root', 100, {}, [
+    cell('eu', 70, { other: branch('Europe', '#00ff00') }, [
+      cell('eu_a', 45, { other: branch('Europe', '#00ff00'), self: branch('A', '#ff0000') }, [], 2),
+      cell('eu_b', 25, { other: branch('Europe', '#00ff00'), self: branch('B') }, [], 2)
+    ], 1),
+    cell('as', 30, { other: branch('Asie') }, [
+      cell('as_a', 15, { other: branch('Asie'), self: branch('A', '#ff0000') }, [], 2),
+      cell('as_b', 15, { other: branch('Asie'), self: branch('B') }, [], 2)
+    ], 1)
+  ])
+  const palette = (i: number) => ['#111111', '#222222', '#333333'][i]
+
+  it('la couleur suit l axe demande, une teinte par branche de cet axe', () => {
+    const slices = partitionSunburst([tree()], palette, 'autres', 'light', '', {
+      color_source: 'palette', depth_shading: false, others_threshold: 0, color_axis: 'self'
+    })
+    const by = (id: string) => slices.find(s => s.id === id)!
+    // A en Europe et A en Asie ont la MEME teinte : c est ce que « colorer par le sujet » promet.
+    expect(by('eu_a').color).toBe(by('as_a').color)
+    expect(by('eu_b').color).toBe(by('as_b').color)
+    expect(by('eu_a').color).not.toBe(by('eu_b').color)
+    // Un secteur sans branche sur cet axe garde la teinte de sa branche de premier anneau.
+    expect(by('eu').color).toBe('#111111')
+  })
+
+  it('sous « couleur du diagramme », la branche coloree prete la sienne', () => {
+    const slices = partitionSunburst([tree()], palette, 'autres', 'light', '', {
+      color_source: 'model', depth_shading: false, others_threshold: 0, color_axis: 'self'
+    })
+    expect(slices.find(s => s.id === 'as_a')!.color).toBe('#ff0000')
+  })
+
+  it('la texture suit l autre axe, un motif par branche, et se nomme', () => {
+    const slices = partitionSunburst([tree()], palette, 'autres', 'light', '', {
+      color_source: 'palette', depth_shading: false, others_threshold: 0, color_axis: 'self', texture_axis: 'other'
+    })
+    const by = (id: string) => slices.find(s => s.id === id)!
+    expect(by('root').texture).toBeNull()
+    expect(by('eu').texture).toBe(0)
+    expect(by('eu_a').texture).toBe(0)
+    expect(by('as').texture).toBe(1)
+    expect(by('as_b').texture).toBe(1)
+    expect(by('as').texture_label).toBe('Asie')
+  })
+
+  it('sans reglage, rien ne change : pas de texture, teinte de branche', () => {
+    const slices = partitionSunburst([tree()], palette, 'autres')
+    expect(slices.every(s => s.texture === null)).toBe(true)
+    // Une seule racine, une seule branche : meme teinte a meme profondeur, comme depuis toujours.
+    expect(slices.find(s => s.id === 'as_b')!.color).toBe(slices.find(s => s.id === 'eu_b')!.color)
+  })
+})
+
 describe('sunburstScope', () => {
 
   it('met le noeud unique au centre et ouvre la couronne sur ses enfants', () => {
