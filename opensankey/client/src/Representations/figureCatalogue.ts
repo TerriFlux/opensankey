@@ -366,13 +366,13 @@ export const LEVELS_CONFIG = {
   //
   // EN PART DU TOUT, et non en unités comme le seuil du diagramme : c'est un ANGLE que la règle
   // mesure, et une couronne n'a pas d'échelle commune avec le Sankey. Zéro les nomme toutes.
+  // ⚠️ UN NOM COURT, ET C'EST CE QUI LUI DONNE SA PLACE. La carte fait 270 px : un libellé de
+  // quarante caractères mange le curseur et laisse une ligne tronquée, sans commande — Julien l'a
+  // eue à l'écran (« ce machin-là qui fonctionne pas »). Le diagramme dit « Flux », « Lib. »,
+  // « Nœud », « Stock », et met le sens dans l'info-bulle : on fait pareil, avec SON mot.
   labels_min_share: entry<number>(3, 'levels', {
-    en: 'Label parts above (% of the whole)', fr: 'Nommer les parts au-dessus de (% du tout)',
-    es: 'Etiquetar las partes por encima de (% del total)',
-    de: 'Teile beschriften über (% des Ganzen)',
-    it: 'Etichettare le parti sopra (% del totale)',
-    'zh-CN': '占比高于此值的部分才显示标签（占整体 %）',
-    ja: '全体に対する割合がこの値を超える部分にラベルを付ける（%）'
+    en: 'Labels', fr: 'Lib.', es: 'Etiq.', de: 'Beschr.',
+    it: 'Etich.', 'zh-CN': '标签', ja: 'ラベル'
   }, {
     en: 'Under it a part keeps its shape but writes nothing. Zero names them all.',
     fr: 'En dessous, une part garde sa forme mais n\'écrit rien. Zéro les nomme toutes.',
@@ -383,6 +383,9 @@ export const LEVELS_CONFIG = {
     ja: 'これを下回る部分は形だけ残り、文字は出ません。0 ならすべてに付きます。'
     // UN CURSEUR, comme les quatre seuils du diagramme : c'est le même geste, il ne peut pas
     // avoir deux visages (cf. `components/ui/ThresholdRow`).
+    //
+    // LA SORTE, elle, se déclare avec la nature qui l'offre (`DONUT_HONOURS`) et non ici : c'est
+    // `display`, la carte « Affichage » de la figure, sœur de celle du diagramme.
   }, { kind: 'slider', min: 0, max: 25, step: 0.5 })
 } as const
 
