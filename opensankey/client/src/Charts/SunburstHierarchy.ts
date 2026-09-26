@@ -324,6 +324,24 @@ const sortSiblings = (
   return out
 }
 
+/**
+ * 26/09/2026 — TRIER UN ARBRE DÉJÀ BÂTI, fratrie par fratrie, racines comprises.
+ *
+ * La couronne bâtit son arbre en ordre 'model' et laisse le classement au réglage du graphe
+ * (`parts_order`). À plat, `orderParts` l'applique ; en anneaux, personne ne l'appliquait — le tracé
+ * du disque dessine les enfants dans l'ordre reçu. Julien : « il manque le tri par ordre
+ * décroissant ». C'est ici que l'ordre s'applique, pour tout arbre, quel que soit celui qui l'a bâti.
+ */
+export const sortSunburstTree = (
+  tree: Type_SunburstTree,
+  order: 'value_desc' | 'value_asc' | 'name' | 'model'
+): Type_SunburstTree => {
+  if (order === 'model') return tree
+  const walk = (node: Type_SunburstNode): Type_SunburstNode =>
+    ({ ...node, children: sortSiblings(node.children.map(walk), order) })
+  return { ...tree, roots: sortSiblings(tree.roots.map(walk), order) }
+}
+
 const ringOf = (state: Type_BuildState, step: Type_AxisStep): Type_SunburstRing => ({
   dimension_id: step.dimension_id,
   dimension_label: state.axes.find(a => a.id === step.dimension_id)?.label ?? step.dimension_id,
