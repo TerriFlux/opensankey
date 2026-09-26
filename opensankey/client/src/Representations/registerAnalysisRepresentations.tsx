@@ -915,6 +915,14 @@ export const registerAnalysisRepresentations = (): void => {
             // fusion : changer de mode change le dessin, pas les couleurs.
             color_source: style.parts_color_source,
             depth_shading: style.parts_depth_shading,
+            // 26/09/2026 — LE SEUIL D'AFFICHAGE VAUT DANS LES DEUX MODES.
+            //
+            // Julien, capture a l appui : « pas sur que ca marche en mode un anneau par niveau ».
+            // Ca ne marchait pas — le trace du disque ne connait que des regles en PIXELS, et le
+            // seuil s arretait a la porte de l autre mode. Les deux modes sont UNE figure : un
+            // reglage qui mord dans l un doit mordre dans l autre, sinon changer de mode change
+            // ce que la figure dit.
+            labels_min_share: style.labels_min_share,
             click_action: 'aggregate'
           },
           texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),

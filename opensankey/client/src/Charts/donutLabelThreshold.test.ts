@@ -17,7 +17,10 @@ import { drawDonutChart } from './NodeStatsCharts'
 import type { Type_StatSlice } from './NodeStatsCharts'
 import { DONUT_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_FigureChartStyle } from './figureChartStyle'
-import { givePlainDrawingEnvironment, sizedContainer } from './figureDomHarness.test-utils'
+import { drawSunburstChart } from './SunburstChart'
+import {
+  givePlainDrawingEnvironment, plainSunburstTree, sizedContainer
+} from './figureDomHarness.test-utils'
 
 givePlainDrawingEnvironment()
 
@@ -86,5 +89,54 @@ describe('le seuil d affichage des etiquettes', () => {
 
     expect(secteurs(nomme)).toBe(2)
     expect(secteurs(muet)).toBe(2)
+  })
+})
+
+// ── 26/09/2026 — ET IL VAUT DANS LES DEUX MODES ──────────────────────────────────────────────
+//
+// Julien, capture d une couronne « un anneau par niveau » avec le seuil a 6,5 et
+// « Asie du... 3,8 % » ecrit quand meme : « pas sur que ca marche en mode un anneau par niveau ».
+//
+// Il avait raison. En anneaux, la couronne delegue a `drawSunburstChart`, qui ne connaissait que
+// des regles en PIXELS (`MIN_LABEL_ARC_PX`) : le seuil s arretait a la porte de l autre mode. Un
+// reglage qui mord dans un mode et pas dans l autre, c est une figure qui dit deux choses selon
+// comment on la regarde — et c est exactement ce que la fusion des deux modes devait supprimer.
+describe('le seuil vaut aussi en anneaux', () => {
+
+  const enAnneaux = (min_share: number): HTMLElement => {
+    const el = sizedContainer()
+    drawSunburstChart(el, plainSunburstTree([
+      { id: 'a', label: 'Gros', value: 100 },
+      { id: 'b', label: 'Miette', value: 1 }
+    ]), {
+      style: {
+        labels_mode: 'always', value_visible: false, legend_visible: false,
+        labels_min_share: min_share
+      } as never
+    })
+    return el
+  }
+
+  const textes = (el: HTMLElement): string =>
+    [...el.querySelectorAll('svg text')].map(t => t.textContent ?? '').join(' ')
+
+  it('LE CAS DE JULIEN : sous le seuil, un secteur d anneau ne s ecrit pas', () => {
+    // « Miette » pese 1 sur 101 : sous 5 %, au-dessus de 0. Et `labels_mode: 'always'` coupe la
+    // regle en PIXELS — sans quoi on ne saurait pas laquelle des deux a parle.
+    expect(textes(enAnneaux(0))).toContain('Miette')
+
+    expect(textes(enAnneaux(5))).not.toContain('Miette')
+  })
+
+  it('ET LE GROS RESTE NOMME : le seuil trie, il ne tait pas tout', () => {
+    // LA CONTRE-VERIFICATION : sans elle, un disque devenu muet pour une autre raison passerait
+    // au vert.
+    expect(textes(enAnneaux(5))).toContain('Gros')
+  })
+
+  it('ZERO NOMME TOUT, et c est ce qui protege un disque enregistre', () => {
+    // La valeur d usine du style du disque est ZERO : un sunburst existant nomme ce qu il
+    // nommait. C est la couronne qui passe le sien, et elle seule.
+    expect(textes(enAnneaux(0))).toContain('Miette')
   })
 })
