@@ -33,6 +33,7 @@ import {
   InputIndicatorWrapper, MenuColorPicker, WrapperBoxSubSectionMenu
 } from '../components/ui/MenuWidgets'
 import { OSTooltip } from '../components/ui/OSTooltip'
+import { ThresholdRow } from '../components/ui/ThresholdRow'
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_AttributeSort, Type_OptionBag, Type_FigureAttributesConfig } from './Figure'
 import { figureControlGroupsOf, figureControlsOf } from './figureControls'
@@ -121,6 +122,30 @@ const FigureField = ({ app_data, item, is_overloaded, onChange }: {
         </OSTooltip>
       </InputIndicatorWrapper>
     </Box>
+  }
+
+  // ── 26/09/2026 — UN SEUIL SE RÈGLE COMME SUR LE DIAGRAMME ───────────────────────────────────
+  //
+  // Julien : « je veux que le look and feel soit le même pour l'ensemble des figures, et qu'on
+  // réutilise au max les mêmes éléments. » Le diagramme règle ses seuils par un curseur suivi
+  // d'une case ; une figure n'avait que `number`, un champ nu. C'est LA MÊME LIGNE qui sert des
+  // deux côtés (`components/ui/ThresholdRow`), pas une imitation.
+  //
+  // ⚠️ ELLE PREND TOUTE LA LARGEUR, et sort donc de la grille à deux colonnes : le nom est DANS la
+  // ligne, entre le curseur et lui. C'est ce qui lui donne l'alignement du panneau du diagramme —
+  // tous les noms à gauche, tous les nombres à droite, quelle que soit la longueur du mot.
+  if (item.kind === 'slider') {
+    return <InputIndicatorWrapper isOverloaded={is_overloaded} t={t}>
+      <ThresholdRow
+        label={item.label}
+        tooltip={item.tooltip}
+        value={Number(item.value ?? 0)}
+        min={item.min ?? 0}
+        max={item.max ?? 100}
+        step={item.step}
+        onChange={onChange}
+      />
+    </InputIndicatorWrapper>
   }
 
   // os#1431 — TROIS CHOIX, TROIS BOUTONS (retour de Julien, 19/09 : « avant on avait un choix
