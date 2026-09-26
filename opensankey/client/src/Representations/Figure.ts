@@ -66,7 +66,17 @@ export type Type_AttributeSort = 'style' | 'navigation' | 'identity'
  * que pour ce qu'aucun type ne dit : une liste de choix, une couleur, ou `'none'` pour un réglage
  * qui n'a pas d'interface (la racine d'une figure, posée par la fenêtre).
  */
-export type Type_FigureControlKind = 'checkbox' | 'select' | 'segmented' | 'number' | 'text' | 'color' | 'none'
+// 26/09/2026 — `slider` : un CURSEUR suivi d'une case chiffree, la ligne de seuil du diagramme.
+//
+// Julien : « je veux que le look and feel soit le meme pour l ensemble des figures, et qu on
+// reutilise au max les memes elements. » Le diagramme regle ses quatre seuils ainsi ; une figure
+// n avait que `number`, un champ nu. La sorte nomme la MEME ligne (`components/ui/ThresholdRow`),
+// pas une imitation.
+//
+// ⚠️ ELLE DEMANDE UN `max`, sans quoi un curseur n a pas d echelle — c est ce qui la distingue de
+// `number`, ou les bornes sont facultatives.
+export type Type_FigureControlKind =
+  'checkbox' | 'select' | 'segmented' | 'number' | 'slider' | 'text' | 'color' | 'none'
 
 /** Un choix, avec son libellé dans les sept langues du dépôt (sa#531). */
 export type Type_FigureChoice = {

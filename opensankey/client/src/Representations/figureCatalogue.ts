@@ -381,7 +381,9 @@ export const LEVELS_CONFIG = {
     it: 'Al di sotto, una parte conserva la sua forma ma non scrive nulla. Zero le nomina tutte.',
     'zh-CN': '低于此值的部分保留形状但不显示文字。设为 0 则全部显示。',
     ja: 'これを下回る部分は形だけ残り、文字は出ません。0 ならすべてに付きます。'
-  }, { kind: 'number', min: 0, max: 25, step: 0.5 })
+    // UN CURSEUR, comme les quatre seuils du diagramme : c'est le même geste, il ne peut pas
+    // avoir deux visages (cf. `components/ui/ThresholdRow`).
+  }, { kind: 'slider', min: 0, max: 25, step: 0.5 })
 } as const
 
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────
