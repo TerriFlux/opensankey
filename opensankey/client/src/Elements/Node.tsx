@@ -1187,6 +1187,39 @@ export class Class_NodeElement extends Class_NodeBase {
     return { radius, items, place }
   }
 
+  /** Le bout d'en face d'un flux tel que le dernier placement l'a posé, `null` s'il ne l'est pas. */
+  private static _otherEnd(link: Class_LinkElement, is_source: boolean): { x: number, y: number } | null {
+    const x = is_source ? link.position_x_end : link.position_x_start
+    const y = is_source ? link.position_y_end : link.position_y_start
+    if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) return null
+    return { x, y }
+  }
+
+  /**
+   * os#1510 — LA DIRECTION D'UN BOUT RADIAL : vers le centre du nœud d'en face, tournée de
+   * l'angle `shape_radial_arc` (départ dans un sens, arrivée dans l'autre : l'arc reste d'un seul
+   * côté de la corde). Le contour ne choisit plus que le POINT d'accroche ; partir le long de sa
+   * normale faisait sortir chaque flux de travers sur la frontière d'un pays, puis tourner — une
+   * étoile. `fallback` quand les deux points se confondent.
+   */
+  private _radialDirection(
+    from: { x: number, y: number }, other: Class_NodeElement, is_source: boolean,
+    fallback: { x: number, y: number }, aim: { x: number, y: number } | null = null
+  ): { x: number, y: number } {
+    // Garde-fou : viser le POINT D'ACCROCHE d'en face (dernier connu), pas le centre du nœud —
+    // sur un flux court entre voisins (France–Belgique), les deux directions ne seraient plus
+    // alignées et le flux ferait un coude. Faute de point connu, le centre.
+    const ox = aim ? aim.x : other.position_x + other.getShapeWidthToUse() / 2
+    const oy = aim ? aim.y : other.position_y + other.getShapeHeightToUse() / 2
+    const dx = ox - from.x, dy = oy - from.y
+    const d = Math.hypot(dx, dy)
+    if (d < 1e-6) return fallback
+    const a = ((this.shape_radial_arc ?? 0) * Math.PI / 180) * (is_source ? 1 : -1)
+    const c = Math.cos(a), s = Math.sin(a)
+    const ux = dx / d, uy = dy / d
+    return { x: ux * c - uy * s, y: ux * s + uy * c }
+  }
+
   /**
    * os#1510 — UN FAISCEAU PART D'UN SEUL TENANT. Les flux d'un nœud radial vers le même nœud
    * d'en face (les bandes des flux éclatés) prennent des places voisines sur le contour, mais
@@ -1203,9 +1236,11 @@ export class Class_NodeElement extends Class_NodeBase {
     slots: Map<string, number>
   ): Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }> {
     const groups = new Map<string, { id: string, th: number, slot: number }[]>()
+    const others = new Map<string, { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }>()
     this._radialEnds().forEach(e => {
       const slot = slots.get(e.link.id)
       if (slot === undefined) return
+      others.set(e.link.id, { node: e.other, is_source: e.is_source, link: e.link })
       const key = (e.is_source ? 'o:' : 'i:') + e.other.id
       const g = groups.get(key) ?? []
       g.push({ id: e.link.id, th: Math.max(e.thickness, 0), slot })
@@ -1225,7 +1260,21 @@ export class Class_NodeElement extends Class_NodeBase {
       })
       const nn = Math.hypot(nx, ny)
       if (nn === 0 || w === 0) return
-      const normal = { x: nx / nn, y: ny / nn }
+      // os#1510 — le faisceau part VERS le nœud d'en face, pas le long de la normale du contour
+      // (Julien, 27/09/2026 : « pourquoi en étoile, pourquoi pas tout droit ? ») : une seule
+      // direction pour toutes ses bandes, qui restent donc parallèles.
+      const other = others.get(members[0].id) as { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }
+      // Visée : le barycentre des bouts d'en face du faisceau, pas le centre du nœud d'en face.
+      let ax = 0, ay = 0, aw = 0
+      members.forEach(m => {
+        const o = others.get(m.id) as { link: Class_LinkElement, is_source: boolean }
+        const end = Class_NodeElement._otherEnd(o.link, o.is_source)
+        if (!end) return
+        const k_w = Math.max(m.th, 1e-6)
+        ax += end.x * k_w; ay += end.y * k_w; aw += k_w
+      })
+      const aim = aw > 0 ? { x: ax / aw, y: ay / aw } : null
+      const normal = this._radialDirection({ x: cx / w, y: cy / w }, other.node, other.is_source, { x: nx / nn, y: ny / nn }, aim)
       let tx = -normal.y, ty = normal.x
       const first = placed[0].point, last = placed[placed.length - 1].point
       if ((last.x - first.x) * tx + (last.y - first.y) * ty < 0) { tx = -tx; ty = -ty }
@@ -2481,8 +2530,15 @@ export class Class_NodeElement extends Class_NodeBase {
     const radial = this.shape_anchor_mode === 'radial' ? this._radialLayout() : null
     const radial_slots = radial ? allocateRadialSlots(radial.items, radial.radius) : null
     const radial_bundles = (radial && radial_slots) ? this._radialBundlePlacement(radial.place, radial_slots) : null
-    const radialPlace = (link: Class_LinkElement, slot: number) =>
-      radial_bundles?.get(link.id) ?? (radial as NonNullable<typeof radial>).place(slot)
+    // os#1510 — le point vient du contour ; la DIRECTION vise le nœud d'en face (cf. _radialDirection).
+    const radialPlace = (link: Class_LinkElement, slot: number) => {
+      const bundled = radial_bundles?.get(link.id)
+      if (bundled) return bundled
+      const { point, normal } = (radial as NonNullable<typeof radial>).place(slot)
+      const is_source = link.source === this
+      const other = (is_source ? link.target : link.source) as Class_NodeElement
+      return { point, normal: this._radialDirection(point, other, is_source, normal, Class_NodeElement._otherEnd(link, is_source)) }
+    }
 
     // Loop on all links to compute starting / ending position
     this._links_order
