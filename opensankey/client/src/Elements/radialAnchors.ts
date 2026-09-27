@@ -150,3 +150,67 @@ export const allocateRadialSlots = (
   line.forEach((it, k) => out.set(it.id, wrapAngle(angles[k])))
   return out
 }
+
+/** Une arrivée à grouper : l'azimut VRAI de sa source (radians), l'angle où elle viserait sur le
+ * contour, et son poids (épaisseur). */
+export type Type_ArrivalItem = { id: string, azimuth: number, angle: number, weight: number }
+
+/** Écart d'azimut sous lequel des arrivées entrent par la même porte (cf. groupArrivalsByCone). */
+export const ARRIVAL_CONE = 20 * Math.PI / 180
+
+/**
+ * UNE PORTE PAR DIRECTION. Les arrivées dont les sources tombent dans un même cône (vu du nœud)
+ * entrent côte à côte par une seule porte, centrée sur leur angle moyen ; des sources de directions
+ * différentes entrent chacune de leur côté (Julien, 27/09/2026). Un pays qui reçoit quatorze flux
+ * depuis les quatorze filières posées autour de la France n'a qu'une porte, « depuis la France » ;
+ * le concentrateur qui importe de 182 pays en a une par région du monde.
+ *
+ * Groupement glouton sur les azimuts triés, à partir du plus grand trou (le tour complet compris) :
+ * une porte s'ouvre sur la première arrivée et prend les suivantes tant qu'elles restent à moins de
+ * `cone` de SA première — la largeur d'une porte est bornée, contrairement à un chaînage de proche
+ * en proche qui, sur 182 pays tout autour, n'en ferait qu'une. Rend, par arrivée, l'angle de sa porte
+ * (moyenne circulaire pondérée des `angle` du groupe) et l'identifiant du groupe.
+ */
+export const groupArrivalsByCone = (
+  items: readonly Type_ArrivalItem[],
+  cone: number = ARRIVAL_CONE
+): Map<string, { angle: number, group: number }> => {
+  const out = new Map<string, { angle: number, group: number }>()
+  const n = items.length
+  if (n === 0) return out
+  const sorted = [...items].sort((a, b) => wrapAngle(a.azimuth) - wrapAngle(b.azimuth))
+  let cut = 0
+  let widest = -1
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n
+    let gap = wrapAngle(sorted[j].azimuth) - wrapAngle(sorted[i].azimuth)
+    if (j === 0) gap += TWO_PI
+    if (gap > widest) { widest = gap; cut = j }
+  }
+  const line = Array.from({ length: n }, (_, k) => sorted[(cut + k) % n])
+  const groups: Type_ArrivalItem[][] = []
+  let start = 0
+  let current: Type_ArrivalItem[] = []
+  line.forEach((it, k) => {
+    let rel = wrapAngle(it.azimuth) - wrapAngle(line[start].azimuth)
+    if (rel < 0) rel += TWO_PI
+    if (current.length > 0 && rel > cone) {
+      groups.push(current)
+      current = []
+      start = k
+    }
+    current.push(it)
+  })
+  if (current.length > 0) groups.push(current)
+  groups.forEach((g, gi) => {
+    let x = 0, y = 0
+    g.forEach(it => {
+      const w = Math.max(it.weight, 1e-6)
+      x += Math.cos(it.angle) * w
+      y += Math.sin(it.angle) * w
+    })
+    const angle = (x !== 0 || y !== 0) ? Math.atan2(y, x) : g[0].angle
+    g.forEach(it => out.set(it.id, { angle, group: gi }))
+  })
+  return out
+}
