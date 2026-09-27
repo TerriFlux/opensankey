@@ -143,6 +143,14 @@ describe('lecture et ecriture du calage', () => {
     expect(relu).toEqual(reference)
   })
 
+  it('emporte la boite de l image quand elle est la, et l ignore si elle est incomplete', () => {
+    const with_box: Type_GeoReference = { ...reference, image: { x: 0, y: 0, width: 3600, height: 1597 } }
+    expect(geoReferenceFromJSON(geoReferenceToJSON(with_box))).toEqual(with_box)
+    const json = geoReferenceToJSON(reference) as { [key: string]: unknown }
+    expect(geoReferenceFromJSON({ ...json, image: { x: 0, y: 0, width: 3600 } })).toEqual(reference)
+    expect(geoReferenceFromJSON({ ...json, image: { x: 0, y: 0, width: 0, height: 10 } })).toEqual(reference)
+  })
+
   it('rend null sur tout ce qui n est pas un calage complet', () => {
     expect(geoReferenceFromJSON(undefined)).toBeNull()
     expect(geoReferenceFromJSON(null)).toBeNull()
