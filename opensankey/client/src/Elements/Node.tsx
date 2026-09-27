@@ -1010,11 +1010,34 @@ export class Class_NodeElement extends Class_NodeBase {
     const radius = this._radialRadius()
     const cx = this.position_x + radius
     const cy = this.position_y + radius
-    const items = this._radialEnds().map(e => {
+    const ends = this._radialEnds().map(e => {
       const ox = e.other.position_x + e.other.getShapeWidthToUse() / 2
       const oy = e.other.position_y + e.other.getShapeHeightToUse() / 2
-      return { id: e.link.id, angle: Math.atan2(oy - cy, ox - cx), thickness: e.thickness }
+      return { ...e, angle: Math.atan2(oy - cy, ox - cx) }
     })
+    // ── LES ARRIVÉES FORMENT UNE SEULE BANDE, FACE À LA DIRECTION MOYENNE DES SOURCES ──────────
+    //
+    // Julien (27/09/2026), après avoir désagrégé le concentrateur : « les points de départ bougent,
+    // oui, mais le point d'arrivée doit être le même ». Un pays qui recevait UN flux depuis la
+    // France en reçoit quatorze depuis quatorze filières posées autour d'elle : chacun visait sa
+    // filière, et les arrivées s'éventaillaient autour du pays. Ce qu'on lit sur une carte, c'est
+    // « ça vient de France » — les arrivées se rangent donc côte à côte, dans une bande centrée
+    // sur la direction moyenne des sources (somme des vecteurs unitaires pondérée par
+    // l'épaisseur). Avec une seule source, c'est son azimut, comme avant. Les DÉPARTS gardent
+    // chacun l'azimut de leur cible : c'est le sens même du contour.
+    let vx = 0
+    let vy = 0
+    ends.forEach(e => {
+      if (e.is_source) return
+      vx += Math.cos(e.angle) * Math.max(e.thickness, 1e-6)
+      vy += Math.sin(e.angle) * Math.max(e.thickness, 1e-6)
+    })
+    const inbound_angle = (vx !== 0 || vy !== 0) ? Math.atan2(vy, vx) : 0
+    const items = ends.map(e => ({
+      id: e.link.id,
+      angle: e.is_source ? e.angle : inbound_angle,
+      thickness: e.thickness
+    }))
     return { radius, cx, cy, items }
   }
 

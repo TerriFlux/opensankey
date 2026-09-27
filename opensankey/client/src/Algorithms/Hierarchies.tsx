@@ -375,7 +375,7 @@ export const aggregate = (
     // #1231 — Une commande de positionnement (désagrégation/agrégation) bascule en mode
     // ABSOLU (positions explicites). Le couple flux/datatag de référence reste persisté ;
     // setAbsoluteMode re-cale aussi les ancres de centre (#1230).
-    new_data.drawing_area.setAbsoluteMode()
+    settlePositionModeAfterHierarchyGesture(new_data)
   })
   const undo = () => {
     disaggregate(new_data, parent_node, contextualised_node.id, false)
@@ -401,6 +401,31 @@ export const aggregate = (
  * hiérarchie. `NodeActions` fait en plus le ré-empilement des cadres englobants, qui reste chez
  * lui : il n'a de sens que sous un mode englobant, que le sunburst ne pose jamais.
  */
+/**
+ * os#1364 / os#1510 (27/09/2026) — CE QUE DEVIENT LE MODE DE POSITION APRÈS UN GESTE DE HIÉRARCHIE.
+ *
+ * Les quatre gestes (agréger, désagréger, changer de niveau, réinitialiser) finissaient par
+ * `setAbsoluteMode()` : ils posent des nœuds à la main (les enfants dans le créneau du parent,
+ * la colonne du dessous poussée du débordement), et un mode d'AFFICHAGE (proportionnel, échelle
+ * adaptée) recalerait ces positions — l'absolu les fige, et recale les centres (#1230).
+ *
+ * Julien, sur la carte : « Maroc Export ne doit pas bouger en y ; quand on désagrège j'ai
+ * l'impression qu'il le calcule comme un delta depuis le point de départ ». C'était ça : après
+ * désagrégation, le document QUITTAIT le mode géographique. Les filières restaient empilées en
+ * colonne à la place de leurs coordonnées, et le Maroc, poussé vers le bas par le débordement
+ * de la colonne, n'était plus jamais reposé sur les siennes.
+ *
+ * En mode géographique, la position DÉRIVE des coordonnées à chaque dessin (cf.
+ * `applyGeographicLayout`, qui recapture aussi les centres) : les placements à la main de ces
+ * gestes ne sont qu'un état transitoire que le prochain dessin remplace. On garde donc le mode.
+ * Un nœud sans coordonnées garde, lui, la place que le geste lui a donnée — comme avant.
+ */
+const settlePositionModeAfterHierarchyGesture = (new_data: Class_ApplicationData) => {
+  const da = new_data.drawing_area
+  if (da.sankey.styles_dict['default'].shape_position_type === 'geographic') return
+  da.setAbsoluteMode()
+}
+
 const refreshAfterLocalHierarchyGesture = (new_data: Class_ApplicationData) => {
   new_data.drawing_area.draw()
   const mc = new_data.menu_configuration
@@ -580,7 +605,7 @@ export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
     sankey.nodes_list.forEach(n => n.dimensionsUpdated())
     new_data.drawing_area.reorganizeIOLinksOf(sankey.visible_nodes_list)
     // #1231 — commande de positionnement → mode absolu (réf persistée conservée).
-    new_data.drawing_area.setAbsoluteMode()
+    settlePositionModeAfterHierarchyGesture(new_data)
     new_data.drawing_area.draw()
   }
   Do()
@@ -812,7 +837,7 @@ export const disaggregate = (
     new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
 
     // #1231 — commande de positionnement (agrégation) → mode absolu (réf persistée conservée).
-    new_data.drawing_area.setAbsoluteMode()
+    settlePositionModeAfterHierarchyGesture(new_data)
   })
 
   const undo = () => {
@@ -918,7 +943,7 @@ export const disaggregationExpansion = (
   })
   new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
   // #1231 — commande de positionnement (expansion/contraction) → mode absolu (réf persistée conservée).
-  new_data.drawing_area.setAbsoluteMode()
+  settlePositionModeAfterHierarchyGesture(new_data)
   // En batch (finalize=false) on laisse bypass_redraws=true (posé en tête) : l'appelant
   // fait un unique draw()+recenter() après la boucle. Sinon rendu immédiat (clic droit).
   if (finalize) {
