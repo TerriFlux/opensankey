@@ -5246,15 +5246,24 @@ export class Class_DrawingArea {
         : this._bg_image_horizontal_align === 'center'
           ? 'xMid'
           : 'xMin'
+      // os#1364 (27/09/2026) — UN FOND CALÉ OCCUPE EXACTEMENT LA ZONE DE DESSIN, dans ses
+      // coordonnées. Les points de calage sont des pixels de la zone, et les nœuds aussi. Le
+      // dimensionner sur la boîte de zoom (le rapport de la FENÊTRE, ajusté en « meet ») l'étirait
+      // de 0,7 % vers l'est sur SOCLE : chaque arrivée tombait 12 px à gauche de son pays, 20 px
+      // en Chine — « un petit décalage vers la droite de toutes les arrivées » (Julien). Un fond
+      // sans calage garde le comportement d'avant : il n'est qu'un décor, la fenêtre le cadre.
+      const fixed_to_area = this._geo_reference !== null
       this.d3_selection_bg
         ?.append('image')
         .attr('id', this.domId('bg_image'))
-        .attr('width', this._zoom_width)
-        .attr('height', this._zoom_height)
+        .attr('width', fixed_to_area ? this._width : this._zoom_width)
+        .attr('height', fixed_to_area ? this._height : this._zoom_height)
         .attr('preserveAspectRatio', x_align + 'YMin meet')
         .attr(
           'transform',
-          'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
+          fixed_to_area
+            ? 'translate(0, 0)'
+            : 'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
         .attr('href', this._background_image)
         .style('background-size', 'contain')
         .style('background-repeat', 'no-repeat')
