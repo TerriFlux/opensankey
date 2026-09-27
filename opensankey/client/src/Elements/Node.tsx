@@ -1187,6 +1187,108 @@ export class Class_NodeElement extends Class_NodeBase {
     return { radius, items, place }
   }
 
+  /** Le bout d'en face d'un flux tel que le dernier placement l'a posé, `null` s'il ne l'est pas. */
+  private static _otherEnd(link: Class_LinkElement, is_source: boolean): { x: number, y: number } | null {
+    const x = is_source ? link.position_x_end : link.position_x_start
+    const y = is_source ? link.position_y_end : link.position_y_start
+    if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) return null
+    return { x, y }
+  }
+
+  /**
+   * os#1510 — LA DIRECTION D'UN BOUT RADIAL : vers le centre du nœud d'en face, tournée de
+   * l'angle `shape_radial_arc` (départ dans un sens, arrivée dans l'autre : l'arc reste d'un seul
+   * côté de la corde). Le contour ne choisit plus que le POINT d'accroche ; partir le long de sa
+   * normale faisait sortir chaque flux de travers sur la frontière d'un pays, puis tourner — une
+   * étoile. `fallback` quand les deux points se confondent.
+   */
+  private _radialDirection(
+    from: { x: number, y: number }, other: Class_NodeElement, is_source: boolean,
+    fallback: { x: number, y: number }, aim: { x: number, y: number } | null = null
+  ): { x: number, y: number } {
+    // Garde-fou : viser le POINT D'ACCROCHE d'en face (dernier connu), pas le centre du nœud —
+    // sur un flux court entre voisins (France–Belgique), les deux directions ne seraient plus
+    // alignées et le flux ferait un coude. Faute de point connu, le centre.
+    const ox = aim ? aim.x : other.position_x + other.getShapeWidthToUse() / 2
+    const oy = aim ? aim.y : other.position_y + other.getShapeHeightToUse() / 2
+    const dx = ox - from.x, dy = oy - from.y
+    const d = Math.hypot(dx, dy)
+    if (d < 1e-6) return fallback
+    const a = ((this.shape_radial_arc ?? 0) * Math.PI / 180) * (is_source ? 1 : -1)
+    const c = Math.cos(a), s = Math.sin(a)
+    const ux = dx / d, uy = dy / d
+    return { x: ux * c - uy * s, y: ux * s + uy * c }
+  }
+
+  /**
+   * os#1510 — UN FAISCEAU PART D'UN SEUL TENANT. Les flux d'un nœud radial vers le même nœud
+   * d'en face (les bandes des flux éclatés) prennent des places voisines sur le contour, mais
+   * chaque place a SA normale : sur le polygone d'un territoire, deux places voisines de part
+   * et d'autre d'un sommet partent dans des directions franchement différentes, et le faisceau
+   * s'effiloche (Julien, 27/09/2026 : « les flux ne se dessinent pas parallèlement »). Ici, un
+   * faisceau de deux flux ou plus reçoit UNE normale (moyenne pondérée par les épaisseurs) et ses
+   * ancres sont posées côte à côte sur le segment perpendiculaire à cette normale, centré sur le
+   * barycentre de leurs places, dans l'ordre de leurs places : un départ droit, jointif, que le
+   * contour exact prolonge en bandes parallèles. Vaut pour les départs comme pour les arrivées.
+   */
+  private _radialBundlePlacement(
+    place: (angle: number) => { point: { x: number, y: number }, normal: { x: number, y: number } },
+    slots: Map<string, number>
+  ): Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }> {
+    const groups = new Map<string, { id: string, th: number, slot: number }[]>()
+    const others = new Map<string, { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }>()
+    this._radialEnds().forEach(e => {
+      const slot = slots.get(e.link.id)
+      if (slot === undefined) return
+      others.set(e.link.id, { node: e.other, is_source: e.is_source, link: e.link })
+      const key = (e.is_source ? 'o:' : 'i:') + e.other.id
+      const g = groups.get(key) ?? []
+      g.push({ id: e.link.id, th: Math.max(e.thickness, 0), slot })
+      groups.set(key, g)
+    })
+    const out = new Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }>()
+    groups.forEach(members => {
+      if (members.length < 2) return
+      const s0 = members[0].slot
+      members.sort((a, b) => wrapAngle(a.slot - s0) - wrapAngle(b.slot - s0))
+      const placed = members.map(m => place(m.slot))
+      let nx = 0, ny = 0, cx = 0, cy = 0, w = 0
+      members.forEach((m, k) => {
+        const k_w = Math.max(m.th, 1e-6)
+        nx += placed[k].normal.x * k_w; ny += placed[k].normal.y * k_w
+        cx += placed[k].point.x * k_w; cy += placed[k].point.y * k_w; w += k_w
+      })
+      const nn = Math.hypot(nx, ny)
+      if (nn === 0 || w === 0) return
+      // os#1510 — le faisceau part VERS le nœud d'en face, pas le long de la normale du contour
+      // (Julien, 27/09/2026 : « pourquoi en étoile, pourquoi pas tout droit ? ») : une seule
+      // direction pour toutes ses bandes, qui restent donc parallèles.
+      const other = others.get(members[0].id) as { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }
+      // Visée : le barycentre des bouts d'en face du faisceau, pas le centre du nœud d'en face.
+      let ax = 0, ay = 0, aw = 0
+      members.forEach(m => {
+        const o = others.get(m.id) as { link: Class_LinkElement, is_source: boolean }
+        const end = Class_NodeElement._otherEnd(o.link, o.is_source)
+        if (!end) return
+        const k_w = Math.max(m.th, 1e-6)
+        ax += end.x * k_w; ay += end.y * k_w; aw += k_w
+      })
+      const aim = aw > 0 ? { x: ax / aw, y: ay / aw } : null
+      const normal = this._radialDirection({ x: cx / w, y: cy / w }, other.node, other.is_source, { x: nx / nn, y: ny / nn }, aim)
+      let tx = -normal.y, ty = normal.x
+      const first = placed[0].point, last = placed[placed.length - 1].point
+      if ((last.x - first.x) * tx + (last.y - first.y) * ty < 0) { tx = -tx; ty = -ty }
+      const total = members.reduce((sum, m) => sum + m.th, 0)
+      let cum = 0
+      members.forEach(m => {
+        const u = cum + m.th / 2 - total / 2
+        out.set(m.id, { point: { x: cx / w + tx * u, y: cy / w + ty * u }, normal })
+        cum += m.th
+      })
+    })
+    return out
+  }
+
   public getShapeWidthToUse() {
     // os#1508 — pendant un lot de réorganisations E/S, la taille est mémorisée (cf. DrawingArea).
     const memo = this.drawing_area.node_size_memo
@@ -1783,7 +1885,36 @@ export class Class_NodeElement extends Class_NodeBase {
     // pointe DE SOURCE (graphique) est retournée : base sur le contour, apex vers l'extérieur.
     const radial_arrows = all_arrows.filter(it =>
       (it.is_source_arrow ? it.link.source_anchor_normal : it.link.target_anchor_normal) !== null)
-    radial_arrows.forEach(it => {
+    // os#1510 — LES ARRIVÉES partagent UNE pointe, comme l'éventail d'un côté : les arrivées d'un
+    // nœud radial forment déjà une seule bande sur le contour (cf. `_radialLayout`) ; chaque flux
+    // y garde sa base, à sa place, et toutes les pointes convergent vers le milieu de la bande,
+    // pondéré par les épaisseurs. Une pointe « indépendante » (shape_arrow_standalone) reste seule.
+    // (Julien, 27/09/2026 : « ça doit finir avec une flèche commune ».)
+    const fan_in = radial_arrows.filter(it => !it.is_source_arrow && !it.link.shape_arrow_standalone
+      && this._input_links_ending_point[it.link.id] !== undefined)
+    if (fan_in.length >= 2) {
+      let wx = 0, wy = 0, w = 0
+      fan_in.forEach(it => {
+        const a = this._input_links_ending_point[it.link.id]
+        const k = Math.max(it.link_thickness, 1e-6)
+        wx += a.x * k; wy += a.y * k; w += k
+      })
+      const apex = { x: wx / w, y: wy / w }
+      fan_in.forEach(it => {
+        const link = it.link
+        const n = link.target_anchor_normal as { x: number, y: number }
+        const a = this._input_links_ending_point[link.id]
+        const size = link.shape_arrow_size
+        const half = it.link_thickness / 2
+        const tx = -n.y, ty = n.x
+        const base = { x: a.x + n.x * size, y: a.y + n.y * size }
+        link.shape_arrow_path = 'M ' + (base.x + tx * half) + ',' + (base.y + ty * half)
+          + ' L ' + apex.x + ',' + apex.y
+          + ' L ' + (base.x - tx * half) + ',' + (base.y - ty * half)
+          + ' Z'
+      })
+    }
+    radial_arrows.filter(it => fan_in.length < 2 || !fan_in.includes(it)).forEach(it => {
       const link = it.link
       const n = (it.is_source_arrow ? link.source_anchor_normal : link.target_anchor_normal) as { x: number, y: number }
       const anchor = it.is_source_arrow ? this._output_links_starting_point[link.id] : this._input_links_ending_point[link.id]
@@ -2398,6 +2529,16 @@ export class Class_NodeElement extends Class_NodeBase {
     // voisins lui laissent, cf. `allocateRadialSlots`). `null` = ancrage par côté, comme avant.
     const radial = this.shape_anchor_mode === 'radial' ? this._radialLayout() : null
     const radial_slots = radial ? allocateRadialSlots(radial.items, radial.radius) : null
+    const radial_bundles = (radial && radial_slots) ? this._radialBundlePlacement(radial.place, radial_slots) : null
+    // os#1510 — le point vient du contour ; la DIRECTION vise le nœud d'en face (cf. _radialDirection).
+    const radialPlace = (link: Class_LinkElement, slot: number) => {
+      const bundled = radial_bundles?.get(link.id)
+      if (bundled) return bundled
+      const { point, normal } = (radial as NonNullable<typeof radial>).place(slot)
+      const is_source = link.source === this
+      const other = (is_source ? link.target : link.source) as Class_NodeElement
+      return { point, normal: this._radialDirection(point, other, is_source, normal, Class_NodeElement._otherEnd(link, is_source)) }
+    }
 
     // Loop on all links to compute starting / ending position
     this._links_order
@@ -2435,7 +2576,7 @@ export class Class_NodeElement extends Class_NodeBase {
           const radial_slot = radial_slots?.get(link.id)
           const radial_here = radial !== null && radial_slot !== undefined
           if (radial_here) {
-            const { point, normal } = radial.place(radial_slot as number)
+            const { point, normal } = radialPlace(link, radial_slot as number)
             link_starting_point = { x: point.x, y: point.y }
             link_starting_handle_point = {
               x: point.x + handle_position_shift * normal.x,
@@ -2542,7 +2683,7 @@ export class Class_NodeElement extends Class_NodeBase {
           const radial_slot_in = radial_slots?.get(link.id)
           const radial_here_in = radial !== null && radial_slot_in !== undefined
           if (radial_here_in) {
-            const { point, normal } = radial.place(radial_slot_in as number)
+            const { point, normal } = radialPlace(link, radial_slot_in as number)
             link_ending_point = { x: point.x, y: point.y }
             link_ending_handle_point = {
               x: point.x + handle_position_shift * normal.x,
