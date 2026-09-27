@@ -131,7 +131,8 @@ export type SankeyNode = {
       container_mode?: 'in_children_out_parent' | 'in_parent_out_children' | 'in_children_out_children' | 'in_parent_out_parent',
       // Issue #1225 — expansion latérale unifiée
       expanded_left?: boolean,
-      expanded_right?: boolean
+      expanded_right?: boolean,
+      split_links?: boolean
     }
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,

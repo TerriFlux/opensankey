@@ -90,6 +90,13 @@ export class LinkTooltip {
 
     const data_label_visible = this._link.value_label_is_visible
     this._link.value_label_is_visible = true
+    // Flux éclaté : la bande d'un enfant — le nommer, le flux allant du parent au voisin.
+    if (this._link.split_child) {
+      html += '<tr>'
+      html += `<th>${escapeHtml(this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.split_child'))}</th>`
+      html += `<td>${escapeHtml(this._link.split_child.name.split('\n').join(' '))}</td>`
+      html += '</tr>'
+    }
     if ((!has_carrying_values && !multi_dim) || has_additive_carrying) {
       // Valeur du lien
       html += '<tr>'
