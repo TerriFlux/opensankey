@@ -66,6 +66,18 @@ import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExport
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
 /**
+ * os#1510 — une COUCHE d'ancrage radial : une courbe fermée (cercle ou territoire), les bouts qui
+ * s'y rangent ensemble, et la fonction angle → point + normale sortante. `departures` : la couche
+ * du cercle, d'où les départs partent le long du rayon.
+ */
+type Type_RadialLayer = {
+  radius: number
+  items: Type_RadialItem[]
+  place: (angle: number) => { point: { x: number, y: number }, normal: { x: number, y: number } }
+  departures: boolean
+}
+
+/**
  * Class that define a node element and how to interact with it
  *
  * @class Class_NodeElement
@@ -1174,14 +1186,23 @@ export class Class_NodeElement extends Class_NodeBase {
    * contour (`facingAbscissa`). Le rangement (`allocateRadialSlots`) ne voit que des angles et
    * des arcs : il ne sait pas si le contour est rond, et n'a pas à le savoir.
    */
-  private _radialLayout(): {
-    radius: number
-    items: Type_RadialItem[]
-    place: (angle: number) => { point: { x: number, y: number }, normal: { x: number, y: number } }
-    } {
+  private _radialLayout(): { layers: Type_RadialLayer[], layer_of: Map<string, Type_RadialLayer> } {
     const contour = this._radialContour()
     const centre = this._radialCentre(contour !== null)
     const radius = contour ? contour.length / (2 * Math.PI) : this._radialRadius()
+    // ── LES DÉPARTS PARTENT DU CERCLE (Julien, 27/09/2026) ────────────────────────────────────────
+    //
+    // « Ça devrait partir des bords du cercle, avec un placement côte à côte pour que ça ne
+    // chevauche pas, et du coup ça modifie les angles de départ : ce qui va en Hollande devra
+    // s'écarter pour passer par-dessus le flux vers la Belgique. » Les départs se rangent sur le
+    // DISQUE du nœud (centré sur son point, rayon = assez pour toutes les épaisseurs), même quand il
+    // porte un territoire, et partent le long du RAYON à l'angle que le rangement leur a donné. Les
+    // arrivées restent sur le territoire.
+    const circle_radius = this._radialRadius()
+    const circle_place = (angle: number) => ({
+      point: { x: centre.x + circle_radius * Math.cos(angle), y: centre.y + circle_radius * Math.sin(angle) },
+      normal: { x: Math.cos(angle), y: Math.sin(angle) }
+    })
     // ── LES ANCRES SONT ENFONCÉES DANS LE TERRITOIRE (Julien, 27/09/2026) ──────────────────────
     //
     // « Ça ne marche pas pour les passages de frontière France–Belgique, France–Italie : il faut
@@ -1203,10 +1224,9 @@ export class Class_NodeElement extends Class_NodeBase {
         normal: { x: Math.cos(angle), y: Math.sin(angle) }
       })
     const ends = this._radialEnds().map(e => {
-      const ox = e.other.position_x + e.other.getShapeWidthToUse() / 2
-      const oy = e.other.position_y + e.other.getShapeHeightToUse() / 2
-      const direction = { x: ox - centre.x, y: oy - centre.y }
-      const angle = contour
+      const o = e.other._radialCentre()
+      const direction = { x: o.x - centre.x, y: o.y - centre.y }
+      const angle = (contour && !e.is_source)
         ? facingAbscissa(contour, centre, direction) / contour.length * 2 * Math.PI
         : Math.atan2(direction.y, direction.x)
       return { ...e, angle, azimuth: Math.atan2(direction.y, direction.x) }
@@ -1240,7 +1260,20 @@ export class Class_NodeElement extends Class_NodeBase {
         tie: e.is_source ? [-ord] : [wrapAngle(e.angle - (doors.get(e.link.id)?.angle ?? e.angle)), ord]
       }
     })
-    return { radius, items, place }
+    // Sans territoire, départs et arrivées partagent le cercle : un seul rangement, comme avant.
+    const is_out = new Set(ends.filter(e => e.is_source).map(e => e.link.id))
+    const out_layer: Type_RadialLayer = {
+      radius: circle_radius, place: circle_place, items: items.filter(i => is_out.has(i.id)), departures: true
+    }
+    const in_layer: Type_RadialLayer = {
+      radius, place, items: items.filter(i => !is_out.has(i.id)), departures: false
+    }
+    const layers: Type_RadialLayer[] = contour
+      ? [out_layer, in_layer]
+      : [{ radius: circle_radius, place: circle_place, items, departures: true }]
+    const layer_of = new Map<string, Type_RadialLayer>()
+    layers.forEach(l => l.items.forEach(i => layer_of.set(i.id, l)))
+    return { layers, layer_of }
   }
 
   /**
@@ -1292,9 +1325,89 @@ export class Class_NodeElement extends Class_NodeBase {
    * barycentre de leurs places, dans l'ordre de leurs places : un départ droit, jointif, que le
    * contour exact prolonge en bandes parallèles. Vaut pour les départs comme pour les arrivées.
    */
-  private _radialBundlePlacement(
-    place: (angle: number) => { point: { x: number, y: number }, normal: { x: number, y: number } },
+  private _radialSlots(layout: { layers: Type_RadialLayer[] }): Map<string, number> {
+    const slots = new Map<string, number>()
+    layout.layers.forEach(l => allocateRadialSlots(l.items, l.radius).forEach((v, k) => slots.set(k, v)))
+    return slots
+  }
+
+  /**
+   * LES DÉPARTS PARTENT DU CERCLE, PAR FAISCEAU : les flux vers une même cible partent ensemble, de
+   * l'angle moyen (pondéré par les épaisseurs) de leurs places, le long du RAYON. Un rangement qui a
+   * écarté un faisceau de l'azimut de sa cible le fait partir de biais : c'est ce qui le fait passer
+   * par-dessus son voisin au lieu de le chevaucher (Julien, 27/09/2026, Pays-Bas / Belgique).
+   * Un flux seul est un faisceau d'un flux : sa place, son rayon.
+   */
+  private _radialDeparturePlacements(
+    layer_of: Map<string, Type_RadialLayer>,
     slots: Map<string, number>
+  ): Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }> {
+    const groups = new Map<string, { id: string, th: number, slot: number }[]>()
+    this._radialEnds().forEach(e => {
+      if (!e.is_source) return
+      const layer = layer_of.get(e.link.id)
+      const slot = slots.get(e.link.id)
+      if (!layer || !layer.departures || slot === undefined) return
+      const g = groups.get(e.other.id) ?? []
+      g.push({ id: e.link.id, th: Math.max(e.thickness, 0), slot })
+      groups.set(e.other.id, g)
+    })
+    const out = new Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }>()
+    groups.forEach(members => {
+      const layer = layer_of.get(members[0].id) as Type_RadialLayer
+      const s0 = members[0].slot
+      let sa = 0, w = 0
+      members.forEach(m => { const k_w = Math.max(m.th, 1e-6); sa += wrapAngle(m.slot - s0) * k_w; w += k_w })
+      const p = layer.place(s0 + sa / w)
+      members.forEach(m => out.set(m.id, p))
+    })
+    return out
+  }
+
+  /**
+   * La direction de DÉPART d'un flux sortant de ce nœud radial (normale sortante), ou `null`. Lue par
+   * le nœud d'arrivée pour régler son bout en miroir ; mémorisée le temps d'une passe de dessin.
+   */
+  public radialDepartureNormal(link: Class_LinkElement): { x: number, y: number } | null {
+    if (this.shape_anchor_mode !== 'radial' || link.source !== this) return null
+    const memo = this.drawing_area.radial_departure_memo
+    let normals = memo?.get(this)
+    if (!normals) {
+      const layout = this._radialLayout()
+      const placements = this._radialDeparturePlacements(layout.layer_of, this._radialSlots(layout))
+      const fresh = new Map<string, { x: number, y: number }>()
+      placements.forEach((p, id) => fresh.set(id, p.normal))
+      normals = fresh
+      memo?.set(this, normals)
+    }
+    return normals.get(link.id) ?? null
+  }
+
+  /**
+   * LA DIRECTION D'ARRIVÉE : le MIROIR du départ par rapport à la corde. Un flux qui part de biais
+   * (écarté par le rangement du cercle) arrive de biais symétriquement : un seul arc, en C, au lieu
+   * d'un S qui partait de biais puis visait le centre d'en face (Julien, 27/09/2026 : « les flux ne
+   * sont pas droits »). Départ dans l'axe → arrivée dans l'axe : droit. Source non radiale : on vise
+   * son centre, comme avant (cf. _radialDirection).
+   */
+  private _arrivalDirection(link: Class_LinkElement, fallback: { x: number, y: number }): { x: number, y: number } {
+    const source = link.source as Class_NodeElement
+    const d = source.radialDepartureNormal(link)
+    if (!d) return this._radialDirection(source, false, fallback)
+    const from = source._radialCentre(), to = this._radialCentre()
+    const cx = to.x - from.x, cy = to.y - from.y
+    const len = Math.hypot(cx, cy)
+    if (len < 1e-6) return fallback
+    const ux = cx / len, uy = cy / len
+    const dot = d.x * ux + d.y * uy
+    // miroir de d par rapport à la corde, puis retourné : la normale sortante du bout d'arrivée.
+    return { x: -(2 * dot * ux - d.x), y: -(2 * dot * uy - d.y) }
+  }
+
+  private _radialBundlePlacement(
+    layer_of: Map<string, Type_RadialLayer>,
+    slots: Map<string, number>,
+    departures: Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }>
   ): Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }> {
     const groups = new Map<string, { id: string, th: number, slot: number }[]>()
     const others = new Map<string, { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }>()
@@ -1310,30 +1423,49 @@ export class Class_NodeElement extends Class_NodeBase {
     const out = new Map<string, { point: { x: number, y: number }, normal: { x: number, y: number } }>()
     groups.forEach(members => {
       if (members.length < 2) return
-      const s0 = members[0].slot
-      members.sort((a, b) => wrapAngle(a.slot - s0) - wrapAngle(b.slot - s0))
-      const placed = members.map(m => place(m.slot))
-      let nx = 0, ny = 0, cx = 0, cy = 0, w = 0
-      members.forEach((m, k) => {
-        const k_w = Math.max(m.th, 1e-6)
-        nx += placed[k].normal.x * k_w; ny += placed[k].normal.y * k_w
-        cx += placed[k].point.x * k_w; cy += placed[k].point.y * k_w; w += k_w
-      })
-      const nn = Math.hypot(nx, ny)
-      if (nn === 0 || w === 0) return
-      // os#1510 — le faisceau part VERS le nœud d'en face, pas le long de la normale du contour
-      // (Julien, 27/09/2026 : « pourquoi en étoile, pourquoi pas tout droit ? ») : une seule
-      // direction pour toutes ses bandes, qui restent donc parallèles.
+      const layer = layer_of.get(members[0].id)
+      if (!layer) return
       const other = others.get(members[0].id) as { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }
-      const normal = this._radialDirection(other.node, other.is_source, { x: nx / nn, y: ny / nn })
-      let tx = -normal.y, ty = normal.x
-      const first = placed[0].point, last = placed[placed.length - 1].point
-      if ((last.x - first.x) * tx + (last.y - first.y) * ty < 0) { tx = -tx; ty = -ty }
+      let normal: { x: number, y: number }
+      let cx = 0, cy = 0
+      if (layer.departures && other.is_source) {
+        // DÉPART DEPUIS LE CERCLE, cf. _radialDeparturePlacements.
+        const p = departures.get(members[0].id)
+        if (!p) return
+        normal = p.normal; cx = p.point.x; cy = p.point.y
+      } else {
+        const placed = members.map(m => layer.place(m.slot))
+        let nx = 0, ny = 0, w = 0
+        members.forEach((m, k) => {
+          const k_w = Math.max(m.th, 1e-6)
+          nx += placed[k].normal.x * k_w; ny += placed[k].normal.y * k_w
+          cx += placed[k].point.x * k_w; cy += placed[k].point.y * k_w; w += k_w
+        })
+        const nn = Math.hypot(nx, ny)
+        if (nn === 0 || w === 0) return
+        cx /= w; cy /= w
+        // Arrivée : le faisceau entre VERS le nœud d'en face (« pourquoi en étoile ? »), une seule
+        // direction pour toutes ses bandes, qui restent donc parallèles.
+        normal = this._arrivalDirection(other.link, { x: nx / nn, y: ny / nn })
+      }
+      // UN FAISCEAU SANS TORSION (sa!675, rétabli) : les bandes se rangent le long de la GAUCHE du
+      // sens de marche, dans l'ordre de leur ordinal, aux deux bouts. Le sens de marche est la
+      // direction au départ, son opposée à l'arrivée ; même règle aux deux bouts, donc même ordre vu
+      // du flux. L'ordre des places sur le contour ne convient pas : il dépend du sens de parcours
+      // du contour, qui change d'un territoire à l'autre — 25 faisceaux sur 193 tressés.
+      const travel = other.is_source ? normal : { x: -normal.x, y: -normal.y }
+      const tx = -travel.y, ty = travel.x
+      const ord = new Map<string, number>()
+      members.forEach(m => {
+        const o = others.get(m.id) as { link: Class_LinkElement }
+        ord.set(m.id, this.sankey.linkOrdinal(o.link))
+      })
+      members.sort((a, b) => (ord.get(a.id) ?? 0) - (ord.get(b.id) ?? 0))
       const total = members.reduce((sum, m) => sum + m.th, 0)
       let cum = 0
       members.forEach(m => {
         const u = cum + m.th / 2 - total / 2
-        out.set(m.id, { point: { x: cx / w + tx * u, y: cy / w + ty * u }, normal })
+        out.set(m.id, { point: { x: cx + tx * u, y: cy + ty * u }, normal })
         cum += m.th
       })
     })
@@ -1946,9 +2078,21 @@ export class Class_NodeElement extends Class_NodeBase {
     // y garde sa base, à sa place, et toutes les pointes convergent vers le milieu de la bande,
     // pondéré par les épaisseurs. Une pointe « indépendante » (shape_arrow_standalone) reste seule.
     // (Julien, 27/09/2026 : « ça doit finir avec une flèche commune ».)
-    const fan_in = radial_arrows.filter(it => !it.is_source_arrow && !it.link.shape_arrow_standalone
-      && this._input_links_ending_point[it.link.id] !== undefined)
-    if (fan_in.length >= 2) {
+    // Une pointe commune PAR FAISCEAU (même source), pas pour tout le nœud : les arrivées d'un nœud
+    // radial viennent de toutes les directions (les importations d'un concentrateur), et une seule
+    // pointe les faisait toutes converger vers un point — une étoile (Julien, 27/09/2026 : « les
+    // importations, c'est rigolo »). Rétabli : la fusion perf sa!676 l'avait effacé par mégarde.
+    const fan_groups = new Map<Class_NodeElement, typeof radial_arrows>()
+    radial_arrows.forEach(it => {
+      if (it.is_source_arrow || it.link.shape_arrow_standalone) return
+      if (this._input_links_ending_point[it.link.id] === undefined) return
+      const g = fan_groups.get(it.link.source) ?? []
+      g.push(it)
+      fan_groups.set(it.link.source, g)
+    })
+    const fanned = new Set<(typeof radial_arrows)[number]>()
+    fan_groups.forEach(fan_in => {
+      if (fan_in.length < 2) return
       let wx = 0, wy = 0, w = 0
       fan_in.forEach(it => {
         const a = this._input_links_ending_point[it.link.id]
@@ -1957,6 +2101,7 @@ export class Class_NodeElement extends Class_NodeBase {
       })
       const apex = { x: wx / w, y: wy / w }
       fan_in.forEach(it => {
+        fanned.add(it)
         const link = it.link
         const n = link.target_anchor_normal as { x: number, y: number }
         const a = this._input_links_ending_point[link.id]
@@ -1969,8 +2114,8 @@ export class Class_NodeElement extends Class_NodeBase {
           + ' L ' + (base.x - tx * half) + ',' + (base.y - ty * half)
           + ' Z'
       })
-    }
-    radial_arrows.filter(it => fan_in.length < 2 || !fan_in.includes(it)).forEach(it => {
+    })
+    radial_arrows.filter(it => !fanned.has(it)).forEach(it => {
       const link = it.link
       const n = (it.is_source_arrow ? link.source_anchor_normal : link.target_anchor_normal) as { x: number, y: number }
       const anchor = it.is_source_arrow ? this._output_links_starting_point[link.id] : this._input_links_ending_point[link.id]
@@ -2584,16 +2729,26 @@ export class Class_NodeElement extends Class_NodeBase {
     // cercle, avant la boucle (l'allocation est globale : chaque flux prend la place que ses
     // voisins lui laissent, cf. `allocateRadialSlots`). `null` = ancrage par côté, comme avant.
     const radial = this.shape_anchor_mode === 'radial' ? this._radialLayout() : null
-    const radial_slots = radial ? allocateRadialSlots(radial.items, radial.radius) : null
-    const radial_bundles = (radial && radial_slots) ? this._radialBundlePlacement(radial.place, radial_slots) : null
-    // os#1510 — le point vient du contour ; la DIRECTION vise le nœud d'en face (cf. _radialDirection).
+    const radial_slots = radial ? this._radialSlots(radial) : null
+    const radial_departures = (radial && radial_slots) ? this._radialDeparturePlacements(radial.layer_of, radial_slots) : null
+    if (radial_departures) {
+      const normals = new Map<string, { x: number, y: number }>()
+      radial_departures.forEach((p, id) => normals.set(id, p.normal))
+      this.drawing_area.radial_departure_memo?.set(this, normals)
+    }
+    const radial_bundles = (radial && radial_slots && radial_departures)
+      ? this._radialBundlePlacement(radial.layer_of, radial_slots, radial_departures) : null
+    // os#1510 — un DÉPART suit le rayon du cercle à l'angle que le rangement lui a donné ; une
+    // ARRIVÉE vient du contour et vise le nœud d'en face (cf. _radialDirection).
     const radialPlace = (link: Class_LinkElement, slot: number) => {
       const bundled = radial_bundles?.get(link.id)
       if (bundled) return bundled
-      const { point, normal } = (radial as NonNullable<typeof radial>).place(slot)
+      const layer = (radial as NonNullable<typeof radial>).layer_of.get(link.id) as Type_RadialLayer
+      const { point, normal } = layer.place(slot)
       const is_source = link.source === this
-      const other = (is_source ? link.target : link.source) as Class_NodeElement
-      return { point, normal: this._radialDirection(other, is_source, normal) }
+      if (is_source && layer.departures) return radial_departures?.get(link.id) ?? { point, normal }
+      if (!is_source) return { point, normal: this._arrivalDirection(link, normal) }
+      return { point, normal: this._radialDirection(link.target as Class_NodeElement, true, normal) }
     }
 
     // Loop on all links to compute starting / ending position
