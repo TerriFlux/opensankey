@@ -36,7 +36,7 @@ import { reorderLinksByIds } from './linksOrderState'
 import { splitLinkId } from './splitLinkId'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 // os#1510 — l'ancrage radial : rayon du disque et rangement des ancres sur le cercle.
-import { allocateRadialSlots, radialRadius, Type_RadialItem } from './radialAnchors'
+import { allocateRadialSlots, radialRadius, wrapAngle, Type_RadialItem } from './radialAnchors'
 // os#1510 lot 3 — le contour d'un territoire comme lieu d'ancrage.
 import { facingAbscissa, makeContour, outwardNormalAt, pointAt, Type_Contour } from './polygonAnchors'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
@@ -1165,11 +1165,23 @@ export class Class_NodeElement extends Class_NodeBase {
       vy += Math.sin(e.angle) * Math.max(e.thickness, 1e-6)
     })
     const inbound_angle = (vx !== 0 || vy !== 0) ? Math.atan2(vy, vx) : 0
-    const items = ends.map(e => ({
-      id: e.link.id,
-      angle: e.is_source ? e.angle : inbound_angle,
-      thickness: e.thickness
-    }))
+    // ── LE DÉPARTAGE DES FLUX DE MÊME AZIMUT : le faisceau reste « détordu » ────────────────────
+    //
+    // Plusieurs flux vers la même cible (les bandes des flux éclatés) : leur cible les range par
+    // l'ordinal global du flux (`bundleTie`, CCW à la source, CW à la cible). Ici, l'angle croît
+    // dans le sens horaire à l'écran : un DÉPART range donc ses flux de même azimut par ordinal
+    // DÉCROISSANT (= CCW), une ARRIVÉE par ordinal croissant — et les deux bouts d'un faisceau se
+    // font face sans se croiser. Les arrivées, toutes posées sur la direction moyenne des sources,
+    // se rangent d'abord par l'azimut de LEUR source (celle qui vient de la gauche arrive à gauche).
+    const items = ends.map(e => {
+      const ord = this.sankey.linkOrdinal(e.link)
+      return {
+        id: e.link.id,
+        angle: e.is_source ? e.angle : inbound_angle,
+        thickness: e.thickness,
+        tie: e.is_source ? [-ord] : [wrapAngle(e.angle - inbound_angle), ord]
+      }
+    })
     return { radius, items, place }
   }
 

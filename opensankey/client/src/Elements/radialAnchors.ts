@@ -17,8 +17,24 @@
 // cercle à ce lot ; le polygone d'un territoire viendra par la même porte (une abscisse
 // curviligne à la place d'un angle).
 
-/** Un flux à ranger : l'azimut de sa cible (radians, repère écran) et son épaisseur en px. */
-export type Type_RadialItem = { id: string, angle: number, thickness: number }
+/**
+ * Un flux à ranger : l'azimut de sa cible (radians, repère écran), son épaisseur en px et,
+ * facultatif, le DÉPARTAGE des flux visés au même endroit (`tie`, comparé terme à terme, croissant
+ * = angle croissant). Sans lui, deux flux de même azimut gardaient l'ordre du dictionnaire — et se
+ * croisaient en route quand leur cible les rangeait autrement (Julien, 27/09/2026, sur les bandes
+ * des flux éclatés : « les flux ne se dessinent pas parallèlement »).
+ */
+export type Type_RadialItem = { id: string, angle: number, thickness: number, tie?: readonly number[] }
+
+/** Comparaison terme à terme de deux départages ; un départage absent vaut zéro. */
+const compareTies = (a: readonly number[] | undefined, b: readonly number[] | undefined): number => {
+  const n = Math.max(a?.length ?? 0, b?.length ?? 0)
+  for (let k = 0; k < n; k++) {
+    const d = (a?.[k] ?? 0) - (b?.[k] ?? 0)
+    if (d !== 0) return d
+  }
+  return 0
+}
 
 const TWO_PI = 2 * Math.PI
 
@@ -95,8 +111,8 @@ export const allocateRadialSlots = (
   const out = new Map<string, number>()
   if (items.length === 0 || radius <= 0) return out
   const sorted = items
-    .map(it => ({ id: it.id, ideal: wrapAngle(it.angle), half: Math.max(0, it.thickness) / (2 * radius) }))
-    .sort((a, b) => a.ideal - b.ideal)
+    .map(it => ({ id: it.id, ideal: wrapAngle(it.angle), half: Math.max(0, it.thickness) / (2 * radius), tie: it.tie }))
+    .sort((a, b) => (a.ideal - b.ideal) || compareTies(a.tie, b.tie))
   const n = sorted.length
   if (n === 1) { out.set(sorted[0].id, sorted[0].ideal); return out }
 
