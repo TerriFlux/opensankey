@@ -840,7 +840,7 @@ export class NodeEventsHandler {
       // "recalcul automatique" that releases the I/O anchor locks ("cadenas") :
       // pass release_locks=false so a user-locked arrangement survives the move
       // (only the unlocked links re-sort around the locked ones).
-      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks(false))
+      drawing_area.reorganizeIOLinksOf(nodes_to_reorganize, false)
 
       // Snapshot new link orders AFTER reorganization — needed by redo.
       const dict_new_orders: { [nodeId: string]: string[] } = {}

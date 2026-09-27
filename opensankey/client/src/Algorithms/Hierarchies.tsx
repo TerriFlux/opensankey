@@ -71,11 +71,14 @@ const finalizeOperation = (
 ) => {
   new_data.drawing_area.nodePositioning.computeParametrization(true)
   new_data.drawing_area.draw()
+  // os#1508 — un seul lot (mémo des tailles de nœuds), chaque nœud une fois.
+  const to_reorg = new Set<Class_NodeElement>()
   nodes.forEach(n => {
-    n.input_links_list.forEach(l => l.source.reorganizeIOLinks())
-    n.output_links_list.forEach(l => l.target.reorganizeIOLinks())
-    n.reorganizeIOLinks()
+    n.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+    n.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+    to_reorg.add(n)
   })
+  new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
 }
 
 // ============================================================================
@@ -367,7 +370,7 @@ export const aggregate = (
     const to_reorg = new Set<Class_NodeElement>([aggregateNode])
     aggregateNode.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
     aggregateNode.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
-    to_reorg.forEach(n => n.reorganizeIOLinks())
+    new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
 
     // #1231 — Une commande de positionnement (désagrégation/agrégation) bascule en mode
     // ABSOLU (positions explicites). Le couple flux/datatag de référence reste persisté ;
@@ -575,7 +578,7 @@ export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
     // Effacer tous les force-flags → visibilité pilotée par les level-tags (état du menu).
     sankey.showAccordingToLevelTags()
     sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-    sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+    new_data.drawing_area.reorganizeIOLinksOf(sankey.visible_nodes_list)
     // #1231 — commande de positionnement → mode absolu (réf persistée conservée).
     new_data.drawing_area.setAbsoluteMode()
     new_data.drawing_area.draw()
@@ -618,7 +621,7 @@ export const applyContainerModeForDim = (
     c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
     c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
   })
-  to_reorg.forEach(n => n.reorganizeIOLinks())
+  new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
 }
 
 /**
@@ -794,8 +797,7 @@ export const disaggregate = (
       if (old_link) new_data.drawing_area.deleteLink(old_link)
       // Reorganize les liens I/O des nœuds concernés pour que les nouveaux
       // liens d'expansion soient correctement attachés et rendus.
-      P.reorganizeIOLinks()
-      new_nodes.forEach(c => c.reorganizeIOLinks())
+      new_data.drawing_area.reorganizeIOLinksOf([P, ...new_nodes])
     }
 
     // #1231 — Réorganiser les liens E/S après désagrégation : sur les enfants ET sur
@@ -807,7 +809,7 @@ export const disaggregate = (
       c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
       c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
     })
-    to_reorg.forEach(n => n.reorganizeIOLinks())
+    new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
 
     // #1231 — commande de positionnement (agrégation) → mode absolu (réf persistée conservée).
     new_data.drawing_area.setAbsoluteMode()
@@ -914,7 +916,7 @@ export const disaggregationExpansion = (
     c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
     c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
   })
-  to_reorg.forEach(n => n.reorganizeIOLinks())
+  new_data.drawing_area.reorganizeIOLinksOf(to_reorg)
   // #1231 — commande de positionnement (expansion/contraction) → mode absolu (réf persistée conservée).
   new_data.drawing_area.setAbsoluteMode()
   // En batch (finalize=false) on laisse bypass_redraws=true (posé en tête) : l'appelant
