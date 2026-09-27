@@ -1014,10 +1014,7 @@ export class NodePositioningAutoSankey {
     }
 
     // Default color + auto reorg of links
-    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-      //n.resetPositionAttribute('dy')
-      n.reorganizeIOLinks()
-    })
+    this.drawingArea.reorganizeIOLinksOf(this.drawingArea.sankey.visible_nodes_list)
 
     if (launched_from_process) {
       // Update default data on recycling mode

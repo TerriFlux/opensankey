@@ -2061,6 +2061,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const old_source = this._source
       // Set source attr
       this._source = _
+      this.drawing_area?.invalidateNodeSizeMemo() // os#1508
       // Set to recompute visibility from nodes after
       this._are_source_and_target_displayed = undefined
       // Clean old source
@@ -2088,7 +2089,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // moving the opposite node does not flip this anchor.
     if (this._source_side_locked && this._source_side_frozen !== undefined)
       return this._source_side_frozen
-    return this._computed_source_side
+    // os#1508 — pendant un lot de réorganisations E/S, le côté calculé est mémorisé (cf. DrawingArea).
+    const memo = this.drawing_area.link_side_memo
+    const hit = memo?.get(this)
+    if (hit?.s !== undefined) return hit.s
+    const s = this._computed_source_side
+    if (memo) memo.set(this, { ...hit, s })
+    return s
   }
 
   /** Side derived from node relative positions, ignoring any anchor lock. */
@@ -2176,6 +2183,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const old_target = this._target
       // Assign target attribute
       this._target = _
+      this.drawing_area?.invalidateNodeSizeMemo() // os#1508
       // Set to recompute visibility from nodes after
       this._are_source_and_target_displayed = undefined
       // Clean old source
@@ -2209,6 +2217,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     old_target.removeInputLink(this)
     this._source = old_target
     this._target = old_source
+    this.drawing_area?.invalidateNodeSizeMemo() // os#1508
     old_target.addOutputLink(this) // old_target is the new source
     old_source.addInputLink(this) // old_source is the new target
     // Set to recompute visibility from nodes after
@@ -2226,7 +2235,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // moving the opposite node does not flip this anchor.
     if (this._target_side_locked && this._target_side_frozen !== undefined)
       return this._target_side_frozen
-    return this._computed_target_side
+    // os#1508 — pendant un lot de réorganisations E/S, le côté calculé est mémorisé (cf. DrawingArea).
+    const memo = this.drawing_area.link_side_memo
+    const hit = memo?.get(this)
+    if (hit?.t !== undefined) return hit.t
+    const t = this._computed_target_side
+    if (memo) memo.set(this, { ...hit, t })
+    return t
   }
 
   /** Side derived from node relative positions, ignoring any anchor lock. */

@@ -303,6 +303,7 @@ export class Class_Sankey {
 
     this._nodes = {}
     this._links = {}
+    this._link_ordinal = null
     this.styles_list.forEach(sn => {
       sn.delete()
     })
@@ -343,6 +344,7 @@ export class Class_Sankey {
     })
     this._nodes = {}
     this._links = {}
+    this._link_ordinal = null
   }
 
   public update() {
@@ -894,6 +896,21 @@ export class Class_Sankey {
 
   public get links_dict() { return this._links }
   public get links_list(): Class_LinkElement[] { return Object.values(this._links) }
+  /**
+   * os#1508 — Rang d'un flux dans `links_list`, en O(1). Le rang sert de composante stable aux clés
+   * de tri des flux d'un nœud (`_computeIOOrderIndex`) ; le chercher par `links_list.indexOf` y
+   * reconstruisait et parcourait le tableau de TOUS les flux à chaque flux du nœud (34 000 × 500 sur
+   * SOCLE pays partenaires : 4,6 s par nœud, une réorganisation par voisin à chaque agrégation ou
+   * déplacement). La table est calculée une fois et jetée dès qu'un flux entre ou sort du dictionnaire.
+   */
+  public linkOrdinal(link: Class_LinkElement): number {
+    if (!this._link_ordinal) {
+      this._link_ordinal = new Map<Class_LinkElement, number>()
+      this.links_list.forEach((l, i) => (this._link_ordinal as Map<Class_LinkElement, number>).set(l, i))
+    }
+    return this._link_ordinal.get(link) ?? -1
+  }
+  private _link_ordinal: Map<Class_LinkElement, number> | null = null
   public get links_list_sorted(): Class_LinkElement[] { return this.links_list.sort((a, b) => sortLinksElementsByIds(a, b)) }
   public get visible_links_list(): Class_LinkElement[] { return Object.values(this._links).filter(node => node.is_visible) }
   public get visible_links_list_sorted(): Class_LinkElement[] { return this.visible_links_list.sort((a, b) => sortLinksElementsByIds(a, b)) }
@@ -908,7 +925,7 @@ export class Class_Sankey {
     this._nodes[node.id] = node
     this.invalidateThemePalette()
   }
-  private _addLink(link: Class_LinkElement) { this._links[link.id] = link }
+  private _addLink(link: Class_LinkElement) { this._links[link.id] = link; this._link_ordinal = null }
 
   protected createNewNode(id: string, name: string): Class_NodeElement {
     const node = new Class_NodeElement(id, name, this.drawing_area)
@@ -1130,7 +1147,7 @@ export class Class_Sankey {
       _.delete()
     }
   }
-  public deleteLink(link: Class_LinkElement) { delete this._links[link.id] }
+  public deleteLink(link: Class_LinkElement) { delete this._links[link.id]; this._link_ordinal = null }
   public deleteContainer(container: Class_ContainerElement) { delete this._containers[container.id] }
 
   /////////////////////////////////////////////////////////////////////////////
