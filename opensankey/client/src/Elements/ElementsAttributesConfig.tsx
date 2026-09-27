@@ -85,6 +85,10 @@ export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'cent
 // dessus retrouvent le comportement pour lequel ils avaient été réglés.
 export type Type_IOReorgMode = 'none' | 'simple' | 'advanced'
 export const default_io_reorg_mode: Type_IOReorgMode = 'simple'
+// os#1510 — Où un nœud accroche ses flux : sur ses quatre côtés (depuis toujours), ou sur son
+// contour, chacun à l'angle de sa cible (cf. `radialAnchors.ts`).
+export type Type_AnchorMode = 'sides' | 'radial'
+export const default_anchor_mode: Type_AnchorMode = 'sides'
 // Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
 export type Type_HatchOrientation = 'none' | 'vertical' | 'horizontal' | 'diagonal' | 'antidiagonal'
 export const default_hatch_orientation: Type_HatchOrientation = 'none'
@@ -3363,6 +3367,34 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       ja: '図が変化したときに入出力フローの順序をどう再計算するか。なし：再計算しません（順序は固定されたまま）。単純：反対側のノードの位置で並べ替え（既定）。高度：曲率による幾何学的な順序 — 最も早く曲がるフローが端に来ます（厳密に／自動で整列された図に最適）。'
     }
   } satisfies AttributeConfig<Type_IOReorgMode>,
+  // os#1510 — ANCRAGE RADIAL. Julien, sur la carte SOCLE : « utiliser tout le périmètre du pays
+  // pour faire les départs de flux, avec un angle ». Un côté n'offre que la hauteur du nœud et
+  // des départs parallèles ; le contour offre 2πR dans toutes les directions. Lot 1 : la SOURCE
+  // seule, sur un cercle (cf. Node.updateLinksPositions, radialAnchors.ts).
+  anchor_mode: {
+    default: default_anchor_mode,
+    type: (() => default_anchor_mode) as (() => Type_AnchorMode),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Link anchoring',
+      fr: 'Accroche des flux',
+      es: 'Anclaje de los flujos',
+      de: 'Flussverankerung',
+      it: 'Ancoraggio dei flussi',
+      'zh-CN': '流量锚定',
+      ja: 'フローの接続'
+    },
+    tooltips: {
+      en: 'Where this node anchors its outgoing links. Sides: stacked on the left/right/top/bottom sides (default). Radial: spread around the node outline, each link leaving at the angle of its target — room for many more thick links, useful on a map.',
+      fr: 'Où ce nœud accroche ses flux sortants. Côtés : empilés sur les côtés gauche/droit/haut/bas (par défaut). Radiale : répartis autour du contour du nœud, chaque flux partant à l\'angle de sa cible — de la place pour bien plus de gros flux, utile sur une carte.',
+      es: 'Dónde ancla este nodo sus flujos salientes. Lados: apilados en los lados izquierdo/derecho/superior/inferior (por defecto). Radial: repartidos alrededor del contorno del nodo, cada flujo saliendo en el ángulo de su destino — sitio para muchos más flujos gruesos, útil en un mapa.',
+      de: 'Wo dieser Knoten seine ausgehenden Flüsse verankert. Seiten: gestapelt an den Seiten links/rechts/oben/unten (Standard). Radial: um die Knotenkontur verteilt, jeder Fluss verlässt den Knoten im Winkel seines Ziels — Platz für viel mehr dicke Flüsse, nützlich auf einer Karte.',
+      it: 'Dove questo nodo ancora i suoi flussi uscenti. Lati: impilati sui lati sinistro/destro/alto/basso (predefinito). Radiale: distribuiti attorno al contorno del nodo, ogni flusso parte nell\'angolo della sua destinazione — spazio per molti più flussi spessi, utile su una mappa.',
+      'zh-CN': '该节点如何锚定其出流。四边：堆叠在左/右/上/下四边（默认）。径向：沿节点轮廓分布，每条流量按其目标的方位离开——可容纳更多粗流量，适合地图。',
+      ja: 'このノードが出力フローをどこに接続するか。辺：左右上下の辺に積み重ね（既定）。放射状：ノードの輪郭の周りに配置し、各フローは目標の方位角で出発 — 太いフローを多数配置でき、地図に有用です。'
+    }
+  } satisfies AttributeConfig<Type_AnchorMode>,
   // Écart d'accroche des flux, en px, perpendiculaire au côté du nœud (équivalent
   // de la « Distance » d'e!Sankey). POSITIF = les ancres rentrent DANS la boîte
   // (les flux entrants/sortants se rejoignent à travers le nœud) ; négatif = elles
