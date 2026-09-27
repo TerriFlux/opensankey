@@ -1268,9 +1268,20 @@ export class Class_NodeElement extends Class_NodeBase {
       // direction pour toutes ses bandes, qui restent donc parallèles.
       const other = others.get(members[0].id) as { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }
       const normal = this._radialDirection(other.node, other.is_source, { x: nx / nn, y: ny / nn })
-      let tx = -normal.y, ty = normal.x
-      const first = placed[0].point, last = placed[placed.length - 1].point
-      if ((last.x - first.x) * tx + (last.y - first.y) * ty < 0) { tx = -tx; ty = -ty }
+      // UN FAISCEAU SANS TORSION : les bandes se rangent le long de la GAUCHE du sens de marche,
+      // dans l'ordre de leur ordinal, aux deux bouts. Le sens de marche est la direction au départ,
+      // son opposée à l'arrivée ; même règle aux deux bouts, donc même ordre vu du flux. L'ordre des
+      // places sur le contour ne convient pas : il dépend du sens de parcours du contour, qui n'est
+      // pas le même d'un territoire à l'autre, et le faisceau se tordait en route (Julien,
+      // 27/09/2026, France–Allemagne : « il y a des choses bizarres »).
+      const travel = other.is_source ? normal : { x: -normal.x, y: -normal.y }
+      const tx = -travel.y, ty = travel.x
+      const ord = new Map<string, number>()
+      members.forEach(m => {
+        const o = others.get(m.id) as { link: Class_LinkElement }
+        ord.set(m.id, this.sankey.linkOrdinal(o.link))
+      })
+      members.sort((a, b) => (ord.get(a.id) ?? 0) - (ord.get(b.id) ?? 0))
       const total = members.reduce((sum, m) => sum + m.th, 0)
       let cum = 0
       members.forEach(m => {
@@ -1883,9 +1894,21 @@ export class Class_NodeElement extends Class_NodeBase {
     // y garde sa base, à sa place, et toutes les pointes convergent vers le milieu de la bande,
     // pondéré par les épaisseurs. Une pointe « indépendante » (shape_arrow_standalone) reste seule.
     // (Julien, 27/09/2026 : « ça doit finir avec une flèche commune ».)
-    const fan_in = radial_arrows.filter(it => !it.is_source_arrow && !it.link.shape_arrow_standalone
-      && this._input_links_ending_point[it.link.id] !== undefined)
-    if (fan_in.length >= 2) {
+    // Une pointe commune PAR FAISCEAU (même source), pas pour tout le nœud : les arrivées d'un nœud
+    // radial viennent de toutes les directions (les importations d'un concentrateur), et une seule
+    // pointe les faisait toutes converger vers un point — une étoile (Julien, 27/09/2026 : « les
+    // importations, c'est rigolo »).
+    const fan_groups = new Map<Class_NodeElement, typeof radial_arrows>()
+    radial_arrows.forEach(it => {
+      if (it.is_source_arrow || it.link.shape_arrow_standalone) return
+      if (this._input_links_ending_point[it.link.id] === undefined) return
+      const g = fan_groups.get(it.link.source) ?? []
+      g.push(it)
+      fan_groups.set(it.link.source, g)
+    })
+    const fanned = new Set<(typeof radial_arrows)[number]>()
+    fan_groups.forEach(fan_in => {
+      if (fan_in.length < 2) return
       let wx = 0, wy = 0, w = 0
       fan_in.forEach(it => {
         const a = this._input_links_ending_point[it.link.id]
@@ -1894,6 +1917,7 @@ export class Class_NodeElement extends Class_NodeBase {
       })
       const apex = { x: wx / w, y: wy / w }
       fan_in.forEach(it => {
+        fanned.add(it)
         const link = it.link
         const n = link.target_anchor_normal as { x: number, y: number }
         const a = this._input_links_ending_point[link.id]
@@ -1906,8 +1930,8 @@ export class Class_NodeElement extends Class_NodeBase {
           + ' L ' + (base.x - tx * half) + ',' + (base.y - ty * half)
           + ' Z'
       })
-    }
-    radial_arrows.filter(it => fan_in.length < 2 || !fan_in.includes(it)).forEach(it => {
+    })
+    radial_arrows.filter(it => !fanned.has(it)).forEach(it => {
       const link = it.link
       const n = (it.is_source_arrow ? link.source_anchor_normal : link.target_anchor_normal) as { x: number, y: number }
       const anchor = it.is_source_arrow ? this._output_links_starting_point[link.id] : this._input_links_ending_point[link.id]
