@@ -36,7 +36,7 @@ import { reorderLinksByIds } from './linksOrderState'
 import { splitLinkId } from './splitLinkId'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 // os#1510 — l'ancrage radial : rayon du disque et rangement des ancres sur le cercle.
-import { allocateRadialSlots, radialRadius, wrapAngle, Type_RadialItem } from './radialAnchors'
+import { allocateRadialSlots, groupArrivalsByCone, radialRadius, wrapAngle, Type_RadialItem } from './radialAnchors'
 // os#1510 lot 3 — le contour d'un territoire comme lieu d'ancrage.
 import { facingAbscissa, makeContour, outwardNormalAt, pointAt, Type_Contour } from './polygonAnchors'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
@@ -475,10 +475,22 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public buildSplitLinks(dim: Class_NodeDimension): Class_LinkElement[] {
     const sankey = this.sankey
-    const children = dim.children as Class_NodeElement[]
-    const in_group = new Set<Class_NodeElement>([this, ...children])
+    // BANDES IMBRIQUÉES (27/09/2026) : un enfant dont une dimension est elle-même « éclatée » ne
+    // donne pas SA bande mais celles de ses enfants, et ainsi de suite — ce sont les FEUILLES de
+    // l'éclatement qui portent les bandes. Tout le sous-arbre fait partie du groupe.
+    const leaves = Class_NodeElement.splitLeavesOf(dim)
+    const in_group = Class_NodeElement.splitSubtreeOf(dim)
+    in_group.add(this)
     const created: Class_LinkElement[] = []
-    children.forEach(child => {
+    // Le flux agrégé this↔X de chaque X, lu une fois : le chercher pour chaque bande parcourait tous
+    // les flux du concentrateur, qui grossit à chaque bande ajoutée (7 s sur 4 300 bandes, SOCLE).
+    const aggregated_with = new Map<string, Class_LinkElement>()
+    ;[...this.output_links_list, ...this.input_links_list].forEach(l => {
+      if (l.is_split_link || l.is_expansion_link) return
+      const key = (l.source === this ? 'out:' : 'in:') + (l.source === this ? l.target : l.source).id
+      if (!aggregated_with.has(key)) aggregated_with.set(key, l)
+    })
+    leaves.forEach(child => {
       [...child.input_links_list, ...child.output_links_list].forEach(origin => {
         if (origin.is_expansion_link || origin.is_split_link) return
         const is_out = origin.source === child
@@ -487,7 +499,7 @@ export class Class_NodeElement extends Class_NodeBase {
         const id = splitLinkId(origin.id, this.id)
         if (sankey.links_dict[id]) return
         const link = sankey.addNewLinkWithId(id, is_out ? this : other, is_out ? other : this)
-        const aggregated = this._aggregatedLinkWith(other, is_out)
+        const aggregated = aggregated_with.get((is_out ? 'out:' : 'in:') + other.id)
         if (aggregated) {
           link.replaceStyles([...aggregated.style])
           link.copyAttrFrom(aggregated)
@@ -503,11 +515,61 @@ export class Class_NodeElement extends Class_NodeBase {
     return created
   }
 
-  /** Retire les bandes des enfants de `dim` ; les flux agrégés qu'elles masquaient réapparaissent. */
+  /**
+   * BANDES IMBRIQUÉES — les nœuds qui portent les bandes d'un éclatement : les enfants de `dim`,
+   * sauf ceux qu'une de leurs propres dimensions éclate à son tour, remplacés par SES feuilles.
+   * « Produits agricoles » éclaté par filière, dont « Céréales » éclaté en bruts/transformés :
+   * les bandes sont Céréales brutes, Céréales transformées, Fruits et légumes, Lait…
+   */
+  public static splitLeavesOf(dim: Class_NodeDimension, seen: Set<Class_NodeDimension> = new Set()): Class_NodeElement[] {
+    if (seen.has(dim)) return []
+    seen.add(dim)
+    const out: Class_NodeElement[] = []
+    ;(dim.children as Class_NodeElement[]).forEach(child => {
+      const nested = child.dimensions_as_parent.find(d => d.split_links && d.children.length > 0)
+      if (nested) out.push(...Class_NodeElement.splitLeavesOf(nested, seen))
+      else out.push(child)
+    })
+    return out
+  }
+
+  /** Tout le sous-arbre d'un éclatement (enfants, petits-enfants éclatés…), sans le parent. */
+  public static splitSubtreeOf(dim: Class_NodeDimension, seen: Set<Class_NodeDimension> = new Set()): Set<Class_NodeElement> {
+    const out = new Set<Class_NodeElement>()
+    if (seen.has(dim)) return out
+    seen.add(dim)
+    ;(dim.children as Class_NodeElement[]).forEach(child => {
+      out.add(child)
+      const nested = child.dimensions_as_parent.find(d => d.split_links && d.children.length > 0)
+      if (nested) Class_NodeElement.splitSubtreeOf(nested, seen).forEach(n => out.add(n))
+    })
+    return out
+  }
+
+  /**
+   * L'éclatement DE TÊTE qui contient `dim`, s'il est imbriqué : en remontant, la dimension éclatée
+   * dont le nœud parent n'est lui-même dans aucun éclatement. `dim` elle-même si elle est de tête.
+   * C'est sur le parent de celle-ci que les bandes existent.
+   */
+  public static splitRootOf(dim: Class_NodeDimension): Class_NodeDimension {
+    let current = dim
+    const seen = new Set<Class_NodeDimension>([dim])
+    for (;;) {
+      const parent = current.parent as Class_NodeElement
+      const up = parent.dimensions_as_child.find(d => d.split_links && !seen.has(d))
+      if (!up) return current
+      seen.add(up)
+      current = up
+    }
+  }
+
+  /** Retire les bandes de l'éclatement `dim` ; les flux agrégés qu'elles masquaient réapparaissent. */
   public dropSplitLinks(dim: Class_NodeDimension) {
-    const children = new Set<Class_NodeElement>(dim.children as Class_NodeElement[])
+    // Tout le sous-arbre, pas les seuls enfants : une bande imbriquée porte une feuille profonde.
+    const subtree = Class_NodeElement.splitSubtreeOf(dim)
+    ;(dim.children as Class_NodeElement[]).forEach(c => subtree.add(c))
     const doomed = [...this.input_links_list, ...this.output_links_list]
-      .filter(l => l.is_split_link && l.split_child !== null && children.has(l.split_child))
+      .filter(l => l.is_split_link && l.split_child !== null && subtree.has(l.split_child))
     const touched = new Set<Class_NodeElement>([this])
     doomed.forEach(l => touched.add(l.source === this ? l.target : l.source))
     this.drawing_area.deleteLinks(doomed)
@@ -521,11 +583,12 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public refreshSplitHiding() {
     const split_dims = this.dimensions_as_parent.filter(d => d.split_links)
+    const subtrees = split_dims.map(d => Class_NodeElement.splitSubtreeOf(d))
     const links = [...this.input_links_list, ...this.output_links_list]
     const covered = new Set<string>()
     links.forEach(l => {
       if (!l.is_split_link || l.split_child === null) return
-      if (!split_dims.some(d => d.children.includes(l.split_child as Class_NodeElement))) return
+      if (!subtrees.some(t => t.has(l.split_child as Class_NodeElement))) return
       covered.add((l.source === this ? 'out:' : 'in:') + (l.source === this ? l.target : l.source).id)
     })
     links.forEach(l => {
@@ -535,11 +598,6 @@ export class Class_NodeElement extends Class_NodeBase {
     })
   }
 
-  /** Le flux ordinaire de ce nœud vers (`is_out`) ou depuis `other`, s'il existe. */
-  private _aggregatedLinkWith(other: Class_NodeElement, is_out: boolean): Class_LinkElement | undefined {
-    return (is_out ? this.output_links_list : this.input_links_list)
-      .find(l => !l.is_split_link && !l.is_expansion_link && (is_out ? l.target : l.source) === other)
-  }
 
   /**
    * Draw given node on drawing area
@@ -1083,8 +1141,14 @@ export class Class_NodeElement extends Class_NodeBase {
    * la position — c'est ce qui permet de le lire depuis `getShapeWidthToUse` sans boucler.
    */
   private _radialRadius(): number {
+    // Le diamètre EST la largeur mémorisée (cf. _computeShapeWidthToUse) : même mémo, même durée.
+    const memo = this.drawing_area.node_size_memo
+    const hit = memo?.get(this)
+    if (hit?.w !== undefined) return hit.w / 2
     const items = this._radialEnds().map(e => ({ id: e.link.id, angle: 0, thickness: e.thickness }))
-    return radialRadius(items, Math.max(this.shape_min_width, this.shape_min_height) / 2)
+    const r = radialRadius(items, Math.max(this.shape_min_width, this.shape_min_height) / 2)
+    if (memo) memo.set(this, { ...hit, w: 2 * r, h: 2 * r })
+    return r
   }
 
   /**
@@ -1145,41 +1209,35 @@ export class Class_NodeElement extends Class_NodeBase {
       const angle = contour
         ? facingAbscissa(contour, centre, direction) / contour.length * 2 * Math.PI
         : Math.atan2(direction.y, direction.x)
-      return { ...e, angle }
+      return { ...e, angle, azimuth: Math.atan2(direction.y, direction.x) }
     })
-    // ── LES ARRIVÉES FORMENT UNE SEULE BANDE, FACE À LA DIRECTION MOYENNE DES SOURCES ──────────
+    // ── LES ARRIVÉES ENTRENT PAR UNE PORTE PAR DIRECTION ─────────────────────────────────────────
     //
-    // Julien (27/09/2026), après avoir désagrégé le concentrateur : « les points de départ bougent,
-    // oui, mais le point d'arrivée doit être le même ». Un pays qui recevait UN flux depuis la
-    // France en reçoit quatorze depuis quatorze filières posées autour d'elle : chacun visait sa
-    // filière, et les arrivées s'éventaillaient autour du pays. Ce qu'on lit sur une carte, c'est
-    // « ça vient de France » — les arrivées se rangent donc côte à côte, dans une bande centrée
-    // sur la direction moyenne des sources (somme des vecteurs unitaires pondérée par
-    // l'épaisseur). Avec une seule source, c'est son azimut, comme avant. Les DÉPARTS gardent
-    // chacun l'azimut de leur cible : c'est le sens même du contour.
-    let vx = 0
-    let vy = 0
-    ends.forEach(e => {
-      if (e.is_source) return
-      vx += Math.cos(e.angle) * Math.max(e.thickness, 1e-6)
-      vy += Math.sin(e.angle) * Math.max(e.thickness, 1e-6)
-    })
-    const inbound_angle = (vx !== 0 || vy !== 0) ? Math.atan2(vy, vx) : 0
+    // Julien (27/09/2026), après avoir désagrégé le concentrateur : « le point d'arrivée doit être le
+    // même » — un pays qui reçoit quatorze flux des quatorze filières posées autour de la France les
+    // reçoit côte à côte, par une seule porte. Mais une porte UNIQUE pour tout le nœud faisait entrer
+    // les importations de 182 pays par le même côté du concentrateur (la moyenne tombait au
+    // sud-est) : les arrivées se groupent désormais par CÔNE d'azimut (cf. groupArrivalsByCone), une
+    // porte par direction. Même principe aux deux échelles. Les DÉPARTS gardent chacun l'azimut de
+    // leur cible.
+    const doors = groupArrivalsByCone(ends.filter(e => !e.is_source).map(e => ({
+      id: e.link.id, azimuth: e.azimuth, angle: e.angle, weight: e.thickness
+    })))
     // ── LE DÉPARTAGE DES FLUX DE MÊME AZIMUT : le faisceau reste « détordu » ────────────────────
     //
     // Plusieurs flux vers la même cible (les bandes des flux éclatés) : leur cible les range par
     // l'ordinal global du flux (`bundleTie`, CCW à la source, CW à la cible). Ici, l'angle croît
     // dans le sens horaire à l'écran : un DÉPART range donc ses flux de même azimut par ordinal
     // DÉCROISSANT (= CCW), une ARRIVÉE par ordinal croissant — et les deux bouts d'un faisceau se
-    // font face sans se croiser. Les arrivées, toutes posées sur la direction moyenne des sources,
-    // se rangent d'abord par l'azimut de LEUR source (celle qui vient de la gauche arrive à gauche).
+    // font face sans se croiser. Les arrivées d'une même porte se rangent d'abord par l'angle de
+    // LEUR source (celle qui vient de la gauche arrive à gauche).
     const items = ends.map(e => {
       const ord = this.sankey.linkOrdinal(e.link)
       return {
         id: e.link.id,
-        angle: e.is_source ? e.angle : inbound_angle,
+        angle: e.is_source ? e.angle : (doors.get(e.link.id)?.angle ?? e.angle),
         thickness: e.thickness,
-        tie: e.is_source ? [-ord] : [wrapAngle(e.angle - inbound_angle), ord]
+        tie: e.is_source ? [-ord] : [wrapAngle(e.angle - (doors.get(e.link.id)?.angle ?? e.angle)), ord]
       }
     })
     return { radius, items, place }
@@ -1817,8 +1875,13 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   private _drawLinks() {
     // Links positions are modified by nodes's position changes
+    // os#1510 — sous une mémo des tailles (cf. DrawingArea.withNodeSizeMemo) : l'ancrage radial lit
+    // la taille du nœud d'en face pour CHAQUE bout, et celle d'un nœud radial reparcourt tous ses
+    // flux. Flux éclatés par filière sur la carte SOCLE : chacun des 1 700 bouts des pays relisait
+    // les 1 700 flux du concentrateur — 160 s d'un dessin de 167 s. Toute écriture de position
+    // vide la mémo : elle ne vaut que le temps de ce placement.
     if (!this.sankey.drawing_area.bypass_compute_positions)
-      this.updateLinksPositions()
+      this.drawing_area.withNodeSizeMemo(() => this.updateLinksPositions())
     else
       this.sankey.visible_links_list.forEach(l => l.draw())
     // Node shape -> affected if links are added or removed, or if links values change

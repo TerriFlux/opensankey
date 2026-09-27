@@ -859,7 +859,11 @@ export class Class_Sankey {
     // visibles) : un nœud invisible non capté par l'exit ci-dessus (jamais
     // entré dans le DOM) doit quand même passer par draw()→unDraw pour ses
     // dépendances (flux, poignées). No-op DOM si déjà retiré.
-    this.nodes_list.forEach(node => node.draw())
+    //
+    // os#1510 — une seule mémo des tailles pour toute la passe (cf. DrawingArea.withNodeSizeMemo) :
+    // l'ancrage radial de chaque pays lit la taille du concentrateur, qui reparcourt ses 1 700 bandes.
+    // Une mémo par nœud la recalculait une fois par pays : 17 s. Une écriture de position la vide.
+    this.drawing_area.withNodeSizeMemo(() => this.nodes_list.forEach(node => node.draw()))
   }
   public linkValueHasReconciliedData = () => {
     return this.links_list.some(link => link.has_result)
