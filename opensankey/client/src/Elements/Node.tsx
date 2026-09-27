@@ -482,6 +482,14 @@ export class Class_NodeElement extends Class_NodeBase {
     const in_group = Class_NodeElement.splitSubtreeOf(dim)
     in_group.add(this)
     const created: Class_LinkElement[] = []
+    // Le flux agrégé this↔X de chaque X, lu une fois : le chercher pour chaque bande parcourait tous
+    // les flux du concentrateur, qui grossit à chaque bande ajoutée (7 s sur 4 300 bandes, SOCLE).
+    const aggregated_with = new Map<string, Class_LinkElement>()
+    ;[...this.output_links_list, ...this.input_links_list].forEach(l => {
+      if (l.is_split_link || l.is_expansion_link) return
+      const key = (l.source === this ? 'out:' : 'in:') + (l.source === this ? l.target : l.source).id
+      if (!aggregated_with.has(key)) aggregated_with.set(key, l)
+    })
     leaves.forEach(child => {
       [...child.input_links_list, ...child.output_links_list].forEach(origin => {
         if (origin.is_expansion_link || origin.is_split_link) return
@@ -491,7 +499,7 @@ export class Class_NodeElement extends Class_NodeBase {
         const id = splitLinkId(origin.id, this.id)
         if (sankey.links_dict[id]) return
         const link = sankey.addNewLinkWithId(id, is_out ? this : other, is_out ? other : this)
-        const aggregated = this._aggregatedLinkWith(other, is_out)
+        const aggregated = aggregated_with.get((is_out ? 'out:' : 'in:') + other.id)
         if (aggregated) {
           link.replaceStyles([...aggregated.style])
           link.copyAttrFrom(aggregated)
@@ -590,11 +598,6 @@ export class Class_NodeElement extends Class_NodeBase {
     })
   }
 
-  /** Le flux ordinaire de ce nœud vers (`is_out`) ou depuis `other`, s'il existe. */
-  private _aggregatedLinkWith(other: Class_NodeElement, is_out: boolean): Class_LinkElement | undefined {
-    return (is_out ? this.output_links_list : this.input_links_list)
-      .find(l => !l.is_split_link && !l.is_expansion_link && (is_out ? l.target : l.source) === other)
-  }
 
   /**
    * Draw given node on drawing area
@@ -1138,8 +1141,14 @@ export class Class_NodeElement extends Class_NodeBase {
    * la position — c'est ce qui permet de le lire depuis `getShapeWidthToUse` sans boucler.
    */
   private _radialRadius(): number {
+    // Le diamètre EST la largeur mémorisée (cf. _computeShapeWidthToUse) : même mémo, même durée.
+    const memo = this.drawing_area.node_size_memo
+    const hit = memo?.get(this)
+    if (hit?.w !== undefined) return hit.w / 2
     const items = this._radialEnds().map(e => ({ id: e.link.id, angle: 0, thickness: e.thickness }))
-    return radialRadius(items, Math.max(this.shape_min_width, this.shape_min_height) / 2)
+    const r = radialRadius(items, Math.max(this.shape_min_width, this.shape_min_height) / 2)
+    if (memo) memo.set(this, { ...hit, w: 2 * r, h: 2 * r })
+    return r
   }
 
   /**
@@ -1866,8 +1875,13 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   private _drawLinks() {
     // Links positions are modified by nodes's position changes
+    // os#1510 — sous une mémo des tailles (cf. DrawingArea.withNodeSizeMemo) : l'ancrage radial lit
+    // la taille du nœud d'en face pour CHAQUE bout, et celle d'un nœud radial reparcourt tous ses
+    // flux. Flux éclatés par filière sur la carte SOCLE : chacun des 1 700 bouts des pays relisait
+    // les 1 700 flux du concentrateur — 160 s d'un dessin de 167 s. Toute écriture de position
+    // vide la mémo : elle ne vaut que le temps de ce placement.
     if (!this.sankey.drawing_area.bypass_compute_positions)
-      this.updateLinksPositions()
+      this.drawing_area.withNodeSizeMemo(() => this.updateLinksPositions())
     else
       this.sankey.visible_links_list.forEach(l => l.draw())
     // Node shape -> affected if links are added or removed, or if links values change
