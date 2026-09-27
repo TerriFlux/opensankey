@@ -3395,6 +3395,34 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       ja: 'このノードが出力フローをどこに接続するか。辺：左右上下の辺に積み重ね（既定）。放射状：ノードの輪郭の周りに配置し、各フローは目標の方位角で出発 — 太いフローを多数配置でき、地図に有用です。'
     }
   } satisfies AttributeConfig<Type_AnchorMode>,
+  // os#1510 — COURBURE DES FLUX RADIAUX, en degrés. Un bout radial part vers le nœud d'en face ;
+  // cet angle le fait pivoter (le départ d'un côté, l'arrivée de l'autre) : 0 = tout droit, une
+  // dizaine de degrés = l'arc léger des cartes de flux, qui sépare deux flux de sens opposés
+  // entre les mêmes lieux.
+  radial_arc: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Radial link bend',
+      fr: 'Courbure des flux radiaux',
+      es: 'Curvatura de los flujos radiales',
+      de: 'Krümmung der radialen Flüsse',
+      it: 'Curvatura dei flussi radiali',
+      'zh-CN': '径向流量弯曲',
+      ja: '放射状フローの曲がり'
+    },
+    tooltips: {
+      en: 'Radial anchoring only. Links leave straight toward the opposite node; this angle (degrees) bends them into a light arc. 0 = straight.',
+      fr: 'Accroche radiale seulement. Les flux partent tout droit vers le nœud d\'en face ; cet angle (en degrés) les courbe en arc léger. 0 = tout droit.',
+      es: 'Solo anclaje radial. Los flujos salen en línea recta hacia el nodo opuesto; este ángulo (grados) los curva en un arco ligero. 0 = recto.',
+      de: 'Nur radiale Verankerung. Flüsse verlaufen gerade zum Gegenknoten; dieser Winkel (Grad) biegt sie zu einem leichten Bogen. 0 = gerade.',
+      it: 'Solo ancoraggio radiale. I flussi partono dritti verso il nodo opposto; questo angolo (gradi) li curva in un arco leggero. 0 = dritto.',
+      'zh-CN': '仅限径向锚定。流量径直指向对面节点；此角度（度）使其弯成轻微弧线。0 = 直线。',
+      ja: '放射状接続のみ。フローは相手ノードへまっすぐ向かいます。この角度（度）で軽い弧に曲げます。0 = 直線。'
+    }
+  } satisfies AttributeConfig<number>,
   // Écart d'accroche des flux, en px, perpendiculaire au côté du nœud (équivalent
   // de la « Distance » d'e!Sankey). POSITIF = les ancres rentrent DANS la boîte
   // (les flux entrants/sortants se rejoignent à travers le nœud) ; négatif = elles
