@@ -72,11 +72,23 @@ export type Type_GeoControlPoint = {
   y: number
 }
 
-/** Le calage complet d'un fond : la projection, et les deux points qui l'ancrent. */
+/**
+ * os#1364 (27/09/2026) — LA BOÎTE DE L'IMAGE, en pixels de la zone de dessin : là où le fond se
+ * dessine, quoi que fasse le cadrage à la fenêtre. Sans elle, l'image suivait la taille de la
+ * zone (que le cadrage recalcule) et s'étirait de 0,7 % : chaque arrivée tombait 12 px à gauche
+ * de son pays sur SOCLE. Les points de calage sont des pixels de zone, l'image doit l'être aussi.
+ */
+export type Type_GeoImageBox = { x: number, y: number, width: number, height: number }
+
+/**
+ * Le calage complet d'un fond : la projection, les deux points qui l'ancrent, et la boîte où
+ * l'image se dessine. `image` absente (fichiers du 10-11/09) : l'image suit la zone, comme avant.
+ */
 export type Type_GeoReference = {
   projection: Type_GeoProjection
   a: Type_GeoControlPoint
   b: Type_GeoControlPoint
+  image?: Type_GeoImageBox
 }
 
 // Latitude au-delà de laquelle Mercator part à l'infini. La borne de Web Mercator, qui rend le
@@ -193,23 +205,40 @@ export const geoReferenceFromJSON = (raw: unknown): Type_GeoReference | null => 
   const b = readPoint(json['b'])
   if (a === null || b === null) return null
   const projection = json['projection']
+  const image = readImageBox(json['image'])
   return {
     projection: GEO_PROJECTIONS.includes(projection as Type_GeoProjection)
       ? projection as Type_GeoProjection
       : 'mercator',
     a,
-    b
+    b,
+    ...(image ? { image } : {})
   }
+}
+
+/** La boîte de l'image, ou `null` si absente ou incomplète — une demi-boîte ne place rien. */
+const readImageBox = (raw: unknown): Type_GeoImageBox | null => {
+  if (raw === null || typeof raw !== 'object') return null
+  const b = raw as { [key: string]: unknown }
+  const num = (v: unknown) => (typeof v === 'number' && isFinite(v)) ? v : null
+  const x = num(b['x']), y = num(b['y']), width = num(b['width']), height = num(b['height'])
+  if (x === null || y === null || width === null || height === null || width <= 0 || height <= 0) return null
+  return { x, y, width, height }
 }
 
 /**
  * Écrit un calage. Deux clés nommées `a` et `b` plutôt qu'une liste de points : `Type_JSON` refuse
  * les tableaux d'objets, et de toute façon ces deux points ne sont pas deux éléments d'une série —
- * chacun a son rôle dans le calage.
+ * chacun a son rôle dans le calage. La boîte de l'image voyage avec, quand elle existe.
  */
 export const geoReferenceToJSON = (reference: Type_GeoReference) => {
   const point = (p: Type_GeoControlPoint) => ({ lat: p.latitude, lon: p.longitude, x: p.x, y: p.y })
-  return { projection: reference.projection, a: point(reference.a), b: point(reference.b) }
+  return {
+    projection: reference.projection,
+    a: point(reference.a),
+    b: point(reference.b),
+    ...(reference.image ? { image: { ...reference.image } } : {})
+  }
 }
 
 /** Terre → pixels, une fois le calage établi. */
