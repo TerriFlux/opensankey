@@ -1456,16 +1456,27 @@ export class Class_DrawingArea {
    */
   private _link_side_memo: Map<Class_LinkElement, { s?: Type_Side, t?: Type_Side }> | null = null
   public get link_side_memo() { return this._link_side_memo }
-  public invalidateNodeSizeMemo() { this._node_size_memo?.clear(); this._link_side_memo?.clear() }
+  /**
+   * os#1510 — même lot, même règle, pour les DIRECTIONS DE DÉPART radiales d'un nœud (id de flux →
+   * normale) : l'arrivée d'un flux se règle en miroir de son départ, et chaque pays la lit sur le
+   * concentrateur, dont le rangement coûte ses 1 700 bandes. Opaque ici (cf. Node._radialDepartureNormals).
+   */
+  private _radial_departure_memo: Map<object, Map<string, { x: number, y: number }>> | null = null
+  public get radial_departure_memo() { return this._radial_departure_memo }
+  public invalidateNodeSizeMemo() {
+    this._node_size_memo?.clear(); this._link_side_memo?.clear(); this._radial_departure_memo?.clear()
+  }
   public withNodeSizeMemo<T>(fn: () => T): T {
     if (this._node_size_memo) return fn()
     this._node_size_memo = new Map()
     this._link_side_memo = new Map()
+    this._radial_departure_memo = new Map()
     try {
       return fn()
     } finally {
       this._node_size_memo = null
       this._link_side_memo = null
+      this._radial_departure_memo = null
     }
   }
   /** Réorganise les flux E/S de chaque nœud, sous une seule mémo de tailles (cf. ci-dessus). */
