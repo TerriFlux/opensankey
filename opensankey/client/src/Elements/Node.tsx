@@ -475,10 +475,14 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public buildSplitLinks(dim: Class_NodeDimension): Class_LinkElement[] {
     const sankey = this.sankey
-    const children = dim.children as Class_NodeElement[]
-    const in_group = new Set<Class_NodeElement>([this, ...children])
+    // BANDES IMBRIQUÉES (27/09/2026) : un enfant dont une dimension est elle-même « éclatée » ne
+    // donne pas SA bande mais celles de ses enfants, et ainsi de suite — ce sont les FEUILLES de
+    // l'éclatement qui portent les bandes. Tout le sous-arbre fait partie du groupe.
+    const leaves = Class_NodeElement.splitLeavesOf(dim)
+    const in_group = Class_NodeElement.splitSubtreeOf(dim)
+    in_group.add(this)
     const created: Class_LinkElement[] = []
-    children.forEach(child => {
+    leaves.forEach(child => {
       [...child.input_links_list, ...child.output_links_list].forEach(origin => {
         if (origin.is_expansion_link || origin.is_split_link) return
         const is_out = origin.source === child
@@ -503,11 +507,61 @@ export class Class_NodeElement extends Class_NodeBase {
     return created
   }
 
-  /** Retire les bandes des enfants de `dim` ; les flux agrégés qu'elles masquaient réapparaissent. */
+  /**
+   * BANDES IMBRIQUÉES — les nœuds qui portent les bandes d'un éclatement : les enfants de `dim`,
+   * sauf ceux qu'une de leurs propres dimensions éclate à son tour, remplacés par SES feuilles.
+   * « Produits agricoles » éclaté par filière, dont « Céréales » éclaté en bruts/transformés :
+   * les bandes sont Céréales brutes, Céréales transformées, Fruits et légumes, Lait…
+   */
+  public static splitLeavesOf(dim: Class_NodeDimension, seen: Set<Class_NodeDimension> = new Set()): Class_NodeElement[] {
+    if (seen.has(dim)) return []
+    seen.add(dim)
+    const out: Class_NodeElement[] = []
+    ;(dim.children as Class_NodeElement[]).forEach(child => {
+      const nested = child.dimensions_as_parent.find(d => d.split_links && d.children.length > 0)
+      if (nested) out.push(...Class_NodeElement.splitLeavesOf(nested, seen))
+      else out.push(child)
+    })
+    return out
+  }
+
+  /** Tout le sous-arbre d'un éclatement (enfants, petits-enfants éclatés…), sans le parent. */
+  public static splitSubtreeOf(dim: Class_NodeDimension, seen: Set<Class_NodeDimension> = new Set()): Set<Class_NodeElement> {
+    const out = new Set<Class_NodeElement>()
+    if (seen.has(dim)) return out
+    seen.add(dim)
+    ;(dim.children as Class_NodeElement[]).forEach(child => {
+      out.add(child)
+      const nested = child.dimensions_as_parent.find(d => d.split_links && d.children.length > 0)
+      if (nested) Class_NodeElement.splitSubtreeOf(nested, seen).forEach(n => out.add(n))
+    })
+    return out
+  }
+
+  /**
+   * L'éclatement DE TÊTE qui contient `dim`, s'il est imbriqué : en remontant, la dimension éclatée
+   * dont le nœud parent n'est lui-même dans aucun éclatement. `dim` elle-même si elle est de tête.
+   * C'est sur le parent de celle-ci que les bandes existent.
+   */
+  public static splitRootOf(dim: Class_NodeDimension): Class_NodeDimension {
+    let current = dim
+    const seen = new Set<Class_NodeDimension>([dim])
+    for (;;) {
+      const parent = current.parent as Class_NodeElement
+      const up = parent.dimensions_as_child.find(d => d.split_links && !seen.has(d))
+      if (!up) return current
+      seen.add(up)
+      current = up
+    }
+  }
+
+  /** Retire les bandes de l'éclatement `dim` ; les flux agrégés qu'elles masquaient réapparaissent. */
   public dropSplitLinks(dim: Class_NodeDimension) {
-    const children = new Set<Class_NodeElement>(dim.children as Class_NodeElement[])
+    // Tout le sous-arbre, pas les seuls enfants : une bande imbriquée porte une feuille profonde.
+    const subtree = Class_NodeElement.splitSubtreeOf(dim)
+    ;(dim.children as Class_NodeElement[]).forEach(c => subtree.add(c))
     const doomed = [...this.input_links_list, ...this.output_links_list]
-      .filter(l => l.is_split_link && l.split_child !== null && children.has(l.split_child))
+      .filter(l => l.is_split_link && l.split_child !== null && subtree.has(l.split_child))
     const touched = new Set<Class_NodeElement>([this])
     doomed.forEach(l => touched.add(l.source === this ? l.target : l.source))
     this.drawing_area.deleteLinks(doomed)
@@ -521,11 +575,12 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public refreshSplitHiding() {
     const split_dims = this.dimensions_as_parent.filter(d => d.split_links)
+    const subtrees = split_dims.map(d => Class_NodeElement.splitSubtreeOf(d))
     const links = [...this.input_links_list, ...this.output_links_list]
     const covered = new Set<string>()
     links.forEach(l => {
       if (!l.is_split_link || l.split_child === null) return
-      if (!split_dims.some(d => d.children.includes(l.split_child as Class_NodeElement))) return
+      if (!subtrees.some(t => t.has(l.split_child as Class_NodeElement))) return
       covered.add((l.source === this ? 'out:' : 'in:') + (l.source === this ? l.target : l.source).id)
     })
     links.forEach(l => {

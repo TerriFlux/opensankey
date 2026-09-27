@@ -470,6 +470,68 @@ export const unsplitLinks = (
   return true
 }
 
+// ── BANDES IMBRIQUÉES (27/09/2026) ────────────────────────────────────────────────────────────────
+//
+// Julien : « quand on désagrège par filière il faut dessiner comme on dessine des dataTags multiples
+// […] sans perdre la désagrégation filière → bruts/transformés → HS4 ». Une bande se ré-éclate : ses
+// sous-bandes prennent sa place dans le même faisceau, sous le nœud qui reste visible. Le drapeau
+// `split_links` se pose sur la dimension de l'enfant (il est déjà enregistré) ; les bandes, elles,
+// vivent toujours sur le parent de l'éclatement DE TÊTE, qu'on refait en entier à chaque geste.
+
+/** Refait les bandes de l'éclatement de tête qui contient `dim`, autour d'un changement `change`. */
+const rebuildSplitAround = (
+  new_data: Class_ApplicationData,
+  dim: Class_NodeDimension,
+  change: () => void
+) => {
+  const root = Class_NodeElement.splitRootOf(dim)
+  const top = root.parent as Class_NodeElement
+  new_data.drawing_area.withBypassRedraws(() => {
+    // Retirer AVANT le changement : le sous-arbre se lit sur les drapeaux actuels, et une bande
+    // imbriquée qu'on s'apprête à refermer ne serait plus reconnue après.
+    top.dropSplitLinks(root)
+    change()
+    const created = top.buildSplitLinks(root)
+    const touched = new Set<Class_NodeElement>([top])
+    created.forEach(l => { touched.add(l.source); touched.add(l.target) })
+    new_data.drawing_area.reorganizeIOLinksOf(touched)
+  }, false)
+  refreshAfterLocalHierarchyGesture(new_data)
+}
+
+/** La dimension par laquelle une bande peut se ré-éclater (celle de son enfant), ou `undefined`. */
+export const bandSplittableDimension = (band: Class_LinkElement): Class_NodeDimension | undefined => {
+  const child = band.split_child
+  if (!band.is_split_link || !child) return undefined
+  return child.dimensions_as_parent.find(d => !d.split_links && d.children.length > 0)
+}
+
+/** La dimension éclatée IMBRIQUÉE dont la bande est une sous-bande, ou `undefined` (bande de tête). */
+export const bandRegroupableDimension = (band: Class_LinkElement): Class_NodeDimension | undefined => {
+  const child = band.split_child
+  if (!band.is_split_link || !child) return undefined
+  return child.dimensions_as_child.find(d => d.split_links && Class_NodeElement.splitRootOf(d) !== d)
+}
+
+/** Éclate une BANDE en sous-bandes, une par enfant de son nœud. Vrai si quelque chose a bougé. */
+export const splitBand = (new_data: Class_ApplicationData, band: Class_LinkElement): boolean => {
+  const dim = bandSplittableDimension(band)
+  if (!dim) return false
+  rebuildSplitAround(new_data, dim, () => {
+    dim.setSplitLinks()
+    dim.forced_by_local_action = true
+  })
+  return true
+}
+
+/** Regroupe les sous-bandes d'une bande imbriquée en la bande de leur parent. Vrai si quelque chose a bougé. */
+export const regroupBand = (new_data: Class_ApplicationData, band: Class_LinkElement): boolean => {
+  const dim = bandRegroupableDimension(band)
+  if (!dim) return false
+  rebuildSplitAround(new_data, dim, () => dim.unsetSplitLinks())
+  return true
+}
+
 /** Déplie `parent` sur l'axe qui mène à `child_id`, comme le clic droit. Vrai si quelque chose a bougé. */
 export const disaggregateLocally = (
   new_data: Class_ApplicationData,
