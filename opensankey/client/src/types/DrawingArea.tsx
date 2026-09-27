@@ -59,7 +59,7 @@ import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
-import type { Type_GeoReference } from '../Algorithms/geoProjection'
+import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
@@ -5246,23 +5246,25 @@ export class Class_DrawingArea {
         : this._bg_image_horizontal_align === 'center'
           ? 'xMid'
           : 'xMin'
-      // os#1364 (27/09/2026) — UN FOND CALÉ OCCUPE EXACTEMENT LA ZONE DE DESSIN, dans ses
-      // coordonnées. Les points de calage sont des pixels de la zone, et les nœuds aussi. Le
-      // dimensionner sur la boîte de zoom (le rapport de la FENÊTRE, ajusté en « meet ») l'étirait
-      // de 0,7 % vers l'est sur SOCLE : chaque arrivée tombait 12 px à gauche de son pays, 20 px
-      // en Chine — « un petit décalage vers la droite de toutes les arrivées » (Julien). Un fond
-      // sans calage garde le comportement d'avant : il n'est qu'un décor, la fenêtre le cadre.
-      const fixed_to_area = this._geo_reference !== null
+      // os#1364 (27/09/2026) — UN FOND CALÉ SE DESSINE DANS SA BOÎTE, en pixels de la zone, quoi
+      // que fasse le cadrage à la fenêtre. Les points de calage sont des pixels de zone, les nœuds
+      // aussi ; l'image l'était par accident seulement — dimensionnée sur la boîte de zoom (le
+      // rapport de la FENÊTRE, ajusté en « meet »), puis sur la zone que le cadrage redimensionne,
+      // elle s'étirait de 0,7 % vers l'est sur SOCLE : chaque arrivée tombait 12 px à gauche de
+      // son pays, 20 px en Chine — « un petit décalage vers la droite de toutes les arrivées »
+      // (Julien). La boîte est FIGÉE dans la référence au calage (cf. `bgImageDrawnBox`). Un fond
+      // sans boîte garde le comportement d'avant : il n'est qu'un décor, la fenêtre le cadre.
+      const box = this._geo_reference?.image
       this.d3_selection_bg
         ?.append('image')
         .attr('id', this.domId('bg_image'))
-        .attr('width', fixed_to_area ? this._width : this._zoom_width)
-        .attr('height', fixed_to_area ? this._height : this._zoom_height)
+        .attr('width', box ? box.width : this._zoom_width)
+        .attr('height', box ? box.height : this._zoom_height)
         .attr('preserveAspectRatio', x_align + 'YMin meet')
         .attr(
           'transform',
-          fixed_to_area
-            ? 'translate(0, 0)'
+          box
+            ? 'translate(' + box.x + ', ' + box.y + ')'
             : 'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
         .attr('href', this._background_image)
         .style('background-size', 'contain')
@@ -5391,6 +5393,25 @@ export class Class_DrawingArea {
     } else {
       this._loadBgImageNaturalRatio(true)
     }
+  }
+
+  /**
+   * os#1364 (27/09/2026) — LA BOÎTE OÙ L'IMAGE DE FOND EST DESSINÉE EN CE MOMENT, en pixels de la
+   * zone : celle de la référence si elle en a une, sinon ce que « meet » fait de l'image dans la
+   * boîte de zoom (largeur bornée par le rapport naturel, ancrée en haut et selon l'alignement).
+   * C'est ce que le panneau de calage FIGE dans la référence quand l'auteur cale : l'image ne
+   * bougera plus avec la fenêtre, les deux nœuds de calage restent sur leurs pays.
+   */
+  public bgImageDrawnBox(): Type_GeoImageBox {
+    const fixed = this._geo_reference?.image
+    if (fixed) return { ...fixed }
+    const ratio = this._bg_image_natural_ratio > 0 ? this._bg_image_natural_ratio : this._zoom_width / this._zoom_height
+    const width = Math.min(this._zoom_width, this._zoom_height * ratio)
+    const height = width / ratio
+    const slack = this._zoom_width - width
+    const x = this._background_d3_groups_shift_x
+      + (this._bg_image_horizontal_align === 'right' ? slack : this._bg_image_horizontal_align === 'center' ? slack / 2 : 0)
+    return { x, y: this._background_d3_groups_shift_y, width, height }
   }
 
   // os#1364 — Calage géographique du fond (cf. `_geo_reference`). Le poser ne déplace rien tout
