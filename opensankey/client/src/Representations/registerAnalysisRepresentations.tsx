@@ -76,7 +76,8 @@ import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
 import {
-  crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf
+  crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf,
+  crossOpeningAt
 } from '../Charts/CrossHierarchy'
 import type { Type_CrossAxis, Type_CrossSpec } from '../Charts/CrossHierarchy'
 
@@ -614,12 +615,20 @@ const donutClickGestures = (
     )
   }
 
-  // ── os#1509 — LE CROISEMENT : ouvrir et refermer des CASES, et rien d'autre ──────────────────
+  // ── os#1509 — LE CROISEMENT : ouvrir et refermer des CASES ───────────────────────────────────
   //
-  // Une case est un flux du document, pas un nœud : le diagramme n'a rien à déplier pour elle, et
-  // la figure ne descend pas dedans. Reste le geste de base — un clic ouvre par l'axe de la
-  // figure, alt+clic par l'AUTRE axe (c'est ce qui permet « Céréales → Europe → Belgique → blé »),
-  // shift+clic referme la case, ou le parent par lequel on la voit, avec tout ce qu'ils portaient.
+  // Un clic ouvre par l'axe de la figure, alt+clic par l'AUTRE axe (c'est ce qui permet
+  // « Céréales → Europe → Belgique → blé »), shift+clic referme la case, ou le parent par lequel
+  // on la voit, avec tout ce qu'ils portaient.
+  //
+  // ⚠️ 27/09/2026 — ET LE DIAGRAMME SUIT, quand l'auteur l'a demandé. Ce bloc disait « une case
+  // est un flux du document, pas un nœud : le diagramme n'a rien à déplier pour elle ». C'était
+  // vrai de la CASE et faux de l'AXE : ouvrir une case par un axe remplace l'un de ses deux bouts
+  // par ses enfants, et ce bout-là est un NŒUD que le diagramme sait désagréger.
+  //
+  // Julien : « quand on est en mode le croisement des flux entrants et qu'on a le déplie dans le
+  // diagramme, ça ne marche pas. » Le réglage restait offert en croisé sans rien faire — un bouton
+  // mort, que le harnais des « bites » ne voit pas (il n'interroge pas le croisement).
   if (hierarchy.cross) {
     const cross = hierarchy.cross
     const cellBelow = (below_id: string, ancestor_id: string): boolean => {
@@ -651,6 +660,14 @@ const donutClickGestures = (
           : undefined
         crossExpansionEntriesOf(part_id).forEach(e => next.delete(e))
         next.add(crossExpansionEntry(part_id, axis))
+        // LE DIAGRAMME SUIT L'AXE QU'ON VIENT D'OUVRIR. `axis` n'est pose que par alt+clic ; sans
+        // lui, c'est l'axe de la figure qui a ouvert (`cross.first`), et c'est donc lui qu'on
+        // deplie. `crossOpeningAt` applique la meme regle que le trace (cf. `cellsAlong`).
+        if (wants_unfold) {
+          const link = sankey.links_dict[part_id] as Class_LinkElement
+          const opening = crossOpeningAt(link, axis ?? cross.first, cross.side)
+          if (opening) disaggregateAlong(app_data, [opening.node.id, opening.first_child.id])
+        }
       }
       if (next.size !== hierarchy.expanded.size || [...next].some(e => !hierarchy.expanded.has(e))) {
         writeExpanded(next)
