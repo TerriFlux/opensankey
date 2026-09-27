@@ -216,7 +216,7 @@ export const sunburstNodeValue = (
     return on_target ? (l.valueCurrentTarget ?? l.valueCurrent) : l.valueCurrent
   }
   const sum = (links: Class_LinkElement[], on_target: boolean) => links
-    .filter(l => !l.is_expansion_link && passesLinkTagFilters(l))
+    .filter(l => !l.is_expansion_link && !l.is_split_link && passesLinkTagFilters(l))
     .reduce((acc, l) => acc + (valueOf(l, on_target) ?? 0), 0)
   const inputs = () => sum(node.input_links_list as Class_LinkElement[], true)
   const outputs = () => sum(node.output_links_list as Class_LinkElement[], false)

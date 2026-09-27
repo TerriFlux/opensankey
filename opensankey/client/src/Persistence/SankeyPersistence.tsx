@@ -909,33 +909,33 @@ export class NodeElementPersistence extends NodeBasePersistence {
 
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
       }
     } else if (kwargs && kwargs['only_visible_elements']) {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => l.is_visible).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && l.is_visible).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => l.is_visible).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && l.is_visible).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => l.is_visible).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && l.is_visible).map(link => link.id)
       }
     } else {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link).map(link => link.id)
       }
     }
     return json_object
@@ -1524,7 +1524,9 @@ export class SankeyPersistence {
     )
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
+    // Flux éclatés : jamais écrits (reconstruits du drapeau `split_links` des dimensions).
     links_list
+      .filter(link => !link.is_split_link)
       .forEach(link => {
         json_object_links[link.id] = {}
         json_object_links[link.id] = LinkElementPersistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })

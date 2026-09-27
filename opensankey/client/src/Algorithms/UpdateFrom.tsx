@@ -346,6 +346,9 @@ export const updateFrom = (
         // Issue #1225 — flags d'expansion latérale unifiés sur la dim
         if (src_dim.expanded_left) dim.setExpandedSide('left', true)
         else if (src_dim.expanded_right) dim.setExpandedSide('right', true)
+        // Flux éclatés : le drapeau ; les bandes sont refaites en fin de synchronisation.
+        else if (src_dim.split_links) dim.setSplitLinks(true)
+        else if (dim.split_links) dim.unsetSplitLinks()
         // #1231 — recopier le type de désagrégation mémorisé (indépendant de l'état
         // d'affichage), pour que la désagrégation globale réapplique le même type
         // dans la vue cible. Les setX ci-dessus sont en fromJSON=true → ne le posent
@@ -633,6 +636,8 @@ export const updateFrom = (
       to_add
         .forEach(id => {
           const link = other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id]
+          // Flux éclatés : jamais copiés (refaits du drapeau de la dimension).
+          if (link.is_split_link) return
           const similar_src_curr = drawing_area.sankey.nodes_dict[link.source.id]
           const similar_trgt_curr = drawing_area.sankey.nodes_dict[link.target.id]
           if (similar_src_curr && similar_trgt_curr) {
@@ -651,6 +656,7 @@ export const updateFrom = (
     if (remove_flux || all) {
       to_remove
         .forEach(id => {
+          if (drawing_area.sankey.links_dict[id].is_split_link) return
           drawing_area.sankey.drawing_area.deleteLink(drawing_area.sankey.links_dict[id])
         })
     }
@@ -660,6 +666,7 @@ export const updateFrom = (
       to_update
         .forEach(id => {
           const link = drawing_area.sankey.links_dict[id]
+          if (link.is_split_link) return
           // Save positions
           // const sp = structuredClone(link.source.display.position)
           // const tp = structuredClone(link.target.display.position)
