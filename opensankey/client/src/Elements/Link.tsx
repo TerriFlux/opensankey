@@ -48,6 +48,7 @@ import { resolveLinkOrientation } from './linkOrientation'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { effectiveOpacity } from './elementOpacity'
+import { shadeAmongSiblings } from './splitBandColor'
 import { topLayerDefining } from './tagStyles'
 import { resolveScaleCarrierTag } from '../types/ScaleResolution'
 import { countLinkDraw } from '../types/DrawCounters'
@@ -846,8 +847,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.tagStyleLayerImposing('shape_color') !== undefined || this.isTagStyleLockedOut('shape_color')) {
       return this.shape_color
     }
-    // Flux éclaté : la bande porte la couleur de l'enfant qu'elle représente.
-    if (this._split_child) return this._split_child.getShapeColorToUse()
+    // Flux éclaté : la bande porte la couleur de l'enfant qu'elle représente, nuancée si des sœurs
+    // de la même dimension éclatée partagent cette couleur (cf. splitBandColor.ts).
+    if (this._split_child) {
+      const child = this._split_child
+      const dim = child.dimensions_as_child.find(d => d.split_links)
+      if (!dim) return child.getShapeColorToUse()
+      const siblings = dim.children as Class_NodeElement[]
+      return shadeAmongSiblings(siblings.map(c => c.getShapeColorToUse()), siblings.indexOf(child))
+    }
 
     // Apply gradient if needed
     if (this.shape_color_rule == 'gradient') {
