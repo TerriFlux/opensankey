@@ -36,7 +36,7 @@ import { reorderLinksByIds } from './linksOrderState'
 import { splitLinkId } from './splitLinkId'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 // os#1510 — l'ancrage radial : rayon du disque et rangement des ancres sur le cercle.
-import { allocateRadialSlots, radialRadius, wrapAngle, Type_RadialItem } from './radialAnchors'
+import { allocateRadialSlots, groupArrivalsByCone, radialRadius, wrapAngle, Type_RadialItem } from './radialAnchors'
 // os#1510 lot 3 — le contour d'un territoire comme lieu d'ancrage.
 import { facingAbscissa, makeContour, outwardNormalAt, pointAt, Type_Contour } from './polygonAnchors'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
@@ -1145,41 +1145,35 @@ export class Class_NodeElement extends Class_NodeBase {
       const angle = contour
         ? facingAbscissa(contour, centre, direction) / contour.length * 2 * Math.PI
         : Math.atan2(direction.y, direction.x)
-      return { ...e, angle }
+      return { ...e, angle, azimuth: Math.atan2(direction.y, direction.x) }
     })
-    // ── LES ARRIVÉES FORMENT UNE SEULE BANDE, FACE À LA DIRECTION MOYENNE DES SOURCES ──────────
+    // ── LES ARRIVÉES ENTRENT PAR UNE PORTE PAR DIRECTION ─────────────────────────────────────────
     //
-    // Julien (27/09/2026), après avoir désagrégé le concentrateur : « les points de départ bougent,
-    // oui, mais le point d'arrivée doit être le même ». Un pays qui recevait UN flux depuis la
-    // France en reçoit quatorze depuis quatorze filières posées autour d'elle : chacun visait sa
-    // filière, et les arrivées s'éventaillaient autour du pays. Ce qu'on lit sur une carte, c'est
-    // « ça vient de France » — les arrivées se rangent donc côte à côte, dans une bande centrée
-    // sur la direction moyenne des sources (somme des vecteurs unitaires pondérée par
-    // l'épaisseur). Avec une seule source, c'est son azimut, comme avant. Les DÉPARTS gardent
-    // chacun l'azimut de leur cible : c'est le sens même du contour.
-    let vx = 0
-    let vy = 0
-    ends.forEach(e => {
-      if (e.is_source) return
-      vx += Math.cos(e.angle) * Math.max(e.thickness, 1e-6)
-      vy += Math.sin(e.angle) * Math.max(e.thickness, 1e-6)
-    })
-    const inbound_angle = (vx !== 0 || vy !== 0) ? Math.atan2(vy, vx) : 0
+    // Julien (27/09/2026), après avoir désagrégé le concentrateur : « le point d'arrivée doit être le
+    // même » — un pays qui reçoit quatorze flux des quatorze filières posées autour de la France les
+    // reçoit côte à côte, par une seule porte. Mais une porte UNIQUE pour tout le nœud faisait entrer
+    // les importations de 182 pays par le même côté du concentrateur (la moyenne tombait au
+    // sud-est) : les arrivées se groupent désormais par CÔNE d'azimut (cf. groupArrivalsByCone), une
+    // porte par direction. Même principe aux deux échelles. Les DÉPARTS gardent chacun l'azimut de
+    // leur cible.
+    const doors = groupArrivalsByCone(ends.filter(e => !e.is_source).map(e => ({
+      id: e.link.id, azimuth: e.azimuth, angle: e.angle, weight: e.thickness
+    })))
     // ── LE DÉPARTAGE DES FLUX DE MÊME AZIMUT : le faisceau reste « détordu » ────────────────────
     //
     // Plusieurs flux vers la même cible (les bandes des flux éclatés) : leur cible les range par
     // l'ordinal global du flux (`bundleTie`, CCW à la source, CW à la cible). Ici, l'angle croît
     // dans le sens horaire à l'écran : un DÉPART range donc ses flux de même azimut par ordinal
     // DÉCROISSANT (= CCW), une ARRIVÉE par ordinal croissant — et les deux bouts d'un faisceau se
-    // font face sans se croiser. Les arrivées, toutes posées sur la direction moyenne des sources,
-    // se rangent d'abord par l'azimut de LEUR source (celle qui vient de la gauche arrive à gauche).
+    // font face sans se croiser. Les arrivées d'une même porte se rangent d'abord par l'angle de
+    // LEUR source (celle qui vient de la gauche arrive à gauche).
     const items = ends.map(e => {
       const ord = this.sankey.linkOrdinal(e.link)
       return {
         id: e.link.id,
-        angle: e.is_source ? e.angle : inbound_angle,
+        angle: e.is_source ? e.angle : (doors.get(e.link.id)?.angle ?? e.angle),
         thickness: e.thickness,
-        tie: e.is_source ? [-ord] : [wrapAngle(e.angle - inbound_angle), ord]
+        tie: e.is_source ? [-ord] : [wrapAngle(e.angle - (doors.get(e.link.id)?.angle ?? e.angle)), ord]
       }
     })
     return { radius, items, place }
