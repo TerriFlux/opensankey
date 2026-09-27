@@ -59,17 +59,13 @@ export class NodePositioningGeographic {
       // porte un occupe sa boîte englobante (son coin est celui de la boîte, pas le point moins
       // une demi-taille) : c'est le contour qui dit où le nœud est, le point n'en est que le
       // centre visuel, où le nom s'écrit et d'où partent les azimuts.
+      // Le contour n'est QUE le lieu des ancres : le nœud garde sa taille propre, centrée sur son
+      // point (27/09/2026). Lui donner la boîte de son territoire posait des rectangles invisibles
+      // sur la carte — « France - Import » recouvrait le concentrateur et captait les clics.
       const ring = node.geo_ring
-      if (ring !== null && node.shape_anchor_mode === 'radial') {
-        const px = ring.map(([la, lo]) => placeGeoPoint(la, lo, reference, fit))
-        node.geo_ring_px = px
-        node.position_x = Math.min(...px.map(p => p.x))
-        node.position_y = Math.min(...px.map(p => p.y))
-        node.captureCenterFromCorner()
-        placed++
-        return
-      }
-      node.geo_ring_px = null
+      node.geo_ring_px = (ring !== null && node.shape_anchor_mode === 'radial')
+        ? ring.map(([la, lo]) => placeGeoPoint(la, lo, reference, fit))
+        : null
       // Le point géographique est le CENTRE du nœud, jamais son coin haut-gauche : un nœud dont
       // la hauteur EST sa valeur change de taille au moindre changement de datatag, et caler son
       // coin le ferait glisser vers le bas à chaque fois — le lieu se déplacerait avec la
