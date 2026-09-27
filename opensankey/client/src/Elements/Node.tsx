@@ -37,6 +37,8 @@ import { splitLinkId } from './splitLinkId'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 // os#1510 — l'ancrage radial : rayon du disque et rangement des ancres sur le cercle.
 import { allocateRadialSlots, radialRadius, Type_RadialItem } from './radialAnchors'
+// os#1510 lot 3 — le contour d'un territoire comme lieu d'ancrage.
+import { facingAbscissa, makeContour, outwardNormalAt, pointAt, Type_Contour } from './polygonAnchors'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -1089,14 +1091,61 @@ export class Class_NodeElement extends Class_NodeBase {
    * Le disque et l'azimut du nœud d'en face pour chaque bout, vu du centre. Le centre est le coin
    * + le rayon : en mode géographique, c'est exactement le point projeté (`applyGeographicLayout`).
    */
-  private _radialLayout(): { radius: number, cx: number, cy: number, items: Type_RadialItem[] } {
-    const radius = this._radialRadius()
-    const cx = this.position_x + radius
-    const cy = this.position_y + radius
+  /**
+   * os#1510 lot 3 — LE CONTOUR PROJETÉ, quand le nœud porte un territoire et que le placement
+   * géographique l'a posé pour ce dessin ; `null` sinon (le nœud est un disque).
+   */
+  private _radialContour(): Type_Contour | null {
+    const px = this.geo_ring_px
+    return px ? makeContour(px) : null
+  }
+
+  /** La boîte englobante du contour projeté : la taille du nœud quand il a un territoire. */
+  private _ringBox(): { w: number, h: number } | null {
+    const px = this.geo_ring_px
+    if (!px || px.length < 3) return null
+    const xs = px.map(p => p.x)
+    const ys = px.map(p => p.y)
+    return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
+  }
+
+  /**
+   * LE CONTOUR ET SES BOUTS : pour chaque bout, l'ANGLE idéal (l'azimut du nœud d'en face vu du
+   * centre), et une fonction qui transforme un angle alloué en point + normale sortante.
+   *
+   * Sur un DISQUE, l'angle est un angle. Sur un TERRITOIRE (lot 3), le contour est une polyligne
+   * fermée de longueur L : une abscisse `s` y vaut un angle `2π·s/L` sur un cercle de rayon
+   * `L/2π`, et l'idéal d'un bout est l'abscisse où le rayon vers le nœud d'en face sort du
+   * contour (`facingAbscissa`). Le rangement (`allocateRadialSlots`) ne voit que des angles et
+   * des arcs : il ne sait pas si le contour est rond, et n'a pas à le savoir.
+   */
+  private _radialLayout(): {
+    radius: number
+    items: Type_RadialItem[]
+    place: (angle: number) => { point: { x: number, y: number }, normal: { x: number, y: number } }
+    } {
+    const contour = this._radialContour()
+    const centre = contour
+      ? (this.geo_point_px ?? { x: this.position_x + this._ringBox()!.w / 2, y: this.position_y + this._ringBox()!.h / 2 })
+      : { x: this.position_x + this._radialRadius(), y: this.position_y + this._radialRadius() }
+    const radius = contour ? contour.length / (2 * Math.PI) : this._radialRadius()
+    const place = contour
+      ? (angle: number) => {
+        const s = angle / (2 * Math.PI) * contour.length
+        return { point: pointAt(contour, s), normal: outwardNormalAt(contour, s) }
+      }
+      : (angle: number) => ({
+        point: { x: centre.x + radius * Math.cos(angle), y: centre.y + radius * Math.sin(angle) },
+        normal: { x: Math.cos(angle), y: Math.sin(angle) }
+      })
     const ends = this._radialEnds().map(e => {
       const ox = e.other.position_x + e.other.getShapeWidthToUse() / 2
       const oy = e.other.position_y + e.other.getShapeHeightToUse() / 2
-      return { ...e, angle: Math.atan2(oy - cy, ox - cx) }
+      const direction = { x: ox - centre.x, y: oy - centre.y }
+      const angle = contour
+        ? facingAbscissa(contour, centre, direction) / contour.length * 2 * Math.PI
+        : Math.atan2(direction.y, direction.x)
+      return { ...e, angle }
     })
     // ── LES ARRIVÉES FORMENT UNE SEULE BANDE, FACE À LA DIRECTION MOYENNE DES SOURCES ──────────
     //
@@ -1121,7 +1170,7 @@ export class Class_NodeElement extends Class_NodeBase {
       angle: e.is_source ? e.angle : inbound_angle,
       thickness: e.thickness
     }))
-    return { radius, cx, cy, items }
+    return { radius, items, place }
   }
 
   public getShapeWidthToUse() {
@@ -1135,8 +1184,9 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private _computeShapeWidthToUse() {
-    // os#1510 — un nœud radial est un disque : sa largeur est son diamètre.
-    if (this.shape_anchor_mode === 'radial') return 2 * this._radialRadius()
+    // os#1510 — un nœud radial est un disque : sa largeur est son diamètre. Lot 3 : ou la boîte de
+    // son territoire, quand il en porte un et qu'il est posé sur la carte.
+    if (this.shape_anchor_mode === 'radial') return this._ringBox()?.w ?? 2 * this._radialRadius()
     // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
     // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
     // thickness inflated the node width to N × minimum_flux for N thin links;
@@ -1229,8 +1279,8 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private _getNaturalShapeHeight() {
-    // os#1510 — un nœud radial est un disque : aussi haut que large.
-    if (this.shape_anchor_mode === 'radial') return 2 * this._radialRadius()
+    // os#1510 — un nœud radial est un disque : aussi haut que large. Lot 3 : ou sa boîte de territoire.
+    if (this.shape_anchor_mode === 'radial') return this._ringBox()?.h ?? 2 * this._radialRadius()
     if (this.use_stock_for_height) {
       const si = this.currentStockInitialForHeight()
       if (si !== null) {
@@ -2371,14 +2421,13 @@ export class Class_NodeElement extends Class_NodeBase {
           const radial_slot = radial_slots?.get(link.id)
           const radial_here = radial !== null && radial_slot !== undefined
           if (radial_here) {
-            const nx = Math.cos(radial_slot as number)
-            const ny = Math.sin(radial_slot as number)
-            link_starting_point = { x: radial.cx + radial.radius * nx, y: radial.cy + radial.radius * ny }
+            const { point, normal } = radial.place(radial_slot as number)
+            link_starting_point = { x: point.x, y: point.y }
             link_starting_handle_point = {
-              x: link_starting_point.x + handle_position_shift * nx,
-              y: link_starting_point.y + handle_position_shift * ny
+              x: point.x + handle_position_shift * normal.x,
+              y: point.y + handle_position_shift * normal.y
             }
-            link.source_anchor_normal = { x: nx, y: ny }
+            link.source_anchor_normal = { x: normal.x, y: normal.y }
           }
           else if (link.source_side === 'right') {
             link.source_anchor_normal = null
@@ -2479,14 +2528,13 @@ export class Class_NodeElement extends Class_NodeBase {
           const radial_slot_in = radial_slots?.get(link.id)
           const radial_here_in = radial !== null && radial_slot_in !== undefined
           if (radial_here_in) {
-            const nx = Math.cos(radial_slot_in as number)
-            const ny = Math.sin(radial_slot_in as number)
-            link_ending_point = { x: radial.cx + radial.radius * nx, y: radial.cy + radial.radius * ny }
+            const { point, normal } = radial.place(radial_slot_in as number)
+            link_ending_point = { x: point.x, y: point.y }
             link_ending_handle_point = {
-              x: link_ending_point.x + handle_position_shift * nx,
-              y: link_ending_point.y + handle_position_shift * ny
+              x: point.x + handle_position_shift * normal.x,
+              y: point.y + handle_position_shift * normal.y
             }
-            link.target_anchor_normal = { x: nx, y: ny }
+            link.target_anchor_normal = { x: normal.x, y: normal.y }
           }
           else if (link.target_side === 'right') {
             link.target_anchor_normal = null
