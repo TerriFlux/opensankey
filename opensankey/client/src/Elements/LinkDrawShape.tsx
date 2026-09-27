@@ -1241,6 +1241,16 @@ export class LinkDrawShape {
           + ' L ' + x0l + ',' + y0l
           + ' Z'
       } else {
+        // os#1510 — FLUX RADIAL en « Contour exact » : le bord suit la normale locale de la
+        // médiane, et un FAISCEAU (mêmes source et cible : les bandes des flux éclatés) dérive
+        // toutes ses bandes d'une médiane commune — elles restent parallèles et jointives de bout
+        // en bout (Julien, 27/09/2026 : « pour que les flux soient parallèles, contour exact »).
+        if ((this._link.source_anchor_normal || this._link.target_anchor_normal)
+          && this._link.shape_type === 'bezier_outline_exact' && !this.isBeingDragged()) {
+          return this.getRadialExactOutline(
+            [x0, y0], [x1, y1], [x2, y2], [x4, y4], [x5, y5], [x6, y6]
+          )
+        }
         // Nouveau calcul pour vh et hv
         const thickness = this._link.thickness
         if (is_outline) {
@@ -1497,6 +1507,70 @@ export class LinkDrawShape {
   private isBeingDragged(): boolean {
     return (this._link.source?.getDragState() ?? false)
       || (this._link.target?.getDragState() ?? false)
+  }
+
+  /**
+   * os#1510 — CONTOUR EXACT D'UN FLUX RADIAL, seul ou dans son faisceau.
+   *
+   * Un bout radial part en biais : pas d'axe transverse fixe comme en hh/vv. On mesure donc
+   * chaque bout le long de la PERPENDICULAIRE à la tangente de départ (resp. d'arrivée) de la
+   * médiane. Seul, le flux s'étend de ±épaisseur/2 autour de sa propre médiane. Dans un faisceau
+   * (flux visibles de même source et même cible, en contour exact), la médiane est celle de
+   * l'ENVELOPPE du faisceau à chaque bout — ses points de contrôle sont ceux de ce flux, décalés
+   * le long de la perpendiculaire — et chaque bande est le décalage de cette médiane commune, aux
+   * offsets réels de ses ancrages : les frontières coïncident, sans trou ni croisement.
+   */
+  private getRadialExactOutline(
+    p0: number[], p1: number[], p2: number[], p4: number[], p5: number[], p6: number[]
+  ): string {
+    const link = this._link
+    const unit = (v: number[]): number[] => {
+      const n = Math.hypot(v[0], v[1])
+      return n > 0 ? [v[0] / n, v[1] / n] : [0, 1]
+    }
+    const perp = (t: number[]): number[] => unit([-t[1], t[0]])
+    const seg_start = [p1[0] - p0[0], p1[1] - p0[1]]
+    const seg_end = [p6[0] - p5[0], p6[1] - p5[1]]
+    const tan_start = (seg_start[0] || seg_start[1]) ? seg_start : [p2[0] - p1[0], p2[1] - p1[1]]
+    const tan_end = (seg_end[0] || seg_end[1]) ? seg_end : [p5[0] - p4[0], p5[1] - p4[1]]
+    const n_src = perp(tan_start)
+    const n_tgt = perp(tan_end)
+    const half_src = link.thicknessSource / 2
+    const half_tgt = link.thicknessTarget / 2
+
+    const group = (link.source?.visible_output_links_list ?? []).filter(l =>
+      l.target === link.target &&
+      l.shape_type === 'bezier_outline_exact' &&
+      l.shape_is_curved &&
+      !l.shape_is_recycling
+    )
+    // Coordonnée transverse de l'enveloppe du faisceau, relative à CE flux, à un bout.
+    const envelope = (
+      pos: (l: Class_LinkElement) => number[], half: (l: Class_LinkElement) => number, n: number[]
+    ): number => {
+      if (group.length < 2) return 0
+      const me = pos(link)
+      let lo = Infinity, hi = -Infinity
+      group.forEach(l => {
+        const q = pos(l)
+        const u = (q[0] - me[0]) * n[0] + (q[1] - me[1]) * n[1]
+        lo = Math.min(lo, u - half(l))
+        hi = Math.max(hi, u + half(l))
+      })
+      return (lo + hi) / 2
+    }
+    const u_src = envelope(l => [l.position_x_start, l.position_y_start], l => l.thicknessSource / 2, n_src)
+    const u_tgt = envelope(l => [l.position_x_end, l.position_y_end], l => l.thicknessTarget / 2, n_tgt)
+    // Médiane du faisceau : la moitié source décalée de u_src, la moitié cible de u_tgt.
+    const shift = (p: number[], n: number[], u: number) => [p[0] + n[0] * u, p[1] + n[1] * u]
+    const m0 = shift(p0, n_src, u_src), m1 = shift(p1, n_src, u_src), m2 = shift(p2, n_src, u_src)
+    const m4 = shift(p4, n_tgt, u_tgt), m5 = shift(p5, n_tgt, u_tgt), m6 = shift(p6, n_tgt, u_tgt)
+    const m3 = [(m2[0] + m4[0]) / 2, (m2[1] + m4[1]) / 2]
+    return this.getExactBezierOutline(
+      m0, m1, m2, m3, m4, m5, m6,
+      -u_src - half_src, -u_tgt - half_tgt, -u_src + half_src, -u_tgt + half_tgt,
+      n_src
+    )
   }
 
   /**
