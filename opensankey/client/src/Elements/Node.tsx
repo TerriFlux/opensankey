@@ -170,7 +170,6 @@ export class Class_NodeElement extends Class_NodeBase {
     return new Class_StockValue(parent)
   }
 
-  protected _links_visibilities_fingerprint: string = ''
   protected _are_links_visibilities_ok: boolean | undefined = undefined
 
   private _input_links: { [id: string]: Class_LinkElement } = {}
@@ -184,6 +183,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public resetLinkVisibilitiesMemorization() {
     this._are_links_visibilities_ok = undefined
+    this._visibility_witness = null
   }
 
   protected _orderD3Elements() {
@@ -1268,20 +1268,9 @@ export class Class_NodeElement extends Class_NodeBase {
       // direction pour toutes ses bandes, qui restent donc parallèles.
       const other = others.get(members[0].id) as { node: Class_NodeElement, is_source: boolean, link: Class_LinkElement }
       const normal = this._radialDirection(other.node, other.is_source, { x: nx / nn, y: ny / nn })
-      // UN FAISCEAU SANS TORSION : les bandes se rangent le long de la GAUCHE du sens de marche,
-      // dans l'ordre de leur ordinal, aux deux bouts. Le sens de marche est la direction au départ,
-      // son opposée à l'arrivée ; même règle aux deux bouts, donc même ordre vu du flux. L'ordre des
-      // places sur le contour ne convient pas : il dépend du sens de parcours du contour, qui n'est
-      // pas le même d'un territoire à l'autre, et le faisceau se tordait en route (Julien,
-      // 27/09/2026, France–Allemagne : « il y a des choses bizarres »).
-      const travel = other.is_source ? normal : { x: -normal.x, y: -normal.y }
-      const tx = -travel.y, ty = travel.x
-      const ord = new Map<string, number>()
-      members.forEach(m => {
-        const o = others.get(m.id) as { link: Class_LinkElement }
-        ord.set(m.id, this.sankey.linkOrdinal(o.link))
-      })
-      members.sort((a, b) => (ord.get(a.id) ?? 0) - (ord.get(b.id) ?? 0))
+      let tx = -normal.y, ty = normal.x
+      const first = placed[0].point, last = placed[placed.length - 1].point
+      if ((last.x - first.x) * tx + (last.y - first.y) * ty < 0) { tx = -tx; ty = -ty }
       const total = members.reduce((sum, m) => sum + m.th, 0)
       let cum = 0
       members.forEach(m => {
@@ -1894,21 +1883,9 @@ export class Class_NodeElement extends Class_NodeBase {
     // y garde sa base, à sa place, et toutes les pointes convergent vers le milieu de la bande,
     // pondéré par les épaisseurs. Une pointe « indépendante » (shape_arrow_standalone) reste seule.
     // (Julien, 27/09/2026 : « ça doit finir avec une flèche commune ».)
-    // Une pointe commune PAR FAISCEAU (même source), pas pour tout le nœud : les arrivées d'un nœud
-    // radial viennent de toutes les directions (les importations d'un concentrateur), et une seule
-    // pointe les faisait toutes converger vers un point — une étoile (Julien, 27/09/2026 : « les
-    // importations, c'est rigolo »).
-    const fan_groups = new Map<Class_NodeElement, typeof radial_arrows>()
-    radial_arrows.forEach(it => {
-      if (it.is_source_arrow || it.link.shape_arrow_standalone) return
-      if (this._input_links_ending_point[it.link.id] === undefined) return
-      const g = fan_groups.get(it.link.source) ?? []
-      g.push(it)
-      fan_groups.set(it.link.source, g)
-    })
-    const fanned = new Set<(typeof radial_arrows)[number]>()
-    fan_groups.forEach(fan_in => {
-      if (fan_in.length < 2) return
+    const fan_in = radial_arrows.filter(it => !it.is_source_arrow && !it.link.shape_arrow_standalone
+      && this._input_links_ending_point[it.link.id] !== undefined)
+    if (fan_in.length >= 2) {
       let wx = 0, wy = 0, w = 0
       fan_in.forEach(it => {
         const a = this._input_links_ending_point[it.link.id]
@@ -1917,7 +1894,6 @@ export class Class_NodeElement extends Class_NodeBase {
       })
       const apex = { x: wx / w, y: wy / w }
       fan_in.forEach(it => {
-        fanned.add(it)
         const link = it.link
         const n = link.target_anchor_normal as { x: number, y: number }
         const a = this._input_links_ending_point[link.id]
@@ -1930,8 +1906,8 @@ export class Class_NodeElement extends Class_NodeBase {
           + ' L ' + (base.x - tx * half) + ',' + (base.y - ty * half)
           + ' Z'
       })
-    })
-    radial_arrows.filter(it => !fanned.has(it)).forEach(it => {
+    }
+    radial_arrows.filter(it => fan_in.length < 2 || !fan_in.includes(it)).forEach(it => {
       const link = it.link
       const n = (it.is_source_arrow ? link.source_anchor_normal : link.target_anchor_normal) as { x: number, y: number }
       const anchor = it.is_source_arrow ? this._output_links_starting_point[link.id] : this._input_links_ending_point[link.id]
@@ -3081,29 +3057,38 @@ export class Class_NodeElement extends Class_NodeBase {
 
 
   // 🔄 LINKS VISIBILITY - RÉINTÉGRÉ DIRECTEMENT
-  private get are_links_visibilities_ok() {
-    const links_visibilities_fingerprint = this.getLinksVisibilitiesFingerprint()
-    if (
-      (this._are_links_visibilities_ok === undefined ||
-        links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
-    ) {
-      const are_links_visibilities_ok = this.checkIfLinksVisibilitiesAreOK()
+  // os#1508 (27/09/2026) — LE TÉMOIN. « Ce nœud a-t-il au moins un flux qui peut s'afficher ? »
+  // est interrogé par CHAQUE flux, pour ses deux bouts (`are_source_and_target_displayed`).
+  // L'ancienne mémo reposait sur une empreinte : une chaîne concaténée sur TOUS les flux du nœud,
+  // recalculée à chaque appel pour savoir si la mémo tenait — donc O(flux du nœud) par flux, soit
+  // quadratique sur un nœud à milliers de flux. Mesuré sur la carte SOCLE : 4,7 s sur 20.
+  //
+  // Une réponse « oui » se PROUVE par un seul flux : on garde celui qui l'a prouvée et on le
+  // revérifie en O(1). Tant qu'il tient, la réponse est juste sans rien regarder d'autre ; s'il ne
+  // tient plus, on rebalaye (et on retient le nouveau témoin). Une réponse « non » est rebalayée à
+  // chaque fois, mais un nœud sans aucun flux affichable est un nœud masqué, qu'on interroge peu.
+  private _visibility_witness: Class_LinkElement | null = null
 
-      if (are_links_visibilities_ok !== this._are_links_visibilities_ok) {
-        this.updateVisibilityFingerprint()
-      }
-
-      this._are_links_visibilities_ok = are_links_visibilities_ok
-      this._links_visibilities_fingerprint = links_visibilities_fingerprint
-    }
-    return this._are_links_visibilities_ok
+  private linkWitnessesVisibility(link: Class_LinkElement): boolean {
+    const is_in = link.target === this
+    if (is_in ? this._input_links[link.id] !== link : this._output_links[link.id] !== link) return false
+    const other = is_in ? link.source : link.target
+    return (link.is_not_zero || link.is_forced_visible_when_zero) &&
+      link.are_related_flux_tags_selected &&
+      other.are_related_node_tags_selected &&
+      other.are_related_dimensions_selected
   }
 
-  private getLinksVisibilitiesFingerprint() {
-    let links_visibilities_fingerprint = ''
-    this._links_order
-      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint + link.source.visibility_fingerprint + link.target.visibility_fingerprint)
-    return links_visibilities_fingerprint + '_' + this.sankey.data_tags_fingerprint
+  private get are_links_visibilities_ok() {
+    const witness = this._visibility_witness
+    const ok = (witness !== null && this.linkWitnessesVisibility(witness))
+      ? true
+      : this.checkIfLinksVisibilitiesAreOK()
+    if (ok !== this._are_links_visibilities_ok) {
+      this.updateVisibilityFingerprint()
+    }
+    this._are_links_visibilities_ok = ok
+    return ok
   }
 
   private get orphan_visible() {
@@ -3124,27 +3109,27 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private checkIfLinksVisibilitiesAreOK() {
-    if (this.input_links_list.length + this.output_links_list.length == 0) {
-      return true
+    // Un seul flux visible suffit : on s'arrête au premier, et on le retient comme témoin (cf.
+    // `are_links_visibilities_ok`). Parcours direct des dictionnaires : `input_links_list` en
+    // recopiait tout le contenu dans un tableau à chaque appel.
+    let any = false
+    for (const id in this._input_links) {
+      any = true
+      if (this.linkWitnessesVisibility(this._input_links[id])) {
+        this._visibility_witness = this._input_links[id]
+        return true
+      }
     }
-    // Un seul flux visible suffit : on s'arrête au premier (`some`), au lieu de filtrer TOUS les
-    // flux du nœud — sur un nœud à 4 800 flux (« Produits agricoles » aux flux éclatés), le
-    // filtre complet coûtait 12 s par lot de réorganisations.
-    const input_links_visible = this.input_links_list.some(link =>
-      (link.is_not_zero || link.is_forced_visible_when_zero) &&
-      link.are_related_flux_tags_selected &&
-      link.source.are_related_node_tags_selected &&
-      link.source.are_related_dimensions_selected
-    )
-    if (input_links_visible) {
-      return true
+    for (const id in this._output_links) {
+      any = true
+      if (this.linkWitnessesVisibility(this._output_links[id])) {
+        this._visibility_witness = this._output_links[id]
+        return true
+      }
     }
-    return this.output_links_list.some(link =>
-      (link.is_not_zero || link.is_forced_visible_when_zero) &&
-      link.are_related_flux_tags_selected &&
-      link.target.are_related_node_tags_selected &&
-      link.target.are_related_dimensions_selected
-    )
+    this._visibility_witness = null
+    // Un nœud sans aucun flux est « ok » (c'est la règle des orphelins qui décide de lui).
+    return !any
   }
 
   // SPECIAL METHODS FOR IMPORT/EXPORT =================================================
