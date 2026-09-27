@@ -1304,6 +1304,13 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (!drawing_area || !default_style) return
     if (default_style.shape_position_type === this._position_mode) return
     if (!force && default_style.shape_position_type === 'parametric') return
+    // os#1364 (27/09/2026) — UN DOCUMENT GÉOGRAPHIQUE LE RESTE. Le mode d'un groupe d'étiquettes
+    // est un mode d'AFFICHAGE (proportionnel, échelle adaptée, ou « absolu » = aucun) appliqué à
+    // chaque changement de sélection ; sur une carte, les positions DÉRIVENT des coordonnées et
+    // aucun de ces modes n'a de sens. C'est par ici que changer d'année, de niveau, ou le
+    // rafraîchissement qui suit une désagrégation, faisaient quitter la carte : les filières
+    // restaient empilées en colonne et le Maroc, poussé vers le bas, n'était jamais reposé.
+    if (default_style.shape_position_type === 'geographic') return
     if (this._position_mode === 'proportional') {
       drawing_area.setProportionalMode()
       if (redraw) drawing_area.draw()
