@@ -15,8 +15,9 @@ import type { Class_NodeElement } from '../Elements/Node'
 import { FOLLOWING_NAVIGATION } from './FigureNavigation'
 import {
   buildCrossTree, crossAxesOf, crossExpandedDownToLevels, crossExpansionEntry, crossFrontier,
-  crossIsOffered, crossLevelsShown
+  crossIsOffered, crossLevelsShown, crossOpeningAt
 } from './CrossHierarchy'
+import type { Class_LinkElement } from '../Elements/Link'
 import { analysisHierarchyTree, buildAnalysisChartData } from './AnalysisChartData'
 import type { Type_ChartSubject } from './AnalysisChartData'
 
@@ -199,5 +200,72 @@ describe('la couronne croisee', () => {
     const parts = buildAnalysisChartData(subject, descriptor, FOLLOWING_NAVIGATION, {}, new Set()).series[0]?.parts ?? []
     expect(parts.map(p => p.id).sort()).toEqual([linkId('Asie', 'P'), linkId('Europe', 'P')].sort())
     expect(parts.every(p => p.has_children === true)).toBe(true)
+  })
+})
+
+// ── 27/09/2026 — CE QUE LE DIAGRAMME DOIT DEPLIER QUAND ON OUVRE UNE CASE ────────────────────
+//
+// Julien : « quand on est en mode le croisement des flux entrants et qu on a le deplie dans le
+// diagramme, ca ne marche pas. »
+//
+// Il avait raison, et le code le disait en toutes lettres : « une case est un flux du document,
+// pas un noeud : le diagramme n a rien a deplier pour elle ». C etait vrai de la CASE et faux de
+// l AXE — ouvrir une case par un axe remplace l un de ses deux bouts par ses enfants, et ce
+// bout-la est un NOEUD que le diagramme sait desagreger.
+//
+// Le reglage « Le clic sur une part, en plus » restait donc offert en croise sans rien faire : un
+// bouton mort. Le harnais des « bites » ne le voit pas — il n interroge pas le croisement.
+describe('l axe ouvert designe un noeud que le diagramme sait deplier', () => {
+
+  const lien = (app: Class_ApplicationData, id: string) =>
+    app.drawing_area.sankey.links_dict[id] as Class_LinkElement
+
+  test('LE CAS DE JULIEN : ouvrir par l axe d en face deplie le PARTENAIRE', () => {
+    // La case (Europe, P) ouverte par l axe « other » montre France et Belgique : c est donc
+    // EUROPE que le diagramme doit desagreger, pas le flux ni le produit.
+    const app = loadApp()
+
+    const ouverture = crossOpeningAt(lien(app, 'Europe_P'), 'other', 'inputs')
+
+    expect(ouverture?.node.id).toBe('Europe')
+    expect(['FR', 'BE']).toContain(ouverture?.first_child.id)
+  })
+
+  test('ET PAR L AXE DU SUJET, c est le PRODUIT — l autre bout de la meme case', () => {
+    // alt+clic ouvre par l autre axe : la meme case montre alors A et B. Les deux bouts d une case
+    // sont deux noeuds, et l axe dit lequel on ouvre.
+    const app = loadApp()
+
+    const ouverture = crossOpeningAt(lien(app, 'Europe_P'), 'self', 'inputs')
+
+    expect(ouverture?.node.id).toBe('P')
+    expect(['A', 'B']).toContain(ouverture?.first_child.id)
+  })
+
+  test('UN BOUT SANS ENFANTS NE DEPLIE RIEN, et le dit', () => {
+    // LA CONTRE-VERIFICATION : « A » est une feuille de l axe produit. Rendre un noeud quand meme
+    // ferait desagreger au hasard — on rend `null`, et l appelant s arrete.
+    const app = loadApp()
+
+    expect(crossOpeningAt(lien(app, 'Europe_A'), 'self', 'inputs')).toBeNull()
+  })
+
+  test('LA MEME REGLE QUE LE TRACE : le bout ouvert est celui dont la figure montre les enfants', () => {
+    // Le garde-fou qui compte. Si `crossOpeningAt` et `cellsAlong` choisissaient deux noeuds
+    // differents, le diagramme deplierait autre chose que la figure — un decalage qu on ne verrait
+    // qu a l ecran, et par intermittence.
+    const app = loadApp()
+    const cross = buildCrossTree(
+      nodeOf(app, 'P'), spec('other'), FOLLOWING_NAVIGATION,
+      new Set([crossExpansionEntry('Europe_P', 'other')])
+    )
+    const sous_europe = crossFrontier(cross!)
+      .filter(s => s.parent_label === 'Europe')
+      .map(s => s.label)
+
+    const ouverture = crossOpeningAt(lien(app, 'Europe_P'), 'other', 'inputs')
+
+    expect(sous_europe.length).toBeGreaterThan(0)
+    expect(sous_europe).toContain(ouverture!.first_child.name)
   })
 })

@@ -142,6 +142,35 @@ const childrenAlong = (
   return null
 }
 
+/**
+ * 27/09/2026 — CE QUE LE DIAGRAMME DOIT DÉPLIER QUAND ON OUVRE UNE CASE PAR UN AXE.
+ *
+ * Julien : « quand on est en mode le croisement des flux entrants et qu'on a le déplie dans le
+ * diagramme, ça ne marche pas. »
+ *
+ * Il avait raison, et le code le disait : « une case est un flux du document, pas un nœud : le
+ * diagramme n'a rien à déplier pour elle ». C'était vrai de la CASE et faux de l'AXE — ouvrir une
+ * case par un axe, c'est remplacer l'un de ses deux bouts par ses enfants, et ce bout-là est bien
+ * un nœud que le diagramme sait désagréger.
+ *
+ * Le réglage « Le clic sur une part, en plus » restait donc offert en croisé sans rien faire : un
+ * bouton mort, que le harnais des « bites » ne voit pas (il n'interroge pas le croisement).
+ *
+ * ⚠️ LA MÊME RÈGLE QUE `cellsAlong`, ET PAS UNE AUTRE : l'axe `self` ouvre le bout du SUJET,
+ * `other` celui d'en face, et les enfants sont ceux de `childrenAlong` — filtres d'étiquettes
+ * compris. Deux façons de choisir le même nœud finiraient par en désigner deux.
+ */
+export const crossOpeningAt = (
+  link: Class_LinkElement,
+  axis: Type_CrossAxis,
+  side: 'inputs' | 'outputs'
+): { node: Class_NodeElement, first_child: Class_NodeElement } | null => {
+  const ends = crossEnds(link, side)
+  const node = axis === 'self' ? ends.p : ends.q
+  const along = childrenAlong(node)
+  return along ? { node, first_child: along.children[0] } : null
+}
+
 /** Ce nœud participe-t-il à une hiérarchie, comme parent ou comme enfant ? */
 const hasHierarchy = (node: Class_NodeElement): boolean =>
   node.dimensions_as_parent.length > 0 || node.dimensions_as_child.length > 0
