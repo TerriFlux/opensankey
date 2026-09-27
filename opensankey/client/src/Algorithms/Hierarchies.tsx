@@ -434,6 +434,42 @@ const refreshAfterLocalHierarchyGesture = (new_data: Class_ApplicationData) => {
   mc.updateAllComponentsRelatedToLevelTags()
 }
 
+/**
+ * FLUX ÉCLATÉS — `parent` reste agrégé mais ses flux se divisent en bandes, une par enfant de
+ * l'axe qui mène à `child_id` (cf. Class_NodeDimension.split_links). Vrai si quelque chose a bougé.
+ */
+export const splitLinks = (
+  new_data: Class_ApplicationData,
+  parent: Class_NodeElement,
+  child_id: string
+): boolean => {
+  const dim = parent.dimensions_as_parent.find(d => d.children.some(c => c.id === child_id))
+  if (!dim || dim.split_links) return false
+  new_data.drawing_area.withBypassRedraws(() => {
+    dim.setSplitLinks()
+    const created = parent.buildSplitLinks(dim)
+    dim.forced_by_local_action = true
+    const touched = new Set<Class_NodeElement>([parent])
+    created.forEach(l => { touched.add(l.source); touched.add(l.target) })
+    new_data.drawing_area.reorganizeIOLinksOf(touched)
+  }, false)
+  refreshAfterLocalHierarchyGesture(new_data)
+  return true
+}
+
+/** Défait `splitLinks` : les bandes disparaissent, les flux agrégés réapparaissent. */
+export const unsplitLinks = (
+  new_data: Class_ApplicationData,
+  parent: Class_NodeElement,
+  child_id: string
+): boolean => {
+  const dim = parent.dimensions_as_parent.find(d => d.children.some(c => c.id === child_id))
+  if (!dim || !dim.split_links) return false
+  new_data.drawing_area.withBypassRedraws(() => dim.unsetSplitLinks(), false)
+  refreshAfterLocalHierarchyGesture(new_data)
+  return true
+}
+
 /** Déplie `parent` sur l'axe qui mène à `child_id`, comme le clic droit. Vrai si quelque chose a bougé. */
 export const disaggregateLocally = (
   new_data: Class_ApplicationData,

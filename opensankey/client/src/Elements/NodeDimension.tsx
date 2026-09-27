@@ -63,6 +63,7 @@ export type Type_DisaggregationKind =
   | Exclude<Type_ContainerMode, null>
   | 'expanded_left'
   | 'expanded_right'
+  | 'split_links'
 
 export class Class_NodeDimension {
 
@@ -84,6 +85,14 @@ export class Class_NodeDimension {
   // Replaces the old clone-based mechanism (master_node / slave_nodes).
   private _expanded_left: boolean = false
   private _expanded_right: boolean = false
+  // FLUX ÉCLATÉS — le parent reste seul visible (comme agrégé), mais ses flux se divisent en
+  // bandes parallèles, une par enfant : pour chaque flux enfant↔X hors du groupe, un flux
+  // éclaté parent↔X (valeurs de l'enfant, couleur de l'enfant) remplace le flux agrégé
+  // parent↔X, masqué. Les flux éclatés ne sont pas enregistrés : ce drapeau l'est, et
+  // `Class_NodeElement.buildSplitLinks` les reconstruit au chargement. Exclusif avec la
+  // désagrégation, l'englobement et l'expansion ; compatible avec l'agrégation forcée
+  // (le parent est visible dans les deux cas).
+  private _split_links: boolean = false
   // #1231 — Type de désagrégation mémorisé (cf. Type_DisaggregationKind). Posé par
   // les désagrégations locales (clic droit), persisté, survit aux agrégations.
   private _preferred_disaggregation: Type_DisaggregationKind | null = null
@@ -217,6 +226,7 @@ export class Class_NodeDimension {
     // Set booleans accordingly
     // #1231 — sortie du mode englobant via agrégation → retirer le style cadre.
     this._removeContainerStyleIfLeaving()
+    this._leaveSplitLinks()
     this._force_show_children = false
     this._force_show_parent = true
     this._container_mode = null
@@ -263,6 +273,7 @@ export class Class_NodeDimension {
     // Set booleans accordingly
     // #1231 — sortie du mode englobant via désagrégation simple → retirer le style cadre.
     this._removeContainerStyleIfLeaving()
+    this._leaveSplitLinks()
     this._force_show_children = true
     this._force_show_parent = false
     this._container_mode = null
@@ -310,6 +321,7 @@ export class Class_NodeDimension {
     if (this._container_mode === mode) return
     if (this._is_currently_in_unsetting_recursion) return
     this._is_currently_in_unsetting_recursion = true
+    this._leaveSplitLinks()
     this._force_show_children = false
     this._force_show_parent = false
     this._expanded_left = false
@@ -367,6 +379,7 @@ export class Class_NodeDimension {
   public setContainerModeQuiet(mode: Type_ContainerMode) {
     this._container_mode = mode
     if (mode) {
+      this._leaveSplitLinks()
       this._force_show_children = false
       this._force_show_parent = false
       this._expanded_left = false
@@ -432,6 +445,7 @@ export class Class_NodeDimension {
     this._is_currently_in_unsetting_recursion = true
     // #1231 — sortie du mode englobant via expansion latérale → retirer le style cadre.
     this._removeContainerStyleIfLeaving()
+    this._leaveSplitLinks()
     this._force_show_children = false
     this._force_show_parent = false
     this._container_mode = null
@@ -484,6 +498,7 @@ export class Class_NodeDimension {
     // #1231 — sortie du mode englobant via showAccordingToLevelTags (menu Hiérarchies)
     // → retirer le style cadre.
     this._removeContainerStyleIfLeaving()
+    this._leaveSplitLinks()
     this._force_show_children = false
     this._force_show_parent = false
     this._container_mode = null
@@ -491,6 +506,44 @@ export class Class_NodeDimension {
     this._expanded_right = false
     this._forced_by_local_action = false
     this._updated()
+  }
+
+  // FLUX ÉCLATÉS ======================================================================
+
+  /**
+   * Entre dans l'état « flux éclatés » : le parent reste visible, les enfants masqués, et les
+   * flux du parent se divisent en bandes par enfant (cf. l'attribut). Ne crée PAS les flux :
+   * c'est `Class_NodeElement.buildSplitLinks(dim)` qui le fait (clic droit, chargement, vues).
+   */
+  public setSplitLinks(fromJSON: boolean = false) {
+    if (this._split_links) return
+    if (this._is_currently_in_unsetting_recursion) return
+    this._is_currently_in_unsetting_recursion = true
+    this._removeContainerStyleIfLeaving()
+    this._force_show_children = false
+    this._force_show_parent = false
+    this._container_mode = null
+    this._expanded_left = false
+    this._expanded_right = false
+    this._split_links = true
+    if (!fromJSON) this._preferred_disaggregation = 'split_links'
+    this._updated()
+    this._is_currently_in_unsetting_recursion = false
+  }
+
+  /** Quitte l'état « flux éclatés » : les flux éclatés sont retirés, les flux agrégés réapparaissent. */
+  public unsetSplitLinks() {
+    if (!this._split_links) return
+    this._leaveSplitLinks()
+    this._forced_by_local_action = false
+    this._updated()
+  }
+
+  /** Sortie de l'état par n'importe quelle transition : les flux éclatés ne survivent pas. */
+  private _leaveSplitLinks() {
+    if (!this._split_links) return
+    this._split_links = false
+    this._parent.dropSplitLinks(this)
   }
 
 
@@ -537,6 +590,7 @@ export class Class_NodeDimension {
 
   public get expanded_left() { return this._expanded_left }
   public get expanded_right() { return this._expanded_right }
+  public get split_links() { return this._split_links }
   public get is_expanded() { return this._expanded_left || this._expanded_right }
   public get expansion_side(): 'left' | 'right' | null {
     if (this._expanded_left) return 'left'
@@ -735,6 +789,8 @@ export class NodeDimensionsManager {
             // Issue #1225 — expansion latérale unifiée sur la dimension
             if (dimension.expanded_left) dimensions[dimension.id].expanded_left = true
             if (dimension.expanded_right) dimensions[dimension.id].expanded_right = true
+            // Flux éclatés : le drapeau seul, les flux sont reconstruits au chargement.
+            if (dimension.split_links) dimensions[dimension.id].split_links = true
             // #1231 — type de désagrégation mémorisé. Écrit indépendamment de l'état
             // d'affichage courant (un nœud ré-agrégé garde sa préférence pour la
             // prochaine désagrégation globale).
@@ -856,6 +912,10 @@ export class NodeDimensionsManager {
                 } else if (dimension_as_json.expanded_right) {
                   const nodeDimParent = parent.nodeDimensionAsParent(this._node)!
                   nodeDimParent?.setExpandedSide('right', true)
+                } else if (dimension_as_json.split_links) {
+                  // Flux éclatés : le drapeau ; les flux sont reconstruits par
+                  // `DrawingArea.afterFromJSON` une fois tous les flux chargés.
+                  parent.nodeDimensionAsParent(this._node)?.setSplitLinks(true)
                 }
                 // #1231 — restaurer le type de désagrégation mémorisé (indépendant
                 // de l'état d'affichage : présent même pour un nœud ré-agrégé).
@@ -1001,6 +1061,8 @@ export class NodeDimensionsManager {
           dim.setExpandedSide('left', true)
         } else if (entry['expanded_right'] === true) {
           dim.setExpandedSide('right', true)
+        } else if (entry['split_links'] === true) {
+          dim.setSplitLinks(true)
         } else if (entry['force_show_children'] === true) {
           // fromJSON = false : on VEUT le réordonnancement des flux (il ne dessine pas),
           // la salissure de `preferred_disaggregation` est corrigée juste après.
@@ -1180,8 +1242,10 @@ export class NodeDimensionsManager {
 
     let has_forced_dimensions: boolean = false
     let ok_forced_dimensions = true
+    // Flux éclatés (`split_links`) : même visibilité que l'agrégation forcée — le parent se
+    // voit, les enfants non ; seuls les flux changent.
     Object.values(dimensionsData.dimensions_as_child).forEach(dim => {
-      if (dim.force_show_parent || dim.force_show_children) {
+      if (dim.force_show_parent || dim.force_show_children || dim.split_links) {
         has_forced_dimensions = true
         ok_forced_dimensions = ok_forced_dimensions && dim.force_show_children
       }
@@ -1190,9 +1254,9 @@ export class NodeDimensionsManager {
     // Check dimensions where node is tagged as a parent
     this.dimensions_as_parent
       .forEach(dim => {
-        if (dim.force_show_parent || dim.force_show_children) {
+        if (dim.force_show_parent || dim.force_show_children || dim.split_links) {
           has_forced_dimensions = true
-          ok_forced_dimensions = ok_forced_dimensions && dim.force_show_parent
+          ok_forced_dimensions = ok_forced_dimensions && (dim.force_show_parent || dim.split_links)
         }
       })
 

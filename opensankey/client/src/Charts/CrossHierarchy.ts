@@ -128,7 +128,7 @@ const linkBetween = (
   p: Class_NodeElement, q: Class_NodeElement, side: 'inputs' | 'outputs'
 ): Class_LinkElement | undefined => {
   const links = (side === 'inputs' ? p.input_links_list : p.output_links_list) as Class_LinkElement[]
-  return links.find(l => !l.is_expansion_link && (side === 'inputs' ? l.source === q : l.target === q))
+  return links.find(l => !l.is_expansion_link && !l.is_split_link && (side === 'inputs' ? l.source === q : l.target === q))
 }
 
 /** Les enfants d'un nœud le long de son premier axe qui en a, filtres d'étiquettes appliqués. */
@@ -152,7 +152,7 @@ const hasHierarchy = (node: Class_NodeElement): boolean =>
  */
 export const crossIsOffered = (node: Class_NodeElement, side: 'inputs' | 'outputs'): boolean => {
   const links = (side === 'inputs' ? node.input_links_list : node.output_links_list) as Class_LinkElement[]
-  return links.some(l => !l.is_expansion_link && hasHierarchy(crossEnds(l, side).q))
+  return links.some(l => !l.is_expansion_link && !l.is_split_link && hasHierarchy(crossEnds(l, side).q))
 }
 
 /**
@@ -164,7 +164,7 @@ const oppositeTops = (p: Class_NodeElement, side: 'inputs' | 'outputs'): Class_N
   const seen = new Set<Class_NodeElement>()
   const opposites: Class_NodeElement[] = []
   links.forEach(l => {
-    if (l.is_expansion_link || !passesLinkTagFilters(l)) return
+    if (l.is_expansion_link || l.is_split_link || !passesLinkTagFilters(l)) return
     const q = crossEnds(l, side).q
     if (seen.has(q)) return
     seen.add(q)
