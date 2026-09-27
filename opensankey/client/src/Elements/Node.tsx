@@ -1100,15 +1100,6 @@ export class Class_NodeElement extends Class_NodeBase {
     return px ? makeContour(px) : null
   }
 
-  /** La boîte englobante du contour projeté : la taille du nœud quand il a un territoire. */
-  private _ringBox(): { w: number, h: number } | null {
-    const px = this.geo_ring_px
-    if (!px || px.length < 3) return null
-    const xs = px.map(p => p.x)
-    const ys = px.map(p => p.y)
-    return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
-  }
-
   /**
    * LE CONTOUR ET SES BOUTS : pour chaque bout, l'ANGLE idéal (l'azimut du nœud d'en face vu du
    * centre), et une fonction qui transforme un angle alloué en point + normale sortante.
@@ -1126,13 +1117,24 @@ export class Class_NodeElement extends Class_NodeBase {
     } {
     const contour = this._radialContour()
     const centre = contour
-      ? (this.geo_point_px ?? { x: this.position_x + this._ringBox()!.w / 2, y: this.position_y + this._ringBox()!.h / 2 })
+      ? (this.geo_point_px ?? { x: this.position_x + this.getShapeWidthToUse() / 2, y: this.position_y + this.getShapeHeightToUse() / 2 })
       : { x: this.position_x + this._radialRadius(), y: this.position_y + this._radialRadius() }
     const radius = contour ? contour.length / (2 * Math.PI) : this._radialRadius()
+    // ── LES ANCRES SONT ENFONCÉES DANS LE TERRITOIRE (Julien, 27/09/2026) ──────────────────────
+    //
+    // « Ça ne marche pas pour les passages de frontière France–Belgique, France–Italie : il faut
+    // un départ à l'intérieur un peu en arrière et une arrivée à l'intérieur un peu en avant. »
+    // Entre voisins, départ et arrivée tombaient sur la MÊME frontière : un flux sans longueur.
+    // Chaque ancre recule le long de la normale rentrante, de 40 % de sa distance au centre visuel
+    // (plafonné à 25 px) : décalage parallèle au contour, qui garde l'écart entre bandes. Le flux
+    // part toujours le long de la normale sortante et traverse la frontière.
     const place = contour
       ? (angle: number) => {
         const s = angle / (2 * Math.PI) * contour.length
-        return { point: pointAt(contour, s), normal: outwardNormalAt(contour, s) }
+        const p = pointAt(contour, s)
+        const normal = outwardNormalAt(contour, s)
+        const inset = Math.min(25, 0.4 * Math.hypot(p.x - centre.x, p.y - centre.y))
+        return { point: { x: p.x - normal.x * inset, y: p.y - normal.y * inset }, normal }
       }
       : (angle: number) => ({
         point: { x: centre.x + radius * Math.cos(angle), y: centre.y + radius * Math.sin(angle) },
@@ -1198,7 +1200,7 @@ export class Class_NodeElement extends Class_NodeBase {
   private _computeShapeWidthToUse() {
     // os#1510 — un nœud radial est un disque : sa largeur est son diamètre. Lot 3 : ou la boîte de
     // son territoire, quand il en porte un et qu'il est posé sur la carte.
-    if (this.shape_anchor_mode === 'radial') return this._ringBox()?.w ?? 2 * this._radialRadius()
+    if (this.shape_anchor_mode === 'radial') return 2 * this._radialRadius()
     // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
     // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
     // thickness inflated the node width to N × minimum_flux for N thin links;
@@ -1292,7 +1294,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private _getNaturalShapeHeight() {
     // os#1510 — un nœud radial est un disque : aussi haut que large. Lot 3 : ou sa boîte de territoire.
-    if (this.shape_anchor_mode === 'radial') return this._ringBox()?.h ?? 2 * this._radialRadius()
+    if (this.shape_anchor_mode === 'radial') return 2 * this._radialRadius()
     if (this.use_stock_for_height) {
       const si = this.currentStockInitialForHeight()
       if (si !== null) {
