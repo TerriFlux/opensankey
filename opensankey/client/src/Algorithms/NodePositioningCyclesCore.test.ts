@@ -447,3 +447,37 @@ describe('#1253 computeHorizontalIndex — appelant externe (SankeyAnimation)', 
     expect(recycling).toEqual(['B->A'])
   })
 })
+
+describe('os#1364 sur une carte, pas de recyclage', () => {
+  it('ne flague pas un flux qui recule quand une extremite est en position geographique', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    ;(g.node('B') as unknown as { shape_position_type: string }).shape_position_type = 'geographic'
+    g.core.markRecyclingLinks(g.nodes, { A: 2, B: 0 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+
+  it('deflague un flux en ancrage radial deja en recyclage', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    ;(g.node('A') as unknown as { shape_anchor_mode: string }).shape_anchor_mode = 'radial'
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    const previous = g.core.markRecyclingLinks(g.nodes, { A: 2, B: 0 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(previous).toEqual({ 'A->B': true })
+  })
+
+  it('au chargement, defait un recyclage non verrouille sur un flux de carte', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    ;(g.node('B') as unknown as { shape_position_type: string }).shape_position_type = 'geographic'
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })
+    expect(locked).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+
+  it('garde un recyclage force par l utilisateur sur une carte', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', forced_recycling: true }])
+    ;(g.node('B') as unknown as { shape_position_type: string }).shape_position_type = 'geographic'
+    g.core.markRecyclingLinks(g.nodes, { A: 0, B: 2 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+})
