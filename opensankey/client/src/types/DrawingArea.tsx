@@ -1387,6 +1387,28 @@ export class Class_DrawingArea {
       this.nodePositioning.splitTrade()
     }
     this.nodePositioning.arrangeTrade(true)
+    // Flux éclatés : reconstruits du drapeau des dimensions, jamais lus dans le fichier.
+    this.rebuildSplitLinks()
+  }
+
+  /**
+   * Refait les bandes de chaque dimension en « flux éclatés » (cf. Class_NodeDimension.split_links)
+   * — après un chargement, une synchronisation de vue. Idempotent. Réordonne les flux des nœuds
+   * touchés, l'ordre enregistré ne connaissant pas les bandes.
+   */
+  public rebuildSplitLinks() {
+    const touched = new Set<Class_NodeElement>()
+    this.withBypassRedraws(() => {
+      this.sankey.nodes_list.forEach(node => {
+        node.dimensions_as_parent.filter(d => d.split_links).forEach(dim => {
+          const created = node.buildSplitLinks(dim)
+          if (created.length === 0) return
+          touched.add(node)
+          created.forEach(l => { touched.add(l.source); touched.add(l.target) })
+        })
+      })
+      if (touched.size > 0) this.reorganizeIOLinksOf(touched)
+    }, false)
   }
 
 
@@ -2477,13 +2499,26 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
   }
   public deleteLink(link: Class_LinkElement) {
-    // Remove link from selection if necessary
-    this.removeElementFromSelection(link)
-    // Remove link from sankey
-    this.sankey.deleteLink(link)
-    this._list_g_element_id = this._list_g_element_id.filter(id => id != link.id)
-    // Self delete node
-    link.delete()
+    this.deleteLinks([link])
+  }
+
+  /**
+   * Supprime un LOT de flux : la liste des ids dessinés est filtrée une fois et les menus mis à
+   * jour une fois (par flux, c'était 4 297 filtrages de 35 000 ids en regroupant les bandes de
+   * « Produits agricoles » : 2 s).
+   */
+  public deleteLinks(links: Class_LinkElement[]) {
+    if (links.length === 0) return
+    const doomed = new Set(links.map(l => l.id))
+    links.forEach(link => {
+      // Remove link from selection if necessary
+      this.removeElementFromSelection(link)
+      // Remove link from sankey
+      this.sankey.deleteLink(link)
+    })
+    this._list_g_element_id = this._list_g_element_id.filter(id => !doomed.has(id))
+    // Self delete
+    links.forEach(link => link.delete())
     // Update related menus
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }

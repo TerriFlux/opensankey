@@ -33,6 +33,7 @@ import {
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { reorderLinksByIds } from './linksOrderState'
+import { splitLinkId } from './splitLinkId'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 // os#1510 — l'ancrage radial : rayon du disque et rangement des ancres sur le cercle.
 import { allocateRadialSlots, radialRadius, Type_RadialItem } from './radialAnchors'
@@ -456,6 +457,88 @@ export class Class_NodeElement extends Class_NodeBase {
     }
     return null
   }
+  // FLUX ÉCLATÉS ======================================================================
+
+  /**
+   * Flux éclatés (cf. Class_NodeDimension.split_links) : ce nœud reste seul visible, mais ses
+   * flux se divisent en bandes parallèles, une par enfant de `dim`. Pour chaque flux d'un enfant
+   * c vers un nœud X hors du groupe (c↔X), on crée un flux ÉCLATÉ this↔X : valeurs et étiquettes
+   * de c↔X, attributs locaux et styles du flux agrégé this↔X qu'il remplace, couleur de c. Le
+   * flux agrégé this↔X est masqué (`hidden_by_split`). Les flux existent pour TOUS les X liés
+   * aux enfants, quel que soit leur niveau : la visibilité de X fait le reste, comme pour les
+   * flux ordinaires (un changement de niveau de l'autre axe garde les bandes).
+   *
+   * Idempotent : un flux éclaté déjà présent n'est pas recréé. Les bandes ne sont jamais
+   * enregistrées ; `DrawingArea.rebuildSplitLinks` les refait au chargement.
+   */
+  public buildSplitLinks(dim: Class_NodeDimension): Class_LinkElement[] {
+    const sankey = this.sankey
+    const children = dim.children as Class_NodeElement[]
+    const in_group = new Set<Class_NodeElement>([this, ...children])
+    const created: Class_LinkElement[] = []
+    children.forEach(child => {
+      [...child.input_links_list, ...child.output_links_list].forEach(origin => {
+        if (origin.is_expansion_link || origin.is_split_link) return
+        const is_out = origin.source === child
+        const other = (is_out ? origin.target : origin.source) as Class_NodeElement
+        if (in_group.has(other)) return
+        const id = splitLinkId(origin.id, this.id)
+        if (sankey.links_dict[id]) return
+        const link = sankey.addNewLinkWithId(id, is_out ? this : other, is_out ? other : this)
+        const aggregated = this._aggregatedLinkWith(other, is_out)
+        if (aggregated) {
+          link.replaceStyles([...aggregated.style])
+          link.copyAttrFrom(aggregated)
+        } else {
+          link.replaceStyles([...origin.style])
+          link.copyAttrFrom(origin)
+        }
+        link.markAsSplitOf(origin, child)
+        created.push(link)
+      })
+    })
+    this.refreshSplitHiding()
+    return created
+  }
+
+  /** Retire les bandes des enfants de `dim` ; les flux agrégés qu'elles masquaient réapparaissent. */
+  public dropSplitLinks(dim: Class_NodeDimension) {
+    const children = new Set<Class_NodeElement>(dim.children as Class_NodeElement[])
+    const doomed = [...this.input_links_list, ...this.output_links_list]
+      .filter(l => l.is_split_link && l.split_child !== null && children.has(l.split_child))
+    const touched = new Set<Class_NodeElement>([this])
+    doomed.forEach(l => touched.add(l.source === this ? l.target : l.source))
+    this.drawing_area.deleteLinks(doomed)
+    this.refreshSplitHiding()
+    if (doomed.length > 0) this.drawing_area.reorganizeIOLinksOf(touched)
+  }
+
+  /**
+   * Masque chaque flux agrégé this↔X (dans un sens donné) dès qu'une bande this↔X d'une
+   * dimension encore en flux éclatés existe dans ce sens, et démasque les autres.
+   */
+  public refreshSplitHiding() {
+    const split_dims = this.dimensions_as_parent.filter(d => d.split_links)
+    const links = [...this.input_links_list, ...this.output_links_list]
+    const covered = new Set<string>()
+    links.forEach(l => {
+      if (!l.is_split_link || l.split_child === null) return
+      if (!split_dims.some(d => d.children.includes(l.split_child as Class_NodeElement))) return
+      covered.add((l.source === this ? 'out:' : 'in:') + (l.source === this ? l.target : l.source).id)
+    })
+    links.forEach(l => {
+      if (l.is_split_link || l.is_expansion_link) return
+      const key = (l.source === this ? 'out:' : 'in:') + (l.source === this ? l.target : l.source).id
+      l.hidden_by_split = covered.has(key)
+    })
+  }
+
+  /** Le flux ordinaire de ce nœud vers (`is_out`) ou depuis `other`, s'il existe. */
+  private _aggregatedLinkWith(other: Class_NodeElement, is_out: boolean): Class_LinkElement | undefined {
+    return (is_out ? this.output_links_list : this.input_links_list)
+      .find(l => !l.is_split_link && !l.is_expansion_link && (is_out ? l.target : l.source) === other)
+  }
+
   /**
    * Draw given node on drawing area
    */
@@ -1172,7 +1255,9 @@ export class Class_NodeElement extends Class_NodeBase {
       this.addMovingHandleForGivenLink(link, 'input')
       link.target = this
       this.drawLinks()
-      this.drawValueLabel()
+      // Sous bypass, pas d'étiquette de valeur par flux ajouté : un dessin complet suit. Mesuré
+      // en éclatant les flux de « Produits agricoles » (4 297 bandes) : 444 s passaient ici.
+      if (!this.drawing_area.bypass_redraws) this.drawValueLabel()
     }
   }
 
@@ -1185,7 +1270,7 @@ export class Class_NodeElement extends Class_NodeBase {
       this.addMovingHandleForGivenLink(link, 'output')
       link.source = this
       this.drawLinks()
-      this.drawValueLabel()
+      if (!this.drawing_area.bypass_redraws) this.drawValueLabel() // cf. addInputLink
     }
   }
 
@@ -2799,25 +2884,24 @@ export class Class_NodeElement extends Class_NodeBase {
     if (this.input_links_list.length + this.output_links_list.length == 0) {
       return true
     }
-    const input_links_visible = this.input_links_list.filter(link =>
+    // Un seul flux visible suffit : on s'arrête au premier (`some`), au lieu de filtrer TOUS les
+    // flux du nœud — sur un nœud à 4 800 flux (« Produits agricoles » aux flux éclatés), le
+    // filtre complet coûtait 12 s par lot de réorganisations.
+    const input_links_visible = this.input_links_list.some(link =>
       (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.source.are_related_node_tags_selected &&
       link.source.are_related_dimensions_selected
     )
-    if (input_links_visible.length > 0) {
+    if (input_links_visible) {
       return true
     }
-    const output_links_visible = this.output_links_list.filter(link =>
+    return this.output_links_list.some(link =>
       (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.target.are_related_node_tags_selected &&
       link.target.are_related_dimensions_selected
     )
-    if (output_links_visible.length > 0) {
-      return true
-    }
-    return false
   }
 
   // SPECIAL METHODS FOR IMPORT/EXPORT =================================================

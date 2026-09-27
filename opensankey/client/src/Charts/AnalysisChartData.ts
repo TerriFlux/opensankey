@@ -573,7 +573,7 @@ const decomposeFluxChildren = (
   const seen = new Set<Class_LinkElement>()
   src_subtree.forEach(cs => {
     (cs.output_links_list as Class_LinkElement[]).forEach(l => {
-      if (l === link || l.is_expansion_link || seen.has(l)) return
+      if (l === link || l.is_expansion_link || l.is_split_link || seen.has(l)) return
       if (!tgt_set.has(l.target)) return
       if (!passesLinkTagFilters(l)) return
       seen.add(l)

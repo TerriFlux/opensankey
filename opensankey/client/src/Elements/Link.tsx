@@ -260,6 +260,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // a lateral expansion (parent ↔ child of an expanded NodeDimension).
   // Used by contract() to know which links to delete when collapsing back.
   private _is_expansion_link: boolean = false
+  // FLUX ÉCLATÉ (cf. Class_NodeDimension.split_links) : ce flux parent↔X est la bande d'UN
+  // enfant du parent ; `_split_origin` est le flux enfant↔X qu'il reproduit (valeurs copiées),
+  // `_split_child` l'enfant (sa couleur, son nom). Transitoires : jamais enregistrés.
+  private _split_origin: Class_LinkElement | null = null
+  private _split_child: Class_NodeElement | null = null
+  // Flux agrégé parent↔X remplacé à l'écran par les bandes de ses enfants : masqué tant que le
+  // parent est en flux éclatés. Transitoire (recalculé par `Node.refreshSplitHiding`).
+  private _hidden_by_split: boolean = false
   // #411 — pourquoi ce flux existe. Renseigné par le parser (voie de création,
   // onglet, ligne, déclencheur) et restitué depuis le JSON. `undefined` = le
   // fichier ne le dit pas : l'inspecteur l'annonce comme inconnu, jamais comme
@@ -838,6 +846,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.tagStyleLayerImposing('shape_color') !== undefined || this.isTagStyleLockedOut('shape_color')) {
       return this.shape_color
     }
+    // Flux éclaté : la bande porte la couleur de l'enfant qu'elle représente.
+    if (this._split_child) return this._split_child.getShapeColorToUse()
 
     // Apply gradient if needed
     if (this.shape_color_rule == 'gradient') {
@@ -1757,6 +1767,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_expansion_link() { return this._is_expansion_link }
   public set is_expansion_link(v: boolean) { this._is_expansion_link = v }
 
+  // FLUX ÉCLATÉS ======================================================================
+  public get is_split_link() { return this._split_origin !== null }
+  public get split_origin(): Class_LinkElement | null { return this._split_origin }
+  public get split_child(): Class_NodeElement | null { return this._split_child }
+  /** Fait de ce flux la bande de `child` : valeurs et étiquettes de flux copiées de `origin`. */
+  public markAsSplitOf(origin: Class_LinkElement, child: Class_NodeElement) {
+    this._split_origin = origin
+    this._split_child = child
+    this.copyValues(origin) // valeurs ET étiquettes de flux (portées par la valeur)
+  }
+  public get hidden_by_split() { return this._hidden_by_split }
+  public set hidden_by_split(v: boolean) {
+    if (this._hidden_by_split === v) return
+    this._hidden_by_split = v
+    this.updateVisibilityFingerprint()
+  }
+
   // #411 — traçabilité de l'origine du flux.
   public get origin() { return this._origin }
   public set origin(v: Type_Origin | undefined) { this._origin = v }
@@ -1772,7 +1799,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // container pour révéler un flux normalement masqué par son niveau.
     if (
       this.drawing_area.application_data.reveal_data_links &&
-      super.is_visible
+      super.is_visible && !this._hidden_by_split
     ) {
       // (a) le flux de donnée lui-même
       if (this.has_collected_data) return true
@@ -1879,6 +1906,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     return (
       super.is_visible &&
+      !this._hidden_by_split &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
       (!require_non_zero || this.is_not_zero || this.is_forced_visible_when_zero)
@@ -2570,7 +2598,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       let any = false
       for (const l of links) {
         if (l === this) continue
-        if (l.is_expansion_link) continue
+        if (l.is_expansion_link || l.is_split_link) continue
         if (!l.is_visible_ignoring_container_modes) continue
         const v = l.value?.valueResult ?? l.value?.valueData ?? null
         if (v != null) { total += v; any = true }
