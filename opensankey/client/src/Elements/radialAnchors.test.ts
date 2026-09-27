@@ -74,3 +74,27 @@ describe('allocateRadialSlots — chaque ancre au plus pres de sa cible, sans re
     expect(gap).toBeGreaterThanOrEqual(60 / (2 * 50) - 1e-6)
   })
 })
+
+describe('allocateRadialSlots — le departage des flux de meme azimut', () => {
+  it('range les flux de meme azimut par leur departage, croissant = angle croissant', () => {
+    const items = [
+      { id: 'b', angle: 0, thickness: 10, tie: [1] },
+      { id: 'a', angle: 0, thickness: 10, tie: [0] },
+      { id: 'c', angle: 0, thickness: 10, tie: [2] }
+    ]
+    const slots = allocateRadialSlots(items, 100)
+    expect(slots.get('a')).toBeLessThan(slots.get('b') as number)
+    expect(slots.get('b')).toBeLessThan(slots.get('c') as number)
+  })
+
+  it('compare le departage terme a terme', () => {
+    const items = [
+      { id: 'x', angle: 1, thickness: 10, tie: [0, 5] },
+      { id: 'y', angle: 1, thickness: 10, tie: [0, 2] },
+      { id: 'z', angle: 1, thickness: 10, tie: [-1, 9] }
+    ]
+    const slots = allocateRadialSlots(items, 100)
+    expect(slots.get('z')).toBeLessThan(slots.get('y') as number)
+    expect(slots.get('y')).toBeLessThan(slots.get('x') as number)
+  })
+})
