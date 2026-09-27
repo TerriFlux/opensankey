@@ -22,6 +22,17 @@ import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 
 /**
+ * os#1364 / os#1510 — SUR UNE CARTE, PAS DE RECYCLAGE. Un flux dont une extrémité est posée à sa
+ * place géographique, ou accrochée en radial, ne va ni « en avant » ni « en arrière » : il va d'un
+ * lieu à un autre. Les colonnes et rangées déduites des x/y y déclaraient en recyclage tout flux
+ * partant vers le nord-ouest (Royaume-Uni, Irlande, Pays-Bas depuis la France), dessiné alors en
+ * boucle rectangulaire (Julien, 27/09/2026 : « c'est mis en recyclage, c'est l'erreur »).
+ */
+export const recyclingIsMeaningless = (link: Class_LinkElement): boolean =>
+  [link.source, link.target].some(n =>
+    n.shape_position_type === 'geographic' || n.shape_anchor_mode === 'radial')
+
+/**
  * Topologie « structurelle » : le seul filtre de liens du socle.
  *
  * Un flux a valeur nulle (typiquement fraichement cree, valeur pas encore saisie) reste
@@ -220,6 +231,7 @@ export class NodePositioningCyclesCore {
         ) return
         if (forced.has(link.id)) return assign(link_data, true)
         if (forbidden.has(link.id)) return assign(link_data, false)
+        if (recyclingIsMeaningless(link_data)) return assign(link_data, false)
 
         const indexes = this.progressionIndexes(link_data, horizontal_indexes, vertical_indexes)
         if (indexes === undefined) return // flux mixte 'hv'/'vh' : statut laisse tel quel
@@ -273,6 +285,12 @@ export class NodePositioningCyclesCore {
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
         if (link_data === undefined || link_data.shape_is_recycling_locked === true) return
+        // Un recyclage non verrouillé enregistré sur un flux de carte est une séquelle du recalcul
+        // d'avant cette garde : on le défait, on ne le grave pas.
+        if (recyclingIsMeaningless(link_data)) {
+          if (link_data.shape_is_recycling === true) link_data.shape_is_recycling = false
+          return
+        }
         // Meme axe et meme critere (strict) que markRecyclingLinks : les deux doivent rester
         // d'accord, sinon le chargement verrouillerait des flux que le recalcul n'aurait de
         // toute facon pas touches.
