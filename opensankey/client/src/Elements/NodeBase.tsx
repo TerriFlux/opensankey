@@ -360,7 +360,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public setInputLabelVisible(initialValue?: string) { this._nodeDrawNameLabel.setInputLabelVisible(initialValue) }
   public setInputLabelInvisible() { this._nodeDrawNameLabel.setInputLabelInvisible() }
 
-  public shiftVertically(shift: number) { this._position.y += shift }
+  public shiftVertically(shift: number) { this._position.y += shift; this._positionWritten() }
 
   protected _draw() {
     super._draw()
@@ -1006,6 +1006,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         this.shape_line_y2 = old_val.y2
         this._position.x = old_val.x
         this._position.y = old_val.y
+        this._positionWritten()
         this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
         this.draw()
       })
@@ -1042,6 +1043,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         this.shape_line_y2 = old_val.y2
         this._position.x = old_val.x
         this._position.y = old_val.y
+        this._positionWritten()
         this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
         this.draw()
       })

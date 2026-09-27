@@ -42,6 +42,7 @@ import {
   Type_PaperFormat,
   Type_PaperOrientation,
   Type_Shape,
+  Type_Side,
   Type_TextHPos,
   Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
@@ -733,7 +734,7 @@ export class Class_DrawingArea {
     // Sous bypass : reorganizeIOLinks redessine chaque nœud au passage, ce qui doublerait
     // le rendu juste avant le draw complet de drawElements.
     this.withBypassRedraws(
-      () => this._sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks(false)),
+      () => this.reorganizeIOLinksOf(this._sankey.visible_nodes_list, false),
       false
     )
     return true
@@ -1404,6 +1405,50 @@ export class Class_DrawingArea {
    *   les blocs qui ne redessinent pas (construction de tooltip, édition de
    *   label, preview de tag) ou qui délèguent le rendu à l'appelant.
    */
+  /**
+   * os#1508 — MÉMO DES TAILLES DE NŒUDS pendant un LOT de réorganisations E/S.
+   *
+   * `reorganizeIOLinks` classe les flux d'un nœud par le CENTRE du nœud d'en face, donc par
+   * `getShapeWidthToUse`/`getShapeHeightToUse` de chaque voisin — et ces tailles se dérivent de
+   * la bande des flux du voisin : quatre passes sur SES flux, chacune lisant le côté d'accroche
+   * (orientation, waypoints : des attributs stylés). Un voisin à 500 flux coûte ainsi quelques
+   * millisecondes, recalculées pour CHAQUE nœud du lot qui le regarde. Sur SOCLE pays
+   * partenaires (agrégation de « Céréales » : 500 nœuds réorganisés, chacun face à des nœuds à
+   * plusieurs centaines de flux), 700 s passaient là — 96 % du geste.
+   *
+   * Pendant un lot, rien de ce dont ces tailles dépendent ne change (positions, valeurs,
+   * visibilité) : on les mémorise le temps du lot, et toute écriture de position vide la mémo
+   * (cf. Class_Element.setPosXY et les autres écritures de `_position`), ce qui couvre les nœuds
+   * en position relative que le dessin d'un voisin déplace. Hors lot, la mémo est absente et rien
+   * ne change.
+   */
+  private _node_size_memo: Map<Class_NodeElement, { w?: number, h?: number }> | null = null
+  public get node_size_memo() { return this._node_size_memo }
+  /**
+   * Même lot, même règle, pour le CÔTÉ D'ACCROCHE calculé de chaque flux (`source_side`,
+   * `target_side`) : trois lectures d'attributs stylés (orientation, waypoints) par flux, refaites
+   * à chaque passe de `getLinksOrdered` — quatre par taille de nœud, une par nœud du lot qui
+   * regarde ce flux. Reste 10 s sur 16 après la mémo des tailles seule (SOCLE pays partenaires).
+   */
+  private _link_side_memo: Map<Class_LinkElement, { s?: Type_Side, t?: Type_Side }> | null = null
+  public get link_side_memo() { return this._link_side_memo }
+  public invalidateNodeSizeMemo() { this._node_size_memo?.clear(); this._link_side_memo?.clear() }
+  public withNodeSizeMemo<T>(fn: () => T): T {
+    if (this._node_size_memo) return fn()
+    this._node_size_memo = new Map()
+    this._link_side_memo = new Map()
+    try {
+      return fn()
+    } finally {
+      this._node_size_memo = null
+      this._link_side_memo = null
+    }
+  }
+  /** Réorganise les flux E/S de chaque nœud, sous une seule mémo de tailles (cf. ci-dessus). */
+  public reorganizeIOLinksOf(nodes: Iterable<Class_NodeElement>, release_locks: boolean = true) {
+    this.withNodeSizeMemo(() => { for (const n of nodes) n.reorganizeIOLinks(release_locks) })
+  }
+
   public withBypassRedraws<T>(fn: () => T, redraw: boolean = true): T {
     const previous = this.bypass_redraws
     this.bypass_redraws = true
@@ -2054,6 +2099,24 @@ export class Class_DrawingArea {
   public beginArrowEpoch(): void { this._arrow_epoch++; this._in_arrow_epoch = true }
 
   public endArrowEpoch(): void { this._in_arrow_epoch = false }
+
+  /**
+   * os#1508 — Une époque d'éventail LOCALE, pour un lot de dessins de flux hors `Class_Sankey.draw`
+   * (le glisser-déposer : `updateLinksPositions` redessine tous les flux du nœud déplacé). Sans
+   * époque, chaque flux redessiné trouve sa pointe périmée et redemande au nœud l'éventail ENTIER de
+   * son côté : 501 éventails de 501 pointes pour un seul pas de souris sur « Produits agricoles »
+   * (SOCLE pays partenaires), 3,5 s par pas. Sous une époque, l'éventail est posé une fois et les
+   * flux suivants du lot gardent leur pointe. Réentrant : dans une passe complète, on ne fait rien.
+   */
+  public withArrowEpoch<T>(fn: () => T): T {
+    if (this._in_arrow_epoch) return fn()
+    this.beginArrowEpoch()
+    try {
+      return fn()
+    } finally {
+      this.endArrowEpoch()
+    }
+  }
 
   /**
    * os#1373 — Ouvre la phase « calculer les ancres » : à partir d'ici et jusqu'au flush, un nœud

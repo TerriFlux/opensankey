@@ -286,12 +286,13 @@ export class Class_NodeDimension {
     //   })
     // Redraw
     if (!fromJSON) { //when called in dimensionsFromJSON, we don't reorganise link order as it's informed by node json
-      nodes_to_redraw
+      // os#1508 — un seul lot : mémo des tailles de nœuds le temps des réorganisations.
+      this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw
         .forEach(node => {
           node.reorganizeIOLinks()
           node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
           node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
-        })
+        }))
     }
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
@@ -336,11 +337,12 @@ export class Class_NodeDimension {
         this._parent,
         ...this._children
       ])
-      nodes_to_redraw.forEach(node => {
+      // os#1508 — un seul lot : mémo des tailles de nœuds le temps des réorganisations.
+      this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw.forEach(node => {
         node.reorganizeIOLinks()
         node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
         node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
-      })
+      }))
       // PR 3 step 5: replace the old `per-node draw() + setTimeout(0) for
       // envelope + restackAncestorContainers` dance with a single full
       // `drawElements()` pass. The centralized
@@ -405,9 +407,7 @@ export class Class_NodeDimension {
       this._parent,
       ...this._children
     ])
-    nodes_to_redraw.forEach(node => {
-      node.reorganizeIOLinks()
-    })
+    this._parent.drawing_area.reorganizeIOLinksOf(nodes_to_redraw)
     nodes_to_redraw.forEach(node => node.draw())
   }
 
@@ -445,11 +445,12 @@ export class Class_NodeDimension {
         this._parent,
         ...this._children
       ])
-      nodes_to_redraw.forEach(node => {
+      // os#1508 — un seul lot : mémo des tailles de nœuds le temps des réorganisations.
+      this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw.forEach(node => {
         node.reorganizeIOLinks()
         node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
         node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
-      })
+      }))
       this._parent.drawing_area.drawElements()
     }
     this._is_currently_in_unsetting_recursion = false
@@ -468,7 +469,7 @@ export class Class_NodeDimension {
       this._parent,
       ...this._children
     ])
-    nodes_to_redraw.forEach(node => node.reorganizeIOLinks())
+    this._parent.drawing_area.reorganizeIOLinksOf(nodes_to_redraw)
     nodes_to_redraw.forEach(node => node.draw())
   }
 
