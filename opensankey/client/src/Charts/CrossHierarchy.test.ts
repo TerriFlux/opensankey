@@ -14,8 +14,8 @@ import type { Type_JSON } from '../types/Utils'
 import type { Class_NodeElement } from '../Elements/Node'
 import { FOLLOWING_NAVIGATION } from './FigureNavigation'
 import {
-  buildCrossTree, crossAxesOf, crossExpandedDownToLevels, crossExpansionEntry, crossFrontier,
-  crossIsOffered, crossLevelsShown, crossOpeningAt
+  buildCrossTree, crossAxesOf, crossExpandedDownToLevels, crossExpansionEntry, crossExpansionOf,
+  crossFrontier, crossIsOffered, crossLevelsShown, crossOpeningAt
 } from './CrossHierarchy'
 import type { Class_LinkElement } from '../Elements/Link'
 import { analysisHierarchyTree, buildAnalysisChartData } from './AnalysisChartData'
@@ -267,5 +267,57 @@ describe('l axe ouvert designe un noeud que le diagramme sait deplier', () => {
 
     expect(sous_europe.length).toBeGreaterThan(0)
     expect(sous_europe).toContain(ouverture!.first_child.name)
+  })
+})
+
+// ── 27/09/2026 — ET ON REFERME CE QU ON A OUVERT ─────────────────────────────────────────────
+//
+// Le geste symetrique, demande par Julien dans la foulee du precedent (« fais-le »). Shift+clic
+// referme la case dans la figure ; quand l auteur a demande que le diagramme suive, il doit se
+// refermer avec — sur LE MEME bout, sinon l ouverture et la fermeture ne parlent pas du meme
+// noeud et le diagramme derive a chaque aller-retour.
+//
+// ⚠️ L AXE SE LIT AVANT L EFFACEMENT, et c est tout le piege du geste : c est l ensemble des cases
+// ouvertes qui le porte, et refermer commence par l en retirer. Lu apres, on ne saurait plus quel
+// bout avait ete ouvert — et on re-agregerait l autre.
+describe('refermer une case rend le meme noeud que l ouvrir', () => {
+
+  const lien = (app: Class_ApplicationData, id: string) =>
+    app.drawing_area.sankey.links_dict[id] as Class_LinkElement
+
+  test('LE GESTE SYMETRIQUE : ouverte par l axe d en face, elle se referme sur EUROPE', () => {
+    const app = loadApp()
+    // L ensemble tel que l ouverture l a ecrit (cf. `crossExpansionEntry`).
+    const ouvert = new Set([crossExpansionEntry('Europe_P', 'other')])
+
+    const axe = crossExpansionOf(ouvert, 'Europe_P').axis ?? 'other'
+    const fermeture = crossOpeningAt(lien(app, 'Europe_P'), axe, 'inputs')
+
+    expect(axe).toBe('other')
+    expect(fermeture?.node.id).toBe('Europe')
+  })
+
+  test('ET PAR L AXE DU SUJET, sur le PRODUIT — jamais l autre bout', () => {
+    const app = loadApp()
+    const ouvert = new Set([crossExpansionEntry('Europe_P', 'self')])
+
+    const axe = crossExpansionOf(ouvert, 'Europe_P').axis ?? 'other'
+    const fermeture = crossOpeningAt(lien(app, 'Europe_P'), axe, 'inputs')
+
+    expect(axe).toBe('self')
+    expect(fermeture?.node.id).toBe('P')
+  })
+
+  test('UNE CASE OUVERTE SANS AXE PRECISE retombe sur celui de la figure', () => {
+    // L ensemble accepte trois ecritures (cf. `crossExpansionEntriesOf`) : l entree nue dit
+    // « ouverte », sans dire par quoi. C est alors l axe de la figure qui avait ouvert.
+    const app = loadApp()
+    const ouvert = new Set(['Europe_P'])
+
+    const axe = crossExpansionOf(ouvert, 'Europe_P').axis ?? 'other'
+    const fermeture = crossOpeningAt(lien(app, 'Europe_P'), axe, 'inputs')
+
+    expect(crossExpansionOf(ouvert, 'Europe_P').axis).toBeUndefined()
+    expect(fermeture?.node.id).toBe('Europe')
   })
 })

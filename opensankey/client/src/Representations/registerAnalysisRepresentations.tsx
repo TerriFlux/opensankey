@@ -649,10 +649,23 @@ const donutClickGestures = (
           ? part_id
           : (drawn_parent !== undefined && crossExpansionOf(next, drawn_parent).open ? drawn_parent : undefined)
         if (target !== undefined) {
+          // ⚠️ L'AXE SE LIT AVANT L'EFFACEMENT : c'est l'ensemble des cases ouvertes qui le porte,
+          // et les lignes suivantes l'en retirent. Sans axe precise, c'est celui de la figure qui
+          // avait ouvert (`cross.first`), comme a l'ouverture.
+          const closed_axis = crossExpansionOf(next, target).axis ?? cross.first
           crossExpansionEntriesOf(target).forEach(e => next.delete(e))
           ;[...next]
             .filter(e => cellBelow(crossEntryLinkId(e), target))
             .forEach(e => next.delete(e))
+          // ET LE DIAGRAMME SE REFERME AVEC, geste symetrique de l'ouverture : on re-agrege le
+          // bout que cet axe avait ouvert. `aggregateLocally` refuse d'elle-meme si le couple
+          // n'est pas deplie — on ne devine pas a sa place.
+          if (wants_unfold) {
+            const closing = crossOpeningAt(
+              sankey.links_dict[target] as Class_LinkElement, closed_axis, cross.side
+            )
+            if (closing) aggregateLocally(app_data, closing.first_child, closing.node.id)
+          }
         }
       } else {
         const axis: Type_CrossAxis | undefined = gesture.alt
