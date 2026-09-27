@@ -278,6 +278,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // the anchor is locked: its side is frozen so moving the *opposite* node
   // no longer flips it. Locks are released by any automatic layout pass
   // (Class_NodePositioning.computeAutoSankey, Node.reorganizeIOLinks).
+  // os#1510 — NORMALE SORTANTE de l'ancre quand la source accroche en radial : posée par le
+  // nœud à chaque mise en page (cf. Node.updateLinksPositions), jamais persistée. `null` =
+  // ancrage par côté, le tracé part le long de l'axe comme depuis toujours.
+  private _source_anchor_normal: { x: number, y: number } | null = null
   private _source_side_locked: boolean = false
   private _target_side_locked: boolean = false
   private _source_side_frozen: Type_Side | undefined = undefined
@@ -2076,6 +2080,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @type {Type_Side}
    * @memberof Class_LinkElement
    */
+  /** os#1510 — la normale sortante d'une ancre radiale, ou `null` (cf. `_source_anchor_normal`). */
+  public get source_anchor_normal(): { x: number, y: number } | null { return this._source_anchor_normal }
+  public set source_anchor_normal(value: { x: number, y: number } | null) { this._source_anchor_normal = value }
+
   public get source_side(): Type_Side {
     // Locked anchor : keep the side captured when the user locked it, so
     // moving the opposite node does not flip this anchor.
@@ -3165,6 +3173,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get position_x_start() {
+    // os#1510 — ancre radiale : le point du contour, tel quel (ni marge de côté, ni recul de flèche).
+    if (this._source_anchor_normal) return this._position.x
     const source_side = this.source_side
     // Avec une flèche côté source, le trait est raccourci côté source pour laisser
     // place à la pointe (symétrique de position_x_end côté cible).
@@ -3187,6 +3197,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get position_y_start() {
+    if (this._source_anchor_normal) return this._position.y
     const source_side = this.source_side
     let shifting_start_point_y = 0
     if (this.shape_arrow_at_source) {
