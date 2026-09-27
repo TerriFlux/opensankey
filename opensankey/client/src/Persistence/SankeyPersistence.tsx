@@ -296,6 +296,14 @@ export class NodeBasePersistence extends ProtoElementPersistence {
       json_object['lat'] = latitude
       json_object['lon'] = longitude
     }
+    // os#1510 lot 3 — le contour du territoire, une donnée comme les coordonnées : deux décimales
+    // (≈ 1 km), ce qui suffit à une frontière tracée au 1/110 000 000.
+    const ring = node_base.geo_ring
+    if (ring !== null) {
+      (json_object as { [key: string]: unknown })['ring'] = ring.map(
+        ([la, lo]) => [Math.round(la * 100) / 100, Math.round(lo * 100) / 100]
+      )
+    }
     if (node_base.tied_to_nodes) {
       json_object['tiedToNode'] = true
       json_object['attachedNodes'] = node_base.attached_node.map(n => n.id)
@@ -370,6 +378,10 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     }
     if (json_node_object['lon'] !== undefined) {
       node_base.longitude = getNumberFromJSON(json_node_object, 'lon', NaN)
+    }
+    // os#1510 lot 3 — le contour, relu par le setter (qui trie ce qui est un vrai contour).
+    if (json_node_object['ring'] !== undefined) {
+      node_base.geo_ring = (json_node_object as { [key: string]: unknown })['ring']
     }
 
     // Tied/attached frame state (shared by Class_NodeElement and Class_ContainerElement).

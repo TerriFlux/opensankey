@@ -88,6 +88,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   // n'a pas de coordonnées ne change donc pas d'un pixel.
   private _latitude: number | null = null
   private _longitude: number | null = null
+  // os#1510 lot 3 — LE CONTOUR DU TERRITOIRE, en [latitude, longitude] (degrés), fermé
+  // implicitement. Une DONNÉE du nœud comme ses coordonnées : persistée avec elles. `null` = pas
+  // de contour, le nœud radial est un disque. Sa projection en pixels (`_geo_ring_px`) est
+  // TRANSITOIRE : posée par le placement géographique à chaque dessin, jamais persistée.
+  private _geo_ring: [number, number][] | null = null
+  private _geo_ring_px: { x: number, y: number }[] | null = null
+  private _geo_point_px: { x: number, y: number } | null = null
 
   // os#1445 — `_name_map` et tout le nommage (`name`, `name_label`,
   // `name_label_effective`…) vivent désormais sur `Class_BaseShape` : ils
@@ -275,6 +282,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._position_v = _._position_v
     this._latitude = _._latitude
     this._longitude = _._longitude
+    this._geo_ring = _._geo_ring ? _._geo_ring.map(p => [p[0], p[1]] as [number, number]) : null
 
   }
 
@@ -1402,6 +1410,30 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public get has_geo_position(): boolean {
     return this._latitude !== null && this._longitude !== null
   }
+
+  // os#1510 lot 3 — Le contour du territoire. Le setter garde ce qui est un vrai contour : au
+  // moins trois paires de coordonnées dans leurs bornes ; le reste vaut `null`, comme une
+  // latitude de 900 vaut « pas de coordonnée ».
+  public get geo_ring(): [number, number][] | null { return this._geo_ring }
+  public set geo_ring(_: unknown) {
+    if (!Array.isArray(_)) { this._geo_ring = null; return }
+    const ring: [number, number][] = []
+    for (const p of _) {
+      if (!Array.isArray(p) || p.length < 2) continue
+      const lat = Number(p[0])
+      const lon = Number(p[1])
+      if (!isFinite(lat) || !isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) continue
+      ring.push([lat, lon])
+    }
+    this._geo_ring = ring.length >= 3 ? ring : null
+  }
+  public get has_geo_ring(): boolean { return this._geo_ring !== null }
+  /** Le contour projeté en pixels de la zone, posé par le placement géographique du dessin courant. */
+  public get geo_ring_px(): { x: number, y: number }[] | null { return this._geo_ring_px }
+  public set geo_ring_px(_: { x: number, y: number }[] | null) { this._geo_ring_px = _ }
+  /** Le point du nœud projeté en pixels (son centre visuel), posé de même. */
+  public get geo_point_px(): { x: number, y: number } | null { return this._geo_point_px }
+  public set geo_point_px(_: { x: number, y: number } | null) { this._geo_point_px = _ }
 
   public get selected_elements_list(): Class_NodeBase[] {
     return []
