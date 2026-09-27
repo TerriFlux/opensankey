@@ -298,7 +298,7 @@ export class Class_NodeDimension {
     // Redraw
     if (!fromJSON) { //when called in dimensionsFromJSON, we don't reorganise link order as it's informed by node json
       // os#1508 — un seul lot : mémo des tailles de nœuds le temps des réorganisations.
-      this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw
+      if (!this._parent.drawing_area.in_hierarchy_batch) this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw
         .forEach(node => {
           node.reorganizeIOLinks()
           node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
@@ -350,7 +350,7 @@ export class Class_NodeDimension {
         ...this._children
       ])
       // os#1508 — un seul lot : mémo des tailles de nœuds le temps des réorganisations.
-      this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw.forEach(node => {
+      if (!this._parent.drawing_area.in_hierarchy_batch) this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw.forEach(node => {
         node.reorganizeIOLinks()
         node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
         node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
@@ -460,7 +460,7 @@ export class Class_NodeDimension {
         ...this._children
       ])
       // os#1508 — un seul lot : mémo des tailles de nœuds le temps des réorganisations.
-      this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw.forEach(node => {
+      if (!this._parent.drawing_area.in_hierarchy_batch) this._parent.drawing_area.withNodeSizeMemo(() => nodes_to_redraw.forEach(node => {
         node.reorganizeIOLinks()
         node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
         node.input_links_list.forEach(l => l.source.reorganizeIOLinks())

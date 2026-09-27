@@ -361,8 +361,7 @@ export const aggregate = (
       // Détruire les liens transitifs
       transitive_links.forEach(l => new_data.drawing_area.deleteLink(l))
       // Reorganize les I/O
-      P.reorganizeIOLinks()
-      aggregateNode.reorganizeIOLinks()
+      new_data.drawing_area.reorganizeIOLinksOf([P, aggregateNode])
     }
 
     // #1231 — Réorganiser les liens E/S sur le parent ré-agrégé et ses voisins
@@ -422,6 +421,8 @@ export const aggregate = (
  */
 const settlePositionModeAfterHierarchyGesture = (new_data: Class_ApplicationData) => {
   const da = new_data.drawing_area
+  // os#1508 — dans un lot (sélecteur de niveau), le recalage se fait une fois, à la fin du lot.
+  if (da.in_hierarchy_batch) return
   if (da.sankey.styles_dict['default'].shape_position_type === 'geographic') return
   da.setAbsoluteMode()
 }

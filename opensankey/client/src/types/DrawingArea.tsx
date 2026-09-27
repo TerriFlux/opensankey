@@ -1470,7 +1470,31 @@ export class Class_DrawingArea {
   }
   /** Réorganise les flux E/S de chaque nœud, sous une seule mémo de tailles (cf. ci-dessus). */
   public reorganizeIOLinksOf(nodes: Iterable<Class_NodeElement>, release_locks: boolean = true) {
+    // os#1508 — dans un LOT de gestes de hiérarchie, chaque geste réorganisait ses voisins, et le lot
+    // réorganise tout à la fin : on ne garde que la fin (cf. withHierarchyBatch).
+    if (this._hierarchy_batch) return
     this.withNodeSizeMemo(() => { for (const n of nodes) n.reorganizeIOLinks(release_locks) })
+  }
+
+  /**
+   * os#1508 — UN LOT DE GESTES DE HIÉRARCHIE (le sélecteur de niveau : un geste par nœud visible).
+   * Chaque `aggregate`/`disaggregate` réorganisait les flux E/S de tous ses voisins et recalait les
+   * centres de TOUS les nœuds (`setAbsoluteMode`) ; le lot refait l'un et l'autre une fois, à la fin.
+   * Sur SOCLE pays partenaires, agréger « Pays » en « Sous-régions » (≈ 250 gestes, des voisins à
+   * 500 flux) prenait 338 s, dont l'essentiel en réorganisations et recalages intermédiaires
+   * aussitôt remplacés. Pendant le lot, `reorganizeIOLinksOf` et le recalage de fin de geste ne font
+   * rien ; l'appelant DOIT réorganiser et recaler lui-même après (le sélecteur le fait).
+   */
+  private _hierarchy_batch = false
+  public get in_hierarchy_batch() { return this._hierarchy_batch }
+  public withHierarchyBatch<T>(fn: () => T): T {
+    if (this._hierarchy_batch) return fn()
+    this._hierarchy_batch = true
+    try {
+      return fn()
+    } finally {
+      this._hierarchy_batch = false
+    }
   }
 
   public withBypassRedraws<T>(fn: () => T, redraw: boolean = true): T {
