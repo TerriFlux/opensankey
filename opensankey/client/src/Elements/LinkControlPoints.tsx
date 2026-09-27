@@ -577,6 +577,14 @@ export class LinkControlPoints {
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
     let x5, y5
+    // os#1510 lot 2 — ancre radiale à l'arrivée : le flux ARRIVE le long de la normale sortante du
+    // contour, d'une fraction (`shape_ending_curve`) de la distance — symétrique du départ.
+    const normal = this.link.target_anchor_normal
+    if (normal && !this.link.shape_is_recycling) {
+      const d = Math.hypot(x6 - x0, y6 - y0) * this.link.shape_ending_curve
+      this._control_points.ending_curve_point.setPosXY(x6 + normal.x * d, y6 + normal.y * d)
+      return
+    }
     // Normal mode
     if (!this.link.shape_is_recycling) {
       if (this.link.is_horizontal || this.link.is_vertical_horizontal) {
@@ -663,6 +671,14 @@ export class LinkControlPoints {
     const y5 = this._control_points.ending_curve_point.position_y
 
     let x4, y4
+    // os#1510 lot 2 — ancre radiale à l'arrivée : la tangente d'arrivée continue le long de la
+    // normale sortante, de la part du chemin qui se projette dessus.
+    const normal = this.link.target_anchor_normal
+    if (normal && !this.link.shape_is_recycling) {
+      const along = Math.abs((x1 - x5) * normal.x + (y1 - y5) * normal.y) * this.link.shape_ending_tangeant
+      this._control_points.ending_bezier_point.setPosXY(x5 + normal.x * along, y5 + normal.y * along)
+      return
+    }
     // Normal mode
     if (!this.link.shape_is_recycling) {
       if (this.link.is_horizontal || this.link.is_vertical_horizontal) {

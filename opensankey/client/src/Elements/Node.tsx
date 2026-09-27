@@ -977,9 +977,19 @@ export class Class_NodeElement extends Class_NodeBase {
   // nœud radial s'accrochent encore par côté (lot 2), et le contour est un cercle (le polygone
   // d'un territoire est le lot 3).
 
-  /** Les flux sortants concernés par l'ancrage radial : visibles, et pas une boucle sur soi. */
-  private _radialLinks(): Class_LinkElement[] {
-    return this.output_links_list.filter(l => l.is_visible && l.target !== this)
+  /**
+   * Les BOUTS de flux que le contour accroche : chaque flux sortant (vers sa cible) et — lot 2 —
+   * chaque flux entrant (depuis sa source), visibles, hors boucle sur soi. Un flux n'y figure
+   * qu'une fois, son identifiant suffit à nommer le bout.
+   */
+  private _radialEnds(): { link: Class_LinkElement, is_source: boolean, other: Class_NodeElement, thickness: number }[] {
+    const outs = this.output_links_list
+      .filter(l => l.is_visible && l.target !== this)
+      .map(l => ({ link: l, is_source: true, other: l.target as Class_NodeElement, thickness: l.thicknessSourceRaw }))
+    const ins = this.input_links_list
+      .filter(l => l.is_visible && l.source !== this)
+      .map(l => ({ link: l, is_source: false, other: l.source as Class_NodeElement, thickness: l.thicknessTargetRaw }))
+    return [...outs, ...ins]
   }
 
   /**
@@ -988,23 +998,22 @@ export class Class_NodeElement extends Class_NodeBase {
    * la position — c'est ce qui permet de le lire depuis `getShapeWidthToUse` sans boucler.
    */
   private _radialRadius(): number {
-    const items = this._radialLinks().map(l => ({ id: l.id, angle: 0, thickness: l.thicknessSourceRaw }))
+    const items = this._radialEnds().map(e => ({ id: e.link.id, angle: 0, thickness: e.thickness }))
     return radialRadius(items, Math.max(this.shape_min_width, this.shape_min_height) / 2)
   }
 
   /**
-   * Le disque et l'azimut de chaque cible vu de son centre. Le centre est le coin + le rayon :
-   * en mode géographique, c'est exactement le point projeté (cf. `applyGeographicLayout`).
+   * Le disque et l'azimut du nœud d'en face pour chaque bout, vu du centre. Le centre est le coin
+   * + le rayon : en mode géographique, c'est exactement le point projeté (`applyGeographicLayout`).
    */
   private _radialLayout(): { radius: number, cx: number, cy: number, items: Type_RadialItem[] } {
     const radius = this._radialRadius()
     const cx = this.position_x + radius
     const cy = this.position_y + radius
-    const items = this._radialLinks().map(l => {
-      const t = l.target
-      const tx = t.position_x + t.getShapeWidthToUse() / 2
-      const ty = t.position_y + t.getShapeHeightToUse() / 2
-      return { id: l.id, angle: Math.atan2(ty - cy, tx - cx), thickness: l.thicknessSourceRaw }
+    const items = this._radialEnds().map(e => {
+      const ox = e.other.position_x + e.other.getShapeWidthToUse() / 2
+      const oy = e.other.position_y + e.other.getShapeHeightToUse() / 2
+      return { id: e.link.id, angle: Math.atan2(oy - cy, ox - cx), thickness: e.thickness }
     })
     return { radius, cx, cy, items }
   }
@@ -1591,8 +1600,35 @@ export class Class_NodeElement extends Class_NodeBase {
     // `_links_order` à chaque comparaison, soit K·k·log k par éventail sur un nœud à K flux.
     const rank = new Map<Class_LinkElement, number>()
     this._links_order.forEach((link, i) => rank.set(link, i))
-    const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
+    const all_arrows = [...target_arrows, ...source_arrows]
       .sort((a, b) => (rank.get(a.link) ?? -1) - (rank.get(b.link) ?? -1))
+
+    // ── os#1510 — LES POINTES RADIALES : un triangle le long de la normale, hors des éventails ──
+    //
+    // Un bout ancré sur le contour n'a pas de côté : sa pointe ne peut appartenir à aucun éventail
+    // (qui converge vers le milieu d'un côté). Elle est posée ici, à la main : apex sur le contour,
+    // base reculée le long de la normale sortante de la taille de pointe, large comme le flux. Une
+    // pointe DE SOURCE (graphique) est retournée : base sur le contour, apex vers l'extérieur.
+    const radial_arrows = all_arrows.filter(it =>
+      (it.is_source_arrow ? it.link.source_anchor_normal : it.link.target_anchor_normal) !== null)
+    radial_arrows.forEach(it => {
+      const link = it.link
+      const n = (it.is_source_arrow ? link.source_anchor_normal : link.target_anchor_normal) as { x: number, y: number }
+      const anchor = it.is_source_arrow ? this._output_links_starting_point[link.id] : this._input_links_ending_point[link.id]
+      if (!anchor) return
+      const size = link.shape_arrow_size
+      const half = it.link_thickness / 2
+      const tx = -n.y, ty = n.x
+      const apex = it.is_source_arrow ? { x: anchor.x + n.x * size, y: anchor.y + n.y * size } : anchor
+      const base = it.is_source_arrow ? anchor : { x: anchor.x + n.x * size, y: anchor.y + n.y * size }
+      const path = 'M ' + (base.x + tx * half) + ',' + (base.y + ty * half)
+        + ' L ' + apex.x + ',' + apex.y
+        + ' L ' + (base.x - tx * half) + ',' + (base.y - ty * half)
+        + ' Z'
+      if (it.is_source_arrow) link.shape_arrow_path_source = path
+      else link.shape_arrow_path = path
+    })
+    const list_link_to_add_arrow = all_arrows.filter(it => !radial_arrows.includes(it))
 
     const node_height = this.getShapeHeightToUse()
     const node_width = this.getShapeWidthToUse()
@@ -2330,32 +2366,50 @@ export class Class_NodeElement extends Class_NodeBase {
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           // User-set spacing inserted before this anchor (cf. "Ordre des flux E/S").
           const anchor_delta = link.target_anchor_delta
-          if (link.target_side === 'right') {
+          // os#1510 lot 2 — l'ARRIVÉE sur le cercle, symétrique du départ : le point du contour
+          // que l'allocation a donné à ce bout, sa poignée et sa normale sortante.
+          const radial_slot_in = radial_slots?.get(link.id)
+          const radial_here_in = radial !== null && radial_slot_in !== undefined
+          if (radial_here_in) {
+            const nx = Math.cos(radial_slot_in as number)
+            const ny = Math.sin(radial_slot_in as number)
+            link_ending_point = { x: radial.cx + radial.radius * nx, y: radial.cy + radial.radius * ny }
+            link_ending_handle_point = {
+              x: link_ending_point.x + handle_position_shift * nx,
+              y: link_ending_point.y + handle_position_shift * ny
+            }
+            link.target_anchor_normal = { x: nx, y: ny }
+          }
+          else if (link.target_side === 'right') {
+            link.target_anchor_normal = null
             dy_right = dy_right + anchor_delta
             link_ending_point = { x: (x0 + width - inset_x), y: (y0 + dy_right + thickness / 2) }
             link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
             dy_right = dy_right + thickness
           }
           else if (link.target_side === 'left') {
+            link.target_anchor_normal = null
             dy_left = dy_left + anchor_delta
             link_ending_point = { x: (x0 + inset_x), y: (y0 + dy_left + thickness / 2) }
             link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
             dy_left = dy_left + thickness
           }
           else if (link.target_side === 'top') {
+            link.target_anchor_normal = null
             dx_top = dx_top + anchor_delta
             link_ending_point = { x: (x0 + dx_top + thickness / 2), y: (y0 + inset_y) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
             dx_top = dx_top + thickness
           }
           else {  // link.target_side === 'bottom'
+            link.target_anchor_normal = null
             dx_bottom = dx_bottom + anchor_delta
             link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height - inset_y) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
             dx_bottom = dx_bottom + thickness
           }
           // opensankey#1301 — offset d'ancre importé : sous-bande centrée sur le port, cf. source.
-          if (link.shape_target_anchor_offset !== undefined) {
+          if (link.shape_target_anchor_offset !== undefined && !radial_here_in) {
             const o = link.shape_target_anchor_offset
             const total = targetOffTotals.get(o) ?? thickness
             const cumul = targetOffCumul.get(o) ?? 0

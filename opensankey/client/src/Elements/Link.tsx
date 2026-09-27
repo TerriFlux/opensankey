@@ -282,6 +282,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // nœud à chaque mise en page (cf. Node.updateLinksPositions), jamais persistée. `null` =
   // ancrage par côté, le tracé part le long de l'axe comme depuis toujours.
   private _source_anchor_normal: { x: number, y: number } | null = null
+  // os#1510 lot 2 — la même chose à l'ARRIVÉE : normale sortante du contour de la cible.
+  private _target_anchor_normal: { x: number, y: number } | null = null
   private _source_side_locked: boolean = false
   private _target_side_locked: boolean = false
   private _source_side_frozen: Type_Side | undefined = undefined
@@ -2083,6 +2085,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   /** os#1510 — la normale sortante d'une ancre radiale, ou `null` (cf. `_source_anchor_normal`). */
   public get source_anchor_normal(): { x: number, y: number } | null { return this._source_anchor_normal }
   public set source_anchor_normal(value: { x: number, y: number } | null) { this._source_anchor_normal = value }
+  public get target_anchor_normal(): { x: number, y: number } | null { return this._target_anchor_normal }
+  public set target_anchor_normal(value: { x: number, y: number } | null) { this._target_anchor_normal = value }
 
   public get source_side(): Type_Side {
     // Locked anchor : keep the side captured when the user locked it, so
@@ -3218,6 +3222,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get position_x_end() {
+    // os#1510 lot 2 — ancre radiale : le point du contour, reculé le long de la normale de la
+    // taille de la pointe s'il y en a une (le corps s'arrête où la pointe commence).
+    const normal = this._target_anchor_normal
+    if (normal) return this._position_ending.x + (this.shape_is_arrow ? normal.x * this.shape_arrow_size : 0)
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
     if (this.shape_is_arrow) {
@@ -3241,6 +3249,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get position_y_end() {
+    const normal = this._target_anchor_normal
+    if (normal) return this._position_ending.y + (this.shape_is_arrow ? normal.y * this.shape_arrow_size : 0)
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
     if (this.shape_is_arrow) {
