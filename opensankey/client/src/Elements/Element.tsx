@@ -240,6 +240,7 @@ export abstract class Class_BaseElement {
     this._is_selected = element._is_selected
     this._position.x = element.position_x
     this._position.y = element.position_y
+    this._positionWritten()
     this._svg_parent_group = element._svg_parent_group
   }
 
@@ -327,17 +328,19 @@ export abstract class Class_BaseElement {
     }
   }
   public setPosXY(x: number, y: number) {
-    this._position.x = x; this._position.y = y; this.applyPosition()
+    this._position.x = x; this._position.y = y; this._positionWritten(); this.applyPosition()
   }
+  /** os#1508 — une position change : la mémo des tailles de nœuds (lot de réorganisations) tombe. */
+  protected _positionWritten() { this._drawing_area?.invalidateNodeSizeMemo() }
   protected applyPosition() {
     this.d3_selection?.attr(
       'transform',
       'translate(' + this.position_x + ', ' + this.position_y + ')')
   }
   public get position_x() { return this._position.x }
-  public set position_x(_) { this._position.x = _ }
+  public set position_x(_) { this._position.x = _; this._positionWritten() }
   public get position_y() { return this._position.y }
-  public set position_y(_) { this._position.y = _ }
+  public set position_y(_) { this._position.y = _; this._positionWritten() }
 
   public get drawing_area() { return this._drawing_area }
   public get is_visible() {

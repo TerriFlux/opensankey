@@ -57,6 +57,8 @@ function makeArea(has_been_laid_out: boolean, height: number) {
     },
     suspendPositionModeUntilDataChange: () => undefined,
     clearPositionModeSuspension: () => undefined,
+    // os#1508 — le settle des centres tourne sous la memo des tailles : ici, un simple passe-plat.
+    withNodeSizeMemo: <T>(fn: () => T) => fn(),
     draw: () => { draws++ },
     // os#1377 — `setScaleAdaptedMode` pose desormais le mode sous cette enveloppe, pour que
     // l affectation ne declenche pas les actions de dessin de l attribut (un dessin par nœud et
