@@ -40,6 +40,14 @@ export class Class_Handler extends Class_BaseElement{
   private _custom_html_grp: boolean
   protected _is_visible: boolean = true
 
+  /**
+   * os#1510 — une POIGNÉE qui bouge ne change la taille d'aucun nœud : elle ne vide pas la mémo des
+   * tailles (cf. DrawingArea.withNodeSizeMemo). Le placement des flux d'un nœud pose les deux
+   * poignées de chaque flux ; sur la carte SOCLE en flux éclatés, 3 600 poses par dessin vidaient
+   * la mémo autant de fois, et chaque pays relisait les 1 700 bandes du concentrateur.
+   */
+  protected _positionWritten() { /* rien : cf. ci-dessus */ }
+
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
