@@ -1,4 +1,4 @@
-import { allocateRadialSlots, radialRadius, wrapAngle } from './radialAnchors'
+import { allocateRadialSlots, groupArrivalsByCone, radialRadius, wrapAngle } from './radialAnchors'
 
 const TWO_PI = 2 * Math.PI
 const gapBetween = (a: number, b: number) => {
@@ -96,5 +96,35 @@ describe('allocateRadialSlots — le departage des flux de meme azimut', () => {
     const slots = allocateRadialSlots(items, 100)
     expect(slots.get('z')).toBeLessThan(slots.get('y') as number)
     expect(slots.get('y')).toBeLessThan(slots.get('x') as number)
+  })
+})
+
+describe('groupArrivalsByCone — une porte par direction', () => {
+  const deg = (d: number) => d * Math.PI / 180
+  const arr = (id: string, az: number) => ({ id, azimuth: deg(az), angle: deg(az), weight: 1 })
+
+  it('groupe des sources proches en une seule porte', () => {
+    const doors = groupArrivalsByCone([arr('a', 10), arr('b', 14), arr('c', 18)])
+    expect(new Set([...doors.values()].map(d => d.group)).size).toBe(1)
+    expect(doors.get('a')?.angle).toBeCloseTo(deg(14), 5)
+  })
+
+  it('separe des sources de directions differentes', () => {
+    const doors = groupArrivalsByCone([arr('nord', -90), arr('est', 0), arr('sud', 90)])
+    expect(new Set([...doors.values()].map(d => d.group)).size).toBe(3)
+    expect(doors.get('est')?.angle).toBeCloseTo(0, 5)
+  })
+
+  it('borne la largeur d une porte au lieu de chainer de proche en proche', () => {
+    const tour = Array.from({ length: 36 }, (_, k) => arr('p' + k, k * 10))
+    const doors = groupArrivalsByCone(tour)
+    const groups = new Set([...doors.values()].map(d => d.group)).size
+    expect(groups).toBeGreaterThanOrEqual(12)
+  })
+
+  it('traverse le demi tour sans couper une porte', () => {
+    const doors = groupArrivalsByCone([arr('a', 175), arr('b', -175), arr('c', 0)])
+    expect(doors.get('a')?.group).toBe(doors.get('b')?.group)
+    expect(doors.get('c')?.group).not.toBe(doors.get('a')?.group)
   })
 })
