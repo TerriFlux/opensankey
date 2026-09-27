@@ -1400,7 +1400,9 @@ export class Class_DrawingArea {
     const touched = new Set<Class_NodeElement>()
     this.withBypassRedraws(() => {
       this.sankey.nodes_list.forEach(node => {
-        node.dimensions_as_parent.filter(d => d.split_links).forEach(dim => {
+        // Bandes imbriquées : une dimension éclatée SOUS un éclatement n'a pas de bandes à elle,
+        // elle découpe celles de l'éclatement de tête (cf. `Class_NodeElement.splitLeavesOf`).
+        node.dimensions_as_parent.filter(d => d.split_links && Class_NodeElement.splitRootOf(d) === d).forEach(dim => {
           const created = node.buildSplitLinks(dim)
           if (created.length === 0) return
           touched.add(node)

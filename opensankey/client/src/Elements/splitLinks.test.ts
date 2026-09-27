@@ -1,5 +1,5 @@
 import { Class_ApplicationData } from '../types/ApplicationData'
-import { splitLinks, unsplitLinks } from '../Algorithms/Hierarchies'
+import { regroupBand, splitBand, splitLinks, unsplitLinks } from '../Algorithms/Hierarchies'
 import { splitLinkId } from './splitLinkId'
 
 // ==================================================================================================
@@ -115,5 +115,87 @@ describe('flux eclates : le noeud reste, ses flux se divisent par enfant', () =>
     expect(band).toBeDefined()
     expect(band.valueCurrent).toBe(10)
     expect(sankey2.links_dict[PX.id].hidden_by_split).toBe(true)
+  })
+})
+
+/**
+ * BANDES IMBRIQUÉES : c1 (Cereales) a deux enfants g1 (brutes) et g2 (transformees) sur l'axe
+ * « transfo ». Flux à chaque niveau : P→X 30, c1→X 10, c2→X 20, g1→X 4, g2→X 6.
+ */
+function buildNested() {
+  const base = build()
+  const { sankey, c1, X } = base
+  const g1 = sankey.addNewNode('g1', 'Cereales brutes')
+  const g2 = sankey.addNewNode('g2', 'Cereales transformees')
+  g1._nodeDimensionsManager.getOrCreateLowerDimension(c1, g1, 'transfo')
+  g2._nodeDimensionsManager.getOrCreateLowerDimension(c1, g2, 'transfo')
+  g1.shape_color = '#00ff00'
+  const g1X = sankey.addNewLink(g1, X); g1X.valueCurrent = 4
+  const g2X = sankey.addNewLink(g2, X); g2X.valueCurrent = 6
+  const sub = c1.dimensions_as_parent.find(d => d.id === 'transfo')!
+  return { ...base, g1, g2, g1X, g2X, sub }
+}
+
+describe('bandes imbriquees : une bande se re-eclate dans le meme faisceau', () => {
+  it('eclater la bande Cereales la remplace par ses sous-bandes, sous le noeud visible', () => {
+    const { app, sankey, P, c1, g1, g2, X, c1X, c2X, g1X, g2X, sub } = buildNested()
+    splitLinks(app, P, 'c1')
+    const band_c1 = sankey.links_dict[splitLinkId(c1X.id, P.id)]
+    expect(splitBand(app, band_c1)).toBe(true)
+    expect(sub.split_links).toBe(true)
+    // La bande de Cereales disparait, ses deux sous-bandes la remplacent ; Viandes reste.
+    expect(sankey.links_dict[splitLinkId(c1X.id, P.id)]).toBeUndefined()
+    const b_g1 = sankey.links_dict[splitLinkId(g1X.id, P.id)]
+    const b_g2 = sankey.links_dict[splitLinkId(g2X.id, P.id)]
+    expect(b_g1).toBeDefined(); expect(b_g2).toBeDefined()
+    expect(sankey.links_dict[splitLinkId(c2X.id, P.id)]).toBeDefined()
+    // Sous le noeud visible, vers le meme voisin, avec la valeur et la couleur de la feuille.
+    expect(b_g1.source).toBe(P); expect(b_g1.target).toBe(X)
+    expect(b_g1.valueCurrent).toBe(4); expect(b_g2.valueCurrent).toBe(6)
+    expect(b_g1.split_child).toBe(g1)
+    expect(b_g1.getShapeColorToUse()).toBe('#00ff00')
+    // Seul P se voit : ni Cereales ni ses enfants.
+    expect(P.is_visible).toBe(true)
+    expect(c1.is_visible).toBe(false)
+    expect(g1.is_visible).toBe(false)
+    expect(g2.is_visible).toBe(false)
+    // Aucune bande n'est posee sur Cereales elle-meme.
+    expect(c1.output_links_list.some(l => l.is_split_link)).toBe(false)
+  })
+
+  it('regrouper une sous-bande rend la bande de son parent', () => {
+    const { app, sankey, P, c1X, g1X, sub } = buildNested()
+    splitLinks(app, P, 'c1')
+    splitBand(app, sankey.links_dict[splitLinkId(c1X.id, P.id)])
+    expect(regroupBand(app, sankey.links_dict[splitLinkId(g1X.id, P.id)])).toBe(true)
+    expect(sub.split_links).toBe(false)
+    expect(sankey.links_dict[splitLinkId(g1X.id, P.id)]).toBeUndefined()
+    expect(sankey.links_dict[splitLinkId(c1X.id, P.id)]).toBeDefined()
+    // Une bande de tete ne se « regroupe » pas par ce geste (c'est « Regrouper les flux » du noeud).
+    expect(regroupBand(app, sankey.links_dict[splitLinkId(c1X.id, P.id)])).toBe(false)
+  })
+
+  it('regrouper le noeud retire toutes les bandes, imbriquees comprises', () => {
+    const { app, sankey, P, PX, c1X } = buildNested()
+    splitLinks(app, P, 'c1')
+    splitBand(app, sankey.links_dict[splitLinkId(c1X.id, P.id)])
+    unsplitLinks(app, P, 'c2')
+    expect(sankey.links_list.some(l => l.is_split_link)).toBe(false)
+    expect(PX.hidden_by_split).toBe(false)
+  })
+
+  it('l imbrication survit a l enregistrement', () => {
+    const { app, sankey, P, c1X, g1X, g2X } = buildNested()
+    splitLinks(app, P, 'c1')
+    splitBand(app, sankey.links_dict[splitLinkId(c1X.id, P.id)])
+    const json = app.toJSON()
+    const app2 = new Class_ApplicationData(false)
+    app2.fromJSON(json)
+    const sankey2 = app2.drawing_area.sankey
+    expect(sankey2.links_dict[splitLinkId(g1X.id, 'P')]).toBeDefined()
+    expect(sankey2.links_dict[splitLinkId(g2X.id, 'P')]).toBeDefined()
+    expect(sankey2.links_dict[splitLinkId(c1X.id, 'P')]).toBeUndefined()
+    // Aucune bande posee sur le noeud intermediaire au chargement.
+    expect(sankey2.nodes_dict['c1'].output_links_list.some(l => l.is_split_link)).toBe(false)
   })
 })
