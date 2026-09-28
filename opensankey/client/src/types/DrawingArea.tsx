@@ -60,6 +60,8 @@ import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { disaggregateDimensionNodes } from '../Algorithms/DimensionDisaggregation'
+import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
+import type { Class_DataTagGroup as Type_DataTagGroup } from './TagGroup'
 import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
@@ -1390,6 +1392,10 @@ export class Class_DrawingArea {
     this.nodePositioning.arrangeTrade(true)
     // Flux éclatés : reconstruits du drapeau des dimensions, jamais lus dans le fichier.
     this.rebuildSplitLinks()
+    // Une dimension hiérarchisée toute grise reçoit une palette : plusieurs de ses membres se
+    // dessinent ensemble, en bandes ou en nœuds, et la même couleur pour tous ne dit rien.
+    this.sankey.data_taggs_list.forEach(tagg =>
+      applyHierarchyPaletteIfGrey(tagg as unknown as Type_DataTagGroup))
     // Nœuds de membre : refaits de l'attachement du nœud à sa dimension, jamais lus non plus.
     this.rebuildDimensionNodes()
   }

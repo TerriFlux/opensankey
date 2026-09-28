@@ -1,6 +1,7 @@
 import { Class_ApplicationData } from './ApplicationData'
 import type { Class_DataTag } from './Tag'
 import type { Class_DataTagGroup } from './TagGroup'
+import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
 
 // jest 27 / jsdom n'expose pas structuredClone (utilise par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -353,5 +354,37 @@ describe('os#1511 — choisir un niveau entier', () => {
     groupe.selectAllAtLevel(1)
     expect(groupe.selectAllAtLevel(Number('pas un nombre'))).toBe(false)
     expect(groupe.current_level_index).toBe(1)
+  })
+})
+
+// os#1511 — LA PALETTE D UNE DIMENSION HIERARCHISEE. Un tag nait gris, et la palette est une
+// commande explicite du menu : tenable tant qu on lit un membre a la fois, illisible des que
+// plusieurs se dessinent ensemble — toutes les bandes sortaient de la meme couleur (28/09).
+
+describe('os#1511 — une dimension hierarchisee toute grise recoit une palette', () => {
+  test('chaque membre recoit une couleur, et une BRANCHE se reconnait', () => {
+    const { groupe, cereales, brutes, ble, lait } = makeArbre()
+    expect(applyHierarchyPaletteIfGrey(groupe)).toBeGreaterThan(0)
+    groupe.tags_list.forEach((t: Class_DataTag) => expect(t.color).toMatch(/^hsl\(/))
+    // La teinte suit la parente : Ble descend de Cereales, Lait est une autre branche.
+    const teinte = (t: Class_DataTag) => t.color.slice(4, t.color.indexOf(','))
+    expect(teinte(ble)).toBe(teinte(cereales))
+    expect(teinte(brutes)).toBe(teinte(cereales))
+    expect(teinte(lait)).not.toBe(teinte(cereales))
+    // Et l on s eclaircit en descendant : un parent reste plus dense que ses enfants.
+    expect(ble.color).not.toBe(cereales.color)
+  })
+
+  test('un groupe DEJA colorie n est pas touche', () => {
+    const { groupe, ble } = makeArbre()
+    ble.color = '#123456'
+    expect(applyHierarchyPaletteIfGrey(groupe)).toBe(0)
+    expect(ble.color).toBe('#123456')
+  })
+
+  test('une dimension PLATE ne recoit rien', () => {
+    const { groupe } = makeArbre()
+    groupe.levels = []
+    expect(applyHierarchyPaletteIfGrey(groupe)).toBe(0)
   })
 })
