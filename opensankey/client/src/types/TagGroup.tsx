@@ -1488,21 +1488,24 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       .map(id => this._tags[id] as Class_DataTag | undefined)
       .filter((membre): membre is Class_DataTag => membre !== undefined)
     if (demandes.length === 0) return false
-    // Le niveau retenu est le PLUS FIN des membres demandés, et l'on garde ceux que ce niveau
-    // montre — ce qui n'est pas la même chose que « ceux de la même profondeur ».
+    // LA SEULE CHOSE INTERDITE EST LE RECOUVREMENT : un membre qui en contient un autre. Tout
+    // le reste passe, quelles que soient les profondeurs.
     //
-    // La règle des branches courtes en dépend : « Oléagineux », qui n'a pas d'enfant, se montre
-    // au niveau des transformations comme à celui des filières. Comparer les profondeurs brutes
-    // l'écartait dès qu'on le cochait avec « Céréales brutes », et il ne se dessinait pas —
-    // constaté à l'écran le 28/09. Un vrai mélange parent/enfant, lui, reste écarté : « Céréales »
-    // coché avec « Blé » tombe, sans quoi la donnée du blé compterait deux fois.
-    const plafond = Math.max(0, this._levels.length - 1)
-    const profondeur = demandes.reduce(
-      (max, membre) => Math.max(max, Math.min(this.depthOf(membre), plafond)), 0)
-    const montres = this.membersAtLevel(profondeur)
-    const retenus = demandes.filter(membre => montres.includes(membre))
+    // Deux règles plus strictes ont été essayées et se sont révélées fausses à l'écran, le
+    // 28/09. « Même profondeur » écartait « Oléagineux », qui n'a pas d'enfant et se montre
+    // donc à tous les niveaux plus fins. « Ce que montre le niveau le plus fin » écartait
+    // « Céréales transformées » coché avec « Blé » et « Maïs », alors que les trois sont
+    // disjoints : personne n'est compté deux fois, et lire le détail des céréales brutes à
+    // côté des transformées en bloc est un usage légitime.
+    //
+    // Quand un membre et son descendant sont demandés ensemble, c'est l'ANCÊTRE qui tombe :
+    // on garde le détail, qui est ce que le clic le plus fin exprimait.
+    const retenus = demandes.filter(membre =>
+      !demandes.some(autre => autre !== membre && autre.hasAncestor(membre)))
     if (retenus.length === 0) return false
-    this._current_level_index = profondeur
+    const plafond = Math.max(0, this._levels.length - 1)
+    this._current_level_index = retenus.reduce(
+      (max, membre) => Math.max(max, Math.min(this.depthOf(membre), plafond)), 0)
     this.tags_list.forEach(tag => tag.setUnSelected())
     retenus.forEach(membre => membre.setSelected())
     return true

@@ -421,3 +421,30 @@ describe('os#1511 — une branche courte se coche avec les membres plus profonds
     expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual([ble.id])
   })
 })
+
+// os#1511 — LE SEUL INTERDIT EST LE RECOUVREMENT. Julien a coche Ble, Mais et Cereales
+// transformees : les trois sont disjoints, aucune donnee n est comptee deux fois, et pourtant
+// « Cereales transformees » ne se dessinait pas — ma regle du « meme niveau » l ecartait.
+
+describe('os#1511 — melanger les granularites tant que rien ne se recouvre', () => {
+  test('du detail d un cote, un bloc de l autre', () => {
+    const { groupe, ble, mais, cereales } = makeArbre()
+    // On fabrique le pendant du cas reel : deux feuilles et un frere qui a ses propres enfants.
+    const transformees = groupe.addTag('Cereales transformees', 'transformees') as Class_DataTag
+    transformees.parent = cereales
+    const farine = groupe.addTag('Farine', 'farine') as Class_DataTag
+    farine.parent = transformees
+
+    groupe.selectMembers([ble.id, mais.id, transformees.id])
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id).sort())
+      .toEqual(['ble', 'mais', 'transformees'])
+    // Le niveau courant suit le membre le plus fin.
+    expect(groupe.current_level_index).toBe(3)
+  })
+
+  test('mais un ancetre du lot tombe toujours', () => {
+    const { groupe, ble, brutes } = makeArbre()
+    groupe.selectMembers([ble.id, brutes.id])
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual(['ble'])
+  })
+})
