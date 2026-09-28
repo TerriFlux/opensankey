@@ -247,3 +247,73 @@ describe('os#1511 — persistance : cles ADDITIVES, fichier plat inchange', () =
     expect(groupe.current_level).toBe('produit')
   })
 })
+
+// os#1511 — UNE SEULE LISTE EN ARBRE. Julien a regarde le panneau « Coordonnees » : deux listes
+// empilees, « Niveau » puis les membres, et au premier niveau la seconde n avait qu une option.
+// Le niveau se deduit donc du membre choisi, et la liste unique les range par niveau.
+
+describe('os#1511 — les membres ranges par niveau, pour une liste unique', () => {
+  test('chaque membre parait UNE fois, sous le niveau de sa propre profondeur', () => {
+    const { groupe } = makeArbre()
+    const range = groupe.membersByLevel()
+    expect(range.map(n => n.level)).toEqual(['produits agricoles', 'filieres', 'transformation', 'produits'])
+    expect(range.map(n => n.members.map((m: Class_DataTag) => m.id))).toEqual([
+      ['produits'],
+      ['cereales', 'lait'],
+      ['brutes'],
+      ['ble', 'mais'],
+    ])
+    // Chaque membre une fois et une seule : membersAtLevel, lui, remontre une branche courte a
+    // tous les niveaux plus profonds — ce qui est juste pour lire des valeurs, et illisible
+    // dans une liste.
+    const tous = range.flatMap(n => n.members.map((m: Class_DataTag) => m.id))
+    expect(new Set(tous).size).toBe(tous.length)
+    expect(tous).toHaveLength(groupe.tags_list.length)
+  })
+
+  test('une dimension plate ne range rien', () => {
+    const { groupe } = makeArbre()
+    groupe.levels = []
+    expect(groupe.membersByLevel()).toEqual([])
+  })
+
+  test('choisir un membre pose le niveau ou il vit', () => {
+    const { groupe, ble, cereales } = makeArbre()
+    expect(groupe.selectMembers([ble.id])).toBe(true)
+    expect(groupe.current_level_index).toBe(3)
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual(['ble'])
+    expect(groupe.selectMembers([cereales.id])).toBe(true)
+    expect(groupe.current_level_index).toBe(1)
+  })
+
+  test('une branche COURTE se range a sa profondeur reelle', () => {
+    const { groupe, lait } = makeArbre()
+    groupe.selectMembers([lait.id])
+    // Lait est une feuille au niveau 1 : c est la qu on le choisit, meme si membersAtLevel le
+    // remontre aux niveaux 2 et 3 pour que son total ne disparaisse pas.
+    expect(groupe.current_level_index).toBe(1)
+    expect(groupe.membersAtLevel(3).map((t: Class_DataTag) => t.id)).toContain('lait')
+  })
+
+  test('MELANGER deux niveaux est refuse : le second est ecarte', () => {
+    const { groupe, ble, cereales } = makeArbre()
+    groupe.selectMembers([ble.id, cereales.id])
+    // Cereales est l ancetre de Ble : les additionner compterait la meme donnee deux fois, et
+    // un noeud d axe ne se decoupe qu a un niveau a la fois.
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual(['ble'])
+    expect(groupe.current_level_index).toBe(3)
+  })
+
+  test('deux membres du MEME niveau passent tous les deux', () => {
+    const { groupe, ble, mais } = makeArbre()
+    groupe.selectMembers([ble.id, mais.id])
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id).sort()).toEqual(['ble', 'mais'])
+  })
+
+  test('un identifiant INCONNU ne change rien', () => {
+    const { groupe, ble } = makeArbre()
+    groupe.selectMembers([ble.id])
+    expect(groupe.selectMembers(['membre_qui_n_existe_pas'])).toBe(false)
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual(['ble'])
+  })
+})

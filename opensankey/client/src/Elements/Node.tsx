@@ -84,6 +84,21 @@ type Type_RadialLayer = {
  * @extends {ClassAbstract_NodeElement}
  */
 export class Class_NodeElement extends Class_NodeBase {
+  // os#1511 lot 2 — DIMENSION QUI PILOTE CE NŒUD, par l'id de son groupe de dataTags.
+  //
+  // Un nœud peut représenter un axe entier : le nœud « Monde » est l'axe des pays. Au niveau
+  // courant de cette dimension, il se remplace par un nœud par membre visible — régions, puis
+  // pays — et le flux se répartit sur eux selon ses valeurs taguées.
+  //
+  // Les nœuds ainsi engendrés sont TRANSITOIRES (décision du 28/09) : jamais écrits dans le
+  // fichier, refabriqués à chaque ouverture. Seul l'ATTACHEMENT est persistant, et il tient en
+  // un id — c'est lui qui permet de tout reconstruire. Ce que l'on déplace à l'écran survit
+  // par la géométrie portée par le MEMBRE (`Class_DataTag.position`), pas par le nœud.
+  //
+  // Stocké par id et résolu paresseusement : à `fromJSON`, le groupe peut ne pas encore
+  // exister selon l'ordre des clés.
+  private _driving_dimension_id: string | undefined = undefined
+
   public _nodeDimensionsManager: NodeDimensionsManager
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
@@ -1048,6 +1063,38 @@ export class Class_NodeElement extends Class_NodeBase {
    * sa#283 lot 5 — état de dimension SÉRIALISÉ de ce nœud (forme de `toJSON`).
    * Cf. `NodeDimensionsManager.dimensionsStateToJSON`.
    */
+  // DIMENSION PILOTE (os#1511 lot 2) ===================================================
+
+  /**
+   * Dimension dont ce nœud est le représentant, `undefined` s'il n'en pilote aucune — ou si
+   * l'id enregistré ne désigne aucune dimension (fichier incohérent : mieux vaut un nœud
+   * ordinaire qu'un nœud rattaché à un axe fantôme).
+   */
+  public get driving_dimension(): Class_DataTagGroup | undefined {
+    if (this._driving_dimension_id === undefined) return undefined
+    return this.sankey.data_taggs_dict[this._driving_dimension_id] as Class_DataTagGroup | undefined
+  }
+
+  public set driving_dimension(dimension: Class_DataTagGroup | undefined) {
+    this._driving_dimension_id = dimension?.id
+  }
+
+  /**
+   * os#1511 lot 2 — pose l'attachement PAR ID, sans résoudre. Réservé au chargement : à ce
+   * moment le groupe de dataTags peut ne pas encore être construit, selon l'ordre des clés du
+   * fichier. La résolution se fait à la lecture, par `driving_dimension`.
+   */
+  public setDrivingDimensionId(dimension_id: string | undefined) {
+    this._driving_dimension_id = (dimension_id !== undefined && dimension_id !== '')
+      ? dimension_id
+      : undefined
+  }
+
+  /** Vrai si ce nœud se désagrège en suivant une dimension. */
+  public get is_driven_by_dimension(): boolean {
+    return this.driving_dimension !== undefined
+  }
+
   public dimensionsStateToJSON(dimension_ids?: string[]) {
     return this._nodeDimensionsManager.dimensionsStateToJSON(dimension_ids)
   }

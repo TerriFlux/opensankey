@@ -35,6 +35,7 @@ import {
   default_paper_format, default_paper_orientation, default_margin_mm,
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
+import { isGeneratedMemberLink, isGeneratedMemberNode } from '../Algorithms/DimensionDisaggregation'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
 import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { originFromJSON, originToJSON } from '../types/Origin'
@@ -880,6 +881,12 @@ export class NodeElementPersistence extends NodeBasePersistence {
   public static toJSON(node: Class_NodeElement, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node, json_object, kwargs)
     node._nodeDimensionsManager.toJSON(json_object)
+    // os#1511 lot 2 — DIMENSION PILOTE : clé ADDITIVE, écrite par le seul nœud qui représente
+    // un axe. Les nœuds qu'il engendre, eux, ne sont jamais écrits : ils se refabriquent au
+    // chargement depuis les membres, et c'est cet attachement qui permet de les reconstruire.
+    if (node.driving_dimension !== undefined) {
+      json_object['driving_dimension'] = node.driving_dimension.id
+    }
     if (node.tooltip_text) json_object['tooltip_text'] = node.tooltip_text
     // #411 — trace d'origine du nœud, voir LinkElementPersistence.
     if (node.origin) json_object['origin'] = originToJSON(node.origin)
@@ -921,33 +928,33 @@ export class NodeElementPersistence extends NodeBasePersistence {
 
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
       }
     } else if (kwargs && kwargs['only_visible_elements']) {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && l.is_visible).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.is_visible).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && l.is_visible).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.is_visible).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && l.is_visible).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.is_visible).map(link => link.id)
       }
     } else {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l)).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l)).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && !isGeneratedMemberLink(l)).map(link => link.id)
       }
     }
     return json_object
@@ -1079,6 +1086,15 @@ export class NodeElementPersistence extends NodeBasePersistence {
     node['_tooltip_text'] = getStringFromJSON(json_node_object, 'tooltip_text', '')
     // #411 — restaure la trace d'origine du nœud si le fichier la porte.
     node.origin = originFromJSON(json_node_object['origin'])
+
+    // os#1511 lot 2 — DIMENSION PILOTE. On garde l'ID sans le résoudre : au chargement, le
+    // groupe de dataTags peut ne pas encore être construit selon l'ordre des clés. Une chaîne
+    // vide vaut absence, et un id qui ne désigne aucune dimension laisse un nœud ORDINAIRE
+    // plutôt que de le rattacher à un axe fantôme (même règle que le parent d'un membre, #193).
+    const raw_driving_dimension = json_node_object['driving_dimension']
+    if (typeof raw_driving_dimension === 'string' && raw_driving_dimension !== '') {
+      node.setDrivingDimensionId(raw_driving_dimension)
+    }
 
     // Délégation aux managers
     node._nodeTagsManager.fromJSON(json_node_object)
@@ -1504,6 +1520,12 @@ export class SankeyPersistence {
 
     nodes_list
       .forEach(node => {
+        // os#1511 lot 2 — un nœud ENGENDRÉ par la désagrégation d'une dimension ne s'écrit
+        // JAMAIS : il est transitoire, refabriqué à l'ouverture depuis les membres. L'écrire
+        // le ferait engendrer une seconde fois au chargement suivant — c'est exactement ce qui
+        // a produit 928 nœuds au lieu de 506 sur Bois Savoie avec les nœuds d'échange. Le
+        // fichier ne garde que le nœud d'AXE, qui reste dans le modèle (masqué) pour cela.
+        if (isGeneratedMemberNode(node)) return
         if (!(kwargs && kwargs['keep_siblings']) && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
           if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = NodeElementPersistence.toJSON(
             node.sibling,
@@ -1537,8 +1559,11 @@ export class SankeyPersistence {
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
     // Flux éclatés : jamais écrits (reconstruits du drapeau `split_links` des dimensions).
+    // os#1511 lot 2 — même règle pour les flux ENGENDRÉS par la désagrégation d'une dimension :
+    // transitoires, refabriqués à l'ouverture. Le fichier ne garde que le flux d'origine, qui
+    // porte les valeurs de tous les membres.
     links_list
-      .filter(link => !link.is_split_link)
+      .filter(link => !link.is_split_link && !isGeneratedMemberLink(link))
       .forEach(link => {
         json_object_links[link.id] = {}
         json_object_links[link.id] = LinkElementPersistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })

@@ -1413,6 +1413,60 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     remplacant.setSelected()
   }
 
+  /**
+   * os#1511 — Les membres RANGÉS PAR NIVEAU, de quoi faire UNE seule liste en arbre au lieu
+   * d'empiler une liste de niveaux et une liste de membres.
+   *
+   * Deux listes l'une sous l'autre se lisaient mal (retour de Julien, 28/09) : au premier
+   * niveau, celle des membres n'avait qu'une option — « Tous produits », « Monde » — et ne
+   * servait à rien. Le niveau se DÉDUIT désormais du membre choisi.
+   *
+   * Chaque membre paraît UNE fois, sous le niveau de sa PROPRE profondeur — et non à tous les
+   * niveaux où `membersAtLevel` le montrerait. Une branche courte y est donc rangée à sa
+   * profondeur réelle, ce qui la nomme sans la répéter. L'ordre est celui d'un parcours en
+   * profondeur depuis les racines : les enfants d'un parent restent groupés.
+   *
+   * Rend une liste vide pour une dimension plate : il n'y a alors rien à ranger.
+   */
+  public membersByLevel(): { level: string, index: number, members: Class_DataTag[] }[] {
+    if (this._levels.length === 0) return []
+    const par_profondeur: Class_DataTag[][] = this._levels.map(() => [])
+    const tous = Object.values(this._tags) as Class_DataTag[]
+    const ranger = (membre: Class_DataTag) => {
+      const profondeur = Math.min(this.depthOf(membre), this._levels.length - 1)
+      par_profondeur[profondeur].push(membre)
+      membre.children.forEach(enfant => ranger(enfant as Class_DataTag))
+    }
+    tous.filter(membre => membre.parent === undefined).forEach(ranger)
+    return this._levels.map((level, index) => ({ level, index, members: par_profondeur[index] }))
+  }
+
+  /**
+   * os#1511 — Choisit un MEMBRE, et se place du même geste au niveau où il vit.
+   *
+   * C'est l'envers de `selectLevel` : là on donnait le niveau et le modèle réaccordait le
+   * membre, ici on donne le membre et le modèle en déduit le niveau. La liste en arbre passe
+   * par ici ; `selectLevel` reste le chemin des autres hôtes.
+   *
+   * Plusieurs membres sont admis, à condition qu'ils soient AU MÊME NIVEAU. Mélanger un parent
+   * et son enfant additionnerait deux fois la même donnée, et depuis le lot 2B cela n'a même
+   * plus de dessin : un nœud d'axe ne se découpe qu'à un niveau à la fois. Les intrus sont donc
+   * écartés, en gardant le niveau du premier membre cité.
+   */
+  public selectMembers(tag_ids: string[]): boolean {
+    const demandes = tag_ids
+      .map(id => this._tags[id] as Class_DataTag | undefined)
+      .filter((membre): membre is Class_DataTag => membre !== undefined)
+    if (demandes.length === 0) return false
+    const profondeur = Math.min(this.depthOf(demandes[0]), Math.max(0, this._levels.length - 1))
+    const retenus = demandes.filter(membre =>
+      Math.min(this.depthOf(membre), Math.max(0, this._levels.length - 1)) === profondeur)
+    this._current_level_index = profondeur
+    this.tags_list.forEach(tag => tag.setUnSelected())
+    retenus.forEach(membre => membre.setSelected())
+    return true
+  }
+
   // PUBLIC METHODS =====================================================================
 
   /**
