@@ -182,3 +182,41 @@ describe('os#1511 — une dimension PLATE se comporte comme avant', () => {
     expect(lien.contributing_values).toBeNull()
   })
 })
+
+// os#1511 — CE QUE LE DESSIN LIT. L agregat ci-dessus etait calcule mais personne ne l appelait :
+// sur le jeu de demonstration, le flux se dessinait SANS VALEUR au niveau des parents (constate
+// par Julien, 28/09). `valueCurrent` est le seul chemin par lequel il entre dans le dessin.
+
+describe('os#1511 — l agregat entre dans le DESSIN', () => {
+  test('viser un PARENT donne la somme de ses feuilles, pas rien', () => {
+    const m = monter()
+    viser(m.groupe, m.cereales)
+    expect(m.lien.valueCurrent).toBe(42)
+    viser(m.groupe, m.produits)
+    expect(m.lien.valueCurrent).toBe(49)
+  })
+
+  test('une FEUILLE garde sa valeur propre, le repli ne s en mele pas', () => {
+    const m = monter()
+    viser(m.groupe, m.ble)
+    expect(m.lien.valueCurrent).toBe(30)
+  })
+
+  test('une valeur SAISIE au niveau du parent prime sur la somme de ses feuilles', () => {
+    const m = monter()
+    poser(m.lien, m.cereales, 100)
+    viser(m.groupe, m.cereales)
+    // Un total saisi a la main peut differer de la somme du detail : c est le total qui fait foi.
+    expect(m.lien.valueCurrent).toBe(100)
+  })
+
+  test('un diagramme SANS hierarchie ne change pas de comportement', () => {
+    const m = monter()
+    m.groupe.levels = []
+    m.groupe.tags_list.forEach(tag => { (tag as Class_DataTag).parent = undefined })
+    viser(m.groupe, m.cereales)
+    // Plus de hierarchie, donc plus de feuilles a sommer : le flux n a rien a montrer ici, et
+    // le repli ne doit pas inventer une valeur.
+    expect(m.lien.valueCurrent).toBeNull()
+  })
+})
