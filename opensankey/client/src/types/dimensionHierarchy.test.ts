@@ -317,3 +317,41 @@ describe('os#1511 — les membres ranges par niveau, pour une liste unique', () 
     expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual(['ble'])
   })
 })
+
+// os#1511 — UN NIVEAU SE CHOISIT COMME UN MEMBRE. « Regions continentales » montre toutes les
+// regions, « Europe » montre l Europe. Les deux vivent dans la meme liste parce que ce sont deux
+// reponses a la meme question : qu est-ce qu on regarde ?
+
+describe('os#1511 — choisir un niveau entier', () => {
+  test('choisir un niveau coche tous les membres qu il montre', () => {
+    const { groupe, ble, mais, lait } = makeArbre()
+    expect(groupe.selectAllAtLevel(3)).toBe(true)
+    expect(groupe.current_level_index).toBe(3)
+    // La branche COURTE en fait partie : le lait n a pas de sous-niveau, il reste montre.
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id).sort())
+      .toEqual([ble.id, lait.id, mais.id].sort())
+  })
+
+  test('un niveau entier se RECONNAIT, et un membre seul ne passe pas pour lui', () => {
+    const { groupe, cereales } = makeArbre()
+    groupe.selectAllAtLevel(1)
+    expect(groupe.isWholeLevelSelected(1)).toBe(true)
+    expect(groupe.isWholeLevelSelected(2)).toBe(false)
+    groupe.selectMembers([cereales.id])
+    // Les filieres comptent deux membres : Cereales seul n est pas le niveau.
+    expect(groupe.isWholeLevelSelected(1)).toBe(false)
+  })
+
+  test('une dimension PLATE n a pas de niveau a choisir', () => {
+    const { groupe } = makeArbre()
+    groupe.levels = []
+    expect(groupe.selectAllAtLevel(0)).toBe(false)
+  })
+
+  test('un index NON FINI est refuse, comme pour selectLevel', () => {
+    const { groupe } = makeArbre()
+    groupe.selectAllAtLevel(1)
+    expect(groupe.selectAllAtLevel(Number('pas un nombre'))).toBe(false)
+    expect(groupe.current_level_index).toBe(1)
+  })
+})

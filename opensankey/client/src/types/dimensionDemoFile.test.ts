@@ -153,6 +153,11 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     filiere.selectLevel(0)
     pays.selectLevel(0)
 
+    // L ECHELLE, sans quoi le diagramme s ouvre avec des flux minuscules dans un coin —
+    // constate a l ecran. Le SOCLE, qui est bien regle, prend un dixieme de son total : on
+    // garde ce rapport plutot que d inventer un nombre.
+    app.drawing_area.scale = 1385 / 10
+
     // L INVARIANT qui rend le fichier utile : au niveau le plus agrege, le flux vaut la somme
     // de toutes les feuilles saisies — sans qu aucun total n ait ete ecrit nulle part.
     const contributions = exportations.contributing_values
@@ -163,15 +168,18 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     // valeur ne prouve rien, meme si l agregat est juste par ailleurs.
     expect(exportations.valueCurrent).toBe(1385)
 
-    // Le second invariant, celui du lot 2 : le noeud d axe se decoupe sur les ENFANTS du
-    // membre choisi, et le flux se repartit sans rien perdre en chemin. « Monde » etant le
-    // membre courant, ce sont ses deux regions.
+    // Le second invariant, celui du lot 2 : le noeud d axe se decoupe sur les membres CHOISIS,
+    // et le flux se repartit sans rien perdre en chemin. On choisit ici le niveau des regions,
+    // ce qui coche les deux d un coup.
+    pays.selectAllAtLevel(1)
     expect(disaggregateDimensionNodes(sankey)).toBe(2)
     const par_membre = sankey.links_list.filter(isGeneratedMemberLink)
     expect(par_membre.map(l => l.target.name).sort()).toEqual(['Afrique', 'Europe'])
     expect(par_membre.reduce((t, l) => t + (l.value?.valueData ?? 0), 0)).toBe(1385)
-    // On rend le fichier a son etat d ouverture : les noeuds engendres ne s ecrivent pas.
+    // On rend le fichier a son etat d ouverture : les noeuds engendres ne s ecrivent pas, et
+    // l on repart du niveau le plus agrege.
     removeGeneratedMemberNodes(sankey)
+    pays.selectAllAtLevel(0)
 
     if (SORTIE !== undefined) {
       const json = app.toJSON()
