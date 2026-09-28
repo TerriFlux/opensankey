@@ -132,6 +132,54 @@ describe('os#1511 — membres montres a un niveau, hierarchie DESEQUILIBREE', ()
   })
 })
 
+describe('os#1511 — changer de niveau garde la LIGNEE', () => {
+  const selectionne = (g: ReturnType<typeof makeArbre>['groupe']) =>
+    g.selected_tags_list.map((t: Class_DataTag) => t.id)
+
+  test('en REMONTANT, on arrive sur l ancetre, pas sur le premier venu', () => {
+    const { groupe, ble } = makeArbre()
+    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
+    ble.setSelected()
+    groupe.selectLevel(1)
+    // De « Ble » on arrive a « Cereales », son ancetre au niveau 1 — pas a « Lait ».
+    expect(selectionne(groupe)).toEqual(['cereales'])
+  })
+
+  test('en DESCENDANT, on entre dans un descendant du membre courant', () => {
+    const { groupe, cereales } = makeArbre()
+    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
+    cereales.setSelected()
+    groupe.selectLevel(3)
+    // On reste dans la branche des cereales : ble ou mais, jamais le lait.
+    expect(['ble', 'mais']).toContain(selectionne(groupe)[0])
+  })
+
+  test('un membre encore montre au nouveau niveau est CONSERVE', () => {
+    const { groupe, lait } = makeArbre()
+    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
+    lait.setSelected()
+    // Le lait est une feuille courte : il reste montre aux niveaux 2 et 3.
+    groupe.selectLevel(3)
+    expect(selectionne(groupe)).toEqual(['lait'])
+  })
+
+  test('sans lignee, on prend le premier membre montre plutot qu un ecran vide', () => {
+    const { groupe } = makeArbre()
+    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
+    groupe.selectLevel(2)
+    expect(selectionne(groupe)).toHaveLength(1)
+  })
+
+  test('une dimension PLATE ignore le changement de niveau', () => {
+    const { groupe, ble } = makeArbre()
+    groupe.levels = []
+    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
+    ble.setSelected()
+    groupe.selectLevel(2)
+    expect(selectionne(groupe)).toEqual(['ble'])
+  })
+})
+
 describe('os#1511 — persistance : cles ADDITIVES, fichier plat inchange', () => {
   test('une dimension plate n ecrit ni levels ni current_level', () => {
     const app = new Class_ApplicationData(false)
