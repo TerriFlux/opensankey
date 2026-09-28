@@ -52,6 +52,11 @@ export function applyHierarchyPaletteIfGrey(dimension: Class_DataTagGroup): numb
     }
     descendre(racine)
   })
+  // Poser des couleurs sans les nommer ne sert à rien : l'interrupteur `use_colors` est ce qui
+  // fait entrer le groupe dans la LÉGENDE (cf. `tagGroupCarriesFormatting`). Une dimension
+  // qu'on vient de colorier l'allume donc, pour que les bandes disent de quoi elles sont faites.
+  dimension.use_colors = true
+
   // Une racine unique donnerait une seule teinte pour tout l'axe : ses ENFANTS prennent alors
   // la relève, sans quoi « Monde » colorierait l'Europe et l'Afrique de la même couleur.
   if (racines.length === 1) {
