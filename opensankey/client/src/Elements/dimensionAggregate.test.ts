@@ -220,3 +220,65 @@ describe('os#1511 — l agregat entre dans le DESSIN', () => {
     expect(m.lien.valueCurrent).toBeNull()
   })
 })
+
+// os#1511 — LES BANDES D UN MEMBRE PARENT. Julien a mis « Pays partenaire » en choix multiple,
+// coche Europe et Afrique, et le flux a disparu : une bande lit la feuille a sa coordonnee, or
+// un parent n en porte pas. Comme l epaisseur du flux vient de ses bandes, le flux entier
+// s effacait.
+
+describe('os#1511 — une bande sur un membre parent vaut la somme de ses feuilles', () => {
+  test('deux parents coches donnent deux bandes, pas zero', () => {
+    const m = monter()
+    m.groupe.banner = 'multi'
+    m.groupe.tags_list.forEach(t => t.setUnSelected())
+    m.cereales.setSelected()
+    m.lait.setSelected()
+    const bandes = m.lien.tagged_value_bands
+    expect(bandes.map(b => b.id).sort()).toEqual(['cereales', 'lait'])
+    // Cereales = ble 30 + mais 12 ; Lait porte sa valeur, 7.
+    expect(bandes.find(b => b.id === 'cereales')?.value).toBe(42)
+    expect(bandes.find(b => b.id === 'lait')?.value).toBe(7)
+  })
+
+  test('une FEUILLE garde sa valeur propre, le repli ne s en mele pas', () => {
+    const m = monter()
+    m.groupe.banner = 'multi'
+    m.groupe.tags_list.forEach(t => t.setUnSelected())
+    m.ble.setSelected()
+    m.mais.setSelected()
+    const bandes = m.lien.tagged_value_bands
+    expect(bandes.find(b => b.id === 'ble')?.value).toBe(30)
+    expect(bandes.find(b => b.id === 'mais')?.value).toBe(12)
+  })
+
+  test('un parent SANS aucune feuille renseignee ne fait pas de bande a zero', () => {
+    const m = monter()
+    m.groupe.banner = 'multi'
+    poser(m.lien, m.ble, null as unknown as number)
+    poser(m.lien, m.mais, null as unknown as number)
+    m.groupe.tags_list.forEach(t => t.setUnSelected())
+    m.cereales.setSelected()
+    m.lait.setSelected()
+    const bandes = m.lien.tagged_value_bands
+    // « Ce flux n existe pas ici » n est pas « il vaut 0 » : pas de bande fantome.
+    expect(bandes.map(b => b.id)).toEqual(['lait'])
+  })
+})
+
+// os#1511 — UNE dimension se dessine en NOEUDS, les autres en bandes (decision du 28/09).
+// « Sur les noeuds dupliques, le mode multiple fait apparaitre des noeuds au lieu de faire
+// apparaitre des bandes. »
+
+describe('os#1511 — une dimension attachee ne fait pas de bandes', () => {
+  test('en choix multiple, une dimension ATTACHEE n en produit aucune', () => {
+    const m = monter()
+    m.groupe.banner = 'multi'
+    m.groupe.tags_list.forEach(t => t.setUnSelected())
+    m.cereales.setSelected()
+    m.lait.setSelected()
+    expect(m.lien.tagged_value_bands.length).toBe(2)
+    // On attache la cible a cet axe : ses membres deviennent des noeuds, plus des bandes.
+    m.lien.target.driving_dimension = m.groupe
+    expect(m.lien.tagged_value_bands).toEqual([])
+  })
+})

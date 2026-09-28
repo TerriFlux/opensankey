@@ -1075,13 +1075,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
     //    plus aucun lien fantôme dans le modèle).
+    // os#1511 — une dimension ATTACHÉE à un nœud fait des NŒUDS, jamais des bandes. Sans cette
+    // exclusion, la mettre en choix multiple produisait les deux à la fois pour le même axe.
+    // Une seule dimension se dessine en nœuds ; les autres restent en bandes.
     const multi_dim = this.sankey.data_taggs_list.find(tagg =>
-      tagg.banner === 'multi' && tagg.tags_list.length > 1)
+      tagg.banner === 'multi'
+      && tagg.tags_list.length > 1
+      && !this.sankey.nodes_list.some(node => node.driving_dimension === tagg))
     if (multi_dim) {
       const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-        const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+        let v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+        // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
+        // adresse un point du cube : sur une dimension hiérarchisée, « Europe » n'y porte rien,
+        // la donnée étant sur l'Espagne et l'Italie. Sans ce repli, cocher Europe et Afrique ne
+        // dessinait AUCUNE bande — et comme l'épaisseur du flux vient des bandes, le flux
+        // disparaissait entièrement. Constaté à l'écran le 28/09.
+        if (v === null || v <= 0) {
+          const coordonnee = (this.selected_data_tags_list as Class_DataTag[])
+            .filter(autre => autre.group.id !== multi_dim.id)
+            .concat([tag as Class_DataTag])
+          const contributions = this.contributingValuesFor(coordonnee)
+          if (contributions !== null) {
+            const somme = contributions.reduce((total, valeur) => total + (
+              this._reads_collected_layer
+                ? (valeur.valueData ?? 0)
+                : (valeur.valueResult ?? ((valeur.value_option === 'value' || valeur.value_option === 'intervals') ? valeur.valueData : null) ?? 0)
+            ), 0)
+            if (somme > 0) v = somme
+          }
+        }
         if (v === null || v <= 0) return
         const { color: styled_color, ...styled_opacity } = band_style(valueTags(leaf))
         // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
