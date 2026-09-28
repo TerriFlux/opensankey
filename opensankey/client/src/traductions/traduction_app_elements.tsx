@@ -578,6 +578,7 @@ export const resources_app_elements = {
 
       Banner: {
         unitary_view: 'View generation',
+        dimension_level: 'Level',
         title_data_type: 'Data displayed',
         data: 'Data',
         filter: 'Filter',
@@ -1370,6 +1371,7 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Génération de vues',
+        dimension_level: 'Niveau',
         title_data_type: 'Données affichées',
         data: 'Données',
         filter: 'Filtres',
@@ -2112,6 +2114,7 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Generación de vistas',
+        dimension_level: 'Nivel',
         title_data_type: 'Datos mostrados',
         data: 'Datos',
         filter: 'Filtros',
@@ -2852,6 +2855,7 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Ansichtserzeugung',
+        dimension_level: 'Ebene',
         title_data_type: 'Angezeigte Daten',
         data: 'Daten',
         filter: 'Filter',
@@ -3592,6 +3596,7 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Generazione viste',
+        dimension_level: 'Livello',
         title_data_type: 'Dati visualizzati',
         data: 'Dati',
         filter: 'Filtri',
@@ -4319,6 +4324,7 @@ export const resources_app_elements = {
 
       Banner: {
         unitary_view: '视图生成',
+        dimension_level: '层级',
         title_data_type: '显示的数据',
         data: '数据',
         filter: '筛选',
@@ -5066,6 +5072,7 @@ export const resources_app_elements = {
 
       Banner: {
         unitary_view: 'ビューの生成',
+        dimension_level: '階層',
         title_data_type: '表示中のデータ',
         data: 'データ',
         filter: '絞り込み',

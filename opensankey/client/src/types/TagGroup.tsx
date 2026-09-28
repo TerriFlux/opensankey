@@ -1368,6 +1368,46 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     })
   }
 
+  /**
+   * os#1511 lot 1 — Change le NIVEAU courant et réaccorde la sélection.
+   *
+   * Changer de niveau sans toucher à la sélection laisserait le diagramme vide : le membre
+   * choisi n'est en général pas montré au nouveau niveau. On réaccorde donc, en GARDANT LA
+   * LIGNÉE — c'est ce que le lecteur attend, et cela vaut dans les deux sens :
+   *
+   * - en remontant, on prend l'ANCÊTRE visible du membre courant (de « Blé » on arrive à
+   *   « Céréales », pas sur le premier membre venu) ;
+   * - en descendant, son premier DESCENDANT visible (de « Céréales » on entre dans « Blé »).
+   *
+   * À défaut de lignée — aucun membre sélectionné, ou une branche qui ne mène nulle part —
+   * on prend le premier membre visible, pour ne jamais rendre un écran vide.
+   */
+  public selectLevel(index: number) {
+    if (this._levels.length === 0) return
+    this._current_level_index = Math.min(Math.max(0, index), this._levels.length - 1)
+    const visibles = this.membersAtLevel(this._current_level_index)
+    if (visibles.length === 0) return
+
+    const courant = this.selected_tags_list[0] as Class_DataTag | undefined
+    let remplacant = visibles[0]
+    if (courant !== undefined) {
+      // En remontant : soi-même s'il est encore montré, sinon le premier ancêtre qui l'est.
+      let lignee: Class_DataTag | undefined = courant
+      let trouve: Class_DataTag | undefined = undefined
+      while (lignee !== undefined && trouve === undefined) {
+        if (visibles.includes(lignee)) trouve = lignee
+        lignee = lignee.parent
+      }
+      // En descendant : le premier descendant montré.
+      if (trouve === undefined) {
+        trouve = visibles.find(membre => membre.hasAncestor(courant))
+      }
+      if (trouve !== undefined) remplacant = trouve
+    }
+    this.tags_list.forEach(tag => tag.setUnSelected())
+    remplacant.setSelected()
+  }
+
   // PUBLIC METHODS =====================================================================
 
   /**
