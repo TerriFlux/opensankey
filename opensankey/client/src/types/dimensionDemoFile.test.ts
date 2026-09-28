@@ -163,17 +163,15 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     // valeur ne prouve rien, meme si l agregat est juste par ailleurs.
     expect(exportations.valueCurrent).toBe(1385)
 
-    // Le second invariant, celui du lot 2 : descendre d un niveau decoupe le noeud d axe et
-    // repartit le flux, sans rien perdre en chemin.
-    pays.selectLevel(1)
+    // Le second invariant, celui du lot 2 : le noeud d axe se decoupe sur les ENFANTS du
+    // membre choisi, et le flux se repartit sans rien perdre en chemin. « Monde » etant le
+    // membre courant, ce sont ses deux regions.
     expect(disaggregateDimensionNodes(sankey)).toBe(2)
     const par_membre = sankey.links_list.filter(isGeneratedMemberLink)
     expect(par_membre.map(l => l.target.name).sort()).toEqual(['Afrique', 'Europe'])
     expect(par_membre.reduce((t, l) => t + (l.value?.valueData ?? 0), 0)).toBe(1385)
-    // On rend le fichier a son etat d ouverture : les noeuds engendres ne s ecrivent pas, mais
-    // le niveau courant, lui, s ecrit.
+    // On rend le fichier a son etat d ouverture : les noeuds engendres ne s ecrivent pas.
     removeGeneratedMemberNodes(sankey)
-    pays.selectLevel(0)
 
     if (SORTIE !== undefined) {
       const json = app.toJSON()
