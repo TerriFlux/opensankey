@@ -861,6 +861,24 @@ export class Class_DataTag extends Class_ProtoTag {
   // exister (l'ordre des membres dans le JSON n'est pas garanti). On ne garde donc pas la
   // référence mais l'id, et `parent` résout au moment de la lecture.
   private _parent_id: string | undefined = undefined
+
+  // os#1511 lot 2 — GÉOMÉTRIE DU MEMBRE : où se dessine le nœud qui le représente.
+  //
+  // Les nœuds engendrés par la désagrégation d'une dimension sont TRANSITOIRES (décision du
+  // 28/09) : refabriqués à chaque ouverture, jamais écrits. Persister les nœuds remettrait
+  // dans leur identité ce que ce chantier vient d'en sortir, et un changement de donnée ou de
+  // niveau laisserait des nœuds périmés que rien ne signale.
+  //
+  // Mais ce que l'on déplace à l'écran doit survivre : la position est donc portée par le
+  // MEMBRE, qui lui est persistant. C'est le même geste que les vues contextuelles (sa#283),
+  // une géométrie par membre — et c'est ce qui la fait survivre à la régénération.
+  //
+  // `position` est en coordonnées du diagramme ; `latitude`/`longitude` servent la carte
+  // (os#1364), où un membre sans coordonnées prend le barycentre de ses enfants. Les trois
+  // sont indépendantes et facultatives.
+  private _position: { x: number, y: number } | undefined = undefined
+  private _latitude: number | undefined = undefined
+  private _longitude: number | undefined = undefined
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -902,6 +920,14 @@ export class Class_DataTag extends Class_ProtoTag {
     // os#1511 — clé ADDITIVE, écrite seulement par un membre qui a un parent. Absente d'un
     // fichier sans hiérarchie → dimension plate → comportement strictement inchangé.
     if (this._parent_id !== undefined) json_object['parent'] = this._parent_id
+    // os#1511 lot 2 — géométrie du membre, toutes clés ADDITIVES : un membre qu'on n'a jamais
+    // déplacé n'écrit rien, un fichier sans dimension désagrégée ne change pas d'un octet.
+    if (this._position !== undefined) {
+      json_object['x'] = this._position.x
+      json_object['y'] = this._position.y
+    }
+    if (this._latitude !== undefined) json_object['latitude'] = this._latitude
+    if (this._longitude !== undefined) json_object['longitude'] = this._longitude
   }
 
   /**
@@ -951,6 +977,55 @@ export class Class_DataTag extends Class_ProtoTag {
     return false
   }
 
+  // GÉOMÉTRIE DU MEMBRE (os#1511 lot 2) ================================================
+
+  /** Position dans le diagramme du nœud qui représente ce membre, si on l'a déplacé. */
+  public get position(): { x: number, y: number } | undefined {
+    return this._position === undefined ? undefined : { ...this._position }
+  }
+
+  public set position(position: { x: number, y: number } | undefined) {
+    if (position === undefined) { this._position = undefined; return }
+    // Une position non finie ne place rien et se propagerait en silence dans le dessin.
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return
+    this._position = { x: position.x, y: position.y }
+  }
+
+  public get latitude(): number | undefined { return this._latitude }
+  public set latitude(valeur: number | undefined) {
+    this._latitude = (valeur !== undefined && Number.isFinite(valeur)) ? valeur : undefined
+  }
+
+  public get longitude(): number | undefined { return this._longitude }
+  public set longitude(valeur: number | undefined) {
+    this._longitude = (valeur !== undefined && Number.isFinite(valeur)) ? valeur : undefined
+  }
+
+  /**
+   * os#1511 lot 2 — Coordonnées géographiques EFFECTIVES : les siennes, ou le BARYCENTRE de
+   * ses descendants qui en ont (décision du 27/09).
+   *
+   * C'est ce qui rend le niveau « régions continentales » plaçable sur une carte sans saisir
+   * une seule coordonnée : une région se pose au milieu de ses pays. On moyenne les FEUILLES
+   * géolocalisées de la descendance, pas les enfants directs — sinon une branche profonde
+   * pèserait autant qu'un pays isolé.
+   *
+   * `undefined` si ni lui ni aucun de ses descendants n'est géolocalisé : la carte doit
+   * pouvoir le dire, pas le placer au hasard.
+   */
+  public get effective_coordinates(): { latitude: number, longitude: number } | undefined {
+    if (this._latitude !== undefined && this._longitude !== undefined) {
+      return { latitude: this._latitude, longitude: this._longitude }
+    }
+    const situes = this.leaves.filter(feuille =>
+      feuille !== this && feuille.latitude !== undefined && feuille.longitude !== undefined)
+    if (situes.length === 0) return undefined
+    return {
+      latitude: situes.reduce((t, f) => t + (f.latitude as number), 0) / situes.length,
+      longitude: situes.reduce((t, f) => t + (f.longitude as number), 0) / situes.length,
+    }
+  }
+
   /** Membres du groupe dont le parent est CE membre (un seul cran, pas la descendance). */
   public get children(): Class_DataTag[] {
     return (Object.values(this._group.tags_dict) as Class_DataTag[])
@@ -989,6 +1064,19 @@ export class Class_DataTag extends Class_ProtoTag {
     // (même règle qu'au chargement d'une hiérarchie de nœuds, #193).
     const raw_parent = json_object['parent']
     this._parent_id = (typeof raw_parent === 'string' && raw_parent !== '') ? raw_parent : undefined
+    // os#1511 lot 2 — cf. _toJSON. Une position n'a de sens qu'ENTIÈRE : un x sans y ne place
+    // rien, on préfère l'ignorer plutôt que d'inventer la coordonnée manquante. Les nombres
+    // non finis sont écartés de même — ils traverseraient les calculs sans bruit.
+    const x = json_object['x']
+    const y = json_object['y']
+    this._position = (typeof x === 'number' && Number.isFinite(x)
+      && typeof y === 'number' && Number.isFinite(y))
+      ? { x, y }
+      : undefined
+    const lat = json_object['latitude']
+    const lon = json_object['longitude']
+    this._latitude = (typeof lat === 'number' && Number.isFinite(lat)) ? lat : undefined
+    this._longitude = (typeof lon === 'number' && Number.isFinite(lon)) ? lon : undefined
   }
 
 
