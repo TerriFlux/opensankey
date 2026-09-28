@@ -388,3 +388,33 @@ describe('os#1511 — une dimension hierarchisee toute grise recoit une palette'
     expect(applyHierarchyPaletteIfGrey(groupe)).toBe(0)
   })
 })
+
+// os#1511 — LES BRANCHES COURTES DANS LA SELECTION. Julien a coche Oleagineux avec Cereales
+// brutes et Cereales transformees : Oleagineux ne se dessinait pas, ecarte parce qu il n a pas
+// la meme profondeur. Il n a pourtant pas d enfant, donc il se montre a ce niveau-la aussi.
+
+describe('os#1511 — une branche courte se coche avec les membres plus profonds', () => {
+  test('Oleagineux tient avec les deux niveaux de transformation', () => {
+    const { groupe, brutes, lait } = makeArbre()
+    // Lait est la branche courte de cet arbre : feuille au niveau 1, montree jusqu au 3.
+    groupe.selectMembers([lait.id, brutes.id])
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id).sort())
+      .toEqual([brutes.id, lait.id].sort())
+    // Le niveau retenu est le PLUS FIN des deux.
+    expect(groupe.current_level_index).toBe(2)
+  })
+
+  test('l ordre du clic ne change pas le resultat', () => {
+    const { groupe, brutes, lait } = makeArbre()
+    groupe.selectMembers([brutes.id, lait.id])
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id).sort())
+      .toEqual([brutes.id, lait.id].sort())
+  })
+
+  test('un vrai melange parent / enfant reste ecarte', () => {
+    const { groupe, cereales, ble } = makeArbre()
+    groupe.selectMembers([cereales.id, ble.id])
+    // Cereales contient Ble : les additionner compterait la meme donnee deux fois.
+    expect(groupe.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual([ble.id])
+  })
+})
