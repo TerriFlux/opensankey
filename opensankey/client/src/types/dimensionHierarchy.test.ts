@@ -373,6 +373,9 @@ describe('os#1511 — une dimension hierarchisee toute grise recoit une palette'
     expect(teinte(lait)).not.toBe(teinte(cereales))
     // Et l on s eclaircit en descendant : un parent reste plus dense que ses enfants.
     expect(ble.color).not.toBe(cereales.color)
+    // Poser des couleurs sans les nommer ne sert a rien : l interrupteur des couleurs est ce
+    // qui fait entrer le groupe dans la LEGENDE.
+    expect(groupe.use_colors).toBe(true)
   })
 
   test('un groupe DEJA colorie n est pas touche', () => {
