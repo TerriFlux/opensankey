@@ -134,6 +134,10 @@ const decomposeEntry = (spec: Type_DecomposeSpec): [string, Type_CoordState] => 
     return [`dim:${spec.dimension_id}`, { mode: 'parts' }]
   case 'flux_cross':
     return [`cross:${spec.side}`, { mode: 'parts', cross_first: spec.first }]
+  // os#1511 — une dimension de données décompose sous la MÊME clé de champ que lorsqu'elle épingle
+  // ou se juxtapose : c'est le même axe, dans trois usages. Un champ, trois modes.
+  case 'data_dimension':
+    return [`dt:${spec.data_tagg_id}`, { mode: 'parts' }]
   }
 }
 
@@ -202,9 +206,18 @@ const decomposeSpecOf = (
     const first = state.mode === 'parts' && state.cross_first ? state.cross_first : 'other'
     return { kind: 'flux_cross', side: id, first }
   }
-  // Un groupe d'étiquettes de données ne décompose RIEN : deux années ne font pas un tout. Le cas
-  // n'arrive pas par la surface (`setCoordState` l'interdit), il est tenu ici aussi parce qu'un sac
-  // peut venir d'ailleurs.
+  // UN GROUPE PLAT NE DÉCOMPOSE RIEN : deux années ne font pas un tout. C'était vrai de TOUS les
+  // groupes d'étiquettes de données, et os#1511 a créé l'exception — une dimension HIÉRARCHISÉE
+  // fait un tout, ses feuilles sommant à leur parent (contrat du cube de valeurs). C'est
+  // `is_hierarchical` qui départage, et la surface ne propose « en parts » que là (cf.
+  // `CoordinatesNavigation.coordFieldsOf`).
+  //
+  // Ici on TRADUIT, on ne juge pas : la hiérarchie est une propriété du modèle, ce module ne lit
+  // que le sac. Un sac qui demanderait à décomposer un groupe plat produit un descripteur que
+  // `buildDataDimensionTree` refuse (il rend `null`), donc une figure vide — jamais une couronne
+  // qui mentirait en additionnant des millésimes.
+  case 'data_tagg':
+    return { kind: 'data_dimension', data_tagg_id: id }
   default:
     return null
   }

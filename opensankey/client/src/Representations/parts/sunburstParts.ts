@@ -25,6 +25,7 @@
 // `foldNarrowChildren`) est fabriqué par le tracé, pas par le modèle.
 
 import type { Type_SunburstNode, Type_SunburstTree } from '../../Charts/SunburstHierarchy'
+import { parseMemberSectorId } from '../../Charts/memberSectorId'
 import type { Type_PartInput } from './buildParts'
 import { NO_SUBJECT } from './PartSubject'
 import type { Type_NamedSubject, Type_PartSubject } from './PartSubject'
@@ -39,6 +40,10 @@ export interface Type_SunburstPartsSource {
   // os#1509 — une couronne CROISÉE désigne des FLUX : ses secteurs portent l'id d'un flux du
   // document, et c'est ici qu'on le retrouve quand aucun nœud ne porte cet id.
   links_dict?: { [link_id: string]: Type_NamedSubject }
+  // os#1511 — une couronne bâtie sur une dimension de DONNÉES désigne des MEMBRES. Leur
+  // identifiant de secteur est préfixé (cf. `memberSectorId`) parce qu'un identifiant de membre
+  // n'est unique que dans sa dimension : c'est le couple (dimension, membre) qui désigne.
+  data_taggs_dict?: { [tagg_id: string]: { tags_dict: { [tag_id: string]: Type_NamedSubject } } }
 }
 
 /** Le suffixe que `buildSunburstTree` donne au secteur de complément (mode « valeur propre »). */
@@ -59,6 +64,14 @@ export const sunburstPartSubject = (
   // Ni l'un ni l'autre n'est de trop — un secteur replié par le tracé porte le drapeau sans le
   // suffixe, et un arbre relu d'un enregistrement porte le suffixe sans forcément le drapeau.
   if (sector.is_residual === true || sector.id.endsWith(SUNBURST_RESIDUAL_SUFFIX)) return NO_SUBJECT
+  // os#1511 — un secteur de dimension de données porte un identifiant préfixé, qu'aucun registre
+  // d'éléments ne peut contenir : on le résout AVANT les deux autres, et un membre introuvable ne
+  // retombe pas sur un nœud homonyme.
+  const member_ref = parseMemberSectorId(sector.id)
+  if (member_ref !== null) {
+    const tag = source.data_taggs_dict?.[member_ref.dimension_id]?.tags_dict[member_ref.member_id]
+    return tag !== undefined ? { kind: 'tag', tag } : NO_SUBJECT
+  }
   const node = source.nodes_dict[sector.id]
   // Le nœud LUI-MÊME, pas une copie de son nom : la part suit ce que le document dit, et un
   // renommage ailleurs change ce qu'elle affiche tant qu'elle ne porte pas d'alias.
