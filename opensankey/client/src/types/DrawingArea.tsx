@@ -59,6 +59,7 @@ import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
+import { disaggregateDimensionNodes } from '../Algorithms/DimensionDisaggregation'
 import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
@@ -1389,6 +1390,22 @@ export class Class_DrawingArea {
     this.nodePositioning.arrangeTrade(true)
     // Flux éclatés : reconstruits du drapeau des dimensions, jamais lus dans le fichier.
     this.rebuildSplitLinks()
+    // Nœuds de membre : refaits de l'attachement du nœud à sa dimension, jamais lus non plus.
+    this.rebuildDimensionNodes()
+  }
+
+  /**
+   * os#1511 — Refait les nœuds de membre des nœuds d'axe, au niveau courant de leur dimension
+   * (cf. `Class_NodeElement.driving_dimension`) — après un chargement, après un changement de
+   * niveau. Idempotent : elle retire les engendrés du tour précédent avant d'engendrer.
+   *
+   * Rien n'est écrit dans le fichier : c'est cet appel, et lui seul, qui fait exister les nœuds
+   * de membre. Un diagramme sans nœud d'axe n'y perd rien.
+   */
+  public rebuildDimensionNodes() {
+    this.withBypassRedraws(() => {
+      disaggregateDimensionNodes(this.sankey)
+    }, false)
   }
 
   /**

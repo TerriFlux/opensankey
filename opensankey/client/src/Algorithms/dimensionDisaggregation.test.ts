@@ -216,7 +216,7 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
     expect(flux.length).toBe(1)
   })
 
-  test('recharger un fichier enregistre desagrege ne double rien', () => {
+  test('recharger un fichier enregistre desagrege rend le MEME dessin, sans rien doubler', () => {
     const { app, sankey, pays } = monter()
     pays.selectLevel(2)
     disaggregateDimensionNodes(sankey)
@@ -225,10 +225,10 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
     const relu = new Class_ApplicationData(false)
     relu.fromJSON(json)
     const sankey_relu = relu.drawing_area.sankey
-    // Au chargement, rien n est encore engendre : le fichier ne porte que l axe.
-    expect(sankey_relu.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(0)
-    const groupe = sankey_relu.data_taggs_dict['pays'] as unknown as Class_DataTagGroup
-    groupe.selectLevel(2)
+    // Le fichier ne porte que l axe ; c est `afterFromJSON` qui refabrique les engendres, au
+    // niveau enregistre. Trois, pas six : la garde du portillon tient au chargement aussi.
+    expect(nomsEngendres(sankey_relu)).toEqual(['Espagne', 'France', 'Maroc'])
+    // Et le second tour, celui d un changement de niveau, n ajoute toujours rien.
     expect(disaggregateDimensionNodes(sankey_relu)).toBe(3)
     expect(sankey_relu.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(3)
   })
