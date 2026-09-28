@@ -131,8 +131,10 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
     const n_pays = sankey.addNewNodeWithName('Monde')
     n_produits.setPosXY(120, 320)
     n_pays.setPosXY(760, 320)
-    // Chaque noeud EST son axe : il se redecoupe sur les enfants du membre choisi.
-    n_produits.driving_dimension = produit
+    // UN SEUL noeud attache, celui des pays. Attacher les deux fait se CROISER les deux
+    // decoupes — 14 filieres x 8 regions = 270 flux des l ouverture, 124 s de chargement
+    // (mesure du 28/09). Le croisement n est pas faux, mais il ne doit pas etre l etat
+    // d ouverture : on part du plus agrege, et l on ouvre ce qu on veut voir.
     n_pays.driving_dimension = pays
 
     const exporte = sankey.addNewLinkWithId('exporte', n_produits, n_pays)

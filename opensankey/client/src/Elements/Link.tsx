@@ -34,6 +34,7 @@ import type {
   Class_Tag,
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
+import { isGeneratedMemberId } from './GeneratedMemberMark'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -338,10 +339,21 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
     // Values
     this._values = this.createValue(this)
-    drawing_area.sankey.data_taggs_list
-      .forEach(data_tagg => {
-        this._values = this._values.expand(data_tagg as Class_DataTagGroup)
-      })
+    // os#1511 — un flux ENGENDRÉ est un POINT du cube, pas un cube. Il naît d'un choix de
+    // coordonnées, sa valeur est donc déjà résolue : il porte un scalaire, et déplier les
+    // dimensions ne lui apporterait rien.
+    //
+    // Ce n'est pas qu'une économie de principe. L'arbre est DENSE — un enfant par membre, à
+    // chaque étage —, donc sur le SOCLE « Pays partenaires » (148 produits × 263 pays × 3
+    // années) un flux neuf alloue 116 772 feuilles, soit 318 Mo. La désagrégation en crée un
+    // par membre : une vingtaine au chargement, et le navigateur mourait avant d'afficher quoi
+    // que ce soit. Mesuré le 28/09.
+    if (!isGeneratedMemberId(id)) {
+      drawing_area.sankey.data_taggs_list
+        .forEach(data_tagg => {
+          this._values = this._values.expand(data_tagg as Class_DataTagGroup)
+        })
+    }
     // Source
     this._source = source
     this._source_visibility_fingerprint = source.visibility_fingerprint
@@ -2464,13 +2476,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * Un flux sans aucune dimension porte sa valeur directement : il contribue pour lui-même.
    */
   public get contributing_values(): Class_LinkValue[] | null {
+    return this.contributingValuesFor(this.selected_data_tags_list as Class_DataTag[])
+  }
+
+  /**
+   * os#1511 — les valeurs contributrices pour une coordonnée DONNÉE, sans passer par la
+   * sélection.
+   *
+   * La désagrégation lit un membre après l'autre. Le faire en posant la sélection coûtait
+   * 36 s sur le SOCLE pour huit membres : chaque bascule parcourt les 263 étiquettes de l'axe
+   * et invalide au passage les caches de visibilité de tout le diagramme. Viser la coordonnée
+   * directement ne touche à rien et ne laisse rien à restaurer.
+   */
+  public contributingValuesFor(data_tags: Class_DataTag[]): Class_LinkValue[] | null {
     if (this._values instanceof Class_LinkValue) {
       if (this._values.structurally_absent) return null
       return [this._values]
     }
-    return this._values.getContributingValues(
-      this.selected_data_tags_list as Class_DataTag[]
-    ) as Class_LinkValue[] | null
+    return this._values.getContributingValues(data_tags) as Class_LinkValue[] | null
   }
 
   /**
