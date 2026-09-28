@@ -4,7 +4,9 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
-import { buildDataDimensionTree, memberSectorId, parseMemberSectorId } from './DataDimensionHierarchy'
+import {
+  buildDataDimensionTree, dataDimensionExpandedDownToLevel, memberSectorId, parseMemberSectorId
+} from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
 // jest 27 / jsdom n expose pas structuredClone (utilise par Link.copyFrom)
@@ -280,6 +282,33 @@ describe('os#1511 — un NOEUD se decompose aussi bien qu un flux', () => {
     const m = monter()
     const arbre = buildDataDimensionTree({ kind: 'node', node: m.cible }, m.groupe)
     expect(arbre?.roots[0].label).toBe('Cible')
+  })
+})
+
+// os#1511 — LE SELECTEUR DE NIVEAU ECRIT L ENSEMBLE DES SECTEURS OUVERTS, il ne s y superpose pas.
+// C est ce qui fait que le selecteur et le clic cooperent : apres « niveau 3 », shift+clic referme
+// une branche et le reste tient. Deux regles auraient rouvert ce que le clic venait de fermer.
+
+describe('os#1511 — le niveau d une dimension decoupee', () => {
+  test('le niveau 0 n ouvre rien : le premier anneau est deja la', () => {
+    const m = monter()
+    expect(dataDimensionExpandedDownToLevel(m.groupe, 0).size).toBe(0)
+  })
+
+  test('voir le niveau 1 demande d ouvrir les membres du niveau 0', () => {
+    const m = monter()
+    expect([...dataDimensionExpandedDownToLevel(m.groupe, 1)])
+      .toEqual([memberSectorId(m.groupe.id, m.produits.id)])
+  })
+
+  test('voir le niveau 2 ouvre aussi les membres du niveau 1', () => {
+    const m = monter()
+    const ouverts = dataDimensionExpandedDownToLevel(m.groupe, 2)
+    expect(ouverts.has(memberSectorId(m.groupe.id, m.produits.id))).toBe(true)
+    expect(ouverts.has(memberSectorId(m.groupe.id, m.cereales.id))).toBe(true)
+    expect(ouverts.has(memberSectorId(m.groupe.id, m.lait.id))).toBe(true)
+    // Les feuilles ne s ouvrent pas : elles n ont rien dessous.
+    expect(ouverts.has(memberSectorId(m.groupe.id, m.ble.id))).toBe(false)
   })
 })
 
