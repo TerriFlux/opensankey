@@ -264,3 +264,21 @@ describe('os#1511 — une bande sur un membre parent vaut la somme de ses feuill
     expect(bandes.map(b => b.id)).toEqual(['lait'])
   })
 })
+
+// os#1511 — UNE dimension se dessine en NOEUDS, les autres en bandes (decision du 28/09).
+// « Sur les noeuds dupliques, le mode multiple fait apparaitre des noeuds au lieu de faire
+// apparaitre des bandes. »
+
+describe('os#1511 — une dimension attachee ne fait pas de bandes', () => {
+  test('en choix multiple, une dimension ATTACHEE n en produit aucune', () => {
+    const m = monter()
+    m.groupe.banner = 'multi'
+    m.groupe.tags_list.forEach(t => t.setUnSelected())
+    m.cereales.setSelected()
+    m.lait.setSelected()
+    expect(m.lien.tagged_value_bands.length).toBe(2)
+    // On attache la cible a cet axe : ses membres deviennent des noeuds, plus des bandes.
+    m.lien.target.driving_dimension = m.groupe
+    expect(m.lien.tagged_value_bands).toEqual([])
+  })
+})

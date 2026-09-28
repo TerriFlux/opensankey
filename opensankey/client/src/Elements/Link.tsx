@@ -1075,8 +1075,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
     //    plus aucun lien fantôme dans le modèle).
+    // os#1511 — une dimension ATTACHÉE à un nœud fait des NŒUDS, jamais des bandes. Sans cette
+    // exclusion, la mettre en choix multiple produisait les deux à la fois pour le même axe.
+    // Une seule dimension se dessine en nœuds ; les autres restent en bandes.
     const multi_dim = this.sankey.data_taggs_list.find(tagg =>
-      tagg.banner === 'multi' && tagg.tags_list.length > 1)
+      tagg.banner === 'multi'
+      && tagg.tags_list.length > 1
+      && !this.sankey.nodes_list.some(node => node.driving_dimension === tagg))
     if (multi_dim) {
       const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
       multi_dim.selected_tags_list.forEach(tag => {
