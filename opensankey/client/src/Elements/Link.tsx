@@ -34,7 +34,7 @@ import type {
   Class_Tag,
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
-import { isGeneratedMemberId } from './GeneratedMemberMark'
+import { isGeneratedMemberId, MEMBER_NODE_MARK } from './GeneratedMemberMark'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -1084,19 +1084,35 @@ export class Class_LinkElement extends Class_LinkAttribute {
       && !this.sankey.nodes_list.some(node => node.driving_dimension === tagg))
     if (multi_dim) {
       const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
+      // os#1511 — UN FLUX ENGENDRÉ ne porte qu'un scalaire : il naît d'un choix de coordonnées
+      // et ne sait pas se redécouper par un autre axe. Ses bandes se lisent donc sur le flux
+      // D'ORIGINE, à la coordonnée de son membre. Sans cela, chaque bande valait le total du
+      // flux — deux filières à 1 385 kt chacune au lieu de 1 280 et 105.
+      const morceaux = this.id.split(MEMBER_NODE_MARK)
+      const origine = morceaux.length > 1 ? this.sankey.links_dict[morceaux[0]] : undefined
+      const membre_axe = morceaux.length > 1
+        ? this.sankey.data_taggs_list
+          .map(g => g.tags_dict[morceaux[1]] as Class_DataTag | undefined)
+          .find(t => t !== undefined)
+        : undefined
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-        let v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+        let v = (origine !== undefined && membre_axe !== undefined)
+          ? null
+          : (leaf === null ? null : (leaf.valueData ?? leaf.valueResult))
         // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
         // adresse un point du cube : sur une dimension hiérarchisée, « Europe » n'y porte rien,
         // la donnée étant sur l'Espagne et l'Italie. Sans ce repli, cocher Europe et Afrique ne
         // dessinait AUCUNE bande — et comme l'épaisseur du flux vient des bandes, le flux
         // disparaissait entièrement. Constaté à l'écran le 28/09.
         if (v === null || v <= 0) {
-          const coordonnee = (this.selected_data_tags_list as Class_DataTag[])
-            .filter(autre => autre.group.id !== multi_dim.id)
+          const porteur = origine ?? this
+          const coordonnee = (porteur.selected_data_tags_list as Class_DataTag[])
+            .filter(autre => autre.group.id !== multi_dim.id
+              && (membre_axe === undefined || autre.group.id !== membre_axe.group.id))
             .concat([tag as Class_DataTag])
-          const contributions = this.contributingValuesFor(coordonnee)
+            .concat(membre_axe !== undefined ? [membre_axe] : [])
+          const contributions = porteur.contributingValuesFor(coordonnee)
           if (contributions !== null) {
             const somme = contributions.reduce((total, valeur) => total + (
               this._reads_collected_layer

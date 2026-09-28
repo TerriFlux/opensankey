@@ -459,7 +459,25 @@ export class Class_ElementValueTree {
     if (data_tags.length === 0) return null
     const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
     const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
-    if (matching_tags.length !== 1) return null
+    if (matching_tags.length === 0) return null
+    // os#1511 — PLUSIEURS MEMBRES VISÉS sur cet axe : on additionne ce que chacun apporte.
+    //
+    // `getValueForDataTags` adresse un point et refuse ce cas ; les contributions, elles, sont
+    // faites pour être sommées. Sans cela, mettre une dimension en choix multiple pendant qu'une
+    // autre pilote des nœuds effaçait le flux entier : le nœud engendré demandait sa valeur avec
+    // deux filières visées, et n'obtenait rien. Constaté à l'écran le 28/09.
+    //
+    // Les membres visés sont des frères — l'interface interdit de mêler deux niveaux — donc
+    // rien n'est compté deux fois. Mêler un parent et son enfant le ferait, et c'est la raison
+    // de cet interdit.
+    if (matching_tags.length > 1) {
+      const cumul: Class_ElementValue[] = []
+      matching_tags.forEach(membre => {
+        const part = this.getContributingValues([membre, ...remaining_tags])
+        if (part !== null) cumul.push(...part)
+      })
+      return cumul.length > 0 ? cumul : null
+    }
     const member = matching_tags[0]
 
     // 1. Ce que porte le membre visé lui-même.
