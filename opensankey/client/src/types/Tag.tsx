@@ -846,6 +846,21 @@ export class Class_DataTag extends Class_ProtoTag {
   // lui (et lui seul) qui fait participer le tag à la résolution du porteur d'échelle
   // (cf. ScaleResolution.resolveScaleCarrier).
   private _has_own_scale: boolean = false
+
+  // os#1511 lot 1 — PARENT du membre dans la hiérarchie de sa dimension.
+  //
+  // Une dimension est un axe muni d'une hiérarchie de NIVEAUX (Filière → bruts/transformés →
+  // HS4 ; Monde → régions → sous-régions → pays). La parenté est portée par le MEMBRE, pas
+  // par les éléments : « HS4 1001 est un enfant de Céréales brutes » est une propriété de la
+  // donnée, vraie indépendamment de tout nœud qui l'afficherait. C'est l'inverse du choix
+  // historique côté nœuds, où chaque nœud déclare son `parent_name` (`NodeDimension`) — donc
+  // où une hiérarchie de 200 membres est répétée sur 200 nœuds, avec le risque qu'un nœud
+  // contredise la donnée.
+  //
+  // Stocké par ID et résolu paresseusement : à `fromJSON`, le parent peut ne pas encore
+  // exister (l'ordre des membres dans le JSON n'est pas garanti). On ne garde donc pas la
+  // référence mais l'id, et `parent` résout au moment de la lecture.
+  private _parent_id: string | undefined = undefined
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -884,6 +899,9 @@ export class Class_DataTag extends Class_ProtoTag {
     // d'unité restent régis par `scale` seul, comme toujours). Absente d'un fichier
     // legacy → false → comportement strictement inchangé.
     if (this._has_own_scale) json_object['scale_owned'] = true
+    // os#1511 — clé ADDITIVE, écrite seulement par un membre qui a un parent. Absente d'un
+    // fichier sans hiérarchie → dimension plate → comportement strictement inchangé.
+    if (this._parent_id !== undefined) json_object['parent'] = this._parent_id
   }
 
   /**
@@ -896,6 +914,58 @@ export class Class_DataTag extends Class_ProtoTag {
     super._copyFrom(tag_to_copy)
     this._scale = (tag_to_copy as Class_DataTag)._scale
     this._has_own_scale = (tag_to_copy as Class_DataTag)._has_own_scale
+    // os#1511 — l'id du parent se recopie tel quel : la copie vit dans une dimension dont les
+    // membres portent les MÊMES ids (c'est l'hypothèse de tout `copyFrom` de tag ici).
+    this._parent_id = (tag_to_copy as Class_DataTag)._parent_id
+  }
+
+  // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
+
+  /**
+   * Membre parent dans la hiérarchie de la dimension, `undefined` si ce membre est une
+   * racine — ou si l'id enregistré ne désigne aucun membre du groupe (fichier incohérent :
+   * on préfère une racine à un parent fantôme).
+   */
+  public get parent(): Class_DataTag | undefined {
+    if (this._parent_id === undefined) return undefined
+    const parent = this._group.tags_dict[this._parent_id] as Class_DataTag | undefined
+    // Un membre ne peut pas être son propre parent : garde-fou contre un JSON malformé, qui
+    // ferait boucler `ancestors` et `leaves` indéfiniment.
+    return (parent !== undefined && parent !== this) ? parent : undefined
+  }
+
+  public set parent(parent: Class_DataTag | undefined) {
+    if (parent === this) return
+    // Refus d'un CYCLE : se rendre descendant de soi-même rendrait tout parcours infini.
+    if (parent !== undefined && parent.hasAncestor(this)) return
+    this._parent_id = parent?.id
+  }
+
+  /** Vrai si `candidate` est un ancêtre de ce membre (remontée par les parents). */
+  public hasAncestor(candidate: Class_DataTag): boolean {
+    let current = this.parent
+    while (current !== undefined) {
+      if (current === candidate) return true
+      current = current.parent
+    }
+    return false
+  }
+
+  /** Membres du groupe dont le parent est CE membre (un seul cran, pas la descendance). */
+  public get children(): Class_DataTag[] {
+    return (Object.values(this._group.tags_dict) as Class_DataTag[])
+      .filter(tag => tag.parent === this)
+  }
+
+  /**
+   * FEUILLES de ce membre : lui-même s'il n'a pas d'enfant, sinon les feuilles de ses
+   * descendants. C'est l'ensemble sur lequel se calcule l'agrégat d'un membre parent quand la
+   * donnée n'est portée qu'au niveau fin.
+   */
+  public get leaves(): Class_DataTag[] {
+    const children = this.children
+    if (children.length === 0) return [this]
+    return children.flatMap(child => child.leaves)
   }
 
   /**
@@ -913,6 +983,12 @@ export class Class_DataTag extends Class_ProtoTag {
     this._scale = getNumberFromJSON(json_object, 'scale', this._scale)
     // sa#283 — cf. _toJSON : absent (tous les fichiers legacy) → false.
     this._has_own_scale = json_object['scale_owned'] === true
+    // os#1511 — cf. _toJSON. On garde l'ID sans le résoudre : au chargement, le membre parent
+    // peut ne pas encore être construit. Une chaîne vide vaut absence, et un id qui ne
+    // désigne aucun membre laisse le membre RACINE plutôt que de fabriquer un parent fantôme
+    // (même règle qu'au chargement d'une hiérarchie de nœuds, #193).
+    const raw_parent = json_object['parent']
+    this._parent_id = (typeof raw_parent === 'string' && raw_parent !== '') ? raw_parent : undefined
   }
 
 

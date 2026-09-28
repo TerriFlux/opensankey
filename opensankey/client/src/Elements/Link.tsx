@@ -2452,6 +2452,28 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * os#1511 lot 1 — VALEURS CONTRIBUTRICES de ce flux pour la sélection courante, agrégat
+   * compris. Pendant de `value`, qui n'adresse qu'un POINT du cube : depuis qu'une dimension
+   * peut porter une hiérarchie, viser un membre PARENT doit rendre ce que portent ses
+   * feuilles.
+   *
+   * `null` signifie ABSENT — rien à dessiner — et se distingue d'un zéro, qui est une valeur.
+   * La LISTE est rendue plutôt que sa somme : la couche à lire (donnée saisie ou résultat
+   * réconcilié) dépend du flux, et `valueCurrent` sait déjà la choisir.
+   *
+   * Un flux sans aucune dimension porte sa valeur directement : il contribue pour lui-même.
+   */
+  public get contributing_values(): Class_LinkValue[] | null {
+    if (this._values instanceof Class_LinkValue) {
+      if (this._values.structurally_absent) return null
+      return [this._values]
+    }
+    return this._values.getContributingValues(
+      this.selected_data_tags_list as Class_DataTag[]
+    ) as Class_LinkValue[] | null
+  }
+
+  /**
    * Épaisseur cible (px) de ce flux quand il est la référence d'échelle du view tag COURANT
    * (cf. DrawingArea.applyViewTagScaleReference). undefined si ce flux n'est pas la référence
    * du view tag courant, ou en « vue complète » (aucun view tag sélectionné). La donnée vit

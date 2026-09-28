@@ -7,7 +7,7 @@ import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkVa
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
-import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
+import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
 
 // #486 - separateurs de la feuille Etiquettes du format Excel. Le « / » separe les
@@ -1190,6 +1190,21 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // dans le mode de la dimension que l'on manipule.
   private _position_mode: Type_PositionMode = 'absolute'
 
+  // os#1511 lot 1 — NIVEAUX de la dimension, du plus AGRÉGÉ au plus FIN
+  // (['filiere', 'transformation', 'produit']). Liste vide = dimension plate, comportement
+  // d'avant strictement inchangé.
+  //
+  // Les niveaux ne font que NOMMER des profondeurs : le niveau d'un membre se DÉDUIT du
+  // nombre de ses ancêtres, il ne se déclare pas. Deux sources (le membre dirait son niveau,
+  // et sa parenté dirait autre chose) finiraient par se contredire — c'est la même raison qui
+  // fait porter la parenté par le membre plutôt que par les nœuds.
+  private _levels: string[] = []
+
+  // Niveau COURANT, par index dans `_levels`. Un niveau par DIMENSION (décision de Julien du
+  // 27/09) : on veut pouvoir croiser un axe fin avec un axe grossier — « les céréales, par
+  // pays ». Un curseur de détail global l'interdirait.
+  private _current_level_index: number = 0
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1246,6 +1261,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // #370 — le mode d'affichage voyage avec la dimension (ancien #369 : il n'était
     // persisté nulle part et retombait sur « absolu » à chaque ouverture).
     json_object['position_mode'] = this._position_mode
+    // os#1511 — clés ADDITIVES, écrites seulement par une dimension hiérarchisée. Absentes
+    // d'un fichier plat → aucun niveau → comportement inchangé.
+    if (this._levels.length > 0) {
+      json_object['levels'] = [...this._levels]
+      json_object['current_level'] = this._current_level_index
+    }
   }
 
   protected _fromJSON(
@@ -1264,6 +1285,127 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // `parametric`, qui n'est pas proposé par le sélecteur) est ignorée de même.
     const raw_position_mode = getStringFromJSON(json_object, 'position_mode', this._position_mode)
     if (isPositionMode(raw_position_mode)) this._position_mode = raw_position_mode
+    // os#1511 — cf. _toJSON. On ne retient que des noms de niveaux non vides et distincts :
+    // un doublon rendrait le sélecteur ambigu, et un niveau vide ne serait pas nommable.
+    const raw_levels = json_object['levels']
+    if (Array.isArray(raw_levels)) {
+      const vus = new Set<string>()
+      this._levels = raw_levels
+        .filter((n): n is string => typeof n === 'string' && n !== '')
+        .filter(n => !vus.has(n) && (vus.add(n), true))
+    }
+    // Un index hors des niveaux existants est ramené dans les bornes plutôt qu'ignoré : un
+    // fichier dont la hiérarchie a été raccourcie ne doit pas rester bloqué sur un niveau
+    // qui n'existe plus.
+    this._current_level_index = Math.min(
+      Math.max(0, getNumberFromJSON(json_object, 'current_level', this._current_level_index)),
+      Math.max(0, this._levels.length - 1)
+    )
+  }
+
+  // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
+
+  /** Noms des niveaux, du plus agrégé au plus fin. Vide = dimension plate. */
+  public get levels(): string[] { return [...this._levels] }
+
+  public set levels(noms: string[]) {
+    const vus = new Set<string>()
+    this._levels = noms
+      .filter(n => n !== '')
+      .filter(n => !vus.has(n) && (vus.add(n), true))
+    if (this._current_level_index > this._levels.length - 1) {
+      this._current_level_index = Math.max(0, this._levels.length - 1)
+    }
+  }
+
+  /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
+  public get is_hierarchical(): boolean { return this._levels.length > 1 }
+
+  public get current_level_index(): number { return this._current_level_index }
+
+  public set current_level_index(index: number) {
+    if (this._levels.length === 0) return
+    this._current_level_index = Math.min(Math.max(0, index), this._levels.length - 1)
+  }
+
+  /** Nom du niveau courant, `undefined` pour une dimension plate. */
+  public get current_level(): string | undefined {
+    return this._levels[this._current_level_index]
+  }
+
+  /** Profondeur d'un membre = son nombre d'ancêtres. 0 pour une racine. */
+  public depthOf(tag: Class_DataTag): number {
+    let depth = 0
+    let current = tag.parent
+    while (current !== undefined) {
+      depth++
+      current = current.parent
+    }
+    return depth
+  }
+
+  /**
+   * Membres à MONTRER au niveau `index` (le niveau courant par défaut).
+   *
+   * Règle des hiérarchies DÉSÉQUILIBRÉES, et c'est le point à ne pas rater : toutes les
+   * branches n'ont pas la même profondeur (un pays sans sous-région, une filière sans
+   * distinction bruts/transformés). On montre donc un membre dont la profondeur vaut le
+   * niveau demandé, ET tout membre MOINS PROFOND qui n'a pas d'enfant — sinon la donnée
+   * portée par une branche courte disparaîtrait de l'écran en descendant d'un niveau, et les
+   * totaux cesseraient d'être justes. Un membre PLUS profond, lui, est représenté par son
+   * ancêtre au niveau demandé : il ne se montre pas.
+   *
+   * Dimension plate : tous les membres, comme avant.
+   */
+  public membersAtLevel(index: number = this._current_level_index): Class_DataTag[] {
+    const tags = Object.values(this._tags) as Class_DataTag[]
+    if (this._levels.length === 0) return tags
+    const cible = Math.min(Math.max(0, index), this._levels.length - 1)
+    return tags.filter(tag => {
+      const depth = this.depthOf(tag)
+      if (depth === cible) return true
+      return depth < cible && tag.children.length === 0
+    })
+  }
+
+  /**
+   * os#1511 lot 1 — Change le NIVEAU courant et réaccorde la sélection.
+   *
+   * Changer de niveau sans toucher à la sélection laisserait le diagramme vide : le membre
+   * choisi n'est en général pas montré au nouveau niveau. On réaccorde donc, en GARDANT LA
+   * LIGNÉE — c'est ce que le lecteur attend, et cela vaut dans les deux sens :
+   *
+   * - en remontant, on prend l'ANCÊTRE visible du membre courant (de « Blé » on arrive à
+   *   « Céréales », pas sur le premier membre venu) ;
+   * - en descendant, son premier DESCENDANT visible (de « Céréales » on entre dans « Blé »).
+   *
+   * À défaut de lignée — aucun membre sélectionné, ou une branche qui ne mène nulle part —
+   * on prend le premier membre visible, pour ne jamais rendre un écran vide.
+   */
+  public selectLevel(index: number) {
+    if (this._levels.length === 0) return
+    this._current_level_index = Math.min(Math.max(0, index), this._levels.length - 1)
+    const visibles = this.membersAtLevel(this._current_level_index)
+    if (visibles.length === 0) return
+
+    const courant = this.selected_tags_list[0] as Class_DataTag | undefined
+    let remplacant = visibles[0]
+    if (courant !== undefined) {
+      // En remontant : soi-même s'il est encore montré, sinon le premier ancêtre qui l'est.
+      let lignee: Class_DataTag | undefined = courant
+      let trouve: Class_DataTag | undefined = undefined
+      while (lignee !== undefined && trouve === undefined) {
+        if (visibles.includes(lignee)) trouve = lignee
+        lignee = lignee.parent
+      }
+      // En descendant : le premier descendant montré.
+      if (trouve === undefined) {
+        trouve = visibles.find(membre => membre.hasAncestor(courant))
+      }
+      if (trouve !== undefined) remplacant = trouve
+    }
+    this.tags_list.forEach(tag => tag.setUnSelected())
+    remplacant.setSelected()
   }
 
   // PUBLIC METHODS =====================================================================
