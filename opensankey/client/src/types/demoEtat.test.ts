@@ -76,3 +76,33 @@ maybe('os#1511 — une dimension en bandes pendant que l autre pilote des noeuds
     expect(bandes.reduce((t, b) => t + b.value, 0)).toBe(1385)
   }, 300000)
 })
+
+maybe('os#1511 — Oleagineux avec les deux niveaux de transformation', () => {
+  test('la selection exacte de Julien, bande par bande', () => {
+    const json = JSON.parse(zlib.gunzipSync(fs.readFileSync(FICHIER as string)).toString('utf-8'))
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(json)
+    const sankey = app.drawing_area.sankey
+    const filiere = sankey.data_taggs_dict['filiere'] as unknown as Class_DataTagGroup
+    const pays = sankey.data_taggs_dict['pays'] as unknown as Class_DataTagGroup
+    filiere.banner = 'multi'
+    filiere.selectMembers(['oleagineux', 'cereales-brutes', 'cereales-transformees'])
+    pays.selectAllAtLevel(0)
+    app.drawing_area.rebuildDimensionNodes()
+
+    // eslint-disable-next-line no-console
+    console.log('  coches : ' + filiere.selected_tags_list.map(t => t.id).join(' '))
+    const origine = sankey.links_list.find(l => !l.id.includes('--par--'))
+    filiere.selected_tags_list.forEach(tag => {
+      const coord = [tag, pays.tags_dict['monde']]
+      const c = origine?.contributingValuesFor(coord as never)
+      const somme = (c ?? []).reduce((t, v) => t + (v.valueData ?? 0), 0)
+      // eslint-disable-next-line no-console
+      console.log(`    ${tag.id} -> ${(c ?? null) === null ? 'ABSENT' : `${(c ?? []).length} valeurs, somme ${somme}`}`)
+    })
+    const dessine = sankey.links_list.filter(l => l.is_visible && l.id.includes('--par--'))
+    // eslint-disable-next-line no-console
+    console.log('  bandes : ' + dessine[0].tagged_value_bands.map(b => `${b.id}=${b.value}`).join(' '))
+    expect(dessine.length).toBe(1)
+  }, 300000)
+})
