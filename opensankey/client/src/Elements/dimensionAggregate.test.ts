@@ -282,3 +282,33 @@ describe('os#1511 — une dimension attachee ne fait pas de bandes', () => {
     expect(m.lien.tagged_value_bands).toEqual([])
   })
 })
+
+// os#1511 — UNE DIMENSION EN BANDES PENDANT QU UNE AUTRE PILOTE DES NOEUDS. Julien a mis
+// « Filiere » en choix multiple, coche deux filieres, et le flux a disparu : le noeud engendre
+// demandait sa valeur avec DEUX filieres visees, et n obtenait rien.
+
+describe('os#1511 — plusieurs membres vises sur un axe s additionnent', () => {
+  test('deux membres vises rendent la somme de leurs contributions', () => {
+    const m = monter()
+    viser(m.groupe, m.ble)
+    m.mais.setSelected()
+    expect(sommeSaisie(m.lien.contributing_values)).toBe(42)
+  })
+
+  test('deux PARENTS vises passent aussi par leurs feuilles', () => {
+    const m = monter()
+    viser(m.groupe, m.cereales)
+    m.lait.setSelected()
+    // Cereales = 30 + 12, Lait = 7.
+    expect(sommeSaisie(m.lien.contributing_values)).toBe(49)
+  })
+
+  test('deux membres dont aucun n apporte rien restent ABSENTS', () => {
+    const m = monter()
+    poser(m.lien, m.ble, null as unknown as number)
+    poser(m.lien, m.mais, null as unknown as number)
+    viser(m.groupe, m.ble)
+    m.mais.setSelected()
+    expect(m.lien.contributing_values).toBeNull()
+  })
+})
