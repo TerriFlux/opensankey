@@ -24,17 +24,15 @@ import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
+import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 
-/**
- * Marque qui sépare, dans l'identifiant d'un nœud engendré, le nœud d'axe de son membre.
- * Choisie longue et improbable : elle doit rester reconnaissable sur le graphe, et ne jamais
- * apparaître par hasard dans un identifiant écrit à la main ou venu d'un tableur.
- */
-export const MEMBER_NODE_MARK = '--par--'
+// La marque vit dans un module SANS dépendance : le constructeur d'un flux la lit aussi, pour
+// ne pas déplier de cube sur un flux engendré, et la déclarer ici ferait un cycle d'imports.
+export { MEMBER_NODE_MARK } from '../Elements/GeneratedMemberMark'
 
 /** Identifiant du nœud qui représente `membre` pour le nœud d'axe `axe`. */
 export function memberNodeId(axe_id: string, membre_id: string): string {
-  return `${axe_id}${MEMBER_NODE_MARK}${membre_id}`
+  return `${axe_id}${MARQUE}${membre_id}`
 }
 
 /**
@@ -43,18 +41,18 @@ export function memberNodeId(axe_id: string, membre_id: string): string {
  * milieu d'une session.
  */
 export function isGeneratedMemberNode(node: Class_NodeElement): boolean {
-  return node.id.includes(MEMBER_NODE_MARK)
+  return isGeneratedMemberId(node.id)
 }
 
 /** Même reconnaissance pour un flux engendré : à sa forme, sur le graphe. */
 export function isGeneratedMemberLink(link: Class_LinkElement): boolean {
-  return link.id.includes(MEMBER_NODE_MARK)
+  return isGeneratedMemberId(link.id)
 }
 
 /** Le nœud d'axe dont `node` a été engendré, s'il en est un. */
 export function drivingNodeIdOf(node: Class_NodeElement): string | undefined {
   if (!isGeneratedMemberNode(node)) return undefined
-  return node.id.split(MEMBER_NODE_MARK)[0]
+  return node.id.split(MARQUE)[0]
 }
 
 /**
@@ -182,17 +180,15 @@ function repartir(
     if (contributions === null) return
     // L'identifiant porte la MARQUE : c'est ce qui rend le flux engendré reconnaissable sur le
     // graphe, comme son nœud, et donc effaçable au tour suivant sans tenir de registre.
-    const id = `${flux.id}${MEMBER_NODE_MARK}${membre.id}`
+    const id = `${flux.id}${MARQUE}${membre.id}`
     const nouveau = bout === 'target'
       ? sankey.addNewLinkWithId(id, autre_bout, noeud_membre)
       : sankey.addNewLinkWithId(id, noeud_membre, autre_bout)
     nouveau.copyAttrFrom(flux)
-    // Le flux engendré REPRÉSENTE un membre : sa valeur ne doit plus dépendre du membre visé.
-    // Sans cela elle vit à une coordonnée de la dimension découpée, et deux membres cochés la
-    // rendent illisible — `getValueForDataTags` n'adresse qu'un membre à la fois, donc le flux
-    // se dessinait sans valeur dès qu'on en cochait deux. On retire donc cette dimension de son
-    // arbre de valeurs ; il garde sa dépendance aux AUTRES dimensions, qui est légitime.
-    nouveau.removeDataTagGroup(membre.group as unknown as Class_DataTagGroup)
+    // Sa valeur est un SCALAIRE : un flux engendré naît d'un choix de coordonnées, donc il ne
+    // porte pas de cube (cf. le constructeur de `Class_LinkElement`, qui reconnaît la marque).
+    // Elle ne dépend ainsi d'aucune sélection — ce qui la rend lisible même quand deux membres
+    // sont cochés, là où une valeur rangée à une coordonnée ne l'était pas.
     const valeur = nouveau.value
     if (valeur !== null) {
       valeur.valueData = contributions
@@ -213,13 +209,15 @@ function repartir(
  * une valeur ne doit pas laisser le diagramme sur un autre membre que celui de l'utilisateur.
  */
 function contributionsPourMembre(flux: Class_LinkElement, membre: Class_DataTag): number | null {
-  const dimension = membre.group as unknown as Class_DataTagGroup
-  const selection_avant = dimension.tags_list.filter(tag => tag.is_selected)
-  dimension.tags_list.forEach(tag => tag.setUnSelected())
-  membre.setSelected()
-  const contributions = flux.contributing_values
-  dimension.tags_list.forEach(tag => tag.setUnSelected())
-  selection_avant.forEach(tag => tag.setSelected())
+  const dimension = membre.group
+  // La coordonnée à lire : celle de l'utilisateur, sauf sur l'axe découpé, où l'on vise CE
+  // membre. On ne pose rien dans le modèle — poser la sélection puis la rendre coûtait 36 s sur
+  // le SOCLE pour huit membres, chaque bascule parcourant les 263 étiquettes de l'axe et
+  // invalidant les caches de visibilité du diagramme entier.
+  const coordonnee = (flux.selected_data_tags_list as Class_DataTag[])
+    .filter(tag => tag.group !== dimension)
+    .concat([membre])
+  const contributions = flux.contributingValuesFor(coordonnee)
   if (contributions === null || contributions.length === 0) return null
   return contributions.reduce((total, valeur) => total + (valeur.valueData ?? 0), 0)
 }
