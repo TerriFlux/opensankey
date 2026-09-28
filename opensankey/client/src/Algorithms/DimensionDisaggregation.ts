@@ -138,13 +138,20 @@ function disaggregateOne(
   const sortants = [...axe.output_links_list]
 
   const noeuds_par_membre = new Map<string, Class_NodeElement>()
-  membres.forEach(membre => {
+  // Écart vertical entre deux membres sans position propre. Ils s'étalent dans la COLONNE de
+  // leur axe, centrés sur lui : les poser tous à sa place les empilerait en un seul tas
+  // illisible — constaté à l'écran sur le SOCLE, où aucun des 263 pays n'a de position.
+  const PAS_VERTICAL = 90
+  const milieu = (membres.length - 1) / 2
+  membres.forEach((membre, rang) => {
     const nouveau = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
-    // La géométrie vient du MEMBRE : c'est elle qui survit à la régénération. À défaut, le
-    // nœud d'axe sert de point de départ — tous les membres s'empilent alors à sa place, ce
-    // qui est au moins un endroit prévisible.
+    // La géométrie vient du MEMBRE quand il en porte une : c'est elle qui survit à la
+    // régénération, et c'est ce qu'on déplace à l'écran.
     const position = membre.position
-    nouveau.setPosXY(position?.x ?? axe.position_x, position?.y ?? axe.position_y)
+    nouveau.setPosXY(
+      position?.x ?? axe.position_x,
+      position?.y ?? (axe.position_y + (rang - milieu) * PAS_VERTICAL)
+    )
     nouveau.copyAttrFrom(axe)
     noeuds_par_membre.set(membre.id, nouveau)
   })

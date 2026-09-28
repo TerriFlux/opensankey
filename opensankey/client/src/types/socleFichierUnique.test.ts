@@ -30,6 +30,8 @@ const SORTIE = process.env.SOCLE_OUT
 
 type Type_NoeudSource = {
   name?: string,
+  x?: number,
+  y?: number,
   dimensions?: { [axe: string]: { parent_name?: string } },
 }
 type Type_FluxSource = {
@@ -69,6 +71,7 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
     const releverParents = (axe: string, cle: (nid: string) => string) => {
       const parents: { [membre: string]: string | undefined } = {}
       const noms: { [membre: string]: string } = {}
+      const places: { [membre: string]: { x: number, y: number } } = {}
       const conflits: string[] = []
       Object.entries(source.nodes).forEach(([nid, n]) => {
         if (axe_de[nid] !== axe) return
@@ -80,8 +83,13 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
         // « Andorre - Export » et « Andorre - Import » nomment le meme pays : on garde le nom
         // sans son suffixe de sens, qui n a plus lieu d etre une fois le sens porte par le flux.
         noms[membre] = (n.name ?? membre).replace(/\s*-\s*(Export|Import)$/, '')
+        // Le meme pays a deux places, une par sens : on garde celle de l EXPORT, arbitrairement
+        // mais une fois pour toutes, pour que la colonne reste droite.
+        if (n.x !== undefined && n.y !== undefined && (!(membre in places) || nid.endsWith('_Export'))) {
+          places[membre] = { x: n.x, y: n.y }
+        }
       })
-      return { parents, noms, conflits }
+      return { parents, noms, places, conflits }
     }
 
     const pays_src = releverParents(AXE_PAYS, membrePays)
@@ -103,11 +111,26 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
 
     const poserDimension = (
       id: string, nom: string,
-      src: { parents: { [m: string]: string | undefined }, noms: { [m: string]: string } },
-      noms_niveaux: string[]
+      src: {
+        parents: { [m: string]: string | undefined },
+        noms: { [m: string]: string },
+        places: { [m: string]: { x: number, y: number } },
+      },
+      noms_niveaux: string[],
+      reprendre_les_places: boolean
     ) => {
       const dim = sankey.addDataTagGroup(id, nom, false) as unknown as Class_DataTagGroup
       Object.keys(src.parents).forEach(membre => dim.addTag(src.noms[membre], membre))
+      // LA MISE EN PAGE DU FICHIER SOURCE, reprise membre par membre. Sans elle, les noeuds
+      // engendres se posent tous a l endroit de leur axe et s empilent — ce que Julien a vu a
+      // l ecran. La geometrie appartient au MEMBRE : c est ce qui la fait survivre a la
+      // regeneration des noeuds.
+      if (reprendre_les_places) {
+        Object.entries(src.places).forEach(([membre, place]) => {
+          const tag = dim.tags_dict[membre] as Class_DataTag | undefined
+          if (tag !== undefined) tag.position = place
+        })
+      }
       Object.entries(src.parents).forEach(([membre, parent]) => {
         if (parent === undefined) return
         const enfant = dim.tags_dict[membre] as Class_DataTag
@@ -120,25 +143,38 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
     }
 
     // L ORDRE compte : l arbre de valeurs porte un etage par dimension, dans cet ordre.
-    const produit = poserDimension('produit', 'Produit', produit_src, niveaux(AXE_PRODUIT))
-    const pays = poserDimension('pays', 'Pays partenaire', pays_src, niveaux(AXE_PAYS))
+    const produit = poserDimension('produit', 'Produit', produit_src, niveaux(AXE_PRODUIT), true)
+    // Les pays pilotent DEUX noeuds, l import et l export : un membre ne peut pas porter deux
+    // places. Ils s etalent donc dans la colonne de leur axe, ce qui donne les deux colonnes.
+    const pays = poserDimension('pays', 'Pays partenaire', pays_src, niveaux(AXE_PAYS), false)
     const annee = sankey.addDataTagGroup('annee', 'Année', false) as unknown as Class_DataTagGroup
     const annees = Object.keys((source.dataTags ?? {})['annee']?.tags ?? {})
     annees.forEach(an => annee.addTag(an, an))
     annee.banner = 'sequence'
 
+    // TROIS noeuds, comme le fichier source les disposait : ce qui ENTRE a gauche, les produits
+    // au centre, ce qui SORT a droite. Un seul noeud de pays melangeait les deux sens au meme
+    // endroit (demande de Julien, 28/09).
+    const n_import = sankey.addNewNodeWithName('Monde - Import')
     const n_produits = sankey.addNewNodeWithName('Produits agricoles')
-    const n_pays = sankey.addNewNodeWithName('Monde')
-    n_produits.setPosXY(120, 320)
-    n_pays.setPosXY(760, 320)
+    const n_export = sankey.addNewNodeWithName('Monde - Export')
+    n_import.setPosXY(120, 500)
+    n_produits.setPosXY(820, 500)
+    n_export.setPosXY(1520, 500)
     // UN SEUL noeud attache, celui des pays. Attacher les deux fait se CROISER les deux
     // decoupes — 14 filieres x 8 regions = 270 flux des l ouverture, 124 s de chargement
     // (mesure du 28/09). Le croisement n est pas faux, mais il ne doit pas etre l etat
     // d ouverture : on part du plus agrege, et l on ouvre ce qu on veut voir.
-    n_pays.driving_dimension = pays
+    // Les deux bouts sont l axe des pays : chacun se redecoupe dans SA colonne.
+    n_import.driving_dimension = pays
+    n_export.driving_dimension = pays
 
-    const exporte = sankey.addNewLinkWithId('exporte', n_produits, n_pays)
-    const importe = sankey.addNewLinkWithId('importe', n_pays, n_produits)
+    // L ECHELLE du fichier source : sans elle le diagramme s ouvre sans epaisseur utilisable.
+    const echelle = (source as unknown as { user_scale?: number }).user_scale
+    if (echelle !== undefined) app.drawing_area.scale = echelle
+
+    const exporte = sankey.addNewLinkWithId('exporte', n_produits, n_export)
+    const importe = sankey.addNewLinkWithId('importe', n_import, n_produits)
 
     // ---- 3. Verser les valeurs ------------------------------------------------------------
     // On vise une coordonnee en posant la selection, et on ne change que l etiquette qui varie :
@@ -183,7 +219,7 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
 
     // ---- 4. Ce qui doit etre vrai avant d ecrire -------------------------------------------
     expect(sankey.links_list.length).toBe(2)
-    expect(sankey.nodes_list.length).toBe(2)
+    expect(sankey.nodes_list.length).toBe(3)
     expect(ignores).toBe(0)
     expect(verses).toBeGreaterThan(90000)
     // Le total general de 2015, tel que le fichier source le portait sur son flux racine.
