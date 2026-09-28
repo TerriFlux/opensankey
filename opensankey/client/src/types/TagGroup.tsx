@@ -1488,9 +1488,20 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       .map(id => this._tags[id] as Class_DataTag | undefined)
       .filter((membre): membre is Class_DataTag => membre !== undefined)
     if (demandes.length === 0) return false
-    const profondeur = Math.min(this.depthOf(demandes[0]), Math.max(0, this._levels.length - 1))
-    const retenus = demandes.filter(membre =>
-      Math.min(this.depthOf(membre), Math.max(0, this._levels.length - 1)) === profondeur)
+    // Le niveau retenu est le PLUS FIN des membres demandés, et l'on garde ceux que ce niveau
+    // montre — ce qui n'est pas la même chose que « ceux de la même profondeur ».
+    //
+    // La règle des branches courtes en dépend : « Oléagineux », qui n'a pas d'enfant, se montre
+    // au niveau des transformations comme à celui des filières. Comparer les profondeurs brutes
+    // l'écartait dès qu'on le cochait avec « Céréales brutes », et il ne se dessinait pas —
+    // constaté à l'écran le 28/09. Un vrai mélange parent/enfant, lui, reste écarté : « Céréales »
+    // coché avec « Blé » tombe, sans quoi la donnée du blé compterait deux fois.
+    const plafond = Math.max(0, this._levels.length - 1)
+    const profondeur = demandes.reduce(
+      (max, membre) => Math.max(max, Math.min(this.depthOf(membre), plafond)), 0)
+    const montres = this.membersAtLevel(profondeur)
+    const retenus = demandes.filter(membre => montres.includes(membre))
+    if (retenus.length === 0) return false
     this._current_level_index = profondeur
     this.tags_list.forEach(tag => tag.setUnSelected())
     retenus.forEach(membre => membre.setSelected())
