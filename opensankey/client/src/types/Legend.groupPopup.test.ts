@@ -140,7 +140,7 @@ describe('SA#551 — clic sur le nom d\'un groupe', () => {
     expect(type.use_colors).toBe(true)
     expect(app.drawing_area.sankey.getTagGroupsOrder('node_taggs')).toEqual(['fiab', 'type', 'source'])
     expect(a.shape_color).toBe('#0000ff')
-    expect(titlesTopDown(app)).toEqual(['legend-group-type', 'legend-group-fiab', 'legend-group-source'])
+    expect(titlesTopDown(app)).toEqual(['legend-group-fiab', 'legend-group-type', 'legend-group-source'])
   })
 
   it('EN ÉDITION aussi : une zone de légende ne se règle pas, le clic ouvre donc la pop-up', () => {
