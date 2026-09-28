@@ -2469,10 +2469,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
    */
   public valueForDataTags(data_tags: Class_DataTag[]): number | null {
+    const lire = (valeur: Class_LinkValue): number | null => this._reads_collected_layer
+      ? valeur.valueData ?? null
+      : valeur.valueResult ?? ((valeur.value_option === 'value' || valeur.value_option === 'intervals') ? valeur.valueData : null) ?? null
     const v = this.valueForTags(data_tags)
-    if (!v) return null
-    if (this._reads_collected_layer) return v.valueData ?? null
-    return v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null) ?? null
+    if (v) {
+      const lu = lire(v)
+      if (lu !== null) return lu
+    }
+    // os#1511 — AGRÉGAT d'un membre PARENT, à la coordonnée DEMANDÉE.
+    //
+    // Cette lecture est celle de TOUTES les figures épinglées (`Charts/FigureNavigation`), du
+    // mode « échelle adaptée » et de l'extraction unitaire. Elle n'adressait qu'un POINT du
+    // cube : épinglée sur « Céréales », une couronne ne trouvait rien — la donnée étant portée
+    // par « Blé » et « Maïs » — et affichait zéro, pendant que le même diagramme, lui, montrait
+    // le total (`valueCurrent` fait ce repli depuis le lot 1, mais sur la SÉLECTION seulement).
+    //
+    // Même règle qu'ailleurs, et c'est elle qui compte : une valeur saisie au niveau demandé
+    // prime sur la somme de ses feuilles ; la somme n'est qu'un repli. Le parcours de l'arbre
+    // n'a lieu que si le diagramme porte vraiment une hiérarchie.
+    if (!this.sankey.data_taggs_list.some(tagg => (tagg as Class_DataTagGroup).is_hierarchical)) return null
+    const contributions = this.contributingValuesFor(data_tags)
+    if (contributions === null) return null
+    const portees = contributions.map(lire).filter((portee): portee is number => portee !== null)
+    return portees.length > 0 ? portees.reduce((total, portee) => total + portee, 0) : null
   }
 
   public valueForTag(tag: Class_DataTag | undefined) {
