@@ -221,6 +221,51 @@ describe('os#1511 — l agregat entre dans le DESSIN', () => {
   })
 })
 
+// os#1511 — CE QU UNE FIGURE EPINGLEE LIT. `valueCurrent` suit la SELECTION ; toutes les figures,
+// elles, lisent par `valueForDataTags` une coordonnee EPINGLEE, sans toucher a la selection
+// (os#1231). Cette lecture n adressait qu un POINT du cube : epinglee sur « Cereales », une
+// couronne n y trouvait rien et affichait zero, pendant que le meme diagramme montrait le total.
+// C est aussi la lecture du mode « echelle adaptee » et de l extraction unitaire.
+
+describe('os#1511 — une figure epinglee sur un parent lit l agregat', () => {
+  test('la coordonnee d un PARENT rend la somme de ses feuilles', () => {
+    const m = monter()
+    expect(m.lien.valueForDataTags([m.cereales])).toBe(42)
+    expect(m.lien.valueForDataTags([m.produits])).toBe(49)
+  })
+
+  test('une FEUILLE garde sa valeur propre, le repli ne s en mele pas', () => {
+    const m = monter()
+    expect(m.lien.valueForDataTags([m.ble])).toBe(30)
+  })
+
+  test('une valeur SAISIE au niveau du parent prime sur la somme de ses feuilles', () => {
+    const m = monter()
+    poser(m.lien, m.cereales, 100)
+    expect(m.lien.valueForDataTags([m.cereales])).toBe(100)
+  })
+
+  test('la lecture epinglee ne depend pas de la selection courante et ne la deplace pas', () => {
+    const m = monter()
+    viser(m.groupe, m.ble)
+    expect(m.lien.valueForDataTags([m.lait])).toBe(7)
+    expect(m.ble.is_selected).toBe(true)
+  })
+
+  test('un membre sans valeur ni descendance reste ABSENT, pas nul', () => {
+    const m = monter()
+    const vide = m.groupe.addTag('Vide', 'vide') as Class_DataTag
+    expect(m.lien.valueForDataTags([vide])).toBeNull()
+  })
+
+  test('un diagramme SANS hierarchie ne change pas de comportement', () => {
+    const m = monter()
+    m.groupe.levels = []
+    m.groupe.tags_list.forEach(tag => { (tag as Class_DataTag).parent = undefined })
+    expect(m.lien.valueForDataTags([m.cereales])).toBeNull()
+  })
+})
+
 // os#1511 — LES BANDES D UN MEMBRE PARENT. Julien a mis « Pays partenaire » en choix multiple,
 // coche Europe et Afrique, et le flux a disparu : une bande lit la feuille a sa coordonnee, or
 // un parent n en porte pas. Comme l epaisseur du flux vient de ses bandes, le flux entier
