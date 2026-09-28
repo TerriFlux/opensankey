@@ -53,6 +53,7 @@ import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
+import { isGeneratedMemberId } from './GeneratedMemberMark'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
@@ -186,9 +187,16 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Init stock values tree (expand for each data tag group, like link values)
     this._stock_values = new Class_StockValue(this)
-    drawing_area.sankey.data_taggs_list.forEach(data_tagg => {
-      this._stock_values = this._stock_values.expand(data_tagg as Class_DataTagGroup) as Class_StockValue | Class_ElementValueTree
-    })
+    // os#1511 — un nœud ENGENDRÉ représente UN membre : il n'a pas de cube à déplier, pas plus
+    // que les flux qui en partent. C'est ici que passait le temps sur le SOCLE — 37 s pour huit
+    // membres, mesuré au profil V8 : `expand` reclasse tous les enfants à chaque étage
+    // (`kindOfChildren`), donc déplier 148 × 263 × 3 est quadratique, et on le refaisait pour
+    // chaque nœud engendré, à chaque changement de membre.
+    if (!isGeneratedMemberId(id)) {
+      drawing_area.sankey.data_taggs_list.forEach(data_tagg => {
+        this._stock_values = this._stock_values.expand(data_tagg as Class_DataTagGroup) as Class_StockValue | Class_ElementValueTree
+      })
+    }
   }
 
   public createValue(

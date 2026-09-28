@@ -919,10 +919,16 @@ export class Class_ElementValue {
 
   public expand(data_tag_group: Class_DataTagGroup) {
     const new_parent = new Class_ElementValueTree(this.parent, data_tag_group)
-    data_tag_group.tags_list.forEach(tag => {
-      const _ = new_parent.extend(tag)
-      if (_ instanceof Class_ElementValue)
-        _.copyFrom(this)
+    // Le constructeur du sous-arbre a DÉJÀ créé une valeur par membre : il ne reste qu'à y
+    // recopier celle qu'on déplie. On passait auparavant par `extend`, un par membre, qui
+    // reclasse tous les enfants (`kindOfChildren`) à chaque appel pour finir par rendre un
+    // enfant qui existait déjà — n appels balayant n enfants, donc un coût en n².
+    //
+    // C'est ce que le profil V8 a montré sur le SOCLE, où déplier 263 pays sous 148 produits
+    // faisait 5 millions de comparaisons : 45 s dans `kindOfChildren`, 23 s dans
+    // `getDataTagIdFromChild`. Mesuré le 28/09.
+    Object.values(new_parent.children).forEach(child => {
+      if (child instanceof Class_ElementValue) child.copyFrom(this)
     })
     this.delete()
     return new_parent
