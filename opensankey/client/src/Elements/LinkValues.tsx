@@ -432,6 +432,73 @@ export class Class_ElementValueTree {
     }
   }
 
+  /**
+   * os#1511 lot 1 — VALEURS CONTRIBUTRICES pour une position du cube, agrégat compris.
+   *
+   * `getValueForDataTags` adresse un POINT : il exige exactement un membre par dimension et
+   * rend la valeur qui s'y trouve, ou rien. Depuis qu'une dimension peut porter une
+   * hiérarchie, viser un membre PARENT doit rendre ce que portent ses feuilles — sans quoi
+   * « lire les céréales » ne montrerait rien alors que la donnée existe, produit par produit.
+   *
+   * Cette méthode rend la LISTE des valeurs à additionner, et non leur somme, parce que le
+   * nombre à sommer n'est pas décidable ici : selon le flux, la couche lue est la donnée
+   * saisie ou le résultat réconcilié (cf. `_reads_collected_layer`). L'appelant, lui, le
+   * sait déjà.
+   *
+   * - `null` : ABSENT. Rien à dessiner — à distinguer d'un zéro, qui est une valeur.
+   * - un seul élément : la valeur portée AU NIVEAU DEMANDÉ ; elle fait foi, l'agrégat n'est
+   *   qu'un recours. C'est ce qui permet de charger un fichier où seuls les totaux sont
+   *   connus, sans que le calcul ne les écrase.
+   * - plusieurs : les feuilles à additionner.
+   *
+   * Une feuille `structurally_absent` (#161) est SAUTÉE, jamais comptée pour zéro : « ce flux
+   * n'existe pas ici » n'est pas « il vaut 0 ». Si toutes les feuilles d'un parent sont
+   * absentes, le parent l'est aussi — sinon le diagramme se remplirait de flux fantômes.
+   */
+  public getContributingValues(data_tags: Class_DataTag[]): Class_ElementValue[] | null {
+    if (data_tags.length === 0) return null
+    const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
+    const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
+    if (matching_tags.length !== 1) return null
+    const member = matching_tags[0]
+
+    // 1. Ce que porte le membre visé lui-même.
+    const carried = this._contributionOf(this.children[member.id], remaining_tags)
+    if (carried !== null) return carried
+
+    // 2. À défaut, ses feuilles. Un membre sans descendance est sa propre feuille : il n'y a
+    //    alors rien de plus à tenter, et on rend ABSENT plutôt que de reboucler sur lui.
+    const leaves = member.leaves
+    if (leaves.length === 1 && leaves[0] === member) return null
+    const contributions: Class_ElementValue[] = []
+    leaves.forEach(leaf => {
+      const contribution = this._contributionOf(this.children[leaf.id], remaining_tags)
+      if (contribution !== null) contributions.push(...contribution)
+    })
+    return contributions.length > 0 ? contributions : null
+  }
+
+  /**
+   * os#1511 — ce qu'un nœud du trie apporte : rien s'il est absent ou vide, lui-même si c'est
+   * une valeur renseignée, et sinon la récursion sur la dimension suivante.
+   *
+   * Le trie est DENSE — son constructeur crée un enfant pour chaque membre du groupe — donc
+   * un membre parent a toujours son nœud, vide. « Porte une valeur » ne peut pas se lire à la
+   * présence de la clé : il faut que la valeur ait une donnée ou un résultat.
+   */
+  private _contributionOf(
+    child: Class_ElementValue | Class_ElementValueTree | undefined,
+    remaining_tags: Class_DataTag[]
+  ): Class_ElementValue[] | null {
+    if (child === undefined) return null
+    if (child instanceof Class_ElementValue) {
+      if (child.structurally_absent) return null
+      if (!child.has_data && !child.has_result) return null
+      return [child]
+    }
+    return child.getContributingValues(remaining_tags)
+  }
+
   // #188 — mirror getValueForDataTags but return the structurally-absent marker
   // of the matching leaf. getValueForDataTags returns null for an absent leaf,
   // which is indistinguishable from a plain missing value; a Link needs the

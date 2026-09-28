@@ -1,5 +1,6 @@
 import { Class_ApplicationData } from './ApplicationData'
-import type { Class_DataTag, Class_DataTagGroup } from './Tag'
+import type { Class_DataTag } from './Tag'
+import type { Class_DataTagGroup } from './TagGroup'
 
 // jest 27 / jsdom n'expose pas structuredClone (utilise par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -53,15 +54,15 @@ describe('os#1511 — hierarchie d une dimension : parente portee par le membre'
     const { produits, cereales, brutes, ble, mais, lait } = makeArbre()
     expect(cereales.parent).toBe(produits)
     expect(produits.parent).toBeUndefined()
-    expect(produits.children.map(t => t.id).sort()).toEqual(['cereales', 'lait'])
-    expect(brutes.leaves.map(t => t.id).sort()).toEqual(['ble', 'mais'])
+    expect(produits.children.map((t: Class_DataTag) => t.id).sort()).toEqual(['cereales', 'lait'])
+    expect(brutes.leaves.map((t: Class_DataTag) => t.id).sort()).toEqual(['ble', 'mais'])
     // Une feuille est sa propre feuille : c est ce qui rend l agregat uniforme.
-    expect(ble.leaves.map(t => t.id)).toEqual(['ble'])
+    expect(ble.leaves.map((t: Class_DataTag) => t.id)).toEqual(['ble'])
     // Les feuilles de la racine couvrent toute la dimension, branche courte comprise.
-    expect(produits.leaves.map(t => t.id).sort()).toEqual(['ble', 'lait', 'mais'])
+    expect(produits.leaves.map((t: Class_DataTag) => t.id).sort()).toEqual(['ble', 'lait', 'mais'])
     expect(mais.hasAncestor(produits)).toBe(true)
     expect(produits.hasAncestor(mais)).toBe(false)
-    expect(lait.leaves.map(t => t.id)).toEqual(['lait'])
+    expect(lait.leaves.map((t: Class_DataTag) => t.id)).toEqual(['lait'])
   })
 
   test('un CYCLE est refuse, sinon tout parcours de la hierarchie boucle', () => {
@@ -89,7 +90,7 @@ describe('os#1511 — hierarchie d une dimension : parente portee par le membre'
 describe('os#1511 — membres montres a un niveau, hierarchie DESEQUILIBREE', () => {
   test('au niveau le plus agrege, seule la racine se montre', () => {
     const { groupe } = makeArbre()
-    expect(groupe.membersAtLevel(0).map(t => t.id)).toEqual(['produits'])
+    expect(groupe.membersAtLevel(0).map((t: Class_DataTag) => t.id)).toEqual(['produits'])
   })
 
   test('une branche COURTE reste visible sous son niveau, sinon sa donnee disparait', () => {
@@ -97,14 +98,14 @@ describe('os#1511 — membres montres a un niveau, hierarchie DESEQUILIBREE', ()
     // Niveau 2 : « cereales brutes » est a cette profondeur, et « lait » — feuille de
     // profondeur 1 — doit rester montre. Sans cette regle, le lait disparaitrait de l ecran
     // en descendant d un niveau et les totaux cesseraient d etre justes.
-    expect(groupe.membersAtLevel(2).map(t => t.id).sort()).toEqual(['brutes', 'lait'])
+    expect(groupe.membersAtLevel(2).map((t: Class_DataTag) => t.id).sort()).toEqual(['brutes', 'lait'])
     // Niveau 3, le plus fin : les deux feuilles de cereales, plus le lait toujours la.
-    expect(groupe.membersAtLevel(3).map(t => t.id).sort()).toEqual(['ble', 'lait', 'mais'])
+    expect(groupe.membersAtLevel(3).map((t: Class_DataTag) => t.id).sort()).toEqual(['ble', 'lait', 'mais'])
   })
 
   test('un membre PLUS profond que le niveau ne se montre pas, son ancetre le represente', () => {
     const { groupe } = makeArbre()
-    const au_niveau_1 = groupe.membersAtLevel(1).map(t => t.id).sort()
+    const au_niveau_1 = groupe.membersAtLevel(1).map((t: Class_DataTag) => t.id).sort()
     expect(au_niveau_1).toEqual(['cereales', 'lait'])
     expect(au_niveau_1).not.toContain('ble')
     expect(au_niveau_1).not.toContain('brutes')
@@ -160,7 +161,7 @@ describe('os#1511 — persistance : cles ADDITIVES, fichier plat inchange', () =
     expect(relu.current_level_index).toBe(2)
     const ble_relu = relu.tags_dict['ble'] as Class_DataTag
     expect(ble_relu.parent?.id).toBe('brutes')
-    expect(relu.membersAtLevel(3).map(t => t.id).sort()).toEqual(['ble', 'lait', 'mais'])
+    expect(relu.membersAtLevel(3).map((t: Class_DataTag) => t.id).sort()).toEqual(['ble', 'lait', 'mais'])
   })
 
   test('un parent FANTOME laisse le membre racine, il ne fabrique pas de parent', () => {
