@@ -1453,6 +1453,36 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * plus de dessin : un nœud d'axe ne se découpe qu'à un niveau à la fois. Les intrus sont donc
    * écartés, en gardant le niveau du premier membre cité.
    */
+  /**
+   * os#1511 — Choisit UN NIVEAU ENTIER : tous les membres qu'il montre, d'un coup.
+   *
+   * C'est l'autre entrée de la liste, à côté des membres eux-mêmes. « Régions continentales »
+   * donne les régions ; « Europe » donne l'Europe seule. Le panneau nomme ainsi toujours ce que
+   * le dessin montre — ce qui n'était pas le cas quand choisir un membre dessinait ses enfants
+   * (« le panneau disait Monde et le dessin Europe, Afrique », 28/09).
+   *
+   * Rend `false` si la dimension n'a pas de niveaux, ou si le niveau demandé ne montre rien.
+   */
+  public selectAllAtLevel(index: number): boolean {
+    if (this._levels.length === 0) return false
+    if (!Number.isFinite(index)) return false
+    const cible = Math.min(Math.max(0, index), this._levels.length - 1)
+    const membres = this.membersAtLevel(cible)
+    if (membres.length === 0) return false
+    this._current_level_index = cible
+    this.tags_list.forEach(tag => tag.setUnSelected())
+    membres.forEach(membre => membre.setSelected())
+    return true
+  }
+
+  /** Vrai si la sélection courante est EXACTEMENT ce que montre le niveau `index`. */
+  public isWholeLevelSelected(index: number): boolean {
+    const montres = this.membersAtLevel(index)
+    if (montres.length === 0) return false
+    const choisis = this.selected_tags_list
+    return choisis.length === montres.length && montres.every(membre => membre.is_selected)
+  }
+
   public selectMembers(tag_ids: string[]): boolean {
     const demandes = tag_ids
       .map(id => this._tags[id] as Class_DataTag | undefined)

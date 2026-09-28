@@ -101,25 +101,16 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // supprimée par un tour précédent de cette même boucle).
     const dimension = axe.driving_dimension
     if (dimension === undefined) return
-    // Les ENFANTS du membre choisi (décision de Julien, 28/09). On descend dans l'arbre en
-    // désignant un parent : « Monde » montre les régions, « Europe » ses pays, et un membre
-    // TERMINAL ne se découpe plus — il se montre seul.
+    // LES MEMBRES CHOISIS, et rien d'autre : le panneau nomme ainsi toujours ce que le dessin
+    // montre. « Europe » donne l'Europe, « Régions continentales » — un NIVEAU, qui se choisit
+    // dans la même liste — donne les régions.
     //
-    // La règle vient d'une contrainte du cube : `getValueForDataTags` n'adresse qu'UN membre
-    // par dimension, deux membres cochés ne rendent aucune valeur. Montrer « tous les membres
-    // du niveau » rendait donc le sélecteur inopérant (choisir l'Espagne affichait les quatre
-    // pays), et filtrer sur le seul membre choisi supprimait toute désagrégation. Les enfants
-    // satisfont les deux : on lit toujours un membre, on en montre plusieurs.
-    // Plusieurs membres cochés donnent l'UNION de leurs enfants. Ne lire que le premier
-    // reviendrait à ignorer les autres en silence — or cocher deux membres veut dire qu'on
-    // veut voir les deux (les bandes d'un flux, elles, se dérivent déjà ainsi au dessin).
-    const choisis = dimension.selected_tags_list as Class_DataTag[]
-    if (choisis.length === 0) return
-    const membres: Class_DataTag[] = []
-    choisis.forEach(choisi => {
-      const descente = choisi.children.length > 0 ? choisi.children : [choisi]
-      descente.forEach(membre => { if (!membres.includes(membre)) membres.push(membre) })
-    })
+    // La version précédente montrait les ENFANTS du membre choisi, et se lisait comme un bug :
+    // le panneau disait « Monde » et le dessin « Europe, Afrique » (constaté le 28/09). Lire
+    // plusieurs membres à la fois ne coûte plus rien depuis que les flux engendrés portent un
+    // scalaire au lieu d'une coordonnée dans le cube.
+    const membres = dimension.selected_tags_list as Class_DataTag[]
+    if (membres.length === 0) return
     engendres += disaggregateOne(sankey, axe, dimension, membres)
   })
   return engendres

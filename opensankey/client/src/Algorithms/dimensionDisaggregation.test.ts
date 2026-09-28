@@ -15,13 +15,13 @@ if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
 }
 
-// os#1511 lot 2B — un noeud d AXE se remplace par les ENFANTS du membre choisi, et les flux se
-// repartissent. On descend dans l arbre en designant un parent.
+// os#1511 lot 2B — un noeud d AXE se remplace par les membres CHOISIS, et les flux se
+// repartissent sur eux.
 //
-// La regle vient d une contrainte du cube : il n adresse qu UN membre par dimension. Montrer
-// tous les membres du niveau rendait le selecteur inoperant (choisir l Espagne affichait les
-// quatre pays, constate par Julien le 28/09) ; ne montrer que le membre choisi supprimait toute
-// desagregation. Les enfants satisfont les deux : on lit un membre, on en montre plusieurs.
+// Le panneau nomme ainsi toujours ce que le dessin montre. Une version precedente montrait les
+// ENFANTS du membre choisi : le panneau disait « Monde » et le dessin « Europe, Afrique », ce
+// que Julien a lu comme un bug (28/09). Un NIVEAU entier se choisit dans la meme liste que les
+// membres — « Regions continentales » coche toutes les regions.
 //
 // Les noeuds engendres sont TRANSITOIRES : c est pourquoi on verifie surtout les GARDES, celles
 // qui ont coute cher aux noeuds d echange en aout.
@@ -82,10 +82,10 @@ const parCible = (sankey: ReturnType<typeof monter>['sankey']) =>
     .filter(isGeneratedMemberLink)
     .map(l => [l.target.name, l.value?.valueData ?? 0]))
 
-describe('os#1511 lot 2B — un noeud d axe se remplace par les enfants du membre choisi', () => {
-  test('choisir la racine montre ses enfants, et l axe quitte le dessin', () => {
-    const { sankey, pays, monde } = monter()
-    choisir(pays, monde)
+describe('os#1511 lot 2B — un noeud d axe se remplace par les membres choisis', () => {
+  test('choisir un NIVEAU montre tous ses membres, et l axe quitte le dessin', () => {
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     expect(disaggregateDimensionNodes(sankey)).toBe(2)
     expect(nomsEngendres(sankey)).toEqual(['Afrique', 'Europe'])
     // Le noeud d axe quitte le DESSIN, pas le modele : il reste ce d ou l on repart au
@@ -96,8 +96,8 @@ describe('os#1511 lot 2B — un noeud d axe se remplace par les enfants du membr
   })
 
   test('les flux se repartissent, et les totaux se conservent', () => {
-    const { sankey, pays, monde } = monter()
-    choisir(pays, monde)
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     const par_cible = parCible(sankey)
     expect(par_cible.get('Europe')).toBe(42)
@@ -106,55 +106,50 @@ describe('os#1511 lot 2B — un noeud d axe se remplace par les enfants du membr
     expect([...par_cible.values()].reduce((t, v) => t + v, 0)).toBe(49)
   })
 
-  test('DESCENDRE : choisir l Europe montre ses pays, et eux seuls', () => {
-    const { sankey, pays, europe } = monter()
-    choisir(pays, europe)
-    expect(disaggregateDimensionNodes(sankey)).toBe(2)
-    // Le Maroc n est pas sous l Europe : il ne doit pas apparaitre.
-    expect(nomsEngendres(sankey)).toEqual(['Espagne', 'France'])
+  test('DESCENDRE : le niveau des pays montre les trois pays', () => {
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(2)
+    expect(disaggregateDimensionNodes(sankey)).toBe(3)
+    expect(nomsEngendres(sankey)).toEqual(['Espagne', 'France', 'Maroc'])
     const par_cible = parCible(sankey)
     expect(par_cible.get('France')).toBe(30)
     expect(par_cible.get('Espagne')).toBe(12)
   })
 
-  test('un membre TERMINAL ne se decoupe plus, il se montre seul', () => {
-    const { sankey, pays, espagne } = monter()
-    choisir(pays, espagne)
-    // C est le cas que Julien a regarde : choisir l Espagne montre l Espagne, et non les
-    // quatre pays du niveau.
+  test('UN membre choisi montre CE membre, et lui seul', () => {
+    const { sankey, pays, europe } = monter()
+    choisir(pays, europe)
+    // Le panneau dit « Europe », le dessin montre l Europe : c est tout le point.
     expect(disaggregateDimensionNodes(sankey)).toBe(1)
-    expect(nomsEngendres(sankey)).toEqual(['Espagne'])
-    expect(parCible(sankey).get('Espagne')).toBe(12)
+    expect(nomsEngendres(sankey)).toEqual(['Europe'])
+    expect(parCible(sankey).get('Europe')).toBe(42)
   })
 
-  test('DEUX membres coches donnent l UNION de leurs enfants', () => {
+  test('DEUX membres choisis montrent les deux', () => {
     const { sankey, pays, europe, maroc } = monter()
-    // Le Maroc est une feuille : il s apporte lui-meme. L Europe apporte ses deux pays.
     choisir(pays, europe, maroc)
-    expect(disaggregateDimensionNodes(sankey)).toBe(3)
-    expect(nomsEngendres(sankey)).toEqual(['Espagne', 'France', 'Maroc'])
-    const par_cible = parCible(sankey)
-    expect(par_cible.get('France')).toBe(30)
-    expect(par_cible.get('Maroc')).toBe(7)
+    expect(disaggregateDimensionNodes(sankey)).toBe(2)
+    expect(nomsEngendres(sankey)).toEqual(['Europe', 'Maroc'])
+    expect(parCible(sankey).get('Maroc')).toBe(7)
   })
 
-  test('un enfant SANS contribution ne recoit AUCUN flux, pas un flux a zero', () => {
-    const { sankey, pays, espagne, europe } = monter()
+  test('un membre SANS contribution ne recoit AUCUN flux, pas un flux a zero', () => {
+    const { sankey, pays, espagne } = monter()
     // On retire la valeur de l Espagne : elle ne doit plus apparaitre du tout.
     choisir(pays, espagne)
     const flux = sankey.links_list[0]
     ;(flux.value as Class_LinkValue).valueData = null
-    choisir(pays, europe)
+    pays.selectAllAtLevel(2)
     disaggregateDimensionNodes(sankey)
-    const cibles = sankey.links_list.filter(isGeneratedMemberLink).map(l => l.target.name)
+    const cibles = sankey.links_list.filter(isGeneratedMemberLink).map(l => l.target.name).sort()
     // Un flux fantome a zero se dessinerait : il ne doit pas exister.
-    expect(cibles).toEqual(['France'])
+    expect(cibles).toEqual(['France', 'Maroc'])
   })
 
   test('la position vient du MEMBRE, ce qui la fait survivre a la regeneration', () => {
-    const { sankey, pays, monde, europe } = monter()
+    const { sankey, pays, europe } = monter()
     europe.position = { x: 500, y: 250 }
-    choisir(pays, monde)
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     const noeud_europe = sankey.nodes_list.find(n => n.name === 'Europe')
     expect(noeud_europe?.position_x).toBe(500)
@@ -167,8 +162,8 @@ describe('os#1511 lot 2B — un noeud d axe se remplace par les enfants du membr
 
 describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   test('la forme engendree se reconnait SUR LE GRAPHE, sans etat en memoire', () => {
-    const { sankey, pays, monde } = monter()
-    choisir(pays, monde)
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     const engendre = sankey.nodes_list.find(isGeneratedMemberNode)
     expect(engendre).toBeDefined()
@@ -180,8 +175,8 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   })
 
   test('DEUX desagregations de suite ne doublent pas les noeuds', () => {
-    const { sankey, pays, monde } = monter()
-    choisir(pays, monde)
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     const apres_un = sankey.nodes_list.length
     disaggregateDimensionNodes(sankey)
@@ -191,13 +186,13 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   })
 
   test('changer de membre ne LAISSE PAS les noeuds du precedent', () => {
-    const { sankey, pays, monde, europe } = monter()
-    choisir(pays, monde)
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
-    choisir(pays, europe)
+    pays.selectAllAtLevel(2)
     disaggregateDimensionNodes(sankey)
     // Les regions doivent avoir disparu, pas s ajouter aux pays.
-    expect(nomsEngendres(sankey)).toEqual(['Espagne', 'France'])
+    expect(nomsEngendres(sankey)).toEqual(['Espagne', 'France', 'Maroc'])
   })
 
   test('AUCUN membre choisi ne desagrege rien', () => {
@@ -218,16 +213,16 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   })
 
   test('le retrait des engendres se fait seul, et rend leur nombre', () => {
-    const { sankey, pays, monde } = monter()
-    choisir(pays, monde)
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     expect(removeGeneratedMemberNodes(sankey)).toBe(2)
     expect(sankey.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(0)
   })
 
   test('ENREGISTRER un diagramme desagrege n ecrit AUCUN engendre', () => {
-    const { app, sankey, pays, monde } = monter()
-    choisir(pays, monde)
+    const { app, sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     expect(sankey.nodes_list.filter(isGeneratedMemberNode).length).toBe(2)
 
@@ -244,8 +239,8 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   })
 
   test('recharger un fichier enregistre desagrege rend le MEME dessin, sans rien doubler', () => {
-    const { app, sankey, pays, europe } = monter()
-    choisir(pays, europe)
+    const { app, sankey, pays } = monter()
+    pays.selectAllAtLevel(2)
     disaggregateDimensionNodes(sankey)
     const json = app.toJSON()
 
@@ -254,17 +249,18 @@ describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
     const sankey_relu = relu.drawing_area.sankey
     // Le fichier ne porte que l axe ; c est `afterFromJSON` qui refabrique les engendres, sur
     // le membre enregistre. Deux, pas quatre : la garde du portillon tient au chargement aussi.
-    expect(nomsEngendres(sankey_relu)).toEqual(['Espagne', 'France'])
-    expect(disaggregateDimensionNodes(sankey_relu)).toBe(2)
-    expect(sankey_relu.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(2)
+    expect(nomsEngendres(sankey_relu)).toEqual(['Espagne', 'France', 'Maroc'])
+    expect(disaggregateDimensionNodes(sankey_relu)).toBe(3)
+    expect(sankey_relu.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(3)
   })
 
   test('lire une contribution ne laisse pas le diagramme sur un autre membre', () => {
-    const { sankey, pays, monde } = monter()
-    choisir(pays, monde)
+    const { sankey, pays } = monter()
+    pays.selectAllAtLevel(1)
     disaggregateDimensionNodes(sankey)
     // Lire une valeur vise les membres un a un : la selection de l utilisateur doit se
     // retrouver intacte, sinon le dessin part sur le dernier membre vise.
-    expect(pays.selected_tags_list.map((t: Class_DataTag) => t.id)).toEqual(['monde'])
+    expect(pays.selected_tags_list.map((t: Class_DataTag) => t.id).sort())
+      .toEqual(['afrique', 'europe'])
   })
 })
