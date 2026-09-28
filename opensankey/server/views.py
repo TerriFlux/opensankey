@@ -164,6 +164,19 @@ def is_run_dir(path):
     return os.path.dirname(real) == os.path.realpath(runs_root()) and os.path.isdir(real)
 
 
+def run_id_of(log_filename):
+    """Identifiant d'un run : le nom du dossier de son journal (`new_run_dir`, donc unique).
+
+    sa#571 — chaque lancement le renvoie et `check_process` le répète : le client ne tient
+    compte que des statuts de SON run. Sans ce lien, le premier poll, parti avant la réponse
+    du lancement donc avec l'ancien cookie de session, relisait le `failed`/`finished` du run
+    précédent : après un échec, il fallait cliquer deux fois pour relancer.
+    """
+    if not log_filename:
+        return None
+    return os.path.basename(os.path.dirname(log_filename)) or None
+
+
 def discard_run(state):
     """Supprime les dossiers de travail (entrée, sortie, journal) d'un état de session."""
     if not isinstance(state, dict):
@@ -460,6 +473,8 @@ def check_process():
             status = read_process_status(logname)
             results_dict = {
                 "log_name": logname,
+                # sa#571 — le run dont parle cette réponse : le client écarte celle d'un autre.
+                "run_id": run_id_of(logname),
                 "output": results,
                 # Statut machine-lisible piloté par le thread via <logname>.status.
                 # None tant que le thread n'a rien écrit (= traitement en cours) ;
@@ -675,7 +690,12 @@ def retrieve_json():
         thread.start()
         trace.logger.debug("Conversion thread launched")
 
-        return Response(response="{}", status=200, mimetype="application/json")
+        # sa#571 — le client ne suit que ce run (cf. run_id_of).
+        return Response(
+            response=json.dumps({"run_id": run_id_of(log_filename)}),
+            status=200,
+            mimetype="application/json",
+        )
 
     except Exception as excpt:
         trace.logger.error(f"launch_conversion failed: {str(excpt)}")
@@ -830,7 +850,7 @@ def launch_conversion():
                 # déjà terminé). Les autres formats renvoient {} et gardent le
                 # polling, leur conversion tournant dans un thread.
                 return Response(
-                    response=json.dumps({"status": PROCESS_STATUS_FINISHED}),
+                    response=json.dumps({"status": PROCESS_STATUS_FINISHED, "run_id": run_id_of(log_filename)}),
                     status=200,
                     mimetype="application/json",
                 )
@@ -891,7 +911,12 @@ def launch_conversion():
         thread.start()
         trace.logger.debug("Conversion thread launched")
 
-        return Response(response="{}", status=200, mimetype="application/json")
+        # sa#571 — le client ne suit que ce run (cf. run_id_of).
+        return Response(
+            response=json.dumps({"run_id": run_id_of(log_filename)}),
+            status=200,
+            mimetype="application/json",
+        )
 
     except Exception as excpt:
         trace.logger.error(f"launch_conversion failed: {str(excpt)}")
