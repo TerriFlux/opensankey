@@ -123,6 +123,12 @@ describe('aller-retour', () => {
       decompose: { kind: 'node_children', dimension_id: 'region' },
       compare: { data_tagg_id: 'annee' },
       compare_secondary: { data_tagg_id: 'scenario' }
+    }],
+    // os#1511 — une dimension de donnees en parts, sur un flux comme sur un noeud.
+    ['dimension de donnees decoupee', { decompose: { kind: 'data_dimension', data_tagg_id: 'filiere' }, compare: null }],
+    ['dimension de donnees decoupee, une autre epinglee', {
+      decompose: { kind: 'data_dimension', data_tagg_id: 'filiere' },
+      compare: { data_tagg_id: 'annee' }
     }]
   ]
   test.each(cases)('%s se relit tel quel', (_name, descriptor) => {
@@ -130,6 +136,39 @@ describe('aller-retour', () => {
     expect(back.decompose).toEqual(descriptor.decompose)
     expect(back.compare).toEqual(descriptor.compare)
     expect(back.compare_secondary ?? null).toEqual(descriptor.compare_secondary ?? null)
+  })
+})
+
+// os#1511 — UN GROUPE D ETIQUETTES DE DONNEES PEUT DESORMAIS DECOUPER. La regle d hier valait de
+// tous : « deux annees ne font pas un tout ». Elle reste vraie d un groupe PLAT ; une dimension
+// HIERARCHISEE, elle, fait un tout, ses feuilles sommant a leur parent. Ce module TRADUIT et ne
+// juge pas — c est la surface qui n offre l option que la ou elle a un sens.
+
+describe('os#1511 — une dimension de donnees en parts', () => {
+  test('le champ garde sa cle : c est le meme axe, dans un autre usage', () => {
+    const coords = coordinatesOf(
+      { decompose: { kind: 'data_dimension', data_tagg_id: 'filiere' }, compare: null }, null)
+    expect(coords['dt:filiere']).toEqual({ mode: 'parts' })
+    expect(partsFieldKey(coords)).toBe('dt:filiere')
+  })
+
+  test('elle rend la main quand un autre champ prend les parts', () => {
+    const coords = setCoordState(
+      { 'dt:filiere': { mode: 'parts' } }, 'flows:outputs', { mode: 'parts' })
+    expect(partsFieldKey(coords)).toBe('flows:outputs')
+    expect('dt:filiere' in coords).toBe(false)
+  })
+
+  test('decouper une dimension et en epingler une autre coexistent', () => {
+    const written = applyCoordinates(
+      { 'dt:filiere': { mode: 'parts' }, 'dt:annee': { mode: 'fixed', value_id: '2015' } }, 'flux')
+    expect(written.descriptor.decompose).toEqual({ kind: 'data_dimension', data_tagg_id: 'filiere' })
+    expect(written.pins).toEqual({ annee: '2015' })
+  })
+
+  test('sur un FLUX aussi : c est la seule decomposition qui ne demande pas un noeud', () => {
+    const written = applyCoordinates({ 'dt:filiere': { mode: 'parts' } }, 'flux').descriptor
+    expect(written.decompose).toEqual({ kind: 'data_dimension', data_tagg_id: 'filiere' })
   })
 })
 

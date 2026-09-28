@@ -277,6 +277,27 @@ export const buildDataDimensionTree = (
 }
 
 /**
+ * os#1511 — LE SÉLECTEUR DE NIVEAU, COMME SUR LE SANKEY et comme sur les deux autres descentes.
+ *
+ * ⚠️ CE N'EST PAS UNE SECONDE RÈGLE, C'EST UN RACCOURCI QUI ÉCRIT LA PREMIÈRE. Le niveau REMPLIT
+ * l'ensemble des secteurs ouverts ; il ne s'y superpose pas. C'est ce qui fait que le sélecteur et
+ * le clic coopèrent au lieu de se disputer : après « niveau 3 », shift+clic referme une branche et
+ * le reste tient. (Même choix qu'`expandedDownToLevel` pour les nœuds et que
+ * `crossExpandedDownToLevels` pour le croisement.)
+ *
+ * Pour VOIR le niveau `level_index`, il faut avoir ouvert tous les membres MOINS profonds : un
+ * secteur montre ses enfants quand il est dans l'ensemble. Le niveau 0 n'ouvre donc rien.
+ */
+export const dataDimensionExpandedDownToLevel = (
+  dimension: Class_DataTagGroup,
+  level_index: number
+): Set<string> => new Set(
+  (dimension.tags_list as Class_DataTag[])
+    .filter(member => dimension.depthOf(member) < level_index)
+    .map(member => memberSectorId(dimension.id, member.id))
+)
+
+/**
  * Les dimensions de données qui portent effectivement une hiérarchie, dans l'ordre du modèle.
  * Sert à peupler un sélecteur d'axe, comme `sunburstDimensions` pour les nœuds.
  */
