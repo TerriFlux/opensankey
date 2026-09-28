@@ -347,7 +347,8 @@ export const resources_inspector = {
       filter_panel: {
         // Jalon 79 — « coordonnées » (année, scénario, géographie : mêmes nœuds,
         // d'autres chiffres), pas « légende » : ce panneau pilote la lecture.
-        title: 'Navigation and coordinates',
+        title: 'Navigation',
+        tag_styles: 'Tag styles',
         coordinates_dimensions: 'Dimensions',
         coordinates_levels: 'Levels',
         filter: 'Filter',
@@ -729,7 +730,8 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Navigation et coordonnées',
+        title: 'Navigation',
+        tag_styles: 'Styles des étiquettes',
         coordinates_dimensions: 'Dimensions',
         coordinates_levels: 'Niveaux',
         filter: 'Filtrer',
@@ -1094,7 +1096,8 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Navegación y coordenadas',
+        title: 'Navegación',
+        tag_styles: 'Estilos de etiquetas',
         coordinates_dimensions: 'Dimensiones',
         coordinates_levels: 'Niveles',
         filter: 'Filtrar',
@@ -1448,7 +1451,8 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Navigation und Koordinaten',
+        title: 'Navigation',
+        tag_styles: 'Etikettenstile',
         coordinates_dimensions: 'Dimensionen',
         coordinates_levels: 'Ebenen',
         filter: 'Filtern',
@@ -1802,7 +1806,8 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'Navigazione e coordinate',
+        title: 'Navigazione',
+        tag_styles: 'Stili delle etichette',
         coordinates_dimensions: 'Dimensioni',
         coordinates_levels: 'Livelli',
         filter: 'Filtrare',
@@ -2160,7 +2165,8 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: '导航与坐标',
+        title: '导航',
+        tag_styles: '标签样式',
         coordinates_dimensions: '维度',
         coordinates_levels: '层级',
         filter: '筛选',
@@ -2518,7 +2524,8 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
-        title: 'ナビゲーションと座標',
+        title: 'ナビゲーション',
+        tag_styles: 'タグのスタイル',
         coordinates_dimensions: 'ディメンション',
         coordinates_levels: '階層',
         filter: '絞り込み',
