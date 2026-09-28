@@ -2,6 +2,73 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.6] — 2026-09-28
+
+### Légende
+
+- **Les groupes gardent l'ordre du fichier** (`taggs_order`). SA#551 les rangeait du plus
+  prioritaire au moins prioritaire ; un diagramme à quatre groupes (CARTOFOB) se lisait à l'envers.
+  La priorité de la cascade de styles reste ce qu'elle est, elle ne range plus la légende.
+- **Disposition horizontale : le titre d'un groupe ouvre la ligne de ses étiquettes**, à leur
+  gauche, au lieu d'occuper une ligne à lui seul ; l'écart qui le sépare de la première entrée suit
+  la police (il disparaissait en police verrouillée dès que le zoom baissait).
+- Clic sur une entrée pour masquer son étiquette, rayée (SA#549) ; groupe épinglé en bas, sur une
+  ligne avec sa description (SA#550) ; choix de l'année ou de l'unité depuis la légende (SA#552) ;
+  le nom d'un groupe ouvre sa pop-up avec une vue du diagramme mis en forme par lui (SA#551) ;
+  définitions au survol (SA#542) ; une entrée prend la forme du style de son étiquette (SA#545) ;
+  étiquette générée « Sans [groupe] » (SA#553) ; ligne vide entre deux sections (SA#556) ; la
+  légende passe devant les cadres de groupe et les zones.
+
+### Nœuds
+
+- **Boîte de stock : « Réduire pour tenir dans le nœud »** (`stock_label_shrink_to_fit`, défaut
+  activé). En police verrouillée la boîte mesure police / zoom : sur un petit écran elle débordait du
+  nœud. Quand elle est intérieure, sa police descend jusqu'à tenir dans la largeur et la hauteur du
+  nœud, à chaque dessin ; la réduction passe avant le repoussement de « Position verticale
+  ajustée », un nœud fin garde sa boîte au lieu de la voir posée sur le voisin.
+- Ancrage radial (os#1510) : les flux partent du contour d'un nœud à l'angle de leur cible, faisceaux
+  sans torsion, arrivée en miroir du départ. Flux éclatés : le nœud reste, ses flux se divisent en
+  bandes par enfant.
+- Hiérarchie de niveaux par dimension (os#1511) : une dimension porte une hiérarchie de niveaux,
+  sélecteur de niveau par dimension, un membre parent rend ce que portent ses feuilles.
+
+### Étiquettes
+
+- Une étiquette et un groupe portent une définition et une mise en forme (SA#537) ; un style nommé
+  porté par une étiquette supplante le style des éléments qui la portent (SA#541) ; descriptions
+  éditables depuis le menu Étiquettes (SA#546) ; un réglage à 0 ne disparaît plus à
+  l'enregistrement (#529) ; le front ne détruit plus les attributs qu'il ne connaît pas (SA#527).
+
+### Figures et représentations
+
+- Un registre des représentations ; la grande zone héberge N fenêtres, chacune = (sujet,
+  représentation) ; le diagramme est une fenêtre comme les autres (os#1355 à os#1363, os#1387).
+- Couronne : mode « un anneau par niveau » (l'ancien sunburst), couronne croisée à deux axes
+  (os#1509), la hiérarchie descend dans le même anneau, seuil d'affichage réglable, le centre est
+  une part. Barres : angle des étiquettes par part, empilement (os#1499).
+- Une part de figure est un élément : styles, attributs de forme, libellé, valeur, icône, un seul
+  catalogue d'attributs et un harnais qui mesure que chaque réglage offert agit (os#1445 à os#1505).
+- Carte géographique (os#1364) : mode de position `geographic`, calage du fond sur deux nœuds,
+  projection Natural Earth, colonnes Latitude / Longitude du tableur.
+
+### Appli d'applis (os#1385)
+
+- `Class_Workspace` au-dessus des documents ; feuilles vivantes éditables en fenêtre ; onglets de
+  feuilles (glisser dans la grande zone, pastille « modifié ») ; coller d'une feuille à l'autre ;
+  le diagramme se détache dans une fenêtre de navigateur (os#1439) ; panneau « Vues et tableaux de
+  bord » hors de l'inspecteur (os#1488, os#1497) ; carte Coordonnées unique (os#1431).
+
+### Performance
+
+- Les gros fichiers tiennent en mémoire et se dessinent quatre fois plus vite ; changer de niveau,
+  agréger ou déplacer un nœud ne recompte plus tout le diagramme (os#1508).
+
+### Viewer et publication
+
+- Une page publiée à plusieurs feuilles montre leurs onglets, en lecture seule (os#1385 lot 6a) ;
+  une page sans l'option `representation` dessine de nouveau son diagramme (os#1426) ; l'adresse ne
+  porte l'état d'affichage que lorsqu'elle nomme déjà le document (os#1428).
+
 ## [1.3.5] — 2026-09-11
 
 ### Viewer embarqué
