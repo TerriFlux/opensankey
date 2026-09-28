@@ -1384,6 +1384,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    */
   public selectLevel(index: number) {
     if (this._levels.length === 0) return
+    // Un index NON FINI passerait les bornes sans bruit (`Math.min(Math.max(0, NaN), n)` vaut
+    // NaN) : le niveau courant deviendrait NaN, plus aucune option ne correspondrait et le
+    // sélecteur reviendrait au premier niveau sans rien dire. Vécu à l'écran, cause en amont
+    // (une valeur lue dans un geste différé) — mais le modèle doit se défendre seul.
+    if (!Number.isFinite(index)) return
     this._current_level_index = Math.min(Math.max(0, index), this._levels.length - 1)
     const visibles = this.membersAtLevel(this._current_level_index)
     if (visibles.length === 0) return
