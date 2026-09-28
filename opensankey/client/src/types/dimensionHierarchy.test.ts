@@ -170,6 +170,18 @@ describe('os#1511 — changer de niveau garde la LIGNEE', () => {
     expect(selectionne(groupe)).toHaveLength(1)
   })
 
+  test('un index NON FINI est refuse, il ne corrompt pas le niveau courant', () => {
+    const { groupe, ble } = makeArbre()
+    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
+    ble.setSelected()
+    groupe.selectLevel(2)
+    groupe.selectLevel(Number('pas un nombre'))
+    // Le niveau reste celui d avant : sans cette garde il vaudrait NaN, aucune option ne
+    // correspondrait et le selecteur reviendrait au premier niveau sans rien dire.
+    expect(groupe.current_level_index).toBe(2)
+    expect(selectionne(groupe)).toHaveLength(1)
+  })
+
   test('une dimension PLATE ignore le changement de niveau', () => {
     const { groupe, ble } = makeArbre()
     groupe.levels = []
