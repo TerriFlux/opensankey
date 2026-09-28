@@ -76,9 +76,10 @@ const navigationAttributes = (): Type_FigureAttributesConfig => ({
   }, undefined, { kind: 'select', choicesOf: dimensionChoices, group: G_READ }),
 
   chain_axes: figureAttribute<boolean>(true, 'navigation', {
-    en: 'Chain the other hierarchies', fr: 'Enchaîner les autres hiérarchies',
-    es: 'Encadenar las demás jerarquías', de: 'Weitere Hierarchien verketten',
-    it: 'Concatenare le altre gerarchie', 'zh-CN': '串联其他层级', ja: '他の階層を連結する'
+    // 28/09/2026 — des NOMS, comme sur le Sankey : le libellé nomme le réglage, la valeur le règle.
+    en: 'Hierarchy chaining', fr: 'Enchaînement des hiérarchies',
+    es: 'Encadenamiento de jerarquías', de: 'Hierarchieverkettung',
+    it: 'Concatenazione delle gerarchie', 'zh-CN': '层级串联', ja: '階層の連結'
   }, {
     en: 'A node with no children left in the current hierarchy continues in the next one.',
     fr: 'Un nœud qui n’a plus d’enfants dans la hiérarchie courante continue dans la suivante.',
@@ -103,9 +104,9 @@ const navigationAttributes = (): Type_FigureAttributesConfig => ({
   }, { kind: 'number', min: 1, max: 12, step: 1, group: G_READ, advanced: true }),
 
   value_mode: figureAttribute<'sum' | 'declared'>('sum', 'navigation', {
-    en: 'A parent sector is worth', fr: 'Un secteur parent vaut',
-    es: 'Un sector padre vale', de: 'Ein Elternsektor entspricht',
-    it: 'Un settore padre vale', 'zh-CN': '父扇区的取值', ja: '親の扇形の値'
+    en: 'Parent sector value', fr: 'Valeur d’un secteur parent',
+    es: 'Valor de un sector padre', de: 'Wert eines Elternsektors',
+    it: 'Valore di un settore padre', 'zh-CN': '父扇区的取值', ja: '親の扇形の値'
   }, {
     en: 'Sum of children: the geometry cannot lie, the gap is reported. Own value: what the children do not cover becomes an “Unallocated” sector.',
     fr: 'Somme des enfants : la géométrie ne peut pas mentir, l’écart est signalé. Valeur propre : ce que les enfants ne couvrent pas devient un secteur « Non réparti ».',
@@ -119,12 +120,12 @@ const navigationAttributes = (): Type_FigureAttributesConfig => ({
     choices: [
       choice('sum', {
         en: 'the sum of its children', fr: 'la somme de ses enfants', es: 'la suma de sus hijos',
-        de: 'der Summe seiner Kinder', it: 'la somma dei suoi figli',
+        de: 'Summe seiner Kinder', it: 'la somma dei suoi figli',
         'zh-CN': '其子节点之和', ja: '子ノードの合計'
       }),
       choice('declared', {
         en: 'its own value', fr: 'sa valeur propre', es: 'su propio valor',
-        de: 'seinem eigenen Wert', it: 'il suo valore proprio',
+        de: 'eigener Wert', it: 'il suo valore proprio',
         'zh-CN': '其自身的值', ja: '自身の値'
       })
     ],
@@ -133,8 +134,8 @@ const navigationAttributes = (): Type_FigureAttributesConfig => ({
   }),
 
   node_value_mode: figureAttribute<'max' | 'inputs' | 'outputs'>('max', 'navigation', {
-    en: 'A node is worth', fr: 'Un nœud vaut', es: 'Un nodo vale',
-    de: 'Ein Knoten entspricht', it: 'Un nodo vale', 'zh-CN': '节点的取值', ja: 'ノードの値'
+    en: 'Node value', fr: 'Valeur d’un nœud', es: 'Valor de un nodo',
+    de: 'Knotenwert', it: 'Valore di un nodo', 'zh-CN': '节点的取值', ja: 'ノードの値'
   }, {
     en: 'Which side of the node the value is read from. Often makes no difference: on a balanced diagram inflows equal outflows.',
     fr: 'De quel côté du nœud la valeur se lit. Souvent sans effet : sur un diagramme bouclé, les entrées égalent les sorties.',

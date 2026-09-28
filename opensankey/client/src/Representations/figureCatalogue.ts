@@ -330,8 +330,10 @@ export const CENTRE_CONFIG = {
 // exactement ce qu'on veut ici, et c'est ce que `parts_` aurait empêché en l'envoyant dans Forme.
 export const LEVELS_CONFIG = {
   levels_display: entry<'in_place' | 'rings'>('in_place', 'levels', {
-    en: 'The levels', fr: 'Les niveaux', es: 'Los niveles', de: 'Die Ebenen',
-    it: 'I livelli', 'zh-CN': '各层级', ja: '階層の表示'
+    // 28/09/2026 — des NOMS, comme sur le Sankey (« Année · 2015 ») : le libellé nomme le réglage,
+    // la liste dit sa valeur.
+    en: 'Level layout', fr: 'Disposition des niveaux', es: 'Disposición de niveles', de: 'Ebenenanordnung',
+    it: 'Disposizione dei livelli', 'zh-CN': '层级排列', ja: '階層の配置'
   }, {
     en: 'In place, children replace their parent in one ring. Otherwise each level takes a ring of its own.',
     fr: 'En place, les enfants remplacent leur parent dans un seul anneau. Sinon chaque niveau prend un anneau à lui.',
@@ -402,9 +404,9 @@ export const INTERACTION_CONFIG = {
   // (ce que le disque fait depuis toujours), ou re-enraciner la figure sur lui (le drill-down).
   // D'où les libellés : ils disent le SUPPLÉMENT, pas le geste.
   interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('none', 'interaction', {
-    en: 'Clicking a part also', fr: 'Le clic sur une part, en plus', es: 'Al hacer clic, además',
-    de: 'Klick auf einen Teil zusätzlich', it: 'Il clic su una parte, in più',
-    'zh-CN': '点击某部分时，另外', ja: '部分をクリックしたとき、さらに'
+    en: 'Click on a part', fr: 'Clic sur une part', es: 'Clic en una parte',
+    de: 'Klick auf einen Teil', it: 'Clic su una parte',
+    'zh-CN': '点击部分', ja: '部分のクリック'
   }, {
     en: 'Clicking always opens the ring in the figure. This says what else it does.',
     fr: 'Le clic ouvre toujours l’anneau dans la figure. Ceci dit ce qu’il fait en plus.',
