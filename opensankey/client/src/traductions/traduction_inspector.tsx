@@ -348,6 +348,8 @@ export const resources_inspector = {
         // Jalon 79 — « coordonnées » (année, scénario, géographie : mêmes nœuds,
         // d'autres chiffres), pas « légende » : ce panneau pilote la lecture.
         title: 'Navigation and coordinates',
+        coordinates_dimensions: 'Dimensions',
+        coordinates_levels: 'Levels',
         filter: 'Filter',
         select: 'Select',
         select_tooltip: 'Select elements by type and tag (bulk operations)',
@@ -728,6 +730,8 @@ export const resources_inspector = {
       },
       filter_panel: {
         title: 'Navigation et coordonnées',
+        coordinates_dimensions: 'Dimensions',
+        coordinates_levels: 'Niveaux',
         filter: 'Filtrer',
         select: 'Sélectionner',
         select_tooltip: 'Sélectionner des éléments par type et par tag (opérations groupées)',
@@ -1091,6 +1095,8 @@ export const resources_inspector = {
       },
       filter_panel: {
         title: 'Navegación y coordenadas',
+        coordinates_dimensions: 'Dimensiones',
+        coordinates_levels: 'Niveles',
         filter: 'Filtrar',
         select: 'Seleccionar',
         select_tooltip: 'Seleccionar elementos por tipo y etiqueta (operaciones en grupo)',
@@ -1443,6 +1449,8 @@ export const resources_inspector = {
       },
       filter_panel: {
         title: 'Navigation und Koordinaten',
+        coordinates_dimensions: 'Dimensionen',
+        coordinates_levels: 'Ebenen',
         filter: 'Filtern',
         select: 'Auswählen',
         select_tooltip: 'Elemente nach Typ und Tag auswählen (Sammelvorgänge)',
@@ -1795,6 +1803,8 @@ export const resources_inspector = {
       },
       filter_panel: {
         title: 'Navigazione e coordinate',
+        coordinates_dimensions: 'Dimensioni',
+        coordinates_levels: 'Livelli',
         filter: 'Filtrare',
         select: 'Selezionare',
         select_tooltip: 'Selezionare elementi per tipo e tag (operazioni di gruppo)',
@@ -2151,6 +2161,8 @@ export const resources_inspector = {
       },
       filter_panel: {
         title: '导航与坐标',
+        coordinates_dimensions: '维度',
+        coordinates_levels: '层级',
         filter: '筛选',
         select: '选择',
         select_tooltip: '按类型与标签选择元素（批量操作）',
@@ -2507,6 +2519,8 @@ export const resources_inspector = {
       },
       filter_panel: {
         title: 'ナビゲーションと座標',
+        coordinates_dimensions: 'ディメンション',
+        coordinates_levels: '階層',
         filter: '絞り込み',
         select: '選択',
         select_tooltip: '種類とタグで要素を選択します（一括操作）',
