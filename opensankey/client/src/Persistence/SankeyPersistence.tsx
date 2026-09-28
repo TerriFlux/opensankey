@@ -35,6 +35,7 @@ import {
   default_paper_format, default_paper_orientation, default_margin_mm,
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
+import { isGeneratedMemberLink, isGeneratedMemberNode } from '../Algorithms/DimensionDisaggregation'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
 import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { originFromJSON, originToJSON } from '../types/Origin'
@@ -927,33 +928,33 @@ export class NodeElementPersistence extends NodeBasePersistence {
 
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
       }
     } else if (kwargs && kwargs['only_visible_elements']) {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && l.is_visible).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.is_visible).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && l.is_visible).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.is_visible).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && l.is_visible).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && !isGeneratedMemberLink(l) && l.is_visible).map(link => link.id)
       }
     } else {
       if (node.input_links_list.length > 0) {
-        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link).map(l => l.id)
+        json_object['inputLinksId'] = node.input_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l)).map(l => l.id)
       }
       if (node.output_links_list.length > 0) {
-        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link).map(l => l.id)
+        json_object['outputLinksId'] = node.output_links_list.filter(l => !l.is_split_link && !isGeneratedMemberLink(l)).map(l => l.id)
       }
       if (node.links_order.length > 0) {
-        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link).map(link => link.id)
+        json_object['links_order'] = node.links_order.filter(l => !l.is_split_link && !isGeneratedMemberLink(l)).map(link => link.id)
       }
     }
     return json_object
@@ -1519,6 +1520,12 @@ export class SankeyPersistence {
 
     nodes_list
       .forEach(node => {
+        // os#1511 lot 2 — un nœud ENGENDRÉ par la désagrégation d'une dimension ne s'écrit
+        // JAMAIS : il est transitoire, refabriqué à l'ouverture depuis les membres. L'écrire
+        // le ferait engendrer une seconde fois au chargement suivant — c'est exactement ce qui
+        // a produit 928 nœuds au lieu de 506 sur Bois Savoie avec les nœuds d'échange. Le
+        // fichier ne garde que le nœud d'AXE, qui reste dans le modèle (masqué) pour cela.
+        if (isGeneratedMemberNode(node)) return
         if (!(kwargs && kwargs['keep_siblings']) && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
           if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = NodeElementPersistence.toJSON(
             node.sibling,
@@ -1552,8 +1559,11 @@ export class SankeyPersistence {
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
     // Flux éclatés : jamais écrits (reconstruits du drapeau `split_links` des dimensions).
+    // os#1511 lot 2 — même règle pour les flux ENGENDRÉS par la désagrégation d'une dimension :
+    // transitoires, refabriqués à l'ouverture. Le fichier ne garde que le flux d'origine, qui
+    // porte les valeurs de tous les membres.
     links_list
-      .filter(link => !link.is_split_link)
+      .filter(link => !link.is_split_link && !isGeneratedMemberLink(link))
       .forEach(link => {
         json_object_links[link.id] = {}
         json_object_links[link.id] = LinkElementPersistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })
