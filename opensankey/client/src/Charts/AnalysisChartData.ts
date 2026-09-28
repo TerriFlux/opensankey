@@ -58,6 +58,8 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
+import { buildDataDimensionTree } from './DataDimensionHierarchy'
+import { parseMemberSectorId } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
@@ -527,6 +529,11 @@ export const analysisHierarchyTree = (
   expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   const decompose = effectiveDecompose(descriptor)
+  // os#1511 — la descente par dimension de données est la seule qui accepte un sujet FLUX : elle
+  // se teste donc AVANT le garde-fou « nœud seulement » des deux autres.
+  if (decompose?.kind === 'data_dimension') {
+    return dataDimensionTreeOf(subject, decompose, nav, reading, expanded)
+  }
   if (subject.kind !== 'node') return null
   // os#1509 — LE CROISEMENT descend aussi, et il a son propre arbre : ses secteurs sont des
   // cases, pas des nœuds (cf. Charts/CrossHierarchy).
@@ -535,6 +542,98 @@ export const analysisHierarchyTree = (
   }
   if (decompose?.kind !== 'node_children') return null
   return hierarchyTreeOf(subject.node, decompose, nav, reading, expanded)
+}
+
+// ── os#1511 — LA DESCENTE D'UNE DIMENSION DE DONNÉES ────────────────────────────────────────────
+//
+// Troisième descente, et la seule dont le SUJET ne bouge pas : un secteur n'est ni un nœud ni un
+// flux, c'est un MEMBRE, et la valeur d'un secteur est celle du sujet lu à cette coordonnée. Elle
+// vaut donc pour un flux comme pour un nœud — c'est la demande de Julien du 28/09 (« ça s'applique
+// aux flux ») —, là où les deux autres descentes n'acceptent qu'un nœud.
+
+/** L'arbre, élagué comme les deux autres : on ne descend que sous ce que l'auteur a ouvert. */
+const dataDimensionTreeOf = (
+  subject: Type_ChartSubject,
+  spec: { data_tagg_id: string, focus_id?: string },
+  nav: Type_FigureNavigation,
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
+): Type_SunburstTree | null => {
+  const element = subject.kind === 'node' ? subject.node : subject.link
+  const dimension = element.sankey.data_taggs_dict[spec.data_tagg_id] as unknown as
+    Class_DataTagGroup | undefined
+  if (dimension === undefined) return null
+  const tree = buildDataDimensionTree(
+    subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
+    dimension,
+    nav,
+    {
+      focus_id: spec.focus_id,
+      max_depth: reading.max_depth,
+      value_mode: reading.value_mode,
+      node_value_mode: reading.node_value_mode,
+      residual_label: reading.residual_label
+    }
+  )
+  if (!tree) return null
+  // La RACINE est le sujet, toujours ouverte : le décomposer est la raison d'être de la figure.
+  const prune = (sector: Type_SunburstNode, is_root: boolean) => {
+    if (!is_root && !expanded.has(sector.id)) {
+      sector.children = []
+      return
+    }
+    sector.children.forEach(child => prune(child, false))
+  }
+  tree.roots.forEach(root => prune(root, true))
+  return tree
+}
+
+/** LA FRONTIÈRE de cet arbre, à plat : ce que dessine le mode « en place ». */
+const decomposeDataDimension = (
+  subject: Type_ChartSubject,
+  spec: { data_tagg_id: string, focus_id?: string },
+  nav: Type_FigureNavigation,
+  reading: Type_HierarchyReading = {},
+  expanded: ReadonlySet<string> = new Set()
+): Type_ChartPart[] => {
+  const element = subject.kind === 'node' ? subject.node : subject.link
+  const dimension = element.sankey.data_taggs_dict[spec.data_tagg_id] as unknown as
+    Class_DataTagGroup | undefined
+  const root = dataDimensionTreeOf(subject, spec, nav, reading, expanded)?.roots[0]
+  if (!root || dimension === undefined) return []
+  /** Le membre du modèle derrière un secteur — pour savoir s'il reste quelque chose à ouvrir. */
+  const memberOf = (sector_id: string) => {
+    const ref = parseMemberSectorId(sector_id)
+    if (ref === null || ref.dimension_id !== dimension.id) return undefined
+    return dimension.tags_dict[ref.member_id] as Class_DataTag | undefined
+  }
+  const walk = (
+    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[]
+  ): Type_ChartPart[] => {
+    if (sector.children.length > 0) {
+      return sector.children.flatMap(
+        child => walk(child, sector.label, depth + 1, branch_id, [...path, child.id])
+      )
+    }
+    return [{
+      path,
+      id: sector.id,
+      label: sector.label,
+      value: sector.value,
+      color: sector.color ?? undefined,
+      depth,
+      parent_label,
+      // La TEINTE vient de la branche, la profondeur ne donnant que la clarté — exactement la
+      // règle de la descente par nœuds, et celle que `DimensionPalette` applique au diagramme.
+      branch_id,
+      // L'arbre est élagué : un membre sans enfant ICI peut en avoir dans le modèle, et c'est
+      // justement ce que le clic ouvrira.
+      has_children: (memberOf(sector.id)?.children.length ?? 0) > 0
+    }]
+  }
+  return root.children
+    .flatMap(child => walk(child, root.label, 0, child.id, [root.id, child.id]))
+    .filter(part => part.value > 0)
 }
 
 const decomposeFluxChildren = (
@@ -626,11 +725,19 @@ const decomposeSubject = (
       const cross = buildCrossTree(node, spec, nav, expanded, { max_depth: reading.max_depth })
       return cross ? crossFrontier(cross) : []
     }
+    // os#1511 — une dimension de données découpe un NŒUD aussi bien qu'un flux : le sujet ne
+    // change pas d'un secteur à l'autre, seule la coordonnée sous laquelle on le lit change.
+    if (spec.kind === 'data_dimension') {
+      return decomposeDataDimension(subject, spec, nav, reading, expanded)
+    }
     return []
   }
-  // Sujet flux : seule la décomposition en flux enfants a un sens.
+  // Sujet flux : la décomposition en flux enfants, et — depuis os#1511 — la dimension de données.
   if (spec.kind === 'flux_children') {
     return decomposeFluxChildren(subject.link, spec.dimension_id, nav)
+  }
+  if (spec.kind === 'data_dimension') {
+    return decomposeDataDimension(subject, spec, nav, reading, expanded)
   }
   return []
 }

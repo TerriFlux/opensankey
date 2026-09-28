@@ -55,6 +55,18 @@ export type Type_DecomposeSpec =
   // axe (cf. Charts/CrossHierarchy). `first` : l'axe qui ouvre — la hiérarchie du sujet ('self')
   // ou celle des nœuds d'en face ('other') —, l'autre prenant le relais.
   | { kind: 'flux_cross', side: 'inputs' | 'outputs', first: 'self' | 'other' }
+  // os#1511 — UNE DIMENSION HIÉRARCHISÉE DE DONNÉES (sujet flux OU nœud) : une part est un MEMBRE
+  // de la dimension, sa valeur celle du sujet à cette coordonnée, et descendre d'un anneau
+  // remplace un membre par ses enfants (cf. Charts/DataDimensionHierarchy).
+  //
+  // ⚠️ CET AXE EST ADDITIF, ET C'EST UNE NOUVEAUTÉ POUR UN GROUPE D'ÉTIQUETTES DE DONNÉES. La règle
+  // d'en face — « un groupe d'étiquettes de données ne décompose RIEN : deux années ne font pas un
+  // tout » (`figureCoordinates.decomposeSpecOf`) — reste vraie de tout groupe PLAT, et c'est
+  // pourquoi elle y demeure. Une dimension hiérarchisée, elle, fait un tout : ses feuilles somment
+  // à leur parent, c'est le contrat du cube de valeurs. C'est `is_hierarchical` qui départage.
+  //
+  // `focus_id` : le membre à la racine de la décomposition, quand la figure est descendue dedans.
+  | { kind: 'data_dimension', data_tagg_id: string, focus_id?: string }
 
 // Axe non-additif : la valeur du sujet pour chaque tag d'un groupe de data tags,
 // OU (#389) pour chacun des flux entrants / sortants d'un nœud — une barre par
@@ -184,7 +196,8 @@ export const deduceRepr = (d: Type_AnalysisDescriptor): 'donut' | 'bars' => {
 //   - `inputs` / `outputs` sans groupement : une part par FLUX visible du nœud ;
 //   - `inputs` / `outputs` groupés par un groupe d'étiquettes de flux : une part par TAG ;
 //   - `node_children` : une part par NŒUD enfant, le long d'une dimension ;
-//   - `flux_children` : une part par FLUX enfant.
+//   - `flux_children` : une part par FLUX enfant ;
+//   - `data_dimension` : une part par MEMBRE d'une dimension de données (os#1511).
 //
 // Point de vérité unique : c'est ici, avec le descripteur, et non dans chaque moteur de dessin —
 // couronne et histogramme montrent le même axe, ils ne peuvent pas en tirer deux réponses.
@@ -199,6 +212,10 @@ export const decomposedPartKind = (
   if (spec.kind === 'flux_children') return 'link'
   // Une case du croisement EST un flux du document (os#1509).
   if (spec.kind === 'flux_cross') return 'link'
+  // os#1511 — un secteur EST un membre de la dimension, donc une étiquette. Même nature qu'une
+  // décomposition par flux GROUPÉS : aucun objet unique n'est derrière la part, l'étiquette est
+  // ce qu'elle désigne.
+  if (spec.kind === 'data_dimension') return 'tag'
   return null
 }
 
