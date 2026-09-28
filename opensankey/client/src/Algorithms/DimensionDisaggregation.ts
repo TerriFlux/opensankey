@@ -112,9 +112,16 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // du niveau » rendait donc le sélecteur inopérant (choisir l'Espagne affichait les quatre
     // pays), et filtrer sur le seul membre choisi supprimait toute désagrégation. Les enfants
     // satisfont les deux : on lit toujours un membre, on en montre plusieurs.
-    const choisi = dimension.selected_tags_list[0] as Class_DataTag | undefined
-    if (choisi === undefined) return
-    const membres = choisi.children.length > 0 ? choisi.children : [choisi]
+    // Plusieurs membres cochés donnent l'UNION de leurs enfants. Ne lire que le premier
+    // reviendrait à ignorer les autres en silence — or cocher deux membres veut dire qu'on
+    // veut voir les deux (les bandes d'un flux, elles, se dérivent déjà ainsi au dessin).
+    const choisis = dimension.selected_tags_list as Class_DataTag[]
+    if (choisis.length === 0) return
+    const membres: Class_DataTag[] = []
+    choisis.forEach(choisi => {
+      const descente = choisi.children.length > 0 ? choisi.children : [choisi]
+      descente.forEach(membre => { if (!membres.includes(membre)) membres.push(membre) })
+    })
     engendres += disaggregateOne(sankey, axe, dimension, membres)
   })
   return engendres
@@ -180,6 +187,12 @@ function repartir(
       ? sankey.addNewLinkWithId(id, autre_bout, noeud_membre)
       : sankey.addNewLinkWithId(id, noeud_membre, autre_bout)
     nouveau.copyAttrFrom(flux)
+    // Le flux engendré REPRÉSENTE un membre : sa valeur ne doit plus dépendre du membre visé.
+    // Sans cela elle vit à une coordonnée de la dimension découpée, et deux membres cochés la
+    // rendent illisible — `getValueForDataTags` n'adresse qu'un membre à la fois, donc le flux
+    // se dessinait sans valeur dès qu'on en cochait deux. On retire donc cette dimension de son
+    // arbre de valeurs ; il garde sa dépendance aux AUTRES dimensions, qui est légitime.
+    nouveau.removeDataTagGroup(membre.group as unknown as Class_DataTagGroup)
     const valeur = nouveau.value
     if (valeur !== null) {
       valeur.valueData = contributions

@@ -26,10 +26,10 @@ if (typeof globalThis.structuredClone !== 'function') {
 // Les noeuds engendres sont TRANSITOIRES : c est pourquoi on verifie surtout les GARDES, celles
 // qui ont coute cher aux noeuds d echange en aout.
 
-/** Designe LE membre courant. Le cube n en adresse qu un : ce n est pas une simplification. */
-function choisir(pays: Class_DataTagGroup, membre?: Class_DataTag) {
+/** Coche ces membres, et eux seuls. */
+function choisir(pays: Class_DataTagGroup, ...membres: Class_DataTag[]) {
   pays.tags_list.forEach(t => t.setUnSelected())
-  if (membre !== undefined) membre.setSelected()
+  membres.forEach(membre => membre.setSelected())
 }
 
 /**
@@ -125,6 +125,17 @@ describe('os#1511 lot 2B — un noeud d axe se remplace par les enfants du membr
     expect(disaggregateDimensionNodes(sankey)).toBe(1)
     expect(nomsEngendres(sankey)).toEqual(['Espagne'])
     expect(parCible(sankey).get('Espagne')).toBe(12)
+  })
+
+  test('DEUX membres coches donnent l UNION de leurs enfants', () => {
+    const { sankey, pays, europe, maroc } = monter()
+    // Le Maroc est une feuille : il s apporte lui-meme. L Europe apporte ses deux pays.
+    choisir(pays, europe, maroc)
+    expect(disaggregateDimensionNodes(sankey)).toBe(3)
+    expect(nomsEngendres(sankey)).toEqual(['Espagne', 'France', 'Maroc'])
+    const par_cible = parCible(sankey)
+    expect(par_cible.get('France')).toBe(30)
+    expect(par_cible.get('Maroc')).toBe(7)
   })
 
   test('un enfant SANS contribution ne recoit AUCUN flux, pas un flux a zero', () => {
