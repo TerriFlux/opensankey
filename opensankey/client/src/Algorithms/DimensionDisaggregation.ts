@@ -83,11 +83,10 @@ export function removeGeneratedMemberNodes(sankey: Class_Sankey): number {
 }
 
 /**
- * Désagrège tous les nœuds d'axe du diagramme au niveau courant de leur dimension.
+ * Désagrège tous les nœuds d'axe du diagramme sur les ENFANTS du membre choisi.
  *
- * Rend le nombre de nœuds engendrés. Un nœud d'axe dont la dimension ne montre qu'un seul
- * membre au niveau courant N'EST PAS désagrégé : le remplacer par un unique nœud ne dirait
- * rien de plus et lui ferait perdre son identité.
+ * Rend le nombre de nœuds engendrés. Un nœud d'axe dont aucun membre n'est choisi n'est pas
+ * désagrégé : il n'y aurait rien à montrer, et le vider serait pire que le laisser.
  */
 export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   removeGeneratedMemberNodes(sankey)
@@ -104,8 +103,25 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // supprimée par un tour précédent de cette même boucle).
     const dimension = axe.driving_dimension
     if (dimension === undefined) return
-    const membres = dimension.membersAtLevel()
-    if (membres.length < 2) return
+    // Les ENFANTS du membre choisi (décision de Julien, 28/09). On descend dans l'arbre en
+    // désignant un parent : « Monde » montre les régions, « Europe » ses pays, et un membre
+    // TERMINAL ne se découpe plus — il se montre seul.
+    //
+    // La règle vient d'une contrainte du cube : `getValueForDataTags` n'adresse qu'UN membre
+    // par dimension, deux membres cochés ne rendent aucune valeur. Montrer « tous les membres
+    // du niveau » rendait donc le sélecteur inopérant (choisir l'Espagne affichait les quatre
+    // pays), et filtrer sur le seul membre choisi supprimait toute désagrégation. Les enfants
+    // satisfont les deux : on lit toujours un membre, on en montre plusieurs.
+    // Plusieurs membres cochés donnent l'UNION de leurs enfants. Ne lire que le premier
+    // reviendrait à ignorer les autres en silence — or cocher deux membres veut dire qu'on
+    // veut voir les deux (les bandes d'un flux, elles, se dérivent déjà ainsi au dessin).
+    const choisis = dimension.selected_tags_list as Class_DataTag[]
+    if (choisis.length === 0) return
+    const membres: Class_DataTag[] = []
+    choisis.forEach(choisi => {
+      const descente = choisi.children.length > 0 ? choisi.children : [choisi]
+      descente.forEach(membre => { if (!membres.includes(membre)) membres.push(membre) })
+    })
     engendres += disaggregateOne(sankey, axe, dimension, membres)
   })
   return engendres
@@ -171,6 +187,12 @@ function repartir(
       ? sankey.addNewLinkWithId(id, autre_bout, noeud_membre)
       : sankey.addNewLinkWithId(id, noeud_membre, autre_bout)
     nouveau.copyAttrFrom(flux)
+    // Le flux engendré REPRÉSENTE un membre : sa valeur ne doit plus dépendre du membre visé.
+    // Sans cela elle vit à une coordonnée de la dimension découpée, et deux membres cochés la
+    // rendent illisible — `getValueForDataTags` n'adresse qu'un membre à la fois, donc le flux
+    // se dessinait sans valeur dès qu'on en cochait deux. On retire donc cette dimension de son
+    // arbre de valeurs ; il garde sa dépendance aux AUTRES dimensions, qui est légitime.
+    nouveau.removeDataTagGroup(membre.group as unknown as Class_DataTagGroup)
     const valeur = nouveau.value
     if (valeur !== null) {
       valeur.valueData = contributions

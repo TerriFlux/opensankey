@@ -2510,6 +2510,26 @@ export class Class_LinkElement extends Class_LinkAttribute {
     let value_current = null
     if (this._reads_collected_layer) value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
+    // os#1511 lot 1 — AGRÉGAT d'un membre PARENT. `value` n'adresse qu'un point du cube : sur
+    // une dimension hiérarchisée, viser « Céréales » ne trouve rien, la donnée étant portée
+    // par « Blé » et « Maïs ». Le flux se dessinait alors SANS VALEUR (constaté par Julien sur
+    // le jeu de démonstration, 28/09) — c'est ici, et nulle part ailleurs, que l'agrégat entre
+    // dans le dessin.
+    //
+    // Le repli ne joue que faute de valeur propre : une valeur saisie au niveau demandé prime
+    // toujours sur la somme de ses feuilles. Et il ne coûte le parcours de l'arbre que si le
+    // diagramme porte vraiment une hiérarchie.
+    if (value_current === null && this.sankey.data_taggs_list.some(tagg => (tagg as Class_DataTagGroup).is_hierarchical)) {
+      const contributions = this.contributing_values
+      if (contributions !== null) {
+        const portees = contributions
+          .map(v => this._reads_collected_layer
+            ? v.valueData
+            : v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null))
+          .filter((v): v is number => v !== null && v !== undefined)
+        if (portees.length > 0) value_current = portees.reduce((total, v) => total + v, 0)
+      }
+    }
     // #285 (§3.0ter) — pas de valeur principale : avec des groupes PORTEURS,
     // la valeur affichée est celle du TAG SÉLECTIONNÉ (comme pour les
     // dataTags), même si un scalaire hérité subsiste (il ne sert plus que de
