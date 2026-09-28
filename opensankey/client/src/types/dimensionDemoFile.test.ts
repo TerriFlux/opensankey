@@ -5,6 +5,11 @@ import { Class_ApplicationData } from './ApplicationData'
 import type { Class_DataTag } from './Tag'
 import type { Class_DataTagGroup } from './TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
+import {
+  disaggregateDimensionNodes,
+  isGeneratedMemberLink,
+  removeGeneratedMemberNodes,
+} from '../Algorithms/DimensionDisaggregation'
 
 // jest 27 / jsdom n'expose pas structuredClone (utilise par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -115,6 +120,23 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     const france = sankey.addNewNodeWithName('France')
     const partenaires = sankey.addNewNodeWithName('Partenaires')
     const exportations = sankey.addNewLink(france, partenaires)
+    // os#1511 lot 2 — « Partenaires » N EST PAS un noeud ordinaire : il EST l axe des pays. Au
+    // niveau des regions il se remplacera par Europe et Afrique, au niveau des pays par les
+    // quatre. Sans cet attachement, le fichier ne montrait qu un seul flux, quel que soit le
+    // niveau choisi — ce que Julien a vu a l ecran le 28/09.
+    partenaires.driving_dimension = pays
+    france.setPosXY(80, 260)
+    partenaires.setPosXY(520, 260)
+    // La geometrie est portee par le MEMBRE : c est elle qui survit a la regeneration des
+    // noeuds engendres. On etale les membres pour qu ils ne s empilent pas au premier abord.
+    const PLACES: { [id: string]: { x: number, y: number } } = {
+      'europe': { x: 520, y: 150 }, 'afrique': { x: 520, y: 380 },
+      'espagne': { x: 520, y: 80 }, 'italie': { x: 520, y: 220 },
+      'maroc': { x: 520, y: 340 }, 'egypte': { x: 520, y: 460 },
+    }
+    Object.entries(PLACES).forEach(([id, place]) => {
+      (pays.tags_dict[id] as Class_DataTag).position = place
+    })
 
     let total_saisi = 0
     Object.entries(VALEURS).forEach(([filiere_id, par_pays]) => {
@@ -137,6 +159,21 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     const total_agrege = (contributions ?? []).reduce((t, v) => t + (v.valueData ?? 0), 0)
     expect(total_agrege).toBe(total_saisi)
     expect(total_agrege).toBe(1385)
+    // Et l invariant tel que le DESSIN le lit, qui est ce que Julien regarde : un flux sans
+    // valeur ne prouve rien, meme si l agregat est juste par ailleurs.
+    expect(exportations.valueCurrent).toBe(1385)
+
+    // Le second invariant, celui du lot 2 : descendre d un niveau decoupe le noeud d axe et
+    // repartit le flux, sans rien perdre en chemin.
+    pays.selectLevel(1)
+    expect(disaggregateDimensionNodes(sankey)).toBe(2)
+    const par_membre = sankey.links_list.filter(isGeneratedMemberLink)
+    expect(par_membre.map(l => l.target.name).sort()).toEqual(['Afrique', 'Europe'])
+    expect(par_membre.reduce((t, l) => t + (l.value?.valueData ?? 0), 0)).toBe(1385)
+    // On rend le fichier a son etat d ouverture : les noeuds engendres ne s ecrivent pas, mais
+    // le niveau courant, lui, s ecrit.
+    removeGeneratedMemberNodes(sankey)
+    pays.selectLevel(0)
 
     if (SORTIE !== undefined) {
       const json = app.toJSON()
