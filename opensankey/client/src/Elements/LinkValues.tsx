@@ -558,15 +558,17 @@ export class Class_ElementValueTree {
     }
   }
 
+  /**
+   * os#1511 — la fratrie est balayée jusqu'au fils, plus au-delà : un même objet n'est jamais
+   * rangé sous deux étiquettes (chaque entrée reçoit une valeur fraîchement construite), donc
+   * s'arrêter au premier trouvé rend le même résultat. On évite aussi le tableau de clés :
+   * appelée pour chaque feuille d'un cube de 116 772, cette allocation se voyait au profil.
+   */
   public getDataTagIdFromChild(child: Class_ElementValue | Class_ElementValueTree): string | undefined {
-    let id = undefined
-    Object.keys(this.children)
-      .forEach(tag_id => {
-        if (this.children[tag_id] === child) {
-          id = tag_id
-        }
-      })
-    return id
+    for (const tag_id in this.children) {
+      if (this.children[tag_id] === child) return tag_id
+    }
+    return undefined
   }
 
   public getDataTagsIdCombination(child: Class_ElementValue | Class_ElementValueTree): string[] {
@@ -664,6 +666,9 @@ export class Class_ElementValueTree {
 
 // Backward-compatible alias
 export { Class_ElementValueTree as Class_LinkValueTree }
+
+/** os#1511 — un vecteur de n cases vides ; cf. le constructeur de `Class_ElementValue`. */
+const vecteurVide = (n: number): (number | null)[] => (n === 1) ? [null] : new Array(n).fill(null)
 
 // CLASS ELEMENT VALUE (BASE) ***********************************************************
 /**
@@ -782,7 +787,14 @@ export class Class_ElementValue {
   protected get vectorSize(): number { return 1 }
 
   // PRIVATE ATTRIBUTES ==================================================================
-  private _id: string
+  /**
+   * os#1511 — FABRIQUÉ À LA DEMANDE. OS#1367 avait déjà établi que cet identifiant n'est pas
+   * une identité mais une clé de dictionnaire temporaire, jamais écrite dans le fichier ; rien
+   * n'oblige donc à le tirer tant que personne ne le lit. Or sur le SOCLE (148 produits × 263
+   * pays × 3 années) le cube compte 116 772 feuilles par élément, et le profil V8 imputait
+   * 2,6 s au seul tirage aléatoire — pour des chaînes que le chargement ne consulte jamais.
+   */
+  private _id: string | null = null
   private _flux_tags: Class_Tag[] = []
   private _taggs_dict: { [x: string]: Class_Tag[]; } = {}
   // #284 — sous-valeurs à coordonnée éparse (NOTE-FUSION-TAGS.md §3.0). Une
@@ -796,24 +808,36 @@ export class Class_ElementValue {
   constructor(parent: Class_ElementValueTree | ValueParentElement) {
     this.parent = parent
     const n = this.vectorSize
-    this._data_value = new Array(n).fill(null)
-    this._data_min = new Array(n).fill(null)
-    this._data_max = new Array(n).fill(null)
-    this._data_uncertainty = new Array(n).fill(null)
-    this._result_value = new Array(n).fill(null)
-    this._result_min = new Array(n).fill(null)
-    this._result_max = new Array(n).fill(null)
-    const name = (this.link?.id ?? '') + '_value_'
-    this.data_tags_id
-      .forEach(tag_id => name + '_' + tag_id)
-    this._id = makeId(name)
+    // os#1511 — `[null]` plutôt que `new Array(1).fill(null)` dans le cas courant (les flux) :
+    // le second fabrique un tableau TROUÉ puis le bouche, que V8 range dans une famille plus
+    // lente que le littéral. Sept vecteurs par feuille et 116 772 feuilles par élément : la
+    // différence se lit au chronomètre.
+    this._data_value = vecteurVide(n)
+    this._data_min = vecteurVide(n)
+    this._data_max = vecteurVide(n)
+    this._data_uncertainty = vecteurVide(n)
+    this._result_value = vecteurVide(n)
+    this._result_min = vecteurVide(n)
+    this._result_max = vecteurVide(n)
+    // os#1511 — l'identifiant n'est plus tiré ici (cf. `_id` et le getter `id`). La combinaison
+    // de dataTags n'y entrait de toute façon pas : le nom était un `const` et la boucle qui
+    // l'épelait jetait son résultat. Elle coûtait pourtant cher, car `data_tags_id` remonte
+    // l'arbre en cherchant à chaque étage la clé du fils par BALAYAGE de la fratrie
+    // (`getDataTagIdFromChild`) — or à la construction le fils n'y est pas encore posé, donc le
+    // balayage était intégral et rendait toujours la liste vide. Le profil V8 du SOCLE (148
+    // produits × 263 pays × 3 années) lui imputait 4,6 s des 12 s de construction, pour rien.
   }
 
   // CLEANING METHODS ===================================================================
-  public delete() {
+  /**
+   * @param detach_from_parent os#1511 — `false` quand l'appelant REMPLACE lui-même l'entrée du
+   * parent (cf. `expand`) : le retrait chercherait la clé du fils par balayage de la fratrie,
+   * pour la voir écrasée juste après. Sur le SOCLE ce balayage pesait 9,8 s au profil V8.
+   */
+  public delete(detach_from_parent = true) {
     if (!this._is_currently_deleted) {
       this._is_currently_deleted = true
-      if (this.parent instanceof Class_ElementValueTree)
+      if (detach_from_parent && this.parent instanceof Class_ElementValueTree)
         this.parent.removeChild(this)
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
       this._flux_tags = []
@@ -899,8 +923,9 @@ export class Class_ElementValue {
   ) {
     // OS#1367 — tolérance de lecture : l'id n'est plus écrit, mais un fichier
     // ancien en porte un ; on l'adopte alors tel quel, sinon on garde celui du
-    // constructeur.
-    this._id = getStringFromJSON(json_object, 'id', this._id)
+    // constructeur. os#1511 — l'absence se lit sans TOUCHER à `this._id` : le consulter
+    // comme valeur de repli forcerait le tirage que la construction paresseuse évite.
+    if (typeof json_object['id'] === 'string') this._id = json_object['id'] as string
     // Get Flux tags
     const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
@@ -948,7 +973,11 @@ export class Class_ElementValue {
     Object.values(new_parent.children).forEach(child => {
       if (child instanceof Class_ElementValue) child.copyFrom(this)
     })
-    this.delete()
+    // Les QUATRE appelants de `expand` rangent eux-mêmes le sous-arbre rendu à la place de la
+    // feuille dépliée (`this.children[id] = …`, `this._values = …`). Se retirer du parent serait
+    // donc chercher une clé pour la voir écrasée dans la foulée : 9,8 s au profil V8 du SOCLE,
+    // passées dans le balayage de fratrie de `getDataTagIdFromChild`. Mesuré le 28/09.
+    this.delete(false)
     return new_parent
   }
 
@@ -1051,7 +1080,11 @@ export class Class_ElementValue {
   }
 
   // GETTERS / SETTERS ==================================================================
-  public get id() { return this._id }
+  /** os#1511 — tiré au premier regard, et pas avant (cf. `_id`). */
+  public get id(): string {
+    if (this._id === null) this._id = makeId((this.link?.id ?? '') + '_value_')
+    return this._id
+  }
 
   public get rootElement(): ValueParentElement | null {
     if (this.parent instanceof Class_ElementValueTree) return this.parent.rootElement

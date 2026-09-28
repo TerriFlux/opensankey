@@ -244,3 +244,25 @@ describe('OS#1367 — un aller-retour JSON rend une valeur équivalente', () => 
     expect(matiere.tags_dict['acier'].references).toHaveLength(2)
   })
 })
+
+// os#1511 — l identifiant est desormais FORGE AU PREMIER REGARD, plus au constructeur : sur un
+// cube dense (148 produits x 263 pays x 3 annees) le tirage aleatoire pesait 2,6 s au profil V8
+// pour des chaines que le chargement ne consulte jamais. Ces tests figent ce que la paresse ne
+// doit PAS changer.
+describe('os#1511 — un id tire a la demande se comporte comme un id tire au constructeur', () => {
+
+  it('le meme id est rendu a chaque lecture', () => {
+    const env = makeEnv()
+    const value = new Class_LinkValue(env.link)
+    expect(value.id).toBe(value.id)
+  })
+
+  it('un id du fichier est adopte meme si personne ne lit celui de la valeur avant', () => {
+    const env = makeEnv()
+    const value = new Class_LinkValue(env.link)
+    // Aucune lecture de value.id avant ce point : la paresse ne doit pas laisser passer
+    // le repli du constructeur devant l id ecrit dans un fichier ancien.
+    value.fromJSON({ id: 'sourcecible_value__wA9x4', data_value: 1 })
+    expect(value.id).toBe('sourcecible_value__wA9x4')
+  })
+})
