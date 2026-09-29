@@ -188,29 +188,55 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   return engendres
 }
 
-/** Les nœuds de membre d'UN axe, dans l'ordre des membres choisis. */
+/**
+ * Les nœuds de membre d'UN axe, dans l'ordre des membres choisis.
+ *
+ * ── LA MISE EN PAGE SUIT LES OPTIONS DE DÉSAGRÉGATION (Julien, 29/09) ──────────────────────────
+ *
+ * « En nœud dupliqué, il faut que ça suive les options de désagrégation. » Il a raison, et c'est
+ * la même exigence que partout ailleurs sur ce chantier : un nœud engendré par une dimension de
+ * données doit se comporter comme un nœud engendré par une hiérarchie de nœuds. Deux façons de
+ * placer des enfants seraient deux diagrammes.
+ *
+ * Ces options vivent sur la zone de dessin (`disaggregation_gap_mode` : remplir le slot du parent,
+ * garder les positions, écart propre à chaque enfant, écart constant) et s'appliquent par
+ * `layoutChildrenInParentSlot` — exactement l'appel que fait la désagrégation d'un nœud
+ * (`Hierarchies.tsx`). On l'emprunte plutôt que de le réécrire.
+ *
+ * ⚠️ CE QUE ÇA REMPLACE : un écart de 90 px en dur, centré sur l'axe. Il ne connaissait ni la
+ * hauteur des nœuds ni le slot du parent, donc il débordait sur les voisins dès que les membres
+ * étaient nombreux ou épais.
+ *
+ * LA POSITION PORTÉE PAR LE MEMBRE reste prioritaire, et c'est elle qui survit à la régénération :
+ * c'est ce qu'on déplace à l'écran. Elle s'applique donc APRÈS la mise en page, qui ne vaut que
+ * pour les membres dont personne n'a encore décidé la place.
+ */
 function creerNoeudsDeMembre(
   sankey: Class_Sankey,
   axe: Class_NodeElement,
   membres: Class_DataTag[]
 ): Type_MembreRepresente[] {
-  // Écart vertical entre deux membres sans position propre. Ils s'étalent dans la COLONNE de
-  // leur axe, centrés sur lui : les poser tous à sa place les empilerait en un seul tas
-  // illisible — constaté à l'écran sur le SOCLE, où aucun des 263 pays n'a de position.
-  const PAS_VERTICAL = 90
-  const milieu = (membres.length - 1) / 2
-  return membres.map((membre, rang) => {
+  const engendres = membres.map(membre => {
     const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
-    // La géométrie vient du MEMBRE quand il en porte une : c'est elle qui survit à la
-    // régénération, et c'est ce qu'on déplace à l'écran.
-    const position = membre.position
-    noeud.setPosXY(
-      position?.x ?? axe.position_x,
-      position?.y ?? (axe.position_y + (rang - milieu) * PAS_VERTICAL)
-    )
     noeud.copyAttrFrom(axe)
+    // La COLONNE est toujours celle de l'axe : `layoutChildrenInParentSlot` ne règle que le Y,
+    // et un membre sans colonne se retrouverait à l'abscisse zéro.
+    noeud.position_u = axe.position_u
+    noeud.position_x = axe.position_x
     return { membre, noeud }
   })
+
+  // Le slot du parent, c'est-à-dire la place que l'axe occupait : les membres la prennent, et
+  // aucun voisin n'est poussé tant qu'ils y tiennent.
+  axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
+    engendres.map(({ noeud }) => noeud), axe.position_y, axe.getShapeHeightToUse()
+  )
+
+  engendres.forEach(({ membre, noeud }) => {
+    const position = membre.position
+    if (position !== undefined) noeud.setPosXY(position.x, position.y)
+  })
+  return engendres
 }
 
 /**
