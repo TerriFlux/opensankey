@@ -25,7 +25,7 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaCode, FaInfoCircle, FaEye } from 'react-icons/fa'
+import { FaProjectDiagram, FaTable, FaFileAlt, FaCode, FaInfoCircle } from 'react-icons/fa'
 // os#1473 — la couronne et les barres sont des natures d'OpenSankey, comme le sunburst.
 import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
@@ -280,7 +280,9 @@ export const registerBaseRepresentations = (): void => {
     // l'en-tête pose à côté du libellé (`describeContent`, juste dessous). Une fenêtre dit donc
     // « Sankey · Origine » là où le canevas dit « Sankey » tout court.
     label: (a) => a.t('Spreadsheet.zone.diagram'),
-    icon: <FaEye />,
+    // sa#567 — L'ICÔNE DU DIAGRAMME, et non plus l'œil : un Sankey est un Sankey, qu'il soit le
+    // canevas ou un volet de plus (arbitrage Alexandre, 29/09). L'œil reste le symbole des VUES.
+    icon: <FaProjectDiagram />,
     // Un diagramme SANS aucun groupe d'étiquettes n'a rien à mettre en forme : la nature ne se
     // propose pas, plutôt que d'offrir une vue qui serait la copie conforme du diagramme.
     isAvailable: (ctx) => tagGroupsOf(ctx.app_data).length > 0,

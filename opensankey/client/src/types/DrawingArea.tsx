@@ -90,7 +90,8 @@ import { toolAppliesToActiveWindow } from './CreationToolScope'
  * diagramme n'est pas la fenêtre principale, 'hidden' quand il est fermé. Posé par l'hôte
  * (MainZoneTabs) dans ApplicationData.main_zone_canvas_frame, lu par la drawing area affichée.
  */
-export type Type_CanvasFrame = { left: number, top: number, width: number, height: number } | 'hidden'
+// sa#567 — `z` : le plan du SVG quand son volet FLOTTE au-dessus de la grille (absent sinon).
+export type Type_CanvasFrame = { left: number, top: number, width: number, height: number, z?: number } | 'hidden'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
@@ -463,7 +464,7 @@ export class Class_DrawingArea {
     const f = this.canvas_frame
     if (f === null || f === 'hidden') {
       svg.style('position', null).style('left', null).style('top', null)
-        .style('width', null).style('height', null)
+        .style('width', null).style('height', null).style('z-index', null)
         .attr('width', '100%').attr('height', this._svgDefaultHeight())
       if (f === 'hidden') svg.style('visibility', 'hidden')
       else svg.style('visibility', null)
@@ -472,6 +473,7 @@ export class Class_DrawingArea {
     svg.style('visibility', null)
       .style('position', 'fixed').style('left', f.left + 'px').style('top', f.top + 'px')
       .style('width', f.width + 'px').style('height', f.height + 'px')
+      .style('z-index', f.z !== undefined ? String(f.z) : '')
       .attr('width', f.width).attr('height', f.height)
   }
 

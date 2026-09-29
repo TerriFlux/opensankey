@@ -57,6 +57,13 @@ import type {
 export const TAG_GROUP_VIEW_OPTION_KEY = 'tagg_id'
 
 /**
+ * sa#567 — « AUCUN GROUPE » : le réglage d'un volet Sankey ouvert depuis le « + » quand le
+ * diagramme est déjà à l'écran. Ce volet est un second Sankey du MÊME document, dessiné tel quel ;
+ * sans cette valeur, le repli de `tagGroupOfContext` le mettrait en forme par le premier groupe.
+ */
+export const TAG_GROUP_VIEW_NONE = '__none__'
+
+/**
  * Les groupes d'étiquettes qu'une vue peut prendre pour réglage : ceux de NŒUDS et ceux de FLUX,
  * les deux familles que la cascade des styles d'étiquette met en forme (`setTagStylePreview`).
  */
@@ -79,6 +86,7 @@ export const tagGroupsOf = (app_data: Class_ApplicationData): Class_TagGroup[] =
 export const tagGroupOfContext = (ctx: Type_RepresentationContext): Class_TagGroup | undefined => {
   const groups = tagGroupsOf(ctx.app_data)
   const wanted = ctx.options[TAG_GROUP_VIEW_OPTION_KEY]
+  if (wanted === TAG_GROUP_VIEW_NONE) return undefined
   if (typeof wanted === 'string' && wanted !== '') {
     const found = groups.find(g => g.id === wanted)
     if (found) return found

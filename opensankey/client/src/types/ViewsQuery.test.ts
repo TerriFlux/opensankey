@@ -30,6 +30,8 @@ const makeHost = (opts: {
     views_order: opts.views_order ?? Object.keys(views),
     current_view_id: opts.current_view_id ?? MASTER_VIEW_ID,
     master_view_name: opts.master_view_name ?? '',
+    // sa#567 — comme `ApplicationData.master_view_display_name` : le nom donné, sinon la nature.
+    master_view_display_name: opts.master_view_name || 'Sankey',
     show_master_in_views: opts.show_master_in_views ?? false,
     master_drawing_area: opts.no_master ? undefined : da,
     drawing_area: da,
@@ -266,11 +268,19 @@ describe('#244 ViewsQuery — requêtes / navigation', () => {
       views: { v1: view('Vue 1'), v2: view('Vue 2') },
       views_order: ['v1', 'v2'],
     }))
+    // sa#567 — le maître non nommé porte le nom de sa nature, plus « Vue principale ».
     expect(vm.layout_view_sources).toEqual([
-      { id: MASTER_VIEW_ID, name: 'Vue principale' },
+      { id: MASTER_VIEW_ID, name: 'Sankey' },
       { id: 'v1', name: 'Vue 1' },
       { id: 'v2', name: 'Vue 2' },
     ])
+  })
+
+  it('sa#567 — layout_view_sources : le maître nommé garde son nom', () => {
+    const vm = new ViewsQuery(makeHost({
+      views: { v1: view('Vue 1') }, views_order: ['v1'], master_view_name: 'Ensemble'
+    }))
+    expect(vm.layout_view_sources[0]).toEqual({ id: MASTER_VIEW_ID, name: 'Ensemble' })
   })
 })
 
