@@ -21,7 +21,8 @@
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { NodePositioning } from './NodePositioning'
-import { fitGeoReference, placeGeoPoint } from './geoProjection'
+import { fitGeoReference, placeGeoPoint, Type_GeoReference } from './geoProjection'
+import { explodeAround, greatCircleKm, isExploded, Type_ExplodeItem } from './explodedGeoLayout'
 
 export class NodePositioningGeographic {
   constructor(private readonly np: NodePositioning) { }
@@ -79,7 +80,66 @@ export class NodePositioningGeographic {
       node.captureCenterFromCorner()
       placed++
     })
+    if (reference.exploded) this._explode(reference, fit)
     return placed
+  }
+
+  /**
+   * CARTE ÉCLATÉE (cf. `explodedGeoLayout.ts`) : les nœuds déjà posés qui s'éclatent sont
+   * déplacés autour du centre, leur contour suit (translaté et mis à l'échelle autour de leur
+   * point). Le reste — le centre lui-même, ce qui l'entoure sans territoire — ne bouge pas.
+   */
+  private _explode(reference: Type_GeoReference, fit: NonNullable<ReturnType<typeof fitGeoReference>>) {
+    const centre_geo = reference.exploded as { latitude: number, longitude: number }
+    const centre = placeGeoPoint(centre_geo.latitude, centre_geo.longitude, reference, fit)
+    const reach = (node: Class_NodeElement, point: { x: number, y: number }) => {
+      const ring = node.geo_ring_px
+      if (ring === null) return Math.max(node.getShapeWidthToUse(), node.getShapeHeightToUse()) / 2
+      return Math.max(...ring.map(p => Math.hypot(p.x - point.x, p.y - point.y)))
+    }
+    const items: Type_ExplodeItem[] = []
+    const nodes = new Map<string, Class_NodeElement>()
+    let centre_radius = 0
+    const centre_nodes: Class_NodeElement[] = []
+    this.drawingArea.sankey.nodes_list.forEach((node: Class_NodeElement) => {
+      const point = node.geo_point_px
+      if (!node.is_visible || !node.has_geo_position || point === null) return
+      if (node.shape_position_type === 'relative') return
+      const km = greatCircleKm(node.latitude as number, node.longitude as number, centre_geo.latitude, centre_geo.longitude)
+      if (!isExploded(km, node.geo_ring_px !== null)) {
+        if (km <= 50) {
+          centre_radius = Math.max(centre_radius, reach(node, point))
+          if (node.geo_ring_px !== null) centre_nodes.push(node)
+        }
+        return
+      }
+      nodes.set(node.id, node)
+      items.push({ id: node.id, x: point.x, y: point.y, radius: reach(node, point), scalable: node.geo_ring_px !== null })
+    })
+    if (items.length === 0) return
+    const farthest = Math.max(...items.map(it => Math.hypot(it.x - centre.x, it.y - centre.y)))
+    const { placements, centre_scale } = explodeAround(centre, items, {
+      centre_radius: centre_radius > 0 ? centre_radius : 40,
+      max_distance: 0.85 * farthest
+    })
+    // Le territoire du centre grandit comme ses voisins (cf. `centre_scale`) ; le nœud, lui, reste.
+    centre_nodes.forEach(node => {
+      const pt = node.geo_point_px as { x: number, y: number }
+      node.geo_ring_px = (node.geo_ring_px as { x: number, y: number }[])
+        .map(q => ({ x: pt.x + (q.x - pt.x) * centre_scale, y: pt.y + (q.y - pt.y) * centre_scale }))
+    })
+    placements.forEach((p, id) => {
+      const node = nodes.get(id) as Class_NodeElement
+      const old = node.geo_point_px as { x: number, y: number }
+      const ring = node.geo_ring_px
+      if (ring !== null) {
+        node.geo_ring_px = ring.map(q => ({ x: p.x + (q.x - old.x) * p.scale, y: p.y + (q.y - old.y) * p.scale }))
+      }
+      node.geo_point_px = { x: p.x, y: p.y }
+      node.position_x = p.x - node.getShapeWidthToUse() / 2
+      node.position_y = p.y - node.getShapeHeightToUse() / 2
+      node.captureCenterFromCorner()
+    })
   }
 
   /**

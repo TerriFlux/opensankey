@@ -89,6 +89,11 @@ export type Type_GeoReference = {
   a: Type_GeoControlPoint
   b: Type_GeoControlPoint
   image?: Type_GeoImageBox
+  /**
+   * os#1364 (29/09/2026) — CARTE ÉCLATÉE : le lieu autour duquel les territoires se détachent
+   * (cf. `explodedGeoLayout.ts`). Absent : la carte est une vraie carte, comme avant.
+   */
+  exploded?: { latitude: number, longitude: number }
 }
 
 // Latitude au-delà de laquelle Mercator part à l'infini. La borne de Web Mercator, qui rend le
@@ -206,14 +211,26 @@ export const geoReferenceFromJSON = (raw: unknown): Type_GeoReference | null => 
   if (a === null || b === null) return null
   const projection = json['projection']
   const image = readImageBox(json['image'])
+  const exploded = readExplodedCentre(json['exploded'])
   return {
     projection: GEO_PROJECTIONS.includes(projection as Type_GeoProjection)
       ? projection as Type_GeoProjection
       : 'mercator',
     a,
     b,
-    ...(image ? { image } : {})
+    ...(image ? { image } : {}),
+    ...(exploded ? { exploded } : {})
   }
+}
+
+/** Le centre de la carte éclatée, ou `null` : une coordonnée absurde ne vaut pas un centre. */
+const readExplodedCentre = (raw: unknown): { latitude: number, longitude: number } | null => {
+  if (raw === null || typeof raw !== 'object') return null
+  const p = raw as { [key: string]: unknown }
+  const latitude = readCoordinate(p['lat'], 90)
+  const longitude = readCoordinate(p['lon'], 180)
+  if (latitude === null || longitude === null) return null
+  return { latitude, longitude }
 }
 
 /** La boîte de l'image, ou `null` si absente ou incomplète — une demi-boîte ne place rien. */
@@ -237,7 +254,8 @@ export const geoReferenceToJSON = (reference: Type_GeoReference) => {
     projection: reference.projection,
     a: point(reference.a),
     b: point(reference.b),
-    ...(reference.image ? { image: { ...reference.image } } : {})
+    ...(reference.image ? { image: { ...reference.image } } : {}),
+    ...(reference.exploded ? { exploded: { lat: reference.exploded.latitude, lon: reference.exploded.longitude } } : {})
   }
 }
 
