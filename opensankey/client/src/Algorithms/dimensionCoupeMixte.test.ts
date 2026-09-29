@@ -132,6 +132,37 @@ describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => 
     expect(totalDe(['afrique', 'espagne', 'italie'])).toBe(TOTAL)
   })
 
+  // os#1511, 29/09 — Julien : « en noeud duplique, il faut que ca suive les options de
+  // desagregation ». Les noeuds engendres prennent la place de l axe (mode `fill`, le defaut) au
+  // lieu de s etaler de 90 px en dur autour de lui — un ecart qui ne connaissait ni leur hauteur
+  // ni le slot du parent, donc qui debordait sur les voisins des qu ils etaient nombreux.
+  test('les noeuds engendres prennent la PLACE de l axe, pas un ecart en dur', () => {
+    const m = monter()
+    m.partenaires.setPosXY(520, 300)
+    m.partenaires.driving_dimension = m.pays
+    m.pays.selectMembers(['europe', 'afrique'])
+    disaggregateDimensionNodes(m.sankey)
+    const engendres = m.sankey.nodes_list.filter(isGeneratedMemberNode)
+    // Meme colonne que l axe : `layoutChildrenInParentSlot` ne regle que le Y.
+    engendres.forEach(n => expect(n.position_x).toBe(520))
+    // Et ils occupent le slot du parent, a partir de son haut — jamais au-dessus.
+    const haut = Math.min(...engendres.map(n => n.position_y))
+    expect(haut).toBeGreaterThanOrEqual(300)
+  })
+
+  test('un membre qui porte sa POSITION garde la sienne, la mise en page ne la reecrit pas', () => {
+    const m = monter()
+    m.partenaires.setPosXY(520, 300)
+    m.partenaires.driving_dimension = m.pays
+    ;(m.pays.tags_dict['afrique'] as Class_DataTag).position = { x: 700, y: 55 }
+    m.pays.selectMembers(['europe', 'afrique'])
+    disaggregateDimensionNodes(m.sankey)
+    const afrique = m.sankey.nodes_list.filter(isGeneratedMemberNode)
+      .find(n => n.name === 'Afrique')
+    // C est la geometrie qui survit a la regeneration : c est elle qu on deplace a l ecran.
+    expect([afrique?.position_x, afrique?.position_y]).toEqual([700, 55])
+  })
+
   test('une coupe mixte de l autre cote : Europe entiere, l Afrique detaillee', () => {
     const m = monter()
     m.partenaires.driving_dimension = m.pays
