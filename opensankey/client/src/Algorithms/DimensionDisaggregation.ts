@@ -207,9 +207,17 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
  * hauteur des nœuds ni le slot du parent, donc il débordait sur les voisins dès que les membres
  * étaient nombreux ou épais.
  *
- * LA POSITION PORTÉE PAR LE MEMBRE reste prioritaire, et c'est elle qui survit à la régénération :
- * c'est ce qu'on déplace à l'écran. Elle s'applique donc APRÈS la mise en page, qui ne vaut que
- * pour les membres dont personne n'a encore décidé la place.
+ * ⚠️ LA POSITION PORTÉE PAR LE MEMBRE NE VAUT QUE SOUS « GARDER LES POSITIONS ».
+ *
+ * Julien, 29/09 : « c'est marqué "remplir le slot du parent" mais ça fait pas ça, ça écarte. »
+ * Il avait raison et c'était moi : je calculais le slot, puis je le JETAIS au profit de la
+ * position enregistrée de chaque membre. Sur la démo, l'Europe est à y=150 et l'Afrique à y=380 —
+ * d'où l'écart, sous un libellé qui promettait le contraire.
+ *
+ * La géométrie portée par le membre est ce que l'auteur a DÉPLACÉ à la main. C'est exactement ce
+ * que le mode « garder les positions » demande de respecter, et exactement ce que les trois autres
+ * demandent de RECALCULER. Elle ne s'applique donc que sous `keep` — où, faute de position, un
+ * membre retombe sur celle de son axe plutôt que sur l'origine du dessin.
  */
 function creerNoeudsDeMembre(
   sankey: Class_Sankey,
@@ -226,16 +234,21 @@ function creerNoeudsDeMembre(
     return { membre, noeud }
   })
 
-  // Le slot du parent, c'est-à-dire la place que l'axe occupait : les membres la prennent, et
+  if (axe.drawing_area.effective_gap_mode === 'keep') {
+    // « Garder les positions » : celle du membre fait foi. `layoutChildrenInParentSlot` ne
+    // réempile rien dans ce mode, il ne reste donc qu'à poser ce que l'auteur a déplacé.
+    engendres.forEach(({ membre, noeud }) => {
+      const position = membre.position
+      noeud.setPosXY(position?.x ?? axe.position_x, position?.y ?? axe.position_y)
+    })
+    return engendres
+  }
+
+  // Les trois autres modes RECALCULENT : les membres prennent la place que l'axe occupait, et
   // aucun voisin n'est poussé tant qu'ils y tiennent.
   axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
     engendres.map(({ noeud }) => noeud), axe.position_y, axe.getShapeHeightToUse()
   )
-
-  engendres.forEach(({ membre, noeud }) => {
-    const position = membre.position
-    if (position !== undefined) noeud.setPosXY(position.x, position.y)
-  })
   return engendres
 }
 
