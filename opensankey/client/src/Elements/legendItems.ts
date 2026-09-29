@@ -149,6 +149,11 @@ type Type_TagGroupForLegend = {
   // SA#550 — `Class_ProtoTagGroup.pinned_in_legend` (socle #537) : le groupe reste en bas
   // de la légende même quand il ne met rien en forme. Absent = non épinglé.
   pinned_in_legend?: boolean
+  // os#1511 (retour de Julien, 29/09) — « pour les pays qui sont désagrégés en nœud, pas besoin
+  // de légende ». Exact : une dimension dessinée EN NŒUDS n'a rien à légender, ses membres sont
+  // des nœuds NOMMÉS sur le diagramme. Une légende de couleurs n'a de sens que pour ce qui n'est
+  // pas nommé à sa place — les bandes d'un flux. Absent = comportement d'avant.
+  is_drawn_as_nodes?: boolean
   selected_tags_list: Type_TagForLegend[]
   // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
   // absent, le calcul retombe sur `selected_tags_list` (comportement d'avant
@@ -374,7 +379,9 @@ export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGrou
   if (previewed !== undefined) {
     return [...sankey.node_taggs_list, ...sankey.flux_taggs_list].filter(group => group.id === previewed)
   }
+  // os#1511 — une dimension dessinée EN NŒUDS ne paraît pas : cf. `is_drawn_as_nodes`.
   return [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
+    .filter(group => group.is_drawn_as_nodes !== true)
 }
 
 /**
