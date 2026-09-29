@@ -62,17 +62,42 @@ export function drivingNodeIdOf(node: Class_NodeElement): string | undefined {
  * Les flux qui les touchaient disparaissent avec eux — ils étaient engendrés eux aussi.
  */
 export function removeGeneratedMemberNodes(sankey: Class_Sankey): number {
-  sankey.links_list.filter(isGeneratedMemberLink).forEach(link => sankey.deleteLink(link))
   const engendres = sankey.nodes_list.filter(isGeneratedMemberNode)
+
+  // QUI A ENGENDRÉ CE QU'ON RETIRE — relevé AVANT la suppression, et lu SUR LE GRAPHE : la
+  // marque d'id d'un nœud engendré nomme le nœud d'axe dont il vient (`drivingNodeIdOf`).
+  //
+  // ⚠️ C'EST LA SEULE MÉMOIRE FIABLE, et s'en passer était un défaut. La version précédente
+  // rendait leur visibilité aux nœuds `is_driven_by_dimension`, c'est-à-dire aux axes
+  // D'AUJOURD'HUI. Or le nœud qu'on vient de DÉTACHER n'en est plus un, et c'est précisément
+  // celui qu'il faut rendre : il avait été masqué quand il était axe, plus rien ne le
+  // ressuscitait. Constaté par Julien le 29/09 sur la démo — attacher « Filière » à France
+  // détache « Partenaires » de « Pays » (une seule dimension se dessine en nœuds à la fois),
+  // et le dessin montrait alors le nœud « Oléagineux » seul : son flux existait, avec la
+  // bonne valeur, mais pointait vers une cible restée invisible.
+  //
+  // C'est la garde n°1 du fichier appliquée à la réparation : reconnaître sur le graphe, jamais
+  // à un état en mémoire — ici l'attachement, qui a le droit de changer entre deux tours.
+  const a_rendre = new Set<string>()
+  engendres.forEach(node => {
+    const axe_id = drivingNodeIdOf(node)
+    if (axe_id !== undefined) a_rendre.add(axe_id)
+  })
+
+  sankey.links_list.filter(isGeneratedMemberLink).forEach(link => sankey.deleteLink(link))
   engendres.forEach(node => sankey.deleteNode(node))
+
   // Les nœuds d'axe et leurs flux n'avaient pas été supprimés mais MASQUÉS : on les rend.
   //
   // C'est le correctif d'une première version qui les supprimait, et qui n'était donc pas
   // répétable — or l'opération doit l'être à chaque changement de niveau. Après un tour, il
   // n'y avait plus d'axe d'où repartir : le second tour ne rendait rien et le diagramme se
   // vidait. Garder l'axe évite aussi d'avoir à le reconstruire à la sérialisation.
+  //
+  // Les axes d'aujourd'hui s'y ajoutent : au tout premier tour, rien n'a encore été engendré,
+  // donc `a_rendre` est vide et c'est `is_driven_by_dimension` qui porte la liste.
   sankey.nodes_list
-    .filter(node => node.is_driven_by_dimension)
+    .filter(node => a_rendre.has(node.id) || node.is_driven_by_dimension)
     .forEach(axe => {
       axe.setVisible()
       ;[...axe.input_links_list, ...axe.output_links_list].forEach(flux => flux.setVisible())
