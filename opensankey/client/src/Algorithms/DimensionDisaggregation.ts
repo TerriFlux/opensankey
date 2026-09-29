@@ -22,7 +22,6 @@
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DataTag } from '../types/Tag'
-import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 
@@ -105,11 +104,47 @@ export function removeGeneratedMemberNodes(sankey: Class_Sankey): number {
   return engendres.length
 }
 
+/** Un membre représenté, et le nœud qui le représente. */
+interface Type_MembreRepresente { membre: Class_DataTag, noeud: Class_NodeElement }
+
 /**
- * Désagrège tous les nœuds d'axe du diagramme sur les ENFANTS du membre choisi.
+ * Le membre qu'un nœud engendré représente, `undefined` si ce n'en est pas un.
  *
- * Rend le nombre de nœuds engendrés. Un nœud d'axe dont aucun membre n'est choisi n'est pas
- * désagrégé : il n'y aurait rien à montrer, et le vider serait pire que le laisser.
+ * Lu SUR LE GRAPHE, par la marque d'id : elle nomme le nœud d'axe, dont la dimension nomme le
+ * membre. C'est ce qui permet à un flux engendré de retrouver sa coordonnée sans que celle-ci
+ * soit encodée dans son propre identifiant (cf. `Link.tagged_value_bands`).
+ */
+export function memberOfGeneratedNode(node: Class_NodeElement): Class_DataTag | undefined {
+  if (!isGeneratedMemberNode(node)) return undefined
+  const [axe_id, membre_id] = node.id.split(MARQUE)
+  const dimension = node.sankey.nodes_dict[axe_id]?.driving_dimension
+  return dimension?.tags_dict[membre_id] as Class_DataTag | undefined
+}
+
+/**
+ * Désagrège tous les nœuds d'axe du diagramme sur les membres choisis de leur dimension.
+ *
+ * ── PLUSIEURS AXES À LA FOIS (29/09/2026) ────────────────────────────────────────────────────
+ *
+ * Julien : « il faut qu'une dimension ne puisse avoir qu'un nœud qui la représente, mais
+ * différents nœuds peuvent représenter différentes dimensions. Dans notre cas, le nœud de gauche
+ * les filières et les nœuds de droite les pays. »
+ *
+ * C'EST LE TABLEAU CROISÉ RENDU EN SANKEY, et c'est exactement ce que la limite d'avant
+ * interdisait : une seule dimension pouvait se dessiner en nœuds, attacher la seconde détachait
+ * la première. Les lignes d'un tableau croisé à gauche, ses colonnes à droite, et une CASE par
+ * intersection — un flux.
+ *
+ * ⚠️ D'OÙ LA RÉÉCRITURE : la répartition ne peut plus se faire axe par axe. Un flux dont les DEUX
+ * bouts portent un axe ne se découpe pas deux fois de suite — il se découpe UNE fois, sur le
+ * produit des deux. Découper en deux passes aurait redécoupé les flux déjà engendrés du premier
+ * tour, or ceux-là ne portent qu'un scalaire : chaque pays aurait reçu le total de la filière.
+ *
+ * Le coût est celui d'un produit cartésien, et il faut le savoir : n filières × m pays font
+ * n × m flux. C'est ce que montre un tableau croisé de mêmes axes, ni plus ni moins.
+ *
+ * Rend le nombre de nœuds engendrés. Un axe dont aucun membre n'est choisi n'est pas désagrégé :
+ * il n'y aurait rien à montrer, et le vider serait pire que le laisser.
  */
 export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   removeGeneratedMemberNodes(sankey)
@@ -120,93 +155,94 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     !isGeneratedMemberNode(node) && node.is_driven_by_dimension)
   if (axes.length === 0) return 0
 
-  let engendres = 0
+  // 1) UN NŒUD PAR MEMBRE, axe par axe. Aucun flux n'est encore touché : les nœuds des deux
+  //    axes doivent tous exister avant qu'on croise quoi que ce soit.
+  const par_axe = new Map<string, Type_MembreRepresente[]>()
   axes.forEach(axe => {
-    // Garde n°2, PAR NŒUD : `is_driven_by_dimension` a pu devenir faux entre-temps (dimension
-    // supprimée par un tour précédent de cette même boucle).
+    // Garde n°2, PAR NŒUD : `is_driven_by_dimension` a pu devenir faux entre-temps.
     const dimension = axe.driving_dimension
     if (dimension === undefined) return
     // LES MEMBRES CHOISIS, et rien d'autre : le panneau nomme ainsi toujours ce que le dessin
     // montre. « Europe » donne l'Europe, « Régions continentales » — un NIVEAU, qui se choisit
     // dans la même liste — donne les régions.
-    //
-    // La version précédente montrait les ENFANTS du membre choisi, et se lisait comme un bug :
-    // le panneau disait « Monde » et le dessin « Europe, Afrique » (constaté le 28/09). Lire
-    // plusieurs membres à la fois ne coûte plus rien depuis que les flux engendrés portent un
-    // scalaire au lieu d'une coordonnée dans le cube.
     const membres = dimension.selected_tags_list as Class_DataTag[]
     if (membres.length === 0) return
-    engendres += disaggregateOne(sankey, axe, dimension, membres)
+    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres))
+  })
+  if (par_axe.size === 0) return 0
+
+  // 2) LES FLUX, une fois chacun. On relève la liste AVANT de créer quoi que ce soit : on y
+  //    ajoute des flux au fur et à mesure, et itérer une liste qu'on allonge n'a pas de fin.
+  sankey.links_list
+    .filter(flux => !isGeneratedMemberLink(flux))
+    .forEach(flux => repartir(sankey, flux, par_axe))
+
+  // 3) Les nœuds d'axe quittent le DESSIN, pas le modèle : ils sont représentés par leurs
+  //    membres, mais restent ce d'où l'on repart au prochain changement de niveau — et ce que
+  //    le fichier écrit.
+  let engendres = 0
+  par_axe.forEach((membres, axe_id) => {
+    engendres += membres.length
+    sankey.nodes_dict[axe_id]?.setInvisible()
   })
   return engendres
 }
 
-/** Désagrège UN nœud d'axe : un nœud par membre, puis les flux répartis, puis l'axe retiré. */
-function disaggregateOne(
+/** Les nœuds de membre d'UN axe, dans l'ordre des membres choisis. */
+function creerNoeudsDeMembre(
   sankey: Class_Sankey,
   axe: Class_NodeElement,
-  dimension: Class_DataTagGroup,
   membres: Class_DataTag[]
-): number {
-  // Les flux à répartir sont relevés AVANT toute création : la liste du nœud change au fur et
-  // à mesure qu'on l'y raccroche, et l'itérer en la modifiant sauterait des flux.
-  const entrants = [...axe.input_links_list]
-  const sortants = [...axe.output_links_list]
-
-  const noeuds_par_membre = new Map<string, Class_NodeElement>()
+): Type_MembreRepresente[] {
   // Écart vertical entre deux membres sans position propre. Ils s'étalent dans la COLONNE de
   // leur axe, centrés sur lui : les poser tous à sa place les empilerait en un seul tas
   // illisible — constaté à l'écran sur le SOCLE, où aucun des 263 pays n'a de position.
   const PAS_VERTICAL = 90
   const milieu = (membres.length - 1) / 2
-  membres.forEach((membre, rang) => {
-    const nouveau = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
+  return membres.map((membre, rang) => {
+    const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
     // La géométrie vient du MEMBRE quand il en porte une : c'est elle qui survit à la
     // régénération, et c'est ce qu'on déplace à l'écran.
     const position = membre.position
-    nouveau.setPosXY(
+    noeud.setPosXY(
       position?.x ?? axe.position_x,
       position?.y ?? (axe.position_y + (rang - milieu) * PAS_VERTICAL)
     )
-    nouveau.copyAttrFrom(axe)
-    noeuds_par_membre.set(membre.id, nouveau)
+    noeud.copyAttrFrom(axe)
+    return { membre, noeud }
   })
-
-  entrants.forEach(flux => repartir(sankey, flux, membres, noeuds_par_membre, 'target'))
-  sortants.forEach(flux => repartir(sankey, flux, membres, noeuds_par_membre, 'source'))
-
-  // Le nœud d'axe quitte le DESSIN, pas le modèle : il est représenté par ses membres, mais il
-  // reste ce d'où l'on repart au prochain changement de niveau — et ce que le fichier écrit.
-  axe.setInvisible()
-  return noeuds_par_membre.size
 }
 
 /**
- * Répartit un flux sur les nœuds de membre : un flux par membre qui porte quelque chose.
+ * Répartit un flux sur les nœuds de membre de ses DEUX bouts : un flux par case du croisement.
  *
- * Un membre dont la contribution est ABSENTE ne reçoit AUCUN flux — pas un flux à zéro. C'est
- * la même règle que l'agrégat du lot 1 : « ce flux n'existe pas ici » n'est pas « il vaut 0 »,
- * et un flux fantôme à zéro se dessinerait.
+ * Un bout sans axe ne se découpe pas et reste lui-même — c'est le cas courant, et c'est ce que
+ * fait le `[undefined]` : le produit cartésien à un seul terme.
+ *
+ * Une case dont la contribution est ABSENTE ne reçoit AUCUN flux — pas un flux à zéro. C'est la
+ * même règle que l'agrégat du lot 1 : « ce flux n'existe pas ici » n'est pas « il vaut 0 », et un
+ * flux fantôme à zéro se dessinerait. Sur un croisement, ces cases vides sont la règle plutôt que
+ * l'exception : c'est exactement ce qu'un tableau croisé laisse en blanc.
  */
 function repartir(
   sankey: Class_Sankey,
   flux: Class_LinkElement,
-  membres: Class_DataTag[],
-  noeuds_par_membre: Map<string, Class_NodeElement>,
-  bout: 'source' | 'target'
+  par_axe: Map<string, Type_MembreRepresente[]>
 ): void {
-  const autre_bout = bout === 'target' ? flux.source : flux.target
-  membres.forEach(membre => {
-    const noeud_membre = noeuds_par_membre.get(membre.id)
-    if (noeud_membre === undefined) return
-    const contributions = contributionsPourMembre(flux, membre)
+  const gauche: (Type_MembreRepresente | undefined)[] = par_axe.get(flux.source.id) ?? [undefined]
+  const droite: (Type_MembreRepresente | undefined)[] = par_axe.get(flux.target.id) ?? [undefined]
+  if (gauche[0] === undefined && droite[0] === undefined) return
+
+  gauche.forEach(g => droite.forEach(d => {
+    const membres = [g?.membre, d?.membre].filter((m): m is Class_DataTag => m !== undefined)
+    const contributions = contributionsPourCase(flux, membres)
     if (contributions === null) return
     // L'identifiant porte la MARQUE : c'est ce qui rend le flux engendré reconnaissable sur le
-    // graphe, comme son nœud, et donc effaçable au tour suivant sans tenir de registre.
-    const id = `${flux.id}${MARQUE}${membre.id}`
-    const nouveau = bout === 'target'
-      ? sankey.addNewLinkWithId(id, autre_bout, noeud_membre)
-      : sankey.addNewLinkWithId(id, noeud_membre, autre_bout)
+    // graphe, comme son nœud, et donc effaçable au tour suivant sans tenir de registre. Les
+    // membres y figurent pour l'unicité seulement — un flux engendré retrouve sa coordonnée par
+    // ses NŒUDS (cf. `memberOfGeneratedNode`), qui la portent déjà.
+    const id = `${flux.id}${MARQUE}${membres.map(m => m.id).join(MARQUE)}`
+    const nouveau = sankey.addNewLinkWithId(id, g?.noeud ?? flux.source, d?.noeud ?? flux.target)
     nouveau.copyAttrFrom(flux)
     // Sa valeur est un SCALAIRE : un flux engendré naît d'un choix de coordonnées, donc il ne
     // porte pas de cube (cf. le constructeur de `Class_LinkElement`, qui reconnaît la marque).
@@ -216,30 +252,28 @@ function repartir(
     if (valeur !== null) {
       valeur.valueData = contributions
     }
-  })
-  // Le flux d'origine est MASQUÉ, jamais supprimé : il porte les valeurs de tous les membres,
+  }))
+  // Le flux d'origine est MASQUÉ, jamais supprimé : il porte les valeurs de toutes les cases,
   // c'est de lui qu'on repartira au prochain changement de niveau, et c'est lui que le fichier
   // écrit.
   flux.setInvisible()
 }
 
 /**
- * Ce que le flux apporte à CE membre, `null` s'il n'apporte rien.
+ * Ce que le flux apporte à CETTE case du croisement, `null` s'il n'apporte rien.
  *
- * On passe par la résolution du lot 1 en visant le membre : elle rend la valeur portée au
- * niveau demandé si elle existe, sinon l'agrégat de ses feuilles, et `null` si tout est
- * absent. La sélection de la dimension est posée le temps de la lecture puis rendue — lire
- * une valeur ne doit pas laisser le diagramme sur un autre membre que celui de l'utilisateur.
+ * On passe par la résolution du lot 1 en visant les membres : elle rend la valeur portée au
+ * niveau demandé si elle existe, sinon l'agrégat de ses feuilles, et `null` si tout est absent.
  */
-function contributionsPourMembre(flux: Class_LinkElement, membre: Class_DataTag): number | null {
-  const dimension = membre.group
-  // La coordonnée à lire : celle de l'utilisateur, sauf sur l'axe découpé, où l'on vise CE
-  // membre. On ne pose rien dans le modèle — poser la sélection puis la rendre coûtait 36 s sur
+function contributionsPourCase(flux: Class_LinkElement, membres: Class_DataTag[]): number | null {
+  // La coordonnée à lire : celle de l'utilisateur, sauf sur les axes découpés, où l'on vise CES
+  // membres. On ne pose rien dans le modèle — poser la sélection puis la rendre coûtait 36 s sur
   // le SOCLE pour huit membres, chaque bascule parcourant les 263 étiquettes de l'axe et
   // invalidant les caches de visibilité du diagramme entier.
+  const groupes = new Set(membres.map(membre => membre.group))
   const coordonnee = (flux.selected_data_tags_list as Class_DataTag[])
-    .filter(tag => tag.group !== dimension)
-    .concat([membre])
+    .filter(tag => !groupes.has(tag.group))
+    .concat(membres)
   const contributions = flux.contributingValuesFor(coordonnee)
   if (contributions === null || contributions.length === 0) return null
   return contributions.reduce((total, valeur) => total + (valeur.valueData ?? 0), 0)

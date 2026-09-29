@@ -35,6 +35,9 @@ import type {
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { isGeneratedMemberId, MEMBER_NODE_MARK } from './GeneratedMemberMark'
+// os#1511 — import de VALEUR vers un module qui ne nous importe qu'en TYPE : les imports de type
+// sont effacés à la compilation, il n'y a donc pas de cycle à l'exécution.
+import { memberOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -1090,14 +1093,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // flux — deux filières à 1 385 kt chacune au lieu de 1 280 et 105.
       const morceaux = this.id.split(MEMBER_NODE_MARK)
       const origine = morceaux.length > 1 ? this.sankey.links_dict[morceaux[0]] : undefined
-      const membre_axe = morceaux.length > 1
-        ? this.sankey.data_taggs_list
-          .map(g => g.tags_dict[morceaux[1]] as Class_DataTag | undefined)
-          .find(t => t !== undefined)
-        : undefined
+      // os#1511 — LES MEMBRES SE LISENT SUR LES NŒUDS, pas dans l'identifiant du flux. Depuis
+      // que DEUX axes peuvent se croiser (« les filières à gauche, les pays à droite »), un flux
+      // engendré est une CASE et porte donc jusqu'à deux coordonnées ; les chercher dans son id
+      // obligerait à savoir de quelle dimension vient chaque morceau, alors que ses nœuds le
+      // disent déjà.
+      const membres_axes = [this.source, this.target]
+        .map(bout => memberOfGeneratedNode(bout as Class_NodeElement))
+        .filter((membre): membre is Class_DataTag => membre !== undefined)
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-        let v = (origine !== undefined && membre_axe !== undefined)
+        let v = (origine !== undefined && membres_axes.length > 0)
           ? null
           : (leaf === null ? null : (leaf.valueData ?? leaf.valueResult))
         // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
@@ -1107,11 +1113,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
         // disparaissait entièrement. Constaté à l'écran le 28/09.
         if (v === null || v <= 0) {
           const porteur = origine ?? this
+          const groupes_axes = new Set(membres_axes.map(membre => membre.group.id))
           const coordonnee = (porteur.selected_data_tags_list as Class_DataTag[])
-            .filter(autre => autre.group.id !== multi_dim.id
-              && (membre_axe === undefined || autre.group.id !== membre_axe.group.id))
+            .filter(autre => autre.group.id !== multi_dim.id && !groupes_axes.has(autre.group.id))
             .concat([tag as Class_DataTag])
-            .concat(membre_axe !== undefined ? [membre_axe] : [])
+            .concat(membres_axes)
           const contributions = porteur.contributingValuesFor(coordonnee)
           if (contributions !== null) {
             const somme = contributions.reduce((total, valeur) => total + (
