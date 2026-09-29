@@ -98,6 +98,8 @@ export interface ViewsQueryHost {
   readonly views_order: string[]
   readonly current_view_id: string
   readonly master_view_name: string
+  // sa#567 — le nom AFFICHÉ du maître (le sien, sinon celui de la nature du diagramme).
+  readonly master_view_display_name: string
   readonly show_master_in_views: boolean
   readonly master_drawing_area: Class_DrawingArea | undefined
   readonly drawing_area: Class_DrawingArea
@@ -425,7 +427,9 @@ export class ViewsQuery {
     if (!this.has_views) return []
     const sources: Array<{ id: string, name: string }> = []
     if (this.host.master_drawing_area) {
-      sources.push({ id: MASTER_VIEW_ID, name: 'Vue principale' })
+      // sa#567 — le nom affiché du maître, et plus un « Vue principale » écrit en dur, en
+      // français, qui ignorait le nom que l'auteur lui avait donné.
+      sources.push({ id: MASTER_VIEW_ID, name: this.host.master_view_display_name })
     }
     this.host.views_order.forEach(id => {
       if (id !== MASTER_VIEW_ID && this.host.views_dict[id]) {

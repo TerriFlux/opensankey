@@ -786,13 +786,34 @@ export class Class_ApplicationData {
   public get views_order() { return this._views_order }
 
   // Affiche le Sankey maître comme une entrée à part entière dans la liste des vues
-  // (sélecteur topbar + table de config). Par défaut masqué. Libellé éditable = _master_view_name.
-  protected _show_master_in_views: boolean = false
+  // (sélecteur topbar + table de config). Libellé éditable = _master_view_name.
+  //
+  // sa#567 — LISTÉ PAR DÉFAUT, ET L'OPTION A QUITTÉ L'ÉCRAN : le maître est une vue comme les
+  // autres. Le drapeau reste lu et écrit tel quel, pour une seule raison — un fichier ANTÉRIEUR
+  // qui le masquait (`false` écrit, ou clé absente d'un fichier à vues : cf. `viewsFromJSON`) le
+  // masque toujours (arbitrage Alexandre, 29/09). Un document neuf, lui, part de `true`, et
+  // `resetFile` l'y ramène à chaque fichier : sans quoi un fichier ancien ouvert avant
+  // « Nouveau » léguerait son masquage au document suivant.
+  protected _show_master_in_views: boolean = true
   public get show_master_in_views() { return this._show_master_in_views }
   public set show_master_in_views(v: boolean) { this._show_master_in_views = v }
   protected _master_view_name: string = ''
   public get master_view_name() { return this._master_view_name }
   public set master_view_name(v: string) { this._master_view_name = v }
+  /**
+   * sa#567 — LE NOM QU'ON AFFICHE POUR LE MAÎTRE : celui que l'auteur lui a donné, sinon le nom
+   * de la nature du diagramme (« Sankey »), exactement comme un volet éphémère se nomme par sa
+   * nature. Plus de « Sankey maître » ni de « Vue principale » : aucune vue n'est désignée comme
+   * celle dont les autres dérivent (arbitrage Alexandre, 29/09). SEUL point d'où l'interface tire
+   * ce nom — le sélecteur, la table des vues, F7, les exports et les sources de mise en page le
+   * lisent tous ici, pour qu'ils ne puissent plus diverger (ils écrivaient trois noms différents).
+   *
+   * Lecture seule : rien de ceci n'est écrit dans le fichier, `master_view_name` reste vide tant
+   * que l'auteur ne l'a pas nommé.
+   */
+  public get master_view_display_name(): string {
+    return this._master_view_name || this.t('Spreadsheet.zone.diagram')
+  }
 
   // OS#1315 — Conserver le réglage caméra (zoom/pan) d'une vue à l'autre. true (défaut) : la
   // caméra de la vue sortante est reportée sur l'entrante (cadrage 'none'). false : chaque vue
@@ -1172,6 +1193,11 @@ export class Class_ApplicationData {
     // Ici, et non dans `resetDocument` : une bascule de feuille reste DANS l'étude ouverte,
     // et lui faire perdre son « réenregistrer en place » n'avait aucune raison d'être.
     this._sankeytheque_origin = null
+    // sa#567 — les réglages du maître appartiennent au FICHIER : un fichier sans vues ne les
+    // écrit pas et ne les relit donc pas (`viewsFromJSON` retourne tôt), il hériterait sinon de
+    // ceux du fichier précédent.
+    this._show_master_in_views = true
+    this._master_view_name = ''
   }
 
   /**
