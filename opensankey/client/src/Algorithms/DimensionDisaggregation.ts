@@ -177,7 +177,28 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     .filter(flux => !isGeneratedMemberLink(flux))
     .forEach(flux => repartir(sankey, flux, par_axe))
 
-  // 3) Les nœuds d'axe quittent le DESSIN, pas le modèle : ils sont représentés par leurs
+  // 3) LA MISE EN PAGE, APRÈS LES FLUX — et l'ordre n'est pas un détail.
+  //
+  //    Julien, 29/09 : « le positionnement désagrégé, ça marche toujours pas. » C'était vrai
+  //    malgré la correction du matin, et pour une autre raison : « remplir le slot du parent »
+  //    répartit les enfants d'après LEUR HAUTEUR, et la hauteur d'un nœud vient de ses flux.
+  //    Placer les membres à leur création, c'est les placer tous à hauteur nulle — le slot se
+  //    répartissait donc entre des nœuds qui ne pesaient rien encore, et le résultat ne
+  //    ressemblait en rien à ce que le libellé promet.
+  //
+  //    Le mode « garder les positions » est le seul qui n'en dépende pas : il ne réempile rien,
+  //    et il a donc déjà fait son travail à la création.
+  if (sankey.drawing_area.effective_gap_mode !== 'keep') {
+    par_axe.forEach((membres, axe_id) => {
+      const axe = sankey.nodes_dict[axe_id]
+      if (axe === undefined) return
+      axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
+        membres.map(({ noeud }) => noeud), axe.position_y, axe.getShapeHeightToUse()
+      )
+    })
+  }
+
+  // 4) Les nœuds d'axe quittent le DESSIN, pas le modèle : ils sont représentés par leurs
   //    membres, mais restent ce d'où l'on repart au prochain changement de niveau — et ce que
   //    le fichier écrit.
   let engendres = 0
@@ -235,20 +256,12 @@ function creerNoeudsDeMembre(
   })
 
   if (axe.drawing_area.effective_gap_mode === 'keep') {
-    // « Garder les positions » : celle du membre fait foi. `layoutChildrenInParentSlot` ne
-    // réempile rien dans ce mode, il ne reste donc qu'à poser ce que l'auteur a déplacé.
+    // « Garder les positions » : celle du membre fait foi, et rien n'est réempilé.
     engendres.forEach(({ membre, noeud }) => {
       const position = membre.position
       noeud.setPosXY(position?.x ?? axe.position_x, position?.y ?? axe.position_y)
     })
-    return engendres
   }
-
-  // Les trois autres modes RECALCULENT : les membres prennent la place que l'axe occupait, et
-  // aucun voisin n'est poussé tant qu'ils y tiennent.
-  axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
-    engendres.map(({ noeud }) => noeud), axe.position_y, axe.getShapeHeightToUse()
-  )
   return engendres
 }
 

@@ -183,6 +183,31 @@ describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => 
     expect(Math.min(...engendres.map(n => n.position_y))).toBeGreaterThanOrEqual(300)
   })
 
+  // os#1511, 29/09 — « le positionnement desagrege, ca marche toujours pas ». La cause n etait
+  // plus la position du membre (corrigee le matin) mais L ORDRE : la mise en page tournait a la
+  // CREATION des noeuds, donc AVANT que leurs flux existent. « Remplir le slot » repartit d apres
+  // la HAUTEUR, et la hauteur d un noeud vient de ses flux : on repartissait le slot entre des
+  // noeuds qui ne pesaient rien.
+  test('au moment ou on les place, les membres ont deja leurs flux — donc une hauteur', () => {
+    const m = monter()
+    m.partenaires.setPosXY(520, 300)
+    m.partenaires.driving_dimension = m.pays
+    m.pays.selectMembers(['europe', 'afrique'])
+    disaggregateDimensionNodes(m.sankey)
+    const engendres = m.sankey.nodes_list.filter(isGeneratedMemberNode)
+    // Chacun porte son flux, donc une hauteur non nulle : c est ce qui manquait.
+    engendres.forEach(n => {
+      expect(n.input_links_list.filter(isGeneratedMemberLink).length).toBe(1)
+      expect(n.getShapeHeightToUse()).toBeGreaterThan(0)
+    })
+    // Et ils se suivent dans le slot, du plus haut au plus bas, sans se chevaucher.
+    const tries = [...engendres].sort((a, b) => a.position_y - b.position_y)
+    for (let i = 1; i < tries.length; i++) {
+      expect(tries[i].position_y)
+        .toBeGreaterThanOrEqual(tries[i - 1].position_y + tries[i - 1].getShapeHeightToUse())
+    }
+  })
+
   test('une coupe mixte de l autre cote : Europe entiere, l Afrique detaillee', () => {
     const m = monter()
     m.partenaires.driving_dimension = m.pays
