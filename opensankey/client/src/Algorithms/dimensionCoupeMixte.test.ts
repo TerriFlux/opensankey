@@ -1,0 +1,144 @@
+import { Class_ApplicationData } from '../types/ApplicationData'
+import type { Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
+import type { Class_LinkValue } from '../Elements/LinkValues'
+import type { Class_LinkElement } from '../Elements/Link'
+import type { Class_NodeElement } from '../Elements/Node'
+import { disaggregateDimensionNodes, isGeneratedMemberLink, isGeneratedMemberNode } from './DimensionDisaggregation'
+
+// jest 27 / jsdom n expose pas structuredClone (utilise par Link.copyFrom)
+if (typeof globalThis.structuredClone !== 'function') {
+  globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
+}
+
+// os#1511 — LA COUPE MIXTE. Julien, 29/09 : « on pourrait mixer differents niveaux, par exemple
+// Afrique et Espagne et Italie, parce que ca c est cool. »
+//
+// Ce que ces tests etablissent, avant de toucher a la moindre interface : le MODELE le fait-il
+// deja ? La regle de `selectMembers` n interdit que le RECOUVREMENT (un membre et son ancetre
+// ensemble), pas la difference de niveau. Si elle suffit, il n y a rien a changer sous l ecran —
+// et c est l ecran seul qui empeche de le demander.
+//
+// LA PROPRIETE QUI COMPTE N EST PAS « des niveaux differents », c est que les membres dessines
+// forment une FRONTIERE : aucun n est l ancetre d un autre (sinon on compte deux fois), et
+// ensemble ils couvrent la racine (sinon il en manque). Afrique + Espagne + Italie la forme ;
+// Europe + Espagne, non.
+//
+//   monde
+//     europe          (espagne 195, italie 145)
+//       espagne
+//       italie
+//     afrique         (maroc 130, egypte 80)
+//       maroc
+//       egypte
+
+type Montage = {
+  sankey: Class_ApplicationData['drawing_area']['sankey'],
+  pays: Class_DataTagGroup,
+  france: Class_NodeElement,
+  partenaires: Class_NodeElement,
+  flux: Class_LinkElement,
+}
+
+const FEUILLES: { [id: string]: number } = {
+  espagne: 195, italie: 145, maroc: 130, egypte: 80,
+}
+const TOTAL = 195 + 145 + 130 + 80   // 550
+
+function monter(): Montage {
+  const app = new Class_ApplicationData(false)
+  const sankey = app.drawing_area.sankey
+  const pays = sankey.addDataTagGroup('pays', 'Pays', false) as unknown as Class_DataTagGroup
+  const monde = pays.addTag('Monde', 'monde') as Class_DataTag
+  const europe = pays.addTag('Europe', 'europe') as Class_DataTag
+  const afrique = pays.addTag('Afrique', 'afrique') as Class_DataTag
+  europe.parent = monde
+  afrique.parent = monde
+  Object.keys(FEUILLES).forEach(id => {
+    const feuille = pays.addTag(id, id) as Class_DataTag
+    feuille.parent = (id === 'espagne' || id === 'italie') ? europe : afrique
+  })
+  pays.levels = ['monde', 'regions', 'pays']
+
+  const france = sankey.addNewNodeWithName('France')
+  const partenaires = sankey.addNewNodeWithName('Partenaires')
+  const flux = sankey.addNewLink(france, partenaires)
+  Object.entries(FEUILLES).forEach(([id, nombre]) => {
+    pays.tags_list.forEach(t => t.setUnSelected())
+    ;(pays.tags_dict[id] as Class_DataTag).setSelected()
+    ;(flux.value as Class_LinkValue).valueData = nombre
+  })
+  return { sankey, pays, france, partenaires, flux }
+}
+
+/** Les membres effectivement retenus par le modele, dans l ordre du groupe. */
+function retenus(pays: Class_DataTagGroup): string[] {
+  return pays.selected_tags_list.map(t => t.id).sort()
+}
+
+describe('os#1511 — le modele accepte-t-il deja une coupe MIXTE', () => {
+  test('Afrique + Espagne + Italie : les trois sont retenus', () => {
+    const m = monter()
+    m.pays.selectMembers(['afrique', 'espagne', 'italie'])
+    expect(retenus(m.pays)).toEqual(['afrique', 'espagne', 'italie'])
+  })
+
+  test('un membre et son ANCETRE ensemble : l ancetre cede la place', () => {
+    const m = monter()
+    m.pays.selectMembers(['europe', 'espagne'])
+    // Garder les deux compterait l Espagne deux fois — dans Europe, et pour elle-meme.
+    expect(retenus(m.pays)).toEqual(['espagne'])
+  })
+
+  test('le niveau courant suit le membre le PLUS FIN de la coupe', () => {
+    const m = monter()
+    m.pays.selectMembers(['afrique', 'espagne', 'italie'])
+    // Afrique est au niveau 1, Espagne et Italie au niveau 2 : la coupe descend a 2.
+    expect(m.pays.current_level_index).toBe(2)
+  })
+})
+
+describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => {
+  test('trois noeuds, et les trois refont le total', () => {
+    const m = monter()
+    m.partenaires.driving_dimension = m.pays
+    m.pays.selectMembers(['afrique', 'espagne', 'italie'])
+    disaggregateDimensionNodes(m.sankey)
+
+    const noeuds = m.sankey.nodes_list.filter(isGeneratedMemberNode).map(n => n.name).sort()
+    expect(noeuds).toEqual(['Afrique', 'espagne', 'italie'])
+
+    const flux = m.sankey.links_list.filter(isGeneratedMemberLink)
+      .map(l => `${l.target.name}=${l.value?.valueData}`).sort()
+    // Afrique agrege ses deux feuilles ; l Espagne et l Italie portent la leur.
+    expect(flux).toEqual(['Afrique=210', 'espagne=195', 'italie=145'])
+    expect(m.sankey.links_list.filter(isGeneratedMemberLink)
+      .reduce((t, l) => t + (l.value?.valueData ?? 0), 0)).toBe(TOTAL)
+  })
+
+  test('le total ne bouge pas d une coupe a l autre — le critere de recette', () => {
+    const m = monter()
+    m.partenaires.driving_dimension = m.pays
+    const totalDe = (coupe: string[]) => {
+      m.pays.selectMembers(coupe)
+      disaggregateDimensionNodes(m.sankey)
+      return m.sankey.links_list.filter(isGeneratedMemberLink)
+        .reduce((t, l) => t + (l.value?.valueData ?? 0), 0)
+    }
+    expect(totalDe(['monde'])).toBe(TOTAL)
+    expect(totalDe(['europe', 'afrique'])).toBe(TOTAL)
+    expect(totalDe(['espagne', 'italie', 'maroc', 'egypte'])).toBe(TOTAL)
+    // ET LA COUPE MIXTE, qui est le point : elle vaut autant que les trois autres.
+    expect(totalDe(['afrique', 'espagne', 'italie'])).toBe(TOTAL)
+  })
+
+  test('une coupe mixte de l autre cote : Europe entiere, l Afrique detaillee', () => {
+    const m = monter()
+    m.partenaires.driving_dimension = m.pays
+    m.pays.selectMembers(['europe', 'maroc', 'egypte'])
+    disaggregateDimensionNodes(m.sankey)
+    const flux = m.sankey.links_list.filter(isGeneratedMemberLink)
+      .map(l => `${l.target.name}=${l.value?.valueData}`).sort()
+    expect(flux).toEqual(['Europe=340', 'egypte=80', 'maroc=130'])
+  })
+})
