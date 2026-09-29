@@ -69,8 +69,8 @@ export type Type_DeterminationExplanation = {
   // c'est de leur combinaison que sort l'équation aplatie, et le coefficient
   // qu'elle porte. Sans elles, ce coefficient sort de nulle part.
   combines: number[]
-  // #544 — statut de réconciliation gradué (cf. RECONCILIATION_STATUSES).
-  // Absent quand la réconciliation n'a pas été lancée avec l'option.
+  // #544, #576 — méthode d'obtention graduée (cf. RECONCILIATION_STATUSES).
+  // Absente quand le calcul du bilan n'a pas été lancé avec l'option.
   status?: string
 }
 
@@ -375,9 +375,10 @@ export const determinationStatusOf = (
 }
 
 /**
- * #544 — Les six états du « Statut après réconciliation », du PIRE au MEILLEUR.
+ * #544, #576 — Les sept états de la « Méthode d'obtention » (ex-« Statut après
+ * réconciliation »), du PIRE au MEILLEUR.
  *
- * Calculés par la réconciliation elle-même (`reconciliation_statuses`,
+ * Calculés par le calcul du bilan lui-même (`reconciliation_statuses`,
  * `mfa_problem_determination.py`) : une valeur déterminée y prend le pire de ce
  * qu'elle traverse jusqu'aux données — nature des équations (bilan ou
  * coefficient ; une agrégation transmet l'état de ses termes) et état des
@@ -392,7 +393,9 @@ export const RECONCILIATION_STATUSES = [
   'reconciled',
   'determined_by_balance',
   'determined_by_coefficient',
-  'collected'
+  'collected',
+  // #576 — saisie ET retrouvée à l'identique par un autre chemin du modèle.
+  'collected_cross_checked'
 ] as const
 
 export type Type_ReconciliationStatus = typeof RECONCILIATION_STATUSES[number]
@@ -401,7 +404,7 @@ const isReconciliationStatus = (value: unknown): value is Type_ReconciliationSta
   typeof value === 'string' && (RECONCILIATION_STATUSES as readonly string[]).includes(value)
 
 /**
- * Statut de réconciliation gradué de la valeur affichée, ou `undefined`.
+ * Méthode d'obtention graduée de la valeur affichée, ou `undefined`.
  *
  * `undefined` est l'état NORMAL de tout fichier réconcilié sans l'option (ou
  * avant #544) : pas de repli sur les quatre états, qui ne savent pas distinguer
@@ -416,7 +419,10 @@ export const reconciliationStatusOf = (
   return isReconciliationStatus(status) ? status : undefined
 }
 
-/** Projection des six états sur les quatre que lit l'inspecteur (#536). */
+/**
+ * Projection des sept états sur les quatre que lit l'inspecteur (#536). Une
+ * valeur recoupée reste une valeur collectée : le solveur ne l'a pas déplacée.
+ */
 export const reconciliationStatusToDeterminationStatus = (
   status: Type_ReconciliationStatus
 ): Type_DeterminationStatus => {
@@ -425,6 +431,7 @@ export const reconciliationStatusToDeterminationStatus = (
     case 'undetermined_bounded': return 'undetermined'
     case 'determined_by_balance':
     case 'determined_by_coefficient': return 'determined'
+    case 'collected_cross_checked': return 'collected'
     default: return status
   }
 }
