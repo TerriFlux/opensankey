@@ -267,9 +267,10 @@ def parse_folder(current_dir, menus, key=None):
                 menus[key] = {}
             if "Files" not in menus[key]:
                 menus[key]["Files"] = []
-            reconciled_file = os.path.splitext(file_or_folder)[0] + "_reconciled.xlsx"
-            reconciled_path = os.path.join(current_dir, reconciled_file)
-            if os.path.isfile(reconciled_path):
+            # SA#576 — fichier de résultats « _calcule » ; « _reconciled » avant.
+            stem = os.path.splitext(file_or_folder)[0]
+            if any(os.path.isfile(os.path.join(current_dir, stem + suffix + ".xlsx"))
+                   for suffix in ("_calcule", "_reconciled")):
                 continue
             menus[key]["Files"].append(file_or_folder)
             menus[key]["Files"].sort()

@@ -147,11 +147,11 @@ export const resources_inspector = {
         determination: {
           title: 'Where does this value come from?',
           intro: 'What fixed the value of the selected flow, and the constraints bearing on it.',
-          unknown: 'This file does not say what fixed this value (diagram not reconciled, or reconciled by an earlier version).',
+          unknown: 'This file does not say what fixed this value (balance not computed, or computed by an earlier version).',
           absent: 'This flow does not exist for this tag combination: there is no value to explain.',
           interval: 'Possible range',
           entered_value: 'Entered value',
-          reconciled_value: 'Reconciled value',
+          reconciled_value: 'Computed value',
           flux_involved: '{{n}} flows involved',
           show_flux: 'show the equation',
           hide_flux: 'hide the equation',
@@ -167,15 +167,15 @@ export const resources_inspector = {
             determined: 'determined',
             free: 'free',
             free_unbounded: 'free, unbounded',
-            failed: 'not reconciled'
+            failed: 'not solved'
           },
           meaning: {
-            measured: 'The value was entered, and nothing in the model allowed recomputing it: reconciliation left it as it was.',
-            redundant: 'The value was entered, and the model could also compute it: reconciliation arbitrated between the two.',
+            measured: 'The value was entered, and nothing in the model allowed recomputing it: the computation left it as it was.',
+            redundant: 'The value was entered, and the model could also compute it: the computation compared the two — if they agree, the value is cross-checked; otherwise reconciliation adjusted it.',
             determined: 'The value was not entered: the constraints of the model are enough to fix it, no other solution is possible.',
-            free: 'The constraints are not enough to fix this value; reconciliation picked one within the possible range.',
+            free: 'The constraints are not enough to fix this value; the computation picked one within the possible range.',
             free_unbounded: 'The constraints are not enough to fix this value, and nothing bounds it.',
-            failed: 'Reconciliation of this tag combination did not succeed: the value shown is the input one.'
+            failed: 'The computation of this tag combination did not succeed: the value shown is the input one.'
           },
           step_by_step: 'Step by step:',
           flat_equation: 'The equation that determines it:',
@@ -212,9 +212,9 @@ export const resources_inspector = {
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
-          reconciliation: 'Reconciliation',
+          reconciliation: 'Balance computation',
           open_spreadsheet: 'Open the spreadsheet (constraints)',
-          run_reconciliation: 'Reconcile via Excel…',
+          run_reconciliation: 'Compute the balance via Excel…',
           value_in_mfa: 'Value type, bounds and uncertainty are edited in the MFA tab.'
         },
         // #1258 — Titres des sections repliables des onglets.
@@ -539,11 +539,11 @@ export const resources_inspector = {
         determination: {
           title: 'D\'où vient cette valeur ?',
           intro: 'Ce qui a fixé la valeur du flux sélectionné, et les contraintes qui portent sur elle.',
-          unknown: 'Ce fichier ne dit pas ce qui a fixé cette valeur (diagramme non réconcilié, ou réconcilié par une version antérieure).',
+          unknown: 'Ce fichier ne dit pas ce qui a fixé cette valeur (bilan non calculé, ou calculé par une version antérieure).',
           absent: 'Ce flux n\'existe pas pour cette combinaison d\'étiquettes : il n\'y a pas de valeur à expliquer.',
           interval: 'Intervalle possible',
           entered_value: 'Valeur saisie',
-          reconciled_value: 'Valeur réconciliée',
+          reconciled_value: 'Valeur calculée',
           flux_involved: '{{n}} flux concernés',
           show_flux: 'voir l\'équation',
           hide_flux: 'masquer l\'équation',
@@ -559,15 +559,15 @@ export const resources_inspector = {
             determined: 'déterminée',
             free: 'libre',
             free_unbounded: 'libre, non bornée',
-            failed: 'non réconciliée'
+            failed: 'non résolue'
           },
           meaning: {
-            measured: 'La valeur a été saisie, et rien dans le modèle ne permettait de la recalculer : la réconciliation l\'a laissée telle quelle.',
-            redundant: 'La valeur a été saisie, et le modèle permettait aussi de la calculer : la réconciliation a arbitré entre les deux.',
+            measured: 'La valeur a été saisie, et rien dans le modèle ne permettait de la recalculer : le calcul l\'a laissée telle quelle.',
+            redundant: 'La valeur a été saisie, et le modèle permettait aussi de la calculer : le calcul a confronté les deux — si elles concordent, la valeur est recoupée ; sinon, la réconciliation l\'a ajustée.',
             determined: 'La valeur n\'a pas été saisie : les contraintes du modèle suffisent à la fixer, aucune autre solution n\'est possible.',
-            free: 'Les contraintes ne suffisent pas à fixer cette valeur ; la réconciliation en a choisi une dans l\'intervalle possible.',
+            free: 'Les contraintes ne suffisent pas à fixer cette valeur ; le calcul en a choisi une dans l\'intervalle possible.',
             free_unbounded: 'Les contraintes ne suffisent pas à fixer cette valeur, et rien ne la borne.',
-            failed: 'La réconciliation de cette combinaison d\'étiquettes n\'a pas abouti : la valeur affichée est celle d\'entrée.'
+            failed: 'Le calcul de cette combinaison d\'étiquettes n\'a pas abouti : la valeur affichée est celle d\'entrée.'
           },
           step_by_step: 'Le cheminement, étape par étape :',
           flat_equation: 'L’équation qui détermine :',
@@ -603,9 +603,9 @@ export const resources_inspector = {
           }
         },
         mfa: {
-          reconciliation: 'Réconciliation',
+          reconciliation: 'Calcul du bilan',
           open_spreadsheet: 'Ouvrir le tableur (contraintes)',
-          run_reconciliation: 'Réconcilier via Excel…',
+          run_reconciliation: 'Calculer le bilan via Excel…',
           value_in_mfa: 'Type de valeur, bornes et incertitude s’éditent dans l’onglet AFM.'
         },
         section: {
@@ -905,11 +905,11 @@ export const resources_inspector = {
         determination: {
           title: '¿De dónde viene este valor?',
           intro: 'Lo que fijó el valor del flujo seleccionado, y las restricciones que actúan sobre él.',
-          unknown: 'Este archivo no indica qué fijó este valor (diagrama no reconciliado, o reconciliado por una versión anterior).',
+          unknown: 'Este archivo no indica qué fijó este valor (balance no calculado, o calculado por una versión anterior).',
           absent: 'Este flujo no existe para esta combinación de etiquetas: no hay valor que explicar.',
           interval: 'Intervalo posible',
           entered_value: 'Valor introducido',
-          reconciled_value: 'Valor reconciliado',
+          reconciled_value: 'Valor calculado',
           flux_involved: '{{n}} flujos implicados',
           show_flux: 'ver la ecuación',
           hide_flux: 'ocultar la ecuación',
@@ -925,15 +925,15 @@ export const resources_inspector = {
             determined: 'determinado',
             free: 'libre',
             free_unbounded: 'libre, sin cotas',
-            failed: 'no reconciliado'
+            failed: 'no resuelto'
           },
           meaning: {
-            measured: 'El valor fue introducido y nada en el modelo permitía recalcularlo: la reconciliación lo dejó tal cual.',
-            redundant: 'El valor fue introducido y el modelo también podía calcularlo: la reconciliación arbitró entre ambos.',
+            measured: 'El valor fue introducido y nada en el modelo permitía recalcularlo: el cálculo lo dejó tal cual.',
+            redundant: 'El valor fue introducido y el modelo también podía calcularlo: el cálculo comparó ambos — si coinciden, el valor queda contrastado; si no, la reconciliación lo ajustó.',
             determined: 'El valor no fue introducido: las restricciones del modelo bastan para fijarlo, no hay otra solución posible.',
-            free: 'Las restricciones no bastan para fijar este valor; la reconciliación eligió uno dentro del intervalo posible.',
+            free: 'Las restricciones no bastan para fijar este valor; el cálculo eligió uno dentro del intervalo posible.',
             free_unbounded: 'Las restricciones no bastan para fijar este valor, y nada lo acota.',
-            failed: 'La reconciliación de esta combinación de etiquetas no llegó a término: el valor mostrado es el de entrada.'
+            failed: 'El cálculo de esta combinación de etiquetas no llegó a término: el valor mostrado es el de entrada.'
           },
           step_by_step: 'Paso a paso:',
           flat_equation: 'La ecuación que la determina:',
@@ -969,9 +969,9 @@ export const resources_inspector = {
           }
         },
         mfa: {
-          reconciliation: 'Conciliación',
+          reconciliation: 'Cálculo del balance',
           open_spreadsheet: 'Abrir la hoja de cálculo (restricciones)',
-          run_reconciliation: 'Conciliar vía Excel…',
+          run_reconciliation: 'Calcular el balance vía Excel…',
           value_in_mfa: 'El tipo de valor, los límites y la incertidumbre se editan en la pestaña AFM.'
         },
         section: {
@@ -1260,11 +1260,11 @@ export const resources_inspector = {
         determination: {
           title: 'Woher stammt dieser Wert?',
           intro: 'Was den Wert des ausgewählten Flusses festgelegt hat, und die Nebenbedingungen, die auf ihn wirken.',
-          unknown: 'Diese Datei sagt nicht, was diesen Wert festgelegt hat (Diagramm nicht abgeglichen oder von einer älteren Version abgeglichen).',
+          unknown: 'Diese Datei sagt nicht, was diesen Wert festgelegt hat (Bilanz nicht berechnet oder von einer älteren Version berechnet).',
           absent: 'Dieser Fluss existiert für diese Etikettenkombination nicht: Es gibt keinen Wert zu erklären.',
           interval: 'Möglicher Bereich',
           entered_value: 'Eingegebener Wert',
-          reconciled_value: 'Abgeglichener Wert',
+          reconciled_value: 'Berechneter Wert',
           flux_involved: '{{n}} beteiligte Flüsse',
           show_flux: 'Gleichung anzeigen',
           hide_flux: 'Gleichung ausblenden',
@@ -1280,15 +1280,15 @@ export const resources_inspector = {
             determined: 'bestimmt',
             free: 'frei',
             free_unbounded: 'frei, unbeschränkt',
-            failed: 'nicht abgeglichen'
+            failed: 'nicht gelöst'
           },
           meaning: {
-            measured: 'Der Wert wurde eingegeben, und nichts im Modell erlaubte, ihn neu zu berechnen: Der Abgleich hat ihn unverändert gelassen.',
-            redundant: 'Der Wert wurde eingegeben, und das Modell konnte ihn ebenfalls berechnen: Der Abgleich hat zwischen beiden entschieden.',
+            measured: 'Der Wert wurde eingegeben, und nichts im Modell erlaubte, ihn neu zu berechnen: Die Berechnung hat ihn unverändert gelassen.',
+            redundant: 'Der Wert wurde eingegeben, und das Modell konnte ihn ebenfalls berechnen: Die Berechnung hat beide verglichen — stimmen sie überein, ist der Wert gegengeprüft; sonst hat der Abgleich ihn angepasst.',
             determined: 'Der Wert wurde nicht eingegeben: Die Nebenbedingungen des Modells genügen, um ihn festzulegen, eine andere Lösung gibt es nicht.',
-            free: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen; der Abgleich hat einen aus dem möglichen Bereich gewählt.',
+            free: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen; die Berechnung hat einen aus dem möglichen Bereich gewählt.',
             free_unbounded: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen, und nichts beschränkt ihn.',
-            failed: 'Der Abgleich dieser Etikettenkombination ist gescheitert: Der angezeigte Wert ist der Eingabewert.'
+            failed: 'Die Berechnung dieser Etikettenkombination ist gescheitert: Der angezeigte Wert ist der Eingabewert.'
           },
           step_by_step: 'Schritt für Schritt:',
           flat_equation: 'Die Gleichung, die ihn bestimmt:',
@@ -1324,9 +1324,9 @@ export const resources_inspector = {
           }
         },
         mfa: {
-          reconciliation: 'Abgleich',
+          reconciliation: 'Bilanzberechnung',
           open_spreadsheet: 'Tabelle öffnen (Nebenbedingungen)',
-          run_reconciliation: 'Abgleich über Excel…',
+          run_reconciliation: 'Bilanz über Excel berechnen…',
           value_in_mfa: 'Werttyp, Grenzen und Unsicherheit werden im MFA-Tab bearbeitet.'
         },
         section: {
@@ -1615,11 +1615,11 @@ export const resources_inspector = {
         determination: {
           title: 'Da dove viene questo valore?',
           intro: 'Ciò che ha fissato il valore del flusso selezionato, e i vincoli che agiscono su di esso.',
-          unknown: 'Questo file non dice cosa ha fissato questo valore (diagramma non riconciliato, o riconciliato da una versione precedente).',
+          unknown: 'Questo file non dice cosa ha fissato questo valore (bilancio non calcolato, o calcolato da una versione precedente).',
           absent: 'Questo flusso non esiste per questa combinazione di etichette: non c\'è alcun valore da spiegare.',
           interval: 'Intervallo possibile',
           entered_value: 'Valore inserito',
-          reconciled_value: 'Valore riconciliato',
+          reconciled_value: 'Valore calcolato',
           flux_involved: '{{n}} flussi coinvolti',
           show_flux: 'mostra l\'equazione',
           hide_flux: 'nascondi l\'equazione',
@@ -1635,15 +1635,15 @@ export const resources_inspector = {
             determined: 'determinato',
             free: 'libero',
             free_unbounded: 'libero, non limitato',
-            failed: 'non riconciliato'
+            failed: 'non risolto'
           },
           meaning: {
-            measured: 'Il valore è stato inserito e nulla nel modello permetteva di ricalcolarlo: la riconciliazione lo ha lasciato invariato.',
-            redundant: 'Il valore è stato inserito e il modello poteva anche calcolarlo: la riconciliazione ha arbitrato tra i due.',
+            measured: 'Il valore è stato inserito e nulla nel modello permetteva di ricalcolarlo: il calcolo lo ha lasciato invariato.',
+            redundant: 'Il valore è stato inserito e il modello poteva anche calcolarlo: il calcolo ha confrontato i due — se concordano, il valore è riscontrato; altrimenti la riconciliazione lo ha aggiustato.',
             determined: 'Il valore non è stato inserito: i vincoli del modello bastano a fissarlo, non esiste altra soluzione possibile.',
-            free: 'I vincoli non bastano a fissare questo valore; la riconciliazione ne ha scelto uno nell\'intervallo possibile.',
+            free: 'I vincoli non bastano a fissare questo valore; il calcolo ne ha scelto uno nell\'intervallo possibile.',
             free_unbounded: 'I vincoli non bastano a fissare questo valore, e nulla lo limita.',
-            failed: 'La riconciliazione di questa combinazione di etichette non è riuscita: il valore mostrato è quello di ingresso.'
+            failed: 'Il calcolo di questa combinazione di etichette non è riuscito: il valore mostrato è quello di ingresso.'
           },
           step_by_step: 'Passo dopo passo:',
           flat_equation: 'L’equazione che lo determina:',
@@ -1679,9 +1679,9 @@ export const resources_inspector = {
           }
         },
         mfa: {
-          reconciliation: 'Riconciliazione',
+          reconciliation: 'Calcolo del bilancio',
           open_spreadsheet: 'Aprire il foglio di calcolo (vincoli)',
-          run_reconciliation: 'Riconciliare via Excel…',
+          run_reconciliation: 'Calcolare il bilancio via Excel…',
           value_in_mfa: 'Tipo di valore, limiti e incertezza si modificano nella scheda AFM.'
         },
         section: {
@@ -1971,11 +1971,11 @@ export const resources_inspector = {
         determination: {
           title: '该数值从何而来？',
           intro: '是什么确定了所选流的数值，以及作用于它的约束。',
-          unknown: '该文件未说明是什么确定了这个数值（图未经调和，或由较早版本调和）。',
+          unknown: '该文件未说明是什么确定了这个数值（未进行平衡计算，或由较早版本计算）。',
           absent: '该流在此标签组合下不存在：没有可解释的数值。',
           interval: '可能区间',
           entered_value: '录入值',
-          reconciled_value: '调和值',
+          reconciled_value: '计算值',
           flux_involved: '涉及 {{n}} 条流',
           show_flux: '查看方程',
           hide_flux: '收起方程',
@@ -1991,15 +1991,15 @@ export const resources_inspector = {
             determined: '已确定',
             free: '自由',
             free_unbounded: '自由且无界',
-            failed: '未调和'
+            failed: '未求解'
           },
           meaning: {
-            measured: '该数值为录入值，模型中没有任何方式可重新计算它：调和保持了原值。',
-            redundant: '该数值为录入值，模型也能够计算它：调和在两者之间进行了权衡。',
+            measured: '该数值为录入值，模型中没有任何方式可重新计算它：计算保持了原值。',
+            redundant: '该数值为录入值，模型也能够计算它：计算对两者进行了比对——若一致，该数值即经交叉核对；否则由调和对其进行了调整。',
             determined: '该数值并非录入值：模型的约束足以将其确定，不存在其他可能解。',
-            free: '约束不足以确定该数值；调和在可能区间内选取了一个。',
+            free: '约束不足以确定该数值；计算在可能区间内选取了一个。',
             free_unbounded: '约束不足以确定该数值，且没有任何界限。',
-            failed: '该标签组合的调和未能完成：显示的是输入值。'
+            failed: '该标签组合的计算未能完成：显示的是输入值。'
           },
           step_by_step: '逐步推导：',
           flat_equation: '确定它的方程：',
@@ -2036,9 +2036,9 @@ export const resources_inspector = {
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
-          reconciliation: '数据调和',
+          reconciliation: '平衡计算',
           open_spreadsheet: '打开电子表格（约束）',
-          run_reconciliation: '通过 Excel 调和……',
+          run_reconciliation: '通过 Excel 计算平衡……',
           value_in_mfa: '数值类型、界限与不确定性在 MFA 选项卡中编辑。'
         },
         // #1258 — Titres des sections repliables des onglets.
@@ -2330,11 +2330,11 @@ export const resources_inspector = {
         determination: {
           title: 'この値はどこから来たのか',
           intro: '選択したフローの値を決めたものと、そこに掛かっている制約。',
-          unknown: 'このファイルには、この値を決めたものが記録されていません（未調整の図、または以前のバージョンで調整された図）。',
+          unknown: 'このファイルには、この値を決めたものが記録されていません（収支が未計算、または以前のバージョンで計算されたもの）。',
           absent: 'このタグの組み合わせではこのフローは存在しません。説明すべき値がありません。',
           interval: '取りうる区間',
           entered_value: '入力値',
-          reconciled_value: '調整後の値',
+          reconciled_value: '計算値',
           flux_involved: '関係するフロー {{n}} 件',
           show_flux: '式を表示',
           hide_flux: '式を隠す',
@@ -2350,15 +2350,15 @@ export const resources_inspector = {
             determined: '決定済み',
             free: '自由',
             free_unbounded: '自由（上下限なし）',
-            failed: '未調整'
+            failed: '未解決'
           },
           meaning: {
-            measured: 'この値は入力されたもので、モデルには再計算する手段がありませんでした。調整はそのまま残しました。',
-            redundant: 'この値は入力されたもので、モデルでも計算できました。調整が両者を調停しました。',
+            measured: 'この値は入力されたもので、モデルには再計算する手段がありませんでした。計算ではそのまま残しました。',
+            redundant: 'この値は入力されたもので、モデルでも計算できました。計算で両者を照合しました。一致すれば照合済み、一致しなければ調和によって調整されています。',
             determined: 'この値は入力されたものではありません。モデルの制約だけで一意に決まり、他の解はありません。',
-            free: '制約だけではこの値は決まりません。調整は取りうる区間の中から一つを選びました。',
+            free: '制約だけではこの値は決まりません。計算では取りうる区間の中から一つを選びました。',
             free_unbounded: '制約だけではこの値は決まらず、上下限もありません。',
-            failed: 'このタグの組み合わせの調整は完了しませんでした。表示されているのは入力値です。'
+            failed: 'このタグの組み合わせの計算は完了しませんでした。表示されているのは入力値です。'
           },
           step_by_step: '順を追って：',
           flat_equation: 'この値を決める式：',
@@ -2395,9 +2395,9 @@ export const resources_inspector = {
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
-          reconciliation: 'データ調和',
+          reconciliation: '収支計算',
           open_spreadsheet: 'スプレッドシートを開く（制約）',
-          run_reconciliation: 'Excel で調和…',
+          run_reconciliation: 'Excel で収支を計算…',
           value_in_mfa: '値の種類、範囲、不確実性は MFA タブで編集します。'
         },
         // #1258 — Titres des sections repliables des onglets.

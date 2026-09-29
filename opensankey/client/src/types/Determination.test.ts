@@ -350,28 +350,30 @@ describe('#544 statut de réconciliation', () => {
     expect(determinationCatalogFromJSON({ explanations: [graded(3)] })).toBeUndefined()
   })
 
-  it('rend les six états, du pire au meilleur', () => {
+  it('rend les sept états, du pire au meilleur', () => {
     expect(RECONCILIATION_STATUSES).toEqual([
       'undetermined_unbounded', 'undetermined_bounded', 'reconciled',
-      'determined_by_balance', 'determined_by_coefficient', 'collected'
+      'determined_by_balance', 'determined_by_coefficient', 'collected',
+      'collected_cross_checked'
     ])
-    const six = {
+    const seven = {
       subjects: [],
       explanations: [...RECONCILIATION_STATUSES.map(s => graded(s)), graded(), graded('quantum')]
     } as Type_DeterminationCatalog
     RECONCILIATION_STATUSES.forEach((status, index) => {
-      expect(reconciliationStatusOf(six, { determination: index })).toBe(status)
+      expect(reconciliationStatusOf(seven, { determination: index })).toBe(status)
     })
     // Sans l'option, aucun statut — et surtout pas un repli sur les quatre états.
-    expect(reconciliationStatusOf(six, { determination: 6 })).toBeUndefined()
+    expect(reconciliationStatusOf(seven, { determination: 7 })).toBeUndefined()
     // Un code qu'un moteur plus récent introduirait ne se devine pas.
-    expect(reconciliationStatusOf(six, { determination: 7 })).toBeUndefined()
+    expect(reconciliationStatusOf(seven, { determination: 8 })).toBeUndefined()
     expect(reconciliationStatusOf(undefined, { determination: 0 })).toBeUndefined()
   })
 
   it('se projette sur les quatre états de l’inspecteur', () => {
     expect(RECONCILIATION_STATUSES.map(reconciliationStatusToDeterminationStatus)).toEqual([
-      'undetermined', 'undetermined', 'reconciled', 'determined', 'determined', 'collected'
+      'undetermined', 'undetermined', 'reconciled', 'determined', 'determined', 'collected',
+      'collected'
     ])
   })
 })
