@@ -2316,6 +2316,7 @@ export class Class_DrawingArea {
       // exactement où il est, ce qui est la seule chose raisonnable à faire tant que la carte
       // n'existe pas encore.
       this.nodePositioning.geographic.applyGeographicLayout()
+      this.drawGeoTerritories()
     } else if (_position_type === 'proportional') {
       // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
       // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
@@ -5332,10 +5333,60 @@ export class Class_DrawingArea {
   // paierait une rotation et une déformation d'axes, c'est-à-dire justement ce qu'une carte ne
   // doit pas avoir (cf. `fitGeoReference`, qui impose une échelle unique aux deux axes).
   private _geo_reference: Type_GeoReference | null = null
+  /**
+   * os#1364 — CARTE ÉCLATÉE : le calage porte un centre et le document est en mode géographique.
+   * Les territoires ont quitté leur place : le fond de carte ne correspond plus à rien, il se tait,
+   * et chaque territoire se dessine lui-même (cf. `drawGeoTerritories`).
+   */
+  public get is_geo_exploded(): boolean {
+    return this._geo_reference?.exploded !== undefined
+      && this._sankey.styles_dict['default'].shape_position_type === 'geographic'
+  }
+
+  /**
+   * Les TERRITOIRES de la carte éclatée, sous les flux et les nœuds : le contour projeté de chaque
+   * nœud qui en porte un (déplacé et mis à l'échelle par l'éclatement), et son nom quand le nœud
+   * n'écrit pas le sien — sur une carte éclatée, on ne reconnaît plus un pays à sa place.
+   */
+  public drawGeoTerritories() {
+    const bg_node = this.d3_selection_bg?.node() as SVGGElement | null | undefined
+    const host_node = bg_node?.parentNode as SVGGElement | null | undefined
+    if (!bg_node || !host_node) return
+    const host = d3.select(host_node)
+    host.select(this.domIdSelector('geo_territories')).remove()
+    if (!this.is_geo_exploded) return
+    // JUSTE APRÈS le groupe du fond, pas dedans : son rectangle y est redessiné à chaque passe et
+    // recouvrirait les territoires.
+    const g = host.insert('g', () => bg_node.nextSibling as Element).attr('id', this.domId('geo_territories'))
+    this._sankey.visible_nodes_list.forEach(node => {
+      const ring = node.geo_ring_px
+      if (ring === null || ring.length < 3) return
+      g.append('path')
+        .attr('d', 'M' + ring.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join('L') + 'Z')
+        .attr('fill', '#e6dfcc')
+        .attr('stroke', '#ffffff')
+        .attr('stroke-width', 1.2)
+        .attr('stroke-linejoin', 'round')
+      const point = node.geo_point_px
+      if (point !== null && !node.name_label_is_visible) {
+        g.append('text')
+          .attr('x', point.x)
+          .attr('y', point.y)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('font-size', 9)
+          .attr('font-family', 'sans-serif')
+          .attr('fill', '#4a4538')
+          .attr('pointer-events', 'none')
+          .text(node.name)
+      }
+    })
+  }
+
   public drawBgImage() {
     this.d3_selection_bg?.select(this.domIdSelector('bg_image')).remove()
 
-    if (this._show_background_image) {
+    if (this._show_background_image && !this.is_geo_exploded) {
       const x_align = this._bg_image_horizontal_align === 'right'
         ? 'xMax'
         : this._bg_image_horizontal_align === 'center'
