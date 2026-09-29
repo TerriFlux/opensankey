@@ -1605,8 +1605,8 @@ def _generate_excel_template(filepath, sheets, lang="fr"):
             "cols": [
                 ("Origine" if fr else "Origin", ""),
                 ("Destination" if fr else "Target", ""),
-                ("Valeur réconciliée" if fr else "Reconciled value",
-                 "Valeur calculée par le solveur." if fr else "Value computed by the solver."),
+                ("Valeur calculée" if fr else "Computed value",
+                 "Valeur issue du calcul du bilan." if fr else "Value from the balance computation."),
                 ("Borne inférieure" if fr else "Lower boundary",
                  "Borne inf si variable libre." if fr else "Lower bound if free variable."),
                 ("Borne supérieure" if fr else "Upper boundary",
@@ -1619,16 +1619,17 @@ def _generate_excel_template(filepath, sheets, lang="fr"):
             "cols": [
                 ("Origine" if fr else "Origin", ""),
                 ("Destination" if fr else "Target", ""),
-                ("Valeur réconciliée" if fr else "Reconciled value", ""),
+                ("Valeur calculée" if fr else "Computed value", ""),
                 ("Borne inférieure" if fr else "Lower boundary", ""),
                 ("Borne supérieure" if fr else "Upper boundary", ""),
-                ("Valeur non-réconciliée" if fr else "Unreconciled value",
+                ("Valeur collectée" if fr else "Collected value",
                  "Valeur d'entrée." if fr else "Input value."),
-                ("Incertitude relative non-réconciliée" if fr else "Unreconciled relative uncertainty",
+                ("Incertitude relative de la donnée collectée" if fr
+                 else "Relative uncertainty of the collected data",
                  "Écart-type relatif d'entrée (%)." if fr else "Input relative std dev (%)."),
                 ("Nb sigmas" if fr else "Nb sigmas",
-                 "Écart entrée/réconcilié en σ. <= 2 OK, > 3 à vérifier." if fr
-                 else "Input/reconciled gap in σ. <= 2 OK, > 3 check."),
+                 "Écart entre valeur collectée et valeur calculée, en σ. <= 2 OK, > 3 à vérifier." if fr
+                 else "Collected/computed gap in σ. <= 2 OK, > 3 check."),
                 ("Type de variable" if fr else "Variable type",
                  "mesuré, redondant, déterminable, libre" if fr
                  else "measured, redundant, determinable, free"),
