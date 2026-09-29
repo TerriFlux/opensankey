@@ -1434,9 +1434,16 @@ export class Class_MenuConfig {
      * qui seul sait à côté de quoi poser le volet (l'élément cliqué, cf. `placeFloatingNear`).
      * Absente, la naissance se fait au centre — c'est le cas d'un geste qui ne désigne rien.
      */
-    geometry?: Type_PopupGeometry
+    geometry?: Type_PopupGeometry,
+    /**
+     * sa#567 — TOUJOURS UNE FENÊTRE NEUVE, à identifiant propre, même pour une nature qui n'en
+     * accepte d'ordinaire qu'une : c'est le geste du « + », qui crée un volet de plus quel que soit
+     * ce qui est déjà ouvert (arbitrage Alexandre, 29/09). L'identifiant `w_N` suffit à la faire
+     * reconnaître partout comme une fenêtre de plus (cf. `mainZoneOccupantUsesOwnWindowId`).
+     */
+    always_new: boolean = false
   ): string {
-    if (!mainZoneSubjectUsesOwnWindowId(subject) && !representationAllowsMany(representation)) {
+    if (!always_new && !mainZoneSubjectUsesOwnWindowId(subject) && !representationAllowsMany(representation)) {
       // sa#563 — une fenêtre DÉJÀ ouverte ne se fait pas déménager par un second geste
       // d'ouverture : si l'auteur l'a ancrée en volet, la rouvrir depuis la légende ne doit pas
       // la ré-arracher à la grille. Seule une fenêtre NEUVE reçoit la place demandée.
