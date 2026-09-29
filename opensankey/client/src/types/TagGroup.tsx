@@ -1321,6 +1321,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
   public get is_hierarchical(): boolean { return this._levels.length > 1 }
 
+  /**
+   * os#1511 (retour de Julien, 29/09) — cette dimension est-elle DESSINÉE EN NŒUDS, c'est-à-dire
+   * un nœud du diagramme la porte-t-il (`Class_NodeElement.driving_dimension`) ?
+   *
+   * Sert à la LÉGENDE, qui l'écarte alors : « pour les pays qui sont désagrégés en nœud, pas
+   * besoin de légende ». Ses membres sont des nœuds NOMMÉS sur le diagramme ; une légende de
+   * couleurs n'a de sens que pour ce qui n'est pas nommé à sa place — les bandes d'un flux.
+   */
+  public get is_drawn_as_nodes(): boolean {
+    return this._ref_sankey.nodes_list.some(
+      (node: Class_NodeElement) => node.driving_dimension === this)
+  }
+
   public get current_level_index(): number { return this._current_level_index }
 
   public set current_level_index(index: number) {
