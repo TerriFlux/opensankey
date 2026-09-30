@@ -73,34 +73,31 @@ describe('os#1511 — dimensions emboitees', () => {
     expect(parseMemberSectorId(id)).toEqual({ dimension_id: 'pays', member_id: 'fr' })
   })
 
-  test('rien d ouvert : un anneau de la premiere dimension, sans pays', () => {
+  test('rien d ouvert : la racine unique ne fait pas d anneau, on entre par ses enfants', () => {
     const m = monter()
     const racine = arbre(m, [])?.roots[0] as Type_SunburstNode
     expect(racine.value).toBe(42)
-    expect(racine.children.map(c => c.id)).toEqual([memberSectorId('filiere', 'produits')])
+    expect(racine.children.map(c => c.id)).toEqual([memberSectorId('filiere', 'cereales')])
     expect(racine.children[0].children).toEqual([])
   })
 
-  test('alt clic : les pays sous CE secteur seulement', () => {
+  test('alt clic : les pays sous CE secteur seulement, sans anneau Monde', () => {
     const m = monter()
     const cereales = memberSectorId('filiere', 'cereales')
-    const racine = arbre(m, [memberSectorId('filiere', 'produits'), nestedSectorEntry(cereales, 'pays')])
-      ?.roots[0] as Type_SunburstNode
+    const racine = arbre(m, [nestedSectorEntry(cereales, 'pays')])?.roots[0] as Type_SunburstNode
     const sous = chercher(racine, cereales) as Type_SunburstNode
-    expect(sous.children.map(c => c.label)).toEqual(['Monde'])
-    expect(sous.children[0].value).toBe(42)
+    expect(sous.children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
   })
 
-  test('emboite partout : chaque produit se decoupe par pays, totaux inchanges', () => {
+  test('emboite partout : chaque produit se decoupe par pays, totaux inchanges, deux palettes', () => {
     const m = monter()
-    const racine = arbre(m, [
-      memberSectorId('filiere', 'produits'), memberSectorId('filiere', 'cereales'),
-      nestAllEntry('pays'), memberSectorId('pays', 'monde')
-    ])?.roots[0] as Type_SunburstNode
+    const racine = arbre(m, [memberSectorId('filiere', 'cereales'), nestAllEntry('pays')])
+      ?.roots[0] as Type_SunburstNode
     const ble = chercher(racine, memberSectorId('filiere', 'ble')) as Type_SunburstNode
     expect(ble.value).toBe(30)
-    const monde = ble.children[0]
-    expect(monde.children.map(c => [c.label, c.value])).toEqual([['France', 10], ['Allemagne', 20]])
+    expect(ble.children.map(c => [c.label, c.value])).toEqual([['France', 10], ['Allemagne', 20]])
     expect(racine.value).toBe(42)
+    expect(ble.palette?.index).toBe(0)
+    expect(ble.children[0].palette).toEqual({ index: 1, branch_id: 'fr', depth: 0 })
   })
 })
