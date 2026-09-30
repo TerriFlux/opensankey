@@ -40,7 +40,8 @@ import { OSTooltip } from './OSTooltip'
 // `applyPositionMode` vit dans le module de règles voisin (sans Chakra) : c'est ce qui le rend
 // testable — aucune suite jest du dépôt ne peut charger `@chakra-ui/react`.
 import {
-  applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
+  applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf,
+  dimensionDrawingEnabledFor, positionModeSelectorEnabledFor
 } from './positionModeHost'
 import {
   applyBandsByValue, applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyNodesByValue,
@@ -134,9 +135,11 @@ export const PositionModeMenu = ({ app_data, tagg }: {
   const current = POSITION_MODE_META.find(m => m.value === mode) ?? POSITION_MODE_META[0]
   // os#1383 — La référence ne se propose qu'en échelle adaptée : c'est le seul mode qu'elle règle.
   const reference = mode === 'scale_adapted' ? scaleAdaptedReferenceDataTagOf(app_data, tagg) : undefined
-  // os#1511 — LE DESSIN ne se règle qu'en ÉDITION : il change la structure du diagramme (des nœuds
-  // engendrés), là où la position n'est qu'une façon de lire. En lecture, le menu reste celui d'hier.
-  const can_draw = !app_data.is_static
+  // os#1511 — LE DESSIN change la structure du diagramme (des nœuds engendrés), là où la position
+  // n'est qu'une façon de lire : en lecture, il ne s'offre que si la page le demande
+  // (`dimension_drawing`). Chaque moitié du menu a son propre gate ; seule, elle se montre à plat.
+  const can_draw = dimensionDrawingEnabledFor(app_data)
+  const can_position = positionModeSelectorEnabledFor(app_data)
   const drawing = dimensionDrawingOf(app_data, tagg)
   const in_bands = dimensionInMemberBands(app_data, tagg)
   const position_items = <>
@@ -196,9 +199,11 @@ export const PositionModeMenu = ({ app_data, tagg }: {
       <MenuList minWidth='unset' zIndex={50}>
         {can_draw
           ? <>
-            <Submenu label={t('Banner.posMode_submenu')} icon={<FontAwesomeIcon icon={current.icon} />}>
-              {position_items}
-            </Submenu>
+            {can_position
+              ? <Submenu label={t('Banner.posMode_submenu')} icon={<FontAwesomeIcon icon={current.icon} />}>
+                {position_items}
+              </Submenu>
+              : null}
             {/* os#1511 — LE DESSIN DE LA DIMENSION (Julien, 30/09 : « les options par bandes ou par
                 nœud, avec des sous-menus », puis « et les options de désagrégation pour les
                 nœuds ») : un membre, plusieurs en bandes, ou plusieurs en nœuds — et alors quels
