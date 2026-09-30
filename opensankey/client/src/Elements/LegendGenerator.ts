@@ -29,7 +29,7 @@ import type { Type_HatchOrientation } from './ElementsAttributesConfig'
 import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
+  computeLegendItems, computeScaleText, layoutLegendItems, legendIndentWidth, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
   Type_SankeyForLegend, legendEntrySwatchShift, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
@@ -949,7 +949,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         zone.name_label_text = item.text
         zone.name_label_is_visible = true
         zone.name_label_font_size = values.police
-        zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+        // os#1511 — un membre en retrait garde la largeur de la légende pour bord droit
+        zone.name_label_box_width = Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
         applyPinnedLabel(zone, item, values.police, NO_PADDING)
         applyTextFormat(zone, item.format?.name, item.bold ?? false)
         zone.draw()
@@ -1091,7 +1092,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       zone.tooltip_text = item.description ?? ''
       // En horizontal les entrées restent sur une ligne (pas de wrap) — sauf SA#550 la
       // définition d'un groupe épinglé, enveloppée à la largeur de la légende.
-      zone.name_label_box_width = (values.horizontal && item.wrap !== true) ? 4000 : Math.max(values.width, 4 * values.police)
+      zone.name_label_box_width = (values.horizontal && item.wrap !== true)
+        ? 4000
+        : Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
       // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
       // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
       applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)

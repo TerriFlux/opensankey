@@ -608,3 +608,42 @@ describe('#533 — « ce groupe porte une mise en forme »', () => {
     expect(items[0]).toMatchObject({ text: 'Fiabilité des données', bold: true })
   })
 })
+
+describe('os#1511 — legende d une dimension a niveaux', () => {
+  // Produit : Lait, Oleo (desagrege en Bruts et Transformes), Vin. La coupe dessinee ne contient
+  // plus Oleo, et la selection range Transformes en dernier.
+  const lait = makeTag('lait')
+  const oleo = makeTag('oleo')
+  const bruts = { ...makeTag('bruts'), parent: oleo }
+  const transformes = { ...makeTag('transformes'), parent: oleo }
+  const vin = makeTag('vin')
+  const sankey = makeSankey({
+    data_taggs_list: [{
+      id: 'produit', name: 'Produit', use_colors: true,
+      tags_list: [lait, oleo, vin, bruts, transformes],
+      selected_tags_list: [lait, bruts, vin, transformes]
+    }]
+  })
+
+  it('les membres desagreges prennent ensemble la place du parent, en retrait', () => {
+    const entries = computeLegendItems(sankey, base_config).filter(i => i.tag_id !== undefined)
+    expect(entries.map(i => i.tag_id)).toEqual(['lait', 'bruts', 'transformes', 'vin'])
+    expect(entries.map(i => i.indent)).toEqual([undefined, 1, 1, undefined])
+  })
+
+  it('vertical : le retrait decale l entree d une police', () => {
+    const items = computeLegendItems(sankey, base_config)
+    const pos = new Map(layoutLegendItems(items, base_config).map(p => [p.id, p.x]))
+    expect(pos.get('legend-tag-produit-lait')).toBe(0)
+    expect(pos.get('legend-tag-produit-bruts')).toBe(base_config.police)
+  })
+
+  it('dimension plate : ordre et positions inchanges', () => {
+    const flat = makeSankey({
+      data_taggs_list: [{ id: 'p', name: 'P', use_colors: true, selected_tags_list: [vin, lait] }]
+    })
+    const entries = computeLegendItems(flat, base_config).filter(i => i.tag_id !== undefined)
+    expect(entries.map(i => i.tag_id)).toEqual(['vin', 'lait'])
+    expect(entries.every(i => i.indent === undefined)).toBe(true)
+  })
+})
