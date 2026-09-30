@@ -3638,6 +3638,9 @@ export class Class_ApplicationData {
 
   public syncUrlState(): void {
     if (!this.workspace.url_sync_enabled) return
+    // 30/09/2026 — une page PUBLIÉE garde l'adresse qu'on lui a donnée : l'état n'y sert qu'au
+    // bouton « Éditer », qui le calcule du modèle au clic (`getUrlStateParams`).
+    if (this.is_static) return
     // os#1385 (lot 2) — SEUL L'ACTIF ÉCRIT DANS L'ADRESSE. Il n'y a qu'une barre d'adresse pour
     // toute la page : deux documents qui s'y synchronisent se réécrivent l'un l'autre, et
     // l'adresse finit par décrire le document que l'utilisateur ne regarde pas. Un document
