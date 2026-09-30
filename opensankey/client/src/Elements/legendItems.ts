@@ -142,6 +142,9 @@ type Type_TagGroupForLegend = {
   // pas persisté en tant que tel — il dérive de `style_patch`, écrit seulement
   // quand il porte quelque chose : aucun fichier existant ne l'allume.
   has_style_patch?: boolean
+  // Troisième terme : `Class_DataTagGroup.draws_members_in_color` — la dimension se dessine
+  // membre par membre, chacun à sa couleur (bandes). Absent sur les groupes de nœuds et de flux.
+  draws_members_in_color?: boolean
   // SA#545 — `Class_TagGroup.uses_tag_styles` (SA#541) : « le groupe ou une de ses
   // étiquettes porte un style utilisable ». Absent sur les groupes de data tags, qui
   // n'ont pas de styles d'étiquette.
@@ -287,7 +290,10 @@ function definitionOf(owner: { description?: string }): string | undefined {
  * retoucher ferait de deux tickets parallèles un arbitrage de fusion).
  */
 export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): boolean {
+  // Le panneau annonce le dessin : des bandes colorées par membre se nomment, que l'interrupteur
+  // `use_colors` (sans commande sur une dimension) soit allumé ou non.
   return tag_group.use_colors || tag_group.has_style_patch === true
+    || tag_group.draws_members_in_color === true
 }
 
 /**
