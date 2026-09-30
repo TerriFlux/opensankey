@@ -25,7 +25,6 @@
 // ==================================================================================================
 
 import { Class_LinkElement } from './Link'
-import { getNameLabelValues } from './ElementsAttributesConfig'
 import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
@@ -487,15 +486,6 @@ export class LinkDrawShape {
     }
 
     const da = link.sankey.drawing_area
-    // #285 — le label de bande suit la MÊME police que le label de valeur du
-    // flux (réglage font_size), compensée du zoom local comme les autres labels
-    // (mode police verrouillée) : plus de taille 8-11 px codée en dur.
-    const value_lv = getNameLabelValues(link, 'value_label') as { font_size?: number }
-    const band_font_size = (value_lv.font_size ?? 12) * (da.font_compensation ?? 1)
-    // #285 — unité affichée sur les labels de bande : l'unité PROPRE de la bande
-    // (groupe de type unité) sinon l'unité de valeur du flux si elle est visible
-    // (value_label_unit_visible). Indépendant du label de total.
-    const flux_unit = link.value_label_unit_visible ? link.unit_name('value_label') : ''
     let cum = 0
     bands.forEach(({ id, color, share, value, unit, label_visible, px, opacity }) => {
       // SA#541 — opacité imposée à LA bande par le style de ses étiquettes, mêmes gardes que le flux.
@@ -534,7 +524,6 @@ export class LinkDrawShape {
       const band_label_wanted = da.type_data !== 'structure'
         && (link.has_additive_bands ? !!label_visible : link.value_label_is_visible)
       if (band_label_wanted) {
-        const band_unit = unit ?? flux_unit
         const n_mid_label = perp(x2, y2, x4, y4)
         const off_mid = ((off_lo_src + off_hi_src) / 2 + (off_lo_tgt + off_hi_tgt) / 2) / 2
         this._link.d3_selection?.append('text')
@@ -543,15 +532,18 @@ export class LinkDrawShape {
           .attr('y', y3 + n_mid_label[1] * off_mid)
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'middle')
-          .attr('font-size', band_font_size)
-          .attr('fill', '#000')
           .attr('pointer-events', 'none')
           .attr('data-band-value', value)
           .attr('data-band-px', px)
-          .style('display', link.bandLabelPassesFilter(value, px) ? 'inline' : 'none')
-          .text(band_unit ? `${value} ${band_unit}` : String(value))
+          // Épaisseur DESSINÉE de la bande (sa part du flux), pour « Masquer si ça dépasse ».
+          .attr('data-band-thickness', share * (full_src + full_tgt) / 2)
+          .attr('data-band-unit', unit ?? '')
+          .attr('data-band-own-unit', unit !== undefined ? 'true' : 'false')
       }
     })
+    // Texte, police, couleur et seuils : posés en un seul endroit, que le menu de l'étiquette de
+    // valeur rappelle aussi (drawValueLabel) sans redessiner la forme.
+    link.refreshBandLabels()
     return true
   }
 

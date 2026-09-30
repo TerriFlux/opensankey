@@ -41,6 +41,15 @@ export const formatElementValue = (n: number, sample_link?: Class_LinkElement): 
   } else if (lv.unit_factor && lv.unit_factor > 1) {
     v = v / lv.unit_factor
   }
+  return formatDigits(v, lv)
+}
+
+/**
+ * Précision d'affichage seule (notation scientifique, chiffres significatifs, décimales,
+ * séparateur de milliers), SANS conversion d'unité : pour une valeur déjà exprimée dans
+ * son unité propre (bande d'un groupe de type unité).
+ */
+export const formatDigits = (v: number, lv: ReturnType<typeof getNameLabelValues>): string => {
   let text: string
   if (lv.scientific_notation) {
     text = lv.significant_digits
