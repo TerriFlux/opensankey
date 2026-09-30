@@ -18,6 +18,8 @@ import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constr
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { escapeHtml } from './htmlEscape'
 import { formatElementValue, resolveValueUnit } from './ValueFormatting'
+import { MEMBER_NODE_MARK, isGeneratedMemberId } from './GeneratedMemberMark'
+import { OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 /** Une tranche de la série d'un flux (une combinaison de dataTags). */
 export type Type_LinkSeriesEntry = {
@@ -133,7 +135,7 @@ export class LinkTooltip {
       shown.forEach(band => {
         const tag = multi_dim.tags_dict[band.id] as Class_DataTag | undefined
         html += '<tr>'
-        html += `<th>${escapeHtml(tag?.display_name ?? band.id)}</th>`
+        html += `<th>${escapeHtml(tag?.display_name ?? (band.id === OTHERS_ID ? this.othersLabel() : band.id))}</th>`
         html += `<td class="value">${escapeHtml(formatElementValue(band.value, this._link) + (unit ? ' ' + unit : ''))}</td>`
         html += '</tr>'
       })
@@ -353,10 +355,38 @@ export class LinkTooltip {
     let html = ''
     this._link.drawing_area.sankey.data_taggs_list.forEach(tagg => {
       if (tagg.id === skip_tagg_id) return
-      const sel = tagg.selected_tags_list.map(t => t.display_name).join(', ')
+      // os#1511 — un bout ENGENDRÉ par cette dimension (« Monde - Export - Europe ») dit de quel
+      // membre est ce flux : on le nomme, lui, et non tous les membres choisis de la dimension.
+      const membres = this.membersOfGeneratedEnds(tagg.id)
+      const sel = membres.length > 0
+        ? membres.join(', ')
+        : tagg.selected_tags_list.map(t => t.display_name).join(', ')
       html += `<tr><th>${escapeHtml(tagg.name)}</th><td>${escapeHtml(sel) || '-'}</td></tr>`
     })
     return html
+  }
+
+  /** Libellé de la bande et du nœud « Autres » (repli des membres trop petits). */
+  private othersLabel(): string {
+    const t = this._link.drawing_area.application_data?.t
+    return (t ? t('sunburst.others') : '') || 'Autres'
+  }
+
+  /**
+   * Noms des membres portés par les bouts ENGENDRÉS du flux (`<axe>--par--<membre>`) dont l'axe se
+   * désagrège selon la dimension `tagg_id`. Vide si aucun bout n'en vient.
+   */
+  private membersOfGeneratedEnds(tagg_id: string): string[] {
+    const noms: string[] = []
+    ;[this._link.source, this._link.target].forEach(bout => {
+      if (!isGeneratedMemberId(bout.id)) return
+      const [axe_id, membre_id] = bout.id.split(MEMBER_NODE_MARK)
+      const dimension = this._link.sankey.nodes_dict[axe_id]?.driving_dimension
+      if (dimension?.id !== tagg_id) return
+      const nom = membre_id === OTHERS_ID ? this.othersLabel() : dimension.tags_dict[membre_id]?.display_name
+      if (nom !== undefined && !noms.includes(nom)) noms.push(nom)
+    })
+    return noms
   }
 
   /** Trie une combinaison de dataTags selon l'ordre des groupes du sankey. */
