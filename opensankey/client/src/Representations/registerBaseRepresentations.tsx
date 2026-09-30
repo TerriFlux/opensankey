@@ -137,6 +137,10 @@ export const registerBaseRepresentations = (): void => {
     order: 25,
     label: (a) => a.t('Spreadsheet.zone.json'),
     icon: <FaCode />,
+    // 30/09/2026 — RÉSERVÉE À LA LICENCE DEV (arbitrage Julien) : le texte du format natif est
+    // un outil de mise au point, pas une lecture du diagramme. Le gate l'écarte des sélecteurs
+    // (`list`) ; une page publiée ne l'offre donc pas non plus, `is_static` ne donnant pas dev.
+    gate: (a) => a.has_sankey_dev,
     // os#1418 — LA CLÉ RACINE REGARDÉE, déclarée ici bien que l'onglet vive dans l'éditeur.
     //
     // Elle est de sorte 'navigation' et pas 'style' : changer de clé racine ne change pas la
