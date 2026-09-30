@@ -193,15 +193,27 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // PAR DIMENSION, pas par axe : tous les nœuds qui la portent replient les mêmes membres, sinon
   // une chaîne (CARTOFOB) ne pourrait pas apparier ses « Autres » d'un maillon à l'autre.
   const replis = new Map<Class_DataTagGroup, Set<Class_DataTag>>()
+  // La VALEUR d'un membre sur les flux de sa dimension, mémorisée : elle sert au repli « Autres »
+  // et à l'ordre des nœuds, et un membre parent (Europe) somme ses feuilles.
+  const valeurs = new Map<Class_DataTag, number>()
+  const flux_par_dimension = new Map<Class_DataTagGroup, Class_LinkElement[]>()
+  const valeurDe = (dimension: Class_DataTagGroup, membre: Class_DataTag): number => {
+    const deja = valeurs.get(membre)
+    if (deja !== undefined) return deja
+    let flux_de_la_dimension = flux_par_dimension.get(dimension)
+    if (flux_de_la_dimension === undefined) {
+      flux_de_la_dimension = sankey.links_list.filter(flux => !isGeneratedMemberLink(flux) &&
+        [flux.source, flux.target].some(bout => bout.driving_dimension === dimension))
+      flux_par_dimension.set(dimension, flux_de_la_dimension)
+    }
+    const valeur = flux_de_la_dimension.reduce((total, flux) => total + (contributionsPourCase(flux, [membre]) ?? 0), 0)
+    valeurs.set(membre, valeur)
+    return valeur
+  }
   const replisDe = (dimension: Class_DataTagGroup, membres: Class_DataTag[]): Set<Class_DataTag> => {
     const deja = replis.get(dimension)
     if (deja !== undefined) return deja
-    const flux_de_la_dimension = sankey.links_list.filter(flux => !isGeneratedMemberLink(flux) &&
-      [flux.source, flux.target].some(bout => bout.driving_dimension === dimension))
-    const parts = membres.map(membre => ({
-      membre,
-      value: flux_de_la_dimension.reduce((total, flux) => total + (contributionsPourCase(flux, [membre]) ?? 0), 0)
-    }))
+    const parts = membres.map(membre => ({ membre, value: valeurDe(dimension, membre) }))
     const { folded } = foldSmallParts(parts)
     const set = new Set(folded.map(part => part.membre))
     replis.set(dimension, set)
@@ -214,7 +226,8 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // LES MEMBRES CHOISIS, et rien d'autre : le panneau nomme ainsi toujours ce que le dessin
     // montre. « Europe » donne l'Europe, « Régions continentales » — un NIVEAU, qui se choisit
     // dans la même liste — donne les régions.
-    const membres = ordreArborescent(dimension, dimension.selected_tags_list as Class_DataTag[])
+    const membres = ordreArborescent(dimension, dimension.selected_tags_list as Class_DataTag[],
+      dimension.nodes_by_value ? membre => valeurDe(dimension, membre) : undefined)
     if (membres.length === 0) return
     // UN SEUL MEMBRE : L'AXE EST CE MEMBRE, on n'engendre rien (retour de Julien, 30/09).
     //
@@ -311,21 +324,39 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
  * 30/09 : « quand j'ai désagrégé Europe, il n'a pas mis ses sous-régions à la place d'Europe mais
  * réparties ailleurs, en intercalant Asie, Afrique »). L'ordre du groupe est celui d'apparition
  * dans les données : les sous-régions d'Europe y sont semées entre les autres régions.
+ *
+ * AVEC `valeur` (`nodes_by_value`, défaut — Julien, 30/09 : « comme pour les bandes, la
+ * désagrégation devrait suivre l'ordre décroissant de valeur ») : des frères, le plus grand
+ * d'abord. Le tri se fait ENTRE FRÈRES, jamais à plat : les sous-régions d'Europe restent groupées
+ * à la place d'Europe, rangée elle-même d'après sa valeur parmi les régions. Seuls les membres
+ * choisis et leurs ancêtres sont évalués — les autres ne comptent pas dans l'ordre.
  */
-function ordreArborescent(dimension: Class_DataTagGroup, membres: Class_DataTag[]): Class_DataTag[] {
-  const tags = dimension.tags_list as Class_DataTag[]
+function ordreArborescent(
+  dimension: Class_DataTagGroup,
+  membres: Class_DataTag[],
+  valeur?: (membre: Class_DataTag) => number
+): Class_DataTag[] {
+  const utiles = new Set<Class_DataTag>()
+  membres.forEach(membre => {
+    for (let tag: Class_DataTag | undefined = membre; tag !== undefined && !utiles.has(tag); tag = tag.parent) utiles.add(tag)
+  })
+  const tags = (dimension.tags_list as Class_DataTag[]).filter(tag => utiles.has(tag))
   const enfants = new Map<Class_DataTag | undefined, Class_DataTag[]>()
   tags.forEach(tag => {
     const parent = tag.parent
     enfants.set(parent, [...(enfants.get(parent) ?? []), tag])
   })
+  // À valeur égale, l'ordre du groupe (tri stable).
+  const trier = (freres: Class_DataTag[]) => valeur === undefined
+    ? freres
+    : [...freres].sort((a, b) => valeur(b) - valeur(a))
   const rang = new Map<Class_DataTag, number>()
   const visiter = (tag: Class_DataTag) => {
     if (rang.has(tag)) return
     rang.set(tag, rang.size)
-    ;(enfants.get(tag) ?? []).forEach(visiter)
+    trier(enfants.get(tag) ?? []).forEach(visiter)
   }
-  ;(enfants.get(undefined) ?? []).forEach(visiter)
+  trier(enfants.get(undefined) ?? []).forEach(visiter)
   return [...membres].sort((a, b) => (rang.get(a) ?? Infinity) - (rang.get(b) ?? Infinity))
 }
 

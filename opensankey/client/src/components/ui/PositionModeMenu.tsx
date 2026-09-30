@@ -43,7 +43,8 @@ import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
 } from './positionModeHost'
 import {
-  applyBandsByValue, applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, dimensionCarrierCandidates,
+  applyBandsByValue, applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyNodesByValue,
+  dimensionCarrierCandidates,
   dimensionCarriersOf, dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import type { Type_DisaggregationGap } from '../../types/Utils'
@@ -233,6 +234,15 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                       />
                     ))}
                   </MenuGroup>
+                  {/* os#1511 — l'ordre des nœuds engendrés : du plus grand au plus petit (défaut),
+                      comme les bandes. */}
+                  <MenuDivider />
+                  <CheckItem
+                    label={t('Banner.draw_nodes_by_value')}
+                    checked={tagg.nodes_by_value}
+                    closeOnSelect={false}
+                    onClick={() => applyNodesByValue(app_data, tagg, !tagg.nodes_by_value)}
+                  />
                   {/* L'écart vertical des enfants du nœud désagrégé : le réglage de l'onglet
                       Hiérarchie, ici aussi (global à la zone de dessin). */}
                   <MenuDivider />

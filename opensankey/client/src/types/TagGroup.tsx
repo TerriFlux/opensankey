@@ -1303,6 +1303,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // s'il est posé.
   private _bands_by_value: boolean | undefined = undefined
 
+  // os#1511 — ORDRE DES NŒUDS engendrés quand la dimension se dessine en nœuds (Julien, 30/09 :
+  // « la désagrégation devrait aussi suivre cette règle, avec une option, on par défaut »). Même
+  // contrat que `_bands_by_value` : `undefined` = par valeur décroissante, `false` = ordre de l'arbre.
+  private _nodes_by_value: boolean | undefined = undefined
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1349,6 +1354,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
     this._bands_by_value = tagg_to_copy._bands_by_value
+    this._nodes_by_value = tagg_to_copy._nodes_by_value
   }
 
   protected _toJSON(
@@ -1374,6 +1380,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
     if (this._bands_by_value !== undefined) json_object['bands_by_value'] = this._bands_by_value
+    if (this._nodes_by_value !== undefined) json_object['nodes_by_value'] = this._nodes_by_value
   }
 
   protected _fromJSON(
@@ -1425,6 +1432,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     )
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
     if (typeof json_object['bands_by_value'] === 'boolean') this._bands_by_value = json_object['bands_by_value'] as boolean
+    if (typeof json_object['nodes_by_value'] === 'boolean') this._nodes_by_value = json_object['nodes_by_value'] as boolean
   }
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
@@ -1434,6 +1442,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /** os#1511 — bandes rangées du plus grand au plus petit (défaut) ou dans l'ordre de la sélection. */
   public get bands_by_value(): boolean { return this._bands_by_value ?? true }
   public set bands_by_value(value: boolean) { this._bands_by_value = value ? undefined : false }
+
+  /** os#1511 — nœuds engendrés du plus grand au plus petit (défaut), frères entre eux dans l'arbre. */
+  public get nodes_by_value(): boolean { return this._nodes_by_value ?? true }
+  public set nodes_by_value(value: boolean) { this._nodes_by_value = value ? undefined : false }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
 

@@ -161,6 +161,21 @@ export const applyBandsByValue = (app_data: Class_ApplicationData, tagg: Class_D
   apply(on)
 }
 
+/** os#1511 — nœuds engendrés du plus grand au plus petit, ou dans l'ordre de l'arbre (annulable). */
+export const applyNodesByValue = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  const before = tagg.nodes_by_value
+  const apply = (value: boolean) => {
+    tagg.nodes_by_value = value
+    // L'ordre des nœuds se décide à la désagrégation : on la refait.
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(on))
+  apply(on)
+}
+
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */
 export const toggleDimensionCarrier = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string
