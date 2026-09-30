@@ -141,7 +141,16 @@ export const defaultDecomposeSpec = (subject: Type_ChartSubject): Type_Decompose
   }
   const link = subject.link
   const dim = [...link.source.dimensions_as_parent, ...link.target.dimensions_as_parent][0]
-  return dim ? { kind: 'flux_children', dimension_id: dim.id } : null
+  if (dim) return { kind: 'flux_children', dimension_id: dim.id }
+  // 30/09/2026 — UN FLUX DONT LES DONNÉES ONT DES NIVEAUX a son axe, même sans nœud hiérarchisé.
+  //
+  // Julien : « pour les dataTags avec niveaux il faut une représentation pour la couronne, et le
+  // sujet devient le flux ». Sur un fichier en dimensions unifiées (os#1511 : SOCLE, 3 nœuds /
+  // 2 flux), la hiérarchie n'est plus dans les nœuds mais dans les dataTags du flux ; la descente
+  // `data_dimension` savait déjà la lire, mais rien ne la choisissait d'office, donc aucune
+  // couronne n'était proposée sur le flux. Repli EN DERNIER : un flux qui avait un axe le garde.
+  const data_dim = link.sankey?.data_taggs_list.find(g => g.is_hierarchical && g.tags_list.length > 0)
+  return data_dim ? { kind: 'data_dimension', data_tagg_id: data_dim.id } : null
 }
 
 /**
