@@ -167,6 +167,23 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // dans la même liste — donne les régions.
     const membres = dimension.selected_tags_list as Class_DataTag[]
     if (membres.length === 0) return
+    // UN SEUL MEMBRE : L'AXE EST CE MEMBRE, on n'engendre rien (retour de Julien, 30/09).
+    //
+    // « Je pense qu'il y a une ambiguïté sur ce niveau 1 représenté par 2 nœuds. » Il l'a vu en
+    // déplaçant « Monde » : le nœud revenait à sa place. Et il l'a vu une seconde fois dans son
+    // export Excel, qui portait DEUX lignes pour un seul flux — France→Partenaires et
+    // France→Monde.
+    //
+    // Les deux symptômes ont la même cause. Au niveau racine, la coupe ne contient qu'un membre ;
+    // on masquait alors le nœud d'axe pour le remplacer par un nœud engendré qui dit exactement la
+    // même chose. Deux objets pour une seule idée : celui qu'on déplace est le transitoire, donc
+    // le déplacement ne survit pas au premier rebâti, et celui que l'export voit est le mauvais.
+    //
+    // Désagréger n'a de sens qu'à partir de DEUX membres — c'est le sens du mot. Avec un seul,
+    // l'axe reste lui-même, visible, et son flux porte l'agrégat du membre (`valueCurrent` fait
+    // déjà ce repli). Le déplacement porte alors sur un vrai nœud du fichier, et l'export n'a plus
+    // qu'une ligne.
+    if (membres.length === 1) return
     par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres))
   })
   if (par_axe.size === 0) return 0

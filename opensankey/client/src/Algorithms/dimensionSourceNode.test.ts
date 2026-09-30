@@ -109,20 +109,18 @@ describe('os#1511 — un noeud d axe en SOURCE se decoupe comme un noeud d axe e
     // 2) le geste : on attache la SOURCE a l autre dimension, ce qui detache la cible.
     m.partenaires.setDrivingDimensionId(undefined)
     m.france.driving_dimension = m.filiere
-    m.filiere.tags_list.forEach(t => t.setUnSelected())
-    m.oleagineux.setSelected()
+    m.filiere.selectAllAtLevel(1)   // DEUX membres : il y a donc quelque chose a desagreger
     disaggregateDimensionNodes(m.sankey)
 
-    // 3) ce que le dessin doit montrer : Oleagineux -> Partenaires, les deux visibles.
+    // 3) ce que le dessin doit montrer : les filieres vers Partenaires, tout visible.
     expect(m.partenaires.is_visible).toBe(true)
     const engendres = m.sankey.links_list.filter(isGeneratedMemberLink)
-    expect(engendres).toHaveLength(1)
-    expect(engendres[0].is_visible).toBe(true)
-    expect(engendres[0].source.name).toBe('Oleagineux')
-    expect(engendres[0].target.name).toBe('Partenaires')
-    expect(engendres[0].value?.valueData).toBe(70)
+    expect(engendres.every(l => l.is_visible)).toBe(true)
+    expect(engendres.map(l => l.source.name).sort()).toEqual(['Cereales', 'Oleagineux'])
+    expect(engendres.every(l => l.target.name === 'Partenaires')).toBe(true)
     // Et il ne reste aucun noeud de l axe precedent.
-    expect(m.sankey.nodes_list.filter(isGeneratedMemberNode).map(n => n.name)).toEqual(['Oleagineux'])
+    expect(m.sankey.nodes_list.filter(isGeneratedMemberNode).map(n => n.name).sort())
+      .toEqual(['Cereales', 'Oleagineux'])
   })
 
   test('detacher un axe SANS en attacher un autre rend tout le diagramme', () => {
@@ -224,17 +222,22 @@ describe('os#1511 — un noeud d axe en SOURCE se decoupe comme un noeud d axe e
     expect(cibles.filter(n => n === 'Europe')).toHaveLength(2)
   })
 
-  test('un SEUL membre choisi sur la source : un noeud, un flux', () => {
+  // os#1511, 30/09 — UN SEUL MEMBRE : L AXE EST CE MEMBRE, on n engendre rien. Julien : « je pense
+  // qu il y a une ambiguite sur ce niveau 1 represente par 2 noeuds. » Il l a vu en deplacant le
+  // noeud engendre — qui revenait a sa place, etant transitoire — et dans son export Excel, qui
+  // portait DEUX lignes pour un seul flux. Desagreger n a de sens qu a partir de DEUX membres.
+  test('un SEUL membre choisi : rien n est engendre, l axe reste lui-meme', () => {
     const m = monter()
     m.france.driving_dimension = m.filiere
     m.filiere.tags_list.forEach(t => t.setUnSelected())
     m.oleagineux.setSelected()
     disaggregateDimensionNodes(m.sankey)
-    const engendres = m.sankey.links_list.filter(isGeneratedMemberLink)
-    expect(engendres).toHaveLength(1)
-    expect(engendres[0].source.name).toBe('Oleagineux')
-    expect(engendres[0].target.name).toBe('Partenaires')
-    expect(engendres[0].value?.valueData).toBe(70)
-    expect(engendres[0].is_visible).toBe(true)
+    expect(m.sankey.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(0)
+    expect(m.sankey.links_list.filter(isGeneratedMemberLink)).toHaveLength(0)
+    // L axe reste VISIBLE — c est lui qu on deplace, et c est lui que le fichier ecrit.
+    expect(m.france.is_visible).toBe(true)
+    expect(m.flux.is_visible).toBe(true)
+    // Et son flux porte l agregat du membre choisi, sans qu on ait rien engendre.
+    expect(m.flux.valueCurrent).toBe(70)
   })
 })

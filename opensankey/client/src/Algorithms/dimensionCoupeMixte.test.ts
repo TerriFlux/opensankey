@@ -120,11 +120,15 @@ describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => 
   test('le total ne bouge pas d une coupe a l autre — le critere de recette', () => {
     const m = monter()
     m.partenaires.driving_dimension = m.pays
+    // CE QUE LE DESSIN MONTRE, et non les seuls flux engendres : avec UN SEUL membre choisi, il
+    // n y a rien a engendrer — l axe reste lui-meme et porte l agregat (cf. la regle du membre
+    // unique). Sommer les flux VISIBLES est donc la seule lecture qui vaille pour les quatre
+    // coupes a la fois.
     const totalDe = (coupe: string[]) => {
       m.pays.selectMembers(coupe)
       disaggregateDimensionNodes(m.sankey)
-      return m.sankey.links_list.filter(isGeneratedMemberLink)
-        .reduce((t, l) => t + (l.value?.valueData ?? 0), 0)
+      return m.sankey.links_list.filter(l => l.is_visible)
+        .reduce((t, l) => t + (l.valueCurrent ?? 0), 0)
     }
     expect(totalDe(['monde'])).toBe(TOTAL)
     expect(totalDe(['europe', 'afrique'])).toBe(TOTAL)
