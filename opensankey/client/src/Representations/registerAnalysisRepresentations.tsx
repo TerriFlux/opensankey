@@ -49,6 +49,7 @@ import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
+import { coupeDepuisOuverts, coupeEnFermant, ouvertsDepuisCoupe } from '../Algorithms/DimensionCut'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -571,7 +572,8 @@ const isBelow = (
  * `null` quand la figure ne découpe pas selon une dimension de données.
  */
 const dataDimensionClickGestures = (
-  ctx: Type_RepresentationContext
+  ctx: Type_RepresentationContext,
+  style: Type_FigureChartStyle
 ): { activate: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (decompose?.kind !== 'data_dimension') return null
@@ -583,6 +585,23 @@ const dataDimensionClickGestures = (
     const ref = parseMemberSectorId(sector_id)
     if (ref === null || ref.dimension_id !== dimension.id) return undefined
     return dimension.tags_dict[ref.member_id] as Class_DataTag | undefined
+  }
+  // 30/09/2026 — LE DIAGRAMME SUIT, sous le même réglage que pour les nœuds (« Clic sur une part :
+  // le déplie dans le diagramme »). Julien : « quand je clique ça ne pilote pas le diagramme ».
+  // Le geste est celui du panneau et du menu contextuel d'un nœud engendré : une nouvelle COUPE de
+  // la dimension (`selectMembers`), puis les nœuds engendrés se refont. Seulement là où une coupe
+  // à plusieurs membres se dessine — un nœud porte la dimension, ou bannière « multiple » — sinon
+  // le cube n'adresserait plus aucune valeur et le dessin se viderait (cf. `createTreeSelector`).
+  const app_data = ctx.app_data
+  const diagram_follows = (style.interaction_click === 'aggregate' || style.interaction_click === 'both')
+    && ((dimension as unknown as { banner: string }).banner === 'multi'
+      || app_data.drawing_area.sankey.nodes_list.some(node => node.driving_dimension === dimension))
+  const cutDiagram = (cut: string[]) => {
+    app_data.runHeavyGesture(() => {
+      dimension.selectMembers(cut)
+      app_data.drawing_area.rebuildDimensionNodes()
+      app_data.drawing_area.draw()
+    })
   }
   const activate = (part_id: string, gesture: { shift: boolean }, route: string[] = []) => {
     const member = memberOf(part_id)
@@ -606,11 +625,19 @@ const dataDimensionClickGestures = (
         ;(m.children as Class_DataTag[]).forEach(close)
       }
       close(target)
+      if (diagram_follows) cutDiagram(coupeEnFermant(dimension, target))
     } else if ((member.children as Class_DataTag[]).length > 0) {
       next.add(part_id)
+      // TOUTE LA ROUTE, comme `disaggregateAlong` pour les nœuds : ouvrir un membre profond ouvre
+      // aussi ses ancêtres dans le diagramme, sinon la descente s'arrêterait au premier fermé.
+      if (diagram_follows) {
+        const opened = ouvertsDepuisCoupe(dimension)
+        for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent) opened.add(m.id)
+        cutDiagram(coupeDepuisOuverts(dimension, opened))
+      }
     }
     if (next.size === expanded.size) return
-    ctx.app_data.menu_configuration.setMainZonePaneOptions(
+    app_data.menu_configuration.setMainZonePaneOptions(
       window_id, pane_key, { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...next] } as unknown as Type_JSON
     )
   }
@@ -657,7 +684,7 @@ const donutClickGestures = (
   // L'ANNEAU EST LE GESTE DE BASE, il ne se règle pas. Le réglage ne dit que ce qui s'y AJOUTE
   // (déplier le diagramme, descendre dedans). Y sortir ici éteignait le geste même qu'on venait
   // de rendre inconditionnel.
-  const data_gestures = dataDimensionClickGestures(ctx)
+  const data_gestures = dataDimensionClickGestures(ctx, style)
   if (data_gestures) return data_gestures
   const hierarchy = hierarchyInEffect(ctx)
   if (!hierarchy) return {}
