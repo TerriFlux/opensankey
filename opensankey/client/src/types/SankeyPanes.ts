@@ -57,7 +57,7 @@ import type { Class_Sankey } from './Sankey'
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { SankeyPersistence } from '../Persistence/SankeyPersistence'
 import { compressJSONToGzip } from '../Persistence/UniversalJSONCompression'
-import { DRAW_TOPIC } from './EventBus'
+import { DRAW_TOPIC, HISTORY_TOPIC } from './EventBus'
 import { isSankeyPane, mainZoneSubjectView, type Type_MainZoneOccupant } from './MenuConfig'
 import { default_main_sankey_id, type Type_JSON } from './Utils'
 
@@ -657,11 +657,18 @@ export class Class_SankeyPanes {
 
   // FRAÎCHEUR DES RENDUS ===========================================================================
 
-  /** Branche la fraîcheur des rendus sur les dessins du vivant. */
+  /**
+   * Branche la fraîcheur des rendus sur les dessins du vivant ET sur son historique : un geste de
+   * l'utilisateur ne redessine souvent que ce qu'il touche — un nœud créé à la souris ne dessine
+   * que lui —, mais il s'inscrit toujours à l'historique. Sans ce second signal, le nœud ne
+   * paraissait dans les autres volets qu'à leur activation (retour d'Alexandre, 30/09).
+   */
   public listen(): void {
     const mc = this.host.menu_configuration
     if (!mc || this._unsubscribe_draw) return
-    this._unsubscribe_draw = mc.subscribe(DRAW_TOPIC, () => this.scheduleRefresh())
+    const off_draw = mc.subscribe(DRAW_TOPIC, () => this.scheduleRefresh())
+    const off_history = mc.subscribe(HISTORY_TOPIC, () => this.scheduleRefresh())
+    this._unsubscribe_draw = () => { off_draw(); off_history() }
   }
 
   protected scheduleRefresh(): void {
