@@ -561,6 +561,12 @@ export const drawDonutChart = (
     .style('display', 'flex')
     .style('flex-direction', flexDirection(st))
     .style('align-items', 'center')
+    // 30/09/2026 — CENTRÉE DANS SA FENÊTRE (Julien : « la fenêtre n'est pas carrée, plus souvent
+    // plus haute que large, il faudrait centrer au moins verticalement »). La légende étant en bas
+    // par défaut, la couronne et sa légende s'empilaient en haut et tout le vide restait dessous.
+    // Le bloc se centre sur l'axe principal aussi : verticalement légende dessous, horizontalement
+    // légende à côté.
+    .style('justify-content', 'center')
     .style('gap', '0.5rem')
     .style('width', '100%')
     .style('height', '100%')
