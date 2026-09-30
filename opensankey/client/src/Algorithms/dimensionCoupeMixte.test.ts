@@ -5,6 +5,7 @@ import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import { disaggregateDimensionNodes, isGeneratedMemberLink, isGeneratedMemberNode } from './DimensionDisaggregation'
+import { NodeRightExtremityStyle } from '../Elements/ElementStyle'
 
 // jest 27 / jsdom n expose pas structuredClone (utilise par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -206,6 +207,23 @@ describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => 
       expect(tries[i].position_y)
         .toBeGreaterThanOrEqual(tries[i - 1].position_y + tries[i - 1].getShapeHeightToUse())
     }
+  })
+
+  // os#1511, 30/09 — « il faut que les labels soient positionnes a droite ou a gauche du noeud ».
+  // Les styles d extremite mettent le nom A COTE plutot que dessus ; la mise en page automatique
+  // les pose d apres la connectivite, mais un noeud de membre nait APRES elle. Il herite donc de
+  // ceux de son axe, ce qui est juste par construction : meme colonne, memes voisins.
+  test('un noeud de membre herite des styles d extremite de son axe', () => {
+    const m = monter()
+    const style = m.sankey.styles_dict[NodeRightExtremityStyle]
+    expect(style).toBeDefined()
+    m.partenaires.addStyle(style)
+    m.partenaires.driving_dimension = m.pays
+    m.pays.selectMembers(['europe', 'afrique'])
+    disaggregateDimensionNodes(m.sankey)
+    const engendres = m.sankey.nodes_list.filter(isGeneratedMemberNode)
+    expect(engendres.length).toBeGreaterThan(0)
+    engendres.forEach(n => expect(n.hasStyle(NodeRightExtremityStyle)).toBe(true))
   })
 
   test('une coupe mixte de l autre cote : Europe entiere, l Afrique detaillee', () => {
