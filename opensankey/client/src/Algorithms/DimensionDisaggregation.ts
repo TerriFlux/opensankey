@@ -313,8 +313,20 @@ function repartir(
   const droite: (Type_MembreRepresente | undefined)[] = par_axe.get(flux.target.id) ?? [undefined]
   if (gauche[0] === undefined && droite[0] === undefined) return
 
+  // UNE CHAÎNE SUR UNE MÊME DIMENSION NE SE CROISE PAS, ELLE SE SUIT (CARTOFOB, 30/09/2026).
+  //
+  // Deux bouts peuvent porter la MÊME dimension : dans CARTOFOB, Prélèvements, Scieries, Sciages…
+  // représentent tous l'axe des essences, parce que chaque étape de la filière se décline par
+  // essence. Le croisement ci-dessous fabriquerait alors Chêne → Hêtre, Chêne → Douglas… — des
+  // flux qui n'existent pas : le chêne prélevé est le chêne scié. Le produit cartésien vaut pour
+  // DEUX dimensions (les filières à gauche, les pays à droite) ; sur une seule, seule la
+  // diagonale a un sens, chaque membre se reliant à lui-même.
+  const meme_dimension = gauche[0] !== undefined && droite[0] !== undefined &&
+    gauche[0].membre.group === droite[0].membre.group
+
   gauche.forEach(g => droite.forEach(d => {
-    const membres = [g?.membre, d?.membre].filter((m): m is Class_DataTag => m !== undefined)
+    if (meme_dimension && g?.membre !== d?.membre) return
+    const membres = [...new Set([g?.membre, d?.membre])].filter((m): m is Class_DataTag => m !== undefined)
     const contributions = contributionsPourCase(flux, membres)
     if (contributions === null) return
     // L'identifiant porte la MARQUE : c'est ce qui rend le flux engendré reconnaissable sur le
