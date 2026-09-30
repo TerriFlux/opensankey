@@ -514,7 +514,9 @@ export class LinkDrawShape {
         .attr('fill', color ?? link.getShapeColorToUse())
         .attr('fill-opacity', band_opacity)
         .attr('stroke', 'none')
-        .attr('pointer-events', 'none')
+        // os#1511 — la bande reçoit le pointeur : son survol remonte au flux, qui sait ainsi
+        // laquelle montrer dans l'info-bulle (Link.eventMouseOver, `hovered_band_id`).
+        .attr('data-band-id', id)
       // #285 — label de valeur PAR bande, indépendant du label de total :
       //  - cas ADDITIF : affiché si la bande le demande (tv.label_visible) ;
       //  - cas unité / dataTag multi : suit la visibilité du label du flux.

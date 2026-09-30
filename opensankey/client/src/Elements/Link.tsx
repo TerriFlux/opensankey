@@ -65,7 +65,7 @@ import { LinkStyle } from './ElementStyle'
 import {
   openPresentationFor, opensPresentationOnClick, canPresentTooltip,
   matchesPresentationTrigger,
-  schedulePresentationHover, schedulePresentationHoverClose
+  schedulePresentationHover, schedulePresentationHoverClose, closePresentationTooltip
 } from '../components/panels/presentation/openPresentation'
 
 const side_order: { [_ in Type_Side]: number } = {
@@ -262,6 +262,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   // Boolean var only used when enlarging thickness when mouse hovering link
   private _artifical_enlargement: boolean = false
+  // Bande survolée (id de `tagged_value_bands`), transitoire : l'info-bulle ne montre qu'elle.
+  private _hovered_band_id: string | undefined = undefined
+  public get hovered_band_id(): string | undefined { return this._hovered_band_id }
 
   // Transient marker (not persisted) — true if this link was created as part of
   // a lateral expansion (parent ↔ child of an expanded NodeDimension).
@@ -1646,6 +1649,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Apply parent behavior first
     super.eventMouseOver(event)
+    // os#1511 — LA BANDE SURVOLÉE (Julien, 30/09 : « l'info-bulle doit montrer l'info uniquement
+    // pour le dataTag correspondant à la bande »). `mouseover` remonte de chaque enfant du flux :
+    // passer d'une bande à l'autre le redéclenche. L'info-bulle d'un même élément ne se refait
+    // pas d'elle-même, on la ferme donc pour qu'elle se rouvre sur la nouvelle bande.
+    const band = (event.target as unknown as Element | null)?.closest?.('.link_band')
+    const band_id = band?.getAttribute('data-band-id') ?? undefined
+    if (band_id !== this._hovered_band_id) {
+      const had_band = this._hovered_band_id !== undefined
+      this._hovered_band_id = band_id
+      if (had_band) closePresentationTooltip(this.drawing_area.application_data)
+    }
     // ALT
     if (this.thickness < 15) {
       this._artifical_enlargement = true
@@ -1694,6 +1708,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOut(event)
+    // Quitter le flux (et non passer d'une bande à l'autre) oublie la bande survolée.
+    const vers = (event as unknown as { relatedTarget: Node | null }).relatedTarget
+    if (!vers || !this.d3_selection?.node()?.contains(vers)) this._hovered_band_id = undefined
     // OS#305 — quitter le flux programme la fermeture de son info-bulle de
     // présentation (annulée si le curseur y entre, cf. PanelShell).
     schedulePresentationHoverClose(this.drawing_area.application_data)

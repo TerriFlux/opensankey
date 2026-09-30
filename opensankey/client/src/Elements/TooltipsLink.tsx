@@ -17,6 +17,7 @@ import { Class_FluxTagGroup } from '../types/TagGroup'
 import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { escapeHtml } from './htmlEscape'
+import { formatElementValue, resolveValueUnit } from './ValueFormatting'
 
 /** Une tranche de la série d'un flux (une combinaison de dataTags). */
 export type Type_LinkSeriesEntry = {
@@ -120,13 +121,20 @@ export class LinkTooltip {
 
     // Une ligne par tranche sélectionnée de la dimension multi (comme la liste
     // par tag des fluxTags)
+    // os#1511 (Julien, 30/09) — les valeurs sont celles des BANDES dessinées (`tagged_value_bands`),
+    // pas `valueForTag` : sur un flux engendré (Produits agricoles → Monde - Export - Europe), ce
+    // dernier rendait le total pour chaque filière. Et seule la bande SURVOLÉE est montrée ; hors
+    // de toute bande (le flux entier), toutes.
     if (multi_dim) {
-      multi_dim.selected_tags_list.forEach(tag => {
-        const leaf = this._link.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-        const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+      const unit = resolveValueUnit(this._link)
+      const hovered = this._link.hovered_band_id
+      const bands = this._link.tagged_value_bands
+      const shown = bands.some(band => band.id === hovered) ? bands.filter(band => band.id === hovered) : bands
+      shown.forEach(band => {
+        const tag = multi_dim.tags_dict[band.id] as Class_DataTag | undefined
         html += '<tr>'
-        html += `<th>${escapeHtml(tag.display_name)}</th>`
-        html += `<td class="value">${v ?? '-'}</td>`
+        html += `<th>${escapeHtml(tag?.display_name ?? band.id)}</th>`
+        html += `<td class="value">${escapeHtml(formatElementValue(band.value, this._link) + (unit ? ' ' + unit : ''))}</td>`
         html += '</tr>'
       })
     }
@@ -161,7 +169,9 @@ export class LinkTooltip {
 
     // #284 — sous-valeurs de la feuille courante : une ligne par sous-valeur,
     // libellée par sa coordonnée (tags, un par groupe).
-    tagged_values.forEach(sub => {
+    // Même règle pour les valeurs coordonnées : la bande survolée seule, sinon toutes.
+    const hovered_sub = tagged_values.some(sub => sub.id === this._link.hovered_band_id)
+    tagged_values.filter(sub => !hovered_sub || sub.id === this._link.hovered_band_id).forEach(sub => {
       const coord = sub.tags_list
         .map(tag => tag.display_name)
         .join(', ')
