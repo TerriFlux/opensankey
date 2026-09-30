@@ -262,8 +262,14 @@ function creerNoeudsDeMembre(
   axe: Class_NodeElement,
   membres: Class_DataTag[]
 ): Type_MembreRepresente[] {
+  // PLUSIEURS AXES SUR LA MÊME DIMENSION (CARTOFOB, 30/09) : chaque étape de la filière se décline
+  // par essence, et quatorze nœuds « Chêne » ne disent plus de quelle étape ils sont. Le nom du
+  // membre seul ne suffit que si l'axe est le seul à porter sa dimension.
+  const partage = sankey.nodes_list.some(autre => autre !== axe &&
+    !isGeneratedMemberNode(autre) && autre.driving_dimension === axe.driving_dimension)
   const engendres = membres.map(membre => {
-    const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
+    const nom = partage ? `${axe.name} - ${membre.name}` : membre.name
+    const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), nom)
     noeud.copyAttrFrom(axe)
     // os#1511 (retour de Julien, 30/09 : « il faut que les labels soient positionnés à droite ou
     // à gauche du nœud ») — LES STYLES D'EXTRÉMITÉ DE L'AXE DESCENDENT SUR SES MEMBRES.
