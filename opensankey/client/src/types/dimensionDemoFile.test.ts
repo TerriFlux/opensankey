@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as zlib from 'zlib'
 import { Class_ApplicationData } from './ApplicationData'
+import { NodeLeftExtremityStyle, NodeRightExtremityStyle } from '../Elements/ElementStyle'
 import type { Class_DataTag } from './Tag'
 import type { Class_DataTagGroup } from './TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
@@ -125,6 +126,17 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     // quatre. Sans cet attachement, le fichier ne montrait qu un seul flux, quel que soit le
     // niveau choisi — ce que Julien a vu a l ecran le 28/09.
     partenaires.driving_dimension = pays
+    // os#1511 (retour de Julien, 30/09) — LES STYLES D EXTREMITE, que la mise en page automatique
+    // pose d apres la connectivite (`setNodeLabelPositioning`) et qu un fichier fabrique a la main
+    // n a jamais recus. Sans eux, le nom se pose AU MILIEU du noeud, par-dessus lui ; avec eux, il
+    // se pose du cote libre — a gauche d une source, a droite d un puits.
+    //
+    // Les noeuds de membre en heritent a la desagregation : ils occupent la colonne de leur axe et
+    // se branchent sur les memes voisins, donc ils ont la meme extremite.
+    const style_gauche = sankey.styles_dict[NodeLeftExtremityStyle]
+    const style_droite = sankey.styles_dict[NodeRightExtremityStyle]
+    if (style_gauche !== undefined) france.addStyle(style_gauche)
+    if (style_droite !== undefined) partenaires.addStyle(style_droite)
     france.setPosXY(80, 260)
     partenaires.setPosXY(520, 260)
     // La geometrie est portee par le MEMBRE : c est elle qui survit a la regeneration des

@@ -248,6 +248,17 @@ function creerNoeudsDeMembre(
   const engendres = membres.map(membre => {
     const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
     noeud.copyAttrFrom(axe)
+    // os#1511 (retour de Julien, 30/09 : « il faut que les labels soient positionnés à droite ou
+    // à gauche du nœud ») — LES STYLES D'EXTRÉMITÉ DE L'AXE DESCENDENT SUR SES MEMBRES.
+    //
+    // `NodeLeftExtremityStyle` / `NodeRightExtremityStyle` mettent le nom du nœud À CÔTÉ plutôt
+    // que dessus, du côté libre. La mise en page automatique les pose d'après la connectivité
+    // (`setNodeLabelPositioning`), mais un nœud de membre est fabriqué après elle : il naissait
+    // sans, et son nom se posait au milieu, par-dessus le nœud.
+    //
+    // Il hérite donc de l'axe, ce qui est juste par construction : il occupe sa colonne et se
+    // branche sur les mêmes voisins, donc il a la même extrémité que lui.
+    axe.style.forEach(style => noeud.addStyle(style))
     // La COLONNE est toujours celle de l'axe : `layoutChildrenInParentSlot` ne règle que le Y,
     // et un membre sans colonne se retrouverait à l'abscisse zéro.
     noeud.position_u = axe.position_u
