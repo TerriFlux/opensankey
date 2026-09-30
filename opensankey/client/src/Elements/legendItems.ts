@@ -77,6 +77,9 @@ export type Type_LegendItem = {
   // groupe d'au moins deux étiquettes. Une dimension à étiquette unique (Territoire, Filière)
   // ne promet rien : ni main, ni flèche, ni info-bulle, ni liste.
   dimension_choice?: boolean
+  // os#1511 — membre DÉSAGRÉGÉ d'une dimension à niveaux : retrait, en niveaux, sous la place
+  // qu'occupe son parent quand il est agrégé. Absent = pas de retrait.
+  indent?: number
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -128,6 +131,9 @@ type Type_TagForLegend = {
   // SA#553 — étiquette générée « Sans [nom du groupe] » : ses porteurs se calculent
   // (`hasGivenTag` des éléments), elle n'a pas de couleur propre.
   is_untagged?: boolean
+  // os#1511 — `Class_DataTag.parent` : membre parent dans la hiérarchie de la dimension.
+  // Absent = racine (ou groupe sans hiérarchie).
+  parent?: Type_TagForLegend
 }
 type Type_TagGroupForLegend = {
   id: string
@@ -447,6 +453,49 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
 }
 
 /**
+ * os#1511 — retrait des membres montrés d'une dimension à niveaux : leur profondeur moins celle
+ * du moins profond d'entre eux. `undefined` si aucun n'a de parent (dimension plate, ou niveau
+ * le plus agrégé) : la légende reste celle d'avant.
+ */
+function hierarchyIndents(tags: Type_TagForLegend[]): Map<Type_TagForLegend, number> | undefined {
+  if (!tags.some(tag => tag.parent !== undefined)) return undefined
+  const depthOf = (tag: Type_TagForLegend) => {
+    let depth = 0
+    for (let p = tag.parent; p !== undefined; p = p.parent) depth++
+    return depth
+  }
+  const depths = new Map(tags.map(tag => [tag, depthOf(tag)] as [Type_TagForLegend, number]))
+  const min_depth = Math.min(...depths.values())
+  depths.forEach((depth, tag) => depths.set(tag, depth - min_depth))
+  return depths
+}
+
+/**
+ * os#1511 — range les membres dans l'ordre de l'arbre : chacun est repéré par la suite des rangs
+ * (dans `tags_list`) de ses ancêtres puis de lui-même. Les enfants d'un parent désagrégé se
+ * suivent donc, à l'endroit où ce parent se trouvait quand il était agrégé.
+ */
+function sortByHierarchy(tags: Type_TagForLegend[], all_tags: Type_TagForLegend[]) {
+  const rank = new Map(all_tags.map((tag, i) => [tag.id, i] as [string, number]))
+  const pathOf = (tag: Type_TagForLegend) => {
+    const path: number[] = []
+    for (let t: Type_TagForLegend | undefined = tag; t !== undefined; t = t.parent) {
+      path.unshift(rank.get(t.id) ?? Number.MAX_SAFE_INTEGER)
+    }
+    return path
+  }
+  const paths = new Map(tags.map(tag => [tag, pathOf(tag)] as [Type_TagForLegend, number[]]))
+  tags.sort((a, b) => {
+    const pa = paths.get(a) ?? []
+    const pb = paths.get(b) ?? []
+    for (let i = 0; i < Math.min(pa.length, pb.length); i++) {
+      if (pa[i] !== pb[i]) return pa[i] - pb[i]
+    }
+    return pa.length - pb.length
+  })
+}
+
+/**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
  * moins un élément visible (ou data tags, toujours montrés).
@@ -525,6 +574,10 @@ export function computeLegendItems(
           sankey.visible_links_list.some(f => f.hasGivenTag(tag))
       })
       if (displayed_tags.length === 0) return
+      // os#1511 — dimension à niveaux : les membres désagrégés prennent ENSEMBLE la place de leur
+      // parent (ordre de l'arbre), en retrait.
+      const indents = is_data_tagg ? hierarchyIndents(displayed_tags) : undefined
+      if (indents !== undefined) sortByHierarchy(displayed_tags, tag_group.tags_list ?? displayed_tags)
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       const title: Type_LegendItem = {
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
@@ -562,6 +615,8 @@ export function computeLegendItems(
         // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
         // entrées ordinaires restent structurellement identiques à avant.
         if (tag.is_selected === false) item.dimmed = true
+        const indent = indents?.get(tag) ?? 0
+        if (indent > 0) item.indent = indent
         const tag_description = definitionOf(tag)
         if (tag_description !== undefined) item.description = tag_description
         items.push(item)
@@ -767,6 +822,11 @@ export function computeScaleText(
 
 export type Type_LegendItemPosition = { id: string, x: number, y: number }
 
+/** os#1511 — retrait (px monde) d'un membre désagrégé en disposition verticale : une police par niveau. */
+export function legendIndentWidth(item: Type_LegendItem, police: number): number {
+  return (item.indent ?? 0) * police
+}
+
 // Estimation de largeur de texte sans DOM (moyenne ~0.55 em par caractère)
 function estimateTextWidth(text: string, font_size: number): number {
   return text.length * font_size * 0.55
@@ -912,7 +972,8 @@ export function layoutLegendItems(
         x += entry_width + 14
       }
     } else {
-      positions.push({ id: item.id, x: 0, y })
+      // os#1511 — membre désagrégé : décalé d'une police par niveau sous la place de son parent
+      positions.push({ id: item.id, x: legendIndentWidth(item, police), y })
       if (item.scale_bar) {
         y += bar_row_height
       } else {
