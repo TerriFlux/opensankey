@@ -43,7 +43,7 @@ import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, dimensionCarrierCandidates,
+  applyBandsByValue, applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, dimensionCarrierCandidates,
   dimensionCarriersOf, dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import type { Type_DisaggregationGap } from '../../types/Utils'
@@ -212,6 +212,13 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                 label={t('Banner.draw_bands')}
                 checked={drawing === 'multi'}
                 onClick={() => applyDimensionDrawing(app_data, tagg, 'multi')}
+              />
+              {/* os#1511 — l'ordre des bandes d'un flux : du plus grand au plus petit (défaut). */}
+              <CheckItem
+                label={t('Banner.draw_bands_by_value')}
+                checked={tagg.bands_by_value}
+                closeOnSelect={false}
+                onClick={() => applyBandsByValue(app_data, tagg, !tagg.bands_by_value)}
               />
               {tagg.is_hierarchical
                 ? <Submenu label={t('Banner.draw_nodes')} checked={drawing === 'nodes'}>
