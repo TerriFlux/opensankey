@@ -214,7 +214,7 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // LES MEMBRES CHOISIS, et rien d'autre : le panneau nomme ainsi toujours ce que le dessin
     // montre. « Europe » donne l'Europe, « Régions continentales » — un NIVEAU, qui se choisit
     // dans la même liste — donne les régions.
-    const membres = dimension.selected_tags_list as Class_DataTag[]
+    const membres = ordreArborescent(dimension, dimension.selected_tags_list as Class_DataTag[])
     if (membres.length === 0) return
     // UN SEUL MEMBRE : L'AXE EST CE MEMBRE, on n'engendre rien (retour de Julien, 30/09).
     //
@@ -243,6 +243,22 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   //    droits, il faut qu'ils restent droits »). Après `repartir`, le flux d'origine est masqué
   //    et ne s'accroche plus nulle part : c'est maintenant ou jamais.
   const pentes = pentesEntreAxes(sankey, par_axe)
+  // 1 ter) LE CRÉNEAU DE CHAQUE AXE, relevé lui aussi AVANT de découper : après `repartir`, ses
+  //    flux sont masqués et l'axe retombe à la hauteur minimale d'un nœud (40 px au lieu de 647
+  //    sur « [SOCLE] Pays partenaires ») — « remplir le slot du parent » remplissait alors un
+  //    créneau qui n'existait plus.
+  //    Son CENTRE est celui que le nœud mémorise (`center_y`), la vérité de sa position : quand
+  //    plusieurs membres sont choisis, la hauteur de l'axe n'est que celle du premier (218 au lieu
+  //    de 647 au second tour), alors que son coin répond encore à l'ancienne — le milieu déduit du
+  //    coin tombait 215 px trop haut.
+  //    Un axe jamais dessiné n'a pas de centre mémorisé : son coin fait alors foi, et la pile part
+  //    de son haut comme avant.
+  const creneaux = new Map<string, { haut: number, hauteur: number, centre: number | undefined }>()
+  par_axe.forEach((_membres, axe_id) => {
+    const axe = sankey.nodes_dict[axe_id]
+    if (axe === undefined) return
+    creneaux.set(axe_id, { haut: axe.position_y, hauteur: axe.getShapeHeightToUse(), centre: axe.center_y })
+  })
 
   // 2) LES FLUX, une fois chacun. On relève la liste AVANT de créer quoi que ce soit : on y
   //    ajoute des flux au fur et à mesure, et itérer une liste qu'on allonge n'a pas de fin.
@@ -271,10 +287,11 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     par_axe.forEach((membres, axe_id) => {
       if (ranges.has(axe_id)) return
       const axe = sankey.nodes_dict[axe_id]
-      if (axe === undefined) return
-      axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
-        membres.map(({ noeud }) => noeud), axe.position_y, axe.getShapeHeightToUse()
-      )
+      const creneau = creneaux.get(axe_id)
+      if (axe === undefined || creneau === undefined) return
+      const noeuds = membres.map(({ noeud }) => noeud)
+      axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(noeuds, creneau.haut, creneau.hauteur)
+      centrerSurAxe(noeuds, creneau)
     })
   }
 
@@ -287,6 +304,47 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     sankey.nodes_dict[axe_id]?.setInvisible()
   })
   return engendres
+}
+
+/**
+ * Les membres dans l'ordre de l'ARBRE de la dimension, frères dans l'ordre du groupe (Julien,
+ * 30/09 : « quand j'ai désagrégé Europe, il n'a pas mis ses sous-régions à la place d'Europe mais
+ * réparties ailleurs, en intercalant Asie, Afrique »). L'ordre du groupe est celui d'apparition
+ * dans les données : les sous-régions d'Europe y sont semées entre les autres régions.
+ */
+function ordreArborescent(dimension: Class_DataTagGroup, membres: Class_DataTag[]): Class_DataTag[] {
+  const tags = dimension.tags_list as Class_DataTag[]
+  const enfants = new Map<Class_DataTag | undefined, Class_DataTag[]>()
+  tags.forEach(tag => {
+    const parent = tag.parent
+    enfants.set(parent, [...(enfants.get(parent) ?? []), tag])
+  })
+  const rang = new Map<Class_DataTag, number>()
+  const visiter = (tag: Class_DataTag) => {
+    if (rang.has(tag)) return
+    rang.set(tag, rang.size)
+    ;(enfants.get(tag) ?? []).forEach(visiter)
+  }
+  ;(enfants.get(undefined) ?? []).forEach(visiter)
+  return [...membres].sort((a, b) => (rang.get(a) ?? Infinity) - (rang.get(b) ?? Infinity))
+}
+
+/**
+ * Recentre la pile des membres sur le CENTRE de l'axe. Au dessin, tout nœud libre garde son
+ * centre quand sa taille change (`anchorByCenterIfResized`) : son voisin « Produits agricoles »
+ * grandit autour du sien. Des membres empilés depuis le HAUT de l'axe débordaient vers le bas, et
+ * leur haut semblait « descendu » (Julien, 30/09).
+ */
+function centrerSurAxe(noeuds: Class_NodeElement[], creneau: { centre: number | undefined }): void {
+  if (noeuds.length === 0 || creneau.centre === undefined) return
+  const haut = Math.min(...noeuds.map(n => n.position_y))
+  const bas = Math.max(...noeuds.map(n => n.position_y + n.getShapeHeightToUse()))
+  const decalage = creneau.centre - (haut + bas) / 2
+  if (Math.abs(decalage) < 0.5) return
+  noeuds.forEach(n => {
+    n.position_y += decalage
+    n.captureCenterFromCorner()
+  })
 }
 
 /**
