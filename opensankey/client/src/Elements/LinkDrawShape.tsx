@@ -496,13 +496,6 @@ export class LinkDrawShape {
     // (groupe de type unité) sinon l'unité de valeur du flux si elle est visible
     // (value_label_unit_visible). Indépendant du label de total.
     const flux_unit = link.value_label_unit_visible ? link.unit_name('value_label') : ''
-    // #285 — filtre de taille appliqué PAR BANDE (pas sur le total du flux) :
-    // en mode pixel, l'épaisseur écran de la bande ; en mode valeur, sa valeur.
-    const zoom = da.getZoomScale()
-    const bandPassesFilter = (band_value: number, band_px: number): boolean =>
-      da.filter_unit === 'pixel'
-        ? (!(da.filter_label_px > 0) || band_px * zoom >= da.filter_label_px)
-        : band_value >= da.filter_label
     let cum = 0
     bands.forEach(({ id, color, share, value, unit, label_visible, px, opacity }) => {
       // SA#541 — opacité imposée à LA bande par le style de ses étiquettes, mêmes gardes que le flux.
@@ -535,11 +528,12 @@ export class LinkDrawShape {
       // #285 — label de valeur PAR bande, indépendant du label de total :
       //  - cas ADDITIF : affiché si la bande le demande (tv.label_visible) ;
       //  - cas unité / dataTag multi : suit la visibilité du label du flux.
-      // Dans les deux cas, soumis au filtre de taille PAR BANDE.
-      const band_label_shown = da.type_data !== 'structure'
-        && bandPassesFilter(value, px)
+      // Dans les deux cas, soumis au filtre de taille PAR BANDE. L'étiquette est créée même
+      // sous le seuil, masquée : le curseur « Lib. » ne rappelle que drawValueLabel, qui
+      // réapplique le seuil (Link.refreshBandLabels) sans redessiner la forme.
+      const band_label_wanted = da.type_data !== 'structure'
         && (link.has_additive_bands ? !!label_visible : link.value_label_is_visible)
-      if (band_label_shown) {
+      if (band_label_wanted) {
         const band_unit = unit ?? flux_unit
         const n_mid_label = perp(x2, y2, x4, y4)
         const off_mid = ((off_lo_src + off_hi_src) / 2 + (off_lo_tgt + off_hi_tgt) / 2) / 2
@@ -552,6 +546,9 @@ export class LinkDrawShape {
           .attr('font-size', band_font_size)
           .attr('fill', '#000')
           .attr('pointer-events', 'none')
+          .attr('data-band-value', value)
+          .attr('data-band-px', px)
+          .style('display', link.bandLabelPassesFilter(value, px) ? 'inline' : 'none')
           .text(band_unit ? `${value} ${band_unit}` : String(value))
       }
     })

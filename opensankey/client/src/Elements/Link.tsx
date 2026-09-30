@@ -662,19 +662,35 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // drawShape) : le refresh de labels (zoom / verrou de police) ne les
     // recrée pas, on remet donc leur font-size compensée ici pour qu'ils
     // suivent le mode « police verrouillée » comme les labels normaux.
-    this.refreshBandLabelsFontSize()
+    this.refreshBandLabels()
     this._orderD3Elements()
   }
 
-  /** #285 — remet la font-size compensée du zoom sur les labels de bande déjà
-   *  présents dans le DOM (cf. LinkDrawShape.drawTaggedValueBands), sans les
-   *  reconstruire : suit la police du label de valeur + font_compensation. */
-  public refreshBandLabelsFontSize() {
-    const labels = this.d3_selection?.selectAll('.link_band_label')
+  /** #285 — filtre de taille appliqué PAR BANDE (pas sur le total du flux) :
+   *  en mode pixel, l'épaisseur écran de la bande ; en mode valeur, sa valeur. */
+  public bandLabelPassesFilter(band_value: number, band_px: number): boolean {
+    const da = this.drawing_area
+    return da.filter_unit === 'pixel'
+      ? (!(da.filter_label_px > 0) || band_px * da.getZoomScale() >= da.filter_label_px)
+      : band_value >= da.filter_label
+  }
+
+  /** #285 — remet sur les labels de bande déjà présents dans le DOM (cf.
+   *  LinkDrawShape.drawTaggedValueBands), sans les reconstruire : la font-size
+   *  compensée du zoom (police du label de valeur + font_compensation) et le seuil
+   *  « Lib. » (valeur et épaisseur de la bande portées par data-band-*). */
+  public refreshBandLabels() {
+    const labels = this.d3_selection?.selectAll<SVGTextElement, unknown>('.link_band_label')
     if (!labels || labels.empty()) return
     const value_lv = getNameLabelValues(this, 'value_label') as { font_size?: number }
     const fs = (value_lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
     labels.attr('font-size', fs)
+    labels.style('display', (_, i, nodes) => {
+      const el = nodes[i]
+      const passes = this.bandLabelPassesFilter(
+        Number(el.getAttribute('data-band-value')), Number(el.getAttribute('data-band-px')))
+      return passes ? 'inline' : 'none'
+    })
   }
 
   /**
