@@ -9,6 +9,46 @@ import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
+import {
+  Type_HierarchicalPaletteParams, Type_PaletteNode, computeHierarchicalColors, default_hierarchical_palette_params
+} from '../Algorithms/HierarchicalPalette'
+
+/**
+ * os#1516 — RECETTE de palette d'une dimension. C'est elle qui fait foi : les couleurs des membres
+ * en DÉCOULENT (et restent écrites dans chaque membre, pour les versions antérieures et le viewer).
+ * `locks` : couleurs choisies à la main, que le recalcul respecte. `frozen` : plus de recalcul
+ * automatique quand la structure change (couleurs déjà publiées ou imprimées).
+ */
+export type Type_DimensionPalette = {
+  params: Type_HierarchicalPaletteParams
+  locks: { [tag_id: string]: string }
+  frozen: boolean
+}
+
+const copyPalette = (palette: Type_DimensionPalette): Type_DimensionPalette => ({
+  params: { ...palette.params }, locks: { ...palette.locks }, frozen: palette.frozen
+})
+
+const parsePalette = (raw: unknown): Type_DimensionPalette | undefined => {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return undefined
+  const json = raw as Type_JSON
+  const params = { ...default_hierarchical_palette_params }
+  const raw_params = json['params']
+  if (typeof raw_params === 'object' && raw_params !== null) {
+    (Object.keys(params) as (keyof Type_HierarchicalPaletteParams)[]).forEach(key => {
+      const value = (raw_params as Type_JSON)[key]
+      if (typeof value === 'number' && Number.isFinite(value)) params[key] = value
+    })
+  }
+  const locks: { [tag_id: string]: string } = {}
+  const raw_locks = json['locks']
+  if (typeof raw_locks === 'object' && raw_locks !== null) {
+    Object.entries(raw_locks as Type_JSON).forEach(([id, color]) => {
+      if (typeof color === 'string' && color !== '') locks[id] = color
+    })
+  }
+  return { params, locks, frozen: json['frozen'] === true }
+}
 
 // #486 - separateurs de la feuille Etiquettes du format Excel. Le « / » separe les
 // groupes antagonistes declares sur une meme ligne, le « : » les etiquettes d'un
@@ -42,6 +82,9 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'style_id',
   // SA#553 - etiquette generee « Sans [nom du groupe] », modelisee
   'untagged_tag',
+  // os#1511 - hierarchie de la dimension, modelisee : hors du sac, une dimension rendue plate
+  // ressortirait avec ses anciens niveaux. os#1516 - recette de palette, modelisee.
+  'levels', 'current_level', 'palette',
 ])
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -1205,6 +1248,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // pays ». Un curseur de détail global l'interdirait.
   private _current_level_index: number = 0
 
+  // os#1516 — recette de palette hiérarchique ; `undefined` = couleurs libres, comme avant.
+  private _palette: Type_DimensionPalette | undefined = undefined
+  // Pendant un chargement, les membres arrivent un à un avec leur couleur enregistrée : recalculer
+  // sur un arbre partiel écraserait ces couleurs par celles d'une hiérarchie incomplète.
+  private _palette_suspended: boolean = false
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1248,6 +1297,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._is_unit = tagg_to_copy._is_unit
     this._propagate_structure = tagg_to_copy._propagate_structure
     this._position_mode = tagg_to_copy._position_mode
+    this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
   }
 
   protected _toJSON(
@@ -1267,13 +1317,30 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       json_object['levels'] = [...this._levels]
       json_object['current_level'] = this._current_level_index
     }
+    // os#1516 — clé ADDITIVE, écrite seulement par une dimension qui a reçu une palette hiérarchique.
+    if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
   }
 
   protected _fromJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    this._palette_suspended = true
+    try {
+      this._fromJSONDimension(json_object, kwargs)
+    } finally {
+      this._palette_suspended = false
+    }
+  }
+
+  private _fromJSONDimension(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
     super._fromJSON(json_object, kwargs)
+    // os#1516 — cf. _toJSON. Absente → couleurs libres. Les couleurs des membres sont relues
+    // telles qu'enregistrées : on ne recalcule pas à l'ouverture.
+    this._palette = parsePalette(json_object['palette'])
     this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
     if ( getBooleanFromJSON(json_object, 'is_sequence', false)) {
       this.banner = 'sequence'
@@ -1320,6 +1387,120 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
   public get is_hierarchical(): boolean { return this._levels.length > 1 }
+
+  // PALETTE HIÉRARCHIQUE (os#1516) ======================================================
+
+  /** Recette de palette (copie), `undefined` si les couleurs des membres sont libres. */
+  public get palette(): Type_DimensionPalette | undefined {
+    return this._palette === undefined ? undefined : copyPalette(this._palette)
+  }
+
+  /**
+   * Remet une recette telle quelle, SANS recalculer : c'est le chemin de l'annulation, qui
+   * restaure aussi les couleurs d'avant. Pour appliquer une palette, `applyHierarchicalPalette`.
+   */
+  public set palette(palette: Type_DimensionPalette | undefined) {
+    this._palette = palette === undefined ? undefined : copyPalette(palette)
+  }
+
+  /**
+   * Applique la palette hiérarchique (règle hybride, cf. `HierarchicalPalette`) et la garde comme
+   * recette : les couleurs suivront désormais la structure. Les couleurs verrouillées sont gardées.
+   */
+  public applyHierarchicalPalette(params: Type_HierarchicalPaletteParams = this._palette?.params ?? default_hierarchical_palette_params) {
+    this._palette = {
+      params: { ...params },
+      locks: { ...(this._palette?.locks ?? {}) },
+      frozen: false,
+    }
+    this.recolorFromPalette()
+  }
+
+  /** Plus de recalcul automatique quand la structure change (couleurs publiées ou imprimées). */
+  public get palette_frozen(): boolean { return this._palette?.frozen ?? false }
+  public set palette_frozen(frozen: boolean) {
+    if (this._palette === undefined) return
+    this._palette.frozen = frozen
+    if (!frozen) this.recolorFromPalette()
+  }
+
+  /**
+   * Couleur choisie À LA MAIN pour un membre. Sous une palette hiérarchique, elle est VERROUILLÉE :
+   * le recalcul la respecte et ses descendants s'en dérivent. Sans quoi le prochain recalcul
+   * effacerait sans prévenir le choix de l'utilisateur.
+   */
+  public setMemberColor(tag: Class_DataTag, color: string) {
+    if (this._palette === undefined) {
+      tag.color = color
+      return
+    }
+    this._palette.locks[tag.id] = color
+    tag.color = color
+    this.recolorFromPalette(true)
+  }
+
+  public isMemberColorLocked(tag: Class_DataTag): boolean {
+    return this._palette?.locks[tag.id] !== undefined
+  }
+
+  /** Rend un membre à la couleur calculée. */
+  public unlockMemberColor(tag: Class_DataTag) {
+    if (this._palette === undefined || this._palette.locks[tag.id] === undefined) return
+    delete this._palette.locks[tag.id]
+    this.recolorFromPalette(true)
+  }
+
+  /**
+   * À appeler quand la STRUCTURE change (membre ajouté, retiré, reparenté) : recolore les membres
+   * non verrouillés, sauf palette figée ou chargement en cours.
+   */
+  public hierarchyChanged() {
+    if (this._palette === undefined || this._palette.frozen || this._palette_suspended) return
+    this.recolorFromPalette()
+  }
+
+  /**
+   * Recalcule les couleurs depuis la recette. `force` passe outre `frozen` : un geste explicite
+   * (verrouiller, déverrouiller) doit se voir même sur une palette figée.
+   */
+  public recolorFromPalette(force: boolean = false) {
+    if (this._palette === undefined) return
+    if (this._palette.frozen && !force) return
+    const members = this.tags_list as Class_DataTag[]
+    // Verrous orphelins (membre supprimé) : on les oublie, ils ne désignent plus rien.
+    Object.keys(this._palette.locks)
+      .filter(id => this._tags[id] === undefined)
+      .forEach(id => { delete (this._palette as Type_DimensionPalette).locks[id] })
+    // Arbre minimal, enfants dans l'ordre d'affichage des membres.
+    const nodes = new Map<string, Type_PaletteNode>()
+    members.forEach(tag => nodes.set(tag.id, { id: tag.id, children: [] }))
+    const roots: Type_PaletteNode[] = []
+    members.forEach(tag => {
+      const node = nodes.get(tag.id) as Type_PaletteNode
+      const parent = tag.parent
+      if (parent !== undefined && nodes.has(parent.id)) {
+        (nodes.get(parent.id) as Type_PaletteNode).children.push(node)
+      } else {
+        roots.push(node)
+      }
+    })
+    const colors = computeHierarchicalColors(roots, this._palette.params, this._palette.locks)
+    members.forEach(tag => {
+      const color = colors[tag.id]
+      if (color !== undefined) tag.color = color
+    })
+  }
+
+  public override addTag(name: string, id: string | undefined = undefined) {
+    const tag = super.addTag(name, id)
+    this.hierarchyChanged()
+    return tag
+  }
+
+  public override removeTag(tag: Class_ProtoTag) {
+    super.removeTag(tag)
+    this.hierarchyChanged()
+  }
 
   /**
    * os#1511 (retour de Julien, 29/09) — cette dimension est-elle DESSINÉE EN NŒUDS, c'est-à-dire

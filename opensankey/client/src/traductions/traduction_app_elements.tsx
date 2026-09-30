@@ -560,6 +560,7 @@ export const resources_app_elements = {
         },
         tooltips: {
           pal: 'Apply a random color palette for the tags of the selected group',
+          pal_hierarchical: 'Apply a palette that follows the hierarchy: each member takes a shade of its parent\'s colour',
           pal_shuffle: 'Change the order of the colors applied to the tags of the selected group',
           pal_std: 'Choose a standard color palette for the tags of the selected group',
           pal_styles: 'Generate, for each tag of the selected group, a style holding only a colour taken from a random palette',
@@ -1354,6 +1355,7 @@ export const resources_app_elements = {
         selct: 'Sélectionné',
         tooltips: {
           pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',
+          pal_hierarchical: 'Appliquer une palette qui suit la hiérarchie : chaque membre prend une nuance de la couleur de son parent',
           pal_shuffle: 'Changer l\'ordre des couleur appliquées aux étiquettes du groupe sélectionné',
           pal_std: 'Choisir une palette de couleurs standard pour les étiquettes du groupe sélectionné',
           pal_styles: 'Générer, pour chaque étiquette du groupe sélectionné, un style qui ne porte qu’une couleur tirée d’une palette aléatoire',
@@ -2113,6 +2115,7 @@ export const resources_app_elements = {
         selct: 'Seleccionado',
         tooltips: {
           pal: 'Aplicar una paleta de colores aleatorios para las etiquetas del grupo seleccionado',
+          pal_hierarchical: 'Aplicar una paleta que sigue la jerarquía: cada miembro toma un matiz del color de su padre',
           pal_shuffle: 'Cambiar el orden de los colores aplicados a las etiquetas del grupo seleccionado',
           pal_std: 'Elegir una paleta de colores estándar para las etiquetas del grupo seleccionado',
           pal_styles: 'Generar, para cada etiqueta del grupo seleccionado, un estilo que solo lleva un color tomado de una paleta aleatoria',
@@ -2870,6 +2873,7 @@ export const resources_app_elements = {
         selct: 'Ausgewählt',
         tooltips: {
           pal: 'Zufällige Farbpalette für die Beschriftungen der ausgewählten Gruppe anwenden',
+          pal_hierarchical: 'Eine Palette anwenden, die der Hierarchie folgt: Jedes Mitglied erhält eine Nuance der Farbe seines Elternelements',
           pal_shuffle: 'Reihenfolge der auf die Beschriftungen angewandten Farben ändern',
           pal_std: 'Standard-Farbpalette für die Beschriftungen der ausgewählten Gruppe wählen',
           pal_styles: 'Für jedes Etikett der ausgewählten Gruppe einen Stil erzeugen, der nur eine Farbe aus einer zufälligen Palette trägt',
@@ -3627,6 +3631,7 @@ export const resources_app_elements = {
         selct: 'Selezionato',
         tooltips: {
           pal: 'Applicare una palette di colori casuali per le etichette del gruppo selezionato',
+          pal_hierarchical: 'Applicare una palette che segue la gerarchia: ogni membro prende una sfumatura del colore del genitore',
           pal_shuffle: 'Cambiare l\'ordine dei colori applicati alle etichette del gruppo selezionato',
           pal_std: 'Scegliere una palette di colori standard per le etichette del gruppo selezionato',
           pal_styles: 'Generare, per ogni etichetta del gruppo selezionato, uno stile con un solo colore preso da una palette casuale',
@@ -4386,6 +4391,7 @@ export const resources_app_elements = {
         },
         tooltips: {
           pal: '为所选组的标签应用随机配色方案',
+          pal_hierarchical: '应用遵循层级的配色：每个成员取其父级颜色的一种色调',
           pal_shuffle: '更改应用于所选组标签的颜色顺序',
           pal_std: '为所选组的标签选择一个标准配色方案',
           pal_styles: '为所选组的每个标签生成一个仅含一种颜色的样式，颜色取自随机配色方案',
@@ -5150,6 +5156,7 @@ export const resources_app_elements = {
         },
         tooltips: {
           pal: '選択中のグループのタグにランダムな配色を適用します',
+          pal_hierarchical: '階層に沿った配色を適用します：各メンバーは親の色の色合いを受け継ぎます',
           pal_shuffle: '選択中のグループのタグに適用される色の順序を変更します',
           pal_std: '選択中のグループのタグに標準の配色を選びます',
           pal_styles: '選択中のグループの各タグに、ランダムな配色から取った色だけを持つスタイルを生成します',

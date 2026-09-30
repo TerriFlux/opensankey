@@ -964,7 +964,10 @@ export class Class_DataTag extends Class_ProtoTag {
     if (parent === this) return
     // Refus d'un CYCLE : se rendre descendant de soi-même rendrait tout parcours infini.
     if (parent !== undefined && parent.hasAncestor(this)) return
+    if (this._parent_id === parent?.id) return
     this._parent_id = parent?.id
+    // os#1516 — la palette hiérarchique suit la structure
+    this._group.hierarchyChanged()
   }
 
   /** Vrai si `candidate` est un ancêtre de ce membre (remontée par les parents). */
