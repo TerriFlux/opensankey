@@ -26,6 +26,7 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from './DimensionOthers'
+import { NodeLeftExtremityStyle, NodeRightExtremityStyle } from '../Elements/ElementStyle'
 
 // La marque vit dans un module SANS dépendance : le constructeur d'un flux la lit aussi, pour
 // ne pas déplier de cube sur un flux engendré, et la déclarer ici ferait un cycle d'imports.
@@ -488,6 +489,29 @@ function pentesEntreAxes(
  * demandent de RECALCULER. Elle ne s'applique donc que sous `keep` — où, faute de position, un
  * membre retombe sur celle de son axe plutôt que sur l'origine du dessin.
  */
+/**
+ * Styles de l'axe recopiés sur son membre, et À DÉFAUT son EXTRÉMITÉ déduite (Julien, 30/09 :
+ * « les nœuds désagrégés n'ont pas le label à droite du nœud »).
+ *
+ * Recopier les styles de l'axe ne suffit pas : un fichier enregistré sans mise en page
+ * automatique porte des axes au seul style `default`, et le membre n'héritait alors de rien. On
+ * lit donc la connectivité DE L'AXE — celle du membre n'existe pas encore, ses flux se
+ * répartissent après (`repartir`) — avec la règle de `setNodeLabelPositioning` : que des sorties,
+ * extrémité gauche ; que des entrées, extrémité droite. Un override local du placement du nom
+ * (`name_label_horiz` / `_vert`) sur l'axe l'emporte, comme là-bas.
+ */
+function heriterExtremite(sankey: Class_Sankey, axe: Class_NodeElement, noeud: Class_NodeElement): void {
+  axe.style.forEach(style => { if (!noeud.hasStyle(style.id)) noeud.addStyle(style) })
+  if (axe.hasStyle(NodeLeftExtremityStyle) || axe.hasStyle(NodeRightExtremityStyle)) return
+  if (axe.isAttributeOverloaded('name_label_horiz') || axe.isAttributeOverloaded('name_label_vert')) return
+  const source = axe.hasOutputLinks() && !axe.hasInputLinks()
+  const puits = axe.hasInputLinks() && !axe.hasOutputLinks()
+  const style = source
+    ? sankey.styles_dict[NodeLeftExtremityStyle]
+    : (puits ? sankey.styles_dict[NodeRightExtremityStyle] : undefined)
+  if (style !== undefined && !noeud.hasStyle(style.id)) noeud.addStyle(style)
+}
+
 function creerNoeudsDeMembre(
   sankey: Class_Sankey,
   axe: Class_NodeElement,
@@ -516,7 +540,7 @@ function creerNoeudsDeMembre(
     // branche sur les mêmes voisins, donc il a la même extrémité que lui.
     // `copyAttrFrom` en a déjà transféré une partie : `addStyle` avertit en console sur un style
     // déjà posé, et le faisait pour chaque membre engendré.
-    axe.style.forEach(style => { if (!noeud.hasStyle(style.id)) noeud.addStyle(style) })
+    heriterExtremite(sankey, axe, noeud)
     // La COLONNE est toujours celle de l'axe : `layoutChildrenInParentSlot` ne règle que le Y,
     // et un membre sans colonne se retrouverait à l'abscisse zéro.
     noeud.position_u = axe.position_u
@@ -533,7 +557,7 @@ function creerNoeudsDeMembre(
     const nom = partage ? `${axe.name} - ${libelle}` : libelle
     const noeud = sankey.addNewNode(memberNodeId(axe.id, OTHERS_ID), nom)
     noeud.copyAttrFrom(axe)
-    axe.style.forEach(style => { if (!noeud.hasStyle(style.id)) noeud.addStyle(style) })
+    heriterExtremite(sankey, axe, noeud)
     noeud.position_u = axe.position_u
     noeud.position_x = axe.position_x
     noeud.shape_color = OTHERS_COLOR

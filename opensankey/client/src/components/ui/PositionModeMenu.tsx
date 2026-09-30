@@ -43,8 +43,8 @@ import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyDisaggregationGap, dimensionCarrierCandidates, dimensionDrawingOf,
-  toggleDimensionCarrier
+  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, dimensionCarrierCandidates,
+  dimensionCarriersOf, dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
@@ -137,6 +137,7 @@ export const PositionModeMenu = ({ app_data, tagg }: {
   // engendrés), là où la position n'est qu'une façon de lire. En lecture, le menu reste celui d'hier.
   const can_draw = !app_data.is_static
   const drawing = dimensionDrawingOf(app_data, tagg)
+  const in_bands = dimensionInMemberBands(app_data, tagg)
   const position_items = <>
     {POSITION_MODE_META.map(m => (
       <CheckItem
@@ -229,14 +230,26 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                       Hiérarchie, ici aussi (global à la zone de dessin). */}
                   <MenuDivider />
                   <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
+                    {/* os#1511 — dès deux porteurs, la dimension se range en bandes et le mode
+                        d'écart n'a plus d'effet : on le dit, au lieu de cocher un mode qui ne
+                        s'applique pas. Choisir un mode quitte les bandes. */}
+                    {dimensionCarriersOf(app_data, tagg).length >= 2
+                      ? <CheckItem
+                        label={t('Banner.draw_member_bands') +
+                          ` (${app_data.drawing_area.disaggregation_gap_value})`}
+                        checked={in_bands}
+                        closeOnSelect={false}
+                        onClick={() => applyMemberBands(app_data, tagg, true)}
+                      />
+                      : null}
                     {GAP_MODES.map(g => (
                       <CheckItem
                         key={g.value}
                         label={t(g.label_key) + (g.value === 'constant'
                           ? ` (${app_data.drawing_area.disaggregation_gap_value})` : '')}
-                        checked={app_data.drawing_area.disaggregation_gap_mode === g.value}
+                        checked={!in_bands && app_data.drawing_area.disaggregation_gap_mode === g.value}
                         closeOnSelect={false}
-                        onClick={() => applyDisaggregationGap(app_data, g.value)}
+                        onClick={() => applyDisaggregationGap(app_data, g.value, tagg)}
                       />
                     ))}
                   </MenuGroup>
