@@ -562,9 +562,25 @@ export function computeLegendItems(
       })
     })
 
-  // Rappel des data tags sélectionnés par groupe
+  // RAPPEL DES DATA TAGS SÉLECTIONNÉS, et il ne vaut que pour ce que la légende ne montre pas
+  // DÉJÀ (retour de Julien, 30/09 : « on a toujours doublon : on a la liste avec les couleurs, et
+  // c'est repris en dessous »).
+  //
+  // Ce rappel existe pour la dimension qu'on ne voit nulle part ailleurs : « Année : 2015 » dit
+  // sous quel millésime on lit le diagramme, et rien d'autre ne le dit. Mais il s'écrivait pour
+  // TOUS les groupes, sans regarder ce qui précède — un groupe qui a déjà son bloc de pastilles
+  // juste au-dessus voyait donc ses membres réécrits en toutes lettres.
+  //
+  // Deux cas où la dimension est déjà dite, et où le rappel ne fait que répéter :
+  //  - elle PORTE UNE MISE EN FORME : son bloc liste ses membres, avec leur couleur ;
+  //  - elle est DESSINÉE EN NŒUDS : ses membres sont des nœuds nommés sur le diagramme (c'est la
+  //    même raison qui l'a sortie de `legendTagGroupsOrder` — mais cette boucle-là ne passait pas
+  //    par lui, d'où « Pays partenaire » qui restait malgré tout).
   if (config.show_dataTags) {
-    data_taggs.forEach(tag_group => {
+    data_taggs
+      .filter(tag_group => !tagGroupCarriesFormatting(tag_group)
+        && tag_group.is_drawn_as_nodes !== true)
+      .forEach(tag_group => {
       const item: Type_LegendItem = {
         // SA#552 — id partagé avec le clic qui ouvre la liste de la dimension
         id: legendDataTagZoneId(tag_group.id),
