@@ -11,9 +11,10 @@ import * as d3 from '../d3Modules'
 //
 // - ARBRE DE TEINTES (HCL) : au premier embranchement, le cercle chromatique est partagé en
 //   secteurs, chaque enfant prend un sous-secteur de son parent, un cran plus clair et moins
-//   saturé. Les secteurs suivent le NOMBRE DE FEUILLES de la branche : une famille de douze pays
-//   a besoin de plus de nuances qu'une famille de deux.
-// - GRILLE teinte × luminance : quand la part de teinte par frère passe sous `narrow`, un partage
+//   saturé. Les secteurs suivent en partie le NOMBRE DE FEUILLES de la branche (moitié égale,
+//   moitié racine carrée) : une famille de douze pays a besoin de plus de nuances qu'une famille
+//   de deux, sans pour autant affamer les petites.
+// - GRILLE teinte × luminance : quand le plus petit secteur passe sous `narrow`, un partage
 //   en teinte seule ne les sépare plus (c'est ce qui fait tomber l'arbre pur à ΔE 2). Les frères
 //   sont alors rangés en 2 ou 3 rangs de luminance : douze frères font 4 teintes × 3 luminances.
 // - RACINES UNIQUES NEUTRES : « Tous produits », « Monde » n'ont personne à qui s'opposer ; les
@@ -66,6 +67,21 @@ const clampLightness = (l: number) => Math.max(18, Math.min(92, l))
 const wrapHue = (h: number) => ((h % 360) + 360) % 360
 
 /**
+ * Couleur HCL ramenée DANS le gamut en baissant la saturation, teinte et luminance gardées.
+ * Écrêter en RGB (ce que fait `formatHex` d'une couleur hors gamut) déplace la TEINTE : un bleu
+ * foncé saturé glissait de 248° à 269° et rejoignait son voisin de grille (ΔE 16).
+ */
+const hclInGamut = (h: number, c: number, l: number): string => {
+  let chroma = c
+  let color = d3.hcl(h, chroma, l)
+  while (!color.displayable() && chroma > 0) {
+    chroma = Math.max(0, chroma - 2)
+    color = d3.hcl(h, chroma, l)
+  }
+  return color.formatHex()
+}
+
+/**
  * Couleurs des membres d'un arbre, par id.
  *
  * @param roots membres sans parent de la dimension
@@ -98,9 +114,19 @@ export function computeHierarchicalColors(
   const split = (kids: Type_PaletteNode[], a: number, b: number, depth: number) => {
     const n = kids.length
     if (n === 0) return
-    const total = kids.reduce((s, k) => s + countLeaves(k), 0)
-    // Grille teinte × luminance si la part de teinte par frère est trop étroite
-    const grid = n > 1 && (b - a) / n < params.narrow
+    // PART DE CHAQUE FRÈRE : moitié égale, moitié selon la racine du nombre de feuilles.
+    //
+    // Pondérer par les feuilles brutes était une erreur, vue sur l'import SOCLE (14 filières au
+    // premier niveau, 30/09) : Fruits et légumes et Oléoprotéagineux prenaient chacun une centaine
+    // de degrés, les huit petites familles s'entassaient sur 90°, et Sucre et Fourrages retombaient
+    // sur Viande chevaline (ΔE 9). La moitié égale garantit à chacun au moins 1 / (2n) du cercle ;
+    // la racine carrée laisse un peu plus de place aux familles nombreuses sans écraser les autres.
+    const roots_w = kids.map(k => Math.sqrt(countLeaves(k)))
+    const total_w = roots_w.reduce((s, w) => s + w, 0)
+    const shares = roots_w.map(w => (1 / n + w / total_w) / 2)
+    // Grille teinte × luminance dès que le PLUS PETIT secteur est trop étroit — pas la moyenne :
+    // 360° / 14 = 25,7° passait le seuil de 25° alors que les petits secteurs en faisaient 10.
+    const grid = n > 1 && (b - a) * Math.min(...shares) < params.narrow
     const rows = !grid ? 1 : (n <= 3 ? n : n <= 8 ? 2 : 3)
     const cols = Math.ceil(n / rows)
     let cursor = a
@@ -109,12 +135,15 @@ export function computeHierarchicalColors(
       let half: number
       let dl = 0
       if (grid) {
+        // Chaque colonne est encore partagée entre ses rangs : deux frères de la même colonne
+        // diffèrent aussi par la teinte, pas seulement par la luminance (ΔE 15 → plus de 20).
         const col_width = (b - a) / cols
-        hue = a + col_width * ((i % cols) + 0.5)
-        half = col_width * params.sector_fill / 2
-        dl = rows === 1 ? 0 : -params.spread / 2 + params.spread * Math.floor(i / cols) / (rows - 1)
+        const row = Math.floor(i / cols)
+        hue = a + col_width * ((i % cols) + (row + 0.5) / rows)
+        half = col_width / rows * params.sector_fill / 2
+        dl = rows === 1 ? 0 : -params.spread / 2 + params.spread * row / (rows - 1)
       } else {
-        const slot = (b - a) * countLeaves(kid) / total
+        const slot = (b - a) * shares[i]
         hue = cursor + slot / 2
         half = slot * params.sector_fill / 2
         cursor += slot
@@ -125,11 +154,11 @@ export function computeHierarchicalColors(
         const locked_hue = d3.hcl(lock).h
         if (!isNaN(locked_hue)) hue = locked_hue
       } else {
-        colors[kid.id] = d3.hcl(
+        colors[kid.id] = hclInGamut(
           wrapHue(hue),
           Math.max(8, params.chroma - params.chroma_step * (depth - 1)),
           clampLightness(params.lightness + params.lightness_step * (depth - 1) + dl)
-        ).formatHex()
+        )
       }
       split(kid.children, hue - half, hue + half, depth + 1)
     })
