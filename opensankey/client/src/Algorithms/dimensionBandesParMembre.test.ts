@@ -2,7 +2,11 @@ import { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
-import { bandesParMembre, disaggregateDimensionNodes, isGeneratedMemberNode } from './DimensionDisaggregation'
+import type { Class_LinkElement } from '../Elements/Link'
+import type { Class_NodeElement } from '../Elements/Node'
+import {
+  bandesParMembre, disaggregateDimensionNodes, isGeneratedMemberLink, isGeneratedMemberNode, MEMBER_NODE_MARK
+} from './DimensionDisaggregation'
 
 // jest 27 / jsdom n'expose pas structuredClone (utilise par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -65,27 +69,38 @@ describe('os#1511 — un diagramme par membre', () => {
     expect(bandesParMembre(pays, 3)).toBe(false)
   })
 
-  test('chaque bande garde la forme du diagramme et commence sous le noeud le plus bas de la precedente', () => {
+  /** Accroche cible moins accroche source : 0 = flux droit. */
+  const pente = (l: Class_LinkElement) =>
+    ((l.target as Class_NodeElement).position_y + ((l.target as Class_NodeElement).linkAttachOffsetY(l) ?? NaN)) -
+    ((l.source as Class_NodeElement).position_y + ((l.source as Class_NodeElement).linkAttachOffsetY(l) ?? NaN))
+
+  test('un flux droit reste droit dans chaque bande, meme quand les noeuds n ont plus la meme hauteur', () => {
+    // Cas du SOCLE : trois noeuds alignes, flux droits (50 entrent, 50 sortent). Par pays, les
+    // valeurs different (Maroc : 10 entrent, 20 sortent), donc les noeuds engendres n ont pas la
+    // meme hauteur : caler leur HAUT courbait les flux.
     const { sankey, app } = monter()
-    // Les axes ne sont pas alignes : « Produits agricoles » est 50 plus bas que les deux autres.
+    app.drawing_area.disaggregation_gap_value = 25
+    const origine = sankey.links_list.filter(l => !isGeneratedMemberLink(l)).map(pente)
+    expect(origine.every(p => Math.abs(p) < 1e-6)).toBe(true)
+    disaggregateDimensionNodes(sankey)
+    const engendres = sankey.links_list.filter(isGeneratedMemberLink)
+    expect(engendres).toHaveLength(4)
+    engendres.forEach(l => expect(pente(l)).toBeCloseTo(0, 6))
+  })
+
+  test('une pente d origine est gardee, et chaque bande commence sous le noeud le plus bas de la precedente', () => {
+    const { sankey, app } = monter()
+    // « Produits agricoles » 50 plus bas : les flux d origine descendent puis remontent.
     sankey.nodes_list.find(n => n.name === 'Produits agricoles')?.setPosXY(300, 150)
     app.drawing_area.disaggregation_gap_value = 25
+    const avant = new Map(sankey.links_list.map(l => [l.id, pente(l)]))
     disaggregateDimensionNodes(sankey)
-    const par = (suffixe: string) => new Map(sankey.nodes_list.filter(isGeneratedMemberNode)
-      .filter(n => n.id.endsWith(suffixe))
-      .map(n => [n.id.split('--')[0], { y: n.position_y, h: n.getShapeHeightToUse() }]))
-    const espagne = par('espagne')
-    const maroc = par('maroc')
-    expect(espagne.size).toBe(3)
-    // Passe 1 : la forme est gardee dans chaque bande (meme decalage pour tous les noeuds)
-    const idDe = (nom: string) => sankey.nodes_list.find(n => n.name === nom)?.id ?? ''
-    const ecartForme = (m: typeof espagne) =>
-      (m.get(idDe('Produits agricoles'))?.y ?? 0) - (m.get(idDe('Monde - Import'))?.y ?? 0)
-    expect(ecartForme(espagne)).toBeCloseTo(50, 6)
-    expect(ecartForme(maroc)).toBeCloseTo(50, 6)
-    // Passe 2 : le noeud le plus haut du Maroc commence sous le bas le plus bas de l Espagne + 25
-    const bas_espagne = Math.max(...[...espagne.values()].map(e => e.y + e.h))
-    const haut_maroc = Math.min(...[...maroc.values()].map(m => m.y))
+    sankey.links_list.filter(isGeneratedMemberLink).forEach(l =>
+      expect(pente(l)).toBeCloseTo(avant.get(l.id.split(MEMBER_NODE_MARK)[0]) as number, 6))
+    const bande = (suffixe: string) => sankey.nodes_list.filter(isGeneratedMemberNode)
+      .filter(n => n.id.endsWith(suffixe)).map(n => ({ y: n.position_y, h: n.getShapeHeightToUse() }))
+    const bas_espagne = Math.max(...bande('espagne').map(e => e.y + e.h))
+    const haut_maroc = Math.min(...bande('maroc').map(m => m.y))
     expect(haut_maroc).toBeCloseTo(bas_espagne + 25, 6)
   })
 
