@@ -933,9 +933,16 @@ export const updateFrom = (
   // marquage parametric PAR NŒUD est conservé : un nœud « Ecartement » doit garder son
   // calage relatif au nœud du dessus à travers les changements de vue / reload
   // (anchorParametricNodesToAbsolute le replace après le placement global).
-  Object.values(drawing_area.sankey.styles_dict).forEach(style => {
-    if (style.shape_position_type === 'parametric') style.shape_position_type = 'absolute'
-  })
+  //
+  // sa#581 — SAUF `keepPositionType` : la mise en page d'un volet Sankey passe d'un volet à
+  // l'autre SUR LE MÊME MODÈLE. Les styles nommés en font partie et sont communs aux volets :
+  // réécrire ici leur mode de position, ce serait changer le modèle à chaque clic d'un volet à
+  // l'autre. Les `u`/`v` des nœuds, eux, voyagent avec les positions (`posNode`).
+  if (!mode.includes('keepPositionType')) {
+    Object.values(drawing_area.sankey.styles_dict).forEach(style => {
+      if (style.shape_position_type === 'parametric') style.shape_position_type = 'absolute'
+    })
+  }
 
   // #1230 — Mode coordonnées absolues : après un re-chargement des positions
   // (changement de vue), re-caler l'ancrage du centre sur la taille courante.

@@ -39,8 +39,10 @@ import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import {
   Class_MenuConfig, URL_MAIN_ZONE_SHORT_NAMES, URL_MAIN_ZONE_LONG_NAMES,
-  mainZoneOccupantUsesOwnWindowId, mainZoneSubjectSheet, mainZoneSubjectView, MAIN_ZONE_CANVAS_ID
+  mainZoneOccupantUsesOwnWindowId, mainZoneSubjectSheet, mainZoneSubjectView, MAIN_ZONE_CANVAS_ID,
+  isSankeyPane
 } from '../types/MenuConfig'
+import { Class_SankeyPanes } from './SankeyPanes'
 // os#1482 — les tableaux de bord (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
   implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId, mainZoneWithViewOnCurrentSheet,
@@ -903,6 +905,16 @@ export class Class_ApplicationData {
   protected instanciateViewsReader(): ViewsReader { return new ViewsReader(this) }
 
   /**
+   * sa#581 — LES VOLETS SANKEY : lequel porte la zone de dessin du document, la mise en page de
+   * chacun, le rendu des volets inactifs (cf. `Class_SankeyPanes`). Tenu par tout document, servi
+   * par le principal seulement : c'est lui que la grande zone montre.
+   */
+  protected _sankey_panes: Class_SankeyPanes = new Class_SankeyPanes(this)
+  public get sankey_panes(): Class_SankeyPanes { return this._sankey_panes }
+  /** Vrai pendant une bascule de vue commandée par un GESTE d'utilisateur (cf. `runAsViewGesture`). */
+  protected _view_gesture: boolean = false
+
+  /**
    * os#1369 — Exécute un geste LOURD d'interface (filtrage par dataTag, et tout ce qui
    * redessine le diagramme entier) en cédant d'abord la main au navigateur, voile et sillon
    * posés. Suite directe d'os#1368 : la cause est la même — le travail est synchrone, donc
@@ -1269,8 +1281,11 @@ export class Class_ApplicationData {
     // suppression de toutes les vues) doivent la voir repartir à zéro comme les autres.
     //
     // sa#581 — ZÉRO, C'EST VIDE (arbitrage Alexandre, 30/09 : « Nouveau diagramme : vide aussi ») :
-    // une feuille blanche sous la barre du haut, et le « + » ouvre ce qu'on veut y voir.
+    // une feuille blanche sous la barre du haut, et le « + » ouvre ce qu'on veut y voir. Les
+    // volets Sankey partent avec leurs rendus et leurs mises en page.
     this.menu_configuration?.resetMainZone()
+    this._sankey_panes.reset()
+    this._sankey_panes.restoreBaseLayout()
     // Reset Class_ApplicationData instance
     if (redraw) {
       this.reset({})
@@ -1701,12 +1716,16 @@ export class Class_ApplicationData {
     const previous_will_draw = this._from_json_will_draw
     this._from_json_will_draw = draw
     try {
-      this._fromJSON(json_object, kwargs)
+      // sa#581 — LES VOLETS SANKEY ATTENDENT LA FIN DE LA LECTURE : la disposition se relit avant
+      // les vues, et une synchronisation faite entre les deux prendrait les vues des volets pour
+      // disparues.
+      this._sankey_panes.hold(() => this._fromJSON(json_object, kwargs))
     } finally {
       this._from_json_will_draw = previous_will_draw
     }
     // Post processing & menu updating
     this._afterFromJSON()
+    this._sankey_panes.sync()
     // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
     // à l'enregistrement (œil ON / view_mode), il est RESTAURÉ tel quel à l'ouverture pour
     // que le sous-ensemble curé de la vue s'affiche sans réintervention manuelle.
@@ -2080,7 +2099,13 @@ export class Class_ApplicationData {
       if (!entry) return
       const sheet = mainZoneSubjectSheet(o.subject)
       const doc = (sheet === '' || sheet === this._current_sheet_id) ? this : this.sheetApplication(sheet)
-      const view = doc ? doc.current_view_id : mainZoneSubjectView(o.subject)
+      // sa#581 — un volet Sankey montre SA vue (sa coordonnée), plus forcément la vue courante. Le
+      // vivant, lui, montre ce que dessine la zone de dessin : la vue courante, même quand une
+      // bascule par programme l'y a posée sans le déplacer (cf. `Class_SankeyPanes.afterViewChange`).
+      const live = o.id === this.menu_configuration.main_zone_live_sankey_id
+      const view = isSankeyPane(o)
+        ? (live ? this._current_view_id : this._sankey_panes.coordinateOf(o))
+        : (doc ? doc.current_view_id : mainZoneSubjectView(o.subject))
       if (view === '') return
       const subject = { ...(entry['subject'] as Type_JSON ?? { kind: 'diagram' }), view }
       entry['subject'] = subject
@@ -2173,7 +2198,7 @@ export class Class_ApplicationData {
 
   /**
    * LA BASCULE DE VUE POSE LE VOLET DE LA VUE — appelée par `ViewsReader.applyViewChange`, une fois
-   * la nouvelle vue courante.
+   * la nouvelle vue courante, et par le choix d'une vue qui n'est qu'un volet.
    *
    * COMME UNE FENÊTRE DU SYSTÈME (arbitrage Alexandre, 24/09) : choisir une vue la ramène au premier
    * plan, PAR-DESSUS ce qu'on voit, dans l'affichage où on l'a laissée — flottante, ancrée ou en
@@ -2183,24 +2208,105 @@ export class Class_ApplicationData {
    *  - Le volet de la vue est déjà ouvert : il passe au premier plan (`bringMainZoneOccupantForward`).
    *  - Il est fermé : il se rouvre depuis la forme que la vue en garde, à sa place et, s'il y était,
    *    en plein écran.
-   *  - Une vue sans volet est le diagramme de la fenêtre principale : rien à poser.
-   *  - Une vue ÉPHÉMÈRE qu'on quitte est oubliée : on l'avait gardée le temps de la regarder.
+   *  - Une vue ÉPHÉMÈRE qu'on quitte est oubliée, si plus aucun volet ne la montre.
+   *
+   * sa#581 — UNE VUE SANS VOLET (fichier d'avant, vue générée par les étiquettes) se montre dans un
+   * VOLET SANKEY, puisqu'il n'y a plus de fenêtre principale pour l'accueillir d'office : le volet
+   * vivant s'il n'est pas lui-même une vue enregistrée — c'est ainsi qu'un récit se déroule dans un
+   * seul volet, F8/F9 —, sinon un autre volet non enregistré, sinon un volet qu'on ouvre. Seulement
+   * sur un GESTE : un export qui parcourt les vues ne touche pas aux volets. Et un volet Sankey qui
+   * reçoit la vue devient le vivant : c'est sur lui que le dessin se pose.
    */
-  public applySavedViewWindowsOnSwitch(prev_id: string, id: string): void {
+  public placeViewOnPanes(prev_id: string, id: string): void {
     const mc = this.menu_configuration
     if (!mc || !this.is_main) return
     this.captureSavedViewWindows()
-    if (prev_id !== id && this._views[prev_id]?.ephemeral) this.forgetEphemeralView(prev_id)
     const window = this._views[id]?.window
-    if (!window) {
-      // Une vue sans volet est le diagramme : un autre volet en plein écran le cacherait.
+    if (window) {
+      const open = mc.mainZoneOccupantOfSavedView(id)
+      const pane_id = open ? open.id : mc.openMainZoneWindowFromJSON(window, id)
+      if (open) mc.bringMainZoneOccupantForward(open.id)
+      const pane = pane_id !== null ? mc.mainZoneOccupantById(pane_id) : undefined
+      if (pane && isSankeyPane(pane)) mc.main_zone_live_sankey_id = pane.id
+    } else {
+      if (this._view_gesture) {
+        const live_id = mc.main_zone_live_sankey_id
+        const live = live_id !== null ? mc.mainZoneOccupantById(live_id) : undefined
+        const target = (live && !live.saved_view) ? live : mc.main_zone_sankey_panes.find(p => !p.saved_view)
+        const target_id = target ? target.id : mc.openSankeyPane(id)
+        if (target) mc.setSankeyPaneView(target.id, id)
+        mc.main_zone_live_sankey_id = target_id
+        mc.main_zone_active_id = target_id
+      }
+      // Un autre volet en plein écran cacherait le diagramme.
       const maximized = mc.main_zone_maximized_id
-      if (maximized !== null && maximized !== MAIN_ZONE_CANVAS_ID) mc.setMainZoneMaximized(null)
-      return
+      if (maximized !== null && maximized !== mc.main_zone_live_sankey_id) mc.setMainZoneMaximized(null)
     }
-    const open = mc.mainZoneOccupantOfSavedView(id)
-    if (open) mc.bringMainZoneOccupantForward(open.id)
-    else mc.openMainZoneWindowFromJSON(window, id)
+    // Une vue éphémère qu'on quitte est oubliée si plus aucun volet ne la montre — APRÈS le
+    // placement : le volet qui la montrait vient peut-être de recevoir la vue choisie.
+    if (prev_id !== id && this._views[prev_id]?.ephemeral && !this._sankey_panes.anyPaneShows(prev_id)) {
+      this.forgetEphemeralView(prev_id)
+    }
+  }
+
+  /**
+   * sa#581 — Exécute `work` comme la suite d'un GESTE d'utilisateur (sélecteur, bandeau, F8/F9) :
+   * la vue choisie cherche alors un volet où se montrer (cf. `placeViewOnPanes`).
+   */
+  public runAsViewGesture(work: () => void): void {
+    const was = this._view_gesture
+    this._view_gesture = true
+    try { work() } finally { this._view_gesture = was }
+  }
+
+  /** sa#581 — Une vue qui n'est qu'un volet (cf. `Type_ViewEntry.window_only`) ? */
+  public isWindowOnlyView(id: string): boolean {
+    return !!this._views[id]?.window_only
+  }
+
+  /** sa#581 — Bascule commandée par l'activation d'un volet Sankey (cf. `Class_SankeyPanes.activate`). */
+  public switchViewForPane(id: string): void { this._views_reader.switchViewForPane(id) }
+  /** sa#581 — Avant une bascule de vue : la mise en page du volet vivant est mise à l'abri. */
+  public beforeViewChange(): void { this._sankey_panes.beforeViewChange() }
+  /** sa#581 — Après une bascule de vue : la mise en page qui convient (cf. `Class_SankeyPanes`). */
+  public afterViewChange(id: string): void { this._sankey_panes.afterViewChange(id) }
+  /** sa#581 — Oublie une vue éphémère que plus aucun volet ne montre. */
+  public forgetEphemeralViewOf(id: string): void { if (this._views[id]?.ephemeral) this.forgetEphemeralView(id) }
+
+  /**
+   * sa#581 — UNE VUE EST-ELLE OUVERTE, c'est-à-dire montrée par un volet ? C'est ce que le sélecteur
+   * de vues encadre (retour d'Alexandre, 30/09 : « n'encadrer en vert que les vues ouvertes ») :
+   * la vue courante d'une grande zone vide ne l'est pas. Sans grande zone (viewer), la vue courante
+   * est celle qu'on voit.
+   */
+  public isViewOpen(id: string): boolean {
+    const mc = this.menu_configuration
+    if (!mc || !mc.main_zone_hosted) return id === this._current_view_id
+    if (mc.mainZoneOccupantOfSavedView(id)) return true
+    return this._sankey_panes.anyPaneShows(id)
+  }
+
+  /**
+   * sa#581 — MONTRER UNE VUE, geste du sélecteur : la bascule ordinaire, et pour la vue courante —
+   * qu'on peut rechoisir parce que son volet a été fermé ou est passé derrière — le seul volet.
+   */
+  public showView(id: string): void | Promise<void> {
+    if (id !== this._current_view_id) return this.requestViewChange(id)
+    this.runAsViewGesture(() => this._sankey_panes.hold(() => this.placeViewOnPanes(id, id)))
+    this._sankey_panes.sync()
+  }
+
+  /**
+   * sa#581 — LE « + » SANKEY : un volet Sankey de plus, sur la vue du volet vivant (ou la vue
+   * courante), qui devient l'actif — il reçoit le dessin, avec la mise en page qu'il montrait.
+   */
+  public openSankeyPane(): string | null {
+    const mc = this.menu_configuration
+    if (!mc) return null
+    const live_id = mc.main_zone_live_sankey_id
+    const live = live_id !== null ? mc.mainZoneOccupantById(live_id) : undefined
+    const view = live ? this._sankey_panes.coordinateOf(live) : this._current_view_id
+    return mc.openSankeyPane(view)
   }
 
   /**
@@ -2225,6 +2331,8 @@ export class Class_ApplicationData {
     const mc = this.menu_configuration
     if (!mc || !this.is_main || this.is_static) return
     mc.resetMainZone()
+    // sa#581 — les rendus et les mises en page des volets d'avant montraient un autre modèle.
+    this._sankey_panes.reset()
     const view_id = this._current_view_id
     const listed = view_id === default_main_sankey_id
       ? this._show_master_in_views
@@ -2232,7 +2340,7 @@ export class Class_ApplicationData {
     if (!listed) return
     const window = this._views[view_id]?.window
     if (window) mc.openMainZoneWindowFromJSON(window, view_id)
-    else mc.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
+    else mc.openSankeyPane(view_id === default_main_sankey_id ? undefined : view_id)
   }
 
   /**
@@ -2261,7 +2369,8 @@ export class Class_ApplicationData {
   public ensureDiagramShown(): void {
     const mc = this.menu_configuration
     if (!mc || !this.is_main || this.is_static) return
-    if (!mc.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID)) mc.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
+    // sa#581 — un volet Sankey, quel qu'il soit : tous se valent.
+    if (mc.main_zone_sankey_panes.length === 0) mc.openSankeyPane()
   }
 
   /**
@@ -2274,6 +2383,19 @@ export class Class_ApplicationData {
   public startNewSankeyDiagram(): void {
     this.reinitialization()
     this.ensureDiagramShown()
+  }
+
+  /**
+   * sa#581 — LES VOLETS SANKEY APRÈS UN CHANGEMENT DE CONTENU (une autre feuille au premier plan) :
+   * leurs rendus montraient l'ancien, leurs coordonnées nommaient des vues de l'ancien. Ils
+   * repartent sur la vue courante du nouveau contenu ; la grille, elle, ne bouge pas (os#1433).
+   */
+  protected resetSankeyPanesOnNewContent(): void {
+    const mc = this.menu_configuration
+    this._sankey_panes.reset()
+    if (!mc) return
+    this._sankey_panes.hold(() => mc.main_zone_sankey_panes.forEach(p => mc.setSankeyPaneView(p.id, '')))
+    this._sankey_panes.sync()
   }
 
   /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
@@ -2759,6 +2881,7 @@ export class Class_ApplicationData {
     const target_json = JSON.parse(pako.inflate(target_snapshot, { to: 'string' })) as Type_JSON
     this._loadSheetContent(target_json, draw)
     this._current_sheet_id = id
+    this.resetSankeyPanesOnNewContent()
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
   }
 
@@ -4653,6 +4776,8 @@ export class Class_ApplicationData {
   public get is_current_view_light(): boolean { return this._views_reader.is_current_view_light }
   public get has_master_sankey(): boolean { return this._views_reader.has_master_sankey }
   public get views_navigation_order(): string[] { return this._views_reader.views_navigation_order }
+  /** sa#581 — l'ordre des flèches Préc./Suiv. (cf. `ViewsQuery.views_arrow_order`). */
+  public get views_arrow_order(): string[] { return this._views_reader.views_arrow_order }
   // sa#396/397 — labels de vues (étiquettes de SÉLECTION posées sur les vues, cf. Type_ViewEntry).
   public get all_view_labels(): string[] { return this._views_reader.all_view_labels }
   public viewIdsWithLabel(label: string): string[] { return this._views_reader.viewIdsWithLabel(label) }

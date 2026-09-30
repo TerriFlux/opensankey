@@ -363,6 +363,21 @@ export const mainZoneOccupantUsesOwnWindowId = (
 ): boolean => mainZoneSubjectUsesOwnWindowId(o.subject) || isOwnMainZoneWindowId(o.id)
 
 /**
+ * sa#581 — CE VOLET EST-IL UN VOLET SANKEY : le diagramme de la FEUILLE COURANTE, dessiné en
+ * entier et éditable ? Tous se valent (arbitrage Alexandre, 30/09) : l'un d'eux porte la zone de
+ * dessin du document, et n'importe lequel peut devenir ce volet-là en devenant l'actif.
+ *
+ * La feuille est la ligne de partage, comme pour le canevas d'une AUTRE feuille (os#1385 lot 0) :
+ * celui-là dessine le document de sa feuille, dans sa case, et n'est pas un volet Sankey de la
+ * feuille qu'on édite. Un sujet sans feuille désigne la feuille courante.
+ */
+export const isSankeyPane = (
+  o: { representation: string, subject: Type_MainZoneSubject }
+): boolean =>
+  o.representation === MAIN_ZONE_CANVAS_ID && o.subject.kind === 'diagram' &&
+  mainZoneSubjectSheet(o.subject) === ''
+
+/**
  * os#1387 (10/09/2026) — LA CLÉ DE LA VIGNETTE de rang `i` d'un sujet `elements`.
  *
  * Un seul endroit pour appliquer le repli, parce qu'il y a deux façons d'écrire la même
@@ -1021,6 +1036,17 @@ export class Class_MenuConfig {
    * qu'on désigne un autre volet — comme une fenêtre du système jusqu'au clic suivant. TRANSITOIRE.
    */
   protected _main_zone_front_id: string | null = null
+  /**
+   * sa#581 — LE VOLET SANKEY VIVANT, ou `null` : celui sur lequel la zone de dessin du document
+   * (le SVG de `#sankey_app`, avec tout son menu, sa sélection, son clavier et son historique) est
+   * cadrée. Tous les volets Sankey se valent : celui qu'on active devient le vivant, les autres
+   * montrent chacun un rendu à jour de leur propre mise en page (cf. `Class_SankeyPanes`).
+   *
+   * TRANSITOIRE, et posé par le document principal seulement — c'est lui qui sait transporter une
+   * mise en page d'un volet à l'autre. `null` : aucun volet Sankey n'est vivant (grande zone vide,
+   * ou le vivant vient d'être fermé) ; le dessin est alors masqué.
+   */
+  protected _main_zone_live_sankey_id: string | null = null
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
   protected _main_zone_active_id: string | null = null
@@ -1503,6 +1529,63 @@ export class Class_MenuConfig {
    * un AUTRE volet qui le cacherait. Sa place, elle, ne change pas : c'est dans son bandeau qu'on
    * la change ensuite.
    */
+  /** sa#581 — Le volet Sankey vivant (cf. `_main_zone_live_sankey_id`), s'il est encore ouvert. */
+  public get main_zone_live_sankey_id(): string | null {
+    const id = this._host._main_zone_live_sankey_id
+    return (id !== null && this.isMainZoneOccupant(id)) ? id : null
+  }
+  public set main_zone_live_sankey_id(id: string | null) {
+    if (this._host._main_zone_live_sankey_id === id) return
+    this._host._main_zone_live_sankey_id = id
+    this._notifyMainZone()
+  }
+  /**
+   * sa#581 — LES VOLETS SANKEY de la grande zone : ceux qui montrent le diagramme de la feuille
+   * courante (cf. `isSankeyPane`). Dans l'ordre des occupants, qui est celui des ouvertures.
+   */
+  public get main_zone_sankey_panes(): Type_MainZoneOccupant[] {
+    return this._host._main_zone_occupants.filter(isSankeyPane).map(o => ({ ...o }))
+  }
+  /**
+   * sa#581 — OUVRIR UN VOLET SANKEY DE PLUS (le « + »), qui devient l'actif. Le premier volet
+   * Sankey garde l'identifiant de registre du diagramme — c'est lui que citent l'état d'URL, les
+   * tableaux de bord et les fichiers d'avant —, les suivants prennent un identifiant propre.
+   *
+   * @param view la coordonnée du volet : la vue qu'il montre (absente = la vue courante)
+   * @param place sa place (absente = la principale si elle est libre, sinon la colonne droite)
+   * @returns l'identifiant du volet ouvert
+   */
+  public openSankeyPane(view?: string, place?: Type_MainZonePlace): string {
+    const subject: Type_MainZoneSubject = view ? { kind: 'diagram', view } : { kind: 'diagram' }
+    let id: string = MAIN_ZONE_CANVAS_ID
+    if (this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID)) {
+      do {
+        this._host._main_zone_window_seq += 1
+        id = `w_${this._host._main_zone_window_seq}`
+      } while (this.isMainZoneOccupant(id))
+    }
+    this._pushMainZoneOccupant({ id, subject, representation: MAIN_ZONE_CANVAS_ID }, place)
+    if (place === 'floating') this._ensureFloatingGeometry(id)
+    this._host._main_zone_active_id = id
+    this._host._main_zone_active_pane_key = null
+    this._host._main_zone_selected_pane_keys = []
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+    return id
+  }
+
+  /**
+   * sa#581 — LA COORDONNÉE D'UN VOLET SANKEY : la vue qu'il montre (`''` = la vue courante). Elle
+   * ne se règle pas par `setMainZoneWindowSubject`, qui ne touche qu'aux sujets d'élément : un
+   * sujet diagramme ne change pas de nature, seulement de vue.
+   */
+  public setSankeyPaneView(id: string, view: string): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || !isSankeyPane(o) || mainZoneSubjectView(o.subject) === view) return
+    o.subject = view === '' ? { kind: 'diagram' } : { kind: 'diagram', view }
+    this._notifyMainZone()
+  }
+
   /** sa#566 — Le volet au premier plan (cf. `_main_zone_front_id`), s'il est encore ouvert. */
   public get main_zone_front_id(): string | null {
     const id = this._host._main_zone_front_id
@@ -1589,7 +1672,12 @@ export class Class_MenuConfig {
     // flotte, auquel cas elle se pose par-dessus, comme une fenêtre qu'on ramène au premier plan.
     if (e.place !== 'floating' || e.maximized) this._host._main_zone_maximized_id = null
     let id = ''
-    if (!mainZoneSubjectUsesOwnWindowId(e.subject)) {
+    // sa#581 — UN VOLET SANKEY DE PLUS, et non celui qui est déjà là. Plusieurs volets Sankey
+    // coexistent : le premier porte l'identifiant de registre, et le réutiliser pour rappeler une
+    // vue enlèverait à ce volet-là ce qu'il montrait. Il ne se réutilise que s'il EST déjà cette vue.
+    const sankey_taken = e.representation === MAIN_ZONE_CANVAS_ID && this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID) &&
+      this.mainZoneOccupantById(MAIN_ZONE_CANVAS_ID)?.saved_view !== view_id
+    if (!mainZoneSubjectUsesOwnWindowId(e.subject) && !sankey_taken) {
       id = e.representation
       if (id === '') return null
       if (!this.isMainZoneOccupant(id)) {
@@ -1610,6 +1698,8 @@ export class Class_MenuConfig {
     if (e.geometry) o.geometry = e.geometry
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
+    // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
+    if (isSankeyPane(o)) o.subject = { kind: 'diagram', view: view_id }
     this._host._main_zone_detached.delete(id)
     if (e.place === 'floating') this.enforceMainZoneFloatingCap(id)
     // Les réglages de la VUE remplacent ceux que portait une fenêtre réutilisée.
@@ -2337,8 +2427,14 @@ export class Class_MenuConfig {
    *
    * Sans effet quand le canevas n'est pas dans la grande zone (masqué, ou remplacé par une autre
    * fenêtre principale) : on n'active pas ce qui ne s'affiche pas.
+   *
+   * sa#581 — LE CANEVAS, C'EST LE VOLET VIVANT : le SVG qu'on vient de toucher est cadré sur lui,
+   * quel qu'il soit parmi les volets Sankey. Le premier volet Sankey ne compte plus que faute de
+   * vivant (page qui ne pose pas de vivant : lecture publiée, tests).
    */
   public activateMainZoneCanvas(): void {
+    const live = this.main_zone_live_sankey_id
+    if (live !== null) { this.main_zone_active_id = live; return }
     if (this.mainZonePlaceOf(MAIN_ZONE_CANVAS_ID) === null) return
     this.main_zone_active_id = MAIN_ZONE_CANVAS_ID
   }

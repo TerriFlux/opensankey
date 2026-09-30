@@ -742,5 +742,8 @@ export class Class_Workspace {
     // `main_zone_active_id` notifie déjà la grande zone ; on s'y branche plutôt que d'ajouter un
     // geste, parce que c'est littéralement le même (D5, « toucher rend actif »).
     this.menu_configuration.subscribe(MAIN_ZONE_TOPIC, () => this.refreshActive())
+    // sa#581 — ET LE VOLET SANKEY QU'ON ACTIVE DEVIENT CELUI QUI PORTE LE DESSIN du document
+    // principal (cf. `Class_SankeyPanes.sync`) : même geste, « toucher rend actif ».
+    this.menu_configuration.subscribe(MAIN_ZONE_TOPIC, () => this._main?.sankey_panes.sync())
   }
 }

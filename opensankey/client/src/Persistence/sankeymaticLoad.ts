@@ -32,7 +32,9 @@ export const loadSankeymaticTemplate = (
   // Avance automatique du diaporama de la galerie : marquée dans l'URL pour que
   // le journal d'usage la compte à part des chargements délibérés
   // (cf. server/usage_events.py et SankeyTemplates.assetUrl).
-  from_slideshow = false
+  from_slideshow = false,
+  // sa#581 — ce que l'appelant fait une fois le modèle montré (l'éditeur y enregistre ses volets).
+  onShown?: () => void
 ): void => {
   const url = window.location.origin + '/opensankey/menus/templates_asset/' + file_path
     + (from_slideshow ? '?origin=slideshow' : '')
@@ -42,6 +44,7 @@ export const loadSankeymaticTemplate = (
       applySankeymaticText(text, app_data)
       // sa#581 — un modèle de la galerie montre son diagramme (il ne porte pas de disposition).
       app_data.showTemplateModel({})
+      onShown?.()
     })
     .catch((error) => {
       console.error('Error in loadSankeymaticTemplate - ' + error.toString())

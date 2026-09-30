@@ -68,6 +68,22 @@ export type Type_ViewEntry = {
    * C'est littéralement un volet éphémère. JAMAIS écrit.
    */
   ephemeral?: boolean
+  /**
+   * sa#581 — UNE VUE LÉGÈRE À MISE EN PAGE PROPRE : le volet Sankey qu'on a enregistré. Elle
+   * montre les données du MODÈLE (comme toute vue légère : elles restent communes à tous les
+   * volets) avec SA mise en page — positions, apparence, zones de texte, légende, réglages de la
+   * zone —, que porte `json` : un instantané complet de sa zone de dessin, dont seule la mise en
+   * page est appliquée (cf. `Class_SankeyPanes`). Dans le fichier, le delta contre la racine n'en
+   * garde que ce qui diffère : la mise en page. Écrit `own_layout: true`.
+   */
+  own_layout?: boolean
+  /**
+   * sa#581 — UNE VUE QUI N'EST QU'UN VOLET : un tableur, une doc, une étoile… qu'on a enregistré.
+   * Elle ne porte aucun état du diagramme — le modèle est commun —, seulement son volet
+   * (`window`). La choisir rouvre ou ramène ce volet, sans toucher à la vue courante ni au
+   * dessin. Écrit `window_only: true`.
+   */
+  window_only?: boolean
 }
 
 /**
@@ -183,6 +199,9 @@ export class ViewsQuery {
       entry.tag_selection = ts as { [view_tagg_id: string]: string }
     }
     if (view_json['is_light']) entry.is_light = true
+    // sa#581 — les deux sortes de vues nées d'un volet enregistré (cf. `Type_ViewEntry`).
+    if (view_json['own_layout']) entry.own_layout = true
+    if (view_json['window_only']) entry.window_only = true
     const gfg = view_json['generated_from_group_id']
     if (typeof gfg === 'string') entry.generated_from_group_id = gfg
     // sa#396 — labels de vues : lus si présents (tableau de chaînes non vides, dédoublonné).
@@ -411,13 +430,23 @@ export class ViewsQuery {
     return this.host.drawing_area
   }
 
+  /**
+   * sa#581 — L'ORDRE DES FLÈCHES Préc./Suiv. (et de F8/F9) : celui du sélecteur, sans les vues qui ne
+   * sont qu'un volet (`window_only`). Elles ne portent pas de diagramme, la vue courante ne s'y pose
+   * donc jamais : une flèche qui y mènerait rappellerait leur volet, et la suivante y ramènerait.
+   * Le sélecteur, lui, les montre toutes.
+   */
+  public get views_arrow_order(): string[] {
+    return this.views_navigation_order.filter(id => !this.host.views_dict[id]?.window_only)
+  }
+
   public get has_view_before(): boolean {
-    return this.has_views && this.views_navigation_order.indexOf(this.host.current_view_id) > 0
+    return this.has_views && this.views_arrow_order.indexOf(this.host.current_view_id) > 0
   }
 
   public get has_view_after(): boolean {
     if (!this.has_views) return false
-    const order = this.views_navigation_order
+    const order = this.views_arrow_order
     // indexOf === -1 (courant hors liste, ex. maître non affiché) => Suiv. va vers la 1re vue.
     return order.indexOf(this.host.current_view_id) < (order.length - 1)
   }

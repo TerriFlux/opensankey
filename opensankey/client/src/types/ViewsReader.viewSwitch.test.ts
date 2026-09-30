@@ -10,8 +10,8 @@ import type { Class_ApplicationData } from './ApplicationData'
 // ordre. Ce qui est testé ici, c'est donc exactement ce qui a changé : QUI appelle ce corps, QUAND,
 // et avec quel id — plus le fait que le chemin programmatique reste synchrone à la lettre.
 
-const view = (name: string, is_light: boolean) => ({
-  name, json: new Uint8Array(), is_light,
+const view = (name: string, is_light: boolean, window_only = false) => ({
+  name, json: new Uint8Array(), is_light, window_only,
 })
 
 type Host = {
@@ -23,22 +23,39 @@ type Host = {
   master_drawing_area: unknown
   drawing_area: unknown
   publish_view_label_filter: string | null
+  // sa#581 — l'hôte place les vues sur les volets de la grande zone : le double note ce qu'il place,
+  // et combien de bascules lui sont parvenues comme gestes d'utilisateur.
+  placed: string[]
+  gestures: number
+  isWindowOnlyView: (id: string) => boolean
+  runAsViewGesture: (work: () => void) => void
+  placeViewOnPanes: (prev_id: string, id: string) => void
 }
 
-const makeHost = (current_view_id = MASTER_VIEW_ID): Host => ({
-  views_dict: {
-    light1: view('Vue légère 1', true),
-    light2: view('Vue légère 2', true),
-    heavy1: view('Vue lourde 1', false),
-  },
-  views_order: ['light1', 'light2', 'heavy1'],
-  current_view_id,
-  master_view_name: '',
-  show_master_in_views: false,
-  master_drawing_area: { sankey: { view_taggs_list: [] } },
-  drawing_area: { sankey: { view_taggs_list: [] }, container_selector: '#sankey_app' },
-  publish_view_label_filter: null,
-})
+const makeHost = (current_view_id = MASTER_VIEW_ID): Host => {
+  const host: Host = {
+    views_dict: {
+      light1: view('Vue légère 1', true),
+      light2: view('Vue légère 2', true),
+      heavy1: view('Vue lourde 1', false),
+      // sa#581 — un volet de tableur enregistré : une vue qui n'est qu'un volet.
+      pane1: view('Tableur', true, true),
+    },
+    views_order: ['light1', 'light2', 'heavy1'],
+    current_view_id,
+    master_view_name: '',
+    show_master_in_views: false,
+    master_drawing_area: { sankey: { view_taggs_list: [] } },
+    drawing_area: { sankey: { view_taggs_list: [] }, container_selector: '#sankey_app' },
+    publish_view_label_filter: null,
+    placed: [],
+    gestures: 0,
+    isWindowOnlyView: (id) => !!host.views_dict[id]?.window_only,
+    runAsViewGesture: (work) => { host.gestures += 1; work() },
+    placeViewOnPanes: (_prev_id, id) => { host.placed.push(id) },
+  }
+  return host
+}
 
 /** Lecteur de test : le corps du switch est remplacé par un journal (aucun diagramme monté). */
 class TestReader extends ViewsReader {
@@ -176,5 +193,43 @@ describe('os#1368 ViewsReader — navigation enchainee', () => {
     reader.navigateToView('vue_supprimee')
     expect(reader.applied).toEqual([])
     expect(calls).toEqual([])
+  })
+})
+
+// sa#581 — Une vue enregistrée depuis un volet qui n'est pas un Sankey (tableur, JSON, leçon) ne
+// porte pas de diagramme : y aller rappelle son volet, et le diagramme reste sur sa vue.
+describe('sa#581 ViewsReader — une vue qui n est qu un volet', () => {
+  it('le chemin programmatique rappelle son volet sans basculer le diagramme', () => {
+    const host = makeHost('light1')
+    const reader = new TestReader(host)
+    reader.setCurrentView('pane1')
+    expect(host.placed).toEqual(['pane1'])
+    expect(reader.applied).toEqual([])
+    expect(reader.intercept_ids).toEqual([])
+    expect(host.current_view_id).toBe('light1')
+  })
+
+  it('le chemin interactif aussi : un geste, sans indicateur ni interception', () => {
+    const { indicator, calls } = makeSpyIndicator()
+    const host = makeHost('light1')
+    const reader = new TestReader(host, indicator, () => Promise.resolve())
+    const result = reader.requestViewChange('pane1')
+    expect(result).toBeUndefined()
+    expect(host.placed).toEqual(['pane1'])
+    expect(host.gestures).toBe(1)
+    expect(reader.applied).toEqual([])
+    expect(reader.intercept_ids).toEqual([])
+    expect(calls).toEqual([])
+  })
+
+  it('seule la bascule interactive vers une vue du diagramme est un geste', async () => {
+    const host = makeHost()
+    const reader = new TestReader(host, undefined, () => Promise.resolve())
+    await reader.requestViewChange('light1')
+    expect(host.gestures).toBe(1)
+    // L'export de toutes les vues passe par ici : il ne doit ouvrir aucun volet.
+    reader.setCurrentView('light2')
+    expect(host.gestures).toBe(1)
+    expect(reader.applied).toEqual(['light1', 'light2'])
   })
 })
