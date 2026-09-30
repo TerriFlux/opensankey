@@ -104,6 +104,11 @@ export interface SankeyGlobals {
   // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
   app_info?: boolean
   sidebar_toggle?: boolean
+  // sa#567 — default FALSE : le bandeau du diagramme dans la grande case (« Sankey ⌄ », masquer,
+  // flotter, plein écran, détacher, fermer). Ses gestes arrangent l'espace de travail de l'auteur ;
+  // le lecteur d'une page publiée n'a rien à y faire, et la bande de 28 px mange le diagramme.
+  // Sans effet hors publish — l'éditeur le garde toujours.
+  canvas_header?: boolean
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -232,6 +237,7 @@ export interface PublishOptions {
   badge: boolean
   app_info: boolean
   sidebar_toggle: boolean
+  canvas_header: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -485,6 +491,7 @@ export const getPublishOptions = (): PublishOptions => {
     badge: bool(s.badge, true),
     app_info: bool(s.app_info, true),
     sidebar_toggle: bool(s.sidebar_toggle, true),
+    canvas_header: bool(s.canvas_header, false),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -550,6 +557,7 @@ export type ViewerSankeyOptions = {
   representation?: boolean
   navigation_help?: boolean
   badge?: boolean
+  canvas_header?: boolean  // sa#567 : bandeau du diagramme dans la grande case (défaut false)
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
@@ -602,7 +610,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge',
+    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge', 'canvas_header',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',
