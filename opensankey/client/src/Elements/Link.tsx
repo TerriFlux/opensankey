@@ -1558,6 +1558,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected _orderD3Elements() {
     this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
+    // os#1511 — les BANDES au-dessus du tracé principal : invisible sous elles, celui-ci captait
+    // encore le survol (une opacité nulle ne coupe pas les événements SVG), et l'info-bulle ne
+    // savait jamais quelle bande montrer. Le tracé reste dessous : sa zone de survol élargie des
+    // flux fins (`_artifical_enlargement`) continue de répondre hors des bandes.
+    this.d3_selection?.selectAll('.link_band').raise()
+    this.d3_selection?.selectAll('.link_band_label').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
 
     this._link_draw_label.d3_selection?.raise()
