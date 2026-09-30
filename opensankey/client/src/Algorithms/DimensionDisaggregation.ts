@@ -189,6 +189,13 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   })
   if (par_axe.size === 0) return 0
 
+  // 1 bis) LA PENTE DE CHAQUE FLUX ENTRE DEUX AXES, relevée AVANT de le découper : l'écart
+  //    vertical entre son accroche source et son accroche cible. Un flux droit vaut 0, et ses
+  //    copies dans chaque bande devront valoir 0 aussi (Julien, 30/09 : « si y avait des flux
+  //    droits, il faut qu'ils restent droits »). Après `repartir`, le flux d'origine est masqué
+  //    et ne s'accroche plus nulle part : c'est maintenant ou jamais.
+  const pentes = pentesEntreAxes(sankey, par_axe)
+
   // 2) LES FLUX, une fois chacun. On relève la liste AVANT de créer quoi que ce soit : on y
   //    ajoute des flux au fur et à mesure, et itérer une liste qu'on allonge n'a pas de fin.
   sankey.links_list
@@ -210,7 +217,7 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // placement a sa propre règle (l'écart constant entre bandes) et ne lit pas le mode d'écart des
   // enfants, qui décrit le créneau d'UN nœud — cf. `rangerEnBandes`.
   const en_bandes = axesEnBandes(sankey, par_axe)
-  en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe))
+  en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe, pentes))
   const ranges = new Set([...en_bandes].flat())
   if (sankey.drawing_area.effective_gap_mode !== 'keep') {
     par_axe.forEach((membres, axe_id) => {
@@ -275,9 +282,12 @@ function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepr
  * comme Julien l'a décrit (30/09) — « prendre le nœud qui va le plus bas pour chaque bande,
  * appliquer l'écart constant pour aller sur le haut du nœud de la bande du dessous » :
  *
- *  1. chaque bande reprend la FORME du diagramme : un nœud de membre se pose à la hauteur de son
- *     axe, décalée d'une même quantité pour toute la bande. Les petits multiples sont des copies ;
- *     aligner tous les nœuds d'une bande sur une même ligne aurait aplati la filière.
+ *  1. chaque bande reprend la FORME du diagramme, flux par flux. Le nœud de l'axe le plus à
+ *     gauche part de la hauteur de son axe ; de proche en proche le long des flux de la bande,
+ *     chaque nœud se pose pour que le flux qui le relie garde entre ses deux accroches l'écart
+ *     qu'avait le flux d'origine (`pentesEntreAxes`). Un flux droit reste droit — caler le HAUT
+ *     des nœuds ne suffisait pas : un nœud engendré n'a pas la hauteur de son axe, et un flux
+ *     s'accroche au milieu de sa part de la pile, pas au haut du nœud (retour de Julien, 30/09).
  *  2. bande par bande, on relève le BAS du nœud qui descend le plus, et la bande suivante est
  *     décalée pour que son nœud le plus haut commence à ce bas plus l'écart constant
  *     (`disaggregation_gap_value`).
@@ -290,7 +300,8 @@ function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepr
 function rangerEnBandes(
   sankey: Class_Sankey,
   axe_ids: string[],
-  par_axe: Map<string, Type_MembreRepresente[]>
+  par_axe: Map<string, Type_MembreRepresente[]>,
+  pentes: Map<string, number>
 ): void {
   const ecart = sankey.drawing_area.disaggregation_gap_value
   // Les membres dans l'ordre choisi — le même pour tous les axes de la dimension.
@@ -300,31 +311,103 @@ function rangerEnBandes(
   }))
   const noeudDe = (axe_id: string, membre: Class_DataTag) =>
     (par_axe.get(axe_id) ?? []).find(m => m.membre === membre)?.noeud
-
-  // Passe 1 : la forme. Le haut de chaque axe, relevé AVANT tout déplacement.
+  // Le haut de chaque axe, relevé AVANT tout déplacement, et les axes de gauche à droite.
   const haut_axe = new Map<string, number>()
   axe_ids.forEach(id => {
     const axe = sankey.nodes_dict[id]
     if (axe !== undefined) haut_axe.set(id, axe.position_y)
   })
   if (haut_axe.size === 0) return
+  const de_gauche_a_droite = [...haut_axe.keys()].sort((a, b) =>
+    (sankey.nodes_dict[a].position_u - sankey.nodes_dict[b].position_u) ||
+    (sankey.nodes_dict[a].position_x - sankey.nodes_dict[b].position_x))
 
-  // Passe 2 : bande par bande, sous le bas le plus bas de la précédente.
   let bas_precedent: number | undefined = undefined
   ordre.forEach(membre => {
-    const places = axe_ids
-      .map(id => ({ noeud: noeudDe(id, membre), haut: haut_axe.get(id) }))
-      .filter((p): p is { noeud: Class_NodeElement, haut: number } =>
-        p.noeud !== undefined && p.haut !== undefined)
-    if (places.length === 0) return
-    const plus_haut = Math.min(...places.map(p => p.haut))
+    // ── PASSE 1 : la forme de la bande, à une translation près ──────────────────────────────
+    const axe_de = new Map<Class_NodeElement, string>()
+    de_gauche_a_droite.forEach(id => {
+      const noeud = noeudDe(id, membre)
+      if (noeud !== undefined) axe_de.set(noeud, id)
+    })
+    if (axe_de.size === 0) return
+    const y = new Map<Class_NodeElement, number>()
+    const poser = (depart: Class_NodeElement) => {
+      y.set(depart, haut_axe.get(axe_de.get(depart) as string) as number)
+      const file = [depart]
+      while (file.length > 0) {
+        const a = file.shift() as Class_NodeElement
+        const flux = [...a.input_links_list, ...a.output_links_list] as Class_LinkElement[]
+        flux.forEach(lien => {
+          if (!isGeneratedMemberLink(lien) || !lien.is_visible) return
+          const b = (lien.source === a ? lien.target : lien.source) as Class_NodeElement
+          if (!axe_de.has(b) || y.has(b)) return
+          y.set(b, hauteurAlignee(a, b, lien, pentes, y.get(a) as number, haut_axe, axe_de))
+          file.push(b)
+        })
+      }
+    }
+    axe_de.forEach((_id, noeud) => { if (!y.has(noeud)) poser(noeud) })
+
+    // ── PASSE 2 : sous le nœud le plus bas de la bande précédente ───────────────────────────
+    const plus_haut = Math.min(...y.values())
     const decalage = bas_precedent === undefined ? 0 : bas_precedent + ecart - plus_haut
-    places.forEach(({ noeud, haut }) => {
+    y.forEach((haut, noeud) => {
       noeud.position_y = haut + decalage
       noeud.captureCenterFromCorner()
     })
-    bas_precedent = Math.max(...places.map(p => p.noeud.position_y + p.noeud.getShapeHeightToUse()))
+    bas_precedent = Math.max(...[...y.keys()].map(n => n.position_y + n.getShapeHeightToUse()))
   })
+}
+
+/**
+ * Hauteur de `b`, déjà placé `a` à `y_a`, pour que le flux `lien` qui les relie garde la pente de
+ * son flux d'origine. À défaut d'accroche calculable (ancrage radial, côté haut ou bas, port
+ * importé) ou de pente relevée, `b` garde l'écart entre les HAUTS de leurs axes — le placement
+ * d'avant.
+ */
+function hauteurAlignee(
+  a: Class_NodeElement,
+  b: Class_NodeElement,
+  lien: Class_LinkElement,
+  pentes: Map<string, number>,
+  y_a: number,
+  haut_axe: Map<string, number>,
+  axe_de: Map<Class_NodeElement, string>
+): number {
+  const repli = y_a + (haut_axe.get(axe_de.get(b) as string) as number) -
+    (haut_axe.get(axe_de.get(a) as string) as number)
+  const pente = pentes.get(lien.id.split(MARQUE)[0])
+  const acc_a = a.linkAttachOffsetY(lien)
+  const acc_b = b.linkAttachOffsetY(lien)
+  if (pente === undefined || acc_a === undefined || acc_b === undefined) return repli
+  // pente = accroche cible - accroche source (0 : droit, positif : descend vers la cible)
+  return lien.source === a
+    ? y_a + acc_a + pente - acc_b
+    : y_a + acc_a - pente - acc_b
+}
+
+/**
+ * La pente de chaque flux RELIANT DEUX AXES de ce tour : accroche cible moins accroche source,
+ * relevée sur les axes tels qu'ils sont avant d'être découpés. Un flux dont l'une des accroches
+ * ne se calcule pas (cf. `linkAttachOffsetY`) n'a pas d'entrée.
+ */
+function pentesEntreAxes(
+  sankey: Class_Sankey,
+  par_axe: Map<string, Type_MembreRepresente[]>
+): Map<string, number> {
+  const pentes = new Map<string, number>()
+  sankey.links_list.forEach(lien => {
+    if (isGeneratedMemberLink(lien) || !lien.is_visible) return
+    if (!par_axe.has(lien.source.id) || !par_axe.has(lien.target.id)) return
+    const source = lien.source as Class_NodeElement
+    const cible = lien.target as Class_NodeElement
+    const acc_s = source.linkAttachOffsetY(lien)
+    const acc_c = cible.linkAttachOffsetY(lien)
+    if (acc_s === undefined || acc_c === undefined) return
+    pentes.set(lien.id, (cible.position_y + acc_c) - (source.position_y + acc_s))
+  })
+  return pentes
 }
 
 /**
