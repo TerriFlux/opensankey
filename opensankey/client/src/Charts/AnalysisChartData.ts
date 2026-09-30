@@ -58,7 +58,7 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
-import { buildNestedDimensionTree } from './DataDimensionHierarchy'
+import { buildNestedDimensionTree, isDetachedOpening } from './DataDimensionHierarchy'
 import { parseMemberSectorPath } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
@@ -563,16 +563,25 @@ const dataDimensionTreeOf = (
   expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   const element = subject.kind === 'node' ? subject.node : subject.link
-  const dimensions = [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])]
+  const declared = [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])]
     .map(id => element.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
     .filter((d): d is Class_DataTagGroup => d !== undefined)
-  if (dimensions.length === 0 || dimensions[0].id !== spec.data_tagg_id) return null
+  if (declared.length === 0 || declared[0].id !== spec.data_tagg_id) return null
+  // 30/09/2026 — LIÉE AU DIAGRAMME (défaut) : toutes ses dimensions à niveaux entrent dans la
+  // figure, dans l'ordre choisi (« Premier axe ») puis celui du fichier ; c'est la coupe du
+  // diagramme qui dit lesquelles découpent (cf. `buildNestedDimensionTree`).
+  const linked = !isDetachedOpening(expanded)
+  const dimensions = linked
+    ? [...declared, ...(element.sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+      .filter(d => d.is_hierarchical && !declared.includes(d))]
+    : declared
   return buildNestedDimensionTree(
     subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
     dimensions,
     nav,
     {
       expanded,
+      linked,
       focus_id: spec.focus_id,
       max_depth: reading.max_depth,
       value_mode: reading.value_mode,

@@ -50,7 +50,7 @@ import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
 import {
-  dimensionRootsOf, effectiveDimensionOpening
+  diagramDimensionOpening, dimensionRootsOf, effectiveDimensionOpening, isDetachedOpening
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import type { Type_JSON } from '../types/Utils'
@@ -587,12 +587,20 @@ const dataDimensionClickGestures = (
   const { window_id, pane_key } = ctx
   const app_data = ctx.app_data
   const sankey = app_data.drawing_area.sankey
-  const dims = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+  const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
     .map(id => sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
     .filter((d): d is Class_DataTagGroup => d !== undefined)
+  // 30/09/2026 — LIÉE AU DIAGRAMME (défaut, cf. `isDetachedOpening`) : la figure n'a pas de coupe
+  // propre, son clic ÉCRIT celle du diagramme — c'est le même état, le réglage « Clic sur une
+  // part » n'y ajoute donc rien. Toutes les dimensions à niveaux y entrent.
+  const linked = !isDetachedOpening(expandedOf(ctx.options))
+  const dims = linked
+    ? [...declared, ...(sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+      .filter(d => d.is_hierarchical && !declared.includes(d))]
+    : declared
   if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
 
-  const diagram_follows = style.interaction_click === 'aggregate' || style.interaction_click === 'both'
+  const diagram_follows = linked || style.interaction_click === 'aggregate' || style.interaction_click === 'both'
   /** La coupe du diagramme pour cette dimension devient celle de la figure. */
   const followInDiagram = (dim: Class_DataTagGroup, expanded: ReadonlySet<string>) => {
     if (!diagram_follows) return
@@ -619,7 +627,8 @@ const dataDimensionClickGestures = (
     // L'ouverture EFFECTIVE, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
     // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore.
     const expanded = expandedOf(ctx.options)
-    const next = effectiveDimensionOpening(dims, expanded)
+    // Liée : on part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
+    const next = linked ? diagramDimensionOpening([dim]) : effectiveDimensionOpening(dims, expanded)
     const entry = (m: Class_DataTag) => memberSectorId(dim.id, m.id)
     if (gesture.shift) {
       const target = next.has(entry(member)) ? member : member.parent
@@ -632,8 +641,11 @@ const dataDimensionClickGestures = (
       close(target)
     } else {
       if ((member.children as Class_DataTag[]).length === 0) return
-      next.add(entry(member))
+      // Toute la route : ouvrir un membre profond ouvre ses ancêtres, sinon la coupe s'arrêterait
+      // au premier fermé.
+      for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent) next.add(entry(m))
     }
+    if (linked) { followInDiagram(dim, next); return }
     if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return
     app_data.menu_configuration.setMainZonePaneOptions(
       window_id, pane_key, { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...next] } as unknown as Type_JSON
