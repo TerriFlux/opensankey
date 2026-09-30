@@ -1439,6 +1439,18 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
   public get is_hierarchical(): boolean { return this._levels.length > 1 }
 
+  /**
+   * La dimension se dessine membre par membre, chacun à SA couleur : choix multiple et au moins
+   * deux membres retenus (bandes d'un flux, cf. `Link.tagged_value_bands`, ou nœuds engendrés).
+   * Le dessin lit alors `tag.color` sans consulter `use_colors` ; la légende doit donc nommer ces
+   * couleurs elle aussi (`tagGroupCarriesFormatting`), faute de quoi elle ne donnait qu'un rappel
+   * texte sous des bandes colorées — et aucune commande ne permet d'allumer `use_colors` sur une
+   * dimension.
+   */
+  public get draws_members_in_color(): boolean {
+    return this.banner === 'multi' && this.tags_list.length > 1 && this.selected_tags_list.length > 1
+  }
+
   // PALETTE HIÉRARCHIQUE (os#1516) ======================================================
 
   /** Recette de palette (copie), `undefined` si les couleurs des membres sont libres. */
