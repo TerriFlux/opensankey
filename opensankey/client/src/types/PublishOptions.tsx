@@ -65,6 +65,10 @@ export interface SankeyGlobals {
   // serait un piège) : cette option n'a donc d'effet que pour COUPER cet automatisme.
   // `toolbar` reste l'opt-in explicite, qui l'expose sur toutes les dimensions.
   position_mode_selector?: boolean
+  // os#1511 — default FALSE : sous-menu « Dessin » du menu de chaque dimension (un membre, plusieurs
+  // en bandes, plusieurs en nœuds). Il engendre des nœuds : l'offrir au lecteur est un geste d'auteur.
+  // Seul, il suffit à faire apparaître le menu (sans la partie « Position » si celle-ci est coupée).
+  dimension_drawing?: boolean
   // default TRUE (08/08) : groupe ajustement/verrous + indicateur de zoom dans la
   // barre du bas. Il l'était à false, et une page publiée n'offrait alors AUCUN
   // moyen visible de zoomer ni de recadrer — seulement Ctrl+molette, qui ne
@@ -222,6 +226,8 @@ export interface PublishOptions {
   // os#1366 — autorise l'apparition automatique du sélecteur de mode d'affichage en lecture
   // quand le diagramme déclare une référence (cf. SankeyGlobals).
   position_mode_selector: boolean
+  // os#1511 — sous-menu « Dessin » des dimensions offert au lecteur (cf. SankeyGlobals).
+  dimension_drawing: boolean
   fit_toolbar: boolean
   fullscreen: boolean
   filter_bar: boolean
@@ -477,6 +483,7 @@ export const getPublishOptions = (): PublishOptions => {
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
     position_mode_selector: bool(s.position_mode_selector, true),
+    dimension_drawing: bool(s.dimension_drawing, false),
     fit_toolbar: bool(s.fit_toolbar, true),
     fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
@@ -545,6 +552,7 @@ export type ViewerSankeyOptions = {
   footer?: boolean
   toolbar?: boolean
   position_mode_selector?: boolean
+  dimension_drawing?: boolean  // os#1511 : sous-menu « Dessin » des dimensions (défaut false)
   fit_toolbar?: boolean
   fullscreen?: boolean
   filter_bar?: boolean
@@ -609,7 +617,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
+    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'dimension_drawing', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
     'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge', 'canvas_header',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list',

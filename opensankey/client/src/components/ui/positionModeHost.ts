@@ -91,6 +91,8 @@ export type Type_PositionModePublishGate = {
   toolbar: boolean
   /** os#1366 : autorise l'apparition automatique quand une référence est déclarée. */
   position_mode_selector: boolean
+  /** os#1511 : offre au lecteur le sous-menu « Dessin » (un membre / bandes / nœuds). */
+  dimension_drawing?: boolean
 }
 
 /**
@@ -135,6 +137,22 @@ export const positionModeSelectorEnabledFor = (app: Type_PositionModeHostApp): b
     prop_reference_datatag_ids: app.drawing_area.nodePositioning.proportionalReferenceDatatagIds,
     scale_reference_by_viewtag: app.drawing_area.scale_reference_by_viewtag,
   })
+
+/**
+ * os#1511 — Le DESSIN d'une dimension (un membre, plusieurs en bandes, plusieurs en nœuds) : en
+ * édition toujours ; en lecture seulement si la page l'offre (`dimension_drawing`, défaut false).
+ * Il engendre des nœuds, donc change ce que le lecteur voit bien plus qu'un mode de position :
+ * c'est à l'auteur de l'ouvrir, et le parc publié ne bouge pas.
+ */
+export const dimensionDrawingEnabledFor = (app: Pick<Type_PositionModeHostApp, 'is_static' | 'publish_options'>): boolean =>
+  !app.is_static || app.publish_options.dimension_drawing === true
+
+/**
+ * os#1511 — Le menu d'une dimension existe dès qu'il a quelque chose à offrir : la position, le
+ * dessin, ou les deux. C'est le gate que lisent les trois hôtes.
+ */
+export const dimensionMenuEnabledFor = (app: Type_PositionModeHostApp): boolean =>
+  positionModeSelectorEnabledFor(app) || dimensionDrawingEnabledFor(app)
 
 /**
  * #370 — Choisit le mode d'affichage (absolu / proportionnel / échelle adaptée) D'UNE
