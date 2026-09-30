@@ -221,3 +221,42 @@ describe('les quatre regles du modele', () => {
     expect(coords).toEqual({})
   })
 })
+
+// 30/09/2026 — deux dimensions de donnees hierarchisees s emboitent au lieu de se chasser :
+// « produits, puis les pays dans chaque produit ».
+describe('dimensions de donnees emboitees', () => {
+  test('une seconde dimension en parts se range sous la premiere', () => {
+    let coords: Type_FigureCoordinates = setCoordState({}, 'dt:produit', { mode: 'parts' })
+    coords = setCoordState(coords, 'dt:pays', { mode: 'parts' })
+    const written = applyCoordinates(coords, 'flux', null).descriptor
+    expect(written.decompose).toEqual({ kind: 'data_dimension', data_tagg_id: 'produit', nested_tagg_ids: ['pays'] })
+  })
+
+  test('l aller retour garde l ordre', () => {
+    const descriptor: Type_AnalysisDescriptor = {
+      decompose: { kind: 'data_dimension', data_tagg_id: 'pays', nested_tagg_ids: ['produit'] }, compare: null
+    }
+    const again = applyCoordinates(coordinatesOf(descriptor, null), 'flux', descriptor).descriptor
+    expect(again.decompose).toEqual(descriptor.decompose)
+  })
+
+  test('le premier axe se change en demandant le rang 1', () => {
+    let coords: Type_FigureCoordinates = setCoordState({}, 'dt:produit', { mode: 'parts' })
+    coords = setCoordState(coords, 'dt:pays', { mode: 'parts' })
+    coords = setCoordState(coords, 'dt:pays', { mode: 'parts', nest: 1 })
+    expect(applyCoordinates(coords, 'flux', null).descriptor.decompose)
+      .toEqual({ kind: 'data_dimension', data_tagg_id: 'pays', nested_tagg_ids: ['produit'] })
+  })
+
+  test('un champ flux en parts chasse toutes les dimensions', () => {
+    let coords: Type_FigureCoordinates = setCoordState({}, 'dt:produit', { mode: 'parts' })
+    coords = setCoordState(coords, 'dt:pays', { mode: 'parts' })
+    coords = setCoordState(coords, 'flows:outputs', { mode: 'parts' })
+    expect(partsFieldKey(coords)).toBe('flows:outputs')
+    expect(Object.keys(coords)).toEqual(['flows:outputs'])
+  })
+
+  test('seule, une dimension ne porte pas de rang', () => {
+    expect(setCoordState({}, 'dt:produit', { mode: 'parts' })).toEqual({ 'dt:produit': { mode: 'parts' } })
+  })
+})
