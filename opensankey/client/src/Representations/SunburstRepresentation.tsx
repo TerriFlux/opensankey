@@ -66,7 +66,8 @@ export const SUNBURST_ZOOM: Type_RepresentationZoom = {
   min: 0.5,
   max: 8,
   neutral: 1,
-  isAvailable: (ctx) => handleOf(ctx) !== null
+  isAvailable: (ctx) => handleOf(ctx) !== null,
+  fit: (ctx) => handleOf(ctx)?.fit?.()
 }
 const handleOf = (ctx: Type_RepresentationContext) =>
   figureZoomHandle(ctx.window_id, ctx.app_data.menu_configuration?.main_zone_active_pane_key)

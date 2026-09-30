@@ -1942,7 +1942,9 @@ export const drawSunburstChart = (
       const bounded = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k))
       zoomer?.svg.call(zoomer.zoom.scaleTo, bounded)
     },
-    scaleBy: (factor) => { zoomer?.svg.call(zoomer.zoom.scaleBy, factor) }
+    scaleBy: (factor) => { zoomer?.svg.call(zoomer.zoom.scaleBy, factor) },
+    // Le même geste que le double-clic : la figure revient centrée dans sa fenêtre, à 100 %.
+    fit: () => { zoomer?.svg.call(zoomer.zoom.transform, d3.zoomIdentity) }
   })
 
   let raf = 0
