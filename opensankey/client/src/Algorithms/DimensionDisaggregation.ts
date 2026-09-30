@@ -206,11 +206,13 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   //
   //    Le mode « garder les positions » est le seul qui n'en dépende pas : il ne réempile rien,
   //    et il a donc déjà fait son travail à la création.
+  // UN DIAGRAMME PAR MEMBRE : les axes d'une même dimension se rangent ENSEMBLE, en bandes. Ce
+  // placement a sa propre règle (l'écart constant entre bandes) et ne lit pas le mode d'écart des
+  // enfants, qui décrit le créneau d'UN nœud — cf. `rangerEnBandes`.
+  const en_bandes = axesEnBandes(sankey, par_axe)
+  en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe))
+  const ranges = new Set([...en_bandes].flat())
   if (sankey.drawing_area.effective_gap_mode !== 'keep') {
-    // UN DIAGRAMME PAR MEMBRE : les axes d'une même dimension se rangent ENSEMBLE, en bandes.
-    const en_bandes = axesEnBandes(sankey, par_axe)
-    en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe))
-    const ranges = new Set([...en_bandes].flat())
     par_axe.forEach((membres, axe_id) => {
       if (ranges.has(axe_id)) return
       const axe = sankey.nodes_dict[axe_id]
@@ -269,14 +271,19 @@ function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepr
 /**
  * Range les nœuds engendrés de plusieurs axes d'une même dimension en BANDES, une par membre.
  *
- * Chaque axe garde sa colonne (x déjà posé à la création) ; seule la hauteur change. La bande
- * d'un membre est aussi haute que son plus grand nœud, et les bandes s'empilent depuis le haut du
- * plus haut des axes. L'écart entre bandes suit le MÊME réglage que l'empilement dans un créneau
- * (`effective_gap_mode`), pour que le sélecteur d'écart garde son effet :
- *  - « remplir » : les bandes se répartissent la hauteur de la plus grande colonne d'axes ;
- *  - « écart propre à chaque enfant » : l'écart par défaut du style ;
- *  - « écart constant » : `disaggregation_gap_value`.
- * (« garder les positions » n'arrive pas ici : l'appelant ne réempile rien dans ce mode.)
+ * Chaque axe garde sa colonne (x déjà posé à la création) ; seule la hauteur change. Deux passes,
+ * comme Julien l'a décrit (30/09) — « prendre le nœud qui va le plus bas pour chaque bande,
+ * appliquer l'écart constant pour aller sur le haut du nœud de la bande du dessous » :
+ *
+ *  1. chaque bande reprend la FORME du diagramme : un nœud de membre se pose à la hauteur de son
+ *     axe, décalée d'une même quantité pour toute la bande. Les petits multiples sont des copies ;
+ *     aligner tous les nœuds d'une bande sur une même ligne aurait aplati la filière.
+ *  2. bande par bande, on relève le BAS du nœud qui descend le plus, et la bande suivante est
+ *     décalée pour que son nœud le plus haut commence à ce bas plus l'écart constant
+ *     (`disaggregation_gap_value`).
+ *
+ * Le mode d'écart des enfants (« remplir le slot », etc.) n'est PAS lu : il décrit le créneau
+ * d'UN nœud, et une bande en traverse plusieurs. L'éditeur le masque sous les bandes.
  *
  * Appelée APRÈS les flux : la hauteur d'un nœud engendré vient de ses flux (cf. l'étape 3).
  */
@@ -285,9 +292,7 @@ function rangerEnBandes(
   axe_ids: string[],
   par_axe: Map<string, Type_MembreRepresente[]>
 ): void {
-  const da = sankey.drawing_area
-  const axes = axe_ids.map(id => sankey.nodes_dict[id]).filter(axe => axe !== undefined)
-  if (axes.length === 0) return
+  const ecart = sankey.drawing_area.disaggregation_gap_value
   // Les membres dans l'ordre choisi — le même pour tous les axes de la dimension.
   const ordre: Class_DataTag[] = []
   axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ membre }) => {
@@ -295,29 +300,30 @@ function rangerEnBandes(
   }))
   const noeudDe = (axe_id: string, membre: Class_DataTag) =>
     (par_axe.get(axe_id) ?? []).find(m => m.membre === membre)?.noeud
-  const hauteurs = ordre.map(membre => Math.max(0, ...axe_ids.map(id =>
-    noeudDe(id, membre)?.getShapeHeightToUse() ?? 0)))
 
-  const haut = Math.min(...axes.map(axe => axe.position_y))
-  const mode = da.effective_gap_mode
-  const somme = hauteurs.reduce((s, h) => s + h, 0)
-  const colonne = Math.max(...axes.map(axe => axe.position_y + axe.getShapeHeightToUse())) - haut
-  const ecart = mode === 'fill'
-    ? (ordre.length > 1 ? Math.max(0, (colonne - somme) / (ordre.length - 1)) : 0)
-    : mode === 'children_dy'
-      ? (sankey.default_style.shape_position_dy ?? 0)
-      : da.disaggregation_gap_value
+  // Passe 1 : la forme. Le haut de chaque axe, relevé AVANT tout déplacement.
+  const haut_axe = new Map<string, number>()
+  axe_ids.forEach(id => {
+    const axe = sankey.nodes_dict[id]
+    if (axe !== undefined) haut_axe.set(id, axe.position_y)
+  })
+  if (haut_axe.size === 0) return
 
-  let curseur = haut
-  ordre.forEach((membre, k) => {
-    if (k > 0) curseur += ecart
-    axe_ids.forEach(id => {
-      const noeud = noeudDe(id, membre)
-      if (noeud === undefined) return
-      noeud.position_y = curseur
+  // Passe 2 : bande par bande, sous le bas le plus bas de la précédente.
+  let bas_precedent: number | undefined = undefined
+  ordre.forEach(membre => {
+    const places = axe_ids
+      .map(id => ({ noeud: noeudDe(id, membre), haut: haut_axe.get(id) }))
+      .filter((p): p is { noeud: Class_NodeElement, haut: number } =>
+        p.noeud !== undefined && p.haut !== undefined)
+    if (places.length === 0) return
+    const plus_haut = Math.min(...places.map(p => p.haut))
+    const decalage = bas_precedent === undefined ? 0 : bas_precedent + ecart - plus_haut
+    places.forEach(({ noeud, haut }) => {
+      noeud.position_y = haut + decalage
       noeud.captureCenterFromCorner()
     })
-    curseur += hauteurs[k]
+    bas_precedent = Math.max(...places.map(p => p.noeud.position_y + p.noeud.getShapeHeightToUse()))
   })
 }
 

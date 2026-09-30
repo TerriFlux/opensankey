@@ -65,18 +65,28 @@ describe('os#1511 — un diagramme par membre', () => {
     expect(bandesParMembre(pays, 3)).toBe(false)
   })
 
-  test('chaque membre a sa bande : meme hauteur dans toutes les colonnes, sans chevauchement', () => {
+  test('chaque bande garde la forme du diagramme et commence sous le noeud le plus bas de la precedente', () => {
     const { sankey, app } = monter()
-    app.drawing_area.disaggregation_gap_mode = 'constant'
+    // Les axes ne sont pas alignes : « Produits agricoles » est 50 plus bas que les deux autres.
+    sankey.nodes_list.find(n => n.name === 'Produits agricoles')?.setPosXY(300, 150)
     app.drawing_area.disaggregation_gap_value = 25
     disaggregateDimensionNodes(sankey)
-    const espagne = yDe(sankey, 'espagne')
-    const maroc = yDe(sankey, 'maroc')
-    expect(espagne).toHaveLength(3)
-    expect(new Set(espagne.map(e => e.y)).size).toBe(1)
-    expect(new Set(maroc.map(m => m.y)).size).toBe(1)
-    const bas_espagne = espagne[0].y + Math.max(...espagne.map(e => e.h))
-    expect(maroc[0].y).toBeCloseTo(bas_espagne + 25, 6)
+    const par = (suffixe: string) => new Map(sankey.nodes_list.filter(isGeneratedMemberNode)
+      .filter(n => n.id.endsWith(suffixe))
+      .map(n => [n.id.split('--')[0], { y: n.position_y, h: n.getShapeHeightToUse() }]))
+    const espagne = par('espagne')
+    const maroc = par('maroc')
+    expect(espagne.size).toBe(3)
+    // Passe 1 : la forme est gardee dans chaque bande (meme decalage pour tous les noeuds)
+    const idDe = (nom: string) => sankey.nodes_list.find(n => n.name === nom)?.id ?? ''
+    const ecartForme = (m: typeof espagne) =>
+      (m.get(idDe('Produits agricoles'))?.y ?? 0) - (m.get(idDe('Monde - Import'))?.y ?? 0)
+    expect(ecartForme(espagne)).toBeCloseTo(50, 6)
+    expect(ecartForme(maroc)).toBeCloseTo(50, 6)
+    // Passe 2 : le noeud le plus haut du Maroc commence sous le bas le plus bas de l Espagne + 25
+    const bas_espagne = Math.max(...[...espagne.values()].map(e => e.y + e.h))
+    const haut_maroc = Math.min(...[...maroc.values()].map(m => m.y))
+    expect(haut_maroc).toBeCloseTo(bas_espagne + 25, 6)
   })
 
   test('decoche, chaque noeud retrouve son empilement propre', () => {
