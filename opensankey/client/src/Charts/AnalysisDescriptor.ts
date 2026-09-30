@@ -66,7 +66,9 @@ export type Type_DecomposeSpec =
   // à leur parent, c'est le contrat du cube de valeurs. C'est `is_hierarchical` qui départage.
   //
   // `focus_id` : le membre à la racine de la décomposition, quand la figure est descendue dedans.
-  | { kind: 'data_dimension', data_tagg_id: string, focus_id?: string }
+  // `nested_tagg_ids` (30/09/2026) : les dimensions EMBOÎTÉES sous la première, dans l'ordre —
+  // « produits, puis les pays dans chaque produit » (cf. `buildNestedDimensionTree`).
+  | { kind: 'data_dimension', data_tagg_id: string, focus_id?: string, nested_tagg_ids?: string[] }
 
 // Axe non-additif : la valeur du sujet pour chaque tag d'un groupe de data tags,
 // OU (#389) pour chacun des flux entrants / sortants d'un nœud — une barre par

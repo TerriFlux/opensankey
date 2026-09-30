@@ -52,9 +52,12 @@ import { FOLLOWING_NAVIGATION, linkValueUnder } from './FigureNavigation'
 import type { Type_FigureNavigation } from './FigureNavigation'
 import { SUNBURST_DEFAULT_MAX_DEPTH, sunburstNodeValue } from './SunburstHierarchy'
 import type { Type_SunburstNode, Type_SunburstRing, Type_SunburstTree } from './SunburstHierarchy'
-import { memberSectorId } from './memberSectorId'
+import { memberPathSectorId, memberSectorId, parseMemberSectorId } from './memberSectorId'
+import type { Type_MemberRef } from './memberSectorId'
 
-export { MEMBER_SECTOR_PREFIX, memberSectorId, parseMemberSectorId } from './memberSectorId'
+export {
+  MEMBER_SECTOR_PREFIX, memberPathSectorId, memberSectorId, parseMemberSectorId, parseMemberSectorPath
+} from './memberSectorId'
 
 /**
  * Le sujet dont on décompose la valeur. Un flux ou un nœud : les deux se lisent sous une
@@ -275,6 +278,191 @@ export const buildDataDimensionTree = (
     is_truncated: state.is_truncated
   }
 }
+
+// ── 30/09/2026 — DIMENSIONS EMBOÎTÉES : « produits, puis les pays dans chaque produit » ─────────
+//
+// Julien : « je n'arrive pas à désagréger les pays », puis, au choix proposé, « emboîtés sous
+// produits », puis « il faut savoir quelle dimension ouvre, comme pour les nœuds ».
+//
+// L'ensemble ouvert (`hierarchy_expanded`) porte TROIS sortes d'entrées :
+//   `membre:<dim>/<m>`       le membre m est ouvert DANS SA DIMENSION — sous tous les secteurs qui
+//                            finissent par lui, comme le diagramme n'a qu'une coupe par dimension
+//                            (c'est le format d'avant, et ce qu'écrivent le niveau et l'arbre) ;
+//   `<secteur>#<dim>`        CE secteur s'ouvre sur la dimension <dim> (alt+clic, ou clic sur une
+//                            feuille) — les pays sous « Céréales » seulement ;
+//   `emboite:<dim>`          toute feuille des dimensions précédentes s'ouvre sur <dim> (le niveau
+//                            choisi pour une dimension emboîtée, dans « Coordonnées »).
+// Un secteur ouvert dans sa dimension l'emporte : on n'emboîte que sous la coupe.
+//
+// ⚠️ CONSTRUIT À LA DEMANDE, et c'est obligatoire : bâtir d'abord tout l'arbre puis élaguer, comme
+// la descente simple le faisait, coûterait produits × pays (148 × 272 sur le SOCLE) lectures du cube
+// par secteur ouvert. Ici on ne lit que ce qui se dessine.
+//
+// Un secteur non ouvert vaut ce que le modèle porte à sa coordonnée (agrégat des feuilles, ou valeur
+// déclarée à ce niveau, qui fait foi — cf. l'en-tête). Un secteur ouvert vaut la somme de ce qu'il
+// montre en régime 'sum', sa valeur déclarée en 'declared' (le reste en « non réparti »).
+
+export interface Type_NestedDimensionOptions extends Type_DataDimensionOptions {
+  /** Les membres ouverts, en identifiants de secteur de membre (`memberSectorId`). */
+  expanded: ReadonlySet<string>
+}
+
+export const buildNestedDimensionTree = (
+  subject: Type_DataDimensionSubject,
+  dimensions: Class_DataTagGroup[],
+  nav: Type_FigureNavigation,
+  options: Type_NestedDimensionOptions
+): Type_SunburstTree | null => {
+  const dims = dimensions.filter(d => d.is_hierarchical && d.tags_list.length > 0)
+  if (dims.length === 0) return null
+  const element = subject.kind === 'node' ? subject.node : subject.link
+  const groups = element.sankey.data_taggs_list as unknown as Class_DataTagGroup[]
+  const value_mode = options.value_mode ?? 'sum'
+  const node_value_mode = options.node_value_mode ?? 'max'
+  const residual_label = options.residual_label ?? 'Unallocated'
+  const max_depth = Math.max(1, (options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH) + 1)
+  let mismatch_count = 0
+  let is_truncated = false
+
+  const isOpen = (dim: Class_DataTagGroup, member: Class_DataTag) =>
+    options.expanded.has(memberSectorId(dim.id, member.id))
+  /** La dimension sur laquelle ce secteur s'emboîte, ou -1 : son choix propre, sinon l'emboîtement global. */
+  const nestedDimOf = (id: string, refs: Type_MemberRef[]): number => {
+    const used = new Set(refs.map(ref => ref.dimension_id))
+    const free = dims.map((d, i) => ({ d, i })).filter(({ d }) => !used.has(d.id))
+    const own = free.find(({ d }) => options.expanded.has(nestedSectorEntry(id, d.id)))
+    if (own !== undefined) return own.i
+    const next = free[0]
+    return next !== undefined && options.expanded.has(nestAllEntry(next.d.id)) ? next.i : -1
+  }
+  const rootsOf = (dim: Class_DataTagGroup) =>
+    (dim.tags_list as Class_DataTag[]).filter(m => m.parent === undefined)
+
+  /** La valeur du sujet à une coordonnée : les dimensions découpées fixées, les autres suivies. */
+  const valueAt = (coord: Map<string, Class_DataTag>): number => {
+    const tags: Class_DataTag[] = []
+    groups.forEach(group => {
+      const fixed = coord.get(group.id)
+      if (fixed !== undefined) { tags.push(fixed); return }
+      const pinned = nav.data_tags?.filter(tag => tag.group.id === group.id) ?? []
+      if (pinned.length > 0) { tags.push(...pinned); return }
+      tags.push(...(group.selected_tags_list as Class_DataTag[]))
+    })
+    const at: Type_FigureNavigation = { data_tags: tags }
+    return subject.kind === 'node'
+      ? sunburstNodeValue(subject.node, at, node_value_mode)
+      : (linkValueUnder(subject.link, at) ?? 0)
+  }
+
+  const build = (
+    refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number
+  ): Type_SunburstNode => {
+    const dim = dims[k]
+    const declared = valueAt(coord)
+    const id = memberPathSectorId(refs)
+    const base: Type_SunburstNode = {
+      id, label: member.name, value: declared, declared, color: member.color ?? null,
+      depth, children: [], dimension_id: dim.id
+    }
+    // Où ce secteur s'ouvre : sur ses enfants s'il est ouvert, sinon sur la dimension suivante.
+    const own = isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
+    const nested = own.length > 0 ? -1 : nestedDimOf(id, refs)
+    const next: { k: number, members: Class_DataTag[] } | null = own.length > 0
+      ? { k, members: own }
+      : (nested >= 0 ? { k: nested, members: rootsOf(dims[nested]) } : null)
+    if (next === null) return base
+    if (depth + 1 >= max_depth) { is_truncated = true; return base }
+    const children = next.members
+      .map(child => {
+        const child_coord = new Map(coord)
+        child_coord.set(dims[next.k].id, child)
+        const child_refs = next.k === k
+          ? [...refs.slice(0, -1), { dimension_id: dim.id, member_id: child.id }]
+          : [...refs, { dimension_id: dims[next.k].id, member_id: child.id }]
+        return build(child_refs, child_coord, next.k, child, depth + 1)
+      })
+      .filter(child => child.value > 0)
+    if (children.length === 0) return base
+    base.children = children
+    const sum = children.reduce((acc, child) => acc + child.value, 0)
+    const gap = declared - sum
+    if (Math.abs(gap) > Math.max(BALANCE_TOLERANCE, Math.abs(declared) * BALANCE_TOLERANCE)) mismatch_count++
+    if (value_mode === 'declared') {
+      if (gap > BALANCE_TOLERANCE) {
+        base.children = [...children, {
+          id: `${id}${RESIDUAL_SUFFIX}`, label: residual_label, value: gap, declared: gap, color: null,
+          depth: depth + 1, children: [], is_residual: true, dimension_id: dim.id
+        }]
+      }
+    } else {
+      base.value = sum
+    }
+    return base
+  }
+
+  // LE FOYER, sur la première dimension seulement : c'est elle qui porte la descente.
+  const focus = options.focus_id !== undefined
+    ? (dims[0].tags_dict[options.focus_id] as Class_DataTag | undefined)
+    : undefined
+  const first_rank = focus !== undefined ? (focus.children as Class_DataTag[]) : rootsOf(dims[0])
+  const children = first_rank
+    .map(member => build(
+      [{ dimension_id: dims[0].id, member_id: member.id }], new Map([[dims[0].id, member]]), 0, member, 1
+    ))
+    .filter(member => member.value > 0)
+  const total = children.reduce((acc, child) => acc + child.value, 0)
+  const root: Type_SunburstNode = {
+    id: element.id,
+    label: focus !== undefined ? focus.name : displayedNameOf(element),
+    value: total, declared: total, color: null, depth: 0, children, dimension_id: dims[0].id
+  }
+
+  // UN ANNEAU PAR PROFONDEUR, nommé par le premier secteur qui l'occupe : sa dimension, son niveau.
+  // Sous une coupe inégale un anneau mêle deux niveaux ; il porte alors le nom du premier, comme
+  // l'anneau d'une descente par nœuds ouverte à la main.
+  const first_at: Type_SunburstNode[] = []
+  const walk = (node: Type_SunburstNode) => {
+    if (first_at[node.depth] === undefined) first_at[node.depth] = node
+    node.children.forEach(walk)
+  }
+  walk(root)
+  const rings: Type_SunburstRing[] = first_at.map((node, depth) => {
+    const ref = depth === 0 ? null : parseMemberSectorId(node.id)
+    const dim = dims.find(d => d.id === (ref?.dimension_id ?? dims[0].id)) ?? dims[0]
+    const member = ref !== null ? dim.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
+    const rank = member !== undefined ? dim.depthOf(member) : 0
+    return {
+      dimension_id: dim.id,
+      dimension_label: dim.name,
+      level_label: depth === 0 ? '' : (dim.levels[rank] ?? ''),
+      is_selected_level: dim.current_level_index === rank
+    }
+  })
+
+  return {
+    dimension_id: dims[0].id,
+    dimension_label: dims.map(d => d.name).join(' › '),
+    roots: [root],
+    rings,
+    total,
+    mismatch_count,
+    is_truncated
+  }
+}
+
+/** L'entrée « ce secteur s'ouvre sur cette dimension ». */
+export const nestedSectorEntry = (sector_id: string, dimension_id: string): string => `${sector_id}#${dimension_id}`
+
+/** Le secteur et la dimension d'une entrée d'emboîtement, ou `null`. */
+export const parseNestedSectorEntry = (entry: string): { sector_id: string, dimension_id: string } | null => {
+  const cut = entry.lastIndexOf('#')
+  if (cut <= 0 || !entry.startsWith('membre:')) return null
+  return { sector_id: entry.slice(0, cut), dimension_id: entry.slice(cut + 1) }
+}
+
+export const NEST_ALL_PREFIX = 'emboite:'
+/** L'entrée « toute feuille s'ouvre sur cette dimension ». */
+export const nestAllEntry = (dimension_id: string): string => `${NEST_ALL_PREFIX}${dimension_id}`
 
 /**
  * os#1511 — LE SÉLECTEUR DE NIVEAU, COMME SUR LE SANKEY et comme sur les deux autres descentes.

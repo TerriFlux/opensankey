@@ -48,8 +48,9 @@ import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
-import { coupeDepuisOuverts, coupeEnFermant, ouvertsDepuisCoupe } from '../Algorithms/DimensionCut'
+import { memberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
+import { nestAllEntry, nestedSectorEntry, parseNestedSectorEntry } from '../Charts/DataDimensionHierarchy'
+import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -559,87 +560,117 @@ const isBelow = (
 }
 
 /**
- * os#1511 — CLIC ET SHIFT+CLIC SUR UNE DIMENSION DE DONNÉES (Julien, 30/09 : « est-ce que le clic
- * et shift+clic sont bien connectés ? »). Ils ne l'étaient pas : `hierarchyInEffect` ne connaît que
- * les nœuds et le croisement, et la couronne d'une dimension de données ne faisait que sélectionner.
+ * os#1511 — CLIC, ALT+CLIC ET SHIFT+CLIC SUR UNE DIMENSION DE DONNÉES (Julien, 30/09 : « est-ce que
+ * le clic et shift+clic sont bien connectés ? », puis « il faut savoir quelle dimension ouvre, comme
+ * pour les nœuds »).
  *
- * Mêmes gestes que sur les nœuds, sur l'ensemble ouvert de la figure (`hierarchy_expanded`, en
- * identifiants de secteurs de membres, celui qu'écrivent aussi le niveau et l'arbre de
- * « Coordonnées ») : un clic ouvre un membre qui a des enfants ; shift+clic referme le membre s'il
- * est ouvert, sinon le parent par lequel on le voit, avec tout ce qu'il portait. Le diagramme ne
- * suit pas : un secteur est un membre, pas un nœud à déplier.
+ * Les gestes du croisement (os#1509), sur des dimensions de données emboîtées :
+ *   clic       ouvre le membre dans SA dimension (sous tous les secteurs qui finissent par lui, comme
+ *              le diagramme n'a qu'une coupe par dimension) ; sur une feuille, ouvre CE secteur sur
+ *              la dimension suivante ;
+ *   alt+clic   ouvre CE secteur sur l'autre dimension — les pays sous « Céréales » ;
+ *   shift+clic referme : le membre ou l'emboîtement du secteur, sinon ceux du parent dessiné.
+ * L'ensemble ouvert et ses trois sortes d'entrées : cf. `buildNestedDimensionTree`.
+ *
+ * LE DIAGRAMME SUIT sous « Clic sur une part : le déplie dans le diagramme », comme pour les nœuds :
+ * la coupe de la dimension touchée devient celle de la figure (`selectMembers`), et une dimension en
+ * choix unique passe en choix multiple — une couronne montre toujours plusieurs membres à la fois,
+ * et un choix unique à plusieurs membres ne rendrait plus aucune valeur (arbitrage de Julien, 30/09).
  *
  * `null` quand la figure ne découpe pas selon une dimension de données.
  */
 const dataDimensionClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
-): { activate: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void } | null => {
+): { activate: (part_id: string, gesture: { shift: boolean, alt?: boolean }, route?: string[]) => void } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (decompose?.kind !== 'data_dimension') return null
   const { window_id, pane_key } = ctx
-  const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[decompose.data_tagg_id] as unknown as
-    Class_DataTagGroup | undefined
-  if (window_id === undefined || pane_key === undefined || dimension === undefined) return null
-  const memberOf = (sector_id: string): Class_DataTag | undefined => {
-    const ref = parseMemberSectorId(sector_id)
-    if (ref === null || ref.dimension_id !== dimension.id) return undefined
-    return dimension.tags_dict[ref.member_id] as Class_DataTag | undefined
-  }
-  // 30/09/2026 — LE DIAGRAMME SUIT, sous le même réglage que pour les nœuds (« Clic sur une part :
-  // le déplie dans le diagramme »). Julien : « quand je clique ça ne pilote pas le diagramme ».
-  // Le geste est celui du panneau et du menu contextuel d'un nœud engendré : une nouvelle COUPE de
-  // la dimension (`selectMembers`), puis les nœuds engendrés se refont. Seulement là où une coupe
-  // à plusieurs membres se dessine — un nœud porte la dimension, ou bannière « multiple » — sinon
-  // le cube n'adresserait plus aucune valeur et le dessin se viderait (cf. `createTreeSelector`).
   const app_data = ctx.app_data
-  const diagram_follows = (style.interaction_click === 'aggregate' || style.interaction_click === 'both')
-    && ((dimension as unknown as { banner: string }).banner === 'multi'
-      || app_data.drawing_area.sankey.nodes_list.some(node => node.driving_dimension === dimension))
-  const cutDiagram = (cut: string[]) => {
+  const sankey = app_data.drawing_area.sankey
+  const dims = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+    .map(id => sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
+    .filter((d): d is Class_DataTagGroup => d !== undefined)
+  if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
+  const dimOf = (id: string) => dims.find(d => d.id === id)
+  const memberAt = (ref: { dimension_id: string, member_id: string }) =>
+    dimOf(ref.dimension_id)?.tags_dict[ref.member_id] as Class_DataTag | undefined
+
+  const diagram_follows = style.interaction_click === 'aggregate' || style.interaction_click === 'both'
+  /** La coupe du diagramme pour cette dimension devient celle de la figure. */
+  const followInDiagram = (dim: Class_DataTagGroup, expanded: ReadonlySet<string>) => {
+    if (!diagram_follows) return
+    const opened = new Set(
+      (dim.tags_list as Class_DataTag[])
+        .filter(m => expanded.has(memberSectorId(dim.id, m.id)))
+        .map(m => m.id)
+    )
     app_data.runHeavyGesture(() => {
-      dimension.selectMembers(cut)
+      const group = dim as unknown as { banner: string }
+      const drawn_by_node = sankey.nodes_list.some(node => node.driving_dimension === dim)
+      if (group.banner !== 'multi' && !drawn_by_node) group.banner = 'multi'
+      dim.selectMembers(coupeDepuisOuverts(dim, opened))
       app_data.drawing_area.rebuildDimensionNodes()
       app_data.drawing_area.draw()
     })
   }
-  const activate = (part_id: string, gesture: { shift: boolean }, route: string[] = []) => {
-    const member = memberOf(part_id)
-    if (member === undefined) return
+
+  const activate = (part_id: string, gesture: { shift: boolean, alt?: boolean }, route: string[] = []) => {
+    const refs = parseMemberSectorPath(part_id)
+    if (refs === null) return
+    const last = refs[refs.length - 1]
+    const member = memberAt(last)
+    const dim = dimOf(last.dimension_id)
+    if (member === undefined || dim === undefined) return
     const expanded = expandedOf(ctx.options)
     const next = new Set(expanded)
+    let touched: Class_DataTagGroup | undefined
+
+    /** Referme un membre dans sa dimension, avec tout ce qu'il portait. */
+    const closeMember = (d: Class_DataTagGroup, m: Class_DataTag) => {
+      next.delete(memberSectorId(d.id, m.id))
+      ;(m.children as Class_DataTag[]).forEach(child => closeMember(d, child))
+      touched = d
+    }
+    /** Referme les emboîtements posés sur ce secteur. */
+    const closeNests = (sector_id: string): boolean => {
+      const own = [...next].filter(e => parseNestedSectorEntry(e)?.sector_id === sector_id)
+      own.forEach(e => next.delete(e))
+      return own.length > 0
+    }
+
     if (gesture.shift) {
-      // Le parent DESSINÉ d'abord (la route), le parent du modèle sinon — en place, le membre
-      // ouvert a disparu derrière ses enfants, et c'est par eux qu'on le referme.
       const drawn_parent = route.length >= 2 ? route[route.length - 2] : undefined
-      const parent_sector = member.parent !== undefined ? memberSectorId(dimension.id, member.parent.id) : undefined
-      const target = next.has(part_id)
-        ? member
-        : [drawn_parent, parent_sector]
-          .filter((id): id is string => id !== undefined && next.has(id))
-          .map(memberOf)
-          .find((m): m is Class_DataTag => m !== undefined)
-      if (target === undefined) return
-      const close = (m: Class_DataTag) => {
-        next.delete(memberSectorId(dimension.id, m.id))
-        ;(m.children as Class_DataTag[]).forEach(close)
+      const parent_refs = drawn_parent !== undefined ? parseMemberSectorPath(drawn_parent) : null
+      if (next.has(memberSectorId(dim.id, member.id))) closeMember(dim, member)
+      else if (closeNests(part_id)) { /* l'emboîtement du secteur */ }
+      else if (parent_refs !== null && drawn_parent !== undefined) {
+        const p_last = parent_refs[parent_refs.length - 1]
+        const p_member = memberAt(p_last)
+        const p_dim = dimOf(p_last.dimension_id)
+        if (p_dim !== undefined && p_member !== undefined && p_dim.id === dim.id &&
+          next.has(memberSectorId(p_dim.id, p_member.id))) {
+          closeMember(p_dim, p_member)
+        } else if (!closeNests(drawn_parent)) {
+          // Emboîté partout par le niveau de « Coordonnées » : shift+clic retire cet emboîtement.
+          next.delete(nestAllEntry(dim.id))
+        }
       }
-      close(target)
-      if (diagram_follows) cutDiagram(coupeEnFermant(dimension, target))
-    } else if ((member.children as Class_DataTag[]).length > 0) {
-      next.add(part_id)
-      // TOUTE LA ROUTE, comme `disaggregateAlong` pour les nœuds : ouvrir un membre profond ouvre
-      // aussi ses ancêtres dans le diagramme, sinon la descente s'arrêterait au premier fermé.
-      if (diagram_follows) {
-        const opened = ouvertsDepuisCoupe(dimension)
-        for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent) opened.add(m.id)
-        cutDiagram(coupeDepuisOuverts(dimension, opened))
+    } else {
+      const other = dims.find(d => !refs.some(r => r.dimension_id === d.id))
+      if (!gesture.alt && (member.children as Class_DataTag[]).length > 0) {
+        next.add(memberSectorId(dim.id, member.id))
+        touched = dim
+      } else if (other !== undefined) {
+        next.add(nestedSectorEntry(part_id, other.id))
+        touched = other
       }
     }
-    if (next.size === expanded.size) return
+    if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return
     app_data.menu_configuration.setMainZonePaneOptions(
       window_id, pane_key, { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...next] } as unknown as Type_JSON
     )
+    if (touched !== undefined) followInDiagram(touched, next)
   }
   return { activate }
 }
@@ -677,7 +708,7 @@ const donutClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
 ): {
-  activate?: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void
+  activate?: (part_id: string, gesture: { shift: boolean, alt?: boolean }, route?: string[]) => void
   back?: () => void
 } => {
   // ⚠️ PLUS DE SORTIE SUR `interaction_click === 'none'`, et c'est le cœur du modèle : OUVRIR
@@ -1077,8 +1108,8 @@ export const registerAnalysisRepresentations = (): void => {
           // extérieur est profond par nature — sans elle, on dépliait son dernier cran seul.
           on_arc_click: (
             node_id: string, _is: boolean, _dim: string, path: string[],
-            gesture?: { shift: boolean }
-          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true }, path),
+            gesture?: { shift: boolean, alt?: boolean }
+          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true, alt: gesture?.alt === true }, path),
           // LE ZOOM, prêté à la colonne d'outils par le même pont que le disque : c'est ce qui
           // rend `SUNBURST_ZOOM` vrai sur une couronne en anneaux (cf. la déclaration `zoom`).
           zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),

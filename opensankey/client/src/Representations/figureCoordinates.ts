@@ -105,14 +105,27 @@ const idOf = (key: string): string => key.slice(key.indexOf(':') + 1)
 export type Type_CoordState =
   | { mode: 'fixed', value_id: string }
   // `cross_first` : sur un croisement, l'axe qui ouvre (os#1509) ; absent = les nœuds d'en face.
-  | { mode: 'parts', group_by_flux_tagg_id?: string, cross_first?: 'self' | 'other' }
+  // `nest` (30/09/2026) : le rang d'une dimension de données EMBOÎTÉE — 1 la première, 2 celle qui
+  // se découpe dans chacune de ses parts, etc. Absent = 1.
+  | { mode: 'parts', group_by_flux_tagg_id?: string, cross_first?: 'self' | 'other', nest?: number }
   | { mode: 'series', rank: 1 | 2 }
 
 export type Type_FigureCoordinates = { [field_key: string]: Type_CoordState }
 
-/** Le champ déployé en parts, s'il y en a un (il y en a au plus un : cf. `setCoordState`). */
+/**
+ * Les champs déployés en parts, dans l'ordre d'emboîtement. Un seul, sauf des dimensions de données
+ * emboîtées (cf. `setCoordState`, règle 1).
+ */
+export const partsFieldKeys = (coords: Type_FigureCoordinates): string[] =>
+  Object.keys(coords)
+    .filter(k => coords[k].mode === 'parts')
+    .sort((a, b) => nestOf(coords[a]) - nestOf(coords[b]))
+
+const nestOf = (state: Type_CoordState): number => (state.mode === 'parts' ? state.nest : undefined) ?? 1
+
+/** Le PREMIER champ déployé en parts, s'il y en a un. */
 export const partsFieldKey = (coords: Type_FigureCoordinates): string | null =>
-  Object.keys(coords).find(k => coords[k].mode === 'parts') ?? null
+  partsFieldKeys(coords)[0] ?? null
 
 /** Les champs juxtaposés, dans l'ordre de leur rang (0, 1 ou 2 clés). */
 export const seriesFieldKeys = (coords: Type_FigureCoordinates): string[] =>
@@ -168,6 +181,12 @@ export const coordinatesOf = (
     if (decompose) {
       const [key, state] = decomposeEntry(decompose)
       coords[key] = state
+      // Les dimensions emboîtées sous la première, chacune à son rang.
+      if (decompose.kind === 'data_dimension') {
+        (decompose.nested_tagg_ids ?? []).forEach((id, i) => {
+          coords[`dt:${id}`] = { mode: 'parts', nest: i + 2 }
+        })
+      }
     }
     if (descriptor.compare) coords[compareKey(descriptor.compare)] = { mode: 'series', rank: 1 }
     const secondary = effectiveCompareSecondary(descriptor)
@@ -223,6 +242,13 @@ const decomposeSpecOf = (
   }
 }
 
+/** La dimension de données découpée, augmentée de celles qui s'emboîtent dessous. */
+const nestedSpecOf = (spec: Type_DecomposeSpec | null, parts_keys: string[]): Type_DecomposeSpec | null => {
+  if (spec?.kind !== 'data_dimension' || parts_keys.length < 2) return spec
+  const nested = parts_keys.slice(1).filter(k => coordFieldKindOf(k) === 'data_tagg').map(idOf)
+  return nested.length > 0 ? { ...spec, nested_tagg_ids: nested } : spec
+}
+
 const compareSpecOf = (key: string): Type_CompareSpec | null => {
   const id = idOf(key)
   if (coordFieldKindOf(key) === 'flows') {
@@ -244,7 +270,8 @@ export const applyCoordinates = (
   subject_kind: 'node' | 'flux',
   base?: Type_AnalysisDescriptor | null
 ): { descriptor: Type_AnalysisDescriptor, pins: { [tagg_id: string]: string } } => {
-  const parts_key = partsFieldKey(coords)
+  const parts_keys = partsFieldKeys(coords)
+  const parts_key = parts_keys[0] ?? null
   const series = seriesFieldKeys(coords)
   const pins: { [tagg_id: string]: string } = {}
   Object.entries(coords).forEach(([key, state]) => {
@@ -252,7 +279,7 @@ export const applyCoordinates = (
   })
   const descriptor: Type_AnalysisDescriptor = {
     ...(base ?? {}),
-    decompose: parts_key ? decomposeSpecOf(parts_key, coords[parts_key], subject_kind) : null,
+    decompose: parts_key ? nestedSpecOf(decomposeSpecOf(parts_key, coords[parts_key], subject_kind), parts_keys) : null,
     compare: series[0] ? compareSpecOf(series[0]) : null
   }
   // Le second axe n'est écrit QUE s'il existe : une clé `compare_secondary: null` sur un descripteur
@@ -290,12 +317,31 @@ export const setCoordState = (
   if (!state) return next
 
   if (state.mode === 'parts') {
-    // (1) et (4) : le champ qui tenait les parts les rend, et des flux juxtaposés interdiraient
-    // ces parts-là — on les laisse gagner en libérant les séries « flux ».
+    // (1) SAUF ENTRE DIMENSIONS DE DONNÉES (30/09/2026) : deux dimensions hiérarchisées
+    // s'EMBOÎTENT — les pays dans chaque produit — au lieu de se chasser. La nouvelle venue se
+    // range sous les autres, sauf rang demandé. Tout autre champ en parts les chasse toutes.
+    const nests_with_data = coordFieldKindOf(key) === 'data_tagg'
+    const kept_data = nests_with_data
+      ? partsFieldKeys(next).filter(k => coordFieldKindOf(k) === 'data_tagg')
+      : []
+    // (4) : des flux juxtaposés interdiraient ces parts-là — on les laisse gagner en libérant les
+    // séries « flux ».
     Object.keys(next).forEach(k => {
-      if (next[k].mode === 'parts') delete next[k]
+      if (next[k].mode === 'parts' && !kept_data.includes(k)) delete next[k]
       if (next[k]?.mode === 'series' && coordFieldKindOf(k) === 'flows') delete next[k]
     })
+    if (nests_with_data) {
+      const order = [...kept_data]
+      const at = Math.min(Math.max(0, (state.nest ?? order.length + 1) - 1), order.length)
+      order.splice(at, 0, key)
+      // Seule, une dimension n'a pas de rang : l'état reste celui d'avant, au caractère près.
+      order.forEach((k, i) => {
+        const current = { ...(k === key ? state : next[k]) as { mode: 'parts', nest?: number } }
+        delete current.nest
+        next[k] = order.length > 1 ? { ...current, mode: 'parts', nest: i + 1 } : { ...current, mode: 'parts' }
+      })
+      return next
+    }
     next[key] = state
     return next
   }
