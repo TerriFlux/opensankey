@@ -22,6 +22,7 @@
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 
@@ -206,7 +207,12 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   //    Le mode « garder les positions » est le seul qui n'en dépende pas : il ne réempile rien,
   //    et il a donc déjà fait son travail à la création.
   if (sankey.drawing_area.effective_gap_mode !== 'keep') {
+    // UN DIAGRAMME PAR MEMBRE : les axes d'une même dimension se rangent ENSEMBLE, en bandes.
+    const en_bandes = axesEnBandes(sankey, par_axe)
+    en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe))
+    const ranges = new Set([...en_bandes].flat())
     par_axe.forEach((membres, axe_id) => {
+      if (ranges.has(axe_id)) return
       const axe = sankey.nodes_dict[axe_id]
       if (axe === undefined) return
       axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
@@ -224,6 +230,95 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     sankey.nodes_dict[axe_id]?.setInvisible()
   })
   return engendres
+}
+
+/**
+ * os#1511 — UN DIAGRAMME PAR MEMBRE : la dimension se range-t-elle en bandes ?
+ *
+ * Julien, 30/09, sur « [SOCLE] Pays partenaires » : trois nœuds portent la dimension des pays
+ * (Produits agricoles, Monde - Export, Monde - Import) ; « il faudrait que les diagrammes se
+ * mettent les uns sous les autres, parallèlement ». Éclater chaque nœud dans son propre créneau
+ * mélangeait les membres colonne par colonne — et dans CARTOFOB, où les quatorze étapes portent
+ * l'essence, les nœuds d'une même colonne s'empilaient.
+ *
+ * Réglé sur la dimension (`member_bands`), automatique à défaut : oui dès que deux nœuds ou plus
+ * la portent. Un seul porteur n'a pas de diagramme à répéter.
+ */
+export function bandesParMembre(dimension: Class_DataTagGroup, porteurs: number): boolean {
+  return dimension.member_bands ?? porteurs >= 2
+}
+
+/** Les axes découpés de ce tour, regroupés par dimension rangée en bandes. */
+function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): string[][] {
+  const par_dimension = new Map<Class_DataTagGroup, string[]>()
+  par_axe.forEach((_membres, axe_id) => {
+    const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
+    if (dimension === undefined) return
+    par_dimension.set(dimension, [...(par_dimension.get(dimension) ?? []), axe_id])
+  })
+  const out: string[][] = []
+  par_dimension.forEach((axe_ids, dimension) => {
+    // Le compte est celui des nœuds qui PORTENT la dimension, pas de ceux découpés à ce tour.
+    const porteurs = sankey.nodes_list
+      .filter(node => !isGeneratedMemberNode(node) && node.driving_dimension === dimension).length
+    if (axe_ids.length >= 2 && bandesParMembre(dimension, porteurs)) out.push(axe_ids)
+  })
+  return out
+}
+
+/**
+ * Range les nœuds engendrés de plusieurs axes d'une même dimension en BANDES, une par membre.
+ *
+ * Chaque axe garde sa colonne (x déjà posé à la création) ; seule la hauteur change. La bande
+ * d'un membre est aussi haute que son plus grand nœud, et les bandes s'empilent depuis le haut du
+ * plus haut des axes. L'écart entre bandes suit le MÊME réglage que l'empilement dans un créneau
+ * (`effective_gap_mode`), pour que le sélecteur d'écart garde son effet :
+ *  - « remplir » : les bandes se répartissent la hauteur de la plus grande colonne d'axes ;
+ *  - « écart propre à chaque enfant » : l'écart par défaut du style ;
+ *  - « écart constant » : `disaggregation_gap_value`.
+ * (« garder les positions » n'arrive pas ici : l'appelant ne réempile rien dans ce mode.)
+ *
+ * Appelée APRÈS les flux : la hauteur d'un nœud engendré vient de ses flux (cf. l'étape 3).
+ */
+function rangerEnBandes(
+  sankey: Class_Sankey,
+  axe_ids: string[],
+  par_axe: Map<string, Type_MembreRepresente[]>
+): void {
+  const da = sankey.drawing_area
+  const axes = axe_ids.map(id => sankey.nodes_dict[id]).filter(axe => axe !== undefined)
+  if (axes.length === 0) return
+  // Les membres dans l'ordre choisi — le même pour tous les axes de la dimension.
+  const ordre: Class_DataTag[] = []
+  axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ membre }) => {
+    if (!ordre.includes(membre)) ordre.push(membre)
+  }))
+  const noeudDe = (axe_id: string, membre: Class_DataTag) =>
+    (par_axe.get(axe_id) ?? []).find(m => m.membre === membre)?.noeud
+  const hauteurs = ordre.map(membre => Math.max(0, ...axe_ids.map(id =>
+    noeudDe(id, membre)?.getShapeHeightToUse() ?? 0)))
+
+  const haut = Math.min(...axes.map(axe => axe.position_y))
+  const mode = da.effective_gap_mode
+  const somme = hauteurs.reduce((s, h) => s + h, 0)
+  const colonne = Math.max(...axes.map(axe => axe.position_y + axe.getShapeHeightToUse())) - haut
+  const ecart = mode === 'fill'
+    ? (ordre.length > 1 ? Math.max(0, (colonne - somme) / (ordre.length - 1)) : 0)
+    : mode === 'children_dy'
+      ? (sankey.default_style.shape_position_dy ?? 0)
+      : da.disaggregation_gap_value
+
+  let curseur = haut
+  ordre.forEach((membre, k) => {
+    if (k > 0) curseur += ecart
+    axe_ids.forEach(id => {
+      const noeud = noeudDe(id, membre)
+      if (noeud === undefined) return
+      noeud.position_y = curseur
+      noeud.captureCenterFromCorner()
+    })
+    curseur += hauteurs[k]
+  })
 }
 
 /**
