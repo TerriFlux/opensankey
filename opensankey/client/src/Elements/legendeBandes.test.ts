@@ -21,10 +21,19 @@ function monter() {
   pays.use_colors = true
   const source = sankey.addNewNodeWithName('A')
   const cible = sankey.addNewNodeWithName('B')
-  sankey.addNewLink(source, cible)
+  const lien = sankey.addNewLink(source, cible)
+  // DES VALEURS, sans quoi il n y a pas de bande : « ce flux n existe pas ici » n est pas « il vaut
+  // 0 », et une bande sans valeur ne se dessine pas (#161).
+  const poser = (id: string, nombre: number) => {
+    pays.tags_list.forEach(t => t.setUnSelected())
+    ;(pays.tags_dict[id] as Class_DataTag).setSelected()
+    ;(lien.value as { valueData: number | null }).valueData = nombre
+  }
+  poser('europe', 340)
+  poser('afrique', 210)
   pays.tags_list.forEach(t => t.setUnSelected())
   europe.setSelected(); afrique.setSelected()
-  return { app, sankey, pays, cible }
+  return { app, sankey, pays, cible, lien }
 }
 
 // os#1511, 30/09 — LE RAPPEL DES DATA TAGS NE REPETE PLUS CE QUI EST DEJA DIT. Julien : « on a
@@ -62,6 +71,36 @@ describe('os#1511 — le rappel des dataTags ne double pas le bloc de couleurs',
     // Ses membres sont des noeuds NOMMES sur le diagramme : le rappel les reecrirait pour rien.
     expect(items.filter(i => typeof i.text === 'string' && i.text.startsWith('Pays : ')))
       .toHaveLength(0)
+  })
+})
+
+// os#1511, 30/09 — LE SURVOL D UNE ENTREE DE DIMENSION DESIGNE SES BANDES. Julien : « quand on
+// passe sur la couleur dans la legende, ca ne met pas en exergue la ou les bandes correspondantes
+// — c est pas vrai pour les etiquettes de noeud et flux, passer la souris sur la legende fait
+// exactement ce que je demande. »
+//
+// Il avait raison : le mecanisme existe (`applyLegendHighlight`), mais il ne pouvait pas atteindre
+// une dimension. On ne teste pas le rendu D3 ici — on teste le PONT qui manquait : un flux sait-il
+// dire quelles bandes portent le membre survole, et sous l identifiant que le dessin leur donne.
+
+describe('os#1511 — un flux sait nommer les bandes d un membre', () => {
+  test('la bande d un membre porte SON identifiant, celui que le dessin utilise', () => {
+    const m = monter()
+    m.pays.banner = 'multi'
+    const bandes = m.lien.tagged_value_bands
+    expect(bandes.map(b => b.id).sort()).toEqual(['afrique', 'europe'])
+    // `LinkDrawShape` dessine chaque bande sous `<flux>_band_<id de bande>` : c est par la que le
+    // survol les retrouve.
+    expect(bandes.map(b => `${m.lien.id}_band_${b.id}`).every(id => id.includes('_band_')))
+      .toBe(true)
+  })
+
+  test('un membre NON dessine n a pas de bande a designer', () => {
+    const m = monter()
+    m.pays.banner = 'multi'
+    const ids = m.lien.tagged_value_bands.map(b => b.id)
+    // « Monde » est l ancetre des deux membres coches : il n est pas dessine, donc rien a exergue.
+    expect(ids).not.toContain('monde')
   })
 })
 

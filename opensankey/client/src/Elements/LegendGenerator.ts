@@ -658,6 +658,20 @@ type Type_LegendHoverPredicate = {
   node: (node: Type_TagCarrier) => boolean
   link: (link: Type_TagCarrier) => boolean
   band: (carried: readonly Class_Tag[]) => boolean
+  // os#1511 — LES MEMBRES DE DIMENSION SURVOLÉS, quand l'entrée appartient à un groupe de données.
+  //
+  // Julien, 30/09 : « quand on passe sur la couleur dans la légende, ça ne met pas en exergue la
+  // ou les bandes correspondantes » — alors que ça marche pour les étiquettes de nœud et de flux.
+  //
+  // Les trois prédicats ci-dessus ne pouvaient pas y arriver, et pour deux raisons distinctes. Un
+  // flux ne PORTE pas une dimension comme il porte une étiquette : une dimension est une
+  // coordonnée de son cube de valeurs, donc `hasGivenTag` est faux partout et tout le diagramme
+  // s'atténuait sans rien désigner. Et ses bandes ne sont pas dans `tagged_values_list` — elles
+  // sont calculées par `tagged_value_bands`, branche 1, à partir des membres choisis.
+  //
+  // On garde donc les membres eux-mêmes : c'est `applyLegendHighlight` qui sait interroger les
+  // bandes d'un flux, et lui seul.
+  data_tags?: readonly Class_Tag[]
 }
 
 // Résout la cible à l'instant T — le modèle a pu changer depuis la génération.
@@ -681,11 +695,18 @@ function hoverPredicate(
     const band = tag.is_untagged
       ? (carried: readonly Class_Tag[]) => is_flux_group && !carried.some(t => t.group === tag.group)
       : (carried: readonly Class_Tag[]) => carried.includes(tag)
-    return { node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band }
+    const is_data_group = tag.group.id in sankey.data_taggs_dict
+    return {
+      node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band,
+      data_tags: is_data_group ? [tag] : undefined
+    }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
   const bandCarriesOne = (carried: readonly Class_Tag[]) => carried.some(t => tags.includes(t))
-  return { node: carriesOne, link: carriesOne, band: bandCarriesOne }
+  return {
+    node: carriesOne, link: carriesOne, band: bandCarriesOne,
+    data_tags: (group.id in sankey.data_taggs_dict) ? tags : undefined
+  }
 }
 
 // SA#545 — cible de survol d'un item : son étiquette, ou, pour un titre de groupe, le groupe de son
@@ -737,17 +758,30 @@ function applyLegendHighlight(drawing_area: Class_DrawingArea, target: Type_Lege
   const node_list = drawing_area.sankey.visible_nodes_list
   const highlighted_nodes = new Set<Class_NodeBase>()
   flux_list.forEach(l => {
-    if (matches.link(l) || matches.node(l.source) || matches.node(l.target)) {
+    // os#1511 — LES BANDES D'UNE DIMENSION, que `tagged_values_list` ne connaît pas : elles se
+    // lisent sur `tagged_value_bands`, et leur identifiant de bande EST celui du membre. On ne les
+    // calcule que si l'entrée survolée est bien celle d'une dimension — ce getter refait le
+    // découpage du flux, et le survol est fréquent.
+    const bandes_de_dimension = matches.data_tags !== undefined
+      ? l.tagged_value_bands.filter(b => matches.data_tags?.some(t => t.id === b.id))
+      : []
+    if (matches.link(l) || matches.node(l.source) || matches.node(l.target)
+      || bandes_de_dimension.length > 0) {
       highlighted_nodes.add(l.source)
       highlighted_nodes.add(l.target)
       // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
       // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
       const bands = l.d3_selection?.selectAll('.link_band')
       if (bands && !bands.empty()) {
-        const matching = new Set(
-          (l.value?.tagged_values_list ?? [])
+        // Les deux mécanismes de bande, réunis : les valeurs coordonnées d'un groupe de flux
+        // (#285) et les membres d'une dimension (os#1511). L'identifiant dessiné est le même dans
+        // les deux cas — `<flux>_band_<id>` (cf. `LinkDrawShape`).
+        const matching = new Set([
+          ...(l.value?.tagged_values_list ?? [])
             .filter(tv => matches.band(tv.tags_list as Class_Tag[]))
-            .map(tv => l.id + '_band_' + tv.id))
+            .map(tv => l.id + '_band_' + tv.id),
+          ...bandes_de_dimension.map(b => l.id + '_band_' + b.id)
+        ])
         if (matching.size > 0) {
           bands.attr('opacity', function () {
             return matching.has((this as Element).getAttribute('id') ?? '') ? '' : 0.1
