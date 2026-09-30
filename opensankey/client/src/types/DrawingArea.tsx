@@ -458,6 +458,13 @@ export class Class_DrawingArea {
    * texte restent justes) ; ou rien, en disposition ordinaire. Rejoué à chaque fenêtrage et à
    * chaque (re)construction du SVG.
    */
+  /**
+   * sa#581 — Repose le cadre sur le SVG SANS rien redessiner : pour un geste qui déplace ou
+   * redimensionne le volet du diagramme, pendant lequel le SVG doit suivre le cadre à chaque
+   * mouvement de la souris (cf. `Class_ApplicationData.previewCanvasFrame`).
+   */
+  public refreshCanvasFrameStyle(): void { this._applyCanvasFrameStyle() }
+
   protected _applyCanvasFrameStyle() {
     const svg = this.d3_selection_zoom_area
     if (!svg) return

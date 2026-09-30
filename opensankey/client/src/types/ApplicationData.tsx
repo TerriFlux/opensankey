@@ -2264,6 +2264,18 @@ export class Class_ApplicationData {
     if (!mc.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID)) mc.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
   }
 
+  /**
+   * sa#581 — « NOUVEAU DIAGRAMME DE SANKEY » : on repart d'un diagramme vierge, et la grande zone
+   * montre une ZONE DE DESSIN, avec ses outils, prête pour le premier nœud (retour d'Alexandre,
+   * 30/09 : « ça n'ouvre pas une zone vide mais une zone de dessin avec les outils pour commencer
+   * à dessiner »). Le nom de la commande dit ce qu'on obtient ; la feuille blanche reste celle
+   * qu'on trouve en ouvrant un modèle, ou en fermant tous ses volets.
+   */
+  public startNewSankeyDiagram(): void {
+    this.reinitialization()
+    this.ensureDiagramShown()
+  }
+
   /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
   protected forgetEphemeralView(id: string): void {
     delete this._views[id]
@@ -3298,6 +3310,22 @@ export class Class_ApplicationData {
    * elle, vit dans menu_configuration et se recalcule à l'ouverture.
    */
   public main_zone_canvas_frame: Type_CanvasFrame | null = null
+
+  /**
+   * sa#581 — LE DIAGRAMME SUIT SON CADRE PENDANT LE GESTE (retour d'Alexandre, 30/09 : « le cadre
+   * suit la souris mais pas son contenu »).
+   *
+   * Son SVG n'est pas dans l'arbre React du volet : il est posé en position fixe sur le cadre que
+   * le MODÈLE décrit, et le modèle n'apprend la nouvelle géométrie d'un volet flottant qu'au
+   * relâchement (cf. `OccupantFrame`, qui déplace son cadre dans la page à chaque mouvement sans
+   * rien écrire). Le cadre partait donc seul, et le dessin le rattrapait à la fin. L'hôte pose ici
+   * le cadre de l'aperçu, et seul le STYLE du SVG est repris : rien n'est redessiné en chemin — le
+   * relâchement écrit la géométrie, et le recadrage ordinaire suit.
+   */
+  public previewCanvasFrame(frame: Type_CanvasFrame): void {
+    this.main_zone_canvas_frame = frame
+    this.drawing_area.refreshCanvasFrameStyle()
+  }
 
   /**
    * os#1385 (lot 6, D8/D10) — OUVRIR LA PAGE SUR UNE FEUILLE (`window.sankey.sheet`).
