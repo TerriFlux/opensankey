@@ -593,15 +593,14 @@ const decomposeDataDimension = (
   const element = subject.kind === 'node' ? subject.node : subject.link
   const root = dataDimensionTreeOf(subject, spec, nav, reading, expanded)?.roots[0]
   if (!root) return []
-  const all_dims = [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])]
-  /** Reste-t-il quelque chose à ouvrir sous ce secteur ? Des enfants, ou une dimension pas encore emboîtée. */
+  /** Reste-t-il quelque chose à ouvrir sous ce secteur ? Des enfants dans sa dimension. */
   const canOpen = (sector_id: string) => {
     const refs = parseMemberSectorPath(sector_id)
     if (refs === null) return false
     const ref = refs[refs.length - 1]
     const dimension = element.sankey.data_taggs_dict[ref.dimension_id] as unknown as Class_DataTagGroup | undefined
     const member = dimension?.tags_dict[ref.member_id] as Class_DataTag | undefined
-    return (member?.children.length ?? 0) > 0 || all_dims.some(id => !refs.some(r => r.dimension_id === id))
+    return (member?.children.length ?? 0) > 0
   }
   const walk = (
     sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[]

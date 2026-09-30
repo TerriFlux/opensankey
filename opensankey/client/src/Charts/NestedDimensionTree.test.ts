@@ -4,8 +4,7 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import {
-  buildNestedDimensionTree, memberPathSectorId, memberSectorId, nestAllEntry, nestedSectorEntry,
-  parseMemberSectorId, parseMemberSectorPath
+  buildNestedDimensionTree, memberPathSectorId, memberSectorId, parseMemberSectorId, parseMemberSectorPath
 } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
@@ -13,8 +12,9 @@ if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
 }
 
-// 30/09/2026 — DIMENSIONS EMBOITEES. Julien : « desagreger les pays » sous les produits, et
-// « il faut savoir quelle dimension ouvre, comme pour les noeuds ».
+// 30/09/2026 — DIMENSIONS EMBOITEES, calees sur le diagramme (Julien : « cale-toi sur ce qui est
+// fait pour le diagramme »). Chaque dimension a sa coupe ; racine fermee = niveau « ensemble », elle
+// ne decoupe pas ; les dimensions qui decoupent s emboitent dans l ordre.
 //
 //   filiere : produits > cereales > (ble, mais)          pays : monde > (fr, de)
 //   ble/fr = 10, ble/de = 20, mais/fr = 5, mais/de = 7
@@ -73,27 +73,34 @@ describe('os#1511 — dimensions emboitees', () => {
     expect(parseMemberSectorId(id)).toEqual({ dimension_id: 'pays', member_id: 'fr' })
   })
 
-  test('rien d ouvert : la racine unique ne fait pas d anneau, on entre par ses enfants', () => {
+  const P = (id: string) => memberSectorId('filiere', id)
+  const G = (id: string) => memberSectorId('pays', id)
+
+  test('figure neuve : la premiere dimension decoupe d un cran, sans anneau Tous produits', () => {
     const m = monter()
     const racine = arbre(m, [])?.roots[0] as Type_SunburstNode
     expect(racine.value).toBe(42)
-    expect(racine.children.map(c => c.id)).toEqual([memberSectorId('filiere', 'cereales')])
+    expect(racine.children.map(c => c.id)).toEqual([P('cereales')])
     expect(racine.children[0].children).toEqual([])
   })
 
-  test('alt clic : les pays sous CE secteur seulement, sans anneau Monde', () => {
+  test('la geographie seule : filiere a ensemble, pays ouverts', () => {
     const m = monter()
-    const cereales = memberSectorId('filiere', 'cereales')
-    const racine = arbre(m, [nestedSectorEntry(cereales, 'pays')])?.roots[0] as Type_SunburstNode
-    const sous = chercher(racine, cereales) as Type_SunburstNode
-    expect(sous.children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
+    const racine = arbre(m, [G('monde')])?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
+    expect(racine.children[0].id).toBe(G('fr'))
   })
 
-  test('emboite partout : chaque produit se decoupe par pays, totaux inchanges, deux palettes', () => {
+  test('rien ne decoupe : un seul secteur, le tout', () => {
     const m = monter()
-    const racine = arbre(m, [memberSectorId('filiere', 'cereales'), nestAllEntry('pays')])
-      ?.roots[0] as Type_SunburstNode
-    const ble = chercher(racine, memberSectorId('filiere', 'ble')) as Type_SunburstNode
+    const racine = arbre(m, [G('x_rien')])?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => [c.label, c.value])).toEqual([['Produits', 42]])
+  })
+
+  test('les deux : chaque produit se decoupe par pays, totaux inchanges, deux palettes', () => {
+    const m = monter()
+    const racine = arbre(m, [P('produits'), P('cereales'), G('monde')])?.roots[0] as Type_SunburstNode
+    const ble = chercher(racine, P('ble')) as Type_SunburstNode
     expect(ble.value).toBe(30)
     expect(ble.children.map(c => [c.label, c.value])).toEqual([['France', 10], ['Allemagne', 20]])
     expect(racine.value).toBe(42)
