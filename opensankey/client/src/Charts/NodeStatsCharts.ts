@@ -258,14 +258,66 @@ export const barLabelBottom = (angles: readonly number[]): number => {
 }
 
 /** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
-export const orderParts = <T extends { label: string, value: number }>(
+export const orderParts = <T extends { label: string, value: number, path?: string[], parent_label?: string }>(
   parts: T[], order: Type_FigureChartStyle['parts_order']
 ): T[] => {
   if (order === 'model') return parts
-  const out = [...parts]
-  if (order === 'name') out.sort((a, b) => a.label.localeCompare(b.label))
-  else if (order === 'value_asc') out.sort((a, b) => a.value - b.value)
-  else out.sort((a, b) => b.value - a.value)
+  const compare = (a: { label: string, value: number }, b: { label: string, value: number }) =>
+    order === 'name' ? a.label.localeCompare(b.label)
+      : order === 'value_asc' ? a.value - b.value
+        : b.value - a.value
+  if (parts.some(p => (p.path?.length ?? 0) > 2)) return orderPartsAsTree(parts, compare)
+  return [...parts].sort(compare)
+}
+
+/**
+ * 30/09/2026 — UNE COURONNE DÉPLIÉE SE TRIE EN ARBRE, comme ses anneaux (`sortSunburstTree`).
+ *
+ * Julien : « la couronne réorganise tout dans l'ordre croissant, mais quand on désagrège ce n'est
+ * pas vraiment ce qu'on veut ; ça marche en mode un anneau par niveau, il faut la même chose sur la
+ * couronne simple ». Trier toutes les parts ensemble mélangeait les enfants de parents différents —
+ * « Blé » entre « Lait » et « Maïs ». Ici chaque fratrie se trie à sa place, et un groupe se classe
+ * parmi ses voisins par son TOTAL (la somme de ses parts) : les enfants d'un même parent restent
+ * côte à côte, et les branches gardent entre elles l'ordre demandé.
+ *
+ * Le nom d'un groupe est celui que ses parts disent de leur parent (`parent_label`) ; au-delà,
+ * son identifiant — l'ordre alphabétique des groupes profonds n'est donc qu'approché.
+ */
+const orderPartsAsTree = <T extends { label: string, value: number, path?: string[], parent_label?: string }>(
+  parts: T[], compare: (a: { label: string, value: number }, b: { label: string, value: number }) => number
+): T[] => {
+  type Type_Group = { label: string, value: number, children: Map<string, Type_Group>, leaves: T[] }
+  const group = (label: string): Type_Group => ({ label, value: 0, children: new Map(), leaves: [] })
+  const root = group('')
+  parts.forEach(part => {
+    // La route sans la racine et sans la part elle-même : les groupes qui la contiennent.
+    const ancestors = (part.path ?? []).slice(1, -1)
+    let at = root
+    at.value += part.value
+    ancestors.forEach((id, i) => {
+      let next = at.children.get(id)
+      if (next === undefined) {
+        next = group(i === ancestors.length - 1 ? (part.parent_label ?? id) : id)
+        at.children.set(id, next)
+      }
+      next.value += part.value
+      at = next
+    })
+    at.leaves.push(part)
+  })
+  const out: T[] = []
+  const walk = (g: Type_Group) => {
+    // Parts et sous-groupes d'un même parent se classent ensemble, chacun par sa valeur.
+    const items: ({ label: string, value: number } & ({ leaf: T } | { sub: Type_Group }))[] = [
+      ...g.leaves.map(leaf => ({ label: leaf.label, value: leaf.value, leaf })),
+      ...[...g.children.values()].map(sub => ({ label: sub.label, value: sub.value, sub }))
+    ]
+    items.sort(compare).forEach(item => {
+      if ('leaf' in item) out.push(item.leaf)
+      else walk(item.sub)
+    })
+  }
+  walk(root)
   return out
 }
 
