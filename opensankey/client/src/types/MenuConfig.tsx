@@ -1378,8 +1378,11 @@ export class Class_MenuConfig {
       // Le diagramme qui revient reprend la principale ; celui qui l'occupait prend sa place.
       this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, 'right')
       this._normalizeMainZoneOccupants()
+      // sa#581 — PAS DE `return` ICI : c'était l'échange qui prévenait la grande zone. Dans une
+      // grande zone VIDE, la normalisation a déjà fait du diagramme la principale, l'échange n'a
+      // plus rien à faire et ressort sans notifier — l'écran restait vide, modèle rempli. La suite
+      // commune le rend actif et notifie dans tous les cas.
       this.makeMainZoneOccupantMain(id)
-      return
     } else {
       // Une fenêtre à sujet DIAGRAMME : son id est sa représentation (cf. Type_MainZoneOccupant).
       this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, place)
