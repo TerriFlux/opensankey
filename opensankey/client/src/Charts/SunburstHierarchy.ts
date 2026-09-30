@@ -147,6 +147,10 @@ export interface Type_SunburstNode {
   // os#1509 — les branches de chaque axe par lesquelles ce secteur descend (couronne croisée
   // seulement ; absent ailleurs, et le tracé colore alors par branche comme toujours).
   axis_branches?: { self?: Type_AxisBranch, other?: Type_AxisBranch }
+  // 30/09/2026 — DIMENSIONS EMBOÎTÉES : la palette de la dimension de ce secteur (0, 1…), sa branche
+  // dans cette dimension, et sa profondeur depuis l'entrée dans la dimension. Deux dimensions, deux
+  // palettes contrastées (Julien : « deux palettes complètement différentes »).
+  palette?: { index: number, branch_id: string, depth: number }
 }
 
 // Un ANNEAU : de quel axe vient ce cran, et quel niveau il porte.

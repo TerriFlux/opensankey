@@ -49,7 +49,9 @@ import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
-import { nestAllEntry, nestedSectorEntry, parseNestedSectorEntry } from '../Charts/DataDimensionHierarchy'
+import {
+  clickAxisOf, nestAllEntry, nestedSectorEntry, parseNestedSectorEntry, skippedRootOf
+} from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
@@ -605,6 +607,10 @@ const dataDimensionClickGestures = (
         .filter(m => expanded.has(memberSectorId(dim.id, m.id)))
         .map(m => m.id)
     )
+    // La racine unique ne fait pas d'anneau : elle est ouverte pour la figure, elle l'est aussi pour
+    // le diagramme — sinon la coupe y retomberait sur « Monde » seul.
+    const skipped = skippedRootOf(dim)
+    if (skipped !== undefined) opened.add(skipped.id)
     app_data.runHeavyGesture(() => {
       const group = dim as unknown as { banner: string }
       const drawn_by_node = sankey.nodes_list.some(node => node.driving_dimension === dim)
@@ -657,13 +663,24 @@ const dataDimensionClickGestures = (
         }
       }
     } else {
-      const other = dims.find(d => !refs.some(r => r.dimension_id === d.id))
-      if (!gesture.alt && (member.children as Class_DataTag[]).length > 0) {
+      // L'AXE COURANT décide ce que le clic ouvre ; alt+clic prend l'autre. Sans axe courant, c'est
+      // la dimension du secteur cliqué.
+      const free = dims.filter(d => !refs.some(r => r.dimension_id === d.id))
+      const current = dimOf(clickAxisOf(expanded) ?? '') ?? dim
+      const along = gesture.alt
+        ? (current.id === dim.id ? free[0] : dim)
+        : current
+      const has_children = (member.children as Class_DataTag[]).length > 0
+      if (along !== undefined && along.id !== dim.id && free.includes(along)) {
+        next.add(nestedSectorEntry(part_id, along.id))
+        touched = along
+      } else if (has_children) {
         next.add(memberSectorId(dim.id, member.id))
         touched = dim
-      } else if (other !== undefined) {
-        next.add(nestedSectorEntry(part_id, other.id))
-        touched = other
+      } else if (free[0] !== undefined) {
+        // Une feuille de sa dimension : il ne reste qu'à emboîter la suivante.
+        next.add(nestedSectorEntry(part_id, free[0].id))
+        touched = free[0]
       }
     }
     if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return

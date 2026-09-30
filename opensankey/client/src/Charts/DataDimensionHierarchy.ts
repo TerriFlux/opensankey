@@ -335,8 +335,16 @@ export const buildNestedDimensionTree = (
     const next = free[0]
     return next !== undefined && options.expanded.has(nestAllEntry(next.d.id)) ? next.i : -1
   }
-  const rootsOf = (dim: Class_DataTagGroup) =>
-    (dim.tags_list as Class_DataTag[]).filter(m => m.parent === undefined)
+  // LA RACINE UNIQUE NE FAIT PAS D'ANNEAU (Julien, 30/09 : « aucun intérêt d'avoir le niveau Monde
+  // ni le niveau Tous produits quand elle est dépliée, c'est redondant avec les niveaux 1 »). Un
+  // anneau d'un seul secteur à 100 % ne découpe rien : on entre directement par ses enfants.
+  const rootsOf = (dim: Class_DataTagGroup) => {
+    const skipped = skippedRootOf(dim)
+    return skipped !== undefined
+      ? (skipped.children as Class_DataTag[])
+      : (dim.tags_list as Class_DataTag[]).filter(m => m.parent === undefined)
+  }
+  const nested_palettes = dims.length > 1
 
   /** La valeur du sujet à une coordonnée : les dimensions découpées fixées, les autres suivies. */
   const valueAt = (coord: Map<string, Class_DataTag>): number => {
@@ -355,14 +363,16 @@ export const buildNestedDimensionTree = (
   }
 
   const build = (
-    refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number
+    refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number,
+    branch: string, entry_depth: number
   ): Type_SunburstNode => {
     const dim = dims[k]
     const declared = valueAt(coord)
     const id = memberPathSectorId(refs)
     const base: Type_SunburstNode = {
       id, label: member.name, value: declared, declared, color: member.color ?? null,
-      depth, children: [], dimension_id: dim.id
+      depth, children: [], dimension_id: dim.id,
+      ...(nested_palettes ? { palette: { index: k, branch_id: branch, depth: depth - entry_depth } } : {})
     }
     // Où ce secteur s'ouvre : sur ses enfants s'il est ouvert, sinon sur la dimension suivante.
     const own = isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
@@ -379,7 +389,9 @@ export const buildNestedDimensionTree = (
         const child_refs = next.k === k
           ? [...refs.slice(0, -1), { dimension_id: dim.id, member_id: child.id }]
           : [...refs, { dimension_id: dims[next.k].id, member_id: child.id }]
-        return build(child_refs, child_coord, next.k, child, depth + 1)
+        return next.k === k
+          ? build(child_refs, child_coord, k, child, depth + 1, branch, entry_depth)
+          : build(child_refs, child_coord, next.k, child, depth + 1, child.id, depth + 1)
       })
       .filter(child => child.value > 0)
     if (children.length === 0) return base
@@ -407,7 +419,8 @@ export const buildNestedDimensionTree = (
   const first_rank = focus !== undefined ? (focus.children as Class_DataTag[]) : rootsOf(dims[0])
   const children = first_rank
     .map(member => build(
-      [{ dimension_id: dims[0].id, member_id: member.id }], new Map([[dims[0].id, member]]), 0, member, 1
+      [{ dimension_id: dims[0].id, member_id: member.id }], new Map([[dims[0].id, member]]), 0, member, 1,
+      member.id, 1
     ))
     .filter(member => member.value > 0)
   const total = children.reduce((acc, child) => acc + child.value, 0)
@@ -450,6 +463,15 @@ export const buildNestedDimensionTree = (
   }
 }
 
+/**
+ * La racine UNIQUE d'une dimension, quand elle a des enfants : elle ne fait pas d'anneau, la figure
+ * entre par ses enfants. `undefined` quand la dimension a plusieurs racines, ou une seule sans enfant.
+ */
+export const skippedRootOf = (dim: Class_DataTagGroup): Class_DataTag | undefined => {
+  const roots = (dim.tags_list as Class_DataTag[]).filter(m => m.parent === undefined)
+  return roots.length === 1 && roots[0].children.length > 0 ? roots[0] : undefined
+}
+
 /** L'entrée « ce secteur s'ouvre sur cette dimension ». */
 export const nestedSectorEntry = (sector_id: string, dimension_id: string): string => `${sector_id}#${dimension_id}`
 
@@ -458,6 +480,18 @@ export const parseNestedSectorEntry = (entry: string): { sector_id: string, dime
   const cut = entry.lastIndexOf('#')
   if (cut <= 0 || !entry.startsWith('membre:')) return null
   return { sector_id: entry.slice(0, cut), dimension_id: entry.slice(cut + 1) }
+}
+
+/**
+ * 30/09/2026 — L'AXE COURANT : la dimension selon laquelle le CLIC ouvre (Julien : « pouvoir passer
+ * de Europe à la division par filière sans devoir tout désagréger les pays — l'idée de l'axe courant
+ * qu'on peut modifier »). Absent : le clic ouvre le membre dans sa propre dimension.
+ */
+export const CLICK_AXIS_PREFIX = 'axe:'
+export const clickAxisEntry = (dimension_id: string): string => `${CLICK_AXIS_PREFIX}${dimension_id}`
+export const clickAxisOf = (expanded: Iterable<string>): string | undefined => {
+  for (const entry of expanded) if (entry.startsWith(CLICK_AXIS_PREFIX)) return entry.slice(CLICK_AXIS_PREFIX.length)
+  return undefined
 }
 
 export const NEST_ALL_PREFIX = 'emboite:'

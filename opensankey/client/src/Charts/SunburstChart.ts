@@ -511,6 +511,17 @@ const MAX_BRANCHES = THEME.light.palette.length
  * dessine à deux endroits : dans une fenêtre et SUR UN NŒUD (cf. NodeStatsCharts), et que
  * deux palettes feraient de la même figure deux figures.
  */
+/**
+ * 30/09/2026 — UNE PALETTE PAR DIMENSION EMBOÎTÉE, et elles ne se ressemblent pas : chaudes pour la
+ * première, froides pour la seconde, sourdes pour une troisième. Sous « produits, puis pays », un
+ * pays ne doit pas passer pour un produit, ni hériter de sa teinte.
+ */
+export const NESTED_DIMENSION_PALETTES: string[][] = [
+  ['#d62728', '#ff7f0e', '#e6ab02', '#8c564b', '#e377c2', '#bcbd22', '#f4a261', '#a0522d'],
+  ['#1f77b4', '#2ca02c', '#17becf', '#9467bd', '#1b9e77', '#4575b4', '#66a61e', '#7570b3'],
+  ['#636363', '#8c6d31', '#393b79', '#637939', '#7b4173', '#843c39', '#5254a3', '#8ca252']
+]
+
 export const sunburstBranchColor = (theme: 'light' | 'dark' = 'light') =>
   (index: number): string => THEME[theme].palette[index % MAX_BRANCHES]
 // Un secteur plus étroit que ça ne se voit ni ne se survole : on l'agrège au « Autres »
@@ -695,6 +706,18 @@ export const partitionSunburst = (
   const texture_axis = style.texture_axis ?? 'none'
   const axis_colors = new Map<string, string>()
   const textures = new Map<string, number>()
+  const nested_colors: Map<string, string>[] = []
+  /** La teinte d'un secteur de dimension emboîtée : sa palette, sa branche, sa profondeur DANS elle. */
+  const nestedColor = (palette: { index: number, branch_id: string, depth: number }): string => {
+    const colors = nested_colors[palette.index] ?? (nested_colors[palette.index] = new Map())
+    let hue = colors.get(palette.branch_id)
+    if (hue === undefined) {
+      const scheme = NESTED_DIMENSION_PALETTES[palette.index % NESTED_DIMENSION_PALETTES.length]
+      hue = scheme[colors.size % scheme.length]
+      colors.set(palette.branch_id, hue)
+    }
+    return style.depth_shading ? shadeForDepth(hue, palette.depth, theme) : hue
+  }
 
   const walk = (
     node: Type_SunburstNode,
@@ -737,7 +760,9 @@ export const partitionSunburst = (
       // profondeur ne s'applique pas : deux nœuds du modèle se distinguent déjà par elle.
       color: node.is_residual
         ? others
-        : color_branch
+        : (node.palette !== undefined && style.color_source === 'palette' && !color_branch)
+          ? nestedColor(node.palette)
+          : color_branch
           ? axisColor()
           : (style.color_source === 'model' && node.color)
             ? node.color
