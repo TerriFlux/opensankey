@@ -110,6 +110,19 @@ export abstract class Class_ProtoTagGroup {
   // Type of banner
   private _banner: tag_banner_type = 'one'
 
+  // os#1517 — LA BARRE DU HAUT EST UN RÉGLAGE À PART, pas une valeur de `banner`.
+  //
+  // Julien, 30/09 : « il faut pouvoir dire que c'est en topbar indépendamment des autres options,
+  // pareil pour frise en mode mono, et après bande ou nœud c'est encore autre chose. Là on met
+  // tout dans un seul sélecteur, ça va pas. » `banner` répond à COMBIEN et SOUS QUELLE FORME (un
+  // membre, en frise, en bandes) ; ceci répond à OÙ le choix se fait. Une dimension peut donc être
+  // en barre du haut ET en bandes, ou en nœuds.
+  //
+  // Compatibilité : `banner: 'topbar'` des fichiers existants se lit « un membre » + barre du haut,
+  // et ce cas s'écrit encore `banner: 'topbar'` (en plus de `topbar: true`) pour qu'un viewer
+  // publié antérieur le montre toujours en haut.
+  private _in_topbar: boolean = false
+
   /**
    * True if tag is currently on a deletion process
    * Avoid infinite calls of delete() method
@@ -212,6 +225,7 @@ export abstract class Class_ProtoTagGroup {
     // Map complète (pas la string résolue) : les traductions survivent à la copie.
     this._name_map = { ...tagg_to_copy._name_map }
     this._banner = tagg_to_copy._banner
+    this._in_topbar = tagg_to_copy._in_topbar
     this._tag_count = tagg_to_copy._tag_count
     // #486 - les separateurs suivent le groupe : sans cette ligne, un updateFrom
     // (fusion de mise en page, duplication) les perdrait silencieusement et le
@@ -285,7 +299,10 @@ export abstract class Class_ProtoTagGroup {
     // Fill group attributes
     // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
-    json_object['banner'] = this._banner
+    // os#1517 — « un membre, en barre du haut » s'écrit comme avant, pour les viewers antérieurs ;
+    // les autres combinaisons portent la barre du haut dans sa propre clé.
+    json_object['banner'] = (this._in_topbar && this._banner === 'one') ? 'topbar' : this._banner
+    if (this._in_topbar) json_object['topbar'] = true
     json_object['tags_order'] = this._tags_order
     // #486 - ecrits seulement quand ils s'ecartent du defaut : un diagramme qui
     // n'en declare pas produit exactement le meme JSON qu'avant.
@@ -352,7 +369,11 @@ export abstract class Class_ProtoTagGroup {
     if (anta_sep_read !== undefined && anta_sep_read !== '') this._antagonists_separator = anta_sep_read
     const banner_read = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     const valid_banners: tag_banner_type[] = ['none', 'one', 'multi', 'sequence', 'topbar']
-    if (valid_banners.includes(banner_read)) this._banner = banner_read
+    if (valid_banners.includes(banner_read)) this.banner = banner_read
+    // os#1517 — clé présente seulement quand elle vaut vrai ; absente, on ne touche à rien
+    // (`fromJSON` sert aussi aux mises à jour partielles).
+    if (json_object['topbar'] === true) this._in_topbar = true
+    else if (json_object['topbar'] === false) this._in_topbar = false
     // #537 - cle absente = defaut du format. On n'ecrase que si la cle est
     // presente : `fromJSON` sert aussi aux mises a jour partielles, ou un JSON
     // muet ne doit rien effacer.
@@ -764,6 +785,10 @@ export abstract class Class_ProtoTagGroup {
 
   public get banner(): tag_banner_type { return this._banner }
 
+  /** os#1517 — le choix se fait-il dans la barre du haut ? Indépendant de `banner`. */
+  public get in_topbar(): boolean { return this._in_topbar }
+  public set in_topbar(value: boolean) { this._in_topbar = value }
+
   // SETTERS ============================================================================
   public set name(value: string) {
     const lang = normalizeLang(i18next.language)
@@ -772,7 +797,18 @@ export abstract class Class_ProtoTagGroup {
     if (value === '' && Object.keys(this._name_map).some(l => l !== lang)) delete this._name_map[lang]
     else this._name_map[lang] = value
   }
-  public set banner(value: tag_banner_type) { this._banner = value }
+  /**
+   * os#1517 — `topbar` n'est plus une forme : l'écrire (ancien code, ancien fichier) pose « un
+   * membre à la fois » ET la barre du haut. `banner` ne vaut donc jamais `'topbar'` en mémoire.
+   */
+  public set banner(value: tag_banner_type) {
+    if (value === 'topbar') {
+      this._banner = 'one'
+      this._in_topbar = true
+      return
+    }
+    this._banner = value
+  }
 }
 // CLASS TAGGROUP ***********************************************************************
 /**
