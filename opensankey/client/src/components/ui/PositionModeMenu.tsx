@@ -31,7 +31,7 @@ import React from 'react'
 import {
   Button, Menu, MenuButton, MenuList, MenuItem, MenuDivider, MenuGroup, HStack, Box, Portal
 } from '@chakra-ui/react'
-import { CheckIcon } from '@chakra-ui/icons'
+import { CheckIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
@@ -42,6 +42,9 @@ import { OSTooltip } from './OSTooltip'
 import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
 } from './positionModeHost'
+import {
+  applyDimensionDrawing, dimensionCarrierCandidates, dimensionDrawingOf, toggleDimensionCarrier
+} from './dimensionDrawingHost'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -51,6 +54,53 @@ export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinitio
   { value: 'proportional', icon: faPercent, label_key: 'Banner.posModeShort_proportional' },
   { value: 'scale_adapted', icon: faRulerVertical, label_key: 'Banner.posModeShort_scale_adapted' },
 ]
+
+/** Une entrée cochable. */
+const CheckItem = ({ label, checked, onClick, icon, closeOnSelect }: {
+  label: string, checked: boolean, onClick: () => void, icon?: React.ReactElement, closeOnSelect?: boolean
+}) => (
+  <MenuItem fontSize='0.75rem' icon={icon} onClick={onClick} closeOnSelect={closeOnSelect}>
+    <HStack spacing='0.5rem'>
+      <Box as='span'>{label}</Box>
+      {checked ? <CheckIcon boxSize='0.6rem' /> : null}
+    </HStack>
+  </MenuItem>
+)
+
+/**
+ * os#1511 — UN SOUS-MENU. Chakra v2 n'en a pas de natif : même patron que le menu Aide (tutoriels),
+ * ouverture au survol, et l'entrée ne ferme pas le menu parent.
+ */
+const Submenu = ({ label, icon, checked, children }: {
+  label: string, icon?: React.ReactElement, checked?: boolean, children: React.ReactNode
+}) => {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <Box onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <Menu isOpen={open} placement='right-start' gutter={0} offset={[0, 0]} isLazy>
+        <MenuButton as={MenuItem} closeOnSelect={false} fontSize='0.75rem' icon={icon}>
+          <HStack justifyContent='space-between' spacing='0.75rem'>
+            <HStack spacing='0.5rem'>
+              <Box as='span'>{label}</Box>
+              {checked ? <CheckIcon boxSize='0.6rem' /> : null}
+            </HStack>
+            <ChevronRightIcon boxSize='0.9rem' />
+          </HStack>
+        </MenuButton>
+        <Portal>
+          <MenuList
+            minWidth='unset'
+            zIndex={51}
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
+            {children}
+          </MenuList>
+        </Portal>
+      </Menu>
+    </Box>
+  )
+}
 
 /**
  * Menu du mode d'affichage D'UNE DIMENSION : déclencheur icône seule (icône du mode de la
@@ -73,6 +123,44 @@ export const PositionModeMenu = ({ app_data, tagg }: {
   const current = POSITION_MODE_META.find(m => m.value === mode) ?? POSITION_MODE_META[0]
   // os#1383 — La référence ne se propose qu'en échelle adaptée : c'est le seul mode qu'elle règle.
   const reference = mode === 'scale_adapted' ? scaleAdaptedReferenceDataTagOf(app_data, tagg) : undefined
+  // os#1511 — LE DESSIN ne se règle qu'en ÉDITION : il change la structure du diagramme (des nœuds
+  // engendrés), là où la position n'est qu'une façon de lire. En lecture, le menu reste celui d'hier.
+  const can_draw = !app_data.is_static
+  const drawing = dimensionDrawingOf(app_data, tagg)
+  const position_items = <>
+    {POSITION_MODE_META.map(m => (
+      <CheckItem
+        key={m.value}
+        icon={<FontAwesomeIcon icon={m.icon} />}
+        label={t(m.label_key)}
+        checked={m.value === mode}
+        onClick={() => applyPositionMode(app_data, tagg, m.value)}
+      />
+    ))}
+    {/* os#1383 — Sur quoi l'échelle adaptée se cale. Sans ce réglage, la grandeur de
+        référence est celle qui se trouvait à l'écran quand le mode a pris : l'échelle
+        dépend alors du chemin de clics. Désignée, elle se recalcule à chaque dessin. */}
+    {mode === 'scale_adapted' && tagg.tags_list.length > 0 ? <>
+      <MenuDivider />
+      <MenuGroup title={t('Banner.posMode_ref_title')} fontSize='0.7rem'>
+        <CheckItem
+          label={t('Banner.posMode_ref_none')}
+          checked={reference === undefined}
+          onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, undefined)}
+        />
+        {/* Libellé long s'il existe (« Corse »), sinon le nom (« 94 ») — la même règle que les
+            sélecteurs de l'éditeur. */}
+        {tagg.tags_list.map(tag => (
+          <CheckItem
+            key={tag.id}
+            label={tag.display_name}
+            checked={reference === tag.id}
+            onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, tag.id)}
+          />
+        ))}
+      </MenuGroup>
+    </> : null}
+  </>
   return <Menu placement='bottom-start'>
     <OSTooltip placement='bottom' label={t('Banner.posMode_title_tt')}>
       {/* `variant` obligatoire : le style de base des boutons du thème est vert PLEINE
@@ -94,50 +182,44 @@ export const PositionModeMenu = ({ app_data, tagg }: {
         MenuList peut s'ouvrir clippée. */}
     <Portal>
       <MenuList minWidth='unset' zIndex={50}>
-        {POSITION_MODE_META.map(m => (
-          <MenuItem
-            key={m.value}
-            fontSize='0.75rem'
-            icon={<FontAwesomeIcon icon={m.icon} />}
-            onClick={() => applyPositionMode(app_data, tagg, m.value)}
-          >
-            <HStack spacing='0.5rem'>
-              <Box as='span'>{t(m.label_key)}</Box>
-              {m.value === mode ? <CheckIcon boxSize='0.6rem' /> : null}
-            </HStack>
-          </MenuItem>
-        ))}
-        {/* os#1383 — Sur quoi l'échelle adaptée se cale. Sans ce réglage, la grandeur de
-            référence est celle qui se trouvait à l'écran quand le mode a pris : l'échelle
-            dépend alors du chemin de clics. Désignée, elle se recalcule à chaque dessin. */}
-        {mode === 'scale_adapted' && tagg.tags_list.length > 0 ? <>
-          <MenuDivider />
-          <MenuGroup title={t('Banner.posMode_ref_title')} fontSize='0.7rem'>
-            <MenuItem
-              fontSize='0.75rem'
-              onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, undefined)}
-            >
-              <HStack spacing='0.5rem'>
-                <Box as='span'>{t('Banner.posMode_ref_none')}</Box>
-                {reference === undefined ? <CheckIcon boxSize='0.6rem' /> : null}
-              </HStack>
-            </MenuItem>
-            {tagg.tags_list.map(tag => (
-              <MenuItem
-                key={tag.id}
-                fontSize='0.75rem'
-                onClick={() => setScaleAdaptedReferenceDataTag(app_data, tagg, tag.id)}
-              >
-                <HStack spacing='0.5rem'>
-                  {/* Libellé long s'il existe (« Corse »), sinon le nom (« 94 ») — la
-                      même règle que les sélecteurs de l'éditeur. */}
-                  <Box as='span'>{tag.display_name}</Box>
-                  {reference === tag.id ? <CheckIcon boxSize='0.6rem' /> : null}
-                </HStack>
-              </MenuItem>
-            ))}
-          </MenuGroup>
-        </> : null}
+        {can_draw
+          ? <>
+            <Submenu label={t('Banner.posMode_submenu')} icon={<FontAwesomeIcon icon={current.icon} />}>
+              {position_items}
+            </Submenu>
+            {/* os#1511 — LE DESSIN DE LA DIMENSION (Julien, 30/09 : « les options par bandes ou par
+                nœud, avec des sous-menus », puis « et les options de désagrégation pour les
+                nœuds ») : un membre, plusieurs en bandes, ou plusieurs en nœuds — et alors quels
+                nœuds la portent, chacun se désagrégeant selon elle. */}
+            <Submenu label={t('Banner.draw_submenu')}>
+              <CheckItem
+                label={t('Banner.draw_one')}
+                checked={drawing === 'one'}
+                onClick={() => applyDimensionDrawing(app_data, tagg, 'one')}
+              />
+              <CheckItem
+                label={t('Banner.draw_bands')}
+                checked={drawing === 'multi'}
+                onClick={() => applyDimensionDrawing(app_data, tagg, 'multi')}
+              />
+              {tagg.is_hierarchical
+                ? <Submenu label={t('Banner.draw_nodes')} checked={drawing === 'nodes'}>
+                  <MenuGroup title={t('Banner.draw_carriers')} fontSize='0.7rem'>
+                    {dimensionCarrierCandidates(app_data).map(node => (
+                      <CheckItem
+                        key={node.id}
+                        label={node.name}
+                        checked={node.driving_dimension === tagg}
+                        closeOnSelect={false}
+                        onClick={() => toggleDimensionCarrier(app_data, tagg, node.id)}
+                      />
+                    ))}
+                  </MenuGroup>
+                </Submenu>
+                : null}
+            </Submenu>
+          </>
+          : position_items}
       </MenuList>
     </Portal>
   </Menu>
