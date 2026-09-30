@@ -2346,11 +2346,12 @@ export class Class_ApplicationData {
   /**
    * sa#581 — UN MODÈLE DE LA GALERIE (exemple, tutoriel, diagramme publié) s'ouvre comme son
    * auteur l'a préparé, et non sur une feuille blanche : c'est un contenu montré, pas un modèle
-   * qu'on vient reprendre. Les tutoriels portent leur disposition (diagramme, tableur, leçon) et
-   * `fromJSON` l'a déjà rejouée. Les autres n'en portent pas — 23 des 29 modèles de SankeyData au
-   * 30/09 — et gardent la grande zone du document précédent, comme avant ce ticket ; mais si
-   * elle ne montre pas le diagramme (vide depuis « Nouveau », ou fermé à la main), le modèle
-   * ouvert serait invisible : le diagramme s'y ajoute.
+   * qu'on vient reprendre. Un modèle qui porte sa disposition l'a vue rejouée par `fromJSON`.
+   * Les autres n'en portent pas — les tutoriels et 23 des 29 modèles de SankeyData au 30/09 — :
+   * ce que l'auteur a préparé, c'est alors son diagramme, et lui seul. Les volets du document
+   * précédent se ferment donc : ils montreraient le modèle sans que son auteur l'ait voulu, et
+   * l'éditeur les enregistre ensuite comme vues du modèle (cf. `registerShownLayout`) — l'un
+   * d'eux pouvait même rester lié à une vue du document précédent.
    *
    * @param json le contenu qu'on vient de charger (seule sa clé `main_zone` est lue)
    */
@@ -2358,7 +2359,9 @@ export class Class_ApplicationData {
     const mc = this.menu_configuration
     if (!mc || !this.is_main || this.is_static) return
     if (json['main_zone'] && typeof json['main_zone'] === 'object') return
-    this.ensureDiagramShown()
+    mc.resetMainZone()
+    this._sankey_panes.reset()
+    mc.openSankeyPane()
   }
 
   /**
