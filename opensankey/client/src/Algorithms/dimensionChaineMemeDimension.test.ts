@@ -57,10 +57,11 @@ test('deux noeuds sur la meme dimension se relient membre a membre, sans croisem
   const engendres = sankey.links_list.filter(isGeneratedMemberLink)
     .map(l => `${l.source.name} -> ${l.target.name} = ${l.value?.valueData}`)
     .sort()
+  // Plusieurs axes portent la meme dimension : le nom du membre seul ne dirait plus l etape.
   expect(engendres).toEqual([
-    'Chene -> Chene = 30',
-    'Chene -> Merrains = 5',
-    'Hetre -> Hetre = 12',
-    'Hetre -> Merrains = 2',
+    'Prelevements - Chene -> Scieries - Chene = 30',
+    'Prelevements - Hetre -> Scieries - Hetre = 12',
+    'Scieries - Chene -> Merrains = 5',
+    'Scieries - Hetre -> Merrains = 2',
   ])
 })
