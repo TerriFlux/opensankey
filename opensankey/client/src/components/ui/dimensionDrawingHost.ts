@@ -24,6 +24,7 @@
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Class_NodeElement } from '../../Elements/Node'
+import type { Type_DisaggregationGap } from '../../types/Utils'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 
 export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
@@ -92,6 +93,21 @@ export const applyDimensionDrawing = (
     carriers: [],
     selected: drawing === 'one' ? now.selected.slice(0, 1) : now.selected
   })
+}
+
+/**
+ * L'ÉCART VERTICAL DES ENFANTS d'un nœud désagrégé (Julien, 30/09 : « je parlais aussi de ces
+ * options »). Le même réglage que `DisaggregationGapControl` (onglet Hiérarchie), avec le même
+ * geste : global à la zone de dessin, annulable, et le dessin ré-empile aussitôt les enfants.
+ */
+export const applyDisaggregationGap = (app_data: Class_ApplicationData, mode: Type_DisaggregationGap) => {
+  const f = (value: Type_DisaggregationGap) => {
+    app_data.drawing_area.disaggregation_gap_mode = value
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+    app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+  }
+  app_data.setValueAndSaveHistory(app_data.drawing_area, 'disaggregation_gap_mode', mode, f)
 }
 
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */
