@@ -56,15 +56,16 @@ describe('sa#563 un volet flottant est un occupant, a une troisieme place', () =
   })
 
   it('un volet flottant se FERME toujours, meme s il est le dernier volet ouvert', () => {
-    // `hideMainZoneOccupant` refuse de retirer le dernier occupant — une grande zone vide n a
-    // rien pour se rallumer. Ce refus ne vaut que pour la GRILLE : la croix d un volet flottant
-    // est le seul moyen de s en debarrasser, et il ne laisse aucune case vide derriere lui.
+    // La croix d un volet flottant est le seul moyen de s en debarrasser, et il ne laisse aucune
+    // case vide derriere lui.
     const mc = newMc()
     const id = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, 'osp.repr.unit', 'floating')
     expect(mc.hideMainZoneOccupant(id)).toBe(true)
     expect(mc.isMainZoneOccupant(id)).toBe(false)
-    // Le canevas, dernier occupant de la grille, reste inamovible.
-    expect(mc.hideMainZoneOccupant(MAIN_ZONE_CANVAS_ID)).toBe(false)
+    // sa#581 — le canevas, dernier occupant de la grille, se ferme lui aussi : la grande zone
+    // vide est un etat legitime, le « + » la rallume.
+    expect(mc.hideMainZoneOccupant(MAIN_ZONE_CANVAS_ID)).toBe(true)
+    expect(mc.main_zone_occupants).toEqual([])
   })
 
   it('un volet flottant n est JAMAIS promu fenetre principale par la normalisation', () => {
@@ -77,8 +78,9 @@ describe('sa#563 un volet flottant est un occupant, a une troisieme place', () =
     // volet flottant — le cas que la normalisation doit rattraper.
     mc.setMainZoneOccupantIds([])
     expect(mc.mainZonePlaceOf(id)).toBe('floating')
-    // La grande zone a retrouve son canevas, principal.
-    expect(mc.main_zone_main_id).toBe(MAIN_ZONE_CANVAS_ID)
+    // sa#581 — la grille reste vide : plus de canevas repose d office, donc pas de principale.
+    expect(mc.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID)).toBe(false)
+    expect(mc.main_zone_main_id).toBeNull()
   })
 
   it('« mettre en principale » un flottant renvoie le diagramme a droite, et non flotter', () => {

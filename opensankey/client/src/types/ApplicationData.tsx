@@ -788,13 +788,17 @@ export class Class_ApplicationData {
   // Affiche le Sankey maître comme une entrée à part entière dans la liste des vues
   // (sélecteur topbar + table de config). Libellé éditable = _master_view_name.
   //
-  // sa#567 — LISTÉ PAR DÉFAUT, ET L'OPTION A QUITTÉ L'ÉCRAN : le maître est une vue comme les
-  // autres. Le drapeau reste lu et écrit tel quel, pour une seule raison — un fichier ANTÉRIEUR
-  // qui le masquait (`false` écrit, ou clé absente d'un fichier à vues : cf. `viewsFromJSON`) le
-  // masque toujours (arbitrage Alexandre, 29/09). Un document neuf, lui, part de `true`, et
-  // `resetFile` l'y ramène à chaque fichier : sans quoi un fichier ancien ouvert avant
-  // « Nouveau » léguerait son masquage au document suivant.
-  protected _show_master_in_views: boolean = true
+  // sa#567 — L'OPTION A QUITTÉ L'ÉCRAN. Le drapeau reste lu et écrit tel quel, pour une seule
+  // raison : un fichier ANTÉRIEUR garde la liste qu'il avait (arbitrage Alexandre, 29/09).
+  //
+  // sa#581 — ET IL NE LISTE PLUS RIEN PAR DÉFAUT : le diagramme initial n'est pas une vue tant
+  // qu'on ne l'a pas enregistré (arbitrage Alexandre, 30/09). Sur un diagramme neuf, enregistrer
+  // un volet comme vue doit donner UNE vue dans la liste — celle qu'on vient d'enregistrer —, et
+  // non deux, le diagramme de départ en tête. Le maître n'est plus que le modèle, à la racine du
+  // fichier. Un document neuf part donc de `false`, comme un fichier à vues qui n'écrit pas la clé
+  // (cf. `viewsFromJSON`), et `resetFile` l'y ramène à chaque fichier : sans quoi un fichier
+  // ancien qui listait son maître léguerait sa liste au document suivant.
+  protected _show_master_in_views: boolean = false
   public get show_master_in_views() { return this._show_master_in_views }
   public set show_master_in_views(v: boolean) { this._show_master_in_views = v }
   protected _master_view_name: string = ''
@@ -1195,8 +1199,8 @@ export class Class_ApplicationData {
     this._sankeytheque_origin = null
     // sa#567 — les réglages du maître appartiennent au FICHIER : un fichier sans vues ne les
     // écrit pas et ne les relit donc pas (`viewsFromJSON` retourne tôt), il hériterait sinon de
-    // ceux du fichier précédent.
-    this._show_master_in_views = true
+    // ceux du fichier précédent. sa#581 — non listé : cf. la déclaration du drapeau.
+    this._show_master_in_views = false
     this._master_view_name = ''
   }
 
@@ -1262,8 +1266,11 @@ export class Class_ApplicationData {
     //
     // Posé HORS du `if (redraw)`, contrairement au reste : la grande zone n'est pas un dessin,
     // c'est l'état de l'écran, et les deux appelants qui ne redessinent pas (dialogue d'accueil,
-    // suppression de toutes les vues) doivent la voir revenir au diagramme comme les autres.
-    this.menu_configuration?.resetMainZoneToCanvas()
+    // suppression de toutes les vues) doivent la voir repartir à zéro comme les autres.
+    //
+    // sa#581 — ZÉRO, C'EST VIDE (arbitrage Alexandre, 30/09 : « Nouveau diagramme : vide aussi ») :
+    // une feuille blanche sous la barre du haut, et le « + » ouvre ce qu'on veut y voir.
+    this.menu_configuration?.resetMainZone()
     // Reset Class_ApplicationData instance
     if (redraw) {
       this.reset({})
@@ -2196,6 +2203,67 @@ export class Class_ApplicationData {
     else mc.openMainZoneWindowFromJSON(window, id)
   }
 
+  /**
+   * sa#581 — CE QU'ON VOIT EN OUVRANT UN MODÈLE : une feuille blanche, sauf la vue courante du
+   * fichier si elle est enregistrée (arbitrages Alexandre, 30/09).
+   *
+   * « À l'ouverture d'un modèle, l'affichage par défaut est VIDE » : on y crée ensuite les volets
+   * qu'on veut, qui sont autant de représentations — souvent partielles — du modèle chargé.
+   * La disposition que le fichier a gardée n'est donc pas rejouée ; les dispositions nommées
+   * restent à portée de main, ce sont les tableaux de bord. Une exception, pour ne pas ouvrir sur
+   * du vide un fichier qu'on a quitté en regardant une vue : la vue courante, si elle fait partie
+   * de la liste, rouvre son volet.
+   *
+   * APPELÉE PAR LES GESTES QUI OUVRENT UN MODÈLE, et par eux seuls (Ouvrir, Récents, Bibliothèque,
+   * imports, lien `?url=`). `fromJSON` ne peut pas en décider : une annulation qui restaure un
+   * instantané, la reprise de session au rechargement de la page ou un contenu de feuille passent
+   * par lui aussi, et ils doivent retrouver les volets tels qu'ils étaient.
+   *
+   * Sans effet dans une page publiée : elle s'ouvre toujours comme son auteur l'a publiée.
+   */
+  public showOpenedModel(): void {
+    const mc = this.menu_configuration
+    if (!mc || !this.is_main || this.is_static) return
+    mc.resetMainZone()
+    const view_id = this._current_view_id
+    const listed = view_id === default_main_sankey_id
+      ? this._show_master_in_views
+      : this._views_order.includes(view_id) && !this._views[view_id]?.ephemeral
+    if (!listed) return
+    const window = this._views[view_id]?.window
+    if (window) mc.openMainZoneWindowFromJSON(window, view_id)
+    else mc.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
+  }
+
+  /**
+   * sa#581 — UN MODÈLE DE LA GALERIE (exemple, tutoriel, diagramme publié) s'ouvre comme son
+   * auteur l'a préparé, et non sur une feuille blanche : c'est un contenu montré, pas un modèle
+   * qu'on vient reprendre. Les tutoriels portent leur disposition (diagramme, tableur, leçon) et
+   * `fromJSON` l'a déjà rejouée. Les autres n'en portent pas — 23 des 29 modèles de SankeyData au
+   * 30/09 — et gardent la grande zone du document précédent, comme avant ce ticket ; mais si
+   * elle ne montre pas le diagramme (vide depuis « Nouveau », ou fermé à la main), le modèle
+   * ouvert serait invisible : le diagramme s'y ajoute.
+   *
+   * @param json le contenu qu'on vient de charger (seule sa clé `main_zone` est lue)
+   */
+  public showTemplateModel(json: Type_JSON): void {
+    const mc = this.menu_configuration
+    if (!mc || !this.is_main || this.is_static) return
+    if (json['main_zone'] && typeof json['main_zone'] === 'object') return
+    this.ensureDiagramShown()
+  }
+
+  /**
+   * sa#581 — LA GRANDE ZONE MONTRE LE DIAGRAMME, en l'ouvrant s'il ne l'est pas. Pour les gestes
+   * qui ont besoin de le voir et qu'une grande zone vide laisserait sans objet : un modèle de la
+   * galerie sans disposition, la visite guidée, qui désigne des éléments du dessin.
+   */
+  public ensureDiagramShown(): void {
+    const mc = this.menu_configuration
+    if (!mc || !this.is_main || this.is_static) return
+    if (!mc.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID)) mc.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
+  }
+
   /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
   protected forgetEphemeralView(id: string): void {
     delete this._views[id]
@@ -2472,12 +2540,13 @@ export class Class_ApplicationData {
     const blank_json = this.dumpDrawingAreaToJSON(blank_da)
     blank_da.delete()
     const name = this._defaultSheetName(this._sheets_order.length + 1)
-    // os#1433 — UNE FEUILLE VIERGE N'A QU'UNE FENÊTRE, la zone de dessin (arbitrage de Julien).
+    // os#1433 — UNE FEUILLE VIERGE REPART D'UNE GRANDE ZONE NEUVE (arbitrage de Julien).
     // Pas seulement les épinglées : TOUTES. Une page blanche n'a rien dont un tableur, une doc
     // ou une couronne puissent parler, et garder la mise en page devant elle oblige à fermer les
-    // fenêtres une par une avant de pouvoir travailler. Cf. `resetMainZoneToCanvas`, qui dit
-    // aussi pourquoi BASCULER vers une feuille qui existe, à l'inverse, garde la grille.
-    this.menu_configuration?.resetMainZoneToCanvas()
+    // fenêtres une par une avant de pouvoir travailler. Cf. `resetMainZone`, qui dit aussi
+    // pourquoi BASCULER vers une feuille qui existe, à l'inverse, garde la grille — et pourquoi,
+    // depuis sa#581, « neuve » veut dire vide.
+    this.menu_configuration?.resetMainZone()
     // os#1492 — et on sort de le tableau de bord courante, pour la même raison qu'à la bascule : une page
     // blanche, dont on vient de vider les fenêtres, ne ressemble à aucun tableau de bord composée.
     this.leaveCurrentDashboard()

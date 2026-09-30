@@ -38,7 +38,11 @@ export const loadSankeymaticTemplate = (
     + (from_slideshow ? '?origin=slideshow' : '')
   fetch(url)
     .then(response => response.text())
-    .then(text => applySankeymaticText(text, app_data))
+    .then(text => {
+      applySankeymaticText(text, app_data)
+      // sa#581 — un modèle de la galerie montre son diagramme (il ne porte pas de disposition).
+      app_data.showTemplateModel({})
+    })
     .catch((error) => {
       console.error('Error in loadSankeymaticTemplate - ' + error.toString())
     })
