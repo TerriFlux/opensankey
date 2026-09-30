@@ -48,6 +48,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, getNameLabelValues, Type_NameLabelSource, Type_Orientation } from './ElementsAttributesConfig'
+import { formatDigits, formatElementValue } from './ValueFormatting'
 import { resolveLinkOrientation } from './linkOrientation'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
@@ -659,9 +660,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       this._link_draw_label.refreshStickLayout()
     }
     // #285 — les labels de bande vivent dans le repère zoomé (dessinés au
-    // drawShape) : le refresh de labels (zoom / verrou de police) ne les
-    // recrée pas, on remet donc leur font-size compensée ici pour qu'ils
-    // suivent le mode « police verrouillée » comme les labels normaux.
+    // drawShape) : le refresh de labels (zoom, verrou de police, menu de
+    // l'étiquette de valeur, seuil) ne les recrée pas, on les rhabille ici.
     this.refreshBandLabels()
     this._orderD3Elements()
   }
@@ -675,22 +675,41 @@ export class Class_LinkElement extends Class_LinkAttribute {
       : band_value >= da.filter_label
   }
 
-  /** #285 — remet sur les labels de bande déjà présents dans le DOM (cf.
-   *  LinkDrawShape.drawTaggedValueBands), sans les reconstruire : la font-size
-   *  compensée du zoom (police du label de valeur + font_compensation) et le seuil
-   *  « Lib. » (valeur et épaisseur de la bande portées par data-band-*). */
+  /** #285 — habille les labels de bande déjà présents dans le DOM (posés sans style par
+   *  LinkDrawShape.drawTaggedValueBands, qui y range valeur, épaisseurs et unité en data-band-*),
+   *  sans les reconstruire. Une étiquette de bande EST l'étiquette de valeur du flux, découpée :
+   *  elle en suit tous les réglages — format des nombres, unité, police compensée du zoom, gras,
+   *  italique, majuscules, couleur verrouillée, « Masquer si ça dépasse » — et le seuil « Lib. ». */
   public refreshBandLabels() {
     const labels = this.d3_selection?.selectAll<SVGTextElement, unknown>('.link_band_label')
     if (!labels || labels.empty()) return
-    const value_lv = getNameLabelValues(this, 'value_label') as { font_size?: number }
-    const fs = (value_lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
-    labels.attr('font-size', fs)
-    labels.style('display', (_, i, nodes) => {
-      const el = nodes[i]
-      const passes = this.bandLabelPassesFilter(
-        Number(el.getAttribute('data-band-value')), Number(el.getAttribute('data-band-px')))
-      return passes ? 'inline' : 'none'
-    })
+    const lv = getNameLabelValues(this, 'value_label')
+    const fs = (lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
+    // Unité du flux si elle est visible (value_label_unit_visible) ; une bande d'un groupe de
+    // type unité porte la sienne, déjà dans son unité : précision seule, pas de conversion.
+    const flux_unit = this.value_label_unit_visible ? this.unit_name('value_label') : ''
+    labels
+      .attr('font-size', fs)
+      .attr('font-family', lv.font_family)
+      .attr('font-weight', lv.bold ? 'bold' : 'normal')
+      .attr('font-style', lv.italic ? 'italic' : 'normal')
+      .style('text-transform', lv.uppercase ? 'uppercase' : 'none')
+      .attr('fill', lv.color_sustainable ? lv.color : '#000')
+      .text((_, i, nodes) => {
+        const el = nodes[i]
+        const value = Number(el.getAttribute('data-band-value'))
+        const own_unit = el.getAttribute('data-band-own-unit') === 'true'
+        const text = own_unit ? formatDigits(value, lv) : formatElementValue(value, this)
+        const unit = own_unit ? (el.getAttribute('data-band-unit') ?? '') : flux_unit
+        return unit ? `${text} ${unit}` : text
+      })
+      .style('display', (_, i, nodes) => {
+        const el = nodes[i]
+        const passes = this.bandLabelPassesFilter(
+          Number(el.getAttribute('data-band-value')), Number(el.getAttribute('data-band-px')))
+        const fits = !lv.prune_if_unfitting || fs <= Number(el.getAttribute('data-band-thickness'))
+        return passes && fits ? 'inline' : 'none'
+      })
   }
 
   /**
