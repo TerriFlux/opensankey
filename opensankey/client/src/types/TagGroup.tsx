@@ -1441,7 +1441,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /**
    * La dimension se dessine membre par membre, chacun à SA couleur : choix multiple et au moins
-   * deux membres retenus (bandes d'un flux, cf. `Link.tagged_value_bands`, ou nœuds engendrés).
+   * deux membres retenus (bandes d'un flux, cf. `Link.tagged_value_bands`).
    * Le dessin lit alors `tag.color` sans consulter `use_colors` ; la légende doit donc nommer ces
    * couleurs elle aussi (`tagGroupCarriesFormatting`), faute de quoi elle ne donnait qu'un rappel
    * texte sous des bandes colorées — et aucune commande ne permet d'allumer `use_colors` sur une
