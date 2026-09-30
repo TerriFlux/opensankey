@@ -46,6 +46,9 @@ import {
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
 import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
+import type { Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
+import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -555,6 +558,66 @@ const isBelow = (
 }
 
 /**
+ * os#1511 — CLIC ET SHIFT+CLIC SUR UNE DIMENSION DE DONNÉES (Julien, 30/09 : « est-ce que le clic
+ * et shift+clic sont bien connectés ? »). Ils ne l'étaient pas : `hierarchyInEffect` ne connaît que
+ * les nœuds et le croisement, et la couronne d'une dimension de données ne faisait que sélectionner.
+ *
+ * Mêmes gestes que sur les nœuds, sur l'ensemble ouvert de la figure (`hierarchy_expanded`, en
+ * identifiants de secteurs de membres, celui qu'écrivent aussi le niveau et l'arbre de
+ * « Coordonnées ») : un clic ouvre un membre qui a des enfants ; shift+clic referme le membre s'il
+ * est ouvert, sinon le parent par lequel on le voit, avec tout ce qu'il portait. Le diagramme ne
+ * suit pas : un secteur est un membre, pas un nœud à déplier.
+ *
+ * `null` quand la figure ne découpe pas selon une dimension de données.
+ */
+const dataDimensionClickGestures = (
+  ctx: Type_RepresentationContext
+): { activate: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void } | null => {
+  const decompose = analysisOf(ctx)?.descriptor.decompose
+  if (decompose?.kind !== 'data_dimension') return null
+  const { window_id, pane_key } = ctx
+  const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[decompose.data_tagg_id] as unknown as
+    Class_DataTagGroup | undefined
+  if (window_id === undefined || pane_key === undefined || dimension === undefined) return null
+  const memberOf = (sector_id: string): Class_DataTag | undefined => {
+    const ref = parseMemberSectorId(sector_id)
+    if (ref === null || ref.dimension_id !== dimension.id) return undefined
+    return dimension.tags_dict[ref.member_id] as Class_DataTag | undefined
+  }
+  const activate = (part_id: string, gesture: { shift: boolean }, route: string[] = []) => {
+    const member = memberOf(part_id)
+    if (member === undefined) return
+    const expanded = expandedOf(ctx.options)
+    const next = new Set(expanded)
+    if (gesture.shift) {
+      // Le parent DESSINÉ d'abord (la route), le parent du modèle sinon — en place, le membre
+      // ouvert a disparu derrière ses enfants, et c'est par eux qu'on le referme.
+      const drawn_parent = route.length >= 2 ? route[route.length - 2] : undefined
+      const parent_sector = member.parent !== undefined ? memberSectorId(dimension.id, member.parent.id) : undefined
+      const target = next.has(part_id)
+        ? member
+        : [drawn_parent, parent_sector]
+          .filter((id): id is string => id !== undefined && next.has(id))
+          .map(memberOf)
+          .find((m): m is Class_DataTag => m !== undefined)
+      if (target === undefined) return
+      const close = (m: Class_DataTag) => {
+        next.delete(memberSectorId(dimension.id, m.id))
+        ;(m.children as Class_DataTag[]).forEach(close)
+      }
+      close(target)
+    } else if ((member.children as Class_DataTag[]).length > 0) {
+      next.add(part_id)
+    }
+    if (next.size === expanded.size) return
+    ctx.app_data.menu_configuration.setMainZonePaneOptions(
+      window_id, pane_key, { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...next] } as unknown as Type_JSON
+    )
+  }
+  return { activate }
+}
+
+/**
  * CE QUE LE CLIC FAIT EN PLUS DE SÉLECTIONNER, et le retour au centre avec.
  *
  * Deux gestes, et ce sont les deux que Julien a demandés d'un coup — « les deux premiers, mais avec
@@ -594,6 +657,8 @@ const donutClickGestures = (
   // L'ANNEAU EST LE GESTE DE BASE, il ne se règle pas. Le réglage ne dit que ce qui s'y AJOUTE
   // (déplier le diagramme, descendre dedans). Y sortir ici éteignait le geste même qu'on venait
   // de rendre inconditionnel.
+  const data_gestures = dataDimensionClickGestures(ctx)
+  if (data_gestures) return data_gestures
   const hierarchy = hierarchyInEffect(ctx)
   if (!hierarchy) return {}
   const app_data = ctx.app_data
