@@ -5,29 +5,17 @@
 // plusieurs membres se dessinent ensemble — en bandes ou en nœuds —, tout sort de la même
 // couleur et le dessin ne dit plus rien. Constaté à l'écran le 28/09.
 //
-// La couleur suit la PARENTÉ, ce qui est le seul choix qui porte de l'information ici : une
-// teinte par branche de premier niveau, et un éclaircissement par cran de profondeur. Les pays
-// d'Europe se ressemblent donc entre eux et se distinguent de ceux d'Afrique, à tous les
-// niveaux de lecture.
+// os#1516 — LA RÈGLE EST CELLE DU BOUTON PALETTE, la palette hiérarchique hybride
+// (`Class_DataTagGroup.applyHierarchicalPalette`). Il y en avait une seconde ici : une teinte par
+// branche, la clarté selon la seule profondeur. Tous les frères sortaient donc de la MÊME couleur
+// — les pays d'une région, les produits d'une filière —, précisément là où plusieurs se dessinent
+// ensemble. Deux règles auraient aussi donné deux diagrammes selon qu'on ouvre le fichier ou qu'on
+// clique le bouton. La recette est gardée, comme au bouton : les couleurs suivront la structure.
 import { default_grey_color } from '../Elements/ElementsAttributesConfig'
-import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
-/** Teintes de départ, une par branche racine. Elles tournent si les branches sont nombreuses. */
-const TEINTES = [210, 25, 145, 275, 55, 330, 185, 95, 300, 0]
-
-/** Une couleur CSS à partir d'une teinte et d'une profondeur. */
-function couleur(teinte: number, profondeur: number, profondeur_max: number): string {
-  // Plus on descend, plus on éclaircit : un parent reste plus dense que ses enfants, ce qui se
-  // lit comme « le total, puis son détail ». La plage s'arrête avant le blanc.
-  const marche = profondeur_max > 0 ? profondeur / profondeur_max : 0
-  const clarte = Math.round(38 + marche * 34)
-  const saturation = Math.round(62 - marche * 18)
-  return `hsl(${teinte}, ${saturation}%, ${clarte}%)`
-}
-
 /**
- * Pose une palette sur `dimension` si AUCUN de ses membres n'a de couleur propre.
+ * Pose la palette hiérarchique sur `dimension` si AUCUN de ses membres n'a de couleur propre.
  *
  * Ne touche à rien dès qu'une seule couleur a été choisie : un fichier déjà colorié garde ses
  * couleurs, et l'utilisateur qui en pose une garde la main sur tout le groupe.
@@ -36,38 +24,14 @@ function couleur(teinte: number, profondeur: number, profondeur_max: number): st
  */
 export function applyHierarchyPaletteIfGrey(dimension: Class_DataTagGroup): number {
   if (!dimension.is_hierarchical) return 0
-  const membres = dimension.tags_list as Class_DataTag[]
+  const membres = dimension.tags_list
   if (membres.length === 0) return 0
   if (membres.some(membre => membre.color !== default_grey_color)) return 0
 
-  const racines = membres.filter(membre => membre.parent === undefined)
-  const profondeur_max = Math.max(1, dimension.levels.length - 1)
-  let colories = 0
-  racines.forEach((racine, rang) => {
-    const teinte = TEINTES[rang % TEINTES.length]
-    const descendre = (membre: Class_DataTag) => {
-      membre.color = couleur(teinte, dimension.depthOf(membre), profondeur_max)
-      colories++
-      membre.children.forEach(enfant => descendre(enfant as Class_DataTag))
-    }
-    descendre(racine)
-  })
+  dimension.applyHierarchicalPalette()
   // Poser des couleurs sans les nommer ne sert à rien : l'interrupteur `use_colors` est ce qui
   // fait entrer le groupe dans la LÉGENDE (cf. `tagGroupCarriesFormatting`). Une dimension
   // qu'on vient de colorier l'allume donc, pour que les bandes disent de quoi elles sont faites.
   dimension.use_colors = true
-
-  // Une racine unique donnerait une seule teinte pour tout l'axe : ses ENFANTS prennent alors
-  // la relève, sans quoi « Monde » colorierait l'Europe et l'Afrique de la même couleur.
-  if (racines.length === 1) {
-    racines[0].children.forEach((branche, rang) => {
-      const teinte = TEINTES[rang % TEINTES.length]
-      const descendre = (membre: Class_DataTag) => {
-        membre.color = couleur(teinte, dimension.depthOf(membre), profondeur_max)
-        membre.children.forEach(enfant => descendre(enfant as Class_DataTag))
-      }
-      descendre(branche as Class_DataTag)
-    })
-  }
-  return colories
+  return membres.length
 }

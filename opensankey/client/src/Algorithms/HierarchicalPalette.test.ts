@@ -58,6 +58,21 @@ describe('os#1516 — calcul de la palette hierarchique', () => {
     })
   })
 
+  test('quatorze familles inegales au premier niveau restent distinctes', () => {
+    // L import SOCLE du 30/09 : Fruits et legumes et Oleoproteagineux ont des dizaines de
+    // produits, les viandes un seul. Avec des secteurs selon les feuilles brutes, Sucre et
+    // Fourrages retombaient sur Viande chevaline (dE 9).
+    const feuilles = [1, 1, 1, 1, 2, 3, 1, 2, 40, 35, 4, 12, 3, 2]
+    const familles = feuilles.map((n, i) =>
+      node(`f${i}`, n === 1 ? [] : Array.from({ length: n }, (_, j) => node(`f${i}-${j}`))))
+    const colors = computeHierarchicalColors([node('tous', familles)])
+    let min = Infinity
+    familles.forEach((a, i) => familles.slice(i + 1).forEach(b => {
+      min = Math.min(min, deltaE(colors[a.id], colors[b.id]))
+    }))
+    expect(min).toBeGreaterThan(18)
+  })
+
   test('une couleur verrouillee est gardee et ses descendants en derivent', () => {
     const lock = '#1f77b4'
     const colors = computeHierarchicalColors(monde(), default_hierarchical_palette_params, { afrique: lock })
