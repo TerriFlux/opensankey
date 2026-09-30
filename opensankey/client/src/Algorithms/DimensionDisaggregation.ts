@@ -25,6 +25,7 @@ import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
+import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from './DimensionOthers'
 
 // La marque vit dans un module SANS dépendance : le constructeur d'un flux la lit aussi, pour
 // ne pas déplier de cube sur un flux engendré, et la déclarer ici ferait un cycle d'imports.
@@ -105,8 +106,35 @@ export function removeGeneratedMemberNodes(sankey: Class_Sankey): number {
   return engendres.length
 }
 
-/** Un membre représenté, et le nœud qui le représente. */
-interface Type_MembreRepresente { membre: Class_DataTag, noeud: Class_NodeElement }
+/**
+ * Un membre représenté, et le nœud qui le représente.
+ *
+ * os#1511 — « AUTRES » : une entrée peut représenter PLUSIEURS membres repliés (`replies`). Son
+ * `membre` est alors le premier d'entre eux — un vrai membre de la dimension, qui sert d'identité
+ * commune : c'est le MÊME objet sur tous les axes de la dimension, si bien que la diagonale d'une
+ * chaîne (`repartir`) et l'ordre des bandes (`rangerEnBandes`) apparient les « Autres » entre eux.
+ */
+interface Type_MembreRepresente { membre: Class_DataTag, noeud: Class_NodeElement, replies?: Class_DataTag[] }
+
+/** Les membres qu'une entrée représente : les repliés d'un « Autres », sinon son membre. */
+const membresDe = (entree: Type_MembreRepresente): Class_DataTag[] => entree.replies ?? [entree.membre]
+
+// Les membres repliés de chaque nœud « Autres » engendré. Transitoire comme le nœud lui-même :
+// rebâti à chaque désagrégation, jamais sérialisé.
+const replies_par_noeud = new WeakMap<Class_NodeElement, Class_DataTag[]>()
+
+/**
+ * Les membres qu'un nœud engendré représente : son membre, ou les membres repliés d'un
+ * « Autres » ; vide si ce n'est pas un nœud engendré. C'est ce qu'il faut à un flux engendré pour
+ * retrouver sa coordonnée (cf. `Link.tagged_value_bands`) : sommer sur plusieurs membres d'un même
+ * groupe, le cube sait le faire.
+ */
+export function membersOfGeneratedNode(node: Class_NodeElement): Class_DataTag[] {
+  const replies = replies_par_noeud.get(node)
+  if (replies !== undefined) return replies
+  const membre = memberOfGeneratedNode(node)
+  return membre === undefined ? [] : [membre]
+}
 
 /**
  * Le membre qu'un nœud engendré représente, `undefined` si ce n'en est pas un.
@@ -159,6 +187,25 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // 1) UN NŒUD PAR MEMBRE, axe par axe. Aucun flux n'est encore touché : les nœuds des deux
   //    axes doivent tous exister avant qu'on croise quoi que ce soit.
   const par_axe = new Map<string, Type_MembreRepresente[]>()
+  // os#1511 — « AUTRES », À LA VOLÉE (Julien, 30/09 : « il faut créer une catégorie "autre" à la
+  // volée pour les flux trop petits, et les agréger, comme pour la couronne »). Le repli se décide
+  // PAR DIMENSION, pas par axe : tous les nœuds qui la portent replient les mêmes membres, sinon
+  // une chaîne (CARTOFOB) ne pourrait pas apparier ses « Autres » d'un maillon à l'autre.
+  const replis = new Map<Class_DataTagGroup, Set<Class_DataTag>>()
+  const replisDe = (dimension: Class_DataTagGroup, membres: Class_DataTag[]): Set<Class_DataTag> => {
+    const deja = replis.get(dimension)
+    if (deja !== undefined) return deja
+    const flux_de_la_dimension = sankey.links_list.filter(flux => !isGeneratedMemberLink(flux) &&
+      [flux.source, flux.target].some(bout => bout.driving_dimension === dimension))
+    const parts = membres.map(membre => ({
+      membre,
+      value: flux_de_la_dimension.reduce((total, flux) => total + (contributionsPourCase(flux, [membre]) ?? 0), 0)
+    }))
+    const { folded } = foldSmallParts(parts)
+    const set = new Set(folded.map(part => part.membre))
+    replis.set(dimension, set)
+    return set
+  }
   axes.forEach(axe => {
     // Garde n°2, PAR NŒUD : `is_driven_by_dimension` a pu devenir faux entre-temps.
     const dimension = axe.driving_dimension
@@ -185,7 +232,7 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // déjà ce repli). Le déplacement porte alors sur un vrai nœud du fichier, et l'export n'a plus
     // qu'une ligne.
     if (membres.length === 1) return
-    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres))
+    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres, replisDe(dimension, membres)))
   })
   if (par_axe.size === 0) return 0
 
@@ -444,14 +491,16 @@ function pentesEntreAxes(
 function creerNoeudsDeMembre(
   sankey: Class_Sankey,
   axe: Class_NodeElement,
-  membres: Class_DataTag[]
+  membres: Class_DataTag[],
+  replies: Set<Class_DataTag> = new Set()
 ): Type_MembreRepresente[] {
   // PLUSIEURS AXES SUR LA MÊME DIMENSION (CARTOFOB, 30/09) : chaque étape de la filière se décline
   // par essence, et quatorze nœuds « Chêne » ne disent plus de quelle étape ils sont. Le nom du
   // membre seul ne suffit que si l'axe est le seul à porter sa dimension.
   const partage = sankey.nodes_list.some(autre => autre !== axe &&
     !isGeneratedMemberNode(autre) && autre.driving_dimension === axe.driving_dimension)
-  const engendres = membres.map(membre => {
+  const gardes = membres.filter(membre => !replies.has(membre))
+  const engendres: Type_MembreRepresente[] = gardes.map(membre => {
     const nom = partage ? `${axe.name} - ${membre.name}` : membre.name
     const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), nom)
     noeud.copyAttrFrom(axe)
@@ -475,10 +524,28 @@ function creerNoeudsDeMembre(
     return { membre, noeud }
   })
 
+  // os#1511 — « AUTRES » : un seul nœud, gris, pour tous les membres repliés, en dernier. Son
+  // identité est le premier replié dans l'ordre des membres (cf. `Type_MembreRepresente`).
+  const repliés = membres.filter(membre => replies.has(membre))
+  if (repliés.length > 0) {
+    const t = sankey.drawing_area.application_data?.t
+    const libelle = (t ? t('sunburst.others') : '') || 'Autres'
+    const nom = partage ? `${axe.name} - ${libelle}` : libelle
+    const noeud = sankey.addNewNode(memberNodeId(axe.id, OTHERS_ID), nom)
+    noeud.copyAttrFrom(axe)
+    axe.style.forEach(style => { if (!noeud.hasStyle(style.id)) noeud.addStyle(style) })
+    noeud.position_u = axe.position_u
+    noeud.position_x = axe.position_x
+    noeud.shape_color = OTHERS_COLOR
+    replies_par_noeud.set(noeud, repliés)
+    engendres.push({ membre: repliés[0], noeud, replies: repliés })
+  }
+
   if (axe.drawing_area.effective_gap_mode === 'keep') {
     // « Garder les positions » : celle du membre fait foi, et rien n'est réempilé.
-    engendres.forEach(({ membre, noeud }) => {
-      const position = membre.position
+    engendres.forEach(({ membre, noeud, replies }) => {
+      // « Autres » ne porte pas de position à lui : il se pose sur son axe.
+      const position = replies === undefined ? membre.position : undefined
       noeud.setPosXY(position?.x ?? axe.position_x, position?.y ?? axe.position_y)
     })
   }
@@ -518,14 +585,16 @@ function repartir(
 
   gauche.forEach(g => droite.forEach(d => {
     if (meme_dimension && g?.membre !== d?.membre) return
-    const membres = [...new Set([g?.membre, d?.membre])].filter((m): m is Class_DataTag => m !== undefined)
-    const contributions = contributionsPourCase(flux, membres)
+    // « Autres » vise TOUS ses membres repliés : le cube somme plusieurs membres d'un même groupe.
+    const entrees = [g, d].filter((e): e is Type_MembreRepresente => e !== undefined)
+    const vises = [...new Set(entrees.flatMap(membresDe))]
+    const contributions = contributionsPourCase(flux, vises)
     if (contributions === null) return
     // L'identifiant porte la MARQUE : c'est ce qui rend le flux engendré reconnaissable sur le
     // graphe, comme son nœud, et donc effaçable au tour suivant sans tenir de registre. Les
     // membres y figurent pour l'unicité seulement — un flux engendré retrouve sa coordonnée par
     // ses NŒUDS (cf. `memberOfGeneratedNode`), qui la portent déjà.
-    const id = `${flux.id}${MARQUE}${membres.map(m => m.id).join(MARQUE)}`
+    const id = `${flux.id}${MARQUE}${[...new Set(entrees.map(e => e.replies !== undefined ? OTHERS_ID : e.membre.id))].join(MARQUE)}`
     const nouveau = sankey.addNewLinkWithId(id, g?.noeud ?? flux.source, d?.noeud ?? flux.target)
     nouveau.copyAttrFrom(flux)
     // Sa valeur est un SCALAIRE : un flux engendré naît d'un choix de coordonnées, donc il ne

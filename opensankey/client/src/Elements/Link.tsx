@@ -35,9 +35,10 @@ import type {
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { isGeneratedMemberId, MEMBER_NODE_MARK } from './GeneratedMemberMark'
+import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 // os#1511 — import de VALEUR vers un module qui ne nous importe qu'en TYPE : les imports de type
 // sont effacés à la compilation, il n'y a donc pas de cycle à l'exécution.
-import { memberOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
+import { membersOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -1133,9 +1134,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // engendré est une CASE et porte donc jusqu'à deux coordonnées ; les chercher dans son id
       // obligerait à savoir de quelle dimension vient chaque morceau, alors que ses nœuds le
       // disent déjà.
+      // Un bout « Autres » représente plusieurs membres repliés : ils entrent tous dans la
+      // coordonnée, le cube les somme (cf. membersOfGeneratedNode).
       const membres_axes = [this.source, this.target]
-        .map(bout => memberOfGeneratedNode(bout as Class_NodeElement))
-        .filter((membre): membre is Class_DataTag => membre !== undefined)
+        .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
         let v = (origine !== undefined && membres_axes.length > 0)
@@ -1177,6 +1179,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
           bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
         }
       })
+      // os#1511 — « AUTRES », À LA VOLÉE : les bandes trop fines (moins de 0,5 % du flux, ou
+      // au-delà de la vingtième) se replient en une bande grise, comme les parts de la couronne
+      // (cf. Algorithms/DimensionOthers). 263 pays faisaient 263 bandes, dont 240 sous le pixel.
+      const { kept, folded } = foldSmallParts(bands)
+      if (folded.length > 0) {
+        bands.splice(0, bands.length, ...kept, {
+          id: OTHERS_ID,
+          px: folded.reduce((acc, band) => acc + band.px, 0),
+          color: OTHERS_COLOR,
+          value: folded.reduce((acc, band) => acc + band.value, 0)
+        })
+      }
       const dim_total = bands.reduce((acc, band) => acc + band.px, 0)
       if (dim_total <= 0) return []
       return bands.map(band => ({ ...band, share: band.px / dim_total }))
