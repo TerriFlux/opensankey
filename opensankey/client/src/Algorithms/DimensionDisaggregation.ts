@@ -281,7 +281,9 @@ function creerNoeudsDeMembre(
     //
     // Il hérite donc de l'axe, ce qui est juste par construction : il occupe sa colonne et se
     // branche sur les mêmes voisins, donc il a la même extrémité que lui.
-    axe.style.forEach(style => noeud.addStyle(style))
+    // `copyAttrFrom` en a déjà transféré une partie : `addStyle` avertit en console sur un style
+    // déjà posé, et le faisait pour chaque membre engendré.
+    axe.style.forEach(style => { if (!noeud.hasStyle(style.id)) noeud.addStyle(style) })
     // La COLONNE est toujours celle de l'axe : `layoutChildrenInParentSlot` ne règle que le Y,
     // et un membre sans colonne se retrouverait à l'abscisse zéro.
     noeud.position_u = axe.position_u
