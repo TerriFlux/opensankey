@@ -413,7 +413,7 @@ describe('OS#1254 — layoutLegendItems', () => {
   })
 
   it('horizontal : le titre ouvre la ligne, ses entrées le suivent, nouveau groupe = nouvelle ligne', () => {
-    const pos = layoutLegendItems(items, { ...base_config, horizontal: true })
+    const pos = layoutLegendItems(items, { ...base_config, horizontal: true, width: 2000 })
     const line_height = base_config.police * 1.5
     // Titre en tête de ligne
     expect(pos[0]).toMatchObject({ x: 0, y: 0 })
@@ -437,6 +437,26 @@ describe('OS#1254 — layoutLegendItems', () => {
     // Le titre du premier groupe commence une nouvelle ligne, ses entrées le suivent
     expect(pos[1]).toMatchObject({ x: 0, y: line_height })
     expect(pos[2].y).toBe(line_height)
+  })
+
+  it('horizontal : les entrees passent a la ligne a la largeur de la legende, sous la premiere', () => {
+    const many = [
+      { id: 'a', text: 'Produit', bold: true, starts_group: true, own_line: true, group_title: true },
+      ...['Viande chevaline', 'Viande bovine', 'Viande porcine', 'Volailles', 'Lait'].map((text, i) => (
+        { id: 'e' + i, text, swatch_color: '#f00' }
+      ))
+    ]
+    const width = 400
+    const pos = layoutLegendItems(many, { ...base_config, horizontal: true, width })
+    const entries = pos.slice(1)
+    // Plus d une ligne, et aucune entree ne deborde de la largeur
+    expect(new Set(entries.map(p => p.y)).size).toBeGreaterThan(1)
+    entries.forEach(p => expect(p.x).toBeLessThan(width))
+    // Les lignes suivantes reprennent a l abscisse de la premiere entree
+    const first_x = entries[0].x
+    new Set(entries.map(p => p.y)).forEach(y => {
+      expect(Math.min(...entries.filter(p => p.y === y).map(p => p.x))).toBe(first_x)
+    })
   })
 })
 

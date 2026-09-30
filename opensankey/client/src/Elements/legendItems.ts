@@ -842,6 +842,9 @@ export function layoutLegendItems(
   const wrap_width = Math.max(config.width, 4 * police)
   let x = 0
   let y = 0
+  // Horizontal : abscisse où reprennent les entrées d'un groupe quand elles passent à la ligne
+  // (alignées sous la première, à droite du titre)
+  let entries_x = 0
   let previous_section: string | undefined
   items.forEach(item => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
@@ -869,6 +872,16 @@ export function layoutLegendItems(
         x = 0
         y += line_height
       }
+      if (item.starts_group || item.own_line) entries_x = 0
+      const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
+      const entry_width = swatch + estimateTextWidth(item.text, police)
+      if (!item.group_title && !item.own_line && x > entries_x && x + entry_width > wrap_width) {
+        // Retour à la ligne à la largeur de la légende : la ligne ne pousse pas la fenêtre.
+        // Sous le titre si celui-ci mange plus de la moitié de la largeur.
+        if (entries_x + entry_width > wrap_width || entries_x > wrap_width / 2) entries_x = 0
+        x = entries_x
+        y += line_height
+      }
       positions.push({ id: item.id, x, y })
       if (item.group_title) {
         // Titre d'un groupe développé : à gauche de ses entrées, sur leur ligne. Le titre est en
@@ -876,14 +889,14 @@ export function layoutLegendItems(
         // sa première entrée suit la police : un écart fixe en px monde disparaît en police
         // verrouillée dès que le zoom baisse (CARTOFOB à 16 % : titre collé à l'entrée).
         x += estimateTextWidth(item.text, police) * 1.1 + 0.6 * police
+        entries_x = x
       } else if (item.own_line) {
         // Lignes d'info, échelle, groupes épinglés : seuls sur leur ligne, seules
         // les entrées de tag s'enchaînent horizontalement.
         x = 0
         y += item.scale_bar ? bar_row_height : line_height
       } else {
-        const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
-        x += swatch + estimateTextWidth(item.text, police) + 14
+        x += entry_width + 14
       }
     } else {
       positions.push({ id: item.id, x: 0, y })
