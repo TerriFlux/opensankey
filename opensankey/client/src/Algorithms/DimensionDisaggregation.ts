@@ -211,6 +211,20 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     valeurs.set(membre, valeur)
     return valeur
   }
+  // La valeur d'un membre sur les flux d'UN axe : c'est elle qui range ses nœuds. Julien, 30/09 :
+  // « ça a marché pour les exports mais pas les imports » — l'ordre, calculé sur toute la
+  // dimension, était celui des exports (les plus gros) pour les deux colonnes.
+  const valeurs_axe = new Map<string, number>()
+  const valeurSurAxe = (axe: Class_NodeElement, membre: Class_DataTag): number => {
+    const cle = axe.id + '\u0000' + membre.id
+    const deja = valeurs_axe.get(cle)
+    if (deja !== undefined) return deja
+    const valeur = [...axe.input_links_list, ...axe.output_links_list]
+      .filter(flux => !isGeneratedMemberLink(flux))
+      .reduce((total, flux) => total + (contributionsPourCase(flux, [membre]) ?? 0), 0)
+    valeurs_axe.set(cle, valeur)
+    return valeur
+  }
   const replisDe = (dimension: Class_DataTagGroup, membres: Class_DataTag[]): Set<Class_DataTag> => {
     const deja = replis.get(dimension)
     if (deja !== undefined) return deja
@@ -227,9 +241,15 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // LES MEMBRES CHOISIS, et rien d'autre : le panneau nomme ainsi toujours ce que le dessin
     // montre. « Europe » donne l'Europe, « Régions continentales » — un NIVEAU, qui se choisit
     // dans la même liste — donne les régions.
-    // L'ORDRE, le même qu'en bandes (`members_order`, cf. DimensionMemberOrder).
+    // L'ORDRE, le même qu'en bandes (`members_order`, cf. DimensionMemberOrder), d'après les flux
+    // de CET axe. Sauf quand la dimension se range en bandes (un diagramme par membre) : les axes
+    // y partagent un même ordre, sans quoi les bandes ne s'aligneraient pas d'une colonne à l'autre.
+    const porteurs = sankey.nodes_list
+      .filter(node => !isGeneratedMemberNode(node) && node.driving_dimension === dimension).length
+    const en_bandes = porteurs >= 2 && bandesParMembre(dimension, porteurs)
     const membres = ordonnerMembres(dimension, dimension.selected_tags_list as Class_DataTag[],
-      dimension.members_order, membre => valeurDe(dimension, membre))
+      dimension.members_order,
+      membre => en_bandes ? valeurDe(dimension, membre) : valeurSurAxe(axe, membre))
     if (membres.length === 0) return
     // UN SEUL MEMBRE : L'AXE EST CE MEMBRE, on n'engendre rien (retour de Julien, 30/09).
     //

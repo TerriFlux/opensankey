@@ -86,6 +86,43 @@ describe('os#1511 — ordre des membres dessines', () => {
     expect(pile(sankey)).toEqual(['France', 'Espagne', 'Maroc'])
   })
 
+  test('chaque axe se range d apres SES flux (imports et exports different)', () => {
+    // Julien, 30/09 : « ca a marche pour les exports mais pas les imports ».
+    const app = new Class_ApplicationData(false)
+    const sankey = app.drawing_area.sankey
+    const pays = sankey.addDataTagGroup('pays', 'Pays', false) as unknown as Class_DataTagGroup
+    const monde = pays.addTag('Monde', 'monde') as Class_DataTag
+    const europe = pays.addTag('Europe', 'europe') as Class_DataTag
+    const afrique = pays.addTag('Afrique', 'afrique') as Class_DataTag
+    europe.parent = monde
+    afrique.parent = monde
+    pays.levels = ['monde', 'regions']
+    pays.member_bands = false
+    const imports = sankey.addNewNodeWithName('Import')
+    const produits = sankey.addNewNodeWithName('Produits')
+    const exports = sankey.addNewNodeWithName('Export')
+    const entree = sankey.addNewLink(imports, produits)
+    const sortie = sankey.addNewLink(produits, exports)
+    imports.driving_dimension = pays
+    exports.driving_dimension = pays
+    const poser = (flux: typeof entree, membre: Class_DataTag, nombre: number) => {
+      choisir(pays, membre)
+      ;(flux.value as Class_LinkValue).valueData = nombre
+    }
+    poser(entree, europe, 5)
+    poser(entree, afrique, 40)
+    poser(sortie, europe, 30)
+    poser(sortie, afrique, 10)
+    choisir(pays, europe, afrique)
+    disaggregateDimensionNodes(sankey)
+    const colonne = (axe: string) => sankey.nodes_list.filter(isGeneratedMemberNode)
+      .filter(n => n.id.startsWith(sankey.nodes_list.find(a => a.name === axe)?.id + '--'))
+      .sort((a, b) => a.position_y - b.position_y)
+      .map(n => n.id.split('--').pop())
+    expect(colonne('Import')).toEqual(['afrique', 'europe'])
+    expect(colonne('Export')).toEqual(['europe', 'afrique'])
+  })
+
   test('le reglage fait l aller retour du fichier, muet au defaut, et relit l ancien format', () => {
     const { pays } = monter()
     type J = { members_order?: string, bands_by_value?: boolean }
