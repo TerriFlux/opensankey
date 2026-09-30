@@ -158,6 +158,17 @@ function drawnLabelLineCount(zone: Class_ContainerElement): number {
   return Math.max(1, text.selectAll('tspan').size())
 }
 
+/** Largeur (px monde) du libellé dessiné d'une zone, 0 sans libellé ou sans moteur de rendu. */
+function drawnLabelWidth(zone: Class_ContainerElement): number {
+  const node = zone.d3_selection?.select('text.name_label_text').node() as SVGTextElement | null | undefined
+  if (!node || typeof node.getBBox !== 'function') return 0
+  try {
+    return node.getBBox().width
+  } catch {
+    return 0
+  }
+}
+
 function escapeHtml(s: string): string {
   return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 }
@@ -966,7 +977,28 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       const n_pinned_lines = richTextLineCount(zone)
       if (n_pinned_lines > 0) line_counts.set(item.id, n_pinned_lines)
     })
-    const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
+    // Horizontal : largeur RÉELLE des libellés sur une ligne (titres de groupe et entrées), pour
+    // enchaîner les entrées sans chevauchement et passer à la ligne à la largeur de la légende.
+    // Sans DOM (tests) : estimation, cf. layoutLegendItems.
+    const text_widths = new Map<string, number>()
+    if (values.horizontal) {
+      items.forEach(item => {
+        if (item.wrap === true || (item.own_line && !item.group_title)) return
+        const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
+        zone.name_label_source = 'custom'
+        zone.name_label_text = item.text
+        zone.name_label_is_visible = true
+        zone.name_label_font_size = values.police
+        zone.name_label_bold = item.bold ?? false
+        zone.name_label_box_width = 4000
+        applyPinnedLabel(zone, item, values.police, NO_PADDING)
+        applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        zone.draw()
+        const width = drawnLabelWidth(zone)
+        if (width > 0) text_widths.set(item.id, width)
+      })
+    }
+    const positions = new Map(layoutLegendItems(items, layout_values, line_counts, text_widths).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
     items.forEach(i => {
       if (i.block_id) desired_ids.add(i.block_id)

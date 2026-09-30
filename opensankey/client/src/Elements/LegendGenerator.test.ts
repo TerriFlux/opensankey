@@ -458,6 +458,22 @@ describe('OS#1254 — layoutLegendItems', () => {
       expect(Math.min(...entries.filter(p => p.y === y).map(p => p.x))).toBe(first_x)
     })
   })
+
+  it('horizontal : les largeurs mesurees l emportent sur l estimation', () => {
+    const two = [
+      { id: 'e1', text: 'Viande porcine', swatch_color: '#f00' },
+      { id: 'e2', text: 'Lait', swatch_color: '#0f0' }
+    ]
+    const config = { ...base_config, horizontal: true, width: 2000 }
+    const estimated = layoutLegendItems(two, config)
+    const measured = layoutLegendItems(two, config, undefined, new Map([['e1', 300]]))
+    // L entree suivante part apres la largeur MESUREE du nom
+    expect(measured[1].x).toBeGreaterThan(estimated[1].x)
+    expect(measured[1].x - measured[0].x).toBeGreaterThan(300)
+    // Et une largeur mesuree qui depasse la legende fait passer a la ligne
+    const narrow = layoutLegendItems(two, { ...config, width: 320 }, undefined, new Map([['e1', 300]]))
+    expect(narrow[1]).toMatchObject({ x: 0, y: base_config.police * 1.5 })
+  })
 })
 
 describe('OS#1254 — computeScaleText', () => {

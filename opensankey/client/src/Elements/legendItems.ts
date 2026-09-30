@@ -830,11 +830,16 @@ function legendSectionOf(item: Type_LegendItem): string {
  *
  * `line_counts` : SA#550 — lignes mesurées des zones enveloppées (`wrap`), cf.
  * legendWrappedLineCount ; #556 — lignes (tspans) mesurées des autres entrées en vertical.
+ *
+ * `text_widths` : en horizontal, largeur MESURÉE du libellé dessiné (px monde). L'estimation à
+ * 0,55 em par caractère sous-estime les noms réels : les entrées se chevauchaient et la ligne
+ * dépassait la largeur de la légende sans passer à la ligne.
  */
 export function layoutLegendItems(
   items: Type_LegendItem[],
   config: Type_LegendConfigValues,
-  line_counts?: Map<string, number>
+  line_counts?: Map<string, number>,
+  text_widths?: Map<string, number>
 ): Type_LegendItemPosition[] {
   const positions: Type_LegendItemPosition[] = []
   const police = config.police
@@ -873,8 +878,10 @@ export function layoutLegendItems(
         y += line_height
       }
       if (item.starts_group || item.own_line) entries_x = 0
+      const measured = text_widths?.get(item.id)
+      const text_width = measured !== undefined && measured > 0 ? measured : estimateTextWidth(item.text, police)
       const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
-      const entry_width = swatch + estimateTextWidth(item.text, police)
+      const entry_width = swatch + text_width
       if (!item.group_title && !item.own_line && x > entries_x && x + entry_width > wrap_width) {
         // Retour à la ligne à la largeur de la légende : la ligne ne pousse pas la fenêtre.
         // Sous le titre si celui-ci mange plus de la moitié de la largeur.
@@ -888,7 +895,7 @@ export function layoutLegendItems(
         // GRAS (glyphes ~10 % plus larges que l'estimation en romain), et l'écart qui le sépare de
         // sa première entrée suit la police : un écart fixe en px monde disparaît en police
         // verrouillée dès que le zoom baisse (CARTOFOB à 16 % : titre collé à l'entrée).
-        x += estimateTextWidth(item.text, police) * 1.1 + 0.6 * police
+        x += (measured !== undefined && measured > 0 ? measured : estimateTextWidth(item.text, police) * 1.1) + 0.6 * police
         entries_x = x
       } else if (item.own_line) {
         // Lignes d'info, échelle, groupes épinglés : seuls sur leur ligne, seules
