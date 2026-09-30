@@ -1297,6 +1297,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
   private _member_bands: boolean | undefined = undefined
 
+  // os#1511 — ORDRE DES BANDES d'un flux dessiné en bandes (Julien, 30/09 : « une option, choisie
+  // par défaut, pour que les flux soient dessinés du plus grand au plus petit »). `undefined` =
+  // par défaut, c.-à-d. par valeur décroissante ; `false` = ordre de la sélection. Écrit seulement
+  // s'il est posé.
+  private _bands_by_value: boolean | undefined = undefined
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1342,6 +1348,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._position_mode = tagg_to_copy._position_mode
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
+    this._bands_by_value = tagg_to_copy._bands_by_value
   }
 
   protected _toJSON(
@@ -1365,6 +1372,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
+    // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
+    if (this._bands_by_value !== undefined) json_object['bands_by_value'] = this._bands_by_value
   }
 
   protected _fromJSON(
@@ -1415,11 +1424,16 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       Math.max(0, this._levels.length - 1)
     )
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
+    if (typeof json_object['bands_by_value'] === 'boolean') this._bands_by_value = json_object['bands_by_value'] as boolean
   }
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
   public get member_bands(): boolean | undefined { return this._member_bands }
   public set member_bands(value: boolean | undefined) { this._member_bands = value }
+
+  /** os#1511 — bandes rangées du plus grand au plus petit (défaut) ou dans l'ordre de la sélection. */
+  public get bands_by_value(): boolean { return this._bands_by_value ?? true }
+  public set bands_by_value(value: boolean) { this._bands_by_value = value ? undefined : false }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
 

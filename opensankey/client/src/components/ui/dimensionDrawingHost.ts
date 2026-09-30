@@ -148,6 +148,19 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
   apply(on)
 }
 
+/** os#1511 — bandes du plus grand au plus petit, ou dans l'ordre de la sélection (annulable). */
+export const applyBandsByValue = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  const before = tagg.bands_by_value
+  const apply = (value: boolean) => {
+    tagg.bands_by_value = value
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(on))
+  apply(on)
+}
+
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */
 export const toggleDimensionCarrier = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string

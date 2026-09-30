@@ -1186,6 +1186,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // au-delà de la vingtième) se replient en une bande grise, comme les parts de la couronne
       // (cf. Algorithms/DimensionOthers). 263 pays faisaient 263 bandes, dont 240 sous le pixel.
       const { kept, folded } = foldSmallParts(bands)
+      // os#1511 — du plus grand au plus petit (défaut, réglable sur la dimension) : la bande la
+      // plus épaisse en tête, « Autres » toujours en dernier. À valeur égale, l'ordre de sélection.
+      if (multi_dim.bands_by_value) {
+        const rang = new Map(kept.map((band, i) => [band, i]))
+        kept.sort((a, b) => (b.value - a.value) || ((rang.get(a) ?? 0) - (rang.get(b) ?? 0)))
+        bands.splice(0, bands.length, ...kept)
+      }
       if (folded.length > 0) {
         bands.splice(0, bands.length, ...kept, {
           id: OTHERS_ID,
