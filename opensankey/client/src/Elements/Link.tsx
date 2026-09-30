@@ -891,6 +891,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
+  /**
+   * os#1511 — La couleur du membre montré d'une dimension colorée dessinée « un membre à la fois » :
+   * dimension à niveaux, couleurs activées, bannière `one`, un seul membre choisi qui porte une
+   * vraie couleur, et qui ne se dessine pas en nœuds (ses nœuds engendrés portent alors le membre).
+   * `undefined` sinon — dont la racine « Tous produits », grise : le flux garde sa règle habituelle.
+   */
+  private _singleMemberDimensionColor(): string | undefined {
+    for (const tagg of this.sankey.data_taggs_list) {
+      if (!tagg.use_colors || !tagg.is_hierarchical || tagg.banner !== 'one') continue
+      if (this.sankey.nodes_list.some(node => node.driving_dimension === tagg)) continue
+      const selected = tagg.selected_tags_list
+      if (selected.length !== 1) continue
+      const color = selected[0].color
+      if (color && color !== 'grey') return color
+    }
+    return undefined
+  }
+
   public getShapeColorToUse(): string {
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
@@ -952,6 +970,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => this.sankey.tagGroupAppliesFormatting(tagg) && !tagg.uses_tag_styles).length == 0) {
+      // 0. os#1511 — UN MEMBRE À LA FOIS : le flux prend la couleur du membre montré (Julien, 30/09 :
+      // « quand on choisit un membre à la fois, il ne met pas les couleurs »). En bandes, chaque
+      // bande porte la couleur de son membre ; un seul membre, c'est une seule bande, donc la même
+      // couleur — sans quoi choisir « Sucre » rendait le flux gris.
+      const member_color = this._singleMemberDimensionColor()
+      if (member_color !== undefined) return member_color
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
       const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && this.sankey.tagGroupAppliesFormatting(tag.group))
