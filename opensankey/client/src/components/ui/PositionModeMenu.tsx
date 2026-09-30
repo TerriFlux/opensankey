@@ -43,8 +43,10 @@ import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, dimensionCarrierCandidates, dimensionDrawingOf, toggleDimensionCarrier
+  applyDimensionDrawing, applyDisaggregationGap, dimensionCarrierCandidates, dimensionDrawingOf,
+  toggleDimensionCarrier
 } from './dimensionDrawingHost'
+import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -53,6 +55,14 @@ export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinitio
   { value: 'absolute', icon: faLocationDot, label_key: 'Banner.posModeShort_absolute' },
   { value: 'proportional', icon: faPercent, label_key: 'Banner.posModeShort_proportional' },
   { value: 'scale_adapted', icon: faRulerVertical, label_key: 'Banner.posModeShort_scale_adapted' },
+]
+
+/** Les modes d'écart vertical des enfants, dans l'ordre de `DisaggregationGapControl`. */
+const GAP_MODES: { value: Type_DisaggregationGap, label_key: string }[] = [
+  { value: 'fill', label_key: 'MEP.childGapFill' },
+  { value: 'keep', label_key: 'MEP.childGapKeep' },
+  { value: 'children_dy', label_key: 'MEP.childGapDy' },
+  { value: 'constant', label_key: 'MEP.childGapConst' }
 ]
 
 /** Une entrée cochable. */
@@ -212,6 +222,21 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                         checked={node.driving_dimension === tagg}
                         closeOnSelect={false}
                         onClick={() => toggleDimensionCarrier(app_data, tagg, node.id)}
+                      />
+                    ))}
+                  </MenuGroup>
+                  {/* L'écart vertical des enfants du nœud désagrégé : le réglage de l'onglet
+                      Hiérarchie, ici aussi (global à la zone de dessin). */}
+                  <MenuDivider />
+                  <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
+                    {GAP_MODES.map(g => (
+                      <CheckItem
+                        key={g.value}
+                        label={t(g.label_key) + (g.value === 'constant'
+                          ? ` (${app_data.drawing_area.disaggregation_gap_value})` : '')}
+                        checked={app_data.drawing_area.disaggregation_gap_mode === g.value}
+                        closeOnSelect={false}
+                        onClick={() => applyDisaggregationGap(app_data, g.value)}
                       />
                     ))}
                   </MenuGroup>

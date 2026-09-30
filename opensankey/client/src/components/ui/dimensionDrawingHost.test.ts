@@ -2,7 +2,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
-  applyDimensionDrawing, dimensionCarriersOf, dimensionDrawingOf, toggleDimensionCarrier
+  applyDimensionDrawing, applyDisaggregationGap, dimensionCarriersOf, dimensionDrawingOf, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -54,5 +54,14 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionCarriersOf(app, pays)).toEqual([])
     app.history.applyUndo()
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
+  })
+
+  test('l ecart vertical des enfants se regle d ici aussi, et s annule', () => {
+    const { app } = monter()
+    const avant = app.drawing_area.disaggregation_gap_mode
+    applyDisaggregationGap(app, 'constant')
+    expect(app.drawing_area.disaggregation_gap_mode).toBe('constant')
+    app.history.applyUndo()
+    expect(app.drawing_area.disaggregation_gap_mode).toBe(avant)
   })
 })
