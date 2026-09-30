@@ -1290,6 +1290,13 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // sur un arbre partiel écraserait ces couleurs par celles d'une hiérarchie incomplète.
   private _palette_suspended: boolean = false
 
+  // os#1511 — UN DIAGRAMME PAR MEMBRE (« petits multiples »). Quand plusieurs nœuds portent la
+  // dimension, leurs nœuds engendrés se rangent en BANDES, une par membre — le diagramme se répète
+  // une fois par membre, les copies les unes sous les autres — au lieu de s'empiler étape par
+  // étape dans le créneau de chaque nœud. `undefined` = automatique : bandes dès que deux nœuds ou
+  // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
+  private _member_bands: boolean | undefined = undefined
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1334,6 +1341,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._propagate_structure = tagg_to_copy._propagate_structure
     this._position_mode = tagg_to_copy._position_mode
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
+    this._member_bands = tagg_to_copy._member_bands
   }
 
   protected _toJSON(
@@ -1355,6 +1363,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     }
     // os#1516 — clé ADDITIVE, écrite seulement par une dimension qui a reçu une palette hiérarchique.
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
+    // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
+    if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
   }
 
   protected _fromJSON(
@@ -1404,7 +1414,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       Math.max(0, getNumberFromJSON(json_object, 'current_level', this._current_level_index)),
       Math.max(0, this._levels.length - 1)
     )
+    if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
   }
+
+  /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
+  public get member_bands(): boolean | undefined { return this._member_bands }
+  public set member_bands(value: boolean | undefined) { this._member_bands = value }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
 

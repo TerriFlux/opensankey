@@ -22,6 +22,7 @@
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 
@@ -205,8 +206,15 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   //
   //    Le mode « garder les positions » est le seul qui n'en dépende pas : il ne réempile rien,
   //    et il a donc déjà fait son travail à la création.
+  // UN DIAGRAMME PAR MEMBRE : les axes d'une même dimension se rangent ENSEMBLE, en bandes. Ce
+  // placement a sa propre règle (l'écart constant entre bandes) et ne lit pas le mode d'écart des
+  // enfants, qui décrit le créneau d'UN nœud — cf. `rangerEnBandes`.
+  const en_bandes = axesEnBandes(sankey, par_axe)
+  en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe))
+  const ranges = new Set([...en_bandes].flat())
   if (sankey.drawing_area.effective_gap_mode !== 'keep') {
     par_axe.forEach((membres, axe_id) => {
+      if (ranges.has(axe_id)) return
       const axe = sankey.nodes_dict[axe_id]
       if (axe === undefined) return
       axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
@@ -224,6 +232,99 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     sankey.nodes_dict[axe_id]?.setInvisible()
   })
   return engendres
+}
+
+/**
+ * os#1511 — UN DIAGRAMME PAR MEMBRE : la dimension se range-t-elle en bandes ?
+ *
+ * Julien, 30/09, sur « [SOCLE] Pays partenaires » : trois nœuds portent la dimension des pays
+ * (Produits agricoles, Monde - Export, Monde - Import) ; « il faudrait que les diagrammes se
+ * mettent les uns sous les autres, parallèlement ». Éclater chaque nœud dans son propre créneau
+ * mélangeait les membres colonne par colonne — et dans CARTOFOB, où les quatorze étapes portent
+ * l'essence, les nœuds d'une même colonne s'empilaient.
+ *
+ * Réglé sur la dimension (`member_bands`), automatique à défaut : oui dès que deux nœuds ou plus
+ * la portent. Un seul porteur n'a pas de diagramme à répéter.
+ */
+export function bandesParMembre(dimension: Class_DataTagGroup, porteurs: number): boolean {
+  return dimension.member_bands ?? porteurs >= 2
+}
+
+/** Les axes découpés de ce tour, regroupés par dimension rangée en bandes. */
+function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): string[][] {
+  const par_dimension = new Map<Class_DataTagGroup, string[]>()
+  par_axe.forEach((_membres, axe_id) => {
+    const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
+    if (dimension === undefined) return
+    par_dimension.set(dimension, [...(par_dimension.get(dimension) ?? []), axe_id])
+  })
+  const out: string[][] = []
+  par_dimension.forEach((axe_ids, dimension) => {
+    // Le compte est celui des nœuds qui PORTENT la dimension, pas de ceux découpés à ce tour.
+    const porteurs = sankey.nodes_list
+      .filter(node => !isGeneratedMemberNode(node) && node.driving_dimension === dimension).length
+    if (axe_ids.length >= 2 && bandesParMembre(dimension, porteurs)) out.push(axe_ids)
+  })
+  return out
+}
+
+/**
+ * Range les nœuds engendrés de plusieurs axes d'une même dimension en BANDES, une par membre.
+ *
+ * Chaque axe garde sa colonne (x déjà posé à la création) ; seule la hauteur change. Deux passes,
+ * comme Julien l'a décrit (30/09) — « prendre le nœud qui va le plus bas pour chaque bande,
+ * appliquer l'écart constant pour aller sur le haut du nœud de la bande du dessous » :
+ *
+ *  1. chaque bande reprend la FORME du diagramme : un nœud de membre se pose à la hauteur de son
+ *     axe, décalée d'une même quantité pour toute la bande. Les petits multiples sont des copies ;
+ *     aligner tous les nœuds d'une bande sur une même ligne aurait aplati la filière.
+ *  2. bande par bande, on relève le BAS du nœud qui descend le plus, et la bande suivante est
+ *     décalée pour que son nœud le plus haut commence à ce bas plus l'écart constant
+ *     (`disaggregation_gap_value`).
+ *
+ * Le mode d'écart des enfants (« remplir le slot », etc.) n'est PAS lu : il décrit le créneau
+ * d'UN nœud, et une bande en traverse plusieurs. L'éditeur le masque sous les bandes.
+ *
+ * Appelée APRÈS les flux : la hauteur d'un nœud engendré vient de ses flux (cf. l'étape 3).
+ */
+function rangerEnBandes(
+  sankey: Class_Sankey,
+  axe_ids: string[],
+  par_axe: Map<string, Type_MembreRepresente[]>
+): void {
+  const ecart = sankey.drawing_area.disaggregation_gap_value
+  // Les membres dans l'ordre choisi — le même pour tous les axes de la dimension.
+  const ordre: Class_DataTag[] = []
+  axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ membre }) => {
+    if (!ordre.includes(membre)) ordre.push(membre)
+  }))
+  const noeudDe = (axe_id: string, membre: Class_DataTag) =>
+    (par_axe.get(axe_id) ?? []).find(m => m.membre === membre)?.noeud
+
+  // Passe 1 : la forme. Le haut de chaque axe, relevé AVANT tout déplacement.
+  const haut_axe = new Map<string, number>()
+  axe_ids.forEach(id => {
+    const axe = sankey.nodes_dict[id]
+    if (axe !== undefined) haut_axe.set(id, axe.position_y)
+  })
+  if (haut_axe.size === 0) return
+
+  // Passe 2 : bande par bande, sous le bas le plus bas de la précédente.
+  let bas_precedent: number | undefined = undefined
+  ordre.forEach(membre => {
+    const places = axe_ids
+      .map(id => ({ noeud: noeudDe(id, membre), haut: haut_axe.get(id) }))
+      .filter((p): p is { noeud: Class_NodeElement, haut: number } =>
+        p.noeud !== undefined && p.haut !== undefined)
+    if (places.length === 0) return
+    const plus_haut = Math.min(...places.map(p => p.haut))
+    const decalage = bas_precedent === undefined ? 0 : bas_precedent + ecart - plus_haut
+    places.forEach(({ noeud, haut }) => {
+      noeud.position_y = haut + decalage
+      noeud.captureCenterFromCorner()
+    })
+    bas_precedent = Math.max(...places.map(p => p.noeud.position_y + p.noeud.getShapeHeightToUse()))
+  })
 }
 
 /**
