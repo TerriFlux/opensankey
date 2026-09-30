@@ -36,6 +36,7 @@ import type {
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { isGeneratedMemberId, MEMBER_NODE_MARK } from './GeneratedMemberMark'
 import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
+import { ordonnerMembres } from '../Algorithms/DimensionMemberOrder'
 // os#1511 — import de VALEUR vers un module qui ne nous importe qu'en TYPE : les imports de type
 // sont effacés à la compilation, il n'y a donc pas de cycle à l'exécution.
 import { membersOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
@@ -1210,13 +1211,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // au-delà de la vingtième) se replient en une bande grise, comme les parts de la couronne
       // (cf. Algorithms/DimensionOthers). 263 pays faisaient 263 bandes, dont 240 sous le pixel.
       const { kept, folded } = foldSmallParts(bands)
-      // os#1511 — du plus grand au plus petit (défaut, réglable sur la dimension) : la bande la
-      // plus épaisse en tête, « Autres » toujours en dernier. À valeur égale, l'ordre de sélection.
-      if (multi_dim.bands_by_value) {
-        const rang = new Map(kept.map((band, i) => [band, i]))
-        kept.sort((a, b) => (b.value - a.value) || ((rang.get(a) ?? 0) - (rang.get(b) ?? 0)))
-        bands.splice(0, bands.length, ...kept)
-      }
+      // os#1511 — ORDRE DES BANDES : le même qu'en nœuds (`members_order`, cf.
+      // Algorithms/DimensionMemberOrder) — par défaut du plus grand au plus petit au premier niveau,
+      // l'ordre de l'arbre plus bas ; « Autres » toujours en dernier. Trier à plat éparpillait les
+      // sous-régions d'une région éclatée entre les autres régions.
+      const par_membre = new Map(kept.map(band => [multi_dim.tags_dict[band.id] as Class_DataTag, band]))
+      const ordre = ordonnerMembres(multi_dim, [...par_membre.keys()], multi_dim.members_order,
+        membre => par_membre.get(membre)?.value ?? 0)
+      kept.splice(0, kept.length, ...ordre.map(membre => par_membre.get(membre) as typeof kept[number]))
+      bands.splice(0, bands.length, ...kept)
       if (folded.length > 0) {
         bands.splice(0, bands.length, ...kept, {
           id: OTHERS_ID,

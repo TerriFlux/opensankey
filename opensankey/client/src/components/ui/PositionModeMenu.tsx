@@ -43,11 +43,12 @@ import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
 } from './positionModeHost'
 import {
-  applyBandsByValue, applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyNodesByValue,
+  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyMembersOrder,
   dimensionCarrierCandidates,
   dimensionCarriersOf, dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import type { Type_DisaggregationGap } from '../../types/Utils'
+import { MEMBERS_ORDERS } from '../../Algorithms/DimensionMemberOrder'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -214,13 +215,23 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                 checked={drawing === 'multi'}
                 onClick={() => applyDimensionDrawing(app_data, tagg, 'multi')}
               />
-              {/* os#1511 — l'ordre des bandes d'un flux : du plus grand au plus petit (défaut). */}
-              <CheckItem
-                label={t('Banner.draw_bands_by_value')}
-                checked={tagg.bands_by_value}
-                closeOnSelect={false}
-                onClick={() => applyBandsByValue(app_data, tagg, !tagg.bands_by_value)}
-              />
+              {/* os#1511 — L'ORDRE DES MEMBRES, en bandes comme en nœuds : par valeur au premier
+                  niveau (défaut), à tous les niveaux, ou ordre de l'arbre. Sur une dimension plate,
+                  les deux premiers se confondent : un seul est proposé. */}
+              <MenuDivider />
+              <MenuGroup title={t('Banner.order_title')} fontSize='0.7rem'>
+                {MEMBERS_ORDERS
+                  .filter(o => tagg.is_hierarchical || o !== 'value_all_levels')
+                  .map(o => (
+                    <CheckItem
+                      key={o}
+                      label={t('Banner.order_' + o)}
+                      checked={tagg.members_order === o}
+                      closeOnSelect={false}
+                      onClick={() => applyMembersOrder(app_data, tagg, o)}
+                    />
+                  ))}
+              </MenuGroup>
               {tagg.is_hierarchical
                 ? <Submenu label={t('Banner.draw_nodes')} checked={drawing === 'nodes'}>
                   <MenuGroup title={t('Banner.draw_carriers')} fontSize='0.7rem'>
@@ -234,15 +245,6 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                       />
                     ))}
                   </MenuGroup>
-                  {/* os#1511 — l'ordre des nœuds engendrés : du plus grand au plus petit (défaut),
-                      comme les bandes. */}
-                  <MenuDivider />
-                  <CheckItem
-                    label={t('Banner.draw_nodes_by_value')}
-                    checked={tagg.nodes_by_value}
-                    closeOnSelect={false}
-                    onClick={() => applyNodesByValue(app_data, tagg, !tagg.nodes_by_value)}
-                  />
                   {/* L'écart vertical des enfants du nœud désagrégé : le réglage de l'onglet
                       Hiérarchie, ici aussi (global à la zone de dessin). */}
                   <MenuDivider />
