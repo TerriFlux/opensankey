@@ -689,7 +689,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const el = nodes[i]
       const passes = this.bandLabelPassesFilter(
         Number(el.getAttribute('data-band-value')), Number(el.getAttribute('data-band-px')))
-      return passes ? null : 'none'
+      return passes ? 'inline' : 'none'
     })
   }
 

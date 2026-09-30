@@ -548,7 +548,7 @@ export class LinkDrawShape {
           .attr('pointer-events', 'none')
           .attr('data-band-value', value)
           .attr('data-band-px', px)
-          .style('display', link.bandLabelPassesFilter(value, px) ? null : 'none')
+          .style('display', link.bandLabelPassesFilter(value, px) ? 'inline' : 'none')
           .text(band_unit ? `${value} ${band_unit}` : String(value))
       }
     })
