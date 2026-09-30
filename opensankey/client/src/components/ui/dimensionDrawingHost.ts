@@ -25,6 +25,7 @@ import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Class_NodeElement } from '../../Elements/Node'
 import type { Type_DisaggregationGap } from '../../types/Utils'
+import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 
 export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
@@ -148,32 +149,23 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
   apply(on)
 }
 
-/** os#1511 — bandes du plus grand au plus petit, ou dans l'ordre de la sélection (annulable). */
-export const applyBandsByValue = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
-  const before = tagg.bands_by_value
-  const apply = (value: boolean) => {
-    tagg.bands_by_value = value
-    app_data.drawing_area.draw()
-    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
-  }
-  app_data.history.saveUndo(() => apply(before))
-  app_data.history.saveRedo(() => apply(on))
-  apply(on)
-}
-
-/** os#1511 — nœuds engendrés du plus grand au plus petit, ou dans l'ordre de l'arbre (annulable). */
-export const applyNodesByValue = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
-  const before = tagg.nodes_by_value
-  const apply = (value: boolean) => {
-    tagg.nodes_by_value = value
-    // L'ordre des nœuds se décide à la désagrégation : on la refait.
+/**
+ * os#1511 — ORDRE DES MEMBRES dessinés, en bandes comme en nœuds (annulable). L'ordre des nœuds
+ * se décide à la désagrégation : on la refait ; celui des bandes au dessin.
+ */
+export const applyMembersOrder = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ordre: Type_MembersOrder
+) => {
+  const before = tagg.members_order
+  const apply = (value: Type_MembersOrder) => {
+    tagg.members_order = value
     app_data.drawing_area.rebuildDimensionNodes()
     app_data.drawing_area.draw()
     app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   }
   app_data.history.saveUndo(() => apply(before))
-  app_data.history.saveRedo(() => apply(on))
-  apply(on)
+  app_data.history.saveRedo(() => apply(ordre))
+  apply(ordre)
 }
 
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */

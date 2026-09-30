@@ -9,6 +9,7 @@ import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
+import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER } from '../Algorithms/DimensionMemberOrder'
 import {
   Type_HierarchicalPaletteParams, Type_PaletteNode, computeHierarchicalColors, default_hierarchical_palette_params
 } from '../Algorithms/HierarchicalPalette'
@@ -85,6 +86,11 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // os#1511 - hierarchie de la dimension, modelisee : hors du sac, une dimension rendue plate
   // ressortirait avec ses anciens niveaux. os#1516 - recette de palette, modelisee.
   'levels', 'current_level', 'palette',
+  // os#1517 / os#1511 — barre du haut, un diagramme par membre, ordre des membres : écrits
+  // seulement hors défaut, donc à tenir HORS du sac, sinon une valeur remise au défaut ressortait
+  // au prochain enregistrement. `bands_by_value` / `nodes_by_value` sont relus (ancien format de
+  // `members_order`) puis abandonnés.
+  'topbar', 'member_bands', 'members_order', 'bands_by_value', 'nodes_by_value',
 ])
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -1297,16 +1303,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
   private _member_bands: boolean | undefined = undefined
 
-  // os#1511 — ORDRE DES BANDES d'un flux dessiné en bandes (Julien, 30/09 : « une option, choisie
-  // par défaut, pour que les flux soient dessinés du plus grand au plus petit »). `undefined` =
-  // par défaut, c.-à-d. par valeur décroissante ; `false` = ordre de la sélection. Écrit seulement
-  // s'il est posé.
-  private _bands_by_value: boolean | undefined = undefined
-
-  // os#1511 — ORDRE DES NŒUDS engendrés quand la dimension se dessine en nœuds (Julien, 30/09 :
-  // « la désagrégation devrait aussi suivre cette règle, avec une option, on par défaut »). Même
-  // contrat que `_bands_by_value` : `undefined` = par valeur décroissante, `false` = ordre de l'arbre.
-  private _nodes_by_value: boolean | undefined = undefined
+  // os#1511 — ORDRE DES MEMBRES dessinés, EN BANDES COMME EN NŒUDS (cf.
+  // `Algorithms/DimensionMemberOrder`). `undefined` = défaut (par valeur au premier niveau). Écrit
+  // seulement s'il est posé. Remplace `bands_by_value` / `nodes_by_value` (deux cases, même 30/09),
+  // relus à la lecture : `false` y voulait dire l'ordre de l'arbre.
+  private _members_order: Type_MembersOrder | undefined = undefined
 
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
@@ -1353,8 +1354,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._position_mode = tagg_to_copy._position_mode
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
-    this._bands_by_value = tagg_to_copy._bands_by_value
-    this._nodes_by_value = tagg_to_copy._nodes_by_value
+    this._members_order = tagg_to_copy._members_order
   }
 
   protected _toJSON(
@@ -1379,8 +1379,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
-    if (this._bands_by_value !== undefined) json_object['bands_by_value'] = this._bands_by_value
-    if (this._nodes_by_value !== undefined) json_object['nodes_by_value'] = this._nodes_by_value
+    if (this._members_order !== undefined) json_object['members_order'] = this._members_order
   }
 
   protected _fromJSON(
@@ -1431,21 +1430,23 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       Math.max(0, this._levels.length - 1)
     )
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
-    if (typeof json_object['bands_by_value'] === 'boolean') this._bands_by_value = json_object['bands_by_value'] as boolean
-    if (typeof json_object['nodes_by_value'] === 'boolean') this._nodes_by_value = json_object['nodes_by_value'] as boolean
+    const ordre_lu = json_object['members_order']
+    if (typeof ordre_lu === 'string' && (MEMBERS_ORDERS as string[]).includes(ordre_lu)) {
+      this.members_order = ordre_lu as Type_MembersOrder
+    } else if (json_object['bands_by_value'] === false || json_object['nodes_by_value'] === false) {
+      this._members_order = 'tree'
+    }
   }
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
   public get member_bands(): boolean | undefined { return this._member_bands }
   public set member_bands(value: boolean | undefined) { this._member_bands = value }
 
-  /** os#1511 — bandes rangées du plus grand au plus petit (défaut) ou dans l'ordre de la sélection. */
-  public get bands_by_value(): boolean { return this._bands_by_value ?? true }
-  public set bands_by_value(value: boolean) { this._bands_by_value = value ? undefined : false }
-
-  /** os#1511 — nœuds engendrés du plus grand au plus petit (défaut), frères entre eux dans l'arbre. */
-  public get nodes_by_value(): boolean { return this._nodes_by_value ?? true }
-  public set nodes_by_value(value: boolean) { this._nodes_by_value = value ? undefined : false }
+  /** os#1511 — ordre des membres dessinés, en bandes comme en nœuds (défaut : par valeur au premier niveau). */
+  public get members_order(): Type_MembersOrder { return this._members_order ?? DEFAULT_MEMBERS_ORDER }
+  public set members_order(value: Type_MembersOrder) {
+    this._members_order = value === DEFAULT_MEMBERS_ORDER ? undefined : value
+  }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
 
