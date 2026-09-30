@@ -60,6 +60,7 @@ import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { disaggregateDimensionNodes } from '../Algorithms/DimensionDisaggregation'
+import { MEMBER_NODE_MARK, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
 import type { Class_DataTagGroup as Type_DataTagGroup } from './TagGroup'
 import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
@@ -1411,9 +1412,26 @@ export class Class_DrawingArea {
    * de membre. Un diagramme sans nœud d'axe n'y perd rien.
    */
   public rebuildDimensionNodes() {
+    // 30/09/2026 — LA SÉLECTION SURVIT AU REBÂTI. Julien : « quand je clique dans la couronne pour
+    // désagréger Céréales transformées, ça désagrège dans le diagramme mais ça ferme la couronne ».
+    // La couronne portait sur un flux ENGENDRÉ ; le rebâti supprime tous les engendrés et en refait
+    // de nouveaux objets, la sélection perdait donc son flux, et la fenêtre qui la suit se fermait.
+    // On la reprend par IDENTIFIANT : un engendré refait sous le même id est resélectionné ; un
+    // engendré qui n'existe plus (son membre vient d'être découpé) cède la place à l'élément
+    // d'ORIGINE, dont l'id précède la marque — le tout dont il n'était qu'une part.
+    const selected_ids = this.selected_elements_list.map(element => element.id)
     this.withBypassRedraws(() => {
       disaggregateDimensionNodes(this.sankey)
     }, false)
+    const find = (id: string) =>
+      (this.sankey.nodes_dict[id] ?? this.sankey.links_dict[id]) as Class_ProtoElement | undefined
+    selected_ids.forEach(id => {
+      const stale = this._selection[id]
+      const fresh = find(id) ?? (isGeneratedMemberId(id) ? find(id.split(MEMBER_NODE_MARK)[0]) : undefined)
+      if (stale !== undefined && stale === fresh) return
+      if (stale !== undefined) delete this._selection[id]
+      if (fresh !== undefined && this._selection[fresh.id] === undefined) this.addElementToSelection(fresh)
+    })
   }
 
   /**
