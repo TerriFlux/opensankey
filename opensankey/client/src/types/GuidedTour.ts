@@ -121,6 +121,9 @@ export class Class_GuidedTour {
       this._app_data.reset({})
       this._app_data.drawing_area.draw()
     }
+    // sa#581 — la visite désigne des éléments du DESSIN : une grande zone vide (l'état d'un
+    // « Nouveau diagramme ») la laisserait pointer dans le vide.
+    this._app_data.ensureDiagramShown()
     // Après le reset : `buildSteps` fige le mode sur le diagramme RÉSULTANT.
     this._app_data.setSteps()
     // Le TourProvider ne se démonte jamais et garde `currentStep` d'un lancement à l'autre (son

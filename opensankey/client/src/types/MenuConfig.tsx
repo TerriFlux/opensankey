@@ -363,6 +363,21 @@ export const mainZoneOccupantUsesOwnWindowId = (
 ): boolean => mainZoneSubjectUsesOwnWindowId(o.subject) || isOwnMainZoneWindowId(o.id)
 
 /**
+ * sa#581 — CE VOLET EST-IL UN VOLET SANKEY : le diagramme de la FEUILLE COURANTE, dessiné en
+ * entier et éditable ? Tous se valent (arbitrage Alexandre, 30/09) : l'un d'eux porte la zone de
+ * dessin du document, et n'importe lequel peut devenir ce volet-là en devenant l'actif.
+ *
+ * La feuille est la ligne de partage, comme pour le canevas d'une AUTRE feuille (os#1385 lot 0) :
+ * celui-là dessine le document de sa feuille, dans sa case, et n'est pas un volet Sankey de la
+ * feuille qu'on édite. Un sujet sans feuille désigne la feuille courante.
+ */
+export const isSankeyPane = (
+  o: { representation: string, subject: Type_MainZoneSubject }
+): boolean =>
+  o.representation === MAIN_ZONE_CANVAS_ID && o.subject.kind === 'diagram' &&
+  mainZoneSubjectSheet(o.subject) === ''
+
+/**
  * os#1387 (10/09/2026) — LA CLÉ DE LA VIGNETTE de rang `i` d'un sujet `elements`.
  *
  * Un seul endroit pour appliquer le repli, parce qu'il y a deux façons d'écrire la même
@@ -966,8 +981,9 @@ export class Class_MenuConfig {
   // droite ou le bandeau du bas, et se ferme. Ce modèle ne sait rien du SVG : l'hôte
   // (MainZoneTabs) donne à la drawing area le CADRE de sa case quand il n'est pas `main` (cf.
   // ApplicationData.main_zone_canvas_frame), et le SVG s'y cadre comme une zone détachée.
-  // Seul invariant : exactement un occupant `main`, garanti par `_normalizeMainZoneOccupants`
-  // après chaque mutation, plutôt que par chaque appelant.
+  // Seul invariant : exactement un occupant `main` dès que la grille en a un, garanti par
+  // `_normalizeMainZoneOccupants` après chaque mutation, plutôt que par chaque appelant. sa#581 —
+  // la grille peut être vide (plus aucun volet, ou seulement des flottants) : pas de `main` alors.
   // ---------------------------------------------------------------------------------------
   protected _main_zone_occupants: Type_MainZoneOccupant[] = [
     { id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 }
@@ -1024,6 +1040,17 @@ export class Class_MenuConfig {
    * qu'on désigne un autre volet — comme une fenêtre du système jusqu'au clic suivant. TRANSITOIRE.
    */
   protected _main_zone_front_id: string | null = null
+  /**
+   * sa#581 — LE VOLET SANKEY VIVANT, ou `null` : celui sur lequel la zone de dessin du document
+   * (le SVG de `#sankey_app`, avec tout son menu, sa sélection, son clavier et son historique) est
+   * cadrée. Tous les volets Sankey se valent : celui qu'on active devient le vivant, les autres
+   * montrent chacun un rendu à jour de leur propre mise en page (cf. `Class_SankeyPanes`).
+   *
+   * TRANSITOIRE, et posé par le document principal seulement — c'est lui qui sait transporter une
+   * mise en page d'un volet à l'autre. `null` : aucun volet Sankey n'est vivant (grande zone vide,
+   * ou le vivant vient d'être fermé) ; le dessin est alors masqué.
+   */
+  protected _main_zone_live_sankey_id: string | null = null
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
   protected _main_zone_active_id: string | null = null
@@ -1321,7 +1348,7 @@ export class Class_MenuConfig {
       .filter(o => o.place === place && !this._host._main_zone_detached.has(o.id))
       .map(o => ({ ...o }))
   }
-  /** L'occupant principal, ou null (jamais après normalisation, sauf liste vide transitoire). */
+  /** L'occupant principal, ou null quand la grille est vide (sa#581 : un état légitime). */
   public get main_zone_main_id(): string | null {
     return this._host._main_zone_occupants.find(o => o.place === 'main')?.id ?? null
   }
@@ -1377,8 +1404,11 @@ export class Class_MenuConfig {
       // Le diagramme qui revient reprend la principale ; celui qui l'occupait prend sa place.
       this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, 'right')
       this._normalizeMainZoneOccupants()
+      // sa#581 — PAS DE `return` ICI : c'était l'échange qui prévenait la grande zone. Dans une
+      // grande zone VIDE, la normalisation a déjà fait du diagramme la principale, l'échange n'a
+      // plus rien à faire et ressort sans notifier — l'écran restait vide, modèle rempli. La suite
+      // commune le rend actif et notifie dans tous les cas.
       this.makeMainZoneOccupantMain(id)
-      return
     } else {
       // Une fenêtre à sujet DIAGRAMME : son id est sa représentation (cf. Type_MainZoneOccupant).
       this._pushMainZoneOccupant({ id, subject: { kind: 'diagram' }, representation: id }, place)
@@ -1503,6 +1533,63 @@ export class Class_MenuConfig {
    * un AUTRE volet qui le cacherait. Sa place, elle, ne change pas : c'est dans son bandeau qu'on
    * la change ensuite.
    */
+  /** sa#581 — Le volet Sankey vivant (cf. `_main_zone_live_sankey_id`), s'il est encore ouvert. */
+  public get main_zone_live_sankey_id(): string | null {
+    const id = this._host._main_zone_live_sankey_id
+    return (id !== null && this.isMainZoneOccupant(id)) ? id : null
+  }
+  public set main_zone_live_sankey_id(id: string | null) {
+    if (this._host._main_zone_live_sankey_id === id) return
+    this._host._main_zone_live_sankey_id = id
+    this._notifyMainZone()
+  }
+  /**
+   * sa#581 — LES VOLETS SANKEY de la grande zone : ceux qui montrent le diagramme de la feuille
+   * courante (cf. `isSankeyPane`). Dans l'ordre des occupants, qui est celui des ouvertures.
+   */
+  public get main_zone_sankey_panes(): Type_MainZoneOccupant[] {
+    return this._host._main_zone_occupants.filter(isSankeyPane).map(o => ({ ...o }))
+  }
+  /**
+   * sa#581 — OUVRIR UN VOLET SANKEY DE PLUS (le « + »), qui devient l'actif. Le premier volet
+   * Sankey garde l'identifiant de registre du diagramme — c'est lui que citent l'état d'URL, les
+   * tableaux de bord et les fichiers d'avant —, les suivants prennent un identifiant propre.
+   *
+   * @param view la coordonnée du volet : la vue qu'il montre (absente = la vue courante)
+   * @param place sa place (absente = la principale si elle est libre, sinon la colonne droite)
+   * @returns l'identifiant du volet ouvert
+   */
+  public openSankeyPane(view?: string, place?: Type_MainZonePlace): string {
+    const subject: Type_MainZoneSubject = view ? { kind: 'diagram', view } : { kind: 'diagram' }
+    let id: string = MAIN_ZONE_CANVAS_ID
+    if (this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID)) {
+      do {
+        this._host._main_zone_window_seq += 1
+        id = `w_${this._host._main_zone_window_seq}`
+      } while (this.isMainZoneOccupant(id))
+    }
+    this._pushMainZoneOccupant({ id, subject, representation: MAIN_ZONE_CANVAS_ID }, place)
+    if (place === 'floating') this._ensureFloatingGeometry(id)
+    this._host._main_zone_active_id = id
+    this._host._main_zone_active_pane_key = null
+    this._host._main_zone_selected_pane_keys = []
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+    return id
+  }
+
+  /**
+   * sa#581 — LA COORDONNÉE D'UN VOLET SANKEY : la vue qu'il montre (`''` = la vue courante). Elle
+   * ne se règle pas par `setMainZoneWindowSubject`, qui ne touche qu'aux sujets d'élément : un
+   * sujet diagramme ne change pas de nature, seulement de vue.
+   */
+  public setSankeyPaneView(id: string, view: string): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || !isSankeyPane(o) || mainZoneSubjectView(o.subject) === view) return
+    o.subject = view === '' ? { kind: 'diagram' } : { kind: 'diagram', view }
+    this._notifyMainZone()
+  }
+
   /** sa#566 — Le volet au premier plan (cf. `_main_zone_front_id`), s'il est encore ouvert. */
   public get main_zone_front_id(): string | null {
     const id = this._host._main_zone_front_id
@@ -1589,7 +1676,12 @@ export class Class_MenuConfig {
     // flotte, auquel cas elle se pose par-dessus, comme une fenêtre qu'on ramène au premier plan.
     if (e.place !== 'floating' || e.maximized) this._host._main_zone_maximized_id = null
     let id = ''
-    if (!mainZoneSubjectUsesOwnWindowId(e.subject)) {
+    // sa#581 — UN VOLET SANKEY DE PLUS, et non celui qui est déjà là. Plusieurs volets Sankey
+    // coexistent : le premier porte l'identifiant de registre, et le réutiliser pour rappeler une
+    // vue enlèverait à ce volet-là ce qu'il montrait. Il ne se réutilise que s'il EST déjà cette vue.
+    const sankey_taken = e.representation === MAIN_ZONE_CANVAS_ID && this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID) &&
+      this.mainZoneOccupantById(MAIN_ZONE_CANVAS_ID)?.saved_view !== view_id
+    if (!mainZoneSubjectUsesOwnWindowId(e.subject) && !sankey_taken) {
       id = e.representation
       if (id === '') return null
       if (!this.isMainZoneOccupant(id)) {
@@ -1610,6 +1702,8 @@ export class Class_MenuConfig {
     if (e.geometry) o.geometry = e.geometry
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
+    // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
+    if (isSankeyPane(o)) o.subject = { kind: 'diagram', view: view_id }
     this._host._main_zone_detached.delete(id)
     if (e.place === 'floating') this.enforceMainZoneFloatingCap(id)
     // Les réglages de la VUE remplacent ceux que portait une fenêtre réutilisée.
@@ -2337,8 +2431,14 @@ export class Class_MenuConfig {
    *
    * Sans effet quand le canevas n'est pas dans la grande zone (masqué, ou remplacé par une autre
    * fenêtre principale) : on n'active pas ce qui ne s'affiche pas.
+   *
+   * sa#581 — LE CANEVAS, C'EST LE VOLET VIVANT : le SVG qu'on vient de toucher est cadré sur lui,
+   * quel qu'il soit parmi les volets Sankey. Le premier volet Sankey ne compte plus que faute de
+   * vivant (page qui ne pose pas de vivant : lecture publiée, tests).
    */
   public activateMainZoneCanvas(): void {
+    const live = this.main_zone_live_sankey_id
+    if (live !== null) { this.main_zone_active_id = live; return }
     if (this.mainZonePlaceOf(MAIN_ZONE_CANVAS_ID) === null) return
     this.main_zone_active_id = MAIN_ZONE_CANVAS_ID
   }
@@ -2453,18 +2553,17 @@ export class Class_MenuConfig {
     this._ref_to_inspector_updater.current()
   }
   /**
-   * Masque un occupant. Refuse (rend false) d'enlever le DERNIER : la grande zone vide n'a
-   * rien pour se rallumer que le bouton qu'on vient de cliquer. Un occupant `main` qui part
-   * cède la place au premier de la colonne droite (cf. normalisation).
+   * Masque un occupant. Un occupant `main` qui part cède la place au premier de la colonne
+   * droite (cf. normalisation). Rend `true` si l'occupant était là.
+   *
+   * sa#581 — LE DERNIER VOLET SE FERME AUSSI (arbitrage Alexandre, 30/09 : « on peut fermer tous
+   * les volets »). Le refus d'avant tenait à une crainte — une grande zone vide n'aurait rien pour
+   * se rallumer — que le « + » de la barre du haut a levée depuis sa#567 : il ouvre un volet de
+   * n'importe quelle nature, à tout moment. Une zone vide est un état légitime, et c'est même celui
+   * d'un modèle qu'on vient d'ouvrir (cf. `Class_ApplicationData.showOpenedModel`).
    */
   public hideMainZoneOccupant(id: string): boolean {
-    // sa#563 — LE REFUS NE PORTE QUE SUR LA GRILLE. Il existe parce qu'une grande zone vide n'a
-    // rien pour se rallumer que le bouton qu'on vient de cliquer ; un volet FLOTTANT, lui, se
-    // ferme toujours — il ne laisse aucune case vide derrière lui, et sa croix est le seul moyen
-    // de s'en débarrasser. Le compte porte donc sur les occupants de la grille, et le volet
-    // flottant qu'on ferme n'en fait pas partie.
-    const grid = this._host._main_zone_occupants.filter(o => o.place !== 'floating')
-    if (grid.length <= 1 && grid.some(o => o.id === id)) return false
+    if (!this.isMainZoneOccupant(id)) return false
     // sa#566 — un volet ENREGISTRÉ qu'on ferme laisse son dernier état à sa vue.
     this._snapshotSavedWindows([id])
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
@@ -2479,7 +2578,7 @@ export class Class_MenuConfig {
   }
 
   /**
-   * os#1433 (19/09/2026) — LA GRANDE ZONE REVIENT AU DIAGRAMME SEUL.
+   * os#1433 (19/09/2026) — LA GRANDE ZONE REPART À ZÉRO.
    *
    * Arbitrage de Julien : « quand on ouvre une feuille vierge, il n'y a plus qu'une seule
    * fenêtre, la zone de dessin. Pareil quand on fait Nouveau diagramme : ça doit supprimer les
@@ -2489,19 +2588,19 @@ export class Class_MenuConfig {
    * garder sa mise en page d'un onglet à l'autre est un service, la garder devant une page
    * BLANCHE n'en est pas un. Une feuille vierge n'a rien dont un tableur, une doc ou une
    * couronne puissent parler ; les fenêtres y regardent toutes le vide, et il faut les fermer
-   * une par une avant de pouvoir travailler. Repartir du diagramme seul est le seul état qui ne
-   * demande rien à personne.
+   * une par une avant de pouvoir travailler.
    *
    * La différence avec `closeWindowsPinnedOnSheet` est celle des deux gestes : BASCULER vers une
    * feuille qui existe garde la grille (on retrouve sa mise en page, seuls les épinglages
    * partent), CRÉER une feuille ou un diagramme la remet à zéro. Le premier reprend un travail,
    * le second en commence un.
    *
-   * On ne repose rien à la main : la liste vidée, `_normalizeMainZoneOccupants` y met le canevas
-   * en principale — c'est son cas « aucune fenêtre », déjà écrit et déjà le défaut d'un document
-   * neuf. Une règle, un seul endroit.
+   * sa#581 — ET ZÉRO VEUT DIRE VIDE, plus « le diagramme seul » (arbitrage Alexandre, 30/09 :
+   * « Nouveau diagramme et nouvelle feuille : vide aussi »). Aucun volet n'est plus celui qu'on
+   * retrouve d'office : on part d'une feuille blanche sous la barre du haut, et le « + » ouvre
+   * la représentation qu'on veut. La normalisation ne repose plus rien dans une liste vide.
    */
-  public resetMainZoneToCanvas(): void {
+  public resetMainZone(): void {
     const host = this._host
     this._snapshotSavedWindows(host._main_zone_occupants.map(o => o.id))
     host._main_zone_occupants = []
@@ -2664,14 +2763,19 @@ export class Class_MenuConfig {
     this._notifyMainZone()
   }
   /**
-   * L'invariant de la grande zone, rétabli après chaque mutation : au moins un occupant ;
-   * exactement un `main` ; le canevas, s'il est là, EST ce `main` (contrainte du SVG, cf. en-
-   * tête) ; pas de doublon ; des poids finis et positifs.
+   * L'invariant de la grande zone, rétabli après chaque mutation : exactement un `main` dès que
+   * la grille a un occupant, aucun sinon ; pas de doublon ; des poids finis et positifs.
+   *
+   * sa#581 — LA LISTE PEUT ÊTRE VIDE, OU NE PORTER QUE DES VOLETS FLOTTANTS. Deux règles sont
+   * tombées avec « aucun volet n'est privilégié » (arbitrage Alexandre, 30/09) : « il faut au
+   * moins un occupant de la grille », qui rallumait le canevas dans une liste vide, et son
+   * corollaire, qui faisait redescendre le diagramme dans la grille quand il flottait seul. Une
+   * grille vide n'a pas de `main` ; les volets flottants se posent alors sur la feuille blanche.
    */
   protected _normalizeMainZoneOccupants(): void {
     const host = this._host
     const seen = new Set<string>()
-    let list = host._main_zone_occupants.filter(o => {
+    const list = host._main_zone_occupants.filter(o => {
       if (seen.has(o.id) || !MAIN_ZONE_PLACES.includes(o.place)) return false
       seen.add(o.id)
       return true
@@ -2694,24 +2798,6 @@ export class Class_MenuConfig {
       if (!o.representation) o.representation = o.id
       if (!mainZoneOccupantUsesOwnWindowId(o)) o.representation = o.id
     })
-    // sa#563 — IL FAUT TOUJOURS UN OCCUPANT DE LA GRILLE, et pas seulement un occupant.
-    //
-    // La liste vide rallumait le canevas ; une liste qui ne contient QUE des volets flottants
-    // pose exactement le même problème sous un autre visage — la grille n'a plus de `main`, donc
-    // la promotion ci-dessous happerait un volet flottant pour lui donner toute la page. Un volet
-    // qu'on vient d'ouvrir au-dessus du diagramme ne doit pas devenir le diagramme.
-    if (list.filter(o => o.place !== 'floating').length === 0) {
-      // Le canevas peut DÉJÀ être là, flottant : on le fait redescendre dans la grille plutôt que
-      // d'en poser un second, qui porterait le même identifiant.
-      const canvas = list.find(o => o.id === MAIN_ZONE_CANVAS_ID)
-      if (canvas) canvas.place = 'main'
-      else {
-        list = [
-          { id: MAIN_ZONE_CANVAS_ID, subject: { kind: 'diagram' }, representation: MAIN_ZONE_CANVAS_ID, place: 'main', size: 1 },
-          ...list
-        ]
-      }
-    }
     if (host._main_zone_active_id !== null && !list.some(o => o.id === host._main_zone_active_id)) {
       host._main_zone_active_id = null
       // os#1394 — la vignette active appartenait à cette fenêtre : elle part avec elle.
@@ -2721,14 +2807,13 @@ export class Class_MenuConfig {
     }
     const mains = list.filter(o => o.place === 'main')
     if (mains.length === 0) {
-      // Personne en principale : le diagramme s'il est là, sinon le premier de la colonne
-      // droite, sinon le premier venu DE LA GRILLE. sa#563 — jamais un flottant : la garde
-      // ci-dessus a assuré qu'il en reste au moins un, et happer un volet flottant pour lui
-      // donner toute la page défierait le geste qui vient de le faire flotter.
+      // Personne en principale : le premier de la colonne droite, sinon le premier venu DE LA
+      // GRILLE. sa#563 — jamais un flottant : happer un volet flottant pour lui donner toute la
+      // page défierait le geste qui vient de le faire flotter. sa#581 — et une grille vide n'a
+      // pas de principale : il n'y a personne à promouvoir, les flottants restent où ils sont.
       const grid = list.filter(o => o.place !== 'floating')
-      const promoted = grid.find(o => o.id === MAIN_ZONE_CANVAS_ID)
-        ?? grid.find(o => o.place === 'right') ?? grid[0]
-      promoted.place = 'main'
+      const promoted = grid.find(o => o.place === 'right') ?? grid[0]
+      if (promoted) promoted.place = 'main'
     } else mains.slice(1).forEach(o => { o.place = 'right' })
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
     // sa#563 — un volet flottant a TOUJOURS une géométrie : l'hôte n'a alors aucun cas de

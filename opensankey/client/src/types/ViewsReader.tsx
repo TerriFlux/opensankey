@@ -93,6 +93,7 @@ export class ViewsReader {
   public get is_view_master(): boolean { return this.query.is_view_master }
   public get is_current_view_light(): boolean { return this.query.is_current_view_light }
   public get views_navigation_order(): string[] { return this.query.views_navigation_order }
+  public get views_arrow_order(): string[] { return this.query.views_arrow_order }
   public get has_master_sankey(): boolean { return this.query.has_master_sankey }
   public get master_view(): Class_DrawingArea | undefined { return this.query.master_view }
   public get has_view_before(): boolean { return this.query.has_view_before }
@@ -265,6 +266,8 @@ export class ViewsReader {
     this.host.current_view_id = active_view_id
     if (this.host.views_dict[active_view_id].is_light) {
       this.host.drawing_area.sankey.setVisible()
+      // sa#581 — une vue légère à mise en page propre rouvre avec SA mise en page.
+      this.host.afterViewChange(active_view_id)
     } else {
       this.extractViewFromJSON(this.host.views_dict[active_view_id].json, active_view_id)
     }
@@ -322,8 +325,20 @@ export class ViewsReader {
    * application des options de publication à l'ouverture, suites de tests.
    */
   public setCurrentView(id: string) {
+    // sa#581 — une vue qui n'est qu'un volet ne change rien au diagramme : on rappelle son volet.
+    if (this.host.isWindowOnlyView(id)) { this.host.placeViewOnPanes(this.host.current_view_id, id); return }
     // OSP peut intercepter (modifs non sauvegardées => pop-up) et avorter le switch immédiat.
     if (this.interceptViewChange(id)) return
+    this.applyViewChange(id)
+  }
+
+  /**
+   * sa#581 — LA BASCULE QU'UNE ACTIVATION DE VOLET SANKEY COMMANDE : le volet devient le vivant,
+   * et le dessin passe sur sa vue. Sans interception — la mise en page du volet quitté est gardée
+   * d'office (cf. `Class_SankeyPanes`), il n'y a rien à demander — et sans replacement de volets :
+   * celui qui reçoit la vue est déjà choisi.
+   */
+  public switchViewForPane(id: string) {
     this.applyViewChange(id)
   }
 
@@ -340,10 +355,18 @@ export class ViewsReader {
    * clignotement serait pire que rien.
    */
   public requestViewChange(id: string): void | Promise<void> {
+    // sa#581 — une vue qui n'est qu'un volet : son volet revient, le diagramme ne bouge pas.
+    if (this.host.isWindowOnlyView(id)) {
+      this.host.runAsViewGesture(() => this.host.placeViewOnPanes(this.host.current_view_id, id))
+      return
+    }
     if (this.interceptViewChange(id)) return
     const path = viewSwitchPath(id, MASTER_VIEW_ID, this.host.views_dict)
     return this.switch_progress.run(path, () => {
-      this.applyViewChange(id)
+      // sa#581 — GESTE D'UTILISATEUR : la vue choisie trouve un volet où se montrer, quitte à en
+      // ouvrir un (cf. `Class_ApplicationData.placeViewOnPanes`). Une bascule programmatique — un
+      // export qui parcourt les vues — ne touche pas aux volets.
+      this.host.runAsViewGesture(() => this.applyViewChange(id))
       this.noteTutorialStep(id)
     })
   }
@@ -368,7 +391,9 @@ export class ViewsReader {
       const menu = this.host.menu_configuration
       const file = menu?.current_tutorial
       if (!file) return
-      const order = this.host.views_order ?? []
+      // sa#581 — une étape de leçon est une vue SANS volet : les vues que l'ouverture du tutoriel a
+      // créées pour ses volets (diagramme, tableur, leçon) viennent après, et ne sont pas des étapes.
+      const order = (this.host.views_order ?? []).filter(v => !this.host.views_dict[v]?.window)
       const rank = order.indexOf(id)
       if (rank < 0) return
       menu.last_tutorial_step = { file, rank, last: rank === order.length - 1 }
@@ -378,6 +403,13 @@ export class ViewsReader {
 
   /** Corps du switch : pose la nouvelle vue (light/heavy), la visibilité, la caméra et redessine. */
   protected applyViewChange(id: string) {
+    // sa#581 — PENDANT LA BASCULE, LES VOLETS SANKEY NE SE RESYNCHRONISENT PAS. Elle change le volet
+    // vivant, une coordonnée, le volet actif : autant de notifications de la grande zone, dont
+    // chacune relancerait une activation de volet AU MILIEU de la bascule qui l'a causée.
+    this.host.sankey_panes.hold(() => this.applyViewChangeBody(id))
+  }
+
+  protected applyViewChangeBody(id: string) {
     const host = this.host
     // sa#566 — la vue qu'on quitte : son volet se ferme si celui de la vue d'arrivée le remplace.
     const prev_id = host.current_view_id
@@ -387,6 +419,8 @@ export class ViewsReader {
     // #680 (revu) — Caméra de la vue SORTANTE, capturée avant unDraw : reportée sur la vue
     // entrante en mode 'none' (changer de vue ne recadre pas).
     const prev_camera = host.drawing_area.getCameraTransform()
+    // sa#581 — la mise en page PROPRE du volet vivant est mise à l'abri avant que le dessin change.
+    host.beforeViewChange()
     host.drawing_area.sankey.setInvisible()
     host.drawing_area.purgeSelection()
     host.drawing_area.unDraw()
@@ -413,8 +447,9 @@ export class ViewsReader {
     const dashboards = host.menu_configuration?.dashboards
     if (dashboards && host.is_main && !dashboards.activating) dashboards.current = implicitDashboardId(id)
     // sa#566 — UNE VUE EST UN VOLET ENREGISTRÉ : la bascule pose le sien. Pas pendant l'activation
-    // d'un tableau de bord, qui pose lui-même toute la grille.
-    if (host.is_main && !dashboards?.activating) host.applySavedViewWindowsOnSwitch(prev_id, id)
+    // d'un tableau de bord, qui pose lui-même toute la grille. sa#581 — ni pendant l'activation
+    // d'un volet Sankey, qui a déjà choisi où la vue se montre.
+    if (host.is_main && !dashboards?.activating && !host.sankey_panes.activating) host.placeViewOnPanes(prev_id, id)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {
@@ -422,6 +457,9 @@ export class ViewsReader {
     } else if (is_light) {
       this.afterLightViewLoaded(id)
     }
+    // sa#581 — la mise en page qui convient : celle du volet vivant si la vue est la sienne, sinon
+    // celle que la vue enregistre (vue légère à mise en page propre).
+    host.afterViewChange(id)
     // Concept unifié vue ⊕ viewtag : applique la sélection de visibilité portée par la vue.
     // Master / vue sans sélection => undefined => efface tout filtre.
     this.applyViewTagSelection(
@@ -463,7 +501,7 @@ export class ViewsReader {
 
   public setCurrentViewToNext(): void | Promise<void> {
     if (this.has_views && this.has_view_after) {
-      const order = this.views_navigation_order
+      const order = this.views_arrow_order
       const idx = order.indexOf(this.host.current_view_id)
       return this.requestViewChange(order[idx + 1])
     }
@@ -471,7 +509,7 @@ export class ViewsReader {
 
   public setCurrentViewToPrev(): void | Promise<void> {
     if (this.has_views && this.has_view_before) {
-      const order = this.views_navigation_order
+      const order = this.views_arrow_order
       const idx = order.indexOf(this.host.current_view_id)
       return this.requestViewChange(order[idx - 1])
     }

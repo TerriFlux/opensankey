@@ -92,7 +92,33 @@ import { toolAppliesToActiveWindow } from './CreationToolScope'
  * (MainZoneTabs) dans ApplicationData.main_zone_canvas_frame, lu par la drawing area affichée.
  */
 // sa#567 — `z` : le plan du SVG quand son volet FLOTTE au-dessus de la grille (absent sinon).
-export type Type_CanvasFrame = { left: number, top: number, width: number, height: number, z?: number } | 'hidden'
+export type Type_CanvasFrame = {
+  left: number, top: number, width: number, height: number, z?: number,
+  /**
+   * sa#581 — LA FEUILLE AU RAS DU VOLET. Le dessin trace sa feuille (`viewport_border`) en retrait
+   * de la moitié de sa marge d'ajustement, dans son propre SVG : le volet montrait donc une bande
+   * vide entre son bord et la feuille. Le cadre est alors élargi d'`inset` pixels de chaque côté, et
+   * le SVG découpé d'autant : la feuille touche le bord du volet, et la marge élargie n'est ni vue
+   * ni cliquable (un découpage CSS borne aussi la zone sensible).
+   */
+  inset?: number,
+  /**
+   * sa#581 — Le côté du carré laissé libre au coin bas-droit, découpé du SVG : la poignée de taille
+   * d'un volet flottant, que le SVG — plus loin dans la page, au même plan — recouvrirait sinon.
+   */
+  notch?: number
+} | 'hidden'
+
+/** sa#581 — Le découpage CSS du SVG pour un cadre (cf. `Type_CanvasFrame.inset` / `notch`). */
+export const canvasFrameClipPath = (f: { width: number, height: number, inset?: number, notch?: number }): string | null => {
+  const i = Math.max(0, f.inset ?? 0)
+  const n = Math.max(0, f.notch ?? 0)
+  if (i === 0 && n === 0) return null
+  if (n === 0) return `inset(${i}px)`
+  const r = f.width - i
+  const b = f.height - i
+  return `polygon(${i}px ${i}px, ${r}px ${i}px, ${r}px ${b - n}px, ${r - n}px ${b - n}px, ${r - n}px ${b}px, ${i}px ${b}px)`
+}
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
@@ -459,13 +485,20 @@ export class Class_DrawingArea {
    * texte restent justes) ; ou rien, en disposition ordinaire. Rejoué à chaque fenêtrage et à
    * chaque (re)construction du SVG.
    */
+  /**
+   * sa#581 — Repose le cadre sur le SVG SANS rien redessiner : pour un geste qui déplace ou
+   * redimensionne le volet du diagramme, pendant lequel le SVG doit suivre le cadre à chaque
+   * mouvement de la souris (cf. `Class_ApplicationData.previewCanvasFrame`).
+   */
+  public refreshCanvasFrameStyle(): void { this._applyCanvasFrameStyle() }
+
   protected _applyCanvasFrameStyle() {
     const svg = this.d3_selection_zoom_area
     if (!svg) return
     const f = this.canvas_frame
     if (f === null || f === 'hidden') {
       svg.style('position', null).style('left', null).style('top', null)
-        .style('width', null).style('height', null).style('z-index', null)
+        .style('width', null).style('height', null).style('z-index', null).style('clip-path', null)
         .attr('width', '100%').attr('height', this._svgDefaultHeight())
       if (f === 'hidden') svg.style('visibility', 'hidden')
       else svg.style('visibility', null)
@@ -476,6 +509,9 @@ export class Class_DrawingArea {
       .style('width', f.width + 'px').style('height', f.height + 'px')
       .style('z-index', f.z !== undefined ? String(f.z) : '')
       .attr('width', f.width).attr('height', f.height)
+    const clip = canvasFrameClipPath(f)
+    if (clip) svg.style('clip-path', clip)
+    else svg.style('clip-path', null)
   }
 
   /**

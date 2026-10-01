@@ -68,7 +68,22 @@ export const TOOL_GESTURE_SCOPE: { [gesture in Type_ToolGesture]: () => string[]
 }
 
 /**
- * La NATURE de la fenêtre active de la grande zone, ou `null` quand il n'y en a pas.
+ * sa#581 — LA NATURE D'AUCUN VOLET : ce que la fenêtre active « montre » quand la grande zone
+ * est rendue mais qu'aucun volet n'y est actif — tous fermés, ou seulement des flottants que rien
+ * n'a désignés.
+ *
+ * Il fallait la distinguer de `null`, et c'est tout l'objet de cette valeur. `null` veut dire
+ * « il n'y a pas de grande zone » (viewer embarqué, plateau unitaire d'OS+, tests) : les portes
+ * y restent PERMISSIVES, pour ne pas retirer des gestes qui marchent. Une grande zone VIDE, elle,
+ * n'a rien sur quoi dessiner, zoomer ou chercher : la colonne d'outils doit s'en défaire
+ * (retour d'Alexandre, 30/09). Aucune nature ne déclare cette valeur dans ses portées, donc toute
+ * porte qui la reçoit refuse — sans qu'aucune n'ait à la connaître.
+ */
+export const MAIN_ZONE_NO_WINDOW = 'os.repr.none'
+
+/**
+ * La NATURE de la fenêtre active de la grande zone ; `MAIN_ZONE_NO_WINDOW` quand la grande zone
+ * est rendue sans volet actif ; `null` quand il n'y a pas de grande zone.
  *
  * Même chemin que l'inspecteur (`activeRepresentation`, os#1394) : `main_zone_active_id` puis
  * l'occupant, dont on ne retient que sa représentation — deux fenêtres peuvent montrer la même
@@ -80,7 +95,7 @@ export const activeWindowRepresentation = (
   const mc = app_data?.menu_configuration
   if (!mc) return null
   const id = mc.main_zone_active_id
-  if (!id) return null
+  if (!id) return mc.main_zone_hosted ? MAIN_ZONE_NO_WINDOW : null
   return mc.mainZoneOccupantById(id)?.representation ?? null
 }
 

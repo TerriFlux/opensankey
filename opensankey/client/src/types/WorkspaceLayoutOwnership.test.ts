@@ -73,16 +73,17 @@ describe('os#1433 la grille est de l espace de travail', () => {
     expect(windowIds(main)).toEqual(avant)
   })
 
-  it('une feuille VIERGE n a qu une fenetre, la zone de dessin', () => {
+  it('une feuille VIERGE repart d une grande zone vide', () => {
     // Arbitrage de Julien, et c est la limite de la regle du dessus : garder sa mise en page d un
     // onglet a l autre est un service, la garder devant une page BLANCHE n en est pas un. Une
-    // feuille vierge n a rien dont un tableur ou une couronne puissent parler.
+    // feuille vierge n a rien dont un tableur ou une couronne puissent parler. sa#581 — et plus
+    // de diagramme d office non plus : on part d une feuille blanche (arbitrage Alexandre, 30/09).
     const { main } = buildTwoSheets()
     main.menu_configuration.showMainZoneOccupant(MAIN_ZONE_JSON_ID, 'right')
 
     main.createNewSheet(false)
 
-    expect(windowIds(main)).toEqual([MAIN_ZONE_CANVAS_ID])
+    expect(windowIds(main)).toEqual([])
   })
 
   it('« Nouveau diagramme » supprime les fenetres, redessin ou pas', () => {
@@ -94,7 +95,8 @@ describe('os#1433 la grille est de l espace de travail', () => {
 
     main.reinitialization(false)
 
-    expect(windowIds(main)).toEqual([MAIN_ZONE_CANVAS_ID])
+    // sa#581 — vide, comme une feuille vierge.
+    expect(windowIds(main)).toEqual([])
   })
 
   it('un fichier ecrit AVANT ce correctif ne rejoue plus la disposition de ses feuilles', () => {
@@ -132,6 +134,9 @@ describe('os#1433 une fenetre epinglee appartient a sa feuille', () => {
     // nom d avant. La bascule, elle, GARDE la grille : on reprend un travail, on n en commence
     // pas un (cf. la creation, plus haut, qui remet tout au diagramme seul).
     const { main, sheet_b } = buildTwoSheets()
+    // La creation d une feuille vide la grande zone (sa#581) : on y remet le diagramme, qui doit
+    // survivre a la bascule quand la fenetre epinglee, elle, s en va.
+    main.menu_configuration.showMainZoneOccupant(MAIN_ZONE_CANVAS_ID)
     const pinned = main.menu_configuration.openMainZoneWindow(
       { kind: 'node', id: 'n_a' }, MAIN_ZONE_JSON_ID, 'right'
     )
@@ -168,9 +173,8 @@ describe('os#1433 une fenetre epinglee appartient a sa feuille', () => {
   })
 
   it('fermer la derniere fenetre epinglee est permis, meme s il ne reste rien d autre', () => {
-    // `hideMainZoneOccupant` refuse de retirer la derniere fenetre — garde juste pour un GESTE de
-    // l utilisateur, fausse ici : une feuille dont aucune fenetre n a de sens doit pouvoir n en
-    // garder aucune, le canevas de la feuille d arrivee reprenant la place au rendu suivant.
+    // Une feuille dont aucune fenetre n a de sens doit pouvoir n en garder aucune. sa#581 — la
+    // grande zone reste alors vide : plus de canevas repose d office.
     const { main } = buildTwoSheets()
     const mc = main.menu_configuration
     const pinned = mc.openMainZoneWindow({ kind: 'node', id: 'n_a' }, MAIN_ZONE_JSON_ID, 'right')
