@@ -24,7 +24,7 @@
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
-import { figureUnitOf } from './figureUnit'
+import { figureUnitFactorOf, figureUnitOf } from './figureUnit'
 import { figureTextsOf } from '../Charts/figureChartStyle'
 import {
   figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
@@ -291,6 +291,7 @@ export const drawSunburstRepresentation = (
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.
     unit: figureUnitOf(sankey),
+    unit_factor: figureUnitFactorOf(sankey),
     empty_label: t('sunburst.empty') as string,
     others_label: t('sunburst.others') as string,
     scope_label: (count: number) => t('sunburst.scope', { count }) as string,

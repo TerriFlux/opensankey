@@ -537,8 +537,10 @@ export const partAspect = (
           numberSaid(said('value_label_nb_significant_digits')) ?? base_format.nb_significant_digits,
         custom_digit: booleanSaid(said('value_label_custom_digit')) ?? base_format.custom_digit,
         nb_digit: numberSaid(said('value_label_nb_digit')) ?? base_format.nb_digit,
-        // Le FACTEUR n'entre pas ici : il reste au graphe (cf. l'arbitrage, plus haut).
-        unit: unit_on ? unitSymbol() : ''
+        // Le FACTEUR n'est pas réglable par la part : il reste au graphe (cf. l'arbitrage, plus
+        // haut), qui le transmet — une part qui règle ses décimales divise comme ses voisines.
+        unit: unit_on ? unitSymbol() : '',
+        factor: base_format.factor
       })
       : undefined
   }

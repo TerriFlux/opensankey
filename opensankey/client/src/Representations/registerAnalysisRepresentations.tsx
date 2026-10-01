@@ -60,7 +60,7 @@ import {
 } from '../Charts/figureChartStyle'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
-import { figureUnitOf, figureUnitOfNode } from './figureUnit'
+import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfNode } from './figureUnit'
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
@@ -387,11 +387,18 @@ const analysisPartContext = (ctx: Type_RepresentationContext) => {
     ? figureUnitOfNode(subject.node)
     : figureUnitOf(app_data.drawing_area.sankey)
   return {
-    format: figureValueFormatOf(ctx.options, unit),
+    format: figureValueFormatOf(ctx.options, unit, undefined, unitFactorOfSubject(subject, app_data)),
     resolveUnit: (id: string) => app_data.drawing_area.sankey.units.resolve(id)?.unit.label
   }
 }
 
+
+/** 30/09/2026 — le diviseur d'unité de la figure, lu sur le même flux que son symbole. */
+const unitFactorOfSubject = (
+  subject: Type_ChartSubject | null, app_data: Type_RepresentationContext['app_data']
+): number => subject?.kind === 'node'
+  ? figureUnitFactorOfNode(subject.node)
+  : figureUnitFactorOf(app_data.drawing_area.sankey)
 
 const chartOptions = (
   ctx: Type_RepresentationContext,
@@ -409,7 +416,7 @@ const chartOptions = (
     out_of_scale_label: (count: number) => app_data.t('view.unit_chart_out_of_scale', { count }),
     independent_scales_label: app_data.t('view.unit_chart_independent_scales'),
     style: figureChartStyleOf(ctx.options, defaults),
-    format: figureValueFormatter(figureValueFormatOf(ctx.options, unit)),
+    format: figureValueFormatter(figureValueFormatOf(ctx.options, unit, undefined, unitFactorOfSubject(subject, app_data))),
     // os#1477 — TOUT LE TEXTE DE LA FIGURE, titre compris, comme pour le disque : le titre est la
     // zone n° 0 depuis os#1449, et l'auteur peut en ajouter d'autres (`text_zones`).
     texts: (subject_name: string) => figureTextsOf(ctx.options, subject_name),
@@ -1071,6 +1078,7 @@ export const registerAnalysisRepresentations = (): void => {
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
+          unit_factor: unitFactorOfSubject(chartSubjectOf(ctx.element), ctx.app_data),
           empty_label: t('sunburst.empty') as string,
           others_label: t('sunburst.others') as string,
           truncated_label: t('sunburst.truncated') as string,

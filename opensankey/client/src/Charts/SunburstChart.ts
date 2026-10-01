@@ -399,6 +399,8 @@ export interface Type_SunburstChartOptions {
   on_part_select?: (sector_id: string) => void
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
+  /** 30/09/2026 — le diviseur qui va avec `unit` (kt → Mt : 1 000) ; le dessin reste sur le brut. */
+  unit_factor?: number
   /**
    * os#1449 — LES TEXTES DE LA FIGURE, dans l'ordre où ils se posent ; le titre est le premier.
    *
@@ -1105,8 +1107,10 @@ export const drawSunburstChart = (
   // par la mise en forme depuis os#1445 : les chiffres d'une valeur sont un réglage d'élément, et
   // une part qui règle les siens écrit sa valeur autrement que ses voisines.
   const digits = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
-  const formatWith = (s: Type_SunburstStyle) => (v: number): string => {
-    if (opts.format) return opts.format(v)
+  const unit_factor = (opts.unit_factor !== undefined && opts.unit_factor > 0) ? opts.unit_factor : 1
+  const formatWith = (s: Type_SunburstStyle) => (raw: number): string => {
+    if (opts.format) return opts.format(raw)
+    const v = raw / unit_factor
     if (s.scientific_notation) {
       return s.significant_digits
         ? v.toExponential(digits(s.nb_significant_digits - 1, 20))
