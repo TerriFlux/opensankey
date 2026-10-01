@@ -62,6 +62,8 @@ import { previewedTagGroups } from './tagGroupPriority'
 // SANS rouvrir le cycle Element → … → Handler, puisque le gabarit à jetons ne connaît pas le
 // modèle — ses résolveurs lui sont injectés sous forme de fonction.
 import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
+// sa#586 — module FEUILLE lui aussi (aucun import)
+import { domSafeId } from './domSafeId'
 
 // SA#541 — index « couleur → cadenas », calculé au PREMIER usage : `ElementsAttributesConfig` et
 // `Element` se chargent en cycle, la config peut ne pas exister encore à l'évaluation du module.
@@ -375,7 +377,12 @@ export abstract class Class_BaseElement {
   public get id() { return this._id }
   public get sankey() { return this.drawing_area.sankey }
   public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
+  /**
+   * Identifiant DOM du <g> racine de l'élément. sa#586 — encodage INJECTIF de l'id (`domSafeId`) :
+   * deux éléments dont les ids ne diffèrent que par la ponctuation, les espaces ou les accents
+   * (« 25 » / « -25 ») ne partagent plus le même groupe.
+   */
+  public get svg_group() { return 'gg_' + domSafeId(this._id) }
 
   public isMouseOver() { return this._is_mouse_over }
   public setMouseOver() { this._is_mouse_over = true }
