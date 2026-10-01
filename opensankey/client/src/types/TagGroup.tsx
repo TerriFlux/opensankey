@@ -10,6 +10,7 @@ import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTa
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
 import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER } from '../Algorithms/DimensionMemberOrder'
+import { foldSmallParts } from '../Algorithms/DimensionOthers'
 import {
   Type_HierarchicalPaletteParams, Type_PaletteNode, computeHierarchicalColors, default_hierarchical_palette_params
 } from '../Algorithms/HierarchicalPalette'
@@ -1505,6 +1506,42 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * `undefined` si la dimension ne se dessine pas en bandes (les flux la lisent d'abord : même
    * critère que `Link.tagged_value_bands`) — la légende garde alors les membres choisis.
    */
+  /**
+   * os#1511 — les membres REPLIÉS AU TOTAL dans « Autres » (règle arrêtée avec Julien le 01/10) :
+   * chaque membre choisi est sommé sur les bandes brutes de tous les flux visibles
+   * (`Link.dimensionBandsRaw`), puis la règle de la couronne s'applique à ces totaux (moins de
+   * 0,5 %, ou au-delà du 19e ; au moins deux à replier). Le flux y ajoute son exception locale
+   * (cf. `Link.tagged_value_bands`).
+   *
+   * Mémoïsé le temps d'un passage SYNCHRONE : chaque flux d'un même dessin le relit, et le
+   * recalculer par flux coûterait n² ; la mémo tombe à la tâche suivante, et dès que la sélection
+   * ou les flux visibles changent, donc jamais d'un geste à l'autre. Une lecture RÉENTRANTE (la
+   * visibilité d'un flux qui relirait ses bandes) rend l'ensemble vide plutôt que de boucler.
+   */
+  public globalFoldedMembers(): Set<string> {
+    if (this._fold_computing) return new Set()
+    const sankey = this._ref_sankey
+    this._fold_computing = true
+    try {
+      const flux = sankey.visible_links_list
+      const cle = this.selected_tags_list.map(tag => tag.id).join('|') + '#' + flux.map(lien => lien.id).join('|')
+      if (this._fold_memo !== undefined && this._fold_memo.cle === cle) return this._fold_memo.replies
+      const totaux = new Map<string, number>()
+      flux.forEach(lien => lien.dimensionBandsRaw(this).forEach(bande => {
+        totaux.set(bande.id, (totaux.get(bande.id) ?? 0) + bande.value)
+      }))
+      const { folded } = foldSmallParts([...totaux].map(([id, value]) => ({ id, value })))
+      const replies = new Set(folded.map(part => part.id))
+      this._fold_memo = { cle, replies }
+      queueMicrotask(() => { this._fold_memo = undefined })
+      return replies
+    } finally {
+      this._fold_computing = false
+    }
+  }
+  private _fold_memo: { cle: string, replies: Set<string> } | undefined = undefined
+  private _fold_computing = false
+
   public get members_drawn_in_bands(): { members: Set<string>, has_others: boolean } | undefined {
     if (!this.draws_members_in_color) return undefined
     const sankey = this._ref_sankey
