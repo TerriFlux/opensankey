@@ -857,6 +857,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
         t_dimension_change: t('MEP.legend_dimension_change'),
+        // os#1511 — entrée « Autres » d'une dimension en bandes (même libellé que la couronne)
+        t_others: t('sunburst.others'),
         // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
         default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
       }

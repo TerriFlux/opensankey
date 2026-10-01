@@ -138,6 +138,16 @@ export class LinkTooltip {
         html += `<th>${escapeHtml(tag?.display_name ?? (band.id === OTHERS_ID ? this.othersLabel() : band.id))}</th>`
         html += `<td class="value">${escapeHtml(formatElementValue(band.value, this._link) + (unit ? ' ' + unit : ''))}</td>`
         html += '</tr>'
+        // « Autres » SURVOLÉE : ce qu'elle replie sur CE flux, membre par membre (« petit ici »).
+        if (band.id === hovered && band.folded !== undefined) {
+          band.folded.forEach(part => {
+            const membre = multi_dim.tags_dict[part.id] as Class_DataTag | undefined
+            html += '<tr>'
+            html += `<th>&nbsp;&nbsp;${escapeHtml(membre?.display_name ?? part.id)}</th>`
+            html += `<td class="value">${escapeHtml(formatElementValue(part.value, this._link) + (unit ? ' ' + unit : ''))}</td>`
+            html += '</tr>'
+          })
+        }
       })
     }
 
