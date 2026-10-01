@@ -310,7 +310,11 @@ const DONUT_HONOURS = {
   value_label_is_visible: { default: true },
   name_label_font_size: { default: 11 },
   value_label_percent: { default: 'value_total' },
-  centre_content: { default: 'value' },
+  // 01/10/2026 — PLUS DANS LE GRAPHE (Julien : « le centre c'est aussi une part ; ce n'est pas dans
+  // graphe »). Ce que le centre écrit se règle sur SA part, comme le libellé et la valeur de
+  // n'importe quel secteur ; `centre_content` reste lu, comme DÉFAUT de cette part (les couronnes
+  // enregistrées le portent), mais ne s'offre plus dans l'inspecteur de la figure.
+  centre_content: { default: 'value', visibleIf: () => false },
   centre_hole: { default: 55 },
   // 26/09/2026 — LE SEUIL D'AFFICHAGE DES ÉTIQUETTES, ET SEULEMENT SUR LA COURONNE.
   //
