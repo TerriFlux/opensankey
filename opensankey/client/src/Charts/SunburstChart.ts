@@ -31,6 +31,7 @@ import type { Type_FigureTextDefaults } from './figurePartText'
 // partir de ce que la part a dit, comme la couronne et les barres.
 import { partAspect } from './partAspect'
 import type { Type_FigurePart, Type_FigurePartAspect } from './partAspect'
+import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
 import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureText, Type_FigurePartTextAspect } from './figureChartStyle'
@@ -1437,8 +1438,14 @@ export const drawSunburstChart = (
     centre.append('circle').attr('r', inner_r - 2).attr('fill', palette.surface)
     // Ce que le centre écrit est réglé (os#1425). Les deux textes existent toujours — le survol
     // s'en sert pour écrire le fil d'Ariane — mais ils restent vides si l'auteur n'en veut pas.
-    const shows_name = st.centre_content === 'both' || st.centre_content === 'name'
-    const shows_value = st.centre_content === 'both' || st.centre_content === 'value'
+    //
+    // 01/10/2026 — ET LE CENTRE EST UNE PART ICI AUSSI (Julien : « le centre c'est aussi une part,
+    // ça permet de configurer son libellé et ses valeurs comme le reste »). La couronne en anneaux
+    // passe ses parts, centre compris ; ce que la part dit l'emporte, `centre_content` reste le
+    // défaut — la même règle que la couronne à plat (`drawDonutChart`).
+    const centre_part = opts.parts?.[FIGURE_CENTRE_PART_ID] !== undefined ? aspectOf(FIGURE_CENTRE_PART_ID) : undefined
+    const shows_name = centre_part?.name?.is_visible ?? (st.centre_content === 'both' || st.centre_content === 'name')
+    const shows_value = centre_part?.value?.is_visible ?? (st.centre_content === 'both' || st.centre_content === 'value')
     const centre_label = centre.append('text')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
       .attr('y', shows_value ? -inner_r * 0.3 : 0)
