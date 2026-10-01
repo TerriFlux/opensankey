@@ -837,12 +837,31 @@ export const drawDonutChart = (
    * encore vrai.
    */
   const label_radius = (inner + radius) / 2
+  //
+  // 01/10/2026 — LA VRAIE GÉOMÉTRIE, ET NON LA CORDE (Julien : « la notion de trop petit ne me
+  // paraît pas très bien calculée : pour Fruits et légumes et Pomme de terre, on voit que ça rentre »).
+  // La corde mesure la place LE LONG de l'arc ; or le texte est horizontal, et sur les côtés du
+  // disque il court dans l'ÉPAISSEUR de l'anneau. Le texte tient si les quatre coins de son cadre,
+  // posé au centre du secteur, restent dans le secteur : entre les deux rayons, entre les deux angles.
   const sectorFits = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     const s = styleOf(d)
-    const chord_px = 2 * label_radius * Math.sin(Math.min(Math.PI, d.endAngle - d.startAngle) / 2)
-    return sector_lines(d).every(
-      line => labelTextWidthPx(line.text, s.name_label_font_size) <= chord_px
-    )
+    const lines = sector_lines(d)
+    const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
+    const h = lines.length * s.name_label_font_size * 1.15
+    const mid = (d.startAngle + d.endAngle) / 2
+    const cx = label_radius * Math.sin(mid)
+    const cy = -label_radius * Math.cos(mid)
+    const tol = 1
+    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(([sx, sy]) => {
+      const x = cx + sx * w / 2
+      const y = cy + sy * h / 2
+      const r = Math.hypot(x, y)
+      if (r < inner - tol || r > radius + tol) return false
+      let a = Math.atan2(x, -y)
+      if (a < d.startAngle - Math.PI) a += 2 * Math.PI
+      if (a > d.endAngle + Math.PI) a -= 2 * Math.PI
+      return a >= d.startAngle - tol / Math.max(r, 1) && a <= d.endAngle + tol / Math.max(r, 1)
+    })
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
   const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
