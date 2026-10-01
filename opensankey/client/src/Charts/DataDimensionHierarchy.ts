@@ -354,6 +354,19 @@ export const dimensionRootsOf = (dim: Class_DataTagGroup): Class_DataTag[] =>
   (dim.tags_list as Class_DataTag[]).filter(m => m.parent === undefined)
 
 /**
+ * 01/10/2026 — LES MEMBRES DES PETITS MULTIPLES : une petite couronne par membre. Ceux que le
+ * diagramme montre quand il en montre plusieurs (la barre du haut décide) ; sinon les enfants du
+ * membre montré, ou de la racine ; un membre sans enfants se montre seul.
+ */
+export const smallMultipleMembersOf = (dim: Class_DataTagGroup): Class_DataTag[] => {
+  const shown = dim.selected_tags_list as Class_DataTag[]
+  if (shown.length > 1) return shown
+  const base = shown[0] ?? dimensionRootsOf(dim)[0]
+  if (base === undefined) return []
+  return base.children.length > 0 ? (base.children as Class_DataTag[]) : [base]
+}
+
+/**
  * L'ensemble ouvert EFFECTIF : une figure qui n'a encore rien ouvert (aucune entrée de membre)
  * découpe sa première dimension d'un cran — sans quoi une couronne neuve serait un disque plein.
  */

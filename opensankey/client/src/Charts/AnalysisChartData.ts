@@ -343,6 +343,11 @@ export interface Type_HierarchyReading {
   max_depth?: number
   /** Le libellé du secteur « non réparti » (mode 'declared'), traduit par l'appelant. */
   residual_label?: string
+  /**
+   * 01/10/2026 — LES DIMENSIONS QUI NE DÉCOUPENT PAS CETTE FIGURE, quoi que dise la coupe : celle
+   * des petits multiples (une couronne par membre), que chaque petite couronne lit sur SON membre.
+   */
+  exclude_dimension_ids?: string[]
 }
 
 /**
@@ -571,10 +576,12 @@ const dataDimensionTreeOf = (
   // figure, dans l'ordre choisi (« Premier axe ») puis celui du fichier ; c'est la coupe du
   // diagramme qui dit lesquelles découpent (cf. `buildNestedDimensionTree`).
   const linked = !isDetachedOpening(expanded)
-  const dimensions = linked
+  const excluded = reading.exclude_dimension_ids ?? []
+  const dimensions = (linked
     ? [...declared, ...(element.sankey.data_taggs_list as unknown as Class_DataTagGroup[])
       .filter(d => d.is_hierarchical && !declared.includes(d))]
-    : declared
+    : declared).filter(d => !excluded.includes(d.id))
+  if (dimensions.length === 0) return null
   return buildNestedDimensionTree(
     subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
     dimensions,
