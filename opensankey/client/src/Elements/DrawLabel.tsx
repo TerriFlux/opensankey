@@ -606,7 +606,7 @@ export abstract class DrawLabelBase {
     }
 
     // Préfixées comme les autres : l'identifiant d'un Class_Handler devient son identifiant DOM
-    // (`svg_group` = `gg_` + identifiant nettoyé), et deux canevas affichant le même nœud
+    // (`svg_group` = `gg_` + identifiant encodé), et deux canevas affichant le même nœud
     // poseraient sinon deux poignées homonymes dans le même document.
     this._resize_handle_left = new Class_LabelResizeHandler(
       this.domId(`label_resize_${this.prefix}_left_${this.getElementId()}`),

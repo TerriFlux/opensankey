@@ -57,6 +57,7 @@ import { clampLinkThickness } from './flowThickness'
 import { effectiveOpacity } from './elementOpacity'
 import { shadeAmongSiblings } from './splitBandColor'
 import { topLayerDefining } from './tagStyles'
+import { domSafeId } from './domSafeId'
 import { resolveScaleCarrierTag } from '../types/ScaleResolution'
 import { countLinkDraw } from '../types/DrawCounters'
 import { Class_LinkAttribute } from './Element'
@@ -1464,7 +1465,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const x_end = at_source ? this.position_x_start : this.position_x_end
       const y_end = at_source ? this.position_y_start : this.position_y_end
       const is_hh = this.orientation_in_effect === 'hh'
-      const safe_id = this.id.replace(/[^a-zA-Z0-9_-]/g, '_')
+      const safe_id = domSafeId(this.id) // sa#586 — injectif : url(#…) se résout dans tout le document
       let cum = 0
       bands.forEach(({ color, share }, band_idx) => {
         const lo = cum
@@ -1532,9 +1533,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._applySourceNotchMask()
   }
 
-  /** Id du mask d'encoche — id du flux échappé pour rester un fragment url(#...) valide. */
+  /** Id du mask d'encoche — id du flux échappé (sa#586 : injectivement) pour rester un fragment url(#...) valide. */
   private _sourceNotchMaskId(): string {
-    return 'link_source_notch_mask_' + this.id.replace(/[^a-zA-Z0-9_-]/g, c => '_' + c.charCodeAt(0) + '_')
+    return 'link_source_notch_mask_' + domSafeId(this.id)
   }
 
   /**
