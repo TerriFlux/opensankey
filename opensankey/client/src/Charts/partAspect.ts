@@ -506,7 +506,11 @@ export const partAspect = (
     // rien : c'est le même lecteur, avec l'autre préfixe.
     name: {
       ...textAspect('name_label'),
-      custom_text: said('name_label_source') === 'custom' ? textSaid(said('name_label_text')) : undefined
+      // Les deux schémas de « texte personnalisé » : celui des nœuds (`name_label_source`) et celui
+      // des flux (`name_label_text_source`), qu'une part reçoit quand son sujet est un flux.
+      custom_text: (said('name_label_source') === 'custom' || said('name_label_text_source') === 'custom')
+        ? textSaid(said('name_label_text'))
+        : undefined
     },
     value: textAspect('value_label'),
     // os#1482 — ET ELLE S'EST ALLUMÉE D'ELLE-MÊME, exactement comme ce commentaire l'annonçait.
