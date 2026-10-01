@@ -93,6 +93,8 @@ const makeFakeAppData = (initial_node_ids: string[] = []) => {
     drawing_area,
     menu_configuration,
     setSteps: jest.fn(),
+    // sa#581 — la visite montre le diagramme avant de désigner ses éléments.
+    ensureDiagramShown: jest.fn(),
     // Le vrai reset() remplace la zone de dessin par une neuve : ici on vide le diagramme.
     reset: jest.fn(() => {
       Object.keys(nodes).forEach(id => delete nodes[id])
