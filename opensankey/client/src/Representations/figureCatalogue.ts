@@ -388,7 +388,21 @@ export const LEVELS_CONFIG = {
     //
     // LA SORTE, elle, se déclare avec la nature qui l'offre (`DONUT_HONOURS`) et non ici : c'est
     // `display`, la carte « Affichage » de la figure, sœur de celle du diagramme.
-  }, { kind: 'slider', min: 0, max: 25, step: 0.5 })
+  }, { kind: 'slider', min: 0, max: 25, step: 0.5 }),
+  // 01/10/2026 — CE QUI NE TIENT PAS SORT EN DÉTACHÉ (Julien : « pour les parties trop petites qui
+  // ne peuvent pas afficher de label, l'afficher en détaché »).
+  labels_callout_small: entry<boolean>(true, 'levels', {
+    en: 'Detach small labels', fr: 'Détacher si trop petit', es: 'Separar si es pequeña',
+    de: 'Klein: abgesetzt', it: 'Staccare se piccola', 'zh-CN': '过小则引出', ja: '小さければ引き出す'
+  }, {
+    en: 'A part too small for its label writes it outside, linked by a line, instead of hiding it.',
+    fr: 'Une part trop petite pour son libellé l\'écrit au dehors, reliée par un trait, au lieu de le taire.',
+    es: 'Una parte demasiado pequeña para su etiqueta la escribe fuera, unida por una línea, en lugar de ocultarla.',
+    de: 'Ein für seine Beschriftung zu kleiner Teil schreibt sie außen, mit einer Linie verbunden, statt sie auszublenden.',
+    it: 'Una parte troppo piccola per la sua etichetta la scrive fuori, collegata da una linea, invece di nasconderla.',
+    'zh-CN': '放不下标签的过小部分会在外侧用引线标注，而不是隐藏。',
+    ja: 'ラベルが収まらない小さな部分は、隠さずに線でつないで外側に書きます。'
+  })
 } as const
 
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────

@@ -833,10 +833,17 @@ export const drawDonutChart = (
     )
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
-  const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean =>
-    (aspectOf(d.data.id)?.label_callout ?? st.name_label_callout)
-    && d.data.id !== '__others__'
-    && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+  const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
+    if (d.data.id === '__others__') return false
+    const said = aspectOf(d.data.id)?.label_callout
+    if (said !== undefined || st.name_label_callout) {
+      return (said ?? st.name_label_callout) && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+    }
+    // 01/10/2026 — TROP PETIT POUR SON ÉTIQUETTE : elle sort au lieu de se taire. Un secteur d'à
+    // peine un pixel n'a pas de bord où accrocher son trait ; il reste muet.
+    if (!st.labels_callout_small || (d.endAngle - d.startAngle) * radius < 1) return false
+    return (d.endAngle - d.startAngle) / (2 * Math.PI) < labelMinShare(st) || !sectorFits(d)
+  }
   // Ce qui porte une étiquette se décide SECTEUR PAR SECTEUR, et non plus par un drapeau de figure :
   // une part peut demander son nom là où la figure n'en veut pas. Rien ne change quand personne ne
   // dit rien — un secteur sans ligne n'avait déjà pas de texte.

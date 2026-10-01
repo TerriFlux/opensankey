@@ -265,9 +265,9 @@ const DONUT_HONOURS = {
   // le même défaut côté tracé — les deux doivent dire la même chose, sinon l'inspecteur montre un
   // réglage et le dessin en applique un autre.
   legend_position: { default: 'left' },
-  // 01/10/2026 — légende visible et à gauche, nom éteint, valeur et pourcentage dans les secteurs :
-  // la légende nomme, le secteur chiffre (Julien). Mêmes défauts que `DONUT_STYLE_DEFAULTS`.
-  legend_visible: { default: true },
+  // 01/10/2026 — nom + valeur + % dans les secteurs, pas de légende (Julien, en fin de compte).
+  // Mêmes défauts que `DONUT_STYLE_DEFAULTS`.
+  legend_visible: { default: false },
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
@@ -304,7 +304,7 @@ const DONUT_HONOURS = {
   // que tout le monde rallume. Les couronnes existantes gagneront donc leurs noms à la
   // réouverture ; celles dont l'auteur avait explicitement décoché gardent leur réglage, la
   // surcharge primant sur le défaut.
-  name_label_is_visible: { default: false },
+  name_label_is_visible: { default: true },
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
   value_label_is_visible: { default: true },
@@ -336,6 +336,8 @@ const DONUT_HONOURS = {
   // quel objet, quelle année, quel niveau ; l'affichage dit CE QU'ON MONTRE de cet endroit-là.
   // Julien, deux captures côte à côte : « y a coordonnées mais pas affichage ».
   labels_min_share: { sort: 'display' as const },
+  // 01/10/2026 — et ce qui ne tient pas sort en détaché, au lieu de se taire.
+  labels_callout_small: { sort: 'display' as const },
   legend_width: { default: 230 }
 }
 const BARS_HONOURS = {
