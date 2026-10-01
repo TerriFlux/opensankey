@@ -248,13 +248,17 @@ export class Class_SankeyPanes {
     this._base = { owner: base, doc: this.buildDocument(this.host.dumpDrawingAreaToJSON(base)) }
   }
 
-  /** LA MISE EN PAGE DE BASE REVIENT sur la zone de dessin du modèle, qui retourne sur la base. */
-  public restoreBaseLayout(): void {
+  /**
+   * LA MISE EN PAGE DE BASE REVIENT sur la zone de dessin du modèle, qui retourne sur la base. Rend
+   * `true` si elle a changé quelque chose.
+   */
+  public restoreBaseLayout(): boolean {
     const parked = this.parkedBase()
     const base = this.baseDrawingArea()
-    if (!parked || !base) return
+    if (!parked || !base) return false
     this.applyLayout(base, parked.drawing_area)
     this.dropBase()
+    return true
   }
 
   /** Jette l'abri : un autre contenu arrive, dont la zone de dessin montre sa propre base. */
@@ -322,25 +326,28 @@ export class Class_SankeyPanes {
 
   /**
    * APPLIQUER AU DESSIN VIVANT LA MISE EN PAGE PROPRE du volet qui le reçoit. Rien pour une vue
-   * lourde : sa zone de dessin est la vue elle-même.
+   * lourde : sa zone de dessin est la vue elle-même. Rend `true` si la mise en page a changé.
    */
-  protected applyLayoutOf(o: Type_MainZoneOccupant): void {
+  protected applyLayoutOf(o: Type_MainZoneOccupant): boolean {
     const coordinate = this.coordinateOf(o)
-    if (this.isHeavyView(coordinate)) { this.disposeRender(o.id); return }
+    if (this.isHeavyView(coordinate)) { this.disposeRender(o.id); return false }
     const entry = this.host.views_dict[coordinate]
     // Une vue à mise en page propre s'applique par-dessus la base, qu'on met à l'abri ; le maître
     // et les vues légères ordinaires la retrouvent.
+    let changed = false
     if (entry?.own_layout) this.parkBase()
-    else this.restoreBaseLayout()
+    else changed = this.restoreBaseLayout()
     const render = this._renders.get(o.id)
     const registered = !!entry?.own_layout && this.isRegisteredOn(o, coordinate)
     if (!registered && render && !render.doc.disposed && render.coordinate === coordinate) {
       this.applyLayout(this.host.drawing_area, render.doc.drawing_area)
+      changed = true
     } else if (entry?.own_layout) {
-      this.applyViewLayout(coordinate)
+      changed = this.applyViewLayout(coordinate) || changed
     }
     // Le volet est vivant : son rendu ne montre plus rien, le dessin le remplace.
     this.disposeRender(o.id)
+    return changed
   }
 
   /**
@@ -421,11 +428,19 @@ export class Class_SankeyPanes {
         mc.main_zone_live_sankey_id = id
         const was_bypassing = host.drawing_area.bypass_redraws
         host.drawing_area.bypass_redraws = true
-        try { this.applyLayoutOf(o) } finally { host.drawing_area.bypass_redraws = was_bypassing }
+        let changed = false
+        try { changed = this.applyLayoutOf(o) } finally { host.drawing_area.bypass_redraws = was_bypassing }
         this._layout_owner = id
-        host.drawing_area.draw()
-        host.resetHistory()
-        mc.updateAllMenuComponents()
+        // Le dessin PASSE d'un volet à l'autre : il se redessine avec la mise en page de celui qui le
+        // reçoit, et l'historique repart — il parlait de l'autre volet. Rien de tout cela quand il se
+        // POSE pour la première fois sans que rien ne change (ouverture d'un document, premier geste
+        // dans la grande zone) : ce serait redessiner en plein geste — un survol a ainsi remplacé
+        // les éléments qu'il désignait — et oublier pour rien l'historique de l'utilisateur.
+        if (previous !== null || changed) {
+          host.drawing_area.draw()
+          host.resetHistory()
+          mc.updateAllMenuComponents()
+        }
       } else {
         mc.main_zone_live_sankey_id = id
         host.switchViewForPane(coordinate)
@@ -458,13 +473,17 @@ export class Class_SankeyPanes {
       const panes = mc.main_zone_sankey_panes
       const open = new Set(panes.map(p => p.id))
       this._known.forEach((memo, id) => { if (!open.has(id)) this.onPaneClosed(id, memo) })
-      // Une coordonnée implicite (fichier d'avant, volet ouvert sans vue) suit la vue courante :
-      // elle se fige ici, sans quoi le volet changerait de vue avec le suivant qu'on active.
+      // Une coordonnée implicite (fichier d'avant, volet ouvert sans vue) suit la vue courante. Dès
+      // qu'il y a DEUX volets Sankey, elle se fige ici, sans quoi le volet changerait de vue avec
+      // le suivant qu'on active. Seul, il n'y a rien à figer : sa vue EST la vue courante, et le
+      // fichier d'un document à un seul volet reste celui d'avant.
+      const several = panes.length > 1
       panes.forEach(p => {
         const view = mainZoneSubjectView(p.subject)
         // Une vue qui n'existe plus (supprimée, ou d'un autre contenu) : le volet retombe sur la
         // vue courante, comme une coordonnée implicite.
-        if (view === '' || !this.viewExists(view)) mc.setSankeyPaneView(p.id, this.host.current_view_id)
+        if (view !== '' && !this.viewExists(view)) mc.setSankeyPaneView(p.id, several ? this.host.current_view_id : '')
+        else if (view === '' && several) mc.setSankeyPaneView(p.id, this.host.current_view_id)
       })
       // Le vivant montre SA mise en page dès que la vue courante est la sienne — y compris après
       // un rechargement du même document (annulation, reprise de session), qui a remis à zéro qui
