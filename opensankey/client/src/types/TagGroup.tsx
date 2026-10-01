@@ -9,6 +9,7 @@ import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
+import { Type_AssignmentRule, Type_RuleMeasurable, parseAssignmentRule, resolveRuleTag, serializeAssignmentRule } from './TagAssignmentRule'
 import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER } from '../Algorithms/DimensionMemberOrder'
 import { foldSmallParts } from '../Algorithms/DimensionOthers'
 import {
@@ -84,6 +85,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'style_id',
   // SA#553 - etiquette generee « Sans [nom du groupe] », modelisee
   'untagged_tag',
+  // SA#580 - groupe de flux attribue par regles, modelise
+  'assignment_rule',
   // os#1511 - hierarchie de la dimension, modelisee : hors du sac, une dimension rendue plate
   // ressortirait avec ses anciens niveaux. os#1516 - recette de palette, modelisee.
   'levels', 'current_level', 'palette',
@@ -556,6 +559,15 @@ export abstract class Class_ProtoTagGroup {
 
   /** SA#553 - Redessine les elements de la famille du groupe (porteurs possibles de son etiquette generee). */
   public drawFamilyElements(): void { }
+
+  /**
+   * SA#580 - Le groupe attribue-t-il ses etiquettes par regles (cf. `TagAssignmentRule.ts`) ?
+   * Seuls les groupes de flux le peuvent ; ici, jamais.
+   */
+  public get is_rule_based(): boolean { return false }
+
+  /** SA#580 - Etiquette que la regle du groupe attribue a une valeur, undefined sans regle ni grandeur. */
+  public ruleTagFor(_value: Type_RuleMeasurable): Class_ProtoTag | undefined { return undefined }
 
   /**
    * SA#553 - Retire et rend le style de groupe lu (ancien format du #541), pour le reporter sur
@@ -1138,6 +1150,38 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   // fichiers fusion existants deviennent additifs).
   private _is_additive: boolean = true
 
+  // SA#580 — groupe « attribué par règles » (cf. `TagAssignmentRule.ts`) : ses étiquettes se
+  // calculent sur la valeur affichée de chaque flux, elles ne s'affectent pas. undefined = groupe
+  // ordinaire. Écrit seulement s'il est posé.
+  private _assignment_rule: Type_AssignmentRule | undefined = undefined
+
+  public get assignment_rule(): Type_AssignmentRule | undefined { return this._assignment_rule }
+  public set assignment_rule(_: Type_AssignmentRule | undefined) {
+    this._assignment_rule = _
+    this.ruleConfigUpdated()
+  }
+
+  public override get is_rule_based(): boolean { return this._assignment_rule !== undefined }
+
+  /** SA#580 — étiquette de la tranche où tombe la grandeur de la valeur (cf. `resolveRuleTag`). */
+  public override ruleTagFor(value: Type_RuleMeasurable): Class_FluxTag | undefined {
+    if (this._assignment_rule === undefined) return undefined
+    return resolveRuleTag(value.ruleQuantity(this._assignment_rule.quantity), this.tags_list as Class_FluxTag[])
+  }
+
+  /**
+   * SA#580 — la règle ou un seuil a changé : chaque flux peut changer d'étiquette. Les mémoires de
+   * visibilité (empreinte des étiquettes de flux) et de style (époques du #541) sont périmées, et
+   * tous les flux comme la légende sont à redessiner — sans relancer le calcul du bilan.
+   * Signaux en `?.()` : des tests construisent des groupes sur un diagramme simulé.
+   */
+  public ruleConfigUpdated(): void {
+    this._ref_sankey.fluxTagsUpdated?.()
+    this._ref_sankey.tagStylesConfigUpdated?.()
+    this._ref_sankey.links_list?.forEach(link => link.draw())
+    this._ref_sankey.drawing_area?.legend?.draw()
+  }
+
   public get carries_values(): boolean { return this._carries_values }
   public set carries_values(_: boolean) { this._carries_values = _ }
 
@@ -1166,6 +1210,9 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     if (this._is_unit_type) json_object['is_unit_type'] = true
     // Défaut true → on ne sérialise que l'exception (non additif sans être unité).
     if (!this._is_additive) json_object['is_additive'] = false
+    // SA#580 — écriture conditionnelle : un groupe ordinaire produit le même JSON qu'avant
+    const assignment_rule = serializeAssignmentRule(this._assignment_rule)
+    if (assignment_rule !== undefined) json_object['assignment_rule'] = assignment_rule
   }
 
   protected _fromJSON(
@@ -1177,6 +1224,12 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     this._has_own_scales = getBooleanFromJSON(json_object, 'has_own_scales', this._has_own_scales)
     this._is_unit_type = getBooleanFromJSON(json_object, 'is_unit_type', this._is_unit_type)
     this._is_additive = getBooleanFromJSON(json_object, 'is_additive', this._is_additive)
+    // SA#580 — un JSON de groupe complet (qui porte ses étiquettes) décrit entièrement la règle,
+    // clé absente = groupe ordinaire ; une mise à jour partielle muette n'y touche pas. Posée
+    // sans signal : les flux ne sont pas encore lus, rien n'est à redessiner.
+    if (json_object['assignment_rule'] !== undefined || json_object['tags'] !== undefined) {
+      this._assignment_rule = parseAssignmentRule(json_object['assignment_rule'])
+    }
   }
 
   // #528 — ces quatre drapeaux sont serialises (ci-dessus) mais n'etaient pas
@@ -1194,6 +1247,8 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     this._has_own_scales = tagg_to_copy._has_own_scales
     this._is_unit_type = tagg_to_copy._is_unit_type
     this._is_additive = tagg_to_copy._is_additive
+    // SA#580 — comme ces drapeaux (#528) : une copie de groupe perdrait sa règle en silence
+    this._assignment_rule = parseAssignmentRule(serializeAssignmentRule(tagg_to_copy._assignment_rule))
   }
 
   // PROTECTED ATTRIBUTES ===============================================================

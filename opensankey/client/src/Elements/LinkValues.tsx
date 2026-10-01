@@ -1,5 +1,6 @@
 import type { Class_DataTag, Class_Tag } from '../types/Tag'
 import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
+import { RULE_QUANTITY_COMPUTED_RELATIVE_UNCERTAINTY } from '../types/TagAssignmentRule'
 import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getBooleanFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
 import type { Class_LinkElement } from './Link'
 import type { Class_NodeElement } from './Node'
@@ -907,9 +908,11 @@ export class Class_ElementValue {
     // diagramme ces chaînes pesaient ~18 % du poids du JSON.
     // La LECTURE reste tolérante (cf. fromJSON) : un fichier ancien porte
     // encore ces id et les conserve.
-    if (this.flux_taggs_list.length > 0) {
+    // SA#580 - les etiquettes d'un groupe attribue par regles se calculent : jamais ecrites
+    const written_taggs = this.flux_taggs_list.filter(tagg => !tagg.is_rule_based)
+    if (written_taggs.length > 0) {
       json_object['tags'] = Object.fromEntries(
-        this.flux_taggs_list
+        written_taggs
           .map(tagg => [
             tagg.id,
             this.flux_tags_list
@@ -993,6 +996,12 @@ export class Class_ElementValue {
     // sur un flux ventilé, par une de ses valeurs coordonnées. La légende et le
     // filtrage comptent l'usage via ce test : sans les tagged_values, un flux
     // fusionné (ex. import e!Sankey) ferait disparaître ses tags de la légende.
+    // SA#580 - groupe attribue par regles : le port se calcule sur la valeur, les etiquettes
+    // affectees a la main (avant que le groupe ne devienne « par regles ») ne comptent plus.
+    if (tag?.group?.is_rule_based) {
+      const ruled = tag.group.ruleTagFor(this)
+      return tag.is_untagged ? ruled === undefined : ruled === tag
+    }
     // SA#553 - etiquette generee : portee quand la valeur ne porte aucune autre etiquette du groupe
     if (tag?.is_untagged) return !this.carriesTagOfGroup(tag.group.id)
     return this._flux_tags.includes(tag) ||
@@ -1001,13 +1010,17 @@ export class Class_ElementValue {
 
   /** SA#553 - la valeur porte-t-elle une etiquette (ordinaire) du groupe, sur le flux ou une valeur coordonnee ? */
   public carriesTagOfGroup(group_id: string): boolean {
+    // SA#580 - groupe attribue par regles : porte une etiquette si la regle en attribue une
+    const rule_group = this.rule_flux_taggs_list.find(tagg => tagg.id === group_id)
+    if (rule_group) return rule_group.ruleTagFor(this) !== undefined
     return (this._taggs_dict[group_id]?.length ?? 0) > 0 ||
       this._tagged_values.some(tv => tv.tags_list.some(tag => tag.group.id === group_id))
   }
 
   public addTag(tag: Class_Tag) {
     // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
-    if (tag?.is_untagged) return
+    // SA#580 - ni celui d'une etiquette d'un groupe attribue par regles
+    if (tag?.is_untagged || tag?.group?.is_rule_based) return
     if (!this.hasGivenTag(tag)) {
       this._flux_tags.push(tag)
       this.addTagToGroupTagDict(tag)
@@ -1017,7 +1030,8 @@ export class Class_ElementValue {
   }
 
   public removeTag(tag: Class_Tag) {
-    if (this.hasGivenTag(tag)) {
+    // SA#580 - `hasGivenTag` calcule le port des groupes par regles : on retire ce qui est STOCKE
+    if (this._flux_tags.includes(tag)) {
       const idx = this._flux_tags.indexOf(tag)
       this._flux_tags.splice(idx, 1)
       this.removeTagToGroupTagDict(tag)
@@ -1124,6 +1138,43 @@ export class Class_ElementValue {
   public get taggs_dict() {
     return this._taggs_dict
   }
+
+  /** SA#580 - groupes de flux du diagramme qui attribuent leurs etiquettes par regles. */
+  public get rule_flux_taggs_list(): Class_TagGroup[] {
+    const sankey = this.link?.sankey
+    if (!sankey) return []
+    return sankey.flux_taggs_list.filter(tagg => tagg.is_rule_based)
+  }
+
+  /**
+   * SA#580 - etiquettes que la valeur PORTE A L'ECRAN : celles qui lui sont affectees, hors
+   * groupes par regles, plus celles que ces groupes lui attribuent. C'est ce que lisent l'affichage
+   * (visibilite, styles, couleur, info-bulle, libelles) ; `flux_tags_list` reste ce qui est STOCKE
+   * (ecriture du fichier, copies).
+   */
+  public get effective_flux_tags_list(): Class_Tag[] {
+    const rule_taggs = this.rule_flux_taggs_list
+    if (rule_taggs.length === 0) return this.flux_tags_list
+    const tags = this._flux_tags.filter(tag => !tag.group.is_rule_based)
+    rule_taggs.forEach(tagg => {
+      const tag = tagg.ruleTagFor(this) as Class_Tag | undefined
+      if (tag) tags.push(tag)
+    })
+    return tags
+  }
+
+  /** SA#580 - pendant de `taggs_dict` pour `effective_flux_tags_list`. */
+  public get effective_taggs_dict(): { [x: string]: Class_Tag[]; } {
+    if (this.rule_flux_taggs_list.length === 0) return this._taggs_dict
+    const dict: { [x: string]: Class_Tag[]; } = {}
+    this.effective_flux_tags_list.forEach(tag => {
+      (dict[tag.group.id] ??= []).push(tag)
+    })
+    return dict
+  }
+
+  /** SA#580 - grandeur mesuree par une regle d'attribution ; aucune sur une valeur generique. */
+  public ruleQuantity(_quantity: string): number | undefined { return undefined }
 
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
@@ -1249,7 +1300,8 @@ export class Class_ElementTaggedValue {
    */
   public addTag(tag: Class_Tag) {
     // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
-    if (tag?.is_untagged) return
+    // SA#580 - ni celui d'une etiquette d'un groupe attribue par regles
+    if (tag?.is_untagged || tag?.group?.is_rule_based) return
     if (!this.hasGivenTag(tag)) {
       this._tags
         .filter(t => t.group === tag.group)
@@ -1332,6 +1384,20 @@ export class Class_LinkValue extends Class_ElementValue {
   public get result_uncertainty() { return this._result_uncertainty }
   public get result_uncertainty_abs() { return this._result_uncertainty_abs }
   public get result_uncertainty_bound() { return this._result_uncertainty_bound }
+
+  /**
+   * SA#580 - grandeurs des groupes attribues par regles. Incertitude relative calculee : le % du
+   * calcul du bilan ; « infini » (rien ne borne la valeur) = `Infinity`, la tranche la moins fiable ;
+   * aucune pour une valeur non calculee ou un flux nul (une incertitude relative n'y a pas de sens).
+   */
+  public override ruleQuantity(quantity: string): number | undefined {
+    if (quantity !== RULE_QUANTITY_COMPUTED_RELATIVE_UNCERTAINTY) return undefined
+    const uncertainty = this._result_uncertainty
+    if (uncertainty === null || this._result_value[Class_LinkValue.SRC] === 0) return undefined
+    if (typeof uncertainty === 'number') return uncertainty
+    const parsed = Number(uncertainty)
+    return (uncertainty.trim() !== '' && Number.isFinite(parsed)) ? parsed : Number.POSITIVE_INFINITY
+  }
 
   public get data_source() { return this._data_source }
   public set data_source(_: string | null) { this._data_source = _ }

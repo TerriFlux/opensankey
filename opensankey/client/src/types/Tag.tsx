@@ -41,6 +41,8 @@ import { Class_Sankey } from './Sankey'
 import { Type_LangMap, normalizeLang, parseLangMap, parseStylePatch, resolveLangMap, serializeLangMap, serializeStylePatch } from '../Persistence/persistenceMigrations'
 import type { Type_StylePatch } from './Theme'
 import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup, Class_ViewTagGroup } from './TagGroup'
+import type { Class_FluxTagGroup } from './TagGroup'
+import { parseRuleUpperBound } from './TagAssignmentRule'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -60,6 +62,8 @@ const KNOWN_TAG_JSON_KEYS = new Set([
   'description', 'style_patch',
   // SA#541 - style nomme impose par l'etiquette : modelise, donc hors du sac.
   'style_id',
+  // SA#580 - seuil haut de la tranche d'un groupe attribue par regles : modelise.
+  'rule_upper_bound',
 ])
 
 // SA#553 - ETIQUETTE GENEREE « Sans [nom du groupe] » ************************************
@@ -469,7 +473,8 @@ export abstract class Class_ProtoTag {
     this._is_selected = !this._is_selected
     // SA#553 - les porteurs de l'etiquette generee n'ont pas de reference a redessiner : leur
     // visibilite, memorisee sur l'empreinte d'etiquettes, doit etre recalculee.
-    if (this._is_untagged) this.updateFingerprint()
+    // SA#580 - idem pour une etiquette d'un groupe attribue par regles.
+    if (this._is_untagged || this.group.is_rule_based) this.updateFingerprint()
     // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement, AVANT le
     // redraw d'update() (slot optionnel enregistré par OSP).
     this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
@@ -647,7 +652,8 @@ export abstract class Class_Tag extends Class_ProtoTag {
   public update() {
     // SA#553 - l'etiquette generee n'a pas de references : ses porteurs se calculent, et peuvent
     // etre n'importe quel element de sa famille. On les redessine tous.
-    if (this.is_untagged) {
+    // SA#580 - idem pour une etiquette d'un groupe attribue par regles.
+    if (this.is_untagged || this._group.is_rule_based) {
       this._group.drawFamilyElements()
       this._ref_sankey.drawing_area.legend.draw()
       return
@@ -667,7 +673,8 @@ export abstract class Class_Tag extends Class_ProtoTag {
 
   public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     // SA#553 - le port de l'etiquette generee se calcule, il ne s'affecte pas
-    if (this.is_untagged) return
+    // SA#580 - ni celui d'une etiquette d'un groupe attribue par regles
+    if (this.is_untagged || this._group.is_rule_based) return
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       // SA#541 - ce que porte l'element change : ses couches de style sont a recalculer.
@@ -766,6 +773,19 @@ export class Class_FluxTag extends Class_Tag {
     return this._unit_ref ? this._ref_sankey.units.resolve(this._unit_ref) : undefined
   }
 
+  // SA#580 — seuil HAUT de la tranche de l'étiquette quand son groupe attribue ses étiquettes par
+  // règles (cf. `TagAssignmentRule.ts`), dans l'unité de la grandeur ; undefined = tranche ouverte.
+  // Écrit seulement s'il est posé. Le changer ré-étiquette les flux sans calcul.
+  private _rule_upper_bound: number | undefined = undefined
+
+  public get rule_upper_bound(): number | undefined { return this._rule_upper_bound }
+  public set rule_upper_bound(_: number | undefined) {
+    const next = parseRuleUpperBound(_)
+    if (next === this._rule_upper_bound) return
+    this._rule_upper_bound = next
+    if (this.group.is_rule_based) (this.group as Class_FluxTagGroup).ruleConfigUpdated()
+  }
+
   protected _toJSON(
     json_object: Type_JSON,
     _kwargs?: Type_JSON
@@ -773,6 +793,7 @@ export class Class_FluxTag extends Class_Tag {
     super._toJSON(json_object, _kwargs)
     if (this._scale !== undefined) json_object['scale'] = this._scale
     if (this._unit_ref !== undefined) json_object['unit'] = this._unit_ref
+    if (this._rule_upper_bound !== undefined) json_object['rule_upper_bound'] = this._rule_upper_bound
   }
 
   protected _fromJSON(
@@ -782,6 +803,11 @@ export class Class_FluxTag extends Class_Tag {
     super._fromJSON(json_object, _kwargs)
     if (json_object['scale'] !== undefined) this._scale = getNumberFromJSON(json_object, 'scale', 0)
     if (json_object['unit'] !== undefined) this._unit_ref = getStringFromJSON(json_object, 'unit', '')
+    // SA#580 — un JSON d'étiquette complet (il porte son nom) décrit entièrement le seuil :
+    // clé absente = tranche ouverte ; une mise à jour partielle muette n'y touche pas.
+    if (json_object['rule_upper_bound'] !== undefined || json_object['name'] !== undefined) {
+      this._rule_upper_bound = parseRuleUpperBound(json_object['rule_upper_bound'])
+    }
   }
 
   protected _copyFrom(tag_to_copy: Class_ProtoTag) {
@@ -789,6 +815,7 @@ export class Class_FluxTag extends Class_Tag {
     if (tag_to_copy instanceof Class_FluxTag) {
       this._scale = tag_to_copy._scale
       this._unit_ref = tag_to_copy._unit_ref
+      this._rule_upper_bound = tag_to_copy._rule_upper_bound
     }
   }
 

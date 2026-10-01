@@ -194,7 +194,8 @@ export function sortLinksElementsByRelativeNodesPositions(
  */
 function valueTags(value: Class_LinkValue | null): Class_Tag[] {
   if (!value) return []
-  const tags = [...value.flux_tags_list]
+  // SA#580 - y compris les etiquettes que les groupes par regles attribuent a la valeur
+  const tags = [...value.effective_flux_tags_list]
   value.tagged_values_list.forEach(tv => tags.push(...tv.tags_list))
   return tags
 }
@@ -1312,7 +1313,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       unit_tag_of(tv)?.resolved_unit?.unit.label
     // SA#541 — étiquettes d'une bande = les siennes + celles de la feuille qui la contient (une
     // fiabilité posée sur la feuille vaut pour chacune de ses valeurs coordonnées).
-    const leaf_tags = this.value?.flux_tags_list ?? []
+    const leaf_tags = this.value?.effective_flux_tags_list ?? []
     const bands = tvs.map(tv => {
       const { color: styled_color, ...styled_opacity } = band_style([...tv.tags_list, ...leaf_tags])
       return { id: tv.id, px: Math.max(0, px_for(tv)), color: styled_color ?? color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible, ...styled_opacity }
@@ -3238,9 +3239,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get flux_tags_list() {
+    // SA#580 - etiquettes portees A L'ECRAN par la valeur affichee, groupes par regles compris
     const value = this.value
     if (value)
-      return this.value.flux_tags_list
+      return value.effective_flux_tags_list
     return []
   }
 
@@ -3250,10 +3252,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get flux_taggs_dict() {
-    const value = this.value
-    if (value)
-      return this.value.flux_taggs_dict
-    return {}
+    // SA#580 - groupes des etiquettes portees a l'ecran (cf. `flux_tags_list`)
+    const taggs: { [_: string]: Class_TagGroup; } = {}
+    this.flux_tags_list.forEach(tag => { taggs[tag.group.id] ??= tag.group })
+    return taggs
   }
 
   /**
@@ -3674,9 +3676,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get are_related_flux_tags_selected(): boolean {
+    // SA#580 - les etiquettes d'un flux sont celles de la VALEUR AFFICHEE : changer d'annee ou
+    // d'unite les change (groupes par regles, etiquettes posees par annee). L'empreinte memorisee
+    // couvre donc aussi la selection des etiquettes de donnees.
+    const fingerprint = this.sankey.flux_tags_fingerprint + '|' + this.sankey.data_tags_fingerprint
     if (
       (this._are_related_flux_tags_selected === undefined) ||
-      (this.sankey.flux_tags_fingerprint !== this._flux_tags_fingerprint)
+      (fingerprint !== this._flux_tags_fingerprint)
     ) {
       // Recompute visibility value
       let are_related_flux_tags_selected: boolean
@@ -3684,7 +3690,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (list_tag.length > 0) {
         let display = true
         // Check if at least one flux tag is selected in each group = ok to display
-        Object.values(this.value?.taggs_dict ?? {})
+        // SA#580 - groupes par regles compris (etiquette calculee sur la valeur affichee)
+        Object.values(this.value?.effective_taggs_dict ?? {})
           .forEach(tag_list => {
             display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
           })
@@ -3709,7 +3716,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
       // Update memorized values
       this._are_related_flux_tags_selected = are_related_flux_tags_selected
-      this._flux_tags_fingerprint = this.sankey.flux_tags_fingerprint
+      this._flux_tags_fingerprint = fingerprint
     }
     return this._are_related_flux_tags_selected
   }
