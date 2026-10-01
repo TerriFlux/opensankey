@@ -33,15 +33,23 @@ export { addThousandsSeparator }
 export const formatElementValue = (n: number, sample_link?: Class_LinkElement): string => {
   if (!sample_link) return addThousandsSeparator(String(n))
   const lv = getNameLabelValues(sample_link, 'value_label')
-  let v = n
-  // OS#1286 — en mode unit_model, le facteur est le coefficient de l'unité du registre.
+  return formatDigits(n / resolveValueUnitFactor(sample_link), lv)
+}
+
+/**
+ * Le DIVISEUR des valeurs de `sample_link` : ce que l'unité affichée vaut en unité du fichier
+ * (59 320 kt écrits « 59,32 Mt » : 1 000). 1 quand il n'y en a pas.
+ *
+ * OS#1286 — en mode unit_model, le facteur est le coefficient de l'unité du registre. Sorti de
+ * `formatElementValue` le 30/09/2026 pour que les FIGURES divisent comme le dessin : la couronne
+ * écrivait « 59 320 Mt » à côté d'un flux étiqueté « 59.32 Mt » (os#1511).
+ */
+export const resolveValueUnitFactor = (sample_link?: Class_LinkElement): number => {
+  if (!sample_link) return 1
+  const lv = getNameLabelValues(sample_link, 'value_label')
   const model = lv.unit_type === 'unit_model' ? sample_link.sankey.units.resolve(lv.unit) : undefined
-  if (model) {
-    if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
-  } else if (lv.unit_factor && lv.unit_factor > 1) {
-    v = v / lv.unit_factor
-  }
-  return formatDigits(v, lv)
+  if (model) return model.unit.coefficient !== 0 ? model.unit.coefficient : 1
+  return (lv.unit_factor && lv.unit_factor > 1) ? lv.unit_factor : 1
 }
 
 /**
