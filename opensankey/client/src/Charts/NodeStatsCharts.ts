@@ -16,6 +16,7 @@
 // aux classes DrawingArea/Sankey : les données arrivent déjà extraites
 // (Type_StatSlice), ce module ne fait que dessiner dans le conteneur DOM fourni.
 
+import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import * as d3 from '../d3Modules'
 // os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
 import {
@@ -71,6 +72,15 @@ export interface Type_StatSlice {
 }
 
 export interface Type_ChartOptions {
+  /**
+   * 01/10/2026 — LE ZOOM DE LA COURONNE À PLAT (Julien : « il manque toujours les fonctions de zoom
+   * dans cette fenêtre »). Même pont que le disque : la poignée est prêtée à la colonne d'outils
+   * (−/+/%, cadrage), et le point de vue survit au remontage.
+   */
+  zoom_handle?: (handle: Type_FigureZoomHandle | null) => void
+  on_zoom?: () => void
+  initial_view?: Type_FigureView | null
+  on_view?: (view: Type_FigureView) => void
   // Formatage d'une valeur (nombre + unité éventuelle). Défaut : 4 chiffres significatifs.
   format?: (value: number) => string
   // Libellé du regroupement des petites parts (donut). Défaut : 'Others'.
@@ -588,7 +598,9 @@ export const drawDonutChart = (
     .attr('width', side)
     .attr('height', side)
     .style('flex', '0 0 auto')
-  const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
+  // 01/10/2026 — LA COUCHE QUE LE ZOOM DÉPLACE ; la couronne y est posée comme avant.
+  const zoom_layer = svg.append('g').attr('class', 'node_stats_zoom_layer')
+  const g = zoom_layer.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
   // os#1481 — OÙ VIT LE FILTRE D'OMBRE. Un `<filter>` par secteur serait ruineux sur une couronne
   // de cent parts, et l'ombre est la même pour toutes : `partShadow` la déclare ICI, à la demande.
   const defs = svg.append('defs')
@@ -1078,8 +1090,27 @@ export const drawDonutChart = (
     const edgeOf = (d: d3.PieArcDatum<Type_StatSlice>) => point(radius, midOf(d))
     const defaultAt = (d: d3.PieArcDatum<Type_StatSlice>) =>
       point(radius + CALLOUT_GAP_PX, midOf(d))
+    // 01/10/2026 — RANGÉES, ET NON EMPILÉES (Julien, capture à l'appui : les petites parts du
+    // haut écrivaient leurs étiquettes les unes sur les autres). Celles que l'auteur n'a pas
+    // déplacées se posent en deux colonnes, à droite et à gauche du disque, dans l'ordre de leur
+    // hauteur, chacune au moins une hauteur d'étiquette sous la précédente.
+    const laid_out = new Map<string, { x: number, y: number }>()
+    ;([1, -1] as const).forEach(side_sign => {
+      const column = callouts
+        .filter(d => opts.label_positions?.[d.data.id] === undefined)
+        .filter(d => (Math.sin(midOf(d)) >= 0 ? 1 : -1) === side_sign)
+        .map(d => ({ d, y: defaultAt(d).y }))
+        .sort((a, b) => a.y - b.y)
+      let floor = -Infinity
+      column.forEach(({ d, y }) => {
+        const height_px = sector_lines(d).length * styleOf(d).name_label_font_size * 1.15
+        const at_y = Math.max(y, floor + height_px / 2)
+        floor = at_y + height_px / 2 + 2
+        laid_out.set(d.data.id, { x: side_sign * (radius + CALLOUT_GAP_PX * 2), y: at_y })
+      })
+    })
     const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
-      opts.label_positions?.[d.data.id] ?? defaultAt(d)
+      opts.label_positions?.[d.data.id] ?? laid_out.get(d.data.id) ?? defaultAt(d)
     // Le texte s'écarte du disque : à droite il commence au trait, à gauche il y finit.
     const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
     const layer = g.append('g').attr('class', 'node_stats_callouts')
@@ -1238,6 +1269,50 @@ export const drawDonutChart = (
   // CE QUE LE TRACÉ A DÉCIDÉ, RAPPORTÉ UNE FOIS — ici, et non à la toute fin : la suite ne dessine
   // que la légende, qui ne peint aucune part, et le corps sort plus bas par un retour anticipé.
   opts.on_parts_resolved?.(resolved)
+
+  // ── 01/10/2026 — LE CADRE, PUIS LE ZOOM ────────────────────────────────────────────────────
+  //
+  // Julien, capture à l'appui : « avec les labels détachés, la couronne n'est pas cadrée ». Les
+  // étiquettes sorties débordaient du carré du disque. La figure prend donc pour cadre ce qu'elle
+  // dessine VRAIMENT — disque et étiquettes — et l'étale sur toute la place de la fenêtre.
+  const g_node = g.node() as SVGGElement | null
+  if (callouts.length > 0 && g_node && typeof g_node.getBBox === 'function') {
+    try {
+      const box = g_node.getBBox()
+      const pad = 6
+      const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
+      const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
+      svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
+        .attr('viewBox', `${box.x + side / 2 - pad} ${box.y + side / 2 - pad} ${box.width + 2 * pad} ${box.height + 2 * pad}`)
+        .attr('preserveAspectRatio', 'xMidYMid meet')
+    } catch { /* jsdom n'a pas de mise en page : le cadre d'avant reste */ }
+  }
+  // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
+  // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
+  if (opts.zoom_handle) {
+    let view = opts.initial_view ?? { x: 0, y: 0, k: 1 }
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 8])
+      .filter((event: Event) => event.type === 'wheel' || (event.type === 'mousedown' && (event as MouseEvent).button === 0 && (event.target as Element).tagName === 'svg'))
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+        const changed = event.transform.k !== view.k
+        view = { x: event.transform.x, y: event.transform.y, k: event.transform.k }
+        zoom_layer.attr('transform', event.transform.toString())
+        opts.on_view?.(view)
+        if (changed) opts.on_zoom?.()
+      })
+    const svg_sel = svg as unknown as d3.Selection<SVGSVGElement, unknown, null, undefined>
+    svg_sel.call(zoom)
+      .call(zoom.transform, d3.zoomIdentity.translate(view.x, view.y).scale(view.k))
+      .on('dblclick.zoom', null)
+      .on('dblclick', () => { svg_sel.call(zoom.transform, d3.zoomIdentity) })
+    opts.zoom_handle({
+      getScale: () => view.k,
+      setScale: (k) => { svg_sel.call(zoom.scaleTo, Math.max(0.5, Math.min(8, k))) },
+      scaleBy: (factor) => { svg_sel.call(zoom.scaleBy, factor) },
+      fit: () => { svg_sel.call(zoom.transform, d3.zoomIdentity) }
+    })
+  }
 
   if (!legend_shown) return
   // 24/09/2026 — DESSOUS, LA LÉGENDE EST UN BANDEAU, PAS UNE COLONNE COUCHÉE.

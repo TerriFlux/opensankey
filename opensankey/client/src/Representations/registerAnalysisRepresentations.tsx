@@ -1126,10 +1126,18 @@ export const registerAnalysisRepresentations = (): void => {
           on_centre_click: gestures.back,
           centre_back_label: t('sunburst.back') as string,
           label_positions: wiring.label_positions,
-          on_label_move: wiring.on_label_move
+          on_label_move: wiring.on_label_move,
+          // 01/10/2026 — le zoom de la couronne à plat, prêté comme celui du mode à anneaux.
+          zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),
+          on_zoom: () => ctx.app_data.menu_configuration.notify(ZOOM_TOPIC),
+          initial_view: figureViewOf(ctx.window_id, ctx.pane_key),
+          on_view: (view) => rememberFigureView(ctx.window_id, ctx.pane_key, view)
         }
       )
-      return () => { container.innerHTML = '' }
+      return () => {
+        publishFigureZoom(ctx.window_id, ctx.pane_key, null)
+        container.innerHTML = ''
+      }
     }
   })
 
