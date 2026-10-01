@@ -739,7 +739,8 @@ export const drawDonutChart = (
    */
   const sectorName = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const a = aspectOf(d.data.id)
-    const name = sunburstSectorName(d.data.label, null, {
+    // Le texte personnalisé de la part, s'il y en a un, remplace le nom de son sujet.
+    const name = a?.name?.custom_text !== undefined && a.name.custom_text !== '' ? a.name.custom_text : sunburstSectorName(d.data.label, null, {
       separator: a?.name?.separator ?? '',
       separator_part: a?.name?.separator_part ?? 'after'
     })
@@ -1226,7 +1227,10 @@ export const drawDonutChart = (
   // part le surcharge comme n'importe quel élément surcharge le réglage de sa figure. Aucune
   // exception nouvelle : c'est la doctrine du lecteur commun, appliquée à un texte de plus.
   const centre = opts.part_aspect?.(FIGURE_CENTRE_PART_ID)
-  const centre_name = opts.title_fallback ?? ''
+  // Le centre aussi : son texte personnalisé, sinon le nom de ce que la figure montre.
+  const centre_name = (centre?.name?.custom_text !== undefined && centre.name.custom_text !== '')
+    ? centre.name.custom_text
+    : opts.title_fallback ?? ''
   const wants_name = (centre?.name?.is_visible
     ?? (st.centre_content === 'name' || st.centre_content === 'both')) && centre_name !== ''
   const wants_value = centre?.value?.is_visible
