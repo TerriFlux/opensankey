@@ -508,8 +508,15 @@ export const partAspect = (
       ...textAspect('name_label'),
       // Les deux schémas de « texte personnalisé » : celui des nœuds (`name_label_source`) et celui
       // des flux (`name_label_text_source`), qu'une part reçoit quand son sujet est un flux.
+      //
+      // ⚠️ LE TEXTE EST TRADUISIBLE : il est rangé `{ fr: 'Exportation' }`, une valeur par langue, et
+      // non en chaîne (trouvé au banc le 01/10/2026 — c'est pourquoi aucune part ne l'écrivait). On
+      // le lit donc par l'accesseur de la part, qui rend la valeur de la langue courante.
       custom_text: (said('name_label_source') === 'custom' || said('name_label_text_source') === 'custom')
-        ? textSaid(said('name_label_text'))
+        ? textSaid(said('name_label_text')) ??
+          (said('name_label_text') !== undefined
+            ? textSaid((part as unknown as Record<string, unknown>)['name_label_text'])
+            : undefined)
         : undefined
     },
     value: textAspect('value_label'),
