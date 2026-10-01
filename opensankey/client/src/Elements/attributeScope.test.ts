@@ -176,6 +176,17 @@ describe('os#1497 un style de part porte la nature de sa figure', () => {
     expect(attributeAppliesToElements([style_noeud], 'value_label_unit_type')).toBe(true)
   })
 
+  it('os#1518 UN STYLE D APPLICATION ne recoit pas ce qui est reserve aux parts', () => {
+    // Julien, capture a l appui : en portee Styles, l onglet Valeur d un style de flux offrait
+    // « Unite personnalisee » et un champ texte (le selecteur des parts) au lieu du registre.
+    const { style } = buildScene()
+
+    expect(attributeAppliesToElements([style], 'value_label_part_unit')).toBe(false)
+    expect(attributeAppliesToElements([style], 'value_label_unit_type')).toBe(true)
+    // Il garde ce que noeuds, flux ou zones recoivent
+    expect(attributeAppliesToElements([style], 'shape_border_radius')).toBe(true)
+  })
+
   it('LES QUATRE NOMS SONT LES MEMES DES DEUX COTES', () => {
     // ⚠️ LE GARDE-FOU DE LA RECOPIE. `attributeScope` ne peut pas importer `ElementStyle` sans
     // refermer un cycle de modules : les quatre identifiants y sont donc recopies. Ce cas tient
