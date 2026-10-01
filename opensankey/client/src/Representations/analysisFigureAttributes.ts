@@ -103,6 +103,18 @@ export const hierarchyExpandedAttribute = () => figureAttribute<string[] | undef
     de: 'Geöffnete Knoten', it: 'Nodi aperti', 'zh-CN': '已展开的节点', ja: '開いたノード'
   }, undefined, { kind: 'none' }
 )
+/**
+ * 01/10/2026 — LES PETITS MULTIPLES : la dimension qui donne UNE PETITE COURONNE PAR MEMBRE
+ * (Julien : « une petite couronne par membre de la seconde hiérarchie »). Absente, une seule
+ * couronne. Sans interface générique : la ligne « Une couronne par » des Coordonnées la règle.
+ */
+export const SMALL_MULTIPLES_KEY = 'small_multiples_by'
+export const smallMultiplesAttribute = () => figureAttribute<string | undefined>(
+  undefined, 'identity', {
+    en: 'One chart per', fr: 'Une couronne par', es: 'Un gráfico por',
+    de: 'Ein Diagramm pro', it: 'Un grafico per', 'zh-CN': '每个成员一个图', ja: 'メンバーごとに1つ'
+  }, undefined, { kind: 'none' }
+)
 export const hierarchyFocusAttribute = () => figureAttribute<string[] | undefined>(
   undefined, 'identity', {
     en: 'Drilled into', fr: 'Descendu dans', es: 'Profundizado en',
@@ -373,7 +385,8 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   // adresses pour le même choix, c'est une de trop (cf. `hierarchyReadingAttributes`).
   ...hierarchyReadingAttributes(),
   [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute(),
-  [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute()
+  [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute(),
+  [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute()
 }
 
 export const DONUT_ATTRIBUTES: Type_FigureAttributesConfig = {

@@ -40,8 +40,9 @@ import type { Type_PartInput } from './parts/buildParts'
 import { registerFigureNature } from './figureNature'
 import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
-  HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY
+  HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
+import { mountFigureTextZones } from './figureTextZones'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
 import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
@@ -50,13 +51,14 @@ import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
 import {
-  diagramDimensionOpening, dimensionRootsOf, effectiveDimensionOpening, isDetachedOpening
+  diagramDimensionOpening, dimensionRootsOf, effectiveDimensionOpening, isDetachedOpening,
+  smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
-  figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
+  figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS, FIGURE_TEXT_DEFAULTS
 } from '../Charts/figureChartStyle'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
@@ -64,7 +66,7 @@ import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfN
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
-  type Type_AnalysisDescriptor, isDescriptorEmpty, isGroupedCross
+  type Type_AnalysisDescriptor, effectiveDecompose, isDescriptorEmpty, isGroupedCross
 } from '../Charts/AnalysisDescriptor'
 import { analysisPartTarget } from './AnalysisPartTarget'
 import {
@@ -299,6 +301,7 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
   const raw = ctx.options ?? {}
   const one_of = <T extends string>(v: unknown, allowed: readonly T[]): T | undefined =>
     allowed.includes(v as T) ? v as T : undefined
+  const split = smallMultiplesOf(ctx)
   return {
     chain_axes: typeof raw['chain_axes'] === 'boolean' ? raw['chain_axes'] : undefined,
     value_mode: one_of(raw['value_mode'], ['sum', 'declared'] as const),
@@ -306,8 +309,48 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
     max_depth: typeof raw['max_depth'] === 'number' && raw['max_depth'] > 0
       ? Math.floor(raw['max_depth'])
       : undefined,
-    residual_label: ctx.app_data.t('sunburst.unallocated') as string
+    residual_label: ctx.app_data.t('sunburst.unallocated') as string,
+    // Les petits multiples : leur dimension ne découpe pas, chaque petite couronne la lit sur
+    // son membre (cf. `smallMultiplesOf`).
+    exclude_dimension_ids: split ? [split.dimension.id] : undefined
   }
+}
+
+/**
+ * 01/10/2026 — LES PETITS MULTIPLES DE LA COURONNE : la dimension réglée (`small_multiples_by`) et
+ * ses membres, une petite couronne chacun. `null` sans réglage, ou quand le réglage ne s'applique
+ * pas : la figure ne découpe pas par dimension de données, ou la dimension n'existe plus.
+ */
+const smallMultiplesOf = (
+  ctx: Type_RepresentationContext
+): { dimension: Class_DataTagGroup, members: Class_DataTag[] } | null => {
+  const id = ctx.options?.[SMALL_MULTIPLES_KEY]
+  if (typeof id !== 'string' || id === '' || !ctx.element) return null
+  const subject = chartSubjectOf(ctx.element)
+  if (!subject) return null
+  const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
+  if (!descriptor || effectiveDecompose(descriptor)?.kind !== 'data_dimension') return null
+  const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined
+  if (!dimension?.is_hierarchical) return null
+  const members = smallMultipleMembersOf(dimension)
+  return members.length > 0 ? { dimension, members } : null
+}
+
+/** La navigation de la figure, la dimension des petits multiples fixée sur `member`. */
+const navAtMember = (nav: Type_FigureNavigation, member: Class_DataTag): Type_FigureNavigation => ({
+  ...nav,
+  data_tags: [...(nav.data_tags ?? []).filter(tag => tag.group.id !== member.group.id), member]
+})
+
+/** Les parts d'UNE petite couronne : la figure lue au membre. */
+const smallMultipleSlices = (
+  ctx: Type_RepresentationContext, member: Class_DataTag
+): Type_PartInput[] => {
+  const a = analysisOf(ctx)
+  if (!a) return []
+  return analysisPartInputs(a.subject, a.descriptor, flatParts(
+    a.subject, a.descriptor, navAtMember(a.nav, member), hierarchyReadingOf(ctx), expandedOf(ctx.options)
+  ))
 }
 
 /**
@@ -1017,6 +1060,19 @@ export const registerAnalysisRepresentations = (): void => {
     // 25/09/2026 — LES SECTEURS, PLUS LE CENTRE. La couronne est la seule à en avoir un : les
     // barres n'ont pas de trou, et le disque écrit son centre par un autre chemin.
     parts: (ctx) => {
+      // 01/10/2026 — PETITS MULTIPLES : les parts de la figure sont l'UNION de celles des petites
+      // couronnes. Un même secteur (« Céréales ») porte le même identifiant dans chacune : c'est un
+      // seul élément, une seule couleur, une seule sélection, d'une couronne à l'autre.
+      const split = smallMultiplesOf(ctx)
+      if (split) {
+        const union = new Map<string, Type_PartInput>()
+        split.members.forEach(member => smallMultipleSlices(ctx, member).forEach(part => {
+          const seen = union.get(part.id)
+          union.set(part.id, seen ? { ...seen, value: (seen.value ?? 0) + (part.value ?? 0) } : part)
+        }))
+        const sectors = [...union.values()]
+        return [...sectors, centrePartInput(ctx, sectors.reduce((sum, p) => sum + (p.value ?? 0), 0))]
+      }
       const sectors = analysisPartsOf(ctx)
       if (sectors === null) return null
       const total = sectors.reduce((sum, p) => sum + (p.value ?? 0), 0)
@@ -1029,6 +1085,55 @@ export const registerAnalysisRepresentations = (): void => {
       const style = donutStyleOf(ctx)
       const gestures = donutClickGestures(ctx, style)
       const t = ctx.app_data.t
+
+      // 01/10/2026 — UNE PETITE COURONNE PAR MEMBRE (Julien : « une petite couronne par membre de
+      // la seconde hiérarchie »). La grille sous le titre de la figure, chaque case titrée par son
+      // membre et dessinée par le MÊME tracé à plat, avec les parts de la figure (aspect, sélection)
+      // et les valeurs lues au membre.
+      const split = smallMultiplesOf(ctx)
+      if (split) {
+        container.innerHTML = ''
+        const host = mountFigureTextZones(container, figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx)))
+        const n = split.members.length
+        const cols = Math.ceil(Math.sqrt(n * Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight)))
+        const rows = Math.ceil(n / Math.max(1, cols))
+        const grid = document.createElement('div')
+        grid.className = 'figure_small_multiples'
+        grid.style.display = 'grid'
+        grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`
+        grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`
+        grid.style.width = '100%'
+        grid.style.height = '100%'
+        host.appendChild(grid)
+        const by_id = new Map((parts as unknown as Type_StatSlice[]).map(p => [p.id, p]))
+        const base = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
+        split.members.forEach((member, i) => {
+          const cell = document.createElement('div')
+          cell.style.position = 'relative'
+          cell.style.minWidth = '0'
+          cell.style.minHeight = '0'
+          grid.appendChild(cell)
+          const slices = smallMultipleSlices(ctx, member)
+            .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
+          drawDonutChart(cell, slices, {
+            ...base,
+            style,
+            texts: () => [{
+              ...FIGURE_TEXT_DEFAULTS, text: member.name, bold: true,
+              font_size: Math.min(FIGURE_TEXT_DEFAULTS.font_size, 12)
+            }],
+            title_fallback: member.name,
+            part_aspect: wiring.part_aspect,
+            on_part_select: wiring.on_part_select,
+            // Le panneau apprend l'encre réelle des parts par UN tracé : le premier.
+            on_parts_resolved: i === 0 ? wiring.on_parts_resolved : undefined
+          })
+        })
+        return () => {
+          publishFigureZoom(ctx.window_id, ctx.pane_key, null)
+          container.innerHTML = ''
+        }
+      }
 
       // 24/09/2026 — UN ANNEAU PAR NIVEAU : LE MÊME ARBRE, DESSINÉ AUTREMENT.
       //
