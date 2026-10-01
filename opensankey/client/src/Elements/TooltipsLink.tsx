@@ -445,7 +445,7 @@ export class LinkTooltip {
     // OS#1286 — en mode unit_model le facteur est le coefficient de l'unité du registre.
     const model = lv.unit_type === 'unit_model' ? this._link.sankey.units.resolve(lv.unit) : undefined
     if (model) {
-      if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
+      v = v / model.unit_type.displayFactor(model.unit)
     } else if (lv.unit_factor && lv.unit_factor > 1) {
       v = v / lv.unit_factor
     }

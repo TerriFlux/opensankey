@@ -40,6 +40,34 @@ describe('OS#1286 — Class_UnitsRegistry', () => {
     expect(new Class_UnitsRegistry().resolve('')).toBeUndefined()
   })
 
+  test('os#1518 unite de reference : le facteur d affichage se rapporte a l unite de saisie', () => {
+    const reg = makeDefault()
+    const mass = reg.getUnitType('unit_type_mass')!
+    const unit = (id: string) => mass.units.find(u => u.id === id)!
+    // Sans unité de référence : données en unité de base (t)
+    expect(mass.displayFactor(unit('mass_kt'))).toBe(1000)
+    // Données saisies en kt : afficher en kt ne convertit pas, en Mt divise par 1000
+    mass.reference_unit_id = 'mass_kt'
+    expect(mass.displayFactor(unit('mass_kt'))).toBe(1)
+    expect(mass.displayFactor(unit('mass_mt'))).toBe(1000)
+    expect(mass.displayFactor(unit('mass_t'))).toBe(0.001)
+    // Persistée, relue, et rend le registre différent du catalogue
+    expect(reg.equalsDefaultCatalog()).toBe(false)
+    const reread = new Class_UnitsRegistry()
+    reread.fromJSON(JSON.parse(JSON.stringify(reg.toJSON())))
+    expect(reread.getUnitType('unit_type_mass')!.reference_unit?.id).toBe('mass_kt')
+    // Supprimer l unité de référence ramène à l unité de base
+    mass.removeUnit('mass_kt')
+    expect(mass.reference_unit_id).toBeUndefined()
+    expect(mass.displayFactor(unit('mass_mt'))).toBe(1000000)
+  })
+
+  test('os#1518 une grandeur sans unite de coefficient 1 garde un facteur egal au coefficient', () => {
+    const ut = new Class_UnitType('u', 'Fichier')
+    ut.addUnit('Mt', 1000000)
+    expect(ut.displayFactor(ut.units[0])).toBe(1000000)
+  })
+
   test('canonicalUnitSymbol : casse, accents, pluriels, alias', () => {
     expect(canonicalUnitSymbol('Tonnes')).toBe('t')
     expect(canonicalUnitSymbol('mégatonne')).toBe('mt')
