@@ -9,6 +9,8 @@ import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
+import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER } from '../Algorithms/DimensionMemberOrder'
+import { foldSmallParts } from '../Algorithms/DimensionOthers'
 import {
   Type_HierarchicalPaletteParams, Type_PaletteNode, computeHierarchicalColors, default_hierarchical_palette_params
 } from '../Algorithms/HierarchicalPalette'
@@ -85,6 +87,11 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // os#1511 - hierarchie de la dimension, modelisee : hors du sac, une dimension rendue plate
   // ressortirait avec ses anciens niveaux. os#1516 - recette de palette, modelisee.
   'levels', 'current_level', 'palette',
+  // os#1517 / os#1511 — barre du haut, un diagramme par membre, ordre des membres : écrits
+  // seulement hors défaut, donc à tenir HORS du sac, sinon une valeur remise au défaut ressortait
+  // au prochain enregistrement. `bands_by_value` / `nodes_by_value` sont relus (ancien format de
+  // `members_order`) puis abandonnés.
+  'topbar', 'member_bands', 'members_order', 'bands_by_value', 'nodes_by_value',
 ])
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -109,6 +116,19 @@ export abstract class Class_ProtoTagGroup {
 
   // Type of banner
   private _banner: tag_banner_type = 'one'
+
+  // os#1517 — LA BARRE DU HAUT EST UN RÉGLAGE À PART, pas une valeur de `banner`.
+  //
+  // Julien, 30/09 : « il faut pouvoir dire que c'est en topbar indépendamment des autres options,
+  // pareil pour frise en mode mono, et après bande ou nœud c'est encore autre chose. Là on met
+  // tout dans un seul sélecteur, ça va pas. » `banner` répond à COMBIEN et SOUS QUELLE FORME (un
+  // membre, en frise, en bandes) ; ceci répond à OÙ le choix se fait. Une dimension peut donc être
+  // en barre du haut ET en bandes, ou en nœuds.
+  //
+  // Compatibilité : `banner: 'topbar'` des fichiers existants se lit « un membre » + barre du haut,
+  // et ce cas s'écrit encore `banner: 'topbar'` (en plus de `topbar: true`) pour qu'un viewer
+  // publié antérieur le montre toujours en haut.
+  private _in_topbar: boolean = false
 
   /**
    * True if tag is currently on a deletion process
@@ -212,6 +232,7 @@ export abstract class Class_ProtoTagGroup {
     // Map complète (pas la string résolue) : les traductions survivent à la copie.
     this._name_map = { ...tagg_to_copy._name_map }
     this._banner = tagg_to_copy._banner
+    this._in_topbar = tagg_to_copy._in_topbar
     this._tag_count = tagg_to_copy._tag_count
     // #486 - les separateurs suivent le groupe : sans cette ligne, un updateFrom
     // (fusion de mise en page, duplication) les perdrait silencieusement et le
@@ -285,7 +306,10 @@ export abstract class Class_ProtoTagGroup {
     // Fill group attributes
     // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
-    json_object['banner'] = this._banner
+    // os#1517 — « un membre, en barre du haut » s'écrit comme avant, pour les viewers antérieurs ;
+    // les autres combinaisons portent la barre du haut dans sa propre clé.
+    json_object['banner'] = (this._in_topbar && this._banner === 'one') ? 'topbar' : this._banner
+    if (this._in_topbar) json_object['topbar'] = true
     json_object['tags_order'] = this._tags_order
     // #486 - ecrits seulement quand ils s'ecartent du defaut : un diagramme qui
     // n'en declare pas produit exactement le meme JSON qu'avant.
@@ -352,7 +376,11 @@ export abstract class Class_ProtoTagGroup {
     if (anta_sep_read !== undefined && anta_sep_read !== '') this._antagonists_separator = anta_sep_read
     const banner_read = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     const valid_banners: tag_banner_type[] = ['none', 'one', 'multi', 'sequence', 'topbar']
-    if (valid_banners.includes(banner_read)) this._banner = banner_read
+    if (valid_banners.includes(banner_read)) this.banner = banner_read
+    // os#1517 — clé présente seulement quand elle vaut vrai ; absente, on ne touche à rien
+    // (`fromJSON` sert aussi aux mises à jour partielles).
+    if (json_object['topbar'] === true) this._in_topbar = true
+    else if (json_object['topbar'] === false) this._in_topbar = false
     // #537 - cle absente = defaut du format. On n'ecrase que si la cle est
     // presente : `fromJSON` sert aussi aux mises a jour partielles, ou un JSON
     // muet ne doit rien effacer.
@@ -764,6 +792,10 @@ export abstract class Class_ProtoTagGroup {
 
   public get banner(): tag_banner_type { return this._banner }
 
+  /** os#1517 — le choix se fait-il dans la barre du haut ? Indépendant de `banner`. */
+  public get in_topbar(): boolean { return this._in_topbar }
+  public set in_topbar(value: boolean) { this._in_topbar = value }
+
   // SETTERS ============================================================================
   public set name(value: string) {
     const lang = normalizeLang(i18next.language)
@@ -772,7 +804,18 @@ export abstract class Class_ProtoTagGroup {
     if (value === '' && Object.keys(this._name_map).some(l => l !== lang)) delete this._name_map[lang]
     else this._name_map[lang] = value
   }
-  public set banner(value: tag_banner_type) { this._banner = value }
+  /**
+   * os#1517 — `topbar` n'est plus une forme : l'écrire (ancien code, ancien fichier) pose « un
+   * membre à la fois » ET la barre du haut. `banner` ne vaut donc jamais `'topbar'` en mémoire.
+   */
+  public set banner(value: tag_banner_type) {
+    if (value === 'topbar') {
+      this._banner = 'one'
+      this._in_topbar = true
+      return
+    }
+    this._banner = value
+  }
 }
 // CLASS TAGGROUP ***********************************************************************
 /**
@@ -1254,6 +1297,24 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // sur un arbre partiel écraserait ces couleurs par celles d'une hiérarchie incomplète.
   private _palette_suspended: boolean = false
 
+  // os#1511 — UN DIAGRAMME PAR MEMBRE (« petits multiples »). Quand plusieurs nœuds portent la
+  // dimension, leurs nœuds engendrés se rangent en BANDES, une par membre — le diagramme se répète
+  // une fois par membre, les copies les unes sous les autres — au lieu de s'empiler étape par
+  // étape dans le créneau de chaque nœud. `undefined` = automatique : bandes dès que deux nœuds ou
+  // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
+  private _member_bands: boolean | undefined = undefined
+  // os#1511 — NŒUD DE RÉFÉRENCE de la mise en page désagrégée (Julien, 01/10 : « la faire à partir
+  // d'un nœud de référence et tout placer autour de lui »). Il ne bouge pas ; les nœuds engendrés
+  // se placent autour de lui le long des flux. `undefined` = automatique
+  // (cf. `DimensionDisaggregation.noeudDeReference`). Écrit seulement s'il est posé.
+  private _reference_node_id: string | undefined = undefined
+
+  // os#1511 — ORDRE DES MEMBRES dessinés, EN BANDES COMME EN NŒUDS (cf.
+  // `Algorithms/DimensionMemberOrder`). `undefined` = défaut (par valeur au premier niveau). Écrit
+  // seulement s'il est posé. Remplace `bands_by_value` / `nodes_by_value` (deux cases, même 30/09),
+  // relus à la lecture : `false` y voulait dire l'ordre de l'arbre.
+  private _members_order: Type_MembersOrder | undefined = undefined
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1298,6 +1359,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._propagate_structure = tagg_to_copy._propagate_structure
     this._position_mode = tagg_to_copy._position_mode
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
+    this._member_bands = tagg_to_copy._member_bands
+    this._reference_node_id = tagg_to_copy._reference_node_id
+    this._members_order = tagg_to_copy._members_order
   }
 
   protected _toJSON(
@@ -1319,6 +1383,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     }
     // os#1516 — clé ADDITIVE, écrite seulement par une dimension qui a reçu une palette hiérarchique.
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
+    // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
+    if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
+    if (this._reference_node_id !== undefined) json_object['reference_node'] = this._reference_node_id
+    // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
+    if (this._members_order !== undefined) json_object['members_order'] = this._members_order
   }
 
   protected _fromJSON(
@@ -1368,6 +1437,31 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       Math.max(0, getNumberFromJSON(json_object, 'current_level', this._current_level_index)),
       Math.max(0, this._levels.length - 1)
     )
+    if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
+    const reference = json_object['reference_node']
+    if (typeof reference === 'string' && reference !== '') this._reference_node_id = reference
+    const ordre_lu = json_object['members_order']
+    if (typeof ordre_lu === 'string' && (MEMBERS_ORDERS as string[]).includes(ordre_lu)) {
+      this.members_order = ordre_lu as Type_MembersOrder
+    } else if (json_object['bands_by_value'] === false || json_object['nodes_by_value'] === false) {
+      this._members_order = 'tree'
+    }
+  }
+
+  /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
+  public get member_bands(): boolean | undefined { return this._member_bands }
+  public set member_bands(value: boolean | undefined) { this._member_bands = value }
+
+  /** os#1511 — nœud de référence de la mise en page désagrégée : `undefined` = automatique. */
+  public get reference_node_id(): string | undefined { return this._reference_node_id }
+  public set reference_node_id(value: string | undefined) {
+    this._reference_node_id = (value === undefined || value === '') ? undefined : value
+  }
+
+  /** os#1511 — ordre des membres dessinés, en bandes comme en nœuds (défaut : par valeur au premier niveau). */
+  public get members_order(): Type_MembersOrder { return this._members_order ?? DEFAULT_MEMBERS_ORDER }
+  public set members_order(value: Type_MembersOrder) {
+    this._members_order = value === DEFAULT_MEMBERS_ORDER ? undefined : value
   }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
@@ -1387,6 +1481,85 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
   public get is_hierarchical(): boolean { return this._levels.length > 1 }
+
+  /**
+   * La dimension se dessine membre par membre, chacun à SA couleur : choix multiple et au moins
+   * deux membres retenus (bandes d'un flux, cf. `Link.tagged_value_bands`).
+   * Le dessin lit alors `tag.color` sans consulter `use_colors` ; la légende doit donc nommer ces
+   * couleurs elle aussi (`tagGroupCarriesFormatting`), faute de quoi elle ne donnait qu'un rappel
+   * texte sous des bandes colorées — et aucune commande ne permet d'allumer `use_colors` sur une
+   * dimension.
+   */
+  public get draws_members_in_color(): boolean {
+    return this.banner === 'multi' && this.tags_list.length > 1 && this.selected_tags_list.length > 1
+  }
+
+  /**
+   * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles
+   * (Julien, 30/09 : « que la légende montre Autres au lieu de toute la liste »).
+   *
+   * « Autres » se décide FLUX PAR FLUX (moins de 0,5 % du flux, ou au-delà de la vingtième bande,
+   * cf. `foldSmallParts`) : il veut dire « petit ICI ». Un membre minuscule au total mais gros sur
+   * un flux y apparaît donc en propre — et entre dans la légende. La légende nomme ainsi les membres
+   * dessinés en propre sur AU MOINS un flux visible, plus « Autres » s'il existe quelque part.
+   *
+   * `undefined` si la dimension ne se dessine pas en bandes (les flux la lisent d'abord : même
+   * critère que `Link.tagged_value_bands`) — la légende garde alors les membres choisis.
+   */
+  /**
+   * os#1511 — les membres REPLIÉS AU TOTAL dans « Autres » (règle arrêtée avec Julien le 01/10) :
+   * chaque membre choisi est sommé sur les bandes brutes de tous les flux visibles
+   * (`Link.dimensionBandsRaw`), puis la règle de la couronne s'applique à ces totaux (moins de
+   * 0,5 %, ou au-delà du 19e ; au moins deux à replier). Le flux y ajoute son exception locale
+   * (cf. `Link.tagged_value_bands`).
+   *
+   * Mémoïsé le temps d'un passage SYNCHRONE : chaque flux d'un même dessin le relit, et le
+   * recalculer par flux coûterait n² ; la mémo tombe à la tâche suivante, et dès que la sélection
+   * ou les flux visibles changent, donc jamais d'un geste à l'autre. Une lecture RÉENTRANTE (la
+   * visibilité d'un flux qui relirait ses bandes) rend l'ensemble vide plutôt que de boucler.
+   */
+  public globalFoldedMembers(): Set<string> {
+    if (this._fold_computing) return new Set()
+    const sankey = this._ref_sankey
+    this._fold_computing = true
+    try {
+      const flux = sankey.visible_links_list
+      const cle = this.selected_tags_list.map(tag => tag.id).join('|') + '#' + flux.map(lien => lien.id).join('|')
+      if (this._fold_memo !== undefined && this._fold_memo.cle === cle) return this._fold_memo.replies
+      const totaux = new Map<string, number>()
+      flux.forEach(lien => lien.dimensionBandsRaw(this).forEach(bande => {
+        totaux.set(bande.id, (totaux.get(bande.id) ?? 0) + bande.value)
+      }))
+      const { folded } = foldSmallParts([...totaux].map(([id, value]) => ({ id, value })))
+      const replies = new Set(folded.map(part => part.id))
+      this._fold_memo = { cle, replies }
+      queueMicrotask(() => { this._fold_memo = undefined })
+      return replies
+    } finally {
+      this._fold_computing = false
+    }
+  }
+  private _fold_memo: { cle: string, replies: Set<string> } | undefined = undefined
+  private _fold_computing = false
+
+  public get members_drawn_in_bands(): { members: Set<string>, has_others: boolean } | undefined {
+    if (!this.draws_members_in_color) return undefined
+    const sankey = this._ref_sankey
+    const dessinee = sankey.data_taggs_list.find(tagg =>
+      tagg.banner === 'multi'
+      && tagg.tags_list.length > 1
+      && !sankey.nodes_list.some(node => node.driving_dimension === tagg))
+    if (dessinee !== (this as unknown)) return undefined
+    const members = new Set<string>()
+    let has_others = false
+    sankey.visible_links_list.forEach(link => {
+      link.tagged_value_bands.forEach(band => {
+        if (band.folded !== undefined) has_others = true
+        else members.add(band.id)
+      })
+    })
+    return { members, has_others }
+  }
 
   // PALETTE HIÉRARCHIQUE (os#1516) ======================================================
 

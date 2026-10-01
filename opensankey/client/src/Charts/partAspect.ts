@@ -286,13 +286,20 @@ export const partAspect = (
   // DIT. Aucune figure enregistrée ne change d'aspect.
   const part_unit = oneOfSaid(
     said('value_label_part_unit'),
-    ['value', 'percent_total', 'percent_parent', 'custom'] as const
+    ['value', 'percent_total', 'percent_parent', 'value_percent_total', 'value_percent_parent', 'custom'] as const
   )
+  const PART_PERCENT = {
+    value: 'none', custom: 'none', percent_total: 'total', percent_parent: 'parent',
+    value_percent_total: 'value_total', value_percent_parent: 'value_parent'
+  } as const
   const part_percent = part_unit !== undefined
-    ? (part_unit === 'percent_total' ? 'total' : part_unit === 'percent_parent' ? 'parent' : 'none')
-    : oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const)
-  /** Vrai quand la part écrit un pourcentage : « 75 % t » n'aurait aucun sens (os#1489). */
-  const part_in_percent = part_percent !== undefined && part_percent !== 'none'
+    ? PART_PERCENT[part_unit]
+    : oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent', 'value_total', 'value_parent'] as const)
+  /**
+   * Vrai quand la part écrit un pourcentage SEUL : « 75 % t » n'aurait aucun sens (os#1489). Écrite
+   * avec sa valeur (« 12 t (40 %) »), elle garde son unité.
+   */
+  const part_in_percent = part_percent === 'total' || part_percent === 'parent'
 
   // VALEUR (`value_label_*`) — le nombre écrit au-dessus de CETTE barre.
   put('value_label_is_visible', booleanSaid(said('value_label_is_visible')))
@@ -497,7 +504,14 @@ export const partAspect = (
     // valeur en recopiant les quinze lignes aurait marché — et aurait recréé, une famille plus
     // bas, la duplication qui a fait diverger les natures entre elles. Ici la valeur ne coûte
     // rien : c'est le même lecteur, avec l'autre préfixe.
-    name: textAspect('name_label'),
+    name: {
+      ...textAspect('name_label'),
+      // Les deux schémas de « texte personnalisé » : celui des nœuds (`name_label_source`) et celui
+      // des flux (`name_label_text_source`), qu'une part reçoit quand son sujet est un flux.
+      custom_text: (said('name_label_source') === 'custom' || said('name_label_text_source') === 'custom')
+        ? textSaid(said('name_label_text'))
+        : undefined
+    },
     value: textAspect('value_label'),
     // os#1482 — ET ELLE S'EST ALLUMÉE D'ELLE-MÊME, exactement comme ce commentaire l'annonçait.
     //
@@ -537,8 +551,10 @@ export const partAspect = (
           numberSaid(said('value_label_nb_significant_digits')) ?? base_format.nb_significant_digits,
         custom_digit: booleanSaid(said('value_label_custom_digit')) ?? base_format.custom_digit,
         nb_digit: numberSaid(said('value_label_nb_digit')) ?? base_format.nb_digit,
-        // Le FACTEUR n'entre pas ici : il reste au graphe (cf. l'arbitrage, plus haut).
-        unit: unit_on ? unitSymbol() : ''
+        // Le FACTEUR n'est pas réglable par la part : il reste au graphe (cf. l'arbitrage, plus
+        // haut), qui le transmet — une part qui règle ses décimales divise comme ses voisines.
+        unit: unit_on ? unitSymbol() : '',
+        factor: base_format.factor
       })
       : undefined
   }

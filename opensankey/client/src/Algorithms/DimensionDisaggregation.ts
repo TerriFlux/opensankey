@@ -22,8 +22,12 @@
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_Sankey } from '../types/Sankey'
 import { MEMBER_NODE_MARK as MARQUE, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
+import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from './DimensionOthers'
+import { ordonnerMembres } from './DimensionMemberOrder'
+import { NodeLeftExtremityStyle, NodeRightExtremityStyle } from '../Elements/ElementStyle'
 
 // La marque vit dans un module SANS dépendance : le constructeur d'un flux la lit aussi, pour
 // ne pas déplier de cube sur un flux engendré, et la déclarer ici ferait un cycle d'imports.
@@ -104,8 +108,35 @@ export function removeGeneratedMemberNodes(sankey: Class_Sankey): number {
   return engendres.length
 }
 
-/** Un membre représenté, et le nœud qui le représente. */
-interface Type_MembreRepresente { membre: Class_DataTag, noeud: Class_NodeElement }
+/**
+ * Un membre représenté, et le nœud qui le représente.
+ *
+ * os#1511 — « AUTRES » : une entrée peut représenter PLUSIEURS membres repliés (`replies`). Son
+ * `membre` est alors le premier d'entre eux — un vrai membre de la dimension, qui sert d'identité
+ * commune : c'est le MÊME objet sur tous les axes de la dimension, si bien que la diagonale d'une
+ * chaîne (`repartir`) et l'ordre des bandes (`rangerEnBandes`) apparient les « Autres » entre eux.
+ */
+interface Type_MembreRepresente { membre: Class_DataTag, noeud: Class_NodeElement, replies?: Class_DataTag[] }
+
+/** Les membres qu'une entrée représente : les repliés d'un « Autres », sinon son membre. */
+const membresDe = (entree: Type_MembreRepresente): Class_DataTag[] => entree.replies ?? [entree.membre]
+
+// Les membres repliés de chaque nœud « Autres » engendré. Transitoire comme le nœud lui-même :
+// rebâti à chaque désagrégation, jamais sérialisé.
+const replies_par_noeud = new WeakMap<Class_NodeElement, Class_DataTag[]>()
+
+/**
+ * Les membres qu'un nœud engendré représente : son membre, ou les membres repliés d'un
+ * « Autres » ; vide si ce n'est pas un nœud engendré. C'est ce qu'il faut à un flux engendré pour
+ * retrouver sa coordonnée (cf. `Link.tagged_value_bands`) : sommer sur plusieurs membres d'un même
+ * groupe, le cube sait le faire.
+ */
+export function membersOfGeneratedNode(node: Class_NodeElement): Class_DataTag[] {
+  const replies = replies_par_noeud.get(node)
+  if (replies !== undefined) return replies
+  const membre = memberOfGeneratedNode(node)
+  return membre === undefined ? [] : [membre]
+}
 
 /**
  * Le membre qu'un nœud engendré représente, `undefined` si ce n'en est pas un.
@@ -158,6 +189,51 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // 1) UN NŒUD PAR MEMBRE, axe par axe. Aucun flux n'est encore touché : les nœuds des deux
   //    axes doivent tous exister avant qu'on croise quoi que ce soit.
   const par_axe = new Map<string, Type_MembreRepresente[]>()
+  // os#1511 — « AUTRES », À LA VOLÉE (Julien, 30/09 : « il faut créer une catégorie "autre" à la
+  // volée pour les flux trop petits, et les agréger, comme pour la couronne »). Le repli se décide
+  // PAR DIMENSION, pas par axe : tous les nœuds qui la portent replient les mêmes membres, sinon
+  // une chaîne (CARTOFOB) ne pourrait pas apparier ses « Autres » d'un maillon à l'autre.
+  const replis = new Map<Class_DataTagGroup, Set<Class_DataTag>>()
+  // La VALEUR d'un membre sur les flux de sa dimension, mémorisée : elle sert au repli « Autres »
+  // et à l'ordre des nœuds, et un membre parent (Europe) somme ses feuilles.
+  const valeurs = new Map<Class_DataTag, number>()
+  const flux_par_dimension = new Map<Class_DataTagGroup, Class_LinkElement[]>()
+  const valeurDe = (dimension: Class_DataTagGroup, membre: Class_DataTag): number => {
+    const deja = valeurs.get(membre)
+    if (deja !== undefined) return deja
+    let flux_de_la_dimension = flux_par_dimension.get(dimension)
+    if (flux_de_la_dimension === undefined) {
+      flux_de_la_dimension = sankey.links_list.filter(flux => !isGeneratedMemberLink(flux) &&
+        [flux.source, flux.target].some(bout => bout.driving_dimension === dimension))
+      flux_par_dimension.set(dimension, flux_de_la_dimension)
+    }
+    const valeur = flux_de_la_dimension.reduce((total, flux) => total + (contributionsPourCase(flux, [membre]) ?? 0), 0)
+    valeurs.set(membre, valeur)
+    return valeur
+  }
+  // La valeur d'un membre sur les flux d'UN axe : c'est elle qui range ses nœuds. Julien, 30/09 :
+  // « ça a marché pour les exports mais pas les imports » — l'ordre, calculé sur toute la
+  // dimension, était celui des exports (les plus gros) pour les deux colonnes.
+  const valeurs_axe = new Map<string, number>()
+  const valeurSurAxe = (axe: Class_NodeElement, membre: Class_DataTag): number => {
+    const cle = axe.id + '\u0000' + membre.id
+    const deja = valeurs_axe.get(cle)
+    if (deja !== undefined) return deja
+    const valeur = [...axe.input_links_list, ...axe.output_links_list]
+      .filter(flux => !isGeneratedMemberLink(flux))
+      .reduce((total, flux) => total + (contributionsPourCase(flux, [membre]) ?? 0), 0)
+    valeurs_axe.set(cle, valeur)
+    return valeur
+  }
+  const replisDe = (dimension: Class_DataTagGroup, membres: Class_DataTag[]): Set<Class_DataTag> => {
+    const deja = replis.get(dimension)
+    if (deja !== undefined) return deja
+    const parts = membres.map(membre => ({ membre, value: valeurDe(dimension, membre) }))
+    const { folded } = foldSmallParts(parts)
+    const set = new Set(folded.map(part => part.membre))
+    replis.set(dimension, set)
+    return set
+  }
   axes.forEach(axe => {
     // Garde n°2, PAR NŒUD : `is_driven_by_dimension` a pu devenir faux entre-temps.
     const dimension = axe.driving_dimension
@@ -165,7 +241,15 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // LES MEMBRES CHOISIS, et rien d'autre : le panneau nomme ainsi toujours ce que le dessin
     // montre. « Europe » donne l'Europe, « Régions continentales » — un NIVEAU, qui se choisit
     // dans la même liste — donne les régions.
-    const membres = dimension.selected_tags_list as Class_DataTag[]
+    // L'ORDRE, le même qu'en bandes (`members_order`, cf. DimensionMemberOrder), d'après les flux
+    // de CET axe. Sauf quand la dimension se range en bandes (un diagramme par membre) : les axes
+    // y partagent un même ordre, sans quoi les bandes ne s'aligneraient pas d'une colonne à l'autre.
+    const porteurs = sankey.nodes_list
+      .filter(node => !isGeneratedMemberNode(node) && node.driving_dimension === dimension).length
+    const en_bandes = porteurs >= 2 && bandesParMembre(dimension, porteurs)
+    const membres = ordonnerMembres(dimension, dimension.selected_tags_list as Class_DataTag[],
+      dimension.members_order,
+      membre => en_bandes ? valeurDe(dimension, membre) : valeurSurAxe(axe, membre))
     if (membres.length === 0) return
     // UN SEUL MEMBRE : L'AXE EST CE MEMBRE, on n'engendre rien (retour de Julien, 30/09).
     //
@@ -184,9 +268,32 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // déjà ce repli). Le déplacement porte alors sur un vrai nœud du fichier, et l'export n'a plus
     // qu'une ligne.
     if (membres.length === 1) return
-    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres))
+    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres, replisDe(dimension, membres)))
   })
   if (par_axe.size === 0) return 0
+
+  // 1 bis) LA PENTE DE CHAQUE FLUX ENTRE DEUX AXES, relevée AVANT de le découper : l'écart
+  //    vertical entre son accroche source et son accroche cible. Un flux droit vaut 0, et ses
+  //    copies dans chaque bande devront valoir 0 aussi (Julien, 30/09 : « si y avait des flux
+  //    droits, il faut qu'ils restent droits »). Après `repartir`, le flux d'origine est masqué
+  //    et ne s'accroche plus nulle part : c'est maintenant ou jamais.
+  const pentes = pentesEntreAxes(sankey, par_axe)
+  // 1 ter) LE CRÉNEAU DE CHAQUE AXE, relevé lui aussi AVANT de découper : après `repartir`, ses
+  //    flux sont masqués et l'axe retombe à la hauteur minimale d'un nœud (40 px au lieu de 647
+  //    sur « [SOCLE] Pays partenaires ») — « remplir le slot du parent » remplissait alors un
+  //    créneau qui n'existait plus.
+  //    Son CENTRE est celui que le nœud mémorise (`center_y`), la vérité de sa position : quand
+  //    plusieurs membres sont choisis, la hauteur de l'axe n'est que celle du premier (218 au lieu
+  //    de 647 au second tour), alors que son coin répond encore à l'ancienne — le milieu déduit du
+  //    coin tombait 215 px trop haut.
+  //    Un axe jamais dessiné n'a pas de centre mémorisé : son coin fait alors foi, et la pile part
+  //    de son haut comme avant.
+  const creneaux = new Map<string, { haut: number, hauteur: number, centre: number | undefined }>()
+  par_axe.forEach((_membres, axe_id) => {
+    const axe = sankey.nodes_dict[axe_id]
+    if (axe === undefined) return
+    creneaux.set(axe_id, { haut: axe.position_y, hauteur: axe.getShapeHeightToUse(), centre: axe.center_y })
+  })
 
   // 2) LES FLUX, une fois chacun. On relève la liste AVANT de créer quoi que ce soit : on y
   //    ajoute des flux au fur et à mesure, et itérer une liste qu'on allonge n'a pas de fin.
@@ -205,13 +312,37 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   //
   //    Le mode « garder les positions » est le seul qui n'en dépende pas : il ne réempile rien,
   //    et il a donc déjà fait son travail à la création.
+  // UN DIAGRAMME PAR MEMBRE : les axes d'une même dimension se rangent ENSEMBLE, en bandes. Ce
+  // placement a sa propre règle (l'écart constant entre bandes) et ne lit pas le mode d'écart des
+  // enfants, qui décrit le créneau d'UN nœud — cf. `rangerEnBandes`.
+  // LE NŒUD DE RÉFÉRENCE (Julien, 01/10 : « la faire à partir d'un nœud de référence et tout placer
+  // autour de lui »). S'il ne porte pas la dimension — « Produits agricoles » entre les imports et
+  // les exports du SOCLE —, tous les nœuds engendrés qu'il atteint se posent autour de lui, chacun
+  // en face de sa part de sa pile : les flux restent droits et ne se chevauchent pas. S'il la porte,
+  // ce sont les bandes qui se rangent autour de lui (cf. `rangerEnBandes`).
+  const places = new Set<Class_NodeElement>()
+  const references = referencesDuTour(sankey, par_axe)
+  references.forEach(reference => {
+    if (!par_axe.has(reference.id)) placerAutour(reference, pentes, places)
+  })
+  const en_bandes = axesEnBandes(sankey, par_axe)
+  en_bandes.forEach(axe_ids => {
+    const dimension = sankey.nodes_dict[axe_ids[0]]?.driving_dimension
+    const reference = dimension === undefined ? undefined : references.get(dimension)
+    const axe_reference = reference !== undefined && par_axe.has(reference.id) ? reference.id : undefined
+    rangerEnBandes(sankey, axe_ids, par_axe, pentes, places, axe_reference, creneaux)
+  })
+  const ranges = new Set([...en_bandes].flat())
   if (sankey.drawing_area.effective_gap_mode !== 'keep') {
     par_axe.forEach((membres, axe_id) => {
+      if (ranges.has(axe_id)) return
       const axe = sankey.nodes_dict[axe_id]
-      if (axe === undefined) return
-      axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
-        membres.map(({ noeud }) => noeud), axe.position_y, axe.getShapeHeightToUse()
-      )
+      const creneau = creneaux.get(axe_id)
+      if (axe === undefined || creneau === undefined) return
+      const noeuds = membres.map(({ noeud }) => noeud).filter(noeud => !places.has(noeud))
+      if (noeuds.length === 0) return
+      axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(noeuds, creneau.haut, creneau.hauteur)
+      centrerSurAxe(noeuds, creneau)
     })
   }
 
@@ -224,6 +355,308 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     sankey.nodes_dict[axe_id]?.setInvisible()
   })
   return engendres
+}
+
+/**
+ * Recentre la pile des membres sur le CENTRE de l'axe. Au dessin, tout nœud libre garde son
+ * centre quand sa taille change (`anchorByCenterIfResized`) : son voisin « Produits agricoles »
+ * grandit autour du sien. Des membres empilés depuis le HAUT de l'axe débordaient vers le bas, et
+ * leur haut semblait « descendu » (Julien, 30/09).
+ */
+function centrerSurAxe(noeuds: Class_NodeElement[], creneau: { centre: number | undefined }): void {
+  if (noeuds.length === 0 || creneau.centre === undefined) return
+  const haut = Math.min(...noeuds.map(n => n.position_y))
+  const bas = Math.max(...noeuds.map(n => n.position_y + n.getShapeHeightToUse()))
+  const decalage = creneau.centre - (haut + bas) / 2
+  if (Math.abs(decalage) < 0.5) return
+  noeuds.forEach(n => {
+    n.position_y += decalage
+    n.captureCenterFromCorner()
+  })
+}
+
+/**
+ * os#1511 — UN DIAGRAMME PAR MEMBRE : la dimension se range-t-elle en bandes ?
+ *
+ * Julien, 30/09, sur « [SOCLE] Pays partenaires » : trois nœuds portent la dimension des pays
+ * (Produits agricoles, Monde - Export, Monde - Import) ; « il faudrait que les diagrammes se
+ * mettent les uns sous les autres, parallèlement ». Éclater chaque nœud dans son propre créneau
+ * mélangeait les membres colonne par colonne — et dans CARTOFOB, où les quatorze étapes portent
+ * l'essence, les nœuds d'une même colonne s'empilaient.
+ *
+ * Réglé sur la dimension (`member_bands`), automatique à défaut : oui dès que deux nœuds ou plus
+ * la portent. Un seul porteur n'a pas de diagramme à répéter.
+ */
+export function bandesParMembre(dimension: Class_DataTagGroup, porteurs: number): boolean {
+  return dimension.member_bands ?? porteurs >= 2
+}
+
+/** Les axes découpés de ce tour, regroupés par dimension rangée en bandes. */
+function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): string[][] {
+  const par_dimension = new Map<Class_DataTagGroup, string[]>()
+  par_axe.forEach((_membres, axe_id) => {
+    const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
+    if (dimension === undefined) return
+    par_dimension.set(dimension, [...(par_dimension.get(dimension) ?? []), axe_id])
+  })
+  const out: string[][] = []
+  par_dimension.forEach((axe_ids, dimension) => {
+    // Le compte est celui des nœuds qui PORTENT la dimension, pas de ceux découpés à ce tour.
+    const porteurs = sankey.nodes_list
+      .filter(node => !isGeneratedMemberNode(node) && node.driving_dimension === dimension).length
+    if (axe_ids.length >= 2 && bandesParMembre(dimension, porteurs)) out.push(axe_ids)
+  })
+  return out
+}
+
+/**
+ * Range les nœuds engendrés de plusieurs axes d'une même dimension en BANDES, une par membre.
+ *
+ * Chaque axe garde sa colonne (x déjà posé à la création) ; seule la hauteur change. Deux passes,
+ * comme Julien l'a décrit (30/09) — « prendre le nœud qui va le plus bas pour chaque bande,
+ * appliquer l'écart constant pour aller sur le haut du nœud de la bande du dessous » :
+ *
+ *  1. chaque bande reprend la FORME du diagramme, flux par flux. Le nœud de l'axe le plus à
+ *     gauche part de la hauteur de son axe ; de proche en proche le long des flux de la bande,
+ *     chaque nœud se pose pour que le flux qui le relie garde entre ses deux accroches l'écart
+ *     qu'avait le flux d'origine (`pentesEntreAxes`). Un flux droit reste droit — caler le HAUT
+ *     des nœuds ne suffisait pas : un nœud engendré n'a pas la hauteur de son axe, et un flux
+ *     s'accroche au milieu de sa part de la pile, pas au haut du nœud (retour de Julien, 30/09).
+ *  2. bande par bande, on relève le BAS du nœud qui descend le plus, et la bande suivante est
+ *     décalée pour que son nœud le plus haut commence à ce bas plus l'écart constant
+ *     (`disaggregation_gap_value`).
+ *
+ * Le mode d'écart des enfants (« remplir le slot », etc.) n'est PAS lu : il décrit le créneau
+ * d'UN nœud, et une bande en traverse plusieurs. L'éditeur le masque sous les bandes.
+ *
+ * Appelée APRÈS les flux : la hauteur d'un nœud engendré vient de ses flux (cf. l'étape 3).
+ */
+function rangerEnBandes(
+  sankey: Class_Sankey,
+  axe_ids: string[],
+  par_axe: Map<string, Type_MembreRepresente[]>,
+  pentes: Map<string, number>,
+  places: Set<Class_NodeElement> = new Set(),
+  axe_reference?: string,
+  creneaux?: Map<string, { haut: number, hauteur: number, centre: number | undefined }>
+): void {
+  const ecart = sankey.drawing_area.disaggregation_gap_value
+  const ranges: Class_NodeElement[] = []
+  // Les membres dans l'ordre choisi — le même pour tous les axes de la dimension.
+  const ordre: Class_DataTag[] = []
+  axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ membre }) => {
+    if (!ordre.includes(membre)) ordre.push(membre)
+  }))
+  const noeudDe = (axe_id: string, membre: Class_DataTag) =>
+    (par_axe.get(axe_id) ?? []).find(m => m.membre === membre)?.noeud
+  // Le haut de chaque axe, relevé AVANT tout déplacement, et les axes de gauche à droite.
+  const haut_axe = new Map<string, number>()
+  axe_ids.forEach(id => {
+    const axe = sankey.nodes_dict[id]
+    if (axe !== undefined) haut_axe.set(id, axe.position_y)
+  })
+  if (haut_axe.size === 0) return
+  // Le nœud de référence ouvre la marche : c'est de lui que part la forme de chaque bande.
+  const de_gauche_a_droite = [...haut_axe.keys()].sort((a, b) =>
+    (Number(b === axe_reference) - Number(a === axe_reference)) ||
+    (sankey.nodes_dict[a].position_u - sankey.nodes_dict[b].position_u) ||
+    (sankey.nodes_dict[a].position_x - sankey.nodes_dict[b].position_x))
+
+  let bas_precedent: number | undefined = undefined
+  ordre.forEach(membre => {
+    // ── PASSE 1 : la forme de la bande, à une translation près ──────────────────────────────
+    const axe_de = new Map<Class_NodeElement, string>()
+    de_gauche_a_droite.forEach(id => {
+      const noeud = noeudDe(id, membre)
+      if (noeud !== undefined && !places.has(noeud)) axe_de.set(noeud, id)
+    })
+    if (axe_de.size === 0) return
+    const y = new Map<Class_NodeElement, number>()
+    const poser = (depart: Class_NodeElement) => {
+      y.set(depart, haut_axe.get(axe_de.get(depart) as string) as number)
+      const file = [depart]
+      while (file.length > 0) {
+        const a = file.shift() as Class_NodeElement
+        const flux = [...a.input_links_list, ...a.output_links_list] as Class_LinkElement[]
+        flux.forEach(lien => {
+          if (!isGeneratedMemberLink(lien) || !lien.is_visible) return
+          const b = (lien.source === a ? lien.target : lien.source) as Class_NodeElement
+          if (!axe_de.has(b) || y.has(b)) return
+          y.set(b, hauteurAlignee(a, b, lien, pentes, y.get(a) as number, haut_axe, axe_de))
+          file.push(b)
+        })
+      }
+    }
+    axe_de.forEach((_id, noeud) => { if (!y.has(noeud)) poser(noeud) })
+
+    // ── PASSE 2 : sous le nœud le plus bas de la bande précédente ───────────────────────────
+    const plus_haut = Math.min(...y.values())
+    const decalage = bas_precedent === undefined ? 0 : bas_precedent + ecart - plus_haut
+    y.forEach((haut, noeud) => {
+      noeud.position_y = haut + decalage
+      noeud.captureCenterFromCorner()
+      ranges.push(noeud)
+    })
+    bas_precedent = Math.max(...[...y.keys()].map(n => n.position_y + n.getShapeHeightToUse()))
+  })
+
+  // ── AUTOUR DE LA RÉFÉRENCE : les bandes se centrent sur elle, au-dessus et en dessous, au lieu
+  //    de partir toutes vers le bas depuis la première.
+  if (axe_reference === undefined || ranges.length === 0) return
+  const creneau = creneaux?.get(axe_reference)
+  const centre = creneau?.centre ?? (creneau !== undefined ? creneau.haut + creneau.hauteur / 2 : undefined)
+  if (centre === undefined) return
+  const haut = Math.min(...ranges.map(n => n.position_y))
+  const bas = Math.max(...ranges.map(n => n.position_y + n.getShapeHeightToUse()))
+  const decalage = centre - (haut + bas) / 2
+  if (Math.abs(decalage) < 0.5) return
+  ranges.forEach(n => {
+    n.position_y += decalage
+    n.captureCenterFromCorner()
+  })
+}
+
+/**
+ * Le nœud de référence de chaque dimension découpée à ce tour.
+ *
+ * Seulement celui que l'auteur a choisi (`reference_node_id`), s'il existe encore. PAS de choix
+ * automatique : poser d'office « Produits agricoles » en référence collait ses membres en face de
+ * sa pile et sautait l'écart constant de la désagrégation (régression vue par Julien le 01/10).
+ * Aucun : la mise en page d'avant (bandes depuis le porteur le plus à gauche, ou créneau).
+ */
+function referencesDuTour(
+  sankey: Class_Sankey,
+  par_axe: Map<string, Type_MembreRepresente[]>
+): Map<Class_DataTagGroup, Class_NodeElement> {
+  const out = new Map<Class_DataTagGroup, Class_NodeElement>()
+  par_axe.forEach((_m, axe_id) => {
+    const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
+    if (dimension === undefined || dimension.reference_node_id === undefined) return
+    const choisi = sankey.nodes_dict[dimension.reference_node_id]
+    if (choisi !== undefined && !isGeneratedMemberNode(choisi)) out.set(dimension, choisi)
+  })
+  return out
+}
+
+/**
+ * Pose autour de `reference` — qui ne bouge pas — tous les nœuds engendrés qu'on atteint depuis
+ * elle le long des flux engendrés : chacun se met à la hauteur qui rend son flux DROIT. Sur le
+ * SOCLE, chaque pays d'import se pose en face de sa part de
+ * la pile d'entrée de « Produits agricoles », chaque pays d'export en face de sa part de la pile
+ * de sortie : les nœuds d'un même côté se touchent sans se chevaucher, puisque chacun a la hauteur
+ * de sa part. Un nœud dont l'accroche ne se calcule pas garde sa position.
+ */
+function placerAutour(
+  reference: Class_NodeElement,
+  _pentes: Map<string, number>,
+  places: Set<Class_NodeElement>
+): void {
+  const y = new Map<Class_NodeElement, number>([[reference, reference.position_y]])
+  const file: Class_NodeElement[] = [reference]
+  while (file.length > 0) {
+    const a = file.shift() as Class_NodeElement
+    const flux = [...a.input_links_list, ...a.output_links_list] as Class_LinkElement[]
+    flux.forEach(lien => {
+      if (!isGeneratedMemberLink(lien) || !lien.is_visible) return
+      const b = (lien.source === a ? lien.target : lien.source) as Class_NodeElement
+      if (!isGeneratedMemberNode(b) || y.has(b) || places.has(b)) return
+      // DROIT, quelle que soit la pente d'origine : en face de sa part de la pile du nœud déjà
+      // posé, c'est ce qui range les membres bord à bord, sans chevauchement.
+      const y_b = hauteurPourFlux(a, b, lien, DROIT, y.get(a) as number) ?? b.position_y
+      y.set(b, y_b)
+      b.position_y = y_b
+      b.captureCenterFromCorner()
+      places.add(b)
+      file.push(b)
+    })
+  }
+  // UN NŒUD PLUS HAUT QUE SA PART DE PILE — un petit membre relevé à la hauteur minimale d'un nœud
+  // — déborderait sur son voisin. Colonne par colonne, on ne pousse vers le bas que ce qui
+  // chevauche : tous les autres flux restent droits.
+  const colonnes = new Map<number, Class_NodeElement[]>()
+  y.forEach((_y, noeud) => {
+    if (noeud === reference) return
+    colonnes.set(noeud.position_x, [...(colonnes.get(noeud.position_x) ?? []), noeud])
+  })
+  colonnes.forEach(noeuds => {
+    noeuds.sort((p, q) => p.position_y - q.position_y)
+    for (let i = 1; i < noeuds.length; i++) {
+      const bas = noeuds[i - 1].position_y + noeuds[i - 1].getShapeHeightToUse()
+      if (noeuds[i].position_y < bas) {
+        noeuds[i].position_y = bas
+        noeuds[i].captureCenterFromCorner()
+      }
+    }
+  })
+}
+
+/** Pente nulle pour tout flux : `hauteurPourFlux` rend alors la hauteur qui met le flux à plat. */
+const DROIT = { get: (): number | undefined => 0 }
+
+/**
+ * Hauteur de `b` pour que `lien` garde la pente de son flux d'origine, `a` étant posé à `y_a`.
+ * `undefined` si la pente n'a pas été relevée ou si une accroche ne se calcule pas.
+ */
+function hauteurPourFlux(
+  a: Class_NodeElement,
+  b: Class_NodeElement,
+  lien: Class_LinkElement,
+  pentes: { get(id: string): number | undefined },
+  y_a: number
+): number | undefined {
+  const pente = pentes.get(lien.id.split(MARQUE)[0])
+  const acc_a = a.linkAttachOffsetY(lien)
+  const acc_b = b.linkAttachOffsetY(lien)
+  if (pente === undefined || acc_a === undefined || acc_b === undefined) return undefined
+  // pente = accroche cible - accroche source (0 : droit, positif : descend vers la cible)
+  return lien.source === a
+    ? y_a + acc_a + pente - acc_b
+    : y_a + acc_a - pente - acc_b
+}
+
+/**
+ * Hauteur de `b`, déjà placé `a` à `y_a`, pour que le flux `lien` qui les relie garde la pente de
+ * son flux d'origine. À défaut d'accroche calculable (ancrage radial, côté haut ou bas, port
+ * importé) ou de pente relevée, `b` garde l'écart entre les HAUTS de leurs axes — le placement
+ * d'avant.
+ */
+function hauteurAlignee(
+  a: Class_NodeElement,
+  b: Class_NodeElement,
+  lien: Class_LinkElement,
+  pentes: Map<string, number>,
+  y_a: number,
+  haut_axe: Map<string, number>,
+  axe_de: Map<Class_NodeElement, string>
+): number {
+  const repli = y_a + (haut_axe.get(axe_de.get(b) as string) as number) -
+    (haut_axe.get(axe_de.get(a) as string) as number)
+  return hauteurPourFlux(a, b, lien, pentes, y_a) ?? repli
+}
+
+/**
+ * La pente de chaque flux TOUCHANT UN AXE de ce tour : accroche cible moins accroche source,
+ * relevée sur les nœuds tels qu'ils sont avant d'être découpés. Les flux entre un axe et un nœud
+ * qui ne porte pas la dimension en font partie : c'est eux que suit le placement autour d'un nœud
+ * de référence. Un flux dont l'une des accroches ne se calcule pas (cf. `linkAttachOffsetY`) n'a
+ * pas d'entrée.
+ */
+function pentesEntreAxes(
+  sankey: Class_Sankey,
+  par_axe: Map<string, Type_MembreRepresente[]>
+): Map<string, number> {
+  const pentes = new Map<string, number>()
+  sankey.links_list.forEach(lien => {
+    if (isGeneratedMemberLink(lien) || !lien.is_visible) return
+    if (!par_axe.has(lien.source.id) && !par_axe.has(lien.target.id)) return
+    const source = lien.source as Class_NodeElement
+    const cible = lien.target as Class_NodeElement
+    const acc_s = source.linkAttachOffsetY(lien)
+    const acc_c = cible.linkAttachOffsetY(lien)
+    if (acc_s === undefined || acc_c === undefined) return
+    pentes.set(lien.id, (cible.position_y + acc_c) - (source.position_y + acc_s))
+  })
+  return pentes
 }
 
 /**
@@ -257,13 +690,44 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
  * demandent de RECALCULER. Elle ne s'applique donc que sous `keep` — où, faute de position, un
  * membre retombe sur celle de son axe plutôt que sur l'origine du dessin.
  */
+/**
+ * Styles de l'axe recopiés sur son membre, et À DÉFAUT son EXTRÉMITÉ déduite (Julien, 30/09 :
+ * « les nœuds désagrégés n'ont pas le label à droite du nœud »).
+ *
+ * Recopier les styles de l'axe ne suffit pas : un fichier enregistré sans mise en page
+ * automatique porte des axes au seul style `default`, et le membre n'héritait alors de rien. On
+ * lit donc la connectivité DE L'AXE — celle du membre n'existe pas encore, ses flux se
+ * répartissent après (`repartir`) — avec la règle de `setNodeLabelPositioning` : que des sorties,
+ * extrémité gauche ; que des entrées, extrémité droite. Un override local du placement du nom
+ * (`name_label_horiz` / `_vert`) sur l'axe l'emporte, comme là-bas.
+ */
+function heriterExtremite(sankey: Class_Sankey, axe: Class_NodeElement, noeud: Class_NodeElement): void {
+  axe.style.forEach(style => { if (!noeud.hasStyle(style.id)) noeud.addStyle(style) })
+  if (axe.hasStyle(NodeLeftExtremityStyle) || axe.hasStyle(NodeRightExtremityStyle)) return
+  if (axe.isAttributeOverloaded('name_label_horiz') || axe.isAttributeOverloaded('name_label_vert')) return
+  const source = axe.hasOutputLinks() && !axe.hasInputLinks()
+  const puits = axe.hasInputLinks() && !axe.hasOutputLinks()
+  const style = source
+    ? sankey.styles_dict[NodeLeftExtremityStyle]
+    : (puits ? sankey.styles_dict[NodeRightExtremityStyle] : undefined)
+  if (style !== undefined && !noeud.hasStyle(style.id)) noeud.addStyle(style)
+}
+
 function creerNoeudsDeMembre(
   sankey: Class_Sankey,
   axe: Class_NodeElement,
-  membres: Class_DataTag[]
+  membres: Class_DataTag[],
+  replies: Set<Class_DataTag> = new Set()
 ): Type_MembreRepresente[] {
-  const engendres = membres.map(membre => {
-    const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), membre.name)
+  // PLUSIEURS AXES SUR LA MÊME DIMENSION (CARTOFOB, 30/09) : chaque étape de la filière se décline
+  // par essence, et quatorze nœuds « Chêne » ne disent plus de quelle étape ils sont. Le nom du
+  // membre seul ne suffit que si l'axe est le seul à porter sa dimension.
+  const partage = sankey.nodes_list.some(autre => autre !== axe &&
+    !isGeneratedMemberNode(autre) && autre.driving_dimension === axe.driving_dimension)
+  const gardes = membres.filter(membre => !replies.has(membre))
+  const engendres: Type_MembreRepresente[] = gardes.map(membre => {
+    const nom = partage ? `${axe.name} - ${membre.name}` : membre.name
+    const noeud = sankey.addNewNode(memberNodeId(axe.id, membre.id), nom)
     noeud.copyAttrFrom(axe)
     // os#1511 (retour de Julien, 30/09 : « il faut que les labels soient positionnés à droite ou
     // à gauche du nœud ») — LES STYLES D'EXTRÉMITÉ DE L'AXE DESCENDENT SUR SES MEMBRES.
@@ -275,7 +739,9 @@ function creerNoeudsDeMembre(
     //
     // Il hérite donc de l'axe, ce qui est juste par construction : il occupe sa colonne et se
     // branche sur les mêmes voisins, donc il a la même extrémité que lui.
-    axe.style.forEach(style => noeud.addStyle(style))
+    // `copyAttrFrom` en a déjà transféré une partie : `addStyle` avertit en console sur un style
+    // déjà posé, et le faisait pour chaque membre engendré.
+    heriterExtremite(sankey, axe, noeud)
     // La COLONNE est toujours celle de l'axe : `layoutChildrenInParentSlot` ne règle que le Y,
     // et un membre sans colonne se retrouverait à l'abscisse zéro.
     noeud.position_u = axe.position_u
@@ -283,10 +749,28 @@ function creerNoeudsDeMembre(
     return { membre, noeud }
   })
 
+  // os#1511 — « AUTRES » : un seul nœud, gris, pour tous les membres repliés, en dernier. Son
+  // identité est le premier replié dans l'ordre des membres (cf. `Type_MembreRepresente`).
+  const repliés = membres.filter(membre => replies.has(membre))
+  if (repliés.length > 0) {
+    const t = sankey.drawing_area.application_data?.t
+    const libelle = (t ? t('sunburst.others') : '') || 'Autres'
+    const nom = partage ? `${axe.name} - ${libelle}` : libelle
+    const noeud = sankey.addNewNode(memberNodeId(axe.id, OTHERS_ID), nom)
+    noeud.copyAttrFrom(axe)
+    heriterExtremite(sankey, axe, noeud)
+    noeud.position_u = axe.position_u
+    noeud.position_x = axe.position_x
+    noeud.shape_color = OTHERS_COLOR
+    replies_par_noeud.set(noeud, repliés)
+    engendres.push({ membre: repliés[0], noeud, replies: repliés })
+  }
+
   if (axe.drawing_area.effective_gap_mode === 'keep') {
     // « Garder les positions » : celle du membre fait foi, et rien n'est réempilé.
-    engendres.forEach(({ membre, noeud }) => {
-      const position = membre.position
+    engendres.forEach(({ membre, noeud, replies }) => {
+      // « Autres » ne porte pas de position à lui : il se pose sur son axe.
+      const position = replies === undefined ? membre.position : undefined
       noeud.setPosXY(position?.x ?? axe.position_x, position?.y ?? axe.position_y)
     })
   }
@@ -313,15 +797,29 @@ function repartir(
   const droite: (Type_MembreRepresente | undefined)[] = par_axe.get(flux.target.id) ?? [undefined]
   if (gauche[0] === undefined && droite[0] === undefined) return
 
+  // UNE CHAÎNE SUR UNE MÊME DIMENSION NE SE CROISE PAS, ELLE SE SUIT (CARTOFOB, 30/09/2026).
+  //
+  // Deux bouts peuvent porter la MÊME dimension : dans CARTOFOB, Prélèvements, Scieries, Sciages…
+  // représentent tous l'axe des essences, parce que chaque étape de la filière se décline par
+  // essence. Le croisement ci-dessous fabriquerait alors Chêne → Hêtre, Chêne → Douglas… — des
+  // flux qui n'existent pas : le chêne prélevé est le chêne scié. Le produit cartésien vaut pour
+  // DEUX dimensions (les filières à gauche, les pays à droite) ; sur une seule, seule la
+  // diagonale a un sens, chaque membre se reliant à lui-même.
+  const meme_dimension = gauche[0] !== undefined && droite[0] !== undefined &&
+    gauche[0].membre.group === droite[0].membre.group
+
   gauche.forEach(g => droite.forEach(d => {
-    const membres = [g?.membre, d?.membre].filter((m): m is Class_DataTag => m !== undefined)
-    const contributions = contributionsPourCase(flux, membres)
+    if (meme_dimension && g?.membre !== d?.membre) return
+    // « Autres » vise TOUS ses membres repliés : le cube somme plusieurs membres d'un même groupe.
+    const entrees = [g, d].filter((e): e is Type_MembreRepresente => e !== undefined)
+    const vises = [...new Set(entrees.flatMap(membresDe))]
+    const contributions = contributionsPourCase(flux, vises)
     if (contributions === null) return
     // L'identifiant porte la MARQUE : c'est ce qui rend le flux engendré reconnaissable sur le
     // graphe, comme son nœud, et donc effaçable au tour suivant sans tenir de registre. Les
     // membres y figurent pour l'unicité seulement — un flux engendré retrouve sa coordonnée par
     // ses NŒUDS (cf. `memberOfGeneratedNode`), qui la portent déjà.
-    const id = `${flux.id}${MARQUE}${membres.map(m => m.id).join(MARQUE)}`
+    const id = `${flux.id}${MARQUE}${[...new Set(entrees.map(e => e.replies !== undefined ? OTHERS_ID : e.membre.id))].join(MARQUE)}`
     const nouveau = sankey.addNewLinkWithId(id, g?.noeud ?? flux.source, d?.noeud ?? flux.target)
     nouveau.copyAttrFrom(flux)
     // Sa valeur est un SCALAIRE : un flux engendré naît d'un choix de coordonnées, donc il ne

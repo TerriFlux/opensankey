@@ -81,6 +81,11 @@ export const applyPartsDocumentRules = (
   if (source_sankey !== undefined && document.drawing_area !== undefined) {
     document.drawing_area.sankey.icon_catalog = source_sankey.icon_catalog
   }
+
+  // (6) LE TEMOIN « ENREGISTRE » EST CELUI DE LA SOURCE — corollaire de (2). L'enregistrement part
+  // a la source, mais le bouton lit le document actif : sans ce partage, la coche ne passait jamais
+  // au vert sur une couronne. Reposee aussi par `createNewMenuConfiguration` (cf. les classes).
+  document.menu_configuration.shareSaveStateWith(source.menu_configuration)
 }
 
 export class Class_PartsDocument extends Class_ApplicationData {
@@ -115,7 +120,10 @@ export class Class_PartsDocument extends Class_ApplicationData {
    */
   public override createNewMenuConfiguration(toast: CreateToastFnReturn | null = null) {
     const menu_configuration = super.createNewMenuConfiguration(toast)
-    if (this._source !== undefined) this._history = this._source.history
+    if (this._source !== undefined) {
+      this._history = this._source.history
+      menu_configuration.shareSaveStateWith(this._source.menu_configuration)
+    }
     return menu_configuration
   }
 

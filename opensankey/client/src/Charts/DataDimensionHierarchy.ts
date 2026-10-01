@@ -52,9 +52,12 @@ import { FOLLOWING_NAVIGATION, linkValueUnder } from './FigureNavigation'
 import type { Type_FigureNavigation } from './FigureNavigation'
 import { SUNBURST_DEFAULT_MAX_DEPTH, sunburstNodeValue } from './SunburstHierarchy'
 import type { Type_SunburstNode, Type_SunburstRing, Type_SunburstTree } from './SunburstHierarchy'
-import { memberSectorId } from './memberSectorId'
+import { MEMBER_SECTOR_PREFIX, memberPathSectorId, memberSectorId, parseMemberSectorId } from './memberSectorId'
+import type { Type_MemberRef } from './memberSectorId'
 
-export { MEMBER_SECTOR_PREFIX, memberSectorId, parseMemberSectorId } from './memberSectorId'
+export {
+  MEMBER_SECTOR_PREFIX, memberPathSectorId, memberSectorId, parseMemberSectorId, parseMemberSectorPath
+} from './memberSectorId'
 
 /**
  * Le sujet dont on décompose la valeur. Un flux ou un nœud : les deux se lisent sous une
@@ -273,6 +276,274 @@ export const buildDataDimensionTree = (
     total,
     mismatch_count: state.mismatch_count,
     is_truncated: state.is_truncated
+  }
+}
+
+// ── 30/09/2026 — DIMENSIONS EMBOÎTÉES, CALÉES SUR LE DIAGRAMME ─────────────────────────────────
+//
+// Julien : « je n'arrive pas à désagréger les pays », puis, après une première version à alt+clic,
+// emboîtements par secteur et « axe courant » : « tu t'embêtes, cale-toi sur ce qui est fait pour le
+// diagramme, c'est très bien ».
+//
+// LE MODÈLE DU DIAGRAMME : chaque dimension a UNE COUPE — ses membres ouverts (`membre:<dim>/<m>`
+// dans `hierarchy_expanded`, ce qu'écrivent le niveau et l'arbre de « Coordonnées »). Une dimension
+// dont la racine unique est fermée est à son niveau « ensemble » : elle ne découpe rien, et la figure
+// la lit à sa racine. Une dimension ouverte découpe, et les dimensions qui découpent s'EMBOÎTENT dans
+// l'ordre du descripteur : produits, puis les pays dans chaque produit. On a donc la géographie seule,
+// les filières seules, ou les deux — c'est la coupe de chacune qui le dit.
+//
+// La racine unique ne fait jamais d'anneau (« Monde », « Tous produits » : un secteur à 100 %, redit
+// par le niveau 1) — sauf quand rien ne découpe, où elle est le seul secteur.
+//
+// ⚠️ CONSTRUIT À LA DEMANDE : bâtir tout l'arbre puis élaguer coûterait produits × pays lectures du
+// cube (148 × 272 sur le SOCLE). On ne lit que ce qui se dessine. Un secteur non ouvert vaut ce que le
+// modèle porte à sa coordonnée ; un secteur ouvert, la somme de ce qu'il montre en régime 'sum'.
+
+export interface Type_NestedDimensionOptions extends Type_DataDimensionOptions {
+  /** Les membres ouverts, en identifiants de secteur de membre (`memberSectorId`). */
+  expanded: ReadonlySet<string>
+  /** Coordonnées LIÉES au diagramme : ses coupes font foi, `expanded` est ignoré. */
+  linked?: boolean
+}
+
+// ── 30/09/2026 — COORDONNÉES LIÉES AU DIAGRAMME ─────────────────────────────────────────────────
+//
+// Julien : « il faut un mode qui rend l'interface Coordonnées commune aux différentes fenêtres, en
+// l'occurrence couronne et diagramme — peut-être un truc avec la barre du haut, qui serait forcément
+// commune ». Arbitrages : un interrupteur PAR FENÊTRE, et une couronne neuve LIÉE par défaut.
+//
+// Liée, la figure n'a plus de coupe propre : elle lit celle du diagramme (la barre du haut, le
+// panneau du diagramme), et son clic l'écrit. Détachée, elle a la sienne (`hierarchy_expanded`),
+// pour comparer deux coupes côte à côte. Une figure est détachée si elle le dit (`detache`), et
+// seulement alors.
+//
+// 01/10/2026 — PLUS DE DÉTACHEMENT IMPLICITE. La première règle détachait aussi toute figure qui
+// portait déjà une coupe propre, pour respecter les couronnes enregistrées avant ce mode ; or chaque
+// clic d'avant en avait écrit une, et ces couronnes ignoraient la barre du haut (Julien : « la barre
+// du haut ne marche toujours pas pour les couronnes »). Liée, une figure ignore l'ancienne coupe.
+
+/** L'entrée qui détache une figure du diagramme. */
+export const DETACHED_ENTRY = 'detache'
+
+/** La figure a-t-elle ses propres coordonnées ? Sinon, elle suit le diagramme. */
+export const isDetachedOpening = (expanded: Iterable<string>): boolean => {
+  for (const entry of expanded) {
+    if (entry === DETACHED_ENTRY) return true
+  }
+  return false
+}
+
+/**
+ * La coupe DU DIAGRAMME, en membres ouverts : les ancêtres des membres qu'il montre, pour chaque
+ * dimension qui en montre plusieurs. Une dimension à un seul membre n'ouvre rien.
+ */
+export const diagramDimensionOpening = (dims: Class_DataTagGroup[]): Set<string> => {
+  const out = new Set<string>()
+  dims.forEach(dim => {
+    const shown = dim.selected_tags_list as Class_DataTag[]
+    if (shown.length < 2) return
+    shown.forEach(member => {
+      for (let p = member.parent; p !== undefined; p = p.parent) out.add(memberSectorId(dim.id, p.id))
+    })
+  })
+  return out
+}
+
+/** Les racines d'une dimension. */
+export const dimensionRootsOf = (dim: Class_DataTagGroup): Class_DataTag[] =>
+  (dim.tags_list as Class_DataTag[]).filter(m => m.parent === undefined)
+
+/**
+ * L'ensemble ouvert EFFECTIF : une figure qui n'a encore rien ouvert (aucune entrée de membre)
+ * découpe sa première dimension d'un cran — sans quoi une couronne neuve serait un disque plein.
+ */
+export const effectiveDimensionOpening = (
+  dims: Class_DataTagGroup[], expanded: ReadonlySet<string>
+): Set<string> => {
+  const out = new Set(expanded)
+  const fresh = ![...expanded].some(e => e.startsWith(MEMBER_SECTOR_PREFIX))
+  const first = dims[0]
+  if (fresh && first !== undefined) {
+    const roots = dimensionRootsOf(first)
+    if (roots.length === 1) out.add(memberSectorId(first.id, roots[0].id))
+  }
+  return out
+}
+
+/** La dimension découpe-t-elle ? Racine unique ouverte, ou plusieurs racines. */
+export const dimensionDivides = (dim: Class_DataTagGroup, opened: ReadonlySet<string>): boolean => {
+  const roots = dimensionRootsOf(dim)
+  if (roots.length !== 1) return roots.length > 1
+  return roots[0].children.length > 0 && opened.has(memberSectorId(dim.id, roots[0].id))
+}
+
+export const buildNestedDimensionTree = (
+  subject: Type_DataDimensionSubject,
+  dimensions: Class_DataTagGroup[],
+  nav: Type_FigureNavigation,
+  options: Type_NestedDimensionOptions
+): Type_SunburstTree | null => {
+  const all = dimensions.filter(d => d.is_hierarchical && d.tags_list.length > 0)
+  if (all.length === 0) return null
+  const element = subject.kind === 'node' ? subject.node : subject.link
+  const groups = element.sankey.data_taggs_list as unknown as Class_DataTagGroup[]
+  const value_mode = options.value_mode ?? 'sum'
+  const node_value_mode = options.node_value_mode ?? 'max'
+  const residual_label = options.residual_label ?? 'Unallocated'
+  const max_depth = Math.max(1, (options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH) + 1)
+  let mismatch_count = 0
+  let is_truncated = false
+
+  // LIÉE AU DIAGRAMME : la coupe de chaque dimension est celle du diagramme, et une dimension
+  // découpe dès que le diagramme en montre plusieurs membres. Une dimension à un seul membre se lit
+  // sur CE membre (« Europe » si c'est l'Europe), pas sur sa racine.
+  const opened = options.linked ? diagramDimensionOpening(all) : effectiveDimensionOpening(all, options.expanded)
+  const dims = options.linked
+    ? all.filter(d => d.selected_tags_list.length > 1)
+    : all.filter(d => dimensionDivides(d, opened))
+  // Détachée, une dimension au niveau « ensemble » se lit à sa racine, pas à ce que le diagramme
+  // sélectionne ; liée, elle se lit à ce qu'il sélectionne (la coordonnée n'est alors pas fixée).
+  const base_coord = new Map<string, Class_DataTag>()
+  if (!options.linked) {
+    all.filter(d => !dims.includes(d)).forEach(d => {
+      const roots = dimensionRootsOf(d)
+      if (roots.length === 1) base_coord.set(d.id, roots[0])
+    })
+  }
+  const isOpen = (dim: Class_DataTagGroup, member: Class_DataTag) =>
+    opened.has(memberSectorId(dim.id, member.id))
+  /** Par où l'on entre dans une dimension qui découpe : les enfants de sa racine unique, ou ses racines. */
+  const entryOf = (dim: Class_DataTagGroup) => {
+    const roots = dimensionRootsOf(dim)
+    return roots.length === 1 ? (roots[0].children as Class_DataTag[]) : roots
+  }
+  const nested_palettes = dims.length > 1
+
+  /** La valeur du sujet à une coordonnée : les dimensions découpées fixées, les autres suivies. */
+  const valueAt = (coord: Map<string, Class_DataTag>): number => {
+    const tags: Class_DataTag[] = []
+    groups.forEach(group => {
+      const fixed = coord.get(group.id)
+      if (fixed !== undefined) { tags.push(fixed); return }
+      const pinned = nav.data_tags?.filter(tag => tag.group.id === group.id) ?? []
+      if (pinned.length > 0) { tags.push(...pinned); return }
+      tags.push(...(group.selected_tags_list as Class_DataTag[]))
+    })
+    const at: Type_FigureNavigation = { data_tags: tags }
+    return subject.kind === 'node'
+      ? sunburstNodeValue(subject.node, at, node_value_mode)
+      : (linkValueUnder(subject.link, at) ?? 0)
+  }
+
+  const build = (
+    refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number,
+    branch: string, entry_depth: number
+  ): Type_SunburstNode => {
+    const dim = dims[k]
+    const declared = valueAt(coord)
+    const id = memberPathSectorId(refs)
+    const base: Type_SunburstNode = {
+      id, label: member.name, value: declared, declared, color: member.color ?? null,
+      depth, children: [], dimension_id: dim.id,
+      ...(nested_palettes ? { palette: { index: k, branch_id: branch, depth: depth - entry_depth } } : {})
+    }
+    // Ouvert dans sa dimension : ses enfants. Sinon, la dimension suivante qui découpe.
+    const own = isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
+    const next: { k: number, members: Class_DataTag[] } | null = own.length > 0
+      ? { k, members: own }
+      : (k + 1 < dims.length ? { k: k + 1, members: entryOf(dims[k + 1]) } : null)
+    if (next === null) return base
+    if (depth + 1 >= max_depth) { is_truncated = true; return base }
+    const children = next.members
+      .map(child => {
+        const child_coord = new Map(coord)
+        child_coord.set(dims[next.k].id, child)
+        if (next.k === k) {
+          const child_refs = [...refs.slice(0, -1), { dimension_id: dim.id, member_id: child.id }]
+          return build(child_refs, child_coord, k, child, depth + 1, branch, entry_depth)
+        }
+        const child_refs = [...refs, { dimension_id: dims[next.k].id, member_id: child.id }]
+        return build(child_refs, child_coord, next.k, child, depth + 1, child.id, depth + 1)
+      })
+      .filter(child => child.value > 0)
+    if (children.length === 0) return base
+    base.children = children
+    const sum = children.reduce((acc, child) => acc + child.value, 0)
+    const gap = declared - sum
+    if (Math.abs(gap) > Math.max(BALANCE_TOLERANCE, Math.abs(declared) * BALANCE_TOLERANCE)) mismatch_count++
+    if (value_mode === 'declared') {
+      if (gap > BALANCE_TOLERANCE) {
+        base.children = [...children, {
+          id: `${id}${RESIDUAL_SUFFIX}`, label: residual_label, value: gap, declared: gap, color: null,
+          depth: depth + 1, children: [], is_residual: true, dimension_id: dim.id
+        }]
+      }
+    } else {
+      base.value = sum
+    }
+    return base
+  }
+
+  let children: Type_SunburstNode[]
+  if (dims.length === 0) {
+    // RIEN NE DÉCOUPE : un seul secteur, la racine de la première dimension — le tout, sans partage.
+    const first = all[0]
+    const whole = (options.linked ? (first.selected_tags_list[0] as Class_DataTag | undefined) : undefined)
+      ?? dimensionRootsOf(first)[0]
+    const value = valueAt(base_coord)
+    children = whole === undefined || value <= 0 ? [] : [{
+      id: memberSectorId(first.id, whole.id), label: whole.name, value, declared: value,
+      color: whole.color ?? null, depth: 1, children: [], dimension_id: first.id
+    }]
+  } else {
+    // LE FOYER, sur la première dimension qui découpe : c'est elle qui porte la descente.
+    const focus = options.focus_id !== undefined
+      ? (dims[0].tags_dict[options.focus_id] as Class_DataTag | undefined)
+      : undefined
+    const first_rank = focus !== undefined ? (focus.children as Class_DataTag[]) : entryOf(dims[0])
+    children = first_rank
+      .map(member => {
+        const coord = new Map(base_coord)
+        coord.set(dims[0].id, member)
+        return build([{ dimension_id: dims[0].id, member_id: member.id }], coord, 0, member, 1, member.id, 1)
+      })
+      .filter(member => member.value > 0)
+  }
+  const total = children.reduce((acc, child) => acc + child.value, 0)
+  const root: Type_SunburstNode = {
+    id: element.id,
+    label: displayedNameOf(element),
+    value: total, declared: total, color: null, depth: 0, children, dimension_id: all[0].id
+  }
+
+  // UN ANNEAU PAR PROFONDEUR, nommé par le premier secteur qui l'occupe : sa dimension, son niveau.
+  const first_at: Type_SunburstNode[] = []
+  const walk = (node: Type_SunburstNode) => {
+    if (first_at[node.depth] === undefined) first_at[node.depth] = node
+    node.children.forEach(walk)
+  }
+  walk(root)
+  const rings: Type_SunburstRing[] = first_at.map((node, depth) => {
+    const ref = depth === 0 ? null : parseMemberSectorId(node.id)
+    const dim = all.find(d => d.id === (ref?.dimension_id ?? all[0].id)) ?? all[0]
+    const member = ref !== null ? dim.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
+    const rank = member !== undefined ? dim.depthOf(member) : 0
+    return {
+      dimension_id: dim.id,
+      dimension_label: dim.name,
+      level_label: depth === 0 ? '' : (dim.levels[rank] ?? ''),
+      is_selected_level: dim.current_level_index === rank
+    }
+  })
+
+  return {
+    dimension_id: all[0].id,
+    dimension_label: dims.map(d => d.name).join(' › ') || all[0].name,
+    roots: [root],
+    rings,
+    total,
+    mismatch_count,
+    is_truncated
   }
 }
 

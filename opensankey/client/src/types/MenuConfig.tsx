@@ -4693,6 +4693,23 @@ export class Class_MenuConfig {
     return this._ref_to_save_in_cache_indicator_value
   }
 
+  /**
+   * L'ÉTAT « ENREGISTRÉ » D'UN DOCUMENT SUBORDONNÉ EST CELUI DE SA SOURCE.
+   *
+   * Une couronne (document de parts) ou une étoile renvoie tout enregistrement à sa source
+   * (`file_holder`) : c'est la source qui passe à « enregistré ». Le bouton du haut, lui, lit le
+   * document ACTIF — la figure — dont le témoin ne bougeait donc jamais : pas de coche verte après
+   * un Ctrl+S sur une couronne. Et dans l'autre sens, une retouche de la couronne marquait la figure
+   * « modifiée » sans que la source le sache. On partage donc les DEUX refs (slot et valeur) : un
+   * seul témoin, quel que soit le document par lequel on le lit ou l'écrit.
+   *
+   * PAS pour les feuilles : elles ont un état par feuille, voulu (os#1442, pastilles d'onglets).
+   */
+  public shareSaveStateWith(source: Class_MenuConfig): void {
+    this._ref_to_save_in_cache_indicator = source._ref_to_save_in_cache_indicator
+    this._ref_to_save_in_cache_indicator_value = source._ref_to_save_in_cache_indicator_value
+  }
+
   public get ref_to_last_download_updater(): MutableRefObject<() => void> {
     return this._ref_to_last_download_updater
   }

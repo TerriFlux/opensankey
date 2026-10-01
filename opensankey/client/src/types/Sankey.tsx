@@ -508,7 +508,10 @@ export class Class_Sankey {
     const tags_meta = flux_tagg.tags_list.map(tag => ({
       id: tag.id, name: tag.name, long_name: tag.long_name, color: tag.color,
       scale: (tag as Class_FluxTag).scale,
-      unit_coeff: (tag as Class_FluxTag).resolved_unit?.unit.coefficient,
+      unit_coeff: (() => {
+        const resolved = (tag as Class_FluxTag).resolved_unit
+        return resolved ? resolved.unit_type.displayFactor(resolved.unit) : undefined
+      })(),
       unit_grandeur_scale: (tag as Class_FluxTag).resolved_unit?.unit_type.display_scale
     }))
 

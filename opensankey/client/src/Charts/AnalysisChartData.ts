@@ -58,8 +58,8 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
-import { buildDataDimensionTree } from './DataDimensionHierarchy'
-import { parseMemberSectorId } from './memberSectorId'
+import { buildNestedDimensionTree, isDetachedOpening } from './DataDimensionHierarchy'
+import { parseMemberSectorPath } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
@@ -551,23 +551,37 @@ export const analysisHierarchyTree = (
 // vaut donc pour un flux comme pour un nœud — c'est la demande de Julien du 28/09 (« ça s'applique
 // aux flux ») —, là où les deux autres descentes n'acceptent qu'un nœud.
 
-/** L'arbre, élagué comme les deux autres : on ne descend que sous ce que l'auteur a ouvert. */
+/**
+ * L'arbre, bâti à la demande : on ne descend que sous ce que l'auteur a ouvert, dans chaque
+ * dimension découpée (30/09/2026 : les dimensions s'emboîtent, cf. `buildNestedDimensionTree`).
+ */
 const dataDimensionTreeOf = (
   subject: Type_ChartSubject,
-  spec: { data_tagg_id: string, focus_id?: string },
+  spec: { data_tagg_id: string, focus_id?: string, nested_tagg_ids?: string[] },
   nav: Type_FigureNavigation,
   reading: Type_HierarchyReading = {},
   expanded: ReadonlySet<string> = new Set()
 ): Type_SunburstTree | null => {
   const element = subject.kind === 'node' ? subject.node : subject.link
-  const dimension = element.sankey.data_taggs_dict[spec.data_tagg_id] as unknown as
-    Class_DataTagGroup | undefined
-  if (dimension === undefined) return null
-  const tree = buildDataDimensionTree(
+  const declared = [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])]
+    .map(id => element.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
+    .filter((d): d is Class_DataTagGroup => d !== undefined)
+  if (declared.length === 0 || declared[0].id !== spec.data_tagg_id) return null
+  // 30/09/2026 — LIÉE AU DIAGRAMME (défaut) : toutes ses dimensions à niveaux entrent dans la
+  // figure, dans l'ordre choisi (« Premier axe ») puis celui du fichier ; c'est la coupe du
+  // diagramme qui dit lesquelles découpent (cf. `buildNestedDimensionTree`).
+  const linked = !isDetachedOpening(expanded)
+  const dimensions = linked
+    ? [...declared, ...(element.sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+      .filter(d => d.is_hierarchical && !declared.includes(d))]
+    : declared
+  return buildNestedDimensionTree(
     subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
-    dimension,
+    dimensions,
     nav,
     {
+      expanded,
+      linked,
       focus_id: spec.focus_id,
       max_depth: reading.max_depth,
       value_mode: reading.value_mode,
@@ -575,37 +589,27 @@ const dataDimensionTreeOf = (
       residual_label: reading.residual_label
     }
   )
-  if (!tree) return null
-  // La RACINE est le sujet, toujours ouverte : le décomposer est la raison d'être de la figure.
-  const prune = (sector: Type_SunburstNode, is_root: boolean) => {
-    if (!is_root && !expanded.has(sector.id)) {
-      sector.children = []
-      return
-    }
-    sector.children.forEach(child => prune(child, false))
-  }
-  tree.roots.forEach(root => prune(root, true))
-  return tree
 }
 
 /** LA FRONTIÈRE de cet arbre, à plat : ce que dessine le mode « en place ». */
 const decomposeDataDimension = (
   subject: Type_ChartSubject,
-  spec: { data_tagg_id: string, focus_id?: string },
+  spec: { data_tagg_id: string, focus_id?: string, nested_tagg_ids?: string[] },
   nav: Type_FigureNavigation,
   reading: Type_HierarchyReading = {},
   expanded: ReadonlySet<string> = new Set()
 ): Type_ChartPart[] => {
   const element = subject.kind === 'node' ? subject.node : subject.link
-  const dimension = element.sankey.data_taggs_dict[spec.data_tagg_id] as unknown as
-    Class_DataTagGroup | undefined
   const root = dataDimensionTreeOf(subject, spec, nav, reading, expanded)?.roots[0]
-  if (!root || dimension === undefined) return []
-  /** Le membre du modèle derrière un secteur — pour savoir s'il reste quelque chose à ouvrir. */
-  const memberOf = (sector_id: string) => {
-    const ref = parseMemberSectorId(sector_id)
-    if (ref === null || ref.dimension_id !== dimension.id) return undefined
-    return dimension.tags_dict[ref.member_id] as Class_DataTag | undefined
+  if (!root) return []
+  /** Reste-t-il quelque chose à ouvrir sous ce secteur ? Des enfants dans sa dimension. */
+  const canOpen = (sector_id: string) => {
+    const refs = parseMemberSectorPath(sector_id)
+    if (refs === null) return false
+    const ref = refs[refs.length - 1]
+    const dimension = element.sankey.data_taggs_dict[ref.dimension_id] as unknown as Class_DataTagGroup | undefined
+    const member = dimension?.tags_dict[ref.member_id] as Class_DataTag | undefined
+    return (member?.children.length ?? 0) > 0
   }
   const walk = (
     sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[]
@@ -628,7 +632,7 @@ const decomposeDataDimension = (
       branch_id,
       // L'arbre est élagué : un membre sans enfant ICI peut en avoir dans le modèle, et c'est
       // justement ce que le clic ouvrira.
-      has_children: (memberOf(sector.id)?.children.length ?? 0) > 0
+      has_children: canOpen(sector.id)
     }]
   }
   return root.children

@@ -219,7 +219,9 @@ describe('os#1511 — un noeud d axe en SOURCE se decoupe comme un noeud d axe e
       .map(l => l.target.name).sort()
     // Les deux axes ont chacun leurs membres : quatre noeuds engendres, pas deux.
     expect(m.sankey.nodes_list.filter(isGeneratedMemberNode)).toHaveLength(4)
-    expect(cibles.filter(n => n === 'Europe')).toHaveLength(2)
+    // Deux axes sur la meme dimension : chaque membre porte le nom de son axe, sinon deux noeuds
+    // « Europe » ne disent plus lequel est l import et lequel l export (CARTOFOB, 30/09).
+    expect(cibles.filter(n => n.endsWith(' - Europe'))).toEqual(['Partenaires - Europe', 'Partenaires bis - Europe'])
   })
 
   // os#1511, 30/09 — UN SEUL MEMBRE : L AXE EST CE MEMBRE, on n engendre rien. Julien : « je pense

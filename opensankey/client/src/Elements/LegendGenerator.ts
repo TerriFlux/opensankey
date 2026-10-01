@@ -29,7 +29,7 @@ import type { Type_HatchOrientation } from './ElementsAttributesConfig'
 import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
-  computeLegendItems, computeScaleText, layoutLegendItems, legendSampleZoneId, legendSwatchWidth,
+  computeLegendItems, computeScaleText, layoutLegendItems, legendIndentWidth, legendSampleZoneId, legendSwatchWidth,
   renderableLegendItems, SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem,
   Type_SankeyForLegend, legendEntrySwatchShift, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
@@ -156,6 +156,17 @@ function drawnLabelLineCount(zone: Class_ContainerElement): number {
   const text = zone.d3_selection?.select('text.name_label_text')
   if (text === undefined || text.empty()) return 0
   return Math.max(1, text.selectAll('tspan').size())
+}
+
+/** Largeur (px monde) du libellé dessiné d'une zone, 0 sans libellé ou sans moteur de rendu. */
+function drawnLabelWidth(zone: Class_ContainerElement): number {
+  const node = zone.d3_selection?.select('text.name_label_text').node() as SVGTextElement | null | undefined
+  if (!node || typeof node.getBBox !== 'function') return 0
+  try {
+    return node.getBBox().width
+  } catch {
+    return 0
+  }
 }
 
 function escapeHtml(s: string): string {
@@ -846,6 +857,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         t_dashed_links: t('MEP.legend_dashed_links'),
         t_scale: t('scale'),
         t_dimension_change: t('MEP.legend_dimension_change'),
+        // os#1511 — entrée « Autres » d'une dimension en bandes (même libellé que la couronne)
+        t_others: t('sunburst.others'),
         // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
         default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
       }
@@ -938,7 +951,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         zone.name_label_text = item.text
         zone.name_label_is_visible = true
         zone.name_label_font_size = values.police
-        zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+        // os#1511 — un membre en retrait garde la largeur de la légende pour bord droit
+        zone.name_label_box_width = Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
         applyPinnedLabel(zone, item, values.police, NO_PADDING)
         applyTextFormat(zone, item.format?.name, item.bold ?? false)
         zone.draw()
@@ -966,7 +980,28 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       const n_pinned_lines = richTextLineCount(zone)
       if (n_pinned_lines > 0) line_counts.set(item.id, n_pinned_lines)
     })
-    const positions = new Map(layoutLegendItems(items, layout_values, line_counts).map(p => [p.id, p]))
+    // Horizontal : largeur RÉELLE des libellés sur une ligne (titres de groupe et entrées), pour
+    // enchaîner les entrées sans chevauchement et passer à la ligne à la largeur de la légende.
+    // Sans DOM (tests) : estimation, cf. layoutLegendItems.
+    const text_widths = new Map<string, number>()
+    if (values.horizontal) {
+      items.forEach(item => {
+        if (item.wrap === true || (item.own_line && !item.group_title)) return
+        const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
+        zone.name_label_source = 'custom'
+        zone.name_label_text = item.text
+        zone.name_label_is_visible = true
+        zone.name_label_font_size = values.police
+        zone.name_label_bold = item.bold ?? false
+        zone.name_label_box_width = 4000
+        applyPinnedLabel(zone, item, values.police, NO_PADDING)
+        applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        zone.draw()
+        const width = drawnLabelWidth(zone)
+        if (width > 0) text_widths.set(item.id, width)
+      })
+    }
+    const positions = new Map(layoutLegendItems(items, layout_values, line_counts, text_widths).map(p => [p.id, p]))
     const desired_ids = new Set(items.map(i => i.id))
     items.forEach(i => {
       if (i.block_id) desired_ids.add(i.block_id)
@@ -1059,7 +1094,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       zone.tooltip_text = item.description ?? ''
       // En horizontal les entrées restent sur une ligne (pas de wrap) — sauf SA#550 la
       // définition d'un groupe épinglé, enveloppée à la largeur de la légende.
-      zone.name_label_box_width = (values.horizontal && item.wrap !== true) ? 4000 : Math.max(values.width, 4 * values.police)
+      zone.name_label_box_width = (values.horizontal && item.wrap !== true)
+        ? 4000
+        : Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
       // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
       // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
       applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)

@@ -35,9 +35,11 @@ import type {
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { isGeneratedMemberId, MEMBER_NODE_MARK } from './GeneratedMemberMark'
+import { OTHERS_COLOR, OTHERS_EXCEPTION_SHARE_PCT, OTHERS_ID } from '../Algorithms/DimensionOthers'
+import { ordonnerMembres } from '../Algorithms/DimensionMemberOrder'
 // os#1511 — import de VALEUR vers un module qui ne nous importe qu'en TYPE : les imports de type
 // sont effacés à la compilation, il n'y a donc pas de cycle à l'exécution.
-import { memberOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
+import { membersOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -48,6 +50,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, getNameLabelValues, Type_NameLabelSource, Type_Orientation } from './ElementsAttributesConfig'
+import { formatDigits, formatElementValue } from './ValueFormatting'
 import { resolveLinkOrientation } from './linkOrientation'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
@@ -63,8 +66,14 @@ import { LinkStyle } from './ElementStyle'
 import {
   openPresentationFor, opensPresentationOnClick, canPresentTooltip,
   matchesPresentationTrigger,
-  schedulePresentationHover, schedulePresentationHoverClose
+  schedulePresentationHover, schedulePresentationHoverClose, closePresentationTooltip
 } from '../components/panels/presentation/openPresentation'
+
+/** os#1511 — une bande d'une dimension dessinée en bandes, avant sa part relative (`share`). */
+export type Type_DimensionBand = {
+  id: string, px: number, color: string | null, value: number, opacity?: number,
+  folded?: { id: string, value: number }[]
+}
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -260,6 +269,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   // Boolean var only used when enlarging thickness when mouse hovering link
   private _artifical_enlargement: boolean = false
+  // Bande survolée (id de `tagged_value_bands`), transitoire : l'info-bulle ne montre qu'elle.
+  private _hovered_band_id: string | undefined = undefined
+  public get hovered_band_id(): string | undefined { return this._hovered_band_id }
 
   // Transient marker (not persisted) — true if this link was created as part of
   // a lateral expansion (parent ↔ child of an expanded NodeDimension).
@@ -659,22 +671,56 @@ export class Class_LinkElement extends Class_LinkAttribute {
       this._link_draw_label.refreshStickLayout()
     }
     // #285 — les labels de bande vivent dans le repère zoomé (dessinés au
-    // drawShape) : le refresh de labels (zoom / verrou de police) ne les
-    // recrée pas, on remet donc leur font-size compensée ici pour qu'ils
-    // suivent le mode « police verrouillée » comme les labels normaux.
-    this.refreshBandLabelsFontSize()
+    // drawShape) : le refresh de labels (zoom, verrou de police, menu de
+    // l'étiquette de valeur, seuil) ne les recrée pas, on les rhabille ici.
+    this.refreshBandLabels()
     this._orderD3Elements()
   }
 
-  /** #285 — remet la font-size compensée du zoom sur les labels de bande déjà
-   *  présents dans le DOM (cf. LinkDrawShape.drawTaggedValueBands), sans les
-   *  reconstruire : suit la police du label de valeur + font_compensation. */
-  public refreshBandLabelsFontSize() {
-    const labels = this.d3_selection?.selectAll('.link_band_label')
+  /** #285 — filtre de taille appliqué PAR BANDE (pas sur le total du flux) :
+   *  en mode pixel, l'épaisseur écran de la bande ; en mode valeur, sa valeur. */
+  public bandLabelPassesFilter(band_value: number, band_px: number): boolean {
+    const da = this.drawing_area
+    return da.filter_unit === 'pixel'
+      ? (!(da.filter_label_px > 0) || band_px * da.getZoomScale() >= da.filter_label_px)
+      : band_value >= da.filter_label
+  }
+
+  /** #285 — habille les labels de bande déjà présents dans le DOM (posés sans style par
+   *  LinkDrawShape.drawTaggedValueBands, qui y range valeur, épaisseurs et unité en data-band-*),
+   *  sans les reconstruire. Une étiquette de bande EST l'étiquette de valeur du flux, découpée :
+   *  elle en suit tous les réglages — format des nombres, unité, police compensée du zoom, gras,
+   *  italique, majuscules, couleur verrouillée, « Masquer si ça dépasse » — et le seuil « Lib. ». */
+  public refreshBandLabels() {
+    const labels = this.d3_selection?.selectAll<SVGTextElement, unknown>('.link_band_label')
     if (!labels || labels.empty()) return
-    const value_lv = getNameLabelValues(this, 'value_label') as { font_size?: number }
-    const fs = (value_lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
-    labels.attr('font-size', fs)
+    const lv = getNameLabelValues(this, 'value_label')
+    const fs = (lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
+    // Unité du flux si elle est visible (value_label_unit_visible) ; une bande d'un groupe de
+    // type unité porte la sienne, déjà dans son unité : précision seule, pas de conversion.
+    const flux_unit = this.value_label_unit_visible ? this.unit_name('value_label') : ''
+    labels
+      .attr('font-size', fs)
+      .attr('font-family', lv.font_family)
+      .attr('font-weight', lv.bold ? 'bold' : 'normal')
+      .attr('font-style', lv.italic ? 'italic' : 'normal')
+      .style('text-transform', lv.uppercase ? 'uppercase' : 'none')
+      .attr('fill', lv.color_sustainable ? lv.color : '#000')
+      .text((_, i, nodes) => {
+        const el = nodes[i]
+        const value = Number(el.getAttribute('data-band-value'))
+        const own_unit = el.getAttribute('data-band-own-unit') === 'true'
+        const text = own_unit ? formatDigits(value, lv) : formatElementValue(value, this)
+        const unit = own_unit ? (el.getAttribute('data-band-unit') ?? '') : flux_unit
+        return unit ? `${text} ${unit}` : text
+      })
+      .style('display', (_, i, nodes) => {
+        const el = nodes[i]
+        const passes = this.bandLabelPassesFilter(
+          Number(el.getAttribute('data-band-value')), Number(el.getAttribute('data-band-px')))
+        const fits = !lv.prune_if_unfitting || fs <= Number(el.getAttribute('data-band-thickness'))
+        return passes && fits ? 'inline' : 'none'
+      })
   }
 
   /**
@@ -852,6 +898,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
+  /**
+   * os#1511 — La couleur du membre montré d'une dimension colorée dessinée « un membre à la fois » :
+   * dimension à niveaux, couleurs activées, bannière `one`, un seul membre choisi qui porte une
+   * vraie couleur, et qui ne se dessine pas en nœuds (ses nœuds engendrés portent alors le membre).
+   * `undefined` sinon — dont la racine « Tous produits », grise : le flux garde sa règle habituelle.
+   */
+  private _singleMemberDimensionColor(): string | undefined {
+    for (const tagg of this.sankey.data_taggs_list) {
+      if (!tagg.use_colors || !tagg.is_hierarchical || tagg.banner !== 'one') continue
+      if (this.sankey.nodes_list.some(node => node.driving_dimension === tagg)) continue
+      const selected = tagg.selected_tags_list
+      if (selected.length !== 1) continue
+      const color = selected[0].color
+      if (color && color !== 'grey') return color
+    }
+    return undefined
+  }
+
   public getShapeColorToUse(): string {
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
@@ -913,6 +977,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => this.sankey.tagGroupAppliesFormatting(tagg) && !tagg.uses_tag_styles).length == 0) {
+      // 0. os#1511 — UN MEMBRE À LA FOIS : le flux prend la couleur du membre montré (Julien, 30/09 :
+      // « quand on choisit un membre à la fois, il ne met pas les couleurs »). En bandes, chaque
+      // bande porte la couleur de son membre ; un seul membre, c'est une seule bande, donc la même
+      // couleur — sans quoi choisir « Sucre » rendait le flux gris.
+      const member_color = this._singleMemberDimensionColor()
+      if (member_color !== undefined) return member_color
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
       const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && this.sankey.tagGroupAppliesFormatting(tag.group))
@@ -1048,6 +1118,92 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * os#1511 — les bandes d'une dimension en bandes sur CE flux, AVANT tout repli « Autres » : une
+   * par membre choisi de valeur positive, dans l'ordre de la sélection. Public : la dimension les
+   * lit sur tous les flux visibles pour décider ce qui se replie au total
+   * (`Class_DataTagGroup.globalFoldedMembers`).
+   */
+  public dimensionBandsRaw(multi_dim: Class_DataTagGroup): Type_DimensionBand[] {
+    if (this._is_expansion_link) return []
+    const band_style = (tags: Class_Tag[]) => this._bandStyle(tags)
+    const bands: Type_DimensionBand[] = []
+    // os#1511 — UN FLUX ENGENDRÉ ne porte qu'un scalaire : il naît d'un choix de coordonnées
+    // et ne sait pas se redécouper par un autre axe. Ses bandes se lisent donc sur le flux
+    // D'ORIGINE, à la coordonnée de son membre. Sans cela, chaque bande valait le total du
+    // flux — deux filières à 1 385 kt chacune au lieu de 1 280 et 105.
+    const morceaux = this.id.split(MEMBER_NODE_MARK)
+    const origine = morceaux.length > 1 ? this.sankey.links_dict[morceaux[0]] : undefined
+    // os#1511 — LES MEMBRES SE LISENT SUR LES NŒUDS, pas dans l'identifiant du flux. Depuis
+    // que DEUX axes peuvent se croiser (« les filières à gauche, les pays à droite »), un flux
+    // engendré est une CASE et porte donc jusqu'à deux coordonnées ; les chercher dans son id
+    // obligerait à savoir de quelle dimension vient chaque morceau, alors que ses nœuds le
+    // disent déjà.
+    // Un bout « Autres » représente plusieurs membres repliés : ils entrent tous dans la
+    // coordonnée, le cube les somme (cf. membersOfGeneratedNode).
+    const membres_axes = [this.source, this.target]
+      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
+    multi_dim.selected_tags_list.forEach(tag => {
+      const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
+      let v = (origine !== undefined && membres_axes.length > 0)
+        ? null
+        : (leaf === null ? null : (leaf.valueData ?? leaf.valueResult))
+      // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
+      // adresse un point du cube : sur une dimension hiérarchisée, « Europe » n'y porte rien,
+      // la donnée étant sur l'Espagne et l'Italie. Sans ce repli, cocher Europe et Afrique ne
+      // dessinait AUCUNE bande — et comme l'épaisseur du flux vient des bandes, le flux
+      // disparaissait entièrement. Constaté à l'écran le 28/09.
+      if (v === null || v <= 0) {
+        const porteur = origine ?? this
+        const groupes_axes = new Set(membres_axes.map(membre => membre.group.id))
+        const coordonnee = (porteur.selected_data_tags_list as Class_DataTag[])
+          .filter(autre => autre.group.id !== multi_dim.id && !groupes_axes.has(autre.group.id))
+          .concat([tag as Class_DataTag])
+          .concat(membres_axes)
+        const contributions = porteur.contributingValuesFor(coordonnee)
+        if (contributions !== null) {
+          const somme = contributions.reduce((total, valeur) => total + (
+            this._reads_collected_layer
+              ? (valeur.valueData ?? 0)
+              : (valeur.valueResult ?? ((valeur.value_option === 'value' || valeur.value_option === 'intervals') ? valeur.valueData : null) ?? 0)
+          ), 0)
+          if (somme > 0) v = somme
+        }
+      }
+      if (v === null || v <= 0) return
+      const { color: styled_color, ...styled_opacity } = band_style(valueTags(leaf))
+      // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
+      // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
+      // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
+      const band_own_scale = (tag as Class_DataTag).own_scale
+      if (band_own_scale !== undefined && band_own_scale > 0) {
+        this.setDomainLocalScale(band_own_scale)
+        bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
+      }
+      else {
+        bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
+      }
+    })
+    return bands
+  }
+
+  /** SA#541 — couleur et opacité imposées à une bande par les styles des étiquettes de sa valeur. */
+  private _bandStyle(tags: Class_Tag[]): { color?: string, opacity?: number } {
+    if (!this.sankey.has_tag_styles) return {}
+    const layers = this.resolveTagStyleLayers(
+      this.sankey.tagGroupsInPriorityOrder('flux_taggs'),
+      tag => tags.includes(tag as Class_Tag)
+    )
+    const out: { color?: string, opacity?: number } = {}
+    const color_layer = topLayerDefining(layers, style => style.getElementProperty('shape_color'))
+    if (color_layer && this.attributes.shape_color_sustainable !== true) {
+      out.color = color_layer.style.getElementProperty('shape_color') as string
+    }
+    const opacity_layer = topLayerDefining(layers, style => style.getElementProperty('shape_opacity'))
+    if (opacity_layer) out.opacity = opacity_layer.style.getElementProperty('shape_opacity') as number
+    return out
+  }
+
+  /**
    * #285 — bandes internes : subdivision de l'épaisseur du flux,
    * proportionnelle aux valeurs coordonnées VISIBLES de la feuille courante.
    * Choix d'affichage déclenché par la bannière `multi` d'un groupe libre
@@ -1056,25 +1212,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean, opacity?: number }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean, opacity?: number, folded?: { id: string, value: number }[] }[] {
     if (this._is_expansion_link) return []
     // SA#541 — une bande est une valeur à part entière : les styles des étiquettes de SA valeur
     // imposent sa couleur et son opacité. Rien n'est calculé sans style d'étiquette.
-    const band_style = (tags: Class_Tag[]): { color?: string, opacity?: number } => {
-      if (!this.sankey.has_tag_styles) return {}
-      const layers = this.resolveTagStyleLayers(
-        this.sankey.tagGroupsInPriorityOrder('flux_taggs'),
-        tag => tags.includes(tag as Class_Tag)
-      )
-      const out: { color?: string, opacity?: number } = {}
-      const color_layer = topLayerDefining(layers, style => style.getElementProperty('shape_color'))
-      if (color_layer && this.attributes.shape_color_sustainable !== true) {
-        out.color = color_layer.style.getElementProperty('shape_color') as string
-      }
-      const opacity_layer = topLayerDefining(layers, style => style.getElementProperty('shape_opacity'))
-      if (opacity_layer) out.opacity = opacity_layer.style.getElementProperty('shape_opacity') as number
-      return out
-    }
+    const band_style = (tags: Class_Tag[]) => this._bandStyle(tags)
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
     //    plus aucun lien fantôme dans le modèle).
@@ -1086,62 +1228,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
       && tagg.tags_list.length > 1
       && !this.sankey.nodes_list.some(node => node.driving_dimension === tagg))
     if (multi_dim) {
-      const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
-      // os#1511 — UN FLUX ENGENDRÉ ne porte qu'un scalaire : il naît d'un choix de coordonnées
-      // et ne sait pas se redécouper par un autre axe. Ses bandes se lisent donc sur le flux
-      // D'ORIGINE, à la coordonnée de son membre. Sans cela, chaque bande valait le total du
-      // flux — deux filières à 1 385 kt chacune au lieu de 1 280 et 105.
-      const morceaux = this.id.split(MEMBER_NODE_MARK)
-      const origine = morceaux.length > 1 ? this.sankey.links_dict[morceaux[0]] : undefined
-      // os#1511 — LES MEMBRES SE LISENT SUR LES NŒUDS, pas dans l'identifiant du flux. Depuis
-      // que DEUX axes peuvent se croiser (« les filières à gauche, les pays à droite »), un flux
-      // engendré est une CASE et porte donc jusqu'à deux coordonnées ; les chercher dans son id
-      // obligerait à savoir de quelle dimension vient chaque morceau, alors que ses nœuds le
-      // disent déjà.
-      const membres_axes = [this.source, this.target]
-        .map(bout => memberOfGeneratedNode(bout as Class_NodeElement))
-        .filter((membre): membre is Class_DataTag => membre !== undefined)
-      multi_dim.selected_tags_list.forEach(tag => {
-        const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-        let v = (origine !== undefined && membres_axes.length > 0)
-          ? null
-          : (leaf === null ? null : (leaf.valueData ?? leaf.valueResult))
-        // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
-        // adresse un point du cube : sur une dimension hiérarchisée, « Europe » n'y porte rien,
-        // la donnée étant sur l'Espagne et l'Italie. Sans ce repli, cocher Europe et Afrique ne
-        // dessinait AUCUNE bande — et comme l'épaisseur du flux vient des bandes, le flux
-        // disparaissait entièrement. Constaté à l'écran le 28/09.
-        if (v === null || v <= 0) {
-          const porteur = origine ?? this
-          const groupes_axes = new Set(membres_axes.map(membre => membre.group.id))
-          const coordonnee = (porteur.selected_data_tags_list as Class_DataTag[])
-            .filter(autre => autre.group.id !== multi_dim.id && !groupes_axes.has(autre.group.id))
-            .concat([tag as Class_DataTag])
-            .concat(membres_axes)
-          const contributions = porteur.contributingValuesFor(coordonnee)
-          if (contributions !== null) {
-            const somme = contributions.reduce((total, valeur) => total + (
-              this._reads_collected_layer
-                ? (valeur.valueData ?? 0)
-                : (valeur.valueResult ?? ((valeur.value_option === 'value' || valeur.value_option === 'intervals') ? valeur.valueData : null) ?? 0)
-            ), 0)
-            if (somme > 0) v = somme
-          }
-        }
-        if (v === null || v <= 0) return
-        const { color: styled_color, ...styled_opacity } = band_style(valueTags(leaf))
-        // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
-        // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
-        // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
-        const band_own_scale = (tag as Class_DataTag).own_scale
-        if (band_own_scale !== undefined && band_own_scale > 0) {
-          this.setDomainLocalScale(band_own_scale)
-          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
-        }
-        else {
-          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
-        }
-      })
+      const bands: Type_DimensionBand[] = this.dimensionBandsRaw(multi_dim)
+      // os#1511 — « AUTRES » (règle arrêtée avec Julien le 01/10) : le repli se décide AU TOTAL de
+      // la dimension sur les flux visibles (moins de 0,5 %, ou au-delà du 19e — même règle que la
+      // couronne), pour que la légende reste courte et qu'un membre soit replié partout ou nulle
+      // part. EXCEPTION : un membre replié au total reste en propre sur un flux où il pèse au moins
+      // 5 % (`OTHERS_EXCEPTION_SHARE_PCT`) — le cas d'une bande grosse sur un seul flux.
+      const replies_au_total = multi_dim.globalFoldedMembers()
+      const total_flux = bands.reduce((acc, band) => acc + band.value, 0)
+      const exception = (band: Type_DimensionBand) =>
+        total_flux > 0 && band.value / total_flux >= OTHERS_EXCEPTION_SHARE_PCT / 100
+      const folded = bands.filter(band => replies_au_total.has(band.id) && !exception(band))
+      const kept = bands.filter(band => !folded.includes(band))
+      // os#1511 — ORDRE DES BANDES : le même qu'en nœuds (`members_order`, cf.
+      // Algorithms/DimensionMemberOrder) — par défaut du plus grand au plus petit au premier niveau,
+      // l'ordre de l'arbre plus bas ; « Autres » toujours en dernier. Trier à plat éparpillait les
+      // sous-régions d'une région éclatée entre les autres régions.
+      const par_membre = new Map(kept.map(band => [multi_dim.tags_dict[band.id] as Class_DataTag, band]))
+      const ordre = ordonnerMembres(multi_dim, [...par_membre.keys()], multi_dim.members_order,
+        membre => par_membre.get(membre)?.value ?? 0)
+      kept.splice(0, kept.length, ...ordre.map(membre => par_membre.get(membre) as typeof kept[number]))
+      bands.splice(0, bands.length, ...kept)
+      if (folded.length > 0) {
+        bands.splice(0, bands.length, ...kept, {
+          id: OTHERS_ID,
+          px: folded.reduce((acc, band) => acc + band.px, 0),
+          color: OTHERS_COLOR,
+          value: folded.reduce((acc, band) => acc + band.value, 0),
+          // Ce que la bande replie SUR CE FLUX, du plus grand au plus petit : l'info-bulle le détaille.
+          folded: folded.map(band => ({ id: band.id, value: band.value })).sort((a, b) => b.value - a.value)
+        })
+      }
       const dim_total = bands.reduce((acc, band) => acc + band.px, 0)
       if (dim_total <= 0) return []
       return bands.map(band => ({ ...band, share: band.px / dim_total }))
@@ -1167,10 +1284,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const unit_tag = unit_tag_of(tv)
       if (unit_tag) {
         const resolved = unit_tag.resolved_unit
-        const coeff = resolved?.unit.coefficient ?? 1
+        const coeff = resolved ? resolved.unit_type.displayFactor(resolved.unit) : 1
         // Échelle PROPRE à la grandeur (façon e!Sankey) si définie, sinon
-        // échelle globale du dessin ; le coefficient convertit vers l'unité
-        // de base sur laquelle l'échelle s'exprime.
+        // échelle globale du dessin ; le facteur convertit vers l'unité de
+        // référence des données, sur laquelle l'échelle s'exprime (os#1518).
         const base_scale = resolved?.unit_type.display_scale ?? this.sankey.drawing_area.scale
         this.setDomainLocalScale(base_scale / (coeff || 1))
         return this._scaleValueToPx(v)
@@ -1472,6 +1589,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected _orderD3Elements() {
     this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
+    // os#1511 — les BANDES au-dessus du tracé principal : invisible sous elles, celui-ci captait
+    // encore le survol (une opacité nulle ne coupe pas les événements SVG), et l'info-bulle ne
+    // savait jamais quelle bande montrer. Le tracé reste dessous : sa zone de survol élargie des
+    // flux fins (`_artifical_enlargement`) continue de répondre hors des bandes.
+    this.d3_selection?.selectAll('.link_band').raise()
+    this.d3_selection?.selectAll('.link_band_label').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
 
     this._link_draw_label.d3_selection?.raise()
@@ -1597,6 +1720,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Apply parent behavior first
     super.eventMouseOver(event)
+    // os#1511 — LA BANDE SURVOLÉE (Julien, 30/09 : « l'info-bulle doit montrer l'info uniquement
+    // pour le dataTag correspondant à la bande »). `mouseover` remonte de chaque enfant du flux :
+    // passer d'une bande à l'autre le redéclenche. L'info-bulle d'un même élément ne se refait
+    // pas d'elle-même, on la ferme donc pour qu'elle se rouvre sur la nouvelle bande.
+    const band = (event.target as unknown as Element | null)?.closest?.('.link_band')
+    const band_id = band?.getAttribute('data-band-id') ?? undefined
+    if (band_id !== this._hovered_band_id) {
+      const had_band = this._hovered_band_id !== undefined
+      this._hovered_band_id = band_id
+      if (had_band) closePresentationTooltip(this.drawing_area.application_data)
+    }
     // ALT
     if (this.thickness < 15) {
       this._artifical_enlargement = true
@@ -1645,6 +1779,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOut(event)
+    // Quitter le flux (et non passer d'une bande à l'autre) oublie la bande survolée.
+    const vers = (event as unknown as { relatedTarget: Node | null }).relatedTarget
+    if (!vers || !this.d3_selection?.node()?.contains(vers)) this._hovered_band_id = undefined
     // OS#305 — quitter le flux programme la fermeture de son info-bulle de
     // présentation (annulée si le curseur y entre, cf. PanelShell).
     schedulePresentationHoverClose(this.drawing_area.application_data)

@@ -2,6 +2,7 @@ import { Class_ApplicationData } from './ApplicationData'
 import type { Class_DataTag } from './Tag'
 import type { Class_DataTagGroup } from './TagGroup'
 import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
+import * as d3 from '../d3Modules'
 
 // jest 27 / jsdom n'expose pas structuredClone (utilise par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -365,14 +366,19 @@ describe('os#1511 — une dimension hierarchisee toute grise recoit une palette'
   test('chaque membre recoit une couleur, et une BRANCHE se reconnait', () => {
     const { groupe, cereales, brutes, ble, lait } = makeArbre()
     expect(applyHierarchyPaletteIfGrey(groupe)).toBeGreaterThan(0)
-    groupe.tags_list.forEach((t: Class_DataTag) => expect(t.color).toMatch(/^hsl\(/))
-    // La teinte suit la parente : Ble descend de Cereales, Lait est une autre branche.
-    const teinte = (t: Class_DataTag) => t.color.slice(4, t.color.indexOf(','))
-    expect(teinte(ble)).toBe(teinte(cereales))
-    expect(teinte(brutes)).toBe(teinte(cereales))
-    expect(teinte(lait)).not.toBe(teinte(cereales))
+    groupe.tags_list.forEach((t: Class_DataTag) => expect(t.color).toMatch(/^#[0-9a-f]{6}$/))
+    // os#1516 — la teinte suit la parente : Ble reste dans la famille de Cereales, plus pres
+    // d elle que de Lait, qui est une autre branche.
+    const ecart = (a: Class_DataTag, b: Class_DataTag) => {
+      const d = Math.abs(d3.hcl(a.color).h - d3.hcl(b.color).h) % 360
+      return Math.min(d, 360 - d)
+    }
+    expect(ecart(ble, cereales)).toBeLessThan(ecart(ble, lait))
+    expect(ecart(brutes, cereales)).toBeLessThan(ecart(brutes, lait))
     // Et l on s eclaircit en descendant : un parent reste plus dense que ses enfants.
-    expect(ble.color).not.toBe(cereales.color)
+    expect(d3.hcl(ble.color).l).toBeGreaterThan(d3.hcl(cereales.color).l)
+    // La recette est gardee, comme au bouton palette : les couleurs suivront la structure.
+    expect(groupe.palette).toBeDefined()
     // Poser des couleurs sans les nommer ne sert a rien : l interrupteur des couleurs est ce
     // qui fait entrer le groupe dans la LEGENDE.
     expect(groupe.use_colors).toBe(true)

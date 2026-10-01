@@ -190,6 +190,13 @@ export type Type_RepresentationZoom = {
    * en le disant plutot que d'avaler les clics.
    */
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
+  /**
+   * 30/09/2026 — RECADRER la figure dans sa fenêtre (Julien : « la couronne devrait pouvoir être
+   * centrée dans sa fenêtre avec le même bouton que le diagramme »). Le bouton de cadrage de la
+   * colonne d'outils l'appelle quand la fenêtre active est cette figure ; le diagramme garde son
+   * cadrage automatique, qui est un MODE et non un geste.
+   */
+  fit?: (ctx: Type_RepresentationContext) => void
 }
 
 /** Ce qu'une représentation reçoit en entrée. */

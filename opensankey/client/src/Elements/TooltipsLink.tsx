@@ -17,6 +17,9 @@ import { Class_FluxTagGroup } from '../types/TagGroup'
 import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { escapeHtml } from './htmlEscape'
+import { formatElementValue, resolveValueUnit } from './ValueFormatting'
+import { MEMBER_NODE_MARK, isGeneratedMemberId } from './GeneratedMemberMark'
+import { OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 /** Une tranche de la série d'un flux (une combinaison de dataTags). */
 export type Type_LinkSeriesEntry = {
@@ -120,14 +123,31 @@ export class LinkTooltip {
 
     // Une ligne par tranche sélectionnée de la dimension multi (comme la liste
     // par tag des fluxTags)
+    // os#1511 (Julien, 30/09) — les valeurs sont celles des BANDES dessinées (`tagged_value_bands`),
+    // pas `valueForTag` : sur un flux engendré (Produits agricoles → Monde - Export - Europe), ce
+    // dernier rendait le total pour chaque filière. Et seule la bande SURVOLÉE est montrée ; hors
+    // de toute bande (le flux entier), toutes.
     if (multi_dim) {
-      multi_dim.selected_tags_list.forEach(tag => {
-        const leaf = this._link.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-        const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+      const unit = resolveValueUnit(this._link)
+      const hovered = this._link.hovered_band_id
+      const bands = this._link.tagged_value_bands
+      const shown = bands.some(band => band.id === hovered) ? bands.filter(band => band.id === hovered) : bands
+      shown.forEach(band => {
+        const tag = multi_dim.tags_dict[band.id] as Class_DataTag | undefined
         html += '<tr>'
-        html += `<th>${escapeHtml(tag.display_name)}</th>`
-        html += `<td class="value">${v ?? '-'}</td>`
+        html += `<th>${escapeHtml(tag?.display_name ?? (band.id === OTHERS_ID ? this.othersLabel() : band.id))}</th>`
+        html += `<td class="value">${escapeHtml(formatElementValue(band.value, this._link) + (unit ? ' ' + unit : ''))}</td>`
         html += '</tr>'
+        // « Autres » SURVOLÉE : ce qu'elle replie sur CE flux, membre par membre (« petit ici »).
+        if (band.id === hovered && band.folded !== undefined) {
+          band.folded.forEach(part => {
+            const membre = multi_dim.tags_dict[part.id] as Class_DataTag | undefined
+            html += '<tr>'
+            html += `<th>&nbsp;&nbsp;${escapeHtml(membre?.display_name ?? part.id)}</th>`
+            html += `<td class="value">${escapeHtml(formatElementValue(part.value, this._link) + (unit ? ' ' + unit : ''))}</td>`
+            html += '</tr>'
+          })
+        }
       })
     }
 
@@ -161,7 +181,9 @@ export class LinkTooltip {
 
     // #284 — sous-valeurs de la feuille courante : une ligne par sous-valeur,
     // libellée par sa coordonnée (tags, un par groupe).
-    tagged_values.forEach(sub => {
+    // Même règle pour les valeurs coordonnées : la bande survolée seule, sinon toutes.
+    const hovered_sub = tagged_values.some(sub => sub.id === this._link.hovered_band_id)
+    tagged_values.filter(sub => !hovered_sub || sub.id === this._link.hovered_band_id).forEach(sub => {
       const coord = sub.tags_list
         .map(tag => tag.display_name)
         .join(', ')
@@ -343,10 +365,38 @@ export class LinkTooltip {
     let html = ''
     this._link.drawing_area.sankey.data_taggs_list.forEach(tagg => {
       if (tagg.id === skip_tagg_id) return
-      const sel = tagg.selected_tags_list.map(t => t.display_name).join(', ')
+      // os#1511 — un bout ENGENDRÉ par cette dimension (« Monde - Export - Europe ») dit de quel
+      // membre est ce flux : on le nomme, lui, et non tous les membres choisis de la dimension.
+      const membres = this.membersOfGeneratedEnds(tagg.id)
+      const sel = membres.length > 0
+        ? membres.join(', ')
+        : tagg.selected_tags_list.map(t => t.display_name).join(', ')
       html += `<tr><th>${escapeHtml(tagg.name)}</th><td>${escapeHtml(sel) || '-'}</td></tr>`
     })
     return html
+  }
+
+  /** Libellé de la bande et du nœud « Autres » (repli des membres trop petits). */
+  private othersLabel(): string {
+    const t = this._link.drawing_area.application_data?.t
+    return (t ? t('sunburst.others') : '') || 'Autres'
+  }
+
+  /**
+   * Noms des membres portés par les bouts ENGENDRÉS du flux (`<axe>--par--<membre>`) dont l'axe se
+   * désagrège selon la dimension `tagg_id`. Vide si aucun bout n'en vient.
+   */
+  private membersOfGeneratedEnds(tagg_id: string): string[] {
+    const noms: string[] = []
+    ;[this._link.source, this._link.target].forEach(bout => {
+      if (!isGeneratedMemberId(bout.id)) return
+      const [axe_id, membre_id] = bout.id.split(MEMBER_NODE_MARK)
+      const dimension = this._link.sankey.nodes_dict[axe_id]?.driving_dimension
+      if (dimension?.id !== tagg_id) return
+      const nom = membre_id === OTHERS_ID ? this.othersLabel() : dimension.tags_dict[membre_id]?.display_name
+      if (nom !== undefined && !noms.includes(nom)) noms.push(nom)
+    })
+    return noms
   }
 
   /** Trie une combinaison de dataTags selon l'ordre des groupes du sankey. */
@@ -395,7 +445,7 @@ export class LinkTooltip {
     // OS#1286 — en mode unit_model le facteur est le coefficient de l'unité du registre.
     const model = lv.unit_type === 'unit_model' ? this._link.sankey.units.resolve(lv.unit) : undefined
     if (model) {
-      if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
+      v = v / model.unit_type.displayFactor(model.unit)
     } else if (lv.unit_factor && lv.unit_factor > 1) {
       v = v / lv.unit_factor
     }

@@ -74,6 +74,13 @@ export interface Type_FigureChartStyle {
    * pas. C'est ce qui la distingue de `parts_group_under`, qui la fait disparaître dans « Autres ».
    */
   labels_min_share: number
+  /**
+   * 01/10/2026 — UNE PART TROP PETITE POUR SON ÉTIQUETTE LA SORT EN DÉTACHÉ, reliée par un trait,
+   * au lieu de la taire (Julien : « pour les parties trop petites qui ne peuvent pas afficher de
+   * label, l'afficher en détaché »). Trop petite = sous le seuil `labels_min_share`, ou dont le
+   * texte ne tient pas dans la corde du secteur.
+   */
+  labels_callout_small: boolean
   /** Parts au plus ; 0 = sans limite. */
   parts_max: number
   /**
@@ -122,7 +129,8 @@ export interface Type_FigureChartStyle {
   name_label_callout: boolean
   /** value_label_* : la valeur écrite dans le dessin, et le pourcentage. */
   value_label_is_visible: boolean
-  value_label_percent: 'none' | 'total' | 'parent'
+  // 01/10/2026 — `value_total` / `value_parent` : la valeur ET son pourcentage (« 59,3 Mt (40 %) »).
+  value_label_percent: 'none' | 'total' | 'parent' | 'value_total' | 'value_parent'
   /** scale_factor, en % du cadre. */
   scale_factor: number
   interaction_tooltip: boolean
@@ -149,6 +157,9 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // (deux jus « Product » sont du même orange : quatre lignes, deux teintes). Une figure qui n'a
   // jamais réglé `legend_visible` la perd donc — c'est l'exception assumée à « aucune figure
   // enregistrée ne change d'aspect » ; on la rallume dans l'inspecteur.
+  // 01/10/2026 — PAS DE LÉGENDE, en fin de compte (Julien : « la meilleure option par défaut pour
+  // la couronne, c'est nom + valeur + %, pas de légende ») : les secteurs se nomment eux-mêmes, et
+  // ceux qui sont trop petits sortent leur étiquette (`labels_callout_small`).
   legend_visible: false,
   legend_parts: 'all',
   // 24/09/2026 — DESSOUS, ET C'EST UN CHANGEMENT DE DÉFAUT ASSUMÉ (demande de Julien : « la
@@ -156,7 +167,12 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // largeur, c'est-à-dire sur le diamètre du disque ; dessous, elle prend un bandeau qui revient
   // à la ligne et laisse le rond plus grand. Une couronne qui n'a jamais réglé sa position suivra
   // donc ; celle qui l'a réglée garde son réglage, la surcharge primant sur le défaut.
-  legend_position: 'bottom',
+  //
+  // 01/10/2026 — À GAUCHE, ET LÉGENDE VISIBLE D'OFFICE (Julien : « pour moi le défaut de la
+  // couronne, ça devient légende visible à gauche et pas de label dans les parts de la figure
+  // mais valeur + pourcentage — comme ça pas de redondance et un maximum d'information »). La
+  // légende NOMME, le secteur CHIFFRE : le nom n'est plus écrit deux fois.
+  legend_position: 'left',
   legend_font_size: 12,
   legend_width: 230,
   // La légende nomme les parts sans dire leur parent : sous un seul cran il n'y en a pas à dire,
@@ -172,6 +188,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_group_under: 0.5,
   // La valeur que le tracé appliquait en dur : une couronne enregistrée ne change pas d'un pixel.
   labels_min_share: 3,
+  labels_callout_small: true,
   parts_max: 20,
   levels_display: 'in_place',
   centre_content: 'value',
@@ -181,6 +198,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // ⚠️ RENVERSEMENT ASSUMÉ. os#1431 les avait éteints « sans quoi toute couronne déjà
   // enregistrée se couvrirait de noms ». Julien tranche l'inverse : une couronne muette ne dit
   // rien de ce qu'elle montre, et c'est le premier réglage que tout le monde rallume.
+  //
+  // 01/10/2026 — ALLUMÉ : nom + valeur + % dans chaque secteur, sans légende (cf. plus haut).
   name_label_is_visible: true,
   name_label_font_size: 11,
   // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
@@ -213,7 +232,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
   name_label_callout: false,
   value_label_is_visible: true,
-  value_label_percent: 'total',
+  // 01/10/2026 — LA VALEUR ET SON POURCENTAGE, sans le nom (cf. `name_label_is_visible`).
+  value_label_percent: 'value_total',
   scale_factor: 100,
   interaction_tooltip: true,
   // RIEN DE PLUS : le clic ouvre l'anneau dans la figure, et s'arrête là. Déplier aussi le
@@ -229,6 +249,11 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // Les barres gardent l'ordre de l'analyse (un axe « année » reste chronologique) ; les
   // catégories d'un empilement, elles, restent par total décroissant sous ce même défaut.
   parts_order: 'model',
+  // Les défauts propres à la couronne ne la concernent qu'elle.
+  legend_visible: false,
+  legend_position: 'bottom',
+  name_label_is_visible: true,
+  labels_callout_small: false,
   legend_width: 200,
   parts_group_under: 0,
   parts_max: 20,
@@ -260,6 +285,12 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
 
 /** Ce qu'une part dit d'UN de ses textes — son nom, ou sa valeur. */
 export interface Type_FigurePartTextAspect extends Type_FigureLabelBackground {
+  /**
+   * 01/10/2026 — LE TEXTE PERSONNALISÉ du nom (« Contenu du label » : texte personnalisé), quand la
+   * part en a un ; absent, la part écrit le nom de son sujet. Julien : « le texte personnalisé pour
+   * le centre (et les autres parts) ne marche pas » — le tracé ne le lisait nulle part.
+   */
+  custom_text?: string
   /** `*_font_family` — absent ou vide : la police de la page, comme hier. */
   font_family?: string
   /** `*_font_size`, en points. */
@@ -404,7 +435,7 @@ export interface Type_FigurePartLabelAspect {
    * et le pourcentage a sa facon — a besoin des valeurs, pas de la fonction. Les deux sortent du
    * meme `said()` ; il n y a qu une lecture.
    */
-  value_percent?: 'none' | 'total' | 'parent'
+  value_percent?: 'none' | 'total' | 'parent' | 'value_total' | 'value_parent'
   unit_visible?: boolean
   scientific_notation?: boolean
   significant_digits?: boolean

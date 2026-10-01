@@ -60,6 +60,7 @@ import {
   effectiveDecompose,
   isFluxCompare
 } from '../../Charts/AnalysisDescriptor'
+import { parseMemberSectorId } from '../../Charts/memberSectorId'
 import type { Type_PartInput } from './buildParts'
 import { NO_SUBJECT } from './PartSubject'
 import type {
@@ -130,6 +131,13 @@ const selfLookup = (subject: Type_ChartSubject): Type_PartLookup => (id) => {
     : { kind: 'flux', link: subject.link }
 }
 
+/** Un MEMBRE de dimension de données, par l'identifiant de son secteur. */
+const memberLookup = (source: Type_AnalysisPartsSource): Type_PartLookup => (id) => {
+  const ref = parseMemberSectorId(id)
+  if (ref === null) return null
+  return tagLookup(source.data_taggs_dict[ref.dimension_id])(ref.member_id)
+}
+
 /** Les recherches qu'un AXE ADDITIF appelle : une seule, celle du registre qu'il désigne. */
 const decomposeLookups = (
   source: Type_AnalysisPartsSource,
@@ -146,6 +154,11 @@ const decomposeLookups = (
     return group ? [tagLookup(group)] : [linkLookup(source)]
   }
   if (spec.kind === 'node_children') return [nodeLookup(source)]
+  // 01/10/2026 — UNE DIMENSION DE DONNÉES découpe en MEMBRES : la part est le membre, retrouvé par
+  // l'identifiant de son secteur (« membre:<dim>/<membre> », le dernier d'une coordonnée emboîtée).
+  // Sans elle, ces parts répondaient `none` : sans nom, et le sélecteur de parts listait des cases
+  // vides (retour de Julien).
+  if (spec.kind === 'data_dimension') return [memberLookup(source)]
   return [linkLookup(source)]
 }
 

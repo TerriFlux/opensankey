@@ -264,7 +264,10 @@ const DONUT_HONOURS = {
   // disque plutôt qu'une colonne qui lui mange son diamètre. Cf. `DONUT_STYLE_DEFAULTS`, qui porte
   // le même défaut côté tracé — les deux doivent dire la même chose, sinon l'inspecteur montre un
   // réglage et le dessin en applique un autre.
-  legend_position: { default: 'bottom' },
+  legend_position: { default: 'left' },
+  // 01/10/2026 — nom + valeur + % dans les secteurs, pas de légende (Julien, en fin de compte).
+  // Mêmes défauts que `DONUT_STYLE_DEFAULTS`.
+  legend_visible: { default: false },
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
@@ -306,8 +309,12 @@ const DONUT_HONOURS = {
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
   value_label_is_visible: { default: true },
   name_label_font_size: { default: 11 },
-  value_label_percent: { default: 'total' },
-  centre_content: { default: 'value' },
+  value_label_percent: { default: 'value_total' },
+  // 01/10/2026 — PLUS DANS LE GRAPHE (Julien : « le centre c'est aussi une part ; ce n'est pas dans
+  // graphe »). Ce que le centre écrit se règle sur SA part, comme le libellé et la valeur de
+  // n'importe quel secteur ; `centre_content` reste lu, comme DÉFAUT de cette part (les couronnes
+  // enregistrées le portent), mais ne s'offre plus dans l'inspecteur de la figure.
+  centre_content: { default: 'value', visibleIf: () => false },
   centre_hole: { default: 55 },
   // 26/09/2026 — LE SEUIL D'AFFICHAGE DES ÉTIQUETTES, ET SEULEMENT SUR LA COURONNE.
   //
@@ -329,6 +336,8 @@ const DONUT_HONOURS = {
   // quel objet, quelle année, quel niveau ; l'affichage dit CE QU'ON MONTRE de cet endroit-là.
   // Julien, deux captures côte à côte : « y a coordonnées mais pas affichage ».
   labels_min_share: { sort: 'display' as const },
+  // 01/10/2026 — et ce qui ne tient pas sort en détaché, au lieu de se taire.
+  labels_callout_small: { sort: 'display' as const },
   legend_width: { default: 230 }
 }
 const BARS_HONOURS = {

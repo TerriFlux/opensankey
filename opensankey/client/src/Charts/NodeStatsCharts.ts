@@ -16,6 +16,7 @@
 // aux classes DrawingArea/Sankey : les données arrivent déjà extraites
 // (Type_StatSlice), ce module ne fait que dessiner dans le conteneur DOM fourni.
 
+import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import * as d3 from '../d3Modules'
 // os#1468 — le cartouche derrière une étiquette de part, écrit une fois pour les trois natures.
 import {
@@ -71,6 +72,15 @@ export interface Type_StatSlice {
 }
 
 export interface Type_ChartOptions {
+  /**
+   * 01/10/2026 — LE ZOOM DE LA COURONNE À PLAT (Julien : « il manque toujours les fonctions de zoom
+   * dans cette fenêtre »). Même pont que le disque : la poignée est prêtée à la colonne d'outils
+   * (−/+/%, cadrage), et le point de vue survit au remontage.
+   */
+  zoom_handle?: (handle: Type_FigureZoomHandle | null) => void
+  on_zoom?: () => void
+  initial_view?: Type_FigureView | null
+  on_view?: (view: Type_FigureView) => void
   // Formatage d'une valeur (nombre + unité éventuelle). Défaut : 4 chiffres significatifs.
   format?: (value: number) => string
   // Libellé du regroupement des petites parts (donut). Défaut : 'Others'.
@@ -258,14 +268,66 @@ export const barLabelBottom = (angles: readonly number[]): number => {
 }
 
 /** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
-export const orderParts = <T extends { label: string, value: number }>(
+export const orderParts = <T extends { label: string, value: number, path?: string[], parent_label?: string }>(
   parts: T[], order: Type_FigureChartStyle['parts_order']
 ): T[] => {
   if (order === 'model') return parts
-  const out = [...parts]
-  if (order === 'name') out.sort((a, b) => a.label.localeCompare(b.label))
-  else if (order === 'value_asc') out.sort((a, b) => a.value - b.value)
-  else out.sort((a, b) => b.value - a.value)
+  const compare = (a: { label: string, value: number }, b: { label: string, value: number }) =>
+    order === 'name' ? a.label.localeCompare(b.label)
+      : order === 'value_asc' ? a.value - b.value
+        : b.value - a.value
+  if (parts.some(p => (p.path?.length ?? 0) > 2)) return orderPartsAsTree(parts, compare)
+  return [...parts].sort(compare)
+}
+
+/**
+ * 30/09/2026 — UNE COURONNE DÉPLIÉE SE TRIE EN ARBRE, comme ses anneaux (`sortSunburstTree`).
+ *
+ * Julien : « la couronne réorganise tout dans l'ordre croissant, mais quand on désagrège ce n'est
+ * pas vraiment ce qu'on veut ; ça marche en mode un anneau par niveau, il faut la même chose sur la
+ * couronne simple ». Trier toutes les parts ensemble mélangeait les enfants de parents différents —
+ * « Blé » entre « Lait » et « Maïs ». Ici chaque fratrie se trie à sa place, et un groupe se classe
+ * parmi ses voisins par son TOTAL (la somme de ses parts) : les enfants d'un même parent restent
+ * côte à côte, et les branches gardent entre elles l'ordre demandé.
+ *
+ * Le nom d'un groupe est celui que ses parts disent de leur parent (`parent_label`) ; au-delà,
+ * son identifiant — l'ordre alphabétique des groupes profonds n'est donc qu'approché.
+ */
+const orderPartsAsTree = <T extends { label: string, value: number, path?: string[], parent_label?: string }>(
+  parts: T[], compare: (a: { label: string, value: number }, b: { label: string, value: number }) => number
+): T[] => {
+  type Type_Group = { label: string, value: number, children: Map<string, Type_Group>, leaves: T[] }
+  const group = (label: string): Type_Group => ({ label, value: 0, children: new Map(), leaves: [] })
+  const root = group('')
+  parts.forEach(part => {
+    // La route sans la racine et sans la part elle-même : les groupes qui la contiennent.
+    const ancestors = (part.path ?? []).slice(1, -1)
+    let at = root
+    at.value += part.value
+    ancestors.forEach((id, i) => {
+      let next = at.children.get(id)
+      if (next === undefined) {
+        next = group(i === ancestors.length - 1 ? (part.parent_label ?? id) : id)
+        at.children.set(id, next)
+      }
+      next.value += part.value
+      at = next
+    })
+    at.leaves.push(part)
+  })
+  const out: T[] = []
+  const walk = (g: Type_Group) => {
+    // Parts et sous-groupes d'un même parent se classent ensemble, chacun par sa valeur.
+    const items: ({ label: string, value: number } & ({ leaf: T } | { sub: Type_Group }))[] = [
+      ...g.leaves.map(leaf => ({ label: leaf.label, value: leaf.value, leaf })),
+      ...[...g.children.values()].map(sub => ({ label: sub.label, value: sub.value, sub }))
+    ]
+    items.sort(compare).forEach(item => {
+      if ('leaf' in item) out.push(item.leaf)
+      else walk(item.sub)
+    })
+  }
+  walk(root)
   return out
 }
 
@@ -509,6 +571,12 @@ export const drawDonutChart = (
     .style('display', 'flex')
     .style('flex-direction', flexDirection(st))
     .style('align-items', 'center')
+    // 30/09/2026 — CENTRÉE DANS SA FENÊTRE (Julien : « la fenêtre n'est pas carrée, plus souvent
+    // plus haute que large, il faudrait centrer au moins verticalement »). La légende étant en bas
+    // par défaut, la couronne et sa légende s'empilaient en haut et tout le vide restait dessous.
+    // Le bloc se centre sur l'axe principal aussi : verticalement légende dessous, horizontalement
+    // légende à côté.
+    .style('justify-content', 'center')
     .style('gap', '0.5rem')
     .style('width', '100%')
     .style('height', '100%')
@@ -530,7 +598,9 @@ export const drawDonutChart = (
     .attr('width', side)
     .attr('height', side)
     .style('flex', '0 0 auto')
-  const g = svg.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
+  // 01/10/2026 — LA COUCHE QUE LE ZOOM DÉPLACE ; la couronne y est posée comme avant.
+  const zoom_layer = svg.append('g').attr('class', 'node_stats_zoom_layer')
+  const g = zoom_layer.append('g').attr('transform', `translate(${side / 2},${side / 2})`)
   // os#1481 — OÙ VIT LE FILTRE D'OMBRE. Un `<filter>` par secteur serait ruineux sur une couronne
   // de cent parts, et l'ombre est la même pour toutes : `partShadow` la déclare ICI, à la demande.
   const defs = svg.append('defs')
@@ -560,8 +630,17 @@ export const drawDonutChart = (
    *
    * Sous un seul cran, aucune part ne porte de parent : la légende est celle d'hier, au caractère.
    */
+  //
+  // 01/10/2026 — SAUF AU PREMIER RANG, dont le parent est le SUJET lui-même (Julien, capture à
+  // l'appui : « dans la légende, le nom du nœud central n'a pas à être repris pour chaque élément,
+  // juste en tête de légende »). « Produits agricoles → Monde - Export › Céréales » répétait le sujet
+  // sur chaque ligne ; il s'écrit une fois, en tête (`legend_head`), et la ligne dit « Céréales ».
   const legendLabel = (s: Type_StatSlice): string =>
-    (st.legend_levels && s.parent_label) ? `${s.parent_label} › ${s.label}` : s.label
+    (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
+  /** Le nom du sujet, quand des parts le portent pour parent : la tête de légende. */
+  const legend_head = st.legend_levels
+    ? kept.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
+    : undefined
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
     `${legendLabel(d.data)}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
@@ -660,7 +739,8 @@ export const drawDonutChart = (
    */
   const sectorName = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const a = aspectOf(d.data.id)
-    const name = sunburstSectorName(d.data.label, null, {
+    // Le texte personnalisé de la part, s'il y en a un, remplace le nom de son sujet.
+    const name = a?.name?.custom_text !== undefined && a.name.custom_text !== '' ? a.name.custom_text : sunburstSectorName(d.data.label, null, {
       separator: a?.name?.separator ?? '',
       separator_part: a?.name?.separator_part ?? 'after'
     })
@@ -713,7 +793,12 @@ export const drawDonutChart = (
     //
     // « Aucun » veut donc dire « la valeur telle quelle », et non « pas de pourcentage en plus ».
     if (!s.value_label_is_visible) return ''
-    if (s.value_label_percent !== 'none') return Math.round(d.data.value / total * 100) + '%'
+    // 01/10/2026 — sauf quand l'auteur demande les DEUX (« valeur + pourcentage »).
+    const pct = Math.round(d.data.value / total * 100) + '%'
+    if (s.value_label_percent === 'value_total' || s.value_label_percent === 'value_parent') {
+      return `${(a?.value_format ?? fmt)(d.data.value)} (${pct})`
+    }
+    if (s.value_label_percent !== 'none') return pct
     return (a?.value_format ?? fmt)(d.data.value)
   }
   /**
@@ -753,18 +838,44 @@ export const drawDonutChart = (
    * encore vrai.
    */
   const label_radius = (inner + radius) / 2
+  //
+  // 01/10/2026 — LA VRAIE GÉOMÉTRIE, ET NON LA CORDE (Julien : « la notion de trop petit ne me
+  // paraît pas très bien calculée : pour Fruits et légumes et Pomme de terre, on voit que ça rentre »).
+  // La corde mesure la place LE LONG de l'arc ; or le texte est horizontal, et sur les côtés du
+  // disque il court dans l'ÉPAISSEUR de l'anneau. Le texte tient si les quatre coins de son cadre,
+  // posé au centre du secteur, restent dans le secteur : entre les deux rayons, entre les deux angles.
   const sectorFits = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     const s = styleOf(d)
-    const chord_px = 2 * label_radius * Math.sin(Math.min(Math.PI, d.endAngle - d.startAngle) / 2)
-    return sector_lines(d).every(
-      line => labelTextWidthPx(line.text, s.name_label_font_size) <= chord_px
-    )
+    const lines = sector_lines(d)
+    const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
+    const h = lines.length * s.name_label_font_size * 1.15
+    const mid = (d.startAngle + d.endAngle) / 2
+    const cx = label_radius * Math.sin(mid)
+    const cy = -label_radius * Math.cos(mid)
+    const tol = 1
+    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(([sx, sy]) => {
+      const x = cx + sx * w / 2
+      const y = cy + sy * h / 2
+      const r = Math.hypot(x, y)
+      if (r < inner - tol || r > radius + tol) return false
+      let a = Math.atan2(x, -y)
+      if (a < d.startAngle - Math.PI) a += 2 * Math.PI
+      if (a > d.endAngle + Math.PI) a -= 2 * Math.PI
+      return a >= d.startAngle - tol / Math.max(r, 1) && a <= d.endAngle + tol / Math.max(r, 1)
+    })
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
-  const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean =>
-    (aspectOf(d.data.id)?.label_callout ?? st.name_label_callout)
-    && d.data.id !== '__others__'
-    && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+  const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
+    if (d.data.id === '__others__') return false
+    const said = aspectOf(d.data.id)?.label_callout
+    if (said !== undefined || st.name_label_callout) {
+      return (said ?? st.name_label_callout) && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+    }
+    // 01/10/2026 — TROP PETIT POUR SON ÉTIQUETTE : elle sort au lieu de se taire. Un secteur d'à
+    // peine un pixel n'a pas de bord où accrocher son trait ; il reste muet.
+    if (!st.labels_callout_small || (d.endAngle - d.startAngle) * radius < 1) return false
+    return (d.endAngle - d.startAngle) / (2 * Math.PI) < labelMinShare(st) || !sectorFits(d)
+  }
   // Ce qui porte une étiquette se décide SECTEUR PAR SECTEUR, et non plus par un drapeau de figure :
   // une part peut demander son nom là où la figure n'en veut pas. Rien ne change quand personne ne
   // dit rien — un secteur sans ligne n'avait déjà pas de texte.
@@ -993,14 +1104,37 @@ export const drawDonutChart = (
   // rendue à l'appelant (`on_label_move`), qui la retient par figure (`label_positions`).
   //
   // Elles vivent dans `g`, comme les arcs : ce qui les déplace déplace le disque avec.
+  // 01/10/2026 — LE CADRE DE CE QUI EST DESSINÉ, CALCULÉ (et non mesuré : `getBBox` rend zéro ou
+  // échoue quand la figure se dessine avant d'être montée, et la coupure revenait — Julien, capture
+  // à l'appui). Le disque, plus chaque étiquette sortie : sa position, son ancrage, sa largeur.
+  let drawn_box: { x0: number, x1: number, y0: number, y1: number } | null = null
   if (callouts.length > 0) {
     const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
     const midOf = (d: d3.PieArcDatum<Type_StatSlice>) => (d.startAngle + d.endAngle) / 2
     const edgeOf = (d: d3.PieArcDatum<Type_StatSlice>) => point(radius, midOf(d))
     const defaultAt = (d: d3.PieArcDatum<Type_StatSlice>) =>
       point(radius + CALLOUT_GAP_PX, midOf(d))
+    // 01/10/2026 — RANGÉES, ET NON EMPILÉES (Julien, capture à l'appui : les petites parts du
+    // haut écrivaient leurs étiquettes les unes sur les autres). Celles que l'auteur n'a pas
+    // déplacées se posent en deux colonnes, à droite et à gauche du disque, dans l'ordre de leur
+    // hauteur, chacune au moins une hauteur d'étiquette sous la précédente.
+    const laid_out = new Map<string, { x: number, y: number }>()
+    ;([1, -1] as const).forEach(side_sign => {
+      const column = callouts
+        .filter(d => opts.label_positions?.[d.data.id] === undefined)
+        .filter(d => (Math.sin(midOf(d)) >= 0 ? 1 : -1) === side_sign)
+        .map(d => ({ d, y: defaultAt(d).y }))
+        .sort((a, b) => a.y - b.y)
+      let floor = -Infinity
+      column.forEach(({ d, y }) => {
+        const height_px = sector_lines(d).length * styleOf(d).name_label_font_size * 1.15
+        const at_y = Math.max(y, floor + height_px / 2)
+        floor = at_y + height_px / 2 + 2
+        laid_out.set(d.data.id, { x: side_sign * (radius + CALLOUT_GAP_PX * 2), y: at_y })
+      })
+    })
     const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
-      opts.label_positions?.[d.data.id] ?? defaultAt(d)
+      opts.label_positions?.[d.data.id] ?? laid_out.get(d.data.id) ?? defaultAt(d)
     // Le texte s'écarte du disque : à droite il commence au trait, à gauche il y finit.
     const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
     const layer = g.append('g').attr('class', 'node_stats_callouts')
@@ -1046,6 +1180,21 @@ export const drawDonutChart = (
         .text(line => line.text)
     })
     if (st.interaction_tooltip) items.append('title').text(slice_title)
+    const box = { x0: -radius, x1: radius, y0: -radius, y1: radius }
+    callouts.forEach(d => {
+      const p = positionOf(d)
+      const s = styleOf(d)
+      const lines = sector_lines(d)
+      const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
+      const h = lines.length * s.name_label_font_size * 1.15
+      const anchor = anchorOf(p)
+      const x0 = anchor === 'start' ? p.x : anchor === 'end' ? p.x - w : p.x - w / 2
+      box.x0 = Math.min(box.x0, x0)
+      box.x1 = Math.max(box.x1, x0 + w)
+      box.y0 = Math.min(box.y0, p.y - h / 2)
+      box.y1 = Math.max(box.y1, p.y + h / 2)
+    })
+    drawn_box = box
     // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
     items.call(d3.drag<SVGGElement, d3.PieArcDatum<Type_StatSlice>>()
       .on('start', (event) => { event.sourceEvent?.stopPropagation() })
@@ -1078,7 +1227,10 @@ export const drawDonutChart = (
   // part le surcharge comme n'importe quel élément surcharge le réglage de sa figure. Aucune
   // exception nouvelle : c'est la doctrine du lecteur commun, appliquée à un texte de plus.
   const centre = opts.part_aspect?.(FIGURE_CENTRE_PART_ID)
-  const centre_name = opts.title_fallback ?? ''
+  // Le centre aussi : son texte personnalisé, sinon le nom de ce que la figure montre.
+  const centre_name = (centre?.name?.custom_text !== undefined && centre.name.custom_text !== '')
+    ? centre.name.custom_text
+    : opts.title_fallback ?? ''
   const wants_name = (centre?.name?.is_visible
     ?? (st.centre_content === 'name' || st.centre_content === 'both')) && centre_name !== ''
   const wants_value = centre?.value?.is_visible
@@ -1160,6 +1312,49 @@ export const drawDonutChart = (
   // que la légende, qui ne peint aucune part, et le corps sort plus bas par un retour anticipé.
   opts.on_parts_resolved?.(resolved)
 
+  // ── 01/10/2026 — LE CADRE, PUIS LE ZOOM ────────────────────────────────────────────────────
+  //
+  // Julien, capture à l'appui : « avec les labels détachés, la couronne n'est pas cadrée ». Les
+  // étiquettes sorties débordaient du carré du disque. La figure prend donc pour cadre ce qu'elle
+  // dessine VRAIMENT — disque et étiquettes — et l'étale sur toute la place de la fenêtre.
+  if (drawn_box !== null) {
+    // Avec une légende, la place qu'elle prend est déjà retirée : la figure se cadre dans le reste.
+    const pad = 8
+    const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
+    const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
+    const { x0, x1, y0, y1 } = drawn_box
+    svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
+      .attr('viewBox', `${x0 + side / 2 - pad} ${y0 + side / 2 - pad} ${x1 - x0 + 2 * pad} ${y1 - y0 + 2 * pad}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('overflow', 'visible')
+  }
+  // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
+  // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
+  if (opts.zoom_handle) {
+    let view = opts.initial_view ?? { x: 0, y: 0, k: 1 }
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 8])
+      .filter((event: Event) => event.type === 'wheel' || (event.type === 'mousedown' && (event as MouseEvent).button === 0 && (event.target as Element).tagName === 'svg'))
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+        const changed = event.transform.k !== view.k
+        view = { x: event.transform.x, y: event.transform.y, k: event.transform.k }
+        zoom_layer.attr('transform', event.transform.toString())
+        opts.on_view?.(view)
+        if (changed) opts.on_zoom?.()
+      })
+    const svg_sel = svg as unknown as d3.Selection<SVGSVGElement, unknown, null, undefined>
+    svg_sel.call(zoom)
+      .call(zoom.transform, d3.zoomIdentity.translate(view.x, view.y).scale(view.k))
+      .on('dblclick.zoom', null)
+      .on('dblclick', () => { svg_sel.call(zoom.transform, d3.zoomIdentity) })
+    opts.zoom_handle({
+      getScale: () => view.k,
+      setScale: (k) => { svg_sel.call(zoom.scaleTo, Math.max(0.5, Math.min(8, k))) },
+      scaleBy: (factor) => { svg_sel.call(zoom.scaleBy, factor) },
+      fit: () => { svg_sel.call(zoom.transform, d3.zoomIdentity) }
+    })
+  }
+
   if (!legend_shown) return
   // 24/09/2026 — DESSOUS, LA LÉGENDE EST UN BANDEAU, PAS UNE COLONNE COUCHÉE.
   //
@@ -1180,9 +1375,19 @@ export const drawDonutChart = (
       .style('column-gap', '0.8rem')
       .style('width', '100%')
   }
-  const items = legend.selectAll('div')
+  if (legend_head) {
+    legend.append('div')
+      .attr('class', 'node_stats_legend_head')
+      .style('font-weight', '600')
+      .style('padding', '0.1rem 0.2rem 0.25rem')
+      .style('flex-basis', below ? '100%' : 'auto')
+      .style('text-align', below ? 'center' : 'left')
+      .text(legend_head)
+  }
+  const items = legend.selectAll('div.node_stats_legend_item')
     .data(arcs)
     .enter().append('div')
+    .attr('class', 'node_stats_legend_item')
     .style('display', 'flex')
     .style('align-items', 'center')
     .style('gap', '0.35rem')
@@ -1414,6 +1619,10 @@ export const drawBarChart = (
     const a = aspectOf(d.id)
     // os#1489 — la meme regle que la couronne et le disque : le pourcentage REMPLACE la valeur.
     const total_all = slices.reduce((acc, s2) => acc + s2.value, 0)
+    const both = s.value_label_percent === 'value_total' || s.value_label_percent === 'value_parent'
+    if (both && total_all > 0) {
+      return `${(a?.value_format ?? fmt)(d.value)} (${Math.round(d.value / total_all * 100)}%)`
+    }
     if (s.value_label_percent !== 'none' && total_all > 0) {
       return Math.round(d.value / total_all * 100) + '%'
     }

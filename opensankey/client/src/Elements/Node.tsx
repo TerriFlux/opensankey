@@ -2734,6 +2734,43 @@ export class Class_NodeElement extends Class_NodeBase {
       this._output_links_handle[link.id] = handle
   }
 
+  /**
+   * os#1511 — HAUTEUR D'ACCROCHE d'un flux sur ce nœud, relative au haut du nœud, SANS DESSINER.
+   *
+   * Même calcul que `updateLinksPositions` pour un côté gauche ou droit : départ de la pile selon
+   * l'alignement, puis les flux visibles de `_links_order` empilés dans l'ordre, chacun précédé
+   * de son écart d'ancre, l'accroche au milieu de son épaisseur brute. Le placement en bandes
+   * (`DimensionDisaggregation`) s'en sert pour garder DROIT un flux qui l'était : il place les
+   * nœuds avant tout dessin, quand le cache des points d'accroche n'existe pas encore.
+   *
+   * `undefined` hors du cas simple — ancrage radial, côté haut ou bas, offset de port importé —
+   * où la hauteur ne se déduit pas de la pile seule.
+   */
+  public linkAttachOffsetY(target_link: Class_LinkElement): number | undefined {
+    if (this.shape_anchor_mode === 'radial') return undefined
+    const at_source = target_link.source === this
+    if (!at_source && target_link.target !== this) return undefined
+    const side = at_source ? target_link.source_side : target_link.target_side
+    if (side !== 'left' && side !== 'right') return undefined
+    const port = at_source ? target_link.shape_source_anchor_offset : target_link.shape_target_anchor_offset
+    if (port !== undefined) return undefined
+    let dy = this.getLinksStartingPositionOffSet(side)
+    for (const link of this._links_order) {
+      if (!link.is_visible) continue
+      const self_loop = link.source === this && link.target === this
+      const roles: ('s' | 't')[] = []
+      if (link.source === this && link.source_side === side) roles.push('s')
+      if (link.target === this && (link.source !== this || self_loop) && link.target_side === side) roles.push('t')
+      for (const role of roles) {
+        dy += role === 's' ? link.source_anchor_delta : link.target_anchor_delta
+        const thickness = role === 's' ? link.thicknessSourceRaw : link.thicknessTargetRaw
+        if (link === target_link && role === (at_source ? 's' : 't')) return dy + thickness / 2
+        dy += thickness
+      }
+    }
+    return undefined
+  }
+
   private updateLinksPositions() {
     // Reference position
     const x0 = this.position_x

@@ -46,6 +46,13 @@ import {
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
 import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
+import type { Class_DataTag } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
+import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
+import {
+  diagramDimensionOpening, dimensionRootsOf, effectiveDimensionOpening, isDetachedOpening
+} from '../Charts/DataDimensionHierarchy'
+import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -53,7 +60,7 @@ import {
 } from '../Charts/figureChartStyle'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
-import { figureUnitOf, figureUnitOfNode } from './figureUnit'
+import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfNode } from './figureUnit'
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
@@ -380,11 +387,18 @@ const analysisPartContext = (ctx: Type_RepresentationContext) => {
     ? figureUnitOfNode(subject.node)
     : figureUnitOf(app_data.drawing_area.sankey)
   return {
-    format: figureValueFormatOf(ctx.options, unit),
+    format: figureValueFormatOf(ctx.options, unit, undefined, unitFactorOfSubject(subject, app_data)),
     resolveUnit: (id: string) => app_data.drawing_area.sankey.units.resolve(id)?.unit.label
   }
 }
 
+
+/** 30/09/2026 — le diviseur d'unité de la figure, lu sur le même flux que son symbole. */
+const unitFactorOfSubject = (
+  subject: Type_ChartSubject | null, app_data: Type_RepresentationContext['app_data']
+): number => subject?.kind === 'node'
+  ? figureUnitFactorOfNode(subject.node)
+  : figureUnitFactorOf(app_data.drawing_area.sankey)
 
 const chartOptions = (
   ctx: Type_RepresentationContext,
@@ -402,7 +416,7 @@ const chartOptions = (
     out_of_scale_label: (count: number) => app_data.t('view.unit_chart_out_of_scale', { count }),
     independent_scales_label: app_data.t('view.unit_chart_independent_scales'),
     style: figureChartStyleOf(ctx.options, defaults),
-    format: figureValueFormatter(figureValueFormatOf(ctx.options, unit)),
+    format: figureValueFormatter(figureValueFormatOf(ctx.options, unit, undefined, unitFactorOfSubject(subject, app_data))),
     // os#1477 — TOUT LE TEXTE DE LA FIGURE, titre compris, comme pour le disque : le titre est la
     // zone n° 0 depuis os#1449, et l'auteur peut en ajouter d'autres (`text_zones`).
     texts: (subject_name: string) => figureTextsOf(ctx.options, subject_name),
@@ -555,6 +569,100 @@ const isBelow = (
 }
 
 /**
+ * os#1511 — CLIC ET SHIFT+CLIC SUR UNE DIMENSION DE DONNÉES, comme dans l'arbre du diagramme.
+ *
+ * Julien, 30/09 : « est-ce que le clic et shift+clic sont bien connectés ? », puis « cale-toi sur ce
+ * qui est fait pour le diagramme ». Chaque dimension a une coupe (cf. `buildNestedDimensionTree`) :
+ *   clic       ouvre le membre cliqué dans SA dimension — comme le chevron de l'arbre ;
+ *   shift+clic referme le membre s'il est ouvert, sinon son parent dans la dimension.
+ * La racine unique ne se referme pas au clic : repasser une dimension à « ensemble » est un choix de
+ * niveau, qui se fait dans « Coordonnées ».
+ *
+ * LE DIAGRAMME SUIT sous « Clic sur une part : le déplie dans le diagramme » : la coupe de la
+ * dimension touchée devient celle de la figure (`selectMembers`), et une dimension en choix unique
+ * passe en choix multiple — une couronne montre toujours plusieurs membres à la fois (arbitrage de
+ * Julien, 30/09).
+ *
+ * `null` quand la figure ne découpe pas selon une dimension de données.
+ */
+const dataDimensionClickGestures = (
+  ctx: Type_RepresentationContext,
+  style: Type_FigureChartStyle
+): { activate: (part_id: string, gesture: { shift: boolean, alt?: boolean }, route?: string[]) => void } | null => {
+  const decompose = analysisOf(ctx)?.descriptor.decompose
+  if (decompose?.kind !== 'data_dimension') return null
+  const { window_id, pane_key } = ctx
+  const app_data = ctx.app_data
+  const sankey = app_data.drawing_area.sankey
+  const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+    .map(id => sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
+    .filter((d): d is Class_DataTagGroup => d !== undefined)
+  // 30/09/2026 — LIÉE AU DIAGRAMME (défaut, cf. `isDetachedOpening`) : la figure n'a pas de coupe
+  // propre, son clic ÉCRIT celle du diagramme — c'est le même état, le réglage « Clic sur une
+  // part » n'y ajoute donc rien. Toutes les dimensions à niveaux y entrent.
+  const linked = !isDetachedOpening(expandedOf(ctx.options))
+  const dims = linked
+    ? [...declared, ...(sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+      .filter(d => d.is_hierarchical && !declared.includes(d))]
+    : declared
+  if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
+
+  const diagram_follows = linked || style.interaction_click === 'aggregate' || style.interaction_click === 'both'
+  /** La coupe du diagramme pour cette dimension devient celle de la figure. */
+  const followInDiagram = (dim: Class_DataTagGroup, expanded: ReadonlySet<string>) => {
+    if (!diagram_follows) return
+    const opened = new Set(
+      (dim.tags_list as Class_DataTag[])
+        .filter(m => expanded.has(memberSectorId(dim.id, m.id)))
+        .map(m => m.id)
+    )
+    app_data.runHeavyGesture(() => {
+      const group = dim as unknown as { banner: string }
+      const drawn_by_node = sankey.nodes_list.some(node => node.driving_dimension === dim)
+      if (group.banner !== 'multi' && !drawn_by_node) group.banner = 'multi'
+      dim.selectMembers(coupeDepuisOuverts(dim, opened))
+      app_data.drawing_area.rebuildDimensionNodes()
+      app_data.drawing_area.draw()
+    })
+  }
+
+  const activate = (part_id: string, gesture: { shift: boolean, alt?: boolean }) => {
+    const ref = parseMemberSectorId(part_id)
+    const dim = dims.find(d => d.id === ref?.dimension_id)
+    const member = ref !== null ? dim?.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
+    if (dim === undefined || member === undefined) return
+    // L'ouverture EFFECTIVE, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
+    // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore.
+    const expanded = expandedOf(ctx.options)
+    // Liée : on part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
+    const next = linked ? diagramDimensionOpening([dim]) : effectiveDimensionOpening(dims, expanded)
+    const entry = (m: Class_DataTag) => memberSectorId(dim.id, m.id)
+    if (gesture.shift) {
+      const target = next.has(entry(member)) ? member : member.parent
+      // La racine reste : la refermer ferait disparaître la dimension, ce que fait le niveau.
+      if (target === undefined || target.parent === undefined && dimensionRootsOf(dim).length === 1) return
+      const close = (m: Class_DataTag) => {
+        next.delete(entry(m))
+        ;(m.children as Class_DataTag[]).forEach(close)
+      }
+      close(target)
+    } else {
+      if ((member.children as Class_DataTag[]).length === 0) return
+      // Toute la route : ouvrir un membre profond ouvre ses ancêtres, sinon la coupe s'arrêterait
+      // au premier fermé.
+      for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent) next.add(entry(m))
+    }
+    if (linked) { followInDiagram(dim, next); return }
+    if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return
+    app_data.menu_configuration.setMainZonePaneOptions(
+      window_id, pane_key, { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...next] } as unknown as Type_JSON
+    )
+    followInDiagram(dim, next)
+  }
+  return { activate }
+}
+
+/**
  * CE QUE LE CLIC FAIT EN PLUS DE SÉLECTIONNER, et le retour au centre avec.
  *
  * Deux gestes, et ce sont les deux que Julien a demandés d'un coup — « les deux premiers, mais avec
@@ -587,13 +695,15 @@ const donutClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
 ): {
-  activate?: (part_id: string, gesture: { shift: boolean }, route?: string[]) => void
+  activate?: (part_id: string, gesture: { shift: boolean, alt?: boolean }, route?: string[]) => void
   back?: () => void
 } => {
   // ⚠️ PLUS DE SORTIE SUR `interaction_click === 'none'`, et c'est le cœur du modèle : OUVRIR
   // L'ANNEAU EST LE GESTE DE BASE, il ne se règle pas. Le réglage ne dit que ce qui s'y AJOUTE
   // (déplier le diagramme, descendre dedans). Y sortir ici éteignait le geste même qu'on venait
   // de rendre inconditionnel.
+  const data_gestures = dataDimensionClickGestures(ctx, style)
+  if (data_gestures) return data_gestures
   const hierarchy = hierarchyInEffect(ctx)
   if (!hierarchy) return {}
   const app_data = ctx.app_data
@@ -968,6 +1078,7 @@ export const registerAnalysisRepresentations = (): void => {
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
+          unit_factor: unitFactorOfSubject(chartSubjectOf(ctx.element), ctx.app_data),
           empty_label: t('sunburst.empty') as string,
           others_label: t('sunburst.others') as string,
           truncated_label: t('sunburst.truncated') as string,
@@ -985,8 +1096,8 @@ export const registerAnalysisRepresentations = (): void => {
           // extérieur est profond par nature — sans elle, on dépliait son dernier cran seul.
           on_arc_click: (
             node_id: string, _is: boolean, _dim: string, path: string[],
-            gesture?: { shift: boolean }
-          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true }, path),
+            gesture?: { shift: boolean, alt?: boolean }
+          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true, alt: gesture?.alt === true }, path),
           // LE ZOOM, prêté à la colonne d'outils par le même pont que le disque : c'est ce qui
           // rend `SUNBURST_ZOOM` vrai sur une couronne en anneaux (cf. la déclaration `zoom`).
           zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),
@@ -1015,10 +1126,18 @@ export const registerAnalysisRepresentations = (): void => {
           on_centre_click: gestures.back,
           centre_back_label: t('sunburst.back') as string,
           label_positions: wiring.label_positions,
-          on_label_move: wiring.on_label_move
+          on_label_move: wiring.on_label_move,
+          // 01/10/2026 — le zoom de la couronne à plat, prêté comme celui du mode à anneaux.
+          zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),
+          on_zoom: () => ctx.app_data.menu_configuration.notify(ZOOM_TOPIC),
+          initial_view: figureViewOf(ctx.window_id, ctx.pane_key),
+          on_view: (view) => rememberFigureView(ctx.window_id, ctx.pane_key, view)
         }
       )
-      return () => { container.innerHTML = '' }
+      return () => {
+        publishFigureZoom(ctx.window_id, ctx.pane_key, null)
+        container.innerHTML = ''
+      }
     }
   })
 
