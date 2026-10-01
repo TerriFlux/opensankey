@@ -122,7 +122,8 @@ export interface Type_FigureChartStyle {
   name_label_callout: boolean
   /** value_label_* : la valeur écrite dans le dessin, et le pourcentage. */
   value_label_is_visible: boolean
-  value_label_percent: 'none' | 'total' | 'parent'
+  // 01/10/2026 — `value_total` / `value_parent` : la valeur ET son pourcentage (« 59,3 Mt (40 %) »).
+  value_label_percent: 'none' | 'total' | 'parent' | 'value_total' | 'value_parent'
   /** scale_factor, en % du cadre. */
   scale_factor: number
   interaction_tooltip: boolean
@@ -149,14 +150,20 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // (deux jus « Product » sont du même orange : quatre lignes, deux teintes). Une figure qui n'a
   // jamais réglé `legend_visible` la perd donc — c'est l'exception assumée à « aucune figure
   // enregistrée ne change d'aspect » ; on la rallume dans l'inspecteur.
-  legend_visible: false,
+  // 01/10/2026 — VISIBLE, À GAUCHE (cf. plus bas) : c'est elle qui nomme les parts.
+  legend_visible: true,
   legend_parts: 'all',
   // 24/09/2026 — DESSOUS, ET C'EST UN CHANGEMENT DE DÉFAUT ASSUMÉ (demande de Julien : « la
   // position par défaut devrait être en dessous »). À côté, la légende prend une colonne sur la
   // largeur, c'est-à-dire sur le diamètre du disque ; dessous, elle prend un bandeau qui revient
   // à la ligne et laisse le rond plus grand. Une couronne qui n'a jamais réglé sa position suivra
   // donc ; celle qui l'a réglée garde son réglage, la surcharge primant sur le défaut.
-  legend_position: 'bottom',
+  //
+  // 01/10/2026 — À GAUCHE, ET LÉGENDE VISIBLE D'OFFICE (Julien : « pour moi le défaut de la
+  // couronne, ça devient légende visible à gauche et pas de label dans les parts de la figure
+  // mais valeur + pourcentage — comme ça pas de redondance et un maximum d'information »). La
+  // légende NOMME, le secteur CHIFFRE : le nom n'est plus écrit deux fois.
+  legend_position: 'left',
   legend_font_size: 12,
   legend_width: 230,
   // La légende nomme les parts sans dire leur parent : sous un seul cran il n'y en a pas à dire,
@@ -181,7 +188,10 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // ⚠️ RENVERSEMENT ASSUMÉ. os#1431 les avait éteints « sans quoi toute couronne déjà
   // enregistrée se couvrirait de noms ». Julien tranche l'inverse : une couronne muette ne dit
   // rien de ce qu'elle montre, et c'est le premier réglage que tout le monde rallume.
-  name_label_is_visible: true,
+  //
+  // 01/10/2026 — ÉTEINT À NOUVEAU, mais pour une autre raison : la légende, visible d'office,
+  // nomme déjà chaque part (cf. `legend_position`). Le secteur écrit ses chiffres.
+  name_label_is_visible: false,
   name_label_font_size: 11,
   // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
   // une seule ligne, aucun separateur, et rien ne se masque sur la longueur.
@@ -213,7 +223,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
   name_label_callout: false,
   value_label_is_visible: true,
-  value_label_percent: 'total',
+  // 01/10/2026 — LA VALEUR ET SON POURCENTAGE, sans le nom (cf. `name_label_is_visible`).
+  value_label_percent: 'value_total',
   scale_factor: 100,
   interaction_tooltip: true,
   // RIEN DE PLUS : le clic ouvre l'anneau dans la figure, et s'arrête là. Déplier aussi le
@@ -229,6 +240,10 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // Les barres gardent l'ordre de l'analyse (un axe « année » reste chronologique) ; les
   // catégories d'un empilement, elles, restent par total décroissant sous ce même défaut.
   parts_order: 'model',
+  // Les nouveaux défauts de la couronne (légende à gauche, nom éteint) ne la concernent qu'elle.
+  legend_visible: false,
+  legend_position: 'bottom',
+  name_label_is_visible: true,
   legend_width: 200,
   parts_group_under: 0,
   parts_max: 20,
@@ -404,7 +419,7 @@ export interface Type_FigurePartLabelAspect {
    * et le pourcentage a sa facon — a besoin des valeurs, pas de la fonction. Les deux sortent du
    * meme `said()` ; il n y a qu une lecture.
    */
-  value_percent?: 'none' | 'total' | 'parent'
+  value_percent?: 'none' | 'total' | 'parent' | 'value_total' | 'value_parent'
   unit_visible?: boolean
   scientific_notation?: boolean
   significant_digits?: boolean

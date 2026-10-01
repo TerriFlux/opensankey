@@ -771,7 +771,12 @@ export const drawDonutChart = (
     //
     // « Aucun » veut donc dire « la valeur telle quelle », et non « pas de pourcentage en plus ».
     if (!s.value_label_is_visible) return ''
-    if (s.value_label_percent !== 'none') return Math.round(d.data.value / total * 100) + '%'
+    // 01/10/2026 — sauf quand l'auteur demande les DEUX (« valeur + pourcentage »).
+    const pct = Math.round(d.data.value / total * 100) + '%'
+    if (s.value_label_percent === 'value_total' || s.value_label_percent === 'value_parent') {
+      return `${(a?.value_format ?? fmt)(d.data.value)} (${pct})`
+    }
+    if (s.value_label_percent !== 'none') return pct
     return (a?.value_format ?? fmt)(d.data.value)
   }
   /**
@@ -1472,6 +1477,10 @@ export const drawBarChart = (
     const a = aspectOf(d.id)
     // os#1489 — la meme regle que la couronne et le disque : le pourcentage REMPLACE la valeur.
     const total_all = slices.reduce((acc, s2) => acc + s2.value, 0)
+    const both = s.value_label_percent === 'value_total' || s.value_label_percent === 'value_parent'
+    if (both && total_all > 0) {
+      return `${(a?.value_format ?? fmt)(d.value)} (${Math.round(d.value / total_all * 100)}%)`
+    }
     if (s.value_label_percent !== 'none' && total_all > 0) {
       return Math.round(d.value / total_all * 100) + '%'
     }

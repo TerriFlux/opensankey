@@ -697,7 +697,7 @@ export const FIGURE_LABEL_CONFIG = {
     es: 'Blanco sobre una parte oscura, oscuro sobre una clara. Desmarcado: el color de las etiquetas.', de: 'Weiß auf dunklem Teil, dunkel auf hellem. Abgewählt: die Beschriftungsfarbe.',
     it: 'Bianco su una parte scura, scuro su una chiara. Deselezionato: il colore delle etichette.', 'zh-CN': '深色部分用白字，浅色部分用深字；取消则用标签颜色。', ja: '暗い部分は白、明るい部分は暗い文字。外すとラベルの色。'
   }, { advanced: true }),
-  value_label_percent: entry<'none' | 'total' | 'parent'>('none', 'value_label', {
+  value_label_percent: entry<'none' | 'total' | 'parent' | 'value_total' | 'value_parent'>('none', 'value_label', {
     en: 'Show a percentage', fr: 'Afficher un pourcentage', es: 'Mostrar un porcentaje',
     de: 'Prozentsatz anzeigen', it: 'Mostrare una percentuale', 'zh-CN': '显示百分比', ja: '割合を表示'
   }, {
@@ -709,7 +709,10 @@ export const FIGURE_LABEL_CONFIG = {
     choices: [
       choice('none', { en: 'None', fr: 'Aucun', es: 'Ninguno', de: 'Keiner', it: 'Nessuna', 'zh-CN': '不显示', ja: '表示しない' }),
       choice('total', { en: 'Of the whole', fr: 'Du tout', es: 'Del total', de: 'Vom Ganzen', it: 'Del totale', 'zh-CN': '占整体', ja: '全体に対して' }),
-      choice('parent', { en: 'Of its parent', fr: 'De son parent', es: 'De su padre', de: 'Vom Elternteil', it: 'Del suo genitore', 'zh-CN': '占父级', ja: '親に対して' })
+      choice('parent', { en: 'Of its parent', fr: 'De son parent', es: 'De su padre', de: 'Vom Elternteil', it: 'Del suo genitore', 'zh-CN': '占父级', ja: '親に対して' }),
+      // 01/10/2026 — la valeur ET son pourcentage (Julien : « il manque valeur + pourcentage »).
+      choice('value_total', { en: 'Value and % of the whole', fr: 'Valeur et % du tout', es: 'Valor y % del total', de: 'Wert und % vom Ganzen', it: 'Valore e % del totale', 'zh-CN': '数值及占整体百分比', ja: '値と全体に対する割合' }),
+      choice('value_parent', { en: 'Value and % of its parent', fr: 'Valeur et % de son parent', es: 'Valor y % de su padre', de: 'Wert und % vom Elternteil', it: 'Valore e % del suo genitore', 'zh-CN': '数值及占父级百分比', ja: '値と親に対する割合' })
     ]
   })
 } as const

@@ -286,13 +286,20 @@ export const partAspect = (
   // DIT. Aucune figure enregistrée ne change d'aspect.
   const part_unit = oneOfSaid(
     said('value_label_part_unit'),
-    ['value', 'percent_total', 'percent_parent', 'custom'] as const
+    ['value', 'percent_total', 'percent_parent', 'value_percent_total', 'value_percent_parent', 'custom'] as const
   )
+  const PART_PERCENT = {
+    value: 'none', custom: 'none', percent_total: 'total', percent_parent: 'parent',
+    value_percent_total: 'value_total', value_percent_parent: 'value_parent'
+  } as const
   const part_percent = part_unit !== undefined
-    ? (part_unit === 'percent_total' ? 'total' : part_unit === 'percent_parent' ? 'parent' : 'none')
-    : oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent'] as const)
-  /** Vrai quand la part écrit un pourcentage : « 75 % t » n'aurait aucun sens (os#1489). */
-  const part_in_percent = part_percent !== undefined && part_percent !== 'none'
+    ? PART_PERCENT[part_unit]
+    : oneOfSaid(said('value_label_percent'), ['none', 'total', 'parent', 'value_total', 'value_parent'] as const)
+  /**
+   * Vrai quand la part écrit un pourcentage SEUL : « 75 % t » n'aurait aucun sens (os#1489). Écrite
+   * avec sa valeur (« 12 t (40 %) »), elle garde son unité.
+   */
+  const part_in_percent = part_percent === 'total' || part_percent === 'parent'
 
   // VALEUR (`value_label_*`) — le nombre écrit au-dessus de CETTE barre.
   put('value_label_is_visible', booleanSaid(said('value_label_is_visible')))

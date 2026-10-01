@@ -164,7 +164,7 @@ export interface Type_SunburstStyle {
   custom_digit: boolean
   nb_digit: number
   scientific_notation: boolean
-  label_percent: 'none' | 'total' | 'parent'
+  label_percent: 'none' | 'total' | 'parent' | 'value_total' | 'value_parent'
   centre_content: 'both' | 'name' | 'value' | 'none'
   /** Rayon du trou, en pourcentage du rayon extérieur. */
   centre_hole: number
@@ -1222,7 +1222,8 @@ export const drawSunburstChart = (
      * somme de ses parts, ce qui ferait lire 100 % là où il y a un écart.
      */
     const baseOf = (d: Type_SunburstSlice): number => {
-      if (styleOf(d.id).label_percent === 'total' || d.path.length < 2) return total
+      const percent = styleOf(d.id).label_percent
+      if (percent === 'total' || percent === 'value_total' || d.path.length < 2) return total
       return slices.find(s => s.id === d.path[d.path.length - 2])?.value ?? total
     }
 
@@ -1281,6 +1282,10 @@ export const drawSunburstChart = (
       //
       // « Aucun » veut donc dire « la valeur telle quelle », et non « pas de pourcentage en plus ».
       if (!s.value_visible) return []
+      // 01/10/2026 — LA VALEUR ET SON POURCENTAGE, sur demande explicite (« valeur + pourcentage »).
+      if (s.label_percent === 'value_total' || s.label_percent === 'value_parent') {
+        return [valueText(d.value, s), pctText(d.value, baseOf(d))]
+      }
       if (s.label_percent !== 'none') return [pctText(d.value, baseOf(d))]
       return [valueText(d.value, s)]
     }
