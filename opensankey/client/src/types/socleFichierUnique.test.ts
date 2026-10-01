@@ -142,11 +142,27 @@ maybe('os#1511 lot 3 — le SOCLE pays partenaires ramene a deux flux', () => {
       return dim
     }
 
+    // LES LIBELLES DE LECTURE (retour de Jean-Yves sur la publication, 01/10/2026) : la liste dit
+    // ce qu elle regle (« Niveau de detail ... »), les niveaux sont numerotes du plus agrege au plus
+    // fin, et la racine dit ce qu elle contient. Le niveau 0 et la racine portent le meme libelle.
+    const RACINE_PRODUITS = '0 - Tous produits agricoles confondus'
+    const RACINE_PAYS = '0 - Monde'
+    const NIVEAUX_PRODUITS = [RACINE_PRODUITS, '1 - Filières', '2 - Bruts / transformés', '3 - Produits (HS4)']
+    const NIVEAUX_PAYS = [RACINE_PAYS, '1 - Continents', '2 - Sous-régions', '3 - Pays']
+    const numeroter = (lus: string[], voulus: string[]): string[] =>
+      lus.length === voulus.length ? voulus : lus.map((nom, i) => `${i} - ${nom}`)
     // L ORDRE compte : l arbre de valeurs porte un etage par dimension, dans cet ordre.
-    const produit = poserDimension('produit', 'Produit', produit_src, niveaux(AXE_PRODUIT), true)
+    const produit = poserDimension('produit', 'Niveau de détail produits', produit_src,
+      numeroter(niveaux(AXE_PRODUIT), NIVEAUX_PRODUITS), true)
     // Les pays pilotent DEUX noeuds, l import et l export : un membre ne peut pas porter deux
     // places. Ils s etalent donc dans la colonne de leur axe, ce qui donne les deux colonnes.
-    const pays = poserDimension('pays', 'Pays partenaire', pays_src, niveaux(AXE_PAYS), false)
+    const pays = poserDimension('pays', 'Niveau de détail pays partenaires', pays_src,
+      numeroter(niveaux(AXE_PAYS), NIVEAUX_PAYS), false)
+    // Les racines prennent le libelle du niveau 0.
+    produit.tags_list.filter(tag => (tag as Class_DataTag).parent === undefined)
+      .forEach(tag => { tag.name = RACINE_PRODUITS })
+    pays.tags_list.filter(tag => (tag as Class_DataTag).parent === undefined)
+      .forEach(tag => { tag.name = RACINE_PAYS })
     const annee = sankey.addDataTagGroup('annee', 'Année', false) as unknown as Class_DataTagGroup
     const annees = Object.keys((source.dataTags ?? {})['annee']?.tags ?? {})
     annees.forEach(an => annee.addTag(an, an))
