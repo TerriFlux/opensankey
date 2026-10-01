@@ -285,6 +285,12 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
 
 /** Ce qu'une part dit d'UN de ses textes — son nom, ou sa valeur. */
 export interface Type_FigurePartTextAspect extends Type_FigureLabelBackground {
+  /**
+   * 01/10/2026 — LE TEXTE PERSONNALISÉ du nom (« Contenu du label » : texte personnalisé), quand la
+   * part en a un ; absent, la part écrit le nom de son sujet. Julien : « le texte personnalisé pour
+   * le centre (et les autres parts) ne marche pas » — le tracé ne le lisait nulle part.
+   */
+  custom_text?: string
   /** `*_font_family` — absent ou vide : la police de la page, comme hier. */
   font_family?: string
   /** `*_font_size`, en points. */

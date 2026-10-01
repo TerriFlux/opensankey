@@ -504,7 +504,10 @@ export const partAspect = (
     // valeur en recopiant les quinze lignes aurait marché — et aurait recréé, une famille plus
     // bas, la duplication qui a fait diverger les natures entre elles. Ici la valeur ne coûte
     // rien : c'est le même lecteur, avec l'autre préfixe.
-    name: textAspect('name_label'),
+    name: {
+      ...textAspect('name_label'),
+      custom_text: said('name_label_source') === 'custom' ? textSaid(said('name_label_text')) : undefined
+    },
     value: textAspect('value_label'),
     // os#1482 — ET ELLE S'EST ALLUMÉE D'ELLE-MÊME, exactement comme ce commentaire l'annonçait.
     //

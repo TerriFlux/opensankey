@@ -1241,6 +1241,9 @@ export const drawSunburstChart = (
     }
     const sectorName = (d: Type_SunburstSlice): string => {
       const s = styleOf(d.id)
+      // 01/10/2026 — le texte personnalisé de la part, s'il y en a un (cf. `custom_text`).
+      const custom = opts.parts?.[d.id] !== undefined ? aspectOf(d.id).name?.custom_text : undefined
+      if (custom !== undefined && custom !== '') return custom
       return sunburstSectorName(d.label, parentLabelOf(d), {
         strip_parent: s.strip_parent, separator: s.separator, separator_part: s.separator_part
       })
@@ -1421,9 +1424,15 @@ export const drawSunburstChart = (
     zoomer = { svg, zoom }
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
-    const scope_title = centre_node
-      ? centre_node.label
-      : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
+    // 01/10/2026 — le texte personnalisé de la part de centre, s'il y en a un.
+    const centre_custom = opts.parts?.[FIGURE_CENTRE_PART_ID] !== undefined
+      ? aspectOf(FIGURE_CENTRE_PART_ID).name?.custom_text
+      : undefined
+    const scope_title = (centre_custom !== undefined && centre_custom !== '')
+      ? centre_custom
+      : centre_node
+        ? centre_node.label
+        : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
     // Sous le zoom radial, le clic sur le centre REMONTE d'un cran ; sinon il REPLIE le nœud
     // central dans le diagramme (18/09) — l'inverse du clic sur un secteur, au même endroit.
     const centre_folds = !focus_id && !!centre_node && !!opts.on_centre_click &&
