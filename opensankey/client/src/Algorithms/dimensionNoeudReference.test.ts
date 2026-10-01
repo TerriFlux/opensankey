@@ -70,9 +70,23 @@ const colonne = (sankey: ReturnType<typeof monter>['sankey'], prefixe: string) =
     .sort((a, b) => a.haut - b.haut)
 
 describe('os#1511 — tout placer autour d un noeud de reference', () => {
-  test('automatique : le noeud non porteur relie a tous les porteurs reste en place, tous les flux sont droits', () => {
-    const { sankey, produits } = monter(false)
+  test('sans choix, pas de reference : la mise en page habituelle et son ecart sont intacts', () => {
+    // Regression du 01/10 : une reference automatique collait les membres et sautait l ecart constant.
+    const temoin = monter(false)
+    disaggregateDimensionNodes(temoin.sankey)
+    const { sankey, pays } = monter(false)
+    pays.reference_node_id = undefined
+    disaggregateDimensionNodes(sankey)
+    const ys = (s: typeof sankey) => s.nodes_list.filter(isGeneratedMemberNode).map(n => [n.name, n.position_y])
+    expect(ys(sankey)).toEqual(ys(temoin.sankey))
+    const c = colonne(sankey, 'Monde - Import')
+    for (let i = 1; i < c.length; i++) expect(c[i].haut).toBeGreaterThan(c[i - 1].bas)
+  })
+
+  test('non porteur choisi : il reste en place, tous les flux sont droits', () => {
+    const { sankey, pays, produits } = monter(false)
     const y_produits = produits.position_y
+    pays.reference_node_id = produits.id
     disaggregateDimensionNodes(sankey)
     expect(produits.position_y).toBe(y_produits)
     const engendres = sankey.links_list.filter(isGeneratedMemberLink)
@@ -81,7 +95,8 @@ describe('os#1511 — tout placer autour d un noeud de reference', () => {
   })
 
   test('meme avec un petit pays, les pays d un meme cote ne se chevauchent pas', () => {
-    const { sankey } = monter(false, true)
+    const { sankey, pays, produits } = monter(false, true)
+    pays.reference_node_id = produits.id
     disaggregateDimensionNodes(sankey)
     ;['Monde - Import', 'Monde - Export'].forEach(prefixe => {
       const c = colonne(sankey, prefixe)

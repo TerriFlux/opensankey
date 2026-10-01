@@ -519,44 +519,21 @@ function rangerEnBandes(
 /**
  * Le nœud de référence de chaque dimension découpée à ce tour.
  *
- * Celui que l'auteur a choisi (`reference_node_id`) s'il existe encore. À défaut, automatique : le
- * nœud QUI NE PORTE PAS la dimension et qui est relié à TOUS ses porteurs — « Produits agricoles »,
- * entre « Monde - Import » et « Monde - Export » —, le plus relié s'il y en a plusieurs, et seulement
- * à partir de deux porteurs. Aucun : pas
- * de référence, la mise en page d'avant (bandes depuis le porteur le plus à gauche, ou créneau).
+ * Seulement celui que l'auteur a choisi (`reference_node_id`), s'il existe encore. PAS de choix
+ * automatique : poser d'office « Produits agricoles » en référence collait ses membres en face de
+ * sa pile et sautait l'écart constant de la désagrégation (régression vue par Julien le 01/10).
+ * Aucun : la mise en page d'avant (bandes depuis le porteur le plus à gauche, ou créneau).
  */
 function referencesDuTour(
   sankey: Class_Sankey,
   par_axe: Map<string, Type_MembreRepresente[]>
 ): Map<Class_DataTagGroup, Class_NodeElement> {
   const out = new Map<Class_DataTagGroup, Class_NodeElement>()
-  const dimensions = new Set<Class_DataTagGroup>()
   par_axe.forEach((_m, axe_id) => {
     const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
-    if (dimension !== undefined) dimensions.add(dimension)
-  })
-  dimensions.forEach(dimension => {
-    const choisi = dimension.reference_node_id === undefined
-      ? undefined : sankey.nodes_dict[dimension.reference_node_id]
-    if (choisi !== undefined && !isGeneratedMemberNode(choisi)) {
-      out.set(dimension, choisi)
-      return
-    }
-    const porteurs = sankey.nodes_list.filter(node =>
-      !isGeneratedMemberNode(node) && node.driving_dimension === dimension)
-    // Un seul porteur : tout voisin serait « relié à tous » ; on garde le créneau d'avant.
-    if (porteurs.length < 2) return
-    let meilleur: { noeud: Class_NodeElement, liens: number } | undefined
-    sankey.nodes_list.forEach(noeud => {
-      if (isGeneratedMemberNode(noeud) || noeud.driving_dimension === dimension) return
-      const flux = [...noeud.input_links_list, ...noeud.output_links_list]
-        .filter(lien => !isGeneratedMemberLink(lien))
-      const voisins = new Set(flux.map(lien => lien.source === noeud ? lien.target : lien.source))
-      if (!porteurs.every(porteur => voisins.has(porteur))) return
-      const liens = flux.filter(lien => porteurs.includes((lien.source === noeud ? lien.target : lien.source) as Class_NodeElement)).length
-      if (meilleur === undefined || liens > meilleur.liens) meilleur = { noeud: noeud as Class_NodeElement, liens }
-    })
-    if (meilleur !== undefined) out.set(dimension, meilleur.noeud)
+    if (dimension === undefined || dimension.reference_node_id === undefined) return
+    const choisi = sankey.nodes_dict[dimension.reference_node_id]
+    if (choisi !== undefined && !isGeneratedMemberNode(choisi)) out.set(dimension, choisi)
   })
   return out
 }
