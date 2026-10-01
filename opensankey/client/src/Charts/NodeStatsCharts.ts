@@ -618,8 +618,17 @@ export const drawDonutChart = (
    *
    * Sous un seul cran, aucune part ne porte de parent : la légende est celle d'hier, au caractère.
    */
+  //
+  // 01/10/2026 — SAUF AU PREMIER RANG, dont le parent est le SUJET lui-même (Julien, capture à
+  // l'appui : « dans la légende, le nom du nœud central n'a pas à être repris pour chaque élément,
+  // juste en tête de légende »). « Produits agricoles → Monde - Export › Céréales » répétait le sujet
+  // sur chaque ligne ; il s'écrit une fois, en tête (`legend_head`), et la ligne dit « Céréales ».
   const legendLabel = (s: Type_StatSlice): string =>
-    (st.legend_levels && s.parent_label) ? `${s.parent_label} › ${s.label}` : s.label
+    (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
+  /** Le nom du sujet, quand des parts le portent pour parent : la tête de légende. */
+  const legend_head = st.legend_levels
+    ? kept.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
+    : undefined
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
     `${legendLabel(d.data)}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
 
@@ -1243,9 +1252,19 @@ export const drawDonutChart = (
       .style('column-gap', '0.8rem')
       .style('width', '100%')
   }
-  const items = legend.selectAll('div')
+  if (legend_head) {
+    legend.append('div')
+      .attr('class', 'node_stats_legend_head')
+      .style('font-weight', '600')
+      .style('padding', '0.1rem 0.2rem 0.25rem')
+      .style('flex-basis', below ? '100%' : 'auto')
+      .style('text-align', below ? 'center' : 'left')
+      .text(legend_head)
+  }
+  const items = legend.selectAll('div.node_stats_legend_item')
     .data(arcs)
     .enter().append('div')
+    .attr('class', 'node_stats_legend_item')
     .style('display', 'flex')
     .style('align-items', 'center')
     .style('gap', '0.35rem')
