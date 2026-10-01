@@ -6,11 +6,12 @@
 // (clé JSON `units`, additive : absente des anciens fichiers → catalogue par
 // défaut).
 //
-// Invariant : `data_value` reste TOUJOURS stocké dans l'unité de base de sa
-// grandeur (coefficient 1). Le registre ne sert qu'à l'AFFICHAGE (mode
-// `unit_type: 'unit_model'` des labels de valeur : valeur divisée par le
-// coefficient de l'unité affichée, symbole ajouté) et à l'import (e!Sankey
-// convertit déjà vers l'unité de base, cf. esankeyParser).
+// `data_value` est exprimé dans l'unité de RÉFÉRENCE de sa grandeur
+// (os#1518) : celle que l'utilisateur déclare comme unité de saisie, l'unité
+// de base (coefficient 1) quand il n'en déclare pas. Le registre ne sert qu'à
+// l'AFFICHAGE (mode `unit_type: 'unit_model'` des labels de valeur : valeur
+// divisée par `unitDisplayDivisor`, symbole ajouté) et à l'import (e!Sankey
+// convertit vers l'unité de base, cf. esankeyParser).
 //
 // Distinct du groupe de dataTags `is_unit` (arbre multi-unités par VALEUR, qui
 // filtre une unité pour tout le diagramme) : les deux mécanismes coexistent.
@@ -30,6 +31,7 @@ export type Type_UnitTypeJSON = {
   default_unit: string,
   units: Type_UnitJSON[],
   display_scale?: number,
+  reference_unit?: string,
 }
 
 /** Une unité : symbole canonique + coefficient vers l'unité de base de sa
@@ -99,20 +101,42 @@ export class Class_UnitType {
    * échelle globale du dessin (drawing_area.scale). Permet d'équilibrer
    * visuellement des grandeurs différentes (kWh vs t vs €) sur un même flux. */
   public display_scale?: number
+  /** os#1518 — id de l'unité dans laquelle les valeurs de cette grandeur sont
+   * SAISIES (données en kt : `mass_kt`). undefined = unité de base
+   * (coefficient 1). Sérialisé seulement si défini (equalsDefaultCatalog). */
+  public reference_unit_id?: string
 
-  constructor(id: string, name: string, units: Class_Unit[] = [], default_unit_id: string = '', display_scale?: number) {
+  constructor(
+    id: string, name: string, units: Class_Unit[] = [], default_unit_id: string = '',
+    display_scale?: number, reference_unit_id?: string
+  ) {
     this.id = id
     this.name = name
     this.units = units
     this.default_unit_id = default_unit_id
     this.display_scale = display_scale
+    this.reference_unit_id = reference_unit_id
+  }
+
+  /** Unité de saisie déclarée, undefined si les valeurs sont dans l'unité de base. */
+  public get reference_unit(): Class_Unit | undefined {
+    return this.reference_unit_id ? this.units.find(u => u.id === this.reference_unit_id) : undefined
+  }
+
+  /** Ce que vaut `unit` en unité de RÉFÉRENCE : le diviseur à appliquer aux
+   * valeurs pour les écrire dans `unit` (données en kt, affichage en Mt : 1000). */
+  public displayFactor(unit: Class_Unit): number {
+    const ref_coeff = this.reference_unit?.coefficient || 1
+    const factor = unit.coefficient / ref_coeff
+    return (Number.isFinite(factor) && factor !== 0) ? factor : 1
   }
 
   public get default_unit(): Class_Unit | undefined {
     return this.units.find(u => u.id === this.default_unit_id) ?? this.units[0]
   }
 
-  /** Unité de base (coefficient 1) — celle dans laquelle data_value est stocké. */
+  /** Unité de base (coefficient 1) — celle des données quand aucune unité de
+   * référence n'est déclarée. */
   public get base_unit(): Class_Unit | undefined {
     return this.units.find(u => u.coefficient === 1) ?? this.units[0]
   }
@@ -128,6 +152,7 @@ export class Class_UnitType {
   public removeUnit(id: string) {
     this.units = this.units.filter(u => u.id !== id)
     if (this.default_unit_id === id) this.default_unit_id = this.units[0]?.id ?? ''
+    if (this.reference_unit_id === id) this.reference_unit_id = undefined
   }
 
   private _makeUnitId(name: string): string {
@@ -146,6 +171,7 @@ export class Class_UnitType {
       units: this.units.map(u => u.toJSON()),
     }
     if (this.display_scale !== undefined) json.display_scale = this.display_scale
+    if (this.reference_unit_id) json.reference_unit = this.reference_unit_id
     return json
   }
 
@@ -159,7 +185,8 @@ export class Class_UnitType {
       getStringFromJSON(json_object, 'name', ''),
       units,
       getStringFromJSON(json_object, 'default_unit', units[0]?.id ?? ''),
-      json_object['display_scale'] !== undefined ? getNumberFromJSON(json_object, 'display_scale', 0) : undefined
+      json_object['display_scale'] !== undefined ? getNumberFromJSON(json_object, 'display_scale', 0) : undefined,
+      getStringFromJSON(json_object, 'reference_unit', '') || undefined
     )
   }
 }
@@ -224,19 +251,19 @@ export class Class_UnitsRegistry {
    * OS#1286 — migration des anciennes « unités personnalisées » (texte libre).
    * Cherche une unité du registre correspondant au texte : symbole exact
    * d'abord, puis normalisé (casse/accents/pluriel) + table d'alias
-   * (« tonne » → t). Le coefficient doit ÉGALER l'ancien `unit_factor` : le
-   * mode texte libre divisait la valeur par ce facteur, une correspondance
-   * avec un autre coefficient changerait l'affichage.
+   * (« tonne » → t). Le diviseur d'affichage doit ÉGALER l'ancien
+   * `unit_factor` : le mode texte libre divisait la valeur par ce facteur, une
+   * correspondance avec un autre diviseur changerait l'affichage.
    */
   public findLegacyUnit(text: string, factor: number = 1): Type_ResolvedUnit | undefined {
     const trimmed = text.trim()
     for (const ut of this.unit_types) {
-      const unit = ut.units.find(u => u.name === trimmed && u.coefficient === factor)
+      const unit = ut.units.find(u => u.name === trimmed && ut.displayFactor(u) === factor)
       if (unit) return { unit, unit_type: ut }
     }
     const wanted = canonicalUnitSymbol(trimmed)
     for (const ut of this.unit_types) {
-      const unit = ut.units.find(u => canonicalUnitSymbol(u.name) === wanted && u.coefficient === factor)
+      const unit = ut.units.find(u => canonicalUnitSymbol(u.name) === wanted && ut.displayFactor(u) === factor)
       if (unit) return { unit, unit_type: ut }
     }
     return undefined
@@ -267,7 +294,7 @@ export class Class_UnitsRegistry {
       ut = new Class_UnitType(FILE_UNITS_TYPE_ID, FILE_UNITS_TYPE_NAME)
       this.unit_types.push(ut)
     }
-    const unit = ut.addUnit(text.trim(), factor)
+    const unit = ut.addUnit(text.trim(), factor * (ut.reference_unit?.coefficient || 1))
     return { unit, unit_type: ut }
   }
 

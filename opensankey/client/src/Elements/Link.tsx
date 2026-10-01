@@ -1284,10 +1284,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const unit_tag = unit_tag_of(tv)
       if (unit_tag) {
         const resolved = unit_tag.resolved_unit
-        const coeff = resolved?.unit.coefficient ?? 1
+        const coeff = resolved ? resolved.unit_type.displayFactor(resolved.unit) : 1
         // Échelle PROPRE à la grandeur (façon e!Sankey) si définie, sinon
-        // échelle globale du dessin ; le coefficient convertit vers l'unité
-        // de base sur laquelle l'échelle s'exprime.
+        // échelle globale du dessin ; le facteur convertit vers l'unité de
+        // référence des données, sur laquelle l'échelle s'exprime (os#1518).
         const base_scale = resolved?.unit_type.display_scale ?? this.sankey.drawing_area.scale
         this.setDomainLocalScale(base_scale / (coeff || 1))
         return this._scaleValueToPx(v)
