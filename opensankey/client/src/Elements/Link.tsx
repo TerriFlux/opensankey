@@ -1120,7 +1120,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean, opacity?: number }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean, opacity?: number, folded?: { id: string, value: number }[] }[] {
     if (this._is_expansion_link) return []
     // SA#541 — une bande est une valeur à part entière : les styles des étiquettes de SA valeur
     // imposent sa couleur et son opacité. Rien n'est calculé sans style d'étiquette.
@@ -1150,7 +1150,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       && tagg.tags_list.length > 1
       && !this.sankey.nodes_list.some(node => node.driving_dimension === tagg))
     if (multi_dim) {
-      const bands: { id: string, px: number, color: string | null, value: number, opacity?: number }[] = []
+      const bands: { id: string, px: number, color: string | null, value: number, opacity?: number, folded?: { id: string, value: number }[] }[] = []
       // os#1511 — UN FLUX ENGENDRÉ ne porte qu'un scalaire : il naît d'un choix de coordonnées
       // et ne sait pas se redécouper par un autre axe. Ses bandes se lisent donc sur le flux
       // D'ORIGINE, à la coordonnée de son membre. Sans cela, chaque bande valait le total du
@@ -1225,7 +1225,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
           id: OTHERS_ID,
           px: folded.reduce((acc, band) => acc + band.px, 0),
           color: OTHERS_COLOR,
-          value: folded.reduce((acc, band) => acc + band.value, 0)
+          value: folded.reduce((acc, band) => acc + band.value, 0),
+          // Ce que la bande replie SUR CE FLUX, du plus grand au plus petit : l'info-bulle le détaille.
+          folded: folded.map(band => ({ id: band.id, value: band.value })).sort((a, b) => b.value - a.value)
         })
       }
       const dim_total = bands.reduce((acc, band) => acc + band.px, 0)

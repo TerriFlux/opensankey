@@ -19,6 +19,7 @@ import {
 } from './legendTagStyle'
 // SA#553 — valeurs par défaut de l'étiquette générée (même règle que la cascade)
 import { untaggedDefaultsStyle } from './tagStyles'
+import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 // ITEMS (pur) ========================================================================
 
@@ -102,6 +103,8 @@ export type Type_LegendEnv = {
   t_scale?: string
   // SA#552 — info-bulle de la ligne de rappel d'une dimension : elle se modifie au clic
   t_dimension_change?: string
+  // os#1511 — libellé de l'entrée « Autres » d'une dimension dessinée en bandes
+  t_others?: string
   // SA#553 — valeur par défaut (usine) d'un paramètre de mise en forme : celle que prend
   // l'étiquette générée « Sans [groupe] » pour les paramètres que règlent les autres étiquettes.
   // Absente (mocks), ces paramètres ne sont pas montrés sur son entrée.
@@ -151,6 +154,9 @@ type Type_TagGroupForLegend = {
   // Troisième terme : `Class_DataTagGroup.draws_members_in_color` — la dimension se dessine
   // membre par membre, chacun à sa couleur (bandes). Absent sur les groupes de nœuds et de flux.
   draws_members_in_color?: boolean
+  // os#1511 — `Class_DataTagGroup.members_drawn_in_bands` : membres dessinés en propre sur au moins
+  // un flux visible, et présence d'une bande « Autres ». Absent : la légende garde les membres choisis.
+  members_drawn_in_bands?: { members: Set<string>, has_others: boolean }
   // SA#545 — `Class_TagGroup.uses_tag_styles` (SA#541) : « le groupe ou une de ses
   // étiquettes porte un style utilisable ». Absent sur les groupes de data tags, qui
   // n'ont pas de styles d'étiquette.
@@ -548,8 +554,13 @@ export function computeLegendItems(
       const all_tags = styled
         ? (tag_group.tags_list_with_untagged ?? tag_group.tags_list)
         : tag_group.tags_list
+      // os#1511 — dimension en bandes : les membres DESSINÉS en propre quelque part, pas toute la
+      // sélection ; les autres sont dans « Autres », qui a son entrée en fin de bloc.
+      const en_bandes = is_data_tagg ? tag_group.members_drawn_in_bands : undefined
       const candidate_tags = is_data_tagg
-        ? tag_group.selected_tags_list
+        ? (en_bandes !== undefined
+          ? tag_group.selected_tags_list.filter(tag => en_bandes.members.has(tag.id))
+          : tag_group.selected_tags_list)
         : (all_tags ?? tag_group.selected_tags_list)
       const displayed_tags = candidate_tags.filter(tag => {
         if (is_data_tagg) return true
@@ -621,6 +632,14 @@ export function computeLegendItems(
         if (tag_description !== undefined) item.description = tag_description
         items.push(item)
       })
+      if (en_bandes?.has_others) {
+        items.push({
+          id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(OTHERS_ID),
+          text: env.t_others || 'Autres',
+          swatch_color: OTHERS_COLOR,
+          block_id
+        })
+      }
     })
 
   // RAPPEL DES DATA TAGS SÉLECTIONNÉS, et il ne vaut que pour ce que la légende ne montre pas

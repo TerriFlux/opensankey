@@ -1478,6 +1478,37 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     return this.banner === 'multi' && this.tags_list.length > 1 && this.selected_tags_list.length > 1
   }
 
+  /**
+   * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles
+   * (Julien, 30/09 : « que la légende montre Autres au lieu de toute la liste »).
+   *
+   * « Autres » se décide FLUX PAR FLUX (moins de 0,5 % du flux, ou au-delà de la vingtième bande,
+   * cf. `foldSmallParts`) : il veut dire « petit ICI ». Un membre minuscule au total mais gros sur
+   * un flux y apparaît donc en propre — et entre dans la légende. La légende nomme ainsi les membres
+   * dessinés en propre sur AU MOINS un flux visible, plus « Autres » s'il existe quelque part.
+   *
+   * `undefined` si la dimension ne se dessine pas en bandes (les flux la lisent d'abord : même
+   * critère que `Link.tagged_value_bands`) — la légende garde alors les membres choisis.
+   */
+  public get members_drawn_in_bands(): { members: Set<string>, has_others: boolean } | undefined {
+    if (!this.draws_members_in_color) return undefined
+    const sankey = this._ref_sankey
+    const dessinee = sankey.data_taggs_list.find(tagg =>
+      tagg.banner === 'multi'
+      && tagg.tags_list.length > 1
+      && !sankey.nodes_list.some(node => node.driving_dimension === tagg))
+    if (dessinee !== (this as unknown)) return undefined
+    const members = new Set<string>()
+    let has_others = false
+    sankey.visible_links_list.forEach(link => {
+      link.tagged_value_bands.forEach(band => {
+        if (band.folded !== undefined) has_others = true
+        else members.add(band.id)
+      })
+    })
+    return { members, has_others }
+  }
+
   // PALETTE HIÉRARCHIQUE (os#1516) ======================================================
 
   /** Recette de palette (copie), `undefined` si les couleurs des membres sont libres. */
