@@ -25,6 +25,7 @@ import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Class_NodeElement } from '../../Elements/Node'
 import type { Type_DisaggregationGap } from '../../types/Utils'
+import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 
 export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
@@ -100,14 +101,71 @@ export const applyDimensionDrawing = (
  * options »). Le même réglage que `DisaggregationGapControl` (onglet Hiérarchie), avec le même
  * geste : global à la zone de dessin, annulable, et le dessin ré-empile aussitôt les enfants.
  */
-export const applyDisaggregationGap = (app_data: Class_ApplicationData, mode: Type_DisaggregationGap) => {
-  const f = (value: Type_DisaggregationGap) => {
+export const applyDisaggregationGap = (
+  app_data: Class_ApplicationData, mode: Type_DisaggregationGap, tagg?: Class_DataTagGroup
+) => {
+  // Choisir un mode d'écart pour une dimension rangée en bandes, c'est quitter les bandes : sous
+  // elles le mode n'a pas d'effet (Julien, 30/09 : « il ne respecte pas le mode remplir le slot »).
+  const leave_bands = tagg !== undefined && dimensionInMemberBands(app_data, tagg)
+  const before = { mode: app_data.drawing_area.disaggregation_gap_mode, bands: tagg?.member_bands }
+  const apply = (value: Type_DisaggregationGap, bands: boolean | undefined) => {
     app_data.drawing_area.disaggregation_gap_mode = value
+    if (tagg !== undefined) tagg.member_bands = bands
+    // Les nœuds engendrés par une dimension se placent à la désagrégation, pas au dessin :
+    // sans la refaire, le nouveau mode ne se voyait que sur les hiérarchies de nœuds.
+    app_data.drawing_area.rebuildDimensionNodes()
     app_data.drawing_area.draw()
     app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
   }
-  app_data.setValueAndSaveHistory(app_data.drawing_area, 'disaggregation_gap_mode', mode, f)
+  const bands_after = leave_bands ? false : tagg?.member_bands
+  app_data.history.saveUndo(() => apply(before.mode, before.bands))
+  app_data.history.saveRedo(() => apply(mode, bands_after))
+  apply(mode, bands_after)
+}
+
+/**
+ * os#1511 — UN DIAGRAMME PAR MEMBRE : la dimension se range-t-elle en bandes ? Même règle que
+ * `DimensionDisaggregation.bandesParMembre` + `axesEnBandes` (réglage de la dimension, automatique
+ * dès deux porteurs), lue ici sans importer l'algorithme : ce module reste une feuille.
+ */
+export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): boolean => {
+  const porteurs = dimensionCarriersOf(app_data, tagg).length
+  return porteurs >= 2 && (tagg.member_bands ?? true)
+}
+
+/** Range la dimension en bandes (un diagramme par membre), ou revient au mode d'écart des enfants. */
+export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  const before = tagg.member_bands
+  const apply = (value: boolean | undefined) => {
+    tagg.member_bands = value
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+    app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(on))
+  apply(on)
+}
+
+/**
+ * os#1511 — ORDRE DES MEMBRES dessinés, en bandes comme en nœuds (annulable). L'ordre des nœuds
+ * se décide à la désagrégation : on la refait ; celui des bandes au dessin.
+ */
+export const applyMembersOrder = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ordre: Type_MembersOrder
+) => {
+  const before = tagg.members_order
+  const apply = (value: Type_MembersOrder) => {
+    tagg.members_order = value
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(ordre))
+  apply(ordre)
 }
 
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */

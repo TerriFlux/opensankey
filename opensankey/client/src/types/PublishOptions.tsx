@@ -65,6 +65,10 @@ export interface SankeyGlobals {
   // serait un piège) : cette option n'a donc d'effet que pour COUPER cet automatisme.
   // `toolbar` reste l'opt-in explicite, qui l'expose sur toutes les dimensions.
   position_mode_selector?: boolean
+  // os#1511 — default FALSE : sous-menu « Dessin » du menu de chaque dimension (un membre, plusieurs
+  // en bandes, plusieurs en nœuds). Il engendre des nœuds : l'offrir au lecteur est un geste d'auteur.
+  // Seul, il suffit à faire apparaître le menu (sans la partie « Position » si celle-ci est coupée).
+  dimension_drawing?: boolean
   // default TRUE (08/08) : groupe ajustement/verrous + indicateur de zoom dans la
   // barre du bas. Il l'était à false, et une page publiée n'offrait alors AUCUN
   // moyen visible de zoomer ni de recadrer — seulement Ctrl+molette, qui ne
@@ -104,6 +108,11 @@ export interface SankeyGlobals {
   // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
   app_info?: boolean
   sidebar_toggle?: boolean
+  // sa#567 — default FALSE : le bandeau du diagramme dans la grande case (« Sankey ⌄ », masquer,
+  // flotter, plein écran, détacher, fermer). Ses gestes arrangent l'espace de travail de l'auteur ;
+  // le lecteur d'une page publiée n'a rien à y faire, et la bande de 28 px mange le diagramme.
+  // Sans effet hors publish — l'éditeur le garde toujours.
+  canvas_header?: boolean
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -217,6 +226,8 @@ export interface PublishOptions {
   // os#1366 — autorise l'apparition automatique du sélecteur de mode d'affichage en lecture
   // quand le diagramme déclare une référence (cf. SankeyGlobals).
   position_mode_selector: boolean
+  // os#1511 — sous-menu « Dessin » des dimensions offert au lecteur (cf. SankeyGlobals).
+  dimension_drawing: boolean
   fit_toolbar: boolean
   fullscreen: boolean
   filter_bar: boolean
@@ -232,6 +243,7 @@ export interface PublishOptions {
   badge: boolean
   app_info: boolean
   sidebar_toggle: boolean
+  canvas_header: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -471,6 +483,7 @@ export const getPublishOptions = (): PublishOptions => {
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
     position_mode_selector: bool(s.position_mode_selector, true),
+    dimension_drawing: bool(s.dimension_drawing, false),
     fit_toolbar: bool(s.fit_toolbar, true),
     fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
@@ -485,6 +498,7 @@ export const getPublishOptions = (): PublishOptions => {
     badge: bool(s.badge, true),
     app_info: bool(s.app_info, true),
     sidebar_toggle: bool(s.sidebar_toggle, true),
+    canvas_header: bool(s.canvas_header, false),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -538,6 +552,7 @@ export type ViewerSankeyOptions = {
   footer?: boolean
   toolbar?: boolean
   position_mode_selector?: boolean
+  dimension_drawing?: boolean  // os#1511 : sous-menu « Dessin » des dimensions (défaut false)
   fit_toolbar?: boolean
   fullscreen?: boolean
   filter_bar?: boolean
@@ -550,6 +565,7 @@ export type ViewerSankeyOptions = {
   representation?: boolean
   navigation_help?: boolean
   badge?: boolean
+  canvas_header?: boolean  // sa#567 : bandeau du diagramme dans la grande case (défaut false)
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
@@ -601,8 +617,8 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge',
+    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'dimension_drawing', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
+    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge', 'canvas_header',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',

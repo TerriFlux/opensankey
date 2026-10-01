@@ -30,6 +30,12 @@ export interface Type_FigureValueFormat {
   scientific_notation: boolean
   /** L'unité, déjà résolue par l'appelant ; `''` quand il n'y en a pas ou qu'on ne la veut pas. */
   unit: string
+  /**
+   * 30/09/2026 — LE DIVISEUR de l'unité affichée (kt → Mt : 1 000), lu avec le symbole sur le même
+   * flux que le dessin. Il DIVISE le nombre écrit, jamais la géométrie (os#1463 : c'est au graphe
+   * d'en répondre, pour toutes ses parts). Absent : 1.
+   */
+  factor?: number
 }
 
 /** Ce que le tracé faisait avant que ces clés existent : quatre chiffres significatifs. */
@@ -46,7 +52,8 @@ export const FIGURE_VALUE_FORMAT_DEFAULTS: Type_FigureValueFormat = {
 export const figureValueFormatOf = (
   options: Type_OptionBag,
   unit: string,
-  fallback: Type_FigureValueFormat = FIGURE_VALUE_FORMAT_DEFAULTS
+  fallback: Type_FigureValueFormat = FIGURE_VALUE_FORMAT_DEFAULTS,
+  factor = 1
 ): Type_FigureValueFormat => {
   const bool = (key: string, d: boolean) => typeof options[key] === 'boolean' ? options[key] as boolean : d
   const num = (key: string, d: number) => typeof options[key] === 'number' ? options[key] as number : d
@@ -68,7 +75,8 @@ export const figureValueFormatOf = (
     // ⚠️ CE N'EST PAS UN RENVERSEMENT RISQUÉ : quand le diagramme n'a pas d'unité, `unit` vaut ''
     // et rien ne change. C'est la même condition qu'avant, lue au bon endroit — et un auteur qui
     // avait décoché garde son réglage, la surcharge primant sur le défaut.
-    unit: bool('value_label_unit_visible', true) ? unit : ''
+    unit: bool('value_label_unit_visible', true) ? unit : '',
+    factor
   }
 }
 
@@ -77,7 +85,9 @@ const clamp = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n
 /** La fonction qui écrit un nombre selon ce format, unité comprise. */
 export const figureValueFormatter = (f: Type_FigureValueFormat): ((v: number) => string) => {
   const suffix = f.unit ? ' ' + f.unit : ''
-  return (v: number) => {
+  const factor = (f.factor !== undefined && f.factor > 0) ? f.factor : 1
+  return (raw: number) => {
+    const v = raw / factor
     if (f.scientific_notation) {
       const text = f.significant_digits
         ? v.toExponential(clamp(f.nb_significant_digits - 1, 20))

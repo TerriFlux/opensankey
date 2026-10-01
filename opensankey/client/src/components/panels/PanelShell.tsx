@@ -86,8 +86,12 @@ const PANEL_GRAB_MARGIN_PX = 80
  * principal est actif et répond correctement.
  *
  * Repli sur 0 quand la barre n'existe pas : page publiée sans barre, tests hors DOM.
+ *
+ * Exportée : la colonne d'outils, le bouton de config et les pop-ups de l'éditeur sont eux aussi
+ * du chrome de PAGE. Depuis sa#567 (plus de volet principal), la zone active est toujours cadrée
+ * et la colonne d'outils remontait jusqu'en haut de l'écran, par-dessus la barre.
  */
-const pageNavBarHeightPx = (): number => {
+export const pageNavBarHeightPx = (): number => {
   if (typeof document === 'undefined') return 0
   const el = document.getElementsByClassName('TopMenu')[0]
   return el ? el.getBoundingClientRect().height : 0

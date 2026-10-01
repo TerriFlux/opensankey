@@ -19,6 +19,7 @@ import {
 } from './legendTagStyle'
 // SA#553 — valeurs par défaut de l'étiquette générée (même règle que la cascade)
 import { untaggedDefaultsStyle } from './tagStyles'
+import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 // ITEMS (pur) ========================================================================
 
@@ -77,6 +78,9 @@ export type Type_LegendItem = {
   // groupe d'au moins deux étiquettes. Une dimension à étiquette unique (Territoire, Filière)
   // ne promet rien : ni main, ni flèche, ni info-bulle, ni liste.
   dimension_choice?: boolean
+  // os#1511 — membre DÉSAGRÉGÉ d'une dimension à niveaux : retrait, en niveaux, sous la place
+  // qu'occupe son parent quand il est agrégé. Absent = pas de retrait.
+  indent?: number
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -99,6 +103,8 @@ export type Type_LegendEnv = {
   t_scale?: string
   // SA#552 — info-bulle de la ligne de rappel d'une dimension : elle se modifie au clic
   t_dimension_change?: string
+  // os#1511 — libellé de l'entrée « Autres » d'une dimension dessinée en bandes
+  t_others?: string
   // SA#553 — valeur par défaut (usine) d'un paramètre de mise en forme : celle que prend
   // l'étiquette générée « Sans [groupe] » pour les paramètres que règlent les autres étiquettes.
   // Absente (mocks), ces paramètres ne sont pas montrés sur son entrée.
@@ -128,6 +134,9 @@ type Type_TagForLegend = {
   // SA#553 — étiquette générée « Sans [nom du groupe] » : ses porteurs se calculent
   // (`hasGivenTag` des éléments), elle n'a pas de couleur propre.
   is_untagged?: boolean
+  // os#1511 — `Class_DataTag.parent` : membre parent dans la hiérarchie de la dimension.
+  // Absent = racine (ou groupe sans hiérarchie).
+  parent?: Type_TagForLegend
 }
 type Type_TagGroupForLegend = {
   id: string
@@ -142,6 +151,12 @@ type Type_TagGroupForLegend = {
   // pas persisté en tant que tel — il dérive de `style_patch`, écrit seulement
   // quand il porte quelque chose : aucun fichier existant ne l'allume.
   has_style_patch?: boolean
+  // Troisième terme : `Class_DataTagGroup.draws_members_in_color` — la dimension se dessine
+  // membre par membre, chacun à sa couleur (bandes). Absent sur les groupes de nœuds et de flux.
+  draws_members_in_color?: boolean
+  // os#1511 — `Class_DataTagGroup.members_drawn_in_bands` : membres dessinés en propre sur au moins
+  // un flux visible, et présence d'une bande « Autres ». Absent : la légende garde les membres choisis.
+  members_drawn_in_bands?: { members: Set<string>, has_others: boolean }
   // SA#545 — `Class_TagGroup.uses_tag_styles` (SA#541) : « le groupe ou une de ses
   // étiquettes porte un style utilisable ». Absent sur les groupes de data tags, qui
   // n'ont pas de styles d'étiquette.
@@ -287,7 +302,10 @@ function definitionOf(owner: { description?: string }): string | undefined {
  * retoucher ferait de deux tickets parallèles un arbitrage de fusion).
  */
 export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): boolean {
+  // Le panneau annonce le dessin : des bandes colorées par membre se nomment, que l'interrupteur
+  // `use_colors` (sans commande sur une dimension) soit allumé ou non.
   return tag_group.use_colors || tag_group.has_style_patch === true
+    || tag_group.draws_members_in_color === true
 }
 
 /**
@@ -441,6 +459,49 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
 }
 
 /**
+ * os#1511 — retrait des membres montrés d'une dimension à niveaux : leur profondeur moins celle
+ * du moins profond d'entre eux. `undefined` si aucun n'a de parent (dimension plate, ou niveau
+ * le plus agrégé) : la légende reste celle d'avant.
+ */
+function hierarchyIndents(tags: Type_TagForLegend[]): Map<Type_TagForLegend, number> | undefined {
+  if (!tags.some(tag => tag.parent !== undefined)) return undefined
+  const depthOf = (tag: Type_TagForLegend) => {
+    let depth = 0
+    for (let p = tag.parent; p !== undefined; p = p.parent) depth++
+    return depth
+  }
+  const depths = new Map(tags.map(tag => [tag, depthOf(tag)] as [Type_TagForLegend, number]))
+  const min_depth = Math.min(...depths.values())
+  depths.forEach((depth, tag) => depths.set(tag, depth - min_depth))
+  return depths
+}
+
+/**
+ * os#1511 — range les membres dans l'ordre de l'arbre : chacun est repéré par la suite des rangs
+ * (dans `tags_list`) de ses ancêtres puis de lui-même. Les enfants d'un parent désagrégé se
+ * suivent donc, à l'endroit où ce parent se trouvait quand il était agrégé.
+ */
+function sortByHierarchy(tags: Type_TagForLegend[], all_tags: Type_TagForLegend[]) {
+  const rank = new Map(all_tags.map((tag, i) => [tag.id, i] as [string, number]))
+  const pathOf = (tag: Type_TagForLegend) => {
+    const path: number[] = []
+    for (let t: Type_TagForLegend | undefined = tag; t !== undefined; t = t.parent) {
+      path.unshift(rank.get(t.id) ?? Number.MAX_SAFE_INTEGER)
+    }
+    return path
+  }
+  const paths = new Map(tags.map(tag => [tag, pathOf(tag)] as [Type_TagForLegend, number[]]))
+  tags.sort((a, b) => {
+    const pa = paths.get(a) ?? []
+    const pb = paths.get(b) ?? []
+    for (let i = 0; i < Math.min(pa.length, pb.length); i++) {
+      if (pa[i] !== pb[i]) return pa[i] - pb[i]
+    }
+    return pa.length - pb.length
+  })
+}
+
+/**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
  * drawTagDisplayed() — groupes avec use_colors, tags sélectionnés portés par au
  * moins un élément visible (ou data tags, toujours montrés).
@@ -493,8 +554,13 @@ export function computeLegendItems(
       const all_tags = styled
         ? (tag_group.tags_list_with_untagged ?? tag_group.tags_list)
         : tag_group.tags_list
+      // os#1511 — dimension en bandes : les membres DESSINÉS en propre quelque part, pas toute la
+      // sélection ; les autres sont dans « Autres », qui a son entrée en fin de bloc.
+      const en_bandes = is_data_tagg ? tag_group.members_drawn_in_bands : undefined
       const candidate_tags = is_data_tagg
-        ? tag_group.selected_tags_list
+        ? (en_bandes !== undefined
+          ? tag_group.selected_tags_list.filter(tag => en_bandes.members.has(tag.id))
+          : tag_group.selected_tags_list)
         : (all_tags ?? tag_group.selected_tags_list)
       const displayed_tags = candidate_tags.filter(tag => {
         if (is_data_tagg) return true
@@ -519,6 +585,10 @@ export function computeLegendItems(
           sankey.visible_links_list.some(f => f.hasGivenTag(tag))
       })
       if (displayed_tags.length === 0) return
+      // os#1511 — dimension à niveaux : les membres désagrégés prennent ENSEMBLE la place de leur
+      // parent (ordre de l'arbre), en retrait.
+      const indents = is_data_tagg ? hierarchyIndents(displayed_tags) : undefined
+      if (indents !== undefined) sortByHierarchy(displayed_tags, tag_group.tags_list ?? displayed_tags)
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       const title: Type_LegendItem = {
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
@@ -556,10 +626,20 @@ export function computeLegendItems(
         // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
         // entrées ordinaires restent structurellement identiques à avant.
         if (tag.is_selected === false) item.dimmed = true
+        const indent = indents?.get(tag) ?? 0
+        if (indent > 0) item.indent = indent
         const tag_description = definitionOf(tag)
         if (tag_description !== undefined) item.description = tag_description
         items.push(item)
       })
+      if (en_bandes?.has_others) {
+        items.push({
+          id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(OTHERS_ID),
+          text: env.t_others || 'Autres',
+          swatch_color: OTHERS_COLOR,
+          block_id
+        })
+      }
     })
 
   // RAPPEL DES DATA TAGS SÉLECTIONNÉS, et il ne vaut que pour ce que la légende ne montre pas
@@ -761,6 +841,11 @@ export function computeScaleText(
 
 export type Type_LegendItemPosition = { id: string, x: number, y: number }
 
+/** os#1511 — retrait (px monde) d'un membre désagrégé en disposition verticale : une police par niveau. */
+export function legendIndentWidth(item: Type_LegendItem, police: number): number {
+  return (item.indent ?? 0) * police
+}
+
 // Estimation de largeur de texte sans DOM (moyenne ~0.55 em par caractère)
 function estimateTextWidth(text: string, font_size: number): number {
   return text.length * font_size * 0.55
@@ -830,11 +915,16 @@ function legendSectionOf(item: Type_LegendItem): string {
  *
  * `line_counts` : SA#550 — lignes mesurées des zones enveloppées (`wrap`), cf.
  * legendWrappedLineCount ; #556 — lignes (tspans) mesurées des autres entrées en vertical.
+ *
+ * `text_widths` : en horizontal, largeur MESURÉE du libellé dessiné (px monde). L'estimation à
+ * 0,55 em par caractère sous-estime les noms réels : les entrées se chevauchaient et la ligne
+ * dépassait la largeur de la légende sans passer à la ligne.
  */
 export function layoutLegendItems(
   items: Type_LegendItem[],
   config: Type_LegendConfigValues,
-  line_counts?: Map<string, number>
+  line_counts?: Map<string, number>,
+  text_widths?: Map<string, number>
 ): Type_LegendItemPosition[] {
   const positions: Type_LegendItemPosition[] = []
   const police = config.police
@@ -842,6 +932,9 @@ export function layoutLegendItems(
   const wrap_width = Math.max(config.width, 4 * police)
   let x = 0
   let y = 0
+  // Horizontal : abscisse où reprennent les entrées d'un groupe quand elles passent à la ligne
+  // (alignées sous la première, à droite du titre)
+  let entries_x = 0
   let previous_section: string | undefined
   items.forEach(item => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
@@ -869,24 +962,37 @@ export function layoutLegendItems(
         x = 0
         y += line_height
       }
+      if (item.starts_group || item.own_line) entries_x = 0
+      const measured = text_widths?.get(item.id)
+      const text_width = measured !== undefined && measured > 0 ? measured : estimateTextWidth(item.text, police)
+      const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
+      const entry_width = swatch + text_width
+      if (!item.group_title && !item.own_line && x > entries_x && x + entry_width > wrap_width) {
+        // Retour à la ligne à la largeur de la légende : la ligne ne pousse pas la fenêtre.
+        // Sous le titre si celui-ci mange plus de la moitié de la largeur.
+        if (entries_x + entry_width > wrap_width || entries_x > wrap_width / 2) entries_x = 0
+        x = entries_x
+        y += line_height
+      }
       positions.push({ id: item.id, x, y })
       if (item.group_title) {
         // Titre d'un groupe développé : à gauche de ses entrées, sur leur ligne. Le titre est en
         // GRAS (glyphes ~10 % plus larges que l'estimation en romain), et l'écart qui le sépare de
         // sa première entrée suit la police : un écart fixe en px monde disparaît en police
         // verrouillée dès que le zoom baisse (CARTOFOB à 16 % : titre collé à l'entrée).
-        x += estimateTextWidth(item.text, police) * 1.1 + 0.6 * police
+        x += (measured !== undefined && measured > 0 ? measured : estimateTextWidth(item.text, police) * 1.1) + 0.6 * police
+        entries_x = x
       } else if (item.own_line) {
         // Lignes d'info, échelle, groupes épinglés : seuls sur leur ligne, seules
         // les entrées de tag s'enchaînent horizontalement.
         x = 0
         y += item.scale_bar ? bar_row_height : line_height
       } else {
-        const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
-        x += swatch + estimateTextWidth(item.text, police) + 14
+        x += entry_width + 14
       }
     } else {
-      positions.push({ id: item.id, x: 0, y })
+      // os#1511 — membre désagrégé : décalé d'une police par niveau sous la place de son parent
+      positions.push({ id: item.id, x: legendIndentWidth(item, police), y })
       if (item.scale_bar) {
         y += bar_row_height
       } else {

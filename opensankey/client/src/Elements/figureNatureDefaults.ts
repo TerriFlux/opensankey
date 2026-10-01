@@ -218,6 +218,8 @@ const figureStampedDefault = (rec: { [k: string]: unknown }, key: string): unkno
 const partUnitOfPercent = (percent: unknown): string | undefined => {
   if (percent === 'total') return 'percent_total'
   if (percent === 'parent') return 'percent_parent'
+  if (percent === 'value_total') return 'value_percent_total'
+  if (percent === 'value_parent') return 'value_percent_parent'
   if (percent === 'none') return 'value'
   return undefined
 }

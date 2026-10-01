@@ -327,6 +327,9 @@ interface ElementsSelectionConfig {
   node: ElementSelectionConfig
   link: ElementSelectionConfig
   container: ElementSelectionConfig
+  // 01/10/2026 — les PARTS d'une figure (os#1456) : leurs libellés existaient mais n'étaient jamais
+  // enregistrés, et le sélecteur affichait la clé brute « part.TS » (retour de Julien).
+  part?: ElementSelectionConfig
   common: {
     labels: Record<string, LanguageLabels>
   }
@@ -341,14 +344,16 @@ export const use_elements_selection_config = (
   const typeMapping = {
     node: 'Noeud',
     link: 'Flux',
-    container: 'Container'
+    container: 'Container',
+    part: 'part'
   } as const
 
   langs_of(resources).forEach(lang => {
     const translation = resources[lang]!.translation
 
-    ;(['node', 'link', 'container'] as const).forEach(elementType => {
+    ;(['node', 'link', 'container', 'part'] as const).forEach(elementType => {
       const config = elements_config[elementType]
+      if (config === undefined) return
       const translationPath = typeMapping[elementType]
 
       // Initialiser les structures pour ce type d'élément

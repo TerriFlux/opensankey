@@ -278,7 +278,8 @@ describe('SA#545 — mise en page', () => {
     // Même texte de 4 lettres pour comparer les seules largeurs de carré
     items.forEach(i => { i.text = 'XXXX' })
     const [full, color] = items
-    const positions = layoutLegendItems([full, color, { ...color, id: 'legend-next' }], { ...base_config, horizontal: true })
+    // Assez large pour que les trois entrées tiennent sur une ligne
+    const positions = layoutLegendItems([full, color, { ...color, id: 'legend-next' }], { ...base_config, horizontal: true, width: 2000 })
     const full_advance = positions[1].x - positions[0].x
     const color_advance = positions[2].x - positions[1].x
     expect(full_advance - color_advance).toBeCloseTo((LEGEND_SAMPLE_SWATCH_EM - 1) * base_config.police)

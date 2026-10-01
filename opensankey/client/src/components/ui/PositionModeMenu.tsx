@@ -40,13 +40,16 @@ import { OSTooltip } from './OSTooltip'
 // `applyPositionMode` vit dans le module de règles voisin (sans Chakra) : c'est ce qui le rend
 // testable — aucune suite jest du dépôt ne peut charger `@chakra-ui/react`.
 import {
-  applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
+  applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf,
+  dimensionDrawingEnabledFor, positionModeSelectorEnabledFor
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyDisaggregationGap, dimensionCarrierCandidates, dimensionDrawingOf,
-  toggleDimensionCarrier
+  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyMembersOrder,
+  dimensionCarrierCandidates,
+  dimensionCarriersOf, dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import type { Type_DisaggregationGap } from '../../types/Utils'
+import { MEMBERS_ORDERS } from '../../Algorithms/DimensionMemberOrder'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -81,14 +84,14 @@ const CheckItem = ({ label, checked, onClick, icon, closeOnSelect }: {
  * os#1511 — UN SOUS-MENU. Chakra v2 n'en a pas de natif : même patron que le menu Aide (tutoriels),
  * ouverture au survol, et l'entrée ne ferme pas le menu parent.
  */
-const Submenu = ({ label, icon, checked, children }: {
-  label: string, icon?: React.ReactElement, checked?: boolean, children: React.ReactNode
+const Submenu = ({ label, icon, checked, disabled, children }: {
+  label: string, icon?: React.ReactElement, checked?: boolean, disabled?: boolean, children: React.ReactNode
 }) => {
   const [open, setOpen] = React.useState(false)
   return (
-    <Box onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <Menu isOpen={open} placement='right-start' gutter={0} offset={[0, 0]} isLazy>
-        <MenuButton as={MenuItem} closeOnSelect={false} fontSize='0.75rem' icon={icon}>
+    <Box onMouseEnter={() => setOpen(!disabled)} onMouseLeave={() => setOpen(false)}>
+      <Menu isOpen={open && !disabled} placement='right-start' gutter={0} offset={[0, 0]} isLazy>
+        <MenuButton as={MenuItem} closeOnSelect={false} fontSize='0.75rem' icon={icon} isDisabled={disabled}>
           <HStack justifyContent='space-between' spacing='0.75rem'>
             <HStack spacing='0.5rem'>
               <Box as='span'>{label}</Box>
@@ -133,12 +136,42 @@ export const PositionModeMenu = ({ app_data, tagg }: {
   const current = POSITION_MODE_META.find(m => m.value === mode) ?? POSITION_MODE_META[0]
   // os#1383 — La référence ne se propose qu'en échelle adaptée : c'est le seul mode qu'elle règle.
   const reference = mode === 'scale_adapted' ? scaleAdaptedReferenceDataTagOf(app_data, tagg) : undefined
-  // os#1511 — LE DESSIN ne se règle qu'en ÉDITION : il change la structure du diagramme (des nœuds
-  // engendrés), là où la position n'est qu'une façon de lire. En lecture, le menu reste celui d'hier.
-  const can_draw = !app_data.is_static
+  // os#1511 — LE DESSIN change la structure du diagramme (des nœuds engendrés), là où la position
+  // n'est qu'une façon de lire : en lecture, il ne s'offre que si la page le demande
+  // (`dimension_drawing`). Chaque moitié du menu a son propre gate ; seule, elle se montre à plat.
+  const can_draw = dimensionDrawingEnabledFor(app_data)
+  const can_position = positionModeSelectorEnabledFor(app_data)
   const drawing = dimensionDrawingOf(app_data, tagg)
+  const in_bands = dimensionInMemberBands(app_data, tagg)
+  // os#1511 — L'ÉCART DES ENFANTS d'un nœud désagrégé : il place les membres, il va donc dans
+  // « Placer », mais il n'a de sens que si la dimension se dessine en nœuds.
+  const gap_items = can_draw && drawing === 'nodes'
+    ? <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
+      {/* os#1511 — dès deux porteurs, la dimension se range en bandes et le mode d'écart n'a plus
+          d'effet : on le dit, au lieu de cocher un mode qui ne s'applique pas. Choisir un mode
+          quitte les bandes. */}
+      {dimensionCarriersOf(app_data, tagg).length >= 2
+        ? <CheckItem
+          label={t('Banner.draw_member_bands') + ` (${app_data.drawing_area.disaggregation_gap_value})`}
+          checked={in_bands}
+          closeOnSelect={false}
+          onClick={() => applyMemberBands(app_data, tagg, true)}
+        />
+        : null}
+      {GAP_MODES.map(g => (
+        <CheckItem
+          key={g.value}
+          label={t(g.label_key) + (g.value === 'constant'
+            ? ` (${app_data.drawing_area.disaggregation_gap_value})` : '')}
+          checked={!in_bands && app_data.drawing_area.disaggregation_gap_mode === g.value}
+          closeOnSelect={false}
+          onClick={() => applyDisaggregationGap(app_data, g.value, tagg)}
+        />
+      ))}
+    </MenuGroup>
+    : null
   const position_items = <>
-    {POSITION_MODE_META.map(m => (
+    {can_position ? POSITION_MODE_META.map(m => (
       <CheckItem
         key={m.value}
         icon={<FontAwesomeIcon icon={m.icon} />}
@@ -146,11 +179,11 @@ export const PositionModeMenu = ({ app_data, tagg }: {
         checked={m.value === mode}
         onClick={() => applyPositionMode(app_data, tagg, m.value)}
       />
-    ))}
+    )) : null}
     {/* os#1383 — Sur quoi l'échelle adaptée se cale. Sans ce réglage, la grandeur de
         référence est celle qui se trouvait à l'écran quand le mode a pris : l'échelle
         dépend alors du chemin de clics. Désignée, elle se recalcule à chaque dessin. */}
-    {mode === 'scale_adapted' && tagg.tags_list.length > 0 ? <>
+    {can_position && mode === 'scale_adapted' && tagg.tags_list.length > 0 ? <>
       <MenuDivider />
       <MenuGroup title={t('Banner.posMode_ref_title')} fontSize='0.7rem'>
         <CheckItem
@@ -170,6 +203,7 @@ export const PositionModeMenu = ({ app_data, tagg }: {
         ))}
       </MenuGroup>
     </> : null}
+    {gap_items !== null ? <>{can_position ? <MenuDivider /> : null}{gap_items}</> : null}
   </>
   return <Menu placement='bottom-start'>
     <OSTooltip placement='bottom' label={t('Banner.posMode_title_tt')}>
@@ -194,19 +228,24 @@ export const PositionModeMenu = ({ app_data, tagg }: {
       <MenuList minWidth='unset' zIndex={50}>
         {can_draw
           ? <>
-            <Submenu label={t('Banner.posMode_submenu')} icon={<FontAwesomeIcon icon={current.icon} />}>
-              {position_items}
-            </Submenu>
-            {/* os#1511 — LE DESSIN DE LA DIMENSION (Julien, 30/09 : « les options par bandes ou par
-                nœud, avec des sous-menus », puis « et les options de désagrégation pour les
-                nœuds ») : un membre, plusieurs en bandes, ou plusieurs en nœuds — et alors quels
-                nœuds la portent, chacun se désagrégeant selon elle. */}
-            <Submenu label={t('Banner.draw_submenu')}>
+            {/* os#1511 — TROIS QUESTIONS, DANS L'ORDRE OÙ ON SE LES POSE (Jean-Yves, 01/10 :
+                séparer le choix d'un ou de plusieurs membres, la façon de les dessiner et leur
+                placement). « Afficher » : un membre ou plusieurs. « Dessiner » : en bandes ou en
+                nœuds, et dans quel ordre ; grisé tant qu'on n'affiche qu'un membre. « Placer » :
+                le mode de position, et l'écart des enfants quand la dimension est en nœuds. */}
+            <Submenu label={t('Banner.show_submenu')}>
               <CheckItem
                 label={t('Banner.draw_one')}
                 checked={drawing === 'one'}
                 onClick={() => applyDimensionDrawing(app_data, tagg, 'one')}
               />
+              <CheckItem
+                label={t('Banner.show_many')}
+                checked={drawing !== 'one'}
+                onClick={() => { if (drawing === 'one') applyDimensionDrawing(app_data, tagg, 'multi') }}
+              />
+            </Submenu>
+            <Submenu label={t('Banner.draw_submenu')} disabled={drawing === 'one'}>
               <CheckItem
                 label={t('Banner.draw_bands')}
                 checked={drawing === 'multi'}
@@ -225,24 +264,31 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                       />
                     ))}
                   </MenuGroup>
-                  {/* L'écart vertical des enfants du nœud désagrégé : le réglage de l'onglet
-                      Hiérarchie, ici aussi (global à la zone de dessin). */}
-                  <MenuDivider />
-                  <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
-                    {GAP_MODES.map(g => (
-                      <CheckItem
-                        key={g.value}
-                        label={t(g.label_key) + (g.value === 'constant'
-                          ? ` (${app_data.drawing_area.disaggregation_gap_value})` : '')}
-                        checked={app_data.drawing_area.disaggregation_gap_mode === g.value}
-                        closeOnSelect={false}
-                        onClick={() => applyDisaggregationGap(app_data, g.value)}
-                      />
-                    ))}
-                  </MenuGroup>
                 </Submenu>
                 : null}
+              {/* os#1511 — L'ORDRE DES MEMBRES, en bandes comme en nœuds : par valeur au premier
+                  niveau (défaut), à tous les niveaux, ou ordre de l'arbre. Sur une dimension plate,
+                  les deux premiers se confondent : un seul est proposé. */}
+              <MenuDivider />
+              <MenuGroup title={t('Banner.order_title')} fontSize='0.7rem'>
+                {MEMBERS_ORDERS
+                  .filter(o => tagg.is_hierarchical || o !== 'value_all_levels')
+                  .map(o => (
+                    <CheckItem
+                      key={o}
+                      label={t('Banner.order_' + o)}
+                      checked={tagg.members_order === o}
+                      closeOnSelect={false}
+                      onClick={() => applyMembersOrder(app_data, tagg, o)}
+                    />
+                  ))}
+              </MenuGroup>
             </Submenu>
+            {can_position || gap_items !== null
+              ? <Submenu label={t('Banner.place_submenu')}>
+                {position_items}
+              </Submenu>
+              : null}
           </>
           : position_items}
       </MenuList>

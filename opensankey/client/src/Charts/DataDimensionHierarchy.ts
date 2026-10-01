@@ -302,6 +302,51 @@ export const buildDataDimensionTree = (
 export interface Type_NestedDimensionOptions extends Type_DataDimensionOptions {
   /** Les membres ouverts, en identifiants de secteur de membre (`memberSectorId`). */
   expanded: ReadonlySet<string>
+  /** Coordonnées LIÉES au diagramme : ses coupes font foi, `expanded` est ignoré. */
+  linked?: boolean
+}
+
+// ── 30/09/2026 — COORDONNÉES LIÉES AU DIAGRAMME ─────────────────────────────────────────────────
+//
+// Julien : « il faut un mode qui rend l'interface Coordonnées commune aux différentes fenêtres, en
+// l'occurrence couronne et diagramme — peut-être un truc avec la barre du haut, qui serait forcément
+// commune ». Arbitrages : un interrupteur PAR FENÊTRE, et une couronne neuve LIÉE par défaut.
+//
+// Liée, la figure n'a plus de coupe propre : elle lit celle du diagramme (la barre du haut, le
+// panneau du diagramme), et son clic l'écrit. Détachée, elle a la sienne (`hierarchy_expanded`),
+// pour comparer deux coupes côte à côte. Une figure est détachée si elle le dit (`detache`), et
+// seulement alors.
+//
+// 01/10/2026 — PLUS DE DÉTACHEMENT IMPLICITE. La première règle détachait aussi toute figure qui
+// portait déjà une coupe propre, pour respecter les couronnes enregistrées avant ce mode ; or chaque
+// clic d'avant en avait écrit une, et ces couronnes ignoraient la barre du haut (Julien : « la barre
+// du haut ne marche toujours pas pour les couronnes »). Liée, une figure ignore l'ancienne coupe.
+
+/** L'entrée qui détache une figure du diagramme. */
+export const DETACHED_ENTRY = 'detache'
+
+/** La figure a-t-elle ses propres coordonnées ? Sinon, elle suit le diagramme. */
+export const isDetachedOpening = (expanded: Iterable<string>): boolean => {
+  for (const entry of expanded) {
+    if (entry === DETACHED_ENTRY) return true
+  }
+  return false
+}
+
+/**
+ * La coupe DU DIAGRAMME, en membres ouverts : les ancêtres des membres qu'il montre, pour chaque
+ * dimension qui en montre plusieurs. Une dimension à un seul membre n'ouvre rien.
+ */
+export const diagramDimensionOpening = (dims: Class_DataTagGroup[]): Set<string> => {
+  const out = new Set<string>()
+  dims.forEach(dim => {
+    const shown = dim.selected_tags_list as Class_DataTag[]
+    if (shown.length < 2) return
+    shown.forEach(member => {
+      for (let p = member.parent; p !== undefined; p = p.parent) out.add(memberSectorId(dim.id, p.id))
+    })
+  })
+  return out
 }
 
 /** Les racines d'une dimension. */
@@ -349,14 +394,22 @@ export const buildNestedDimensionTree = (
   let mismatch_count = 0
   let is_truncated = false
 
-  const opened = effectiveDimensionOpening(all, options.expanded)
-  const dims = all.filter(d => dimensionDivides(d, opened))
-  // Une dimension au niveau « ensemble » se lit à sa racine, pas à ce que le diagramme sélectionne.
+  // LIÉE AU DIAGRAMME : la coupe de chaque dimension est celle du diagramme, et une dimension
+  // découpe dès que le diagramme en montre plusieurs membres. Une dimension à un seul membre se lit
+  // sur CE membre (« Europe » si c'est l'Europe), pas sur sa racine.
+  const opened = options.linked ? diagramDimensionOpening(all) : effectiveDimensionOpening(all, options.expanded)
+  const dims = options.linked
+    ? all.filter(d => d.selected_tags_list.length > 1)
+    : all.filter(d => dimensionDivides(d, opened))
+  // Détachée, une dimension au niveau « ensemble » se lit à sa racine, pas à ce que le diagramme
+  // sélectionne ; liée, elle se lit à ce qu'il sélectionne (la coordonnée n'est alors pas fixée).
   const base_coord = new Map<string, Class_DataTag>()
-  all.filter(d => !dims.includes(d)).forEach(d => {
-    const roots = dimensionRootsOf(d)
-    if (roots.length === 1) base_coord.set(d.id, roots[0])
-  })
+  if (!options.linked) {
+    all.filter(d => !dims.includes(d)).forEach(d => {
+      const roots = dimensionRootsOf(d)
+      if (roots.length === 1) base_coord.set(d.id, roots[0])
+    })
+  }
   const isOpen = (dim: Class_DataTagGroup, member: Class_DataTag) =>
     opened.has(memberSectorId(dim.id, member.id))
   /** Par où l'on entre dans une dimension qui découpe : les enfants de sa racine unique, ou ses racines. */
@@ -435,7 +488,8 @@ export const buildNestedDimensionTree = (
   if (dims.length === 0) {
     // RIEN NE DÉCOUPE : un seul secteur, la racine de la première dimension — le tout, sans partage.
     const first = all[0]
-    const whole = dimensionRootsOf(first)[0]
+    const whole = (options.linked ? (first.selected_tags_list[0] as Class_DataTag | undefined) : undefined)
+      ?? dimensionRootsOf(first)[0]
     const value = valueAt(base_coord)
     children = whole === undefined || value <= 0 ? [] : [{
       id: memberSectorId(first.id, whole.id), label: whole.name, value, declared: value,

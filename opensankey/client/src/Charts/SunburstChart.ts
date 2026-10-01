@@ -31,6 +31,7 @@ import type { Type_FigureTextDefaults } from './figurePartText'
 // partir de ce que la part a dit, comme la couronne et les barres.
 import { partAspect } from './partAspect'
 import type { Type_FigurePart, Type_FigurePartAspect } from './partAspect'
+import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
 import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureText, Type_FigurePartTextAspect } from './figureChartStyle'
@@ -164,7 +165,7 @@ export interface Type_SunburstStyle {
   custom_digit: boolean
   nb_digit: number
   scientific_notation: boolean
-  label_percent: 'none' | 'total' | 'parent'
+  label_percent: 'none' | 'total' | 'parent' | 'value_total' | 'value_parent'
   centre_content: 'both' | 'name' | 'value' | 'none'
   /** Rayon du trou, en pourcentage du rayon extérieur. */
   centre_hole: number
@@ -399,6 +400,8 @@ export interface Type_SunburstChartOptions {
   on_part_select?: (sector_id: string) => void
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
+  /** 30/09/2026 — le diviseur qui va avec `unit` (kt → Mt : 1 000) ; le dessin reste sur le brut. */
+  unit_factor?: number
   /**
    * os#1449 — LES TEXTES DE LA FIGURE, dans l'ordre où ils se posent ; le titre est le premier.
    *
@@ -1105,8 +1108,10 @@ export const drawSunburstChart = (
   // par la mise en forme depuis os#1445 : les chiffres d'une valeur sont un réglage d'élément, et
   // une part qui règle les siens écrit sa valeur autrement que ses voisines.
   const digits = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
-  const formatWith = (s: Type_SunburstStyle) => (v: number): string => {
-    if (opts.format) return opts.format(v)
+  const unit_factor = (opts.unit_factor !== undefined && opts.unit_factor > 0) ? opts.unit_factor : 1
+  const formatWith = (s: Type_SunburstStyle) => (raw: number): string => {
+    if (opts.format) return opts.format(raw)
+    const v = raw / unit_factor
     if (s.scientific_notation) {
       return s.significant_digits
         ? v.toExponential(digits(s.nb_significant_digits - 1, 20))
@@ -1218,7 +1223,8 @@ export const drawSunburstChart = (
      * somme de ses parts, ce qui ferait lire 100 % là où il y a un écart.
      */
     const baseOf = (d: Type_SunburstSlice): number => {
-      if (styleOf(d.id).label_percent === 'total' || d.path.length < 2) return total
+      const percent = styleOf(d.id).label_percent
+      if (percent === 'total' || percent === 'value_total' || d.path.length < 2) return total
       return slices.find(s => s.id === d.path[d.path.length - 2])?.value ?? total
     }
 
@@ -1235,6 +1241,9 @@ export const drawSunburstChart = (
     }
     const sectorName = (d: Type_SunburstSlice): string => {
       const s = styleOf(d.id)
+      // 01/10/2026 — le texte personnalisé de la part, s'il y en a un (cf. `custom_text`).
+      const custom = opts.parts?.[d.id] !== undefined ? aspectOf(d.id).name?.custom_text : undefined
+      if (custom !== undefined && custom !== '') return custom
       return sunburstSectorName(d.label, parentLabelOf(d), {
         strip_parent: s.strip_parent, separator: s.separator, separator_part: s.separator_part
       })
@@ -1277,6 +1286,10 @@ export const drawSunburstChart = (
       //
       // « Aucun » veut donc dire « la valeur telle quelle », et non « pas de pourcentage en plus ».
       if (!s.value_visible) return []
+      // 01/10/2026 — LA VALEUR ET SON POURCENTAGE, sur demande explicite (« valeur + pourcentage »).
+      if (s.label_percent === 'value_total' || s.label_percent === 'value_parent') {
+        return [valueText(d.value, s), pctText(d.value, baseOf(d))]
+      }
       if (s.label_percent !== 'none') return [pctText(d.value, baseOf(d))]
       return [valueText(d.value, s)]
     }
@@ -1411,9 +1424,15 @@ export const drawSunburstChart = (
     zoomer = { svg, zoom }
 
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
-    const scope_title = centre_node
-      ? centre_node.label
-      : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
+    // 01/10/2026 — le texte personnalisé de la part de centre, s'il y en a un.
+    const centre_custom = opts.parts?.[FIGURE_CENTRE_PART_ID] !== undefined
+      ? aspectOf(FIGURE_CENTRE_PART_ID).name?.custom_text
+      : undefined
+    const scope_title = (centre_custom !== undefined && centre_custom !== '')
+      ? centre_custom
+      : centre_node
+        ? centre_node.label
+        : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
     // Sous le zoom radial, le clic sur le centre REMONTE d'un cran ; sinon il REPLIE le nœud
     // central dans le diagramme (18/09) — l'inverse du clic sur un secteur, au même endroit.
     const centre_folds = !focus_id && !!centre_node && !!opts.on_centre_click &&
@@ -1428,8 +1447,14 @@ export const drawSunburstChart = (
     centre.append('circle').attr('r', inner_r - 2).attr('fill', palette.surface)
     // Ce que le centre écrit est réglé (os#1425). Les deux textes existent toujours — le survol
     // s'en sert pour écrire le fil d'Ariane — mais ils restent vides si l'auteur n'en veut pas.
-    const shows_name = st.centre_content === 'both' || st.centre_content === 'name'
-    const shows_value = st.centre_content === 'both' || st.centre_content === 'value'
+    //
+    // 01/10/2026 — ET LE CENTRE EST UNE PART ICI AUSSI (Julien : « le centre c'est aussi une part,
+    // ça permet de configurer son libellé et ses valeurs comme le reste »). La couronne en anneaux
+    // passe ses parts, centre compris ; ce que la part dit l'emporte, `centre_content` reste le
+    // défaut — la même règle que la couronne à plat (`drawDonutChart`).
+    const centre_part = opts.parts?.[FIGURE_CENTRE_PART_ID] !== undefined ? aspectOf(FIGURE_CENTRE_PART_ID) : undefined
+    const shows_name = centre_part?.name?.is_visible ?? (st.centre_content === 'both' || st.centre_content === 'name')
+    const shows_value = centre_part?.value?.is_visible ?? (st.centre_content === 'both' || st.centre_content === 'value')
     const centre_label = centre.append('text')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
       .attr('y', shows_value ? -inner_r * 0.3 : 0)
@@ -1942,7 +1967,9 @@ export const drawSunburstChart = (
       const bounded = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k))
       zoomer?.svg.call(zoomer.zoom.scaleTo, bounded)
     },
-    scaleBy: (factor) => { zoomer?.svg.call(zoomer.zoom.scaleBy, factor) }
+    scaleBy: (factor) => { zoomer?.svg.call(zoomer.zoom.scaleBy, factor) },
+    // Le même geste que le double-clic : la figure revient centrée dans sa fenêtre, à 100 %.
+    fit: () => { zoomer?.svg.call(zoomer.zoom.transform, d3.zoomIdentity) }
   })
 
   let raf = 0

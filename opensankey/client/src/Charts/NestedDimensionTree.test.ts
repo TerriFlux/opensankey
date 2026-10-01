@@ -4,7 +4,8 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import {
-  buildNestedDimensionTree, memberPathSectorId, memberSectorId, parseMemberSectorId, parseMemberSectorPath
+  DETACHED_ENTRY, buildNestedDimensionTree, isDetachedOpening, memberPathSectorId, memberSectorId, parseMemberSectorId,
+  parseMemberSectorPath
 } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
@@ -106,5 +107,27 @@ describe('os#1511 — dimensions emboitees', () => {
     expect(racine.value).toBe(42)
     expect(ble.palette?.index).toBe(0)
     expect(ble.children[0].palette).toEqual({ index: 1, branch_id: 'fr', depth: 0 })
+  })
+
+  // 30/09/2026 — COORDONNEES LIEES AU DIAGRAMME : ses coupes font foi.
+  const lie = (m: ReturnType<typeof monter>) => buildNestedDimensionTree(
+    { kind: 'link', link: m.lien }, [m.filiere, m.pays], { data_tags: null }, { expanded: new Set(), linked: true, max_depth: 8 }
+  )?.roots[0] as Type_SunburstNode
+
+  test('liee, un membre par dimension dans le diagramme : un seul secteur, ce membre', () => {
+    const m = monter()
+    expect(lie(m).children.map(c => [c.label, c.value])).toEqual([['Produits', 42]])
+  })
+
+  test('liee, le diagramme montre deux pays : la couronne les decoupe', () => {
+    const m = monter()
+    m.pays.selectMembers([m.fr.id, m.de.id])
+    expect(lie(m).children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
+  })
+
+  test('une figure n est detachee que si elle le dit', () => {
+    expect(isDetachedOpening([])).toBe(false)
+    expect(isDetachedOpening([DETACHED_ENTRY])).toBe(true)
+    expect(isDetachedOpening([P('produits')])).toBe(false)
   })
 })

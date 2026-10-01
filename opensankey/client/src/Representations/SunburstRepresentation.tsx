@@ -24,7 +24,7 @@
 
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_NodeElement } from '../Elements/Node'
-import { figureUnitOf } from './figureUnit'
+import { figureUnitFactorOf, figureUnitOf } from './figureUnit'
 import { figureTextsOf } from '../Charts/figureChartStyle'
 import {
   figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
@@ -66,7 +66,8 @@ export const SUNBURST_ZOOM: Type_RepresentationZoom = {
   min: 0.5,
   max: 8,
   neutral: 1,
-  isAvailable: (ctx) => handleOf(ctx) !== null
+  isAvailable: (ctx) => handleOf(ctx) !== null,
+  fit: (ctx) => handleOf(ctx)?.fit?.()
 }
 const handleOf = (ctx: Type_RepresentationContext) =>
   figureZoomHandle(ctx.window_id, ctx.app_data.menu_configuration?.main_zone_active_pane_key)
@@ -290,6 +291,7 @@ export const drawSunburstRepresentation = (
     // (`resolveValueUnit`) : la couronne écrit la même que les étiquettes du dessin, ou aucune
     // quand le diagramme n'en montre pas — une seule unité, une seule décision.
     unit: figureUnitOf(sankey),
+    unit_factor: figureUnitFactorOf(sankey),
     empty_label: t('sunburst.empty') as string,
     others_label: t('sunburst.others') as string,
     scope_label: (count: number) => t('sunburst.scope', { count }) as string,
