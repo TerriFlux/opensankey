@@ -570,7 +570,11 @@ export class Class_ApplicationData {
    * l'hôte, elle, ne bouge pas : les composants d'interface s'y abonnent une fois pour toutes.
    */
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
-    this.workspace.toast = toast
+    // 01/10/2026 — UN DOCUMENT SANS TOAST N'EFFACE PAS CELUI DE L'ESPACE DE TRAVAIL. L'espace est
+    // partagé : un document secondaire (le document de parts d'une figure, une fenêtre Sankey) se
+    // crée sans toast, et l'affectation nue remettait à `null` celui de toute l'application — le
+    // chargement suivant plantait sur `_toast!.promise` (« this._toast is null »), rien ne s'affichait.
+    if (toast !== null) this.workspace.toast = toast
     this._menu_configuration = new Class_MenuConfig(this.workspace.menu_configuration)
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration
