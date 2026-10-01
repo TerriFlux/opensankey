@@ -10,6 +10,13 @@ function isLinkElement(o: unknown): o is Class_LinkElement {
   return o !== null && typeof o === 'object' && 'source' in (o as object) && 'target' in (o as object)
 }
 
+// SA#578 — une incertitude calculée est un nombre, ou le mot « infini » : JSON
+// n'a pas d'infini.
+function getUncertaintyOrNullFromJSON(json_object: Type_JSON, key: string): number | string | null {
+  const value = json_object[key] as unknown
+  return (typeof value === 'number' || typeof value === 'string') ? value : null
+}
+
 // Parent type for value tree and leaf: either a tree node, a link, or a node (for stock values)
 export type ValueParentElement = Class_LinkElement | Class_NodeElement
 
@@ -1304,6 +1311,15 @@ export class Class_LinkValue extends Class_ElementValue {
   // Volontairement absent de `copyFrom` : un flux dupliqué est un autre flux,
   // que le solveur n'a jamais vu — il ne doit hériter d'aucune explication.
   private _determination: number | null = null
+  // SA#578 — incertitude de la valeur calculée, posée par le calcul du bilan :
+  // relative en % (comme data_uncertainty) et absolue, à 2σ, ou « infini » pour
+  // une valeur que rien ne borne. `_result_uncertainty_bound` vaut « reached »
+  // ou « near » quand la valeur touche une borne ou en est proche. Réécrites
+  // telles quelles — le front ne les calcule pas — et, comme l'explication,
+  // absentes de `copyFrom`.
+  private _result_uncertainty: number | string | null = null
+  private _result_uncertainty_abs: number | string | null = null
+  private _result_uncertainty_bound: string | null = null
 
   public get ratio_unit_tag() { return this._ratio_unit_tag }
   public set ratio_unit_tag(_) { this._ratio_unit_tag = _ }
@@ -1311,6 +1327,11 @@ export class Class_LinkValue extends Class_ElementValue {
   // #426 — voir _determination.
   public get determination() { return this._determination }
   public set determination(_: number | null) { this._determination = _ }
+
+  // SA#578 — voir _result_uncertainty.
+  public get result_uncertainty() { return this._result_uncertainty }
+  public get result_uncertainty_abs() { return this._result_uncertainty_abs }
+  public get result_uncertainty_bound() { return this._result_uncertainty_bound }
 
   public get data_source() { return this._data_source }
   public set data_source(_: string | null) { this._data_source = _ }
@@ -1496,6 +1517,12 @@ export class Class_LinkValue extends Class_ElementValue {
     // #426 — l'explication propre à cette cellule. Réécrite telle quelle : le
     // front ne la fabrique pas, il n'a pas la matrice de contraintes.
     if (this._determination !== null) json_object['determination'] = this._determination
+    // SA#578 — incertitude calculée, même régime que l'explication.
+    if (this._result_uncertainty !== null) json_object['result_uncertainty'] = this._result_uncertainty
+    if (this._result_uncertainty_abs !== null) json_object['result_uncertainty_abs'] = this._result_uncertainty_abs
+    if (this._result_uncertainty_bound !== null) {
+      json_object['result_uncertainty_bound'] = this._result_uncertainty_bound
+    }
     // SA#487 — « min » / « max » demandé sur cette cellule, et son rang.
     if (this.value_objective !== null) json_object['data_value_objective'] = this.value_objective
     if (this.value_objective_rank !== null) {
@@ -1538,6 +1565,10 @@ export class Class_LinkValue extends Class_ElementValue {
     // #426 — explication propre à la cellule ; absente d'un fichier antérieur
     // ou d'une cellule qui répond comme son flux (cf. Class_LinkElement).
     this._determination = getNumberOrNullFromJSON(json_object, 'determination')
+    // SA#578 — absente d'un fichier antérieur ou d'une valeur non calculée.
+    this._result_uncertainty = getUncertaintyOrNullFromJSON(json_object, 'result_uncertainty')
+    this._result_uncertainty_abs = getUncertaintyOrNullFromJSON(json_object, 'result_uncertainty_abs')
+    this._result_uncertainty_bound = getStringOrNullFromJSON(json_object, 'result_uncertainty_bound')
     // SA#487 — absent des fichiers antérieurs : la cellule n'exprime alors
     // aucune intention, et rien ne change.
     this.value_objective = getStringOrNullFromJSON(json_object, 'data_value_objective')
