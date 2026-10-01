@@ -29,6 +29,13 @@ export const OTHERS_MIN_SHARE_PCT = 0.5
 /** Nombre maximal de parts montrées, « Autres » compris. */
 export const OTHERS_MAX_PARTS = 20
 
+/**
+ * os#1511 — dimension en bandes : un membre replié AU TOTAL (sur tous les flux visibles) reste en
+ * propre sur un flux où il pèse au moins ce pourcentage du flux (règle arrêtée avec Julien le
+ * 01/10 : « une bande peut être grosse sur un flux et petite sur tous les autres »).
+ */
+export const OTHERS_EXCEPTION_SHARE_PCT = 5
+
 export type Type_OthersOptions = { min_share_pct?: number, max_parts?: number }
 
 /**
