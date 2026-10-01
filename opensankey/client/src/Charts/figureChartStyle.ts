@@ -74,6 +74,13 @@ export interface Type_FigureChartStyle {
    * pas. C'est ce qui la distingue de `parts_group_under`, qui la fait disparaître dans « Autres ».
    */
   labels_min_share: number
+  /**
+   * 01/10/2026 — UNE PART TROP PETITE POUR SON ÉTIQUETTE LA SORT EN DÉTACHÉ, reliée par un trait,
+   * au lieu de la taire (Julien : « pour les parties trop petites qui ne peuvent pas afficher de
+   * label, l'afficher en détaché »). Trop petite = sous le seuil `labels_min_share`, ou dont le
+   * texte ne tient pas dans la corde du secteur.
+   */
+  labels_callout_small: boolean
   /** Parts au plus ; 0 = sans limite. */
   parts_max: number
   /**
@@ -150,8 +157,10 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // (deux jus « Product » sont du même orange : quatre lignes, deux teintes). Une figure qui n'a
   // jamais réglé `legend_visible` la perd donc — c'est l'exception assumée à « aucune figure
   // enregistrée ne change d'aspect » ; on la rallume dans l'inspecteur.
-  // 01/10/2026 — VISIBLE, À GAUCHE (cf. plus bas) : c'est elle qui nomme les parts.
-  legend_visible: true,
+  // 01/10/2026 — PAS DE LÉGENDE, en fin de compte (Julien : « la meilleure option par défaut pour
+  // la couronne, c'est nom + valeur + %, pas de légende ») : les secteurs se nomment eux-mêmes, et
+  // ceux qui sont trop petits sortent leur étiquette (`labels_callout_small`).
+  legend_visible: false,
   legend_parts: 'all',
   // 24/09/2026 — DESSOUS, ET C'EST UN CHANGEMENT DE DÉFAUT ASSUMÉ (demande de Julien : « la
   // position par défaut devrait être en dessous »). À côté, la légende prend une colonne sur la
@@ -179,6 +188,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_group_under: 0.5,
   // La valeur que le tracé appliquait en dur : une couronne enregistrée ne change pas d'un pixel.
   labels_min_share: 3,
+  labels_callout_small: true,
   parts_max: 20,
   levels_display: 'in_place',
   centre_content: 'value',
@@ -189,9 +199,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // enregistrée se couvrirait de noms ». Julien tranche l'inverse : une couronne muette ne dit
   // rien de ce qu'elle montre, et c'est le premier réglage que tout le monde rallume.
   //
-  // 01/10/2026 — ÉTEINT À NOUVEAU, mais pour une autre raison : la légende, visible d'office,
-  // nomme déjà chaque part (cf. `legend_position`). Le secteur écrit ses chiffres.
-  name_label_is_visible: false,
+  // 01/10/2026 — ALLUMÉ : nom + valeur + % dans chaque secteur, sans légende (cf. plus haut).
+  name_label_is_visible: true,
   name_label_font_size: 11,
   // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
   // une seule ligne, aucun separateur, et rien ne se masque sur la longueur.
@@ -240,10 +249,11 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // Les barres gardent l'ordre de l'analyse (un axe « année » reste chronologique) ; les
   // catégories d'un empilement, elles, restent par total décroissant sous ce même défaut.
   parts_order: 'model',
-  // Les nouveaux défauts de la couronne (légende à gauche, nom éteint) ne la concernent qu'elle.
+  // Les défauts propres à la couronne ne la concernent qu'elle.
   legend_visible: false,
   legend_position: 'bottom',
   name_label_is_visible: true,
+  labels_callout_small: false,
   legend_width: 200,
   parts_group_under: 0,
   parts_max: 20,
