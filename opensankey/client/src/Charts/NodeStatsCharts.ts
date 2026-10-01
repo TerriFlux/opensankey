@@ -1084,6 +1084,10 @@ export const drawDonutChart = (
   // rendue à l'appelant (`on_label_move`), qui la retient par figure (`label_positions`).
   //
   // Elles vivent dans `g`, comme les arcs : ce qui les déplace déplace le disque avec.
+  // 01/10/2026 — LE CADRE DE CE QUI EST DESSINÉ, CALCULÉ (et non mesuré : `getBBox` rend zéro ou
+  // échoue quand la figure se dessine avant d'être montée, et la coupure revenait — Julien, capture
+  // à l'appui). Le disque, plus chaque étiquette sortie : sa position, son ancrage, sa largeur.
+  let drawn_box: { x0: number, x1: number, y0: number, y1: number } | null = null
   if (callouts.length > 0) {
     const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
     const midOf = (d: d3.PieArcDatum<Type_StatSlice>) => (d.startAngle + d.endAngle) / 2
@@ -1156,6 +1160,21 @@ export const drawDonutChart = (
         .text(line => line.text)
     })
     if (st.interaction_tooltip) items.append('title').text(slice_title)
+    const box = { x0: -radius, x1: radius, y0: -radius, y1: radius }
+    callouts.forEach(d => {
+      const p = positionOf(d)
+      const s = styleOf(d)
+      const lines = sector_lines(d)
+      const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
+      const h = lines.length * s.name_label_font_size * 1.15
+      const anchor = anchorOf(p)
+      const x0 = anchor === 'start' ? p.x : anchor === 'end' ? p.x - w : p.x - w / 2
+      box.x0 = Math.min(box.x0, x0)
+      box.x1 = Math.max(box.x1, x0 + w)
+      box.y0 = Math.min(box.y0, p.y - h / 2)
+      box.y1 = Math.max(box.y1, p.y + h / 2)
+    })
+    drawn_box = box
     // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
     items.call(d3.drag<SVGGElement, d3.PieArcDatum<Type_StatSlice>>()
       .on('start', (event) => { event.sourceEvent?.stopPropagation() })
@@ -1275,17 +1294,16 @@ export const drawDonutChart = (
   // Julien, capture à l'appui : « avec les labels détachés, la couronne n'est pas cadrée ». Les
   // étiquettes sorties débordaient du carré du disque. La figure prend donc pour cadre ce qu'elle
   // dessine VRAIMENT — disque et étiquettes — et l'étale sur toute la place de la fenêtre.
-  const g_node = g.node() as SVGGElement | null
-  if (callouts.length > 0 && g_node && typeof g_node.getBBox === 'function') {
-    try {
-      const box = g_node.getBBox()
-      const pad = 6
-      const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
-      const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
-      svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
-        .attr('viewBox', `${box.x + side / 2 - pad} ${box.y + side / 2 - pad} ${box.width + 2 * pad} ${box.height + 2 * pad}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-    } catch { /* jsdom n'a pas de mise en page : le cadre d'avant reste */ }
+  if (drawn_box !== null) {
+    // Avec une légende, la place qu'elle prend est déjà retirée : la figure se cadre dans le reste.
+    const pad = 8
+    const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
+    const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
+    const { x0, x1, y0, y1 } = drawn_box
+    svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
+      .attr('viewBox', `${x0 + side / 2 - pad} ${y0 + side / 2 - pad} ${x1 - x0 + 2 * pad} ${y1 - y0 + 2 * pad}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('overflow', 'visible')
   }
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
   // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
