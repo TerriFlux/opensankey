@@ -285,7 +285,26 @@ export const attributeAppliesToElements = (
 ): boolean => {
   const scope = attributeScopeOf(attr_key)
   if (scope === undefined || elements.length === 0) return true
-  return elements.some(el => scopeSpeaksTo(scope, natureOf(el), figureNatureOf(el)))
+  return elements.some(el => {
+    const nature = natureOf(el)
+    // os#1518 — UN STYLE D'APPLICATION N'EST JAMAIS LE STYLE D'UNE PART. Sans nature, il recevait
+    // tout, y compris les réglages réservés aux parts : en portée Styles, l'onglet Valeur d'un
+    // style de flux offrait le sélecteur d'unité des figures (« Unité personnalisée » + champ
+    // texte) au lieu de celui du registre. Il sert nœuds, flux et zones : il reçoit ce que l'une
+    // d'elles reçoit. Les styles de part, eux, ont déjà leur nature (cf. `natureOf`).
+    if (nature === null && isApplicationStyle(el)) {
+      return NON_PART_NATURES.some(n => scopeSpeaksTo(scope, n))
+    }
+    return scopeSpeaksTo(scope, nature, figureNatureOf(el))
+  })
+}
+
+const NON_PART_NATURES: readonly Type_ElementNature[] = ['node', 'link', 'container']
+
+/** Un `Class_ElementStyle`, lu structurellement (cf. `natureOf`) : il tient ses références. */
+const isApplicationStyle = (el: unknown): boolean => {
+  const rec = asRecord(el)
+  return rec !== null && '_references' in rec && '_default_style' in rec
 }
 
 /**
