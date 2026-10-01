@@ -125,9 +125,9 @@ describe('os#1511 — dimensions emboitees', () => {
     expect(lie(m).children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
   })
 
-  test('une figure est detachee si elle le dit, ou si elle porte deja une coupe propre', () => {
+  test('une figure n est detachee que si elle le dit', () => {
     expect(isDetachedOpening([])).toBe(false)
     expect(isDetachedOpening([DETACHED_ENTRY])).toBe(true)
-    expect(isDetachedOpening([P('produits')])).toBe(true)
+    expect(isDetachedOpening([P('produits')])).toBe(false)
   })
 })

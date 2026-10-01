@@ -314,9 +314,13 @@ export interface Type_NestedDimensionOptions extends Type_DataDimensionOptions {
 //
 // Liée, la figure n'a plus de coupe propre : elle lit celle du diagramme (la barre du haut, le
 // panneau du diagramme), et son clic l'écrit. Détachée, elle a la sienne (`hierarchy_expanded`),
-// pour comparer deux coupes côte à côte. Une figure est détachée si elle le dit (`detache`), ou si
-// elle porte déjà une coupe propre — les couronnes enregistrées avant ce mode restent comme elles
-// étaient.
+// pour comparer deux coupes côte à côte. Une figure est détachée si elle le dit (`detache`), et
+// seulement alors.
+//
+// 01/10/2026 — PLUS DE DÉTACHEMENT IMPLICITE. La première règle détachait aussi toute figure qui
+// portait déjà une coupe propre, pour respecter les couronnes enregistrées avant ce mode ; or chaque
+// clic d'avant en avait écrit une, et ces couronnes ignoraient la barre du haut (Julien : « la barre
+// du haut ne marche toujours pas pour les couronnes »). Liée, une figure ignore l'ancienne coupe.
 
 /** L'entrée qui détache une figure du diagramme. */
 export const DETACHED_ENTRY = 'detache'
@@ -324,7 +328,7 @@ export const DETACHED_ENTRY = 'detache'
 /** La figure a-t-elle ses propres coordonnées ? Sinon, elle suit le diagramme. */
 export const isDetachedOpening = (expanded: Iterable<string>): boolean => {
   for (const entry of expanded) {
-    if (entry === DETACHED_ENTRY || entry.startsWith(MEMBER_SECTOR_PREFIX)) return true
+    if (entry === DETACHED_ENTRY) return true
   }
   return false
 }
