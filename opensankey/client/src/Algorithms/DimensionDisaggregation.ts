@@ -315,8 +315,23 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // UN DIAGRAMME PAR MEMBRE : les axes d'une même dimension se rangent ENSEMBLE, en bandes. Ce
   // placement a sa propre règle (l'écart constant entre bandes) et ne lit pas le mode d'écart des
   // enfants, qui décrit le créneau d'UN nœud — cf. `rangerEnBandes`.
+  // LE NŒUD DE RÉFÉRENCE (Julien, 01/10 : « la faire à partir d'un nœud de référence et tout placer
+  // autour de lui »). S'il ne porte pas la dimension — « Produits agricoles » entre les imports et
+  // les exports du SOCLE —, tous les nœuds engendrés qu'il atteint se posent autour de lui, chacun
+  // en face de sa part de sa pile : les flux restent droits et ne se chevauchent pas. S'il la porte,
+  // ce sont les bandes qui se rangent autour de lui (cf. `rangerEnBandes`).
+  const places = new Set<Class_NodeElement>()
+  const references = referencesDuTour(sankey, par_axe)
+  references.forEach(reference => {
+    if (!par_axe.has(reference.id)) placerAutour(reference, pentes, places)
+  })
   const en_bandes = axesEnBandes(sankey, par_axe)
-  en_bandes.forEach(axe_ids => rangerEnBandes(sankey, axe_ids, par_axe, pentes))
+  en_bandes.forEach(axe_ids => {
+    const dimension = sankey.nodes_dict[axe_ids[0]]?.driving_dimension
+    const reference = dimension === undefined ? undefined : references.get(dimension)
+    const axe_reference = reference !== undefined && par_axe.has(reference.id) ? reference.id : undefined
+    rangerEnBandes(sankey, axe_ids, par_axe, pentes, places, axe_reference, creneaux)
+  })
   const ranges = new Set([...en_bandes].flat())
   if (sankey.drawing_area.effective_gap_mode !== 'keep') {
     par_axe.forEach((membres, axe_id) => {
@@ -324,7 +339,8 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
       const axe = sankey.nodes_dict[axe_id]
       const creneau = creneaux.get(axe_id)
       if (axe === undefined || creneau === undefined) return
-      const noeuds = membres.map(({ noeud }) => noeud)
+      const noeuds = membres.map(({ noeud }) => noeud).filter(noeud => !places.has(noeud))
+      if (noeuds.length === 0) return
       axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(noeuds, creneau.haut, creneau.hauteur)
       centrerSurAxe(noeuds, creneau)
     })
@@ -419,9 +435,13 @@ function rangerEnBandes(
   sankey: Class_Sankey,
   axe_ids: string[],
   par_axe: Map<string, Type_MembreRepresente[]>,
-  pentes: Map<string, number>
+  pentes: Map<string, number>,
+  places: Set<Class_NodeElement> = new Set(),
+  axe_reference?: string,
+  creneaux?: Map<string, { haut: number, hauteur: number, centre: number | undefined }>
 ): void {
   const ecart = sankey.drawing_area.disaggregation_gap_value
+  const ranges: Class_NodeElement[] = []
   // Les membres dans l'ordre choisi — le même pour tous les axes de la dimension.
   const ordre: Class_DataTag[] = []
   axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ membre }) => {
@@ -436,7 +456,9 @@ function rangerEnBandes(
     if (axe !== undefined) haut_axe.set(id, axe.position_y)
   })
   if (haut_axe.size === 0) return
+  // Le nœud de référence ouvre la marche : c'est de lui que part la forme de chaque bande.
   const de_gauche_a_droite = [...haut_axe.keys()].sort((a, b) =>
+    (Number(b === axe_reference) - Number(a === axe_reference)) ||
     (sankey.nodes_dict[a].position_u - sankey.nodes_dict[b].position_u) ||
     (sankey.nodes_dict[a].position_x - sankey.nodes_dict[b].position_x))
 
@@ -446,7 +468,7 @@ function rangerEnBandes(
     const axe_de = new Map<Class_NodeElement, string>()
     de_gauche_a_droite.forEach(id => {
       const noeud = noeudDe(id, membre)
-      if (noeud !== undefined) axe_de.set(noeud, id)
+      if (noeud !== undefined && !places.has(noeud)) axe_de.set(noeud, id)
     })
     if (axe_de.size === 0) return
     const y = new Map<Class_NodeElement, number>()
@@ -473,9 +495,146 @@ function rangerEnBandes(
     y.forEach((haut, noeud) => {
       noeud.position_y = haut + decalage
       noeud.captureCenterFromCorner()
+      ranges.push(noeud)
     })
     bas_precedent = Math.max(...[...y.keys()].map(n => n.position_y + n.getShapeHeightToUse()))
   })
+
+  // ── AUTOUR DE LA RÉFÉRENCE : les bandes se centrent sur elle, au-dessus et en dessous, au lieu
+  //    de partir toutes vers le bas depuis la première.
+  if (axe_reference === undefined || ranges.length === 0) return
+  const creneau = creneaux?.get(axe_reference)
+  const centre = creneau?.centre ?? (creneau !== undefined ? creneau.haut + creneau.hauteur / 2 : undefined)
+  if (centre === undefined) return
+  const haut = Math.min(...ranges.map(n => n.position_y))
+  const bas = Math.max(...ranges.map(n => n.position_y + n.getShapeHeightToUse()))
+  const decalage = centre - (haut + bas) / 2
+  if (Math.abs(decalage) < 0.5) return
+  ranges.forEach(n => {
+    n.position_y += decalage
+    n.captureCenterFromCorner()
+  })
+}
+
+/**
+ * Le nœud de référence de chaque dimension découpée à ce tour.
+ *
+ * Celui que l'auteur a choisi (`reference_node_id`) s'il existe encore. À défaut, automatique : le
+ * nœud QUI NE PORTE PAS la dimension et qui est relié à TOUS ses porteurs — « Produits agricoles »,
+ * entre « Monde - Import » et « Monde - Export » —, le plus relié s'il y en a plusieurs, et seulement
+ * à partir de deux porteurs. Aucun : pas
+ * de référence, la mise en page d'avant (bandes depuis le porteur le plus à gauche, ou créneau).
+ */
+function referencesDuTour(
+  sankey: Class_Sankey,
+  par_axe: Map<string, Type_MembreRepresente[]>
+): Map<Class_DataTagGroup, Class_NodeElement> {
+  const out = new Map<Class_DataTagGroup, Class_NodeElement>()
+  const dimensions = new Set<Class_DataTagGroup>()
+  par_axe.forEach((_m, axe_id) => {
+    const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
+    if (dimension !== undefined) dimensions.add(dimension)
+  })
+  dimensions.forEach(dimension => {
+    const choisi = dimension.reference_node_id === undefined
+      ? undefined : sankey.nodes_dict[dimension.reference_node_id]
+    if (choisi !== undefined && !isGeneratedMemberNode(choisi)) {
+      out.set(dimension, choisi)
+      return
+    }
+    const porteurs = sankey.nodes_list.filter(node =>
+      !isGeneratedMemberNode(node) && node.driving_dimension === dimension)
+    // Un seul porteur : tout voisin serait « relié à tous » ; on garde le créneau d'avant.
+    if (porteurs.length < 2) return
+    let meilleur: { noeud: Class_NodeElement, liens: number } | undefined
+    sankey.nodes_list.forEach(noeud => {
+      if (isGeneratedMemberNode(noeud) || noeud.driving_dimension === dimension) return
+      const flux = [...noeud.input_links_list, ...noeud.output_links_list]
+        .filter(lien => !isGeneratedMemberLink(lien))
+      const voisins = new Set(flux.map(lien => lien.source === noeud ? lien.target : lien.source))
+      if (!porteurs.every(porteur => voisins.has(porteur))) return
+      const liens = flux.filter(lien => porteurs.includes((lien.source === noeud ? lien.target : lien.source) as Class_NodeElement)).length
+      if (meilleur === undefined || liens > meilleur.liens) meilleur = { noeud: noeud as Class_NodeElement, liens }
+    })
+    if (meilleur !== undefined) out.set(dimension, meilleur.noeud)
+  })
+  return out
+}
+
+/**
+ * Pose autour de `reference` — qui ne bouge pas — tous les nœuds engendrés qu'on atteint depuis
+ * elle le long des flux engendrés : chacun se met à la hauteur qui rend son flux DROIT. Sur le
+ * SOCLE, chaque pays d'import se pose en face de sa part de
+ * la pile d'entrée de « Produits agricoles », chaque pays d'export en face de sa part de la pile
+ * de sortie : les nœuds d'un même côté se touchent sans se chevaucher, puisque chacun a la hauteur
+ * de sa part. Un nœud dont l'accroche ne se calcule pas garde sa position.
+ */
+function placerAutour(
+  reference: Class_NodeElement,
+  _pentes: Map<string, number>,
+  places: Set<Class_NodeElement>
+): void {
+  const y = new Map<Class_NodeElement, number>([[reference, reference.position_y]])
+  const file: Class_NodeElement[] = [reference]
+  while (file.length > 0) {
+    const a = file.shift() as Class_NodeElement
+    const flux = [...a.input_links_list, ...a.output_links_list] as Class_LinkElement[]
+    flux.forEach(lien => {
+      if (!isGeneratedMemberLink(lien) || !lien.is_visible) return
+      const b = (lien.source === a ? lien.target : lien.source) as Class_NodeElement
+      if (!isGeneratedMemberNode(b) || y.has(b) || places.has(b)) return
+      // DROIT, quelle que soit la pente d'origine : en face de sa part de la pile du nœud déjà
+      // posé, c'est ce qui range les membres bord à bord, sans chevauchement.
+      const y_b = hauteurPourFlux(a, b, lien, DROIT, y.get(a) as number) ?? b.position_y
+      y.set(b, y_b)
+      b.position_y = y_b
+      b.captureCenterFromCorner()
+      places.add(b)
+      file.push(b)
+    })
+  }
+  // UN NŒUD PLUS HAUT QUE SA PART DE PILE — un petit membre relevé à la hauteur minimale d'un nœud
+  // — déborderait sur son voisin. Colonne par colonne, on ne pousse vers le bas que ce qui
+  // chevauche : tous les autres flux restent droits.
+  const colonnes = new Map<number, Class_NodeElement[]>()
+  y.forEach((_y, noeud) => {
+    if (noeud === reference) return
+    colonnes.set(noeud.position_x, [...(colonnes.get(noeud.position_x) ?? []), noeud])
+  })
+  colonnes.forEach(noeuds => {
+    noeuds.sort((p, q) => p.position_y - q.position_y)
+    for (let i = 1; i < noeuds.length; i++) {
+      const bas = noeuds[i - 1].position_y + noeuds[i - 1].getShapeHeightToUse()
+      if (noeuds[i].position_y < bas) {
+        noeuds[i].position_y = bas
+        noeuds[i].captureCenterFromCorner()
+      }
+    }
+  })
+}
+
+/** Pente nulle pour tout flux : `hauteurPourFlux` rend alors la hauteur qui met le flux à plat. */
+const DROIT = { get: (): number | undefined => 0 }
+
+/**
+ * Hauteur de `b` pour que `lien` garde la pente de son flux d'origine, `a` étant posé à `y_a`.
+ * `undefined` si la pente n'a pas été relevée ou si une accroche ne se calcule pas.
+ */
+function hauteurPourFlux(
+  a: Class_NodeElement,
+  b: Class_NodeElement,
+  lien: Class_LinkElement,
+  pentes: { get(id: string): number | undefined },
+  y_a: number
+): number | undefined {
+  const pente = pentes.get(lien.id.split(MARQUE)[0])
+  const acc_a = a.linkAttachOffsetY(lien)
+  const acc_b = b.linkAttachOffsetY(lien)
+  if (pente === undefined || acc_a === undefined || acc_b === undefined) return undefined
+  // pente = accroche cible - accroche source (0 : droit, positif : descend vers la cible)
+  return lien.source === a
+    ? y_a + acc_a + pente - acc_b
+    : y_a + acc_a - pente - acc_b
 }
 
 /**
@@ -495,20 +654,15 @@ function hauteurAlignee(
 ): number {
   const repli = y_a + (haut_axe.get(axe_de.get(b) as string) as number) -
     (haut_axe.get(axe_de.get(a) as string) as number)
-  const pente = pentes.get(lien.id.split(MARQUE)[0])
-  const acc_a = a.linkAttachOffsetY(lien)
-  const acc_b = b.linkAttachOffsetY(lien)
-  if (pente === undefined || acc_a === undefined || acc_b === undefined) return repli
-  // pente = accroche cible - accroche source (0 : droit, positif : descend vers la cible)
-  return lien.source === a
-    ? y_a + acc_a + pente - acc_b
-    : y_a + acc_a - pente - acc_b
+  return hauteurPourFlux(a, b, lien, pentes, y_a) ?? repli
 }
 
 /**
- * La pente de chaque flux RELIANT DEUX AXES de ce tour : accroche cible moins accroche source,
- * relevée sur les axes tels qu'ils sont avant d'être découpés. Un flux dont l'une des accroches
- * ne se calcule pas (cf. `linkAttachOffsetY`) n'a pas d'entrée.
+ * La pente de chaque flux TOUCHANT UN AXE de ce tour : accroche cible moins accroche source,
+ * relevée sur les nœuds tels qu'ils sont avant d'être découpés. Les flux entre un axe et un nœud
+ * qui ne porte pas la dimension en font partie : c'est eux que suit le placement autour d'un nœud
+ * de référence. Un flux dont l'une des accroches ne se calcule pas (cf. `linkAttachOffsetY`) n'a
+ * pas d'entrée.
  */
 function pentesEntreAxes(
   sankey: Class_Sankey,
@@ -517,7 +671,7 @@ function pentesEntreAxes(
   const pentes = new Map<string, number>()
   sankey.links_list.forEach(lien => {
     if (isGeneratedMemberLink(lien) || !lien.is_visible) return
-    if (!par_axe.has(lien.source.id) || !par_axe.has(lien.target.id)) return
+    if (!par_axe.has(lien.source.id) && !par_axe.has(lien.target.id)) return
     const source = lien.source as Class_NodeElement
     const cible = lien.target as Class_NodeElement
     const acc_s = source.linkAttachOffsetY(lien)

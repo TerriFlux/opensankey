@@ -1302,6 +1302,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // étape dans le créneau de chaque nœud. `undefined` = automatique : bandes dès que deux nœuds ou
   // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
   private _member_bands: boolean | undefined = undefined
+  // os#1511 — NŒUD DE RÉFÉRENCE de la mise en page désagrégée (Julien, 01/10 : « la faire à partir
+  // d'un nœud de référence et tout placer autour de lui »). Il ne bouge pas ; les nœuds engendrés
+  // se placent autour de lui le long des flux. `undefined` = automatique
+  // (cf. `DimensionDisaggregation.noeudDeReference`). Écrit seulement s'il est posé.
+  private _reference_node_id: string | undefined = undefined
 
   // os#1511 — ORDRE DES MEMBRES dessinés, EN BANDES COMME EN NŒUDS (cf.
   // `Algorithms/DimensionMemberOrder`). `undefined` = défaut (par valeur au premier niveau). Écrit
@@ -1354,6 +1359,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._position_mode = tagg_to_copy._position_mode
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
+    this._reference_node_id = tagg_to_copy._reference_node_id
     this._members_order = tagg_to_copy._members_order
   }
 
@@ -1378,6 +1384,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
+    if (this._reference_node_id !== undefined) json_object['reference_node'] = this._reference_node_id
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
     if (this._members_order !== undefined) json_object['members_order'] = this._members_order
   }
@@ -1430,6 +1437,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       Math.max(0, this._levels.length - 1)
     )
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
+    const reference = json_object['reference_node']
+    if (typeof reference === 'string' && reference !== '') this._reference_node_id = reference
     const ordre_lu = json_object['members_order']
     if (typeof ordre_lu === 'string' && (MEMBERS_ORDERS as string[]).includes(ordre_lu)) {
       this.members_order = ordre_lu as Type_MembersOrder
@@ -1441,6 +1450,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
   public get member_bands(): boolean | undefined { return this._member_bands }
   public set member_bands(value: boolean | undefined) { this._member_bands = value }
+
+  /** os#1511 — nœud de référence de la mise en page désagrégée : `undefined` = automatique. */
+  public get reference_node_id(): string | undefined { return this._reference_node_id }
+  public set reference_node_id(value: string | undefined) {
+    this._reference_node_id = (value === undefined || value === '') ? undefined : value
+  }
 
   /** os#1511 — ordre des membres dessinés, en bandes comme en nœuds (défaut : par valeur au premier niveau). */
   public get members_order(): Type_MembersOrder { return this._members_order ?? DEFAULT_MEMBERS_ORDER }
