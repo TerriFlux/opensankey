@@ -5,8 +5,9 @@ import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import {
-  buildDataDimensionTree, dataDimensionExpandedDownToLevel, memberSectorId, parseMemberSectorId
+  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, memberSectorId, parseMemberSectorId
 } from './DataDimensionHierarchy'
+import type { Type_DataDimensionOptions } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
 
 // jest 27 / jsdom n expose pas structuredClone (utilise par Link.copyFrom)
@@ -14,10 +15,9 @@ if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
 }
 
-// os#1511 — LA COURONNE SUR UNE DIMENSION DE DONNEES. Julien, 28/09 : « la couronne, notamment un
-// mode sunburst, represente exactement cet hypercube, mais dans le cas present ca s applique aux
-// flux. » Un secteur est un MEMBRE, sa valeur celle du sujet a cette coordonnee, et le sujet ne
-// bouge pas d un anneau a l autre — c est ce qui distingue cette descente des deux autres.
+// os#1511 — LA COURONNE SUR UNE DIMENSION DE DONNEES. Un secteur est un MEMBRE, sa valeur celle du
+// sujet a cette coordonnee, et le sujet ne bouge pas d un anneau a l autre — c est ce qui distingue
+// cette descente des deux autres. Ici, une seule dimension, coupe propre (figure detachee).
 
 type Montage = {
   lien: Class_LinkElement,
@@ -72,6 +72,26 @@ function poser(lien: Class_LinkElement, membre: Class_DataTag, nombre: number) {
   valeur.valueData = nombre
 }
 
+/** Tout ouvert jusqu aux feuilles. */
+const TOUT = ['produits', 'cereales']
+
+/**
+ * L arbre d une figure DETACHEE sur la seule dimension `groupe`. `ouverts` absent : coupe jamais
+ * ecrite (la figure decoupe sa premiere dimension d un cran).
+ */
+function arbre(
+  m: Montage, ouverts?: string[], options: Type_DataDimensionOptions = {}, sujet: 'lien' | 'noeud' = 'lien'
+) {
+  const coupe = dataCutOf(
+    m.lien.sankey, [m.groupe.id],
+    ouverts === undefined ? { linked: false } : { linked: false, opened: { [m.groupe.id]: ouverts } }
+  )
+  return buildNestedDimensionTree(
+    sujet === 'lien' ? { kind: 'link', link: m.lien } : { kind: 'node', node: m.cible },
+    coupe, { data_tags: null }, { max_depth: 8, ...options }
+  )
+}
+
 /** Le secteur d un membre dans un arbre, cherche par son identifiant prefixe. */
 function secteur(racine: Type_SunburstNode, groupe: Class_DataTagGroup, membre: Class_DataTag) {
   const cible = memberSectorId(groupe.id, membre.id)
@@ -108,7 +128,7 @@ describe('os#1511 — une dimension PLATE ne decompose rien', () => {
     const m = monter()
     m.groupe.levels = []
     m.groupe.tags_list.forEach(tag => { (tag as Class_DataTag).parent = undefined })
-    expect(buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)).toBeNull()
+    expect(arbre(m)).toBeNull()
   })
 
   test('deux millesimes ne font pas un tout', () => {
@@ -120,102 +140,80 @@ describe('os#1511 — une dimension PLATE ne decompose rien', () => {
     const lien = sankey.addNewLink(
       sankey.addNewNodeWithName('A'), sankey.addNewNodeWithName('B')
     )
-    expect(buildDataDimensionTree({ kind: 'link', link: lien }, annee)).toBeNull()
+    const coupe = dataCutOf(sankey, [annee.id], { linked: false })
+    expect(buildNestedDimensionTree({ kind: 'link', link: lien }, coupe, { data_tags: null })).toBeNull()
   })
 })
 
 describe('os#1511 — la forme de l arbre : le sujet au centre, les membres en anneaux', () => {
-  test('la racine est le SUJET, ses enfants sont les membres de premier niveau', () => {
+  test('la racine est le SUJET ; figure neuve, ses enfants sont ceux de la racine unique', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
-    expect(arbre).not.toBeNull()
-    expect(arbre?.roots).toHaveLength(1)
-    expect(arbre?.roots[0].id).toBe(m.lien.id)
-    // Une seule racine dans la dimension : Produits.
-    expect(arbre?.roots[0].children.map(c => c.id))
-      .toEqual([memberSectorId(m.groupe.id, m.produits.id)])
+    const resultat = arbre(m)
+    expect(resultat?.roots).toHaveLength(1)
+    expect(resultat?.roots[0].id).toBe(m.lien.id)
+    // La racine unique Produits ne fait pas d anneau : le premier anneau est son niveau 1.
+    expect(resultat?.roots[0].children.map(c => c.id))
+      .toEqual([memberSectorId(m.groupe.id, m.cereales.id), memberSectorId(m.groupe.id, m.lait.id)])
   })
 
-  test('un secteur PARENT vaut la somme de ses feuilles', () => {
+  test('un secteur PARENT ouvert vaut la somme de ses feuilles', () => {
     const m = monter()
-    const racine = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)?.roots[0]
-    expect(secteur(racine as Type_SunburstNode, m.groupe, m.cereales)?.value).toBe(42)
-    expect(secteur(racine as Type_SunburstNode, m.groupe, m.produits)?.value).toBe(49)
+    const resultat = arbre(m, TOUT)
+    expect(secteur(resultat?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)?.value).toBe(42)
+    expect(resultat?.roots[0].value).toBe(49)
   })
 
   test('une FEUILLE vaut ce qu elle porte, branche courte comprise', () => {
     const m = monter()
-    const racine = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)?.roots[0]
-    expect(secteur(racine as Type_SunburstNode, m.groupe, m.ble)?.value).toBe(30)
-    expect(secteur(racine as Type_SunburstNode, m.groupe, m.lait)?.value).toBe(7)
+    const racine = arbre(m, TOUT)?.roots[0] as Type_SunburstNode
+    expect(secteur(racine, m.groupe, m.ble)?.value).toBe(30)
+    expect(secteur(racine, m.groupe, m.lait)?.value).toBe(7)
+  })
+
+  test('un secteur FERME vaut ce que le modele porte a sa coordonnee', () => {
+    const m = monter()
+    const racine = arbre(m)?.roots[0] as Type_SunburstNode
+    expect(secteur(racine, m.groupe, m.cereales)?.value).toBe(42)
+    expect(secteur(racine, m.groupe, m.cereales)?.children).toEqual([])
   })
 
   test('le TOTAL de la couronne est celui de la dimension entiere', () => {
     const m = monter()
-    expect(buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)?.total).toBe(49)
+    expect(arbre(m)?.total).toBe(49)
   })
 
   test('un membre qui n apporte rien ne fait pas de secteur a zero', () => {
     const m = monter()
-    m.groupe.addTag('Vide', 'vide')
-    const racine = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)?.roots[0]
-    expect(secteur(racine as Type_SunburstNode, m.groupe, m.groupe.tags_dict['vide'] as Class_DataTag))
-      .toBeUndefined()
+    const vide = m.groupe.addTag('Vide', 'vide') as Class_DataTag
+    vide.parent = m.produits
+    expect(secteur(arbre(m, TOUT)?.roots[0] as Type_SunburstNode, m.groupe, vide)).toBeUndefined()
   })
 
   test('la couleur du secteur est celle du membre', () => {
     const m = monter()
     m.cereales.color = '#123456'
-    const racine = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)?.roots[0]
-    expect(secteur(racine as Type_SunburstNode, m.groupe, m.cereales)?.color).toBe('#123456')
+    expect(secteur(arbre(m)?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)?.color).toBe('#123456')
+  })
+
+  test('rien d ouvert, explicitement : un seul secteur, le tout', () => {
+    const m = monter()
+    const racine = arbre(m, [])?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => [c.label, c.value])).toEqual([['Produits', 49]])
   })
 })
 
 describe('os#1511 — les anneaux nomment les niveaux de la dimension', () => {
-  test('un anneau par niveau, le centre ne comptant pas', () => {
+  test('un anneau par niveau ouvert, le centre ne portant aucun niveau', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
-    // Centre (le flux), puis les trois niveaux nommes de la dimension.
-    expect(arbre?.rings.map(r => r.level_label)).toEqual(['produits', 'produits', 'filieres', 'produit'])
+    expect(arbre(m, TOUT)?.rings.map(r => r.level_label)).toEqual(['', 'filieres', 'produit'])
   })
 
   test('l anneau du niveau COURANT est celui que le diagramme montre a cote', () => {
     const m = monter()
     m.groupe.selectAllAtLevel(1)
-    const arbre = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
-    // rings[2] porte le niveau d index 1 : c est lui qui est en gras.
-    expect(arbre?.rings[2].is_selected_level).toBe(true)
-    expect(arbre?.rings[3].is_selected_level).toBe(false)
-  })
-})
-
-describe('os#1511 — descendre dans un membre (le foyer)', () => {
-  test('le foyer devient le centre, et ses enfants le premier anneau', () => {
-    const m = monter()
-    const arbre = buildDataDimensionTree(
-      { kind: 'link', link: m.lien }, m.groupe, undefined, { focus_id: 'cereales' }
-    )
-    expect(arbre?.roots[0].label).toBe('Cereales')
-    expect(arbre?.roots[0].children.map(c => c.label).sort()).toEqual(['Ble', 'Mais'])
-    // Le total est celui du foyer, pas celui de la dimension.
-    expect(arbre?.total).toBe(42)
-  })
-
-  test('les anneaux repartent de la profondeur du foyer', () => {
-    const m = monter()
-    const arbre = buildDataDimensionTree(
-      { kind: 'link', link: m.lien }, m.groupe, undefined, { focus_id: 'cereales' }
-    )
-    // Cereales est au niveau 1 : le centre le porte, et l anneau suivant porte le niveau 2.
-    expect(arbre?.rings.map(r => r.level_label)).toEqual(['filieres', 'produit'])
-  })
-
-  test('un foyer PERIME revient au sujet plutot que de vider la figure', () => {
-    const m = monter()
-    const arbre = buildDataDimensionTree(
-      { kind: 'link', link: m.lien }, m.groupe, undefined, { focus_id: 'disparu' }
-    )
-    expect(arbre?.total).toBe(49)
+    const resultat = arbre(m, TOUT)
+    expect(resultat?.rings[1].is_selected_level).toBe(true)
+    expect(resultat?.rings[2].is_selected_level).toBe(false)
   })
 })
 
@@ -224,19 +222,16 @@ describe('os#1511 — quand le parent ne vaut pas la somme de ses enfants', () =
     const m = monter()
     // Le fichier connait le total des cereales : 50, alors que ble + mais font 42.
     poser(m.lien, m.cereales, 50)
-    const arbre = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
-    expect(secteur(arbre?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)?.value).toBe(42)
-    expect(arbre?.mismatch_count).toBe(1)
+    const resultat = arbre(m, TOUT)
+    expect(secteur(resultat?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)?.value).toBe(42)
+    expect(resultat?.mismatch_count).toBe(1)
   })
 
   test('en regime DECLARE, le parent vaut son total et le reste devient un secteur', () => {
     const m = monter()
     poser(m.lien, m.cereales, 50)
-    const arbre = buildDataDimensionTree(
-      { kind: 'link', link: m.lien }, m.groupe, undefined,
-      { value_mode: 'declared', residual_label: 'Non reparti' }
-    )
-    const cereales = secteur(arbre?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)
+    const resultat = arbre(m, TOUT, { value_mode: 'declared', residual_label: 'Non reparti' })
+    const cereales = secteur(resultat?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)
     expect(cereales?.value).toBe(50)
     const reste = cereales?.children.find(c => c.is_residual === true)
     expect(reste?.label).toBe('Non reparti')
@@ -245,71 +240,64 @@ describe('os#1511 — quand le parent ne vaut pas la somme de ses enfants', () =
 
   test('sans ecart, le regime DECLARE ne fabrique aucun secteur de complement', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree(
-      { kind: 'link', link: m.lien }, m.groupe, undefined, { value_mode: 'declared' }
-    )
-    const cereales = secteur(arbre?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)
+    const resultat = arbre(m, TOUT, { value_mode: 'declared' })
+    const cereales = secteur(resultat?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)
     expect(cereales?.children.some(c => c.is_residual === true)).toBe(false)
-    expect(arbre?.mismatch_count).toBe(0)
+    expect(resultat?.mismatch_count).toBe(0)
   })
 })
 
 describe('os#1511 — la profondeur se regle, et la coupe est annoncee', () => {
   test('un seul anneau coupe sous le premier niveau', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree(
-      { kind: 'link', link: m.lien }, m.groupe, undefined, { max_depth: 1 }
-    )
-    expect(arbre?.roots[0].children[0].children).toHaveLength(0)
-    expect(arbre?.is_truncated).toBe(true)
+    const resultat = arbre(m, TOUT, { max_depth: 1 })
+    expect(resultat?.roots[0].children[0].children).toHaveLength(0)
+    expect(resultat?.is_truncated).toBe(true)
   })
 
   test('assez d anneaux pour tout montrer : rien n est coupe', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
-    expect(arbre?.is_truncated).toBe(false)
+    expect(arbre(m, TOUT)?.is_truncated).toBe(false)
   })
 })
 
 describe('os#1511 — un NOEUD se decompose aussi bien qu un flux', () => {
   test('la valeur d un secteur est celle du noeud a cette coordonnee', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree({ kind: 'node', node: m.cible }, m.groupe)
-    expect(arbre?.total).toBe(49)
-    expect(secteur(arbre?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)?.value).toBe(42)
+    const resultat = arbre(m, undefined, {}, 'noeud')
+    expect(resultat?.total).toBe(49)
+    expect(secteur(resultat?.roots[0] as Type_SunburstNode, m.groupe, m.cereales)?.value).toBe(42)
   })
 
   test('le centre porte le nom du noeud', () => {
     const m = monter()
-    const arbre = buildDataDimensionTree({ kind: 'node', node: m.cible }, m.groupe)
-    expect(arbre?.roots[0].label).toBe('Cible')
+    expect(arbre(m, undefined, {}, 'noeud')?.roots[0].label).toBe('Cible')
   })
 })
 
-// os#1511 — LE SELECTEUR DE NIVEAU ECRIT L ENSEMBLE DES SECTEURS OUVERTS, il ne s y superpose pas.
-// C est ce qui fait que le selecteur et le clic cooperent : apres « niveau 3 », shift+clic referme
-// une branche et le reste tient. Deux regles auraient rouvert ce que le clic venait de fermer.
+// os#1511 — LE SELECTEUR DE NIVEAU ECRIT LA COUPE, il ne s y superpose pas. C est ce qui fait que
+// le selecteur et le clic cooperent : apres « niveau 3 », shift+clic referme une branche et le
+// reste tient. Deux regles auraient rouvert ce que le clic venait de fermer.
 
 describe('os#1511 — le niveau d une dimension decoupee', () => {
-  test('le niveau 0 n ouvre rien : le premier anneau est deja la', () => {
+  test('le niveau 0 n ouvre rien', () => {
     const m = monter()
-    expect(dataDimensionExpandedDownToLevel(m.groupe, 0).size).toBe(0)
+    expect(dataDimensionOpenedDownToLevel(m.groupe, 0).size).toBe(0)
   })
 
   test('voir le niveau 1 demande d ouvrir les membres du niveau 0', () => {
     const m = monter()
-    expect([...dataDimensionExpandedDownToLevel(m.groupe, 1)])
-      .toEqual([memberSectorId(m.groupe.id, m.produits.id)])
+    expect([...dataDimensionOpenedDownToLevel(m.groupe, 1)]).toEqual([m.produits.id])
   })
 
   test('voir le niveau 2 ouvre aussi les membres du niveau 1', () => {
     const m = monter()
-    const ouverts = dataDimensionExpandedDownToLevel(m.groupe, 2)
-    expect(ouverts.has(memberSectorId(m.groupe.id, m.produits.id))).toBe(true)
-    expect(ouverts.has(memberSectorId(m.groupe.id, m.cereales.id))).toBe(true)
-    expect(ouverts.has(memberSectorId(m.groupe.id, m.lait.id))).toBe(true)
+    const ouverts = dataDimensionOpenedDownToLevel(m.groupe, 2)
+    expect(ouverts.has(m.produits.id)).toBe(true)
+    expect(ouverts.has(m.cereales.id)).toBe(true)
+    expect(ouverts.has(m.lait.id)).toBe(true)
     // Les feuilles ne s ouvrent pas : elles n ont rien dessous.
-    expect(ouverts.has(memberSectorId(m.groupe.id, m.ble.id))).toBe(false)
+    expect(ouverts.has(m.ble.id)).toBe(false)
   })
 })
 
@@ -317,7 +305,7 @@ describe('os#1511 — la couronne ne deplace pas la selection du diagramme', () 
   test('apres construction, le membre choisi dans le diagramme est le meme', () => {
     const m = monter()
     viser(m.groupe, m.ble)
-    buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
+    arbre(m, TOUT)
     expect(m.groupe.selected_tags_list.map(t => t.id)).toEqual(['ble'])
   })
 })

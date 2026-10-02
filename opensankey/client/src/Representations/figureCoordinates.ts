@@ -233,7 +233,7 @@ const decomposeSpecOf = (
   //
   // Ici on TRADUIT, on ne juge pas : la hiérarchie est une propriété du modèle, ce module ne lit
   // que le sac. Un sac qui demanderait à décomposer un groupe plat produit un descripteur que
-  // `buildDataDimensionTree` refuse (il rend `null`), donc une figure vide — jamais une couronne
+  // `buildNestedDimensionTree` refuse (il rend `null`), donc une figure vide — jamais une couronne
   // qui mentirait en additionnant des millésimes.
   case 'data_tagg':
     return { kind: 'data_dimension', data_tagg_id: id }
