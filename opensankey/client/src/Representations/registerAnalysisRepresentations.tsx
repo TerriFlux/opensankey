@@ -43,7 +43,7 @@ import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
   HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
-import { readFigureOpening, withDataOpening, withElementOpening } from './figureOpening'
+import { readFigureDataLayer, readFigureOpening, withDataOpening, withElementOpening } from './figureOpening'
 import { mountFigureTextZones } from './figureTextZones'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
@@ -65,7 +65,7 @@ import {
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
 import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfNode } from './figureUnit'
-import { figureNavigationOf } from '../Charts/FigureNavigation'
+import { figureNavigationOf, withDataLayer } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
   type Type_AnalysisDescriptor, effectiveDecompose, isDescriptorEmpty, isGroupedCross
@@ -523,7 +523,9 @@ const analysisOf = (
   if (!subject) return null
   const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
   if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return null
-  const nav = figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options)
+  // os#1511 — et la COUCHE de données d'une figure détachée qui en a choisi une (`readFigureDataLayer`).
+  // Elle voyage dans la navigation : parts, totaux, pourcentages et petits multiples la lisent tous.
+  const nav = withDataLayer(figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options), readFigureDataLayer(ctx.options))
   return { subject, descriptor, nav }
 }
 

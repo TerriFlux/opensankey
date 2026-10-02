@@ -28,7 +28,7 @@
 import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
 import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
-  COORDINATES_LINKED_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY
+  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY
 } from './analysisFigureAttributes'
 
 /** L'entrée par laquelle les fichiers d'avant détachaient une figure du diagramme. */
@@ -99,3 +99,32 @@ export const withElementOpening = (options: Type_Options, elements: Iterable<str
 /** Raccourci : seule la coupe des dimensions de données change. */
 export const withDataOpening = (options: Type_Options, data: Type_DataOpening): Type_Options =>
   withFigureOpening(options, { ...readFigureOpening(options), data })
+
+// ── os#1511 — LA COUCHE DE DONNÉES DE LA FIGURE ─────────────────────────────────────────────────
+//
+// Même règle que la coupe, et c'est pourquoi elle se lit ICI : LIÉE au diagramme, la figure lit sa
+// couche (la clé, si un fichier en porte une, est ignorée) ; DÉTACHÉE, elle lit la sienne, et
+// suit le diagramme tant qu'elle n'en a pas choisi. Une couronne enregistrée sans la clé s'ouvre
+// donc comme avant.
+
+export type Type_FigureDataLayer = 'collected' | 'reconciled'
+
+/** La couche écrite dans le sac, sans la règle liée/détachée ; `undefined` si absente ou malformée. */
+export const storedFigureDataLayer = (options: Type_Options | null | undefined): Type_FigureDataLayer | undefined => {
+  const raw = options?.[DATA_LAYER_KEY]
+  return raw === 'collected' || raw === 'reconciled' ? raw : undefined
+}
+
+/**
+ * LA COUCHE QUE LA FIGURE LIT, en la forme qu'attend la navigation (`Type_FigureNavigation.collected`) :
+ * `true` collectées, `false` réconciliées, `undefined` celle du diagramme.
+ */
+export const readFigureDataLayer = (options: Type_Options | null | undefined): boolean | undefined => {
+  if (readFigureOpening(options).data.linked) return undefined
+  const layer = storedFigureDataLayer(options)
+  return layer === undefined ? undefined : layer === 'collected'
+}
+
+/** Le sac qui porte la couche `layer` (`undefined` la retire : la figure suit alors le diagramme). */
+export const withFigureDataLayer = (options: Type_Options, layer: Type_FigureDataLayer | undefined): Type_Options =>
+  ({ ...options, [DATA_LAYER_KEY]: layer })
