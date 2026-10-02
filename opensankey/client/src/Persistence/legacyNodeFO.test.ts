@@ -1,17 +1,18 @@
 import { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_JSON } from '../types/Utils'
+import { legacyFOImageSrc } from './persistenceLegacyKeyMaps'
 
 /**
- * Étiquette riche (FO) de nœud d'un fichier legacy 0.8 : `has_FO` + `FO_content` à la racine du nœud.
+ * FO de nœud d'un fichier legacy 0.8 : `has_FO` + `FO_content` à la racine du nœud.
  *
- * La démo « Collecte-Transport-Traitement-Déchets » range l'icône de chaque nœud dans ce rich-text
- * (`<p><img src="data:…"></p>`). La table de renommage legacy ne reprenait ni l'une ni l'autre clé
- * depuis la refonte de la persistance : les nœuds se chargeaient sans icône.
+ * L'ancien format dessinait ce rich-text DANS la boîte du nœud, l'étiquette de nom restant à part.
+ * La démo « Collecte-Transport-Traitement-Déchets » y range l'icône de chaque nœud
+ * (`<p><img src="data:…"></p>`) : elle doit devenir l'icône-image du nœud, sans toucher au nom.
  */
-const FO = '<p><img width="85" src="data:image/png;base64,AAAA"></p><p>Papiers</p>'
+const FO_IMAGE = '<p><img width="85" src="data:image/png;base64,AAAA"></p>'
 
 function legacyStudyWithFO(): Type_JSON {
-  const node = (id: string, has_FO: boolean) => ({
+  const node = (id: string, has_FO: boolean, FO_content: string) => ({
     idNode: id,
     name: id,
     display: true,
@@ -23,20 +24,21 @@ function legacyStudyWithFO(): Type_JSON {
     y: 0,
     has_FO,
     is_FO_raw: false,
-    FO_content: FO
+    FO_content
   })
 
   return {
     version: '0.8',
     nodes: {
-      node0: node('node0', true),
-      node1: node('node1', false)
+      allume: node('allume', true, FO_IMAGE),
+      eteint: node('eteint', false, FO_IMAGE),
+      texte: node('texte', true, '<p><strong>Titre</strong></p>')
     },
     links: {
       link0: {
         idLink: 'link0',
-        idSource: 'node0',
-        idTarget: 'node1',
+        idSource: 'allume',
+        idTarget: 'eteint',
         value: { value: 1, tags: {}, extension: {} }
       }
     },
@@ -47,16 +49,31 @@ function legacyStudyWithFO(): Type_JSON {
   } as unknown as Type_JSON
 }
 
-it('reprend le FO legacy d un noeud dans son etiquette de nom', () => {
+it('un FO legacy reduit a une image devient l icone image du noeud, le nom reste', () => {
   const app = new Class_ApplicationData(false)
   app.fromJSON(legacyStudyWithFO() as never, {}, false)
 
   const nodes = app.drawing_area.sankey.nodes_dict
 
-  expect(nodes['node0'].name_label_has_fo).toBe(true)
-  expect(nodes['node0'].name_label_fo_content).toContain('data:image/png;base64,AAAA')
+  expect(nodes['allume'].icon_is_image).toBe(true)
+  expect(nodes['allume'].icon_image_src).toBe('data:image/png;base64,AAAA')
+  expect(nodes['allume'].icon_inside_horiz).toBe(true)
+  expect(nodes['allume'].icon_inside_vert).toBe(true)
+  expect(nodes['allume'].name_label_has_fo).toBe(false)
 
-  // FO présent mais éteint : le contenu est gardé (une vue peut l'allumer), l'affichage non.
-  expect(nodes['node1'].name_label_has_fo).toBe(false)
-  expect(nodes['node1'].name_label_fo_content).toContain('data:image/png;base64,AAAA')
+  // FO éteint : rien à dessiner.
+  expect(nodes['eteint'].icon_is_image).toBe(false)
+
+  // FO texte : pas d'équivalent, l'étiquette de nom n'est pas écrasée.
+  expect(nodes['texte'].icon_is_image).toBe(false)
+  expect(nodes['texte'].name_label_has_fo).toBe(false)
+})
+
+it('legacyFOImageSrc ne retient qu une image seule', () => {
+  expect(legacyFOImageSrc(FO_IMAGE)).toBe('data:image/png;base64,AAAA')
+  expect(legacyFOImageSrc('<p><img src=\'x.png\'></p><p><br></p>')).toBe('x.png')
+  expect(legacyFOImageSrc('<p><img src="a"></p><p>Papiers</p>')).toBeUndefined()
+  expect(legacyFOImageSrc('<p><img src="a"><img src="b"></p>')).toBeUndefined()
+  expect(legacyFOImageSrc('')).toBeUndefined()
+  expect(legacyFOImageSrc(undefined)).toBeUndefined()
 })

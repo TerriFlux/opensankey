@@ -63,6 +63,7 @@ import {
   LINK_LOCAL_KEY_MAP,
   NODE_ICON_KEY_MAP,
   NODE_LOCAL_KEY_MAP,
+  legacyFOImageSrc,
   STYLE_KEY_MAP
 } from './persistenceLegacyKeyMaps'
 
@@ -1002,6 +1003,13 @@ export class NodeElementPersistence extends NodeBasePersistence {
         }
       }
     })
+
+    // FO legacy allumé et réduit à une image : c'était l'illustration du nœud, dessinée dans sa boîte.
+    const fo_image_src = json_object.has_FO === true ? legacyFOImageSrc(json_object.FO_content) : undefined
+    if (fo_image_src && !node.icon_is_image) {
+      node.attributes['icon_is_image'] = true
+      node.attributes['icon_image_src'] = fo_image_src
+    }
 
     if (node.icon_is_image) {
       node.attributes['icon_is_icon'] = false
