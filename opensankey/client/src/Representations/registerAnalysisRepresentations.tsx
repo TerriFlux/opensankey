@@ -331,7 +331,9 @@ const smallMultiplesOf = (
   if (!descriptor || effectiveDecompose(descriptor)?.kind !== 'data_dimension') return null
   const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined
   if (!dimension?.is_hierarchical) return null
-  const members = smallMultipleMembersOf(dimension)
+  // Liée, ce que le diagramme montre ; détachée, la coupe propre de la figure pour cette dimension
+  // — « Monde » seul fait UNE couronne, c'est le retour (cf. `smallMultipleMembersOf`).
+  const members = smallMultipleMembersOf(dimension, readFigureOpening(ctx.options).data)
   return members.length > 0 ? { dimension, members } : null
 }
 
