@@ -58,6 +58,17 @@ const monter = () => {
   return { app, lien, source, pays, monde, europe, afrique }
 }
 
+/**
+ * Le diagramme en COLLECTÉES, comme le pose le geste « Données » (`setDiagramDataSource`) : la
+ * source ET l'affichage des intervalles. `data_source = 'data'` seul laisse `interval_display` à
+ * 'free_value' (défaut), et `type_data` désigne alors encore le réconcilié (cf.
+ * `Link._reads_collected_layer`) — ce n'est pas un état que l'interface produit.
+ */
+const collectees = (app: Class_ApplicationData) => {
+  app.drawing_area.data_source = 'data'
+  app.drawing_area.interval_display = 'structure'
+}
+
 describe('os#1511 — une lecture à couche EXPLICITE', () => {
   test('le diagramme en réconciliées, la figure lit les collectées, et réciproquement', () => {
     const m = monter()
@@ -65,14 +76,14 @@ describe('os#1511 — une lecture à couche EXPLICITE', () => {
     expect(m.lien.valueCurrent).toBe(1507)
     expect(m.lien.valueCurrentIn(true)).toBe(1385)
     expect(m.lien.valueCurrentIn(false)).toBe(1507)
-    m.app.drawing_area.data_source = 'data'
+    collectees(m.app)
     expect(m.lien.valueCurrent).toBe(1385)
     expect(m.lien.valueCurrentIn(false)).toBe(1507)
   })
 
   test('sous une coordonnée, l agrégat d un parent se lit dans la couche demandée', () => {
     const m = monter()
-    m.app.drawing_area.data_source = 'data'
+    collectees(m.app)
     expect(m.lien.valueForDataTags([m.europe])).toBe(512)
     expect(m.lien.valueForDataTags([m.europe], false)).toBe(550)
     expect(m.lien.valueForDataTags([m.afrique], false)).toBe(957)
@@ -81,7 +92,7 @@ describe('os#1511 — une lecture à couche EXPLICITE', () => {
 
   test('lire ne touche pas au diagramme', () => {
     const m = monter()
-    m.app.drawing_area.data_source = 'data'
+    collectees(m.app)
     m.lien.valueCurrentIn(false)
     m.lien.valueForDataTags([m.europe], false)
     expect(m.app.drawing_area.data_source).toBe('data')
@@ -92,14 +103,14 @@ describe('os#1511 — une lecture à couche EXPLICITE', () => {
 describe('os#1511 — la navigation d une figure porte sa couche', () => {
   test('sans couche, la figure lit ce que lit le diagramme, au nombre près', () => {
     const m = monter()
-    m.app.drawing_area.data_source = 'data'
+    collectees(m.app)
     expect(linkValueUnder(m.lien, FOLLOWING_NAVIGATION)).toBe(m.lien.valueCurrent)
     expect(withDataLayer(FOLLOWING_NAVIGATION, undefined)).toBe(FOLLOWING_NAVIGATION)
   })
 
   test('diagramme en collectées, couronne en réconciliées', () => {
     const m = monter()
-    m.app.drawing_area.data_source = 'data'
+    collectees(m.app)
     const nav = withDataLayer(FOLLOWING_NAVIGATION, false)
     expect(linkValueUnder(m.lien, nav)).toBe(1507)
     expect(linkValueUnder(m.lien, { ...nav, data_tags: [m.europe] })).toBe(550)

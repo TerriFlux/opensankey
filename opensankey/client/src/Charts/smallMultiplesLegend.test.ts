@@ -116,10 +116,15 @@ describe('petits multiples — la legende commune', () => {
 })
 
 describe('petits multiples — le panneau dit vrai', () => {
+  // Le panneau recoit les reglages EFFECTIFS (cascade resolue, cf. `figureControlsOf`) : une
+  // couronne qui n a rien surcharge y lit le defaut de la couronne, `legend_visible: false`. Le
+  // sac brut, sans ce defaut, ferait croire la legende allumee.
   const keysOf = (options: { [k: string]: unknown }) =>
-    figureControlsOf(DONUT_ATTRIBUTES, options, ['style'], 'fr', { app_data: {} }).map(c => c.key)
+    figureControlsOf(DONUT_ATTRIBUTES, { legend_visible: false, ...options }, ['style'], 'fr', { app_data: {} })
+      .map(c => c.key)
 
   test('le nom des parts et l interrupteur de legende se cachent, la position de la legende se montre', () => {
+    // Legende eteinte au reglage : en petits multiples, la legende commune est posee d office.
     const keys = keysOf({ [SMALL_MULTIPLES_KEY]: 'pays', name_label_is_visible: true })
     expect(keys).not.toContain('name_label_is_visible')
     expect(keys).not.toContain('name_label_uppercase')
@@ -134,5 +139,7 @@ describe('petits multiples — le panneau dit vrai', () => {
     expect(keys).toContain('name_label_is_visible')
     expect(keys).toContain('legend_visible')
     expect(keys).not.toContain('legend_position')
+    // Et legende allumee, sa position revient — la meme regle qu avant les petits multiples.
+    expect(keysOf({ legend_visible: true })).toContain('legend_position')
   })
 })
