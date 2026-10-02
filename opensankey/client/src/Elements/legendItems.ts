@@ -21,7 +21,8 @@ import {
 import { untaggedDefaultsStyle } from './tagStyles'
 import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 // os#1511 — retrait et ordre de l'arbre, partagés avec la légende des figures
-import { LEGEND_INDENT_EM, relativeIndents, sortByTreeRanks } from './legendHierarchy'
+import { LEGEND_INDENT_EM, legendTreeRows, sortByTreeRanks } from './legendHierarchy'
+import type { Type_LegendTreeAncestor } from './legendHierarchy'
 
 // ITEMS (pur) ========================================================================
 
@@ -83,6 +84,11 @@ export type Type_LegendItem = {
   // os#1511 — membre DÉSAGRÉGÉ d'une dimension à niveaux : retrait, en niveaux, sous la place
   // qu'occupe son parent quand il est agrégé. Absent = pas de retrait.
   indent?: number
+  // os#1511 (02/10/2026) — EN-TÊTE d'un ancêtre OUVERT d'une dimension à niveaux (« Céréales »,
+  // puis « Céréales brutes ») : sans pastille, ni survol ni clic, posé à la place de son premier
+  // membre, ses membres dessous un cran plus loin. Même règle que la légende des couronnes
+  // (`legendTreeRows`). Jamais `own_line` : il n'est ni un titre de groupe ni une ligne d'info.
+  heading?: boolean
 }
 
 // Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
@@ -460,18 +466,23 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
   return new Set(all_groups.filter(g => emitted_blocks.has(LEGEND_CHILD_PREFIX + 'block-' + slug(g.id))))
 }
 
+/** os#1511 — profondeur d'un membre dans l'arbre de sa dimension (0 = racine). */
+function tagDepth(tag: Type_TagForLegend): number {
+  let depth = 0
+  for (let p = tag.parent; p !== undefined; p = p.parent) depth++
+  return depth
+}
+
 /**
- * os#1511 — retrait des membres montrés d'une dimension à niveaux : leur profondeur moins celle
- * du moins profond d'entre eux. `undefined` si aucun n'a de parent (dimension plate, ou niveau
- * le plus agrégé) : la légende reste celle d'avant.
+ * os#1511 — les ancêtres OUVERTS d'un membre montré, du plus haut au plus proche : ceux qui ne sont
+ * pas plus haut que le moins profond des membres montrés (`min_depth`). Au-dessus, ce sont des
+ * niveaux que la légende ne déplie pas (« Tous produits ») : ils ne s'écrivent pas.
  */
-function hierarchyIndents(tags: Type_TagForLegend[]): Map<Type_TagForLegend, number> | undefined {
-  if (!tags.some(tag => tag.parent !== undefined)) return undefined
-  return relativeIndents(tags, tag => {
-    let depth = 0
-    for (let p = tag.parent; p !== undefined; p = p.parent) depth++
-    return depth
-  })
+function openAncestors(tag: Type_TagForLegend, min_depth: number): Type_TagForLegend[] {
+  const ancestors: Type_TagForLegend[] = []
+  let depth = tagDepth(tag)
+  for (let p = tag.parent; p !== undefined && --depth >= min_depth; p = p.parent) ancestors.unshift(p)
+  return ancestors
 }
 
 /**
@@ -576,9 +587,19 @@ export function computeLegendItems(
       })
       if (displayed_tags.length === 0) return
       // os#1511 — dimension à niveaux : les membres désagrégés prennent ENSEMBLE la place de leur
-      // parent (ordre de l'arbre), en retrait.
-      const indents = is_data_tagg ? hierarchyIndents(displayed_tags) : undefined
-      if (indents !== undefined) sortByHierarchy(displayed_tags, tag_group.tags_list ?? displayed_tags)
+      // parent (ordre de l'arbre), en retrait ; chaque ancêtre OUVERT s'écrit une fois, en en-tête
+      // sans pastille, à la place de son premier membre — exactement la légende des couronnes.
+      const hierarchical = is_data_tagg && displayed_tags.some(tag => tag.parent !== undefined)
+      if (hierarchical) sortByHierarchy(displayed_tags, tag_group.tags_list ?? displayed_tags)
+      const min_depth = hierarchical ? Math.min(...displayed_tags.map(tagDepth)) : 0
+      const ancestors_by_id = new Map<string, Type_TagForLegend>()
+      const rows = legendTreeRows(displayed_tags, (tag): Type_LegendTreeAncestor[] | undefined => {
+        if (!hierarchical) return undefined
+        return openAncestors(tag, min_depth).map(a => {
+          ancestors_by_id.set(a.id, a)
+          return { id: a.id, label: a.display_name }
+        })
+      })
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       const title: Type_LegendItem = {
         id: LEGEND_CHILD_PREFIX + 'group-' + slug(tag_group.id),
@@ -592,7 +613,26 @@ export function computeLegendItems(
       const group_description = definitionOf(tag_group)
       if (group_description !== undefined) title.description = group_description
       items.push(title)
-      displayed_tags.forEach(tag => {
+      rows.forEach(row => {
+        if (row.kind === 'heading') {
+          // La clé de l'en-tête est la ROUTE de l'ancêtre (deux routes, deux en-têtes) ; son
+          // dernier maillon est l'ancêtre lui-même.
+          const route = row.key.split('\u0000')
+          const heading: Type_LegendItem = {
+            id: LEGEND_CHILD_PREFIX + 'heading-' + slug(tag_group.id) + '-' + route.map(slug).join('--'),
+            text: row.label,
+            bold: true,
+            heading: true,
+            block_id
+          }
+          if (row.indent > 0) heading.indent = row.indent
+          const ancestor = ancestors_by_id.get(route[route.length - 1])
+          const heading_description = ancestor !== undefined ? definitionOf(ancestor) : undefined
+          if (heading_description !== undefined) heading.description = heading_description
+          items.push(heading)
+          return
+        }
+        const tag = row.entry
         const item: Type_LegendItem = {
           id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
           text: legendEntryText(tag, tag_group, config.entry_template),
@@ -616,8 +656,7 @@ export function computeLegendItems(
         // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
         // entrées ordinaires restent structurellement identiques à avant.
         if (tag.is_selected === false) item.dimmed = true
-        const indent = indents?.get(tag) ?? 0
-        if (indent > 0) item.indent = indent
+        if (row.indent > 0) item.indent = row.indent
         const tag_description = definitionOf(tag)
         if (tag_description !== undefined) item.description = tag_description
         items.push(item)
@@ -926,7 +965,7 @@ export function layoutLegendItems(
   // (alignées sous la première, à droite du titre)
   let entries_x = 0
   let previous_section: string | undefined
-  items.forEach(item => {
+  items.forEach((item, index) => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
     const bar_row_height = SCALE_BAR_HEIGHT_PX + 0.5 * police
     // #556 — ligne vide entre deux sections (un groupe développé et le suivant, le dernier groupe
@@ -957,7 +996,13 @@ export function layoutLegendItems(
       const text_width = measured !== undefined && measured > 0 ? measured : estimateTextWidth(item.text, police)
       const swatch = item.swatch_color !== undefined ? legendSwatchWidth(item, police) + 5 : 0
       const entry_width = swatch + text_width
-      if (!item.group_title && !item.own_line && x > entries_x && x + entry_width > wrap_width) {
+      // os#1511 — un EN-TÊTE d'ancêtre ne reste pas seul en bout de ligne, son premier membre
+      // passé à la suivante : il passe à la ligne avec lui s'ils ne tiennent pas ensemble.
+      const next = item.heading === true ? items[index + 1] : undefined
+      const kept_width = next === undefined ? entry_width : entry_width + 14 +
+        (next.swatch_color !== undefined ? legendSwatchWidth(next, police) + 5 : 0) +
+        ((text_widths?.get(next.id) ?? 0) > 0 ? text_widths?.get(next.id) as number : estimateTextWidth(next.text, police))
+      if (!item.group_title && !item.own_line && x > entries_x && x + kept_width > wrap_width) {
         // Retour à la ligne à la largeur de la légende : la ligne ne pousse pas la fenêtre.
         // Sous le titre si celui-ci mange plus de la moitié de la largeur.
         if (entries_x + entry_width > wrap_width || entries_x > wrap_width / 2) entries_x = 0
