@@ -21,6 +21,12 @@ import {
  * `locks` : couleurs choisies à la main, que le recalcul respecte. `frozen` : plus de recalcul
  * automatique quand la structure change (couleurs déjà publiées ou imprimées).
  */
+/**
+ * os#1511 — COMMENT UNE DIMENSION SE DESSINE (cf. `Class_DataTagGroup.drawing`) : un membre à la
+ * fois, plusieurs en bandes, plusieurs en nœuds (un nœud la porte), ou rien de tout cela.
+ */
+export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
+
 export type Type_DimensionPalette = {
   params: Type_HierarchicalPaletteParams
   locks: { [tag_id: string]: string }
@@ -1493,30 +1499,106 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
   public get is_hierarchical(): boolean { return this._levels.length > 1 }
 
+  // LE DESSIN DE LA DIMENSION (os#1511) ================================================
+  //
+  // Il se redéduisait à six endroits (flux, légende, couleur d'un membre seul, barre du haut),
+  // chacun avec sa règle : l'un exigeait des niveaux, l'autre oubliait les nœuds porteurs. Il se
+  // décide désormais ICI, et tous le lisent.
+
   /**
-   * La dimension se dessine membre par membre, chacun à SA couleur : choix multiple et au moins
-   * deux membres retenus (bandes d'un flux, cf. `Link.tagged_value_bands`).
+   * Comment la dimension se dessine : `nodes` dès qu'un nœud la porte (`driving_dimension`) —
+   * c'est l'attachement qui prime, la bannière ne dit plus rien alors —, sinon `multi` (choix
+   * multiple, en bandes), `one` (un membre à la fois, défilé de séquence compris), `other`.
+   */
+  public get drawing(): Type_DimensionDrawing {
+    if (this.carriers_count > 0) return 'nodes'
+    const banner = this.banner
+    if (banner === 'multi') return 'multi'
+    if (banner === 'one' || banner === 'topbar' || banner === 'sequence') return 'one'
+    return 'other'
+  }
+
+  /**
+   * Nombre de nœuds qui PORTENT la dimension. Un nœud engendré n'en porte jamais : l'attachement
+   * n'est pas recopié sur les membres.
+   *
+   * Mémoïsé : chaque flux le lit à chaque dessin, et `nodes_list` refait un tableau à chaque
+   * appel. La mémo tombe quand un attachement change (`drawingChanged`, appelé par le nœud et par
+   * sa suppression) et, par prudence, à la tâche suivante.
+   */
+  public get carriers_count(): number {
+    if (this._carriers_memo === undefined) {
+      this._carriers_memo = this._ref_sankey.nodes_list
+        .filter((node: Class_NodeElement) => node.driving_dimension === this).length
+      queueMicrotask(() => { this._carriers_memo = undefined })
+    }
+    return this._carriers_memo
+  }
+  private _carriers_memo: number | undefined = undefined
+
+  /** Un nœud a pris, quitté ou perdu (suppression) cette dimension : le dessin est à relire. */
+  public drawingChanged(): void { this._carriers_memo = undefined }
+
+  /** Choix multiple, pas en nœuds, et plusieurs membres possibles : de quoi faire des bandes. */
+  private get _may_draw_bands(): boolean {
+    return this.drawing === 'multi' && this.tags_list.length > 1
+  }
+
+  /**
+   * CETTE dimension est celle que les flux découpent en bandes (`Link.tagged_value_bands`) : la
+   * première de la liste qui le peut. Une seule dimension se dessine en bandes à la fois.
+   */
+  public get draws_bands(): boolean {
+    return this._may_draw_bands &&
+      this._ref_sankey.data_taggs_list.find(tagg => tagg._may_draw_bands) === this
+  }
+
+  /**
+   * La dimension se dessine membre par membre, chacun à SA couleur : c'est elle qui fait les
+   * bandes, et au moins deux membres sont retenus.
    * Le dessin lit alors `tag.color` sans consulter `use_colors` ; la légende doit donc nommer ces
    * couleurs elle aussi (`tagGroupCarriesFormatting`), faute de quoi elle ne donnait qu'un rappel
    * texte sous des bandes colorées — et aucune commande ne permet d'allumer `use_colors` sur une
    * dimension.
    */
   public get draws_members_in_color(): boolean {
-    return this.banner === 'multi' && this.tags_list.length > 1 && this.selected_tags_list.length > 1
+    return this.draws_bands && this.selected_tags_list.length > 1
   }
 
   /**
-   * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles
-   * (Julien, 30/09 : « que la légende montre Autres au lieu de toute la liste »).
-   *
-   * « Autres » se décide FLUX PAR FLUX (moins de 0,5 % du flux, ou au-delà de la vingtième bande,
-   * cf. `foldSmallParts`) : il veut dire « petit ICI ». Un membre minuscule au total mais gros sur
-   * un flux y apparaît donc en propre — et entre dans la légende. La légende nomme ainsi les membres
-   * dessinés en propre sur AU MOINS un flux visible, plus « Autres » s'il existe quelque part.
-   *
-   * `undefined` si la dimension ne se dessine pas en bandes (les flux la lisent d'abord : même
-   * critère que `Link.tagged_value_bands`) — la légende garde alors les membres choisis.
+   * os#1511 — un membre à la fois, dans SA couleur : dimension à niveaux, couleurs activées, un
+   * seul membre choisi qui porte une vraie couleur. `undefined` sinon — dont la racine « Tous
+   * produits », grise. Lu par le flux (`Link.getShapeColorToUse`).
    */
+  public get single_member_color(): string | undefined {
+    if (!this.use_colors || !this.is_hierarchical || this.drawing !== 'one') return undefined
+    const selected = this.selected_tags_list
+    if (selected.length !== 1) return undefined
+    const color = selected[0].color
+    return (color && color !== 'grey') ? color : undefined
+  }
+
+  /**
+   * os#1511 — LES MEMBRES REPLIÉS DANS « AUTRES » d'après leurs totaux : la règle de la couronne
+   * (moins de 0,5 %, ou au-delà du 19e ; au moins deux à replier), une seule implémentation pour
+   * les bandes et pour les nœuds. Seule l'ASSIETTE des totaux diffère :
+   *  - en bandes, les bandes brutes de tous les flux visibles (`globalFoldedMembers`), le flux y
+   *    ajoutant son exception locale ;
+   *  - en nœuds, les flux d'origine qui touchent un nœud porteur (`DimensionDisaggregation`).
+   * L'ordre d'entrée départage les ex æquo.
+   */
+  public foldedMembersOf(totaux: Iterable<[string, number]>): Set<string> {
+    const { folded } = foldSmallParts([...totaux].map(([id, value]) => ({ id, value })))
+    return new Set(folded.map(part => part.id))
+  }
+
+  /**
+   * Les membres repliés dans le nœud « Autres » de la dernière désagrégation en nœuds (cf.
+   * `DimensionDisaggregation`). TRANSITOIRE comme ce nœud : rebâti à chaque désagrégation, jamais
+   * sérialisé. Le repli se décide par dimension, donc tous ses nœuds porteurs replient les mêmes.
+   */
+  public nodes_folded_members: Class_DataTag[] = []
+
   /**
    * os#1511 — les membres REPLIÉS AU TOTAL dans « Autres » (règle arrêtée avec Julien le 01/10) :
    * chaque membre choisi est sommé sur les bandes brutes de tous les flux visibles
@@ -1541,8 +1623,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       flux.forEach(lien => lien.dimensionBandsRaw(this).forEach(bande => {
         totaux.set(bande.id, (totaux.get(bande.id) ?? 0) + bande.value)
       }))
-      const { folded } = foldSmallParts([...totaux].map(([id, value]) => ({ id, value })))
-      const replies = new Set(folded.map(part => part.id))
+      const replies = this.foldedMembersOf(totaux)
       this._fold_memo = { cle, replies }
       queueMicrotask(() => { this._fold_memo = undefined })
       return replies
@@ -1553,17 +1634,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   private _fold_memo: { cle: string, replies: Set<string> } | undefined = undefined
   private _fold_computing = false
 
+  /**
+   * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles
+   * (Julien, 30/09 : « que la légende montre Autres au lieu de toute la liste ») : les membres
+   * dessinés en propre sur AU MOINS un flux visible, plus « Autres » s'il existe quelque part.
+   *
+   * `undefined` si la dimension ne se dessine pas en bandes de couleur
+   * (`draws_members_in_color`) — la légende garde alors les membres choisis.
+   */
   public get members_drawn_in_bands(): { members: Set<string>, has_others: boolean } | undefined {
     if (!this.draws_members_in_color) return undefined
-    const sankey = this._ref_sankey
-    const dessinee = sankey.data_taggs_list.find(tagg =>
-      tagg.banner === 'multi'
-      && tagg.tags_list.length > 1
-      && !sankey.nodes_list.some(node => node.driving_dimension === tagg))
-    if (dessinee !== (this as unknown)) return undefined
     const members = new Set<string>()
     let has_others = false
-    sankey.visible_links_list.forEach(link => {
+    this._ref_sankey.visible_links_list.forEach(link => {
       link.tagged_value_bands.forEach(band => {
         if (band.folded !== undefined) has_others = true
         else members.add(band.id)
@@ -1695,8 +1778,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * couleurs n'a de sens que pour ce qui n'est pas nommé à sa place — les bandes d'un flux.
    */
   public get is_drawn_as_nodes(): boolean {
-    return this._ref_sankey.nodes_list.some(
-      (node: Class_NodeElement) => node.driving_dimension === this)
+    return this.drawing === 'nodes'
   }
 
   public get current_level_index(): number { return this._current_level_index }

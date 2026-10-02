@@ -22,13 +22,13 @@
 // d'un module sans dépendance. Chaque geste s'annule.
 
 import type { Class_ApplicationData } from '../../types/ApplicationData'
-import type { Class_DataTagGroup } from '../../types/TagGroup'
+import type { Class_DataTagGroup, Type_DimensionDrawing } from '../../types/TagGroup'
 import type { Class_NodeElement } from '../../Elements/Node'
 import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 
-export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
+export type { Type_DimensionDrawing } from '../../types/TagGroup'
 
 /** Les nœuds qui portent la dimension. */
 export const dimensionCarriersOf = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_NodeElement[] =>
@@ -38,14 +38,9 @@ export const dimensionCarriersOf = (app_data: Class_ApplicationData, tagg: Class
 export const dimensionCarrierCandidates = (app_data: Class_ApplicationData): Class_NodeElement[] =>
   (app_data.drawing_area.sankey.nodes_list as Class_NodeElement[]).filter(node => !isGeneratedMemberId(node.id))
 
-/** Le dessin de la dimension, tel que le lecteur le voit. */
-export const dimensionDrawingOf = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_DimensionDrawing => {
-  if (dimensionCarriersOf(app_data, tagg).length > 0) return 'nodes'
-  const banner = (tagg as unknown as { banner: string }).banner
-  if (banner === 'multi') return 'multi'
-  if (banner === 'one' || banner === 'topbar' || banner === 'sequence') return 'one'
-  return 'other'
-}
+/** Le dessin de la dimension, tel que le lecteur le voit : la dimension le décide (`drawing`). */
+export const dimensionDrawingOf = (_app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_DimensionDrawing =>
+  tagg.drawing
 
 type Type_Snapshot = { banner: string, carriers: string[], selected: string[], level?: number }
 

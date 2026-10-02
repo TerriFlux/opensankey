@@ -1149,6 +1149,8 @@ export class Class_Sankey {
 
       // Delete node in sankey
       const _ = this._nodes[node.id]
+      // Un nœud porteur qui part change le dessin de sa dimension (`Class_DataTagGroup.drawing`).
+      node.driving_dimension?.drawingChanged()
       delete this._nodes[node.id]
       this.invalidateThemePalette()
       _.delete()
