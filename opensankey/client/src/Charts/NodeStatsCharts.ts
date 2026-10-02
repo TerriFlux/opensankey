@@ -40,6 +40,7 @@ import type {
 } from './figureChartStyle'
 // 25/09/2026 — LE CENTRE EST UNE PART, et le tracé la cherche par son identifiant.
 import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
+import { layoutDonutCallouts } from './donutCalloutLayout'
 // os#1477 — LE MÊME TRACEUR DE TEXTE QUE LE DISQUE (cf. `prepareContainer`).
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 
@@ -465,6 +466,15 @@ const MIN_PART_ICON_PX = 8
 // l'étiquette tant que l'auteur ne l'a pas déplacée.
 const MIN_CALLOUT_EDGE_PX = 6
 const CALLOUT_GAP_PX = 14
+// 02/10/2026 — LES PETITS MULTIPLES LISIBLES (Julien, capture « Export par continent » : les
+// petites couronnes noyées d'étiquettes détachées en escalier, plus grosses que leur disque).
+// - sous ce rayon, une case n'écrit AUCUNE étiquette de part : le centre garde son nom ;
+// - les étiquettes détachées d'une case ne descendent pas sous cette police, la même partout ;
+// - la part du demi-côté laissée aux étiquettes détachées autour du disque, la même dans toutes
+//   les cases : le cadre commun reste celui de la case, la police n'y rétrécit pas.
+export const MIN_CELL_LABEL_RADIUS_PX = 30
+export const MIN_CELL_CALLOUT_FONT_PX = 9
+const CELL_CALLOUT_RESERVE = 0.3
 
 // ── 02/10/2026 — LES PETITS MULTIPLES À LA MÊME ÉCHELLE (cf. `Type_SmallMultipleCell`) ──────────
 
@@ -825,7 +835,9 @@ export const drawDonutChart = (
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
   // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
   // près de leur disque, à la mesure de la case.
-  const radius = (side / 2 - 2) * scaleOf(st) * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
+  const cell_reserve = cell && (st.labels_callout_small || st.name_label_callout) ? 1 - CELL_CALLOUT_RESERVE : 1
+  const radius = (side / 2 - 2) * scaleOf(st) * cell_reserve *
+    (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
   const callout_gap = cell ? cell.callout_gap_px : CALLOUT_GAP_PX
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
 
@@ -1111,13 +1123,17 @@ export const drawDonutChart = (
   const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     if (d.data.id === '__others__') return false
     const said = aspectOf(d.data.id)?.label_callout
-    if (said !== undefined || st.name_label_callout) {
-      return (said ?? st.name_label_callout) && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+    // 02/10/2026 — LE SEUIL « LIB. » VAUT AUSSI POUR LES ÉTIQUETTES DÉTACHÉES (Julien) : sous lui, une
+    // part se tait, dedans comme dehors. Seule une part qui demande elle-même à sortir passe outre.
+    const above_threshold = (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st)
+    if (said !== undefined) return said && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
+    if (st.name_label_callout) {
+      return above_threshold && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
     }
     // 01/10/2026 — TROP PETIT POUR SON ÉTIQUETTE : elle sort au lieu de se taire. Un secteur d'à
     // peine un pixel n'a pas de bord où accrocher son trait ; il reste muet.
     if (!st.labels_callout_small || (d.endAngle - d.startAngle) * radius < 1) return false
-    return (d.endAngle - d.startAngle) / (2 * Math.PI) < labelMinShare(st) || !sectorFits(d)
+    return above_threshold && !sectorFits(d)
   }
   // Ce qui porte une étiquette se décide SECTEUR PAR SECTEUR, et non plus par un drapeau de figure :
   // une part peut demander son nom là où la figure n'en veut pas. Rien ne change quand personne ne
@@ -1188,7 +1204,20 @@ export const drawDonutChart = (
   // 02/10/2026 — UNE PART QUI FAIT TOUT L'ANNEAU NE PORTE AUCUNE ÉTIQUETTE (Julien, sur « Tous
   // produits » : « un label détaché complètement inutile »). « 550 (100%) » redit le centre ; ni
   // dans le secteur, ni sortie, ni nombre détaché.
-  const with_text = arcs.filter(d => !isWholeRing(d.startAngle, d.endAngle) && sector_lines(d).length > 0)
+  //
+  // 02/10/2026 — ET SE TAISENT AUSSI (Julien, petits multiples « Export par continent ») : une part
+  // dont la valeur s'arrondit à 0 dans l'unité affichée (« 0 Mt (37%) » ne dit rien), et toutes les
+  // parts d'une case dont le disque est trop petit pour porter des étiquettes.
+  const roundsToZero = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
+    const f = aspectOf(d.data.id)?.value_format ?? fmt
+    return d.data.value !== 0 && f(Math.abs(d.data.value)) === f(0)
+  }
+  const cell_too_small = cell !== undefined && radius < MIN_CELL_LABEL_RADIUS_PX
+  const with_text = cell_too_small ? [] : arcs.filter(d =>
+    !isWholeRing(d.startAngle, d.endAngle) && !roundsToZero(d) && sector_lines(d).length > 0)
+  /** La police d'une étiquette sortie : en petits multiples, jamais sous un plancher lisible. */
+  const calloutFontOf = (d: d3.PieArcDatum<Type_StatSlice>): number =>
+    cell ? Math.max(MIN_CELL_CALLOUT_FONT_PX, styleOf(d).name_label_font_size) : styleOf(d).name_label_font_size
   const callouts = with_text.filter(d => callsOut(d))
   const labelled = with_text.filter(d =>
     !callsOut(d) &&
@@ -1269,8 +1298,9 @@ export const drawDonutChart = (
   // collé ne peut pas offrir, puisqu'il n'y a qu'un texte. Posé sous le nom par défaut, d'une
   // hauteur de ligne : c'est là qu'il était quand il y était collé, ce qui rend le passage de
   // l'un à l'autre lisible plutôt que brutal.
-  const detached = arcs.filter(d =>
+  const detached = cell_too_small ? [] : arcs.filter(d =>
     !isWholeRing(d.startAngle, d.endAngle) &&
+    !roundsToZero(d) &&
     !valueAttached(d.data.id) &&
     sectorValue(d) !== '' &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st) &&
@@ -1361,47 +1391,63 @@ export const drawDonutChart = (
     const edgeOf = (d: d3.PieArcDatum<Type_StatSlice>) => point(radius, midOf(d))
     const defaultAt = (d: d3.PieArcDatum<Type_StatSlice>) =>
       point(radius + callout_gap, midOf(d))
-    // 01/10/2026 — RANGÉES, ET NON EMPILÉES (Julien, capture à l'appui : les petites parts du
-    // haut écrivaient leurs étiquettes les unes sur les autres). Celles que l'auteur n'a pas
-    // déplacées se posent en deux colonnes, à droite et à gauche du disque, dans l'ordre de leur
-    // hauteur, chacune au moins une hauteur d'étiquette sous la précédente.
-    const laid_out = new Map<string, { x: number, y: number }>()
-    ;([1, -1] as const).forEach(side_sign => {
-      const column = callouts
+    // 02/10/2026 — LE PATRON CLASSIQUE DES DONUTS (cf. `layoutDonutCallouts`) : trait radial jusqu'à
+    // un coude à `rayon + écart`, puis palier horizontal vers une colonne à droite ou à gauche du
+    // disque, où les étiquettes sont repoussées verticalement pour ne jamais se chevaucher. Posées à
+    // un écart de leur point d'arc (sa!832), les petites parts consécutives s'écrivaient les unes
+    // sur les autres et sur leurs voisines. Celles que l'auteur a déplacées gardent leur place.
+    //
+    // En petits multiples, le cadre est LA CASE : ce qui n'y tient pas sans chevaucher se tait (les
+    // plus grandes parts d'abord), l'info-bulle du secteur garde la valeur.
+    const half_cell = side / 2 - 2
+    const laid_out = layoutDonutCallouts(
+      callouts
         .filter(d => opts.label_positions?.[d.data.id] === undefined)
-        .filter(d => (Math.sin(midOf(d)) >= 0 ? 1 : -1) === side_sign)
-        .map(d => ({ d, y: defaultAt(d).y }))
-        .sort((a, b) => a.y - b.y)
-      let floor = -Infinity
-      column.forEach(({ d, y }) => {
-        const height_px = sector_lines(d).length * styleOf(d).name_label_font_size * 1.15
-        const at_y = Math.max(y, floor + height_px / 2)
-        floor = at_y + height_px / 2 + 2
-        // 02/10/2026 — UN TRAIT COURT : l'étiquette s'écarte d'un écart de SON point d'arc, et non
-        // d'une colonne posée à `rayon + 2 écarts` du centre. Un secteur du bas (ou du haut) tirait
-        // un long trait en biais jusqu'au flanc du disque.
-        laid_out.set(d.data.id, { x: defaultAt(d).x + side_sign * callout_gap, y: at_y })
-      })
-    })
+        .map(d => ({
+          id: d.data.id,
+          mid_angle: midOf(d),
+          height: sector_lines(d).length * calloutFontOf(d) * 1.15,
+          width: Math.max(0, ...sector_lines(d).map(line => labelTextWidthPx(line.text, calloutFontOf(d)))),
+          weight: d.data.value
+        })),
+      radius, callout_gap, callout_gap,
+      cell ? { half_height: half_cell, half_width: half_cell } : {})
+    const shown = callouts.filter(d =>
+      opts.label_positions?.[d.data.id] !== undefined || laid_out.has(d.data.id))
     const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
       opts.label_positions?.[d.data.id] ?? laid_out.get(d.data.id) ?? defaultAt(d)
     // Le texte s'écarte du disque : à droite il commence au trait, à gauche il y finit.
     const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
+    const textAnchorOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
+      laid_out.get(d.data.id)?.text_anchor ?? anchorOf(positionOf(d))
+    // Le trait : bord → coude → texte pour une étiquette rangée ; droit jusqu'au texte pour une
+    // étiquette déplacée à la main, qui peut être n'importe où.
+    const PALIER_PAD = 2
+    const traitOf = (d: d3.PieArcDatum<Type_StatSlice>, moved?: { x: number, y: number }) => {
+      const a = edgeOf(d)
+      const placed = moved === undefined ? laid_out.get(d.data.id) : undefined
+      if (placed === undefined) {
+        const p = moved ?? positionOf(d)
+        return `${a.x},${a.y} ${p.x},${p.y}`
+      }
+      const end_x = placed.x - placed.side * PALIER_PAD
+      return `${a.x},${a.y} ${placed.elbow.x},${placed.elbow.y} ${end_x},${placed.y}`
+    }
     const layer = g.append('g').attr('class', 'node_stats_callouts')
     const items = layer.selectAll<SVGGElement, d3.PieArcDatum<Type_StatSlice>>('g.node_stats_callout')
-      .data(callouts)
+      .data(shown)
       .enter().append('g')
       .attr('class', 'node_stats_callout')
       .style('cursor', 'move')
-    items.append('line')
+    items.append('polyline')
       .attr('class', 'node_stats_callout_line')
+      .attr('fill', 'none')
       .attr('stroke', '#718096').attr('stroke-width', 1)
-      .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
-      .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
+      .attr('points', d => traitOf(d))
     const texts = items.append('text')
       .attr('class', 'node_stats_callout_text')
       .attr('x', d => positionOf(d).x).attr('y', d => positionOf(d).y)
-      .attr('text-anchor', d => anchorOf(positionOf(d)))
+      .attr('text-anchor', d => textAnchorOf(d))
       .attr('dominant-baseline', 'central')
       // Sortie du disque, l'étiquette garde la mise en forme de SA part : c'est la même étiquette,
       // à un autre endroit. Seule l'encre change de repli — le blanc du secteur serait invisible
@@ -1413,7 +1459,7 @@ export const drawDonutChart = (
       // SORTIE, L'ÉTIQUETTE A UN AUTRE REPLI D'ENCRE (`calloutInk`) : c'est celle-là qu'il faut
       // annoncer pour une part qui sort la sienne, et non le blanc de l'intérieur du secteur.
       const ink = applyPartTextStyle(d3.select(this), aspectOf(d.data.id)?.name, {
-        font_size: styleOf(d).name_label_font_size,
+        font_size: calloutFontOf(d),
         font_family: styleOf(d).name_label_font_family,
         bold: styleOf(d).name_label_bold,
         italic: styleOf(d).name_label_italic,
@@ -1431,13 +1477,12 @@ export const drawDonutChart = (
     })
     if (st.interaction_tooltip) items.append('title').text(slice_title)
     const box = { x0: -radius, x1: radius, y0: -radius, y1: radius }
-    callouts.forEach(d => {
+    shown.forEach(d => {
       const p = positionOf(d)
-      const s = styleOf(d)
       const lines = sector_lines(d)
-      const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
-      const h = lines.length * s.name_label_font_size * 1.15
-      const anchor = anchorOf(p)
+      const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, calloutFontOf(d))))
+      const h = lines.length * calloutFontOf(d) * 1.15
+      const anchor = textAnchorOf(d)
       const x0 = anchor === 'start' ? p.x : anchor === 'end' ? p.x - w : p.x - w / 2
       box.x0 = Math.min(box.x0, x0)
       box.x1 = Math.max(box.x1, x0 + w)
@@ -1448,10 +1493,10 @@ export const drawDonutChart = (
     // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
     items.call(d3.drag<SVGGElement, d3.PieArcDatum<Type_StatSlice>>()
       .on('start', (event) => { event.sourceEvent?.stopPropagation() })
-      .on('drag', function (event) {
+      .on('drag', function (event, d) {
         const p = { x: event.x, y: event.y }
         const item = d3.select(this)
-        item.select('line').attr('x2', p.x).attr('y2', p.y)
+        item.select('polyline').attr('points', traitOf(d, p))
         item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', anchorOf(p))
         item.selectAll('tspan').attr('x', p.x)
       })
