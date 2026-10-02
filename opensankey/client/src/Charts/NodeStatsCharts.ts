@@ -218,6 +218,14 @@ export interface Type_SmallMultipleCell {
    * COMMUN, l'union de ceux de toutes les cases — une seule échelle d'une case à l'autre.
    */
   frame: (box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void) => void
+  /**
+   * 02/10/2026 — LA COULEUR DE CHAQUE PART, FIXÉE UNE FOIS POUR TOUTES LES CASES (cf.
+   * `donutPartColors` sur l'union). Chaque case colorait par SON rang : « Céréales » changeait de
+   * teinte d'une case à l'autre dès qu'une part y manquait, et une légende commune aurait menti.
+   */
+  colors?: ReadonlyMap<string, string>
+  /** Les parts que la case a réellement dessinées (« Autres » compris) : de quoi faire la légende commune. */
+  drawn?: (kept: Type_StatSlice[]) => void
 }
 
 /** Ce qu'un tracé a réellement appliqué à une part, et que le panneau doit annoncer. */
@@ -426,6 +434,131 @@ export const unionDrawnBox = (boxes: Type_DrawnBox[]): Type_DrawnBox | null =>
     : boxes.reduce((u, b) => ({
       x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1)
     }))
+
+/**
+ * LA COULEUR DE CHAQUE PART D'UNE COURONNE, dans l'ordre reçu (celui des secteurs, « Autres »
+ * compris). La règle du tracé, sortie pour servir aussi l'union des petits multiples :
+ *
+ * À PLAT : la couleur du modèle si l'auteur la veut et que la donnée la porte, la palette sinon,
+ * dans l'ordre des parts. SOUS UNE DESCENTE : la teinte dit la branche, la clarté dit le niveau
+ * (`shadeForDepth`, la règle du disque) ; et pas de dégradé sous 'model'.
+ */
+export const donutPartColors = (
+  parts: readonly Type_StatSlice[], st: Type_FigureChartStyle
+): Map<string, string> => {
+  const branch_order = new Map<string, number>()
+  parts.forEach(s => {
+    const branch = s.branch_id ?? s.id
+    if (!branch_order.has(branch)) branch_order.set(branch, branch_order.size)
+  })
+  const out = new Map<string, string>()
+  parts.forEach((d, i) => {
+    if (d.id === '__others__') out.set(d.id, OTHERS_COLOR)
+    else if (st.parts_color_source === 'model' && d.color) out.set(d.id, d.color)
+    // Hors descente, `branch_id` est absent : l'index du secteur commande, comme hier.
+    else if (d.branch_id === undefined) out.set(d.id, paletteColor(i))
+    else {
+      const base = paletteColor(branch_order.get(d.branch_id) ?? i)
+      out.set(d.id, st.parts_depth_shading ? shadeForDepth(base, d.depth ?? 0, 'light') : base)
+    }
+  })
+  return out
+}
+
+/**
+ * 02/10/2026 — LES ENTRÉES DE LA LÉGENDE COMMUNE DES PETITS MULTIPLES (Julien : « une place commune
+ * pour la légende serait intéressante »). L'union des parts que les cases ont réellement dessinées,
+ * dans l'ordre des parts de la figure (`order`), « Autres » en dernier — une part repliée dans une
+ * case et dessinée dans une autre y figure une fois.
+ */
+export const smallMultiplesLegendEntries = (
+  order: readonly string[], drawn: readonly (readonly Type_StatSlice[])[]
+): Type_StatSlice[] => {
+  const seen = new Map<string, Type_StatSlice>()
+  drawn.forEach(kept => kept.forEach(s => { if (!seen.has(s.id)) seen.set(s.id, s) }))
+  const rank = (id: string) => id === '__others__'
+    ? Number.MAX_SAFE_INTEGER
+    : (order.indexOf(id) < 0 ? Number.MAX_SAFE_INTEGER - 1 : order.indexOf(id))
+  return [...seen.values()].sort((a, b) => rank(a.id) - rank(b.id))
+}
+
+/**
+ * La place que la légende commune prend : une LARGEUR à côté des cases, une HAUTEUR dessous — les
+ * mêmes bornes que la légende d'une couronne seule (`drawDonutChart`), prises sur toute la figure.
+ */
+export const smallMultiplesLegendRoom = (st: Type_FigureChartStyle, width: number, height: number): number =>
+  st.legend_position === 'bottom'
+    ? Math.min(st.legend_width, height * 0.28, st.legend_font_size * 7)
+    : Math.min(st.legend_width, width * 0.32)
+
+/**
+ * LA LÉGENDE COMMUNE, dans `legend` (le conteneur que l'appelant a posé à côté ou sous la grille,
+ * à la place `smallMultiplesLegendRoom`). Puce, nom de la part ; pas de valeur — elle varie d'une
+ * case à l'autre, chaque case l'écrit. Le survol d'une entrée met la part en avant dans TOUTES les
+ * cases (`scope`), par l'opacité CSS du secteur : celle réglée par l'auteur (`fill-opacity`) reste.
+ */
+export const drawSmallMultiplesLegend = (
+  legend: HTMLElement,
+  scope: HTMLElement,
+  entries: readonly Type_StatSlice[],
+  colors: ReadonlyMap<string, string>,
+  st: Type_FigureChartStyle
+) => {
+  const below = st.legend_position === 'bottom'
+  const root = d3.select(legend)
+    .attr('class', 'figure_small_multiples_legend')
+    .style('overflow-y', 'auto')
+    .style('font-size', `${st.legend_font_size}px`)
+  if (below) {
+    root.style('display', 'flex').style('flex-wrap', 'wrap')
+      .style('justify-content', 'center').style('align-content', 'flex-start').style('column-gap', '0.8rem')
+  }
+  const legendLabel = (s: Type_StatSlice): string =>
+    (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
+  const head = st.legend_levels
+    ? entries.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
+    : undefined
+  if (head) {
+    root.append('div')
+      .attr('class', 'node_stats_legend_head')
+      .style('font-weight', '600')
+      .style('padding', '0.1rem 0.2rem 0.25rem')
+      .style('flex-basis', below ? '100%' : 'auto')
+      .style('text-align', below ? 'center' : 'left')
+      .text(head)
+  }
+  const arcsOf = () => d3.select(scope).selectAll<SVGPathElement, unknown>('path.node_stats_arc')
+  const items = root.selectAll('div.node_stats_legend_item')
+    .data(entries)
+    .enter().append('div')
+    .attr('class', 'node_stats_legend_item')
+    .attr('data-part-id', d => d.id)
+    .style('display', 'flex')
+    .style('align-items', 'center')
+    .style('gap', '0.35rem')
+    .style('padding', '0.1rem 0.2rem')
+    .style('cursor', 'default')
+    .attr('title', d => legendLabel(d))
+    .on('mouseover', (_, d) => {
+      arcsOf().style('opacity', function () {
+        return (this as SVGPathElement).getAttribute('data-repr-id') === d.id ? null : '0.35'
+      })
+    })
+    .on('mouseout', () => { arcsOf().style('opacity', null) })
+  if (below) items.style('flex', '0 0 auto')
+  items.append('span')
+    .style('flex', '0 0 auto')
+    .style('width', '0.7rem')
+    .style('height', '0.7rem')
+    .style('border-radius', '2px')
+    .style('background', d => colors.get(d.id) ?? d.color ?? OTHERS_COLOR)
+  items.append('span')
+    .style('flex', '1 1 auto')
+    .style('overflow', 'hidden')
+    .style('text-overflow', 'ellipsis')
+    .style('white-space', 'nowrap')
+    .text(d => legendLabel(d))
+}
 // Barres groupées (#390) : au-delà de ce nombre de séries, une grappe devient
 // illisible. On TRONQUE, on ne replie PAS dans un « Autres » : les deux axes croisés
 // sont non additifs — sommer les séries restantes serait exactement le contresens
@@ -591,19 +724,13 @@ export const drawDonutChart = (
   // ⚠️ ET PAS DE DÉGRADÉ SOUS 'model' : c'est la règle du disque aussi (`partitionSunburst`), et
   // elle est juste — deux nœuds qui portent leur propre couleur se distinguent déjà par elle,
   // l'éclaircir ne ferait que la trahir.
-  const branch_order = new Map<string, number>()
-  kept.forEach(s => {
-    const branch = s.branch_id ?? s.id
-    if (!branch_order.has(branch)) branch_order.set(branch, branch_order.size)
-  })
-  const colorOf = (d: Type_StatSlice, i: number) => {
-    if (d.id === '__others__') return OTHERS_COLOR
-    if (st.parts_color_source === 'model' && d.color) return d.color
-    // Hors descente, `branch_id` est absent : l'index du secteur commande, comme hier.
-    if (d.branch_id === undefined) return paletteColor(i)
-    const base = paletteColor(branch_order.get(d.branch_id) ?? i)
-    return st.parts_depth_shading ? shadeForDepth(base, d.depth ?? 0, 'light') : base
-  }
+  const cell = opts.small_multiple
+  cell?.drawn?.(kept)
+  const own_colors = donutPartColors(kept, st)
+  // Petits multiples : la couleur fixée sur l'union de toutes les cases l'emporte (cf.
+  // `Type_SmallMultipleCell.colors`) — une part a la même teinte partout, et la légende commune dit vrai.
+  const colorOf = (d: Type_StatSlice, i: number) =>
+    cell?.colors?.get(d.id) ?? own_colors.get(d.id) ?? paletteColor(i)
   // CE QUE LE TRACÉ AURA DÉCIDÉ, ramassé au fil du dessin (cf. `on_parts_resolved`).
   const resolved: { [part_id: string]: Type_FigurePartResolved } = {}
   const noted = (id: string, patch: Type_FigurePartResolved) => {
@@ -612,7 +739,9 @@ export const drawDonutChart = (
   kept.forEach((d, i) => noted(d.id, { shape_color: opts.part_aspect?.(d.id)?.fill ?? colorOf(d, i) }))
 
   // Mise en page : svg carré d'un côté, légende HTML scrollable de l'autre (ou dessous).
-  const legend_shown = st.legend_visible && st.legend_parts !== 'none'
+  // Une case de petits multiples n'a pas la sienne : la légende est COMMUNE, posée par l'appelant
+  // (`drawSmallMultiplesLegend`).
+  const legend_shown = !cell && st.legend_visible && st.legend_parts !== 'none'
   const below = st.legend_position === 'bottom'
   const root = sel.append('div')
     .style('display', 'flex')
@@ -640,7 +769,6 @@ export const drawDonutChart = (
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
   // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
   // près de leur disque, à la mesure de la case.
-  const cell = opts.small_multiple
   const radius = (side / 2 - 2) * scaleOf(st) * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
   const callout_gap = cell ? cell.callout_gap_px : CALLOUT_GAP_PX
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
@@ -815,6 +943,14 @@ export const drawDonutChart = (
    * `false` sur un histogramme — sans quoi l'un des deux parcs changerait d'aspect.
    */
   const valueAttached = (id: string): boolean => aspectOf(id)?.value_attached ?? true
+  /**
+   * 02/10/2026 — LE NOM D'UNE PART S'ÉCRIT-IL ? Pas dans une case de petits multiples (Julien : « pour
+   * les multiples, il ne faut pas voir les labels qui sont répétés »). Les parts y sont les mêmes
+   * d'une case à l'autre, même nom et même couleur : la légende commune les nomme une fois, la case
+   * ne garde que ce qui varie — sa valeur, son pourcentage. Sans rien d'autre à dire, une part n'a
+   * ni étiquette ni trait de rappel (`with_text`).
+   */
+  const names_written = (s: Type_FigureChartStyle): boolean => !cell && s.name_label_is_visible
   /** Ce que le nombre écrit, collé ou non : la valeur formatée, puis le pourcentage demandé. */
   const sectorValue = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const s = styleOf(d)
@@ -866,7 +1002,7 @@ export const drawDonutChart = (
     const s = styleOf(d)
     const a = aspectOf(d.data.id)
     const lines: { text: string, is_value: boolean }[] = []
-    if (s.name_label_is_visible) lines.push({ text: sectorName(d), is_value: false })
+    if (names_written(s)) lines.push({ text: sectorName(d), is_value: false })
     // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
     // n'existe que si la part a dit quelque chose des six clés de format (cf. `partAspect`).
     // La CASSE est celle de la valeur, et non celle du nom : c'est son texte.
@@ -1091,7 +1227,7 @@ export const drawDonutChart = (
         const a = aspectOf(d.data.id)?.value
         const [cx, cy] = label_arc.centroid(d)
         const size = a?.font_size ?? styleOf(d).name_label_font_size
-        const named = styleOf(d).name_label_is_visible
+        const named = names_written(styleOf(d))
         const at = partTextPlacement(
           { x: cx, y: cy + (named ? size * 0.9 : 0), anchor: 'middle', rotate: false }, a)
         const text = d3.select(this)
