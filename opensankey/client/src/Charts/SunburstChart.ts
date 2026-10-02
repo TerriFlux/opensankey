@@ -509,22 +509,24 @@ const THEME = {
 const MAX_BRANCHES = THEME.light.palette.length
 
 /**
- * La couleur d'une BRANCHE, par son rang — l'ordre fixe de la palette, jamais recyclé
- * (cf. `capBranches`, qui garantit qu'on ne dépasse pas). Exportée parce que la couronne se
- * dessine à deux endroits : dans une fenêtre et SUR UN NŒUD (cf. NodeStatsCharts), et que
- * deux palettes feraient de la même figure deux figures.
+ * UNE PALETTE PAR DIMENSION EMBOÎTÉE, sous la source « palette » : chaudes pour la première, froides
+ * pour la seconde, sourdes pour une troisième. Sous « produits, puis pays », un pays ne doit pas
+ * passer pour un produit, ni hériter de sa teinte. Sous la source « modèle », un secteur de membre
+ * porte la couleur du membre (`Type_SunburstNode.color`), celle de la palette hiérarchique de la
+ * dimension.
  */
-/**
- * 30/09/2026 — UNE PALETTE PAR DIMENSION EMBOÎTÉE, et elles ne se ressemblent pas : chaudes pour la
- * première, froides pour la seconde, sourdes pour une troisième. Sous « produits, puis pays », un
- * pays ne doit pas passer pour un produit, ni hériter de sa teinte.
- */
-export const NESTED_DIMENSION_PALETTES: string[][] = [
+const NESTED_DIMENSION_PALETTES: string[][] = [
   ['#d62728', '#ff7f0e', '#e6ab02', '#8c564b', '#e377c2', '#bcbd22', '#f4a261', '#a0522d'],
   ['#1f77b4', '#2ca02c', '#17becf', '#9467bd', '#1b9e77', '#4575b4', '#66a61e', '#7570b3'],
   ['#636363', '#8c6d31', '#393b79', '#637939', '#7b4173', '#843c39', '#5254a3', '#8ca252']
 ]
 
+/**
+ * La couleur d'une BRANCHE, par son rang — l'ordre fixe de la palette, jamais recyclé
+ * (cf. `capBranches`, qui garantit qu'on ne dépasse pas). Exportée parce que la couronne se
+ * dessine à deux endroits : dans une fenêtre et SUR UN NŒUD (cf. NodeStatsCharts), et que
+ * deux palettes feraient de la même figure deux figures.
+ */
 export const sunburstBranchColor = (theme: 'light' | 'dark' = 'light') =>
   (index: number): string => THEME[theme].palette[index % MAX_BRANCHES]
 // Un secteur plus étroit que ça ne se voit ni ne se survole : on l'agrège au « Autres »
@@ -742,6 +744,22 @@ export const partitionSunburst = (
       }
       return style.depth_shading ? shadeForDepth(hue, depth, theme) : hue
     }
+    // La teinte du secteur, dans l'ordre où les règles priment :
+    //  - un secteur de complément (« non réparti », « autres ») n'est pas une branche : il prend la
+    //    teinte neutre plutôt que de se faire passer pour un élément du modèle ;
+    //  - sous 'palette', un secteur de dimension emboîtée prend la palette de sa dimension ;
+    //  - une branche d'axe coloré (os#1509) prend la teinte de cet axe ;
+    //  - sous 'model', la couleur de l'élément commande, sans dégradé de profondeur (os#1425) ;
+    //  - sinon, la teinte de la branche, dégradée avec la profondeur si demandé.
+    const sliceColor = (): string => {
+      if (node.is_residual) return others
+      if (node.palette !== undefined && style.color_source === 'palette' && !color_branch) {
+        return nestedColor(node.palette)
+      }
+      if (color_branch) return axisColor()
+      if (style.color_source === 'model' && node.color) return node.color
+      return style.depth_shading ? shadeForDepth(base, depth, theme) : base
+    }
     const texture_branch = (texture_axis === 'none' || node.is_residual) ? undefined : node.axis_branches?.[texture_axis]
     let texture: number | null = null
     if (texture_branch) {
@@ -757,19 +775,7 @@ export const partitionSunburst = (
       depth,
       a0,
       a1,
-      // Un secteur de complément (« non réparti », « autres ») n'est pas une branche :
-      // il prend la teinte neutre plutôt que de se faire passer pour un nœud du modèle.
-      // os#1425 — sous 'model', c'est la couleur du NŒUD qui commande, et le dégradé de
-      // profondeur ne s'applique pas : deux nœuds du modèle se distinguent déjà par elle.
-      color: node.is_residual
-        ? others
-        : (node.palette !== undefined && style.color_source === 'palette' && !color_branch)
-          ? nestedColor(node.palette)
-          : color_branch
-          ? axisColor()
-          : (style.color_source === 'model' && node.color)
-            ? node.color
-            : (style.depth_shading ? shadeForDepth(base, depth, theme) : base),
+      color: sliceColor(),
       is_residual: !!node.is_residual,
       is_disaggregated: !!node.is_disaggregated,
       dimension_id: node.dimension_id,

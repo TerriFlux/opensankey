@@ -93,14 +93,40 @@ export const HIERARCHY_FOCUS_KEY = 'hierarchy_focus'
  * feuilles », la figure montrait déjà tout et le clic était inerte par construction — le défaut
  * que Julien a rapporté sous « le clic ne marche plus ».
  *
- * Même sorte et même absence d'interface que le foyer : ce sont des nœuds de CE diagramme, et on
+ * Même sorte et même absence d'interface que le foyer : ce sont des éléments de CE diagramme, et on
  * les ouvre en cliquant, pas en remplissant un champ.
+ *
+ * Ce sont des nœuds sous une descente par nœuds enfants, des cases `<flux>[#self|#other]` sous un
+ * croisement (os#1509). La coupe d'une DIMENSION DE DONNÉES n'est pas ici : elle a ses deux clés,
+ * juste dessous. Lecture et écriture passent par `figureOpening`, et par lui seul.
  */
 export const HIERARCHY_EXPANDED_KEY = 'hierarchy_expanded'
 export const hierarchyExpandedAttribute = () => figureAttribute<string[] | undefined>(
   undefined, 'identity', {
-    en: 'Opened nodes', fr: 'Nœuds ouverts', es: 'Nodos abiertos',
-    de: 'Geöffnete Knoten', it: 'Nodi aperti', 'zh-CN': '已展开的节点', ja: '開いたノード'
+    en: 'Opened sectors', fr: 'Secteurs ouverts', es: 'Sectores abiertos',
+    de: 'Geöffnete Sektoren', it: 'Settori aperti', 'zh-CN': '已展开的扇区', ja: '開いたセクター'
+  }, undefined, { kind: 'none' }
+)
+/**
+ * os#1511 — LA FIGURE SUIT-ELLE LA COUPE DU DIAGRAMME ? Absent = oui (le défaut) ; `false` = elle
+ * a sa propre coupe, `dimension_opening`.
+ */
+export const COORDINATES_LINKED_KEY = 'coordinates_linked'
+export const coordinatesLinkedAttribute = () => figureAttribute<boolean | undefined>(
+  undefined, 'identity', {
+    en: 'Linked to the diagram', fr: 'Liées au diagramme', es: 'Vinculadas al diagrama',
+    de: 'Mit dem Diagramm verknüpft', it: 'Collegate al diagramma', 'zh-CN': '与图表联动', ja: '図と連動'
+  }, undefined, { kind: 'none' }
+)
+/**
+ * os#1511 — LA COUPE PROPRE d'une figure détachée : les membres ouverts, par dimension de données.
+ * Absente = jamais écrite (la figure découpe sa première dimension d'un cran).
+ */
+export const DIMENSION_OPENING_KEY = 'dimension_opening'
+export const dimensionOpeningAttribute = () => figureAttribute<{ [dimension_id: string]: string[] } | undefined>(
+  undefined, 'identity', {
+    en: 'Opened members', fr: 'Membres ouverts', es: 'Miembros abiertos',
+    de: 'Geöffnete Elemente', it: 'Membri aperti', 'zh-CN': '已展开的成员', ja: '開いたメンバー'
   }, undefined, { kind: 'none' }
 )
 /**
@@ -386,6 +412,8 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   ...hierarchyReadingAttributes(),
   [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute(),
   [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute(),
+  [COORDINATES_LINKED_KEY]: coordinatesLinkedAttribute(),
+  [DIMENSION_OPENING_KEY]: dimensionOpeningAttribute(),
   [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute()
 }
 
