@@ -940,9 +940,27 @@ export class Class_DataTag extends Class_ProtoTag {
     super._copyFrom(tag_to_copy)
     this._scale = (tag_to_copy as Class_DataTag)._scale
     this._has_own_scale = (tag_to_copy as Class_DataTag)._has_own_scale
-    // os#1511 — l'id du parent se recopie tel quel : la copie vit dans une dimension dont les
-    // membres portent les MÊMES ids (c'est l'hypothèse de tout `copyFrom` de tag ici).
+    // os#1511 — l'id du parent se recopie tel quel ; quand les deux dimensions sont appariées par
+    // nom avec des ids de membres différents, le groupe le retraduit ensuite
+    // (`Class_DataTagGroup._copyFrom` → `remapParentId`).
     this._parent_id = (tag_to_copy as Class_DataTag)._parent_id
+    // os#1511 — tout ce que `_toJSON` écrit se copie : la géométrie du membre aussi, sinon une
+    // réinitialisation de vue (`sankey.copyFrom`) perdait les nœuds de membre déplacés.
+    const source_position = (tag_to_copy as Class_DataTag)._position
+    this._position = source_position === undefined ? undefined : { ...source_position }
+    this._latitude = (tag_to_copy as Class_DataTag)._latitude
+    this._longitude = (tag_to_copy as Class_DataTag)._longitude
+  }
+
+  /**
+   * os#1511 — retraduit l'id du parent d'un id de la SOURCE vers l'id du membre correspondant de
+   * ce groupe (appariement par nom, cf. `Class_ProtoTagGroup._copyFrom`). Sans effet si l'id
+   * n'est pas dans la table.
+   */
+  public remapParentId(source_to_target: { [source_id: string]: string }) {
+    if (this._parent_id === undefined) return
+    const target = source_to_target[this._parent_id]
+    if (target !== undefined) this._parent_id = target
   }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================

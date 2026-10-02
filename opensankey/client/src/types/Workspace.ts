@@ -524,10 +524,7 @@ export class Class_Workspace {
       const bound = this.boundWindowDocument(active_id, mc.main_zone_active_pane_key)
       if (bound) return bound
     }
-    const occupant = active_id === null ? undefined : mc.mainZoneOccupantById(active_id)
-    const sheet = occupant ? mainZoneSubjectSheet(occupant.subject) : ''
-    if (sheet === '' || sheet === main.current_sheet_id) return main
-    return main.sheetApplication(sheet) ?? main
+    return this.active_sheet_document
   }
 
   /**

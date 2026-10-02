@@ -334,6 +334,10 @@ export class Class_NodeElement extends Class_NodeBase {
     super._copyFrom(_)
     this.copyDimensionsFrom(_ as Class_NodeElement)
     this._tooltip_text = _._tooltip_text
+    // os#1511 — le rattachement à une dimension est écrit par la persistance (`driving_dimension`) :
+    // il se copie aussi, sinon réinitialiser une vue détachait le nœud de son axe. Copié par ID,
+    // résolu à la lecture dans le sankey de destination.
+    this._driving_dimension_id = _._driving_dimension_id
     this._nodeTagsManager.copyTagsFrom(_)
   }
 
