@@ -60,6 +60,7 @@ import {
   dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
+import { foldSmallCells } from '../Algorithms/DimensionOthers'
 import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
@@ -341,6 +342,16 @@ const smallMultiplesOf = (
   // — « Monde » seul fait UNE couronne, c'est le retour (cf. `smallMultipleMembersOf`).
   const members = smallMultipleMembersOf(dimension, readFigureOpening(ctx.options).data)
   return members.length > 0 ? { dimension, members } : null
+}
+
+/** Au-delà, la liste des cases repliées dans « Autres » s'arrête sur « … (+N) ». */
+const OTHERS_CELL_TITLE_MAX = 12
+
+/** L'info-bulle de la case « Autres » : son nom, puis les membres qu'elle réunit. */
+const othersCellTitle = (name: string, folded: readonly string[]): string => {
+  const listed = folded.slice(0, OTHERS_CELL_TITLE_MAX)
+  const rest = folded.length - listed.length
+  return [`${name} (${folded.length})`, ...listed, ...(rest > 0 ? [`… (+${rest})`] : [])].join('\n')
 }
 
 /** La navigation de la figure, la dimension des petits multiples fixée sur `member`. */
@@ -1155,24 +1166,50 @@ export const registerAnalysisRepresentations = (): void => {
         grid.style.flex = '1 1 0'
         grid.style.minWidth = '0'
         grid.style.minHeight = '0'
-        const n = split.members.length
+        const by_id = new Map((parts as unknown as Type_StatSlice[]).map(p => [p.id, p]))
+        const base = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
+        const measured = split.members.map(member => {
+          const slices = smallMultipleSlices(ctx, member)
+            .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
+          return { name: member.name, slices, value: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
+        })
+        // 02/10/2026 — LA COURONNE « AUTRES » (Julien : « selon le même principe que Autres pour les
+        // bandes ou les parts »). Les petites cases se replient par la règle des parts, avec les
+        // réglages de la couronne (`parts_group_under`, `parts_max`), en UNE dernière case qui vaut
+        // leur agrégat, part par part ; une case nulle dans l'unité affichée n'a jamais sa couronne.
+        const fmt = base.format
+        const { kept: shown, folded } = foldSmallCells(
+          measured,
+          { min_share_pct: style.parts_group_under, max_parts: style.parts_max },
+          value => !(value > 0) || fmt(value) === fmt(0)
+        )
+        const per_member: { name: string, slices: Type_StatSlice[], total: number, folded_names?: string[] }[] =
+          shown.map(m => ({ name: m.name, slices: m.slices, total: m.value }))
+        if (folded.length > 0) {
+          const sum = new Map<string, Type_StatSlice>()
+          folded.forEach(m => m.slices.forEach(s => {
+            const seen = sum.get(s.id)
+            sum.set(s.id, seen ? { ...seen, value: seen.value + s.value } : s)
+          }))
+          const slices = [...sum.values()]
+          per_member.push({
+            name: t('sunburst.others') as string,
+            slices,
+            total: slices.reduce((s, p) => s + Math.max(0, p.value), 0),
+            folded_names: folded.map(m => m.name)
+          })
+        }
+        const n = per_member.length
         const cols = Math.ceil(Math.sqrt(n * Math.max(1, grid.clientWidth) / Math.max(1, grid.clientHeight)))
         const rows = Math.ceil(n / Math.max(1, cols))
         grid.className = 'figure_small_multiples'
         grid.style.display = 'grid'
         grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`
         grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`
-        const by_id = new Map((parts as unknown as Type_StatSlice[]).map(p => [p.id, p]))
-        const base = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
         // 02/10/2026 — UNE SEULE ÉCHELLE (Julien : « on a l'impression de ne pas avoir la même
         // échelle »). L'aire de chaque couronne dit son total, la plus grosse remplit sa case ; et
         // toutes les cases se cadrent sur la MÊME boîte — l'union de leurs disques et étiquettes
         // sorties —, posée une fois tout dessiné. Chacune se cadrait sur ses propres étiquettes.
-        const per_member = split.members.map(member => {
-          const slices = smallMultipleSlices(ctx, member)
-            .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
-          return { member, slices, total: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
-        })
         const max_total = Math.max(0, ...per_member.map(m => m.total))
         // L'ORDRE ET LA COULEUR DES PARTS, décidés UNE FOIS sur l'union des cases : une part a la
         // même teinte dans chaque case, et c'est ce qui permet à une seule légende de les nommer.
@@ -1185,11 +1222,13 @@ export const registerAnalysisRepresentations = (): void => {
         const colors = donutPartColors(union_order, style)
         const drawn: Type_StatSlice[][] = []
         const frames: { box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void }[] = []
-        per_member.forEach(({ member, slices, total }, i) => {
+        per_member.forEach(({ name, slices, total, folded_names }, i) => {
           const cell = document.createElement('div')
           cell.style.position = 'relative'
           cell.style.minWidth = '0'
           cell.style.minHeight = '0'
+          // La case « Autres » dit qui elle réunit, au survol de son centre (liste tronquée).
+          if (folded_names) cell.title = othersCellTitle(name, folded_names)
           grid.appendChild(cell)
           drawDonutChart(cell, slices, {
             ...base,
@@ -1198,7 +1237,7 @@ export const registerAnalysisRepresentations = (): void => {
             // couronne (`small_multiple.name`). Collé au bord de la case, il était rogné et loin
             // de son disque.
             texts: () => [],
-            title_fallback: member.name,
+            title_fallback: name,
             part_aspect: wiring.part_aspect,
             on_part_select: wiring.on_part_select,
             // 02/10/2026 — LE CLIC OUVRE, COMME EN COURONNE SEULE (Julien : « le clic ne marche pas
@@ -1218,7 +1257,7 @@ export const registerAnalysisRepresentations = (): void => {
               frame: (box, apply) => { frames.push({ box, apply }) },
               colors,
               drawn: (kept) => { drawn.push(kept) },
-              name: member.name
+              name
             }
           })
         })

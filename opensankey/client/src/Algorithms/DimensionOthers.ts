@@ -67,3 +67,34 @@ export const foldSmallParts = <T extends { value: number }>(
     folded: parts.filter((_, index) => folded_idx.has(index))
   }
 }
+
+/**
+ * 02/10/2026 — LES CASES DES PETITS MULTIPLES SE REPLIENT COMME LES PARTS (Julien : « il faut la
+ * couronne "Autres" selon le même principe que Autres pour les bandes ou les parts »). Une couronne
+ * par continent montrait Divers, Océanie, Non déterminé, Antarctique : des cases quasi vides. La
+ * règle est `foldSmallParts`, appliquée aux TOTAUX des cases, avec les réglages de la couronne.
+ *
+ * En plus, UNE CASE VIDE N'A JAMAIS SA COURONNE (`is_empty` : total nul, ou nul une fois écrit dans
+ * l'unité de la figure) : elle passe dans « Autres » quand il y en a un, et disparaît sinon. Un
+ * « Autres » qui ne réunirait qu'une seule case non vide n'est pas formé — la case garde son nom.
+ */
+export const foldSmallCells = <T extends { value: number }>(
+  cells: readonly T[],
+  opts: Type_OthersOptions = {},
+  is_empty: (value: number) => boolean = value => !(value > 0)
+): { kept: T[], folded: T[] } => {
+  const { kept, folded } = foldSmallParts(cells, opts)
+  const empty = (cell: T) => is_empty(cell.value)
+  const folded_full = folded.filter(cell => !empty(cell))
+  if (folded_full.length < 2) {
+    // Pas d'« Autres » : les cases non vides gardent leur couronne, les vides disparaissent.
+    const shown = new Set<T>([...kept, ...folded_full])
+    return { kept: cells.filter(cell => shown.has(cell) && !empty(cell)), folded: [] }
+  }
+  const out = new Set<T>(folded)
+  kept.forEach(cell => { if (empty(cell)) out.add(cell) })
+  return {
+    kept: cells.filter(cell => !out.has(cell)),
+    folded: cells.filter(cell => out.has(cell))
+  }
+}
