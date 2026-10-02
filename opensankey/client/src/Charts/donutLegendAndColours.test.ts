@@ -62,10 +62,11 @@ afterEach(() => { document.body.innerHTML = '' })
 
 describe('la legende d une couronne', () => {
 
-  test('elle se pose DESSOUS par defaut', () => {
+  test('elle se pose A GAUCHE par defaut', () => {
     // Le defaut du trace et celui que l inspecteur montre doivent dire la meme chose : c est
     // `DONUT_HONOURS.legend_position` qui porte l autre moitie (cf. analysisFigureAttributes).
-    expect(DONUT_STYLE_DEFAULTS.legend_position).toBe('bottom')
+    // 01/10/2026 — a gauche (Julien), quand l auteur la rend visible : masquee par defaut.
+    expect(DONUT_STYLE_DEFAULTS.legend_position).toBe('left')
   })
 
   test('elle ne redit pas le pourcentage que le secteur porte deja', () => {

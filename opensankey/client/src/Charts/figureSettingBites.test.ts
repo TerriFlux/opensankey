@@ -107,7 +107,12 @@ const allume = <T extends object>(base: T): T => ({
   name_label_is_visible: true,
   value_label_is_visible: true,
   legend_visible: true,
-  name_label_callout: false
+  name_label_callout: false,
+  // 01/10/2026 — la couronne envoie EN DETACHE ce qui ne tient pas dans son secteur
+  // (`labels_callout_small`, son defaut). Sans geometrie, jsdom ne fait rien tenir : tout partirait
+  // en detache, et la sonde mesurerait l etiquette detachee, pas celle du secteur. Dette connue :
+  // l etiquette detachee ignore decalages, orientation et typographie de la valeur.
+  labels_callout_small: false
 })
 
 /** Dessine dans un conteneur neuf et rend le DOM produit. */

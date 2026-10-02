@@ -34,6 +34,10 @@ const styleOf = (over: Partial<Type_FigureChartStyle>): Type_FigureChartStyle =>
   ...DONUT_STYLE_DEFAULTS,
   name_label_is_visible: true,
   name_label_callout: false,
+  // 01/10/2026 — le defaut d une couronne ECRIT EN DETACHE ce qui est trop petit
+  // (`labels_callout_small`) : la miette ne se tait plus, elle sort. Ce banc mesure le seuil
+  // d ecriture DANS le secteur, donc sans ce renvoi.
+  labels_callout_small: false,
   // Le repliement en « Autres » emporterait la miette avant qu on ait mesure son etiquette : on le
   // coupe pour ne mesurer QUE le seuil d ecriture, qui est le sujet.
   parts_group_under: 0,
