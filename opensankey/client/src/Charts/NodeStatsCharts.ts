@@ -238,6 +238,18 @@ export interface Type_SmallMultipleCell {
 export const isWholeRing = (start_angle: number, end_angle: number): boolean =>
   end_angle - start_angle >= 2 * Math.PI - 1e-6
 
+/**
+ * 02/10/2026 — L'ANGLE `a` (repère d3 : 0 en haut, sens horaire, quelconque modulo 2π) tombe-t-il
+ * dans le secteur [start, end], à `tol` radians près de chaque côté ? On mesure l'angle À PARTIR du
+ * début du secteur, ramené dans [0, 2π) : `atan2` rend (-π, π], et un coin juste à gauche du bas
+ * (≈ -π) d'un secteur de plus d'un demi-tour parti de 0 était jugé dehors — l'étiquette sortait.
+ */
+export const angleInSector = (a: number, start: number, end: number, tol: number = 0): boolean => {
+  let rel = (a - (start - tol)) % (2 * Math.PI)
+  if (rel < 0) rel += 2 * Math.PI
+  return rel <= (end - start) + 2 * tol
+}
+
 // Sous cette taille, le nom d'une case ne se lit plus : on le coupe, puis on le sort du trou.
 const CELL_NAME_MIN_PX = 9
 
@@ -1092,10 +1104,7 @@ export const drawDonutChart = (
       const y = cy + sy * h / 2
       const r = Math.hypot(x, y)
       if (r < inner - tol || r > radius + tol) return false
-      let a = Math.atan2(x, -y)
-      if (a < d.startAngle - Math.PI) a += 2 * Math.PI
-      if (a > d.endAngle + Math.PI) a -= 2 * Math.PI
-      return a >= d.startAngle - tol / Math.max(r, 1) && a <= d.endAngle + tol / Math.max(r, 1)
+      return angleInSector(Math.atan2(x, -y), d.startAngle, d.endAngle, tol / Math.max(r, 1))
     })
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
