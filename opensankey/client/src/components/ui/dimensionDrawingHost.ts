@@ -42,27 +42,24 @@ export const dimensionCarrierCandidates = (app_data: Class_ApplicationData): Cla
 export const dimensionDrawingOf = (_app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_DimensionDrawing =>
   tagg.drawing
 
-type Type_Snapshot = { banner: string, carriers: string[], selected: string[], level?: number }
+type Type_Snapshot = { banner: string, carriers: string[], selected: string[] }
 
 const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_Snapshot => ({
   banner: (tagg as unknown as { banner: string }).banner,
   carriers: dimensionCarriersOf(app_data, tagg).map(node => node.id),
-  selected: tagg.selected_tags_list.map(tag => tag.id),
-  level: tagg.is_hierarchical ? tagg.current_level_index : undefined
+  selected: tagg.selected_tags_list.map(tag => tag.id)
 })
 
 /**
- * Pose une coupe. Hiérarchisée : `selectMembers` (le niveau se déduit des membres, sauf s'il est
- * dit — un niveau entier peut ne montrer que des feuilles moins profondes que lui). Plate : la
+ * Pose une coupe. Hiérarchisée : `selectMembers` (le niveau courant se déduit des membres, cf.
+ * `Class_DataTagGroup.current_level_index` : rien d'autre à restaurer). Plate : la
  * sélection ordinaire, qui impose au passage le mode d'affichage de la dimension (#370) et ne
  * s'inscrit pas dans l'historique — c'est le geste qui s'y inscrit, une fois.
  */
-const poseSelection = (tagg: Class_DataTagGroup, selected: string[], level: number | undefined) => {
+const poseSelection = (tagg: Class_DataTagGroup, selected: string[]) => {
   if (selected.length === 0) return
-  if (tagg.is_hierarchical) {
-    tagg.selectMembers(selected)
-    if (level !== undefined) tagg.current_level_index = level
-  } else tagg.selectTagsFromIds(selected)
+  if (tagg.is_hierarchical) tagg.selectMembers(selected)
+  else tagg.selectTagsFromIds(selected)
 }
 
 const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, state: Type_Snapshot) => {
@@ -75,7 +72,7 @@ const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, stat
   })
   // Un aperçu (menu unitaire) a pu laisser `bypass_redraws` posé : le dessin final doit passer.
   drawing_area.bypass_redraws = false
-  drawing_area.withBypassRedraws(() => poseSelection(tagg, state.selected, state.level), false)
+  drawing_area.withBypassRedraws(() => poseSelection(tagg, state.selected), false)
   drawing_area.rebuildDimensionNodes()
   drawing_area.draw()
   app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
@@ -108,7 +105,7 @@ export const applyDimensionCut = (
   if (ids.length === 0) return
   const now = snapshot(app_data, tagg)
   const banner = options.multi && now.carriers.length === 0 ? 'multi' : now.banner
-  commit(app_data, tagg, { ...now, banner, selected: ids, level: undefined })
+  commit(app_data, tagg, { ...now, banner, selected: ids })
 }
 
 /** os#1511 — UN NIVEAU ENTIER : tous les membres que montre le niveau `index` (annulable). */
@@ -118,7 +115,7 @@ export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class
   const level = Math.min(Math.max(0, index), levels - 1)
   const membres = tagg.membersAtLevel(level)
   if (membres.length === 0) return
-  commit(app_data, tagg, { ...snapshot(app_data, tagg), selected: membres.map(m => m.id), level })
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), selected: membres.map(m => m.id) })
 }
 
 /**

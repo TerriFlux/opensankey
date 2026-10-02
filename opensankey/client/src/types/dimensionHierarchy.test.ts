@@ -51,6 +51,12 @@ function makeArbre(): Arbre {
   return { groupe, produits, cereales, brutes, ble, mais, lait }
 }
 
+/** Rend la dimension PLATE : la hierarchie est la parente, pas les noms de niveaux. */
+function aplatir(groupe: Class_DataTagGroup) {
+  groupe.tags_list.forEach(t => { (t as Class_DataTag).parent = undefined })
+  groupe.levels = []
+}
+
 describe('os#1511 — hierarchie d une dimension : parente portee par le membre', () => {
   test('la parente se lit dans les deux sens, et les feuilles se calculent', () => {
     const { produits, cereales, brutes, ble, mais, lait } = makeArbre()
@@ -115,82 +121,65 @@ describe('os#1511 — membres montres a un niveau, hierarchie DESEQUILIBREE', ()
 
   test('une dimension PLATE montre tous ses membres, comme avant', () => {
     const { groupe } = makeArbre()
-    groupe.levels = []
+    aplatir(groupe)
     expect(groupe.is_hierarchical).toBe(false)
     expect(groupe.current_level).toBeUndefined()
     expect(groupe.membersAtLevel().length).toBe(6)
   })
 
-  test('le niveau courant reste dans les bornes des niveaux declares', () => {
-    const { groupe } = makeArbre()
-    groupe.current_level_index = 99
+  test('le niveau courant se DEDUIT de la selection et reste dans les bornes', () => {
+    const { groupe, ble } = makeArbre()
+    expect(groupe.selectAllAtLevel(99)).toBe(true)
     expect(groupe.current_level_index).toBe(3)
-    groupe.current_level_index = -5
+    expect(groupe.selectAllAtLevel(-5)).toBe(true)
     expect(groupe.current_level_index).toBe(0)
-    // Raccourcir la hierarchie ne doit pas laisser le niveau courant hors des bornes.
-    groupe.current_level_index = 3
+    // Les noms ne bornent plus rien : la profondeur de Ble reste 3, et le niveau aussi.
+    groupe.selectMembers([ble.id])
     groupe.levels = ['a', 'b']
-    expect(groupe.current_level_index).toBe(1)
+    expect(groupe.current_level_index).toBe(3)
   })
 })
 
-describe('os#1511 — changer de niveau garde la LIGNEE', () => {
-  const selectionne = (g: ReturnType<typeof makeArbre>['groupe']) =>
-    g.selected_tags_list.map((t: Class_DataTag) => t.id)
+// os#1511 — LA HIERARCHIE EST LA PARENTE. Les niveaux ne sont que des etiquettes : des parents
+// poses sans niveau nomme hierarchisent la dimension, et une profondeur sans nom en recoit un.
 
-  test('en REMONTANT, on arrive sur l ancetre, pas sur le premier venu', () => {
-    const { groupe, ble } = makeArbre()
-    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
-    ble.setSelected()
-    groupe.selectLevel(1)
-    // De « Ble » on arrive a « Cereales », son ancetre au niveau 1 — pas a « Lait ».
-    expect(selectionne(groupe)).toEqual(['cereales'])
-  })
-
-  test('en DESCENDANT, on entre dans un descendant du membre courant', () => {
-    const { groupe, cereales } = makeArbre()
-    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
-    cereales.setSelected()
-    groupe.selectLevel(3)
-    // On reste dans la branche des cereales : ble ou mais, jamais le lait.
-    expect(['ble', 'mais']).toContain(selectionne(groupe)[0])
-  })
-
-  test('un membre encore montre au nouveau niveau est CONSERVE', () => {
-    const { groupe, lait } = makeArbre()
-    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
-    lait.setSelected()
-    // Le lait est une feuille courte : il reste montre aux niveaux 2 et 3.
-    groupe.selectLevel(3)
-    expect(selectionne(groupe)).toEqual(['lait'])
-  })
-
-  test('sans lignee, on prend le premier membre montre plutot qu un ecran vide', () => {
+describe('os#1511 — hierarchie sans niveaux nommes', () => {
+  test('des parents sans nom de niveau suffisent a hierarchiser', () => {
     const { groupe } = makeArbre()
-    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
-    groupe.selectLevel(2)
-    expect(selectionne(groupe)).toHaveLength(1)
-  })
-
-  test('un index NON FINI est refuse, il ne corrompt pas le niveau courant', () => {
-    const { groupe, ble } = makeArbre()
-    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
-    ble.setSelected()
-    groupe.selectLevel(2)
-    groupe.selectLevel(Number('pas un nombre'))
-    // Le niveau reste celui d avant : sans cette garde il vaudrait NaN, aucune option ne
-    // correspondrait et le selecteur reviendrait au premier niveau sans rien dire.
-    expect(groupe.current_level_index).toBe(2)
-    expect(selectionne(groupe)).toHaveLength(1)
-  })
-
-  test('une dimension PLATE ignore le changement de niveau', () => {
-    const { groupe, ble } = makeArbre()
     groupe.levels = []
-    groupe.tags_list.forEach((t: Class_DataTag) => t.setUnSelected())
-    ble.setSelected()
-    groupe.selectLevel(2)
-    expect(selectionne(groupe)).toEqual(['ble'])
+    expect(groupe.is_hierarchical).toBe(true)
+    expect(groupe.levels).toHaveLength(4)
+    expect(groupe.named_levels).toEqual([])
+    // Sans double compte : le niveau 1 ne montre pas les parents avec leurs enfants.
+    expect(groupe.membersAtLevel(1).map((t: Class_DataTag) => t.id).sort()).toEqual(['cereales', 'lait'])
+  })
+
+  test('un seul niveau nomme ne bride pas la profondeur', () => {
+    const { groupe } = makeArbre()
+    groupe.levels = ['tout']
+    expect(groupe.levels[0]).toBe('tout')
+    expect(groupe.levels).toHaveLength(4)
+    expect(groupe.membersByLevel().map(n => n.members.length)).toEqual([1, 2, 1, 2])
+  })
+
+  test('des noms sans parente ne hierarchisent rien', () => {
+    const { groupe } = makeArbre()
+    aplatir(groupe)
+    groupe.levels = ['a', 'b']
+    expect(groupe.is_hierarchical).toBe(false)
+  })
+
+  test('l index des enfants suit un reparentage et un ajout', () => {
+    const { groupe, produits, cereales, lait } = makeArbre()
+    expect(produits.children.map((t: Class_DataTag) => t.id).sort()).toEqual(['cereales', 'lait'])
+    lait.parent = cereales
+    expect(produits.children.map((t: Class_DataTag) => t.id)).toEqual(['cereales'])
+    expect(groupe.depthOf(lait)).toBe(2)
+    const miel = groupe.addTag('Miel', 'miel') as Class_DataTag
+    miel.parent = produits
+    expect(produits.children.map((t: Class_DataTag) => t.id).sort()).toEqual(['cereales', 'miel'])
+    groupe.removeTag(miel)
+    expect(produits.children.map((t: Class_DataTag) => t.id)).toEqual(['cereales'])
   })
 })
 
@@ -210,10 +199,11 @@ describe('os#1511 — persistance : cles ADDITIVES, fichier plat inchange', () =
 
   test('la hierarchie fait un aller-retour JSON a l identique', () => {
     const { groupe, ble } = makeArbre()
-    groupe.current_level_index = 2
+    groupe.selectAllAtLevel(2)
     const json_groupe = groupe.toJSON()
     expect(json_groupe['levels']).toEqual(['produits agricoles', 'filieres', 'transformation', 'produits'])
-    expect(json_groupe['current_level']).toBe(2)
+    // Le niveau courant ne s ecrit plus : il se deduit de la selection, relue avec les membres.
+    expect(json_groupe['current_level']).toBeUndefined()
     expect(ble.toJSON()['parent']).toBe('brutes')
 
     const app2 = new Class_ApplicationData(false)
@@ -243,10 +233,11 @@ describe('os#1511 — persistance : cles ADDITIVES, fichier plat inchange', () =
     // traverserait pas le chemin de production.
     const json = groupe.toJSON()
     json['levels'] = ['filiere', '', 'filiere', 'produit']
+    // Clé des fichiers d avant : ignoree, le niveau courant se deduit de la selection.
     json['current_level'] = 1
     groupe.fromJSON(json)
     expect(groupe.levels).toEqual(['filiere', 'produit'])
-    expect(groupe.current_level).toBe('produit')
+    expect(groupe.current_level).toBe('filiere')
   })
 })
 
@@ -275,7 +266,7 @@ describe('os#1511 — les membres ranges par niveau, pour une liste unique', () 
 
   test('une dimension plate ne range rien', () => {
     const { groupe } = makeArbre()
-    groupe.levels = []
+    aplatir(groupe)
     expect(groupe.membersByLevel()).toEqual([])
   })
 
@@ -346,11 +337,11 @@ describe('os#1511 — choisir un niveau entier', () => {
 
   test('une dimension PLATE n a pas de niveau a choisir', () => {
     const { groupe } = makeArbre()
-    groupe.levels = []
+    aplatir(groupe)
     expect(groupe.selectAllAtLevel(0)).toBe(false)
   })
 
-  test('un index NON FINI est refuse, comme pour selectLevel', () => {
+  test('un index NON FINI est refuse, il ne corrompt pas le niveau courant', () => {
     const { groupe } = makeArbre()
     groupe.selectAllAtLevel(1)
     expect(groupe.selectAllAtLevel(Number('pas un nombre'))).toBe(false)
@@ -393,7 +384,7 @@ describe('os#1511 — une dimension hierarchisee toute grise recoit une palette'
 
   test('une dimension PLATE ne recoit rien', () => {
     const { groupe } = makeArbre()
-    groupe.levels = []
+    aplatir(groupe)
     expect(applyHierarchyPaletteIfGrey(groupe)).toBe(0)
   })
 })

@@ -175,7 +175,7 @@ describe('os#1511 lot 2 — persistance ADDITIVE : un fichier sans rien ne chang
     // ViewsManager reinitialise une vue par `sankey.copyFrom` : un champ ecrit mais pas copie y
     // disparaissait en silence (niveaux, niveau courant, geometrie des membres, attachement).
     const { app, sankey, pays, france, noeud } = monter()
-    pays.current_level_index = 1
+    pays.selectAllAtLevel(1)
     pays.member_bands = false
     pays.reference_node_id = noeud.id
     pays.members_order = 'tree'

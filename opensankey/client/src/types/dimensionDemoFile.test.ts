@@ -162,8 +162,8 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     })
 
     // Le fichier s ouvre au niveau le plus agrege : un seul flux, le total.
-    filiere.selectLevel(0)
-    pays.selectLevel(0)
+    filiere.selectAllAtLevel(0)
+    pays.selectAllAtLevel(0)
 
     // L ECHELLE, sans quoi le diagramme s ouvre avec des flux minuscules dans un coin —
     // constate a l ecran. Le SOCLE, qui est bien regle, prend un dixieme de son total : on
