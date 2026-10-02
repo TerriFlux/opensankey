@@ -154,6 +154,15 @@ export type Type_FigureControl = {
    * diagramme bouclé, où entrées et sorties sont égales).
    */
   advanced?: boolean
+  /**
+   * 02/10/2026 — UN CHOIX SANS EFFET SE GRISE, ET DIT POURQUOI (os#1511).
+   *
+   * Julien, sur « Clic sur une part » : « dans le cas où il n'y a pas de diagramme il y a des
+   * commandes en trop ». Le choix reste visible — sa valeur peut être posée —, il ne s'offre plus :
+   * `null` s'il agit, sinon la raison dans les sept langues, que le panneau et la barre du haut
+   * mettent en info-bulle.
+   */
+  choiceUnavailable?: (value: string, ctx: Type_FigureChoiceContext) => { [lang: string]: string } | null
 }
 
 /** Un attribut déclaré par une nature : le patron des éléments, plus sa sorte et son contrôle. */

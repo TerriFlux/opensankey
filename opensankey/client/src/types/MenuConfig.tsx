@@ -159,7 +159,8 @@ export type Type_TopbarFigureChoice = {
   key: string
   label: string
   value: string
-  options: { value: string, label: string, disabled?: boolean }[]
+  /** `title` : pourquoi une option grisée ne s'offre pas, en info-bulle. */
+  options: { value: string, label: string, disabled?: boolean, title?: string }[]
   disabled?: boolean
   choose: (value: string) => void
 }

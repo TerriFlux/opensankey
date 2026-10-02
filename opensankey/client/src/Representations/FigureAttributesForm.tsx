@@ -162,6 +162,8 @@ const FigureField = ({ app_data, item, is_overloaded, onChange }: {
           size='xs'
           variant={on ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
           aria-pressed={on}
+          isDisabled={c.disabled}
+          title={c.reason}
           sx={{ flex: '1 1 auto', minWidth: 'auto', width: 'auto', paddingInline: '0.4rem', height: 'auto' }}
           onClick={() => {
             const numeric = item.choices?.every(x => String(Number(x.value)) === String(x.value))
@@ -181,7 +183,8 @@ const FigureField = ({ app_data, item, is_overloaded, onChange }: {
           onChange(numeric ? Number(e.target.value) : e.target.value)
         }}
       >
-        {(item.choices ?? []).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        {(item.choices ?? []).map(c =>
+          <option key={c.value} value={c.value} disabled={c.disabled} title={c.reason}>{c.label}</option>)}
       </Select>
       : item.kind === 'color'
         ? <MenuColorPicker

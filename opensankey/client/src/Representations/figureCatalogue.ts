@@ -406,6 +406,39 @@ export const LEVELS_CONFIG = {
 } as const
 
 // ── interaction_* : ce que fait un geste sur la figure ───────────────────────────────────────
+
+/**
+ * 02/10/2026 — LE DIAGRAMME EST-IL AFFICHÉ ? Un volet Sankey au moins dans la grande zone
+ * (`main_zone_sankey_panes`). Sans annuaire lisible (sonde, aperçu, test), on le suppose affiché :
+ * on ne retire pas un choix sur une ignorance.
+ */
+export const diagramIsShown = (app_data: unknown): boolean => {
+  const panes = (app_data as { menu_configuration?: { main_zone_sankey_panes?: unknown[] } } | undefined)
+    ?.menu_configuration?.main_zone_sankey_panes
+  return panes === undefined || panes.length > 0
+}
+
+/** Les choix du clic qui écrivent dans le diagramme. */
+export const CLICK_CHOICES_ON_DIAGRAM: readonly string[] = ['aggregate', 'both']
+
+/**
+ * Julien : « dans le cas où il n'y a pas de diagramme il y a des commandes en trop ». Sans diagramme
+ * à côté de la figure, déplier « dans le diagramme » ne se voit nulle part : le choix se grise, et le
+ * geste ne l'écrit pas (cf. `donutClickGestures`).
+ */
+const clickChoiceUnavailable = (value: string, ctx: { app_data: unknown }) =>
+  CLICK_CHOICES_ON_DIAGRAM.includes(value) && !diagramIsShown(ctx.app_data)
+    ? {
+      en: 'No diagram is shown beside the figure: nothing to expand there.',
+      fr: 'Aucun diagramme n’est affiché à côté de la figure : rien à y déplier.',
+      es: 'No se muestra ningún diagrama junto a la figura: nada que desplegar.',
+      de: 'Neben der Abbildung wird kein Diagramm angezeigt: dort gibt es nichts aufzuklappen.',
+      it: 'Nessun diagramma è mostrato accanto alla figura: niente da espandere.',
+      'zh-CN': '图形旁没有显示图表：无处可展开。',
+      ja: '図の横に図表が表示されていないため、展開する先がありません。'
+    }
+    : null
+
 export const INTERACTION_CONFIG = {
   // ── 24/09/2026 — LE CLIC OUVRE L'ANNEAU, TOUJOURS. CE RÉGLAGE DIT CE QU'IL FAIT EN PLUS ─────
   //
@@ -437,7 +470,8 @@ export const INTERACTION_CONFIG = {
       choice('zoom', { en: 'Zooms in only', fr: 'Zoome dedans seulement', es: 'Solo hace zoom', de: 'Zoomt nur hinein', it: 'Ingrandisce soltanto', 'zh-CN': '仅放大', ja: 'ズームのみ' }),
       choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et le déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' })
     ],
-    advanced: true
+    advanced: true,
+    choiceUnavailable: clickChoiceUnavailable
   }),
   interaction_tooltip: entry<boolean>(true, 'interaction', {
     en: 'Tooltip on hover', fr: 'Info-bulle au survol', es: 'Información al pasar el ratón',

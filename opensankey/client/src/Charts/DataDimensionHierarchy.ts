@@ -92,6 +92,14 @@ export interface Type_DataDimensionOptions {
    * par niveau (cf. `foldInPlaceLevels`).
    */
   levels_display_of?: (dimension_id: string) => 'in_place' | 'rings'
+  /**
+   * 02/10/2026 — LE FOYER (« Zoome dedans ») : la coordonnée du secteur où la figure est descendue.
+   * Le centre devient ce secteur (nom et valeur) et ses enfants remplissent l'anneau, qu'il soit
+   * ouvert ou non dans la coupe : zoomer n'ouvre rien. Sous lui, la coupe reprend la main. Un foyer
+   * qui ne désigne plus un secteur possible (dimension qui ne découpe plus, membre disparu, rien
+   * dessous) est ignoré : la figure revient au sujet.
+   */
+  focus?: Type_MemberRef[]
 }
 
 /**
@@ -286,6 +294,32 @@ export const smallMultipleMembersOf = (dim: Class_DataTagGroup, opening: Type_Da
 }
 
 /**
+ * 02/10/2026 — LE SECTEUR QUE DÉSIGNE UN FOYER, s'il peut l'être sous cette coupe : chaque membre de
+ * la coordonnée existe dans une dimension de la figure, la dernière découpe, et il y a quelque chose
+ * dessous (des enfants, ou une dimension suivante qui découpe). `null` sinon : on ne zoome pas sur
+ * une feuille, l'anneau serait vide.
+ */
+export const resolveDataFocus = (
+  cut: Type_DataCut,
+  refs: Type_MemberRef[] | undefined
+): { k: number, member: Class_DataTag, coord: Map<string, Class_DataTag>, refs: Type_MemberRef[] } | null => {
+  if (refs === undefined || refs.length === 0) return null
+  const coord = new Map<string, Class_DataTag>()
+  for (const ref of refs) {
+    const dim = cut.dims.find(d => d.id === ref.dimension_id)
+    const member = dim?.tags_dict[ref.member_id] as Class_DataTag | undefined
+    if (dim === undefined || member === undefined) return null
+    coord.set(dim.id, member)
+  }
+  const last = refs[refs.length - 1]
+  const k = cut.dividing.findIndex(d => d.id === last.dimension_id)
+  if (k < 0) return null
+  const member = coord.get(last.dimension_id) as Class_DataTag
+  if (member.children.length === 0 && k + 1 >= cut.dividing.length) return null
+  return { k, member, coord, refs }
+}
+
+/**
  * L'ARBRE d'une couronne sur une ou plusieurs dimensions de données, selon une coupe (`dataCutOf`).
  *
  * La racine unique d'une dimension ne fait jamais d'anneau (« Monde », « Tous produits » : un
@@ -353,7 +387,7 @@ export const buildNestedDimensionTree = (
 
   const build = (
     refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number,
-    branch: string, entry_depth: number
+    branch: string, entry_depth: number, force_open = false
   ): Type_SunburstNode => {
     const dim = dims[k]
     const declared = valueAt(coord)
@@ -364,7 +398,8 @@ export const buildNestedDimensionTree = (
       ...(nested_palettes ? { palette: { index: k, branch_id: branch, depth: depth - entry_depth } } : {})
     }
     // Ouvert dans sa dimension : ses enfants. Sinon, la dimension suivante qui découpe.
-    const own = isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
+    // `force_open` : le foyer montre ses enfants, ouvert ou non dans la coupe.
+    const own = force_open || isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
     const next: { k: number, members: Class_DataTag[] } | null = own.length > 0
       ? { k, members: own }
       : (k + 1 < dims.length ? { k: k + 1, members: entryOf(dims[k + 1]) } : null)
@@ -401,7 +436,17 @@ export const buildNestedDimensionTree = (
   }
 
   let children: Type_SunburstNode[]
-  if (dims.length === 0) {
+  // LE FOYER, quand la figure est descendue : le secteur est bâti comme les autres, à la profondeur
+  // du centre, et ce sont SES enfants qui forment le premier anneau.
+  const focus = resolveDataFocus(cut, options.focus)
+  let root_label = displayedNameOf(element)
+  if (focus !== null) {
+    const coord = new Map(base_coord)
+    focus.coord.forEach((member, dim_id) => coord.set(dim_id, member))
+    const node = build(focus.refs, coord, focus.k, focus.member, 0, focus.member.id, 0, true)
+    children = node.children
+    root_label = focus.member.name
+  } else if (dims.length === 0) {
     // RIEN NE DÉCOUPE : un seul secteur, la racine de la première dimension — le tout, sans partage.
     const first = all[0]
     const whole = (cut.linked ? (first.selected_tags_list[0] as Class_DataTag | undefined) : undefined)
@@ -423,7 +468,7 @@ export const buildNestedDimensionTree = (
   const total = children.reduce((acc, child) => acc + child.value, 0)
   const built: Type_SunburstNode = {
     id: element.id,
-    label: displayedNameOf(element),
+    label: root_label,
     value: total, declared: total, color: null, depth: 0, children, dimension_id: all[0].id
   }
   // La disposition par dimension se pose AVANT de nommer les anneaux : ils se comptent sur le dessin.
