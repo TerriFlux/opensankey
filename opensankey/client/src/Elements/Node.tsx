@@ -1088,7 +1088,7 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public set driving_dimension(dimension: Class_DataTagGroup | undefined) {
-    this._driving_dimension_id = dimension?.id
+    this.setDrivingDimensionId(dimension?.id)
   }
 
   /**
@@ -1097,9 +1097,12 @@ export class Class_NodeElement extends Class_NodeBase {
    * fichier. La résolution se fait à la lecture, par `driving_dimension`.
    */
   public setDrivingDimensionId(dimension_id: string | undefined) {
+    // Le dessin de l'ancienne et de la nouvelle dimension change (`Class_DataTagGroup.drawing`).
+    this.driving_dimension?.drawingChanged()
     this._driving_dimension_id = (dimension_id !== undefined && dimension_id !== '')
       ? dimension_id
       : undefined
+    this.driving_dimension?.drawingChanged()
   }
 
   /** Vrai si ce nœud se désagrège en suivant une dimension. */

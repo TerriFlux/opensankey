@@ -1405,6 +1405,17 @@ export class Class_LinkValue extends Class_ElementValue {
     this._result_value[Class_LinkValue.SRC] = null
   }
 
+  /**
+   * os#1511 — LA COUCHE LUE : la donnée saisie si `collected`, sinon le résultat réconcilié, à
+   * défaut la donnée quand elle est une valeur ou un intervalle saisi. La seule lecture de couche
+   * du flux (cf. `Class_LinkElement.readLayer`, qui sait laquelle le dessin montre).
+   */
+  public readLayer(collected: boolean): number | null {
+    if (collected) return this.valueData ?? null
+    return this.valueResult ??
+      ((this.value_option === 'value' || this.value_option === 'intervals') ? this.valueData : null) ?? null
+  }
+
   // Target (destination) value = index 1
   public get valueResultTarget() {
     return this._result_value[Class_LinkValue.TGT]

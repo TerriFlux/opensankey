@@ -60,7 +60,7 @@ import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { disaggregateDimensionNodes } from '../Algorithms/DimensionDisaggregation'
-import { MEMBER_NODE_MARK, isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
+import { parseGeneratedId } from '../Elements/GeneratedMemberMark'
 import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
 import type { Class_DataTagGroup as Type_DataTagGroup } from './TagGroup'
 import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
@@ -1463,7 +1463,8 @@ export class Class_DrawingArea {
       (this.sankey.nodes_dict[id] ?? this.sankey.links_dict[id]) as Class_ProtoElement | undefined
     selected_ids.forEach(id => {
       const stale = this._selection[id]
-      const fresh = find(id) ?? (isGeneratedMemberId(id) ? find(id.split(MEMBER_NODE_MARK)[0]) : undefined)
+      const origine = parseGeneratedId(id)?.origin
+      const fresh = find(id) ?? (origine !== undefined ? find(origine) : undefined)
       if (stale !== undefined && stale === fresh) return
       if (stale !== undefined) delete this._selection[id]
       if (fresh !== undefined && this._selection[fresh.id] === undefined) this.addElementToSelection(fresh)

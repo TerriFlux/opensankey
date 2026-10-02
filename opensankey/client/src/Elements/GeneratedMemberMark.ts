@@ -21,3 +21,22 @@ export const MEMBER_NODE_MARK = '--par--'
 export function isGeneratedMemberId(id: string): boolean {
   return id.includes(MEMBER_NODE_MARK)
 }
+
+/**
+ * Identifiant d'un élément engendré : son origine (nœud d'axe ou flux de base), puis les clés de
+ * ses membres (id d'un membre, ou `OTHERS_ID` pour un « Autres »), chacune précédée de la marque.
+ */
+export function generatedId(origin: string, members: readonly string[]): string {
+  return [origin, ...members].join(MEMBER_NODE_MARK)
+}
+
+/**
+ * Le seul découpage de la marque : `{ origin, members }` d'un identifiant engendré, `undefined`
+ * pour un identifiant ordinaire. Un nœud engendré porte un membre (`<axe>--par--<membre>`), un flux
+ * engendré un ou deux (`<flux>--par--<m1>[--par--<m2>]`, une case du croisement).
+ */
+export function parseGeneratedId(id: string): { origin: string, members: string[] } | undefined {
+  if (!isGeneratedMemberId(id)) return undefined
+  const [origin, ...members] = id.split(MEMBER_NODE_MARK)
+  return { origin, members }
+}
