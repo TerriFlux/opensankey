@@ -131,7 +131,11 @@ export const NODE_LOCAL_KEY_MAP: Type_LegacyKeyMap = {
   'colorSustainable': 'shape_color_sustainable'
 }
 
-/** NŒUD (racine du JSON) : l'icône, portée hors du bloc `local`. */
+/**
+ * NŒUD (racine du JSON) : l'icône et l'étiquette riche (FO), portées hors du bloc `local`.
+ * Le FO legacy (`has_FO`/`FO_content`) porte souvent l'icône du nœud sous forme d'<img> dans du
+ * rich-text Quill : sans ces deux clés, la démo Déchets se chargeait sans aucune icône.
+ */
 export const NODE_ICON_KEY_MAP: Type_LegacyKeyMap = {
   'iconName': 'icon_icon_name',
   'iconColor': 'icon_color',
@@ -139,7 +143,9 @@ export const NODE_ICON_KEY_MAP: Type_LegacyKeyMap = {
   'iconViewBox': 'icon_view_box',
   'iconColorSustainable': 'icon_color_sustainable',
   'is_image': 'icon_is_image',
-  'image_src': 'icon_image_src'
+  'image_src': 'icon_image_src',
+  'has_FO': 'name_label_has_fo',
+  'FO_content': 'name_label_fo_content'
 }
 
 /** CADRE / zone de texte. */
