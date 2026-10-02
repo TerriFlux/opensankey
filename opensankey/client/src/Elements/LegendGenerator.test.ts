@@ -645,5 +645,52 @@ describe('os#1511 — legende d une dimension a niveaux', () => {
     const entries = computeLegendItems(flat, base_config).filter(i => i.tag_id !== undefined)
     expect(entries.map(i => i.tag_id)).toEqual(['vin', 'lait'])
     expect(entries.every(i => i.indent === undefined)).toBe(true)
+    expect(computeLegendItems(flat, base_config).some(i => i.heading === true)).toBe(false)
+  })
+
+  it('le parent ouvert s ecrit en en-tete sans pastille, a la place de ses membres', () => {
+    const items = computeLegendItems(sankey, base_config)
+    expect(items.map(i => i.id)).toEqual([
+      'legend-group-produit', 'legend-tag-produit-lait', 'legend-heading-produit-oleo',
+      'legend-tag-produit-bruts', 'legend-tag-produit-transformes', 'legend-tag-produit-vin'
+    ])
+    const heading = items[2]
+    expect(heading).toMatchObject({ text: 'OLEO', heading: true, block_id: 'legend-block-produit' })
+    expect(heading.swatch_color).toBeUndefined()
+    expect(heading.tag_id).toBeUndefined()
+    expect(heading.own_line).toBeUndefined()
+    expect(heading.indent).toBeUndefined()
+  })
+
+  it('plusieurs niveaux ouverts : un en-tete par niveau, retrait d un cran chacun, racine non ecrite', () => {
+    const tous = makeTag('tous')
+    const cereales = { ...makeTag('cereales'), parent: tous }
+    const oleagineux = { ...makeTag('oleagineux'), parent: tous }
+    const brutes = { ...makeTag('brutes'), parent: cereales }
+    const ble = { ...makeTag('ble'), parent: brutes }
+    const mais = { ...makeTag('mais'), parent: brutes }
+    const farine = { ...makeTag('farine'), parent: cereales }
+    const deep = makeSankey({
+      data_taggs_list: [{
+        id: 'f', name: 'Filiere', use_colors: true,
+        tags_list: [tous, cereales, oleagineux, brutes, ble, mais, farine],
+        selected_tags_list: [oleagineux, farine, ble, mais]
+      }]
+    })
+    const rows = computeLegendItems(deep, base_config).slice(1).map(i => [i.text, i.heading === true, i.indent ?? 0])
+    expect(rows).toEqual([
+      ['CEREALES', true, 0], ['BRUTES', true, 1], ['BLE', false, 2], ['MAIS', false, 2],
+      ['FARINE', false, 1], ['OLEAGINEUX', false, 0]
+    ])
+  })
+
+  it('horizontal : un en-tete ne reste pas seul en bout de ligne', () => {
+    // Largeur ou l en-tete tiendrait seul apres LAIT, mais pas avec BRUTS
+    const horizontal = { ...base_config, horizontal: true, width: 200 }
+    const items = computeLegendItems(sankey, horizontal)
+    const pos = new Map(layoutLegendItems(items, horizontal).map(p => [p.id, p]))
+    const heading = pos.get('legend-heading-produit-oleo')
+    const first = pos.get('legend-tag-produit-bruts')
+    expect(heading?.y).toBe(first?.y)
   })
 })
