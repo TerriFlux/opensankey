@@ -160,6 +160,61 @@ describe('os#1511 lot 2B — un noeud d axe se remplace par les membres choisis'
   })
 })
 
+describe('os#1511 — un noeud engendre deplace reste ou on l a pose', () => {
+  test('en mode remplir le slot, la position manuelle survit au rebati', () => {
+    const { app, sankey, pays, europe, axe } = monter()
+    app.drawing_area.disaggregation_gap_mode = 'fill'
+    pays.selectAllAtLevel(1)
+    disaggregateDimensionNodes(sankey)
+    const auto = sankey.nodes_dict[memberNodeId(axe.id, 'europe')]
+    const auto_xy = [auto.position_x, auto.position_y]
+    const afrique_auto = sankey.nodes_dict[memberNodeId(axe.id, 'afrique')].position_y
+    // Ce que le glisser ecrit (NodeEventsHandler) : la position du noeud, pour SON axe.
+    europe.setPositionOn(axe.id, { x: 321, y: 123 })
+    disaggregateDimensionNodes(sankey)
+    const apres = sankey.nodes_dict[memberNodeId(axe.id, 'europe')]
+    expect([apres.position_x, apres.position_y]).toEqual([321, 123])
+    // Les autres suivent la mise en page.
+    expect(sankey.nodes_dict[memberNodeId(axe.id, 'afrique')].position_y).toBe(afrique_auto)
+    // Retour au placement automatique.
+    europe.clearManualPositions()
+    disaggregateDimensionNodes(sankey)
+    const remis = sankey.nodes_dict[memberNodeId(axe.id, 'europe')]
+    expect([remis.position_x, remis.position_y]).toEqual(auto_xy)
+  })
+
+  test('deux axes de la meme dimension gardent chacun leur position', () => {
+    const { app, sankey, pays, monde, europe, france_m, espagne, maroc, source, axe } = monter()
+    app.drawing_area.disaggregation_gap_mode = 'fill'
+    const axe_bis = sankey.addNewNodeWithName('Monde bis')
+    const flux_bis = sankey.addNewLink(source, axe_bis)
+    const poser = (membre: Class_DataTag, nombre: number) => {
+      choisir(pays, membre)
+      ;(flux_bis.value as Class_LinkValue).valueData = nombre
+    }
+    poser(france_m, 30)
+    poser(espagne, 12)
+    poser(maroc, 7)
+    choisir(pays, monde)
+    axe_bis.driving_dimension = pays
+    pays.selectAllAtLevel(1)
+    europe.setPositionOn(axe.id, { x: 100, y: 50 })
+    europe.setPositionOn(axe_bis.id, { x: 400, y: 300 })
+    disaggregateDimensionNodes(sankey)
+    const sur_axe = sankey.nodes_dict[memberNodeId(axe.id, 'europe')]
+    const sur_bis = sankey.nodes_dict[memberNodeId(axe_bis.id, 'europe')]
+    expect([sur_axe.position_x, sur_axe.position_y]).toEqual([100, 50])
+    expect([sur_bis.position_x, sur_bis.position_y]).toEqual([400, 300])
+    // L ancienne position unique vaut pour tout axe qui n a pas la sienne.
+    europe.setPositionOn(axe_bis.id, undefined)
+    europe.position = { x: 7, y: 8 }
+    disaggregateDimensionNodes(sankey)
+    const repli = sankey.nodes_dict[memberNodeId(axe_bis.id, 'europe')]
+    expect([repli.position_x, repli.position_y]).toEqual([7, 8])
+    expect(sankey.nodes_dict[memberNodeId(axe.id, 'europe')].position_x).toBe(100)
+  })
+})
+
 describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   test('la forme engendree se reconnait SUR LE GRAPHE, sans etat en memoire', () => {
     const { sankey, pays } = monter()

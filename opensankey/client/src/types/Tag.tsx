@@ -824,6 +824,20 @@ export class Class_FluxTag extends Class_Tag {
 
 // CLASS DATATAG ************************************************************************
 
+/** os#1511 — géométrie manuelle d'un membre : la position commune d'avant, et une par axe. */
+export type Type_MemberManualPositions = {
+  position: { x: number, y: number } | undefined,
+  positions: { [axe_id: string]: { x: number, y: number } }
+}
+
+const copierPositions = (
+  positions: { [axe_id: string]: { x: number, y: number } }
+): { [axe_id: string]: { x: number, y: number } } => {
+  const copie: { [axe_id: string]: { x: number, y: number } } = {}
+  Object.entries(positions).forEach(([axe_id, p]) => { copie[axe_id] = { x: p.x, y: p.y } })
+  return copie
+}
+
 export class Class_DataTag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -876,7 +890,14 @@ export class Class_DataTag extends Class_ProtoTag {
   // `position` est en coordonnées du diagramme ; `latitude`/`longitude` servent la carte
   // (os#1364), où un membre sans coordonnées prend le barycentre de ses enfants. Les trois
   // sont indépendantes et facultatives.
+  //
+  // os#1511 — UNE POSITION PAR AXE (`_positions`, clé JSON `positions`). Quand plusieurs nœuds
+  // portent la même dimension (CARTOFOB : Prélèvements, Scieries… déclinés par essence), chaque
+  // axe a son nœud « Chêne », et un seul x/y pour tous les empilait au même endroit. La clé est
+  // l'id du nœud d'axe, qui est persisté. `_position` (x/y d'avant) reste lu comme la position
+  // valable pour TOUT axe qui n'a pas la sienne : un fichier qui l'écrit s'ouvre comme avant.
   private _position: { x: number, y: number } | undefined = undefined
+  private _positions: { [axe_id: string]: { x: number, y: number } } = {}
   private _latitude: number | undefined = undefined
   private _longitude: number | undefined = undefined
   // CONSTRUCTOR ========================================================================
@@ -926,6 +947,7 @@ export class Class_DataTag extends Class_ProtoTag {
       json_object['x'] = this._position.x
       json_object['y'] = this._position.y
     }
+    if (Object.keys(this._positions).length > 0) json_object['positions'] = copierPositions(this._positions)
     if (this._latitude !== undefined) json_object['latitude'] = this._latitude
     if (this._longitude !== undefined) json_object['longitude'] = this._longitude
   }
@@ -949,6 +971,7 @@ export class Class_DataTag extends Class_ProtoTag {
     // réinitialisation de vue (`sankey.copyFrom`) perdait les nœuds de membre déplacés.
     const source_position = (tag_to_copy as Class_DataTag)._position
     this._position = source_position === undefined ? undefined : { ...source_position }
+    this._positions = copierPositions((tag_to_copy as Class_DataTag)._positions)
     this._latitude = (tag_to_copy as Class_DataTag)._latitude
     this._longitude = (tag_to_copy as Class_DataTag)._longitude
   }
@@ -1012,6 +1035,54 @@ export class Class_DataTag extends Class_ProtoTag {
     // Une position non finie ne place rien et se propagerait en silence dans le dessin.
     if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return
     this._position = { x: position.x, y: position.y }
+  }
+
+  /**
+   * os#1511 — Position du nœud de ce membre engendré par l'axe `axe_id` : la sienne, ou à défaut
+   * la position commune d'avant (`position`), valable pour tout axe. `undefined` : aucune
+   * position manuelle, le nœud suit la mise en page automatique.
+   */
+  public positionOn(axe_id: string): { x: number, y: number } | undefined {
+    const propre = this._positions[axe_id]
+    if (propre !== undefined) return { ...propre }
+    return this.position
+  }
+
+  /** La position PROPRE à l'axe `axe_id`, sans repli sur la position commune. */
+  public ownPositionOn(axe_id: string): { x: number, y: number } | undefined {
+    const propre = this._positions[axe_id]
+    return propre === undefined ? undefined : { ...propre }
+  }
+
+  /** Pose (ou retire, avec `undefined`) la position du nœud de ce membre sur l'axe `axe_id`. */
+  public setPositionOn(axe_id: string, position: { x: number, y: number } | undefined): void {
+    if (position === undefined) { delete this._positions[axe_id]; return }
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return
+    this._positions[axe_id] = { x: position.x, y: position.y }
+  }
+
+  /** Vrai si un nœud de ce membre a été déplacé à la main, sur un axe ou sur tous. */
+  public get has_manual_position(): boolean {
+    return this._position !== undefined || Object.keys(this._positions).length > 0
+  }
+
+  /** Toute la géométrie manuelle, pour l'annuler ou la rendre (`restoreManualPositions`). */
+  public get manual_positions(): Type_MemberManualPositions {
+    return {
+      position: this.position,
+      positions: copierPositions(this._positions)
+    }
+  }
+
+  public restoreManualPositions(etat: Type_MemberManualPositions): void {
+    this._position = etat.position === undefined ? undefined : { ...etat.position }
+    this._positions = copierPositions(etat.positions)
+  }
+
+  /** Retour au placement automatique : plus aucune position manuelle, sur aucun axe. */
+  public clearManualPositions(): void {
+    this._position = undefined
+    this._positions = {}
   }
 
   public get latitude(): number | undefined { return this._latitude }
@@ -1102,6 +1173,18 @@ export class Class_DataTag extends Class_ProtoTag {
       && typeof y === 'number' && Number.isFinite(y))
       ? { x, y }
       : undefined
+    // os#1511 — une position par axe ; une entrée incomplète ou non finie est ignorée.
+    this._positions = {}
+    const positions = json_object['positions']
+    if (typeof positions === 'object' && positions !== null && !Array.isArray(positions)) {
+      Object.entries(positions as { [axe_id: string]: unknown }).forEach(([axe_id, p]) => {
+        const px = (p as { x?: unknown } | null)?.x
+        const py = (p as { y?: unknown } | null)?.y
+        if (typeof px === 'number' && Number.isFinite(px) && typeof py === 'number' && Number.isFinite(py)) {
+          this._positions[axe_id] = { x: px, y: py }
+        }
+      })
+    }
     const lat = json_object['latitude']
     const lon = json_object['longitude']
     this._latitude = (typeof lat === 'number' && Number.isFinite(lat)) ? lat : undefined

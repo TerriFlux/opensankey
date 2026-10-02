@@ -7,7 +7,15 @@
 // LES NŒUDS ENGENDRÉS SONT TRANSITOIRES (décision du 28/09) : jamais écrits dans le fichier,
 // refabriqués à chaque ouverture et à chaque changement de niveau. Seul l'ATTACHEMENT du nœud
 // à sa dimension est persistant. Ce que l'utilisateur déplace survit par la géométrie portée
-// par le MEMBRE (`Class_DataTag.position`), pas par le nœud.
+// par le MEMBRE, pas par le nœud — une position PAR AXE (`Class_DataTag.positionOn`), puisque
+// plusieurs axes peuvent porter la même dimension et donc engendrer chacun leur « Chêne ».
+//
+// UN NŒUD ENGENDRÉ SE COMPORTE COMME UN NŒUD ORDINAIRE (Julien, 02/10 : « ça n'a pas l'air de
+// marcher ») : déplacé à la main, il reste où on l'a posé. La position manuelle s'applique APRÈS
+// la mise en page automatique, quel qu'en soit le mode (remplir le slot, bandes, référence,
+// garder) ; les nœuds sans position suivent la mise en page. Choisir un placement ou un écart
+// dans le menu « Placer » de la dimension efface ces positions (`dimensionDrawingHost`) : c'est le
+// retour au placement automatique.
 //
 // TROIS GARDES REPRISES DES NŒUDS D'ÉCHANGE, qui ont coûté cher en août (Bois Savoie : 928
 // nœuds au lieu de 506, « trop de flux visibles » à tous les niveaux) :
@@ -353,6 +361,8 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
       centrerSurAxe(noeuds, creneau)
     })
   }
+  // 3 bis) CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page.
+  appliquerPositionsManuelles(par_axe)
 
   // 4) Les nœuds d'axe quittent le DESSIN, pas le modèle : ils sont représentés par leurs
   //    membres, mais restent ce d'où l'on repart au prochain changement de niveau — et ce que
@@ -363,6 +373,26 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     sankey.nodes_dict[axe_id]?.setInvisible()
   })
   return engendres
+}
+
+/**
+ * os#1511 — Pose chaque nœud engendré qui a une position manuelle sur l'axe qui l'a engendré
+ * (`Class_DataTag.positionOn`) — et lui seul : les autres gardent la place que la mise en page
+ * vient de leur donner. « Autres » n'a pas de membre à lui, donc jamais de position manuelle.
+ *
+ * Appelée APRÈS la mise en page, dans tous les modes : c'est ce qui fait qu'un nœud déplacé ne
+ * revient pas à sa place au rebâti suivant (changement de sélection, de niveau, d'ordre,
+ * rechargement). Le centre est recapturé : au dessin, un nœud garde son centre quand sa taille
+ * change, et un centre périmé le ramènerait vers sa place automatique.
+ */
+function appliquerPositionsManuelles(par_axe: Map<string, Type_MembreRepresente[]>): void {
+  par_axe.forEach((entrees, axe_id) => entrees.forEach(entree => {
+    if (estAutres(entree)) return
+    const position = entree.membres[0]?.positionOn(axe_id)
+    if (position === undefined) return
+    entree.noeud.setPosXY(position.x, position.y)
+    entree.noeud.captureCenterFromCorner()
+  }))
 }
 
 /**
@@ -692,10 +722,10 @@ function heriterExtremite(sankey: Class_Sankey, axe: Class_NodeElement, noeud: C
  * — comme les enfants d'un nœud désagrégé (Julien, 29/09 : « en nœud dupliqué, il faut que ça suive
  * les options de désagrégation »).
  *
- * Seul « garder les positions » (`keep`) se règle ICI : la géométrie portée par le membre
- * (`Class_DataTag.position`) est ce que l'auteur a déplacé à la main, et c'est ce mode, et lui
- * seul, qui demande de la respecter ; faute de position, le membre se pose sur son axe. Les autres
- * modes la recalculent.
+ * Seul « garder les positions » (`keep`) se règle ICI : rien n'est réempilé, chaque membre se
+ * pose sur son axe. Ce que l'auteur a déplacé à la main ne se lit PAS ici mais après la mise en
+ * page, dans tous les modes (`appliquerPositionsManuelles`) : lu à la création, il était écrasé
+ * par l'étape 3 dès que le mode n'était pas `keep` — c'est-à-dire presque toujours.
  */
 function creerNoeudsDeMembre(
   sankey: Class_Sankey,
@@ -750,13 +780,9 @@ function creerNoeudsDeMembre(
   }
 
   if (axe.drawing_area.effective_gap_mode === 'keep') {
-    // « Garder les positions » : celle du membre fait foi, et rien n'est réempilé.
-    engendres.forEach(entree => {
-      // « Autres » ne porte pas de position à lui : il se pose sur son axe.
-      const position = estAutres(entree) ? undefined : entree.membres[0].position
-      const noeud = entree.noeud
-      noeud.setPosXY(position?.x ?? axe.position_x, position?.y ?? axe.position_y)
-    })
+    // « Garder les positions » : rien n'est réempilé, chacun se pose sur son axe ; la position
+    // manuelle, s'il en a une, viendra après la mise en page.
+    engendres.forEach(({ noeud }) => noeud.setPosXY(axe.position_x, axe.position_y))
   }
   return engendres
 }

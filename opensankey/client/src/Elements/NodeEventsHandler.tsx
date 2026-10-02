@@ -44,21 +44,24 @@ import {
 // Module FEUILLE (aucun import) : le prédicat de zone ne tire ni React ni le générateur.
 import { isLegendGroupZoneId } from './legendIds'
 import type { Class_DataTag } from '../types/Tag'
-import { memberOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
+import { drivingNodeIdOf, memberOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 import { OTHERS_ID } from '../Algorithms/DimensionOthers'
 import { MEMBER_NODE_MARK } from './GeneratedMemberMark'
 
-type Type_MemberPositions = Map<Class_DataTag, {
+type Type_MemberPositions = {
+  membre: Class_DataTag,
+  axe_id: string,
   before: { x: number, y: number } | undefined,
   after: { x: number, y: number }
-}>
+}[]
 
 /**
- * os#1511 — LA POSITION D'UN NŒUD ENGENDRÉ VA AU MEMBRE. Les nœuds engendrés par la
+ * os#1511 — LA POSITION D'UN NŒUD ENGENDRÉ VA AU MEMBRE, POUR SON AXE. Les nœuds engendrés par la
  * désagrégation d'une dimension sont rebâtis à chaque changement de niveau ou de sélection : ce
- * qu'on y déplace à la main ne survit que par `Class_DataTag.position`, que la désagrégation relit
- * en mode « garder les positions » (même repère : coin du nœud, coordonnées du diagramme). Sans
- * cette écriture, un nœud déplacé revenait à sa place au rebâti suivant.
+ * qu'on y déplace à la main ne survit que par `Class_DataTag.setPositionOn(axe, …)`, que la
+ * désagrégation réapplique après la mise en page, dans tous les modes (même repère : coin du nœud,
+ * coordonnées du diagramme). Par axe : deux axes de la même dimension ont chacun leur nœud du
+ * membre, et chacun reste où on l'a posé.
  *
  * « Autres » n'a pas de membre à lui : il se repose sur son axe, rien n'est écrit.
  */
@@ -66,17 +69,18 @@ function recordGeneratedMemberPositions(
   nodes: Class_NodeBase[],
   old_positions: { [x: string]: [number, number] }
 ): Type_MemberPositions {
-  const written: Type_MemberPositions = new Map()
+  const written: Type_MemberPositions = []
   nodes.forEach(n => {
     if (n.id.endsWith(MEMBER_NODE_MARK + OTHERS_ID)) return
     const before_drag = old_positions[n.id]
     if (before_drag !== undefined && before_drag[0] === n.position_x && before_drag[1] === n.position_y) return
     const membre = memberOfGeneratedNode(n as Class_NodeElement)
-    if (membre === undefined) return
-    const before = membre.position
-    membre.position = { x: n.position_x, y: n.position_y }
-    const after = membre.position
-    if (after !== undefined) written.set(membre, { before, after })
+    const axe_id = drivingNodeIdOf(n as Class_NodeElement)
+    if (membre === undefined || axe_id === undefined) return
+    const before = membre.ownPositionOn(axe_id)
+    membre.setPositionOn(axe_id, { x: n.position_x, y: n.position_y })
+    const after = membre.ownPositionOn(axe_id)
+    if (after !== undefined) written.push({ membre, axe_id, before, after })
   })
   return written
 }
@@ -989,7 +993,7 @@ export class NodeEventsHandler {
           }
         })
         applyRecycling(_, true)
-        member_positions.forEach((p, membre) => { membre.position = p.before })
+        member_positions.forEach(p => p.membre.setPositionOn(p.axe_id, p.before))
       }
 
       function redo(_: Class_ProtoElement) {
@@ -1017,7 +1021,7 @@ export class NodeEventsHandler {
           }
         })
         applyRecycling(_, false)
-        member_positions.forEach((p, membre) => { membre.position = p.after })
+        member_positions.forEach(p => p.membre.setPositionOn(p.axe_id, p.after))
         // OS#1250 — même traitement qu'en fin de drag : pas de recadrage caméra
         // au redo, seulement l'extent de pan.
         _.drawing_area.refreshPanExtent()
