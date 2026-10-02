@@ -200,16 +200,45 @@ export const dataCutOf = (
 }
 
 /**
- * Les membres des PETITS MULTIPLES : une petite couronne par membre. Ceux que le diagramme montre
- * quand il en montre plusieurs (la barre du haut décide) ; sinon les enfants du membre montré, ou
- * de la racine ; un membre sans enfants se montre seul.
+ * Les membres ouverts de la dimension des PETITS MULTIPLES quand la figure, détachée, n'en a encore
+ * rien écrit : un cran sous ce que le diagramme montre (sa racine, à défaut), pour qu'activer
+ * « Une couronne par » fasse d'emblée plusieurs couronnes.
  */
-export const smallMultipleMembersOf = (dim: Class_DataTagGroup): Class_DataTag[] => {
+export const smallMultipleDefaultOpened = (dim: Class_DataTagGroup): string[] => {
   const shown = dim.selected_tags_list as Class_DataTag[]
-  if (shown.length > 1) return shown
-  const base = shown[0] ?? dimensionRootsOf(dim)[0]
-  if (base === undefined) return []
-  return base.children.length > 0 ? (base.children as Class_DataTag[]) : [base]
+  const base = shown.length === 1 ? shown[0] : (shown.length === 0 ? dimensionRootsOf(dim)[0] : undefined)
+  if (base === undefined) return [...dimensionOpenedMembers(dim, diagramDimensionOpening([dim]))]
+  const out: string[] = []
+  for (let m: Class_DataTag | undefined = base; m !== undefined; m = m.parent as Class_DataTag | undefined) {
+    if (m.children.length > 0) out.push(m.id)
+  }
+  return out
+}
+
+/**
+ * Les membres des PETITS MULTIPLES : une petite couronne par membre.
+ *
+ * 02/10/2026 — Julien : « quand je suis en mode une couronne par pays partenaire, je ne peux pas
+ * revenir à une couronne pour le monde ». Les membres se lisaient sur le diagramme, et un membre
+ * montré seul (« Monde ») était remplacé par ses enfants : le niveau « ensemble » donnait toujours
+ * une couronne par continent, et rien ne ramenait à une seule. Ils se lisent désormais comme toute
+ * coupe de la figure :
+ *  - LIÉE, ce que le diagramme montre, tel quel : « Monde » fait une couronne, les continents une
+ *    par continent ;
+ *  - DÉTACHÉE, la FRONTIÈRE des membres ouverts de la figure pour cette dimension (le sélecteur de
+ *    niveau et l'arbre des Coordonnées l'écrivent) : rien d'ouvert, la racine seule, une couronne ;
+ *    jamais écrite, un cran sous ce que le diagramme montre (`smallMultipleDefaultOpened`).
+ */
+export const smallMultipleMembersOf = (dim: Class_DataTagGroup, opening: Type_DataOpening): Class_DataTag[] => {
+  const roots = dimensionRootsOf(dim)
+  if (opening.linked) {
+    const shown = dim.selected_tags_list as Class_DataTag[]
+    return shown.length > 0 ? shown : roots
+  }
+  const opened = new Set(opening.opened?.[dim.id] ?? smallMultipleDefaultOpened(dim))
+  const frontier = (members: Class_DataTag[]): Class_DataTag[] => members.flatMap(m =>
+    opened.has(m.id) && m.children.length > 0 ? frontier(m.children as Class_DataTag[]) : [m])
+  return frontier(roots)
 }
 
 /**

@@ -5,7 +5,8 @@ import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import {
-  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, memberSectorId, parseMemberSectorId
+  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, memberSectorId, parseMemberSectorId,
+  smallMultipleDefaultOpened, smallMultipleMembersOf
 } from './DataDimensionHierarchy'
 import type { Type_DataDimensionOptions } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
@@ -307,5 +308,51 @@ describe('os#1511 — la couronne ne deplace pas la selection du diagramme', () 
     viser(m.groupe, m.ble)
     arbre(m, TOUT)
     expect(m.groupe.selected_tags_list.map(t => t.id)).toEqual(['ble'])
+  })
+})
+
+// 02/10/2026 — LES PETITS MULTIPLES REVIENNENT A UNE COURONNE. Julien : « quand je suis en mode une
+// couronne par pays partenaire, je ne peux pas revenir a une couronne pour le monde ». Un membre
+// montre seul etait remplace par ses enfants : le niveau ensemble faisait toujours plusieurs couronnes.
+
+describe('os#1511 — les membres des petits multiples', () => {
+  const noms = (membres: Class_DataTag[]) => membres.map(t => t.id)
+
+  test('liee, le diagramme au niveau ensemble : UNE couronne, la racine', () => {
+    const m = monter()
+    viser(m.groupe, m.produits)
+    expect(noms(smallMultipleMembersOf(m.groupe, { linked: true }))).toEqual(['produits'])
+  })
+
+  test('liee, le diagramme au niveau 1 : une couronne par membre montre', () => {
+    const m = monter()
+    m.groupe.selectAllAtLevel(1)
+    expect(noms(smallMultipleMembersOf(m.groupe, { linked: true }))).toEqual(['cereales', 'lait'])
+  })
+
+  test('detachee, rien d ouvert : UNE couronne, la racine', () => {
+    const m = monter()
+    expect(noms(smallMultipleMembersOf(m.groupe, { linked: false, opened: { filiere: [] } })))
+      .toEqual(['produits'])
+  })
+
+  test('detachee, la racine ouverte : une couronne par membre du niveau 1', () => {
+    const m = monter()
+    expect(noms(smallMultipleMembersOf(m.groupe, { linked: false, opened: { filiere: ['produits'] } })))
+      .toEqual(['cereales', 'lait'])
+  })
+
+  test('detachee, le niveau 2 : la frontiere, branche courte comprise', () => {
+    const m = monter()
+    const ouverts = [...dataDimensionOpenedDownToLevel(m.groupe, 2)]
+    expect(noms(smallMultipleMembersOf(m.groupe, { linked: false, opened: { filiere: ouverts } })))
+      .toEqual(['ble', 'mais', 'lait'])
+  })
+
+  test('detachee, coupe jamais ecrite : un cran sous ce que le diagramme montre', () => {
+    const m = monter()
+    viser(m.groupe, m.produits)
+    expect(smallMultipleDefaultOpened(m.groupe)).toEqual(['produits'])
+    expect(noms(smallMultipleMembersOf(m.groupe, { linked: false }))).toEqual(['cereales', 'lait'])
   })
 })

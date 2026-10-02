@@ -196,6 +196,28 @@ export interface Type_ChartOptions {
    * ajouté d'un seul côté. On rapporte donc, on ne redevine pas.
    */
   on_parts_resolved?: (resolved: { [part_id: string]: Type_FigurePartResolved }) => void
+  /**
+   * 02/10/2026 — UNE CASE DE PETITS MULTIPLES (couronne seule). Julien : « en mode multiple avec des
+   * labels détachés on a l'impression de ne pas avoir la même échelle ». Chaque case se cadrait sur
+   * SES étiquettes sorties : une case aux étiquettes larges rétrécissait son disque, une autre non.
+   * Absente, le tracé d'hier au pixel.
+   */
+  small_multiple?: Type_SmallMultipleCell
+}
+
+/** Un cadre de tracé, en pixels depuis le centre du disque. */
+export interface Type_DrawnBox { x0: number, x1: number, y0: number, y1: number }
+
+export interface Type_SmallMultipleCell {
+  /** Le rayon, en part de celui que la case permet : √(total / plus grand total), l'aire dit la valeur. */
+  radius_ratio: number
+  /** L'écart des étiquettes sorties au bord du disque, en pixels — à la mesure de la case. */
+  callout_gap_px: number
+  /**
+   * Le cadre de cette case (disque et étiquettes), rendu à l'appelant ; `apply` y pose le cadre
+   * COMMUN, l'union de ceux de toutes les cases — une seule échelle d'une case à l'autre.
+   */
+  frame: (box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void) => void
 }
 
 /** Ce qu'un tracé a réellement appliqué à une part, et que le panneau doit annoncer. */
@@ -379,6 +401,31 @@ const MIN_PART_ICON_PX = 8
 // l'étiquette tant que l'auteur ne l'a pas déplacée.
 const MIN_CALLOUT_EDGE_PX = 6
 const CALLOUT_GAP_PX = 14
+
+// ── 02/10/2026 — LES PETITS MULTIPLES À LA MÊME ÉCHELLE (cf. `Type_SmallMultipleCell`) ──────────
+
+/**
+ * Le rayon relatif d'une petite couronne : l'AIRE dit la valeur, donc √(total / plus grand total).
+ * La plus grosse prend tout le rayon de sa case ; une couronne vide n'en a pas.
+ */
+export const smallMultipleRadiusRatio = (total: number, max_total: number): number =>
+  max_total > 0 && total > 0 ? Math.min(1, Math.sqrt(total / max_total)) : 0
+
+/**
+ * L'écart des étiquettes sorties dans une case de `cell_side` pixels : 4 % du côté, jamais plus
+ * que celui d'une couronne seule ni moins de 3 px. Les 14 px d'une figure entière, doublés par la
+ * colonne des étiquettes, mettaient le nom d'une petite part à un demi-rayon de son secteur.
+ */
+export const smallMultipleCalloutGap = (cell_side: number): number =>
+  Math.max(3, Math.min(CALLOUT_GAP_PX, cell_side * 0.04))
+
+/** L'union de cadres : la réserve d'étiquettes la plus large, prise une fois pour toutes les cases. */
+export const unionDrawnBox = (boxes: Type_DrawnBox[]): Type_DrawnBox | null =>
+  boxes.length === 0
+    ? null
+    : boxes.reduce((u, b) => ({
+      x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1)
+    }))
 // Barres groupées (#390) : au-delà de ce nombre de séries, une grappe devient
 // illisible. On TRONQUE, on ne replie PAS dans un « Autres » : les deux axes croisés
 // sont non additifs — sommer les séries restantes serait exactement le contresens
@@ -591,7 +638,11 @@ export const drawDonutChart = (
   const side = below
     ? Math.max(100, Math.min(width, height - legend_room - 12) - 8)
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
-  const radius = (side / 2 - 2) * scaleOf(st)
+  // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
+  // près de leur disque, à la mesure de la case.
+  const cell = opts.small_multiple
+  const radius = (side / 2 - 2) * scaleOf(st) * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
+  const callout_gap = cell ? cell.callout_gap_px : CALLOUT_GAP_PX
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
 
   const svg = root.append('svg')
@@ -1113,7 +1164,7 @@ export const drawDonutChart = (
     const midOf = (d: d3.PieArcDatum<Type_StatSlice>) => (d.startAngle + d.endAngle) / 2
     const edgeOf = (d: d3.PieArcDatum<Type_StatSlice>) => point(radius, midOf(d))
     const defaultAt = (d: d3.PieArcDatum<Type_StatSlice>) =>
-      point(radius + CALLOUT_GAP_PX, midOf(d))
+      point(radius + callout_gap, midOf(d))
     // 01/10/2026 — RANGÉES, ET NON EMPILÉES (Julien, capture à l'appui : les petites parts du
     // haut écrivaient leurs étiquettes les unes sur les autres). Celles que l'auteur n'a pas
     // déplacées se posent en deux colonnes, à droite et à gauche du disque, dans l'ordre de leur
@@ -1130,7 +1181,7 @@ export const drawDonutChart = (
         const height_px = sector_lines(d).length * styleOf(d).name_label_font_size * 1.15
         const at_y = Math.max(y, floor + height_px / 2)
         floor = at_y + height_px / 2 + 2
-        laid_out.set(d.data.id, { x: side_sign * (radius + CALLOUT_GAP_PX * 2), y: at_y })
+        laid_out.set(d.data.id, { x: side_sign * (radius + callout_gap * 2), y: at_y })
       })
     })
     const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
@@ -1317,17 +1368,21 @@ export const drawDonutChart = (
   // Julien, capture à l'appui : « avec les labels détachés, la couronne n'est pas cadrée ». Les
   // étiquettes sorties débordaient du carré du disque. La figure prend donc pour cadre ce qu'elle
   // dessine VRAIMENT — disque et étiquettes — et l'étale sur toute la place de la fenêtre.
-  if (drawn_box !== null) {
+  const frameTo = (frame: Type_DrawnBox) => {
     // Avec une légende, la place qu'elle prend est déjà retirée : la figure se cadre dans le reste.
     const pad = 8
     const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
     const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
-    const { x0, x1, y0, y1 } = drawn_box
+    const { x0, x1, y0, y1 } = frame
     svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
       .attr('viewBox', `${x0 + side / 2 - pad} ${y0 + side / 2 - pad} ${x1 - x0 + 2 * pad} ${y1 - y0 + 2 * pad}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('overflow', 'visible')
   }
+  // Petits multiples : la case rend son cadre, l'appelant pose le cadre commun — même sans
+  // étiquette sortie, sans quoi une case nue garderait sa propre échelle.
+  if (cell) cell.frame(drawn_box ?? { x0: -radius, x1: radius, y0: -radius, y1: radius }, frameTo)
+  else if (drawn_box !== null) frameTo(drawn_box)
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
   // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
   if (opts.zoom_handle) {
