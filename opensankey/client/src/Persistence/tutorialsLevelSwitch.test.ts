@@ -15,7 +15,7 @@ import { Class_ApplicationData } from '../types/ApplicationData'
  * Le chargement seul ne montre RIEN : les `force_show_*` ecrits dans le fichier
  * forcent l'affichage et court-circuitent le filtre par tags. Il faut rejouer le
  * geste — selection du niveau puis `showAccordingToLevelTags()`, la fin de
- * `applyLevelSelection` (Toolbar.tsx) en desagregation uniforme simple.
+ * `applyLevelSelection` (components/ui/levelSelectionHost.ts) en desagregation uniforme simple.
  */
 
 function findTutorialsDir(): string | null {

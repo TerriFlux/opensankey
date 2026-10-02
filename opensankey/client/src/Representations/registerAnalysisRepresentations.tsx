@@ -55,6 +55,7 @@ import {
   smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
+import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -659,14 +660,10 @@ const dataDimensionClickGestures = (
         .filter(m => expanded.has(memberSectorId(dim.id, m.id)))
         .map(m => m.id)
     )
-    app_data.runHeavyGesture(() => {
-      const group = dim as unknown as { banner: string }
-      const drawn_by_node = sankey.nodes_list.some(node => node.driving_dimension === dim)
-      if (group.banner !== 'multi' && !drawn_by_node) group.banner = 'multi'
-      dim.selectMembers(coupeDepuisOuverts(dim, opened))
-      app_data.drawing_area.rebuildDimensionNodes()
-      app_data.drawing_area.draw()
-    })
+    // os#1511 — le geste de coupe de l'hôte, annulable ; `multi` passe en choix multiple une
+    // dimension qu'aucun nœud ne porte, dans le même pas d'historique.
+    app_data.runHeavyGesture(() =>
+      applyDimensionCut(app_data, dim, coupeDepuisOuverts(dim, opened), { multi: true }))
   }
 
   const activate = (part_id: string, gesture: { shift: boolean, alt?: boolean }) => {

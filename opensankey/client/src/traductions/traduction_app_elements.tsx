@@ -592,7 +592,6 @@ export const resources_app_elements = {
 
       Banner: {
         unitary_view: 'View generation',
-        dimension_level: 'Level',
         dimension_node: 'Node that carries it',
         cut_custom: '— custom —',
         dimension_open: 'open',
@@ -697,7 +696,6 @@ export const resources_app_elements = {
         posMode_proportional: 'Proportional mode (vertical center as % of diagram height)',
         posMode_scale_adapted: 'Adapted scale mode (the reference flow keeps a constant size; the scale adapts per data tag)',
         posMode_title: 'Display mode',
-        posMode_submenu: 'Position',
         draw_submenu: 'Draw',
         show_submenu: 'Show',
         show_many: 'Several members together',
@@ -1417,7 +1415,6 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Génération de vues',
-        dimension_level: 'Niveau',
         dimension_node: 'Noeud qui la represente',
         cut_custom: '— personnalisé —',
         dimension_open: 'ouvrir',
@@ -1514,7 +1511,6 @@ export const resources_app_elements = {
         posMode_proportional: 'Mode proportionnel (centre vertical en % de la hauteur)',
         posMode_scale_adapted: 'Mode échelle adaptée (le flux de référence garde une taille constante ; l\'échelle s\'adapte à chaque tag de données)',
         posMode_title: 'Mode d\'affichage',
-        posMode_submenu: 'Position',
         draw_submenu: 'Dessiner',
         show_submenu: 'Afficher',
         show_many: 'Plusieurs membres ensemble',
@@ -2192,7 +2188,6 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Generación de vistas',
-        dimension_level: 'Nivel',
         dimension_node: 'Nodo que la representa',
         cut_custom: '— personalizado —',
         dimension_open: 'abrir',
@@ -2289,7 +2284,6 @@ export const resources_app_elements = {
         posMode_proportional: 'Modo proporcional (centro vertical en % de la altura)',
         posMode_scale_adapted: 'Modo de escala adaptada (el flujo de referencia mantiene un tamaño constante; la escala se adapta por etiqueta de datos)',
         posMode_title: 'Modo de visualización',
-        posMode_submenu: 'Posición',
         draw_submenu: 'Dibujar',
         show_submenu: 'Mostrar',
         show_many: 'Varios miembros juntos',
@@ -2965,7 +2959,6 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Ansichtserzeugung',
-        dimension_level: 'Ebene',
         dimension_node: 'Knoten, der sie darstellt',
         cut_custom: '— benutzerdefiniert —',
         dimension_open: 'oeffnen',
@@ -3062,7 +3055,6 @@ export const resources_app_elements = {
         posMode_proportional: 'Proportionaler Modus (vertikale Mitte als % der Höhe)',
         posMode_scale_adapted: 'Modus angepasster Maßstab (der Referenzfluss behält eine konstante Größe; der Maßstab passt sich je Daten-Tag an)',
         posMode_title: 'Anzeigemodus',
-        posMode_submenu: 'Position',
         draw_submenu: 'Zeichnen',
         show_submenu: 'Anzeigen',
         show_many: 'Mehrere Mitglieder zusammen',
@@ -3738,7 +3730,6 @@ export const resources_app_elements = {
       },
       Banner: {
         unitary_view: 'Generazione viste',
-        dimension_level: 'Livello',
         dimension_node: 'Nodo che la rappresenta',
         cut_custom: '— personalizzato —',
         dimension_open: 'aprire',
@@ -3835,7 +3826,6 @@ export const resources_app_elements = {
         posMode_proportional: 'Modalità proporzionale (centro verticale in % dell\'altezza)',
         posMode_scale_adapted: 'Modalità scala adattata (il flusso di riferimento mantiene una dimensione costante; la scala si adatta per ogni tag di dati)',
         posMode_title: 'Modalità di visualizzazione',
-        posMode_submenu: 'Posizione',
         draw_submenu: 'Disegna',
         show_submenu: 'Mostra',
         show_many: 'Più membri insieme',
@@ -4498,7 +4488,6 @@ export const resources_app_elements = {
 
       Banner: {
         unitary_view: '视图生成',
-        dimension_level: '层级',
         dimension_node: '代表它的节点',
         cut_custom: '— 自定义 —',
         dimension_open: '展开',
@@ -4595,7 +4584,6 @@ export const resources_app_elements = {
         posMode_proportional: '比例模式（垂直中心以图表高度的百分比表示）',
         posMode_scale_adapted: '自适应比例模式（参考流量保持恒定尺寸；比例尺随各数据标签自适应）',
         posMode_title: '显示模式',
-        posMode_submenu: '位置',
         draw_submenu: '绘制',
         show_submenu: '显示',
         show_many: '多个成员一起',
@@ -5278,7 +5266,6 @@ export const resources_app_elements = {
 
       Banner: {
         unitary_view: 'ビューの生成',
-        dimension_level: '階層',
         dimension_node: 'それを表すノード',
         cut_custom: '— カスタム —',
         dimension_open: '展開',
@@ -5375,7 +5362,6 @@ export const resources_app_elements = {
         posMode_proportional: '比例モード（垂直方向の中心を図の高さに対する % で指定）',
         posMode_scale_adapted: '適応スケールモード（基準フローの大きさを一定に保ち、データタグごとにスケールが適応します）',
         posMode_title: '表示モード',
-        posMode_submenu: '位置',
         draw_submenu: '描画',
         show_submenu: '表示',
         show_many: '複数のメンバーをまとめて',
