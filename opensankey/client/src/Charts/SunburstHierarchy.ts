@@ -217,6 +217,8 @@ export const sunburstNodeValue = (
 ): number => {
   const valueOf = (l: Class_LinkElement, on_target: boolean) => {
     if (nav.data_tags) return linkValueUnder(l, nav)
+    // os#1511 — une couche propre, sans épingle : la lecture du diagramme, dans cette couche-là.
+    if (nav.collected !== undefined) return linkValueUnder(l, nav, on_target)
     return on_target ? (l.valueCurrentTarget ?? l.valueCurrent) : l.valueCurrent
   }
   const sum = (links: Class_LinkElement[], on_target: boolean) => links

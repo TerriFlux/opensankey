@@ -2600,18 +2600,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * `_reads_collected_layer`. Elle se recodait à six endroits de ce fichier, dans deux ordres
    * opposés : les bandes et l'agrégat d'un membre lisaient la donnée AVANT le résultat, si bien
    * qu'en mode résultats un flux engendré montrait la donnée saisie. Toute lecture passe ici.
+   *
+   * `collected` : la couche EXPLICITE qu'une figure veut lire (os#1511, une couronne détachée en
+   * réconciliées sous un diagramme en collectées). Absent, c'est celle du dessin. Rien n'est copié
+   * ni basculé : les deux couches vivent déjà sur chaque valeur, on choisit seulement laquelle lire.
    */
-  public readLayer(valeur: Class_LinkValue): number | null {
-    return valeur.readLayer(this._reads_collected_layer)
+  public readLayer(valeur: Class_LinkValue, collected: boolean = this._reads_collected_layer): number | null {
+    return valeur.readLayer(collected)
   }
 
   /**
    * #1231 — Valeur numérique du flux pour un jeu de datatags EXPLICITE (même extraction que
    * `valueCurrent`, mais sans dépendre de la sélection courante). Utilisé par le mode % pour
    * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
+   *
+   * os#1511 — `collected` : la couche lue, celle du dessin par défaut (cf. `readLayer`).
    */
-  public valueForDataTags(data_tags: Class_DataTag[]): number | null {
-    const lire = (valeur: Class_LinkValue): number | null => this.readLayer(valeur)
+  public valueForDataTags(data_tags: Class_DataTag[], collected: boolean = this._reads_collected_layer): number | null {
+    const lire = (valeur: Class_LinkValue): number | null => this.readLayer(valeur, collected)
     const v = this.valueForTags(data_tags)
     if (v) {
       const lu = lire(v)
@@ -2717,6 +2723,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _is_computing = false
   public get valueCurrent() {
+    return this.valueCurrentIn(this._reads_collected_layer)
+  }
+
+  /**
+   * os#1511 — `valueCurrent` lu dans une couche EXPLICITE (donnée collectée si `collected`, résultat
+   * réconcilié sinon) : la lecture d'une figure qui a sa propre couche. Même règle, mêmes replis
+   * (agrégat d'un parent, groupes porteurs, bandes) — seul le choix de couche change.
+   */
+  public valueCurrentIn(collected: boolean): number | null {
     if (this._is_computing) {
       return null
     }
@@ -2731,7 +2746,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return v
     }
     let value_current = null
-    value_current = this.value === null ? null : this.readLayer(this.value)
+    value_current = this.value === null ? null : this.readLayer(this.value, collected)
     // os#1511 lot 1 — AGRÉGAT d'un membre PARENT. `value` n'adresse qu'un point du cube : sur
     // une dimension hiérarchisée, viser « Céréales » ne trouve rien, la donnée étant portée
     // par « Blé » et « Maïs ». Le flux se dessinait alors SANS VALEUR (constaté par Julien sur
@@ -2745,7 +2760,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const contributions = this.contributing_values
       if (contributions !== null) {
         const portees = contributions
-          .map(v => this.readLayer(v))
+          .map(v => this.readLayer(v, collected))
           .filter((v): v is number => v !== null)
         if (portees.length > 0) value_current = portees.reduce((total, v) => total + v, 0)
       }
@@ -2798,7 +2813,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
           const vals = multi_dim.selected_tags_list
             .map(tag => {
               const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-              return leaf === null ? null : this.readLayer(leaf)
+              return leaf === null ? null : this.readLayer(leaf, collected)
             })
             .filter((v): v is number => v !== null)
           if (vals.length > 0) value_current = vals.reduce((a, b) => a + b, 0)
@@ -3079,10 +3094,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * When set, the link tapers from source value to target value.
    */
   public get valueCurrentTarget(): number | null {
+    return this.valueCurrentTargetIn(this._reads_collected_layer)
+  }
+
+  /** os#1511 — `valueCurrentTarget` dans une couche explicite (cf. `valueCurrentIn`). */
+  public valueCurrentTargetIn(collected: boolean): number | null {
     if (this._is_computing) return null
     this._is_computing = true
     let value_target = null
-    if (this._reads_collected_layer) {
+    if (collected) {
       value_target = this.value?.valueDataTarget ?? null
     } else {
       value_target = this.value?.valueResultTarget ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueDataTarget : null) ?? null

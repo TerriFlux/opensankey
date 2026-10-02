@@ -141,6 +141,21 @@ export const smallMultiplesAttribute = () => figureAttribute<string | undefined>
     de: 'Ein Diagramm pro', it: 'Un grafico per', 'zh-CN': '每个成员一个图', ja: 'メンバーごとに1つ'
   }, undefined, { kind: 'none' }
 )
+/**
+ * 02/10/2026 — LA COUCHE DE DONNÉES QUE LA FIGURE LIT : `'collected'` (donnée collectée) ou
+ * `'reconciled'` (résultat réconcilié). Absente = celle du diagramme, comme avant.
+ *
+ * Elle ne vaut que pour une figure DÉTACHÉE : liée, la figure lit ce que lit le diagramme, et la
+ * ligne « Données » de ses Coordonnées écrit la couche du diagramme. Lue à un seul endroit,
+ * `readFigureDataLayer` (cf. `figureOpening`). Sans interface générique : la ligne la règle.
+ */
+export const DATA_LAYER_KEY = 'data_layer'
+export const dataLayerAttribute = () => figureAttribute<'collected' | 'reconciled' | undefined>(
+  undefined, 'identity', {
+    en: 'Data layer', fr: 'Couche de données', es: 'Capa de datos',
+    de: 'Datenebene', it: 'Livello di dati', 'zh-CN': '数据层', ja: 'データレイヤー'
+  }, undefined, { kind: 'none' }
+)
 export const hierarchyFocusAttribute = () => figureAttribute<string[] | undefined>(
   undefined, 'identity', {
     en: 'Drilled into', fr: 'Descendu dans', es: 'Profundizado en',
@@ -414,6 +429,7 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute(),
   [COORDINATES_LINKED_KEY]: coordinatesLinkedAttribute(),
   [DIMENSION_OPENING_KEY]: dimensionOpeningAttribute(),
+  [DATA_LAYER_KEY]: dataLayerAttribute(),
   [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute()
 }
 

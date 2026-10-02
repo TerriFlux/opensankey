@@ -50,6 +50,7 @@ import type { Class_DataTag } from '../types/Tag'
 import {
   FOLLOWING_NAVIGATION,
   linkValueUnder,
+  navReadsApart,
   nodeValueUnder,
   passesLinkTagFilters,
   passesNodeTagFilters,
@@ -163,7 +164,8 @@ const linkValue = (link: Class_LinkElement, nav: Type_FigureNavigation): number 
  * diagramme, cas où `data_value` ne répond pas du tout à la question posée.
  */
 const nodeValue = (node: Class_NodeElement, nav: Type_FigureNavigation): number =>
-  nav.data_tags ? nodeValueUnder(node, nav) : node.data_value
+  // os#1511 — une COUCHE propre se lit aussi par `nodeValueUnder` : `data_value` lit celle du dessin.
+  navReadsApart(nav) ? nodeValueUnder(node, nav) : node.data_value
 
 // Un lien porte-t-il le fluxTag d'id donné ? (appartenance, pas de sous-valeur par
 // tag : un lien a une valeur unique et le jeu de fluxTags auquel il appartient.)
@@ -824,7 +826,7 @@ const navUnderSweptTags = (
     const ids = new Set(tagg.tags_list.map(t => t.id))
     out = out.map(t => (ids.has(t.id) ? tag : t))
   })
-  return out === nav.data_tags ? nav : { data_tags: out }
+  return out === nav.data_tags ? nav : { ...nav, data_tags: out }
 }
 
 // Les valeurs d'un axe de comparaison. Sur un axe « flux » on N'ÉLAGUE PAS sur la

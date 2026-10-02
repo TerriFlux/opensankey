@@ -300,7 +300,8 @@ export const buildNestedDimensionTree = (
       if (pinned.length > 0) { tags.push(...pinned); return }
       tags.push(...(group.selected_tags_list as Class_DataTag[]))
     })
-    const at: Type_FigureNavigation = { data_tags: tags }
+    // os#1511 — la couche de la figure voyage avec la coordonnée.
+    const at: Type_FigureNavigation = { ...nav, data_tags: tags }
     return subject.kind === 'node'
       ? sunburstNodeValue(subject.node, at, node_value_mode)
       : (linkValueUnder(subject.link, at) ?? 0)

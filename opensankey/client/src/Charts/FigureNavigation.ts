@@ -63,9 +63,23 @@ export type Type_DataTagSource = {
  */
 export type Type_FigureNavigation = {
   data_tags: Class_DataTag[] | null
+  /**
+   * os#1511 — LA COUCHE LUE : `true` la donnée collectée, `false` le résultat réconcilié, absent
+   * celle du diagramme (comme avant). Posée par la figure DÉTACHÉE qui a choisi sa couche
+   * (`readFigureDataLayer`) ; jamais par une figure liée, qui lit ce que le diagramme lit.
+   */
+  collected?: boolean
 }
 
 export const FOLLOWING_NAVIGATION: Type_FigureNavigation = { data_tags: null }
+
+/** os#1511 — la navigation `nav`, lue dans la couche `collected` (`undefined` : celle du diagramme). */
+export const withDataLayer = (nav: Type_FigureNavigation, collected: boolean | undefined): Type_FigureNavigation =>
+  collected === undefined ? nav : { ...nav, collected }
+
+/** os#1511 — vrai quand la navigation lit sous d'autres coordonnées OU une autre couche que le diagramme. */
+export const navReadsApart = (nav: Type_FigureNavigation): boolean =>
+  !!nav.data_tags || nav.collected !== undefined
 
 /** Lit les épingles dans un sac de réglages ; `null` si la clé est absente ou malformée. */
 export const readFigureDataTagPins = (
@@ -130,7 +144,13 @@ export const figureNavigationOf = (
 export const linkValueUnder = (
   link: Class_LinkElement, nav: Type_FigureNavigation, at_target = false
 ): number | null => {
-  if (nav.data_tags) return link.valueForDataTags(nav.data_tags)
+  // os#1511 — UNE COUCHE PROPRE se lit par les variantes explicites, sans toucher au diagramme.
+  const c = nav.collected
+  if (nav.data_tags) return link.valueForDataTags(nav.data_tags, c)
+  if (c !== undefined) {
+    if (at_target) return link.valueCurrentTargetIn(c) ?? link.valueCurrentIn(c) ?? null
+    return link.valueCurrentIn(c) ?? null
+  }
   if (at_target) return link.valueCurrentTarget ?? link.valueCurrent ?? null
   return link.valueCurrent ?? null
 }
