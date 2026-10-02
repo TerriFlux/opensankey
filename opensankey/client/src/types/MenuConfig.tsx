@@ -61,6 +61,7 @@ import {
   FIGURE_DIAGRAM_PANE_KEY, transposableBagChanges,
   type Type_FigureAttributesConfig, type Type_OptionBag
 } from '../Representations/Figure'
+import { isSyncableKey, readSyncedKeys, syncableKeysOf, syncedChanges } from '../Representations/paneSync'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
 // (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
@@ -399,6 +400,16 @@ export type Type_MainZoneOccupant = {
    * s'écrit que si elle est posée, et un document sans vue enregistrée garde son fichier d'avant.
    */
   saved_view?: string
+  /**
+   * sa#568 — LES RÉGLAGES QUE CE VOLET PARTAGE avec les autres volets qui les ont cochés.
+   *
+   * Des clés de figure (`data_tags` pour l'année épinglée, `descriptor` pour l'axe d'analyse…) :
+   * changer l'une d'elles dans ce volet la change dans tout autre volet qui a coché la même, et
+   * inversement (cf. `Representations/paneSync`). Absent = rien de partagé, l'état de départ ;
+   * la clé ne s'écrit que si elle est posée, et un document où rien n'est coché garde son
+   * fichier d'avant.
+   */
+  synced?: string[]
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -1899,6 +1910,9 @@ export class Class_MenuConfig {
     if (e.place !== 'main') o.place = e.place
     o.size = e.size
     if (e.geometry) o.geometry = e.geometry
+    // sa#568 — la vue rend ses réglages partagés, et ôte ceux que portait une fenêtre réutilisée.
+    if (e.synced.length > 0) o.synced = [...e.synced]
+    else delete o.synced
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
     // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
@@ -2411,7 +2425,7 @@ export class Class_MenuConfig {
    */
   public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
     if (!this.isMainZoneOccupant(id)) return
-    this.figureOf(id, pane_key).assign(options as Type_OptionBag)
+    this._assignFigureAndSync(id, pane_key, options as Type_OptionBag)
     this._notifyMainZone()
   }
   /**
@@ -2420,8 +2434,93 @@ export class Class_MenuConfig {
    */
   public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
     if (!this.isMainZoneOccupant(id)) return
-    this.figureOf(id, FIGURE_DIAGRAM_PANE_KEY).assign(options as Type_OptionBag)
+    this._assignFigureAndSync(id, FIGURE_DIAGRAM_PANE_KEY, options as Type_OptionBag)
     this._notifyMainZone()
+  }
+
+  // --- sa#568 : les réglages PARTAGÉS entre volets ----------------------------------------------
+
+  /**
+   * ÉCRIT UNE FIGURE, PUIS PORTE AUX VOLETS RELIÉS ce qui vient de changer parmi les réglages
+   * cochés de son volet (cf. `Representations/paneSync`).
+   *
+   * C'est ici, et non dans une surface, parce que toutes les surfaces qui règlent une figure —
+   * l'inspecteur, la carte « Coordonnées », la barre du haut, un clic dans la couronne — finissent
+   * par l'un des deux setters ci-dessus. Les autres volets reçoivent la clé par `Class_Figure.set`,
+   * qui n'appelle aucun setter : la propagation ne rebondit donc pas d'un volet à l'autre.
+   *
+   * Dérogation assumée à l'arbitrage du 16/09 (« n'écrit que cette figure ») : c'est l'auteur qui
+   * la demande, en cochant le réglage des deux côtés.
+   */
+  protected _assignFigureAndSync(id: string, pane_key: string, options: Type_OptionBag): void {
+    const fig = this.figureOf(id, pane_key)
+    const synced = this._syncedKeysOf(id)
+    const before = synced.length > 0 ? fig.attributes : {}
+    fig.assign(options)
+    if (synced.length === 0) return
+    const changes = syncedChanges(before, fig.attributes, synced)
+    Object.keys(changes).forEach(key => {
+      this._host._main_zone_occupants.forEach(o => {
+        if (o.id === id || !(o.synced ?? []).includes(key)) return
+        const nature = this.figureNature(o.representation)
+        if (!isSyncableKey(nature, key)) return
+        this._syncTargetFiguresOf(o).forEach(target => target.set(key, changes[key]))
+      })
+    })
+  }
+
+  /** Les réglages cochés d'un volet que sa nature déclare encore (une nature changée en perd). */
+  protected _syncedKeysOf(id: string): string[] {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o?.synced || o.synced.length === 0) return []
+    const nature = this.figureNature(o.representation)
+    return o.synced.filter(key => isSyncableKey(nature, key))
+  }
+
+  /**
+   * LES FIGURES D'UN VOLET RELIÉ qui reçoivent un réglage partagé : celles qu'il a déjà — une
+   * vignette montrée a la sienne, créée en se dessinant —, plus la figure unique d'un volet à
+   * sujet diagramme, créée au besoin. Une vignette jamais montrée n'en a pas encore : elle naîtra
+   * des valeurs d'usine, comme toute vignette neuve.
+   */
+  protected _syncTargetFiguresOf(o: Type_MainZoneOccupant): Class_Figure[] {
+    if (o.subject.kind === 'diagram') this.figureOf(o.id, FIGURE_DIAGRAM_PANE_KEY)
+    const nature = this.figureNature(o.representation)
+    return Object.values(this._figures[o.id] ?? {}).filter(f => f.nature === nature)
+  }
+
+  /** Les réglages qu'un volet peut cocher : ceux que sa nature déclare, sauf l'identité. */
+  public mainZoneSyncableKeys(id: string): string[] {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    return o ? syncableKeysOf(this.figureNature(o.representation)) : []
+  }
+
+  /** Les réglages qu'un volet a cochés (copie). */
+  public mainZoneSyncedKeys(id: string): string[] {
+    return [...(this._host._main_zone_occupants.find(x => x.id === id)?.synced ?? [])]
+  }
+
+  /**
+   * Coche ou décoche un réglage partagé. Cocher NE RECOPIE RIEN : les deux volets gardent ce
+   * qu'ils montrent, et c'est le prochain changement, d'un côté ou de l'autre, qui voyage. Aligner
+   * d'office imposerait de choisir lequel des deux l'emporte, ce que le geste ne dit pas.
+   */
+  public setMainZoneSyncedKey(id: string, key: string, synced: boolean): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const keys = (o.synced ?? []).filter(k => k !== key)
+    if (synced) keys.push(key)
+    if (keys.length > 0) o.synced = keys
+    else delete o.synced
+    this._notifyMainZone()
+  }
+
+  /** Les AUTRES volets ouverts qui partagent ce réglage — ce que la liste à cocher annonce. */
+  public mainZoneSyncPartners(id: string, key: string): string[] {
+    return this._host._main_zone_occupants
+      .filter(o => o.id !== id && (o.synced ?? []).includes(key) &&
+        isSyncableKey(this.figureNature(o.representation), key))
+      .map(o => o.id)
   }
 
   // --- os#1418 : le STYLE d'une nature de figure ----------------------------------------------
@@ -3482,6 +3581,9 @@ export class Class_MenuConfig {
       })
       if (Object.keys(figures).length > 0) entry['figures'] = figures
     }
+    // sa#568 — LES RÉGLAGES PARTAGÉS, seulement s'il y en a : un document où rien n'est coché
+    // écrit le même fichier qu'avant. Écrits aussi dans la forme d'une vue, qui les retrouve.
+    if (o.synced && o.synced.length > 0) entry['synced'] = [...o.synced]
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
     // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
     if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
@@ -3598,6 +3700,8 @@ export class Class_MenuConfig {
     }
     // sa#566 — la vue que ce volet EST, s'il est enregistré (cf. `Type_MainZoneOccupant.saved_view`).
     const saved_view = getStringFromJSON(e, 'saved_view', '')
+    // sa#568 — les réglages partagés (cf. `Type_MainZoneOccupant.synced`) ; absents = aucun.
+    const synced = readSyncedKeys(e['synced'])
     return {
       id,
       subject,
@@ -3609,6 +3713,7 @@ export class Class_MenuConfig {
       figures,
       options,
       saved_view: saved_view !== '' ? saved_view : undefined,
+      synced,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
@@ -3650,10 +3755,11 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view }) => {
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view, synced }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
         if (saved_view) o.saved_view = saved_view
+        if (synced.length > 0) o.synced = synced
         return o
       })
       // sa#566 — les notes de volets fermés parlaient de l'état qu'on quitte.
