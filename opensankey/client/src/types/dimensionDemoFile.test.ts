@@ -29,6 +29,23 @@ if (typeof globalThis.structuredClone !== 'function') {
 
 const SORTIE = process.env.DIMENSION_DEMO_OUT
 
+// os#1511 (sa!820) — VARIANTE « RESULTATS » : chaque valeur saisie recoit en plus un resultat
+// reconcilie NETTEMENT different, pour voir quelle couche lit un noeud engendre. Avant sa!820, en
+// mode resultats, les noeuds engendres montraient la donnee saisie : avec deux couches egales, on
+// ne voyait rien. L ecart depend du PAYS (axe dessine en noeuds) et de la FILIERE (axe dessine en
+// bandes, d ou `banner = 'multi'`), de sorte que chaque noeud et chaque bande ait son propre ecart.
+// Une sortie en `.json` s ecrit en clair, avec son jumeau `.json.gz` a cote.
+const RESULTATS = process.env.DIMENSION_DEMO_RESULTS === '1'
+const ECART_PAYS: { [pays: string]: number } = {
+  'espagne': 1.10, 'italie': 0.80, 'maroc': 1.30, 'egypte': 0.90,
+}
+const ECART_FILIERE: { [filiere: string]: number } = {
+  'ble': 1.00, 'mais': 1.20, 'farine': 0.85, 'malt': 1.10, 'oleagineux': 1.25,
+}
+function resultatReconcilie(filiere_id: string, pays_id: string, nombre: number): number {
+  return Math.round(nombre * ECART_PAYS[pays_id] * ECART_FILIERE[filiere_id])
+}
+
 const FILIERES: { [membre: string]: string | null } = {
   // membre -> parent
   'tous-produits': null,       // RACINE UNIQUE : sans elle, le total general n est
@@ -95,7 +112,9 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
   test('fabrique un diagramme dont les totaux se deduisent des feuilles', () => {
     const app = new Class_ApplicationData(false)
     const sankey = app.drawing_area.sankey
-    sankey.name = 'Démo — dimensions hiérarchisées'
+    sankey.name = RESULTATS
+      ? 'Démo — dimensions hiérarchisées (données et résultats)'
+      : 'Démo — dimensions hiérarchisées'
 
     // Les dimensions AVANT le flux : son arbre de valeurs porte alors un etage par dimension.
     const filiere = sankey.addDataTagGroup('filiere', 'Filière', false) as unknown as Class_DataTagGroup
@@ -106,7 +125,18 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
       membre.parent = filiere.tags_dict[parent_id] as Class_DataTag
     })
     filiere.levels = ['ensemble', 'filières', 'transformation', 'produits']
-    filiere.banner = 'one'
+    // En variante resultats, la filiere se dessine EN BANDES (choix multiple) : on compare ainsi
+    // les deux chemins de lecture, bandes d un flux et noeuds engendres.
+    filiere.banner = RESULTATS ? 'multi' : 'one'
+    if (RESULTATS) {
+      // Des bandes toutes grises ne se distingueraient pas : une couleur par membre.
+      const COULEURS: { [id: string]: string } = {
+        'cereales': '#d9a441', 'oleagineux': '#5b8c3a',
+        'cereales-brutes': '#c98a2b', 'cereales-transformees': '#e6c27a',
+        'ble': '#b5781f', 'mais': '#f0b93a', 'farine': '#e8d3a1', 'malt': '#9c6b30',
+      }
+      Object.entries(COULEURS).forEach(([id, couleur]) => { (filiere.tags_dict[id] as Class_DataTag).color = couleur })
+    }
 
     const pays = sankey.addDataTagGroup('pays', 'Pays partenaire', false) as unknown as Class_DataTagGroup
     Object.keys(PAYS).forEach(id => pays.addTag(NOMS_PAYS[id], id))
@@ -151,6 +181,8 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     })
 
     let total_saisi = 0
+    let total_resultat = 0
+    const resultat_par_pays: { [pays: string]: number } = {}
     Object.entries(VALEURS).forEach(([filiere_id, par_pays]) => {
       Object.entries(par_pays).forEach(([pays_id, nombre]) => {
         viser(filiere, filiere_id)
@@ -158,6 +190,13 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
         const valeur = exportations.value as Class_LinkValue
         valeur.valueData = nombre
         total_saisi += nombre
+        if (RESULTATS) {
+          // APRES la donnee : `valueData` remet le resultat a null.
+          const resultat = resultatReconcilie(filiere_id, pays_id, nombre)
+          valeur.valueResult = resultat
+          total_resultat += resultat
+          resultat_par_pays[pays_id] = (resultat_par_pays[pays_id] ?? 0) + resultat
+        }
       })
     })
 
@@ -178,7 +217,16 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     expect(total_agrege).toBe(1385)
     // Et l invariant tel que le DESSIN le lit, qui est ce que Julien regarde : un flux sans
     // valeur ne prouve rien, meme si l agregat est juste par ailleurs.
-    expect(exportations.valueCurrent).toBe(1385)
+    // A l ouverture, la couche lue est le reconcilie (`type_data` par defaut) : sans resultat, il
+    // retombe sur la donnee saisie ; avec, il doit rendre la somme des RESULTATS.
+    expect(exportations.valueCurrent).toBe(RESULTATS ? total_resultat : 1385)
+    if (RESULTATS) {
+      expect(total_resultat).not.toBe(total_saisi)
+      app.drawing_area.type_data = 'data'
+      expect(exportations.valueCurrent).toBe(1385)
+      app.drawing_area.type_data = 'free_value'
+      expect(exportations.valueCurrent).toBe(total_resultat)
+    }
 
     // Le second invariant, celui du lot 2 : le noeud d axe se decoupe sur les membres CHOISIS,
     // et le flux se repartit sans rien perdre en chemin. On choisit ici le niveau des regions,
@@ -188,17 +236,42 @@ describe('os#1511 — fichier d essai a dimensions hierarchisees', () => {
     const par_membre = sankey.links_list.filter(isGeneratedMemberLink)
     expect(par_membre.map(l => l.target.name).sort()).toEqual(['Afrique', 'Europe'])
     expect(par_membre.reduce((t, l) => t + (l.value?.valueData ?? 0), 0)).toBe(1385)
+    if (RESULTATS) {
+      // Ce que sa!820 garantit : le noeud engendre porte les DEUX couches, et le dessin lit le
+      // resultat en mode reconcilie. Europe = Espagne + Italie, Afrique = Maroc + Egypte.
+      const attendu: { [nom: string]: number } = {
+        'Europe': resultat_par_pays['espagne'] + resultat_par_pays['italie'],
+        'Afrique': resultat_par_pays['maroc'] + resultat_par_pays['egypte'],
+      }
+      par_membre.forEach(l => {
+        expect(l.value?.valueResult).toBe(attendu[l.target.name])
+        expect(l.value?.valueResult).not.toBe(l.value?.valueData)
+        expect(l.valueCurrent).toBe(attendu[l.target.name])
+        // eslint-disable-next-line no-console
+        console.log(`  ${l.target.name} : saisi ${l.value?.valueData} kt, reconcilie ${l.value?.valueResult} kt`)
+      })
+    }
     // On rend le fichier a son etat d ouverture : les noeuds engendres ne s ecrivent pas, et
     // l on repart du niveau le plus agrege.
     removeGeneratedMemberNodes(sankey)
     pays.selectAllAtLevel(0)
+    if (RESULTATS) {
+      // La variante s ouvre la ou les deux lectures se comparent d un coup d oeil : les filieres
+      // en bandes (Cereales, Oleagineux), les regions en noeuds (Europe, Afrique). Les noeuds
+      // engendres se refont au premier dessin.
+      filiere.selectAllAtLevel(1)
+      pays.selectAllAtLevel(1)
+    }
 
     if (SORTIE !== undefined) {
-      const json = app.toJSON()
+      const texte = JSON.stringify(app.toJSON())
       fs.mkdirSync(path.dirname(SORTIE), { recursive: true })
-      fs.writeFileSync(SORTIE, zlib.gzipSync(Buffer.from(JSON.stringify(json), 'utf-8')))
+      const ecrits = SORTIE.endsWith('.json') ? [SORTIE, `${SORTIE}.gz`] : [SORTIE]
+      if (SORTIE.endsWith('.json')) fs.writeFileSync(SORTIE, texte, 'utf-8')
+      fs.writeFileSync(ecrits[ecrits.length - 1], zlib.gzipSync(Buffer.from(texte, 'utf-8')))
+      const totaux = RESULTATS ? `saisi ${total_agrege} kt, reconcilie ${total_resultat} kt` : `total ${total_agrege} kt`
       // eslint-disable-next-line no-console
-      console.log(`FICHIER ECRIT : ${SORTIE} (${fs.statSync(SORTIE).size} octets, total ${total_agrege} kt)`)
+      console.log(`FICHIER ECRIT : ${ecrits.join(' + ')} (${totaux})`)
     }
   })
 })
