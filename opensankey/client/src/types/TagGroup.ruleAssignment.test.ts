@@ -62,13 +62,19 @@ describe('SA#580 — règle pure', () => {
   const tags = SEUILS.map(([name, rule_upper_bound]) => ({ name, rule_upper_bound }))
   const nameOf = (q: number | undefined) => resolveRuleTag(q, tags)?.name
 
-  it('tranches [seuil précédent ; seuil[, la dernière ouverte', () => {
+  it('tranches ]seuil précédent ; seuil], le seuil inclus, la dernière ouverte', () => {
     expect(nameOf(0)).toBe('Fiable')
-    expect(nameOf(9.99)).toBe('Fiable')
-    expect(nameOf(10)).toBe('Robuste')
+    expect(nameOf(10)).toBe('Fiable')
+    expect(nameOf(10.01)).toBe('Robuste')
     expect(nameOf(34.9)).toBe('Probable')
-    expect(nameOf(50)).toBe('Indicative')
+    expect(nameOf(50)).toBe('Approximative')
+    expect(nameOf(50.1)).toBe('Indicative')
     expect(nameOf(400)).toBe('Indicative')
+  })
+
+  it('seuil inclus au bruit de calcul près, pas au-delà (valeurs du Lait SOCLE)', () => {
+    expect(nameOf(10.000000123548254)).toBe('Fiable')
+    expect(nameOf(10.00006011927746)).toBe('Robuste')
   })
 
   it('inconnue (infinie) = dernière tranche ; sans grandeur = aucune étiquette', () => {

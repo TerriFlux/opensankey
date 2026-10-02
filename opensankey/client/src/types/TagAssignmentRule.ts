@@ -2,9 +2,10 @@
 //
 // Un groupe de flux peut confier l'attribution de ses étiquettes à une règle : une GRANDEUR,
 // mesurée sur la valeur affichée de chaque flux, et pour chaque étiquette un SEUIL HAUT. Les
-// étiquettes, dans leur ordre, découpent la grandeur en tranches [seuil précédent ; seuil[ ; une
-// étiquette sans seuil est ouverte vers le haut. Exemple de la fiabilité (2σ) :
-//   Fiable < 10 % ≤ Robuste < 20 % ≤ Probable < 35 % ≤ Approximative < 50 % ≤ Indicative
+// étiquettes, dans leur ordre, découpent la grandeur en tranches ]seuil précédent ; seuil] — le
+// seuil appartient à sa tranche (retour d'Alexandre, 2026-10-02 : un flux à 10 % reste Fiable) ;
+// une étiquette sans seuil est ouverte vers le haut. Exemple de la fiabilité (2σ) :
+//   Fiable ≤ 10 % < Robuste ≤ 20 % < Probable ≤ 35 % < Approximative ≤ 50 % < Indicative
 //
 // Le port se CALCULE, il ne s'écrit jamais sur les éléments (comme l'étiquette « Sans [groupe] »
 // du #553) : changer d'année ou d'unité change la valeur affichée, donc son étiquette, et changer
@@ -58,16 +59,26 @@ export function parseRuleUpperBound(raw: unknown): number | undefined {
 }
 
 /**
- * Étiquette d'une grandeur mesurée : la première, dans l'ordre du groupe, dont le seuil haut
- * dépasse strictement la grandeur, ou qui n'a pas de seuil. Une grandeur au-delà de tous les seuils
- * — ou infinie : une valeur inconnue — tombe dans la DERNIÈRE tranche, la moins fiable (règle
- * d'Alexandre, 2026-09-29). Pas de grandeur, pas d'étiquette : « Sans [groupe] ».
+ * Écart relatif toléré au seuil : une grandeur CALCULÉE « à 10 % » ressort couramment à
+ * 10,000000124 % (bruit du solveur, Lait SOCLE 2023) ; sans tolérance, la borne incluse ne
+ * servirait à rien sur une valeur calculée. 1e-6 du seuil : bien en deçà de toute précision
+ * affichée, et 10,00006 % (écart réel du calcul, Lait 2015) reste au-delà.
+ */
+export const RULE_BOUND_RELATIVE_TOLERANCE = 1e-6
+
+/**
+ * Étiquette d'une grandeur mesurée : la première, dans l'ordre du groupe, dont la grandeur ne
+ * dépasse pas le seuil haut (seuil inclus, à la tolérance près), ou qui n'a pas de seuil. Une
+ * grandeur au-delà de tous les seuils — ou infinie : une valeur inconnue — tombe dans la DERNIÈRE
+ * tranche, la moins fiable (règle d'Alexandre, 2026-09-29). Pas de grandeur, pas d'étiquette :
+ * « Sans [groupe] ».
  */
 export function resolveRuleTag<T extends { rule_upper_bound: number | undefined }>(
   quantity: number | undefined,
   tags: T[]
 ): T | undefined {
   if (quantity === undefined || Number.isNaN(quantity) || tags.length === 0) return undefined
-  const tag = tags.find(t => t.rule_upper_bound === undefined || quantity < t.rule_upper_bound)
+  const tag = tags.find(t => t.rule_upper_bound === undefined ||
+    quantity <= t.rule_upper_bound + Math.abs(t.rule_upper_bound) * RULE_BOUND_RELATIVE_TOLERANCE)
   return tag ?? tags[tags.length - 1]
 }
