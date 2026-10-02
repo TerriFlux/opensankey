@@ -4,7 +4,7 @@
 // consecutives ecrivaient leurs etiquettes collees au bord de l arc, les unes sur les autres et sur
 // le disque. Le patron classique : coude radial, colonne a droite ou a gauche, repoussee verticalement.
 
-import { CALLOUT_STACK_GAP_PX, layoutDonutCallouts } from './donutCalloutLayout'
+import { CALLOUT_MAX_SHIFT_LINES, CALLOUT_STACK_GAP_PX, layoutDonutCallouts } from './donutCalloutLayout'
 import type { Type_CalloutRequest } from './donutCalloutLayout'
 
 const RADIUS = 100
@@ -48,7 +48,8 @@ describe('etiquettes detachees de la couronne', () => {
   it.each([0, 0.2, 0.45, 0.7, 0.96])('huit petites parts a partir de %p du tour : aucun chevauchement', start => {
     const boxes = boxesOf(huitPetites(start))
 
-    expect(boxes.length).toBe(8)
+    // 02/10/2026 — au plus ce qui tient pres de son ancre : la plus grande part au moins.
+    expect(boxes.length).toBeGreaterThan(0)
     for (let i = 0; i < boxes.length; i++) {
       for (let j = i + 1; j < boxes.length; j++) {
         expect(overlap(boxes[i], boxes[j])).toBe(false)
@@ -76,8 +77,9 @@ describe('etiquettes detachees de la couronne', () => {
   })
 
   it('dans un cadre borne, les plus grandes parts gardent leur etiquette et rien ne deborde', () => {
-    const half = 3 * H
-    const requests = huitPetites(0.1)
+    // La bande d une case de petits multiples : le disque, son coude et une etiquette.
+    const half = RADIUS + GAP + H
+    const requests = huitPetites(0)
     const placed = layoutDonutCallouts(requests, RADIUS, GAP, GAP, { half_height: half })
 
     expect(placed.size).toBeLessThan(8)
@@ -86,5 +88,32 @@ describe('etiquettes detachees de la couronne', () => {
       expect(p.y - H / 2).toBeGreaterThanOrEqual(-half - 1e-9)
       expect(p.y + H / 2).toBeLessThanOrEqual(half + 1e-9)
     })
+  })
+
+  // 02/10/2026 — Julien, capture « Export par continent » : dix etiquettes empilees en colonne a
+  // gauche, un eventail de traits longs qui se croisent. Chacune reste pres de son ancre, ou se tait.
+  it.each([0, 0.2, 0.45, 0.7, 0.96])('a partir de %p du tour : chaque etiquette reste pres de son coude', start => {
+    const placed = layoutDonutCallouts(huitPetites(start), RADIUS, GAP)
+    placed.forEach(p => {
+      expect(Math.abs(p.y - p.elbow.y)).toBeLessThanOrEqual(CALLOUT_MAX_SHIFT_LINES * H + 1e-9)
+    })
+  })
+
+  it('les plus grandes parts passent d abord quand tout ne tient pas pres de son ancre', () => {
+    const placed = layoutDonutCallouts(huitPetites(0), RADIUS, GAP)
+
+    expect(placed.size).toBeLessThan(8)
+    expect(placed.has('p0')).toBe(true)
+    expect(placed.has('p1')).toBe(true)
+  })
+
+  it('des parts eparses gardent toutes leur etiquette, a la hauteur de leur coude', () => {
+    const eparses: Type_CalloutRequest[] = [0.1, 0.3, 0.6, 0.85].map((a, i) => ({
+      id: `e${i}`, mid_angle: 2 * Math.PI * a, height: H, width: W, weight: 1
+    }))
+    const placed = layoutDonutCallouts(eparses, RADIUS, GAP)
+
+    expect(placed.size).toBe(4)
+    placed.forEach(p => expect(p.y).toBeCloseTo(p.elbow.y))
   })
 })

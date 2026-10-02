@@ -227,7 +227,14 @@ export interface Type_SmallMultipleCell {
    * Le cadre de cette case (disque et étiquettes), rendu à l'appelant ; `apply` y pose le cadre
    * COMMUN, l'union de ceux de toutes les cases — une seule échelle d'une case à l'autre.
    */
-  frame: (box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void) => void
+  frame?: (box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void) => void
+  /**
+   * 02/10/2026 — LA CASE TAILLÉE À SON DISQUE (cf. `packSmallMultiples`). Le rayon en pixels, à
+   * l'échelle commune, et le cadre de la case depuis le centre du disque : la case le dessine à
+   * l'échelle 1, ses étiquettes sorties s'y bornent. Absents, la case d'hier (`radius_ratio`, `frame`).
+   */
+  radius_px?: number
+  box?: Type_DrawnBox
   /**
    * 02/10/2026 — LA COULEUR DE CHAQUE PART, FIXÉE UNE FOIS POUR TOUTES LES CASES (cf.
    * `donutPartColors` sur l'union). Chaque case colorait par SON rang : « Céréales » changeait de
@@ -292,6 +299,191 @@ export const smallMultipleCentreName = (
     }
   }
   return { lines: [name], size: Math.min(12, Math.max(CELL_NAME_MIN_PX, base)), above: true }
+}
+
+/** Le centre d'une case : le nom (cf. `smallMultipleCentreName`) et la valeur, dedans ou dessous. */
+export interface Type_SmallMultipleCentrePlan {
+  name: { lines: string[], size: number, above: boolean }
+  value: { size: number, below: boolean } | null
+}
+
+/**
+ * 02/10/2026 — LA VALEUR DU CENTRE TIENT-ELLE DANS LE TROU ? (Julien : « 1,19 Mt » plus large que le
+ * trou des Amériques chevauchait l'anneau). Sa police se réduit jusqu'au plancher lisible ; en
+ * dessous, elle passe SOUS le disque et le nom AU-DESSUS, tous deux hors de l'anneau. Sinon le nom
+ * suit sa propre règle (`smallMultipleCentreName`), la valeur restant au centre.
+ */
+export const smallMultipleCentrePlan = (
+  name: string, value_text: string | null, inner: number, value_font?: number
+): Type_SmallMultipleCentrePlan => {
+  if (value_text === null) return { name: smallMultipleCentreName(name, inner, null), value: null }
+  const base = value_font ?? Math.max(11, inner * 0.28)
+  const room_w = inner * 1.7
+  const size = value_font ?? Math.min(base, base * room_w / Math.max(1, labelTextWidthPx(value_text, base)))
+  const inside = inner >= 12 && size >= CELL_NAME_MIN_PX && labelTextWidthPx(value_text, size) <= room_w + 1e-6
+  if (!inside) {
+    const out_size = value_font ?? Math.min(12, Math.max(CELL_NAME_MIN_PX, base))
+    return { name: { lines: [name], size: Math.min(12, Math.max(CELL_NAME_MIN_PX, inner * 0.2)), above: true }, value: { size: out_size, below: true } }
+  }
+  return { name: smallMultipleCentreName(name, inner, size), value: { size, below: false } }
+}
+
+/** Une case de petits multiples : son membre, ses parts, son total. */
+export interface Type_SmallMultipleMember { name: string, slices: Type_StatSlice[], total: number }
+
+/**
+ * 02/10/2026 — LE CADRE D'UNE CASE AU RAYON `radius`, depuis le centre de son disque : le disque, la
+ * place des étiquettes qui sortiront (à droite, à gauche, au-dessus et au-dessous), le nom posé
+ * au-dessus et la valeur dessous quand le trou ne les tient pas. Les mêmes règles que le tracé
+ * (`drawDonutChart`) : mêmes parts repliées, même seuil, même texte, même test « tient dans son
+ * secteur » — sans quoi la case réserverait une place que personne n'occupe, ou pas celle qu'il faut.
+ */
+export const smallMultipleCellBox = (
+  m: Type_SmallMultipleMember, radius: number, st: Type_FigureChartStyle, f: (v: number) => string,
+  others_label: string
+): Type_DrawnBox => {
+  const gap = smallMultipleCalloutGap(2.8 * radius)
+  const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
+  const font = Math.max(MIN_CELL_CALLOUT_FONT_PX, st.name_label_font_size)
+  let right = 0
+  let left = 0
+  let vert = 0
+  if (radius >= MIN_CELL_LABEL_RADIUS_PX && (st.labels_callout_small || st.name_label_callout)) {
+    const kept = foldDonutParts(m.slices, st, others_label)
+    const total = kept.reduce((s, d) => s + d.value, 0)
+    // Comme le tracé : la police du secteur peut descendre jusqu'au plancher pour tenir dedans.
+    const fitsInside = (text: string, a0: number, a1: number): boolean => {
+      for (let size = st.name_label_font_size; size >= Math.min(MIN_CELL_CALLOUT_FONT_PX, st.name_label_font_size); size--) {
+        if (fitLabelInSector(labelTextWidthPx(text, size), size * 1.15, inner, radius, a0, a1) !== null) return true
+      }
+      return false
+    }
+    let start = 0
+    kept.forEach(s => {
+      const span = total > 0 ? 2 * Math.PI * s.value / total : 0
+      const end = start + span
+      const text = donutValueText(s.value, total, st, f)
+      const out = text !== '' && f(Math.abs(s.value)) !== f(0) && !isWholeRing(start, end) &&
+        span / (2 * Math.PI) >= labelMinShare(st) && span * radius >= 1 &&
+        (st.name_label_callout || !fitsInside(text, start, end))
+      if (out) {
+        const need = 2 * gap + labelTextWidthPx(text, font) + 2
+        if (Math.sin((start + end) / 2) >= 0) right = Math.max(right, need)
+        else left = Math.max(left, need)
+        vert = gap + font * 1.15
+      }
+      start = end
+    })
+  }
+  const wants_value = st.centre_content === 'value' || st.centre_content === 'both'
+  const plan = smallMultipleCentrePlan(m.name, wants_value ? f(m.total) : null, inner)
+  let top = radius + vert
+  let bottom = radius + vert
+  let x1 = radius + right
+  let x0 = -(radius + left)
+  // Le nom au-dessus et la valeur dessous se posent AU-DELÀ des étiquettes sorties (cf. le tracé).
+  const beyond = vert > 0 ? Math.max(radius + gap, radius + vert + 2) : radius + gap
+  if (plan.name.above) {
+    top = Math.max(top, beyond + plan.name.lines.length * plan.name.size * 1.15 + 2)
+    const w = Math.max(...plan.name.lines.map(l => labelTextWidthPx(l, plan.name.size))) / 2 + 2
+    x1 = Math.max(x1, w)
+    x0 = Math.min(x0, -w)
+  }
+  if (plan.value?.below) {
+    bottom = Math.max(bottom, beyond + plan.value.size * 1.2 + 2)
+    const w = labelTextWidthPx(f(m.total), plan.value.size) / 2 + 2
+    x1 = Math.max(x1, w)
+    x0 = Math.min(x0, -w)
+  }
+  return { x0, x1, y0: -top, y1: bottom }
+}
+
+/** Où se pose une case : son rayon à l'échelle commune, son cadre, le centre de son disque. */
+export interface Type_SmallMultiplePlacement { radius: number, box: Type_DrawnBox, cx: number, cy: number }
+
+/**
+ * 02/10/2026 — LES CASES EN RANGÉES, CHACUNE À LA TAILLE DE SON DISQUE (Julien : « il y a trop de
+ * vide, tu dois pouvoir densifier »). La grille de cases égales donnait à la minuscule couronne
+ * « Autres » la même place qu'à l'Europe.
+ *
+ * Le rayon dit la valeur (aire ∝ total) à UNE échelle commune `k` : r = k·√total. On cherche le plus
+ * grand `k` (dichotomie) tel que l'ensemble tienne dans `width` × `height` : à chaque essai, les
+ * cases, dans l'ordre reçu, remplissent les rangées tant que la largeur le permet ; chaque rangée a
+ * la hauteur de ses cases, les centres des disques sur une même ligne ; la hauteur totale doit
+ * tenir. Les rangées sont centrées, le bloc aussi.
+ */
+export const packSmallMultiples = (
+  totals: readonly number[], boxOf: (i: number, radius: number) => Type_DrawnBox,
+  width: number, height: number, gap: number = 8
+): Type_SmallMultiplePlacement[] => {
+  const max_total = Math.max(0, ...totals)
+  const radiusOf = (k: number, t: number) => (t > 0 ? k * Math.sqrt(t) : 0)
+  const attempt = (k: number) => {
+    const boxes = totals.map((t, i) => boxOf(i, radiusOf(k, t)))
+    const rows: number[][] = []
+    let row: number[] = []
+    let used = 0
+    let fits = true
+    boxes.forEach((b, i) => {
+      const w = b.x1 - b.x0
+      if (w > width) fits = false
+      if (row.length > 0 && used + gap + w > width) { rows.push(row); row = []; used = 0 }
+      used += (row.length > 0 ? gap : 0) + w
+      row.push(i)
+    })
+    if (row.length > 0) rows.push(row)
+    const ups = rows.map(r => Math.max(...r.map(i => -boxes[i].y0)))
+    const downs = rows.map(r => Math.max(...r.map(i => boxes[i].y1)))
+    const total_h = rows.reduce((s, _r, j) => s + ups[j] + downs[j], 0) + gap * Math.max(0, rows.length - 1)
+    return { boxes, rows, ups, downs, total_h, fits: fits && total_h <= height }
+  }
+  let lo = 0
+  let hi = max_total > 0 ? Math.max(0, Math.min(width, height)) / 2 / Math.sqrt(max_total) : 0
+  for (let n = 0; n < 40 && hi - lo > 1e-6; n++) {
+    const mid = (lo + hi) / 2
+    if (attempt(mid).fits) lo = mid
+    else hi = mid
+  }
+  const best = attempt(lo)
+  const out: Type_SmallMultiplePlacement[] = []
+  let y = (height - best.total_h) / 2
+  best.rows.forEach((r, j) => {
+    const row_w = r.reduce((s, i) => s + best.boxes[i].x1 - best.boxes[i].x0, 0) + gap * (r.length - 1)
+    let x = (width - row_w) / 2
+    r.forEach(i => {
+      const b = best.boxes[i]
+      out[i] = { radius: radiusOf(lo, totals[i]), box: b, cx: x - b.x0, cy: y + best.ups[j] }
+      x += b.x1 - b.x0 + gap
+    })
+    y += best.ups[j] + best.downs[j] + gap
+  })
+  return out
+}
+
+/**
+ * Pose dans `grid` une case par membre, rangées par `packSmallMultiples`, et rend pour chacune son
+ * élément et ce que son tracé doit savoir (`Type_SmallMultipleCell` : rayon, cadre, écart).
+ */
+export const mountSmallMultipleCells = (
+  grid: HTMLElement, members: readonly Type_SmallMultipleMember[], st: Type_FigureChartStyle,
+  f: (v: number) => string, others_label: string
+): { cell: HTMLElement, radius_px: number, box: Type_DrawnBox, callout_gap_px: number }[] => {
+  const placed = packSmallMultiples(
+    members.map(m => m.total),
+    (i, r) => smallMultipleCellBox(members[i], r, st, f, others_label),
+    grid.clientWidth, grid.clientHeight)
+  grid.style.position = 'relative'
+  return members.map((_m, i) => {
+    const p = placed[i]
+    const cell = document.createElement('div')
+    cell.style.position = 'absolute'
+    cell.style.left = `${p.cx + p.box.x0}px`
+    cell.style.top = `${p.cy + p.box.y0}px`
+    cell.style.width = `${p.box.x1 - p.box.x0}px`
+    cell.style.height = `${p.box.y1 - p.box.y0}px`
+    grid.appendChild(cell)
+    return { cell, radius_px: p.radius, box: p.box, callout_gap_px: smallMultipleCalloutGap(2.8 * p.radius) }
+  })
 }
 
 /** Ce qu'un tracé a réellement appliqué à une part, et que le panneau doit annoncer. */
@@ -821,6 +1013,88 @@ const pctText = (value: number, total: number) => {
   return (pct >= 10 ? pct.toFixed(0) : pct >= 1 ? pct.toFixed(1) : pct.toFixed(2)) + '%'
 }
 
+/**
+ * Ordre des parts, puis repli des petites en « Autres » : sous le seuil (`parts_group_under`, en %
+ * du tout) ou au-delà du plafond (`parts_max`). Les deux à zéro ne replient rien. Sorti du tracé
+ * pour que la mise en page des petits multiples mesure les mêmes parts que celles dessinées.
+ */
+export const foldDonutParts = (
+  slices: readonly Type_StatSlice[], st: Type_FigureChartStyle, others_label: string
+): Type_StatSlice[] => {
+  const total = slices.reduce((s, d) => s + d.value, 0)
+  const kept: Type_StatSlice[] = []
+  let others = 0
+  orderParts([...slices], st.parts_order).forEach((s, i) => {
+    const under = st.parts_group_under > 0 && s.value / total < st.parts_group_under / 100
+    const over = st.parts_max > 0 && i >= st.parts_max
+    if (!under && !over) kept.push(s)
+    else others += s.value
+  })
+  if (others > 0) kept.push({ id: '__others__', label: others_label, value: others, color: OTHERS_COLOR })
+  return kept
+}
+
+/**
+ * Le nombre qu'écrit un secteur : la valeur, son pourcentage, ou les deux (cf. `sectorValue` dans
+ * `drawDonutChart` pour l'histoire de chaque cas). Vide si la valeur est masquée.
+ */
+export const donutValueText = (
+  value: number, total: number, st: Type_FigureChartStyle, f: (v: number) => string
+): string => {
+  if (!st.value_label_is_visible) return ''
+  const pct = Math.round(value / total * 100) + '%'
+  if (st.value_label_percent === 'value_total' || st.value_label_percent === 'value_parent') return `${f(value)} (${pct})`
+  if (st.value_label_percent !== 'none') return pct
+  return f(value)
+}
+
+/**
+ * 02/10/2026 — OÙ UN TEXTE HORIZONTAL DE `w` × `h` TIENT-IL DANS UN SECTEUR D'ANNEAU ? Rend le centre
+ * du texte, ou null s'il ne tient nulle part.
+ *
+ * Julien, capture « Export par continent » : « 4,32 Mt (52 %) » et « 9,47 Mt (83 %) » sortaient en
+ * détaché alors qu'ils tiennent largement dans leur secteur. Le test ne regardait qu'UN point, le
+ * milieu du secteur à mi-épaisseur : sur le flanc du disque l'anneau court verticalement et un texte
+ * horizontal n'y entre pas, quand il entre sans peine plus haut ou plus bas dans le même secteur. On
+ * essaie donc le milieu d'abord (le dessin d'hier quand il tenait), puis des angles de plus en plus
+ * écartés du milieu et des rayons sur l'épaisseur. Tenir : le cadre reste hors du trou, dans le
+ * disque, et ses coins et milieux de bords dans l'angle du secteur.
+ */
+export const fitLabelInSector = (
+  w: number, h: number, inner: number, outer: number, start: number, end: number, only_mid: boolean = false
+): { x: number, y: number } | null => {
+  const tol = 1
+  const span = end - start
+  const mid = (start + end) / 2
+  const fits = (cx: number, cy: number): boolean => {
+    // Le point du cadre le plus proche du centre reste hors du trou ; le plus loin dans le disque.
+    const nx = Math.max(0, Math.abs(cx) - w / 2)
+    const ny = Math.max(0, Math.abs(cy) - h / 2)
+    if (Math.hypot(nx, ny) < inner - tol) return false
+    if (Math.hypot(Math.abs(cx) + w / 2, Math.abs(cy) + h / 2) > outer + tol) return false
+    return [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]].every(([sx, sy]) => {
+      const x = cx + sx * w / 2
+      const y = cy + sy * h / 2
+      return angleInSector(Math.atan2(x, -y), start, end, tol / Math.max(Math.hypot(x, y), 1))
+    })
+  }
+  const STEPS = only_mid ? 0 : 24
+  const offsets = [0]
+  for (let k = 1; k < STEPS; k++) offsets.push(k / STEPS, -k / STEPS)
+  const mid_r = (inner + outer) / 2
+  const radii = [mid_r]
+  if (!only_mid) for (let k = 1; k <= 6; k++) radii.push(mid_r + k * (outer - inner) / 14, mid_r - k * (outer - inner) / 14)
+  for (const o of offsets) {
+    const a = mid + o * span / 2
+    for (const r of radii) {
+      const cx = r * Math.sin(a)
+      const cy = -r * Math.cos(a)
+      if (fits(cx, cy)) return { x: cx, y: cy }
+    }
+  }
+  return null
+}
+
 // ==================================================================================================
 // Couronne (donut) — un secteur par entrée, total au centre, légende HTML à droite
 // ==================================================================================================
@@ -834,25 +1108,14 @@ export const drawDonutChart = (
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container, opts)
   const total = slices.reduce((s, d) => s + d.value, 0)
-  if (slices.length === 0 || total <= 0 || width < 80 || height < 80) {
+  // Une case taillée à son disque peut être plus petite que le plancher d'une figure : elle dessine.
+  const too_small = opts.small_multiple?.box === undefined && (width < 80 || height < 80)
+  if (slices.length === 0 || total <= 0 || too_small) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
     return
   }
 
-  // Ordre des parts, puis repli des petites en « Autres » : sous le seuil (`parts_group_under`,
-  // en % du tout) ou au-delà du plafond (`parts_max`). Les deux à zéro ne replient rien.
-  const ordered = orderParts(slices, st.parts_order)
-  const kept: Type_StatSlice[] = []
-  let others = 0
-  ordered.forEach((s, i) => {
-    const under = st.parts_group_under > 0 && s.value / total < st.parts_group_under / 100
-    const over = st.parts_max > 0 && i >= st.parts_max
-    if (!under && !over) kept.push(s)
-    else others += s.value
-  })
-  if (others > 0) {
-    kept.push({ id: '__others__', label: opts.others_label ?? 'Others', value: others, color: OTHERS_COLOR })
-  }
+  const kept = foldDonutParts(slices, st, opts.others_label ?? 'Others')
   // ── LA COULEUR D'UN SECTEUR, ET LA MÊME RÈGLE QUE LE DISQUE SOUS UNE DESCENTE ───────────────
   //
   // Julien, 24/09/2026 : « il faudrait une logique de couleur comme pour le sunburst ».
@@ -920,8 +1183,9 @@ export const drawDonutChart = (
   // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
   // près de leur disque, à la mesure de la case.
   const cell_reserve = cell && (st.labels_callout_small || st.name_label_callout) ? 1 - CELL_CALLOUT_RESERVE : 1
-  const radius = (side / 2 - 2) * scaleOf(st) * cell_reserve *
-    (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
+  const radius = cell?.radius_px !== undefined
+    ? Math.max(0, cell.radius_px)
+    : (side / 2 - 2) * scaleOf(st) * cell_reserve * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
   const callout_gap = cell ? cell.callout_gap_px : CALLOUT_GAP_PX
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
 
@@ -1131,14 +1395,8 @@ export const drawDonutChart = (
     // ou l autre, selon l unite choisie.
     //
     // « Aucun » veut donc dire « la valeur telle quelle », et non « pas de pourcentage en plus ».
-    if (!s.value_label_is_visible) return ''
     // 01/10/2026 — sauf quand l'auteur demande les DEUX (« valeur + pourcentage »).
-    const pct = Math.round(d.data.value / total * 100) + '%'
-    if (s.value_label_percent === 'value_total' || s.value_label_percent === 'value_parent') {
-      return `${(a?.value_format ?? fmt)(d.data.value)} (${pct})`
-    }
-    if (s.value_label_percent !== 'none') return pct
-    return (a?.value_format ?? fmt)(d.data.value)
+    return donutValueText(d.data.value, total, s, a?.value_format ?? fmt)
   }
   /**
    * os#1502 — UNE LIGNE DU BLOC, ET CE QU'ELLE EST : le nom, ou la valeur.
@@ -1176,36 +1434,56 @@ export const drawDonutChart = (
    * aux secteurs trop étroits (`MIN_LABEL_SHARE`) et jamais sur la longueur du texte, et c'est
    * encore vrai.
    */
-  const label_radius = (inner + radius) / 2
   //
   // 01/10/2026 — LA VRAIE GÉOMÉTRIE, ET NON LA CORDE (Julien : « la notion de trop petit ne me
   // paraît pas très bien calculée : pour Fruits et légumes et Pomme de terre, on voit que ça rentre »).
   // La corde mesure la place LE LONG de l'arc ; or le texte est horizontal, et sur les côtés du
   // disque il court dans l'ÉPAISSEUR de l'anneau. Le texte tient si les quatre coins de son cadre,
   // posé au centre du secteur, restent dans le secteur : entre les deux rayons, entre les deux angles.
+  //
+  // 02/10/2026 — ET PAS SEULEMENT AU MILIEU (cf. `fitLabelInSector`) : un texte horizontal qui ne
+  // tient pas sur le flanc d'un grand secteur tient plus haut ou plus bas dans ce secteur, et c'est
+  // là qu'il s'écrit (`fitSpotOf`). Un texte tourné (le long de l'arc, radial) garde le milieu.
+  //
+  // EN PETITS MULTIPLES, la police d'un secteur peut descendre jusqu'au plancher lisible des
+  // étiquettes sorties (`MIN_CELL_CALLOUT_FONT_PX`) pour tenir dedans : les disques y sont petits,
+  // et « 4,32 Mt (52 %) » qui sort en détaché d'un secteur d'un demi-tour se lit moins bien qu'un
+  // point de police en moins.
+  const fit_spots = new Map<string, { x: number, y: number, size: number } | null>()
+  const fitSpotOf = (d: d3.PieArcDatum<Type_StatSlice>): { x: number, y: number, size: number } | null => {
+    if (fit_spots.has(d.data.id)) return fit_spots.get(d.data.id) ?? null
+    const s = styleOf(d)
+    const lines = sector_lines(d)
+    const orientation = aspectOf(d.data.id)?.name?.orientation
+    const turned = orientation === 'tangential' || orientation === 'radial'
+    const sizes = [s.name_label_font_size]
+    if (cell && !turned) {
+      for (let f = s.name_label_font_size - 1; f >= MIN_CELL_CALLOUT_FONT_PX; f--) sizes.push(f)
+    }
+    let found: { x: number, y: number, size: number } | null = null
+    for (const size of sizes) {
+      const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, size)))
+      const h = lines.length * size * 1.15
+      // Tourné, le texte reste au milieu : il tient s'il y tenait, mesuré à plat comme hier.
+      const spot = fitLabelInSector(w, h, inner, radius, d.startAngle, d.endAngle, turned)
+      if (spot !== null) { found = { ...spot, size }; break }
+    }
+    fit_spots.set(d.data.id, found)
+    return found
+  }
+  /** La police d'une étiquette écrite DANS son secteur (cf. `fitSpotOf`). */
+  const insideFontOf = (d: d3.PieArcDatum<Type_StatSlice>): number =>
+    fitSpotOf(d)?.size ?? styleOf(d).name_label_font_size
   const sectorFits = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     // L'anneau entier a toute la place : la mesure par les angles, qui se replie à ±π, le jugeait
     // trop petit et l'étiquette sortait, reliée au bas de l'anneau.
     if (isWholeRing(d.startAngle, d.endAngle)) return true
-    const s = styleOf(d)
-    const lines = sector_lines(d)
-    const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
-    const h = lines.length * s.name_label_font_size * 1.15
-    const mid = (d.startAngle + d.endAngle) / 2
-    const cx = label_radius * Math.sin(mid)
-    const cy = -label_radius * Math.cos(mid)
-    const tol = 1
-    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(([sx, sy]) => {
-      const x = cx + sx * w / 2
-      const y = cy + sy * h / 2
-      const r = Math.hypot(x, y)
-      if (r < inner - tol || r > radius + tol) return false
-      return angleInSector(Math.atan2(x, -y), d.startAngle, d.endAngle, tol / Math.max(r, 1))
-    })
+    return fitSpotOf(d) !== null
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
+  // 02/10/2026 — « AUTRES » SUIT LA MÊME RÈGLE QUE TOUTE PART (Julien : son « 0,67 Mt (2 %) » s'écrivait
+  // dans le secteur gris en débordant sur l'anneau et le trou). Il en était exempté.
   const callsOut = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
-    if (d.data.id === '__others__') return false
     const said = aspectOf(d.data.id)?.label_callout
     // 02/10/2026 — LE SEUIL « LIB. » VAUT AUSSI POUR LES ÉTIQUETTES DÉTACHÉES (Julien) : sous lui, une
     // part se tait, dedans comme dehors. Seule une part qui demande elle-même à sortir passe outre.
@@ -1256,7 +1534,9 @@ export const drawDonutChart = (
     // l'étiquette vers la droite de l'écran, quelle que soit l'orientation du texte. C'est le sens
     // que le geste a pour qui le fait — il regarde le dessin, pas le repère du secteur.
     const a_name = aspectOf(d.data.id)?.name
-    const [ax, ay] = label_arc.centroid(d)
+    // Là où le texte tient (`fitSpotOf`), sinon au milieu du secteur comme hier.
+    const spot = isWholeRing(d.startAngle, d.endAngle) ? null : fitSpotOf(d)
+    const [ax, ay] = spot !== null ? [spot.x, spot.y] : label_arc.centroid(d)
     const at = `translate(${ax + (a_name?.shift_x ?? 0)},${ay + (a_name?.shift_y ?? 0)})`
     const orientation = aspectOf(d.data.id)?.name?.orientation
     // HORIZONTALE, ou rien de dit : le texte reste droit, pose au centroide — le dessin d'hier.
@@ -1303,6 +1583,16 @@ export const drawDonutChart = (
   const calloutFontOf = (d: d3.PieArcDatum<Type_StatSlice>): number =>
     cell ? Math.max(MIN_CELL_CALLOUT_FONT_PX, styleOf(d).name_label_font_size) : styleOf(d).name_label_font_size
   const callouts = with_text.filter(d => callsOut(d))
+  /**
+   * 02/10/2026 — UNE ÉTIQUETTE QUI NE TIENT PAS DANS SON SECTEUR NE S'Y ÉCRIT PAS EN DÉBORDANT dès que
+   * la figure sort les petites étiquettes (`labels_callout_small`, le défaut) : elle sort, ou se
+   * tait si la place manque dehors aussi. Seuls « Masquer si ça dépasse » décoché ET la sortie
+   * refusée (par la figure ou par la part) laissent encore un texte déborder, comme hier.
+   */
+  const mustFitInside = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
+    if (aspectOf(d.data.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) return true
+    return st.labels_callout_small && aspectOf(d.data.id)?.label_callout !== false
+  }
   const labelled = with_text.filter(d =>
     !callsOut(d) &&
     // os#1465 — UN SECTEUR QUI PORTE UN PICTOGRAMME N'ÉCRIT PAS SON NOM DEDANS. Les deux se
@@ -1310,7 +1600,7 @@ export const drawDonutChart = (
     // règle qu'au sunburst, et que sur un nœud dont le libellé porte une icône.
     aspectOf(d.data.id)?.icon_path === undefined &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st) &&
-    (!(aspectOf(d.data.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) || sectorFits(d)))
+    (sectorFits(d) || !mustFitInside(d)))
   if (labelled.length > 0) {
     g.selectAll('text.node_stats_pct')
       .data(labelled)
@@ -1357,7 +1647,7 @@ export const drawDonutChart = (
         // au-dessus. Ce n'est pas un oubli : les séparer demanderait deux textes, donc deux
         // placements, dans un creux d'arc qui n'en a pas la place.
         const ink = applyPartTextStyle(text, aspectOf(d.data.id)?.name, {
-          font_size: styleOf(d).name_label_font_size,
+          font_size: insideFontOf(d),
           font_family: styleOf(d).name_label_font_family,
           bold: styleOf(d).name_label_bold,
           italic: styleOf(d).name_label_italic,
@@ -1484,6 +1774,15 @@ export const drawDonutChart = (
     // En petits multiples, le cadre est LA CASE : ce qui n'y tient pas sans chevaucher se tait (les
     // plus grandes parts d'abord), l'info-bulle du secteur garde la valeur.
     const half_cell = side / 2 - 2
+    const cell_bounds = cell?.box
+      ? {
+          // La bande réservée aux étiquettes (cf. `smallMultipleCellBox`) : au-delà vivent le nom et la valeur.
+          half_height: Math.min(-cell.box.y0, cell.box.y1,
+            radius + callout_gap + Math.max(MIN_CELL_CALLOUT_FONT_PX, st.name_label_font_size) * 1.15),
+          right_width: cell.box.x1,
+          left_width: -cell.box.x0
+        }
+      : cell ? { half_height: half_cell, half_width: half_cell } : {}
     const laid_out = layoutDonutCallouts(
       callouts
         .filter(d => opts.label_positions?.[d.data.id] === undefined)
@@ -1494,8 +1793,7 @@ export const drawDonutChart = (
           width: Math.max(0, ...sector_lines(d).map(line => labelTextWidthPx(line.text, calloutFontOf(d)))),
           weight: d.data.value
         })),
-      radius, callout_gap, callout_gap,
-      cell ? { half_height: half_cell, half_width: half_cell } : {})
+      radius, callout_gap, callout_gap, cell_bounds)
     const shown = callouts.filter(d =>
       opts.label_positions?.[d.data.id] !== undefined || laid_out.has(d.data.id))
     const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
@@ -1644,9 +1942,12 @@ export const drawDonutChart = (
       .attr('pointer-events', 'none')
       .text(`‹ ${opts.centre_back_label ?? ''}`.trim())
   }
+  let cell_value_below: { size: number } | null = null
   if (cell_name !== '') {
-    const value_size = wants_value && inner >= 12 ? (centre?.value?.font_size ?? Math.max(11, inner * 0.28)) : null
-    const placed = smallMultipleCentreName(cell_name, inner, value_size)
+    const plan = smallMultipleCentrePlan(cell_name, wants_value ? fmt(total) : null, inner, centre?.value?.font_size)
+    const value_size = plan.value !== null && !plan.value.below ? plan.value.size : null
+    const placed = plan.name
+    if (plan.value?.below) cell_value_below = { size: plan.value.size }
     const text = g.append('text')
       .attr('class', 'node_stats_cell_name_block')
       .attr('text-anchor', 'middle')
@@ -1658,7 +1959,9 @@ export const drawDonutChart = (
     if (placed.above) {
       cell_name_above = placed
       // Juste au-dessus du disque, à un écart de son bord : le titre suit SON disque.
-      const y_last = -radius - callout_gap - name_h / 2
+      // 02/10/2026 — et au-dessus des étiquettes sorties : à leur hauteur, le palier de leurs traits
+      // passait sous le nom.
+      const y_last = -Math.max(radius + callout_gap, -(drawn_box?.y0 ?? 0) + 2) - name_h / 2
       placed.lines.forEach((line, i) => {
         text.append('tspan').attr('class', 'node_stats_cell_name')
           .attr('x', 0).attr('y', y_last - (placed.lines.length - 1 - i) * name_h)
@@ -1680,11 +1983,22 @@ export const drawDonutChart = (
         .attr('font-size', value_size).attr('font-weight', (centre?.value?.bold ?? true) ? 'bold' : 'normal')
         .text(fmt(total))
     }
+    if (cell_value_below !== null) {
+      // Sous le disque, à un écart de son bord, comme le nom au-dessus.
+      const vs = (cell_value_below as { size: number }).size
+      text.append('tspan').attr('class', 'node_stats_cell_value')
+        .attr('x', 0).attr('y', Math.max(radius + callout_gap, (drawn_box?.y1 ?? 0) + 2) + vs * 0.6)
+        .attr('font-size', vs).attr('font-weight', (centre?.value?.bold ?? true) ? 'bold' : 'normal')
+        .text(fmt(total))
+    }
   } else if ((wants_name || wants_value) && inner >= 12) {
     // LA TAILLE SE MESURE SUR LE TROU, et c'est ce qui fait qu'un centre reste lisible quelle que
     // soit la place : un nombre en points fixes déborderait d'un petit trou et se perdrait dans un
     // grand. La part peut en imposer une — c'est son texte —, et alors c'est la sienne.
-    const value_size = centre?.value?.font_size ?? Math.max(11, inner * 0.28)
+    // 02/10/2026 — réduite pour tenir dans la largeur du trou, jusqu'au plancher lisible.
+    const value_base = Math.max(11, inner * 0.28)
+    const value_size = centre?.value?.font_size ?? Math.max(CELL_NAME_MIN_PX, Math.min(value_base,
+      value_base * inner * 1.7 / Math.max(1, labelTextWidthPx(fmt(total), value_base))))
     // Le nom passe AU-DESSUS du total et plus petit : c'est le total qu'on lit de loin, le nom qui
     // le qualifie. Seul, il prend la place centrale.
     const name_size = centre?.name?.font_size
@@ -1750,7 +2064,14 @@ export const drawDonutChart = (
   }
   // Petits multiples : la case rend son cadre, l'appelant pose le cadre commun — même sans
   // étiquette sortie, sans quoi une case nue garderait sa propre échelle.
-  if (cell) {
+  if (cell?.box) {
+    // La case est taillée à son disque : son cadre, à l'échelle 1 — l'échelle commune est déjà dans
+    // le rayon. Ce qui déborde du cadre a été tu au tracé (étiquettes) ou réservé (nom, valeur).
+    const b = cell.box
+    svg.attr('width', Math.max(1, b.x1 - b.x0)).attr('height', Math.max(1, b.y1 - b.y0))
+      .attr('viewBox', `${b.x0 + side / 2} ${b.y0 + side / 2} ${Math.max(1, b.x1 - b.x0)} ${Math.max(1, b.y1 - b.y0)}`)
+      .style('overflow', 'visible')
+  } else if (cell) {
     const box = drawn_box ?? { x0: -radius, x1: radius, y0: -radius, y1: radius }
     // Un nom sorti au-dessus du disque entre dans le cadre : il reste entièrement visible.
     if (cell_name_above !== null) {
@@ -1760,7 +2081,10 @@ export const drawDonutChart = (
       box.x1 = Math.max(box.x1, w / 2)
       box.y0 = Math.min(box.y0, -radius - callout_gap - lines.length * size * 1.15)
     }
-    cell.frame(box, frameTo)
+    if (cell_value_below !== null) {
+      box.y1 = Math.max(box.y1, radius + callout_gap + (cell_value_below as { size: number }).size * 1.2)
+    }
+    cell.frame?.(box, frameTo)
   }
   else if (drawn_box !== null) frameTo(drawn_box)
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
