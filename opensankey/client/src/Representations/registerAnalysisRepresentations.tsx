@@ -27,9 +27,10 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
-  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor
+  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, smallMultipleCalloutGap,
+  smallMultipleRadiusRatio, unionDrawnBox
 } from '../Charts/NodeStatsCharts'
-import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
+import type { Type_DrawnBox, Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
 import {
   FIGURE_CENTRE_NATURE, FIGURE_CENTRE_PART_ID, isFigureCentrePart
@@ -1098,14 +1099,23 @@ export const registerAnalysisRepresentations = (): void => {
         host.appendChild(grid)
         const by_id = new Map((parts as unknown as Type_StatSlice[]).map(p => [p.id, p]))
         const base = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
-        split.members.forEach((member, i) => {
+        // 02/10/2026 — UNE SEULE ÉCHELLE (Julien : « on a l'impression de ne pas avoir la même
+        // échelle »). L'aire de chaque couronne dit son total, la plus grosse remplit sa case ; et
+        // toutes les cases se cadrent sur la MÊME boîte — l'union de leurs disques et étiquettes
+        // sorties —, posée une fois tout dessiné. Chacune se cadrait sur ses propres étiquettes.
+        const per_member = split.members.map(member => {
+          const slices = smallMultipleSlices(ctx, member)
+            .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
+          return { member, slices, total: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
+        })
+        const max_total = Math.max(0, ...per_member.map(m => m.total))
+        const frames: { box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void }[] = []
+        per_member.forEach(({ member, slices, total }, i) => {
           const cell = document.createElement('div')
           cell.style.position = 'relative'
           cell.style.minWidth = '0'
           cell.style.minHeight = '0'
           grid.appendChild(cell)
-          const slices = smallMultipleSlices(ctx, member)
-            .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
           drawDonutChart(cell, slices, {
             ...base,
             style,
@@ -1117,9 +1127,16 @@ export const registerAnalysisRepresentations = (): void => {
             part_aspect: wiring.part_aspect,
             on_part_select: wiring.on_part_select,
             // Le panneau apprend l'encre réelle des parts par UN tracé : le premier.
-            on_parts_resolved: i === 0 ? wiring.on_parts_resolved : undefined
+            on_parts_resolved: i === 0 ? wiring.on_parts_resolved : undefined,
+            small_multiple: {
+              radius_ratio: smallMultipleRadiusRatio(total, max_total),
+              callout_gap_px: smallMultipleCalloutGap(Math.min(cell.clientWidth, cell.clientHeight)),
+              frame: (box, apply) => { frames.push({ box, apply }) }
+            }
           })
         })
+        const common = unionDrawnBox(frames.map(f => f.box))
+        if (common !== null) frames.forEach(f => f.apply(common))
         return () => {
           publishFigureZoom(ctx.window_id, ctx.pane_key, null)
           container.innerHTML = ''
