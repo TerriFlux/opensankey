@@ -1,4 +1,29 @@
-import { readFigureOpening, withDataOpening, withElementOpening, withFigureOpening } from './figureOpening'
+import {
+  levelsDisplayOfDimension, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withDimensionLevelsDisplay,
+  withElementOpening, withFigureOpening
+} from './figureOpening'
+
+// 02/10/2026 — LA DISPOSITION DES NIVEAUX PAR DIMENSION : l ancien reglage commun sert de defaut.
+describe('os#1511 — disposition des niveaux par dimension', () => {
+  test('une couronne d avant, en anneaux : toute dimension sans entree est en anneaux', () => {
+    const l = readFigureLevelsDisplay({ levels_display: 'rings' })
+    expect(l).toEqual({ common: 'rings', by: {} })
+    expect(levelsDisplayOfDimension(l, 'pays')).toBe('rings')
+  })
+  test('un sac vide : en place, partout', () => {
+    expect(levelsDisplayOfDimension(readFigureLevelsDisplay({}), 'pays')).toBe('in_place')
+  })
+  test('une entree par dimension prime sur le reglage commun ; une valeur inconnue est ignoree', () => {
+    const l = readFigureLevelsDisplay({ levels_display: 'rings', levels_display_by: { pays: 'in_place', x: 'spiral' } })
+    expect(levelsDisplayOfDimension(l, 'pays')).toBe('in_place')
+    expect(levelsDisplayOfDimension(l, 'filiere')).toBe('rings')
+    expect(l.by).toEqual({ pays: 'in_place' })
+  })
+  test('ecrire une dimension garde les autres et le reglage commun', () => {
+    const o = withDimensionLevelsDisplay({ levels_display: 'in_place', levels_display_by: { pays: 'in_place' } }, 'filiere', 'rings')
+    expect(o).toEqual({ levels_display: 'in_place', levels_display_by: { pays: 'in_place', filiere: 'rings' } })
+  })
+})
 
 // os#1511 — CE QU UNE FIGURE A OUVERT, lu et ecrit a un seul endroit. Les fichiers d avant rangeaient
 // tout dans `hierarchy_expanded` (entree `detache`, entrees `membre:<dim>/<m>`) : ils doivent se

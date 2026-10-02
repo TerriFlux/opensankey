@@ -85,6 +85,40 @@ export interface Type_DataDimensionOptions {
   node_value_mode?: 'max' | 'inputs' | 'outputs'
   /** Le libellé du secteur « non réparti », traduit par l'appelant : ce module ignore i18n. */
   residual_label?: string
+  /**
+   * 02/10/2026 — LA DISPOSITION DES NIVEAUX DE CHAQUE DIMENSION (os#1511). Absente : un anneau par
+   * profondeur, le sunburst d'hier. Sinon, une dimension en `'in_place'` replie ses niveaux dans UN
+   * anneau (ses enfants ouverts remplacent leur parent), une dimension en `'rings'` garde un anneau
+   * par niveau (cf. `foldInPlaceLevels`).
+   */
+  levels_display_of?: (dimension_id: string) => 'in_place' | 'rings'
+}
+
+/**
+ * 02/10/2026 — LES NIVEAUX D'UNE DIMENSION « EN SECTEURS » SE REPLIENT DANS UN SEUL ANNEAU.
+ * Fonction PURE : rend un nouvel arbre, profondeurs recalculées.
+ *
+ * Un secteur d'une dimension en `'in_place'` dont les enfants sont de SA dimension (il est ouvert
+ * dans sa dimension) disparaît derrière eux, comme dans la couronne en place ; un secteur dont les
+ * enfants entrent dans la dimension SUIVANTE garde son anneau — c'est la frontière entre deux
+ * dimensions, et c'est ce qui donne « pays en secteurs, filières en sunburst emboîtées dessous ».
+ * Le secteur « non réparti » ne compte pas : il porte la dimension de son parent quel que soit le cas.
+ */
+export const foldInPlaceLevels = (
+  root: Type_SunburstNode,
+  modeOf: (dimension_id: string) => 'in_place' | 'rings'
+): Type_SunburstNode => {
+  const fold = (node: Type_SunburstNode): Type_SunburstNode[] => {
+    const own_level = node.children.some(c => !c.is_residual && c.dimension_id === node.dimension_id)
+    const children = node.children.flatMap(fold)
+    if (node.depth > 0 && own_level && modeOf(node.dimension_id) === 'in_place') {
+      return children
+    }
+    return [{ ...node, children }]
+  }
+  const redepth = (node: Type_SunburstNode, depth: number): Type_SunburstNode =>
+    ({ ...node, depth, children: node.children.map(c => redepth(c, depth + 1)) })
+  return redepth({ ...root, children: root.children.flatMap(fold) }, root.depth)
 }
 
 /** Tolérance RELATIVE du bouclage parent ↔ Σ enfants, la même que pour les nœuds. */
@@ -153,6 +187,16 @@ export const dimensionDivides = (dim: Class_DataTagGroup, opened: ReadonlySet<st
   const roots = dimensionRootsOf(dim)
   if (roots.length !== 1) return roots.length > 1
   return roots[0].children.length > 0 && opened.has(memberSectorId(dim.id, roots[0].id))
+}
+
+/**
+ * 02/10/2026 — LA DIMENSION A-T-ELLE DES NIVEAUX À DISPOSER ? Au moins un membre par lequel on y
+ * entre (`entryOf`) a des enfants. Sans cela « en sunburst » et « en secteurs » dessinent pareil.
+ */
+export const dimensionHasNestedLevels = (dim: Class_DataTagGroup): boolean => {
+  const roots = dimensionRootsOf(dim)
+  const entry = roots.length === 1 ? (roots[0].children as Class_DataTag[]) : roots
+  return entry.some(m => m.children.length > 0)
 }
 
 /** Les membres ouverts d'UNE dimension, en identifiants de membre, lus sur une coupe. */
@@ -377,11 +421,13 @@ export const buildNestedDimensionTree = (
       .filter(member => member.value > 0)
   }
   const total = children.reduce((acc, child) => acc + child.value, 0)
-  const root: Type_SunburstNode = {
+  const built: Type_SunburstNode = {
     id: element.id,
     label: displayedNameOf(element),
     value: total, declared: total, color: null, depth: 0, children, dimension_id: all[0].id
   }
+  // La disposition par dimension se pose AVANT de nommer les anneaux : ils se comptent sur le dessin.
+  const root = options.levels_display_of ? foldInPlaceLevels(built, options.levels_display_of) : built
 
   // UN ANNEAU PAR PROFONDEUR, nommé par le premier secteur qui l'occupe : sa dimension, son niveau.
   const first_at: Type_SunburstNode[] = []

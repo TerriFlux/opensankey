@@ -142,6 +142,20 @@ export const smallMultiplesAttribute = () => figureAttribute<string | undefined>
   }, undefined, { kind: 'none' }
 )
 /**
+ * 02/10/2026 — LA DISPOSITION DES NIVEAUX, PAR DIMENSION DE DONNÉES (os#1511) : `'in_place'` (en
+ * secteurs, les enfants remplacent leur parent dans l'anneau de la dimension) ou `'rings'` (en
+ * sunburst, un anneau par niveau). Une dimension absente suit `levels_display`, le réglage commun
+ * d'hier : une couronne enregistrée s'ouvre à l'identique. Lue et écrite par `figureOpening` seul.
+ */
+export const LEVELS_DISPLAY_BY_KEY = 'levels_display_by'
+export const levelsDisplayByAttribute = () => figureAttribute<{ [dimension_id: string]: 'in_place' | 'rings' } | undefined>(
+  undefined, 'identity', {
+    en: 'Levels display by dimension', fr: 'Disposition des niveaux par dimension',
+    es: 'Disposición de los niveles por dimensión', de: 'Ebenenanordnung je Dimension',
+    it: 'Disposizione dei livelli per dimensione', 'zh-CN': '按维度的层级布局', ja: '次元ごとのレベル配置'
+  }, undefined, { kind: 'none' }
+)
+/**
  * 02/10/2026 — LA COUCHE DE DONNÉES QUE LA FIGURE LIT : `'collected'` (donnée collectée) ou
  * `'reconciled'` (résultat réconcilié). Absente = celle du diagramme, comme avant.
  *
@@ -451,7 +465,8 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   [COORDINATES_LINKED_KEY]: coordinatesLinkedAttribute(),
   [DIMENSION_OPENING_KEY]: dimensionOpeningAttribute(),
   [DATA_LAYER_KEY]: dataLayerAttribute(),
-  [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute()
+  [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute(),
+  [LEVELS_DISPLAY_BY_KEY]: levelsDisplayByAttribute()
 }
 
 export const DONUT_ATTRIBUTES: Type_FigureAttributesConfig = {

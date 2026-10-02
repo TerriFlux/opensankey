@@ -28,7 +28,7 @@
 import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
 import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
-  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY
+  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, LEVELS_DISPLAY_BY_KEY
 } from './analysisFigureAttributes'
 
 /** L'entrée par laquelle les fichiers d'avant détachaient une figure du diagramme. */
@@ -128,3 +128,47 @@ export const readFigureDataLayer = (options: Type_Options | null | undefined): b
 /** Le sac qui porte la couche `layer` (`undefined` la retire : la figure suit alors le diagramme). */
 export const withFigureDataLayer = (options: Type_Options, layer: Type_FigureDataLayer | undefined): Type_Options =>
   ({ ...options, [DATA_LAYER_KEY]: layer })
+
+// ── 02/10/2026 — LA DISPOSITION DES NIVEAUX, PAR DIMENSION (os#1511) ────────────────────────────
+//
+// Julien : « filières en sunburst emboîtées sous pays en secteurs ». La disposition des niveaux était
+// UN réglage de la figure (`levels_display`) ; sur une couronne qui découpe par dimensions de données,
+// chacune a désormais la sienne (`levels_display_by`). Une dimension sans entrée suit le réglage
+// commun — c'est lui qu'une couronne enregistrée porte, et elle s'ouvre donc à l'identique. Sur une
+// couronne de NŒUDS (pas de dimension de données), seul le réglage commun compte.
+
+export type Type_LevelsDisplay = 'in_place' | 'rings'
+
+export interface Type_FigureLevelsDisplay {
+  /** Le réglage commun d'hier, défaut de toute dimension sans entrée. */
+  common: Type_LevelsDisplay
+  by: { readonly [dimension_id: string]: Type_LevelsDisplay }
+}
+
+const asLevelsDisplay = (v: unknown): Type_LevelsDisplay | undefined =>
+  v === 'rings' || v === 'in_place' ? v : undefined
+
+/** La disposition des niveaux, lue sur le sac de réglages. */
+export const readFigureLevelsDisplay = (options: Type_Options | null | undefined): Type_FigureLevelsDisplay => {
+  const by: { [dimension_id: string]: Type_LevelsDisplay } = {}
+  const raw = options?.[LEVELS_DISPLAY_BY_KEY]
+  if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+    Object.entries(raw as Type_Options).forEach(([id, v]) => {
+      const mode = asLevelsDisplay(v)
+      if (mode !== undefined) by[id] = mode
+    })
+  }
+  return { common: asLevelsDisplay(options?.['levels_display']) ?? 'in_place', by }
+}
+
+/** La disposition d'UNE dimension : la sienne, sinon le réglage commun. */
+export const levelsDisplayOfDimension = (levels: Type_FigureLevelsDisplay, dimension_id: string): Type_LevelsDisplay =>
+  levels.by[dimension_id] ?? levels.common
+
+/** Le sac où la dimension `dimension_id` se dispose en `mode` ; les autres clés intactes. */
+export const withDimensionLevelsDisplay = (
+  options: Type_Options, dimension_id: string, mode: Type_LevelsDisplay
+): Type_Options => ({
+  ...options,
+  [LEVELS_DISPLAY_BY_KEY]: { ...readFigureLevelsDisplay(options).by, [dimension_id]: mode }
+})
