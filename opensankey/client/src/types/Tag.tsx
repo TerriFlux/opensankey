@@ -944,6 +944,7 @@ export class Class_DataTag extends Class_ProtoTag {
     // nom avec des ids de membres différents, le groupe le retraduit ensuite
     // (`Class_DataTagGroup._copyFrom` → `remapParentId`).
     this._parent_id = (tag_to_copy as Class_DataTag)._parent_id
+    this._group?.invalidateHierarchyIndex()
     // os#1511 — tout ce que `_toJSON` écrit se copie : la géométrie du membre aussi, sinon une
     // réinitialisation de vue (`sankey.copyFrom`) perdait les nœuds de membre déplacés.
     const source_position = (tag_to_copy as Class_DataTag)._position
@@ -961,6 +962,7 @@ export class Class_DataTag extends Class_ProtoTag {
     if (this._parent_id === undefined) return
     const target = source_to_target[this._parent_id]
     if (target !== undefined) this._parent_id = target
+    this._group?.invalidateHierarchyIndex()
   }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
@@ -984,7 +986,7 @@ export class Class_DataTag extends Class_ProtoTag {
     if (parent !== undefined && parent.hasAncestor(this)) return
     if (this._parent_id === parent?.id) return
     this._parent_id = parent?.id
-    // os#1516 — la palette hiérarchique suit la structure
+    // os#1516 — la palette hiérarchique suit la structure (et l'index des enfants est invalidé)
     this._group.hierarchyChanged()
   }
 
@@ -1047,10 +1049,15 @@ export class Class_DataTag extends Class_ProtoTag {
     }
   }
 
-  /** Membres du groupe dont le parent est CE membre (un seul cran, pas la descendance). */
+  /**
+   * Membres du groupe dont le parent est CE membre (un seul cran, pas la descendance).
+   *
+   * Lu dans l'index des enfants tenu par le groupe (`Class_DataTagGroup.childrenOf`) : parcourir
+   * toute la dimension à chaque appel rendait `leaves`, `membersAtLevel` et `membersByLevel`
+   * quadratiques — sensible sur une nomenclature de plusieurs milliers de membres.
+   */
   public get children(): Class_DataTag[] {
-    return (Object.values(this._group.tags_dict) as Class_DataTag[])
-      .filter(tag => tag.parent === this)
+    return this._group.childrenOf(this)
   }
 
   /**
@@ -1085,6 +1092,7 @@ export class Class_DataTag extends Class_ProtoTag {
     // (même règle qu'au chargement d'une hiérarchie de nœuds, #193).
     const raw_parent = json_object['parent']
     this._parent_id = (typeof raw_parent === 'string' && raw_parent !== '') ? raw_parent : undefined
+    this._group?.invalidateHierarchyIndex()
     // os#1511 lot 2 — cf. _toJSON. Une position n'a de sens qu'ENTIÈRE : un x sans y ne place
     // rien, on préfère l'ignorer plutôt que d'inventer la coordonnée manquante. Les nombres
     // non finis sont écartés de même — ils traverseraient les calculs sans bruit.

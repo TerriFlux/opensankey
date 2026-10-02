@@ -107,6 +107,7 @@ describe('os#1511 — une dimension PLATE ne decompose rien', () => {
   test('sans niveaux, l arbre est refuse plutot que faux', () => {
     const m = monter()
     m.groupe.levels = []
+    m.groupe.tags_list.forEach(tag => { (tag as Class_DataTag).parent = undefined })
     expect(buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)).toBeNull()
   })
 
@@ -180,7 +181,7 @@ describe('os#1511 — les anneaux nomment les niveaux de la dimension', () => {
 
   test('l anneau du niveau COURANT est celui que le diagramme montre a cote', () => {
     const m = monter()
-    m.groupe.current_level_index = 1
+    m.groupe.selectAllAtLevel(1)
     const arbre = buildDataDimensionTree({ kind: 'link', link: m.lien }, m.groupe)
     // rings[2] porte le niveau d index 1 : c est lui qui est en gras.
     expect(arbre?.rings[2].is_selected_level).toBe(true)

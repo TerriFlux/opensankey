@@ -556,7 +556,6 @@ export const resources_app_elements = {
           parent: 'Parent',
           parent_tooltip: 'Member this one sits under. A parent carries the sum of its members, and its depth gives it its level.',
           root: '(root)',
-          too_deep: 'members are deeper than the last level and are shown at that level.',
           flat: 'This group is flat. Declare levels to turn it into a hierarchical dimension.'
         },
         tooltips: {
@@ -1359,7 +1358,6 @@ export const resources_app_elements = {
           parent: 'Parent',
           parent_tooltip: 'Membre sous lequel celui-ci se range. Un parent porte la somme de ses membres, et sa profondeur lui donne son niveau.',
           root: '(racine)',
-          too_deep: 'membres sont plus profonds que le dernier niveau et s\'affichent à ce niveau.',
           flat: 'Ce groupe est plat. Déclarez des niveaux pour en faire une dimension hiérarchisée.'
         },
         Dimension: 'Dimension',
@@ -2133,7 +2131,6 @@ export const resources_app_elements = {
           parent: 'Padre',
           parent_tooltip: 'Miembro bajo el cual se sitúa este. Un padre lleva la suma de sus miembros, y su profundidad le da su nivel.',
           root: '(raíz)',
-          too_deep: 'miembros son más profundos que el último nivel y se muestran en ese nivel.',
           flat: 'Este grupo es plano. Declare niveles para convertirlo en una dimensión jerárquica.'
         },
         Dimension: 'Dimensión',
@@ -2904,7 +2901,6 @@ export const resources_app_elements = {
           parent: 'Übergeordnet',
           parent_tooltip: 'Mitglied, unter dem dieses steht. Ein übergeordnetes Mitglied trägt die Summe seiner Mitglieder, und seine Tiefe bestimmt seine Ebene.',
           root: '(Wurzel)',
-          too_deep: 'Mitglieder liegen tiefer als die letzte Ebene und werden auf dieser Ebene angezeigt.',
           flat: 'Diese Gruppe ist flach. Legen Sie Ebenen an, um daraus eine hierarchische Dimension zu machen.'
         },
         Dimension: 'Dimension',
@@ -3675,7 +3671,6 @@ export const resources_app_elements = {
           parent: 'Padre',
           parent_tooltip: 'Membro sotto il quale questo si colloca. Un padre porta la somma dei suoi membri e la sua profondità ne determina il livello.',
           root: '(radice)',
-          too_deep: 'membri sono più profondi dell\'ultimo livello e vengono mostrati a quel livello.',
           flat: 'Questo gruppo è piatto. Dichiarare dei livelli per farne una dimensione gerarchica.'
         },
         Dimension: 'Dimensione',
@@ -4452,7 +4447,6 @@ export const resources_app_elements = {
           parent: '上级',
           parent_tooltip: '该成员所属的上级成员。上级承载其成员之和，其深度决定其层级。',
           root: '（根）',
-          too_deep: '个成员比最后一层更深，将显示在该层。',
           flat: '该组为平面结构。声明层级即可将其变为层级维度。'
         },
         tooltips: {
@@ -5230,7 +5224,6 @@ export const resources_app_elements = {
           parent: '親',
           parent_tooltip: 'このメンバーが属する親メンバー。親はそのメンバーの合計を担い、深さによってレベルが決まります。',
           root: '（ルート）',
-          too_deep: '件のメンバーが最後のレベルより深く、そのレベルに表示されます。',
           flat: 'このグループはフラットです。レベルを宣言すると階層次元になります。'
         },
         tooltips: {
