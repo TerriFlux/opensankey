@@ -61,7 +61,7 @@ import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
-  figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS, FIGURE_TEXT_DEFAULTS
+  figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
@@ -1154,10 +1154,10 @@ export const registerAnalysisRepresentations = (): void => {
           drawDonutChart(cell, slices, {
             ...base,
             style,
-            texts: () => [{
-              ...FIGURE_TEXT_DEFAULTS, text: member.name, bold: true,
-              font_size: Math.min(FIGURE_TEXT_DEFAULTS.font_size, 12)
-            }],
+            // 02/10/2026 — PAS DE TITRE EN HAUT DE CASE : le nom du membre s'écrit au centre de sa
+            // couronne (`small_multiple.name`). Collé au bord de la case, il était rogné et loin
+            // de son disque.
+            texts: () => [],
             title_fallback: member.name,
             part_aspect: wiring.part_aspect,
             on_part_select: wiring.on_part_select,
@@ -1168,7 +1168,8 @@ export const registerAnalysisRepresentations = (): void => {
               callout_gap_px: smallMultipleCalloutGap(Math.min(cell.clientWidth, cell.clientHeight)),
               frame: (box, apply) => { frames.push({ box, apply }) },
               colors,
-              drawn: (kept) => { drawn.push(kept) }
+              drawn: (kept) => { drawn.push(kept) },
+              name: member.name
             }
           })
         })
