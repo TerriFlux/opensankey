@@ -43,6 +43,9 @@ import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
 import { layoutDonutCallouts } from './donutCalloutLayout'
 // os#1477 — LE MÊME TRACEUR DE TEXTE QUE LE DISQUE (cf. `prepareContainer`).
 import { mountFigureTextZones } from '../Representations/figureTextZones'
+// os#1511 — la légende en arbre : même règle (ordre, retrait) que la légende du diagramme.
+import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
+import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
 
 export interface Type_StatSlice {
   id: string
@@ -62,8 +65,14 @@ export interface Type_StatSlice {
   // donc ne change ni d'aspect ni de légende.
   /** Rang sous la racine de la décomposition. 0 = enfant direct. */
   depth?: number
-  /** Le nom du parent DESSINÉ, celui que la légende met devant. */
+  /** Le nom du parent DESSINÉ, celui que l'info-bulle met devant. */
   parent_label?: string
+  /**
+   * os#1511 — LES ANCÊTRES DESSINÉS, du plus haut au plus proche, sujet exclu (id et nom). C'est ce
+   * qui met la légende en arbre : chaque ancêtre ouvert y est un en-tête, ses parts dessous en
+   * retrait (`legendTreeRows`). Absent sous un seul cran.
+   */
+  ancestors?: { id: string, label: string }[]
   /** L'ancêtre de premier rang : c'est LUI qui donne la teinte, la profondeur ne donnant que la clarté. */
   branch_id?: string
   /** La route DESSINÉE jusqu'à cette part, racine comprise : c'est elle que le clic déplie. */
@@ -549,6 +558,99 @@ export const smallMultiplesLegendEntries = (
 }
 
 /**
+ * os#1511 — LES ANCÊTRES D'UNE PART, pour la légende en arbre. Ceux que la décomposition a posés
+ * (`ancestors`) ; à défaut, le seul parent nommé (`parent_label`) d'une part qui n'est pas au premier
+ * rang. Rien sous un seul cran.
+ */
+export const sliceLegendAncestors = (s: Type_StatSlice): Type_LegendTreeAncestor[] | undefined => {
+  if (s.ancestors !== undefined) return s.ancestors
+  if (!s.parent_label || (s.depth ?? 0) <= 0) return undefined
+  return [{ id: s.path?.[s.path.length - 2] ?? s.parent_label, label: s.parent_label }]
+}
+
+/**
+ * 02/10/2026 — LA LÉGENDE D'UNE COURONNE SE LIT COMME CELLE DU DIAGRAMME (Julien : « pour la légende
+ * il faut faire comme pour les diagrammes : un décalage qui suit le niveau hiérarchique »).
+ *
+ * Elle listait des CHEMINS à plat (« Produits bruts - Céréales › Blé »), tronqués dès le deuxième
+ * niveau. Chaque entrée dit désormais le NOM COURT de sa part ; chaque ancêtre ouvert s'écrit une
+ * fois, en en-tête sans pastille, à sa place ; ses parts le suivent, un cran plus loin
+ * (`legendTreeRows`, la règle partagée avec le diagramme). « Autres » reste en dernier, sans retrait.
+ * Sans `legend_levels`, aucune ligne d'en-tête : la liste à plat, au nom court.
+ */
+export const donutLegendRows = <T>(
+  entries: readonly T[], sliceOf: (entry: T) => Type_StatSlice, st: Type_FigureChartStyle
+): Type_LegendTreeRow<T>[] =>
+  legendTreeRows(
+    entries,
+    entry => st.legend_levels ? sliceLegendAncestors(sliceOf(entry)) : undefined,
+    entry => sliceOf(entry).id === '__others__'
+  )
+
+/**
+ * Le nom d'une part tel que l'INFO-BULLE l'écrit : précédé de son parent sous une descente
+ * (« Céréales › Blé »), sauf au premier rang dont le parent est le sujet. La légende, elle, n'écrit
+ * que le nom court : son arbre dit déjà le parent.
+ */
+export const sliceTooltipLabel = (s: Type_StatSlice, st: Type_FigureChartStyle): string =>
+  (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
+
+type Type_LegendEntryRow<T> = Extract<Type_LegendTreeRow<T>, { kind: 'entry' }>
+
+/**
+ * Pose les lignes de `rows` dans `legend` et rend la sélection des ENTRÉES (les en-têtes n'ont ni
+ * pastille ni survol), chacune avec sa pastille et son nom. En colonne, le retrait vaut
+ * `LEGEND_INDENT_EM` par niveau et un nom trop long passe à la ligne, comme dans la légende verticale
+ * du diagramme ; en bandeau (`below`), les lignes s'enchaînent sans retrait ni coupure, comme sa
+ * légende horizontale.
+ */
+const appendDonutLegendRows = <T>(
+  legend: d3.Selection<HTMLElement, unknown, null, undefined>,
+  rows: Type_LegendTreeRow<T>[],
+  below: boolean,
+  swatch_color: (entry: T) => string,
+  label: (entry: T) => string
+): d3.Selection<HTMLDivElement, Type_LegendEntryRow<T>, HTMLElement, unknown> => {
+  const all = legend
+    .selectAll<HTMLDivElement, Type_LegendTreeRow<T>>('div.node_stats_legend_row')
+    .data(rows)
+    .enter().append('div')
+    .attr('class', r => 'node_stats_legend_row '
+      + (r.kind === 'heading' ? 'node_stats_legend_heading' : 'node_stats_legend_item'))
+    .attr('data-legend-indent', r => String(r.indent))
+    .style('padding-top', '0.1rem').style('padding-bottom', '0.1rem').style('padding-right', '0.2rem')
+    .style('padding-left', r => below ? '0.2rem' : `calc(0.2rem + ${r.indent * LEGEND_INDENT_EM}em)`)
+  if (below) all.style('flex', '0 0 auto')
+  all.filter(r => r.kind === 'heading')
+    .style('font-weight', '600')
+    .style('white-space', below ? 'nowrap' : 'normal')
+    .style('overflow-wrap', below ? 'normal' : 'break-word')
+    .text(r => r.kind === 'heading' ? r.label : '')
+  const items = all.filter(r => r.kind === 'entry') as unknown as
+    d3.Selection<HTMLDivElement, Type_LegendEntryRow<T>, HTMLElement, unknown>
+  items
+    .style('display', 'flex')
+    .style('align-items', below ? 'center' : 'flex-start')
+    .style('gap', '0.35rem')
+    .style('cursor', 'default')
+  items.append('span')
+    .style('flex', '0 0 auto')
+    .style('width', '0.7rem')
+    .style('height', '0.7rem')
+    // En colonne le nom peut tenir sur deux lignes : la pastille reste en face de la première.
+    .style('margin-top', below ? '0' : '0.15em')
+    .style('border-radius', '2px')
+    .style('background', r => swatch_color(r.entry))
+  items.append('span')
+    .style('flex', '1 1 auto')
+    .style('min-width', '0')
+    .style('white-space', below ? 'nowrap' : 'normal')
+    .style('overflow-wrap', below ? 'normal' : 'break-word')
+    .text(r => label(r.entry))
+  return items
+}
+
+/**
  * La place que la légende commune prend : une LARGEUR à côté des cases, une HAUTEUR dessous — les
  * mêmes bornes que la légende d'une couronne seule (`drawDonutChart`), prises sur toute la figure.
  */
@@ -579,8 +681,6 @@ export const drawSmallMultiplesLegend = (
     root.style('display', 'flex').style('flex-wrap', 'wrap')
       .style('justify-content', 'center').style('align-content', 'flex-start').style('column-gap', '0.8rem')
   }
-  const legendLabel = (s: Type_StatSlice): string =>
-    (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
   const head = st.legend_levels
     ? entries.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
     : undefined
@@ -594,36 +694,20 @@ export const drawSmallMultiplesLegend = (
       .text(head)
   }
   const arcsOf = () => d3.select(scope).selectAll<SVGPathElement, unknown>('path.node_stats_arc')
-  const items = root.selectAll('div.node_stats_legend_item')
-    .data(entries)
-    .enter().append('div')
-    .attr('class', 'node_stats_legend_item')
-    .attr('data-part-id', d => d.id)
-    .style('display', 'flex')
-    .style('align-items', 'center')
-    .style('gap', '0.35rem')
-    .style('padding', '0.1rem 0.2rem')
-    .style('cursor', 'default')
-    .attr('title', d => legendLabel(d))
-    .on('mouseover', (_, d) => {
+  appendDonutLegendRows(
+    root as unknown as d3.Selection<HTMLElement, unknown, null, undefined>,
+    donutLegendRows(entries, s => s, st), below,
+    s => colors.get(s.id) ?? s.color ?? OTHERS_COLOR, s => s.label
+  )
+    .attr('data-part-id', r => r.entry.id)
+    // L'info-bulle garde le nom complet : c'est elle qui dit le parent au survol.
+    .attr('title', r => sliceTooltipLabel(r.entry, st))
+    .on('mouseover', (_, r) => {
       arcsOf().style('opacity', function () {
-        return (this as SVGPathElement).getAttribute('data-repr-id') === d.id ? null : '0.35'
+        return (this as SVGPathElement).getAttribute('data-repr-id') === r.entry.id ? null : '0.35'
       })
     })
     .on('mouseout', () => { arcsOf().style('opacity', null) })
-  if (below) items.style('flex', '0 0 auto')
-  items.append('span')
-    .style('flex', '0 0 auto')
-    .style('width', '0.7rem')
-    .style('height', '0.7rem')
-    .style('border-radius', '2px')
-    .style('background', d => colors.get(d.id) ?? d.color ?? OTHERS_COLOR)
-  items.append('span')
-    .style('flex', '1 1 auto')
-    .style('overflow', 'hidden')
-    .style('text-overflow', 'ellipsis')
-    .style('white-space', 'nowrap')
-    .text(d => legendLabel(d))
 }
 // Barres groupées (#390) : au-delà de ce nombre de séries, une grappe devient
 // illisible. On TRONQUE, on ne replie PAS dans un « Autres » : les deux axes croisés
@@ -882,8 +966,8 @@ export const drawDonutChart = (
   // l'appui : « dans la légende, le nom du nœud central n'a pas à être repris pour chaque élément,
   // juste en tête de légende »). « Produits agricoles → Monde - Export › Céréales » répétait le sujet
   // sur chaque ligne ; il s'écrit une fois, en tête (`legend_head`), et la ligne dit « Céréales ».
-  const legendLabel = (s: Type_StatSlice): string =>
-    (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
+  // 02/10/2026 — l'info-bulle seule : la légende écrit le nom court, en arbre (`donutLegendRows`).
+  const legendLabel = (s: Type_StatSlice): string => sliceTooltipLabel(s, st)
   /** Le nom du sujet, quand des parts le portent pour parent : la tête de légende. */
   const legend_head = st.legend_levels
     ? kept.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
@@ -1735,18 +1819,13 @@ export const drawDonutChart = (
       .style('text-align', below ? 'center' : 'left')
       .text(legend_head)
   }
-  const items = legend.selectAll('div.node_stats_legend_item')
-    .data(arcs)
-    .enter().append('div')
-    .attr('class', 'node_stats_legend_item')
-    .style('display', 'flex')
-    .style('align-items', 'center')
-    .style('gap', '0.35rem')
-    .style('padding', '0.1rem 0.2rem')
-    .style('cursor', 'default')
-    .attr('title', slice_title)
-  // Dans un bandeau, une entrée prend la largeur de son texte ; en colonne, elle prend sa ligne.
-  if (below) items.style('flex', '0 0 auto')
+  // os#1511 — en arbre : nom court, ancêtres ouverts en en-têtes, retrait par niveau.
+  const items = appendDonutLegendRows(
+    legend as unknown as d3.Selection<HTMLElement, unknown, null, undefined>,
+    donutLegendRows(arcs, a => a.data, st), below,
+    a => colorOf(a.data, a.index), a => a.data.label
+  )
+    .attr('title', r => slice_title(r.entry))
   items
     // os#1481 — LE SURVOL DE LA LÉGENDE NE MANGE PLUS L'OPACITÉ RÉGLÉE.
     //
@@ -1757,26 +1836,14 @@ export const drawDonutChart = (
     //
     // Un test de résolveur ne pouvait pas voir ça : l'aspect rendait la bonne valeur, et le tracé
     // l'écrivait. C'est le geste d'APRÈS qui l'effaçait.
-    .on('mouseover', (_, d) => {
+    .on('mouseover', (_, r) => {
       g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
-        .attr('fill-opacity', a => a.index === d.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
+        .attr('fill-opacity', a => a.index === r.entry.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
     })
     .on('mouseout', () => {
       g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
         .attr('fill-opacity', a => arcOpacity(a))
     })
-  items.append('span')
-    .style('flex', '0 0 auto')
-    .style('width', '0.7rem')
-    .style('height', '0.7rem')
-    .style('border-radius', '2px')
-    .style('background', d => colorOf(d.data, d.index))
-  items.append('span')
-    .style('flex', '1 1 auto')
-    .style('overflow', 'hidden')
-    .style('text-overflow', 'ellipsis')
-    .style('white-space', 'nowrap')
-    .text(d => legendLabel(d.data))
   // ── LE POURCENTAGE, SEULEMENT QUAND LE DESSIN NE LE DIT PAS (Julien, 24/09/2026) ────────────
   //
   // « Je vois pas trop l'intérêt de mettre les pourcentages qui sont déjà sur le graphe. » Il a
@@ -1791,7 +1858,7 @@ export const drawDonutChart = (
     items.append('span')
       .style('flex', '0 0 auto')
       .style('color', '#718096')
-      .text(d => pctText(d.data.value, total))
+      .text(r => pctText(r.entry.data.value, total))
   }
 }
 

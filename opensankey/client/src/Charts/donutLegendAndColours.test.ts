@@ -89,9 +89,15 @@ describe('la legende d une couronne', () => {
   test('sous une descente, elle nomme le parent de chaque part', () => {
     // « Que le nom des noeuds puisse se voir en legende » : le nom seul ne dit plus de quoi un
     // secteur est la coupe quand l anneau melange deux niveaux.
-    const el = draw(DESCENDED, { legend_levels: true, value_label_is_visible: true })
+    // os#1511 (02/10/2026) — le parent s ecrit une fois, en en-tete, et ses parts dessous en
+    // retrait, au nom court : comme la legende du diagramme.
+    const el = draw(DESCENDED, { legend_levels: true, value_label_is_visible: true, parts_order: 'model' })
 
-    expect(legendText(el)).toContain('Cereales › Ble')
+    const heading = el.querySelector('div.node_stats_legend_heading')
+    expect(heading?.textContent).toBe('Cereales')
+    expect(legendText(el)).not.toContain('›')
+    const ble = [...el.querySelectorAll('div.node_stats_legend_item')].find(d => d.textContent === 'Ble')
+    expect(ble?.getAttribute('data-legend-indent')).toBe('1')
   })
 })
 

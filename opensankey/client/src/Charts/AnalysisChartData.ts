@@ -462,11 +462,14 @@ const decomposeNodeHierarchy = (
     // elle seule : sur un treillis, deux chemins mènent au même nœud sans déplier la même chose
     // (cf. `disaggregateAlong`). La couronne la calculait AUTREMENT — elle ne dépliait que le
     // nœud cliqué —, et le diagramme montrait alors le parent ET ses parts.
-    path: string[]
+    path: string[],
+    // os#1511 — les ancêtres dessinés (sujet exclu), pour la légende en arbre.
+    ancestors: { id: string, label: string }[] = []
   ): Type_ChartPart[] => {
     if (sector.children.length > 0) {
+      const below = [...ancestors, { id: sector.id, label: sector.label }]
       return sector.children.flatMap(
-        c => walk(c, sector.label, depth + 1, branch_id, [...path, c.id])
+        c => walk(c, sector.label, depth + 1, branch_id, [...path, c.id], below)
       )
     }
     return [{
@@ -477,6 +480,7 @@ const decomposeNodeHierarchy = (
       color: sector.color ?? undefined,
       depth,
       parent_label,
+      ancestors,
       // LA BRANCHE, portée jusqu'en bas : c'est elle qui donne la TEINTE, la profondeur ne donnant
       // que la clarté (24/09/2026, « une logique de couleur comme pour le sunburst »). Sans elle,
       // le tracé ne pourrait pas savoir que « Blé » et « Maïs » sont deux nuances de « Céréales » —
@@ -634,11 +638,13 @@ const decomposeDataDimension = (
     return (member?.children.length ?? 0) > 0
   }
   const walk = (
-    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[]
+    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[],
+    ancestors: { id: string, label: string }[] = []
   ): Type_ChartPart[] => {
     if (sector.children.length > 0) {
+      const below = [...ancestors, { id: sector.id, label: sector.label }]
       return sector.children.flatMap(
-        child => walk(child, sector.label, depth + 1, branch_id, [...path, child.id])
+        child => walk(child, sector.label, depth + 1, branch_id, [...path, child.id], below)
       )
     }
     return [{
@@ -649,6 +655,7 @@ const decomposeDataDimension = (
       color: sector.color ?? undefined,
       depth,
       parent_label,
+      ancestors,
       // La TEINTE vient de la branche, la profondeur ne donnant que la clarté — exactement la
       // règle de la descente par nœuds, et celle que `DimensionPalette` applique au diagramme.
       branch_id,

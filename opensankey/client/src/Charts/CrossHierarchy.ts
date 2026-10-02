@@ -440,10 +440,13 @@ export const crossLevelsShown = (
 export const crossFrontier = (cross: Type_CrossTree): Type_StatSlice[] => {
   const { tree, expandable } = cross
   const walk = (
-    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[]
+    sector: Type_SunburstNode, parent_label: string, depth: number, branch_id: string, path: string[],
+    // os#1511 — les ancêtres dessinés (sujet exclu), pour la légende en arbre.
+    ancestors: { id: string, label: string }[] = []
   ): Type_StatSlice[] => {
     if (sector.children.length > 0) {
-      return sector.children.flatMap(c => walk(c, sector.label, depth + 1, branch_id, [...path, c.id]))
+      const below = [...ancestors, { id: sector.id, label: sector.label }]
+      return sector.children.flatMap(c => walk(c, sector.label, depth + 1, branch_id, [...path, c.id], below))
     }
     return [{
       path,
@@ -453,6 +456,7 @@ export const crossFrontier = (cross: Type_CrossTree): Type_StatSlice[] => {
       color: sector.color ?? undefined,
       depth,
       parent_label,
+      ancestors,
       branch_id,
       has_children: expandable.has(sector.id)
     }]
