@@ -47,27 +47,42 @@ export const dimensionDrawingOf = (app_data: Class_ApplicationData, tagg: Class_
   return 'other'
 }
 
-type Type_Snapshot = { banner: string, carriers: string[], selected: string[] }
+type Type_Snapshot = { banner: string, carriers: string[], selected: string[], level?: number }
 
 const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_Snapshot => ({
   banner: (tagg as unknown as { banner: string }).banner,
   carriers: dimensionCarriersOf(app_data, tagg).map(node => node.id),
-  selected: tagg.selected_tags_list.map(tag => tag.id)
+  selected: tagg.selected_tags_list.map(tag => tag.id),
+  level: tagg.is_hierarchical ? tagg.current_level_index : undefined
 })
 
+/**
+ * Pose une coupe. Hiérarchisée : `selectMembers` (le niveau se déduit des membres, sauf s'il est
+ * dit — un niveau entier peut ne montrer que des feuilles moins profondes que lui). Plate : la
+ * sélection ordinaire, qui impose au passage le mode d'affichage de la dimension (#370) et ne
+ * s'inscrit pas dans l'historique — c'est le geste qui s'y inscrit, une fois.
+ */
+const poseSelection = (tagg: Class_DataTagGroup, selected: string[], level: number | undefined) => {
+  if (selected.length === 0) return
+  if (tagg.is_hierarchical) {
+    tagg.selectMembers(selected)
+    if (level !== undefined) tagg.current_level_index = level
+  } else tagg.selectTagsFromIds(selected)
+}
+
 const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, state: Type_Snapshot) => {
+  const { drawing_area } = app_data
   ;(tagg as unknown as { banner: string }).banner = state.banner
   dimensionCarrierCandidates(app_data).forEach(node => {
     const carries = state.carriers.includes(node.id)
     if (carries && node.driving_dimension !== tagg) node.driving_dimension = tagg
     else if (!carries && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
   })
-  if (state.selected.length > 0) {
-    if (tagg.is_hierarchical) tagg.selectMembers(state.selected)
-    else tagg.selectTagsFromId(state.selected[0])
-  }
-  app_data.drawing_area.rebuildDimensionNodes()
-  app_data.drawing_area.draw()
+  // Un aperçu (menu unitaire) a pu laisser `bypass_redraws` posé : le dessin final doit passer.
+  drawing_area.bypass_redraws = false
+  drawing_area.withBypassRedraws(() => poseSelection(tagg, state.selected, state.level), false)
+  drawing_area.rebuildDimensionNodes()
+  drawing_area.draw()
   app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
 }
@@ -81,20 +96,82 @@ const commit = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, next:
 }
 
 /**
+ * os#1511 — COUPER UNE DIMENSION : les membres dessinés deviennent `ids`. LE geste de coupe, que
+ * tous les sélecteurs appellent (barre du haut, panneau, clic droit, couronne) : la sélection,
+ * les nœuds d'axe redécoupés, le dessin, les menus — et l'annulation.
+ *
+ * L'ordre des `ids` est indifférent : `selectMembers` écarte l'ancêtre d'un membre demandé et
+ * déduit le niveau du plus profond, quel que soit l'ordre (le « membre cliqué en tête » que les
+ * sélecteurs recopiaient ne changeait plus rien).
+ *
+ * `multi` : une figure montre toujours plusieurs membres ; une dimension en choix unique qu'aucun
+ * nœud ne porte passe alors en choix multiple, dans le même pas d'historique.
+ */
+export const applyDimensionCut = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[], options: { multi?: boolean } = {}
+) => {
+  if (ids.length === 0) return
+  const now = snapshot(app_data, tagg)
+  const banner = options.multi && now.carriers.length === 0 ? 'multi' : now.banner
+  commit(app_data, tagg, { ...now, banner, selected: ids, level: undefined })
+}
+
+/** os#1511 — UN NIVEAU ENTIER : tous les membres que montre le niveau `index` (annulable). */
+export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, index: number) => {
+  const levels = tagg.levels.length
+  if (levels === 0 || !Number.isFinite(index)) return
+  const level = Math.min(Math.max(0, index), levels - 1)
+  const membres = tagg.membersAtLevel(level)
+  if (membres.length === 0) return
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), selected: membres.map(m => m.id), level })
+}
+
+/**
+ * Le dessin choisi dans la liste de l'éditeur de groupe : une bannière (un membre, plusieurs en
+ * bandes, séquence, aucun…). Quitter « en nœuds » détache TOUS les porteurs ; une bannière à choix
+ * unique ne garde que le premier membre choisi — un choix unique à plusieurs membres ne rendrait
+ * plus aucune valeur.
+ */
+export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, banner: string) => {
+  const now = snapshot(app_data, tagg)
+  const unique = banner === 'one' || banner === 'topbar' || banner === 'sequence'
+  commit(app_data, tagg, { ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected })
+}
+
+/** Les nœuds qui portent la dimension deviennent exactement `node_ids` (annulable). */
+export const applyDimensionCarriers = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_ids: string[]
+) => {
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), carriers: node_ids })
+}
+
+/**
+ * os#1511 — LE NŒUD DE RÉFÉRENCE de la dimension (« tout placer autour de lui ») ; `undefined` ou
+ * vide : aucun, la mise en page habituelle. Annulable.
+ */
+export const applyReferenceNode = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string | undefined
+) => {
+  const before = tagg.reference_node_id
+  const apply = (value: string | undefined) => {
+    tagg.reference_node_id = value
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(node_id))
+  apply(node_id)
+}
+
+/**
  * Un membre à la fois, ou plusieurs en bandes. Quitter « en nœuds » détache TOUS les porteurs.
  * Revenir à un seul membre garde le premier qui était choisi — un choix unique à plusieurs membres
  * ne rendrait plus aucune valeur.
  */
 export const applyDimensionDrawing = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, drawing: 'one' | 'multi'
-) => {
-  const now = snapshot(app_data, tagg)
-  commit(app_data, tagg, {
-    banner: drawing,
-    carriers: [],
-    selected: drawing === 'one' ? now.selected.slice(0, 1) : now.selected
-  })
-}
+) => applyDimensionBanner(app_data, tagg, drawing)
 
 /**
  * L'ÉCART VERTICAL DES ENFANTS d'un nœud désagrégé (Julien, 30/09 : « je parlais aussi de ces
