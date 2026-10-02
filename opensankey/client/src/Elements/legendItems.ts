@@ -20,6 +20,8 @@ import {
 // SA#553 — valeurs par défaut de l'étiquette générée (même règle que la cascade)
 import { untaggedDefaultsStyle } from './tagStyles'
 import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
+// os#1511 — retrait et ordre de l'arbre, partagés avec la légende des figures
+import { LEGEND_INDENT_EM, relativeIndents, sortByTreeRanks } from './legendHierarchy'
 
 // ITEMS (pur) ========================================================================
 
@@ -465,39 +467,27 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
  */
 function hierarchyIndents(tags: Type_TagForLegend[]): Map<Type_TagForLegend, number> | undefined {
   if (!tags.some(tag => tag.parent !== undefined)) return undefined
-  const depthOf = (tag: Type_TagForLegend) => {
+  return relativeIndents(tags, tag => {
     let depth = 0
     for (let p = tag.parent; p !== undefined; p = p.parent) depth++
     return depth
-  }
-  const depths = new Map(tags.map(tag => [tag, depthOf(tag)] as [Type_TagForLegend, number]))
-  const min_depth = Math.min(...depths.values())
-  depths.forEach((depth, tag) => depths.set(tag, depth - min_depth))
-  return depths
+  })
 }
 
 /**
  * os#1511 — range les membres dans l'ordre de l'arbre : chacun est repéré par la suite des rangs
  * (dans `tags_list`) de ses ancêtres puis de lui-même. Les enfants d'un parent désagrégé se
- * suivent donc, à l'endroit où ce parent se trouvait quand il était agrégé.
+ * suivent donc, à l'endroit où ce parent se trouvait quand il était agrégé. La règle est partagée
+ * avec la légende des figures (`legendHierarchy`).
  */
 function sortByHierarchy(tags: Type_TagForLegend[], all_tags: Type_TagForLegend[]) {
   const rank = new Map(all_tags.map((tag, i) => [tag.id, i] as [string, number]))
-  const pathOf = (tag: Type_TagForLegend) => {
+  sortByTreeRanks(tags, tag => {
     const path: number[] = []
     for (let t: Type_TagForLegend | undefined = tag; t !== undefined; t = t.parent) {
       path.unshift(rank.get(t.id) ?? Number.MAX_SAFE_INTEGER)
     }
     return path
-  }
-  const paths = new Map(tags.map(tag => [tag, pathOf(tag)] as [Type_TagForLegend, number[]]))
-  tags.sort((a, b) => {
-    const pa = paths.get(a) ?? []
-    const pb = paths.get(b) ?? []
-    for (let i = 0; i < Math.min(pa.length, pb.length); i++) {
-      if (pa[i] !== pb[i]) return pa[i] - pb[i]
-    }
-    return pa.length - pb.length
   })
 }
 
@@ -843,7 +833,7 @@ export type Type_LegendItemPosition = { id: string, x: number, y: number }
 
 /** os#1511 — retrait (px monde) d'un membre désagrégé en disposition verticale : une police par niveau. */
 export function legendIndentWidth(item: Type_LegendItem, police: number): number {
-  return (item.indent ?? 0) * police
+  return (item.indent ?? 0) * LEGEND_INDENT_EM * police
 }
 
 // Estimation de largeur de texte sans DOM (moyenne ~0.55 em par caractère)

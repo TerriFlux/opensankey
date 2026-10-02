@@ -69,8 +69,10 @@ export interface Type_PartInput {
   // `map` qu'on écrirait sans y penser.
   /** Rang sous la racine de la décomposition. 0 = enfant direct. */
   depth?: number
-  /** Le nom du parent DESSINÉ, celui que la légende met devant. */
+  /** Le nom du parent DESSINÉ, celui que l'info-bulle met devant. */
   parent_label?: string
+  /** os#1511 — les ancêtres dessinés, sujet exclu : la légende s'en sert pour son arbre. */
+  ancestors?: { id: string, label: string }[]
   /** L'ancêtre de premier rang : c'est lui qui donne la TEINTE, la profondeur donnant la clarté. */
   branch_id?: string
   /** La route DESSINÉE jusqu'à cette part, racine comprise : c'est elle que le clic déplie. */
