@@ -157,8 +157,8 @@ describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => 
 
   // os#1511, 29/09 — Julien : « c est marque "remplir le slot du parent" mais ca fait pas ca, ca
   // ecarte. » C etait vrai : la position enregistree de chaque membre ecrasait la mise en page
-  // qu on venait de calculer. Elle ne vaut plus que sous « garder les positions », qui est
-  // precisement le mode qui demande de la respecter.
+  // qu on venait de calculer. (Depuis le 02/10, elle s applique APRES la mise en page, dans tous
+  // les modes : cf. le test suivant.)
   test('sous GARDER LES POSITIONS, celle du membre fait foi', () => {
     const m = monter()
     m.partenaires.setPosXY(520, 300)
@@ -173,19 +173,24 @@ describe('os#1511 — une coupe mixte se DESSINE, et sans double compte', () => 
     expect([afrique?.position_x, afrique?.position_y]).toEqual([700, 55])
   })
 
-  test('sous REMPLIR LE SLOT, elle est RECALCULEE — le libelle dit ce qu il fait', () => {
+  // os#1511, 02/10 (sa!824) — RENVERSE : « un noeud engendre se comporte comme un noeud ordinaire ».
+  // Deplace a la main, il reste ou on l a pose, dans TOUS les modes, slot compris : la position
+  // manuelle s applique APRES la mise en page. Les membres sans position suivent le slot. Le retour
+  // au placement automatique passe par le menu « Placer », qui efface ces positions.
+  test('sous REMPLIR LE SLOT, un membre deplace garde sa place, les autres suivent le slot', () => {
     const m = monter()
     m.partenaires.setPosXY(520, 300)
     m.partenaires.driving_dimension = m.pays
-    // Deux positions enregistrees tres ecartees : c est exactement le cas de la demo.
-    ;(m.pays.tags_dict['europe'] as Class_DataTag).position = { x: 520, y: 150 }
-    ;(m.pays.tags_dict['afrique'] as Class_DataTag).position = { x: 520, y: 380 }
+    ;(m.pays.tags_dict['afrique'] as Class_DataTag).position = { x: 700, y: 55 }
     m.pays.selectMembers(['europe', 'afrique'])
     disaggregateDimensionNodes(m.sankey)
     const engendres = m.sankey.nodes_list.filter(isGeneratedMemberNode)
-    // Aucun ne reste a sa position enregistree : le slot commande.
-    expect(engendres.map(n => n.position_y)).not.toContain(380)
-    expect(Math.min(...engendres.map(n => n.position_y))).toBeGreaterThanOrEqual(300)
+    const afrique = engendres.find(n => n.name === 'Afrique')
+    const europe = engendres.find(n => n.name === 'Europe')
+    expect([afrique?.position_x, afrique?.position_y]).toEqual([700, 55])
+    // L Europe, sans position a elle, est mise en page dans le slot de l axe.
+    expect(europe?.position_x).toBe(520)
+    expect(europe?.position_y).toBeGreaterThanOrEqual(300)
   })
 
   // os#1511, 29/09 — « le positionnement desagrege, ca marche toujours pas ». La cause n etait

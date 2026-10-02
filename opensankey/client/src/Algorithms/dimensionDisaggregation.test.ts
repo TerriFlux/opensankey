@@ -116,13 +116,19 @@ describe('os#1511 lot 2B — un noeud d axe se remplace par les membres choisis'
     expect(par_cible.get('Espagne')).toBe(12)
   })
 
+  // os#1511, 30/09 — UN SEUL MEMBRE : L AXE EST CE MEMBRE, on n engendre rien (regle du membre
+  // unique, DimensionDisaggregation). Le panneau dit « Europe », le dessin montre l Europe — mais
+  // par l axe lui-meme, qui porte l agregat du membre, et non par un double transitoire.
   test('UN membre choisi montre CE membre, et lui seul', () => {
-    const { sankey, pays, europe } = monter()
+    const { sankey, pays, europe, axe, flux } = monter()
     choisir(pays, europe)
-    // Le panneau dit « Europe », le dessin montre l Europe : c est tout le point.
-    expect(disaggregateDimensionNodes(sankey)).toBe(1)
-    expect(nomsEngendres(sankey)).toEqual(['Europe'])
-    expect(parCible(sankey).get('Europe')).toBe(42)
+    expect(disaggregateDimensionNodes(sankey)).toBe(0)
+    expect(nomsEngendres(sankey)).toEqual([])
+    expect(sankey.links_list.filter(isGeneratedMemberLink)).toHaveLength(0)
+    // L axe reste VISIBLE, et son flux vaut l Europe seule (30 + 12), pas le monde (49).
+    expect(axe.is_visible).toBe(true)
+    expect(flux.is_visible).toBe(true)
+    expect(flux.valueCurrent).toBe(42)
   })
 
   test('DEUX membres choisis montrent les deux', () => {
