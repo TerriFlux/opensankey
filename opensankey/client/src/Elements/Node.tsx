@@ -1211,12 +1211,14 @@ export class Class_NodeElement extends Class_NodeBase {
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
       // 'simple' — éventail « split direction + hauteur » réservé aux flux qui changent d'axe
-      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée ; les
-      // flux de recyclage restent parqués en bloc entre le middle et les exports
-      // (comportement historique), donc hors index.
-      recycling_links = this._links_order.filter(l => l.shape_is_recycling)
+      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée.
+      // Les flux de recyclage sont triés avec eux, d'après le ventre de leur boucle
+      // (`stack_ref`) au lieu du nœud opposé. Parqués en bloc sous tous les autres, ils
+      // croisaient les entrées du côté dès que la boucle remontait (démo Déchets, « Refus
+      // criblage » au site de compostage).
+      recycling_links = []
       const middle = this._links_order.filter(
-        l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
+        l => !import_links.includes(l) && !export_links.includes(l)
       )
       const order_index = this._computeIOOrderIndex(middle, false)
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)

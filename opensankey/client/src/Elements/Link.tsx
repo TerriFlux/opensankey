@@ -1958,15 +1958,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
     }
     // Recylcing mode
+    // Inégalité STRICTE : source et cible dans la même colonne (x égaux), c'est le recyclage
+    // ordinaire — le flux part vers l'avant puis revient. Avec `<=`, l'égalité le faisait sortir
+    // à gauche (démo Déchets, « Refus criblage » dans la vue agrégée). Même règle côté cible.
     else {
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        if (this.source.position_x <= this.target.position_x)
+        if (this.source.position_x < this.target.position_x)
           return 'left'
         else
           return 'right'
       }
       else {
-        if (this.source.position_y <= this.target.position_y)
+        if (this.source.position_y < this.target.position_y)
           return 'top'
         else
           return 'bottom'
@@ -2072,16 +2075,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
           return 'bottom'
       }
     }
-    // Recycling mode
+    // Recycling mode (inégalité stricte, cf. _computed_source_side)
     else {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        if (this.source.position_x <= this.target.position_x)
+        if (this.source.position_x < this.target.position_x)
           return 'right'
         else
           return 'left'
       }
       else {
-        if (this.source.position_y <= this.target.position_y)
+        if (this.source.position_y < this.target.position_y)
           return 'bottom'
         else
           return 'top'

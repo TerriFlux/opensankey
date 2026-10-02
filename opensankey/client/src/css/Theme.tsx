@@ -2213,7 +2213,9 @@ export const tableStyles = {
   table_edit_tag_node_pos: createTableStyle('auto 1fr auto'),
   table_edit_tag_link_pos: createTableStyle('auto 1fr auto'),
   table_edit_tag_data_pos: createTableStyle('auto 1fr auto'),
-  table_edit_node_io: createTableStyle('3fr 1fr 0.7fr 1.3fr'),
+  // Nom | flèches haut/bas | cadenas | décalage. Les trois dernières colonnes ont une taille
+  // propre : en fractions, la colonne des flèches s'écrasait et les boutons tournaient en pilules.
+  table_edit_node_io: createTableStyle('minmax(0, 1fr) auto auto 5.5rem'),
 
   table_welcome_buttons: table.definePartsStyle({
     table: {
