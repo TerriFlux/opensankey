@@ -28,7 +28,8 @@ import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
   drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, smallMultipleCalloutGap,
-  smallMultipleRadiusRatio, unionDrawnBox
+  smallMultipleRadiusRatio, unionDrawnBox, donutPartColors, orderParts, drawSmallMultiplesLegend,
+  smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_DrawnBox, Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
@@ -1088,17 +1089,39 @@ export const registerAnalysisRepresentations = (): void => {
       if (split) {
         container.innerHTML = ''
         const host = mountFigureTextZones(container, figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx)))
-        const n = split.members.length
-        const cols = Math.ceil(Math.sqrt(n * Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight)))
-        const rows = Math.ceil(n / Math.max(1, cols))
+        // 02/10/2026 — UNE LÉGENDE COMMUNE (Julien : « pour les multiples, il ne faut pas voir les
+        // labels qui sont répétés ; par contre une place commune pour la légende serait
+        // intéressante »). Les cases n'écrivent plus le nom des parts — ce sont les mêmes partout —
+        // et une seule légende les nomme, posée d'office, à la place que dit `legend_position`.
+        // Sa place est RÉSERVÉE avant les cases : elles se mesurent sur ce qui reste, toutes égales.
+        const below = style.legend_position === 'bottom'
+        const room = smallMultiplesLegendRoom(style, host.clientWidth, host.clientHeight)
+        const frame = document.createElement('div')
+        frame.style.display = 'flex'
+        frame.style.flexDirection = below ? 'column' : style.legend_position === 'left' ? 'row-reverse' : 'row'
+        frame.style.gap = '0.5rem'
+        frame.style.width = '100%'
+        frame.style.height = '100%'
+        host.appendChild(frame)
         const grid = document.createElement('div')
+        const legend = document.createElement('div')
+        legend.style.flex = `0 0 ${Math.max(0, Math.floor(room))}px`
+        legend.style.minWidth = '0'
+        legend.style.minHeight = '0'
+        legend.style.alignSelf = below ? 'stretch' : 'center'
+        legend.style.maxHeight = '100%'
+        frame.appendChild(grid)
+        frame.appendChild(legend)
+        grid.style.flex = '1 1 0'
+        grid.style.minWidth = '0'
+        grid.style.minHeight = '0'
+        const n = split.members.length
+        const cols = Math.ceil(Math.sqrt(n * Math.max(1, grid.clientWidth) / Math.max(1, grid.clientHeight)))
+        const rows = Math.ceil(n / Math.max(1, cols))
         grid.className = 'figure_small_multiples'
         grid.style.display = 'grid'
         grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`
         grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`
-        grid.style.width = '100%'
-        grid.style.height = '100%'
-        host.appendChild(grid)
         const by_id = new Map((parts as unknown as Type_StatSlice[]).map(p => [p.id, p]))
         const base = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
         // 02/10/2026 — UNE SEULE ÉCHELLE (Julien : « on a l'impression de ne pas avoir la même
@@ -1111,6 +1134,16 @@ export const registerAnalysisRepresentations = (): void => {
           return { member, slices, total: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
         })
         const max_total = Math.max(0, ...per_member.map(m => m.total))
+        // L'ORDRE ET LA COULEUR DES PARTS, décidés UNE FOIS sur l'union des cases : une part a la
+        // même teinte dans chaque case, et c'est ce qui permet à une seule légende de les nommer.
+        const union = new Map<string, Type_StatSlice>()
+        per_member.forEach(({ slices }) => slices.forEach(s => {
+          const seen = union.get(s.id)
+          union.set(s.id, seen ? { ...seen, value: seen.value + s.value } : s)
+        }))
+        const union_order = orderParts([...union.values()], style.parts_order)
+        const colors = donutPartColors(union_order, style)
+        const drawn: Type_StatSlice[][] = []
         const frames: { box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void }[] = []
         per_member.forEach(({ member, slices, total }, i) => {
           const cell = document.createElement('div')
@@ -1133,12 +1166,16 @@ export const registerAnalysisRepresentations = (): void => {
             small_multiple: {
               radius_ratio: smallMultipleRadiusRatio(total, max_total),
               callout_gap_px: smallMultipleCalloutGap(Math.min(cell.clientWidth, cell.clientHeight)),
-              frame: (box, apply) => { frames.push({ box, apply }) }
+              frame: (box, apply) => { frames.push({ box, apply }) },
+              colors,
+              drawn: (kept) => { drawn.push(kept) }
             }
           })
         })
         const common = unionDrawnBox(frames.map(f => f.box))
         if (common !== null) frames.forEach(f => f.apply(common))
+        drawSmallMultiplesLegend(
+          legend, grid, smallMultiplesLegendEntries(union_order.map(s => s.id), drawn), colors, style)
         return () => {
           publishFigureZoom(ctx.window_id, ctx.pane_key, null)
           container.innerHTML = ''

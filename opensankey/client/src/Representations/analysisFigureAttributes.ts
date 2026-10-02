@@ -184,6 +184,15 @@ export const ANALYSIS_ATTRIBUTES: Type_FigureAttributesConfig = {
 type Type_Bag = { [k: string]: unknown }
 const valued = (o: Type_Bag) => o['value_label_is_visible'] === true
 const named = (o: Type_Bag) => o['name_label_is_visible'] === true
+/**
+ * 02/10/2026 — LA COURONNE EST-ELLE EN PETITS MULTIPLES (« Une couronne par ») ? Lu sur le réglage
+ * seul : le panneau ne reçoit que le sac (`visibleIf`). Le tracé ne découpe que si la dimension
+ * existe encore et que la figure se décompose par dimension de données — la ligne qui pose ce
+ * réglage n'est offerte que dans ce cas.
+ */
+const smallMultiplesOn = (o: Type_Bag) => typeof o[SMALL_MULTIPLES_KEY] === 'string' && o[SMALL_MULTIPLES_KEY] !== ''
+/** La légende se dessine : l'auteur l'a allumée, ou la couronne est en petits multiples (légende commune). */
+const legendShown = (o: Type_Bag) => o['legend_visible'] !== false || smallMultiplesOn(o)
 export const SHARED_HONOURS = {
   parts_order: {},
   parts_color_source: { default: 'model' },
@@ -300,7 +309,7 @@ const DONUT_HONOURS = {
   //
   // Le coût d'une option visible qui n'agit pas encore est une ligne de plus ; le coût d'une
   // option introuvable est que la fonction n'existe pas.
-  legend_levels: { visibleIf: (o: Type_Bag) => o['legend_visible'] !== false },
+  legend_levels: { visibleIf: legendShown },
   // LE DÉGRADÉ DE PROFONDEUR, la règle du disque reprise telle quelle : la teinte dit la branche,
   // la clarté dit le niveau. Le catalogue la cache déjà sous `parts_color_source: 'model'` (où
   // elle n'a pas de sens) ; on ajoute la seconde condition — sans descente, aucune part n'a de
@@ -317,10 +326,9 @@ const DONUT_HONOURS = {
   // disque plutôt qu'une colonne qui lui mange son diamètre. Cf. `DONUT_STYLE_DEFAULTS`, qui porte
   // le même défaut côté tracé — les deux doivent dire la même chose, sinon l'inspecteur montre un
   // réglage et le dessin en applique un autre.
-  legend_position: { default: 'left' },
+  legend_position: { default: 'left', visibleIf: legendShown },
   // 01/10/2026 — nom + valeur + % dans les secteurs, pas de légende (Julien, en fin de compte).
-  // Mêmes défauts que `DONUT_STYLE_DEFAULTS`.
-  legend_visible: { default: false },
+  // Mêmes défauts que `DONUT_STYLE_DEFAULTS` (cf. `legend_visible`, plus bas).
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
@@ -357,7 +365,21 @@ const DONUT_HONOURS = {
   // que tout le monde rallume. Les couronnes existantes gagneront donc leurs noms à la
   // réouverture ; celles dont l'auteur avait explicitement décoché gardent leur réglage, la
   // surcharge primant sur le défaut.
-  name_label_is_visible: { default: true },
+  // 02/10/2026 — SAUF EN PETITS MULTIPLES : les noms des parts n'y sont écrits que par la légende
+  // commune (`names_written`, NodeStatsCharts). Les réglages qui ne touchent QUE le nom se cachent
+  // donc — une case cochée qui n'écrit rien mentirait ; ceux qu'il partage avec la valeur
+  // (taille, police, encre, détachement) restent, ils mordent encore sur elle.
+  name_label_is_visible: { default: true, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
+  name_label_uppercase: { visibleIf: (o: Type_Bag) => named(o) && !smallMultiplesOn(o) },
+  name_label_separator: { advanced: true, visibleIf: (o: Type_Bag) => named(o) && !smallMultiplesOn(o) },
+  name_label_separator_part: { advanced: true, visibleIf: (o: Type_Bag) => named(o) && !smallMultiplesOn(o) },
+  // Et la légende, POSÉE D'OFFICE en petits multiples : « Légende » et « Les parts dans la
+  // légende » n'y décident de rien et se cachent ; sa position, sa taille, sa largeur et ses
+  // niveaux s'y appliquent, et se montrent.
+  legend_visible: { default: false, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
+  legend_parts: { default: 'all', visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && !smallMultiplesOn(o) },
+  legend_font_size: { visibleIf: legendShown },
+  legend_width: { default: 230, visibleIf: legendShown },
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
   value_label_is_visible: { default: true },
@@ -390,8 +412,7 @@ const DONUT_HONOURS = {
   // Julien, deux captures côte à côte : « y a coordonnées mais pas affichage ».
   labels_min_share: { sort: 'display' as const },
   // 01/10/2026 — et ce qui ne tient pas sort en détaché, au lieu de se taire.
-  labels_callout_small: { sort: 'display' as const },
-  legend_width: { default: 230 }
+  labels_callout_small: { sort: 'display' as const }
 }
 const BARS_HONOURS = {
   ...SHARED_HONOURS,
