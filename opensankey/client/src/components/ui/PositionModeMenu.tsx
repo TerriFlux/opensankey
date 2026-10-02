@@ -70,11 +70,13 @@ const GAP_MODES: { value: Type_DisaggregationGap, label_key: string }[] = [
 ]
 
 /** Une entrée cochable. */
-const CheckItem = ({ label, checked, onClick, icon, closeOnSelect, disabled }: {
+const CheckItem = ({ label, checked, onClick, icon, closeOnSelect, disabled, title }: {
   label: string, checked: boolean, onClick: () => void, icon?: React.ReactElement, closeOnSelect?: boolean,
-  disabled?: boolean
+  disabled?: boolean, title?: string
 }) => (
-  <MenuItem fontSize='0.75rem' icon={icon} onClick={onClick} closeOnSelect={closeOnSelect} isDisabled={disabled}>
+  <MenuItem
+    fontSize='0.75rem' icon={icon} onClick={onClick} closeOnSelect={closeOnSelect} isDisabled={disabled} title={title}
+  >
     <HStack spacing='0.5rem'>
       <Box as='span'>{label}</Box>
       {checked ? <CheckIcon boxSize='0.6rem' /> : null}
@@ -130,6 +132,7 @@ const figureChoiceItems = (choices: Type_TopbarFigureChoice[]) => choices.map((c
       label={only.label}
       checked={c.value === only.value}
       disabled={c.disabled || only.disabled}
+      title={only.title}
       closeOnSelect={false}
       onClick={() => c.choose(c.value === only.value ? '' : only.value)}
     />
@@ -143,6 +146,7 @@ const figureChoiceItems = (choices: Type_TopbarFigureChoice[]) => choices.map((c
           label={o.label}
           checked={c.value === o.value}
           disabled={c.disabled || o.disabled}
+          title={o.title}
           closeOnSelect={false}
           onClick={() => { if (c.value !== o.value) c.choose(o.value) }}
         />
@@ -186,6 +190,7 @@ export const FigureTopbarMenu = ({ menus }: { menus: Type_TopbarFigureMenus }) =
                 label={o.label}
                 checked={c.value === o.value}
                 disabled={c.disabled || o.disabled}
+                title={o.title}
                 closeOnSelect={false}
                 onClick={() => { if (c.value !== o.value) c.choose(o.value) }}
               />

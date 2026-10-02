@@ -146,6 +146,44 @@ describe('os#1511 — une dimension PLATE ne decompose rien', () => {
   })
 })
 
+// 02/10/2026 — « ZOOME DEDANS » : la couronne se re-enracine sur la part cliquee. Le centre devient
+// cette part (nom et valeur), ses enfants remplissent l anneau, qu elle soit ouverte ou non dans la
+// coupe : zoomer n ouvre rien.
+describe('os#1511 — le foyer d une couronne de dimension de donnees', () => {
+  const foyer = (m: Montage, membre: Class_DataTag) => [{ dimension_id: m.groupe.id, member_id: membre.id }]
+
+  test('zoomer sur Cereales : le centre la nomme et vaut 42, ses enfants font l anneau', () => {
+    const m = monter()
+    const racine = arbre(m, undefined, { focus: foyer(m, m.cereales) })?.roots[0] as Type_SunburstNode
+    expect(racine.label).toBe('Cereales')
+    expect(racine.value).toBe(42)
+    expect(racine.children.map(c => c.id))
+      .toEqual([memberSectorId(m.groupe.id, m.ble.id), memberSectorId(m.groupe.id, m.mais.id)])
+    expect(racine.children.map(c => c.depth)).toEqual([1, 1])
+  })
+
+  test('le foyer ne demande pas que Cereales soit ouverte dans la coupe', () => {
+    const m = monter()
+    // Coupe : seule la racine est ouverte, Cereales est fermee.
+    const racine = arbre(m, ['produits'], { focus: foyer(m, m.cereales) })?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => c.label)).toEqual(['Ble', 'Mais'])
+  })
+
+  test('un foyer sur une feuille est ignore : la figure revient au sujet', () => {
+    const m = monter()
+    const racine = arbre(m, undefined, { focus: foyer(m, m.lait) })?.roots[0] as Type_SunburstNode
+    expect(racine.id).toBe(m.lien.id)
+    expect(racine.value).toBe(49)
+  })
+
+  test('un foyer sur un membre disparu est ignore', () => {
+    const m = monter()
+    const racine = arbre(m, undefined, { focus: [{ dimension_id: m.groupe.id, member_id: 'disparu' }] })
+      ?.roots[0] as Type_SunburstNode
+    expect(racine.value).toBe(49)
+  })
+})
+
 describe('os#1511 — la forme de l arbre : le sujet au centre, les membres en anneaux', () => {
   test('la racine est le SUJET ; figure neuve, ses enfants sont ceux de la racine unique', () => {
     const m = monter()

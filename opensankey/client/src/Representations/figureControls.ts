@@ -43,7 +43,7 @@ export interface Type_FigureControlItem {
   tooltip: string
   value: unknown
   /** Pour un sélecteur : les choix, déjà traduits et dans l'ordre déclaré. */
-  choices?: { value: string, label: string }[]
+  choices?: { value: string, label: string, disabled?: boolean, reason?: string }[]
   min?: number
   max?: number
   step?: number
@@ -159,7 +159,11 @@ export const figureControlsOf = (
     // clé de la même figure (les étiquettes du groupe choisi). Le sac est déjà là, `visibleIf`
     // le reçoit depuis os#1425 ; on le passe aussi aux choix.
     const model_choices = ui?.choicesOf ? ui.choicesOf({ ...ctx, options }) : undefined
-    const choices = declared_choices ?? model_choices
+    // Un choix sans effet ICI se grise avec sa raison (cf. `Type_FigureControl.choiceUnavailable`).
+    const choices = (declared_choices ?? model_choices)?.map(c => {
+      const why = ui?.choiceUnavailable?.(c.value, { ...ctx, options })
+      return why ? { ...c, disabled: true, reason: inLang(why, lang, '') } : c
+    })
     const kind = controlKindOf(ui?.kind, attr.default, !!choices && choices.length > 0)
     if (kind === 'none') return
 

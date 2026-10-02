@@ -27,8 +27,10 @@
 
 import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
 import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSectorId'
+import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
-  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, LEVELS_DISPLAY_BY_KEY
+  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
+  LEVELS_DISPLAY_BY_KEY
 } from './analysisFigureAttributes'
 
 /** L'entrée par laquelle les fichiers d'avant détachaient une figure du diagramme. */
@@ -99,6 +101,27 @@ export const withElementOpening = (options: Type_Options, elements: Iterable<str
 /** Raccourci : seule la coupe des dimensions de données change. */
 export const withDataOpening = (options: Type_Options, data: Type_DataOpening): Type_Options =>
   withFigureOpening(options, { ...readFigureOpening(options), data })
+
+// ── 02/10/2026 — OÙ LA FIGURE EST DESCENDUE (« Zoome dedans ») ──────────────────────────────────
+//
+// Une pile, du sujet vers le foyer, dans `hierarchy_focus` : des identifiants de NŒUDS pour une
+// couronne de nœuds, des identifiants de SECTEURS DE MEMBRE (`membre:<dim>/<m>`, emboîtés compris)
+// pour une couronne de dimensions de données. Ce n'est pas la coupe : zoomer re-enracine la figure
+// sans rien ouvrir, ni chez elle ni dans le diagramme. Le centre dépile.
+
+/** La pile des foyers de la figure ; vide = elle regarde son sujet. */
+export const readFigureFocus = (options: Type_Options | null | undefined): string[] =>
+  stringsOf(options?.[HIERARCHY_FOCUS_KEY])
+
+/** Le sac qui porte la pile `path` (vide : la clé est retirée). */
+export const withFigureFocus = (options: Type_Options, path: string[]): Type_Options =>
+  ({ ...options, [HIERARCHY_FOCUS_KEY]: path.length > 0 ? [...path] : undefined })
+
+/** Le foyer d'une couronne de dimensions de données : la coordonnée du dernier secteur empilé. */
+export const readFigureDataFocus = (options: Type_Options | null | undefined): Type_MemberRef[] | undefined => {
+  const last = readFigureFocus(options).slice(-1)[0]
+  return last === undefined ? undefined : parseMemberSectorPath(last) ?? undefined
+}
 
 // ── os#1511 — LA COUCHE DE DONNÉES DE LA FIGURE ─────────────────────────────────────────────────
 //

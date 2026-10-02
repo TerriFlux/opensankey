@@ -44,9 +44,10 @@ import {
   HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
 import {
-  levelsDisplayOfDimension, readFigureDataLayer, readFigureLevelsDisplay, readFigureOpening, withDataOpening,
-  withElementOpening
+  levelsDisplayOfDimension, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay,
+  readFigureOpening, withDataOpening, withElementOpening, withFigureFocus
 } from './figureOpening'
+import { diagramIsShown } from './figureCatalogue'
 import { mountFigureTextZones } from './figureTextZones'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
@@ -54,9 +55,10 @@ import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
+import { memberSectorId, parseMemberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
-  dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, smallMultipleMembersOf
+  dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, resolveDataFocus,
+  smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
@@ -231,11 +233,11 @@ export const descriptorInEffect = (
  */
 const expandedOf = (options: { [key: string]: unknown }): ReadonlySet<string> => readFigureOpening(options).elements
 
-/** Le chemin des nœuds où la figure est descendue. Vide = elle regarde son sujet. */
-const hierarchyPathOf = (options: { [key: string]: unknown }): string[] => {
-  const raw = options[HIERARCHY_FOCUS_KEY]
-  return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : []
-}
+/**
+ * Le chemin où la figure est descendue. Vide = elle regarde son sujet. Des nœuds sur une couronne de
+ * nœuds, des secteurs de membre sur une couronne de dimensions de données (cf. `readFigureFocus`).
+ */
+const hierarchyPathOf = (options: { [key: string]: unknown }): string[] => readFigureFocus(options)
 
 /**
  * LE DESCRIPTEUR, AUGMENTÉ DE L'ENDROIT OÙ LA FIGURE EST DESCENDUE — et rendu tel quel sinon.
@@ -317,8 +319,25 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
     // Les petits multiples : leur dimension ne découpe pas, chaque petite couronne la lit sur
     // son membre (cf. `smallMultiplesOf`).
     exclude_dimension_ids: split ? [split.dimension.id] : undefined,
-    data_opening: readFigureOpening(raw).data
+    data_opening: readFigureOpening(raw).data,
+    // 02/10/2026 — « Zoome dedans » : le secteur de membre où la figure est descendue. Les petits
+    // multiples le lisent aussi : toutes les cases se re-enracinent sur la même part.
+    data_focus: readFigureDataFocus(raw)
   }
+}
+
+/**
+ * 02/10/2026 — LE FOYER EN VIGUEUR d'une couronne de dimensions de données, résolu sur sa coupe
+ * comme le fait l'arbre (`resolveDataFocus`) : `null` si elle n'est pas descendue, ou si le foyer
+ * écrit ne désigne plus rien de dessinable.
+ */
+const dataFocusOf = (ctx: Type_RepresentationContext) => {
+  const a = analysisOf(ctx)
+  const decompose = a?.descriptor.decompose
+  if (!a || decompose?.kind !== 'data_dimension') return null
+  const reading = hierarchyReadingOf(ctx)
+  const cut = analysisDataCutOf(a.subject, decompose, reading)
+  return cut === null ? null : resolveDataFocus(cut, reading.data_focus)
 }
 
 /**
@@ -530,7 +549,7 @@ const chartOptions = (
  */
 const figureTitleFallback = (ctx: Type_RepresentationContext): string => {
   const subject = chartSubjectOf(ctx.element)
-  return focusedNodeOf(ctx)?.name ?? (subject?.kind === 'node'
+  return focusedNodeOf(ctx)?.name ?? dataFocusOf(ctx)?.member.name ?? (subject?.kind === 'node'
     ? subject.node.name
     : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : '')
 }
@@ -594,13 +613,18 @@ const analysisOf = (
  * sac tel quel, comme avant.
  */
 const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle => {
-  const style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
-  if (style.parts_color_source !== 'model' || !hierarchyInEffect(ctx)) return style
+  let style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
+  // 02/10/2026 — ZOOMÉE, LE CENTRE DIT OÙ ON EST : le nom de la part re-enracinée avec sa valeur
+  // (« Céréales / 1 368 »), et pas la valeur seule, qui ne dirait pas qu'on est descendu.
+  const zoomed = hierarchyPathOf(ctx.options).length > 0 && style.centre_content === 'value'
+  const repaint = style.parts_color_source === 'model' && hierarchyInEffect(ctx) !== null
+  if (!zoomed && !repaint) return style
   const { window_id, pane_key } = ctx
   if (window_id === undefined || pane_key === undefined) return style
   const figure = ctx.app_data.menu_configuration.figureOf(window_id, pane_key)
-  if (figure.isAttributeOverloaded('parts_color_source')) return style
-  return { ...style, parts_color_source: 'palette' }
+  if (repaint && !figure.isAttributeOverloaded('parts_color_source')) style = { ...style, parts_color_source: 'palette' }
+  if (zoomed && !figure.isAttributeOverloaded('centre_content')) style = { ...style, centre_content: 'both' }
+  return style
 }
 
 /**
@@ -672,12 +696,24 @@ const isBelow = (
  * diagramme ». Quand le diagramme suit, une dimension en choix unique passe en choix multiple — une
  * couronne montre toujours plusieurs membres à la fois.
  *
+ * ── 02/10/2026 — « ZOOME DEDANS », ENFIN ─────────────────────────────────────────────────────
+ *
+ * Julien : « zoome dedans ne zoome pas : c'est toujours le déplie dans le diagramme ». Le zoom
+ * n'existait pas ici, et une figure LIÉE écrivait la coupe du diagramme quel que soit le réglage.
+ * Les quatre choix disent maintenant ce qu'ils font :
+ *   'none'      ouvre l'anneau dans la figure (liée, sa coupe EST celle du diagramme) ;
+ *   'aggregate' ouvre l'anneau, et le diagramme suit ;
+ *   'zoom'      re-enracine la figure sur la part (`hierarchy_focus`) — sans rien ouvrir, ni chez
+ *               elle ni dans le diagramme ; shift+clic remonte d'un cran, comme le centre ;
+ *   'both'      re-enracine, et déplie la part dans le diagramme.
+ * Sans diagramme affiché, « dans le diagramme » ne s'écrit pas (cf. `diagramIsShown`).
+ *
  * `null` quand la figure ne découpe pas selon une dimension de données.
  */
 const dataDimensionClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
-): { activate: (part_id: string, gesture: { shift: boolean }) => void } | null => {
+): { activate: (part_id: string, gesture: { shift: boolean }) => void, back?: () => void } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (decompose?.kind !== 'data_dimension') return null
   const { window_id, pane_key } = ctx
@@ -697,8 +733,15 @@ const dataDimensionClickGestures = (
   const dims = cut.dims
   if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
 
-  const diagram_follows = linked || style.interaction_click === 'aggregate' || style.interaction_click === 'both'
-  /** La coupe du diagramme pour cette dimension devient celle de la figure. */
+  const mode = style.interaction_click
+  const diagram_shown = diagramIsShown(app_data)
+  const wants_zoom = mode === 'zoom' || mode === 'both'
+  const diagram_follows = linked || ((mode === 'aggregate' || mode === 'both') && diagram_shown)
+  const focus = readFigureFocus(ctx.options)
+  const writeFocus = (path: string[]) => app_data.menu_configuration.setMainZonePaneOptions(
+    window_id, pane_key, withFigureFocus(ctx.options, path) as unknown as Type_JSON
+  )
+  /** La coupe du diagramme pour cette dimension devient `expanded`. */
   const followInDiagram = (dim: Class_DataTagGroup, expanded: ReadonlySet<string>) => {
     if (!diagram_follows) return
     const opened = new Set(
@@ -712,32 +755,61 @@ const dataDimensionClickGestures = (
       applyDimensionCut(app_data, dim, coupeDepuisOuverts(dim, opened), { multi: true }))
   }
 
-  const activate = (part_id: string, gesture: { shift: boolean }) => {
-    const ref = parseMemberSectorId(part_id)
-    const dim = dims.find(d => d.id === ref?.dimension_id)
-    const member = ref !== null ? dim?.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
-    if (dim === undefined || member === undefined) return
-    // La coupe EN VIGUEUR, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
-    // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore. Liée, on
-    // part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
-    const expanded = cut.opened
-    const next = new Set(linked ? diagramDimensionOpening([dim]) : expanded)
+  /**
+   * La coupe `base` après le geste sur `member` : ouvert (avec toute sa route), ou refermé (lui s'il
+   * est ouvert, sinon son parent, avec ce qu'ils portaient). `null` : le geste ne change rien.
+   */
+  const cutAfter = (
+    base: ReadonlySet<string>, dim: Class_DataTagGroup, member: Class_DataTag, shift: boolean
+  ): Set<string> | null => {
+    const next = new Set(base)
     const entry = (m: Class_DataTag) => memberSectorId(dim.id, m.id)
-    if (gesture.shift) {
+    if (shift) {
       const target = next.has(entry(member)) ? member : member.parent
       // La racine reste : la refermer ferait disparaître la dimension, ce que fait le niveau.
-      if (target === undefined || target.parent === undefined && dimensionRootsOf(dim).length === 1) return
+      if (target === undefined || target.parent === undefined && dimensionRootsOf(dim).length === 1) return null
       const close = (m: Class_DataTag) => {
         next.delete(entry(m))
         ;(m.children as Class_DataTag[]).forEach(close)
       }
       close(target)
     } else {
-      if ((member.children as Class_DataTag[]).length === 0) return
+      if ((member.children as Class_DataTag[]).length === 0) return null
       // Toute la route : ouvrir un membre profond ouvre ses ancêtres, sinon la coupe s'arrêterait
       // au premier fermé.
       for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent) next.add(entry(m))
     }
+    return next
+  }
+
+  const activate = (part_id: string, gesture: { shift: boolean }) => {
+    const ref = parseMemberSectorId(part_id)
+    const dim = dims.find(d => d.id === ref?.dimension_id)
+    const member = ref !== null ? dim?.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
+    if (dim === undefined || member === undefined) return
+
+    // ── ZOOMER : le foyer s'empile (ou se dépile au shift), la coupe de la figure ne bouge pas ──
+    if (wants_zoom) {
+      if (gesture.shift) {
+        if (focus.length > 0) writeFocus(focus.slice(0, -1))
+      } else if (resolveDataFocus(cut, parseMemberSectorPath(part_id) ?? undefined) !== null) {
+        writeFocus([...focus, part_id])
+      }
+      // « et le déplie dans le diagramme » : la coupe DU DIAGRAMME seule, la figure étant zoomée.
+      if (mode === 'both' && diagram_shown) {
+        const next = cutAfter(diagramDimensionOpening([dim]), dim, member, gesture.shift)
+        if (next !== null) followInDiagram(dim, next)
+      }
+      return
+    }
+
+    // ── OUVRIR L'ANNEAU ─────────────────────────────────────────────────────────────────────────
+    // La coupe EN VIGUEUR, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
+    // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore. Liée, on
+    // part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
+    const expanded = cut.opened
+    const next = cutAfter(linked ? diagramDimensionOpening([dim]) : expanded, dim, member, gesture.shift)
+    if (next === null) return
     if (linked) { followInDiagram(dim, next); return }
     if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return
     const opened = { ...data_opening.opened }
@@ -747,7 +819,9 @@ const dataDimensionClickGestures = (
     )
     followInDiagram(dim, next)
   }
-  return { activate }
+  // LE CENTRE REMONTE D'UN CRAN quand la figure est descendue, quel que soit le réglage du moment :
+  // un foyer posé sous « Zoome dedans » ne doit pas devenir un piège quand on change de réglage.
+  return { activate, back: focus.length > 0 ? () => writeFocus(focus.slice(0, -1)) : undefined }
 }
 
 /**
@@ -798,7 +872,10 @@ const donutClickGestures = (
   const sankey = app_data.drawing_area.sankey
   const { window_id, pane_key } = ctx
   const in_pane = window_id !== undefined && pane_key !== undefined
-  const wants_unfold = style.interaction_click === 'aggregate' || style.interaction_click === 'both'
+  // Sans diagramme affiché, « le déplie dans le diagramme » n'écrit rien : le menu le grise
+  // (`choiceUnavailable`), le geste s'y aligne.
+  const wants_unfold = (style.interaction_click === 'aggregate' || style.interaction_click === 'both')
+    && diagramIsShown(app_data)
   const wants_drill = (style.interaction_click === 'zoom' || style.interaction_click === 'both')
     && in_pane
 
@@ -1334,6 +1411,8 @@ export const registerAnalysisRepresentations = (): void => {
             node_id: string, _is: boolean, _dim: string, path: string[],
             gesture?: { shift: boolean, alt?: boolean }
           ) => gestures.activate?.(node_id, { shift: gesture?.shift === true, alt: gesture?.alt === true }, path),
+          // 02/10/2026 — LE CENTRE REMONTE D'UN CRAN quand la figure est zoomée, comme à plat.
+          on_centre_click: gestures.back ? () => { gestures.back?.(); return true } : undefined,
           // LE ZOOM, prêté à la colonne d'outils par le même pont que le disque : c'est ce qui
           // rend `SUNBURST_ZOOM` vrai sur une couronne en anneaux (cf. la déclaration `zoom`).
           zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),

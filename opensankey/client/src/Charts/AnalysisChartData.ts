@@ -62,6 +62,7 @@ import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
 import { buildNestedDimensionTree, dataCutOf } from './DataDimensionHierarchy'
 import type { Type_DataCut, Type_DataOpening } from './DataDimensionHierarchy'
 import { parseMemberSectorPath } from './memberSectorId'
+import type { Type_MemberRef } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
@@ -361,6 +362,11 @@ export interface Type_HierarchyReading {
    * (cf. `foldInPlaceLevels`). Absente : un anneau par niveau partout, comme hier.
    */
   levels_display_of?: (dimension_id: string) => 'in_place' | 'rings'
+  /**
+   * 02/10/2026 — LE FOYER d'une couronne de dimensions de données (« Zoome dedans ») : la coordonnée
+   * du secteur où elle est descendue (cf. `readFigureDataFocus`). Absent : elle regarde son sujet.
+   */
+  data_focus?: Type_MemberRef[]
 }
 
 /**
@@ -613,7 +619,8 @@ const dataDimensionTreeOf = (
       value_mode: reading.value_mode,
       node_value_mode: reading.node_value_mode,
       residual_label: reading.residual_label,
-      levels_display_of: reading.levels_display_of
+      levels_display_of: reading.levels_display_of,
+      focus: reading.data_focus
     }
   )
 }
