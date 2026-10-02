@@ -2,7 +2,8 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
-  applyDimensionDrawing, applyDisaggregationGap, dimensionCarriersOf, dimensionDrawingOf, toggleDimensionCarrier
+  applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
+  applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -63,5 +64,40 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(app.drawing_area.disaggregation_gap_mode).toBe('constant')
     app.history.applyUndo()
     expect(app.drawing_area.disaggregation_gap_mode).toBe(avant)
+  })
+
+  test('couper la dimension s annule, niveau compris', () => {
+    const { app, pays } = monter()
+    pays.selectAllAtLevel(0)
+    applyDimensionCut(app, pays, ['afrique', 'europe'])
+    expect(pays.selected_tags_list.map(t => t.id).sort()).toEqual(['afrique', 'europe'])
+    expect(pays.current_level_index).toBe(1)
+    app.history.applyUndo()
+    expect(pays.selected_tags_list.map(t => t.id)).toEqual(['monde'])
+    expect(pays.current_level_index).toBe(0)
+  })
+
+  test('un niveau entier, puis la couronne qui passe la dimension en choix multiple', () => {
+    const { app, pays } = monter()
+    applyDimensionLevel(app, pays, 1)
+    expect(pays.isWholeLevelSelected(1)).toBe(true)
+    applyDimensionLevel(app, pays, 0)
+    applyDimensionCut(app, pays, ['europe', 'afrique'], { multi: true })
+    expect(dimensionDrawingOf(app, pays)).toBe('multi')
+    app.history.applyUndo()
+    expect(pays.isWholeLevelSelected(0)).toBe(true)
+    expect(dimensionDrawingOf(app, pays)).not.toBe('multi')
+  })
+
+  test('les porteurs et le noeud de reference se posent et s annulent', () => {
+    const { app, pays, a, b } = monter()
+    applyDimensionCarriers(app, pays, [a.id, b.id])
+    expect(dimensionCarriersOf(app, pays).length).toBe(2)
+    applyReferenceNode(app, pays, b.id)
+    expect(pays.reference_node_id).toBe(b.id)
+    app.history.applyUndo()
+    expect(pays.reference_node_id).toBeUndefined()
+    app.history.applyUndo()
+    expect(dimensionCarriersOf(app, pays)).toEqual([])
   })
 })

@@ -27,9 +27,11 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
-  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor
+  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, smallMultipleCalloutGap,
+  smallMultipleRadiusRatio, unionDrawnBox, donutPartColors, orderParts, drawSmallMultiplesLegend,
+  smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
-import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
+import type { Type_DrawnBox, Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
 import {
   FIGURE_CENTRE_NATURE, FIGURE_CENTRE_PART_ID, isFigureCentrePart
@@ -40,8 +42,10 @@ import type { Type_PartInput } from './parts/buildParts'
 import { registerFigureNature } from './figureNature'
 import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
-  HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY
+  HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
+import { readFigureDataLayer, readFigureOpening, withDataOpening, withElementOpening } from './figureOpening'
+import { mountFigureTextZones } from './figureTextZones'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
 import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
@@ -50,9 +54,10 @@ import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorId } from '../Charts/memberSectorId'
 import {
-  diagramDimensionOpening, dimensionRootsOf, effectiveDimensionOpening, isDetachedOpening
+  dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
+import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -61,10 +66,10 @@ import {
 import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
 import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfNode } from './figureUnit'
-import { figureNavigationOf } from '../Charts/FigureNavigation'
+import { figureNavigationOf, withDataLayer } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
-  type Type_AnalysisDescriptor, isDescriptorEmpty, isGroupedCross
+  type Type_AnalysisDescriptor, effectiveDecompose, isDescriptorEmpty, isGroupedCross
 } from '../Charts/AnalysisDescriptor'
 import { analysisPartTarget } from './AnalysisPartTarget'
 import {
@@ -217,13 +222,10 @@ export const descriptorInEffect = (
 // la figure ne fait, comme depuis os#1387, que regarder autrement.
 
 /**
- * LES NŒUDS QUE L'AUTEUR A OUVERTS dans cette figure. Vide = la couronne décompose d'un cran,
- * c'est-à-dire le dessin de tout le parc enregistré (24/09/2026).
+ * LES NŒUDS (ou cases de croisement) QUE L'AUTEUR A OUVERTS dans cette figure. Vide = la couronne
+ * décompose d'un cran, c'est-à-dire le dessin de tout le parc enregistré (24/09/2026).
  */
-const expandedOf = (options: { [key: string]: unknown }): Set<string> => {
-  const raw = options[HIERARCHY_EXPANDED_KEY]
-  return new Set(Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : [])
-}
+const expandedOf = (options: { [key: string]: unknown }): ReadonlySet<string> => readFigureOpening(options).elements
 
 /** Le chemin des nœuds où la figure est descendue. Vide = elle regarde son sujet. */
 const hierarchyPathOf = (options: { [key: string]: unknown }): string[] => {
@@ -299,6 +301,7 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
   const raw = ctx.options ?? {}
   const one_of = <T extends string>(v: unknown, allowed: readonly T[]): T | undefined =>
     allowed.includes(v as T) ? v as T : undefined
+  const split = smallMultiplesOf(ctx)
   return {
     chain_axes: typeof raw['chain_axes'] === 'boolean' ? raw['chain_axes'] : undefined,
     value_mode: one_of(raw['value_mode'], ['sum', 'declared'] as const),
@@ -306,8 +309,51 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
     max_depth: typeof raw['max_depth'] === 'number' && raw['max_depth'] > 0
       ? Math.floor(raw['max_depth'])
       : undefined,
-    residual_label: ctx.app_data.t('sunburst.unallocated') as string
+    residual_label: ctx.app_data.t('sunburst.unallocated') as string,
+    // Les petits multiples : leur dimension ne découpe pas, chaque petite couronne la lit sur
+    // son membre (cf. `smallMultiplesOf`).
+    exclude_dimension_ids: split ? [split.dimension.id] : undefined,
+    data_opening: readFigureOpening(raw).data
   }
+}
+
+/**
+ * 01/10/2026 — LES PETITS MULTIPLES DE LA COURONNE : la dimension réglée (`small_multiples_by`) et
+ * ses membres, une petite couronne chacun. `null` sans réglage, ou quand le réglage ne s'applique
+ * pas : la figure ne découpe pas par dimension de données, ou la dimension n'existe plus.
+ */
+const smallMultiplesOf = (
+  ctx: Type_RepresentationContext
+): { dimension: Class_DataTagGroup, members: Class_DataTag[] } | null => {
+  const id = ctx.options?.[SMALL_MULTIPLES_KEY]
+  if (typeof id !== 'string' || id === '' || !ctx.element) return null
+  const subject = chartSubjectOf(ctx.element)
+  if (!subject) return null
+  const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
+  if (!descriptor || effectiveDecompose(descriptor)?.kind !== 'data_dimension') return null
+  const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined
+  if (!dimension?.is_hierarchical) return null
+  // Liée, ce que le diagramme montre ; détachée, la coupe propre de la figure pour cette dimension
+  // — « Monde » seul fait UNE couronne, c'est le retour (cf. `smallMultipleMembersOf`).
+  const members = smallMultipleMembersOf(dimension, readFigureOpening(ctx.options).data)
+  return members.length > 0 ? { dimension, members } : null
+}
+
+/** La navigation de la figure, la dimension des petits multiples fixée sur `member`. */
+const navAtMember = (nav: Type_FigureNavigation, member: Class_DataTag): Type_FigureNavigation => ({
+  ...nav,
+  data_tags: [...(nav.data_tags ?? []).filter(tag => tag.group.id !== member.group.id), member]
+})
+
+/** Les parts d'UNE petite couronne : la figure lue au membre. */
+const smallMultipleSlices = (
+  ctx: Type_RepresentationContext, member: Class_DataTag
+): Type_PartInput[] => {
+  const a = analysisOf(ctx)
+  if (!a) return []
+  return analysisPartInputs(a.subject, a.descriptor, flatParts(
+    a.subject, a.descriptor, navAtMember(a.nav, member), hierarchyReadingOf(ctx), expandedOf(ctx.options)
+  ))
 }
 
 /**
@@ -478,7 +524,9 @@ const analysisOf = (
   if (!subject) return null
   const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
   if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return null
-  const nav = figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options)
+  // os#1511 — et la COUCHE de données d'une figure détachée qui en a choisi une (`readFigureDataLayer`).
+  // Elle voyage dans la navigation : parts, totaux, pourcentages et petits multiples la lisent tous.
+  const nav = withDataLayer(figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options), readFigureDataLayer(ctx.options))
   return { subject, descriptor, nav }
 }
 
@@ -522,7 +570,7 @@ const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle =>
  */
 const hierarchyInEffect = (
   ctx: Type_RepresentationContext
-): { dimension_id: string, path: string[], expanded: Set<string>, cross?: Type_CrossSpec } | null => {
+): { dimension_id: string, path: string[], expanded: ReadonlySet<string>, cross?: Type_CrossSpec } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (!decompose) return null
   // os#1509 — le croisement descend aussi : mêmes anneaux, même palette, même ensemble ouvert.
@@ -571,40 +619,40 @@ const isBelow = (
 /**
  * os#1511 — CLIC ET SHIFT+CLIC SUR UNE DIMENSION DE DONNÉES, comme dans l'arbre du diagramme.
  *
- * Julien, 30/09 : « est-ce que le clic et shift+clic sont bien connectés ? », puis « cale-toi sur ce
- * qui est fait pour le diagramme ». Chaque dimension a une coupe (cf. `buildNestedDimensionTree`) :
+ * Chaque dimension a une coupe, et c'est `dataCutOf` qui dit laquelle est en vigueur :
  *   clic       ouvre le membre cliqué dans SA dimension — comme le chevron de l'arbre ;
  *   shift+clic referme le membre s'il est ouvert, sinon son parent dans la dimension.
  * La racine unique ne se referme pas au clic : repasser une dimension à « ensemble » est un choix de
  * niveau, qui se fait dans « Coordonnées ».
  *
- * LE DIAGRAMME SUIT sous « Clic sur une part : le déplie dans le diagramme » : la coupe de la
- * dimension touchée devient celle de la figure (`selectMembers`), et une dimension en choix unique
- * passe en choix multiple — une couronne montre toujours plusieurs membres à la fois (arbitrage de
- * Julien, 30/09).
+ * LIÉE, la figure n'a pas de coupe propre : son clic ÉCRIT celle du diagramme. DÉTACHÉE, il écrit
+ * celle de la figure, et le diagramme ne suit que sous « Clic sur une part : le déplie dans le
+ * diagramme ». Quand le diagramme suit, une dimension en choix unique passe en choix multiple — une
+ * couronne montre toujours plusieurs membres à la fois.
  *
  * `null` quand la figure ne découpe pas selon une dimension de données.
  */
 const dataDimensionClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
-): { activate: (part_id: string, gesture: { shift: boolean, alt?: boolean }, route?: string[]) => void } | null => {
+): { activate: (part_id: string, gesture: { shift: boolean }) => void } | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (decompose?.kind !== 'data_dimension') return null
   const { window_id, pane_key } = ctx
   const app_data = ctx.app_data
   const sankey = app_data.drawing_area.sankey
-  const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
-    .map(id => sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
-    .filter((d): d is Class_DataTagGroup => d !== undefined)
-  // 30/09/2026 — LIÉE AU DIAGRAMME (défaut, cf. `isDetachedOpening`) : la figure n'a pas de coupe
-  // propre, son clic ÉCRIT celle du diagramme — c'est le même état, le réglage « Clic sur une
-  // part » n'y ajoute donc rien. Toutes les dimensions à niveaux y entrent.
-  const linked = !isDetachedOpening(expandedOf(ctx.options))
-  const dims = linked
-    ? [...declared, ...(sankey.data_taggs_list as unknown as Class_DataTagGroup[])
-      .filter(d => d.is_hierarchical && !declared.includes(d))]
-    : declared
+  const data_opening = readFigureOpening(ctx.options).data
+  // 02/10/2026 — LA DIMENSION DES PETITS MULTIPLES SORT DE LA COUPE, comme au dessin
+  // (`hierarchyReadingOf`) et dans l'hôte (`figureGesturesHost`). Le clic sur une part agit sur la
+  // dimension découpée en parts, jamais sur celle des cases ; et la réécriture de la coupe ne doit
+  // pas toucher à la liste des cases — sans quoi une figure neuve retombait sur une seule couronne.
+  const split = smallMultiplesOf(ctx)
+  const cut = dataCutOf(
+    sankey, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])], data_opening,
+    split ? [split.dimension.id] : []
+  )
+  const linked = cut.linked
+  const dims = cut.dims
   if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
 
   const diagram_follows = linked || style.interaction_click === 'aggregate' || style.interaction_click === 'both'
@@ -616,26 +664,22 @@ const dataDimensionClickGestures = (
         .filter(m => expanded.has(memberSectorId(dim.id, m.id)))
         .map(m => m.id)
     )
-    app_data.runHeavyGesture(() => {
-      const group = dim as unknown as { banner: string }
-      const drawn_by_node = sankey.nodes_list.some(node => node.driving_dimension === dim)
-      if (group.banner !== 'multi' && !drawn_by_node) group.banner = 'multi'
-      dim.selectMembers(coupeDepuisOuverts(dim, opened))
-      app_data.drawing_area.rebuildDimensionNodes()
-      app_data.drawing_area.draw()
-    })
+    // os#1511 — le geste de coupe de l'hôte, annulable ; `multi` passe en choix multiple une
+    // dimension qu'aucun nœud ne porte, dans le même pas d'historique.
+    app_data.runHeavyGesture(() =>
+      applyDimensionCut(app_data, dim, coupeDepuisOuverts(dim, opened), { multi: true }))
   }
 
-  const activate = (part_id: string, gesture: { shift: boolean, alt?: boolean }) => {
+  const activate = (part_id: string, gesture: { shift: boolean }) => {
     const ref = parseMemberSectorId(part_id)
     const dim = dims.find(d => d.id === ref?.dimension_id)
     const member = ref !== null ? dim?.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
     if (dim === undefined || member === undefined) return
-    // L'ouverture EFFECTIVE, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
-    // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore.
-    const expanded = expandedOf(ctx.options)
-    // Liée : on part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
-    const next = linked ? diagramDimensionOpening([dim]) : effectiveDimensionOpening(dims, expanded)
+    // La coupe EN VIGUEUR, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
+    // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore. Liée, on
+    // part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
+    const expanded = cut.opened
+    const next = new Set(linked ? diagramDimensionOpening([dim]) : expanded)
     const entry = (m: Class_DataTag) => memberSectorId(dim.id, m.id)
     if (gesture.shift) {
       const target = next.has(entry(member)) ? member : member.parent
@@ -654,8 +698,10 @@ const dataDimensionClickGestures = (
     }
     if (linked) { followInDiagram(dim, next); return }
     if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return
+    const opened = { ...data_opening.opened }
+    dims.forEach(d => { opened[d.id] = [...dimensionOpenedMembers(d, next)] })
     app_data.menu_configuration.setMainZonePaneOptions(
-      window_id, pane_key, { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...next] } as unknown as Type_JSON
+      window_id, pane_key, withDataOpening(ctx.options, { linked: false, opened }) as unknown as Type_JSON
     )
     followInDiagram(dim, next)
   }
@@ -730,7 +776,7 @@ const donutClickGestures = (
   const writeExpanded = (ids: Set<string>) => {
     app_data.menu_configuration.setMainZonePaneOptions(
       window_id as string, pane_key as string,
-      { ...ctx.options, [HIERARCHY_EXPANDED_KEY]: [...ids] } as unknown as Type_JSON
+      withElementOpening(ctx.options, ids) as unknown as Type_JSON
     )
   }
 
@@ -1017,6 +1063,19 @@ export const registerAnalysisRepresentations = (): void => {
     // 25/09/2026 — LES SECTEURS, PLUS LE CENTRE. La couronne est la seule à en avoir un : les
     // barres n'ont pas de trou, et le disque écrit son centre par un autre chemin.
     parts: (ctx) => {
+      // 01/10/2026 — PETITS MULTIPLES : les parts de la figure sont l'UNION de celles des petites
+      // couronnes. Un même secteur (« Céréales ») porte le même identifiant dans chacune : c'est un
+      // seul élément, une seule couleur, une seule sélection, d'une couronne à l'autre.
+      const split = smallMultiplesOf(ctx)
+      if (split) {
+        const union = new Map<string, Type_PartInput>()
+        split.members.forEach(member => smallMultipleSlices(ctx, member).forEach(part => {
+          const seen = union.get(part.id)
+          union.set(part.id, seen ? { ...seen, value: (seen.value ?? 0) + (part.value ?? 0) } : part)
+        }))
+        const sectors = [...union.values()]
+        return [...sectors, centrePartInput(ctx, sectors.reduce((sum, p) => sum + (p.value ?? 0), 0))]
+      }
       const sectors = analysisPartsOf(ctx)
       if (sectors === null) return null
       const total = sectors.reduce((sum, p) => sum + (p.value ?? 0), 0)
@@ -1029,6 +1088,117 @@ export const registerAnalysisRepresentations = (): void => {
       const style = donutStyleOf(ctx)
       const gestures = donutClickGestures(ctx, style)
       const t = ctx.app_data.t
+
+      // 01/10/2026 — UNE PETITE COURONNE PAR MEMBRE (Julien : « une petite couronne par membre de
+      // la seconde hiérarchie »). La grille sous le titre de la figure, chaque case titrée par son
+      // membre et dessinée par le MÊME tracé à plat, avec les parts de la figure (aspect, sélection)
+      // et les valeurs lues au membre.
+      const split = smallMultiplesOf(ctx)
+      if (split) {
+        container.innerHTML = ''
+        const host = mountFigureTextZones(container, figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx)))
+        // 02/10/2026 — UNE LÉGENDE COMMUNE (Julien : « pour les multiples, il ne faut pas voir les
+        // labels qui sont répétés ; par contre une place commune pour la légende serait
+        // intéressante »). Les cases n'écrivent plus le nom des parts — ce sont les mêmes partout —
+        // et une seule légende les nomme, posée d'office, à la place que dit `legend_position`.
+        // Sa place est RÉSERVÉE avant les cases : elles se mesurent sur ce qui reste, toutes égales.
+        const below = style.legend_position === 'bottom'
+        const room = smallMultiplesLegendRoom(style, host.clientWidth, host.clientHeight)
+        const frame = document.createElement('div')
+        frame.style.display = 'flex'
+        frame.style.flexDirection = below ? 'column' : style.legend_position === 'left' ? 'row-reverse' : 'row'
+        frame.style.gap = '0.5rem'
+        frame.style.width = '100%'
+        frame.style.height = '100%'
+        host.appendChild(frame)
+        const grid = document.createElement('div')
+        const legend = document.createElement('div')
+        legend.style.flex = `0 0 ${Math.max(0, Math.floor(room))}px`
+        legend.style.minWidth = '0'
+        legend.style.minHeight = '0'
+        legend.style.alignSelf = below ? 'stretch' : 'center'
+        legend.style.maxHeight = '100%'
+        frame.appendChild(grid)
+        frame.appendChild(legend)
+        grid.style.flex = '1 1 0'
+        grid.style.minWidth = '0'
+        grid.style.minHeight = '0'
+        const n = split.members.length
+        const cols = Math.ceil(Math.sqrt(n * Math.max(1, grid.clientWidth) / Math.max(1, grid.clientHeight)))
+        const rows = Math.ceil(n / Math.max(1, cols))
+        grid.className = 'figure_small_multiples'
+        grid.style.display = 'grid'
+        grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`
+        grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`
+        const by_id = new Map((parts as unknown as Type_StatSlice[]).map(p => [p.id, p]))
+        const base = chartOptions(ctx, DONUT_STYLE_DEFAULTS)
+        // 02/10/2026 — UNE SEULE ÉCHELLE (Julien : « on a l'impression de ne pas avoir la même
+        // échelle »). L'aire de chaque couronne dit son total, la plus grosse remplit sa case ; et
+        // toutes les cases se cadrent sur la MÊME boîte — l'union de leurs disques et étiquettes
+        // sorties —, posée une fois tout dessiné. Chacune se cadrait sur ses propres étiquettes.
+        const per_member = split.members.map(member => {
+          const slices = smallMultipleSlices(ctx, member)
+            .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
+          return { member, slices, total: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
+        })
+        const max_total = Math.max(0, ...per_member.map(m => m.total))
+        // L'ORDRE ET LA COULEUR DES PARTS, décidés UNE FOIS sur l'union des cases : une part a la
+        // même teinte dans chaque case, et c'est ce qui permet à une seule légende de les nommer.
+        const union = new Map<string, Type_StatSlice>()
+        per_member.forEach(({ slices }) => slices.forEach(s => {
+          const seen = union.get(s.id)
+          union.set(s.id, seen ? { ...seen, value: seen.value + s.value } : s)
+        }))
+        const union_order = orderParts([...union.values()], style.parts_order)
+        const colors = donutPartColors(union_order, style)
+        const drawn: Type_StatSlice[][] = []
+        const frames: { box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void }[] = []
+        per_member.forEach(({ member, slices, total }, i) => {
+          const cell = document.createElement('div')
+          cell.style.position = 'relative'
+          cell.style.minWidth = '0'
+          cell.style.minHeight = '0'
+          grid.appendChild(cell)
+          drawDonutChart(cell, slices, {
+            ...base,
+            style,
+            // 02/10/2026 — PAS DE TITRE EN HAUT DE CASE : le nom du membre s'écrit au centre de sa
+            // couronne (`small_multiple.name`). Collé au bord de la case, il était rogné et loin
+            // de son disque.
+            texts: () => [],
+            title_fallback: member.name,
+            part_aspect: wiring.part_aspect,
+            on_part_select: wiring.on_part_select,
+            // 02/10/2026 — LE CLIC OUVRE, COMME EN COURONNE SEULE (Julien : « le clic ne marche pas
+            // sur les parts de couronne en mode multiple »). Les cases ne recevaient pas le geste :
+            // le clic sélectionnait sans rien ouvrir. Une part porte le même identifiant dans
+            // chaque case et la coupe est celle de la FIGURE : ouvrir « Céréales » dans une case
+            // l'ouvre dans toutes. Le centre d'une case nomme son membre ; il ne ramène en arrière
+            // que si le geste existe (`back`), ce qui n'est pas le cas d'une dimension de données.
+            on_part_activate: gestures.activate,
+            on_centre_click: gestures.back,
+            centre_back_label: t('sunburst.back') as string,
+            // Le panneau apprend l'encre réelle des parts par UN tracé : le premier.
+            on_parts_resolved: i === 0 ? wiring.on_parts_resolved : undefined,
+            small_multiple: {
+              radius_ratio: smallMultipleRadiusRatio(total, max_total),
+              callout_gap_px: smallMultipleCalloutGap(Math.min(cell.clientWidth, cell.clientHeight)),
+              frame: (box, apply) => { frames.push({ box, apply }) },
+              colors,
+              drawn: (kept) => { drawn.push(kept) },
+              name: member.name
+            }
+          })
+        })
+        const common = unionDrawnBox(frames.map(f => f.box))
+        if (common !== null) frames.forEach(f => f.apply(common))
+        drawSmallMultiplesLegend(
+          legend, grid, smallMultiplesLegendEntries(union_order.map(s => s.id), drawn), colors, style)
+        return () => {
+          publishFigureZoom(ctx.window_id, ctx.pane_key, null)
+          container.innerHTML = ''
+        }
+      }
 
       // 24/09/2026 — UN ANNEAU PAR NIVEAU : LE MÊME ARBRE, DESSINÉ AUTREMENT.
       //

@@ -34,7 +34,7 @@ import type {
   Class_Tag,
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
-import { isGeneratedMemberId, MEMBER_NODE_MARK } from './GeneratedMemberMark'
+import { isGeneratedMemberId, parseGeneratedId } from './GeneratedMemberMark'
 import { OTHERS_COLOR, OTHERS_EXCEPTION_SHARE_PCT, OTHERS_ID } from '../Algorithms/DimensionOthers'
 import { ordonnerMembres } from '../Algorithms/DimensionMemberOrder'
 // os#1511 — import de VALEUR vers un module qui ne nous importe qu'en TYPE : les imports de type
@@ -901,19 +901,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * os#1511 — La couleur du membre montré d'une dimension colorée dessinée « un membre à la fois » :
-   * dimension à niveaux, couleurs activées, bannière `one`, un seul membre choisi qui porte une
-   * vraie couleur, et qui ne se dessine pas en nœuds (ses nœuds engendrés portent alors le membre).
-   * `undefined` sinon — dont la racine « Tous produits », grise : le flux garde sa règle habituelle.
+   * os#1511 — La couleur du membre montré d'une dimension colorée dessinée « un membre à la fois »
+   * (`Class_DataTagGroup.single_member_color`, qui décide). `undefined` sinon : le flux garde sa
+   * règle habituelle.
    */
   private _singleMemberDimensionColor(): string | undefined {
     for (const tagg of this.sankey.data_taggs_list) {
-      if (!tagg.use_colors || !tagg.is_hierarchical || tagg.banner !== 'one') continue
-      if (this.sankey.nodes_list.some(node => node.driving_dimension === tagg)) continue
-      const selected = tagg.selected_tags_list
-      if (selected.length !== 1) continue
-      const color = selected[0].color
-      if (color && color !== 'grey') return color
+      const color = tagg.single_member_color
+      if (color !== undefined) return color
     }
     return undefined
   }
@@ -1133,8 +1128,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // et ne sait pas se redécouper par un autre axe. Ses bandes se lisent donc sur le flux
     // D'ORIGINE, à la coordonnée de son membre. Sans cela, chaque bande valait le total du
     // flux — deux filières à 1 385 kt chacune au lieu de 1 280 et 105.
-    const morceaux = this.id.split(MEMBER_NODE_MARK)
-    const origine = morceaux.length > 1 ? this.sankey.links_dict[morceaux[0]] : undefined
+    const parsed = parseGeneratedId(this.id)
+    const origine = parsed !== undefined ? this.sankey.links_dict[parsed.origin] : undefined
     // os#1511 — LES MEMBRES SE LISENT SUR LES NŒUDS, pas dans l'identifiant du flux. Depuis
     // que DEUX axes peuvent se croiser (« les filières à gauche, les pays à droite »), un flux
     // engendré est une CASE et porte donc jusqu'à deux coordonnées ; les chercher dans son id
@@ -1148,7 +1143,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
       let v = (origine !== undefined && membres_axes.length > 0)
         ? null
-        : (leaf === null ? null : (leaf.valueData ?? leaf.valueResult))
+        : (leaf === null ? null : this.readLayer(leaf))
       // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
       // adresse un point du cube : sur une dimension hiérarchisée, « Europe » n'y porte rien,
       // la donnée étant sur l'Espagne et l'Italie. Sans ce repli, cocher Europe et Afrique ne
@@ -1163,11 +1158,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
           .concat(membres_axes)
         const contributions = porteur.contributingValuesFor(coordonnee)
         if (contributions !== null) {
-          const somme = contributions.reduce((total, valeur) => total + (
-            this._reads_collected_layer
-              ? (valeur.valueData ?? 0)
-              : (valeur.valueResult ?? ((valeur.value_option === 'value' || valeur.value_option === 'intervals') ? valeur.valueData : null) ?? 0)
-          ), 0)
+          const somme = contributions.reduce((total, valeur) => total + (this.readLayer(valeur) ?? 0), 0)
           if (somme > 0) v = somme
         }
       }
@@ -1225,10 +1216,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // os#1511 — une dimension ATTACHÉE à un nœud fait des NŒUDS, jamais des bandes. Sans cette
     // exclusion, la mettre en choix multiple produisait les deux à la fois pour le même axe.
     // Une seule dimension se dessine en nœuds ; les autres restent en bandes.
-    const multi_dim = this.sankey.data_taggs_list.find(tagg =>
-      tagg.banner === 'multi'
-      && tagg.tags_list.length > 1
-      && !this.sankey.nodes_list.some(node => node.driving_dimension === tagg))
+    const multi_dim = this.sankey.data_taggs_list.find(tagg => tagg.draws_bands)
     if (multi_dim) {
       const bands: Type_DimensionBand[] = this.dimensionBandsRaw(multi_dim)
       // os#1511 — « AUTRES » (règle arrêtée avec Julien le 01/10) : le repli se décide AU TOTAL de
@@ -2386,15 +2374,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
     }
     // Recylcing mode
+    // Inégalité STRICTE : source et cible dans la même colonne (x égaux), c'est le recyclage
+    // ordinaire — le flux part vers l'avant puis revient. Avec `<=`, l'égalité le faisait sortir
+    // à gauche (démo Déchets, « Refus criblage » dans la vue agrégée). Même règle côté cible.
     else {
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        if (this.source.position_x <= this.target.position_x)
+        if (this.source.position_x < this.target.position_x)
           return 'left'
         else
           return 'right'
       }
       else {
-        if (this.source.position_y <= this.target.position_y)
+        if (this.source.position_y < this.target.position_y)
           return 'top'
         else
           return 'bottom'
@@ -2508,16 +2499,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
           return 'bottom'
       }
     }
-    // Recycling mode
+    // Recycling mode (inégalité stricte, cf. _computed_source_side)
     else {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        if (this.source.position_x <= this.target.position_x)
+        if (this.source.position_x < this.target.position_x)
           return 'right'
         else
           return 'left'
       }
       else {
-        if (this.source.position_y <= this.target.position_y)
+        if (this.source.position_y < this.target.position_y)
           return 'bottom'
         else
           return 'top'
@@ -2609,14 +2600,28 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * os#1511 — LA COUCHE LUE d'une valeur de ce flux (donnée saisie ou résultat réconcilié), selon
+   * `_reads_collected_layer`. Elle se recodait à six endroits de ce fichier, dans deux ordres
+   * opposés : les bandes et l'agrégat d'un membre lisaient la donnée AVANT le résultat, si bien
+   * qu'en mode résultats un flux engendré montrait la donnée saisie. Toute lecture passe ici.
+   *
+   * `collected` : la couche EXPLICITE qu'une figure veut lire (os#1511, une couronne détachée en
+   * réconciliées sous un diagramme en collectées). Absent, c'est celle du dessin. Rien n'est copié
+   * ni basculé : les deux couches vivent déjà sur chaque valeur, on choisit seulement laquelle lire.
+   */
+  public readLayer(valeur: Class_LinkValue, collected: boolean = this._reads_collected_layer): number | null {
+    return valeur.readLayer(collected)
+  }
+
+  /**
    * #1231 — Valeur numérique du flux pour un jeu de datatags EXPLICITE (même extraction que
    * `valueCurrent`, mais sans dépendre de la sélection courante). Utilisé par le mode % pour
    * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
+   *
+   * os#1511 — `collected` : la couche lue, celle du dessin par défaut (cf. `readLayer`).
    */
-  public valueForDataTags(data_tags: Class_DataTag[]): number | null {
-    const lire = (valeur: Class_LinkValue): number | null => this._reads_collected_layer
-      ? valeur.valueData ?? null
-      : valeur.valueResult ?? ((valeur.value_option === 'value' || valeur.value_option === 'intervals') ? valeur.valueData : null) ?? null
+  public valueForDataTags(data_tags: Class_DataTag[], collected: boolean = this._reads_collected_layer): number | null {
+    const lire = (valeur: Class_LinkValue): number | null => this.readLayer(valeur, collected)
     const v = this.valueForTags(data_tags)
     if (v) {
       const lu = lire(v)
@@ -2722,6 +2727,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _is_computing = false
   public get valueCurrent() {
+    return this.valueCurrentIn(this._reads_collected_layer)
+  }
+
+  /**
+   * os#1511 — `valueCurrent` lu dans une couche EXPLICITE (donnée collectée si `collected`, résultat
+   * réconcilié sinon) : la lecture d'une figure qui a sa propre couche. Même règle, mêmes replis
+   * (agrégat d'un parent, groupes porteurs, bandes) — seul le choix de couche change.
+   */
+  public valueCurrentIn(collected: boolean): number | null {
     if (this._is_computing) {
       return null
     }
@@ -2736,8 +2750,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return v
     }
     let value_current = null
-    if (this._reads_collected_layer) value_current = this.value?.valueData ?? null
-    else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
+    value_current = this.value === null ? null : this.readLayer(this.value, collected)
     // os#1511 lot 1 — AGRÉGAT d'un membre PARENT. `value` n'adresse qu'un point du cube : sur
     // une dimension hiérarchisée, viser « Céréales » ne trouve rien, la donnée étant portée
     // par « Blé » et « Maïs ». Le flux se dessinait alors SANS VALEUR (constaté par Julien sur
@@ -2751,10 +2764,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const contributions = this.contributing_values
       if (contributions !== null) {
         const portees = contributions
-          .map(v => this._reads_collected_layer
-            ? v.valueData
-            : v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null))
-          .filter((v): v is number => v !== null && v !== undefined)
+          .map(v => this.readLayer(v, collected))
+          .filter((v): v is number => v !== null)
         if (portees.length > 0) value_current = portees.reduce((total, v) => total + v, 0)
       }
     }
@@ -2806,7 +2817,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
           const vals = multi_dim.selected_tags_list
             .map(tag => {
               const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-              return leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+              return leaf === null ? null : this.readLayer(leaf, collected)
             })
             .filter((v): v is number => v !== null)
           if (vals.length > 0) value_current = vals.reduce((a, b) => a + b, 0)
@@ -3087,10 +3098,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * When set, the link tapers from source value to target value.
    */
   public get valueCurrentTarget(): number | null {
+    return this.valueCurrentTargetIn(this._reads_collected_layer)
+  }
+
+  /** os#1511 — `valueCurrentTarget` dans une couche explicite (cf. `valueCurrentIn`). */
+  public valueCurrentTargetIn(collected: boolean): number | null {
     if (this._is_computing) return null
     this._is_computing = true
     let value_target = null
-    if (this._reads_collected_layer) {
+    if (collected) {
       value_target = this.value?.valueDataTarget ?? null
     } else {
       value_target = this.value?.valueResultTarget ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueDataTarget : null) ?? null

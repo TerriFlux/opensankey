@@ -18,7 +18,7 @@ import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constr
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { escapeHtml } from './htmlEscape'
 import { formatElementValue, resolveValueUnit } from './ValueFormatting'
-import { MEMBER_NODE_MARK, isGeneratedMemberId } from './GeneratedMemberMark'
+import { parseGeneratedId } from './GeneratedMemberMark'
 import { OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 /** Une tranche de la série d'un flux (une combinaison de dataTags). */
@@ -389,8 +389,9 @@ export class LinkTooltip {
   private membersOfGeneratedEnds(tagg_id: string): string[] {
     const noms: string[] = []
     ;[this._link.source, this._link.target].forEach(bout => {
-      if (!isGeneratedMemberId(bout.id)) return
-      const [axe_id, membre_id] = bout.id.split(MEMBER_NODE_MARK)
+      const parsed = parseGeneratedId(bout.id)
+      if (parsed === undefined) return
+      const { origin: axe_id, members: [membre_id] } = parsed
       const dimension = this._link.sankey.nodes_dict[axe_id]?.driving_dimension
       if (dimension?.id !== tagg_id) return
       const nom = membre_id === OTHERS_ID ? this.othersLabel() : dimension.tags_dict[membre_id]?.display_name

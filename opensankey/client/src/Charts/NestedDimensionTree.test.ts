@@ -4,7 +4,7 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import {
-  DETACHED_ENTRY, buildNestedDimensionTree, isDetachedOpening, memberPathSectorId, memberSectorId, parseMemberSectorId,
+  buildNestedDimensionTree, dataCutOf, memberPathSectorId, memberSectorId, parseMemberSectorId,
   parseMemberSectorPath
 } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
@@ -56,8 +56,11 @@ function monter() {
   return { lien: lien as Class_LinkElement, filiere, pays, produits, cereales, ble, mais, monde, fr, de }
 }
 
-const arbre = (m: ReturnType<typeof monter>, expanded: string[]) => buildNestedDimensionTree(
-  { kind: 'link', link: m.lien }, [m.filiere, m.pays], { data_tags: null }, { expanded: new Set(expanded), max_depth: 8 }
+/** Une figure DETACHEE : `ouverts` absent = coupe jamais ecrite. */
+const arbre = (m: ReturnType<typeof monter>, ouverts?: { [dim: string]: string[] }) => buildNestedDimensionTree(
+  { kind: 'link', link: m.lien },
+  dataCutOf(m.lien.sankey, ['filiere', 'pays'], ouverts === undefined ? { linked: false } : { linked: false, opened: ouverts }),
+  { data_tags: null }, { max_depth: 8 }
 )
 
 const chercher = (noeud: Type_SunburstNode, id: string): Type_SunburstNode | undefined =>
@@ -79,7 +82,7 @@ describe('os#1511 — dimensions emboitees', () => {
 
   test('figure neuve : la premiere dimension decoupe d un cran, sans anneau Tous produits', () => {
     const m = monter()
-    const racine = arbre(m, [])?.roots[0] as Type_SunburstNode
+    const racine = arbre(m)?.roots[0] as Type_SunburstNode
     expect(racine.value).toBe(42)
     expect(racine.children.map(c => c.id)).toEqual([P('cereales')])
     expect(racine.children[0].children).toEqual([])
@@ -87,20 +90,20 @@ describe('os#1511 — dimensions emboitees', () => {
 
   test('la geographie seule : filiere a ensemble, pays ouverts', () => {
     const m = monter()
-    const racine = arbre(m, [G('monde')])?.roots[0] as Type_SunburstNode
+    const racine = arbre(m, { pays: ['monde'] })?.roots[0] as Type_SunburstNode
     expect(racine.children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
     expect(racine.children[0].id).toBe(G('fr'))
   })
 
   test('rien ne decoupe : un seul secteur, le tout', () => {
     const m = monter()
-    const racine = arbre(m, [G('x_rien')])?.roots[0] as Type_SunburstNode
+    const racine = arbre(m, {})?.roots[0] as Type_SunburstNode
     expect(racine.children.map(c => [c.label, c.value])).toEqual([['Produits', 42]])
   })
 
   test('les deux : chaque produit se decoupe par pays, totaux inchanges, deux palettes', () => {
     const m = monter()
-    const racine = arbre(m, [P('produits'), P('cereales'), G('monde')])?.roots[0] as Type_SunburstNode
+    const racine = arbre(m, { filiere: ['produits', 'cereales'], pays: ['monde'] })?.roots[0] as Type_SunburstNode
     const ble = chercher(racine, P('ble')) as Type_SunburstNode
     expect(ble.value).toBe(30)
     expect(ble.children.map(c => [c.label, c.value])).toEqual([['France', 10], ['Allemagne', 20]])
@@ -111,7 +114,8 @@ describe('os#1511 — dimensions emboitees', () => {
 
   // 30/09/2026 — COORDONNEES LIEES AU DIAGRAMME : ses coupes font foi.
   const lie = (m: ReturnType<typeof monter>) => buildNestedDimensionTree(
-    { kind: 'link', link: m.lien }, [m.filiere, m.pays], { data_tags: null }, { expanded: new Set(), linked: true, max_depth: 8 }
+    { kind: 'link', link: m.lien }, dataCutOf(m.lien.sankey, ['filiere', 'pays'], { linked: true }), { data_tags: null },
+    { max_depth: 8 }
   )?.roots[0] as Type_SunburstNode
 
   test('liee, un membre par dimension dans le diagramme : un seul secteur, ce membre', () => {
@@ -123,11 +127,5 @@ describe('os#1511 — dimensions emboitees', () => {
     const m = monter()
     m.pays.selectMembers([m.fr.id, m.de.id])
     expect(lie(m).children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
-  })
-
-  test('une figure n est detachee que si elle le dit', () => {
-    expect(isDetachedOpening([])).toBe(false)
-    expect(isDetachedOpening([DETACHED_ENTRY])).toBe(true)
-    expect(isDetachedOpening([P('produits')])).toBe(false)
   })
 })

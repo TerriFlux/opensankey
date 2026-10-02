@@ -93,14 +93,67 @@ export const HIERARCHY_FOCUS_KEY = 'hierarchy_focus'
  * feuilles », la figure montrait déjà tout et le clic était inerte par construction — le défaut
  * que Julien a rapporté sous « le clic ne marche plus ».
  *
- * Même sorte et même absence d'interface que le foyer : ce sont des nœuds de CE diagramme, et on
+ * Même sorte et même absence d'interface que le foyer : ce sont des éléments de CE diagramme, et on
  * les ouvre en cliquant, pas en remplissant un champ.
+ *
+ * Ce sont des nœuds sous une descente par nœuds enfants, des cases `<flux>[#self|#other]` sous un
+ * croisement (os#1509). La coupe d'une DIMENSION DE DONNÉES n'est pas ici : elle a ses deux clés,
+ * juste dessous. Lecture et écriture passent par `figureOpening`, et par lui seul.
  */
 export const HIERARCHY_EXPANDED_KEY = 'hierarchy_expanded'
 export const hierarchyExpandedAttribute = () => figureAttribute<string[] | undefined>(
   undefined, 'identity', {
-    en: 'Opened nodes', fr: 'Nœuds ouverts', es: 'Nodos abiertos',
-    de: 'Geöffnete Knoten', it: 'Nodi aperti', 'zh-CN': '已展开的节点', ja: '開いたノード'
+    en: 'Opened sectors', fr: 'Secteurs ouverts', es: 'Sectores abiertos',
+    de: 'Geöffnete Sektoren', it: 'Settori aperti', 'zh-CN': '已展开的扇区', ja: '開いたセクター'
+  }, undefined, { kind: 'none' }
+)
+/**
+ * os#1511 — LA FIGURE SUIT-ELLE LA COUPE DU DIAGRAMME ? Absent = oui (le défaut) ; `false` = elle
+ * a sa propre coupe, `dimension_opening`.
+ */
+export const COORDINATES_LINKED_KEY = 'coordinates_linked'
+export const coordinatesLinkedAttribute = () => figureAttribute<boolean | undefined>(
+  undefined, 'identity', {
+    en: 'Linked to the diagram', fr: 'Liées au diagramme', es: 'Vinculadas al diagrama',
+    de: 'Mit dem Diagramm verknüpft', it: 'Collegate al diagramma', 'zh-CN': '与图表联动', ja: '図と連動'
+  }, undefined, { kind: 'none' }
+)
+/**
+ * os#1511 — LA COUPE PROPRE d'une figure détachée : les membres ouverts, par dimension de données.
+ * Absente = jamais écrite (la figure découpe sa première dimension d'un cran).
+ */
+export const DIMENSION_OPENING_KEY = 'dimension_opening'
+export const dimensionOpeningAttribute = () => figureAttribute<{ [dimension_id: string]: string[] } | undefined>(
+  undefined, 'identity', {
+    en: 'Opened members', fr: 'Membres ouverts', es: 'Miembros abiertos',
+    de: 'Geöffnete Elemente', it: 'Membri aperti', 'zh-CN': '已展开的成员', ja: '開いたメンバー'
+  }, undefined, { kind: 'none' }
+)
+/**
+ * 01/10/2026 — LES PETITS MULTIPLES : la dimension qui donne UNE PETITE COURONNE PAR MEMBRE
+ * (Julien : « une petite couronne par membre de la seconde hiérarchie »). Absente, une seule
+ * couronne. Sans interface générique : la ligne « Une couronne par » des Coordonnées la règle.
+ */
+export const SMALL_MULTIPLES_KEY = 'small_multiples_by'
+export const smallMultiplesAttribute = () => figureAttribute<string | undefined>(
+  undefined, 'identity', {
+    en: 'One chart per', fr: 'Une couronne par', es: 'Un gráfico por',
+    de: 'Ein Diagramm pro', it: 'Un grafico per', 'zh-CN': '每个成员一个图', ja: 'メンバーごとに1つ'
+  }, undefined, { kind: 'none' }
+)
+/**
+ * 02/10/2026 — LA COUCHE DE DONNÉES QUE LA FIGURE LIT : `'collected'` (donnée collectée) ou
+ * `'reconciled'` (résultat réconcilié). Absente = celle du diagramme, comme avant.
+ *
+ * Elle ne vaut que pour une figure DÉTACHÉE : liée, la figure lit ce que lit le diagramme, et la
+ * ligne « Données » de ses Coordonnées écrit la couche du diagramme. Lue à un seul endroit,
+ * `readFigureDataLayer` (cf. `figureOpening`). Sans interface générique : la ligne la règle.
+ */
+export const DATA_LAYER_KEY = 'data_layer'
+export const dataLayerAttribute = () => figureAttribute<'collected' | 'reconciled' | undefined>(
+  undefined, 'identity', {
+    en: 'Data layer', fr: 'Couche de données', es: 'Capa de datos',
+    de: 'Datenebene', it: 'Livello di dati', 'zh-CN': '数据层', ja: 'データレイヤー'
   }, undefined, { kind: 'none' }
 )
 export const hierarchyFocusAttribute = () => figureAttribute<string[] | undefined>(
@@ -131,6 +184,15 @@ export const ANALYSIS_ATTRIBUTES: Type_FigureAttributesConfig = {
 type Type_Bag = { [k: string]: unknown }
 const valued = (o: Type_Bag) => o['value_label_is_visible'] === true
 const named = (o: Type_Bag) => o['name_label_is_visible'] === true
+/**
+ * 02/10/2026 — LA COURONNE EST-ELLE EN PETITS MULTIPLES (« Une couronne par ») ? Lu sur le réglage
+ * seul : le panneau ne reçoit que le sac (`visibleIf`). Le tracé ne découpe que si la dimension
+ * existe encore et que la figure se décompose par dimension de données — la ligne qui pose ce
+ * réglage n'est offerte que dans ce cas.
+ */
+const smallMultiplesOn = (o: Type_Bag) => typeof o[SMALL_MULTIPLES_KEY] === 'string' && o[SMALL_MULTIPLES_KEY] !== ''
+/** La légende se dessine : l'auteur l'a allumée, ou la couronne est en petits multiples (légende commune). */
+const legendShown = (o: Type_Bag) => o['legend_visible'] !== false || smallMultiplesOn(o)
 export const SHARED_HONOURS = {
   parts_order: {},
   parts_color_source: { default: 'model' },
@@ -247,7 +309,7 @@ const DONUT_HONOURS = {
   //
   // Le coût d'une option visible qui n'agit pas encore est une ligne de plus ; le coût d'une
   // option introuvable est que la fonction n'existe pas.
-  legend_levels: { visibleIf: (o: Type_Bag) => o['legend_visible'] !== false },
+  legend_levels: { visibleIf: legendShown },
   // LE DÉGRADÉ DE PROFONDEUR, la règle du disque reprise telle quelle : la teinte dit la branche,
   // la clarté dit le niveau. Le catalogue la cache déjà sous `parts_color_source: 'model'` (où
   // elle n'a pas de sens) ; on ajoute la seconde condition — sans descente, aucune part n'a de
@@ -264,10 +326,9 @@ const DONUT_HONOURS = {
   // disque plutôt qu'une colonne qui lui mange son diamètre. Cf. `DONUT_STYLE_DEFAULTS`, qui porte
   // le même défaut côté tracé — les deux doivent dire la même chose, sinon l'inspecteur montre un
   // réglage et le dessin en applique un autre.
-  legend_position: { default: 'left' },
+  legend_position: { default: 'left', visibleIf: legendShown },
   // 01/10/2026 — nom + valeur + % dans les secteurs, pas de légende (Julien, en fin de compte).
-  // Mêmes défauts que `DONUT_STYLE_DEFAULTS`.
-  legend_visible: { default: false },
+  // Mêmes défauts que `DONUT_STYLE_DEFAULTS` (cf. `legend_visible`, plus bas).
   // `advanced: false` à dessein, là où le disque laisse le clic sous « Avancé » : sur un disque il
   // ne sert qu'à changer un effet qui existe déjà, ici c'est LE mode de descente — « un mode drill
   // down à sélectionner quelque part » — et un réglage qu'on ne trouve pas n'existe pas.
@@ -304,7 +365,21 @@ const DONUT_HONOURS = {
   // que tout le monde rallume. Les couronnes existantes gagneront donc leurs noms à la
   // réouverture ; celles dont l'auteur avait explicitement décoché gardent leur réglage, la
   // surcharge primant sur le défaut.
-  name_label_is_visible: { default: true },
+  // 02/10/2026 — SAUF EN PETITS MULTIPLES : les noms des parts n'y sont écrits que par la légende
+  // commune (`names_written`, NodeStatsCharts). Les réglages qui ne touchent QUE le nom se cachent
+  // donc — une case cochée qui n'écrit rien mentirait ; ceux qu'il partage avec la valeur
+  // (taille, police, encre, détachement) restent, ils mordent encore sur elle.
+  name_label_is_visible: { default: true, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
+  name_label_uppercase: { visibleIf: (o: Type_Bag) => named(o) && !smallMultiplesOn(o) },
+  name_label_separator: { advanced: true, visibleIf: (o: Type_Bag) => named(o) && !smallMultiplesOn(o) },
+  name_label_separator_part: { advanced: true, visibleIf: (o: Type_Bag) => named(o) && !smallMultiplesOn(o) },
+  // Et la légende, POSÉE D'OFFICE en petits multiples : « Légende » et « Les parts dans la
+  // légende » n'y décident de rien et se cachent ; sa position, sa taille, sa largeur et ses
+  // niveaux s'y appliquent, et se montrent.
+  legend_visible: { default: false, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
+  legend_parts: { default: 'all', visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && !smallMultiplesOn(o) },
+  legend_font_size: { visibleIf: legendShown },
+  legend_width: { default: 230, visibleIf: legendShown },
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
   value_label_is_visible: { default: true },
@@ -337,8 +412,7 @@ const DONUT_HONOURS = {
   // Julien, deux captures côte à côte : « y a coordonnées mais pas affichage ».
   labels_min_share: { sort: 'display' as const },
   // 01/10/2026 — et ce qui ne tient pas sort en détaché, au lieu de se taire.
-  labels_callout_small: { sort: 'display' as const },
-  legend_width: { default: 230 }
+  labels_callout_small: { sort: 'display' as const }
 }
 const BARS_HONOURS = {
   ...SHARED_HONOURS,
@@ -373,7 +447,11 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   // adresses pour le même choix, c'est une de trop (cf. `hierarchyReadingAttributes`).
   ...hierarchyReadingAttributes(),
   [HIERARCHY_FOCUS_KEY]: hierarchyFocusAttribute(),
-  [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute()
+  [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute(),
+  [COORDINATES_LINKED_KEY]: coordinatesLinkedAttribute(),
+  [DIMENSION_OPENING_KEY]: dimensionOpeningAttribute(),
+  [DATA_LAYER_KEY]: dataLayerAttribute(),
+  [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute()
 }
 
 export const DONUT_ATTRIBUTES: Type_FigureAttributesConfig = {

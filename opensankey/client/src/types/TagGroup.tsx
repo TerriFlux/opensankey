@@ -7,7 +7,7 @@ import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkVa
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
-import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
+import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
 import { Type_AssignmentRule, Type_RuleMeasurable, parseAssignmentRule, resolveRuleTag, serializeAssignmentRule } from './TagAssignmentRule'
 import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER } from '../Algorithms/DimensionMemberOrder'
@@ -22,6 +22,12 @@ import {
  * `locks` : couleurs choisies à la main, que le recalcul respecte. `frozen` : plus de recalcul
  * automatique quand la structure change (couleurs déjà publiées ou imprimées).
  */
+/**
+ * os#1511 — COMMENT UNE DIMENSION SE DESSINE (cf. `Class_DataTagGroup.drawing`) : un membre à la
+ * fois, plusieurs en bandes, plusieurs en nœuds (un nœud la porte), ou rien de tout cela.
+ */
+export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
+
 export type Type_DimensionPalette = {
   params: Type_HierarchicalPaletteParams
   locks: { [tag_id: string]: string }
@@ -89,6 +95,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'assignment_rule',
   // os#1511 - hierarchie de la dimension, modelisee : hors du sac, une dimension rendue plate
   // ressortirait avec ses anciens niveaux. os#1516 - recette de palette, modelisee.
+  // `current_level` n'est plus ecrit (le niveau courant se deduit de la selection) : il reste
+  // ici pour qu'un ancien fichier ne le traine pas dans le sac.
   'levels', 'current_level', 'palette',
   // os#1517 / os#1511 — barre du haut, un diagramme par membre, ordre des membres : écrits
   // seulement hors défaut, donc à tenir HORS du sac, sinon une valeur remise au défaut ressortait
@@ -96,6 +104,17 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // `members_order`) puis abandonnés.
   'topbar', 'member_bands', 'members_order', 'bands_by_value', 'nodes_by_value',
 ])
+
+/**
+ * os#1511 — Nom par défaut d'une profondeur que l'auteur n'a pas nommée : « Niveau 3 » (langue
+ * active ; repli français hors application, où i18next n'est pas initialisé et rendrait la clé).
+ */
+export const defaultLevelName = (index: number): string => {
+  const cle = 'Tags.hierarchy.level_default'
+  const texte = i18next.t(cle) as unknown
+  const mot = (typeof texte === 'string' && texte !== '' && texte !== cle) ? texte : 'Niveau'
+  return `${mot} ${index + 1}`
+}
 
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
@@ -1338,20 +1357,27 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // dans le mode de la dimension que l'on manipule.
   private _position_mode: Type_PositionMode = 'absolute'
 
-  // os#1511 lot 1 — NIVEAUX de la dimension, du plus AGRÉGÉ au plus FIN
-  // (['filiere', 'transformation', 'produit']). Liste vide = dimension plate, comportement
-  // d'avant strictement inchangé.
+  // os#1511 lot 1 — NOMS des niveaux de la dimension, du plus AGRÉGÉ au plus FIN
+  // (['filiere', 'transformation', 'produit']).
   //
-  // Les niveaux ne font que NOMMER des profondeurs : le niveau d'un membre se DÉDUIT du
-  // nombre de ses ancêtres, il ne se déclare pas. Deux sources (le membre dirait son niveau,
-  // et sa parenté dirait autre chose) finiraient par se contredire — c'est la même raison qui
-  // fait porter la parenté par le membre plutôt que par les nœuds.
+  // Les niveaux ne font que NOMMER des profondeurs : la HIÉRARCHIE, c'est la parenté des membres
+  // (`Class_DataTag.parent`), et le niveau d'un membre se DÉDUIT du nombre de ses ancêtres. Deux
+  // sources (le membre dirait son niveau, et sa parenté dirait autre chose) finiraient par se
+  // contredire. Une profondeur sans nom en reçoit un par défaut (cf. `levels`).
+  //
+  // Le niveau COURANT n'est pas stocké : il se déduit de la sélection (cf. `current_level_index`).
+  // Un niveau par DIMENSION (décision de Julien du 27/09) : on veut pouvoir croiser un axe fin
+  // avec un axe grossier — « les céréales, par pays ».
   private _levels: string[] = []
 
-  // Niveau COURANT, par index dans `_levels`. Un niveau par DIMENSION (décision de Julien du
-  // 27/09) : on veut pouvoir croiser un axe fin avec un axe grossier — « les céréales, par
-  // pays ». Un curseur de détail global l'interdirait.
-  private _current_level_index: number = 0
+  // Index des ENFANTS par membre parent, et profondeur de chaque membre. Dérivé de la parenté,
+  // jamais sérialisé ; invalidé par tout changement de structure (`invalidateHierarchyIndex`).
+  // `_hierarchy_index_of` retient le dictionnaire de membres indexé : un groupe vidé par
+  // réaffectation de `_tags` (suppression, copie) se reconnaît sans avoir à le signaler.
+  private _children_index: Map<string, Class_DataTag[]> | undefined = undefined
+  private _depth_index: Map<string, number> | undefined = undefined
+  private _max_depth: number = 0
+  private _hierarchy_index_of: object | undefined = undefined
 
   // os#1516 — recette de palette hiérarchique ; `undefined` = couleurs libres, comme avant.
   private _palette: Type_DimensionPalette | undefined = undefined
@@ -1416,10 +1442,21 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     matching_tags_id: { [_: string]: string; } = {}
   ) {
     super._copyFrom(tagg_to_copy, matching_tags_id)
+    // os#1511 — les membres ont recopié l'id de parent de la SOURCE : on le ramène aux ids de ce
+    // groupe (`matching_tags_id` va de nos ids vers ceux de la source).
+    const source_to_target: { [source_id: string]: string } = {}
+    Object.entries(matching_tags_id).forEach(([target, source]) => { source_to_target[source] = target })
+    if (Object.keys(source_to_target).length > 0) {
+      (this.tags_list as Class_DataTag[]).forEach(tag => tag.remapParentId(source_to_target))
+    }
     this._use_colors = tagg_to_copy.use_colors
     this._is_unit = tagg_to_copy._is_unit
     this._propagate_structure = tagg_to_copy._propagate_structure
     this._position_mode = tagg_to_copy._position_mode
+    // os#1511 — tout ce que `_toJSON` écrit se copie : sans ces lignes, réinitialiser une vue
+    // (ViewsManager → `sankey.copyFrom`) aplatissait une dimension hiérarchisée.
+    // Le niveau courant se déduit de la sélection, recopiée avec les membres.
+    this._levels = [...tagg_to_copy._levels]
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
     this._reference_node_id = tagg_to_copy._reference_node_id
@@ -1437,12 +1474,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // #370 — le mode d'affichage voyage avec la dimension (ancien #369 : il n'était
     // persisté nulle part et retombait sur « absolu » à chaque ouverture).
     json_object['position_mode'] = this._position_mode
-    // os#1511 — clés ADDITIVES, écrites seulement par une dimension hiérarchisée. Absentes
-    // d'un fichier plat → aucun niveau → comportement inchangé.
-    if (this._levels.length > 0) {
-      json_object['levels'] = [...this._levels]
-      json_object['current_level'] = this._current_level_index
-    }
+    // os#1511 — clé ADDITIVE, écrite seulement quand des niveaux sont nommés. Le niveau courant
+    // ne s'écrit plus (`current_level`) : il se déduit de la sélection, qui voyage déjà.
+    if (this._levels.length > 0) json_object['levels'] = [...this._levels]
     // os#1516 — clé ADDITIVE, écrite seulement par une dimension qui a reçu une palette hiérarchique.
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
@@ -1492,13 +1526,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
         .filter((n): n is string => typeof n === 'string' && n !== '')
         .filter(n => !vus.has(n) && (vus.add(n), true))
     }
-    // Un index hors des niveaux existants est ramené dans les bornes plutôt qu'ignoré : un
-    // fichier dont la hiérarchie a été raccourcie ne doit pas rester bloqué sur un niveau
-    // qui n'existe plus.
-    this._current_level_index = Math.min(
-      Math.max(0, getNumberFromJSON(json_object, 'current_level', this._current_level_index)),
-      Math.max(0, this._levels.length - 1)
-    )
+    // `current_level` (fichiers d'avant le 02/10) n'est plus lu : le niveau courant se déduit de
+    // la sélection relue avec les membres, qui le contredisait parfois.
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
     const reference = json_object['reference_node']
     if (typeof reference === 'string' && reference !== '') this._reference_node_id = reference
@@ -1528,46 +1557,202 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
 
-  /** Noms des niveaux, du plus agrégé au plus fin. Vide = dimension plate. */
-  public get levels(): string[] { return [...this._levels] }
+  /**
+   * Noms des niveaux EFFECTIFS, du plus agrégé au plus fin : un par profondeur de la hiérarchie
+   * (et au moins autant que de niveaux nommés). Une profondeur sans nom reçoit « Niveau n ».
+   * Vide = dimension plate sans niveau nommé.
+   */
+  public get levels(): string[] {
+    const nb = this.level_count
+    const noms: string[] = []
+    for (let index = 0; index < nb; index++) noms.push(this._levels[index] ?? defaultLevelName(index))
+    return noms
+  }
 
+  /** Pose les NOMS des niveaux (vides et doublons écartés). Ne touche pas à la parenté. */
   public set levels(noms: string[]) {
     const vus = new Set<string>()
     this._levels = noms
       .filter(n => n !== '')
       .filter(n => !vus.has(n) && (vus.add(n), true))
-    if (this._current_level_index > this._levels.length - 1) {
-      this._current_level_index = Math.max(0, this._levels.length - 1)
-    }
   }
 
-  /** Vrai si cette dimension porte une hiérarchie (au moins deux niveaux nommés). */
-  public get is_hierarchical(): boolean { return this._levels.length > 1 }
+  /** Les seuls niveaux NOMMÉS par l'auteur, sans les noms par défaut (cf. `levels`). */
+  public get named_levels(): string[] { return [...this._levels] }
 
   /**
-   * La dimension se dessine membre par membre, chacun à SA couleur : choix multiple et au moins
-   * deux membres retenus (bandes d'un flux, cf. `Link.tagged_value_bands`).
+   * Nombre de niveaux effectifs : la profondeur de la hiérarchie, ou le nombre de niveaux nommés
+   * s'il est plus grand (des noms posés avant la parenté ne disparaissent pas).
+   */
+  public get level_count(): number {
+    const profondeurs = this.is_hierarchical ? this.max_depth + 1 : 0
+    return Math.max(this._levels.length, profondeurs)
+  }
+
+  /**
+   * Vrai si cette dimension porte une hiérarchie : au moins un membre a un parent. La hiérarchie
+   * EST la parenté ; nommer des niveaux sans rattacher personne ne hiérarchise rien, et rattacher
+   * des membres sans nommer de niveau hiérarchise bel et bien (le repli sur l'agrégat en dépend).
+   */
+  public get is_hierarchical(): boolean {
+    this.ensureHierarchyIndex()
+    return (this._children_index as Map<string, Class_DataTag[]>).size > 0
+  }
+
+  /** Profondeur du membre le plus profond (0 pour une dimension plate). */
+  public get max_depth(): number {
+    this.ensureHierarchyIndex()
+    return this._max_depth
+  }
+
+  /** Oublie l'index des enfants et des profondeurs : la parenté ou les membres ont changé. */
+  public invalidateHierarchyIndex() {
+    this._children_index = undefined
+    this._depth_index = undefined
+  }
+
+  /** Enfants directs d'un membre, dans l'ordre du dictionnaire des membres (copie). */
+  public childrenOf(tag: Class_DataTag): Class_DataTag[] {
+    this.ensureHierarchyIndex()
+    return [...((this._children_index as Map<string, Class_DataTag[]>).get(tag.id) ?? [])]
+  }
+
+  private ensureHierarchyIndex() {
+    if (this._children_index !== undefined && this._depth_index !== undefined &&
+      this._hierarchy_index_of === this._tags) return
+    const enfants = new Map<string, Class_DataTag[]>()
+    const membres = Object.values(this._tags) as Class_DataTag[]
+    membres.forEach(membre => {
+      const parent = membre.parent
+      if (parent === undefined) return
+      const liste = enfants.get(parent.id)
+      if (liste === undefined) enfants.set(parent.id, [membre])
+      else liste.push(membre)
+    })
+    // Profondeurs mémoïsées. Un CYCLE venu d'un JSON malformé (A sous B, B sous A — le setter
+    // `parent` les refuse, pas la lecture) ne doit pas boucler : on le coupe à la première
+    // rencontre, comme une racine.
+    const profondeurs = new Map<string, number>()
+    const en_cours = new Set<string>()
+    const profondeur = (membre: Class_DataTag): number => {
+      const connue = profondeurs.get(membre.id)
+      if (connue !== undefined) return connue
+      if (en_cours.has(membre.id)) return 0
+      en_cours.add(membre.id)
+      const parent = membre.parent
+      const p = parent === undefined ? 0 : profondeur(parent) + 1
+      en_cours.delete(membre.id)
+      profondeurs.set(membre.id, p)
+      return p
+    }
+    let max = 0
+    membres.forEach(membre => { max = Math.max(max, profondeur(membre)) })
+    this._children_index = enfants
+    this._depth_index = profondeurs
+    this._max_depth = max
+    this._hierarchy_index_of = this._tags
+  }
+
+  // LE DESSIN DE LA DIMENSION (os#1511) ================================================
+  //
+  // Il se redéduisait à six endroits (flux, légende, couleur d'un membre seul, barre du haut),
+  // chacun avec sa règle : l'un exigeait des niveaux, l'autre oubliait les nœuds porteurs. Il se
+  // décide désormais ICI, et tous le lisent.
+
+  /**
+   * Comment la dimension se dessine : `nodes` dès qu'un nœud la porte (`driving_dimension`) —
+   * c'est l'attachement qui prime, la bannière ne dit plus rien alors —, sinon `multi` (choix
+   * multiple, en bandes), `one` (un membre à la fois, défilé de séquence compris), `other`.
+   */
+  public get drawing(): Type_DimensionDrawing {
+    if (this.carriers_count > 0) return 'nodes'
+    const banner = this.banner
+    if (banner === 'multi') return 'multi'
+    if (banner === 'one' || banner === 'topbar' || banner === 'sequence') return 'one'
+    return 'other'
+  }
+
+  /**
+   * Nombre de nœuds qui PORTENT la dimension. Un nœud engendré n'en porte jamais : l'attachement
+   * n'est pas recopié sur les membres.
+   *
+   * Mémoïsé : chaque flux le lit à chaque dessin, et `nodes_list` refait un tableau à chaque
+   * appel. La mémo tombe quand un attachement change (`drawingChanged`, appelé par le nœud et par
+   * sa suppression) et, par prudence, à la tâche suivante.
+   */
+  public get carriers_count(): number {
+    if (this._carriers_memo === undefined) {
+      this._carriers_memo = this._ref_sankey.nodes_list
+        .filter((node: Class_NodeElement) => node.driving_dimension === this).length
+      queueMicrotask(() => { this._carriers_memo = undefined })
+    }
+    return this._carriers_memo
+  }
+  private _carriers_memo: number | undefined = undefined
+
+  /** Un nœud a pris, quitté ou perdu (suppression) cette dimension : le dessin est à relire. */
+  public drawingChanged(): void { this._carriers_memo = undefined }
+
+  /** Choix multiple, pas en nœuds, et plusieurs membres possibles : de quoi faire des bandes. */
+  private get _may_draw_bands(): boolean {
+    return this.drawing === 'multi' && this.tags_list.length > 1
+  }
+
+  /**
+   * CETTE dimension est celle que les flux découpent en bandes (`Link.tagged_value_bands`) : la
+   * première de la liste qui le peut. Une seule dimension se dessine en bandes à la fois.
+   */
+  public get draws_bands(): boolean {
+    return this._may_draw_bands &&
+      this._ref_sankey.data_taggs_list.find(tagg => tagg._may_draw_bands) === this
+  }
+
+  /**
+   * La dimension se dessine membre par membre, chacun à SA couleur : c'est elle qui fait les
+   * bandes, et au moins deux membres sont retenus.
    * Le dessin lit alors `tag.color` sans consulter `use_colors` ; la légende doit donc nommer ces
    * couleurs elle aussi (`tagGroupCarriesFormatting`), faute de quoi elle ne donnait qu'un rappel
    * texte sous des bandes colorées — et aucune commande ne permet d'allumer `use_colors` sur une
    * dimension.
    */
   public get draws_members_in_color(): boolean {
-    return this.banner === 'multi' && this.tags_list.length > 1 && this.selected_tags_list.length > 1
+    return this.draws_bands && this.selected_tags_list.length > 1
   }
 
   /**
-   * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles
-   * (Julien, 30/09 : « que la légende montre Autres au lieu de toute la liste »).
-   *
-   * « Autres » se décide FLUX PAR FLUX (moins de 0,5 % du flux, ou au-delà de la vingtième bande,
-   * cf. `foldSmallParts`) : il veut dire « petit ICI ». Un membre minuscule au total mais gros sur
-   * un flux y apparaît donc en propre — et entre dans la légende. La légende nomme ainsi les membres
-   * dessinés en propre sur AU MOINS un flux visible, plus « Autres » s'il existe quelque part.
-   *
-   * `undefined` si la dimension ne se dessine pas en bandes (les flux la lisent d'abord : même
-   * critère que `Link.tagged_value_bands`) — la légende garde alors les membres choisis.
+   * os#1511 — un membre à la fois, dans SA couleur : dimension à niveaux, couleurs activées, un
+   * seul membre choisi qui porte une vraie couleur. `undefined` sinon — dont la racine « Tous
+   * produits », grise. Lu par le flux (`Link.getShapeColorToUse`).
    */
+  public get single_member_color(): string | undefined {
+    if (!this.use_colors || !this.is_hierarchical || this.drawing !== 'one') return undefined
+    const selected = this.selected_tags_list
+    if (selected.length !== 1) return undefined
+    const color = selected[0].color
+    return (color && color !== 'grey') ? color : undefined
+  }
+
+  /**
+   * os#1511 — LES MEMBRES REPLIÉS DANS « AUTRES » d'après leurs totaux : la règle de la couronne
+   * (moins de 0,5 %, ou au-delà du 19e ; au moins deux à replier), une seule implémentation pour
+   * les bandes et pour les nœuds. Seule l'ASSIETTE des totaux diffère :
+   *  - en bandes, les bandes brutes de tous les flux visibles (`globalFoldedMembers`), le flux y
+   *    ajoutant son exception locale ;
+   *  - en nœuds, les flux d'origine qui touchent un nœud porteur (`DimensionDisaggregation`).
+   * L'ordre d'entrée départage les ex æquo.
+   */
+  public foldedMembersOf(totaux: Iterable<[string, number]>): Set<string> {
+    const { folded } = foldSmallParts([...totaux].map(([id, value]) => ({ id, value })))
+    return new Set(folded.map(part => part.id))
+  }
+
+  /**
+   * Les membres repliés dans le nœud « Autres » de la dernière désagrégation en nœuds (cf.
+   * `DimensionDisaggregation`). TRANSITOIRE comme ce nœud : rebâti à chaque désagrégation, jamais
+   * sérialisé. Le repli se décide par dimension, donc tous ses nœuds porteurs replient les mêmes.
+   */
+  public nodes_folded_members: Class_DataTag[] = []
+
   /**
    * os#1511 — les membres REPLIÉS AU TOTAL dans « Autres » (règle arrêtée avec Julien le 01/10) :
    * chaque membre choisi est sommé sur les bandes brutes de tous les flux visibles
@@ -1592,8 +1777,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       flux.forEach(lien => lien.dimensionBandsRaw(this).forEach(bande => {
         totaux.set(bande.id, (totaux.get(bande.id) ?? 0) + bande.value)
       }))
-      const { folded } = foldSmallParts([...totaux].map(([id, value]) => ({ id, value })))
-      const replies = new Set(folded.map(part => part.id))
+      const replies = this.foldedMembersOf(totaux)
       this._fold_memo = { cle, replies }
       queueMicrotask(() => { this._fold_memo = undefined })
       return replies
@@ -1604,17 +1788,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   private _fold_memo: { cle: string, replies: Set<string> } | undefined = undefined
   private _fold_computing = false
 
+  /**
+   * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles
+   * (Julien, 30/09 : « que la légende montre Autres au lieu de toute la liste ») : les membres
+   * dessinés en propre sur AU MOINS un flux visible, plus « Autres » s'il existe quelque part.
+   *
+   * `undefined` si la dimension ne se dessine pas en bandes de couleur
+   * (`draws_members_in_color`) — la légende garde alors les membres choisis.
+   */
   public get members_drawn_in_bands(): { members: Set<string>, has_others: boolean } | undefined {
     if (!this.draws_members_in_color) return undefined
-    const sankey = this._ref_sankey
-    const dessinee = sankey.data_taggs_list.find(tagg =>
-      tagg.banner === 'multi'
-      && tagg.tags_list.length > 1
-      && !sankey.nodes_list.some(node => node.driving_dimension === tagg))
-    if (dessinee !== (this as unknown)) return undefined
     const members = new Set<string>()
     let has_others = false
-    sankey.visible_links_list.forEach(link => {
+    this._ref_sankey.visible_links_list.forEach(link => {
       link.tagged_value_bands.forEach(band => {
         if (band.folded !== undefined) has_others = true
         else members.add(band.id)
@@ -1690,6 +1876,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * non verrouillés, sauf palette figée ou chargement en cours.
    */
   public hierarchyChanged() {
+    this.invalidateHierarchyIndex()
     if (this._palette === undefined || this._palette.frozen || this._palette_suspended) return
     this.recolorFromPalette()
   }
@@ -1746,24 +1933,36 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * couleurs n'a de sens que pour ce qui n'est pas nommé à sa place — les bandes d'un flux.
    */
   public get is_drawn_as_nodes(): boolean {
-    return this._ref_sankey.nodes_list.some(
-      (node: Class_NodeElement) => node.driving_dimension === this)
+    return this.drawing === 'nodes'
   }
 
-  public get current_level_index(): number { return this._current_level_index }
-
-  public set current_level_index(index: number) {
-    if (this._levels.length === 0) return
-    this._current_level_index = Math.min(Math.max(0, index), this._levels.length - 1)
+  /**
+   * Niveau COURANT, DÉDUIT de la sélection : la profondeur du membre choisi le plus fin, bornée
+   * aux niveaux effectifs. 0 sans niveau ou sans sélection.
+   *
+   * Il n'est plus stocké : `selectMembers` le recalculait déjà ainsi, et le garder à part laissait
+   * deux vérités se contredire (un fichier relu, une sélection changée par un autre chemin).
+   */
+  public get current_level_index(): number {
+    const nb = this.level_count
+    if (nb === 0) return 0
+    const plafond = nb - 1
+    return (this.selected_tags_list as Class_DataTag[]).reduce(
+      (max, membre) => Math.max(max, Math.min(this.depthOf(membre), plafond)), 0)
   }
 
   /** Nom du niveau courant, `undefined` pour une dimension plate. */
   public get current_level(): string | undefined {
-    return this._levels[this._current_level_index]
+    return this.levels[this.current_level_index]
   }
 
   /** Profondeur d'un membre = son nombre d'ancêtres. 0 pour une racine. */
   public depthOf(tag: Class_DataTag): number {
+    if (this._tags[tag.id] === tag) {
+      this.ensureHierarchyIndex()
+      const connue = (this._depth_index as Map<string, number>).get(tag.id)
+      if (connue !== undefined) return connue
+    }
     let depth = 0
     let current = tag.parent
     while (current !== undefined) {
@@ -1786,60 +1985,18 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    *
    * Dimension plate : tous les membres, comme avant.
    */
-  public membersAtLevel(index: number = this._current_level_index): Class_DataTag[] {
+  public membersAtLevel(index: number = this.current_level_index): Class_DataTag[] {
     const tags = Object.values(this._tags) as Class_DataTag[]
-    if (this._levels.length === 0) return tags
-    const cible = Math.min(Math.max(0, index), this._levels.length - 1)
+    const nb = this.level_count
+    if (nb === 0) return tags
+    const cible = Math.min(Math.max(0, index), nb - 1)
+    this.ensureHierarchyIndex()
+    const enfants = this._children_index as Map<string, Class_DataTag[]>
     return tags.filter(tag => {
       const depth = this.depthOf(tag)
       if (depth === cible) return true
-      return depth < cible && tag.children.length === 0
+      return depth < cible && !enfants.has(tag.id)
     })
-  }
-
-  /**
-   * os#1511 lot 1 — Change le NIVEAU courant et réaccorde la sélection.
-   *
-   * Changer de niveau sans toucher à la sélection laisserait le diagramme vide : le membre
-   * choisi n'est en général pas montré au nouveau niveau. On réaccorde donc, en GARDANT LA
-   * LIGNÉE — c'est ce que le lecteur attend, et cela vaut dans les deux sens :
-   *
-   * - en remontant, on prend l'ANCÊTRE visible du membre courant (de « Blé » on arrive à
-   *   « Céréales », pas sur le premier membre venu) ;
-   * - en descendant, son premier DESCENDANT visible (de « Céréales » on entre dans « Blé »).
-   *
-   * À défaut de lignée — aucun membre sélectionné, ou une branche qui ne mène nulle part —
-   * on prend le premier membre visible, pour ne jamais rendre un écran vide.
-   */
-  public selectLevel(index: number) {
-    if (this._levels.length === 0) return
-    // Un index NON FINI passerait les bornes sans bruit (`Math.min(Math.max(0, NaN), n)` vaut
-    // NaN) : le niveau courant deviendrait NaN, plus aucune option ne correspondrait et le
-    // sélecteur reviendrait au premier niveau sans rien dire. Vécu à l'écran, cause en amont
-    // (une valeur lue dans un geste différé) — mais le modèle doit se défendre seul.
-    if (!Number.isFinite(index)) return
-    this._current_level_index = Math.min(Math.max(0, index), this._levels.length - 1)
-    const visibles = this.membersAtLevel(this._current_level_index)
-    if (visibles.length === 0) return
-
-    const courant = this.selected_tags_list[0] as Class_DataTag | undefined
-    let remplacant = visibles[0]
-    if (courant !== undefined) {
-      // En remontant : soi-même s'il est encore montré, sinon le premier ancêtre qui l'est.
-      let lignee: Class_DataTag | undefined = courant
-      let trouve: Class_DataTag | undefined = undefined
-      while (lignee !== undefined && trouve === undefined) {
-        if (visibles.includes(lignee)) trouve = lignee
-        lignee = lignee.parent
-      }
-      // En descendant : le premier descendant montré.
-      if (trouve === undefined) {
-        trouve = visibles.find(membre => membre.hasAncestor(courant))
-      }
-      if (trouve !== undefined) remplacant = trouve
-    }
-    this.tags_list.forEach(tag => tag.setUnSelected())
-    remplacant.setSelected()
   }
 
   /**
@@ -1858,30 +2015,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * Rend une liste vide pour une dimension plate : il n'y a alors rien à ranger.
    */
   public membersByLevel(): { level: string, index: number, members: Class_DataTag[] }[] {
-    if (this._levels.length === 0) return []
-    const par_profondeur: Class_DataTag[][] = this._levels.map(() => [])
+    const noms = this.levels
+    if (noms.length === 0) return []
+    const par_profondeur: Class_DataTag[][] = noms.map(() => [])
     const tous = Object.values(this._tags) as Class_DataTag[]
     const ranger = (membre: Class_DataTag) => {
-      const profondeur = Math.min(this.depthOf(membre), this._levels.length - 1)
+      const profondeur = Math.min(this.depthOf(membre), noms.length - 1)
       par_profondeur[profondeur].push(membre)
       membre.children.forEach(enfant => ranger(enfant as Class_DataTag))
     }
     tous.filter(membre => membre.parent === undefined).forEach(ranger)
-    return this._levels.map((level, index) => ({ level, index, members: par_profondeur[index] }))
+    return noms.map((level, index) => ({ level, index, members: par_profondeur[index] }))
   }
 
-  /**
-   * os#1511 — Choisit un MEMBRE, et se place du même geste au niveau où il vit.
-   *
-   * C'est l'envers de `selectLevel` : là on donnait le niveau et le modèle réaccordait le
-   * membre, ici on donne le membre et le modèle en déduit le niveau. La liste en arbre passe
-   * par ici ; `selectLevel` reste le chemin des autres hôtes.
-   *
-   * Plusieurs membres sont admis, à condition qu'ils soient AU MÊME NIVEAU. Mélanger un parent
-   * et son enfant additionnerait deux fois la même donnée, et depuis le lot 2B cela n'a même
-   * plus de dessin : un nœud d'axe ne se découpe qu'à un niveau à la fois. Les intrus sont donc
-   * écartés, en gardant le niveau du premier membre cité.
-   */
   /**
    * os#1511 — Choisit UN NIVEAU ENTIER : tous les membres qu'il montre, d'un coup.
    *
@@ -1893,12 +2039,13 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * Rend `false` si la dimension n'a pas de niveaux, ou si le niveau demandé ne montre rien.
    */
   public selectAllAtLevel(index: number): boolean {
-    if (this._levels.length === 0) return false
+    const nb = this.level_count
+    if (nb === 0) return false
+    // Un index NON FINI passerait les bornes sans bruit (`Math.min(Math.max(0, NaN), n)` vaut NaN).
     if (!Number.isFinite(index)) return false
-    const cible = Math.min(Math.max(0, index), this._levels.length - 1)
+    const cible = Math.min(Math.max(0, index), nb - 1)
     const membres = this.membersAtLevel(cible)
     if (membres.length === 0) return false
-    this._current_level_index = cible
     this.tags_list.forEach(tag => tag.setUnSelected())
     membres.forEach(membre => membre.setSelected())
     return true
@@ -1912,6 +2059,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     return choisis.length === montres.length && montres.every(membre => membre.is_selected)
   }
 
+  /**
+   * os#1511 — Choisit des MEMBRES ; le niveau courant s'en déduit (cf. `current_level_index`).
+   *
+   * Plusieurs membres sont admis, de profondeurs quelconques : seul le RECOUVREMENT est refusé
+   * (un membre et l'un de ses descendants). Quand les deux sont demandés, l'ancêtre tombe.
+   */
   public selectMembers(tag_ids: string[]): boolean {
     const demandes = tag_ids
       .map(id => this._tags[id] as Class_DataTag | undefined)
@@ -1932,9 +2085,6 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     const retenus = demandes.filter(membre =>
       !demandes.some(autre => autre !== membre && autre.hasAncestor(membre)))
     if (retenus.length === 0) return false
-    const plafond = Math.max(0, this._levels.length - 1)
-    this._current_level_index = retenus.reduce(
-      (max, membre) => Math.max(max, Math.min(this.depthOf(membre), plafond)), 0)
     this.tags_list.forEach(tag => tag.setUnSelected())
     retenus.forEach(membre => membre.setSelected())
     return true

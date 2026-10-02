@@ -66,7 +66,8 @@ describe('os#1502 la valeur dun secteur a sa propre typographie', () => {
   it('LA TAILLE de la valeur agit, et celle du nom ne bouge pas', () => {
     // Quatre lignes : deux secteurs, chacun son nom puis sa valeur (le bloc colle d os#1470).
     const av = lignes({ value_label_font_size: 31 })
-    expect(av.map(l => l.texte)).toEqual(['Ble', '60%', 'Mais', '40%'])
+    // 01/10/2026 — le defaut d une couronne ecrit la valeur ET le pourcentage (`value_total`).
+    expect(av.map(l => l.texte)).toEqual(['Ble', '6 (60%)', 'Mais', '4 (40%)'])
 
     expect(av[1].taille).toBe('31')
     // DEUX CONTRE-VERIFICATIONS : le nom du meme secteur ne bouge pas — sans quoi poser la taille

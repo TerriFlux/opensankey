@@ -22,13 +22,14 @@
 // d'un module sans dépendance. Chaque geste s'annule.
 
 import type { Class_ApplicationData } from '../../types/ApplicationData'
-import type { Class_DataTagGroup } from '../../types/TagGroup'
+import type { Class_DataTagGroup, Type_DimensionDrawing } from '../../types/TagGroup'
+import type { Class_DataTag, Type_MemberManualPositions } from '../../types/Tag'
 import type { Class_NodeElement } from '../../Elements/Node'
 import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 
-export type Type_DimensionDrawing = 'one' | 'multi' | 'nodes' | 'other'
+export type { Type_DimensionDrawing } from '../../types/TagGroup'
 
 /** Les nœuds qui portent la dimension. */
 export const dimensionCarriersOf = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_NodeElement[] =>
@@ -38,14 +39,38 @@ export const dimensionCarriersOf = (app_data: Class_ApplicationData, tagg: Class
 export const dimensionCarrierCandidates = (app_data: Class_ApplicationData): Class_NodeElement[] =>
   (app_data.drawing_area.sankey.nodes_list as Class_NodeElement[]).filter(node => !isGeneratedMemberId(node.id))
 
-/** Le dessin de la dimension, tel que le lecteur le voit. */
-export const dimensionDrawingOf = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_DimensionDrawing => {
-  if (dimensionCarriersOf(app_data, tagg).length > 0) return 'nodes'
-  const banner = (tagg as unknown as { banner: string }).banner
-  if (banner === 'multi') return 'multi'
-  if (banner === 'one' || banner === 'topbar' || banner === 'sequence') return 'one'
-  return 'other'
+/** Le dessin de la dimension, tel que le lecteur le voit : la dimension le décide (`drawing`). */
+export const dimensionDrawingOf = (_app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_DimensionDrawing =>
+  tagg.drawing
+
+/**
+ * os#1511 — LES POSITIONS MANUELLES des nœuds engendrés d'une dimension (cf.
+ * `Class_DataTag.positionOn`). Un nœud engendré déplacé à la main reste où on l'a posé, quel que
+ * soit le placement ; choisir un placement ou un écart dans « Placer », c'est donc demander le
+ * placement AUTOMATIQUE : ces gestes effacent les positions manuelles de la dimension, dans le
+ * même pas d'historique — l'annulation les rend.
+ */
+type Type_ManualPositions = [Class_DataTag, Type_MemberManualPositions][]
+
+const manualPositionsOf = (dimensions: Class_DataTagGroup[]): Type_ManualPositions =>
+  dimensions.flatMap(tagg => (tagg.tags_list as Class_DataTag[])
+    .filter(membre => membre.has_manual_position)
+    .map(membre => [membre, membre.manual_positions] as [Class_DataTag, Type_MemberManualPositions]))
+
+/** `undefined` : effacer (placement automatique) ; sinon, rendre l'état relevé. */
+const setManualPositions = (dimensions: Class_DataTagGroup[], state: Type_ManualPositions | undefined) => {
+  if (state === undefined) {
+    dimensions.forEach(tagg => (tagg.tags_list as Class_DataTag[]).forEach(membre => membre.clearManualPositions()))
+    return
+  }
+  state.forEach(([membre, positions]) => membre.restoreManualPositions(positions))
 }
+
+/** Les dimensions que des nœuds portent : celles qu'un réglage global d'écart replace. */
+const dimensionsDrawnAsNodes = (app_data: Class_ApplicationData): Class_DataTagGroup[] => [...new Set(
+  (app_data.drawing_area.sankey.nodes_list as Class_NodeElement[])
+    .map(node => node.driving_dimension)
+    .filter((tagg): tagg is Class_DataTagGroup => tagg !== undefined))]
 
 type Type_Snapshot = { banner: string, carriers: string[], selected: string[] }
 
@@ -55,19 +80,31 @@ const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Ty
   selected: tagg.selected_tags_list.map(tag => tag.id)
 })
 
+/**
+ * Pose une coupe. Hiérarchisée : `selectMembers` (le niveau courant se déduit des membres, cf.
+ * `Class_DataTagGroup.current_level_index` : rien d'autre à restaurer). Plate : la
+ * sélection ordinaire, qui impose au passage le mode d'affichage de la dimension (#370) et ne
+ * s'inscrit pas dans l'historique — c'est le geste qui s'y inscrit, une fois.
+ */
+const poseSelection = (tagg: Class_DataTagGroup, selected: string[]) => {
+  if (selected.length === 0) return
+  if (tagg.is_hierarchical) tagg.selectMembers(selected)
+  else tagg.selectTagsFromIds(selected)
+}
+
 const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, state: Type_Snapshot) => {
+  const { drawing_area } = app_data
   ;(tagg as unknown as { banner: string }).banner = state.banner
   dimensionCarrierCandidates(app_data).forEach(node => {
     const carries = state.carriers.includes(node.id)
     if (carries && node.driving_dimension !== tagg) node.driving_dimension = tagg
     else if (!carries && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
   })
-  if (state.selected.length > 0) {
-    if (tagg.is_hierarchical) tagg.selectMembers(state.selected)
-    else tagg.selectTagsFromId(state.selected[0])
-  }
-  app_data.drawing_area.rebuildDimensionNodes()
-  app_data.drawing_area.draw()
+  // Un aperçu (menu unitaire) a pu laisser `bypass_redraws` posé : le dessin final doit passer.
+  drawing_area.bypass_redraws = false
+  drawing_area.withBypassRedraws(() => poseSelection(tagg, state.selected), false)
+  drawing_area.rebuildDimensionNodes()
+  drawing_area.draw()
   app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
 }
@@ -81,25 +118,94 @@ const commit = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, next:
 }
 
 /**
+ * os#1511 — COUPER UNE DIMENSION : les membres dessinés deviennent `ids`. LE geste de coupe, que
+ * tous les sélecteurs appellent (barre du haut, panneau, clic droit, couronne) : la sélection,
+ * les nœuds d'axe redécoupés, le dessin, les menus — et l'annulation.
+ *
+ * L'ordre des `ids` est indifférent : `selectMembers` écarte l'ancêtre d'un membre demandé et
+ * déduit le niveau du plus profond, quel que soit l'ordre (le « membre cliqué en tête » que les
+ * sélecteurs recopiaient ne changeait plus rien).
+ *
+ * `multi` : une figure montre toujours plusieurs membres ; une dimension en choix unique qu'aucun
+ * nœud ne porte passe alors en choix multiple, dans le même pas d'historique.
+ */
+export const applyDimensionCut = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[], options: { multi?: boolean } = {}
+) => {
+  if (ids.length === 0) return
+  const now = snapshot(app_data, tagg)
+  const banner = options.multi && now.carriers.length === 0 ? 'multi' : now.banner
+  commit(app_data, tagg, { ...now, banner, selected: ids })
+}
+
+/** os#1511 — UN NIVEAU ENTIER : tous les membres que montre le niveau `index` (annulable). */
+export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, index: number) => {
+  const levels = tagg.levels.length
+  if (levels === 0 || !Number.isFinite(index)) return
+  const level = Math.min(Math.max(0, index), levels - 1)
+  const membres = tagg.membersAtLevel(level)
+  if (membres.length === 0) return
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), selected: membres.map(m => m.id) })
+}
+
+/**
+ * Le dessin choisi dans la liste de l'éditeur de groupe : une bannière (un membre, plusieurs en
+ * bandes, séquence, aucun…). Quitter « en nœuds » détache TOUS les porteurs ; une bannière à choix
+ * unique ne garde que le premier membre choisi — un choix unique à plusieurs membres ne rendrait
+ * plus aucune valeur.
+ */
+export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, banner: string) => {
+  const now = snapshot(app_data, tagg)
+  const unique = banner === 'one' || banner === 'topbar' || banner === 'sequence'
+  commit(app_data, tagg, { ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected })
+}
+
+/** Les nœuds qui portent la dimension deviennent exactement `node_ids` (annulable). */
+export const applyDimensionCarriers = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_ids: string[]
+) => {
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), carriers: node_ids })
+}
+
+/**
+ * os#1511 — LE NŒUD DE RÉFÉRENCE de la dimension (« tout placer autour de lui ») ; `undefined` ou
+ * vide : aucun, la mise en page habituelle. Efface les positions manuelles de la dimension.
+ * Annulable.
+ */
+export const applyReferenceNode = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string | undefined
+) => {
+  const before = tagg.reference_node_id
+  const positions_before = manualPositionsOf([tagg])
+  const apply = (value: string | undefined, positions: Type_ManualPositions | undefined) => {
+    tagg.reference_node_id = value
+    setManualPositions([tagg], positions)
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before, positions_before))
+  app_data.history.saveRedo(() => apply(node_id, undefined))
+  apply(node_id, undefined)
+}
+
+/**
  * Un membre à la fois, ou plusieurs en bandes. Quitter « en nœuds » détache TOUS les porteurs.
  * Revenir à un seul membre garde le premier qui était choisi — un choix unique à plusieurs membres
  * ne rendrait plus aucune valeur.
  */
 export const applyDimensionDrawing = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, drawing: 'one' | 'multi'
-) => {
-  const now = snapshot(app_data, tagg)
-  commit(app_data, tagg, {
-    banner: drawing,
-    carriers: [],
-    selected: drawing === 'one' ? now.selected.slice(0, 1) : now.selected
-  })
-}
+) => applyDimensionBanner(app_data, tagg, drawing)
 
 /**
  * L'ÉCART VERTICAL DES ENFANTS d'un nœud désagrégé (Julien, 30/09 : « je parlais aussi de ces
  * options »). Le même réglage que `DisaggregationGapControl` (onglet Hiérarchie), avec le même
  * geste : global à la zone de dessin, annulable, et le dessin ré-empile aussitôt les enfants.
+ *
+ * Efface les positions manuelles des nœuds engendrés : ceux de `tagg` s'il est donné (menu
+ * « Placer » de la dimension), sinon ceux de toutes les dimensions dessinées en nœuds (le réglage
+ * est global). Même un mode déjà coché : c'est le moyen de revenir au placement automatique.
  */
 export const applyDisaggregationGap = (
   app_data: Class_ApplicationData, mode: Type_DisaggregationGap, tagg?: Class_DataTagGroup
@@ -107,10 +213,16 @@ export const applyDisaggregationGap = (
   // Choisir un mode d'écart pour une dimension rangée en bandes, c'est quitter les bandes : sous
   // elles le mode n'a pas d'effet (Julien, 30/09 : « il ne respecte pas le mode remplir le slot »).
   const leave_bands = tagg !== undefined && dimensionInMemberBands(app_data, tagg)
-  const before = { mode: app_data.drawing_area.disaggregation_gap_mode, bands: tagg?.member_bands }
-  const apply = (value: Type_DisaggregationGap, bands: boolean | undefined) => {
+  const dimensions = tagg !== undefined ? [tagg] : dimensionsDrawnAsNodes(app_data)
+  const before = {
+    mode: app_data.drawing_area.disaggregation_gap_mode,
+    bands: tagg?.member_bands,
+    positions: manualPositionsOf(dimensions)
+  }
+  const apply = (value: Type_DisaggregationGap, bands: boolean | undefined, positions?: Type_ManualPositions) => {
     app_data.drawing_area.disaggregation_gap_mode = value
     if (tagg !== undefined) tagg.member_bands = bands
+    setManualPositions(dimensions, positions)
     // Les nœuds engendrés par une dimension se placent à la désagrégation, pas au dessin :
     // sans la refaire, le nouveau mode ne se voyait que sur les hiérarchies de nœuds.
     app_data.drawing_area.rebuildDimensionNodes()
@@ -119,7 +231,7 @@ export const applyDisaggregationGap = (
     app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
   }
   const bands_after = leave_bands ? false : tagg?.member_bands
-  app_data.history.saveUndo(() => apply(before.mode, before.bands))
+  app_data.history.saveUndo(() => apply(before.mode, before.bands, before.positions))
   app_data.history.saveRedo(() => apply(mode, bands_after))
   apply(mode, bands_after)
 }
@@ -134,17 +246,22 @@ export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Cl
   return porteurs >= 2 && (tagg.member_bands ?? true)
 }
 
-/** Range la dimension en bandes (un diagramme par membre), ou revient au mode d'écart des enfants. */
+/**
+ * Range la dimension en bandes (un diagramme par membre), ou revient au mode d'écart des enfants.
+ * Efface les positions manuelles de la dimension (retour au placement automatique).
+ */
 export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
   const before = tagg.member_bands
-  const apply = (value: boolean | undefined) => {
+  const positions_before = manualPositionsOf([tagg])
+  const apply = (value: boolean | undefined, positions?: Type_ManualPositions) => {
     tagg.member_bands = value
+    setManualPositions([tagg], positions)
     app_data.drawing_area.rebuildDimensionNodes()
     app_data.drawing_area.draw()
     app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
   }
-  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveUndo(() => apply(before, positions_before))
   app_data.history.saveRedo(() => apply(on))
   apply(on)
 }

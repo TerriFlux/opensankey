@@ -570,7 +570,11 @@ export class Class_ApplicationData {
    * l'hôte, elle, ne bouge pas : les composants d'interface s'y abonnent une fois pour toutes.
    */
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
-    this.workspace.toast = toast
+    // 01/10/2026 — UN DOCUMENT SANS TOAST N'EFFACE PAS CELUI DE L'ESPACE DE TRAVAIL. L'espace est
+    // partagé : un document secondaire (le document de parts d'une figure, une fenêtre Sankey) se
+    // crée sans toast, et l'affectation nue remettait à `null` celui de toute l'application — le
+    // chargement suivant plantait sur `_toast!.promise` (« this._toast is null »), rien ne s'affichait.
+    if (toast !== null) this.workspace.toast = toast
     this._menu_configuration = new Class_MenuConfig(this.workspace.menu_configuration)
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration
@@ -2310,8 +2314,9 @@ export class Class_ApplicationData {
   }
 
   /**
-   * sa#581 — CE QU'ON VOIT EN OUVRANT UN MODÈLE : une feuille blanche, sauf la vue courante du
-   * fichier si elle est enregistrée (arbitrages Alexandre, 30/09).
+   * sa#581 — CE QU'ON VOIT EN OUVRANT UN MODÈLE : la vue courante du fichier si elle est
+   * enregistrée (arbitrages Alexandre, 30/09), sinon le diagramme dans un volet Sankey (01/10 :
+   * la feuille blanche d'origine passait pour un chargement raté).
    *
    * « À l'ouverture d'un modèle, l'affichage par défaut est VIDE » : on y crée ensuite les volets
    * qu'on veut, qui sont autant de représentations — souvent partielles — du modèle chargé.
@@ -2337,7 +2342,10 @@ export class Class_ApplicationData {
     const listed = view_id === default_main_sankey_id
       ? this._show_master_in_views
       : this._views_order.includes(view_id) && !this._views[view_id]?.ephemeral
-    if (!listed) return
+    // 01/10/2026 — UN MODÈLE OUVERT SE VOIT. Une grande zone vide après un chargement passait pour
+    // un échec (« rien ne se crée ») : le dessin était fait, mais masqué faute de volet. Sans vue
+    // enregistrée à rouvrir, le diagramme s'ouvre donc dans un volet Sankey.
+    if (!listed) { mc.openSankeyPane(); return }
     const window = this._views[view_id]?.window
     if (window) mc.openMainZoneWindowFromJSON(window, view_id)
     else mc.openSankeyPane(view_id === default_main_sankey_id ? undefined : view_id)

@@ -50,6 +50,7 @@ import type { Class_DataTag } from '../types/Tag'
 import {
   FOLLOWING_NAVIGATION,
   linkValueUnder,
+  navReadsApart,
   nodeValueUnder,
   passesLinkTagFilters,
   passesNodeTagFilters,
@@ -58,7 +59,8 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
-import { buildNestedDimensionTree, isDetachedOpening } from './DataDimensionHierarchy'
+import { buildNestedDimensionTree, dataCutOf } from './DataDimensionHierarchy'
+import type { Type_DataOpening } from './DataDimensionHierarchy'
 import { parseMemberSectorPath } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
@@ -162,7 +164,8 @@ const linkValue = (link: Class_LinkElement, nav: Type_FigureNavigation): number 
  * diagramme, cas où `data_value` ne répond pas du tout à la question posée.
  */
 const nodeValue = (node: Class_NodeElement, nav: Type_FigureNavigation): number =>
-  nav.data_tags ? nodeValueUnder(node, nav) : node.data_value
+  // os#1511 — une COUCHE propre se lit aussi par `nodeValueUnder` : `data_value` lit celle du dessin.
+  navReadsApart(nav) ? nodeValueUnder(node, nav) : node.data_value
 
 // Un lien porte-t-il le fluxTag d'id donné ? (appartenance, pas de sous-valeur par
 // tag : un lien a une valeur unique et le jeu de fluxTags auquel il appartient.)
@@ -343,6 +346,16 @@ export interface Type_HierarchyReading {
   max_depth?: number
   /** Le libellé du secteur « non réparti » (mode 'declared'), traduit par l'appelant. */
   residual_label?: string
+  /**
+   * 01/10/2026 — LES DIMENSIONS QUI NE DÉCOUPENT PAS CETTE FIGURE, quoi que dise la coupe : celle
+   * des petits multiples (une couronne par membre), que chaque petite couronne lit sur SON membre.
+   */
+  exclude_dimension_ids?: string[]
+  /**
+   * os#1511 — LA COUPE des dimensions de données, telle que la figure l'enregistre (cf.
+   * `figureOpening`). Absente : liée au diagramme, le défaut.
+   */
+  data_opening?: Type_DataOpening
 }
 
 /**
@@ -532,7 +545,7 @@ export const analysisHierarchyTree = (
   // os#1511 — la descente par dimension de données est la seule qui accepte un sujet FLUX : elle
   // se teste donc AVANT le garde-fou « nœud seulement » des deux autres.
   if (decompose?.kind === 'data_dimension') {
-    return dataDimensionTreeOf(subject, decompose, nav, reading, expanded)
+    return dataDimensionTreeOf(subject, decompose, nav, reading)
   }
   if (subject.kind !== 'node') return null
   // os#1509 — LE CROISEMENT descend aussi, et il a son propre arbre : ses secteurs sont des
@@ -552,37 +565,28 @@ export const analysisHierarchyTree = (
 // aux flux ») —, là où les deux autres descentes n'acceptent qu'un nœud.
 
 /**
- * L'arbre, bâti à la demande : on ne descend que sous ce que l'auteur a ouvert, dans chaque
- * dimension découpée (30/09/2026 : les dimensions s'emboîtent, cf. `buildNestedDimensionTree`).
+ * L'arbre, bâti à la demande selon la coupe de la figure (`dataCutOf`, qui décide seule des
+ * dimensions qui entrent et de celles qui découpent).
  */
 const dataDimensionTreeOf = (
   subject: Type_ChartSubject,
-  spec: { data_tagg_id: string, focus_id?: string, nested_tagg_ids?: string[] },
+  spec: { data_tagg_id: string, nested_tagg_ids?: string[] },
   nav: Type_FigureNavigation,
-  reading: Type_HierarchyReading = {},
-  expanded: ReadonlySet<string> = new Set()
+  reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
-  const element = subject.kind === 'node' ? subject.node : subject.link
-  const declared = [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])]
-    .map(id => element.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
-    .filter((d): d is Class_DataTagGroup => d !== undefined)
-  if (declared.length === 0 || declared[0].id !== spec.data_tagg_id) return null
-  // 30/09/2026 — LIÉE AU DIAGRAMME (défaut) : toutes ses dimensions à niveaux entrent dans la
-  // figure, dans l'ordre choisi (« Premier axe ») puis celui du fichier ; c'est la coupe du
-  // diagramme qui dit lesquelles découpent (cf. `buildNestedDimensionTree`).
-  const linked = !isDetachedOpening(expanded)
-  const dimensions = linked
-    ? [...declared, ...(element.sankey.data_taggs_list as unknown as Class_DataTagGroup[])
-      .filter(d => d.is_hierarchical && !declared.includes(d))]
-    : declared
+  const sankey = (subject.kind === 'node' ? subject.node : subject.link).sankey
+  if (sankey.data_taggs_dict[spec.data_tagg_id] === undefined) return null
+  const cut = dataCutOf(
+    sankey,
+    [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])],
+    reading.data_opening ?? { linked: true },
+    reading.exclude_dimension_ids
+  )
   return buildNestedDimensionTree(
     subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
-    dimensions,
+    cut,
     nav,
     {
-      expanded,
-      linked,
-      focus_id: spec.focus_id,
       max_depth: reading.max_depth,
       value_mode: reading.value_mode,
       node_value_mode: reading.node_value_mode,
@@ -594,13 +598,12 @@ const dataDimensionTreeOf = (
 /** LA FRONTIÈRE de cet arbre, à plat : ce que dessine le mode « en place ». */
 const decomposeDataDimension = (
   subject: Type_ChartSubject,
-  spec: { data_tagg_id: string, focus_id?: string, nested_tagg_ids?: string[] },
+  spec: { data_tagg_id: string, nested_tagg_ids?: string[] },
   nav: Type_FigureNavigation,
-  reading: Type_HierarchyReading = {},
-  expanded: ReadonlySet<string> = new Set()
+  reading: Type_HierarchyReading = {}
 ): Type_ChartPart[] => {
   const element = subject.kind === 'node' ? subject.node : subject.link
-  const root = dataDimensionTreeOf(subject, spec, nav, reading, expanded)?.roots[0]
+  const root = dataDimensionTreeOf(subject, spec, nav, reading)?.roots[0]
   if (!root) return []
   /** Reste-t-il quelque chose à ouvrir sous ce secteur ? Des enfants dans sa dimension. */
   const canOpen = (sector_id: string) => {
@@ -732,7 +735,7 @@ const decomposeSubject = (
     // os#1511 — une dimension de données découpe un NŒUD aussi bien qu'un flux : le sujet ne
     // change pas d'un secteur à l'autre, seule la coordonnée sous laquelle on le lit change.
     if (spec.kind === 'data_dimension') {
-      return decomposeDataDimension(subject, spec, nav, reading, expanded)
+      return decomposeDataDimension(subject, spec, nav, reading)
     }
     return []
   }
@@ -741,7 +744,7 @@ const decomposeSubject = (
     return decomposeFluxChildren(subject.link, spec.dimension_id, nav)
   }
   if (spec.kind === 'data_dimension') {
-    return decomposeDataDimension(subject, spec, nav, reading, expanded)
+    return decomposeDataDimension(subject, spec, nav, reading)
   }
   return []
 }
@@ -823,7 +826,7 @@ const navUnderSweptTags = (
     const ids = new Set(tagg.tags_list.map(t => t.id))
     out = out.map(t => (ids.has(t.id) ? tag : t))
   })
-  return out === nav.data_tags ? nav : { data_tags: out }
+  return out === nav.data_tags ? nav : { ...nav, data_tags: out }
 }
 
 // Les valeurs d'un axe de comparaison. Sur un axe « flux » on N'ÉLAGUE PAS sur la

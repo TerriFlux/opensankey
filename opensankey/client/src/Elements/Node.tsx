@@ -334,6 +334,10 @@ export class Class_NodeElement extends Class_NodeBase {
     super._copyFrom(_)
     this.copyDimensionsFrom(_ as Class_NodeElement)
     this._tooltip_text = _._tooltip_text
+    // os#1511 — le rattachement à une dimension est écrit par la persistance (`driving_dimension`) :
+    // il se copie aussi, sinon réinitialiser une vue détachait le nœud de son axe. Copié par ID,
+    // résolu à la lecture dans le sankey de destination.
+    this.setDrivingDimensionId(_._driving_dimension_id)
     this._nodeTagsManager.copyTagsFrom(_)
   }
 
@@ -1084,7 +1088,7 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public set driving_dimension(dimension: Class_DataTagGroup | undefined) {
-    this._driving_dimension_id = dimension?.id
+    this.setDrivingDimensionId(dimension?.id)
   }
 
   /**
@@ -1093,9 +1097,12 @@ export class Class_NodeElement extends Class_NodeBase {
    * fichier. La résolution se fait à la lecture, par `driving_dimension`.
    */
   public setDrivingDimensionId(dimension_id: string | undefined) {
+    // Le dessin de l'ancienne et de la nouvelle dimension change (`Class_DataTagGroup.drawing`).
+    this.driving_dimension?.drawingChanged()
     this._driving_dimension_id = (dimension_id !== undefined && dimension_id !== '')
       ? dimension_id
       : undefined
+    this.driving_dimension?.drawingChanged()
   }
 
   /** Vrai si ce nœud se désagrège en suivant une dimension. */
@@ -1854,12 +1861,14 @@ export class Class_NodeElement extends Class_NodeBase {
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
       // 'simple' — éventail « split direction + hauteur » réservé aux flux qui changent d'axe
-      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée ; les
-      // flux de recyclage restent parqués en bloc entre le middle et les exports
-      // (comportement historique), donc hors index.
-      recycling_links = this._links_order.filter(l => l.shape_is_recycling)
+      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée.
+      // Les flux de recyclage sont triés avec eux, d'après le ventre de leur boucle
+      // (`stack_ref`) au lieu du nœud opposé. Parqués en bloc sous tous les autres, ils
+      // croisaient les entrées du côté dès que la boucle remontait (démo Déchets, « Refus
+      // criblage » au site de compostage).
+      recycling_links = []
       const middle = this._links_order.filter(
-        l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
+        l => !import_links.includes(l) && !export_links.includes(l)
       )
       const order_index = this._computeIOOrderIndex(middle, false)
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)

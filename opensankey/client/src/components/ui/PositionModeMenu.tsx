@@ -33,7 +33,7 @@ import {
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
+import { faChartPie, faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 import { OSTooltip } from './OSTooltip'
@@ -53,6 +53,7 @@ import { MEMBERS_ORDERS } from '../../Algorithms/DimensionMemberOrder'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
+import type { Type_TopbarFigureChoice, Type_TopbarFigureMenus } from '../../types/MenuConfig'
 
 export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinition, label_key: string }[] = [
   { value: 'absolute', icon: faLocationDot, label_key: 'Banner.posModeShort_absolute' },
@@ -69,10 +70,11 @@ const GAP_MODES: { value: Type_DisaggregationGap, label_key: string }[] = [
 ]
 
 /** Une entrée cochable. */
-const CheckItem = ({ label, checked, onClick, icon, closeOnSelect }: {
-  label: string, checked: boolean, onClick: () => void, icon?: React.ReactElement, closeOnSelect?: boolean
+const CheckItem = ({ label, checked, onClick, icon, closeOnSelect, disabled }: {
+  label: string, checked: boolean, onClick: () => void, icon?: React.ReactElement, closeOnSelect?: boolean,
+  disabled?: boolean
 }) => (
-  <MenuItem fontSize='0.75rem' icon={icon} onClick={onClick} closeOnSelect={closeOnSelect}>
+  <MenuItem fontSize='0.75rem' icon={icon} onClick={onClick} closeOnSelect={closeOnSelect} isDisabled={disabled}>
     <HStack spacing='0.5rem'>
       <Box as='span'>{label}</Box>
       {checked ? <CheckIcon boxSize='0.6rem' /> : null}
@@ -116,6 +118,85 @@ const Submenu = ({ label, icon, checked, disabled, children }: {
 }
 
 /**
+ * 02/10/2026 — LES CHOIX D'UNE FIGURE (os#1511), rendus comme ceux du diagramme : un groupe titré
+ * par choix, une coche sur la valeur. Une option grisée ne fait rien — le choix n'a pas d'effet sur
+ * ce que la figure montre. Un choix à une seule option est une case.
+ */
+const figureChoiceItems = (choices: Type_TopbarFigureChoice[]) => choices.map((c, i) => {
+  if (c.options.length === 1) {
+    const only = c.options[0]
+    return <CheckItem
+      key={c.key}
+      label={only.label}
+      checked={c.value === only.value}
+      disabled={c.disabled || only.disabled}
+      closeOnSelect={false}
+      onClick={() => c.choose(c.value === only.value ? '' : only.value)}
+    />
+  }
+  return <React.Fragment key={c.key}>
+    {i > 0 ? <MenuDivider /> : null}
+    <MenuGroup title={c.label} fontSize='0.7rem'>
+      {c.options.map(o => (
+        <CheckItem
+          key={o.value}
+          label={o.label}
+          checked={c.value === o.value}
+          disabled={c.disabled || o.disabled}
+          closeOnSelect={false}
+          onClick={() => { if (c.value !== o.value) c.choose(o.value) }}
+        />
+      ))}
+    </MenuGroup>
+  </React.Fragment>
+})
+
+/** Un choix a-t-il au moins une option qui agit ? Sinon son sous-menu se grise. */
+const anyEnabled = (choices: Type_TopbarFigureChoice[]) =>
+  choices.some(c => !c.disabled && c.options.some(o => !o.disabled))
+
+/**
+ * 02/10/2026 — LE BOUTON DE LA FIGURE ACTIVE, en tête de la barre du haut (os#1511) : son nom et
+ * son icône, et ses réglages communs — disposition des niveaux, clic sur une part, liaison au
+ * diagramme, couche de données —, un sous-menu au survol par réglage, comme le menu d'une
+ * dimension. Les gestes sont ceux des lignes de ses Coordonnées (OS+, `figureGesturesHost`).
+ */
+export const FigureTopbarMenu = ({ menus }: { menus: Type_TopbarFigureMenus }) => (
+  <Menu placement='bottom-start'>
+    <MenuButton
+      as={Button}
+      size='xs'
+      variant='menuconfigpanel_icon_button'
+      aria-label={menus.title}
+      title={menus.title}
+    >
+      <HStack spacing='0.3rem'>
+        <Box as='span' display='inline-flex'>{menus.icon ?? <FontAwesomeIcon icon={faChartPie} />}</Box>
+        <Box as='span'>{menus.title}</Box>
+      </HStack>
+    </MenuButton>
+    <Portal>
+      <MenuList minWidth='unset' zIndex={50}>
+        {menus.settings.map(c => c.options.length === 1
+          ? figureChoiceItems([c])[0]
+          : <Submenu key={c.key} label={c.label} disabled={!anyEnabled([c])}>
+            {c.options.map(o => (
+              <CheckItem
+                key={o.value}
+                label={o.label}
+                checked={c.value === o.value}
+                disabled={c.disabled || o.disabled}
+                closeOnSelect={false}
+                onClick={() => { if (c.value !== o.value) c.choose(o.value) }}
+              />
+            ))}
+          </Submenu>)}
+      </MenuList>
+    </Portal>
+  </Menu>
+)
+
+/**
  * Menu du mode d'affichage D'UNE DIMENSION : déclencheur icône seule (icône du mode de la
  * dimension, discret), le texte + icône de chaque mode ne se voient que dans le menu
  * déroulé.
@@ -126,9 +207,16 @@ const Submenu = ({ label, icon, checked, disabled, children }: {
  * qualifie chaque dimension (échelle adaptée pour des unités, proportionnel pour des
  * années).
  */
-export const PositionModeMenu = ({ app_data, tagg }: {
+export const PositionModeMenu = ({ app_data, tagg, figure }: {
   app_data: Class_ApplicationData,
-  tagg: Class_DataTagGroup
+  tagg: Class_DataTagGroup,
+  /**
+   * 02/10/2026 — LA FENÊTRE ACTIVE EST UNE COURONNE (os#1511) : « Dessiner » règle la figure (en
+   * secteurs ou une couronne par membre, l'anneau, l'ordre des parts) et « Placer », qui place des
+   * nœuds du diagramme, se retire. « Afficher » reste celui du diagramme, que la couronne liée suit ;
+   * détachée, elle a sa coupe (l'arbre du bouton), et il se retire aussi.
+   */
+  figure?: { drawing: Type_TopbarFigureChoice[], detached: boolean }
 }) => {
   const { t } = app_data
   const mode = tagg.position_mode
@@ -205,6 +293,40 @@ export const PositionModeMenu = ({ app_data, tagg }: {
     </> : null}
     {gap_items !== null ? <>{can_position ? <MenuDivider /> : null}{gap_items}</> : null}
   </>
+  // La couronne : Afficher (liée), puis Dessiner sur la figure ; rien de « Placer ».
+  const show_items = <Submenu label={t('Banner.show_submenu')}>
+    <CheckItem
+      label={t('Banner.draw_one')}
+      checked={drawing === 'one'}
+      onClick={() => applyDimensionDrawing(app_data, tagg, 'one')}
+    />
+    <CheckItem
+      label={t('Banner.show_many')}
+      checked={drawing !== 'one'}
+      onClick={() => { if (drawing === 'one') applyDimensionDrawing(app_data, tagg, 'multi') }}
+    />
+  </Submenu>
+  if (figure !== undefined) {
+    return <Menu placement='bottom-start'>
+      <MenuButton
+        as={Button}
+        size='xs'
+        variant='menuconfigpanel_icon_button'
+        aria-label={t('Banner.draw_submenu') + ' — ' + tagg.name}
+        title={t('Banner.draw_submenu') + ' — ' + tagg.name}
+      >
+        <FontAwesomeIcon icon={faChartPie} />
+      </MenuButton>
+      <Portal>
+        <MenuList minWidth='unset' zIndex={50}>
+          {can_draw && !figure.detached ? show_items : null}
+          <Submenu label={t('Banner.draw_submenu')} disabled={!anyEnabled(figure.drawing)}>
+            {figureChoiceItems(figure.drawing)}
+          </Submenu>
+        </MenuList>
+      </Portal>
+    </Menu>
+  }
   return <Menu placement='bottom-start'>
     <OSTooltip placement='bottom' label={t('Banner.posMode_title_tt')}>
       {/* `variant` obligatoire : le style de base des boutons du thème est vert PLEINE
@@ -233,18 +355,7 @@ export const PositionModeMenu = ({ app_data, tagg }: {
                 placement). « Afficher » : un membre ou plusieurs. « Dessiner » : en bandes ou en
                 nœuds, et dans quel ordre ; grisé tant qu'on n'affiche qu'un membre. « Placer » :
                 le mode de position, et l'écart des enfants quand la dimension est en nœuds. */}
-            <Submenu label={t('Banner.show_submenu')}>
-              <CheckItem
-                label={t('Banner.draw_one')}
-                checked={drawing === 'one'}
-                onClick={() => applyDimensionDrawing(app_data, tagg, 'one')}
-              />
-              <CheckItem
-                label={t('Banner.show_many')}
-                checked={drawing !== 'one'}
-                onClick={() => { if (drawing === 'one') applyDimensionDrawing(app_data, tagg, 'multi') }}
-              />
-            </Submenu>
+            {show_items}
             <Submenu label={t('Banner.draw_submenu')} disabled={drawing === 'one'}>
               <CheckItem
                 label={t('Banner.draw_bands')}

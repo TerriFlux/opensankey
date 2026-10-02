@@ -196,6 +196,92 @@ export interface Type_ChartOptions {
    * ajouté d'un seul côté. On rapporte donc, on ne redevine pas.
    */
   on_parts_resolved?: (resolved: { [part_id: string]: Type_FigurePartResolved }) => void
+  /**
+   * 02/10/2026 — UNE CASE DE PETITS MULTIPLES (couronne seule). Julien : « en mode multiple avec des
+   * labels détachés on a l'impression de ne pas avoir la même échelle ». Chaque case se cadrait sur
+   * SES étiquettes sorties : une case aux étiquettes larges rétrécissait son disque, une autre non.
+   * Absente, le tracé d'hier au pixel.
+   */
+  small_multiple?: Type_SmallMultipleCell
+}
+
+/** Un cadre de tracé, en pixels depuis le centre du disque. */
+export interface Type_DrawnBox { x0: number, x1: number, y0: number, y1: number }
+
+export interface Type_SmallMultipleCell {
+  /** Le rayon, en part de celui que la case permet : √(total / plus grand total), l'aire dit la valeur. */
+  radius_ratio: number
+  /** L'écart des étiquettes sorties au bord du disque, en pixels — à la mesure de la case. */
+  callout_gap_px: number
+  /**
+   * Le cadre de cette case (disque et étiquettes), rendu à l'appelant ; `apply` y pose le cadre
+   * COMMUN, l'union de ceux de toutes les cases — une seule échelle d'une case à l'autre.
+   */
+  frame: (box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void) => void
+  /**
+   * 02/10/2026 — LA COULEUR DE CHAQUE PART, FIXÉE UNE FOIS POUR TOUTES LES CASES (cf.
+   * `donutPartColors` sur l'union). Chaque case colorait par SON rang : « Céréales » changeait de
+   * teinte d'une case à l'autre dès qu'une part y manquait, et une légende commune aurait menti.
+   */
+  colors?: ReadonlyMap<string, string>
+  /** Les parts que la case a réellement dessinées (« Autres » compris) : de quoi faire la légende commune. */
+  drawn?: (kept: Type_StatSlice[]) => void
+  /**
+   * 02/10/2026 — LE NOM DU MEMBRE DE LA CASE (Europe, Afrique…), écrit AU CENTRE de sa couronne,
+   * au-dessus de la valeur (Julien : « au centre de la couronne ce serait plus visible »). Cf.
+   * `smallMultipleCentreName` pour ce qui se passe quand il ne tient pas dans le trou.
+   */
+  name?: string
+}
+
+/** Une part qui fait tout l'anneau : son secteur est le disque entier. */
+export const isWholeRing = (start_angle: number, end_angle: number): boolean =>
+  end_angle - start_angle >= 2 * Math.PI - 1e-6
+
+/**
+ * 02/10/2026 — L'ANGLE `a` (repère d3 : 0 en haut, sens horaire, quelconque modulo 2π) tombe-t-il
+ * dans le secteur [start, end], à `tol` radians près de chaque côté ? On mesure l'angle À PARTIR du
+ * début du secteur, ramené dans [0, 2π) : `atan2` rend (-π, π], et un coin juste à gauche du bas
+ * (≈ -π) d'un secteur de plus d'un demi-tour parti de 0 était jugé dehors — l'étiquette sortait.
+ */
+export const angleInSector = (a: number, start: number, end: number, tol: number = 0): boolean => {
+  let rel = (a - (start - tol)) % (2 * Math.PI)
+  if (rel < 0) rel += 2 * Math.PI
+  return rel <= (end - start) + 2 * tol
+}
+
+// Sous cette taille, le nom d'une case ne se lit plus : on le coupe, puis on le sort du trou.
+const CELL_NAME_MIN_PX = 9
+
+/**
+ * 02/10/2026 — LE NOM D'UNE CASE DE PETITS MULTIPLES DANS LE TROU DE SA COURONNE.
+ *
+ * Taille proportionnelle au rayon intérieur, un peu plus petite que la valeur (`value_size`, quand
+ * elle s'écrit dessous). S'il ne tient pas : réduit jusqu'à `CELL_NAME_MIN_PX`, puis coupé sur deux
+ * lignes au blanc le plus central ; en dernier recours seulement, posé AU-DESSUS du disque
+ * (`above`). La place est la largeur utile du trou (≈ 1,7 rayon) et sa hauteur.
+ */
+export const smallMultipleCentreName = (
+  name: string, inner: number, value_size: number | null
+): { lines: string[], size: number, above: boolean } => {
+  const base = value_size !== null ? Math.max(CELL_NAME_MIN_PX + 1, inner * 0.2) : Math.max(11, inner * 0.26)
+  const room_w = inner * 1.7
+  const room_h = inner * 1.5 - (value_size !== null ? value_size * 1.2 : 0)
+  const fits = (lines: string[], size: number) =>
+    lines.every(l => labelTextWidthPx(l, size) <= room_w) && lines.length * size * 1.15 <= room_h
+  const sizeFor = (lines: string[]) => Math.max(CELL_NAME_MIN_PX, Math.min(
+    base, ...lines.map(l => base * room_w / Math.max(1, labelTextWidthPx(l, base)))))
+  if (inner >= 12) {
+    const one = [name]
+    if (fits(one, sizeFor(one))) return { lines: one, size: sizeFor(one), above: false }
+    const blanks = [...name.matchAll(/ /g)].map(m => m.index ?? 0)
+    if (blanks.length > 0) {
+      const cut = blanks.reduce((b, i) => Math.abs(i - name.length / 2) < Math.abs(b - name.length / 2) ? i : b)
+      const two = [name.slice(0, cut), name.slice(cut + 1)]
+      if (fits(two, sizeFor(two))) return { lines: two, size: sizeFor(two), above: false }
+    }
+  }
+  return { lines: [name], size: Math.min(12, Math.max(CELL_NAME_MIN_PX, base)), above: true }
 }
 
 /** Ce qu'un tracé a réellement appliqué à une part, et que le panneau doit annoncer. */
@@ -379,6 +465,156 @@ const MIN_PART_ICON_PX = 8
 // l'étiquette tant que l'auteur ne l'a pas déplacée.
 const MIN_CALLOUT_EDGE_PX = 6
 const CALLOUT_GAP_PX = 14
+
+// ── 02/10/2026 — LES PETITS MULTIPLES À LA MÊME ÉCHELLE (cf. `Type_SmallMultipleCell`) ──────────
+
+/**
+ * Le rayon relatif d'une petite couronne : l'AIRE dit la valeur, donc √(total / plus grand total).
+ * La plus grosse prend tout le rayon de sa case ; une couronne vide n'en a pas.
+ */
+export const smallMultipleRadiusRatio = (total: number, max_total: number): number =>
+  max_total > 0 && total > 0 ? Math.min(1, Math.sqrt(total / max_total)) : 0
+
+/**
+ * L'écart des étiquettes sorties dans une case de `cell_side` pixels : 4 % du côté, jamais plus
+ * que celui d'une couronne seule ni moins de 3 px. Les 14 px d'une figure entière, doublés par la
+ * colonne des étiquettes, mettaient le nom d'une petite part à un demi-rayon de son secteur.
+ */
+export const smallMultipleCalloutGap = (cell_side: number): number =>
+  Math.max(3, Math.min(CALLOUT_GAP_PX, cell_side * 0.04))
+
+/** L'union de cadres : la réserve d'étiquettes la plus large, prise une fois pour toutes les cases. */
+export const unionDrawnBox = (boxes: Type_DrawnBox[]): Type_DrawnBox | null =>
+  boxes.length === 0
+    ? null
+    : boxes.reduce((u, b) => ({
+      x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1)
+    }))
+
+/**
+ * LA COULEUR DE CHAQUE PART D'UNE COURONNE, dans l'ordre reçu (celui des secteurs, « Autres »
+ * compris). La règle du tracé, sortie pour servir aussi l'union des petits multiples :
+ *
+ * À PLAT : la couleur du modèle si l'auteur la veut et que la donnée la porte, la palette sinon,
+ * dans l'ordre des parts. SOUS UNE DESCENTE : la teinte dit la branche, la clarté dit le niveau
+ * (`shadeForDepth`, la règle du disque) ; et pas de dégradé sous 'model'.
+ */
+export const donutPartColors = (
+  parts: readonly Type_StatSlice[], st: Type_FigureChartStyle
+): Map<string, string> => {
+  const branch_order = new Map<string, number>()
+  parts.forEach(s => {
+    const branch = s.branch_id ?? s.id
+    if (!branch_order.has(branch)) branch_order.set(branch, branch_order.size)
+  })
+  const out = new Map<string, string>()
+  parts.forEach((d, i) => {
+    if (d.id === '__others__') out.set(d.id, OTHERS_COLOR)
+    else if (st.parts_color_source === 'model' && d.color) out.set(d.id, d.color)
+    // Hors descente, `branch_id` est absent : l'index du secteur commande, comme hier.
+    else if (d.branch_id === undefined) out.set(d.id, paletteColor(i))
+    else {
+      const base = paletteColor(branch_order.get(d.branch_id) ?? i)
+      out.set(d.id, st.parts_depth_shading ? shadeForDepth(base, d.depth ?? 0, 'light') : base)
+    }
+  })
+  return out
+}
+
+/**
+ * 02/10/2026 — LES ENTRÉES DE LA LÉGENDE COMMUNE DES PETITS MULTIPLES (Julien : « une place commune
+ * pour la légende serait intéressante »). L'union des parts que les cases ont réellement dessinées,
+ * dans l'ordre des parts de la figure (`order`), « Autres » en dernier — une part repliée dans une
+ * case et dessinée dans une autre y figure une fois.
+ */
+export const smallMultiplesLegendEntries = (
+  order: readonly string[], drawn: readonly (readonly Type_StatSlice[])[]
+): Type_StatSlice[] => {
+  const seen = new Map<string, Type_StatSlice>()
+  drawn.forEach(kept => kept.forEach(s => { if (!seen.has(s.id)) seen.set(s.id, s) }))
+  const rank = (id: string) => id === '__others__'
+    ? Number.MAX_SAFE_INTEGER
+    : (order.indexOf(id) < 0 ? Number.MAX_SAFE_INTEGER - 1 : order.indexOf(id))
+  return [...seen.values()].sort((a, b) => rank(a.id) - rank(b.id))
+}
+
+/**
+ * La place que la légende commune prend : une LARGEUR à côté des cases, une HAUTEUR dessous — les
+ * mêmes bornes que la légende d'une couronne seule (`drawDonutChart`), prises sur toute la figure.
+ */
+export const smallMultiplesLegendRoom = (st: Type_FigureChartStyle, width: number, height: number): number =>
+  st.legend_position === 'bottom'
+    ? Math.min(st.legend_width, height * 0.28, st.legend_font_size * 7)
+    : Math.min(st.legend_width, width * 0.32)
+
+/**
+ * LA LÉGENDE COMMUNE, dans `legend` (le conteneur que l'appelant a posé à côté ou sous la grille,
+ * à la place `smallMultiplesLegendRoom`). Puce, nom de la part ; pas de valeur — elle varie d'une
+ * case à l'autre, chaque case l'écrit. Le survol d'une entrée met la part en avant dans TOUTES les
+ * cases (`scope`), par l'opacité CSS du secteur : celle réglée par l'auteur (`fill-opacity`) reste.
+ */
+export const drawSmallMultiplesLegend = (
+  legend: HTMLElement,
+  scope: HTMLElement,
+  entries: readonly Type_StatSlice[],
+  colors: ReadonlyMap<string, string>,
+  st: Type_FigureChartStyle
+) => {
+  const below = st.legend_position === 'bottom'
+  const root = d3.select(legend)
+    .attr('class', 'figure_small_multiples_legend')
+    .style('overflow-y', 'auto')
+    .style('font-size', `${st.legend_font_size}px`)
+  if (below) {
+    root.style('display', 'flex').style('flex-wrap', 'wrap')
+      .style('justify-content', 'center').style('align-content', 'flex-start').style('column-gap', '0.8rem')
+  }
+  const legendLabel = (s: Type_StatSlice): string =>
+    (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
+  const head = st.legend_levels
+    ? entries.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
+    : undefined
+  if (head) {
+    root.append('div')
+      .attr('class', 'node_stats_legend_head')
+      .style('font-weight', '600')
+      .style('padding', '0.1rem 0.2rem 0.25rem')
+      .style('flex-basis', below ? '100%' : 'auto')
+      .style('text-align', below ? 'center' : 'left')
+      .text(head)
+  }
+  const arcsOf = () => d3.select(scope).selectAll<SVGPathElement, unknown>('path.node_stats_arc')
+  const items = root.selectAll('div.node_stats_legend_item')
+    .data(entries)
+    .enter().append('div')
+    .attr('class', 'node_stats_legend_item')
+    .attr('data-part-id', d => d.id)
+    .style('display', 'flex')
+    .style('align-items', 'center')
+    .style('gap', '0.35rem')
+    .style('padding', '0.1rem 0.2rem')
+    .style('cursor', 'default')
+    .attr('title', d => legendLabel(d))
+    .on('mouseover', (_, d) => {
+      arcsOf().style('opacity', function () {
+        return (this as SVGPathElement).getAttribute('data-repr-id') === d.id ? null : '0.35'
+      })
+    })
+    .on('mouseout', () => { arcsOf().style('opacity', null) })
+  if (below) items.style('flex', '0 0 auto')
+  items.append('span')
+    .style('flex', '0 0 auto')
+    .style('width', '0.7rem')
+    .style('height', '0.7rem')
+    .style('border-radius', '2px')
+    .style('background', d => colors.get(d.id) ?? d.color ?? OTHERS_COLOR)
+  items.append('span')
+    .style('flex', '1 1 auto')
+    .style('overflow', 'hidden')
+    .style('text-overflow', 'ellipsis')
+    .style('white-space', 'nowrap')
+    .text(d => legendLabel(d))
+}
 // Barres groupées (#390) : au-delà de ce nombre de séries, une grappe devient
 // illisible. On TRONQUE, on ne replie PAS dans un « Autres » : les deux axes croisés
 // sont non additifs — sommer les séries restantes serait exactement le contresens
@@ -544,19 +780,13 @@ export const drawDonutChart = (
   // ⚠️ ET PAS DE DÉGRADÉ SOUS 'model' : c'est la règle du disque aussi (`partitionSunburst`), et
   // elle est juste — deux nœuds qui portent leur propre couleur se distinguent déjà par elle,
   // l'éclaircir ne ferait que la trahir.
-  const branch_order = new Map<string, number>()
-  kept.forEach(s => {
-    const branch = s.branch_id ?? s.id
-    if (!branch_order.has(branch)) branch_order.set(branch, branch_order.size)
-  })
-  const colorOf = (d: Type_StatSlice, i: number) => {
-    if (d.id === '__others__') return OTHERS_COLOR
-    if (st.parts_color_source === 'model' && d.color) return d.color
-    // Hors descente, `branch_id` est absent : l'index du secteur commande, comme hier.
-    if (d.branch_id === undefined) return paletteColor(i)
-    const base = paletteColor(branch_order.get(d.branch_id) ?? i)
-    return st.parts_depth_shading ? shadeForDepth(base, d.depth ?? 0, 'light') : base
-  }
+  const cell = opts.small_multiple
+  cell?.drawn?.(kept)
+  const own_colors = donutPartColors(kept, st)
+  // Petits multiples : la couleur fixée sur l'union de toutes les cases l'emporte (cf.
+  // `Type_SmallMultipleCell.colors`) — une part a la même teinte partout, et la légende commune dit vrai.
+  const colorOf = (d: Type_StatSlice, i: number) =>
+    cell?.colors?.get(d.id) ?? own_colors.get(d.id) ?? paletteColor(i)
   // CE QUE LE TRACÉ AURA DÉCIDÉ, ramassé au fil du dessin (cf. `on_parts_resolved`).
   const resolved: { [part_id: string]: Type_FigurePartResolved } = {}
   const noted = (id: string, patch: Type_FigurePartResolved) => {
@@ -565,7 +795,9 @@ export const drawDonutChart = (
   kept.forEach((d, i) => noted(d.id, { shape_color: opts.part_aspect?.(d.id)?.fill ?? colorOf(d, i) }))
 
   // Mise en page : svg carré d'un côté, légende HTML scrollable de l'autre (ou dessous).
-  const legend_shown = st.legend_visible && st.legend_parts !== 'none'
+  // Une case de petits multiples n'a pas la sienne : la légende est COMMUNE, posée par l'appelant
+  // (`drawSmallMultiplesLegend`).
+  const legend_shown = !cell && st.legend_visible && st.legend_parts !== 'none'
   const below = st.legend_position === 'bottom'
   const root = sel.append('div')
     .style('display', 'flex')
@@ -591,7 +823,10 @@ export const drawDonutChart = (
   const side = below
     ? Math.max(100, Math.min(width, height - legend_room - 12) - 8)
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
-  const radius = (side / 2 - 2) * scaleOf(st)
+  // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
+  // près de leur disque, à la mesure de la case.
+  const radius = (side / 2 - 2) * scaleOf(st) * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
+  const callout_gap = cell ? cell.callout_gap_px : CALLOUT_GAP_PX
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
 
   const svg = root.append('svg')
@@ -764,6 +999,14 @@ export const drawDonutChart = (
    * `false` sur un histogramme — sans quoi l'un des deux parcs changerait d'aspect.
    */
   const valueAttached = (id: string): boolean => aspectOf(id)?.value_attached ?? true
+  /**
+   * 02/10/2026 — LE NOM D'UNE PART S'ÉCRIT-IL ? Pas dans une case de petits multiples (Julien : « pour
+   * les multiples, il ne faut pas voir les labels qui sont répétés »). Les parts y sont les mêmes
+   * d'une case à l'autre, même nom et même couleur : la légende commune les nomme une fois, la case
+   * ne garde que ce qui varie — sa valeur, son pourcentage. Sans rien d'autre à dire, une part n'a
+   * ni étiquette ni trait de rappel (`with_text`).
+   */
+  const names_written = (s: Type_FigureChartStyle): boolean => !cell && s.name_label_is_visible
   /** Ce que le nombre écrit, collé ou non : la valeur formatée, puis le pourcentage demandé. */
   const sectorValue = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const s = styleOf(d)
@@ -815,7 +1058,7 @@ export const drawDonutChart = (
     const s = styleOf(d)
     const a = aspectOf(d.data.id)
     const lines: { text: string, is_value: boolean }[] = []
-    if (s.name_label_is_visible) lines.push({ text: sectorName(d), is_value: false })
+    if (names_written(s)) lines.push({ text: sectorName(d), is_value: false })
     // Le format de CETTE part quand elle en règle un, celui de la figure sinon : `value_format`
     // n'existe que si la part a dit quelque chose des six clés de format (cf. `partAspect`).
     // La CASSE est celle de la valeur, et non celle du nom : c'est son texte.
@@ -845,6 +1088,9 @@ export const drawDonutChart = (
   // disque il court dans l'ÉPAISSEUR de l'anneau. Le texte tient si les quatre coins de son cadre,
   // posé au centre du secteur, restent dans le secteur : entre les deux rayons, entre les deux angles.
   const sectorFits = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
+    // L'anneau entier a toute la place : la mesure par les angles, qui se replie à ±π, le jugeait
+    // trop petit et l'étiquette sortait, reliée au bas de l'anneau.
+    if (isWholeRing(d.startAngle, d.endAngle)) return true
     const s = styleOf(d)
     const lines = sector_lines(d)
     const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, s.name_label_font_size)))
@@ -858,10 +1104,7 @@ export const drawDonutChart = (
       const y = cy + sy * h / 2
       const r = Math.hypot(x, y)
       if (r < inner - tol || r > radius + tol) return false
-      let a = Math.atan2(x, -y)
-      if (a < d.startAngle - Math.PI) a += 2 * Math.PI
-      if (a > d.endAngle + Math.PI) a -= 2 * Math.PI
-      return a >= d.startAngle - tol / Math.max(r, 1) && a <= d.endAngle + tol / Math.max(r, 1)
+      return angleInSector(Math.atan2(x, -y), d.startAngle, d.endAngle, tol / Math.max(r, 1))
     })
   }
   /** Le secteur sort-il son étiquette du disque, relié par un trait ? (cf. plus bas) */
@@ -942,7 +1185,10 @@ export const drawDonutChart = (
     return `${at} rotate(${deg + (flip ? 90 : -90)})`
   }
 
-  const with_text = arcs.filter(d => sector_lines(d).length > 0)
+  // 02/10/2026 — UNE PART QUI FAIT TOUT L'ANNEAU NE PORTE AUCUNE ÉTIQUETTE (Julien, sur « Tous
+  // produits » : « un label détaché complètement inutile »). « 550 (100%) » redit le centre ; ni
+  // dans le secteur, ni sortie, ni nombre détaché.
+  const with_text = arcs.filter(d => !isWholeRing(d.startAngle, d.endAngle) && sector_lines(d).length > 0)
   const callouts = with_text.filter(d => callsOut(d))
   const labelled = with_text.filter(d =>
     !callsOut(d) &&
@@ -1024,6 +1270,7 @@ export const drawDonutChart = (
   // hauteur de ligne : c'est là qu'il était quand il y était collé, ce qui rend le passage de
   // l'un à l'autre lisible plutôt que brutal.
   const detached = arcs.filter(d =>
+    !isWholeRing(d.startAngle, d.endAngle) &&
     !valueAttached(d.data.id) &&
     sectorValue(d) !== '' &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st) &&
@@ -1040,7 +1287,7 @@ export const drawDonutChart = (
         const a = aspectOf(d.data.id)?.value
         const [cx, cy] = label_arc.centroid(d)
         const size = a?.font_size ?? styleOf(d).name_label_font_size
-        const named = styleOf(d).name_label_is_visible
+        const named = names_written(styleOf(d))
         const at = partTextPlacement(
           { x: cx, y: cy + (named ? size * 0.9 : 0), anchor: 'middle', rotate: false }, a)
         const text = d3.select(this)
@@ -1113,7 +1360,7 @@ export const drawDonutChart = (
     const midOf = (d: d3.PieArcDatum<Type_StatSlice>) => (d.startAngle + d.endAngle) / 2
     const edgeOf = (d: d3.PieArcDatum<Type_StatSlice>) => point(radius, midOf(d))
     const defaultAt = (d: d3.PieArcDatum<Type_StatSlice>) =>
-      point(radius + CALLOUT_GAP_PX, midOf(d))
+      point(radius + callout_gap, midOf(d))
     // 01/10/2026 — RANGÉES, ET NON EMPILÉES (Julien, capture à l'appui : les petites parts du
     // haut écrivaient leurs étiquettes les unes sur les autres). Celles que l'auteur n'a pas
     // déplacées se posent en deux colonnes, à droite et à gauche du disque, dans l'ordre de leur
@@ -1130,7 +1377,10 @@ export const drawDonutChart = (
         const height_px = sector_lines(d).length * styleOf(d).name_label_font_size * 1.15
         const at_y = Math.max(y, floor + height_px / 2)
         floor = at_y + height_px / 2 + 2
-        laid_out.set(d.data.id, { x: side_sign * (radius + CALLOUT_GAP_PX * 2), y: at_y })
+        // 02/10/2026 — UN TRAIT COURT : l'étiquette s'écarte d'un écart de SON point d'arc, et non
+        // d'une colonne posée à `rayon + 2 écarts` du centre. Un secteur du bas (ou du haut) tirait
+        // un long trait en biais jusqu'au flanc du disque.
+        laid_out.set(d.data.id, { x: defaultAt(d).x + side_sign * callout_gap, y: at_y })
       })
     })
     const positionOf = (d: d3.PieArcDatum<Type_StatSlice>) =>
@@ -1235,6 +1485,11 @@ export const drawDonutChart = (
     ?? (st.centre_content === 'name' || st.centre_content === 'both')) && centre_name !== ''
   const wants_value = centre?.value?.is_visible
     ?? (st.centre_content === 'value' || st.centre_content === 'both')
+  // 02/10/2026 — PETITS MULTIPLES : le nom du membre au centre, TOUJOURS, au-dessus de la valeur
+  // (que `centre_content` continue de commander). Le titre en haut de case, loin de son disque et
+  // rogné par le bord, ne se lisait pas.
+  const cell_name = cell ? (cell.name ?? opts.title_fallback ?? '') : ''
+  let cell_name_above: { lines: string[], size: number } | null = null
   // 23/09/2026 — LE TROU RAMÈNE EN ARRIÈRE quand la figure est descendue dans un nœud.
   //
   // Un disque transparent AVANT le texte : il prend le clic sur toute la surface du trou, y compris
@@ -1260,7 +1515,43 @@ export const drawDonutChart = (
       .attr('pointer-events', 'none')
       .text(`‹ ${opts.centre_back_label ?? ''}`.trim())
   }
-  if ((wants_name || wants_value) && inner >= 12) {
+  if (cell_name !== '') {
+    const value_size = wants_value && inner >= 12 ? (centre?.value?.font_size ?? Math.max(11, inner * 0.28)) : null
+    const placed = smallMultipleCentreName(cell_name, inner, value_size)
+    const text = g.append('text')
+      .attr('class', 'node_stats_cell_name_block')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('fill', centre?.value?.color ?? '#2D3748')
+      .attr('pointer-events', 'none')
+    const name_h = placed.size * 1.15
+    const value_h = value_size !== null ? value_size * 1.2 : 0
+    if (placed.above) {
+      cell_name_above = placed
+      // Juste au-dessus du disque, à un écart de son bord : le titre suit SON disque.
+      const y_last = -radius - callout_gap - name_h / 2
+      placed.lines.forEach((line, i) => {
+        text.append('tspan').attr('class', 'node_stats_cell_name')
+          .attr('x', 0).attr('y', y_last - (placed.lines.length - 1 - i) * name_h)
+          .attr('font-size', placed.size).attr('font-weight', '600').text(line)
+      })
+    } else {
+      // Le bloc (nom puis valeur) centré sur le centre du trou.
+      const top = -(placed.lines.length * name_h + value_h) / 2
+      placed.lines.forEach((line, i) => {
+        text.append('tspan').attr('class', 'node_stats_cell_name')
+          .attr('x', 0).attr('y', top + (i + 0.5) * name_h)
+          .attr('font-size', placed.size).attr('font-weight', '600').text(line)
+      })
+    }
+    if (value_size !== null) {
+      const y = placed.above ? 0 : -(placed.lines.length * name_h + value_h) / 2 + placed.lines.length * name_h + value_h / 2
+      text.append('tspan').attr('class', 'node_stats_cell_value')
+        .attr('x', 0).attr('y', y)
+        .attr('font-size', value_size).attr('font-weight', (centre?.value?.bold ?? true) ? 'bold' : 'normal')
+        .text(fmt(total))
+    }
+  } else if ((wants_name || wants_value) && inner >= 12) {
     // LA TAILLE SE MESURE SUR LE TROU, et c'est ce qui fait qu'un centre reste lisible quelle que
     // soit la place : un nombre en points fixes déborderait d'un petit trou et se perdrait dans un
     // grand. La part peut en imposer une — c'est son texte —, et alors c'est la sienne.
@@ -1317,17 +1608,32 @@ export const drawDonutChart = (
   // Julien, capture à l'appui : « avec les labels détachés, la couronne n'est pas cadrée ». Les
   // étiquettes sorties débordaient du carré du disque. La figure prend donc pour cadre ce qu'elle
   // dessine VRAIMENT — disque et étiquettes — et l'étale sur toute la place de la fenêtre.
-  if (drawn_box !== null) {
+  const frameTo = (frame: Type_DrawnBox) => {
     // Avec une légende, la place qu'elle prend est déjà retirée : la figure se cadre dans le reste.
     const pad = 8
     const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
     const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
-    const { x0, x1, y0, y1 } = drawn_box
+    const { x0, x1, y0, y1 } = frame
     svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
       .attr('viewBox', `${x0 + side / 2 - pad} ${y0 + side / 2 - pad} ${x1 - x0 + 2 * pad} ${y1 - y0 + 2 * pad}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('overflow', 'visible')
   }
+  // Petits multiples : la case rend son cadre, l'appelant pose le cadre commun — même sans
+  // étiquette sortie, sans quoi une case nue garderait sa propre échelle.
+  if (cell) {
+    const box = drawn_box ?? { x0: -radius, x1: radius, y0: -radius, y1: radius }
+    // Un nom sorti au-dessus du disque entre dans le cadre : il reste entièrement visible.
+    if (cell_name_above !== null) {
+      const { lines, size } = cell_name_above as { lines: string[], size: number }
+      const w = Math.max(...lines.map(l => labelTextWidthPx(l, size)))
+      box.x0 = Math.min(box.x0, -w / 2)
+      box.x1 = Math.max(box.x1, w / 2)
+      box.y0 = Math.min(box.y0, -radius - callout_gap - lines.length * size * 1.15)
+    }
+    cell.frame(box, frameTo)
+  }
+  else if (drawn_box !== null) frameTo(drawn_box)
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
   // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
   if (opts.zoom_handle) {

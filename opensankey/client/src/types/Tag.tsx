@@ -851,6 +851,20 @@ export class Class_FluxTag extends Class_Tag {
 
 // CLASS DATATAG ************************************************************************
 
+/** os#1511 — géométrie manuelle d'un membre : la position commune d'avant, et une par axe. */
+export type Type_MemberManualPositions = {
+  position: { x: number, y: number } | undefined,
+  positions: { [axe_id: string]: { x: number, y: number } }
+}
+
+const copierPositions = (
+  positions: { [axe_id: string]: { x: number, y: number } }
+): { [axe_id: string]: { x: number, y: number } } => {
+  const copie: { [axe_id: string]: { x: number, y: number } } = {}
+  Object.entries(positions).forEach(([axe_id, p]) => { copie[axe_id] = { x: p.x, y: p.y } })
+  return copie
+}
+
 export class Class_DataTag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -903,7 +917,14 @@ export class Class_DataTag extends Class_ProtoTag {
   // `position` est en coordonnées du diagramme ; `latitude`/`longitude` servent la carte
   // (os#1364), où un membre sans coordonnées prend le barycentre de ses enfants. Les trois
   // sont indépendantes et facultatives.
+  //
+  // os#1511 — UNE POSITION PAR AXE (`_positions`, clé JSON `positions`). Quand plusieurs nœuds
+  // portent la même dimension (CARTOFOB : Prélèvements, Scieries… déclinés par essence), chaque
+  // axe a son nœud « Chêne », et un seul x/y pour tous les empilait au même endroit. La clé est
+  // l'id du nœud d'axe, qui est persisté. `_position` (x/y d'avant) reste lu comme la position
+  // valable pour TOUT axe qui n'a pas la sienne : un fichier qui l'écrit s'ouvre comme avant.
   private _position: { x: number, y: number } | undefined = undefined
+  private _positions: { [axe_id: string]: { x: number, y: number } } = {}
   private _latitude: number | undefined = undefined
   private _longitude: number | undefined = undefined
   // CONSTRUCTOR ========================================================================
@@ -953,6 +974,7 @@ export class Class_DataTag extends Class_ProtoTag {
       json_object['x'] = this._position.x
       json_object['y'] = this._position.y
     }
+    if (Object.keys(this._positions).length > 0) json_object['positions'] = copierPositions(this._positions)
     if (this._latitude !== undefined) json_object['latitude'] = this._latitude
     if (this._longitude !== undefined) json_object['longitude'] = this._longitude
   }
@@ -967,9 +989,30 @@ export class Class_DataTag extends Class_ProtoTag {
     super._copyFrom(tag_to_copy)
     this._scale = (tag_to_copy as Class_DataTag)._scale
     this._has_own_scale = (tag_to_copy as Class_DataTag)._has_own_scale
-    // os#1511 — l'id du parent se recopie tel quel : la copie vit dans une dimension dont les
-    // membres portent les MÊMES ids (c'est l'hypothèse de tout `copyFrom` de tag ici).
+    // os#1511 — l'id du parent se recopie tel quel ; quand les deux dimensions sont appariées par
+    // nom avec des ids de membres différents, le groupe le retraduit ensuite
+    // (`Class_DataTagGroup._copyFrom` → `remapParentId`).
     this._parent_id = (tag_to_copy as Class_DataTag)._parent_id
+    this._group?.invalidateHierarchyIndex()
+    // os#1511 — tout ce que `_toJSON` écrit se copie : la géométrie du membre aussi, sinon une
+    // réinitialisation de vue (`sankey.copyFrom`) perdait les nœuds de membre déplacés.
+    const source_position = (tag_to_copy as Class_DataTag)._position
+    this._position = source_position === undefined ? undefined : { ...source_position }
+    this._positions = copierPositions((tag_to_copy as Class_DataTag)._positions)
+    this._latitude = (tag_to_copy as Class_DataTag)._latitude
+    this._longitude = (tag_to_copy as Class_DataTag)._longitude
+  }
+
+  /**
+   * os#1511 — retraduit l'id du parent d'un id de la SOURCE vers l'id du membre correspondant de
+   * ce groupe (appariement par nom, cf. `Class_ProtoTagGroup._copyFrom`). Sans effet si l'id
+   * n'est pas dans la table.
+   */
+  public remapParentId(source_to_target: { [source_id: string]: string }) {
+    if (this._parent_id === undefined) return
+    const target = source_to_target[this._parent_id]
+    if (target !== undefined) this._parent_id = target
+    this._group?.invalidateHierarchyIndex()
   }
 
   // HIÉRARCHIE DE LA DIMENSION (os#1511 lot 1) =========================================
@@ -993,7 +1036,7 @@ export class Class_DataTag extends Class_ProtoTag {
     if (parent !== undefined && parent.hasAncestor(this)) return
     if (this._parent_id === parent?.id) return
     this._parent_id = parent?.id
-    // os#1516 — la palette hiérarchique suit la structure
+    // os#1516 — la palette hiérarchique suit la structure (et l'index des enfants est invalidé)
     this._group.hierarchyChanged()
   }
 
@@ -1019,6 +1062,54 @@ export class Class_DataTag extends Class_ProtoTag {
     // Une position non finie ne place rien et se propagerait en silence dans le dessin.
     if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return
     this._position = { x: position.x, y: position.y }
+  }
+
+  /**
+   * os#1511 — Position du nœud de ce membre engendré par l'axe `axe_id` : la sienne, ou à défaut
+   * la position commune d'avant (`position`), valable pour tout axe. `undefined` : aucune
+   * position manuelle, le nœud suit la mise en page automatique.
+   */
+  public positionOn(axe_id: string): { x: number, y: number } | undefined {
+    const propre = this._positions[axe_id]
+    if (propre !== undefined) return { ...propre }
+    return this.position
+  }
+
+  /** La position PROPRE à l'axe `axe_id`, sans repli sur la position commune. */
+  public ownPositionOn(axe_id: string): { x: number, y: number } | undefined {
+    const propre = this._positions[axe_id]
+    return propre === undefined ? undefined : { ...propre }
+  }
+
+  /** Pose (ou retire, avec `undefined`) la position du nœud de ce membre sur l'axe `axe_id`. */
+  public setPositionOn(axe_id: string, position: { x: number, y: number } | undefined): void {
+    if (position === undefined) { delete this._positions[axe_id]; return }
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return
+    this._positions[axe_id] = { x: position.x, y: position.y }
+  }
+
+  /** Vrai si un nœud de ce membre a été déplacé à la main, sur un axe ou sur tous. */
+  public get has_manual_position(): boolean {
+    return this._position !== undefined || Object.keys(this._positions).length > 0
+  }
+
+  /** Toute la géométrie manuelle, pour l'annuler ou la rendre (`restoreManualPositions`). */
+  public get manual_positions(): Type_MemberManualPositions {
+    return {
+      position: this.position,
+      positions: copierPositions(this._positions)
+    }
+  }
+
+  public restoreManualPositions(etat: Type_MemberManualPositions): void {
+    this._position = etat.position === undefined ? undefined : { ...etat.position }
+    this._positions = copierPositions(etat.positions)
+  }
+
+  /** Retour au placement automatique : plus aucune position manuelle, sur aucun axe. */
+  public clearManualPositions(): void {
+    this._position = undefined
+    this._positions = {}
   }
 
   public get latitude(): number | undefined { return this._latitude }
@@ -1056,10 +1147,15 @@ export class Class_DataTag extends Class_ProtoTag {
     }
   }
 
-  /** Membres du groupe dont le parent est CE membre (un seul cran, pas la descendance). */
+  /**
+   * Membres du groupe dont le parent est CE membre (un seul cran, pas la descendance).
+   *
+   * Lu dans l'index des enfants tenu par le groupe (`Class_DataTagGroup.childrenOf`) : parcourir
+   * toute la dimension à chaque appel rendait `leaves`, `membersAtLevel` et `membersByLevel`
+   * quadratiques — sensible sur une nomenclature de plusieurs milliers de membres.
+   */
   public get children(): Class_DataTag[] {
-    return (Object.values(this._group.tags_dict) as Class_DataTag[])
-      .filter(tag => tag.parent === this)
+    return this._group.childrenOf(this)
   }
 
   /**
@@ -1094,6 +1190,7 @@ export class Class_DataTag extends Class_ProtoTag {
     // (même règle qu'au chargement d'une hiérarchie de nœuds, #193).
     const raw_parent = json_object['parent']
     this._parent_id = (typeof raw_parent === 'string' && raw_parent !== '') ? raw_parent : undefined
+    this._group?.invalidateHierarchyIndex()
     // os#1511 lot 2 — cf. _toJSON. Une position n'a de sens qu'ENTIÈRE : un x sans y ne place
     // rien, on préfère l'ignorer plutôt que d'inventer la coordonnée manquante. Les nombres
     // non finis sont écartés de même — ils traverseraient les calculs sans bruit.
@@ -1103,6 +1200,18 @@ export class Class_DataTag extends Class_ProtoTag {
       && typeof y === 'number' && Number.isFinite(y))
       ? { x, y }
       : undefined
+    // os#1511 — une position par axe ; une entrée incomplète ou non finie est ignorée.
+    this._positions = {}
+    const positions = json_object['positions']
+    if (typeof positions === 'object' && positions !== null && !Array.isArray(positions)) {
+      Object.entries(positions as { [axe_id: string]: unknown }).forEach(([axe_id, p]) => {
+        const px = (p as { x?: unknown } | null)?.x
+        const py = (p as { y?: unknown } | null)?.y
+        if (typeof px === 'number' && Number.isFinite(px) && typeof py === 'number' && Number.isFinite(py)) {
+          this._positions[axe_id] = { x: px, y: py }
+        }
+      })
+    }
     const lat = json_object['latitude']
     const lon = json_object['longitude']
     this._latitude = (typeof lat === 'number' && Number.isFinite(lat)) ? lat : undefined

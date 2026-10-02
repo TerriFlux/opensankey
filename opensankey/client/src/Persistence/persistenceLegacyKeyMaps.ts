@@ -131,7 +131,11 @@ export const NODE_LOCAL_KEY_MAP: Type_LegacyKeyMap = {
   'colorSustainable': 'shape_color_sustainable'
 }
 
-/** NŒUD (racine du JSON) : l'icône, portée hors du bloc `local`. */
+/**
+ * NŒUD (racine du JSON) : l'icône, portée hors du bloc `local`.
+ * Le FO legacy (`has_FO`/`FO_content`) n'est PAS une clé à renommer : il se dessinait DANS la boîte
+ * du nœud, à côté de l'étiquette de nom — cf. `legacyFOImageSrc`.
+ */
 export const NODE_ICON_KEY_MAP: Type_LegacyKeyMap = {
   'iconName': 'icon_icon_name',
   'iconColor': 'icon_color',
@@ -140,6 +144,23 @@ export const NODE_ICON_KEY_MAP: Type_LegacyKeyMap = {
   'iconColorSustainable': 'icon_color_sustainable',
   'is_image': 'icon_is_image',
   'image_src': 'icon_image_src'
+}
+
+/**
+ * FO legacy d'un nœud réduit à une image (`<p><img src="…"></p>`, sans texte) : renvoie le src.
+ *
+ * L'ancien format dessinait `FO_content` dans un foreignObject aux dimensions de la forme du nœud,
+ * INDÉPENDAMMENT de l'étiquette de nom. Le modèle actuel n'a plus de FO de nœud ; l'équivalent fidèle
+ * d'une image seule est l'icône-image du nœud. Un FO qui porte du texte n'a pas d'équivalent : on
+ * renvoie undefined plutôt que d'écraser l'étiquette de nom (qui reste, elle, affichée).
+ */
+export function legacyFOImageSrc(fo_content: unknown): string | undefined {
+  if (typeof fo_content !== 'string') return undefined
+  const imgs = fo_content.match(/<img\b[^>]*>/gi)
+  if (!imgs || imgs.length !== 1) return undefined
+  const text = fo_content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+  if (text !== '') return undefined
+  return /\ssrc\s*=\s*(["'])(.*?)\1/i.exec(imgs[0])?.[2] || undefined
 }
 
 /** CADRE / zone de texte. */

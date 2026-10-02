@@ -135,6 +135,49 @@ export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', '
 // questions différentes se posent : « cette place existe-t-elle ? » (lecture d'un fichier) et
 // « cette place occupe-t-elle une case ? » (disposition, réserve du dessin, invariant du `main`).
 export type Type_MainZonePlace = 'main' | 'right' | 'bottom' | 'floating'
+
+/**
+ * 02/10/2026 — LA COUPE PROPRE DE LA FIGURE ACTIVE, telle que la barre du haut la règle (cf.
+ * `topbar_figure_cut`) : par dimension, le niveau qu'elle dit, ses membres ouverts, ce qu'elle
+ * montre, et les deux gestes qui l'écrivent.
+ */
+export type Type_TopbarFigureCut = {
+  levelShown: (dim: Class_DataTagGroup) => string
+  chooseLevel: (dim: Class_DataTagGroup, depth: number) => void
+  opened: (dim: Class_DataTagGroup) => Set<string>
+  setOpened: (dim: Class_DataTagGroup, opened: ReadonlySet<string>) => void
+  shownNames: (dim: Class_DataTagGroup) => string[]
+}
+
+/**
+ * 02/10/2026 — UN CHOIX D'UNE FIGURE, tel que la barre du haut le pose (os#1511) : un titre, des
+ * options cochables, la valeur cochée. Une option `disabled` se grise — le panneau annonce le
+ * dessin, il n'offre pas un choix sans effet. Une seule option : une case à cocher (`value` vaut
+ * cette option ou `''`).
+ */
+export type Type_TopbarFigureChoice = {
+  key: string
+  label: string
+  value: string
+  options: { value: string, label: string, disabled?: boolean }[]
+  disabled?: boolean
+  choose: (value: string) => void
+}
+
+/**
+ * 02/10/2026 — LES MENUS DE LA FIGURE ACTIVE dans la barre du haut (cf. `topbar_figure_menus`) :
+ * le bouton de la figure en tête (réglages communs) et, par dimension, ce que « Dessiner » y offre.
+ */
+export type Type_TopbarFigureMenus = {
+  /** Le nom de la représentation active (« Couronne »). */
+  title: string
+  icon?: React.ReactNode
+  settings: Type_TopbarFigureChoice[]
+  /** « Dessiner » d'une dimension sur cette figure ; vide : rien à y régler. */
+  drawing: (dim: Class_DataTagGroup) => Type_TopbarFigureChoice[]
+  /** La figure a sa coupe propre : « Afficher » du diagramme ne la touche pas. */
+  detached: boolean
+}
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
 /** Les places qui prennent une CASE de la grille : celles dont la disposition se calcule. */
 export const MAIN_ZONE_GRID_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom']
@@ -1216,6 +1259,20 @@ export class Class_MenuConfig {
   public set render_tag_group_editor(
     v: ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null
   ) { this._host._render_tag_group_editor = v }
+
+  // 02/10/2026 — LA BARRE DU HAUT SUIT LA FENÊTRE ACTIVE (Julien : « c'est plus intuitif »). Quand
+  // la fenêtre active est une figure DÉTACHÉE, la barre règle SA coupe, pas celle du diagramme.
+  // OS+ fournit cette coupe (les figures qui découpent sont à lui) ; `null` : la barre règle le
+  // diagramme, comme toujours.
+  protected _topbar_figure_cut: (() => Type_TopbarFigureCut | null) | null = null
+  public get topbar_figure_cut(): (() => Type_TopbarFigureCut | null) | null { return this._host._topbar_figure_cut }
+  public set topbar_figure_cut(v: (() => Type_TopbarFigureCut | null) | null) { this._host._topbar_figure_cut = v }
+  // 02/10/2026 — ET SES MENUS (os#1511) : quand la fenêtre active est une couronne, la barre du
+  // haut règle ses petits multiples, ses anneaux, ses niveaux et son clic. OS+ les fournit (gestes
+  // de `figureGesturesHost`, les mêmes que le panneau Coordonnées) ; `null` : menus du diagramme.
+  protected _topbar_figure_menus: (() => Type_TopbarFigureMenus | null) | null = null
+  public get topbar_figure_menus(): (() => Type_TopbarFigureMenus | null) | null { return this._host._topbar_figure_menus }
+  public set topbar_figure_menus(v: (() => Type_TopbarFigureMenus | null) | null) { this._host._topbar_figure_menus = v }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
   // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
