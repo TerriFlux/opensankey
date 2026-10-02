@@ -27,11 +27,10 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
-  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, smallMultipleCalloutGap,
-  smallMultipleRadiusRatio, unionDrawnBox, donutPartColors, orderParts, drawSmallMultiplesLegend,
-  smallMultiplesLegendEntries, smallMultiplesLegendRoom
+  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells,
+  donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
-import type { Type_DrawnBox, Type_StatSlice } from '../Charts/NodeStatsCharts'
+import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
 import { analysisPartInputs } from './parts/analysisParts'
 import {
   FIGURE_CENTRE_NATURE, FIGURE_CENTRE_PART_ID, isFigureCentrePart
@@ -1205,18 +1204,14 @@ export const registerAnalysisRepresentations = (): void => {
             folded_names: folded.map(m => m.name)
           })
         }
-        const n = per_member.length
-        const cols = Math.ceil(Math.sqrt(n * Math.max(1, grid.clientWidth) / Math.max(1, grid.clientHeight)))
-        const rows = Math.ceil(n / Math.max(1, cols))
         grid.className = 'figure_small_multiples'
-        grid.style.display = 'grid'
-        grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`
-        grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`
         // 02/10/2026 — UNE SEULE ÉCHELLE (Julien : « on a l'impression de ne pas avoir la même
-        // échelle »). L'aire de chaque couronne dit son total, la plus grosse remplit sa case ; et
-        // toutes les cases se cadrent sur la MÊME boîte — l'union de leurs disques et étiquettes
-        // sorties —, posée une fois tout dessiné. Chacune se cadrait sur ses propres étiquettes.
-        const max_total = Math.max(0, ...per_member.map(m => m.total))
+        // échelle »), ET DES CASES À LA TAILLE DE LEUR DISQUE (« il y a trop de vide, tu dois pouvoir
+        // densifier ») : l'aire de chaque couronne dit son total, à une échelle commune, la plus
+        // grande qui laisse tout tenir ; les cases se rangent en rangées centrées (cf.
+        // `packSmallMultiples`). La grille de cases égales laissait d'énormes vides autour des
+        // petites couronnes.
+        const cells = mountSmallMultipleCells(grid, per_member, style, fmt, t('sunburst.others') as string)
         // L'ORDRE ET LA COULEUR DES PARTS, décidés UNE FOIS sur l'union des cases : une part a la
         // même teinte dans chaque case, et c'est ce qui permet à une seule légende de les nommer.
         const union = new Map<string, Type_StatSlice>()
@@ -1227,15 +1222,10 @@ export const registerAnalysisRepresentations = (): void => {
         const union_order = orderParts([...union.values()], style.parts_order)
         const colors = donutPartColors(union_order, style)
         const drawn: Type_StatSlice[][] = []
-        const frames: { box: Type_DrawnBox, apply: (common: Type_DrawnBox) => void }[] = []
-        per_member.forEach(({ name, slices, total, folded_names }, i) => {
-          const cell = document.createElement('div')
-          cell.style.position = 'relative'
-          cell.style.minWidth = '0'
-          cell.style.minHeight = '0'
+        per_member.forEach(({ name, slices, folded_names }, i) => {
+          const { cell, radius_px, box, callout_gap_px } = cells[i]
           // La case « Autres » dit qui elle réunit, au survol de son centre (liste tronquée).
           if (folded_names) cell.title = othersCellTitle(name, folded_names)
-          grid.appendChild(cell)
           drawDonutChart(cell, slices, {
             ...base,
             style,
@@ -1258,17 +1248,16 @@ export const registerAnalysisRepresentations = (): void => {
             // Le panneau apprend l'encre réelle des parts par UN tracé : le premier.
             on_parts_resolved: i === 0 ? wiring.on_parts_resolved : undefined,
             small_multiple: {
-              radius_ratio: smallMultipleRadiusRatio(total, max_total),
-              callout_gap_px: smallMultipleCalloutGap(Math.min(cell.clientWidth, cell.clientHeight)),
-              frame: (box, apply) => { frames.push({ box, apply }) },
+              radius_ratio: 1,
+              radius_px,
+              box,
+              callout_gap_px,
               colors,
               drawn: (kept) => { drawn.push(kept) },
               name
             }
           })
         })
-        const common = unionDrawnBox(frames.map(f => f.box))
-        if (common !== null) frames.forEach(f => f.apply(common))
         drawSmallMultiplesLegend(
           legend, grid, smallMultiplesLegendEntries(union_order.map(s => s.id), drawn), colors, style)
         return () => {

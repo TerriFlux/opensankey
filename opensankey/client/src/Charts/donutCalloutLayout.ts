@@ -15,6 +15,13 @@
 // ET UN CADRE BORNÉ, QUAND IL L'EST (petits multiples : la case) : on ne garde, par côté, que ce
 // qui tient sans chevauchement — les plus grandes parts d'abord, les autres se taisent.
 //
+// 02/10/2026 — CHACUNE RESTE PRÈS DE SON ANCRE (Julien, capture « Export par continent » : dix
+// étiquettes empilées en colonne à gauche, un éventail de traits longs qui se croisent). La pile
+// ne se comprime plus : les étiquettes sont admises une à une, les plus grandes parts d'abord, et
+// la colonne se détend au plus juste (grappes posées au plus près de la hauteur voulue de leurs
+// membres). Une étiquette qu'il faudrait pousser à plus de `CALLOUT_MAX_SHIFT_LINES` hauteurs de
+// sa ligne de son ancre, ou hors du cadre, n'est pas admise : elle se tait, l'info-bulle reste.
+//
 // Fonction pure, sans DOM : le tracé (`drawDonutChart`) et son test la partagent.
 
 /** Une étiquette à poser. */
@@ -46,17 +53,64 @@ export interface Type_CalloutBounds {
   half_height?: number
   /** La demi-largeur du cadre, depuis le centre du disque. */
   half_width?: number
+  /** La largeur du cadre à droite et à gauche du centre, quand elles diffèrent (sinon `half_width`). */
+  right_width?: number
+  left_width?: number
 }
 
 /** L'écart vertical minimal entre deux étiquettes d'une même colonne, en pixels. */
 export const CALLOUT_STACK_GAP_PX = 2
 
+/** Au-delà de ce nombre de hauteurs d'étiquette entre sa place et son ancre, elle se tait. */
+export const CALLOUT_MAX_SHIFT_LINES = 1.5
+
 const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
+
+interface Type_Wanted { r: Type_CalloutRequest, want: number }
+
+/**
+ * La colonne détendue AU PLUS JUSTE : triées par hauteur voulue, les étiquettes qui se chevauchent
+ * forment des grappes, chaque grappe se pose à la moyenne de ce que veulent ses membres (le moins de
+ * déplacement total), dans [-limit, limit]. Rend le centre de chacune, ou null si la colonne ne
+ * tient pas dans le cadre.
+ */
+const relaxColumn = (items: Type_Wanted[], limit: number): number[] | null => {
+  const sorted = [...items].sort((a, b) => a.want - b.want)
+  const total = sorted.reduce((s, c) => s + c.r.height, 0) + CALLOUT_STACK_GAP_PX * (sorted.length - 1)
+  if (total > 2 * limit + 1e-9) return null
+  interface Cluster { members: Type_Wanted[], offsets: number[], height: number, top: number }
+  const placeOf = (c: Cluster) => {
+    const ideal = c.members.reduce((s, m, k) => s + (m.want - m.r.height / 2 - c.offsets[k]), 0) / c.members.length
+    c.top = Math.max(-limit, Math.min(limit - c.height, ideal))
+  }
+  const stack: Cluster[] = []
+  sorted.forEach(m => {
+    let cur: Cluster = { members: [m], offsets: [0], height: m.r.height, top: 0 }
+    placeOf(cur)
+    while (stack.length > 0) {
+      const prev = stack[stack.length - 1]
+      if (prev.top + prev.height + CALLOUT_STACK_GAP_PX <= cur.top + 1e-9) break
+      stack.pop()
+      const shift = prev.height + CALLOUT_STACK_GAP_PX
+      cur = {
+        members: [...prev.members, ...cur.members],
+        offsets: [...prev.offsets, ...cur.offsets.map(o => o + shift)],
+        height: prev.height + CALLOUT_STACK_GAP_PX + cur.height,
+        top: 0
+      }
+      placeOf(cur)
+    }
+    stack.push(cur)
+  })
+  const ys = new Map<Type_Wanted, number>()
+  stack.forEach(c => c.members.forEach((m, k) => ys.set(m, c.top + c.offsets[k] + m.r.height / 2)))
+  return items.map(m => ys.get(m) as number)
+}
 
 /**
  * Range les étiquettes détachées autour d'un disque de rayon `radius`. `gap` est l'écart du coude au
  * bord, `step` le palier horizontal entre le coude et le texte. Une étiquette absente de la carte
- * rendue ne tient pas dans `bounds` : elle se tait.
+ * rendue ne tient pas dans `bounds`, ou s'écarterait trop de son ancre : elle se tait.
  */
 export const layoutDonutCallouts = (
   requests: Type_CalloutRequest[], radius: number, gap: number, step: number = gap,
@@ -66,59 +120,33 @@ export const layoutDonutCallouts = (
   const elbow_r = radius + gap
   const text_x = elbow_r + step
   ;([1, -1] as const).forEach(side => {
-    let mine = requests
+    const room_w = (side > 0 ? bounds.right_width : bounds.left_width) ?? bounds.half_width
+    const mine = requests
       .filter(r => (Math.sin(r.mid_angle) >= 0 ? 1 : -1) === side)
       // Trop large pour le cadre : elle ne tient d'aucune façon.
-      .filter(r => bounds.half_width === undefined || text_x + (r.width ?? 0) <= bounds.half_width)
-    if (bounds.half_height !== undefined) {
-      // Les plus grandes d'abord, tant que la pile tient dans la hauteur du cadre.
-      const room = 2 * bounds.half_height
-      let used = 0
-      const kept = new Set<Type_CalloutRequest>()
-      ;[...mine].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0)).forEach(r => {
-        const need = r.height + (kept.size > 0 ? CALLOUT_STACK_GAP_PX : 0)
-        if (used + need <= room) { kept.add(r); used += need }
-      })
-      mine = mine.filter(r => kept.has(r))
-    }
-    const column = mine
-      .map(r => ({ r, y: point(elbow_r, r.mid_angle).y }))
-      .sort((a, b) => a.y - b.y)
-    if (column.length === 0) return
-    // Descente : chacune au moins sa demi-hauteur, celle de la précédente et 2 px sous elle.
-    for (let i = 1; i < column.length; i++) {
-      const prev = column[i - 1]
-      const cur = column[i]
-      const min_y = prev.y + (prev.r.height + cur.r.height) / 2 + CALLOUT_STACK_GAP_PX
-      if (cur.y < min_y) cur.y = min_y
-    }
-    // Le cadre de la colonne : celui qui est donné, sinon la hauteur du disque et de son coude, ou
-    // celle de la colonne si elle est plus haute — elle se centre alors sur le disque.
-    const stacked = column.reduce((s, c) => s + c.r.height, 0) + CALLOUT_STACK_GAP_PX * (column.length - 1)
-    const limit = bounds.half_height ?? Math.max(elbow_r, stacked / 2)
-    const last = column[column.length - 1]
-    if (last.y + last.r.height / 2 > limit) {
-      // Remontée : la dernière revient au bas du cadre, les précédentes lui laissent la place.
-      last.y = limit - last.r.height / 2
-      for (let i = column.length - 2; i >= 0; i--) {
-        const next = column[i + 1]
-        const cur = column[i]
-        const max_y = next.y - (next.r.height + cur.r.height) / 2 - CALLOUT_STACK_GAP_PX
-        if (cur.y > max_y) cur.y = max_y
-      }
-    }
-    const first = column[0]
-    if (first.y - first.r.height / 2 < -limit) {
-      // La remontée a trop poussé : on redescend la colonne d'un bloc (elle tient, cf. plus haut).
-      const shift = -limit - (first.y - first.r.height / 2)
-      column.forEach(c => { c.y += shift })
-    }
-    column.forEach(({ r, y }) => {
+      .filter(r => room_w === undefined || text_x + (r.width ?? 0) <= room_w + 1e-6)
+    if (mine.length === 0) return
+    // Le cadre de la colonne : celui qui est donné, sinon le disque, son coude et une étiquette.
+    const limit = bounds.half_height ?? elbow_r + Math.max(...mine.map(r => r.height))
+    // Les plus grandes parts d'abord : chacune est admise si la colonne détendue la garde dans le
+    // cadre ET laisse chaque étiquette déjà admise près de son ancre.
+    let kept: Type_Wanted[] = []
+    let ys: number[] = []
+    ;[...mine].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0)).forEach(r => {
+      const trial = [...kept, { r, want: point(elbow_r, r.mid_angle).y }]
+      const at = relaxColumn(trial, limit)
+      if (at === null) return
+      const near = trial.every((m, k) => Math.abs(at[k] - m.want) <= CALLOUT_MAX_SHIFT_LINES * m.r.height + 1e-9)
+      if (!near) return
+      kept = trial
+      ys = at
+    })
+    kept.forEach(({ r }, k) => {
       out.set(r.id, {
         anchor: point(radius, r.mid_angle),
         elbow: point(elbow_r, r.mid_angle),
         x: side * text_x,
-        y,
+        y: ys[k],
         side,
         text_anchor: side > 0 ? 'start' : 'end'
       })
