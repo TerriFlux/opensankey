@@ -171,6 +171,50 @@ describe('os#1511 lot 2 — persistance ADDITIVE : un fichier sans rien ne chang
     expect(sankey_relu.nodes_list.length).toBe(noeuds_avant)
   })
 
+  test('copyFrom recopie TOUT ce que toJSON ecrit (reinitialisation de vue)', () => {
+    // ViewsManager reinitialise une vue par `sankey.copyFrom` : un champ ecrit mais pas copie y
+    // disparaissait en silence (niveaux, niveau courant, geometrie des membres, attachement).
+    const { app, sankey, pays, france, noeud } = monter()
+    pays.current_level_index = 1
+    pays.member_bands = false
+    pays.reference_node_id = noeud.id
+    pays.members_order = 'tree'
+    france.position = { x: 120, y: 340 }
+    france.latitude = 46.6
+    france.longitude = 2.3
+    noeud.driving_dimension = pays
+
+    const copie = new Class_ApplicationData(false)
+    copie.drawing_area.sankey.copyFrom(sankey)
+    const sankey_copie = copie.drawing_area.sankey
+    const pays_copie = sankey_copie.data_taggs_dict['pays'] as unknown as Class_DataTagGroup
+
+    expect(pays_copie.toJSON()).toEqual(pays.toJSON())
+    expect(pays_copie.levels).toEqual(['monde', 'regions', 'pays'])
+    expect(pays_copie.current_level_index).toBe(1)
+    expect((pays_copie.tags_dict['france'] as Class_DataTag).parent?.id).toBe('europe')
+    expect(sankey_copie.nodes_dict[noeud.id].driving_dimension?.id).toBe('pays')
+    expect((app.toJSON()['nodes'] as Record<string, Record<string, unknown>>)[noeud.id]['driving_dimension'])
+      .toBe('pays')
+  })
+
+  test('copyFrom avec appariement par nom retraduit le parent vers les ids de la cible', () => {
+    const { pays } = monter()
+    const app_cible = new Class_ApplicationData(false)
+    const cible = app_cible.drawing_area.sankey.addDataTagGroup('pays', 'Pays', false) as unknown as Class_DataTagGroup
+    const ids_cible = ['m', 'eu', 'af', 'fr', 'es', 'ma']
+    const ids_source = ['monde', 'europe', 'afrique', 'france', 'espagne', 'maroc']
+    const noms = ['Monde', 'Europe', 'Afrique', 'France', 'Espagne', 'Maroc']
+    noms.forEach((nom, i) => cible.addTag(nom, ids_cible[i]))
+    const appariement: { [_: string]: string } = {}
+    ids_cible.forEach((id, i) => { appariement[id] = ids_source[i] })
+
+    cible.copyFrom(pays, appariement)
+
+    expect((cible.tags_dict['fr'] as Class_DataTag).parent?.id).toBe('eu')
+    expect((cible.tags_dict['eu'] as Class_DataTag).parent?.id).toBe('m')
+  })
+
   test('une position A MOITIE ecrite est ignoree plutot que completee', () => {
     const { france } = monter()
     const json = france.toJSON()

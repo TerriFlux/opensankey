@@ -1354,10 +1354,21 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     matching_tags_id: { [_: string]: string; } = {}
   ) {
     super._copyFrom(tagg_to_copy, matching_tags_id)
+    // os#1511 — les membres ont recopié l'id de parent de la SOURCE : on le ramène aux ids de ce
+    // groupe (`matching_tags_id` va de nos ids vers ceux de la source).
+    const source_to_target: { [source_id: string]: string } = {}
+    Object.entries(matching_tags_id).forEach(([target, source]) => { source_to_target[source] = target })
+    if (Object.keys(source_to_target).length > 0) {
+      (this.tags_list as Class_DataTag[]).forEach(tag => tag.remapParentId(source_to_target))
+    }
     this._use_colors = tagg_to_copy.use_colors
     this._is_unit = tagg_to_copy._is_unit
     this._propagate_structure = tagg_to_copy._propagate_structure
     this._position_mode = tagg_to_copy._position_mode
+    // os#1511 — tout ce que `_toJSON` écrit se copie : sans ces lignes, réinitialiser une vue
+    // (ViewsManager → `sankey.copyFrom`) aplatissait une dimension hiérarchisée.
+    this._levels = [...tagg_to_copy._levels]
+    this._current_level_index = tagg_to_copy._current_level_index
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
     this._reference_node_id = tagg_to_copy._reference_node_id
