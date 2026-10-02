@@ -60,7 +60,7 @@ import {
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
 import { buildNestedDimensionTree, dataCutOf } from './DataDimensionHierarchy'
-import type { Type_DataOpening } from './DataDimensionHierarchy'
+import type { Type_DataCut, Type_DataOpening } from './DataDimensionHierarchy'
 import { parseMemberSectorPath } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
@@ -356,6 +356,11 @@ export interface Type_HierarchyReading {
    * `figureOpening`). Absente : liée au diagramme, le défaut.
    */
   data_opening?: Type_DataOpening
+  /**
+   * 02/10/2026 — LA DISPOSITION DES NIVEAUX DE CHAQUE DIMENSION DE DONNÉES, pour l'arbre en anneaux
+   * (cf. `foldInPlaceLevels`). Absente : un anneau par niveau partout, comme hier.
+   */
+  levels_display_of?: (dimension_id: string) => 'in_place' | 'rings'
 }
 
 /**
@@ -568,20 +573,33 @@ export const analysisHierarchyTree = (
  * L'arbre, bâti à la demande selon la coupe de la figure (`dataCutOf`, qui décide seule des
  * dimensions qui entrent et de celles qui découpent).
  */
+/**
+ * La coupe EN VIGUEUR d'une descente par dimension de données — celle que l'arbre lit. `null` quand
+ * la dimension du descripteur n'existe plus.
+ */
+export const analysisDataCutOf = (
+  subject: Type_ChartSubject,
+  spec: { data_tagg_id: string, nested_tagg_ids?: string[] },
+  reading: Type_HierarchyReading = {}
+): Type_DataCut | null => {
+  const sankey = (subject.kind === 'node' ? subject.node : subject.link).sankey
+  if (sankey.data_taggs_dict[spec.data_tagg_id] === undefined) return null
+  return dataCutOf(
+    sankey,
+    [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])],
+    reading.data_opening ?? { linked: true },
+    reading.exclude_dimension_ids
+  )
+}
+
 const dataDimensionTreeOf = (
   subject: Type_ChartSubject,
   spec: { data_tagg_id: string, nested_tagg_ids?: string[] },
   nav: Type_FigureNavigation,
   reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
-  const sankey = (subject.kind === 'node' ? subject.node : subject.link).sankey
-  if (sankey.data_taggs_dict[spec.data_tagg_id] === undefined) return null
-  const cut = dataCutOf(
-    sankey,
-    [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])],
-    reading.data_opening ?? { linked: true },
-    reading.exclude_dimension_ids
-  )
+  const cut = analysisDataCutOf(subject, spec, reading)
+  if (cut === null) return null
   return buildNestedDimensionTree(
     subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
     cut,
@@ -590,7 +608,8 @@ const dataDimensionTreeOf = (
       max_depth: reading.max_depth,
       value_mode: reading.value_mode,
       node_value_mode: reading.node_value_mode,
-      residual_label: reading.residual_label
+      residual_label: reading.residual_label,
+      levels_display_of: reading.levels_display_of
     }
   )
 }

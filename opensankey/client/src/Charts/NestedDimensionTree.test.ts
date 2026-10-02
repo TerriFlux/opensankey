@@ -129,3 +129,45 @@ describe('os#1511 — dimensions emboitees', () => {
     expect(lie(m).children.map(c => [c.label, c.value])).toEqual([['France', 15], ['Allemagne', 27]])
   })
 })
+
+// 02/10/2026 — LA DISPOSITION DES NIVEAUX PAR DIMENSION : une dimension en secteurs replie ses
+// niveaux dans un anneau, une dimension en sunburst garde un anneau par niveau.
+describe('os#1511 — disposition des niveaux par dimension', () => {
+  const P = (id: string) => memberSectorId('filiere', id)
+  const disposer = (m: ReturnType<typeof monter>, modes: { [dim: string]: 'in_place' | 'rings' }) => buildNestedDimensionTree(
+    { kind: 'link', link: m.lien },
+    dataCutOf(m.lien.sankey, ['filiere', 'pays'], { linked: false, opened: { filiere: ['produits', 'cereales'], pays: ['monde'] } }),
+    { data_tags: null }, { max_depth: 8, levels_display_of: id => modes[id] ?? 'rings' }
+  )
+  const profondeurs = (n: Type_SunburstNode): number => 1 + Math.max(0, ...n.children.map(profondeurs))
+
+  test('tout en sunburst : l arbre d hier, un anneau par niveau', () => {
+    const t = disposer(monter(), { filiere: 'rings', pays: 'rings' })
+    const racine = t?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => c.id)).toEqual([P('cereales')])
+    expect(profondeurs(racine)).toBe(4)
+    expect(t?.rings.length).toBe(4)
+  })
+
+  test('filieres en secteurs, pays en sunburst dessous : les grains remplacent les cereales', () => {
+    const t = disposer(monter(), { filiere: 'in_place', pays: 'rings' })
+    const racine = t?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => [c.id, c.value, c.depth])).toEqual([[P('ble'), 30, 1], [P('mais'), 12, 1]])
+    const ble = chercher(racine, P('ble')) as Type_SunburstNode
+    expect(ble.children.map(c => [c.label, c.value, c.depth])).toEqual([['France', 10, 2], ['Allemagne', 20, 2]])
+    expect(racine.value).toBe(42)
+    expect(t?.rings.map(r => r.dimension_id)).toEqual(['filiere', 'filiere', 'pays'])
+  })
+
+  test('filieres en sunburst, pays en secteurs : la frontiere entre dimensions garde son anneau', () => {
+    const t = disposer(monter(), { filiere: 'rings', pays: 'in_place' })
+    const racine = t?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => c.id)).toEqual([P('cereales')])
+    const ble = chercher(racine, P('ble')) as Type_SunburstNode
+    expect(ble.depth).toBe(2)
+    expect(ble.children.map(c => parseMemberSectorId(c.id))).toEqual([
+      { dimension_id: 'pays', member_id: 'fr' }, { dimension_id: 'pays', member_id: 'de' }
+    ])
+    expect(profondeurs(racine)).toBe(4)
+  })
+})

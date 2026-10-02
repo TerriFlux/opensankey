@@ -44,7 +44,10 @@ import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
   HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
-import { readFigureDataLayer, readFigureOpening, withDataOpening, withElementOpening } from './figureOpening'
+import {
+  levelsDisplayOfDimension, readFigureDataLayer, readFigureLevelsDisplay, readFigureOpening, withDataOpening,
+  withElementOpening
+} from './figureOpening'
 import { mountFigureTextZones } from './figureTextZones'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
@@ -73,7 +76,8 @@ import {
 } from '../Charts/AnalysisDescriptor'
 import { analysisPartTarget } from './AnalysisPartTarget'
 import {
-  analysisHierarchyTree, buildAnalysisChartData, isFluxCompare, Type_DecomposeSpec, Type_ChartSubject
+  analysisDataCutOf, analysisHierarchyTree, buildAnalysisChartData, isFluxCompare, Type_DecomposeSpec,
+  Type_ChartSubject
 } from '../Charts/AnalysisChartData'
 import type { Type_HierarchyReading } from '../Charts/AnalysisChartData'
 // 24/09/2026 — le tracé à anneaux et sa lecture de style, appelés par la couronne quand le mode
@@ -397,6 +401,33 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
   )
 }
 
+/**
+ * 02/10/2026 — LA FIGURE SE DESSINE-T-ELLE EN ANNEAUX, et avec quelle lecture ? `null` : en place.
+ *
+ * Couronne de NŒUDS (ou croisement) : le réglage commun `levels_display`, comme hier. Couronne sur
+ * DIMENSIONS DE DONNÉES : chaque dimension a sa disposition (`readFigureLevelsDisplay`) ; dès qu'une
+ * dimension qui découpe est en sunburst, la figure passe en anneaux, et celles en secteurs y
+ * replient leurs niveaux (`foldInPlaceLevels`). Toutes en secteurs, c'est la couronne en place
+ * d'hier — un seul anneau, pas un anneau par dimension.
+ */
+const ringsReadingOf = (
+  ctx: Type_RepresentationContext,
+  a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor },
+  reading: Type_HierarchyReading
+): Type_HierarchyReading | null => {
+  const levels = readFigureLevelsDisplay(ctx.options)
+  const decompose = effectiveDecompose(a.descriptor)
+  if (decompose?.kind !== 'data_dimension') return levels.common === 'rings' ? reading : null
+  const cut = analysisDataCutOf(a.subject, decompose, reading)
+  if (cut === null) return null
+  const modeOf = (id: string) => levelsDisplayOfDimension(levels, id)
+  // Rien ne découpe : un seul secteur, que seul le réglage commun peut demander en anneau.
+  const any_rings = cut.dividing.length === 0
+    ? levels.common === 'rings'
+    : cut.dividing.some(d => modeOf(d.id) === 'rings')
+  return any_rings ? { ...reading, levels_display_of: modeOf } : null
+}
+
 /** L'arbre à dessiner en anneaux, ou `null` quand la figure est « en place » (ou à plat). */
 const ringsTreeOf = (
   ctx: Type_RepresentationContext,
@@ -407,8 +438,9 @@ const ringsTreeOf = (
   // `figureChartStyleOf` et non `donutStyleOf` : celui-ci demande la descente, qui demanderait
   // l'arbre — on tournerait en rond. Le mode de dessin, lui, se lit sur le sac tel quel.
   const style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
-  if (style.levels_display !== 'rings') return null
-  const tree = analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading, expanded)
+  const ring_reading = ringsReadingOf(ctx, a, reading)
+  if (ring_reading === null) return null
+  const tree = analysisHierarchyTree(a.subject, a.descriptor, a.nav, ring_reading, expanded)
   // 26/09/2026 — L'ORDRE DES PARTS S'APPLIQUE AUX ANNEAUX AUSSI. L'arbre est bâti en ordre 'model'
   // (le classement est un réglage du graphe), et à plat `orderParts` l'applique ; en anneaux,
   // personne ne le faisait — les secteurs sortaient dans l'ordre du fichier, à plat par valeur
