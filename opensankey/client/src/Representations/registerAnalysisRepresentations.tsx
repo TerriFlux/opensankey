@@ -60,7 +60,7 @@ import {
   dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
 import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
-import { foldSmallCells } from '../Algorithms/DimensionOthers'
+import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
 import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { type Type_RepresentationContext } from './RepresentationRegistry'
@@ -1177,10 +1177,16 @@ export const registerAnalysisRepresentations = (): void => {
         // bandes ou les parts »). Les petites cases se replient par la règle des parts, avec les
         // réglages de la couronne (`parts_group_under`, `parts_max`), en UNE dernière case qui vaut
         // leur agrégat, part par part ; une case nulle dans l'unité affichée n'a jamais sa couronne.
+        // Le seuil des PARTS de la couronne vaut 0 par défaut (« ne replie rien ») : appliqué aux
+        // cases, il laissait Divers, Océanie, Antarctique en couronnes invisibles. Les cases suivent
+        // la règle des bandes (`OTHERS_MIN_SHARE_PCT`) tant que l'auteur n'a pas posé de seuil.
         const fmt = base.format
         const { kept: shown, folded } = foldSmallCells(
           measured,
-          { min_share_pct: style.parts_group_under, max_parts: style.parts_max },
+          {
+            min_share_pct: style.parts_group_under > 0 ? style.parts_group_under : OTHERS_MIN_SHARE_PCT,
+            max_parts: style.parts_max
+          },
           value => !(value > 0) || fmt(value) === fmt(0)
         )
         const per_member: { name: string, slices: Type_StatSlice[], total: number, folded_names?: string[] }[] =
