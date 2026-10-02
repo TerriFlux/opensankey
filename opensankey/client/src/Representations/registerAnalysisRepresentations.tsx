@@ -642,7 +642,15 @@ const dataDimensionClickGestures = (
   const app_data = ctx.app_data
   const sankey = app_data.drawing_area.sankey
   const data_opening = readFigureOpening(ctx.options).data
-  const cut = dataCutOf(sankey, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])], data_opening)
+  // 02/10/2026 — LA DIMENSION DES PETITS MULTIPLES SORT DE LA COUPE, comme au dessin
+  // (`hierarchyReadingOf`) et dans l'hôte (`figureGesturesHost`). Le clic sur une part agit sur la
+  // dimension découpée en parts, jamais sur celle des cases ; et la réécriture de la coupe ne doit
+  // pas toucher à la liste des cases — sans quoi une figure neuve retombait sur une seule couronne.
+  const split = smallMultiplesOf(ctx)
+  const cut = dataCutOf(
+    sankey, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])], data_opening,
+    split ? [split.dimension.id] : []
+  )
   const linked = cut.linked
   const dims = cut.dims
   if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
@@ -1161,6 +1169,15 @@ export const registerAnalysisRepresentations = (): void => {
             title_fallback: member.name,
             part_aspect: wiring.part_aspect,
             on_part_select: wiring.on_part_select,
+            // 02/10/2026 — LE CLIC OUVRE, COMME EN COURONNE SEULE (Julien : « le clic ne marche pas
+            // sur les parts de couronne en mode multiple »). Les cases ne recevaient pas le geste :
+            // le clic sélectionnait sans rien ouvrir. Une part porte le même identifiant dans
+            // chaque case et la coupe est celle de la FIGURE : ouvrir « Céréales » dans une case
+            // l'ouvre dans toutes. Le centre d'une case nomme son membre ; il ne ramène en arrière
+            // que si le geste existe (`back`), ce qui n'est pas le cas d'une dimension de données.
+            on_part_activate: gestures.activate,
+            on_centre_click: gestures.back,
+            centre_back_label: t('sunburst.back') as string,
             // Le panneau apprend l'encre réelle des parts par UN tracé : le premier.
             on_parts_resolved: i === 0 ? wiring.on_parts_resolved : undefined,
             small_multiple: {
