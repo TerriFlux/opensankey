@@ -1,10 +1,13 @@
 import { Class_ApplicationData } from './ApplicationData'
+import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerprint'
 import type { Class_DataTag, Class_FluxTag, Class_Tag } from './Tag'
 import type { Class_FluxTagGroup } from './TagGroup'
 import type { Type_JSON } from './Utils'
 import {
   RULE_QUANTITY_COMPUTED_RELATIVE_UNCERTAINTY, parseAssignmentRule, resolveRuleTag, serializeAssignmentRule
 } from './TagAssignmentRule'
+
+installJsdomRenderStubs()
 
 // jest 27/jsdom n'expose pas structuredClone (utilisé par Link.copyFrom)
 if (typeof globalThis.structuredClone !== 'function') {
@@ -234,5 +237,26 @@ describe('SA#580 — format', () => {
     const agreste = source.addTag('Agreste', 'agreste') as Class_Tag
     link.valueForTag(y2019)!.addTag(agreste)
     expect(link.valueForTag(y2019)!.toJSON()['tags']).toEqual({ source: ['agreste'] })
+  })
+})
+
+describe('SA#580 — dessin', () => {
+  it('l interrupteur « Style » du groupe recolore les flux dessinés (couleur des étiquettes)', () => {
+    resetHost()
+    const { app, link, fiabilite, tags } = makeRuleBased()
+    tags['Fiable'].color = '#1a9850'
+    app.drawing_area.draw()
+    const drawn = () => {
+      const shape = link.d3_selection?.select('.link_shape, .link_path')
+      const fill = shape?.attr('fill')
+      return (fill && fill !== 'none') ? fill : shape?.attr('stroke')
+    }
+    const before = drawn()
+    expect(before).not.toBe('#1a9850')
+    // Le geste de la carte « Affichage » : `use_colors`, sans redessin général du diagramme
+    fiabilite.use_colors = true
+    expect(drawn()).toBe('#1a9850')
+    fiabilite.use_colors = false
+    expect(drawn()).toBe(before)
   })
 })

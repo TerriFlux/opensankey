@@ -947,6 +947,13 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PUBLIC METHODS =====================================================================
   public updateTagsReferences(): void {
+    // SA#580 - groupe attribue par regles : ses etiquettes n'ont aucune reference (le port se
+    // calcule), n'importe quel flux peut en porter une. On les redessine tous — sans quoi
+    // l'interrupteur « Style » ne recolorait rien (vu au test local du 2026-10-02).
+    if (this.is_rule_based) {
+      this.drawFamilyElements()
+      return
+    }
     const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
