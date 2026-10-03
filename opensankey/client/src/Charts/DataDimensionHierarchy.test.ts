@@ -6,7 +6,8 @@ import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import {
   buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, dimensionShowsSeveralLevels, memberSectorId,
-  parseMemberSectorId, smallMultipleDefaultOpened, smallMultipleMembersOf
+  inactiveDimensionsOf, parseMemberSectorId, smallMultipleDefaultOpened, smallMultipleMembersOf,
+  toggledInactiveDimensions
 } from './DataDimensionHierarchy'
 import type { Type_DataDimensionOptions } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
@@ -467,5 +468,29 @@ describe('os#1511 — decocher un membre : la couronne ne le dessine plus', () =
     expect(smallMultipleMembersOf(m.groupe, {
       linked: false, opened: { filiere: ['produits'] }, hidden: { filiere: ['lait'] }
     }).map(t => t.id)).toEqual(['cereales'])
+  })
+})
+
+// 03/10/2026 — ACTIVER / DESACTIVER UNE DIMENSION (Julien : « une veritable activation/desactivation
+// serait plus claire »). Desactivee, elle ne decoupe pas ; il en reste toujours une active.
+describe('os#1511 — une dimension desactivee ne decoupe pas la couronne', () => {
+  const dims = [{ id: 'produits' }, { id: 'pays' }] as unknown as Class_DataTagGroup[]
+  test('desactiver l une des deux la retire, l autre reste active', () => {
+    expect(toggledInactiveDimensions(['produits', 'pays'], [], 'pays')).toEqual(['pays'])
+  })
+  test('desactiver l autre rallume la premiere d office', () => {
+    expect(toggledInactiveDimensions(['produits', 'pays'], ['pays'], 'produits')).toEqual(['produits'])
+  })
+  test('la reactiver la rend a la coupe', () => {
+    expect(toggledInactiveDimensions(['produits', 'pays'], ['pays'], 'pays')).toEqual([])
+  })
+  test('la seule dimension ne se desactive pas', () => {
+    expect(toggledInactiveDimensions(['produits'], [], 'produits')).toBeNull()
+  })
+  test('toutes desactivees dans un fichier : la premiere reste active', () => {
+    expect([...inactiveDimensionsOf(dims, ['produits', 'pays'])]).toEqual(['pays'])
+  })
+  test('la dimension des cases active suffit : la seule des parts peut etre desactivee', () => {
+    expect([...inactiveDimensionsOf(dims.slice(0, 1), ['produits'], true)]).toEqual(['produits'])
   })
 })
