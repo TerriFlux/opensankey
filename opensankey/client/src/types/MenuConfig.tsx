@@ -427,6 +427,12 @@ export type Type_MainZoneSnapshot = {
   active: string | null
   split: number
   bottom: number
+  /**
+   * sa#589 — LA MOSAÏQUE : l'arbre des découpes et leurs proportions. Sans elle, annuler une coupe
+   * ou un redimensionnement ne rendrait rien — c'est elle que ces gestes écrivent, les étiquettes
+   * `place` des volets n'en étant que le reflet.
+   */
+  grid: Type_MainZoneGridNode | null
   figures: { [id: string]: { [key: string]: Class_Figure } }
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
@@ -2534,6 +2540,7 @@ export class Class_MenuConfig {
       active: host._main_zone_active_id,
       split: host._main_zone_split_ratio,
       bottom: host._main_zone_bottom_px,
+      grid: gridClone(host._main_zone_grid),
       figures
     }
   }
@@ -2562,6 +2569,10 @@ export class Class_MenuConfig {
     host._main_zone_active_id = s.active
     host._main_zone_split_ratio = s.split
     host._main_zone_bottom_px = s.bottom
+    // sa#589 — la mosaïque d'abord, ses étiquettes avec elle : la normalisation qui suit lirait une
+    // étiquette d'une autre mosaïque comme une demande de déplacement.
+    host._main_zone_grid = gridClone(s.grid)
+    this._relabelMainZoneGrid()
     host._main_zone_active_pane_key = null
     host._main_zone_selected_pane_keys = []
     const figures: { [id: string]: { [key: string]: Class_Figure } } = {}

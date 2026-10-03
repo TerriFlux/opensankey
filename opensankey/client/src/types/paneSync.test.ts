@@ -347,6 +347,22 @@ describe('sa#568 toute action sur une figure ou un volet s\'annule, une par une'
     expect(mc.mainZoneOccupantById(a)?.place).toBe('floating')
   })
 
+  it('redimensionner deux volets de la mosaïque (sa#589) s\'annule', () => {
+    const { app, mc } = makeApp()
+    mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, 'right', undefined, true)
+    const sizes = () => JSON.stringify(mc.main_zone_grid)
+    const before = sizes()
+    const end = mc.beginUndoableMainZone()
+    mc.setMainZoneGridPairSizes([], 0, 1, 3)
+    end()
+    const after = sizes()
+    expect(after).not.toBe(before)
+    app.history.applyUndo()
+    expect(sizes()).toBe(before)
+    app.history.applyRedo()
+    expect(sizes()).toBe(after)
+  })
+
   it('ouvrir ou déplacer un volet s\'annule ; un geste qui ne change rien n\'entre pas', () => {
     const { app, mc } = makeApp()
     let a = ''
