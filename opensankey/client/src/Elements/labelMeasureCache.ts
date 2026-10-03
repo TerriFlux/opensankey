@@ -120,7 +120,7 @@ export function labelFontTemplate(text_node: SVGTextElement): string {
   // Un attribut de police absent s'HÉRITE du contexte (la légende pose sa propre famille sur son
   // groupe) : la clé ne le verrait pas. Seule une police entièrement portée par le <text> se retient.
   const own_font = !!font_style && !!font_weight && !!font_family
-  const key = [font_style, font_weight, font_family, text_node.getAttribute('class')].join('')
+  const key = [font_style, font_weight, font_family, text_node.getAttribute('class')].join('\u0001')
   let font = own_font ? by_key.get(key) : undefined
   if (font === undefined) {
     // os#1385 — style calculé dans la VUE du nœud : un canevas détaché dessine son texte dans une
