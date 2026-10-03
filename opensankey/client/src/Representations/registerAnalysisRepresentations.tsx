@@ -22,7 +22,7 @@
 // moitiés du mécanisme des figures vivent enfin dans le même paquet, et peuvent converger.
 
 import React from 'react'
-import { FaChartPie, FaChartBar } from 'react-icons/fa'
+import { FaChartPie, FaChartBar, FaTable } from 'react-icons/fa'
 
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
@@ -67,7 +67,12 @@ import {
 import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
 import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
-import { type Type_RepresentationContext } from './RepresentationRegistry'
+import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
+import {
+  buildDimensionMatrix, dimensionMatrixCsv, matrixDecimals, matrixNumberFormatter, nextMatrixSort
+} from '../Charts/DimensionMatrix'
+import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
+import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
@@ -1710,6 +1715,129 @@ export const registerAnalysisRepresentations = (): void => {
         on_label_move: wiring.on_label_move
       })
       return () => { container.innerHTML = '' }
+    }
+  })
+
+  registerDimensionMatrix()
+}
+
+// ── os#1519 — LE TABLEAU CROISÉ ──────────────────────────────────────────────────────────────────
+//
+// Une autre lecture de la même analyse que la couronne : même sujet, même coupe (`analysisDataCutOf`,
+// liée au diagramme par défaut), même cube. Ce n'est pas une figure À PARTS (rien à styler part par
+// part) : elle s'enregistre directement, comme une vue, et se redessine sur place quand la coupe
+// change (`redraw`), en gardant ses +/−.
+
+/** Les +/− posés dans chaque tableau, par fenêtre et vignette : ils survivent au redessin. */
+const matrix_row_toggles = new Map<string, Map<string, boolean>>()
+/** Le tri choisi dans chaque tableau (absent : Total décroissant). */
+const matrix_sorts = new Map<string, Type_MatrixSort>()
+
+/** Ce qu'on lit en plus du sujet : les coordonnées des dimensions SANS niveaux (l'année, par exemple). */
+const matrixCoordinateLabel = (sankey: { data_taggs_list: unknown[] }, nav: Type_FigureNavigation): string =>
+  (sankey.data_taggs_list as Class_DataTagGroup[])
+    .filter(group => !group.is_hierarchical && group.tags_list.length > 1)
+    .map(group => {
+      const pinned = nav.data_tags?.filter(tag => tag.group.id === group.id) ?? []
+      const shown = pinned.length > 0 ? pinned : (group.selected_tags_list as Class_DataTag[])
+      return shown.map(tag => tag.name).join(', ')
+    })
+    .filter(text => text !== '')
+    .join(' · ')
+
+const registerDimensionMatrix = (): void => {
+  representation_registry.register({
+    id: 'osp.repr.matrix',
+    scale: 'element',
+    order: 35,
+    label: (a) => a.t('matrix.label'),
+    icon: <FaTable />,
+    // Sur une décomposition par dimension(s) de données seulement : c'est elle qui a des lignes et
+    // des colonnes. Un sujet sans dimension à niveaux n'a rien à croiser.
+    isAvailable: (ctx) => {
+      const a = analysisOf(ctx)
+      return !!a && effectiveDecompose(a.descriptor)?.kind === 'data_dimension'
+    },
+    draw: (container, ctx) => {
+      const t = ctx.app_data.t
+      const key = `${ctx.window_id ?? ''}|${ctx.pane_key ?? ''}`
+      const toggles = matrix_row_toggles.get(key) ?? new Map<string, boolean>()
+      matrix_row_toggles.set(key, toggles)
+      let teardown: () => void = () => { container.innerHTML = '' }
+
+      const render = () => {
+        teardown()
+        const a = analysisOf(ctx)
+        const decompose = a ? effectiveDecompose(a.descriptor) : null
+        if (!a || decompose?.kind !== 'data_dimension') {
+          container.innerHTML = ''
+          return
+        }
+        const reading = hierarchyReadingOf(ctx)
+        const cut = analysisDataCutOf(a.subject, decompose, reading)
+        const subject = a.subject.kind === 'node'
+          ? { kind: 'node' as const, node: a.subject.node }
+          : { kind: 'link' as const, link: a.subject.link }
+        const matrix = cut === null ? null : buildDimensionMatrix(subject, cut, a.nav, {
+          row_toggles: toggles,
+          sort: matrix_sorts.get(key),
+          node_value_mode: reading.node_value_mode,
+          residual_label: t('matrix.unallocated'),
+          total_label: t('matrix.total'),
+          value_label: t('matrix.value'),
+          share_label: t('matrix.share')
+        })
+        const app_data = ctx.app_data
+        const unit = a.subject.kind === 'node' ? figureUnitOfNode(a.subject.node) : figureUnitOf(app_data.drawing_area.sankey)
+        const factor = unitFactorOfSubject(a.subject, app_data)
+        const lang = app_data.language || 'fr'
+        // Des décimales FIXES pour tout le tableau (cf. `matrixDecimals`), l'unité dans l'en-tête.
+        const total_row = matrix?.rows[matrix.rows.length - 1]
+        const grand = (total_row?.cells[matrix?.column_dimension ? total_row.cells.length - 1 : 0] ?? 0) / factor
+        const numbers = matrixNumberFormatter(matrixDecimals(grand), lang)
+        const format = (v: number) => numbers(v / factor)
+        const percent = new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 1 })
+        const element = a.subject.kind === 'node' ? a.subject.node : a.subject.link
+        const coordinate = matrixCoordinateLabel(element.sankey, a.nav)
+        const title = coordinate ? `${displayedNameOf(element)} · ${coordinate}` : displayedNameOf(element)
+        teardown = drawDimensionMatrixTable(container, matrix, {
+          format,
+          format_share: (v) => percent.format(v),
+          title,
+          unit,
+          labels: {
+            expand: t('matrix.expand'), collapse: t('matrix.collapse'),
+            export_csv: t('matrix.export_csv'), empty: t('matrix.empty')
+          },
+          on_toggle: (member_id, expanded) => {
+            toggles.set(member_id, expanded)
+            render()
+          },
+          sort_label: t('matrix.sort_by'),
+          on_sort: (sort_key) => {
+            if (matrix === null) return
+            matrix_sorts.set(key, nextMatrixSort(matrix.sort, sort_key))
+            render()
+          },
+          on_export: () => {
+            if (matrix === null) return
+            const decimal = ['en', 'zh-CN', 'ja'].includes(lang) ? '.' : ','
+            // Le BOM : Excel lit alors l'UTF-8 (accents, « ‰ ») sans qu'on le lui dise.
+            const csv = '﻿' + dimensionMatrixCsv(matrix, { decimal, factor, unit })
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `${title.replace(/[\\/:*?"<>|]+/g, '_')}.csv`
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            setTimeout(() => URL.revokeObjectURL(url), 0)
+          }
+        })
+      }
+      render()
+      return { redraw: render, cleanup: () => teardown() }
     }
   })
 }
