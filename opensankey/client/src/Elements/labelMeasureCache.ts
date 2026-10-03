@@ -112,11 +112,14 @@ export function labelFontTemplate(text_node: SVGTextElement): string {
     by_key = new Map()
     _fonts.set(doc, by_key)
   }
-  const key = [
-    text_node.getAttribute('font-style'), text_node.getAttribute('font-weight'),
-    text_node.getAttribute('font-family'), text_node.getAttribute('class')
-  ].join('')
-  let font = by_key.get(key)
+  const font_style = text_node.getAttribute('font-style')
+  const font_weight = text_node.getAttribute('font-weight')
+  const font_family = text_node.getAttribute('font-family')
+  // Un attribut de police absent s'HÉRITE du contexte (la légende pose sa propre famille sur son
+  // groupe) : la clé ne le verrait pas. Seule une police entièrement portée par le <text> se retient.
+  const own_font = !!font_style && !!font_weight && !!font_family
+  const key = [font_style, font_weight, font_family, text_node.getAttribute('class')].join('')
+  let font = own_font ? by_key.get(key) : undefined
   if (font === undefined) {
     // os#1385 — style calculé dans la VUE du nœud : un canevas détaché dessine son texte dans une
     // autre fenêtre de navigateur, dont la feuille de style est la sienne. Retombe sur la fenêtre de
@@ -125,7 +128,7 @@ export function labelFontTemplate(text_node: SVGTextElement): string {
     font = `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} {size}px ${computed.fontFamily || 'sans-serif'}`
     // Hors du document, le style calculé est VIDE (d'où les replis ci-dessus) : la police rendue
     // ne vaut que pour cet appel, on ne la retient pas.
-    if (text_node.isConnected && computed.fontFamily) by_key.set(key, font)
+    if (own_font && text_node.isConnected && computed.fontFamily) by_key.set(key, font)
   }
   return font
 }
