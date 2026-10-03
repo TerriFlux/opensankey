@@ -1,5 +1,5 @@
 import {
-  levelsDisplayOfDimension, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withDimensionLevelsDisplay,
+  dataDimensionLevelsDisplay, levelsDisplayOfDimension, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withDimensionLevelsDisplay,
   withElementOpening, withFigureOpening
 } from './figureOpening'
 
@@ -22,6 +22,24 @@ describe('os#1511 — disposition des niveaux par dimension', () => {
   test('ecrire une dimension garde les autres et le reglage commun', () => {
     const o = withDimensionLevelsDisplay({ levels_display: 'in_place', levels_display_by: { pays: 'in_place' } }, 'filiere', 'rings')
     expect(o).toEqual({ levels_display: 'in_place', levels_display_by: { pays: 'in_place', filiere: 'rings' } })
+  })
+})
+
+// 03/10/2026 — LE DEFAUT SUIT LE NOMBRE DE DIMENSIONS QUI DECOUPENT : sunburst seule, un anneau
+// chacune a plusieurs. Le choix explicite de « Dessiner » garde le dernier mot.
+describe('os#1511 — disposition par defaut selon le nombre de dimensions', () => {
+  test('une seule dimension decoupe : sunburst complet, meme si le reglage commun dit en place', () => {
+    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({ levels_display: 'in_place' }), 1, 'produit')).toBe('rings')
+  })
+  test('deux dimensions ou plus : un anneau par dimension, meme si le reglage commun dit en anneaux', () => {
+    const l = readFigureLevelsDisplay({ levels_display: 'rings' })
+    expect(dataDimensionLevelsDisplay(l, 2, 'produit')).toBe('in_place')
+    expect(dataDimensionLevelsDisplay(l, 3, 'pays')).toBe('in_place')
+  })
+  test('une entree propre a la dimension prime sur la regle', () => {
+    const l = readFigureLevelsDisplay({ levels_display_by: { produit: 'rings', pays: 'in_place' } })
+    expect(dataDimensionLevelsDisplay(l, 2, 'produit')).toBe('rings')
+    expect(dataDimensionLevelsDisplay(l, 1, 'pays')).toBe('in_place')
   })
 })
 

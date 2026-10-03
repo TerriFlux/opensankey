@@ -212,6 +212,19 @@ export const readFigureLevelsDisplay = (options: Type_Options | null | undefined
 export const levelsDisplayOfDimension = (levels: Type_FigureLevelsDisplay, dimension_id: string): Type_LevelsDisplay =>
   levels.by[dimension_id] ?? levels.common
 
+/**
+ * 03/10/2026 — LA DISPOSITION PAR DÉFAUT DÉPEND DU NOMBRE DE DIMENSIONS QUI DÉCOUPENT (os#1511).
+ * Julien : « le sunburst complet quand on travaille sur une seule dimension, et seulement deux
+ * anneaux quand on travaille sur deux dimensions (éventuellement n) ». Une dimension sans entrée
+ * PROPRE se dispose donc en sunburst si elle découpe seule, en secteurs (un anneau pour elle) dès
+ * qu'elles sont plusieurs. Le réglage commun ne joue plus sur une couronne de dimensions de données :
+ * ni la barre ni le panneau ne l'y offrent. Le choix explicite de « Dessiner » garde le dernier mot.
+ */
+export const dataDimensionLevelsDisplay = (
+  levels: Type_FigureLevelsDisplay, dividing_count: number, dimension_id: string
+): Type_LevelsDisplay =>
+  levels.by[dimension_id] ?? (dividing_count > 1 ? 'in_place' : 'rings')
+
 /** Le sac où la dimension `dimension_id` se dispose en `mode` ; les autres clés intactes. */
 export const withDimensionLevelsDisplay = (
   options: Type_Options, dimension_id: string, mode: Type_LevelsDisplay

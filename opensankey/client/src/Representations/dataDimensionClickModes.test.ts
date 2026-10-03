@@ -23,7 +23,7 @@ import { registerAnalysisRepresentations } from './registerAnalysisRepresentatio
 import { representation_registry, elementContext } from './RepresentationRegistry'
 import type { Type_Presentable } from '../components/panels/presentation/openPresentation'
 import {
-  COORDINATES_LINKED_KEY, DIMENSION_OPENING_KEY, HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
+  COORDINATES_LINKED_KEY, DIMENSION_OPENING_KEY, HIERARCHY_FOCUS_KEY, LEVELS_DISPLAY_BY_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
 import { INTERACTION_CONFIG } from './figureCatalogue'
 import { figureControlsOf } from './figureControls'
@@ -93,6 +93,9 @@ const scene = ({ clic, linked = false, focus, multiples = false, sans_diagramme 
   const options: { [k: string]: unknown } = {
     descriptor: { decompose: { kind: 'data_dimension', data_tagg_id: 'filiere' }, compare: null },
     interaction_click: clic,
+    // 03/10/2026 — seule, une dimension se dessine en sunburst par defaut : ces gestes sont ceux de
+    // la couronne EN PLACE, qu on demande donc explicitement.
+    [LEVELS_DISPLAY_BY_KEY]: { filiere: 'in_place' },
     ...(linked ? {} : {
       [COORDINATES_LINKED_KEY]: false,
       [DIMENSION_OPENING_KEY]: { pays: ['monde'], filiere: ['produits'] }

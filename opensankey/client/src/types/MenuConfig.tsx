@@ -181,6 +181,13 @@ export type Type_TopbarFigureMenus = {
   drawing: (dim: Class_DataTagGroup) => Type_TopbarFigureChoice[]
   /** La figure a sa coupe propre : « Afficher » du diagramme ne la touche pas. */
   detached: boolean
+  /**
+   * 03/10/2026 — Les dimensions qui découpent, de l'anneau intérieur à l'extérieur : la barre range
+   * leurs listes dans cet ordre. Moins de deux : pas d'ordre à régler.
+   */
+  nest_order?: string[]
+  /** ⇄ entre deux listes voisines : `dim_id` passe derrière sa voisine extérieure. */
+  swapNestWithNext?: (dim_id: string) => void
 }
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
 /** Les places qui prennent une CASE de la grille : celles dont la disposition se calcule. */

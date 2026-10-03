@@ -170,4 +170,14 @@ describe('os#1511 — disposition des niveaux par dimension', () => {
     ])
     expect(profondeurs(racine)).toBe(4)
   })
+
+  // 03/10/2026 — Julien : « seulement deux anneaux quand on travaille sur deux dimensions ».
+  test('les deux dimensions en secteurs : un anneau par dimension, grains puis pays', () => {
+    const t = disposer(monter(), { filiere: 'in_place', pays: 'in_place' })
+    const racine = t?.roots[0] as Type_SunburstNode
+    expect(racine.children.map(c => [c.id, c.depth])).toEqual([[P('ble'), 1], [P('mais'), 1]])
+    const ble = chercher(racine, P('ble')) as Type_SunburstNode
+    expect(ble.children.map(c => [c.label, c.depth])).toEqual([['France', 2], ['Allemagne', 2]])
+    expect(profondeurs(racine)).toBe(3)
+  })
 })

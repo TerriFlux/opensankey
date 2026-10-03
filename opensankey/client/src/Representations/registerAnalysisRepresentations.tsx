@@ -44,7 +44,7 @@ import {
   HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
 import {
-  levelsDisplayOfDimension, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay,
+  dataDimensionLevelsDisplay, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay,
   readFigureOpening, withDataOpening, withElementOpening, withFigureFocus
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
@@ -437,10 +437,10 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
  * 02/10/2026 — LA FIGURE SE DESSINE-T-ELLE EN ANNEAUX, et avec quelle lecture ? `null` : en place.
  *
  * Couronne de NŒUDS (ou croisement) : le réglage commun `levels_display`, comme hier. Couronne sur
- * DIMENSIONS DE DONNÉES : chaque dimension a sa disposition (`readFigureLevelsDisplay`) ; dès qu'une
- * dimension qui découpe est en sunburst, la figure passe en anneaux, et celles en secteurs y
- * replient leurs niveaux (`foldInPlaceLevels`). Toutes en secteurs, c'est la couronne en place
- * d'hier — un seul anneau, pas un anneau par dimension.
+ * DIMENSIONS DE DONNÉES : chaque dimension a sa disposition (`dataDimensionLevelsDisplay` : la sienne,
+ * sinon sunburst seule, secteurs à plusieurs) ; la figure passe en anneaux dès qu'une dimension qui
+ * découpe est en sunburst, ou que plusieurs découpent, et celles en secteurs y replient leurs niveaux
+ * (`foldInPlaceLevels`). Une seule dimension, en secteurs : la couronne en place, un seul anneau.
  */
 const ringsReadingOf = (
   ctx: Type_RepresentationContext,
@@ -452,11 +452,15 @@ const ringsReadingOf = (
   if (decompose?.kind !== 'data_dimension') return levels.common === 'rings' ? reading : null
   const cut = analysisDataCutOf(a.subject, decompose, reading)
   if (cut === null) return null
-  const modeOf = (id: string) => levelsDisplayOfDimension(levels, id)
+  const count = cut.dividing.length
+  const modeOf = (id: string) => dataDimensionLevelsDisplay(levels, count, id)
   // Rien ne découpe : un seul secteur, que seul le réglage commun peut demander en anneau.
-  const any_rings = cut.dividing.length === 0
+  // 03/10/2026 — plusieurs dimensions découpent : toujours en anneaux, un par dimension au moins.
+  // Toutes en secteurs, `foldInPlaceLevels` replie chacune dans le sien (la frontière entre deux
+  // dimensions garde son anneau) : n dimensions, n anneaux — plus l'anneau unique du produit cartésien.
+  const any_rings = count === 0
     ? levels.common === 'rings'
-    : cut.dividing.some(d => modeOf(d.id) === 'rings')
+    : count > 1 || cut.dividing.some(d => modeOf(d.id) === 'rings')
   return any_rings ? { ...reading, levels_display_of: modeOf } : null
 }
 
