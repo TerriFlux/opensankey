@@ -45,9 +45,11 @@ type Scene = {
   focus?: string[]
   multiples?: boolean
   sans_diagramme?: boolean
+  /** Le geste lourd s'execute pour de bon (la coupe du diagramme s'ecrit), dessin du diagramme a part. */
+  reel?: boolean
 }
 
-const scene = ({ clic, linked = false, focus, multiples = false, sans_diagramme = false }: Scene) => {
+const scene = ({ clic, linked = false, focus, multiples = false, sans_diagramme = false, reel = false }: Scene) => {
   const ws = new Class_Workspace(false)
   const source = ws.createDocument()
   source.drawing_area.bypass_redraws = true
@@ -105,7 +107,9 @@ const scene = ({ clic, linked = false, focus, multiples = false, sans_diagramme 
   }
   const ctx = { ...elementContext(source, lien as unknown as Type_Presentable), window_id, pane_key: 'p1', options }
   const ecrit = jest.spyOn(source.menu_configuration, 'setMainZonePaneOptions').mockImplementation(() => undefined)
-  const diagramme = jest.spyOn(source, 'runHeavyGesture').mockImplementation(() => undefined)
+  const diagramme = jest.spyOn(source, 'runHeavyGesture')
+    .mockImplementation(reel ? (work: () => void) => work() : () => undefined)
+  if (reel) jest.spyOn(source.drawing_area, 'draw').mockImplementation(() => undefined)
   if (sans_diagramme) {
     jest.spyOn(source.menu_configuration, 'main_zone_sankey_panes', 'get').mockReturnValue([])
   }
@@ -254,5 +258,50 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
       { app_data: source as never }
     )
     expect((item.choices ?? []).some(c => c.disabled)).toBe(false)
+  })
+
+  // 03/10/2026 — NON-REGRESSION, LE CAS DE JULIEN : « je veux pouvoir deplier dans la couronne et pas
+  // seulement zoomer ». Le choix existe (c est 'none'), il doit ouvrir l anneau MEME SANS diagramme
+  // affiche : grise, le diagramme ne retire que les deux choix qui le nomment, jamais le depliage.
+
+  test('DEPLIE DANS LA COURONNE, liee, SANS diagramme affiche : Cereales cede la place a Ble et Mais', () => {
+    const { ctx, diagramme, source } = scene({ clic: 'none', linked: true, sans_diagramme: true, reel: true })
+    const { el, teardown } = dessiner(ctx)
+    cliquer(el, CEREALES)
+    // Liee, la coupe de la figure EST celle du diagramme : c est elle qui s ecrit.
+    expect(diagramme).toHaveBeenCalledTimes(1)
+    const filiere = source.drawing_area.sankey.data_taggs_dict['filiere'] as unknown as Class_DataTagGroup
+    const coches = (filiere.tags_list as Class_DataTag[]).filter(t => t.is_selected).map(t => t.id).sort()
+    expect(coches).toEqual(['ble', 'lait', 'mais'])
+    teardown()
+    // Et la couronne redessinee le montre.
+    const { el: apres, teardown: fin } = dessiner(ctx)
+    const ids = [...apres.querySelectorAll('path.node_stats_arc')].map(p => p.getAttribute('data-repr-id'))
+    expect(ids).toEqual(expect.arrayContaining([BLE, memberSectorId('filiere', 'mais')]))
+    expect(ids).not.toContain(CEREALES)
+    fin()
+  })
+
+  test('DEPLIE DANS LA COURONNE, detachee, SANS diagramme affiche : la figure ouvre, le diagramme ne bouge pas', () => {
+    const { ctx, ecrit, diagramme } = scene({ clic: 'none', sans_diagramme: true })
+    const { el, teardown } = dessiner(ctx)
+    cliquer(el, CEREALES)
+    expect((dernierSac(ecrit)?.[DIMENSION_OPENING_KEY] as { filiere: string[] }).filiere)
+      .toEqual(['produits', 'cereales'])
+    expect(diagramme).not.toHaveBeenCalled()
+    teardown()
+  })
+
+  test('les libelles disent le geste : deplier dans la couronne reste offert sans diagramme', () => {
+    const { source } = scene({ clic: 'none', sans_diagramme: true })
+    const [item] = figureControlsOf(
+      { interaction_click: INTERACTION_CONFIG.interaction_click as never }, {}, ['style'], 'fr',
+      { app_data: source as never }
+    )
+    const none = (item.choices ?? []).find(c => c.value === 'none')
+    expect(none?.label).toBe('Déplie dans la couronne')
+    expect(none?.disabled).toBeFalsy()
+    expect((item.choices ?? []).find(c => c.value === 'aggregate')?.label).toBe('Déplie dans la couronne et le diagramme')
+    expect((item.choices ?? []).find(c => c.value === 'zoom')?.label).toBe('Zoome dedans')
   })
 })
