@@ -376,6 +376,22 @@ const smallMultiplesOf = (
   return members.length > 0 ? { dimension, members } : null
 }
 
+/**
+ * 03/10/2026 — LES PETITS MULTIPLES QUI SE DESSINENT EN CASES : au moins deux membres (os#1511).
+ *
+ * Julien, capture à l'appui : zoomée sur « Produits bruts - Céréales », pays à « 0 - Monde », le
+ * centre disait « 0 - Monde / 35,2 Mt » — la case unique nommait son membre (la racine de l'AUTRE
+ * dimension, qui ne découpe rien) et le membre zoomé n'apparaissait nulle part. Une case seule EST
+ * la couronne : elle se dessine comme elle, lue à ce membre (`analysisOf`), et son centre nomme le
+ * foyer ; le membre passe dans la ligne de contexte (`centreContextOf`).
+ */
+const smallMultiplesDrawnOf = (
+  ctx: Type_RepresentationContext
+): { dimension: Class_DataTagGroup, members: Class_DataTag[] } | null => {
+  const split = smallMultiplesOf(ctx)
+  return split !== null && split.members.length > 1 ? split : null
+}
+
 /** En deçà, le tracé à anneaux ne dessine pas (cf. `drawSunburstChart`) : une petite case est réduite. */
 const SUNBURST_MIN_SIDE_PX = 120
 
@@ -635,35 +651,135 @@ const subjectShortNameOf = (ctx: Type_RepresentationContext): string => {
  * une dimension d'unité. Le sujet se tait quand le nom au centre le dit déjà (`said`).
  */
 const measureCaptionOf = (ctx: Type_RepresentationContext, said: string): string => {
+  const subject = subjectShortNameOf(ctx)
+  const shows_subject = subject !== '' && !said.toLocaleLowerCase().includes(subject.toLocaleLowerCase())
+  const context = centreContextOf(ctx)
+  return [...(shows_subject ? [subject] : []), ...(context !== '' ? [context] : [])].join(' · ')
+}
+
+/** Un nom de membre sans son numéro de niveau (« 0 - Monde » → « Monde »), pour la ligne de contexte. */
+const contextNameOf = (text: string): string => text.replace(/^\s*\d+\s*-\s+/, '')
+
+/**
+ * 03/10/2026 — CE QU'UNE DIMENSION RETIENT, en quelques mots (os#1511) : le nom de sa racine quand
+ * tout est retenu (« Monde »), un ou deux membres nommés (« Europe, Amériques »), au-delà leur nombre
+ * et leur niveau (« 3 continents »), à défaut « 4 membres ». Vide : rien à dire (toutes les racines
+ * d'une dimension qui en a plusieurs, ou aucun membre).
+ */
+const retainedLabelOf = (
+  ctx: Type_RepresentationContext, group: Class_DataTagGroup, members: Class_DataTag[]
+): string => {
+  if (members.length === 0) return ''
+  const ids = new Set(members.map(m => m.id))
+  const covers = (m: Class_DataTag): boolean =>
+    ids.has(m.id) || (m.children.length > 0 && (m.children as Class_DataTag[]).every(covers))
+  const roots = dimensionRootsOf(group)
+  if (roots.length > 0 && roots.every(covers)) {
+    if (roots.length === 1) return contextNameOf(displayedNameOf(roots[0]))
+    if (members.length > 1) return ''
+  }
+  if (members.length <= 2) return members.map(m => contextNameOf(displayedNameOf(m))).join(', ')
+  const depths = new Set(members.map(m => group.depthOf(m)))
+  const level = depths.size === 1 ? contextNameOf(group.levels[[...depths][0]] ?? '') : ''
+  return level !== ''
+    ? `${members.length} ${level.charAt(0).toLocaleLowerCase()}${level.slice(1)}`
+    : ctx.app_data.t('sunburst.members_count', { count: members.length }) as string
+}
+
+/**
+ * 03/10/2026 — LA LIGNE DE CONTEXTE DU CENTRE (os#1511) : la position de la figure sur les dimensions
+ * de données qu'elle ne nomme pas déjà. Julien : produits zoomés sur « Produits bruts - Céréales »,
+ * pays à Europe + Amériques → « Europe, Amériques · 2015 », et non plus « Monde - Export · 2015 ».
+ *
+ * Se taisent : la dimension que le centre nomme (celle du foyer ; sans foyer, la première qui
+ * découpe, que l'anneau intérieur montre), celle des petits multiples en cases (chaque case nomme
+ * son membre) et les dimensions d'unité. Les autres disent ce qu'elles retiennent
+ * (`retainedLabelOf`) : un membre fixé plus haut par le foyer ; une dimension désactivée, ou détachée
+ * sans découper, sa racine (c'est ainsi que la figure la lit, cf. `buildNestedDimensionTree`) ;
+ * détachée et découpant, la frontière de sa coupe ; sinon l'épingle de la figure ou ce que le
+ * diagramme sélectionne (l'année épinglée, « Europe, Amériques »).
+ */
+const centreContextOf = (ctx: Type_RepresentationContext): string => {
   const a = analysisOf(ctx)
   if (!a) return ''
   const sankey = ctx.app_data.drawing_area.sankey
-  const split = smallMultiplesOf(ctx)
-  // Ce qui découpe (anneaux, cases) n'est pas une coordonnée : la figure le montre.
-  const skipped = new Set<string>(split ? [split.dimension.id] : [])
+  const split = smallMultiplesDrawnOf(ctx)
+  const named = new Set<string>(split ? [split.dimension.id] : [])
+  const fixed = new Map<string, Class_DataTag>()
   const decompose = effectiveDecompose(a.descriptor)
-  if (decompose?.kind === 'data_dimension') {
-    const cut = analysisDataCutOf(a.subject, decompose, hierarchyReadingOf(ctx))
-    cut?.dims.forEach(d => {
-      // Une dimension de la figure qui ne découpe pas se lit à sa racine quand elle est détachée ou
-      // désactivée (cf. `buildNestedDimensionTree`) : elle n'épingle rien.
-      if (cut.dividing.includes(d) || !cut.linked || cut.inactive?.has(d.id)) skipped.add(d.id)
-    })
+  const reading = hierarchyReadingOf(ctx)
+  const cut = decompose?.kind === 'data_dimension' ? analysisDataCutOf(a.subject, decompose, reading) : null
+  if (cut !== null) {
+    const focus = resolveDataFocus(cut, reading.data_focus)
+    if (focus !== null) {
+      const centre_dim = focus.refs[focus.refs.length - 1].dimension_id
+      named.add(centre_dim)
+      focus.coord.forEach((member, dim_id) => { if (dim_id !== centre_dim) fixed.set(dim_id, member) })
+    } else if (cut.dividing.length > 0) {
+      named.add(cut.dividing[0].id)
+    }
   }
-  const pinned = (sankey.data_taggs_list as unknown as Class_DataTagGroup[])
-    .filter(group => !skipped.has(group.id) && !(group as unknown as { is_unit?: boolean }).is_unit)
-    .map(group => {
-      const from_nav = (a.nav.data_tags ?? []).filter(tag => tag.group.id === group.id)
-      const members = from_nav.length > 0 ? from_nav : group.selected_tags_list as Class_DataTag[]
-      if (members.length !== 1) return ''
-      const roots = dimensionRootsOf(group)
-      if (roots.length === 1 && roots[0] === members[0]) return ''
-      return displayedNameOf(members[0])
-    })
-    .filter(name => name !== '')
-  const subject = subjectShortNameOf(ctx)
-  const shows_subject = subject !== '' && !said.toLocaleLowerCase().includes(subject.toLocaleLowerCase())
-  return [...(shows_subject ? [subject] : []), ...pinned].join(' · ')
+  const retained = (group: Class_DataTagGroup): Class_DataTag[] => {
+    const at = fixed.get(group.id)
+    if (at !== undefined) return [at]
+    if (cut !== null && cut.dims.includes(group)) {
+      if (cut.inactive?.has(group.id)) return dimensionRootsOf(group)
+      if (!cut.linked) {
+        if (!cut.dividing.includes(group)) return dimensionRootsOf(group)
+        return selectionFromOpening(group, dimensionOpenedMembers(group, cut.opened), dimensionHiddenMembers(group, cut.hidden))
+          .map(id => group.tags_dict[id] as Class_DataTag | undefined)
+          .filter((m): m is Class_DataTag => m !== undefined)
+      }
+    }
+    const pinned = (a.nav.data_tags ?? []).filter(tag => tag.group.id === group.id)
+    return pinned.length > 0 ? pinned : group.selected_tags_list as Class_DataTag[]
+  }
+  return (sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+    .filter(group => !named.has(group.id) && !(group as unknown as { is_unit?: boolean }).is_unit)
+    .map(group => retainedLabelOf(ctx, group, retained(group)))
+    .filter(text => text !== '')
+    .join(' · ')
+}
+
+/**
+ * 03/10/2026 — LE NOM DU SUJET PASSE AU TITRE (os#1511) : le centre d'une couronne sur dimensions de
+ * données ne le redit plus (il dit le membre zoomé, la valeur et le contexte). Quand ni le titre ni
+ * une zone de texte ne le portent, une ligne discrète le pose en haut de la figure.
+ */
+const withSubjectLine = (ctx: Type_RepresentationContext, texts: Type_FigureText[]): Type_FigureText[] => {
+  const a = analysisOf(ctx)
+  if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension') return texts
+  const subject = subjectNameOf(ctx)
+  const short = subjectShortNameOf(ctx).toLocaleLowerCase()
+  if (subject === '' || texts.some(z => z.text.toLocaleLowerCase().includes(short))) return texts
+  return [...texts, {
+    text: subject, position: 'top', font_size: 12, bold: false, italic: false, font_family: '',
+    color: '#4A5568', align: 'middle', wrap: false
+  }]
+}
+
+/**
+ * 03/10/2026 — NON ZOOMÉE, LE CENTRE D'UNE COURONNE SUR DIMENSIONS DE DONNÉES TAIT LE NOM DU SUJET
+ * (passé au titre, `withSubjectLine`) : la valeur et le contexte. Un réglage explicite de l'auteur
+ * (`centre_content`) prime.
+ */
+const dataRingsCentreContent = (
+  ctx: Type_RepresentationContext, own: Type_FigureChartStyle['centre_content']
+): Type_FigureChartStyle['centre_content'] => {
+  const a = analysisOf(ctx)
+  if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension' || dataFocusOf(ctx) !== null) return own
+  const { window_id, pane_key } = ctx
+  const explicit = window_id !== undefined && pane_key !== undefined
+    ? ctx.app_data.menu_configuration.figureOf(window_id, pane_key).isAttributeOverloaded('centre_content')
+    : ctx.options?.['centre_content'] !== undefined
+  if (explicit) return own
+  return own === 'both' ? 'value' : own === 'name' ? 'none' : own
+}
+
+/** La figure découpe-t-elle selon des dimensions de données ? */
+const isDataDimensionFigure = (ctx: Type_RepresentationContext): boolean => {
+  const a = analysisOf(ctx)
+  return !!a && effectiveDecompose(a.descriptor)?.kind === 'data_dimension'
 }
 
 /** Le centre écrit-il le nom (réglage de la figure) ? Sinon la ligne de mesure redit le sujet. */
@@ -797,6 +913,10 @@ const analysisOf = (
   // os#1511 — et la COUCHE de données d'une figure détachée qui en a choisi une (`readFigureDataLayer`).
   // Elle voyage dans la navigation : parts, totaux, pourcentages et petits multiples la lisent tous.
   const nav = withDataLayer(figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options), readFigureDataLayer(ctx.options))
+  // 03/10/2026 — une seule case de petits multiples : la couronne lue à son membre (cf.
+  // `smallMultiplesDrawnOf`).
+  const split = smallMultiplesOf(ctx)
+  if (split !== null && split.members.length === 1) return { subject, descriptor, nav: navAtMember(nav, split.members[0]) }
   return { subject, descriptor, nav }
 }
 
@@ -1408,7 +1528,7 @@ export const registerAnalysisRepresentations = (): void => {
       // 01/10/2026 — PETITS MULTIPLES : les parts de la figure sont l'UNION de celles des petites
       // couronnes. Un même secteur (« Céréales ») porte le même identifiant dans chacune : c'est un
       // seul élément, une seule couleur, une seule sélection, d'une couronne à l'autre.
-      const split = smallMultiplesOf(ctx)
+      const split = smallMultiplesDrawnOf(ctx)
       if (split) {
         const union = new Map<string, Type_PartInput>()
         // En sunburst, les parts de chaque case sont tout son arbre (cf. `analysisPartsOf`).
@@ -1443,7 +1563,7 @@ export const registerAnalysisRepresentations = (): void => {
       // la seconde hiérarchie »). La grille sous le titre de la figure, chaque case titrée par son
       // membre et dessinée par le MÊME tracé à plat, avec les parts de la figure (aspect, sélection)
       // et les valeurs lues au membre.
-      const split = smallMultiplesOf(ctx)
+      const split = smallMultiplesDrawnOf(ctx)
       if (split) {
         container.innerHTML = ''
         const titled = figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx))
@@ -1678,13 +1798,18 @@ export const registerAnalysisRepresentations = (): void => {
             // « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
             labels_small: style.labels_small,
             labels_small_outer: labelsSmallOuterOf(ctx),
-            click_action: 'aggregate'
+            click_action: 'aggregate',
+            // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
+            centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')
           },
-          texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
+          texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
           // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
-          centre_caption: measureCaptionOf(ctx,
-            ['both', 'name'].includes(readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both') &&
-              rings.roots.length === 1 ? rings.roots[0].label : ''),
+          // 03/10/2026 — sur dimensions de données, la ligne dit le contexte des autres dimensions.
+          centre_caption: isDataDimensionFigure(ctx)
+            ? centreContextOf(ctx)
+            : measureCaptionOf(ctx,
+              ['both', 'name'].includes(readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both') &&
+                rings.roots.length === 1 ? rings.roots[0].label : ''),
           caption_plan: centreCaptionPlan,
           breadcrumb,
           label_positions: wiring.label_positions,
@@ -1742,8 +1867,12 @@ export const registerAnalysisRepresentations = (): void => {
           on_part_activate: gestures.activate,
           on_centre_click: gestures.back,
           centre_back_label: t('sunburst.back') as string,
-          // 03/10/2026 — ce que le centre mesure, sous la valeur.
-          centre_caption: measureCaptionOf(ctx, centreSaysName(style) ? figureTitleFallback(ctx) : ''),
+          // 03/10/2026 — ce que le centre mesure, sous la valeur ; sur dimensions de données, le
+          // contexte des autres dimensions, le sujet passant au titre.
+          centre_caption: isDataDimensionFigure(ctx)
+            ? centreContextOf(ctx)
+            : measureCaptionOf(ctx, centreSaysName(style) ? figureTitleFallback(ctx) : ''),
+          texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           // 01/10/2026 — le zoom de la couronne à plat, prêté comme celui du mode à anneaux.

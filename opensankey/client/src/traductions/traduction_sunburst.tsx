@@ -19,6 +19,7 @@ export const resources_sunburst = {
         truncated: 'Depth truncated',
         back: 'back',
         back_to: 'Back to {{name}}',
+        members_count: '{{count}} members',
         level: 'Level {{index}}',
         group: {
           read: 'Hierarchy'
@@ -42,6 +43,7 @@ export const resources_sunburst = {
         truncated: 'Profondeur tronquée',
         back: 'remonter',
         back_to: 'Remonter à {{name}}',
+        members_count: '{{count}} membres',
         level: 'Niveau {{index}}',
         group: {
           read: 'Hiérarchie'
@@ -65,6 +67,7 @@ export const resources_sunburst = {
         truncated: 'Profundidad truncada',
         back: 'volver',
         back_to: 'Volver a {{name}}',
+        members_count: '{{count}} miembros',
         level: 'Nivel {{index}}',
         group: {
           read: 'Jerarquía'
@@ -88,6 +91,7 @@ export const resources_sunburst = {
         truncated: 'Tiefe abgeschnitten',
         back: 'zurück',
         back_to: 'Zurück zu {{name}}',
+        members_count: '{{count}} Mitglieder',
         level: 'Ebene {{index}}',
         group: {
           read: 'Hierarchie'
@@ -111,6 +115,7 @@ export const resources_sunburst = {
         truncated: 'Profondità troncata',
         back: 'risalire',
         back_to: 'Risalire a {{name}}',
+        members_count: '{{count}} membri',
         level: 'Livello {{index}}',
         group: {
           read: 'Gerarchia'
@@ -134,6 +139,7 @@ export const resources_sunburst = {
         truncated: '层级已截断',
         back: '返回',
         back_to: '返回 {{name}}',
+        members_count: '{{count}} 个成员',
         level: '第 {{index}} 层',
         group: {
           read: '层级'
@@ -157,6 +163,7 @@ export const resources_sunburst = {
         truncated: '深さを打ち切りました',
         back: '戻る',
         back_to: '{{name}} に戻る',
+        members_count: '{{count}} 件のメンバー',
         level: 'レベル {{index}}',
         group: {
           read: '階層'
