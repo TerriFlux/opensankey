@@ -45,7 +45,7 @@ import {
 } from './analysisFigureAttributes'
 import {
   dataDimensionLevelsDisplay, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay,
-  readFigureOpening, withDataOpening, withElementOpening, withFigureFocus
+  readFigureOpening, smallMultiplesApply, withDataOpening, withElementOpening, withFigureFocus
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
 import { mountFigureTextZones } from './figureTextZones'
@@ -356,13 +356,15 @@ const smallMultiplesOf = (
   const subject = chartSubjectOf(ctx.element)
   if (!subject) return null
   const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
-  if (!descriptor || effectiveDecompose(descriptor)?.kind !== 'data_dimension') return null
+  const decompose = descriptor ? effectiveDecompose(descriptor) : null
+  if (decompose?.kind !== 'data_dimension') return null
   const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined
   if (!dimension?.is_hierarchical) return null
   const data_opening = readFigureOpening(ctx.options).data
-  // 03/10/2026 — la dimension des cases DÉSACTIVÉE : plus de cases, une seule couronne qui la lit à
-  // sa racine (cf. `dataCutOf`).
-  if (data_opening.inactive?.includes(dimension.id)) return null
+  // 03/10/2026 — la dimension des cases DÉSACTIVÉE, ou plus aucune autre active pour les parts :
+  // plus de cases, une seule couronne (cf. `smallMultiplesApply`, `dataCutOf`).
+  const part_ids = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+  if (!smallMultiplesApply(dimension.id, part_ids, data_opening.inactive)) return null
   // Liée, ce que le diagramme montre ; détachée, la coupe propre de la figure pour cette dimension
   // — « Monde » seul fait UNE couronne, c'est le retour (cf. `smallMultipleMembersOf`).
   const members = smallMultipleMembersOf(dimension, data_opening)
