@@ -41,7 +41,7 @@ import { OSTooltip } from './OSTooltip'
 // testable — aucune suite jest du dépôt ne peut charger `@chakra-ui/react`.
 import {
   applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf,
-  dimensionDrawingEnabledFor, positionModeSelectorEnabledFor
+  dimensionDrawingEnabledFor, positionModeSelectorEnabledFor, loneSubmenuOf
 } from './positionModeHost'
 import {
   applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyMembersOrder,
@@ -120,6 +120,28 @@ const Submenu = ({ label, icon, checked, disabled, children }: {
 }
 
 /**
+ * 03/10/2026 — UNE ENTRÉE DE MENU, sous-menu ou non. Un menu qui n'aurait qu'un sous-menu
+ * (« Dessiner › » seul, couronne active) l'APLATIT : son contenu, titres de section compris, se
+ * pose directement dans le menu (`loneSubmenuOf`). `flat` : ce contenu quand il se pose à plat.
+ */
+type Type_MenuEntry = { key: string, is_submenu: boolean, node: React.ReactNode, flat?: React.ReactNode }
+
+const submenuEntry = (key: string, label: string, content: React.ReactNode, opts: {
+  disabled?: boolean, checked?: boolean, flat?: React.ReactNode
+} = {}): Type_MenuEntry => ({
+  key,
+  is_submenu: true,
+  node: <Submenu label={label} disabled={opts.disabled} checked={opts.checked}>{content}</Submenu>,
+  flat: opts.flat ?? content
+})
+
+const menuEntries = (entries: (Type_MenuEntry | null)[]): React.ReactNode => {
+  const lone = loneSubmenuOf(entries)
+  if (lone !== null) return lone.flat
+  return entries.map(e => e === null ? null : <React.Fragment key={e.key}>{e.node}</React.Fragment>)
+}
+
+/**
  * 02/10/2026 — LES CHOIX D'UNE FIGURE (os#1511), rendus comme ceux du diagramme : un groupe titré
  * par choix, une coche sur la valeur. Une option grisée ne fait rien — le choix n'a pas d'effet sur
  * ce que la figure montre. Un choix à une seule option est une case.
@@ -181,21 +203,23 @@ export const FigureTopbarMenu = ({ menus }: { menus: Type_TopbarFigureMenus }) =
     </MenuButton>
     <Portal>
       <MenuList minWidth='unset' zIndex={50}>
-        {menus.settings.map(c => c.options.length === 1
-          ? figureChoiceItems([c])[0]
-          : <Submenu key={c.key} label={c.label} disabled={!anyEnabled([c])}>
-            {c.options.map(o => (
-              <CheckItem
-                key={o.value}
-                label={o.label}
-                checked={c.value === o.value}
-                disabled={c.disabled || o.disabled}
-                title={o.title}
-                closeOnSelect={false}
-                onClick={() => { if (c.value !== o.value) c.choose(o.value) }}
-              />
-            ))}
-          </Submenu>)}
+        {menuEntries(menus.settings.map((c): Type_MenuEntry => c.options.length === 1
+          ? { key: c.key, is_submenu: false, node: figureChoiceItems([c])[0] }
+          : submenuEntry(c.key, c.label, c.options.map(o => (
+            <CheckItem
+              key={o.value}
+              label={o.label}
+              checked={c.value === o.value}
+              disabled={c.disabled || o.disabled}
+              title={o.title}
+              closeOnSelect={false}
+              onClick={() => { if (c.value !== o.value) c.choose(o.value) }}
+            />
+          )), {
+            disabled: !anyEnabled([c]),
+            // À plat, le choix garde son titre de section.
+            flat: figureChoiceItems([c])
+          })))}
       </MenuList>
     </Portal>
   </Menu>
@@ -299,7 +323,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     {gap_items !== null ? <>{can_position ? <MenuDivider /> : null}{gap_items}</> : null}
   </>
   // La couronne : Afficher (liée), puis Dessiner sur la figure ; rien de « Placer ».
-  const show_items = <Submenu label={t('Banner.show_submenu')}>
+  const show_items = submenuEntry('show', t('Banner.show_submenu'), <>
     <CheckItem
       label={t('Banner.draw_one')}
       checked={drawing === 'one'}
@@ -310,7 +334,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
       checked={drawing !== 'one'}
       onClick={() => { if (drawing === 'one') applyDimensionDrawing(app_data, tagg, 'multi') }}
     />
-  </Submenu>
+  </>)
   if (figure !== undefined) {
     return <Menu placement='bottom-start'>
       <MenuButton
@@ -324,10 +348,14 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
       </MenuButton>
       <Portal>
         <MenuList minWidth='unset' zIndex={50}>
-          {can_draw && !figure.detached ? show_items : null}
-          <Submenu label={t('Banner.draw_submenu')} disabled={!anyEnabled(figure.drawing)}>
-            {figureChoiceItems(figure.drawing)}
-          </Submenu>
+          {/* Couronne : Afficher retiré (détachée, ou lecture sans dessin), « Dessiner » seul
+              s'aplatit — ses sections Dessin de la dimension et Anneau se posent dans le menu. */}
+          {menuEntries([
+            can_draw && !figure.detached ? show_items : null,
+            submenuEntry('draw', t('Banner.draw_submenu'), figureChoiceItems(figure.drawing), {
+              disabled: !anyEnabled(figure.drawing)
+            })
+          ])}
         </MenuList>
       </Portal>
     </Menu>
@@ -354,14 +382,14 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     <Portal>
       <MenuList minWidth='unset' zIndex={50}>
         {can_draw
-          ? <>
-            {/* os#1511 — TROIS QUESTIONS, DANS L'ORDRE OÙ ON SE LES POSE (Jean-Yves, 01/10 :
+          ? menuEntries([
+            /* os#1511 — TROIS QUESTIONS, DANS L'ORDRE OÙ ON SE LES POSE (Jean-Yves, 01/10 :
                 séparer le choix d'un ou de plusieurs membres, la façon de les dessiner et leur
                 placement). « Afficher » : un membre ou plusieurs. « Dessiner » : en bandes ou en
                 nœuds, et dans quel ordre ; grisé tant qu'on n'affiche qu'un membre. « Placer » :
-                le mode de position, et l'écart des enfants quand la dimension est en nœuds. */}
-            {show_items}
-            <Submenu label={t('Banner.draw_submenu')} disabled={drawing === 'one'}>
+                le mode de position, et l'écart des enfants quand la dimension est en nœuds. */
+            show_items,
+            submenuEntry('draw', t('Banner.draw_submenu'), <>
               <CheckItem
                 label={t('Banner.draw_bands')}
                 checked={drawing === 'multi'}
@@ -399,13 +427,11 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                     />
                   ))}
               </MenuGroup>
-            </Submenu>
-            {can_position || gap_items !== null
-              ? <Submenu label={t('Banner.place_submenu')}>
-                {position_items}
-              </Submenu>
-              : null}
-          </>
+            </>, { disabled: drawing === 'one' }),
+            can_position || gap_items !== null
+              ? submenuEntry('place', t('Banner.place_submenu'), position_items)
+              : null
+          ])
           : position_items}
       </MenuList>
     </Portal>

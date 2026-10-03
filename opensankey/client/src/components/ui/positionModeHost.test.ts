@@ -3,6 +3,7 @@ import {
   diagramDeclaresPositionReference,
   positionModeSelectorEnabled,
   positionModeSelectorEnabledFor,
+  loneSubmenuOf,
   type Type_PositionModeCandidate,
   type Type_PositionModeHostApp
 } from './positionModeHost'
@@ -139,5 +140,22 @@ describe('os#1366 positionModeSelectorEnabledFor — lecture sur l application',
     expect(positionModeSelectorEnabledFor(app({ prop_ids: ['dt'] }))).toBe(true)
     expect(positionModeSelectorEnabledFor(app({ scale_ref: { vt: {} } }))).toBe(true)
     expect(positionModeSelectorEnabledFor(app())).toBe(false)
+  })
+})
+
+describe('loneSubmenuOf : un menu a un seul sous-menu s aplatit', () => {
+  const sub = (key: string) => ({ key, is_submenu: true })
+  const item = (key: string) => ({ key, is_submenu: false })
+  test('Dessiner seul est rendu a plat', () => {
+    expect(loneSubmenuOf([null, sub('draw'), false])?.key).toBe('draw')
+  })
+  test('trois sous-menus restent trois sous-menus', () => {
+    expect(loneSubmenuOf([sub('show'), sub('draw'), sub('place')])).toBeNull()
+  })
+  test('une entree simple seule n a rien a aplatir', () => {
+    expect(loneSubmenuOf([item('linked')])).toBeNull()
+  })
+  test('un menu vide n a rien a aplatir', () => {
+    expect(loneSubmenuOf([undefined])).toBeNull()
   })
 })
