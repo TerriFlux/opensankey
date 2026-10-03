@@ -39,6 +39,13 @@ import {
 import { Class_PanelManager, Type_PanelMode, Type_PopupGeometry } from './PanelManager'
 // os#1482 — le magasin des tableaux de bord est PUR (aucune arête vers le dessin), comme `PanelManager`.
 import { Class_DashboardsStore } from './Dashboards'
+// sa#589 — la grille en mosaïque : un arbre de découpes, module PUR (cf. son en-tête).
+import {
+  Type_MainZoneGridNode, Type_MainZoneGridFrame, Type_MainZoneSide, MAIN_ZONE_GRID_GAP_PX,
+  gridAddAtEdge, gridClone, gridDock, gridFrames, gridFromJSON, gridHas, gridKeep, gridPaneIds,
+  gridPlaceLabels, gridPrincipal, gridRename, gridSameShape, gridSetPairSizes, gridSplitPane,
+  gridSwap, gridToJSON
+} from './MainZoneGrid'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
 import type { ConverterConfig } from './ConverterConfig'
@@ -140,16 +147,21 @@ export type Type_MainZonePlace = 'main' | 'right' | 'bottom' | 'floating'
  * sa#587 — OÙ L'ON DÉPOSE UN VOLET QU'ON A SAISI PAR SON EN-TÊTE (cf. `dropMainZoneOccupant`).
  *
  * Les flèches de l'en-tête (« passer dans la grande case », « passer à droite / en bas ») sont
- * remplacées par un glisser-déposer, comme les fenêtres du système. Le geste a trois issues, et
+ * remplacées par un glisser-déposer, comme les fenêtres du système. Le geste a quatre issues, et
  * ce type les nomme toutes :
  *  - `swap`  : prendre la place d'un autre volet de la grille, qui prend la sienne ;
- *  - `stack` : entrer dans la colonne de droite ou le bandeau du bas, avant le volet `before`
- *              (`null` = au bout de la pile) ;
+ *  - `split` : (sa#589) COUPER en deux le volet `with`, le volet déposé prenant la moitié du côté
+ *              `side` — c'est ce qui compose une mosaïque quelconque ;
+ *  - `edge`  : (sa#589) ajouter une colonne (bord gauche, droit) ou une ligne (bord haut, bas) à
+ *              la grille entière, autant de fois qu'on veut ;
  *  - `float` : quitter la grille et flotter à la géométrie donnée.
+ * (La pile `stack` de sa#587 — entrer dans la colonne de droite ou le bandeau du bas — est un cas
+ * de `split` et de `edge` depuis que la grille n'a plus ces deux places.)
  */
 export type Type_MainZoneDropTarget =
   | { kind: 'swap', with: string }
-  | { kind: 'stack', place: 'right' | 'bottom', before: string | null }
+  | { kind: 'split', with: string, side: Type_MainZoneSide }
+  | { kind: 'edge', side: Type_MainZoneSide }
   | { kind: 'float', geometry: Type_PopupGeometry }
 
 /**
@@ -240,6 +252,19 @@ export type Type_TopbarFigureMenus = {
   }
 }
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
+/**
+ * sa#589 — LA GRILLE APRÈS UN DÉPÔT (cf. `Type_MainZoneDropTarget`), sans rien toucher : c'est la
+ * même fonction qui calcule l'aperçu (l'éditeur y lit la case que le volet prendra) et qui écrit
+ * le dépôt (`dropMainZoneOccupant`). `null` pour un flottement, qui sort le volet de la grille.
+ */
+export const mainZoneGridAfterDrop = (
+  grid: Type_MainZoneGridNode | null, id: string, target: Type_MainZoneDropTarget
+): Type_MainZoneGridNode | null => {
+  if (target.kind === 'float') return gridKeep(grid, x => x !== id)
+  if (target.kind === 'swap') return gridSwap(grid, id, target.with)
+  if (target.kind === 'split') return gridSplitPane(grid, target.with, id, target.side)
+  return gridAddAtEdge(grid, id, target.side)
+}
 /** Les places qui prennent une CASE de la grille : celles dont la disposition se calcule. */
 export const MAIN_ZONE_GRID_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom']
 /** Taille de naissance d'un volet flottant, quand personne ne lui en donne une. */
@@ -757,6 +782,39 @@ export const mainZoneSplitRatioForPointer = (
   if (W <= 0) return 0.5
   return 1 - (content_w - client_x) / W
 }
+/**
+ * sa#589 — Largeur et hauteur de la fenêtre (repli des tests : pas de `window` sous Node).
+ */
+export const mainZoneViewportSize = (): { w: number, h: number } => ({
+  w: (typeof window !== 'undefined' && window.innerWidth) || 1280,
+  h: (typeof window !== 'undefined' && window.innerHeight) || 720
+})
+/**
+ * sa#589 — La hauteur de la grande zone : la fenêtre moins les barres du haut et du bas, mesurées
+ * DANS LA PAGE comme le fait la disposition de l'éditeur (`mainZoneLayout`). Absentes (tests,
+ * publication sans barre) : elles ne retranchent rien.
+ */
+export const mainZoneContentHeightPx = (): number => {
+  const bar = (class_name: string): number => {
+    if (typeof document === 'undefined') return 0
+    const el = document.getElementsByClassName(class_name)[0]
+    return el ? el.getBoundingClientRect().height : 0
+  }
+  return Math.max(0, mainZoneViewportSize().h - bar('TopMenu') - bar('BottomMenu'))
+}
+/**
+ * sa#589 — Deux grilles décrivent-elles la même mosaïque, AUX PROPORTIONS PRÈS d'un millionième ?
+ * C'est le juge de l'écriture de `grid` : une grille égale à celle que reconstruisent les places
+ * d'avant n'a pas besoin d'être écrite.
+ */
+const sameMainZoneGrid = (a: Type_MainZoneGridNode | null, b: Type_MainZoneGridNode | null): boolean => {
+  if (!gridSameShape(a, b) || !a || !b) return gridSameShape(a, b)
+  if ('pane' in a || 'pane' in b) return true
+  const ta = a.sizes.reduce((x, y) => x + y, 0)
+  const tb = b.sizes.reduce((x, y) => x + y, 0)
+  return a.sizes.every((s, i) => Math.abs(s / ta - b.sizes[i] / tb) < 1e-6) &&
+    a.children.every((c, i) => sameMainZoneGrid(c, b.children[i]))
+}
 /** Hauteur (px) du bandeau du bas pour une hauteur demandée, bornée par ce que l'écran laisse. */
 export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number): number =>
   Math.min(Math.max(MAIN_ZONE_MIN_BOTTOM_PX, wanted_px), Math.max(MAIN_ZONE_MIN_BOTTOM_PX, content_h - MAIN_ZONE_MIN_BOTTOM_PX))
@@ -1238,9 +1296,27 @@ export class Class_MenuConfig {
   protected _dashboards: Class_DashboardsStore = new Class_DashboardsStore()
   public get dashboards(): Class_DashboardsStore { return this._host._dashboards }
   // Part de la largeur donnée à la zone principale face à la colonne droite (0..1).
+  // sa#589 — Ces deux réglages ne disposent plus la grille (c'est `_main_zone_grid`) : ils restent
+  // le format des fichiers d'avant, qu'on relit et qu'on réécrit tels quels, et la taille que prend
+  // une colonne de droite ou un bandeau du bas qui NAÎT d'une ouverture (cf. `gridDock`).
   protected _main_zone_split_ratio: number = 2 / 3
   // Hauteur (px) du bandeau du bas, réglée par sa poignée.
   protected _main_zone_bottom_px: number = 280
+  /**
+   * sa#589 — LA GRILLE EN MOSAÏQUE : l'arbre de découpes de la grande zone (cf. `MainZoneGrid.ts`).
+   *
+   * Il dit OÙ est chaque volet ANCRÉ (ni flottant, ni fermé) ; la liste des occupants dit QUI ils
+   * sont. Les deux sont tenus d'accord par `_normalizeMainZoneOccupants`, qui retire de l'arbre ce
+   * qui n'est plus ancré et y range ce qui vient de l'être. Un volet DÉTACHÉ y garde sa case — le
+   * refermer l'y ramène —, mais la disposition le saute (`main_zone_visible_grid`).
+   *
+   * `place` ne décrit plus que l'ÉTIQUETTE héritée d'un volet ancré (`main` en haut à gauche,
+   * `right` / `bottom` selon qu'il est à droite ou sous lui, cf. `gridPlaceLabels`), recalculée
+   * après chaque geste. Écrite par un appelant (ouvrir « à droite », rappeler une vue « en bas »),
+   * elle redevient ce qu'elle était avant sa#589 : une demande de place, que la normalisation
+   * exécute (cf. `gridDock`).
+   */
+  protected _main_zone_grid: Type_MainZoneGridNode | null = { pane: MAIN_ZONE_CANVAS_ID }
   // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
   // OS#300 Lot 2 avait rendu la barre TOUJOURS visible et neutralisé
@@ -1486,6 +1562,18 @@ export class Class_MenuConfig {
     return this._host._main_zone_occupants
       .filter(o => o.place !== 'floating')
       .map(o => ({ ...o }))
+  }
+  /** sa#589 — La grille en mosaïque (copie), volets détachés compris. */
+  public get main_zone_grid(): Type_MainZoneGridNode | null {
+    return gridClone(this._host._main_zone_grid)
+  }
+  /**
+   * sa#589 — La grille telle qu'elle se DESSINE : sans les volets détachés (ils n'ont plus de case,
+   * leurs voisins s'étendent). Source de la disposition de l'éditeur et des réserves du dessin.
+   */
+  public get main_zone_visible_grid(): Type_MainZoneGridNode | null {
+    const detached = this._host._main_zone_detached
+    return gridKeep(this._host._main_zone_grid, id => !detached.has(id))
   }
   /** sa#563 — cf. `_main_zone_hosted` : la grande zone est-elle rendue par cette page ? */
   public get main_zone_hosted(): boolean { return this._host._main_zone_hosted }
@@ -1887,6 +1975,8 @@ export class Class_MenuConfig {
       o.id = representation
       o.representation = representation
       if (this._host._main_zone_active_id === id) this._host._main_zone_active_id = representation
+      // sa#589 — le volet change de nom, pas de case.
+      this._host._main_zone_grid = gridRename(this._host._main_zone_grid, id, representation)
     }
     this._normalizeMainZoneOccupants()
     // La fenêtre est toujours là, sous son id courant, et cet id n'indexe rien d'autre : ses
@@ -2825,62 +2915,59 @@ export class Class_MenuConfig {
    * sa#587 — DÉPOSER UN VOLET DE LA GRILLE LÀ OÙ ON L'A LÂCHÉ (cf. `Type_MainZoneDropTarget`).
    *
    * Comme `setMainZoneOccupantPlace`, le geste ne touche qu'à la PLACE du volet : sujet, nature,
-   * figures et sélection restent les siens. Mais l'ORDRE compte ici, et c'est pourquoi le geste ne
-   * se ramène pas à elle : dans une pile, les volets se rangent dans l'ordre de la liste, et
-   * déposer « au-dessus de B » veut dire « juste avant B dans la liste ».
+   * figures et sélection restent les siens.
    *
-   * UN PIÈGE DE LA NORMALISATION, désamorcé ici : quand la grande case se vide, elle promeut le
-   * PREMIER volet de la colonne droite. Celui qu'on vient d'y déposer en tête serait alors renvoyé
-   * dans la grande case qu'il quittait, et le geste n'aurait rien fait. On promeut donc soi-même un
-   * AUTRE volet de la grille avant de normaliser.
+   * sa#589 — LE GESTE S'ÉCRIT DANS L'ARBRE DE LA MOSAÏQUE, et nulle part ailleurs : la nouvelle
+   * grille est calculée par `mainZoneGridAfterDrop` — la même fonction que l'aperçu dessine avant
+   * qu'on lâche, ce qui garantit que la case annoncée est celle où le volet se pose. Les étiquettes
+   * `place` suivent (cf. `_main_zone_grid`).
    *
    * Rendu : `true` si la grande zone a changé.
    */
   public dropMainZoneOccupant(id: string, target: Type_MainZoneDropTarget): boolean {
     const host = this._host
-    const list = host._main_zone_occupants
-    const o = list.find(x => x.id === id)
+    const o = host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === 'floating' || host._main_zone_detached.has(id)) return false
     if (target.kind === 'float') {
       o.place = 'floating'
       o.geometry = clampMainZoneFloatingGeometry(target.geometry)
-    } else if (target.kind === 'swap') {
-      const other = list.find(x => x.id === target.with)
-      if (!other || other === o || other.place === 'floating') return false
-      // Les deux échangent leur place ET leur rang dans la liste — donc dans leur pile —, et leur
-      // poids, pour que chaque case garde la taille qu'elle avait.
-      const i = list.indexOf(o)
-      const j = list.indexOf(other)
-      const place = o.place
-      const size = o.size
-      o.place = other.place
-      o.size = other.size
-      other.place = place
-      other.size = size
-      list[i] = other
-      list[j] = o
+      host._main_zone_grid = gridKeep(host._main_zone_grid, x => x !== id)
     } else {
-      const before = target.before === null ? null : list.find(x => x.id === target.before) ?? null
-      if (before === o || (before !== null && before.place !== target.place)) return false
-      // Le volet quitte la grande case : quelqu'un d'autre la prend, et ce n'est pas lui (cf. plus haut).
-      if (o.place === 'main') {
-        const grid = list.filter(x => x !== o && x.place !== 'floating')
-        const heir = grid.find(x => x.place === 'right') ?? grid[0]
-        if (!heir) return false
-        heir.place = 'main'
-        heir.size = 1
+      if (target.kind !== 'edge') {
+        const other = host._main_zone_occupants.find(x => x.id === target.with)
+        if (!other || other === o || other.place === 'floating' || host._main_zone_detached.has(other.id)) return false
       }
-      // Poids d'arrivée = poids moyen de la pile, comme pour un volet qu'on ouvre.
-      const peers = list.filter(x => x !== o && x.place === target.place)
-      o.size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
-      o.place = target.place
-      list.splice(list.indexOf(o), 1)
-      list.splice(before === null ? list.length : list.indexOf(before), 0, o)
+      const next = mainZoneGridAfterDrop(host._main_zone_grid, id, target)
+      if (next === null || gridSameShape(next, host._main_zone_grid)) return false
+      host._main_zone_grid = next
     }
+    this._relabelMainZoneGrid()
     host._main_zone_active_id = id
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
     return true
+  }
+  /**
+   * sa#589 — Les poids des bandes `index` et `index + 1` de la découpe `path` : le geste d'une
+   * poignée de séparation (cf. `Type_MainZoneGridDivider`). Les autres bandes ne bougent pas.
+   */
+  public setMainZoneGridPairSizes(path: number[], index: number, a: number, b: number): void {
+    const next = gridSetPairSizes(this._host._main_zone_grid, path, index, a, b)
+    if (next === this._host._main_zone_grid) return
+    this._host._main_zone_grid = next
+    this._notifyMainZone()
+  }
+  /**
+   * sa#589 — Recalcule l'étiquette `place` de chaque volet ancré depuis l'arbre. Appelée par tout
+   * geste qui écrit l'arbre lui-même : la normalisation lit ensuite une étiquette DIFFÉRENTE de
+   * l'arbre comme une demande de déplacement (cf. `_normalizeMainZoneOccupants`).
+   */
+  protected _relabelMainZoneGrid(): void {
+    const labels = gridPlaceLabels(this._host._main_zone_grid)
+    this._host._main_zone_occupants.forEach(o => {
+      const l = labels[o.id]
+      if (l !== undefined && o.place !== 'floating') o.place = l
+    })
   }
   /** Donne au volet une géométrie s'il n'en a pas — la demandée, la sienne, ou celle par défaut. */
   protected _ensureFloatingGeometry(id: string, geometry?: Type_PopupGeometry): void {
@@ -2947,14 +3034,6 @@ export class Class_MenuConfig {
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
   }
-  /** Poids des occupants d'une pile, écrits par ses poignées de redimensionnement. */
-  public setMainZoneStackSizes(sizes: { [id: string]: number }): void {
-    this._host._main_zone_occupants.forEach(o => {
-      const s = sizes[o.id]
-      if (typeof s === 'number' && Number.isFinite(s) && s > 0) o.size = s
-    })
-    this._notifyMainZone()
-  }
   public isMainZoneDetached(id: string): boolean { return this._host._main_zone_detached.has(id) }
   public setMainZoneDetached(id: string, detached: boolean): void {
     if (detached === this._host._main_zone_detached.has(id)) return
@@ -3005,16 +3084,37 @@ export class Class_MenuConfig {
       // os#1423 — la sélection aussi : elle ne vit que dans la fenêtre active, qui n'est plus là.
       host._main_zone_selected_pane_keys = []
     }
-    const mains = list.filter(o => o.place === 'main')
-    if (mains.length === 0) {
-      // Personne en principale : le premier de la colonne droite, sinon le premier venu DE LA
-      // GRILLE. sa#563 — jamais un flottant : happer un volet flottant pour lui donner toute la
-      // page défierait le geste qui vient de le faire flotter. sa#581 — et une grille vide n'a
-      // pas de principale : il n'y a personne à promouvoir, les flottants restent où ils sont.
-      const grid = list.filter(o => o.place !== 'floating')
-      const promoted = grid.find(o => o.place === 'right') ?? grid[0]
-      if (promoted) promoted.place = 'main'
-    } else mains.slice(1).forEach(o => { o.place = 'right' })
+    // sa#589 — LA GRILLE SUIT LA LISTE. Le `main` n'est plus une case qu'il faudrait garder
+    // occupée : c'est le premier volet de l'arbre, et l'arbre en a un dès qu'il n'est pas vide.
+    //
+    // Un volet ancré qui n'est pas dans l'arbre y entre à la place que dit son étiquette ; un volet
+    // de l'arbre dont l'étiquette a été RÉÉCRITE par un appelant (elle n'est plus celle que l'arbre
+    // lui donnait) en sort et y rentre de même — c'est le sens qu'avait `place` avant la mosaïque,
+    // et les appelants d'avant (ouvrir « à droite », « en bas », rappeler une vue) le gardent. Ce
+    // qui n'est plus ancré (flottant, fermé) quitte l'arbre ; ses voisins se partagent sa case.
+    //
+    // sa#563 — jamais un flottant n'y entre de lui-même : happer un volet flottant pour lui donner
+    // une case défierait le geste qui vient de le faire flotter. sa#581 — une grille vide reste
+    // vide : il n'y a personne à y ranger, les flottants restent où ils sont.
+    {
+      const before = gridPlaceLabels(host._main_zone_grid)
+      const docked = list.filter(o => o.place !== 'floating')
+      const movers = new Set(docked.filter(o => before[o.id] !== undefined && before[o.id] !== o.place).map(o => o.id))
+      const docked_ids = new Set(docked.map(o => o.id))
+      let grid = gridKeep(host._main_zone_grid, id => docked_ids.has(id) && !movers.has(id))
+      let main_taken = false
+      docked.forEach(o => {
+        if (gridHas(grid, o.id)) return
+        // Deux demandes de grande case dans la même passe : la première l'emporte, comme avant.
+        let place: 'main' | 'right' | 'bottom' = o.place === 'main' || o.place === 'bottom' ? o.place : 'right'
+        if (place === 'main' && main_taken) place = 'right'
+        if (place === 'main') main_taken = true
+        grid = gridDock(grid, o.id, place, this._mainZoneRightShare(), this._mainZoneBottomShare())
+      })
+      host._main_zone_grid = grid
+      const labels = gridPlaceLabels(grid)
+      docked.forEach(o => { o.place = labels[o.id] ?? o.place })
+    }
     list.forEach(o => { if (!Number.isFinite(o.size) || o.size <= 0) o.size = 1 })
     // sa#563 — un volet flottant a TOUJOURS une géométrie : l'hôte n'a alors aucun cas de
     // « cadre manquant » à traiter, et un fichier qui l'aurait perdue se rouvre au centre plutôt
@@ -3041,19 +3141,74 @@ export class Class_MenuConfig {
    * sans qu'aucune fenêtre ne disparaisse. Une fenêtre détachée se ré-attache pour cela.
    */
   public makeMainZoneOccupantMain(id: string): void {
-    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    const host = this._host
+    const o = host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.place === 'main') return
-    const main = this._host._main_zone_occupants.find(x => x.place === 'main')
+    const principal = gridPrincipal(host._main_zone_grid)
+    // sa#589 — l'échange se fait dans l'arbre : les deux volets échangent leur case.
     // sa#563 — L'ÉCHANGE NE REND PAS LE DIAGRAMME FLOTTANT. Promouvoir un volet flottant en
     // fenêtre principale est un geste sur LUI ; renvoyer l'ancienne principale flotter à sa
     // place ferait décoller le diagramme d'un clic qui ne parlait pas de lui. Elle prend la
     // colonne droite, comme elle le ferait pour n'importe quelle autre promotion.
-    if (main) { main.place = o.place === 'floating' ? 'right' : o.place; main.size = o.size }
-    o.place = 'main'
-    o.size = 1
-    this._host._main_zone_detached.delete(id)
+    if (o.place === 'floating' || principal === null || !gridHas(host._main_zone_grid, id)) {
+      host._main_zone_grid = gridDock(host._main_zone_grid, id, 'main', this._mainZoneRightShare(), this._mainZoneBottomShare())
+      o.place = 'main'
+    } else {
+      host._main_zone_grid = gridSwap(host._main_zone_grid, id, principal)
+    }
+    this._relabelMainZoneGrid()
+    host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
+  }
+  /**
+   * sa#589 — Part de sa case que prend une colonne de droite qui NAÎT d'une ouverture : celle que
+   * donnait le réglage d'avant (`split_ratio`, bornes comprises), pour qu'ouvrir le tableur à côté
+   * du diagramme le pose comme avant.
+   */
+  protected _mainZoneRightShare(): number {
+    const W = mainZoneViewportSize().w
+    if (W <= 0) return 1 / 3
+    return mainZoneRightColumnWidthPx(this._host._main_zone_split_ratio, W) / W
+  }
+  /** sa#589 — Même chose pour un bandeau du bas qui naît : la hauteur réglée d'avant (`bottom_px`). */
+  protected _mainZoneBottomShare(): number {
+    const h = mainZoneContentHeightPx()
+    if (h <= 0) return 1 / 3
+    return mainZoneBottomBandHeightPx(this._host._main_zone_bottom_px, h) / h
+  }
+  /**
+   * sa#589 — LA GRILLE QU'ÉCRIVAIENT LES FICHIERS D'AVANT, reconstruite depuis les étiquettes : la
+   * grande case, la colonne de droite (empilée, poids `size`, largeur `split_ratio`) et le bandeau
+   * du bas (côte à côte, poids `size`, hauteur `bottom_px`), aux dimensions de l'écran du moment.
+   *
+   * Deux lecteurs. La LECTURE d'un fichier sans `grid` (tout fichier d'avant sa#589) : il s'ouvre
+   * exactement comme avant. L'ÉCRITURE : une grille qui est encore cette disposition-là n'écrit pas
+   * `grid`, et le fichier d'un document qu'on n'a pas recomposé reste identique octet pour octet.
+   */
+  protected _legacyMainZoneGrid(): Type_MainZoneGridNode | null {
+    const host = this._host
+    const docked = host._main_zone_occupants.filter(o => o.place !== 'floating')
+    if (docked.length === 0) return null
+    // Même règle que la normalisation d'avant : la première grande case, sinon le premier de la
+    // colonne, sinon le premier venu ; une grande case de trop rejoint la colonne.
+    const principal = docked.find(o => o.place === 'main') ?? docked.find(o => o.place === 'right') ?? docked[0]
+    const right = docked.filter(o => o !== principal && o.place !== 'bottom')
+    const bottom = docked.filter(o => o !== principal && o.place === 'bottom')
+    const stack = (dir: 'row' | 'column', os: Type_MainZoneOccupant[]): Type_MainZoneGridNode =>
+      os.length === 1 ? { pane: os[0].id } : { split: dir, children: os.map(o => ({ pane: o.id })), sizes: os.map(o => o.size) }
+    // Les deux parts sont celles que prend une colonne ou un bandeau qui naît d'une ouverture
+    // (`_mainZoneRightShare`, `_mainZoneBottomShare`) : ouvrir puis enregistrer ne recompose rien.
+    let grid: Type_MainZoneGridNode = { pane: principal.id }
+    if (right.length > 0) {
+      const share = Math.min(0.9, Math.max(0.1, this._mainZoneRightShare()))
+      grid = { split: 'row', children: [grid, stack('column', right)], sizes: [1 - share, share] }
+    }
+    if (bottom.length > 0) {
+      const share = Math.min(0.9, Math.max(0.1, this._mainZoneBottomShare()))
+      grid = { split: 'column', children: [grid, stack('row', bottom)], sizes: [1 - share, share] }
+    }
+    return grid
   }
 
   // --- Compatibilité : les quatre occupants historiques par leur ancien nom -----------------
@@ -3229,25 +3384,49 @@ export class Class_MenuConfig {
     // Le chrome droit (colonne d'outils + barre latérale) se réserve toujours : il occupe
     // l'extrême droite et la colonne d'occupants se décale d'autant vers la gauche.
     const tools = this.getRightChromeReservedPx()
-    // La colonne droite n'existe que si quelque chose y vit ET qu'une zone principale la borde ;
-    // un occupant détaché n'y compte pas (cf. mainZoneOccupantsIn).
-    if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('right').length === 0) return tools
-    // sa#566 — un volet en plein écran : la colonne n'est pas dessinée, elle ne réserve rien.
-    if (this.main_zone_maximized_id !== null) return tools
-    return mainZoneRightColumnWidthPx(this._host._main_zone_split_ratio) + tools
+    // os#1385 — rien à réserver : on ne lit pas la fenêtre (une zone détachée ne doit jamais
+    // interroger celle de la page, cf. DrawingArea.foreignWindow.test).
+    if (!this._mainZoneReservesSomething()) return tools
+    // sa#589 — ce qui est à droite du volet PRINCIPAL dans la mosaïque. Il est toujours dans le
+    // coin haut gauche (cf. `MainZoneGrid.ts`) : deux réserves, droite et bas, décrivent donc sa
+    // case entière, quelle que soit la mosaïque.
+    // Les abscisses d'une mosaïque ne dépendent pas de sa hauteur : la fenêtre suffit, sans mesurer
+    // les barres dans la page (cette réserve est lue à chaque cadrage du dessin).
+    const { w, h } = mainZoneViewportSize()
+    const content_w = Math.max(0, w - tools)
+    const f = this._mainZonePrincipalFrame(content_w, h)
+    return f ? tools + Math.max(0, content_w - (f.left + f.width)) : tools
   }
 
   /**
-   * Hauteur (px) réservée en bas par le bandeau d'occupants. Symétrique de la réserve droite :
-   * lue par window_fitting_height de toute drawing area, donc le diagramme se recadre dans la
-   * hauteur restante. 0 sans bandeau.
+   * Hauteur (px) réservée en bas par la grille sous le volet principal. Symétrique de la réserve
+   * droite : lue par window_fitting_height de toute drawing area, donc le diagramme se recadre
+   * dans la hauteur restante. 0 quand rien n'est sous lui.
    */
   public getMainZoneBottomReservedPx(): number {
-    if (this.main_zone_main_id === null || this.mainZoneOccupantsIn('bottom').length === 0) return 0
-    if (this.main_zone_maximized_id !== null) return 0
-    return mainZoneBottomBandHeightPx(
-      this._host._main_zone_bottom_px, window.innerHeight - MAIN_ZONE_MIN_BOTTOM_PX
-    )
+    if (!this._mainZoneReservesSomething()) return 0
+    const content_h = mainZoneContentHeightPx()
+    const content_w = Math.max(0, mainZoneViewportSize().w - this.getRightChromeReservedPx())
+    const f = this._mainZonePrincipalFrame(content_w, content_h)
+    return f ? Math.max(0, content_h - (f.top + f.height)) : 0
+  }
+
+  /** sa#589 — Le volet principal partage-t-il la grille avec d'autres (hors plein écran) ? */
+  protected _mainZoneReservesSomething(): boolean {
+    return this.main_zone_maximized_id === null && gridPaneIds(this.main_zone_visible_grid).length >= 2
+  }
+  /**
+   * sa#589 — La case du volet principal dans une grande zone de `content_w` × `content_h`, comptée
+   * depuis son coin haut gauche ; `null` quand il est seul (il a tout) ou qu'un volet est en plein
+   * écran (la grille n'est pas dessinée, elle ne réserve rien — sa#566). Un volet détaché n'y
+   * compte pas : il n'a plus de case.
+   */
+  protected _mainZonePrincipalFrame(content_w: number, content_h: number): Type_MainZoneGridFrame | null {
+    if (!this._mainZoneReservesSomething()) return null
+    const grid = this.main_zone_visible_grid
+    const principal = gridPrincipal(grid) as string
+    return gridFrames(grid, { top: 0, left: 0, width: content_w, height: content_h }, MAIN_ZONE_GRID_GAP_PX)
+      .frames[principal] ?? null
   }
 
   /**
@@ -3338,6 +3517,11 @@ export class Class_MenuConfig {
       split_ratio: this._host._main_zone_split_ratio,
       bottom_px: this._host._main_zone_bottom_px
     }
+    // sa#589 — LA MOSAÏQUE, seulement quand les trois places d'avant ne la décrivent pas (cf.
+    // `_legacyMainZoneGrid`) : un document qu'on n'a pas recomposé garde son fichier d'avant, et
+    // une version d'avant relit une mosaïque comme la grille la plus proche (étiquettes `place`).
+    const grid = this._host._main_zone_grid
+    if (grid !== null && !sameMainZoneGrid(grid, this._legacyMainZoneGrid())) state['grid'] = gridToJSON(grid)
     // sa#566 — seulement quand un volet est en plein écran : fichier inchangé sinon.
     const maximized = this.main_zone_maximized_id
     if (maximized !== null) state['maximized'] = maximized
@@ -3451,6 +3635,13 @@ export class Class_MenuConfig {
    */
   public mainZoneStateFromJSON(json: Type_JSON) {
     const host = this._host
+    // sa#589 — les réglages d'avant D'ABORD : la grille d'un fichier sans `grid` en est faite.
+    host._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', host._main_zone_split_ratio)
+    host._main_zone_bottom_px = getNumberFromJSON(
+      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', host._main_zone_bottom_px)
+    )
+    // Les identifiants renommés à la lecture (unitaire d'avant), que la mosaïque doit suivre.
+    const renamed = new Map<string, string>()
     const raw = json['occupants']
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       const entries = Object.entries(raw as Type_JSON)
@@ -3484,11 +3675,19 @@ export class Class_MenuConfig {
         // sous le nouvel identifiant.
         const raw = raw_figures.get(o.id)
         if (raw) { raw_figures.delete(o.id); raw_figures.set(new_id, raw) }
+        renamed.set(o.id, new_id)
         return { ...o, id: new_id, subject: { kind: 'selection' } as Type_MainZoneSubject, representation: MAIN_ZONE_UNIT_WINDOW_ID }
       })
       // Réaligner le compteur d'ids `w_N` sur le fichier, pour ne jamais réutiliser un id.
       host._main_zone_window_seq = Math.max(host._main_zone_window_seq, ...host._main_zone_occupants
         .map(o => OWN_MAIN_ZONE_WINDOW_ID.exec(o.id)).map(m => (m ? Number(m[1]) : 0)))
+      // sa#589 — LA MOSAÏQUE : celle du fichier (`grid`) s'il en écrit une, sinon celle que disent
+      // les trois places d'avant. Les étiquettes en sont recalculées tout de suite : la
+      // normalisation qui suit lirait sinon celles du fichier comme des demandes de déplacement.
+      let grid = gridFromJSON(json['grid'])
+      renamed.forEach((to, from) => { grid = gridRename(grid, from, to) })
+      host._main_zone_grid = grid ?? this._legacyMainZoneGrid()
+      this._relabelMainZoneGrid()
       // La normalisation AVANT la migration : elle peut écarter une fenêtre (doublon, place
       // inconnue), et migrer les réglages d'une fenêtre qui n'existera pas les sèmerait sous un
       // identifiant orphelin — que `figureOf` refuserait d'ailleurs d'indexer.
@@ -3525,16 +3724,15 @@ export class Class_MenuConfig {
       }
       if (show_doc && doc_bottom) list.push(diagramWindow(MAIN_ZONE_DOC_ID, 'bottom', 1))
       host._main_zone_occupants = list
+      // sa#589 — la grille d'un fichier d'avant les occupants : ses trois places.
+      host._main_zone_grid = this._legacyMainZoneGrid()
+      this._relabelMainZoneGrid()
     }
     // sa#566 — le volet en plein écran, s'il est encore là (`setMainZoneMaximized` le vérifie).
     const maximized = getStringFromJSON(json, 'maximized', '')
     host._main_zone_maximized_id = (maximized !== '' && host._main_zone_occupants.some(o => o.id === maximized))
       ? maximized : null
     this._normalizeMainZoneOccupants()
-    host._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', host._main_zone_split_ratio)
-    host._main_zone_bottom_px = getNumberFromJSON(
-      json, 'bottom_px', getNumberFromJSON(json, 'doc_bottom_px', host._main_zone_bottom_px)
-    )
     this._notifyMainZone()
   }
 
