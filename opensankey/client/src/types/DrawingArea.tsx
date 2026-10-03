@@ -2314,7 +2314,13 @@ export class Class_DrawingArea {
     const set = this._deferred_link_draws
     this._deferred_link_draws = null
     if (!set) return
-    set.forEach(l => l.draw())
+    // #588 — sous la mémo des tailles de nœuds et des côtés d'accroche (os#1508) : tracer un flux
+    // relit le côté d'accroche de tous les flux de ses deux nœuds (rangement de leurs bandes,
+    // pointes de flèche, points de contrôle), soit ~80 lectures d'orientation, de recyclage et de
+    // points de passage par flux et par dessin — 97 % de ces lectures se faisaient hors mémo. Rien
+    // de ce dont elles dépendent ne change pendant le tracé ; une écriture de position (un flux
+    // qui redessine un nœud) vide la mémo comme partout ailleurs.
+    this.withNodeSizeMemo(() => set.forEach(l => l.draw()))
   }
 
   public drawElements() {
