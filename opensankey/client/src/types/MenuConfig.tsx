@@ -137,6 +137,22 @@ export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', '
 export type Type_MainZonePlace = 'main' | 'right' | 'bottom' | 'floating'
 
 /**
+ * sa#587 — OÙ L'ON DÉPOSE UN VOLET QU'ON A SAISI PAR SON EN-TÊTE (cf. `dropMainZoneOccupant`).
+ *
+ * Les flèches de l'en-tête (« passer dans la grande case », « passer à droite / en bas ») sont
+ * remplacées par un glisser-déposer, comme les fenêtres du système. Le geste a trois issues, et
+ * ce type les nomme toutes :
+ *  - `swap`  : prendre la place d'un autre volet de la grille, qui prend la sienne ;
+ *  - `stack` : entrer dans la colonne de droite ou le bandeau du bas, avant le volet `before`
+ *              (`null` = au bout de la pile) ;
+ *  - `float` : quitter la grille et flotter à la géométrie donnée.
+ */
+export type Type_MainZoneDropTarget =
+  | { kind: 'swap', with: string }
+  | { kind: 'stack', place: 'right' | 'bottom', before: string | null }
+  | { kind: 'float', geometry: Type_PopupGeometry }
+
+/**
  * 02/10/2026 — LA COUPE PROPRE DE LA FIGURE ACTIVE, telle que la barre du haut la règle (cf.
  * `topbar_figure_cut`) : par dimension, le niveau qu'elle dit, ses membres ouverts, ce qu'elle
  * montre, et les deux gestes qui l'écrivent.
@@ -2766,6 +2782,67 @@ export class Class_MenuConfig {
     if (place === 'floating') this._ensureFloatingGeometry(id)
     this._normalizeMainZoneOccupants()
     this._notifyMainZone()
+  }
+  /**
+   * sa#587 — DÉPOSER UN VOLET DE LA GRILLE LÀ OÙ ON L'A LÂCHÉ (cf. `Type_MainZoneDropTarget`).
+   *
+   * Comme `setMainZoneOccupantPlace`, le geste ne touche qu'à la PLACE du volet : sujet, nature,
+   * figures et sélection restent les siens. Mais l'ORDRE compte ici, et c'est pourquoi le geste ne
+   * se ramène pas à elle : dans une pile, les volets se rangent dans l'ordre de la liste, et
+   * déposer « au-dessus de B » veut dire « juste avant B dans la liste ».
+   *
+   * UN PIÈGE DE LA NORMALISATION, désamorcé ici : quand la grande case se vide, elle promeut le
+   * PREMIER volet de la colonne droite. Celui qu'on vient d'y déposer en tête serait alors renvoyé
+   * dans la grande case qu'il quittait, et le geste n'aurait rien fait. On promeut donc soi-même un
+   * AUTRE volet de la grille avant de normaliser.
+   *
+   * Rendu : `true` si la grande zone a changé.
+   */
+  public dropMainZoneOccupant(id: string, target: Type_MainZoneDropTarget): boolean {
+    const host = this._host
+    const list = host._main_zone_occupants
+    const o = list.find(x => x.id === id)
+    if (!o || o.place === 'floating' || host._main_zone_detached.has(id)) return false
+    if (target.kind === 'float') {
+      o.place = 'floating'
+      o.geometry = clampMainZoneFloatingGeometry(target.geometry)
+    } else if (target.kind === 'swap') {
+      const other = list.find(x => x.id === target.with)
+      if (!other || other === o || other.place === 'floating') return false
+      // Les deux échangent leur place ET leur rang dans la liste — donc dans leur pile —, et leur
+      // poids, pour que chaque case garde la taille qu'elle avait.
+      const i = list.indexOf(o)
+      const j = list.indexOf(other)
+      const place = o.place
+      const size = o.size
+      o.place = other.place
+      o.size = other.size
+      other.place = place
+      other.size = size
+      list[i] = other
+      list[j] = o
+    } else {
+      const before = target.before === null ? null : list.find(x => x.id === target.before) ?? null
+      if (before === o || (before !== null && before.place !== target.place)) return false
+      // Le volet quitte la grande case : quelqu'un d'autre la prend, et ce n'est pas lui (cf. plus haut).
+      if (o.place === 'main') {
+        const grid = list.filter(x => x !== o && x.place !== 'floating')
+        const heir = grid.find(x => x.place === 'right') ?? grid[0]
+        if (!heir) return false
+        heir.place = 'main'
+        heir.size = 1
+      }
+      // Poids d'arrivée = poids moyen de la pile, comme pour un volet qu'on ouvre.
+      const peers = list.filter(x => x !== o && x.place === target.place)
+      o.size = peers.length > 0 ? peers.reduce((s, x) => s + x.size, 0) / peers.length : 1
+      o.place = target.place
+      list.splice(list.indexOf(o), 1)
+      list.splice(before === null ? list.length : list.indexOf(before), 0, o)
+    }
+    host._main_zone_active_id = id
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+    return true
   }
   /** Donne au volet une géométrie s'il n'en a pas — la demandée, la sienne, ou celle par défaut. */
   protected _ensureFloatingGeometry(id: string, geometry?: Type_PopupGeometry): void {
