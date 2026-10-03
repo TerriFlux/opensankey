@@ -241,7 +241,7 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   value_label_percent: { visibleIf: labelled },
   value_label_significant_digits: { default: true, visibleIf: valued },
   value_label_nb_significant_digits: {
-    default: 4, visibleIf: (o) => valued(o) && is(o, 'value_label_significant_digits', true)
+    default: 3, visibleIf: (o) => valued(o) && is(o, 'value_label_significant_digits', true)
   },
   value_label_custom_digit: { advanced: true, visibleIf: valued },
   value_label_nb_digit: {

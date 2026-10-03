@@ -258,7 +258,7 @@ export const SHARED_HONOURS = {
   value_label_unit_visible: { default: true, visibleIf: valued },
   value_label_significant_digits: { default: true, visibleIf: valued },
   value_label_nb_significant_digits: {
-    default: 4, visibleIf: (o: Type_Bag) => valued(o) && o['value_label_significant_digits'] !== false
+    default: 3, visibleIf: (o: Type_Bag) => valued(o) && o['value_label_significant_digits'] !== false
   },
   value_label_custom_digit: { advanced: true, visibleIf: valued },
   value_label_nb_digit: {
