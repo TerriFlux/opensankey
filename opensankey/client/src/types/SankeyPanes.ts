@@ -114,6 +114,18 @@ export const sankeyDataKey = (sankey: Class_Sankey): string => {
 
 type Type_Camera = NonNullable<ReturnType<Class_DrawingArea['getCameraTransform']>>
 
+/**
+ * sa#568 — DEUX CAMÉRAS QUI MONTRENT LA MÊME CHOSE (à un demi-pixel près). Poser une caméra n'est
+ * pas gratuit — elle recale les étiquettes de tout le dessin : ≈ 0,5 s sur 300 nœuds, mesuré le
+ * 03/10 —, et deux volets créés l'un de l'autre ont le plus souvent la même : on ne la pose donc
+ * que si elle change quelque chose.
+ */
+export const sameCameraTransform = (
+  a: { k: number, x: number, y: number } | null | undefined,
+  b: { k: number, x: number, y: number } | null | undefined
+): boolean =>
+  !!a && !!b && Math.abs(a.k - b.k) < 1e-9 && Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5
+
 /** Le rendu d'un volet inactif : un document hors écran, ses données et SA mise en page. */
 type Type_PaneRender = {
   doc: Class_ApplicationData
@@ -461,7 +473,9 @@ export class Class_SankeyPanes {
         host.switchViewForPane(coordinate)
       }
       const camera = this._cameras.get(id)
-      if (camera) host.drawing_area.setCamera(camera)
+      if (camera && !sameCameraTransform(camera, host.drawing_area.getCameraTransform())) {
+        host.drawing_area.setCamera(camera)
+      }
       // sa#568 — le volet activé a posé sa mise en page, synchronisée, sur le dessin : c'est l'état
       // de référence du prochain geste.
       this.markShared()
