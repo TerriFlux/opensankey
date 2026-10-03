@@ -141,15 +141,21 @@ export type Type_MainZonePlace = 'main' | 'right' | 'bottom' | 'floating'
  * `topbar_figure_cut`) : par dimension, le niveau qu'elle dit, ses membres ouverts, ce qu'elle
  * montre, et les deux gestes qui l'écrivent.
  */
+/**
+ * 03/10/2026 — Une écriture de coupe sort du zoom posé sur la dimension, sauf `keep_focus` : le
+ * sélecteur placé SOUS le membre zoomé n'agit que sur ses descendants (os#1511).
+ */
+export type Type_CutWriteOptions = { keep_focus?: boolean }
+
 export type Type_TopbarFigureCut = {
   levelShown: (dim: Class_DataTagGroup) => string
-  chooseLevel: (dim: Class_DataTagGroup, depth: number) => void
+  chooseLevel: (dim: Class_DataTagGroup, depth: number, opts?: Type_CutWriteOptions) => void
   opened: (dim: Class_DataTagGroup) => Set<string>
   setOpened: (dim: Class_DataTagGroup, opened: ReadonlySet<string>) => void
   shownNames: (dim: Class_DataTagGroup) => string[]
   /** 03/10/2026 — les membres que la figure dessine (décochés exclus), et le geste qui les pose. */
   chosen: (dim: Class_DataTagGroup) => string[]
-  setChosen: (dim: Class_DataTagGroup, ids: readonly string[]) => void
+  setChosen: (dim: Class_DataTagGroup, ids: readonly string[], opts?: Type_CutWriteOptions) => void
   /**
    * 03/10/2026 — UNE DIMENSION QUI NE DÉCOUPE PAS (la séquence Année) : le membre que la figure lit,
    * épinglé, ou `null` quand elle suit le diagramme ; et le geste qui l'épingle. Une séquence ne
@@ -205,6 +211,17 @@ export type Type_TopbarFigureMenus = {
    */
   dimension_activation?: { [dim_id: string]: { active: boolean, can_toggle: boolean } }
   toggleDimensionActive?: (dim_id: string) => void
+  /**
+   * 03/10/2026 — LE ZOOM (« Zoome dedans ») QUE LA BARRE MONTRE ET DÉFAIT (os#1511) : les membres que
+   * le foyer fixe, par dimension, et celle du centre. `up` remonte d'un cran, `exitOn` sort du zoom
+   * posé sur une dimension. Absent : la figure n'est pas zoomée.
+   */
+  zoom?: {
+    members: { [dim_id: string]: { member_id: string, label: string } }
+    centre_dimension_id: string
+    up: () => void
+    exitOn: (dim_id: string) => void
+  }
 }
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
 /** Les places qui prennent une CASE de la grille : celles dont la disposition se calcule. */

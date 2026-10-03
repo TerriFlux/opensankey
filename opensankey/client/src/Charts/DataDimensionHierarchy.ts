@@ -450,8 +450,17 @@ export const resolveDataFocus = (
   const k = cut.dividing.findIndex(d => d.id === last.dimension_id)
   if (k < 0) return null
   const member = coord.get(last.dimension_id) as Class_DataTag
-  if (member.children.length === 0 && k + 1 >= cut.dividing.length) return null
-  return { k, member, coord, refs }
+  // 03/10/2026 — quelque chose dessous : ses enfants, ou une AUTRE dimension qui découpe encore — non
+  // fixée, ou fixée sur un membre que la coupe ouvre (cf. `entryAt` de `buildNestedDimensionTree`).
+  const below = member.children.length > 0 || cut.dividing.some(d => {
+    if (d.id === last.dimension_id) return false
+    const fixed = coord.get(d.id)
+    return fixed === undefined || (fixed.children.length > 0 && cut.opened.has(memberSectorId(d.id, fixed.id)))
+  })
+  if (!below) return null
+  // Un membre par dimension, le dernier écrit : la pile peut redire une dimension plus profond.
+  const unique = refs.filter((r, i) => !refs.slice(i + 1).some(s => s.dimension_id === r.dimension_id))
+  return { k, member, coord, refs: unique }
 }
 
 /**
@@ -530,19 +539,44 @@ export const buildNestedDimensionTree = (
       : (linkValueUnder(subject.link, at) ?? 0)
   }
 
+  // 03/10/2026 — LE FOYER FIXE SES MEMBRES, IL N'ARRÊTE PAS LES AUTRES DIMENSIONS (os#1511). Julien,
+  // pays › produits zoomé sur « Céréales » : l'anneau des pays disparaissait, la construction
+  // repartait au rang de la dimension zoomée et sautait celles d'avant. Chaque dimension qui découpe
+  // découpe toujours, dans l'ordre d'emboîtement ; celle d'un membre fixé par le foyer entre SOUS ce
+  // membre — ses enfants pour le centre (zoomer n'ouvre rien mais montre ce qu'il y a dessous), ce
+  // que la coupe ouvre sous lui pour un membre fixé plus haut dans la pile — ou ne découpe pas.
+  const focus = resolveDataFocus(cut, options.focus)
+  const entryAt = (j: number): Class_DataTag[] => {
+    const dim = dims[j]
+    const fixed = focus?.coord.get(dim.id)
+    if (fixed === undefined) return entryOfAll(dim)
+    const is_centre = fixed === focus?.member
+    return is_centre || isOpen(dim, fixed) ? (fixed.children as Class_DataTag[]) : []
+  }
+  /** La première dimension à partir de `from` qui a quelque chose à montrer, et ce qu'elle montre. */
+  const nextEntry = (from: number): { k: number, members: Class_DataTag[] } | null => {
+    for (let j = from; j < dims.length; j++) {
+      const members = entryAt(j)
+      if (members.length > 0) return { k: j, members }
+    }
+    return null
+  }
+  /** La coordonnée-chemin d'un secteur : son membre remplace celui de sa dimension, à la fin. */
+  const withRef = (refs: Type_MemberRef[], dimension_id: string, member_id: string): Type_MemberRef[] =>
+    [...refs.filter(r => r.dimension_id !== dimension_id), { dimension_id, member_id }]
+
   const build = (
     refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number,
-    branch: string, entry_depth: number, force_open = false
+    branch: string, entry_depth: number
   ): Type_SunburstNode => {
     const dim = dims[k]
     const id = memberPathSectorId(refs)
     // Ouvert dans sa dimension : ses enfants. Sinon, la dimension suivante qui découpe.
-    // `force_open` : le foyer montre ses enfants, ouvert ou non dans la coupe.
-    const own_all = force_open || isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
+    const own_all = isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
     const own = shownIn(dim, own_all)
     const next_all: { k: number, members: Class_DataTag[] } | null = own.length > 0
       ? { k, members: own_all }
-      : (k + 1 < dims.length ? { k: k + 1, members: entryOfAll(dims[k + 1]) } : null)
+      : nextEntry(k + 1)
     const next = next_all === null ? null : { k: next_all.k, members: shownIn(dims[next_all.k], next_all.members) }
     // 03/10/2026 — CE QUI EST DÉCOCHÉ SOUS CE SECTEUR SORT DE SA VALEUR : sinon l'arc compterait ce
     // qu'on a retiré (tronqué, ou en régime 'declared' où il deviendrait du « non réparti »).
@@ -563,11 +597,8 @@ export const buildNestedDimensionTree = (
       .map(child => {
         const child_coord = new Map(coord)
         child_coord.set(dims[next.k].id, child)
-        if (next.k === k) {
-          const child_refs = [...refs.slice(0, -1), { dimension_id: dim.id, member_id: child.id }]
-          return build(child_refs, child_coord, k, child, depth + 1, branch, entry_depth)
-        }
-        const child_refs = [...refs, { dimension_id: dims[next.k].id, member_id: child.id }]
+        const child_refs = withRef(refs, dims[next.k].id, child.id)
+        if (next.k === k) return build(child_refs, child_coord, k, child, depth + 1, branch, entry_depth)
         return build(child_refs, child_coord, next.k, child, depth + 1, child.id, depth + 1)
       })
       .filter(child => child.value > 0)
@@ -590,15 +621,20 @@ export const buildNestedDimensionTree = (
   }
 
   let children: Type_SunburstNode[]
-  // LE FOYER, quand la figure est descendue : le secteur est bâti comme les autres, à la profondeur
-  // du centre, et ce sont SES enfants qui forment le premier anneau.
-  const focus = resolveDataFocus(cut, options.focus)
+  // LE FOYER, quand la figure est descendue : ses membres sont fixés dans la coordonnée, et le
+  // premier anneau est la première dimension qui a quelque chose à montrer sous eux (`entryAt`).
   let root_label = displayedNameOf(element)
   if (focus !== null) {
     const coord = new Map(base_coord)
     focus.coord.forEach((member, dim_id) => coord.set(dim_id, member))
-    const node = build(focus.refs, coord, focus.k, focus.member, 0, focus.member.id, 0, true)
-    children = node.children
+    const first = nextEntry(0)
+    children = first === null ? [] : shownIn(dims[first.k], first.members)
+      .map(member => {
+        const child_coord = new Map(coord).set(dims[first.k].id, member)
+        const refs = withRef(focus.refs, dims[first.k].id, member.id)
+        return build(refs, child_coord, first.k, member, 1, member.id, 1)
+      })
+      .filter(member => member.value > 0)
     root_label = focus.member.name
   } else if (dims.length === 0) {
     // RIEN NE DÉCOUPE : un seul secteur, la racine de la première dimension — le tout, sans partage.

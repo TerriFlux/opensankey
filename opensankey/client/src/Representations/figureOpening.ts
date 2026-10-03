@@ -167,6 +167,25 @@ export const readFigureFocus = (options: Type_Options | null | undefined): strin
 export const withFigureFocus = (options: Type_Options, path: string[]): Type_Options =>
   ({ ...options, [HIERARCHY_FOCUS_KEY]: path.length > 0 ? [...path] : undefined })
 
+/**
+ * 03/10/2026 — LA PILE SANS FOYER SUR UNE DIMENSION (os#1511). Julien : changer le niveau ou les
+ * membres d'une dimension dans la barre laissait la couronne enracinée sur l'ancien membre — elle
+ * « ne réagissait pas ». Le patron du drill de Power BI : toucher à la coupe d'une dimension sort du
+ * zoom posé SUR ELLE. La pile se coupe au premier cran qui fixe un membre de `dimension_id` (les crans
+ * suivants l'emboîtent) ; un foyer sur une autre dimension reste.
+ */
+export const focusWithoutDimension = (path: string[], dimension_id: string): string[] => {
+  const at = path.findIndex(entry => (parseMemberSectorPath(entry) ?? []).some(r => r.dimension_id === dimension_id))
+  return at < 0 ? path : path.slice(0, at)
+}
+
+/** Le sac sans le foyer posé sur `dimension_id` (inchangé s'il n'y en a pas). */
+export const withFigureFocusClearedOn = (options: Type_Options, dimension_id: string): Type_Options => {
+  const path = readFigureFocus(options)
+  const next = focusWithoutDimension(path, dimension_id)
+  return next.length === path.length ? options : withFigureFocus(options, next)
+}
+
 /** Le foyer d'une couronne de dimensions de données : la coordonnée du dernier secteur empilé. */
 export const readFigureDataFocus = (options: Type_Options | null | undefined): Type_MemberRef[] | undefined => {
   const last = readFigureFocus(options).slice(-1)[0]
