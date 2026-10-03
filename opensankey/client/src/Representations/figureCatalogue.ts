@@ -449,26 +449,31 @@ export const INTERACTION_CONFIG = {
   //
   // Ce que ce réglage choisit, c'est ce qui S'AJOUTE : déplier aussi le nœud dans le diagramme
   // (ce que le disque fait depuis toujours), ou re-enraciner la figure sur lui (le drill-down).
-  // D'où les libellés : ils disent le SUPPLÉMENT, pas le geste.
+  // (Les libellés, eux, disent désormais le geste entier : cf. le 03/10/2026 ci-dessous.)
   interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('none', 'interaction', {
     en: 'Click on a part', fr: 'Clic sur une part', es: 'Clic en una parte',
     de: 'Klick auf einen Teil', it: 'Clic su una parte',
     'zh-CN': '点击部分', ja: '部分のクリック'
   }, {
-    en: 'Clicking always opens the ring in the figure. This says what else it does.',
-    fr: 'Le clic ouvre toujours l’anneau dans la figure. Ceci dit ce qu’il fait en plus.',
-    es: 'El clic siempre abre el anillo en la figura. Esto dice qué hace además.',
-    de: 'Der Klick öffnet immer den Ring in der Abbildung. Dies sagt, was er zusätzlich tut.',
-    it: 'Il clic apre sempre l’anello nella figura. Questo dice cosa fa in più.',
-    'zh-CN': '点击总是在图形内展开该环，此项决定它额外做什么。',
-    ja: 'クリックは必ず図の中でリングを開きます。ここでは、それに加えて何をするかを選びます。'
+    // 03/10/2026 — LES LIBELLÉS DISENT CE QUE FAIT LE CLIC, et non ce qu'il fait « en plus » (Julien :
+    // « je veux pouvoir déplier dans la couronne et pas seulement zoomer »). Déplier dans la couronne
+    // était là depuis toujours, sous « Rien de plus » : personne ne pouvait le deviner, et le jour où
+    // les deux choix « dans le diagramme » se sont grisés sans diagramme, il ne restait en apparence
+    // que le zoom.
+    en: 'Expanding opens the part as a new ring; zooming makes it the centre. The diagram follows when the choice names it.',
+    fr: 'Déplier ouvre la part en un nouvel anneau ; zoomer en fait le centre. Le diagramme suit quand le choix le nomme.',
+    es: 'Desplegar abre la parte en un nuevo anillo; hacer zoom la convierte en el centro. El diagrama sigue cuando la opción lo nombra.',
+    de: 'Aufklappen öffnet den Teil als neuen Ring; Zoomen macht ihn zur Mitte. Das Diagramm folgt, wenn die Wahl es nennt.',
+    it: 'Espandere apre la parte in un nuovo anello; ingrandire la rende il centro. Il diagramma segue quando la scelta lo nomina.',
+    'zh-CN': '展开会把该部分打开为新的一环；放大会以它为中心。选项提到图时，图也会随之变化。',
+    ja: '展開すると部分が新しいリングとして開き、ズームするとそれが中心になります。選択肢が図に触れている場合は図も追従します。'
   }, {
     kind: 'select',
     choices: [
-      choice('none', { en: 'Nothing else', fr: 'Rien de plus', es: 'Nada más', de: 'Nichts weiter', it: 'Nulla di più', 'zh-CN': '不做别的', ja: '他には何もしない' }),
-      choice('aggregate', { en: 'Expands it in the diagram', fr: 'Le déplie dans le diagramme', es: 'Lo despliega en el diagrama', de: 'Klappt ihn im Diagramm auf', it: 'Lo espande nel diagramma', 'zh-CN': '在图中展开', ja: '図で展開する' }),
-      choice('zoom', { en: 'Zooms in only', fr: 'Zoome dedans seulement', es: 'Solo hace zoom', de: 'Zoomt nur hinein', it: 'Ingrandisce soltanto', 'zh-CN': '仅放大', ja: 'ズームのみ' }),
-      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et le déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' })
+      choice('none', { en: 'Expands it in the ring', fr: 'Déplie dans la couronne', es: 'Lo despliega en la corona', de: 'Klappt ihn im Ring auf', it: 'Lo espande nella corona', 'zh-CN': '在环图中展开', ja: 'リングで展開する' }),
+      choice('aggregate', { en: 'Expands it in the ring and the diagram', fr: 'Déplie dans la couronne et le diagramme', es: 'Lo despliega en la corona y el diagrama', de: 'Klappt ihn im Ring und im Diagramm auf', it: 'Lo espande nella corona e nel diagramma', 'zh-CN': '在环图和图中展开', ja: 'リングと図で展開する' }),
+      choice('zoom', { en: 'Zooms in', fr: 'Zoome dedans', es: 'Hace zoom', de: 'Zoomt hinein', it: 'Ingrandisce', 'zh-CN': '放大', ja: 'ズームする' }),
+      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' })
     ],
     advanced: true,
     choiceUnavailable: clickChoiceUnavailable
