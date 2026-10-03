@@ -28,7 +28,7 @@ const STYLE: Type_FigureChartStyle = {
   name_label_is_visible: false,
   value_label_is_visible: true,
   value_label_percent: 'value_total',
-  labels_callout_small: true,
+  labels_small: 'detach',
   labels_min_share: 1
 }
 
@@ -69,7 +69,7 @@ describe('ou s ecrit l etiquette d une part', () => {
   test('sans sortie des petites, « Autres » qui ne tient pas se tait', () => {
     const el = sizedContainer()
     drawDonutChart(el, PARTS, {
-      style: { ...STYLE, labels_callout_small: false, name_label_prune_if_unfitting: true },
+      style: { ...STYLE, labels_small: 'hide' },
       format: fmt,
       others_label: 'Autres'
     })

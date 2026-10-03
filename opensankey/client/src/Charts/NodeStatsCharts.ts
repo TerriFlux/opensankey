@@ -353,7 +353,9 @@ export const smallMultipleCellBox = (
   let right = 0
   let left = 0
   let vert = 0
-  if (radius >= MIN_CELL_LABEL_RADIUS_PX && (st.labels_callout_small || st.name_label_callout)) {
+  // Seul « Détacher » (ou la sortie forcée) pose des étiquettes autour du disque : les autres modes
+  // écrivent dans l'anneau ou se taisent, la case n'a rien à réserver.
+  if (radius >= MIN_CELL_LABEL_RADIUS_PX && (st.labels_small === 'detach' || st.name_label_callout)) {
     const kept = foldDonutParts(m.slices, st, others_label)
     const total = kept.reduce((s, d) => s + d.value, 0)
     // Comme le tracé : la police du secteur peut descendre jusqu'au plancher pour tenir dedans.
@@ -1099,6 +1101,56 @@ export const fitLabelInSector = (
   return null
 }
 
+// ── 03/10/2026 — L'ÉTIQUETTE RADIALE (`labels_small: 'radial'`) ─────────────────────────────────
+//
+// Julien : celles qui ne tiennent pas à plat s'écrivent le long du RAYON, dans l'épaisseur de
+// l'anneau, tournées pour rester lisibles, police réduite jusqu'au plancher lisible ; si même ainsi
+// elles ne tiennent pas, elles se taisent.
+
+/** Le plancher lisible d'une étiquette radiale. */
+export const RADIAL_LABEL_MIN_FONT_PX = 9
+
+/**
+ * L'angle (en degrés, repère SVG) qui couche un texte le long du rayon d'angle `mid` (repère d3 :
+ * 0 en haut, sens horaire). JAMAIS À L'ENVERS : le résultat est ramené dans [-90, 90] — sur la
+ * moitié gauche du disque, le texte fait un demi-tour de plus et se lit de l'extérieur vers le centre.
+ */
+export const radialLabelRotation = (mid: number): number => {
+  let deg = (mid * 180 / Math.PI - 90) % 360
+  if (deg > 180) deg -= 360
+  if (deg <= -180) deg += 360
+  if (deg > 90) deg -= 180
+  else if (deg < -90) deg += 180
+  return deg
+}
+
+/**
+ * OÙ UN TEXTE COUCHÉ LE LONG DU RAYON TIENT-IL DANS UN SECTEUR D'ANNEAU ? `w` court le long du
+ * rayon, `h` (la hauteur des lignes) en travers. Rend son centre, ou null. Même vraie géométrie que
+ * `fitLabelInSector` : ses quatre coins restent entre les deux rayons et dans l'angle du secteur
+ * (`angleInSector`). Essaie le milieu de l'épaisseur, puis le plus à l'extérieur possible — c'est
+ * là que le secteur est le plus large.
+ */
+export const fitRadialLabelInSector = (
+  w: number, h: number, inner: number, outer: number, start: number, end: number
+): { x: number, y: number } | null => {
+  const tol = 1
+  const mid = (start + end) / 2
+  const fits = (r: number): boolean => {
+    const r0 = r - w / 2
+    const r1 = r + w / 2
+    if (r0 < inner - tol || Math.hypot(r1, h / 2) > outer + tol) return false
+    return [r0, r1].every(rr => [-1, 1].every(side => {
+      const da = Math.atan2(side * h / 2, rr)
+      return angleInSector(mid + da, start, end, tol / Math.max(rr, 1))
+    }))
+  }
+  for (const r of [(inner + outer) / 2, outer - w / 2 - tol]) {
+    if (fits(r)) return { x: r * Math.sin(mid), y: -r * Math.cos(mid) }
+  }
+  return null
+}
+
 // ==================================================================================================
 // Couronne (donut) — un secteur par entrée, total au centre, légende HTML à droite
 // ==================================================================================================
@@ -1186,7 +1238,7 @@ export const drawDonutChart = (
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
   // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
   // près de leur disque, à la mesure de la case.
-  const cell_reserve = cell && (st.labels_callout_small || st.name_label_callout) ? 1 - CELL_CALLOUT_RESERVE : 1
+  const cell_reserve = cell && (st.labels_small === 'detach' || st.name_label_callout) ? 1 - CELL_CALLOUT_RESERVE : 1
   const radius = cell?.radius_px !== undefined
     ? Math.max(0, cell.radius_px)
     : (side / 2 - 2) * scaleOf(st) * cell_reserve * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
@@ -1418,7 +1470,8 @@ export const drawDonutChart = (
    * (os#1470), et ce texte portait la typographie du NOM : régler celle de la valeur était donc un
    * geste sans effet. Savoir quelle ligne est laquelle suffit à le réparer.
    */
-  const sector_lines = (
+  /** Les lignes du bloc AVANT la coupure à la boîte : le nom, puis la valeur collée. */
+  const sector_raw_lines = (
     d: d3.PieArcDatum<Type_StatSlice>
   ): { text: string, is_value: boolean }[] => {
     const s = styleOf(d)
@@ -1430,6 +1483,14 @@ export const drawDonutChart = (
     // La CASSE est celle de la valeur, et non celle du nom : c'est son texte.
     const value = valueAttached(d.data.id) ? partTextCase(sectorValue(d), a?.value) : ''
     if (value !== '') lines.push({ text: value, is_value: true })
+    return lines
+  }
+  const sector_lines = (
+    d: d3.PieArcDatum<Type_StatSlice>
+  ): { text: string, is_value: boolean }[] => {
+    const s = styleOf(d)
+    const a = aspectOf(d.data.id)
+    const lines = sector_raw_lines(d)
     // La boîte de texte (`name_label_box_width`) : au-delà, retour à la ligne entre les mots, et
     // dans les mots si la part le demande (`name_label_wrap_long_words`). Boîte absente — le cas de
     // toute couronne enregistrée —, chaque ligne ressort telle quelle.
@@ -1485,7 +1546,7 @@ export const drawDonutChart = (
   }
   /** La police d'une étiquette écrite DANS son secteur (cf. `fitSpotOf`). */
   const insideFontOf = (d: d3.PieArcDatum<Type_StatSlice>): number =>
-    fitSpotOf(d)?.size ?? styleOf(d).name_label_font_size
+    radialSpotOf(d)?.size ?? fitSpotOf(d)?.size ?? styleOf(d).name_label_font_size
   const sectorFits = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     // L'anneau entier a toute la place : la mesure par les angles, qui se replie à ±π, le jugeait
     // trop petit et l'étiquette sortait, reliée au bas de l'anneau.
@@ -1506,8 +1567,46 @@ export const drawDonutChart = (
     }
     // 01/10/2026 — TROP PETIT POUR SON ÉTIQUETTE : elle sort au lieu de se taire. Un secteur d'à
     // peine un pixel n'a pas de bord où accrocher son trait ; il reste muet.
-    if (!st.labels_callout_small || (d.endAngle - d.startAngle) * radius < 1) return false
+    // 03/10/2026 — seulement sous « Détacher » (`labels_small`) ; les trois autres modes la gardent
+    // dans l'anneau ou la taisent.
+    if (st.labels_small !== 'detach' || (d.endAngle - d.startAngle) * radius < 1) return false
     return above_threshold && !sectorFits(d)
+  }
+  /**
+   * 03/10/2026 — `labels_small: 'radial'` : l'étiquette qui ne tient pas À PLAT se couche le long
+   * du rayon (cf. `fitRadialLabelInSector`), police réduite jusqu'à `RADIAL_LABEL_MIN_FONT_PX`. Les
+   * lignes sont celles d'avant la coupure à la boîte (la boîte mesure une largeur à plat) ; si le nom
+   * et la valeur ne tiennent pas l'un sous l'autre, ils s'essaient sur une seule ligne. `null` :
+   * pas en radial, l'étiquette tient à plat, ou elle ne tient pas non plus couchée — elle se tait.
+   * Une part qui demande elle-même à sortir (`label_callout`) sort : elle reste prioritaire.
+   */
+  type Type_RadialSpot = { x: number, y: number, size: number, rotate: number, lines: { text: string, is_value: boolean }[] }
+  const radial_spots = new Map<string, Type_RadialSpot | null>()
+  const radialSpotOf = (d: d3.PieArcDatum<Type_StatSlice>): Type_RadialSpot | null => {
+    if (st.labels_small !== 'radial') return null
+    if (radial_spots.has(d.data.id)) return radial_spots.get(d.data.id) ?? null
+    let found: Type_RadialSpot | null = null
+    if (!isWholeRing(d.startAngle, d.endAngle) && aspectOf(d.data.id)?.label_callout !== true && !sectorFits(d)) {
+      const raw = sector_raw_lines(d)
+      const variants = raw.length > 1
+        ? [raw, [{ text: raw.map(l => l.text).join(' '), is_value: false }]]
+        : [raw]
+      const base = styleOf(d).name_label_font_size
+      const sizes: number[] = []
+      for (let f = base; f >= Math.min(base, RADIAL_LABEL_MIN_FONT_PX); f--) sizes.push(f)
+      search: for (const size of sizes) {
+        for (const lines of variants) {
+          const w = Math.max(0, ...lines.map(l => labelTextWidthPx(l.text, size)))
+          const spot = fitRadialLabelInSector(w, lines.length * size * 1.15, inner, radius, d.startAngle, d.endAngle)
+          if (spot !== null) {
+            found = { ...spot, size, rotate: radialLabelRotation((d.startAngle + d.endAngle) / 2), lines }
+            break search
+          }
+        }
+      }
+    }
+    radial_spots.set(d.data.id, found)
+    return found
   }
   // Ce qui porte une étiquette se décide SECTEUR PAR SECTEUR, et non plus par un drapeau de figure :
   // une part peut demander son nom là où la figure n'en veut pas. Rien ne change quand personne ne
@@ -1597,13 +1696,19 @@ export const drawDonutChart = (
   const callouts = with_text.filter(d => callsOut(d))
   /**
    * 02/10/2026 — UNE ÉTIQUETTE QUI NE TIENT PAS DANS SON SECTEUR NE S'Y ÉCRIT PAS EN DÉBORDANT dès que
-   * la figure sort les petites étiquettes (`labels_callout_small`, le défaut) : elle sort, ou se
+   * la figure sort les petites étiquettes (`labels_small: 'detach'`, le défaut) : elle sort, ou se
    * tait si la place manque dehors aussi. Seuls « Masquer si ça dépasse » décoché ET la sortie
    * refusée (par la figure ou par la part) laissent encore un texte déborder, comme hier.
    */
+  //
+  // 03/10/2026 — PAR MODE (`labels_small`) : « Montrer quand même » laisse déborder, « Masquer » et
+  // « Radial » exigent de tenir (à plat, ou couché pour le radial), « Détacher » aussi — sauf pour
+  // une part qui refuse elle-même de sortir, qui déborde comme hier.
   const mustFitInside = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     if (aspectOf(d.data.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) return true
-    return st.labels_callout_small && aspectOf(d.data.id)?.label_callout !== false
+    if (st.labels_small === 'show') return false
+    if (st.labels_small === 'detach') return aspectOf(d.data.id)?.label_callout !== false
+    return true
   }
   const labelled = with_text.filter(d =>
     !callsOut(d) &&
@@ -1612,7 +1717,9 @@ export const drawDonutChart = (
     // règle qu'au sunburst, et que sur un nœud dont le libellé porte une icône.
     aspectOf(d.data.id)?.icon_path === undefined &&
     (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st) &&
-    (sectorFits(d) || !mustFitInside(d)))
+    (sectorFits(d) || radialSpotOf(d) !== null || !mustFitInside(d)))
+  /** Les lignes écrites dans le secteur : couchées le long du rayon, ou celles du bloc à plat. */
+  const insideLinesOf = (d: d3.PieArcDatum<Type_StatSlice>) => radialSpotOf(d)?.lines ?? sector_lines(d)
   if (labelled.length > 0) {
     g.selectAll('text.node_stats_pct')
       .data(labelled)
@@ -1623,12 +1730,18 @@ export const drawDonutChart = (
       // Julien : « n'oublie pas d'ajouter les orientations pertinentes sur la couronne et le
       // sunburst : horizontal, radial, ou le long de l'arc ». La couronne n'en avait AUCUNE : son
       // nom restait droit au centroïde quoi qu'on règle.
-      .attr('transform', d => arcLabelTransform(d))
+      .attr('transform', d => {
+        // 03/10/2026 — COUCHÉE LE LONG DU RAYON (`labels_small: 'radial'`), jamais à l'envers.
+        const rs = radialSpotOf(d)
+        if (rs === null) return arcLabelTransform(d)
+        const a_name = aspectOf(d.data.id)?.name
+        return `translate(${rs.x + (a_name?.shift_x ?? 0)},${rs.y + (a_name?.shift_y ?? 0)}) rotate(${rs.rotate})`
+      })
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('pointer-events', 'none')
       .each(function (d) {
-        const lines = sector_lines(d)
+        const lines = insideLinesOf(d)
         // Le bloc reste CENTRÉ sur le centroïde : la première ligne remonte d'une demi-hauteur par
         // ligne supplémentaire, sinon l'étiquette dériverait vers le bord extérieur du secteur.
         const dy0 = -(lines.length - 1) * 0.55

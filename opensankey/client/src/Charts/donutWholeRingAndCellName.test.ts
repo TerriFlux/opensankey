@@ -18,7 +18,7 @@ const STYLE: Type_FigureChartStyle = {
   value_label_is_visible: true,
   value_label_percent: 'value_total',
   centre_content: 'value',
-  labels_callout_small: true
+  labels_small: 'detach'
 }
 const WHOLE: Type_StatSlice[] = [{ id: 'tous', label: 'Tous produits', value: 550 }]
 
