@@ -141,6 +141,17 @@ export const withInactiveDimensions = (options: Type_Options, inactive: readonly
   return withFigureOpening(options, { ...now, data: { ...now.data, inactive: [...inactive] } })
 }
 
+/**
+ * 03/10/2026 — LES PETITS MULTIPLES S'APPLIQUENT-ILS ? Il faut la dimension des cases ACTIVE et au
+ * moins une AUTRE dimension active pour les parts : sinon une seule couronne, et la case « Une
+ * couronne par membre » se montre décochée (Julien : « ça reste bloqué sur une couronne par membre »).
+ * `part_ids` : les dimensions que la figure décompose.
+ */
+export const smallMultiplesApply = (
+  split_id: string, part_ids: readonly string[], inactive: readonly string[] | undefined
+): boolean => !(inactive?.includes(split_id) ?? false) &&
+  part_ids.some(id => id !== split_id && !(inactive?.includes(id) ?? false))
+
 // ── 02/10/2026 — OÙ LA FIGURE EST DESCENDUE (« Zoome dedans ») ──────────────────────────────────
 //
 // Une pile, du sujet vers le foyer, dans `hierarchy_focus` : des identifiants de NŒUDS pour une
