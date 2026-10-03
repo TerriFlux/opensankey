@@ -58,7 +58,8 @@ import type { Class_Sankey } from './Sankey'
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { SankeyPersistence } from '../Persistence/SankeyPersistence'
 import { compressJSONToGzip } from '../Persistence/UniversalJSONCompression'
-import { DRAW_TOPIC, ELEMENT_DRAW_TOPIC, HISTORY_TOPIC } from './EventBus'
+import { DRAW_TOPIC, HISTORY_TOPIC } from './EventBus'
+import type { Type_HistoryContext } from './ApplicationHistory'
 import { isSankeyPane, mainZoneSubjectView, type Type_MainZoneOccupant } from './MenuConfig'
 import { default_main_sankey_id, type Type_JSON } from './Utils'
 import {
@@ -179,6 +180,9 @@ export class Class_SankeyPanes {
   protected _base: { owner: Class_DrawingArea, doc: Class_ApplicationData } | null = null
   /** sa#568 — l'empreinte du dessin vivant au dernier partage, et de quel volet (cf. `shareLiveLayout`). */
   protected _print: { pane: string, print: Type_LayoutPrint } | null = null
+  /** sa#568 — l'observateur du DOM du dessin vivant, et l'élément observé (cf. `observeLive`). */
+  protected _observer: { disconnect: () => void } | null = null
+  protected _observed: Element | null = null
 
   constructor(protected readonly host: Class_ApplicationData) { }
 
@@ -440,8 +444,10 @@ export class Class_SankeyPanes {
     try {
       // sa#568 — ce que le vivant n'a pas encore donné à ses volets synchronisés part AVANT qu'il ne
       // cède la place (le relevé attend la fin du geste) : sinon le volet activé reprendrait une
-      // mise en page d'avant le dernier geste.
+      // mise en page d'avant le dernier geste. Et le relevé se fait même sans signal en attente :
+      // c'est le filet, si un geste a échappé à l'observation (cf. `observeLive`).
       this.flushPendingShare()
+      this.shareLiveLayout()
       // Un vivant parti dans une fenêtre du système y laissait le dessin : il rentre d'abord, le
       // volet qu'on active le reçoit dans la page.
       const previous = mc.main_zone_live_sankey_id
@@ -459,13 +465,16 @@ export class Class_SankeyPanes {
         try { changed = this.applyLayoutOf(o) } finally { host.drawing_area.bypass_redraws = was_bypassing }
         this._layout_owner = id
         // Le dessin PASSE d'un volet à l'autre : il se redessine avec la mise en page de celui qui le
-        // reçoit, et l'historique repart — il parlait de l'autre volet. Rien de tout cela quand il se
-        // POSE pour la première fois sans que rien ne change (ouverture d'un document, premier geste
-        // dans la grande zone) : ce serait redessiner en plein geste — un survol a ainsi remplacé
-        // les éléments qu'il désignait — et oublier pour rien l'historique de l'utilisateur.
+        // reçoit. Rien de tout cela quand il se POSE pour la première fois sans que rien ne change
+        // (ouverture d'un document, premier geste dans la grande zone) : ce serait redessiner en
+        // plein geste — un survol a ainsi remplacé les éléments qu'il désignait.
+        //
+        // sa#568 — L'HISTORIQUE NE REPART PLUS (Alexandre, 03/10 : annuler / rétablir valent pour
+        // toutes les actions du fichier, quel que soit le volet). Il « parlait de l'autre volet » :
+        // chaque entrée retient désormais le volet de son geste, qui redevient le vivant avant
+        // qu'on la rejoue (cf. `history_context`).
         if (previous !== null || changed) {
           host.drawing_area.draw()
-          host.resetHistory()
           mc.updateAllMenuComponents()
         }
       } else {
@@ -477,8 +486,9 @@ export class Class_SankeyPanes {
         host.drawing_area.setCamera(camera)
       }
       // sa#568 — le volet activé a posé sa mise en page, synchronisée, sur le dessin : c'est l'état
-      // de référence du prochain geste.
+      // de référence du prochain geste. Et son DOM est peut-être neuf (une vue lourde en change).
       this.markShared()
+      this.observeLive()
     } finally {
       this._activating = false
       this._busy = was_busy
@@ -500,6 +510,7 @@ export class Class_SankeyPanes {
     const mc = this.host.menu_configuration
     if (this._busy || !mc || !this.host.is_main || this.host.is_static) return
     this.listen()
+    this.observeLive()
     this._busy = true
     try {
       const panes = mc.main_zone_sankey_panes
@@ -719,10 +730,52 @@ export class Class_SankeyPanes {
     if (!mc || this._unsubscribe_draw) return
     const off_draw = mc.subscribe(DRAW_TOPIC, () => this.scheduleRefresh())
     const off_history = mc.subscribe(HISTORY_TOPIC, () => this.scheduleRefresh())
-    // sa#568 — le redessin d'UN élément du vivant : un glisser aimanté ou un réglage d'élément ne
-    // fait ni dessin complet ni, toujours, d'entrée d'historique (cf. « MISE EN PAGE SYNCHRONISÉE »).
-    const off_element = mc.subscribe(ELEMENT_DRAW_TOPIC, () => this.scheduleRefresh())
-    this._unsubscribe_draw = () => { off_draw(); off_history(); off_element() }
+    this._unsubscribe_draw = () => { off_draw(); off_history() }
+  }
+
+  /**
+   * sa#568 — OBSERVER LE DOM DU DESSIN VIVANT : tout ce qui change à l'écran programme un relevé.
+   *
+   * Recette du 03/10 (Alexandre : « la nouvelle position du nœud ne s'affiche que lorsque les volets
+   * sont actifs, idem pour les couleurs de flux ») : ni l'historique, ni le dessin complet, ni même
+   * `Element.draw` ne voient tous les gestes — un glisser pose sa position directement sur le SVG
+   * (`setPosXY` → `applyPosition`), un réglage d'élément redessine une sous-partie. Le DOM, lui, voit
+   * tout : c'est le seul signal qui ne dépende d'aucun chemin de code. L'observateur ne lit pas ce
+   * qui a changé (l'empreinte s'en charge) : il ne fait que programmer le relevé différé.
+   *
+   * Observé : le conteneur du dessin vivant, qui survit aux dessins complets. Les rendus des autres
+   * volets sont ailleurs dans la page : leurs propres redessins ne relancent rien.
+   */
+  public observeLive(): void {
+    const da = this.host.drawing_area
+    const doc = da.container_owner_document ?? (typeof document !== 'undefined' ? document : null)
+    const el = doc ? doc.querySelector(da.container_selector) : null
+    if (el === this._observed) return
+    this._observer?.disconnect()
+    this._observer = null
+    this._observed = el
+    const Observer = doc?.defaultView?.MutationObserver
+    if (!el || !Observer) return
+    const observer = new Observer(() => this.scheduleRefresh())
+    observer.observe(el, { subtree: true, childList: true, attributes: true, characterData: true })
+    this._observer = observer
+  }
+
+  /**
+   * sa#568 — LE CONTEXTE D'UN GESTE, pour l'historique (cf. `Type_HistoryContext`) : le volet Sankey
+   * vivant au moment du geste. L'annuler ou le rétablir le fait d'abord redevenir le vivant — sans
+   * quoi un geste fait dans le volet A, défait pendant que B est le vivant, toucherait la mise en
+   * page de B. Un volet fermé depuis ne se rouvre pas : le geste se rejoue là où l'on est.
+   */
+  public readonly history_context: Type_HistoryContext = {
+    capture: () => this.host.menu_configuration?.main_zone_live_sankey_id ?? null,
+    restore: (context: unknown) => {
+      const mc = this.host.menu_configuration
+      if (!mc || typeof context !== 'string' || mc.main_zone_live_sankey_id === context) return
+      if (!this.paneById(context)) return
+      mc.main_zone_active_id = context
+      this.sync()
+    }
   }
 
   protected scheduleRefresh(): void {
@@ -781,9 +834,9 @@ export class Class_SankeyPanes {
   // bouge pas dans l'autre, idem pour la couleur d'un flux » ; « c'est super lent ») :
   //  - LE SIGNAL. La première passe n'écoutait que l'historique et les dessins complets. Or un
   //    glisser n'inscrit son annulation que si le nœud a bougé en x ET en y (un déplacement
-  //    aimanté sur une ligne n'en inscrit pas), et un réglage d'élément ne redessine que lui. Le
-  //    signal est désormais le REDESSIN D'UN ÉLÉMENT du dessin vivant (`ELEMENT_DRAW_TOPIC`) : tout
-  //    ce qui se voit à l'écran passe par lui.
+  //    aimanté sur une ligne n'en inscrit pas), pose sa position directement sur le SVG, et un
+  //    réglage d'élément ne redessine qu'une partie de l'élément. Le signal est désormais le DOM du
+  //    dessin vivant lui-même (`observeLive`), et chaque activation relève ce qui aurait échappé.
   //  - LA RECOPIE. `updateFrom` réapparie tout le modèle et, sur un rendu déjà dessiné, redessinait
   //    chaque élément touché — 1,2 s sur 300 nœuds, puis 1,8 s de dessin complet. On compare
   //    désormais une EMPREINTE du dessin élément par élément (quelques ms), on ne rejoue que les
@@ -977,6 +1030,44 @@ export class Class_SankeyPanes {
     this._layout_owner = to.id
   }
 
+  /**
+   * sa#568 — LA MISE EN PAGE DE CES VOLETS, telle qu'elle est (pour défaire un cochage) : le dessin
+   * vivant pour le vivant, le rendu pour les autres. Un volet sans rendu n'a rien à retenir : il
+   * renaîtra du dessin vivant.
+   */
+  public layoutSnapshots(ids: string[]): { pane: string, json: Type_JSON }[] {
+    const live_id = this.host.menu_configuration?.main_zone_live_sankey_id ?? null
+    const out: { pane: string, json: Type_JSON }[] = []
+    ids.forEach(id => {
+      if (!this.paneById(id)) return
+      if (id === live_id) { out.push({ pane: id, json: this.host.dumpDrawingAreaToJSON(this.host.drawing_area) }); return }
+      const render = this._renders.get(id)
+      if (render && !render.doc.disposed) out.push({ pane: id, json: this.host.dumpDrawingAreaToJSON(render.doc.drawing_area) })
+    })
+    return out
+  }
+
+  /** sa#568 — rend au volet `id` ces modes de la mise en page `json` (cf. `layoutSnapshots`). */
+  public restoreLayout(id: string, json: Type_JSON, modes: string[]): void {
+    const mc = this.host.menu_configuration
+    const o = this.paneById(id)
+    if (!mc || !o || modes.length === 0) return
+    const source = this.buildDocument(json)
+    try {
+      if (mc.main_zone_live_sankey_id === id) {
+        const da = this.host.drawing_area
+        const was = da.bypass_redraws
+        da.bypass_redraws = true
+        try { updateFrom(da, source.drawing_area, [...modes, 'keepPositionType']) } finally { da.bypass_redraws = was }
+        da.draw()
+      } else if (this.applyToRender(o, source.drawing_area, modes, null) === 'remount') {
+        mc.notifyMainZone()
+      }
+    } finally {
+      this.disposeDocument(source)
+    }
+  }
+
   /** Le volet dont `doc` est le rendu, s'il y en a un (cf. l'échange, `swapLive`). */
   public renderOwnerOf(doc: Class_ApplicationData): string | null {
     for (const [id, render] of this._renders) if (render.doc === doc) return id
@@ -1011,5 +1102,8 @@ export class Class_SankeyPanes {
     this.dropBase()
     this._unsubscribe_draw?.()
     this._unsubscribe_draw = null
+    this._observer?.disconnect()
+    this._observer = null
+    this._observed = null
   }
 }

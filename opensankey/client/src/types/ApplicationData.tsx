@@ -2322,19 +2322,23 @@ export class Class_ApplicationData {
   }
 
   /**
-   * sa#568 — SYNCHRONISER UN VOLET SUR UN AUTRE POUR UN RÉGLAGE, geste de la grille « Synchronisé
-   * avec » : dans le menu du volet `id`, la case de la colonne `source_id`. `id` — et ce qui le
+   * sa#568 — UN VOLET HÉRITE D'UN AUTRE UN RÉGLAGE, geste de la grille « Réglages hérités des autres
+   * volets » : dans le menu du volet `id`, la case de la colonne `source_id`. `id` — et ce qui le
    * suivait — prend ce que `source_id` montre. Le registre aligne les figures ; la mise en page des
    * volets Sankey s'aligne ici, sur leurs dessins.
    */
-  public linkMainZonePanes(id: string, source_id: string, settings: string | string[]): boolean {
+  public linkMainZonePanes(id: string, source_id: string, settings: string | string[], record = true): boolean {
     const mc = this.menu_configuration
     if (!mc) return false
+    const list = Array.isArray(settings) ? settings : [settings]
+    // sa#568 — UN COCHAGE S'ANNULE comme tout geste du fichier (Alexandre, 03/10) : on retient, avant,
+    // les groupes de tous les volets et ce que l'alignement va remplacer.
+    const undo = record ? this._linkUndoOf(id, list) : null
     // Plusieurs réglages d'un coup (la case « tout » d'une colonne) : le registre d'abord, puis UN
     // alignement par volet avec tous ses modes — et non un dessin complet par réglage.
     const modes_by_pane = new Map<string, string[]>()
     let linked = false
-    ;(Array.isArray(settings) ? settings : [settings]).forEach(setting => {
+    list.forEach(setting => {
       const movers = mc.linkMainZoneSync(id, source_id, setting)
       if (movers === null) return
       linked = true
@@ -2344,7 +2348,51 @@ export class Class_ApplicationData {
     modes_by_pane.forEach((modes, pane) => this._sankey_panes.alignLayout(source_id, pane, modes))
     // Les volets cochés montrent désormais la même chose : c'est l'état de référence du prochain geste.
     if (linked) this._sankey_panes.markShared()
+    if (linked && undo) {
+      this.history.saveUndo(undo)
+      this.history.saveRedo(() => { this.linkMainZonePanes(id, source_id, list, false) })
+    }
     return linked
+  }
+
+  /**
+   * sa#568 — CE QUI DÉFAIT UN COCHAGE, retenu avant lui : les groupes de tous les volets, et — pour
+   * les volets que l'alignement va toucher (`id` et ceux qui le suivent) — la surcharge de leurs
+   * figures et la mise en page de leurs dessins.
+   */
+  protected _linkUndoOf(id: string, settings: string[]): () => void {
+    const mc = this.menu_configuration
+    const sync_before = mc.mainZoneSyncSnapshot()
+    const touched = new Set<string>([id])
+    settings.forEach(setting => mc.mainZoneSyncPartners(id, setting).forEach(p => touched.add(p)))
+    const figures_before = mc.figureOwnSnapshot([...touched])
+    const modes = settings.map(layoutModeOf).filter((m): m is string => m !== null)
+    const layouts_before = modes.length > 0 ? this._sankey_panes.layoutSnapshots([...touched]) : []
+    return () => {
+      mc.restoreMainZoneSyncSnapshot(sync_before)
+      mc.restoreFigureOwnSnapshot(figures_before)
+      layouts_before.forEach(s => this._sankey_panes.restoreLayout(s.pane, s.json, modes))
+      this._sankey_panes.markShared()
+    }
+  }
+
+  /**
+   * sa#568 — DÉCOCHER : `id` quitte, pour ces réglages, le groupe des volets dont il héritait ; il
+   * garde ce qu'il montre. S'annule comme le reste (les groupes reviennent tels qu'ils étaient).
+   */
+  public unlinkMainZonePanes(id: string, settings: string | string[], record = true): void {
+    const mc = this.menu_configuration
+    if (!mc) return
+    const list = Array.isArray(settings) ? settings : [settings]
+    const before = record ? mc.mainZoneSyncSnapshot() : null
+    list.forEach(setting => mc.unlinkMainZoneSync(id, setting))
+    this._sankey_panes.markShared()
+    if (!before) return
+    this.history.saveUndo(() => {
+      mc.restoreMainZoneSyncSnapshot(before)
+      this._sankey_panes.markShared()
+    })
+    this.history.saveRedo(() => { this.unlinkMainZonePanes(id, list, false) })
   }
 
   /**
@@ -4792,7 +4840,16 @@ export class Class_ApplicationData {
    */
   public get is_static(): boolean { return this.workspace.published_mode }
 
-  public get history(): Class_ApplicationHistory { return this._history! }
+  public get history(): Class_ApplicationHistory {
+    const history = this._history!
+    // sa#568 — chaque geste du document principal retient le volet Sankey où il a été fait : annuler
+    // ou rétablir le rejoue LÀ (cf. `Type_HistoryContext`). Posé ici, et non à la construction, parce
+    // que l'historique est remplacé à chaque remise à zéro.
+    if (history.context === null && this.is_main && this._sankey_panes) {
+      history.context = this._sankey_panes.history_context
+    }
+    return history
+  }
 
   /** Réinitialise l'historique undo/redo (appelé au switch de vue par ViewsReader). */
   public resetHistory(): void {

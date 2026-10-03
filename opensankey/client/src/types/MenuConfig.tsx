@@ -2587,6 +2587,44 @@ export class Class_MenuConfig {
     return movers.map(m => m.id)
   }
 
+  /** sa#568 — les groupes de tous les volets, tels qu'ils sont (pour défaire un cochage). */
+  public mainZoneSyncSnapshot(): { [id: string]: { [setting: string]: string } | null } {
+    const out: { [id: string]: { [setting: string]: string } | null } = {}
+    this._host._main_zone_occupants.forEach(o => { out[o.id] = o.sync ? { ...o.sync } : null })
+    return out
+  }
+
+  /** sa#568 — rend aux volets les groupes d'un instantané ; un volet ouvert depuis n'y est pas. */
+  public restoreMainZoneSyncSnapshot(snapshot: { [id: string]: { [setting: string]: string } | null }): void {
+    this._host._main_zone_occupants.forEach(o => {
+      if (!(o.id in snapshot)) return
+      const sync = snapshot[o.id]
+      if (sync && Object.keys(sync).length > 0) o.sync = { ...sync }
+      else delete o.sync
+    })
+    this._notifyMainZone()
+  }
+
+  /** sa#568 — la surcharge propre des figures de ces volets (pour défaire un alignement de mise en forme). */
+  public figureOwnSnapshot(ids: string[]): { [id: string]: { [pane_key: string]: Type_OptionBag } } {
+    const out: { [id: string]: { [pane_key: string]: Type_OptionBag } } = {}
+    ids.forEach(id => {
+      const by_key = this._figures[id]
+      if (!by_key) return
+      out[id] = {}
+      Object.entries(by_key).forEach(([key, fig]) => { out[id][key] = fig.own })
+    })
+    return out
+  }
+
+  /** sa#568 — rend aux figures la surcharge d'un instantané. */
+  public restoreFigureOwnSnapshot(snapshot: { [id: string]: { [pane_key: string]: Type_OptionBag } }): void {
+    Object.entries(snapshot).forEach(([id, by_key]) => {
+      Object.entries(by_key).forEach(([key, own]) => this._figures[id]?.[key]?.loadOwn(own))
+    })
+    this._notifyMainZone()
+  }
+
   /** Le volet cesse de partager ce réglage : il garde ce qu'il montre, et ne le partage plus. */
   public unlinkMainZoneSync(id: string, setting: string): void {
     const o = this._host._main_zone_occupants.find(x => x.id === id)

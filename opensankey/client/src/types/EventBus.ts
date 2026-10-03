@@ -24,18 +24,6 @@ export const MAIN_ZONE_TOPIC = 'main_zone'
 export const DRAW_TOPIC = 'draw'
 
 /**
- * sa#568 — Topic « un ÉLÉMENT du dessin affiché vient de se redessiner », hors dessin complet.
- *
- * Tout ce qui change à l'écran passe par le redessin d'un élément (un nœud glissé, la couleur d'un
- * flux) ou par un dessin complet (`DRAW_TOPIC`). L'historique ne suffit pas à le savoir : un glisser
- * aimanté sur une ligne n'y inscrit rien. Abonné : la synchronisation des volets Sankey, qui relève
- * alors ce qui a changé pour le donner aux volets synchronisés (cf. `Class_SankeyPanes`). Notifié
- * À CHAQUE redessin d'élément : un abonné ne doit rien faire de coûteux à la réception (il
- * programme un relevé différé).
- */
-export const ELEMENT_DRAW_TOPIC = 'element_draw'
-
-/**
  * #1243 — Topic « composition de la sélection » (add/remove/purge d'éléments).
  * Notifié par Class_MenuConfig.updateInspector(), donc à chaque changement de
  * sélection. Contrairement aux slots ref (un seul titulaire), ce topic accepte
