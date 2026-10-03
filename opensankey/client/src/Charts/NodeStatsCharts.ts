@@ -437,7 +437,11 @@ export const smallMultipleCellBox = (
     x1 = Math.max(x1, w)
     x0 = Math.min(x0, -w)
   }
-  return { x0, x1, y0: -top, y1: bottom }
+  // 03/10/2026 — LE DISQUE AU CENTRE DE SA CASE (Julien : « le centrage ne devrait pas prendre en
+  // compte les labels détachés »). La réserve est symétrique : le plus grand débord, des deux côtés.
+  const hx = Math.max(x1, -x0)
+  const hy = Math.max(top, bottom)
+  return { x0: -hx, x1: hx, y0: -hy, y1: hy }
 }
 
 /** Où se pose une case : son rayon à l'échelle commune, son cadre, le centre de son disque. */
@@ -2257,15 +2261,29 @@ export const drawDonutChart = (
   // Julien, capture à l'appui : « avec les labels détachés, la couronne n'est pas cadrée ». Les
   // étiquettes sorties débordaient du carré du disque. La figure prend donc pour cadre ce qu'elle
   // dessine VRAIMENT — disque et étiquettes — et l'étale sur toute la place de la fenêtre.
+  //
+  // 03/10/2026 — LE DISQUE AU CENTRE, LES ÉTIQUETTES N'Y TOUCHENT PAS (Julien : « le centrage ne
+  // devrait pas prendre en compte les labels détachés, ça fait super bizarre »). Le cadre était
+  // l'UNION du disque et des étiquettes sorties : des étiquettes d'un seul côté poussaient le disque
+  // de l'autre. La réserve est désormais SYMÉTRIQUE — le plus grand débord des deux côtés, appliqué
+  // des deux côtés, en largeur comme en hauteur — : elle ne fait que réduire le rayon, jamais
+  // déplacer le centre.
+  //
+  // 03/10/2026 — ET LE SVG SUIT SA PLACE, IL NE LA DÉCRÈTE PLUS (Julien : « le diagramme se coupe
+  // parfois à gauche »). Il portait une largeur en pixels, mesurée au tracé : dès que la case
+  // rétrécissait sans redessin (ou était mesurée avant d'avoir sa taille finale), ce svg plus large
+  // que son cadre débordait des deux côtés du flex centré, et le bord gauche — légende à gauche,
+  // `row-reverse` — passait sous le bord de la fenêtre. Il prend maintenant toute la place que la
+  // légende laisse (`flex: 1 1 0`) et le `viewBox` recadre le disque à chaque changement de taille.
   const frameTo = (frame: Type_DrawnBox) => {
-    // Avec une légende, la place qu'elle prend est déjà retirée : la figure se cadre dans le reste.
     const pad = 8
-    const avail_w = Math.max(side, width - legend_room - (legend_shown && !below ? 12 : 0))
-    const avail_h = Math.max(side, height - (legend_shown && below ? legend_room + 12 : 0))
-    const { x0, x1, y0, y1 } = frame
-    svg.attr('width', Math.floor(avail_w - 8)).attr('height', Math.floor(avail_h - 8))
-      .attr('viewBox', `${x0 + side / 2 - pad} ${y0 + side / 2 - pad} ${x1 - x0 + 2 * pad} ${y1 - y0 + 2 * pad}`)
+    const hx = Math.max(-frame.x0, frame.x1)
+    const hy = Math.max(-frame.y0, frame.y1)
+    svg.attr('width', '100%').attr('height', '100%')
+      .attr('viewBox', `${side / 2 - hx - pad} ${side / 2 - hy - pad} ${2 * (hx + pad)} ${2 * (hy + pad)}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('flex', '1 1 0').style('min-width', '0').style('min-height', '0')
+      .style('align-self', 'stretch')
       .style('overflow', 'visible')
   }
   // Petits multiples : la case rend son cadre, l'appelant pose le cadre commun — même sans
@@ -2294,7 +2312,8 @@ export const drawDonutChart = (
     if (cell) cell.frame?.(box, frameTo)
     else frameTo(box)
   }
-  else if (drawn_box !== null) frameTo(drawn_box)
+  // Sans étiquette sortie, le carré du disque : le dessin d'hier, mais qui suit sa place.
+  else frameTo(drawn_box ?? { x0: 8 - side / 2, x1: side / 2 - 8, y0: 8 - side / 2, y1: side / 2 - 8 })
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
   // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
   if (opts.zoom_handle) {
@@ -2328,8 +2347,9 @@ export const drawDonutChart = (
   // C'est la contrepartie de la position par défaut (cf. `DONUT_STYLE_DEFAULTS.legend_position`) :
   // une colonne sous le disque userait toute la hauteur pour trois entrées, alors qu'une bande qui
   // revient à la ligne en met six par ligne et rend le disque plus grand, pas plus petit.
+  // À côté, sa largeur est RÉSERVÉE (`legend_room`) : le svg prend le reste, jamais le dessous.
   const legend = root.append('div')
-    .style('flex', below ? '0 0 auto' : '1 1 0')
+    .style('flex', below ? '0 0 auto' : `0 0 ${Math.floor(legend_room)}px`)
     .style('min-width', '0')
     .style('max-height', below ? `${legend_room}px` : '100%')
     .style('overflow-y', 'auto')
