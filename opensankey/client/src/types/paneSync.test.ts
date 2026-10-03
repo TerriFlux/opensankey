@@ -335,6 +335,18 @@ describe('sa#568 toute action sur une figure ou un volet s\'annule, une par une'
     expect(mc.isMainZoneOccupant(a)).toBe(false)
   })
 
+  it('ranger un volet en glissant son en-tête (sa#587) s\'annule', () => {
+    const { app, mc } = makeApp()
+    let a = ''
+    mc.undoableMainZone(() => { a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, 'right', undefined, true) })
+    mc.undoableMainZone(() => { mc.dropMainZoneOccupant(a, { kind: 'float', geometry: { x: 10, y: 10, w: 300, h: 200 } }) })
+    expect(mc.mainZoneOccupantById(a)?.place).toBe('floating')
+    app.history.applyUndo()
+    expect(mc.mainZoneOccupantById(a)?.place).toBe('right')
+    app.history.applyRedo()
+    expect(mc.mainZoneOccupantById(a)?.place).toBe('floating')
+  })
+
   it('ouvrir ou déplacer un volet s\'annule ; un geste qui ne change rien n\'entre pas', () => {
     const { app, mc } = makeApp()
     let a = ''
