@@ -25,8 +25,10 @@
 export type Type_WrappedLine = { text: string, dx: string | null, dy: string | null }
 export type Type_WrapMeasure = { lines: Type_WrappedLine[], widths: number[] }
 
-// Borne de taille : au-delà, on repart de zéro plutôt que de gérer une éviction.
+// Borne de taille : au-delà, on repart de zéro plutôt que de gérer une éviction. Les clés de boîte
+// portent le `outerHTML` du <text> (quelques centaines d'octets) : borne plus basse.
 const MAX_ENTRIES = 20000
+const MAX_BBOX_ENTRIES = 10000
 
 let _wraps = new Map<string, Type_WrapMeasure>()
 type Type_BBox = { x: number, y: number, width: number, height: number }
@@ -155,7 +157,7 @@ export function textBBox(owner: object, text_node: SVGTextElement, scale: number
   // Boîte nulle : <text> sans mise en page (hors document, ancêtre masqué) — pas retenue (cf.
   // setWrapMeasure).
   if (!(bbox.width > 0 && bbox.height > 0)) return bbox
-  if (_bboxes.size >= MAX_ENTRIES) _bboxes = new Map()
+  if (_bboxes.size >= MAX_BBOX_ENTRIES) _bboxes = new Map()
   _bboxes.set(key, bbox)
   return bbox
 }
