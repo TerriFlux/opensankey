@@ -148,6 +148,19 @@ export const dimensionDrawingEnabledFor = (app: Pick<Type_PositionModeHostApp, '
   !app.is_static || app.publish_options.dimension_drawing === true
 
 /**
+ * 03/10/2026 — UN MENU À UNE SEULE ENTRÉE-SOUS-MENU S'APLATIT (demande Julien) : « Dessiner › » seul
+ * (couronne active, Afficher et Placer retirés) est un clic pour rien. Rend l'entrée unique quand
+ * le menu n'a qu'elle et qu'elle est un sous-menu ; `null` sinon (le menu se rend tel quel).
+ * Les entrées absentes (`null`, `undefined`, `false`) ne comptent pas.
+ */
+export const loneSubmenuOf = <T extends { is_submenu: boolean }>(
+  entries: readonly (T | null | undefined | false)[]
+): T | null => {
+  const present = entries.filter((e): e is T => !!e)
+  return present.length === 1 && present[0].is_submenu ? present[0] : null
+}
+
+/**
  * os#1511 — Le menu d'une dimension existe dès qu'il a quelque chose à offrir : la position, le
  * dessin, ou les deux. C'est le gate que lisent les trois hôtes.
  */
