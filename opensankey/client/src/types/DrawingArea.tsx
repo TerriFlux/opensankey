@@ -2439,7 +2439,9 @@ export class Class_DrawingArea {
       // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
       // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
       // avant _sankey.draw() pour que le coin recalculé soit utilisé dès cette frame.
-      this.nodePositioning.anchorAbsoluteNodesByCenter()
+      // #588 — sous la mémo des tailles (os#1508) : chaque nœud y relit sa taille deux fois, et
+      // chaque taille relit le côté d'accroche de tous ses flux. Un coin réécrit vide la mémo.
+      this.withNodeSizeMemo(() => this.nodePositioning.anchorAbsoluteNodesByCenter())
     }
     // Mix par nœud : les nœuds marqués 'parametric' (« Ecartement ») se calent sous le
     // nœud du dessus de leur colonne (un absolu placé par le mode global, ou un
