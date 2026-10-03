@@ -162,28 +162,31 @@ export type Type_TopbarFigureChoice = {
   key: string
   label: string
   value: string
-  /** `title` : pourquoi une option grisée ne s'offre pas, en info-bulle. */
-  options: { value: string, label: string, disabled?: boolean, title?: string }[]
+  /**
+   * `title` : pourquoi une option grisée ne s'offre pas, en info-bulle. `icon` : le petit visuel
+   * du choix, par son nom (cf. `FigureDrawingIcon`) — l'hôte qui bâtit le choix reste sans React.
+   */
+  options: { value: string, label: string, disabled?: boolean, title?: string, icon?: string }[]
   disabled?: boolean
   choose: (value: string) => void
 }
 
 /**
  * 02/10/2026 — LES MENUS DE LA FIGURE ACTIVE dans la barre du haut (cf. `topbar_figure_menus`) :
- * le bouton de la figure en tête (réglages communs) et, par dimension, ce que « Dessiner » y offre.
+ * le bouton de la figure en tête (ses réglages, dont son dessin depuis le 03/10/2026 : les
+ * dimensions n'ont plus de « Dessiner » propre) et l'ordre d'emboîtement que suit le ⇄.
  */
 export type Type_TopbarFigureMenus = {
   /** Le nom de la représentation active (« Couronne »). */
   title: string
   icon?: React.ReactNode
   settings: Type_TopbarFigureChoice[]
-  /** « Dessiner » d'une dimension sur cette figure ; vide : rien à y régler. */
-  drawing: (dim: Class_DataTagGroup) => Type_TopbarFigureChoice[]
   /** La figure a sa coupe propre : « Afficher » du diagramme ne la touche pas. */
   detached: boolean
   /**
-   * 03/10/2026 — Les dimensions qui découpent, de l'anneau intérieur à l'extérieur : la barre range
-   * leurs listes dans cet ordre. Moins de deux : pas d'ordre à régler.
+   * 03/10/2026 — Les dimensions qui découpent, de l'anneau intérieur à l'extérieur (puis, en petits
+   * multiples, celle qui fait les cases) : la barre range leurs listes dans cet ordre. Moins de
+   * deux : pas d'ordre à régler.
    */
   nest_order?: string[]
   /** ⇄ entre deux listes voisines : `dim_id` passe derrière sa voisine extérieure. */

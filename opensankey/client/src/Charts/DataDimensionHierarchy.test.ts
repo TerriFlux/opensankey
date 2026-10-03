@@ -5,8 +5,8 @@ import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import {
-  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, memberSectorId, parseMemberSectorId,
-  smallMultipleDefaultOpened, smallMultipleMembersOf
+  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, dimensionShowsSeveralLevels, memberSectorId,
+  parseMemberSectorId, smallMultipleDefaultOpened, smallMultipleMembersOf
 } from './DataDimensionHierarchy'
 import type { Type_DataDimensionOptions } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
@@ -392,6 +392,33 @@ describe('os#1511 — les membres des petits multiples', () => {
     viser(m.groupe, m.produits)
     expect(smallMultipleDefaultOpened(m.groupe)).toEqual(['produits'])
     expect(noms(smallMultipleMembersOf(m.groupe, { linked: false }))).toEqual(['cereales', 'lait'])
+  })
+})
+
+// 03/10/2026 — « EN SUNBURST » N A D EFFET QUE SI LA DIMENSION AFFICHE PLUS D UN NIVEAU. Julien : « le
+// dessin est en secteurs et la selection en sunburst ». Des filieres seules ne font qu un anneau.
+
+describe('os#1511 — la dimension affiche-t-elle plus d un niveau', () => {
+  test('liee, le diagramme au niveau 1 : un seul niveau sous la racine sautee', () => {
+    const m = monter()
+    m.groupe.selectAllAtLevel(1)
+    expect(dimensionShowsSeveralLevels(m.groupe, { linked: true })).toBe(false)
+  })
+  test('liee, le diagramme au niveau 2 : Ble et Mais sous Cereales, deux niveaux', () => {
+    const m = monter()
+    m.groupe.selectAllAtLevel(2)
+    expect(dimensionShowsSeveralLevels(m.groupe, { linked: true })).toBe(true)
+  })
+  test('detachee : la frontiere des ouverts decide', () => {
+    const m = monter()
+    expect(dimensionShowsSeveralLevels(m.groupe, { linked: false, opened: { filiere: ['produits'] } })).toBe(false)
+    expect(dimensionShowsSeveralLevels(m.groupe, { linked: false, opened: { filiere: TOUT } })).toBe(true)
+  })
+  test('detachee, Ble et Mais decoches : il ne reste que le niveau 1', () => {
+    const m = monter()
+    expect(dimensionShowsSeveralLevels(
+      m.groupe, { linked: false, opened: { filiere: TOUT }, hidden: { filiere: ['ble', 'mais'] } }
+    )).toBe(false)
   })
 })
 

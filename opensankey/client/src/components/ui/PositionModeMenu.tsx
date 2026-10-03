@@ -54,6 +54,7 @@ import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
 import type { Type_TopbarFigureChoice, Type_TopbarFigureMenus } from '../../types/MenuConfig'
+import { FigureDrawingIcon, isFigureDrawingIconName } from './FigureDrawingIcon'
 
 export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinition, label_key: string }[] = [
   { value: 'absolute', icon: faLocationDot, label_key: 'Banner.posModeShort_absolute' },
@@ -70,14 +71,17 @@ const GAP_MODES: { value: Type_DisaggregationGap, label_key: string }[] = [
 ]
 
 /** Une entrée cochable. */
-const CheckItem = ({ label, checked, onClick, icon, closeOnSelect, disabled, title }: {
+const CheckItem = ({ label, checked, onClick, icon, glyph, closeOnSelect, disabled, title }: {
   label: string, checked: boolean, onClick: () => void, icon?: React.ReactElement, closeOnSelect?: boolean,
-  disabled?: boolean, title?: string
+  disabled?: boolean, title?: string,
+  /** 03/10/2026 — un petit visuel devant le libellé, sur la même ligne (cf. `FigureDrawingIcon`). */
+  glyph?: React.ReactElement
 }) => (
   <MenuItem
     fontSize='0.75rem' icon={icon} onClick={onClick} closeOnSelect={closeOnSelect} isDisabled={disabled} title={title}
   >
     <HStack spacing='0.5rem'>
+      {glyph ?? null}
       <Box as='span'>{label}</Box>
       {checked ? <CheckIcon boxSize='0.6rem' /> : null}
     </HStack>
@@ -141,6 +145,10 @@ const menuEntries = (entries: (Type_MenuEntry | null)[]): React.ReactNode => {
   return entries.map(e => e === null ? null : <React.Fragment key={e.key}>{e.node}</React.Fragment>)
 }
 
+/** Le petit visuel d'une option de figure, s'il en a un (cf. `FigureDrawingIcon`). */
+const optionIcon = (o: Type_TopbarFigureChoice['options'][number]) =>
+  isFigureDrawingIconName(o.icon) ? <FigureDrawingIcon name={o.icon} /> : undefined
+
 /**
  * 02/10/2026 — LES CHOIX D'UNE FIGURE (os#1511), rendus comme ceux du diagramme : un groupe titré
  * par choix, une coche sur la valeur. Une option grisée ne fait rien — le choix n'a pas d'effet sur
@@ -151,6 +159,7 @@ const figureChoiceItems = (choices: Type_TopbarFigureChoice[]) => choices.map((c
     const only = c.options[0]
     return <CheckItem
       key={c.key}
+      glyph={optionIcon(only)}
       label={only.label}
       checked={c.value === only.value}
       disabled={c.disabled || only.disabled}
@@ -165,6 +174,7 @@ const figureChoiceItems = (choices: Type_TopbarFigureChoice[]) => choices.map((c
       {c.options.map(o => (
         <CheckItem
           key={o.value}
+          glyph={optionIcon(o)}
           label={o.label}
           checked={c.value === o.value}
           disabled={c.disabled || o.disabled}
@@ -182,10 +192,13 @@ const anyEnabled = (choices: Type_TopbarFigureChoice[]) =>
   choices.some(c => !c.disabled && c.options.some(o => !o.disabled))
 
 /**
- * 02/10/2026 — LE BOUTON DE LA FIGURE ACTIVE, en tête de la barre du haut (os#1511) : son nom et
- * son icône, et ses réglages communs — disposition des niveaux, clic sur une part, liaison au
- * diagramme, couche de données —, un sous-menu au survol par réglage, comme le menu d'une
- * dimension. Les gestes sont ceux des lignes de ses Coordonnées (OS+, `figureGesturesHost`).
+ * 02/10/2026 — LE BOUTON DE LA FIGURE ACTIVE, en tête de la barre du haut (os#1511) : son icône, et
+ * ses réglages communs — dessin (en secteurs, en sunburst, une couronne par membre), clic sur une
+ * part, liaison au diagramme, couche de données —, un sous-menu au survol par réglage, comme le
+ * menu d'une dimension. Les gestes sont ceux des lignes de ses Coordonnées (OS+, `figureGesturesHost`).
+ *
+ * 03/10/2026 — L'ICÔNE SEULE, comme les autres boutons de la barre (Julien) : le nom de la
+ * représentation passe en info-bulle et en `aria-label`.
  */
 export const FigureTopbarMenu = ({ menus }: { menus: Type_TopbarFigureMenus }) => (
   <Menu placement='bottom-start'>
@@ -196,10 +209,7 @@ export const FigureTopbarMenu = ({ menus }: { menus: Type_TopbarFigureMenus }) =
       aria-label={menus.title}
       title={menus.title}
     >
-      <HStack spacing='0.3rem'>
-        <Box as='span' display='inline-flex'>{menus.icon ?? <FontAwesomeIcon icon={faChartPie} />}</Box>
-        <Box as='span'>{menus.title}</Box>
-      </HStack>
+      <Box as='span' display='inline-flex'>{menus.icon ?? <FontAwesomeIcon icon={faChartPie} />}</Box>
     </MenuButton>
     <Portal>
       <MenuList minWidth='unset' zIndex={50}>
@@ -208,6 +218,7 @@ export const FigureTopbarMenu = ({ menus }: { menus: Type_TopbarFigureMenus }) =
           : submenuEntry(c.key, c.label, c.options.map(o => (
             <CheckItem
               key={o.value}
+              glyph={optionIcon(o)}
               label={o.label}
               checked={c.value === o.value}
               disabled={c.disabled || o.disabled}
@@ -240,12 +251,15 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   app_data: Class_ApplicationData,
   tagg: Class_DataTagGroup,
   /**
-   * 02/10/2026 — LA FENÊTRE ACTIVE EST UNE COURONNE (os#1511) : « Dessiner » règle la figure (en
-   * secteurs ou une couronne par membre, l'anneau, l'ordre des parts) et « Placer », qui place des
-   * nœuds du diagramme, se retire. « Afficher » reste celui du diagramme, que la couronne liée suit ;
+   * 02/10/2026 — LA FENÊTRE ACTIVE EST UNE COURONNE (os#1511) : « Placer », qui place des nœuds du
+   * diagramme, se retire. « Afficher » reste celui du diagramme, que la couronne liée suit ;
    * détachée, elle a sa coupe (l'arbre du bouton), et il se retire aussi.
+   *
+   * 03/10/2026 — « Dessiner » et « Anneau » se retirent aussi : le dessin est un réglage de la
+   * figure (son bouton en tête de barre), l'anneau suit l'ordre des dimensions (le ⇄). Sans rien à
+   * offrir, la dimension n'a pas de menu.
    */
-  figure?: { drawing: Type_TopbarFigureChoice[], detached: boolean }
+  figure?: { detached: boolean }
 }) => {
   const { t } = app_data
   const mode = tagg.position_mode
@@ -336,26 +350,21 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     />
   </>)
   if (figure !== undefined) {
+    if (!can_draw || figure.detached) return null
     return <Menu placement='bottom-start'>
       <MenuButton
         as={Button}
         size='xs'
         variant='menuconfigpanel_icon_button'
-        aria-label={t('Banner.draw_submenu') + ' — ' + tagg.name}
-        title={t('Banner.draw_submenu') + ' — ' + tagg.name}
+        aria-label={t('Banner.show_submenu') + ' — ' + tagg.name}
+        title={t('Banner.show_submenu') + ' — ' + tagg.name}
       >
         <FontAwesomeIcon icon={faChartPie} />
       </MenuButton>
       <Portal>
         <MenuList minWidth='unset' zIndex={50}>
-          {/* Couronne : Afficher retiré (détachée, ou lecture sans dessin), « Dessiner » seul
-              s'aplatit — ses sections Dessin de la dimension et Anneau se posent dans le menu. */}
-          {menuEntries([
-            can_draw && !figure.detached ? show_items : null,
-            submenuEntry('draw', t('Banner.draw_submenu'), figureChoiceItems(figure.drawing), {
-              disabled: !anyEnabled(figure.drawing)
-            })
-          ])}
+          {/* « Afficher » seul s'aplatit : ses deux choix se posent dans le menu. */}
+          {menuEntries([show_items])}
         </MenuList>
       </Portal>
     </Menu>
