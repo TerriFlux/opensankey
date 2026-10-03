@@ -191,6 +191,13 @@ export type Type_TopbarFigureMenus = {
   nest_order?: string[]
   /** ⇄ entre deux listes voisines : `dim_id` passe derrière sa voisine extérieure. */
   swapNestWithNext?: (dim_id: string) => void
+  /**
+   * 03/10/2026 — L'INTERRUPTEUR D'ACTIVATION de chaque dimension de la figure (deux au moins) :
+   * active, elle découpe ; désactivée, la figure la lit à sa racine et garde son réglage. `can_toggle`
+   * faux : c'est la seule active.
+   */
+  dimension_activation?: { [dim_id: string]: { active: boolean, can_toggle: boolean } }
+  toggleDimensionActive?: (dim_id: string) => void
 }
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
 /** Les places qui prennent une CASE de la grille : celles dont la disposition se calcule. */

@@ -163,6 +163,11 @@ export interface Type_DataOpening {
    * le diagramme). Absent d'une écriture = ceux d'avant sont gardés (cf. `withDataOpening`).
    */
   hidden?: { [dimension_id: string]: string[] }
+  /**
+   * 03/10/2026 — LES DIMENSIONS DÉSACTIVÉES (liée comme détachée) : elles ne découpent pas, la figure
+   * les lit à leur racine, mais leur niveau et leurs membres choisis restent écrits pour leur retour.
+   */
+  inactive?: string[]
 }
 
 /** La coupe EN VIGUEUR, telle que l'arbre, le clic et le panneau la lisent. */
@@ -179,6 +184,11 @@ export interface Type_DataCut {
    * total ne les compte pas (le filtre d'Excel). Absent = aucun.
    */
   hidden?: ReadonlySet<string>
+  /**
+   * 03/10/2026 — Les dimensions de la figure DÉSACTIVÉES (identifiants) : dans `dims`, jamais dans
+   * `dividing`, lues à leur racine. Jamais toutes : il en reste au moins une active.
+   */
+  inactive?: ReadonlySet<string>
 }
 
 // ── 03/10/2026 — UNE COUPE PEUT AVOIR DES TROUS ─────────────────────────────────────────────────
@@ -318,15 +328,19 @@ export const dataCutOf = (
     ? [...declared, ...(sankey.data_taggs_list as Class_DataTagGroup[]).filter(d => !declared.includes(d))]
     : declared
   const dims = candidates.filter(d => d.is_hierarchical && d.tags_list.length > 0 && !excluded_ids.includes(d.id))
+  // La dimension des petits multiples, active, suffit à la règle « au moins une active ».
+  const inactive = inactiveDimensionsOf(dims, opening.inactive, excluded_ids.some(id => !opening.inactive?.includes(id)))
+  const active = (d: Class_DataTagGroup) => !inactive.has(d.id)
   if (opening.linked) {
-    const dividing = dims.filter(d => d.selected_tags_list.length > 1)
+    const dividing = dims.filter(d => active(d) && d.selected_tags_list.length > 1)
     return {
       linked: true,
       dims,
       dividing,
       opened: diagramDimensionOpening(dims),
       // Ce que le diagramme a décoché ne se dessine pas non plus dans la figure qui le suit.
-      hidden: hiddenSectorsOf(dividing, d => hiddenForSelection(d, new Set(d.selected_tags_list.map(m => m.id))))
+      hidden: hiddenSectorsOf(dividing, d => hiddenForSelection(d, new Set(d.selected_tags_list.map(m => m.id)))),
+      inactive
     }
   }
   const opened = new Set<string>()
@@ -337,7 +351,38 @@ export const dataCutOf = (
     Object.entries(opening.opened).forEach(([dim_id, ids]) => ids.forEach(id => opened.add(memberSectorId(dim_id, id))))
   }
   const hidden = hiddenSectorsOf(dims, d => opening.hidden?.[d.id] ?? [])
-  return { linked: false, dims, dividing: dims.filter(d => dimensionDivides(d, opened)), opened, hidden }
+  // Les ouverts et décochés d'une dimension désactivée restent dans la coupe : c'est ce qui les
+  // retrouve tels quels à sa réactivation. Elle ne découpe simplement pas.
+  return { linked: false, dims, dividing: dims.filter(d => active(d) && dimensionDivides(d, opened)), opened, hidden, inactive }
+}
+
+/**
+ * 03/10/2026 — LES DIMENSIONS DÉSACTIVÉES EN VIGUEUR parmi `dims` : celles que la figure a désactivées,
+ * sauf si elles le sont toutes (il en reste au moins une active — la première).
+ */
+export const inactiveDimensionsOf = (
+  dims: Class_DataTagGroup[], inactive_ids: readonly string[] | undefined, another_active = false
+): Set<string> => {
+  const out = new Set(dims.filter(d => inactive_ids?.includes(d.id)).map(d => d.id))
+  if (!another_active && dims.length > 0 && out.size >= dims.length) out.delete(dims[0].id)
+  return out
+}
+
+/**
+ * 03/10/2026 — LE GESTE « ACTIVER / DÉSACTIVER » une dimension : la nouvelle liste des désactivées.
+ * Désactiver la seule active est refusé (`null`) ; désactiver l'une ACTIVE les autres quand toutes
+ * les autres étaient désactivées (avec deux dimensions : l'autre se réactive d'office).
+ */
+export const toggledInactiveDimensions = (
+  dim_ids: readonly string[], inactive_ids: readonly string[] | undefined, dim_id: string
+): string[] | null => {
+  const now = new Set((inactive_ids ?? []).filter(id => dim_ids.includes(id)))
+  if (now.has(dim_id)) { now.delete(dim_id); return [...now] }
+  const others = dim_ids.filter(id => id !== dim_id)
+  if (others.length === 0) return null
+  if (others.every(id => now.has(id))) others.forEach(id => now.delete(id))
+  now.add(dim_id)
+  return [...now]
 }
 
 /**
@@ -442,13 +487,13 @@ export const buildNestedDimensionTree = (
   const dims = cut.dividing
   // Détachée, une dimension au niveau « ensemble » se lit à sa racine, pas à ce que le diagramme
   // sélectionne ; liée, elle se lit à ce qu'il sélectionne (« Europe » si c'est l'Europe).
+  // 03/10/2026 — une dimension DÉSACTIVÉE se lit à sa racine, liée comme détachée : la couronne liée
+  // ne la découpe pas, quoi que le diagramme en montre.
   const base_coord = new Map<string, Class_DataTag>()
-  if (!cut.linked) {
-    all.filter(d => !dims.includes(d)).forEach(d => {
-      const roots = dimensionRootsOf(d)
-      if (roots.length === 1) base_coord.set(d.id, roots[0])
-    })
-  }
+  all.filter(d => !dims.includes(d) && (!cut.linked || cut.inactive?.has(d.id))).forEach(d => {
+    const roots = dimensionRootsOf(d)
+    if (roots.length === 1) base_coord.set(d.id, roots[0])
+  })
   const isOpen = (dim: Class_DataTagGroup, member: Class_DataTag) =>
     opened.has(memberSectorId(dim.id, member.id))
   // 03/10/2026 — un membre décoché ne se dessine pas : ni lui, ni sa part du total.
@@ -557,8 +602,8 @@ export const buildNestedDimensionTree = (
     root_label = focus.member.name
   } else if (dims.length === 0) {
     // RIEN NE DÉCOUPE : un seul secteur, la racine de la première dimension — le tout, sans partage.
-    const first = all[0]
-    const whole = (cut.linked ? (first.selected_tags_list[0] as Class_DataTag | undefined) : undefined)
+    const first = all.find(d => !cut.inactive?.has(d.id)) ?? all[0]
+    const whole = (cut.linked && !cut.inactive?.has(first.id) ?(first.selected_tags_list[0] as Class_DataTag | undefined) : undefined)
       ?? dimensionRootsOf(first)[0]
     const value = valueAt(base_coord)
     children = whole === undefined || value <= 0 ? [] : [{

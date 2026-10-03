@@ -359,9 +359,13 @@ const smallMultiplesOf = (
   if (!descriptor || effectiveDecompose(descriptor)?.kind !== 'data_dimension') return null
   const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined
   if (!dimension?.is_hierarchical) return null
+  const data_opening = readFigureOpening(ctx.options).data
+  // 03/10/2026 — la dimension des cases DÉSACTIVÉE : plus de cases, une seule couronne qui la lit à
+  // sa racine (cf. `dataCutOf`).
+  if (data_opening.inactive?.includes(dimension.id)) return null
   // Liée, ce que le diagramme montre ; détachée, la coupe propre de la figure pour cette dimension
   // — « Monde » seul fait UNE couronne, c'est le retour (cf. `smallMultipleMembersOf`).
-  const members = smallMultipleMembersOf(dimension, readFigureOpening(ctx.options).data)
+  const members = smallMultipleMembersOf(dimension, data_opening)
   return members.length > 0 ? { dimension, members } : null
 }
 

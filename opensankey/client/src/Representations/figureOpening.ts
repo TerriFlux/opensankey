@@ -30,7 +30,7 @@ import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSec
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
   COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_HIDDEN_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
-  LEVELS_DISPLAY_BY_KEY
+  INACTIVE_DIMENSIONS_KEY, LEVELS_DISPLAY_BY_KEY
 } from './analysisFigureAttributes'
 
 /** L'entrée par laquelle les fichiers d'avant détachaient une figure du diagramme. */
@@ -76,7 +76,10 @@ export const readFigureOpening = (options: Type_Options | null | undefined): Typ
   const linked = typeof linked_raw === 'boolean' ? linked_raw : !raw.includes(LEGACY_DETACHED_ENTRY)
   // Liée, la figure n'a pas de coupe propre : ce qu'un fichier d'avant y avait laissé est ignoré,
   // comme il l'était au dessin.
-  if (linked) return { elements, data: { linked } }
+  // 03/10/2026 — les dimensions désactivées valent pour la figure liée comme détachée.
+  const inactive_raw = stringsOf(options?.[INACTIVE_DIMENSIONS_KEY])
+  const inactive = inactive_raw.length > 0 ? { inactive: inactive_raw } : {}
+  if (linked) return { elements, data: { linked, ...inactive } }
   const opened = options?.[DIMENSION_OPENING_KEY] !== undefined
     ? storedDataOpening(options?.[DIMENSION_OPENING_KEY])
     : legacyDataOpening(raw)
@@ -86,7 +89,8 @@ export const readFigureOpening = (options: Type_Options | null | undefined): Typ
     data: {
       linked,
       ...(opened === undefined ? {} : { opened }),
-      ...(hidden === undefined ? {} : { hidden })
+      ...(hidden === undefined ? {} : { hidden }),
+      ...inactive
     }
   }
 }
@@ -107,7 +111,10 @@ export const withFigureOpening = (options: Type_Options, opening: Type_FigureOpe
   [HIERARCHY_EXPANDED_KEY]: opening.elements.size > 0 ? [...opening.elements] : undefined,
   [COORDINATES_LINKED_KEY]: opening.data.linked ? undefined : false,
   [DIMENSION_OPENING_KEY]: !opening.data.linked && opening.data.opened !== undefined ? opening.data.opened : undefined,
-  [DIMENSION_HIDDEN_KEY]: opening.data.linked ? undefined : nonEmpty(opening.data.hidden)
+  [DIMENSION_HIDDEN_KEY]: opening.data.linked ? undefined : nonEmpty(opening.data.hidden),
+  [INACTIVE_DIMENSIONS_KEY]: opening.data.inactive !== undefined && opening.data.inactive.length > 0
+    ? [...opening.data.inactive]
+    : undefined
 })
 
 /** Raccourci : seuls les éléments ouverts changent. */
@@ -122,8 +129,16 @@ export const withElementOpening = (options: Type_Options, elements: Iterable<str
  */
 export const withDataOpening = (options: Type_Options, data: Type_DataOpening): Type_Options => {
   const now = readFigureOpening(options)
-  const kept = !data.linked && !('hidden' in data) && now.data.hidden !== undefined ? { ...data, hidden: now.data.hidden } : data
+  let kept = !data.linked && !('hidden' in data) && now.data.hidden !== undefined ? { ...data, hidden: now.data.hidden } : data
+  // Les dimensions désactivées survivent à toute écriture qui n'en parle pas, lier compris.
+  if (!('inactive' in data) && now.data.inactive !== undefined) kept = { ...kept, inactive: now.data.inactive }
   return withFigureOpening(options, { ...now, data: kept })
+}
+
+/** 03/10/2026 — Raccourci : seules les dimensions désactivées changent. */
+export const withInactiveDimensions = (options: Type_Options, inactive: readonly string[]): Type_Options => {
+  const now = readFigureOpening(options)
+  return withFigureOpening(options, { ...now, data: { ...now.data, inactive: [...inactive] } })
 }
 
 // ── 02/10/2026 — OÙ LA FIGURE EST DESCENDUE (« Zoome dedans ») ──────────────────────────────────

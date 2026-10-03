@@ -141,6 +141,18 @@ export const dimensionHiddenAttribute = () => figureAttribute<{ [dimension_id: s
   }, undefined, { kind: 'none' }
 )
 /**
+ * 03/10/2026 — LES DIMENSIONS DÉSACTIVÉES de la figure (liée comme détachée) : elles ne découpent
+ * pas la couronne, qui les lit à leur racine, mais gardent niveau et membres choisis. Absente = toutes
+ * actives. Julien : « une véritable activation/désactivation serait plus claire » que repasser à 0.
+ */
+export const INACTIVE_DIMENSIONS_KEY = 'inactive_dimensions'
+export const inactiveDimensionsAttribute = () => figureAttribute<string[] | undefined>(
+  undefined, 'identity', {
+    en: 'Inactive dimensions', fr: 'Dimensions désactivées', es: 'Dimensiones desactivadas',
+    de: 'Deaktivierte Dimensionen', it: 'Dimensioni disattivate', 'zh-CN': '已停用的维度', ja: '無効化された次元'
+  }, undefined, { kind: 'none' }
+)
+/**
  * 01/10/2026 — LES PETITS MULTIPLES : la dimension qui donne UNE PETITE COURONNE PAR MEMBRE
  * (Julien : « une petite couronne par membre de la seconde hiérarchie »). Absente, une seule
  * couronne. Sans interface générique : la ligne « Une couronne par » des Coordonnées la règle.
@@ -480,6 +492,7 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   [COORDINATES_LINKED_KEY]: coordinatesLinkedAttribute(),
   [DIMENSION_OPENING_KEY]: dimensionOpeningAttribute(),
   [DIMENSION_HIDDEN_KEY]: dimensionHiddenAttribute(),
+  [INACTIVE_DIMENSIONS_KEY]: inactiveDimensionsAttribute(),
   [DATA_LAYER_KEY]: dataLayerAttribute(),
   [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute(),
   [LEVELS_DISPLAY_BY_KEY]: levelsDisplayByAttribute()
