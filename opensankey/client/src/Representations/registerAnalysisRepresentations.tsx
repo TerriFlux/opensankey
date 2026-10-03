@@ -438,7 +438,7 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
  *
  * Couronne de NŒUDS (ou croisement) : le réglage commun `levels_display`, comme hier. Couronne sur
  * DIMENSIONS DE DONNÉES : chaque dimension a sa disposition (`dataDimensionLevelsDisplay` : la sienne,
- * sinon sunburst seule, secteurs à plusieurs) ; la figure passe en anneaux dès qu'une dimension qui
+ * sinon le réglage commun seule, secteurs à plusieurs) ; la figure passe en anneaux dès qu'une dimension qui
  * découpe est en sunburst, ou que plusieurs découpent, et celles en secteurs y replient leurs niveaux
  * (`foldInPlaceLevels`). Une seule dimension, en secteurs : la couronne en place, un seul anneau.
  */

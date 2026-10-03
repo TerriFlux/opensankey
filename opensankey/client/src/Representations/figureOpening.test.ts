@@ -25,11 +25,12 @@ describe('os#1511 — disposition des niveaux par dimension', () => {
   })
 })
 
-// 03/10/2026 — LE DEFAUT SUIT LE NOMBRE DE DIMENSIONS QUI DECOUPENT : sunburst seule, un anneau
-// chacune a plusieurs. Le choix explicite de « Dessiner » garde le dernier mot.
+// 03/10/2026 — LE DEFAUT SUIT LE NOMBRE DE DIMENSIONS QUI DECOUPENT : en place seule (le sunburst
+// n est pas le defaut), un anneau chacune a plusieurs. Le choix explicite de « Dessiner » prime.
 describe('os#1511 — disposition par defaut selon le nombre de dimensions', () => {
-  test('une seule dimension decoupe : sunburst complet, meme si le reglage commun dit en place', () => {
-    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({ levels_display: 'in_place' }), 1, 'produit')).toBe('rings')
+  test('une seule dimension decoupe : en place par defaut, le sunburst se demande', () => {
+    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({}), 1, 'produit')).toBe('in_place')
+    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({ levels_display: 'rings' }), 1, 'produit')).toBe('rings')
   })
   test('deux dimensions ou plus : un anneau par dimension, meme si le reglage commun dit en anneaux', () => {
     const l = readFigureLevelsDisplay({ levels_display: 'rings' })
