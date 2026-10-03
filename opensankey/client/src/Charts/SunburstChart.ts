@@ -38,6 +38,7 @@ import type { Type_FigureText, Type_FigurePartTextAspect } from './figureChartSt
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
+import { figureNumberText } from './figureFormat'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -218,7 +219,7 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   // qu'on ait à la cocher. Sans unité au diagramme, `opts.unit` vaut '' et rien ne s'écrit.
   unit_visible: true,
   significant_digits: true,
-  nb_significant_digits: 4,
+  nb_significant_digits: 3,
   custom_digit: false,
   nb_digit: 0,
   scientific_notation: false,
@@ -562,7 +563,7 @@ const ICON_VIEW_BOX = '0 0 1000 1000'
 // Encre d'une étiquette POSÉE SUR un secteur : choisie sur la luminance du secteur, pas
 // sur le thème. Un même bleu porte du blanc au centre et du gris foncé sur les anneaux
 // éclaircis ; imposer l'encre du thème rendrait illisible la moitié des étiquettes.
-const inkOn = (fill: string, ink: string): string => {
+export const inkOn = (fill: string, ink: string): string => {
   const c = d3.rgb(fill)
   const chan = (v: number) => {
     const s = v / 255
@@ -1116,20 +1117,11 @@ export const drawSunburstChart = (
   // qu'une notation scientifique ne se cumule pas avec un nombre de décimales. Il est PARAMÉTRÉ
   // par la mise en forme depuis os#1445 : les chiffres d'une valeur sont un réglage d'élément, et
   // une part qui règle les siens écrit sa valeur autrement que ses voisines.
-  const digits = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
   const unit_factor = (opts.unit_factor !== undefined && opts.unit_factor > 0) ? opts.unit_factor : 1
   const formatWith = (s: Type_SunburstStyle) => (raw: number): string => {
     if (opts.format) return opts.format(raw)
-    const v = raw / unit_factor
-    if (s.scientific_notation) {
-      return s.significant_digits
-        ? v.toExponential(digits(s.nb_significant_digits - 1, 20))
-        : v.toExponential()
-    }
-    let text = v
-    if (s.significant_digits) text = parseFloat(v.toPrecision(digits(s.nb_significant_digits, 21) || 1))
-    if (s.custom_digit) text = parseFloat(text.toFixed(digits(s.nb_digit, 20)))
-    return new Intl.NumberFormat().format(text)
+    // 03/10/2026 — la règle commune des figures (`figureNumberText`) : mêmes décimales partout.
+    return figureNumberText(raw / unit_factor, s)
   }
   const unitOf = (s: Type_SunburstStyle) => s.unit_visible && opts.unit ? ' ' + opts.unit : ''
   /** Une valeur écrite sous une mise en forme donnée : celle de la figure, ou celle d'une part. */

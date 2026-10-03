@@ -38,10 +38,12 @@ export interface Type_FigureValueFormat {
   factor?: number
 }
 
-/** Ce que le tracé faisait avant que ces clés existent : quatre chiffres significatifs. */
+/**
+ * Le défaut : trois chiffres significatifs (quatre jusqu'au 03/10/2026, cf. `figureNumberText`).
+ */
 export const FIGURE_VALUE_FORMAT_DEFAULTS: Type_FigureValueFormat = {
   significant_digits: true,
-  nb_significant_digits: 4,
+  nb_significant_digits: 3,
   custom_digit: false,
   nb_digit: 0,
   scientific_notation: false,
@@ -82,21 +84,57 @@ export const figureValueFormatOf = (
 
 const clamp = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n)))
 
+/**
+ * 03/10/2026 — LE NOMBRE ÉCRIT, sans l'unité : la règle de TOUTES les figures (couronne, barres,
+ * sunburst), centre, secteurs, étiquettes sorties, info-bulle et légende.
+ *
+ * Julien, capture du SOCLE à l'appui : dans une même couronne « 1,194 Mt » côtoyait « 0,2 Mt »,
+ * « 35,2 Mt », « 4,134 Mt ». Deux causes : quatre chiffres significatifs par défaut, et `parseFloat`
+ * qui mangeait les zéros de fin (0,20 → 0,2). D'où, en chiffres significatifs :
+ *
+ * - le nombre de DÉCIMALES se déduit de la grandeur — `nb` moins les chiffres de la partie entière —
+ *   et les zéros de fin restent : 39,3 / 4,13 / 1,19 / 0,20 / 0,56 ;
+ * - sous 1, au moins deux chiffres significatifs (0,056, pas 0,06) ;
+ * - au-delà de `nb` chiffres entiers, l'arrondi des chiffres significatifs (1 194 → 1 190 en 3) ;
+ * - un ENTIER exact reste entier (un dénombrement ne s'écrit pas « 12,0 »).
+ *
+ * Décimales imposées (`custom_digit`) : ce nombre-là, zéros de fin compris, et au plus autant que
+ * la règle des chiffres significatifs quand les deux sont cochés.
+ */
+export const figureNumberText = (
+  v: number,
+  f: Pick<Type_FigureValueFormat, 'significant_digits' | 'nb_significant_digits' | 'custom_digit' | 'nb_digit' | 'scientific_notation'>
+): string => {
+  if (f.scientific_notation) {
+    return f.significant_digits
+      ? v.toExponential(clamp(f.nb_significant_digits - 1, 20))
+      : v.toExponential()
+  }
+  if (!Number.isFinite(v)) return String(v)
+  let n = v
+  let decimals: number | undefined
+  if (f.significant_digits) {
+    const nb = clamp(f.nb_significant_digits, 21) || 1
+    const abs = Math.abs(v)
+    const int_digits = abs < 1 ? 1 : Math.floor(Math.log10(abs)) + 1
+    if (int_digits > nb) n = parseFloat(v.toPrecision(nb))
+    decimals = Math.max(0, nb - int_digits)
+    if (abs > 0 && abs < 1) decimals = Math.max(decimals, 1 - Math.floor(Math.log10(abs)))
+    decimals = Math.min(decimals, 20)
+  }
+  if (f.custom_digit) {
+    const nb_digit = clamp(f.nb_digit, 20)
+    decimals = decimals === undefined ? nb_digit : Math.min(decimals, nb_digit)
+  }
+  if (decimals === undefined) return new Intl.NumberFormat().format(n)
+  n = parseFloat(n.toFixed(decimals))
+  if (Number.isInteger(v)) decimals = 0
+  return new Intl.NumberFormat(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)
+}
+
 /** La fonction qui écrit un nombre selon ce format, unité comprise. */
 export const figureValueFormatter = (f: Type_FigureValueFormat): ((v: number) => string) => {
   const suffix = f.unit ? ' ' + f.unit : ''
   const factor = (f.factor !== undefined && f.factor > 0) ? f.factor : 1
-  return (raw: number) => {
-    const v = raw / factor
-    if (f.scientific_notation) {
-      const text = f.significant_digits
-        ? v.toExponential(clamp(f.nb_significant_digits - 1, 20))
-        : v.toExponential()
-      return text + suffix
-    }
-    let n = v
-    if (f.significant_digits) n = parseFloat(n.toPrecision(clamp(f.nb_significant_digits, 21) || 1))
-    if (f.custom_digit) n = parseFloat(n.toFixed(clamp(f.nb_digit, 20)))
-    return new Intl.NumberFormat().format(n) + suffix
-  }
+  return (raw: number) => figureNumberText(raw / factor, f) + suffix
 }

@@ -30,6 +30,7 @@ import {
   SUNBURST_STYLE_DEFAULTS
 } from './SunburstChart'
 import type { Type_SunburstSlice, Type_SunburstStyle } from './SunburstChart'
+import { inkOn } from './SunburstChart'
 import type { Type_SunburstTree } from './SunburstHierarchy'
 // os#1425 — la mise en forme lue sur le catalogue des attributs de figure.
 import {
@@ -47,6 +48,7 @@ import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 // os#1511 — la légende en arbre : même règle (ordre, retrait) que la légende du diagramme.
 import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
 import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
+import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText } from './figureFormat'
 
 export interface Type_StatSlice {
   id: string
@@ -634,8 +636,7 @@ const flexDirection = (st: Type_FigureChartStyle) =>
 // peuvent être commensurables, deux scénarios peuvent ne pas l'être).
 export type Type_ScaleMode = 'auto' | 'shared' | 'per_group'
 
-const DEFAULT_FORMAT = (v: number) =>
-  new Intl.NumberFormat(undefined, { maximumSignificantDigits: 4 }).format(v)
+const DEFAULT_FORMAT = (v: number) => figureNumberText(v, FIGURE_VALUE_FORMAT_DEFAULTS)
 
 // Regroupement « Autres » (cf. ecodata historique) : parts < 0,5 % du total ou au-delà de 20
 // secteurs — un donut à 50 secteurs est illisible. Les deux seuils sont désormais des RÉGLAGES
@@ -1254,6 +1255,18 @@ export const drawDonutChart = (
     resolved_aspects.set(id, resolved)
     return resolved
   }
+  const sectorFill = (d: d3.PieArcDatum<Type_StatSlice>): string => {
+    const a = aspectOf(d.data.id)
+    if (a?.background_visible === false) return 'none'
+    return a?.fill ?? colorOf(d.data, d.index)
+  }
+  // 03/10/2026 — L'ENCRE D'UNE ÉTIQUETTE POSÉE SUR SON SECTEUR suit la clarté du secteur, comme au
+  // sunburst (`inkOn`) : les nuances claires de la palette hiérarchique (os#1516) portaient un
+  // blanc illisible. Sans fond, le texte est sur le blanc de la figure.
+  const sectorInk = (d: d3.PieArcDatum<Type_StatSlice>): string => {
+    const fill = sectorFill(d)
+    return fill === 'none' ? '#2D3748' : inkOn(fill, '#2D3748')
+  }
   const paths = g.selectAll('path')
     .data(arcs)
     .enter().append('path')
@@ -1267,11 +1280,7 @@ export const drawDonutChart = (
     .attr('data-repr-id', d => d.data.id)
     .attr('d', arc)
     // « Fond » décoché l'emporte sur toute couleur : c'est le sens du réglage.
-    .attr('fill', d => {
-      const a = aspectOf(d.data.id)
-      if (a?.background_visible === false) return 'none'
-      return a?.fill ?? colorOf(d.data, d.index)
-    })
+    .attr('fill', d => sectorFill(d))
     .attr('fill-opacity', d => arcOpacity(d))
     // Le liséré se demande EN BLOC : une part qui n'a rien dit de lui garde celui du tracé (blanc,
     // 1 px), sans quoi une amorce de style le ferait disparaître partout.
@@ -1654,7 +1663,7 @@ export const drawDonutChart = (
           font_family: styleOf(d).name_label_font_family,
           bold: styleOf(d).name_label_bold,
           italic: styleOf(d).name_label_italic,
-          color: styleOf(d).name_label_color || 'white'
+          color: styleOf(d).name_label_color || sectorInk(d)
         })
         // 25/09/2026 — L'ENCRE DE LA VALEUR EST POSEE EXPLICITEMENT, et non laissee a l heritage.
         //
@@ -1707,7 +1716,7 @@ export const drawDonutChart = (
             font_family: styleOf(d).name_label_font_family,
             bold: styleOf(d).name_label_bold,
             italic: styleOf(d).name_label_italic,
-            color: styleOf(d).name_label_color || 'white'
+            color: styleOf(d).name_label_color || sectorInk(d)
           })
         })
       })
@@ -2002,10 +2011,27 @@ export const drawDonutChart = (
     const value_base = Math.max(11, inner * 0.28)
     const value_size = centre?.value?.font_size ?? Math.max(CELL_NAME_MIN_PX, Math.min(value_base,
       value_base * inner * 1.7 / Math.max(1, labelTextWidthPx(fmt(total), value_base))))
-    // Le nom passe AU-DESSUS du total et plus petit : c'est le total qu'on lit de loin, le nom qui
-    // le qualifie. Seul, il prend la place centrale.
-    const name_size = centre?.name?.font_size
-      ?? (wants_value ? Math.max(9, inner * 0.16) : Math.max(11, inner * 0.22))
+    // 03/10/2026 — LE NOM SUIT LA RÈGLE DES PETITS MULTIPLES (`smallMultipleCentrePlan`, sa!832).
+    // Zoomée sur « Produits transformés - Céréales », la couronne seule écrivait le nom d'une
+    // traite, à une taille fixée par le trou : il débordait sur l'anneau. Même règle que la case :
+    // réduit jusqu'au plancher lisible, puis coupé sur deux lignes, en dernier recours AU-DESSUS du
+    // disque (et la valeur dessous). Une taille imposée par la part reste la sienne.
+    const shown_name = centre?.name?.uppercase ? centre_name.toUpperCase() : centre_name
+    let name_plan: { lines: string[], size: number, above: boolean } | null = null
+    let value_size_in = value_size
+    let value_below = false
+    if (wants_name) {
+      if (wants_value) {
+        const plan = smallMultipleCentrePlan(shown_name, fmt(total), inner, centre?.value?.font_size)
+        name_plan = plan.name
+        if (plan.value !== null) { value_size_in = plan.value.size; value_below = plan.value.below }
+      } else {
+        name_plan = smallMultipleCentreName(shown_name, inner, null)
+      }
+      if (centre?.name?.font_size !== undefined) name_plan = { ...name_plan, size: centre.name.font_size }
+      if (name_plan.above) cell_name_above = name_plan
+      if (value_below) cell_value_below = { size: value_size_in }
+    }
     const text = g.append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
@@ -2028,18 +2054,30 @@ export const drawDonutChart = (
       if (a?.font_family) span.attr('font-family', a.font_family)
       if (a?.color) span.attr('fill', a.color)
     }
-    if (wants_name) {
-      const span = text.append('tspan')
-        .attr('x', 0)
-        .attr('dy', wants_value ? `${-0.6}em` : '0em')
-      dress(span, centre?.name, name_size, false)
-      span.text(centre?.name?.uppercase ? centre_name.toUpperCase() : centre_name)
+    // Le bloc nom puis valeur, centré dans le trou ; ou le nom au-dessus du disque et la valeur
+    // dessous, quand le trou ne les tient pas (mêmes places que pour une case).
+    const name_h = (name_plan?.size ?? 0) * 1.15
+    const value_h = wants_value && !value_below ? value_size_in * 1.2 : 0
+    const lines_in = name_plan !== null && !name_plan.above ? name_plan.lines.length : 0
+    const top = -(lines_in * name_h + value_h) / 2
+    if (name_plan !== null) {
+      const plan = name_plan
+      const y_last = -Math.max(radius + callout_gap, -(drawn_box?.y0 ?? 0) + 2) - name_h / 2
+      plan.lines.forEach((line, i) => {
+        const span = text.append('tspan')
+          .attr('x', 0)
+          .attr('y', plan.above ? y_last - (plan.lines.length - 1 - i) * name_h : top + (i + 0.5) * name_h)
+        dress(span, centre?.name, plan.size, false)
+        span.text(line)
+      })
     }
     if (wants_value) {
       const span = text.append('tspan')
         .attr('x', 0)
-        .attr('dy', wants_name ? '1.2em' : '0em')
-      dress(span, centre?.value, value_size, true)
+        .attr('y', value_below
+          ? Math.max(radius + callout_gap, (drawn_box?.y1 ?? 0) + 2) + value_size_in * 0.6
+          : top + lines_in * name_h + value_h / 2)
+      dress(span, centre?.value, value_size_in, true)
       span.text(fmt(total))
     }
   }
@@ -2074,7 +2112,7 @@ export const drawDonutChart = (
     svg.attr('width', Math.max(1, b.x1 - b.x0)).attr('height', Math.max(1, b.y1 - b.y0))
       .attr('viewBox', `${b.x0 + side / 2} ${b.y0 + side / 2} ${Math.max(1, b.x1 - b.x0)} ${Math.max(1, b.y1 - b.y0)}`)
       .style('overflow', 'visible')
-  } else if (cell) {
+  } else if (cell || cell_name_above !== null || cell_value_below !== null) {
     const box = drawn_box ?? { x0: -radius, x1: radius, y0: -radius, y1: radius }
     // Un nom sorti au-dessus du disque entre dans le cadre : il reste entièrement visible.
     if (cell_name_above !== null) {
@@ -2087,7 +2125,9 @@ export const drawDonutChart = (
     if (cell_value_below !== null) {
       box.y1 = Math.max(box.y1, radius + callout_gap + (cell_value_below as { size: number }).size * 1.2)
     }
-    cell.frame?.(box, frameTo)
+    // 03/10/2026 — la couronne seule aussi : un nom sorti du trou entre dans son cadre.
+    if (cell) cell.frame?.(box, frameTo)
+    else frameTo(box)
   }
   else if (drawn_box !== null) frameTo(drawn_box)
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.

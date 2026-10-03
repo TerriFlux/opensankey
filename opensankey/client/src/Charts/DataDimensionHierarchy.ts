@@ -47,6 +47,7 @@ import type { Class_NodeElement } from '../Elements/Node'
 import { displayedNameOf } from '../Elements/ElementNaming'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
+import { resolvedMemberColors } from '../Algorithms/DimensionPalette'
 import { linkValueUnder } from './FigureNavigation'
 import type { Type_FigureNavigation } from './FigureNavigation'
 import { SUNBURST_DEFAULT_MAX_DEPTH, sunburstNodeValue } from './SunburstHierarchy'
@@ -453,6 +454,10 @@ export const buildNestedDimensionTree = (
   }
   const entryOf = (dim: Class_DataTagGroup) => shownIn(dim, entryOfAll(dim))
   const nested_palettes = dims.length > 1
+  // 03/10/2026 — la couleur MONTRÉE d'un membre : un membre gris d'une dimension coloriée en partie
+  // prend une nuance de son ancêtre colorié (`resolvedMemberColors`), au lieu d'un gris pour tous.
+  const colorOf = (dim: Class_DataTagGroup, member: Class_DataTag): string | null =>
+    resolvedMemberColors(dim)[member.id] ?? member.color ?? null
 
   /** La valeur du sujet à une coordonnée : les dimensions découpées fixées, les autres suivies. */
   const valueAt = (coord: Map<string, Class_DataTag>): number => {
@@ -494,7 +499,7 @@ export const buildNestedDimensionTree = (
         .reduce((acc, m) => acc + valueAt(new Map(coord).set(dims[next_all.k].id, m)), 0)
     const declared = valueAt(coord) - hidden_value
     const base: Type_SunburstNode = {
-      id, label: member.name, value: declared, declared, color: member.color ?? null,
+      id, label: member.name, value: declared, declared, color: colorOf(dim, member),
       depth, children: [], dimension_id: dim.id,
       ...(nested_palettes ? { palette: { index: k, branch_id: branch, depth: depth - entry_depth } } : {})
     }
@@ -549,7 +554,7 @@ export const buildNestedDimensionTree = (
     const value = valueAt(base_coord)
     children = whole === undefined || value <= 0 ? [] : [{
       id: memberSectorId(first.id, whole.id), label: whole.name, value, declared: value,
-      color: whole.color ?? null, depth: 1, children: [], dimension_id: first.id
+      color: colorOf(first, whole), depth: 1, children: [], dimension_id: first.id
     }]
   } else {
     children = entryOf(dims[0])

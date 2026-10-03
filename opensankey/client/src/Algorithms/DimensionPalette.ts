@@ -13,6 +13,7 @@
 // clique le bouton. La recette est gardée, comme au bouton : les couleurs suivront la structure.
 import { default_grey_color } from '../Elements/ElementsAttributesConfig'
 import type { Class_DataTagGroup } from '../types/TagGroup'
+import { computeHierarchicalColors, default_hierarchical_palette_params, type Type_PaletteNode } from './HierarchicalPalette'
 
 /**
  * Pose la palette hiérarchique sur `dimension` si AUCUN de ses membres n'a de couleur propre.
@@ -34,4 +35,49 @@ export function applyHierarchyPaletteIfGrey(dimension: Class_DataTagGroup): numb
   // qu'on vient de colorier l'allume donc, pour que les bandes disent de quoi elles sont faites.
   dimension.use_colors = true
   return membres.length
+}
+
+/**
+ * 03/10/2026 — LA COULEUR QU'UN MEMBRE MONTRE, quand la dimension n'est coloriée qu'EN PARTIE.
+ *
+ * Constaté sur le SOCLE « Pays partenaires - dimensions » : les quatorze filières ont leur couleur,
+ * leurs 133 descendants sont restés gris. `applyHierarchyPaletteIfGrey` ne touche à rien (une
+ * couleur a été choisie), donc une couronne zoomée sur Céréales, ou lue au niveau HS4, sortait
+ * toute grise : chaque part avait la même couleur que sa voisine.
+ *
+ * Règle : la palette hiérarchique, avec chaque couleur CHOISIE (non grise) comme VERROU. Un membre
+ * colorié garde exactement sa couleur ; un membre gris prend une nuance de la famille de son
+ * ancêtre colorié, comme le ferait le bouton palette. Rien n'est écrit dans le modèle : c'est une
+ * lecture, le fichier et le diagramme restent tels quels.
+ *
+ * Rend la couleur du tag telle quelle si aucun membre n'est gris (cas courant) ou si aucun ne l'est
+ * pas (`applyHierarchyPaletteIfGrey` a sa main au chargement).
+ */
+const resolved_cache = new WeakMap<Class_DataTagGroup, { signature: string, colors: { [id: string]: string } }>()
+
+export function resolvedMemberColors(dimension: Class_DataTagGroup): { [id: string]: string } {
+  const membres = dimension.tags_list
+  const signature = membres.map(m => `${m.id}:${m.color}:${m.parent?.id ?? ''}`).join('|')
+  const known = resolved_cache.get(dimension)
+  if (known !== undefined && known.signature === signature) return known.colors
+  const colors: { [id: string]: string } = {}
+  membres.forEach(m => { colors[m.id] = m.color })
+  const greys = membres.filter(m => m.color === default_grey_color)
+  if (dimension.is_hierarchical && greys.length > 0 && greys.length < membres.length) {
+    const locks: { [id: string]: string } = {}
+    membres.filter(m => m.color !== default_grey_color).forEach(m => { locks[m.id] = m.color })
+    const nodes = new Map<string, Type_PaletteNode>()
+    membres.forEach(m => nodes.set(m.id, { id: m.id, children: [] }))
+    const roots: Type_PaletteNode[] = []
+    membres.forEach(m => {
+      const parent = m.parent
+      const node = nodes.get(m.id) as Type_PaletteNode
+      if (parent !== undefined && nodes.has(parent.id)) (nodes.get(parent.id) as Type_PaletteNode).children.push(node)
+      else roots.push(node)
+    })
+    const computed = computeHierarchicalColors(roots, dimension.palette?.params ?? default_hierarchical_palette_params, locks)
+    greys.forEach(m => { if (computed[m.id] !== undefined) colors[m.id] = computed[m.id] })
+  }
+  resolved_cache.set(dimension, { signature, colors })
+  return colors
 }
