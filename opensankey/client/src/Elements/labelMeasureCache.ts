@@ -29,6 +29,8 @@ export type Type_WrapMeasure = { lines: Type_WrappedLine[], widths: number[] }
 const MAX_ENTRIES = 20000
 
 let _wraps = new Map<string, Type_WrapMeasure>()
+type Type_BBox = { x: number, y: number, width: number, height: number }
+let _bboxes = new Map<string, Type_BBox>()
 const _owner_tokens = new WeakMap<object, number>()
 let _next_token = 1
 const _hooked_documents = new WeakSet<Document>()
@@ -84,4 +86,29 @@ export function setWrapMeasure(key: string, measure: Type_WrapMeasure): void {
 
 export function resetLabelMeasureCache(): void {
   _wraps = new Map()
+  _bboxes = new Map()
+}
+
+// --------------------------------------------------------------------------------------------------
+// Boîte englobante d'un <text> de libellé (fond du libellé). Même principe : `getBBox` force une
+// mise en page de tout le document au milieu des écritures du dessin. La boîte d'un <text> dans
+// son propre repère ne dépend que de ce qu'il porte (attributs, <tspan>, texte — tout est dans son
+// `outerHTML`) et de l'échelle d'affichage ; un <textPath> dépendrait en plus du tracé qu'il suit,
+// d'où son exclusion.
+// --------------------------------------------------------------------------------------------------
+
+/** `getBBox()` du <text>, rejoué si le même <text> a déjà été mesuré à la même échelle. */
+export function textBBox(owner: object, text_node: SVGTextElement, scale: number): Type_BBox {
+  if (text_node.querySelector('textPath') !== null) return text_node.getBBox()
+  const doc = text_node.ownerDocument
+  hookFontLoading(doc)
+  const dpr = doc.defaultView?.devicePixelRatio ?? 1
+  const key = [ownerToken(owner), scale, dpr, text_node.outerHTML].join('\u0001')
+  const known = _bboxes.get(key)
+  if (known !== undefined) return known
+  const b = text_node.getBBox()
+  const bbox = { x: b.x, y: b.y, width: b.width, height: b.height }
+  if (_bboxes.size >= MAX_ENTRIES) _bboxes = new Map()
+  _bboxes.set(key, bbox)
+  return bbox
 }

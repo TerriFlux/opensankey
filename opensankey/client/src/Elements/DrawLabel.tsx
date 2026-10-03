@@ -26,7 +26,7 @@ import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_BaseShape } from './Element'
 import { effectiveOpacity } from './elementOpacity'
-import { getWrapMeasure, setWrapMeasure, wrapMeasureKey } from './labelMeasureCache'
+import { getWrapMeasure, setWrapMeasure, textBBox, wrapMeasureKey } from './labelMeasureCache'
 
 
 type DisplayPrefix = 'name' | 'value'
@@ -753,8 +753,12 @@ export abstract class DrawLabelBase {
     }
 
     const textSelection = group?.select(this.getTextSelector())
-    const bbox = (textSelection?.node() as SVGGElement)?.getBBox()
-      ?? { x: 0, y: 0, height: 0, width: 0 }
+    // #588 — boîte rejouée quand le même <text> a déjà été mesuré (cf. labelMeasureCache).
+    const text_node = textSelection?.node() as SVGTextElement | null | undefined
+    const owner = this._element.drawing_area
+    const bbox = (text_node && owner)
+      ? textBBox(owner, text_node, owner.getZoomScale())
+      : ((text_node as SVGGElement | null | undefined)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 })
     // Ancrage du texte (start/middle/end) — sert à caler le fond verrouillé
     // sur la forme du nœud, exactement comme le texte.
     const anchor = textSelection?.attr('text-anchor') ?? 'middle'
