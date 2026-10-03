@@ -611,7 +611,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: 'View generation',
         dimension_node: 'Node that carries it',
-        cut_custom: '— custom —',
+        cut_custom: '— mixed —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: 'Mixed · {{level}} + {{members}} expanded',
         cut_by_level: 'By level',
         cut_tree: 'Tree',
         cut_select_all: '(Select all)',
@@ -1474,7 +1476,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: 'Génération de vues',
         dimension_node: 'Noeud qui la represente',
-        cut_custom: '— personnalisé —',
+        cut_custom: '— mixte —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: 'Mixte · {{level}} + {{members}} dépliée(s)',
         cut_by_level: 'Par niveau',
         cut_tree: 'Arbre',
         cut_select_all: '(Tout sélectionner)',
@@ -2287,7 +2291,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: 'Generación de vistas',
         dimension_node: 'Nodo que la representa',
-        cut_custom: '— personalizado —',
+        cut_custom: '— mixto —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: 'Mixto · {{level}} + {{members}} desplegado(s)',
         cut_by_level: 'Por nivel',
         cut_tree: 'Árbol',
         cut_select_all: '(Seleccionar todo)',
@@ -3098,7 +3104,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: 'Ansichtserzeugung',
         dimension_node: 'Knoten, der sie darstellt',
-        cut_custom: '— benutzerdefiniert —',
+        cut_custom: '— gemischt —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: 'Gemischt · {{level}} + {{members}} aufgeklappt',
         cut_by_level: 'Nach Ebene',
         cut_tree: 'Baum',
         cut_select_all: '(Alle auswählen)',
@@ -3909,7 +3917,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: 'Generazione viste',
         dimension_node: 'Nodo che la rappresenta',
-        cut_custom: '— personalizzato —',
+        cut_custom: '— misto —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: 'Misto · {{level}} + {{members}} espanso/i',
         cut_by_level: 'Per livello',
         cut_tree: 'Albero',
         cut_select_all: '(Seleziona tutto)',
@@ -4707,7 +4717,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: '视图生成',
         dimension_node: '代表它的节点',
-        cut_custom: '— 自定义 —',
+        cut_custom: '— 混合 —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: '混合 · {{level}} + 已展开 {{members}}',
         cut_by_level: '按层级',
         cut_tree: '树状',
         cut_select_all: '(全选)',
@@ -5525,7 +5537,9 @@ export const resources_app_elements = {
       Banner: {
         unitary_view: 'ビューの生成',
         dimension_node: 'それを表すノード',
-        cut_custom: '— カスタム —',
+        cut_custom: '— 混在 —',
+        // os#1522 — le bouton d'une coupe irrégulière.
+        cut_mixed_preview: '混在 · {{level}} + {{members}} を展開',
         cut_by_level: 'レベル別',
         cut_tree: 'ツリー',
         cut_select_all: '(すべて選択)',

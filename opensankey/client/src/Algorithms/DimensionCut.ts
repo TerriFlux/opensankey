@@ -177,6 +177,30 @@ export const niveauDeLaSelection = (dimension: Class_DataTagGroup, choisis: Read
   return membres.every(m => montres.has(m.id)) ? niveau : null
 }
 
+/**
+ * os#1522 — L'APERÇU D'UNE COUPE IRRÉGULIÈRE, pour que le bouton dise ce qui est montré au lieu
+ * d'aligner des noms : le niveau de BASE (celui du membre choisi le moins profond) et les membres
+ * de ce niveau DÉPLIÉS plus bas (les ancêtres, à ce niveau, des membres choisis plus profonds).
+ * « 1 - Filières + Céréales dépliée(s) ». `null` quand la coupe tient dans un niveau.
+ */
+export const apercuMixte = (
+  dimension: Class_DataTagGroup, choisis: ReadonlySet<string>
+): { niveau: number, deplies: Class_DataTag[] } | null => {
+  if (niveauDeLaSelection(dimension, choisis) !== null) return null
+  const membres = [...choisis]
+    .map(id => dimension.tags_dict[id] as Class_DataTag | undefined)
+    .filter((m): m is Class_DataTag => m !== undefined)
+  if (membres.length === 0) return null
+  const niveau = Math.min(...membres.map(m => dimension.depthOf(m)))
+  const deplies: Class_DataTag[] = []
+  membres.forEach(m => {
+    let a: Class_DataTag | undefined = m
+    while (a !== undefined && dimension.depthOf(a) > niveau) a = a.parent as Class_DataTag | undefined
+    if (a !== undefined && a !== m && !deplies.includes(a)) deplies.push(a)
+  })
+  return { niveau, deplies }
+}
+
 /** Le mode à l'ouverture : « Par niveau » si la sélection tient dans un niveau, sinon « Arbre ». */
 export const modeALOuverture = (dimension: Class_DataTagGroup, choisis: ReadonlySet<string>): Type_SelecteurMode =>
   dimension.levels.length === 0 || niveauDeLaSelection(dimension, choisis) !== null ? 'level' : 'tree'
