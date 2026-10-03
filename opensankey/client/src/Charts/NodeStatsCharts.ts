@@ -43,6 +43,7 @@ import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
 import { layoutDonutCallouts } from './donutCalloutLayout'
 // os#1477 — LE MÊME TRACEUR DE TEXTE QUE LE DISQUE (cf. `prepareContainer`).
 import { mountFigureTextZones } from '../Representations/figureTextZones'
+import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 // os#1511 — la légende en arbre : même règle (ordre, retrait) que la légende du diagramme.
 import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
 import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
@@ -130,6 +131,8 @@ export interface Type_ChartOptions {
    * c'est pourquoi il reste une option à part plutôt que d'être plié dans `texts`.
    */
   title_fallback?: string
+  /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
+  breadcrumb?: Type_FigureCrumb[]
   /**
    * os#1460 — L'ASPECT D'UNE PART, quand elle en porte un.
    *
@@ -990,7 +993,7 @@ export const countLifted = (bar_pixels: number[], floor_px: number = MIN_VISIBLE
  */
 const prepareContainer = (container: HTMLElement, opts: Type_ChartOptions = {}) => {
   d3.select(container).selectAll('*').remove()
-  const host = mountFigureTextZones(container, opts.texts?.(opts.title_fallback ?? '') ?? [])
+  const host = mountFigureTextZones(container, opts.texts?.(opts.title_fallback ?? '') ?? [], opts.breadcrumb)
   return { sel: d3.select(host), width: host.clientWidth, height: host.clientHeight }
 }
 

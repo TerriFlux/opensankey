@@ -67,19 +67,94 @@ const buildTextBlock = (text: Type_FigureText, is_title: boolean): HTMLElement =
   return block
 }
 
+// ── 02/10/2026 — LE FIL D'ARIANE D'UNE FIGURE ZOOMÉE (os#1511) ──────────────────────────────────
+//
+// Julien : « il faudrait un fil d'Ariane qui montre tout ce qu'on a cliqué, genre Céréales ›
+// Céréales transformées ». Une ligne sous le titre, posée ICI parce que c'est ici que la place des
+// textes est prise avant que le dessin ne mesure la sienne : le disque se dimensionne sur ce qui
+// reste, il ne peut ni chevaucher le fil ni y loger ses étiquettes détachées.
+//
+// Le dernier cran est l'endroit où l'on est : en gras, inerte. Chaque cran précédent remonte
+// directement à son niveau, quand la figure sait remonter (`go` absent : simple texte).
+
+/** Un cran du fil d'Ariane. */
+export interface Type_FigureCrumb {
+  label: string
+  /** Remonte à ce cran ; absent, le cran se lit sans se cliquer. */
+  go?: () => void
+  /** L'infobulle du cran cliquable. */
+  hint?: string
+}
+
+const CRUMB_SEPARATOR = ' › '
+
+/** La ligne du fil d'Ariane. Rien à poser sous deux crans : la figure regarde son sujet. */
+const buildBreadcrumb = (crumbs: Type_FigureCrumb[]): HTMLElement => {
+  const line = document.createElement('div')
+  line.className = 'figure_breadcrumb'
+  line.style.flex = '0 0 auto'
+  line.style.padding = '0.1rem 0.4rem'
+  line.style.fontSize = '12px'
+  line.style.lineHeight = '1.3'
+  line.style.color = '#4a5568'
+  line.style.whiteSpace = 'nowrap'
+  line.style.overflow = 'hidden'
+  line.style.textOverflow = 'ellipsis'
+  line.style.textAlign = 'left'
+  line.title = crumbs.map(c => c.label).join(CRUMB_SEPARATOR)
+  crumbs.forEach((crumb, i) => {
+    if (i > 0) {
+      const sep = document.createElement('span')
+      sep.textContent = CRUMB_SEPARATOR
+      sep.style.color = '#a0aec0'
+      line.appendChild(sep)
+    }
+    const last = i === crumbs.length - 1
+    const go = last ? undefined : crumb.go
+    const node = document.createElement(go ? 'button' : 'span')
+    node.className = last ? 'figure_crumb figure_crumb_current' : 'figure_crumb'
+    node.textContent = crumb.label
+    if (last) node.style.fontWeight = '700'
+    if (go) {
+      const b = node as HTMLButtonElement
+      b.type = 'button'
+      b.title = crumb.hint ?? crumb.label
+      b.style.background = 'none'
+      b.style.border = 'none'
+      b.style.padding = '0'
+      b.style.margin = '0'
+      b.style.font = 'inherit'
+      b.style.color = '#2b6cb0'
+      b.style.cursor = 'pointer'
+      b.addEventListener('mouseenter', () => { b.style.textDecoration = 'underline' })
+      b.addEventListener('mouseleave', () => { b.style.textDecoration = 'none' })
+      // Le clic reste au fil : la vignette sous lui le prendrait pour une sélection.
+      b.addEventListener('pointerdown', e => e.stopPropagation())
+      b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); go() })
+    }
+    line.appendChild(node)
+  })
+  return line
+}
+
 /**
  * Pose les zones de texte dans `container` et rend L'ÉLÉMENT OÙ DESSINER — le conteneur lui-même
  * quand il n'y a aucun texte, auquel cas rien n'est ajouté et rien ne change.
  *
  * L'ordre rendu est : les blocs « dessus » dans l'ordre reçu, le dessin, les blocs « dessous »
  * dans l'ordre reçu. Le titre étant le premier de la liste, il reste la première ligne.
+ *
+ * `crumbs` : le fil d'Ariane d'une figure zoomée, posé juste sous le titre (en tête s'il n'y a pas
+ * de titre au-dessus). Moins de deux crans : aucune ligne, aucune place prise.
  */
 export const mountFigureTextZones = (
   container: HTMLElement,
-  texts: Type_FigureText[]
+  texts: Type_FigureText[],
+  crumbs: Type_FigureCrumb[] = []
 ): HTMLElement => {
   const written = texts.filter(t => t.text !== '')
-  if (written.length === 0) return container
+  const trail = crumbs.length >= 2 ? buildBreadcrumb(crumbs) : null
+  if (written.length === 0 && trail === null) return container
 
   const wrap = document.createElement('div')
   wrap.className = 'figure_titled'
@@ -98,7 +173,13 @@ export const mountFigureTextZones = (
   body.style.position = 'relative'
 
   const blocks = written.map((t, i) => buildTextBlock(t, i === 0))
-  blocks.forEach((b, i) => { if (written[i].position !== 'bottom') wrap.appendChild(b) })
+  const title_on_top = written.length > 0 && written[0].position !== 'bottom'
+  if (trail !== null && !title_on_top) wrap.appendChild(trail)
+  blocks.forEach((b, i) => {
+    if (written[i].position === 'bottom') return
+    wrap.appendChild(b)
+    if (i === 0 && trail !== null) wrap.appendChild(trail)
+  })
   wrap.appendChild(body)
   blocks.forEach((b, i) => { if (written[i].position === 'bottom') wrap.appendChild(b) })
 
