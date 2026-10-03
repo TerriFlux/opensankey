@@ -81,6 +81,10 @@ export function getWrapMeasure(key: string): Type_WrapMeasure | undefined {
 }
 
 export function setWrapMeasure(key: string, measure: Type_WrapMeasure): void {
+  // Une mesure NULLE n'en est pas une : <text> hors du document ou sous un ancêtre masqué (volet
+  // caché, document hors écran), sans mise en page. On ne la retient pas — elle serait rejouée une
+  // fois le libellé affiché. Les <tspan> vides ayant été retirés, une vraie largeur est > 0.
+  if (measure.widths.length === 0 || measure.widths.some(w => !(w > 0))) return
   if (_wraps.size >= MAX_ENTRIES) _wraps = new Map()
   _wraps.set(key, measure)
 }
@@ -119,7 +123,9 @@ export function labelFontTemplate(text_node: SVGTextElement): string {
     // la page pour tout le reste, qui y vit.
     const computed = (doc.defaultView ?? window).getComputedStyle(text_node)
     font = `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} {size}px ${computed.fontFamily || 'sans-serif'}`
-    by_key.set(key, font)
+    // Hors du document, le style calculé est VIDE (d'où les replis ci-dessus) : la police rendue
+    // ne vaut que pour cet appel, on ne la retient pas.
+    if (text_node.isConnected && computed.fontFamily) by_key.set(key, font)
   }
   return font
 }
@@ -143,6 +149,9 @@ export function textBBox(owner: object, text_node: SVGTextElement, scale: number
   if (known !== undefined) return known
   const b = text_node.getBBox()
   const bbox = { x: b.x, y: b.y, width: b.width, height: b.height }
+  // Boîte nulle : <text> sans mise en page (hors document, ancêtre masqué) — pas retenue (cf.
+  // setWrapMeasure).
+  if (!(bbox.width > 0 && bbox.height > 0)) return bbox
   if (_bboxes.size >= MAX_ENTRIES) _bboxes = new Map()
   _bboxes.set(key, bbox)
   return bbox
