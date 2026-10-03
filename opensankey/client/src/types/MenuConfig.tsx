@@ -150,6 +150,13 @@ export type Type_TopbarFigureCut = {
   /** 03/10/2026 — les membres que la figure dessine (décochés exclus), et le geste qui les pose. */
   chosen: (dim: Class_DataTagGroup) => string[]
   setChosen: (dim: Class_DataTagGroup, ids: readonly string[]) => void
+  /**
+   * 03/10/2026 — UNE DIMENSION QUI NE DÉCOUPE PAS (la séquence Année) : le membre que la figure lit,
+   * épinglé, ou `null` quand elle suit le diagramme ; et le geste qui l'épingle. Une séquence ne
+   * découpe jamais une couronne (« une couronne 2019/2020 serait un mensonge ») : elle s'y lit.
+   */
+  pinned: (dim: Class_DataTagGroup) => string | null
+  pin: (dim: Class_DataTagGroup, id: string) => void
 }
 
 /**
