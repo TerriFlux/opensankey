@@ -1862,9 +1862,18 @@ export class Class_MenuConfig {
   public setMainZoneWindowRepresentation(id: string, representation: string): void {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.representation === representation) return
-    // Jeté AVANT la mutation : dans la branche « remplacement en place » l'occupant change d'id,
-    // et ses figures resteraient sinon indexées sous l'ancien — orphelines et persistées.
-    this._dropFigures(id)
+    // Dans la branche « remplacement en place » l'occupant change d'id : ses figures ne doivent
+    // pas rester indexées sous l'ancien — orphelines et persistées.
+    //
+    // 03/10/2026 — ELLES SUIVENT LA FENÊTRE, ELLES NE SONT PLUS JETÉES (Julien : « quand je passe en
+    // tableau croisé et reviens sur la couronne, je revois apparaître les boutons pour configurer
+    // chaque dimension »). Les jeter ici défaisait l'arbitrage du 18/09 (« changer de nature ne
+    // perd pas les réglages », cf. `figureOf`, qui re-nature la figure en gardant sa surcharge) :
+    // un aller-retour couronne → tableau croisé → couronne perdait « Liées au diagramme » (la
+    // couronne détachée revenait LIÉE, avec les menus de dimension de la couronne liée), sa coupe,
+    // son axe. Seule la fenêtre qui QUITTE la grande zone (branche du milieu) jette les siennes.
+    const carried = this._figures[id]
+    delete this._figures[id]
     // os#1498 — LE JUGE EST L'OCCUPANT, PAS SON SUJET. Une fenêtre de nature `allow_many` a un
     // sujet diagramme sans feuille mais un identifiant propre : la traiter par le remplacement en
     // place la rebaptiserait du nom de sa nouvelle nature, et deux vues de groupe qui changent
@@ -1880,6 +1889,18 @@ export class Class_MenuConfig {
       if (this._host._main_zone_active_id === id) this._host._main_zone_active_id = representation
     }
     this._normalizeMainZoneOccupants()
+    // La fenêtre est toujours là, sous son id courant, et cet id n'indexe rien d'autre : ses
+    // figures la suivent. Sinon (elle a quitté la zone, ou fusionné avec une voisine), elles
+    // s'en vont, sauf les promues.
+    if (carried && this._host._main_zone_occupants.includes(o) && this._figures[o.id] === undefined) {
+      this._figures[o.id] = carried
+    } else if (carried) {
+      Object.keys(carried).forEach(k => { if (this._isDroppableFigure(carried[k])) delete carried[k] })
+      if (Object.keys(carried).length > 0) {
+        const by_key = this._figures[id] ?? (this._figures[id] = {})
+        Object.assign(by_key, carried)
+      }
+    }
     // os#1423 — la sélection est relue APRÈS la normalisation, et sur l'id COURANT de la fenêtre
     // (la branche « remplacement en place » vient peut-être de le changer). Un sujet `elements`
     // garde ses vignettes en changeant de nature — donc sa sélection ; un sujet à critère, dont
