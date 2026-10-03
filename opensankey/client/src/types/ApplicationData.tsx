@@ -2312,23 +2312,39 @@ export class Class_ApplicationData {
     const live = live_id !== null ? mc.mainZoneOccupantById(live_id) : undefined
     const view = live ? this._sankey_panes.coordinateOf(live) : this._current_view_id
     const id = mc.openSankeyPane(view)
-    // sa#568 — le volet créé partage TOUT avec le volet vivant dont il part : les deux sont
-    // identiques, et c'est l'auteur qui les fait diverger en désynchronisant.
+    // sa#568 — le volet créé est synchronisé sur TOUT avec le volet vivant dont il part : les deux
+    // sont identiques, et c'est l'auteur qui les fait diverger en désynchronisant. L'ouverture l'a
+    // déjà activé (la grande zone se synchronise à chaque changement), avant ce lien : l'état de
+    // référence du prochain geste se prend donc ici.
     mc.linkNewMainZonePane(id, live_id ?? undefined)
+    this._sankey_panes.markShared()
     return id
   }
 
   /**
-   * sa#568 — RELIER UN VOLET À UN AUTRE POUR UN RÉGLAGE, geste de la grille « Partagé avec » :
-   * `other_id` rejoint le groupe de `id` et prend ce que `id` montre. Le registre aligne les figures ;
-   * la mise en page des volets Sankey s'aligne ici, sur leurs dessins.
+   * sa#568 — SYNCHRONISER UN VOLET SUR UN AUTRE POUR UN RÉGLAGE, geste de la grille « Synchronisé
+   * avec » : dans le menu du volet `id`, la case de la colonne `source_id`. `id` — et ce qui le
+   * suivait — prend ce que `source_id` montre. Le registre aligne les figures ; la mise en page des
+   * volets Sankey s'aligne ici, sur leurs dessins.
    */
-  public linkMainZonePanes(id: string, other_id: string, setting: string): boolean {
+  public linkMainZonePanes(id: string, source_id: string, settings: string | string[]): boolean {
     const mc = this.menu_configuration
-    if (!mc || !mc.linkMainZoneSync(id, other_id, setting)) return false
-    const mode = layoutModeOf(setting)
-    if (mode !== null) this._sankey_panes.alignLayout(id, other_id, [mode])
-    return true
+    if (!mc) return false
+    // Plusieurs réglages d'un coup (la case « tout » d'une colonne) : le registre d'abord, puis UN
+    // alignement par volet avec tous ses modes — et non un dessin complet par réglage.
+    const modes_by_pane = new Map<string, string[]>()
+    let linked = false
+    ;(Array.isArray(settings) ? settings : [settings]).forEach(setting => {
+      const movers = mc.linkMainZoneSync(id, source_id, setting)
+      if (movers === null) return
+      linked = true
+      const mode = layoutModeOf(setting)
+      if (mode !== null) movers.forEach(m => modes_by_pane.set(m, [...(modes_by_pane.get(m) ?? []), mode]))
+    })
+    modes_by_pane.forEach((modes, pane) => this._sankey_panes.alignLayout(source_id, pane, modes))
+    // Les volets cochés montrent désormais la même chose : c'est l'état de référence du prochain geste.
+    if (linked) this._sankey_panes.markShared()
+    return linked
   }
 
   /**

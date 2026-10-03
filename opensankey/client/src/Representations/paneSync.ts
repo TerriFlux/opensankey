@@ -143,21 +143,96 @@ export const leaveGroup = (panes: Type_SyncPane[], pane: Type_SyncPane, setting:
 }
 
 /**
- * `other` REJOINT le groupe de `pane` pour ce réglage (et quitte le sien) ; `pane` en ouvre un s'il
- * n'en a pas. Rend `false` si les deux ne peuvent pas partager ce réglage.
+ * `pane` SE SYNCHRONISE SUR `source` pour ce réglage : son groupe — lui et tout ce qui le suivait
+ * déjà — FUSIONNE dans celui de `source` (qui en ouvre un s'il n'en a pas).
+ *
+ * C'est le geste « cocher, dans le menu du volet A, la colonne du volet B » (retour d'Alexandre,
+ * 03/10 : « chaque case cochée détermine ce qui sera appliqué au volet actif, et non l'inverse ») :
+ * A prend ce que montre B. Fusionner plutôt que de faire quitter son groupe à A, parce que les
+ * volets qui suivaient A le suivent toujours — la case de leur colonne, dans le menu de A, reste
+ * cochée — et prennent donc la valeur de B avec lui.
+ *
+ * Rend les volets qui ont CHANGÉ de groupe — ceux qui doivent prendre la valeur de `source` —, ou
+ * `null` quand les deux ne peuvent pas partager ce réglage.
  */
-export const joinGroup = (panes: Type_SyncPane[], pane: Type_SyncPane, other: Type_SyncPane, setting: string): boolean => {
-  if (!canShare(pane, other, setting)) return false
-  if (pane.sync?.[setting] !== undefined && pane.sync[setting] === other.sync?.[setting]) return true
-  leaveGroup(panes, other, setting)
-  let group = pane.sync?.[setting]
+export const mergeInto = <T extends Type_SyncPane>(panes: T[], pane: T, source: T, setting: string): T[] | null => {
+  if (!canShare(pane, source, setting)) return null
+  const mine = pane.sync?.[setting]
+  let group = source.sync?.[setting]
+  if (mine !== undefined && mine === group) return []
   if (group === undefined) {
     group = nextSyncGroupId(panes)
-    pane.sync = { ...(pane.sync ?? {}), [setting]: group }
+    source.sync = { ...(source.sync ?? {}), [setting]: group }
   }
-  other.sync = { ...(other.sync ?? {}), [setting]: group }
-  return true
+  const movers = mine === undefined ? [pane] : panes.filter(p => p.sync?.[setting] === mine)
+  movers.forEach(p => { p.sync = { ...(p.sync ?? {}), [setting]: group as string } })
+  return movers
 }
+
+// --- Ce qui a changé dans un dessin -----------------------------------------------------------------
+
+/**
+ * L'EMPREINTE D'UN DESSIN, élément par élément : de quoi savoir, après un geste, QUELS éléments ont
+ * changé — pour ne recopier et ne redessiner qu'eux dans les volets synchronisés. Faite sur la
+ * sérialisation du dessin (`DrawingAreaPersistence.toJSON`), qui coûte quelques millisecondes là où
+ * un dessin complet en coûte plus d'une seconde (mesuré le 03/10 sur 300 nœuds et 500 flux).
+ */
+export type Type_LayoutPrint = {
+  nodes: { [id: string]: string }
+  links: { [id: string]: string }
+  labels: { [id: string]: string }
+  /** Tout ce qui n'est pas un élément : attributs de la zone, légende, échelle. */
+  area: string
+}
+
+const ELEMENT_FAMILIES = ['nodes', 'links', 'labels'] as const
+
+export const layoutPrintOf = (json: { [key: string]: unknown }): Type_LayoutPrint => {
+  const out: Type_LayoutPrint = { nodes: {}, links: {}, labels: {}, area: '' }
+  const rest: { [key: string]: unknown } = {}
+  Object.entries(json).forEach(([key, value]) => {
+    if ((ELEMENT_FAMILIES as readonly string[]).includes(key) && value && typeof value === 'object') {
+      const family = out[key as typeof ELEMENT_FAMILIES[number]]
+      Object.entries(value as { [id: string]: unknown }).forEach(([id, element]) => {
+        family[id] = JSON.stringify(element)
+      })
+    } else rest[key] = value
+  })
+  out.area = JSON.stringify(rest)
+  return out
+}
+
+/** Les éléments qui ont changé (ou sont apparus) d'une empreinte à l'autre. */
+export type Type_LayoutChanges = { nodes: string[], links: string[], labels: string[], area: boolean }
+
+export const layoutChangesOf = (before: Type_LayoutPrint, after: Type_LayoutPrint): Type_LayoutChanges => {
+  const changed = (a: { [id: string]: string }, b: { [id: string]: string }) =>
+    Object.keys(b).filter(id => a[id] !== b[id])
+  return {
+    nodes: changed(before.nodes, after.nodes),
+    links: changed(before.links, after.links),
+    labels: changed(before.labels, after.labels),
+    area: before.area !== after.area
+  }
+}
+
+export const hasLayoutChanges = (c: Type_LayoutChanges): boolean =>
+  c.area || c.nodes.length > 0 || c.links.length > 0 || c.labels.length > 0
+
+/**
+ * LES MODES À REJOUER pour ces changements, parmi ceux que deux volets partagent : rien ne sert de
+ * recopier les styles des flux quand seul un nœud a bougé. L'ordre des flux à un nœud (`posFlux`)
+ * est porté par le NŒUD (`links_order`) : il suit les nœuds.
+ */
+export const modesForChanges = (changes: Type_LayoutChanges, shared: string[]): string[] =>
+  shared.filter(mode => {
+    if (mode === 'attrDrawingArea' || mode === 'scale') return changes.area
+    if (mode.endsWith('FreeLabel')) return changes.labels.length > 0
+    if (mode === 'posFlux') return changes.nodes.length > 0 || changes.links.length > 0
+    if (mode.endsWith('Flux')) return changes.links.length > 0
+    if (mode.endsWith('Node')) return changes.nodes.length > 0
+    return true
+  })
 
 // --- Ce qui voyage --------------------------------------------------------------------------------
 

@@ -78,7 +78,7 @@ import * as CameraMath from './CameraMath'
 import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
-import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
+import { ZOOM_TOPIC, DRAW_TOPIC, ELEMENT_DRAW_TOPIC } from './EventBus'
 // os#1393 - les menus contextuels des REPRÉSENTATIONS (étoile unitaire, sunburst…) se ferment
 // par le même geste que ceux du diagramme : un seul menu à l'écran, une seule commande pour
 // tout refermer (le clic extérieur passe déjà par `closeAllContextMenus`).
@@ -553,6 +553,18 @@ export class Class_DrawingArea {
    * son usage réel.
    */
   public isInFullDraw(): boolean { return this._in_full_draw }
+
+  /**
+   * sa#568 — UN ÉLÉMENT DE CE DESSIN VIENT DE SE REDESSINER (cf. `ELEMENT_DRAW_TOPIC`). Seul le
+   * dessin AFFICHÉ du document principal le signale, et jamais pendant un dessin complet, qui a son
+   * propre signal : les rendus des volets inactifs, les feuilles et les vues en chemin se taisent.
+   */
+  public notifyElementDrawn(): void {
+    if (this._in_full_draw) return
+    const app = this.application_data
+    if (app.drawing_area !== this || !app.is_main) return
+    app.menu_configuration?.notify(ELEMENT_DRAW_TOPIC)
+  }
 
   /**
    * Documentation (onglet Doc, SA#167) importée depuis un fichier source lors d'un

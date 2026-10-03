@@ -3,7 +3,8 @@ import type { Type_JSON } from './Utils'
 import { representation_registry } from '../Representations/RepresentationRegistry'
 import { Class_FigureNature } from '../Representations/Figure'
 import {
-  figureSettingOfKey, joinGroup, leaveGroup, partnersOf, readSyncMap, type Type_SyncPane
+  figureSettingOfKey, hasLayoutChanges, layoutChangesOf, layoutPrintOf, leaveGroup, mergeInto, modesForChanges,
+  partnersOf, readSyncMap, type Type_SyncPane
 } from '../Representations/paneSync'
 
 /**
@@ -70,12 +71,12 @@ describe('sa#568 les regles pures', () => {
     expect(figureSettingOfKey(nature, 'undeclared')).toBeNull()
   })
 
-  it('des groupes : rejoindre relie a tout le groupe, un groupe d un seul volet se dissout', () => {
+  it('des groupes : se synchroniser relie a tout le groupe, un groupe d un seul volet se dissout', () => {
     const panes: Type_SyncPane[] = ['a', 'b', 'c'].map(id => ({ id, representation: 'x' }))
     const [a, b, c] = panes
-    joinGroup(panes, a, b, 'layout:posNode')
-    joinGroup(panes, b, c, 'layout:posNode')
-    // c a rejoint le groupe de b, qui est celui de a : a suit c.
+    // b se synchronise sur a, puis c sur b : les trois sont relies (c suit a).
+    expect(mergeInto(panes, b, a, 'layout:posNode')!.map(p => p.id)).toEqual(['b'])
+    expect(mergeInto(panes, c, b, 'layout:posNode')!.map(p => p.id)).toEqual(['c'])
     expect(partnersOf(panes, a, 'layout:posNode').map(p => p.id)).toEqual(['b', 'c'])
     leaveGroup(panes, b, 'layout:posNode')
     expect(partnersOf(panes, a, 'layout:posNode').map(p => p.id)).toEqual(['c'])
@@ -83,11 +84,43 @@ describe('sa#568 les regles pures', () => {
     expect(a.sync).toBeUndefined()
   })
 
+  it('se synchroniser sur un volet FUSIONNE les groupes : ce qui suivait le volet le suit toujours', () => {
+    const panes: Type_SyncPane[] = ['a', 'b', 'c', 'd'].map(id => ({ id, representation: 'x' }))
+    const [a, b, c, d] = panes
+    mergeInto(panes, b, a, 'layout:posNode')
+    mergeInto(panes, d, c, 'layout:posNode')
+    // Dans le menu de a, cocher la colonne de c : a — et b, qui le suivait — prennent la valeur de c.
+    expect(mergeInto(panes, a, c, 'layout:posNode')!.map(p => p.id).sort()).toEqual(['a', 'b'])
+    expect(partnersOf(panes, b, 'layout:posNode').map(p => p.id)).toEqual(['a', 'c', 'd'])
+    // Deja synchronises : rien ne bouge.
+    expect(mergeInto(panes, a, d, 'layout:posNode')).toEqual([])
+  })
+
   it('la mise en page ne se partage qu entre volets de meme type ; les donnees entre tous', () => {
     const panes: Type_SyncPane[] = [{ id: 'a', representation: 'x' }, { id: 'b', representation: 'y' }]
-    expect(joinGroup(panes, panes[0], panes[1], 'layout:posNode')).toBe(false)
-    expect(joinGroup(panes, panes[0], panes[1], 'format:legend')).toBe(false)
-    expect(joinGroup(panes, panes[0], panes[1], 'data:annee')).toBe(true)
+    expect(mergeInto(panes, panes[0], panes[1], 'layout:posNode')).toBeNull()
+    expect(mergeInto(panes, panes[0], panes[1], 'format:legend')).toBeNull()
+    expect(mergeInto(panes, panes[0], panes[1], 'data:annee')).not.toBeNull()
+  })
+
+  it('l empreinte d un dessin dit quels elements ont change, et les modes a rejouer', () => {
+    const before = layoutPrintOf({
+      width: 100, nodes: { a: { x: 1 }, b: { x: 2 } }, links: { l: { style: ['s'] } }
+    })
+    const moved = layoutPrintOf({
+      width: 100, nodes: { a: { x: 5 }, b: { x: 2 } }, links: { l: { style: ['s'] } }
+    })
+    const changes = layoutChangesOf(before, moved)
+    expect(changes).toEqual({ nodes: ['a'], links: [], labels: [], area: false })
+    expect(hasLayoutChanges(changes)).toBe(true)
+    // Un noeud a bouge : les modes des noeuds, et l ordre des flux (porte par les noeuds).
+    expect(modesForChanges(changes, ['posNode', 'attrNode', 'attrFlux', 'posFlux', 'scale']))
+      .toEqual(['posNode', 'attrNode', 'posFlux'])
+    const resized = layoutPrintOf({
+      width: 200, nodes: { a: { x: 1 }, b: { x: 2 } }, links: { l: { style: ['s'] } }
+    })
+    expect(layoutChangesOf(before, resized).area).toBe(true)
+    expect(hasLayoutChanges(layoutChangesOf(before, before))).toBe(false)
   })
 
   it('la table relue d un fichier ne garde que des chaines non vides', () => {
@@ -142,13 +175,18 @@ describe('sa#568 les figures partagent leur mise en forme', () => {
     expect(mc.mainZonePaneOptionsOf(b, 'n2').legend_visible).toBe(false)
   })
 
-  it('relier aligne : le volet relie prend ce que montre celui d ou l on relie', () => {
+  it('cocher, dans le menu de b, la colonne de a : b prend ce que montre a', () => {
     const { mc, a, b } = twoPanes()
     mc.unlinkMainZoneSync(b, 'format:graph')
     mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
     expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('percent')
-    mc.linkMainZoneSync(a, b, 'format:graph')
+    expect(mc.linkMainZoneSync(b, a, 'format:graph')).toEqual([b])
     expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('value')
+    // Et dans l autre sens : a prend ce que montre b.
+    mc.unlinkMainZoneSync(b, 'format:graph')
+    mc.setMainZonePaneOptions(b, 'n2', { value_mode: 'normalized' })
+    mc.linkMainZoneSync(a, b, 'format:graph')
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('normalized')
   })
 
   it('ni l identite ni l annee epinglee ne voyagent', () => {

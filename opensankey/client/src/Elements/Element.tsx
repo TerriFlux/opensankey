@@ -263,6 +263,8 @@ export abstract class Class_BaseElement {
       } else {
         this.unDraw()
       }
+      // sa#568 — ce qui change à l'écran se dit : les volets synchronisés en ont besoin.
+      this.drawing_area.notifyElementDrawn?.()
     })
   }
 

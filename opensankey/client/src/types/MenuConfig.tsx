@@ -63,7 +63,7 @@ import {
 } from '../Representations/Figure'
 import {
   SANKEY_LAYOUT_SETTING_IDS, canShare, figureChangesBySetting, figureFormatSettingsOf, figureSettingOfKey,
-  joinGroup, leaveGroup, partnersOf, readSyncMap
+  leaveGroup, mergeInto, partnersOf, readSyncMap
 } from '../Representations/paneSync'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
@@ -2554,29 +2554,37 @@ export class Class_MenuConfig {
   }
 
   /**
-   * RELIE `other_id` À `id` POUR CE RÉGLAGE : il rejoint le groupe de `id` (et quitte le sien).
+   * SYNCHRONISE `id` SUR `source_id` POUR CE RÉGLAGE : `id` — et ce qui le suivait déjà — rejoint le
+   * groupe de `source_id`, et PREND CE QUE `source_id` MONTRE (cf. `mergeInto`).
    *
-   * Relier ALIGNE : le volet qu'on relie prend ce que dit le volet d'où l'on relie — c'est le geste
-   * « ce volet-là, comme celui-ci ». Ne rien recopier laisserait deux volets « partagés » montrer
-   * deux choses jusqu'au prochain changement, et pour une mise en page ce prochain changement
-   * recopierait de toute façon tout le réglage (toutes les positions, pas seulement le nœud bougé).
+   * C'est la case de la colonne `source_id` dans le menu du volet `id` (retour d'Alexandre, 03/10 :
+   * « chaque case cochée détermine ce qui sera appliqué au volet actif, et non l'inverse »). Prendre
+   * la valeur plutôt que la garder : deux volets synchronisés qui montreraient deux choses jusqu'au
+   * prochain geste ne seraient pas synchronisés, et pour une mise en page ce prochain geste recopie
+   * de toute façon le réglage entier (toutes les positions, pas seulement celle du nœud bougé).
+   *
    * L'alignement d'une FIGURE se fait ici ; celui d'un volet Sankey, dans `Class_SankeyPanes`
-   * (cf. `Class_ApplicationData.linkMainZonePanes`).
-   *
-   * Rend `false` si les deux volets ne peuvent pas partager ce réglage.
+   * (cf. `Class_ApplicationData.linkMainZonePanes`). Rend les volets qui ont pris la valeur de
+   * `source_id` (vide s'ils la partageaient déjà), ou `null` si ce réglage ne peut pas se partager
+   * entre les deux.
    */
-  public linkMainZoneSync(id: string, other_id: string, setting: string): boolean {
-    if (!this.canShareMainZoneSync(id, other_id, setting)) return false
+  public linkMainZoneSync(id: string, source_id: string, setting: string): string[] | null {
+    if (!this.canShareMainZoneSync(id, source_id, setting)) return null
     const occupants = this._host._main_zone_occupants
     const o = occupants.find(x => x.id === id)!
-    const other = occupants.find(x => x.id === other_id)!
-    if (!joinGroup(occupants, o, other, setting)) return false
+    const source = occupants.find(x => x.id === source_id)!
+    const movers = mergeInto(occupants, o, source, setting)
+    if (movers === null) return null
     if (setting.startsWith('format:')) {
-      const ref = this._referenceFigureOf(o)
-      if (ref) this._figuresToShareOf(other).forEach(f => { if (f.nature === ref.nature) this._copyFigureSetting(ref, f, setting) })
+      const ref = this._referenceFigureOf(source)
+      if (ref) {
+        movers.forEach(m => this._figuresToShareOf(m).forEach(f => {
+          if (f.nature === ref.nature) this._copyFigureSetting(ref, f, setting)
+        }))
+      }
     }
     this._notifyMainZone()
-    return true
+    return movers.map(m => m.id)
   }
 
   /** Le volet cesse de partager ce réglage : il garde ce qu'il montre, et ne le partage plus. */
@@ -2588,14 +2596,14 @@ export class Class_MenuConfig {
   }
 
   /**
-   * UN VOLET CRÉÉ PARTAGE TOUT avec ceux de son type (arbitrage Alexandre, 02/10) : « si un Sankey
-   * est déjà ouvert et qu'on crée un nouveau volet Sankey, les deux seront identiques et
+   * UN VOLET CRÉÉ EST SYNCHRONISÉ SUR TOUT avec ceux de son type (arbitrage Alexandre, 02/10) : « si
+   * un Sankey est déjà ouvert et qu'on crée un nouveau volet Sankey, les deux seront identiques et
    * synchronisés ; c'est l'utilisateur qui désynchronise ».
    *
-   * Pour chaque réglage, il rejoint le groupe de `source` — le volet d'où on l'a créé — s'il peut
-   * le partager avec lui, sinon celui du premier volet qui le peut. Relier aligne (cf.
+   * Pour chaque réglage, il se synchronise sur `source` — le volet d'où on l'a créé — s'il peut le
+   * partager avec lui, sinon sur le premier volet qui le peut, et en prend la valeur (cf.
    * `linkMainZoneSync`) : une couronne neuve prend la mise en forme de celle qu'elle rejoint. Un
-   * volet Sankey neuf n'a rien à aligner : il montre déjà le dessin du volet vivant.
+   * volet Sankey neuf n'a rien à prendre : il montre déjà le dessin du volet vivant.
    *
    * N'est PAS appelée à la relecture d'un fichier ni au rappel d'une vue : ce qui a été enregistré
    * sans partage se rouvre sans partage.
@@ -2605,17 +2613,18 @@ export class Class_MenuConfig {
     if (!occupants.some(x => x.id === id)) return
     let linked = false
     this.mainZoneSyncSettings(id).forEach(setting => {
-      const from = (source !== undefined && this.canShareMainZoneSync(source, id, setting))
+      const from = (source !== undefined && this.canShareMainZoneSync(id, source, setting))
         ? source
-        : occupants.find(x => this.canShareMainZoneSync(x.id, id, setting))?.id
+        : occupants.find(x => this.canShareMainZoneSync(id, x.id, setting))?.id
       if (from === undefined) return
-      const o = occupants.find(x => x.id === from)!
-      const other = occupants.find(x => x.id === id)!
-      if (!joinGroup(occupants, o, other, setting)) return
+      const o = occupants.find(x => x.id === id)!
+      const src = occupants.find(x => x.id === from)!
+      const movers = mergeInto(occupants, o, src, setting)
+      if (!movers) return
       linked = true
       if (setting.startsWith('format:')) {
-        const ref = this._referenceFigureOf(o)
-        if (ref) this._figuresToShareOf(other).forEach(f => { if (f.nature === ref.nature) this._copyFigureSetting(ref, f, setting) })
+        const ref = this._referenceFigureOf(src)
+        if (ref) this._figuresToShareOf(o).forEach(f => { if (f.nature === ref.nature) this._copyFigureSetting(ref, f, setting) })
       }
     })
     if (linked) this._notifyMainZone()
