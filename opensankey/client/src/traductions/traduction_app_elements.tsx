@@ -1,6 +1,18 @@
 export const resources_app_elements = {
   en: {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: 'Crosstab',
+        total: 'Total',
+        unallocated: 'Unallocated',
+        value: 'Value',
+        share: 'Share',
+        expand: 'Expand',
+        collapse: 'Collapse',
+        export_csv: 'Export CSV',
+        empty: 'Nothing to cross: no dimension with levels'
+      },
       // OS#85 — document sheets (independent diagrams, tabs at the bottom of the canvas).
       sheets: {
         sheet: 'Sheet',
@@ -819,6 +831,18 @@ export const resources_app_elements = {
   //=======================================================
   fr: {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: 'Tableau croisé',
+        total: 'Total',
+        unallocated: 'Non réparti',
+        value: 'Valeur',
+        share: 'Part',
+        expand: 'Déplier',
+        collapse: 'Replier',
+        export_csv: 'Exporter en CSV',
+        empty: 'Rien à croiser : aucune dimension à niveaux'
+      },
       // OS#85 — feuilles du document (diagrammes indépendants, onglets en bas du canvas).
       sheets: {
         sheet: 'Feuille',
@@ -1636,6 +1660,18 @@ export const resources_app_elements = {
   //=======================================================
   es: {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: 'Tabla cruzada',
+        total: 'Total',
+        unallocated: 'Sin asignar',
+        value: 'Valor',
+        share: 'Proporción',
+        expand: 'Desplegar',
+        collapse: 'Plegar',
+        export_csv: 'Exportar en CSV',
+        empty: 'Nada que cruzar: ninguna dimensión con niveles'
+      },
       // OS#85 — hojas del documento (diagramas independientes, pestañas abajo del lienzo).
       sheets: {
         sheet: 'Hoja',
@@ -2429,6 +2465,18 @@ export const resources_app_elements = {
   //=======================================================
   de: {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: 'Kreuztabelle',
+        total: 'Gesamt',
+        unallocated: 'Nicht zugeordnet',
+        value: 'Wert',
+        share: 'Anteil',
+        expand: 'Aufklappen',
+        collapse: 'Zuklappen',
+        export_csv: 'Als CSV exportieren',
+        empty: 'Nichts zu kreuzen: keine Dimension mit Ebenen'
+      },
       // OS#85 — Blätter des Dokuments (unabhängige Diagramme, Tabs unten am Canvas).
       sheets: {
         sheet: 'Blatt',
@@ -3222,6 +3270,18 @@ export const resources_app_elements = {
   //=======================================================
   it: {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: 'Tabella incrociata',
+        total: 'Totale',
+        unallocated: 'Non ripartito',
+        value: 'Valore',
+        share: 'Quota',
+        expand: 'Espandi',
+        collapse: 'Comprimi',
+        export_csv: 'Esporta in CSV',
+        empty: 'Niente da incrociare: nessuna dimensione con livelli'
+      },
       // OS#85 — fogli del documento (diagrammi indipendenti, schede in basso del canvas).
       sheets: {
         sheet: 'Foglio',
@@ -4012,6 +4072,18 @@ export const resources_app_elements = {
   },
   'zh-CN': {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: '交叉表',
+        total: '合计',
+        unallocated: '未分配',
+        value: '数值',
+        share: '占比',
+        expand: '展开',
+        collapse: '折叠',
+        export_csv: '导出 CSV',
+        empty: '无可交叉的内容：没有分层级的维度'
+      },
       // OS#85 — 文档的工作表（相互独立的图表，画布底部的标签页）。
       sheets: {
         sheet: '工作表',
@@ -4812,6 +4884,18 @@ export const resources_app_elements = {
   },
   ja: {
     translation: {
+      // os#1519 — le tableau croisé d'un sujet sur ses dimensions de données.
+      matrix: {
+        label: 'クロス集計表',
+        total: '合計',
+        unallocated: '未配分',
+        value: '値',
+        share: '割合',
+        expand: '展開',
+        collapse: '折りたたむ',
+        export_csv: 'CSV でエクスポート',
+        empty: 'クロス集計できません：階層のある次元がありません'
+      },
       // OS#85 — ドキュメントのシート（独立した図、キャンバス下部のタブ）。
       sheets: {
         sheet: 'シート',
