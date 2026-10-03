@@ -133,6 +133,12 @@ export interface Type_ChartOptions {
    * c'est pourquoi il reste une option à part plutôt que d'être plié dans `texts`.
    */
   title_fallback?: string
+  /**
+   * 03/10/2026 — CE QUE LE CENTRE MESURE (« Exports · 2015 »), une ligne discrète sous la valeur
+   * (cf. `centreCaptionPlan`). Absent ou vide : pas de ligne. Ignoré dans une case de petits
+   * multiples : la grille le dit une fois, sous le titre.
+   */
+  centre_caption?: string
   /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
   breadcrumb?: Type_FigureCrumb[]
   /**
@@ -331,6 +337,35 @@ export const smallMultipleCentrePlan = (
     return { name: { lines: [name], size: Math.min(12, Math.max(CELL_NAME_MIN_PX, inner * 0.2)), above: true }, value: { size: out_size, below: true } }
   }
   return { name: smallMultipleCentreName(name, inner, size), value: { size, below: false } }
+}
+
+/**
+ * 03/10/2026 — LE CENTRE DIT CE QU'IL MESURE (os#1511) : sous la valeur, une ligne discrète
+ * « sujet · coordonnée épinglée » (« Exports · 2015 »). Même règle de place que le nom au centre
+ * (`smallMultipleCentrePlan`) : réduite jusqu'au plancher lisible, puis sur deux lignes (coupée au
+ * séparateur le plus central), en dernier recours SOUS le disque. `used_h` est la hauteur que le nom
+ * et la valeur prennent déjà dans le trou. `null` : rien à écrire.
+ */
+export const centreCaptionPlan = (
+  caption: string, inner: number, used_h: number
+): { lines: string[], size: number, below: boolean } | null => {
+  const text = caption.trim()
+  if (text === '') return null
+  const base = Math.max(CELL_NAME_MIN_PX, Math.min(13, inner * 0.16))
+  const room_w = inner * 1.6
+  const room_h = inner * 1.5 - used_h
+  const sizeFor = (lines: string[]) => Math.min(base, ...lines.map(l => base * room_w / Math.max(1, labelTextWidthPx(l, base))))
+  const fits = (lines: string[], size: number) => inner >= 12 && size >= CELL_NAME_MIN_PX - 1e-6 &&
+    lines.every(l => labelTextWidthPx(l, size) <= room_w + 1e-6) && lines.length * size * 1.2 <= room_h
+  const one = [text]
+  if (fits(one, sizeFor(one))) return { lines: one, size: sizeFor(one), below: false }
+  const seps = [...text.matchAll(/ · /g)].map(m => m.index ?? 0)
+  if (seps.length > 0) {
+    const cut = seps.reduce((b, i) => Math.abs(i - text.length / 2) < Math.abs(b - text.length / 2) ? i : b)
+    const two = [text.slice(0, cut), text.slice(cut + 3)]
+    if (fits(two, sizeFor(two))) return { lines: two, size: sizeFor(two), below: false }
+  }
+  return { lines: one, size: Math.min(11, Math.max(CELL_NAME_MIN_PX, base)), below: true }
 }
 
 /** Une case de petits multiples : son membre, ses parts, son total. */
@@ -2172,7 +2207,10 @@ export const drawDonutChart = (
     const name_h = (name_plan?.size ?? 0) * 1.15
     const value_h = wants_value && !value_below ? value_size_in * 1.2 : 0
     const lines_in = name_plan !== null && !name_plan.above ? name_plan.lines.length : 0
-    const top = -(lines_in * name_h + value_h) / 2
+    // 03/10/2026 — ce que le centre mesure, sous la valeur : dans le trou s'il y tient, sinon dessous.
+    const caption = centreCaptionPlan(opts.centre_caption ?? '', inner, lines_in * name_h + value_h)
+    const caption_h = caption !== null && !caption.below ? caption.lines.length * caption.size * 1.2 : 0
+    const top = -(lines_in * name_h + value_h + caption_h) / 2
     if (name_plan !== null) {
       const plan = name_plan
       const y_last = -Math.max(radius + callout_gap, -(drawn_box?.y0 ?? 0) + 2) - name_h / 2
@@ -2192,6 +2230,20 @@ export const drawDonutChart = (
           : top + lines_in * name_h + value_h / 2)
       dress(span, centre?.value, value_size_in, true)
       span.text(fmt(total))
+    }
+    if (caption !== null) {
+      const below_top = Math.max(radius + callout_gap, (drawn_box?.y1 ?? 0) + 2) + (value_below ? value_size_in * 1.2 : 0)
+      caption.lines.forEach((line, i) => {
+        text.append('tspan')
+          .attr('class', 'node_stats_centre_caption')
+          .attr('x', 0)
+          .attr('y', caption.below
+            ? below_top + (i + 0.5) * caption.size * 1.2
+            : top + lines_in * name_h + value_h + (i + 0.5) * caption.size * 1.2)
+          .attr('font-size', caption.size)
+          .attr('fill', '#718096')
+          .text(line)
+      })
     }
   }
 

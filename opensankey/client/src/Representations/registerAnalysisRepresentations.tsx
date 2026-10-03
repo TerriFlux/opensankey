@@ -27,7 +27,7 @@ import { FaChartPie, FaChartBar, FaTable } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
-  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells, smallMultipleCentrePlan,
+  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells, smallMultipleCentrePlan, centreCaptionPlan,
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
@@ -51,7 +51,7 @@ import { diagramIsShown } from './figureCatalogue'
 import { mountFigureTextZones } from './figureTextZones'
 import type { Type_FigureCrumb } from './figureTextZones'
 // Les crans se nomment par l'accesseur commun (libellé affiché, repli nom puis id).
-import { displayedNameOf } from '../Elements/ElementNaming'
+import { displayedLabelOf, displayedNameOf } from '../Elements/ElementNaming'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
 import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
@@ -76,7 +76,7 @@ import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
-import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
+import type { Type_FigureChartStyle, Type_FigureText } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
 import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfNode } from './figureUnit'
 import { figureNavigationOf, withDataLayer } from '../Charts/FigureNavigation'
@@ -613,6 +613,87 @@ const chartOptions = (
  */
 const figureTitleFallback = (ctx: Type_RepresentationContext): string =>
   focusedNodeOf(ctx)?.name ?? dataFocusOf(ctx)?.member.name ?? subjectNameOf(ctx)
+
+/**
+ * 03/10/2026 — LE NOM COURT DU SUJET, pour la ligne de ce que le centre mesure : le nœud, ou pour un
+ * flux son libellé propre s'il en a un, sinon son ARRIVÉE (« Monde - Export ») — c'est elle qui dit
+ * ce que le flux mesure, la source étant ce que les anneaux découpent.
+ */
+const subjectShortNameOf = (ctx: Type_RepresentationContext): string => {
+  const subject = chartSubjectOf(ctx.element)
+  if (subject?.kind === 'node') return displayedNameOf(subject.node)
+  if (subject?.kind !== 'flux') return ''
+  const own = displayedLabelOf(subject.link)
+  return own !== '' && own !== subject.link.name ? own : displayedNameOf(subject.link.target)
+}
+
+/**
+ * 03/10/2026 — CE QUE LE CENTRE MESURE (os#1511) : « sujet · coordonnée épinglée », p. ex.
+ * « Monde - Export · 2015 ». Les coordonnées sont les membres des dimensions qui NE DÉCOUPENT PAS la
+ * figure et qu'elle lit en un seul membre (l'année) ; une racine unique (« Monde », « Tous
+ * produits ») ne dit rien et se tait, comme une dimension lue sur plusieurs membres (une somme) ou
+ * une dimension d'unité. Le sujet se tait quand le nom au centre le dit déjà (`said`).
+ */
+const measureCaptionOf = (ctx: Type_RepresentationContext, said: string): string => {
+  const a = analysisOf(ctx)
+  if (!a) return ''
+  const sankey = ctx.app_data.drawing_area.sankey
+  const split = smallMultiplesOf(ctx)
+  // Ce qui découpe (anneaux, cases) n'est pas une coordonnée : la figure le montre.
+  const skipped = new Set<string>(split ? [split.dimension.id] : [])
+  const decompose = effectiveDecompose(a.descriptor)
+  if (decompose?.kind === 'data_dimension') {
+    const cut = analysisDataCutOf(a.subject, decompose, hierarchyReadingOf(ctx))
+    cut?.dims.forEach(d => {
+      // Une dimension de la figure qui ne découpe pas se lit à sa racine quand elle est détachée ou
+      // désactivée (cf. `buildNestedDimensionTree`) : elle n'épingle rien.
+      if (cut.dividing.includes(d) || !cut.linked || cut.inactive?.has(d.id)) skipped.add(d.id)
+    })
+  }
+  const pinned = (sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+    .filter(group => !skipped.has(group.id) && !(group as unknown as { is_unit?: boolean }).is_unit)
+    .map(group => {
+      const from_nav = (a.nav.data_tags ?? []).filter(tag => tag.group.id === group.id)
+      const members = from_nav.length > 0 ? from_nav : group.selected_tags_list as Class_DataTag[]
+      if (members.length !== 1) return ''
+      const roots = dimensionRootsOf(group)
+      if (roots.length === 1 && roots[0] === members[0]) return ''
+      return displayedNameOf(members[0])
+    })
+    .filter(name => name !== '')
+  const subject = subjectShortNameOf(ctx)
+  const shows_subject = subject !== '' && !said.toLocaleLowerCase().includes(subject.toLocaleLowerCase())
+  return [...(shows_subject ? [subject] : []), ...pinned].join(' · ')
+}
+
+/** Le centre écrit-il le nom (réglage de la figure) ? Sinon la ligne de mesure redit le sujet. */
+const centreSaysName = (style: Type_FigureChartStyle): boolean =>
+  style.centre_content === 'both' || style.centre_content === 'name'
+
+/**
+ * 03/10/2026 — EN PETITS MULTIPLES, CE QUE LES CASES MESURENT SE DIT UNE FOIS, sous le titre, plutôt
+ * que dans chaque case : une zone de texte discrète ajoutée aux textes de la figure.
+ */
+const withMeasureCaption = (texts: Type_FigureText[], caption: string): Type_FigureText[] => caption === ''
+  ? texts
+  : [...texts, {
+    text: caption, position: 'top', font_size: 11, bold: false, italic: false, font_family: '',
+    color: '#718096', align: 'middle', wrap: false
+  }]
+
+/**
+ * 03/10/2026 — LE DÉFAUT DES ÉTIQUETTES QUI NE TIENNENT PAS, SUR L'ANNEAU LE PLUS EXTERNE d'une figure
+ * à plusieurs anneaux : « masquer » (cent secteurs de continents ne se nomment pas autour d'un disque,
+ * l'info-bulle les détaille). Un choix EXPLICITE de l'auteur (`labels_small` posé) prime toujours :
+ * `undefined`, l'anneau externe suit alors la règle de toute la figure.
+ */
+const labelsSmallOuterOf = (ctx: Type_RepresentationContext): 'hide' | undefined => {
+  const { window_id, pane_key } = ctx
+  const explicit = window_id !== undefined && pane_key !== undefined
+    ? ctx.app_data.menu_configuration.figureOf(window_id, pane_key).isAttributeOverloaded('labels_small')
+    : ctx.options?.['labels_small'] !== undefined
+  return explicit ? undefined : 'hide'
+}
 
 /** Le nom du SUJET, ce que la figure nomme quand elle n'est pas descendue. */
 const subjectNameOf = (ctx: Type_RepresentationContext): string => {
@@ -1365,8 +1446,9 @@ export const registerAnalysisRepresentations = (): void => {
       const split = smallMultiplesOf(ctx)
       if (split) {
         container.innerHTML = ''
+        const titled = figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx))
         const host = mountFigureTextZones(
-          container, figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx)), breadcrumb)
+          container, withMeasureCaption(titled, measureCaptionOf(ctx, titled[0]?.text ?? '')), breadcrumb)
         // 02/10/2026 — UNE LÉGENDE COMMUNE (Julien : « pour les multiples, il ne faut pas voir les
         // labels qui sont répétés ; par contre une place commune pour la légende serait
         // intéressante »). Les cases n'écrivent plus le nom des parts — ce sont les mêmes partout —
@@ -1592,9 +1674,18 @@ export const registerAnalysisRepresentations = (): void => {
             // reglage qui mord dans l un doit mordre dans l autre, sinon changer de mode change
             // ce que la figure dit.
             labels_min_share: style.labels_min_share,
+            // 03/10/2026 — la règle des étiquettes qui ne tiennent pas, celle de la couronne ; et
+            // « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
+            labels_small: style.labels_small,
+            labels_small_outer: labelsSmallOuterOf(ctx),
             click_action: 'aggregate'
           },
           texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
+          // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
+          centre_caption: measureCaptionOf(ctx,
+            ['both', 'name'].includes(readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both') &&
+              rings.roots.length === 1 ? rings.roots[0].label : ''),
+          caption_plan: centreCaptionPlan,
           breadcrumb,
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
@@ -1651,6 +1742,8 @@ export const registerAnalysisRepresentations = (): void => {
           on_part_activate: gestures.activate,
           on_centre_click: gestures.back,
           centre_back_label: t('sunburst.back') as string,
+          // 03/10/2026 — ce que le centre mesure, sous la valeur.
+          centre_caption: measureCaptionOf(ctx, centreSaysName(style) ? figureTitleFallback(ctx) : ''),
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           // 01/10/2026 — le zoom de la couronne à plat, prêté comme celui du mode à anneaux.

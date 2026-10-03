@@ -39,6 +39,7 @@ import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText } from './figureFormat'
+import { layoutDonutCallouts } from './donutCalloutLayout'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -150,6 +151,18 @@ export interface Type_SunburstStyle {
    * secteur par un trait, et se déplacent à la main (cf. `label_positions`).
    */
   callout: boolean
+  /**
+   * 03/10/2026 — CE QUE DEVIENT UNE ÉTIQUETTE QUI NE TIENT PAS DANS SON SECTEUR (`labels_small`, la
+   * clé de la couronne) : écrite quand même, sortie au bout d'un trait, tue, ou couchée le long du
+   * rayon. 'hide' par défaut : un disque d'avant ce réglage taisait ce qui ne tenait pas.
+   */
+  labels_small: 'show' | 'detach' | 'hide' | 'radial'
+  /**
+   * 03/10/2026 — LA MÊME RÈGLE POUR L'ANNEAU LE PLUS EXTERNE, quand l'hôte la distingue. Absente :
+   * `labels_small`. La couronne y met « masquer » par défaut sur une figure à plusieurs anneaux :
+   * cent secteurs de continents ne se nomment pas autour d'un disque, l'info-bulle les détaille.
+   */
+  labels_small_outer?: 'show' | 'detach' | 'hide' | 'radial'
   /** Ceux-ci sont les attributs d'ÉTIQUETTE des éléments (`name_label_*`). */
   font_family: string
   font_size: number
@@ -207,6 +220,7 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   separator_part: 'after',
   box_width: 150,
   callout: false,
+  labels_small: 'hide',
   font_family: 'Arial,sans-serif',
   font_size: 10,
   bold: false,
@@ -497,6 +511,14 @@ export interface Type_SunburstChartOptions {
     value: { size: number, below: boolean } | null
   }
   /**
+   * 03/10/2026 — CE QUE LE CENTRE MESURE (« Exports · 2015 »), écrit sous la valeur, et la règle de
+   * sa place (`centreCaptionPlan`, injectée comme `centre_plan`). Absents : pas de ligne.
+   */
+  centre_caption?: string
+  caption_plan?: (caption: string, inner: number, used_h: number) => {
+    lines: string[], size: number, below: boolean
+  } | null
+  /**
    * 03/10/2026 — L'ÉCHELLE À LAQUELLE LE DISQUE SERA VU : une petite case le dessine à 120 px et le
    * réduit. La règle du centre se calcule sur le trou VU, et ses tailles se compensent.
    */
@@ -534,17 +556,94 @@ const THEME = {
 const MAX_BRANCHES = THEME.light.palette.length
 
 /**
- * UNE PALETTE PAR DIMENSION EMBOÎTÉE, sous la source « palette » : chaudes pour la première, froides
- * pour la seconde, sourdes pour une troisième. Sous « produits, puis pays », un pays ne doit pas
- * passer pour un produit, ni hériter de sa teinte. Sous la source « modèle », un secteur de membre
- * porte la couleur du membre (`Type_SunburstNode.color`), celle de la palette hiérarchique de la
- * dimension.
+ * 03/10/2026 — UNE TEINTE = UNE IDENTITÉ (os#1511). Sous « produits, puis pays », un continent peint
+ * de sa teinte catégorielle (Europe orange) se confondait avec une filière (Lait orange). Arbitrage
+ * Julien (« familles disjointes », préférées aux nuances du parent) : chaque dimension garde une
+ * identité de couleur, mais dans des FAMILLES QUI NE SE RECOUVRENT PAS — la dimension la plus
+ * extérieure (souvent la plus nombreuse) garde la palette catégorielle, les intérieures prennent des
+ * gris-bleus étagés en clarté, un par membre, dans l'ordre de leur dimension. Une dimension qui
+ * découpe seule n'est pas concernée : ses membres gardent leurs teintes.
  */
-const NESTED_DIMENSION_PALETTES: string[][] = [
-  ['#d62728', '#ff7f0e', '#e6ab02', '#8c564b', '#e377c2', '#bcbd22', '#f4a261', '#a0522d'],
-  ['#1f77b4', '#2ca02c', '#17becf', '#9467bd', '#1b9e77', '#4575b4', '#66a61e', '#7570b3'],
-  ['#636363', '#8c6d31', '#393b79', '#637939', '#7b4173', '#843c39', '#5254a3', '#8ca252']
-]
+const SOBRE_HUE = 250
+const SOBRE_CHROMA = 16
+const sobreLightness = (t: number) => 34 + 46 * t
+export const sobreFamilyShade = (rank: number, count: number): string =>
+  d3.hcl(SOBRE_HUE, SOBRE_CHROMA, sobreLightness(count > 1 ? rank / (count - 1) : 0.5)).formatHex()
+
+/** En deçà de cet écart (ΔE CIELAB), une teinte catégorielle passerait pour un gris-bleu intérieur. */
+const SOBRE_MIN_DELTA_E = 22
+const SOBRE_SAMPLES = [0, 0.25, 0.5, 0.75, 1].map(t => d3.hcl(SOBRE_HUE, SOBRE_CHROMA, sobreLightness(t)).formatHex())
+const deltaE = (a: string, b: string): number => {
+  const x = d3.lab(a)
+  const y = d3.lab(b)
+  return Math.hypot(x.l - y.l, x.a - y.a, x.b - y.b)
+}
+const farFromSobre = (color: string) => SOBRE_SAMPLES.every(g => deltaE(color, g) >= SOBRE_MIN_DELTA_E)
+
+/**
+ * UNE TEINTE CATÉGORIELLE TENUE À L'ÉCART DE LA FAMILLE SOBRE (Julien : Vin bleu clair ≈ Amériques
+ * gris-bleu clair). La couleur du diagramme est gardée telle quelle dès qu'elle est assez loin de
+ * TOUS les gris-bleus ; sinon elle est décalée le moins possible : même teinte, même clarté, plus
+ * saturée (un bleu reste un bleu, il cesse d'être gris) ; un gris pur, sans teinte à saturer, prend
+ * un sable chaud, à l'opposé du gris-bleu.
+ */
+export const awayFromSobre = (color: string): string => {
+  if (farFromSobre(color)) return color
+  const c = d3.hcl(color)
+  if (isNaN(c.l)) return color
+  const hue = isNaN(c.h) || c.c < 8 ? 70 : c.h
+  for (let chroma = Math.max(c.c, 20); chroma <= 90; chroma += 5) {
+    for (const dl of [0, -6, 6, -12, 12]) {
+      const moved = d3.hcl(hue, chroma, c.l + dl)
+      if (moved.displayable() && farFromSobre(moved.formatHex())) return moved.formatHex()
+    }
+  }
+  return d3.hcl(hue, 45, c.l).formatHex()
+}
+
+/** Une nuance d'un parent, à un rang parmi `count` : les niveaux plus fins d'une même dimension. */
+const NESTED_SHADE_STEP = 9
+const NESTED_SHADE_SPREAD_MAX = 40
+const NESTED_SHADE_LIFT = 6
+export const nestedMemberShade = (parent: string, rank: number, count: number): string => {
+  const c = d3.hcl(parent)
+  if (isNaN(c.l)) return parent
+  const spread = Math.min(NESTED_SHADE_SPREAD_MAX, NESTED_SHADE_STEP * Math.max(0, count - 1))
+  let lo = c.l + NESTED_SHADE_LIFT - spread / 2
+  // La fenêtre glisse plutôt que d'écraser : les écarts entre nuances restent ceux voulus.
+  lo = Math.max(26, Math.min(90 - spread, lo))
+  const l = count > 1 ? lo + spread * rank / (count - 1) : lo + spread / 2
+  // La chroma suit un peu la clarté : une nuance très claire saturée sortirait du gamut et virerait.
+  const chroma = isNaN(c.c) ? 0 : c.c * (l > c.l ? Math.max(0.55, 1 - (l - c.l) / 80) : 1)
+  return d3.hcl(isNaN(c.h) ? 0 : c.h, chroma, l).formatHex()
+}
+
+/**
+ * L'ORDRE DES MEMBRES D'UNE DIMENSION EMBOÎTÉE, le même sous chaque parent : les fratries de l'arbre
+ * fusionnées (chacune suit l'ordre de sa dimension, à des absents près). Clé : rang de la dimension
+ * et profondeur dans elle ; identité d'un membre : son nom, unique dans sa dimension.
+ */
+const nestedMemberRanks = (roots: Type_SunburstNode[]): Map<string, string[]> => {
+  const orders = new Map<string, string[]>()
+  const visit = (siblings: Type_SunburstNode[]) => {
+    let previous: string | null = null
+    siblings.forEach(node => {
+      if (node.palette !== undefined && !node.is_residual) {
+        const key = `${node.palette.index}/${node.palette.depth}`
+        const order = orders.get(key) ?? []
+        if (!order.includes(node.label)) {
+          const at = previous === null ? 0 : order.indexOf(previous) + 1
+          order.splice(at, 0, node.label)
+        }
+        orders.set(key, order)
+        previous = node.label
+      }
+      visit(node.children)
+    })
+  }
+  visit(roots)
+  return orders
+}
 
 /**
  * La couleur d'une BRANCHE, par son rang — l'ordre fixe de la palette, jamais recyclé
@@ -571,6 +670,8 @@ const LABEL_CHAR_PX = 6
 const MIN_CALLOUT_EDGE_PX = 6
 // L'écart entre le disque et une étiquette sortie, quand l'auteur ne l'a pas encore déplacée.
 const CALLOUT_GAP_PX = 14
+// Le palier horizontal entre le coude du trait et le texte d'une étiquette sortie.
+const CALLOUT_STEP_PX = 10
 // Écart entre deux anneaux : un vide de la couleur du fond, pas un trait.
 const ARC_GAP_PX = 1.5
 // os#1465 — la part de son secteur qu'un pictogramme occupe quand l'auteur n'impose pas sa taille.
@@ -637,6 +738,8 @@ export interface Type_SunburstSlice {
   // `null` sans texture.
   texture: number | null
   texture_label: string
+  /** 03/10/2026 — sous plusieurs dimensions emboîtées : le rang de la dimension et la profondeur dans elle. */
+  nested?: { index: number, depth: number }
 }
 
 // Replie les enfants trop étroits pour être vus dans un « Autres » de fratrie. Le seuil
@@ -736,17 +839,34 @@ export const partitionSunburst = (
   const texture_axis = style.texture_axis ?? 'none'
   const axis_colors = new Map<string, string>()
   const textures = new Map<string, number>()
-  const nested_colors: Map<string, string>[] = []
-  /** La teinte d'un secteur de dimension emboîtée : sa palette, sa branche, sa profondeur DANS elle. */
-  const nestedColor = (palette: { index: number, branch_id: string, depth: number }): string => {
-    const colors = nested_colors[palette.index] ?? (nested_colors[palette.index] = new Map())
-    let hue = colors.get(palette.branch_id)
-    if (hue === undefined) {
-      const scheme = NESTED_DIMENSION_PALETTES[palette.index % NESTED_DIMENSION_PALETTES.length]
-      hue = scheme[colors.size % scheme.length]
-      colors.set(palette.branch_id, hue)
+  const nested_orders = nestedMemberRanks(roots)
+  let outer_index = -1
+  const findOuter = (nodes: Type_SunburstNode[]) => nodes.forEach(n => {
+    if (n.palette !== undefined) outer_index = Math.max(outer_index, n.palette.index)
+    findOuter(n.children)
+  })
+  findOuter(roots)
+  /** Le rang d'un membre dans sa dimension (même rang sous chaque parent), et leur nombre. */
+  const rankOf = (node: Type_SunburstNode): { rank: number, count: number } => {
+    const palette = node.palette as { index: number, depth: number }
+    const order = nested_orders.get(`${palette.index}/${palette.depth}`) ?? []
+    return { rank: Math.max(0, order.indexOf(node.label)), count: order.length }
+  }
+  /**
+   * Plusieurs dimensions emboîtées : la plus extérieure garde son identité catégorielle (couleur du
+   * membre, ou la palette par rang), tenue à l'écart de la famille sobre ; les intérieures prennent la
+   * famille sobre ; plus bas dans une même dimension, une nuance du parent.
+   */
+  const familyColor = (node: Type_SunburstNode, parent_color: string | null): string => {
+    const palette = node.palette as { index: number, depth: number }
+    const { rank, count } = rankOf(node)
+    if (palette.depth > 0 && parent_color !== null && !(palette.index === outer_index && style.color_source === 'model' && node.color)) {
+      return nestedMemberShade(parent_color, rank, count)
     }
-    return style.depth_shading ? shadeForDepth(hue, palette.depth, theme) : hue
+    if (palette.index === outer_index) {
+      return awayFromSobre((style.color_source === 'model' && node.color) ? node.color : branch_color(rank))
+    }
+    return sobreFamilyShade(rank, count)
   }
 
   const walk = (
@@ -755,7 +875,8 @@ export const partitionSunburst = (
     a1: number,
     depth: number,
     base: string,
-    path: string[]
+    path: string[],
+    parent_color: string | null = null
   ) => {
     const span = a1 - a0
     const children = foldNarrowChildren(node.children, span, others_label, style.others_threshold)
@@ -772,16 +893,14 @@ export const partitionSunburst = (
     // La teinte du secteur, dans l'ordre où les règles priment :
     //  - un secteur de complément (« non réparti », « autres ») n'est pas une branche : il prend la
     //    teinte neutre plutôt que de se faire passer pour un élément du modèle ;
-    //  - sous 'palette', un secteur de dimension emboîtée prend la palette de sa dimension ;
     //  - une branche d'axe coloré (os#1509) prend la teinte de cet axe ;
+    //  - sous plusieurs dimensions emboîtées, chaque dimension sa famille (cf. `familyColor`) ;
     //  - sous 'model', la couleur de l'élément commande, sans dégradé de profondeur (os#1425) ;
     //  - sinon, la teinte de la branche, dégradée avec la profondeur si demandé.
     const sliceColor = (): string => {
       if (node.is_residual) return others
-      if (node.palette !== undefined && style.color_source === 'palette' && !color_branch) {
-        return nestedColor(node.palette)
-      }
       if (color_branch) return axisColor()
+      if (node.palette !== undefined) return familyColor(node, parent_color)
       if (style.color_source === 'model' && node.color) return node.color
       return style.depth_shading ? shadeForDepth(base, depth, theme) : base
     }
@@ -792,6 +911,7 @@ export const partitionSunburst = (
       texture = known ?? textures.size
       if (known === undefined) textures.set(texture_branch.id, texture)
     }
+    const color = sliceColor()
     slices.push({
       id: node.id,
       label: node.label,
@@ -800,21 +920,22 @@ export const partitionSunburst = (
       depth,
       a0,
       a1,
-      color: sliceColor(),
+      color,
       is_residual: !!node.is_residual,
       is_disaggregated: !!node.is_disaggregated,
       dimension_id: node.dimension_id,
       children_count: children.length,
       path,
       texture,
-      texture_label: texture_branch?.label ?? ''
+      texture_label: texture_branch?.label ?? '',
+      ...(node.palette !== undefined ? { nested: { index: node.palette.index, depth: node.palette.depth } } : {})
     })
     const sum = children.reduce((acc, c) => acc + c.value, 0)
     if (sum <= 0) return
     let cursor = a0
     children.forEach(child => {
       const width = (child.value / sum) * span
-      walk(child, cursor, cursor + width, depth + 1, base, [...path, child.id])
+      walk(child, cursor, cursor + width, depth + 1, base, [...path, child.id], node.is_residual ? null : color)
       cursor += width
     })
   }
@@ -1331,7 +1452,19 @@ export const drawSunburstChart = (
     const bigEnoughToName = (d: Type_SunburstSlice): boolean =>
       (d.a1 - d.a0) / (2 * Math.PI) >= Math.max(0, st.labels_min_share) / 100
 
-    const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null => {
+    /**
+     * 03/10/2026 — CE QUE DEVIENT L'ÉTIQUETTE QUI NE TIENT PAS (`labels_small`), anneau par anneau :
+     * l'anneau le plus externe d'une figure à plusieurs anneaux a sa propre règle quand l'hôte la
+     * donne (`labels_small_outer`).
+     */
+    const smallModeOf = (d: Type_SunburstSlice): Type_SunburstStyle['labels_small'] =>
+      (rings > 1 && d.depth === rings - 1 && st.labels_small_outer !== undefined)
+        ? st.labels_small_outer
+        : st.labels_small
+    /** Le texte d'un secteur DANS son anneau, et l'orientation où il s'écrit. */
+    const arcLabelPlanOf = (
+      d: Type_SunburstSlice, geo: Type_Geometry
+    ): { text: string, orientation: Type_SunburstStyle['label_orientation'] } | null => {
       const s = styleOf(d.id)
       if (!bigEnoughToName(d)) return null
       // os#1465 — L'ICÔNE PREND LA PLACE DU NOM, et c'est le procédé du diagramme : sur un nœud
@@ -1340,18 +1473,27 @@ export const drawSunburstChart = (
       // pictogramme barré de lettres — et écrire les deux demanderait une mise en page que
       // personne n'a demandée. L'auteur qui veut le nom ne met pas d'icône.
       if (s.icon_path) return null
-      return sunburstArcLabel(
+      const labelIn = (
+        orientation: Type_SunburstStyle['label_orientation'], mode: Type_SunburstStyle['labels_mode']
+      ) => sunburstArcLabel(
         sectorText(d),
         (d.a1 - d.a0) * (geo.inner_r + (d.depth + 0.5) * geo.ring),
         geo.ring,
-        {
-          orientation: s.label_orientation,
-          mode: s.labels_mode,
-          font_size: s.font_size,
-          box_px: s.box_width
-        }
+        { orientation, mode, font_size: s.font_size, box_px: s.box_width }
       )
+      const fitted = labelIn(s.label_orientation, s.labels_mode)
+      if (fitted !== null) return { text: fitted, orientation: s.label_orientation }
+      // Ne tient pas : « montrer quand même » l'écrit sans les planchers de lisibilité, « radial »
+      // de même mais couché le long du rayon ; « détacher » et « masquer » laissent l'anneau vide.
+      if (s.labels_mode !== 'fit') return null
+      const small = smallModeOf(d)
+      if (small !== 'show' && small !== 'radial') return null
+      const orientation = small === 'radial' ? 'radial' : s.label_orientation
+      const forced = labelIn(orientation, 'always')
+      return forced === null ? null : { text: forced, orientation }
     }
+    const arcLabelOf = (d: Type_SunburstSlice, geo: Type_Geometry): string | null =>
+      arcLabelPlanOf(d, geo)?.text ?? null
     // Un nom tronqué ne nomme pas : « Céréale… » ne distingue pas deux branches. Un nom revenu
     // à la ligne, lui, est écrit en entier.
     const namesItself = (d: Type_SunburstSlice, geo: Type_Geometry): boolean => {
@@ -1360,10 +1502,15 @@ export const drawSunburstChart = (
     }
     // Un secteur assez large pour qu'un trait de rappel désigne quelque chose : au-dessous, le
     // rappel pointerait un fil, et cent rappels sur un anneau de miettes ne nommeraient rien.
+    // 03/10/2026 — SORTIE par la règle de la figure (`labels_small: 'detach'`, ou l'ancien
+    // `name_label_callout`), sauf la part qui refuse explicitement de sortir.
+    const wantsOut = (d: Type_SunburstSlice): boolean =>
+      (styleOf(d.id).callout || smallModeOf(d) === 'detach') &&
+      aspectOf(d.id).label_callout !== false
     const calloutable = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
       // LE SEUIL VAUT AUSSI POUR LE TRAIT DE RAPPEL : sortir une etiquette, c'est encore ecrire.
       // Sans cette ligne, baisser le seuil taisait les secteurs et les rappels restaient.
-      styleOf(d.id).callout && !d.is_residual && bigEnoughToName(d) &&
+      wantsOut(d) && !d.is_residual && bigEnoughToName(d) &&
       (d.a1 - d.a0) * (geo.inner_r + (d.depth + 1) * geo.ring) >= MIN_CALLOUT_EDGE_PX
     // Sorti du disque avec son trait, un secteur est nommé aussi sûrement que dans son anneau.
     const named = (d: Type_SunburstSlice, geo: Type_Geometry): boolean =>
@@ -1380,9 +1527,12 @@ export const drawSunburstChart = (
     const room = legend_below ? height : width
     const wide = Math.min(Math.max(80, st.legend_width), room * 0.32)
     const narrow = Math.min(Math.max(60, st.legend_width * 0.68), room * 0.28)
+    // 03/10/2026 — PLUSIEURS DIMENSIONS DÉCOUPENT : la légende les liste toutes, un bloc chacune (cf.
+    // plus bas) ; elle prend la colonne large d'office.
+    const multi_dimension = slices.some(sl => sl.nested !== undefined && sl.nested.index > 0)
     const legend_width = !st.legend_visible
       ? 0
-      : st.legend_parts === 'all'
+      : st.legend_parts === 'all' || (multi_dimension && st.legend_parts !== 'none')
         ? wide
         : unnamedBranches(geometryFor(narrow)).length > 0 ? wide : narrow
     const geo = geometryFor(legend_width)
@@ -1493,11 +1643,21 @@ export const drawSunburstChart = (
      * (`centre_plan`) — mesurée sur le trou VU (`display_scale`), tailles compensées. Le survol
      * réécrit le centre par le même chemin.
      */
+    // 03/10/2026 — ce que le centre mesure, sous la valeur (`centre_caption`).
+    const centre_caption = centre.append('text')
+      .attr('class', 'sunburst_centre_caption')
+      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+      .attr('fill', palette.muted).attr('pointer-events', 'none')
+    const caption = opts.centre_caption ?? ''
     const writeCentre = (name: string, value_text: string) => {
       const plan_of = opts.centre_plan
+      centre_caption.selectAll('tspan').remove()
       if (plan_of === undefined) {
         centre_label.text(shows_name ? name : '')
         centre_value.text(shows_value ? value_text : '')
+        if (caption !== '') {
+          centre_caption.attr('font-size', 9).attr('y', inner_r * 0.45).append('tspan').attr('x', 0).text(caption)
+        }
         return
       }
       const k = opts.display_scale ?? 1
@@ -1508,9 +1668,23 @@ export const drawSunburstChart = (
       const value_in = shows_value && plan.value !== null && !plan.value.below
       const name_in = !plan.name.above
       const outer = geo.outer_r
-      // Le bloc du dedans, centré : les lignes du nom puis la valeur.
-      const in_h = (name_in ? name_lines.length * name_size * 1.15 : 0) + (value_in ? value_size * 1.2 : 0)
+      // Le bloc du dedans, centré : les lignes du nom, la valeur, puis ce que le centre mesure.
+      const named_h = (name_in ? name_lines.length * name_size * 1.15 : 0) + (value_in ? value_size * 1.2 : 0)
+      const cap = opts.caption_plan?.(caption, inner_r * k, named_h * k) ?? null
+      const cap_size = (cap?.size ?? 0) / k
+      const cap_in = cap !== null && !cap.below
+      const in_h = named_h + (cap_in ? (cap?.lines.length ?? 0) * cap_size * 1.2 : 0)
       const top = -in_h / 2
+      if (cap !== null) {
+        centre_caption.attr('font-size', cap_size)
+        // Dessous, il passe sous la valeur sortie s'il y en a une.
+        const below_top = outer + 4 / k + (shows_value && plan.value?.below ? value_size * 1.2 : 0)
+        cap.lines.forEach((line, i) => {
+          centre_caption.append('tspan').attr('x', 0)
+            .attr('y', cap_in ? top + named_h + (i + 0.5) * cap_size * 1.2 : below_top + (i + 0.5) * cap_size * 1.2)
+            .text(line)
+        })
+      }
       centre_label.selectAll('tspan').remove()
       centre_label.text(null).attr('font-size', name_size).attr('y', null)
       name_lines.forEach((line, i) => {
@@ -1686,7 +1860,8 @@ export const drawSunburstChart = (
       // Au-dela du demi-tour, le texte se lirait la tete en bas.
       const flip = deg > 90 || deg < -90
       const at = 'rotate(' + deg + ') translate(' + radius + ',0)'
-      const orientation = styleOf(d.id).label_orientation
+      // L'orientation où le nom s'écrit vraiment : couché le long du rayon sous `labels_small: 'radial'`.
+      const orientation = arcLabelPlanOf(d, geo)?.orientation ?? styleOf(d.id).label_orientation
       const p = arcTextShift(aspect)
       // Le décalage s'ajoute APRÈS la rotation propre à l'orientation : il se lit alors dans le
       // sens où le texte est écrit, ce qui est le seul sens utilisable à la main.
@@ -1822,13 +1997,34 @@ export const drawSunburstChart = (
     // de figure) : le disque etait le seul a n obeir qu a la regle generale.
     const askedOut = (d: Type_SunburstSlice): boolean =>
       aspectOf(d.id).label_callout === true && !d.is_residual
-    const callouts = slices.filter(d => askedOut(d) || (!namesItself(d, geo) && calloutable(d, geo)))
+    const wanted_out = slices.filter(d => askedOut(d) || (!namesItself(d, geo) && calloutable(d, geo)))
+    const outer_r = geo.outer_r
+    const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
+    // 03/10/2026 — RANGÉES COMME DANS TOUT DONUT (`layoutDonutCallouts`, le placement de la couronne à
+    // plat) : une colonne par côté, coude puis palier, et jamais une étiquette par-dessus une autre.
+    // Posées à l'aplomb de leur secteur, cent étiquettes de l'anneau externe s'empilaient en haut à
+    // gauche. Celles que la colonne ne peut pas garder près de leur ancre, ni dans le cadre, se
+    // taisent : l'info-bulle reste. Une étiquette DÉPLACÉE À LA MAIN garde sa place : c'est l'auteur.
+    const auto_out = wanted_out.filter(d => opts.label_positions?.[d.id] === undefined)
+    const laid = layoutDonutCallouts(
+      auto_out.map(d => {
+        const s = styleOf(d.id)
+        return {
+          id: d.id,
+          mid_angle: (d.a0 + d.a1) / 2,
+          height: s.font_size * LABEL_LINE_HEIGHT + 1,
+          width: sectorText(d).length * (s.font_size / 10) * LABEL_CHAR_PX,
+          // L'ordre de l'auteur passe avant la taille de la part.
+          weight: askedOut(d) ? Number.MAX_VALUE : d.value
+        }
+      }),
+      outer_r, CALLOUT_GAP_PX, CALLOUT_STEP_PX,
+      { half_height: box_h / 2 - 2, half_width: box_w / 2 - 2 }
+    )
+    const callouts = wanted_out.filter(d => opts.label_positions?.[d.id] !== undefined || laid.has(d.id))
     if (callouts.length > 0) {
-      const outer_r = geo.outer_r
-      const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
       const edgeOf = (d: Type_SunburstSlice) =>
         point(inner_r + (d.depth + 1) * ring - ARC_GAP_PX, (d.a0 + d.a1) / 2)
-      const defaultAt = (d: Type_SunburstSlice) => point(outer_r + CALLOUT_GAP_PX, (d.a0 + d.a1) / 2)
       const anchorOf = (p: { x: number }) => Math.abs(p.x) < 1 ? 'middle' : p.x > 0 ? 'start' : 'end'
       // os#1476 — LA PLACE PROPOSÉE PAR LE TRACÉ, CORRIGÉE DE CE QUE LA PART DEMANDE.
       //
@@ -1836,10 +2032,26 @@ export const drawSunburstChart = (
       // page, comme le nom d'une barre. Le décalage fin et l'alignement, offerts dans l'inspecteur,
       // n'avaient aucun chemin jusqu'à cette étiquette-ci.
       const placeOf = (d: Type_SunburstSlice) => {
-        const at = opts.label_positions?.[d.id] ?? defaultAt(d)
+        const manual = opts.label_positions?.[d.id]
+        const auto = laid.get(d.id)
+        const at = manual ?? (auto ? { x: auto.x, y: auto.y } : point(outer_r + CALLOUT_GAP_PX, (d.a0 + d.a1) / 2))
         return partTextPlacement(
-          { x: at.x, y: at.y, anchor: anchorOf(at), rotate: false }, aspectOf(d.id).name
+          {
+            x: at.x, y: at.y,
+            anchor: manual === undefined && auto ? (auto.text_anchor) : anchorOf(at),
+            rotate: false
+          },
+          aspectOf(d.id).name
         )
+      }
+      /** Le trait : du bord du secteur au coude, puis le palier jusqu'au texte (posé à la main : droit). */
+      const leaderOf = (d: Type_SunburstSlice, to: { x: number, y: number }): string => {
+        const from = edgeOf(d)
+        const auto = opts.label_positions?.[d.id] === undefined ? laid.get(d.id) : undefined
+        const pts = auto
+          ? [from, auto.elbow, { x: to.x - auto.side * 2, y: to.y }]
+          : [from, to]
+        return pts.map(p => `${p.x},${p.y}`).join(' ')
       }
       // LE TRAIT VISE LE TEXTE, donc la place CORRIGÉE : un rappel qui ne touche pas son étiquette
       // se lit comme un défaut d'affichage, pas comme un réglage. La place NUE, elle, n'est que ce
@@ -1850,11 +2062,11 @@ export const drawSunburstChart = (
         .enter().append('g')
         .attr('class', 'sunburst_callout')
         .style('cursor', 'move')
-      items.append('line')
+      items.append('polyline')
         .attr('class', 'sunburst_callout_line')
+        .attr('fill', 'none')
         .attr('stroke', palette.muted).attr('stroke-width', 1)
-        .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
-        .attr('x2', d => placeOf(d).x).attr('y2', d => placeOf(d).y)
+        .attr('points', d => leaderOf(d, placeOf(d)))
       items.append('text')
         .attr('class', 'sunburst_callout_text')
         .attr('x', d => placeOf(d).x).attr('y', d => placeOf(d).y)
@@ -1880,7 +2092,8 @@ export const drawSunburstChart = (
             aspectOf(d.id).name
           )
           const item = d3.select(this)
-          item.select('line').attr('x2', p.x).attr('y2', p.y)
+          const from = edgeOf(d)
+          item.select('polyline').attr('points', `${from.x},${from.y} ${p.x},${p.y}`)
           item.select('text').attr('x', p.x).attr('y', p.y).attr('text-anchor', p.anchor)
         })
         .on('end', (event, d) => {
@@ -1899,7 +2112,7 @@ export const drawSunburstChart = (
       .style('color', palette.ink)
       .style('display', st.legend_visible ? 'block' : 'none')
     // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
-    const show_rings = st.legend_visible && st.legend_levels
+    const show_rings = st.legend_visible && st.legend_levels && !multi_dimension
 
     // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
     // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
@@ -1975,7 +2188,79 @@ export const drawSunburstChart = (
     // large porte déjà son nom, le répéter à côté ne fait que prendre la place du disque.
     // Un secteur trop étroit, ou dont le nom a été tronqué, n'existe en toutes lettres
     // que dans son info-bulle — c'est là que la légende sert.
-    if (unnamed_branches.length > 0) {
+    // ── 03/10/2026 — UN BLOC PAR DIMENSION QUI DÉCOUPE (Julien : « il n'y a pas la légende pour les
+    // deux dimensions ») ───────────────────────────────────────────────────────────────────────
+    //
+    // Dans l'ordre des anneaux, de l'intérieur vers l'extérieur : le titre de la dimension et de ses
+    // niveaux, puis ses membres — en arbre quand elle montre plusieurs niveaux, « Autres » en dernier.
+    // Chaque dimension ayant sa famille de couleurs, chaque membre a sa pastille.
+    if (multi_dimension && st.legend_visible && st.legend_parts !== 'none') {
+      const ringOf = (sl: Type_SunburstSlice) => tree.rings[sl.depth + level_offset]
+      const dimOf = (sl: Type_SunburstSlice) => sl.dimension_id || ringOf(sl)?.dimension_id || ''
+      const dim_order: string[] = []
+      for (let d = 0; d < rings; d++) {
+        const id = tree.rings[d + level_offset]?.dimension_id
+        if (id !== undefined && !dim_order.includes(id)) dim_order.push(id)
+      }
+      dim_order.forEach((dim_id, k) => {
+        const mine = slices.filter(sl => dimOf(sl) === dim_id)
+        if (mine.length === 0) return
+        const levels = [...new Set(
+          [...Array(rings).keys()]
+            .map(d => tree.rings[d + level_offset])
+            .filter(r => r?.dimension_id === dim_id)
+            .map(r => r?.level_label ?? '')
+            .filter(l => l !== '')
+        )]
+        const label = tree.rings.find(r => r?.dimension_id === dim_id)?.dimension_label ?? ''
+        legend.append('div')
+          .style('padding', k === 0 ? '0.1rem 0.2rem' : '0.5rem 0.2rem 0.1rem')
+          .style('color', palette.muted).style('font-weight', 'bold')
+          .attr('title', [label, ...levels].join(' · '))
+          .text([label, ...levels].join(' · '))
+        // Les membres, chacun une fois : un continent répété sous chaque filière est UN membre.
+        const rows: { key: string, label: string, color: string, indent: number }[] = []
+        const seen = new Set<string>()
+        const by_id = new Map(slices.map(sl => [sl.id, sl]))
+        mine.forEach(sl => {
+          if (sl.is_residual) return
+          const within = sl.nested?.depth ?? 0
+          // L'ascendant dans la MÊME dimension : de quoi poser l'arbre.
+          const parent = within > 0 ? by_id.get(sl.path[sl.path.length - 2] ?? '') : undefined
+          const key = `${parent?.label ?? ''}/${sl.label}`
+          if (seen.has(key)) return
+          seen.add(key)
+          const row = { key, label: sl.label, color: sl.color, indent: within }
+          if (parent !== undefined) {
+            // Sous son parent, après ses frères déjà posés.
+            const at = rows.findIndex(r => r.label === parent.label && r.indent === within - 1)
+            if (at >= 0) {
+              let end = at + 1
+              while (end < rows.length && rows[end].indent > rows[at].indent) end++
+              rows.splice(end, 0, row)
+              return
+            }
+          }
+          rows.push(row)
+        })
+        const item = (text: string, color: string, indent: number) => {
+          const row = legend.append('div')
+            .attr('class', 'sunburst_branch')
+            .style('display', 'flex').style('align-items', 'center')
+            .style('gap', '0.35rem').style('padding', `0.05rem 0.2rem 0.05rem ${0.2 + indent * 0.9}rem`)
+          row.append('span')
+            .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+            .style('border-radius', '2px').style('background', color)
+          row.append('span')
+            .style('flex', '1 1 auto').style('overflow', 'hidden')
+            .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+            .attr('title', text).text(text)
+        }
+        rows.forEach(r => item(r.label, r.color, r.indent))
+        const residual = mine.find(sl => sl.is_residual)
+        if (residual !== undefined) item(others_label, residual.color, 0)
+      })
+    } else if (unnamed_branches.length > 0) {
       legend.append('div').style('height', '0.4rem')
       const items = legend.selectAll('div.sunburst_branch')
         .data(unnamed_branches).enter().append('div')
