@@ -180,6 +180,13 @@ export class Class_SankeyPanes {
   protected _base: { owner: Class_DrawingArea, doc: Class_ApplicationData } | null = null
   /** sa#568 — l'empreinte du dessin vivant au dernier partage, et de quel volet (cf. `shareLiveLayout`). */
   protected _print: { pane: string, print: Type_LayoutPrint } | null = null
+  /**
+   * sa#568 — LES VOLETS FERMÉS, gardés un temps : fermer un volet s'annule, et le volet rouvert doit
+   * retrouver SA mise en page (son rendu, sa caméra). Les plus anciens partent au-delà de
+   * `BURIED_MAX` : chaque rendu est un document entier.
+   */
+  protected _buried = new Map<string, { render: Type_PaneRender, camera?: Type_Camera }>()
+  protected static readonly BURIED_MAX = 4
   /** sa#568 — l'observateur du DOM du dessin vivant, et l'élément observé (cf. `observeLive`). */
   protected _observer: { disconnect: () => void } | null = null
   protected _observed: Element | null = null
@@ -511,11 +518,15 @@ export class Class_SankeyPanes {
     if (this._busy || !mc || !this.host.is_main || this.host.is_static) return
     this.listen()
     this.observeLive()
+    // sa#568 — les réglages de figure s'inscrivent à l'historique de ce document (cf. `undo_recorder`).
+    if (mc.undo_recorder === null) mc.undo_recorder = this.undo_recorder
     this._busy = true
     try {
       const panes = mc.main_zone_sankey_panes
       const open = new Set(panes.map(p => p.id))
       this._known.forEach((memo, id) => { if (!open.has(id)) this.onPaneClosed(id, memo) })
+      // sa#568 — un volet qui revient (« annuler » sa fermeture) reprend sa mise en page gardée.
+      open.forEach(id => { if (!this._known.has(id) && this._buried.has(id)) this.resurrect(id) })
       // Une coordonnée implicite (fichier d'avant, volet ouvert sans vue) suit la vue courante. Dès
       // qu'il y a DEUX volets Sankey, elle se fige ici, sans quoi le volet changerait de vue avec
       // le suivant qu'on active. Seul, il n'y a rien à figer : sa vue EST la vue courante, et le
@@ -587,15 +598,29 @@ export class Class_SankeyPanes {
 
   /** Un volet Sankey vient d'être fermé. */
   protected onPaneClosed(id: string, memo: Type_PaneMemo): void {
+    // sa#568 — sa mise en page est gardée un temps (`bury`) : « annuler » peut le rouvrir.
+    const camera = this._cameras.get(id)
     if (this._layout_owner === id) {
       // Sa mise en page n'est gardée que si une vue la garde ; un volet éphémère l'emporte.
       this._layout_owner = null
       const entry = this.host.views_dict[memo.coordinate]
       if (this.isHeavyView(memo.coordinate) || (entry?.own_layout && memo.saved_view === memo.coordinate)) {
         this.storeLiveInView(memo.coordinate)
+      } else if (!this.isHeavyView(memo.coordinate)) {
+        this.bury(id, {
+          doc: this.buildDocument(this.host.dumpDrawingAreaToJSON(this.host.drawing_area)),
+          coordinate: memo.coordinate,
+          data_key: sankeyDataKey(this.host.drawing_area.sankey),
+          mirror: false
+        }, this.host.drawing_area.getCameraTransform() ?? camera)
       }
     }
-    this.disposeRender(id)
+    const render = this._renders.get(id)
+    if (render && !render.mirror) {
+      this._renders.delete(id)
+      this.bumpVersion(id)
+      this.bury(id, render, camera)
+    } else this.disposeRender(id)
     this._cameras.delete(id)
     this._known.delete(id)
     // Une vue éphémère que plus rien ne montre est oubliée (cf. `Type_ViewEntry.ephemeral`).
@@ -603,6 +628,34 @@ export class Class_SankeyPanes {
     if (entry?.ephemeral && memo.coordinate !== this.host.current_view_id && !this.anyPaneShows(memo.coordinate)) {
       this.host.forgetEphemeralViewOf(memo.coordinate)
     }
+  }
+
+  /** Garde le rendu d'un volet fermé (cf. `_buried`). */
+  protected bury(id: string, render: Type_PaneRender, camera?: Type_Camera): void {
+    const previous = this._buried.get(id)
+    if (previous && previous.render.doc !== render.doc) this.disposeDocument(previous.render.doc)
+    this._buried.delete(id)
+    this._buried.set(id, { render, camera })
+    while (this._buried.size > Class_SankeyPanes.BURIED_MAX) {
+      const oldest = this._buried.keys().next().value as string
+      const gone = this._buried.get(oldest)
+      this._buried.delete(oldest)
+      if (gone) this.disposeDocument(gone.render.doc)
+    }
+  }
+
+  /** Un volet fermé revient (« annuler ») : il reprend son rendu et sa caméra. */
+  protected resurrect(id: string): void {
+    const buried = this._buried.get(id)
+    if (!buried) return
+    this._buried.delete(id)
+    const o = this.paneById(id)
+    if (!o || buried.render.doc.disposed || buried.render.coordinate !== this.coordinateOf(o)) {
+      this.disposeDocument(buried.render.doc)
+      return
+    }
+    this.setRender(id, buried.render)
+    if (buried.camera) this._cameras.set(id, buried.camera)
   }
 
   // RENDUS DES VOLETS INACTIFS =====================================================================
@@ -767,6 +820,34 @@ export class Class_SankeyPanes {
    * quoi un geste fait dans le volet A, défait pendant que B est le vivant, toucherait la mise en
    * page de B. Un volet fermé depuis ne se rouvre pas : le geste se rejoue là où l'on est.
    */
+  /** sa#568 — la dernière entrée inscrite par `undo_recorder`, pour fondre un geste continu. */
+  protected _last_record: { key: string, stamp: number, at: number } | null = null
+
+  /** Délai sous lequel deux écritures des mêmes réglages font un seul geste (un curseur qui glisse). */
+  protected static readonly MERGE_MS = 600
+
+  /**
+   * sa#568 — L'HISTORIQUE DES RÉGLAGES DE FIGURE (cf. `Class_MenuConfig.recordUndoable`) : chaque
+   * geste y entre, mais un geste CONTINU n'y entre qu'une fois — une écriture qui suit la précédente
+   * sur la même clé (même figure, mêmes réglages), sans aucune entrée entre les deux et dans la
+   * foulée, en remplace seulement le rétablissement. « Annuler » ramène donc au début du geste, et
+   * « rétablir » à sa fin. Hors contexte : l'entrée vise sa figure elle-même.
+   */
+  public readonly undo_recorder = (undo: () => void, redo: () => void, merge_key: string): void => {
+    const history = this.host.history
+    const now = Date.now()
+    const last = this._last_record
+    if (last && last.key === merge_key && last.stamp === history.stamp &&
+      now - last.at < Class_SankeyPanes.MERGE_MS) {
+      history.saveRedo(redo, false)
+      last.at = now
+      return
+    }
+    history.saveUndo(undo, false)
+    history.saveRedo(redo, false)
+    this._last_record = { key: merge_key, stamp: history.stamp, at: now }
+  }
+
   public readonly history_context: Type_HistoryContext = {
     capture: () => this.host.menu_configuration?.main_zone_live_sankey_id ?? null,
     restore: (context: unknown) => {
@@ -1092,6 +1173,8 @@ export class Class_SankeyPanes {
     this.parkedBase()
     this._layout_owner = null
     this._print = null
+    this._buried.forEach(b => this.disposeDocument(b.render.doc))
+    this._buried.clear()
     this._cameras.clear()
     this._known.clear()
     if (this._refresh_timer !== null) { clearTimeout(this._refresh_timer); this._refresh_timer = null }

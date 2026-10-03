@@ -99,6 +99,18 @@ export const figureFormatSettingsOf = (nature: Class_FigureNature): string[] => 
 }
 
 /**
+ * UNE FIGURE, au sens où ses réglages se partagent et s'annulent : une nature qui déclare au moins un
+ * réglage de STYLE (couronne, histogramme, étoile…). Le tableur, la documentation ou la vue JSON n'en
+ * déclarent pas : leurs « réglages » sont des états d'affichage (un onglet, un mode).
+ */
+export const isFigureNature = (nature: Class_FigureNature): boolean =>
+  nature.declared_keys.some(key => nature.sortOf(key) === 'style')
+
+/** Les clés dont la valeur diffère d'un sac de réglages à l'autre (une clé retirée compte). */
+export const changedOptionKeys = (prev: Type_OptionBag, next: Type_OptionBag): string[] =>
+  [...new Set([...Object.keys(prev), ...Object.keys(next)])].filter(key => !sameValue(prev[key], next[key])).sort()
+
+/**
  * UN RÉGLAGE DE MISE EN PAGE ne se partage qu'entre volets de MÊME TYPE (deux Sankey, deux
  * couronnes) : une position de nœud n'a pas de sens sur une couronne. Les données — ce qu'on
  * regarde — se partagent entre tous.

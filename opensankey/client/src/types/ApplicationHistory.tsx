@@ -121,6 +121,14 @@ export class Class_ApplicationHistory {
   /** sa#568 — le contexte des gestes, posé par le document principal (cf. `Type_HistoryContext`). */
   public context: Type_HistoryContext | null = null
 
+  /**
+   * sa#568 — avance à chaque entrée posée, annulée ou rétablie. Deux lectures égales disent « rien
+   * ne s'est passé entre les deux » : c'est ce qui permet de fondre un geste continu (un curseur
+   * qu'on fait glisser) en UNE entrée, en remplaçant son rétablissement au lieu d'en empiler une.
+   */
+  protected _stamp = 0
+  public get stamp(): number { return this._stamp }
+
   /** `f`, précédé du retour au contexte où le geste a été fait. */
   protected _inContext(f: () => void): () => void {
     const context = this.context
@@ -171,10 +179,14 @@ export class Class_ApplicationHistory {
    * @param f
    */
   public saveUndo(
-    f: () => void
+    f: () => void,
+    // sa#568 — `false` : l'entrée vise elle-même ce qu'elle défait (un volet, une figure) et n'a pas
+    // à ramener d'abord le volet où le geste a été fait (cf. `Type_HistoryContext`).
+    in_context: boolean = true
   ) {
     this.increaseIndexes()
-    this._transitions_table[this._index_table % history_size].toPrev = this._inContext(f)
+    this._transitions_table[this._index_table % history_size].toPrev = in_context ? this._inContext(f) : f
+    this._stamp += 1
     this._notifyMenus()
   }
 
@@ -183,9 +195,10 @@ export class Class_ApplicationHistory {
    * @param f
    */
   public saveRedo(
-    f: () => void
+    f: () => void,
+    in_context: boolean = true
   ) {
-    this._transitions_table[(this._index_table - 1) % history_size].toNext = this._inContext(f)
+    this._transitions_table[(this._index_table - 1) % history_size].toNext = in_context ? this._inContext(f) : f
     this._notifyMenus()
   }
 
@@ -196,6 +209,7 @@ export class Class_ApplicationHistory {
     if (this.can_undo) {
       this._transitions_table[this._index_table % history_size].toPrev()
       this._index_table = this._index_table - 1
+      this._stamp += 1
       this._notifyMenus()
     }
   }
@@ -207,6 +221,7 @@ export class Class_ApplicationHistory {
     if (this.can_redo) {
       this._transitions_table[this._index_table % history_size].toNext()
       this._index_table = this._index_table + 1
+      this._stamp += 1
       this._notifyMenus()
     }
   }

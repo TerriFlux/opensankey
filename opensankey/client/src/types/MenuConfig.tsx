@@ -62,8 +62,8 @@ import {
   type Type_FigureAttributesConfig, type Type_OptionBag
 } from '../Representations/Figure'
 import {
-  SANKEY_LAYOUT_SETTING_IDS, canShare, figureChangesBySetting, figureFormatSettingsOf, figureSettingOfKey,
-  leaveGroup, mergeInto, partnersOf, readSyncMap
+  SANKEY_LAYOUT_SETTING_IDS, canShare, changedOptionKeys, figureChangesBySetting, figureFormatSettingsOf,
+  figureSettingOfKey, isFigureNature, leaveGroup, mergeInto, partnersOf, readSyncMap
 } from '../Representations/paneSync'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
@@ -417,6 +417,17 @@ export type Type_MainZoneOccupant = {
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
   // au lieu d'en recevoir une copie au moment de sa création.
+}
+/** sa#568 — l'état de la grande zone qu'un geste sur les volets change (cf. `undoableMainZone`). */
+export type Type_MainZoneSnapshot = {
+  occupants: Type_MainZoneOccupant[]
+  detached: string[]
+  maximized: string | null
+  front: string | null
+  active: string | null
+  split: number
+  bottom: number
+  figures: { [id: string]: { [key: string]: Class_Figure } }
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
 /**
@@ -2433,18 +2444,178 @@ export class Class_MenuConfig {
    * découvrait la propagation qu'en ouvrant la suivante. Régler toutes les figures d'une nature
    * se demande désormais, en portée « style » (`setRepresentationStyleOptions`).
    */
-  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
+  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON, record = true): void {
     if (!this.isMainZoneOccupant(id)) return
-    this._assignFigureAndSync(id, pane_key, options as Type_OptionBag)
-    this._notifyMainZone()
+    this._writeFigure(id, pane_key, options as Type_OptionBag, record)
   }
   /**
    * Réglages d'une fenêtre à sujet DIAGRAMME, qui n'a qu'une figure (clé `''`). Même contrat
    * que ci-dessus : sac complet, et rien d'autre que cette figure n'est touché.
    */
-  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
+  public setMainZoneWindowOptions(id: string, options: Type_JSON, record = true): void {
     if (!this.isMainZoneOccupant(id)) return
-    this._assignFigureAndSync(id, FIGURE_DIAGRAM_PANE_KEY, options as Type_OptionBag)
+    this._writeFigure(id, FIGURE_DIAGRAM_PANE_KEY, options as Type_OptionBag, record)
+  }
+
+  // --- sa#568 : les réglages de figure s'ANNULENT -----------------------------------------------
+  //
+  // Alexandre, 03/10 : « toute action effectuée par l'utilisateur doit être annulable, une par
+  // une ». Les réglages de figure n'entraient pas dans l'historique (`figureGesturesHost` le
+  // disait). Toutes les surfaces qui en écrivent — inspecteur, carte « Coordonnées », barre du haut,
+  // clic dans la couronne, glisser d'étiquette — passent par les deux setters ci-dessus : c'est
+  // donc ici que le geste s'inscrit, une fois pour toutes.
+  //
+  // Trois règles :
+  //  - une entrée = UN geste : une écriture qui suit la précédente sur les mêmes clés de la même
+  //    figure, sans rien entre les deux et dans la foulée (un curseur qu'on fait glisser), la
+  //    prolonge au lieu d'en empiler une (cf. `Class_SankeyPanes.undo_recorder`) ; un geste qui
+  //    écrit plusieurs figures (la sélection, « toutes ») n'en fait qu'une (`undoableGroup`) ;
+  //  - seules les FIGURES (une nature qui déclare au moins un réglage de style) s'annulent : les
+  //    onglets du JSON ou le mode de la documentation sont des états d'affichage, pas des actions
+  //    sur le document ;
+  //  - défaire, c'est réécrire le sac d'avant PAR LE MÊME CHEMIN : les volets synchronisés le
+  //    reçoivent comme ils avaient reçu le geste.
+
+  /** Où vont les gestes annulables : posé par le document principal (cf. `Class_SankeyPanes`). */
+  public undo_recorder: ((undo: () => void, redo: () => void, merge_key: string) => void) | null = null
+  protected _undo_group: { undo: () => void, redo: () => void, key: string }[] | null = null
+
+  /** Inscrit un geste annulable (dans le groupe en cours, s'il y en a un). */
+  public recordUndoable(undo: () => void, redo: () => void, merge_key: string): void {
+    if (this._undo_group) { this._undo_group.push({ undo, redo, key: merge_key }); return }
+    this.undo_recorder?.(undo, redo, merge_key)
+  }
+
+  /**
+   * UN GESTE, UNE ENTRÉE : tout ce que `work` inscrit à l'historique n'en fait qu'une, défaite à
+   * rebours et rétablie dans l'ordre. Un groupe dans un groupe se fond dans le premier.
+   */
+  public undoableGroup(work: () => void): void {
+    if (this._undo_group !== null) { work(); return }
+    const group: { undo: () => void, redo: () => void, key: string }[] = []
+    this._undo_group = group
+    try { work() } finally { this._undo_group = null }
+    if (group.length === 0) return
+    if (group.length === 1) { this.undo_recorder?.(group[0].undo, group[0].redo, group[0].key); return }
+    this.undo_recorder?.(
+      () => group.slice().reverse().forEach(g => g.undo()),
+      () => group.forEach(g => g.redo()),
+      group.map(g => g.key).join('|')
+    )
+  }
+
+  // --- sa#568 : les gestes sur les VOLETS s'annulent ---------------------------------------------
+  //
+  // Ouvrir, fermer, déplacer, faire flotter, agrandir, détacher un volet, en changer la nature ou le
+  // sujet, déplacer une séparation : autant d'actions de l'utilisateur, qui s'annulent une par une.
+  //
+  // L'INSCRIPTION SE FAIT AUTOUR DU GESTE, dans l'interface (`undoableMainZone`), et non dans les
+  // méthodes elles-mêmes : le programme les appelle aussi — ouverture d'un fichier, choix d'une vue,
+  // leçon, tableau de bord —, et « annuler » ne doit pas défaire ce que l'utilisateur n'a pas fait.
+  //
+  // Défaire, c'est rendre à la grande zone l'état d'avant le geste : ses volets (place, taille,
+  // sujet, liens de synchronisation…), ce qui est plein écran, détaché, actif, les séparations, et
+  // les FIGURES des volets — les mêmes objets, si bien qu'un volet fermé puis rouvert par
+  // « annuler » retrouve ses réglages. La mise en page d'un volet Sankey fermé est gardée un temps
+  // par `Class_SankeyPanes` (cf. `bury`).
+
+  protected _main_zone_gesture_seq = 0
+
+  /** L'état de la grande zone qu'un geste sur les volets peut changer. */
+  protected _mainZoneSnapshot(): Type_MainZoneSnapshot {
+    const host = this._host
+    const figures: { [id: string]: { [key: string]: Class_Figure } } = {}
+    Object.entries(this._figures).forEach(([id, by_key]) => { figures[id] = { ...by_key } })
+    return {
+      occupants: JSON.parse(JSON.stringify(host._main_zone_occupants)) as Type_MainZoneOccupant[],
+      detached: [...host._main_zone_detached],
+      maximized: host._main_zone_maximized_id,
+      front: host._main_zone_front_id,
+      active: host._main_zone_active_id,
+      split: host._main_zone_split_ratio,
+      bottom: host._main_zone_bottom_px,
+      figures
+    }
+  }
+
+  /** Deux états de la grande zone identiques : même disposition, mêmes figures. */
+  protected _sameMainZoneSnapshot(a: Type_MainZoneSnapshot, b: Type_MainZoneSnapshot): boolean {
+    const plain = (s: Type_MainZoneSnapshot) => JSON.stringify({ ...s, active: null, front: null, figures: null })
+    if (plain(a) !== plain(b)) return false
+    const ids = new Set([...Object.keys(a.figures), ...Object.keys(b.figures)])
+    for (const id of ids) {
+      const fa = a.figures[id] ?? {}
+      const fb = b.figures[id] ?? {}
+      const keys = new Set([...Object.keys(fa), ...Object.keys(fb)])
+      for (const key of keys) if (fa[key] !== fb[key]) return false
+    }
+    return true
+  }
+
+  /** Rend à la grande zone un état d'avant (ou d'après) un geste. */
+  protected _restoreMainZoneSnapshot(s: Type_MainZoneSnapshot): void {
+    const host = this._host
+    host._main_zone_occupants = JSON.parse(JSON.stringify(s.occupants)) as Type_MainZoneOccupant[]
+    host._main_zone_detached = new Set(s.detached)
+    host._main_zone_maximized_id = s.maximized
+    host._main_zone_front_id = s.front
+    host._main_zone_active_id = s.active
+    host._main_zone_split_ratio = s.split
+    host._main_zone_bottom_px = s.bottom
+    host._main_zone_active_pane_key = null
+    host._main_zone_selected_pane_keys = []
+    const figures: { [id: string]: { [key: string]: Class_Figure } } = {}
+    Object.entries(s.figures).forEach(([id, by_key]) => { figures[id] = { ...by_key } })
+    this._figures = figures
+    this._normalizeMainZoneOccupants()
+    this._notifyMainZone()
+  }
+
+  /**
+   * UN GESTE SUR LES VOLETS, ANNULABLE : `work` est le geste ; s'il change la grande zone, il entre
+   * à l'historique comme UNE action. À appeler par l'interface, autour du geste de l'utilisateur.
+   */
+  public undoableMainZone(work: () => void): void {
+    const end = this.beginUndoableMainZone()
+    try { work() } finally { end() }
+  }
+
+  /**
+   * Le même, pour un geste qui DURE (déplacer une séparation) : la photo d'avant est prise au
+   * début, la fonction rendue l'inscrit à la fin — une seule entrée pour tout le geste.
+   */
+  public beginUndoableMainZone(): () => void {
+    if (this.undo_recorder === null) return () => undefined
+    const before = this._mainZoneSnapshot()
+    return () => {
+      const after = this._mainZoneSnapshot()
+      if (this._sameMainZoneSnapshot(before, after)) return
+      this._main_zone_gesture_seq += 1
+      this.recordUndoable(
+        () => this._restoreMainZoneSnapshot(before),
+        () => this._restoreMainZoneSnapshot(after),
+        'main_zone:' + this._main_zone_gesture_seq
+      )
+    }
+  }
+
+  /** Écrit une figure (synchronisation comprise) et inscrit le geste s'il change quelque chose. */
+  protected _writeFigure(id: string, pane_key: string, options: Type_OptionBag, record: boolean): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    const undoable = record && this.undo_recorder !== null && !!o && isFigureNature(this.figureNature(o.representation))
+    const before = undoable ? this.figureOf(id, pane_key).attributes : null
+    this._assignFigureAndSync(id, pane_key, options)
+    if (before) {
+      const after = this.figureOf(id, pane_key).attributes
+      const keys = changedOptionKeys(before, after)
+      if (keys.length > 0) {
+        this.recordUndoable(
+          () => { if (this.isMainZoneOccupant(id)) this._writeFigure(id, pane_key, before, false) },
+          () => { if (this.isMainZoneOccupant(id)) this._writeFigure(id, pane_key, after, false) },
+          `figure:${id}:${pane_key}:${keys.join(',')}`
+        )
+      }
+    }
     this._notifyMainZone()
   }
 
@@ -2532,7 +2703,7 @@ export class Class_MenuConfig {
     if (!o) return []
     if (isSankeyPane(o)) return [...SANKEY_LAYOUT_SETTING_IDS]
     const nature = this.figureNature(o.representation)
-    if (!nature.declared_keys.some(k => nature.sortOf(k) === 'style')) return []
+    if (!isFigureNature(nature)) return []
     return figureFormatSettingsOf(nature)
   }
 
@@ -2682,9 +2853,22 @@ export class Class_MenuConfig {
    * Les figures qui n'ont rien surchargé suivent immédiatement, celles qui ont surchargé gardent
    * leur surcharge : c'est la cascade des éléments, et rien n'est recopié nulle part.
    */
-  public setRepresentationStyleOptions(nature_id: string, options: Type_OptionBag): string[] {
+  public setRepresentationStyleOptions(nature_id: string, options: Type_OptionBag, record = true): string[] {
     const nature = this.figureNature(nature_id)
+    // sa#568 — régler le style d'une nature s'annule comme régler une figure.
+    const before = record && this.undo_recorder !== null ? nature.styleBag(nature.default_style) : null
     const refused = nature.assignStyle(nature.default_style, options)
+    if (before) {
+      const after = nature.styleBag(nature.default_style)
+      const keys = changedOptionKeys(before, after)
+      if (keys.length > 0) {
+        this.recordUndoable(
+          () => { this.setRepresentationStyleOptions(nature_id, before, false) },
+          () => { this.setRepresentationStyleOptions(nature_id, after, false) },
+          `style:${nature_id}:${keys.join(',')}`
+        )
+      }
+    }
     this._notifyMainZone()
     return refused
   }

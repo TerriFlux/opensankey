@@ -2348,9 +2348,10 @@ export class Class_ApplicationData {
     modes_by_pane.forEach((modes, pane) => this._sankey_panes.alignLayout(source_id, pane, modes))
     // Les volets cochés montrent désormais la même chose : c'est l'état de référence du prochain geste.
     if (linked) this._sankey_panes.markShared()
+    // Hors contexte : l'entrée vise elle-même les volets qu'elle défait (cf. `Type_HistoryContext`).
     if (linked && undo) {
-      this.history.saveUndo(undo)
-      this.history.saveRedo(() => { this.linkMainZonePanes(id, source_id, list, false) })
+      this.history.saveUndo(undo, false)
+      this.history.saveRedo(() => { this.linkMainZonePanes(id, source_id, list, false) }, false)
     }
     return linked
   }
@@ -2391,8 +2392,8 @@ export class Class_ApplicationData {
     this.history.saveUndo(() => {
       mc.restoreMainZoneSyncSnapshot(before)
       this._sankey_panes.markShared()
-    })
-    this.history.saveRedo(() => { this.unlinkMainZonePanes(id, list, false) })
+    }, false)
+    this.history.saveRedo(() => { this.unlinkMainZonePanes(id, list, false) }, false)
   }
 
   /**

@@ -247,3 +247,106 @@ describe('sa#568 les figures partagent leur mise en forme', () => {
     expect(mc.mainZoneOccupantById(id as string)?.sync).toEqual(form['sync'])
   })
 })
+
+describe('sa#568 toute action sur une figure ou un volet s\'annule, une par une', () => {
+  const VIEW = 'test.figure.sync.view'
+  // Une nature SANS réglage de style (un onglet, un mode) : un état d'affichage, pas une figure.
+  const VIEW_ENTRY = {
+    id: VIEW, scale: 'diagram', order: 97, label: () => 'View',
+    attributes: { tab: attr('navigation', 'a') }, draw: () => undefined
+  }
+  beforeAll(() => {
+    representation_registry.register(DONUT_ENTRY as never)
+    representation_registry.register(VIEW_ENTRY as never)
+  })
+  afterAll(() => {
+    representation_registry.unregister(NATURE)
+    representation_registry.unregister(VIEW)
+  })
+
+  /** Un document principal dont l'historique reçoit les gestes (cf. `Class_SankeyPanes.undo_recorder`). */
+  const makeApp = () => {
+    const app = new Class_ApplicationData(false)
+    app.sankey_panes.sync()
+    return { app, mc: app.menu_configuration }
+  }
+
+  it('un réglage de figure s\'annule et se rétablit', () => {
+    const { app, mc } = makeApp()
+    const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, undefined, undefined, true)
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    expect(app.history.can_undo).toBe(true)
+    app.history.applyUndo()
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('percent')
+    app.history.applyRedo()
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('value')
+  })
+
+  it('un geste continu sur un même réglage ne fait qu\'une action ; deux réglages, deux actions', () => {
+    const { app, mc } = makeApp()
+    const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, undefined, undefined, true)
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'normalized' })
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'normalized', legend_visible: false })
+    app.history.applyUndo()
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').legend_visible).toBe(true)
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('normalized')
+    app.history.applyUndo()
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('percent')
+  })
+
+  it('un réglage posé sur plusieurs figures d\'un geste s\'annule d\'un coup', () => {
+    const { app, mc } = makeApp()
+    const a = mc.openMainZoneWindow({ kind: 'elements', ids: ['n1', 'n2'], keys: ['n1', 'n2'] }, NATURE, undefined, undefined, true)
+    mc.undoableGroup(() => {
+      mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+      mc.setMainZonePaneOptions(a, 'n2', { value_mode: 'value' })
+    })
+    app.history.applyUndo()
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('percent')
+    expect(mc.mainZonePaneOptionsOf(a, 'n2').value_mode).toBe('percent')
+  })
+
+  it('un état d\'affichage (onglet, mode) n\'entre pas à l\'historique', () => {
+    const { app, mc } = makeApp()
+    const v = mc.openMainZoneWindow({ kind: 'diagram' }, VIEW, undefined, undefined, true)
+    mc.setMainZoneWindowOptions(v, { tab: 'b' })
+    expect(app.history.can_undo).toBe(false)
+  })
+
+  it('le style d\'une nature s\'annule', () => {
+    const { app, mc } = makeApp()
+    mc.setRepresentationStyleOptions(NATURE, { value_mode: 'value', legend_visible: true })
+    expect(mc.representationStyleOptions(NATURE).value_mode).toBe('value')
+    app.history.applyUndo()
+    expect(mc.representationStyleOptions(NATURE).value_mode).toBe('percent')
+  })
+
+  it('fermer un volet s\'annule : il revient avec ses réglages', () => {
+    const { app, mc } = makeApp()
+    const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, undefined, undefined, true)
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    mc.undoableMainZone(() => mc.hideMainZoneOccupant(a))
+    expect(mc.isMainZoneOccupant(a)).toBe(false)
+    app.history.applyUndo()
+    expect(mc.isMainZoneOccupant(a)).toBe(true)
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('value')
+    app.history.applyRedo()
+    expect(mc.isMainZoneOccupant(a)).toBe(false)
+  })
+
+  it('ouvrir ou déplacer un volet s\'annule ; un geste qui ne change rien n\'entre pas', () => {
+    const { app, mc } = makeApp()
+    let a = ''
+    mc.undoableMainZone(() => { a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, 'right', undefined, true) })
+    mc.undoableMainZone(() => mc.setMainZoneOccupantPlace(a, 'bottom'))
+    expect(mc.mainZoneOccupantById(a)?.place).toBe('bottom')
+    app.history.applyUndo()
+    expect(mc.mainZoneOccupantById(a)?.place).toBe('right')
+    app.history.applyUndo()
+    expect(mc.isMainZoneOccupant(a)).toBe(false)
+    expect(app.history.can_undo).toBe(false)
+    mc.undoableMainZone(() => undefined)
+    expect(app.history.can_undo).toBe(false)
+  })
+})
