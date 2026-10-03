@@ -27,7 +27,7 @@ import { FaChartPie, FaChartBar } from 'react-icons/fa'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
-  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells,
+  drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells, smallMultipleCentrePlan,
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
@@ -365,6 +365,9 @@ const smallMultiplesOf = (
   return members.length > 0 ? { dimension, members } : null
 }
 
+/** En deçà, le tracé à anneaux ne dessine pas (cf. `drawSunburstChart`) : une petite case est réduite. */
+const SUNBURST_MIN_SIDE_PX = 120
+
 /** Au-delà, la liste des cases repliées dans « Autres » s'arrête sur « … (+N) ». */
 const OTHERS_CELL_TITLE_MAX = 12
 
@@ -380,6 +383,50 @@ const navAtMember = (nav: Type_FigureNavigation, member: Class_DataTag): Type_Fi
   ...nav,
   data_tags: [...(nav.data_tags ?? []).filter(tag => tag.group.id !== member.group.id), member]
 })
+
+/**
+ * 03/10/2026 — UNE PETITE COURONNE EN SUNBURST (Julien : « le mode sunburst ne marche pas si l'autre
+ * dimension est en mode une couronne par membre »). Le dessin et les petits multiples sont deux
+ * réglages indépendants : chaque case dessine les dimensions qui découpent comme la couronne seule,
+ * un anneau par niveau en sunburst. `null` quand la figure se dessine en secteurs. Plusieurs membres
+ * (la case « Autres ») : la figure lue sur leur réunion.
+ */
+const smallMultipleRingsTree = (
+  ctx: Type_RepresentationContext, members: Class_DataTag[], name: string
+): Type_SunburstTree | null => {
+  const a = analysisOf(ctx)
+  if (!a || members.length === 0) return null
+  const group_id = members[0].group.id
+  const nav: Type_FigureNavigation = {
+    ...a.nav, data_tags: [...(a.nav.data_tags ?? []).filter(tag => tag.group.id !== group_id), ...members]
+  }
+  const tree = ringsTreeOf(ctx, { ...a, nav }, hierarchyReadingOf(ctx), expandedOf(ctx.options))
+  // UN SEUL ANNEAU (un niveau affiché) : c'est le dessin des secteurs, et la petite couronne garde le sien.
+  if (tree === null || tree.rings.length <= 2) return null
+  // Le centre de la case nomme son membre, comme celui d'une petite couronne en secteurs.
+  return { ...tree, roots: tree.roots.map(r => ({ ...r, label: name })) }
+}
+
+/**
+ * 03/10/2026 — LES FEUILLES D'UNE PETITE COURONNE EN SUNBURST, pour la légende commune : chacune avec
+ * ses ancêtres dessinés (centre exclu), de quoi la poser en arbre, une filière en en-tête et ses
+ * produits en retrait (`donutLegendRows`), comme la légende de la couronne seule.
+ */
+const sunburstLegendLeaves = (tree: Type_SunburstTree): Type_StatSlice[] => {
+  const out: Type_StatSlice[] = []
+  const walk = (node: Type_SunburstTree['roots'][number], ancestors: { id: string, label: string }[]) => {
+    if (node.children.length === 0) {
+      out.push({
+        id: node.id, label: node.label, value: node.value, ...(node.color ? { color: node.color } : {}),
+        ...(ancestors.length > 0 ? { ancestors, depth: ancestors.length, parent_label: ancestors[ancestors.length - 1].label } : {})
+      })
+      return
+    }
+    node.children.forEach(c => walk(c, [...ancestors, { id: node.id, label: node.label }]))
+  }
+  tree.roots.forEach(root => root.children.forEach(c => walk(c, [])))
+  return out
+}
 
 /** Les parts d'UNE petite couronne : la figure lue au membre. */
 const smallMultipleSlices = (
@@ -437,10 +484,11 @@ const analysisPartsOf = (ctx: Type_RepresentationContext): Type_PartInput[] | nu
  * 02/10/2026 — LA FIGURE SE DESSINE-T-ELLE EN ANNEAUX, et avec quelle lecture ? `null` : en place.
  *
  * Couronne de NŒUDS (ou croisement) : le réglage commun `levels_display`, comme hier. Couronne sur
- * DIMENSIONS DE DONNÉES : chaque dimension a sa disposition (`dataDimensionLevelsDisplay` : la sienne,
- * sinon le réglage commun seule, secteurs à plusieurs) ; la figure passe en anneaux dès qu'une dimension qui
- * découpe est en sunburst, ou que plusieurs découpent, et celles en secteurs y replient leurs niveaux
- * (`foldInPlaceLevels`). Une seule dimension, en secteurs : la couronne en place, un seul anneau.
+ * DIMENSIONS DE DONNÉES : le même réglage, commun à toutes ses dimensions depuis le 03/10/2026
+ * (`dataDimensionLevelsDisplay` : sans réglage, en secteurs). La figure passe
+ * en anneaux en sunburst, ou dès que plusieurs dimensions découpent : en secteurs, chacune y replie
+ * ses niveaux dans le sien (`foldInPlaceLevels`). Une seule dimension, en secteurs : la couronne en
+ * place, un seul anneau.
  */
 const ringsReadingOf = (
   ctx: Type_RepresentationContext,
@@ -453,15 +501,13 @@ const ringsReadingOf = (
   const cut = analysisDataCutOf(a.subject, decompose, reading)
   if (cut === null) return null
   const count = cut.dividing.length
-  const modeOf = (id: string) => dataDimensionLevelsDisplay(levels, count, id)
+  const mode = dataDimensionLevelsDisplay(levels)
   // Rien ne découpe : un seul secteur, que seul le réglage commun peut demander en anneau.
-  // 03/10/2026 — plusieurs dimensions découpent : toujours en anneaux, un par dimension au moins.
-  // Toutes en secteurs, `foldInPlaceLevels` replie chacune dans le sien (la frontière entre deux
-  // dimensions garde son anneau) : n dimensions, n anneaux — plus l'anneau unique du produit cartésien.
-  const any_rings = count === 0
-    ? levels.common === 'rings'
-    : count > 1 || cut.dividing.some(d => modeOf(d.id) === 'rings')
-  return any_rings ? { ...reading, levels_display_of: modeOf } : null
+  // Plusieurs dimensions découpent : toujours en anneaux, un par dimension au moins. En secteurs,
+  // `foldInPlaceLevels` replie chacune dans le sien (la frontière entre deux dimensions garde son
+  // anneau) : n dimensions, n anneaux.
+  const any_rings = count === 0 ? levels.common === 'rings' : count > 1 || mode === 'rings'
+  return any_rings ? { ...reading, levels_display_of: () => mode } : null
 }
 
 /** L'arbre à dessiner en anneaux, ou `null` quand la figure est « en place » (ou à plat). */
@@ -1273,7 +1319,12 @@ export const registerAnalysisRepresentations = (): void => {
       const split = smallMultiplesOf(ctx)
       if (split) {
         const union = new Map<string, Type_PartInput>()
-        split.members.forEach(member => smallMultipleSlices(ctx, member).forEach(part => {
+        // En sunburst, les parts de chaque case sont tout son arbre (cf. `analysisPartsOf`).
+        const partsAt = (member: Class_DataTag): Type_PartInput[] => {
+          const tree = smallMultipleRingsTree(ctx, [member], member.name)
+          return tree ? sunburstPartInputs(ctx.app_data.drawing_area.sankey, tree) : smallMultipleSlices(ctx, member)
+        }
+        split.members.forEach(member => partsAt(member).forEach(part => {
           const seen = union.get(part.id)
           union.set(part.id, seen ? { ...seen, value: (seen.value ?? 0) + (part.value ?? 0) } : part)
         }))
@@ -1336,7 +1387,7 @@ export const registerAnalysisRepresentations = (): void => {
         const measured = split.members.map(member => {
           const slices = smallMultipleSlices(ctx, member)
             .map(p => ({ ...(by_id.get(p.id) ?? p), value: p.value ?? 0 }) as Type_StatSlice)
-          return { name: member.name, slices, value: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
+          return { name: member.name, member, slices, value: slices.reduce((s, p) => s + Math.max(0, p.value), 0) }
         })
         // 02/10/2026 — LA COURONNE « AUTRES » (Julien : « selon le même principe que Autres pour les
         // bandes ou les parts »). Les petites cases se replient par la règle des parts, avec les
@@ -1354,8 +1405,9 @@ export const registerAnalysisRepresentations = (): void => {
           },
           value => !(value > 0) || fmt(value) === fmt(0)
         )
-        const per_member: { name: string, slices: Type_StatSlice[], total: number, folded_names?: string[] }[] =
-          shown.map(m => ({ name: m.name, slices: m.slices, total: m.value }))
+        const per_member: {
+          name: string, members: Class_DataTag[], slices: Type_StatSlice[], total: number, folded_names?: string[]
+        }[] = shown.map(m => ({ name: m.name, members: [m.member], slices: m.slices, total: m.value }))
         if (folded.length > 0) {
           const sum = new Map<string, Type_StatSlice>()
           folded.forEach(m => m.slices.forEach(s => {
@@ -1365,6 +1417,7 @@ export const registerAnalysisRepresentations = (): void => {
           const slices = [...sum.values()]
           per_member.push({
             name: t('sunburst.others') as string,
+            members: folded.map(m => m.member),
             slices,
             total: slices.reduce((s, p) => s + Math.max(0, p.value), 0),
             folded_names: folded.map(m => m.name)
@@ -1388,10 +1441,63 @@ export const registerAnalysisRepresentations = (): void => {
         const union_order = orderParts([...union.values()], style.parts_order)
         const colors = donutPartColors(union_order, style)
         const drawn: Type_StatSlice[][] = []
-        per_member.forEach(({ name, slices, folded_names }, i) => {
+        const teardowns: (() => void)[] = []
+        /** En sunburst, l'ordre de la légende est celui de l'arbre : chaque filière groupe ses produits. */
+        const tree_order: string[] = []
+        per_member.forEach(({ name, members, slices, folded_names }, i) => {
           const { cell, radius_px, box, callout_gap_px } = cells[i]
           // La case « Autres » dit qui elle réunit, au survol de son centre (liste tronquée).
           if (folded_names) cell.title = othersCellTitle(name, folded_names)
+          // 03/10/2026 — EN SUNBURST, la case dessine ses anneaux (un par niveau affiché), centrée
+          // sur la place que l'échelle commune lui donne ; ses arcs se nomment eux-mêmes.
+          const tree = smallMultipleRingsTree(ctx, members, name)
+          if (tree) {
+            const leaves = sunburstLegendLeaves(tree)
+            drawn.push(leaves)
+            leaves.forEach(l => { if (!tree_order.includes(l.id)) tree_order.push(l.id) })
+            // Le tracé à anneaux ne dessine pas sous 120 px : une petite case le dessine à 120 px
+            // et le réduit à sa place, pour que l'aire dise toujours le total à l'échelle commune.
+            const side = Math.max(1, Math.round(2 * radius_px + 8))
+            const drawn_side = Math.max(side, SUNBURST_MIN_SIDE_PX)
+            const disc = document.createElement('div')
+            disc.style.position = 'absolute'
+            disc.style.width = `${drawn_side}px`
+            disc.style.height = `${drawn_side}px`
+            disc.style.left = `${Math.round(-box.x0 - drawn_side / 2)}px`
+            disc.style.top = `${Math.round(-box.y0 - drawn_side / 2)}px`
+            if (drawn_side > side) disc.style.transform = `scale(${side / drawn_side})`
+            cell.style.overflow = 'visible'
+            cell.appendChild(disc)
+            const drawSunburstCell = () => drawSunburstChart(disc, tree, {
+              parts: wiring.by_id,
+              on_part_select: wiring.on_part_select,
+              branch_color: paletteColor,
+              style: {
+                ...readSunburstStyle(ctx.options ?? {}),
+                color_source: style.parts_color_source,
+                depth_shading: style.parts_depth_shading,
+                labels_min_share: style.labels_min_share,
+                legend_visible: false,
+                click_action: 'aggregate'
+              },
+              texts: () => [],
+              unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
+              unit_factor: unitFactorOfSubject(chartSubjectOf(ctx.element), ctx.app_data),
+              empty_label: t('sunburst.empty') as string,
+              others_label: t('sunburst.others') as string,
+              truncated_label: t('sunburst.truncated') as string,
+              level_label: (index: number) => t('sunburst.level', { index }) as string,
+              centre_plan: smallMultipleCentrePlan,
+              display_scale: side / drawn_side,
+              bare: true,
+              on_arc_click: (
+                node_id: string, _is: boolean, _dim: string, path: string[],
+                gesture?: { shift: boolean, alt?: boolean }
+              ) => gestures.activate?.(node_id, { shift: gesture?.shift === true, alt: gesture?.alt === true }, path)
+            })
+            teardowns.push(drawSunburstCell())
+            return
+          }
           drawDonutChart(cell, slices, {
             ...base,
             style,
@@ -1424,9 +1530,10 @@ export const registerAnalysisRepresentations = (): void => {
             }
           })
         })
-        drawSmallMultiplesLegend(
-          legend, grid, smallMultiplesLegendEntries(union_order.map(s => s.id), drawn), colors, style)
+        drawSmallMultiplesLegend(legend, grid, smallMultiplesLegendEntries(
+          tree_order.length > 0 ? tree_order : union_order.map(s => s.id), drawn), colors, style)
         return () => {
+          teardowns.forEach(f => f())
           publishFigureZoom(ctx.window_id, ctx.pane_key, null)
           container.innerHTML = ''
         }
@@ -1487,6 +1594,8 @@ export const registerAnalysisRepresentations = (): void => {
           truncated_label: t('sunburst.truncated') as string,
           back_label: t('sunburst.back') as string,
           level_label: (index: number) => t('sunburst.level', { index }) as string,
+          // 03/10/2026 — le nom au centre suit la règle des petites couronnes (réduit, deux lignes).
+          centre_plan: smallMultipleCentrePlan,
           // LE MÊME GESTE QUE DANS L'ANNEAU UNIQUE, et c'est ce qui fait que les deux modes sont
           // une seule figure : un clic déplie, shift+clic replie (cf. `donutClickGestures`).
           //

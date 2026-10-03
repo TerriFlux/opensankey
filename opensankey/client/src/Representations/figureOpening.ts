@@ -176,60 +176,43 @@ export const readFigureDataLayer = (options: Type_Options | null | undefined): b
 export const withFigureDataLayer = (options: Type_Options, layer: Type_FigureDataLayer | undefined): Type_Options =>
   ({ ...options, [DATA_LAYER_KEY]: layer })
 
-// ── 02/10/2026 — LA DISPOSITION DES NIVEAUX, PAR DIMENSION (os#1511) ────────────────────────────
+// ── LA DISPOSITION DES NIVEAUX (os#1511) ────────────────────────────────────────────────────────
 //
-// Julien : « filières en sunburst emboîtées sous pays en secteurs ». La disposition des niveaux était
-// UN réglage de la figure (`levels_display`) ; sur une couronne qui découpe par dimensions de données,
-// chacune a désormais la sienne (`levels_display_by`). Une dimension sans entrée suit le réglage
-// commun — c'est lui qu'une couronne enregistrée porte, et elle s'ouvre donc à l'identique. Sur une
-// couronne de NŒUDS (pas de dimension de données), seul le réglage commun compte.
+// 02/10/2026, sa!841 : chaque dimension de données avait sa disposition (`levels_display_by`).
+// 03/10/2026 — RETOUR À UN RÉGLAGE COMMUN. Julien : « si on ne garde que ces 3 options, ce sont des
+// options pour toutes les dimensions ». La figure se dessine en secteurs, en sunburst ou en petits
+// multiples ; l'emboîtement (quelle dimension à l'intérieur, laquelle fait les cases) suit l'ordre
+// des dimensions dans la barre du haut, que règle le ⇄. `levels_display_by` n'est plus écrit : un
+// fichier qui le porte est lu une fois (une entrée en sunburst → la figure en sunburst).
 
 export type Type_LevelsDisplay = 'in_place' | 'rings'
 
 export interface Type_FigureLevelsDisplay {
-  /** Le réglage commun d'hier, défaut de toute dimension sans entrée. */
-  common: Type_LevelsDisplay
-  by: { readonly [dimension_id: string]: Type_LevelsDisplay }
+  /** Le réglage commun, `undefined` quand le sac ne le dit pas (ni par l'ancienne clé par dimension). */
+  common: Type_LevelsDisplay | undefined
 }
 
 const asLevelsDisplay = (v: unknown): Type_LevelsDisplay | undefined =>
   v === 'rings' || v === 'in_place' ? v : undefined
 
-/** La disposition des niveaux, lue sur le sac de réglages. */
+/** La disposition des niveaux, lue sur le sac de réglages (l'ancienne clé par dimension comprise). */
 export const readFigureLevelsDisplay = (options: Type_Options | null | undefined): Type_FigureLevelsDisplay => {
-  const by: { [dimension_id: string]: Type_LevelsDisplay } = {}
+  const common = asLevelsDisplay(options?.['levels_display'])
+  if (common !== undefined) return { common }
   const raw = options?.[LEVELS_DISPLAY_BY_KEY]
-  if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
-    Object.entries(raw as Type_Options).forEach(([id, v]) => {
-      const mode = asLevelsDisplay(v)
-      if (mode !== undefined) by[id] = mode
-    })
-  }
-  return { common: asLevelsDisplay(options?.['levels_display']) ?? 'in_place', by }
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { common: undefined }
+  const modes = Object.values(raw as Type_Options).map(asLevelsDisplay).filter(m => m !== undefined)
+  if (modes.length === 0) return { common: undefined }
+  return { common: modes.includes('rings') ? 'rings' : 'in_place' }
 }
 
-/** La disposition d'UNE dimension : la sienne, sinon le réglage commun. */
-export const levelsDisplayOfDimension = (levels: Type_FigureLevelsDisplay, dimension_id: string): Type_LevelsDisplay =>
-  levels.by[dimension_id] ?? levels.common
-
 /**
- * 03/10/2026 — LA DISPOSITION PAR DÉFAUT DÉPEND DU NOMBRE DE DIMENSIONS QUI DÉCOUPENT (os#1511).
- * Julien : « le sunburst complet quand on travaille sur une seule dimension, et seulement deux
- * anneaux quand on travaille sur deux dimensions (éventuellement n) ». Puis, même jour : « le mode
- * sunburst ne doit pas être celui sélectionné par défaut ». Une dimension sans entrée PROPRE se
- * dispose donc en secteurs (un anneau pour elle) dès qu'elles sont plusieurs ; seule, elle suit le
- * réglage commun, en place par défaut — le sunburst complet se demande dans « Dessiner ». Le choix
- * explicite de « Dessiner » garde le dernier mot.
+ * LA DISPOSITION QUE DESSINE UNE COURONNE DE DIMENSIONS DE DONNÉES : le réglage écrit, sinon en
+ * secteurs (Julien, 03/10 : « le mode sunburst ne doit pas être celui sélectionné par défaut »).
  */
-export const dataDimensionLevelsDisplay = (
-  levels: Type_FigureLevelsDisplay, dividing_count: number, dimension_id: string
-): Type_LevelsDisplay =>
-  levels.by[dimension_id] ?? (dividing_count > 1 ? 'in_place' : levels.common)
+export const dataDimensionLevelsDisplay = (levels: Type_FigureLevelsDisplay): Type_LevelsDisplay =>
+  levels.common ?? 'in_place'
 
-/** Le sac où la dimension `dimension_id` se dispose en `mode` ; les autres clés intactes. */
-export const withDimensionLevelsDisplay = (
-  options: Type_Options, dimension_id: string, mode: Type_LevelsDisplay
-): Type_Options => ({
-  ...options,
-  [LEVELS_DISPLAY_BY_KEY]: { ...readFigureLevelsDisplay(options).by, [dimension_id]: mode }
-})
+/** Le sac où la figure se dispose en `mode` ; l'ancienne clé par dimension s'en va. */
+export const withLevelsDisplay = (options: Type_Options, mode: Type_LevelsDisplay): Type_Options =>
+  ({ ...options, levels_display: mode, [LEVELS_DISPLAY_BY_KEY]: undefined })

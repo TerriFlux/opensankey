@@ -1,46 +1,39 @@
 import {
-  dataDimensionLevelsDisplay, levelsDisplayOfDimension, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withDimensionLevelsDisplay,
-  withElementOpening, withFigureOpening
+  dataDimensionLevelsDisplay, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withElementOpening,
+  withFigureOpening, withLevelsDisplay
 } from './figureOpening'
 
-// 02/10/2026 — LA DISPOSITION DES NIVEAUX PAR DIMENSION : l ancien reglage commun sert de defaut.
-describe('os#1511 — disposition des niveaux par dimension', () => {
-  test('une couronne d avant, en anneaux : toute dimension sans entree est en anneaux', () => {
-    const l = readFigureLevelsDisplay({ levels_display: 'rings' })
-    expect(l).toEqual({ common: 'rings', by: {} })
-    expect(levelsDisplayOfDimension(l, 'pays')).toBe('rings')
+// 03/10/2026 — LA DISPOSITION DES NIVEAUX REDEVIENT COMMUNE (os#1511) : en secteurs ou en sunburst,
+// pour toutes les dimensions. `levels_display_by` (sa!841) n est plus ecrit, il se lit une fois.
+describe('os#1511 — disposition des niveaux commune', () => {
+  test('le reglage commun se lit tel quel', () => {
+    expect(readFigureLevelsDisplay({ levels_display: 'rings' })).toEqual({ common: 'rings' })
+    expect(readFigureLevelsDisplay({ levels_display: 'in_place' })).toEqual({ common: 'in_place' })
   })
-  test('un sac vide : en place, partout', () => {
-    expect(levelsDisplayOfDimension(readFigureLevelsDisplay({}), 'pays')).toBe('in_place')
+  test('un sac vide ne dit rien', () => {
+    expect(readFigureLevelsDisplay({})).toEqual({ common: undefined })
   })
-  test('une entree par dimension prime sur le reglage commun ; une valeur inconnue est ignoree', () => {
-    const l = readFigureLevelsDisplay({ levels_display: 'rings', levels_display_by: { pays: 'in_place', x: 'spiral' } })
-    expect(levelsDisplayOfDimension(l, 'pays')).toBe('in_place')
-    expect(levelsDisplayOfDimension(l, 'filiere')).toBe('rings')
-    expect(l.by).toEqual({ pays: 'in_place' })
+  test('l ancienne cle par dimension : une entree en sunburst met la figure en sunburst', () => {
+    expect(readFigureLevelsDisplay({ levels_display_by: { pays: 'in_place', produit: 'rings' } })).toEqual({ common: 'rings' })
+    expect(readFigureLevelsDisplay({ levels_display_by: { pays: 'in_place', x: 'spiral' } })).toEqual({ common: 'in_place' })
   })
-  test('ecrire une dimension garde les autres et le reglage commun', () => {
-    const o = withDimensionLevelsDisplay({ levels_display: 'in_place', levels_display_by: { pays: 'in_place' } }, 'filiere', 'rings')
-    expect(o).toEqual({ levels_display: 'in_place', levels_display_by: { pays: 'in_place', filiere: 'rings' } })
+  test('le reglage commun prime sur l ancienne cle', () => {
+    expect(readFigureLevelsDisplay({ levels_display: 'in_place', levels_display_by: { produit: 'rings' } }))
+      .toEqual({ common: 'in_place' })
+  })
+  test('ecrire la disposition retire l ancienne cle', () => {
+    expect(withLevelsDisplay({ levels_display_by: { produit: 'rings' }, x: 1 }, 'in_place'))
+      .toEqual({ levels_display: 'in_place', levels_display_by: undefined, x: 1 })
   })
 })
 
-// 03/10/2026 — LE DEFAUT SUIT LE NOMBRE DE DIMENSIONS QUI DECOUPENT : en place seule (le sunburst
-// n est pas le defaut), un anneau chacune a plusieurs. Le choix explicite de « Dessiner » prime.
-describe('os#1511 — disposition par defaut selon le nombre de dimensions', () => {
-  test('une seule dimension decoupe : en place par defaut, le sunburst se demande', () => {
-    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({}), 1, 'produit')).toBe('in_place')
-    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({ levels_display: 'rings' }), 1, 'produit')).toBe('rings')
+// Sans reglage, en secteurs (« le mode sunburst ne doit pas etre celui selectionne par defaut »).
+describe('os#1511 — disposition par defaut', () => {
+  test('sans reglage : en secteurs', () => {
+    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({}))).toBe('in_place')
   })
-  test('deux dimensions ou plus : un anneau par dimension, meme si le reglage commun dit en anneaux', () => {
-    const l = readFigureLevelsDisplay({ levels_display: 'rings' })
-    expect(dataDimensionLevelsDisplay(l, 2, 'produit')).toBe('in_place')
-    expect(dataDimensionLevelsDisplay(l, 3, 'pays')).toBe('in_place')
-  })
-  test('une entree propre a la dimension prime sur la regle', () => {
-    const l = readFigureLevelsDisplay({ levels_display_by: { produit: 'rings', pays: 'in_place' } })
-    expect(dataDimensionLevelsDisplay(l, 2, 'produit')).toBe('rings')
-    expect(dataDimensionLevelsDisplay(l, 1, 'pays')).toBe('in_place')
+  test('le reglage ecrit l emporte', () => {
+    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({ levels_display: 'rings' }))).toBe('rings')
   })
 })
 

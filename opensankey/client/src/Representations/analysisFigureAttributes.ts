@@ -157,6 +157,9 @@ export const smallMultiplesAttribute = () => figureAttribute<string | undefined>
  * secteurs, les enfants remplacent leur parent dans l'anneau de la dimension) ou `'rings'` (en
  * sunburst, un anneau par niveau). Une dimension absente suit `levels_display`, le réglage commun
  * d'hier : une couronne enregistrée s'ouvre à l'identique. Lue et écrite par `figureOpening` seul.
+ *
+ * 03/10/2026 — PLUS ÉCRITE : la disposition redevient commune (`levels_display`). La clé reste
+ * déclarée pour lire les fichiers qui la portent (cf. `readFigureLevelsDisplay`).
  */
 export const LEVELS_DISPLAY_BY_KEY = 'levels_display_by'
 export const levelsDisplayByAttribute = () => figureAttribute<{ [dimension_id: string]: 'in_place' | 'rings' } | undefined>(

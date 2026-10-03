@@ -274,13 +274,22 @@ export const dimensionDivides = (dim: Class_DataTagGroup, opened: ReadonlySet<st
 }
 
 /**
- * 02/10/2026 — LA DIMENSION A-T-ELLE DES NIVEAUX À DISPOSER ? Au moins un membre par lequel on y
- * entre (`entryOf`) a des enfants. Sans cela « en sunburst » et « en secteurs » dessinent pareil.
+ * 03/10/2026 — LA DIMENSION AFFICHE-T-ELLE PLUS D'UN NIVEAU ? (os#1511) Julien : « le dessin est en
+ * secteurs et la sélection en sunburst ». Avoir des niveaux ne suffit pas : en sunburst, la couronne
+ * montre la hiérarchie depuis l'entrée de la dimension jusqu'aux membres AFFICHÉS, et des membres
+ * tous au premier niveau (les filières seules) ne font qu'un anneau — le dessin des secteurs. Il en
+ * faut un sous l'entrée (sous la racine unique, sautée, ou sous les racines).
+ *
+ * Les membres affichés sont ceux que la figure lit : LIÉE, ce que le diagramme montre ; DÉTACHÉE,
+ * la frontière de ses ouverts moins ses décochés.
  */
-export const dimensionHasNestedLevels = (dim: Class_DataTagGroup): boolean => {
-  const roots = dimensionRootsOf(dim)
-  const entry = roots.length === 1 ? (roots[0].children as Class_DataTag[]) : roots
-  return entry.some(m => m.children.length > 0)
+export const dimensionShowsSeveralLevels = (dim: Class_DataTagGroup, opening: Type_DataOpening): boolean => {
+  const entry_depth = dimensionRootsOf(dim).length === 1 ? 1 : 0
+  const shown = opening.linked
+    ? dim.selected_tags_list as Class_DataTag[]
+    : selectionFromOpening(dim, new Set(opening.opened?.[dim.id] ?? []), new Set(opening.hidden?.[dim.id] ?? []))
+      .map(id => dim.tags_dict[id] as Class_DataTag)
+  return shown.some(m => m !== undefined && dim.depthOf(m) > entry_depth)
 }
 
 /** Les membres ouverts d'UNE dimension, en identifiants de membre, lus sur une coupe. */

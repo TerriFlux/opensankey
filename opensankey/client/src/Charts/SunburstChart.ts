@@ -486,6 +486,27 @@ export interface Type_SunburstChartOptions {
   /** Le point de vue au montage, et chaque changement : de quoi le retrouver après un remontage. */
   initial_view?: Type_FigureView | null
   on_view?: (view: Type_FigureView) => void
+  /**
+   * 03/10/2026 — LA RÈGLE DU NOM AU CENTRE (os#1511), celle des petites couronnes
+   * (`smallMultipleCentrePlan`) : le nom réduit jusqu'au plancher lisible, puis sur deux lignes ; en
+   * dernier recours le nom AU-DESSUS du disque et la valeur DESSOUS. INJECTÉE (elle vit avec la
+   * couronne à plat, qui importe déjà ce module) ; absente, le centre d'hier.
+   */
+  centre_plan?: (name: string, value_text: string | null, inner: number) => {
+    name: { lines: string[], size: number, above: boolean }
+    value: { size: number, below: boolean } | null
+  }
+  /**
+   * 03/10/2026 — L'ÉCHELLE À LAQUELLE LE DISQUE SERA VU : une petite case le dessine à 120 px et le
+   * réduit. La règle du centre se calcule sur le trou VU, et ses tailles se compensent.
+   */
+  display_scale?: number
+  /**
+   * 03/10/2026 — UNE CASE DE PETITS MULTIPLES : pas de fond (la grille a le sien, sinon un carré
+   * entoure chaque petite couronne) et rien de coupé (le nom au-dessus du disque, la valeur dessous :
+   * la case leur a réservé la place).
+   */
+  bare?: boolean
 }
 
 // Palette catégorielle VALIDÉE dans les deux modes (bande de clarté, plancher de
@@ -1192,7 +1213,7 @@ export const drawSunburstChart = (
         : st.legend_position === 'left' ? 'row-reverse' : 'row')
       .style('align-items', legend_below ? 'center' : 'stretch')
       .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
-      .style('background', palette.surface)
+      .style('background', opts.bare ? 'transparent' : palette.surface)
 
     // ── Combien de place pour la légende ? ────────────────────────────────────────
     // Elle ne liste que ce que le DESSIN NE NOMME PAS (arbitrage Julien, 17/09/2026) :
@@ -1382,7 +1403,7 @@ export const drawSunburstChart = (
       .style('flex', '0 0 auto')
       // Le disque ne déborde jamais de sa case : ce qu'un zoom pousse dehors est coupé, pas
       // dessiné par-dessus la légende ou le voisin.
-      .style('overflow', 'hidden')
+      .style('overflow', opts.bare ? 'visible' : 'hidden')
     // ZOOM ET DÉPLACEMENT (demande Julien, 18/09), comme sur le diagramme : molette pour zoomer,
     // glisser pour déplacer, double-clic pour recentrer. Le point de vue survit aux redessins
     // (redimensionnement, zoom radial) — c'est `view`, tenu hors de `render`.
@@ -1461,14 +1482,50 @@ export const drawSunburstChart = (
       .attr('y', shows_value ? -inner_r * 0.3 : 0)
       .attr('font-size', Math.max(9, Math.min(inner_r * 0.24, 12)))
       .attr('fill', palette.muted).attr('pointer-events', 'none')
-      .text(shows_name ? scope_title : '')
     const centre_value = centre.append('text')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
       .attr('y', shows_name ? inner_r * 0.1 : 0)
       .attr('font-size', Math.max(11, Math.min(inner_r * 0.34, 18)))
       .attr('font-weight', 'bold')
       .attr('fill', palette.ink).attr('pointer-events', 'none')
-      .text(shows_value ? fmtUnit(total) : '')
+    /**
+     * Écrit le centre : le nom et la valeur, à la règle des petites couronnes quand l'hôte la donne
+     * (`centre_plan`) — mesurée sur le trou VU (`display_scale`), tailles compensées. Le survol
+     * réécrit le centre par le même chemin.
+     */
+    const writeCentre = (name: string, value_text: string) => {
+      const plan_of = opts.centre_plan
+      if (plan_of === undefined) {
+        centre_label.text(shows_name ? name : '')
+        centre_value.text(shows_value ? value_text : '')
+        return
+      }
+      const k = opts.display_scale ?? 1
+      const plan = plan_of(name, shows_value ? value_text : null, inner_r * k)
+      const name_size = plan.name.size / k
+      const value_size = (plan.value?.size ?? 0) / k
+      const name_lines = shows_name ? plan.name.lines : []
+      const value_in = shows_value && plan.value !== null && !plan.value.below
+      const name_in = !plan.name.above
+      const outer = geo.outer_r
+      // Le bloc du dedans, centré : les lignes du nom puis la valeur.
+      const in_h = (name_in ? name_lines.length * name_size * 1.15 : 0) + (value_in ? value_size * 1.2 : 0)
+      const top = -in_h / 2
+      centre_label.selectAll('tspan').remove()
+      centre_label.text(null).attr('font-size', name_size).attr('y', null)
+      name_lines.forEach((line, i) => {
+        const y = name_in
+          ? top + (i + 0.5) * name_size * 1.15
+          : -outer - 4 / k - (name_lines.length - 0.5 - i) * name_size * 1.15
+        centre_label.append('tspan').attr('x', 0).attr('y', y).text(line)
+      })
+      centre_value.attr('font-size', value_size || null)
+        .attr('y', value_in
+          ? top + (name_in ? name_lines.length * name_size * 1.15 : 0) + value_size * 0.6
+          : outer + 4 / k + value_size * 0.6)
+        .text(shows_value && plan.value !== null ? value_text : '')
+    }
+    writeCentre(scope_title, fmtUnit(total))
     if (focus_id && opts.back_label) {
       centre.append('text')
         .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
@@ -1543,14 +1600,8 @@ export const drawSunburstChart = (
       //
       // Le CENTRE, lui, continue de nommer ce qu'on survole : ce n'est pas une mise en exergue,
       // c'est une lecture — il dit ce que le secteur vaut, là où l'anneau n'a pas la place.
-      .on('mouseover', (_, d) => {
-        if (shows_name) centre_label.text(d.label)
-        if (shows_value) centre_value.text(fmtUnit(d.value))
-      })
-      .on('mouseout', () => {
-        if (shows_name) centre_label.text(scope_title)
-        if (shows_value) centre_value.text(fmtUnit(total))
-      })
+      .on('mouseover', (_, d) => writeCentre(d.label, fmtUnit(d.value)))
+      .on('mouseout', () => writeCentre(scope_title, fmtUnit(total)))
       // DEUX GESTES DANS UN, ET ILS SE SÉPARENT (os#1425). Le clic zoomait dans l'anneau ET
       // dépliait le nœud dans le diagramme, sans que rien ne le dise. L'auteur choisit ce qu'il
       // veut — déplier seul est le défaut, le zoom radial un choix.
