@@ -4,7 +4,9 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import { dataCutOf } from './DataDimensionHierarchy'
-import { buildDimensionMatrix, dimensionMatrixCsv } from './DimensionMatrix'
+import {
+  buildDimensionMatrix, dimensionMatrixCsv, MATRIX_SORT_LABEL, matrixDecimals, matrixNumberFormatter, nextMatrixSort
+} from './DimensionMatrix'
 import type { Type_DimensionMatrix } from './DimensionMatrix'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -104,6 +106,30 @@ describe('os#1519 — tableau croise', () => {
     expect(lignes(mx)).toEqual([['Cereales', 0, 15, 27, 42], ['Total', 0, 15, 27, 42]])
     expect(mx.rows[0].expanded).toBe(false)
     expect(mx.rows[0].has_children).toBe(true)
+  })
+
+  test('le tri : Total decroissant par defaut, puis une colonne, puis le libelle', () => {
+    const m = monter()
+    const ordre = (sort?: { key: string, dir: 'asc' | 'desc' }) => buildDimensionMatrix(
+      { kind: 'link', link: m.lien },
+      dataCutOf(m.lien.sankey, ['filiere', 'pays'], { linked: false, opened: { filiere: ['produits', 'cereales'], pays: ['monde'] } }),
+      { data_tags: null }, { sort }
+    )?.rows.filter(r => r.depth === 1).map(r => r.label)
+    expect(ordre()).toEqual(['Ble', 'Mais'])
+    expect(ordre({ key: 'c:fr', dir: 'asc' })).toEqual(['Mais', 'Ble'])
+    expect(ordre({ key: MATRIX_SORT_LABEL, dir: 'desc' })).toEqual(['Mais', 'Ble'])
+    expect(nextMatrixSort({ key: 'c:__total__', dir: 'desc' }, 'c:__total__')).toEqual({ key: 'c:__total__', dir: 'asc' })
+    expect(nextMatrixSort({ key: 'c:__total__', dir: 'desc' }, MATRIX_SORT_LABEL)).toEqual({ key: MATRIX_SORT_LABEL, dir: 'asc' })
+  })
+
+  test('les nombres : des decimales fixes qui gardent cinq chiffres au total, et moins de la resolution', () => {
+    expect(matrixDecimals(59.317)).toBe(3)
+    expect(matrixDecimals(59317)).toBe(0)
+    expect(matrixDecimals(0.42)).toBe(4)
+    const f = matrixNumberFormatter(3, 'fr')
+    expect(f(2.13)).toBe('2,130')
+    expect(f(0)).toBe('0,000')
+    expect(f(0.000003)).toBe('< 0,001')
   })
 
   test('le CSV : point-virgule, virgule decimale, unite dans l en-tete, retrait des sous-niveaux', () => {

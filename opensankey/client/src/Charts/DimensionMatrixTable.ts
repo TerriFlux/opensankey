@@ -14,6 +14,7 @@
 // italique, la ligne et la colonne Total séparées d'un trait. Encre du texte toujours, jamais de
 // couleur de série : un tableau ne code rien par la couleur.
 
+import { MATRIX_SORT_LABEL } from './DimensionMatrix'
 import type { Type_DimensionMatrix, Type_MatrixRow } from './DimensionMatrix'
 
 export interface Type_DimensionMatrixTableOptions {
@@ -28,6 +29,10 @@ export interface Type_DimensionMatrixTableOptions {
   labels: { expand: string, collapse: string, export_csv: string, empty: string }
   on_toggle: (member_id: string, expanded: boolean) => void
   on_export: () => void
+  /** Clic sur un en-tête : la clé de la colonne, ou `MATRIX_SORT_LABEL` pour l'en-tête des lignes. */
+  on_sort: (key: string) => void
+  /** « Trier par » : l'info-bulle des en-têtes. */
+  sort_label: string
 }
 
 const INDENT_PX = 16
@@ -91,11 +96,27 @@ export const drawDimensionMatrixTable = (
 
   const thead = document.createElement('thead')
   const hr = document.createElement('tr')
+  /** Un en-tête TRIABLE : un bouton dans le <th>, `aria-sort` sur le <th>, la flèche du sens. */
+  const sortable = (th: HTMLTableCellElement, text: string, key: string, align: 'left' | 'right') => {
+    const active = matrix.sort.key === key
+    th.setAttribute('aria-sort', active ? (matrix.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none')
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'dimension_matrix_sort'
+    button.title = `${o.sort_label} ${text}`
+    button.textContent = active ? (align === 'right' ? `${matrix.sort.dir === 'asc' ? '▲' : '▼'} ${text}` : `${text} ${matrix.sort.dir === 'asc' ? '▲' : '▼'}`) : text
+    css(button, {
+      font: 'inherit', fontWeight: '600', padding: '0', borderWidth: '0', borderStyle: 'none', background: 'transparent', color: 'inherit',
+      cursor: 'pointer', textAlign: align, whiteSpace: 'nowrap'
+    })
+    button.addEventListener('click', () => o.on_sort(key))
+    th.appendChild(button)
+  }
   const corner = document.createElement('th')
   corner.scope = 'col'
-  corner.textContent = matrix.column_dimension
+  sortable(corner, matrix.column_dimension
     ? `${matrix.row_dimension.label} \\ ${matrix.column_dimension.label}`
-    : matrix.row_dimension.label
+    : matrix.row_dimension.label, MATRIX_SORT_LABEL, 'left')
   css(corner, {
     textAlign: 'left', fontWeight: '600', padding: '4px 8px', position: 'sticky', top: '0', left: '0', zIndex: '2',
     background: sticky_bg, borderBottom: strong_line, whiteSpace: 'nowrap'
@@ -104,7 +125,7 @@ export const drawDimensionMatrixTable = (
   matrix.columns.forEach(c => {
     const th = document.createElement('th')
     th.scope = 'col'
-    th.textContent = c.label
+    sortable(th, c.label, c.key, 'right')
     css(th, {
       textAlign: 'right', fontWeight: '600', padding: '4px 8px', position: 'sticky', top: '0', zIndex: '1',
       background: sticky_bg, borderBottom: strong_line, whiteSpace: 'nowrap',

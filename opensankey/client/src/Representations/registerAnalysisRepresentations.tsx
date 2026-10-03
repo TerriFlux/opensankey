@@ -68,7 +68,10 @@ import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOth
 import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
-import { buildDimensionMatrix, dimensionMatrixCsv } from '../Charts/DimensionMatrix'
+import {
+  buildDimensionMatrix, dimensionMatrixCsv, matrixDecimals, matrixNumberFormatter, nextMatrixSort
+} from '../Charts/DimensionMatrix'
+import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
 import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
@@ -1727,6 +1730,8 @@ export const registerAnalysisRepresentations = (): void => {
 
 /** Les +/− posés dans chaque tableau, par fenêtre et vignette : ils survivent au redessin. */
 const matrix_row_toggles = new Map<string, Map<string, boolean>>()
+/** Le tri choisi dans chaque tableau (absent : Total décroissant). */
+const matrix_sorts = new Map<string, Type_MatrixSort>()
 
 /** Ce qu'on lit en plus du sujet : les coordonnées des dimensions SANS niveaux (l'année, par exemple). */
 const matrixCoordinateLabel = (sankey: { data_taggs_list: unknown[] }, nav: Type_FigureNavigation): string =>
@@ -1775,6 +1780,7 @@ const registerDimensionMatrix = (): void => {
           : { kind: 'link' as const, link: a.subject.link }
         const matrix = cut === null ? null : buildDimensionMatrix(subject, cut, a.nav, {
           row_toggles: toggles,
+          sort: matrix_sorts.get(key),
           node_value_mode: reading.node_value_mode,
           residual_label: t('matrix.unallocated'),
           total_label: t('matrix.total'),
@@ -1784,9 +1790,12 @@ const registerDimensionMatrix = (): void => {
         const app_data = ctx.app_data
         const unit = a.subject.kind === 'node' ? figureUnitOfNode(a.subject.node) : figureUnitOf(app_data.drawing_area.sankey)
         const factor = unitFactorOfSubject(a.subject, app_data)
-        // Les chiffres des figures (3 significatifs par défaut), l'unité dans l'en-tête seulement.
-        const format = figureValueFormatter(figureValueFormatOf(ctx.options, '', undefined, factor))
         const lang = app_data.language || 'fr'
+        // Des décimales FIXES pour tout le tableau (cf. `matrixDecimals`), l'unité dans l'en-tête.
+        const total_row = matrix?.rows[matrix.rows.length - 1]
+        const grand = (total_row?.cells[matrix?.column_dimension ? total_row.cells.length - 1 : 0] ?? 0) / factor
+        const numbers = matrixNumberFormatter(matrixDecimals(grand), lang)
+        const format = (v: number) => numbers(v / factor)
         const percent = new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 1 })
         const element = a.subject.kind === 'node' ? a.subject.node : a.subject.link
         const coordinate = matrixCoordinateLabel(element.sankey, a.nav)
@@ -1802,6 +1811,12 @@ const registerDimensionMatrix = (): void => {
           },
           on_toggle: (member_id, expanded) => {
             toggles.set(member_id, expanded)
+            render()
+          },
+          sort_label: t('matrix.sort_by'),
+          on_sort: (sort_key) => {
+            if (matrix === null) return
+            matrix_sorts.set(key, nextMatrixSort(matrix.sort, sort_key))
             render()
           },
           on_export: () => {

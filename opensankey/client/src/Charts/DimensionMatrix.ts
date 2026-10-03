@@ -68,6 +68,8 @@ export interface Type_DimensionMatrix {
   column_dimension: { id: string, label: string } | null
   columns: Type_MatrixColumn[]
   rows: Type_MatrixRow[]
+  /** Le tri en vigueur, pour que l'en-tête l'annonce. */
+  sort: Type_MatrixSort
 }
 
 export interface Type_DimensionMatrixOptions {
@@ -81,6 +83,52 @@ export interface Type_DimensionMatrixOptions {
   total_label?: string
   value_label?: string
   share_label?: string
+  /**
+   * L'ordre des lignes, frères par frères : une colonne (sa `key`) ou le libellé (`'label'`).
+   * Absent : la colonne Total (ou Valeur) décroissante, comme les bandes du Sankey (Julien, 03/10).
+   */
+  sort?: Type_MatrixSort
+}
+
+export interface Type_MatrixSort {
+  key: string
+  dir: 'asc' | 'desc'
+}
+
+/** La clé de tri des libellés (l'en-tête des lignes), à côté des clés de colonnes. */
+export const MATRIX_SORT_LABEL = 'label'
+
+/** Le tri qui suit un clic sur un en-tête : décroissant d'abord (libellé : croissant d'abord), puis l'inverse. */
+export const nextMatrixSort = (current: Type_MatrixSort, key: string): Type_MatrixSort => {
+  if (current.key !== key) return { key, dir: key === MATRIX_SORT_LABEL ? 'asc' : 'desc' }
+  return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+}
+
+// ── LES NOMBRES D'UN TABLEAU ────────────────────────────────────────────────────────────────────
+//
+// Julien, 03/10 : pas les 3 chiffres significatifs des figures, qui donnent une colonne en dents de
+// scie (0,63 / 0,000041 / 0,0000030). UN nombre de décimales pour tout le tableau, comme un
+// tableur : celui qui garde CINQ chiffres au total général (59,317 Mt → 3 décimales, 59 317 kt → 0).
+// Une valeur non nulle trop petite pour ce format ne devient pas « 0,000 » : elle s'écrit « < 0,001 ».
+
+const MATRIX_TOTAL_DIGITS = 5
+
+/** Les décimales du tableau, d'après son total général déjà exprimé dans l'unité affichée. */
+export const matrixDecimals = (grand_display: number): number => {
+  const abs = Math.abs(grand_display)
+  const int_digits = abs < 1 ? 1 : Math.floor(Math.log10(abs)) + 1
+  return Math.min(6, Math.max(0, MATRIX_TOTAL_DIGITS - int_digits))
+}
+
+/** Le formateur d'un tableau : décimales fixes dans la langue `lang`, « < 0,001 » sous la résolution. */
+export const matrixNumberFormatter = (decimals: number, lang: string): ((v: number) => string) => {
+  const nf = new Intl.NumberFormat(lang, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+  const smallest = Math.pow(10, -decimals)
+  const below = `< ${nf.format(smallest)}`
+  return (v: number) => {
+    if (v !== 0 && Math.abs(v) < smallest / 2) return v < 0 ? `> −${nf.format(smallest)}` : below
+    return nf.format(v)
+  }
 }
 
 /** Les membres que la coupe MONTRE pour une dimension : sa frontière, décochés exclus. */
@@ -181,10 +229,27 @@ export const buildDimensionMatrix = (
     return children.filter(c => frontier_ids.has(c.id) || opened_by_cut.has(c.id) || !cut.linked)
   }
 
+  // L'ORDRE DES FRÈRES : une colonne, décroissante par défaut (la dernière colonne de valeurs), ou le
+  // libellé. Une valeur absente va en bas quel que soit le sens : le vide n'est ni grand ni petit.
+  const default_key = columns[col_dim ? columns.length - 1 : 0].key
+  const sort = options.sort ?? { key: default_key, dir: 'desc' as const }
+  const by_label = sort.key === MATRIX_SORT_LABEL
+  const found = columns.findIndex(c => c.key === sort.key)
+  // La part se trie comme la valeur dont elle est la fraction.
+  const sort_index = found < 0 ? columns.findIndex(c => c.key === default_key) : (columns[found].kind === 'share' ? 0 : found)
+  const sign = sort.dir === 'asc' ? 1 : -1
+  const ordered = (members: Class_DataTag[]): { m: Class_DataTag, cells: (number | null)[] }[] =>
+    members.map(m => ({ m, cells: cellsAt([m]) })).sort((a, b) => {
+      if (by_label) return sign * a.m.name.localeCompare(b.m.name)
+      const va = a.cells[sort_index]
+      const vb = b.cells[sort_index]
+      if (va === null || vb === null) return va === vb ? 0 : (va === null ? 1 : -1)
+      return sign * (va - vb)
+    })
+
   const rows: Type_MatrixRow[] = []
-  const visit = (m: Class_DataTag, depth: number) => {
+  const visit = (m: Class_DataTag, depth: number, cells: (number | null)[]) => {
     const expanded = isExpanded(m)
-    const cells = cellsAt([m])
     rows.push({
       key: `r:${m.id}`, label: m.name, member_id: m.id, depth, kind: 'member',
       has_children: m.children.length > 0, expanded, cells
@@ -192,7 +257,7 @@ export const buildDimensionMatrix = (
     if (!expanded) return
     const children = shownChildren(m)
     const start = rows.length
-    children.forEach(c => visit(c, depth + 1))
+    ordered(children).forEach(c => visit(c.m, depth + 1, c.cells))
     // LE NON RÉPARTI : ce que le parent déclare et que ses enfants ne couvrent pas, colonne par
     // colonne. Il se tait quand des enfants sont cachés : l'écart est alors voulu.
     if (children.length !== (m.children as Class_DataTag[]).length) return
@@ -217,8 +282,8 @@ export const buildDimensionMatrix = (
     .filter(m => !hidden.has(m.id) && (!cut.linked || frontier_ids.has(m.id) || opened_by_cut.has(m.id)))
   // Liée, une dimension qui ne découpe pas se lit au membre que le diagramme montre.
   const linked_single = cut.linked && !cut.dividing.includes(row_dim) && frontier.length === 1
-  if (linked_single) visit(frontier[0], 0)
-  else entry.forEach(m => visit(m, 0))
+  if (linked_single) visit(frontier[0], 0, cellsAt([frontier[0]]))
+  else ordered(entry).forEach(e => visit(e.m, 0, e.cells))
 
   // LA LIGNE TOTAL : à la racine unique quand rien n'est décoché, sinon la somme des lignes d'entrée.
   const top = rows.filter(r => r.depth === 0 && r.kind === 'member')
@@ -255,7 +320,8 @@ export const buildDimensionMatrix = (
     row_dimension: { id: row_dim.id, label: row_dim.name },
     column_dimension: col_dim ? { id: col_dim.id, label: col_dim.name } : null,
     columns,
-    rows
+    rows,
+    sort: by_label || found >= 0 ? sort : { key: default_key, dir: sort.dir }
   }
 }
 

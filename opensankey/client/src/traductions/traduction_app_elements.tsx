@@ -11,7 +11,8 @@ export const resources_app_elements = {
         expand: 'Expand',
         collapse: 'Collapse',
         export_csv: 'Export CSV',
-        empty: 'Nothing to cross: no dimension with levels'
+        empty: 'Nothing to cross: no dimension with levels',
+        sort_by: 'Sort by'
       },
       // OS#85 — document sheets (independent diagrams, tabs at the bottom of the canvas).
       sheets: {
@@ -841,7 +842,8 @@ export const resources_app_elements = {
         expand: 'Déplier',
         collapse: 'Replier',
         export_csv: 'Exporter en CSV',
-        empty: 'Rien à croiser : aucune dimension à niveaux'
+        empty: 'Rien à croiser : aucune dimension à niveaux',
+        sort_by: 'Trier par'
       },
       // OS#85 — feuilles du document (diagrammes indépendants, onglets en bas du canvas).
       sheets: {
@@ -1670,7 +1672,8 @@ export const resources_app_elements = {
         expand: 'Desplegar',
         collapse: 'Plegar',
         export_csv: 'Exportar en CSV',
-        empty: 'Nada que cruzar: ninguna dimensión con niveles'
+        empty: 'Nada que cruzar: ninguna dimensión con niveles',
+        sort_by: 'Ordenar por'
       },
       // OS#85 — hojas del documento (diagramas independientes, pestañas abajo del lienzo).
       sheets: {
@@ -2475,7 +2478,8 @@ export const resources_app_elements = {
         expand: 'Aufklappen',
         collapse: 'Zuklappen',
         export_csv: 'Als CSV exportieren',
-        empty: 'Nichts zu kreuzen: keine Dimension mit Ebenen'
+        empty: 'Nichts zu kreuzen: keine Dimension mit Ebenen',
+        sort_by: 'Sortieren nach'
       },
       // OS#85 — Blätter des Dokuments (unabhängige Diagramme, Tabs unten am Canvas).
       sheets: {
@@ -3280,7 +3284,8 @@ export const resources_app_elements = {
         expand: 'Espandi',
         collapse: 'Comprimi',
         export_csv: 'Esporta in CSV',
-        empty: 'Niente da incrociare: nessuna dimensione con livelli'
+        empty: 'Niente da incrociare: nessuna dimensione con livelli',
+        sort_by: 'Ordina per'
       },
       // OS#85 — fogli del documento (diagrammi indipendenti, schede in basso del canvas).
       sheets: {
@@ -4082,7 +4087,8 @@ export const resources_app_elements = {
         expand: '展开',
         collapse: '折叠',
         export_csv: '导出 CSV',
-        empty: '无可交叉的内容：没有分层级的维度'
+        empty: '无可交叉的内容：没有分层级的维度',
+        sort_by: '排序依据'
       },
       // OS#85 — 文档的工作表（相互独立的图表，画布底部的标签页）。
       sheets: {
@@ -4894,7 +4900,8 @@ export const resources_app_elements = {
         expand: '展開',
         collapse: '折りたたむ',
         export_csv: 'CSV でエクスポート',
-        empty: 'クロス集計できません：階層のある次元がありません'
+        empty: 'クロス集計できません：階層のある次元がありません',
+        sort_by: '並べ替え：'
       },
       // OS#85 — ドキュメントのシート（独立した図、キャンバス下部のタブ）。
       sheets: {
