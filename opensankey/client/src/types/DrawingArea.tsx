@@ -68,6 +68,7 @@ import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
+import { resetLabelFontCache } from '../Elements/DrawLabel'
 import { Class_ApplicationData } from './ApplicationData'
 import { dedupeZOrderKeepFirst } from './zOrder'
 import { beginDrawPass, endDrawPass } from './DrawCounters'
@@ -827,6 +828,17 @@ export class Class_DrawingArea {
   }
 
   protected _font_size_locked: boolean = true
+  /**
+   * #588 — Compensation de police (cf. `font_compensation`) avec laquelle TOUS les libellés ont été
+   * dessinés en dernier, par un dessin complet ou par `_refreshLabelsForFitZoom`. `NaN` = inconnue
+   * (un zoom a changé l'échelle depuis) : le prochain recalage est alors dû.
+   *
+   * Sert à ne recaler les libellés que si l'échelle a vraiment changé. Avant, chaque dessin complet
+   * les redessinait deux fois de plus (une fois tout de suite, une fois 120 ms plus tard par la
+   * caméra reposée), et chaque déplacement de la vue une fois — à échelle inchangée, donc pour
+   * rien : c'était la moitié du temps d'un dessin complet.
+   */
+  private _labels_compensation: number = NaN
   public get font_size_locked(): boolean { return this._font_size_locked }
   public set font_size_locked(v: boolean) {
     if (this._font_size_locked === v) return
@@ -1603,6 +1615,8 @@ export class Class_DrawingArea {
   ) {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
+    // #588 — la police calculée des libellés est relue une fois par dessin complet, pas plus.
+    resetLabelFontCache()
     // os#1372 — signale le dessin complet à l'application, qui s'en sert pour ne pas en
     // déclencher un de plus quand un geste en a déjà provoqué un (cf. draw_epoch).
     this.application_data.notifyFullDraw()
@@ -1665,8 +1679,19 @@ export class Class_DrawingArea {
     // Reinit d3 selections
     this._initDraw()
 
+    // #588 — Caméra libre (mode 'none') : la caméra de ce dessin est connue d'avance, c'est celle
+    // d'avant (reposée telle quelle plus bas). On la pose DÈS MAINTENANT sur le SVG neuf, avant de
+    // dessiner : les libellés sont ainsi dessinés d'emblée avec leur compensation de police
+    // définitive, au lieu de l'être à k=1 puis entièrement redessinés une fois la caméra reposée.
+    // Les autres modes recadrent après le dessin, sur une échelle qu'on ne connaît pas encore : eux
+    // gardent le recalage après coup (cf. plus bas).
+    const camera_known_in_advance = !this._size_locked && this._auto_fit_mode === 'none' &&
+      !this.is_unitary && live_zoom_transform !== null
+    if (camera_known_in_advance && live_zoom_transform) this.setCamera(live_zoom_transform)
+
     // Draw Everything
     this.drawElements()
+    this._labels_compensation = this.font_compensation
     // Fit area
 
     // Mode verrouillé : tant que le cadrage est « dirty » (1er rendu, ou recenter
@@ -1742,7 +1767,10 @@ export class Class_DrawingArea {
     // réapplication d'un transform verrouillé ne le fait jamais) : ils sont donc encore
     // dimensionnés pour le zoom identité. En mode police verrouillée, forcer la mise à
     // l'échelle 1/k sur le zoom courant.
-    if (this._font_size_locked && this._k_fit === k_fit_before_fit) {
+    // #588 — … sauf s'ils sont déjà à la bonne compensation : caméra posée avant le dessin
+    // (mode 'none'), ou échelle finale égale à celle du dessin.
+    if (this._font_size_locked && this._k_fit === k_fit_before_fit &&
+      this.font_compensation !== this._labels_compensation) {
       this._refreshLabelsForFitZoom()
     }
     // #363 — deuxième passage de recalage des cadres englobants, ICI et pas
@@ -3366,6 +3394,7 @@ export class Class_DrawingArea {
   }
 
   private _refreshLabelsForFitZoom() {
+    this._labels_compensation = this.font_compensation
     this._sankey.nodes_list.forEach(n => {
       n.drawNameLabel()
       n.drawValueLabel()
@@ -4332,9 +4361,16 @@ export class Class_DrawingArea {
       // compensation (font_compensation lit le zoom live). Débouncé pour ne pas
       // re-dessiner à chaque tick. En mode déverrouillé, le texte scale nativement
       // avec le repère : aucun re-render nécessaire.
-      if (this._font_size_locked) {
+      //
+      // #588 — seulement si l'échelle a changé depuis le dernier dessin de TOUS les libellés : un
+      // déplacement de la vue, ou la caméra reposée telle quelle par un dessin complet, ne change
+      // pas leur compensation. Une échelle changée invalide la compensation connue (`NaN`) jusqu'au
+      // recalage, pour qu'un retour à l'échelle d'origine avant l'échéance ne l'annule pas : des
+      // libellés ont pu être dessinés entre-temps à l'échelle intermédiaire.
+      if (this._font_size_locked && this.font_compensation !== this._labels_compensation) {
+        this._labels_compensation = NaN
         this.application_data._add_waiting_process('refresh_labels_zoom', () => {
-          this._refreshLabelsForFitZoom()
+          if (this.font_compensation !== this._labels_compensation) this._refreshLabelsForFitZoom()
         }, 120)
       }
 

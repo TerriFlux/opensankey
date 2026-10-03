@@ -947,14 +947,17 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         // long. Seuls les réglages qui décident de la césure sont posés ici (texte, police,
         // largeur, mise en forme du nom) ; la zone est placée et achevée avec les autres ci-dessous.
         const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
-        zone.name_label_source = 'custom'
-        zone.name_label_text = item.text
-        zone.name_label_is_visible = true
-        zone.name_label_font_size = values.police
-        // os#1511 — un membre en retrait garde la largeur de la légende pour bord droit
-        zone.name_label_box_width = Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
-        applyPinnedLabel(zone, item, values.police, NO_PADDING)
-        applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        // #588 — paramètres posés sans dessin intermédiaire : le seul dessin utile suit.
+        zone.withActionsSuspended(() => {
+          zone.name_label_source = 'custom'
+          zone.name_label_text = item.text
+          zone.name_label_is_visible = true
+          zone.name_label_font_size = values.police
+          // os#1511 — un membre en retrait garde la largeur de la légende pour bord droit
+          zone.name_label_box_width = Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
+          applyPinnedLabel(zone, item, values.police, NO_PADDING)
+          applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        })
         zone.draw()
         const n_lines = drawnLabelLineCount(zone)
         if (n_lines > 0) line_counts.set(item.id, n_lines)
@@ -962,17 +965,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       if (item.pinned_name === undefined) return
       const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
-      zone.name_label_source = 'custom'
-      zone.name_label_text = item.text
-      zone.name_label_is_visible = true
-      zone.name_label_font_size = values.police
-      zone.name_label_box_width = Math.max(values.width, 4 * values.police)
-      applyPinnedLabel(zone, item, values.police, NO_PADDING)
+      zone.withActionsSuspended(() => {
+        zone.name_label_source = 'custom'
+        zone.name_label_text = item.text
+        zone.name_label_is_visible = true
+        zone.name_label_font_size = values.police
+        zone.name_label_box_width = Math.max(values.width, 4 * values.police)
+        applyPinnedLabel(zone, item, values.police, NO_PADDING)
+      })
       zone.draw()
       const padding = richPaddingOf(zone)
       rich_paddings.set(item.id, padding)
       if (padding !== NO_PADDING) {
-        applyPinnedLabel(zone, item, values.police, padding)
+        zone.withActionsSuspended(() => applyPinnedLabel(zone, item, values.police, padding))
         zone.draw()
       }
       // #556 — lignes DESSINÉES de la ligne épinglée : sa rangée fait alors ses lignes plus la
@@ -988,14 +993,16 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       items.forEach(item => {
         if (item.wrap === true || (item.own_line && !item.group_title)) return
         const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
-        zone.name_label_source = 'custom'
-        zone.name_label_text = item.text
-        zone.name_label_is_visible = true
-        zone.name_label_font_size = values.police
-        zone.name_label_bold = item.bold ?? false
-        zone.name_label_box_width = 4000
-        applyPinnedLabel(zone, item, values.police, NO_PADDING)
-        applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        zone.withActionsSuspended(() => {
+          zone.name_label_source = 'custom'
+          zone.name_label_text = item.text
+          zone.name_label_is_visible = true
+          zone.name_label_font_size = values.police
+          zone.name_label_bold = item.bold ?? false
+          zone.name_label_box_width = 4000
+          applyPinnedLabel(zone, item, values.police, NO_PADDING)
+          applyTextFormat(zone, item.format?.name, item.bold ?? false)
+        })
         zone.draw()
         const width = drawnLabelWidth(zone)
         if (width > 0) text_widths.set(item.id, width)
@@ -1055,13 +1062,15 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
 
     // Cadre englobant
     const frame = existing_frame ?? sankey.addNewContainer(LEGEND_FRAME_ID, 'Légende')
-    frame.tied_to_nodes = true
-    frame.name_label_is_visible = false
-    frame.shape_color = values.bg_color
-    frame.shape_color_visible = values.bg_opacity > 0
-    frame.shape_opacity = values.bg_opacity / 100
-    frame.shape_border_visible = values.bg_border
-    frame.shape_border_radius = 2
+    frame.withActionsSuspended(() => {
+      frame.tied_to_nodes = true
+      frame.name_label_is_visible = false
+      frame.shape_color = values.bg_color
+      frame.shape_color_visible = values.bg_opacity > 0
+      frame.shape_opacity = values.bg_opacity / 100
+      frame.shape_border_visible = values.bg_border
+      frame.shape_border_radius = 2
+    })
     if (!existing_frame) {
       frame.setPosXY(config.initial_position.x, config.initial_position.y)
     }
@@ -1080,89 +1089,93 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       const pos = positions.get(item.id)
       if (!pos) return
       const zone = sankey.containers_dict[item.id] ?? sankey.addNewContainer(item.id, item.text)
-      // Texte
-      zone.name_label_source = 'custom'
-      zone.name_label_text = item.text
-      zone.name_label_is_visible = true
-      zone.name_label_font_size = values.police
-      zone.name_label_bold = item.bold ?? false
-      // #542 — définition de l'étiquette ou du groupe, lue au survol par le bloc
-      // INFOS de la présentation. Reposée à CHAQUE régénération (changement de
-      // langue ou de définition compris) et vidée quand la définition disparaît :
-      // la zone est réutilisée par id, l'ancienne survivrait sinon. Écriture
-      // faite sous `_generating`, comme tout ce que le générateur pose.
-      zone.tooltip_text = item.description ?? ''
-      // En horizontal les entrées restent sur une ligne (pas de wrap) — sauf SA#550 la
-      // définition d'un groupe épinglé, enveloppée à la largeur de la légende.
-      zone.name_label_box_width = (values.horizontal && item.wrap !== true)
-        ? 4000
-        : Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
-      // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
-      // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
-      applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)
-      // #556 — le libellé reste centré sur la forme d'ancrage ; c'est la forme qui descend quand
-      // le nom prend plusieurs lignes (cf. entryShiftOf), pour que le carré se retrouve en face
-      // du nom entier et non de sa seule première ligne.
-      zone.delete_attribute('name_label_vert_shift')
-      // Toutes les zones partagent la même géométrie : une petite boîte
-      // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
-      // avec le label à sa droite, centré verticalement → tout s'aligne à
-      // gauche sur la même colonne.
-      zone.shape_visible = item.swatch_color !== undefined || item.scale_bar === true
-      zone.shape_color_visible = zone.shape_visible
-      if (item.swatch_color !== undefined) {
-        zone.shape_color = item.swatch_color
-        zone.shape_opacity = 1
-      }
-      zone.shape_border_visible = false
-      zone.shape_border_radius = 3
-      // SA#545 — mise en forme venue du style de l'étiquette (et effacement de celle
-      // qu'un style retiré aurait laissée sur cette zone réutilisée).
-      applyEntryFormat(zone, item)
-      // SA#549 — étiquette masquée : nom rayé (DrawLabel), carré atténué. Reposé à chaque
-      // régénération, par-dessus la mise en forme du style (SA#545) : la zone est réutilisée par id.
-      zone.legend_entry_dimmed = item.dimmed === true
-      if (item.dimmed === true && item.swatch_color !== undefined) {
-        zone.shape_opacity = zone.shape_opacity * LEGEND_DIMMED_SWATCH_OPACITY
-      }
-      if (item.scale_bar) {
-        // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.
-        // Hauteur en px MONDE bruts (PAS multipliée par la police ni par la
-        // compensation) : elle doit coïncider avec l'épaisseur d'un flux de la
-        // valeur affichée (scale/2 ↔ 50 px via scaleValueToPx).
-        zone.shape_color = 'black'
-        zone.shape_opacity = 1
-        zone.shape_border_radius = 0
-        zone.shape_min_width = Math.max(2, layout_values.police / 8)
-        zone.shape_min_height = SCALE_BAR_HEIGHT_PX
-      } else if (item.swatch_color !== undefined) {
-        // Pastille en px monde effectifs (suit la compensation de police) ; SA#545 : élargie
-        // quand elle porte la valeur d'exemple.
-        zone.shape_min_width = legendSwatchWidth(item, layout_values.police)
-        zone.shape_min_height = layout_values.police
-      } else {
-        // Pas de pastille (titre de groupe, ligne d'info, rappel de data tag) :
-        // la forme est invisible mais réservait quand même une colonne large de
-        // `police` — le libellé, posé à droite de cette boîte d'ancrage, était
-        // décalé vers la droite et désaligné des autres lignes sans pastille.
-        // Largeur nulle → le libellé colle à l'origine de la zone. Hauteur
-        // conservée pour garder le rythme vertical et le centrage du libellé
-        // cohérents avec les lignes à pastille.
-        zone.shape_min_width = 0
-        // SA#550 (ligne enveloppée) et #556 (nom long d'un titre ou d'une ligne d'info) : la forme
-        // couvre toutes les lignes du nom, pour que le libellé centré dessus ne déborde ni sur la
-        // rangée d'avant ni sur celle d'après — et que l'enveloppe du cadre le contienne.
-        zone.shape_min_height = legendWrappedShapeHeight(
-          item.wrap === true
-            ? legendWrappedLineCount(item, layout_values, line_counts)
-            : (line_counts.get(item.id) ?? 1),
-          layout_values.police
-        )
-      }
-      zone.name_label_horiz = 'right'
-      zone.name_label_vert = 'middle'
-      zone.name_label_inside_horiz = false
-      zone.name_label_inside_vert = true
+      // #588 — une douzaine de paramètres par zone : posés sans dessin intermédiaire, la zone
+      // est dessinée une seule fois plus bas (`zone.draw()`).
+      zone.withActionsSuspended(() => {
+        // Texte
+        zone.name_label_source = 'custom'
+        zone.name_label_text = item.text
+        zone.name_label_is_visible = true
+        zone.name_label_font_size = values.police
+        zone.name_label_bold = item.bold ?? false
+        // #542 — définition de l'étiquette ou du groupe, lue au survol par le bloc
+        // INFOS de la présentation. Reposée à CHAQUE régénération (changement de
+        // langue ou de définition compris) et vidée quand la définition disparaît :
+        // la zone est réutilisée par id, l'ancienne survivrait sinon. Écriture
+        // faite sous `_generating`, comme tout ce que le générateur pose.
+        zone.tooltip_text = item.description ?? ''
+        // En horizontal les entrées restent sur une ligne (pas de wrap) — sauf SA#550 la
+        // définition d'un groupe épinglé, enveloppée à la largeur de la légende.
+        zone.name_label_box_width = (values.horizontal && item.wrap !== true)
+          ? 4000
+          : Math.max(values.width - legendIndentWidth(item, values.police), 4 * values.police)
+        // SA#550 — texte riche de la ligne épinglée, effacé sur toute autre zone (réutilisée par id :
+        // un groupe désépinglé ou ouvert retrouve un titre ordinaire).
+        applyPinnedLabel(zone, item, values.police, rich_paddings.get(item.id) ?? NO_PADDING)
+        // #556 — le libellé reste centré sur la forme d'ancrage ; c'est la forme qui descend quand
+        // le nom prend plusieurs lignes (cf. entryShiftOf), pour que le carré se retrouve en face
+        // du nom entier et non de sa seule première ligne.
+        zone.delete_attribute('name_label_vert_shift')
+        // Toutes les zones partagent la même géométrie : une petite boîte
+        // d'ancrage (= la pastille pour les entrées de tag, invisible sinon)
+        // avec le label à sa droite, centré verticalement → tout s'aligne à
+        // gauche sur la même colonne.
+        zone.shape_visible = item.swatch_color !== undefined || item.scale_bar === true
+        zone.shape_color_visible = zone.shape_visible
+        if (item.swatch_color !== undefined) {
+          zone.shape_color = item.swatch_color
+          zone.shape_opacity = 1
+        }
+        zone.shape_border_visible = false
+        zone.shape_border_radius = 3
+        // SA#545 — mise en forme venue du style de l'étiquette (et effacement de celle
+        // qu'un style retiré aurait laissée sur cette zone réutilisée).
+        applyEntryFormat(zone, item)
+        // SA#549 — étiquette masquée : nom rayé (DrawLabel), carré atténué. Reposé à chaque
+        // régénération, par-dessus la mise en forme du style (SA#545) : la zone est réutilisée par id.
+        zone.legend_entry_dimmed = item.dimmed === true
+        if (item.dimmed === true && item.swatch_color !== undefined) {
+          zone.shape_opacity = zone.shape_opacity * LEGEND_DIMMED_SWATCH_OPACITY
+        }
+        if (item.scale_bar) {
+          // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.
+          // Hauteur en px MONDE bruts (PAS multipliée par la police ni par la
+          // compensation) : elle doit coïncider avec l'épaisseur d'un flux de la
+          // valeur affichée (scale/2 ↔ 50 px via scaleValueToPx).
+          zone.shape_color = 'black'
+          zone.shape_opacity = 1
+          zone.shape_border_radius = 0
+          zone.shape_min_width = Math.max(2, layout_values.police / 8)
+          zone.shape_min_height = SCALE_BAR_HEIGHT_PX
+        } else if (item.swatch_color !== undefined) {
+          // Pastille en px monde effectifs (suit la compensation de police) ; SA#545 : élargie
+          // quand elle porte la valeur d'exemple.
+          zone.shape_min_width = legendSwatchWidth(item, layout_values.police)
+          zone.shape_min_height = layout_values.police
+        } else {
+          // Pas de pastille (titre de groupe, ligne d'info, rappel de data tag) :
+          // la forme est invisible mais réservait quand même une colonne large de
+          // `police` — le libellé, posé à droite de cette boîte d'ancrage, était
+          // décalé vers la droite et désaligné des autres lignes sans pastille.
+          // Largeur nulle → le libellé colle à l'origine de la zone. Hauteur
+          // conservée pour garder le rythme vertical et le centrage du libellé
+          // cohérents avec les lignes à pastille.
+          zone.shape_min_width = 0
+          // SA#550 (ligne enveloppée) et #556 (nom long d'un titre ou d'une ligne d'info) : la forme
+          // couvre toutes les lignes du nom, pour que le libellé centré dessus ne déborde ni sur la
+          // rangée d'avant ni sur celle d'après — et que l'enveloppe du cadre le contienne.
+          zone.shape_min_height = legendWrappedShapeHeight(
+            item.wrap === true
+              ? legendWrappedLineCount(item, layout_values, line_counts)
+              : (line_counts.get(item.id) ?? 1),
+            layout_values.police
+          )
+        }
+        zone.name_label_horiz = 'right'
+        zone.name_label_vert = 'middle'
+        zone.name_label_inside_horiz = false
+        zone.name_label_inside_vert = true
+      })
       zone.setPosXY(origin.x + pos.x, origin.y + pos.y + entryShiftOf(item, values.horizontal, line_counts, layout_values.police))
       // Toujours attachée au cadre RACINE (le drag du cadre ne pousse que ses
       // attachés directs, pas les petits-enfants — l'attache est donc double :
@@ -1190,7 +1203,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       const sample_id = legendSampleZoneId(item)
       if (sample_id !== undefined) {
         const sample = sankey.containers_dict[sample_id] ?? sankey.addNewContainer(sample_id, LEGEND_SAMPLE_VALUE)
-        configureSampleZone(sample, item, values.police, layout_values.police)
+        sample.withActionsSuspended(() => configureSampleZone(sample, item, values.police, layout_values.police))
         sample.setPosXY(
           origin.x + pos.x,
           origin.y + pos.y + entryShiftOf(item, values.horizontal, line_counts, layout_values.police)
@@ -1223,10 +1236,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // Nom lisible = le titre du groupe (item own_line du bloc)
       const block_name = items.find(i => i.block_id === block_id && i.own_line)?.text ?? block_id
       const block = sankey.containers_dict[block_id] ?? sankey.addNewContainer(block_id, 'Légende – ' + block_name)
-      block.tied_to_nodes = true
-      block.name_label_is_visible = false
-      block.shape_color_visible = false
-      block.shape_border_visible = false
+      block.withActionsSuspended(() => {
+        block.tied_to_nodes = true
+        block.name_label_is_visible = false
+        block.shape_color_visible = false
+        block.shape_border_visible = false
+      })
       members.forEach(zone => {
         if (!block.attached_node.includes(zone)) block.attachNodeToCont(zone)
       })
@@ -1252,7 +1267,7 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     })
     const frame_bottom = frame.position_y + frame.shape_min_height - frame.shape_margin_bottom
     if (labels_bottom > frame_bottom) {
-      frame.shape_min_height = frame.shape_min_height + labels_bottom - frame_bottom
+      frame.withActionsSuspended(() => { frame.shape_min_height = frame.shape_min_height + labels_bottom - frame_bottom })
     }
     frame.draw()
     frame.setEventsListeners()

@@ -54,11 +54,38 @@ function getCanvasFontStringAtSize(
 ): string {
   const node = textElement.node()
   if (!node || typeof window === 'undefined') return `${fontSizePx}px sans-serif`
-  // os#1385 — style calculé dans la VUE du nœud : un canevas détaché dessine son texte dans une
-  // autre fenêtre de navigateur, dont la feuille de style est la sienne. Retombe sur la fenêtre de
-  // la page pour tout le reste, qui y vit.
-  const computed = (node.ownerDocument.defaultView ?? window).getComputedStyle(node)
-  return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${fontSizePx}px ${computed.fontFamily || 'sans-serif'}`
+  // #588 — style calculé MÉMORISÉ (cf. `_label_font_cache`).
+  const doc = node.ownerDocument
+  let by_key = _label_font_cache.get(doc)
+  if (!by_key) {
+    by_key = new Map()
+    _label_font_cache.set(doc, by_key)
+  }
+  const key = [
+    node.getAttribute('font-style'), node.getAttribute('font-weight'),
+    node.getAttribute('font-family'), node.getAttribute('class')
+  ].join('|')
+  let font = by_key.get(key)
+  if (font === undefined) {
+    // os#1385 — style calculé dans la VUE du nœud : un canevas détaché dessine son texte dans une
+    // autre fenêtre de navigateur, dont la feuille de style est la sienne. Retombe sur la fenêtre de
+    // la page pour tout le reste, qui y vit.
+    const computed = (doc.defaultView ?? window).getComputedStyle(node)
+    font = `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} {size}px ${computed.fontFamily || 'sans-serif'}`
+    by_key.set(key, font)
+  }
+  return font.replace('{size}', String(fontSizePx))
+}
+
+// #588 — Police calculée des libellés, MÉMORISÉE. `getComputedStyle` lu au milieu des écritures du
+// dessin force un recalcul de style du document entier, à chaque libellé : c'était 20 % d'un dessin
+// complet (304 nœuds : 0,34 s). Ce qu'il rend ne dépend que des attributs de police que pose
+// `applyTextStyle`, des classes du <text> et de la feuille de style de sa fenêtre — d'où la clé, et
+// une mémoire par document. Vidée à chaque dessin complet (`resetLabelFontCache`) : une feuille de
+// style qui changerait en cours de route serait relue au dessin suivant.
+let _label_font_cache = new WeakMap<Document, Map<string, string>>()
+export function resetLabelFontCache(): void {
+  _label_font_cache = new WeakMap()
 }
 
 // Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
