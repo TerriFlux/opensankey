@@ -18,6 +18,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} parents do not match the sum of their children',
         truncated: 'Depth truncated',
         back: 'back',
+        back_to: 'Back to {{name}}',
         level: 'Level {{index}}',
         group: {
           read: 'Hierarchy'
@@ -40,6 +41,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} parents ne bouclent pas avec leurs enfants',
         truncated: 'Profondeur tronquée',
         back: 'remonter',
+        back_to: 'Remonter à {{name}}',
         level: 'Niveau {{index}}',
         group: {
           read: 'Hiérarchie'
@@ -62,6 +64,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} padres no cuadran con sus hijos',
         truncated: 'Profundidad truncada',
         back: 'volver',
+        back_to: 'Volver a {{name}}',
         level: 'Nivel {{index}}',
         group: {
           read: 'Jerarquía'
@@ -84,6 +87,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} Elternknoten stimmen nicht mit ihren Kindern überein',
         truncated: 'Tiefe abgeschnitten',
         back: 'zurück',
+        back_to: 'Zurück zu {{name}}',
         level: 'Ebene {{index}}',
         group: {
           read: 'Hierarchie'
@@ -106,6 +110,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} genitori non quadrano con i loro figli',
         truncated: 'Profondità troncata',
         back: 'risalire',
+        back_to: 'Risalire a {{name}}',
         level: 'Livello {{index}}',
         group: {
           read: 'Gerarchia'
@@ -128,6 +133,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} 个父节点与其子节点不平衡',
         truncated: '层级已截断',
         back: '返回',
+        back_to: '返回 {{name}}',
         level: '第 {{index}} 层',
         group: {
           read: '层级'
@@ -150,6 +156,7 @@ export const resources_sunburst = {
         mismatch: '{{count}} 件の親ノードが子ノードと一致しません',
         truncated: '深さを打ち切りました',
         back: '戻る',
+        back_to: '{{name}} に戻る',
         level: 'レベル {{index}}',
         group: {
           read: '階層'

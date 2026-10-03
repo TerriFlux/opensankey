@@ -49,6 +49,9 @@ import {
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
 import { mountFigureTextZones } from './figureTextZones'
+import type { Type_FigureCrumb } from './figureTextZones'
+// Les crans se nomment par l'accesseur commun (libellé affiché, repli nom puis id).
+import { displayedNameOf } from '../Elements/ElementNaming'
 // 23/09/2026 — le geste du clic droit, en entier (marqueur « local », redessin, menu Hiérarchies
 // rafraîchi) : c'est celui que le disque appelle déjà, et il n'y en a pas deux.
 import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
@@ -56,6 +59,7 @@ import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
+import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
   dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, resolveDataFocus,
   smallMultipleMembersOf
@@ -547,11 +551,75 @@ const chartOptions = (
  * pendant que l'anneau décompose son petit-fils. Le sujet reste le sujet — c'est le périmètre
  * REGARDÉ qui a changé, et c'est lui qu'on lit.
  */
-const figureTitleFallback = (ctx: Type_RepresentationContext): string => {
+const figureTitleFallback = (ctx: Type_RepresentationContext): string =>
+  focusedNodeOf(ctx)?.name ?? dataFocusOf(ctx)?.member.name ?? subjectNameOf(ctx)
+
+/** Le nom du SUJET, ce que la figure nomme quand elle n'est pas descendue. */
+const subjectNameOf = (ctx: Type_RepresentationContext): string => {
   const subject = chartSubjectOf(ctx.element)
-  return focusedNodeOf(ctx)?.name ?? dataFocusOf(ctx)?.member.name ?? (subject?.kind === 'node'
+  return subject?.kind === 'node'
     ? subject.node.name
-    : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : '')
+    : subject?.kind === 'flux' ? `${subject.link.source.name} → ${subject.link.target.name}` : ''
+}
+
+/**
+ * 02/10/2026 — LE FIL D'ARIANE D'UNE COURONNE ZOOMÉE (os#1511).
+ *
+ * Julien : « il faudrait un fil d'Ariane qui montre tout ce qu'on a cliqué, genre Céréales ›
+ * Céréales transformées ». Le sujet, puis un cran par foyer empilé (`hierarchy_focus`) : des nœuds
+ * sur une couronne de nœuds, des secteurs de membre sur une couronne de dimensions de données. Un
+ * secteur emboîté (`membre:a/x||membre:b/y`) ne nomme que ce qu'il AJOUTE au cran d'avant — « Europe »
+ * sous « Céréales », pas « Céréales · Europe » qui redirait le cran précédent.
+ *
+ * Chaque cran remonte à son niveau par le même chemin que le centre (`focusTo`, écrit le foyer
+ * tronqué) ; sans geste de remontée, le fil se lit sans se cliquer. Vide : pas de fil — la figure
+ * n'est pas descendue, ou son foyer ne désigne plus rien de dessinable.
+ */
+const figureBreadcrumbOf = (
+  ctx: Type_RepresentationContext,
+  focusTo: ((path: string[]) => void) | undefined
+): Type_FigureCrumb[] => {
+  const path = hierarchyPathOf(ctx.options)
+  if (path.length === 0) return []
+  const sankey = ctx.app_data.drawing_area.sankey
+  const decompose = analysisOf(ctx)?.descriptor.decompose
+  let labels: string[]
+  let root_label = subjectNameOf(ctx)
+  if (decompose?.kind === 'data_dimension') {
+    if (dataFocusOf(ctx) === null) return []
+    // LA RACINE DE LA DIMENSION où l'on est entré (« Produits agricoles ») plutôt que le flux
+    // sujet : c'est elle que le premier zoom a découpée, et le nom du flux n'est écrit nulle part
+    // sur la couronne non zoomée. Plusieurs racines : le sujet.
+    const first_dim_id = parseMemberSectorPath(path[0])?.[0]?.dimension_id
+    const first_dim = first_dim_id !== undefined
+      ? sankey.data_taggs_dict[first_dim_id] as unknown as Class_DataTagGroup | undefined
+      : undefined
+    const roots = first_dim ? dimensionRootsOf(first_dim) : []
+    if (roots.length === 1) root_label = displayedNameOf(roots[0])
+    let previous: Type_MemberRef[] = []
+    labels = path.map(entry => {
+      const refs = parseMemberSectorPath(entry) ?? []
+      const added = refs.filter(r => !previous.some(p => p.dimension_id === r.dimension_id && p.member_id === r.member_id))
+      previous = refs
+      const nameOf = (r: Type_MemberRef) => {
+        const dim = sankey.data_taggs_dict[r.dimension_id] as unknown as Class_DataTagGroup | undefined
+        const member = dim?.tags_dict[r.member_id] as Class_DataTag | undefined
+        return member ? displayedNameOf(member) : r.member_id
+      }
+      return (added.length > 0 ? added : refs.slice(-1)).map(nameOf).join(' · ')
+    })
+  } else if (decompose?.kind === 'node_children') {
+    if (focusedNodeOf(ctx) === null) return []
+    labels = path.map(id => sankey.nodes_dict[id] ? displayedNameOf(sankey.nodes_dict[id]) : id)
+  } else {
+    return []
+  }
+  const t = ctx.app_data.t
+  return [root_label, ...labels].map((label, i) => ({
+    label,
+    go: focusTo ? () => focusTo(path.slice(0, i)) : undefined,
+    hint: t('sunburst.back_to', { name: label }) as string
+  }))
 }
 
 /** Le nœud dans lequel la couronne est descendue, ou `null` si elle regarde son sujet. */
@@ -713,7 +781,11 @@ const isBelow = (
 const dataDimensionClickGestures = (
   ctx: Type_RepresentationContext,
   style: Type_FigureChartStyle
-): { activate: (part_id: string, gesture: { shift: boolean }) => void, back?: () => void } | null => {
+): {
+  activate: (part_id: string, gesture: { shift: boolean }) => void
+  back?: () => void
+  focusTo?: (path: string[]) => void
+} | null => {
   const decompose = analysisOf(ctx)?.descriptor.decompose
   if (decompose?.kind !== 'data_dimension') return null
   const { window_id, pane_key } = ctx
@@ -821,7 +893,12 @@ const dataDimensionClickGestures = (
   }
   // LE CENTRE REMONTE D'UN CRAN quand la figure est descendue, quel que soit le réglage du moment :
   // un foyer posé sous « Zoome dedans » ne doit pas devenir un piège quand on change de réglage.
-  return { activate, back: focus.length > 0 ? () => writeFocus(focus.slice(0, -1)) : undefined }
+  // Le fil d'Ariane remonte par le même chemin, à n'importe quel cran (`figureBreadcrumbOf`).
+  return {
+    activate,
+    back: focus.length > 0 ? () => writeFocus(focus.slice(0, -1)) : undefined,
+    focusTo: focus.length > 0 ? writeFocus : undefined
+  }
 }
 
 /**
@@ -859,6 +936,8 @@ const donutClickGestures = (
 ): {
   activate?: (part_id: string, gesture: { shift: boolean, alt?: boolean }, route?: string[]) => void
   back?: () => void
+  /** Remonte directement au foyer `path` (le fil d'Ariane) ; absent quand `back` l'est. */
+  focusTo?: (path: string[]) => void
 } => {
   // ⚠️ PLUS DE SORTIE SUR `interaction_click === 'none'`, et c'est le cœur du modèle : OUVRIR
   // L'ANNEAU EST LE GESTE DE BASE, il ne se règle pas. Le réglage ne dit que ce qui s'y AJOUTE
@@ -1068,7 +1147,8 @@ const donutClickGestures = (
     activate,
     back: (wants_drill && hierarchy.path.length > 0)
       ? () => writePath(hierarchy.path.slice(0, -1))
-      : undefined
+      : undefined,
+    focusTo: (wants_drill && hierarchy.path.length > 0) ? writePath : undefined
   }
 }
 
@@ -1207,6 +1287,9 @@ export const registerAnalysisRepresentations = (): void => {
       const style = donutStyleOf(ctx)
       const gestures = donutClickGestures(ctx, style)
       const t = ctx.app_data.t
+      // 02/10/2026 — le fil d'Ariane, sous le titre, pour les trois tracés (une seule ligne pour
+      // les petits multiples : toutes leurs cases sont zoomées sur la même part).
+      const breadcrumb = figureBreadcrumbOf(ctx, gestures.focusTo)
 
       // 01/10/2026 — UNE PETITE COURONNE PAR MEMBRE (Julien : « une petite couronne par membre de
       // la seconde hiérarchie »). La grille sous le titre de la figure, chaque case titrée par son
@@ -1215,7 +1298,8 @@ export const registerAnalysisRepresentations = (): void => {
       const split = smallMultiplesOf(ctx)
       if (split) {
         container.innerHTML = ''
-        const host = mountFigureTextZones(container, figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx)))
+        const host = mountFigureTextZones(
+          container, figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx)), breadcrumb)
         // 02/10/2026 — UNE LÉGENDE COMMUNE (Julien : « pour les multiples, il ne faut pas voir les
         // labels qui sont répétés ; par contre une place commune pour la légende serait
         // intéressante »). Les cases n'écrivent plus le nom des parts — ce sont les mêmes partout —
@@ -1388,6 +1472,7 @@ export const registerAnalysisRepresentations = (): void => {
             click_action: 'aggregate'
           },
           texts: (subject_name: string) => figureTextsOf(ctx.options ?? {}, subject_name),
+          breadcrumb,
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
@@ -1432,6 +1517,7 @@ export const registerAnalysisRepresentations = (): void => {
         {
           ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
           style,
+          breadcrumb,
           part_aspect: wiring.part_aspect,
           on_part_select: wiring.on_part_select,
           // 25/09/2026 — ET LE TRACÉ DIT CE QU'IL A DÉCIDÉ : c'est par là que le panneau apprend

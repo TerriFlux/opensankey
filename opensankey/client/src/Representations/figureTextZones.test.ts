@@ -123,3 +123,59 @@ describe('mountFigureTextZones avec plusieurs zones', () => {
     expect(block.style.fontFamily).toBe('Arial, sans-serif')
   })
 })
+
+// 02/10/2026 — LE FIL D ARIANE D UNE FIGURE ZOOMEE (os#1511).
+describe('mountFigureTextZones avec un fil d Ariane', () => {
+
+  const crumbs = (go: jest.Mock) => [
+    { label: 'Produits agricoles', go: () => go(0) },
+    { label: 'Cereales', go: () => go(1) },
+    { label: 'Produits transformes', go: () => go(2) }
+  ]
+
+  it('ne pose rien et ne reserve aucune place sous deux crans', () => {
+    const container = host()
+    expect(mountFigureTextZones(container, [], [{ label: 'Seul' }])).toBe(container)
+    expect(container.childNodes).toHaveLength(0)
+  })
+
+  it('pose le fil seul en tete, avant le dessin, sans titre', () => {
+    const container = host()
+    const body = mountFigureTextZones(container, [], crumbs(jest.fn()))
+    const wrap = container.firstElementChild as HTMLElement
+    expect(Array.from(wrap.children).map(c => c.className)).toEqual(['figure_breadcrumb', 'figure_body'])
+    expect(body.className).toBe('figure_body')
+  })
+
+  it('pose le fil juste sous le titre, avant les autres zones du haut', () => {
+    const container = host()
+    mountFigureTextZones(container, [text({ text: 'Titre' }), text({ text: 'Sous-titre' })], crumbs(jest.fn()))
+    const wrap = container.firstElementChild as HTMLElement
+    expect(Array.from(wrap.children).map(c => c.className))
+      .toEqual(['figure_text figure_title', 'figure_breadcrumb', 'figure_text', 'figure_body'])
+  })
+
+  it('separe les crans, met le dernier en gras et inerte, rend les autres cliquables', () => {
+    const container = host()
+    const go = jest.fn()
+    mountFigureTextZones(container, [], crumbs(go))
+    const line = container.querySelector('.figure_breadcrumb') as HTMLElement
+    expect(line.textContent).toBe('Produits agricoles › Cereales › Produits transformes')
+    const buttons = line.querySelectorAll('button')
+    expect(buttons).toHaveLength(2)
+    const current = line.querySelector('.figure_crumb_current') as HTMLElement
+    expect(current.tagName).toBe('SPAN')
+    expect(current.style.fontWeight).toBe('700')
+    ;(buttons[0] as HTMLButtonElement).click()
+    expect(go).toHaveBeenCalledWith(0)
+    ;(buttons[1] as HTMLButtonElement).click()
+    expect(go).toHaveBeenCalledWith(1)
+    expect(go).not.toHaveBeenCalledWith(2)
+  })
+
+  it('laisse un cran sans geste de remontee en simple texte', () => {
+    const container = host()
+    mountFigureTextZones(container, [], [{ label: 'Racine' }, { label: 'Cereales' }])
+    expect(container.querySelectorAll('.figure_breadcrumb button')).toHaveLength(0)
+  })
+})

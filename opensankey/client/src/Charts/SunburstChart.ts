@@ -36,6 +36,7 @@ import { BARS_STYLE_DEFAULTS } from './figureChartStyle'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import type { Type_FigureText, Type_FigurePartTextAspect } from './figureChartStyle'
 import { mountFigureTextZones } from '../Representations/figureTextZones'
+import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 
 /**
@@ -411,6 +412,8 @@ export interface Type_SunburstChartOptions {
    * plusieurs —, dont un titre sans texte propre se sert ; d'où la fonction plutôt que la liste.
    */
   texts?: (subject_name: string) => Type_FigureText[]
+  /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
+  breadcrumb?: Type_FigureCrumb[]
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
@@ -1158,7 +1161,7 @@ export const drawSunburstChart = (
     const subject_name = tree.roots.length === 1
       ? tree.roots[0].label
       : (opts.scope_label?.(tree.roots.length) ?? '')
-    const host = mountFigureTextZones(container, opts.texts?.(subject_name) ?? [])
+    const host = mountFigureTextZones(container, opts.texts?.(subject_name) ?? [], opts.breadcrumb)
     const sel = d3.select(host)
     const width = host.clientWidth
     const height = host.clientHeight
