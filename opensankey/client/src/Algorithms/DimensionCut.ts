@@ -129,3 +129,109 @@ export const lignesDeLArbre = (
   racines(dimension).forEach(racine => descendre(racine, 0))
   return lignes
 }
+
+// ── 03/10/2026 — LE SÉLECTEUR À DEUX MODES : « PAR NIVEAU » ET « ARBRE » ─────────────────────────
+//
+// Julien : « soit on sélectionne PAR NIVEAU, et la liste dessous donne les tags de ce niveau qu'on
+// peut sélectionner un par un (avec le bouton "tout sélectionner" comme dans Excel) ; soit on est
+// en mode ARBRE et on sélectionne à travers les niveaux. Pour garder la cohérence on ne peut pas
+// sélectionner Céréales et Blé : si on sélectionne Blé ça désélectionne Céréales et vice-versa. »
+//
+// Ce qui perturbait dans l'arbre d'avant : DÉPLIER y était COUPER. Ouvrir « Céréales » remplaçait
+// les céréales par leurs enfants sur le diagramme, sans case à cocher pour dire ce qui était choisi.
+// Désormais la flèche ne fait que déplier l'AFFICHAGE, et ce sont des cases qui choisissent. La
+// coupe n'est plus une frontière par construction : on peut choisir Blé seul. Ce qui reste interdit
+// est le RECOUVREMENT (un membre et son ancêtre ensemble), et le geste le corrige lui-même.
+
+export type Type_SelecteurMode = 'level' | 'tree'
+export type Type_EtatTout = 'all' | 'some' | 'none'
+
+/** Les membres que montre le niveau `index`, dans l'ordre de l'arbre (parcours en profondeur). */
+export const membresDuNiveau = (dimension: Class_DataTagGroup, index: number): Class_DataTag[] => {
+  if (dimension.levels.length === 0) return dimension.tags_list as Class_DataTag[]
+  const montres = new Set(dimension.membersAtLevel(index).map(m => m.id))
+  const out: Class_DataTag[] = []
+  const descendre = (membre: Class_DataTag) => {
+    if (montres.has(membre.id)) out.push(membre)
+    ;(membre.children as Class_DataTag[]).forEach(descendre)
+  }
+  racines(dimension).forEach(descendre)
+  return out
+}
+
+/**
+ * Le niveau dont la sélection est un SOUS-ENSEMBLE, ou `null` si elle mêle des niveaux. C'est le
+ * niveau du membre choisi le plus profond ; les feuilles moins profondes y comptent (une branche
+ * courte se montre à tous les niveaux plus fins, cf. `membersAtLevel`).
+ */
+export const niveauDeLaSelection = (dimension: Class_DataTagGroup, choisis: ReadonlySet<string>): number | null => {
+  const nb = dimension.levels.length
+  if (nb === 0) return 0
+  const membres = [...choisis]
+    .map(id => dimension.tags_dict[id] as Class_DataTag | undefined)
+    .filter((m): m is Class_DataTag => m !== undefined)
+  if (membres.length === 0) return null
+  const niveau = Math.min(nb - 1, Math.max(...membres.map(m => dimension.depthOf(m))))
+  const montres = new Set(dimension.membersAtLevel(niveau).map(m => m.id))
+  return membres.every(m => montres.has(m.id)) ? niveau : null
+}
+
+/** Le mode à l'ouverture : « Par niveau » si la sélection tient dans un niveau, sinon « Arbre ». */
+export const modeALOuverture = (dimension: Class_DataTagGroup, choisis: ReadonlySet<string>): Type_SelecteurMode =>
+  dimension.levels.length === 0 || niveauDeLaSelection(dimension, choisis) !== null ? 'level' : 'tree'
+
+/** L'état de la case « (Tout sélectionner) » : sur les membres VISIBLES (liste filtrée comprise). */
+export const etatToutSelectionner = (visibles: readonly string[], choisis: ReadonlySet<string>): Type_EtatTout => {
+  const n = visibles.filter(id => choisis.has(id)).length
+  if (n === 0) return 'none'
+  return n === visibles.length ? 'all' : 'some'
+}
+
+/**
+ * COCHER un membre dans l'arbre : il entre, ses ancêtres et ses descendants sortent. Jamais
+ * « Céréales » et « Blé » ensemble — le dernier coché l'emporte, dans les deux sens.
+ */
+export const cocherExclusif = (
+  dimension: Class_DataTagGroup, choisis: ReadonlySet<string>, id: string
+): string[] => {
+  const membre = dimension.tags_dict[id] as Class_DataTag | undefined
+  if (membre === undefined) return [...choisis]
+  const garde = [...choisis].filter(autre => {
+    if (autre === id) return false
+    const m = dimension.tags_dict[autre] as Class_DataTag | undefined
+    if (m === undefined) return false
+    return !m.hasAncestor(membre) && !membre.hasAncestor(m)
+  })
+  return [...garde, id]
+}
+
+/** DÉCOCHER : rend `null` s'il ne resterait rien — au moins un membre reste choisi. */
+export const decocher = (choisis: ReadonlySet<string>, id: string): string[] | null => {
+  const reste = [...choisis].filter(autre => autre !== id)
+  return reste.length > 0 ? reste : null
+}
+
+/**
+ * Un membre est-il PARTIELLEMENT choisi dans l'arbre : non choisi lui-même, mais un de ses
+ * descendants l'est. C'est la case « tiret » d'Excel ; la cocher choisit le membre entier.
+ */
+export const descendantChoisi = (membre: Class_DataTag, choisis: ReadonlySet<string>): boolean =>
+  (membre.children as Class_DataTag[]).some(enfant => choisis.has(enfant.id) || descendantChoisi(enfant, choisis))
+
+/**
+ * POUR UNE COUPE QUI DOIT RESTER UNE FRONTIÈRE (couronne détachée : des parts d'un tout). Cocher un
+ * membre ouvre ses ancêtres et referme le membre : il paraît, avec ses frères pour que le tout reste
+ * entier. Rend le nouvel ensemble d'ouverts, que la figure écrit par sa propre fonction.
+ */
+export const ouvertsEnCochant = (
+  dimension: Class_DataTagGroup, ouverts: ReadonlySet<string>, id: string
+): Set<string> => {
+  const membre = dimension.tags_dict[id] as Class_DataTag | undefined
+  const out = new Set(ouverts)
+  if (membre === undefined) return out
+  let parent = membre.parent
+  while (parent !== undefined) { out.add(parent.id); parent = parent.parent }
+  const refermer = (m: Class_DataTag) => { out.delete(m.id); (m.children as Class_DataTag[]).forEach(refermer) }
+  refermer(membre)
+  return out
+}
