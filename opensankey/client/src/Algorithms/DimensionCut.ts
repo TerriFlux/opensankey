@@ -141,7 +141,8 @@ export const lignesDeLArbre = (
 // les céréales par leurs enfants sur le diagramme, sans case à cocher pour dire ce qui était choisi.
 // Désormais la flèche ne fait que déplier l'AFFICHAGE, et ce sont des cases qui choisissent. La
 // coupe n'est plus une frontière par construction : on peut choisir Blé seul. Ce qui reste interdit
-// est le RECOUVREMENT (un membre et son ancêtre ensemble), et le geste le corrige lui-même.
+// est le RECOUVREMENT (un membre et son ancêtre ensemble), et le geste le corrige lui-même. Une
+// couronne, liée ou détachée, dessine la même sélection (cf. `hiddenForSelection`).
 
 export type Type_SelecteurMode = 'level' | 'tree'
 export type Type_EtatTout = 'all' | 'some' | 'none'
@@ -217,21 +218,3 @@ export const decocher = (choisis: ReadonlySet<string>, id: string): string[] | n
  */
 export const descendantChoisi = (membre: Class_DataTag, choisis: ReadonlySet<string>): boolean =>
   (membre.children as Class_DataTag[]).some(enfant => choisis.has(enfant.id) || descendantChoisi(enfant, choisis))
-
-/**
- * POUR UNE COUPE QUI DOIT RESTER UNE FRONTIÈRE (couronne détachée : des parts d'un tout). Cocher un
- * membre ouvre ses ancêtres et referme le membre : il paraît, avec ses frères pour que le tout reste
- * entier. Rend le nouvel ensemble d'ouverts, que la figure écrit par sa propre fonction.
- */
-export const ouvertsEnCochant = (
-  dimension: Class_DataTagGroup, ouverts: ReadonlySet<string>, id: string
-): Set<string> => {
-  const membre = dimension.tags_dict[id] as Class_DataTag | undefined
-  const out = new Set(ouverts)
-  if (membre === undefined) return out
-  let parent = membre.parent
-  while (parent !== undefined) { out.add(parent.id); parent = parent.parent }
-  const refermer = (m: Class_DataTag) => { out.delete(m.id); (m.children as Class_DataTag[]).forEach(refermer) }
-  refermer(membre)
-  return out
-}

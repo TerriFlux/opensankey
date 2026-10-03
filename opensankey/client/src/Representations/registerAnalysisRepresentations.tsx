@@ -61,10 +61,9 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberSectorId, parseMemberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
-  dataCutOf, diagramDimensionOpening, dimensionOpenedMembers, dimensionRootsOf, resolveDataFocus,
-  smallMultipleMembersOf
+  dataCutOf, diagramDimensionOpening, dimensionHiddenMembers, dimensionOpenedMembers, dimensionRootsOf,
+  resolveDataFocus, selectionFromOpening, smallMultipleMembersOf
 } from '../Charts/DataDimensionHierarchy'
-import { coupeDepuisOuverts } from '../Algorithms/DimensionCut'
 import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
 import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
@@ -823,8 +822,10 @@ const dataDimensionClickGestures = (
     )
     // os#1511 — le geste de coupe de l'hôte, annulable ; `multi` passe en choix multiple une
     // dimension qu'aucun nœud ne porte, dans le même pas d'historique.
+    // 03/10/2026 — ce qui est décoché le reste : ouvrir Céréales ne fait pas revenir Lait.
+    const hidden = dimensionHiddenMembers(dim, cut.hidden)
     app_data.runHeavyGesture(() =>
-      applyDimensionCut(app_data, dim, coupeDepuisOuverts(dim, opened), { multi: true }))
+      applyDimensionCut(app_data, dim, selectionFromOpening(dim, opened, hidden), { multi: true }))
   }
 
   /**

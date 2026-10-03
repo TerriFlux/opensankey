@@ -394,3 +394,51 @@ describe('os#1511 — les membres des petits multiples', () => {
     expect(noms(smallMultipleMembersOf(m.groupe, { linked: false }))).toEqual(['cereales', 'lait'])
   })
 })
+
+// 03/10/2026 — UNE COUPE PEUT AVOIR DES TROUS. Julien : « je clique sur Lait rien ne se passe ». La
+// couronne dessine ce qui est coche, comme un graphique d Excel filtre : Lait decoche disparait, et
+// le total baisse d autant.
+
+describe('os#1511 — decocher un membre : la couronne ne le dessine plus', () => {
+  const ids = (racine: Type_SunburstNode) => racine.children.map(c => parseMemberSectorId(c.id)?.member_id)
+
+  test('detachee, Lait decoche : Cereales seule, total 42', () => {
+    const m = monter()
+    const coupe = dataCutOf(m.lien.sankey, [m.groupe.id], {
+      linked: false, opened: { filiere: ['produits'] }, hidden: { filiere: ['lait'] }
+    })
+    const tree = buildNestedDimensionTree({ kind: 'link', link: m.lien }, coupe, { data_tags: null }, { max_depth: 8 })!
+    expect(ids(tree.roots[0])).toEqual(['cereales'])
+    expect(tree.total).toBe(42)
+  })
+
+  test('liee, le diagramme sans Lait : la couronne non plus', () => {
+    const m = monter()
+    m.groupe.selectMembers(['ble', 'mais'])
+    const coupe = dataCutOf(m.lien.sankey, [m.groupe.id], { linked: true })
+    const tree = buildNestedDimensionTree({ kind: 'link', link: m.lien }, coupe, { data_tags: null }, { max_depth: 8 })!
+    expect(secteur(tree.roots[0], m.groupe, m.lait)).toBeUndefined()
+    expect(tree.total).toBe(42)
+  })
+
+  test('un enfant decoche sort de la valeur de son parent, meme en regime declare', () => {
+    const m = monter()
+    const coupe = dataCutOf(m.lien.sankey, [m.groupe.id], {
+      linked: false, opened: { filiere: ['produits', 'cereales'] }, hidden: { filiere: ['mais'] }
+    })
+    const tree = buildNestedDimensionTree(
+      { kind: 'link', link: m.lien }, coupe, { data_tags: null }, { max_depth: 8, value_mode: 'declared' }
+    )!
+    const cereales = secteur(tree.roots[0], m.groupe, m.cereales)!
+    expect(cereales.value).toBe(30)
+    expect(cereales.children.map(c => c.is_residual ?? false)).toEqual([false])
+    expect(tree.total).toBe(37)
+  })
+
+  test('petits multiples detaches : un membre decoche ne fait pas de couronne', () => {
+    const m = monter()
+    expect(smallMultipleMembersOf(m.groupe, {
+      linked: false, opened: { filiere: ['produits'] }, hidden: { filiere: ['lait'] }
+    }).map(t => t.id)).toEqual(['cereales'])
+  })
+})

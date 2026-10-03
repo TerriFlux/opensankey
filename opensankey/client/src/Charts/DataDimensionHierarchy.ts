@@ -157,6 +157,11 @@ const RESIDUAL_SUFFIX = '__residual__'
 export interface Type_DataOpening {
   linked: boolean
   opened?: { [dimension_id: string]: string[] }
+  /**
+   * 03/10/2026 — LES MEMBRES DÉCOCHÉS, par dimension (détachée seulement ; liée, ils se lisent sur
+   * le diagramme). Absent d'une écriture = ceux d'avant sont gardés (cf. `withDataOpening`).
+   */
+  hidden?: { [dimension_id: string]: string[] }
 }
 
 /** La coupe EN VIGUEUR, telle que l'arbre, le clic et le panneau la lisent. */
@@ -168,7 +173,77 @@ export interface Type_DataCut {
   dividing: Class_DataTagGroup[]
   /** Les membres ouverts, en identifiants de secteur de membre (`memberSectorId`). */
   opened: ReadonlySet<string>
+  /**
+   * 03/10/2026 — LES MEMBRES DÉCOCHÉS, en identifiants de secteur : ils ne se dessinent pas, et le
+   * total ne les compte pas (le filtre d'Excel). Absent = aucun.
+   */
+  hidden?: ReadonlySet<string>
 }
+
+// ── 03/10/2026 — UNE COUPE PEUT AVOIR DES TROUS ─────────────────────────────────────────────────
+//
+// Julien : « j'ai pas l'impression qu'on peut désélectionner ? je clique sur Lait rien ne se
+// passe ». La couronne détachée refusait toute décoche (des « parts d'un tout » sans trou), et la
+// couronne liée redessinait Lait quand le diagramme l'avait retiré : elle descendait les enfants des
+// ouverts sans regarder ce qui était choisi. Une couronne dessine désormais les membres choisis,
+// comme un graphique d'Excel filtré : le total et les parts se calculent sur ce qui est montré.
+//
+// Une sélection (une antichaîne de membres) s'écrit en DEUX ensembles : les OUVERTS (ses ancêtres
+// stricts, comme avant) et les CACHÉS — les enfants d'un ouvert, ou les membres d'entrée, qui ne sont
+// ni choisis ni ouverts. Sans caché, c'est la frontière d'hier. Aucun double compte : un membre et
+// son ancêtre ne se dessinent jamais ensemble, l'ouvert cède sa place à ses enfants.
+
+/** Les ancêtres stricts des membres choisis : ce qu'il faut ouvrir pour les voir. */
+export const openedForSelection = (dim: Class_DataTagGroup, chosen: Iterable<string>): Set<string> => {
+  const out = new Set<string>()
+  for (const id of chosen) {
+    const member = dim.tags_dict[id] as Class_DataTag | undefined
+    for (let p = member?.parent as Class_DataTag | undefined; p !== undefined; p = p.parent as Class_DataTag | undefined) {
+      out.add(p.id)
+    }
+  }
+  return out
+}
+
+/** Les membres CACHÉS d'une sélection : rencontrés en descendant, ni choisis ni ouverts. */
+export const hiddenForSelection = (dim: Class_DataTagGroup, chosen: ReadonlySet<string>): string[] => {
+  if (chosen.size === 0) return []
+  const opened = openedForSelection(dim, chosen)
+  const out: string[] = []
+  const visit = (m: Class_DataTag) => {
+    if (chosen.has(m.id)) return
+    if (opened.has(m.id)) { (m.children as Class_DataTag[]).forEach(visit); return }
+    out.push(m.id)
+  }
+  dimensionRootsOf(dim).forEach(visit)
+  return out
+}
+
+/** La sélection qu'écrivent des ouverts et des cachés : la frontière des ouverts, moins les cachés. */
+export const selectionFromOpening = (
+  dim: Class_DataTagGroup, opened: ReadonlySet<string>, hidden: ReadonlySet<string> = new Set()
+): string[] => {
+  const out: string[] = []
+  const visit = (m: Class_DataTag) => {
+    if (hidden.has(m.id)) return
+    const children = m.children as Class_DataTag[]
+    if (opened.has(m.id) && children.length > 0) children.forEach(visit)
+    else out.push(m.id)
+  }
+  dimensionRootsOf(dim).forEach(visit)
+  return out
+}
+
+/** Les cachés d'une coupe, en identifiants de secteur, pour les dimensions données. */
+const hiddenSectorsOf = (dims: Class_DataTagGroup[], hiddenOf: (dim: Class_DataTagGroup) => Iterable<string>) => {
+  const out = new Set<string>()
+  dims.forEach(dim => { for (const id of hiddenOf(dim)) out.add(memberSectorId(dim.id, id)) })
+  return out
+}
+
+/** Les membres cachés d'UNE dimension, en identifiants de membre, lus sur une coupe. */
+export const dimensionHiddenMembers = (dim: Class_DataTagGroup, hidden: ReadonlySet<string> | undefined): Set<string> =>
+  new Set((dim.tags_list as Class_DataTag[]).filter(m => hidden?.has(memberSectorId(dim.id, m.id))).map(m => m.id))
 
 /** Les racines d'une dimension. */
 export const dimensionRootsOf = (dim: Class_DataTagGroup): Class_DataTag[] =>
@@ -234,11 +309,14 @@ export const dataCutOf = (
     : declared
   const dims = candidates.filter(d => d.is_hierarchical && d.tags_list.length > 0 && !excluded_ids.includes(d.id))
   if (opening.linked) {
+    const dividing = dims.filter(d => d.selected_tags_list.length > 1)
     return {
       linked: true,
       dims,
-      dividing: dims.filter(d => d.selected_tags_list.length > 1),
-      opened: diagramDimensionOpening(dims)
+      dividing,
+      opened: diagramDimensionOpening(dims),
+      // Ce que le diagramme a décoché ne se dessine pas non plus dans la figure qui le suit.
+      hidden: hiddenSectorsOf(dividing, d => hiddenForSelection(d, new Set(d.selected_tags_list.map(m => m.id))))
     }
   }
   const opened = new Set<string>()
@@ -248,7 +326,8 @@ export const dataCutOf = (
   } else {
     Object.entries(opening.opened).forEach(([dim_id, ids]) => ids.forEach(id => opened.add(memberSectorId(dim_id, id))))
   }
-  return { linked: false, dims, dividing: dims.filter(d => dimensionDivides(d, opened)), opened }
+  const hidden = hiddenSectorsOf(dims, d => opening.hidden?.[d.id] ?? [])
+  return { linked: false, dims, dividing: dims.filter(d => dimensionDivides(d, opened)), opened, hidden }
 }
 
 /**
@@ -288,9 +367,10 @@ export const smallMultipleMembersOf = (dim: Class_DataTagGroup, opening: Type_Da
     return shown.length > 0 ? shown : roots
   }
   const opened = new Set(opening.opened?.[dim.id] ?? smallMultipleDefaultOpened(dim))
-  const frontier = (members: Class_DataTag[]): Class_DataTag[] => members.flatMap(m =>
-    opened.has(m.id) && m.children.length > 0 ? frontier(m.children as Class_DataTag[]) : [m])
-  return frontier(roots)
+  // 03/10/2026 — un membre décoché ne fait pas de couronne.
+  const hidden = new Set(opening.hidden?.[dim.id] ?? [])
+  const shown = selectionFromOpening(dim, opened, hidden)
+  return shown.map(id => dim.tags_dict[id] as Class_DataTag)
 }
 
 /**
@@ -361,11 +441,17 @@ export const buildNestedDimensionTree = (
   }
   const isOpen = (dim: Class_DataTagGroup, member: Class_DataTag) =>
     opened.has(memberSectorId(dim.id, member.id))
+  // 03/10/2026 — un membre décoché ne se dessine pas : ni lui, ni sa part du total.
+  const hidden = cut.hidden
+  const shownIn = (dim: Class_DataTagGroup, members: Class_DataTag[]) => hidden === undefined || hidden.size === 0
+    ? members
+    : members.filter(m => !hidden.has(memberSectorId(dim.id, m.id)))
   /** Par où l'on entre dans une dimension qui découpe : les enfants de sa racine unique, ou ses racines. */
-  const entryOf = (dim: Class_DataTagGroup) => {
+  const entryOfAll = (dim: Class_DataTagGroup) => {
     const roots = dimensionRootsOf(dim)
     return roots.length === 1 ? (roots[0].children as Class_DataTag[]) : roots
   }
+  const entryOf = (dim: Class_DataTagGroup) => shownIn(dim, entryOfAll(dim))
   const nested_palettes = dims.length > 1
 
   /** La valeur du sujet à une coordonnée : les dimensions découpées fixées, les autres suivies. */
@@ -390,19 +476,28 @@ export const buildNestedDimensionTree = (
     branch: string, entry_depth: number, force_open = false
   ): Type_SunburstNode => {
     const dim = dims[k]
-    const declared = valueAt(coord)
     const id = memberPathSectorId(refs)
+    // Ouvert dans sa dimension : ses enfants. Sinon, la dimension suivante qui découpe.
+    // `force_open` : le foyer montre ses enfants, ouvert ou non dans la coupe.
+    const own_all = force_open || isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
+    const own = shownIn(dim, own_all)
+    const next_all: { k: number, members: Class_DataTag[] } | null = own.length > 0
+      ? { k, members: own_all }
+      : (k + 1 < dims.length ? { k: k + 1, members: entryOfAll(dims[k + 1]) } : null)
+    const next = next_all === null ? null : { k: next_all.k, members: shownIn(dims[next_all.k], next_all.members) }
+    // 03/10/2026 — CE QUI EST DÉCOCHÉ SOUS CE SECTEUR SORT DE SA VALEUR : sinon l'arc compterait ce
+    // qu'on a retiré (tronqué, ou en régime 'declared' où il deviendrait du « non réparti »).
+    const hidden_value = next_all === null || next === null || next.members.length === next_all.members.length
+      ? 0
+      : next_all.members
+        .filter(m => !next.members.includes(m))
+        .reduce((acc, m) => acc + valueAt(new Map(coord).set(dims[next_all.k].id, m)), 0)
+    const declared = valueAt(coord) - hidden_value
     const base: Type_SunburstNode = {
       id, label: member.name, value: declared, declared, color: member.color ?? null,
       depth, children: [], dimension_id: dim.id,
       ...(nested_palettes ? { palette: { index: k, branch_id: branch, depth: depth - entry_depth } } : {})
     }
-    // Ouvert dans sa dimension : ses enfants. Sinon, la dimension suivante qui découpe.
-    // `force_open` : le foyer montre ses enfants, ouvert ou non dans la coupe.
-    const own = force_open || isOpen(dim, member) ? (member.children as Class_DataTag[]) : []
-    const next: { k: number, members: Class_DataTag[] } | null = own.length > 0
-      ? { k, members: own }
-      : (k + 1 < dims.length ? { k: k + 1, members: entryOf(dims[k + 1]) } : null)
     if (next === null) return base
     if (depth + 1 >= max_depth) { is_truncated = true; return base }
     const children = next.members

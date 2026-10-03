@@ -130,6 +130,17 @@ export const dimensionOpeningAttribute = () => figureAttribute<{ [dimension_id: 
   }, undefined, { kind: 'none' }
 )
 /**
+ * 03/10/2026 — LES MEMBRES DÉCOCHÉS d'une figure détachée, par dimension de données : ils ne se
+ * dessinent pas (le filtre d'Excel). Absente = aucun, la coupe est la frontière de ses ouverts.
+ */
+export const DIMENSION_HIDDEN_KEY = 'dimension_hidden'
+export const dimensionHiddenAttribute = () => figureAttribute<{ [dimension_id: string]: string[] } | undefined>(
+  undefined, 'identity', {
+    en: 'Unchecked members', fr: 'Membres décochés', es: 'Miembros desmarcados',
+    de: 'Abgewählte Elemente', it: 'Membri deselezionati', 'zh-CN': '未勾选的成员', ja: '選択解除されたメンバー'
+  }, undefined, { kind: 'none' }
+)
+/**
  * 01/10/2026 — LES PETITS MULTIPLES : la dimension qui donne UNE PETITE COURONNE PAR MEMBRE
  * (Julien : « une petite couronne par membre de la seconde hiérarchie »). Absente, une seule
  * couronne. Sans interface générique : la ligne « Une couronne par » des Coordonnées la règle.
@@ -464,6 +475,7 @@ export const DONUT_EXTRA_ATTRIBUTES: Type_FigureAttributesConfig = {
   [HIERARCHY_EXPANDED_KEY]: hierarchyExpandedAttribute(),
   [COORDINATES_LINKED_KEY]: coordinatesLinkedAttribute(),
   [DIMENSION_OPENING_KEY]: dimensionOpeningAttribute(),
+  [DIMENSION_HIDDEN_KEY]: dimensionHiddenAttribute(),
   [DATA_LAYER_KEY]: dataLayerAttribute(),
   [SMALL_MULTIPLES_KEY]: smallMultiplesAttribute(),
   [LEVELS_DISPLAY_BY_KEY]: levelsDisplayByAttribute()
