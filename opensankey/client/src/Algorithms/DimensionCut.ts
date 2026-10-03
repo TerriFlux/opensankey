@@ -206,7 +206,17 @@ export const cocherExclusif = (
   return [...garde, id]
 }
 
-/** DÉCOCHER : rend `null` s'il ne resterait rien — au moins un membre reste choisi. */
+/**
+ * « (Tout sélectionner) » COCHÉ, cliqué : décoche les membres VISIBLES (tous, ou les résultats de la
+ * recherche, comme Excel). Rend `null` s'il ne resterait rien — le sélecteur passe EN ATTENTE.
+ */
+export const decocherVisibles = (choisis: readonly string[], visibles: readonly string[]): string[] | null => {
+  const masques = new Set(visibles)
+  const reste = choisis.filter(id => !masques.has(id))
+  return reste.length > 0 ? reste : null
+}
+
+/** DÉCOCHER : rend `null` s'il ne resterait rien — le sélecteur passe alors EN ATTENTE, sans rien appliquer. */
 export const decocher = (choisis: ReadonlySet<string>, id: string): string[] | null => {
   const reste = [...choisis].filter(autre => autre !== id)
   return reste.length > 0 ? reste : null
