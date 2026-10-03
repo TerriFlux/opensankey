@@ -108,7 +108,7 @@ export interface SankeyGlobals {
   // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
   app_info?: boolean
   sidebar_toggle?: boolean
-  // sa#567 — default FALSE : le bandeau du diagramme dans la grande case (« Sankey ⌄ », masquer,
+  // sa#567 — default FALSE : le bandeau de TOUTE fenêtre de la grande zone (« Sankey ⌄ », « Couronne ⌄ », masquer,
   // flotter, plein écran, détacher, fermer). Ses gestes arrangent l'espace de travail de l'auteur ;
   // le lecteur d'une page publiée n'a rien à y faire, et la bande de 28 px mange le diagramme.
   // Sans effet hors publish — l'éditeur le garde toujours.
@@ -565,7 +565,7 @@ export type ViewerSankeyOptions = {
   representation?: boolean
   navigation_help?: boolean
   badge?: boolean
-  canvas_header?: boolean  // sa#567 : bandeau du diagramme dans la grande case (défaut false)
+  canvas_header?: boolean  // sa#567 : bandeau des fenêtres de la grande zone, diagramme et figures (défaut false)
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
