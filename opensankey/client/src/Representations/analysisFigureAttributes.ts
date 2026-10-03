@@ -437,7 +437,8 @@ const DONUT_HONOURS = {
   // Julien, deux captures côte à côte : « y a coordonnées mais pas affichage ».
   labels_min_share: { sort: 'display' as const },
   // 01/10/2026 — et ce qui ne tient pas sort en détaché, au lieu de se taire.
-  labels_callout_small: { sort: 'display' as const }
+  // 03/10/2026 — un sélecteur à quatre choix (montrer, détacher, masquer, radial).
+  labels_small: { sort: 'display' as const }
 }
 const BARS_HONOURS = {
   ...SHARED_HONOURS,

@@ -24,6 +24,17 @@ import type { Type_OptionBag } from '../Representations/Figure'
 // os#1468 — le cartouche derriere une etiquette de part : declare une fois, dessine une fois.
 import type { Type_FigureLabelBackground } from './figureLabelBackground'
 
+/**
+ * 03/10/2026 — CE QU'UNE ÉTIQUETTE QUI NE TIENT PAS DANS SA PART DEVIENT (`labels_small`).
+ *
+ *   'show'   — elle s'écrit quand même dans le secteur, en débordant ;
+ *   'detach' — elle sort, reliée par un trait (le défaut d'une couronne) ;
+ *   'hide'   — rien ne s'écrit, l'info-bulle du secteur garde le texte ;
+ *   'radial' — elle se couche le long du rayon, dans l'épaisseur de l'anneau, police réduite
+ *              jusqu'au plancher lisible ; si même ainsi elle ne tient pas, elle se tait.
+ */
+export type Type_LabelsSmall = 'show' | 'detach' | 'hide' | 'radial'
+
 export interface Type_FigureChartStyle {
   /** legend_* */
   legend_visible: boolean
@@ -80,7 +91,11 @@ export interface Type_FigureChartStyle {
    * label, l'afficher en détaché »). Trop petite = sous le seuil `labels_min_share`, ou dont le
    * texte ne tient pas dans la corde du secteur.
    */
-  labels_callout_small: boolean
+  //
+  // 03/10/2026 — QUATRE RÉPONSES, ET PLUS DEUX (cf. `Type_LabelsSmall`). L'ancienne clé booléenne
+  // `labels_callout_small` se relit dans `upgradeLegacyFigureKeys` (Representations/
+  // figureLegacyKeys), et nulle part ailleurs.
+  labels_small: Type_LabelsSmall
   /** Parts au plus ; 0 = sans limite. */
   parts_max: number
   /**
@@ -159,7 +174,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // enregistrée ne change d'aspect » ; on la rallume dans l'inspecteur.
   // 01/10/2026 — PAS DE LÉGENDE, en fin de compte (Julien : « la meilleure option par défaut pour
   // la couronne, c'est nom + valeur + %, pas de légende ») : les secteurs se nomment eux-mêmes, et
-  // ceux qui sont trop petits sortent leur étiquette (`labels_callout_small`).
+  // ceux qui sont trop petits sortent leur étiquette (`labels_small`).
   legend_visible: false,
   legend_parts: 'all',
   // 24/09/2026 — DESSOUS, ET C'EST UN CHANGEMENT DE DÉFAUT ASSUMÉ (demande de Julien : « la
@@ -188,7 +203,7 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   parts_group_under: 0.5,
   // La valeur que le tracé appliquait en dur : une couronne enregistrée ne change pas d'un pixel.
   labels_min_share: 3,
-  labels_callout_small: true,
+  labels_small: 'detach',
   parts_max: 20,
   levels_display: 'in_place',
   centre_content: 'value',
@@ -253,7 +268,7 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   legend_visible: false,
   legend_position: 'bottom',
   name_label_is_visible: true,
-  labels_callout_small: false,
+  labels_small: 'hide',
   legend_width: 200,
   parts_group_under: 0,
   parts_max: 20,

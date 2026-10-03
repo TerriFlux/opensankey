@@ -391,17 +391,31 @@ export const LEVELS_CONFIG = {
   }, { kind: 'slider', min: 0, max: 25, step: 0.5 }),
   // 01/10/2026 — CE QUI NE TIENT PAS SORT EN DÉTACHÉ (Julien : « pour les parties trop petites qui
   // ne peuvent pas afficher de label, l'afficher en détaché »).
-  labels_callout_small: entry<boolean>(true, 'levels', {
-    en: 'Detach small labels', fr: 'Détacher si trop petit', es: 'Separar si es pequeña',
-    de: 'Klein: abgesetzt', it: 'Staccare se piccola', 'zh-CN': '过小则引出', ja: '小さければ引き出す'
+  //
+  // 03/10/2026 — UN SÉLECTEUR, ET PLUS UN BOOLÉEN (Julien) : quatre réponses à « que fait une
+  // étiquette qui ne tient pas ? ». Elle s'écrit quand même en débordant, sort reliée par un trait
+  // (le défaut, l'ancien `true`), se tait (l'ancien `false`), ou se couche le long du RAYON, dans
+  // l'épaisseur de l'anneau. Le seuil « Lib. » s'applique avant, dans les quatre cas. L'ancienne
+  // clé booléenne `labels_callout_small` se relit en UN seul endroit : `upgradeLegacyFigureKeys`.
+  labels_small: entry<'show' | 'detach' | 'hide' | 'radial'>('detach', 'levels', {
+    en: 'If the label does not fit', fr: 'Si l\'étiquette ne tient pas', es: 'Si la etiqueta no cabe',
+    de: 'Passt die Beschriftung nicht', it: 'Se l\'etichetta non entra', 'zh-CN': '标签放不下时', ja: 'ラベルが収まらないとき'
   }, {
-    en: 'A part too small for its label writes it outside, linked by a line, instead of hiding it.',
-    fr: 'Une part trop petite pour son libellé l\'écrit au dehors, reliée par un trait, au lieu de le taire.',
-    es: 'Una parte demasiado pequeña para su etiqueta la escribe fuera, unida por una línea, en lugar de ocultarla.',
-    de: 'Ein für seine Beschriftung zu kleiner Teil schreibt sie außen, mit einer Linie verbunden, statt sie auszublenden.',
-    it: 'Una parte troppo piccola per la sua etichetta la scrive fuori, collegata da una linea, invece di nasconderla.',
-    'zh-CN': '放不下标签的过小部分会在外侧用引线标注，而不是隐藏。',
-    ja: 'ラベルが収まらない小さな部分は、隠さずに線でつないで外側に書きます。'
+    en: 'What a part too small for its label does with it: write it anyway, place it outside linked by a line, hide it (shown on hover), or write it along the radius.',
+    fr: 'Ce qu\'une part trop petite fait de son étiquette : l\'écrire quand même, la sortir reliée par un trait, la masquer (visible au survol), ou l\'écrire le long du rayon.',
+    es: 'Qué hace una parte demasiado pequeña con su etiqueta: escribirla igualmente, sacarla unida por una línea, ocultarla (visible al pasar el ratón) o escribirla a lo largo del radio.',
+    de: 'Was ein für seine Beschriftung zu kleiner Teil damit macht: trotzdem schreiben, außen mit einer Linie verbunden setzen, ausblenden (beim Überfahren sichtbar) oder entlang des Radius schreiben.',
+    it: 'Cosa fa una parte troppo piccola della sua etichetta: scriverla comunque, portarla fuori collegata da una linea, nasconderla (visibile al passaggio del mouse) o scriverla lungo il raggio.',
+    'zh-CN': '部分太小放不下标签时的处理：照样显示、用引线移到外侧、隐藏（悬停时可见），或沿半径书写。',
+    ja: 'ラベルが収まらない小さな部分の扱い：そのまま書く、線でつないで外に出す、隠す（ホバーで表示）、半径に沿って書く。'
+  }, {
+    kind: 'select',
+    choices: [
+      choice('show', { en: 'Show anyway', fr: 'Montrer quand même', es: 'Mostrar igualmente', de: 'Trotzdem zeigen', it: 'Mostrare comunque', 'zh-CN': '照样显示', ja: 'そのまま表示' }),
+      choice('detach', { en: 'Detach', fr: 'Détacher', es: 'Separar', de: 'Absetzen', it: 'Staccare', 'zh-CN': '引出', ja: '引き出す' }),
+      choice('hide', { en: 'Hide', fr: 'Masquer', es: 'Ocultar', de: 'Ausblenden', it: 'Nascondere', 'zh-CN': '隐藏', ja: '隠す' }),
+      choice('radial', { en: 'Radial', fr: 'Radial', es: 'Radial', de: 'Radial', it: 'Radiale', 'zh-CN': '径向', ja: '放射状' })
+    ]
   })
 } as const
 
