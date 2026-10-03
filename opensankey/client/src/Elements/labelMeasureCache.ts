@@ -31,6 +31,7 @@ const MAX_ENTRIES = 20000
 let _wraps = new Map<string, Type_WrapMeasure>()
 type Type_BBox = { x: number, y: number, width: number, height: number }
 let _bboxes = new Map<string, Type_BBox>()
+let _fonts = new WeakMap<Document, Map<string, string>>()
 const _owner_tokens = new WeakMap<object, number>()
 let _next_token = 1
 const _hooked_documents = new WeakSet<Document>()
@@ -87,6 +88,40 @@ export function setWrapMeasure(key: string, measure: Type_WrapMeasure): void {
 export function resetLabelMeasureCache(): void {
   _wraps = new Map()
   _bboxes = new Map()
+  _fonts = new WeakMap()
+}
+
+// --------------------------------------------------------------------------------------------------
+// Police CALCULÉE d'un <text> de libellé, pour la césure des mots longs (mesure canevas). Lire
+// `getComputedStyle` au milieu des écritures du dessin force un recalcul de style du document
+// entier : c'était 20 % d'un dessin complet (304 nœuds : 0,34 s). Ce qu'il rend ne dépend que des
+// attributs de police que pose `applyTextStyle`, des classes du <text> et de la feuille de style de
+// sa fenêtre (aucune règle CSS du dépôt ne vise la police d'un <text>) — d'où la clé, et une mémoire
+// par document. Rend un gabarit où `{size}` tient la place de la taille.
+// --------------------------------------------------------------------------------------------------
+
+export function labelFontTemplate(text_node: SVGTextElement): string {
+  const doc = text_node.ownerDocument
+  hookFontLoading(doc)
+  let by_key = _fonts.get(doc)
+  if (!by_key) {
+    by_key = new Map()
+    _fonts.set(doc, by_key)
+  }
+  const key = [
+    text_node.getAttribute('font-style'), text_node.getAttribute('font-weight'),
+    text_node.getAttribute('font-family'), text_node.getAttribute('class')
+  ].join('')
+  let font = by_key.get(key)
+  if (font === undefined) {
+    // os#1385 — style calculé dans la VUE du nœud : un canevas détaché dessine son texte dans une
+    // autre fenêtre de navigateur, dont la feuille de style est la sienne. Retombe sur la fenêtre de
+    // la page pour tout le reste, qui y vit.
+    const computed = (doc.defaultView ?? window).getComputedStyle(text_node)
+    font = `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} {size}px ${computed.fontFamily || 'sans-serif'}`
+    by_key.set(key, font)
+  }
+  return font
 }
 
 // --------------------------------------------------------------------------------------------------

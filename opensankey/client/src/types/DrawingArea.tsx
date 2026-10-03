@@ -68,7 +68,6 @@ import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
-import { resetLabelFontCache } from '../Elements/DrawLabel'
 import { Class_ApplicationData } from './ApplicationData'
 import { dedupeZOrderKeepFirst } from './zOrder'
 import { beginDrawPass, endDrawPass } from './DrawCounters'
@@ -1615,8 +1614,6 @@ export class Class_DrawingArea {
   ) {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
-    // #588 — la police calculée des libellés est relue une fois par dessin complet, pas plus.
-    resetLabelFontCache()
     // os#1372 — signale le dessin complet à l'application, qui s'en sert pour ne pas en
     // déclencher un de plus quand un geste en a déjà provoqué un (cf. draw_epoch).
     this.application_data.notifyFullDraw()
