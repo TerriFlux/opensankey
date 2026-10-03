@@ -22,16 +22,23 @@ export const applyLevelSelection = (
   app_data: Class_ApplicationData,
   tagg: Class_TagGroup,
   tag_id: string,
-  updateComponents: () => void = () => undefined
+  updateComponents: () => void = () => undefined,
+  /**
+   * os#1522 — CE QUI PRÉCÈDE LE CHANGEMENT DE NIVEAU, dans le MÊME pas d'annulation. La liste
+   * « Mixte » s'en sert : choisir un niveau depuis une coupe irrégulière ré-agrège d'abord les
+   * désagrégations locales (`resetLocalHierarchy`), puis applique le niveau — un seul Annuler.
+   */
+  prepare?: () => void
 ): void => {
   const drawing_area = app_data.drawing_area
-  // Mémoriser AVANT de changer la sélection : le sens du mouvement et les nœuds
-  // visibles du niveau courant en dépendent.
-  const old_level_idx = tagg.tags_list.findIndex(t => t.is_selected)
-  const nodes_before = [...drawing_area.sankey.visible_nodes_list]
   const values = [tag_id]
 
   const run = () => {
+    prepare?.()
+    // Mémoriser AVANT de changer la sélection (et APRÈS `prepare`, qui change ce qui est
+    // visible) : le sens du mouvement et les nœuds visibles du niveau courant en dépendent.
+    const old_level_idx = tagg.tags_list.findIndex(t => t.is_selected)
+    const nodes_before = [...drawing_area.sankey.visible_nodes_list]
     drawing_area.withBypassRedraws(() => {
       tagg.selectTagsFromId(tag_id)
       app_data.drawing_area.bypass_redraws = true
