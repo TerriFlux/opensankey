@@ -26,6 +26,7 @@ import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_BaseShape } from './Element'
 import { effectiveOpacity } from './elementOpacity'
+import { getWrapMeasure, setWrapMeasure, wrapMeasureKey } from './labelMeasureCache'
 
 
 type DisplayPrefix = 'name' | 'value'
@@ -410,6 +411,15 @@ export abstract class DrawLabelBase {
   /**
    * ✅ Dessine un background générique (texte, icône, FO)
    */
+  /** #588 — le fond du libellé est-il affiché ? Même lecture que `drawGenericBackground`. */
+  protected isBackgroundVisible(): boolean {
+    return getShapeValue(
+      this._element as unknown as Class_NodeBase | Class_LinkElement,
+      `${this.prefix}_background` as ShapePrefix,
+      BASE_SHAPE_CONFIG
+    ).visible
+  }
+
   protected drawGenericBackground(
     parent: d3_selection_type,
     x: number,
@@ -730,6 +740,14 @@ export abstract class DrawLabelBase {
       stick_el.value_label_stick_to_label &&
       stick_el.name_label_background_visible
     ) {
+      group.select(`.${this.prefix}_background`).remove()
+      return
+    }
+
+    // #588 — fond invisible (le cas courant) : rien à mesurer. `getBBox` force une mise en page
+    // de tout le document au milieu des écritures du dessin ; on fait ici ce que ferait
+    // drawGenericBackground (retirer l'ancien fond, ne rien dessiner) sans payer la mesure.
+    if (!this.isBackgroundVisible()) {
       group.select(`.${this.prefix}_background`).remove()
       return
     }
@@ -1449,6 +1467,7 @@ export abstract class DrawLabelBase {
    * ✅ Input d'édition générique (contenteditable, multi-ligne, WYSIWYG)
    */
   public setInputLabelVisible(initialValue?: string) {
+    this.ensureLabelInput()
     const foSel = this.d3_selection?.select(`.${this.prefix}_fo_input`)
     foSel?.style('display', null)
     this.d3_selection?.select(`.${this.prefix}_text`).style('display', 'none')
@@ -1533,6 +1552,7 @@ export abstract class DrawLabelBase {
   public openInlineEditor() {
     if (!this._element.drawing_area.editable || !this.enableEditing) return
     const inputId = this.domId(`${this.prefix}_input_${this.getElementId()}`)
+    this.ensureLabelInput()
     if (!this.labelDocument().getElementById(inputId)) {
       this._force_editable_draw = true
       this.drawGenericLabel()
@@ -1545,6 +1565,20 @@ export abstract class DrawLabelBase {
    * ✅ Crée le foreignObject + input d'édition inline.
    * Reste masqué par défaut ; révélé par setInputLabelVisible.
    */
+  // #588 — Zone d'édition du libellé, créée À LA DEMANDE. Chaque libellé dessiné la créait
+  // d'avance, cachée (un <foreignObject>, une <div> stylée, sept écouteurs) : autant de nœuds DOM
+  // à créer, mettre en page et retirer à chaque dessin, pour une édition qui n'en touche qu'un.
+  // Le dessin du libellé ne fait plus que retenir comment la créer (`_pending_input`) ;
+  // `ensureLabelInput` la crée, telle qu'elle l'aurait été au dessin, quand on va l'éditer.
+  private _pending_input: (() => void) | null = null
+
+  /** #588 — crée la zone d'édition retenue au dernier dessin du libellé, si ce n'est déjà fait. */
+  protected ensureLabelInput(): void {
+    const create = this._pending_input
+    this._pending_input = null
+    create?.()
+  }
+
   protected drawLabelInput(
     d3_selection: d3_selection_type | null,
     box_pos_x: number,
@@ -1558,7 +1592,8 @@ export abstract class DrawLabelBase {
     force_nowrap: boolean = false
   ) {
     if (!this._element.drawing_area.editable) return
-
+    // #588 — tout ce que lit la zone d'édition est lu MAINTENANT, au dessin : la zone créée plus
+    // tard est exactement celle qu'aurait posée ce dessin.
     // WYSIWYG : on utilise un <div contenteditable> à la largeur du label
     // (label.box_width). Le texte wrappe au même point que le rendu, et la
     // boîte grandit verticalement à mesure que des lignes sont ajoutées.
@@ -1576,6 +1611,23 @@ export abstract class DrawLabelBase {
     const line_height = Math.max(font_size * 1.3, 14 * comp)
     // Hauteur généreuse pour ne pas clipper plusieurs lignes ; overflow visible.
     const fo_height = Math.max(box_height, line_height * 10)
+    const initial_value = this.getInputInitialValue()
+
+    this._pending_input = () => this._createLabelInput(d3_selection, {
+      box_pos_x, box_pos_y, target_width, fo_height, line_height, font_size, wrap_long, force_nowrap, initial_value
+    })
+  }
+
+  private _createLabelInput(
+    d3_selection: d3_selection_type | null,
+    p: {
+      box_pos_x: number, box_pos_y: number, target_width: number, fo_height: number, line_height: number,
+      font_size: number, wrap_long: boolean, force_nowrap: boolean, initial_value: string
+    }
+  ) {
+    // Libellé redessiné ou retiré depuis : son groupe n'est plus dans le document.
+    if (!d3_selection?.node()?.isConnected) return
+    const { box_pos_x, box_pos_y, target_width, fo_height, line_height, font_size, wrap_long, force_nowrap } = p
 
     const fo = d3_selection?.append('foreignObject')
       .classed(this.prefix, true)
@@ -1625,7 +1677,7 @@ export abstract class DrawLabelBase {
         div.style('min-width', `${target_width}px`)
       }
     }
-    (div.node() as HTMLDivElement).textContent = this.getInputInitialValue()
+    (div.node() as HTMLDivElement).textContent = p.initial_value
     div
       // Empêcher les events souris de bubbler vers le <g> de l'élément :
       // sinon mouseup/click déclenche eventSimpleLMBClick → drawAsSelected →
@@ -1719,6 +1771,8 @@ export abstract class DrawLabelBase {
     if (!d3_selection) return
 
     this.cleanupPreviousLabel()
+    // #588 — la zone d'édition retenue au dessin précédent appartenait au libellé retiré.
+    this._pending_input = null
 
     if (this._label_values.has_fo) {
       // Le mode « texte » (rich text / FO) doit respecter la visibilité du
@@ -1787,8 +1841,24 @@ export abstract class DrawLabelBase {
         )
       }
       const hasSpaces = processedText.includes(' ')
+      // #588 — césure déjà mesurée à l'identique : on la rejoue (cf. labelMeasureCache).
+      const text_node = textElement.node()
+      const owner = this._element.drawing_area
+      const measure_key = (hasSpaces && text_node && owner)
+        ? wrapMeasureKey(owner, text_node, owner.getZoomScale(), eff_box_width, processedText)
+        : undefined
+      const known = measure_key !== undefined ? getWrapMeasure(measure_key) : undefined
 
-      if (hasSpaces) {
+      if (known) {
+        textElement.text('')
+        known.lines.forEach(line => {
+          const tspan = textElement.append('tspan')
+          if (line.dx !== null) tspan.attr('dx', line.dx)
+          if (line.dy !== null) tspan.attr('dy', line.dy)
+          tspan.text(line.text)
+        })
+        tspanWidths = known.widths.slice()
+      } else if (hasSpaces) {
         const wrapper = textwrap()
           .bounds({ height: 100 * k_inv_local, width: eff_box_width })
           .method('tspans')
@@ -1815,10 +1885,22 @@ export abstract class DrawLabelBase {
         textElement.text(processedText)
       }
 
-      const tspans = textElement.selectAll('tspan').nodes() as SVGTSpanElement[]
-      tspans.forEach(tspan => {
-        tspanWidths.push(tspan.getComputedTextLength())
-      })
+      if (!known) {
+        const tspans = textElement.selectAll('tspan').nodes() as SVGTSpanElement[]
+        tspans.forEach(tspan => {
+          tspanWidths.push(tspan.getComputedTextLength())
+        })
+        if (measure_key !== undefined) {
+          setWrapMeasure(measure_key, {
+            lines: tspans.map(tspan => ({
+              text: tspan.textContent ?? '',
+              dx: tspan.getAttribute('dx'),
+              dy: tspan.getAttribute('dy')
+            })),
+            widths: tspanWidths.slice()
+          })
+        }
+      }
 
       this.updateLabelPos()
       this.applyMultilineAlignment(textElement, tspanWidths)

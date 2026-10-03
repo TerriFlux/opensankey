@@ -232,6 +232,8 @@ describe('os#1385 — ledition en ligne cherche son entree dans le bon document'
     da.draw()
 
     expect(da.editable).toBe(true)
+    // #588 — l'entrée n'est créée qu'à l'ouverture de l'édition, plus d'avance au dessin.
+    nodes.source.setInputLabelVisible()
     const input_id = da.domId('name_label_input_' + nodes.source.id)
     expect(foreign.doc.getElementById(input_id)).not.toBeNull()
     expect(document.getElementById(input_id)).toBeNull()

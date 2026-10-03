@@ -1,0 +1,87 @@
+// ==================================================================================================
+// #588 — MÉMOIRE DES MESURES DE LIBELLÉS.
+//
+// La césure d'un libellé (d3-textwrap, méthode « tspans ») mesure le texte mot après mot avec
+// `getComputedTextLength`, en réécrivant le <tspan> entre deux mesures : chaque mesure force donc
+// le navigateur à remettre en page tout le document. Sur un SOCLE réel, c'était le premier poste
+// d'un dessin complet — et le même libellé, redessiné à l'identique (changement de vue, d'année,
+// bascule de volet, redessin après un geste), refaisait exactement les mêmes mesures.
+//
+// On mémorise donc le RÉSULTAT de la césure (lignes, attributs posés, largeurs mesurées), et on le
+// rejoue tel quel quand le même texte est redemandé dans les mêmes conditions. Pas d'estimation :
+// la valeur rejouée est celle que le navigateur a rendue, la clé couvre tout ce dont la mesure
+// dépend.
+//   - le texte et la largeur de césure ;
+//   - les attributs de police du <text> (taille, famille, graisse, style), ses classes et son style
+//     en ligne (`text-transform`…) ;
+//   - l'échelle d'affichage : le navigateur met le texte SVG en page à sa taille ÉCRAN (zoom de la
+//     zone × densité de pixels), et les longueurs en dépendent au centième de pixel près. Une
+//     mesure canevas (`measureText`) ne rend d'ailleurs jamais exactement la même chose : écarts
+//     de 0,01 à 7 px relevés sur les SOCLE, d'où ce choix de rejouer plutôt que d'estimer ;
+//   - la zone de dessin : deux canevas ne partagent rien (fenêtre détachée, aperçu…).
+// La mémoire est vidée quand une police finit de se charger (les largeurs changent alors).
+// ==================================================================================================
+
+export type Type_WrappedLine = { text: string, dx: string | null, dy: string | null }
+export type Type_WrapMeasure = { lines: Type_WrappedLine[], widths: number[] }
+
+// Borne de taille : au-delà, on repart de zéro plutôt que de gérer une éviction.
+const MAX_ENTRIES = 20000
+
+let _wraps = new Map<string, Type_WrapMeasure>()
+const _owner_tokens = new WeakMap<object, number>()
+let _next_token = 1
+const _hooked_documents = new WeakSet<Document>()
+
+function ownerToken(owner: object): number {
+  let token = _owner_tokens.get(owner)
+  if (token === undefined) {
+    token = _next_token++
+    _owner_tokens.set(owner, token)
+  }
+  return token
+}
+
+function hookFontLoading(doc: Document): void {
+  if (_hooked_documents.has(doc)) return
+  _hooked_documents.add(doc)
+  // Absent sous jsdom : rien à surveiller.
+  const fonts = (doc as Document & { fonts?: EventTarget }).fonts
+  fonts?.addEventListener?.('loadingdone', () => resetLabelMeasureCache())
+}
+
+/** Clé de la césure de `text` dans le <text> `text_node`, tel qu'il est stylé à cet instant. */
+export function wrapMeasureKey(
+  owner: object,
+  text_node: SVGTextElement,
+  scale: number,
+  box_width: number,
+  text: string
+): string {
+  const doc = text_node.ownerDocument
+  hookFontLoading(doc)
+  const dpr = doc.defaultView?.devicePixelRatio ?? 1
+  return [
+    ownerToken(owner), scale, dpr, box_width,
+    text_node.getAttribute('class'),
+    text_node.getAttribute('font-size'),
+    text_node.getAttribute('font-family'),
+    text_node.getAttribute('font-weight'),
+    text_node.getAttribute('font-style'),
+    text_node.getAttribute('style'),
+    text
+  ].join('\u0001')
+}
+
+export function getWrapMeasure(key: string): Type_WrapMeasure | undefined {
+  return _wraps.get(key)
+}
+
+export function setWrapMeasure(key: string, measure: Type_WrapMeasure): void {
+  if (_wraps.size >= MAX_ENTRIES) _wraps = new Map()
+  _wraps.set(key, measure)
+}
+
+export function resetLabelMeasureCache(): void {
+  _wraps = new Map()
+}
