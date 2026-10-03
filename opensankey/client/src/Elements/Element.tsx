@@ -637,6 +637,25 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     })
   }
 
+  /**
+   * #588 — Pose plusieurs paramètres d'affilée sans que CHACUN redessine l'élément : les `actions`
+   * de la configuration (drawNameLabel, drawElements…) sont suspendues le temps de `fn`. Les
+   * `setter` et `callback` s'exécutent comme d'habitude : seul le dessin est retenu.
+   *
+   * L'appelant redessine ensuite UNE fois (`draw()`) — c'est à lui de le faire. Mesuré sur la
+   * légende du SOCLE Lait : chaque zone recevait une douzaine de paramètres, donc une douzaine de
+   * dessins de son libellé avant le seul qui compte, soit 1,1 s par dessin complet.
+   */
+  public withActionsSuspended(fn: () => void): void {
+    const previous = this._suspend_actions
+    this._suspend_actions = true
+    try {
+      fn()
+    } finally {
+      this._suspend_actions = previous
+    }
+  }
+
   public get attributes() {
     return this._storage
   }

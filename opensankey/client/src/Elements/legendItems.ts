@@ -528,6 +528,19 @@ export function computeLegendItems(
   scale_text?: string
 ): Type_LegendItem[] {
   const items: Type_LegendItem[] = []
+  // #588 — `visible_nodes_list` / `visible_links_list` refiltrent tout le diagramme à CHAQUE
+  // lecture, et la présence d'une étiquette les lisait une fois par étiquette (SOCLE Lait : 45 ms
+  // par régénération de légende). Rien ne change de visibilité pendant ce calcul : lues une fois.
+  let visible_nodes: Type_SankeyForLegend['visible_nodes_list'] | undefined
+  let visible_links: Type_SankeyForLegend['visible_links_list'] | undefined
+  const visibleNodes = () => {
+    if (visible_nodes === undefined) visible_nodes = sankey.visible_nodes_list
+    return visible_nodes
+  }
+  const visibleLinks = () => {
+    if (visible_links === undefined) visible_links = sankey.visible_links_list
+    return visible_links
+  }
 
   // Ligne « données collectées / calculées »
   if (config.show_data_type && env.data_type_label) {
@@ -575,15 +588,15 @@ export function computeLegendItems(
           // la cherche parmi tous les éléments du diagramme. Listes absentes (mock,
           // appelant historique) → on la retient, faute de pouvoir la réfuter.
           if (tag.is_selected !== false && sankey.nodes_list === undefined && sankey.links_list === undefined) {
-            return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
-              sankey.visible_links_list.some(f => f.hasGivenTag(tag))
+            return visibleNodes().some(n => n.hasGivenTag(tag)) ||
+              visibleLinks().some(f => f.hasGivenTag(tag))
           }
           if (sankey.nodes_list === undefined && sankey.links_list === undefined) return true
           return (sankey.nodes_list ?? []).some(n => n.hasGivenTag(tag)) ||
             (sankey.links_list ?? []).some(f => f.hasGivenTag(tag))
         }
-        return sankey.visible_nodes_list.some(n => n.hasGivenTag(tag)) ||
-          sankey.visible_links_list.some(f => f.hasGivenTag(tag))
+        return visibleNodes().some(n => n.hasGivenTag(tag)) ||
+          visibleLinks().some(f => f.hasGivenTag(tag))
       })
       if (displayed_tags.length === 0) return
       // os#1511 — dimension à niveaux : les membres désagrégés prennent ENSEMBLE la place de leur
@@ -713,7 +726,7 @@ export function computeLegendItems(
   }
 
   // Explication des flux pointillés (valeur indéterminée)
-  const has_dashed = sankey.visible_links_list.some(l => l.valueCurrent == null)
+  const has_dashed = visibleLinks().some(l => l.valueCurrent == null)
   if (has_dashed && config.info_link_value_void && env.t_dashed_links) {
     items.push({ id: LEGEND_CHILD_PREFIX + 'info-dashed', text: env.t_dashed_links, starts_group: true, own_line: true })
   }
