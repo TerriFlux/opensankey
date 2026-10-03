@@ -147,6 +147,9 @@ export type Type_TopbarFigureCut = {
   opened: (dim: Class_DataTagGroup) => Set<string>
   setOpened: (dim: Class_DataTagGroup, opened: ReadonlySet<string>) => void
   shownNames: (dim: Class_DataTagGroup) => string[]
+  /** 03/10/2026 — les membres que la figure dessine (décochés exclus), et le geste qui les pose. */
+  chosen: (dim: Class_DataTagGroup) => string[]
+  setChosen: (dim: Class_DataTagGroup, ids: readonly string[]) => void
 }
 
 /**

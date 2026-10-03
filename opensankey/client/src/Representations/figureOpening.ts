@@ -29,7 +29,7 @@ import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
 import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
-  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
+  COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_HIDDEN_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
   LEVELS_DISPLAY_BY_KEY
 } from './analysisFigureAttributes'
 
@@ -80,7 +80,22 @@ export const readFigureOpening = (options: Type_Options | null | undefined): Typ
   const opened = options?.[DIMENSION_OPENING_KEY] !== undefined
     ? storedDataOpening(options?.[DIMENSION_OPENING_KEY])
     : legacyDataOpening(raw)
-  return { elements, data: opened === undefined ? { linked } : { linked, opened } }
+  const hidden = storedDataOpening(options?.[DIMENSION_HIDDEN_KEY])
+  return {
+    elements,
+    data: {
+      linked,
+      ...(opened === undefined ? {} : { opened }),
+      ...(hidden === undefined ? {} : { hidden })
+    }
+  }
+}
+
+/** Une coupe par dimension sans entrée vide, ou `undefined` s'il ne reste rien. */
+const nonEmpty = (by: { [dimension_id: string]: string[] } | undefined) => {
+  if (by === undefined) return undefined
+  const out = Object.fromEntries(Object.entries(by).filter(([, ids]) => ids.length > 0))
+  return Object.keys(out).length > 0 ? out : undefined
 }
 
 /**
@@ -91,16 +106,25 @@ export const withFigureOpening = (options: Type_Options, opening: Type_FigureOpe
   ...options,
   [HIERARCHY_EXPANDED_KEY]: opening.elements.size > 0 ? [...opening.elements] : undefined,
   [COORDINATES_LINKED_KEY]: opening.data.linked ? undefined : false,
-  [DIMENSION_OPENING_KEY]: !opening.data.linked && opening.data.opened !== undefined ? opening.data.opened : undefined
+  [DIMENSION_OPENING_KEY]: !opening.data.linked && opening.data.opened !== undefined ? opening.data.opened : undefined,
+  [DIMENSION_HIDDEN_KEY]: opening.data.linked ? undefined : nonEmpty(opening.data.hidden)
 })
 
 /** Raccourci : seuls les éléments ouverts changent. */
 export const withElementOpening = (options: Type_Options, elements: Iterable<string>): Type_Options =>
   withFigureOpening(options, { ...readFigureOpening(options), elements: new Set(elements) })
 
-/** Raccourci : seule la coupe des dimensions de données change. */
-export const withDataOpening = (options: Type_Options, data: Type_DataOpening): Type_Options =>
-  withFigureOpening(options, { ...readFigureOpening(options), data })
+/**
+ * Raccourci : seule la coupe des dimensions de données change.
+ *
+ * 03/10/2026 — Détachée, une écriture SANS `hidden` garde les membres décochés d'avant : ouvrir une
+ * part d'un clic ne doit pas faire revenir ce qu'on a décoché. Lier les oublie.
+ */
+export const withDataOpening = (options: Type_Options, data: Type_DataOpening): Type_Options => {
+  const now = readFigureOpening(options)
+  const kept = !data.linked && !('hidden' in data) && now.data.hidden !== undefined ? { ...data, hidden: now.data.hidden } : data
+  return withFigureOpening(options, { ...now, data: kept })
+}
 
 // ── 02/10/2026 — OÙ LA FIGURE EST DESCENDUE (« Zoome dedans ») ──────────────────────────────────
 //
