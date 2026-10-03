@@ -231,8 +231,45 @@ const named = (o: Type_Bag) => o['name_label_is_visible'] === true
  * réglage n'est offerte que dans ce cas.
  */
 const smallMultiplesOn = (o: Type_Bag) => typeof o[SMALL_MULTIPLES_KEY] === 'string' && o[SMALL_MULTIPLES_KEY] !== ''
-/** La légende se dessine : l'auteur l'a allumée, ou la couronne est en petits multiples (légende commune). */
-const legendShown = (o: Type_Bag) => o['legend_visible'] !== false || smallMultiplesOn(o)
+/** La légende se dessine : allumée (par l'auteur ou au premier dessin qui la montre), ou petits multiples. */
+const legendShown = (o: Type_Bag) => o['legend_visible'] === true || smallMultiplesOn(o)
+
+/**
+ * 03/10/2026 — LA LÉGENDE D'UNE COURONNE NE DISPARAÎT JAMAIS D'ELLE-MÊME (os#1511).
+ *
+ * Julien : « quand je manipule souvent, la légende disparaît, je te l'avais déjà dit ». Elle était
+ * CALCULÉE (petits multiples ⇒ légende commune, couronne seule ⇒ rien) : tout geste qui faisait
+ * tomber les cases — pays à « Monde », ⇄, dimension désactivée, zoom, aller-retour de
+ * représentation — l'éteignait sans qu'on l'ait demandé. Corriger geste par geste ne tenait pas.
+ *
+ * LA RÈGLE, en deux phrases :
+ *  1. Tant que l'auteur n'a rien dit (`legend_visible` absent : la couronne n'a pas de valeur
+ *     d'usine pour cette clé), la légende s'affiche dès que la figure découpe selon AU MOINS DEUX
+ *     dimensions (couronne emboîtée, sunburst multi-dimensions, petits multiples) ; à une seule,
+ *     les étiquettes nomment les parts et il n'y en a pas (choix du 01/10).
+ *  2. Le premier dessin qui la montre ainsi ÉCRIT `legend_visible: true` sur la figure
+ *     (`donutLegendLatched`) : un geste qui ramène ensuite à une dimension ne l'efface pas. Seul
+ *     l'interrupteur « Légende » l'éteint — et `false` s'écrit, puisqu'il n'y a pas d'usine à
+ *     laquelle il serait égal.
+ */
+export type Type_DonutLegendShape = {
+  /** Les dimensions qui découpent la figure (celle des petits multiples non comprise). */
+  dimensions: number
+  /** La couronne est en petits multiples : la légende commune est posée d'office. */
+  small_multiples: boolean
+}
+/** Le défaut, quand l'auteur n'a rien dit : légende dès deux dimensions. */
+export const donutLegendByDefault = (shape: Type_DonutLegendShape): boolean =>
+  shape.small_multiples || shape.dimensions >= 2
+/** La légende se dessine-t-elle ? L'interrupteur de l'auteur s'il a parlé, sinon le défaut. */
+export const donutLegendShown = (options: Type_Bag, shape: Type_DonutLegendShape): boolean =>
+  shape.small_multiples ||
+  (typeof options['legend_visible'] === 'boolean' ? options['legend_visible'] : donutLegendByDefault(shape))
+/** Le sac à écrire au dessin quand le défaut montre la légende et que rien n'est posé, sinon `null`. */
+export const donutLegendLatched = (options: Type_Bag, shape: Type_DonutLegendShape): Type_Bag | null =>
+  typeof options['legend_visible'] !== 'boolean' && donutLegendByDefault(shape)
+    ? { ...options, legend_visible: true }
+    : null
 export const SHARED_HONOURS = {
   parts_order: {},
   parts_color_source: { default: 'model' },
@@ -416,8 +453,10 @@ const DONUT_HONOURS = {
   // Et la légende, POSÉE D'OFFICE en petits multiples : « Légende » et « Les parts dans la
   // légende » n'y décident de rien et se cachent ; sa position, sa taille, sa largeur et ses
   // niveaux s'y appliquent, et se montrent.
-  legend_visible: { default: false, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
-  legend_parts: { default: 'all', visibleIf: (o: Type_Bag) => o['legend_visible'] !== false && !smallMultiplesOn(o) },
+  // 03/10/2026 — ET PAS DE VALEUR D'USINE (cf. `donutLegendShown`) : absente, la figure applique la
+  // règle des deux dimensions ; posée, par l'auteur ou au premier dessin qui la montre, elle tient.
+  legend_visible: { default: undefined, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
+  legend_parts: { default: 'all', visibleIf: (o: Type_Bag) => o['legend_visible'] === true && !smallMultiplesOn(o) },
   legend_font_size: { visibleIf: legendShown },
   legend_width: { default: 230, visibleIf: legendShown },
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part

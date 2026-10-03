@@ -84,7 +84,9 @@ export const LEGEND_CONFIG = {
     en: 'Show the legend of the figure.', fr: 'Afficher la légende de la figure.',
     es: 'Mostrar la leyenda de la figura.', de: 'Legende der Abbildung anzeigen.',
     it: 'Mostrare la legenda della figura.', 'zh-CN': '显示图形的图例。', ja: '図の凡例を表示します。'
-  }),
+    // Une case, dite ici : la couronne n'a pas de valeur d'usine (son défaut dépend de ce qu'elle
+    // découpe, cf. `donutLegendShown`), et la case ne se déduirait plus du type de cette valeur.
+  }, { kind: 'checkbox' }),
   legend_parts: entry<'auto' | 'all' | 'none'>('auto', 'legend', {
     en: 'Parts in the legend', fr: 'Les parts dans la légende', es: 'Las partes en la leyenda',
     de: 'Teile in der Legende', it: 'Le parti nella legenda', 'zh-CN': '图例中的部分', ja: '凡例に載せる部分'

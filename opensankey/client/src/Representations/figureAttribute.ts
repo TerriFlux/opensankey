@@ -173,7 +173,11 @@ export const honours = (
           ...(s.group ? { group: s.group } : {})
         }
         : undefined
-    out[key] = elementAttribute(source, s.sort ?? 'style', ui, s.default)
+    const attr = elementAttribute(source, s.sort ?? 'style', ui, s.default)
+    // `default: undefined` ÉCRIT (et non omis) : la nature n'a PAS de valeur d'usine pour cette clé.
+    // La clé reste absente des réglages effectifs tant que personne ne l'a posée, ce qui distingue
+    // « jamais réglé » de « réglé comme l'usine » (cf. la légende de la couronne).
+    out[key] = 'default' in s && s.default === undefined ? { ...attr, default: undefined, type: () => undefined } : attr
   })
   return out
 }

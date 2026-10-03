@@ -41,7 +41,7 @@ import type { Type_PartInput } from './parts/buildParts'
 import { registerFigureNature } from './figureNature'
 import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
-  HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY
+  HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
 } from './analysisFigureAttributes'
 import {
   dataDimensionLevelsDisplay, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay,
@@ -921,6 +921,43 @@ const analysisOf = (
 }
 
 /**
+ * 03/10/2026 — CE QUE LA COURONNE DÉCOUPE, pour sa légende (cf. `donutLegendShown`) : le nombre de
+ * dimensions de données qui la partagent (un croisement de flux en compte deux), et si elle est en
+ * petits multiples.
+ */
+const donutLegendShapeOf = (ctx: Type_RepresentationContext): Type_DonutLegendShape => {
+  const small_multiples = smallMultiplesOf(ctx) !== null
+  const a = analysisOf(ctx)
+  const decompose = a ? effectiveDecompose(a.descriptor) : null
+  if (!a || !decompose) return { dimensions: 1, small_multiples }
+  if (decompose.kind === 'flux_cross') return { dimensions: 2, small_multiples }
+  if (decompose.kind !== 'data_dimension') return { dimensions: 1, small_multiples }
+  const cut = analysisDataCutOf(a.subject, decompose, hierarchyReadingOf(ctx))
+  return { dimensions: cut?.dividing.length ?? 1, small_multiples }
+}
+
+/**
+ * 03/10/2026 — UNE LÉGENDE MONTRÉE D'OFFICE S'ÉCRIT SUR LA FIGURE (os#1511) : au premier dessin où
+ * le défaut l'affiche, `legend_visible: true` est posé, de sorte qu'un geste qui ramène ensuite la
+ * couronne à une dimension ne l'efface pas. Hors fenêtre (pop-up, aperçu), rien à écrire.
+ *
+ * Écrit APRÈS le dessin en cours (micro-tâche) : l'écriture notifie la grande zone, qui redessine ;
+ * un redessin imbriqué dans celui-ci viderait le conteneur sous ses pieds.
+ */
+const latchDonutLegend = (ctx: Type_RepresentationContext) => {
+  const { window_id, pane_key } = ctx
+  if (window_id === undefined || pane_key === undefined) return
+  if (typeof ctx.options?.['legend_visible'] === 'boolean') return
+  const shape = donutLegendShapeOf(ctx)
+  const mc = ctx.app_data.menu_configuration
+  queueMicrotask(() => {
+    if (!mc.isMainZoneOccupant(window_id)) return
+    const next = donutLegendLatched(mc.figureOf(window_id, pane_key).attributes, shape)
+    if (next !== null) mc.setMainZonePaneOptions(window_id, pane_key, next as Type_JSON)
+  })
+}
+
+/**
  * LA MISE EN FORME D'UNE COURONNE — et le seul défaut qui dépend de ce qu'elle montre.
  *
  * 24/09/2026, arbitrage de Julien : « bascule en palette d'office dès qu'elle descend ».
@@ -943,6 +980,8 @@ const analysisOf = (
  */
 const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle => {
   let style = figureChartStyleOf(ctx.options, DONUT_STYLE_DEFAULTS)
+  // 03/10/2026 — la légende : l'interrupteur de l'auteur, sinon dès deux dimensions (os#1511).
+  style = { ...style, legend_visible: donutLegendShown(ctx.options ?? {}, donutLegendShapeOf(ctx)) }
   // 02/10/2026 — ZOOMÉE, LE CENTRE DIT OÙ ON EST : le nom de la part re-enracinée avec sa valeur
   // (« Céréales / 1 368 »), et pas la valeur seule, qui ne dirait pas qu'on est descendu.
   const zoomed = hierarchyPathOf(ctx.options).length > 0 && style.centre_content === 'value'
@@ -1553,6 +1592,8 @@ export const registerAnalysisRepresentations = (): void => {
       // `donutClickGestures`). Absents sous un seul cran : le clic ne fait que sélectionner, comme
       // depuis toujours.
       const style = donutStyleOf(ctx)
+      // La légende que ce dessin montre d'office reste montrée (cf. `latchDonutLegend`).
+      latchDonutLegend(ctx)
       const gestures = donutClickGestures(ctx, style)
       const t = ctx.app_data.t
       // 02/10/2026 — le fil d'Ariane, sous le titre, pour les trois tracés (une seule ligne pour
@@ -1798,6 +1839,8 @@ export const registerAnalysisRepresentations = (): void => {
             // « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
             labels_small: style.labels_small,
             labels_small_outer: labelsSmallOuterOf(ctx),
+            // 03/10/2026 — la légende de la COURONNE (`donutStyleOf`), pas le défaut du disque.
+            legend_visible: style.legend_visible,
             click_action: 'aggregate',
             // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
             centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')
