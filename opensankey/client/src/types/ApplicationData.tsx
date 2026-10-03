@@ -43,6 +43,7 @@ import {
   isSankeyPane
 } from '../types/MenuConfig'
 import { Class_SankeyPanes } from './SankeyPanes'
+import { layoutModeOf } from '../Representations/paneSync'
 // os#1482 — les tableaux de bord (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
   implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId, mainZoneWithViewOnCurrentSheet,
@@ -2310,7 +2311,24 @@ export class Class_ApplicationData {
     const live_id = mc.main_zone_live_sankey_id
     const live = live_id !== null ? mc.mainZoneOccupantById(live_id) : undefined
     const view = live ? this._sankey_panes.coordinateOf(live) : this._current_view_id
-    return mc.openSankeyPane(view)
+    const id = mc.openSankeyPane(view)
+    // sa#568 — le volet créé partage TOUT avec le volet vivant dont il part : les deux sont
+    // identiques, et c'est l'auteur qui les fait diverger en désynchronisant.
+    mc.linkNewMainZonePane(id, live_id ?? undefined)
+    return id
+  }
+
+  /**
+   * sa#568 — RELIER UN VOLET À UN AUTRE POUR UN RÉGLAGE, geste de la grille « Partagé avec » :
+   * `other_id` rejoint le groupe de `id` et prend ce que `id` montre. Le registre aligne les figures ;
+   * la mise en page des volets Sankey s'aligne ici, sur leurs dessins.
+   */
+  public linkMainZonePanes(id: string, other_id: string, setting: string): boolean {
+    const mc = this.menu_configuration
+    if (!mc || !mc.linkMainZoneSync(id, other_id, setting)) return false
+    const mode = layoutModeOf(setting)
+    if (mode !== null) this._sankey_panes.alignLayout(id, other_id, [mode])
+    return true
   }
 
   /**

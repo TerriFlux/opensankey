@@ -2,14 +2,17 @@ import { Class_ApplicationData } from './ApplicationData'
 import type { Type_JSON } from './Utils'
 import { representation_registry } from '../Representations/RepresentationRegistry'
 import { Class_FigureNature } from '../Representations/Figure'
-import { readSyncedKeys, syncableKeysOf, syncedChanges } from '../Representations/paneSync'
+import {
+  figureSettingOfKey, joinGroup, leaveGroup, partnersOf, readSyncMap, type Type_SyncPane
+} from '../Representations/paneSync'
 
 /**
- * sa#568 - SYNCHRONISER DES REGLAGES ENTRE VOLETS, REGLAGE PAR REGLAGE ET VOLET PAR VOLET.
+ * sa#568 - LES REGLAGES PARTAGES ENTRE VOLETS, PAR GROUPES.
  *
- * Recette de l issue : deux volets, l annee cochee des deux cotes -> changer l annee dans l un la
- * change dans l autre ; un reglage non coche (l axe) change dans un volet sans toucher l autre ;
- * ce qui est coche se retrouve a la reouverture ; rien de coche = le meme fichier qu avant.
+ * Retour d Alexandre du 02/10 sur la premiere passe : les reglages sont ceux du menu
+ * Transformations (et, pour une figure, les familles de sa mise en forme) ; pour chacun on choisit
+ * avec quels volets il est partage ; la mise en page ne se partage qu entre volets de meme type ;
+ * un volet CREE partage tout ; un fichier d avant se rouvre sans rien de partage.
  */
 
 const NATURE = 'test.figure.sync.donut'
@@ -20,8 +23,9 @@ const attr = (sort: string, def: unknown = undefined) => ({
   default: def, type: () => def, category: 'figure', labels: labels(sort), tooltips: labels(sort), sort
 })
 
-// Une nature declaree comme une vraie couronne : l annee et l axe (navigation), un reglage de
-// mise en forme, et un reglage d identite qui ne doit JAMAIS voyager.
+// Une nature declaree comme une vraie couronne : une cle de legende (famille Legende), un mode de
+// valeur (Graphe), un axe (Graphe), l annee epinglee (une DONNEE, pas de la mise en forme) et un
+// reglage d identite qui ne voyage jamais.
 const DONUT_ENTRY = {
   id: NATURE,
   scale: 'element',
@@ -29,64 +33,71 @@ const DONUT_ENTRY = {
   label: () => 'Donut',
   attributes: {
     value_mode: attr('style', 'percent'),
+    legend_visible: attr('style', true),
     normalize_link_id: attr('identity'),
     data_tags: attr('navigation'),
     descriptor: attr('navigation')
   },
   draw: () => undefined
 }
-// Une autre nature qui partage la cle d annee : l annee d une etoile et celle d une couronne sont
-// la meme cle, et cocher l annee des deux cotes les relie.
 const STAR_ENTRY = {
   id: OTHER,
   scale: 'element',
   order: 99,
   label: () => 'Star',
-  attributes: { data_tags: attr('navigation'), value_mode: attr('style', 'percent') },
+  attributes: { value_mode: attr('style', 'percent') },
   draw: () => undefined
 }
 
-/** Deux volets neufs de la nature donnee, chacun sur son noeud. */
-const twoPanes = (natureA = NATURE, natureB = NATURE) => {
+/** Deux couronnes CREEES par l auteur, chacune sur son noeud, et leurs vignettes montrees. */
+const twoPanes = (natureB = NATURE) => {
   const mc = new Class_ApplicationData(false).menu_configuration
-  const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, natureA, undefined, undefined, true)
-  const b = mc.openMainZoneWindow({ kind: 'node', id: 'n2' }, natureB, undefined, undefined, true)
-  // Une vignette montree a sa figure : la lire suffit a la creer (c est ce que fait le dessin).
+  const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, undefined, undefined, true)
   mc.mainZonePaneOptionsOf(a, 'n1')
+  const b = mc.openMainZoneWindow({ kind: 'node', id: 'n2' }, natureB, undefined, undefined, true)
   mc.mainZonePaneOptionsOf(b, 'n2')
   return { mc, a, b }
 }
 
-const Y2019 = { year: '2019' }
-const Y2020 = { year: '2020' }
-
 describe('sa#568 les regles pures', () => {
-  it('se cochent les reglages declares sauf l identite, la navigation en tete', () => {
+  it('une cle va a sa famille ; l identite et l annee epinglee ne sont pas de la mise en forme', () => {
     const nature = new Class_FigureNature('n', DONUT_ENTRY.attributes as never)
-    expect(syncableKeysOf(nature)).toEqual(['data_tags', 'descriptor', 'value_mode'])
+    expect(figureSettingOfKey(nature, 'legend_visible')).toBe('format:legend')
+    expect(figureSettingOfKey(nature, 'value_mode')).toBe('format:graph')
+    expect(figureSettingOfKey(nature, 'descriptor')).toBe('format:graph')
+    expect(figureSettingOfKey(nature, 'normalize_link_id')).toBeNull()
+    expect(figureSettingOfKey(nature, 'data_tags')).toBeNull()
+    expect(figureSettingOfKey(nature, 'undeclared')).toBeNull()
   })
 
-  it('une cle RETIREE voyage (revenir a suivre le diagramme), une cle inchangee non', () => {
-    const out = syncedChanges(
-      { data_tags: Y2019, descriptor: 'x', value_mode: 'value' },
-      { descriptor: 'x', value_mode: 'percent' },
-      ['data_tags', 'descriptor']
-    )
-    expect('data_tags' in out).toBe(true)
-    expect(out.data_tags).toBeUndefined()
-    expect('descriptor' in out).toBe(false)
-    // value_mode a change, mais il n est pas coche.
-    expect('value_mode' in out).toBe(false)
+  it('des groupes : rejoindre relie a tout le groupe, un groupe d un seul volet se dissout', () => {
+    const panes: Type_SyncPane[] = ['a', 'b', 'c'].map(id => ({ id, representation: 'x' }))
+    const [a, b, c] = panes
+    joinGroup(panes, a, b, 'layout:posNode')
+    joinGroup(panes, b, c, 'layout:posNode')
+    // c a rejoint le groupe de b, qui est celui de a : a suit c.
+    expect(partnersOf(panes, a, 'layout:posNode').map(p => p.id)).toEqual(['b', 'c'])
+    leaveGroup(panes, b, 'layout:posNode')
+    expect(partnersOf(panes, a, 'layout:posNode').map(p => p.id)).toEqual(['c'])
+    leaveGroup(panes, c, 'layout:posNode')
+    expect(a.sync).toBeUndefined()
   })
 
-  it('la liste relue d un fichier ne garde que des chaines non vides, sans doublon', () => {
-    expect(readSyncedKeys(['data_tags', '', 3, 'data_tags', 'descriptor'])).toEqual(['data_tags', 'descriptor'])
-    expect(readSyncedKeys(undefined)).toEqual([])
-    expect(readSyncedKeys('data_tags')).toEqual([])
+  it('la mise en page ne se partage qu entre volets de meme type ; les donnees entre tous', () => {
+    const panes: Type_SyncPane[] = [{ id: 'a', representation: 'x' }, { id: 'b', representation: 'y' }]
+    expect(joinGroup(panes, panes[0], panes[1], 'layout:posNode')).toBe(false)
+    expect(joinGroup(panes, panes[0], panes[1], 'format:legend')).toBe(false)
+    expect(joinGroup(panes, panes[0], panes[1], 'data:annee')).toBe(true)
+  })
+
+  it('la table relue d un fichier ne garde que des chaines non vides', () => {
+    expect(readSyncMap({ 'layout:posNode': 'g1', '': 'g2', x: 3, y: '' })).toEqual({ 'layout:posNode': 'g1' })
+    expect(readSyncMap(undefined)).toBeUndefined()
+    expect(readSyncMap({})).toBeUndefined()
   })
 })
 
-describe('sa#568 la synchronisation entre volets', () => {
+describe('sa#568 les figures partagent leur mise en forme', () => {
   beforeAll(() => {
     representation_registry.register(DONUT_ENTRY as never)
     representation_registry.register(STAR_ENTRY as never)
@@ -96,123 +107,105 @@ describe('sa#568 la synchronisation entre volets', () => {
     representation_registry.unregister(OTHER)
   })
 
-  it('rien de coche : chaque volet garde ses reglages (aucun changement de comportement)', () => {
+  it('un volet CREE partage tout avec le volet de meme type dont il part', () => {
     const { mc, a, b } = twoPanes()
-    mc.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019 })
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toBeUndefined()
+    expect(mc.mainZoneSyncSettings(b)).toEqual(['format:graph', 'format:legend'])
+    expect(mc.mainZoneSyncPartners(b, 'format:graph')).toEqual([a])
+    expect(mc.mainZoneSyncPartners(a, 'format:legend')).toEqual([b])
   })
 
-  it('l annee cochee des deux cotes : la changer dans l un la change dans l autre, dans les deux sens', () => {
+  it('le volet cree prend la mise en forme de celui qu il rejoint', () => {
+    const mc = new Class_ApplicationData(false).menu_configuration
+    const a = mc.openMainZoneWindow({ kind: 'diagram' }, NATURE, undefined, undefined, true)
+    mc.setMainZoneWindowOptions(a, { value_mode: 'value', legend_visible: false })
+    const b = mc.openMainZoneWindow({ kind: 'diagram' }, NATURE, undefined, undefined, true)
+    expect(mc.mainZonePaneOptionsOf(b, '').value_mode).toBe('value')
+    expect(mc.mainZonePaneOptionsOf(b, '').legend_visible).toBe(false)
+  })
+
+  it('un changement voyage dans tout le groupe, dans les deux sens', () => {
     const { mc, a, b } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZoneSyncedKey(b, 'data_tags', true)
-
-    mc.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019 })
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toEqual(Y2019)
-
-    mc.setMainZonePaneOptions(b, 'n2', { data_tags: Y2020 })
-    expect(mc.mainZonePaneOptionsOf(a, 'n1').data_tags).toEqual(Y2020)
-
-    // Retirer l epingle (« suit le diagramme ») voyage aussi.
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('value')
+    mc.setMainZonePaneOptions(b, 'n2', { value_mode: 'normalized' })
+    expect(mc.mainZonePaneOptionsOf(a, 'n1').value_mode).toBe('normalized')
+    // Revenir a la valeur du style voyage aussi.
     mc.setMainZonePaneOptions(a, 'n1', {})
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toBeUndefined()
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('percent')
   })
 
-  it('un reglage non coche (l axe) change dans un volet sans toucher l autre', () => {
+  it('un reglage delie reste propre a son volet ; les autres continuent de voyager', () => {
     const { mc, a, b } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZoneSyncedKey(b, 'data_tags', true)
-    mc.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019, descriptor: 'by_tag' })
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toEqual(Y2019)
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').descriptor).toBeUndefined()
+    mc.unlinkMainZoneSync(b, 'format:graph')
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value', legend_visible: false })
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('percent')
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').legend_visible).toBe(false)
   })
 
-  it('coche d un seul cote : rien ne relie les deux volets', () => {
+  it('relier aligne : le volet relie prend ce que montre celui d ou l on relie', () => {
     const { mc, a, b } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019 })
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toBeUndefined()
-    expect(mc.mainZoneSyncPartners(a, 'data_tags')).toEqual([])
+    mc.unlinkMainZoneSync(b, 'format:graph')
+    mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('percent')
+    mc.linkMainZoneSync(a, b, 'format:graph')
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('value')
   })
 
-  it('cocher ne recopie rien : c est le changement suivant qui voyage', () => {
+  it('ni l identite ni l annee epinglee ne voyagent', () => {
     const { mc, a, b } = twoPanes()
-    mc.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019 })
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZoneSyncedKey(b, 'data_tags', true)
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toBeUndefined()
-    expect(mc.mainZoneSyncPartners(a, 'data_tags')).toEqual([b])
-  })
-
-  it('l annee relie deux natures differentes qui la declarent', () => {
-    const { mc, a, b } = twoPanes(NATURE, OTHER)
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZoneSyncedKey(b, 'data_tags', true)
-    mc.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019 })
-    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toEqual(Y2019)
-  })
-
-  it('un reglage d identite ne voyage jamais, meme coche', () => {
-    const { mc, a, b } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'normalize_link_id', true)
-    mc.setMainZoneSyncedKey(b, 'normalize_link_id', true)
-    mc.setMainZonePaneOptions(a, 'n1', { normalize_link_id: 'l1' })
+    mc.setMainZonePaneOptions(a, 'n1', { normalize_link_id: 'l1', data_tags: { year: '2019' } })
     expect(mc.mainZonePaneOptionsOf(b, 'n2').normalize_link_id).toBeUndefined()
-    expect(mc.mainZoneSyncableKeys(a)).not.toContain('normalize_link_id')
+    expect(mc.mainZonePaneOptionsOf(b, 'n2').data_tags).toBeUndefined()
   })
 
-  it('toutes les vignettes montrees d un volet relie recoivent le reglage', () => {
+  it('deux natures differentes ne partagent pas leur mise en forme', () => {
+    const { mc, a, b } = twoPanes(OTHER)
+    expect(mc.mainZoneSyncPartners(b, 'format:graph')).toEqual([])
+    expect(mc.canShareMainZoneSync(a, b, 'format:graph')).toBe(false)
+  })
+
+  it('une vignette montree plus tard nait synchronisee', () => {
     const mc = new Class_ApplicationData(false).menu_configuration
     const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, undefined, undefined, true)
-    const b = mc.openMainZoneWindow({ kind: 'elements', ids: ['n2', 'n3'], keys: ['n2', 'n3'] }, NATURE, undefined, undefined, true)
-    mc.mainZonePaneOptionsOf(b, 'n2')
-    mc.mainZonePaneOptionsOf(b, 'n3')
-    mc.setMainZoneSyncedKey(a, 'value_mode', true)
-    mc.setMainZoneSyncedKey(b, 'value_mode', true)
     mc.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    const b = mc.openMainZoneWindow({ kind: 'elements', ids: ['n2', 'n3'], keys: ['n2', 'n3'] }, NATURE, undefined, undefined, true)
+    // Aucune vignette de b n existait a la creation : elles prennent la mise en forme en naissant.
     expect(mc.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('value')
     expect(mc.mainZonePaneOptionsOf(b, 'n3').value_mode).toBe('value')
   })
 
-  it('rien de coche : le fichier n ecrit pas la cle', () => {
-    const { mc } = twoPanes()
-    const occupants = mc.mainZoneStateToJSON()['occupants'] as Type_JSON
-    Object.values(occupants).forEach(entry => expect('synced' in (entry as Type_JSON)).toBe(false))
-  })
-
-  it('ce qui est coche se retrouve a la reouverture du fichier', () => {
+  it('ce qui est partage se retrouve a la relecture, et un fichier sans partage se rouvre sans', () => {
     const { mc, a, b } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZoneSyncedKey(b, 'data_tags', true)
-    mc.setMainZoneSyncedKey(b, 'descriptor', true)
     const json = JSON.parse(JSON.stringify(mc.mainZoneStateToJSON())) as Type_JSON
-    expect(((json['occupants'] as Type_JSON)[b] as Type_JSON)['synced']).toEqual(['data_tags', 'descriptor'])
+    const entry = (json['occupants'] as Type_JSON)[b] as Type_JSON
+    expect(entry['sync']).toEqual({ 'format:graph': 'g1', 'format:legend': 'g2' })
 
     const reread = new Class_ApplicationData(false).menu_configuration
     reread.mainZoneStateFromJSON(json)
-    expect(reread.mainZoneSyncedKeys(a)).toEqual(['data_tags'])
-    expect(reread.mainZoneSyncedKeys(b)).toEqual(['data_tags', 'descriptor'])
-    // Et le lien joue apres relecture.
-    reread.mainZonePaneOptionsOf(b, 'n2')
-    reread.setMainZonePaneOptions(a, 'n1', { data_tags: Y2019 })
-    expect(reread.mainZonePaneOptionsOf(b, 'n2').data_tags).toEqual(Y2019)
+    expect(reread.mainZoneSyncPartners(a, 'format:graph')).toEqual([b])
+
+    // Le meme fichier sans la cle : rien de partage, comme avant.
+    Object.values(json['occupants'] as Type_JSON).forEach(e => { delete (e as Type_JSON)['sync'] })
+    const old = new Class_ApplicationData(false).menu_configuration
+    old.mainZoneStateFromJSON(json)
+    expect(old.mainZoneSyncPartners(a, 'format:graph')).toEqual([])
+    old.mainZonePaneOptionsOf(b, 'n2')
+    old.setMainZonePaneOptions(a, 'n1', { value_mode: 'value' })
+    expect(old.mainZonePaneOptionsOf(b, 'n2').value_mode).toBe('percent')
   })
 
-  it('decocher le dernier reglage retire la cle du volet', () => {
-    const { mc, a } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    mc.setMainZoneSyncedKey(a, 'data_tags', false)
-    expect(mc.mainZoneSyncedKeys(a)).toEqual([])
-    expect('synced' in (mc.mainZoneWindowToJSON(a) as Type_JSON)).toBe(false)
+  it('un volet seul n ecrit pas la cle', () => {
+    const mc = new Class_ApplicationData(false).menu_configuration
+    const a = mc.openMainZoneWindow({ kind: 'node', id: 'n1' }, NATURE, undefined, undefined, true)
+    expect('sync' in (mc.mainZoneWindowToJSON(a) as Type_JSON)).toBe(false)
   })
 
-  it('la forme d une vue garde ses reglages partages, et les rend en se rouvrant', () => {
-    const { mc, a } = twoPanes()
-    mc.setMainZoneSyncedKey(a, 'data_tags', true)
-    const form = mc.mainZoneWindowToJSON(a) as Type_JSON
-    expect(form['synced']).toEqual(['data_tags'])
+  it('la forme d une vue garde ses partages, et les rend en se rouvrant', () => {
+    const { mc, b } = twoPanes()
+    const form = mc.mainZoneWindowToJSON(b) as Type_JSON
+    expect(form['sync']).toBeDefined()
     const id = mc.openMainZoneWindowFromJSON(form, 'v_test')
     expect(id).not.toBeNull()
-    expect(mc.mainZoneSyncedKeys(id as string)).toEqual(['data_tags'])
+    expect(mc.mainZoneOccupantById(id as string)?.sync).toEqual(form['sync'])
   })
 })

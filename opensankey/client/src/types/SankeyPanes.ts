@@ -16,8 +16,9 @@
 // diagramme principal, avec strictement les mêmes options : menu de configuration, outils de
 // dessin, filtres, zoom, clavier, historique. Les volets partagent les DONNÉES du modèle (nœuds,
 // flux, valeurs, étiquettes, hiérarchie) ; leur MISE EN PAGE (positions, apparence des nœuds et
-// des flux, zones de texte, légende, réglages de la zone) est propre à chacun — rien n'est
-// synchronisé par défaut, sa#568 dira réglage par réglage ce qui se partage.
+// des flux, zones de texte, légende, réglages de la zone) est propre à chacun, SAUF ce que les
+// volets partagent (sa#568, cf. « MISE EN PAGE PARTAGÉE » plus bas) : un volet créé partage tout
+// avec celui dont il part, et l'auteur désynchronise réglage par réglage.
 //
 // POURQUOI UN SEUL DESSIN VIVANT, QUI SE DÉPLACE. Tout ce qui fait « les mêmes options » — le menu,
 // la sélection, le clavier, l'historique, les exports — vise la zone de dessin du document. Donner
@@ -60,6 +61,7 @@ import { compressJSONToGzip } from '../Persistence/UniversalJSONCompression'
 import { DRAW_TOPIC, HISTORY_TOPIC } from './EventBus'
 import { isSankeyPane, mainZoneSubjectView, type Type_MainZoneOccupant } from './MenuConfig'
 import { default_main_sankey_id, type Type_JSON } from './Utils'
+import { SANKEY_LAYOUT_SETTINGS, layoutSetting } from '../Representations/paneSync'
 
 /**
  * CE QUI FAIT LA MISE EN PAGE D'UN VOLET, en modes de `updateFrom` : positions, apparence et
@@ -160,6 +162,8 @@ export class Class_SankeyPanes {
    * est alors jeté.
    */
   protected _base: { owner: Class_DrawingArea, doc: Class_ApplicationData } | null = null
+  /** sa#568 — la mise en page du vivant au dernier partage (cf. `shareLiveLayout`). */
+  protected _shared_layout_key: string | null = null
 
   constructor(protected readonly host: Class_ApplicationData) { }
 
@@ -727,8 +731,91 @@ export class Class_SankeyPanes {
       if (next) { this.setRender(pane_id, next); changed = true }
     })
     this._mirror_epoch = epoch
+    // sa#568 — APRÈS les rendus refaits : un rendu rebâti part de sa mise en page d'avant, et
+    // reçoit ensuite ce que le vivant partage avec lui.
+    if (this.shareLiveLayout()) changed = true
     if (changed) mc.notifyMainZone()
     return changed
+  }
+
+  // MISE EN PAGE PARTAGÉE (sa#568) =================================================================
+  //
+  // Deux volets Sankey qui partagent un réglage de mise en page (positions des nœuds, attributs des
+  // flux, échelle… — les cases du menu Transformations) montrent la même chose pour ce réglage. Le
+  // seul dessin qu'on édite est le vivant : c'est donc de lui que la mise en page part, vers les
+  // RENDUS des volets du même groupe, après chaque geste (le rafraîchissement suit les dessins et
+  // l'historique du vivant). L'inverse va de soi : un volet qu'on active pose sa mise en page — déjà
+  // partagée — sur le dessin, et c'est lui qui la donne ensuite.
+  //
+  // Le mode est passé TOUT ENTIER : partager les positions des nœuds, c'est recopier toutes les
+  // positions, pas seulement celle du nœud qu'on vient de bouger. C'est ce qui garantit que deux
+  // volets partagés ne divergent jamais, même après un geste que le partage n'aurait pas vu.
+
+  /**
+   * PORTE AUX VOLETS DU MÊME GROUPE la mise en page du vivant, si elle a changé depuis la dernière
+   * fois. Rend `true` si un rendu a reçu quelque chose.
+   */
+  public shareLiveLayout(): boolean {
+    const mc = this.host.menu_configuration
+    const live = this.paneById(mc?.main_zone_live_sankey_id ?? null)
+    if (!mc || !live || this.isHeavyView(this.coordinateOf(live))) return false
+    const by_partner = new Map<string, string[]>()
+    SANKEY_LAYOUT_SETTINGS.forEach(({ mode }) => {
+      mc.mainZoneSyncPartners(live.id, layoutSetting(mode)).forEach(id => {
+        by_partner.set(id, [...(by_partner.get(id) ?? []), mode])
+      })
+    })
+    if (by_partner.size === 0) { this._shared_layout_key = null; return false }
+    // Une SIGNATURE de ce que montre le vivant : un geste à la souris ne fait pas de dessin complet
+    // (l'époque de dessin ne bouge pas), mais il change la zone sérialisée.
+    const key = live.id + '|' + JSON.stringify(this.host.dumpDrawingAreaToJSON(this.host.drawing_area))
+    if (key === this._shared_layout_key) return false
+    this._shared_layout_key = key
+    let changed = false
+    by_partner.forEach((modes, id) => {
+      const o = this.paneById(id)
+      if (o && this.shareInto(o, this.host.drawing_area, modes)) changed = true
+    })
+    return changed
+  }
+
+  /**
+   * ALIGNE la mise en page du volet `to_id` sur celle de `from_id`, pour ces modes seulement : le
+   * geste « relier ce volet à celui-ci » (cf. `Class_ApplicationData.linkMainZonePanes`).
+   */
+  public alignLayout(from_id: string, to_id: string, modes: string[]): void {
+    const mc = this.host.menu_configuration
+    const to = this.paneById(to_id)
+    if (!mc || !to || !this.paneById(from_id) || modes.length === 0) return
+    const live_id = mc.main_zone_live_sankey_id
+    const source = from_id === live_id ? this.host.drawing_area : this.renderOf(from_id)?.drawing_area
+    if (!source) return
+    if (to_id === live_id) {
+      updateFrom(this.host.drawing_area, source, [...modes, 'keepPositionType'])
+      this.host.drawing_area.draw()
+      return
+    }
+    if (this.shareInto(to, source, modes)) mc.notifyMainZone()
+  }
+
+  /**
+   * Pose ces modes de `source` sur le RENDU du volet inactif `o` — et dans sa vue quand il en est le
+   * volet enregistré à mise en page propre, puisque c'est elle que son activation relira. Rien pour
+   * une vue lourde, qui porte ses propres données (et souvent d'autres éléments).
+   */
+  protected shareInto(o: Type_MainZoneOccupant, source: Class_DrawingArea, modes: string[]): boolean {
+    const coordinate = this.coordinateOf(o)
+    if (this.isHeavyView(coordinate)) return false
+    const doc = this.renderOf(o.id)
+    const render = this._renders.get(o.id)
+    if (!doc || !render || render.mirror || doc.drawing_area === source) return false
+    updateFrom(doc.drawing_area, source, [...modes, 'keepPositionType'])
+    this.bumpVersion(o.id)
+    const entry = this.host.views_dict[coordinate]
+    if (entry?.own_layout && this.isRegisteredOn(o, coordinate)) {
+      entry.json = compressJSONToGzip(this.host.dumpDrawingAreaToJSON(doc.drawing_area)) as Uint8Array
+    }
+    return true
   }
 
   // CYCLE DE VIE ===================================================================================

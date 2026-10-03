@@ -10,82 +10,182 @@
 // Author        : TerriFlux
 // ==================================================================================================
 
-// sa#568 — SYNCHRONISER DES RÉGLAGES ENTRE VOLETS, RÉGLAGE PAR RÉGLAGE ET VOLET PAR VOLET.
+// sa#568 — LES RÉGLAGES PARTAGÉS ENTRE VOLETS : lesquels, avec qui, et comment ils voyagent.
 //
-// CE QUI A ÉTÉ DEMANDÉ : l'auteur choisit quels réglages se suivent d'un volet à l'autre —
-// « l'année sélectionnée oui, l'axe d'analyse non ». Arbitrage rendu au #566 (23/09) : PAR
-// RÉGLAGE ET PAR VOLET. Chaque volet dit, pour chacun de ses réglages, s'il suit les autres ;
-// ce n'est ni une règle du document, ni un choix par sorte de réglage (la sorte 'navigation'
-// porte à la fois l'année et l'axe, qu'on veut pouvoir séparer).
+// CE QUI A ÉTÉ DEMANDÉ (Alexandre, 02/10, après une première passe par clés de figure qu'il ne
+// lisait pas) :
+//  - les réglages sont ceux du menu Transformations — positions, attributs et styles des nœuds,
+//    des flux et des zones de texte, zone de dessin, échelle —, plus ce qu'on regarde (étiquettes
+//    de données, niveau de détail, filtres, élément) ;
+//  - pour CHAQUE réglage, on choisit AVEC QUELS VOLETS il est partagé ; la mise en page ne se
+//    partage qu'entre volets de même type, les données entre tous ;
+//  - à la création d'un volet, TOUT est partagé : un second Sankey est le même que le premier, et
+//    c'est en désynchronisant qu'on les fait diverger.
 //
-// LA RÈGLE, en une phrase : un changement d'un réglage coché dans un volet est posé sur les
-// figures des autres volets qui ont coché LE MÊME réglage. Un volet qui n'a rien coché ne donne
-// ni ne reçoit rien — c'est l'état de départ, donc aucun changement de comportement.
+// LE MODÈLE : DES GROUPES. Pour un réglage donné, chaque volet appartient au plus à un groupe
+// (`Type_MainZoneOccupant.sync[réglage] = identifiant de groupe`) ; deux volets du même groupe
+// partagent ce réglage, un volet sans groupe le garde pour lui. Les groupes et non des paires :
+// si A suit B et B suit C, A suit C — sans quoi un changement n'aurait pas d'ordre de propagation.
 //
-// CE QUI SE COCHE : les clés que la nature du volet DÉCLARE, sauf celles d'identité. Une clé
-// d'identité nomme un objet du sujet (le flux de référence d'une étoile, le chemin où une
-// couronne est descendue) : la recopier sur un autre volet y désignerait un objet qui n'est pas
-// le sien. C'est la même frontière que celle des styles (`Class_FigureNature.assignStyle`), à
-// une différence près, voulue : la NAVIGATION se synchronise, alors qu'elle n'entre jamais dans
-// un style. Un style dit comment regarder TOUTE figure ; une synchronisation relie DEUX volets
-// que l'auteur a choisis, et l'année est précisément ce qu'il veut leur voir partager.
-//
-// La clé suit son NOM, pas sa nature : l'année épinglée d'une couronne et celle d'une étoile
-// sont la même clé (`data_tags`), et cocher l'année des deux côtés les relie.
-//
-// Ce module est PUR (ni interface, ni registre) : c'est ce qui le rend vérifiable sous jest.
+// Ce module est PUR (ni interface, ni registre, ni dessin) : c'est ce qui le rend vérifiable.
 
-import type { Class_FigureNature, Type_AttributeSort, Type_OptionBag } from './Figure'
+import type { Class_FigureNature, Type_OptionBag } from './Figure'
+import { familyOfKey } from './figureControls'
+import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
 
 /** Comparaison par sérialisation, comme partout ailleurs pour les réglages de figure. */
 const sameValue = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b)
 
-/** L'ordre dans lequel la liste à cocher présente les sortes : ce qu'on regarde d'abord. */
-export const PANE_SYNC_SORT_ORDER: Type_AttributeSort[] = ['navigation', 'display', 'style']
+// --- Le catalogue ---------------------------------------------------------------------------------
 
-/** Ce réglage peut-il se synchroniser d'un volet à l'autre ? Déclaré, et pas d'identité. */
-export const isSyncableKey = (nature: Class_FigureNature, key: string): boolean => {
+/**
+ * LA MISE EN PAGE D'UN VOLET SANKEY, réglage par réglage : les cases du menu Transformations, et
+ * le mode d'`updateFrom` que chacune commande (ceux de `PANE_LAYOUT_MODES`, sauf `keepPositionType`
+ * qui n'est pas un réglage mais une précaution). Rangées comme le menu les montre : par sorte
+ * d'élément, puis positions, attributs, styles ; la zone de dessin et l'échelle à part.
+ */
+export const SANKEY_LAYOUT_SETTINGS: { mode: string, element: 'node' | 'flux' | 'label' | 'area' }[] = [
+  { mode: 'posNode', element: 'node' },
+  { mode: 'attrNode', element: 'node' },
+  { mode: 'styleNode', element: 'node' },
+  { mode: 'posFlux', element: 'flux' },
+  { mode: 'attrFlux', element: 'flux' },
+  { mode: 'styleFlux', element: 'flux' },
+  { mode: 'posFreeLabel', element: 'label' },
+  { mode: 'attrFreeLabel', element: 'label' },
+  { mode: 'styleFreeLabel', element: 'label' },
+  { mode: 'attrDrawingArea', element: 'area' },
+  { mode: 'scale', element: 'area' }
+]
+
+/** Le réglage qui porte un mode de mise en page Sankey, et l'inverse. */
+export const layoutSetting = (mode: string): string => 'layout:' + mode
+export const layoutModeOf = (setting: string): string | null =>
+  setting.startsWith('layout:') ? setting.slice('layout:'.length) : null
+export const SANKEY_LAYOUT_SETTING_IDS = SANKEY_LAYOUT_SETTINGS.map(s => layoutSetting(s.mode))
+
+/**
+ * LA MISE EN FORME D'UNE FIGURE, par famille : les onglets de l'inspecteur (Graphe, Forme,
+ * Libellé, Valeur, Titre, Légende). Une figure n'a ni positions ni zones de texte ; ce qui
+ * correspond chez elle aux cases de Transformations, ce sont ces familles.
+ */
+export const FIGURE_FORMAT_FAMILIES = ['graph', 'shape', 'name_label', 'value_label', 'title', 'legend']
+export const formatSetting = (family: string): string => 'format:' + family
+
+/**
+ * LE RÉGLAGE QUI PORTE UNE CLÉ DE FIGURE, ou `null` pour une clé qui ne se partage pas :
+ *  - l'IDENTITÉ (le flux de référence d'une étoile, l'endroit où une couronne est descendue) : la
+ *    recopier sur un autre volet y désignerait un objet qui n'est pas le sien ;
+ *  - l'ÉTIQUETTE DE DONNÉES épinglée : elle relève de ce qu'on regarde (les réglages de données),
+ *    pas de la mise en forme ;
+ *  - une clé que la nature ne déclare pas.
+ * Le reste va à sa famille, et ce qui n'en a pas (l'axe, la profondeur, le centre…) au Graphe.
+ */
+export const figureSettingOfKey = (nature: Class_FigureNature, key: string): string | null => {
   const sort = nature.sortOf(key)
-  return sort !== undefined && sort !== 'identity'
+  if (sort === undefined || sort === 'identity' || key === FIGURE_DATA_TAGS_KEY) return null
+  const family = familyOfKey(key) || (nature.config[key]?.ui?.family ?? '')
+  return formatSetting(FIGURE_FORMAT_FAMILIES.includes(family) ? family : 'graph')
+}
+
+/** Les familles qu'une nature déclare vraiment, dans l'ordre des onglets. */
+export const figureFormatSettingsOf = (nature: Class_FigureNature): string[] => {
+  const present = new Set<string>()
+  nature.declared_keys.forEach(key => {
+    const setting = figureSettingOfKey(nature, key)
+    if (setting) present.add(setting)
+  })
+  return FIGURE_FORMAT_FAMILIES.map(formatSetting).filter(s => present.has(s))
 }
 
 /**
- * Les réglages qu'un volet de cette nature peut cocher, rangés par sorte (navigation, affichage,
- * mise en forme), dans l'ordre de déclaration à l'intérieur d'une sorte.
+ * UN RÉGLAGE DE MISE EN PAGE ne se partage qu'entre volets de MÊME TYPE (deux Sankey, deux
+ * couronnes) : une position de nœud n'a pas de sens sur une couronne. Les données — ce qu'on
+ * regarde — se partagent entre tous.
  */
-export const syncableKeysOf = (nature: Class_FigureNature): string[] => {
-  const keys = nature.declared_keys.filter(key => isSyncableKey(nature, key))
-  const rank = (key: string) => PANE_SYNC_SORT_ORDER.indexOf(nature.sortOf(key) ?? 'style')
-  return keys
-    .map((key, i) => ({ key, i }))
-    .sort((a, b) => (rank(a.key) - rank(b.key)) || (a.i - b.i))
-    .map(({ key }) => key)
+export const isLayoutSetting = (setting: string): boolean =>
+  setting.startsWith('layout:') || setting.startsWith('format:')
+
+// --- Les groupes ----------------------------------------------------------------------------------
+
+/** Le minimum qu'on lit d'un volet pour raisonner sur les groupes (structurel : testable seul). */
+export type Type_SyncPane = { id: string, representation: string, sync?: { [setting: string]: string } }
+
+/** Deux volets PEUVENT-ils partager ce réglage ? (même type pour la mise en page) */
+export const canShare = (a: Type_SyncPane, b: Type_SyncPane, setting: string): boolean =>
+  a.id !== b.id && (!isLayoutSetting(setting) || a.representation === b.representation)
+
+/** Les AUTRES volets du groupe de `pane` pour ce réglage. */
+export const partnersOf = <T extends Type_SyncPane>(panes: T[], pane: T, setting: string): T[] => {
+  const group = pane.sync?.[setting]
+  if (group === undefined) return []
+  return panes.filter(p => p.id !== pane.id && p.sync?.[setting] === group && canShare(pane, p, setting))
+}
+
+/** Un identifiant de groupe libre : `g` suivi du plus grand rang employé, plus un. */
+export const nextSyncGroupId = (panes: Type_SyncPane[]): string => {
+  let max = 0
+  panes.forEach(p => Object.values(p.sync ?? {}).forEach(g => {
+    const n = /^g(\d+)$/.exec(g)
+    if (n) max = Math.max(max, Number(n[1]))
+  }))
+  return 'g' + (max + 1)
+}
+
+/** Retire `pane` de son groupe ; un groupe réduit à un seul volet se dissout (il ne relie rien). */
+export const leaveGroup = (panes: Type_SyncPane[], pane: Type_SyncPane, setting: string): void => {
+  const group = pane.sync?.[setting]
+  if (group === undefined || !pane.sync) return
+  delete pane.sync[setting]
+  if (Object.keys(pane.sync).length === 0) delete pane.sync
+  const rest = panes.filter(p => p.id !== pane.id && p.sync?.[setting] === group)
+  if (rest.length === 1) leaveGroup(panes, rest[0], setting)
 }
 
 /**
- * CE QUI DOIT VOYAGER après un geste : les clés cochées dont la valeur EFFECTIVE a changé.
- *
- * À la différence de la portée « toutes » (`transposableBagChanges`), UNE CLÉ RETIRÉE VOYAGE :
- * retirer l'épingle d'année, c'est revenir à « suit le diagramme », et un volet relié doit y
- * revenir aussi. Elle voyage sous la forme `undefined` — d'où le test `key in out` plutôt que
- * la valeur, chez l'appelant.
+ * `other` REJOINT le groupe de `pane` pour ce réglage (et quitte le sien) ; `pane` en ouvre un s'il
+ * n'en a pas. Rend `false` si les deux ne peuvent pas partager ce réglage.
  */
-export const syncedChanges = (
-  prev: Type_OptionBag,
-  next: Type_OptionBag,
-  synced: readonly string[]
-): Type_OptionBag => {
-  const out: Type_OptionBag = {}
-  synced.forEach(key => {
-    if (!sameValue(prev[key], next[key])) out[key] = next[key]
+export const joinGroup = (panes: Type_SyncPane[], pane: Type_SyncPane, other: Type_SyncPane, setting: string): boolean => {
+  if (!canShare(pane, other, setting)) return false
+  if (pane.sync?.[setting] !== undefined && pane.sync[setting] === other.sync?.[setting]) return true
+  leaveGroup(panes, other, setting)
+  let group = pane.sync?.[setting]
+  if (group === undefined) {
+    group = nextSyncGroupId(panes)
+    pane.sync = { ...(pane.sync ?? {}), [setting]: group }
+  }
+  other.sync = { ...(other.sync ?? {}), [setting]: group }
+  return true
+}
+
+// --- Ce qui voyage --------------------------------------------------------------------------------
+
+/**
+ * CE QUI DOIT VOYAGER après un geste sur une figure : les clés dont la valeur EFFECTIVE a changé,
+ * rangées par réglage. Une clé RETIRÉE voyage (sous la forme `undefined`, d'où `key in` chez
+ * l'appelant) : revenir à la valeur du style est un changement comme un autre.
+ */
+export const figureChangesBySetting = (
+  nature: Class_FigureNature, prev: Type_OptionBag, next: Type_OptionBag
+): { [setting: string]: Type_OptionBag } => {
+  const out: { [setting: string]: Type_OptionBag } = {}
+  const keys = new Set([...Object.keys(prev), ...Object.keys(next)])
+  keys.forEach(key => {
+    if (sameValue(prev[key], next[key])) return
+    const setting = figureSettingOfKey(nature, key)
+    if (!setting) return
+    out[setting] = { ...(out[setting] ?? {}), [key]: next[key] }
   })
   return out
 }
 
-/** La liste des réglages cochés relue d'un fichier : des chaînes non vides, sans doublon. */
-export const readSyncedKeys = (raw: unknown): string[] => {
-  if (!Array.isArray(raw)) return []
-  const out: string[] = []
-  raw.forEach(k => { if (typeof k === 'string' && k !== '' && !out.includes(k)) out.push(k) })
-  return out
+/** La table des groupes relue d'un fichier : des chaînes non vides des deux côtés. */
+export const readSyncMap = (raw: unknown): { [setting: string]: string } | undefined => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined
+  const out: { [setting: string]: string } = {}
+  Object.entries(raw as { [k: string]: unknown }).forEach(([setting, group]) => {
+    if (setting !== '' && typeof group === 'string' && group !== '') out[setting] = group
+  })
+  return Object.keys(out).length > 0 ? out : undefined
 }
