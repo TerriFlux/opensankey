@@ -693,7 +693,13 @@ export class NodeEventsHandler {
     // Did the drag actually move 'this' node? If yes we'll save one combined undo/redo
     // step (positions + IO link orders) at the very end of this handler, once positions
     // are final and the auto-reorganization has been applied.
-    const position_changed = dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)
+    //
+    // sa#568 — SUR L'UN OU L'AUTRE AXE (`||`, et non plus `&&`). Un glisser purement horizontal ou
+    // vertical — le cas d'un nœud aimanté sur une ligne, ou qu'on réordonne dans sa colonne — ne
+    // s'inscrivait pas à l'historique (« annuler » ne le défaisait pas) et ne réorganisait pas
+    // l'ordre des flux. Alexandre, 03/10 : annuler s'applique à toutes les actions, dont le
+    // déplacement d'un nœud.
+    const position_changed = dict_old_pos[this._node.id][0] !== this._node.position_x || (dict_old_pos[this._node.id][1] !== this._node.position_y)
 
     // End of drag
     this._node.setDragState(false)
@@ -703,7 +709,7 @@ export class NodeEventsHandler {
     // bougé, c'était un clic : on ne fait AUCUN travail de fin de drag (settle
     // paramétrique, réorg des colonnes, auto-grow, redraw des liens,
     // refreshPanExtent). La sélection est gérée par le chemin de clic, pas ici.
-    // (position_changed ci-dessus utilise `&&` — X-seul/Y-seul — donc insuffisant.)
+    // (position_changed ci-dessus vaut la même chose depuis sa#568 ; ce test-ci garde sa lecture.)
     const _start_pos = dict_old_pos[this._node.id]
     const _really_moved = !_start_pos
       || _start_pos[0] !== this._node.position_x
