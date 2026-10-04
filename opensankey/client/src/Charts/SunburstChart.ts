@@ -1292,7 +1292,10 @@ export const drawSunburstChart = (
   const ZOOM_MAX = 8
 
   const render = () => {
-    d3.select(container).selectAll('*').remove()
+    // 04/10/2026 — LES ENFANTS DIRECTS SEULEMENT. `selectAll('*')` vidait aussi le DEDANS du tableau de
+    // navigation (os#1511), bloc tout fait que la figure repose à chaque tracé : au second tracé, il
+    // revenait vide — en sunburst, le tableau disparaissait.
+    container.replaceChildren()
     // Chaque texte prend sa ligne, le disque et la légende se partagent le reste (cf.
     // Representations/figureTextZones). Le nom du sujet sert de repli au titre sans texte propre.
     const subject_name = tree.roots.length === 1

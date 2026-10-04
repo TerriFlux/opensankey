@@ -1068,6 +1068,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
   // reste au tableau, pour qu'on puisse la redessiner autrement — ses en-têtes et ses cases inertes.
   const split = smallMultiplesOf(ctx)
   const rows = split && !cut.dims.includes(split.dimension) ? [...cut.dims, split.dimension] : cut.dims
+  const levels_display = readFigureLevelsDisplay(options)
 
   const dimensions: Type_FigureNavDimension[] = rows.map(dim => {
     const entry_depth = dimensionRootsOf(dim).length === 1 ? 1 : 0
@@ -1075,6 +1076,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     const zs = is_split ? [] : zooms.get(dim.id) ?? []
     const divides = cut.dividing.includes(dim)
     const depths = drawn_depths.get(dim.id)
+    const in_rings = dataDimensionLevelsDisplay(levels_display, dim.id) === 'rings'
     const levels = (dim.levels as string[]).map((raw, depth) => ({ raw, depth })).filter(l => l.depth >= entry_depth)
     return {
       id: dim.id,
@@ -1092,7 +1094,11 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
         at_level.sort((x, y) => order.indexOf(x) - order.indexOf(y))
         // La colonne active est le niveau le PLUS HAUT que la couronne dessine : déplier une part
         // dans la couronne (« Déplie dans la couronne ») ne déplace pas la colonne.
-        const active = divides && depths !== undefined && depths.size > 0 && depth === Math.min(...depths)
+        // 04/10/2026 — EN SUNBURST, les niveaux EMPILÉS jusqu'au plus fin dessiné sont surlignés ensemble
+        // (un anneau chacun) ; cliquer un en-tête règle le niveau le plus fin (`choose`).
+        const active = divides && depths !== undefined && depths.size > 0 && (in_rings
+          ? depth <= Math.max(...depths)
+          : depth === Math.min(...depths))
         return {
           label: levelShortName(raw),
           active,
