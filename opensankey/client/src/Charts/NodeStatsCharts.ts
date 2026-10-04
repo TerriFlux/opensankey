@@ -48,7 +48,7 @@ import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 // os#1511 — la légende en arbre : même règle (ordre, retrait) que la légende du diagramme.
 import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
 import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
-import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText } from './figureFormat'
+import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
 
 export interface Type_StatSlice {
   id: string
@@ -601,7 +601,15 @@ export const barLabelBottom = (angles: readonly number[]): number => {
   return steepest >= 70 ? 60 : 46
 }
 
-/** L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu. */
+/**
+ * L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu.
+ *
+ * 04/10/2026 — 'value_desc' (le défaut) trie TOUTES LES PARTS ENSEMBLE, catégories confondues :
+ * Jean-Yves, sur la couronne au niveau HS4, « par défaut je préfère que ce soit par ordre
+ * décroissant toutes catégories confondues (pas par catégorie) ». L'ordre en arbre du 30/09
+ * (`orderPartsAsTree`) reste celui de 'value_desc_grouped', et des ordres croissant et par nom.
+ * « Autres » reste en dernier : il est ajouté APRÈS le tri (`foldDonutParts`).
+ */
 export const orderParts = <T extends { label: string, value: number, path?: string[], parent_label?: string }>(
   parts: T[], order: Type_FigureChartStyle['parts_order']
 ): T[] => {
@@ -610,7 +618,7 @@ export const orderParts = <T extends { label: string, value: number, path?: stri
     order === 'name' ? a.label.localeCompare(b.label)
       : order === 'value_asc' ? a.value - b.value
         : b.value - a.value
-  if (parts.some(p => (p.path?.length ?? 0) > 2)) return orderPartsAsTree(parts, compare)
+  if (order !== 'value_desc' && parts.some(p => (p.path?.length ?? 0) > 2)) return orderPartsAsTree(parts, compare)
   return [...parts].sort(compare)
 }
 
@@ -1053,10 +1061,8 @@ const drawEmptyLabel = (
     .text(label)
 }
 
-const pctText = (value: number, total: number) => {
-  const pct = value / total * 100
-  return (pct >= 10 ? pct.toFixed(0) : pct >= 1 ? pct.toFixed(1) : pct.toFixed(2)) + '%'
-}
+// 04/10/2026 — la règle commune des figures (`figurePercentText`) : un entier, « <1% » en dessous.
+const pctText = figurePercentText
 
 /**
  * Ordre des parts, puis repli des petites en « Autres » : sous le seuil (`parts_group_under`, en %
@@ -1087,7 +1093,7 @@ export const donutValueText = (
   value: number, total: number, st: Type_FigureChartStyle, f: (v: number) => string
 ): string => {
   if (!st.value_label_is_visible) return ''
-  const pct = Math.round(value / total * 100) + '%'
+  const pct = figurePercentText(value, total)
   if (st.value_label_percent === 'value_total' || st.value_label_percent === 'value_parent') return `${f(value)} (${pct})`
   if (st.value_label_percent !== 'none') return pct
   return f(value)
@@ -2591,17 +2597,17 @@ export const drawBarChart = (
     const total_all = slices.reduce((acc, s2) => acc + s2.value, 0)
     const both = s.value_label_percent === 'value_total' || s.value_label_percent === 'value_parent'
     if (both && total_all > 0) {
-      return `${(a?.value_format ?? fmt)(d.value)} (${Math.round(d.value / total_all * 100)}%)`
+      return `${(a?.value_format ?? fmt)(d.value)} (${figurePercentText(d.value, total_all)})`
     }
     if (s.value_label_percent !== 'none' && total_all > 0) {
-      return Math.round(d.value / total_all * 100) + '%'
+      return figurePercentText(d.value, total_all)
     }
     const out: string[] = [(a?.value_format ?? fmt)(d.value)]
     // Le pourcentage du tout, quand l'auteur le demande — 'none' par défaut sur un histogramme,
     // donc rien ne change tant que personne ne le réclame.
     const total_value = slices.reduce((acc, s2) => acc + s2.value, 0)
     if (s.value_label_percent !== 'none' && total_value > 0) {
-      out.push(Math.round(d.value / total_value * 100) + '%')
+      out.push(figurePercentText(d.value, total_value))
     }
     return out.join(' ')
   }

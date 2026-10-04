@@ -151,7 +151,7 @@ export const LEGEND_CONFIG = {
 
 // ── parts_* : les parts d'un tout — secteurs, barres ───────────────────────────────────────
 export const PARTS_CONFIG = {
-  parts_order: entry<'value_desc' | 'value_asc' | 'name' | 'model'>('value_desc', 'parts', {
+  parts_order: entry<'value_desc' | 'value_desc_grouped' | 'value_asc' | 'name' | 'model'>('value_desc', 'parts', {
     en: 'Order of the parts', fr: 'Ordre des parts', es: 'Orden de las partes',
     de: 'Reihenfolge der Teile', it: 'Ordine delle parti', 'zh-CN': '各部分的顺序', ja: '部分の順序'
   }, {
@@ -165,6 +165,8 @@ export const PARTS_CONFIG = {
     kind: 'select',
     choices: [
       choice('value_desc', { en: 'Largest first', fr: 'Du plus grand au plus petit', es: 'De mayor a menor', de: 'Größte zuerst', it: 'Dal più grande al più piccolo', 'zh-CN': '从大到小', ja: '大きい順' }),
+      // 04/10/2026 — l'ordre en arbre : les parts d'une catégorie côte à côte, comme la légende.
+      choice('value_desc_grouped', { en: 'Largest first, by category', fr: 'Du plus grand au plus petit, par catégorie', es: 'De mayor a menor, por categoría', de: 'Größte zuerst, nach Kategorie', it: 'Dal più grande al più piccolo, per categoria', 'zh-CN': '从大到小（按类别）', ja: '大きい順（カテゴリ別）' }),
       choice('value_asc', { en: 'Smallest first', fr: 'Du plus petit au plus grand', es: 'De menor a mayor', de: 'Kleinste zuerst', it: 'Dal più piccolo al più grande', 'zh-CN': '从小到大', ja: '小さい順' }),
       choice('name', { en: 'By name', fr: 'Par nom', es: 'Por nombre', de: 'Nach Name', it: 'Per nome', 'zh-CN': '按名称', ja: '名前順' }),
       choice('model', { en: 'Model order', fr: 'Ordre du modèle', es: 'Orden del modelo', de: 'Reihenfolge des Modells', it: 'Ordine del modello', 'zh-CN': '模型顺序', ja: 'モデルの順序' })

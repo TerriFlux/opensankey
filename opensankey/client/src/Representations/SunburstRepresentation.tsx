@@ -101,7 +101,7 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
     // Les deux suivantes sont des clés DU CATALOGUE (figureCatalogue) : l'ordre des parts et le
     // nom des secteurs se règlent sous les mêmes mots que sur toute autre figure.
     sort_order: one_of(
-      raw.parts_order, ['value_desc', 'value_asc', 'name', 'model'] as const, 'value_desc'
+      raw.parts_order, ['value_desc', 'value_desc_grouped', 'value_asc', 'name', 'model'] as const, 'value_desc'
     ),
     name_source: raw.name_label_follow_diagram === false ? 'own' : 'displayed'
   }
@@ -159,6 +159,11 @@ export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type
   keep('value_label_significant_digits', 'boolean', 'significant_digits')
   keep('value_label_nb_significant_digits', 'number', 'nb_significant_digits')
   keep('value_label_custom_digit', 'boolean', 'custom_digit')
+  // 04/10/2026 — des chiffres significatifs cochés sans décimales dites décident seuls, comme
+  // avant que la décimale unique devienne le défaut (même règle que `figureValueFormatOf`).
+  if (raw.value_label_significant_digits === true && typeof raw.value_label_custom_digit !== 'boolean') {
+    out.custom_digit = false
+  }
   keep('value_label_nb_digit', 'number', 'nb_digit')
   keep('value_label_scientific_notation', 'boolean', 'scientific_notation')
   // Centre, légende, mentions, gestes.

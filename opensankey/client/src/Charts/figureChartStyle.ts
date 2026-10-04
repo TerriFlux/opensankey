@@ -52,8 +52,15 @@ export interface Type_FigureChartStyle {
    * légende »).
    */
   legend_levels: boolean
-  /** parts_* */
-  parts_order: 'value_desc' | 'value_asc' | 'name' | 'model'
+  /**
+   * parts_*
+   *
+   * 04/10/2026 — 'value_desc' trie TOUTES LES PARTS ENSEMBLE, catégories confondues (Jean-Yves :
+   * « par défaut, je préfère que ce soit par ordre décroissant toutes catégories confondues »).
+   * 'value_desc_grouped' garde l'ordre en arbre d'avant (os#1511, 30/09) : les parts d'un même
+   * parent côte à côte, les groupes par leur total — l'ordre de la légende en arbre.
+   */
+  parts_order: 'value_desc' | 'value_desc_grouped' | 'value_asc' | 'name' | 'model'
   /**
    * os#1499 — UNE SEULE BARRE, UN SEGMENT PAR PART. Propre a l'histogramme : une couronne empile
    * deja, c'est ce qu'un anneau EST. Faux par defaut — aucune figure enregistree ne change.
@@ -188,7 +195,10 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // mais valeur + pourcentage — comme ça pas de redondance et un maximum d'information »). La
   // légende NOMME, le secteur CHIFFRE : le nom n'est plus écrit deux fois.
   legend_position: 'left',
-  legend_font_size: 12,
+  // 04/10/2026 — 14 (12 avant). Jean-Yves : « la taille des polices est un peu déséquilibrée ;
+  // augmenter un peu la taille de la police de légende ». Les titres de bloc de la légende en
+  // arbre héritent de cette taille. Les barres gardent 12 (cf. `BARS_STYLE_DEFAULTS`).
+  legend_font_size: 14,
   legend_width: 230,
   // La légende nomme les parts sans dire leur parent : sous un seul cran il n'y en a pas à dire,
   // et sous une hiérarchie c'est ce qui rend la liste lisible — donc vrai d'office, et sans effet
@@ -216,7 +226,9 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   //
   // 01/10/2026 — ALLUMÉ : nom + valeur + % dans chaque secteur, sans légende (cf. plus haut).
   name_label_is_visible: true,
-  name_label_font_size: 11,
+  // 04/10/2026 — 13 (11 avant) : « augmenter la taille de la police dans les segments ». Les
+  // étiquettes détachées suivent ; le plancher lisible des petites cases (9 px) ne bouge pas.
+  name_label_font_size: 13,
   // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
   // une seule ligne, aucun separateur, et rien ne se masque sur la longueur.
   name_label_font_family: '',
@@ -270,6 +282,8 @@ export const BARS_STYLE_DEFAULTS: Type_FigureChartStyle = {
   name_label_is_visible: true,
   labels_small: 'hide',
   legend_width: 200,
+  // La couronne a pris deux points de légende (04/10/2026) ; l'histogramme garde ceux d'hier.
+  legend_font_size: 12,
   parts_group_under: 0,
   parts_max: 20,
   centre_content: 'none',

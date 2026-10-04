@@ -308,13 +308,20 @@ export const SHARED_HONOURS = {
   // panneau lisait encore `false` — la declaration disait l'inverse du dessin, et c'est elle
   // que l'inspecteur montre. Sans unite au diagramme, le symbole vaut '' et rien ne s'ecrit.
   value_label_unit_visible: { default: true, visibleIf: valued },
-  value_label_significant_digits: { default: true, visibleIf: valued },
+  // 04/10/2026 — UNE DÉCIMALE PAR DÉFAUT, comme le tracé (`FIGURE_VALUE_FORMAT_DEFAULTS`) : les
+  // décimales sortent d'« Avancé », c'est désormais le réglage qui décide. Des chiffres
+  // significatifs cochés décident seuls : la case des décimales se retire alors.
+  value_label_significant_digits: { default: false, visibleIf: valued },
   value_label_nb_significant_digits: {
-    default: 3, visibleIf: (o: Type_Bag) => valued(o) && o['value_label_significant_digits'] !== false
+    default: 3, visibleIf: (o: Type_Bag) => valued(o) && o['value_label_significant_digits'] === true
   },
-  value_label_custom_digit: { advanced: true, visibleIf: valued },
+  value_label_custom_digit: {
+    default: true, visibleIf: (o: Type_Bag) => valued(o) && o['value_label_significant_digits'] !== true
+  },
   value_label_nb_digit: {
-    advanced: true, visibleIf: (o: Type_Bag) => valued(o) && o['value_label_custom_digit'] === true
+    default: 1,
+    visibleIf: (o: Type_Bag) => valued(o) && o['value_label_significant_digits'] !== true &&
+      o['value_label_custom_digit'] !== false
   },
   value_label_scientific_notation: { advanced: true, visibleIf: valued },
   // os#1431 — cachée par défaut, comme le tracé (cf. DONUT_STYLE_DEFAULTS) : l'inspecteur doit
@@ -457,12 +464,15 @@ const DONUT_HONOURS = {
   // règle des deux dimensions ; posée, par l'auteur ou au premier dessin qui la montre, elle tient.
   legend_visible: { default: undefined, visibleIf: (o: Type_Bag) => !smallMultiplesOn(o) },
   legend_parts: { default: 'all', visibleIf: (o: Type_Bag) => o['legend_visible'] === true && !smallMultiplesOn(o) },
-  legend_font_size: { visibleIf: legendShown },
+  // 04/10/2026 — DEUX POINTS DE PLUS (Jean-Yves : « augmenter un peu la taille de la police de
+  // légende »), comme `DONUT_STYLE_DEFAULTS`. Les barres gardent les 12 du catalogue.
+  legend_font_size: { default: 14, visibleIf: legendShown },
   legend_width: { default: 230, visibleIf: legendShown },
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
   value_label_is_visible: { default: true },
-  name_label_font_size: { default: 11 },
+  // 04/10/2026 — 13 (11 avant) : cf. `DONUT_STYLE_DEFAULTS`.
+  name_label_font_size: { default: 13 },
   value_label_percent: { default: 'value_total' },
   // 01/10/2026 — PLUS DANS LE GRAPHE (Julien : « le centre c'est aussi une part ; ce n'est pas dans
   // graphe »). Ce que le centre écrit se règle sur SA part, comme le libellé et la valeur de

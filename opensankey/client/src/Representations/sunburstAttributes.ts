@@ -220,7 +220,7 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   name_label_box_width: { visibleIf: labelled },
   name_label_callout: { visibleIf: labelled },
   name_label_font_family: { visibleIf: labelled },
-  name_label_font_size: { default: 10, visibleIf: labelled },
+  name_label_font_size: { default: 12, visibleIf: labelled },
   name_label_bold: { visibleIf: labelled },
   name_label_italic: { advanced: true, visibleIf: labelled },
   name_label_uppercase: { advanced: true, visibleIf: labelled },
@@ -239,13 +239,17 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   // que l'inspecteur montre. Sans unite au diagramme, le symbole vaut '' et rien ne s'ecrit.
   value_label_unit_visible: { default: true, visibleIf: valued },
   value_label_percent: { visibleIf: labelled },
-  value_label_significant_digits: { default: true, visibleIf: valued },
+  // 04/10/2026 — UNE DÉCIMALE PAR DÉFAUT, comme le tracé (`SUNBURST_STYLE_DEFAULTS`) : les
+  // décimales sortent d'« Avancé », c'est désormais le réglage qui décide.
+  value_label_significant_digits: { default: false, visibleIf: valued },
   value_label_nb_significant_digits: {
-    default: 3, visibleIf: (o) => valued(o) && is(o, 'value_label_significant_digits', true)
+    default: 3, visibleIf: (o) => valued(o) && is(o, 'value_label_significant_digits', false)
   },
-  value_label_custom_digit: { advanced: true, visibleIf: valued },
+  value_label_custom_digit: {
+    default: true, visibleIf: (o) => valued(o) && !is(o, 'value_label_significant_digits', false)
+  },
   value_label_nb_digit: {
-    advanced: true, visibleIf: (o) => valued(o) && is(o, 'value_label_custom_digit', false)
+    default: 1, visibleIf: (o) => valued(o) && is(o, 'value_label_custom_digit', true)
   },
   value_label_scientific_notation: { advanced: true, visibleIf: valued },
 
@@ -276,7 +280,7 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   legend_parts: {},
   legend_levels: {},
   legend_position: {},
-  legend_font_size: {},
+  legend_font_size: { default: 14 },
   legend_width: {},
   notes_visible: {},
   interaction_tooltip: {},

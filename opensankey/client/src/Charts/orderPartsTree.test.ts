@@ -25,9 +25,15 @@ describe('orderParts sur une couronne depliee', () => {
       .toEqual(['lait', 'boeuf', 'porc', 'mais', 'ble'])
   })
 
-  test('decroissant : meme regle, a l envers', () => {
-    expect(orderParts(parts, 'value_desc').map(p => p.label))
+  test('decroissant par categorie : meme regle, a l envers', () => {
+    expect(orderParts(parts, 'value_desc_grouped').map(p => p.label))
       .toEqual(['ble', 'mais', 'porc', 'boeuf', 'lait'])
+  })
+
+  // 04/10/2026 — Jean-Yves : « par defaut, decroissant toutes categories confondues ».
+  test('decroissant (le defaut) : toutes categories confondues', () => {
+    expect(orderParts(parts, 'value_desc').map(p => p.label))
+      .toEqual(['ble', 'porc', 'lait', 'mais', 'boeuf'])
   })
 
   test('par nom : les groupes par le nom de leur parent', () => {
