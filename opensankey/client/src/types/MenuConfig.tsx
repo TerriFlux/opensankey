@@ -72,7 +72,7 @@ import {
 import {
   canonicalRepresentationId, retiredRepresentationOptions
 } from '../Representations/retiredRepresentations'
-import { representation_registry } from '../Representations/RepresentationRegistry'
+import { representation_registry, type Type_RepresentationContext } from '../Representations/RepresentationRegistry'
 // os#1421 — LE PLACEMENT : le TYPE et les helpers purs vivent dans `Placement.ts`, le REGISTRE des
 // figures par identifiant de document vit ici (c'est lui qui sait quelle figure un placement cite).
 import {
@@ -226,6 +226,12 @@ export type Type_WindowCoordinatesLink = {
   linked: boolean
   setLinked: (link: boolean) => void
 }
+
+/**
+ * 04/10/2026 — LE DESSIN D'UNE DIMENSION D'UNE COURONNE (os#1511) : en secteurs, en sunburst, une
+ * couronne par membre ; le choix de la dimension `dim_id`, ou `null` quand elle n'en a pas.
+ */
+export type Type_FigureDimensionDrawing = (dim_id: string) => Type_TopbarFigureChoice | null
 
 /**
  * 02/10/2026 — LES MENUS DE LA FIGURE ACTIVE dans la barre du haut (cf. `topbar_figure_menus`) :
@@ -1216,6 +1222,13 @@ export class Class_MenuConfig {
   // fichier sur le plus grand N rencontré, sinon une fenêtre nouvelle prendrait l'id d'une ancienne.
   protected _main_zone_window_seq: number = 0
   /**
+   * 04/10/2026 — LES FENÊTRES OUVERTES DANS CETTE SESSION (os#1511), et elles seules : leurs figures
+   * NAISSENT avec les réglages d'une figure neuve que leur nature déclare (`fresh_own`, la couronne
+   * en « Zoome dedans »). Non sérialisé, et c'est le but : une fenêtre relue d'un fichier n'y est pas,
+   * ses figures gardent ce qu'elles avaient (l'usine pour ce qu'elles ne disaient pas).
+   */
+  protected _fresh_figure_windows: Set<string> = new Set()
+  /**
    * sa#566 — LE DERNIER ÉTAT DES VOLETS ENREGISTRÉS QU'ON A FERMÉS, par identifiant de vue.
    *
    * Une vue retrouve son volet tel qu'on l'a quitté. Or la fermeture a lieu ici, et cette classe ne
@@ -1461,6 +1474,16 @@ export class Class_MenuConfig {
   }
   public set window_coordinates_link(v: ((occupant_id: string) => Type_WindowCoordinatesLink | null) | null) {
     this._host._window_coordinates_link = v
+  }
+  // 04/10/2026 — LE DESSIN DE CHAQUE DIMENSION D'UNE COURONNE (os#1511), que le tableau de navigation
+  // pose dans sa colonne de gauche : OS+ le fournit (gestes de `figureGesturesHost`) ; `null` : la
+  // figure n'a pas de dessin réglable, le tableau n'en montre pas.
+  protected _figure_dimension_drawing: ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null = null
+  public get figure_dimension_drawing(): ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null {
+    return this._host._figure_dimension_drawing
+  }
+  public set figure_dimension_drawing(v: ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null) {
+    this._host._figure_dimension_drawing = v
   }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
@@ -1747,6 +1770,7 @@ export class Class_MenuConfig {
     } while (this.isMainZoneOccupant(id))
     const from = this._host._main_zone_active_id
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
+    this._host._fresh_figure_windows.add(id)
     if (place === 'floating') this._ensureFloatingGeometry(id, geometry)
     this._normalizeMainZoneOccupants()
     // sa#568 — un volet CRÉÉ partage tout avec ceux de son type (arbitrage Alexandre, 02/10).
@@ -2037,6 +2061,8 @@ export class Class_MenuConfig {
       this._host._main_zone_grid = gridRename(this._host._main_zone_grid, id, representation)
     }
     this._normalizeMainZoneOccupants()
+    // 04/10/2026 — une nature choisie maintenant : ses figures sont neuves (cf. `fresh_own`).
+    this._host._fresh_figure_windows.add(o.id)
     // La fenêtre est toujours là, sous son id courant, et cet id n'indexe rien d'autre : ses
     // figures la suivent. Sinon (elle a quitté la zone, ou fusionné avec une voisine), elles
     // s'en vont, sauf les promues.
@@ -2188,8 +2214,29 @@ export class Class_MenuConfig {
     // sa#568 — UNE VIGNETTE NEUVE NAÎT SYNCHRONISÉE : ce que son volet partage, elle le prend d'un
     // volet du même groupe. Sans ça, une couronne qui suit la sélection naîtrait aux valeurs d'usine
     // à chaque nouveau nœud choisi, alors que l'auteur l'a reliée à une couronne réglée.
-    if (!existing) this._initFigureFromPartners(o, fig)
+    if (!existing) {
+      this._initFreshFigure(occupant_id, by_key, fig)
+      this._initFigureFromPartners(o, fig)
+    }
     return fig
+  }
+  /**
+   * 04/10/2026 — UNE FIGURE NEUVE NAÎT AVEC LES RÉGLAGES QUE SA NATURE DÉCLARE POUR UNE FIGURE NEUVE
+   * (`fresh_own` : la couronne en « Zoome dedans », pour le scénario de Jean-Yves, os#1511), écrits
+   * comme une surcharge propre — donc enregistrés. Seulement dans une fenêtre ouverte dans cette
+   * session, ou à côté d'une figure de la même fenêtre qui les porte déjà (une fenêtre qui suit la
+   * sélection relue d'un fichier) : une couronne enregistrée garde ce qu'elle avait, l'usine
+   * comprise, et le défaut d'usine ne change pas.
+   */
+  protected _initFreshFigure(occupant_id: string, by_key: { [key: string]: Class_Figure }, fig: Class_Figure): void {
+    const fresh = (representation_registry.get(fig.nature.id) as { fresh_own?: Type_OptionBag } | undefined)?.fresh_own
+    if (!fresh) return
+    const fresh_window = this._host._fresh_figure_windows.has(occupant_id)
+    const siblings = Object.values(by_key).filter(f => f !== fig && f.nature === fig.nature)
+    Object.entries(fresh).forEach(([key, value]) => {
+      const born_fresh = siblings.some(f => f.isAttributeExplicit(key) && JSON.stringify(f.own[key]) === JSON.stringify(value))
+      if (fresh_window || born_fresh) fig.set(key, value)
+    })
   }
   /** Un réglage de CETTE nature a-t-il un sens sur la figure voisine ? (cf. `isTransposableOption`) */
   public isTransposableFigureOption(nature_id: string, key: string): boolean {

@@ -468,6 +468,10 @@ export const INTERACTION_CONFIG = {
   // Ce que ce réglage choisit, c'est ce qui S'AJOUTE : déplier aussi le nœud dans le diagramme
   // (ce que le disque fait depuis toujours), ou re-enraciner la figure sur lui (le drill-down).
   // (Les libellés, eux, disent désormais le geste entier : cf. le 03/10/2026 ci-dessous.)
+  //
+  // 04/10/2026 — L'USINE RESTE 'none' (« Déplie dans la couronne ») : c'est ce que lit une couronne
+  // enregistrée qui ne dit rien. Une couronne NEUVE naît en « Zoome dedans » par sa nature
+  // (`DONUT_FRESH_OWN`, écrit comme une surcharge propre), pas par ce défaut.
   interaction_click: entry<'both' | 'zoom' | 'aggregate' | 'none'>('none', 'interaction', {
     en: 'Click on a part', fr: 'Clic sur une part', es: 'Clic en una parte',
     de: 'Klick auf einen Teil', it: 'Clic su una parte',

@@ -62,3 +62,23 @@ export const FigureDrawingIcon = ({ name, size = 16 }: { name: Type_FigureDrawin
     {PATHS[name].map((d, i) => <path key={i} d={d} />)}
   </svg>
 )
+
+/** 04/10/2026 — le même visuel en DOM pur, pour le tableau de navigation d'une couronne (os#1511). */
+export const figureDrawingIconElement = (name: Type_FigureDrawingIconName, size = 14): SVGSVGElement => {
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('width', String(size))
+  svg.setAttribute('height', String(size))
+  svg.setAttribute('viewBox', '0 0 16 16')
+  svg.setAttribute('fill', 'currentColor')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.style.display = 'inline-block'
+  svg.style.verticalAlign = 'middle'
+  svg.style.flexShrink = '0'
+  PATHS[name].forEach(d => {
+    const path = document.createElementNS(ns, 'path')
+    path.setAttribute('d', d)
+    svg.appendChild(path)
+  })
+  return svg
+}

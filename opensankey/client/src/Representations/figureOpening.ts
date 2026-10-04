@@ -269,7 +269,7 @@ export const withFigureDataLayer = (options: Type_Options, layer: Type_FigureDat
 // ── LA DISPOSITION DES NIVEAUX (os#1511) ────────────────────────────────────────────────────────
 //
 // 02/10/2026, sa!841 : chaque dimension de données avait sa disposition (`levels_display_by`).
-// 03/10/2026 — RETOUR À UN RÉGLAGE COMMUN. Julien : « si on ne garde que ces 3 options, ce sont des
+// 03/10/2026 — RETOUR À UN RÉGLAGE COMMUN (puis de nouveau par dimension le 04/10, ci-dessous). Julien : « si on ne garde que ces 3 options, ce sont des
 // options pour toutes les dimensions ». La figure se dessine en secteurs, en sunburst ou en petits
 // multiples ; l'emboîtement (quelle dimension à l'intérieur, laquelle fait les cases) suit l'ordre
 // des dimensions dans la barre du haut, que règle le ⇄. `levels_display_by` n'est plus écrit : un
@@ -277,31 +277,51 @@ export const withFigureDataLayer = (options: Type_Options, layer: Type_FigureDat
 
 export type Type_LevelsDisplay = 'in_place' | 'rings'
 
+// 04/10/2026 — DE NOUVEAU PAR DIMENSION, depuis le tableau de navigation (Julien) : chaque ligne de
+// dimension y porte son petit sélecteur de dessin (en secteurs / en sunburst / une couronne par
+// membre), qui dit comment CETTE dimension se dessine quand elle découpe. `levels_display_by` est de
+// nouveau écrit ; `levels_display`, le réglage commun de sa!859, reste lu comme défaut des dimensions
+// qui n'ont rien d'écrit : une couronne enregistrée s'ouvre à l'identique.
+
 export interface Type_FigureLevelsDisplay {
-  /** Le réglage commun, `undefined` quand le sac ne le dit pas (ni par l'ancienne clé par dimension). */
+  /** Le réglage commun, `undefined` quand le sac ne le dit pas. */
   common: Type_LevelsDisplay | undefined
+  /** Les dimensions qui ont leur disposition propre. */
+  by: { [dimension_id: string]: Type_LevelsDisplay }
 }
 
 const asLevelsDisplay = (v: unknown): Type_LevelsDisplay | undefined =>
   v === 'rings' || v === 'in_place' ? v : undefined
 
-/** La disposition des niveaux, lue sur le sac de réglages (l'ancienne clé par dimension comprise). */
+/** La disposition des niveaux, lue sur le sac de réglages (commune, et par dimension). */
 export const readFigureLevelsDisplay = (options: Type_Options | null | undefined): Type_FigureLevelsDisplay => {
   const common = asLevelsDisplay(options?.['levels_display'])
-  if (common !== undefined) return { common }
+  const by: { [dimension_id: string]: Type_LevelsDisplay } = {}
   const raw = options?.[LEVELS_DISPLAY_BY_KEY]
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { common: undefined }
-  const modes = Object.values(raw as Type_Options).map(asLevelsDisplay).filter(m => m !== undefined)
-  if (modes.length === 0) return { common: undefined }
-  return { common: modes.includes('rings') ? 'rings' : 'in_place' }
+  if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+    Object.entries(raw as Type_Options).forEach(([dim_id, v]) => {
+      const mode = asLevelsDisplay(v)
+      if (mode !== undefined) by[dim_id] = mode
+    })
+  }
+  return { common, by }
 }
 
 /**
- * LA DISPOSITION QUE DESSINE UNE COURONNE DE DIMENSIONS DE DONNÉES : le réglage écrit, sinon en
+ * LA DISPOSITION QUE DESSINE UNE DIMENSION DE DONNÉES : la sienne, sinon le réglage commun, sinon en
  * secteurs (Julien, 03/10 : « le mode sunburst ne doit pas être celui sélectionné par défaut »).
+ * Sans dimension : le réglage commun.
  */
-export const dataDimensionLevelsDisplay = (levels: Type_FigureLevelsDisplay): Type_LevelsDisplay =>
-  levels.common ?? 'in_place'
+export const dataDimensionLevelsDisplay = (levels: Type_FigureLevelsDisplay, dimension_id?: string): Type_LevelsDisplay =>
+  (dimension_id !== undefined ? levels.by[dimension_id] : undefined) ?? levels.common ?? 'in_place'
+
+/** Le sac où la dimension `dimension_id` se dispose en `mode`, les autres inchangées. */
+export const withDimensionLevelsDisplay = (
+  options: Type_Options, dimension_id: string, mode: Type_LevelsDisplay
+): Type_Options => ({
+  ...options,
+  [LEVELS_DISPLAY_BY_KEY]: { ...readFigureLevelsDisplay(options).by, [dimension_id]: mode }
+})
 
 /** Le sac où la figure se dispose en `mode` ; l'ancienne clé par dimension s'en va. */
 export const withLevelsDisplay = (options: Type_Options, mode: Type_LevelsDisplay): Type_Options =>

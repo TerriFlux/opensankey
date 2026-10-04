@@ -193,8 +193,9 @@ const anyEnabled = (choices: Type_TopbarFigureChoice[]) =>
 
 /**
  * 02/10/2026 — LE BOUTON DE LA FIGURE ACTIVE, en tête de la barre du haut (os#1511) : son icône, et
- * ses réglages communs — dessin (en secteurs, en sunburst, une couronne par membre), clic sur une
- * part, liaison au diagramme, couche de données —, un sous-menu au survol par réglage, comme le
+ * ses réglages communs — clic sur une part, liaison au diagramme, couche de données (le dessin, en
+ * secteurs / en sunburst / une couronne par membre, se règle par dimension dans le tableau de
+ * navigation depuis le 04/10/2026) —, un sous-menu au survol par réglage, comme le
  * menu d'une dimension. Les gestes sont ceux des lignes de ses Coordonnées (OS+, `figureGesturesHost`).
  *
  * 03/10/2026 — L'ICÔNE SEULE, comme les autres boutons de la barre (Julien) : le nom de la

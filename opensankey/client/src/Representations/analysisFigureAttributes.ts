@@ -172,6 +172,9 @@ export const smallMultiplesAttribute = () => figureAttribute<string | undefined>
  *
  * 03/10/2026 — PLUS ÉCRITE : la disposition redevient commune (`levels_display`). La clé reste
  * déclarée pour lire les fichiers qui la portent (cf. `readFigureLevelsDisplay`).
+ *
+ * 04/10/2026 — DE NOUVEAU ÉCRITE, par le sélecteur de dessin de chaque ligne du tableau de
+ * navigation ; `levels_display` reste le défaut des dimensions qu'elle ne nomme pas.
  */
 export const LEVELS_DISPLAY_BY_KEY = 'levels_display_by'
 export const levelsDisplayByAttribute = () => figureAttribute<{ [dimension_id: string]: 'in_place' | 'rings' } | undefined>(
