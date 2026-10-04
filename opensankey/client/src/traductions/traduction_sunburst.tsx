@@ -21,6 +21,14 @@ export const resources_sunburst = {
         back_to: 'Back to {{name}}',
         members_count: '{{count}} members',
         level: 'Level {{index}}',
+        nav: {
+          dimension: 'Dimension « {{name}} »',
+          zoom: 'Selected zoom',
+          cut_by: 'Split by {{level}}',
+          clear_zoom: 'Remove this zoom (and the deeper ones)',
+          title: 'Navigation',
+          toggle_part: 'Show or hide {{name}}'
+        },
         group: {
           read: 'Hierarchy'
         },
@@ -45,6 +53,14 @@ export const resources_sunburst = {
         back_to: 'Remonter à {{name}}',
         members_count: '{{count}} membres',
         level: 'Niveau {{index}}',
+        nav: {
+          dimension: 'Dimension « {{name}} »',
+          zoom: 'Zoom sélectionné',
+          cut_by: 'Découper par {{level}}',
+          clear_zoom: 'Annuler ce zoom (et ceux en dessous)',
+          title: 'Navigation',
+          toggle_part: 'Afficher ou masquer {{name}}'
+        },
         group: {
           read: 'Hiérarchie'
         },
@@ -69,6 +85,14 @@ export const resources_sunburst = {
         back_to: 'Volver a {{name}}',
         members_count: '{{count}} miembros',
         level: 'Nivel {{index}}',
+        nav: {
+          dimension: 'Dimensión « {{name}} »',
+          zoom: 'Zoom seleccionado',
+          cut_by: 'Dividir por {{level}}',
+          clear_zoom: 'Anular este zoom (y los inferiores)',
+          title: 'Navegación',
+          toggle_part: 'Mostrar u ocultar {{name}}'
+        },
         group: {
           read: 'Jerarquía'
         },
@@ -93,6 +117,14 @@ export const resources_sunburst = {
         back_to: 'Zurück zu {{name}}',
         members_count: '{{count}} Mitglieder',
         level: 'Ebene {{index}}',
+        nav: {
+          dimension: 'Dimension „{{name}}“',
+          zoom: 'Gewählter Zoom',
+          cut_by: 'Aufteilen nach {{level}}',
+          clear_zoom: 'Diesen Zoom aufheben (und die darunter)',
+          title: 'Navigation',
+          toggle_part: '{{name}} ein- oder ausblenden'
+        },
         group: {
           read: 'Hierarchie'
         },
@@ -117,6 +149,14 @@ export const resources_sunburst = {
         back_to: 'Risalire a {{name}}',
         members_count: '{{count}} membri',
         level: 'Livello {{index}}',
+        nav: {
+          dimension: 'Dimensione « {{name}} »',
+          zoom: 'Zoom selezionato',
+          cut_by: 'Suddividere per {{level}}',
+          clear_zoom: 'Annullare questo zoom (e quelli sottostanti)',
+          title: 'Navigazione',
+          toggle_part: 'Mostrare o nascondere {{name}}'
+        },
         group: {
           read: 'Gerarchia'
         },
@@ -141,6 +181,14 @@ export const resources_sunburst = {
         back_to: '返回 {{name}}',
         members_count: '{{count}} 个成员',
         level: '第 {{index}} 层',
+        nav: {
+          dimension: '维度“{{name}}”',
+          zoom: '已选缩放',
+          cut_by: '按 {{level}} 划分',
+          clear_zoom: '取消此缩放（及其下级）',
+          title: '导航',
+          toggle_part: '显示或隐藏 {{name}}'
+        },
         group: {
           read: '层级'
         },
@@ -165,6 +213,14 @@ export const resources_sunburst = {
         back_to: '{{name}} に戻る',
         members_count: '{{count}} 件のメンバー',
         level: 'レベル {{index}}',
+        nav: {
+          dimension: 'ディメンション「{{name}}」',
+          zoom: '選択中のズーム',
+          cut_by: '{{level}} で分割',
+          clear_zoom: 'このズームを解除（下位も）',
+          title: 'ナビゲーション',
+          toggle_part: '{{name}} を表示・非表示'
+        },
         group: {
           read: '階層'
         },

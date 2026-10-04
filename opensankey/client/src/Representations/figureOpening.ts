@@ -26,7 +26,7 @@
 // Module PUR : aucune classe du modèle, aucun React.
 
 import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
-import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSectorId'
+import { MEMBER_SECTOR_PREFIX, memberPathSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
   COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_HIDDEN_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
@@ -175,8 +175,43 @@ export const withFigureFocus = (options: Type_Options, path: string[]): Type_Opt
  * suivants l'emboîtent) ; un foyer sur une autre dimension reste.
  */
 export const focusWithoutDimension = (path: string[], dimension_id: string): string[] => {
-  const at = path.findIndex(entry => (parseMemberSectorPath(entry) ?? []).some(r => r.dimension_id === dimension_id))
-  return at < 0 ? path : path.slice(0, at)
+  // 03/10/2026 — UN ZOOM PAR DIMENSION (tableau de navigation, os#1511) : chaque cran perd ses
+  // membres de `dimension_id` et GARDE ceux des autres dimensions (« Céréales » sorti, « Espagne »
+  // reste) ; un cran vidé s'en va, deux crans devenus égaux n'en font qu'un.
+  const out: string[] = []
+  path.forEach(entry => {
+    const refs = parseMemberSectorPath(entry)
+    if (refs === null) { out.push(entry); return }
+    const kept = refs.filter(r => r.dimension_id !== dimension_id)
+    if (kept.length === 0) return
+    const next = kept.length === refs.length ? entry : memberPathSectorId(kept)
+    if (out[out.length - 1] !== next) out.push(next)
+  })
+  return out
+}
+
+/**
+ * 03/10/2026 — LE ZOOM DE CHAQUE DIMENSION (tableau de navigation, os#1511) : le membre que le dernier
+ * cran de la pile fixe dans chaque dimension (le dernier écrit d'une dimension l'emporte). C'est la
+ * relecture de l'ancien format : une pile de crans emboîtés se lit par son dernier cran.
+ */
+export const readFigureDimensionZooms = (options: Type_Options | null | undefined): Map<string, string> => {
+  const out = new Map<string, string>()
+  ;(readFigureDataFocus(options) ?? []).forEach(r => { out.delete(r.dimension_id); out.set(r.dimension_id, r.member_id) })
+  return out
+}
+
+/**
+ * 03/10/2026 — Le sac dont la pile se réduit à UN cran : le zoom de chaque dimension, celle qui
+ * découpe (`centre_id`) en dernier — c'est elle que le centre nomme. Aucun zoom : la clé s'en va.
+ */
+export const withFigureDimensionZooms = (
+  options: Type_Options, zooms: ReadonlyMap<string, string>, centre_id?: string
+): Type_Options => {
+  const refs: Type_MemberRef[] = [...zooms]
+    .sort(([a], [b]) => (a === centre_id ? 1 : 0) - (b === centre_id ? 1 : 0))
+    .map(([dimension_id, member_id]) => ({ dimension_id, member_id }))
+  return withFigureFocus(options, refs.length > 0 ? [memberPathSectorId(refs)] : [])
 }
 
 /** Le sac sans le foyer posé sur `dimension_id` (inchangé s'il n'y en a pas). */

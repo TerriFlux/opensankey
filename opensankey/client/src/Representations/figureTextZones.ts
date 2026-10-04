@@ -150,10 +150,12 @@ const buildBreadcrumb = (crumbs: Type_FigureCrumb[]): HTMLElement => {
 export const mountFigureTextZones = (
   container: HTMLElement,
   texts: Type_FigureText[],
-  crumbs: Type_FigureCrumb[] = []
+  crumbs: Type_FigureCrumb[] | HTMLElement = []
 ): HTMLElement => {
   const written = texts.filter(t => t.text !== '')
-  const trail = crumbs.length >= 2 ? buildBreadcrumb(crumbs) : null
+  // 03/10/2026 — ou un bloc tout fait, posé à la même place : le tableau de navigation d'une couronne
+  // sur dimensions de données (cf. `figureNavigationTable`), qui remplace son fil d'Ariane.
+  const trail = crumbs instanceof HTMLElement ? crumbs : crumbs.length >= 2 ? buildBreadcrumb(crumbs) : null
   if (written.length === 0 && trail === null) return container
 
   const wrap = document.createElement('div')
