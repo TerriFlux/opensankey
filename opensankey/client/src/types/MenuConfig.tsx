@@ -230,15 +230,8 @@ export type Type_TopbarFigureMenus = {
    * deux : pas d'ordre à régler.
    */
   nest_order?: string[]
-  /** ⇄ entre deux listes voisines : `dim_id` passe derrière sa voisine extérieure. */
-  swapNestWithNext?: (dim_id: string) => void
-  /**
-   * 03/10/2026 — L'INTERRUPTEUR D'ACTIVATION de chaque dimension de la figure (deux au moins) :
-   * active, elle découpe ; désactivée, la figure la lit à sa racine et garde son réglage. `can_toggle`
-   * faux : c'est la seule active.
-   */
-  dimension_activation?: { [dim_id: string]: { active: boolean, can_toggle: boolean } }
-  toggleDimensionActive?: (dim_id: string) => void
+  // 04/10/2026 — le ⇄ et les interrupteurs d'activation ont quitté la barre : le tableau de
+  // navigation de la couronne les remplace (même modèle, `inactive_dimensions` et ordre d'emboîtement).
   /**
    * 03/10/2026 — LE ZOOM (« Zoome dedans ») QUE LA BARRE MONTRE ET DÉFAIT (os#1511) : les membres que
    * le foyer fixe, par dimension, et celle du centre. `up` remonte d'un cran, `exitOn` sort du zoom
