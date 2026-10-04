@@ -59,7 +59,12 @@ import {
 // os#1432 — la valeur STRUCTURELLE d'un nœud, celle que le sunburst lit déjà (cf.
 // `decomposeNodeChildren`, qui dit pourquoi elle est la seule juste pour un enfant).
 import { buildSunburstTree, sunburstNodeValue } from './SunburstHierarchy'
-import { buildNestedDimensionTree, dataCutOf } from './DataDimensionHierarchy'
+import { dataCutOf } from './DataDimensionHierarchy'
+import { buildPlanTree } from './couronneTree'
+import { drawPlanOf } from './couronnePlan'
+import type { Type_DrawPlan } from './couronnePlan'
+import { readCouronneState } from '../Representations/couronneState'
+import type { Type_CouronneSankey, Type_CouronneState } from '../Representations/couronneState'
 import type { Type_DataCut, Type_DataOpening } from './DataDimensionHierarchy'
 import { parseMemberSectorPath } from './memberSectorId'
 import type { Type_MemberRef } from './memberSectorId'
@@ -373,6 +378,12 @@ export interface Type_HierarchyReading {
    * déplace aucune ligne. Absent : la coupe en vigueur.
    */
   data_cut?: Type_DataCut
+  /**
+   * 04/10/2026 — LE PLAN DE DESSIN d'une couronne sur dimensions de données (os#1511, lot 2) : l'état
+   * lu (`readCouronneState`) et ce qu'il dessine (`drawPlanOf`). C'est lui, et lui seul, que l'arbre
+   * lit ; `at` pose une case des petits multiples. Absent : l'état par défaut (liée au diagramme).
+   */
+  data_plan?: { state: Type_CouronneState, plan: Type_DrawPlan, at?: { dimension_id: string, member_ids: string[] } }
 }
 
 /**
@@ -586,12 +597,9 @@ export const analysisHierarchyTree = (
 // aux flux ») —, là où les deux autres descentes n'acceptent qu'un nœud.
 
 /**
- * L'arbre, bâti à la demande selon la coupe de la figure (`dataCutOf`, qui décide seule des
- * dimensions qui entrent et de celles qui découpent).
- */
-/**
- * La coupe EN VIGUEUR d'une descente par dimension de données — celle que l'arbre lit. `null` quand
- * la dimension du descripteur n'existe plus.
+ * La coupe d'une descente par dimension de données, telle que l'écrivent les GESTES (lot 3 : ils
+ * écriront l'état de la couronne) et que lit le tableau croisé. Le DESSIN ne la lit plus : il lit le
+ * plan (`data_plan`). `null` quand la dimension du descripteur n'existe plus.
  */
 export const analysisDataCutOf = (
   subject: Type_ChartSubject,
@@ -615,11 +623,19 @@ const dataDimensionTreeOf = (
   nav: Type_FigureNavigation,
   reading: Type_HierarchyReading = {}
 ): Type_SunburstTree | null => {
-  const cut = analysisDataCutOf(subject, spec, reading)
-  if (cut === null) return null
-  return buildNestedDimensionTree(
+  // 04/10/2026 (lot 2) — L'ARBRE DU PLAN, et de rien d'autre : `dataCutOf`, le foyer résolu et les
+  // exclusions ne décident plus du dessin. Sans plan fourni, celui de l'état par défaut.
+  const sankey = (subject.kind === 'node' ? subject.node : subject.link).sankey as unknown as Type_CouronneSankey
+  if (sankey.data_taggs_dict[spec.data_tagg_id] === undefined) return null
+  const given = reading.data_plan
+  const state = given?.state ?? readCouronneState(
+    undefined, sankey, reading.data_opening?.linked ?? true, [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])]
+  )
+  const plan = given?.plan ?? drawPlanOf(state, sankey)
+  return buildPlanTree(
     subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
-    cut,
+    plan,
+    state,
     nav,
     {
       max_depth: reading.max_depth,
@@ -627,7 +643,7 @@ const dataDimensionTreeOf = (
       node_value_mode: reading.node_value_mode,
       residual_label: reading.residual_label,
       levels_display_of: reading.levels_display_of,
-      focus: reading.data_focus
+      ...(given?.at !== undefined ? { at: given.at } : {})
     }
   )
 }

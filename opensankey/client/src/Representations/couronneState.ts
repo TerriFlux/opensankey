@@ -154,11 +154,12 @@ export const declaredDimensionIdsOf = (options: Type_Options | null | undefined)
 // ── LA PROJECTION DE LA SÉLECTION DU DIAGRAMME SUR LA PORTÉE (LIÉE) ──────────────────────────────
 
 /**
- * Ce qu'une figure LIÉE dessine d'une dimension : la sélection du diagramme, projetée sur la portée.
+ * Ce qu'une figure LIÉE dessine d'une dimension : la sélection du diagramme, projetée sur la portée
+ * (RÈGLE DE LA COURONNE LIÉE, Julien, 04/10/2026, lot 2) :
  *  - un membre choisi DANS la portée reste ;
- *  - un membre choisi AU-DESSUS d'un membre de la portée (ou égal) : quand le diagramme découpe la
- *    dimension (au moins deux membres choisis), on voit SOUS la portée — ses enfants (elle-même pour
- *    une feuille) ; sinon le diagramme n'en montre qu'un, la dimension se lit sur la portée ;
+ *  - un membre choisi AU-DESSUS d'un membre de la portée (ou égal) : le diagramme ne détaille pas ce
+ *    membre (il le montre d'un bloc), la couronne descend d'UN niveau sous lui — ses enfants (lui-même
+ *    pour une feuille). Le diagramme, lui, ne bouge pas ;
  *  - un membre sans rapport avec la portée sort.
  * `null` : rien de la sélection ne touche la portée — la portée revient à la racine.
  */
@@ -166,12 +167,10 @@ const projectSelection = (
   dim: Class_DataTagGroup, selection: Class_DataTag[], focus: Class_DataTag[]
 ): string[] | null => {
   if (focus.length === 0) return antichainOf(dim, selection.map(m => m.id))
-  const divides = selection.length > 1
   const out: string[] = []
   selection.forEach(s => {
     if (focus.some(f => s !== f && s.hasAncestor(f))) { out.push(s.id); return }
     focus.filter(f => isUnderOrSelf(f, s)).forEach(f => {
-      if (!divides) { out.push(f.id); return }
       const kids = childrenOf(f)
       out.push(...(kids.length > 0 ? kids.map(c => c.id) : [f.id]))
     })

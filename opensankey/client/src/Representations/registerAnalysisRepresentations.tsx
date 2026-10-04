@@ -44,7 +44,7 @@ import {
   HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
 } from './analysisFigureAttributes'
 import {
-  dataDimensionLevelsDisplay, readFigureDataFocus, readFigureDataLayer, readFigureDimensionZooms, readFigureFocus, readFigureLevelsDisplay,
+  readFigureDataFocus, readFigureDataLayer, readFigureDimensionZooms, readFigureFocus, readFigureLevelsDisplay,
   readFigureOpening, smallMultiplesApply, withDataOpening, withElementOpening, withFigureDimensionZooms,
   withFigureFocus, withInactiveDimensions
 } from './figureOpening'
@@ -66,7 +66,7 @@ import { memberSectorId, parseMemberSectorId, parseMemberSectorPath } from '../C
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
   dataCutOf, dataDimensionOpenedDownToLevel, diagramDimensionOpening, dimensionDivides, dimensionHiddenMembers, dimensionOpenedMembers,
-  dimensionRootsOf, hiddenForSelection, openedForSelection, resolveDataFocus, selectionFromOpening, smallMultipleCellsOf, zoomMembersOf
+  dimensionRootsOf, hiddenForSelection, openedForSelection, resolveDataFocus, selectionFromOpening
 } from '../Charts/DataDimensionHierarchy'
 import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
 import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
@@ -106,6 +106,12 @@ import { readSunburstStyle, SUNBURST_ZOOM } from './SunburstRepresentation'
 import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
+// 04/10/2026 — os#1511, refonte étape 2, lot 2 : CE QUE LA COURONNE DESSINE se lit à un seul endroit.
+import { readCouronneState } from './couronneState'
+import type { Type_CouronneSankey, Type_CouronneState } from './couronneState'
+import { drawPlanOf } from '../Charts/couronnePlan'
+import type { Type_DrawPlan } from '../Charts/couronnePlan'
+import { planDrawsRings, planLevelsDisplayOf } from '../Charts/couronneTree'
 import {
   crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf,
   crossOpeningAt
@@ -335,23 +341,42 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
     data_opening: readFigureOpening(raw).data,
     // 02/10/2026 — « Zoome dedans » : le secteur de membre où la figure est descendue. Les petits
     // multiples le lisent aussi : toutes les cases se re-enracinent sur la même part.
-    data_focus: readFigureDataFocus(raw)
+    // 04/10/2026 (lot 2) — ces trois clés ne servent plus qu'aux ÉCRIVAINS (gestes) et au tableau
+    // croisé ; le dessin lit le plan (`data_plan`).
+    data_focus: readFigureDataFocus(raw),
+    data_plan: couronneOf(ctx) ?? undefined
   }
 }
 
 /**
- * 02/10/2026 — LE FOYER EN VIGUEUR d'une couronne de dimensions de données, résolu sur sa coupe
- * comme le fait l'arbre (`resolveDataFocus`) : `null` si elle n'est pas descendue, ou si le foyer
- * écrit ne désigne plus rien de dessinable.
+ * 04/10/2026 — L'ÉTAT ET LE PLAN D'UNE COURONNE SUR DIMENSIONS DE DONNÉES (os#1511, refonte étape 2,
+ * lot 2). LE SEUL ENDROIT où la figure apprend ce qu'elle dessine : `readCouronneState` (qui relit
+ * aussi les clés qu'écrivent encore les gestes) puis `drawPlanOf`. Le tracé en secteurs, les anneaux,
+ * les petits multiples, la légende, le centre et le surlignage du tableau lisent tous ce plan.
+ * `null` : la figure ne découpe pas selon des dimensions de données.
  */
-const dataFocusOf = (ctx: Type_RepresentationContext) => {
-  const a = analysisOf(ctx)
-  const decompose = a?.descriptor.decompose
-  if (!a || decompose?.kind !== 'data_dimension') return null
-  const reading = hierarchyReadingOf(ctx)
-  const cut = analysisDataCutOf(a.subject, decompose, reading)
-  return cut === null ? null : resolveDataFocus(cut, reading.data_focus)
+const couronneOf = (ctx: Type_RepresentationContext): { state: Type_CouronneState, plan: Type_DrawPlan } | null => {
+  if (!ctx.element) return null
+  const subject = chartSubjectOf(ctx.element)
+  if (!subject) return null
+  const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
+  const decompose = descriptor ? effectiveDecompose(descriptor) : null
+  if (decompose?.kind !== 'data_dimension') return null
+  const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
+  if (sankey.data_taggs_dict[decompose.data_tagg_id] === undefined) return null
+  const state = readCouronneState(ctx.options, sankey, undefined, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])])
+  return { state, plan: drawPlanOf(state, sankey, { name: subjectNameOf(ctx) }) }
 }
+
+/** La lecture `reading`, une case des petits multiples posée : sa dimension lue sur `members`. */
+const readingAt = (reading: Type_HierarchyReading, members: Class_DataTag[]): Type_HierarchyReading =>
+  reading.data_plan === undefined || members.length === 0
+    ? reading
+    : { ...reading, data_plan: { ...reading.data_plan, at: { dimension_id: members[0].group.id, member_ids: members.map(m => m.id) } } }
+
+/** La portée de la couronne (les dimensions où elle est descendue), en noms ; vide hors zoom. */
+const dataScopeOf = (ctx: Type_RepresentationContext): Type_DrawPlan['centre']['scope'] =>
+  couronneOf(ctx)?.plan.centre.scope ?? []
 
 /**
  * 01/10/2026 — LES PETITS MULTIPLES DE LA COURONNE : la dimension réglée (`small_multiples_by`) et
@@ -361,25 +386,16 @@ const dataFocusOf = (ctx: Type_RepresentationContext) => {
 const smallMultiplesOf = (
   ctx: Type_RepresentationContext
 ): { dimension: Class_DataTagGroup, members: Class_DataTag[] } | null => {
-  const id = ctx.options?.[SMALL_MULTIPLES_KEY]
-  if (typeof id !== 'string' || id === '' || !ctx.element) return null
-  const subject = chartSubjectOf(ctx.element)
-  if (!subject) return null
-  const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
-  const decompose = descriptor ? effectiveDecompose(descriptor) : null
-  if (decompose?.kind !== 'data_dimension') return null
+  // 04/10/2026 (lot 2) — LU SUR LE PLAN : la dimension en « une couronne par membre » quand elle
+  // s'applique (active, une autre active pour les parts), ses cases (`cells`) ou son membre unique.
+  const c = couronneOf(ctx)
+  const id = c?.plan.cells_dimension_id
+  if (!c || !id) return null
   const dimension = ctx.app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined
-  if (!dimension?.is_hierarchical) return null
-  const data_opening = readFigureOpening(ctx.options).data
-  // 03/10/2026 — la dimension des cases DÉSACTIVÉE, ou plus aucune autre active pour les parts :
-  // plus de cases, une seule couronne (cf. `smallMultiplesApply`, `dataCutOf`).
-  const part_ids = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
-  if (!smallMultiplesApply(dimension.id, part_ids, data_opening.inactive)) return null
-  // Liée, ce que le diagramme montre ; détachée, la coupe propre de la figure pour cette dimension
-  // — « Monde » seul fait UNE couronne, c'est le retour (cf. `smallMultipleMembersOf`).
-  // 04/10/2026 — et ses membres ZOOMÉS d'abord (« Europe, Amériques » : deux cases), cf.
-  // `smallMultipleCellsOf`.
-  const members = smallMultipleCellsOf(dimension, data_opening, readFigureDimensionZooms(ctx.options).get(dimension.id))
+  if (dimension === undefined) return null
+  const members = (c.plan.cells?.members ?? c.plan.fixed[id] ?? [])
+    .map(m => dimension.tags_dict[m] as Class_DataTag | undefined)
+    .filter((m): m is Class_DataTag => m !== undefined)
   return members.length > 0 ? { dimension, members } : null
 }
 
@@ -412,12 +428,6 @@ const othersCellTitle = (name: string, folded: readonly string[]): string => {
   return [`${name} (${folded.length})`, ...listed, ...(rest > 0 ? [`… (+${rest})`] : [])].join('\n')
 }
 
-/** La navigation de la figure, la dimension des petits multiples fixée sur `member`. */
-const navAtMember = (nav: Type_FigureNavigation, member: Class_DataTag): Type_FigureNavigation => ({
-  ...nav,
-  data_tags: [...(nav.data_tags ?? []).filter(tag => tag.group.id !== member.group.id), member]
-})
-
 /**
  * 03/10/2026 — UNE PETITE COURONNE EN SUNBURST (Julien : « le mode sunburst ne marche pas si l'autre
  * dimension est en mode une couronne par membre »). Le dessin et les petits multiples sont deux
@@ -430,11 +440,8 @@ const smallMultipleRingsTree = (
 ): Type_SunburstTree | null => {
   const a = analysisOf(ctx)
   if (!a || members.length === 0) return null
-  const group_id = members[0].group.id
-  const nav: Type_FigureNavigation = {
-    ...a.nav, data_tags: [...(a.nav.data_tags ?? []).filter(tag => tag.group.id !== group_id), ...members]
-  }
-  const tree = ringsTreeOf(ctx, { ...a, nav }, hierarchyReadingOf(ctx), expandedOf(ctx.options))
+  // 04/10/2026 (lot 2) — la case se pose sur le plan (`readingAt`), plus par une épingle de navigation.
+  const tree = ringsTreeOf(ctx, a, readingAt(hierarchyReadingOf(ctx), members), expandedOf(ctx.options))
   // UN SEUL ANNEAU (un niveau affiché) : c'est le dessin des secteurs, et la petite couronne garde le sien.
   if (tree === null || tree.rings.length <= 2) return null
   // Le centre de la case nomme son membre, comme celui d'une petite couronne en secteurs.
@@ -469,7 +476,7 @@ const smallMultipleSlices = (
   const a = analysisOf(ctx)
   if (!a) return []
   return analysisPartInputs(a.subject, a.descriptor, flatParts(
-    a.subject, a.descriptor, navAtMember(a.nav, member), hierarchyReadingOf(ctx), expandedOf(ctx.options)
+    a.subject, a.descriptor, a.nav, readingAt(hierarchyReadingOf(ctx), [member]), expandedOf(ctx.options)
   ))
 }
 
@@ -529,23 +536,14 @@ const ringsReadingOf = (
   a: { subject: Type_ChartSubject, descriptor: Type_AnalysisDescriptor },
   reading: Type_HierarchyReading
 ): Type_HierarchyReading | null => {
-  const levels = readFigureLevelsDisplay(ctx.options)
   const decompose = effectiveDecompose(a.descriptor)
-  if (decompose?.kind !== 'data_dimension') return levels.common === 'rings' ? reading : null
-  const cut = analysisDataCutOf(a.subject, decompose, reading)
-  if (cut === null) return null
-  const count = cut.dividing.length
-  // 04/10/2026 — PAR DIMENSION (le sélecteur de dessin de sa ligne dans le tableau de navigation),
-  // le réglage commun en défaut.
-  const modeOf = (dimension_id: string) => dataDimensionLevelsDisplay(levels, dimension_id)
-  // Rien ne découpe : un seul secteur, que seul le réglage commun peut demander en anneau.
-  // Plusieurs dimensions découpent : toujours en anneaux, un par dimension au moins. En secteurs,
-  // `foldInPlaceLevels` replie chacune dans le sien (la frontière entre deux dimensions garde son
-  // anneau) : n dimensions, n anneaux.
-  const any_rings = count === 0
-    ? levels.common === 'rings'
-    : count > 1 || cut.dividing.some(d => modeOf(d.id) === 'rings')
-  return any_rings ? { ...reading, levels_display_of: modeOf } : null
+  if (decompose?.kind !== 'data_dimension') return readFigureLevelsDisplay(ctx.options).common === 'rings' ? reading : null
+  // 04/10/2026 (lot 2) — LU SUR LE PLAN : en anneaux dès que plusieurs dimensions découpent (une en
+  // secteurs y replie ses niveaux dans le sien) ou qu'une découpe en sunburst ; rien ne découpe :
+  // seulement si la dimension du secteur unique est en sunburst (cf. `planDrawsRings`).
+  const c = reading.data_plan
+  if (c === undefined) return null
+  return planDrawsRings(c.plan, c.state) ? { ...reading, levels_display_of: planLevelsDisplayOf(c.plan) } : null
 }
 
 /** L'arbre à dessiner en anneaux, ou `null` quand la figure est « en place » (ou à plat). */
@@ -646,10 +644,9 @@ const figureTitleFallback = (ctx: Type_RepresentationContext): string =>
  * `undefined` sans foyer.
  */
 const dataFocusNameOf = (ctx: Type_RepresentationContext): string | undefined => {
-  const focus = dataFocusOf(ctx)
-  if (focus === null) return undefined
-  const centre = focus.members.get(focus.refs[focus.refs.length - 1].dimension_id) ?? [focus.member]
-  return centre.map(m => m.name).join(', ')
+  // 04/10/2026 (lot 2) — le nom au centre du plan : la portée (« Céréales, Lait »).
+  const c = couronneOf(ctx)
+  return c !== null && c.plan.centre.scope.length > 0 ? c.plan.centre.label : undefined
 }
 
 /**
@@ -725,34 +722,21 @@ const centreContextOf = (ctx: Type_RepresentationContext): string => {
   const a = analysisOf(ctx)
   if (!a) return ''
   const sankey = ctx.app_data.drawing_area.sankey
-  const split = smallMultiplesDrawnOf(ctx)
-  const named = new Set<string>(split ? [split.dimension.id] : [])
-  // 04/10/2026 — un zoom à plusieurs membres se dit en entier (« Europe, Amériques »).
-  const fixed = new Map<string, Class_DataTag[]>()
-  const decompose = effectiveDecompose(a.descriptor)
-  const reading = hierarchyReadingOf(ctx)
-  const cut = decompose?.kind === 'data_dimension' ? analysisDataCutOf(a.subject, decompose, reading) : null
-  if (cut !== null) {
-    const focus = resolveDataFocus(cut, reading.data_focus)
-    if (focus !== null) {
-      const centre_dim = focus.refs[focus.refs.length - 1].dimension_id
-      named.add(centre_dim)
-      focus.members.forEach((list, dim_id) => { if (dim_id !== centre_dim) fixed.set(dim_id, list) })
-    } else if (cut.dividing.length > 0) {
-      named.add(cut.dividing[0].id)
-    }
+  // 04/10/2026 (lot 2) — LU SUR LE PLAN. Se taisent : la portée (le centre la nomme), sans portée la
+  // première dimension qui découpe (l'anneau intérieur la montre), et la dimension des cases. Les
+  // autres disent ce que le plan en retient : les dimensions qui ne découpent pas, leur coordonnée
+  // (`fixed`) ; celles qui découpent, leurs parts ; hors figure, l'épingle ou le diagramme.
+  const plan = couronneOf(ctx)?.plan
+  const named = new Set<string>()
+  if (plan) {
+    plan.centre.scope.forEach(s => named.add(s.dimension_id))
+    if (plan.centre.scope.length === 0 && plan.cut.length > 0) named.add(plan.cut[0].dimension_id)
+    if (plan.cells) named.add(plan.cells.dimension_id)
   }
   const retained = (group: Class_DataTagGroup): Class_DataTag[] => {
-    const at = fixed.get(group.id)
-    if (at !== undefined) return at
-    if (cut !== null && cut.dims.includes(group)) {
-      if (cut.inactive?.has(group.id)) return dimensionRootsOf(group)
-      if (!cut.linked) {
-        if (!cut.dividing.includes(group)) return dimensionRootsOf(group)
-        return selectionFromOpening(group, dimensionOpenedMembers(group, cut.opened), dimensionHiddenMembers(group, cut.hidden))
-          .map(id => group.tags_dict[id] as Class_DataTag | undefined)
-          .filter((m): m is Class_DataTag => m !== undefined)
-      }
+    const ids = plan?.fixed[group.id] ?? plan?.cut.find(c => c.dimension_id === group.id)?.parts.map(p => p.member_id)
+    if (ids !== undefined) {
+      return ids.map(id => group.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
     }
     const pinned = (a.nav.data_tags ?? []).filter(tag => tag.group.id === group.id)
     return pinned.length > 0 ? pinned : group.selected_tags_list as Class_DataTag[]
@@ -790,7 +774,7 @@ const dataRingsCentreContent = (
   ctx: Type_RepresentationContext, own: Type_FigureChartStyle['centre_content']
 ): Type_FigureChartStyle['centre_content'] => {
   const a = analysisOf(ctx)
-  if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension' || dataFocusOf(ctx) !== null) return own
+  if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension' || dataScopeOf(ctx).length > 0) return own
   const { window_id, pane_key } = ctx
   const explicit = window_id !== undefined && pane_key !== undefined
     ? ctx.app_data.menu_configuration.figureOf(window_id, pane_key).isAttributeOverloaded('centre_content')
@@ -866,7 +850,7 @@ const figureBreadcrumbOf = (
   let labels: string[]
   let root_label = subjectNameOf(ctx)
   if (decompose?.kind === 'data_dimension') {
-    if (dataFocusOf(ctx) === null) return []
+    if (dataScopeOf(ctx).length === 0) return []
     // LA RACINE DE LA DIMENSION où l'on est entré (« Produits agricoles ») plutôt que le flux
     // sujet : c'est elle que le premier zoom a découpée, et le nom du flux n'est écrit nulle part
     // sur la couronne non zoomée. Plusieurs racines : le sujet.
@@ -923,41 +907,24 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
   const { window_id, pane_key } = ctx
   if (!a || decompose?.kind !== 'data_dimension' || window_id === undefined || pane_key === undefined) return null
   const reading = hierarchyReadingOf(ctx)
+  // La coupe que les GESTES du tableau réécrivent (lot 3 : ils écriront l'état de la couronne).
   const cut = analysisDataCutOf(a.subject, decompose, reading)
-  if (cut === null || cut.dims.length === 0) return null
+  const couronne = reading.data_plan
+  if (cut === null || cut.dims.length === 0 || couronne === undefined) return null
+  const { state, plan } = couronne
   const app_data = ctx.app_data
   const t = app_data.t
   const options = ctx.options ?? {}
-  const focus = resolveDataFocus(cut, reading.data_focus)
-  // 04/10/2026 — le zoom d'une dimension est une LISTE de membres (« Europe ✕ Amériques ✕ »).
-  const zooms = new Map<string, Class_DataTag[]>(focus?.members ?? [])
-  // 04/10/2026 — et celui de la dimension des petits multiples, hors coupe (ses membres font les cases) :
-  // le tableau le montre et le réécrit tel quel avec les autres.
-  const split_now = smallMultiplesOf(ctx)
-  const split_zoom = split_now ? readFigureDimensionZooms(options).get(split_now.dimension.id) : undefined
-  if (split_now && split_zoom !== undefined) {
-    const list = zoomMembersOf(split_now.dimension, split_zoom)
-    if (list.length > 0) zooms.set(split_now.dimension.id, list)
-  }
-
-  // CE QUE LA COURONNE DESSINE : pour chaque dimension, la profondeur de sa frontière.
-  const drawn_depths = new Map<string, Set<number>>()
-  const tree = analysisHierarchyTree(a.subject, a.descriptor, a.nav, reading)
-  const walk = (node: Type_SunburstTree['roots'][number]) => {
-    node.children.forEach(walk)
-    if (node.depth === 0 || node.is_residual) return
-    const ref = (parseMemberSectorPath(node.id) ?? []).slice(-1)[0]
-    if (ref === undefined) return
-    const own_below = node.children.some(c => !c.is_residual && c.dimension_id === ref.dimension_id)
-    if (own_below) return
-    const dim = cut.dims.find(d => d.id === ref.dimension_id)
-    const member = dim?.tags_dict[ref.member_id] as Class_DataTag | undefined
-    if (!dim || !member) return
-    const set = drawn_depths.get(dim.id) ?? new Set<number>()
-    set.add(dim.depthOf(member))
-    drawn_depths.set(dim.id, set)
-  }
-  tree?.roots.forEach(walk)
+  const sankey_dims = app_data.drawing_area.sankey.data_taggs_dict as unknown as { [id: string]: Class_DataTagGroup | undefined }
+  // 04/10/2026 (lot 2) — LE ZOOM DE CHAQUE DIMENSION EST SA PORTÉE dans l'état lu (une liste de
+  // membres, « Europe ✕ Amériques ✕ »), celle des cases comprise.
+  const zooms = new Map<string, Class_DataTag[]>()
+  state.order.forEach(id => {
+    const d = sankey_dims[id]
+    const list = (state.dims[id]?.focus ?? [])
+      .map(m => d?.tags_dict[m] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+    if (list.length > 0) zooms.set(id, list)
+  })
 
   const centreOf = () => cut.dividing[0]?.id
   /**
@@ -1114,8 +1081,8 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
   // La dimension des petits multiples sort de la coupe (chaque case la lit sur son membre) : sa ligne
   // reste au tableau, pour qu'on puisse la redessiner autrement — ses en-têtes et ses cases inertes.
   const split = smallMultiplesOf(ctx)
-  const rows = split && !cut.dims.includes(split.dimension) ? [...cut.dims, split.dimension] : cut.dims
-  const levels_display = readFigureLevelsDisplay(options)
+  // 04/10/2026 (lot 2) — les lignes sont l'ordre de l'état (celle des cases en dernier).
+  const rows = state.order.map(id => sankey_dims[id]).filter((d): d is Class_DataTagGroup => d !== undefined)
 
   // ── 04/10/2026 — RECLIQUER, CTRL+CLIC (Julien : « quand on clique sur Continents, il faut pouvoir
   // recliquer dessus et que ça désélectionne ») ──────────────────────────────────────────────────
@@ -1152,11 +1119,12 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     const is_split = split?.dimension === dim
     // 04/10/2026 — la ligne des cases a son zoom et sa liste à cases : ce sont ses cases (os#1511).
     const zs = zooms.get(dim.id) ?? []
-    const divides = cut.dividing.includes(dim)
-    const depths = drawn_depths.get(dim.id)
-    const in_rings = dataDimensionLevelsDisplay(levels_display, dim.id) === 'rings'
+    // 04/10/2026 (lot 2) — LU SUR LE PLAN : la dimension découpe-t-elle, à quels niveaux (`columns`).
+    const divides = plan.cut.some(c => c.dimension_id === dim.id)
+    const depths = plan.columns[dim.id]?.depths ?? []
+    const in_rings = state.dims[dim.id]?.drawing === 'sunburst'
     /** La colonne qui découpe : la plus fine dessinée en sunburst, la plus haute en secteurs. */
-    const column_depth = divides && depths !== undefined && depths.size > 0
+    const column_depth = divides && depths.length > 0
       ? (in_rings ? Math.max(...depths) : Math.min(...depths))
       : undefined
     const levels = (dim.levels as string[]).map((raw, depth) => ({ raw, depth })).filter(l => l.depth >= entry_depth)
@@ -1246,23 +1214,23 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
  */
 const legendToggleOf = (ctx: Type_RepresentationContext) => {
   const legend = dataLegendOf(ctx)
-  if (legend === null || legend.cut.dividing.length !== 1) return undefined
-  const { a, cut, reading } = legend
-  const dim = cut.dividing[0]
-  const { toggle, hiddenUnderZoom } = legend.forDimension(dim)
-  // Les décochés : les cachés de la coupe sous le zoom (détachée), ou les membres que la sélection du
-  // diagramme laisse de côté sous un ouvert (liée) — `cut.hidden` dit les deux.
-  const hidden = hiddenUnderZoom()
-    .map(m => ({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m) }))
+  if (legend === null || legend.couronne.plan.cut.length !== 1) return undefined
+  const { a, couronne, reading } = legend
+  const { state, plan } = couronne
+  const dim = ctx.app_data.drawing_area.sankey.data_taggs_dict[plan.cut[0].dimension_id] as unknown as Class_DataTagGroup
+  const toggle = legend.toggleOf(dim)
+  // 04/10/2026 (lot 2) — LES DÉCOCHÉS SONT CEUX DU PLAN (`legend`, cochés ou non).
+  const hidden = (plan.legend[dim.id] ?? []).filter(e => !e.checked)
+    .map(e => ({ id: memberSectorId(dim.id, e.member_id), label: displayedNameOf(dim.tags_dict[e.member_id] as Class_DataTag) }))
   // 04/10/2026 — LA LÉGENDE NE BOUGE PLUS QUAND ON DÉCOCHE (Julien : « tout doit rester à sa place,
-  // coché ou pas coché »). Ses lignes, leur ordre et le repli en « Autres » se calculent sur la coupe
+  // coché ou pas coché »). Ses lignes, leur ordre et le repli en « Autres » se calculent sur le plan
   // SANS les décochés de la dimension, aux valeurs pleines ; la couronne, elle, ne dessine que les
-  // cochés. Avant, la légende suivait les secteurs dessinés et rangeait les décochés en bas.
-  const dim_prefix = memberSectorId(dim.id, '')
-  const full_cut = { ...cut, hidden: new Set([...(cut.hidden ?? [])].filter(id => !id.startsWith(dim_prefix))) }
+  // cochés.
+  const full_state: Type_CouronneState = { ...state, dims: { ...state.dims, [dim.id]: { ...state.dims[dim.id], hidden: [] } } }
+  const full_plan = drawPlanOf(full_state, ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey, { name: subjectNameOf(ctx) })
   const all = analysisPartInputs(
     a.subject, a.descriptor,
-    flatParts(a.subject, a.descriptor, a.nav, { ...reading, data_cut: full_cut }, expandedOf(ctx.options ?? {}))
+    flatParts(a.subject, a.descriptor, a.nav, { ...reading, data_plan: { state: full_state, plan: full_plan } }, expandedOf(ctx.options ?? {}))
   ) as unknown as Type_StatSlice[]
   const t = ctx.app_data.t
   return {
@@ -1281,14 +1249,15 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
  */
 const legendChecksOf = (ctx: Type_RepresentationContext): Type_LegendChecks | undefined => {
   const legend = dataLegendOf(ctx)
-  if (legend === null || legend.cut.dividing.length === 0) return undefined
-  const { cut } = legend
+  if (legend === null || legend.couronne.plan.cut.length === 0) return undefined
+  const { couronne } = legend
+  const sankey = ctx.app_data.drawing_area.sankey
   const blocks: Type_LegendChecks['blocks'] = {}
   const toggles = new Map<string, (part_id: string, show: boolean) => void>()
-  cut.dividing.forEach(dim => {
-    const g = legend.forDimension(dim)
-    toggles.set(dim.id, g.toggle)
-    blocks[dim.id] = g.entries()
+  couronne.plan.cut.forEach(c => {
+    const dim = sankey.data_taggs_dict[c.dimension_id] as unknown as Class_DataTagGroup
+    toggles.set(dim.id, legend.toggleOf(dim))
+    blocks[dim.id] = legendEntriesOf(dim, couronne.state, couronne.plan)
   })
   const t = ctx.app_data.t
   return {
@@ -1302,9 +1271,36 @@ const legendChecksOf = (ctx: Type_RepresentationContext): Type_LegendChecks | un
 }
 
 /**
- * LA LÉGENDE D'UNE FIGURE SUR DIMENSIONS DE DONNÉES, dimension par dimension : ce qui est coché, ce
- * qui est décoché sous le zoom, et le geste qui coche ou décoche un membre — liée, le geste annulable
- * du diagramme ; détachée, la coupe de la figure. `null` hors dimensions de données ou hors fenêtre.
+ * 04/10/2026 (lot 2) — LE BLOC D'UNE DIMENSION, LU SUR LE PLAN (`legend` : les montrés, cochés ou non),
+ * dans l'ordre de la dimension ; leurs ancêtres sous la portée en en-têtes (le tracé ne les montre que
+ * si un anneau les dessine). Liée, un membre que le diagramme ne montre pas n'y figure pas.
+ */
+const legendEntriesOf = (dim: Class_DataTagGroup, state: Type_CouronneState, plan: Type_DrawPlan): Type_LegendCheckEntry[] => {
+  const listed = new Map((plan.legend[dim.id] ?? []).map(e => [e.member_id, e]))
+  const shown = [...listed.keys()].map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+  const focus = (state.dims[dim.id]?.focus ?? []).map(id => dim.tags_dict[id] as Class_DataTag | undefined)
+    .filter((m): m is Class_DataTag => m !== undefined)
+  const inScope = (m: Class_DataTag) => focus.length === 0 || focus.some(f => m !== f && m.hasAncestor(f))
+  const holds = (m: Class_DataTag) => shown.some(x => x !== m && x.hasAncestor(m))
+  const out: Type_LegendCheckEntry[] = []
+  const visit = (m: Class_DataTag) => {
+    const e = listed.get(m.id)
+    if (e !== undefined) {
+      out.push({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m), depth: dim.depthOf(m), checked: e.checked })
+      return
+    }
+    if (!holds(m)) return
+    if (inScope(m)) out.push({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m), depth: dim.depthOf(m), checked: true, heading: true })
+    ;(m.children as Class_DataTag[]).forEach(visit)
+  }
+  dimensionRootsOf(dim).forEach(visit)
+  return out
+}
+
+/**
+ * LA LÉGENDE D'UNE FIGURE SUR DIMENSIONS DE DONNÉES : ce qu'elle montre (le plan) et, par dimension,
+ * le geste qui coche ou décoche un membre — liée, le geste annulable du diagramme ; détachée, la coupe
+ * de la figure (lot 3 : l'état de la couronne). `null` hors dimensions de données ou hors fenêtre.
  */
 const dataLegendOf = (ctx: Type_RepresentationContext) => {
   const a = analysisOf(ctx)
@@ -1312,31 +1308,23 @@ const dataLegendOf = (ctx: Type_RepresentationContext) => {
   const { window_id, pane_key } = ctx
   if (!a || decompose?.kind !== 'data_dimension' || window_id === undefined || pane_key === undefined) return null
   const reading = hierarchyReadingOf(ctx)
+  const couronne = reading.data_plan
   const cut = analysisDataCutOf(a.subject, decompose, reading)
-  if (cut === null) return null
+  if (cut === null || couronne === undefined) return null
   const app_data = ctx.app_data
-  const focus = resolveDataFocus(cut, reading.data_focus)
-  const forDimension = (dim: Class_DataTagGroup) => dimensionLegendOf(ctx, cut, focus?.members.get(dim.id), dim, window_id, pane_key, app_data)
-  return { a, cut, reading, forDimension }
+  const toggleOf = (dim: Class_DataTagGroup) => dimensionToggleOf(ctx, cut, dim, window_id, pane_key, app_data)
+  return { a, couronne, reading, toggleOf }
 }
 
-const dimensionLegendOf = (
+/** LE GESTE de la légende sur une dimension : cocher ou décocher un membre (écrivain, inchangé au lot 2). */
+const dimensionToggleOf = (
   ctx: Type_RepresentationContext,
   cut: NonNullable<ReturnType<typeof analysisDataCutOf>>,
-  zoom: Class_DataTag[] | undefined,
   dim: Class_DataTagGroup,
   window_id: string,
   pane_key: string,
   app_data: Type_RepresentationContext['app_data']
 ) => {
-  // 04/10/2026 — un zoom à plusieurs membres : sous l'un d'eux.
-  const isUnder = (m: Class_DataTag) => {
-    if (zoom === undefined) return true
-    for (let p: Class_DataTag | undefined = m; p !== undefined; p = p.parent as Class_DataTag | undefined) {
-      if (zoom.includes(p)) return true
-    }
-    return false
-  }
   /** Les membres choisis (la frontière dessinée, à plat) : le diagramme lié, la coupe détachée. */
   const chosenNow = (): string[] => cut.linked
     ? (dim.selected_tags_list as Class_DataTag[]).map(m => m.id)
@@ -1385,45 +1373,7 @@ const dimensionLegendOf = (
     chosen.delete(member.id)
     writeChosen([...chosen])
   }
-  /** Les décochés sous le zoom (le zoom lui-même exclu). */
-  const hiddenUnderZoom = (): Class_DataTag[] => [...dimensionHiddenMembers(dim, cut.hidden)]
-    .map(id => dim.tags_dict[id] as Class_DataTag | undefined)
-    .filter((m): m is Class_DataTag => m !== undefined && isUnder(m) && !(zoom?.includes(m) ?? false))
-  /**
-   * LE BLOC DE LA DIMENSION, comme si tout était coché : les membres choisis et les décochés sous le
-   * zoom, dans l'ordre de la dimension (en profondeur d'abord) ; leurs ancêtres ouverts sous le zoom
-   * en en-têtes (le tracé ne les montre que si un anneau les dessine).
-   */
-  const entries = (): Type_LegendCheckEntry[] => {
-    const hidden = new Set(hiddenUnderZoom())
-    const shown = new Set<Class_DataTag>(hidden)
-    chosenNow().forEach(id => {
-      const m = dim.tags_dict[id] as Class_DataTag | undefined
-      if (m === undefined) return
-      if (isUnder(m) && !(zoom?.includes(m) ?? false)) { shown.add(m); return }
-      // Un membre choisi AU-DESSUS du zoom (ou le zoom lui-même) : sous le zoom, la couronne montre
-      // les enfants des membres zoomés qu'il couvre.
-      ;(zoom ?? []).filter(z => z === m || z.hasAncestor(m))
-        .forEach(z => (z.children as Class_DataTag[]).forEach(c => shown.add(c)))
-    })
-    const holds = (m: Class_DataTag): boolean =>
-      (m.children as Class_DataTag[]).some(c => shown.has(c) || holds(c))
-    const out: Type_LegendCheckEntry[] = []
-    const visit = (m: Class_DataTag) => {
-      if (shown.has(m)) {
-        out.push({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m), depth: dim.depthOf(m), checked: !hidden.has(m) })
-        return
-      }
-      if (!holds(m)) return
-      if (isUnder(m) && !(zoom?.includes(m) ?? false)) {
-        out.push({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m), depth: dim.depthOf(m), checked: true, heading: true })
-      }
-      ;(m.children as Class_DataTag[]).forEach(visit)
-    }
-    dimensionRootsOf(dim).forEach(visit)
-    return out
-  }
-  return { toggle, hiddenUnderZoom, entries }
+  return toggle
 }
 
 /** Le nœud dans lequel la couronne est descendue, ou `null` si elle regarde son sujet. */
@@ -1460,10 +1410,8 @@ const analysisOf = (
   // os#1511 — et la COUCHE de données d'une figure détachée qui en a choisi une (`readFigureDataLayer`).
   // Elle voyage dans la navigation : parts, totaux, pourcentages et petits multiples la lisent tous.
   const nav = withDataLayer(figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options), readFigureDataLayer(ctx.options))
-  // 03/10/2026 — une seule case de petits multiples : la couronne lue à son membre (cf.
-  // `smallMultiplesDrawnOf`).
-  const split = smallMultiplesOf(ctx)
-  if (split !== null && split.members.length === 1) return { subject, descriptor, nav: navAtMember(nav, split.members[0]) }
+  // 04/10/2026 (lot 2) — une seule case de petits multiples : le plan lit sa dimension sur ce membre
+  // (`fixed`), plus d'épingle de navigation ici.
   return { subject, descriptor, nav }
 }
 
@@ -1479,8 +1427,8 @@ const donutLegendShapeOf = (ctx: Type_RepresentationContext): Type_DonutLegendSh
   if (!a || !decompose) return { dimensions: 1, small_multiples }
   if (decompose.kind === 'flux_cross') return { dimensions: 2, small_multiples }
   if (decompose.kind !== 'data_dimension') return { dimensions: 1, small_multiples }
-  const cut = analysisDataCutOf(a.subject, decompose, hierarchyReadingOf(ctx))
-  return { dimensions: cut?.dividing.length ?? 1, small_multiples }
+  // 04/10/2026 (lot 2) — les dimensions qui découpent, lues sur le plan.
+  return { dimensions: couronneOf(ctx)?.plan.cut.length ?? 1, small_multiples }
 }
 
 /**
@@ -1531,7 +1479,9 @@ const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle =>
   style = { ...style, legend_visible: donutLegendShown(ctx.options ?? {}, donutLegendShapeOf(ctx)) }
   // 02/10/2026 — ZOOMÉE, LE CENTRE DIT OÙ ON EST : le nom de la part re-enracinée avec sa valeur
   // (« Céréales / 1 368 »), et pas la valeur seule, qui ne dirait pas qu'on est descendu.
-  const zoomed = hierarchyPathOf(ctx.options).length > 0 && style.centre_content === 'value'
+  // 04/10/2026 (lot 2) — sur dimensions de données, zoomée = une portée dans le plan.
+  const zoomed = (isDataDimensionFigure(ctx) ? dataScopeOf(ctx).length > 0 : hierarchyPathOf(ctx.options).length > 0) &&
+    style.centre_content === 'value'
   const repaint = style.parts_color_source === 'model' && hierarchyInEffect(ctx) !== null
   if (!zoomed && !repaint) return style
   const { window_id, pane_key } = ctx
