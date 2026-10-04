@@ -217,6 +217,17 @@ export type Type_TopbarFigureChoice = {
 }
 
 /**
+ * 04/10/2026 — LES COORDONNÉES D'UNE FENÊTRE, LIÉES AU DIAGRAMME OU PROPRES (os#1511, cf.
+ * `window_coordinates_link`). Le bouton d'attache de l'en-tête les règle avec le sujet : suit /
+ * épinglée / détachée. Rien de neuf n'est stocké : `linked` se lit sur les figures de la fenêtre
+ * (`coordinates_linked`), `setLinked` passe par les gestes de la figure.
+ */
+export type Type_WindowCoordinatesLink = {
+  linked: boolean
+  setLinked: (link: boolean) => void
+}
+
+/**
  * 02/10/2026 — LES MENUS DE LA FIGURE ACTIVE dans la barre du haut (cf. `topbar_figure_menus`) :
  * le bouton de la figure en tête (ses réglages, dont son dessin depuis le 03/10/2026 : les
  * dimensions n'ont plus de « Dessiner » propre) et l'ordre d'emboîtement que suit le ⇄.
@@ -1441,6 +1452,16 @@ export class Class_MenuConfig {
   protected _topbar_figure_menus: (() => Type_TopbarFigureMenus | null) | null = null
   public get topbar_figure_menus(): (() => Type_TopbarFigureMenus | null) | null { return this._host._topbar_figure_menus }
   public set topbar_figure_menus(v: (() => Type_TopbarFigureMenus | null) | null) { this._host._topbar_figure_menus = v }
+  // 04/10/2026 — LES COORDONNÉES D'UNE FENÊTRE (os#1511) : OS+ dit si les figures de la fenêtre
+  // `occupant_id` ont des coordonnées à lier au diagramme, et les lie ou les détache. `null` (ou
+  // une réponse `null`) : la fenêtre n'en a pas, son bouton d'attache n'a que deux modes.
+  protected _window_coordinates_link: ((occupant_id: string) => Type_WindowCoordinatesLink | null) | null = null
+  public get window_coordinates_link(): ((occupant_id: string) => Type_WindowCoordinatesLink | null) | null {
+    return this._host._window_coordinates_link
+  }
+  public set window_coordinates_link(v: ((occupant_id: string) => Type_WindowCoordinatesLink | null) | null) {
+    this._host._window_coordinates_link = v
+  }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
   // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
