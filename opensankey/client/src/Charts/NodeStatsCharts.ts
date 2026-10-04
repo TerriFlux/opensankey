@@ -1055,7 +1055,10 @@ export const countLifted = (bar_pixels: number[], floor_px: number = MIN_VISIBLE
  * servies ici.
  */
 const prepareContainer = (container: HTMLElement, opts: Type_ChartOptions = {}) => {
-  d3.select(container).selectAll('*').remove()
+  // 04/10/2026 — LES ENFANTS DIRECTS SEULEMENT. `selectAll('*')` vidait aussi le DEDANS du tableau de
+  // navigation (os#1511), bloc tout fait que la figure repose à chaque tracé : au second tracé, il
+  // revenait vide — en sunburst, le tableau disparaissait.
+  container.replaceChildren()
   const host = mountFigureTextZones(container, opts.texts?.(opts.title_fallback ?? '') ?? [], opts.breadcrumb)
   return { sel: d3.select(host), width: host.clientWidth, height: host.clientHeight }
 }
