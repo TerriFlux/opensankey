@@ -15,8 +15,25 @@
 // dessous dans la même dimension.
 //
 // Posé par `mountFigureTextZones` AVANT que le dessin ne mesure sa place : le disque se dimensionne
-// sur ce qui reste. Module PUR DOM : le modèle (quelle colonne, quels zooms) et les gestes viennent de
-// la nature (`registerAnalysisRepresentations`).
+// sur ce qui reste. Module DOM : le modèle (quelle colonne, quels zooms) et les gestes viennent de la
+// nature (`registerAnalysisRepresentations`) ; les surcouches (liste du zoom, menu de dessin) sont des
+// racines React à part (`figureNavigationPopover`).
+//
+// 04/10/2026 — LA CASE NE S'ÉTEND PLUS (Julien : « ça ne va pas cette interface »). Les puces d'un zoom
+// à plusieurs membres et le menu natif « + » élargissaient la colonne et tout le tableau. Une case de
+// zoom tient sur UNE ligne de largeur fixe : « Céréales », « Céréales +2 » (info-bulle : la liste), un
+// ✕ qui annule ce zoom et ceux en dessous ; un clic (ou le ⌄) ouvre la liste à cases du sélecteur
+// « Par niveau » pour cocher les membres du zoom de CE niveau — à n'importe quel niveau, une case vide
+// comprise (⌄ discret au survol). La colonne de gauche porte, devant « Zoom sélectionné », le petit
+// sélecteur de dessin de la dimension (en secteurs / en sunburst / une couronne par membre), venu du
+// menu Couronne de la barre du haut.
+
+import type { Type_TopbarFigureChoice } from '../types/MenuConfig'
+import { figureDrawingIconElement, isFigureDrawingIconName } from '../components/ui/FigureDrawingIcon'
+import {
+  drawingMenuContent, refreshFigureNavPopover, toggleFigureNavPopover, zoomPickerContent,
+  type Type_FigureNavZoomPick
+} from './figureNavigationPopover'
 
 /** Une colonne : un niveau d'une dimension. */
 export interface Type_FigureNavLevel {
@@ -24,12 +41,18 @@ export interface Type_FigureNavLevel {
   /** La couronne découpe par cette colonne (en-tête surligné). */
   active: boolean
   /**
-   * Les membres zoomés à ce niveau, s'il y en a (04/10/2026 : plusieurs, « Europe ✕ Amériques ✕ »),
-   * chacun avec son ✕ : il sort du zoom ; le dernier annule ce zoom et ceux en dessous.
+   * Les noms des membres zoomés à ce niveau (ou de leurs ancêtres), s'il y en a. La case les résume
+   * sur une ligne de largeur fixe, « Céréales +2 », la liste entière en info-bulle.
    */
-  zooms?: { label: string, clear?: () => void }[]
-  /** 04/10/2026 — « + » : ajouter un membre de ce niveau au zoom (les membres proposés). */
-  add?: { options: { id: string, label: string }[], choose: (id: string) => void }
+  zooms?: string[]
+  /** ✕ : annule le zoom de ce niveau et ceux en dessous dans la même dimension. */
+  clear?: () => void
+  /**
+   * 04/10/2026 — LA LISTE À CASES DU ZOOM DE CE NIVEAU (celle du sélecteur « Par niveau »), ouverte
+   * par la case ou son ⌄ ; une case vide l'ouvre aussi, pour poser un zoom sans passer par la
+   * couronne. Absente : la case est inerte.
+   */
+  pick?: Type_FigureNavZoomPick
   /** Découper par cette colonne ; absent, l'en-tête est inerte. */
   choose?: () => void
 }
@@ -38,6 +61,11 @@ export interface Type_FigureNavDimension {
   id: string
   name: string
   levels: Type_FigureNavLevel[]
+  /**
+   * 04/10/2026 — COMMENT CETTE DIMENSION SE DESSINE quand elle découpe (en secteurs / en sunburst /
+   * une couronne par membre). Absent : rien à choisir.
+   */
+  drawing?: Type_TopbarFigureChoice | null
 }
 
 export interface Type_FigureNavTable {
@@ -48,8 +76,11 @@ export interface Type_FigureNavTable {
     dimension: (name: string) => string
     cut_by: (level: string) => string
     clear_zoom: string
-    add_zoom: string
+    pick_zoom: string
+    drawing: string
   }
+  /** La traduction, pour la liste à cases. */
+  t: (key: string, options?: { [k: string]: unknown }) => unknown
   /** La clé sous laquelle le repli se souvient (fenêtre + vignette). */
   memory_key: string
 }
@@ -58,6 +89,9 @@ export interface Type_FigureNavTable {
 const collapsed_tables = new Set<string>()
 
 const ACCENT = '#2b6cb0'
+
+/** La largeur d'une case de zoom : au-delà, le nom se coupe (« Produits bruts - Cér… +1 »). */
+const ZOOM_CELL_WIDTH = '8.5rem'
 
 /** Un nom de niveau sans son numéro (« 1 - Filières » → « Filières »). */
 export const levelShortName = (text: string): string => text.replace(/^\s*\d+\s*-\s+/, '')
@@ -120,7 +154,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     line.style.textOverflow = 'ellipsis'
     line.style.minWidth = '0'
     line.textContent = model.dimensions.map(d => {
-      const zooms = d.levels.filter(l => l.zooms !== undefined).map(l => (l.zooms ?? []).map(z => z.label).join(', '))
+      const zooms = d.levels.filter(l => l.zooms !== undefined).map(l => (l.zooms ?? []).join(', '))
       const active = d.levels.find(l => l.active)
       return [d.name, ...zooms, ...(active ? [`[${active.label}]`] : [])].join(' › ')
     }).join('  ·  ')
@@ -151,10 +185,11 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     name.style.textOverflow = 'ellipsis'
     if (i > 0) name.style.paddingTop = '0.25rem'
     const zlabel = zoom.insertCell()
-    zlabel.textContent = model.labels.zoom
     zlabel.style.color = '#718096'
     zlabel.style.padding = '0 0.5rem 0 0'
     zlabel.style.whiteSpace = 'nowrap'
+    if (dim.drawing) zlabel.appendChild(drawingButton(model, dim.id, dim.drawing))
+    zlabel.appendChild(document.createTextNode(model.labels.zoom))
     for (let c = 0; c < columns; c++) {
       const level = dim.levels[c]
       const th = head.insertCell()
@@ -184,60 +219,118 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
         keepClick(head_btn, () => { /* colonne déjà active */ })
       }
       th.appendChild(head_btn)
-      if (level.zooms !== undefined) {
-        td.className = 'figure_navigation_zoomed'
-        level.zooms.forEach((z, j) => {
-          const label = document.createElement('span')
-          label.className = 'figure_navigation_member'
-          label.textContent = z.label
-          label.style.fontWeight = '600'
-          if (j > 0) label.style.marginLeft = '0.5rem'
-          td.appendChild(label)
-          if (z.clear) {
-            const x = plainButton(' ✕', model.labels.clear_zoom)
-            x.className = 'figure_navigation_clear'
-            x.style.color = '#c53030'
-            x.style.marginLeft = '0.2rem'
-            keepClick(x, z.clear)
-            td.appendChild(x)
-          }
-        })
-      }
-      // 04/10/2026 — « + » : une liste des membres du niveau, qui s'ajoute au zoom (os#1511).
-      if (level.add !== undefined) {
-        const add = level.add
-        const select = document.createElement('select')
-        select.className = 'figure_navigation_add'
-        select.title = model.labels.add_zoom
-        select.style.font = 'inherit'
-        select.style.fontSize = '10px'
-        select.style.marginLeft = level.zooms !== undefined ? '0.4rem' : '0'
-        select.style.maxWidth = '7rem'
-        select.style.color = ACCENT
-        select.style.border = '1px solid #cbd5e0'
-        select.style.borderRadius = '3px'
-        select.style.background = 'white'
-        select.style.cursor = 'pointer'
-        const head_opt = document.createElement('option')
-        head_opt.value = ''
-        head_opt.textContent = '+'
-        select.appendChild(head_opt)
-        add.options.forEach(o => {
-          const opt = document.createElement('option')
-          opt.value = o.id
-          opt.textContent = o.label
-          select.appendChild(opt)
-        })
-        select.addEventListener('pointerdown', e => e.stopPropagation())
-        select.addEventListener('click', e => e.stopPropagation())
-        select.addEventListener('change', e => {
-          e.stopPropagation()
-          if (select.value !== '') add.choose(select.value)
-        })
-        td.appendChild(select)
-      }
+      fillZoomCell(model, td, `${dim.id}|${c}`, level)
     }
   })
   box.appendChild(table)
   return box
+}
+
+/**
+ * LA CASE DE ZOOM D'UN NIVEAU, sur une ligne de largeur fixe : le résumé (« Céréales +2 »), le ⌄ qui
+ * ouvre la liste à cases (discret au survol d'une case vide), le ✕ qui annule ce zoom.
+ */
+const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, where: string, level: Type_FigureNavLevel) => {
+  const zooms = level.zooms ?? []
+  // `width` sur une case de tableau en disposition automatique est un MINIMUM ; le contenu, de largeur
+  // nulle mais au moins toute la case, ne pousse pas la colonne : elle garde la largeur de son en-tête
+  // ou de ce minimum, quel que soit le zoom.
+  td.style.width = ZOOM_CELL_WIDTH
+  td.style.maxWidth = ZOOM_CELL_WIDTH
+  const wrap = document.createElement('div')
+  wrap.style.display = 'flex'
+  wrap.style.alignItems = 'center'
+  wrap.style.gap = '0.2rem'
+  wrap.style.width = '0'
+  wrap.style.minWidth = '100%'
+  td.appendChild(wrap)
+  if (zooms.length > 0) {
+    td.className = 'figure_navigation_zoomed'
+    td.title = zooms.join('\n')
+  }
+  const pick = level.pick
+  const key = `${model.memory_key}|zoom|${where}`
+  const title = `${level.label} — ${model.labels.pick_zoom}`
+  const openPick = pick ? () => toggleFigureNavPopover(key, td, zoomPickerContent(model.t, title, pick)) : undefined
+  if (zooms.length > 0) {
+    const label = document.createElement('span')
+    label.className = 'figure_navigation_member'
+    label.textContent = zooms[0]
+    label.style.fontWeight = '600'
+    label.style.overflow = 'hidden'
+    label.style.textOverflow = 'ellipsis'
+    label.style.whiteSpace = 'nowrap'
+    label.style.minWidth = '0'
+    label.style.flex = '0 1 auto'
+    if (openPick) { label.style.cursor = 'pointer'; keepClick(label, openPick) }
+    wrap.appendChild(label)
+    if (zooms.length > 1) {
+      const more = document.createElement('span')
+      more.className = 'figure_navigation_more'
+      more.textContent = `+${zooms.length - 1}`
+      more.style.color = ACCENT
+      more.style.fontWeight = '600'
+      more.style.flex = '0 0 auto'
+      if (openPick) { more.style.cursor = 'pointer'; keepClick(more, openPick) }
+      wrap.appendChild(more)
+    }
+  }
+  if (openPick && pick) {
+    td.dataset.navPopover = key
+    const caret = plainButton('▾', model.labels.pick_zoom)
+    caret.className = 'figure_navigation_pick'
+    caret.style.color = '#718096'
+    caret.style.flex = '0 0 auto'
+    caret.style.fontSize = '9px'
+    caret.style.padding = '0 0.1rem'
+    keepClick(caret, openPick)
+    if (zooms.length === 0) {
+      // Une case vide : le ⌄ ne se montre qu'au survol.
+      caret.style.opacity = '0'
+      td.addEventListener('mouseenter', () => { caret.style.opacity = '1' })
+      td.addEventListener('mouseleave', () => { caret.style.opacity = '0' })
+      caret.addEventListener('focus', () => { caret.style.opacity = '1' })
+    }
+    wrap.appendChild(caret)
+    // La liste ouverte suit le redessin : elle reçoit le modèle d'après le geste.
+    refreshFigureNavPopover(key, zoomPickerContent(model.t, title, pick))
+  }
+  if (zooms.length > 0 && level.clear) {
+    const x = plainButton('✕', model.labels.clear_zoom)
+    x.className = 'figure_navigation_clear'
+    x.style.color = '#c53030'
+    x.style.flex = '0 0 auto'
+    x.style.marginLeft = 'auto'
+    keepClick(x, level.clear)
+    wrap.appendChild(x)
+  }
+}
+
+/** LE SÉLECTEUR DE DESSIN d'une dimension : l'icône du dessin courant, un ⌄, et son menu. */
+const drawingButton = (model: Type_FigureNavTable, dim_id: string, choice: Type_TopbarFigureChoice): HTMLElement => {
+  const current = choice.options.find(o => o.value === choice.value)
+  const b = plainButton('', `${model.labels.drawing} : ${current?.label ?? ''}`)
+  b.className = 'figure_navigation_drawing'
+  b.style.display = 'inline-flex'
+  b.style.alignItems = 'center'
+  b.style.gap = '0.1rem'
+  b.style.color = '#4a5568'
+  b.style.border = '1px solid #cbd5e0'
+  b.style.borderRadius = '3px'
+  b.style.padding = '0 0.15rem'
+  b.style.marginRight = '0.3rem'
+  b.style.verticalAlign = 'middle'
+  b.style.background = 'white'
+  const icon = current?.icon
+  if (isFigureDrawingIconName(icon)) b.appendChild(figureDrawingIconElement(icon, 12))
+  const caret = document.createElement('span')
+  caret.textContent = '▾'
+  caret.style.fontSize = '9px'
+  caret.style.color = '#718096'
+  b.appendChild(caret)
+  const key = `${model.memory_key}|draw|${dim_id}`
+  b.dataset.navPopover = key
+  keepClick(b, () => toggleFigureNavPopover(key, b, drawingMenuContent(choice)))
+  refreshFigureNavPopover(key, drawingMenuContent(choice))
+  return b
 }

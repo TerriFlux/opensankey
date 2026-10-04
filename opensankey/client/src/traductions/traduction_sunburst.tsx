@@ -26,7 +26,8 @@ export const resources_sunburst = {
           zoom: 'Selected zoom',
           cut_by: 'Split by {{level}}',
           clear_zoom: 'Remove this zoom (and the deeper ones)',
-          add_zoom: 'Add a member to the zoom (the figure reads their sum)',
+          pick_zoom: 'Choose the zoomed members at this level (the figure reads their sum)',
+          drawing: 'How this dimension is drawn when it divides the chart',
           title: 'Navigation',
           toggle_part: 'Show or hide {{name}}'
         },
@@ -59,7 +60,8 @@ export const resources_sunburst = {
           zoom: 'Zoom sélectionné',
           cut_by: 'Découper par {{level}}',
           clear_zoom: 'Annuler ce zoom (et ceux en dessous)',
-          add_zoom: 'Ajouter un membre au zoom (la figure lit leur somme)',
+          pick_zoom: 'Choisir les membres zoomés à ce niveau (la figure lit leur somme)',
+          drawing: 'Comment cette dimension se dessine quand elle découpe la couronne',
           title: 'Navigation',
           toggle_part: 'Afficher ou masquer {{name}}'
         },
@@ -92,7 +94,8 @@ export const resources_sunburst = {
           zoom: 'Zoom seleccionado',
           cut_by: 'Dividir por {{level}}',
           clear_zoom: 'Anular este zoom (y los inferiores)',
-          add_zoom: 'Añadir un miembro al zoom (la figura lee su suma)',
+          pick_zoom: 'Elegir los miembros ampliados en este nivel (la figura lee su suma)',
+          drawing: 'Cómo se dibuja esta dimensión cuando divide el gráfico',
           title: 'Navegación',
           toggle_part: 'Mostrar u ocultar {{name}}'
         },
@@ -125,7 +128,8 @@ export const resources_sunburst = {
           zoom: 'Gewählter Zoom',
           cut_by: 'Aufteilen nach {{level}}',
           clear_zoom: 'Diesen Zoom aufheben (und die darunter)',
-          add_zoom: 'Ein Mitglied zum Zoom hinzufügen (die Grafik liest ihre Summe)',
+          pick_zoom: 'Die gezoomten Mitglieder dieser Ebene wählen (die Grafik liest ihre Summe)',
+          drawing: 'Wie diese Dimension gezeichnet wird, wenn sie die Grafik teilt',
           title: 'Navigation',
           toggle_part: '{{name}} ein- oder ausblenden'
         },
@@ -158,7 +162,8 @@ export const resources_sunburst = {
           zoom: 'Zoom selezionato',
           cut_by: 'Suddividere per {{level}}',
           clear_zoom: 'Annullare questo zoom (e quelli sottostanti)',
-          add_zoom: 'Aggiungere un membro allo zoom (la figura ne legge la somma)',
+          pick_zoom: 'Scegliere i membri ingranditi a questo livello (la figura ne legge la somma)',
+          drawing: 'Come si disegna questa dimensione quando divide il grafico',
           title: 'Navigazione',
           toggle_part: 'Mostrare o nascondere {{name}}'
         },
@@ -191,7 +196,8 @@ export const resources_sunburst = {
           zoom: '已选缩放',
           cut_by: '按 {{level}} 划分',
           clear_zoom: '取消此缩放（及其下级）',
-          add_zoom: '向缩放添加成员（图形读取其总和）',
+          pick_zoom: '选择此层级的缩放成员（图形读取其总和）',
+          drawing: '此维度划分图形时的绘制方式',
           title: '导航',
           toggle_part: '显示或隐藏 {{name}}'
         },
@@ -224,7 +230,8 @@ export const resources_sunburst = {
           zoom: '選択中のズーム',
           cut_by: '{{level}} で分割',
           clear_zoom: 'このズームを解除（下位も）',
-          add_zoom: 'ズームにメンバーを追加（図はその合計を表示）',
+          pick_zoom: 'このレベルでズームするメンバーを選ぶ（図はその合計を表示）',
+          drawing: 'この次元が図を分割するときの描き方',
           title: 'ナビゲーション',
           toggle_part: '{{name}} を表示・非表示'
         },

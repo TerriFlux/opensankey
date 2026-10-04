@@ -106,6 +106,8 @@ export interface Type_FigureNatureSpec {
   socle?: { [key: string]: Type_HonourSpec }
   /** Des attributs DÉJÀ construits — ce que `honours` ne sait pas faire (une clé d'identité). */
   extra_attributes?: Type_FigureAttributesConfig
+  /** Ce qu'une figure NEUVE porte d'emblée (cf. `Type_RepresentationEntry.fresh_own`). */
+  fresh_own?: { [key: string]: unknown }
   /**
    * LES PARTS, dans l'ordre du tracé. `null` = rien à dessiner ici (pas d'analyse, sujet sans
    * décomposition) : la figure ne s'affiche pas, et c'est une réponse, pas une panne.
@@ -162,6 +164,7 @@ export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
     isAvailable: spec.isAvailable,
     resolveElementTarget: spec.resolveElementTarget,
     attributes,
+    fresh_own: spec.fresh_own,
     draw: (container, ctx) => {
       const parts = spec.parts(ctx)
       if (parts === null) return undefined

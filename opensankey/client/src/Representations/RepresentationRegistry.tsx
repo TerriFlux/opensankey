@@ -428,6 +428,13 @@ type Type_RepresentationCommon = {
    */
   attributes?: Type_FigureAttributesConfig
   /**
+   * 04/10/2026 — CE QU'UNE FIGURE NEUVE DE CETTE NATURE PORTE D'EMBLÉE, écrit comme une surcharge
+   * propre (cf. `Class_MenuConfig._initFreshFigure`) : un défaut pour les figures À VENIR qui ne
+   * change pas celles déjà enregistrées, dont l'usine reste la valeur. La couronne y met
+   * `interaction_click: 'zoom'` (os#1511).
+   */
+  fresh_own?: { [key: string]: unknown }
+  /**
    * Réglages propres à la représentation, ÉDITÉS PAR L'AUTEUR. `setOptions`
    * reçoit l'objet complet : c'est l'appelant qui le persiste.
    */

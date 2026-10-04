@@ -1,27 +1,32 @@
 import {
-  dataDimensionLevelsDisplay, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withElementOpening,
-  withFigureOpening, withLevelsDisplay
+  dataDimensionLevelsDisplay, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withDimensionLevelsDisplay,
+  withElementOpening, withFigureOpening, withLevelsDisplay
 } from './figureOpening'
 
-// 03/10/2026 — LA DISPOSITION DES NIVEAUX REDEVIENT COMMUNE (os#1511) : en secteurs ou en sunburst,
-// pour toutes les dimensions. `levels_display_by` (sa!841) n est plus ecrit, il se lit une fois.
-describe('os#1511 — disposition des niveaux commune', () => {
+// 04/10/2026 — LA DISPOSITION DES NIVEAUX PAR DIMENSION (os#1511, tableau de navigation) : chaque
+// dimension a la sienne (`levels_display_by`) ; le reglage commun `levels_display` reste son defaut.
+describe('os#1511 — disposition des niveaux par dimension', () => {
   test('le reglage commun se lit tel quel', () => {
-    expect(readFigureLevelsDisplay({ levels_display: 'rings' })).toEqual({ common: 'rings' })
-    expect(readFigureLevelsDisplay({ levels_display: 'in_place' })).toEqual({ common: 'in_place' })
+    expect(readFigureLevelsDisplay({ levels_display: 'rings' })).toEqual({ common: 'rings', by: {} })
+    expect(readFigureLevelsDisplay({ levels_display: 'in_place' })).toEqual({ common: 'in_place', by: {} })
   })
   test('un sac vide ne dit rien', () => {
-    expect(readFigureLevelsDisplay({})).toEqual({ common: undefined })
+    expect(readFigureLevelsDisplay({})).toEqual({ common: undefined, by: {} })
   })
-  test('l ancienne cle par dimension : une entree en sunburst met la figure en sunburst', () => {
-    expect(readFigureLevelsDisplay({ levels_display_by: { pays: 'in_place', produit: 'rings' } })).toEqual({ common: 'rings' })
-    expect(readFigureLevelsDisplay({ levels_display_by: { pays: 'in_place', x: 'spiral' } })).toEqual({ common: 'in_place' })
+  test('la cle par dimension se lit, une valeur inconnue est ignoree', () => {
+    expect(readFigureLevelsDisplay({ levels_display_by: { pays: 'in_place', produit: 'rings', x: 'spiral' } }))
+      .toEqual({ common: undefined, by: { pays: 'in_place', produit: 'rings' } })
   })
-  test('le reglage commun prime sur l ancienne cle', () => {
-    expect(readFigureLevelsDisplay({ levels_display: 'in_place', levels_display_by: { produit: 'rings' } }))
-      .toEqual({ common: 'in_place' })
+  test('la dimension l emporte sur le reglage commun, qui reste le defaut des autres', () => {
+    const levels = readFigureLevelsDisplay({ levels_display: 'in_place', levels_display_by: { produit: 'rings' } })
+    expect(dataDimensionLevelsDisplay(levels, 'produit')).toBe('rings')
+    expect(dataDimensionLevelsDisplay(levels, 'pays')).toBe('in_place')
   })
-  test('ecrire la disposition retire l ancienne cle', () => {
+  test('ecrire une dimension garde les autres', () => {
+    expect(withDimensionLevelsDisplay({ levels_display_by: { produit: 'rings' }, x: 1 }, 'pays', 'in_place'))
+      .toEqual({ levels_display_by: { produit: 'rings', pays: 'in_place' }, x: 1 })
+  })
+  test('ecrire la disposition commune retire la cle par dimension', () => {
     expect(withLevelsDisplay({ levels_display_by: { produit: 'rings' }, x: 1 }, 'in_place'))
       .toEqual({ levels_display: 'in_place', levels_display_by: undefined, x: 1 })
   })
@@ -31,6 +36,7 @@ describe('os#1511 — disposition des niveaux commune', () => {
 describe('os#1511 — disposition par defaut', () => {
   test('sans reglage : en secteurs', () => {
     expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({}))).toBe('in_place')
+    expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({}), 'produit')).toBe('in_place')
   })
   test('le reglage ecrit l emporte', () => {
     expect(dataDimensionLevelsDisplay(readFigureLevelsDisplay({ levels_display: 'rings' }))).toBe('rings')
