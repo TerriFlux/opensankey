@@ -195,22 +195,32 @@ export const focusWithoutDimension = (path: string[], dimension_id: string): str
  * cran de la pile fixe dans chaque dimension (le dernier écrit d'une dimension l'emporte). C'est la
  * relecture de l'ancien format : une pile de crans emboîtés se lit par son dernier cran.
  */
-export const readFigureDimensionZooms = (options: Type_Options | null | undefined): Map<string, string> => {
-  const out = new Map<string, string>()
-  ;(readFigureDataFocus(options) ?? []).forEach(r => { out.delete(r.dimension_id); out.set(r.dimension_id, r.member_id) })
+export const readFigureDimensionZooms = (options: Type_Options | null | undefined): Map<string, string[]> => {
+  // 04/10/2026 — PLUSIEURS MEMBRES PAR DIMENSION (« Europe ✕ Amériques ✕ ») : un cran les écrit à
+  // la suite. Les membres apparentés (ancien format, une dimension redite plus profond) se trient à
+  // la résolution, qui connaît la hiérarchie (`zoomMembersOf`).
+  const out = new Map<string, string[]>()
+  ;(readFigureDataFocus(options) ?? []).forEach(r => {
+    const list = out.get(r.dimension_id) ?? []
+    out.delete(r.dimension_id)
+    out.set(r.dimension_id, list.includes(r.member_id) ? list : [...list, r.member_id])
+  })
   return out
 }
 
 /**
  * 03/10/2026 — Le sac dont la pile se réduit à UN cran : le zoom de chaque dimension, celle qui
  * découpe (`centre_id`) en dernier — c'est elle que le centre nomme. Aucun zoom : la clé s'en va.
+ * 04/10/2026 — une dimension peut porter plusieurs membres, écrits à la suite ; une liste vide
+ * annule son zoom.
  */
 export const withFigureDimensionZooms = (
-  options: Type_Options, zooms: ReadonlyMap<string, string>, centre_id?: string
+  options: Type_Options, zooms: ReadonlyMap<string, string | readonly string[]>, centre_id?: string
 ): Type_Options => {
   const refs: Type_MemberRef[] = [...zooms]
     .sort(([a], [b]) => (a === centre_id ? 1 : 0) - (b === centre_id ? 1 : 0))
-    .map(([dimension_id, member_id]) => ({ dimension_id, member_id }))
+    .flatMap(([dimension_id, ids]) => (typeof ids === 'string' ? [ids] : [...ids])
+      .map(member_id => ({ dimension_id, member_id })))
   return withFigureFocus(options, refs.length > 0 ? [memberPathSectorId(refs)] : [])
 }
 

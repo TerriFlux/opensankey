@@ -429,6 +429,47 @@ export const smallMultipleMembersOf = (dim: Class_DataTagGroup, opening: Type_Da
 }
 
 /**
+ * 04/10/2026 — LES MEMBRES DU ZOOM D'UNE DIMENSION, lus sur les crans d'un foyer (os#1511) : un zoom
+ * peut fixer PLUSIEURS membres d'une dimension (« Europe ✕ Amériques ✕ »), qui se lisent sur leur
+ * somme. Un cran écrit les membres d'une dimension à la suite (`pays/europe||pays/ameriques`).
+ *
+ * RELECTURE DE L'ANCIEN FORMAT : une dimension redite plus profond (`produits/cereales||produits/ble`)
+ * était un cran plus bas, le dernier écrit l'emportant. Un membre qui descend d'un membre déjà lu (ou
+ * en est l'ancêtre) le REMPLACE donc ; seuls des membres disjoints s'ajoutent.
+ */
+export const zoomMembersOf = (
+  dim: Class_DataTagGroup, member_ids: readonly string[]
+): Class_DataTag[] => {
+  const out: Class_DataTag[] = []
+  const isUnder = (m: Class_DataTag, over: Class_DataTag) => {
+    for (let p: Class_DataTag | undefined = m; p !== undefined; p = p.parent as Class_DataTag | undefined) {
+      if (p === over) return true
+    }
+    return false
+  }
+  member_ids.forEach(id => {
+    const m = dim.tags_dict[id] as Class_DataTag | undefined
+    if (m === undefined) return
+    const kept = out.filter(o => !isUnder(m, o) && !isUnder(o, m))
+    out.length = 0
+    out.push(...kept, m)
+  })
+  return out
+}
+
+/** Le foyer résolu : `coord` donne UN membre par dimension (le dernier lu), `members` tous. */
+export interface Type_ResolvedDataFocus {
+  k: number
+  /** Le membre du centre (le dernier de sa dimension) ; `members` les dit tous. */
+  member: Class_DataTag
+  coord: Map<string, Class_DataTag>
+  /** 04/10/2026 — les membres de chaque dimension zoomée, plusieurs pour un zoom à plusieurs membres. */
+  members: Map<string, Class_DataTag[]>
+  /** Les références du foyer, la dimension du centre en dernier (ses membres à la suite). */
+  refs: Type_MemberRef[]
+}
+
+/**
  * 02/10/2026 — LE SECTEUR QUE DÉSIGNE UN FOYER, s'il peut l'être sous cette coupe : chaque membre de
  * la coordonnée existe dans une dimension de la figure, la dernière découpe, et il y a quelque chose
  * dessous (des enfants, ou une dimension suivante qui découpe). `null` sinon : on ne zoome pas sur
@@ -437,15 +478,26 @@ export const smallMultipleMembersOf = (dim: Class_DataTagGroup, opening: Type_Da
 export const resolveDataFocus = (
   cut: Type_DataCut,
   refs: Type_MemberRef[] | undefined
-): { k: number, member: Class_DataTag, coord: Map<string, Class_DataTag>, refs: Type_MemberRef[] } | null => {
+): Type_ResolvedDataFocus | null => {
   if (refs === undefined || refs.length === 0) return null
-  const coord = new Map<string, Class_DataTag>()
+  const ids = new Map<string, string[]>()
   for (const ref of refs) {
     const dim = cut.dims.find(d => d.id === ref.dimension_id)
     const member = dim?.tags_dict[ref.member_id] as Class_DataTag | undefined
     if (dim === undefined || member === undefined) return null
-    coord.set(dim.id, member)
+    // L'ordre d'insertion suit la dernière écriture de chaque dimension : celle du centre en dernier.
+    const list = ids.get(dim.id) ?? []
+    ids.delete(dim.id)
+    ids.set(dim.id, [...list, member.id])
   }
+  const members = new Map<string, Class_DataTag[]>()
+  const coord = new Map<string, Class_DataTag>()
+  ids.forEach((member_ids, dim_id) => {
+    const dim = cut.dims.find(d => d.id === dim_id) as Class_DataTagGroup
+    const list = zoomMembersOf(dim, member_ids)
+    members.set(dim_id, list)
+    coord.set(dim_id, list[list.length - 1])
+  })
   const last = refs[refs.length - 1]
   const k = cut.dividing.findIndex(d => d.id === last.dimension_id)
   // 03/10/2026 — UN ZOOM PAR DIMENSION (tableau de navigation) : le dernier cran peut fixer une
@@ -453,21 +505,26 @@ export const resolveDataFocus = (
   // coordonnée, et la dimension qui découpe montre ce qu'elle a sous ce zoom.
   if (k < 0 && (cut.dividing.length === 0 || !cut.dims.some(d => d.id === last.dimension_id))) return null
   const member = coord.get(last.dimension_id) as Class_DataTag
+  const centre_members = members.get(last.dimension_id) as Class_DataTag[]
   // Un membre sans enfants de la SEULE dimension qui découpe se montre seul (« Espagne », 100 %) :
   // le zoom va jusqu'au bout de la dimension, la colonne reste.
-  const lone_leaf = k >= 0 && member.children.length === 0 && cut.dividing.length === 1
+  const lone_leaf = k >= 0 && cut.dividing.length === 1 && centre_members.some(m => m.children.length === 0)
   // 03/10/2026 — quelque chose dessous : ses enfants, ou une AUTRE dimension qui découpe encore — non
   // fixée, ou fixée sur un membre que la coupe ouvre (cf. `entryAt` de `buildNestedDimensionTree`).
-  const below = lone_leaf || member.children.length > 0 || cut.dividing.some(d => {
+  const below = lone_leaf || centre_members.some(m => m.children.length > 0) || cut.dividing.some(d => {
     if (d.id === last.dimension_id) return false
-    const fixed = coord.get(d.id)
-    return fixed === undefined || (fixed.children.length > 0 && cut.opened.has(memberSectorId(d.id, fixed.id)))
+    const fixed = members.get(d.id)
+    return fixed === undefined ||
+      fixed.some(f => f.children.length > 0 && cut.opened.has(memberSectorId(d.id, f.id)))
   })
   if (!below) return null
-  // Un membre par dimension, le dernier écrit : la pile peut redire une dimension plus profond.
-  const unique = refs.filter((r, i) => !refs.slice(i + 1).some(s => s.dimension_id === r.dimension_id))
-  return { k, member, coord, refs: unique }
+  const unique: Type_MemberRef[] = [...members].flatMap(([dimension_id, list]) =>
+    list.map(m => ({ dimension_id, member_id: m.id })))
+  return { k, member, coord, members, refs: unique }
 }
+
+/** Une coordonnée : un membre, ou plusieurs dont la valeur est la somme (zoom à plusieurs membres). */
+type Type_CoordValue = Class_DataTag | Class_DataTag[]
 
 /**
  * L'ARBRE d'une couronne sur une ou plusieurs dimensions de données, selon une coupe (`dataCutOf`).
@@ -504,7 +561,8 @@ export const buildNestedDimensionTree = (
   // sélectionne ; liée, elle se lit à ce qu'il sélectionne (« Europe » si c'est l'Europe).
   // 03/10/2026 — une dimension DÉSACTIVÉE se lit à sa racine, liée comme détachée : la couronne liée
   // ne la découpe pas, quoi que le diagramme en montre.
-  const base_coord = new Map<string, Class_DataTag>()
+  // 04/10/2026 — une dimension zoomée sur PLUSIEURS membres porte leur liste : sa valeur est leur somme.
+  const base_coord = new Map<string, Type_CoordValue>()
   all.filter(d => !dims.includes(d) && (!cut.linked || cut.inactive?.has(d.id))).forEach(d => {
     const roots = dimensionRootsOf(d)
     if (roots.length === 1) base_coord.set(d.id, roots[0])
@@ -529,10 +587,17 @@ export const buildNestedDimensionTree = (
     resolvedMemberColors(dim)[member.id] ?? member.color ?? null
 
   /** La valeur du sujet à une coordonnée : les dimensions découpées fixées, les autres suivies. */
-  const valueAt = (coord: Map<string, Class_DataTag>): number => {
+  const valueAt = (coord: Map<string, Type_CoordValue>): number => {
+    // 04/10/2026 — UN ZOOM À PLUSIEURS MEMBRES se lit sur leur SOMME : une lecture par membre (la
+    // lecture du modèle attend une étiquette par groupe), additionnées.
+    const multi = groups.find(group => Array.isArray(coord.get(group.id)))
+    if (multi !== undefined) {
+      return (coord.get(multi.id) as Class_DataTag[])
+        .reduce((acc, m) => acc + valueAt(new Map(coord).set(multi.id, m)), 0)
+    }
     const tags: Class_DataTag[] = []
     groups.forEach(group => {
-      const fixed = coord.get(group.id)
+      const fixed = coord.get(group.id) as Class_DataTag | undefined
       if (fixed !== undefined) { tags.push(fixed); return }
       const pinned = nav.data_tags?.filter(tag => tag.group.id === group.id) ?? []
       if (pinned.length > 0) { tags.push(...pinned); return }
@@ -552,14 +617,19 @@ export const buildNestedDimensionTree = (
   // membre — ses enfants pour le centre (zoomer n'ouvre rien mais montre ce qu'il y a dessous), ce
   // que la coupe ouvre sous lui pour un membre fixé plus haut dans la pile — ou ne découpe pas.
   const focus = resolveDataFocus(cut, options.focus)
+  const centre_id = focus?.refs[focus.refs.length - 1].dimension_id
   const entryAt = (j: number): Class_DataTag[] => {
     const dim = dims[j]
-    const fixed = focus?.coord.get(dim.id)
+    const fixed = focus?.members.get(dim.id)
     if (fixed === undefined) return entryOfAll(dim)
-    const is_centre = fixed === focus?.member
-    // Un zoom sur une feuille de la dimension qui découpe : elle seule (cf. `resolveDataFocus`).
-    if (is_centre && fixed.children.length === 0) return [fixed]
-    return is_centre || isOpen(dim, fixed) ? (fixed.children as Class_DataTag[]) : []
+    // 04/10/2026 — plusieurs membres zoomés : ce que chacun montre, à la suite (« Europe, Amériques » :
+    // leurs pays).
+    const is_centre = dim.id === centre_id
+    return fixed.flatMap(m => {
+      // Un zoom sur une feuille de la dimension qui découpe : elle seule (cf. `resolveDataFocus`).
+      if (is_centre && m.children.length === 0) return [m]
+      return is_centre || isOpen(dim, m) ? (m.children as Class_DataTag[]) : []
+    })
   }
   /** La première dimension à partir de `from` qui a quelque chose à montrer, et ce qu'elle montre. */
   const nextEntry = (from: number): { k: number, members: Class_DataTag[] } | null => {
@@ -574,7 +644,7 @@ export const buildNestedDimensionTree = (
     [...refs.filter(r => r.dimension_id !== dimension_id), { dimension_id, member_id }]
 
   const build = (
-    refs: Type_MemberRef[], coord: Map<string, Class_DataTag>, k: number, member: Class_DataTag, depth: number,
+    refs: Type_MemberRef[], coord: Map<string, Type_CoordValue>, k: number, member: Class_DataTag, depth: number,
     branch: string, entry_depth: number
   ): Type_SunburstNode => {
     const dim = dims[k]
@@ -634,7 +704,7 @@ export const buildNestedDimensionTree = (
   let root_label = displayedNameOf(element)
   if (focus !== null) {
     const coord = new Map(base_coord)
-    focus.coord.forEach((member, dim_id) => coord.set(dim_id, member))
+    focus.members.forEach((list, dim_id) => coord.set(dim_id, list.length > 1 ? list : list[0]))
     const first = nextEntry(0)
     children = first === null ? [] : shownIn(dims[first.k], first.members)
       .map(member => {
@@ -643,7 +713,8 @@ export const buildNestedDimensionTree = (
         return build(refs, child_coord, first.k, member, 1, member.id, 1)
       })
       .filter(member => member.value > 0)
-    root_label = focus.member.name
+    // Plusieurs membres au centre : leurs noms (« Europe, Amériques »).
+    root_label = (focus.members.get(centre_id as string) ?? [focus.member]).map(m => m.name).join(', ')
   } else if (dims.length === 0) {
     // RIEN NE DÉCOUPE : un seul secteur, la racine de la première dimension — le tout, sans partage.
     const first = all.find(d => !cut.inactive?.has(d.id)) ?? all[0]

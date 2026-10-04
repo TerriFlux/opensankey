@@ -631,7 +631,18 @@ const chartOptions = (
  * REGARDÉ qui a changé, et c'est lui qu'on lit.
  */
 const figureTitleFallback = (ctx: Type_RepresentationContext): string =>
-  focusedNodeOf(ctx)?.name ?? dataFocusOf(ctx)?.member.name ?? subjectNameOf(ctx)
+  focusedNodeOf(ctx)?.name ?? dataFocusNameOf(ctx) ?? subjectNameOf(ctx)
+
+/**
+ * 04/10/2026 — LE NOM DU ZOOM : un zoom à plusieurs membres se nomme en entier (« Europe, Amériques »).
+ * `undefined` sans foyer.
+ */
+const dataFocusNameOf = (ctx: Type_RepresentationContext): string | undefined => {
+  const focus = dataFocusOf(ctx)
+  if (focus === null) return undefined
+  const centre = focus.members.get(focus.refs[focus.refs.length - 1].dimension_id) ?? [focus.member]
+  return centre.map(m => m.name).join(', ')
+}
 
 /**
  * 03/10/2026 — LE NOM COURT DU SUJET, pour la ligne de ce que le centre mesure : le nœud, ou pour un
@@ -708,7 +719,8 @@ const centreContextOf = (ctx: Type_RepresentationContext): string => {
   const sankey = ctx.app_data.drawing_area.sankey
   const split = smallMultiplesDrawnOf(ctx)
   const named = new Set<string>(split ? [split.dimension.id] : [])
-  const fixed = new Map<string, Class_DataTag>()
+  // 04/10/2026 — un zoom à plusieurs membres se dit en entier (« Europe, Amériques »).
+  const fixed = new Map<string, Class_DataTag[]>()
   const decompose = effectiveDecompose(a.descriptor)
   const reading = hierarchyReadingOf(ctx)
   const cut = decompose?.kind === 'data_dimension' ? analysisDataCutOf(a.subject, decompose, reading) : null
@@ -717,14 +729,14 @@ const centreContextOf = (ctx: Type_RepresentationContext): string => {
     if (focus !== null) {
       const centre_dim = focus.refs[focus.refs.length - 1].dimension_id
       named.add(centre_dim)
-      focus.coord.forEach((member, dim_id) => { if (dim_id !== centre_dim) fixed.set(dim_id, member) })
+      focus.members.forEach((list, dim_id) => { if (dim_id !== centre_dim) fixed.set(dim_id, list) })
     } else if (cut.dividing.length > 0) {
       named.add(cut.dividing[0].id)
     }
   }
   const retained = (group: Class_DataTagGroup): Class_DataTag[] => {
     const at = fixed.get(group.id)
-    if (at !== undefined) return [at]
+    if (at !== undefined) return at
     if (cut !== null && cut.dims.includes(group)) {
       if (cut.inactive?.has(group.id)) return dimensionRootsOf(group)
       if (!cut.linked) {
@@ -909,7 +921,8 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
   const t = app_data.t
   const options = ctx.options ?? {}
   const focus = resolveDataFocus(cut, reading.data_focus)
-  const zooms = new Map<string, Class_DataTag>(focus?.coord ?? [])
+  // 04/10/2026 — le zoom d'une dimension est une LISTE de membres (« Europe ✕ Amériques ✕ »).
+  const zooms = new Map<string, Class_DataTag[]>(focus?.members ?? [])
 
   // CE QUE LA COURONNE DESSINE : pour chaque dimension, la profondeur de sa frontière.
   const drawn_depths = new Map<string, Set<number>>()
@@ -932,8 +945,9 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
 
   const centreOf = () => cut.dividing[0]?.id
   /** Écrit les zooms (un membre par dimension) et, si donné, la colonne `dim` au niveau `depth`. */
-  const write = (next_zooms: Map<string, Class_DataTag>, column?: { dim: Class_DataTagGroup, depth: number }) => {
-    const ids = new Map([...next_zooms].map(([dim_id, m]) => [dim_id, m.id]))
+  const write = (next_zooms: Map<string, Class_DataTag[]>, column?: { dim: Class_DataTagGroup, depth: number }) => {
+    const ids = new Map([...next_zooms].filter(([, list]) => list.length > 0)
+      .map(([dim_id, list]) => [dim_id, list.map(m => m.id)]))
     let o = withFigureDimensionZooms(options, ids, column?.dim.id ?? centreOf())
     if (column) {
       const { dim, depth } = column
@@ -966,36 +980,84 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     while (m !== undefined && dim.depthOf(m) > depth) m = m.parent as Class_DataTag | undefined
     return m !== undefined && dim.depthOf(m) === depth ? m : undefined
   }
-  /** Le zoom de `dim` ramené au-dessus de `depth` (supprimé s'il n'en reste rien sous la racine). */
-  const zoomsAbove = (dim: Class_DataTagGroup, depth: number, entry_depth: number) => {
+  /**
+   * Le zoom de `dim` ramené au-dessus de `depth` (supprimé s'il n'en reste rien sous la racine).
+   * 04/10/2026 — `only` : seuls les membres sous cet ancêtre remontent, les autres restent.
+   */
+  const zoomsAbove = (dim: Class_DataTagGroup, depth: number, entry_depth: number, only?: Class_DataTag) => {
     const next = new Map(zooms)
-    const z = zooms.get(dim.id)
-    if (z !== undefined && dim.depthOf(z) >= depth) {
+    const list = zooms.get(dim.id) ?? []
+    const out: Class_DataTag[] = []
+    list.forEach(z => {
+      const concerned = dim.depthOf(z) >= depth && (only === undefined || ancestorAt(dim, z, depth) === only)
+      if (!concerned) { if (!out.includes(z)) out.push(z); return }
       const up = depth - 1 >= entry_depth ? ancestorAt(dim, z, depth - 1) : undefined
-      if (up) next.set(dim.id, up)
-      else next.delete(dim.id)
-    }
+      if (up && !out.includes(up)) out.push(up)
+    })
+    if (out.length > 0) next.set(dim.id, out)
+    else next.delete(dim.id)
     return next
+  }
+  /**
+   * 04/10/2026 — ✕ SUR UN MEMBRE DU ZOOM : il sort du zoom, les autres restent ; le dernier s'en va
+   * comme avant (le zoom de sa dimension remonte au-dessus de son niveau).
+   */
+  const withoutZoomMember = (dim: Class_DataTagGroup, member: Class_DataTag, depth: number, entry_depth: number) => {
+    const list = zooms.get(dim.id) ?? []
+    const others = list.filter(z => ancestorAt(dim, z, depth) !== member)
+    if (others.length === 0) return zoomsAbove(dim, depth, entry_depth)
+    return new Map(zooms).set(dim.id, others)
   }
 
   const dimensions: Type_FigureNavDimension[] = cut.dims.map(dim => {
     const entry_depth = dimensionRootsOf(dim).length === 1 ? 1 : 0
-    const z = zooms.get(dim.id)
+    const zs = zooms.get(dim.id) ?? []
     const divides = cut.dividing.includes(dim)
     const depths = drawn_depths.get(dim.id)
     const levels = (dim.levels as string[]).map((raw, depth) => ({ raw, depth })).filter(l => l.depth >= entry_depth)
+    // 04/10/2026 — « + » AJOUTE UN MEMBRE AU ZOOM (os#1511), au niveau des membres zoomés : Europe
+    // zoomée, « + Amériques » → « Europe ✕ Amériques ✕ ». Une dimension qui ne découpe pas et n'est
+    // pas zoomée l'offre à son premier niveau : elle se fixe d'ici. Le clic sur une part ne pouvait pas
+    // le faire : zoomer sur Europe cache Amériques, et une dimension fixée ne se dessine pas.
+    const add_depth = zs.length > 0 ? dim.depthOf(zs[zs.length - 1]) : divides ? -1 : entry_depth
+    const addAt = (depth: number) => {
+      if (depth !== add_depth) return undefined
+      const options = (dim.membersAtLevel(depth) as Class_DataTag[])
+        .filter(m => !zs.includes(m))
+        .map(m => ({ id: m.id, label: levelShortName(displayedNameOf(m)) }))
+      if (options.length === 0) return undefined
+      return {
+        options,
+        choose: (id: string) => {
+          const m = dim.tags_dict[id] as Class_DataTag | undefined
+          if (m !== undefined) write(new Map(zooms).set(dim.id, [...zs, m]))
+        }
+      }
+    }
     return {
       id: dim.id,
       name: dim.name,
       levels: levels.map(({ raw, depth }) => {
-        const zoomed = z !== undefined ? ancestorAt(dim, z, depth) : undefined
+        // 04/10/2026 — les membres zoomés à ce niveau (ou leurs ancêtres), chacun avec son ✕.
+        const at_level: Class_DataTag[] = []
+        zs.forEach(z => {
+          const m = ancestorAt(dim, z, depth)
+          if (m !== undefined && !at_level.includes(m)) at_level.push(m)
+        })
         const active = divides && (depths?.has(depth) ?? false)
         return {
           label: levelShortName(raw),
           active,
-          zoom: zoomed ? levelShortName(displayedNameOf(zoomed)) : undefined,
-          choose: () => write(zoomsAbove(dim, depth, entry_depth), { dim, depth }),
-          clear: zoomed ? () => write(zoomsAbove(dim, depth, entry_depth)) : undefined
+          zooms: at_level.length === 0 ? undefined : at_level.map(m => ({
+            label: levelShortName(displayedNameOf(m)),
+            // Un seul : le ✕ d'avant (le zoom remonte au-dessus de ce niveau). Plusieurs : ce membre
+            // sort (le membre zoomé lui-même, ou tous ceux qu'il porte s'il en est l'ancêtre).
+            clear: () => write(at_level.length === 1
+              ? zoomsAbove(dim, depth, entry_depth)
+              : zs.includes(m) ? withoutZoomMember(dim, m, depth, entry_depth) : zoomsAbove(dim, depth, entry_depth, m))
+          })),
+          add: addAt(depth),
+          choose: () => write(zoomsAbove(dim, depth, entry_depth), { dim, depth })
         }
       })
     }
@@ -1008,7 +1070,8 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
       zoom: t('sunburst.nav.zoom') as string,
       dimension: (name: string) => t('sunburst.nav.dimension', { name }) as string,
       cut_by: (level: string) => t('sunburst.nav.cut_by', { level }) as string,
-      clear_zoom: t('sunburst.nav.clear_zoom') as string
+      clear_zoom: t('sunburst.nav.clear_zoom') as string,
+      add_zoom: t('sunburst.nav.add_zoom') as string
     }
   })
 }
@@ -1029,12 +1092,14 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
   if (cut === null || cut.dividing.length !== 1) return undefined
   const dim = cut.dividing[0]
   const app_data = ctx.app_data
-  const zoom = resolveDataFocus(cut, reading.data_focus)?.coord.get(dim.id)
+  // 04/10/2026 — un zoom à plusieurs membres : sous l'un d'eux.
+  const zoom = resolveDataFocus(cut, reading.data_focus)?.members.get(dim.id)
   const isUnder = (m: Class_DataTag) => {
+    if (zoom === undefined) return true
     for (let p: Class_DataTag | undefined = m; p !== undefined; p = p.parent as Class_DataTag | undefined) {
-      if (p === zoom) return true
+      if (zoom.includes(p)) return true
     }
-    return zoom === undefined
+    return false
   }
   /** Les membres choisis (la frontière dessinée, à plat) : le diagramme lié, la coupe détachée. */
   const chosenNow = (): string[] => cut.linked
@@ -1088,7 +1153,7 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
   // diagramme laisse de côté sous un ouvert (liée) — `cut.hidden` dit les deux.
   const hidden = [...dimensionHiddenMembers(dim, cut.hidden)]
     .map(id => dim.tags_dict[id] as Class_DataTag | undefined)
-    .filter((m): m is Class_DataTag => m !== undefined && isUnder(m) && m !== zoom)
+    .filter((m): m is Class_DataTag => m !== undefined && isUnder(m) && !(zoom?.includes(m) ?? false))
     .map(m => ({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m) }))
   // 04/10/2026 — LA LÉGENDE NE BOUGE PLUS QUAND ON DÉCOCHE (Julien : « tout doit rester à sa place,
   // coché ou pas coché »). Ses lignes, leur ordre et le repli en « Autres » se calculent sur la coupe
