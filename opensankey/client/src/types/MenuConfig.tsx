@@ -230,6 +230,12 @@ export type Type_TopbarFigureMenus = {
    * deux : pas d'ordre à régler.
    */
   nest_order?: string[]
+  /**
+   * 04/10/2026 — LA COURONNE PORTE SON TABLEAU DE NAVIGATION (dimensions de données) : il règle tout
+   * (colonne, zooms à un ou plusieurs membres). Détachée, la barre des dimensions se masque ; liée,
+   * ses sélecteurs restent, ils pilotent aussi le diagramme.
+   */
+  navigation_table?: boolean
   // 04/10/2026 — le ⇄ et les interrupteurs d'activation ont quitté la barre : le tableau de
   // navigation de la couronne les remplace (même modèle, `inactive_dimensions` et ordre d'emboîtement).
   /**
@@ -238,7 +244,8 @@ export type Type_TopbarFigureMenus = {
    * posé sur une dimension. Absent : la figure n'est pas zoomée.
    */
   zoom?: {
-    members: { [dim_id: string]: { member_id: string, label: string } }
+    /** 04/10/2026 — `member_ids` : tous les membres d'un zoom à plusieurs membres (`member_id`, le dernier). */
+    members: { [dim_id: string]: { member_id: string, member_ids?: string[], label: string } }
     centre_dimension_id: string
     up: () => void
     exitOn: (dim_id: string) => void

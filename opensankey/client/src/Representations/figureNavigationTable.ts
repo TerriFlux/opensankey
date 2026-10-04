@@ -23,12 +23,15 @@ export interface Type_FigureNavLevel {
   label: string
   /** La couronne découpe par cette colonne (en-tête surligné). */
   active: boolean
-  /** Le membre zoomé à ce niveau, s'il y en a un. */
-  zoom?: string
+  /**
+   * Les membres zoomés à ce niveau, s'il y en a (04/10/2026 : plusieurs, « Europe ✕ Amériques ✕ »),
+   * chacun avec son ✕ : il sort du zoom ; le dernier annule ce zoom et ceux en dessous.
+   */
+  zooms?: { label: string, clear?: () => void }[]
+  /** 04/10/2026 — « + » : ajouter un membre de ce niveau au zoom (les membres proposés). */
+  add?: { options: { id: string, label: string }[], choose: (id: string) => void }
   /** Découper par cette colonne ; absent, l'en-tête est inerte. */
   choose?: () => void
-  /** Annuler ce zoom et ceux en dessous. */
-  clear?: () => void
 }
 
 export interface Type_FigureNavDimension {
@@ -45,6 +48,7 @@ export interface Type_FigureNavTable {
     dimension: (name: string) => string
     cut_by: (level: string) => string
     clear_zoom: string
+    add_zoom: string
   }
   /** La clé sous laquelle le repli se souvient (fenêtre + vignette). */
   memory_key: string
@@ -116,7 +120,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     line.style.textOverflow = 'ellipsis'
     line.style.minWidth = '0'
     line.textContent = model.dimensions.map(d => {
-      const zooms = d.levels.filter(l => l.zoom !== undefined).map(l => l.zoom)
+      const zooms = d.levels.filter(l => l.zooms !== undefined).map(l => (l.zooms ?? []).map(z => z.label).join(', '))
       const active = d.levels.find(l => l.active)
       return [d.name, ...zooms, ...(active ? [`[${active.label}]`] : [])].join(' › ')
     }).join('  ·  ')
@@ -180,20 +184,57 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
         keepClick(head_btn, () => { /* colonne déjà active */ })
       }
       th.appendChild(head_btn)
-      if (level.zoom !== undefined) {
+      if (level.zooms !== undefined) {
         td.className = 'figure_navigation_zoomed'
-        const label = document.createElement('span')
-        label.textContent = level.zoom
-        label.style.fontWeight = '600'
-        td.appendChild(label)
-        if (level.clear) {
-          const x = plainButton(' ✕', model.labels.clear_zoom)
-          x.className = 'figure_navigation_clear'
-          x.style.color = '#c53030'
-          x.style.marginLeft = '0.2rem'
-          keepClick(x, level.clear)
-          td.appendChild(x)
-        }
+        level.zooms.forEach((z, j) => {
+          const label = document.createElement('span')
+          label.className = 'figure_navigation_member'
+          label.textContent = z.label
+          label.style.fontWeight = '600'
+          if (j > 0) label.style.marginLeft = '0.5rem'
+          td.appendChild(label)
+          if (z.clear) {
+            const x = plainButton(' ✕', model.labels.clear_zoom)
+            x.className = 'figure_navigation_clear'
+            x.style.color = '#c53030'
+            x.style.marginLeft = '0.2rem'
+            keepClick(x, z.clear)
+            td.appendChild(x)
+          }
+        })
+      }
+      // 04/10/2026 — « + » : une liste des membres du niveau, qui s'ajoute au zoom (os#1511).
+      if (level.add !== undefined) {
+        const add = level.add
+        const select = document.createElement('select')
+        select.className = 'figure_navigation_add'
+        select.title = model.labels.add_zoom
+        select.style.font = 'inherit'
+        select.style.fontSize = '10px'
+        select.style.marginLeft = level.zooms !== undefined ? '0.4rem' : '0'
+        select.style.maxWidth = '7rem'
+        select.style.color = ACCENT
+        select.style.border = '1px solid #cbd5e0'
+        select.style.borderRadius = '3px'
+        select.style.background = 'white'
+        select.style.cursor = 'pointer'
+        const head_opt = document.createElement('option')
+        head_opt.value = ''
+        head_opt.textContent = '+'
+        select.appendChild(head_opt)
+        add.options.forEach(o => {
+          const opt = document.createElement('option')
+          opt.value = o.id
+          opt.textContent = o.label
+          select.appendChild(opt)
+        })
+        select.addEventListener('pointerdown', e => e.stopPropagation())
+        select.addEventListener('click', e => e.stopPropagation())
+        select.addEventListener('change', e => {
+          e.stopPropagation()
+          if (select.value !== '') add.choose(select.value)
+        })
+        td.appendChild(select)
       }
     }
   })
