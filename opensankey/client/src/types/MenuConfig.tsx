@@ -61,6 +61,10 @@ import {
   FIGURE_DIAGRAM_PANE_KEY, transposableBagChanges,
   type Type_FigureAttributesConfig, type Type_OptionBag
 } from '../Representations/Figure'
+import {
+  SANKEY_LAYOUT_SETTING_IDS, canShare, changedOptionKeys, figureChangesBySetting, figureFormatSettingsOf,
+  figureSettingOfKey, isFigureNature, leaveGroup, mergeInto, partnersOf, readSyncMap
+} from '../Representations/paneSync'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
 // (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
@@ -406,10 +410,37 @@ export type Type_MainZoneOccupant = {
    * s'écrit que si elle est posée, et un document sans vue enregistrée garde son fichier d'avant.
    */
   saved_view?: string
+  /**
+   * sa#568 — LES RÉGLAGES QUE CE VOLET PARTAGE, et avec qui : pour chaque réglage (`layout:posNode`,
+   * `format:legend`…), l'identifiant du GROUPE de volets qui le partagent (cf.
+   * `Representations/paneSync`). Un réglage absent est propre au volet.
+   *
+   * Absent d'un fichier d'avant, donc rien de partagé à sa relecture : il s'ouvre comme il était.
+   * Un volet CRÉÉ par l'auteur, lui, naît dans les groupes du volet dont il part (tout partagé).
+   * La clé ne s'écrit que si elle est posée.
+   */
+  sync?: { [setting: string]: string }
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
   // au lieu d'en recevoir une copie au moment de sa création.
+}
+/** sa#568 — l'état de la grande zone qu'un geste sur les volets change (cf. `undoableMainZone`). */
+export type Type_MainZoneSnapshot = {
+  occupants: Type_MainZoneOccupant[]
+  detached: string[]
+  maximized: string | null
+  front: string | null
+  active: string | null
+  split: number
+  bottom: number
+  /**
+   * sa#589 — LA MOSAÏQUE : l'arbre des découpes et leurs proportions. Sans elle, annuler une coupe
+   * ou un redimensionnement ne rendrait rien — c'est elle que ces gestes écrivent, les étiquettes
+   * `place` des volets n'en étant que le reflet.
+   */
+  grid: Type_MainZoneGridNode | null
+  figures: { [id: string]: { [key: string]: Class_Figure } }
 }
 export const isDiagramSubject = (s: Type_MainZoneSubject): boolean => s.kind === 'diagram'
 /**
@@ -1693,9 +1724,12 @@ export class Class_MenuConfig {
       this._host._main_zone_window_seq += 1
       id = `w_${this._host._main_zone_window_seq}`
     } while (this.isMainZoneOccupant(id))
+    const from = this._host._main_zone_active_id
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
     if (place === 'floating') this._ensureFloatingGeometry(id, geometry)
     this._normalizeMainZoneOccupants()
+    // sa#568 — un volet CRÉÉ partage tout avec ceux de son type (arbitrage Alexandre, 02/10).
+    this.linkNewMainZonePane(id, from ?? undefined)
     this._host._main_zone_active_id = id
     // os#1394 — la fenêtre qu'on vient d'ouvrir devient l'active, sur sa PREMIÈRE vignette :
     // la clé de la vignette active d'une autre fenêtre n'a aucun sens ici.
@@ -1906,6 +1940,9 @@ export class Class_MenuConfig {
     if (e.place !== 'main') o.place = e.place
     o.size = e.size
     if (e.geometry) o.geometry = e.geometry
+    // sa#568 — la vue rend ses réglages partagés, et ôte ceux que portait une fenêtre réutilisée.
+    if (e.sync) o.sync = { ...e.sync }
+    else delete o.sync
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
     // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
@@ -2127,6 +2164,10 @@ export class Class_MenuConfig {
     // pour un sunburst ; la figure repart donc sur le style d'usine de sa nouvelle nature.
     if (existing) fig.loadOwn(existing.own)
     by_key[pane_key] = fig
+    // sa#568 — UNE VIGNETTE NEUVE NAÎT SYNCHRONISÉE : ce que son volet partage, elle le prend d'un
+    // volet du même groupe. Sans ça, une couronne qui suit la sélection naîtrait aux valeurs d'usine
+    // à chaque nouveau nœud choisi, alors que l'auteur l'a reliée à une couronne réglée.
+    if (!existing) this._initFigureFromPartners(o, fig)
     return fig
   }
   /** Un réglage de CETTE nature a-t-il un sens sur la figure voisine ? (cf. `isTransposableOption`) */
@@ -2416,19 +2457,404 @@ export class Class_MenuConfig {
    * découvrait la propagation qu'en ouvrant la suivante. Régler toutes les figures d'une nature
    * se demande désormais, en portée « style » (`setRepresentationStyleOptions`).
    */
-  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON): void {
+  public setMainZonePaneOptions(id: string, pane_key: string, options: Type_JSON, record = true): void {
     if (!this.isMainZoneOccupant(id)) return
-    this.figureOf(id, pane_key).assign(options as Type_OptionBag)
-    this._notifyMainZone()
+    this._writeFigure(id, pane_key, options as Type_OptionBag, record)
   }
   /**
    * Réglages d'une fenêtre à sujet DIAGRAMME, qui n'a qu'une figure (clé `''`). Même contrat
    * que ci-dessus : sac complet, et rien d'autre que cette figure n'est touché.
    */
-  public setMainZoneWindowOptions(id: string, options: Type_JSON): void {
+  public setMainZoneWindowOptions(id: string, options: Type_JSON, record = true): void {
     if (!this.isMainZoneOccupant(id)) return
-    this.figureOf(id, FIGURE_DIAGRAM_PANE_KEY).assign(options as Type_OptionBag)
+    this._writeFigure(id, FIGURE_DIAGRAM_PANE_KEY, options as Type_OptionBag, record)
+  }
+
+  // --- sa#568 : les réglages de figure s'ANNULENT -----------------------------------------------
+  //
+  // Alexandre, 03/10 : « toute action effectuée par l'utilisateur doit être annulable, une par
+  // une ». Les réglages de figure n'entraient pas dans l'historique (`figureGesturesHost` le
+  // disait). Toutes les surfaces qui en écrivent — inspecteur, carte « Coordonnées », barre du haut,
+  // clic dans la couronne, glisser d'étiquette — passent par les deux setters ci-dessus : c'est
+  // donc ici que le geste s'inscrit, une fois pour toutes.
+  //
+  // Trois règles :
+  //  - une entrée = UN geste : une écriture qui suit la précédente sur les mêmes clés de la même
+  //    figure, sans rien entre les deux et dans la foulée (un curseur qu'on fait glisser), la
+  //    prolonge au lieu d'en empiler une (cf. `Class_SankeyPanes.undo_recorder`) ; un geste qui
+  //    écrit plusieurs figures (la sélection, « toutes ») n'en fait qu'une (`undoableGroup`) ;
+  //  - seules les FIGURES (une nature qui déclare au moins un réglage de style) s'annulent : les
+  //    onglets du JSON ou le mode de la documentation sont des états d'affichage, pas des actions
+  //    sur le document ;
+  //  - défaire, c'est réécrire le sac d'avant PAR LE MÊME CHEMIN : les volets synchronisés le
+  //    reçoivent comme ils avaient reçu le geste.
+
+  /** Où vont les gestes annulables : posé par le document principal (cf. `Class_SankeyPanes`). */
+  public undo_recorder: ((undo: () => void, redo: () => void, merge_key: string) => void) | null = null
+  protected _undo_group: { undo: () => void, redo: () => void, key: string }[] | null = null
+
+  /** Inscrit un geste annulable (dans le groupe en cours, s'il y en a un). */
+  public recordUndoable(undo: () => void, redo: () => void, merge_key: string): void {
+    if (this._undo_group) { this._undo_group.push({ undo, redo, key: merge_key }); return }
+    this.undo_recorder?.(undo, redo, merge_key)
+  }
+
+  /**
+   * UN GESTE, UNE ENTRÉE : tout ce que `work` inscrit à l'historique n'en fait qu'une, défaite à
+   * rebours et rétablie dans l'ordre. Un groupe dans un groupe se fond dans le premier.
+   */
+  public undoableGroup(work: () => void): void {
+    if (this._undo_group !== null) { work(); return }
+    const group: { undo: () => void, redo: () => void, key: string }[] = []
+    this._undo_group = group
+    try { work() } finally { this._undo_group = null }
+    if (group.length === 0) return
+    if (group.length === 1) { this.undo_recorder?.(group[0].undo, group[0].redo, group[0].key); return }
+    this.undo_recorder?.(
+      () => group.slice().reverse().forEach(g => g.undo()),
+      () => group.forEach(g => g.redo()),
+      group.map(g => g.key).join('|')
+    )
+  }
+
+  // --- sa#568 : les gestes sur les VOLETS s'annulent ---------------------------------------------
+  //
+  // Ouvrir, fermer, déplacer, faire flotter, agrandir, détacher un volet, en changer la nature ou le
+  // sujet, déplacer une séparation : autant d'actions de l'utilisateur, qui s'annulent une par une.
+  //
+  // L'INSCRIPTION SE FAIT AUTOUR DU GESTE, dans l'interface (`undoableMainZone`), et non dans les
+  // méthodes elles-mêmes : le programme les appelle aussi — ouverture d'un fichier, choix d'une vue,
+  // leçon, tableau de bord —, et « annuler » ne doit pas défaire ce que l'utilisateur n'a pas fait.
+  //
+  // Défaire, c'est rendre à la grande zone l'état d'avant le geste : ses volets (place, taille,
+  // sujet, liens de synchronisation…), ce qui est plein écran, détaché, actif, les séparations, et
+  // les FIGURES des volets — les mêmes objets, si bien qu'un volet fermé puis rouvert par
+  // « annuler » retrouve ses réglages. La mise en page d'un volet Sankey fermé est gardée un temps
+  // par `Class_SankeyPanes` (cf. `bury`).
+
+  protected _main_zone_gesture_seq = 0
+
+  /** L'état de la grande zone qu'un geste sur les volets peut changer. */
+  protected _mainZoneSnapshot(): Type_MainZoneSnapshot {
+    const host = this._host
+    const figures: { [id: string]: { [key: string]: Class_Figure } } = {}
+    Object.entries(this._figures).forEach(([id, by_key]) => { figures[id] = { ...by_key } })
+    return {
+      occupants: JSON.parse(JSON.stringify(host._main_zone_occupants)) as Type_MainZoneOccupant[],
+      detached: [...host._main_zone_detached],
+      maximized: host._main_zone_maximized_id,
+      front: host._main_zone_front_id,
+      active: host._main_zone_active_id,
+      split: host._main_zone_split_ratio,
+      bottom: host._main_zone_bottom_px,
+      grid: gridClone(host._main_zone_grid),
+      figures
+    }
+  }
+
+  /** Deux états de la grande zone identiques : même disposition, mêmes figures. */
+  protected _sameMainZoneSnapshot(a: Type_MainZoneSnapshot, b: Type_MainZoneSnapshot): boolean {
+    const plain = (s: Type_MainZoneSnapshot) => JSON.stringify({ ...s, active: null, front: null, figures: null })
+    if (plain(a) !== plain(b)) return false
+    const ids = new Set([...Object.keys(a.figures), ...Object.keys(b.figures)])
+    for (const id of ids) {
+      const fa = a.figures[id] ?? {}
+      const fb = b.figures[id] ?? {}
+      const keys = new Set([...Object.keys(fa), ...Object.keys(fb)])
+      for (const key of keys) if (fa[key] !== fb[key]) return false
+    }
+    return true
+  }
+
+  /** Rend à la grande zone un état d'avant (ou d'après) un geste. */
+  protected _restoreMainZoneSnapshot(s: Type_MainZoneSnapshot): void {
+    const host = this._host
+    host._main_zone_occupants = JSON.parse(JSON.stringify(s.occupants)) as Type_MainZoneOccupant[]
+    host._main_zone_detached = new Set(s.detached)
+    host._main_zone_maximized_id = s.maximized
+    host._main_zone_front_id = s.front
+    host._main_zone_active_id = s.active
+    host._main_zone_split_ratio = s.split
+    host._main_zone_bottom_px = s.bottom
+    // sa#589 — la mosaïque d'abord, ses étiquettes avec elle : la normalisation qui suit lirait une
+    // étiquette d'une autre mosaïque comme une demande de déplacement.
+    host._main_zone_grid = gridClone(s.grid)
+    this._relabelMainZoneGrid()
+    host._main_zone_active_pane_key = null
+    host._main_zone_selected_pane_keys = []
+    const figures: { [id: string]: { [key: string]: Class_Figure } } = {}
+    Object.entries(s.figures).forEach(([id, by_key]) => { figures[id] = { ...by_key } })
+    this._figures = figures
+    this._normalizeMainZoneOccupants()
     this._notifyMainZone()
+  }
+
+  /**
+   * UN GESTE SUR LES VOLETS, ANNULABLE : `work` est le geste ; s'il change la grande zone, il entre
+   * à l'historique comme UNE action. À appeler par l'interface, autour du geste de l'utilisateur.
+   */
+  public undoableMainZone(work: () => void): void {
+    const end = this.beginUndoableMainZone()
+    try { work() } finally { end() }
+  }
+
+  /**
+   * Le même, pour un geste qui DURE (déplacer une séparation) : la photo d'avant est prise au
+   * début, la fonction rendue l'inscrit à la fin — une seule entrée pour tout le geste.
+   */
+  public beginUndoableMainZone(): () => void {
+    if (this.undo_recorder === null) return () => undefined
+    const before = this._mainZoneSnapshot()
+    return () => {
+      const after = this._mainZoneSnapshot()
+      if (this._sameMainZoneSnapshot(before, after)) return
+      this._main_zone_gesture_seq += 1
+      this.recordUndoable(
+        () => this._restoreMainZoneSnapshot(before),
+        () => this._restoreMainZoneSnapshot(after),
+        'main_zone:' + this._main_zone_gesture_seq
+      )
+    }
+  }
+
+  /** Écrit une figure (synchronisation comprise) et inscrit le geste s'il change quelque chose. */
+  protected _writeFigure(id: string, pane_key: string, options: Type_OptionBag, record: boolean): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    const undoable = record && this.undo_recorder !== null && !!o && isFigureNature(this.figureNature(o.representation))
+    const before = undoable ? this.figureOf(id, pane_key).attributes : null
+    this._assignFigureAndSync(id, pane_key, options)
+    if (before) {
+      const after = this.figureOf(id, pane_key).attributes
+      const keys = changedOptionKeys(before, after)
+      if (keys.length > 0) {
+        this.recordUndoable(
+          () => { if (this.isMainZoneOccupant(id)) this._writeFigure(id, pane_key, before, false) },
+          () => { if (this.isMainZoneOccupant(id)) this._writeFigure(id, pane_key, after, false) },
+          `figure:${id}:${pane_key}:${keys.join(',')}`
+        )
+      }
+    }
+    this._notifyMainZone()
+  }
+
+  // --- sa#568 : les réglages PARTAGÉS entre volets ----------------------------------------------
+  //
+  // Les GROUPES vivent sur les occupants (`Type_MainZoneOccupant.sync`) et leurs règles dans
+  // `Representations/paneSync`. Cette classe porte ce qui touche aux FIGURES (elle les détient) ;
+  // la mise en page des volets Sankey se partage dans `Class_SankeyPanes`, qui détient leurs rendus.
+
+  /**
+   * ÉCRIT UNE FIGURE, PUIS PORTE AUX VOLETS DU MÊME GROUPE ce qui vient de changer, réglage par
+   * réglage (la famille de chaque clé : Graphe, Forme, Libellé, Valeur, Titre, Légende).
+   *
+   * C'est ici, et non dans une surface, parce que toutes les surfaces qui règlent une figure —
+   * l'inspecteur, la carte « Coordonnées », la barre du haut, un clic dans la couronne — finissent
+   * par l'un des deux setters ci-dessus. Les autres volets reçoivent la clé par `Class_Figure.set`,
+   * qui n'appelle aucun setter : la propagation ne rebondit pas d'un volet à l'autre.
+   *
+   * Dérogation assumée à l'arbitrage du 16/09 (« n'écrit que cette figure ») : c'est l'auteur qui la
+   * demande, en partageant le réglage.
+   */
+  protected _assignFigureAndSync(id: string, pane_key: string, options: Type_OptionBag): void {
+    const fig = this.figureOf(id, pane_key)
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o?.sync) { fig.assign(options); return }
+    const before = fig.attributes
+    fig.assign(options)
+    const changes = figureChangesBySetting(fig.nature, before, fig.attributes)
+    Object.entries(changes).forEach(([setting, bag]) => {
+      partnersOf(this._host._main_zone_occupants, o, setting).forEach(p => {
+        this._figuresToShareOf(p).forEach(target => {
+          Object.entries(bag).forEach(([key, value]) => target.set(key, value))
+        })
+      })
+    })
+  }
+
+  /**
+   * LES FIGURES D'UN VOLET RELIÉ qui reçoivent un réglage partagé : celles qu'il a déjà — une
+   * vignette montrée a la sienne, créée en se dessinant —, plus la figure unique d'un volet à sujet
+   * diagramme, créée au besoin. Une vignette pas encore montrée naîtra synchronisée
+   * (`_initFigureFromPartners`).
+   */
+  protected _figuresToShareOf(o: Type_MainZoneOccupant): Class_Figure[] {
+    if (o.subject.kind === 'diagram') this.figureOf(o.id, FIGURE_DIAGRAM_PANE_KEY)
+    const nature = this.figureNature(o.representation)
+    return Object.values(this._figures[o.id] ?? {}).filter(f => f.nature === nature)
+  }
+
+  /** La figure d'un volet qui fait foi pour ce qu'il partage : la seule, ou la première montrée. */
+  protected _referenceFigureOf(o: Type_MainZoneOccupant): Class_Figure | undefined {
+    if (o.subject.kind === 'diagram') return this.figureOf(o.id, FIGURE_DIAGRAM_PANE_KEY)
+    const nature = this.figureNature(o.representation)
+    return Object.values(this._figures[o.id] ?? {}).find(f => f.nature === nature)
+  }
+
+  /** Pose sur `target` les clés du réglage `setting` telles que `source` les dit. */
+  protected _copyFigureSetting(source: Class_Figure, target: Class_Figure, setting: string): void {
+    if (source === target) return
+    const values = source.attributes
+    source.nature.declared_keys.forEach(key => {
+      if (figureSettingOfKey(source.nature, key) === setting) target.set(key, values[key])
+    })
+  }
+
+  /** Une vignette NEUVE d'un volet relié prend ce que son volet partage (cf. `figureOf`). */
+  protected _initFigureFromPartners(o: Type_MainZoneOccupant, fig: Class_Figure): void {
+    if (!o.sync) return
+    Object.keys(o.sync).forEach(setting => {
+      if (!setting.startsWith('format:')) return
+      for (const p of partnersOf(this._host._main_zone_occupants, o, setting)) {
+        const ref = this._referenceFigureOf(p)
+        if (ref && ref.nature === fig.nature) { this._copyFigureSetting(ref, fig, setting); return }
+      }
+    })
+  }
+
+  /**
+   * LES RÉGLAGES QU'UN VOLET PEUT PARTAGER : la mise en page du menu Transformations pour un volet
+   * Sankey, les familles de mise en forme pour une figure. Une nature qui ne déclare aucun réglage
+   * de style (tableur, documentation, JSON) n'a rien à partager.
+   */
+  public mainZoneSyncSettings(id: string): string[] {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return []
+    if (isSankeyPane(o)) return [...SANKEY_LAYOUT_SETTING_IDS]
+    const nature = this.figureNature(o.representation)
+    if (!isFigureNature(nature)) return []
+    return figureFormatSettingsOf(nature)
+  }
+
+  /** Ces deux volets peuvent-ils partager ce réglage ? (offert des deux côtés, même type au besoin) */
+  public canShareMainZoneSync(id: string, other_id: string, setting: string): boolean {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    const other = this._host._main_zone_occupants.find(x => x.id === other_id)
+    if (!o || !other) return false
+    return canShare(o, other, setting) &&
+      this.mainZoneSyncSettings(id).includes(setting) &&
+      this.mainZoneSyncSettings(other_id).includes(setting)
+  }
+
+  /** Les AUTRES volets ouverts qui partagent ce réglage avec `id`. */
+  public mainZoneSyncPartners(id: string, setting: string): string[] {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return []
+    return partnersOf(this._host._main_zone_occupants, o, setting).map(p => p.id)
+  }
+
+  /**
+   * SYNCHRONISE `id` SUR `source_id` POUR CE RÉGLAGE : `id` — et ce qui le suivait déjà — rejoint le
+   * groupe de `source_id`, et PREND CE QUE `source_id` MONTRE (cf. `mergeInto`).
+   *
+   * C'est la case de la colonne `source_id` dans le menu du volet `id` (retour d'Alexandre, 03/10 :
+   * « chaque case cochée détermine ce qui sera appliqué au volet actif, et non l'inverse »). Prendre
+   * la valeur plutôt que la garder : deux volets synchronisés qui montreraient deux choses jusqu'au
+   * prochain geste ne seraient pas synchronisés, et pour une mise en page ce prochain geste recopie
+   * de toute façon le réglage entier (toutes les positions, pas seulement celle du nœud bougé).
+   *
+   * L'alignement d'une FIGURE se fait ici ; celui d'un volet Sankey, dans `Class_SankeyPanes`
+   * (cf. `Class_ApplicationData.linkMainZonePanes`). Rend les volets qui ont pris la valeur de
+   * `source_id` (vide s'ils la partageaient déjà), ou `null` si ce réglage ne peut pas se partager
+   * entre les deux.
+   */
+  public linkMainZoneSync(id: string, source_id: string, setting: string): string[] | null {
+    if (!this.canShareMainZoneSync(id, source_id, setting)) return null
+    const occupants = this._host._main_zone_occupants
+    const o = occupants.find(x => x.id === id)!
+    const source = occupants.find(x => x.id === source_id)!
+    const movers = mergeInto(occupants, o, source, setting)
+    if (movers === null) return null
+    if (setting.startsWith('format:')) {
+      const ref = this._referenceFigureOf(source)
+      if (ref) {
+        movers.forEach(m => this._figuresToShareOf(m).forEach(f => {
+          if (f.nature === ref.nature) this._copyFigureSetting(ref, f, setting)
+        }))
+      }
+    }
+    this._notifyMainZone()
+    return movers.map(m => m.id)
+  }
+
+  /** sa#568 — les groupes de tous les volets, tels qu'ils sont (pour défaire un cochage). */
+  public mainZoneSyncSnapshot(): { [id: string]: { [setting: string]: string } | null } {
+    const out: { [id: string]: { [setting: string]: string } | null } = {}
+    this._host._main_zone_occupants.forEach(o => { out[o.id] = o.sync ? { ...o.sync } : null })
+    return out
+  }
+
+  /** sa#568 — rend aux volets les groupes d'un instantané ; un volet ouvert depuis n'y est pas. */
+  public restoreMainZoneSyncSnapshot(snapshot: { [id: string]: { [setting: string]: string } | null }): void {
+    this._host._main_zone_occupants.forEach(o => {
+      if (!(o.id in snapshot)) return
+      const sync = snapshot[o.id]
+      if (sync && Object.keys(sync).length > 0) o.sync = { ...sync }
+      else delete o.sync
+    })
+    this._notifyMainZone()
+  }
+
+  /** sa#568 — la surcharge propre des figures de ces volets (pour défaire un alignement de mise en forme). */
+  public figureOwnSnapshot(ids: string[]): { [id: string]: { [pane_key: string]: Type_OptionBag } } {
+    const out: { [id: string]: { [pane_key: string]: Type_OptionBag } } = {}
+    ids.forEach(id => {
+      const by_key = this._figures[id]
+      if (!by_key) return
+      out[id] = {}
+      Object.entries(by_key).forEach(([key, fig]) => { out[id][key] = fig.own })
+    })
+    return out
+  }
+
+  /** sa#568 — rend aux figures la surcharge d'un instantané. */
+  public restoreFigureOwnSnapshot(snapshot: { [id: string]: { [pane_key: string]: Type_OptionBag } }): void {
+    Object.entries(snapshot).forEach(([id, by_key]) => {
+      Object.entries(by_key).forEach(([key, own]) => this._figures[id]?.[key]?.loadOwn(own))
+    })
+    this._notifyMainZone()
+  }
+
+  /** Le volet cesse de partager ce réglage : il garde ce qu'il montre, et ne le partage plus. */
+  public unlinkMainZoneSync(id: string, setting: string): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    leaveGroup(this._host._main_zone_occupants, o, setting)
+    this._notifyMainZone()
+  }
+
+  /**
+   * UN VOLET CRÉÉ EST SYNCHRONISÉ SUR TOUT avec ceux de son type (arbitrage Alexandre, 02/10) : « si
+   * un Sankey est déjà ouvert et qu'on crée un nouveau volet Sankey, les deux seront identiques et
+   * synchronisés ; c'est l'utilisateur qui désynchronise ».
+   *
+   * Pour chaque réglage, il se synchronise sur `source` — le volet d'où on l'a créé — s'il peut le
+   * partager avec lui, sinon sur le premier volet qui le peut, et en prend la valeur (cf.
+   * `linkMainZoneSync`) : une couronne neuve prend la mise en forme de celle qu'elle rejoint. Un
+   * volet Sankey neuf n'a rien à prendre : il montre déjà le dessin du volet vivant.
+   *
+   * N'est PAS appelée à la relecture d'un fichier ni au rappel d'une vue : ce qui a été enregistré
+   * sans partage se rouvre sans partage.
+   */
+  public linkNewMainZonePane(id: string, source?: string): void {
+    const occupants = this._host._main_zone_occupants
+    if (!occupants.some(x => x.id === id)) return
+    let linked = false
+    this.mainZoneSyncSettings(id).forEach(setting => {
+      const from = (source !== undefined && this.canShareMainZoneSync(id, source, setting))
+        ? source
+        : occupants.find(x => this.canShareMainZoneSync(id, x.id, setting))?.id
+      if (from === undefined) return
+      const o = occupants.find(x => x.id === id)!
+      const src = occupants.find(x => x.id === from)!
+      const movers = mergeInto(occupants, o, src, setting)
+      if (!movers) return
+      linked = true
+      if (setting.startsWith('format:')) {
+        const ref = this._referenceFigureOf(src)
+        if (ref) this._figuresToShareOf(o).forEach(f => { if (f.nature === ref.nature) this._copyFigureSetting(ref, f, setting) })
+      }
+    })
+    if (linked) this._notifyMainZone()
   }
 
   // --- os#1418 : le STYLE d'une nature de figure ----------------------------------------------
@@ -2445,9 +2871,22 @@ export class Class_MenuConfig {
    * Les figures qui n'ont rien surchargé suivent immédiatement, celles qui ont surchargé gardent
    * leur surcharge : c'est la cascade des éléments, et rien n'est recopié nulle part.
    */
-  public setRepresentationStyleOptions(nature_id: string, options: Type_OptionBag): string[] {
+  public setRepresentationStyleOptions(nature_id: string, options: Type_OptionBag, record = true): string[] {
     const nature = this.figureNature(nature_id)
+    // sa#568 — régler le style d'une nature s'annule comme régler une figure.
+    const before = record && this.undo_recorder !== null ? nature.styleBag(nature.default_style) : null
     const refused = nature.assignStyle(nature.default_style, options)
+    if (before) {
+      const after = nature.styleBag(nature.default_style)
+      const keys = changedOptionKeys(before, after)
+      if (keys.length > 0) {
+        this.recordUndoable(
+          () => { this.setRepresentationStyleOptions(nature_id, before, false) },
+          () => { this.setRepresentationStyleOptions(nature_id, after, false) },
+          `style:${nature_id}:${keys.join(',')}`
+        )
+      }
+    }
     this._notifyMainZone()
     return refused
   }
@@ -3489,6 +3928,9 @@ export class Class_MenuConfig {
       })
       if (Object.keys(figures).length > 0) entry['figures'] = figures
     }
+    // sa#568 — LES RÉGLAGES PARTAGÉS, seulement s'il y en a : un document dont aucun volet ne
+    // partage rien écrit le même fichier qu'avant. Écrits aussi dans la forme d'une vue.
+    if (o.sync && Object.keys(o.sync).length > 0) entry['sync'] = { ...o.sync }
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
     // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
     if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
@@ -3605,6 +4047,8 @@ export class Class_MenuConfig {
     }
     // sa#566 — la vue que ce volet EST, s'il est enregistré (cf. `Type_MainZoneOccupant.saved_view`).
     const saved_view = getStringFromJSON(e, 'saved_view', '')
+    // sa#568 — les réglages partagés (cf. `Type_MainZoneOccupant.sync`) ; absents = aucun.
+    const sync = readSyncMap(e['sync'])
     return {
       id,
       subject,
@@ -3616,6 +4060,7 @@ export class Class_MenuConfig {
       figures,
       options,
       saved_view: saved_view !== '' ? saved_view : undefined,
+      sync,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
@@ -3657,10 +4102,11 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view }) => {
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view, sync }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
         if (saved_view) o.saved_view = saved_view
+        if (sync) o.sync = sync
         return o
       })
       // sa#566 — les notes de volets fermés parlaient de l'état qu'on quitte.

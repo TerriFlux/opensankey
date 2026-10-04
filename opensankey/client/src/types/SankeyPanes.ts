@@ -16,8 +16,9 @@
 // diagramme principal, avec strictement les mêmes options : menu de configuration, outils de
 // dessin, filtres, zoom, clavier, historique. Les volets partagent les DONNÉES du modèle (nœuds,
 // flux, valeurs, étiquettes, hiérarchie) ; leur MISE EN PAGE (positions, apparence des nœuds et
-// des flux, zones de texte, légende, réglages de la zone) est propre à chacun — rien n'est
-// synchronisé par défaut, sa#568 dira réglage par réglage ce qui se partage.
+// des flux, zones de texte, légende, réglages de la zone) est propre à chacun, SAUF ce que les
+// volets partagent (sa#568, cf. « MISE EN PAGE PARTAGÉE » plus bas) : un volet créé partage tout
+// avec celui dont il part, et l'auteur désynchronise réglage par réglage.
 //
 // POURQUOI UN SEUL DESSIN VIVANT, QUI SE DÉPLACE. Tout ce qui fait « les mêmes options » — le menu,
 // la sélection, le clavier, l'historique, les exports — vise la zone de dessin du document. Donner
@@ -58,8 +59,13 @@ import { updateFrom } from '../Algorithms/UpdateFrom'
 import { SankeyPersistence } from '../Persistence/SankeyPersistence'
 import { compressJSONToGzip } from '../Persistence/UniversalJSONCompression'
 import { DRAW_TOPIC, HISTORY_TOPIC } from './EventBus'
+import type { Type_HistoryContext } from './ApplicationHistory'
 import { isSankeyPane, mainZoneSubjectView, type Type_MainZoneOccupant } from './MenuConfig'
 import { default_main_sankey_id, type Type_JSON } from './Utils'
+import {
+  SANKEY_LAYOUT_SETTINGS, hasLayoutChanges, layoutChangesOf, layoutPrintOf, layoutSetting, modesForChanges,
+  type Type_LayoutChanges, type Type_LayoutPrint
+} from '../Representations/paneSync'
 
 /**
  * CE QUI FAIT LA MISE EN PAGE D'UN VOLET, en modes de `updateFrom` : positions, apparence et
@@ -108,6 +114,18 @@ export const sankeyDataKey = (sankey: Class_Sankey): string => {
 }
 
 type Type_Camera = NonNullable<ReturnType<Class_DrawingArea['getCameraTransform']>>
+
+/**
+ * sa#568 — DEUX CAMÉRAS QUI MONTRENT LA MÊME CHOSE (à un demi-pixel près). Poser une caméra n'est
+ * pas gratuit — elle recale les étiquettes de tout le dessin : ≈ 0,5 s sur 300 nœuds, mesuré le
+ * 03/10 —, et deux volets créés l'un de l'autre ont le plus souvent la même : on ne la pose donc
+ * que si elle change quelque chose.
+ */
+export const sameCameraTransform = (
+  a: { k: number, x: number, y: number } | null | undefined,
+  b: { k: number, x: number, y: number } | null | undefined
+): boolean =>
+  !!a && !!b && Math.abs(a.k - b.k) < 1e-9 && Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5
 
 /** Le rendu d'un volet inactif : un document hors écran, ses données et SA mise en page. */
 type Type_PaneRender = {
@@ -160,6 +178,18 @@ export class Class_SankeyPanes {
    * est alors jeté.
    */
   protected _base: { owner: Class_DrawingArea, doc: Class_ApplicationData } | null = null
+  /** sa#568 — l'empreinte du dessin vivant au dernier partage, et de quel volet (cf. `shareLiveLayout`). */
+  protected _print: { pane: string, print: Type_LayoutPrint } | null = null
+  /**
+   * sa#568 — LES VOLETS FERMÉS, gardés un temps : fermer un volet s'annule, et le volet rouvert doit
+   * retrouver SA mise en page (son rendu, sa caméra). Les plus anciens partent au-delà de
+   * `BURIED_MAX` : chaque rendu est un document entier.
+   */
+  protected _buried = new Map<string, { render: Type_PaneRender, camera?: Type_Camera }>()
+  protected static readonly BURIED_MAX = 4
+  /** sa#568 — l'observateur du DOM du dessin vivant, et l'élément observé (cf. `observeLive`). */
+  protected _observer: { disconnect: () => void } | null = null
+  protected _observed: Element | null = null
 
   constructor(protected readonly host: Class_ApplicationData) { }
 
@@ -419,11 +449,21 @@ export class Class_SankeyPanes {
     this._busy = true
     this._activating = true
     try {
+      // sa#568 — ce que le vivant n'a pas encore donné à ses volets synchronisés part AVANT qu'il ne
+      // cède la place (le relevé attend la fin du geste) : sinon le volet activé reprendrait une
+      // mise en page d'avant le dernier geste. Et le relevé se fait même sans signal en attente :
+      // c'est le filet, si un geste a échappé à l'observation (cf. `observeLive`).
+      this.flushPendingShare()
+      this.shareLiveLayout()
       // Un vivant parti dans une fenêtre du système y laissait le dessin : il rentre d'abord, le
       // volet qu'on active le reçoit dans la page.
       const previous = mc.main_zone_live_sankey_id
       if (previous !== null && mc.isMainZoneDetached(previous)) mc.setMainZoneDetached(previous, false)
-      if (coordinate === host.current_view_id || !this.viewExists(coordinate)) {
+      const from = this.paneById(previous)
+      if (from && this.canSwap(from, o)) {
+        // sa#568 — les deux volets montrent le même dessin : rien à recopier ni à redessiner.
+        this.swapLive(from, o)
+      } else if (coordinate === host.current_view_id || !this.viewExists(coordinate)) {
         this.beforeViewChange()
         mc.main_zone_live_sankey_id = id
         const was_bypassing = host.drawing_area.bypass_redraws
@@ -432,13 +472,16 @@ export class Class_SankeyPanes {
         try { changed = this.applyLayoutOf(o) } finally { host.drawing_area.bypass_redraws = was_bypassing }
         this._layout_owner = id
         // Le dessin PASSE d'un volet à l'autre : il se redessine avec la mise en page de celui qui le
-        // reçoit, et l'historique repart — il parlait de l'autre volet. Rien de tout cela quand il se
-        // POSE pour la première fois sans que rien ne change (ouverture d'un document, premier geste
-        // dans la grande zone) : ce serait redessiner en plein geste — un survol a ainsi remplacé
-        // les éléments qu'il désignait — et oublier pour rien l'historique de l'utilisateur.
+        // reçoit. Rien de tout cela quand il se POSE pour la première fois sans que rien ne change
+        // (ouverture d'un document, premier geste dans la grande zone) : ce serait redessiner en
+        // plein geste — un survol a ainsi remplacé les éléments qu'il désignait.
+        //
+        // sa#568 — L'HISTORIQUE NE REPART PLUS (Alexandre, 03/10 : annuler / rétablir valent pour
+        // toutes les actions du fichier, quel que soit le volet). Il « parlait de l'autre volet » :
+        // chaque entrée retient désormais le volet de son geste, qui redevient le vivant avant
+        // qu'on la rejoue (cf. `history_context`).
         if (previous !== null || changed) {
           host.drawing_area.draw()
-          host.resetHistory()
           mc.updateAllMenuComponents()
         }
       } else {
@@ -446,7 +489,13 @@ export class Class_SankeyPanes {
         host.switchViewForPane(coordinate)
       }
       const camera = this._cameras.get(id)
-      if (camera) host.drawing_area.setCamera(camera)
+      if (camera && !sameCameraTransform(camera, host.drawing_area.getCameraTransform())) {
+        host.drawing_area.setCamera(camera)
+      }
+      // sa#568 — le volet activé a posé sa mise en page, synchronisée, sur le dessin : c'est l'état
+      // de référence du prochain geste. Et son DOM est peut-être neuf (une vue lourde en change).
+      this.markShared()
+      this.observeLive()
     } finally {
       this._activating = false
       this._busy = was_busy
@@ -468,11 +517,16 @@ export class Class_SankeyPanes {
     const mc = this.host.menu_configuration
     if (this._busy || !mc || !this.host.is_main || this.host.is_static) return
     this.listen()
+    this.observeLive()
+    // sa#568 — les réglages de figure s'inscrivent à l'historique de ce document (cf. `undo_recorder`).
+    if (mc.undo_recorder === null) mc.undo_recorder = this.undo_recorder
     this._busy = true
     try {
       const panes = mc.main_zone_sankey_panes
       const open = new Set(panes.map(p => p.id))
       this._known.forEach((memo, id) => { if (!open.has(id)) this.onPaneClosed(id, memo) })
+      // sa#568 — un volet qui revient (« annuler » sa fermeture) reprend sa mise en page gardée.
+      open.forEach(id => { if (!this._known.has(id) && this._buried.has(id)) this.resurrect(id) })
       // Une coordonnée implicite (fichier d'avant, volet ouvert sans vue) suit la vue courante. Dès
       // qu'il y a DEUX volets Sankey, elle se fige ici, sans quoi le volet changerait de vue avec
       // le suivant qu'on active. Seul, il n'y a rien à figer : sa vue EST la vue courante, et le
@@ -544,15 +598,29 @@ export class Class_SankeyPanes {
 
   /** Un volet Sankey vient d'être fermé. */
   protected onPaneClosed(id: string, memo: Type_PaneMemo): void {
+    // sa#568 — sa mise en page est gardée un temps (`bury`) : « annuler » peut le rouvrir.
+    const camera = this._cameras.get(id)
     if (this._layout_owner === id) {
       // Sa mise en page n'est gardée que si une vue la garde ; un volet éphémère l'emporte.
       this._layout_owner = null
       const entry = this.host.views_dict[memo.coordinate]
       if (this.isHeavyView(memo.coordinate) || (entry?.own_layout && memo.saved_view === memo.coordinate)) {
         this.storeLiveInView(memo.coordinate)
+      } else if (!this.isHeavyView(memo.coordinate)) {
+        this.bury(id, {
+          doc: this.buildDocument(this.host.dumpDrawingAreaToJSON(this.host.drawing_area)),
+          coordinate: memo.coordinate,
+          data_key: sankeyDataKey(this.host.drawing_area.sankey),
+          mirror: false
+        }, this.host.drawing_area.getCameraTransform() ?? camera)
       }
     }
-    this.disposeRender(id)
+    const render = this._renders.get(id)
+    if (render && !render.mirror) {
+      this._renders.delete(id)
+      this.bumpVersion(id)
+      this.bury(id, render, camera)
+    } else this.disposeRender(id)
     this._cameras.delete(id)
     this._known.delete(id)
     // Une vue éphémère que plus rien ne montre est oubliée (cf. `Type_ViewEntry.ephemeral`).
@@ -560,6 +628,34 @@ export class Class_SankeyPanes {
     if (entry?.ephemeral && memo.coordinate !== this.host.current_view_id && !this.anyPaneShows(memo.coordinate)) {
       this.host.forgetEphemeralViewOf(memo.coordinate)
     }
+  }
+
+  /** Garde le rendu d'un volet fermé (cf. `_buried`). */
+  protected bury(id: string, render: Type_PaneRender, camera?: Type_Camera): void {
+    const previous = this._buried.get(id)
+    if (previous && previous.render.doc !== render.doc) this.disposeDocument(previous.render.doc)
+    this._buried.delete(id)
+    this._buried.set(id, { render, camera })
+    while (this._buried.size > Class_SankeyPanes.BURIED_MAX) {
+      const oldest = this._buried.keys().next().value as string
+      const gone = this._buried.get(oldest)
+      this._buried.delete(oldest)
+      if (gone) this.disposeDocument(gone.render.doc)
+    }
+  }
+
+  /** Un volet fermé revient (« annuler ») : il reprend son rendu et sa caméra. */
+  protected resurrect(id: string): void {
+    const buried = this._buried.get(id)
+    if (!buried) return
+    this._buried.delete(id)
+    const o = this.paneById(id)
+    if (!o || buried.render.doc.disposed || buried.render.coordinate !== this.coordinateOf(o)) {
+      this.disposeDocument(buried.render.doc)
+      return
+    }
+    this.setRender(id, buried.render)
+    if (buried.camera) this._cameras.set(id, buried.camera)
   }
 
   // RENDUS DES VOLETS INACTIFS =====================================================================
@@ -690,6 +786,79 @@ export class Class_SankeyPanes {
     this._unsubscribe_draw = () => { off_draw(); off_history() }
   }
 
+  /**
+   * sa#568 — OBSERVER LE DOM DU DESSIN VIVANT : tout ce qui change à l'écran programme un relevé.
+   *
+   * Recette du 03/10 (Alexandre : « la nouvelle position du nœud ne s'affiche que lorsque les volets
+   * sont actifs, idem pour les couleurs de flux ») : ni l'historique, ni le dessin complet, ni même
+   * `Element.draw` ne voient tous les gestes — un glisser pose sa position directement sur le SVG
+   * (`setPosXY` → `applyPosition`), un réglage d'élément redessine une sous-partie. Le DOM, lui, voit
+   * tout : c'est le seul signal qui ne dépende d'aucun chemin de code. L'observateur ne lit pas ce
+   * qui a changé (l'empreinte s'en charge) : il ne fait que programmer le relevé différé.
+   *
+   * Observé : le conteneur du dessin vivant, qui survit aux dessins complets. Les rendus des autres
+   * volets sont ailleurs dans la page : leurs propres redessins ne relancent rien.
+   */
+  public observeLive(): void {
+    const da = this.host.drawing_area
+    const doc = da.container_owner_document ?? (typeof document !== 'undefined' ? document : null)
+    const el = doc ? doc.querySelector(da.container_selector) : null
+    if (el === this._observed) return
+    this._observer?.disconnect()
+    this._observer = null
+    this._observed = el
+    const Observer = doc?.defaultView?.MutationObserver
+    if (!el || !Observer) return
+    const observer = new Observer(() => this.scheduleRefresh())
+    observer.observe(el, { subtree: true, childList: true, attributes: true, characterData: true })
+    this._observer = observer
+  }
+
+  /**
+   * sa#568 — LE CONTEXTE D'UN GESTE, pour l'historique (cf. `Type_HistoryContext`) : le volet Sankey
+   * vivant au moment du geste. L'annuler ou le rétablir le fait d'abord redevenir le vivant — sans
+   * quoi un geste fait dans le volet A, défait pendant que B est le vivant, toucherait la mise en
+   * page de B. Un volet fermé depuis ne se rouvre pas : le geste se rejoue là où l'on est.
+   */
+  /** sa#568 — la dernière entrée inscrite par `undo_recorder`, pour fondre un geste continu. */
+  protected _last_record: { key: string, stamp: number, at: number } | null = null
+
+  /** Délai sous lequel deux écritures des mêmes réglages font un seul geste (un curseur qui glisse). */
+  protected static readonly MERGE_MS = 600
+
+  /**
+   * sa#568 — L'HISTORIQUE DES RÉGLAGES DE FIGURE (cf. `Class_MenuConfig.recordUndoable`) : chaque
+   * geste y entre, mais un geste CONTINU n'y entre qu'une fois — une écriture qui suit la précédente
+   * sur la même clé (même figure, mêmes réglages), sans aucune entrée entre les deux et dans la
+   * foulée, en remplace seulement le rétablissement. « Annuler » ramène donc au début du geste, et
+   * « rétablir » à sa fin. Hors contexte : l'entrée vise sa figure elle-même.
+   */
+  public readonly undo_recorder = (undo: () => void, redo: () => void, merge_key: string): void => {
+    const history = this.host.history
+    const now = Date.now()
+    const last = this._last_record
+    if (last && last.key === merge_key && last.stamp === history.stamp &&
+      now - last.at < Class_SankeyPanes.MERGE_MS) {
+      history.saveRedo(redo, false)
+      last.at = now
+      return
+    }
+    history.saveUndo(undo, false)
+    history.saveRedo(redo, false)
+    this._last_record = { key: merge_key, stamp: history.stamp, at: now }
+  }
+
+  public readonly history_context: Type_HistoryContext = {
+    capture: () => this.host.menu_configuration?.main_zone_live_sankey_id ?? null,
+    restore: (context: unknown) => {
+      const mc = this.host.menu_configuration
+      if (!mc || typeof context !== 'string' || mc.main_zone_live_sankey_id === context) return
+      if (!this.paneById(context)) return
+      mc.main_zone_active_id = context
+      this.sync()
+    }
+  }
+
   protected scheduleRefresh(): void {
     if (this._renders.size === 0 || typeof setTimeout === 'undefined') return
     if (this._refresh_timer !== null) clearTimeout(this._refresh_timer)
@@ -727,8 +896,263 @@ export class Class_SankeyPanes {
       if (next) { this.setRender(pane_id, next); changed = true }
     })
     this._mirror_epoch = epoch
+    // sa#568 — APRÈS les rendus refaits : un rendu rebâti part de sa mise en page d'avant, et
+    // reçoit ensuite ce que le vivant partage avec lui.
+    if (this.shareLiveLayout()) changed = true
     if (changed) mc.notifyMainZone()
     return changed
+  }
+
+  // MISE EN PAGE SYNCHRONISÉE (sa#568) =============================================================
+  //
+  // Deux volets Sankey synchronisés sur un réglage de mise en page (positions des nœuds, attributs
+  // des flux, échelle… — les cases du menu Transformations) montrent la même chose pour ce réglage.
+  // Le seul dessin qu'on édite est le vivant : c'est donc de lui que la mise en page part, vers les
+  // RENDUS des volets synchronisés, après chaque geste. L'inverse va de soi : un volet qu'on active
+  // pose sa mise en page — déjà synchronisée — sur le dessin, et c'est lui qui la donne ensuite.
+  //
+  // CE QUI A ÉTÉ CORRIGÉ À LA RECETTE DU 03/10 (Alexandre : « déplacer un nœud dans un volet ne le
+  // bouge pas dans l'autre, idem pour la couleur d'un flux » ; « c'est super lent ») :
+  //  - LE SIGNAL. La première passe n'écoutait que l'historique et les dessins complets. Or un
+  //    glisser n'inscrit son annulation que si le nœud a bougé en x ET en y (un déplacement
+  //    aimanté sur une ligne n'en inscrit pas), pose sa position directement sur le SVG, et un
+  //    réglage d'élément ne redessine qu'une partie de l'élément. Le signal est désormais le DOM du
+  //    dessin vivant lui-même (`observeLive`), et chaque activation relève ce qui aurait échappé.
+  //  - LA RECOPIE. `updateFrom` réapparie tout le modèle et, sur un rendu déjà dessiné, redessinait
+  //    chaque élément touché — 1,2 s sur 300 nœuds, puis 1,8 s de dessin complet. On compare
+  //    désormais une EMPREINTE du dessin élément par élément (quelques ms), on ne rejoue que les
+  //    modes concernés sans redessiner, puis on ne redessine QUE les éléments changés.
+  //  - LES VUES LOURDES : leurs volets montrent un MIROIR du vivant, qui ne se refaisait qu'aux
+  //    dessins complets. Un miroir est un volet synchronisé sur tout : il suit chaque geste.
+
+  /** Au-delà, redessiner élément par élément coûte plus qu'un dessin complet. */
+  protected static readonly INCREMENTAL_MAX = 60
+
+  /** Les volets à qui le vivant donne sa mise en page, et quels modes : synchronisés, et miroirs. */
+  protected layoutTargetsOf(live: Type_MainZoneOccupant): Map<string, string[]> {
+    const mc = this.host.menu_configuration
+    const out = new Map<string, string[]>()
+    SANKEY_LAYOUT_SETTINGS.forEach(({ mode }) => {
+      mc.mainZoneSyncPartners(live.id, layoutSetting(mode)).forEach(id => {
+        out.set(id, [...(out.get(id) ?? []), mode])
+      })
+    })
+    // Le miroir d'une vue lourde EST le dessin vivant (#581) : il en suit toute la mise en page.
+    this._renders.forEach((render, id) => {
+      if (render.mirror && id !== live.id) out.set(id, SANKEY_LAYOUT_SETTINGS.map(s => s.mode))
+    })
+    return out
+  }
+
+  /**
+   * PORTE AUX VOLETS SYNCHRONISÉS ce qui a changé dans le dessin vivant depuis la dernière fois.
+   * Rend `true` si un rendu doit être remonté (il a été trop changé pour un redessin élément par
+   * élément) — c'est ce qui oblige la grande zone à se rafraîchir ; un redessin élément par élément
+   * se fait sur place, sans elle.
+   */
+  public shareLiveLayout(): boolean {
+    const mc = this.host.menu_configuration
+    const live = this.paneById(mc?.main_zone_live_sankey_id ?? null)
+    if (!mc || !live) { this._print = null; return false }
+    const targets = this.layoutTargetsOf(live)
+    if (targets.size === 0) { this._print = null; return false }
+    const print = layoutPrintOf(this.host.dumpDrawingAreaToJSON(this.host.drawing_area))
+    const before = this._print
+    this._print = { pane: live.id, print }
+    // Premier relevé, ou un autre volet vient de devenir le vivant : il a posé sa mise en page, déjà
+    // synchronisée, sur le dessin — il n'y a rien à donner.
+    if (!before || before.pane !== live.id) return false
+    const changes = layoutChangesOf(before.print, print)
+    if (!hasLayoutChanges(changes)) return false
+    let remount = false
+    targets.forEach((modes, id) => {
+      const o = this.paneById(id)
+      const todo = modesForChanges(changes, modes)
+      if (!o || todo.length === 0) return
+      if (this.applyToRender(o, this.host.drawing_area, todo, changes) === 'remount') remount = true
+    })
+    return remount
+  }
+
+  /**
+   * L'ÉTAT DE RÉFÉRENCE : le vivant et ses volets synchronisés montrent la même chose, on en prend
+   * l'empreinte — le prochain relevé ne donnera que ce qui aura changé depuis. À prendre AVANT le
+   * geste suivant : à la fin d'une activation et après un cochage. Pris au premier relevé, il
+   * arriverait après le premier geste, qui ne partirait jamais.
+   */
+  public markShared(): void {
+    const mc = this.host.menu_configuration
+    const live = this.paneById(mc?.main_zone_live_sankey_id ?? null)
+    if (!mc || !live || this.layoutTargetsOf(live).size === 0) { this._print = null; return }
+    this._print = { pane: live.id, print: layoutPrintOf(this.host.dumpDrawingAreaToJSON(this.host.drawing_area)) }
+  }
+
+  /** Ce qui reste à donner part MAINTENANT : un volet va devenir le vivant, ou le fichier s'écrire. */
+  public flushPendingShare(): void {
+    if (this._refresh_timer === null) return
+    clearTimeout(this._refresh_timer)
+    this._refresh_timer = null
+    this.refresh()
+  }
+
+  /**
+   * SYNCHRONISE la mise en page du volet `to_id` sur celle de `from_id`, pour ces modes seulement : le
+   * geste « cocher la colonne de `from_id` dans le menu de `to_id` » (cf.
+   * `Class_ApplicationData.linkMainZonePanes`).
+   */
+  public alignLayout(from_id: string, to_id: string, modes: string[]): void {
+    const mc = this.host.menu_configuration
+    const to = this.paneById(to_id)
+    if (!mc || !to || !this.paneById(from_id) || modes.length === 0) return
+    const live_id = mc.main_zone_live_sankey_id
+    const source = from_id === live_id ? this.host.drawing_area : this.renderOf(from_id)?.drawing_area
+    if (!source) return
+    if (to_id === live_id) {
+      const da = this.host.drawing_area
+      const was = da.bypass_redraws
+      da.bypass_redraws = true
+      try { updateFrom(da, source, [...modes, 'keepPositionType']) } finally { da.bypass_redraws = was }
+      // Le vivant a changé : le prochain relevé le donnera à ses autres volets synchronisés.
+      da.draw()
+      return
+    }
+    this.renderOf(to_id)
+    if (this.applyToRender(to, source, modes, null) === 'remount') mc.notifyMainZone()
+  }
+
+  /**
+   * Pose ces modes de `source` sur le RENDU du volet inactif `o`, sans redessin pendant la recopie,
+   * puis redessine ce qui a changé : élément par élément quand on sait lesquels et qu'ils sont peu
+   * nombreux, sinon en remontant le rendu (dessin complet). Garde aussi la vue dont le volet est
+   * le volet enregistré à mise en page propre, puisque c'est elle que son activation relira. Rien
+   * pour un volet sans rendu (il naîtra du dessin vivant) ni pour une vue lourde qui n'est pas un
+   * miroir (elle porte ses propres données).
+   */
+  protected applyToRender(
+    o: Type_MainZoneOccupant, source: Class_DrawingArea, modes: string[], changes: Type_LayoutChanges | null
+  ): 'none' | 'drawn' | 'remount' {
+    const coordinate = this.coordinateOf(o)
+    const render = this._renders.get(o.id)
+    if (!render || render.doc.disposed || (!render.mirror && this.isHeavyView(coordinate))) return 'none'
+    const da = render.doc.drawing_area
+    if (da === source) return 'none'
+    const was = da.bypass_redraws
+    da.bypass_redraws = true
+    try { updateFrom(da, source, [...modes, 'keepPositionType']) } finally { da.bypass_redraws = was }
+    const entry = this.host.views_dict[coordinate]
+    if (!render.mirror && entry?.own_layout && this.isRegisteredOn(o, coordinate)) {
+      entry.json = compressJSONToGzip(this.host.dumpDrawingAreaToJSON(da)) as Uint8Array
+    }
+    // Jamais dessiné (pas encore monté) : il se dessinera en montant, déjà à jour.
+    if (was || !da.d3_selection_zoom_area) return 'none'
+    const count = changes ? changes.nodes.length + changes.links.length + changes.labels.length : Infinity
+    if (changes && !changes.area && count <= Class_SankeyPanes.INCREMENTAL_MAX) {
+      this.redrawChanged(da, changes)
+      return 'drawn'
+    }
+    this.bumpVersion(o.id)
+    return 'remount'
+  }
+
+  /** Redessine, dans un rendu, les éléments changés — et les flux des nœuds changés. */
+  protected redrawChanged(da: Class_DrawingArea, changes: Type_LayoutChanges): void {
+    const sankey = da.sankey
+    changes.nodes.forEach(id => {
+      const node = sankey.nodes_dict[id]
+      if (!node) return
+      node.draw()
+      node.drawLinks()
+    })
+    changes.links.forEach(id => sankey.links_dict[id]?.draw())
+    if (changes.labels.length > 0) {
+      const ids = new Set(changes.labels)
+      sankey.containers_list.forEach(c => { if (ids.has(c.id)) c.draw() })
+    }
+  }
+
+  /**
+   * DEUX VOLETS QUI MONTRENT LE MÊME DESSIN : synchronisés sur toute la mise en page, sur la même
+   * vue ordinaire (ni lourde, ni à mise en page propre), le premier vivant et maître de sa mise en
+   * page, le second avec un rendu prêt. Passer de l'un à l'autre n'a alors rien à recopier ni à
+   * redessiner (cf. `swapLive`).
+   */
+  protected canSwap(from: Type_MainZoneOccupant, to: Type_MainZoneOccupant): boolean {
+    const mc = this.host.menu_configuration
+    const coordinate = this.coordinateOf(to)
+    if (this._layout_owner !== from.id || this.coordinateOf(from) !== coordinate) return false
+    if (coordinate !== this.host.current_view_id || this.isHeavyView(coordinate)) return false
+    if (this.host.views_dict[coordinate]?.own_layout || this.parkedBase()) return false
+    const render = this._renders.get(to.id)
+    if (!render || render.doc.disposed || render.mirror || render.coordinate !== coordinate) return false
+    return SANKEY_LAYOUT_SETTINGS.every(({ mode }) =>
+      mc.mainZoneSyncPartners(from.id, layoutSetting(mode)).includes(to.id))
+  }
+
+  /**
+   * L'ÉCHANGE (sa#568, retour d'Alexandre du 03/10 : « c'est super lent de passer d'un volet à
+   * l'autre ») : le volet activé reçoit le dessin vivant TEL QU'IL EST — seul son cadre bouge, ce
+   * qui ne redessine rien —, et le volet quitté reprend le rendu du volet activé, qui montrait déjà
+   * la même chose — l'affichage le récupère sans le redessiner (cf. `SankeyRenderOccupant`).
+   * Mesuré sur 300 nœuds : deux dessins complets (≈ 3 s) évités à chaque bascule.
+   *
+   * L'historique n'est pas remis à zéro : il parlait de ce même dessin, qui n'a pas changé — on
+   * peut annuler, après avoir changé de volet, le geste fait dans l'autre.
+   */
+  protected swapLive(from: Type_MainZoneOccupant, to: Type_MainZoneOccupant): void {
+    const mc = this.host.menu_configuration
+    const camera = this.host.drawing_area.getCameraTransform()
+    if (camera) this._cameras.set(from.id, camera)
+    const render = this._renders.get(to.id)!
+    this._renders.delete(to.id)
+    this._renders.set(from.id, render)
+    this.bumpVersion(from.id)
+    this.bumpVersion(to.id)
+    mc.main_zone_live_sankey_id = to.id
+    this._layout_owner = to.id
+  }
+
+  /**
+   * sa#568 — LA MISE EN PAGE DE CES VOLETS, telle qu'elle est (pour défaire un cochage) : le dessin
+   * vivant pour le vivant, le rendu pour les autres. Un volet sans rendu n'a rien à retenir : il
+   * renaîtra du dessin vivant.
+   */
+  public layoutSnapshots(ids: string[]): { pane: string, json: Type_JSON }[] {
+    const live_id = this.host.menu_configuration?.main_zone_live_sankey_id ?? null
+    const out: { pane: string, json: Type_JSON }[] = []
+    ids.forEach(id => {
+      if (!this.paneById(id)) return
+      if (id === live_id) { out.push({ pane: id, json: this.host.dumpDrawingAreaToJSON(this.host.drawing_area) }); return }
+      const render = this._renders.get(id)
+      if (render && !render.doc.disposed) out.push({ pane: id, json: this.host.dumpDrawingAreaToJSON(render.doc.drawing_area) })
+    })
+    return out
+  }
+
+  /** sa#568 — rend au volet `id` ces modes de la mise en page `json` (cf. `layoutSnapshots`). */
+  public restoreLayout(id: string, json: Type_JSON, modes: string[]): void {
+    const mc = this.host.menu_configuration
+    const o = this.paneById(id)
+    if (!mc || !o || modes.length === 0) return
+    const source = this.buildDocument(json)
+    try {
+      if (mc.main_zone_live_sankey_id === id) {
+        const da = this.host.drawing_area
+        const was = da.bypass_redraws
+        da.bypass_redraws = true
+        try { updateFrom(da, source.drawing_area, [...modes, 'keepPositionType']) } finally { da.bypass_redraws = was }
+        da.draw()
+      } else if (this.applyToRender(o, source.drawing_area, modes, null) === 'remount') {
+        mc.notifyMainZone()
+      }
+    } finally {
+      this.disposeDocument(source)
+    }
+  }
+
+  /** Le volet dont `doc` est le rendu, s'il y en a un (cf. l'échange, `swapLive`). */
+  public renderOwnerOf(doc: Class_ApplicationData): string | null {
+    for (const [id, render] of this._renders) if (render.doc === doc) return id
+    return null
   }
 
   // CYCLE DE VIE ===================================================================================
@@ -748,6 +1172,9 @@ export class Class_SankeyPanes {
     // reste (ouvrir un modèle remet les volets à zéro APRÈS l'avoir chargé, abri compris).
     this.parkedBase()
     this._layout_owner = null
+    this._print = null
+    this._buried.forEach(b => this.disposeDocument(b.render.doc))
+    this._buried.clear()
     this._cameras.clear()
     this._known.clear()
     if (this._refresh_timer !== null) { clearTimeout(this._refresh_timer); this._refresh_timer = null }
@@ -758,5 +1185,8 @@ export class Class_SankeyPanes {
     this.dropBase()
     this._unsubscribe_draw?.()
     this._unsubscribe_draw = null
+    this._observer?.disconnect()
+    this._observer = null
+    this._observed = null
   }
 }

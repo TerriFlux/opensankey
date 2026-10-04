@@ -35,6 +35,22 @@ import { HISTORY_TOPIC } from './EventBus'
 
 export const history_size: number = 10
 
+/**
+ * sa#568 — OÙ UN GESTE A ÉTÉ FAIT, pour l'annuler (ou le rétablir) LÀ OÙ il a été fait.
+ *
+ * Alexandre (03/10) : « les boutons annuler / rétablir s'appliquent tout le temps à toutes les
+ * actions effectuées dans le fichier, quel que soit le volet et sa synchronisation avec les
+ * autres ». Un document n'a qu'un dessin vivant, qui passe d'un volet Sankey à l'autre avec la
+ * mise en page de chacun (sa#581) : un geste fait dans le volet A, annulé pendant que B est le
+ * vivant, s'appliquerait à la mise en page de B. L'historique retient donc, pour chaque entrée, le
+ * contexte du geste (`capture`), et le rétablit (`restore`) avant de la rejouer — le volet A
+ * redevient le vivant, puis le geste est défait.
+ */
+export type Type_HistoryContext = {
+  capture: () => unknown
+  restore: (context: unknown) => void
+}
+
 // CLASS APPLICATION DATA **************************************************************/
 
 /**
@@ -102,6 +118,28 @@ export class Class_ApplicationHistory {
 
   private _menu_config: Class_MenuConfig
 
+  /** sa#568 — le contexte des gestes, posé par le document principal (cf. `Type_HistoryContext`). */
+  public context: Type_HistoryContext | null = null
+
+  /**
+   * sa#568 — avance à chaque entrée posée, annulée ou rétablie. Deux lectures égales disent « rien
+   * ne s'est passé entre les deux » : c'est ce qui permet de fondre un geste continu (un curseur
+   * qu'on fait glisser) en UNE entrée, en remplaçant son rétablissement au lieu d'en empiler une.
+   */
+  protected _stamp = 0
+  public get stamp(): number { return this._stamp }
+
+  /** `f`, précédé du retour au contexte où le geste a été fait. */
+  protected _inContext(f: () => void): () => void {
+    const context = this.context
+    if (!context) return f
+    const captured = context.capture()
+    return () => {
+      context.restore(captured)
+      f()
+    }
+  }
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -141,10 +179,14 @@ export class Class_ApplicationHistory {
    * @param f
    */
   public saveUndo(
-    f: () => void
+    f: () => void,
+    // sa#568 — `false` : l'entrée vise elle-même ce qu'elle défait (un volet, une figure) et n'a pas
+    // à ramener d'abord le volet où le geste a été fait (cf. `Type_HistoryContext`).
+    in_context: boolean = true
   ) {
     this.increaseIndexes()
-    this._transitions_table[this._index_table % history_size].toPrev = f
+    this._transitions_table[this._index_table % history_size].toPrev = in_context ? this._inContext(f) : f
+    this._stamp += 1
     this._notifyMenus()
   }
 
@@ -153,9 +195,10 @@ export class Class_ApplicationHistory {
    * @param f
    */
   public saveRedo(
-    f: () => void
+    f: () => void,
+    in_context: boolean = true
   ) {
-    this._transitions_table[(this._index_table - 1) % history_size].toNext = f
+    this._transitions_table[(this._index_table - 1) % history_size].toNext = in_context ? this._inContext(f) : f
     this._notifyMenus()
   }
 
@@ -166,6 +209,7 @@ export class Class_ApplicationHistory {
     if (this.can_undo) {
       this._transitions_table[this._index_table % history_size].toPrev()
       this._index_table = this._index_table - 1
+      this._stamp += 1
       this._notifyMenus()
     }
   }
@@ -177,6 +221,7 @@ export class Class_ApplicationHistory {
     if (this.can_redo) {
       this._transitions_table[this._index_table % history_size].toNext()
       this._index_table = this._index_table + 1
+      this._stamp += 1
       this._notifyMenus()
     }
   }

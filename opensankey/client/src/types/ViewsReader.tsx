@@ -419,6 +419,8 @@ export class ViewsReader {
     // #680 (revu) — Caméra de la vue SORTANTE, capturée avant unDraw : reportée sur la vue
     // entrante en mode 'none' (changer de vue ne recadre pas).
     const prev_camera = host.drawing_area.getCameraTransform()
+    // sa#568 — le dessin qu'on quitte : l'historique ne repart que s'il est REMPLACÉ (cf. plus bas).
+    const prev_drawing_area = host.drawing_area
     // sa#581 — la mise en page PROPRE du volet vivant est mise à l'abri avant que le dessin change.
     host.beforeViewChange()
     host.drawing_area.sankey.setInvisible()
@@ -486,7 +488,11 @@ export class ViewsReader {
       if (host.keep_camera_across_views && prev_camera) host.drawing_area.setCamera(prev_camera)
     } else host.drawing_area.applyAutoFitMode(false)
     host.drawing_area.orderElementOnDA()
-    host.resetHistory()
+    // sa#568 — L'HISTORIQUE NE REPART QUE SI LE DESSIN A CHANGÉ D'OBJET (vue lourde, reconstruite
+    // depuis son instantané) : ses entrées désigneraient des éléments morts. Le maître et les vues
+    // légères gardent le même dessin — l'historique reste valable, et annuler / rétablir valent pour
+    // toutes les actions du fichier, quel que soit le volet (Alexandre, 03/10).
+    if (host.drawing_area !== prev_drawing_area) host.resetHistory()
     // Rafraîchit les composants de menu liés aux vues (base OS ; OSP ajoute ses propres menus).
     this.updateViewMenus()
   }
