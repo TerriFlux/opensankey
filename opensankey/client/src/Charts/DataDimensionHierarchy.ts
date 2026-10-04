@@ -448,11 +448,17 @@ export const resolveDataFocus = (
   }
   const last = refs[refs.length - 1]
   const k = cut.dividing.findIndex(d => d.id === last.dimension_id)
-  if (k < 0) return null
+  // 03/10/2026 — UN ZOOM PAR DIMENSION (tableau de navigation) : le dernier cran peut fixer une
+  // dimension qui NE découpe PAS (« Espagne » pendant que les produits découpent) ; elle fixe sa
+  // coordonnée, et la dimension qui découpe montre ce qu'elle a sous ce zoom.
+  if (k < 0 && (cut.dividing.length === 0 || !cut.dims.some(d => d.id === last.dimension_id))) return null
   const member = coord.get(last.dimension_id) as Class_DataTag
+  // Un membre sans enfants de la SEULE dimension qui découpe se montre seul (« Espagne », 100 %) :
+  // le zoom va jusqu'au bout de la dimension, la colonne reste.
+  const lone_leaf = k >= 0 && member.children.length === 0 && cut.dividing.length === 1
   // 03/10/2026 — quelque chose dessous : ses enfants, ou une AUTRE dimension qui découpe encore — non
   // fixée, ou fixée sur un membre que la coupe ouvre (cf. `entryAt` de `buildNestedDimensionTree`).
-  const below = member.children.length > 0 || cut.dividing.some(d => {
+  const below = lone_leaf || member.children.length > 0 || cut.dividing.some(d => {
     if (d.id === last.dimension_id) return false
     const fixed = coord.get(d.id)
     return fixed === undefined || (fixed.children.length > 0 && cut.opened.has(memberSectorId(d.id, fixed.id)))
@@ -551,6 +557,8 @@ export const buildNestedDimensionTree = (
     const fixed = focus?.coord.get(dim.id)
     if (fixed === undefined) return entryOfAll(dim)
     const is_centre = fixed === focus?.member
+    // Un zoom sur une feuille de la dimension qui découpe : elle seule (cf. `resolveDataFocus`).
+    if (is_centre && fixed.children.length === 0) return [fixed]
     return is_centre || isOpen(dim, fixed) ? (fixed.children as Class_DataTag[]) : []
   }
   /** La première dimension à partir de `from` qui a quelque chose à montrer, et ce qu'elle montre. */

@@ -140,7 +140,17 @@ export interface Type_ChartOptions {
    */
   centre_caption?: string
   /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
-  breadcrumb?: Type_FigureCrumb[]
+  breadcrumb?: Type_FigureCrumb[] | HTMLElement
+  /**
+   * 03/10/2026 — DES CASES À CÔTÉ DE LA LÉGENDE (Jean-Yves, os#1511) : décocher une entrée retire sa
+   * part, comme le sélecteur de la barre du haut ; les parts retirées restent dans la légende,
+   * décochées (`hidden`), pour revenir d'un clic. Absent : la légende n'a pas de cases.
+   */
+  legend_toggle?: {
+    toggle: (part_id: string, show: boolean) => void
+    hidden: { id: string, label: string }[]
+    hint?: (label: string) => string
+  }
   /**
    * os#1460 — L'ASPECT D'UNE PART, quand elle en porte un.
    *
@@ -2417,6 +2427,37 @@ export const drawDonutChart = (
       .style('flex', '0 0 auto')
       .style('color', '#718096')
       .text(r => pctText(r.entry.data.value, total))
+  }
+  // 03/10/2026 — LES CASES DE LA LÉGENDE (os#1511) : cochée = la part est dessinée. « Autres » n'en a
+  // pas (c'est un repli, pas un membre) ; les parts retirées suivent, décochées.
+  const toggle = opts.legend_toggle
+  if (toggle) {
+    const boxOf = (checked: boolean, id: string, label: string) => {
+      const box = document.createElement('input')
+      box.type = 'checkbox'
+      box.checked = checked
+      box.className = 'node_stats_legend_check'
+      box.title = toggle.hint?.(label) ?? label
+      box.style.margin = below ? '0' : '0.1em 0 0'
+      box.style.flex = '0 0 auto'
+      box.style.cursor = 'pointer'
+      box.addEventListener('pointerdown', e => e.stopPropagation())
+      box.addEventListener('click', e => { e.stopPropagation(); toggle.toggle(id, box.checked) })
+      return box
+    }
+    items.each(function (r) {
+      if (r.entry.data.id === '__others__') return
+      this.insertBefore(boxOf(true, r.entry.data.id, r.entry.data.label), this.firstChild)
+    })
+    toggle.hidden.forEach(h => {
+      const row = legend.append('div')
+        .attr('class', 'node_stats_legend_row node_stats_legend_item node_stats_legend_unchecked')
+        .style('display', 'flex').style('align-items', below ? 'center' : 'flex-start').style('gap', '0.35rem')
+        .style('padding', '0.1rem 0.2rem').style('color', '#a0aec0')
+      if (below) row.style('flex', '0 0 auto')
+      ;(row.node() as HTMLElement).appendChild(boxOf(false, h.id, h.label))
+      row.append('span').style('flex', '1 1 auto').style('min-width', '0').text(h.label)
+    })
   }
 }
 

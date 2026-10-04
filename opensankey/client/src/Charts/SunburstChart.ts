@@ -433,7 +433,7 @@ export interface Type_SunburstChartOptions {
    */
   texts?: (subject_name: string) => Type_FigureText[]
   /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
-  breadcrumb?: Type_FigureCrumb[]
+  breadcrumb?: Type_FigureCrumb[] | HTMLElement
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
