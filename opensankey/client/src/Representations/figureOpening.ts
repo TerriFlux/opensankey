@@ -226,9 +226,17 @@ export const withFigureDimensionZooms = (
 
 /** Le sac sans le foyer posé sur `dimension_id` (inchangé s'il n'y en a pas). */
 export const withFigureFocusClearedOn = (options: Type_Options, dimension_id: string): Type_Options => {
-  const path = readFigureFocus(options)
-  const next = focusWithoutDimension(path, dimension_id)
-  return next.length === path.length ? options : withFigureFocus(options, next)
+  // 04/10/2026 — AU FORMAT DU TABLEAU (os#1511) : le zoom de CETTE dimension s'en va, celui de chaque
+  // autre dimension reste entier (plusieurs membres compris), relu puis réécrit en un cran.
+  const zooms = readFigureDimensionZooms(options)
+  if (!zooms.has(dimension_id)) {
+    const path = readFigureFocus(options)
+    const next = focusWithoutDimension(path, dimension_id)
+    return next.length === path.length ? options : withFigureFocus(options, next)
+  }
+  const centre = [...zooms.keys()].slice(-1)[0]
+  zooms.delete(dimension_id)
+  return withFigureDimensionZooms(options, zooms, centre === dimension_id ? undefined : centre)
 }
 
 /** Le foyer d'une couronne de dimensions de données : la coordonnée du dernier secteur empilé. */
