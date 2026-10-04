@@ -367,6 +367,12 @@ export interface Type_HierarchyReading {
    * du secteur où elle est descendue (cf. `readFigureDataFocus`). Absent : elle regarde son sujet.
    */
   data_focus?: Type_MemberRef[]
+  /**
+   * 04/10/2026 — UNE COUPE IMPOSÉE, à la place de celle que `data_opening` écrirait. Sert à la
+   * légende à cases (os#1511) : elle se calcule sur la coupe SANS décochés, pour que décocher ne
+   * déplace aucune ligne. Absent : la coupe en vigueur.
+   */
+  data_cut?: Type_DataCut
 }
 
 /**
@@ -594,6 +600,7 @@ export const analysisDataCutOf = (
 ): Type_DataCut | null => {
   const sankey = (subject.kind === 'node' ? subject.node : subject.link).sankey
   if (sankey.data_taggs_dict[spec.data_tagg_id] === undefined) return null
+  if (reading.data_cut !== undefined) return reading.data_cut
   return dataCutOf(
     sankey,
     [spec.data_tagg_id, ...(spec.nested_tagg_ids ?? [])],

@@ -1090,8 +1090,18 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
     .map(id => dim.tags_dict[id] as Class_DataTag | undefined)
     .filter((m): m is Class_DataTag => m !== undefined && isUnder(m) && m !== zoom)
     .map(m => ({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m) }))
+  // 04/10/2026 — LA LÉGENDE NE BOUGE PLUS QUAND ON DÉCOCHE (Julien : « tout doit rester à sa place,
+  // coché ou pas coché »). Ses lignes, leur ordre et le repli en « Autres » se calculent sur la coupe
+  // SANS les décochés de la dimension, aux valeurs pleines ; la couronne, elle, ne dessine que les
+  // cochés. Avant, la légende suivait les secteurs dessinés et rangeait les décochés en bas.
+  const dim_prefix = memberSectorId(dim.id, '')
+  const full_cut = { ...cut, hidden: new Set([...(cut.hidden ?? [])].filter(id => !id.startsWith(dim_prefix))) }
+  const all = analysisPartInputs(
+    a.subject, a.descriptor,
+    flatParts(a.subject, a.descriptor, a.nav, { ...reading, data_cut: full_cut }, expandedOf(ctx.options ?? {}))
+  ) as unknown as Type_StatSlice[]
   const t = app_data.t
-  return { toggle, hidden, hint: (name: string) => t('sunburst.nav.toggle_part', { name }) as string }
+  return { toggle, hidden, all, hint: (name: string) => t('sunburst.nav.toggle_part', { name }) as string }
 }
 
 /** Le nœud dans lequel la couronne est descendue, ou `null` si elle regarde son sujet. */
