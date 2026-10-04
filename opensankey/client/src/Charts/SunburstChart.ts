@@ -40,6 +40,9 @@ import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText, figurePercentText } from './figureFormat'
 import { layoutDonutCallouts } from './donutCalloutLayout'
+import {
+  LEGEND_UNCHECKED_INK, legendCheckBox, legendCheckRows, legendMemberKeyOf, type Type_LegendChecks
+} from './legendChecks'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -419,6 +422,12 @@ export interface Type_SunburstChartOptions {
    * valeur — comme pour un noeud du diagramme.
    */
   on_part_select?: (sector_id: string) => void
+  /**
+   * 04/10/2026 — LES CASES DES BLOCS DE DIMENSION (os#1511) : sous plusieurs dimensions, chaque bloc
+   * de la légende liste ses membres comme si tout était coché, chacun avec sa case. Absent : la
+   * légende nomme ce qui est dessiné, sans case.
+   */
+  legend_checks?: Type_LegendChecks
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
   /** 30/09/2026 — le diviseur qui va avec `unit` (kt → Mt : 1 000) ; le dessin reste sur le brut. */
@@ -2224,6 +2233,48 @@ export const drawSunburstChart = (
           .style('color', palette.muted).style('font-weight', 'bold')
           .attr('title', [label, ...levels].join(' · '))
           .text([label, ...levels].join(' · '))
+        // 04/10/2026 — AVEC SES CASES (os#1511) : le bloc liste les membres de la dimension comme si
+        // tout était coché, dans l'ordre de la dimension ; un membre décoché reste à sa place, grisé.
+        const checks = opts.legend_checks
+        const block = checks?.blocks[dim_id]
+        if (checks && block && block.length > 0) {
+          const color_of = new Map<string, string>()
+          mine.forEach(sl => {
+            if (sl.is_residual) return
+            const key = legendMemberKeyOf(sl.id)
+            if (!color_of.has(key)) color_of.set(key, sl.color)
+          })
+          legendCheckRows(block, id => color_of.get(id), palette.others).forEach(({ entry, color, indent }) => {
+            const row = legend.append('div')
+              .attr('class', entry.heading ? 'sunburst_branch sunburst_branch_heading' : 'sunburst_branch')
+              .attr('data-part-id', entry.id)
+              .style('display', 'flex').style('align-items', 'center')
+              .style('gap', '0.35rem').style('padding', `0.05rem 0.2rem 0.05rem ${0.2 + indent * 0.9}rem`)
+            if (!entry.heading) {
+              (row.node() as HTMLElement).appendChild(legendCheckBox(checks, entry))
+              if (!entry.checked) row.classed('node_stats_legend_unchecked', true).style('color', LEGEND_UNCHECKED_INK)
+            }
+            row.append('span')
+              .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+              .style('border-radius', '2px').style('background', color)
+            row.append('span')
+              .style('flex', '1 1 auto').style('overflow', 'hidden')
+              .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+              .attr('title', entry.label).text(entry.label)
+          })
+          const residual_row = mine.find(sl => sl.is_residual)
+          if (residual_row !== undefined) {
+            const row = legend.append('div')
+              .attr('class', 'sunburst_branch')
+              .style('display', 'flex').style('align-items', 'center')
+              .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
+            row.append('span')
+              .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+              .style('border-radius', '2px').style('background', residual_row.color)
+            row.append('span').text(others_label)
+          }
+          return
+        }
         // Les membres, chacun une fois : un continent répété sous chaque filière est UN membre.
         const rows: { key: string, label: string, color: string, indent: number }[] = []
         const seen = new Set<string>()

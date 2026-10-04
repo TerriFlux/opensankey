@@ -189,6 +189,8 @@ export interface Type_DataCut {
    * `dividing`, lues à leur racine. Jamais toutes : il en reste au moins une active.
    */
   inactive?: ReadonlySet<string>
+  /** 04/10/2026 — les dimensions sorties de la coupe (celle des petits multiples). */
+  excluded?: readonly string[]
 }
 
 // ── 03/10/2026 — UNE COUPE PEUT AVOIR DES TROUS ─────────────────────────────────────────────────
@@ -340,7 +342,8 @@ export const dataCutOf = (
       opened: diagramDimensionOpening(dims),
       // Ce que le diagramme a décoché ne se dessine pas non plus dans la figure qui le suit.
       hidden: hiddenSectorsOf(dividing, d => hiddenForSelection(d, new Set(d.selected_tags_list.map(m => m.id)))),
-      inactive
+      inactive,
+      ...(excluded_ids.length > 0 ? { excluded: [...excluded_ids] } : {})
     }
   }
   const opened = new Set<string>()
@@ -353,7 +356,10 @@ export const dataCutOf = (
   const hidden = hiddenSectorsOf(dims, d => opening.hidden?.[d.id] ?? [])
   // Les ouverts et décochés d'une dimension désactivée restent dans la coupe : c'est ce qui les
   // retrouve tels quels à sa réactivation. Elle ne découpe simplement pas.
-  return { linked: false, dims, dividing: dims.filter(d => active(d) && dimensionDivides(d, opened)), opened, hidden, inactive }
+  return {
+    linked: false, dims, dividing: dims.filter(d => active(d) && dimensionDivides(d, opened)), opened, hidden, inactive,
+    ...(excluded_ids.length > 0 ? { excluded: [...excluded_ids] } : {})
+  }
 }
 
 /**
@@ -429,6 +435,26 @@ export const smallMultipleMembersOf = (dim: Class_DataTagGroup, opening: Type_Da
 }
 
 /**
+ * 04/10/2026 — LES CASES DES PETITS MULTIPLES (os#1511). Julien : « la couronne par membre ne semble
+ * pas liée à la sélection qu'on fait pour les pays partenaires ». Les cases sont ce que l'utilisateur
+ * a choisi sur cette dimension :
+ *  - un zoom à PLUSIEURS membres (« Europe, Amériques ») : une case chacun ;
+ *  - un zoom à un membre : les membres de la coupe sous lui (lui seul s'il n'en a pas) ;
+ *  - sans zoom : les membres de sa coupe (sa colonne et ses cases cochées, `smallMultipleMembersOf`).
+ */
+export const smallMultipleCellsOf = (
+  dim: Class_DataTagGroup, opening: Type_DataOpening, zoom_ids: readonly string[] | undefined
+): Class_DataTag[] => {
+  const zoomed = zoom_ids !== undefined && zoom_ids.length > 0 ? zoomMembersOf(dim, zoom_ids) : []
+  if (zoomed.length > 1) return zoomed
+  const members = smallMultipleMembersOf(dim, opening)
+  if (zoomed.length === 0) return members
+  const z = zoomed[0]
+  const under = members.filter(m => m !== z && m.hasAncestor(z))
+  return under.length > 0 ? under : [z]
+}
+
+/**
  * 04/10/2026 — LES MEMBRES DU ZOOM D'UNE DIMENSION, lus sur les crans d'un foyer (os#1511) : un zoom
  * peut fixer PLUSIEURS membres d'une dimension (« Europe ✕ Amériques ✕ »), qui se lisent sur leur
  * somme. Un cran écrit les membres d'une dimension à la suite (`pays/europe||pays/ameriques`).
@@ -480,6 +506,12 @@ export const resolveDataFocus = (
   refs: Type_MemberRef[] | undefined
 ): Type_ResolvedDataFocus | null => {
   if (refs === undefined || refs.length === 0) return null
+  // 04/10/2026 — UN ZOOM SUR LA DIMENSION DES PETITS MULTIPLES (os#1511) : elle sort de la coupe
+  // (`excluded_ids`), ses membres zoomés font les CASES (`smallMultipleCellsOf`). Le reste du zoom
+  // (« Céréales ») vaut toujours : avant, un seul cran hors coupe annulait tout le zoom.
+  const excluded = new Set(cut.excluded ?? [])
+  refs = refs.filter(r => !excluded.has(r.dimension_id))
+  if (refs.length === 0) return null
   const ids = new Map<string, string[]>()
   for (const ref of refs) {
     const dim = cut.dims.find(d => d.id === ref.dimension_id)

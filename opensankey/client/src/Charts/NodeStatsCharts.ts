@@ -48,6 +48,9 @@ import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 // os#1511 — la légende en arbre : même règle (ordre, retrait) que la légende du diagramme.
 import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
 import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
+import {
+  LEGEND_UNCHECKED_INK, legendCheckBox, legendCheckRows, legendMemberKeyOf, type Type_LegendChecks
+} from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
 
 export interface Type_StatSlice {
@@ -928,7 +931,8 @@ export const drawSmallMultiplesLegend = (
   scope: HTMLElement,
   entries: readonly Type_StatSlice[],
   colors: ReadonlyMap<string, string>,
-  st: Type_FigureChartStyle
+  st: Type_FigureChartStyle,
+  checks?: Type_LegendChecks
 ) => {
   const below = st.legend_position === 'bottom'
   const root = d3.select(legend)
@@ -938,6 +942,58 @@ export const drawSmallMultiplesLegend = (
   if (below) {
     root.style('display', 'flex').style('flex-wrap', 'wrap')
       .style('justify-content', 'center').style('align-content', 'flex-start').style('column-gap', '0.8rem')
+  }
+  const arcs = () => d3.select(scope).selectAll<SVGPathElement, unknown>('path.node_stats_arc')
+  // 04/10/2026 — LES CASES PAR DIMENSION (os#1511) : la légende commune des multiples liste les membres
+  // de chaque dimension des parts comme si tout était coché, chacun avec sa case ; décocher grise la
+  // ligne à sa place. Le survol met en avant la part dans toutes les cases, comme sans cases.
+  const blocks = checks ? Object.entries(checks.blocks).filter(([, b]) => b.length > 0) : []
+  if (checks && blocks.length > 0) {
+    const drawn_id = new Map<string, string>()
+    entries.forEach(s => {
+      if (s.id === '__others__') return
+      const key = legendMemberKeyOf(s.id)
+      if (!drawn_id.has(key)) drawn_id.set(key, s.id)
+    })
+    blocks.forEach(([, block]) => {
+      legendCheckRows(block, id => {
+        const sid = drawn_id.get(id)
+        return sid === undefined ? undefined : colors.get(sid) ?? OTHERS_COLOR
+      }, OTHERS_COLOR).forEach(({ entry, color, indent }) => {
+        const row = root.append('div')
+          .attr('class', 'node_stats_legend_row node_stats_legend_item')
+          .attr('data-part-id', drawn_id.get(entry.id) ?? entry.id)
+          .attr('title', entry.label)
+          .style('display', 'flex').style('align-items', below ? 'center' : 'flex-start').style('gap', '0.35rem')
+          .style('padding', `0.1rem 0.2rem 0.1rem ${below ? 0.2 : 0.2 + indent * LEGEND_INDENT_EM}em`)
+        if (below) row.style('flex', '0 0 auto')
+        if (!entry.heading) {
+          (row.node() as HTMLElement).appendChild(legendCheckBox(checks, entry, below))
+          if (!entry.checked) row.classed('node_stats_legend_unchecked', true).style('color', LEGEND_UNCHECKED_INK)
+        }
+        row.append('span')
+          .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+          .style('margin-top', below ? '0' : '0.15em').style('border-radius', '2px').style('background', color)
+        row.append('span').style('flex', '1 1 auto').style('min-width', '0').text(entry.label)
+        const sid = drawn_id.get(entry.id)
+        if (sid === undefined) return
+        row.on('mouseover', () => {
+          arcs().style('opacity', function () {
+            return (this as SVGPathElement).getAttribute('data-repr-id') === sid ? null : '0.35'
+          })
+        }).on('mouseout', () => { arcs().style('opacity', null) })
+      })
+    })
+    const others = entries.find(s => s.id === '__others__')
+    if (others) {
+      const row = root.append('div')
+        .attr('class', 'node_stats_legend_row node_stats_legend_item')
+        .style('display', 'flex').style('align-items', 'center').style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
+      row.append('span').style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+        .style('border-radius', '2px').style('background', colors.get(others.id) ?? OTHERS_COLOR)
+      row.append('span').text(others.label)
+    }
+    return
   }
   const head = st.legend_levels
     ? entries.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label

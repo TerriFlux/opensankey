@@ -234,6 +234,13 @@ export type Type_WindowCoordinatesLink = {
 export type Type_FigureDimensionDrawing = (dim_id: string) => Type_TopbarFigureChoice | null
 
 /**
+ * 04/10/2026 — L'ORDRE D'EMBOÎTEMENT D'UNE COURONNE, depuis son tableau de navigation (os#1511) : la
+ * ligne `dim_id` monte (`-1`) ou descend (`+1`) parmi `row_ids` (les lignes du tableau, du haut —
+ * l'anneau intérieur — vers le bas, celle des cases s'il y en a).
+ */
+export type Type_FigureNestMove = (row_ids: string[], dim_id: string, delta: -1 | 1) => void
+
+/**
  * 02/10/2026 — LES MENUS DE LA FIGURE ACTIVE dans la barre du haut (cf. `topbar_figure_menus`) :
  * le bouton de la figure en tête (ses réglages, dont son dessin depuis le 03/10/2026 : les
  * dimensions n'ont plus de « Dessiner » propre) et l'ordre d'emboîtement que suit le ⇄.
@@ -1484,6 +1491,15 @@ export class Class_MenuConfig {
   }
   public set figure_dimension_drawing(v: ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null) {
     this._host._figure_dimension_drawing = v
+  }
+  // 04/10/2026 — L'ORDRE D'EMBOÎTEMENT D'UNE COURONNE (le ⇄ d'hier), que le tableau de navigation
+  // règle par ses boutons ⇅ / ▲▼ : OS+ le fournit (`figureGesturesHost`) ; `null` : rien à ordonner.
+  protected _figure_nest_move: ((ctx: Type_RepresentationContext) => Type_FigureNestMove | null) | null = null
+  public get figure_nest_move(): ((ctx: Type_RepresentationContext) => Type_FigureNestMove | null) | null {
+    return this._host._figure_nest_move
+  }
+  public set figure_nest_move(v: ((ctx: Type_RepresentationContext) => Type_FigureNestMove | null) | null) {
+    this._host._figure_nest_move = v
   }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)

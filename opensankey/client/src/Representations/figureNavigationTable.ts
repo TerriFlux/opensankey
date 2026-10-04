@@ -53,8 +53,18 @@ export interface Type_FigureNavLevel {
    * couronne. Absente : la case est inerte.
    */
   pick?: Type_FigureNavZoomPick
-  /** Découper par cette colonne ; absent, l'en-tête est inerte. */
+  /**
+   * Le clic simple : découper par cette colonne seule ; sur la colonne qui découpe (`column`), ne plus
+   * découper par cette dimension. Absent, l'en-tête est inerte.
+   */
   choose?: () => void
+  /**
+   * 04/10/2026 — CTRL+CLIC (⌘+clic) : ajouter cette colonne à celles qui découpent (une autre
+   * dimension) ; sur une colonne qui découpe, la retirer.
+   */
+  choose_with?: () => void
+  /** 04/10/2026 — cette colonne découpe la couronne : la recliquer la désélectionne. */
+  column?: boolean
 }
 
 export interface Type_FigureNavDimension {
@@ -78,7 +88,20 @@ export interface Type_FigureNavTable {
     clear_zoom: string
     pick_zoom: string
     drawing: string
+    /** 04/10/2026 — l'info-bulle d'une colonne qui découpe : la recliquer la désélectionne. */
+    uncut: (level: string) => string
+    /** 04/10/2026 — la ligne d'info-bulle du ctrl+clic. */
+    ctrl_hint: string
+    /** 04/10/2026 — ⇅ (deux lignes) et ▲▼ (plus de deux). */
+    swap: string
+    move_up: string
+    move_down: string
   }
+  /**
+   * 04/10/2026 — L'ORDRE DES LIGNES = L'ORDRE D'EMBOÎTEMENT (ligne du haut = anneau intérieur) : la
+   * ligne `dim_id` monte (-1) ou descend (+1). Absent : pas de bouton.
+   */
+  move?: (dim_id: string, delta: -1 | 1) => void
   /** La traduction, pour la liste à cases. */
   t: (key: string, options?: { [k: string]: unknown }) => unknown
   /** La clé sous laquelle le repli se souvient (fenêtre + vignette). */
@@ -169,11 +192,50 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   table.style.tableLayout = 'auto'
   table.style.maxWidth = '100%'
   const columns = Math.max(0, ...model.dimensions.map(d => d.levels.length))
+  // 04/10/2026 — L'ORDRE : une colonne tout à gauche. Deux lignes : un ⇅ qui les échange, à cheval
+  // sur les deux ; davantage : ▲▼ par ligne.
+  const move = model.dimensions.length > 1 ? model.move : undefined
   model.dimensions.forEach((dim, i) => {
     const head = table.insertRow()
     const zoom = table.insertRow()
     head.className = 'figure_navigation_head'
     zoom.className = 'figure_navigation_zoom'
+    if (move && (model.dimensions.length > 2 || i === 0)) {
+      const order = head.insertCell()
+      order.className = 'figure_navigation_order'
+      order.rowSpan = model.dimensions.length === 2 ? 4 : 2
+      order.style.verticalAlign = 'middle'
+      order.style.padding = '0 0.3rem 0 0'
+      order.style.whiteSpace = 'nowrap'
+      const arrow = (text: string, title: string, go: () => void, disabled = false) => {
+        const b = plainButton(text, title)
+        b.style.display = 'block'
+        b.style.color = disabled ? '#cbd5e0' : '#4a5568'
+        b.style.fontSize = '12px'
+        b.style.lineHeight = '1'
+        b.style.padding = '0.05rem 0.15rem'
+        b.style.border = '1px solid #cbd5e0'
+        b.style.borderRadius = '3px'
+        b.style.background = 'white'
+        b.style.margin = '0.05rem 0'
+        if (disabled) { b.disabled = true; b.style.cursor = 'default' }
+        keepClick(b, disabled ? () => { /* rien au-delà du bord */ } : go)
+        return b
+      }
+      if (model.dimensions.length === 2) {
+        const b = arrow('⇅', model.labels.swap, () => move(dim.id, 1))
+        b.className = 'figure_navigation_swap'
+        order.appendChild(b)
+      } else {
+        const up = arrow('▲', model.labels.move_up, () => move(dim.id, -1), i === 0)
+        up.className = 'figure_navigation_up'
+        const down = arrow('▼', model.labels.move_down, () => move(dim.id, 1), i === model.dimensions.length - 1)
+        down.className = 'figure_navigation_down'
+        up.style.fontSize = down.style.fontSize = '8px'
+        order.appendChild(up)
+        order.appendChild(down)
+      }
+    }
     const name = head.insertCell()
     name.textContent = dim.name
     name.title = model.labels.dimension(dim.name)
@@ -206,17 +268,28 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
         th.style.background = '#ebf4ff'
         th.style.boxShadow = `inset 0 -2px 0 ${ACCENT}`
       }
-      const head_btn = plainButton(level.label, model.labels.cut_by(level.label))
+      if (level.column) th.className += ' figure_navigation_column'
+      const tip = level.column ? model.labels.uncut(level.label) : model.labels.cut_by(level.label)
+      const head_btn = plainButton(level.label, level.choose_with ? `${tip}\n${model.labels.ctrl_hint}` : tip)
       head_btn.style.color = level.active ? ACCENT : '#2d3748'
       head_btn.style.fontWeight = level.active ? '700' : '600'
-      if (level.choose && !level.active) {
-        const go = level.choose
+      // 04/10/2026 — clic simple : cette colonne seule (sur la colonne qui découpe : la désélectionner) ;
+      // ctrl+clic ou ⌘+clic : l'ajouter aux colonnes qui découpent, ou l'en retirer.
+      const plain = level.choose
+      const with_ctrl = level.choose_with
+      if (plain || with_ctrl) {
         head_btn.addEventListener('mouseenter', () => { head_btn.style.textDecoration = 'underline' })
         head_btn.addEventListener('mouseleave', () => { head_btn.style.textDecoration = 'none' })
-        keepClick(head_btn, go)
+        head_btn.addEventListener('pointerdown', e => e.stopPropagation())
+        head_btn.addEventListener('click', e => {
+          e.stopPropagation()
+          e.preventDefault()
+          const go = (e.ctrlKey || e.metaKey) && with_ctrl ? with_ctrl : plain
+          go?.()
+        })
       } else {
         head_btn.style.cursor = 'default'
-        keepClick(head_btn, () => { /* colonne déjà active */ })
+        keepClick(head_btn, () => { /* en-tête inerte */ })
       }
       th.appendChild(head_btn)
       fillZoomCell(model, td, `${dim.id}|${c}`, level)
