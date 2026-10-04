@@ -473,12 +473,13 @@ elementStyleConfigs[FigurePartStyle] = {
     name_label_font_size: 10,
     name_label_prune_if_unfitting: true,
 
-    // Valeur : quatre chiffres significatifs, et pas d'arrondi à deux décimales — une figure
-    // compare des ordres de grandeur, un nœud affiche une quantité.
-    value_label_significant_digits: true,
+    // Valeur : 04/10/2026 — UNE DÉCIMALE, la règle des figures (`FIGURE_VALUE_FORMAT_DEFAULTS`) ;
+    // quatre chiffres significatifs avant. Une figure compare des ordres de grandeur, et des
+    // secteurs voisins s'écrivent avec le même nombre de décimales.
+    value_label_significant_digits: false,
     value_label_nb_significant_digits: 4,
-    value_label_custom_digit: false,
-    value_label_nb_digit: 0
+    value_label_custom_digit: true,
+    value_label_nb_digit: 1
   }
 } as const
 
@@ -487,6 +488,8 @@ elementStyleConfigs[FigurePartStyle] = {
 elementStyleConfigs[SunburstPartStyle] = {
   name: 'ElementStyle.SunburstPartStyle',
   config: {
+    // 04/10/2026 — la police d'un secteur de disque (`SUNBURST_STYLE_DEFAULTS.font_size`).
+    name_label_font_size: 12,
     shape_opacity: 1,
     shape_border_visible: true,
     shape_border_color: '#ffffff'
@@ -500,6 +503,8 @@ elementStyleConfigs[SunburstPartStyle] = {
 elementStyleConfigs[DonutPartStyle] = {
   name: 'ElementStyle.DonutPartStyle',
   config: {
+    // 04/10/2026 — la police d'un secteur de couronne (`DONUT_STYLE_DEFAULTS.name_label_font_size`).
+    name_label_font_size: 13,
     shape_opacity: 1,
     shape_border_visible: true,
     shape_border_color: '#ffffff'

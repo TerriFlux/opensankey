@@ -95,7 +95,7 @@ export interface Type_SunburstOptions {
   node_value_mode?: 'max' | 'inputs' | 'outputs'
   // L'ordre des secteurs d'une même fratrie. 'model' garde celui du modèle — le seul qui ne
   // dépende pas des valeurs, donc le seul qui ne bouge pas quand on change de millésime.
-  sort_order?: 'value_desc' | 'value_asc' | 'name' | 'model'
+  sort_order?: 'value_desc' | 'value_desc_grouped' | 'value_asc' | 'name' | 'model'
   // Comment un secteur se nomme : comme le diagramme le nomme (gabarit, étiquette, nœud ancêtre)
   // ou par le nom propre du nœud.
   name_source?: 'displayed' | 'own'
@@ -304,7 +304,7 @@ interface Type_BuildState {
   axis_ids: string[]
   value_mode: 'sum' | 'declared'
   node_value_mode: 'max' | 'inputs' | 'outputs'
-  sort_order: 'value_desc' | 'value_asc' | 'name' | 'model'
+  sort_order: 'value_desc' | 'value_desc_grouped' | 'value_asc' | 'name' | 'model'
   name_source: 'displayed' | 'own'
   // Sous quelles étiquettes de données lire les valeurs (cf. Charts/FigureNavigation).
   nav: Type_FigureNavigation
@@ -350,7 +350,9 @@ const sortSiblings = (
  */
 export const sortSunburstTree = (
   tree: Type_SunburstTree,
-  order: 'value_desc' | 'value_asc' | 'name' | 'model'
+  // 'value_desc_grouped' se lit comme 'value_desc' : en anneaux, l'anneau extérieur reste sous son
+  // parent quoi qu'il arrive — chaque fratrie se trie, les parents eux-mêmes par leur valeur.
+  order: 'value_desc' | 'value_desc_grouped' | 'value_asc' | 'name' | 'model'
 ): Type_SunburstTree => {
   if (order === 'model') return tree
   const walk = (node: Type_SunburstNode): Type_SunburstNode =>

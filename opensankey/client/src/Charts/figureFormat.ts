@@ -39,13 +39,20 @@ export interface Type_FigureValueFormat {
 }
 
 /**
- * Le défaut : trois chiffres significatifs (quatre jusqu'au 03/10/2026, cf. `figureNumberText`).
+ * Le défaut : UNE DÉCIMALE (04/10/2026). Trois chiffres significatifs du 03/10, quatre avant.
+ *
+ * Jean-Yves, relayé par Julien : « mets un seul chiffre après la virgule ». Les chiffres
+ * significatifs donnaient 39,3 / 4,13 / 1,19 / 0,20 dans une même couronne — des nombres de
+ * décimales différents d'un secteur à l'autre ; une décimale fixe écrit 39,3 / 4,1 / 1,2 / 0,2.
+ * Une valeur non nulle qui s'arrondirait à 0,0 garde assez de décimales pour ne pas mentir
+ * (cf. `figureNumberText`). Les chiffres significatifs restent cochables ; posés par l'auteur,
+ * ils reprennent la main (cf. `figureValueFormatOf`).
  */
 export const FIGURE_VALUE_FORMAT_DEFAULTS: Type_FigureValueFormat = {
-  significant_digits: true,
+  significant_digits: false,
   nb_significant_digits: 3,
-  custom_digit: false,
-  nb_digit: 0,
+  custom_digit: true,
+  nb_digit: 1,
   scientific_notation: false,
   unit: ''
 }
@@ -62,7 +69,11 @@ export const figureValueFormatOf = (
   return {
     significant_digits: bool('value_label_significant_digits', fallback.significant_digits),
     nb_significant_digits: num('value_label_nb_significant_digits', fallback.nb_significant_digits),
-    custom_digit: bool('value_label_custom_digit', fallback.custom_digit),
+    // 04/10/2026 — DES CHIFFRES SIGNIFICATIFS COCHÉS PAR L'AUTEUR, SANS DÉCIMALES DITES : ils
+    // décident seuls, comme avant que la décimale unique devienne le défaut. Sans cette règle, une
+    // figure enregistrée en « 3 chiffres significatifs » serait bornée à une décimale en silence.
+    custom_digit: bool('value_label_custom_digit',
+      options['value_label_significant_digits'] === true ? false : fallback.custom_digit),
     nb_digit: num('value_label_nb_digit', fallback.nb_digit),
     scientific_notation: bool('value_label_scientific_notation', fallback.scientific_notation),
     // os#1500 — L'UNITÉ DU DIAGRAMME S'ÉCRIT SANS QU'ON AIT À LA COCHER.
@@ -98,8 +109,10 @@ const clamp = (n: number, max: number) => Math.max(0, Math.min(max, Math.round(n
  * - au-delà de `nb` chiffres entiers, l'arrondi des chiffres significatifs (1 194 → 1 190 en 3) ;
  * - un ENTIER exact reste entier (un dénombrement ne s'écrit pas « 12,0 »).
  *
- * Décimales imposées (`custom_digit`) : ce nombre-là, zéros de fin compris, et au plus autant que
- * la règle des chiffres significatifs quand les deux sont cochés.
+ * Décimales imposées (`custom_digit`, le défaut depuis le 04/10/2026 : une) : ce nombre-là, zéros
+ * de fin compris, et au plus autant que la règle des chiffres significatifs quand les deux sont
+ * cochés. Une valeur NON NULLE qui s'arrondirait à zéro garde les décimales qu'il faut pour montrer
+ * son premier chiffre (0,04 et non 0,0) : écrire 0 d'une part qui existe serait un mensonge.
  */
 export const figureNumberText = (
   v: number,
@@ -125,6 +138,10 @@ export const figureNumberText = (
   if (f.custom_digit) {
     const nb_digit = clamp(f.nb_digit, 20)
     decimals = decimals === undefined ? nb_digit : Math.min(decimals, nb_digit)
+    const abs = Math.abs(v)
+    if (abs > 0 && Number(abs.toFixed(decimals)) === 0) {
+      decimals = Math.min(20, Math.max(decimals, -Math.floor(Math.log10(abs))))
+    }
   }
   if (decimals === undefined) return new Intl.NumberFormat().format(n)
   n = parseFloat(n.toFixed(decimals))
@@ -137,4 +154,16 @@ export const figureValueFormatter = (f: Type_FigureValueFormat): ((v: number) =>
   const suffix = f.unit ? ' ' + f.unit : ''
   const factor = (f.factor !== undefined && f.factor > 0) ? f.factor : 1
   return (raw: number) => figureNumberText(raw / factor, f) + suffix
+}
+
+/**
+ * 04/10/2026 — LE POURCENTAGE ÉCRIT PAR UNE FIGURE : un entier, et « <1% » pour une part non nulle
+ * qui s'arrondirait à 0 (ou à 1 sans l'atteindre). Une seule règle pour le secteur, l'étiquette
+ * sortie, l'info-bulle et la légende : le même secteur ne s'écrit plus « 0,45% » au survol et « 0% »
+ * sur le dessin.
+ */
+export const figurePercentText = (value: number, total: number): string => {
+  const pct = total !== 0 ? value / total * 100 : 0
+  if (pct > 0 && pct < 1) return '<1%'
+  return Math.round(pct) + '%'
 }

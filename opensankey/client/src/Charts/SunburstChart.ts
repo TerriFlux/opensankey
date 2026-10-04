@@ -38,7 +38,7 @@ import type { Type_FigureText, Type_FigurePartTextAspect } from './figureChartSt
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
-import { figureNumberText } from './figureFormat'
+import { figureNumberText, figurePercentText } from './figureFormat'
 import { layoutDonutCallouts } from './donutCalloutLayout'
 
 /**
@@ -222,7 +222,9 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   callout: false,
   labels_small: 'hide',
   font_family: 'Arial,sans-serif',
-  font_size: 10,
+  // 04/10/2026 — DEUX POINTS DE PLUS (Jean-Yves : « augmenter la taille de la police dans les
+  // segments »), comme la couronne. Le plancher lisible des petites cases ne bouge pas.
+  font_size: 12,
   bold: false,
   italic: false,
   uppercase: false,
@@ -232,10 +234,11 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   // os#1500 — VRAI, comme la couronne et les barres : le disque écrit l'unité du diagramme sans
   // qu'on ait à la cocher. Sans unité au diagramme, `opts.unit` vaut '' et rien ne s'écrit.
   unit_visible: true,
-  significant_digits: true,
+  // 04/10/2026 — UNE DÉCIMALE, la règle de toutes les figures (cf. `FIGURE_VALUE_FORMAT_DEFAULTS`).
+  significant_digits: false,
   nb_significant_digits: 3,
-  custom_digit: false,
-  nb_digit: 0,
+  custom_digit: true,
+  nb_digit: 1,
   scientific_notation: false,
   label_percent: 'none',
   centre_content: 'both',
@@ -246,7 +249,9 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   legend_parts: 'auto',
   legend_levels: true,
   legend_position: 'right',
-  legend_font_size: 12,
+  // 04/10/2026 — deux points de plus, comme la couronne (Jean-Yves : « augmenter un peu la taille
+  // de la police de légende »).
+  legend_font_size: 14,
   legend_width: 220,
   notes_visible: true,
   tooltip_visible: true,
@@ -1162,10 +1167,8 @@ const drawEmptyLabel = (
     .text(label)
 }
 
-const pctText = (value: number, total: number) => {
-  const pct = value / total * 100
-  return (pct >= 10 ? pct.toFixed(0) : pct >= 1 ? pct.toFixed(1) : pct.toFixed(2)) + '%'
-}
+// 04/10/2026 — la règle commune des figures (`figurePercentText`) : un entier, « <1% » en dessous.
+const pctText = figurePercentText
 
 /**
  * Dessine le sunburst dans le conteneur fourni et rend un « défaire » qui le remet à
