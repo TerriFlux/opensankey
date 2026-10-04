@@ -145,10 +145,13 @@ export interface Type_ChartOptions {
    * 03/10/2026 — DES CASES À CÔTÉ DE LA LÉGENDE (Jean-Yves, os#1511) : décocher une entrée retire sa
    * part, comme le sélecteur de la barre du haut ; les parts retirées restent dans la légende,
    * décochées (`hidden`), pour revenir d'un clic. Absent : la légende n'a pas de cases.
+   * 04/10/2026 — `all` : les parts comme si tout était coché. La légende s'écrit sur elles (ordre,
+   * repli en « Autres », en-têtes), pour ne pas se réorganiser à chaque case.
    */
   legend_toggle?: {
     toggle: (part_id: string, show: boolean) => void
     hidden: { id: string, label: string }[]
+    all: Type_StatSlice[]
     hint?: (label: string) => string
   }
   /**
@@ -1344,8 +1347,13 @@ export const drawDonutChart = (
   // 02/10/2026 — l'info-bulle seule : la légende écrit le nom court, en arbre (`donutLegendRows`).
   const legendLabel = (s: Type_StatSlice): string => sliceTooltipLabel(s, st)
   /** Le nom du sujet, quand des parts le portent pour parent : la tête de légende. */
+  // 04/10/2026 — avec des cases, la légende se lit sur TOUTES les parts candidates, aux valeurs
+  // pleines (`legend_toggle.all`) : décocher ne déplace ni ne retire aucune ligne.
+  const legend_parts = opts.legend_toggle
+    ? foldDonutParts(opts.legend_toggle.all, st, opts.others_label ?? 'Others')
+    : kept
   const legend_head = st.legend_levels
-    ? kept.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
+    ? legend_parts.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
     : undefined
   const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
     `${legendLabel(d.data)}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
@@ -2388,12 +2396,28 @@ export const drawDonutChart = (
       .text(legend_head)
   }
   // os#1511 — en arbre : nom court, ancêtres ouverts en en-têtes, retrait par niveau.
-  const items = appendDonutLegendRows(
+  // 04/10/2026 — une ligne par part de `legend_parts` (toutes les candidates sous des cases), à sa
+  // place fixe ; elle retrouve son secteur s'il est dessiné, sinon elle reste là, décochée.
+  const toggle = opts.legend_toggle
+  const hidden_ids = new Set(toggle?.hidden.map(h => h.id) ?? [])
+  const arc_of = new Map(arcs.map(a => [a.data.id, a]))
+  const legend_colors = donutPartColors(legend_parts, st)
+  type Type_LegendItem = { slice: Type_StatSlice, arc?: d3.PieArcDatum<Type_StatSlice>, checked: boolean }
+  const legend_items: Type_LegendItem[] = legend_parts.map(s => ({
+    slice: s, arc: arc_of.get(s.id), checked: !hidden_ids.has(s.id)
+  }))
+  const all_items = appendDonutLegendRows(
     legend as unknown as d3.Selection<HTMLElement, unknown, null, undefined>,
-    donutLegendRows(arcs, a => a.data, st), below,
-    a => colorOf(a.data, a.index), a => a.data.label
+    donutLegendRows(legend_items, e => e.slice, st), below,
+    e => e.arc ? colorOf(e.arc.data, e.arc.index) : e.checked ? (legend_colors.get(e.slice.id) ?? OTHERS_COLOR) : '#cbd5e0',
+    e => e.slice.label
   )
-    .attr('title', r => slice_title(r.entry))
+    .attr('title', r => r.entry.arc ? slice_title(r.entry.arc) : r.entry.slice.label)
+  all_items.filter(r => !r.entry.checked)
+    .classed('node_stats_legend_unchecked', true)
+    .style('color', '#a0aec0')
+  const items = all_items.filter(r => r.entry.arc !== undefined) as unknown as
+    d3.Selection<HTMLDivElement, { entry: { arc: d3.PieArcDatum<Type_StatSlice> } }, HTMLElement, unknown>
   items
     // os#1481 — LE SURVOL DE LA LÉGENDE NE MANGE PLUS L'OPACITÉ RÉGLÉE.
     //
@@ -2406,7 +2430,7 @@ export const drawDonutChart = (
     // l'écrivait. C'est le geste d'APRÈS qui l'effaçait.
     .on('mouseover', (_, r) => {
       g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
-        .attr('fill-opacity', a => a.index === r.entry.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
+        .attr('fill-opacity', a => a.index === r.entry.arc.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
     })
     .on('mouseout', () => {
       g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
@@ -2423,14 +2447,13 @@ export const drawDonutChart = (
   // DESSIN N'A PAS DIT. Valeur masquée sur les secteurs, le nombre revient dans la légende, et
   // rien n'est perdu.
   if (!st.value_label_is_visible) {
-    items.append('span')
+    all_items.append('span')
       .style('flex', '0 0 auto')
       .style('color', '#718096')
-      .text(r => pctText(r.entry.data.value, total))
+      .text(r => r.entry.arc ? pctText(r.entry.arc.data.value, total) : '')
   }
   // 03/10/2026 — LES CASES DE LA LÉGENDE (os#1511) : cochée = la part est dessinée. « Autres » n'en a
-  // pas (c'est un repli, pas un membre) ; les parts retirées suivent, décochées.
-  const toggle = opts.legend_toggle
+  // pas (c'est un repli, pas un membre). 04/10/2026 — chaque ligne garde sa place, cochée ou non.
   if (toggle) {
     const boxOf = (checked: boolean, id: string, label: string) => {
       const box = document.createElement('input')
@@ -2445,18 +2468,9 @@ export const drawDonutChart = (
       box.addEventListener('click', e => { e.stopPropagation(); toggle.toggle(id, box.checked) })
       return box
     }
-    items.each(function (r) {
-      if (r.entry.data.id === '__others__') return
-      this.insertBefore(boxOf(true, r.entry.data.id, r.entry.data.label), this.firstChild)
-    })
-    toggle.hidden.forEach(h => {
-      const row = legend.append('div')
-        .attr('class', 'node_stats_legend_row node_stats_legend_item node_stats_legend_unchecked')
-        .style('display', 'flex').style('align-items', below ? 'center' : 'flex-start').style('gap', '0.35rem')
-        .style('padding', '0.1rem 0.2rem').style('color', '#a0aec0')
-      if (below) row.style('flex', '0 0 auto')
-      ;(row.node() as HTMLElement).appendChild(boxOf(false, h.id, h.label))
-      row.append('span').style('flex', '1 1 auto').style('min-width', '0').text(h.label)
+    all_items.each(function (r) {
+      if (r.entry.slice.id === '__others__') return
+      this.insertBefore(boxOf(r.entry.checked, r.entry.slice.id, r.entry.slice.label), this.firstChild)
     })
   }
 }
