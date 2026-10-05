@@ -136,6 +136,26 @@ const ZOOM_CELL_WIDTH = '8.5rem'
 /** Un nom de niveau sans son numéro (« 1 - Filières » → « Filières »). */
 export const levelShortName = (text: string): string => text.replace(/^\s*\d+\s*-\s+/, '')
 
+/**
+ * 05/10/2026 — LE DÉBUT COMMUN DES NOMS DE DIMENSIONS (Julien : « Il faut enlever "Niveau de détail"
+ * des noms (c'est redondant) mais le mettre en titre de colonne »). En mots entiers, sur au moins deux
+ * noms, et chaque nom doit garder un reste : « Niveau de détail produits » / « Niveau de détail pays
+ * partenaires » → titre « Niveau de détail », lignes « Produits » / « Pays partenaires ». Sans début
+ * commun : pas de titre, les noms entiers.
+ */
+export const dimensionNamesPrefix = (names: string[]): { title: string, short: string[] } | null => {
+  if (names.length < 2) return null
+  const words = names.map(n => n.trim().split(/\s+/))
+  let k = 0
+  while (
+    words.every(w => w.length > k + 1) &&
+    words.every(w => w[k] === words[0][k])
+  ) k++
+  if (k === 0) return null
+  const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1)
+  return { title: words[0].slice(0, k).join(' '), short: words.map(w => capitalize(w.slice(k).join(' '))) }
+}
+
 /** Le clic reste au tableau : la vignette dessous le prendrait pour une sélection. */
 const keepClick = (el: HTMLElement, go: () => void) => {
   el.addEventListener('pointerdown', e => e.stopPropagation())
@@ -228,6 +248,21 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   // 04/10/2026 — L'ORDRE : une colonne tout à gauche. Deux lignes : un ⇅ qui les échange, à cheval
   // sur les deux ; davantage : ▲▼ par ligne.
   const move = model.dimensions.length > 1 ? model.move : undefined
+  const prefix = dimensionNamesPrefix(model.dimensions.map(d => d.name))
+  if (prefix) {
+    // Le début commun, une fois, au-dessus de la colonne des noms (style d'un en-tête de niveau).
+    const top = table.insertRow()
+    top.className = 'figure_navigation_title_row'
+    if (move) top.insertCell()
+    const title = top.insertCell()
+    title.className = 'figure_navigation_names_title'
+    title.textContent = prefix.title
+    title.style.fontWeight = '600'
+    title.style.color = '#718096'
+    title.style.whiteSpace = 'nowrap'
+    title.style.padding = '0 0.5rem 0 0'
+    if (columns > 0) top.insertCell().colSpan = 2 * columns
+  }
   // 05/10/2026 — UNE LIGNE PAR DIMENSION (Julien : « pas besoin du texte "Zoom sélectionné", et le
   // sélecteur pourrait être placé à gauche du label du groupe »). À gauche : [dessin ⌄] [nom ▾] ; puis,
   // par niveau, l'en-tête et sa case de zoom côte à côte. Le tableau perd une ligne par dimension, et le
@@ -277,7 +312,8 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     name.className = 'figure_navigation_name'
     if (dim.drawing) name.appendChild(drawingButton(model, dim.id, dim.drawing))
     const dim_label = document.createElement('span')
-    dim_label.textContent = dim.name
+    // Sous un titre commun, le reste du nom ; l'info-bulle garde le nom complet.
+    dim_label.textContent = prefix ? prefix.short[i] : dim.name
     dim_label.title = model.labels.dimension(dim.name)
     name.appendChild(dim_label)
     if (dim.summary) {
