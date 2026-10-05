@@ -31,6 +31,17 @@ describe('le critere a plusieurs etiquettes', () => {
     })
   })
 
+  it('garde les etiquettes que l auteur exclut du volet', () => {
+    // Les extremites d un referentiel de coefficients : jamais proposees, jamais retenues.
+    const mc = freshMenuConfig()
+    const id = mc.openMainZoneWindow(
+      { kind: 'filter', tags: { sous_filiere: ['lait'] }, exclude: { process: ['extremite'], vide: [] } },
+      'osp.repr.unit'
+    )
+    const o = roundTrip(mc.mainZoneStateToJSON()).main_zone_occupants.find(x => x.id === id)
+    expect(o?.subject).toEqual({ kind: 'filter', tags: { sous_filiere: ['lait'] }, exclude: { process: ['extremite'] } })
+  })
+
   it('n ecrit ni les groupes vides ni de cles de vignettes', () => {
     const mc = freshMenuConfig()
     const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')

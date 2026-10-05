@@ -361,12 +361,18 @@ export type Type_MainZoneSubject =
    * porte UNE des étiquettes de CHAQUE groupe nommé (« Filière = Lait ou Sucre » ET « Type de
    * process = transformation ») ; un groupe absent ou vide ne restreint rien.
    * `ids` : parmi les nœuds retenus, ceux que le lecteur a cochés ; vide = tous les nœuds retenus.
+   * `exclude` : par groupe, les étiquettes que l'AUTEUR écarte du volet — elles ne sont pas
+   * proposées, et un nœud qui en porte une n'est jamais retenu (les extrémités d'un référentiel de
+   * coefficients, qui ne sont pas des process à flux de part et d'autre).
    *
    * C'est le sujet d'un volet que le LECTEUR d'une page publiée règle depuis l'en-tête : le
    * critère d'os#1420 n'avait qu'une étiquette, et la liste d'`elements` ne survit pas au critère
    * qui l'a fait naître. Les deux se combinent ici, sans que l'un efface l'autre.
    */
-  | { kind: 'filter', tags: { [tagg_id: string]: string[] }, ids?: string[], sheet?: string }
+  | {
+    kind: 'filter', tags: { [tagg_id: string]: string[] }, ids?: string[],
+    exclude?: { [tagg_id: string]: string[] }, sheet?: string
+  }
   /**
    * sa#594 — CE VOLET SUIT UN AUTRE VOLET : il montre ce que montre le volet `id` — son sujet et
    * ses coordonnées de données —, quoi qu'on y règle ensuite. Le tableau posé sous un volet Unit.
@@ -2212,6 +2218,11 @@ export class Class_MenuConfig {
       Object.entries(subject.tags).forEach(([tagg_id, tag_ids]) => { if (tag_ids.length > 0) tags[tagg_id] = [...tag_ids] })
       o.subject = { kind: 'filter', tags }
       if (subject.ids && subject.ids.length > 0) o.subject.ids = [...subject.ids]
+      const exclude: { [tagg_id: string]: string[] } = {}
+      Object.entries(subject.exclude ?? {}).forEach(([tagg_id, tag_ids]) => {
+        if (tag_ids.length > 0) exclude[tagg_id] = [...tag_ids]
+      })
+      if (Object.keys(exclude).length > 0) o.subject.exclude = exclude
       if (subject.sheet) o.subject.sheet = subject.sheet
     } else if (subject.kind === 'elements') {
       // Les deux tableaux sont RECOPIÉS ensemble : ils sont parallèles, et n'en recopier qu'un
@@ -4143,6 +4154,9 @@ export class Class_MenuConfig {
     if (o.subject.kind === 'elements' && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
     // sa#594 — le critère à plusieurs étiquettes, groupe par groupe (`ids` est écrit juste au-dessus).
     if (o.subject.kind === 'filter') subject['tags'] = tagListMapToJSON(o.subject.tags)
+    if (o.subject.kind === 'filter' && o.subject.exclude && Object.keys(tagListMapToJSON(o.subject.exclude)).length > 0) {
+      subject['exclude'] = tagListMapToJSON(o.subject.exclude)
+    }
     // os#1420 — un sujet à CRITÈRE n'écrit que le critère (groupe + étiquette) : les nœuds qu'il
     // désigne se redemandent au diagramme à l'ouverture, et les écrire ici les figerait — ce qui
     // est exactement ce à quoi ce sujet sert à échapper.
@@ -4277,9 +4291,11 @@ export class Class_MenuConfig {
     }
     // sa#594 — le critère à plusieurs étiquettes (et ses nœuds cochés), le volet suivi.
     else if (kind === 'filter') {
-      subject = ids.length > 0
-        ? { kind: 'filter', tags: tagListMapFromJSON(sj['tags']), ids }
-        : { kind: 'filter', tags: tagListMapFromJSON(sj['tags']) }
+      const filter: Type_MainZoneSubject = { kind: 'filter', tags: tagListMapFromJSON(sj['tags']) }
+      if (ids.length > 0) filter.ids = ids
+      const exclude = tagListMapFromJSON(sj['exclude'])
+      if (Object.keys(exclude).length > 0) filter.exclude = exclude
+      subject = filter
     }
     else if (kind === 'pane' && obj_id !== '') subject = { kind: 'pane', id: obj_id }
     if (subject.kind !== 'selection' && subject.kind !== 'pane' && sheet !== '') subject = { ...subject, sheet }
