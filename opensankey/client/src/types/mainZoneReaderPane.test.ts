@@ -120,10 +120,10 @@ describe('coordonnees du volet et offre au lecteur, dans le fichier', () => {
     const mc = freshMenuConfig()
     const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
     mc.setMainZoneWindowDataTags(id, { annee: ['2019', '2023'], unite: [] })
-    mc.setMainZoneWindowReader(id, { header: true, node_taggs: ['filiere', 'process'] })
+    mc.setMainZoneWindowReader(id, { header: true, node_taggs: ['filiere', 'process'], nodes: true })
     const o = roundTrip(mc.mainZoneStateToJSON()).main_zone_occupants.find(x => x.id === id)
     expect(o?.data_tags).toEqual({ annee: ['2019', '2023'] })
-    expect(o?.reader).toEqual({ header: true, node_taggs: ['filiere', 'process'] })
+    expect(o?.reader).toEqual({ header: true, node_taggs: ['filiere', 'process'], nodes: true })
   })
 
   it('ne s ecrivent pas quand rien n est pose', () => {

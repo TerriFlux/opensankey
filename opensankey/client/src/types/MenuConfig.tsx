@@ -389,13 +389,14 @@ export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 
 export type Type_MainZoneDataTags = { [tagg_id: string]: string[] }
 
 /**
- * sa#594 — CE QUE L'AUTEUR OFFRE AU LECTEUR d'une page publiée, volet par volet.
+ * sa#594 — CE QUE L'EN-TÊTE DU VOLET MONTRE, choisi par l'auteur volet par volet.
  *
- * `header` : l'en-tête du volet reste visible en publication (l'option `canvas_header`, elle, vaut
- * pour tous les volets à la fois). `node_taggs` / `data_taggs` : les groupes d'étiquettes que
- * l'en-tête propose au lecteur ; absent = tous ceux du diagramme.
+ * `header` : l'en-tête reste visible en publication (l'option `canvas_header`, elle, vaut pour tous
+ * les volets à la fois). `node_taggs` / `data_taggs` : les groupes d'étiquettes qui deviennent des
+ * SÉLECTEURS dans le bandeau sous l'en-tête, en édition comme en publication ; `nodes` : la liste
+ * des nœuds retenus y figure aussi. Absent = rien dans le bandeau.
  */
-export type Type_MainZoneReader = { header?: boolean, node_taggs?: string[], data_taggs?: string[] }
+export type Type_MainZoneReader = { header?: boolean, node_taggs?: string[], data_taggs?: string[], nodes?: boolean }
 
 /** Profondeur au-delà de laquelle une chaîne de volets qui se suivent est tenue pour une boucle. */
 const MAIN_ZONE_FOLLOW_DEPTH = 16
@@ -465,6 +466,7 @@ const readMainZoneReader = (raw: unknown): Type_MainZoneReader | undefined => {
     Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x !== '') : undefined
   const reader: Type_MainZoneReader = {}
   if (r['header'] === true) reader.header = true
+  if (r['nodes'] === true) reader.nodes = true
   const node_taggs = ids(r['node_taggs'])
   const data_taggs = ids(r['data_taggs'])
   if (node_taggs) reader.node_taggs = node_taggs
@@ -2306,6 +2308,7 @@ export class Class_MenuConfig {
     if (!o) return
     const next: Type_MainZoneReader = {}
     if (reader.header) next.header = true
+    if (reader.nodes) next.nodes = true
     if (reader.node_taggs) next.node_taggs = [...reader.node_taggs]
     if (reader.data_taggs) next.data_taggs = [...reader.data_taggs]
     if (Object.keys(next).length > 0) o.reader = next
@@ -4364,6 +4367,7 @@ export class Class_MenuConfig {
     if (o.reader) {
       const reader: Type_JSON = {}
       if (o.reader.header) reader['header'] = true
+      if (o.reader.nodes) reader['nodes'] = true
       if (o.reader.node_taggs) reader['node_taggs'] = [...o.reader.node_taggs]
       if (o.reader.data_taggs) reader['data_taggs'] = [...o.reader.data_taggs]
       if (Object.keys(reader).length > 0) entry['reader'] = reader
