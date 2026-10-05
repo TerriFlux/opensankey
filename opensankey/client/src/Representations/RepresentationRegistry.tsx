@@ -383,6 +383,13 @@ type Type_RepresentationCommon = {
    */
   names_subject?: (ctx: Type_RepresentationContext) => boolean
   /**
+   * sa#601 — LA FIGURE DÉCRIT SON DESSIN À LA GRILLE (`Type_TileHost.reportFit`) après chaque
+   * dessin. La grille garde alors chaque vignette invisible jusqu'à sa première description : sans
+   * cela, elles se montraient un instant dans la grille d'avant (six par ligne, en tout petit),
+   * avant de se ranger. Absent = non, la vignette se montre tout de suite.
+   */
+  reports_tile_fit?: boolean
+  /**
    * os#1409 - COMMENT ON ZOOME DANS CETTE NATURE (cf. Type_RepresentationZoom).
    *
    * ABSENT = cette nature ne zoome pas, et c'est une reponse, pas un oubli : l'etoile, la
