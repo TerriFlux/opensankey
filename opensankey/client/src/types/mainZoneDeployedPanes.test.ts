@@ -19,7 +19,6 @@ const TEST_ENTRY = {
   scale: 'element',
   order: 97,
   label: () => 'Deployed',
-  deploys_pane_coordinates: true,
   attributes: {
     value_mode: {
       default: 'percent',

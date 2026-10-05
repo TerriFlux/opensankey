@@ -377,20 +377,6 @@ type Type_RepresentationCommon = {
    */
   names_subject?: (ctx: Type_RepresentationContext) => boolean
   /**
-   * sa#596 — UNE VIGNETTE PAR VALEUR COCHÉE. Vrai : quand l'en-tête du volet a plusieurs années ou
-   * unités cochées, la grande zone montre une vignette par objet ET par combinaison de ces valeurs
-   * (cf. `deployedCoordinates`), chacune dessinée à ses coordonnées. Absent = une vignette par
-   * objet, dessinée à la première valeur cochée — le cas des figures qui déploient déjà une
-   * dimension en elles-mêmes (petits multiples de la couronne).
-   */
-  deploys_pane_coordinates?: boolean
-  /**
-   * sa#596 — LES COORDONNÉES QUE CETTE VIGNETTE DESSINE, dites en clair (« 2015 · kt MG ») : les
-   * étiquettes de données effectivement lues, repli d'unité compris. La grande zone l'écrit sous
-   * une vignette déployée, qui doit dire son année et son unité. Absent ou `''` : rien d'écrit.
-   */
-  describeCoordinates?: (ctx: Type_RepresentationContext) => string
-  /**
    * os#1409 - COMMENT ON ZOOME DANS CETTE NATURE (cf. Type_RepresentationZoom).
    *
    * ABSENT = cette nature ne zoome pas, et c'est une reponse, pas un oubli : l'etoile, la
