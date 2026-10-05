@@ -4,6 +4,7 @@ import {
 } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_DataTagGroup } from '../types/TagGroup'
+import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_Sankey } from '../types/Sankey'
 
@@ -254,6 +255,9 @@ export const layoutUnitaryBoard = (
   const unitary_dy = unitary_style?.shape_position_dy ?? default_style.shape_position_dy ?? 0
   drawing_area.nodePositioning.computeAutoSankey(false, true, unitary_dx, unitary_dy)
   //drawing_area.nodePositioning.computeParametrization(true)
+  // sa#602 — AVANT l'ordre des flux E/S : il lit les positions, et l'écartement ne change pas
+  // l'ordre des nœuds dans une colonne.
+  spreadUnitaryLabels(drawing_area, center_node, unitary_dy)
   drawing_area.reorganizeIOLinksOf(drawing_area.sankey.visible_nodes_list)
   // Rester en mode 'absolute' : les positions x/y calculées ci-dessus sont respectées
   // telles quelles au rendu. L'ancien mode 'parametric' rappelait
@@ -267,4 +271,129 @@ export const layoutUnitaryBoard = (
   // centre, écrasant la disposition symétrique. C'est exactement ce que fait le
   // else-branch de DrawingArea.setAbsoluteMode().
   drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+}
+/**
+ * sa#602 — L'ÉCART LAISSÉ ENTRE DEUX ENCOMBREMENTS VOISINS, en fraction de la police la plus
+ * grande des deux. Un quart de ligne : c'est à peu près ce que la disposition laisse déjà entre
+ * deux libellés d'une ligne au bout de flux minces (pas vertical de 25 pour une police de 20),
+ * donc une étoile dont aucun libellé ne passe à la ligne n'est pas touchée.
+ */
+const UNITARY_LABEL_GAP_RATIO = 0.25
+
+/**
+ * sa#602 — L'ENCOMBREMENT VERTICAL D'UNE EXTRÉMITÉ, relatif au haut de sa forme : la forme
+ * elle-même, son libellé, et le libellé de valeur (le pourcentage) des flux qui la relient au
+ * centre. `font` est la plus grande police en jeu, qui règle l'écart avec le voisin.
+ *
+ * La hauteur du libellé est celle que le dessin lui donnera : `getRequiredLabelHeight` compte les
+ * lignes du repli dans la largeur de boîte (d3-textwrap avance d'`1em` par ligne), sans DOM — ce
+ * qui compte ici, puisque l'étoile se dispose hors écran, avant tout dessin. Sa position suit
+ * `NodeDrawLabelBase.getLabelPos`.
+ */
+const unitaryFootprintOf = (
+  node: Class_NodeElement,
+  center_node: Class_NodeElement,
+  font_compensation: number
+): { lo: number, hi: number, font: number } => {
+  const h = node.getShapeHeightToUse()
+  let lo = 0
+  let hi = h
+  let font = 0
+  const label_h = node.name_label_drawer.getRequiredLabelHeight()
+  // Position absolue : le libellé n'est plus attaché à son nœud, il ne réserve rien autour de lui.
+  if (label_h > 0 && !getNameLabelValues(node, 'name_label').position_absolute) {
+    font = node.name_label_font_size * font_compensation
+    const shift = node.name_label_vert_shift ?? 0
+    const capsule = node.shape_type === 'capsule'
+    const margin_top = capsule ? node.getShapeWidthToUse() / 2 : node.shape_margin_top
+    const margin_bottom = capsule ? node.getShapeWidthToUse() / 2 : node.shape_margin_bottom
+    let top: number
+    if (node.name_label_vert === 'top') {
+      top = node.name_label_inside_vert ? shift : -margin_top + shift - label_h
+    } else if (node.name_label_vert === 'bottom') {
+      top = node.name_label_inside_vert ? h + shift - label_h : h + margin_bottom + shift
+    } else {
+      top = h / 2 + shift - label_h / 2
+    }
+    lo = Math.min(lo, top)
+    hi = Math.max(hi, top + label_h)
+  }
+  // Le pourcentage est posé au bout du flux, centré sur lui : au milieu de l'extrémité.
+  const links = [...node.input_links_list, ...node.output_links_list]
+    .filter(l => (l.source === center_node || l.target === center_node) && l.value_label_is_visible)
+  links.forEach(l => {
+    const value_h = l.value_label_font_size * font_compensation
+    font = Math.max(font, value_h)
+    lo = Math.min(lo, h / 2 - value_h / 2)
+    hi = Math.max(hi, h / 2 + value_h / 2)
+  })
+  return { lo, hi, font }
+}
+
+/**
+ * sa#602 — AUCUN LIBELLÉ D'EXTRÉMITÉ NE RECOUVRE SON VOISIN.
+ *
+ * Le grief : sur une étoile chargée (Vinification, 9 sorties), un libellé long passe sur deux ou
+ * trois lignes, et sa hauteur dépasse l'écart entre deux flux fins — « Pertes de fermentation
+ * (CO2) » recouvrait ses deux voisins. La disposition auto empile les FORMES avec un pas fixe et
+ * ne connaît pas les libellés.
+ *
+ * On RÉSERVE donc à chaque extrémité la hauteur qu'elle occupe vraiment (cf. `unitaryFootprintOf`),
+ * colonne par colonne, de haut en bas : un nœud garde l'écart que la disposition lui donnait avec
+ * son prédécesseur et ne descend que si leurs encombrements se touchent. Le décalage s'ajoute à
+ * celui des nœuds du dessous, si bien que l'ORDRE ne change pas et que le libellé reste en face de
+ * son flux (pas de trait de rappel à dessiner). La colonne écartée est ensuite recentrée sur son
+ * ancien milieu, pour que l'étoile reste symétrique autour du centre. Une colonne où rien ne se
+ * touche n'est pas modifiée du tout.
+ *
+ * Ni la largeur des libellés ni leur police ne changent : ce sont des réglages de figure que
+ * l'auteur peut vouloir, on ne les force pas.
+ */
+export const spreadUnitaryLabels = (
+  drawing_area: Class_DrawingArea,
+  center_node: Class_NodeElement,
+  v_spacing: number
+): void => {
+  const font_compensation = drawing_area.font_compensation
+  const columns = new Map<number, Class_NodeElement[]>()
+  const visible_nodes = drawing_area.sankey.visible_nodes_list
+  visible_nodes.forEach(node => {
+    if (node === center_node) return
+    const column = columns.get(node.position_x) ?? []
+    column.push(node)
+    columns.set(node.position_x, column)
+  })
+
+  let moved = false
+  columns.forEach(column => {
+    column.sort((a, b) => a.position_y - b.position_y)
+    let offset = 0
+    let prev_bottom: number | null = null
+    let prev_font = 0
+    const tops = column.map(node => {
+      const { lo, hi, font } = unitaryFootprintOf(node, center_node, font_compensation)
+      let top = node.position_y + offset
+      if (prev_bottom !== null) {
+        const needed = prev_bottom + UNITARY_LABEL_GAP_RATIO * Math.max(prev_font, font) - lo
+        if (top < needed) {
+          offset += needed - top
+          top = needed
+        }
+      }
+      prev_bottom = top + hi
+      prev_font = font
+      return top
+    })
+    if (offset === 0) return
+    moved = true
+    column.forEach((node, i) => { node.position_y = tops[i] - offset / 2 })
+  })
+  if (!moved) return
+
+  // Recentrer peut faire passer le haut d'une colonne au-dessus de zéro : on redescend tout le
+  // dessin d'un bloc (centre compris, l'étoile ne se déforme pas), et la zone suit en hauteur.
+  const min_top = Math.min(...visible_nodes.map(n => n.position_y))
+  if (min_top < v_spacing) visible_nodes.forEach(n => { n.position_y += v_spacing - min_top })
+  const max_bottom = Math.max(...visible_nodes.map(n => n.position_y + n.getShapeHeightToUse()))
+  if (drawing_area.height < max_bottom + v_spacing) drawing_area.height = max_bottom + v_spacing
 }

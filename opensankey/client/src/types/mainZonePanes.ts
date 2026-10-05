@@ -13,6 +13,29 @@
 /** Le paramètre d'adresse qui porte le choix du lecteur. */
 export const PANES_URL_PARAM = 'panes'
 
+// sa#596 — UNE VIGNETTE PAR COORDONNÉE DÉPLOYÉE. Un volet dont l'en-tête a plusieurs années (ou
+// unités) cochées montre, pour une nature qui le demande, une vignette par objet ET par valeur
+// cochée. Ces vignettes ont chacune leur CLÉ (la sélection, le liséré, le document actif et le
+// masquage désignent un dessin précis), mais une seule FIGURE : celle de l'objet, dont elles
+// partagent les réglages (`Class_MenuConfig.figureOf` ramène la clé à sa base). Régler la
+// Meunerie en 2015 règle la Meunerie, pas une de ses années.
+
+/**
+ * Séparateur entre la clé d'objet et ses coordonnées : un caractère de contrôle « séparateur
+ * d'enregistrement » écrit en échappement, qu'aucun identifiant d'élément ne contient.
+ */
+const PANE_COORDINATES_SEPARATOR = '\u001e'
+
+/** La clé de la vignette de `base` aux coordonnées `tag_ids` (une étiquette par groupe déployé). */
+export const paneCoordinatesKey = (base: string, tag_ids: string[]): string =>
+  tag_ids.length === 0 ? base : [base, ...tag_ids].join(PANE_COORDINATES_SEPARATOR)
+
+/** La clé de l'objet d'une vignette : elle-même, sauf pour une vignette déployée. */
+export const basePaneKeyOf = (key: string): string => {
+  const i = key.indexOf(PANE_COORDINATES_SEPARATOR)
+  return i < 0 ? key : key.slice(0, i)
+}
+
 /** Relit `panes` d'une entrée d'occupant ; `undefined` quand rien n'est masqué. */
 export const readPanesState = (raw: unknown): { hidden?: string[] } | undefined => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined

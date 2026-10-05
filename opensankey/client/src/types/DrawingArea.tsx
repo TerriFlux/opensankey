@@ -79,6 +79,7 @@ import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
 import { ZOOM_TOPIC, DRAW_TOPIC } from './EventBus'
+import type { Type_TileFit } from '../Representations/TileFit'
 // os#1393 - les menus contextuels des REPRÉSENTATIONS (étoile unitaire, sunburst…) se ferment
 // par le même geste que ceux du diagramme : un seul menu à l'écran, une seule commande pour
 // tout refermer (le clic extérieur passe déjà par `closeAllContextMenus`).
@@ -266,6 +267,22 @@ export class Class_DrawingArea {
    * fenêtre (au lieu de centrer la bbox), afin qu'il reste au même endroit d'un focus à
    * l'autre malgré l'asymétrie de l'étoile (entrées/sorties en nombre/largeur variables). */
   public unitary_center_node_id?: string
+
+  /**
+   * sa#601 — CE BOARD UNITAIRE EST UNE VIGNETTE PARMI D'AUTRES, dans une grille qui dimensionne
+   * sa case d'après son contenu (cf. `Type_TileFit`). Il se cadre alors comme un board SANS nœud
+   * central : tout son contenu, sur les deux axes, centré sur lui-même.
+   *
+   * Les deux règles qu'il quitte n'ont de sens que dans une case qu'on garde en changeant de
+   * sujet : le nœud central à une part fixe de la hauteur réservait au-dessus et au-dessous de
+   * l'étoile un vide que la grille ne pouvait pas rendre ; et le centrer réservait de CHAQUE côté
+   * la place du plus large (un quart de la largeur perdu sur les étoiles du Référentiel SOCLE).
+   * Ici, chaque case a son étoile et n'en change pas. Posé par l'hôte avant chaque dessin ;
+   * jamais persisté.
+   */
+  public in_tile_grid = false
+  /** Taille du contenu cadré en grille, en unités du dessin, au dernier cadrage (`null` sinon). */
+  private _tile_content: { w: number, h: number } | null = null
 
   /** Mode d'affichage des valeurs de flux sur un board unitaire (is_unitary).
    * 'percent' = % de la somme entrée/sortie du nœud central (défaut historique),
@@ -3157,7 +3174,7 @@ export class Class_DrawingArea {
       // l'épingler au centre de la fenêtre (échelle + translation ci-dessous). Posé par
       // updateUnitaryStyles. Absent (cas dégénéré : vue générique sans nœud central) →
       // on retombe sur le centrage de la bbox.
-      const unitary_center_node = (this.is_unitary && this.unitary_center_node_id)
+      const unitary_center_node = (this.is_unitary && this.unitary_center_node_id && !this.in_tile_grid)
         ? this._sankey.nodes_dict[this.unitary_center_node_id]
         : undefined
       const cnx = unitary_center_node
@@ -3168,6 +3185,7 @@ export class Class_DrawingArea {
         : 0
 
       let new_k: number
+      if (this.is_unitary) this._tile_content = null
       if (this.is_unitary) {
         // Board unitaire (aperçu) : le contenu doit REMPLIR la fenêtre (s'agrandir ET
         // se réduire) et suivre son redimensionnement. On calcule donc l'échelle sur la
@@ -3232,6 +3250,8 @@ export class Class_DrawingArea {
           // Pas de nœud central : on prend la plus petite des deux échelles pour que TOUT
           // rentre (formes + labels) sur les deux axes ; center_h/center_v recentrent le mou.
           new_k = Math.min(avail_w / bbox.width, avail_h / bbox.height)
+          // sa#601 — c'est aussi le cadrage d'une vignette en grille (cf. `in_tile_grid`).
+          if (this.in_tile_grid) this._tile_content = { w: bbox.width, h: bbox.height }
         }
       } else {
         // Diagramme principal : on cadre l'axe dominant, mais SANS laisser déborder
@@ -4095,6 +4115,43 @@ export class Class_DrawingArea {
   /** Bounds du contenu en coordonnées MONDE (null si vide). */
   public contentBounds(): { x: number, y: number, width: number, height: number } | null {
     return Camera.contentBounds(this)
+  }
+
+  /**
+   * sa#601 — CE QUE CE BOARD UNITAIRE DIT DE SA TAILLE à la grille qui le range (cf.
+   * `Type_TileFit`) : son contenu cadré en grille, et sa plus petite police de libellé.
+   * Tout est en unités du dessin, donc indépendant de la case — c'est ce qui permet à la grille
+   * de choisir la case sans boucler. La marge est comptée deux fois : `window_fitting_*` la
+   * retranche déjà de la case, et le cadrage la retranche encore.
+   */
+  public tileFit(): Type_TileFit | null {
+    const content = this._tile_content
+    if (!this.is_unitary || content === null || content.w <= 0 || content.h <= 0) return null
+    return {
+      content_width: content.w,
+      content_height: content.h,
+      margin_px: 2 * this._fit_margin,
+      // Police verrouillée : taille d'écran constante, le cadrage n'y change rien.
+      min_font_size: this._font_size_locked ? null : this._minDrawnLabelFontSize()
+    }
+  }
+
+  /**
+   * La plus petite police des libellés RÉELLEMENT dessinés (non vides, rendus), lue sur le DOM :
+   * c'est ce qu'on voit qui compte, quelle que soit la règle qui a fixé la taille. Texte simple
+   * (`<text>`) et texte riche (`<foreignObject>`). `null` sans aucun libellé visible.
+   */
+  private _minDrawnLabelFontSize(): number | null {
+    const root = this.d3_selection_elements_group?.node() as Element | null | undefined
+    const view = root?.ownerDocument?.defaultView
+    if (!root || !view) return null
+    let min = Infinity
+    root.querySelectorAll('text, foreignObject > div').forEach(el => {
+      if ((el.textContent ?? '').trim() === '' || el.getClientRects().length === 0) return
+      const size = parseFloat(view.getComputedStyle(el).fontSize)
+      if (size > 0) min = Math.min(min, size)
+    })
+    return Number.isFinite(min) ? min : null
   }
 
   /**
