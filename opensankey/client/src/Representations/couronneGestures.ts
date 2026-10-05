@@ -201,9 +201,15 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * Reclic sur la colonne qui découpe : la dimension se désactive (elle garde portée et montrés). Au
    * moins une reste active : si c'était la seule, la suivante s'active, et découpe d'un cran si elle
    * ne montrait qu'un membre.
+   *
+   * 05/10/2026 — EN « UNE COURONNE PAR MEMBRE », la dimension des cases COMPTE parmi les actives
+   * (elle était exclue : retirer la dimension des parts ne faisait rien). Retirer celle des parts : il
+   * ne reste que celle des cases, qui découpe alors seule, en secteurs (le plan ne fait de cases
+   * qu'avec une autre dimension active) ; retirer celle des cases : plus de petits multiples, une
+   * couronne découpée par les autres. Son dessin `multiples` reste, pour quand elle revient.
    */
   const deactivate = (id: string) => {
-    const others = state.order.filter(o => o !== id && o !== cells_dim)
+    const others = state.order.filter(o => o !== id)
     if (others.some(o => st(o).active)) { commit(withDim(state, id, { active: false })); return }
     const other = others[0]
     if (other === undefined) return
