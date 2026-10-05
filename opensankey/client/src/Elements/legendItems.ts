@@ -571,10 +571,26 @@ export function computeLegendItems(
       // os#1511 — dimension en bandes : les membres DESSINÉS en propre quelque part, pas toute la
       // sélection ; les autres sont dans « Autres », qui a son entrée en fin de bloc.
       const en_bandes = is_data_tagg ? tag_group.members_drawn_in_bands : undefined
-      const candidate_tags = is_data_tagg
+      const selected_data = is_data_tagg
         ? (en_bandes !== undefined
           ? tag_group.selected_tags_list.filter(tag => en_bandes.members.has(tag.id))
           : tag_group.selected_tags_list)
+        : []
+      // os#1526 — DIMENSION À NIVEAUX, étiquettes masquées montrées (allumé par un clic de légende) :
+      // les membres NON choisis du niveau montré restent, rayés — la porte de retour, comme pour un
+      // masquage. Sinon un membre retiré au clic disparaissait de la légende sans moyen d'y revenir.
+      const data_dimmed = is_data_tagg && config.show_hidden_tags === true &&
+        (tag_group.tags_list ?? []).some(tag => tag.parent !== undefined)
+        ? (() => {
+          const depths = new Set(tag_group.selected_tags_list.map(tagDepth))
+          return (tag_group.tags_list ?? []).filter(tag => tag.is_selected === false && depths.has(tagDepth(tag)))
+        })()
+        : []
+      // Sans membre grisé : exactement la liste d'avant (contenu rendu inchangé).
+      const candidate_tags = is_data_tagg
+        ? (data_dimmed.length === 0
+          ? selected_data
+          : (tag_group.tags_list ?? []).filter(tag => selected_data.includes(tag) || data_dimmed.includes(tag)))
         : (all_tags ?? tag_group.selected_tags_list)
       const displayed_tags = candidate_tags.filter(tag => {
         if (is_data_tagg) return true

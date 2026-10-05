@@ -28,10 +28,30 @@ import { Box } from '@chakra-ui/react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { chooseLegendDimensionTag, isMultiDimension, legendDimensionPanelId } from './legendDimensionChoice'
+import { buildDiagramNavigationTable } from '../../../Representations/diagramNavigationTable'
+import { DRAW_TOPIC } from '../../../types/EventBus'
 
 const HOVER_BG = '#edf2f7'
 // Même plan que les pop-ups (PanelShell) : au-dessus du dessin et du chrome, sous les dialogues.
 const LIST_Z_INDEX = 40
+
+/**
+ * os#1526 — UNE DIMENSION À NIVEAUX : le TABLEAU de la couronne (sa ligne), comme la barre du haut et
+ * Coordonnées, à la place de la liste plate. Rebâti à chaque dessin : un geste du tableau redessine.
+ */
+const LegendDimensionTable = ({ app_data, group, style }: {
+  app_data: Class_ApplicationData
+  group: Class_DataTagGroup
+  style: React.CSSProperties
+}) => {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [, refresh] = React.useReducer((n: number) => n + 1, 0)
+  React.useEffect(() => app_data.menu_configuration.subscribe(DRAW_TOPIC, refresh), [app_data])
+  React.useEffect(() => {
+    ref.current?.replaceChildren(buildDiagramNavigationTable(app_data, [group], { memory_key: `legend|${group.id}` }))
+  })
+  return <Box ref={ref} role='menu' aria-label={group.name} style={{ ...style, maxHeight: undefined, overflowY: 'visible' }} />
+}
 
 export const LegendDimensionChoice = ({ app_data, group }: {
   app_data: Class_ApplicationData
@@ -46,6 +66,14 @@ export const LegendDimensionChoice = ({ app_data, group }: {
   if (geometry === null) return null
   const multi = isMultiDimension(group)
   const selected_count = group.selected_tags_list.length
+  const box_style: React.CSSProperties = {
+    position: 'fixed', left: geometry.x, top: geometry.y, minWidth: geometry.w,
+    maxHeight: geometry.h, overflowY: 'auto', zIndex: LIST_Z_INDEX,
+    background: 'white', border: '1px solid #cbd5e0', borderRadius: '0.25rem',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', padding: '0.25rem 0',
+    fontSize: '0.875rem', lineHeight: '1.25rem', color: '#1a202c'
+  }
+  if (group.is_hierarchical) return <LegendDimensionTable app_data={app_data} group={group} style={box_style} />
 
   const choose = (tag_id: string) => {
     chooseLegendDimensionTag(app_data, group, tag_id)
@@ -57,13 +85,7 @@ export const LegendDimensionChoice = ({ app_data, group }: {
     <Box
       role={multi ? 'menu' : 'listbox'}
       aria-label={group.name}
-      style={{
-        position: 'fixed', left: geometry.x, top: geometry.y, minWidth: geometry.w,
-        maxHeight: geometry.h, overflowY: 'auto', zIndex: LIST_Z_INDEX,
-        background: 'white', border: '1px solid #cbd5e0', borderRadius: '0.25rem',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', padding: '0.25rem 0',
-        fontSize: '0.875rem', lineHeight: '1.25rem', color: '#1a202c'
-      }}
+      style={box_style}
     >
       {group.tags_list.map(tag => {
         const is_selected = tag.is_selected
