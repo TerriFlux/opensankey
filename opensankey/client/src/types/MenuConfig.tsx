@@ -86,6 +86,7 @@ import {
 // vers les éléments de dessin (il n'en prend que la forme), et `Class_NodeElement` importé en
 // valeur ferait remonter toute la zone de dessin dans le menu.
 import type { Class_NodeElement } from '../Elements/Node'
+import { isPaneValueMode, type Type_PaneValueMode } from '../Representations/paneValueMode'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -565,6 +566,14 @@ export type Type_MainZoneOccupant = {
    * (cf. `mainZoneReaderVisiblePanes`).
    */
   panes?: { hidden?: string[] }
+  /**
+   * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET (pourcentage, normalisé, valeur), choisi dans son
+   * en-tête. Comme `data_tags`, c'est ce que le volet MONTRE, pas un réglage du diagramme : deux
+   * volets Sankey du même document peuvent lire l'un en pourcentages, l'autre en valeurs. Un volet
+   * qui en suit un autre montre celui du volet suivi. Cf. `Representations/paneValueMode`.
+   * Absent = ce que disent les figures, ou les libellés tels que l'auteur les a réglés.
+   */
+  value_mode?: Type_PaneValueMode
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -2126,6 +2135,9 @@ export class Class_MenuConfig {
     else delete o.data_tags
     if (e.reader) o.reader = e.reader
     else delete o.reader
+    // sa#598 — et le type de valeur qu'elle montre.
+    if (e.value_mode) o.value_mode = e.value_mode
+    else delete o.value_mode
     // Les vignettes masquées sont celles de la vue, pas celles d'une fenêtre réutilisée.
     if (e.panes) o.panes = e.panes
     else delete o.panes
@@ -2317,6 +2329,55 @@ export class Class_MenuConfig {
   }
 
   /**
+   * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET `id` (un volet Sankey : cf.
+   * `Type_MainZoneOccupant.value_mode`) ; `null` rend les libellés réglés par l'auteur.
+   */
+  public setMainZoneWindowValueMode(id: string, mode: Type_PaneValueMode | null): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || (o.value_mode ?? null) === mode) return
+    if (mode !== null) o.value_mode = mode
+    else delete o.value_mode
+    this._notifyMainZone()
+  }
+
+  /** sa#598 — Le type de valeur que montre le volet `id`, ou `null`. Lu à chaque libellé : sans copie. */
+  public mainZoneValueModeOf(id: string): Type_PaneValueMode | null {
+    return this._host._main_zone_occupants.find(x => x.id === id)?.value_mode ?? null
+  }
+
+  /** sa#598 — Le type de valeur que montre le volet `id` : le sien, ou celui du volet qu'il suit. */
+  public mainZoneEffectiveValueMode(id: string): Type_PaneValueMode | null {
+    const occupants = this._host._main_zone_occupants
+    const o = occupants.find(x => x.id === id)
+    return o ? (mainZoneLeaderOf(occupants, o)?.value_mode ?? null) : null
+  }
+
+  /**
+   * sa#598 — RETIRE LE RÉGLAGE `key` QUE PORTENT EN PROPRE les figures de ces volets : elles
+   * retombent sur ce que dit le volet (le type de valeur choisi dans l'en-tête), sinon sur leur style.
+   */
+  public clearMainZoneFigureOption(ids: string[], key: string): void {
+    let changed = false
+    ids.forEach(id => Object.values(this._figures[id] ?? {}).forEach(fig => {
+      if (!fig.isAttributeExplicit(key)) return
+      fig.delete(key)
+      changed = true
+    }))
+    if (changed) this._notifyMainZone()
+  }
+
+  /**
+   * sa#598 — Le type de valeur du volet Sankey qui porte le DESSIN VIVANT : le vivant, sinon le
+   * premier volet Sankey (une page publiée n'en désigne pas, cf. `Class_SankeyPanes.sync`).
+   */
+  public liveSankeyPaneValueMode(): Type_PaneValueMode | null {
+    const occupants = this._host._main_zone_occupants
+    const live_id = this._host._main_zone_live_sankey_id
+    const live = (live_id !== null ? occupants.find(x => x.id === live_id) : undefined) ?? occupants.find(isSankeyPane)
+    return live?.value_mode ?? null
+  }
+
+  /**
    * sa#594 — SE DÉTACHER DU VOLET SUIVI : le volet garde ce qu'il montrait — les objets que le
    * volet suivi désignait à cet instant, et ses coordonnées de données — et cesse de le suivre.
    * `ids` : les objets résolus par l'appelant (le modèle ne sait pas résoudre un critère).
@@ -2325,6 +2386,8 @@ export class Class_MenuConfig {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind !== 'pane') return
     const data_tags = effectiveMainZoneDataTags(this._host._main_zone_occupants, o)
+    // sa#598 — et le type de valeur qu'il montrait, lu AVANT que le volet cesse de suivre.
+    const value_mode = mainZoneLeaderOf(this._host._main_zone_occupants, o)?.value_mode
     const leader_subject = effectiveMainZoneSubject(this._host._main_zone_occupants, o.subject)
     const sheet = mainZoneSubjectSheet(leader_subject)
     const subject: Type_MainZoneSubject = sheet === ''
@@ -2335,6 +2398,7 @@ export class Class_MenuConfig {
     if (data_tags && Object.keys(data_tags).length > 0) {
       o.data_tags = Object.fromEntries(Object.entries(data_tags).map(([k, v]) => [k, [...v]]))
     }
+    if (value_mode) o.value_mode = value_mode
     this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
@@ -3657,6 +3721,9 @@ export class Class_MenuConfig {
         if (subject.kind === 'pane') return
         if (closing.data_tags) o.data_tags = JSON.parse(JSON.stringify(closing.data_tags)) as Type_MainZoneDataTags
         else delete o.data_tags
+        // sa#598 — et le type de valeur qu'il montrait.
+        if (closing.value_mode) o.value_mode = closing.value_mode
+        else delete o.value_mode
       })
     }
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
@@ -4372,6 +4439,8 @@ export class Class_MenuConfig {
       if (o.reader.data_taggs) reader['data_taggs'] = [...o.reader.data_taggs]
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }
+    // sa#598 — le type de valeur d'un volet Sankey, seulement s'il est posé.
+    if (o.value_mode) entry['value_mode'] = o.value_mode
     // 05/10/2026 — LES VIGNETTES MASQUÉES, seulement s'il y en a (cf. `Type_MainZoneOccupant.panes`).
     if (o.panes?.hidden && o.panes.hidden.length > 0) entry['panes'] = { hidden: [...o.panes.hidden] }
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
@@ -4504,6 +4573,8 @@ export class Class_MenuConfig {
     // sa#594 — coordonnées de données et offre au lecteur ; absentes = rien de posé.
     const data_tags = tagListMapFromJSON(e['data_tags'])
     const reader = readMainZoneReader(e['reader'])
+    // sa#598 — le type de valeur d'un volet Sankey ; une valeur inconnue est ignorée.
+    const value_mode = isPaneValueMode(e['value_mode']) ? e['value_mode'] : undefined
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
     const panes = readPanesState(e['panes'])
     return {
@@ -4520,6 +4591,7 @@ export class Class_MenuConfig {
       sync,
       data_tags: Object.keys(data_tags).length > 0 ? data_tags : undefined,
       reader,
+      value_mode,
       panes,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
@@ -4563,7 +4635,7 @@ export class Class_MenuConfig {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
       host._main_zone_occupants = entries.map(({
-        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader
+        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode
       }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
@@ -4571,6 +4643,7 @@ export class Class_MenuConfig {
         if (sync) o.sync = sync
         if (data_tags) o.data_tags = data_tags
         if (reader) o.reader = reader
+        if (value_mode) o.value_mode = value_mode
         if (panes) o.panes = panes
         return o
       })
