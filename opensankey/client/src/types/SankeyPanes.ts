@@ -1518,6 +1518,7 @@ export class Class_SankeyPanes {
       this._applied.wanted[setting] = print
       this._applied.actual[setting] = print
       if (!drew) this.redrawLive()
+      else mc.updateAllComponentsRelatedToTags()
     } else {
       const prints = this._render_prints.get(doc)
       if (prints) prints[setting] = print
