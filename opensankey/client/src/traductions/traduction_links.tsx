@@ -137,6 +137,29 @@ export const resources_flux = {
             scale_ref_thickness: 'Maximum thickness (px) for this flow in the current view tag: only when this flow would exceed this thickness, the diagram scale is rescaled so it sits exactly at this value; all other flows and the scale legend follow. Below the threshold, nothing changes. 0 = disabled. One reference flow per view tag.'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: 'Rules of the normalised value',
+          help: 'A normalised value is a flow divided by the sum of the flows that the rule of its node keeps (on one side of the node, filtered by a tag). The reference flows sum to 1.',
+          kind_secteur: 'Sectors',
+          kind_produit: 'Products',
+          kind_other: 'Other nodes',
+          side_outputs: 'Outputs',
+          side_inputs: 'Inputs',
+          filter_all: 'All flows',
+          filter_counterpart: 'Tag of the node opposite',
+          filter_link: 'Tag of the flow',
+          op_is: 'is',
+          op_is_not: 'is not',
+          default: 'default',
+          reset: 'Back to default',
+          reason_no_flux_on_side: 'no flow on this side',
+          reason_no_flux_matches: 'no flow meets the rule',
+          reason_no_value: 'the reference flows have no value',
+          reason_zero_reference: 'the reference sum is zero',
+          rule_sum: 'Sum of the flows kept by the rule',
+          notice: 'Normalised value empty: {{reason}} ({{rule}}).'
+        },
         labels: {
           value: 'Value',
           intervals: 'Intervals',
@@ -148,6 +171,8 @@ export const resources_flux = {
           unit_tag: 'Native origin unit',
           other_unit_tag: 'Other native units',
           normalized: 'Normalized (ref. flux)',
+          normalized_source: 'Normalised (rule of the source node)',
+          normalized_target: 'Normalised (rule of the destination node)',
           '%IS': '% of the source node inflows',
           '%ID': '% of the destination node inflows',
           '%OS': '% of the source node outflows',
@@ -371,6 +396,29 @@ export const resources_flux = {
             starting_tangeant: 'Règle le rayon de courbure au départ lorsque le/les flux sélectionné(s) sont représentés en courbes de Bézier'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: 'Règles de la valeur normalisée',
+          help: 'Une valeur normalisée est un flux rapporté à la somme des flux que retient la règle de son nœud (d\'un côté du nœud, filtrés par une étiquette). Les flux de référence somment à 1.',
+          kind_secteur: 'Secteurs',
+          kind_produit: 'Produits',
+          kind_other: 'Autres nœuds',
+          side_outputs: 'Sorties',
+          side_inputs: 'Entrées',
+          filter_all: 'Tous les flux',
+          filter_counterpart: 'Étiquette du nœud d\'en face',
+          filter_link: 'Étiquette du flux',
+          op_is: 'est',
+          op_is_not: 'n\'est pas',
+          default: 'défaut',
+          reset: 'Revenir au défaut',
+          reason_no_flux_on_side: 'aucun flux de ce côté',
+          reason_no_flux_matches: 'aucun flux ne vérifie la règle',
+          reason_no_value: 'les flux de référence n\'ont pas de valeur',
+          reason_zero_reference: 'la somme de référence est nulle',
+          rule_sum: 'Somme des flux retenus par la règle',
+          notice: 'Valeur normalisée vide : {{reason}} ({{rule}}).'
+        },
         labels: {
           source: 'Noeud source',
           target: 'Noeud destination',
@@ -405,6 +453,8 @@ export const resources_flux = {
           unit_tag: 'Unité naturelle d\'origine',
           other_unit_tag: 'Autres unités naturelles',
           normalized: 'Normalisé (flux réf.)',
+          normalized_source: 'Normalisé (règle du nœud source)',
+          normalized_target: 'Normalisé (règle du nœud destination)',
           unit_factor: 'Facteur d\'unité',
           labels: 'Nom',
           node_value: 'Valeur',
@@ -604,6 +654,29 @@ export const resources_flux = {
             scale_ref_thickness: 'Grosor máximo (px) de este flujo para la etiqueta de vista actual: solo cuando este flujo superaría este grosor, la escala del diagrama se recalcula para ajustarlo exactamente a este valor; los demás flujos y la leyenda de escala se ajustan. Por debajo del umbral, no cambia nada. 0 = desactivado. Un flujo de referencia por etiqueta de vista.'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: 'Reglas del valor normalizado',
+          help: 'Un valor normalizado es un flujo dividido por la suma de los flujos que retiene la regla de su nodo (de un lado del nodo, filtrados por una etiqueta). Los flujos de referencia suman 1.',
+          kind_secteur: 'Sectores',
+          kind_produit: 'Productos',
+          kind_other: 'Otros nodos',
+          side_outputs: 'Salidas',
+          side_inputs: 'Entradas',
+          filter_all: 'Todos los flujos',
+          filter_counterpart: 'Etiqueta del nodo opuesto',
+          filter_link: 'Etiqueta del flujo',
+          op_is: 'es',
+          op_is_not: 'no es',
+          default: 'por defecto',
+          reset: 'Volver al valor por defecto',
+          reason_no_flux_on_side: 'ningún flujo de este lado',
+          reason_no_flux_matches: 'ningún flujo cumple la regla',
+          reason_no_value: 'los flujos de referencia no tienen valor',
+          reason_zero_reference: 'la suma de referencia es nula',
+          rule_sum: 'Suma de los flujos que retiene la regla',
+          notice: 'Valor normalizado vacío: {{reason}} ({{rule}}).'
+        },
         labels: {
           value: 'Valor',
           intervals: 'Intervalos',
@@ -669,6 +742,8 @@ export const resources_flux = {
           name_label_template: 'Plantilla',
           node_value: 'Valor',
           normalized: 'Normalizado (flujo ref.)',
+          normalized_source: 'Normalizado (regla del nodo origen)',
+          normalized_target: 'Normalizado (regla del nodo destino)',
           other_unit_tag: 'Otras unidades nativas',
           pos_v: 'Posición del valor',
           scientificNotation: 'Notación científica',
@@ -837,6 +912,29 @@ export const resources_flux = {
             scale_ref_thickness: 'Maximale Dicke (px) dieses Flusses für das aktuelle View-Tag: Nur wenn dieser Fluss diese Dicke überschreiten würde, wird der Diagramm-Maßstab so neu berechnet, dass er genau diesen Wert erreicht; alle anderen Flüsse und die Skalenlegende folgen. Unterhalb des Schwellenwerts ändert sich nichts. 0 = deaktiviert. Ein Referenzfluss pro View-Tag.'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: 'Regeln des normierten Werts',
+          help: 'Ein normierter Wert ist ein Fluss geteilt durch die Summe der Flüsse, die die Regel seines Knotens behält (auf einer Seite des Knotens, nach einem Tag gefiltert). Die Referenzflüsse summieren sich zu 1.',
+          kind_secteur: 'Sektoren',
+          kind_produit: 'Produkte',
+          kind_other: 'Andere Knoten',
+          side_outputs: 'Ausgänge',
+          side_inputs: 'Eingänge',
+          filter_all: 'Alle Flüsse',
+          filter_counterpart: 'Tag des gegenüberliegenden Knotens',
+          filter_link: 'Tag des Flusses',
+          op_is: 'ist',
+          op_is_not: 'ist nicht',
+          default: 'Standard',
+          reset: 'Auf Standard zurücksetzen',
+          reason_no_flux_on_side: 'kein Fluss auf dieser Seite',
+          reason_no_flux_matches: 'kein Fluss erfüllt die Regel',
+          reason_no_value: 'die Referenzflüsse haben keinen Wert',
+          reason_zero_reference: 'die Referenzsumme ist null',
+          rule_sum: 'Summe der von der Regel behaltenen Flüsse',
+          notice: 'Normierter Wert leer: {{reason}} ({{rule}}).'
+        },
         labels: {
           value: 'Wert',
           intervals: 'Intervalle',
@@ -902,6 +1000,8 @@ export const resources_flux = {
           name_label_template: 'Vorlage',
           node_value: 'Wert',
           normalized: 'Normiert (Referenzfluss)',
+          normalized_source: 'Normiert (Regel des Quellknotens)',
+          normalized_target: 'Normiert (Regel des Zielknotens)',
           other_unit_tag: 'Weitere native Einheiten',
           pos_v: 'Position des Werts',
           scientificNotation: 'Wissenschaftliche Notation',
@@ -1070,6 +1170,29 @@ export const resources_flux = {
             scale_ref_thickness: 'Spessore massimo (px) di questo flusso per il tag vista corrente: solo quando questo flusso supererebbe questo spessore, la scala del diagramma viene ricalcolata affinché si attesti esattamente a questo valore; tutti gli altri flussi e la legenda della scala si adeguano. Sotto la soglia, nulla cambia. 0 = disattivato. Un flusso di riferimento per tag vista.'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: 'Regole del valore normalizzato',
+          help: 'Un valore normalizzato è un flusso diviso per la somma dei flussi che la regola del suo nodo trattiene (da un lato del nodo, filtrati da un\'etichetta). I flussi di riferimento sommano a 1.',
+          kind_secteur: 'Settori',
+          kind_produit: 'Prodotti',
+          kind_other: 'Altri nodi',
+          side_outputs: 'Uscite',
+          side_inputs: 'Entrate',
+          filter_all: 'Tutti i flussi',
+          filter_counterpart: 'Etichetta del nodo opposto',
+          filter_link: 'Etichetta del flusso',
+          op_is: 'è',
+          op_is_not: 'non è',
+          default: 'predefinito',
+          reset: 'Ripristina il predefinito',
+          reason_no_flux_on_side: 'nessun flusso da questo lato',
+          reason_no_flux_matches: 'nessun flusso soddisfa la regola',
+          reason_no_value: 'i flussi di riferimento non hanno valore',
+          reason_zero_reference: 'la somma di riferimento è nulla',
+          rule_sum: 'Somma dei flussi trattenuti dalla regola',
+          notice: 'Valore normalizzato vuoto: {{reason}} ({{rule}}).'
+        },
         labels: {
           value: 'Valore',
           intervals: 'Intervalli',
@@ -1135,6 +1258,8 @@ export const resources_flux = {
           name_label_template: 'Modello',
           node_value: 'Valore',
           normalized: 'Normalizzato (flusso rif.)',
+          normalized_source: 'Normalizzato (regola del nodo origine)',
+          normalized_target: 'Normalizzato (regola del nodo destinazione)',
           other_unit_tag: 'Altre unità native',
           pos_v: 'Posizione del valore',
           scientificNotation: 'Notazione scientifica',
@@ -1303,6 +1428,29 @@ export const resources_flux = {
             scale_ref_thickness: '该流量在当前视图标签下的最大粗细（px）：仅当该流量将超过此粗细时，图表比例尺才会重新缩放，使其恰好等于该值；其他所有流量与比例尺图例随之调整。低于该阈值时不作任何改变。0 = 停用。每个视图标签一条参考流量。'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: '归一化数值的规则',
+          help: '归一化数值是一条流量除以其节点规则所保留流量之和（节点某一侧、按标签筛选）。参考流量之和为 1。',
+          kind_secteur: '部门',
+          kind_produit: '产品',
+          kind_other: '其他节点',
+          side_outputs: '输出',
+          side_inputs: '输入',
+          filter_all: '所有流量',
+          filter_counterpart: '对端节点的标签',
+          filter_link: '流量的标签',
+          op_is: '是',
+          op_is_not: '不是',
+          default: '默认',
+          reset: '恢复默认',
+          reason_no_flux_on_side: '该侧没有流量',
+          reason_no_flux_matches: '没有流量满足规则',
+          reason_no_value: '参考流量没有数值',
+          reason_zero_reference: '参考总和为零',
+          rule_sum: '规则保留的流量之和',
+          notice: '归一化数值为空：{{reason}}（{{rule}}）。'
+        },
         labels: {
           value: '数值',
           intervals: '区间',
@@ -1314,6 +1462,8 @@ export const resources_flux = {
           unit_tag: '原生来源单位',
           other_unit_tag: '其他原生单位',
           normalized: '归一化（参考流量）',
+          normalized_source: '归一化（源节点规则）',
+          normalized_target: '归一化（目标节点规则）',
           '%IS': '占源节点进入流量的 %',
           '%ID': '占终点节点进入流量的 %',
           '%OS': '占源节点流出流量的 %',
@@ -1536,6 +1686,29 @@ export const resources_flux = {
             scale_ref_thickness: '現在のビュータグにおけるこのフローの最大の太さ（px）：このフローがこの太さを超える場合にのみ、ちょうどこの値になるよう図のスケールが調整され、他のすべてのフローとスケール凡例もそれに従います。しきい値未満では何も変わりません。0 = 無効。ビュータグごとに基準フローは 1 本です。'
           }
         },
+        // sa#595 — règles de la valeur normalisée (éditeur du diagramme, avis du volet Unit.)
+        normalization: {
+          title: '正規化値の規則',
+          help: '正規化値とは、フローをそのノードの規則が残すフロー（ノードの片側、タグで絞り込み）の合計で割った値です。基準フローの合計は 1 になります。',
+          kind_secteur: '部門',
+          kind_produit: '製品',
+          kind_other: 'その他のノード',
+          side_outputs: '出力',
+          side_inputs: '入力',
+          filter_all: 'すべてのフロー',
+          filter_counterpart: '相手側ノードのタグ',
+          filter_link: 'フローのタグ',
+          op_is: 'である',
+          op_is_not: 'でない',
+          default: '既定',
+          reset: '既定に戻す',
+          reason_no_flux_on_side: 'この側にフローがない',
+          reason_no_flux_matches: '規則を満たすフローがない',
+          reason_no_value: '基準フローに値がない',
+          reason_zero_reference: '基準の合計がゼロ',
+          rule_sum: '規則が残すフローの合計',
+          notice: '正規化値が空です：{{reason}}（{{rule}}）。'
+        },
         labels: {
           value: '値',
           intervals: '区間',
@@ -1547,6 +1720,8 @@ export const resources_flux = {
           unit_tag: '元データの単位',
           other_unit_tag: 'その他の元単位',
           normalized: '正規化（基準フロー）',
+          normalized_source: '正規化（始点ノードの規則）',
+          normalized_target: '正規化（終点ノードの規則）',
           '%IS': '始点ノードの入力合計に対する %',
           '%ID': '終点ノードの入力合計に対する %',
           '%OS': '始点ノードの出力合計に対する %',

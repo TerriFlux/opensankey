@@ -36,7 +36,10 @@ export const unit_stock_percent_constants = ['%SS', '%SD'] as const
 // 'unit_model' (OS#1286) : unité résolue depuis le registre d'unités du diagramme
 // (sankey.units) — `unit` porte alors l'id d'une unité ou d'une grandeur, le
 // facteur de conversion est le coefficient de l'unité (unit_factor ignoré).
-export const unit_constants = ['unit_name', 'unit_model', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, ...unit_stock_percent_constants, 'unit_ratio','normalized'] as const
+// sa#595 — la valeur normalisée par la RÈGLE d'un nœud : celle du nœud source (le flux est une de
+// ses sorties) ou du nœud destination (une de ses entrées), comme `%OS` et `%ID` pour les parts.
+export const normalized_rule_constants = ['normalized_source', 'normalized_target'] as const
+export const unit_constants = ['unit_name', 'unit_model', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, ...unit_stock_percent_constants, 'unit_ratio','normalized', ...normalized_rule_constants] as const
 export type UnitType = typeof unit_constants[number]
 
 // CLASS ELEMENT VALUE TREE ************************************************************

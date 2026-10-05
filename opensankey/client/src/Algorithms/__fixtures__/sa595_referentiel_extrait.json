@@ -1,0 +1,3077 @@
+{
+ "version": "1.2.0",
+ "format_version": 2,
+ "id": "referentiel_coefficients_socle",
+ "node_pos_is_center": true,
+ "width": 3000,
+ "height": 68322.39353721411,
+ "user_scale": 20000,
+ "grid_visible": false,
+ "couleur_fond_sankey": "#ffffff",
+ "font_size_locked": false,
+ "levelTags": {},
+ "nodeTags": {
+  "filiere": {
+   "name": "Filière",
+   "banner": "multi",
+   "tags_order": [
+    "cereales",
+    "fourrages et pailles",
+    "fruits et legumes",
+    "lait",
+    "ufs",
+    "oleoproteagineux",
+    "pomme de terre",
+    "sucre",
+    "viande bovine",
+    "viande chevaline",
+    "viande ovine et caprine",
+    "viande porcine",
+    "vin",
+    "volailles"
+   ],
+   "tags": {
+    "cereales": {
+     "name": "Céréales",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "fourrages et pailles": {
+     "name": "Fourrages et pailles",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "fruits et legumes": {
+     "name": "Fruits et légumes",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "lait": {
+     "name": "Lait",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "ufs": {
+     "name": "Œufs",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "oleoproteagineux": {
+     "name": "Oléoprotéagineux",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "pomme de terre": {
+     "name": "Pomme de terre",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "sucre": {
+     "name": "Sucre",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande bovine": {
+     "name": "Viande bovine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande chevaline": {
+     "name": "Viande chevaline",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande ovine et caprine": {
+     "name": "Viande ovine et caprine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande porcine": {
+     "name": "Viande porcine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "vin": {
+     "name": "Vin",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "volailles": {
+     "name": "Volailles",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  },
+  "sous filiere": {
+   "name": "Sous-filière",
+   "banner": "multi",
+   "tags_order": [
+    "ble tendre",
+    "mais",
+    "orge",
+    "ble dur",
+    "triticale",
+    "sorgho",
+    "avoine",
+    "seigle",
+    "sarrasin",
+    "riz",
+    "epeautre",
+    "millet",
+    "fourrages et pailles",
+    "fruits et legumes",
+    "lait",
+    "ufs",
+    "colza",
+    "feverole",
+    "lentille",
+    "lin",
+    "lupin",
+    "olive",
+    "pois",
+    "pois chiche",
+    "soja",
+    "tournesol",
+    "pomme de terre",
+    "sucre",
+    "viande bovine",
+    "viande chevaline",
+    "viande ovine et caprine",
+    "viande porcine",
+    "vin detail par segment",
+    "vin detail par couleur",
+    "volailles"
+   ],
+   "tags": {
+    "ble tendre": {
+     "name": "Blé tendre",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "mais": {
+     "name": "Maïs",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "orge": {
+     "name": "Orge",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "ble dur": {
+     "name": "Blé dur",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "triticale": {
+     "name": "Triticale",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "sorgho": {
+     "name": "Sorgho",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "avoine": {
+     "name": "Avoine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "seigle": {
+     "name": "Seigle",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "sarrasin": {
+     "name": "Sarrasin",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "riz": {
+     "name": "Riz",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "epeautre": {
+     "name": "Epeautre",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "millet": {
+     "name": "Millet",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "fourrages et pailles": {
+     "name": "Fourrages et pailles",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "fruits et legumes": {
+     "name": "Fruits et légumes",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "lait": {
+     "name": "Lait",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "ufs": {
+     "name": "Œufs",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "colza": {
+     "name": "Colza",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "feverole": {
+     "name": "Féverole",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "lentille": {
+     "name": "Lentille",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "lin": {
+     "name": "Lin",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "lupin": {
+     "name": "Lupin",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "olive": {
+     "name": "Olive",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "pois": {
+     "name": "Pois",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "pois chiche": {
+     "name": "Pois chiche",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "soja": {
+     "name": "Soja",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "tournesol": {
+     "name": "Tournesol",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "pomme de terre": {
+     "name": "Pomme de terre",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "sucre": {
+     "name": "Sucre",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande bovine": {
+     "name": "Viande bovine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande chevaline": {
+     "name": "Viande chevaline",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande ovine et caprine": {
+     "name": "Viande ovine et caprine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "viande porcine": {
+     "name": "Viande porcine",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "vin detail par segment": {
+     "name": "Vin (détail par segment)",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "vin detail par couleur": {
+     "name": "Vin (détail par couleur)",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "volailles": {
+     "name": "Volailles",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  },
+  "type de process": {
+   "name": "Type de process",
+   "banner": "multi",
+   "tags_order": [
+    "transformation",
+    "marche",
+    "extremite"
+   ],
+   "tags": {
+    "transformation": {
+     "name": "Transformation",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "marche": {
+     "name": "Marché",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "extremite": {
+     "name": "Extrémité",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  },
+  "type de noeud": {
+   "name": "Type de noeud",
+   "banner": "none",
+   "tags_order": [
+    "produit",
+    "secteur"
+   ],
+   "tags": {
+    "produit": {
+     "name": "produit",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "secteur": {
+     "name": "secteur",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  },
+  "type de matiere": {
+   "name": "Type de matière",
+   "banner": "none",
+   "tags_order": [
+    "coproduit",
+    "intrant externe",
+    "matiere premiere",
+    "produit",
+    "produit remarquable",
+    "rejet"
+   ],
+   "tags": {
+    "coproduit": {
+     "name": "Coproduit",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "intrant externe": {
+     "name": "Intrant externe",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "matiere premiere": {
+     "name": "Matière première",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "produit": {
+     "name": "Produit",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "produit remarquable": {
+     "name": "Produit remarquable",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "rejet": {
+     "name": "Rejet",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  }
+ },
+ "fluxTags": {
+  "echange": {
+   "name": "Échange",
+   "banner": "none",
+   "tags_order": [
+    "interieur",
+    "importation",
+    "exportation"
+   ],
+   "tags": {
+    "interieur": {
+     "name": "Intérieur",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "importation": {
+     "name": "Importation",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "exportation": {
+     "name": "Exportation",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  }
+ },
+ "dataTags": {
+  "annee": {
+   "name": "Année",
+   "banner": "one",
+   "tags_order": [
+    "2015",
+    "2019",
+    "2023"
+   ],
+   "tags": {
+    "2015": {
+     "name": "2015",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "2019": {
+     "name": "2019",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "2023": {
+     "name": "2023",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false,
+   "is_unit": false,
+   "propagate_structure": false
+  },
+  "unite": {
+   "name": "Unité",
+   "banner": "one",
+   "tags_order": [
+    "kt",
+    "ktms",
+    "kt mu",
+    "kt mg",
+    "kt mp"
+   ],
+   "tags": {
+    "kt": {
+     "name": "kt",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "ktms": {
+     "name": "ktms",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "kt mu": {
+     "name": "kt MU",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "kt mg": {
+     "name": "kt MG",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "kt mp": {
+     "name": "kt MP",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    }
+   },
+   "use_colors": false,
+   "is_unit": true,
+   "propagate_structure": false,
+   "activated": true
+  }
+ },
+ "taggs_order": {
+  "node_taggs": [
+   "filiere",
+   "sous filiere",
+   "type de process",
+   "type de noeud",
+   "type de matiere"
+  ],
+  "flux_taggs": [
+   "echange"
+  ],
+  "data_taggs": [
+   "annee",
+   "unite"
+  ],
+  "level_taggs": []
+ },
+ "style": {
+  "default": {
+   "name": "Style par défaut"
+  },
+  "NodeStyle": {
+   "name_label_is_visible": true,
+   "shape_min_height": 3,
+   "name_label_font_family": "Cormorant",
+   "name_label_color": false,
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeStyle"
+  },
+  "LinkStyle": {
+   "name_label_background_visible": false,
+   "name_label_vert": "middle",
+   "name_label_font_size": 20,
+   "value_label_is_visible": true,
+   "value_label_vert": "middle",
+   "value_label_font_size": 30,
+   "value_label_box_width": 300,
+   "shape_ending_curve": 0.050000000000000044,
+   "shape_is_arrow": false,
+   "value_label_font_family": "Arial,serif",
+   "value_label_significant_digits": 5,
+   "value_label_custom_digit": true,
+   "value_label_nb_digit": 0,
+   "value_label_unit_visible": true,
+   "value_label_unit": "kt",
+   "value_label_pos_auto": false,
+   "name": "ElementStyle.LinkStyle"
+  },
+  "ContainerStyle": {
+   "name_label_is_visible": true,
+   "name_label_inside_vert": true,
+   "name_label_vert": "top",
+   "shape_color": "white",
+   "shape_border_visible": true,
+   "shape_border_radius": 5,
+   "value_label_is_visible": false,
+   "shape_min_height": 100,
+   "shape_min_width": 100,
+   "name": "ElementStyle.ContainerStyle"
+  },
+  "NodeContainerStyle": {
+   "shape_type": "rect",
+   "shape_color_visible": false,
+   "shape_border_visible": true,
+   "shape_border_color": "black",
+   "shape_border_thickness": 2,
+   "shape_border_dashed": true,
+   "shape_border_radius": 10,
+   "name_label_is_visible": true,
+   "name_label_horiz": "middle",
+   "name_label_vert": "top",
+   "name_label_inside_horiz": false,
+   "name_label_inside_vert": false,
+   "name_label_bold": true,
+   "value_label_is_visible": false,
+   "shape_margin_top": 10,
+   "shape_margin_bottom": 10,
+   "shape_margin_left": 5,
+   "shape_margin_right": 5,
+   "name": "ElementStyle.NodeContainerStyle"
+  },
+  "NodeLeftExtremityStyle": {
+   "name_label_horiz": "left",
+   "name_label_vert": "middle",
+   "name": "ElementStyle.NodeLeftExtremityStyle"
+  },
+  "NodeRightExtremityStyle": {
+   "name_label_horiz": "right",
+   "name_label_vert": "middle",
+   "name": "ElementStyle.NodeRightExtremityStyle"
+  },
+  "NodeProductStyle": {
+   "shape_type": "rect",
+   "shape_min_width": 140,
+   "shape_min_height": 3,
+   "name_label_font_family": "Cormorant",
+   "name_label_font_size": 30,
+   "name_label_italic": true,
+   "name_label_color": false,
+   "name_label_vert": "middle",
+   "name_label_vert_shift": 0,
+   "name_label_text_align": "middle",
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeProductStyle"
+  },
+  "NodeSectorStyle": {
+   "shape_min_height": 3,
+   "name_label_font_family": "Cormorant",
+   "name_label_color": false,
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeSectorStyle"
+  },
+  "NodeImportExportCloseStyle": {
+   "shape_visible": false,
+   "shape_min_width": 1,
+   "name_label_is_visible": false,
+   "name_label_box_width": 300,
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeImportExportCloseStyle"
+  },
+  "NodeImportCloseStyle": {
+   "name": "ElementStyle.NodeImportCloseStyle"
+  },
+  "NodeExportCloseStyle": {
+   "name": "ElementStyle.NodeExportCloseStyle"
+  },
+  "NodeImportExportAboveBelowStyle": {
+   "shape_visible": false,
+   "shape_min_height": 1,
+   "name_label_vert": "middle",
+   "value_label_is_visible": true,
+   "value_label_vert": "middle",
+   "name": "ElementStyle.NodeImportExportAboveBelowStyle"
+  },
+  "NodeImportAboveStyle": {
+   "name_label_horiz": "left",
+   "value_label_horiz": "left",
+   "value_label_horiz_shift": 40,
+   "name": "ElementStyle.NodeImportAboveStyle"
+  },
+  "NodeExportBelowStyle": {
+   "name_label_horiz": "right",
+   "value_label_horiz": "right",
+   "value_label_horiz_shift": -40,
+   "name": "ElementStyle.NodeExportBelowStyle"
+  },
+  "LinkImportExportCloseStyle": {
+   "name": "ElementStyle.LinkImportExportCloseStyle"
+  },
+  "LinkImportCloseStyle": {
+   "shape_orientation": "vh",
+   "shape_ending_tangeant": 1,
+   "shape_is_arrow": false,
+   "name": "ElementStyle.LinkImportCloseStyle"
+  },
+  "LinkExportCloseStyle": {
+   "shape_orientation": "hv",
+   "shape_starting_tangeant": 1,
+   "name": "ElementStyle.LinkExportCloseStyle"
+  },
+  "LinkImportExportAboveBelowStyle": {
+   "shape_starting_curve": 0.25,
+   "shape_ending_curve": 0.25,
+   "shape_starting_tangeant": 0.5,
+   "shape_ending_tangeant": 0.5,
+   "name": "ElementStyle.LinkImportExportAboveBelowStyle"
+  }
+ },
+ "nodes": {
+  "BleTendre__Importations": {
+   "name": "Importations (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Importations"
+   },
+   "x": 50.0,
+   "y": 50.0,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [
+    "BleTendre__Importations---Farine"
+   ],
+   "links_order": [
+    "BleTendre__Importations---Farine"
+   ]
+  },
+  "BleTendre__Meunerie": {
+   "name": "Meunerie (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Meunerie"
+   },
+   "x": 1197.0100555419922,
+   "y": 187.36003794873147,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [
+    "BleTendre__Meunerie---Farine"
+   ],
+   "links_order": [
+    "BleTendre__Meunerie---Farine"
+   ]
+  },
+  "BleTendre__AmidonnerieGlutennerie": {
+   "name": "Amidonnerie / Glutennerie (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Amidonnerie / Glutennerie"
+   },
+   "x": 1197.0100555419922,
+   "y": 359.89833750927835,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---AmidonnerieGlutennerie"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---AmidonnerieGlutennerie"
+   ]
+  },
+  "BleTendre__Farine": {
+   "name": "Farine (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Farine"
+   },
+   "x": 1436.5483856201172,
+   "y": 148.8958808442393,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "produit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Meunerie---Farine",
+    "BleTendre__Importations---Farine"
+   ],
+   "outputLinksId": [
+    "BleTendre__Farine---Rhd",
+    "BleTendre__Farine---AutresIaa",
+    "BleTendre__Farine---HorsFab",
+    "BleTendre__Farine---Menages",
+    "BleTendre__Farine---Exportations",
+    "BleTendre__Farine---AmidonnerieGlutennerie",
+    "BleTendre__Farine---IndetermineDebouches"
+   ],
+   "links_order": [
+    "BleTendre__Farine---Rhd",
+    "BleTendre__Farine---AutresIaa",
+    "BleTendre__Farine---HorsFab",
+    "BleTendre__Farine---Menages",
+    "BleTendre__Farine---Exportations",
+    "BleTendre__Farine---AmidonnerieGlutennerie",
+    "BleTendre__Farine---IndetermineDebouches",
+    "BleTendre__Meunerie---Farine",
+    "BleTendre__Importations---Farine"
+   ]
+  },
+  "BleTendre__Menages": {
+   "name": "Ménages (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Ménages"
+   },
+   "x": 1980.1929168701172,
+   "y": 133.44117123759247,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---Menages"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---Menages"
+   ]
+  },
+  "BleTendre__Rhd": {
+   "name": "RHD (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "RHD"
+   },
+   "x": 1980.1929168701172,
+   "y": 211.5571227756784,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---Rhd"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---Rhd"
+   ]
+  },
+  "BleTendre__AutresIaa": {
+   "name": "Autres IAA (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Autres IAA"
+   },
+   "x": 1980.1929168701172,
+   "y": 261.28855282938935,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---AutresIaa"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---AutresIaa"
+   ]
+  },
+  "BleTendre__HorsFab": {
+   "name": "Hors FAB (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Hors FAB"
+   },
+   "x": 1980.1929168701172,
+   "y": 910.6739493867198,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---HorsFab"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---HorsFab"
+   ]
+  },
+  "BleTendre__IndetermineDebouches": {
+   "name": "Indéterminé - Débouchés (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Indéterminé - Débouchés"
+   },
+   "x": 1980.1929168701172,
+   "y": 1173.8183363083326,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---IndetermineDebouches"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---IndetermineDebouches"
+   ]
+  },
+  "BleTendre__Exportations": {
+   "name": "Exportations (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Exportations"
+   },
+   "x": 1980.1929168701172,
+   "y": 1216.8910294165867,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "cereales"
+    ],
+    "sous filiere": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "extremite"
+    ]
+   },
+   "inputLinksId": [
+    "BleTendre__Farine---Exportations"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "BleTendre__Farine---Exportations"
+   ]
+  },
+  "Lait__Eau_2DConsommee": {
+   "name": "Eau - Consommée (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Eau - Consommée"
+   },
+   "x": 50.0,
+   "y": 27612.04261065048,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "lait"
+    ],
+    "sous filiere": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "intrant externe"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [
+    "Lait__Eau_2DConsommee---FabricationDeBeurre"
+   ],
+   "links_order": [
+    "Lait__Eau_2DConsommee---FabricationDeBeurre"
+   ]
+  },
+  "Lait__CremeIntermediaire": {
+   "name": "Crème intermédiaire (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Crème intermédiaire"
+   },
+   "x": 653.409294208574,
+   "y": 27371.643246743562,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "lait"
+    ],
+    "sous filiere": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "produit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [
+    "Lait__CremeIntermediaire---FabricationDeBeurre"
+   ],
+   "links_order": [
+    "Lait__CremeIntermediaire---FabricationDeBeurre"
+   ]
+  },
+  "Lait__FabricationDeBeurre": {
+   "name": "Fabrication de beurre (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Fabrication de beurre"
+   },
+   "x": 878.2872312850003,
+   "y": 27404.92940342782,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "lait"
+    ],
+    "sous filiere": [
+     "lait"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [
+    "Lait__CremeIntermediaire---FabricationDeBeurre",
+    "Lait__Eau_2DConsommee---FabricationDeBeurre"
+   ],
+   "outputLinksId": [
+    "Lait__FabricationDeBeurre---Beurre",
+    "Lait__FabricationDeBeurre---Babeurre"
+   ],
+   "links_order": [
+    "Lait__FabricationDeBeurre---Beurre",
+    "Lait__FabricationDeBeurre---Babeurre",
+    "Lait__CremeIntermediaire---FabricationDeBeurre",
+    "Lait__Eau_2DConsommee---FabricationDeBeurre"
+   ]
+  },
+  "Lait__Beurre": {
+   "name": "Beurre (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Beurre"
+   },
+   "x": 1120.0423282014835,
+   "y": 27382.82610600568,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "lait"
+    ],
+    "sous filiere": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "produit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Lait__FabricationDeBeurre---Beurre"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Lait__FabricationDeBeurre---Beurre"
+   ]
+  },
+  "Lait__Babeurre": {
+   "name": "Babeurre (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Babeurre"
+   },
+   "x": 1120.0423282014835,
+   "y": 27406.0645746189,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "lait"
+    ],
+    "sous filiere": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Lait__FabricationDeBeurre---Babeurre"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Lait__FabricationDeBeurre---Babeurre"
+   ]
+  },
+  "Sucre__BetteravesSucrieres": {
+   "name": "Betteraves sucrières (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Betteraves sucrières"
+   },
+   "x": 368.3038635253906,
+   "y": 52925.023241766066,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [
+    "Sucre__BetteravesSucrieres---Sucrerie"
+   ],
+   "links_order": [
+    "Sucre__BetteravesSucrieres---Sucrerie"
+   ]
+  },
+  "Sucre__Sucrerie": {
+   "name": "Sucrerie (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Sucrerie"
+   },
+   "x": 842.4392852783203,
+   "y": 52799.53799701509,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__BetteravesSucrieres---Sucrerie"
+   ],
+   "outputLinksId": [
+    "Sucre__Sucrerie---Sucre",
+    "Sucre__Sucrerie---Melasses",
+    "Sucre__Sucrerie---EcumesDeSucrerie",
+    "Sucre__Sucrerie---PulpesHumides",
+    "Sucre__Sucrerie---PulpesSurpressees",
+    "Sucre__Sucrerie---PulpesDeshydratees",
+    "Sucre__Sucrerie---Eau"
+   ],
+   "links_order": [
+    "Sucre__Sucrerie---Sucre",
+    "Sucre__Sucrerie---Melasses",
+    "Sucre__Sucrerie---EcumesDeSucrerie",
+    "Sucre__Sucrerie---PulpesHumides",
+    "Sucre__Sucrerie---PulpesSurpressees",
+    "Sucre__Sucrerie---PulpesDeshydratees",
+    "Sucre__Sucrerie---Eau",
+    "Sucre__BetteravesSucrieres---Sucrerie"
+   ]
+  },
+  "Sucre__Eau": {
+   "name": "Eau (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Eau"
+   },
+   "x": 1372.4723567414753,
+   "y": 53752.613059851064,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "rejet"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---Eau"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---Eau"
+   ]
+  },
+  "Sucre__EcumesDeSucrerie": {
+   "name": "Écumes de sucrerie (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Écumes de sucrerie"
+   },
+   "x": 1801.0369415283203,
+   "y": 52476.60135150728,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---EcumesDeSucrerie"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---EcumesDeSucrerie"
+   ]
+  },
+  "Sucre__PulpesHumides": {
+   "name": "Pulpes humides (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Pulpes humides"
+   },
+   "x": 1801.0369415283203,
+   "y": 52569.77827716646,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---PulpesHumides"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---PulpesHumides"
+   ]
+  },
+  "Sucre__PulpesSurpressees": {
+   "name": "Pulpes surpressées (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Pulpes surpressées"
+   },
+   "x": 1801.0369415283203,
+   "y": 52665.97792053499,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---PulpesSurpressees"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---PulpesSurpressees"
+   ]
+  },
+  "Sucre__PulpesDeshydratees": {
+   "name": "Pulpes déshydratées (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Pulpes déshydratées"
+   },
+   "x": 1801.0369415283203,
+   "y": 52775.11050372552,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---PulpesDeshydratees"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---PulpesDeshydratees"
+   ]
+  },
+  "Sucre__Melasses": {
+   "name": "Mélasses (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Mélasses"
+   },
+   "x": 1801.0369415283203,
+   "y": 52853.14923230415,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---Melasses"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---Melasses"
+   ]
+  },
+  "Sucre__Sucre": {
+   "name": "Sucre (Sucre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Sucre"
+   },
+   "x": 1801.0369415283203,
+   "y": 53088.72987180974,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filiere": [
+     "sucre"
+    ],
+    "sous filiere": [
+     "sucre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "produit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [
+    "Sucre__Sucrerie---Sucre"
+   ],
+   "outputLinksId": [],
+   "links_order": [
+    "Sucre__Sucrerie---Sucre"
+   ]
+  }
+ },
+ "links": {
+  "BleTendre__Farine---Rhd": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__Rhd",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1.29,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0.86,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 2.95,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Farine---AutresIaa": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__AutresIaa",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1840,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1780,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1950,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Farine---HorsFab": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__HorsFab",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 58.8,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 60.8,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 70.2,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Farine---Menages": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__Menages",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1770,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1690,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1550,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Farine---Exportations": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__Exportations",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 359,
+      "tags": {
+       "echange": [
+        "exportation"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 167,
+      "tags": {
+       "echange": [
+        "exportation"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 208,
+      "tags": {
+       "echange": [
+        "exportation"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Meunerie---Farine": {
+   "idSource": "BleTendre__Meunerie",
+   "idTarget": "BleTendre__Farine",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 4540,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 4260,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 4310,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Importations---Farine": {
+   "idSource": "BleTendre__Importations",
+   "idTarget": "BleTendre__Farine",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 280,
+      "tags": {
+       "echange": [
+        "importation"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 271,
+      "tags": {
+       "echange": [
+        "importation"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 336,
+      "tags": {
+       "echange": [
+        "importation"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Farine---AmidonnerieGlutennerie": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__AmidonnerieGlutennerie",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 7.73,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 24,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 29.8,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Farine---IndetermineDebouches": {
+   "idSource": "BleTendre__Farine",
+   "idTarget": "BleTendre__IndetermineDebouches",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 786,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 806,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 833,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Lait__CremeIntermediaire---FabricationDeBeurre": {
+   "idSource": "Lait__CremeIntermediaire",
+   "idTarget": "Lait__FabricationDeBeurre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1002.893638024815,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 371.2620729090491,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 21.40032230891718,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 392.6623952179663,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 943.9993343461798,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 349.4599391261204,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 20.14360172251053,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 369.6035408486309,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 903.6066533812765,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 334.506937235592,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 19.28167942208329,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 353.7886166576753,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  },
+  "Lait__Eau_2DConsommee---FabricationDeBeurre": {
+   "idSource": "Lait__Eau_2DConsommee",
+   "idTarget": "Lait__FabricationDeBeurre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 2.483226519836333,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1.748403343247281,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1.673583575204135,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  },
+  "Lait__FabricationDeBeurre---Beurre": {
+   "idSource": "Lait__FabricationDeBeurre",
+   "idTarget": "Lait__Beurre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 438.0189999984804,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 367.2146294740919,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 2.657486669782312,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 369.8721161438743,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 412.3730000000141,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 345.6546882043659,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 2.522129514366202,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 348.1768177187321,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 394.728,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 317.347217009103,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 2.533836614720877,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 319.8810536238239,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  },
+  "Lait__FabricationDeBeurre---Babeurre": {
+   "idSource": "Lait__FabricationDeBeurre",
+   "idTarget": "Lait__Babeurre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 567.3578645461706,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 4.087683030075667,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 18.79976339433727,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 22.88744642441294,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 533.3747376894129,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 3.842842410703284,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 17.67371088986052,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 21.51655330056381,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 510.5522245613128,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 3.67841144843569,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 16.9174724137875,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 20.5958838622232,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  },
+  "Sucre__BetteravesSucrieres---Sucrerie": {
+   "idSource": "Sucre__BetteravesSucrieres",
+   "idTarget": "Sucre__Sucrerie",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 26119.5,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 30041.7,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 25585.5,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---Sucre": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__Sucre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 3775.576906725262,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 4342.52,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 3698.39,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---Melasses": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__Melasses",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 992.5409999998199,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1141.584599999638,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 972.2489999998378,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---EcumesDeSucrerie": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__EcumesDeSucrerie",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 783.5849999998578,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 901.250999999714,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 767.5649999998719,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---PulpesHumides": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__PulpesHumides",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 45.18271679998566,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 7.112768999998814,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---PulpesSurpressees": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__PulpesSurpressees",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 2786.349901499495,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1769.78658869944,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1711.234996499715,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---PulpesDeshydratees": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__PulpesDeshydratees",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1011.029098499927,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1687.29178026964,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 924.2280844998904,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Sucre__Sucrerie---Eau": {
+   "idSource": "Sucre__Sucrerie",
+   "idTarget": "Sucre__Eau",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 16770.4180932709,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 20154.08331422205,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 17504.72014999642,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  }
+ }
+}

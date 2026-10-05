@@ -30,6 +30,7 @@ import { useModelBinding } from '../hooks/useModelBinding'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
 import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
+import { normalizedValueFor } from '../Algorithms/NormalizationRule'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_DataTagGroup } from './TagGroup'
@@ -715,6 +716,8 @@ export const format_value = (
     return ''
   }
   let is_percent = false
+  // sa#595 — un rapport (valeur normalisée) n'a pas d'échelle d'unité à appliquer.
+  let is_ratio = false
   if (label_values.unit_type == '%IS') {
     let total_source = 0
     // if (unit_taggs.length > 0) {
@@ -771,6 +774,15 @@ export const format_value = (
     const ref = element.sankey.normalised_link?.value
     const ref_value = ref ? (ref.valueResult ?? ref.valueData) : null
     data_value = (data_value != null && ref_value) ? data_value / ref_value : null
+  } else if (label_values.unit_type == 'normalized_source' || label_values.unit_type == 'normalized_target') {
+    // sa#595 — rapportée à la somme des flux que la RÈGLE du nœud retient (sorties vers des
+    // produits pour un secteur, débouchés intérieurs pour un produit…), dans l'unité affichée.
+    // Référence vide ou nulle : la valeur reste vide, jamais un rapport faux.
+    const ref_node = (label_values.unit_type == 'normalized_source' ? source : target) as Class_NodeElement
+    is_ratio = true
+    data_value = (is_link && ref_node instanceof Class_NodeElement)
+      ? normalizedValueFor(ref_node, data_value, element.sankey)
+      : null
   }
 
   /*==========================================================================*/
@@ -786,9 +798,9 @@ export const format_value = (
   if (data_value !== null && data_value !== undefined && label_values.is_visible) {
     // Apply unit factor regardless of whether the unit is visible/named,
     // so the displayed value reflects the chosen scale even when the unit itself is hidden.
-    if (!is_percent && model_unit) {
+    if (!is_percent && !is_ratio && model_unit) {
       data_value /= model_unit.unit_type.displayFactor(model_unit.unit)
-    } else if (!is_percent && label_values.unit_factor > 1) {
+    } else if (!is_percent && !is_ratio && label_values.unit_factor > 1) {
       data_value /= label_values.unit_factor
     }
 
@@ -855,7 +867,8 @@ export const format_value = (
     text_value = formatValueWithOption(element,text_value, label_values.unit_type as ValueOptionType,prefix)
   } else if ((label_values.unit_type == '%SS' || label_values.unit_type == '%SD') && label_values.is_visible) {
     if (text_value) text_value = text_value + '%'
-  } else if (label_values.unit_type == 'normalized') return text_value
+  } else if (label_values.unit_type == 'normalized' || label_values.unit_type == 'normalized_source' ||
+    label_values.unit_type == 'normalized_target') return text_value
 
   return text_value
 }
