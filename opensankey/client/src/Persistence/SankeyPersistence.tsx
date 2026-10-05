@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { normalizationRulesFromJSON } from '../Algorithms/NormalizationRule'
 import {
   default_style_id, getBooleanFromJSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getNumberFromJSON,
   getNumberOrNullFromJSON,
@@ -1603,6 +1604,10 @@ export class SankeyPersistence {
     // seulement s'il diffère du catalogue par défaut (fichiers existants inchangés).
     if (!sankey.units.equalsDefaultCatalog())
       json_object['units'] = sankey.units.toJSON() as unknown as Type_JSON
+    // sa#595 — règles de la valeur normalisée. Additif : écrites seulement quand l'auteur en a
+    // posé une, de sorte qu'un fichier ordinaire se réécrit comme avant.
+    if (Object.keys(sankey.normalization_rules).length > 0)
+      json_object['normalization_rules'] = sankey.normalization_rules as unknown as Type_JSON
     // #426 — catalogues de traçabilité « d'où vient ta valeur », partagés par
     // tout le diagramme : les sujets des contraintes, et les explications que
     // les flux et les cellules indexent. Écrits par la réconciliation, conservés
@@ -1895,6 +1900,9 @@ export class SankeyPersistence {
       sankey.units.fromJSON(json_object['units'])
     else
       sankey.units.resetToDefault()
+
+    // sa#595 — règles de la valeur normalisée. Additif : clé absente → les défauts par famille.
+    sankey.normalization_rules = normalizationRulesFromJSON(json_object['normalization_rules'])
 
     // #426 — catalogues « d'où vient ta valeur ». Un catalogue illisible est
     // rejeté EN ENTIER (cf. determinationCatalogFromJSON) : des index qui
