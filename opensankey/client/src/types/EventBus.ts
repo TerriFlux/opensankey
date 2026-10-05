@@ -15,6 +15,14 @@
 export const MAIN_ZONE_TOPIC = 'main_zone'
 
 /**
+ * 05/10/2026 — Topic « les vignettes offertes au choix ont changé » : une fenêtre à plusieurs
+ * vignettes déclare ce qu'elle montre (cf. `Class_MenuConfig.reportMainZonePanePicker`), et la barre
+ * du haut d'une page publiée en fait son menu « Vignettes ». Distinct de `MAIN_ZONE` : la fenêtre
+ * déclare EN RÉPONSE à un rendu de la grande zone, et le lui renotifier bouclerait.
+ */
+export const PANE_PICKERS_TOPIC = 'pane_pickers'
+
+/**
  * os#1361 — Topic « le diagramme vient d'être dessiné ». Notifié en fin de
  * `DrawingArea.draw()`, donc à chaque changement de coordonnées effectivement
  * rendu (dataTag, niveau, couche, vue). Abonnés : les occupants `draw` de la
@@ -197,7 +205,10 @@ export const HOST_TOPICS: ReadonlySet<string> = new Set([
   EXPORT_TOPIC,
   // sa#531 — l'avancée dans un tutoriel : un geste d'apprentissage, pas une propriété du
   // diagramme sur lequel il s'exerce (cf. TUTORIAL_TOPIC).
-  TUTORIAL_TOPIC
+  TUTORIAL_TOPIC,
+  // 05/10/2026 — les vignettes que chaque fenêtre offre au choix du lecteur : l'abonné est la barre
+  // du haut de la page publiée, unique (cf. `Class_MenuConfig.reportMainZonePanePicker`).
+  PANE_PICKERS_TOPIC
 ])
 
 export class Class_EventBus {
