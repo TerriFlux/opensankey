@@ -35,6 +35,7 @@ import {
   dimensionHiddenMembers, dimensionOpenedMembers, dimensionRootsOf, openedForSelection, selectionFromOpening
 } from './DataDimensionHierarchy'
 import type { Type_DataCut, Type_DataDimensionSubject } from './DataDimensionHierarchy'
+import type { Type_ExportColumn, Type_ExportRow, Type_ExportTable } from './TableExport'
 
 /** Tolérance RELATIVE de l'écart parent ↔ Σ enfants, la même que la couronne. */
 const BALANCE_TOLERANCE = 1e-6
@@ -332,27 +333,38 @@ const sumOf = (values: (number | null)[]): number | null => {
 }
 
 /**
- * LE CSV de ce que la matrice montre. Séparateur `;` (Excel en français l'attend), séparateur
- * décimal au choix de l'appelant. Les valeurs sont celles du cube, divisées par `factor` (l'unité
- * affichée), sans arrondi : le CSV sert à recalculer. Une cellule absente est vide.
+ * sa#593 — CE QUE LA MATRICE MONTRE, en tableau à exporter (Excel ou CSV, cf. `TableExport`) : les
+ * lignes affichées, dans l'ordre du tri, sous-niveaux en retrait, total et sous-totaux en gras.
+ * Les valeurs sont celles du cube, divisées par `factor` (l'unité affichée), sans arrondi : le
+ * fichier sert à recalculer, Excel n'en AFFICHE que `decimals` décimales. Une cellule absente est
+ * vide. L'unité a SA colonne, juste après les libellés (`unit_label`), et n'est pas collée aux
+ * valeurs : un nombre suivi d'une unité, Excel le lit comme du texte.
  */
-export const dimensionMatrixCsv = (
+export const dimensionMatrixExportTable = (
   matrix: Type_DimensionMatrix,
-  options: { decimal?: '.' | ',', factor?: number, unit?: string } = {}
-): string => {
-  const decimal = options.decimal ?? '.'
+  options: { title: string, factor?: number, unit?: string, unit_label?: string, decimals?: number }
+): Type_ExportTable => {
   const factor = options.factor && options.factor > 0 ? options.factor : 1
-  const esc = (s: string) => /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-  const num = (v: number | null, kind: Type_MatrixColumn['kind']) => {
-    if (v === null) return ''
-    const n = kind === 'share' ? v : v / factor
-    return String(n).replace('.', decimal)
-  }
-  const unit = options.unit ? ` (${options.unit})` : ''
-  const header = [matrix.row_dimension.label, ...matrix.columns.map(c => c.kind === 'share' ? c.label : c.label + unit)]
-  const lines = matrix.rows.map(r => [
-    '  '.repeat(r.depth) + r.label,
-    ...r.cells.map((v, i) => num(v, matrix.columns[i].kind))
-  ])
-  return [header, ...lines].map(cols => cols.map(esc).join(';')).join('\r\n')
+  const unit = options.unit ?? ''
+  const with_unit = unit !== ''
+  const corner = matrix.column_dimension
+    ? `${matrix.row_dimension.label} \\ ${matrix.column_dimension.label}`
+    : matrix.row_dimension.label
+  const columns: Type_ExportColumn[] = [
+    { label: corner, kind: 'text' },
+    ...(with_unit ? [{ label: options.unit_label ?? 'Unit', kind: 'text' as const }] : []),
+    ...matrix.columns.map(c => c.kind === 'share'
+      ? { label: c.label, kind: 'share' as const }
+      : { label: c.label, kind: 'number' as const, decimals: options.decimals ?? 0 })
+  ]
+  const rows: Type_ExportRow[] = matrix.rows.map(r => ({
+    cells: [
+      r.label,
+      ...(with_unit ? [unit] : []),
+      ...r.cells.map((v, i) => v === null ? null : matrix.columns[i].kind === 'share' ? v : v / factor)
+    ],
+    depth: r.depth,
+    strong: r.kind === 'total' || (r.kind === 'member' && r.expanded)
+  }))
+  return { title: options.title, columns, rows }
 }
