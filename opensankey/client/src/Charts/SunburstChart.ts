@@ -39,7 +39,7 @@ import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText, figurePercentText } from './figureFormat'
-import { layoutDonutCallouts } from './donutCalloutLayout'
+import { discRadiusInZone, layoutDonutCallouts } from './donutCalloutLayout'
 import {
   LEGEND_UNCHECKED_INK, legendCheckBox, legendCheckRows, legendMemberKeyOf, type Type_LegendChecks
 } from './legendChecks'
@@ -1368,7 +1368,9 @@ export const drawSunburstChart = (
         ? Math.max(120, Math.min(width, height - legend_width - 12) - 8)
         : Math.max(120, Math.min(width - legend_width - 12, height) - 8)
       // L'ÉCHELLE (`scale_factor`) : la part de la place disponible que prend le disque.
-      const outer_r = (side / 2 - 2) * Math.max(10, Math.min(100, st.scale_factor)) / 100
+      // 05/10/2026 — MOINS LA MARGE FIXE des étiquettes détachées (`CALLOUT_MARGIN_RATIO`), la même
+      // qu'elles sortent ou non : le rayon ne dépend que de la place, comme pour la couronne.
+      const outer_r = discRadiusInZone(side / 2 - 2) * Math.max(10, Math.min(100, st.scale_factor)) / 100
       // Le trou central porte le total et le geste « remonter » : il lui faut de la place.
       const inner_r = Math.max(14, outer_r * (st.centre_hole / 100))
       return { side, outer_r, inner_r, ring: (outer_r - inner_r) / rings }

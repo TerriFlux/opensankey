@@ -58,6 +58,27 @@ export interface Type_CalloutBounds {
   left_width?: number
 }
 
+/**
+ * 05/10/2026 — LA MARGE DES ÉTIQUETTES DÉTACHÉES EST FIXE (Julien : « c'est bizarre que si on les
+ * cache, ça change la taille de la couronne. Il ne faut pas les prendre en compte »). Le cadre se
+ * réglait sur les étiquettes sorties (sa!827, sa!874) : passer de « Détacher » à « Masquer », changer
+ * le seuil ou décocher une part faisait grandir ou rétrécir le disque.
+ *
+ * Désormais le rayon ne dépend QUE de la place : la demi-zone (figure moins légende et titres) moins
+ * cette part, la même que des étiquettes sortent ou non. Les étiquettes détachées se rangent dans la
+ * marge (`layoutDonutCallouts`, bornée par la zone) ; celles qui n'y tiennent pas se taisent,
+ * l'info-bulle reste. Couronne, petits multiples (la case) et sunburst suivent la même règle.
+ */
+export const CALLOUT_MARGIN_RATIO = 0.2
+
+/** Le rayon du disque dans une demi-zone de `half_zone` pixels : la marge fixe retirée. */
+export const discRadiusInZone = (half_zone: number): number =>
+  Math.max(0, half_zone) * (1 - CALLOUT_MARGIN_RATIO)
+
+/** L'inverse : la demi-zone qu'un disque de rayon `radius` réclame, marge fixe comprise. */
+export const zoneHalfOfDisc = (radius: number): number =>
+  Math.max(0, radius) / (1 - CALLOUT_MARGIN_RATIO)
+
 /** L'écart vertical minimal entre deux étiquettes d'une même colonne, en pixels. */
 export const CALLOUT_STACK_GAP_PX = 2
 

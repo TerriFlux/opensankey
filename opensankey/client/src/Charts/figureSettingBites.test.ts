@@ -156,7 +156,10 @@ const sondes = () => {
       parts: disque.by_id,
       draw: (c: HTMLElement) => drawSunburstChart(c, plainSunburstTree(PARTS), {
         parts: disque.by_id as never,
-        style: { labels_mode: 'always', value_visible: true, legend_visible: true }
+        // 05/10/2026 — legende DESSOUS : la zone est plus large que haute, et la marge fixe des
+        // etiquettes sorties (`CALLOUT_MARGIN_RATIO`) laisse a une etiquette demandee dehors la place
+        // de se poser. En carre, elle n y tiendrait pas et se tairait : la sonde la dirait morte.
+        style: { labels_mode: 'always', value_visible: true, legend_visible: true, legend_position: 'bottom' }
       })
     }
   ]

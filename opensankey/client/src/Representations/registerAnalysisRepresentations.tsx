@@ -31,6 +31,7 @@ import {
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
+import { zoneHalfOfDisc } from '../Charts/donutCalloutLayout'
 import { analysisPartInputs } from './parts/analysisParts'
 import {
   FIGURE_CENTRE_NATURE, FIGURE_CENTRE_PART_ID, isFigureCentrePart
@@ -1948,7 +1949,7 @@ export const registerAnalysisRepresentations = (): void => {
         // grande qui laisse tout tenir ; les cases se rangent en rangées centrées (cf.
         // `packSmallMultiples`). La grille de cases égales laissait d'énormes vides autour des
         // petites couronnes.
-        const cells = mountSmallMultipleCells(grid, per_member, style, fmt, t('sunburst.others') as string)
+        const cells = mountSmallMultipleCells(grid, per_member, style, fmt)
         // L'ORDRE ET LA COULEUR DES PARTS, décidés UNE FOIS sur l'union des cases : une part a la
         // même teinte dans chaque case, et c'est ce qui permet à une seule légende de les nommer.
         const union = new Map<string, Type_StatSlice>()
@@ -1975,7 +1976,9 @@ export const registerAnalysisRepresentations = (): void => {
             leaves.forEach(l => { if (!tree_order.includes(l.id)) tree_order.push(l.id) })
             // Le tracé à anneaux ne dessine pas sous 120 px : une petite case le dessine à 120 px
             // et le réduit à sa place, pour que l'aire dise toujours le total à l'échelle commune.
-            const side = Math.max(1, Math.round(2 * radius_px + 8))
+            // 05/10/2026 — la marge fixe que le tracé à anneaux retire (`CALLOUT_MARGIN_RATIO`) est rendue
+            // ici : le disque garde le rayon que l'échelle commune lui donne.
+            const side = Math.max(1, Math.round(2 * zoneHalfOfDisc(radius_px) + 8))
             const drawn_side = Math.max(side, SUNBURST_MIN_SIDE_PX)
             const disc = document.createElement('div')
             disc.style.position = 'absolute'
