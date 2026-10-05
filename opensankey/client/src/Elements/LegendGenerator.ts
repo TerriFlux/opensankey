@@ -576,8 +576,7 @@ export class Class_LegendConfig {
     // tableau de la couronne et la barre du haut), pas le masquer.
     const dimension = sankey.data_taggs_list.find(g => g.id === target.tag_group_id) as unknown as Class_DataTagGroup | undefined
     if (dimension !== undefined) {
-      // Comme pour un masquage : les membres sortis restent en légende (rayés), pour y revenir.
-      this._show_hidden_tags = true
+      // Les membres décochés restent dans la légende par leur case (cf. `offeredDimensionMembers`).
       chooseLegendDimensionTag(drawing_area.application_data, dimension, target.tag_id)
       return true
     }
