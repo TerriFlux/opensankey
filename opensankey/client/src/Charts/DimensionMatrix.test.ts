@@ -5,8 +5,9 @@ import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import { dataCutOf } from './DataDimensionHierarchy'
 import {
-  buildDimensionMatrix, dimensionMatrixCsv, MATRIX_SORT_LABEL, matrixDecimals, matrixNumberFormatter, nextMatrixSort
+  buildDimensionMatrix, dimensionMatrixExportTable, MATRIX_SORT_LABEL, matrixDecimals, matrixNumberFormatter, nextMatrixSort
 } from './DimensionMatrix'
+import { tableToCsv } from './TableExport'
 import type { Type_DimensionMatrix } from './DimensionMatrix'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -132,11 +133,35 @@ describe('os#1519 — tableau croise', () => {
     expect(f(0.000003)).toBe('< 0,001')
   })
 
-  test('le CSV : point-virgule, virgule decimale, unite dans l en-tete, retrait des sous-niveaux', () => {
+  test('le CSV : point-virgule, virgule decimale, unite dans SA colonne, retrait des sous-niveaux', () => {
     const mx = matrice(monter(), { filiere: ['produits', 'cereales'], pays: ['monde'] })
-    const csv = dimensionMatrixCsv(mx, { decimal: ',', factor: 10, unit: 'Mt' }).split('\r\n')
-    expect(csv[0]).toBe('Filiere;France (Mt);Allemagne (Mt);Total (Mt)')
-    expect(csv[2]).toBe('  Ble;1;2;3')
-    expect(csv[1]).toBe('Cereales;1,5;2,7;4,2')
+    const table = dimensionMatrixExportTable(mx, { title: 'T', factor: 10, unit: 'Mt', unit_label: 'Unite', decimals: 1 })
+    const csv = tableToCsv(table, { decimal: ',' }).split('\r\n')
+    expect(csv[0]).toBe('Filiere \\ Pays;Unite;France;Allemagne;Total')
+    expect(csv[2]).toBe('  Ble;Mt;1;2;3')
+    expect(csv[1]).toBe('Cereales;Mt;1,5;2,7;4,2')
+  })
+
+  // sa#593 — l'export suit ce qui est AFFICHE : une ligne repliee emporte ses enfants, le tri donne
+  // l'ordre, le total et les sous-totaux sont en gras, les nombres restent des nombres.
+  test('l export : les lignes affichees seulement, dans l ordre du tri, nombres et unite separes', () => {
+    const m = monter()
+    const repliee = matrice(m, { filiere: ['produits', 'cereales'], pays: ['monde'] }, new Map([['cereales', false]]))
+    const t1 = dimensionMatrixExportTable(repliee, { title: 'T', unit: 'kt', unit_label: 'Unite', decimals: 0 })
+    expect(t1.rows.map(r => r.cells[0])).toEqual(['Cereales', 'Total'])
+    expect(t1.rows[0].cells).toEqual(['Cereales', 'kt', 15, 27, 42])
+    expect(t1.rows[1].strong).toBe(true)
+    expect(t1.columns.map(c => c.kind)).toEqual(['text', 'text', 'number', 'number', 'number'])
+
+    const triee = buildDimensionMatrix(
+      { kind: 'link', link: m.lien },
+      dataCutOf(m.lien.sankey, ['filiere', 'pays'], { linked: false, opened: { filiere: ['produits', 'cereales'], pays: ['monde'] } }),
+      { data_tags: null }, { sort: { key: MATRIX_SORT_LABEL, dir: 'desc' } }
+    ) as Type_DimensionMatrix
+    const t2 = dimensionMatrixExportTable(triee, { title: 'T' })
+    expect(t2.rows.filter(r => r.depth === 1).map(r => r.cells[0])).toEqual(['Mais', 'Ble'])
+    // Sans unite, pas de colonne d'unite ; une ligne ouverte est un sous-total, en gras.
+    expect(t2.columns).toHaveLength(4)
+    expect(t2.rows[0].strong).toBe(true)
   })
 })
