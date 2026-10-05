@@ -35,6 +35,19 @@ export interface Type_DiagramNavigationOptions {
   members?: (dim: Class_DataTagGroup) => ((close: () => void) => ReactNode) | null
 }
 
+/**
+ * os#1526 — LES DIMENSIONS DU TABLEAU DE LA FENÊTRE SANKEY : celles à niveaux, comme la couronne.
+ * Julien, 05/10/2026 : « je veux la même interface que pour les couronnes : disparition des
+ * sélecteurs dans la barre du haut, et il faut que ce soit dans la zone de dessin ». C'est la seule
+ * règle : la bande les montre, la barre du haut et Coordonnées les retirent. Rien en mode EMBARQUÉ,
+ * dont le conteneur appartient à la page hôte : il garde ses sélecteurs.
+ */
+export const diagramNavigationDimensions = (app_data: Class_ApplicationData): Class_DataTagGroup[] => {
+  if (app_data.publish_options.embedded) return []
+  return (app_data.drawing_area.sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+    .filter(dim => dim.is_hierarchical && dim.tags_list.length > 1)
+}
+
 /** Pose une sélection sur le diagramme : le geste annulable, sous le voile des gestes lourds. */
 const poser = (app_data: Class_ApplicationData, dim: Class_DataTagGroup, ids: string[]) => {
   if (ids.length === 0) return
