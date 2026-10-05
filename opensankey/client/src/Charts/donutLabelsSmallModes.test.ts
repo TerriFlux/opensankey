@@ -113,9 +113,29 @@ describe('les quatre modes au trace', () => {
   })
 
   test('Detacher sort ce qui ne tient pas', () => {
-    const el = draw('detach')
+    // 05/10/2026 — la marge des etiquettes sorties est FIXE (`CALLOUT_MARGIN_RATIO`) : un nom long
+    // n y tient pas et se tait. Des noms courts, sur des parts trop etroites pour les porter, sortent
+    // (legende dessous : la zone est plus large que haute, la marge laterale s ouvre).
+    const el = sizedContainer()
+    const short: Type_StatSlice[] = [
+      { id: 'a', label: 'Gros', value: 80 },
+      ...Array.from({ length: 20 }, (_v, i) => ({ id: `p${i}`, label: `P${i}`, value: 1 }))
+    ]
+    drawDonutChart(el, short, { style: { ...STYLE, labels_small: 'detach', value_label_is_visible: false, legend_visible: true, legend_position: 'bottom' }, format: fmt })
 
     expect(dehors(el).length).toBeGreaterThan(0)
+  })
+
+  test('Detacher : ce qui ne tient pas dans la marge se tait, le disque ne retrecit pas', () => {
+    const el = draw('detach')
+    const outer = (e: HTMLElement) => Number(/A([\d.]+),/.exec(e.querySelector('path')?.getAttribute('d') ?? '')?.[1])
+    const r_detach = outer(el)
+    const box_detach = el.querySelector('svg')?.getAttribute('viewBox')
+    document.body.innerHTML = ''
+    const hidden = draw('hide')
+
+    expect(outer(hidden)).toBeCloseTo(r_detach, 6)
+    expect(hidden.querySelector('svg')?.getAttribute('viewBox')).toBe(box_detach)
   })
 
   test('Radial ne detache rien, et ce qu il couche est tourne lisiblement', () => {

@@ -41,7 +41,7 @@ import type {
 } from './figureChartStyle'
 // 25/09/2026 — LE CENTRE EST UNE PART, et le tracé la cherche par son identifiant.
 import { FIGURE_CENTRE_PART_ID } from '../Representations/parts/centrePart'
-import { layoutDonutCallouts } from './donutCalloutLayout'
+import { discRadiusInZone, layoutDonutCallouts, zoneHalfOfDisc } from './donutCalloutLayout'
 // os#1477 — LE MÊME TRACEUR DE TEXTE QUE LE DISQUE (cf. `prepareContainer`).
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureCrumb } from '../Representations/figureTextZones'
@@ -388,59 +388,26 @@ export const centreCaptionPlan = (
 export interface Type_SmallMultipleMember { name: string, slices: Type_StatSlice[], total: number }
 
 /**
- * 02/10/2026 — LE CADRE D'UNE CASE AU RAYON `radius`, depuis le centre de son disque : le disque, la
- * place des étiquettes qui sortiront (à droite, à gauche, au-dessus et au-dessous), le nom posé
- * au-dessus et la valeur dessous quand le trou ne les tient pas. Les mêmes règles que le tracé
- * (`drawDonutChart`) : mêmes parts repliées, même seuil, même texte, même test « tient dans son
- * secteur » — sans quoi la case réserverait une place que personne n'occupe, ou pas celle qu'il faut.
+ * 02/10/2026 — LE CADRE D'UNE CASE AU RAYON `radius`, depuis le centre de son disque : le disque, sa
+ * marge FIXE (`CALLOUT_MARGIN_RATIO`, 05/10/2026 — elle ne dépend plus des étiquettes qui sortent),
+ * le nom posé au-dessus et la valeur dessous quand le trou ne les tient pas (mêmes places que le tracé).
  */
 export const smallMultipleCellBox = (
-  m: Type_SmallMultipleMember, radius: number, st: Type_FigureChartStyle, f: (v: number) => string,
-  others_label: string
+  m: Type_SmallMultipleMember, radius: number, st: Type_FigureChartStyle, f: (v: number) => string
 ): Type_DrawnBox => {
   const gap = smallMultipleCalloutGap(2.8 * radius)
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
-  const font = Math.max(MIN_CELL_CALLOUT_FONT_PX, st.name_label_font_size)
-  let right = 0
-  let left = 0
-  let vert = 0
-  // Seul « Détacher » (ou la sortie forcée) pose des étiquettes autour du disque : les autres modes
-  // écrivent dans l'anneau ou se taisent, la case n'a rien à réserver.
-  if (radius >= MIN_CELL_LABEL_RADIUS_PX && (st.labels_small === 'detach' || st.name_label_callout)) {
-    const kept = foldDonutParts(m.slices, st, others_label)
-    const total = kept.reduce((s, d) => s + d.value, 0)
-    // Comme le tracé : la police du secteur peut descendre jusqu'au plancher pour tenir dedans.
-    const fitsInside = (text: string, a0: number, a1: number): boolean => {
-      for (let size = st.name_label_font_size; size >= Math.min(MIN_CELL_CALLOUT_FONT_PX, st.name_label_font_size); size--) {
-        if (fitLabelInSector(labelTextWidthPx(text, size), size * 1.15, inner, radius, a0, a1) !== null) return true
-      }
-      return false
-    }
-    let start = 0
-    kept.forEach(s => {
-      const span = total > 0 ? 2 * Math.PI * s.value / total : 0
-      const end = start + span
-      const text = donutValueText(s.value, total, st, f)
-      const out = text !== '' && f(Math.abs(s.value)) !== f(0) && !isWholeRing(start, end) &&
-        span / (2 * Math.PI) >= labelMinShare(st) && span * radius >= 1 &&
-        (st.name_label_callout || !fitsInside(text, start, end))
-      if (out) {
-        const need = 2 * gap + labelTextWidthPx(text, font) + 2
-        if (Math.sin((start + end) / 2) >= 0) right = Math.max(right, need)
-        else left = Math.max(left, need)
-        vert = gap + font * 1.15
-      }
-      start = end
-    })
-  }
+  // 05/10/2026 — LA MARGE FIXE (`CALLOUT_MARGIN_RATIO`), quel que soit le sort des étiquettes : la
+  // case ne se règle plus sur celles qui sortent. Elles se rangent dans la marge ou se taisent.
+  const zone = zoneHalfOfDisc(radius)
   const wants_value = st.centre_content === 'value' || st.centre_content === 'both'
   const plan = smallMultipleCentrePlan(m.name, wants_value ? f(m.total) : null, inner)
-  let top = radius + vert
-  let bottom = radius + vert
-  let x1 = radius + right
-  let x0 = -(radius + left)
-  // Le nom au-dessus et la valeur dessous se posent AU-DELÀ des étiquettes sorties (cf. le tracé).
-  const beyond = vert > 0 ? Math.max(radius + gap, radius + vert + 2) : radius + gap
+  let top = zone
+  let bottom = zone
+  let x1 = zone
+  let x0 = -zone
+  // Le nom au-dessus et la valeur dessous se posent à un écart du disque (cf. le tracé).
+  const beyond = radius + gap
   if (plan.name.above) {
     top = Math.max(top, beyond + plan.name.lines.length * plan.name.size * 1.15 + 2)
     const w = Math.max(...plan.name.lines.map(l => labelTextWidthPx(l, plan.name.size))) / 2 + 2
@@ -528,11 +495,11 @@ export const packSmallMultiples = (
  */
 export const mountSmallMultipleCells = (
   grid: HTMLElement, members: readonly Type_SmallMultipleMember[], st: Type_FigureChartStyle,
-  f: (v: number) => string, others_label: string
+  f: (v: number) => string
 ): { cell: HTMLElement, radius_px: number, box: Type_DrawnBox, callout_gap_px: number }[] => {
   const placed = packSmallMultiples(
     members.map(m => m.total),
-    (i, r) => smallMultipleCellBox(members[i], r, st, f, others_label),
+    (i, r) => smallMultipleCellBox(members[i], r, st, f),
     grid.clientWidth, grid.clientHeight)
   grid.style.position = 'relative'
   return members.map((_m, i) => {
@@ -736,15 +703,16 @@ const MIN_PART_ICON_PX = 8
 // l'étiquette tant que l'auteur ne l'a pas déplacée.
 const MIN_CALLOUT_EDGE_PX = 6
 const CALLOUT_GAP_PX = 14
+// Le bord laissé autour du cadre de la couronne, dans son `viewBox`.
+const FRAME_PAD_PX = 8
 // 02/10/2026 — LES PETITS MULTIPLES LISIBLES (Julien, capture « Export par continent » : les
 // petites couronnes noyées d'étiquettes détachées en escalier, plus grosses que leur disque).
 // - sous ce rayon, une case n'écrit AUCUNE étiquette de part : le centre garde son nom ;
 // - les étiquettes détachées d'une case ne descendent pas sous cette police, la même partout ;
-// - la part du demi-côté laissée aux étiquettes détachées autour du disque, la même dans toutes
-//   les cases : le cadre commun reste celui de la case, la police n'y rétrécit pas.
+// (la marge laissée aux étiquettes détachées autour du disque est `CALLOUT_MARGIN_RATIO`, la même
+// partout depuis le 05/10/2026.)
 export const MIN_CELL_LABEL_RADIUS_PX = 30
 export const MIN_CELL_CALLOUT_FONT_PX = 9
-const CELL_CALLOUT_RESERVE = 0.3
 
 // ── 02/10/2026 — LES PETITS MULTIPLES À LA MÊME ÉCHELLE (cf. `Type_SmallMultipleCell`) ──────────
 
@@ -1353,12 +1321,22 @@ export const drawDonutChart = (
   const side = below
     ? Math.max(100, Math.min(width, height - legend_room - 12) - 8)
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
-  // Petits multiples : le rayon dit la valeur (aire ∝ total), et les étiquettes sorties restent
-  // près de leur disque, à la mesure de la case.
-  const cell_reserve = cell && (st.labels_small === 'detach' || st.name_label_callout) ? 1 - CELL_CALLOUT_RESERVE : 1
+  // 05/10/2026 — LA ZONE DU DESSIN, et elle seule, fait le rayon (cf. `CALLOUT_MARGIN_RATIO`) : la
+  // place que la légende laisse, moins le bord, moins une MARGE FIXE où se rangent les étiquettes
+  // détachées. Qu'elles sortent, se masquent ou se taisent faute de place, le disque ne bouge pas.
+  const zone_half_w = (below ? width : width - legend_room - 12) / 2 - FRAME_PAD_PX
+  const zone_half_h = (below ? height - legend_room - 12 : height) / 2 - FRAME_PAD_PX
+  const zone_half = Math.max(46, Math.min(zone_half_w, zone_half_h))
+  const cell_half = side / 2 - FRAME_PAD_PX
+  // Petits multiples : le rayon dit la valeur (aire ∝ total), à l'échelle commune.
   const radius = cell?.radius_px !== undefined
     ? Math.max(0, cell.radius_px)
-    : (side / 2 - 2) * scaleOf(st) * cell_reserve * (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
+    : discRadiusInZone(cell ? cell_half : zone_half) * scaleOf(st) *
+      (cell ? Math.max(0, Math.min(1, cell.radius_ratio)) : 1)
+  // Le cadre FIXE autour du disque : la zone (couronne seule), ou la case taillée à son disque.
+  const frame_w = cell ? cell_half : Math.max(zone_half, zone_half_w)
+  const frame_h = cell ? cell_half : Math.max(zone_half, zone_half_h)
+  const fixed_frame: Type_DrawnBox = cell?.box ?? { x0: -frame_w, x1: frame_w, y0: -frame_h, y1: frame_h }
   const callout_gap = cell ? cell.callout_gap_px : CALLOUT_GAP_PX
   const inner = radius * Math.max(0, Math.min(90, st.centre_hole)) / 100
 
@@ -2005,7 +1983,7 @@ export const drawDonutChart = (
   // 01/10/2026 — LE CADRE DE CE QUI EST DESSINÉ, CALCULÉ (et non mesuré : `getBBox` rend zéro ou
   // échoue quand la figure se dessine avant d'être montée, et la coupure revenait — Julien, capture
   // à l'appui). Le disque, plus chaque étiquette sortie : sa position, son ancrage, sa largeur.
-  let drawn_box: { x0: number, x1: number, y0: number, y1: number } | null = null
+  const callout_rects: { el: SVGGElement, box: Type_DrawnBox }[] = []
   if (callouts.length > 0) {
     const point = (r: number, a: number) => ({ x: r * Math.sin(a), y: -r * Math.cos(a) })
     const midOf = (d: d3.PieArcDatum<Type_StatSlice>) => (d.startAngle + d.endAngle) / 2
@@ -2018,18 +1996,17 @@ export const drawDonutChart = (
     // un écart de leur point d'arc (sa!832), les petites parts consécutives s'écrivaient les unes
     // sur les autres et sur leurs voisines. Celles que l'auteur a déplacées gardent leur place.
     //
-    // En petits multiples, le cadre est LA CASE : ce qui n'y tient pas sans chevaucher se tait (les
-    // plus grandes parts d'abord), l'info-bulle du secteur garde la valeur.
-    const half_cell = side / 2 - 2
-    const cell_bounds = cell?.box
+    // 05/10/2026 — LE CADRE EST FIXE (cf. `CALLOUT_MARGIN_RATIO`) : la zone de la couronne, ou la
+    // marge de la case. Ce qui n'y tient pas sans chevaucher se tait (les plus grandes parts
+    // d'abord), l'info-bulle du secteur garde la valeur — le disque, lui, ne rétrécit plus.
+    const margin_half = cell?.box ? Math.min(zoneHalfOfDisc(radius), -fixed_frame.y0, fixed_frame.y1) : null
+    const cell_bounds = margin_half !== null
       ? {
-          // La bande réservée aux étiquettes (cf. `smallMultipleCellBox`) : au-delà vivent le nom et la valeur.
-          half_height: Math.min(-cell.box.y0, cell.box.y1,
-            radius + callout_gap + Math.max(MIN_CELL_CALLOUT_FONT_PX, st.name_label_font_size) * 1.15),
-          right_width: cell.box.x1,
-          left_width: -cell.box.x0
+          half_height: margin_half,
+          right_width: Math.min(zoneHalfOfDisc(radius), fixed_frame.x1),
+          left_width: Math.min(zoneHalfOfDisc(radius), -fixed_frame.x0)
         }
-      : cell ? { half_height: half_cell, half_width: half_cell } : {}
+      : { half_height: fixed_frame.y1, half_width: fixed_frame.x1 }
     const laid_out = layoutDonutCallouts(
       callouts
         .filter(d => opts.label_positions?.[d.data.id] === undefined)
@@ -2105,20 +2082,27 @@ export const drawDonutChart = (
         .text(line => line.text)
     })
     if (st.interaction_tooltip) items.append('title').text(slice_title)
-    const box = { x0: -radius, x1: radius, y0: -radius, y1: radius }
-    shown.forEach(d => {
+    // Ce que chaque étiquette rangée occupe, palier compris : de quoi taire celles qu'un nom sorti du
+    // trou viendrait recouvrir (cf. plus bas). Elles ne font plus le cadre.
+    items.each(function (d) {
       const p = positionOf(d)
       const lines = sector_lines(d)
       const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, calloutFontOf(d))))
       const h = lines.length * calloutFontOf(d) * 1.15
       const anchor = textAnchorOf(d)
-      const x0 = anchor === 'start' ? p.x : anchor === 'end' ? p.x - w : p.x - w / 2
-      box.x0 = Math.min(box.x0, x0)
-      box.x1 = Math.max(box.x1, x0 + w)
-      box.y0 = Math.min(box.y0, p.y - h / 2)
-      box.y1 = Math.max(box.y1, p.y + h / 2)
+      let x0 = anchor === 'start' ? p.x : anchor === 'end' ? p.x - w : p.x - w / 2
+      let x1 = x0 + w
+      let y0 = p.y - h / 2
+      let y1 = p.y + h / 2
+      const placed = laid_out.get(d.data.id)
+      if (placed !== undefined && opts.label_positions?.[d.data.id] === undefined) {
+        x0 = Math.min(x0, placed.elbow.x)
+        x1 = Math.max(x1, placed.elbow.x)
+        y0 = Math.min(y0, placed.elbow.y)
+        y1 = Math.max(y1, placed.elbow.y)
+      }
+      callout_rects.push({ el: this, box: { x0, x1, y0, y1 } })
     })
-    drawn_box = box
     // Le glisser : le trait suit pendant le geste, la position n'est retenue qu'au dépôt.
     items.call(d3.drag<SVGGElement, d3.PieArcDatum<Type_StatSlice>>()
       .on('start', (event) => { event.sourceEvent?.stopPropagation() })
@@ -2208,7 +2192,7 @@ export const drawDonutChart = (
       // Juste au-dessus du disque, à un écart de son bord : le titre suit SON disque.
       // 02/10/2026 — et au-dessus des étiquettes sorties : à leur hauteur, le palier de leurs traits
       // passait sous le nom.
-      const y_last = -Math.max(radius + callout_gap, -(drawn_box?.y0 ?? 0) + 2) - name_h / 2
+      const y_last = -(radius + callout_gap) - name_h / 2
       placed.lines.forEach((line, i) => {
         text.append('tspan').attr('class', 'node_stats_cell_name')
           .attr('x', 0).attr('y', y_last - (placed.lines.length - 1 - i) * name_h)
@@ -2234,7 +2218,7 @@ export const drawDonutChart = (
       // Sous le disque, à un écart de son bord, comme le nom au-dessus.
       const vs = (cell_value_below as { size: number }).size
       text.append('tspan').attr('class', 'node_stats_cell_value')
-        .attr('x', 0).attr('y', Math.max(radius + callout_gap, (drawn_box?.y1 ?? 0) + 2) + vs * 0.6)
+        .attr('x', 0).attr('y', (radius + callout_gap) + vs * 0.6)
         .attr('font-size', vs).attr('font-weight', (centre?.value?.bold ?? true) ? 'bold' : 'normal')
         .text(fmt(total))
     }
@@ -2300,7 +2284,7 @@ export const drawDonutChart = (
     const top = -(lines_in * name_h + value_h + caption_h) / 2
     if (name_plan !== null) {
       const plan = name_plan
-      const y_last = -Math.max(radius + callout_gap, -(drawn_box?.y0 ?? 0) + 2) - name_h / 2
+      const y_last = -(radius + callout_gap) - name_h / 2
       plan.lines.forEach((line, i) => {
         const span = text.append('tspan')
           .attr('x', 0)
@@ -2313,13 +2297,13 @@ export const drawDonutChart = (
       const span = text.append('tspan')
         .attr('x', 0)
         .attr('y', value_below
-          ? Math.max(radius + callout_gap, (drawn_box?.y1 ?? 0) + 2) + value_size_in * 0.6
+          ? (radius + callout_gap) + value_size_in * 0.6
           : top + lines_in * name_h + value_h / 2)
       dress(span, centre?.value, value_size_in, true)
       span.text(fmt(total))
     }
     if (caption !== null) {
-      const below_top = Math.max(radius + callout_gap, (drawn_box?.y1 ?? 0) + 2) + (value_below ? value_size_in * 1.2 : 0)
+      const below_top = (radius + callout_gap) + (value_below ? value_size_in * 1.2 : 0)
       caption.lines.forEach((line, i) => {
         text.append('tspan')
           .attr('class', 'node_stats_centre_caption')
@@ -2333,6 +2317,24 @@ export const drawDonutChart = (
       })
     }
   }
+
+  // 05/10/2026 — UN NOM SORTI DU TROU (au-dessus du disque) ou une valeur posée dessous passent
+  // AVANT les étiquettes détachées : celles qu'ils recouvriraient se taisent. Le cadre étant fixe, on
+  // ne pousse plus le nom au-delà des étiquettes (ce qui agrandissait le cadre selon leur sort).
+  const centre_rects: Type_DrawnBox[] = []
+  if (cell_name_above !== null) {
+    const { lines, size } = cell_name_above as { lines: string[], size: number }
+    const w = Math.max(...lines.map(l => labelTextWidthPx(l, size)))
+    centre_rects.push({ x0: -w / 2, x1: w / 2, y0: -radius - callout_gap - lines.length * size * 1.15, y1: -radius })
+  }
+  if (cell_value_below !== null) {
+    const vs = (cell_value_below as { size: number }).size
+    const w = labelTextWidthPx(fmt(total), vs)
+    centre_rects.push({ x0: -w / 2, x1: w / 2, y0: radius, y1: radius + callout_gap + vs * 1.2 })
+  }
+  callout_rects
+    .filter(c => centre_rects.some(b => c.box.x0 < b.x1 && b.x0 < c.box.x1 && c.box.y0 < b.y1 && b.y0 < c.box.y1))
+    .forEach(c => c.el.remove())
 
   // Légende HTML : puce colorée + libellé + part ; survol → mise en avant du secteur.
   // CE QUE LE TRACÉ A DÉCIDÉ, RAPPORTÉ UNE FOIS — ici, et non à la toute fin : la suite ne dessine
@@ -2378,8 +2380,11 @@ export const drawDonutChart = (
     svg.attr('width', Math.max(1, b.x1 - b.x0)).attr('height', Math.max(1, b.y1 - b.y0))
       .attr('viewBox', `${b.x0 + side / 2} ${b.y0 + side / 2} ${Math.max(1, b.x1 - b.x0)} ${Math.max(1, b.y1 - b.y0)}`)
       .style('overflow', 'visible')
-  } else if (cell || cell_name_above !== null || cell_value_below !== null) {
-    const box = drawn_box ?? { x0: -radius, x1: radius, y0: -radius, y1: radius }
+  } else {
+    // 05/10/2026 — LE CADRE FIXE (la zone moins rien : la marge y est déjà), que des étiquettes
+    // sortent ou non. Seuls un nom sorti du trou ou une valeur posée dessous l'agrandissent — ce qui
+    // ne dépend pas du sort des étiquettes.
+    const box = { ...fixed_frame }
     // Un nom sorti au-dessus du disque entre dans le cadre : il reste entièrement visible.
     if (cell_name_above !== null) {
       const { lines, size } = cell_name_above as { lines: string[], size: number }
@@ -2395,8 +2400,6 @@ export const drawDonutChart = (
     if (cell) cell.frame?.(box, frameTo)
     else frameTo(box)
   }
-  // Sans étiquette sortie, le carré du disque : le dessin d'hier, mais qui suit sa place.
-  else frameTo(drawn_box ?? { x0: 8 - side / 2, x1: side / 2 - 8, y0: 8 - side / 2, y1: side / 2 - 8 })
   // Le zoom : la molette et le glisser déplacent la couche ; le double-clic la remet à zéro.
   // La poignée est prêtée à la colonne d'outils, comme celle du disque (cf. `SunburstChart`).
   if (opts.zoom_handle) {
