@@ -1029,8 +1029,9 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
           choose: is_cells
             ? (active ? undefined : () => g.chooseColumn(dim.id, depth, false))
             : column ? () => g.deactivate(dim.id) : () => g.chooseColumn(dim.id, depth, true),
-          // Ctrl+clic : ajoutée aux colonnes qui découpent (les autres restent), ou retirée.
-          choose_with: is_cells ? undefined : column ? () => g.deactivate(dim.id) : () => g.chooseColumn(dim.id, depth, false)
+          // Ctrl+clic : ajoutée aux colonnes qui découpent (les autres restent), ou retirée — la ligne des
+          // cases aussi (05/10/2026 : plus de petits multiples, son dessin reste pour son retour).
+          choose_with: column ? () => g.deactivate(dim.id) : () => g.chooseColumn(dim.id, depth, false)
         }
       })
     }

@@ -100,6 +100,41 @@ describe('os#1511 couronneGestures — detachee', () => {
   })
 })
 
+// 05/10/2026 — EN UNE COURONNE PAR MEMBRE, retirer une colonne active (ctrl+clic ou reclic) ne
+// faisait rien : la dimension des cases ne comptait pas parmi les actives, et sa ligne n avait pas
+// de ctrl+clic.
+describe('os#1511 couronneGestures — une couronne par membre, retirer une colonne', () => {
+  const enMultiples = (options: Bag) => {
+    const m = monter(options)
+    m.g().setDrawing('pays', 'multiples')
+    expect(m.plan().cells?.members).toEqual(['europe', 'ameriques', 'asie'])
+    expect(m.parts('filiere')).toEqual(['cereales', 'lait', 'viande'])
+    return m
+  }
+  test.each([['detachee', det], ['liee', lie]])('%s : retirer la dimension des cases donne une seule couronne', (_n, o) => {
+    const m = enMultiples(o)
+    m.g().deactivate('pays')
+    expect(m.plan().cells).toBeNull()
+    expect(m.plan().cut.map(c => c.dimension_id)).toEqual(['filiere'])
+    expect(m.state().dims.pays.drawing).toBe('multiples')
+    // Elle revient (ctrl+clic sur un en-tete) : les cases reviennent.
+    m.g().chooseColumn('pays', 1, false)
+    expect(m.plan().cells?.members).toEqual(['europe', 'ameriques', 'asie'])
+  })
+  test.each([['detachee', det], ['liee', lie]])('%s : retirer la dimension des parts laisse les cases seules, en secteurs', (_n, o) => {
+    const m = enMultiples(o)
+    m.g().deactivate('filiere')
+    expect(m.state().dims.filiere.active).toBe(false)
+    expect(m.plan().cells).toBeNull()
+    expect(m.parts('pays')).toEqual(['europe', 'ameriques', 'asie'])
+    // Au moins une active : retirer la derniere reactive l autre.
+    m.g().deactivate('pays')
+    expect(m.state().dims.pays.active).toBe(false)
+    expect(m.state().dims.filiere.active).toBe(true)
+    expect(m.parts('filiere')).toEqual(['cereales', 'lait', 'viande'])
+  })
+})
+
 describe('os#1511 couronneGestures — liee', () => {
   test('zoom : la portee seule, le diagramme ne bouge pas ; la couronne descend d un niveau', () => {
     const m = monter(lie)
