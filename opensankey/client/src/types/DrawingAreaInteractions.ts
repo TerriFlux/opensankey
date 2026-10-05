@@ -137,9 +137,32 @@ export class Class_DrawingAreaInteractions {
       da.zoomListener)
       .on('dblclick.zoom', null) // deactivate dbl click zoom
       .on('wheel.zoom', (event: WheelEvent) => {
+        // sa#601 — VIGNETTE D'UNE GRILLE (elle ne reçoit la molette que sélectionnée, cf.
+        // `useTileGrid`) : la molette simple ne déplace le dessin que s'il dépasse de sa case.
+        // Sinon, ou arrivé au bord, elle n'est pas retenue et c'est la grille qui défile.
+        if (da.in_tile_grid && !event.ctrlKey && !event.metaKey) {
+          if (this._panTile(da, event)) event.preventDefault()
+          return
+        }
         event.preventDefault()
         this._eventMouseScroll(da, event)
       })
+  }
+
+  /**
+   * sa#601 — Déplace le dessin d'une vignette comme la molette le fait d'ordinaire, et dit s'il a
+   * bougé. Le déplacement est borné au contenu (`translateExtent`, cf. `_updateScrollbars`) : un
+   * dessin qui tient dans sa case, ou déjà poussé jusqu'au bord, ne bouge pas.
+   */
+  private _panTile(da: Class_DrawingArea, event: WheelEvent): boolean {
+    const area = da.d3_selection_zoom_area
+    const node = area?.node()
+    if (!area || !node) return false
+    const before = d3.zoomTransform(node)
+    if (event.shiftKey) da.zoomListener.translateBy(area, -event.deltaY, 0)
+    else da.zoomListener.translateBy(area, -event.deltaX, -event.deltaY)
+    const after = d3.zoomTransform(node)
+    return Math.abs(after.x - before.x) > 0.5 || Math.abs(after.y - before.y) > 0.5
   }
 
   /**
