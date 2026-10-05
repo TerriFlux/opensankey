@@ -25,6 +25,18 @@ describe('sa#283 — resolveScaleCarrier (pur)', () => {
     expect(resolveScaleCarrier(groups)).toBeUndefined()
   })
 
+  // os#1525 — un flux engendre par une dimension porte un simple nombre, sans chemin d unite :
+  // il suivait l echelle de la zone de dessin quelle que soit l unite choisie.
+  it('valeur SANS unite et UNE seule unite selectionnee : cette unite porte', () => {
+    const groups: Type_ScaleCarrierGroupInfo[] = [
+      { group_id: 'unite', is_unit: true, tags: [tag('kt', false, 100), tag('pj', true, 3)] },
+    ]
+    expect(resolveScaleCarrier(groups)).toEqual({ group_id: 'unite', tag_id: 'pj', scale: 3 })
+    // Le chemin de la valeur reste prioritaire sur la selection.
+    expect(resolveScaleCarrier(groups, { group_id: 'unite', tag_id: 'kt' }))
+      .toEqual({ group_id: 'unite', tag_id: 'kt', scale: 100 })
+  })
+
   it('groupe ordinaire : l unique tag SELECTIONNE a echelle propre porte', () => {
     const groups: Type_ScaleCarrierGroupInfo[] = [
       { group_id: 'cereale', is_unit: false, tags: [tag('ble', true, 35000), tag('millet', false, 100)] },

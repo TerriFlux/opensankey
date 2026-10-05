@@ -64,7 +64,17 @@ export function resolveScaleCarrier(
     const group = groups_in_order[i]
     if (group.is_unit) {
       // Groupe d'unité : porteur = le tag d'unité de la valeur, jamais la sélection.
-      if (value_unit_tag === undefined || value_unit_tag.group_id !== group.group_id) continue
+      if (value_unit_tag === undefined || value_unit_tag.group_id !== group.group_id) {
+        // os#1525 — REPLI : une valeur SANS chemin d'unité (flux engendré par une dimension, qui
+        // porte un simple nombre) prend l'échelle de l'unité sélectionnée, si elle est SEULE.
+        // Plusieurs unités sélectionnées (affichage multi-unités historique) : rien ne change.
+        if (value_unit_tag !== undefined) continue
+        const selected = group.tags.filter(t => t.is_selected)
+        if (selected.length === 1 && isValidScale(selected[0].own_scale)) {
+          return { group_id: group.group_id, tag_id: selected[0].tag_id, scale: selected[0].own_scale }
+        }
+        continue
+      }
       const tag = group.tags.find(t => t.tag_id === value_unit_tag.tag_id)
       if (tag !== undefined && isValidScale(tag.own_scale)) {
         return { group_id: group.group_id, tag_id: tag.tag_id, scale: tag.own_scale }
