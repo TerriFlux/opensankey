@@ -10,6 +10,9 @@
 //   'both'      re-enracine, et le diagramme suit ;
 //   sans diagramme affiche, rien n est ecrit au diagramme et ses deux choix se grisent.
 //
+// 04/10/2026 (os#1511, lot 3) — les gestes ecrivent l ETAT DE LA COURONNE (`couronne`) et plus aucune
+// ancienne cle : on lit donc ce que le sac ecrit dit, par `readCouronneState`.
+//
 //   filiere : produits > cereales > (ble, mais)          pays : monde > (fr, de)
 
 import { Class_Workspace } from '../types/Workspace'
@@ -27,6 +30,7 @@ import {
 } from './analysisFigureAttributes'
 import { INTERACTION_CONFIG } from './figureCatalogue'
 import { figureControlsOf } from './figureControls'
+import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronneState'
 
 givePlainDrawingEnvironment()
 
@@ -135,55 +139,57 @@ const dernierSac = (ecrit: jest.SpyInstance): { [k: string]: unknown } | undefin
   return last?.[2] as { [k: string]: unknown } | undefined
 }
 
+/** L etat de la filiere que le dernier sac ecrit dit ; le sac ne porte plus aucune ancienne cle. */
+const filiereEcrite = (ecrit: jest.SpyInstance, source: ReturnType<typeof scene>['source']) => {
+  const sac = dernierSac(ecrit) ?? {}
+  expect(sac[COURONNE_KEY]).toBeDefined()
+  expect(LEGACY_COURONNE_KEYS.every(k => sac[k] === undefined)).toBe(true)
+  return readCouronneState(sac, source.drawing_area.sankey as never).dims.filiere
+}
+
 describe('clic sur une part — couronne de dimension de donnees', () => {
 
   test('RIEN DE PLUS : la figure ouvre Cereales, le diagramme ne bouge pas', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'none' })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'none' })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
-    expect((dernierSac(ecrit)?.[DIMENSION_OPENING_KEY] as { filiere: string[] }).filiere)
-      .toEqual(['produits', 'cereales'])
-    expect(dernierSac(ecrit)?.[HIERARCHY_FOCUS_KEY]).toBeUndefined()
+    expect(filiereEcrite(ecrit, source)).toMatchObject({ focus: [], shown: ['ble', 'mais', 'lait'] })
     expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
 
   test('LE DEPLIE DANS LE DIAGRAMME : la figure ouvre, et le diagramme suit', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'aggregate' })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'aggregate', reel: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
-    expect((dernierSac(ecrit)?.[DIMENSION_OPENING_KEY] as { filiere: string[] }).filiere)
-      .toEqual(['produits', 'cereales'])
+    expect(filiereEcrite(ecrit, source).shown).toEqual(['ble', 'mais', 'lait'])
     expect(diagramme).toHaveBeenCalledTimes(1)
     teardown()
   })
 
   test('LE CAS DE JULIEN — ZOOME DEDANS SEULEMENT : le foyer s empile, ni coupe ni diagramme', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'zoom' })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'zoom' })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
-    const sac = dernierSac(ecrit)
-    expect(sac?.[HIERARCHY_FOCUS_KEY]).toEqual([CEREALES])
-    // La coupe propre est celle d avant : zoomer n ouvre rien.
-    expect((sac?.[DIMENSION_OPENING_KEY] as { filiere: string[] }).filiere).toEqual(['produits'])
+    expect(filiereEcrite(ecrit, source)).toMatchObject({ focus: ['cereales'], shown: ['ble', 'mais'] })
     expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
 
   test('zoome dedans seulement, figure LIEE : le diagramme ne bouge toujours pas', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'zoom', linked: true })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'zoom', linked: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
-    expect(dernierSac(ecrit)?.[HIERARCHY_FOCUS_KEY]).toEqual([CEREALES])
+    expect(filiereEcrite(ecrit, source).focus).toEqual(['cereales'])
     expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
 
   test('ZOOME DEDANS ET LE DEPLIE : le foyer s empile, et le diagramme suit', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'both' })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'both', reel: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
-    expect(dernierSac(ecrit)?.[HIERARCHY_FOCUS_KEY]).toEqual([CEREALES])
+    expect(filiereEcrite(ecrit, source).focus).toEqual(['cereales'])
     expect(diagramme).toHaveBeenCalledTimes(1)
     teardown()
   })
@@ -198,22 +204,22 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
   })
 
   test('zoomee sur Cereales : Ble et Mais font l anneau, le centre remonte d un cran', () => {
-    const { ctx, ecrit } = scene({ clic: 'zoom', focus: [CEREALES] })
+    const { ctx, ecrit, source } = scene({ clic: 'zoom', focus: [CEREALES] })
     const { el, teardown } = dessiner(ctx)
     const ids = [...el.querySelectorAll('path.node_stats_arc')].map(p => p.getAttribute('data-repr-id'))
     expect(ids.sort()).toEqual([BLE, memberSectorId('filiere', 'mais')].sort())
     const centre = el.querySelector('.node_stats_centre_back')
     expect(centre).not.toBeNull()
     centre?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(dernierSac(ecrit)?.[HIERARCHY_FOCUS_KEY]).toBeUndefined()
+    expect(filiereEcrite(ecrit, source)).toMatchObject({ focus: [], shown: ['cereales', 'lait'] })
     teardown()
   })
 
   test('shift+clic sous le zoom remonte d un cran, comme le centre', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'zoom', focus: [CEREALES] })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'zoom', focus: [CEREALES] })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, BLE, true)
-    expect(dernierSac(ecrit)?.[HIERARCHY_FOCUS_KEY]).toBeUndefined()
+    expect(filiereEcrite(ecrit, source).focus).toEqual([])
     expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
@@ -283,11 +289,10 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
   })
 
   test('DEPLIE DANS LA COURONNE, detachee, SANS diagramme affiche : la figure ouvre, le diagramme ne bouge pas', () => {
-    const { ctx, ecrit, diagramme } = scene({ clic: 'none', sans_diagramme: true })
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'none', sans_diagramme: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
-    expect((dernierSac(ecrit)?.[DIMENSION_OPENING_KEY] as { filiere: string[] }).filiere)
-      .toEqual(['produits', 'cereales'])
+    expect(filiereEcrite(ecrit, source).shown).toEqual(['ble', 'mais', 'lait'])
     expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })

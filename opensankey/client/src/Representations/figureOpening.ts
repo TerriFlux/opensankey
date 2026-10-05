@@ -26,7 +26,7 @@
 // Module PUR : aucune classe du modèle, aucun React.
 
 import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
-import { MEMBER_SECTOR_PREFIX, memberPathSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
+import { MEMBER_SECTOR_PREFIX, parseMemberSectorPath } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import {
   COORDINATES_LINKED_KEY, DATA_LAYER_KEY, DIMENSION_HIDDEN_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
@@ -122,26 +122,6 @@ export const withElementOpening = (options: Type_Options, elements: Iterable<str
   withFigureOpening(options, { ...readFigureOpening(options), elements: new Set(elements) })
 
 /**
- * Raccourci : seule la coupe des dimensions de données change.
- *
- * 03/10/2026 — Détachée, une écriture SANS `hidden` garde les membres décochés d'avant : ouvrir une
- * part d'un clic ne doit pas faire revenir ce qu'on a décoché. Lier les oublie.
- */
-export const withDataOpening = (options: Type_Options, data: Type_DataOpening): Type_Options => {
-  const now = readFigureOpening(options)
-  let kept = !data.linked && !('hidden' in data) && now.data.hidden !== undefined ? { ...data, hidden: now.data.hidden } : data
-  // Les dimensions désactivées survivent à toute écriture qui n'en parle pas, lier compris.
-  if (!('inactive' in data) && now.data.inactive !== undefined) kept = { ...kept, inactive: now.data.inactive }
-  return withFigureOpening(options, { ...now, data: kept })
-}
-
-/** 03/10/2026 — Raccourci : seules les dimensions désactivées changent. */
-export const withInactiveDimensions = (options: Type_Options, inactive: readonly string[]): Type_Options => {
-  const now = readFigureOpening(options)
-  return withFigureOpening(options, { ...now, data: { ...now.data, inactive: [...inactive] } })
-}
-
-/**
  * 03/10/2026 — LES PETITS MULTIPLES S'APPLIQUENT-ILS ? Il faut la dimension des cases ACTIVE et au
  * moins une AUTRE dimension active pour les parts : sinon une seule couronne, et la case « Une
  * couronne par membre » se montre décochée (Julien : « ça reste bloqué sur une couronne par membre »).
@@ -163,33 +143,6 @@ export const smallMultiplesApply = (
 export const readFigureFocus = (options: Type_Options | null | undefined): string[] =>
   stringsOf(options?.[HIERARCHY_FOCUS_KEY])
 
-/** Le sac qui porte la pile `path` (vide : la clé est retirée). */
-export const withFigureFocus = (options: Type_Options, path: string[]): Type_Options =>
-  ({ ...options, [HIERARCHY_FOCUS_KEY]: path.length > 0 ? [...path] : undefined })
-
-/**
- * 03/10/2026 — LA PILE SANS FOYER SUR UNE DIMENSION (os#1511). Julien : changer le niveau ou les
- * membres d'une dimension dans la barre laissait la couronne enracinée sur l'ancien membre — elle
- * « ne réagissait pas ». Le patron du drill de Power BI : toucher à la coupe d'une dimension sort du
- * zoom posé SUR ELLE. La pile se coupe au premier cran qui fixe un membre de `dimension_id` (les crans
- * suivants l'emboîtent) ; un foyer sur une autre dimension reste.
- */
-export const focusWithoutDimension = (path: string[], dimension_id: string): string[] => {
-  // 03/10/2026 — UN ZOOM PAR DIMENSION (tableau de navigation, os#1511) : chaque cran perd ses
-  // membres de `dimension_id` et GARDE ceux des autres dimensions (« Céréales » sorti, « Espagne »
-  // reste) ; un cran vidé s'en va, deux crans devenus égaux n'en font qu'un.
-  const out: string[] = []
-  path.forEach(entry => {
-    const refs = parseMemberSectorPath(entry)
-    if (refs === null) { out.push(entry); return }
-    const kept = refs.filter(r => r.dimension_id !== dimension_id)
-    if (kept.length === 0) return
-    const next = kept.length === refs.length ? entry : memberPathSectorId(kept)
-    if (out[out.length - 1] !== next) out.push(next)
-  })
-  return out
-}
-
 /**
  * 03/10/2026 — LE ZOOM DE CHAQUE DIMENSION (tableau de navigation, os#1511) : le membre que le dernier
  * cran de la pile fixe dans chaque dimension (le dernier écrit d'une dimension l'emporte). C'est la
@@ -206,37 +159,6 @@ export const readFigureDimensionZooms = (options: Type_Options | null | undefine
     out.set(r.dimension_id, list.includes(r.member_id) ? list : [...list, r.member_id])
   })
   return out
-}
-
-/**
- * 03/10/2026 — Le sac dont la pile se réduit à UN cran : le zoom de chaque dimension, celle qui
- * découpe (`centre_id`) en dernier — c'est elle que le centre nomme. Aucun zoom : la clé s'en va.
- * 04/10/2026 — une dimension peut porter plusieurs membres, écrits à la suite ; une liste vide
- * annule son zoom.
- */
-export const withFigureDimensionZooms = (
-  options: Type_Options, zooms: ReadonlyMap<string, string | readonly string[]>, centre_id?: string
-): Type_Options => {
-  const refs: Type_MemberRef[] = [...zooms]
-    .sort(([a], [b]) => (a === centre_id ? 1 : 0) - (b === centre_id ? 1 : 0))
-    .flatMap(([dimension_id, ids]) => (typeof ids === 'string' ? [ids] : [...ids])
-      .map(member_id => ({ dimension_id, member_id })))
-  return withFigureFocus(options, refs.length > 0 ? [memberPathSectorId(refs)] : [])
-}
-
-/** Le sac sans le foyer posé sur `dimension_id` (inchangé s'il n'y en a pas). */
-export const withFigureFocusClearedOn = (options: Type_Options, dimension_id: string): Type_Options => {
-  // 04/10/2026 — AU FORMAT DU TABLEAU (os#1511) : le zoom de CETTE dimension s'en va, celui de chaque
-  // autre dimension reste entier (plusieurs membres compris), relu puis réécrit en un cran.
-  const zooms = readFigureDimensionZooms(options)
-  if (!zooms.has(dimension_id)) {
-    const path = readFigureFocus(options)
-    const next = focusWithoutDimension(path, dimension_id)
-    return next.length === path.length ? options : withFigureFocus(options, next)
-  }
-  const centre = [...zooms.keys()].slice(-1)[0]
-  zooms.delete(dimension_id)
-  return withFigureDimensionZooms(options, zooms, centre === dimension_id ? undefined : centre)
 }
 
 /** Le foyer d'une couronne de dimensions de données : la coordonnée du dernier secteur empilé. */
@@ -322,15 +244,3 @@ export const readFigureLevelsDisplay = (options: Type_Options | null | undefined
  */
 export const dataDimensionLevelsDisplay = (levels: Type_FigureLevelsDisplay, dimension_id?: string): Type_LevelsDisplay =>
   (dimension_id !== undefined ? levels.by[dimension_id] : undefined) ?? levels.common ?? 'in_place'
-
-/** Le sac où la dimension `dimension_id` se dispose en `mode`, les autres inchangées. */
-export const withDimensionLevelsDisplay = (
-  options: Type_Options, dimension_id: string, mode: Type_LevelsDisplay
-): Type_Options => ({
-  ...options,
-  [LEVELS_DISPLAY_BY_KEY]: { ...readFigureLevelsDisplay(options).by, [dimension_id]: mode }
-})
-
-/** Le sac où la figure se dispose en `mode` ; l'ancienne clé par dimension s'en va. */
-export const withLevelsDisplay = (options: Type_Options, mode: Type_LevelsDisplay): Type_Options =>
-  ({ ...options, levels_display: mode, [LEVELS_DISPLAY_BY_KEY]: undefined })

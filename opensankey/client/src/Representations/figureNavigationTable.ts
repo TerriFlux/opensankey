@@ -28,10 +28,11 @@
 // sélecteur de dessin de la dimension (en secteurs / en sunburst / une couronne par membre), venu du
 // menu Couronne de la barre du haut.
 
+import type { ReactNode } from 'react'
 import type { Type_TopbarFigureChoice } from '../types/MenuConfig'
 import { figureDrawingIconElement, isFigureDrawingIconName } from '../components/ui/FigureDrawingIcon'
 import {
-  drawingMenuContent, refreshFigureNavPopover, toggleFigureNavPopover, zoomPickerContent,
+  drawingMenuContent, refreshFigureNavPopover, settingsMenuContent, toggleFigureNavPopover, zoomPickerContent,
   type Type_FigureNavZoomPick
 } from './figureNavigationPopover'
 
@@ -76,6 +77,13 @@ export interface Type_FigureNavDimension {
    * une couronne par membre). Absent : rien à choisir.
    */
   drawing?: Type_TopbarFigureChoice | null
+  /**
+   * 04/10/2026 (lot 3) — LE SÉLECTEUR ARBRE de la dimension (les membres montrés, à n'importe quels
+   * niveaux), ouvert par le ▾ de son nom. Absent : le nom est inerte.
+   */
+  members?: ((close: () => void) => ReactNode) | null
+  /** 05/10/2026 — un résumé discret après le nom (« — mixte — » quand plusieurs niveaux sont dessinés). */
+  summary?: string
 }
 
 export interface Type_FigureNavTable {
@@ -96,7 +104,15 @@ export interface Type_FigureNavTable {
     swap: string
     move_up: string
     move_down: string
+    /** 04/10/2026 (lot 3) — la ⚙ et le ▾ du nom d'une dimension. */
+    settings: string
+    members: string
   }
+  /**
+   * 04/10/2026 (lot 3) — LES RÉGLAGES DE LA ⚙ (colonne de gauche, en haut) : clic sur une part, liée /
+   * détachée. Absents ou vides : pas de ⚙.
+   */
+  settings?: Type_TopbarFigureChoice[]
   /**
    * 04/10/2026 — L'ORDRE DES LIGNES = L'ORDRE D'EMBOÎTEMENT (ligne du haut = anneau intérieur) : la
    * ligne `dim_id` monte (-1) ou descend (+1). Absent : pas de bouton.
@@ -168,6 +184,21 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     window.dispatchEvent(new Event('resize'))
   })
   box.appendChild(fold)
+  // 04/10/2026 (lot 3) — LA ⚙ : les réglages de la couronne qui ne sont pas des colonnes (clic sur une
+  // part, liée / détachée). En publication, l'en-tête de fenêtre est masqué : c'est le seul accès.
+  const settings = model.settings ?? []
+  if (settings.length > 0) {
+    const gear = plainButton('⚙', model.labels.settings)
+    gear.className = 'figure_navigation_settings'
+    gear.style.color = '#718096'
+    gear.style.flex = '0 0 auto'
+    gear.style.fontSize = '12px'
+    const key = `${model.memory_key}|settings`
+    gear.dataset.navPopover = key
+    keepClick(gear, () => toggleFigureNavPopover(key, gear, settingsMenuContent(model.labels.settings, settings)))
+    refreshFigureNavPopover(key, settingsMenuContent(model.labels.settings, settings))
+    box.appendChild(gear)
+  }
 
   if (collapsed) {
     // UNE LIGNE : la colonne active et les zooms, « Produits : Céréales › [Pays] ».
@@ -239,11 +270,34 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     const name = head.insertCell()
     name.textContent = dim.name
     name.title = model.labels.dimension(dim.name)
+    if (dim.summary) {
+      const sum = document.createElement('span')
+      sum.className = 'figure_navigation_summary'
+      sum.textContent = ` ${dim.summary}`
+      sum.style.fontWeight = '400'
+      sum.style.color = '#718096'
+      sum.style.fontStyle = 'italic'
+      name.appendChild(sum)
+    }
+    const members = dim.members
+    if (members) {
+      // 04/10/2026 (lot 3) — ▾ : le sélecteur Arbre de la dimension.
+      const key = `${model.memory_key}|members|${dim.id}`
+      const caret = plainButton(' ▾', model.labels.members)
+      caret.className = 'figure_navigation_members'
+      caret.style.color = '#718096'
+      caret.style.fontSize = '9px'
+      caret.dataset.navPopover = key
+      keepClick(caret, () => toggleFigureNavPopover(key, caret, members))
+      refreshFigureNavPopover(key, members)
+      name.appendChild(caret)
+    }
     name.style.fontWeight = '700'
     name.style.padding = '0.05rem 0.5rem 0.05rem 0'
     name.style.whiteSpace = 'nowrap'
-    name.style.maxWidth = '12rem'
-    name.style.overflow = 'hidden'
+    // Un résumé (« — mixte — ») ne doit pas être rogné : la case s'élargit d'autant.
+    name.style.maxWidth = dim.summary ? 'none' : '12rem'
+    name.style.overflow = dim.summary ? 'visible' : 'hidden'
     name.style.textOverflow = 'ellipsis'
     if (i > 0) name.style.paddingTop = '0.25rem'
     const zlabel = zoom.insertCell()

@@ -3,8 +3,9 @@ import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { memberPathSectorId, parseMemberSectorId } from './memberSectorId'
 import type { Type_MemberRef } from './memberSectorId'
-import type { Type_SunburstNode } from './SunburstHierarchy'
+import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import { drawPlanOf } from './couronnePlan'
+import { buildPlanTree, planDrawsRings, planLevelsDisplayOf } from './couronneTree'
 import { descripteur, monterSocle, type Type_Socle } from './__fixtures__/couronneSocle'
 import { declaredDimensionIdsOf, readCouronneState } from '../Representations/couronneState'
 import {
@@ -12,14 +13,14 @@ import {
   readFigureOpening, smallMultiplesApply
 } from '../Representations/figureOpening'
 
-// 04/10/2026 — os#1511, refonte etape 2, lot 1 : LE FILET DU LOT 2.
+// 04/10/2026 — os#1511, refonte etape 2 : LE FILET DU LOT 2, sur le DESSIN REEL.
 //
-// Pour une serie de reglages reels (anciens formats, figure liee et detachee), on compare le plan
-// (`readCouronneState` puis `drawPlanOf`) a ce que dessine le code d aujourd hui : la coupe
-// (`dataCutOf`), les petits multiples (`smallMultiplesOf`, rejoue), la lecture en anneaux
-// (`ringsReadingOf`, rejouee) et l arbre (`buildNestedDimensionTree`). On compare la FORME : les
-// dimensions qui decoupent et leur ordre, les parts de chacune, les anneaux de chaque part en
-// sunburst, les cases, le secteur unique quand rien ne decoupe.
+// Pour une serie de reglages reels (anciens formats, figure liee et detachee), on compare l arbre que
+// le trace dessine depuis le lot 2 (`readCouronneState`, `drawPlanOf`, `buildPlanTree`) a celui que
+// dessinait le code d avant : la coupe (`dataCutOf`), les petits multiples (`smallMultiplesOf`,
+// rejoue), la lecture en anneaux (`ringsReadingOf`, rejouee) et l arbre (`buildNestedDimensionTree`).
+// On compare la FORME des deux arbres : les dimensions qui decoupent et leur ordre, les parts de
+// chacune, les anneaux de chaque part en anneaux, les cases, le secteur unique quand rien ne decoupe.
 //
 // Les ECARTS CONNUS sont listes a part (`ECARTS`) : chacun est un bug d aujourd hui ou un choix du
 // nouveau modele. Un ecart qui n y est pas fait echouer le test ; un ecart liste qui disparait aussi
@@ -39,33 +40,12 @@ interface Drawing {
 const ref = (dimension_id: string, member_id: string): Type_MemberRef => ({ dimension_id, member_id })
 const zoom = (...refs: Type_MemberRef[]) => [memberPathSectorId(refs)]
 
-/** Ce que dessine le code d aujourd hui, rejoue comme `registerAnalysisRepresentations`. */
-const ancien = (s: Type_Socle, options: Bag): Drawing => {
-  const declared = declaredDimensionIdsOf(options) ?? []
-  const opening = readFigureOpening(options).data
-  // `smallMultiplesOf`
-  const split_id = options['small_multiples_by']
-  const split_dim = typeof split_id === 'string' ? s.sankey.data_taggs_dict[split_id] as unknown as Class_DataTagGroup | undefined : undefined
-  let split: { dim: Class_DataTagGroup, members: Class_DataTag[] } | null = null
-  if (split_dim?.is_hierarchical && smallMultiplesApply(split_dim.id, declared, opening.inactive)) {
-    const members = smallMultipleCellsOf(split_dim, opening, readFigureDimensionZooms(options).get(split_dim.id))
-    if (members.length > 0) split = { dim: split_dim, members }
-  }
-  const nav = split !== null && split.members.length === 1 ? { data_tags: [split.members[0]] } : { data_tags: null }
-  const cut = dataCutOf(s.sankey, declared, opening, split ? [split.dim.id] : [])
-  // `ringsReadingOf`
-  const levels = readFigureLevelsDisplay(options)
-  const modeOf = (id: string) => dataDimensionLevelsDisplay(levels, id)
-  const count = cut.dividing.length
-  const rings = count === 0 ? levels.common === 'rings' : count > 1 || cut.dividing.some(d => modeOf(d.id) === 'rings')
-  const tree = buildNestedDimensionTree({ kind: 'link', link: s.lien }, cut, nav, {
-    max_depth: 8, ...(rings ? { levels_display_of: modeOf } : {}), focus: readFigureDataFocus(options)
-  })
-  const out: Drawing = { cut: [], parts: {}, cells: split !== null && split.members.length > 1 ? split.members.map(m => m.id) : null, whole: null }
+/** La forme d un arbre de couronne : dimensions qui decoupent, parts, anneaux, secteur unique. */
+const formeDe = (tree: Type_SunburstTree | null, rien_ne_decoupe: boolean, rings: boolean, cells: string[] | null): Drawing => {
+  const out: Drawing = { cut: [], parts: {}, cells, whole: null }
   const root = tree?.roots[0]
   if (root === undefined) return out
-  // Rien ne decoupe : le foyer ne peut rien designer (`resolveDataFocus`), un seul secteur.
-  if (cut.dividing.length === 0) {
+  if (rien_ne_decoupe) {
     out.whole = root.children.map(c => (parseMemberSectorId(c.id) as Type_MemberRef).member_id)
     return out
   }
@@ -90,19 +70,47 @@ const ancien = (s: Type_Socle, options: Bag): Drawing => {
   return out
 }
 
-/** Ce que dit le plan, dans la meme forme. */
-const nouveau = (s: Type_Socle, options: Bag, rings: boolean): Drawing => {
-  const plan = drawPlanOf(readCouronneState(options, s.sankey), s.sankey)
-  const out: Drawing = {
-    cut: plan.cut.map(c => c.dimension_id),
-    parts: Object.fromEntries(plan.cut.map(c => [c.dimension_id, c.parts.map(p => p.member_id)])),
-    cells: plan.cells?.members ?? null,
-    whole: plan.whole?.member_ids ?? null
+/**
+ * Ce que dessinait le code d avant le lot 2, rejoue comme `registerAnalysisRepresentations` le
+ * faisait (`smallMultiplesOf`, `dataCutOf`, `ringsReadingOf`, `buildNestedDimensionTree`). Avec des
+ * cases, l arbre de la PREMIERE case.
+ */
+const ancien = (s: Type_Socle, options: Bag): Drawing => {
+  const declared = declaredDimensionIdsOf(options) ?? []
+  const opening = readFigureOpening(options).data
+  // `smallMultiplesOf`
+  const split_id = options['small_multiples_by']
+  const split_dim = typeof split_id === 'string' ? s.sankey.data_taggs_dict[split_id] as unknown as Class_DataTagGroup | undefined : undefined
+  let split: { dim: Class_DataTagGroup, members: Class_DataTag[] } | null = null
+  if (split_dim?.is_hierarchical && smallMultiplesApply(split_dim.id, declared, opening.inactive)) {
+    const members = smallMultipleCellsOf(split_dim, opening, readFigureDimensionZooms(options).get(split_dim.id))
+    if (members.length > 0) split = { dim: split_dim, members }
   }
-  if (rings && plan.whole === null) {
-    out.paths = Object.fromEntries(plan.cut.map(c => [c.dimension_id, Object.fromEntries(c.parts.map(p => [p.member_id, p.path]))]))
-  }
-  return out
+  const nav = split !== null ? { data_tags: [split.members[0]] } : { data_tags: null }
+  const cut = dataCutOf(s.sankey, declared, opening, split ? [split.dim.id] : [])
+  // `ringsReadingOf`
+  const levels = readFigureLevelsDisplay(options)
+  const modeOf = (id: string) => dataDimensionLevelsDisplay(levels, id)
+  const count = cut.dividing.length
+  const rings = count === 0 ? levels.common === 'rings' : count > 1 || cut.dividing.some(d => modeOf(d.id) === 'rings')
+  const tree = buildNestedDimensionTree({ kind: 'link', link: s.lien }, cut, nav, {
+    max_depth: 8, ...(rings ? { levels_display_of: modeOf } : {}), focus: readFigureDataFocus(options)
+  })
+  const cells = split !== null && split.members.length > 1 ? split.members.map(m => m.id) : null
+  return formeDe(tree, cut.dividing.length === 0, rings, cells)
+}
+
+/** Ce que DESSINE le lot 2 : l arbre du plan (`buildPlanTree`), lu comme le lit le trace. */
+const nouveau = (s: Type_Socle, options: Bag): Drawing => {
+  const state = readCouronneState(options, s.sankey)
+  const plan = drawPlanOf(state, s.sankey)
+  const rings = planDrawsRings(plan, state)
+  const tree = buildPlanTree({ kind: 'link', link: s.lien }, plan, state, { data_tags: null }, {
+    max_depth: 8,
+    ...(rings ? { levels_display_of: planLevelsDisplayOf(plan) } : {}),
+    ...(plan.cells ? { at: { dimension_id: plan.cells.dimension_id, member_ids: [plan.cells.members[0]] } } : {})
+  })
+  return formeDe(tree, plan.cut.length === 0, rings, plan.cells?.members ?? null)
 }
 
 interface Cas {
@@ -209,7 +217,7 @@ const CAS: Cas[] = [
  * LES ÉCARTS CONNUS : ce que le plan dessine autrement que le code d'aujourd'hui, et pourquoi. La
  * valeur est la partie du dessin qui diffère.
  */
-const ECARTS: { [nom: string]: { pourquoi: string, ancien: Partial<Drawing>, nouveau: Partial<Drawing> } } = {
+const ECARTS: { [nom: string]: { pourquoi: string, ancien: Bag, nouveau: Bag } } = {
   'D15 zoom sur une feuille (Espagne), seule dimension': {
     pourquoi: 'Une dimension a UNE part ne decoupe pas dans le modele : elle se lit sur ce membre. Avant, le ' +
       '« lone leaf » de resolveDataFocus en faisait un anneau d un secteur. Meme image (un secteur a 100 %), ' +
@@ -225,6 +233,25 @@ const ECARTS: { [nom: string]: { pourquoi: string, ancien: Partial<Drawing>, nou
     nouveau: {
       cut: ['filiere', 'pays'], parts: { filiere: ['cereales', 'lait'], pays: ['fr', 'es'] },
       paths: { filiere: { cereales: ['cereales'], lait: ['lait'] }, pays: { fr: ['fr'], es: ['es'] } }
+    }
+  },
+  'D11 pile cereales puis europe': {
+    pourquoi: 'LOT 2, ACCEPTE (Julien) : avant, deux dimensions « decoupaient » (dataCutOf) et la figure passait en ' +
+      'anneaux ; mais Cereales, fixee par le zoom et non ouverte, ne montrait rien et l arbre n avait qu un ' +
+      'anneau, les pays. Le plan ne compte que ce qu il dessine : une dimension decoupe, la couronne est en ' +
+      'secteurs. Memes parts (France, Espagne), un anneau dans les deux cas ; le trace change (couronne a plat ' +
+      'au lieu du trace a anneaux).',
+    ancien: { paths: { pays: { fr: ['fr'], es: ['es'] } } },
+    nouveau: { paths: null }
+  },
+  'L5 liee, zoom Europe, pays a un membre': {
+    pourquoi: 'REGLE DE LA COURONNE LIEE (Julien, lot 2) : le diagramme montre Europe d un bloc, la couronne ' +
+      'zoomee sur Europe descend d UN niveau sous lui (ses pays) ; le diagramme ne bouge pas. Avant, la ' +
+      'dimension se lisait sur Europe sans decouper.',
+    ancien: { cut: ['filiere'], parts: { filiere: ['cereales', 'lait', 'viande'] }, paths: null },
+    nouveau: {
+      cut: ['filiere', 'pays'], parts: { filiere: ['cereales', 'lait', 'viande'], pays: ['fr', 'es'] },
+      paths: { filiere: { cereales: ['cereales'], lait: ['lait'], viande: ['viande'] }, pays: { fr: ['fr'], es: ['es'] } }
     }
   },
   'L9 liee, la selection sort de la portee': {
@@ -255,12 +282,12 @@ const ecartDe = (a: Drawing, b: Drawing): { ancien: Partial<Drawing>, nouveau: P
   return Object.keys(ancien).length > 0 ? { ancien, nouveau } : null
 }
 
-describe('os#1511 drawPlanOf — non-regression contre dataCutOf + buildNestedDimensionTree', () => {
+describe('os#1511 dessin du plan — non-regression contre dataCutOf + buildNestedDimensionTree', () => {
   CAS.forEach(c => {
     test(c.nom, () => {
       const s = monterCas(c)
       const a = ancien(s, c.options)
-      const b = nouveau(s, c.options, a.paths !== undefined)
+      const b = nouveau(s, c.options)
       const ecart = ecartDe(a, b)
       const connu = ECARTS[c.nom]
       if (process.env.COURONNE_ECARTS === '1' && ecart !== null) {

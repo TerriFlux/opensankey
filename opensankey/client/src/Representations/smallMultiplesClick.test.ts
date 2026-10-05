@@ -20,6 +20,7 @@ import type { Type_Presentable } from '../components/panels/presentation/openPre
 import {
   COORDINATES_LINKED_KEY, DIMENSION_OPENING_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
+import { readCouronneState } from './couronneState'
 
 givePlainDrawingEnvironment()
 
@@ -72,7 +73,7 @@ const scene = (filiere_ouverts: string[]) => {
   }
   const ctx = { ...elementContext(source, lien as unknown as Type_Presentable), window_id, pane_key: 'p1', options }
   const ecrit = jest.spyOn(source.menu_configuration, 'setMainZonePaneOptions').mockImplementation(() => undefined)
-  return { ctx, ecrit }
+  return { ctx, ecrit, sankey }
 }
 
 const dessiner = (ctx: ReturnType<typeof scene>['ctx']) => {
@@ -89,16 +90,17 @@ const secteur = (el: HTMLElement, rang: number, id: string): Element | null =>
     `.figure_small_multiples > div:nth-child(${rang}) path.node_stats_arc[data-repr-id="${id}"]`
   )
 
-const coupeEcrite = (ecrit: jest.SpyInstance): { [dim: string]: string[] } | undefined => {
+/** 04/10/2026 (lot 3) — ce que le dernier sac ecrit montre, dimension par dimension (l etat unique). */
+const coupeEcrite = (ecrit: jest.SpyInstance, sankey: ReturnType<typeof scene>['sankey']): { [dim: string]: string[] } => {
   const last = ecrit.mock.calls[ecrit.mock.calls.length - 1]
-  return (last?.[2] as { [k: string]: unknown } | undefined)?.[DIMENSION_OPENING_KEY] as
-    { [dim: string]: string[] } | undefined
+  const state = readCouronneState(last?.[2] as { [k: string]: unknown }, sankey as never)
+  return Object.fromEntries(state.order.map(id => [id, state.dims[id].shown]))
 }
 
 describe('petits multiples — le clic sur une part', () => {
 
   test('LE CAS DE JULIEN : cliquer une part de la deuxieme case ouvre le membre pour la figure', () => {
-    const { ctx, ecrit } = scene(['produits'])
+    const { ctx, ecrit, sankey } = scene(['produits'])
     const { el, teardown } = dessiner(ctx)
     expect(el.querySelectorAll('.figure_small_multiples > div').length).toBe(2)
 
@@ -108,23 +110,23 @@ describe('petits multiples — le clic sur une part', () => {
 
     // La filiere s ouvre d un cran ; la dimension des cases n a pas bouge.
     expect(ecrit).toHaveBeenCalled()
-    const coupe = coupeEcrite(ecrit)
-    expect(coupe?.filiere).toEqual(['produits', 'cereales'])
-    expect(coupe?.pays).toEqual(['monde'])
+    const coupe = coupeEcrite(ecrit, sankey)
+    expect(coupe.filiere).toEqual(['ble', 'mais'])
+    expect(coupe.pays).toEqual(['fr', 'de'])
     if (typeof teardown === 'function') teardown()
   })
 
   test('shift+clic referme, toujours sur la dimension des parts', () => {
-    const { ctx, ecrit } = scene(['produits', 'cereales'])
+    const { ctx, ecrit, sankey } = scene(['produits', 'cereales'])
     const { el, teardown } = dessiner(ctx)
 
     const part = secteur(el, 1, memberSectorId('filiere', 'ble'))
     expect(part).not.toBeNull()
     part?.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }))
 
-    const coupe = coupeEcrite(ecrit)
-    expect(coupe?.filiere).toEqual(['produits'])
-    expect(coupe?.pays).toEqual(['monde'])
+    const coupe = coupeEcrite(ecrit, sankey)
+    expect(coupe.filiere).toEqual(['cereales'])
+    expect(coupe.pays).toEqual(['fr', 'de'])
     if (typeof teardown === 'function') teardown()
   })
 })

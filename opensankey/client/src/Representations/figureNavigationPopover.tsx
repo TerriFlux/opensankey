@@ -202,3 +202,47 @@ export const drawingMenuContent = (choice: Type_TopbarFigureChoice) =>
       </Box>
     })}
   </Box>
+
+/**
+ * 04/10/2026 (lot 3) — LA ⚙ DU TABLEAU : chaque réglage, son titre et ses choix ; le courant coché, un
+ * grisé dit pourquoi. Une case seule (une option) se coche et se décoche.
+ */
+export const settingsMenuContent = (title: string, choices: Type_TopbarFigureChoice[]) =>
+  () => <Box display='flex' flexDirection='column' gap='0.3rem' className='figure_navigation_settings_menu'>
+    <Text fontSize='0.72rem' fontWeight='600' color='gray.600' padding='0 0.3rem'>{title}</Text>
+    {choices.map(choice => <Box key={choice.key} display='flex' flexDirection='column'>
+      <Text fontSize='0.7rem' color='gray.500' padding='0 0.3rem'>{choice.label}</Text>
+      {choice.options.map(o => {
+        const single = choice.options.length === 1
+        const current = o.value === choice.value
+        const disabled = o.disabled === true || choice.disabled === true
+        return <Box
+          as='button'
+          key={o.value}
+          display='flex'
+          alignItems='center'
+          gap='0.45rem'
+          padding='0.15rem 0.4rem'
+          borderRadius='4px'
+          fontSize='0.8rem'
+          textAlign='left'
+          fontWeight={current ? 600 : 400}
+          color={disabled ? 'gray.400' : 'gray.800'}
+          cursor={disabled ? 'not-allowed' : 'pointer'}
+          _hover={disabled ? undefined : { background: 'gray.100' }}
+          title={o.title}
+          className={current ? 'figure_navigation_setting_choice figure_navigation_setting_current' : 'figure_navigation_setting_choice'}
+          data-setting={choice.key}
+          data-value={o.value}
+          onClick={() => {
+            if (disabled) return
+            if (single) { choice.choose(current ? '' : o.value); return }
+            if (!current) choice.choose(o.value)
+          }}
+        >
+          <Box as='span' width='0.8rem' textAlign='center'>{single ? (current ? '☑' : '☐') : current ? '✓' : ''}</Box>
+          <span>{o.label}</span>
+        </Box>
+      })}
+    </Box>)}
+  </Box>

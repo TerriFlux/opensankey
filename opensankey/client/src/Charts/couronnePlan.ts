@@ -14,7 +14,7 @@
 // Le plan est STRUCTUREL : il dit quels membres se dessinent et comment, pas ce qu'ils valent. Les
 // valeurs restent au cube (`valueForDataTags`), lues au dessin sur les coordonnées que le plan donne.
 //
-// Module PUR. Lot 1 : rien n'est encore branché dessus (le lot 2 y branchera le dessin).
+// Module PUR. Lot 2 : le dessin est branché dessus (`couronneTree`, `registerAnalysisRepresentations`).
 
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
@@ -65,7 +65,12 @@ export interface Type_DrawPlan {
   /** Les petites couronnes : une par membre (montrés − décochés), au moins deux ; `null` sinon. */
   cells: { dimension_id: string, members: string[] } | null
   /**
-   * Rien ne découpe (et pas de cases) : le disque est un seul secteur, ce membre. `null` sinon.
+   * La dimension « une couronne par membre » quand elle s'applique (active, une autre dimension
+   * active pour les parts), même à un seul membre — elle se lit alors sur lui (`fixed`). `null` sinon.
+   */
+  cells_dimension_id: string | null
+  /**
+   * Rien ne découpe : le disque (chaque case, avec des cases) est un seul secteur, ce membre. `null` sinon.
    */
   whole: { dimension_id: string, member_ids: string[] } | null
   /** Les candidats de légende de chaque dimension qui découpe ou fait les cases : les montrés, cochés ou non. */
@@ -86,7 +91,7 @@ const nameOf = (dim: Class_DataTagGroup, id: string): string =>
   (dim.tags_dict[id] as Class_DataTag | undefined)?.name ?? id
 
 /** Les anneaux de la portée jusqu'à `member` (compris), cf. `Type_PlanPart.path`. */
-const pathFrom = (dim: Class_DataTagGroup, member: Class_DataTag, focus: Class_DataTag[]): string[] => {
+export const pathFrom = (dim: Class_DataTagGroup, member: Class_DataTag, focus: Class_DataTag[]): string[] => {
   const out: Class_DataTag[] = []
   const single_root = dimensionRootsOf(dim).length === 1
   for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent as Class_DataTag | undefined) {
@@ -148,9 +153,12 @@ export const drawPlanOf = (
   })
 
   // RIEN NE DÉCOUPE : un seul secteur, la première dimension active lue ailleurs qu'à son tout (sa
-  // portée, sa part unique), sinon la première dimension active à son tout.
+  // portée, sa part unique), sinon la première dimension active à son tout. 04/10/2026 (lot 3) — avec
+  // des cases aussi : chaque case dessine alors ce secteur (hors la dimension des cases).
   let whole: Type_DrawPlan['whole'] = null
-  if (cut.length === 0 && cells === null && dims.length > 0) {
+  const whole_dims = cells === null ? dims : dims.filter(d => d.id !== cells.dimension_id)
+  if (cut.length === 0 && whole_dims.length > 0) {
+    const dims = whole_dims
     const actives = dims.filter(d => st(d).active)
     const roots = (d: Class_DataTagGroup) => dimensionRootsOf(d).map(m => m.id)
     const telling = actives.find(d => {
@@ -186,5 +194,8 @@ export const drawPlanOf = (
       ? whole.member_ids.map(id => nameOf(sankey.data_taggs_dict[whole?.dimension_id ?? ''] as Class_DataTagGroup, id)).join(', ')
       : subject?.name ?? ''
 
-  return { linked: state.linked, cut, fixed, cells, whole, legend, columns, centre: { label, scope, context } }
+  return {
+    linked: state.linked, cut, fixed, cells, cells_dimension_id: cells_dim?.id ?? null, whole, legend, columns,
+    centre: { label, scope, context }
+  }
 }

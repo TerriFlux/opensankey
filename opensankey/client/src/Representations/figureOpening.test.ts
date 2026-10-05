@@ -1,6 +1,5 @@
 import {
-  dataDimensionLevelsDisplay, readFigureLevelsDisplay, readFigureOpening, withDataOpening, withDimensionLevelsDisplay,
-  withElementOpening, withFigureOpening, withLevelsDisplay
+  dataDimensionLevelsDisplay, readFigureLevelsDisplay, readFigureOpening, withElementOpening, withFigureOpening
 } from './figureOpening'
 
 // 04/10/2026 — LA DISPOSITION DES NIVEAUX PAR DIMENSION (os#1511, tableau de navigation) : chaque
@@ -21,14 +20,6 @@ describe('os#1511 — disposition des niveaux par dimension', () => {
     const levels = readFigureLevelsDisplay({ levels_display: 'in_place', levels_display_by: { produit: 'rings' } })
     expect(dataDimensionLevelsDisplay(levels, 'produit')).toBe('rings')
     expect(dataDimensionLevelsDisplay(levels, 'pays')).toBe('in_place')
-  })
-  test('ecrire une dimension garde les autres', () => {
-    expect(withDimensionLevelsDisplay({ levels_display_by: { produit: 'rings' }, x: 1 }, 'pays', 'in_place'))
-      .toEqual({ levels_display_by: { produit: 'rings', pays: 'in_place' }, x: 1 })
-  })
-  test('ecrire la disposition commune retire la cle par dimension', () => {
-    expect(withLevelsDisplay({ levels_display_by: { produit: 'rings' }, x: 1 }, 'in_place'))
-      .toEqual({ levels_display: 'in_place', levels_display_by: undefined, x: 1 })
   })
 })
 
@@ -81,24 +72,9 @@ describe('os#1511 — la lecture de ce qu une figure a ouvert', () => {
   })
 })
 
+// 04/10/2026 (lot 3) — la coupe propre ne s'ecrit plus ici : l'etat de la couronne (`couronne`) la
+// remplace. Restent la relecture et les elements ouverts d'une couronne de noeuds.
 describe('os#1511 — l ecriture : un sac se relit comme il s est ecrit', () => {
-  test('une coupe propre s ecrit dans ses deux cles, et le vieux format disparait', () => {
-    const sac = withDataOpening(
-      { hierarchy_expanded: ['detache', 'membre:pays/monde'], autre: 1 },
-      { linked: false, opened: { pays: ['monde'] } }
-    )
-    expect(sac).toEqual({
-      hierarchy_expanded: undefined, coordinates_linked: false, dimension_opening: { pays: ['monde'] }, autre: 1
-    })
-    expect(readFigureOpening(sac).data).toEqual({ linked: false, opened: { pays: ['monde'] } })
-  })
-
-  test('relier retire la coupe propre', () => {
-    const sac = withDataOpening({ coordinates_linked: false, dimension_opening: { pays: ['monde'] } }, { linked: true })
-    expect(sac.coordinates_linked).toBeUndefined()
-    expect(sac.dimension_opening).toBeUndefined()
-  })
-
   test('ouvrir un noeud garde la coupe d un fichier d avant, convertie', () => {
     const sac = withElementOpening({ hierarchy_expanded: ['detache', 'membre:pays/monde'] }, ['n_ble'])
     expect(readFigureOpening(sac)).toEqual({

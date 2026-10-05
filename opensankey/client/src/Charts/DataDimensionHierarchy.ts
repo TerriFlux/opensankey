@@ -285,25 +285,6 @@ export const dimensionDivides = (dim: Class_DataTagGroup, opened: ReadonlySet<st
   return roots[0].children.length > 0 && opened.has(memberSectorId(dim.id, roots[0].id))
 }
 
-/**
- * 03/10/2026 — LA DIMENSION AFFICHE-T-ELLE PLUS D'UN NIVEAU ? (os#1511) Julien : « le dessin est en
- * secteurs et la sélection en sunburst ». Avoir des niveaux ne suffit pas : en sunburst, la couronne
- * montre la hiérarchie depuis l'entrée de la dimension jusqu'aux membres AFFICHÉS, et des membres
- * tous au premier niveau (les filières seules) ne font qu'un anneau — le dessin des secteurs. Il en
- * faut un sous l'entrée (sous la racine unique, sautée, ou sous les racines).
- *
- * Les membres affichés sont ceux que la figure lit : LIÉE, ce que le diagramme montre ; DÉTACHÉE,
- * la frontière de ses ouverts moins ses décochés.
- */
-export const dimensionShowsSeveralLevels = (dim: Class_DataTagGroup, opening: Type_DataOpening): boolean => {
-  const entry_depth = dimensionRootsOf(dim).length === 1 ? 1 : 0
-  const shown = opening.linked
-    ? dim.selected_tags_list as Class_DataTag[]
-    : selectionFromOpening(dim, new Set(opening.opened?.[dim.id] ?? []), new Set(opening.hidden?.[dim.id] ?? []))
-      .map(id => dim.tags_dict[id] as Class_DataTag)
-  return shown.some(m => m !== undefined && dim.depthOf(m) > entry_depth)
-}
-
 /** Les membres ouverts d'UNE dimension, en identifiants de membre, lus sur une coupe. */
 export const dimensionOpenedMembers = (dim: Class_DataTagGroup, opened: ReadonlySet<string>): Set<string> =>
   new Set((dim.tags_list as Class_DataTag[]).filter(m => opened.has(memberSectorId(dim.id, m.id))).map(m => m.id))
@@ -372,23 +353,6 @@ export const inactiveDimensionsOf = (
   const out = new Set(dims.filter(d => inactive_ids?.includes(d.id)).map(d => d.id))
   if (!another_active && dims.length > 0 && out.size >= dims.length) out.delete(dims[0].id)
   return out
-}
-
-/**
- * 03/10/2026 — LE GESTE « ACTIVER / DÉSACTIVER » une dimension : la nouvelle liste des désactivées.
- * Désactiver la seule active est refusé (`null`) ; désactiver l'une ACTIVE les autres quand toutes
- * les autres étaient désactivées (avec deux dimensions : l'autre se réactive d'office).
- */
-export const toggledInactiveDimensions = (
-  dim_ids: readonly string[], inactive_ids: readonly string[] | undefined, dim_id: string
-): string[] | null => {
-  const now = new Set((inactive_ids ?? []).filter(id => dim_ids.includes(id)))
-  if (now.has(dim_id)) { now.delete(dim_id); return [...now] }
-  const others = dim_ids.filter(id => id !== dim_id)
-  if (others.length === 0) return null
-  if (others.every(id => now.has(id))) others.forEach(id => now.delete(id))
-  now.add(dim_id)
-  return [...now]
 }
 
 /**

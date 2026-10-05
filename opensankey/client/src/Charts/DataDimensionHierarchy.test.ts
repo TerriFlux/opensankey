@@ -5,9 +5,8 @@ import type { Class_LinkValue } from '../Elements/LinkValues'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import {
-  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, dimensionShowsSeveralLevels, memberSectorId,
-  inactiveDimensionsOf, parseMemberSectorId, smallMultipleDefaultOpened, smallMultipleMembersOf,
-  toggledInactiveDimensions
+  buildNestedDimensionTree, dataCutOf, dataDimensionOpenedDownToLevel, memberSectorId,
+  inactiveDimensionsOf, parseMemberSectorId, smallMultipleDefaultOpened, smallMultipleMembersOf
 } from './DataDimensionHierarchy'
 import type { Type_DataDimensionOptions } from './DataDimensionHierarchy'
 import type { Type_SunburstNode } from './SunburstHierarchy'
@@ -396,33 +395,6 @@ describe('os#1511 — les membres des petits multiples', () => {
   })
 })
 
-// 03/10/2026 — « EN SUNBURST » N A D EFFET QUE SI LA DIMENSION AFFICHE PLUS D UN NIVEAU. Julien : « le
-// dessin est en secteurs et la selection en sunburst ». Des filieres seules ne font qu un anneau.
-
-describe('os#1511 — la dimension affiche-t-elle plus d un niveau', () => {
-  test('liee, le diagramme au niveau 1 : un seul niveau sous la racine sautee', () => {
-    const m = monter()
-    m.groupe.selectAllAtLevel(1)
-    expect(dimensionShowsSeveralLevels(m.groupe, { linked: true })).toBe(false)
-  })
-  test('liee, le diagramme au niveau 2 : Ble et Mais sous Cereales, deux niveaux', () => {
-    const m = monter()
-    m.groupe.selectAllAtLevel(2)
-    expect(dimensionShowsSeveralLevels(m.groupe, { linked: true })).toBe(true)
-  })
-  test('detachee : la frontiere des ouverts decide', () => {
-    const m = monter()
-    expect(dimensionShowsSeveralLevels(m.groupe, { linked: false, opened: { filiere: ['produits'] } })).toBe(false)
-    expect(dimensionShowsSeveralLevels(m.groupe, { linked: false, opened: { filiere: TOUT } })).toBe(true)
-  })
-  test('detachee, Ble et Mais decoches : il ne reste que le niveau 1', () => {
-    const m = monter()
-    expect(dimensionShowsSeveralLevels(
-      m.groupe, { linked: false, opened: { filiere: TOUT }, hidden: { filiere: ['ble', 'mais'] } }
-    )).toBe(false)
-  })
-})
-
 // 03/10/2026 — UNE COUPE PEUT AVOIR DES TROUS. Julien : « je clique sur Lait rien ne se passe ». La
 // couronne dessine ce qui est coche, comme un graphique d Excel filtre : Lait decoche disparait, et
 // le total baisse d autant.
@@ -475,18 +447,6 @@ describe('os#1511 — decocher un membre : la couronne ne le dessine plus', () =
 // serait plus claire »). Desactivee, elle ne decoupe pas ; il en reste toujours une active.
 describe('os#1511 — une dimension desactivee ne decoupe pas la couronne', () => {
   const dims = [{ id: 'produits' }, { id: 'pays' }] as unknown as Class_DataTagGroup[]
-  test('desactiver l une des deux la retire, l autre reste active', () => {
-    expect(toggledInactiveDimensions(['produits', 'pays'], [], 'pays')).toEqual(['pays'])
-  })
-  test('desactiver l autre rallume la premiere d office', () => {
-    expect(toggledInactiveDimensions(['produits', 'pays'], ['pays'], 'produits')).toEqual(['produits'])
-  })
-  test('la reactiver la rend a la coupe', () => {
-    expect(toggledInactiveDimensions(['produits', 'pays'], ['pays'], 'pays')).toEqual([])
-  })
-  test('la seule dimension ne se desactive pas', () => {
-    expect(toggledInactiveDimensions(['produits'], [], 'produits')).toBeNull()
-  })
   test('toutes desactivees dans un fichier : la premiere reste active', () => {
     expect([...inactiveDimensionsOf(dims, ['produits', 'pays'])]).toEqual(['pays'])
   })

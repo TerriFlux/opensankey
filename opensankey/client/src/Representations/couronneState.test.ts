@@ -239,6 +239,27 @@ describe('os#1511 couronneState — les cas de Julien', () => {
     expect(readCouronneState(zoome, s.sankey, true).dims.filiere).toMatchObject({ focus: [], shown: P('lait', 'viande') })
   })
 
+  test('liee zoomee : le diagramme montre le membre de la portee d un bloc, la couronne descend d un niveau', () => {
+    // REGLE DE LA COURONNE LIEE (Julien, lot 2) : diagramme aux filieres, couronne zoomee sur Cereales
+    // -> ses HS4 ; diagramme a Europe seule, couronne zoomee sur Europe -> ses pays. Le diagramme ne
+    // bouge pas.
+    const s = monterSocle()
+    const options = { descriptor: croise }
+    const st = readCouronneState(options, s.sankey, true)
+    const zoome = writeCouronneState(options, {
+      ...st, dims: { ...st.dims, filiere: { ...st.dims.filiere, focus: ['cereales'] }, pays: { ...st.dims.pays, focus: ['europe'] } }
+    })
+    s.pays.selectMembers(['europe'])
+    const lu = readCouronneState(zoome, s.sankey, true)
+    expect(lu.dims.filiere).toMatchObject({ focus: ['cereales'], shown: P('ble', 'mais') })
+    expect(lu.dims.pays).toMatchObject({ focus: ['europe'], shown: P('fr', 'es') })
+    expect(s.filiere.selected_tags_list.map(m => m.id)).toEqual(P('cereales', 'lait', 'viande'))
+    expect(s.pays.selected_tags_list.map(m => m.id)).toEqual(['europe'])
+    // La legende : les parts ainsi calculees, rien que le diagramme ne montre pas.
+    const plan = drawPlanOf(lu, s.sankey)
+    expect(plan.legend.filiere.map(e => e.member_id)).toEqual(P('ble', 'mais'))
+  })
+
   test('liee, les decoches restent a la figure', () => {
     const s = monterSocle()
     const options = { descriptor: croise }
