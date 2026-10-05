@@ -27,6 +27,8 @@ import {
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
 import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
+import type { Class_DataTagGroup } from '../types/TagGroup'
+import { chooseLegendDimensionTag } from '../components/panels/presentation/legendDimensionChoice'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems, legendIndentWidth, legendSampleZoneId, legendSwatchWidth,
@@ -514,7 +516,10 @@ export class Class_LegendConfig {
    */
   public canRenameEntry(zone_id: string): boolean {
     if (!this._managed) return false
-    if (this._entry_tags.has(zone_id)) return this._entry_template === ''
+    const entry = this._entry_tags.get(zone_id)
+    // os#1526 — un membre de dimension se choisit au clic ; il ne se renomme pas d'ici.
+    if (entry !== undefined && this._drawing_area.sankey.data_taggs_list.some(g => g.id === entry.tag_group_id)) return false
+    if (entry !== undefined) return this._entry_template === ''
     return this._entry_groups.has(zone_id)
   }
 
@@ -567,6 +572,15 @@ export class Class_LegendConfig {
     if (target === undefined) return false
     const drawing_area = this._drawing_area
     const sankey = drawing_area.sankey
+    // os#1526 — un membre d'une dimension à niveaux : le CHOISIR dans le diagramme (même geste que le
+    // tableau de la couronne et la barre du haut), pas le masquer.
+    const dimension = sankey.data_taggs_list.find(g => g.id === target.tag_group_id) as unknown as Class_DataTagGroup | undefined
+    if (dimension !== undefined) {
+      // Comme pour un masquage : les membres sortis restent en légende (rayés), pour y revenir.
+      this._show_hidden_tags = true
+      chooseLegendDimensionTag(drawing_area.application_data, dimension, target.tag_id)
+      return true
+    }
     const group = [...sankey.node_taggs_list, ...sankey.flux_taggs_list]
       .find(g => g.id === target.tag_group_id)
     // SA#553 — l'étiquette générée se masque comme les autres
@@ -884,7 +898,12 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     // SA#549 — zones qu'un clic bascule : entrées (et leur valeur d'exemple) des étiquettes de
     // NŒUDS et de FLUX. Les étiquettes de données en sont exclues : les désélectionner change la
     // valeur affichée, sans rien masquer.
-    const filter_group_ids = new Set([...sankey.node_taggs_list, ...sankey.flux_taggs_list].map(g => g.id))
+    // os#1526 — SAUF LES DIMENSIONS À NIVEAUX : un clic sur un de leurs membres le CHOISIT dans le
+    // diagramme (cf. `toggleEntryTag`), comme le tableau et la barre du haut.
+    const filter_group_ids = new Set([
+      ...sankey.node_taggs_list, ...sankey.flux_taggs_list,
+      ...sankey.data_taggs_list.filter(g => (g as unknown as Class_DataTagGroup).is_hierarchical)
+    ].map(g => g.id))
     const entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
     items.forEach(item => {
       if (item.tag_group_id === undefined || item.tag_id === undefined) return
