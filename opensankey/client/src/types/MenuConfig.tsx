@@ -568,10 +568,9 @@ export type Type_MainZoneOccupant = {
   panes?: { hidden?: string[] }
   /**
    * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET (pourcentage, normalisé, valeur), choisi dans son
-   * en-tête. Comme `data_tags`, c'est ce que le volet MONTRE, pas un réglage du diagramme : deux
-   * volets Sankey du même document peuvent lire l'un en pourcentages, l'autre en valeurs. Un volet
-   * qui en suit un autre montre celui du volet suivi. Cf. `Representations/paneValueMode`.
-   * Absent = ce que disent les figures, ou les libellés tels que l'auteur les a réglés.
+   * en-tête. Comme `data_tags`, c'est ce que le volet MONTRE : ses figures qui déclarent `value_mode`
+   * (l'étoile Unit.) le reçoivent au dessin. Un volet qui en suit un autre montre celui du volet
+   * suivi. Cf. `Representations/paneValueMode`. Absent = ce que disent les figures.
    */
   value_mode?: Type_PaneValueMode
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
@@ -2329,8 +2328,8 @@ export class Class_MenuConfig {
   }
 
   /**
-   * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET `id` (un volet Sankey : cf.
-   * `Type_MainZoneOccupant.value_mode`) ; `null` rend les libellés réglés par l'auteur.
+   * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET `id` (cf. `Type_MainZoneOccupant.value_mode`) ;
+   * `null` rend la main aux réglages des figures.
    */
   public setMainZoneWindowValueMode(id: string, mode: Type_PaneValueMode | null): void {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
@@ -2338,11 +2337,6 @@ export class Class_MenuConfig {
     if (mode !== null) o.value_mode = mode
     else delete o.value_mode
     this._notifyMainZone()
-  }
-
-  /** sa#598 — Le type de valeur que montre le volet `id`, ou `null`. Lu à chaque libellé : sans copie. */
-  public mainZoneValueModeOf(id: string): Type_PaneValueMode | null {
-    return this._host._main_zone_occupants.find(x => x.id === id)?.value_mode ?? null
   }
 
   /** sa#598 — Le type de valeur que montre le volet `id` : le sien, ou celui du volet qu'il suit. */
@@ -2364,17 +2358,6 @@ export class Class_MenuConfig {
       changed = true
     }))
     if (changed) this._notifyMainZone()
-  }
-
-  /**
-   * sa#598 — Le type de valeur du volet Sankey qui porte le DESSIN VIVANT : le vivant, sinon le
-   * premier volet Sankey (une page publiée n'en désigne pas, cf. `Class_SankeyPanes.sync`).
-   */
-  public liveSankeyPaneValueMode(): Type_PaneValueMode | null {
-    const occupants = this._host._main_zone_occupants
-    const live_id = this._host._main_zone_live_sankey_id
-    const live = (live_id !== null ? occupants.find(x => x.id === live_id) : undefined) ?? occupants.find(isSankeyPane)
-    return live?.value_mode ?? null
   }
 
   /**
@@ -4439,7 +4422,7 @@ export class Class_MenuConfig {
       if (o.reader.data_taggs) reader['data_taggs'] = [...o.reader.data_taggs]
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }
-    // sa#598 — le type de valeur d'un volet Sankey, seulement s'il est posé.
+    // sa#598 — le type de valeur du volet, seulement s'il est posé.
     if (o.value_mode) entry['value_mode'] = o.value_mode
     // 05/10/2026 — LES VIGNETTES MASQUÉES, seulement s'il y en a (cf. `Type_MainZoneOccupant.panes`).
     if (o.panes?.hidden && o.panes.hidden.length > 0) entry['panes'] = { hidden: [...o.panes.hidden] }
@@ -4573,7 +4556,7 @@ export class Class_MenuConfig {
     // sa#594 — coordonnées de données et offre au lecteur ; absentes = rien de posé.
     const data_tags = tagListMapFromJSON(e['data_tags'])
     const reader = readMainZoneReader(e['reader'])
-    // sa#598 — le type de valeur d'un volet Sankey ; une valeur inconnue est ignorée.
+    // sa#598 — le type de valeur du volet ; une valeur inconnue est ignorée.
     const value_mode = isPaneValueMode(e['value_mode']) ? e['value_mode'] : undefined
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
     const panes = readPanesState(e['panes'])

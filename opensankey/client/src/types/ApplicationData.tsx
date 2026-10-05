@@ -44,7 +44,6 @@ import {
 } from '../types/MenuConfig'
 import { Class_SankeyPanes } from './SankeyPanes'
 import { layoutModeOf } from '../Representations/paneSync'
-import type { Type_PaneValueMode } from '../Representations/paneValueMode'
 // os#1482 — les tableaux de bord (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
   implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId, mainZoneWithViewOnCurrentSheet,
@@ -951,19 +950,6 @@ export class Class_ApplicationData {
    */
   protected _sankey_panes: Class_SankeyPanes = new Class_SankeyPanes(this)
   public get sankey_panes(): Class_SankeyPanes { return this._sankey_panes }
-
-  /**
-   * sa#598 — LE TYPE DE VALEUR DU VOLET SANKEY QUI DESSINE `da`, lu par `format_value` pour chaque
-   * libellé de valeur de flux : celui du volet vivant pour la zone de dessin du document principal,
-   * celui du volet dont c'est le RENDU pour un rendu de volet inactif (sa#581). `null` pour tout
-   * autre dessin — une étoile, une vue de groupe, une feuille — qui montre ses libellés tels quels.
-   */
-  public sankeyPaneValueModeOf(da: Class_DrawingArea): Type_PaneValueMode | null {
-    const host = this._workspace?.main ?? this
-    if (host === this) return da === this.drawing_area ? this.menu_configuration.liveSankeyPaneValueMode() : null
-    const pane_id = host.sankey_panes.renderOwnerOf(this)
-    return pane_id !== null ? host.menu_configuration.mainZoneValueModeOf(pane_id) : null
-  }
   /** Vrai pendant une bascule de vue commandée par un GESTE d'utilisateur (cf. `runAsViewGesture`). */
   protected _view_gesture: boolean = false
 

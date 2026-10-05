@@ -31,7 +31,6 @@ import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
 import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
 import { normalizedValueFor } from '../Algorithms/NormalizationRule'
-import { sankeyPaneValueLabelOverrides } from '../Representations/paneValueMode'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_DataTagGroup } from './TagGroup'
@@ -687,16 +686,8 @@ export const format_value = (
   // valeur est masqué, et les jetons de pourcentage imposent leur unit_type.
   overrides?: Partial<NameLabelAttributeTypes>
 ) => {
-  // sa#598 — LE TYPE DE VALEUR DU VOLET SANKEY qui dessine ce flux (pourcentage, normalisé, valeur),
-  // choisi dans son en-tête : il passe sous les réglages FORCÉS d'un gabarit, qui imposent les leurs.
-  const pane_overrides = (prefix === 'value_label' && element instanceof Class_LinkElement)
-    ? sankeyPaneValueLabelOverrides(
-      element.drawing_area.application_data?.sankeyPaneValueModeOf?.(element.drawing_area),
-      getNameLabelValues(element, prefix).unit_type
-    )
-    : undefined
-  const label_values = (overrides || pane_overrides)
-    ? { ...getNameLabelValues(element, prefix), ...pane_overrides, ...overrides }
+  const label_values = overrides
+    ? { ...getNameLabelValues(element, prefix), ...overrides }
     : getNameLabelValues(element, prefix)
   /*==========================================================================*/
   // First step. value transformation

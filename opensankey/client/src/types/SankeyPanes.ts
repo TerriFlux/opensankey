@@ -1155,23 +1155,6 @@ export class Class_SankeyPanes {
     return null
   }
 
-  /**
-   * sa#598 — LE TYPE DE VALEUR DU VOLET `pane_id` A CHANGÉ : les libellés de valeur des flux de son
-   * dessin se refont — le dessin vivant s'il le porte, son rendu sinon —, et rien d'autre : ni les
-   * positions, ni les formes, qui ne dépendent pas de ce qu'on écrit sur les flux.
-   */
-  public redrawValueLabels(pane_id: string): void {
-    const mc = this.host.menu_configuration
-    if (!mc) return
-    const live_id = mc.main_zone_live_sankey_id ?? mc.main_zone_sankey_panes[0]?.id ?? null
-    const render = this._renders.get(pane_id)
-    const da = pane_id === live_id
-      ? this.host.drawing_area
-      : (render && !render.doc.disposed ? render.doc.drawing_area : undefined)
-    if (!da || da.bypass_redraws) return
-    da.sankey.links_list.forEach(link => link.drawValueLabel())
-  }
-
   // CYCLE DE VIE ===================================================================================
 
   /** Le caméra d'un volet quand il a cessé d'être vivant. */

@@ -3,12 +3,10 @@
 // Fige ici :
 //  - le champ du volet : il s'ecrit seulement s'il est pose, se relit, et vaut pour les volets qui le
 //    suivent (sa#594) — y compris quand ils s'en detachent ou que le volet suivi se ferme ;
-//  - le reglage PROPRE des vignettes que le bouton retire ;
-//  - ce que devient le libelle de valeur d'un flux dans un volet Sankey.
+//  - le reglage PROPRE des vignettes que le bouton retire.
 
 import { Class_ApplicationData } from './ApplicationData'
 import type { Type_JSON } from './Utils'
-import { sankeyPaneValueLabelOverrides } from '../Representations/paneValueMode'
 
 const freshMenuConfig = () => new Class_ApplicationData(false).menu_configuration
 const roundTrip = (json: Type_JSON) => {
@@ -24,7 +22,7 @@ describe('le type de valeur du volet, dans le fichier', () => {
     mc.setMainZoneWindowValueMode(id, 'normalized')
     const relu = roundTrip(mc.mainZoneStateToJSON())
     expect(relu.main_zone_occupants.find(x => x.id === id)?.value_mode).toBe('normalized')
-    expect(relu.mainZoneValueModeOf(id)).toBe('normalized')
+    expect(relu.mainZoneEffectiveValueMode(id)).toBe('normalized')
   })
 
   it('ne s ecrit pas quand rien n est pose, ni apres un retour aux libelles de l auteur', () => {
@@ -42,7 +40,7 @@ describe('le type de valeur du volet, dans le fichier', () => {
     const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
     const json = mc.mainZoneStateToJSON()
     ;((json['occupants'] as Type_JSON)[id] as Type_JSON)['value_mode'] = 'pour mille'
-    expect(roundTrip(json).mainZoneValueModeOf(id)).toBeNull()
+    expect(roundTrip(json).mainZoneEffectiveValueMode(id)).toBeNull()
   })
 })
 
@@ -88,31 +86,5 @@ describe('le reglage propre des vignettes', () => {
     expect(mc.figureOf(id, 'n1').isAttributeExplicit('value_mode')).toBe(false)
     expect(mc.figureOf(id, 'n2').isAttributeExplicit('value_mode')).toBe(false)
     expect(mc.figureOf(id, 'n1').own['neutral_colors']).toBe(false)
-  })
-})
-
-describe('le libelle de valeur d un flux dans un volet Sankey', () => {
-  it('passe en part des sorties de la source, arrondie a l entier', () => {
-    expect(sankeyPaneValueLabelOverrides('percent', 'unit_tag')).toEqual(expect.objectContaining({
-      unit_type: '%OS', custom_digit: true, nb_digit: 0, unit_visible: true
-    }))
-  })
-
-  it('passe en valeur normalisee par la regle de la source', () => {
-    expect(sankeyPaneValueLabelOverrides('normalized', 'unit_tag')).toEqual(expect.objectContaining({
-      unit_type: 'normalized_source', significant_digits: true, nb_significant_digits: 3
-    }))
-  })
-
-  it('en valeur, garde le reglage de l auteur sauf s il montrait un pourcentage ou un rapport', () => {
-    expect(sankeyPaneValueLabelOverrides('value', 'unit_tag')).toBeUndefined()
-    expect(sankeyPaneValueLabelOverrides('value', 'unit_name')).toBeUndefined()
-    expect(sankeyPaneValueLabelOverrides('value', '%ID')).toEqual(expect.objectContaining({ unit_type: 'unit_tag' }))
-    expect(sankeyPaneValueLabelOverrides('value', 'normalized_target')).toEqual(expect.objectContaining({ unit_type: 'unit_tag' }))
-  })
-
-  it('ne touche a rien quand le volet n a rien choisi', () => {
-    expect(sankeyPaneValueLabelOverrides(null, '%OS')).toBeUndefined()
-    expect(sankeyPaneValueLabelOverrides(undefined, 'unit_tag')).toBeUndefined()
   })
 })
