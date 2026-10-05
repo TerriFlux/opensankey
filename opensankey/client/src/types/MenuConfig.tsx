@@ -34,7 +34,7 @@ import {
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
 import {
-  Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
+  Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, PANE_PICKERS_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
 } from './EventBus'
 import { Class_PanelManager, Type_PanelMode, Type_PopupGeometry } from './PanelManager'
 // os#1482 — le magasin des tableaux de bord est PUR (aucune arête vers le dessin), comme `PanelManager`.
@@ -372,6 +372,18 @@ export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 
  * `mainZoneOccupantUsesOwnWindowId` dès qu'on tient l'occupant — LUI SEUL voit le troisième cas,
  * dont le sujet est un diagramme comme les autres.
  */
+/**
+ * 05/10/2026 — LES VIGNETTES QU'UNE FENÊTRE OFFRE AU CHOIX, telles qu'elle les dessine (cf.
+ * `Class_MenuConfig.reportMainZonePanePicker`) : `label` est le nom court (« Exports »), `full` le nom
+ * complet de l'info-bulle ; `visible` les clés montrées à cet instant.
+ */
+export type Type_MainZonePanePicker = {
+  id: string
+  title: string
+  choices: { key: string, label: string, full: string }[]
+  visible: string[]
+}
+
 export type Type_MainZoneOccupant = {
   id: string
   subject: Type_MainZoneSubject
@@ -1287,6 +1299,8 @@ export class Class_MenuConfig {
   // a cochées. Jamais persisté dans le fichier ; porté par l'adresse (paramètre `panes`, cf.
   // `mainZonePanesParam`). `null` = l'adresse n'a pas encore été lue.
   protected _main_zone_reader_panes: { [id: string]: string[] } | null = null
+  // 05/10/2026 — les vignettes que chaque fenêtre montée offre au choix (cf. `reportMainZonePanePicker`).
+  protected _main_zone_pane_pickers: Map<string, Type_MainZonePanePicker> = new Map()
   // os#1394 — CE QUE L'AUTEUR A TOUCHÉ EN DERNIER, et donc ce dont le menu de configuration doit
   // parler. TRANSITOIRE.
   //
@@ -2232,6 +2246,34 @@ export class Class_MenuConfig {
       } catch { /* adresse exotique (blob:, data:) : le choix vaut pour la session */ }
     }
     this._notifyMainZone()
+  }
+
+  /**
+   * 05/10/2026 — CE QUE CHAQUE FENÊTRE OFFRE AU CHOIX. Seule la fenêtre sait quelles vignettes elle
+   * dessine (le registre filtre les objets auxquels sa nature s'applique) : elle le DÉCLARE ici à
+   * chaque rendu, et la barre du haut d'une page publiée en fait son menu « Vignettes » sans refaire
+   * le calcul. `null` retire la fenêtre (démontée). Transitoire, jamais écrit dans le fichier.
+   * Notifie `PANE_PICKERS_TOPIC` seulement si quelque chose a changé.
+   */
+  public reportMainZonePanePicker(id: string, picker: Type_MainZonePanePicker | null): void {
+    const host = this._host
+    const before = host._main_zone_pane_pickers.get(id)
+    if (picker === null) {
+      if (!before) return
+      host._main_zone_pane_pickers.delete(id)
+    } else {
+      if (before && JSON.stringify(before) === JSON.stringify(picker)) return
+      host._main_zone_pane_pickers.set(id, picker)
+    }
+    host._event_bus.notify(PANE_PICKERS_TOPIC)
+  }
+
+  /** Les fenêtres déclarées (cf. `reportMainZonePanePicker`), dans l'ordre des occupants. */
+  public get main_zone_pane_pickers(): Type_MainZonePanePicker[] {
+    const host = this._host
+    const order = host._main_zone_occupants.map(o => o.id)
+    return [...host._main_zone_pane_pickers.values()]
+      .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))
   }
 
   // --- os#1418 : les figures de la grande zone ------------------------------------------------

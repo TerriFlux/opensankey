@@ -114,8 +114,8 @@ export interface SankeyGlobals {
   // Sans effet hors publish — l'éditeur le garde toujours.
   canvas_header?: boolean
   // 05/10/2026 — default FALSE : le lecteur choisit les vignettes d'une fenêtre qui en a plusieurs
-  // (petit bandeau de cases en tête de la fenêtre). Son choix va dans l'adresse (`?panes=`), jamais
-  // dans le fichier. Indépendant de `canvas_header`.
+  // (icône « Vignettes » de la barre du haut ; page intégrée ou sans barre : au coin de la fenêtre).
+  // Son choix va dans l'adresse (`?panes=`), jamais dans le fichier. Indépendant de `canvas_header`.
   pane_picker?: boolean
 
   // Langue
