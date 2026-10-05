@@ -142,6 +142,11 @@ export interface Type_ChartOptions {
    * multiples : la grille le dit une fois, sous le titre.
    */
   centre_caption?: string
+  /**
+   * 05/10/2026 — LE NOM ÉCRIT AU CENTRE, quand ce n'est pas le titre de repli (le jeu de données,
+   * « Exports », en gras). Le texte personnalisé de la part de centre prime.
+   */
+  centre_name?: { text: string, bold: boolean }
   /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
   breadcrumb?: Type_FigureCrumb[] | HTMLElement
   /**
@@ -2138,7 +2143,8 @@ export const drawDonutChart = (
   // Le centre aussi : son texte personnalisé, sinon le nom de ce que la figure montre.
   const centre_name = (centre?.name?.custom_text !== undefined && centre.name.custom_text !== '')
     ? centre.name.custom_text
-    : opts.title_fallback ?? ''
+    : opts.centre_name?.text ?? opts.title_fallback ?? ''
+  const centre_name_bold = opts.centre_name !== undefined && centre_name === opts.centre_name.text && opts.centre_name.bold
   const wants_name = (centre?.name?.is_visible
     ?? (st.centre_content === 'name' || st.centre_content === 'both')) && centre_name !== ''
   const wants_value = centre?.value?.is_visible
@@ -2289,7 +2295,7 @@ export const drawDonutChart = (
         const span = text.append('tspan')
           .attr('x', 0)
           .attr('y', plan.above ? y_last - (plan.lines.length - 1 - i) * name_h : top + (i + 0.5) * name_h)
-        dress(span, centre?.name, plan.size, false)
+        dress(span, centre?.name, plan.size, centre_name_bold)
         span.text(line)
       })
     }

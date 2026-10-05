@@ -162,8 +162,9 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   box.className = 'figure_navigation'
   box.style.flex = '0 0 auto'
   box.style.padding = '0.1rem 0.4rem 0.2rem'
-  box.style.fontSize = '11px'
-  box.style.lineHeight = '1.25'
+  // 05/10/2026 — un cran plus grand et plus aéré (Jean-Yves) : 12 px (11 avant), interligne 1,45.
+  box.style.fontSize = '12px'
+  box.style.lineHeight = '1.45'
   box.style.color = '#2d3748'
   box.style.display = 'flex'
   box.style.alignItems = 'flex-start'
@@ -234,6 +235,8 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   model.dimensions.forEach((dim, i) => {
     const head = table.insertRow()
     head.className = 'figure_navigation_head'
+    // 05/10/2026 — un filet fin entre les lignes de dimensions (Jean-Yves : séparer les en-têtes).
+    if (i > 0) head.style.borderTop = '1px solid #e2e8f0'
     if (move && (model.dimensions.length > 2 || i === 0)) {
       const order = head.insertCell()
       order.className = 'figure_navigation_order'
@@ -306,17 +309,19 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     name.style.maxWidth = dim.summary ? 'none' : '12rem'
     name.style.overflow = dim.summary ? 'visible' : 'hidden'
     name.style.textOverflow = 'ellipsis'
-    if (i > 0) name.style.paddingTop = '0.25rem'
+    if (i > 0) name.style.paddingTop = '0.35rem'
     for (let c = 0; c < columns; c++) {
       const level = dim.levels[c]
       const th = head.insertCell()
       const td = head.insertCell()
-      th.style.padding = '0.05rem 0.3rem 0.05rem 0.4rem'
+      th.style.padding = '0.2rem 0.35rem 0.2rem 0.45rem'
       th.style.borderLeft = level ? '1px solid #e2e8f0' : 'none'
-      td.style.padding = '0.05rem 0.4rem 0.05rem 0'
+      td.style.padding = '0.2rem 0.45rem 0.2rem 0.3rem'
+      // 05/10/2026 — L'EN-TÊTE ET SA CASE DE ZOOM SE DISTINGUENT : un filet pointillé les sépare.
+      td.style.borderLeft = level ? '1px dotted #cbd5e0' : 'none'
       for (const cell of [th, td]) {
         cell.style.whiteSpace = 'nowrap'
-        if (i > 0) cell.style.paddingTop = '0.25rem'
+        if (i > 0) cell.style.paddingTop = '0.35rem'
       }
       if (!level) continue
       th.className = level.active ? 'figure_navigation_level figure_navigation_active' : 'figure_navigation_level'
@@ -387,7 +392,8 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, wher
     const label = document.createElement('span')
     label.className = 'figure_navigation_member'
     label.textContent = zooms[0]
-    label.style.fontWeight = '600'
+    // 05/10/2026 — le zoom en poids normal : l'en-tête actif seul est en gras.
+    label.style.fontWeight = '400'
     label.style.overflow = 'hidden'
     label.style.textOverflow = 'ellipsis'
     label.style.whiteSpace = 'nowrap'
@@ -400,7 +406,7 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, wher
       more.className = 'figure_navigation_more'
       more.textContent = `+${zooms.length - 1}`
       more.style.color = ACCENT
-      more.style.fontWeight = '600'
+      more.style.fontWeight = '400'
       more.style.flex = '0 0 auto'
       if (openPick) { more.style.cursor = 'pointer'; keepClick(more, openPick) }
       wrap.appendChild(more)

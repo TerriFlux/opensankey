@@ -226,9 +226,9 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   //
   // 01/10/2026 — ALLUMÉ : nom + valeur + % dans chaque secteur, sans légende (cf. plus haut).
   name_label_is_visible: true,
-  // 04/10/2026 — 13 (11 avant) : « augmenter la taille de la police dans les segments ». Les
+  // 05/10/2026 — 15 (13 le 04/10, 11 avant) : « augmenter la taille de la police dans les segments ». Les
   // étiquettes détachées suivent ; le plancher lisible des petites cases (9 px) ne bouge pas.
-  name_label_font_size: 13,
+  name_label_font_size: 15,
   // Le trace d hier : police de la page, sans graisse ni italique, encre choisie par le trace,
   // une seule ligne, aucun separateur, et rien ne se masque sur la longueur.
   name_label_font_family: '',

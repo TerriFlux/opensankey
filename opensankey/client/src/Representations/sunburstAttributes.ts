@@ -220,7 +220,7 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   name_label_box_width: { visibleIf: labelled },
   name_label_callout: { visibleIf: labelled },
   name_label_font_family: { visibleIf: labelled },
-  name_label_font_size: { default: 12, visibleIf: labelled },
+  name_label_font_size: { default: 13, visibleIf: labelled },
   name_label_bold: { visibleIf: labelled },
   name_label_italic: { advanced: true, visibleIf: labelled },
   name_label_uppercase: { advanced: true, visibleIf: labelled },

@@ -474,8 +474,8 @@ const DONUT_HONOURS = {
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.
   value_label_is_visible: { default: true },
-  // 04/10/2026 — 13 (11 avant) : cf. `DONUT_STYLE_DEFAULTS`.
-  name_label_font_size: { default: 13 },
+  // 05/10/2026 — 15 (13 le 04/10, 11 avant) : cf. `DONUT_STYLE_DEFAULTS`.
+  name_label_font_size: { default: 15 },
   value_label_percent: { default: 'value_total' },
   // 01/10/2026 — PLUS DANS LE GRAPHE (Julien : « le centre c'est aussi une part ; ce n'est pas dans
   // graphe »). Ce que le centre écrit se règle sur SA part, comme le libellé et la valeur de
