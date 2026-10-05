@@ -354,7 +354,114 @@ export type Type_MainZoneSubject =
    * nommée, sinon à la feuille courante.
    */
   | { kind: 'tag', tagg_id: string, tag_id: string, sheet?: string }
-export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements', 'tag']
+  /**
+   * sa#594 — UN CRITÈRE À PLUSIEURS ÉTIQUETTES, ET LES NŒUDS QU'ON Y CHOISIT.
+   *
+   * `tags` : par groupe d'étiquettes de nœuds, les étiquettes retenues. Un nœud est retenu s'il
+   * porte UNE des étiquettes de CHAQUE groupe nommé (« Filière = Lait ou Sucre » ET « Type de
+   * process = transformation ») ; un groupe absent ou vide ne restreint rien.
+   * `ids` : parmi les nœuds retenus, ceux que le lecteur a cochés ; vide = tous les nœuds retenus.
+   *
+   * C'est le sujet d'un volet que le LECTEUR d'une page publiée règle depuis l'en-tête : le
+   * critère d'os#1420 n'avait qu'une étiquette, et la liste d'`elements` ne survit pas au critère
+   * qui l'a fait naître. Les deux se combinent ici, sans que l'un efface l'autre.
+   */
+  | { kind: 'filter', tags: { [tagg_id: string]: string[] }, ids?: string[], sheet?: string }
+  /**
+   * sa#594 — CE VOLET SUIT UN AUTRE VOLET : il montre ce que montre le volet `id` — son sujet et
+   * ses coordonnées de données —, quoi qu'on y règle ensuite. Le tableau posé sous un volet Unit.
+   * suit ainsi la sélection que le lecteur fait dans l'en-tête de celui-ci. Se détacher fige ce
+   * qu'il montrait (cf. `effectiveMainZoneSubject`).
+   */
+  | { kind: 'pane', id: string }
+export const MAIN_ZONE_SUBJECT_KINDS = ['diagram', 'selection', 'node', 'link', 'elements', 'tag', 'filter', 'pane']
+
+/** sa#594 — Par groupe d'étiquettes de DONNÉES (année, unité…), les étiquettes cochées. */
+export type Type_MainZoneDataTags = { [tagg_id: string]: string[] }
+
+/**
+ * sa#594 — CE QUE L'AUTEUR OFFRE AU LECTEUR d'une page publiée, volet par volet.
+ *
+ * `header` : l'en-tête du volet reste visible en publication (l'option `canvas_header`, elle, vaut
+ * pour tous les volets à la fois). `node_taggs` / `data_taggs` : les groupes d'étiquettes que
+ * l'en-tête propose au lecteur ; absent = tous ceux du diagramme.
+ */
+export type Type_MainZoneReader = { header?: boolean, node_taggs?: string[], data_taggs?: string[] }
+
+/** Profondeur au-delà de laquelle une chaîne de volets qui se suivent est tenue pour une boucle. */
+const MAIN_ZONE_FOLLOW_DEPTH = 16
+
+/**
+ * sa#594 — LE VOLET QU'UN VOLET SUIT, au bout de la chaîne : celui dont le sujet n'est pas
+ * « suit le volet ». `null` quand la chaîne mène à un volet fermé ou tourne en rond — le volet
+ * ne montre alors rien, plutôt qu'un sujet inventé.
+ */
+export const mainZoneLeaderOf = (
+  occupants: Type_MainZoneOccupant[], occupant: Type_MainZoneOccupant
+): Type_MainZoneOccupant | null => {
+  let current = occupant
+  const seen = new Set<string>([occupant.id])
+  for (let depth = 0; depth < MAIN_ZONE_FOLLOW_DEPTH; depth++) {
+    if (current.subject.kind !== 'pane') return current
+    const target = current.subject.id
+    const next = occupants.find(o => o.id === target)
+    if (!next || seen.has(next.id)) return null
+    seen.add(next.id)
+    current = next
+  }
+  return null
+}
+
+/**
+ * sa#594 — LE SUJET QU'UN VOLET MONTRE VRAIMENT : le sien, ou celui du volet qu'il suit. Un volet
+ * qui suit un volet fermé (ou une boucle) montre une liste vide, jamais un sujet inventé.
+ */
+export const effectiveMainZoneSubject = (
+  occupants: Type_MainZoneOccupant[], subject: Type_MainZoneSubject
+): Type_MainZoneSubject => {
+  if (subject.kind !== 'pane') return subject
+  const start = occupants.find(o => o.id === subject.id)
+  const leader = start ? mainZoneLeaderOf(occupants, start) : null
+  return leader ? leader.subject : { kind: 'elements', ids: [] }
+}
+
+/** sa#594 — Les coordonnées de données qu'un volet montre : les siennes, ou celles du volet suivi. */
+export const effectiveMainZoneDataTags = (
+  occupants: Type_MainZoneOccupant[], occupant: Type_MainZoneOccupant
+): Type_MainZoneDataTags | undefined => mainZoneLeaderOf(occupants, occupant)?.data_tags
+
+/** sa#594 — Écrit une table « groupe → étiquettes » (critère, coordonnées) sans ses listes vides. */
+export const tagListMapToJSON = (map: { [tagg_id: string]: string[] }): Type_JSON => {
+  const out: Type_JSON = {}
+  Object.entries(map).forEach(([tagg_id, tag_ids]) => { if (tag_ids.length > 0) out[tagg_id] = [...tag_ids] })
+  return out
+}
+
+/** sa#594 — Relit une table « groupe → étiquettes » ; une entrée malformée est ignorée. */
+export const tagListMapFromJSON = (raw: unknown): { [tagg_id: string]: string[] } => {
+  const out: { [tagg_id: string]: string[] } = {}
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out
+  Object.entries(raw as { [k: string]: unknown }).forEach(([tagg_id, v]) => {
+    const tag_ids = Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x !== '') : []
+    if (tag_ids.length > 0) out[tagg_id] = tag_ids
+  })
+  return out
+}
+
+/** sa#594 — Relit l'offre au lecteur d'un volet ; `undefined` quand rien n'y est posé. */
+const readMainZoneReader = (raw: unknown): Type_MainZoneReader | undefined => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined
+  const r = raw as { [k: string]: unknown }
+  const ids = (v: unknown): string[] | undefined =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x !== '') : undefined
+  const reader: Type_MainZoneReader = {}
+  if (r['header'] === true) reader.header = true
+  const node_taggs = ids(r['node_taggs'])
+  const data_taggs = ids(r['data_taggs'])
+  if (node_taggs) reader.node_taggs = node_taggs
+  if (data_taggs) reader.data_taggs = data_taggs
+  return Object.keys(reader).length > 0 ? reader : undefined
+}
 /**
  * Une FENÊTRE de la grande zone = un sujet + une représentation (une entrée du registre), plus
  * sa place et son poids. Pour une fenêtre à sujet DIAGRAMME sur la feuille courante,
@@ -412,6 +519,14 @@ export type Type_MainZoneOccupant = {
    * La clé ne s'écrit que si elle est posée.
    */
   sync?: { [setting: string]: string }
+  /**
+   * sa#594 — LES COORDONNÉES DE DONNÉES DU VOLET : par groupe d'étiquettes de données (année,
+   * unité…), les étiquettes cochées dans son en-tête. Elles priment sur la sélection du diagramme
+   * et sur les épingles de ses figures ; un groupe absent suit le diagramme. Absent = tout suit.
+   */
+  data_tags?: Type_MainZoneDataTags
+  /** sa#594 — ce que l'en-tête de ce volet offre au lecteur d'une page publiée. */
+  reader?: Type_MainZoneReader
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -1962,6 +2077,11 @@ export class Class_MenuConfig {
     // sa#568 — la vue rend ses réglages partagés, et ôte ceux que portait une fenêtre réutilisée.
     if (e.sync) o.sync = { ...e.sync }
     else delete o.sync
+    // sa#594 — la vue rend aussi ses coordonnées de données et ce qu'elle offre au lecteur.
+    if (e.data_tags) o.data_tags = e.data_tags
+    else delete o.data_tags
+    if (e.reader) o.reader = e.reader
+    else delete o.reader
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
     // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
@@ -2070,7 +2190,30 @@ export class Class_MenuConfig {
   public setMainZoneWindowSubject(id: string, subject: Type_MainZoneSubject): void {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind === 'diagram' || subject.kind === 'diagram') return
-    if (subject.kind === 'elements') {
+    // sa#594 — suivre un volet : jamais soi-même, jamais un volet qui nous suit déjà (la boucle
+    // ne montrerait rien), jamais un volet absent.
+    if (subject.kind === 'pane') {
+      const target = this._host._main_zone_occupants.find(x => x.id === subject.id)
+      if (!target || target.id === id || target.subject.kind === 'diagram') return
+      if (mainZoneLeaderOf(this._host._main_zone_occupants, target)?.id === id) return
+      const seen = new Set<string>()
+      let walk: Type_MainZoneOccupant | undefined = target
+      while (walk && walk.subject.kind === 'pane' && !seen.has(walk.id)) {
+        if (walk.subject.id === id) return
+        seen.add(walk.id)
+        const next: string = walk.subject.id
+        walk = this._host._main_zone_occupants.find(x => x.id === next)
+      }
+    }
+    if (subject.kind === 'filter') {
+      // Le critère est RECOPIÉ groupe par groupe : l'appelant garde ses listes, et les modifier
+      // ensuite ne doit pas changer en douce ce que le volet montre.
+      const tags: { [tagg_id: string]: string[] } = {}
+      Object.entries(subject.tags).forEach(([tagg_id, tag_ids]) => { if (tag_ids.length > 0) tags[tagg_id] = [...tag_ids] })
+      o.subject = { kind: 'filter', tags }
+      if (subject.ids && subject.ids.length > 0) o.subject.ids = [...subject.ids]
+      if (subject.sheet) o.subject.sheet = subject.sheet
+    } else if (subject.kind === 'elements') {
       // Les deux tableaux sont RECOPIÉS ensemble : ils sont parallèles, et n'en recopier qu'un
       // ferait qu'un appelant qui garde le sien décalerait silencieusement les clés des
       // vignettes — donc leurs réglages — sur les objets voisins.
@@ -2083,6 +2226,62 @@ export class Class_MenuConfig {
     } else o.subject = { ...subject }
     // os#1423 — la sélection de vignettes suit le même ménage que les figures : une clé qui ne
     // nomme plus de vignette ne peut pas rester sélectionnée.
+    this._resyncMainZoneSelection(o.id)
+    this._notifyMainZone()
+  }
+
+  /**
+   * sa#594 — LES COORDONNÉES DE DONNÉES D'UN VOLET (année, unité…), cochées dans son en-tête.
+   * Un groupe sans étiquette cochée suit le diagramme ; une table vide retire la clé.
+   */
+  public setMainZoneWindowDataTags(id: string, data_tags: Type_MainZoneDataTags): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const next: Type_MainZoneDataTags = {}
+    Object.entries(data_tags).forEach(([tagg_id, tag_ids]) => { if (tag_ids.length > 0) next[tagg_id] = [...tag_ids] })
+    if (Object.keys(next).length > 0) o.data_tags = next
+    else delete o.data_tags
+    this._notifyMainZone()
+  }
+
+  /** sa#594 — Les coordonnées de données que montre le volet `id` : les siennes, ou celles du volet suivi. */
+  public mainZoneEffectiveDataTags(id: string): Type_MainZoneDataTags | undefined {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    return o ? effectiveMainZoneDataTags(this._host._main_zone_occupants, o) : undefined
+  }
+
+  /** sa#594 — Ce que l'en-tête du volet `id` offre au lecteur d'une page publiée. */
+  public setMainZoneWindowReader(id: string, reader: Type_MainZoneReader): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const next: Type_MainZoneReader = {}
+    if (reader.header) next.header = true
+    if (reader.node_taggs) next.node_taggs = [...reader.node_taggs]
+    if (reader.data_taggs) next.data_taggs = [...reader.data_taggs]
+    if (Object.keys(next).length > 0) o.reader = next
+    else delete o.reader
+    this._notifyMainZone()
+  }
+
+  /**
+   * sa#594 — SE DÉTACHER DU VOLET SUIVI : le volet garde ce qu'il montrait — les objets que le
+   * volet suivi désignait à cet instant, et ses coordonnées de données — et cesse de le suivre.
+   * `ids` : les objets résolus par l'appelant (le modèle ne sait pas résoudre un critère).
+   */
+  public detachMainZoneWindow(id: string, ids: string[]): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || o.subject.kind !== 'pane') return
+    const data_tags = effectiveMainZoneDataTags(this._host._main_zone_occupants, o)
+    const leader_subject = effectiveMainZoneSubject(this._host._main_zone_occupants, o.subject)
+    const sheet = mainZoneSubjectSheet(leader_subject)
+    const subject: Type_MainZoneSubject = sheet === ''
+      ? { kind: 'elements', ids: [...ids] }
+      : { kind: 'elements', ids: [...ids], sheet }
+    subject.keys = mainZonePaneKeys(subject)
+    o.subject = subject
+    if (data_tags && Object.keys(data_tags).length > 0) {
+      o.data_tags = Object.fromEntries(Object.entries(data_tags).map(([k, v]) => [k, [...v]]))
+    }
     this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
@@ -3276,6 +3475,21 @@ export class Class_MenuConfig {
     if (!this.isMainZoneOccupant(id)) return false
     // sa#566 — un volet ENREGISTRÉ qu'on ferme laisse son dernier état à sa vue.
     this._snapshotSavedWindows([id])
+    // sa#594 — LES VOLETS QUI SUIVAIENT CELUI-CI PRENNENT CE QU'IL MONTRAIT (son sujet et ses
+    // coordonnées), au lieu de se retrouver vides : fermer un volet n'efface pas ce que les autres
+    // montrent. Un volet qui suivait un suiveur suit désormais celui-là, qui reste en place.
+    const closing = this._host._main_zone_occupants.find(o => o.id === id)
+    if (closing && closing.subject.kind !== 'diagram') {
+      const subject = JSON.parse(JSON.stringify(closing.subject)) as Type_MainZoneSubject
+      this._host._main_zone_occupants.forEach(o => {
+        if (o.subject.kind !== 'pane' || o.subject.id !== id) return
+        o.subject = JSON.parse(JSON.stringify(subject)) as Type_MainZoneSubject
+        // Tant qu'il suivait, ses propres coordonnées ne servaient pas : il prend celles qu'il montrait.
+        if (subject.kind === 'pane') return
+        if (closing.data_tags) o.data_tags = JSON.parse(JSON.stringify(closing.data_tags)) as Type_MainZoneDataTags
+        else delete o.data_tags
+      })
+    }
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
     this._host._main_zone_detached.delete(id)
     this._normalizeMainZoneOccupants()
@@ -3352,7 +3566,7 @@ export class Class_MenuConfig {
    * @returns les identifiants des fenêtres fermées (pour les journaux et les tests).
    */
   public closeWindowsPinnedOnSheet(sheet_id: string): string[] {
-    const pinned = new Set(['node', 'link', 'elements', 'tag'])
+    const pinned = new Set(['node', 'link', 'elements', 'tag', 'filter'])
     const doomed = this._host._main_zone_occupants
       .filter(o => {
         if (!pinned.has(o.subject.kind)) return false
@@ -3922,11 +4136,13 @@ export class Class_MenuConfig {
     // chaîne : la forme de lecture s'en accommode sans ces deux clés (fichiers antérieurs).
     const subject: Type_JSON = { kind: o.subject.kind }
     if ('id' in o.subject) subject['id'] = o.subject.id
-    if ('ids' in o.subject) subject['ids'] = [...o.subject.ids]
+    if ('ids' in o.subject && o.subject.ids) subject['ids'] = [...o.subject.ids]
     // os#1387 — les clés de vignettes sont écrites DÈS QU'IL Y A DES OBJETS, même quand elles
     // valent leurs identifiants : c'est ce qui rend le fichier relisable tel quel quand deux
     // vignettes montrent le même nœud, cas où `ids` seul ne dit plus laquelle est laquelle.
-    if ('ids' in o.subject && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
+    if (o.subject.kind === 'elements' && o.subject.ids.length > 0) subject['keys'] = mainZonePaneKeys(o.subject)
+    // sa#594 — le critère à plusieurs étiquettes, groupe par groupe (`ids` est écrit juste au-dessus).
+    if (o.subject.kind === 'filter') subject['tags'] = tagListMapToJSON(o.subject.tags)
     // os#1420 — un sujet à CRITÈRE n'écrit que le critère (groupe + étiquette) : les nœuds qu'il
     // désigne se redemandent au diagramme à l'ouverture, et les écrire ici les figerait — ce qui
     // est exactement ce à quoi ce sujet sert à échapper.
@@ -3973,6 +4189,16 @@ export class Class_MenuConfig {
     // sa#568 — LES RÉGLAGES PARTAGÉS, seulement s'il y en a : un document dont aucun volet ne
     // partage rien écrit le même fichier qu'avant. Écrits aussi dans la forme d'une vue.
     if (o.sync && Object.keys(o.sync).length > 0) entry['sync'] = { ...o.sync }
+    // sa#594 — les coordonnées de données du volet et ce qu'il offre au lecteur, seulement s'ils
+    // sont posés : un fichier qui n'en a pas reste identique à celui d'avant.
+    if (o.data_tags && Object.keys(o.data_tags).length > 0) entry['data_tags'] = tagListMapToJSON(o.data_tags)
+    if (o.reader) {
+      const reader: Type_JSON = {}
+      if (o.reader.header) reader['header'] = true
+      if (o.reader.node_taggs) reader['node_taggs'] = [...o.reader.node_taggs]
+      if (o.reader.data_taggs) reader['data_taggs'] = [...o.reader.data_taggs]
+      if (Object.keys(reader).length > 0) entry['reader'] = reader
+    }
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
     // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
     if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
@@ -4049,7 +4275,14 @@ export class Class_MenuConfig {
     else if (kind === 'tag') {
       subject = (tagg_id !== '' && tag_id !== '') ? { kind: 'tag', tagg_id, tag_id } : { kind: 'selection' }
     }
-    if (subject.kind !== 'selection' && sheet !== '') subject = { ...subject, sheet }
+    // sa#594 — le critère à plusieurs étiquettes (et ses nœuds cochés), le volet suivi.
+    else if (kind === 'filter') {
+      subject = ids.length > 0
+        ? { kind: 'filter', tags: tagListMapFromJSON(sj['tags']), ids }
+        : { kind: 'filter', tags: tagListMapFromJSON(sj['tags']) }
+    }
+    else if (kind === 'pane' && obj_id !== '') subject = { kind: 'pane', id: obj_id }
+    if (subject.kind !== 'selection' && subject.kind !== 'pane' && sheet !== '') subject = { ...subject, sheet }
     // os#1482 — la vue demandée ne vaut que pour un sujet diagramme (cf. `mainZoneSubjectView`).
     const view = getStringFromJSON(sj, 'view', '')
     if (subject.kind === 'diagram' && view !== '') subject = { ...subject, view }
@@ -4091,6 +4324,9 @@ export class Class_MenuConfig {
     const saved_view = getStringFromJSON(e, 'saved_view', '')
     // sa#568 — les réglages partagés (cf. `Type_MainZoneOccupant.sync`) ; absents = aucun.
     const sync = readSyncMap(e['sync'])
+    // sa#594 — coordonnées de données et offre au lecteur ; absentes = rien de posé.
+    const data_tags = tagListMapFromJSON(e['data_tags'])
+    const reader = readMainZoneReader(e['reader'])
     return {
       id,
       subject,
@@ -4103,6 +4339,8 @@ export class Class_MenuConfig {
       options,
       saved_view: saved_view !== '' ? saved_view : undefined,
       sync,
+      data_tags: Object.keys(data_tags).length > 0 ? data_tags : undefined,
+      reader,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
@@ -4144,11 +4382,15 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view, sync }) => {
+      host._main_zone_occupants = entries.map(({
+        id, subject, representation, place, size, geometry, saved_view, sync, data_tags, reader
+      }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
         if (saved_view) o.saved_view = saved_view
         if (sync) o.sync = sync
+        if (data_tags) o.data_tags = data_tags
+        if (reader) o.reader = reader
         return o
       })
       // sa#566 — les notes de volets fermés parlaient de l'état qu'on quitte.
