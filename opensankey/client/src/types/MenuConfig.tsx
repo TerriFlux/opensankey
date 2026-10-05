@@ -65,6 +65,9 @@ import {
   SANKEY_LAYOUT_SETTING_IDS, canShare, changedOptionKeys, figureChangesBySetting, figureFormatSettingsOf,
   figureSettingOfKey, isFigureNature, leaveGroup, mergeInto, partnersOf, readSyncMap
 } from '../Representations/paneSync'
+import {
+  formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
+} from './mainZonePanes'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
 // (`Type_RepresentationOptionScope`) et `RepresentationContextMenu`, qu'il importe en valeur, ne
@@ -412,6 +415,21 @@ export type Type_MainZoneOccupant = {
    * La clé ne s'écrit que si elle est posée.
    */
   sync?: { [setting: string]: string }
+  /**
+   * 05/10/2026 — LES VIGNETTES DE CETTE FENÊTRE QU'ON NE MONTRE PAS (Jean-Yves, page `testCouronne` :
+   * une fenêtre, deux couronnes Export / Import, « pouvoir n'en voir qu'une »).
+   *
+   * MASQUER N'EST PAS RETIRER : la clé reste dans le sujet, et sa figure garde ses réglages
+   * (`figureOf`) — recocher la vignette la rend telle qu'elle était. Les clés nomment des vignettes
+   * (`mainZonePaneKeys`) ; une clé qui ne nomme plus rien est ignorée à l'affichage. Au moins une
+   * vignette reste visible (cf. `setMainZonePaneHidden`).
+   *
+   * `layout` viendra ici (côte à côte, empilé, onglets…) ; pour l'instant la disposition est la
+   * grille automatique. La clé ne s'écrit que si elle est posée : un fichier où rien n'est masqué
+   * reste identique octet pour octet. Le choix d'un LECTEUR de page publiée n'y passe jamais
+   * (cf. `mainZoneReaderVisiblePanes`).
+   */
+  panes?: { hidden?: string[] }
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -1265,6 +1283,10 @@ export class Class_MenuConfig {
   // c'est ce qui permet à la portée 'selection' de dégénérer en 'pane' sans que personne ait à
   // traiter le cas.
   protected _main_zone_selected_pane_keys: string[] = []
+  // 05/10/2026 — LE CHOIX DU LECTEUR d'une page publiée : pour chaque fenêtre, les vignettes qu'il
+  // a cochées. Jamais persisté dans le fichier ; porté par l'adresse (paramètre `panes`, cf.
+  // `mainZonePanesParam`). `null` = l'adresse n'a pas encore été lue.
+  protected _main_zone_reader_panes: { [id: string]: string[] } | null = null
   // os#1394 — CE QUE L'AUTEUR A TOUCHÉ EN DERNIER, et donc ce dont le menu de configuration doit
   // parler. TRANSITOIRE.
   //
@@ -1962,6 +1984,9 @@ export class Class_MenuConfig {
     // sa#568 — la vue rend ses réglages partagés, et ôte ceux que portait une fenêtre réutilisée.
     if (e.sync) o.sync = { ...e.sync }
     else delete o.sync
+    // Les vignettes masquées sont celles de la vue, pas celles d'une fenêtre réutilisée.
+    if (e.panes) o.panes = e.panes
+    else delete o.panes
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
     // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
@@ -2119,6 +2144,94 @@ export class Class_MenuConfig {
       && !kept.includes(this._host._main_zone_active_pane_key)) {
       this._host._main_zone_active_pane_key = kept[0]
     }
+  }
+
+  // --- 05/10/2026 : quelles vignettes d'une fenêtre on montre (cf. `mainZonePanes`) -------------
+
+  /** Les clés de vignettes que l'AUTEUR a masquées dans la fenêtre `id` (copie). */
+  public mainZonePaneHidden(id: string): string[] {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    return [...(o?.panes?.hidden ?? [])]
+  }
+
+  /**
+   * L'AUTEUR masque ou remontre des vignettes. `keys` = les vignettes que la fenêtre montre à cet
+   * instant (le modèle ne les connaît pas pour un sujet à critère) : masquer TOUTES est refusé,
+   * il en reste toujours une. Les clés masquées sortent de la sélection, et cessent d'être
+   * l'active — on ne règle pas ce qu'on ne voit pas.
+   */
+  public setMainZonePaneHidden(id: string, hidden: string[], keys: string[]): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const next = [...new Set(hidden.filter(k => k !== ''))]
+    if (keys.length > 0 && keys.every(k => next.includes(k))) return
+    if (next.length > 0) o.panes = { ...(o.panes ?? {}), hidden: next }
+    else if (o.panes) {
+      const rest = { ...o.panes }
+      delete rest.hidden
+      if (Object.keys(rest).length > 0) o.panes = rest
+      else delete o.panes
+    }
+    this._dropHiddenFromSelection(id, next)
+    this._notifyMainZone()
+  }
+
+  protected _dropHiddenFromSelection(id: string, hidden: string[]): void {
+    if (this.main_zone_active_id !== id || hidden.length === 0) return
+    const host = this._host
+    host._main_zone_selected_pane_keys = host._main_zone_selected_pane_keys.filter(k => !hidden.includes(k))
+    if (host._main_zone_active_pane_key !== null && hidden.includes(host._main_zone_active_pane_key)) {
+      host._main_zone_active_pane_key = host._main_zone_selected_pane_keys[0] ?? null
+    }
+  }
+
+  /**
+   * Le choix du LECTEUR pour la fenêtre `id` (clés visibles), ou `null` s'il n'a rien choisi. Lu
+   * paresseusement dans l'adresse au premier appel (paramètre `panes`).
+   */
+  public mainZoneReaderVisiblePanes(id: string): string[] | null {
+    const host = this._host
+    if (host._main_zone_reader_panes === null) {
+      host._main_zone_reader_panes = typeof window === 'undefined'
+        ? {}
+        : parsePanesParam(rawPanesParam(window.location.search))
+    }
+    return host._main_zone_reader_panes[id] ?? null
+  }
+
+  /**
+   * LES VIGNETTES À MONTRER parmi `keys`, l'auteur d'abord, le lecteur par-dessus quand `reader`.
+   * Un seul juge pour la grille et pour le sélecteur.
+   */
+  public mainZoneVisiblePaneKeys(id: string, keys: string[], reader: boolean): string[] {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    return visiblePaneKeys(keys, o?.panes?.hidden, reader ? this.mainZoneReaderVisiblePanes(id) : null)
+  }
+
+  /**
+   * Le LECTEUR coche ou décoche : `visible` = ce qu'il veut voir parmi `keys`. Jamais vide ; égal au
+   * choix de l'auteur, il s'efface. Reporté dans l'adresse (`replaceState`, pas d'historique) ;
+   * le fichier n'est pas touché.
+   */
+  public setMainZoneReaderVisiblePanes(id: string, visible: string[], keys: string[]): void {
+    const chosen = keys.filter(k => visible.includes(k))
+    if (chosen.length === 0) return
+    this.mainZoneReaderVisiblePanes(id)
+    const host = this._host
+    const panes = { ...(host._main_zone_reader_panes ?? {}) }
+    const authored = this.mainZoneVisiblePaneKeys(id, keys, false)
+    if (authored.length === chosen.length && authored.every((k, i) => k === chosen[i])) delete panes[id]
+    else panes[id] = chosen
+    host._main_zone_reader_panes = panes
+    this._dropHiddenFromSelection(id, keys.filter(k => !chosen.includes(k)))
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      try {
+        const url = new URL(window.location.href)
+        const search = withPanesParam(url.search, formatPanesParam(panes))
+        window.history.replaceState(window.history.state, '', url.pathname + search + url.hash)
+      } catch { /* adresse exotique (blob:, data:) : le choix vaut pour la session */ }
+    }
+    this._notifyMainZone()
   }
 
   // --- os#1418 : les figures de la grande zone ------------------------------------------------
@@ -3973,6 +4086,8 @@ export class Class_MenuConfig {
     // sa#568 — LES RÉGLAGES PARTAGÉS, seulement s'il y en a : un document dont aucun volet ne
     // partage rien écrit le même fichier qu'avant. Écrits aussi dans la forme d'une vue.
     if (o.sync && Object.keys(o.sync).length > 0) entry['sync'] = { ...o.sync }
+    // 05/10/2026 — LES VIGNETTES MASQUÉES, seulement s'il y en a (cf. `Type_MainZoneOccupant.panes`).
+    if (o.panes?.hidden && o.panes.hidden.length > 0) entry['panes'] = { hidden: [...o.panes.hidden] }
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
     // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
     if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
@@ -4091,6 +4206,8 @@ export class Class_MenuConfig {
     const saved_view = getStringFromJSON(e, 'saved_view', '')
     // sa#568 — les réglages partagés (cf. `Type_MainZoneOccupant.sync`) ; absents = aucun.
     const sync = readSyncMap(e['sync'])
+    // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
+    const panes = readPanesState(e['panes'])
     return {
       id,
       subject,
@@ -4103,6 +4220,7 @@ export class Class_MenuConfig {
       options,
       saved_view: saved_view !== '' ? saved_view : undefined,
       sync,
+      panes,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
@@ -4144,11 +4262,12 @@ export class Class_MenuConfig {
       entries.forEach(({ id, figures, options }) => {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
-      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view, sync }) => {
+      host._main_zone_occupants = entries.map(({ id, subject, representation, place, size, geometry, saved_view, sync, panes }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
         if (saved_view) o.saved_view = saved_view
         if (sync) o.sync = sync
+        if (panes) o.panes = panes
         return o
       })
       // sa#566 — les notes de volets fermés parlaient de l'état qu'on quitte.

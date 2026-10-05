@@ -113,6 +113,10 @@ export interface SankeyGlobals {
   // le lecteur d'une page publiée n'a rien à y faire, et la bande de 28 px mange le diagramme.
   // Sans effet hors publish — l'éditeur le garde toujours.
   canvas_header?: boolean
+  // 05/10/2026 — default FALSE : le lecteur choisit les vignettes d'une fenêtre qui en a plusieurs
+  // (petit bandeau de cases en tête de la fenêtre). Son choix va dans l'adresse (`?panes=`), jamais
+  // dans le fichier. Indépendant de `canvas_header`.
+  pane_picker?: boolean
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -244,6 +248,7 @@ export interface PublishOptions {
   app_info: boolean
   sidebar_toggle: boolean
   canvas_header: boolean
+  pane_picker: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -499,6 +504,7 @@ export const getPublishOptions = (): PublishOptions => {
     app_info: bool(s.app_info, true),
     sidebar_toggle: bool(s.sidebar_toggle, true),
     canvas_header: bool(s.canvas_header, false),
+    pane_picker: bool(s.pane_picker, false),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -566,6 +572,7 @@ export type ViewerSankeyOptions = {
   navigation_help?: boolean
   badge?: boolean
   canvas_header?: boolean  // sa#567 : bandeau des fenêtres de la grande zone, diagramme et figures (défaut false)
+  pane_picker?: boolean  // choix des vignettes par le lecteur (défaut false)
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
@@ -618,7 +625,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'dimension_drawing', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge', 'canvas_header',
+    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge', 'canvas_header', 'pane_picker',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',
