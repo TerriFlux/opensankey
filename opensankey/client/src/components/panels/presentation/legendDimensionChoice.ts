@@ -25,6 +25,7 @@ import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { isLegendDataTagZoneId, legendDataTagZoneId } from '../../../Elements/legendIds'
 import { closePresentationTooltip } from './openPresentation'
+import { applyDimensionCut } from '../../ui/dimensionDrawingHost'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
 
 // Liste déroulante : hauteur d'une ligne et marge verticale (px écran), plafond de hauteur
@@ -137,6 +138,18 @@ export const chooseLegendDimensionTag = (
 ): void => {
   if (!group.tags_list.some(tag => tag.id === tag_id)) return
   const before = group.selected_tags_list.map(tag => tag.id)
+  // os#1526 — UNE DIMENSION À NIVEAUX se choisit comme dans le tableau et la barre du haut : par LE
+  // geste du diagramme (`applyDimensionCut` — règle parent/enfant, nœuds d'axe redécoupés, historique).
+  // « Plusieurs » : le membre entre (son ancêtre ou ses descendants choisis tombent) ou sort ; un
+  // membre : il remplace la sélection.
+  if (group.is_hierarchical) {
+    const after = !isMultiDimension(group)
+      ? [tag_id]
+      : before.includes(tag_id) ? before.filter(id => id !== tag_id) : [...before, tag_id]
+    if (after.length === 0 || (after.length === before.length && after.every(id => before.includes(id)))) return
+    applyDimensionCut(app_data, group, after)
+    return
+  }
   if (!isMultiDimension(group)) {
     if (before.length === 1 && before[0] === tag_id) return
     group.selectTagsFromId(tag_id)
