@@ -372,6 +372,11 @@ type Type_RepresentationCommon = {
   /** Refus fin sur CE sujet ; absent = toujours applicable. */
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
   /**
+   * 05/10/2026 — LA FIGURE ÉCRIT-ELLE ELLE-MÊME LE NOM DE SON SUJET (titre, ligne de sujet) ? Oui :
+   * la vignette n'ajoute pas son bandeau « Flux › … » au-dessus, qui le redirait. Absent = non.
+   */
+  names_subject?: (ctx: Type_RepresentationContext) => boolean
+  /**
    * os#1409 - COMMENT ON ZOOME DANS CETTE NATURE (cf. Type_RepresentationZoom).
    *
    * ABSENT = cette nature ne zoome pas, et c'est une reponse, pas un oubli : l'etoile, la
