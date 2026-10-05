@@ -69,6 +69,7 @@ import type { Type_ElementTagStyleLayer } from '../Elements/Element'
 // de valeur sans risque de cycle, il ne dépend lui-même de rien à l'exécution.
 import { unitaryProcessClone } from './UnitaryProcess'
 import type { Type_UnitaryProcess } from './UnitaryProcess'
+import type { Type_NormalizationRule, Type_NormalizationRules } from '../Algorithms/NormalizationRule'
 
 // One Ratio Flux constraint row (mirror of SankeyExcelParser
 // iter_ratio_flux_constraints / the "Ratio Flux" Excel sheet). "*" on a side
@@ -213,6 +214,19 @@ export class Class_Sankey {
 
   public normalised_link?: Class_LinkElement
 
+  /**
+   * sa#595 — les règles de la valeur normalisée, par famille de nœuds (secteur, produit, autre) ;
+   * une famille absente suit son défaut (cf. `Algorithms/NormalizationRule`). Enregistrées dans le
+   * fichier, sous `normalization_rules`, seulement quand l'auteur en a posé une.
+   */
+  public normalization_rules: Type_NormalizationRules = {}
+
+  /**
+   * sa#595 — la règle qu'impose un VOLET (le volet Unit. qui règle la sienne) à tous les nœuds de
+   * ce sankey. Jamais enregistrée : elle appartient au document dérivé qui la porte.
+   */
+  public normalization_rule_override: Type_NormalizationRule | null = null
+
   constructor(
     drawing_area: Class_DrawingArea,
     id: string = default_main_sankey_id
@@ -315,6 +329,9 @@ export class Class_Sankey {
 
     // OS#1286 — reset du registre d'unités : `fromJSON` reposera celui du fichier.
     this._units.resetToDefault()
+
+    // sa#595 — règles de normalisation : `fromJSON` reposera celles du fichier.
+    this.normalization_rules = {}
 
     this.node_taggs_list.forEach(grp => grp.delete())
     this.flux_taggs_list.forEach(grp => grp.delete())

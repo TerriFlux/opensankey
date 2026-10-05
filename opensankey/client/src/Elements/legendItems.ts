@@ -20,6 +20,9 @@ import {
 // SA#553 — valeurs par défaut de l'étiquette générée (même règle que la cascade)
 import { untaggedDefaultsStyle } from './tagStyles'
 import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
+import { lireCoupe, listeDuZoom } from '../Algorithms/DimensionTableCut'
+import type { Class_DataTagGroup } from '../types/TagGroup'
+import type { Class_DataTag } from '../types/Tag'
 // os#1511 — retrait et ordre de l'arbre, partagés avec la légende des figures
 import { LEGEND_INDENT_EM, legendTreeRows, sortByTreeRanks } from './legendHierarchy'
 import type { Type_LegendTreeAncestor } from './legendHierarchy'
@@ -32,6 +35,11 @@ export type Type_LegendItem = {
   bold?: boolean
   // Pastille de couleur (entrée de tag) : la forme du conteneur sert de carré coloré
   swatch_color?: string
+  /**
+   * os#1526 — membre d'une dimension à niveaux : sa CASE (cochée = choisi dans le diagramme), comme
+   * la légende des couronnes. Absent ailleurs.
+   */
+  checked?: boolean
   // Référence au tag pour le survol → surbrillance (résolue au moment de l'événement)
   tag_group_id?: string
   tag_id?: string
@@ -467,6 +475,21 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
 }
 
 /** os#1511 — profondeur d'un membre dans l'arbre de sa dimension (0 = racine). */
+/**
+ * os#1526 — LES MEMBRES PROPOSÉS EN CASES par la légende d'une dimension à niveaux : ceux du niveau
+ * montré sous les zooms du tableau (`listeDuZoom` de la colonne). `null` : pas une vraie dimension
+ * hiérarchisée (maquette), ou une coupe mixte, ou la racine seule — la légende garde alors les seuls
+ * membres choisis.
+ */
+function offeredDimensionMembers(group: Type_TagGroupForLegend): Set<Type_TagForLegend> | null {
+  const real = group as unknown as Class_DataTagGroup
+  if (typeof real.membersAtLevel !== 'function' || typeof real.depthOf !== 'function') return null
+  if (!(group.tags_list ?? []).some(tag => tag.parent !== undefined)) return null
+  const coupe = lireCoupe(real, real.selected_tags_list as Class_DataTag[])
+  if (coupe.mixte || coupe.colonnes.length !== 1) return null
+  return new Set(listeDuZoom(real, coupe, coupe.colonnes[0]).membres as unknown as Type_TagForLegend[])
+}
+
 function tagDepth(tag: Type_TagForLegend): number {
   let depth = 0
   for (let p = tag.parent; p !== undefined; p = p.parent) depth++
@@ -576,21 +599,15 @@ export function computeLegendItems(
           ? tag_group.selected_tags_list.filter(tag => en_bandes.members.has(tag.id))
           : tag_group.selected_tags_list)
         : []
-      // os#1526 — DIMENSION À NIVEAUX, étiquettes masquées montrées (allumé par un clic de légende) :
-      // les membres NON choisis du niveau montré restent, rayés — la porte de retour, comme pour un
-      // masquage. Sinon un membre retiré au clic disparaissait de la légende sans moyen d'y revenir.
-      const data_dimmed = is_data_tagg && config.show_hidden_tags === true &&
-        (tag_group.tags_list ?? []).some(tag => tag.parent !== undefined)
-        ? (() => {
-          const depths = new Set(tag_group.selected_tags_list.map(tagDepth))
-          return (tag_group.tags_list ?? []).filter(tag => tag.is_selected === false && depths.has(tagDepth(tag)))
-        })()
-        : []
-      // Sans membre grisé : exactement la liste d'avant (contenu rendu inchangé).
+      // os#1526 — DIMENSION À NIVEAUX : DES CASES À COCHER, comme la légende des couronnes (choix de
+      // Julien, 05/10/2026). Les membres proposés sont ceux du niveau MONTRÉ sous les zooms du tableau
+      // — la liste de sa case de zoom ; cochés = choisis dans le diagramme. Une coupe mixte, ou un
+      // groupe sans hiérarchie : les seuls membres choisis, comme avant.
+      const offered = is_data_tagg ? offeredDimensionMembers(tag_group) : null
       const candidate_tags = is_data_tagg
-        ? (data_dimmed.length === 0
+        ? (offered === null
           ? selected_data
-          : (tag_group.tags_list ?? []).filter(tag => selected_data.includes(tag) || data_dimmed.includes(tag)))
+          : (tag_group.tags_list ?? []).filter(tag => selected_data.includes(tag) || (offered.has(tag) && tag.is_selected === false)))
         : (all_tags ?? tag_group.selected_tags_list)
       const displayed_tags = candidate_tags.filter(tag => {
         if (is_data_tagg) return true
@@ -682,9 +699,15 @@ export function computeLegendItems(
         } else {
           item.swatch_color = tag.color
         }
-        // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
-        // entrées ordinaires restent structurellement identiques à avant.
-        if (tag.is_selected === false) item.dimmed = true
+        if (offered !== null) {
+          // os#1526 — la case : cochée = choisi dans le diagramme ; un clic coche ou décoche.
+          item.checked = tag.is_selected !== false
+          item.text = (item.checked ? '☑ ' : '☐ ') + item.text
+        } else if (tag.is_selected === false) {
+          // sa#532 — drapeau posé seulement quand il vaut quelque chose, pour que les
+          // entrées ordinaires restent structurellement identiques à avant.
+          item.dimmed = true
+        }
         if (row.indent > 0) item.indent = row.indent
         const tag_description = definitionOf(tag)
         if (tag_description !== undefined) item.description = tag_description
