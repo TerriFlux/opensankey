@@ -489,7 +489,7 @@ elementStyleConfigs[SunburstPartStyle] = {
   name: 'ElementStyle.SunburstPartStyle',
   config: {
     // 04/10/2026 — la police d'un secteur de disque (`SUNBURST_STYLE_DEFAULTS.font_size`).
-    name_label_font_size: 12,
+    name_label_font_size: 13,
     shape_opacity: 1,
     shape_border_visible: true,
     shape_border_color: '#ffffff'
@@ -504,7 +504,7 @@ elementStyleConfigs[DonutPartStyle] = {
   name: 'ElementStyle.DonutPartStyle',
   config: {
     // 04/10/2026 — la police d'un secteur de couronne (`DONUT_STYLE_DEFAULTS.name_label_font_size`).
-    name_label_font_size: 13,
+    name_label_font_size: 15,
     shape_opacity: 1,
     shape_border_visible: true,
     shape_border_color: '#ffffff'

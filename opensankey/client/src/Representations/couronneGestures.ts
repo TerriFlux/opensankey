@@ -312,7 +312,11 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    */
   const zoomTo = (part_id: string, diagram_too: boolean) => {
     const { refs, d, m } = refOf(part_id)
-    if (d === undefined || m === undefined || kidsOf(m).length === 0) return
+    if (d === undefined || m === undefined) return
+    // 05/10/2026 — UNE FEUILLE : la portée s'y pose si une autre dimension prend la découpe.
+    const leaf = kidsOf(m).length === 0
+    const cutter = leaf ? otherCutterFor(d.id) : undefined
+    if (leaf && cutter === undefined) return
     let next = state
     refs.forEach(r => {
       const rd = dimOf(r.dimension_id)
@@ -324,7 +328,47 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
       const shown = under.length > 0 ? under : [rm.id]
       next = withDim(next, rd.id, { focus: [rm.id], shown, hidden: hiddenFor(rd, shown) })
     })
+    if (cutter !== undefined) { commit(withCutter(next, cutter)); return }
     commit(next, diagram_too && !linked ? [{ dim: d, ids: diagramUnfolded(d, m) }] : [])
+  }
+
+  /**
+   * 05/10/2026 — ZOOMER SUR UNE FEUILLE (Jean-Yves : « je ne peux pas voir quels pays importent du
+   * blé ; ni ce qu'importe la Belgique »). Une feuille n'a plus rien à découper dans sa dimension ;
+   * la portée s'y pose quand même dès qu'une AUTRE dimension peut découper : celle des cases, une
+   * active à deux parts ou plus, sinon une activable (deux parts mémorisées, ou une part qui a des
+   * enfants). `undefined` : aucune — le clic ne fait rien.
+   */
+  const partsIdsOf = (s: Type_CouronneState, o: string) => s.dims[o].shown.filter(id => !s.dims[o].hidden.includes(id))
+  const otherCutterFor = (id: string): string | undefined => {
+    const others = state.order.filter(o => o !== id)
+    const cuts_now = (o: string) => plan.cells?.dimension_id === o || plan.cut.some(c => c.dimension_id === o)
+    const can_cut = (o: string) => {
+      const od = dimOf(o)
+      if (od === undefined || o === cells_dim) return false
+      const parts = partsIdsOf(state, o)
+      return parts.length >= 2 || (parts.length === 1 && kidsOf(od.tags_dict[parts[0]] as Class_DataTag).length > 0)
+    }
+    return others.find(cuts_now) ?? others.find(can_cut)
+  }
+  /**
+   * La dimension `o` prend la découpe : active sur ses parts mémorisées s'il y en a deux ; sur une
+   * seule part qui a des enfants, sa portée s'y pose (elle découpe un niveau dessous ; liée, le
+   * diagramme ne bouge pas).
+   */
+  const withCutter = (s: Type_CouronneState, o: string): Type_CouronneState => {
+    const od = dimOf(o)
+    if (od === undefined || o === cells_dim) return s
+    const parts = partsIdsOf(s, o)
+    if (parts.length >= 2) return withDim(s, o, { active: true })
+    const one = od.tags_dict[parts[0]] as Class_DataTag | undefined
+    if (one === undefined || kidsOf(one).length === 0) return s
+    return withDim(nextWithFocus(s, od, [one.id]), o, { active: true })
+  }
+  /** Une feuille qu'un zoom peut regarder (une autre dimension prend la découpe). */
+  const leafZoomable = (part_id: string): boolean => {
+    const { d, m } = refOf(part_id)
+    return d !== undefined && m !== undefined && kidsOf(m).length === 0 && otherCutterFor(d.id) !== undefined
   }
   /** La portée de `id` remonte d'un cran (partie à la racine unique). */
   const zoomUp = (id: string) => {
@@ -355,6 +399,9 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
       return
     }
     if (gesture.shift) fold(part_id, diagram_too)
+    // 05/10/2026 — « Déplie » sur une feuille ne se tait plus : il n'y a rien à déplier, il zoome
+    // (la portée sur la feuille, une autre dimension découpe).
+    else if (leafZoomable(part_id)) zoomTo(part_id, false)
     else unfold(part_id, diagram_too)
   }
 

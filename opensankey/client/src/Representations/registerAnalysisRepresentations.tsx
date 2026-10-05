@@ -661,6 +661,42 @@ const subjectShortNameOf = (ctx: Type_RepresentationContext): string => {
 }
 
 /**
+ * 05/10/2026 — LE NOM COURT D'UN NŒUD (retours de Jean-Yves, os#1511) : la queue de son nom après le
+ * dernier « - », un seul mot, mise au pluriel (« Monde - Export » → « Exports ») ; vide sinon.
+ */
+export const shortNodeNameOf = (name: string): string => {
+  const parts = name.split(' - ')
+  if (parts.length < 2) return ''
+  const tail = parts[parts.length - 1].trim()
+  if (tail === '' || /\s/.test(tail)) return ''
+  const word = tail.charAt(0).toLocaleUpperCase() + tail.slice(1)
+  return /[sxz]$/i.test(word) ? word : `${word}s`
+}
+
+/**
+ * 05/10/2026 — CE QUE MESURE LE JEU DE DONNÉES, EN UN MOT, au centre de la couronne (Jean-Yves :
+ * « Exports » / « Imports »). Pour un flux : son libellé propre s'il en a un ; sinon son extrémité
+ * — le bout qui n'a pas d'autre flux (« Monde - Export », et non « Produits agricoles » que les
+ * anneaux découpent) — en nom court, à défaut en entier. Pour un nœud : son nom court. Vide sinon.
+ */
+export const centreSubjectNameOf = (ctx: Type_RepresentationContext): string => {
+  const subject = chartSubjectOf(ctx.element)
+  if (subject?.kind === 'node') return shortNodeNameOf(displayedNameOf(subject.node))
+  if (subject?.kind !== 'flux') return ''
+  const own = displayedLabelOf(subject.link)
+  if (own !== '' && own !== subject.link.name) return own
+  const source = subject.link.source
+  const target = subject.link.target
+  const ends = [
+    ...(!source.hasInputLinks() ? [source] : []),
+    ...(!target.hasOutputLinks() ? [target] : [])
+  ]
+  if (ends.length !== 1) return ''
+  const name = displayedNameOf(ends[0])
+  return shortNodeNameOf(name) || name
+}
+
+/**
  * 03/10/2026 — CE QUE LE CENTRE MESURE (os#1511) : « sujet · coordonnée épinglée », p. ex.
  * « Monde - Export · 2015 ». Les coordonnées sont les membres des dimensions qui NE DÉCOUPENT PAS la
  * figure et qu'elle lit en un seul membre (l'année) ; une racine unique (« Monde », « Tous
@@ -773,12 +809,36 @@ const dataRingsCentreContent = (
 ): Type_FigureChartStyle['centre_content'] => {
   const a = analysisOf(ctx)
   if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension' || dataScopeOf(ctx).length > 0) return own
+  // 05/10/2026 — sauf quand le jeu de données a un nom court : il s'écrit au centre (`dataCentreNameOf`).
+  if (centreSubjectNameOf(ctx) !== '') return own
   const { window_id, pane_key } = ctx
   const explicit = window_id !== undefined && pane_key !== undefined
     ? ctx.app_data.menu_configuration.figureOf(window_id, pane_key).isAttributeOverloaded('centre_content')
     : ctx.options?.['centre_content'] !== undefined
   if (explicit) return own
   return own === 'both' ? 'value' : own === 'name' ? 'none' : own
+}
+
+/**
+ * 05/10/2026 — NON ZOOMÉE, LE CENTRE D'UNE COURONNE SUR DIMENSIONS DE DONNÉES NOMME LE JEU DE DONNÉES
+ * en gras, au-dessus de la valeur (Jean-Yves : « Exports »). `undefined` : zoomée (le nom du zoom
+ * garde la place) ou rien de court à dire.
+ */
+const dataCentreNameOf = (ctx: Type_RepresentationContext): { text: string, bold: boolean } | undefined => {
+  if (!isDataDimensionFigure(ctx) || dataScopeOf(ctx).length > 0) return undefined
+  const text = centreSubjectNameOf(ctx)
+  return text !== '' ? { text, bold: true } : undefined
+}
+
+/**
+ * 05/10/2026 — LA LIGNE DE CONTEXTE D'UNE COURONNE SUR DIMENSIONS DE DONNÉES : zoomée, le nom du jeu
+ * de données y passe en tête (« Exports · Monde · 2015 ») ; sinon il est au centre, elle n'a que le
+ * contexte.
+ */
+const dataCentreCaptionOf = (ctx: Type_RepresentationContext): string => {
+  const context = centreContextOf(ctx)
+  const subject = dataScopeOf(ctx).length > 0 ? centreSubjectNameOf(ctx) : ''
+  return [subject, context].filter(s => s !== '').join(' · ')
 }
 
 /** La figure découpe-t-elle selon des dimensions de données ? */
@@ -1338,7 +1398,10 @@ const donutStyleOf = (ctx: Type_RepresentationContext): Type_FigureChartStyle =>
   // 02/10/2026 — ZOOMÉE, LE CENTRE DIT OÙ ON EST : le nom de la part re-enracinée avec sa valeur
   // (« Céréales / 1 368 »), et pas la valeur seule, qui ne dirait pas qu'on est descendu.
   // 04/10/2026 (lot 2) — sur dimensions de données, zoomée = une portée dans le plan.
-  const zoomed = (isDataDimensionFigure(ctx) ? dataScopeOf(ctx).length > 0 : hierarchyPathOf(ctx.options).length > 0) &&
+  // 05/10/2026 — non zoomée, le nom court du jeu de données s'y écrit aussi (`dataCentreNameOf`).
+  const zoomed = (isDataDimensionFigure(ctx)
+    ? dataScopeOf(ctx).length > 0 || dataCentreNameOf(ctx) !== undefined
+    : hierarchyPathOf(ctx.options).length > 0) &&
     style.centre_content === 'value'
   const repaint = style.parts_color_source === 'model' && hierarchyInEffect(ctx) !== null
   if (!zoomed && !repaint) return style
@@ -2120,11 +2183,13 @@ export const registerAnalysisRepresentations = (): void => {
           // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
           // 03/10/2026 — sur dimensions de données, la ligne dit le contexte des autres dimensions.
           centre_caption: isDataDimensionFigure(ctx)
-            ? centreContextOf(ctx)
+            ? dataCentreCaptionOf(ctx)
             : measureCaptionOf(ctx,
               ['both', 'name'].includes(readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both') &&
                 rings.roots.length === 1 ? rings.roots[0].label : ''),
           caption_plan: centreCaptionPlan,
+          // 05/10/2026 — non zoomée, le nom court du jeu de données au centre, en gras.
+          centre_name: dataCentreNameOf(ctx),
           breadcrumb,
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
@@ -2185,8 +2250,10 @@ export const registerAnalysisRepresentations = (): void => {
           // 03/10/2026 — ce que le centre mesure, sous la valeur ; sur dimensions de données, le
           // contexte des autres dimensions, le sujet passant au titre.
           centre_caption: isDataDimensionFigure(ctx)
-            ? centreContextOf(ctx)
+            ? dataCentreCaptionOf(ctx)
             : measureCaptionOf(ctx, centreSaysName(style) ? figureTitleFallback(ctx) : ''),
+          // 05/10/2026 — non zoomée, le nom court du jeu de données au centre, en gras.
+          centre_name: dataCentreNameOf(ctx),
           texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,

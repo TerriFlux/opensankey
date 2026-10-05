@@ -182,9 +182,15 @@ export const drawPlanOf = (
     columns[d.id] = { depths, mixed: depths.length > 1 }
   })
 
+  // 05/10/2026 — une portée posée sur la racine unique (« Monde », pour qu'une dimension liée découpe
+  // un niveau dessous) ne nomme rien : elle ne restreint rien.
+  const telling_focus = (d: Class_DataTagGroup) => {
+    const roots = dimensionRootsOf(d)
+    return st(d).focus.filter(id => !(roots.length === 1 && roots[0].id === id))
+  }
   const scope = dims
-    .filter(d => st(d).focus.length > 0 && d !== cells_dim)
-    .map(d => ({ dimension_id: d.id, names: st(d).focus.map(id => nameOf(d, id)) }))
+    .filter(d => telling_focus(d).length > 0 && d !== cells_dim)
+    .map(d => ({ dimension_id: d.id, names: telling_focus(d).map(id => nameOf(d, id)) }))
   const context = dims
     .filter(d => fixed[d.id] !== undefined)
     .map(d => ({ dimension_id: d.id, dimension_name: d.name, names: (fixed[d.id] ?? []).map(id => nameOf(d, id)) }))

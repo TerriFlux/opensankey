@@ -225,9 +225,9 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   callout: false,
   labels_small: 'hide',
   font_family: 'Arial,sans-serif',
-  // 04/10/2026 — DEUX POINTS DE PLUS (Jean-Yves : « augmenter la taille de la police dans les
+  // 05/10/2026 — 13 (12 le 04/10, 10 avant ; Jean-Yves : « augmenter la taille de la police dans les
   // segments »), comme la couronne. Le plancher lisible des petites cases ne bouge pas.
-  font_size: 12,
+  font_size: 13,
   bold: false,
   italic: false,
   uppercase: false,
@@ -529,6 +529,11 @@ export interface Type_SunburstChartOptions {
    * sa place (`centreCaptionPlan`, injectée comme `centre_plan`). Absents : pas de ligne.
    */
   centre_caption?: string
+  /**
+   * 05/10/2026 — LE NOM ÉCRIT AU CENTRE hors zoom radial (le jeu de données, « Exports », en gras).
+   * Le texte personnalisé de la part de centre prime.
+   */
+  centre_name?: { text: string, bold: boolean }
   caption_plan?: (caption: string, inner: number, used_h: number) => {
     lines: string[], size: number, below: boolean
   } | null
@@ -1619,7 +1624,9 @@ export const drawSunburstChart = (
       : undefined
     const scope_title = (centre_custom !== undefined && centre_custom !== '')
       ? centre_custom
-      : centre_node
+      : (!focus_id && opts.centre_name)
+        ? opts.centre_name.text
+        : centre_node
         ? centre_node.label
         : (opts.scope_label ? opts.scope_label(tree.roots.length) : '')
     // Sous le zoom radial, le clic sur le centre REMONTE d'un cran ; sinon il REPLIE le nœud
@@ -1668,6 +1675,8 @@ export const drawSunburstChart = (
     const caption = opts.centre_caption ?? ''
     const writeCentre = (name: string, value_text: string) => {
       const plan_of = opts.centre_plan
+      // 05/10/2026 — le nom du jeu de données en gras ; un nom survolé, non.
+      centre_label.attr('font-weight', opts.centre_name?.bold && name === opts.centre_name.text ? 'bold' : null)
       centre_caption.selectAll('tspan').remove()
       if (plan_of === undefined) {
         centre_label.text(shows_name ? name : '')
