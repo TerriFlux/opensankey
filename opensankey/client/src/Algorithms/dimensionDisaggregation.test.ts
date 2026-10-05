@@ -221,6 +221,70 @@ describe('os#1511 — un noeud engendre deplace reste ou on l a pose', () => {
   })
 })
 
+// os#1524 — UNE dimension pilote DEUX axes aux membres disjoints (SOCLE : « Ressources et
+// emplois », Production d un cote, Exportations de l autre). Chaque axe ne montre que SES membres,
+// et sans prefixe d axe, puisqu aucun membre n apparait des deux cotes.
+describe('os#1524 — une dimension sur deux axes aux membres disjoints', () => {
+  function monterBilan() {
+    const app = new Class_ApplicationData(false)
+    const sankey = app.drawing_area.sankey
+    const poste = sankey.addDataTagGroup('poste', 'Poste', false) as unknown as Class_DataTagGroup
+    const bilan = poste.addTag('Bilan', 'bilan') as Class_DataTag
+    const ressources = poste.addTag('Ressources', 'ressources') as Class_DataTag
+    const emplois = poste.addTag('Emplois', 'emplois') as Class_DataTag
+    const production = poste.addTag('Production', 'production') as Class_DataTag
+    const importations = poste.addTag('Importations', 'importations') as Class_DataTag
+    const exportations = poste.addTag('Exportations', 'exportations') as Class_DataTag
+    const consommation = poste.addTag('Consommation', 'consommation') as Class_DataTag
+    ressources.parent = bilan
+    emplois.parent = bilan
+    production.parent = ressources
+    importations.parent = ressources
+    exportations.parent = emplois
+    consommation.parent = emplois
+    poste.levels = ['bilan', 'cote', 'poste']
+    poste.member_bands = false
+
+    const axe_r = sankey.addNewNodeWithName('Ressources')
+    const matiere = sankey.addNewNodeWithName('Matiere')
+    const axe_e = sankey.addNewNodeWithName('Emplois')
+    const entree = sankey.addNewLink(axe_r, matiere)
+    const sortie = sankey.addNewLink(matiere, axe_e)
+    const poser = (flux: typeof entree, membre: Class_DataTag, nombre: number) => {
+      choisir(poste, membre)
+      ;(flux.value as Class_LinkValue).valueData = nombre
+    }
+    poser(entree, production, 10)
+    poser(entree, importations, 5)
+    poser(sortie, exportations, 6)
+    poser(sortie, consommation, 9)
+    axe_r.driving_dimension = poste
+    axe_e.driving_dimension = poste
+    choisir(poste, production, importations, exportations, consommation)
+    return { sankey, axe_r, axe_e }
+  }
+
+  test('chaque axe ne montre que ses membres, sans noeud vide', () => {
+    const { sankey, axe_r, axe_e } = monterBilan()
+    expect(disaggregateDimensionNodes(sankey)).toBe(4)
+    const de = (axe: typeof axe_r) => sankey.nodes_list
+      .filter(n => isGeneratedMemberNode(n) && n.id.startsWith(axe.id)).map(n => n.name).sort()
+    expect(de(axe_r)).toEqual(['Importations', 'Production'])
+    expect(de(axe_e)).toEqual(['Consommation', 'Exportations'])
+  })
+
+  test('les totaux se conservent de part et d autre', () => {
+    const { sankey } = monterBilan()
+    disaggregateDimensionNodes(sankey)
+    const generes = sankey.links_list.filter(isGeneratedMemberLink)
+    const total = (nom: string) => generes
+      .filter(l => l.source.name === nom || l.target.name === nom)
+      .reduce((t, l) => t + (l.value?.valueData ?? 0), 0)
+    expect(total('Production') + total('Importations')).toBe(15)
+    expect(total('Exportations') + total('Consommation')).toBe(15)
+  })
+})
+
 describe('os#1511 lot 2B — les GARDES heritees des noeuds d echange', () => {
   test('la forme engendree se reconnait SUR LE GRAPHE, sans etat en memoire', () => {
     const { sankey, pays } = monter()

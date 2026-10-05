@@ -251,6 +251,10 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     replis.set(dimension, set)
     return set
   }
+  // os#1524 — DEUX PASSES : on arrête d'abord les membres de chaque axe, puis on crée. Le nom d'un
+  // nœud engendré dépend des AUTRES axes (préfixe seulement si un même membre y figure aussi).
+  const plans: { axe: Class_NodeElement, dimension: Class_DataTagGroup, membres: Class_DataTag[],
+    replies: Set<Class_DataTag> }[] = []
   axes.forEach(axe => {
     // Garde n°2, PAR NŒUD : `is_driven_by_dimension` a pu devenir faux entre-temps.
     const dimension = axe.driving_dimension
@@ -263,9 +267,14 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // y partagent un même ordre, sans quoi les bandes ne s'aligneraient pas d'une colonne à l'autre.
     const porteurs = dimension.carriers_count
     const en_bandes = porteurs >= 2 && bandesParMembre(dimension, porteurs)
-    const membres = ordonnerMembres(dimension, dimension.selected_tags_list as Class_DataTag[],
+    const choisis = ordonnerMembres(dimension, dimension.selected_tags_list as Class_DataTag[],
       dimension.members_order,
       membre => en_bandes ? valeurDe(dimension, membre) : valeurSurAxe(axe, membre))
+    // os#1524 — UN MEMBRE SANS VALEUR SUR CET AXE N'Y A PAS DE NŒUD. Une même dimension peut
+    // piloter deux axes aux membres disjoints (SOCLE : « Ressources et emplois », Production d'un
+    // côté, Exportations de l'autre) ; chaque axe affichait sinon un nœud vide par membre de l'autre
+    // côté. En bandes, on garde tout : les colonnes doivent s'aligner membre par membre.
+    const membres = en_bandes ? choisis : choisis.filter(membre => valeurSurAxe(axe, membre) !== 0)
     if (membres.length === 0) return
     // UN SEUL MEMBRE : L'AXE EST CE MEMBRE, on n'engendre rien (retour de Julien, 30/09).
     //
@@ -284,7 +293,24 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // déjà ce repli). Le déplacement porte alors sur un vrai nœud du fichier, et l'export n'a plus
     // qu'une ligne.
     if (membres.length === 1) return
-    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres, replisDe(dimension, membres)))
+    // Le repli « Autres » se décide sur TOUTE la sélection (règle par dimension, cf. plus haut) ;
+    // chaque axe n'en reçoit que ses propres membres.
+    plans.push({ axe, dimension, membres, replies: replisDe(dimension, choisis) })
+  })
+  // os#1524 — LE PRÉFIXE « <axe> - » SEULEMENT S'IL DÉSAMBIGUÏSE : quand un même membre est
+  // engendré sur au moins deux axes de la dimension (CARTOFOB : quatorze « Chêne » ; pays
+  // partenaires : un même pays à l'import et à l'export). Des axes aux membres disjoints gardent
+  // les noms des membres.
+  const vus = new Map<Class_DataTagGroup, Set<Class_DataTag>>()
+  const ambigues = new Set<Class_DataTagGroup>()
+  plans.forEach(({ dimension, membres }) => {
+    const deja = vus.get(dimension) ?? new Set<Class_DataTag>()
+    if (membres.some(membre => deja.has(membre))) ambigues.add(dimension)
+    membres.forEach(membre => deja.add(membre))
+    vus.set(dimension, deja)
+  })
+  plans.forEach(({ axe, dimension, membres, replies }) => {
+    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres, replies, ambigues.has(dimension)))
   })
   if (par_axe.size === 0) return 0
 
@@ -731,13 +757,15 @@ function creerNoeudsDeMembre(
   sankey: Class_Sankey,
   axe: Class_NodeElement,
   membres: Class_DataTag[],
-  replies: Set<Class_DataTag> = new Set()
+  replies: Set<Class_DataTag> = new Set(),
+  prefixer: boolean = (axe.driving_dimension as Class_DataTagGroup).carriers_count >= 2
 ): Type_MembreRepresente[] {
   // PLUSIEURS AXES SUR LA MÊME DIMENSION (CARTOFOB, 30/09) : chaque étape de la filière se décline
   // par essence, et quatorze nœuds « Chêne » ne disent plus de quelle étape ils sont. Le nom du
-  // membre seul ne suffit que si l'axe est le seul à porter sa dimension.
+  // membre seul ne suffit que si aucun autre axe n'engendre le même membre (os#1524 : c'est
+  // l'appelant qui le sait, il voit tous les axes).
   const dimension = axe.driving_dimension as Class_DataTagGroup
-  const partage = dimension.carriers_count >= 2
+  const partage = prefixer
   const gardes = membres.filter(membre => !replies.has(membre))
   const engendres: Type_MembreRepresente[] = gardes.map(membre => {
     const nom = partage ? `${axe.name} - ${membre.name}` : membre.name
