@@ -373,6 +373,40 @@ export class Class_ApplicationData {
   public set has_sankey_afm(_) { this.workspace.has_sankey_afm = _ }
 
   /**
+   * sa#592 — LE FORMAT SVG EST RÉSERVÉ AUX LICENCES, PNG ET PDF SONT À TOUS. Un SVG est la figure
+   * elle-même, retouchable et réutilisable à volonté : il ne se télécharge pas gratuitement depuis
+   * une page publiée (demande d'Alexandre).
+   *
+   * Lu sur la licence BRUTE du compte, jamais sur `has_sankey_plus` : celui-ci vaut vrai pour TOUT
+   * lecteur d'une page publiée (`is_static`), qui ouvrirait donc le format à chacun. Une page publiée
+   * ne demande d'ailleurs jamais au serveur qui est connecté — le lecteur y est toujours anonyme.
+   *
+   * La restriction est d'INTERFACE, pas une protection : le SVG reste lisible dans la page. Assumé.
+   */
+  public get can_export_svg(): boolean {
+    return !this.is_static && (this.workspace.has_sankey_plus || this.workspace.has_sankey_afm)
+  }
+
+  /**
+   * La mention « réalisé avec OpenSankey.fr » des exports PNG et PDF faits sans licence, posée en bas
+   * à droite d'une image de `width` × `height`. Chaîne vide quand la licence (ou l'essai, ou une page
+   * publiée) la retire. Partagée par l'export du diagramme et celui d'un volet (sa#592).
+   */
+  public exportWatermark(width: number, height: number): string {
+    if (this.has_sankey_plus) return ''
+    const font_size = Math.max(12, Math.min(width, height) * 0.018)
+    // Inset >= 1 line-height keeps the baseline clear of the body's default 8px
+    // margin in wkhtmltopdf/wkhtmltoimage, so the watermark never overflows the page.
+    const inset = font_size * 1.6
+    return `<text x='${width - inset}' y='${height - inset}'` +
+      ' text-anchor=\'end\' dominant-baseline=\'alphabetic\'' +
+      ` font-family='Arial, Helvetica, sans-serif' font-size='${font_size}'` +
+      ' fill=\'#000000\' fill-opacity=\'0.45\'>' +
+      'réalisé avec OpenSankey.fr' +
+      '</text>'
+  }
+
+  /**
    * Libellé de l'édition active, affiché en pastille à droite du logo de la barre
    * du haut — le wordmark seul ne dit pas quelle édition tourne. Null = rien à
    * afficher (OpenSankey libre : le logo suffit). Surchargé en OpenSankey+.
@@ -4241,20 +4275,7 @@ export class Class_ApplicationData {
     // an active OpenSankey+ license. Gated on convert_fo so raw SVG export
     // stays watermark-free. has_sankey_plus is overridden in OS+ to include
     // the free trial, so trial users don't get the mark either.
-    let watermark = ''
-    if (convert_fo && !this.has_sankey_plus) {
-      const font_size = Math.max(12, Math.min(export_width, export_height) * 0.018)
-      // Inset >= 1 line-height keeps the baseline clear of the body's default 8px
-      // margin in wkhtmltopdf/wkhtmltoimage, so the watermark never overflows the page.
-      const inset = font_size * 1.6
-      watermark =
-        `<text x='${export_width - inset}' y='${export_height - inset}'` +
-        ' text-anchor=\'end\' dominant-baseline=\'alphabetic\'' +
-        ` font-family='Arial, Helvetica, sans-serif' font-size='${font_size}'` +
-        ' fill=\'#000000\' fill-opacity=\'0.45\'>' +
-        'réalisé avec OpenSankey.fr' +
-        '</text>'
-    }
+    const watermark = convert_fo ? this.exportWatermark(export_width, export_height) : ''
 
     const svg_with_header = '<svg version="1.1" ' +
       ' height=\'' + export_height.toString() + '\'' +
