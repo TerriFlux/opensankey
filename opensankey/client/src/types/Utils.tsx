@@ -378,7 +378,11 @@ export const formatValueWithOption = (element:Class_BaseShape,value: number | st
     // valeur a déjà été calculée par format_value selon le value_label_unit_type posé
     // par buildUnitaryDrawingArea : valeur brute ou ratio vs flux de référence).
     if ((element.sankey.drawing_area?.unitary_value_mode ?? 'percent') === 'percent') {
-      if (value == 100) return ''
+      // sa#600 — « 100 % » S'ÉCRIT. Le masquer taisait le coefficient de tout flux seul de son
+      // côté (une entrée unique, une sortie unique), et, la valeur reçue étant le texte déjà
+      // arrondi, celui des flux de 99,5 à 99,9 % aussi. Seule l'absence de valeur reste muette (elle
+      // s'écrivait « % » tout seul).
+      if (value === '') return ''
       return value + '%'
     }
   }
@@ -819,7 +823,9 @@ export const format_value = (
       if (label_values.custom_digit) {
         text_value = String(parseFloat(parseFloat(text_value).toFixed(label_values.nb_digit)))
       }
-      if (text_value[text_value.length - 1] == '0' && text_value.length == label_values.nb_significant_digits && text_value == String(data_value)) {
+      // Le point final dit « ce zéro est significatif » (100. à 3 chiffres). Pas sur un
+      // POURCENTAGE : sa#600, le 100 % exact d'un flux seul de son côté s'écrivait « 100.% ».
+      if (!is_percent && text_value[text_value.length - 1] == '0' && text_value.length == label_values.nb_significant_digits && text_value == String(data_value)) {
         text_value += '.'
       }
     } else if (label_values.custom_digit) {
