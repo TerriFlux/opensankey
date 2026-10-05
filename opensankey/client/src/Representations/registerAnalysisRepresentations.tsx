@@ -41,12 +41,11 @@ import type { Type_PartInput } from './parts/buildParts'
 import { registerFigureNature } from './figureNature'
 import {
   ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONUT_OWN, DONUT_SOCLE,
-  HIERARCHY_FOCUS_KEY, SMALL_MULTIPLES_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
+  HIERARCHY_FOCUS_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
 } from './analysisFigureAttributes'
 import {
-  readFigureDataFocus, readFigureDataLayer, readFigureDimensionZooms, readFigureFocus, readFigureLevelsDisplay,
-  readFigureOpening, smallMultiplesApply, withDataOpening, withElementOpening, withFigureDimensionZooms,
-  withFigureFocus, withInactiveDimensions
+  readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
+  withElementOpening
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
 import { mountFigureTextZones } from './figureTextZones'
@@ -62,14 +61,10 @@ import { aggregateLocally, disaggregateAlong } from '../Algorithms/Hierarchies'
 import type { Class_NodeDimension } from '../Elements/NodeDimension'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { memberSectorId, parseMemberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
+import { memberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
-import {
-  dataCutOf, dataDimensionOpenedDownToLevel, diagramDimensionOpening, dimensionDivides, dimensionHiddenMembers, dimensionOpenedMembers,
-  dimensionRootsOf, hiddenForSelection, openedForSelection, resolveDataFocus, selectionFromOpening
-} from '../Charts/DataDimensionHierarchy'
+import { dimensionRootsOf } from '../Charts/DataDimensionHierarchy'
 import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
-import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
 import type { Type_JSON } from '../types/Utils'
 import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
 import {
@@ -107,11 +102,13 @@ import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
 // 04/10/2026 — os#1511, refonte étape 2, lot 2 : CE QUE LA COURONNE DESSINE se lit à un seul endroit.
-import { readCouronneState } from './couronneState'
+import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronneState'
 import type { Type_CouronneSankey, Type_CouronneState } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
 import { planDrawsRings, planLevelsDisplayOf } from '../Charts/couronneTree'
+import { couronneGesturesOf, type Type_CouronneGestures } from './couronneGestures'
+import type { Type_TopbarFigureChoice } from '../types/MenuConfig'
 import {
   crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf,
   crossOpeningAt
@@ -902,138 +899,47 @@ const figureBreadcrumbOf = (
  * état à part. `null` : la figure ne découpe pas selon des dimensions de données, ou hors fenêtre.
  */
 const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement | null => {
-  const a = analysisOf(ctx)
-  const decompose = a ? effectiveDecompose(a.descriptor) : null
+  // 04/10/2026 (lot 3) — LU SUR LE PLAN, ÉCRIT PAR LES GESTES DE LA COURONNE (`couronneGestures`) :
+  // plus aucune coupe ni ancienne clé ici.
+  const g = couronneGesturesOfCtx(ctx)
   const { window_id, pane_key } = ctx
-  if (!a || decompose?.kind !== 'data_dimension' || window_id === undefined || pane_key === undefined) return null
-  const reading = hierarchyReadingOf(ctx)
-  // La coupe que les GESTES du tableau réécrivent (lot 3 : ils écriront l'état de la couronne).
-  const cut = analysisDataCutOf(a.subject, decompose, reading)
-  const couronne = reading.data_plan
-  if (cut === null || cut.dims.length === 0 || couronne === undefined) return null
-  const { state, plan } = couronne
+  if (g === null || window_id === undefined || pane_key === undefined) return null
+  const { state, plan } = g
   const app_data = ctx.app_data
   const t = app_data.t
-  const options = ctx.options ?? {}
   const sankey_dims = app_data.drawing_area.sankey.data_taggs_dict as unknown as { [id: string]: Class_DataTagGroup | undefined }
-  // 04/10/2026 (lot 2) — LE ZOOM DE CHAQUE DIMENSION EST SA PORTÉE dans l'état lu (une liste de
-  // membres, « Europe ✕ Amériques ✕ »), celle des cases comprise.
+  const rows = state.order.map(id => sankey_dims[id]).filter((d): d is Class_DataTagGroup => d !== undefined)
+  if (rows.length === 0) return null
+  // Le zoom de chaque dimension est sa portée (une liste de membres, « Europe ✕ Amériques ✕ »).
   const zooms = new Map<string, Class_DataTag[]>()
-  state.order.forEach(id => {
-    const d = sankey_dims[id]
-    const list = (state.dims[id]?.focus ?? [])
-      .map(m => d?.tags_dict[m] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
-    if (list.length > 0) zooms.set(id, list)
+  rows.forEach(d => {
+    const list = (state.dims[d.id]?.focus ?? [])
+      .map(m => d.tags_dict[m] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+    if (list.length > 0) zooms.set(d.id, list)
   })
-
-  const centreOf = () => cut.dividing[0]?.id
-  /**
-   * Écrit les zooms (un membre par dimension) et, si donné, la colonne `dim` au niveau `depth`.
-   * `inactive` : les dimensions désactivées après le geste ; absent avec une colonne, toutes les
-   * autres (le clic simple : cette colonne seule).
-   */
-  const write = (
-    next_zooms: Map<string, Class_DataTag[]>, column?: { dim: Class_DataTagGroup, depth: number }, inactive?: string[]
-  ) => {
-    const ids = new Map([...next_zooms].filter(([, list]) => list.length > 0)
-      .map(([dim_id, list]) => [dim_id, list.map(m => m.id)]))
-    let o = withFigureDimensionZooms(options, ids, column?.dim.id ?? centreOf())
-    if (column || inactive) {
-      const next_inactive = inactive ?? cut.dims.filter(d => d !== column?.dim).map(d => d.id)
-      o = withInactiveDimensions(o, next_inactive)
-      // Les petits multiples demandent une autre dimension active pour les parts : sinon ils s'éteignent.
-      const split_now = smallMultiplesOf(ctx)
-      if (split_now && !smallMultiplesApply(split_now.dimension.id, cut.dims.map(d => d.id), next_inactive)) {
-        o = { ...o, [SMALL_MULTIPLES_KEY]: undefined }
-      }
-    }
-    if (column) {
-      const { dim, depth } = column
-      if (!cut.linked) {
-        // 04/10/2026 — la coupe écrite des AUTRES dimensions (celle des cases comprise, hors `cut.dims`)
-        // reste telle quelle ; et les décoches de la légende survivent au changement de colonne : un
-        // membre décoché reste décoché à tout niveau (sauf s'il ne restait plus rien).
-        const stored = readFigureOpening(options).data
-        const opened: { [dim_id: string]: string[] } = { ...stored.opened }
-        const hidden: { [dim_id: string]: string[] } = { ...stored.hidden }
-        cut.dims.forEach(d => {
-          opened[d.id] = [...dimensionOpenedMembers(d, cut.opened)]
-          hidden[d.id] = [...dimensionHiddenMembers(d, cut.hidden)]
-        })
-        opened[dim.id] = [...dataDimensionOpenedDownToLevel(dim, depth)]
-        const kept_hidden = hidden[dim.id] ?? []
-        hidden[dim.id] = selectionFromOpening(dim, new Set(opened[dim.id]), new Set(kept_hidden)).length > 0
-          ? kept_hidden
-          : []
-        o = withDataOpening(o, { linked: false, opened, hidden })
-      }
-    }
-    app_data.menu_configuration.setMainZonePaneOptions(window_id, pane_key, o as unknown as Type_JSON)
-    if (column && cut.linked) {
-      // LIÉE : le niveau est celui du diagramme, réglé par le geste annulable de l'hôte (barre du haut).
-      // 04/10/2026 — sans perdre ce que l'utilisateur a retenu : seulement sous le zoom de la dimension,
-      // et sans les membres décochés (ni ce qu'ils portent).
-      const { dim, depth } = column
-      const now_list = dim.selected_tags_list as Class_DataTag[]
-      const now = new Set(now_list.map(m => m.id))
-      const unchecked = new Set(now.size > 1 ? hiddenForSelection(dim, now) : [])
-      const zoomed = next_zooms.get(dim.id) ?? []
-      const kept = (m: Class_DataTag) => {
-        let under_zoom = zoomed.length === 0
-        for (let p: Class_DataTag | undefined = m; p !== undefined; p = p.parent as Class_DataTag | undefined) {
-          if (unchecked.has(p.id)) return false
-          if (zoomed.includes(p)) under_zoom = true
-        }
-        return under_zoom
-      }
-      const all_level = dim.membersAtLevel(depth) as Class_DataTag[]
-      const filtered = all_level.filter(kept)
-      const at_level = (filtered.length > 0 ? filtered : all_level).map(m => m.id)
-      if (at_level.length > 0 && (at_level.length !== now.size || at_level.some(id => !now.has(id)))) {
-        app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, at_level, { multi: true }))
-      }
-    }
-  }
   const ancestorAt = (dim: Class_DataTagGroup, member: Class_DataTag, depth: number): Class_DataTag | undefined => {
     let m: Class_DataTag | undefined = member
     while (m !== undefined && dim.depthOf(m) > depth) m = m.parent as Class_DataTag | undefined
     return m !== undefined && dim.depthOf(m) === depth ? m : undefined
   }
-  /**
-   * Le zoom de `dim` ramené au-dessus de `depth` (supprimé s'il n'en reste rien sous la racine).
-   * 04/10/2026 — `only` : seuls les membres sous cet ancêtre remontent, les autres restent.
-   */
-  const zoomsAbove = (dim: Class_DataTagGroup, depth: number, entry_depth: number, only?: Class_DataTag) => {
-    const next = new Map(zooms)
-    const list = zooms.get(dim.id) ?? []
+  /** La portée de `dim` ramenée au-dessus de `depth`. */
+  const focusAbove = (dim: Class_DataTagGroup, depth: number, entry_depth: number): string[] => {
     const out: Class_DataTag[] = []
-    list.forEach(z => {
-      const concerned = dim.depthOf(z) >= depth && (only === undefined || ancestorAt(dim, z, depth) === only)
-      if (!concerned) { if (!out.includes(z)) out.push(z); return }
+    ;(zooms.get(dim.id) ?? []).forEach(z => {
+      if (dim.depthOf(z) < depth) { if (!out.includes(z)) out.push(z); return }
       const up = depth - 1 >= entry_depth ? ancestorAt(dim, z, depth - 1) : undefined
       if (up && !out.includes(up)) out.push(up)
     })
-    if (out.length > 0) next.set(dim.id, out)
-    else next.delete(dim.id)
-    return next
+    return out.map(m => m.id)
   }
   /**
-   * 04/10/2026 — LA LISTE DU ZOOM D'UN NIVEAU (os#1511) : cocher les membres du zoom de `depth`, à
-   * n'importe quel niveau, comme le filtre d'Excel.
-   *  - PROPOSÉS : les membres de ce niveau sous le zoom des niveaux au-dessus (tous s'il n'y en a pas) ;
-   *  - COCHÉS : ceux que le zoom garde (sous un membre zoomé plus haut, ou au-dessus d'un membre zoomé
-   *    plus bas) ; tous quand la dimension n'est pas zoomée — rien n'est retiré ;
-   *  - POSER une liste, branche par branche : un membre zoomé plus haut dont on garde tous les enfants
-   *    reste, dont on en garde une partie est remplacé par elle, dont on n'en garde aucun s'en va ; un
-   *    membre zoomé plus bas reste si son ancêtre à ce niveau est gardé ; un membre gardé que rien ne
-   *    couvre s'ajoute. Tout cocher, sans zoom plus profond : plus de zoom à ce niveau.
-   * La liste ouverte garde ses membres proposés (`candidates`) : cocher une branche ne fait pas
-   * disparaître les autres de la liste.
+   * LA LISTE DU ZOOM D'UN NIVEAU : cocher les membres de la portée de `depth`, à n'importe quel niveau,
+   * comme le filtre d'Excel (proposés : sous la portée des niveaux au-dessus ; cochés : ceux que la
+   * portée garde ; tout cocher sans portée plus profonde : plus de portée à ce niveau).
    */
   const zoomPickAt = (dim: Class_DataTagGroup, depth: number, entry_depth: number): Type_FigureNavZoomPick | undefined => {
     const zs = zooms.get(dim.id) ?? []
     const at_level = dim.membersAtLevel(depth) as Class_DataTag[]
-    // Le zoom au-dessus : les membres zoomés plus haut, et les ancêtres (depth - 1) des plus profonds.
     const above = new Set<Class_DataTag>()
     if (depth - 1 >= entry_depth) {
       zs.forEach(z => {
@@ -1051,7 +957,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
         const picked = candidates.filter(m => ids.includes(m.id))
         if (picked.length === 0) return
         const deeper = zs.some(z => dim.depthOf(z) > depth)
-        if (picked.length === candidates.length && !deeper) { write(zoomsAbove(dim, depth, entry_depth)); return }
+        if (picked.length === candidates.length && !deeper) { g.setFocus(dim.id, focusAbove(dim, depth, entry_depth)); return }
         const picked_set = new Set(picked)
         const next: Class_DataTag[] = []
         const covered = new Set<Class_DataTag>()
@@ -1070,57 +976,20 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
           else if (up !== undefined && !candidates.includes(up)) next.push(z)
         })
         picked.forEach(m => { if (!covered.has(m)) next.push(m) })
-        write(new Map(zooms).set(dim.id, next))
+        g.setFocus(dim.id, next.map(m => m.id))
       }
     }
   }
-
-  // 04/10/2026 — LE DESSIN DE CHAQUE DIMENSION (en secteurs / en sunburst / une couronne par membre),
-  // fourni par OS+ (`figureGesturesHost`) : un petit sélecteur dans la colonne de gauche de sa ligne.
-  const drawingOf = app_data.menu_configuration.figure_dimension_drawing?.(ctx) ?? null
-  // La dimension des petits multiples sort de la coupe (chaque case la lit sur son membre) : sa ligne
-  // reste au tableau, pour qu'on puisse la redessiner autrement — ses en-têtes et ses cases inertes.
-  const split = smallMultiplesOf(ctx)
-  // 04/10/2026 (lot 2) — les lignes sont l'ordre de l'état (celle des cases en dernier).
-  const rows = state.order.map(id => sankey_dims[id]).filter((d): d is Class_DataTagGroup => d !== undefined)
-
-  // ── 04/10/2026 — RECLIQUER, CTRL+CLIC (Julien : « quand on clique sur Continents, il faut pouvoir
-  // recliquer dessus et que ça désélectionne ») ──────────────────────────────────────────────────
-  //
-  // Le modèle est celui des interrupteurs de sa!860 (`inactive_dimensions`), retirés de la barre du
-  // haut : une dimension désactivée ne découpe plus (lue à son zoom, ou à sa racine) et garde son
-  // niveau et ses membres. Au moins une reste active : désactiver la seule qui découpe active l'autre,
-  // sur la colonne qu'elle avait, ou à défaut sur son premier niveau.
-  const inactive_now = [...(cut.inactive ?? [])]
   const entryDepthOf = (d: Class_DataTagGroup) => dimensionRootsOf(d).length === 1 ? 1 : 0
-  /** Active, la dimension découperait-elle avec ce qu'elle a gardé ? */
-  const wouldDivide = (d: Class_DataTagGroup) => cut.linked
-    ? d.selected_tags_list.length > 1
-    : dimensionDivides(d, cut.opened)
-  const deselect = (dim: Class_DataTagGroup) => {
-    if (cut.dividing.some(d => d !== dim)) {
-      write(new Map(zooms), undefined, [...new Set([...inactive_now, dim.id])])
-      return
-    }
-    const other = cut.dims.find(d => d !== dim)
-    if (other === undefined) return
-    const next = [...new Set([...inactive_now.filter(id => id !== other.id), dim.id])]
-    if (wouldDivide(other)) { write(new Map(zooms), undefined, next); return }
-    const depth = entryDepthOf(other)
-    write(zoomsAbove(other, depth, depth), { dim: other, depth }, next)
-  }
-  // La dimension des cases DÉCOUPE aussi (une couronne par membre) : son niveau est surligné.
-  const split_depth = split && split.members.length > 0
-    ? Math.min(...split.members.map(m => split.dimension.depthOf(m as Class_DataTag)))
-    : undefined
+  // Les cases (« une couronne par membre ») : leur niveau est surligné aussi.
+  const cells_dim = plan.cells_dimension_id
+  const extras = app_data.menu_configuration.figure_navigation_extras?.(ctx) ?? null
 
   const dimensions: Type_FigureNavDimension[] = rows.map(dim => {
     const entry_depth = entryDepthOf(dim)
-    const is_split = split?.dimension === dim
-    // 04/10/2026 — la ligne des cases a son zoom et sa liste à cases : ce sont ses cases (os#1511).
+    const is_cells = cells_dim === dim.id
     const zs = zooms.get(dim.id) ?? []
-    // 04/10/2026 (lot 2) — LU SUR LE PLAN : la dimension découpe-t-elle, à quels niveaux (`columns`).
-    const divides = plan.cut.some(c => c.dimension_id === dim.id)
+    const divides = is_cells || plan.cut.some(c => c.dimension_id === dim.id)
     const depths = plan.columns[dim.id]?.depths ?? []
     const in_rings = state.dims[dim.id]?.drawing === 'sunburst'
     /** La colonne qui découpe : la plus fine dessinée en sunburst, la plus haute en secteurs. */
@@ -1131,57 +1000,43 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     return {
       id: dim.id,
       name: dim.name,
-      drawing: drawingOf?.(dim.id) ?? null,
+      drawing: drawingChoiceOf(ctx, g, dim.id),
+      members: extras?.members?.(dim.id) ?? undefined,
       levels: levels.map(({ raw, depth }) => {
-        // Les membres zoomés à ce niveau (ou leurs ancêtres) : la case les résume, « Céréales +2 ».
         const at_level: Class_DataTag[] = []
         zs.forEach(z => {
           const m = ancestorAt(dim, z, depth)
           if (m !== undefined && !at_level.includes(m)) at_level.push(m)
         })
-        // Dans l'ordre de la dimension (celui de la liste à cases), pas dans celui des écritures.
         const order = dim.membersAtLevel(depth) as Class_DataTag[]
         at_level.sort((x, y) => order.indexOf(x) - order.indexOf(y))
-        // La colonne active est le niveau le PLUS HAUT que la couronne dessine : déplier une part
-        // dans la couronne (« Déplie dans la couronne ») ne déplace pas la colonne.
-        // 04/10/2026 — EN SUNBURST, les niveaux EMPILÉS jusqu'au plus fin dessiné sont surlignés ensemble
-        // (un anneau chacun) ; cliquer un en-tête règle le niveau le plus fin (`choose`).
-        // 04/10/2026 — et celle des cases, à son niveau : le surlignage dit tout ce qui découpe.
         const column = column_depth === depth
-        const active = is_split
-          ? split_depth === depth
-          : column_depth !== undefined && (in_rings ? depth <= column_depth : column)
+        const active = column_depth !== undefined && (in_rings ? depth <= column_depth : column)
         return {
           label: levelShortName(raw),
           active,
           column,
           zooms: at_level.length === 0 ? undefined : at_level.map(m => levelShortName(displayedNameOf(m))),
-          // ✕ : ce zoom et ceux en dessous, dans cette dimension.
-          clear: at_level.length === 0 ? undefined : () => write(zoomsAbove(dim, depth, entry_depth)),
+          // ✕ : cette portée et celles en dessous, dans cette dimension.
+          clear: at_level.length === 0 ? undefined : () => g.setFocus(dim.id, focusAbove(dim, depth, entry_depth)),
           pick: zoomPickAt(dim, depth, entry_depth),
-          // Clic simple : cette colonne seule ; reclic sur la colonne qui découpe : désélectionnée.
-          // La ligne des cases : son en-tête règle le niveau des cases, les autres dimensions restent.
-          choose: is_split
-            ? (active ? undefined : () => write(zoomsAbove(dim, depth, entry_depth), { dim, depth }, inactive_now))
-            : column
-              ? () => deselect(dim)
-              : () => write(zoomsAbove(dim, depth, entry_depth), { dim, depth }),
-          // Ctrl+clic : ajoutée aux colonnes qui découpent (les autres dimensions restent), ou retirée.
-          choose_with: is_split ? undefined : column
-            ? () => deselect(dim)
-            : () => write(zoomsAbove(dim, depth, entry_depth), { dim, depth }, inactive_now.filter(id => id !== dim.id))
+          // Clic simple : cette colonne seule ; reclic sur la colonne qui découpe : désactivée. La ligne
+          // des cases : son en-tête règle le niveau des cases, les autres dimensions restent.
+          choose: is_cells
+            ? (active ? undefined : () => g.chooseColumn(dim.id, depth, false))
+            : column ? () => g.deactivate(dim.id) : () => g.chooseColumn(dim.id, depth, true),
+          // Ctrl+clic : ajoutée aux colonnes qui découpent (les autres restent), ou retirée.
+          choose_with: is_cells ? undefined : column ? () => g.deactivate(dim.id) : () => g.chooseColumn(dim.id, depth, false)
         }
       })
     }
   })
-  // 04/10/2026 — L'ORDRE DES LIGNES EST L'ORDRE D'EMBOÎTEMENT (l'ancien ⇄ de la barre) : OS+ le règle.
-  const nest_move = app_data.menu_configuration.figure_nest_move?.(ctx) ?? null
-  const row_ids = rows.map(d => d.id)
   return buildFigureNavigationTable({
     dimensions,
     memory_key: `${window_id}/${pane_key}`,
     t: (key: string, o?: { [k: string]: unknown }) => t(key, o),
-    move: nest_move ? (dim_id, delta) => nest_move(row_ids, dim_id, delta) : undefined,
+    move: (dim_id, delta) => g.move(rows.map(d => d.id), dim_id, delta),
+    settings: extras?.settings,
     labels: {
       title: t('sunburst.nav.title') as string,
       zoom: t('sunburst.nav.zoom') as string,
@@ -1201,8 +1056,59 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
         defaultValue: 'Échanger l\'ordre des dimensions (ligne du haut = anneau intérieur)'
       }) as string,
       move_up: t('sunburst.nav.move_up', { defaultValue: 'Monter cette dimension (vers l\'anneau intérieur)' }) as string,
-      move_down: t('sunburst.nav.move_down', { defaultValue: 'Descendre cette dimension (vers l\'anneau extérieur)' }) as string
+      move_down: t('sunburst.nav.move_down', { defaultValue: 'Descendre cette dimension (vers l\'anneau extérieur)' }) as string,
+      settings: t('sunburst.nav.settings', { defaultValue: 'Réglages de la couronne' }) as string,
+      members: t('sunburst.nav.members', { defaultValue: 'Choisir les membres' }) as string
     }
+  })
+}
+
+/**
+ * 04/10/2026 (lot 3) — LE SÉLECTEUR DE DESSIN D'UNE LIGNE : en secteurs, en sunburst, une couronne par
+ * membre (exclusif). Un choix sans effet se grise avec sa raison ; le choix courant reste toujours
+ * sélectionnable pour en sortir.
+ */
+const drawingChoiceOf = (ctx: Type_RepresentationContext, g: Type_CouronneGestures, dim_id: string): Type_TopbarFigureChoice => {
+  const t = ctx.app_data.t
+  const now = g.drawingOf(dim_id)
+  const value = now === 'sunburst' ? 'rings' : now
+  const rings_ok = g.offersRingsFor(dim_id) || value === 'rings'
+  const multiples_ok = g.offersMultiplesFor(dim_id) || value === 'multiples'
+  return {
+    key: `dimension_drawing:${dim_id}`,
+    label: t('sunburst.nav.drawing') as string,
+    value,
+    options: [
+      { value: 'sectors', label: t('Banner.draw_sectors') as string, icon: 'sectors' },
+      {
+        value: 'rings', label: t('Banner.draw_rings') as string, icon: 'rings',
+        disabled: !rings_ok, title: rings_ok ? undefined : t('Banner.draw_rings_unavailable') as string
+      },
+      {
+        value: 'multiples', label: t('Banner.draw_small_multiples') as string, icon: 'multiples',
+        disabled: !multiples_ok, title: multiples_ok ? undefined : t('Banner.draw_small_multiples_unavailable') as string
+      }
+    ],
+    choose: (v) => g.setDrawing(dim_id, v === 'rings' ? 'sunburst' : v === 'multiples' ? 'multiples' : 'sectors')
+  }
+}
+
+/**
+ * 04/10/2026 (lot 3) — LES GESTES DE LA COURONNE d'une vignette (`couronneGestures`), écrits sur ses
+ * réglages. `null` : hors fenêtre, ou la figure ne découpe pas selon des dimensions de données.
+ */
+export const couronneGesturesOfCtx = (ctx: Type_RepresentationContext): Type_CouronneGestures | null => {
+  const { window_id, pane_key } = ctx
+  if (!ctx.element || window_id === undefined || pane_key === undefined) return null
+  const subject = chartSubjectOf(ctx.element)
+  const descriptor = subject ? descriptorInEffect(ctx.element, subject, ctx.options) : null
+  const decompose = descriptor ? effectiveDecompose(descriptor) : null
+  if (decompose?.kind !== 'data_dimension') return null
+  return couronneGesturesOf({
+    app: ctx.app_data,
+    options: ctx.options ?? {},
+    declared: [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])],
+    write: o => ctx.app_data.menu_configuration.setMainZonePaneOptions(window_id, pane_key, o as unknown as Type_JSON)
   })
 }
 
@@ -1299,81 +1205,22 @@ const legendEntriesOf = (dim: Class_DataTagGroup, state: Type_CouronneState, pla
 
 /**
  * LA LÉGENDE D'UNE FIGURE SUR DIMENSIONS DE DONNÉES : ce qu'elle montre (le plan) et, par dimension,
- * le geste qui coche ou décoche un membre — liée, le geste annulable du diagramme ; détachée, la coupe
- * de la figure (lot 3 : l'état de la couronne). `null` hors dimensions de données ou hors fenêtre.
+ * le geste qui coche ou décoche un membre. 04/10/2026 (lot 3) — décocher retire la part du dessin et
+ * GARDE sa ligne, liée comme détachée (les décochés de l'état, `toggleHidden`) : liée, le diagramme ne
+ * bouge plus. `null` hors dimensions de données ou hors fenêtre.
  */
 const dataLegendOf = (ctx: Type_RepresentationContext) => {
   const a = analysisOf(ctx)
-  const decompose = a ? effectiveDecompose(a.descriptor) : null
-  const { window_id, pane_key } = ctx
-  if (!a || decompose?.kind !== 'data_dimension' || window_id === undefined || pane_key === undefined) return null
+  const g = couronneGesturesOfCtx(ctx)
+  if (!a || g === null) return null
   const reading = hierarchyReadingOf(ctx)
   const couronne = reading.data_plan
-  const cut = analysisDataCutOf(a.subject, decompose, reading)
-  if (cut === null || couronne === undefined) return null
-  const app_data = ctx.app_data
-  const toggleOf = (dim: Class_DataTagGroup) => dimensionToggleOf(ctx, cut, dim, window_id, pane_key, app_data)
-  return { a, couronne, reading, toggleOf }
-}
-
-/** LE GESTE de la légende sur une dimension : cocher ou décocher un membre (écrivain, inchangé au lot 2). */
-const dimensionToggleOf = (
-  ctx: Type_RepresentationContext,
-  cut: NonNullable<ReturnType<typeof analysisDataCutOf>>,
-  dim: Class_DataTagGroup,
-  window_id: string,
-  pane_key: string,
-  app_data: Type_RepresentationContext['app_data']
-) => {
-  /** Les membres choisis (la frontière dessinée, à plat) : le diagramme lié, la coupe détachée. */
-  const chosenNow = (): string[] => cut.linked
-    ? (dim.selected_tags_list as Class_DataTag[]).map(m => m.id)
-    : selectionFromOpening(dim, dimensionOpenedMembers(dim, cut.opened), dimensionHiddenMembers(dim, cut.hidden))
-  const writeChosen = (chosen: string[]) => {
-    if (chosen.length === 0) return
-    if (cut.linked) {
-      app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, chosen, { multi: true }))
-      return
-    }
-    const set = new Set(chosen)
-    const opened: { [dim_id: string]: string[] } = { ...readFigureOpening(ctx.options).data.opened }
-    const hidden: { [dim_id: string]: string[] } = {}
-    cut.dims.forEach(d => {
-      opened[d.id] = [...dimensionOpenedMembers(d, cut.opened)]
-      hidden[d.id] = [...dimensionHiddenMembers(d, cut.hidden)]
-    })
-    opened[dim.id] = [...openedForSelection(dim, set)]
-    hidden[dim.id] = hiddenForSelection(dim, set)
-    app_data.menu_configuration.setMainZonePaneOptions(
-      window_id, pane_key, withDataOpening(ctx.options ?? {}, { linked: false, opened, hidden }) as unknown as Type_JSON
-    )
-  }
-  const toggle = (part_id: string, show: boolean) => {
+  if (couronne === undefined) return null
+  const toggleOf = (dim: Class_DataTagGroup) => (part_id: string, show: boolean) => {
     const ref = (parseMemberSectorPath(part_id) ?? []).slice(-1)[0]
-    const member = ref?.dimension_id === dim.id ? dim.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
-    if (member === undefined) return
-    const chosen = new Set(chosenNow())
-    if (show) {
-      chosen.add(member.id)
-      writeChosen([...chosen])
-      return
-    }
-    // Un ancêtre choisi du membre (sous zoom, la couronne montre ses enfants) cède sa place à ses
-    // enfants le long de la route, puis le membre s'en va.
-    const route: Class_DataTag[] = []
-    for (let p = member.parent as Class_DataTag | undefined; p !== undefined; p = p.parent as Class_DataTag | undefined) route.unshift(p)
-    const chosen_at = route.findIndex(p => chosen.has(p.id))
-    if (chosen_at >= 0) {
-      route.slice(chosen_at).forEach(p => {
-        chosen.delete(p.id)
-        ;(p.children as Class_DataTag[]).forEach(c => chosen.add(c.id))
-      })
-      route.slice(chosen_at + 1).forEach(p => chosen.delete(p.id))
-    }
-    chosen.delete(member.id)
-    writeChosen([...chosen])
+    if (ref?.dimension_id === dim.id) g.toggleHidden(dim.id, ref.member_id, show)
   }
-  return toggle
+  return { a, couronne, reading, toggleOf }
 }
 
 /** Le nœud dans lequel la couronne est descendue, ou `null` si elle regarde son sujet. */
@@ -1448,7 +1295,13 @@ const latchDonutLegend = (ctx: Type_RepresentationContext) => {
   queueMicrotask(() => {
     if (!mc.isMainZoneOccupant(window_id)) return
     const next = donutLegendLatched(mc.figureOf(window_id, pane_key).attributes, shape)
-    if (next !== null) mc.setMainZonePaneOptions(window_id, pane_key, next as Type_JSON)
+    if (next === null) return
+    // 04/10/2026 (lot 3) — une couronne qui porte son état (`couronne`) n'en réécrit pas les
+    // anciennes clés, que les valeurs effectives de la figure peuvent contenir.
+    const out = next[COURONNE_KEY] !== undefined
+      ? { ...next, ...Object.fromEntries(LEGACY_COURONNE_KEYS.map(k => [k, undefined])) }
+      : next
+    mc.setMainZonePaneOptions(window_id, pane_key, out as Type_JSON)
   })
 }
 
@@ -1583,160 +1436,16 @@ const dataDimensionClickGestures = (
   back?: () => void
   focusTo?: (path: string[]) => void
 } | null => {
-  const decompose = analysisOf(ctx)?.descriptor.decompose
-  if (decompose?.kind !== 'data_dimension') return null
-  const { window_id, pane_key } = ctx
-  const app_data = ctx.app_data
-  const sankey = app_data.drawing_area.sankey
-  const data_opening = readFigureOpening(ctx.options).data
-  // 02/10/2026 — LA DIMENSION DES PETITS MULTIPLES SORT DE LA COUPE, comme au dessin
-  // (`hierarchyReadingOf`) et dans l'hôte (`figureGesturesHost`). Le clic sur une part agit sur la
-  // dimension découpée en parts, jamais sur celle des cases ; et la réécriture de la coupe ne doit
-  // pas toucher à la liste des cases — sans quoi une figure neuve retombait sur une seule couronne.
-  const split = smallMultiplesOf(ctx)
-  const cut = dataCutOf(
-    sankey, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])], data_opening,
-    split ? [split.dimension.id] : []
-  )
-  const linked = cut.linked
-  const dims = cut.dims
-  if (window_id === undefined || pane_key === undefined || dims.length === 0) return null
-
-  const mode = style.interaction_click
-  const diagram_shown = diagramIsShown(app_data)
-  // 03/10/2026 — TABLEAU DE NAVIGATION (os#1511) : sa!878 faisait zoomer le clic dans tous les cas.
-  // 04/10/2026 — RETOUR AU RÉGLAGE (Julien : « Déplie dans la couronne ne marche plus ») : le clic suit
-  // de nouveau « Clic sur une part ». Une couronne NEUVE naît en « Zoome dedans » (le scénario de
-  // Jean-Yves, cf. `DONUT_FRESH_OWN`) ; une couronne enregistrée garde le sien.
-  const wants_zoom = mode === 'zoom' || mode === 'both'
-  const diagram_follows = linked || ((mode === 'aggregate' || mode === 'both') && diagram_shown)
-  const focus = readFigureFocus(ctx.options)
-  const writeFocus = (path: string[]) => app_data.menu_configuration.setMainZonePaneOptions(
-    window_id, pane_key, withFigureFocus(ctx.options, path) as unknown as Type_JSON
-  )
-  /** 04/10/2026 — Écrit le zoom de chaque dimension, au format du tableau (`centre_id` en dernier). */
-  const writeZooms = (zooms: ReadonlyMap<string, readonly string[]>, centre_id?: string) =>
-    app_data.menu_configuration.setMainZonePaneOptions(
-      window_id, pane_key, withFigureDimensionZooms(ctx.options ?? {}, zooms, centre_id) as unknown as Type_JSON
-    )
-  /** 04/10/2026 — Remonte d'un cran le zoom de `dim_id` (parti s'il atteint la racine unique). */
-  const zoomUp = (dim_id: string) => {
-    const zooms = new Map(readFigureDimensionZooms(ctx.options))
-    const d = sankey.data_taggs_dict[dim_id] as unknown as Class_DataTagGroup | undefined
-    const list = zooms.get(dim_id)
-    if (d === undefined || list === undefined) return
-    const single_root = dimensionRootsOf(d).length === 1
-    const up: string[] = []
-    list.forEach(id => {
-      const p = (d.tags_dict[id] as Class_DataTag | undefined)?.parent as Class_DataTag | undefined
-      if (p === undefined || (single_root && p.parent === undefined)) return
-      if (!up.includes(p.id)) up.push(p.id)
-    })
-    if (up.length > 0) zooms.set(dim_id, up)
-    else zooms.delete(dim_id)
-    writeZooms(zooms, up.length > 0 ? dim_id : undefined)
-  }
-  /** La coupe du diagramme pour cette dimension devient `expanded`. */
-  const followInDiagram = (dim: Class_DataTagGroup, expanded: ReadonlySet<string>) => {
-    if (!diagram_follows) return
-    const opened = new Set(
-      (dim.tags_list as Class_DataTag[])
-        .filter(m => expanded.has(memberSectorId(dim.id, m.id)))
-        .map(m => m.id)
-    )
-    // os#1511 — le geste de coupe de l'hôte, annulable ; `multi` passe en choix multiple une
-    // dimension qu'aucun nœud ne porte, dans le même pas d'historique.
-    // 03/10/2026 — ce qui est décoché le reste : ouvrir Céréales ne fait pas revenir Lait.
-    const hidden = dimensionHiddenMembers(dim, cut.hidden)
-    app_data.runHeavyGesture(() =>
-      applyDimensionCut(app_data, dim, selectionFromOpening(dim, opened, hidden), { multi: true }))
-  }
-
-  /**
-   * La coupe `base` après le geste sur `member` : ouvert (avec toute sa route), ou refermé (lui s'il
-   * est ouvert, sinon son parent, avec ce qu'ils portaient). `null` : le geste ne change rien.
-   */
-  const cutAfter = (
-    base: ReadonlySet<string>, dim: Class_DataTagGroup, member: Class_DataTag, shift: boolean
-  ): Set<string> | null => {
-    const next = new Set(base)
-    const entry = (m: Class_DataTag) => memberSectorId(dim.id, m.id)
-    if (shift) {
-      const target = next.has(entry(member)) ? member : member.parent
-      // La racine reste : la refermer ferait disparaître la dimension, ce que fait le niveau.
-      if (target === undefined || target.parent === undefined && dimensionRootsOf(dim).length === 1) return null
-      const close = (m: Class_DataTag) => {
-        next.delete(entry(m))
-        ;(m.children as Class_DataTag[]).forEach(close)
-      }
-      close(target)
-    } else {
-      if ((member.children as Class_DataTag[]).length === 0) return null
-      // Toute la route : ouvrir un membre profond ouvre ses ancêtres, sinon la coupe s'arrêterait
-      // au premier fermé.
-      for (let m: Class_DataTag | undefined = member; m !== undefined; m = m.parent) next.add(entry(m))
-    }
-    return next
-  }
-
-  const activate = (part_id: string, gesture: { shift: boolean }) => {
-    const ref = parseMemberSectorId(part_id)
-    const dim = dims.find(d => d.id === ref?.dimension_id)
-    const member = ref !== null ? dim?.tags_dict[ref.member_id] as Class_DataTag | undefined : undefined
-    if (dim === undefined || member === undefined) return
-
-    // ── ZOOMER : le foyer s'empile (ou se dépile au shift), la coupe de la figure ne bouge pas ──
-    if (wants_zoom) {
-      // 04/10/2026 — LE ZOOM S'ÉCRIT COMME DANS LE TABLEAU (os#1511) : une entrée par dimension
-      // (`withFigureDimensionZooms`), et non plus un cran empilé sur l'ancienne pile. La part cliquée
-      // fixe sa dimension (et celles de sa route, sous des dimensions emboîtées) ; les zooms des
-      // autres dimensions restent. Shift+clic remonte cette dimension d'un cran.
-      if (gesture.shift) {
-        zoomUp(dim.id)
-      } else {
-        const next = new Map(readFigureDimensionZooms(ctx.options))
-        ;(parseMemberSectorPath(part_id) ?? []).forEach(r => next.set(r.dimension_id, [r.member_id]))
-        const refs = [...next].flatMap(([dimension_id, ids]) => ids.map(member_id => ({ dimension_id, member_id })))
-        // Le centre en dernier : c'est la dimension cliquée qui doit avoir quelque chose dessous.
-        const ordered = [...refs.filter(r => r.dimension_id !== dim.id), ...refs.filter(r => r.dimension_id === dim.id)]
-        if (resolveDataFocus(cut, ordered) !== null) writeZooms(next, dim.id)
-      }
-      // « et le déplie dans le diagramme » : la coupe DU DIAGRAMME seule, la figure étant zoomée.
-      if (mode === 'both' && diagram_shown) {
-        const next = cutAfter(diagramDimensionOpening([dim]), dim, member, gesture.shift)
-        if (next !== null) followInDiagram(dim, next)
-      }
-      return
-    }
-
-    // ── OUVRIR L'ANNEAU ─────────────────────────────────────────────────────────────────────────
-    // La coupe EN VIGUEUR, écrite telle quelle : une figure neuve découpe déjà sa première dimension,
-    // et le premier geste ne doit pas la refermer en écrivant un ensemble qui l'ignore. Liée, on
-    // part de la coupe du DIAGRAMME, et c'est lui seul qu'on écrit.
-    const expanded = cut.opened
-    const next = cutAfter(linked ? diagramDimensionOpening([dim]) : expanded, dim, member, gesture.shift)
-    if (next === null) return
-    if (linked) { followInDiagram(dim, next); return }
-    if (next.size === expanded.size && [...next].every(e => expanded.has(e))) return
-    const opened = { ...data_opening.opened }
-    dims.forEach(d => { opened[d.id] = [...dimensionOpenedMembers(d, next)] })
-    app_data.menu_configuration.setMainZonePaneOptions(
-      window_id, pane_key, withDataOpening(ctx.options, { linked: false, opened }) as unknown as Type_JSON
-    )
-    followInDiagram(dim, next)
-  }
-  // LE CENTRE REMONTE D'UN CRAN quand la figure est descendue, quel que soit le réglage du moment :
-  // un foyer posé sous « Zoome dedans » ne doit pas devenir un piège quand on change de réglage.
-  // Le fil d'Ariane remonte par le même chemin, à n'importe quel cran (`figureBreadcrumbOf`).
+  // 04/10/2026 (lot 3) — LES GESTES DE LA COURONNE (`couronneGestures`) : déplier (la part cède sa
+  // place à ses enfants), zoomer (la portée ; liée, le diagramme ne bouge pas), et leur shift+clic.
+  const g = couronneGesturesOfCtx(ctx)
+  if (g === null) return null
+  const mode = (['none', 'aggregate', 'zoom', 'both'] as const).find(m => m === style.interaction_click) ?? 'none'
+  const diagram_shown = diagramIsShown(ctx.app_data)
   return {
-    activate,
-    // 04/10/2026 — le centre remonte d'un cran la dimension du centre (le dernier zoom écrit).
-    back: focus.length > 0 ? () => {
-      const last = [...readFigureDimensionZooms(ctx.options).keys()].slice(-1)[0]
-      if (last !== undefined) zoomUp(last)
-      else writeFocus(focus.slice(0, -1))
-    } : undefined,
-    focusTo: focus.length > 0 ? writeFocus : undefined
+    activate: (part_id, gesture) => g.activatePart(part_id, gesture, mode, diagram_shown),
+    // Le centre remonte d'un cran la dernière dimension zoomée, quel que soit le réglage du moment.
+    back: g.back
   }
 }
 

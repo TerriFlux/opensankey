@@ -236,7 +236,7 @@ const ECARTS: { [nom: string]: { pourquoi: string, ancien: Bag, nouveau: Bag } }
     }
   },
   'D11 pile cereales puis europe': {
-    pourquoi: 'LOT 2, A VALIDER : avant, deux dimensions « decoupaient » (dataCutOf) et la figure passait en ' +
+    pourquoi: 'LOT 2, ACCEPTE (Julien) : avant, deux dimensions « decoupaient » (dataCutOf) et la figure passait en ' +
       'anneaux ; mais Cereales, fixee par le zoom et non ouverte, ne montrait rien et l arbre n avait qu un ' +
       'anneau, les pays. Le plan ne compte que ce qu il dessine : une dimension decoupe, la couronne est en ' +
       'secteurs. Memes parts (France, Espagne), un anneau dans les deux cas ; le trace change (couronne a plat ' +

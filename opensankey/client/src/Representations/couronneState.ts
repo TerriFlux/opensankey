@@ -203,6 +203,12 @@ export const normalizeCouronneState = (state: Type_CouronneState, sankey: Type_C
       const selection = dim.selected_tags_list as Class_DataTag[]
       const projected = projectSelection(dim, selection, focus_members())
       if (projected === null) { focus = []; shown = antichainOf(dim, selection.map(m => m.id)) } else shown = projected
+      // 04/10/2026 (lot 3) — « UNE COURONNE PAR MEMBRE » ZOOMÉE SUR PLUSIEURS MEMBRES (« Europe,
+      // Amériques ») que le diagramme montre d'un bloc : une case par membre de la portée, comme
+      // détachée (les cases sont ce que l'utilisateur a choisi), et non une par enfant.
+      const fm = focus_members()
+      if (raw.drawing === 'multiples' && fm.length > 1 &&
+        fm.every(f => selection.some(s => isUnderOrSelf(f, s)))) shown = fm.map(f => f.id)
     } else {
       const fm = focus_members()
       const kept: string[] = []

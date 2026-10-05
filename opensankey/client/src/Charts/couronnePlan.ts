@@ -70,7 +70,7 @@ export interface Type_DrawPlan {
    */
   cells_dimension_id: string | null
   /**
-   * Rien ne découpe (et pas de cases) : le disque est un seul secteur, ce membre. `null` sinon.
+   * Rien ne découpe : le disque (chaque case, avec des cases) est un seul secteur, ce membre. `null` sinon.
    */
   whole: { dimension_id: string, member_ids: string[] } | null
   /** Les candidats de légende de chaque dimension qui découpe ou fait les cases : les montrés, cochés ou non. */
@@ -153,9 +153,12 @@ export const drawPlanOf = (
   })
 
   // RIEN NE DÉCOUPE : un seul secteur, la première dimension active lue ailleurs qu'à son tout (sa
-  // portée, sa part unique), sinon la première dimension active à son tout.
+  // portée, sa part unique), sinon la première dimension active à son tout. 04/10/2026 (lot 3) — avec
+  // des cases aussi : chaque case dessine alors ce secteur (hors la dimension des cases).
   let whole: Type_DrawPlan['whole'] = null
-  if (cut.length === 0 && cells === null && dims.length > 0) {
+  const whole_dims = cells === null ? dims : dims.filter(d => d.id !== cells.dimension_id)
+  if (cut.length === 0 && whole_dims.length > 0) {
+    const dims = whole_dims
     const actives = dims.filter(d => st(d).active)
     const roots = (d: Class_DataTagGroup) => dimensionRootsOf(d).map(m => m.id)
     const telling = actives.find(d => {

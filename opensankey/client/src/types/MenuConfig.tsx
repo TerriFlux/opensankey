@@ -170,24 +170,16 @@ export type Type_MainZoneDropTarget =
 
 /**
  * 02/10/2026 — LA COUPE PROPRE DE LA FIGURE ACTIVE, telle que la barre du haut la règle (cf.
- * `topbar_figure_cut`) : par dimension, le niveau qu'elle dit, ses membres ouverts, ce qu'elle
- * montre, et les deux gestes qui l'écrivent.
+ * `topbar_figure_cut`). 04/10/2026 (os#1511, lot 3) — une façade sur les gestes de la couronne : le
+ * niveau que disent ses montrés, ses montrés, et les deux gestes qui les posent.
  */
-/**
- * 03/10/2026 — Une écriture de coupe sort du zoom posé sur la dimension, sauf `keep_focus` : le
- * sélecteur placé SOUS le membre zoomé n'agit que sur ses descendants (os#1511).
- */
-export type Type_CutWriteOptions = { keep_focus?: boolean }
-
 export type Type_TopbarFigureCut = {
   levelShown: (dim: Class_DataTagGroup) => string
-  chooseLevel: (dim: Class_DataTagGroup, depth: number, opts?: Type_CutWriteOptions) => void
-  opened: (dim: Class_DataTagGroup) => Set<string>
-  setOpened: (dim: Class_DataTagGroup, opened: ReadonlySet<string>) => void
+  chooseLevel: (dim: Class_DataTagGroup, depth: number) => void
   shownNames: (dim: Class_DataTagGroup) => string[]
   /** 03/10/2026 — les membres que la figure dessine (décochés exclus), et le geste qui les pose. */
   chosen: (dim: Class_DataTagGroup) => string[]
-  setChosen: (dim: Class_DataTagGroup, ids: readonly string[], opts?: Type_CutWriteOptions) => void
+  setChosen: (dim: Class_DataTagGroup, ids: readonly string[]) => void
   /**
    * 03/10/2026 — UNE DIMENSION QUI NE DÉCOUPE PAS (la séquence Année) : le membre que la figure lit,
    * épinglé, ou `null` quand elle suit le diagramme ; et le geste qui l'épingle. Une séquence ne
@@ -228,17 +220,14 @@ export type Type_WindowCoordinatesLink = {
 }
 
 /**
- * 04/10/2026 — LE DESSIN D'UNE DIMENSION D'UNE COURONNE (os#1511) : en secteurs, en sunburst, une
- * couronne par membre ; le choix de la dimension `dim_id`, ou `null` quand elle n'en a pas.
+ * 04/10/2026 (os#1511, lot 3) — CE QU'OS+ AJOUTE AU TABLEAU DE NAVIGATION D'UNE COURONNE : les réglages
+ * de la ⚙ (clic sur une part ; liée / détachée, nécessaire en publication où l'en-tête est masqué) et,
+ * par ligne, le sélecteur Arbre (les membres montrés, à n'importe quels niveaux).
  */
-export type Type_FigureDimensionDrawing = (dim_id: string) => Type_TopbarFigureChoice | null
-
-/**
- * 04/10/2026 — L'ORDRE D'EMBOÎTEMENT D'UNE COURONNE, depuis son tableau de navigation (os#1511) : la
- * ligne `dim_id` monte (`-1`) ou descend (`+1`) parmi `row_ids` (les lignes du tableau, du haut —
- * l'anneau intérieur — vers le bas, celle des cases s'il y en a).
- */
-export type Type_FigureNestMove = (row_ids: string[], dim_id: string, delta: -1 | 1) => void
+export type Type_FigureNavigationExtras = {
+  settings: Type_TopbarFigureChoice[]
+  members?: (dim_id: string) => ((close: () => void) => React.ReactNode) | null
+}
 
 /**
  * 02/10/2026 — LES MENUS DE LA FIGURE ACTIVE dans la barre du haut (cf. `topbar_figure_menus`) :
@@ -253,31 +242,10 @@ export type Type_TopbarFigureMenus = {
   /** La figure a sa coupe propre : « Afficher » du diagramme ne la touche pas. */
   detached: boolean
   /**
-   * 03/10/2026 — Les dimensions qui découpent, de l'anneau intérieur à l'extérieur (puis, en petits
-   * multiples, celle qui fait les cases) : la barre range leurs listes dans cet ordre. Moins de
-   * deux : pas d'ordre à régler.
-   */
-  nest_order?: string[]
-  /**
-   * 04/10/2026 — LA COURONNE PORTE SON TABLEAU DE NAVIGATION (dimensions de données) : il règle tout
-   * (colonne, zooms à un ou plusieurs membres). Détachée, la barre des dimensions se masque ; liée,
-   * ses sélecteurs restent, ils pilotent aussi le diagramme.
+   * 04/10/2026 — LA COURONNE PORTE SON TABLEAU DE NAVIGATION (dimensions de données) : il règle tout.
+   * La barre du haut ne montre alors AUCUN contrôle de dimension (os#1511, lot 3).
    */
   navigation_table?: boolean
-  // 04/10/2026 — le ⇄ et les interrupteurs d'activation ont quitté la barre : le tableau de
-  // navigation de la couronne les remplace (même modèle, `inactive_dimensions` et ordre d'emboîtement).
-  /**
-   * 03/10/2026 — LE ZOOM (« Zoome dedans ») QUE LA BARRE MONTRE ET DÉFAIT (os#1511) : les membres que
-   * le foyer fixe, par dimension, et celle du centre. `up` remonte d'un cran, `exitOn` sort du zoom
-   * posé sur une dimension. Absent : la figure n'est pas zoomée.
-   */
-  zoom?: {
-    /** 04/10/2026 — `member_ids` : tous les membres d'un zoom à plusieurs membres (`member_id`, le dernier). */
-    members: { [dim_id: string]: { member_id: string, member_ids?: string[], label: string } }
-    centre_dimension_id: string
-    up: () => void
-    exitOn: (dim_id: string) => void
-  }
 }
 export const MAIN_ZONE_PLACES: Type_MainZonePlace[] = ['main', 'right', 'bottom', 'floating']
 /**
@@ -1482,24 +1450,14 @@ export class Class_MenuConfig {
   public set window_coordinates_link(v: ((occupant_id: string) => Type_WindowCoordinatesLink | null) | null) {
     this._host._window_coordinates_link = v
   }
-  // 04/10/2026 — LE DESSIN DE CHAQUE DIMENSION D'UNE COURONNE (os#1511), que le tableau de navigation
-  // pose dans sa colonne de gauche : OS+ le fournit (gestes de `figureGesturesHost`) ; `null` : la
-  // figure n'a pas de dessin réglable, le tableau n'en montre pas.
-  protected _figure_dimension_drawing: ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null = null
-  public get figure_dimension_drawing(): ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null {
-    return this._host._figure_dimension_drawing
+  // 04/10/2026 (os#1511, lot 3) — CE QUE LE TABLEAU DE NAVIGATION D'UNE COURONNE TIENT D'OS+ : la ⚙
+  // (clic sur une part, liée / détachée) et le sélecteur Arbre de chaque ligne. `null` : rien de plus.
+  protected _figure_navigation_extras: ((ctx: Type_RepresentationContext) => Type_FigureNavigationExtras | null) | null = null
+  public get figure_navigation_extras(): ((ctx: Type_RepresentationContext) => Type_FigureNavigationExtras | null) | null {
+    return this._host._figure_navigation_extras
   }
-  public set figure_dimension_drawing(v: ((ctx: Type_RepresentationContext) => Type_FigureDimensionDrawing | null) | null) {
-    this._host._figure_dimension_drawing = v
-  }
-  // 04/10/2026 — L'ORDRE D'EMBOÎTEMENT D'UNE COURONNE (le ⇄ d'hier), que le tableau de navigation
-  // règle par ses boutons ⇅ / ▲▼ : OS+ le fournit (`figureGesturesHost`) ; `null` : rien à ordonner.
-  protected _figure_nest_move: ((ctx: Type_RepresentationContext) => Type_FigureNestMove | null) | null = null
-  public get figure_nest_move(): ((ctx: Type_RepresentationContext) => Type_FigureNestMove | null) | null {
-    return this._host._figure_nest_move
-  }
-  public set figure_nest_move(v: ((ctx: Type_RepresentationContext) => Type_FigureNestMove | null) | null) {
-    this._host._figure_nest_move = v
+  public set figure_navigation_extras(v: ((ctx: Type_RepresentationContext) => Type_FigureNavigationExtras | null) | null) {
+    this._host._figure_navigation_extras = v
   }
 
   // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
