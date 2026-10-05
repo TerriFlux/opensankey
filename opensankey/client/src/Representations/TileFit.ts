@@ -81,10 +81,9 @@ export const TILE_MIN_COLUMN_PX = 240
 /**
  * LE NOMBRE DE VIGNETTES PAR LIGNE.
  *
- * Le plus grand qui laisse TOUS les libellés dessinés à au moins `min_text_px` à l'écran — la
- * taille du bandeau de titre des vignettes : un libellé plus petit que le titre de sa case ne se
- * lit plus. On retire donc des colonnes jusqu'à ce que le plus petit libellé de la grille
- * atteigne ce seuil.
+ * Le plus grand qui laisse TOUS les libellés dessinés à au moins `min_text_px` à l'écran. On
+ * retire donc des colonnes jusqu'à ce que le plus petit libellé de la grille atteigne ce seuil.
+ * Le seuil est réglable par l'utilisateur (Ctrl + molette sur la grille, cf. `useTileGrid`).
  *
  * Et si on n'y arrive pas, on s'arrête là où retirer une colonne n'agrandit plus rien : une case
  * bornée par la HAUTEUR du volet (`max_height`) ne grossit plus en s'élargissant, et la passer
@@ -94,27 +93,41 @@ export const TILE_MIN_COLUMN_PX = 240
  * qu'une case prend sur la largeur du dessin (bordures). Sans aucune police à protéger, la règle
  * est celle d'avant : des colonnes d'au moins `TILE_MIN_COLUMN_PX`.
  */
-export const pickTileColumns = (
-  { inner_width, gap, chrome, count, fits, min_text_px, max_height }: {
-    inner_width: number
-    gap: number
-    chrome: number
-    count: number
-    fits: Type_TileFit[]
-    min_text_px: number
-    max_height?: number
-  }
-): number => {
+export type Type_TileGridParams = {
+  inner_width: number
+  gap: number
+  chrome: number
+  count: number
+  fits: Type_TileFit[]
+  min_text_px: number
+  max_height?: number
+}
+
+/** Les figures dont la grille protège les libellés. */
+const fontedFits = (fits: Type_TileFit[]): Type_TileFit[] =>
+  fits.filter(f => f.min_font_size !== null && f.content_width > 0)
+
+/**
+ * La taille à l'écran du plus petit libellé de la grille quand elle a `n` colonnes. `null` quand
+ * aucune figure ne suit l'échelle de ses libellés.
+ */
+export const tileTextPxAt = (
+  n: number, { inner_width, gap, chrome, fits, max_height }: Type_TileGridParams
+): number | null => {
+  const fonted = fontedFits(fits)
+  if (fonted.length === 0) return null
+  const width = (inner_width - (n - 1) * gap) / n - chrome
+  if (width <= 0) return 0
+  return Math.min(...fonted.map(f => (f.min_font_size as number) * tileScaleFor(f, width, max_height)))
+}
+
+export const pickTileColumns = (params: Type_TileGridParams): number => {
+  const { inner_width, gap, count, fits, min_text_px } = params
   if (count <= 1) return 1
-  const fonted = fits.filter(f => f.min_font_size !== null && f.content_width > 0)
-  if (fonted.length === 0) {
+  if (fontedFits(fits).length === 0) {
     return Math.max(1, Math.min(count, Math.floor((inner_width + gap) / (TILE_MIN_COLUMN_PX + gap))))
   }
-  const textAt = (n: number): number => {
-    const width = (inner_width - (n - 1) * gap) / n - chrome
-    if (width <= 0) return 0
-    return Math.min(...fonted.map(f => (f.min_font_size as number) * tileScaleFor(f, width, max_height)))
-  }
+  const textAt = (n: number): number => tileTextPxAt(n, params) ?? 0
   const best = textAt(1)
   for (let n = count; n > 1; n--) {
     const text = textAt(n)

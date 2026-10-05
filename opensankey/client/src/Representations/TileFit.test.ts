@@ -1,4 +1,4 @@
-import { pickTileColumns, sameTileFit, tileHeightFor, tileScaleFor, Type_TileFit } from './TileFit'
+import { pickTileColumns, sameTileFit, tileHeightFor, tileScaleFor, tileTextPxAt, Type_TileFit } from './TileFit'
 
 /**
  * sa#601 — la grille des vignettes choisit ses colonnes d'après la taille des libellés.
@@ -30,6 +30,15 @@ describe('sa#601 — TileFit', () => {
     expect(20 * tileScaleFor(star(1700), w)).toBeGreaterThanOrEqual(10.4)
     const w_more = (1840 - n * 5) / (n + 1) - 4
     expect(20 * tileScaleFor(star(1700), w_more)).toBeLessThan(10.4)
+  })
+
+  test('au seuil par défaut de 9 px, les étoiles du Référentiel tiennent à 4 par ligne', () => {
+    const params = { inner_width: 1840, gap: 4.8, chrome: 4, count: 31, fits: [star(626), star(847), star(880)], min_text_px: 9 }
+    expect(pickTileColumns(params)).toBe(4)
+    // Un cran de zoom de la grille : le seuil prend la taille des libellés à 3 colonnes.
+    expect(pickTileColumns({ ...params, min_text_px: (tileTextPxAt(3, params) as number) * 0.999 })).toBe(3)
+    expect(pickTileColumns({ ...params, min_text_px: (tileTextPxAt(5, params) as number) * 0.999 })).toBe(5)
+    expect(tileTextPxAt(1, { ...params, fits: [star(500, 100, null)] })).toBeNull()
   })
 
   test('un libellé déjà assez grand garde toutes les vignettes sur la ligne', () => {
