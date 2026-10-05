@@ -6,7 +6,7 @@
 
 import type { Class_DataTag } from '../types/Tag'
 import {
-  availableDataTags, candidateCoordinates, firstCoveredCoordinates, hasCheckedDataTags
+  availableDataTags, candidateCoordinates, deployedCoordinates, firstCoveredCoordinates, hasCheckedDataTags
 } from './paneDataCoverage'
 
 const tag = (id: string) => ({ id } as unknown as Class_DataTag)
@@ -52,5 +52,39 @@ describe('sa#594 — coordonnees couvertes', () => {
     expect(hasCheckedDataTags({})).toBe(false)
     expect(hasCheckedDataTags({ unite: [] })).toBe(false)
     expect(hasCheckedDataTags({ unite: ['kt'] })).toBe(true)
+  })
+})
+
+describe('sa#596 — coordonnees deployees', () => {
+  const tri = {
+    data_taggs_list: [
+      { id: 'annee', is_unit: false, tags_list: ['2015', '2019', '2023'].map(tag), selected_tags_list: [tag('2023')] },
+      { id: 'unite', is_unit: true, tags_list: unites, selected_tags_list: [unites[0]] }
+    ]
+  }
+
+  it('une valeur cochee par groupe : rien n est deploye', () => {
+    expect(deployedCoordinates(tri, {})).toEqual([])
+    expect(deployedCoordinates(tri, { annee: ['2015'], unite: ['kt'] })).toEqual([])
+  })
+
+  it('trois annees cochees : une coordonnee par annee, dans l ordre du groupe', () => {
+    expect(deployedCoordinates(tri, { annee: ['2023', '2015', '2019'], unite: ['kt'] }))
+      .toEqual([{ annee: '2015' }, { annee: '2019' }, { annee: '2023' }])
+  })
+
+  it('deux unites cochees : une coordonnee par unite', () => {
+    expect(deployedCoordinates(tri, { unite: ['ktmg', 'kt'] })).toEqual([{ unite: 'kt' }, { unite: 'ktmg' }])
+  })
+
+  it('annees et unites : leur produit, l annee variant le plus lentement', () => {
+    expect(deployedCoordinates(tri, { annee: ['2015', '2023'], unite: ['kt', 'ktmg'] })).toEqual([
+      { annee: '2015', unite: 'kt' }, { annee: '2015', unite: 'ktmg' },
+      { annee: '2023', unite: 'kt' }, { annee: '2023', unite: 'ktmg' }
+    ])
+  })
+
+  it('une etiquette cochee disparue du groupe ne compte pas', () => {
+    expect(deployedCoordinates(tri, { annee: ['2015', '1990'] })).toEqual([])
   })
 })
