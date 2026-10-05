@@ -16,6 +16,8 @@
 
 import { MATRIX_SORT_LABEL } from './DimensionMatrix'
 import type { Type_DimensionMatrix, Type_MatrixRow } from './DimensionMatrix'
+import { appendTableExportButtons } from './TableExport'
+import type { Type_TableExportFormat } from './TableExport'
 
 export interface Type_DimensionMatrixTableOptions {
   /** Le nombre écrit dans une cellule (unité NON comprise : elle est dans l'en-tête). */
@@ -26,9 +28,11 @@ export interface Type_DimensionMatrixTableOptions {
   title: string
   /** L'unité affichée, `''` sans unité. */
   unit: string
-  labels: { expand: string, collapse: string, export_csv: string, empty: string }
+  /** `export_xlsx` / `export_csv` : les infobulles des deux boutons d'export (sa#593). */
+  labels: { expand: string, collapse: string, export_xlsx: string, export_csv: string, empty: string }
   on_toggle: (member_id: string, expanded: boolean) => void
-  on_export: () => void
+  /** sa#593 — exporter le tableau TEL QU'IL EST AFFICHÉ, en Excel ou en CSV. */
+  on_export: (format: Type_TableExportFormat) => void
   /** Clic sur un en-tête : la clé de la colonne, ou `MATRIX_SORT_LABEL` pour l'en-tête des lignes. */
   on_sort: (key: string) => void
   /** « Trier par » : l'info-bulle des en-têtes. */
@@ -62,16 +66,12 @@ export const drawDimensionMatrixTable = (
   title.textContent = o.unit ? `${o.title} · ${o.unit}` : o.title
   css(title, { fontWeight: '600', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })
   head.appendChild(title)
-  const exporter = document.createElement('button')
-  exporter.type = 'button'
-  exporter.className = 'dimension_matrix_export'
-  exporter.textContent = o.labels.export_csv
-  css(exporter, {
-    font: 'inherit', fontSize: '12px', padding: '2px 8px', cursor: 'pointer', borderRadius: '4px',
-    border: '1px solid rgba(127,127,127,0.5)', background: 'transparent', color: 'inherit'
+  // sa#593 — les deux boutons d'export, communs à tout tableau (cf. `TableExport`). Dans CET en-tête,
+  // celui du tableau, et non dans celui du volet : le lecteur d'une page publiée ne voit pas le second.
+  const removeExport = appendTableExportButtons(head, {
+    titles: { xlsx: o.labels.export_xlsx, csv: o.labels.export_csv },
+    on_export: o.on_export
   })
-  exporter.addEventListener('click', o.on_export)
-  head.appendChild(exporter)
   root.appendChild(head)
 
   if (matrix === null || matrix.rows.length === 0) {
@@ -79,7 +79,10 @@ export const drawDimensionMatrixTable = (
     empty.textContent = o.labels.empty
     css(empty, { opacity: '0.7', padding: '12px 0' })
     root.appendChild(empty)
-    return () => { container.innerHTML = '' }
+    return () => {
+      removeExport()
+      container.innerHTML = ''
+    }
   }
 
   // ── LE TABLEAU ──────────────────────────────────────────────────────────────────────────────
@@ -197,7 +200,7 @@ export const drawDimensionMatrixTable = (
   })
 
   return () => {
-    exporter.removeEventListener('click', o.on_export)
+    removeExport()
     container.innerHTML = ''
   }
 }

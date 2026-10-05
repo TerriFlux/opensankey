@@ -69,10 +69,11 @@ import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOth
 import type { Type_JSON } from '../types/Utils'
 import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
 import {
-  buildDimensionMatrix, dimensionMatrixCsv, matrixDecimals, matrixNumberFormatter, nextMatrixSort
+  buildDimensionMatrix, dimensionMatrixExportTable, matrixDecimals, matrixNumberFormatter, nextMatrixSort
 } from '../Charts/DimensionMatrix'
 import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
 import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
+import { csvDecimalOf, downloadTable } from '../Charts/TableExport'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
 } from '../Charts/figureChartStyle'
@@ -2411,7 +2412,7 @@ const registerDimensionMatrix = (): void => {
           unit,
           labels: {
             expand: t('matrix.expand'), collapse: t('matrix.collapse'),
-            export_csv: t('matrix.export_csv'), empty: t('matrix.empty')
+            export_xlsx: t('matrix.export_xlsx'), export_csv: t('matrix.export_csv'), empty: t('matrix.empty')
           },
           on_toggle: (member_id, expanded) => {
             toggles.set(member_id, expanded)
@@ -2423,20 +2424,14 @@ const registerDimensionMatrix = (): void => {
             matrix_sorts.set(key, nextMatrixSort(matrix.sort, sort_key))
             render()
           },
-          on_export: () => {
+          // sa#593 — le tableau tel qu'il est affiché (lignes ouvertes, tri), en Excel ou en CSV,
+          // sans passer par le serveur : le lecteur d'une page publiée exporte aussi.
+          on_export: (format) => {
             if (matrix === null) return
-            const decimal = ['en', 'zh-CN', 'ja'].includes(lang) ? '.' : ','
-            // Le BOM : Excel lit alors l'UTF-8 (accents, « ‰ ») sans qu'on le lui dise.
-            const csv = '﻿' + dimensionMatrixCsv(matrix, { decimal, factor, unit })
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = `${title.replace(/[\\/:*?"<>|]+/g, '_')}.csv`
-            document.body.appendChild(link)
-            link.click()
-            link.remove()
-            setTimeout(() => URL.revokeObjectURL(url), 0)
+            const table = dimensionMatrixExportTable(matrix, {
+              title, factor, unit, unit_label: t('matrix.unit'), decimals: matrixDecimals(grand)
+            })
+            void downloadTable(table, format, { decimal: csvDecimalOf(lang) })
           }
         })
       }
