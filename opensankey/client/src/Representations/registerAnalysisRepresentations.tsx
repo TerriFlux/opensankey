@@ -1044,7 +1044,6 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     settings: extras?.settings,
     labels: {
       title: t('sunburst.nav.title') as string,
-      zoom: t('sunburst.nav.zoom') as string,
       dimension: (name: string) => t('sunburst.nav.dimension', { name }) as string,
       cut_by: (level: string) => t('sunburst.nav.cut_by', { level }) as string,
       clear_zoom: t('sunburst.nav.clear_zoom') as string,

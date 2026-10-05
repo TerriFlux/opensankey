@@ -23,7 +23,6 @@ export const resources_sunburst = {
         level: 'Level {{index}}',
         nav: {
           dimension: 'Dimension « {{name}} »',
-          zoom: 'Selected zoom',
           cut_by: 'Split by {{level}}',
           clear_zoom: 'Remove this zoom (and the deeper ones)',
           pick_zoom: 'Choose the zoomed members at this level (the figure reads their sum)',
@@ -57,7 +56,6 @@ export const resources_sunburst = {
         level: 'Niveau {{index}}',
         nav: {
           dimension: 'Dimension « {{name}} »',
-          zoom: 'Zoom sélectionné',
           cut_by: 'Découper par {{level}}',
           clear_zoom: 'Annuler ce zoom (et ceux en dessous)',
           pick_zoom: 'Choisir les membres zoomés à ce niveau (la figure lit leur somme)',
@@ -91,7 +89,6 @@ export const resources_sunburst = {
         level: 'Nivel {{index}}',
         nav: {
           dimension: 'Dimensión « {{name}} »',
-          zoom: 'Zoom seleccionado',
           cut_by: 'Dividir por {{level}}',
           clear_zoom: 'Anular este zoom (y los inferiores)',
           pick_zoom: 'Elegir los miembros ampliados en este nivel (la figura lee su suma)',
@@ -125,7 +122,6 @@ export const resources_sunburst = {
         level: 'Ebene {{index}}',
         nav: {
           dimension: 'Dimension „{{name}}“',
-          zoom: 'Gewählter Zoom',
           cut_by: 'Aufteilen nach {{level}}',
           clear_zoom: 'Diesen Zoom aufheben (und die darunter)',
           pick_zoom: 'Die gezoomten Mitglieder dieser Ebene wählen (die Grafik liest ihre Summe)',
@@ -159,7 +155,6 @@ export const resources_sunburst = {
         level: 'Livello {{index}}',
         nav: {
           dimension: 'Dimensione « {{name}} »',
-          zoom: 'Zoom selezionato',
           cut_by: 'Suddividere per {{level}}',
           clear_zoom: 'Annullare questo zoom (e quelli sottostanti)',
           pick_zoom: 'Scegliere i membri ingranditi a questo livello (la figura ne legge la somma)',
@@ -193,7 +188,6 @@ export const resources_sunburst = {
         level: '第 {{index}} 层',
         nav: {
           dimension: '维度“{{name}}”',
-          zoom: '已选缩放',
           cut_by: '按 {{level}} 划分',
           clear_zoom: '取消此缩放（及其下级）',
           pick_zoom: '选择此层级的缩放成员（图形读取其总和）',
@@ -227,7 +221,6 @@ export const resources_sunburst = {
         level: 'レベル {{index}}',
         nav: {
           dimension: 'ディメンション「{{name}}」',
-          zoom: '選択中のズーム',
           cut_by: '{{level}} で分割',
           clear_zoom: 'このズームを解除（下位も）',
           pick_zoom: 'このレベルでズームするメンバーを選ぶ（図はその合計を表示）',

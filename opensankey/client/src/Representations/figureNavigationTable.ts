@@ -10,8 +10,7 @@
 //
 // Jean-Yves : « peux-tu mettre un tableau à la place de ton fil d'Ariane ? Ce qu'il manque encore,
 // c'est de jongler d'une dimension à une autre ». Pour chaque dimension, une ligne d'EN-TÊTES (ses
-// niveaux) et une ligne « Zoom sélectionné » dont la case du niveau zoomé nomme le membre (« Céréales
-// ✕ »). Cliquer un en-tête = la couronne découpe par cette colonne ; ✕ annule ce zoom et ceux en
+// niveaux) et des cases de zoom : celle du niveau zoomé nomme le membre (« Céréales ✕ »). Cliquer un en-tête = la couronne découpe par cette colonne ; ✕ annule ce zoom et ceux en
 // dessous dans la même dimension.
 //
 // Posé par `mountFigureTextZones` AVANT que le dessin ne mesure sa place : le disque se dimensionne
@@ -24,9 +23,12 @@
 // zoom tient sur UNE ligne de largeur fixe : « Céréales », « Céréales +2 » (info-bulle : la liste), un
 // ✕ qui annule ce zoom et ceux en dessous ; un clic (ou le ⌄) ouvre la liste à cases du sélecteur
 // « Par niveau » pour cocher les membres du zoom de CE niveau — à n'importe quel niveau, une case vide
-// comprise (⌄ discret au survol). La colonne de gauche porte, devant « Zoom sélectionné », le petit
-// sélecteur de dessin de la dimension (en secteurs / en sunburst / une couronne par membre), venu du
-// menu Couronne de la barre du haut.
+// comprise (⌄ discret au survol). La colonne de gauche porte le petit sélecteur de dessin de la
+// dimension (en secteurs / en sunburst / une couronne par membre), venu du menu Couronne de la barre du
+// haut.
+//
+// 05/10/2026 — UNE LIGNE PAR DIMENSION : « Zoom sélectionné » disparaît, le sélecteur de dessin passe
+// devant le nom de la dimension, et chaque case de zoom suit l'en-tête de son niveau sur la même ligne.
 
 import type { ReactNode } from 'react'
 import type { Type_TopbarFigureChoice } from '../types/MenuConfig'
@@ -90,7 +92,6 @@ export interface Type_FigureNavTable {
   dimensions: Type_FigureNavDimension[]
   labels: {
     title: string
-    zoom: string
     dimension: (name: string) => string
     cut_by: (level: string) => string
     clear_zoom: string
@@ -226,15 +227,17 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   // 04/10/2026 — L'ORDRE : une colonne tout à gauche. Deux lignes : un ⇅ qui les échange, à cheval
   // sur les deux ; davantage : ▲▼ par ligne.
   const move = model.dimensions.length > 1 ? model.move : undefined
+  // 05/10/2026 — UNE LIGNE PAR DIMENSION (Julien : « pas besoin du texte "Zoom sélectionné", et le
+  // sélecteur pourrait être placé à gauche du label du groupe »). À gauche : [dessin ⌄] [nom ▾] ; puis,
+  // par niveau, l'en-tête et sa case de zoom côte à côte. Le tableau perd une ligne par dimension, et le
+  // dessin, mesuré sur ce qui reste (`mountFigureTextZones`), récupère la place.
   model.dimensions.forEach((dim, i) => {
     const head = table.insertRow()
-    const zoom = table.insertRow()
     head.className = 'figure_navigation_head'
-    zoom.className = 'figure_navigation_zoom'
     if (move && (model.dimensions.length > 2 || i === 0)) {
       const order = head.insertCell()
       order.className = 'figure_navigation_order'
-      order.rowSpan = model.dimensions.length === 2 ? 4 : 2
+      order.rowSpan = model.dimensions.length === 2 ? 2 : 1
       order.style.verticalAlign = 'middle'
       order.style.padding = '0 0.3rem 0 0'
       order.style.whiteSpace = 'nowrap'
@@ -268,8 +271,12 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       }
     }
     const name = head.insertCell()
-    name.textContent = dim.name
-    name.title = model.labels.dimension(dim.name)
+    name.className = 'figure_navigation_name'
+    if (dim.drawing) name.appendChild(drawingButton(model, dim.id, dim.drawing))
+    const dim_label = document.createElement('span')
+    dim_label.textContent = dim.name
+    dim_label.title = model.labels.dimension(dim.name)
+    name.appendChild(dim_label)
     if (dim.summary) {
       const sum = document.createElement('span')
       sum.className = 'figure_navigation_summary'
@@ -300,22 +307,17 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     name.style.overflow = dim.summary ? 'visible' : 'hidden'
     name.style.textOverflow = 'ellipsis'
     if (i > 0) name.style.paddingTop = '0.25rem'
-    const zlabel = zoom.insertCell()
-    zlabel.style.color = '#718096'
-    zlabel.style.padding = '0 0.5rem 0 0'
-    zlabel.style.whiteSpace = 'nowrap'
-    if (dim.drawing) zlabel.appendChild(drawingButton(model, dim.id, dim.drawing))
-    zlabel.appendChild(document.createTextNode(model.labels.zoom))
     for (let c = 0; c < columns; c++) {
       const level = dim.levels[c]
       const th = head.insertCell()
-      const td = zoom.insertCell()
+      const td = head.insertCell()
+      th.style.padding = '0.05rem 0.3rem 0.05rem 0.4rem'
+      th.style.borderLeft = level ? '1px solid #e2e8f0' : 'none'
+      td.style.padding = '0.05rem 0.4rem 0.05rem 0'
       for (const cell of [th, td]) {
-        cell.style.padding = '0.05rem 0.4rem'
         cell.style.whiteSpace = 'nowrap'
-        cell.style.borderLeft = level ? '1px solid #e2e8f0' : 'none'
+        if (i > 0) cell.style.paddingTop = '0.25rem'
       }
-      if (i > 0) th.style.paddingTop = '0.25rem'
       if (!level) continue
       th.className = level.active ? 'figure_navigation_level figure_navigation_active' : 'figure_navigation_level'
       if (level.active) {
@@ -362,7 +364,9 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, wher
   // `width` sur une case de tableau en disposition automatique est un MINIMUM ; le contenu, de largeur
   // nulle mais au moins toute la case, ne pousse pas la colonne : elle garde la largeur de son en-tête
   // ou de ce minimum, quel que soit le zoom.
-  td.style.width = ZOOM_CELL_WIDTH
+  // 05/10/2026 — la case est sur la ligne des en-têtes : vide, elle ne garde que la place de son ⌄ ;
+  // la colonne prend la largeur fixe dès qu'une dimension y pose un zoom.
+  td.style.width = zooms.length > 0 ? ZOOM_CELL_WIDTH : '0.8rem'
   td.style.maxWidth = ZOOM_CELL_WIDTH
   const wrap = document.createElement('div')
   wrap.style.display = 'flex'
@@ -427,7 +431,7 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, wher
     x.className = 'figure_navigation_clear'
     x.style.color = '#c53030'
     x.style.flex = '0 0 auto'
-    x.style.marginLeft = 'auto'
+    // Collé au membre : en fin de case, il toucherait l'en-tête du niveau suivant.
     keepClick(x, level.clear)
     wrap.appendChild(x)
   }
