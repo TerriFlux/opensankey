@@ -66,7 +66,7 @@ import {
   figureSettingOfKey, isFigureNature, leaveGroup, mergeInto, partnersOf, readSyncMap
 } from '../Representations/paneSync'
 import {
-  formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
+  basePaneKeyOf, formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
 } from './mainZonePanes'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
@@ -2360,7 +2360,8 @@ export class Class_MenuConfig {
     if (this._host._main_zone_selected_pane_keys.length === 0) return
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     const alive: string[] = (o && o.subject.kind === 'elements') ? mainZonePaneKeys(o.subject) : []
-    const kept = this._host._main_zone_selected_pane_keys.filter(k => alive.includes(k))
+    // sa#596 — une vignette déployée vit tant que son objet vit.
+    const kept = this._host._main_zone_selected_pane_keys.filter(k => alive.includes(basePaneKeyOf(k)))
     this._host._main_zone_selected_pane_keys = kept
     // La vignette active suit la sélection quand il en reste une — l'invariant veut qu'elle en
     // fasse partie. Sélection VIDÉE, en revanche, on ne touche PAS à la vignette active : vide
@@ -2531,7 +2532,10 @@ export class Class_MenuConfig {
    * principal, les figures aussi, et l'appelant reste `MainZoneTabs` avec la configuration du
    * document principal — pour qui hôte et document sont la même grande zone qu'hier.
    */
-  public figureOf(occupant_id: string, pane_key: string): Class_Figure {
+  public figureOf(occupant_id: string, raw_pane_key: string): Class_Figure {
+    // sa#596 — une vignette DÉPLOYÉE (un nœud en 2015, le même en 2019) est la figure de son objet :
+    // ses copies partagent ses réglages (cf. `paneCoordinatesKey`).
+    const pane_key = basePaneKeyOf(raw_pane_key)
     const o = this._host._main_zone_occupants.find(x => x.id === occupant_id)
     const nature = this.figureNature(o?.representation ?? Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID)
     if (!o) return new Class_Figure(nature, pane_key)
