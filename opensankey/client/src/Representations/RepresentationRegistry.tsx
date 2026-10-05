@@ -104,6 +104,7 @@ import {
 // `WindowTarget` lit les types d'ici, ce fichier lit les siens, et rien de tout cela ne survit à
 // la compilation - aucun cycle à l'exécution.
 import type { Type_ElementTargetResolver } from './WindowTarget'
+import type { Type_TileHost } from './TileFit'
 // os#1416 - la portée d'un réglage de figure. Import de TYPE seulement, et dans ce sens-là
 // uniquement : `MenuConfig` ne connaît pas le registre, la portée vit auprès de la liste des
 // réglages liés au sujet, qui est ce qui la borne.
@@ -234,6 +235,11 @@ export type Type_RepresentationContext = {
    * fenêtre.
    */
   pane_key?: string
+  /**
+   * sa#601 — LA GRILLE qui range la vignette, quand c'en est une (cf. `Type_TileHost`) : si elle
+   * est l'une de plusieurs, et à qui dire la taille de son contenu. Absent hors grande zone.
+   */
+  tile?: Type_TileHost
 }
 
 /** Démontage seul ; `void` quand il n'y a rien à défaire. */
