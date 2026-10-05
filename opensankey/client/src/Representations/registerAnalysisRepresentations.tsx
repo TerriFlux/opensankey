@@ -1811,6 +1811,9 @@ export const registerAnalysisRepresentations = (): void => {
     // secteur est un flux, un noeud enfant ou un tag. Le descripteur EFFECTIF est celui que la
     // figure dessine (reglage de vignette compris), donc celui qui dit ce qu on vient de cliquer.
     resolveElementTarget: ({ target, ctx }) => analysisPartTarget(target, analysisOf(ctx)?.descriptor),
+    // 05/10/2026 — sur dimensions de données, la couronne écrit toujours son sujet (titre, ou à défaut
+    // la ligne de `withSubjectLine`) : la vignette ne le redit pas au-dessus.
+    names_subject: (ctx) => isDataDimensionFigure(ctx) && subjectNameOf(ctx) !== '',
     // LE REFUS. Sans lui, la couronne est PROPOSEE sous un croisement de deux axes de comparaison,
     // et `flatParts` lui rend alors la PREMIERE GRAPPE seule, dessinee comme si elle etait le tout.
     // Une figure fausse se lit sans se voir, la ou une nature absente se remarque.

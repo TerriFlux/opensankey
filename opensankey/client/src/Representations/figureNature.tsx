@@ -63,7 +63,7 @@ import { figureNatureAttributes, type Type_HonourSpec } from './figureAttribute'
 import { figurePartsWiring, type Type_PartsWiring } from './parts/figurePartsWiring'
 import { rememberFigureNatureDefaults } from '../Elements/figureNatureDefaults'
 import type { Type_PartInput } from './parts/buildParts'
-import type { Type_FigureChartStyle } from '../Charts/figureChartStyle'
+import { figureTitleOf, type Type_FigureChartStyle } from '../Charts/figureChartStyle'
 import type { Type_FigurePartContext } from '../Charts/partAspect'
 
 /**
@@ -91,6 +91,11 @@ export interface Type_FigureNatureSpec {
   zoom?: Type_RepresentationZoom
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
   resolveElementTarget?: Type_ElementTargetResolver
+  /**
+   * 05/10/2026 — la figure nomme-t-elle son sujet AU-DELÀ DE SON TITRE (ligne de sujet de la
+   * couronne sur dimensions de données) ? Un titre visible suffit toujours, sans le déclarer.
+   */
+  names_subject?: (ctx: Type_RepresentationContext) => boolean
   /**
    * CE QUI N'A DE SENS QUE CHEZ ELLE, piqué au catalogue comme le socle (`honours`). Le trou du
    * centre d'une couronne, l'empilement d'un histogramme, l'orientation d'un disque.
@@ -163,6 +168,7 @@ export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
     zoom: spec.zoom,
     isAvailable: spec.isAvailable,
     resolveElementTarget: spec.resolveElementTarget,
+    names_subject: (ctx) => figureTitleOf(ctx.options ?? {}).title_visible || spec.names_subject?.(ctx) === true,
     attributes,
     fresh_own: spec.fresh_own,
     draw: (container, ctx) => {
