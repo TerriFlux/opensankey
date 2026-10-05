@@ -64,6 +64,8 @@ const KNOWN_TAG_JSON_KEYS = new Set([
   'style_id',
   // SA#580 - seuil haut de la tranche d'un groupe attribue par regles : modelise.
   'rule_upper_bound',
+  // os#1511 (membres de dimension) puis sa#594 (etiquettes de noeuds) - le parent : modelise.
+  'parent',
 ])
 
 // SA#553 - ETIQUETTE GENEREE « Sans [nom du groupe] » ************************************
@@ -713,6 +715,51 @@ export abstract class Class_Tag extends Class_ProtoTag {
  * @class Class_Tag
  */
 export class Class_NodeTag extends Class_Tag {
+
+  /**
+   * sa#594 — L'ÉTIQUETTE PARENTE, pour une liste d'étiquettes HIÉRARCHISÉE (« Toutes filières » >
+   * « Céréales » > « Blé tendre »). Même forme que le parent d'un membre de dimension (os#1511) :
+   * stocké par ID, résolu à la lecture dans le groupe, clé `parent` ADDITIVE dans le fichier.
+   *
+   * La hiérarchie ne sert qu'à CHOISIR : un nœud porte une étiquette (en général une feuille), et
+   * cocher un parent revient à cocher toutes ses descendantes (cf. le sélecteur en arbre de l'en-
+   * tête d'un volet). Rien n'est agrégé.
+   */
+  private _parent_id: string | undefined = undefined
+
+  public get parent(): Class_NodeTag | undefined {
+    if (this._parent_id === undefined) return undefined
+    const parent = this._group.tags_dict[this._parent_id] as Class_NodeTag | undefined
+    return (parent !== undefined && parent !== this) ? parent : undefined
+  }
+
+  public get parent_id(): string | undefined { return this._parent_id }
+
+  public set parent(parent: Class_NodeTag | undefined) {
+    if (parent === this) return
+    // Pas de boucle : un parent ne peut pas descendre de ce membre.
+    for (let p = parent; p !== undefined; p = p.parent) if (p === this) return
+    this._parent_id = parent?.id
+  }
+
+  protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
+    super._toJSON(json_object, _kwargs)
+    if (this._parent_id !== undefined) json_object['parent'] = this._parent_id
+  }
+
+  protected _fromJSON(json_object: Type_JSON, _kwargs?: Type_JSON): void {
+    super._fromJSON(json_object, _kwargs)
+    if (json_object['parent'] !== undefined) {
+      const parent = getStringFromJSON(json_object, 'parent', '')
+      this._parent_id = parent !== '' ? parent : undefined
+    }
+  }
+
+  protected _copyFrom(tag_to_copy: Class_ProtoTag) {
+    super._copyFrom(tag_to_copy)
+    if (tag_to_copy instanceof Class_NodeTag) this._parent_id = tag_to_copy._parent_id
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
