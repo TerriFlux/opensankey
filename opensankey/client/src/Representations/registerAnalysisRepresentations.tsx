@@ -992,6 +992,9 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     const divides = is_cells || plan.cut.some(c => c.dimension_id === dim.id)
     const depths = plan.columns[dim.id]?.depths ?? []
     const in_rings = state.dims[dim.id]?.drawing === 'sunburst'
+    // 05/10/2026 — MIXTE (« Céréales » dépliée) : tous les niveaux dessinés se surlignent, et la ligne
+    // le dit (« — mixte — »).
+    const mixed = divides && (plan.columns[dim.id]?.mixed ?? false)
     /** La colonne qui découpe : la plus fine dessinée en sunburst, la plus haute en secteurs. */
     const column_depth = divides && depths.length > 0
       ? (in_rings ? Math.max(...depths) : Math.min(...depths))
@@ -1001,6 +1004,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
       id: dim.id,
       name: dim.name,
       drawing: drawingChoiceOf(ctx, g, dim.id),
+      summary: mixed && !in_rings ? t('Banner.cut_custom') as string : undefined,
       members: extras?.members?.(dim.id) ?? undefined,
       levels: levels.map(({ raw, depth }) => {
         const at_level: Class_DataTag[] = []
@@ -1011,7 +1015,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
         const order = dim.membersAtLevel(depth) as Class_DataTag[]
         at_level.sort((x, y) => order.indexOf(x) - order.indexOf(y))
         const column = column_depth === depth
-        const active = column_depth !== undefined && (in_rings ? depth <= column_depth : column)
+        const active = column_depth !== undefined && (in_rings ? depth <= column_depth : mixed ? depths.includes(depth) : column)
         return {
           label: levelShortName(raw),
           active,
@@ -1440,7 +1444,9 @@ const dataDimensionClickGestures = (
   // place à ses enfants), zoomer (la portée ; liée, le diagramme ne bouge pas), et leur shift+clic.
   const g = couronneGesturesOfCtx(ctx)
   if (g === null) return null
-  const mode = (['none', 'aggregate', 'zoom', 'both'] as const).find(m => m === style.interaction_click) ?? 'none'
+  const chosen = (['none', 'aggregate', 'zoom', 'both'] as const).find(m => m === style.interaction_click) ?? 'none'
+  // 05/10/2026 — liée, « Déplie dans la couronne » déplie aussi le diagramme (la ⚙ le grise).
+  const mode = chosen === 'none' && g.linked ? 'aggregate' : chosen
   const diagram_shown = diagramIsShown(ctx.app_data)
   return {
     activate: (part_id, gesture) => g.activatePart(part_id, gesture, mode, diagram_shown),

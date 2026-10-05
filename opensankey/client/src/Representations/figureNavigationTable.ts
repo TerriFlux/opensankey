@@ -82,6 +82,8 @@ export interface Type_FigureNavDimension {
    * niveaux), ouvert par le ▾ de son nom. Absent : le nom est inerte.
    */
   members?: ((close: () => void) => ReactNode) | null
+  /** 05/10/2026 — un résumé discret après le nom (« — mixte — » quand plusieurs niveaux sont dessinés). */
+  summary?: string
 }
 
 export interface Type_FigureNavTable {
@@ -268,6 +270,15 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     const name = head.insertCell()
     name.textContent = dim.name
     name.title = model.labels.dimension(dim.name)
+    if (dim.summary) {
+      const sum = document.createElement('span')
+      sum.className = 'figure_navigation_summary'
+      sum.textContent = ` ${dim.summary}`
+      sum.style.fontWeight = '400'
+      sum.style.color = '#718096'
+      sum.style.fontStyle = 'italic'
+      name.appendChild(sum)
+    }
     const members = dim.members
     if (members) {
       // 04/10/2026 (lot 3) — ▾ : le sélecteur Arbre de la dimension.
@@ -284,8 +295,9 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     name.style.fontWeight = '700'
     name.style.padding = '0.05rem 0.5rem 0.05rem 0'
     name.style.whiteSpace = 'nowrap'
-    name.style.maxWidth = '12rem'
-    name.style.overflow = 'hidden'
+    // Un résumé (« — mixte — ») ne doit pas être rogné : la case s'élargit d'autant.
+    name.style.maxWidth = dim.summary ? 'none' : '12rem'
+    name.style.overflow = dim.summary ? 'visible' : 'hidden'
     name.style.textOverflow = 'ellipsis'
     if (i > 0) name.style.paddingTop = '0.25rem'
     const zlabel = zoom.insertCell()
