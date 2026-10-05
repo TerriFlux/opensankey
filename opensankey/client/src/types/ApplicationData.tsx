@@ -1751,7 +1751,9 @@ export class Class_ApplicationData {
         // Puis centrer chaque enfant sur son ancêtre niveau 1 (version légère : pose juste
         // les centres, pas de désagrégation/ré-agrégation récursive — bien plus rapide au
         // chargement) pour que le filtre vue révèle des nœuds déjà placés.
-        centerChildrenOnParent(this)
+        // os#1523 — en suivant la visibilité : ouvert sur un niveau 2, les nœuds visibles
+        // gardent leur place au lieu d'être ramenés sur un parent masqué jamais placé.
+        centerChildrenOnParent(this, { keep_visible: true })
       } else {
         // sankeyapplication#153 — le fichier fait foi sur le statut recyclage : tout flux dont
         // le statut chargé diverge de ce que la géométrie recalculerait est verrouillé

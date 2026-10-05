@@ -1152,10 +1152,26 @@ export const prepositionAllInPlace = (new_data: Class_ApplicationData) => {
  * et statique de l'ancien « mode ancêtres » : une fois lancé, le filtre vue qui révèle
  * des feuilles les montre empilées à la position de leur ancêtre (pas de mécanique
  * dynamique). Léger (ne fait que poser des centres, pas de désagrégation).
+ *
+ * `keep_visible` (os#1523, ouverture d'un fichier sans géométrie) : le recentrage suit la
+ * VISIBILITÉ. Un nœud visible garde la place que la mise en page auto vient de lui donner
+ * et devient l'ancre de ses descendants masqués ; un ancêtre masqué sans ancre visible
+ * prend le centre de ses descendants visibles (pour qu'un repli retombe au bon endroit).
+ * Sans l'option — le geste de menu « Centrer les enfants sur le parent » —, tout se replie
+ * sur l'ancêtre niveau 1, comme avant. Au niveau 1 les deux coïncident ; au niveau 2,
+ * l'ancien replis ramenait les nœuds visibles sur un parent masqué jamais placé.
  */
-export const centerChildrenOnParent = (new_data: Class_ApplicationData) => {
+export const centerChildrenOnParent = (
+  new_data: Class_ApplicationData,
+  options: { keep_visible?: boolean } = {}
+) => {
   const da = new_data.drawing_area
   da.withBypassRedraws(() => {
+    const visible_ids = options.keep_visible
+      ? new Set(da.sankey.visible_nodes_list.map(n => n.id))
+      : undefined
+    const childrenOf = (node: Class_NodeElement) =>
+      node.dimensions_as_parent.flatMap((dim: Class_NodeDimension) => dim.children as Class_NodeElement[])
 
     // Ancêtre niveau 1 (premier parent non-enfant) d'un nœud quelconque. Calculé via la
     // hiérarchie de dimensions, donc indépendant des positions : reste valable même quand
@@ -1201,6 +1217,55 @@ export const centerChildrenOnParent = (new_data: Class_ApplicationData) => {
       // l'enfant (préserve un réglage manuel entre frères mappés sur le même lien parent).
       keyed.sort((a, b) => (a.rank - b.rank) || (a.i - b.i))
       child.reorganizeIOFromListIds(keyed.map(k => k.id))
+    }
+
+    if (visible_ids) {
+      // os#1523 — Passe 1 (de bas en haut) : un ancêtre MASQUÉ dont aucun ascendant n'est
+      // visible n'a pas été placé par la mise en page ; il prend le centre moyen de ses
+      // descendants visibles. Renvoie les centres visibles du sous-arbre.
+      const placed = new Set<string>()
+      const guard = new Set<string>()
+      const centersBelow = (node: Class_NodeElement): { x: number, y: number }[] => {
+        if (guard.has(node.id)) return []
+        guard.add(node.id)
+        if (visible_ids.has(node.id)) {
+          childrenOf(node).forEach(centersBelow)
+          return [node.centerForPersistence()]
+        }
+        const centers = childrenOf(node).flatMap(centersBelow)
+        if (centers.length > 0) {
+          node.setStoredCenter(
+            centers.reduce((s, c) => s + c.x, 0) / centers.length,
+            centers.reduce((s, c) => s + c.y, 0) / centers.length)
+          placed.add(node.id)
+        }
+        return centers
+      }
+      // Passe 2 (de haut en bas) : l'ancre d'un sous-arbre est le plus proche ascendant
+      // visible — ou masqué mais placé en passe 1. Un visible devient lui-même l'ancre de
+      // sa descendance ; un masqué se replie sur l'ancre courante, comme avant.
+      const seen_v = new Set<string>()
+      const anchorize = (node: Class_NodeElement, anchor: Class_NodeElement | undefined) => {
+        if (seen_v.has(node.id)) return
+        seen_v.add(node.id)
+        let next = anchor
+        if (visible_ids.has(node.id) || (placed.has(node.id) && !anchor)) {
+          next = node
+        } else if (anchor) {
+          const center = anchor.centerForPersistence()
+          node.setStoredCenter(center.x, center.y)
+          node.position_u = anchor.position_u
+          node.position_v = anchor.position_v
+          node.shape_position_u_locked = true
+          node.shape_position_v_locked = true
+          reorderAnchorsLikeAncestor(node, anchor)
+        }
+        childrenOf(node).forEach(c => anchorize(c, next))
+      }
+      const roots = da.sankey.nodes_list.filter(n => !n.is_child).slice()
+      roots.forEach(centersBelow)
+      roots.forEach(n => anchorize(n, undefined))
+      return
     }
 
     const seen = new Set<string>()
