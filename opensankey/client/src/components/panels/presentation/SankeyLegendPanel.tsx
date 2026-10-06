@@ -69,14 +69,17 @@ const Swatch = ({ item, unchecked, scale_px }: { item: Type_LegendItem, unchecke
   const color = unchecked ? UNCHECKED_SWATCH : (swatch?.color ?? item.swatch_color)
   if (color === undefined && item.format?.icon === undefined) return null
   const has_value = item.format?.value !== undefined
+  // os#1527 — la pastille de la légende des couronnes : 0,7 em de côté, coins de 2 px (cf.
+  // `appendDonutLegendRows`) ; élargie quand elle porte la valeur d'exemple.
   const w = has_value ? 30 : 14
   const h = 14
   const border = swatch?.border_visible === true
   const dashed = swatch?.border_dashed === true || swatch?.link_dashed === true
   const icon = item.format?.icon
-  return <svg width={w} height={h} style={{ flex: '0 0 auto' }} aria-hidden>
+  return <svg width={`${(0.7 * w) / h}em`} height='0.7em' viewBox={`0 0 ${w} ${h}`}
+    style={{ flex: '0 0 auto', marginTop: '0.15em' }} aria-hidden>
     <rect
-      x={0.5} y={0.5} width={w - 1} height={h - 1} rx={3}
+      x={0.5} y={0.5} width={w - 1} height={h - 1} rx={2}
       fill={color ?? 'none'} fillOpacity={unchecked ? 1 : (swatch?.opacity ?? 1)}
       stroke={border || dashed ? (swatch?.border_color ?? '#4a5568') : 'none'}
       strokeWidth={border ? Math.min(3, swatch?.border_thickness ?? 1) : 1}
@@ -165,10 +168,11 @@ const LegendRow = ({ app_data, item, scale_px }: {
     role={toggles ? 'menuitemcheckbox' : undefined}
     aria-checked={toggles ? checked : undefined}
     style={{
-      display: 'flex', alignItems: 'flex-start', gap: '0.4rem',
-      padding: '0.1rem 0.25rem', borderRadius: '0.2rem',
+      // os#1527 — mêmes mesures qu'une ligne de la légende des couronnes (`appendDonutLegendRows`).
+      display: 'flex', alignItems: 'flex-start', gap: '0.35rem',
+      padding: '0.1rem 0.2rem', borderRadius: '0.2rem',
       marginTop: item.starts_group === true || is_title ? '0.5rem' : 0,
-      paddingLeft: `calc(0.25rem + ${(item.indent ?? 0) * INDENT_EM}em)`,
+      paddingLeft: `calc(0.2rem + ${(item.indent ?? 0) * INDENT_EM}em)`,
       cursor: clickable ? 'pointer' : 'default',
       background: hover && clickable ? HOVER_BG : undefined
     }}
@@ -185,12 +189,10 @@ const LegendRow = ({ app_data, item, scale_px }: {
     {toggles
       ? <input
         type='checkbox' checked={checked} readOnly tabIndex={-1}
-        style={{ margin: '0.15rem 0 0', flex: '0 0 auto', cursor: 'pointer' }}
+        style={{ margin: '0.1em 0 0', flex: '0 0 auto', cursor: 'pointer' }}
       />
       : null}
-    {item.heading === true ? null : <span style={{ marginTop: '0.1rem', display: 'flex' }}>
-      <Swatch item={item} unchecked={unchecked} scale_px={scale_px} />
-    </span>}
+    {item.heading === true ? null : <Swatch item={item} unchecked={unchecked} scale_px={scale_px} />}
     {label}
   </div>
 }
@@ -207,7 +209,8 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
   return <div
     className='sankey_legend_panel'
     style={{
-      fontSize: '0.8rem', lineHeight: '1.15rem', color: INK,
+      // os#1527 — le corps de la légende des couronnes (`legend_font_size`, 14 par défaut).
+      fontSize: '14px', color: INK,
       padding: '0.25rem 0.5rem 0.5rem', userSelect: 'none'
     }}
   >

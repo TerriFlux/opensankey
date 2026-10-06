@@ -1,0 +1,33 @@
+import * as d3 from '../d3Modules'
+import { appendLegendContextRows } from './NodeStatsCharts'
+
+// os#1527 — les lignes de rappel des coordonnees (« Annee : 2015 ») sous la legende d une couronne,
+// comme dans la legende du diagramme : une ligne par dimension, cliquable quand elle se choisit d ici.
+
+describe('os#1527 lignes de rappel de la legende d une couronne', () => {
+  test('une ligne par dimension ; seule celle qui se choisit ouvre sa liste', () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const opened: { x: number, y: number }[] = []
+    appendLegendContextRows(d3.select(host) as unknown as Parameters<typeof appendLegendContextRows>[0], [
+      { label: 'Année : 2015', hint: 'Cliquer pour modifier', open: anchor => opened.push(anchor) },
+      { label: 'Unité : kt' }
+    ], false)
+    const rows = Array.from(host.querySelectorAll('.node_stats_legend_context')) as HTMLElement[]
+    expect(rows.map(r => r.textContent)).toEqual(['Année : 2015', 'Unité : kt'])
+    expect(rows[0].style.cursor).toBe('pointer')
+    expect(rows[0].title).toBe('Cliquer pour modifier')
+    expect(rows[1].style.cursor).toBe('default')
+    rows[1].dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(opened).toHaveLength(0)
+    rows[0].dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(opened).toHaveLength(1)
+    host.remove()
+  })
+
+  test('sans lignes : rien', () => {
+    const host = document.createElement('div')
+    appendLegendContextRows(d3.select(host) as unknown as Parameters<typeof appendLegendContextRows>[0], undefined, true)
+    expect(host.children).toHaveLength(0)
+  })
+})
