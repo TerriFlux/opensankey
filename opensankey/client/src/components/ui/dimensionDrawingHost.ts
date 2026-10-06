@@ -92,21 +92,58 @@ const poseSelection = (tagg: Class_DataTagGroup, selected: string[]) => {
   else tagg.selectTagsFromIds(selected)
 }
 
-const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, state: Type_Snapshot) => {
+/** Pose les états de une ou plusieurs dimensions, puis UN redécoupage et UN dessin. */
+const restoreAll = (app_data: Class_ApplicationData, states: [Class_DataTagGroup, Type_Snapshot][]) => {
   const { drawing_area } = app_data
-  ;(tagg as unknown as { banner: string }).banner = state.banner
-  dimensionCarrierCandidates(app_data).forEach(node => {
-    const carries = state.carriers.includes(node.id)
-    if (carries && node.driving_dimension !== tagg) node.driving_dimension = tagg
-    else if (!carries && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
+  // Les porteurs d'abord détachés, puis rattachés : un nœud ne porte qu'une dimension, et un échange
+  // (⇅) en fait passer d'une dimension à l'autre.
+  states.forEach(([tagg, state]) => {
+    ;(tagg as unknown as { banner: string }).banner = state.banner
+    dimensionCarrierCandidates(app_data).forEach(node => {
+      if (!state.carriers.includes(node.id) && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
+    })
+  })
+  states.forEach(([tagg, state]) => {
+    dimensionCarrierCandidates(app_data).forEach(node => {
+      if (state.carriers.includes(node.id) && node.driving_dimension !== tagg) node.driving_dimension = tagg
+    })
   })
   // Un aperçu (menu unitaire) a pu laisser `bypass_redraws` posé : le dessin final doit passer.
   drawing_area.bypass_redraws = false
-  drawing_area.withBypassRedraws(() => poseSelection(tagg, state.selected), false)
+  drawing_area.withBypassRedraws(() => states.forEach(([tagg, state]) => poseSelection(tagg, state.selected)), false)
   drawing_area.rebuildDimensionNodes()
   drawing_area.draw()
   app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+}
+
+const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, state: Type_Snapshot) =>
+  restoreAll(app_data, [[tagg, state]])
+
+/** Une bannière à choix unique ne lit qu'un membre. */
+const UNIQUE_BANNERS = ['one', 'topbar', 'sequence']
+
+/**
+ * os#1526 — ⇅ DANS LE TABLEAU DU DIAGRAMME : les deux dimensions ÉCHANGENT LEUR DESSIN (Julien,
+ * 06/10 : « si l'une est en bandes et l'autre en nœuds, on inverse avec la double flèche »). Chacune
+ * prend la bannière et les nœuds porteurs de l'autre ; ses membres choisis restent les siens (le
+ * premier seulement, si elle passe à un membre). Un seul pas d'historique, un seul dessin.
+ */
+export const swapDimensionDrawings = (
+  app_data: Class_ApplicationData, a: Class_DataTagGroup, b: Class_DataTagGroup
+) => {
+  if (a === b) return
+  const before_a = snapshot(app_data, a)
+  const before_b = snapshot(app_data, b)
+  const take = (own: Type_Snapshot, other: Type_Snapshot): Type_Snapshot => ({
+    banner: other.banner,
+    carriers: other.carriers,
+    selected: UNIQUE_BANNERS.includes(other.banner) ? own.selected.slice(0, 1) : own.selected
+  })
+  const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(before_a, before_b)], [b, take(before_b, before_a)]]
+  app_data.history.saveUndo(() => restoreAll(app_data, [[a, before_a], [b, before_b]]))
+  app_data.history.saveRedo(() => restoreAll(app_data, after))
+  restoreAll(app_data, after)
 }
 
 /** Pose un état et l'inscrit dans l'historique, avec l'état d'avant pour l'annuler. */
@@ -156,7 +193,7 @@ export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class
  */
 export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, banner: string) => {
   const now = snapshot(app_data, tagg)
-  const unique = banner === 'one' || banner === 'topbar' || banner === 'sequence'
+  const unique = UNIQUE_BANNERS.includes(banner)
   commit(app_data, tagg, { ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected })
 }
 

@@ -3,7 +3,7 @@ import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
   applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
-  applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, toggleDimensionCarrier
+  applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -55,6 +55,25 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionCarriersOf(app, pays)).toEqual([])
     app.history.applyUndo()
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
+  })
+
+  test('os#1526 : la double fleche echange bandes et noeuds entre deux dimensions, en un pas', () => {
+    const { app, pays, a } = monter()
+    const produit = app.drawing_area.sankey.addDataTagGroup('produit', 'Produit', false) as Class_DataTagGroup
+    produit.addTag('Ble', 'ble')
+    produit.addTag('Mais', 'mais')
+    toggleDimensionCarrier(app, pays, a.id)
+    applyDimensionDrawing(app, produit, 'multi')
+    expect(dimensionDrawingOf(app, pays)).toBe('nodes')
+    expect(dimensionDrawingOf(app, produit)).toBe('multi')
+    swapDimensionDrawings(app, pays, produit)
+    expect(dimensionCarriersOf(app, produit).map(n => n.id)).toEqual([a.id])
+    expect(dimensionCarriersOf(app, pays)).toEqual([])
+    expect(dimensionDrawingOf(app, produit)).toBe('nodes')
+    expect(dimensionDrawingOf(app, pays)).toBe('multi')
+    app.history.applyUndo()
+    expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
+    expect(dimensionDrawingOf(app, produit)).toBe('multi')
   })
 
   test('l ecart vertical des enfants se regle d ici aussi, et s annule', () => {
