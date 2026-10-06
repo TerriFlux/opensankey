@@ -88,6 +88,34 @@ describe('os#1527 — panneau de légende', () => {
     expect(frame.d3_selection?.style('display')).not.toBe('none')
   })
 
+  it('capture (export, vignette) : la légende revient à sa place, à gauche du dessin, puis repart', () => {
+    const { app } = makeLegend()
+    const legend = app.drawing_area.legend
+    legend.position_x = 5000
+    legend.in_panel = true
+    const frame = app.drawing_area.sankey.containers_dict['legend']
+    const diagram = app.drawing_area.contentBounds()
+    expect(diagram).not.toBeNull()
+    const hide = legend.showForCapture()
+    expect(legend.hidden_on_screen).toBe(false)
+    expect(frame.d3_selection?.style('display')).not.toBe('none')
+    // À gauche du dessin (rendu, noms compris), sans le chevaucher
+    expect(frame.position_x + frame.getShapeWidthToUse()).toBeLessThan(diagram!.x)
+    // Comptée dans le cadrage pendant la capture
+    expect(contentBoundsFromModel(app.drawing_area)!.x).toBeLessThan(diagram!.x)
+    hide()
+    expect(legend.hidden_on_screen).toBe(true)
+    expect(frame.d3_selection?.style('display')).toBe('none')
+  })
+
+  it('capture sans panneau : rien ne bouge', () => {
+    const { app } = makeLegend()
+    const legend = app.drawing_area.legend
+    const x = legend.position_x
+    legend.showForCapture()()
+    expect(legend.position_x).toBe(x)
+  })
+
   it('légende figée à la main : passer en panneau la régénère', () => {
     const { app } = makeLegend()
     const legend = app.drawing_area.legend
