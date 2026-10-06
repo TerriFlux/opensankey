@@ -49,6 +49,12 @@ export const diagramsListEntryFile = (entry: unknown): string | null => {
   return null
 }
 
+/** sa#606 — Un fichier joint tel que la page le déclare (cf. SankeyGlobals.attachments). */
+export type Type_SankeyAttachment = { file: string, label?: string | Record<string, string> }
+
+/** sa#606 — Un fichier joint prêt à afficher : lien relatif à la page et libellé résolu. */
+export type Type_PublishedAttachment = { href: string, label: string }
+
 export interface SankeyGlobals {
   // Mode
   publish?: boolean      // true => is_static
@@ -98,6 +104,11 @@ export interface SankeyGlobals {
   // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
   // diagramme n'embarque pas de documentation. Sa seule présence suffit à faire apparaître le bouton.
   doc_file?: string
+  // sa#606 — fichiers que l'auteur offre au TÉLÉCHARGEMENT depuis la page (un classeur de données,
+  // un PDF…), déclarés dans le names.json de son dossier et posés par la publication sous
+  // `attachments/`. `file` est RELATIF à la page ; `label` est un texte seul ou un texte par langue
+  // ('' = langue par défaut), résolu dans la langue effective comme `header_i18n`.
+  attachments?: Type_SankeyAttachment[]
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
   badge?: boolean        // default true : badge « Made with OpenSankey » (lien terriflux.com) en bas à gauche en publish
   // default true — les deux boutons de DROITE de la topbar, jusqu'ici sans réglage :
@@ -241,6 +252,8 @@ export interface PublishOptions {
   unitary: boolean
   doc: boolean
   doc_file: string | null
+  // sa#606 — fichiers à télécharger offerts en haut de la page ; [] = aucun.
+  attachments: Type_PublishedAttachment[]
   // os#1356 — représentation du diagramme entier offerte au lecteur (cf. SankeyGlobals).
   representation: boolean
   navigation_help: boolean
@@ -381,6 +394,58 @@ const _effectiveLang = (): string | null => {
     : null
 }
 
+/**
+ * sa#606 — Le lien RELATIF d'un fichier joint, ou null s'il sortirait de la page : URL absolue,
+ * schéma (`javascript:` compris), chemin racine, protocole implicite `//hôte`, remontée `..`.
+ * Même garde que le document de la page (`publishedDocHref`) : n'importe quelle page peut écrire
+ * `window.sankey` à la main.
+ */
+export const attachmentHref = (file: unknown): string | null => {
+  if (typeof file !== 'string') return null
+  const name = file.trim()
+  if (name === '' || name.startsWith('/') || name.startsWith('\\')) return null
+  if (name.split(/[\\/]/).includes('..')) return null
+  if (name.includes(':')) return null
+  return name
+}
+
+/**
+ * sa#606 — Le libellé d'un fichier joint dans la langue `lang` : la langue demandée, sinon le
+ * texte sans langue (''), sinon le français (langue par défaut des sites), sinon le premier venu,
+ * sinon le nom du fichier.
+ */
+export const attachmentLabel = (
+  label: unknown, lang: string | null, href: string
+): string => {
+  if (typeof label === 'string' && label.trim() !== '') return label.trim()
+  if (label && typeof label === 'object' && !Array.isArray(label)) {
+    const map = label as Record<string, unknown>
+    for (const key of [lang, lang ? lang.slice(0, 2) : null, '', 'fr']) {
+      if (key === null) continue
+      const value = map[key]
+      if (typeof value === 'string' && value.trim() !== '') return value.trim()
+    }
+    const first = Object.values(map).find(v => typeof v === 'string' && v.trim() !== '')
+    if (typeof first === 'string') return first.trim()
+  }
+  return href.split('/').pop() ?? href
+}
+
+/** sa#606 — Les fichiers joints de `window.sankey.attachments`, filtrés et résolus. */
+export const parseAttachments = (raw: unknown, lang: string | null): Type_PublishedAttachment[] => {
+  if (!Array.isArray(raw)) return []
+  const out: Type_PublishedAttachment[] = []
+  for (const entry of raw) {
+    const file = (typeof entry === 'string') ? entry
+      : (entry && typeof entry === 'object') ? (entry as { file?: unknown }).file : undefined
+    const href = attachmentHref(file)
+    if (href === null) continue
+    const label = (entry && typeof entry === 'object') ? (entry as { label?: unknown }).label : undefined
+    out.push({ href, label: attachmentLabel(label, lang, href) })
+  }
+  return out
+}
+
 export const getPublishOptions = (): PublishOptions => {
   const s = window.sankey ?? {}
   // Alias rétrocompat : sous_filieres → diagrams_list
@@ -498,6 +563,7 @@ export const getPublishOptions = (): PublishOptions => {
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
     doc_file: str(s.doc_file),
+    attachments: parseAttachments(s.attachments, _effectiveLang()),
     representation: bool(s.representation, false),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
@@ -598,6 +664,7 @@ export type ViewerSankeyOptions = {
   tooltip_on_hover?: boolean
   language?: string
   header_i18n?: Record<string, string>
+  attachments?: Type_SankeyAttachment[]  // sa#606 (cf. SankeyGlobals)
   minimum_flux?: number
   position_mode?: Type_PositionMode
   scale_adapted_reference?: Type_ScaleAdaptedReference
@@ -630,7 +697,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter', 'data_links_reveal',
-    'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n',
+    'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n', 'attachments',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
     'sheet', 'view', 'view_label', 'representations',
