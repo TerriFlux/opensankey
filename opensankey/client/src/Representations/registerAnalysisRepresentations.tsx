@@ -73,7 +73,8 @@ import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOth
 import type { Type_JSON } from '../types/Utils'
 import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
 import {
-  buildDimensionMatrix, dimensionMatrixExportTable, matrixDecimals, matrixNumberFormatter, nextMatrixSort
+  buildDimensionMatrix, dimensionMatrixExportTable, matrixCutOfCouronne, matrixDecimals, matrixNumberFormatter,
+  nextMatrixSort
 } from '../Charts/DimensionMatrix'
 import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
 import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
@@ -2433,13 +2434,18 @@ const registerDimensionMatrix = (): void => {
           return
         }
         const reading = hierarchyReadingOf(ctx)
-        const cut = analysisDataCutOf(a.subject, decompose, reading)
+        // 06/10/2026 — LE MÊME ÉTAT QUE LA COURONNE (`couronneOf`) : lignes, colonnes et coordonnées.
+        // L'ancienne coupe (`analysisDataCutOf`) ne sert plus qu'à défaut d'état.
+        const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
+        const from_state = reading.data_plan ? matrixCutOfCouronne(reading.data_plan.state, reading.data_plan.plan, sankey) : null
+        const cut = from_state?.cut ?? analysisDataCutOf(a.subject, decompose, reading)
         const subject = a.subject.kind === 'node'
           ? { kind: 'node' as const, node: a.subject.node }
           : { kind: 'link' as const, link: a.subject.link }
         const matrix = cut === null ? null : buildDimensionMatrix(subject, cut, a.nav, {
           row_toggles: toggles,
           sort: matrix_sorts.get(key),
+          coordinates: from_state?.coordinates,
           node_value_mode: reading.node_value_mode,
           residual_label: t('matrix.unallocated'),
           total_label: t('matrix.total'),
@@ -2459,7 +2465,30 @@ const registerDimensionMatrix = (): void => {
         const element = a.subject.kind === 'node' ? a.subject.node : a.subject.link
         const coordinate = matrixCoordinateLabel(element.sankey, a.nav)
         const title = coordinate ? `${displayedNameOf(element)} · ${coordinate}` : displayedNameOf(element)
+        // 06/10/2026 — LES AXES DANS LA BARRE : la dimension en colonnes et ⇄, écrits par les gestes de
+        // la couronne (même état, même pas d'annulation).
+        const gestures = from_state ? couronneGesturesOfCtx(ctx) : null
+        const row_id = from_state?.row_id
+        const col_id = from_state?.col_id ?? null
+        const axes = gestures && row_id !== undefined
+          ? {
+            columns_label: t('matrix.columns', { defaultValue: 'Colonnes :' }) as string,
+            column: col_id ?? '',
+            choices: [
+              { value: '', label: t('matrix.no_columns', { defaultValue: '(aucune)' }) as string },
+              ...gestures.state.order.filter(id => id !== row_id).map(id => ({
+                value: id, label: (sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup).name
+              }))
+            ],
+            on_column: (value: string) => gestures.setMatrixColumns(row_id, value === '' ? null : value),
+            swap: col_id === null ? undefined : {
+              label: t('matrix.swap_axes', { defaultValue: 'Échanger lignes et colonnes' }) as string,
+              on_swap: () => gestures.swap(row_id, col_id)
+            }
+          }
+          : undefined
         teardown = drawDimensionMatrixTable(container, matrix, {
+          axes,
           format,
           format_share: (v) => percent.format(v),
           title,
