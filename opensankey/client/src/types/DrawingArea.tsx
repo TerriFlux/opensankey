@@ -1706,6 +1706,12 @@ export class Class_DrawingArea {
     // Draw Everything
     this.drawElements()
     this._labels_compensation = this.font_compensation
+    // os#1527 — LA LÉGENDE DU PANNEAU RESTE CACHÉE AU CADRAGE. `unDraw` / `_initDraw` viennent de
+    // recréer le SVG, zones de légende comprises, VISIBLES : le cadrage ci-dessous mesure le rendu
+    // (`contentBounds`) et les comptait — la légende, posée à l'écart, faisait s'effondrer le zoom au
+    // minimum, et seul un recadrage manuel le rétablissait (Julien, 06/10 : décocher puis recocher
+    // Céréales « dézoome complètement »). Elle ne se recachait qu'à sa régénération, après le cadrage.
+    this._legend.applyPanelDisplay()
     // Fit area
 
     // Mode verrouillé : tant que le cadrage est « dirty » (1er rendu, ou recenter

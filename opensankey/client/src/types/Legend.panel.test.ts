@@ -108,6 +108,22 @@ describe('os#1527 — panneau de légende', () => {
     expect(frame.d3_selection?.style('display')).toBe('none')
   })
 
+  it('redessin complet : la légende du panneau est déjà cachée quand le cadrage mesure', () => {
+    const { app } = makeLegend()
+    const da = app.drawing_area
+    da.legend.in_panel = true
+    da.auto_fit_mode = 'full'
+    const seen: (string | undefined)[] = []
+    const fit = da.areaAutoFit.bind(da)
+    da.areaAutoFit = ((...args: Parameters<typeof da.areaAutoFit>) => {
+      seen.push(da.sankey.containers_dict['legend']?.d3_selection?.style('display'))
+      return fit(...args)
+    }) as typeof da.areaAutoFit
+    da.draw()
+    expect(seen.length).toBeGreaterThan(0)
+    expect(seen.every(d => d === 'none' || d === undefined)).toBe(true)
+  })
+
   it('capture sans panneau : rien ne bouge', () => {
     const { app } = makeLegend()
     const legend = app.drawing_area.legend
