@@ -71,13 +71,18 @@ const normalized = (link: Class_LinkElement, end: 'source' | 'target'): number |
   normalizedValueFor(end === 'source' ? link.source : link.target, link.valueCurrent, link.sankey)
 
 describe('sa#595 — la famille d un noeud et sa regle par defaut', () => {
-  test('un secteur rapporte a ses sorties vers des produits', () => {
+  test('un secteur rapporte a ses sorties vers des produits, sinon matieres premieres, coproduits, rejets', () => {
     const app = load()
     const sucrerie = nodeNamed(app, 'Sucrerie (Sucre)')
     expect(normalizationNodeKind(sucrerie)).toBe('secteur')
     expect(resolveNormalizationRule(sucrerie, app.drawing_area.sankey)).toEqual({
       side: 'outputs',
-      filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_id: 'produit', negate: false }
+      filter: {
+        on: 'counterpart',
+        tag_group_id: 'type de matiere',
+        tag_ids: ['produit', 'matiere premiere', 'coproduit', 'rejet'],
+        negate: false
+      }
     })
   })
 
@@ -87,7 +92,7 @@ describe('sa#595 — la famille d un noeud et sa regle par defaut', () => {
     expect(normalizationNodeKind(farine)).toBe('produit')
     expect(resolveNormalizationRule(farine, app.drawing_area.sankey)).toEqual({
       side: 'outputs',
-      filter: { on: 'link', tag_group_id: 'echange', tag_id: 'exportation', negate: true }
+      filter: { on: 'link', tag_group_id: 'echange', tag_ids: ['exportation'], negate: true }
     })
   })
 
@@ -165,10 +170,10 @@ describe('sa#595 — une reference vide laisse la valeur vide, et dit pourquoi',
     const sucrerie = nodeNamed(app, 'Sucrerie (Sucre)')
     const rule: Type_NormalizationRule = {
       side: 'outputs',
-      filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_id: 'intrant externe', negate: false }
+      filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: ['intrant externe'], negate: false }
     }
     const reference = normalizationReference(sucrerie, rule)
-    expect(reference).toEqual({ value: null, links: [], reason: 'no_flux_matches' })
+    expect(reference).toEqual({ value: null, links: [], reason: 'no_flux_matches', tag_id: null, skipped_tag_ids: [] })
     expect(describeNormalizationNotice(reference, rule, app.drawing_area.sankey, t))
       .toContain('Flux.normalization.reason_no_flux_matches')
   })
@@ -191,7 +196,7 @@ describe('sa#595 — une reference vide laisse la valeur vide, et dit pourquoi',
     expect(format_value(app.drawing_area.type_data, link.valueCurrent, link, '', 'value_label', overrides)).not.toBe('')
 
     app.drawing_area.sankey.normalization_rules = {
-      secteur: { side: 'inputs', filter: { on: 'link', tag_group_id: 'echange', tag_id: 'exportation', negate: false } }
+      secteur: { side: 'inputs', filter: { on: 'link', tag_group_id: 'echange', tag_ids: ['exportation'], negate: false } }
     }
     expect(format_value(app.drawing_area.type_data, link.valueCurrent, link, '', 'value_label', overrides)).toBe('')
   })
@@ -234,5 +239,147 @@ describe('sa#595 — les regles du diagramme', () => {
       produit: { side: 'inputs', filter: { on: 'link', tag_group_id: 'echange' } },
       other: { side: 'inputs', filter: null }
     })).toEqual({ other: { side: 'inputs', filter: null } })
+  })
+})
+
+// ==================================================================================================
+// sa#607 — LA RÉFÉRENCE SUIT UNE PRIORITÉ D'ÉTIQUETTES
+// ==================================================================================================
+//
+// Fixture : extrait du fichier joint à l'issue (Référentiel Coefficients SOCLE, 2026-10-06) — deux
+// organismes stockeurs, qui ne sortent que des matières premières et des coproduits, et la
+// fabrication de babeurre concentré, qui ne sort qu'un coproduit et un rejet. Les nombres attendus
+// sont ceux du protocole de test, qui sont ceux du classeur du référentiel (`PRIORITE_SECTEUR`).
+
+const FIXTURE_607 = path.join(__dirname, '__fixtures__', 'sa607_referentiel_extrait.json')
+
+const load607 = (): Class_ApplicationData => {
+  const json = JSON.parse(fs.readFileSync(FIXTURE_607, 'utf-8')) as Type_JSON
+  const app = new Class_ApplicationData(false)
+  app.fromJSON(json as never, {}, false)
+  app.drawing_area.bypass_redraws = true
+  return app
+}
+
+const t607 = (key: string, options?: { [k: string]: string }) => key + (options ? JSON.stringify(options) : '')
+
+describe('sa#607 — protocole de test de l issue (kt)', () => {
+  test('1. OS (Blé tendre) 2023 : faute de produit, la reference est les matieres premieres', () => {
+    const app = load607()
+    select(app, '2023', 'kt')
+    const os = nodeNamed(app, 'OS (Blé tendre)')
+    const reference = normalizationReference(os, resolveNormalizationRule(os, app.drawing_area.sankey))
+    const ref = 31100 + 2430
+    expect(reference.reason).toBeNull()
+    expect(reference.tag_id).toBe('matiere premiere')
+    expect(reference.skipped_tag_ids).toEqual(['produit'])
+    expect(reference.value).toBeCloseTo(ref, 9)
+
+    expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Grains collectés (Blé tendre)'), 'source')).toBeCloseTo(31100 / ref, 12)
+    expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Grains collectés (Blé tendre)'), 'source')).toBeCloseTo(0.928, 3)
+    expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Stock final (Blé tendre)'), 'source')).toBeCloseTo(0.072, 3)
+    expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Issues de silo (Blé tendre)'), 'source')).toBeCloseTo(0.003, 3)
+    expect(normalized(linkBetween(app, 'Grains récoltés (Blé tendre)', 'OS (Blé tendre)'), 'target')).toBeCloseTo(0.951, 3)
+    expect(normalized(linkBetween(app, 'Stock initial (Blé tendre)', 'OS (Blé tendre)'), 'target')).toBeCloseTo(0.053, 3)
+    // Les flux de référence somment à 1.
+    expect(reference.links.reduce((s, l) => s + (normalized(l, 'source') ?? 0), 0)).toBeCloseTo(1, 12)
+  })
+
+  test('2. Fabrication de babeurre concentré 2023 : la reference est les coproduits', () => {
+    const app = load607()
+    select(app, '2023', 'kt')
+    const fab = nodeNamed(app, 'Fabrication de babeurre concentré (Lait)')
+    const reference = normalizationReference(fab, resolveNormalizationRule(fab, app.drawing_area.sankey))
+    expect(reference.tag_id).toBe('coproduit')
+    expect(reference.skipped_tag_ids).toEqual(['produit', 'matiere premiere'])
+    expect(normalized(linkBetween(app, 'Fabrication de babeurre concentré (Lait)', 'Babeurre concentré (Lait)'), 'source'))
+      .toBeCloseTo(1, 12)
+    expect(normalized(linkBetween(app, 'Fabrication de babeurre concentré (Lait)', 'Eau - Générée (Lait)'), 'source'))
+      .toBeCloseTo(4.477, 3)
+    expect(normalized(linkBetween(app, 'Babeurre (Lait)', 'Fabrication de babeurre concentré (Lait)'), 'target'))
+      .toBeCloseTo(5.477, 3)
+  })
+
+  test('3. Sucrerie : inchangee, la reference reste les produits, sans avis', () => {
+    const app = load()
+    select(app, '2019', 'kt')
+    const sucrerie = nodeNamed(app, 'Sucrerie (Sucre)')
+    const rule = resolveNormalizationRule(sucrerie, app.drawing_area.sankey)
+    const reference = normalizationReference(sucrerie, rule)
+    expect(reference.tag_id).toBe('produit')
+    expect(reference.skipped_tag_ids).toEqual([])
+    expect(reference.links.map(l => l.target.name)).toEqual(['Sucre (Sucre)'])
+    expect(describeNormalizationNotice(reference, rule, app.drawing_area.sankey, t607)).toBeNull()
+  })
+
+  test('4. OS (Epeautre) 2015 : toutes les sorties sont nulles, avis et pas de valeur', () => {
+    const app = load607()
+    select(app, '2015', 'kt')
+    const os = nodeNamed(app, 'OS (Epeautre)')
+    const rule = resolveNormalizationRule(os, app.drawing_area.sankey)
+    const reference = normalizationReference(os, rule)
+    expect(reference.value).toBeNull()
+    // Des flux à 0 ne se dessinent pas : le côté est vide à l'écran, c'est ce que l'avis dit.
+    expect(reference.reason).not.toBeNull()
+    expect(normalized(linkBetween(app, 'OS (Epeautre)', 'Grains collectés (Epeautre)'), 'source')).toBeNull()
+    expect(describeNormalizationNotice(reference, rule, app.drawing_area.sankey, t607))
+      .toContain('Flux.normalization.notice{')
+  })
+
+  test('5. l ordre de la liste decide : coproduits avant matieres premieres', () => {
+    const app = load607()
+    select(app, '2023', 'kt')
+    app.drawing_area.sankey.normalization_rule_override = {
+      side: 'outputs',
+      filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: ['coproduit', 'matiere premiere'], negate: false }
+    }
+    expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Issues de silo (Blé tendre)'), 'source')).toBeCloseTo(1, 12)
+    expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Grains collectés (Blé tendre)'), 'source'))
+      .toBeCloseTo(31100 / 112, 9)
+  })
+})
+
+describe('sa#607 — la priorite se tranche par annee et par unite, et se dit', () => {
+  test('OS (Epeautre) : matieres premieres en 2023, rien en 2015', () => {
+    const app = load607()
+    const os = nodeNamed(app, 'OS (Epeautre)')
+    const reference = () => normalizationReference(os, resolveNormalizationRule(os, app.drawing_area.sankey))
+    select(app, '2023', 'kt')
+    expect(reference().tag_id).toBe('matiere premiere')
+    select(app, '2015', 'kt')
+    expect(reference().tag_id).toBeNull()
+  })
+
+  test('l avis dit l etiquette qui a servi et celles qui manquaient', () => {
+    const app = load607()
+    select(app, '2023', 'kt')
+    const fab = nodeNamed(app, 'Fabrication de babeurre concentré (Lait)')
+    const rule = resolveNormalizationRule(fab, app.drawing_area.sankey)
+    const notice = describeNormalizationNotice(normalizationReference(fab, rule), rule, app.drawing_area.sankey, t607)
+    expect(notice).toContain('Flux.normalization.notice_fallback')
+    expect(notice).toContain('Coproduit')
+    expect(notice).toContain('"skipped":"Produit, Matière première"')
+    expect(notice).not.toContain('Rejet')
+  })
+
+  test('une regle a une seule etiquette (tag_id) se relit comme une liste a un element', () => {
+    expect(normalizationRulesFromJSON({
+      secteur: { side: 'outputs', filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_id: 'produit' } }
+    })).toEqual({
+      secteur: { side: 'outputs', filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: ['produit'], negate: false } }
+    })
+  })
+
+  test('une liste s enregistre et se relit dans son ordre', () => {
+    const rules = {
+      secteur: {
+        side: 'outputs' as const,
+        filter: { on: 'counterpart' as const, tag_group_id: 'type de matiere', tag_ids: ['coproduit', 'produit'], negate: false }
+      }
+    }
+    expect(normalizationRulesFromJSON(JSON.parse(JSON.stringify(rules)))).toEqual(rules)
+    expect(normalizationRulesFromJSON({
+      secteur: { side: 'outputs', filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: [] } }
+    })).toEqual({})
   })
 })

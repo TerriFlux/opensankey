@@ -1,0 +1,2086 @@
+{
+ "version": "1.2.0",
+ "format_version": 2,
+ "id": "referentiel_coefficients_socle_sa607",
+ "node_pos_is_center": true,
+ "width": 3000,
+ "height": 66301.96476273725,
+ "user_scale": 20000,
+ "grid_visible": false,
+ "couleur_fond_sankey": "#ffffff",
+ "font_size_locked": false,
+ "levelTags": {},
+ "nodeTags": {
+  "filieres": {
+   "name": "Filières",
+   "banner": "multi",
+   "tags_order": [
+    "toutes filieres",
+    "cereales",
+    "ble tendre",
+    "mais",
+    "orge",
+    "ble dur",
+    "triticale",
+    "sorgho",
+    "avoine",
+    "seigle",
+    "sarrasin",
+    "riz",
+    "epeautre",
+    "millet",
+    "fourrages et pailles",
+    "fruits et legumes",
+    "lait",
+    "ufs",
+    "oleoproteagineux",
+    "colza",
+    "feverole",
+    "lentille",
+    "lin",
+    "lupin",
+    "olive",
+    "pois",
+    "pois chiche",
+    "soja",
+    "tournesol",
+    "pomme de terre",
+    "sucre",
+    "viande bovine",
+    "viande chevaline",
+    "viande ovine et caprine",
+    "viande porcine",
+    "vin",
+    "volailles"
+   ],
+   "tags": {
+    "toutes filieres": {
+     "name": "Toutes filières",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "cereales": {
+     "name": "Céréales",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "ble tendre": {
+     "name": "Blé tendre",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "mais": {
+     "name": "Maïs",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "orge": {
+     "name": "Orge",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "ble dur": {
+     "name": "Blé dur",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "triticale": {
+     "name": "Triticale",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "sorgho": {
+     "name": "Sorgho",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "avoine": {
+     "name": "Avoine",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "seigle": {
+     "name": "Seigle",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "sarrasin": {
+     "name": "Sarrasin",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "riz": {
+     "name": "Riz",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "epeautre": {
+     "name": "Epeautre",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "millet": {
+     "name": "Millet",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "cereales"
+    },
+    "fourrages et pailles": {
+     "name": "Fourrages et pailles",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "fruits et legumes": {
+     "name": "Fruits et légumes",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "lait": {
+     "name": "Lait",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "ufs": {
+     "name": "Œufs",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "oleoproteagineux": {
+     "name": "Oléoprotéagineux",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "colza": {
+     "name": "Colza",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "feverole": {
+     "name": "Féverole",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "lentille": {
+     "name": "Lentille",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "lin": {
+     "name": "Lin",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "lupin": {
+     "name": "Lupin",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "olive": {
+     "name": "Olive",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "pois": {
+     "name": "Pois",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "pois chiche": {
+     "name": "Pois chiche",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "soja": {
+     "name": "Soja",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "tournesol": {
+     "name": "Tournesol",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "oleoproteagineux"
+    },
+    "pomme de terre": {
+     "name": "Pomme de terre",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "sucre": {
+     "name": "Sucre",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "viande bovine": {
+     "name": "Viande bovine",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "viande chevaline": {
+     "name": "Viande chevaline",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "viande ovine et caprine": {
+     "name": "Viande ovine et caprine",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "viande porcine": {
+     "name": "Viande porcine",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "vin": {
+     "name": "Vin",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    },
+    "volailles": {
+     "name": "Volailles",
+     "long_name": "",
+     "selected": true,
+     "color": "",
+     "parent": "toutes filieres"
+    }
+   },
+   "use_colors": false
+  },
+  "type de process": {
+   "name": "Type de process",
+   "banner": "multi",
+   "tags_order": [
+    "transformation",
+    "marche",
+    "extremite"
+   ],
+   "tags": {
+    "transformation": {
+     "name": "Transformation",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "marche": {
+     "name": "Marché",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "extremite": {
+     "name": "Extrémité",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  },
+  "type de noeud": {
+   "name": "Type de noeud",
+   "banner": "none",
+   "tags_order": [
+    "produit",
+    "secteur"
+   ],
+   "tags": {
+    "produit": {
+     "name": "produit",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "secteur": {
+     "name": "secteur",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  },
+  "type de matiere": {
+   "name": "Type de matière",
+   "banner": "none",
+   "tags_order": [
+    "coproduit",
+    "intrant externe",
+    "matiere premiere",
+    "produit",
+    "produit remarquable",
+    "rejet"
+   ],
+   "tags": {
+    "coproduit": {
+     "name": "Coproduit",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "intrant externe": {
+     "name": "Intrant externe",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "matiere premiere": {
+     "name": "Matière première",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "produit": {
+     "name": "Produit",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "produit remarquable": {
+     "name": "Produit remarquable",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "rejet": {
+     "name": "Rejet",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  }
+ },
+ "fluxTags": {
+  "echange": {
+   "name": "Échange",
+   "banner": "none",
+   "tags_order": [
+    "interieur",
+    "importation",
+    "exportation"
+   ],
+   "tags": {
+    "interieur": {
+     "name": "Intérieur",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "importation": {
+     "name": "Importation",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "exportation": {
+     "name": "Exportation",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false
+  }
+ },
+ "dataTags": {
+  "annee": {
+   "name": "Année",
+   "banner": "one",
+   "tags_order": [
+    "2015",
+    "2019",
+    "2023"
+   ],
+   "tags": {
+    "2015": {
+     "name": "2015",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "2019": {
+     "name": "2019",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "2023": {
+     "name": "2023",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   },
+   "use_colors": false,
+   "is_unit": false,
+   "propagate_structure": false
+  },
+  "unite": {
+   "name": "Unité",
+   "banner": "one",
+   "tags_order": [
+    "kt",
+    "ktms",
+    "kt mu",
+    "kt mg",
+    "kt mp"
+   ],
+   "tags": {
+    "kt": {
+     "name": "kt",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "ktms": {
+     "name": "kt MS",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "kt mu": {
+     "name": "kt MU",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "kt mg": {
+     "name": "kt MG",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    },
+    "kt mp": {
+     "name": "kt MP",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    }
+   },
+   "use_colors": false,
+   "is_unit": true,
+   "propagate_structure": false,
+   "activated": true
+  }
+ },
+ "taggs_order": {
+  "node_taggs": [
+   "filieres",
+   "type de process",
+   "type de noeud",
+   "type de matiere"
+  ],
+  "flux_taggs": [
+   "echange"
+  ],
+  "data_taggs": [
+   "annee",
+   "unite"
+  ],
+  "level_taggs": []
+ },
+ "style": {
+  "default": {
+   "name": "Style par défaut"
+  },
+  "NodeStyle": {
+   "name_label_is_visible": true,
+   "shape_min_height": 3,
+   "name_label_font_family": "Cormorant",
+   "name_label_color": false,
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeStyle"
+  },
+  "LinkStyle": {
+   "name_label_background_visible": false,
+   "name_label_vert": "middle",
+   "name_label_font_size": 20,
+   "value_label_is_visible": true,
+   "value_label_vert": "middle",
+   "value_label_font_size": 30,
+   "value_label_box_width": 300,
+   "shape_ending_curve": 0.050000000000000044,
+   "shape_is_arrow": false,
+   "value_label_font_family": "Arial,serif",
+   "value_label_significant_digits": 5,
+   "value_label_custom_digit": true,
+   "value_label_nb_digit": 0,
+   "value_label_unit_visible": true,
+   "value_label_unit": "kt",
+   "value_label_pos_auto": false,
+   "name": "ElementStyle.LinkStyle"
+  },
+  "ContainerStyle": {
+   "name_label_is_visible": true,
+   "name_label_inside_vert": true,
+   "name_label_vert": "top",
+   "shape_color": "white",
+   "shape_border_visible": true,
+   "shape_border_radius": 5,
+   "value_label_is_visible": false,
+   "shape_min_height": 100,
+   "shape_min_width": 100,
+   "name": "ElementStyle.ContainerStyle"
+  },
+  "NodeContainerStyle": {
+   "shape_type": "rect",
+   "shape_color_visible": false,
+   "shape_border_visible": true,
+   "shape_border_color": "black",
+   "shape_border_thickness": 2,
+   "shape_border_dashed": true,
+   "shape_border_radius": 10,
+   "name_label_is_visible": true,
+   "name_label_horiz": "middle",
+   "name_label_vert": "top",
+   "name_label_inside_horiz": false,
+   "name_label_inside_vert": false,
+   "name_label_bold": true,
+   "value_label_is_visible": false,
+   "shape_margin_top": 10,
+   "shape_margin_bottom": 10,
+   "shape_margin_left": 5,
+   "shape_margin_right": 5,
+   "name": "ElementStyle.NodeContainerStyle"
+  },
+  "NodeLeftExtremityStyle": {
+   "name_label_horiz": "left",
+   "name_label_vert": "middle",
+   "name": "ElementStyle.NodeLeftExtremityStyle"
+  },
+  "NodeRightExtremityStyle": {
+   "name_label_horiz": "right",
+   "name_label_vert": "middle",
+   "name": "ElementStyle.NodeRightExtremityStyle"
+  },
+  "NodeProductStyle": {
+   "shape_type": "rect",
+   "shape_min_width": 140,
+   "shape_min_height": 3,
+   "name_label_font_family": "Cormorant",
+   "name_label_font_size": 30,
+   "name_label_italic": true,
+   "name_label_color": false,
+   "name_label_vert": "middle",
+   "name_label_vert_shift": 0,
+   "name_label_text_align": "middle",
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeProductStyle"
+  },
+  "NodeSectorStyle": {
+   "shape_min_height": 3,
+   "name_label_font_family": "Cormorant",
+   "name_label_color": false,
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeSectorStyle"
+  },
+  "NodeImportExportCloseStyle": {
+   "shape_visible": false,
+   "shape_min_width": 1,
+   "name_label_is_visible": false,
+   "name_label_box_width": 300,
+   "name_label_separator_part": "before",
+   "name": "ElementStyle.NodeImportExportCloseStyle"
+  },
+  "NodeImportCloseStyle": {
+   "name": "ElementStyle.NodeImportCloseStyle"
+  },
+  "NodeExportCloseStyle": {
+   "name": "ElementStyle.NodeExportCloseStyle"
+  },
+  "NodeImportExportAboveBelowStyle": {
+   "shape_visible": false,
+   "shape_min_height": 1,
+   "name_label_vert": "middle",
+   "value_label_is_visible": true,
+   "value_label_vert": "middle",
+   "name": "ElementStyle.NodeImportExportAboveBelowStyle"
+  },
+  "NodeImportAboveStyle": {
+   "name_label_horiz": "left",
+   "value_label_horiz": "left",
+   "value_label_horiz_shift": 40,
+   "name": "ElementStyle.NodeImportAboveStyle"
+  },
+  "NodeExportBelowStyle": {
+   "name_label_horiz": "right",
+   "value_label_horiz": "right",
+   "value_label_horiz_shift": -40,
+   "name": "ElementStyle.NodeExportBelowStyle"
+  },
+  "LinkImportExportCloseStyle": {
+   "name": "ElementStyle.LinkImportExportCloseStyle"
+  },
+  "LinkImportCloseStyle": {
+   "shape_orientation": "vh",
+   "shape_ending_tangeant": 1,
+   "shape_is_arrow": false,
+   "name": "ElementStyle.LinkImportCloseStyle"
+  },
+  "LinkExportCloseStyle": {
+   "shape_orientation": "hv",
+   "shape_starting_tangeant": 1,
+   "name": "ElementStyle.LinkExportCloseStyle"
+  },
+  "LinkImportExportAboveBelowStyle": {
+   "shape_starting_curve": 0.25,
+   "shape_ending_curve": 0.25,
+   "shape_starting_tangeant": 0.5,
+   "shape_ending_tangeant": 0.5,
+   "name": "ElementStyle.LinkImportExportAboveBelowStyle"
+  }
+ },
+ "labels": {},
+ "nodes": {
+  "BleTendre__StockInitial": {
+   "name": "Stock initial (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Stock initial"
+   },
+   "x": 50.0,
+   "y": 415.17382350171,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Lait__Babeurre": {
+   "name": "Babeurre (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Babeurre"
+   },
+   "x": 1120.0423282014835,
+   "y": 27406.0645746189,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Epeautre__GrainsRecoltes": {
+   "name": "Grains récoltés (Epeautre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Grains récoltés"
+   },
+   "x": 223.54329681396484,
+   "y": 20071.684745525377,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "epeautre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Epeautre__StockFinal": {
+   "name": "Stock final (Epeautre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Stock final"
+   },
+   "x": 1983.0742416381836,
+   "y": 20609.212596471956,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "epeautre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "BleTendre__GrainsRecoltes": {
+   "name": "Grains récoltés (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Grains récoltés"
+   },
+   "x": 228.94664001464844,
+   "y": 779.1712992839513,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Lait__FabricationDeBabeurreConcentre": {
+   "name": "Fabrication de babeurre concentré (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Fabrication de babeurre concentré"
+   },
+   "x": 1320.9871063232422,
+   "y": 27441.852606613593,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "lait"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "BleTendre__Os": {
+   "name": "OS (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "OS"
+   },
+   "x": 540.4185028076172,
+   "y": 719.4896537324229,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "BleTendre__GrainsCollectes": {
+   "name": "Grains collectés (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Grains collectés"
+   },
+   "x": 706.5497283935547,
+   "y": 696.3526575275274,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Epeautre__Os": {
+   "name": "OS (Epeautre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "OS"
+   },
+   "x": 583.480094909668,
+   "y": 19913.71971374338,
+   "style": [
+    "default",
+    "NodeSectorStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "epeautre"
+    ],
+    "type de noeud": [
+     "secteur"
+    ],
+    "type de matiere": [],
+    "type de process": [
+     "transformation"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Lait__Eau_2DGeneree": {
+   "name": "Eau - Générée (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Eau - Générée"
+   },
+   "x": 1555.9460521504893,
+   "y": 27766.863908208034,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "rejet"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "BleTendre__IssuesDeSilo": {
+   "name": "Issues de silo (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Issues de silo"
+   },
+   "x": 706.5497283935547,
+   "y": 1299.5793143769542,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Epeautre__IssuesDeSilo": {
+   "name": "Issues de silo (Epeautre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Issues de silo"
+   },
+   "x": 802.0097274780273,
+   "y": 20222.5328851301,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "epeautre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Lait__BabeurreConcentre": {
+   "name": "Babeurre concentré (Lait)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Babeurre concentré"
+   },
+   "x": 1546.8489150199416,
+   "y": 27440.209303264164,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "lait"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "coproduit"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Epeautre__StockInitial": {
+   "name": "Stock initial (Epeautre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Stock initial"
+   },
+   "x": 50.0,
+   "y": 19768.17237716501,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "epeautre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "BleTendre__StockFinal": {
+   "name": "Stock final (Blé tendre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Stock final"
+   },
+   "x": 1980.1929168701172,
+   "y": 1083.912284996156,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "ble tendre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  },
+  "Epeautre__GrainsCollectes": {
+   "name": "Grains collectés (Epeautre)",
+   "local": {
+    "name_label_source": "custom",
+    "name_label_text": "Grains collectés"
+   },
+   "x": 802.0097274780273,
+   "y": 19833.48689234317,
+   "style": [
+    "default",
+    "NodeProductStyle"
+   ],
+   "tags": {
+    "filieres": [
+     "epeautre"
+    ],
+    "type de noeud": [
+     "produit"
+    ],
+    "type de matiere": [
+     "matiere premiere"
+    ],
+    "type de process": [
+     "marche"
+    ]
+   },
+   "inputLinksId": [],
+   "outputLinksId": [],
+   "links_order": []
+  }
+ },
+ "links": {
+  "BleTendre__GrainsRecoltes---Os": {
+   "idSource": "BleTendre__GrainsRecoltes",
+   "idTarget": "BleTendre__Os",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 37000,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 36500,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 31900,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__StockInitial---Os": {
+   "idSource": "BleTendre__StockInitial",
+   "idTarget": "BleTendre__Os",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1870,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1870,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 1790,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Os---GrainsCollectes": {
+   "idSource": "BleTendre__Os",
+   "idTarget": "BleTendre__GrainsCollectes",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 36300,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 36000,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 31100,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Os---IssuesDeSilo": {
+   "idSource": "BleTendre__Os",
+   "idTarget": "BleTendre__IssuesDeSilo",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 129,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 128,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 112,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "BleTendre__Os---StockFinal": {
+   "idSource": "BleTendre__Os",
+   "idTarget": "BleTendre__StockFinal",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 2380,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 2250,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 2430,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Epeautre__GrainsRecoltes---Os": {
+   "idSource": "Epeautre__GrainsRecoltes",
+   "idTarget": "Epeautre__Os",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 31,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Epeautre__StockInitial---Os": {
+   "idSource": "Epeautre__StockInitial",
+   "idTarget": "Epeautre__Os",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 11,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Epeautre__Os---GrainsCollectes": {
+   "idSource": "Epeautre__Os",
+   "idTarget": "Epeautre__GrainsCollectes",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 15.4,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Epeautre__Os---IssuesDeSilo": {
+   "idSource": "Epeautre__Os",
+   "idTarget": "Epeautre__IssuesDeSilo",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0.15,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Epeautre__Os---StockFinal": {
+   "idSource": "Epeautre__Os",
+   "idTarget": "Epeautre__StockFinal",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 26.4,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {},
+     "kt mu": {},
+     "kt mg": {},
+     "kt mp": {}
+    }
+   }
+  },
+  "Lait__Babeurre---FabricationDeBabeurreConcentre": {
+   "idSource": "Lait__Babeurre",
+   "idTarget": "Lait__FabricationDeBabeurreConcentre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 46.43340134039095,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.334541985841042,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 1.538600261568446,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 1.873142247409488,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 257.0267859758443,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 1.851818925870992,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 8.516745892326682,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 10.36856481819767,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 142.0024439543801,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 1.023094975242656,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 4.705341222149809,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 5.728436197392466,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  },
+  "Lait__FabricationDeBabeurreConcentre---BabeurreConcentre": {
+   "idSource": "Lait__FabricationDeBabeurreConcentre",
+   "idTarget": "Lait__BabeurreConcentre",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 8.478,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.33059804970888,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 1.5424895378448,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 1.87308758755368,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 46.929,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 1.82998771818684,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 8.5382745366264,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 10.36826225481324,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 25.927386,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 1.011033645393881,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 4.717235391444177,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 5.728269036838058,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  },
+  "Lait__FabricationDeBabeurreConcentre---Eau_2DGeneree": {
+   "idSource": "Lait__FabricationDeBabeurreConcentre",
+   "idTarget": "Lait__Eau_2DGeneree",
+   "style": [
+    "default"
+   ],
+   "value": {
+    "datatag_group": "annee",
+    "2015": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 37.95540134039096,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2019": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 210.0977859758443,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    },
+    "2023": {
+     "datatag_group": "unite",
+     "kt": {
+      "result_value": 116.0750579543801,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mg": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mp": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "kt mu": {
+      "result_value": 0.0,
+      "tags": {
+       "echange": [
+        "interieur"
+       ]
+      }
+     },
+     "ktms": {}
+    }
+   }
+  }
+ }
+}

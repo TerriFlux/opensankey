@@ -59,9 +59,18 @@ export const candidateCoordinates = (
   )
 }
 
-/** Un flux au moins a-t-il une valeur à ces coordonnées ? */
+/**
+ * Un flux au moins a-t-il une valeur NON NULLE à ces coordonnées ?
+ *
+ * sa#607 (retour d'Alexandre) — un 0 n'est pas une donnée : un calcul du bilan écrit 0 sur les flux
+ * d'une année où la filière n'existe pas (OS de l'épeautre en 2015). Compter ces 0 faisait naître
+ * une vignette de flux sans épaisseur, et proposer l'année dans le bandeau.
+ */
 export const coordinatesCovered = (links: Type_CoverageLink[], tags: Class_DataTag[]): boolean =>
-  links.some(link => link.valueForDataTags(tags) !== null)
+  links.some(link => {
+    const value = link.valueForDataTags(tags)
+    return value !== null && value !== 0
+  })
 
 /**
  * LES PREMIÈRES COORDONNÉES COUVERTES par les flux d'un nœud, parmi les candidates ; `null` quand
