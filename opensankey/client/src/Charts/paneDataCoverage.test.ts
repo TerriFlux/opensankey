@@ -48,6 +48,18 @@ describe('sa#594 — coordonnees couvertes', () => {
     expect(availableDataTags(sankey, lait_oeufs, 'unite', { annee: ['2023'] })).toEqual(['kt'])
   })
 
+  it('sa#607 — des flux qui valent tous 0 ne couvrent pas leurs coordonnees', () => {
+    const epeautre = [0, 0].map(() => ({
+      valueForDataTags: (tags: Class_DataTag[]) => tags[0].id === '2019' ? 0 : 1
+    }))
+    expect(firstCoveredCoordinates(sankey, epeautre, { annee: ['2019'], unite: ['kt'] }, null)).toBeNull()
+    expect(ids(firstCoveredCoordinates(sankey, epeautre, { annee: ['2023'], unite: ['kt'] }, null))).toEqual(['2023', 'kt'])
+    expect(availableDataTags(sankey, epeautre, 'annee', { unite: ['kt'] })).toEqual(['2023'])
+    // Un seul flux non nul suffit.
+    const mixte = [...epeautre, flux('2019/kt')]
+    expect(ids(firstCoveredCoordinates(sankey, mixte, { annee: ['2019'], unite: ['kt'] }, null))).toEqual(['2019', 'kt'])
+  })
+
   it('sait dire si un volet a coche quelque chose', () => {
     expect(hasCheckedDataTags({})).toBe(false)
     expect(hasCheckedDataTags({ unite: [] })).toBe(false)
