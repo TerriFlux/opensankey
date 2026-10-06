@@ -404,7 +404,9 @@ export type Type_MainZoneDataTags = { [tagg_id: string]: string[] }
  */
 export type Type_MainZoneReader = {
   header?: boolean, node_taggs?: string[], data_taggs?: string[], nodes?: boolean,
-  level_taggs?: string[], flux_taggs?: string[]
+  level_taggs?: string[], flux_taggs?: string[],
+  /** sa#608 — le nom que l'auteur donne à la liste des nœuds du bandeau (« Process ») ; absent : « Nœuds ». */
+  nodes_label?: string
 }
 
 /** sa#603 — les quatre listes de groupes qu'un en-tête peut montrer, dans l'ordre du bandeau. */
@@ -479,6 +481,7 @@ const readMainZoneReader = (raw: unknown): Type_MainZoneReader | undefined => {
   const reader: Type_MainZoneReader = {}
   if (r['header'] === true) reader.header = true
   if (r['nodes'] === true) reader.nodes = true
+  if (typeof r['nodes_label'] === 'string' && r['nodes_label'].trim() !== '') reader.nodes_label = r['nodes_label']
   MAIN_ZONE_READER_GROUP_KEYS.forEach(key => {
     const list = ids(r[key])
     if (list) reader[key] = list
@@ -2370,6 +2373,7 @@ export class Class_MenuConfig {
     const next: Type_MainZoneReader = {}
     if (reader.header) next.header = true
     if (reader.nodes) next.nodes = true
+    if (reader.nodes_label && reader.nodes_label.trim() !== '') next.nodes_label = reader.nodes_label
     MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (reader[key]) next[key] = [...(reader[key] as string[])] })
     if (Object.keys(next).length > 0) o.reader = next
     else delete o.reader
@@ -4556,6 +4560,7 @@ export class Class_MenuConfig {
       const reader: Type_JSON = {}
       if (o.reader.header) reader['header'] = true
       if (o.reader.nodes) reader['nodes'] = true
+      if (o.reader.nodes_label) reader['nodes_label'] = o.reader.nodes_label
       MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (o.reader?.[key]) reader[key] = [...(o.reader[key] as string[])] })
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }
