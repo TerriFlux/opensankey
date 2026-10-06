@@ -473,6 +473,55 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     commit(next)
   }
 
+  /**
+   * 06/10/2026 — ⇄ DU TABLEAU CROISÉ : les dimensions `a` et `b` échangent leur place dans l'ordre (les
+   * autres ne bougent pas). Même règle que ⇅ : si l'une fait les cases, l'autre les reprend.
+   */
+  const swap = (a: string, b: string) => {
+    const ia = state.order.indexOf(a)
+    const ib = state.order.indexOf(b)
+    if (ia < 0 || ib < 0 || a === b) return
+    const order = [...state.order]
+    order[ia] = b
+    order[ib] = a
+    let next: Type_CouronneState = { ...state, order }
+    const was = state.order.find(o => st(o).drawing === 'multiples')
+    if (was === a || was === b) {
+      const other = was === a ? b : a
+      next = withDim(withDim(next, was, { drawing: 'sectors' }), other, { drawing: 'multiples', active: true })
+      next = { ...next, order: [...next.order.filter(o => o !== other), other] }
+      next = withCells(next, dimOf(other) as Class_DataTagGroup)
+    }
+    commit(next)
+  }
+
+  /**
+   * 06/10/2026 — LES COLONNES DU TABLEAU CROISÉ : `col_id` devient la seconde dimension active (les
+   * autres, hors `row_id`, se désactivent) ; `null` : plus de colonnes, `row_id` reste seule active.
+   * Une dimension qui ne montre qu'un membre à enfants se pose dessus (elle découpe un cran dessous ;
+   * liée, le diagramme ne bouge pas).
+   */
+  const setMatrixColumns = (row_id: string, col_id: string | null) => {
+    if (st(row_id) === undefined || (col_id !== null && st(col_id) === undefined)) return
+    let next = withDim(state, row_id, { active: true })
+    state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false }) })
+    if (col_id !== null) {
+      const d = dimOf(col_id) as Class_DataTagGroup
+      const parts = partsIdsOf(next, col_id)
+      const one = parts.length === 1 ? d.tags_dict[parts[0]] as Class_DataTag | undefined : undefined
+      if (one !== undefined && kidsOf(one).length > 0) next = nextWithFocus(next, d, [one.id])
+      next = withDim(next, col_id, { active: true })
+      // La seconde dimension suit la première dans l'ordre.
+      const rest = next.order.filter(o => o !== row_id && o !== col_id)
+      const at = next.order.indexOf(row_id) <= next.order.indexOf(col_id) ? 0 : 1
+      next = { ...next, order: at === 0 ? [row_id, col_id, ...rest] : [col_id, row_id, ...rest] }
+    }
+    // Une couronne par membre ne vit qu'avec une autre dimension active.
+    const multiples = next.order.find(o => next.dims[o].drawing === 'multiples')
+    if (multiples !== undefined && col_id === null) next = withDim(next, multiples, { drawing: 'sectors' })
+    commit(next)
+  }
+
   /** « En sunburst » a-t-il un effet ? La dimension doit montrer plus d'un niveau sous sa portée. */
   const offersRingsFor = (id: string): boolean => {
     const d = dimOf(id)
@@ -509,7 +558,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     chooseColumn, deactivate,
     unfold, fold, zoomTo, zoomUp, back, activatePart,
     setFocus, toggleHidden, setShown, chosenOf,
-    move, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
+    move, swap, setMatrixColumns, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
     linkedOptions
   }
 }
