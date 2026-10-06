@@ -26,7 +26,9 @@ import {
   default_info_link_value_void, default_width, ALL_ATTRIBUTES_CONFIG
 } from './ElementsAttributesConfig'
 import type { Type_HatchOrientation } from './ElementsAttributesConfig'
-import { LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, legendSlug } from './legendIds'
+import {
+  LEGEND_CHILD_PREFIX, LEGEND_FRAME_ID, isLegendChildId, isLegendDataTagZoneId, isLegendElementId, legendSlug
+} from './legendIds'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { chooseLegendDimensionTag } from '../components/panels/presentation/legendDimensionChoice'
 import { decorateLegendDimensionZone } from './legendDimensionCaret'
@@ -336,6 +338,10 @@ export class Class_LegendConfig {
   // SA#551 — groupe de nœuds ou de flux que désigne chaque titre de groupe, ligne épinglée comprise :
   // cliquer le titre ouvre ou ferme le groupe.
   private _group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+  // os#1527 — entrées du panneau de légende et ses abonnés (cf. `panel_items`)
+  private _panel_items: readonly Type_LegendItem[] = []
+  private _panel_listeners = new Set<() => void>()
+  private _in_panel: boolean = false
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -506,6 +512,77 @@ export class Class_LegendConfig {
   /** SA#551 — groupe de nœuds ou de flux que désigne ce titre de légende, ou `undefined`. */
   public tagGroupIdOfTitle(zone_id: string): string | undefined {
     return this._group_titles.get(zone_id)?.tag_group_id
+  }
+
+  /**
+   * os#1527 — TOUTES les entrées de la dernière régénération, étiquettes masquées comprises : ce
+   * que lit le panneau de légende (colonne à côté du diagramme). Mêmes ids que les zones : le
+   * panneau passe par les gestes de la légende dessinée (`toggleEntryTag`, `renameEntry`, titre de
+   * groupe, choix de dimension), rien n'est réécrit. Vide quand la légende est masquée.
+   */
+  public get panel_items(): readonly Type_LegendItem[] { return this._panel_items }
+  public set panel_items(_: readonly Type_LegendItem[]) {
+    this._panel_items = _
+    this._panel_listeners.forEach(listener => listener())
+  }
+
+  /**
+   * os#1527 — la légende se lit dans le PANNEAU, à côté du diagramme : ses zones restent dans le
+   * modèle (exports, vignettes, gestes) mais ne sont plus montrées à l'écran ni comptées dans le
+   * cadrage, pour ne plus passer par-dessus le dessin. Posé par l'hôte qui monte le panneau ; pas
+   * persisté.
+   */
+  public get in_panel(): boolean { return this._in_panel }
+  public set in_panel(_: boolean) {
+    if (this._in_panel === _) return
+    this._in_panel = _
+    // Une légende retouchée à la main (figée) n'a pas d'entrées à montrer dans le panneau : elle
+    // repasse en gérée — arbitrage os#1527, « colonne pour tous », les retouches par zone se perdent.
+    if (_ && !this._managed && !this._masked) this.regenerate()
+    this.applyPanelDisplay()
+    this._drawing_area.areaAutoFit()
+  }
+
+  /** os#1527 — montre ou cache à l'écran les zones de la légende selon `in_panel`. */
+  public applyPanelDisplay(): void {
+    const in_panel = this._in_panel
+    this._drawing_area.sankey.containers_list
+      .filter(c => isLegendElementId(c.id))
+      .forEach(c => {
+        if (in_panel) c.d3_selection?.style('display', 'none')
+        else c.d3_selection?.style('display', null)
+      })
+  }
+
+  /** os#1527 — prévenu à chaque régénération ; renvoie le désabonnement. */
+  public subscribePanel(listener: () => void): () => void {
+    this._panel_listeners.add(listener)
+    return () => { this._panel_listeners.delete(listener) }
+  }
+
+  /** os#1527 — l'entrée se coche ou se décoche (étiquette de nœuds, de flux, membre de dimension). */
+  public isToggleEntry(zone_id: string): boolean {
+    return this._managed && !this._masked && this._entry_tags.has(zone_id)
+  }
+
+  /** os#1527 — survol d'une entrée du panneau : même surbrillance que la zone dessinée. */
+  public highlightEntry(zone_id: string): void {
+    if (this._group_titles.has(zone_id)) return
+    const item = this._panel_items.find(i => i.id === zone_id)
+    if (item === undefined) return
+    const block_groups = new Map<string, string>()
+    this._panel_items.forEach(i => {
+      if (i.block_id !== undefined && i.tag_group_id !== undefined && !block_groups.has(i.block_id)) {
+        block_groups.set(i.block_id, i.tag_group_id)
+      }
+    })
+    const target = hoverTargetOf(item, block_groups)
+    if (target !== undefined) applyLegendHighlight(this._drawing_area, target)
+  }
+
+  /** os#1527 — fin du survol d'une entrée du panneau. */
+  public clearHighlight(): void {
+    clearLegendHighlight(this._drawing_area)
   }
 
   /**
@@ -848,6 +925,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
 
     // Masquée (ou aucun contenu) → tout supprimer
     let items: Type_LegendItem[] = []
+    // os#1527 — TOUTES les entrées, étiquettes masquées comprises : le panneau de légende les garde,
+    // décochées, comme la légende des couronnes (ordre stable, porte de retour).
+    let all_items: Type_LegendItem[] = []
     if (!values.masked) {
       const app_data = drawing_area.application_data
       const t = app_data.t
@@ -888,10 +968,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       // `renderableLegendItems` dit ce qui est effectivement posé sur le diagramme.
       // SA#549 — il les garde, rayées, quand le réglage `show_hidden_tags` est allumé ;
       // éteint (défaut, fichiers existants), l'aspect est inchangé (golden de rendu #530).
-      items = renderableLegendItems(
-        computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text),
-        values.show_hidden_tags === true
-      )
+      all_items = computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
+      items = renderableLegendItems(all_items, values.show_hidden_tags === true)
     }
 
     // SA#549 — zones qu'un clic bascule : entrées (et leur valeur d'exemple) des étiquettes de
@@ -904,7 +982,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       ...sankey.data_taggs_list.filter(g => (g as unknown as Class_DataTagGroup).is_hierarchical)
     ].map(g => g.id))
     const entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
-    items.forEach(item => {
+    // os#1527 — relevé sur TOUTES les entrées : une étiquette masquée reste cochable depuis le panneau.
+    all_items.forEach(item => {
       if (item.tag_group_id === undefined || item.tag_id === undefined) return
       if (!filter_group_ids.has(item.tag_group_id)) return
       const target = { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
@@ -916,11 +995,11 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     // SA#549 — titres de groupe (renommer au double-clic renomme le groupe) : le groupe d'un bloc
     // se relève sur ses entrées, le titre étant l'item « sur sa ligne » du bloc sans étiquette.
     const group_of_block = new Map<string, string>()
-    items.forEach(item => {
+    all_items.forEach(item => {
       if (item.block_id !== undefined && item.tag_group_id !== undefined) group_of_block.set(item.block_id, item.tag_group_id)
     })
     const entry_groups = new Map<string, string>()
-    items.forEach(item => {
+    all_items.forEach(item => {
       if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
       const group_id = group_of_block.get(item.block_id)
       if (group_id !== undefined) entry_groups.set(item.id, group_id)
@@ -933,12 +1012,14 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     sankey.node_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'node_taggs', pinned: false }))
     sankey.flux_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'flux_taggs', pinned: false }))
     const group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
-    items.forEach(item => {
+    all_items.forEach(item => {
       if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
       const target = group_of_block_id.get(item.block_id)
       if (target !== undefined) group_titles.set(item.id, { ...target, pinned: item.pinned === true })
     })
     config.group_titles = group_titles
+    // os#1527 — après les relevés : le panneau, prévenu ici, les lit pour ses cases et ses clics.
+    config.panel_items = all_items
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue
@@ -1317,6 +1398,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       if (block) drawing_area.sendFrameBehindMembers(block)
     })
     drawing_area.sendFrameBehindMembers(frame)
+    // os#1527 — zones recréées ou redessinées : masquées à l'écran quand le panneau les montre.
+    config.applyPanelDisplay()
   } finally {
     config._generating = false
   }

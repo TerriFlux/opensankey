@@ -25,6 +25,8 @@ import type { Class_DrawingArea } from './DrawingArea'
 import * as CameraMath from './CameraMath'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeBase } from '../Elements/NodeBase'
+// Module FEUILLE (aucun import)
+import { isLegendElementId } from '../Elements/legendIds'
 
 // Durée de l'interpolation d3 (dézoom → pan → rezoom) des recadrages animés.
 const ZOOM_ANIMATION_DURATION_MS = 450
@@ -434,9 +436,11 @@ export function contentBoundsFromModel(
   // (-margin_left, -margin_top) et mesure getShapeWidthToUse() + les marges (cf.
   // NodeDrawShape.drawShape) : elle s'étend donc de position − margin_left/top à
   // position + taille + margin_right/bottom.
+  // os#1527 — légende lue dans le panneau : ses zones, masquées à l'écran, ne comptent pas.
+  const legend_in_panel = da.legend?.in_panel === true
   const shape_holders = [
     ...da.sankey.visible_nodes_list,
-    ...da.sankey.containers_list.filter(c => c.is_visible)
+    ...da.sankey.containers_list.filter(c => c.is_visible && !(legend_in_panel && isLegendElementId(c.id)))
   ]
   shape_holders.forEach(n => {
     push(n.position_x - n.shape_margin_left, n.position_y - n.shape_margin_top)

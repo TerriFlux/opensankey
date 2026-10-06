@@ -86,6 +86,12 @@ export interface Type_FigureNavDimension {
   members?: ((close: () => void) => ReactNode) | null
   /** 05/10/2026 — un résumé discret après le nom (« — mixte — » quand plusieurs niveaux sont dessinés). */
   summary?: string
+  /**
+   * os#1526 — UN ÉLÉMENT DE L'HÔTE posé devant le nom, à la place du bouton de dessin d'une couronne :
+   * le menu de la dimension du diagramme (Afficher / Dessiner / Placer), rendu par l'hôte (portail
+   * React). L'élément appartient à l'hôte : le tableau rebâti le reprend tel quel.
+   */
+  leading?: HTMLElement
 }
 
 export interface Type_FigureNavTable {
@@ -311,6 +317,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     const name = head.insertCell()
     name.className = 'figure_navigation_name'
     if (dim.drawing) name.appendChild(drawingButton(model, dim.id, dim.drawing))
+    else if (dim.leading) name.appendChild(dim.leading)
     const dim_label = document.createElement('span')
     // Sous un titre commun, le reste du nom ; l'info-bulle garde le nom complet.
     dim_label.textContent = prefix ? prefix.short[i] : dim.name
