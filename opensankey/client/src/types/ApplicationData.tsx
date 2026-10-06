@@ -1609,7 +1609,10 @@ export class Class_ApplicationData {
   }
 
   public toJSON(kwargs?: Type_JSON) {
-    return this._toJSON(kwargs)
+    // sa#603 — la racine du fichier écrit la VALEUR COMMUNE de chaque groupe, même quand le volet
+    // vivant en montre une autre, choisie pour lui seul (elle est écrite sur son volet).
+    if (!this._sankey_panes) return this._toJSON(kwargs)
+    return this._sankey_panes.withCommonReading(() => this._toJSON(kwargs))
   }
 
   /**
