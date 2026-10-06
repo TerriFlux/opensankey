@@ -55,6 +55,14 @@ import {
 /** La clé unique de l'état d'une couronne sur dimensions de données. */
 export const COURONNE_KEY = 'couronne'
 
+/**
+ * 06/10/2026 — LA PORTÉE DE DÉPART que la fenêtre pose quand le sujet désigné est un élément ENGENDRÉ
+ * (`{ [dimension_id]: membres }`, cf. `generatedOriginOf`) : la figure lit l'origine, zoomée sur le
+ * membre. Jamais écrite — posée à la lecture par la fenêtre, lue seulement tant que la figure n'a pas
+ * d'état propre (le premier geste écrit `couronne` et la retire : ✕ ramène alors à la racine).
+ */
+export const SUBJECT_FOCUS_KEY = 'subject_focus'
+
 /** La version du format écrit sous `COURONNE_KEY`. */
 export const COURONNE_STATE_VERSION = 1
 
@@ -292,7 +300,31 @@ export const readCouronneState = (
     })
     return normalizeCouronneState({ ...stored, order, dims }, sankey)
   }
-  return normalizeCouronneState(legacyCouronneState(options, sankey, is_linked, declaredDimensionIdsOf(options) ?? declared_ids ?? []), sankey)
+  const legacy = legacyCouronneState(options, sankey, is_linked, declaredDimensionIdsOf(options) ?? declared_ids ?? [])
+  return normalizeCouronneState(withSubjectFocus(legacy, options?.[SUBJECT_FOCUS_KEY], sankey), sankey)
+}
+
+/**
+ * La portée de départ d'un sujet engendré (`SUBJECT_FOCUS_KEY`) posée sur un état sans réglage propre.
+ * Une dimension qu'il nomme entre dans l'ordre si elle n'y était pas. Détachée, les montrés couvrent
+ * la portée (ses enfants) ; liée, la sélection du diagramme projetée sur elle le dira.
+ */
+const withSubjectFocus = (state: Type_CouronneState, raw: unknown, sankey: Type_CouronneSankey): Type_CouronneState => {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return state
+  const order = [...state.order]
+  const dims = { ...state.dims }
+  Object.entries(raw as Type_Options).forEach(([id, value]) => {
+    const dim = dimOf(sankey, id)
+    const focus = dim === undefined ? [] : antichainOf(dim, stringsOf(value))
+    if (dim === undefined || focus.length === 0) return
+    if (!order.includes(id)) order.push(id)
+    const base = dims[id] ?? defaultDimensionState(dim, state.linked, false)
+    const shown = state.linked
+      ? base.shown
+      : focus.flatMap(f => { const kids = childrenOf(memberOf(dim, f) as Class_DataTag); return kids.length > 0 ? kids.map(k => k.id) : [f] })
+    dims[id] = { ...base, focus, shown, hidden: [] }
+  })
+  return { ...state, order, dims }
 }
 
 /**
@@ -407,6 +439,7 @@ const isDataFocus = (options: Type_Options): boolean =>
 export const writeCouronneState = (options: Type_Options, state: Type_CouronneState): Type_Options => {
   const out: Type_Options = { ...options }
   LEGACY_COURONNE_KEYS.forEach(k => { out[k] = undefined })
+  out[SUBJECT_FOCUS_KEY] = undefined
   if (isDataFocus(options)) out[HIERARCHY_FOCUS_KEY] = undefined
   // `hierarchy_expanded` : l'entrée `detache` et les `membre:` d'avant s'en vont, les nœuds restent.
   const expanded = stringsOf(options[HIERARCHY_EXPANDED_KEY])
