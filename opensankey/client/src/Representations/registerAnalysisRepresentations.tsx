@@ -30,7 +30,10 @@ import {
   drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells, smallMultipleCentrePlan, centreCaptionPlan,
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
-import type { Type_StatSlice } from '../Charts/NodeStatsCharts'
+import type { Type_ChartOptions, Type_StatSlice } from '../Charts/NodeStatsCharts'
+import { tagGroupCarriesFormatting } from '../Elements/legendItems'
+import { legendDataTagZoneId } from '../Elements/legendIds'
+import { openLegendDimensionChoice } from '../components/panels/presentation/legendDimensionChoice'
 import { zoneHalfOfDisc } from '../Charts/donutCalloutLayout'
 import { analysisPartInputs } from './parts/analysisParts'
 import {
@@ -786,7 +789,10 @@ const centreContextOf = (ctx: Type_RepresentationContext): string => {
 /**
  * 03/10/2026 — LE NOM DU SUJET PASSE AU TITRE (os#1511) : le centre d'une couronne sur dimensions de
  * données ne le redit plus (il dit le membre zoomé, la valeur et le contexte). Quand ni le titre ni
- * une zone de texte ne le portent, une ligne discrète le pose en haut de la figure.
+ * une zone de texte ne le portent, une ligne discrète le pose en BAS de la figure.
+ *
+ * 06/10/2026 (os#1527) — EN BAS, PLUS EN HAUT : la figure commence par son tableau, comme la fenêtre
+ * Sankey (Julien : « le haut doit être aligné » entre diagramme et couronnes).
  */
 const withSubjectLine = (ctx: Type_RepresentationContext, texts: Type_FigureText[]): Type_FigureText[] => {
   const a = analysisOf(ctx)
@@ -795,7 +801,7 @@ const withSubjectLine = (ctx: Type_RepresentationContext, texts: Type_FigureText
   const short = subjectShortNameOf(ctx).toLocaleLowerCase()
   if (subject === '' || texts.some(z => z.text.toLocaleLowerCase().includes(short))) return texts
   return [...texts, {
-    text: subject, position: 'top', font_size: 12, bold: false, italic: false, font_family: '',
+    text: subject, position: 'bottom', font_size: 12, bold: false, italic: false, font_family: '',
     color: '#4A5568', align: 'middle', wrap: false
   }]
 }
@@ -1209,6 +1215,44 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
     toggle: (part_id: string, show: boolean) => toggle(part_id, show),
     hidden, all, hint: (name: string) => t('sunburst.nav.toggle_part', { name }) as string
   }
+}
+
+/**
+ * 06/10/2026 (os#1527) — LES LIGNES DE RAPPEL DES COORDONNÉES dans la légende d'une couronne sur
+ * dimensions de données, comme dans celle du diagramme (Julien : « on voit que Année apparaît dans la
+ * légende du diagramme et qu'elle est sélectionnable, il faudrait l'avoir aussi pour les couronnes »).
+ * Même règle que le diagramme (`computeLegendItems`, rappel des data tags) : réglage « montrer les data
+ * tags » de sa légende, ni dimension mise en forme, ni dimension dessinée en nœuds — et ici, aucune
+ * que le tableau de la couronne porte déjà. Le membre lu : l'épingle de la figure, sinon la sélection
+ * du diagramme. Liée et sans épingle, la ligne ouvre la liste de la dimension (le même geste que sur
+ * le diagramme) ; sinon elle ne fait que dire.
+ */
+const legendContextOf = (ctx: Type_RepresentationContext): Type_ChartOptions['legend_context'] => {
+  const couronne = couronneOf(ctx)
+  const a = analysisOf(ctx)
+  if (couronne === null || !a) return undefined
+  const app_data = ctx.app_data
+  const sankey = app_data.drawing_area.sankey
+  if (!app_data.drawing_area.legend.legend_show_dataTags) return undefined
+  const in_table = new Set(couronne.state.order)
+  const t = app_data.t
+  return (sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+    .filter(group => !in_table.has(group.id) && group.tags_list.length > 0
+      && !tagGroupCarriesFormatting(group as unknown as Parameters<typeof tagGroupCarriesFormatting>[0])
+      && group.is_drawn_as_nodes !== true)
+    .map(group => {
+      const pinned = (a.nav.data_tags ?? []).filter(tag => tag.group.id === group.id)
+      const members = pinned.length > 0 ? pinned : group.selected_tags_list as Class_DataTag[]
+      const label = group.name + ' : ' + members.map(m => m.display_name).join(', ')
+      const choosable = couronne.plan.linked && pinned.length === 0 && group.tags_list.length > 1
+      return {
+        label,
+        hint: choosable ? t('MEP.legend_dimension_change') as string : undefined,
+        open: choosable
+          ? (anchor: { x: number, y: number }) => { openLegendDimensionChoice(app_data, legendDataTagZoneId(group.id), anchor) }
+          : undefined
+      }
+    })
 }
 
 /**
@@ -2242,6 +2286,7 @@ export const registerAnalysisRepresentations = (): void => {
           style,
           breadcrumb,
           legend_toggle: legendToggleOf(ctx),
+          legend_context: legendContextOf(ctx),
           part_aspect: wiring.part_aspect,
           on_part_select: wiring.on_part_select,
           // 25/09/2026 — ET LE TRACÉ DIT CE QU'IL A DÉCIDÉ : c'est par là que le panneau apprend

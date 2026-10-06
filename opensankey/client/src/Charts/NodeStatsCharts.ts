@@ -163,6 +163,12 @@ export interface Type_ChartOptions {
     hint?: (label: string) => string
   }
   /**
+   * 06/10/2026 (os#1527) — LES LIGNES DE RAPPEL DES COORDONNÉES, sous les entrées, comme dans la
+   * légende du diagramme (« Année : 2015 ») : les dimensions que la figure ne découpe pas. `open` :
+   * la ligne se clique et ouvre la liste de la dimension. Absent ou vide : pas de ligne.
+   */
+  legend_context?: { label: string, hint?: string, open?: (anchor: { x: number, y: number }) => void }[]
+  /**
    * os#1460 — L'ASPECT D'UNE PART, quand elle en porte un.
    *
    * Depuis os#1445 un secteur de couronne, une barre, sont de vrais ÉLÉMENTS : on les touche, et
@@ -2545,6 +2551,39 @@ export const drawDonutChart = (
       this.insertBefore(boxOf(r.entry.checked, r.entry.slice.id, r.entry.slice.label), this.firstChild)
     })
   }
+  appendLegendContextRows(legend as unknown as d3.Selection<HTMLElement, unknown, null, undefined>, opts.legend_context, below)
+}
+
+/**
+ * os#1527 — LES LIGNES DE RAPPEL DES COORDONNÉES sous les entrées de la légende (« Année : 2015 »),
+ * écrites comme celles de la légende du diagramme : une ligne par dimension, séparée du bloc ; un clic
+ * ouvre la liste de la dimension quand elle se choisit d'ici.
+ */
+export const appendLegendContextRows = (
+  legend: d3.Selection<HTMLElement, unknown, null, undefined>,
+  rows: Type_ChartOptions['legend_context'],
+  below: boolean
+) => {
+  (rows ?? []).forEach((row, i) => {
+    const line = legend.append('div')
+      .attr('class', 'node_stats_legend_context')
+      .style('padding', '0.1rem 0.2rem')
+      .style('margin-top', i === 0 ? '0.5rem' : '0')
+      .style('flex-basis', below ? '100%' : 'auto')
+      .style('text-align', below ? 'center' : 'left')
+      .style('cursor', row.open ? 'pointer' : 'default')
+      .text(row.label)
+    if (row.hint) line.attr('title', row.hint)
+    const open = row.open
+    if (open) {
+      line.on('pointerdown', (e: PointerEvent) => e.stopPropagation())
+      line.on('click', (e: MouseEvent) => {
+        e.stopPropagation()
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        open({ x: rect.left, y: rect.bottom })
+      })
+    }
+  })
 }
 
 // ==================================================================================================
