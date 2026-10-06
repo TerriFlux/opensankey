@@ -32,10 +32,91 @@ import { linkValueUnder } from './FigureNavigation'
 import type { Type_FigureNavigation } from './FigureNavigation'
 import { sunburstNodeValue } from './SunburstHierarchy'
 import {
-  dimensionHiddenMembers, dimensionOpenedMembers, dimensionRootsOf, openedForSelection, selectionFromOpening
+  dimensionHiddenMembers, dimensionOpenedMembers, dimensionRootsOf, hiddenForSelection, openedForSelection,
+  selectionFromOpening
 } from './DataDimensionHierarchy'
 import type { Type_DataCut, Type_DataDimensionSubject } from './DataDimensionHierarchy'
 import type { Type_ExportColumn, Type_ExportRow, Type_ExportTable } from './TableExport'
+import { memberSectorId } from './memberSectorId'
+import type { Type_DrawPlan } from './couronnePlan'
+import type { Type_CouronneSankey, Type_CouronneState } from '../Representations/couronneState'
+
+// ── 06/10/2026 — LE TABLEAU LIT L'ÉTAT DE LA COURONNE ──────────────────────────────────────────────
+//
+// Julien : « je ne vois pas la seconde dimension en COLONNE (les pays) — ça marchait avant ». Depuis
+// que les gestes n'écrivent plus que la clé `couronne` (b3758d824, lot 3), le tableau relisait encore
+// les anciennes (`nested_tagg_ids`, `dimension_opening`, `inactive_dimensions`) par `dataCutOf` : la
+// dimension emboîtée avait disparu du descripteur, il ne restait qu'une dimension. Il lit désormais le
+// MÊME état que la couronne, et en fait une coupe pour `buildDimensionMatrix`.
+
+/** Les deux dimensions du tableau dans l'état d'une couronne : lignes, colonnes (`null` : aucune). */
+export const matrixAxesOf = (
+  state: Type_CouronneState, plan: Type_DrawPlan
+): { row_id: string, col_id: string | null } | null => {
+  const order = state.order.filter(id => state.dims[id] !== undefined)
+  if (order.length === 0) return null
+  const actives = order.filter(id => state.dims[id].active)
+  // Celles qui découpent la couronne d'abord (parts ou cases), puis les autres actives ; l'ORDRE de
+  // l'état décide ensuite laquelle est en lignes (⇄ l'échange).
+  const divides = (id: string) => plan.cut.some(c => c.dimension_id === id) || plan.cells?.dimension_id === id
+  const chosen = [...actives.filter(divides), ...actives.filter(id => !divides(id))].slice(0, 2)
+    .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+  return { row_id: chosen[0] ?? order[0], col_id: chosen[1] ?? null }
+}
+
+/**
+ * Les membres qu'une dimension du tableau montre : ses parts (montrés − décochés) ; une part unique
+ * qui a des enfants s'ouvre d'un cran (« Monde » en colonnes, ce sont ses continents).
+ */
+const matrixMembersOf = (dim: Class_DataTagGroup, state: Type_CouronneState): Class_DataTag[] => {
+  const s = state.dims[dim.id]
+  const parts = s.shown.filter(id => !s.hidden.includes(id))
+    .map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+  if (parts.length === 1 && parts[0].children.length > 0) return [...parts[0].children] as Class_DataTag[]
+  return parts
+}
+
+/**
+ * LA COUPE DU TABLEAU d'après l'état de la couronne (`readCouronneState` / `drawPlanOf`) : lignes et
+ * colonnes (`matrixAxesOf`), leurs membres en ouverts / cachés, et la coordonnée des autres dimensions
+ * (celle du plan, sinon leurs parts). `null` : aucune dimension.
+ */
+export const matrixCutOfCouronne = (
+  state: Type_CouronneState, plan: Type_DrawPlan, sankey: Type_CouronneSankey
+): { cut: Type_DataCut, coordinates: Map<string, Class_DataTag[]>, row_id: string, col_id: string | null } | null => {
+  const axes = matrixAxesOf(state, plan)
+  if (axes === null) return null
+  const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup
+  const dims = state.order.filter(id => state.dims[id] !== undefined).map(dimOf).filter(d => d !== undefined)
+  const axis_ids = [axes.row_id, ...(axes.col_id ? [axes.col_id] : [])]
+  const opened = new Set<string>()
+  const hidden = new Set<string>()
+  axis_ids.forEach(id => {
+    const d = dimOf(id)
+    const chosen = new Set(matrixMembersOf(d, state).map(m => m.id))
+    openedForSelection(d, chosen).forEach(m => opened.add(memberSectorId(id, m)))
+    hiddenForSelection(d, chosen).forEach(m => hidden.add(memberSectorId(id, m)))
+  })
+  const coordinates = new Map<string, Class_DataTag[]>()
+  dims.filter(d => !axis_ids.includes(d.id)).forEach(d => {
+    const ids = plan.fixed[d.id] ?? state.dims[d.id].shown.filter(id => !state.dims[d.id].hidden.includes(id))
+    const members = ids.map(id => d.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+    if (members.length > 0) coordinates.set(d.id, members)
+  })
+  return {
+    cut: {
+      linked: false,
+      dims,
+      dividing: axis_ids.map(dimOf),
+      opened,
+      hidden,
+      inactive: new Set(dims.filter(d => !axis_ids.includes(d.id) && !state.dims[d.id].active).map(d => d.id))
+    },
+    coordinates,
+    row_id: axes.row_id,
+    col_id: axes.col_id
+  }
+}
 
 /** Tolérance RELATIVE de l'écart parent ↔ Σ enfants, la même que la couronne. */
 const BALANCE_TOLERANCE = 1e-6
@@ -89,6 +170,11 @@ export interface Type_DimensionMatrixOptions {
    * Absent : la colonne Total (ou Valeur) décroissante, comme les bandes du Sankey (Julien, 03/10).
    */
   sort?: Type_MatrixSort
+  /**
+   * 06/10/2026 — Où se lisent les dimensions qui ne sont ni en lignes ni en colonnes, quand l'état de
+   * la couronne le dit (`matrixCutOfCouronne`). Remplace la lecture à la racine de la coupe.
+   */
+  coordinates?: ReadonlyMap<string, Class_DataTag[]>
 }
 
 export interface Type_MatrixSort {
@@ -160,7 +246,8 @@ export const buildDimensionMatrix = (
   // Les dimensions qui ne sont NI en lignes NI en colonnes se lisent comme dans la couronne :
   // détachée (ou désactivée), à leur racine unique ; liée, à ce que le diagramme sélectionne.
   const base_coord = new Map<string, Class_DataTag[]>()
-  cut.dims.filter(d => d !== row_dim && d !== col_dim).forEach(d => {
+  if (options.coordinates) options.coordinates.forEach((v, k) => { if (k !== row_dim.id && k !== col_dim?.id) base_coord.set(k, v) })
+  else cut.dims.filter(d => d !== row_dim && d !== col_dim).forEach(d => {
     if (cut.linked && !cut.inactive?.has(d.id)) return
     const roots = dimensionRootsOf(d)
     if (roots.length === 1) base_coord.set(d.id, [roots[0]])
