@@ -591,6 +591,13 @@ export type Type_MainZoneOccupant = {
    * suivi. Cf. `Representations/paneValueMode`. Absent = ce que disent les figures.
    */
   value_mode?: Type_PaneValueMode
+  /**
+   * sa#609 — LE VOLET MASQUE SES PROCESS NEUTRES (au plus un flux non nul de chaque côté, pour les
+   * valeurs affichées), choisi dans son en-tête. Seules les figures qui savent le dire
+   * (`is_neutral_process`, l'étoile Unit.) en ont le bouton. Un volet qui en suit un autre suit son
+   * choix, comme `value_mode`. Absent = tout est montré.
+   */
+  hide_neutral?: boolean
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -2174,6 +2181,9 @@ export class Class_MenuConfig {
     // sa#598 — et le type de valeur qu'elle montre.
     if (e.value_mode) o.value_mode = e.value_mode
     else delete o.value_mode
+    // sa#609 — et s'il masque ses process neutres.
+    if (e.hide_neutral) o.hide_neutral = true
+    else delete o.hide_neutral
     // sa#603 — et ce que son volet Sankey montrait pour lui seul.
     if (e.reading) o.reading = e.reading
     else delete o.reading
@@ -2386,6 +2396,24 @@ export class Class_MenuConfig {
   }
 
   /**
+   * sa#609 — LE VOLET `id` MASQUE-T-IL SES PROCESS NEUTRES (cf. `Type_MainZoneOccupant.hide_neutral`) ?
+   */
+  public setMainZoneWindowHideNeutral(id: string, hide: boolean): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || (o.hide_neutral === true) === hide) return
+    if (hide) o.hide_neutral = true
+    else delete o.hide_neutral
+    this._notifyMainZone()
+  }
+
+  /** sa#609 — Le volet `id` masque-t-il ses process neutres : son choix, ou celui du volet qu'il suit. */
+  public mainZoneEffectiveHideNeutral(id: string): boolean {
+    const occupants = this._host._main_zone_occupants
+    const o = occupants.find(x => x.id === id)
+    return o ? (mainZoneLeaderOf(occupants, o)?.hide_neutral === true) : false
+  }
+
+  /**
    * sa#598 — RETIRE LE RÉGLAGE `key` QUE PORTENT EN PROPRE les figures de ces volets : elles
    * retombent sur ce que dit le volet (le type de valeur choisi dans l'en-tête), sinon sur leur style.
    */
@@ -2426,6 +2454,8 @@ export class Class_MenuConfig {
     const data_tags = effectiveMainZoneDataTags(this._host._main_zone_occupants, o)
     // sa#598 — et le type de valeur qu'il montrait, lu AVANT que le volet cesse de suivre.
     const value_mode = mainZoneLeaderOf(this._host._main_zone_occupants, o)?.value_mode
+    // sa#609 — et s'il masquait les process neutres.
+    const hide_neutral = mainZoneLeaderOf(this._host._main_zone_occupants, o)?.hide_neutral === true
     const leader_subject = effectiveMainZoneSubject(this._host._main_zone_occupants, o.subject)
     const sheet = mainZoneSubjectSheet(leader_subject)
     const subject: Type_MainZoneSubject = sheet === ''
@@ -2437,6 +2467,7 @@ export class Class_MenuConfig {
       o.data_tags = Object.fromEntries(Object.entries(data_tags).map(([k, v]) => [k, [...v]]))
     }
     if (value_mode) o.value_mode = value_mode
+    if (hide_neutral) o.hide_neutral = true
     this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
@@ -3809,6 +3840,9 @@ export class Class_MenuConfig {
         // sa#598 — et le type de valeur qu'il montrait.
         if (closing.value_mode) o.value_mode = closing.value_mode
         else delete o.value_mode
+        // sa#609 — et s'il masquait les process neutres.
+        if (closing.hide_neutral) o.hide_neutral = true
+        else delete o.hide_neutral
       })
     }
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
@@ -4527,6 +4561,8 @@ export class Class_MenuConfig {
     }
     // sa#598 — le type de valeur du volet, seulement s'il est posé.
     if (o.value_mode) entry['value_mode'] = o.value_mode
+    // sa#609 — les process neutres masqués, seulement si c'est posé.
+    if (o.hide_neutral) entry['hide_neutral'] = true
     // sa#603 — ce qu'un volet Sankey montre pour lui seul, seulement s'il a choisi quelque chose.
     if (o.reading && Object.keys(o.reading).length > 0) {
       entry['reading'] = JSON.parse(JSON.stringify(o.reading)) as Type_JSON
@@ -4665,6 +4701,8 @@ export class Class_MenuConfig {
     const reader = readMainZoneReader(e['reader'])
     // sa#598 — le type de valeur du volet ; une valeur inconnue est ignorée.
     const value_mode = isPaneValueMode(e['value_mode']) ? e['value_mode'] : undefined
+    // sa#609 — les process neutres masqués ; absent = tout est montré.
+    const hide_neutral = e['hide_neutral'] === true ? true : undefined
     // sa#603 — ce que le volet Sankey montre pour lui seul ; absent = tout suit la barre générale.
     const reading = readPaneReading(e['reading'])
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
@@ -4684,6 +4722,7 @@ export class Class_MenuConfig {
       data_tags: Object.keys(data_tags).length > 0 ? data_tags : undefined,
       reader,
       value_mode,
+      hide_neutral,
       reading,
       panes,
       maximized: getBooleanFromJSON(e, 'maximized', false)
@@ -4728,7 +4767,7 @@ export class Class_MenuConfig {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
       host._main_zone_occupants = entries.map(({
-        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, reading
+        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, hide_neutral, reading
       }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
@@ -4737,6 +4776,7 @@ export class Class_MenuConfig {
         if (data_tags) o.data_tags = data_tags
         if (reader) o.reader = reader
         if (value_mode) o.value_mode = value_mode
+        if (hide_neutral) o.hide_neutral = true
         if (reading && isSankeyPane(o)) o.reading = reading
         if (panes) o.panes = panes
         return o

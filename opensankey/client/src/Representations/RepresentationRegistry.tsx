@@ -390,6 +390,13 @@ type Type_RepresentationCommon = {
    */
   reports_tile_fit?: boolean
   /**
+   * sa#609 — LE SUJET DE CETTE VIGNETTE EST-IL UN PROCESS NEUTRE : au plus un flux non nul en entrée
+   * et au plus un en sortie, pour les valeurs que la figure DESSINE (coordonnées du volet comprises) ?
+   * Seule la figure sait quels flux elle lit, d'où la question posée à elle. Déclaré, le volet offre
+   * dans son en-tête le bouton « Masquer les process neutres ». Absent = pas de bouton.
+   */
+  is_neutral_process?: (ctx: Type_RepresentationContext) => boolean
+  /**
    * 06/10/2026 (os#1511) — LA FIGURE LIT LE CUBE : posée sur un élément ENGENDRÉ (`--par--`), elle
    * prend son ORIGINE pour sujet, zoomée sur le membre (cf. `generatedOriginOf`). Absent = la figure
    * montre l'élément tel qu'il est (les infos d'un flux engendré disent sa valeur à lui).
