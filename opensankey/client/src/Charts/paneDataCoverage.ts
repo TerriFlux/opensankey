@@ -79,6 +79,30 @@ export const firstCoveredCoordinates = (
   return combos?.find(c => coordinatesCovered(links, c)) ?? null
 }
 
+/** sa#596 — Une coordonnée déployée : par groupe déployé, l'étiquette de la vignette. */
+export type Type_DeployedCoordinates = { [tagg_id: string]: string }
+
+/**
+ * sa#596 — LES COORDONNÉES DÉPLOYÉES D'UN VOLET : un groupe dont le lecteur a coché PLUSIEURS
+ * étiquettes est déployé (l'état « déployé » d'une coordonnée, os#1431 — toutes ses valeurs à la
+ * fois), et chaque combinaison de ses valeurs cochées donne une vignette par objet. Dans l'ordre
+ * des groupes puis de leurs étiquettes, le premier groupe variant le plus lentement.
+ *
+ * `[]` quand aucun groupe n'est déployé : avec une seule valeur cochée par groupe, une seule
+ * vignette par objet, et rien ne change.
+ */
+export const deployedCoordinates = (
+  sankey: Type_CoverageSankey, checked: Type_CheckedDataTags
+): Type_DeployedCoordinates[] => {
+  const per_group = sankey.data_taggs_list
+    .map(g => ({ id: g.id, tags: g.tags_list.filter(t => (checked[g.id] ?? []).includes(t.id)) }))
+    .filter(g => g.tags.length > 1)
+  if (per_group.length === 0) return []
+  return per_group.reduce<Type_DeployedCoordinates[]>(
+    (combos, g) => combos.flatMap(c => g.tags.map(t => ({ ...c, [g.id]: t.id }))), [{}]
+  )
+}
+
 /** Vrai quand le volet a coché au moins une étiquette : les nœuds non couverts s'y cachent. */
 export const hasCheckedDataTags = (checked: Type_CheckedDataTags | undefined): boolean =>
   checked !== undefined && Object.values(checked).some(ids => ids.length > 0)

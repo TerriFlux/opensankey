@@ -67,7 +67,7 @@ import {
 } from '../Representations/paneSync'
 import { readPaneReading, type Type_GroupReading, type Type_PaneReading } from '../Representations/paneReading'
 import {
-  formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
+  basePaneKeyOf, formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
 } from './mainZonePanes'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
@@ -1067,6 +1067,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // sa#424 (lot 5) — fenêtre de choix « Nouveau » (vierge / modèle / classeur
   // Excel vierge), dernière section du menu Fichier devenue une commande.
   ref_setter_show_modal_new_document: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  // sa#605 — fenêtre « Ouvrir l'étude » : remplacer le document ouvert, ou l'ajouter
+  // comme feuille. Ne paraît que si le document ouvert n'est pas vierge.
+  ref_setter_show_open_diagram_choice: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   // Modales héritées, encore ouvertes par le bouton `export_sankey` conservé
   // pour les `menu_top_order` personnalisés.
@@ -2396,7 +2400,8 @@ export class Class_MenuConfig {
     if (this._host._main_zone_selected_pane_keys.length === 0) return
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     const alive: string[] = (o && o.subject.kind === 'elements') ? mainZonePaneKeys(o.subject) : []
-    const kept = this._host._main_zone_selected_pane_keys.filter(k => alive.includes(k))
+    // sa#596 — une vignette déployée vit tant que son objet vit.
+    const kept = this._host._main_zone_selected_pane_keys.filter(k => alive.includes(basePaneKeyOf(k)))
     this._host._main_zone_selected_pane_keys = kept
     // La vignette active suit la sélection quand il en reste une — l'invariant veut qu'elle en
     // fasse partie. Sélection VIDÉE, en revanche, on ne touche PAS à la vignette active : vide
@@ -2567,7 +2572,10 @@ export class Class_MenuConfig {
    * principal, les figures aussi, et l'appelant reste `MainZoneTabs` avec la configuration du
    * document principal — pour qui hôte et document sont la même grande zone qu'hier.
    */
-  public figureOf(occupant_id: string, pane_key: string): Class_Figure {
+  public figureOf(occupant_id: string, raw_pane_key: string): Class_Figure {
+    // sa#596 — une vignette DÉPLOYÉE (un nœud en 2015, le même en 2019) est la figure de son objet :
+    // ses copies partagent ses réglages (cf. `paneCoordinatesKey`).
+    const pane_key = basePaneKeyOf(raw_pane_key)
     const o = this._host._main_zone_occupants.find(x => x.id === occupant_id)
     const nature = this.figureNature(o?.representation ?? Class_MenuConfig.UNKNOWN_FIGURE_NATURE_ID)
     if (!o) return new Class_Figure(nature, pane_key)
@@ -5169,6 +5177,7 @@ export class Class_MenuConfig {
 
       ref_setter_show_modal_export: { current: () => null },
       ref_setter_show_modal_new_document: { current: () => null },
+      ref_setter_show_open_diagram_choice: { current: () => null },
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
       ref_setter_png_saver_res_v: { current: () => null },
@@ -5230,6 +5239,7 @@ export class Class_MenuConfig {
     dialogs.ref_setter_show_sankeymatic_editor.current(false)
     dialogs.ref_setter_show_modal_export.current(false)
     dialogs.ref_setter_show_modal_new_document.current(false)
+    dialogs.ref_setter_show_open_diagram_choice.current(false)
     dialogs.ref_setter_show_modal_png_saver.current(false)
     dialogs.ref_setter_show_modal_pdf_saver.current(false)
     dialogs.ref_setter_show_modal_styles.current(false)

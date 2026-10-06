@@ -822,9 +822,9 @@ export const donutLegendRows = <T>(
   )
 
 /**
- * Le nom d'une part tel que l'INFO-BULLE l'écrit : précédé de son parent sous une descente
- * (« Céréales › Blé »), sauf au premier rang dont le parent est le sujet. La légende, elle, n'écrit
- * que le nom court : son arbre dit déjà le parent.
+ * Le nom d'une part tel que l'info-bulle d'une LIGNE DE LÉGENDE l'écrit : précédé de son parent sous
+ * une descente (« Céréales › Blé »), sauf au premier rang dont le parent est le sujet. La ligne
+ * elle-même, comme l'info-bulle d'un secteur (05/10/2026), n'écrit que le nom court.
  */
 export const sliceTooltipLabel = (s: Type_StatSlice, st: Type_FigureChartStyle): string =>
   (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
@@ -1397,8 +1397,12 @@ export const drawDonutChart = (
   const legend_head = st.legend_levels
     ? legend_parts.find(s => s.parent_label !== undefined && (s.depth ?? 0) === 0)?.parent_label
     : undefined
-  const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) =>
-    `${legendLabel(d.data)}\n${fmt(d.data.value)} (${pctText(d.data.value, total)})`
+  // 05/10/2026 — L'INFO-BULLE D'UN SECTEUR DIT SON NOM COURT (retour de Jean-Yves : « Europe
+  // occidentale › Belgique » au lieu de « Belgique ») : la légende rappelle déjà l'arborescence.
+  // Le nom complet reste au survol d'une ligne de LÉGENDE (`legend_title`).
+  const valueLine = (s: Type_StatSlice) => `${fmt(s.value)} (${pctText(s.value, total)})`
+  const slice_title = (d: d3.PieArcDatum<Type_StatSlice>) => `${d.data.label}\n${valueLine(d.data)}`
+  const legend_title = (d: d3.PieArcDatum<Type_StatSlice>) => `${legendLabel(d.data)}\n${valueLine(d.data)}`
 
   // os#1460 — L'ASPECT DE CHAQUE SECTEUR, le sien s'il en a un, celui de la figure sinon.
   //
@@ -2480,7 +2484,7 @@ export const drawDonutChart = (
     e => e.arc ? colorOf(e.arc.data, e.arc.index) : e.checked ? (legend_colors.get(e.slice.id) ?? OTHERS_COLOR) : '#cbd5e0',
     e => e.slice.label
   )
-    .attr('title', r => r.entry.arc ? slice_title(r.entry.arc) : r.entry.slice.label)
+    .attr('title', r => r.entry.arc ? legend_title(r.entry.arc) : r.entry.slice.label)
   all_items.filter(r => !r.entry.checked)
     .classed('node_stats_legend_unchecked', true)
     .style('color', '#a0aec0')
