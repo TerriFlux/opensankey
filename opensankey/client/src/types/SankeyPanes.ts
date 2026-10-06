@@ -66,6 +66,10 @@ import {
   SANKEY_LAYOUT_SETTINGS, hasLayoutChanges, layoutChangesOf, layoutPrintOf, layoutSetting, modesForChanges,
   type Type_LayoutChanges, type Type_LayoutPrint
 } from '../Representations/paneSync'
+import {
+  applyReading, changedReadingSettings, dataSettingOfGroup, groupOfDataSetting, parseDataSetting, pickReading,
+  readingOf, readingPrintOf, sankeyDataSettings, type Type_GroupReading, type Type_PaneReading
+} from '../Representations/paneReading'
 
 /**
  * CE QUI FAIT LA MISE EN PAGE D'UN VOLET, en modes de `updateFrom` : positions, apparence et
@@ -90,14 +94,30 @@ const ELEMENT_LAYOUT_KEYS = [
   'source_anchor_delta', 'target_anchor_delta'
 ]
 
+/** sa#603 — les familles de groupes dont un volet a sa propre LECTURE (cf. `paneReading`). */
+const READING_TAG_FAMILIES = ['dataTags', 'levelTags', 'nodeTags', 'fluxTags']
+
+/** sa#603 — ce que l'état d'une dimension de nœud dit du NIVEAU montré, et non de la structure. */
+const DIMENSION_READING_KEYS = [
+  'force_show_children', 'force_show_parent', 'container_mode', 'expanded_left', 'expanded_right',
+  'split_links', 'preferred_disaggregation'
+]
+
+/** Une valeur JSON qui est un objet (et non un tableau). */
+const asObject = (value: unknown): Type_JSON | null =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value as Type_JSON : null
+
 /**
  * LA CLÉ DES DONNÉES d'un diagramme : ce que tous les volets partagent, et donc ce dont le
  * changement oblige à refaire leurs rendus. Arranger le volet actif — le cas de loin le plus
  * fréquent — ne la change pas, et les autres volets ne se refont pas pour rien.
  *
  * La sélection des étiquettes de VUE n'en fait pas partie : c'est la coordonnée de chaque volet
- * qui la porte (cf. `Class_SankeyPanes.renderOf`). Celle des niveaux et des données (l'année), si :
- * elle reste commune aux volets en attendant sa#568.
+ * qui la porte (cf. `Class_SankeyPanes.renderOf`). sa#603 — et plus aucune LECTURE n'en fait
+ * partie : étiquettes choisies, niveaux actifs, état des dimensions. Un volet Sankey peut avoir les
+ * siens, et c'est la réconciliation des lectures qui les pose (cf. « LECTURE DES VOLETS »). Les y
+ * laisser referait tous les rendus à chaque changement d'année — avec l'année du volet vivant,
+ * même pour un volet qui a choisi la sienne.
  */
 export const sankeyDataKey = (sankey: Class_Sankey): string => {
   const json = SankeyPersistence.toJSON(sankey) as Type_JSON
@@ -109,8 +129,34 @@ export const sankeyDataKey = (sankey: Class_Sankey): string => {
       ELEMENT_LAYOUT_KEYS.forEach(key => { delete (element as Type_JSON)[key] })
     })
   })
+  READING_TAG_FAMILIES.forEach(family => {
+    Object.values(asObject(json[family]) ?? {}).forEach(raw => {
+      const group = asObject(raw)
+      if (!group) return
+      delete group['activated']
+      Object.values(asObject(group['tags']) ?? {}).forEach(tag => { if (asObject(tag)) delete (tag as Type_JSON)['selected'] })
+      const untagged = asObject(group['untagged_tag'])
+      if (untagged) delete untagged['selected']
+    })
+  })
+  Object.values(asObject(json['nodes']) ?? {}).forEach(node => {
+    Object.values(asObject(asObject(node)?.['dimensions']) ?? {}).forEach(entry => {
+      const dim = asObject(entry)
+      if (dim) DIMENSION_READING_KEYS.forEach(key => { delete dim[key] })
+    })
+  })
   delete json['viewTags']
   return JSON.stringify(json)
+}
+
+/** sa#603 — ce qu'un volet Sankey montre pour lui seul (cf. `Type_MainZoneOccupant.reading`). */
+const ownReadingOf = (o: Type_MainZoneOccupant): Type_PaneReading => o.reading ?? {}
+
+/** sa#603 — deux volets ont-ils choisi la même chose pour eux seuls ? */
+const sameOwnReading = (a: Type_MainZoneOccupant, b: Type_MainZoneOccupant): boolean => {
+  const pa = readingPrintOf(ownReadingOf(a))
+  const pb = readingPrintOf(ownReadingOf(b))
+  return changedReadingSettings(pa, pb).length === 0
 }
 
 type Type_Camera = NonNullable<ReturnType<Class_DrawingArea['getCameraTransform']>>
@@ -190,6 +236,28 @@ export class Class_SankeyPanes {
   /** sa#568 — l'observateur du DOM du dessin vivant, et l'élément observé (cf. `observeLive`). */
   protected _observer: { disconnect: () => void } | null = null
   protected _observed: Element | null = null
+  /**
+   * sa#603 — LA VALEUR COMMUNE (celle de la barre générale) des groupes que le volet vivant a choisis
+   * pour lui seul. Le modèle montre alors SA lecture, et la valeur commune attend ici. Pour tout
+   * autre groupe, la valeur commune est celle que montre le modèle.
+   */
+  protected _common: Type_PaneReading = {}
+  /**
+   * sa#603 — CE QUE LE MODÈLE MONTRE POUR LE VOLET VIVANT, quand il montre sa lecture à lui : le
+   * volet, la zone de dessin, et par réglage l'empreinte voulue (son choix) et l'empreinte obtenue
+   * (ce que le modèle en a fait). Un écart entre l'obtenue et ce que montre le modèle, c'est la
+   * barre générale qui a parlé (cf. `reconcileLive`).
+   */
+  protected _applied: {
+    pane: string | null
+    area: Class_DrawingArea | null
+    wanted: { [setting: string]: string }
+    actual: { [setting: string]: string }
+  } = { pane: null, area: null, wanted: {}, actual: {} }
+  /** sa#603 — par rendu, l'empreinte de la lecture qu'on y a posée (cf. `reconcileRenders`). */
+  protected _render_prints = new WeakMap<Class_ApplicationData, { [setting: string]: string }>()
+  /** sa#603 — un contrôle de la lecture du vivant est déjà prévu (cf. `guardSoon`). */
+  protected _guard_queued = false
 
   constructor(protected readonly host: Class_ApplicationData) { }
 
@@ -469,7 +537,11 @@ export class Class_SankeyPanes {
         const was_bypassing = host.drawing_area.bypass_redraws
         host.drawing_area.bypass_redraws = true
         let changed = false
-        try { changed = this.applyLayoutOf(o) } finally { host.drawing_area.bypass_redraws = was_bypassing }
+        try {
+          changed = this.applyLayoutOf(o)
+          // sa#603 — et SA lecture : ce qu'il a choisi pour lui seul, la valeur commune pour le reste.
+          if (this.reconcileLive()) changed = true
+        } finally { host.drawing_area.bypass_redraws = was_bypassing }
         this._layout_owner = id
         // Le dessin PASSE d'un volet à l'autre : il se redessine avec la mise en page de celui qui le
         // reçoit. Rien de tout cela quand il se POSE pour la première fois sans que rien ne change
@@ -488,6 +560,9 @@ export class Class_SankeyPanes {
         mc.main_zone_live_sankey_id = id
         host.switchViewForPane(coordinate)
       }
+      // sa#603 — l'échange et la bascule de vue posent le dessin sans sa lecture : on la pose ici
+      // (rien à faire après le chemin ordinaire, qui l'a posée avant de dessiner).
+      if (this.reconcileLive()) this.redrawLive()
       const camera = this._cameras.get(id)
       if (camera && !sameCameraTransform(camera, host.drawing_area.getCameraTransform())) {
         host.drawing_area.setCamera(camera)
@@ -568,6 +643,10 @@ export class Class_SankeyPanes {
         this.activate(next)
         this._busy = true
       }
+      // sa#603 — un choix d'en-tête posé, retiré ou annulé : chaque volet montre ce qu'il doit.
+      // Pas de notification pour les rendus : la grande zone se redessine déjà sur celle qu'on sert.
+      if (this.reconcileLive()) this.redrawLive()
+      this.reconcileRenders()
       this.remember()
     } catch (error) {
       console.error('sa#581 — synchronisation des volets Sankey :', error)
@@ -760,6 +839,8 @@ export class Class_SankeyPanes {
       this.applyLayout(doc.drawing_area, parked.drawing_area)
     }
     doc.applyViewTagSelection(entry?.tag_selection)
+    // sa#603 — le modèle montrait la lecture du vivant : le rendu prend celle de SON volet.
+    this.giveRenderReading(o, doc)
     return { doc, coordinate, data_key: sankeyDataKey(base.sankey), mirror: false }
   }
 
@@ -781,7 +862,7 @@ export class Class_SankeyPanes {
   public listen(): void {
     const mc = this.host.menu_configuration
     if (!mc || this._unsubscribe_draw) return
-    const off_draw = mc.subscribe(DRAW_TOPIC, () => this.scheduleRefresh())
+    const off_draw = mc.subscribe(DRAW_TOPIC, () => { this.scheduleRefresh(); this.guardSoon() })
     const off_history = mc.subscribe(HISTORY_TOPIC, () => this.scheduleRefresh())
     this._unsubscribe_draw = () => { off_draw(); off_history() }
   }
@@ -860,7 +941,7 @@ export class Class_SankeyPanes {
   }
 
   protected scheduleRefresh(): void {
-    if (this._renders.size === 0 || typeof setTimeout === 'undefined') return
+    if ((this._renders.size === 0 && !this.showsOwnReading()) || typeof setTimeout === 'undefined') return
     if (this._refresh_timer !== null) clearTimeout(this._refresh_timer)
     this._refresh_timer = setTimeout(() => {
       this._refresh_timer = null
@@ -876,7 +957,11 @@ export class Class_SankeyPanes {
   public refresh(): boolean {
     const host = this.host
     const mc = host.menu_configuration
-    if (!mc || this._renders.size === 0) return false
+    if (!mc) return false
+    // sa#603 — un geste de la barre générale sur un groupe que le vivant a choisi pour lui (filet :
+    // `guardSoon` l'a d'ordinaire déjà vu).
+    if (this.reconcileLive()) this.redrawLive()
+    if (this._renders.size === 0) return false
     const current_heavy = this.isHeavyView(host.current_view_id)
     const base_key = current_heavy ? null : sankeyDataKey(host.drawing_area.sankey)
     const epoch = host.draw_epoch
@@ -896,6 +981,9 @@ export class Class_SankeyPanes {
       if (next) { this.setRender(pane_id, next); changed = true }
     })
     this._mirror_epoch = epoch
+    // sa#603 — la valeur commune a peut-être changé (barre générale) : les volets qui la suivent la
+    // prennent. Avant la mise en page : un rendu qu'elle change se redessine en entier.
+    if (this.reconcileRenders()) changed = true
     // sa#568 — APRÈS les rendus refaits : un rendu rebâti part de sa mise en page d'avant, et
     // reçoit ensuite ce que le vivant partage avec lui.
     if (this.shareLiveLayout()) changed = true
@@ -1084,6 +1172,8 @@ export class Class_SankeyPanes {
     if (this.host.views_dict[coordinate]?.own_layout || this.parkedBase()) return false
     const render = this._renders.get(to.id)
     if (!render || render.doc.disposed || render.mirror || render.coordinate !== coordinate) return false
+    // sa#603 — et ils montrent les mêmes données : rien de choisi pour l'un seul.
+    if (!sameOwnReading(from, to)) return false
     return SANKEY_LAYOUT_SETTINGS.every(({ mode }) =>
       mc.mainZoneSyncPartners(from.id, layoutSetting(mode)).includes(to.id))
   }
@@ -1149,6 +1239,334 @@ export class Class_SankeyPanes {
     }
   }
 
+  // LECTURE DES VOLETS (sa#603) ====================================================================
+  //
+  // Un volet Sankey peut choisir, dans le bandeau sous son en-tête, ce qu'il montre d'un groupe
+  // d'étiquettes (l'année, le niveau, un filtre) : c'est SA lecture (`occupant.reading`), écrite
+  // dans le fichier. Pour un groupe qu'il n'a pas choisi, il SUIT LA BARRE GÉNÉRALE : il montre la
+  // VALEUR COMMUNE.
+  //
+  // Où vit la valeur commune : dans le modèle, que la barre générale et tous les menus lisent et
+  // règlent — sauf pour les groupes que le volet VIVANT a choisis pour lui, où le modèle montre son
+  // choix. La valeur commune attend alors à côté (`_common`), et c'est elle que le fichier écrit à sa
+  // racine (`withCommonReading`).
+  //
+  // LA BARRE GÉNÉRALE RÈGLE TOUJOURS LA VALEUR COMMUNE (l'exemple de l'issue : le second volet a
+  // choisi 2021, on passe la barre à 2020, seul le premier change — même si le second est l'actif).
+  // Elle a une dizaine d'entrées (barre du haut, panneau de filtres, menus, tableau de navigation…),
+  // qui toutes changent le modèle : plutôt que de les détourner une à une, on CONSTATE l'écart après
+  // coup (`reconcileLive`). Si le modèle ne montre plus ce que le volet vivant a choisi, c'est la
+  // valeur commune qui vient de changer : on la retient, et le choix du volet revient — avant que
+  // l'écran ne se peigne (`guardSoon`). Les sélecteurs de la barre affichent la valeur commune
+  // (`commonReadingOfGroup`).
+  //
+  // Les RENDUS des volets inactifs montrent leur choix, la valeur commune pour le reste
+  // (`reconcileRenders`), après chaque geste.
+
+  /** Les réglages de données du modèle : un par groupe d'étiquettes (cf. `paneReading`). */
+  protected dataSettings(): string[] {
+    const base = this.baseDrawingArea()
+    return base ? sankeyDataSettings(base.sankey) : []
+  }
+
+  /** Le modèle montre-t-il en ce moment ce qu'un volet a choisi pour lui seul ? */
+  protected showsOwnReading(): boolean {
+    return Object.keys(this._applied.actual).length > 0
+  }
+
+  /** Le volet vivant, s'il se dessine sur le modèle (une vue lourde porte ses propres données). */
+  protected liveOnModel(): Type_MainZoneOccupant | undefined {
+    const live = this.paneById(this.host.menu_configuration?.main_zone_live_sankey_id ?? null)
+    if (!live || this.isHeavyView(this.coordinateOf(live))) return undefined
+    return live
+  }
+
+  /** LA VALEUR COMMUNE de ces réglages : celle qui attend à côté, sinon celle que montre le modèle. */
+  public commonReading(settings: string[]): Type_PaneReading {
+    const base = this.baseDrawingArea()
+    const out: Type_PaneReading = base ? readingOf(base.sankey, settings.filter(s => !this._common[s])) : {}
+    settings.forEach(s => { if (this._common[s]) out[s] = this._common[s] })
+    return out
+  }
+
+  /**
+   * CE QUE LE VOLET `pane_id` MONTRE D'UN GROUPE : son propre choix (`own`), ou `null` s'il suit la
+   * barre générale ; et ce qu'il montre (`shown`) — son choix, sinon la valeur commune.
+   */
+  public paneReadingState(pane_id: string, setting: string): { own: Type_GroupReading | null, shown: Type_GroupReading | null } {
+    const o = this.paneById(pane_id)
+    const own = o ? ownReadingOf(o)[setting] ?? null : null
+    return { own, shown: own ?? this.commonReading([setting])[setting] ?? null }
+  }
+
+  /**
+   * POUR LA BARRE GÉNÉRALE : la valeur commune d'un groupe du modèle quand le volet vivant en
+   * montre une autre (son choix), `null` quand le modèle montre la valeur commune — la barre lit
+   * alors le groupe, comme toujours.
+   */
+  public commonReadingOfGroup(group: unknown): Type_GroupReading | null {
+    const live = this.liveOnModel()
+    if (!live) return null
+    const setting = dataSettingOfGroup(this.host.drawing_area.sankey, group)
+    if (setting === null || !ownReadingOf(live)[setting]) return null
+    return this._common[setting] ?? null
+  }
+
+  /**
+   * Pose une lecture sur une zone de dessin, sans dessiner ; un niveau changé réordonne les flux
+   * des nœuds, comme le fait le changement de niveau de la barre générale.
+   */
+  protected setReadings(da: Class_DrawingArea, reading: Type_PaneReading): void {
+    if (!applyReading(da.sankey, reading)) return
+    if (Object.keys(reading).some(s => parseDataSetting(s)?.family === 'lt')) {
+      da.reorganizeIOLinksOf(da.sankey.nodes_list)
+    }
+  }
+
+  /** Pose sur le modèle la lecture `r` d'un réglage, si elle n'y est pas. Rend `true` s'il a changé. */
+  protected setReadingIfNeeded(da: Class_DrawingArea, setting: string, r: Type_GroupReading): boolean {
+    if (readingPrintOf(readingOf(da.sankey, [setting]))[setting] === JSON.stringify(r)) return false
+    this.setReadings(da, { [setting]: r })
+    return true
+  }
+
+  /** Oublie ce que le modèle montrait pour un volet : il montre la valeur commune. */
+  protected forgetApplied(): void {
+    this._common = {}
+    this._applied = { pane: null, area: null, wanted: {}, actual: {} }
+  }
+
+  /**
+   * LE MODÈLE MONTRE CE QUE LE VOLET VIVANT DOIT MONTRER : son choix pour les groupes qu'il a
+   * choisis, la valeur commune pour les autres. Ne dessine pas ; rend `true` si le modèle a changé.
+   *
+   *  1. Un groupe choisi par le vivant que le modèle ne montre plus tel qu'on l'y avait posé : la
+   *     barre générale (ou une annulation) a réglé la VALEUR COMMUNE — on la retient.
+   *  2. Un groupe que le vivant ne choisit plus (il suit de nouveau, ou un autre volet est devenu
+   *     le vivant) : la valeur commune revient sur le modèle.
+   *  3. Un groupe qu'il a choisi : son choix va sur le modèle, la valeur commune attend à côté.
+   */
+  public reconcileLive(): boolean {
+    const mc = this.host.menu_configuration
+    if (!mc || !this.host.is_main) return false
+    const live = this.liveOnModel()
+    if (!live) return false
+    const da = this.host.drawing_area
+    // Un autre modèle est venu (fichier rouvert, geste lourd annulé) : il montre la valeur commune,
+    // celle que le fichier écrit à sa racine.
+    if (this._applied.area !== null && this._applied.area !== da) this.forgetApplied()
+    const settings = new Set(this.dataSettings())
+    const own = ownReadingOf(live)
+    let changed = false
+    const was = da.bypass_redraws
+    da.bypass_redraws = true
+    try {
+      const shown = Object.keys(this._applied.actual)
+      if (shown.length > 0) {
+        const now = readingPrintOf(readingOf(da.sankey, shown))
+        shown.forEach(s => {
+          if (now[s] === this._applied.actual[s]) return
+          const r = readingOf(da.sankey, [s])[s]
+          if (r) this._common[s] = r
+          else delete this._common[s]
+          delete this._applied.actual[s]
+          delete this._applied.wanted[s]
+        })
+      }
+      Object.keys(this._common).forEach(s => {
+        if (own[s] && settings.has(s)) return
+        const common = this._common[s]
+        delete this._common[s]
+        delete this._applied.actual[s]
+        delete this._applied.wanted[s]
+        if (settings.has(s) && this.setReadingIfNeeded(da, s, common)) changed = true
+      })
+      Object.entries(own).forEach(([s, r]) => {
+        if (!settings.has(s)) return
+        const want = JSON.stringify(r)
+        if (this._applied.pane === live.id && this._applied.wanted[s] === want && s in this._common) return
+        if (!(s in this._common)) {
+          const common = readingOf(da.sankey, [s])[s]
+          if (common) this._common[s] = common
+        }
+        if (this.setReadingIfNeeded(da, s, r)) changed = true
+        this._applied.wanted[s] = want
+        this._applied.actual[s] = readingPrintOf(readingOf(da.sankey, [s]))[s]
+      })
+      this._applied.pane = live.id
+      this._applied.area = Object.keys(this._applied.actual).length > 0 ? da : null
+    } finally {
+      da.bypass_redraws = was
+    }
+    return changed
+  }
+
+  /** Vrai pendant que le document redessine le vivant pour sa lecture (cf. `guardSoon`). */
+  protected _redrawing_live = false
+
+  /**
+   * Redessine le vivant après qu'on a posé sa lecture, et remet à jour la barre générale. Ce que le
+   * dessin a fait de la lecture (il en normalise parfois une) est ce qu'on retient comme posé.
+   */
+  protected redrawLive(): void {
+    const da = this.host.drawing_area
+    this._redrawing_live = true
+    try { da.draw() } finally { this._redrawing_live = false }
+    const shown = Object.keys(this._applied.actual)
+    if (shown.length > 0) Object.assign(this._applied.actual, readingPrintOf(readingOf(da.sankey, shown)))
+    this.host.menu_configuration?.updateAllComponentsRelatedToTags()
+  }
+
+  /**
+   * APRÈS UN DESSIN DU VIVANT, AVANT QUE L'ÉCRAN NE SE PEIGNE : si la barre générale vient de changer
+   * un groupe que le vivant a choisi pour lui, la valeur commune est retenue et son choix revient
+   * (cf. `reconcileLive`). Une micro-tâche : le geste a fini de régler le modèle, et le navigateur
+   * n'a encore rien montré.
+   */
+  protected guardSoon(): void {
+    if (this._guard_queued || this._redrawing_live || !this.showsOwnReading()) return
+    if (typeof queueMicrotask !== 'function') return
+    this._guard_queued = true
+    queueMicrotask(() => {
+      this._guard_queued = false
+      if (this._busy) return
+      try {
+        if (this.reconcileLive()) this.redrawLive()
+        if (this.reconcileRenders()) this.host.menu_configuration?.notifyMainZone()
+      } catch (error) {
+        console.error('sa#603 — lecture des volets Sankey :', error)
+      }
+    })
+  }
+
+  /**
+   * LES RENDUS DES VOLETS INACTIFS montrent ce qu'ils doivent : leur choix, la valeur commune pour
+   * le reste. Rend `true` si un rendu doit être remonté.
+   */
+  public reconcileRenders(): boolean {
+    if (this._renders.size === 0) return false
+    const settings = this.dataSettings()
+    if (settings.length === 0) return false
+    const common = this.commonReading(settings)
+    let remount = false
+    this._renders.forEach((render, id) => {
+      const o = this.paneById(id)
+      if (!o || render.mirror || render.doc.disposed || this.isHeavyView(this.coordinateOf(o))) return
+      if (this.giveRenderReading(o, render.doc, settings, common)) remount = true
+    })
+    return remount
+  }
+
+  /**
+   * Pose sur le rendu `doc` du volet `o` ce qu'il doit montrer, sans dessiner. Rend `true` — et
+   * avance la version du rendu — s'il était déjà dessiné et qu'il faut le remonter.
+   */
+  protected giveRenderReading(
+    o: Type_MainZoneOccupant, doc: Class_ApplicationData,
+    settings: string[] = this.dataSettings(), common: Type_PaneReading = this.commonReading(settings)
+  ): boolean {
+    const own = ownReadingOf(o)
+    const wanted: Type_PaneReading = {}
+    settings.forEach(s => {
+      const r = own[s] ?? common[s]
+      if (r) wanted[s] = r
+    })
+    const print = readingPrintOf(wanted)
+    const da = doc.drawing_area
+    const before = this._render_prints.get(doc) ?? readingPrintOf(readingOf(da.sankey, settings))
+    const diff = changedReadingSettings(before, print).filter(s => wanted[s])
+    this._render_prints.set(doc, print)
+    if (diff.length === 0) return false
+    const was = da.bypass_redraws
+    da.bypass_redraws = true
+    try { this.setReadings(da, pickReading(wanted, diff)) } finally { da.bypass_redraws = was }
+    // Jamais dessiné (pas encore monté) : il se dessinera en montant, déjà à jour.
+    if (was || !da.d3_selection_zoom_area) return false
+    this.bumpVersion(o.id)
+    return true
+  }
+
+  /**
+   * LE CHOIX D'UN VOLET, DEPUIS SON EN-TÊTE : `choose` règle le groupe sur le document du volet (le
+   * dessin vivant, ou son rendu) avec le geste ordinaire de ce groupe, et rend `true` s'il a déjà
+   * dessiné. Ce que le groupe montre ensuite devient la lecture du volet, retenue dans la grande
+   * zone (annulable par l'appelant, cf. `undoableMainZone`). Rien pour un volet sur une vue lourde.
+   */
+  public choosePaneReading(pane_id: string, setting: string, choose: (doc: Class_ApplicationData) => boolean): void {
+    const mc = this.host.menu_configuration
+    const o = this.paneById(pane_id)
+    if (!mc || !o || this.isHeavyView(this.coordinateOf(o))) return
+    const live = mc.main_zone_live_sankey_id === pane_id
+    const doc = live ? this.host : this.renderOf(pane_id)
+    if (!doc) return
+    const da = doc.drawing_area
+    if (live) {
+      // Le modèle montre d'abord ce qu'il doit ; la valeur commune est mise à l'abri avant le geste.
+      this.reconcileLive()
+      if (!(setting in this._common)) {
+        const common = readingOf(da.sankey, [setting])[setting]
+        if (common) this._common[setting] = common
+      }
+    }
+    const drew = choose(doc)
+    const r = readingOf(da.sankey, [setting])[setting]
+    if (!r) return
+    const print = JSON.stringify(r)
+    if (live) {
+      this._applied.pane = pane_id
+      this._applied.area = da
+      this._applied.wanted[setting] = print
+      this._applied.actual[setting] = print
+      if (!drew) this.redrawLive()
+      else mc.updateAllComponentsRelatedToTags()
+    } else {
+      const prints = this._render_prints.get(doc)
+      if (prints) prints[setting] = print
+      if (!drew && da.d3_selection_zoom_area) this.bumpVersion(pane_id)
+    }
+    mc.setSankeyPaneReading(pane_id, setting, r)
+  }
+
+  /**
+   * Le choix des étiquettes d'un groupe (année, filtre…) depuis l'en-tête du volet `pane_id`.
+   * L'étiquette générée « sans étiquette » (SA#553) peut faire partie de `ids`.
+   */
+  public setPaneSelection(pane_id: string, setting: string, ids: string[]): void {
+    this.choosePaneReading(pane_id, setting, doc => {
+      const da = doc.drawing_area
+      const current = readingOf(da.sankey, [setting])[setting]
+      const group = groupOfDataSetting(da.sankey, setting) as unknown as { untagged_tag?: { id: string } } | undefined
+      if (!current || !group) return false
+      const untagged_id = group.untagged_tag?.id
+      const next: Type_GroupReading = { ...current, selected: ids.filter(id => id !== untagged_id) }
+      if (untagged_id !== undefined) next.untagged = ids.includes(untagged_id)
+      const was = da.bypass_redraws
+      da.bypass_redraws = true
+      try { this.setReadings(da, { [setting]: next }) } finally { da.bypass_redraws = was }
+      return false
+    })
+  }
+
+  /**
+   * EXÉCUTE `work` — l'écriture du fichier — SUR LE MODÈLE REVENU À LA VALEUR COMMUNE : c'est elle
+   * que la racine du fichier écrit (les choix des volets sont écrits sur les volets). Puis le modèle
+   * reprend ce qu'il montrait, sans rien redessiner.
+   */
+  public withCommonReading<T>(work: () => T): T {
+    const area = this._applied.area
+    const settings = Object.keys(this._applied.actual).filter(s => this._common[s])
+    if (!area || settings.length === 0) return work()
+    const was = area.bypass_redraws
+    area.bypass_redraws = true
+    const shown = readingOf(area.sankey, settings)
+    try {
+      applyReading(area.sankey, pickReading(this._common, settings))
+      return work()
+    } finally {
+      try { applyReading(area.sankey, shown) } finally { area.bypass_redraws = was }
+    }
+  }
+
   /** Le volet dont `doc` est le rendu, s'il y en a un (cf. l'échange, `swapLive`). */
   public renderOwnerOf(doc: Class_ApplicationData): string | null {
     for (const [id, render] of this._renders) if (render.doc === doc) return id
@@ -1173,6 +1591,9 @@ export class Class_SankeyPanes {
     this.parkedBase()
     this._layout_owner = null
     this._print = null
+    // sa#603 — le modèle chargé montre la valeur commune (cf. `withCommonReading`).
+    this._common = {}
+    this._applied = { pane: null, area: null, wanted: {}, actual: {} }
     this._buried.forEach(b => this.disposeDocument(b.render.doc))
     this._buried.clear()
     this._cameras.clear()

@@ -30,6 +30,23 @@ export const applyLevelSelection = (
    */
   prepare?: () => void
 ): void => {
+  app_data.runWithSnapshotUndo(
+    () => applyLevelSelectionNow(app_data, tagg, tag_id, updateComponents, prepare), updateComponents)
+}
+
+/**
+ * sa#603 — LE MÊME CHANGEMENT DE NIVEAU, SANS SON INSTANTANÉ D'ANNULATION : le niveau choisi dans
+ * l'en-tête d'un volet Sankey s'annule comme ses autres choix (le volet retient sa lecture), et non
+ * en rechargeant tout le document. Appliqué aussi au rendu d'un volet inactif, dont l'historique
+ * n'est celui de personne.
+ */
+export const applyLevelSelectionNow = (
+  app_data: Class_ApplicationData,
+  tagg: Class_TagGroup,
+  tag_id: string,
+  updateComponents: () => void = () => undefined,
+  prepare?: () => void
+): void => {
   const drawing_area = app_data.drawing_area
   const values = [tag_id]
 
@@ -122,5 +139,5 @@ export const applyLevelSelection = (
     updateComponents()
   }
 
-  app_data.runWithSnapshotUndo(run, updateComponents)
+  run()
 }

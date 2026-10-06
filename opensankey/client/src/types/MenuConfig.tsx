@@ -65,6 +65,7 @@ import {
   SANKEY_LAYOUT_SETTING_IDS, canShare, changedOptionKeys, figureChangesBySetting, figureFormatSettingsOf,
   figureSettingOfKey, isFigureNature, leaveGroup, mergeInto, partnersOf, readSyncMap
 } from '../Representations/paneSync'
+import { readPaneReading, type Type_GroupReading, type Type_PaneReading } from '../Representations/paneReading'
 import {
   basePaneKeyOf, formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
 } from './mainZonePanes'
@@ -397,7 +398,17 @@ export type Type_MainZoneDataTags = { [tagg_id: string]: string[] }
  * SÉLECTEURS dans le bandeau sous l'en-tête, en édition comme en publication ; `nodes` : la liste
  * des nœuds retenus y figure aussi. Absent = rien dans le bandeau.
  */
-export type Type_MainZoneReader = { header?: boolean, node_taggs?: string[], data_taggs?: string[], nodes?: boolean }
+/**
+ * sa#594 — ce que l'en-tête d'un volet offre : les groupes qui y deviennent des sélecteurs.
+ * sa#603 — un volet Sankey y met aussi des niveaux de détail et des étiquettes de flux.
+ */
+export type Type_MainZoneReader = {
+  header?: boolean, node_taggs?: string[], data_taggs?: string[], nodes?: boolean,
+  level_taggs?: string[], flux_taggs?: string[]
+}
+
+/** sa#603 — les quatre listes de groupes qu'un en-tête peut montrer, dans l'ordre du bandeau. */
+export const MAIN_ZONE_READER_GROUP_KEYS = ['data_taggs', 'level_taggs', 'node_taggs', 'flux_taggs'] as const
 
 /** Profondeur au-delà de laquelle une chaîne de volets qui se suivent est tenue pour une boucle. */
 const MAIN_ZONE_FOLLOW_DEPTH = 16
@@ -468,10 +479,10 @@ const readMainZoneReader = (raw: unknown): Type_MainZoneReader | undefined => {
   const reader: Type_MainZoneReader = {}
   if (r['header'] === true) reader.header = true
   if (r['nodes'] === true) reader.nodes = true
-  const node_taggs = ids(r['node_taggs'])
-  const data_taggs = ids(r['data_taggs'])
-  if (node_taggs) reader.node_taggs = node_taggs
-  if (data_taggs) reader.data_taggs = data_taggs
+  MAIN_ZONE_READER_GROUP_KEYS.forEach(key => {
+    const list = ids(r[key])
+    if (list) reader[key] = list
+  })
   return Object.keys(reader).length > 0 ? reader : undefined
 }
 /**
@@ -551,6 +562,13 @@ export type Type_MainZoneOccupant = {
   data_tags?: Type_MainZoneDataTags
   /** sa#594 — ce que l'en-tête de ce volet offre au lecteur d'une page publiée. */
   reader?: Type_MainZoneReader
+  /**
+   * sa#603 — CE QU'UN VOLET SANKEY A CHOISI DE MONTRER POUR LUI SEUL, depuis le bandeau de son
+   * en-tête : par réglage de données (`data:dt:annee`…, cf. `Representations/paneReading`), la
+   * lecture du groupe. Un groupe absent SUIT LA BARRE GÉNÉRALE. Absent d'un fichier d'avant : tout
+   * suit, comme avant. La clé ne s'écrit que si elle est posée.
+   */
+  reading?: Type_PaneReading
   /**
    * 05/10/2026 — LES VIGNETTES DE CETTE FENÊTRE QU'ON NE MONTRE PAS (Jean-Yves, page `testCouronne` :
    * une fenêtre, deux couronnes Export / Import, « pouvoir n'en voir qu'une »).
@@ -2141,6 +2159,9 @@ export class Class_MenuConfig {
     // sa#598 — et le type de valeur qu'elle montre.
     if (e.value_mode) o.value_mode = e.value_mode
     else delete o.value_mode
+    // sa#603 — et ce que son volet Sankey montrait pour lui seul.
+    if (e.reading) o.reading = e.reading
+    else delete o.reading
     // Les vignettes masquées sont celles de la vue, pas celles d'une fenêtre réutilisée.
     if (e.panes) o.panes = e.panes
     else delete o.panes
@@ -2324,8 +2345,7 @@ export class Class_MenuConfig {
     const next: Type_MainZoneReader = {}
     if (reader.header) next.header = true
     if (reader.nodes) next.nodes = true
-    if (reader.node_taggs) next.node_taggs = [...reader.node_taggs]
-    if (reader.data_taggs) next.data_taggs = [...reader.data_taggs]
+    MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (reader[key]) next[key] = [...(reader[key] as string[])] })
     if (Object.keys(next).length > 0) o.reader = next
     else delete o.reader
     this._notifyMainZone()
@@ -2362,6 +2382,22 @@ export class Class_MenuConfig {
       changed = true
     }))
     if (changed) this._notifyMainZone()
+  }
+
+  /**
+   * sa#603 — CE QU'UN VOLET SANKEY MONTRE POUR LUI SEUL d'un groupe d'étiquettes (`reading`), ou
+   * `null` : il suit de nouveau la barre générale. Le document pose ensuite cette lecture sur le
+   * dessin du volet (cf. `Class_SankeyPanes`), à la notification.
+   */
+  public setSankeyPaneReading(id: string, setting: string, reading: Type_GroupReading | null): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || !isSankeyPane(o)) return
+    const next: Type_PaneReading = { ...(o.reading ?? {}) }
+    if (reading) next[setting] = JSON.parse(JSON.stringify(reading)) as Type_GroupReading
+    else delete next[setting]
+    if (Object.keys(next).length > 0) o.reading = next
+    else delete o.reading
+    this._notifyMainZone()
   }
 
   /**
@@ -4426,12 +4462,15 @@ export class Class_MenuConfig {
       const reader: Type_JSON = {}
       if (o.reader.header) reader['header'] = true
       if (o.reader.nodes) reader['nodes'] = true
-      if (o.reader.node_taggs) reader['node_taggs'] = [...o.reader.node_taggs]
-      if (o.reader.data_taggs) reader['data_taggs'] = [...o.reader.data_taggs]
+      MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (o.reader?.[key]) reader[key] = [...(o.reader[key] as string[])] })
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }
     // sa#598 — le type de valeur du volet, seulement s'il est posé.
     if (o.value_mode) entry['value_mode'] = o.value_mode
+    // sa#603 — ce qu'un volet Sankey montre pour lui seul, seulement s'il a choisi quelque chose.
+    if (o.reading && Object.keys(o.reading).length > 0) {
+      entry['reading'] = JSON.parse(JSON.stringify(o.reading)) as Type_JSON
+    }
     // 05/10/2026 — LES VIGNETTES MASQUÉES, seulement s'il y en a (cf. `Type_MainZoneOccupant.panes`).
     if (o.panes?.hidden && o.panes.hidden.length > 0) entry['panes'] = { hidden: [...o.panes.hidden] }
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
@@ -4566,6 +4605,8 @@ export class Class_MenuConfig {
     const reader = readMainZoneReader(e['reader'])
     // sa#598 — le type de valeur du volet ; une valeur inconnue est ignorée.
     const value_mode = isPaneValueMode(e['value_mode']) ? e['value_mode'] : undefined
+    // sa#603 — ce que le volet Sankey montre pour lui seul ; absent = tout suit la barre générale.
+    const reading = readPaneReading(e['reading'])
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
     const panes = readPanesState(e['panes'])
     return {
@@ -4583,6 +4624,7 @@ export class Class_MenuConfig {
       data_tags: Object.keys(data_tags).length > 0 ? data_tags : undefined,
       reader,
       value_mode,
+      reading,
       panes,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
@@ -4626,7 +4668,7 @@ export class Class_MenuConfig {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
       host._main_zone_occupants = entries.map(({
-        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode
+        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, reading
       }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
@@ -4635,6 +4677,7 @@ export class Class_MenuConfig {
         if (data_tags) o.data_tags = data_tags
         if (reader) o.reader = reader
         if (value_mode) o.value_mode = value_mode
+        if (reading && isSankeyPane(o)) o.reading = reading
         if (panes) o.panes = panes
         return o
       })

@@ -76,6 +76,37 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionDrawingOf(app, produit)).toBe('multi')
   })
 
+  test('os#1526 : la double fleche emporte le placement des noeuds, garde les membres, efface les positions', () => {
+    // Les deux dimensions existent AVANT le flux : son arbre de valeurs les connait.
+    const app = new Class_ApplicationData(false)
+    const sankey = app.drawing_area.sankey
+    const pays = sankey.addDataTagGroup('pays', 'Pays', false) as Class_DataTagGroup
+    pays.addTag('Europe', 'europe').setSelected()
+    pays.addTag('Afrique', 'afrique').setSelected()
+    const produit = sankey.addDataTagGroup('produit', 'Produit', false) as Class_DataTagGroup
+    const ble = produit.addTag('Ble', 'ble') as Class_DataTag
+    produit.addTag('Mais', 'mais')
+    const a = sankey.addNewNodeWithName('A')
+    const b = sankey.addNewNodeWithName('B')
+    sankey.addNewLink(a, b)
+    applyDimensionDrawing(app, produit, 'multi')
+    produit.tags_list.forEach(t => t.setSelected())
+    ble.position = { x: 955, y: 30 }
+    // pays en noeuds, banniere a choix unique, ecart constant (quitte les bandes par membre)
+    applyDimensionCarriers(app, pays, [a.id, b.id])
+    applyDisaggregationGap(app, 'constant', pays)
+    expect(pays.member_bands).toBe(false)
+    swapDimensionDrawings(app, pays, produit)
+    expect(produit.selected_tags_list.map(t => t.id).sort()).toEqual(['ble', 'mais'])
+    expect(produit.member_bands).toBe(false)
+    expect(pays.member_bands).toBeUndefined()
+    expect(ble.has_manual_position).toBe(false)
+    app.history.applyUndo()
+    expect(pays.member_bands).toBe(false)
+    expect(produit.member_bands).toBeUndefined()
+    expect(ble.position).toEqual({ x: 955, y: 30 })
+  })
+
   test('l ecart vertical des enfants se regle d ici aussi, et s annule', () => {
     const { app } = monter()
     const avant = app.drawing_area.disaggregation_gap_mode
