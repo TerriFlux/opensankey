@@ -168,6 +168,39 @@ export function memberOfGeneratedNode(node: Class_NodeElement): Class_DataTag | 
 }
 
 /**
+ * 06/10/2026 — CE QU'UNE FIGURE D'ANALYSE LIT D'UN ÉLÉMENT ENGENDRÉ : son ORIGINE (le nœud d'axe, ou
+ * le flux de base), qui porte toutes les valeurs du cube, et la PORTÉE de départ, dimension par
+ * dimension — les membres que l'engendré représente (« Autres » : les membres repliés).
+ *
+ * Julien : « quand on sélectionne un flux à l'intérieur d'une hiérarchie de dataTags, il faut tout
+ * sélectionner ». Un flux engendré (« exports vers l'Europe ») ne porte qu'un scalaire : une couronne
+ * posée dessus montrait l'Europe seule tout en proposant Monde, Afrique… dans sa hiérarchie. Sur
+ * l'origine, zoomée sur l'Europe, ✕ ramène au Monde.
+ *
+ * Les membres se lisent sur les NŒUDS engendrés (comme `Link.dimensionBandsRaw`), jamais dans l'id.
+ * `undefined` : `id` n'est pas un engendré, ou n'existe pas, ou son origine a disparu.
+ */
+export function generatedOriginOf(
+  sankey: Class_Sankey, id: string
+): { origin: Class_NodeElement | Class_LinkElement, focus: { [dimension_id: string]: string[] } } | undefined {
+  const parsed = parseGeneratedId(id)
+  if (parsed === undefined) return undefined
+  const node = sankey.nodes_dict[id] as Class_NodeElement | undefined
+  const link = node === undefined ? sankey.links_dict[id] as Class_LinkElement | undefined : undefined
+  const origin = node !== undefined
+    ? sankey.nodes_dict[parsed.origin] as Class_NodeElement | undefined
+    : link !== undefined ? sankey.links_dict[parsed.origin] as Class_LinkElement | undefined : undefined
+  if (origin === undefined) return undefined
+  const ends = (link !== undefined ? [link.source, link.target] : [node]) as Class_NodeElement[]
+  const focus: { [dimension_id: string]: string[] } = {}
+  ends.flatMap(membersOfGeneratedNode).forEach(membre => {
+    const ids = focus[membre.group.id] ?? (focus[membre.group.id] = [])
+    if (!ids.includes(membre.id)) ids.push(membre.id)
+  })
+  return { origin, focus }
+}
+
+/**
  * Désagrège tous les nœuds d'axe du diagramme sur les membres choisis de leur dimension.
  *
  * ── PLUSIEURS AXES À LA FOIS (29/09/2026) ────────────────────────────────────────────────────

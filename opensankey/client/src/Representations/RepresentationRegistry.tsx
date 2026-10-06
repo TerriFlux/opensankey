@@ -390,6 +390,12 @@ type Type_RepresentationCommon = {
    */
   reports_tile_fit?: boolean
   /**
+   * 06/10/2026 (os#1511) — LA FIGURE LIT LE CUBE : posée sur un élément ENGENDRÉ (`--par--`), elle
+   * prend son ORIGINE pour sujet, zoomée sur le membre (cf. `generatedOriginOf`). Absent = la figure
+   * montre l'élément tel qu'il est (les infos d'un flux engendré disent sa valeur à lui).
+   */
+  reads_generated_origin?: boolean
+  /**
    * os#1409 - COMMENT ON ZOOME DANS CETTE NATURE (cf. Type_RepresentationZoom).
    *
    * ABSENT = cette nature ne zoome pas, et c'est une reponse, pas un oubli : l'etoile, la

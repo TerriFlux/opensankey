@@ -1872,6 +1872,8 @@ export const registerAnalysisRepresentations = (): void => {
     // sur Céréales et je veux voir les pays qui importent »). L'usine reste « Déplie dans la couronne » :
     // une couronne enregistrée sans réglage s'ouvre comme avant.
     fresh_own: DONUT_FRESH_OWN,
+    // 06/10/2026 — sur un flux engendré (« exports vers l'Europe »), son origine zoomée sur l'Europe.
+    reads_generated_origin: true,
     // os#1399 — LA CIBLE D UNE PART, resolue et non declaree : selon l axe de decomposition, un
     // secteur est un flux, un noeud enfant ou un tag. Le descripteur EFFECTIF est celui que la
     // figure dessine (reglage de vignette compris), donc celui qui dit ce qu on vient de cliquer.
@@ -2282,6 +2284,7 @@ export const registerAnalysisRepresentations = (): void => {
     own: BARS_OWN,
     socle: BARS_SOCLE,
     extra_attributes: ANALYSIS_ATTRIBUTES,
+    reads_generated_origin: true,
     // La meme cible de part que la couronne, et pour la meme raison : c est la meme analyse, vue
     // autrement. Une barre porte l objet que l axe designe, exactement comme un secteur.
     resolveElementTarget: ({ target, ctx }) => analysisPartTarget(target, analysisOf(ctx)?.descriptor),
@@ -2357,6 +2360,7 @@ const registerDimensionMatrix = (): void => {
     order: 35,
     label: (a) => a.t('matrix.label'),
     icon: <FaTable />,
+    reads_generated_origin: true,
     // Sur une décomposition par dimension(s) de données seulement : c'est elle qui a des lignes et
     // des colonnes. Un sujet sans dimension à niveaux n'a rien à croiser.
     isAvailable: (ctx) => {
