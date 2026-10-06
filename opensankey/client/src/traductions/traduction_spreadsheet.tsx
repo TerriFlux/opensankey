@@ -302,6 +302,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: 'Normalised: each flow divided by the sum of the flows that the node\'s rule keeps (outputs to products for a sector, domestic outlets for a product)',
           value_mode_value: 'Value: each flow in its unit',
           value_mode: 'Values',
+          hide_neutral: 'Hide neutral processes: at most one non-zero flow in and one out',
+          show_neutral: 'Show neutral processes',
+          neutral_hidden: 'Neutral processes hidden: {{count}}',
           normalize_on: 'Normalize on',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
@@ -614,6 +617,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: 'Normalisé : chaque flux rapporté à la somme des flux que retient la règle du nœud (sorties vers des produits pour un secteur, débouchés intérieurs pour un produit)',
           value_mode_value: 'Valeur : chaque flux dans son unité',
           value_mode: 'Valeurs',
+          hide_neutral: 'Masquer les process neutres : au plus un flux non nul en entrée et un en sortie',
+          show_neutral: 'Afficher les process neutres',
+          neutral_hidden: 'Process neutres masqués : {{count}}',
           normalize_on: 'Normaliser sur',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
@@ -913,6 +919,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: 'Normalizado: cada flujo dividido por la suma de los flujos que retiene la regla del nodo (salidas hacia productos para un sector, salidas interiores para un producto)',
           value_mode_value: 'Valor: cada flujo en su unidad',
           value_mode: 'Valores',
+          hide_neutral: 'Ocultar los procesos neutros: como máximo un flujo no nulo de entrada y uno de salida',
+          show_neutral: 'Mostrar los procesos neutros',
+          neutral_hidden: 'Procesos neutros ocultos: {{count}}',
           normalize_on: 'Normalizar sobre',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
@@ -1212,6 +1221,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: 'Normiert: jeder Fluss geteilt durch die Summe der Flüsse, die die Regel des Knotens behält (Ausgänge zu Produkten für einen Sektor, Inlandsabsatz für ein Produkt)',
           value_mode_value: 'Wert: jeder Fluss in seiner Einheit',
           value_mode: 'Werte',
+          hide_neutral: 'Neutrale Prozesse ausblenden: höchstens ein von null verschiedener Fluss ein- und ausgehend',
+          show_neutral: 'Neutrale Prozesse anzeigen',
+          neutral_hidden: 'Ausgeblendete neutrale Prozesse: {{count}}',
           normalize_on: 'Normieren auf',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
@@ -1511,6 +1523,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: 'Normalizzato: ogni flusso diviso per la somma dei flussi che trattiene la regola del nodo (uscite verso prodotti per un settore, sbocchi interni per un prodotto)',
           value_mode_value: 'Valore: ogni flusso nella sua unità',
           value_mode: 'Valori',
+          hide_neutral: 'Nascondi i processi neutri: al massimo un flusso non nullo in entrata e uno in uscita',
+          show_neutral: 'Mostra i processi neutri',
+          neutral_hidden: 'Processi neutri nascosti: {{count}}',
           normalize_on: 'Normalizza su',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
@@ -1815,6 +1830,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: '归一化：每个流量除以节点规则保留的流量之和（部门为流向产品的输出，产品为国内去向）',
           value_mode_value: '数值：每个流量以其单位表示',
           value_mode: '数值',
+          hide_neutral: '隐藏中性过程：输入和输出各最多一个非零流量',
+          show_neutral: '显示中性过程',
+          neutral_hidden: '已隐藏的中性过程：{{count}}',
           normalize_on: '归一化于',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
@@ -2120,6 +2138,9 @@ export const resources_spreadsheet = {
           value_mode_normalized: '正規化：ノードの規則が残すフローの合計で各フローを割った値（部門は製品への出力、製品は国内向け）',
           value_mode_value: '値：各フローをその単位で表示',
           value_mode: '値',
+          hide_neutral: '中立プロセスを非表示：入力・出力ともに非ゼロのフローが最大1本',
+          show_neutral: '中立プロセスを表示',
+          neutral_hidden: '非表示の中立プロセス：{{count}}',
           normalize_on: '正規化の基準',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
           // diagramme, là où `inspector.element_analysis` porte sur un seul élément.
