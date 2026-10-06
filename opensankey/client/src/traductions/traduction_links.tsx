@@ -151,6 +151,11 @@ export const resources_flux = {
           filter_link: 'Tag of the flow',
           op_is: 'is',
           op_is_not: 'is not',
+          or_else: ', otherwise ',
+          or_else_short: 'otherwise',
+          priority_up: 'Move up in the priority',
+          priority_remove: 'Remove from the priority',
+          priority_add: 'Otherwise…',
           default: 'default',
           reset: 'Back to default',
           reason_no_flux_on_side: 'no flow on this side',
@@ -158,7 +163,8 @@ export const resources_flux = {
           reason_no_value: 'the reference flows have no value',
           reason_zero_reference: 'the reference sum is zero',
           rule_sum: 'Sum of the flows kept by the rule',
-          notice: 'Normalised value empty: {{reason}} ({{rule}}).'
+          notice: 'Normalised value empty: {{reason}} ({{rule}}).',
+          notice_fallback: 'Normalised value relative to: {{rule}}, for lack of {{skipped}}.'
         },
         labels: {
           value: 'Value',
@@ -410,6 +416,11 @@ export const resources_flux = {
           filter_link: 'Étiquette du flux',
           op_is: 'est',
           op_is_not: 'n\'est pas',
+          or_else: ', sinon ',
+          or_else_short: 'sinon',
+          priority_up: 'Monter dans la priorité',
+          priority_remove: 'Retirer de la priorité',
+          priority_add: 'Sinon…',
           default: 'défaut',
           reset: 'Revenir au défaut',
           reason_no_flux_on_side: 'aucun flux de ce côté',
@@ -417,7 +428,8 @@ export const resources_flux = {
           reason_no_value: 'les flux de référence n\'ont pas de valeur',
           reason_zero_reference: 'la somme de référence est nulle',
           rule_sum: 'Somme des flux retenus par la règle',
-          notice: 'Valeur normalisée vide : {{reason}} ({{rule}}).'
+          notice: 'Valeur normalisée vide : {{reason}} ({{rule}}).',
+          notice_fallback: 'Valeur normalisée rapportée à : {{rule}}, faute de {{skipped}}.'
         },
         labels: {
           source: 'Noeud source',
@@ -668,6 +680,11 @@ export const resources_flux = {
           filter_link: 'Etiqueta del flujo',
           op_is: 'es',
           op_is_not: 'no es',
+          or_else: ', si no, ',
+          or_else_short: 'si no,',
+          priority_up: 'Subir en la prioridad',
+          priority_remove: 'Quitar de la prioridad',
+          priority_add: 'Si no…',
           default: 'por defecto',
           reset: 'Volver al valor por defecto',
           reason_no_flux_on_side: 'ningún flujo de este lado',
@@ -675,7 +692,8 @@ export const resources_flux = {
           reason_no_value: 'los flujos de referencia no tienen valor',
           reason_zero_reference: 'la suma de referencia es nula',
           rule_sum: 'Suma de los flujos que retiene la regla',
-          notice: 'Valor normalizado vacío: {{reason}} ({{rule}}).'
+          notice: 'Valor normalizado vacío: {{reason}} ({{rule}}).',
+          notice_fallback: 'Valor normalizado referido a: {{rule}}, a falta de {{skipped}}.'
         },
         labels: {
           value: 'Valor',
@@ -926,6 +944,11 @@ export const resources_flux = {
           filter_link: 'Tag des Flusses',
           op_is: 'ist',
           op_is_not: 'ist nicht',
+          or_else: ', sonst ',
+          or_else_short: 'sonst',
+          priority_up: 'In der Priorität nach oben',
+          priority_remove: 'Aus der Priorität entfernen',
+          priority_add: 'Sonst…',
           default: 'Standard',
           reset: 'Auf Standard zurücksetzen',
           reason_no_flux_on_side: 'kein Fluss auf dieser Seite',
@@ -933,7 +956,8 @@ export const resources_flux = {
           reason_no_value: 'die Referenzflüsse haben keinen Wert',
           reason_zero_reference: 'die Referenzsumme ist null',
           rule_sum: 'Summe der von der Regel behaltenen Flüsse',
-          notice: 'Normierter Wert leer: {{reason}} ({{rule}}).'
+          notice: 'Normierter Wert leer: {{reason}} ({{rule}}).',
+          notice_fallback: 'Normierter Wert bezogen auf: {{rule}}, mangels {{skipped}}.'
         },
         labels: {
           value: 'Wert',
@@ -1184,6 +1208,11 @@ export const resources_flux = {
           filter_link: 'Etichetta del flusso',
           op_is: 'è',
           op_is_not: 'non è',
+          or_else: ', altrimenti ',
+          or_else_short: 'altrimenti',
+          priority_up: 'Sposta su nella priorità',
+          priority_remove: 'Togli dalla priorità',
+          priority_add: 'Altrimenti…',
           default: 'predefinito',
           reset: 'Ripristina il predefinito',
           reason_no_flux_on_side: 'nessun flusso da questo lato',
@@ -1191,7 +1220,8 @@ export const resources_flux = {
           reason_no_value: 'i flussi di riferimento non hanno valore',
           reason_zero_reference: 'la somma di riferimento è nulla',
           rule_sum: 'Somma dei flussi trattenuti dalla regola',
-          notice: 'Valore normalizzato vuoto: {{reason}} ({{rule}}).'
+          notice: 'Valore normalizzato vuoto: {{reason}} ({{rule}}).',
+          notice_fallback: 'Valore normalizzato riferito a: {{rule}}, in mancanza di {{skipped}}.'
         },
         labels: {
           value: 'Valore',
@@ -1442,6 +1472,11 @@ export const resources_flux = {
           filter_link: '流量的标签',
           op_is: '是',
           op_is_not: '不是',
+          or_else: '，否则 ',
+          or_else_short: '否则',
+          priority_up: '在优先级中上移',
+          priority_remove: '从优先级中移除',
+          priority_add: '否则…',
           default: '默认',
           reset: '恢复默认',
           reason_no_flux_on_side: '该侧没有流量',
@@ -1449,7 +1484,8 @@ export const resources_flux = {
           reason_no_value: '参考流量没有数值',
           reason_zero_reference: '参考总和为零',
           rule_sum: '规则保留的流量之和',
-          notice: '归一化数值为空：{{reason}}（{{rule}}）。'
+          notice: '归一化数值为空：{{reason}}（{{rule}}）。',
+          notice_fallback: '归一化数值的参考：{{rule}}（因缺少{{skipped}}）。'
         },
         labels: {
           value: '数值',
@@ -1700,6 +1736,11 @@ export const resources_flux = {
           filter_link: 'フローのタグ',
           op_is: 'である',
           op_is_not: 'でない',
+          or_else: '、なければ ',
+          or_else_short: 'なければ',
+          priority_up: '優先順位を上げる',
+          priority_remove: '優先順位から外す',
+          priority_add: 'なければ…',
           default: '既定',
           reset: '既定に戻す',
           reason_no_flux_on_side: 'この側にフローがない',
@@ -1707,7 +1748,8 @@ export const resources_flux = {
           reason_no_value: '基準フローに値がない',
           reason_zero_reference: '基準の合計がゼロ',
           rule_sum: '規則が残すフローの合計',
-          notice: '正規化値が空です：{{reason}}（{{rule}}）。'
+          notice: '正規化値が空です：{{reason}}（{{rule}}）。',
+          notice_fallback: '正規化値の基準：{{rule}}（{{skipped}}がないため）。'
         },
         labels: {
           value: '値',
