@@ -41,7 +41,8 @@ import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText, figurePercentText } from './figureFormat'
 import { discRadiusInZone, layoutDonutCallouts } from './donutCalloutLayout'
 import {
-  LEGEND_UNCHECKED_INK, legendCheckBox, legendCheckRows, legendMemberKeyOf, type Type_LegendChecks
+  LEGEND_UNCHECKED_INK, appendLegendContextRows, legendCheckBox, legendCheckRows, legendMemberKeyOf,
+  type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 
 /**
@@ -428,6 +429,8 @@ export interface Type_SunburstChartOptions {
    * légende nomme ce qui est dessiné, sans case.
    */
   legend_checks?: Type_LegendChecks
+  /** 06/10/2026 (os#1527) — les lignes de rappel des coordonnées (« Année : 2015 »), sous la légende. */
+  legend_context?: Type_LegendContextRow[]
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
   /** 30/09/2026 — le diviseur qui va avec `unit` (kt → Mt : 1 000) ; le dessin reste sur le brut. */
@@ -2345,6 +2348,9 @@ export const drawSunburstChart = (
         .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
         .attr('title', b => b.label).text(b => b.label)
     }
+    // os#1527 — les coordonnées que la figure ne découpe pas (« Année : 2015 »), comme le diagramme.
+    const legend_node = legend.node() as HTMLElement | null
+    if (legend_node) appendLegendContextRows(legend_node, opts.legend_context)
 
     // ── Mentions ──────────────────────────────────────────────────────────────────
     const mention = (text: string) => legend.append('div')

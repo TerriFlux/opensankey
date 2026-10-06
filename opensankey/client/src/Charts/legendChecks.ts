@@ -70,6 +70,47 @@ export const legendCheckBox = (
   return box
 }
 
+/**
+ * os#1527 — UNE LIGNE DE RAPPEL DES COORDONNÉES (« Année : 2015 »), sous les entrées d'une légende de
+ * figure, comme dans la légende du diagramme. `open` : la ligne se clique et ouvre la liste de la
+ * dimension.
+ */
+export interface Type_LegendContextRow {
+  label: string
+  hint?: string
+  open?: (anchor: { x: number, y: number }) => void
+}
+
+/**
+ * os#1527 — POSE LES LIGNES DE RAPPEL sous les entrées d'une légende de figure (couronne, sunburst,
+ * petits multiples) : une ligne par dimension, séparée du bloc ; le clic reste à la légende.
+ */
+export const appendLegendContextRows = (
+  legend: HTMLElement, rows: readonly Type_LegendContextRow[] | undefined, below = false
+): void => {
+  (rows ?? []).forEach((row, i) => {
+    const line = document.createElement('div')
+    line.className = 'node_stats_legend_context'
+    line.textContent = row.label
+    line.style.padding = '0.1rem 0.2rem'
+    line.style.marginTop = i === 0 ? '0.5rem' : '0'
+    line.style.flexBasis = below ? '100%' : 'auto'
+    line.style.textAlign = below ? 'center' : 'left'
+    line.style.cursor = row.open ? 'pointer' : 'default'
+    if (row.hint) line.title = row.hint
+    const open = row.open
+    if (open) {
+      line.addEventListener('pointerdown', e => e.stopPropagation())
+      line.addEventListener('click', e => {
+        e.stopPropagation()
+        const rect = line.getBoundingClientRect()
+        open({ x: rect.left, y: rect.bottom })
+      })
+    }
+    legend.appendChild(line)
+  })
+}
+
 /** La teinte d'une ligne décochée (pastille et texte). */
 export const LEGEND_UNCHECKED_SWATCH = '#cbd5e0'
 export const LEGEND_UNCHECKED_INK = '#a0aec0'
