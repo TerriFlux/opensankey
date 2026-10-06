@@ -55,6 +55,8 @@ import type { Class_NodeBase } from './NodeBase'
 
 // Marge interne du cadre autour des zones générées (px monde)
 const LEGEND_PADDING = 10
+// os#1527 lot 3 — écart entre la légende et le dessin dans une capture (px monde)
+const LEGEND_CAPTURE_GAP = 20
 
 // SA#549 — facteur d'opacité du carré d'une entrée d'étiquette masquée
 const LEGEND_DIMMED_SWATCH_OPACITY = 0.3
@@ -342,6 +344,9 @@ export class Class_LegendConfig {
   private _panel_items: readonly Type_LegendItem[] = []
   private _panel_listeners = new Set<() => void>()
   private _in_panel: boolean = false
+  // os#1527 lot 3 — capture en cours (export, vignette) : la légende est montrée à sa place
+  private _capturing: boolean = false
+  private _capture_paper: boolean = false
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -543,15 +548,78 @@ export class Class_LegendConfig {
     this._drawing_area.areaAutoFit()
   }
 
-  /** os#1527 — montre ou cache à l'écran les zones de la légende selon `in_panel`. */
-  public applyPanelDisplay(): void {
-    const in_panel = this._in_panel
+  /**
+   * os#1527 — les zones de la légende sont-elles CACHÉES du dessin en ce moment ? Oui quand le
+   * panneau les montre, sauf le temps d'une capture (`showForCapture`). Lu par le cadrage.
+   */
+  public get hidden_on_screen(): boolean { return this._in_panel && !this._capturing }
+
+  /** os#1527 — montre ou cache les zones de la légende (cf. `hidden_on_screen`). `show` force. */
+  public applyPanelDisplay(show: boolean = false): void {
+    const hidden = this.hidden_on_screen && !show
     this._drawing_area.sankey.containers_list
       .filter(c => isLegendElementId(c.id))
       .forEach(c => {
-        if (in_panel) c.d3_selection?.style('display', 'none')
+        if (hidden) c.d3_selection?.style('display', 'none')
         else c.d3_selection?.style('display', null)
       })
+  }
+
+  /**
+   * os#1527 lot 3 — LA LÉGENDE À SA PLACE DANS UNE CAPTURE (export SVG/PNG/PDF, vignette de vue).
+   * Les captures clonent le SVG affiché, où la légende du panneau est cachée : le temps de la
+   * capture, on la pose À GAUCHE DU DESSIN — là où le panneau la montre à l'écran —, visible et
+   * comptée dans le cadrage. `diagram` : l'emprise du dessin SANS la légende, en coordonnées du
+   * diagramme (`contentBoundsFromModel`, appelée avant). En mode papier, si la gauche sort de la
+   * page, à droite. Renvoie de quoi la recacher. Sans panneau (ou légende masquée) : rien.
+   */
+  public showForCapture(paper: boolean = false): () => void {
+    if (!this._in_panel || this._masked || this.frame === undefined || this._capturing) return () => { /* rien */ }
+    this._capture_paper = paper
+    this._capturing = true
+    this.placeForCapture()
+    return () => {
+      this._capturing = false
+      this.applyPanelDisplay()
+    }
+  }
+
+  /**
+   * os#1527 lot 3 — POSE LA LÉGENDE À GAUCHE DU DESSIN pendant une capture, sur ce qui est RENDU :
+   * l'emprise du dessin noms compris (mesurée légende cachée) et la largeur réelle de la légende au
+   * zoom courant — ses textes sont à taille d'écran constante, leur largeur en coordonnées du
+   * diagramme dépend donc du zoom. À rappeler après un recadrage (export). Sans rendu (tests) :
+   * emprise et largeur du modèle.
+   */
+  public placeForCapture(): void {
+    const frame = this.frame
+    if (!this._capturing || frame === undefined) return
+    const da = this._drawing_area
+    const legend_containers = da.sankey.containers_list.filter(c => isLegendElementId(c.id))
+    this.applyPanelDisplay(false)
+    this._capturing = false
+    const diagram = da.contentBounds()
+    this._capturing = true
+    this.applyPanelDisplay()
+    if (diagram === null || (diagram.width === 0 && diagram.height === 0)) return
+    // Bord gauche de la légende (ses formes ; les noms sont à leur droite) et largeur rendue.
+    const left = Math.min(...legend_containers.map(c => c.position_x - c.shape_margin_left))
+    let screen_left = Infinity
+    let screen_right = -Infinity
+    legend_containers.forEach(c => {
+      const rect = (c.d3_selection?.node() as Element | null | undefined)?.getBoundingClientRect?.()
+      if (rect === undefined || rect.width === 0) return
+      screen_left = Math.min(screen_left, rect.left)
+      screen_right = Math.max(screen_right, rect.right)
+    })
+    const k = da.getZoomScale() || 1
+    const width = isFinite(screen_left)
+      ? (screen_right - screen_left) / k
+      : frame.getShapeWidthToUse() + frame.shape_margin_left + frame.shape_margin_right
+    let target_left = diagram.x - LEGEND_CAPTURE_GAP - width
+    if (this._capture_paper && target_left < 0) target_left = diagram.x + diagram.width + LEGEND_CAPTURE_GAP
+    const top = Math.min(...legend_containers.map(c => c.position_y - c.shape_margin_top))
+    this._moveLegend(target_left - left, diagram.y - top)
   }
 
   /** os#1527 — prévenu à chaque régénération ; renvoie le désabonnement. */
@@ -921,6 +989,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
   const sankey = drawing_area.sankey
   config._generating = true
   try {
+    // os#1527 — les zones cachées (panneau) ne se mesurent pas : montrées le temps de la génération
+    // (césure des noms, largeurs), recachées à la fin. Synchrone : rien ne s'affiche.
+    config.applyPanelDisplay(true)
     const values = config.values()
 
     // Masquée (ou aucun contenu) → tout supprimer

@@ -4225,6 +4225,30 @@ export class Class_ApplicationData {
   }
 
   public pre_process_export_svg(convert_fo: boolean = false) {
+    // os#1527 lot 3 — la légende du panneau, cachée à l'écran, entre dans l'export À SA PLACE (à
+    // gauche du dessin) : montrée le temps du cadrage, du clone et de la mesure, recachée ensuite.
+    const legend = this.drawing_area.legend
+    const in_panel = legend.hidden_on_screen && !legend.masked
+    const hideLegend = legend.showForCapture(this.drawing_area.is_paper_mode)
+    if (in_panel) {
+      // Le cadrage d'export change le zoom, donc la largeur de la légende (textes à taille d'écran
+      // constante) et des noms du dessin : on cadre, puis on la repose au zoom d'export.
+      this.drawing_area.areaAutoFit(undefined, undefined, false)
+      this.drawing_area.refreshLabelsForExport()
+      // Interlignes et pastilles suivent la police compensée : mise en page refaite à ce zoom.
+      legend.draw()
+      legend.placeForCapture()
+    }
+    try {
+      return this._preProcessExportSvgWithLegend(convert_fo)
+    } finally {
+      hideLegend()
+      // Le cadrage d'export comptait la légende : l'écran se recadre sans elle.
+      if (in_panel) this.drawing_area.areaAutoFit()
+    }
+  }
+
+  private _preProcessExportSvgWithLegend(convert_fo: boolean) {
     const d3_select = this._pre_process_export_svg()
 
     // Labels rich-text → <text> SVG natifs, pour que l'export se rende sans la feuille de
