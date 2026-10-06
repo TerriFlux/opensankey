@@ -20,7 +20,7 @@ import type { ReactNode } from 'react'
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
+import { applyDimensionCut, swapDimensionDrawings } from '../components/ui/dimensionDrawingHost'
 import {
   coupeChoisirNiveau, coupeEffacerZoom, coupeZoomer, listeDuZoom, lireCoupe
 } from '../Algorithms/DimensionTableCut'
@@ -33,6 +33,8 @@ export interface Type_DiagramNavigationOptions {
   memory_key: string
   /** Le sélecteur Arbre d'une dimension, ouvert par le ▾ de son nom (fourni par l'éditeur). */
   members?: (dim: Class_DataTagGroup) => ((close: () => void) => ReactNode) | null
+  /** os#1526 — l'élément de l'hôte posé devant le nom d'une dimension (son menu), cf. `leading`. */
+  leading?: (dim: Class_DataTagGroup) => HTMLElement | undefined
 }
 
 /**
@@ -69,6 +71,7 @@ export const buildDiagramNavigationTable = (
       name: dim.name,
       summary: coupe.mixte ? t('Banner.cut_custom') as string : undefined,
       members: options.members?.(dim) ?? undefined,
+      leading: options.leading?.(dim),
       levels: levels.map(({ raw, depth }) => {
         const zoom = coupe.zooms.get(depth)
         const liste = listeDuZoom(dim, coupe, depth)
@@ -88,8 +91,17 @@ export const buildDiagramNavigationTable = (
       })
     }
   })
+  // ⇅ (▲▼ au-delà de deux) : la dimension échange son DESSIN avec sa voisine — bandes ↔ nœuds —
+  // l'équivalent, sur le diagramme, de l'ordre des anneaux d'une couronne.
+  const move = (dim_id: string, delta: -1 | 1) => {
+    const i = dims.findIndex(d => d.id === dim_id)
+    const other = dims[i + delta]
+    if (i < 0 || other === undefined) return
+    app_data.runHeavyGesture(() => swapDimensionDrawings(app_data, dims[i], other))
+  }
   return buildFigureNavigationTable({
     dimensions,
+    move,
     memory_key: options.memory_key,
     t: (key: string, o?: { [k: string]: unknown }) => t(key, o),
     labels: {
@@ -103,9 +115,9 @@ export const buildDiagramNavigationTable = (
         level, defaultValue: 'Détaillé par {{level}} — recliquer pour ne plus détailler'
       }) as string,
       ctrl_hint: '',
-      swap: t('sunburst.nav.swap') as string,
-      move_up: t('sunburst.nav.move_up') as string,
-      move_down: t('sunburst.nav.move_down') as string,
+      swap: t('Banner.nav_swap_drawing', { defaultValue: 'Échanger le dessin des deux dimensions (bandes ↔ nœuds)' }) as string,
+      move_up: t('Banner.nav_swap_drawing_up', { defaultValue: 'Échanger le dessin avec la dimension du dessus' }) as string,
+      move_down: t('Banner.nav_swap_drawing_down', { defaultValue: 'Échanger le dessin avec la dimension du dessous' }) as string,
       settings: t('sunburst.nav.settings') as string,
       members: t('sunburst.nav.members', { defaultValue: 'Choisir les membres' }) as string
     }
