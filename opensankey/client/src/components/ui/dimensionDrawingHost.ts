@@ -123,11 +123,37 @@ const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, stat
 /** Une bannière à choix unique ne lit qu'un membre. */
 const UNIQUE_BANNERS = ['one', 'topbar', 'sequence']
 
+/** Le placement des nœuds engendrés d'une dimension : il appartient au dessin « en nœuds ». */
+type Type_NodesPlacement = { member_bands: boolean | undefined, reference_node_id: string | undefined }
+
+const nodesPlacementOf = (tagg: Class_DataTagGroup): Type_NodesPlacement =>
+  ({ member_bands: tagg.member_bands, reference_node_id: tagg.reference_node_id })
+
+const setNodesPlacement = (tagg: Class_DataTagGroup, placement: Type_NodesPlacement) => {
+  tagg.member_bands = placement.member_bands
+  tagg.reference_node_id = placement.reference_node_id
+}
+
 /**
  * os#1526 — ⇅ DANS LE TABLEAU DU DIAGRAMME : les deux dimensions ÉCHANGENT LEUR DESSIN (Julien,
- * 06/10 : « si l'une est en bandes et l'autre en nœuds, on inverse avec la double flèche »). Chacune
- * prend la bannière et les nœuds porteurs de l'autre ; ses membres choisis restent les siens (le
- * premier seulement, si elle passe à un membre). Un seul pas d'historique, un seul dessin.
+ * 06/10 : « si l'une est en bandes et l'autre en nœuds, on inverse avec la double flèche »). C'est
+ * le sens de l'ordre des dimensions sur un diagramme : il n'y a pas d'imbrication à réordonner,
+ * seulement quelle dimension découpe les flux en bandes et laquelle découpe les nœuds.
+ *
+ * Le dessin échangé est TOUT le dessin, pour que le résultat soit celui qu'on aurait obtenu en
+ * posant la configuration directement :
+ *  - la bannière et les nœuds porteurs. Une dimension en nœuds n'a pas de bannière qui compte
+ *    (`drawing` = 'nodes' dès qu'un nœud la porte) : celle qui prend les nœuds garde donc la sienne
+ *    et TOUS ses membres choisis — lui passer la bannière « un membre » de l'autre la réduisait au
+ *    premier membre, et le diagramme se vidait ;
+ *  - le PLACEMENT des nœuds (`member_bands` : un diagramme par membre ou l'écart des enfants,
+ *    `reference_node_id`) : resté sur l'ancienne dimension, « nœuds à écart constant » devenait,
+ *    sur la nouvelle, des bandes par membre automatiques ;
+ *  - les positions manuelles : celle qui arrive sur les porteurs est placée AUTOMATIQUEMENT. Ses
+ *    membres peuvent porter des positions d'un autre dessin (position commune d'un ancien fichier,
+ *    « [SOCLE] Pays partenaires » : les filières, toutes empilées à x = 955 au milieu du
+ *    diagramme) ; c'est la règle de « Placer », qui efface aussi les positions manuelles.
+ * Un seul pas d'historique, un seul dessin ; l'annulation rend tout.
  */
 export const swapDimensionDrawings = (
   app_data: Class_ApplicationData, a: Class_DataTagGroup, b: Class_DataTagGroup
@@ -135,15 +161,35 @@ export const swapDimensionDrawings = (
   if (a === b) return
   const before_a = snapshot(app_data, a)
   const before_b = snapshot(app_data, b)
-  const take = (own: Type_Snapshot, other: Type_Snapshot): Type_Snapshot => ({
-    banner: other.banner,
-    carriers: other.carriers,
-    selected: UNIQUE_BANNERS.includes(other.banner) ? own.selected.slice(0, 1) : own.selected
-  })
+  const placement_a = nodesPlacementOf(a)
+  const placement_b = nodesPlacementOf(b)
+  const positions_before = manualPositionsOf([a, b])
+  const take = (own: Type_Snapshot, other: Type_Snapshot): Type_Snapshot => {
+    const takes_nodes = other.carriers.length > 0
+    const banner = takes_nodes ? own.banner : other.banner
+    return {
+      banner,
+      carriers: other.carriers,
+      selected: !takes_nodes && UNIQUE_BANNERS.includes(banner) ? own.selected.slice(0, 1) : own.selected
+    }
+  }
   const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(before_a, before_b)], [b, take(before_b, before_a)]]
-  app_data.history.saveUndo(() => restoreAll(app_data, [[a, before_a], [b, before_b]]))
-  app_data.history.saveRedo(() => restoreAll(app_data, after))
-  restoreAll(app_data, after)
+  // Les dimensions qui arrivent sur des porteurs : placement automatique.
+  const arriving = [a, b].filter((_tagg, i) => [before_b, before_a][i].carriers.length > 0)
+  app_data.history.saveUndo(() => {
+    setNodesPlacement(a, placement_a)
+    setNodesPlacement(b, placement_b)
+    setManualPositions([a, b], positions_before)
+    restoreAll(app_data, [[a, before_a], [b, before_b]])
+  })
+  const redo = () => {
+    setNodesPlacement(a, placement_b)
+    setNodesPlacement(b, placement_a)
+    setManualPositions(arriving, undefined)
+    restoreAll(app_data, after)
+  }
+  app_data.history.saveRedo(redo)
+  redo()
 }
 
 /** Pose un état et l'inscrit dans l'historique, avec l'état d'avant pour l'annuler. */
