@@ -126,6 +126,14 @@ describe('coordonnees du volet et offre au lecteur, dans le fichier', () => {
     expect(o?.reader).toEqual({ header: true, node_taggs: ['filiere', 'process'], nodes: true })
   })
 
+  it('sa#608 : le nom de la liste des noeuds (« Process ») s ecrit et se relit', () => {
+    const mc = freshMenuConfig()
+    const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
+    mc.setMainZoneWindowReader(id, { nodes: true, nodes_label: 'Process' })
+    const o = roundTrip(mc.mainZoneStateToJSON()).main_zone_occupants.find(x => x.id === id)
+    expect(o?.reader).toEqual({ nodes: true, nodes_label: 'Process' })
+  })
+
   it('ne s ecrivent pas quand rien n est pose', () => {
     const mc = freshMenuConfig()
     const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
