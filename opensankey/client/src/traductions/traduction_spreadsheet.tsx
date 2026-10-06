@@ -296,6 +296,11 @@ export const resources_spreadsheet = {
           pane_reading_none: 'This diagram has no tag group yet (data, levels, nodes, flows): nothing to choose per pane.',
           reader_section: 'Reader of the published page',
           reader_header: 'Header visible to the reader',
+          // sa#598 — le type de valeur d'un volet, choisi dans son en-tête.
+          value_mode_buttons: 'Type of value shown',
+          value_mode_percent: 'Percentage: the share of each flow in the sum of the inputs, or of the outputs, of the process',
+          value_mode_normalized: 'Normalised: each flow divided by the sum of the flows that the node\'s rule keeps (outputs to products for a sector, domestic outlets for a product)',
+          value_mode_value: 'Value: each flow in its unit',
           value_mode: 'Values',
           normalize_on: 'Normalize on',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
@@ -604,6 +609,10 @@ export const resources_spreadsheet = {
           pane_reading_none: 'Ce diagramme n’a pas encore de groupe d’étiquettes (données, niveaux, nœuds, flux) : rien à choisir par volet.',
           reader_section: 'Lecteur de la page publiée',
           reader_header: 'En-tête visible du lecteur',
+          value_mode_buttons: 'Type de valeur affiché',
+          value_mode_percent: 'Pourcentage : la part de chaque flux dans la somme des entrées, ou des sorties, du process',
+          value_mode_normalized: 'Normalisé : chaque flux rapporté à la somme des flux que retient la règle du nœud (sorties vers des produits pour un secteur, débouchés intérieurs pour un produit)',
+          value_mode_value: 'Valeur : chaque flux dans son unité',
           value_mode: 'Valeurs',
           normalize_on: 'Normaliser sur',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
@@ -899,6 +908,10 @@ export const resources_spreadsheet = {
           pane_reading_none: 'Este diagrama aún no tiene grupos de etiquetas (datos, niveles, nodos, flujos): nada que elegir por panel.',
           reader_section: 'Lector de la página publicada',
           reader_header: 'Encabezado visible para el lector',
+          value_mode_buttons: 'Tipo de valor mostrado',
+          value_mode_percent: 'Porcentaje: la parte de cada flujo en la suma de las entradas, o de las salidas, del proceso',
+          value_mode_normalized: 'Normalizado: cada flujo dividido por la suma de los flujos que retiene la regla del nodo (salidas hacia productos para un sector, salidas interiores para un producto)',
+          value_mode_value: 'Valor: cada flujo en su unidad',
           value_mode: 'Valores',
           normalize_on: 'Normalizar sobre',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
@@ -1194,6 +1207,10 @@ export const resources_spreadsheet = {
           pane_reading_none: 'Dieses Diagramm hat noch keine Beschriftungsgruppe (Daten, Ebenen, Knoten, Flüsse): pro Bereich nichts zu wählen.',
           reader_section: 'Leser der veröffentlichten Seite',
           reader_header: 'Kopfzeile für den Leser sichtbar',
+          value_mode_buttons: 'Angezeigter Werttyp',
+          value_mode_percent: 'Prozent: der Anteil jedes Flusses an der Summe der Eingänge bzw. der Ausgänge des Prozesses',
+          value_mode_normalized: 'Normiert: jeder Fluss geteilt durch die Summe der Flüsse, die die Regel des Knotens behält (Ausgänge zu Produkten für einen Sektor, Inlandsabsatz für ein Produkt)',
+          value_mode_value: 'Wert: jeder Fluss in seiner Einheit',
           value_mode: 'Werte',
           normalize_on: 'Normieren auf',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
@@ -1489,6 +1506,10 @@ export const resources_spreadsheet = {
           pane_reading_none: 'Questo diagramma non ha ancora gruppi di etichette (dati, livelli, nodi, flussi): niente da scegliere per riquadro.',
           reader_section: 'Lettore della pagina pubblicata',
           reader_header: 'Intestazione visibile al lettore',
+          value_mode_buttons: 'Tipo di valore mostrato',
+          value_mode_percent: 'Percentuale: la quota di ogni flusso nella somma delle entrate, o delle uscite, del processo',
+          value_mode_normalized: 'Normalizzato: ogni flusso diviso per la somma dei flussi che trattiene la regola del nodo (uscite verso prodotti per un settore, sbocchi interni per un prodotto)',
+          value_mode_value: 'Valore: ogni flusso nella sua unità',
           value_mode: 'Valori',
           normalize_on: 'Normalizza su',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
@@ -1789,6 +1810,10 @@ export const resources_spreadsheet = {
           pane_reading_none: '此图表尚无标签组（数据、层级、节点、流）：无需按窗格选择。',
           reader_section: '发布页面的读者',
           reader_header: '读者可见的标题栏',
+          value_mode_buttons: '显示的数值类型',
+          value_mode_percent: '百分比：每个流量在该过程输入或输出总和中的占比',
+          value_mode_normalized: '归一化：每个流量除以节点规则保留的流量之和（部门为流向产品的输出，产品为国内去向）',
+          value_mode_value: '数值：每个流量以其单位表示',
           value_mode: '数值',
           normalize_on: '归一化于',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le
@@ -2090,6 +2115,10 @@ export const resources_spreadsheet = {
           pane_reading_none: 'この図にはまだラベルグループ（データ、レベル、ノード、フロー）がありません：ペインごとに選ぶものはありません。',
           reader_section: '公開ページの閲覧者',
           reader_header: '閲覧者にヘッダーを表示',
+          value_mode_buttons: '表示する値の種類',
+          value_mode_percent: '割合：プロセスの入力または出力の合計に占める各フローの割合',
+          value_mode_normalized: '正規化：ノードの規則が残すフローの合計で各フローを割った値（部門は製品への出力、製品は国内向け）',
+          value_mode_value: '値：各フローをその単位で表示',
           value_mode: '値',
           normalize_on: '正規化の基準',
           // os#1356 — le GROUPE lui-même, nommé : il change la manière de lire TOUT le

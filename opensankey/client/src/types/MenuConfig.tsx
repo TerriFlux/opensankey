@@ -87,6 +87,7 @@ import {
 // vers les éléments de dessin (il n'en prend que la forme), et `Class_NodeElement` importé en
 // valeur ferait remonter toute la zone de dessin dans le menu.
 import type { Class_NodeElement } from '../Elements/Node'
+import { isPaneValueMode, type Type_PaneValueMode } from '../Representations/paneValueMode'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -583,6 +584,13 @@ export type Type_MainZoneOccupant = {
    * (cf. `mainZoneReaderVisiblePanes`).
    */
   panes?: { hidden?: string[] }
+  /**
+   * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET (pourcentage, normalisé, valeur), choisi dans son
+   * en-tête. Comme `data_tags`, c'est ce que le volet MONTRE : ses figures qui déclarent `value_mode`
+   * (l'étoile Unit.) le reçoivent au dessin. Un volet qui en suit un autre montre celui du volet
+   * suivi. Cf. `Representations/paneValueMode`. Absent = ce que disent les figures.
+   */
+  value_mode?: Type_PaneValueMode
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -2163,6 +2171,9 @@ export class Class_MenuConfig {
     else delete o.data_tags
     if (e.reader) o.reader = e.reader
     else delete o.reader
+    // sa#598 — et le type de valeur qu'elle montre.
+    if (e.value_mode) o.value_mode = e.value_mode
+    else delete o.value_mode
     // sa#603 — et ce que son volet Sankey montrait pour lui seul.
     if (e.reading) o.reading = e.reading
     else delete o.reading
@@ -2356,6 +2367,39 @@ export class Class_MenuConfig {
   }
 
   /**
+   * sa#598 — LE TYPE DE VALEUR QUE MONTRE LE VOLET `id` (cf. `Type_MainZoneOccupant.value_mode`) ;
+   * `null` rend la main aux réglages des figures.
+   */
+  public setMainZoneWindowValueMode(id: string, mode: Type_PaneValueMode | null): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || (o.value_mode ?? null) === mode) return
+    if (mode !== null) o.value_mode = mode
+    else delete o.value_mode
+    this._notifyMainZone()
+  }
+
+  /** sa#598 — Le type de valeur que montre le volet `id` : le sien, ou celui du volet qu'il suit. */
+  public mainZoneEffectiveValueMode(id: string): Type_PaneValueMode | null {
+    const occupants = this._host._main_zone_occupants
+    const o = occupants.find(x => x.id === id)
+    return o ? (mainZoneLeaderOf(occupants, o)?.value_mode ?? null) : null
+  }
+
+  /**
+   * sa#598 — RETIRE LE RÉGLAGE `key` QUE PORTENT EN PROPRE les figures de ces volets : elles
+   * retombent sur ce que dit le volet (le type de valeur choisi dans l'en-tête), sinon sur leur style.
+   */
+  public clearMainZoneFigureOption(ids: string[], key: string): void {
+    let changed = false
+    ids.forEach(id => Object.values(this._figures[id] ?? {}).forEach(fig => {
+      if (!fig.isAttributeExplicit(key)) return
+      fig.delete(key)
+      changed = true
+    }))
+    if (changed) this._notifyMainZone()
+  }
+
+  /**
    * sa#603 — CE QU'UN VOLET SANKEY MONTRE POUR LUI SEUL d'un groupe d'étiquettes (`reading`), ou
    * `null` : il suit de nouveau la barre générale. Le document pose ensuite cette lecture sur le
    * dessin du volet (cf. `Class_SankeyPanes`), à la notification.
@@ -2380,6 +2424,8 @@ export class Class_MenuConfig {
     const o = this._host._main_zone_occupants.find(x => x.id === id)
     if (!o || o.subject.kind !== 'pane') return
     const data_tags = effectiveMainZoneDataTags(this._host._main_zone_occupants, o)
+    // sa#598 — et le type de valeur qu'il montrait, lu AVANT que le volet cesse de suivre.
+    const value_mode = mainZoneLeaderOf(this._host._main_zone_occupants, o)?.value_mode
     const leader_subject = effectiveMainZoneSubject(this._host._main_zone_occupants, o.subject)
     const sheet = mainZoneSubjectSheet(leader_subject)
     const subject: Type_MainZoneSubject = sheet === ''
@@ -2390,6 +2436,7 @@ export class Class_MenuConfig {
     if (data_tags && Object.keys(data_tags).length > 0) {
       o.data_tags = Object.fromEntries(Object.entries(data_tags).map(([k, v]) => [k, [...v]]))
     }
+    if (value_mode) o.value_mode = value_mode
     this._resyncMainZoneSelection(o.id)
     this._notifyMainZone()
   }
@@ -3759,6 +3806,9 @@ export class Class_MenuConfig {
         if (subject.kind === 'pane') return
         if (closing.data_tags) o.data_tags = JSON.parse(JSON.stringify(closing.data_tags)) as Type_MainZoneDataTags
         else delete o.data_tags
+        // sa#598 — et le type de valeur qu'il montrait.
+        if (closing.value_mode) o.value_mode = closing.value_mode
+        else delete o.value_mode
       })
     }
     this._host._main_zone_occupants = this._host._main_zone_occupants.filter(o => o.id !== id)
@@ -4475,6 +4525,8 @@ export class Class_MenuConfig {
       MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (o.reader?.[key]) reader[key] = [...(o.reader[key] as string[])] })
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }
+    // sa#598 — le type de valeur du volet, seulement s'il est posé.
+    if (o.value_mode) entry['value_mode'] = o.value_mode
     // sa#603 — ce qu'un volet Sankey montre pour lui seul, seulement s'il a choisi quelque chose.
     if (o.reading && Object.keys(o.reading).length > 0) {
       entry['reading'] = JSON.parse(JSON.stringify(o.reading)) as Type_JSON
@@ -4611,6 +4663,8 @@ export class Class_MenuConfig {
     // sa#594 — coordonnées de données et offre au lecteur ; absentes = rien de posé.
     const data_tags = tagListMapFromJSON(e['data_tags'])
     const reader = readMainZoneReader(e['reader'])
+    // sa#598 — le type de valeur du volet ; une valeur inconnue est ignorée.
+    const value_mode = isPaneValueMode(e['value_mode']) ? e['value_mode'] : undefined
     // sa#603 — ce que le volet Sankey montre pour lui seul ; absent = tout suit la barre générale.
     const reading = readPaneReading(e['reading'])
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
@@ -4629,6 +4683,7 @@ export class Class_MenuConfig {
       sync,
       data_tags: Object.keys(data_tags).length > 0 ? data_tags : undefined,
       reader,
+      value_mode,
       reading,
       panes,
       maximized: getBooleanFromJSON(e, 'maximized', false)
@@ -4673,7 +4728,7 @@ export class Class_MenuConfig {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
       host._main_zone_occupants = entries.map(({
-        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, reading
+        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, reading
       }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
@@ -4681,6 +4736,7 @@ export class Class_MenuConfig {
         if (sync) o.sync = sync
         if (data_tags) o.data_tags = data_tags
         if (reader) o.reader = reader
+        if (value_mode) o.value_mode = value_mode
         if (reading && isSankeyPane(o)) o.reading = reading
         if (panes) o.panes = panes
         return o
