@@ -666,6 +666,18 @@ const OWN_MAIN_ZONE_WINDOW_ID = /^w_(\d+)$/
 export const isOwnMainZoneWindowId = (id: string): boolean => OWN_MAIN_ZONE_WINDOW_ID.test(id)
 
 /**
+ * sa#604 — « AUCUN VOLET ACTIF », DIT PAR L'UTILISATEUR (un clic dans le vide de la page).
+ *
+ * `null` dans `_main_zone_active_id` veut déjà dire autre chose : « personne n'a encore rien
+ * désigné », et l'accesseur y répond par la fenêtre principale — c'est ce qui donne un volet actif
+ * à une page qu'on vient d'ouvrir. Il fallait donc une seconde valeur, que l'accesseur rend comme
+ * `null` sans retomber sur la principale. Une valeur gardée dans le même champ, et non un drapeau à
+ * côté : tous les chemins qui désignent un volet écrivent ce champ, et effacent donc cet état sans
+ * avoir à le connaître. Ce n'est l'identifiant d'aucun occupant (ni `w_N`, ni un id du registre).
+ */
+const MAIN_ZONE_NONE_ACTIVE = 'os.main_zone.none_active'
+
+/**
  * os#1498 — CETTE FENÊTRE-CI A-T-ELLE UN IDENTIFIANT PROPRE ? LE SEUL JUGE QUAND ON TIENT
  * L'OCCUPANT.
  *
@@ -1420,6 +1432,8 @@ export class Class_MenuConfig {
   protected _main_zone_live_sankey_id: string | null = null
   // Fenêtre ACTIVE : la dernière cliquée. Ne sert qu'aux raccourcis et au liséré — rien dans
   // l'interface n'a à la deviner (le sélecteur de nature vit dans chaque fenêtre). TRANSITOIRE.
+  // `null` = personne n'a encore rien désigné (la principale fait foi) ; `MAIN_ZONE_NONE_ACTIVE`
+  // = l'utilisateur a tout désélectionné (sa#604, cf. `clearMainZoneSelection`).
   protected _main_zone_active_id: string | null = null
   // os#1394 — LA VIGNETTE active DANS la fenêtre active (sa clé), pour que le menu de
   // configuration sache de quel dessin il montre les réglages : une fenêtre d'élément en porte
@@ -1923,7 +1937,8 @@ export class Class_MenuConfig {
       this._host._main_zone_window_seq += 1
       id = `w_${this._host._main_zone_window_seq}`
     } while (this.isMainZoneOccupant(id))
-    const from = this._host._main_zone_active_id
+    // sa#604 — après « tout désélectionner », le volet neuf ne vient de nulle part.
+    const from = this._host._main_zone_active_id === MAIN_ZONE_NONE_ACTIVE ? null : this._host._main_zone_active_id
     this._pushMainZoneOccupant({ id, subject, representation }, place ?? 'right')
     this._host._fresh_figure_windows.add(id)
     if (place === 'floating') this._ensureFloatingGeometry(id, geometry)
@@ -3493,6 +3508,8 @@ export class Class_MenuConfig {
     return o ? { ...o, subject: { ...o.subject } } : undefined
   }
   public get main_zone_active_id(): string | null {
+    // sa#604 — tout désélectionné : aucun volet, et surtout pas la principale (cf. la constante).
+    if (this._host._main_zone_active_id === MAIN_ZONE_NONE_ACTIVE) return null
     return this._host._main_zone_active_id ?? this.main_zone_main_id
   }
   public set main_zone_active_id(id: string | null) {
@@ -3510,7 +3527,10 @@ export class Class_MenuConfig {
     this._host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
   }
-  /** os#1394 — La vignette active de la fenêtre active ; `null` = la première de la fenêtre. */
+  /**
+   * os#1394 — La vignette active de la fenêtre active ; `null` = aucune touchée. sa#604 : la grille
+   * n'en marque alors aucune, et l'inspecteur montre la première pour le compte de toutes.
+   */
   public get main_zone_active_pane_key(): string | null {
     return this._host._main_zone_active_pane_key
   }
@@ -3648,6 +3668,44 @@ export class Class_MenuConfig {
       || !unique.includes(this._host._main_zone_active_pane_key)) {
       this._host._main_zone_active_pane_key = unique[0]
     }
+    this._notifyMainZone()
+  }
+  /**
+   * sa#604 — TOUT DÉSÉLECTIONNER : plus de volet actif, plus de vignette active ni sélectionnée.
+   *
+   * Le geste d'un clic dans le vide de la page (barre du haut hors bouton, marge, fond de la
+   * grande zone). Il manquait depuis os#1397, qui avait rendu le canevas désignable mais rien
+   * DÉ-signable ; et il est devenu nécessaire avec sa#601, où la vignette sélectionnée garde pour
+   * elle la molette : il faut pouvoir la lui reprendre.
+   *
+   * Sans volet actif, la grande zone se lit comme vide de volet (`MAIN_ZONE_NO_WINDOW`) : la colonne
+   * d'outils se réduit à ses commandes d'application (arbitrage Alexandre, 05/10), et l'inspecteur,
+   * n'ayant plus de figure à montrer, revient à la sélection du diagramme. Cliquer dans un volet le
+   * rend actif de nouveau, par le chemin ordinaire.
+   */
+  public clearMainZoneSelection(): void {
+    if (this._host._main_zone_active_id === MAIN_ZONE_NONE_ACTIVE) return
+    this._host._main_zone_active_id = MAIN_ZONE_NONE_ACTIVE
+    this._host._main_zone_active_pane_key = null
+    this._host._main_zone_selected_pane_keys = []
+    this._host._inspector_focus = 'selection'
+    this._notifyMainZone()
+  }
+  /**
+   * sa#604 — DÉSÉLECTIONNER LES VIGNETTES d'un volet, qui reste (ou devient) l'actif : un clic sur
+   * le fond du volet, entre ses vignettes. Le volet désigné sans vignette vaut l'ensemble de ses
+   * figures (cf. `selectedRepresentationPanes`).
+   */
+  public clearMainZonePaneSelection(id: string): void {
+    if (this.main_zone_active_id !== id) {
+      // Désigner un autre volet vide déjà sa sélection de vignettes (cf. le mutateur).
+      this.main_zone_active_id = id
+      return
+    }
+    if (this._host._main_zone_active_pane_key === null && this._host._main_zone_selected_pane_keys.length === 0) return
+    this._host._main_zone_active_id = id
+    this._host._main_zone_active_pane_key = null
+    this._host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
   }
   /**
@@ -3985,7 +4043,9 @@ export class Class_MenuConfig {
       if (!o.representation) o.representation = o.id
       if (!mainZoneOccupantUsesOwnWindowId(o)) o.representation = o.id
     })
-    if (host._main_zone_active_id !== null && !list.some(o => o.id === host._main_zone_active_id)) {
+    // sa#604 — « aucun volet actif » n'est pas un volet disparu : il survit à la normalisation.
+    if (host._main_zone_active_id !== null && host._main_zone_active_id !== MAIN_ZONE_NONE_ACTIVE
+      && !list.some(o => o.id === host._main_zone_active_id)) {
       host._main_zone_active_id = null
       // os#1394 — la vignette active appartenait à cette fenêtre : elle part avec elle.
       host._main_zone_active_pane_key = null
