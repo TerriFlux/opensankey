@@ -31,6 +31,7 @@ import {
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_ChartOptions, Type_StatSlice } from '../Charts/NodeStatsCharts'
+import { appendLegendContextRows } from '../Charts/legendChecks'
 import { tagGroupCarriesFormatting } from '../Elements/legendItems'
 import { legendDataTagZoneId } from '../Elements/legendIds'
 import { openLegendDimensionChoice } from '../components/panels/presentation/legendDimensionChoice'
@@ -2165,6 +2166,8 @@ export const registerAnalysisRepresentations = (): void => {
           tree_order.length > 0 ? tree_order : union_order.map(s => s.id), drawn), colors, style,
         // 04/10/2026 — les cases de chaque dimension des parts (os#1511).
         legendChecksOf(ctx))
+        // os#1527 — « Année : 2015 » sous la légende commune, comme la couronne seule et le diagramme.
+        appendLegendContextRows(legend, legendContextOf(ctx), style.legend_position === 'bottom')
         return () => {
           teardowns.forEach(f => f())
           publishFigureZoom(ctx.window_id, ctx.pane_key, null)
@@ -2188,6 +2191,8 @@ export const registerAnalysisRepresentations = (): void => {
           on_part_select: wiring.on_part_select,
           // 04/10/2026 — les cases de chaque bloc de dimension de la légende (os#1511).
           legend_checks: legendChecksOf(ctx),
+          // os#1527 — « Année : 2015 », comme la couronne en secteurs et le diagramme.
+          legend_context: legendContextOf(ctx),
           // LA PALETTE DE LA COURONNE, et non celle du disque : les deux modes sont une seule
           // figure, ils ne peuvent pas avoir deux jeux de teintes (cf. `branch_color`).
           branch_color: paletteColor,

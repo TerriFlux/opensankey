@@ -1,5 +1,4 @@
-import * as d3 from '../d3Modules'
-import { appendLegendContextRows } from './NodeStatsCharts'
+import { appendLegendContextRows } from './legendChecks'
 
 // os#1527 — les lignes de rappel des coordonnees (« Annee : 2015 ») sous la legende d une couronne,
 // comme dans la legende du diagramme : une ligne par dimension, cliquable quand elle se choisit d ici.
@@ -9,7 +8,7 @@ describe('os#1527 lignes de rappel de la legende d une couronne', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
     const opened: { x: number, y: number }[] = []
-    appendLegendContextRows(d3.select(host) as unknown as Parameters<typeof appendLegendContextRows>[0], [
+    appendLegendContextRows(host, [
       { label: 'Année : 2015', hint: 'Cliquer pour modifier', open: anchor => opened.push(anchor) },
       { label: 'Unité : kt' }
     ], false)
@@ -27,7 +26,7 @@ describe('os#1527 lignes de rappel de la legende d une couronne', () => {
 
   test('sans lignes : rien', () => {
     const host = document.createElement('div')
-    appendLegendContextRows(d3.select(host) as unknown as Parameters<typeof appendLegendContextRows>[0], undefined, true)
+    appendLegendContextRows(host, undefined, true)
     expect(host.children).toHaveLength(0)
   })
 })

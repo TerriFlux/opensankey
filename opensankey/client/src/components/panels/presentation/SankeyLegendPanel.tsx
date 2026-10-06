@@ -33,6 +33,7 @@ import type { Type_LegendItem } from '../../../Elements/legendItems'
 import { LEGEND_SAMPLE_VALUE } from '../../../Elements/legendTagStyle'
 import { openPresentationFor } from './openPresentation'
 import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDimensionChoice'
+import { ZOOM_TOPIC } from '../../../types/EventBus'
 
 /** Largeur de la colonne de légende, en px d'écran. */
 export const SANKEY_LEGEND_PANEL_PX = 240
@@ -57,30 +58,57 @@ export const useSankeyLegendItems = (app_data: Class_ApplicationData): readonly 
 const textOf = (item: Type_LegendItem): string =>
   item.checked !== undefined ? item.text.replace(/^[☑☐]\s*/, '') : item.text
 
-const Swatch = ({ item, unchecked, scale_px }: { item: Type_LegendItem, unchecked: boolean, scale_px: number }) => {
-  if (item.scale_bar === true) {
-    // L'échelle : un trait dont la hauteur est l'épaisseur d'un flux de la valeur écrite, au zoom courant.
-    const h = Math.max(4, Math.min(120, scale_px))
-    return <svg width={8} height={h} style={{ flex: '0 0 auto' }} aria-hidden>
-      <rect x={3} y={0} width={2} height={h} fill='black' />
-    </svg>
-  }
+/**
+ * L'échelle : un trait dont la hauteur est l'épaisseur d'un flux de la valeur écrite, AU ZOOM COURANT
+ * (50 px monde, cf. SCALE_BAR_HEIGHT_PX). Abonné seul au zoom : un tick ne redessine que lui.
+ */
+const ScaleBar = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const [, refresh] = React.useReducer((n: number) => n + 1, 0)
+  React.useEffect(() => app_data.menu_configuration.subscribe(ZOOM_TOPIC, refresh), [app_data])
+  const h = Math.max(4, Math.min(160, 50 * (app_data.drawing_area.getZoomScale?.() ?? 1)))
+  return <svg width={8} height={h} style={{ flex: '0 0 auto' }} aria-hidden>
+    <rect x={3} y={0} width={2} height={h} fill='black' />
+  </svg>
+}
+
+// Les hachures d'un nœud (`shape_hatch`), dans l'orientation du style : un motif de traits.
+const HATCH_ANGLE: { [k: string]: number } = { vertical: 0, horizontal: 90, diagonal: 45, antidiagonal: -45 }
+
+const Swatch = ({ app_data, item, unchecked }: { app_data: Class_ApplicationData, item: Type_LegendItem, unchecked: boolean }) => {
+  const pattern_id = React.useId().replace(/:/g, '_')
+  if (item.scale_bar === true) return <ScaleBar app_data={app_data} />
   const swatch = item.format?.swatch
   const color = unchecked ? UNCHECKED_SWATCH : (swatch?.color ?? item.swatch_color)
-  if (color === undefined && item.format?.icon === undefined) return null
-  const has_value = item.format?.value !== undefined
+  const icon = item.format?.icon
+  if (color === undefined && icon === undefined) return null
+  const value = item.format?.value
+  const has_value = value !== undefined
   // os#1527 — la pastille de la légende des couronnes : 0,7 em de côté, coins de 2 px (cf.
   // `appendDonutLegendRows`) ; élargie quand elle porte la valeur d'exemple.
   const w = has_value ? 30 : 14
   const h = 14
   const border = swatch?.border_visible === true
   const dashed = swatch?.border_dashed === true || swatch?.link_dashed === true
-  const icon = item.format?.icon
+  const hatch = swatch?.hatch !== undefined && swatch.hatch !== 'none' ? HATCH_ANGLE[swatch.hatch] : undefined
+  const ink = unchecked ? UNCHECKED_INK : '#2d3748'
+  // L'icône par son nom : le tracé du catalogue du diagramme, comme sur un nœud (`DrawLabel`).
+  const icon_path = icon !== undefined && !icon.is_image && icon.icon_name
+    ? app_data.drawing_area.sankey.getIconFromCatalog(icon.icon_name) as string | undefined
+    : undefined
   return <svg width={`${(0.7 * w) / h}em`} height='0.7em' viewBox={`0 0 ${w} ${h}`}
     style={{ flex: '0 0 auto', marginTop: '0.15em' }} aria-hidden>
+    {hatch !== undefined
+      ? <defs>
+        <pattern id={pattern_id} width={3} height={3} patternUnits='userSpaceOnUse' patternTransform={`rotate(${hatch})`}>
+          <rect width={3} height={3} fill={color ?? 'none'} />
+          <line x1={0} y1={0} x2={0} y2={3} stroke={ink} strokeWidth={1} />
+        </pattern>
+      </defs>
+      : null}
     <rect
       x={0.5} y={0.5} width={w - 1} height={h - 1} rx={2}
-      fill={color ?? 'none'} fillOpacity={unchecked ? 1 : (swatch?.opacity ?? 1)}
+      fill={hatch !== undefined ? `url(#${pattern_id})` : (color ?? 'none')}
+      fillOpacity={unchecked ? 1 : (swatch?.opacity ?? 1)}
       stroke={border || dashed ? (swatch?.border_color ?? '#4a5568') : 'none'}
       strokeWidth={border ? Math.min(3, swatch?.border_thickness ?? 1) : 1}
       strokeDasharray={dashed ? '3 2' : undefined}
@@ -88,18 +116,24 @@ const Swatch = ({ item, unchecked, scale_px }: { item: Type_LegendItem, unchecke
     {icon?.is_image === true && icon.image_src !== undefined
       ? <image href={icon.image_src} x={1} y={1} width={h - 2} height={h - 2} />
       : null}
+    {icon_path !== undefined && icon_path !== ''
+      ? <svg x={1} y={1} width={h - 2} height={h - 2} viewBox={icon?.view_box || '0 0 24 24'}>
+        <path d={icon_path} fill={unchecked ? UNCHECKED_INK : (icon?.color ?? ink)} />
+      </svg>
+      : null}
     {has_value
       ? <text x={w / 2} y={h / 2} dominantBaseline='central' textAnchor='middle' fontSize={9}
-        fill={item.format?.value?.color ?? INK} fontWeight={item.format?.value?.bold === true ? 700 : 400}
-      >{LEGEND_SAMPLE_VALUE}</text>
+        fill={value?.color ?? INK} fontWeight={value?.bold === true ? 700 : 400}
+        fontStyle={value?.italic === true ? 'italic' : undefined}
+        fontFamily={value?.font_family || undefined}
+      >{value?.uppercase === true ? LEGEND_SAMPLE_VALUE.toLocaleUpperCase() : LEGEND_SAMPLE_VALUE}</text>
       : null}
   </svg>
 }
 
-const LegendRow = ({ app_data, item, scale_px }: {
+const LegendRow = ({ app_data, item }: {
   app_data: Class_ApplicationData
   item: Type_LegendItem
-  scale_px: number
 }) => {
   const legend = app_data.drawing_area.legend
   const [editing, setEditing] = React.useState(false)
@@ -192,7 +226,7 @@ const LegendRow = ({ app_data, item, scale_px }: {
         style={{ margin: '0.1em 0 0', flex: '0 0 auto', cursor: 'pointer' }}
       />
       : null}
-    {item.heading === true ? null : <Swatch item={item} unchecked={unchecked} scale_px={scale_px} />}
+    {item.heading === true ? null : <Swatch app_data={app_data} item={item} unchecked={unchecked} />}
     {label}
   </div>
 }
@@ -203,17 +237,24 @@ const LegendRow = ({ app_data, item, scale_px }: {
  */
 export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const items = useSankeyLegendItems(app_data)
-  const drawing_area = app_data.drawing_area
-  // Hauteur de la barre d'échelle : 50 px monde (cf. SCALE_BAR_HEIGHT_PX) au zoom courant.
-  const scale_px = 50 * (drawing_area.getZoomScale?.() ?? 1)
+  const legend = app_data.drawing_area.legend
+  // Le FOND et le CADRE réglés pour la légende (menu Légende) : ceux du panneau.
+  const bg_opacity = legend.legend_bg_opacity / 100
   return <div
     className='sankey_legend_panel'
     style={{
       // os#1527 — le corps de la légende des couronnes (`legend_font_size`, 14 par défaut).
       fontSize: '14px', color: INK,
-      padding: '0.25rem 0.5rem 0.5rem', userSelect: 'none'
+      padding: '0.25rem 0.5rem 0.5rem', userSelect: 'none',
+      background: bg_opacity > 0 ? hexWithOpacity(legend.legend_bg_color, bg_opacity) : undefined,
+      border: legend.legend_bg_border ? '1px solid #a0aec0' : undefined,
+      borderRadius: legend.legend_bg_border ? '0.25rem' : undefined
     }}
   >
-    {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} scale_px={scale_px} />)}
+    {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} />)}
   </div>
 }
+
+/** `#rrggbb` (ou nom de couleur) avec une opacité : `color-mix`, que tous les navigateurs servis lisent. */
+const hexWithOpacity = (color: string, opacity: number): string =>
+  opacity >= 1 ? color : `color-mix(in srgb, ${color} ${Math.round(opacity * 100)}%, transparent)`
