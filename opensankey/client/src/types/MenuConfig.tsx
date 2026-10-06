@@ -1050,6 +1050,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Excel vierge), dernière section du menu Fichier devenue une commande.
   ref_setter_show_modal_new_document: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
+  // sa#605 — fenêtre « Ouvrir l'étude » : remplacer le document ouvert, ou l'ajouter
+  // comme feuille. Ne paraît que si le document ouvert n'est pas vierge.
+  ref_setter_show_open_diagram_choice: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
   // Modales héritées, encore ouvertes par le bouton `export_sankey` conservé
   // pour les `menu_top_order` personnalisés.
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -5130,6 +5134,7 @@ export class Class_MenuConfig {
 
       ref_setter_show_modal_export: { current: () => null },
       ref_setter_show_modal_new_document: { current: () => null },
+      ref_setter_show_open_diagram_choice: { current: () => null },
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
       ref_setter_png_saver_res_v: { current: () => null },
@@ -5191,6 +5196,7 @@ export class Class_MenuConfig {
     dialogs.ref_setter_show_sankeymatic_editor.current(false)
     dialogs.ref_setter_show_modal_export.current(false)
     dialogs.ref_setter_show_modal_new_document.current(false)
+    dialogs.ref_setter_show_open_diagram_choice.current(false)
     dialogs.ref_setter_show_modal_png_saver.current(false)
     dialogs.ref_setter_show_modal_pdf_saver.current(false)
     dialogs.ref_setter_show_modal_styles.current(false)
