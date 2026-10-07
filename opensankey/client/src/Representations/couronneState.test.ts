@@ -266,12 +266,17 @@ describe('os#1511 couronneState — les cas de Julien', () => {
     expect(plan.legend.filiere.map(e => e.member_id)).toEqual(P('ble', 'mais'))
   })
 
-  test('liee, les decoches restent a la figure', () => {
+  // 07/10/2026 — lie, les decoches sont ceux du DIAGRAMME (partages) ; ceux d une figure liee d avant sont ignores.
+  test('liee, les decoches sont ceux du diagramme', () => {
     const s = monterSocle()
     const options = { descriptor: croise }
     const st = readCouronneState(options, s.sankey, true)
     const bag = writeCouronneState(options, { ...st, dims: { ...st.dims, filiere: { ...st.dims.filiere, hidden: ['lait'] } } })
-    expect((bag[COURONNE_KEY] as { dims: { filiere: object } }).dims.filiere).not.toHaveProperty('shown')
+    const ecrit = (bag[COURONNE_KEY] as { dims: { filiere: object } }).dims.filiere
+    expect(ecrit).not.toHaveProperty('shown')
+    expect(ecrit).not.toHaveProperty('hidden')
+    s.filiere.hidden_ids = ['lait']
+    s.filiere.selectMembers(['cereales', 'viande'])
     const plan = drawPlanOf(readCouronneState(bag, s.sankey, true), s.sankey)
     expect(parts(plan, 'filiere')).toEqual(['cereales', 'viande'])
     expect(plan.legend.filiere.find(e => e.member_id === 'lait')?.checked).toBe(false)
