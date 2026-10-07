@@ -80,10 +80,11 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     expect(engendres).toHaveLength(8)
   })
 
-  test('chaque bande prend la couleur de sa filiere', () => {
+  test('choisie dans la legende, la filiere peint chaque bande de sa couleur', () => {
     const { sankey, filiere } = monter()
     ;(filiere.tags_dict['cereales'] as Class_DataTag).color = '#aa0000'
     ;(filiere.tags_dict['lait'] as Class_DataTag).color = '#00aa00'
+    filiere.paints_flows = true
     disaggregateDimensionNodes(sankey)
     sankey.links_list.filter(isGeneratedMemberLink).forEach(l =>
       expect(l.getShapeColorToUse()).toBe(filiereDe(l.source as Class_NodeElement) === 'cereales' ? '#aa0000' : '#00aa00'))
@@ -114,12 +115,15 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     expect(sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Lait')[0].name_label_is_visible).toBe(true)
   })
 
-  test('les postes colorent les flux quand on le demande, et la legende liste les trois dimensions', () => {
+  test('par defaut les postes peignent les flux, et la legende liste les dimensions', () => {
+    // Julien, 07/10 : « le premier choix, c est Ressources et emplois qui peint les branches ».
     const { sankey, filiere, poste } = monter()
     ;(filiere.tags_dict['cereales'] as Class_DataTag).color = '#aa0000'
     ;(poste.tags_dict['production'] as Class_DataTag).color = '#0000aa'
-    poste.use_colors = true
+    filiere.use_colors = true
     disaggregateDimensionNodes(sankey)
+    expect(poste.paints_member_bands_flows).toBe(true)
+    expect(filiere.paints_member_bands_flows).toBe(false)
     const lien = sankey.links_list.filter(isGeneratedMemberLink)
       .find(l => filiereDe(l.source as Class_NodeElement) === 'cereales' && posteDe(l.source as Class_NodeElement) === 'production')
     expect(lien?.getShapeColorToUse()).toBe('#0000aa')
