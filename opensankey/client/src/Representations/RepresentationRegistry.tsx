@@ -403,6 +403,12 @@ type Type_RepresentationCommon = {
    */
   reads_generated_origin?: boolean
   /**
+   * 07/10/2026 (os#1511, lot 2) — posée sur l'origine d'un élément engendré, la figure NE se restreint
+   * PAS au membre : elle montre l'origine entière (le tableau croisé « Produits agricoles → Europe »
+   * ouvre tous les continents). Absent : la portée de départ est le membre (la couronne).
+   */
+  generated_origin_whole?: boolean
+  /**
    * os#1409 - COMMENT ON ZOOME DANS CETTE NATURE (cf. Type_RepresentationZoom).
    *
    * ABSENT = cette nature ne zoome pas, et c'est une reponse, pas un oubli : l'etoile, la

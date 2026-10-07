@@ -1,7 +1,7 @@
 import { memberPathSectorId } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import { drawPlanOf } from '../Charts/couronnePlan'
-import { buildDimensionMatrix, matrixInputOfPlan } from '../Charts/DimensionMatrix'
+import { buildDimensionMatrix, matrixInputOfPlan, matrixOthersId } from '../Charts/DimensionMatrix'
 import type { Type_DimensionMatrix } from '../Charts/DimensionMatrix'
 import { descripteur, monterSocle } from '../Charts/__fixtures__/couronneSocle'
 import type { Type_Socle } from '../Charts/__fixtures__/couronneSocle'
@@ -426,12 +426,40 @@ describe('os#1511 modele commun, lot 2 — le tableau croise par les roles', () 
     expect(mp.columns).toMatchObject({ entry: ['europe', 'ameriques', 'asie'], opened: ['europe'], total: ['monde'] })
     const mx = lignesDe(st, s)
     expect(mx.columns.map(c => [c.key, c.depth ?? null, c.expanded ?? null])).toEqual([
-      ['c:europe', 0, true], ['c:fr', 1, false], ['c:es', 1, false], ['c:ameriques', 0, false], ['c:asie', 0, false],
+      ['c:fr', 1, false], ['c:es', 1, false], ['c:europe', 0, true], ['c:ameriques', 0, false], ['c:asie', 0, false],
       ['c:__total__', null, null]
     ])
-    // Sous-total Europe = France + Espagne ; le Total ne compte pas deux fois l Europe.
+    // Sous-total Europe = France + Espagne, a droite ; le Total ne compte pas deux fois l Europe.
     const cereales = mx.rows.find(r => r.member_id === 'cereales')
-    expect(cereales?.cells).toEqual([66, 32, 34, 74, 40, 180])
+    expect(cereales?.cells).toEqual([32, 34, 66, 74, 40, 180])
     expect(mx.rows.filter(r => r.depth === 1).map(r => r.member_id).sort()).toEqual(['ble', 'mais'])
+  })
+})
+
+describe('os#1511 lot 2 — Autres dans le tableau, la regle de la couronne', () => {
+  test('lignes en parts, colonnes en cases : les petits se replient en dernier, ouvrables', () => {
+    const s = monterSocle()
+    const st = fromFigure(det({ dimension_opening: { filiere: ['produits'], pays: ['monde'] } }), false, s.sankey)
+    const input = matrixInputOfPlan(matrixPlan(st, s), s.sankey)
+    const build = (opened?: Set<string>) => buildDimensionMatrix(
+      { kind: 'link', link: s.lien }, { linked: false, dims: [], dividing: [], opened: new Set<string>() }, { data_tags: null },
+      {
+        axes: { rows: input.rows, columns: input.columns }, coordinates: input.coordinates, total_label: 'Total',
+        others: { label: 'Autres', rows: { min_share_pct: 0, max_parts: 2 }, columns: { min_share_pct: 0, max_parts: 2 }, opened }
+      }
+    ) as Type_DimensionMatrix
+    const mx = build()
+    // Colonnes : 3 continents, plafond 2 -> le plus gros + Autres (Europe 315, Asie 175 ; Ameriques 335).
+    expect(mx.columns.map(c => c.key)).toEqual(['c:ameriques', `c:${matrixOthersId('c', '')}`, 'c:__total__'])
+    expect(mx.columns[1].folded_names).toEqual(['Europe', 'Asie'])
+    // Lignes : 3 filieres, plafond 2 -> la plus grosse (Lait) + Autres, en dernier.
+    const top = mx.rows.filter(r => r.depth === 0 && r.kind === 'member')
+    expect(top.map(r => r.label)).toEqual(['Lait', 'Autres'])
+    const total = mx.rows[mx.rows.length - 1].cells
+    expect(top.reduce((acc, r) => acc + (r.cells[2] ?? 0), 0)).toBeCloseTo(total[2] ?? 0)
+    // Ouvert, Autres montre ses membres sous lui ; les colonnes repliees viennent avant leur sous-total.
+    const open = build(new Set([matrixOthersId('r', ''), matrixOthersId('c', '')]))
+    expect(open.rows.filter(r => r.depth === 1).map(r => r.label).sort()).toEqual(['Cereales', 'Viande'])
+    expect(open.columns.map(c => c.member_id)).toEqual(['ameriques', 'europe', 'asie', matrixOthersId('c', ''), null])
   })
 })
