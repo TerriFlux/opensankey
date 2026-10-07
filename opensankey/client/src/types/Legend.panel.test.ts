@@ -124,6 +124,17 @@ describe('os#1527 — panneau de légende', () => {
     expect(seen.every(d => d === 'none' || d === undefined)).toBe(true)
   })
 
+  it('une zone redessinee seule (geste, survol, selection) reste cachee', () => {
+    // Julien, 07/10 : « en manipulant, j ai vu apparaitre l ancienne legende ».
+    const { app } = makeLegend()
+    app.drawing_area.legend.in_panel = true
+    const zone = app.drawing_area.sankey.containers_dict['legend-tag-fiab-indic']
+    zone.draw()
+    expect(zone.d3_selection?.style('display')).toBe('none')
+    app.drawing_area.sankey.containers_dict['legend'].draw()
+    expect(app.drawing_area.sankey.containers_dict['legend'].d3_selection?.style('display')).toBe('none')
+  })
+
   it('capture sans panneau : rien ne bouge', () => {
     const { app } = makeLegend()
     const legend = app.drawing_area.legend
