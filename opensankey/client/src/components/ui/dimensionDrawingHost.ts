@@ -31,9 +31,12 @@ import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 
 export type { Type_DimensionDrawing } from '../../types/TagGroup'
 
-/** Les nœuds qui portent la dimension. */
+/**
+ * Les nœuds RÉGLÉS pour porter la dimension — ceux que l'éditeur coche, sans ceux qu'un diagramme
+ * par membre y ajoute (cf. `Node.driving_dimension`).
+ */
 export const dimensionCarriersOf = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_NodeElement[] =>
-  (app_data.drawing_area.sankey.nodes_list as Class_NodeElement[]).filter(node => node.driving_dimension === tagg)
+  (app_data.drawing_area.sankey.nodes_list as Class_NodeElement[]).filter(node => node.own_driving_dimension === tagg)
 
 /** Les nœuds qui peuvent la porter : tous, sauf ceux qu'une désagrégation a engendrés. */
 export const dimensionCarrierCandidates = (app_data: Class_ApplicationData): Class_NodeElement[] =>
@@ -333,30 +336,23 @@ export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Cl
  * Range la dimension en bandes (un diagramme par membre), ou revient au mode d'écart des enfants.
  * Efface les positions manuelles de la dimension (retour au placement automatique).
  *
- * Choisir les bandes, c'est aussi faire porter la dimension par TOUS les nœuds du diagramme
- * (Julien, 07/10 : « si on sélectionne un diagramme par membre, ça doit automatiquement
- * sélectionner tous les nœuds comme représentant ») : un diagramme par membre répète le diagramme
- * entier, pas quelques nœuds. Un nœud qui porte déjà une AUTRE dimension la garde. Revenir à l'écart
- * des enfants laisse les porteurs tels quels. Un seul pas d'historique.
+ * Les bandes répètent le diagramme entier : tous les nœuds y portent la dimension, mais sans que
+ * leur réglage change (`Node.driving_dimension`) — revenir en arrière rend le diagramme d'avant.
  */
 export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
   const before = tagg.member_bands
-  const state_before = snapshot(app_data, tagg)
   const positions_before = manualPositionsOf([tagg])
-  const carriers_after = on
-    ? dimensionCarrierCandidates(app_data)
-      .filter(node => node.driving_dimension === undefined || node.driving_dimension === tagg)
-      .map(node => node.id)
-    : state_before.carriers
-  const apply = (value: boolean | undefined, carriers: string[], positions?: Type_ManualPositions) => {
+  const apply = (value: boolean | undefined, positions?: Type_ManualPositions) => {
     tagg.member_bands = value
     setManualPositions([tagg], positions)
-    // `restoreAll` rattache les porteurs, redécoupe, redessine et rafraîchit les menus.
-    restore(app_data, tagg, { ...snapshot(app_data, tagg), carriers })
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+    app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
   }
-  app_data.history.saveUndo(() => apply(before, state_before.carriers, positions_before))
-  app_data.history.saveRedo(() => apply(on, carriers_after))
-  apply(on, carriers_after)
+  app_data.history.saveUndo(() => apply(before, positions_before))
+  app_data.history.saveRedo(() => apply(on))
+  apply(on)
 }
 
 /**
