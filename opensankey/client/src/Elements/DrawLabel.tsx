@@ -2690,6 +2690,30 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     return pts[pts.length - 1]
   }
 
+  /**
+   * sa#614 — DANS UNE ÉTOILE UNIT., L'ÉTIQUETTE D'UN FLUX D'ENTRÉE S'ÉCARTE DU NOM DE SA SOURCE
+   * AUTANT QUE CELLE D'UNE SORTIE S'ÉCARTE DU NOM DE SA CIBLE.
+   *
+   * À droite, la valeur est ancrée en fin de flux (`position_x_end`), qui s'arrête AVANT la pointe
+   * de flèche : c'est la pointe qui sépare « 53% » de « Exportations ». À gauche, la valeur part du
+   * début du flux, donc du bord du nœud source, dont le nom est ancré juste à sa gauche : « OS99% ».
+   * On rend à gauche l'écart que la flèche donne à droite — celui des sorties du centre, tel que
+   * `position_x_end` le compte (la pointe si elle est dessinée, rien sinon) ; un centre sans sortie
+   * prend la taille de pointe de ce flux. En unités du dessin, comme le flux : l'écart suit le zoom.
+   *
+   * Hors étoile (`is_unitary` + nœud central posé par `layoutUnitaryBoard`), rien ne change : une
+   * valeur à gauche y est dans le flux, à côté d'un nœud qui a une largeur.
+   */
+  protected getUnitaryInputLabelGap(): number {
+    const drawing_area = this.link.drawing_area
+    const center = this.link.target
+    if (!drawing_area?.is_unitary || drawing_area.unitary_center_node_id !== center.id) return 0
+    if (this.link.source_side !== 'right') return 0
+    const outputs = center.output_links_list.filter(l => l.is_visible)
+    if (outputs.length === 0) return this.link.shape_arrow_size
+    return Math.max(...outputs.map(l => l.shape_is_arrow ? l.shape_arrow_size : 0))
+  }
+
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_y = this.link.position_y_start
     const label_pos_y_end = this.link.position_y_end
@@ -2720,6 +2744,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
         label_anchor = 'end'
         label_pos_x = this.link.position_x_end
         label_pos_y = this.link.position_y_end
+      } else {
+        label_pos_x += this.getUnitaryInputLabelGap()
       }
       // ✅ TOUJOURS appliquer horiz_shift
       label_pos_x += this._label_values.horiz_shift
