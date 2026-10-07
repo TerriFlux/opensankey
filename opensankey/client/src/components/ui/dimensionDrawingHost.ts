@@ -75,13 +75,14 @@ const dimensionsDrawnAsNodes = (app_data: Class_ApplicationData): Class_DataTagG
     .map(node => node.driving_dimension)
     .filter((tagg): tagg is Class_DataTagGroup => tagg !== undefined))]
 
-type Type_Snapshot = { banner: string, carriers: string[], selected: string[], bands: boolean | undefined }
+type Type_Snapshot = { banner: string, carriers: string[], selected: string[], bands: boolean | undefined, focus: string[] }
 
 const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_Snapshot => ({
   banner: (tagg as unknown as { banner: string }).banner,
   carriers: dimensionCarriersOf(app_data, tagg).map(node => node.id),
   selected: tagg.selected_tags_list.map(tag => tag.id),
-  bands: tagg.member_bands
+  bands: tagg.member_bands,
+  focus: tagg.stored_focus_ids
 })
 
 /**
@@ -104,6 +105,7 @@ const restoreAll = (app_data: Class_ApplicationData, states: [Class_DataTagGroup
   states.forEach(([tagg, state]) => {
     ;(tagg as unknown as { banner: string }).banner = state.banner
     tagg.member_bands = state.bands
+    tagg.focus_ids = state.focus
     dimensionCarrierCandidates(app_data).forEach(node => {
       if (!state.carriers.includes(node.id) && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
     })
@@ -176,7 +178,8 @@ export const swapDimensionDrawings = (
       banner,
       carriers: other.carriers,
       selected: !takes_nodes && UNIQUE_BANNERS.includes(banner) ? own.selected.slice(0, 1) : own.selected,
-      bands: other.bands
+      bands: other.bands,
+      focus: own.focus
     }
   }
   const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(before_a, before_b)], [b, take(before_b, before_a)]]
@@ -219,12 +222,48 @@ const commit = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, next:
  * nœud ne porte passe alors en choix multiple, dans le même pas d'historique.
  */
 export const applyDimensionCut = (
-  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[], options: { multi?: boolean } = {}
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[], options: { multi?: boolean, focus?: string[] } = {}
 ) => {
   if (ids.length === 0) return
   const now = snapshot(app_data, tagg)
   const banner = options.multi && now.carriers.length === 0 ? 'multi' : now.banner
-  commit(app_data, tagg, { ...now, banner, selected: ids })
+  // 07/10/2026 — la PORTÉE du diagramme (zoom partagé) : celle que le geste dit (`focus`), sinon elle
+  // reste tant que la nouvelle sélection y tient, et tombe sinon — dans le même pas d'historique.
+  const focus = options.focus ?? (focusHolds(tagg, now.focus, ids) ? now.focus : [])
+  commit(app_data, tagg, { ...now, banner, selected: ids, focus })
+}
+
+/** Toute la sélection `ids` tient-elle sous la portée `focus` (non vide) ? */
+const focusHolds = (tagg: Class_DataTagGroup, focus: string[], ids: string[]): boolean => {
+  const F = focus.map(id => tagg.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+  if (F.length === 0) return false
+  return ids.every(id => {
+    const m = tagg.tags_dict[id] as Class_DataTag | undefined
+    return m !== undefined && F.some(f => m === f || m.hasAncestor(f))
+  })
+}
+
+/**
+ * 07/10/2026 — ZOOMER LE DIAGRAMME (os#1511, revirement de Julien : en LIÉ, le zoom est partagé).
+ * La portée de la dimension devient `focus` (vide = la racine) et sa sélection `ids`, restreinte à
+ * la portée : le diagramme ne montre plus que les flux, bandes et nœuds de la portée. Toutes les
+ * fenêtres liées lisent la même portée. Un pas d'historique, d'où que vienne le geste.
+ * `ids` vide : la sélection ne change pas. La bannière ne change pas : en choix unique (un membre à
+ * la fois, sans nœud porteur), le diagramme ne descend pas — sa sélection devient la portée elle-même
+ * (« Céréales »), et ne bouge pas quand on remonte à la racine.
+ */
+export const applyDimensionFocus = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, focus: string[], ids: string[]
+) => {
+  const now = snapshot(app_data, tagg)
+  // Un membre à la fois : le diagramme montrait un membre seul. Plusieurs déjà choisis malgré la
+  // bannière (une figure liée les y a posés) : il découpe, la sélection suit comme en choix multiple.
+  const unique = UNIQUE_BANNERS.includes(now.banner) && now.carriers.length === 0 && now.selected.length <= 1
+  const selected = unique
+    ? (focus.length === 1 ? [...focus] : now.selected)
+    : (ids.length > 0 ? ids : now.selected)
+  const banner = !unique && now.carriers.length === 0 && selected.length > 1 && UNIQUE_BANNERS.includes(now.banner) ? 'multi' : now.banner
+  commit(app_data, tagg, { ...now, banner, selected, focus: [...focus] })
 }
 
 /** os#1511 — UN NIVEAU ENTIER : tous les membres que montre le niveau `index` (annulable). */
@@ -234,7 +273,8 @@ export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class
   const level = Math.min(Math.max(0, index), levels - 1)
   const membres = tagg.membersAtLevel(level)
   if (membres.length === 0) return
-  commit(app_data, tagg, { ...snapshot(app_data, tagg), selected: membres.map(m => m.id) })
+  // Un niveau ENTIER : plus de portée.
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), selected: membres.map(m => m.id), focus: [] })
 }
 
 /**

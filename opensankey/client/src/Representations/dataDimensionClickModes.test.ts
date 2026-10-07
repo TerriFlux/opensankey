@@ -4,11 +4,8 @@
 // pas code pour une dimension de donnees, et une figure liee ecrivait la coupe du diagramme quel que
 // soit le reglage. Chaque mode est verifie sur ses DEUX effets : la figure, le diagramme.
 //
-//   'none'      ouvre l anneau dans la figure (coupe propre), le diagramme ne bouge pas ;
-//   'aggregate' ouvre l anneau, et le diagramme suit ;
-//   'zoom'      re-enracine (`hierarchy_focus`), sans ouvrir ni toucher au diagramme ;
-//   'both'      re-enracine, et le diagramme suit ;
-//   sans diagramme affiche, rien n est ecrit au diagramme et ses deux choix se grisent.
+//   07/10/2026 — deux choix, Deplie ('none' ; 'aggregate' d avant) et Zoome ('zoom' ; 'both' d avant).
+//   Liee, le diagramme suit (le zoom compris) ; detachee, la figure seule.
 //
 // 04/10/2026 (os#1511, lot 3) — les gestes ecrivent l ETAT DE LA COURONNE (`couronne`) et plus aucune
 // ancienne cle : on lit donc ce que le sac ecrit dit, par `readCouronneState`.
@@ -158,12 +155,14 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
     teardown()
   })
 
-  test('LE DEPLIE DANS LE DIAGRAMME : la figure ouvre, et le diagramme suit', () => {
+  // 07/10/2026 — DEUX CHOIX : le diagramme suit selon le LIEN, plus selon le choix. 'aggregate' (valeur
+  // d avant) se lit Deplie : detachee, la figure seule.
+  test('valeur d avant aggregate, DETACHEE : la figure ouvre, le diagramme ne bouge pas', () => {
     const { ctx, ecrit, diagramme, source } = scene({ clic: 'aggregate', reel: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
     expect(filiereEcrite(ecrit, source).shown).toEqual(['ble', 'mais', 'lait'])
-    expect(diagramme).toHaveBeenCalledTimes(1)
+    expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
 
@@ -176,21 +175,24 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
     teardown()
   })
 
-  test('zoome dedans seulement, figure LIEE : le diagramme ne bouge toujours pas', () => {
-    const { ctx, ecrit, diagramme, source } = scene({ clic: 'zoom', linked: true })
+  test('ZOOME, figure LIEE : le diagramme zoome aussi (portee partagee, selection restreinte)', () => {
+    const { ctx, ecrit, diagramme, source } = scene({ clic: 'zoom', linked: true, reel: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
+    expect(diagramme).toHaveBeenCalledTimes(1)
+    const filiere = source.drawing_area.sankey.data_taggs_dict['filiere'] as unknown as Class_DataTagGroup
+    expect(filiere.focus_ids).toEqual(['cereales'])
+    expect(filiere.selected_tags_list.map(t => t.id).sort()).toEqual(['ble', 'mais'])
     expect(filiereEcrite(ecrit, source).focus).toEqual(['cereales'])
-    expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
 
-  test('ZOOME DEDANS ET LE DEPLIE : le foyer s empile, et le diagramme suit', () => {
+  test('valeur d avant both, DETACHEE : se lit Zoome, la figure seule', () => {
     const { ctx, ecrit, diagramme, source } = scene({ clic: 'both', reel: true })
     const { el, teardown } = dessiner(ctx)
     cliquer(el, CEREALES)
     expect(filiereEcrite(ecrit, source).focus).toEqual(['cereales'])
-    expect(diagramme).toHaveBeenCalledTimes(1)
+    expect(diagramme).not.toHaveBeenCalled()
     teardown()
   })
 
@@ -246,15 +248,16 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
     teardown()
   })
 
-  test('SANS DIAGRAMME AFFICHE : les deux choix qui le nomment se grisent, avec leur raison', () => {
-    const { source } = scene({ clic: 'none', sans_diagramme: true })
-    const [item] = figureControlsOf(
-      { interaction_click: INTERACTION_CONFIG.interaction_click as never }, {}, ['style'], 'fr',
+  test('deux choix, Deplie et Zoome ; les valeurs d avant s y lisent', () => {
+    const { source } = scene({ clic: 'none' })
+    const lire = (v: string) => figureControlsOf(
+      { interaction_click: INTERACTION_CONFIG.interaction_click as never }, { interaction_click: v }, ['style'], 'fr',
       { app_data: source as never }
-    )
-    const grises = (item.choices ?? []).filter(c => c.disabled).map(c => c.value)
-    expect(grises.sort()).toEqual(['aggregate', 'both'])
-    expect((item.choices ?? []).find(c => c.value === 'aggregate')?.reason).toMatch(/diagramme/)
+    )[0]
+    expect((lire('none').choices ?? []).map(c => c.value)).toEqual(['none', 'zoom'])
+    expect(lire('aggregate').value).toBe('none')
+    expect(lire('both').value).toBe('zoom')
+    expect(lire('zoom').value).toBe('zoom')
   })
 
   test('avec le diagramme affiche, aucun choix n est grise', () => {
@@ -304,9 +307,8 @@ describe('clic sur une part — couronne de dimension de donnees', () => {
       { app_data: source as never }
     )
     const none = (item.choices ?? []).find(c => c.value === 'none')
-    expect(none?.label).toBe('Déplie dans la couronne')
+    expect(none?.label).toBe('Déplie')
     expect(none?.disabled).toBeFalsy()
-    expect((item.choices ?? []).find(c => c.value === 'aggregate')?.label).toBe('Déplie dans la couronne et le diagramme')
-    expect((item.choices ?? []).find(c => c.value === 'zoom')?.label).toBe('Zoome dedans')
+    expect((item.choices ?? []).find(c => c.value === 'zoom')?.label).toBe('Zoome')
   })
 })

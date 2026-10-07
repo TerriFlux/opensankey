@@ -26,8 +26,10 @@
 //                  `drawing` 'sectors' | 'sunburst' | 'multiples' (une seule dimension en multiples).
 //
 // LIÉE, `shown` n'est PAS stocké : c'est la sélection du diagramme (`selected_tags_list`), projetée
-// sur la portée ; `focus` et `hidden` restent à la figure. Si la sélection du diagramme sort de la
-// portée (aucun membre choisi n'y touche), la portée revient à la racine. DÉTACHÉE, tout est stocké.
+// sur la portée ; `hidden` reste à la figure. 07/10/2026 (revirement de Julien) : `focus` non plus
+// n'est pas stocké, c'est la PORTÉE DU DIAGRAMME (`focus_ids` du groupe), partagée par toutes les
+// fenêtres liées ; une portée propre d'un fichier d'avant est ignorée. Si la sélection du diagramme
+// sort de la portée, la portée revient à la racine. DÉTACHÉE, tout est stocké.
 //
 // LIRE convertit TOUS les anciens formats, en rejouant les résolveurs d'avant (`dataCutOf`,
 // `resolveDataFocus`, `smallMultipleCellsOf`) : l'état lu dessine ce que dessinait la figure.
@@ -248,7 +250,7 @@ const defaultDimensionState = (dim: Class_DataTagGroup, linked: boolean, first: 
   const shown = linked
     ? (dim.selected_tags_list as Class_DataTag[]).map(m => m.id)
     : (first && roots.length === 1 ? childrenOf(roots[0]).map(m => m.id) : roots.map(m => m.id))
-  return { focus: [], shown, hidden: [], active: true, drawing: 'sectors' }
+  return { focus: linked ? dim.focus_ids : [], shown, hidden: [], active: true, drawing: 'sectors' }
 }
 
 // ── LIRE ─────────────────────────────────────────────────────────────────────────────────────────
@@ -287,7 +289,8 @@ export const readCouronneState = (
   declared_ids?: string[]
 ): Type_CouronneState => {
   const is_linked = linked ?? readFigureOpening(options).data.linked
-  const stored = storedCouronneState(options?.[COURONNE_KEY], is_linked)
+  const raw_stored = storedCouronneState(options?.[COURONNE_KEY], is_linked)
+  const stored = raw_stored !== undefined && is_linked ? withDiagramFocus(raw_stored, sankey) : raw_stored
   if (stored !== undefined) {
     // Liée, les dimensions à niveaux que l'état ne nomme pas encore entrent à la suite.
     const order = is_linked
@@ -300,8 +303,25 @@ export const readCouronneState = (
     })
     return normalizeCouronneState({ ...stored, order, dims }, sankey)
   }
-  const legacy = legacyCouronneState(options, sankey, is_linked, declaredDimensionIdsOf(options) ?? declared_ids ?? [])
+  const raw_legacy = legacyCouronneState(options, sankey, is_linked, declaredDimensionIdsOf(options) ?? declared_ids ?? [])
+  const legacy = is_linked ? withDiagramFocus(raw_legacy, sankey) : raw_legacy
   return normalizeCouronneState(withSubjectFocus(legacy, options?.[SUBJECT_FOCUS_KEY], sankey), sankey)
+}
+
+/**
+ * 07/10/2026 — LIÉE, LA PORTÉE EST CELLE DU DIAGRAMME (revirement de Julien : le zoom est partagé).
+ * Chaque dimension prend la portée du diagramme (`focus_ids` du groupe), et oublie la sienne : une
+ * figure liée enregistrée avec une portée propre (format d'avant) n'impose donc rien au diagramme —
+ * sans portée du diagramme, elle s'ouvre à la racine. Les dimensions de la portée du diagramme que
+ * l'état ne nomme pas encore y entrent à la lecture (la suite de `readCouronneState`).
+ */
+const withDiagramFocus = (state: Type_CouronneState, sankey: Type_CouronneSankey): Type_CouronneState => {
+  const dims: Type_CouronneState['dims'] = {}
+  Object.entries(state.dims).forEach(([id, d]) => {
+    const dim = dimOf(sankey, id)
+    dims[id] = { ...d, focus: dim === undefined ? [] : dim.focus_ids }
+  })
+  return { ...state, dims }
 }
 
 /**
@@ -317,6 +337,8 @@ const withSubjectFocus = (state: Type_CouronneState, raw: unknown, sankey: Type_
     const dim = dimOf(sankey, id)
     const focus = dim === undefined ? [] : antichainOf(dim, stringsOf(value))
     if (dim === undefined || focus.length === 0) return
+    // Liée, un diagramme déjà zoomé sur cette dimension l'emporte.
+    if (state.linked && (dims[id]?.focus.length ?? 0) > 0) return
     if (!order.includes(id)) order.push(id)
     const base = dims[id] ?? defaultDimensionState(dim, state.linked, false)
     const shown = state.linked
@@ -460,9 +482,9 @@ export const writeCouronneState = (options: Type_Options, state: Type_CouronneSt
     order: [...state.order],
     dims: Object.fromEntries(state.order.filter(id => state.dims[id] !== undefined).map(id => {
       const d = state.dims[id]
+      // Liée, ni `focus` ni `shown` : ce sont la portée et la sélection du diagramme.
       return [id, {
-        focus: [...d.focus],
-        ...(state.linked ? {} : { shown: [...d.shown] }),
+        ...(state.linked ? {} : { focus: [...d.focus], shown: [...d.shown] }),
         hidden: [...d.hidden],
         active: d.active,
         drawing: d.drawing

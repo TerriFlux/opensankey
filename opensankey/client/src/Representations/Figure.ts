@@ -164,6 +164,11 @@ export type Type_FigureControl = {
    * mettent en info-bulle.
    */
   choiceUnavailable?: (value: string, ctx: Type_FigureChoiceContext) => { [lang: string]: string } | null
+  /**
+   * 07/10/2026 — UNE VALEUR D'AVANT LUE COMME UN CHOIX D'AUJOURD'HUI : quand les choix se resserrent,
+   * une valeur écrite qui n'en est plus un s'affiche sous celui qui la remplace (« Clic sur une part »).
+   */
+  shownValueOf?: (raw: unknown) => unknown
 }
 
 /** Un attribut déclaré par une nature : le patron des éléments, plus sa sorte et son contrôle. */

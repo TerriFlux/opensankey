@@ -103,6 +103,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // au prochain enregistrement. `bands_by_value` / `nodes_by_value` sont relus (ancien format de
   // `members_order`) puis abandonnés.
   'topbar', 'member_bands', 'members_order', 'bands_by_value', 'nodes_by_value',
+  // os#1511 — la portée (zoom) partagée par les fenêtres liées, écrite seulement quand elle est posée.
+  'focus',
 ])
 
 /**
@@ -1403,6 +1405,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // relus à la lecture : `false` y voulait dire l'ordre de l'arbre.
   private _members_order: Type_MembersOrder | undefined = undefined
 
+  // 07/10/2026 — LA PORTÉE (ZOOM) DU DIAGRAMME sur cette dimension (os#1511, revirement de Julien :
+  // en LIÉ, le zoom est partagé). Les membres dans lesquels on est descendu (antichaîne) ; vide = la
+  // racine. Toutes les fenêtres liées (couronne, tableau croisé, Sankey) la lisent ; le diagramme
+  // l'applique par sa sélection, restreinte à la portée. Écrite seulement si elle est posée.
+  private _focus_ids: string[] = []
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1461,6 +1469,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._member_bands = tagg_to_copy._member_bands
     this._reference_node_id = tagg_to_copy._reference_node_id
     this._members_order = tagg_to_copy._members_order
+    this._focus_ids = [...tagg_to_copy._focus_ids]
   }
 
   protected _toJSON(
@@ -1484,6 +1493,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._reference_node_id !== undefined) json_object['reference_node'] = this._reference_node_id
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
     if (this._members_order !== undefined) json_object['members_order'] = this._members_order
+    // os#1511 — clé ADDITIVE, écrite seulement quand le diagramme est zoomé.
+    if (this._focus_ids.length > 0) json_object['focus'] = [...this._focus_ids]
   }
 
   protected _fromJSON(
@@ -1537,6 +1548,29 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     } else if (json_object['bands_by_value'] === false || json_object['nodes_by_value'] === false) {
       this._members_order = 'tree'
     }
+    const focus_lu = json_object['focus']
+    if (Array.isArray(focus_lu)) this._focus_ids = focus_lu.filter((v): v is string => typeof v === 'string' && v !== '')
+  }
+
+  /**
+   * 07/10/2026 — LA PORTÉE DU DIAGRAMME (os#1511) : les membres existants dans lesquels on est
+   * descendu ; vide = la racine. Le diagramme est zoomé quand toute sa sélection tient dans la
+   * portée : une sélection qui en sort (un autre sélecteur, la barre du haut) défait le zoom, la
+   * portée se lit alors vide.
+   */
+  public get focus_ids(): string[] {
+    const members = this._focus_ids
+      .map(id => this.tags_dict[id] as Class_DataTag | undefined)
+      .filter((m): m is Class_DataTag => m !== undefined)
+    if (members.length === 0) return []
+    const selection = this.selected_tags_list as Class_DataTag[]
+    const inside = selection.length > 0 && selection.every(s => members.some(f => s === f || s.hasAncestor(f)))
+    return inside ? members.map(m => m.id) : []
+  }
+  /** La portée telle qu'écrite, sans la confronter à la sélection (instantanés d'historique). */
+  public get stored_focus_ids(): string[] { return [...this._focus_ids] }
+  public set focus_ids(value: string[]) {
+    this._focus_ids = [...new Set(value.filter(id => typeof id === 'string' && id !== ''))]
   }
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
