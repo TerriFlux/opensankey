@@ -281,8 +281,9 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     ? <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
       {/* os#1511 — dès deux porteurs, la dimension se range en bandes et le mode d'écart n'a plus
           d'effet : on le dit, au lieu de cocher un mode qui ne s'applique pas. Choisir un mode
-          quitte les bandes. */}
-      {dimensionCarriersOf(app_data, tagg).length >= 2
+          quitte les bandes. Offert dès qu'un nœud la porte : le choisir fait porter la dimension
+          par tous les nœuds (`applyMemberBands`). */}
+      {dimensionCarriersOf(app_data, tagg).length >= 1
         ? <CheckItem
           label={t('Banner.draw_member_bands') + ` (${app_data.drawing_area.disaggregation_gap_value})`}
           checked={in_bands}
