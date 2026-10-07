@@ -905,6 +905,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * (`Class_DataTagGroup.single_member_color`, qui décide). `undefined` sinon : le flux garde sa
    * règle habituelle.
    */
+  private _memberBandColor(): string | undefined {
+    // os#1511 — UN DIAGRAMME PAR MEMBRE : chaque bande prend la couleur de son membre (Julien,
+    // 07/10 : « sans couleur »). Lue sur les nœuds engendrés des deux bouts.
+    if (!isGeneratedMemberId(this.id)) return undefined
+    const bande = (this.sankey.data_taggs_list as Class_DataTagGroup[]).find(tagg => tagg.member_bands === true)
+    if (bande === undefined) return undefined
+    const membres = [...new Set([this.source, this.target]
+      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
+      .filter(membre => membre.group === bande))]
+    if (membres.length !== 1) return undefined
+    const color = membres[0].color
+    return (color && color !== 'grey') ? color : undefined
+  }
+
   private _singleMemberDimensionColor(): string | undefined {
     for (const tagg of this.sankey.data_taggs_list) {
       const color = tagg.single_member_color
@@ -978,7 +992,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // « quand on choisit un membre à la fois, il ne met pas les couleurs »). En bandes, chaque
       // bande porte la couleur de son membre ; un seul membre, c'est une seule bande, donc la même
       // couleur — sans quoi choisir « Sucre » rendait le flux gris.
-      const member_color = this._singleMemberDimensionColor()
+      const member_color = this._memberBandColor() ?? this._singleMemberDimensionColor()
       if (member_color !== undefined) return member_color
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']

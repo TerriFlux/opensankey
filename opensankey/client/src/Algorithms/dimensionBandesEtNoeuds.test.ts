@@ -55,43 +55,52 @@ function monter() {
   return { app, sankey, filiere, poste, ressources, matiere, emplois }
 }
 
+const filiereDe = (n: Class_NodeElement) => membersOfGeneratedNode(n).find(m => m.group.id === 'filiere')?.id
+const posteDe = (n: Class_NodeElement) => membersOfGeneratedNode(n).find(m => m.group.id === 'poste')?.id
+
 describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque bande', () => {
   test('chaque bande a ses postes, sa matiere, et des flux qui ne sortent pas de la bande', () => {
     const { sankey, ressources } = monter()
     disaggregateDimensionNodes(sankey)
+    // Le diagramme repete : les noeuds de poste portent le nom du poste seul.
     const noms = sankey.nodes_list.filter(isGeneratedMemberNode).map(n => n.name).sort()
     expect(noms).toEqual([
-      'Cereales', 'Cereales - Alimentation', 'Cereales - Exportations', 'Cereales - Importations',
-      'Cereales - Production', 'Lait', 'Lait - Alimentation', 'Lait - Exportations',
-      'Lait - Importations', 'Lait - Production'
+      'Alimentation', 'Alimentation', 'Cereales', 'Exportations', 'Exportations',
+      'Importations', 'Importations', 'Lait', 'Production', 'Production'
     ])
     expect(ressources.own_driving_dimension?.id).toBe('poste')
     // Un diagramme par filiere, pas en plus des bandes de filiere sur les flux.
     expect((sankey.data_taggs_dict['filiere'] as unknown as { drawing: string }).drawing).toBe('nodes')
-    sankey.links_list.filter(isGeneratedMemberLink).forEach(l => {
-      const f = (n: Class_NodeElement) => membersOfGeneratedNode(n).find(m => m.group.id === 'filiere')?.id
-      expect(f(l.source as Class_NodeElement)).toBe(f(l.target as Class_NodeElement))
-    })
-    const valeur = (s: string, c: string) => sankey.links_list.filter(isGeneratedMemberLink)
-      .find(l => l.source.name === s && l.target.name === c)?.value?.valueData
-    expect(valeur('Cereales - Production', 'Cereales')).toBe(60)
-    expect(valeur('Lait', 'Lait - Alimentation')).toBe(25)
-    expect(sankey.links_list.filter(isGeneratedMemberLink)).toHaveLength(8)
+    const engendres = sankey.links_list.filter(isGeneratedMemberLink)
+    engendres.forEach(l => expect(filiereDe(l.source as Class_NodeElement)).toBe(filiereDe(l.target as Class_NodeElement)))
+    const valeur = (f: string, p: string, sens: 'source' | 'target') => engendres
+      .find(l => filiereDe(l[sens] as Class_NodeElement) === f && posteDe(l[sens] as Class_NodeElement) === p)?.value?.valueData
+    expect(valeur('cereales', 'production', 'source')).toBe(60)
+    expect(valeur('lait', 'alimentation', 'target')).toBe(25)
+    expect(engendres).toHaveLength(8)
   })
 
-  test('les bandes ne se chevauchent pas, les postes d une colonne non plus', () => {
-    const { sankey } = monter()
+  test('chaque bande prend la couleur de sa filiere', () => {
+    const { sankey, filiere } = monter()
+    ;(filiere.tags_dict['cereales'] as Class_DataTag).color = '#aa0000'
+    ;(filiere.tags_dict['lait'] as Class_DataTag).color = '#00aa00'
+    disaggregateDimensionNodes(sankey)
+    sankey.links_list.filter(isGeneratedMemberLink).forEach(l =>
+      expect(l.getShapeColorToUse()).toBe(filiereDe(l.source as Class_NodeElement) === 'cereales' ? '#aa0000' : '#00aa00'))
+  })
+
+  test('les bandes ne se chevauchent pas, les postes d une colonne sont espaces d un demi ecart', () => {
+    const { sankey, app } = monter()
+    app.drawing_area.disaggregation_gap_value = 40
     disaggregateDimensionNodes(sankey)
     const boite = (n: Class_NodeElement) => ({ haut: n.position_y, bas: n.position_y + n.getShapeHeightToUse() })
-    const bande = (f: string) => sankey.nodes_list.filter(isGeneratedMemberNode)
-      .filter(n => n.name === f || n.name.startsWith(f + ' - ')).map(boite)
-    const bas_cereales = Math.max(...bande('Cereales').map(b => b.bas))
-    const haut_lait = Math.min(...bande('Lait').map(b => b.haut))
-    expect(haut_lait).toBeGreaterThan(bas_cereales)
-    ;['Production', 'Importations'].forEach(() => {
+    const bande = (f: string) => sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => filiereDe(n) === f).map(boite)
+    expect(Math.min(...bande('lait').map(b => b.haut))).toBeGreaterThan(Math.max(...bande('cereales').map(b => b.bas)))
+    ;['cereales', 'lait'].forEach(f => {
       const colonne = sankey.nodes_list.filter(isGeneratedMemberNode)
-        .filter(n => n.position_x === 0).map(boite).sort((a, b) => a.haut - b.haut)
-      for (let i = 1; i < colonne.length; i++) expect(colonne[i].haut).toBeGreaterThanOrEqual(colonne[i - 1].bas - 1e-6)
+        .filter(n => n.position_x === 0 && filiereDe(n) === f).map(boite).sort((a, b) => a.haut - b.haut)
+      expect(colonne).toHaveLength(2)
+      expect(colonne[1].haut - colonne[0].bas).toBeCloseTo(20, 6)
     })
   })
 })
