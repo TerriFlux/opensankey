@@ -638,16 +638,27 @@ function rangerEnBandes(
       }
     }
     axe_de.forEach((_id, noeud) => { if (!y.has(noeud)) poser(noeud) })
-    // Plusieurs nœuds d'un même axe dans la bande (ses postes) : sans se chevaucher, dans l'ordre.
+    // Plusieurs nœuds d'un même axe dans la bande (ses postes) : ESPACÉS comme dans le diagramme
+    // découpé sur place, que la bande répète (Julien, 07/10 : « je m'attends à voir le même type
+    // de graphe multiplié, mais ça fait un truc tout ramassé »). Dans l'ordre, un demi-écart de
+    // bande entre deux, la pile recentrée sur celle qu'avaient posée les flux droits.
+    const ecart_enfants = ecart / 2
     const par_colonne = new Map<string, Class_NodeElement[]>()
     axe_de.forEach((id, noeud) => par_colonne.set(id, [...(par_colonne.get(id) ?? []), noeud]))
     par_colonne.forEach(noeuds => {
       if (noeuds.length < 2) return
       noeuds.sort((p, q) => (y.get(p) as number) - (y.get(q) as number))
-      for (let i = 1; i < noeuds.length; i++) {
-        const bas = (y.get(noeuds[i - 1]) as number) + noeuds[i - 1].getShapeHeightToUse()
-        if ((y.get(noeuds[i]) as number) < bas) y.set(noeuds[i], bas)
-      }
+      const haut = y.get(noeuds[0]) as number
+      const bas = Math.max(...noeuds.map(n => (y.get(n) as number) + n.getShapeHeightToUse()))
+      let curseur = 0
+      const relatifs = noeuds.map(n => {
+        const r = curseur
+        curseur += n.getShapeHeightToUse() + ecart_enfants
+        return r
+      })
+      const hauteur = curseur - ecart_enfants
+      const depart = (haut + bas) / 2 - hauteur / 2
+      noeuds.forEach((n, i) => y.set(n, depart + relatifs[i]))
     })
 
     // ── PASSE 2 : sous le nœud le plus bas de la bande précédente ───────────────────────────
@@ -935,7 +946,7 @@ function creerNoeudsDeMembre(
  * os#1511 — UN NŒUD DÉCOUPÉ PAR BANDE ET PAR SA DIMENSION (Julien, 07/10 : filières en un
  * diagramme par membre, et dans chaque bande « Ressources » découpé par poste). Une entrée par
  * case (membre de la bande × membre de sa dimension), « Autres » de part et d'autre compris ; une
- * case sans valeur sur les flux de l'axe n'a pas de nœud. Nom : « Céréales - Production ».
+ * case sans valeur sur les flux de l'axe n'a pas de nœud. Nom : celui du membre, « Production ».
  */
 function creerNoeudsDansBandes(
   sankey: Class_Sankey,
@@ -959,7 +970,9 @@ function creerNoeudsDansBandes(
   parts(bande.membres, bande.replies).forEach(b => parts(membres, replies).forEach(d => {
     const vises = [...b.membres, ...d.membres]
     if (flux.every(f => valeurPourCase(f, vises) === 0)) return
-    const noeud = sankey.addNewNode(generatedId(axe.id, [b.cle, d.cle]), `${b.nom} - ${d.nom}`)
+    // Le nom du membre SEUL, comme dans le diagramme que la bande répète : la bande se reconnaît à
+    // sa couleur et à sa place (Julien, 07/10 : « le même type de graphe multiplié »).
+    const noeud = sankey.addNewNode(generatedId(axe.id, [b.cle, d.cle]), d.nom)
     noeud.copyAttrFrom(axe)
     heriterExtremite(sankey, axe, noeud)
     noeud.position_u = axe.position_u
