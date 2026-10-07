@@ -224,8 +224,13 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   // ── PARTS : DÉPLIER, REPLIER ─────────────────────────────────────────────────────────────────
 
   /** La sélection du diagramme quand `m` cède sa place à ses enfants (toute sa route s'ouvre). */
-  const diagramUnfolded = (d: Class_DataTagGroup, m: Class_DataTag): string[] => {
-    const sel = d.selected_tags_list as Class_DataTag[]
+  const diagramUnfolded = (d: Class_DataTagGroup, m: Class_DataTag): string[] =>
+    unfoldedIn(d, d.selected_tags_list as Class_DataTag[], m)
+  /**
+   * Des membres montrés `sel` quand `m` cède sa place à ses enfants : un montré au-dessus de `m` ouvre
+   * toute sa route (ses autres enfants restent montrés à chaque cran).
+   */
+  const unfoldedIn = (d: Class_DataTagGroup, sel: Class_DataTag[], m: Class_DataTag): string[] => {
     const above = sel.filter(s => underOrSelf(m, s))
     const out = sel.filter(s => !above.includes(s)).map(s => s.id)
     above.forEach(s => {
@@ -267,6 +272,35 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     if (linked) { commit(state, [{ dim: d, ids: diagramFolded(d, p) }]); return }
     const shown = antichainOf(d, [...st(d.id).shown.filter(id => !(d.tags_dict[id] as Class_DataTag).hasAncestor(p)), p.id])
     commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }), diagram_too ? [{ dim: d, ids: diagramFolded(d, p) }] : [])
+  }
+
+  // ── 07/10/2026 (lot 2) — LES +/− DU TABLEAU CROISÉ ────────────────────────────────────────────
+  //
+  // Ouvrir une ligne ou une colonne = ouvrir un secteur du sunburst : la même information d'état
+  // (`shown`, dont les ouverts se lisent). Liée, c'est la sélection du diagramme qui s'ouvre.
+
+  /** + : `member_id` cède sa place à ses enfants ; montré sous un montré (une part unique ouverte d'un cran), sa route s'ouvre. */
+  const openMember = (id: string, member_id: string) => {
+    const d = dimOf(id)
+    const m = d?.tags_dict[member_id] as Class_DataTag | undefined
+    if (d === undefined || m === undefined || kidsOf(m).length === 0) return
+    if (linked) { commit(state, [{ dim: d, ids: diagramUnfolded(d, m) }]); return }
+    const shown = unfoldedIn(d, shownOf(d), m)
+    commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }))
+  }
+  /** − : ce qui est montré sous `member_id` se replie en lui (pas la portée, ni au-dessus). */
+  const closeMember = (id: string, member_id: string) => {
+    const d = dimOf(id)
+    const m = d?.tags_dict[member_id] as Class_DataTag | undefined
+    if (d === undefined || m === undefined || focusOf(d).some(f => underOrSelf(f, m))) return
+    if (linked) { commit(state, [{ dim: d, ids: diagramFolded(d, m) }]); return }
+    const shown = antichainOf(d, [...st(d.id).shown.filter(s => !(d.tags_dict[s] as Class_DataTag).hasAncestor(m)), m.id])
+    commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }))
+  }
+  /** Maj+clic : tout le niveau `depth` de la dimension (sous la portée), comme l'en-tête du tableau de navigation. */
+  const showLevel = (id: string, depth: number) => {
+    const r = nextWithColumn(state, id, depth, false)
+    if (r !== null) commit(r.next, r.diagram)
   }
 
   // ── LA PORTÉE (ZOOM) ─────────────────────────────────────────────────────────────────────────
@@ -501,24 +535,20 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * Une dimension qui ne montre qu'un membre à enfants se pose dessus (elle découpe un cran dessous ;
    * liée, le diagramme ne bouge pas).
    */
+  //
+  // 07/10/2026 (lot 2) — PAR LES RÔLES : la dimension en colonnes prend le rôle CASES (« une couronne
+  // par membre » : revenue à la couronne, une couronne par pays) et passe en fin d'ordre ; celle des
+  // lignes, le rôle PARTS. Une colonne qui ne montre qu'un membre descend d'un cran (`withCells`).
   const setMatrixColumns = (row_id: string, col_id: string | null) => {
     if (st(row_id) === undefined || (col_id !== null && st(col_id) === undefined)) return
-    let next = withDim(state, row_id, { active: true })
-    state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false }) })
+    const parts = (o: string) => st(o).drawing === 'multiples' ? { drawing: 'sectors' as const } : {}
+    let next = withDim(state, row_id, { active: true, ...parts(row_id) })
+    state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false, ...parts(o) }) })
     if (col_id !== null) {
-      const d = dimOf(col_id) as Class_DataTagGroup
-      const parts = partsIdsOf(next, col_id)
-      const one = parts.length === 1 ? d.tags_dict[parts[0]] as Class_DataTag | undefined : undefined
-      if (one !== undefined && kidsOf(one).length > 0) next = nextWithFocus(next, d, [one.id])
-      next = withDim(next, col_id, { active: true })
-      // La seconde dimension suit la première dans l'ordre.
-      const rest = next.order.filter(o => o !== row_id && o !== col_id)
-      const at = next.order.indexOf(row_id) <= next.order.indexOf(col_id) ? 0 : 1
-      next = { ...next, order: at === 0 ? [row_id, col_id, ...rest] : [col_id, row_id, ...rest] }
+      next = withDim(next, col_id, { active: true, drawing: 'multiples' })
+      next = { ...next, order: [row_id, ...next.order.filter(o => o !== row_id && o !== col_id), col_id] }
+      next = withCells(next, dimOf(col_id) as Class_DataTagGroup)
     }
-    // Une couronne par membre ne vit qu'avec une autre dimension active.
-    const multiples = next.order.find(o => next.dims[o].drawing === 'multiples')
-    if (multiples !== undefined && col_id === null) next = withDim(next, multiples, { drawing: 'sectors' })
     commit(next)
   }
 
@@ -556,7 +586,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   return {
     state, plan, linked, cells_dim,
     chooseColumn, deactivate,
-    unfold, fold, zoomTo, zoomUp, back, activatePart,
+    unfold, fold, zoomTo, zoomUp, back, activatePart, openMember, closeMember, showLevel,
     setFocus, toggleHidden, setShown, chosenOf,
     move, swap, setMatrixColumns, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
     linkedOptions

@@ -32,90 +32,56 @@ import { linkValueUnder } from './FigureNavigation'
 import type { Type_FigureNavigation } from './FigureNavigation'
 import { sunburstNodeValue } from './SunburstHierarchy'
 import {
-  dimensionHiddenMembers, dimensionOpenedMembers, dimensionRootsOf, hiddenForSelection, openedForSelection,
-  selectionFromOpening
+  dimensionHiddenMembers, dimensionOpenedMembers, dimensionRootsOf, openedForSelection, selectionFromOpening
 } from './DataDimensionHierarchy'
 import type { Type_DataCut, Type_DataDimensionSubject } from './DataDimensionHierarchy'
 import type { Type_ExportColumn, Type_ExportRow, Type_ExportTable } from './TableExport'
-import { memberSectorId } from './memberSectorId'
-import type { Type_DrawPlan } from './couronnePlan'
-import type { Type_CouronneSankey, Type_CouronneState } from '../Representations/couronneState'
+import type { Type_CouronneSankey } from '../Representations/couronneState'
+import type { Type_MatrixAxisPlan, Type_MatrixPlan } from '../Representations/dimensionViewState'
 
-// ── 06/10/2026 — LE TABLEAU LIT L'ÉTAT DE LA COURONNE ──────────────────────────────────────────────
+// ── 07/10/2026 — LE TABLEAU LIT LE MODÈLE COMMUN (os#1511, refonte « rôles communs », lot 2) ──────
 //
-// Julien : « je ne vois pas la seconde dimension en COLONNE (les pays) — ça marchait avant ». Depuis
-// que les gestes n'écrivent plus que la clé `couronne` (b3758d824, lot 3), le tableau relisait encore
-// les anciennes (`nested_tagg_ids`, `dimension_opening`, `inactive_dimensions`) par `dataCutOf` : la
-// dimension emboîtée avait disparu du descripteur, il ne restait qu'une dimension. Il lit désormais le
-// MÊME état que la couronne, et en fait une coupe pour `buildDimensionMatrix`.
+// Le tableau lit l'état de sa fenêtre par `fromFigure` et dessine `planFor(état, 'matrix')` : lignes =
+// la dimension en rôle PARTS, colonnes = celle en rôle CASES (une couronne par membre = un membre par
+// colonne). Les deux axes sont des ARBRES : un ouvert est un sous-total (au-dessus de ses enfants en
+// lignes, à leur gauche en colonnes), et l'ouverture est celle du sunburst — `shown` de l'état commun.
+// `matrixInputOfPlan` en fait l'entrée de `buildDimensionMatrix` (`axes`), qui ne lit plus la coupe.
 
-/** Les deux dimensions du tableau dans l'état d'une couronne : lignes, colonnes (`null` : aucune). */
-export const matrixAxesOf = (
-  state: Type_CouronneState, plan: Type_DrawPlan
-): { row_id: string, col_id: string | null } | null => {
-  const order = state.order.filter(id => state.dims[id] !== undefined)
-  if (order.length === 0) return null
-  const actives = order.filter(id => state.dims[id].active)
-  // Celles qui découpent la couronne d'abord (parts ou cases), puis les autres actives ; l'ORDRE de
-  // l'état décide ensuite laquelle est en lignes (⇄ l'échange).
-  const divides = (id: string) => plan.cut.some(c => c.dimension_id === id) || plan.cells?.dimension_id === id
-  const chosen = [...actives.filter(divides), ...actives.filter(id => !divides(id))].slice(0, 2)
-    .sort((a, b) => order.indexOf(a) - order.indexOf(b))
-  return { row_id: chosen[0] ?? order[0], col_id: chosen[1] ?? null }
+/** Un axe du tableau, en membres : ce que `buildDimensionMatrix` dessine sans relire la coupe. */
+export interface Type_MatrixAxisInput {
+  dim: Class_DataTagGroup
+  /** Le premier niveau (sous la portée). */
+  entry: Class_DataTag[]
+  /** Les membres ouverts (sous-totaux). */
+  opened: ReadonlySet<string>
+  /** Les membres montrés (feuilles de l'axe). */
+  members: ReadonlySet<string>
+  /** Où se lit le Total de l'axe ; `null` : la somme du premier niveau. */
+  total: Class_DataTag[] | null
 }
 
-/**
- * Les membres qu'une dimension du tableau montre : ses parts (montrés − décochés) ; une part unique
- * qui a des enfants s'ouvre d'un cran (« Monde » en colonnes, ce sont ses continents).
- */
-const matrixMembersOf = (dim: Class_DataTagGroup, state: Type_CouronneState): Class_DataTag[] => {
-  const s = state.dims[dim.id]
-  const parts = s.shown.filter(id => !s.hidden.includes(id))
-    .map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
-  if (parts.length === 1 && parts[0].children.length > 0) return [...parts[0].children] as Class_DataTag[]
-  return parts
-}
-
-/**
- * LA COUPE DU TABLEAU d'après l'état de la couronne (`readCouronneState` / `drawPlanOf`) : lignes et
- * colonnes (`matrixAxesOf`), leurs membres en ouverts / cachés, et la coordonnée des autres dimensions
- * (celle du plan, sinon leurs parts). `null` : aucune dimension.
- */
-export const matrixCutOfCouronne = (
-  state: Type_CouronneState, plan: Type_DrawPlan, sankey: Type_CouronneSankey
-): { cut: Type_DataCut, coordinates: Map<string, Class_DataTag[]>, row_id: string, col_id: string | null } | null => {
-  const axes = matrixAxesOf(state, plan)
-  if (axes === null) return null
-  const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup
-  const dims = state.order.filter(id => state.dims[id] !== undefined).map(dimOf).filter(d => d !== undefined)
-  const axis_ids = [axes.row_id, ...(axes.col_id ? [axes.col_id] : [])]
-  const opened = new Set<string>()
-  const hidden = new Set<string>()
-  axis_ids.forEach(id => {
-    const d = dimOf(id)
-    const chosen = new Set(matrixMembersOf(d, state).map(m => m.id))
-    openedForSelection(d, chosen).forEach(m => opened.add(memberSectorId(id, m)))
-    hiddenForSelection(d, chosen).forEach(m => hidden.add(memberSectorId(id, m)))
-  })
-  const coordinates = new Map<string, Class_DataTag[]>()
-  dims.filter(d => !axis_ids.includes(d.id)).forEach(d => {
-    const ids = plan.fixed[d.id] ?? state.dims[d.id].shown.filter(id => !state.dims[d.id].hidden.includes(id))
-    const members = ids.map(id => d.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
-    if (members.length > 0) coordinates.set(d.id, members)
-  })
-  return {
-    cut: {
-      linked: false,
-      dims,
-      dividing: axis_ids.map(dimOf),
-      opened,
-      hidden,
-      inactive: new Set(dims.filter(d => !axis_ids.includes(d.id) && !state.dims[d.id].active).map(d => d.id))
-    },
-    coordinates,
-    row_id: axes.row_id,
-    col_id: axes.col_id
+/** Le plan du tableau (`planFor(…, 'matrix')`), en membres. */
+export const matrixInputOfPlan = (
+  plan: Type_MatrixPlan, sankey: Type_CouronneSankey
+): { rows: Type_MatrixAxisInput, columns: Type_MatrixAxisInput | null, coordinates: Map<string, Class_DataTag[]> } => {
+  const axis = (a: Type_MatrixAxisPlan): Type_MatrixAxisInput => {
+    const dim = sankey.data_taggs_dict[a.dimension_id] as Class_DataTagGroup
+    const members = (ids: string[]) => ids.map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+    return {
+      dim,
+      entry: members(a.entry),
+      opened: new Set(a.opened),
+      members: new Set(a.members),
+      total: a.total === null ? null : members(a.total)
+    }
   }
+  const coordinates = new Map<string, Class_DataTag[]>()
+  Object.entries(plan.coordinates).forEach(([id, ids]) => {
+    const d = sankey.data_taggs_dict[id] as Class_DataTagGroup | undefined
+    const ms = d === undefined ? [] : ids.map(m => d.tags_dict[m] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+    if (ms.length > 0) coordinates.set(id, ms)
+  })
+  return { rows: axis(plan.rows), columns: plan.columns ? axis(plan.columns) : null, coordinates }
 }
 
 /** Tolérance RELATIVE de l'écart parent ↔ Σ enfants, la même que la couronne. */
@@ -129,6 +95,14 @@ export interface Type_MatrixColumn {
   /** Le membre de la dimension des colonnes ; `null` pour la colonne Total ou la colonne unique. */
   member_id: string | null
   kind: 'member' | 'total' | 'value' | 'share'
+  /**
+   * 07/10/2026 (lot 2) — LES COLONNES SONT UN ARBRE, comme les lignes : profondeur (0 au premier
+   * niveau), le membre a-t-il des enfants, est-il ouvert. Ouvert, sa colonne est le SOUS-TOTAL, à
+   * gauche de celles de ses enfants. Absents hors colonnes de membres.
+   */
+  depth?: number
+  has_children?: boolean
+  expanded?: boolean
 }
 
 export interface Type_MatrixRow {
@@ -160,6 +134,14 @@ export interface Type_DimensionMatrixOptions {
    * matrice, par-dessus ceux que la coupe ouvre. Clé = id de membre.
    */
   row_toggles?: ReadonlyMap<string, boolean>
+  /** 07/10/2026 — les +/− posés sur les en-têtes de colonnes, hors état (tableau sans fenêtre). */
+  column_toggles?: ReadonlyMap<string, boolean>
+  /**
+   * 07/10/2026 (lot 2) — LES AXES DU MODÈLE COMMUN (`matrixInputOfPlan`) : lignes et colonnes en
+   * arbres, leur Total. Présents, ils remplacent la lecture de la coupe (qui ne donne plus que le
+   * sujet) ; `coordinates` dit où se lisent les autres dimensions.
+   */
+  axes?: { rows: Type_MatrixAxisInput, columns: Type_MatrixAxisInput | null }
   node_value_mode?: 'max' | 'inputs' | 'outputs'
   residual_label?: string
   total_label?: string
@@ -235,10 +217,11 @@ export const buildDimensionMatrix = (
   nav: Type_FigureNavigation,
   options: Type_DimensionMatrixOptions = {}
 ): Type_DimensionMatrix | null => {
+  const axes = options.axes
   const active = cut.dims.filter(d => !cut.inactive?.has(d.id))
-  const row_dim = cut.dividing[0] ?? active[0] ?? cut.dims[0]
+  const row_dim = axes?.rows.dim ?? cut.dividing[0] ?? active[0] ?? cut.dims[0]
   if (row_dim === undefined) return null
-  const col_dim = cut.dividing[1] ?? null
+  const col_dim = axes ? (axes.columns?.dim ?? null) : (cut.dividing[1] ?? null)
   const element = subject.kind === 'node' ? subject.node : subject.link
   const groups = element.sankey.data_taggs_list as unknown as Class_DataTagGroup[]
   const node_value_mode = options.node_value_mode ?? 'max'
@@ -271,21 +254,55 @@ export const buildDimensionMatrix = (
     return linkValueUnder(subject.link, at)
   }
 
-  // ── LES COLONNES ──────────────────────────────────────────────────────────────────────────────
+  /**
+   * 07/10/2026 (lot 2) — UN AXE DU MODÈLE COMMUN EN ARBRE : un ouvert montre ceux de ses enfants qui
+   * sont montrés ou ouverts ; un membre que l'utilisateur ouvre hors état (+/− sans fenêtre) montre
+   * tous les siens.
+   */
+  const treeOf = (a: Type_MatrixAxisInput, toggles: ReadonlyMap<string, boolean> | undefined) => ({
+    expanded: (m: Class_DataTag) => m.children.length > 0 && (toggles?.get(m.id) ?? a.opened.has(m.id)),
+    children: (m: Class_DataTag): Class_DataTag[] => {
+      const children = m.children as Class_DataTag[]
+      if (!a.opened.has(m.id)) return children
+      return children.filter(c => a.members.has(c.id) || a.opened.has(c.id))
+    }
+  })
+
+  // ── LES COLONNES : un arbre comme les lignes, le sous-total d'un ouvert à gauche de ses enfants ─
   const columns: Type_MatrixColumn[] = []
-  const col_members = col_dim ? matrixFrontierOf(col_dim, cut) : []
+  const col_hidden_members = col_dim && !axes ? dimensionHiddenMembers(col_dim, cut.hidden) : new Set<string>()
+  const col_tree = axes?.columns
+    ? treeOf(axes.columns, options.column_toggles)
+    : {
+      expanded: (m: Class_DataTag) => m.children.length > 0 && (options.column_toggles?.get(m.id) ?? false),
+      children: (m: Class_DataTag) => (m.children as Class_DataTag[]).filter(c => !col_hidden_members.has(c.id))
+    }
+  const col_entry = col_dim ? (axes?.columns ? axes.columns.entry : matrixFrontierOf(col_dim, cut)) : []
+  /** Les membres des colonnes, dans l'ordre des colonnes. */
+  const col_members: Class_DataTag[] = []
   if (col_dim) {
-    col_members.forEach(m => columns.push({ key: `c:${m.id}`, label: m.name, member_id: m.id, kind: 'member' }))
+    const visit = (m: Class_DataTag, depth: number) => {
+      const expanded = col_tree.expanded(m)
+      col_members.push(m)
+      columns.push({
+        key: `c:${m.id}`, label: m.name, member_id: m.id, kind: 'member', depth, has_children: m.children.length > 0, expanded
+      })
+      if (expanded) col_tree.children(m).forEach(c => visit(c, depth + 1))
+    }
+    col_entry.forEach(m => visit(m, 0))
     columns.push({ key: 'c:__total__', label: options.total_label ?? 'Total', member_id: null, kind: 'total' })
   } else {
     columns.push({ key: 'c:__value__', label: options.value_label ?? 'Value', member_id: null, kind: 'value' })
     columns.push({ key: 'c:__share__', label: options.share_label ?? '%', member_id: null, kind: 'share' })
   }
-  // La colonne Total : ce que la dimension des colonnes porte en tout. À sa racine unique quand rien
-  // n'est décoché (la valeur déclarée fait foi), sinon la somme de ce qui est montré.
+  /** Les colonnes du premier niveau : leur somme fait le Total quand il ne se lit pas à la portée. */
+  const col_top = columns.map((c, i) => (c.kind === 'member' && c.depth === 0 ? i : -1)).filter(i => i >= 0)
+  // La colonne Total : ce que la dimension des colonnes porte en tout. À sa racine unique (à sa
+  // portée) quand rien n'est décoché (la valeur déclarée fait foi), sinon la somme de ce qui est montré.
   const col_roots = col_dim ? dimensionRootsOf(col_dim) : []
-  const col_hidden = col_dim ? dimensionHiddenMembers(col_dim, cut.hidden).size > 0 : false
-  const col_total_coord: Class_DataTag[] | null = col_dim && !col_hidden && col_roots.length === 1 ? [col_roots[0]] : null
+  const col_total_coord: Class_DataTag[] | null = axes
+    ? axes.columns?.total ?? null
+    : col_dim && col_hidden_members.size === 0 && col_roots.length === 1 ? [col_roots[0]] : null
 
   /** Les cellules d'une ligne, à une coordonnée de la dimension des lignes. */
   const cellsAt = (row_members: Class_DataTag[]): (number | null)[] => {
@@ -295,23 +312,26 @@ export const buildDimensionMatrix = (
     const cells = col_members.map(c => valueAt(new Map([[row_dim.id, row_members], [col_dim.id, [c]]])))
     const total = col_total_coord !== null
       ? valueAt(new Map([[row_dim.id, row_members], [col_dim.id, col_total_coord]]))
-      : sumOf(cells)
+      : sumOf(col_top.map(i => cells[i]))
     return [...cells, total]
   }
 
-  // ── LES LIGNES : l'arbre de la dimension, ouvert par la coupe puis par les +/− ─────────────────
-  const frontier = matrixFrontierOf(row_dim, cut)
+  // ── LES LIGNES : l'arbre de la dimension, ouvert par l'état (ou la coupe) puis par les +/− ────
+  const frontier = axes ? [] : matrixFrontierOf(row_dim, cut)
   const frontier_ids = new Set(frontier.map(m => m.id))
   const opened_by_cut = openedForSelection(row_dim, frontier_ids)
-  const hidden = dimensionHiddenMembers(row_dim, cut.hidden)
-  const isExpanded = (m: Class_DataTag) =>
-    m.children.length > 0 && (options.row_toggles?.get(m.id) ?? opened_by_cut.has(m.id))
+  const hidden = axes ? new Set<string>() : dimensionHiddenMembers(row_dim, cut.hidden)
+  const row_tree = axes ? treeOf(axes.rows, options.row_toggles) : null
+  const isExpanded = (m: Class_DataTag) => row_tree
+    ? row_tree.expanded(m)
+    : m.children.length > 0 && (options.row_toggles?.get(m.id) ?? opened_by_cut.has(m.id))
   /**
    * Les enfants montrés sous un membre ouvert. Sous un ANCÊTRE de la frontière, seuls ceux qui y
    * mènent (le reste est décoché, ou d'une autre branche) ; sous un membre que l'utilisateur ouvre
    * plus bas que la coupe, tous.
    */
   const shownChildren = (m: Class_DataTag): Class_DataTag[] => {
+    if (row_tree) return row_tree.children(m)
     const children = (m.children as Class_DataTag[]).filter(c => !hidden.has(c.id))
     if (!opened_by_cut.has(m.id)) return children
     return children.filter(c => frontier_ids.has(c.id) || opened_by_cut.has(c.id) || !cut.linked)
@@ -366,17 +386,24 @@ export const buildDimensionMatrix = (
   }
   const row_roots = dimensionRootsOf(row_dim)
   // Liée, l'entrée ne garde que ce qui mène à ce que le diagramme montre (le reste y est décoché).
-  const entry = (row_roots.length === 1 ? (row_roots[0].children as Class_DataTag[]) : row_roots)
-    .filter(m => !hidden.has(m.id) && (!cut.linked || frontier_ids.has(m.id) || opened_by_cut.has(m.id)))
+  // Par l'état commun, l'entrée est celle du plan : sous la portée (le zoom restreint le tableau).
+  const entry = axes
+    ? axes.rows.entry
+    : (row_roots.length === 1 ? (row_roots[0].children as Class_DataTag[]) : row_roots)
+      .filter(m => !hidden.has(m.id) && (!cut.linked || frontier_ids.has(m.id) || opened_by_cut.has(m.id)))
   // Liée, une dimension qui ne découpe pas se lit au membre que le diagramme montre.
-  const linked_single = cut.linked && !cut.dividing.includes(row_dim) && frontier.length === 1
+  const linked_single = !axes && cut.linked && !cut.dividing.includes(row_dim) && frontier.length === 1
   if (linked_single) visit(frontier[0], 0, cellsAt([frontier[0]]))
   else ordered(entry).forEach(e => visit(e.m, 0, e.cells))
 
-  // LA LIGNE TOTAL : à la racine unique quand rien n'est décoché, sinon la somme des lignes d'entrée.
+  // LA LIGNE TOTAL : à la racine unique (à la portée) quand rien n'est décoché, sinon la somme des
+  // lignes d'entrée.
   const top = rows.filter(r => r.depth === 0 && r.kind === 'member')
-  const total_cells = row_roots.length === 1 && hidden.size === 0 && !linked_single
-    ? cellsAt([row_roots[0]])
+  const row_total_coord: Class_DataTag[] | null = axes
+    ? axes.rows.total
+    : row_roots.length === 1 && hidden.size === 0 && !linked_single ? [row_roots[0]] : null
+  const total_cells = row_total_coord !== null
+    ? cellsAt(row_total_coord)
     : columns.map((_, i) => sumOf(top.map(r => r.cells[i])))
   rows.push({
     key: 'r:__total__', label: options.total_label ?? 'Total', member_id: null, depth: 0, kind: 'total',

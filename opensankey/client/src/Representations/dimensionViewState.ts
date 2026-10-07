@@ -38,6 +38,9 @@
 //     `fromFigure` / `toFigureOptions` lisent et écrivent (anciens formats compris).
 // `planFor` dit ce que chaque représentation dessinerait de l'état.
 //
+// 07/10/2026 — LOT 2 : le TABLEAU CROISÉ est branché (`fromFigure` + `planFor(…, 'matrix')`, gestes de
+// `couronneGestures`) : lignes = parts, colonnes = cases, axes dépliables comme le sunburst.
+//
 // Module PUR : aucune classe instanciée, aucun React, aucun DOM.
 
 import type { Class_DataTag } from '../types/Tag'
@@ -45,8 +48,6 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import { dimensionRootsOf, openedForSelection } from '../Charts/DataDimensionHierarchy'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
-import { matrixCutOfCouronne } from '../Charts/DimensionMatrix'
-import { memberSectorId } from '../Charts/memberSectorId'
 import { isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 import {
   antichainOf, COURONNE_KEY, readCouronneState, writeCouronneState
@@ -532,8 +533,17 @@ export interface Type_MatrixAxisPlan {
   dimension_id: string
   /** Les membres de l'axe (parts ; une part unique s'ouvre d'un cran). */
   members: string[]
-  /** Les ouverts (sous-totaux / en-têtes de groupe). */
+  /** Les ouverts (sous-totaux / en-têtes de groupe), sous la portée : ceux de `openedOf`. */
   opened: string[]
+  /** 07/10/2026 (lot 2) — le premier niveau de l'axe : sous la portée, ce qui mène aux membres. */
+  entry: string[]
+  /**
+   * Où se lit le Total de l'axe : la portée, quand les membres la couvrent toute (rien de décoché,
+   * aucun trou) — la valeur déclarée fait foi ; `null` : la somme du premier niveau.
+   */
+  total: string[] | null
+  /** La portée qui RESTREINT l'axe (« Céréales »), pour le titre ; vide à la racine. */
+  scope: string[]
 }
 
 export interface Type_MatrixPlan {
@@ -566,27 +576,72 @@ export type Type_RepresentationPlan =
   | { representation: 'matrix', plan: Type_MatrixPlan | null }
   | { representation: 'sankey', plan: Type_SankeyPlan }
 
-/** Le plan du tableau : celui que dessine aujourd'hui `matrixCutOfCouronne`, en membres. */
-const matrixPlanOf = (state: Type_DimensionViewState, sankey: Type_CouronneSankey): Type_MatrixPlan | null => {
-  const cs = toCouronneState(state)
-  const m = matrixCutOfCouronne(cs, drawPlanOf(cs, sankey), sankey)
-  if (m === null) return null
-  const axis = (id: string): Type_MatrixAxisPlan => {
-    const dim = sankey.data_taggs_dict[id] as Class_DataTagGroup
-    const opened = (dim.tags_list as Class_DataTag[]).filter(t => m.cut.opened.has(memberSectorId(id, t.id))).map(t => t.id)
-    const hidden = new Set((dim.tags_list as Class_DataTag[]).filter(t => m.cut.hidden?.has(memberSectorId(id, t.id))).map(t => t.id))
-    const members: string[] = []
-    const visit = (t: Class_DataTag) => {
-      if (hidden.has(t.id)) return
-      if (opened.includes(t.id) && childrenOf(t).length > 0) childrenOf(t).forEach(visit)
-      else members.push(t.id)
-    }
-    dimensionRootsOf(dim).forEach(visit)
-    return { dimension_id: id, members, opened }
+/**
+ * 07/10/2026 (lot 2) — LES AXES DU TABLEAU PAR LES RÔLES : les colonnes sont la dimension en `cases`
+ * (« une couronne par membre » = un membre par colonne) dès qu'une autre découpe ; les lignes, la
+ * première dimension en `parts` (celle qui découpe d'abord). Sans `cases`, l'ORDRE décide : anneau
+ * intérieur → lignes, anneau extérieur → colonnes (la couronne croisée, produits × continents).
+ */
+export const matrixAxesOfState = (
+  state: Type_DimensionViewState, sankey: Type_CouronneSankey
+): { row_id: string, col_id: string | null } | null => {
+  const ids = state.order.filter(id => state.dims[id] !== undefined && sankey.data_taggs_dict[id] !== undefined)
+  if (ids.length === 0) return null
+  const actives = ids.filter(id => state.dims[id].role !== 'none')
+  const divides = (id: string) => partsOf(state.dims[id]).length >= 2
+  const cases = [...actives].reverse().find(id => state.dims[id].role === 'cases')
+  const others = actives.filter(id => id !== cases)
+  if (cases !== undefined && others.length > 0) return { row_id: others.find(divides) ?? others[0], col_id: cases }
+  const chosen = [...actives.filter(divides), ...actives.filter(id => !divides(id))].slice(0, 2)
+    .sort((a, b) => ids.indexOf(a) - ids.indexOf(b))
+  return { row_id: chosen[0] ?? ids[0], col_id: chosen[1] ?? null }
+}
+
+/**
+ * UN AXE DU TABLEAU d'après la dimension : ses membres (montrés − décochés), ses ouverts (les mêmes
+ * que les anneaux du sunburst, `openedOf`), son premier niveau sous la portée et son Total. Une part
+ * unique qui a des enfants s'ouvre d'un cran (« Monde » en colonnes, ce sont ses continents) : elle
+ * fait alors la portée.
+ */
+export const matrixAxisOf = (dim: Class_DataTagGroup, d: Pick<Type_DimensionView, 'focus' | 'shown' | 'hidden'>): Type_MatrixAxisPlan => {
+  let parts = antichainSorted(dim, d.shown.filter(id => !d.hidden.includes(id)))
+  let focus = d.focus
+  const one = parts.length === 1 ? memberOf(dim, parts[0]) : undefined
+  if (one !== undefined && childrenOf(one).length > 0) {
+    focus = [one.id]
+    parts = childrenOf(one).map(c => c.id)
   }
+  const opened = openedOf(dim, { focus, shown: parts })
+  const roots = dimensionRootsOf(dim)
+  const F = focus.map(id => memberOf(dim, id)).filter((m): m is Class_DataTag => m !== undefined)
+  const scope = F.length > 0 ? F : roots.length === 1 ? roots : []
+  const keep = new Set([...parts, ...opened])
+  const starts = scope.length > 0 ? scope.flatMap(f => childrenOf(f).length > 0 ? childrenOf(f) : [f]) : roots
+  const entry = starts.map(m => m.id).filter(id => keep.has(id))
+  // Couvre-t-on la portée ? Rien de décoché, et sous chaque ouvert (et la portée) tous les enfants.
+  const covers = d.hidden.length === 0 && scope.length > 0 &&
+    [...scope, ...opened.map(id => memberOf(dim, id) as Class_DataTag)].every(m =>
+      childrenOf(m).length === 0 ? keep.has(m.id) : childrenOf(m).every(c => keep.has(c.id)))
+  const telling = F.filter(f => !(roots.length === 1 && roots[0] === f)).map(f => f.id)
+  return { dimension_id: dim.id, members: parts, opened, entry, total: covers ? scope.map(m => m.id) : null, scope: telling }
+}
+
+/** Le plan du tableau : les axes par les rôles, la coordonnée des autres dimensions celle de la couronne. */
+const matrixPlanOf = (state: Type_DimensionViewState, sankey: Type_CouronneSankey): Type_MatrixPlan | null => {
+  const axes = matrixAxesOfState(state, sankey)
+  if (axes === null) return null
+  const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup
+  const axis = (id: string) => matrixAxisOf(dimOf(id), state.dims[id])
+  const fixed = drawPlanOf(toCouronneState(state), sankey).fixed
   const coordinates: Type_MatrixPlan['coordinates'] = {}
-  m.coordinates.forEach((v, k) => { coordinates[k] = v.map(t => t.id) })
-  return { rows: axis(m.row_id), columns: m.col_id ? axis(m.col_id) : null, coordinates }
+  state.order.filter(id => state.dims[id] !== undefined && sankey.data_taggs_dict[id] !== undefined)
+    .filter(id => id !== axes.row_id && id !== axes.col_id)
+    .forEach(id => {
+      const dim = dimOf(id)
+      const ids = (fixed[id] ?? partsOf(state.dims[id])).filter(m => memberOf(dim, m) !== undefined)
+      if (ids.length > 0) coordinates[id] = ids
+    })
+  return { rows: axis(axes.row_id), columns: axes.col_id ? axis(axes.col_id) : null, coordinates }
 }
 
 /** Le plan du Sankey : quelle dimension en bandes, en nœuds, en expansion, par membre. */
@@ -625,8 +680,8 @@ const partsOf = (d: Type_DimensionView) => d.shown.filter(id => !d.hidden.includ
 
 /**
  * CE QUE CHAQUE REPRÉSENTATION DESSINERAIT de l'état (généralise `drawPlanOf`) : la couronne (son
- * plan, inchangé), le tableau (lignes, colonnes, ouverts — celui d'aujourd'hui), le Sankey
- * (bandes, nœuds, expansion, un diagramme par membre, regroupement). Non branché.
+ * plan, inchangé), le tableau (lignes = parts, colonnes = cases, ouverts, portée — branché au lot 2),
+ * le Sankey (bandes, nœuds, expansion, un diagramme par membre, regroupement ; non branché).
  */
 export const planFor = (
   state: Type_DimensionViewState,

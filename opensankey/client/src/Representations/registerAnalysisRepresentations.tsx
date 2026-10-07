@@ -73,10 +73,12 @@ import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOth
 import type { Type_JSON } from '../types/Utils'
 import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
 import {
-  buildDimensionMatrix, dimensionMatrixExportTable, matrixCutOfCouronne, matrixDecimals, matrixNumberFormatter,
+  buildDimensionMatrix, dimensionMatrixExportTable, matrixDecimals, matrixInputOfPlan, matrixNumberFormatter,
   nextMatrixSort
 } from '../Charts/DimensionMatrix'
 import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
+import { fromFigure, planFor } from './dimensionViewState'
+import type { Type_MatrixPlan } from './dimensionViewState'
 import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
 import { csvDecimalOf, downloadTable } from '../Charts/TableExport'
 import {
@@ -2387,8 +2389,12 @@ export const registerAnalysisRepresentations = (): void => {
 // part) : elle s'enregistre directement, comme une vue, et se redessine sur place quand la coupe
 // change (`redraw`), en gardant ses +/−.
 
-/** Les +/− posés dans chaque tableau, par fenêtre et vignette : ils survivent au redessin. */
+/**
+ * Les +/− posés dans chaque tableau HORS FENÊTRE (sans état où les écrire : page publiée), par vignette :
+ * ils survivent au redessin. Dans une fenêtre, ils écrivent l'état commun (`openMember`).
+ */
 const matrix_row_toggles = new Map<string, Map<string, boolean>>()
+const matrix_column_toggles = new Map<string, Map<string, boolean>>()
 /** Le tri choisi dans chaque tableau (absent : Total décroissant). */
 const matrix_sorts = new Map<string, Type_MatrixSort>()
 
@@ -2403,6 +2409,35 @@ const matrixCoordinateLabel = (sankey: { data_taggs_list: unknown[] }, nav: Type
     })
     .filter(text => text !== '')
     .join(' · ')
+
+/** La portée des axes et la coordonnée des autres dimensions à niveaux, en noms (vide à la racine). */
+const matrixScopeLabel = (plan: Type_MatrixPlan, sankey: Type_CouronneSankey): string => {
+  const names = (id: string, ids: string[]) => {
+    const d = sankey.data_taggs_dict[id] as Class_DataTagGroup | undefined
+    if (d === undefined) return ''
+    const roots = dimensionRootsOf(d).map(m => m.id)
+    if (ids.length === roots.length && ids.every(m => roots.includes(m))) return ''
+    return ids.map(m => d.tags_dict[m] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+      .map(m => displayedNameOf(m)).join(', ')
+  }
+  return [
+    names(plan.rows.dimension_id, plan.rows.scope),
+    ...(plan.columns ? [names(plan.columns.dimension_id, plan.columns.scope)] : []),
+    ...Object.entries(plan.coordinates).map(([id, ids]) => names(id, ids))
+  ].filter(x => x !== '').join(' · ')
+}
+
+/** Un +/− du tableau, sur la dimension `dim_id` : le membre, ou tout son niveau (Maj). */
+const toggleAxisMember = (
+  g: Type_CouronneGestures, sankey: Type_CouronneSankey, dim_id: string, member_id: string, expanded: boolean, level: boolean
+): void => {
+  const d = sankey.data_taggs_dict[dim_id] as Class_DataTagGroup | undefined
+  const m = d?.tags_dict[member_id] as Class_DataTag | undefined
+  if (d === undefined || m === undefined) return
+  if (level) g.showLevel(dim_id, d.depthOf(m) + (expanded ? 1 : 0))
+  else if (expanded) g.openMember(dim_id, member_id)
+  else g.closeMember(dim_id, member_id)
+}
 
 const registerDimensionMatrix = (): void => {
   representation_registry.register({
@@ -2423,6 +2458,8 @@ const registerDimensionMatrix = (): void => {
       const key = `${ctx.window_id ?? ''}|${ctx.pane_key ?? ''}`
       const toggles = matrix_row_toggles.get(key) ?? new Map<string, boolean>()
       matrix_row_toggles.set(key, toggles)
+      const column_toggles = matrix_column_toggles.get(key) ?? new Map<string, boolean>()
+      matrix_column_toggles.set(key, column_toggles)
       let teardown: () => void = () => { container.innerHTML = '' }
 
       const render = () => {
@@ -2434,18 +2471,31 @@ const registerDimensionMatrix = (): void => {
           return
         }
         const reading = hierarchyReadingOf(ctx)
-        // 06/10/2026 — LE MÊME ÉTAT QUE LA COURONNE (`couronneOf`) : lignes, colonnes et coordonnées.
-        // L'ancienne coupe (`analysisDataCutOf`) ne sert plus qu'à défaut d'état.
+        // 07/10/2026 (os#1511, lot 2) — LE MODÈLE COMMUN : l'état de la fenêtre (`fromFigure`, le même
+        // sac que la couronne) et son plan de tableau (`planFor(…, 'matrix')`) — lignes = la dimension
+        // en rôle parts, colonnes = celle en rôle cases, axes ouverts comme le sunburst, restreints à la
+        // portée, sans les décochés. L'ancienne coupe (`analysisDataCutOf`) ne sert plus qu'à défaut.
         const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
-        const from_state = reading.data_plan ? matrixCutOfCouronne(reading.data_plan.state, reading.data_plan.plan, sankey) : null
-        const cut = from_state?.cut ?? analysisDataCutOf(a.subject, decompose, reading)
+        const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+        const view_state = sankey.data_taggs_dict[decompose.data_tagg_id] !== undefined
+          ? fromFigure(ctx.options, undefined, sankey, declared)
+          : null
+        const plan = view_state ? planFor(view_state, 'matrix', sankey).plan as Type_MatrixPlan | null : null
+        const input = plan ? matrixInputOfPlan(plan, sankey) : null
+        const cut = input
+          ? { linked: view_state?.linked ?? false, dims: [], dividing: [], opened: new Set<string>() }
+          : analysisDataCutOf(a.subject, decompose, reading)
         const subject = a.subject.kind === 'node'
           ? { kind: 'node' as const, node: a.subject.node }
           : { kind: 'link' as const, link: a.subject.link }
+        // Dans une fenêtre, les +/− écrivent l'état (`gestures`) ; hors fenêtre, ils restent au tableau.
+        const gestures = input ? couronneGesturesOfCtx(ctx) : null
         const matrix = cut === null ? null : buildDimensionMatrix(subject, cut, a.nav, {
-          row_toggles: toggles,
+          axes: input ? { rows: input.rows, columns: input.columns } : undefined,
+          row_toggles: gestures ? undefined : toggles,
+          column_toggles: gestures ? undefined : column_toggles,
           sort: matrix_sorts.get(key),
-          coordinates: from_state?.coordinates,
+          coordinates: input?.coordinates,
           node_value_mode: reading.node_value_mode,
           residual_label: t('matrix.unallocated'),
           total_label: t('matrix.total'),
@@ -2464,12 +2514,14 @@ const registerDimensionMatrix = (): void => {
         const percent = new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 1 })
         const element = a.subject.kind === 'node' ? a.subject.node : a.subject.link
         const coordinate = matrixCoordinateLabel(element.sankey, a.nav)
-        const title = coordinate ? `${displayedNameOf(element)} · ${coordinate}` : displayedNameOf(element)
-        // 06/10/2026 — LES AXES DANS LA BARRE : la dimension en colonnes et ⇄, écrits par les gestes de
-        // la couronne (même état, même pas d'annulation).
-        const gestures = from_state ? couronneGesturesOfCtx(ctx) : null
-        const row_id = from_state?.row_id
-        const col_id = from_state?.col_id ?? null
+        // 07/10/2026 — LA PORTÉE DANS LE TITRE (« Céréales ») : le tableau est restreint au zoom, il le
+        // dit ; et les dimensions hors des axes lues ailleurs qu'à leur tout (« Europe »).
+        const scope = plan ? matrixScopeLabel(plan, sankey) : ''
+        const title = [displayedNameOf(element), scope, coordinate].filter(x => x !== '').join(' · ')
+        // 06/10/2026 — LES AXES DANS LA BARRE : la dimension en colonnes (07/10 : en rôle CASES) et ⇄
+        // (échange des rôles), écrits par les gestes de la couronne (même état, même pas d'annulation).
+        const row_id = plan?.rows.dimension_id
+        const col_id = plan?.columns?.dimension_id ?? null
         const axes = gestures && row_id !== undefined
           ? {
             columns_label: t('matrix.columns', { defaultValue: 'Colonnes :' }) as string,
@@ -2495,12 +2547,27 @@ const registerDimensionMatrix = (): void => {
           unit,
           labels: {
             expand: t('matrix.expand'), collapse: t('matrix.collapse'),
-            export_xlsx: t('matrix.export_xlsx'), export_csv: t('matrix.export_csv'), empty: t('matrix.empty')
+            export_xlsx: t('matrix.export_xlsx'), export_csv: t('matrix.export_csv'), empty: t('matrix.empty'), subtotal: t('matrix.total')
           },
-          on_toggle: (member_id, expanded) => {
+          // 07/10/2026 (lot 2) — +/− d'une ligne ou d'une colonne : l'état commun (le secteur du
+          // sunburst s'ouvre de même) ; Maj+clic : tout le niveau.
+          on_toggle: (member_id, expanded, gesture) => {
+            if (gestures && row_id !== undefined) {
+              toggleAxisMember(gestures, sankey, row_id, member_id, expanded, gesture.shift)
+              return
+            }
             toggles.set(member_id, expanded)
             render()
           },
+          on_column_toggle: (member_id, expanded, gesture) => {
+            if (gestures && col_id !== null) {
+              toggleAxisMember(gestures, sankey, col_id, member_id, expanded, gesture.shift)
+              return
+            }
+            column_toggles.set(member_id, expanded)
+            render()
+          },
+          level_hint: gestures ? t('matrix.level_hint', { defaultValue: 'Maj+clic : tout le niveau' }) as string : undefined,
           sort_label: t('matrix.sort_by'),
           on_sort: (sort_key) => {
             if (matrix === null) return
