@@ -75,12 +75,13 @@ const dimensionsDrawnAsNodes = (app_data: Class_ApplicationData): Class_DataTagG
     .map(node => node.driving_dimension)
     .filter((tagg): tagg is Class_DataTagGroup => tagg !== undefined))]
 
-type Type_Snapshot = { banner: string, carriers: string[], selected: string[] }
+type Type_Snapshot = { banner: string, carriers: string[], selected: string[], bands: boolean | undefined }
 
 const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_Snapshot => ({
   banner: (tagg as unknown as { banner: string }).banner,
   carriers: dimensionCarriersOf(app_data, tagg).map(node => node.id),
-  selected: tagg.selected_tags_list.map(tag => tag.id)
+  selected: tagg.selected_tags_list.map(tag => tag.id),
+  bands: tagg.member_bands
 })
 
 /**
@@ -102,6 +103,7 @@ const restoreAll = (app_data: Class_ApplicationData, states: [Class_DataTagGroup
   // (⇅) en fait passer d'une dimension à l'autre.
   states.forEach(([tagg, state]) => {
     ;(tagg as unknown as { banner: string }).banner = state.banner
+    tagg.member_bands = state.bands
     dimensionCarrierCandidates(app_data).forEach(node => {
       if (!state.carriers.includes(node.id) && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
     })
@@ -173,7 +175,8 @@ export const swapDimensionDrawings = (
     return {
       banner,
       carriers: other.carriers,
-      selected: !takes_nodes && UNIQUE_BANNERS.includes(banner) ? own.selected.slice(0, 1) : own.selected
+      selected: !takes_nodes && UNIQUE_BANNERS.includes(banner) ? own.selected.slice(0, 1) : own.selected,
+      bands: other.bands
     }
   }
   const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(before_a, before_b)], [b, take(before_b, before_a)]]
@@ -243,7 +246,10 @@ export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class
 export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, banner: string) => {
   const now = snapshot(app_data, tagg)
   const unique = UNIQUE_BANNERS.includes(banner)
-  commit(app_data, tagg, { ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected })
+  // Une bannière quitte aussi le diagramme par membre : sous lui, tous les nœuds portent la dimension.
+  commit(app_data, tagg, {
+    ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected, bands: undefined
+  })
 }
 
 /** Les nœuds qui portent la dimension deviennent exactement `node_ids` (annulable). */
@@ -328,8 +334,10 @@ export const applyDisaggregationGap = (
  * dès deux porteurs), lue ici sans importer l'algorithme : ce module reste une feuille.
  */
 export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): boolean => {
-  const porteurs = dimensionCarriersOf(app_data, tagg).length
-  return porteurs >= 2 && (tagg.member_bands ?? true)
+  // Demandé : en vigueur, quels que soient les porteurs (ils le deviennent tous). Automatique : dès
+  // deux porteurs réglés.
+  if (tagg.member_bands !== undefined) return tagg.member_bands
+  return dimensionCarriersOf(app_data, tagg).length >= 2
 }
 
 /**
