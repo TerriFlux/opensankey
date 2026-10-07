@@ -1083,6 +1083,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * ordinaire qu'un nœud rattaché à un axe fantôme).
    */
   public get driving_dimension(): Class_DataTagGroup | undefined {
+    // Un nœud réglé sur une dimension la garde sous un diagramme par membre : il s'y découpe DANS
+    // chaque bande (Julien, 07/10 : filières en diagrammes, Ressources et Emplois en nœuds par poste).
     return this.own_driving_dimension ?? this.implicit_driving_dimension
   }
 
@@ -1098,7 +1100,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * n'a pas besoin de tester le nœud, et comme ça on garde son paramètre » — revenir en arrière puis
    * passer à une autre représentation ne doit pas trouver des nœuds devenus porteurs). Seulement sous
    * des bandes DEMANDÉES (`member_bands` vrai) — même si aucun nœud ne la porte pour de bon : on
-   * peut les demander depuis une dimension en bandes de flux (Julien, 07/10, sur Filière).
+   * peut les demander depuis une dimension en bandes de flux (Julien, 07/10, sur Filière). Une seule
+   * dimension à la fois (`applyMemberBands` retire les autres).
    */
   private get implicit_driving_dimension(): Class_DataTagGroup | undefined {
     if (isGeneratedMemberId(this.id)) return undefined

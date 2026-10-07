@@ -347,11 +347,17 @@ describe('os#1511 modele commun — le diagramme', () => {
 
   test('le patch decrit les ecritures sans les faire', () => {
     const s = monterSocle()
+    // os#1511, 07/10 — hiérarchisée, « un membre » se relit en choix multiple : seule une séquence
+    // en lit encore un à la fois.
+    ;(s.filiere as unknown as { banner: string }).banner = 'sequence'
     const st = fromDiagram(s.sankey)
     expect(st.dims.filiere.role).toBe('none')
     const bands = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'sankey', 'bands'), focus: [] } } }
-    expect(toDiagramPatch(bands, s.sankey)).toEqual({ dims: { filiere: { banner: 'multi' } }, warnings: [] })
-    expect(s.filiere.banner).toBe('one')
+    // Pays, hiérarchisée donc en choix multiple, voit les bandes prises par Filière.
+    expect(toDiagramPatch(bands, s.sankey)).toEqual({
+      dims: { filiere: { banner: 'multi' } }, warnings: [{ dimension_id: 'pays', code: 'bands_taken' }]
+    })
+    expect(s.filiere.banner).toBe('sequence')
     const per_member = { ...st, dims: { ...st.dims, pays: { ...applyLabel(st.dims.pays, 'sankey', 'member_bands'), focus: [], shown: ['europe', 'asie'] } } }
     const p = toDiagramPatch(per_member, s.sankey)
     expect(p.dims.pays).toEqual({ selected: ['europe', 'asie'] })

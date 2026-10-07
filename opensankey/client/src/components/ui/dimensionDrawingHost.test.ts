@@ -2,7 +2,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
-  applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
+  applyDimensionBanner, applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
   applyMemberBands, applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import { NodeElementPersistence } from '../../Persistence/SankeyPersistence'
@@ -31,12 +31,23 @@ function monter() {
 }
 
 describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => {
-  test('plusieurs en bandes, puis un seul membre', () => {
+  test('une dimension hierarchisee reste en choix multiple, son membre coche garde', () => {
+    // os#1511, 07/10 : hiérarchisée = additive, « un membre à la fois » n'existe plus pour elle.
     const { app, pays } = monter()
     applyDimensionDrawing(app, pays, 'multi')
     expect(dimensionDrawingOf(app, pays)).toBe('multi')
+    applyDimensionCut(app, pays, ['europe', 'afrique'])
     applyDimensionDrawing(app, pays, 'one')
+    expect(dimensionDrawingOf(app, pays)).toBe('multi')
+    expect(pays.selected_tags_list.map(t => t.id).sort()).toEqual(['afrique', 'europe'])
+  })
+
+  test('une sequence garde un membre a la fois', () => {
+    const { app, pays } = monter()
+    applyDimensionCut(app, pays, ['europe', 'afrique'])
+    applyDimensionBanner(app, pays, 'sequence')
     expect(dimensionDrawingOf(app, pays)).toBe('one')
+    expect(pays.selected_tags_list.length).toBe(1)
   })
 
   test('cocher un noeud le fait porter la dimension, et plusieurs peuvent la porter', () => {
@@ -61,6 +72,7 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     applyMemberBands(app, pays, true)
     expect(b.driving_dimension).toBe(pays)
     expect(b.own_driving_dimension).toBeUndefined()
+    // Un noeud regle sur une autre dimension la garde : il s y decoupe dans chaque bande.
     expect(c.driving_dimension).toBe(autre)
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
     const ecrit: { [k: string]: unknown } = {}
@@ -175,7 +187,6 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionDrawingOf(app, pays)).toBe('multi')
     app.history.applyUndo()
     expect(pays.isWholeLevelSelected(0)).toBe(true)
-    expect(dimensionDrawingOf(app, pays)).not.toBe('multi')
   })
 
   test('les porteurs et le noeud de reference se posent et s annulent', () => {
