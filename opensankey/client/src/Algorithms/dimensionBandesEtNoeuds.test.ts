@@ -66,6 +66,8 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
       'Lait - Importations', 'Lait - Production'
     ])
     expect(ressources.own_driving_dimension?.id).toBe('poste')
+    // Un diagramme par filiere, pas en plus des bandes de filiere sur les flux.
+    expect((sankey.data_taggs_dict['filiere'] as unknown as { drawing: string }).drawing).toBe('nodes')
     sankey.links_list.filter(isGeneratedMemberLink).forEach(l => {
       const f = (n: Class_NodeElement) => membersOfGeneratedNode(n).find(m => m.group.id === 'filiere')?.id
       expect(f(l.source as Class_NodeElement)).toBe(f(l.target as Class_NodeElement))
