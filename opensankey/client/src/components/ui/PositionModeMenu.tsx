@@ -44,7 +44,7 @@ import {
   dimensionDrawingEnabledFor, positionModeSelectorEnabledFor, loneSubmenuOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyMembersOrder,
+  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyMembersColorFlows, applyMembersOrder,
   dimensionCarrierCandidates,
   dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
@@ -439,6 +439,16 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                     ))}
                   </MenuGroup>
                 </Submenu>
+                : null}
+              {/* os#1511 — sous un diagramme par membre, une dimension en nœuds peut colorer les flux. */}
+              {drawing === 'nodes' && !in_bands &&
+                app_data.drawing_area.sankey.data_taggs_list.some(d => d.member_bands === true)
+                ? <CheckItem
+                  label={t('Banner.members_color_flows')}
+                  checked={tagg.use_colors}
+                  closeOnSelect={false}
+                  onClick={() => applyMembersColorFlows(app_data, tagg, !tagg.use_colors)}
+                />
                 : null}
               {/* os#1511 — L'ORDRE DES MEMBRES, en bandes comme en nœuds : par valeur au premier
                   niveau (défaut), à tous les niveaux, ou ordre de l'arbre. Sur une dimension plate,

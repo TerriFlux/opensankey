@@ -103,4 +103,28 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
       expect(colonne[1].haut - colonne[0].bas).toBeCloseTo(20, 6)
     })
   })
+
+  test('un nom repete d une bande a l autre ne s ecrit qu une fois, en haut', () => {
+    const { sankey } = monter()
+    disaggregateDimensionNodes(sankey)
+    const production = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Production')
+      .sort((a, b) => a.position_y - b.position_y)
+    expect(production.map(n => n.name_label_is_visible)).toEqual([true, false])
+    // Le noeud central, un par bande, garde son nom partout.
+    expect(sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Lait')[0].name_label_is_visible).toBe(true)
+  })
+
+  test('les postes colorent les flux quand on le demande, et la legende liste les trois dimensions', () => {
+    const { sankey, filiere, poste } = monter()
+    ;(filiere.tags_dict['cereales'] as Class_DataTag).color = '#aa0000'
+    ;(poste.tags_dict['production'] as Class_DataTag).color = '#0000aa'
+    poste.use_colors = true
+    disaggregateDimensionNodes(sankey)
+    const lien = sankey.links_list.filter(isGeneratedMemberLink)
+      .find(l => filiereDe(l.source as Class_NodeElement) === 'cereales' && posteDe(l.source as Class_NodeElement) === 'production')
+    expect(lien?.getShapeColorToUse()).toBe('#0000aa')
+    expect(filiere.draws_members_as_nodes).toBe(true)
+    expect(poste.draws_members_as_nodes).toBe(true)
+  })
 })
+

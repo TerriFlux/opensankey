@@ -453,6 +453,26 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
 }
 
 /**
+ * os#1511 — LES MEMBRES DE CETTE DIMENSION COLORENT LES FLUX d'un diagramme par membre, au lieu de
+ * ceux de la bande (Julien, 07/10 : « comment faire pour que la couleur devienne celle de Ressources
+ * et emplois »). Une seule dimension colore à la fois. Annulable.
+ */
+export const applyMembersColorFlows = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  const dimensions = app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]
+  const before = dimensions.map(d => [d, d.use_colors] as [Class_DataTagGroup, boolean])
+  const after = dimensions.map(d => [d, d === tagg ? on : (on && d.drawing === 'nodes' ? false : d.use_colors)] as
+    [Class_DataTagGroup, boolean])
+  const apply = (state: [Class_DataTagGroup, boolean][]) => {
+    state.forEach(([d, v]) => { d.use_colors = v })
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(after))
+  apply(after)
+}
+
+/**
  * os#1511 — ORDRE DES MEMBRES dessinés, en bandes comme en nœuds (annulable). L'ordre des nœuds
  * se décide à la désagrégation : on la refait ; celui des bandes au dessin.
  */
