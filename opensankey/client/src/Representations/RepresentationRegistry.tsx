@@ -284,6 +284,12 @@ type Type_RepresentationCommon = {
    * des deux côtés ; c'est le cas normal, seuls les noms longs le posent.
    */
   short_label?: (app_data: Class_ApplicationData) => string
+  /**
+   * sa#613 — CE QUE LE VOLET MONTRERA une fois les sélecteurs de son bandeau choisis, au bout de
+   * l'invitation « Sélectionner une année pour afficher son Sankey unitaire ». Absent : « les
+   * vignettes « <libellé> » ».
+   */
+  wait_target?: (app_data: Class_ApplicationData) => string
   /** Icône du bouton du sélecteur. */
   icon?: React.ReactNode
   /**
