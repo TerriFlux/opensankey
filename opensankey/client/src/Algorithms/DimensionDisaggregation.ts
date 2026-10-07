@@ -696,10 +696,15 @@ function hauteurPourFlux(
   pentes: { get(id: string): number | undefined },
   y_a: number
 ): number | undefined {
-  const pente = pentes.get(parseGeneratedId(lien.id)?.origin ?? lien.id)
+  // La pente est relevée PAR PIXEL D'ÉPAISSEUR du flux d'origine : la part d'un membre la reprend
+  // à son échelle. Un flux droit reste droit (0) ; un flux qui descendait de la moitié de son
+  // épaisseur continue de le faire, au lieu de reporter sur un fin membre l'écart absolu de
+  // l'agrégat (Julien, 07/10 : en bandes, « le nœud à gauche est plus haut que les deux à droite »).
+  const pente_unitaire = pentes.get(parseGeneratedId(lien.id)?.origin ?? lien.id)
   const acc_a = a.linkAttachOffsetY(lien)
   const acc_b = b.linkAttachOffsetY(lien)
-  if (pente === undefined || acc_a === undefined || acc_b === undefined) return undefined
+  if (pente_unitaire === undefined || acc_a === undefined || acc_b === undefined) return undefined
+  const pente = pente_unitaire * lien.thicknessSourceRaw
   // pente = accroche cible - accroche source (0 : droit, positif : descend vers la cible)
   return lien.source === a
     ? y_a + acc_a + pente - acc_b
@@ -728,7 +733,8 @@ function hauteurAlignee(
 
 /**
  * La pente de chaque flux TOUCHANT UN AXE de ce tour : accroche cible moins accroche source,
- * relevée sur les nœuds tels qu'ils sont avant d'être découpés. Les flux entre un axe et un nœud
+ * relevée sur les nœuds tels qu'ils sont avant d'être découpés, et rapportée à l'ÉPAISSEUR du flux
+ * (cf. `hauteurPourFlux`) ; un flux d'épaisseur nulle n'a pas d'entrée. Les flux entre un axe et un nœud
  * qui ne porte pas la dimension en font partie : c'est eux que suit le placement autour d'un nœud
  * de référence. Un flux dont l'une des accroches ne se calcule pas (cf. `linkAttachOffsetY`) n'a
  * pas d'entrée.
@@ -745,8 +751,9 @@ function pentesEntreAxes(
     const cible = lien.target as Class_NodeElement
     const acc_s = source.linkAttachOffsetY(lien)
     const acc_c = cible.linkAttachOffsetY(lien)
-    if (acc_s === undefined || acc_c === undefined) return
-    pentes.set(lien.id, (cible.position_y + acc_c) - (source.position_y + acc_s))
+    const epaisseur = lien.thicknessSourceRaw
+    if (acc_s === undefined || acc_c === undefined || !(epaisseur > 0)) return
+    pentes.set(lien.id, ((cible.position_y + acc_c) - (source.position_y + acc_s)) / epaisseur)
   })
   return pentes
 }
