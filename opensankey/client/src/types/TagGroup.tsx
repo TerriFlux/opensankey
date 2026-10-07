@@ -1758,7 +1758,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public get drawing(): Type_DimensionDrawing {
-    if (this.carriers_count > 0) return 'nodes'
+    // Un diagramme par membre demandé découpe des NŒUDS, même quand chacun porte une autre
+    // dimension (SOCLE filières : aucun nœud ne porte Filière en propre) ; sans cette règle, la
+    // bannière « plusieurs » la dessinait AUSSI en bandes sur les flux (Julien, 07/10 : « il fait
+    // les deux »).
+    if (this._member_bands === true || this.carriers_count > 0) return 'nodes'
     const banner = this.banner
     if (banner === 'multi') return 'multi'
     if (banner === 'one' || banner === 'topbar' || banner === 'sequence') return 'one'
