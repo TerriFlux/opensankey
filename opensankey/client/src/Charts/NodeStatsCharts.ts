@@ -49,8 +49,8 @@ import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
 import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
 import {
-  LEGEND_UNCHECKED_INK, appendLegendContextRows, legendCheckBox, legendCheckRows, legendMemberKeyOf,
-  type Type_LegendChecks, type Type_LegendContextRow
+  LEGEND_UNCHECKED_INK, appendLegendCapsule, appendLegendContextRows, legendCheckBox, legendCheckRows,
+  legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
 
@@ -169,6 +169,12 @@ export interface Type_ChartOptions {
    * la ligne se clique et ouvre la liste de la dimension. Absent ou vide : pas de ligne.
    */
   legend_context?: Type_LegendContextRow[]
+  /**
+   * 07/10/2026 (os#1527) — LA CAPSULE QUI CACHE OU MONTRE LA LÉGENDE, comme sur le diagramme.
+   * `toggle(show)` : le geste de l'hôte (réglage `legend_visible` de la figure, annulable). Absent :
+   * pas de capsule (aperçu, pop-up).
+   */
+  legend_capsule?: Type_LegendCapsule
   /**
    * os#1460 — L'ASPECT D'UNE PART, quand elle en porte un.
    *
@@ -2444,6 +2450,11 @@ export const drawDonutChart = (
     })
   }
 
+  // os#1527 — LA CAPSULE DE LA LÉGENDE, comme sur le diagramme : affichée, « ‹ » la replie ;
+  // masquée par elle, « Légende › » la rouvre. Du côté de la légende, sans prendre de place.
+  if (!cell && opts.legend_capsule && st.legend_parts !== 'none') {
+    appendLegendCapsule(root.node() as HTMLElement, opts.legend_capsule, legend_shown, st.legend_position)
+  }
   if (!legend_shown) return
   // 24/09/2026 — DESSOUS, LA LÉGENDE EST UN BANDEAU, PAS UNE COLONNE COUCHÉE.
   //

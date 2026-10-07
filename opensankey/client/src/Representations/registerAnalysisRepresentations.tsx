@@ -31,7 +31,7 @@ import {
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_ChartOptions, Type_StatSlice } from '../Charts/NodeStatsCharts'
-import { appendLegendContextRows } from '../Charts/legendChecks'
+import { appendLegendContextRows, type Type_LegendCapsule } from '../Charts/legendChecks'
 import { tagGroupCarriesFormatting } from '../Elements/legendItems'
 import { legendDataTagZoneId } from '../Elements/legendIds'
 import { openLegendDimensionChoice } from '../components/panels/presentation/legendDimensionChoice'
@@ -1400,6 +1400,27 @@ const donutLegendShapeOf = (ctx: Type_RepresentationContext): Type_DonutLegendSh
  * Écrit APRÈS le dessin en cours (micro-tâche) : l'écriture notifie la grande zone, qui redessine ;
  * un redessin imbriqué dans celui-ci viderait le conteneur sous ses pieds.
  */
+/**
+ * 07/10/2026 (os#1527) — LA CAPSULE DE LA LÉGENDE d'une couronne (Julien : « je veux pouvoir cacher
+ * la légende dans la couronne comme dans le diagramme »). Le geste écrit `legend_visible` sur la
+ * figure (sac complet, annulable), après le dessin en cours comme `latchDonutLegend`. Hors fenêtre
+ * (pop-up, aperçu) : pas de capsule.
+ */
+const legendCapsuleOf = (ctx: Type_RepresentationContext): Type_LegendCapsule | undefined => {
+  const { window_id, pane_key } = ctx
+  if (window_id === undefined || pane_key === undefined) return undefined
+  const mc = ctx.app_data.menu_configuration
+  return {
+    label: ctx.app_data.t('MEP.legend_panel_toggle', { defaultValue: 'Légende' }) as string,
+    toggle: (show: boolean) => queueMicrotask(() => {
+      if (!mc.isMainZoneOccupant(window_id)) return
+      mc.setMainZonePaneOptions(window_id, pane_key, {
+        ...(mc.figureOf(window_id, pane_key).attributes as Type_JSON), legend_visible: show
+      })
+    })
+  }
+}
+
 const latchDonutLegend = (ctx: Type_RepresentationContext) => {
   const { window_id, pane_key } = ctx
   if (window_id === undefined || pane_key === undefined) return
@@ -2196,6 +2217,7 @@ export const registerAnalysisRepresentations = (): void => {
           legend_checks: legendChecksOf(ctx),
           // os#1527 — « Année : 2015 », comme la couronne en secteurs et le diagramme.
           legend_context: legendContextOf(ctx),
+          legend_capsule: legendCapsuleOf(ctx),
           // LA PALETTE DE LA COURONNE, et non celle du disque : les deux modes sont une seule
           // figure, ils ne peuvent pas avoir deux jeux de teintes (cf. `branch_color`).
           branch_color: paletteColor,
@@ -2295,6 +2317,7 @@ export const registerAnalysisRepresentations = (): void => {
           breadcrumb,
           legend_toggle: legendToggleOf(ctx),
           legend_context: legendContextOf(ctx),
+          legend_capsule: legendCapsuleOf(ctx),
           part_aspect: wiring.part_aspect,
           on_part_select: wiring.on_part_select,
           // 25/09/2026 — ET LE TRACÉ DIT CE QU'IL A DÉCIDÉ : c'est par là que le panneau apprend
