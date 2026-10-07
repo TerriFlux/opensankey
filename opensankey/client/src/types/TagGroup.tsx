@@ -105,6 +105,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'topbar', 'member_bands', 'members_order', 'bands_by_value', 'nodes_by_value',
   // os#1511 — la portée (zoom) partagée par les fenêtres liées, écrite seulement quand elle est posée.
   'focus',
+  // os#1511 — les décochés partagés par les fenêtres liées, écrits seulement quand il y en a.
+  'hidden_members',
 ])
 
 /**
@@ -1411,6 +1413,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // l'applique par sa sélection, restreinte à la portée. Écrite seulement si elle est posée.
   private _focus_ids: string[] = []
 
+  // 07/10/2026 — LES DÉCOCHÉS DU DIAGRAMME (os#1511, réponse de Julien : en LIÉ, ils sont partagés
+  // comme la portée). Un membre décoché n'est plus choisi — le diagramme ne le dessine pas — mais il
+  // garde sa ligne, grisée, dans les légendes et le tableau de navigation des fenêtres liées.
+  private _hidden_ids: string[] = []
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1470,6 +1477,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._reference_node_id = tagg_to_copy._reference_node_id
     this._members_order = tagg_to_copy._members_order
     this._focus_ids = [...tagg_to_copy._focus_ids]
+    this._hidden_ids = [...tagg_to_copy._hidden_ids]
   }
 
   protected _toJSON(
@@ -1495,6 +1503,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._members_order !== undefined) json_object['members_order'] = this._members_order
     // os#1511 — clé ADDITIVE, écrite seulement quand le diagramme est zoomé.
     if (this._focus_ids.length > 0) json_object['focus'] = [...this._focus_ids]
+    // os#1511 — clé ADDITIVE, écrite seulement quand des membres sont décochés.
+    if (this._hidden_ids.length > 0) json_object['hidden_members'] = [...this._hidden_ids]
   }
 
   protected _fromJSON(
@@ -1550,6 +1560,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     }
     const focus_lu = json_object['focus']
     if (Array.isArray(focus_lu)) this._focus_ids = focus_lu.filter((v): v is string => typeof v === 'string' && v !== '')
+    const decoches_lus = json_object['hidden_members']
+    if (Array.isArray(decoches_lus)) this._hidden_ids = decoches_lus.filter((v): v is string => typeof v === 'string' && v !== '')
   }
 
   /**
@@ -1567,6 +1579,22 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     const inside = selection.length > 0 && selection.every(s => members.some(f => s === f || s.hasAncestor(f)))
     return inside ? members.map(m => m.id) : []
   }
+  /**
+   * 07/10/2026 — LES DÉCOCHÉS DU DIAGRAMME (os#1511) : les membres existants décochés, et qui ne
+   * sont pas choisis (un membre choisi à nouveau, par n'importe quel sélecteur, n'est plus décoché).
+   */
+  public get hidden_ids(): string[] {
+    return this._hidden_ids.filter(id => {
+      const m = this.tags_dict[id] as Class_DataTag | undefined
+      return m !== undefined && !m.is_selected
+    })
+  }
+  /** Les décochés tels qu'écrits (instantanés d'historique). */
+  public get stored_hidden_ids(): string[] { return [...this._hidden_ids] }
+  public set hidden_ids(value: string[]) {
+    this._hidden_ids = [...new Set(value.filter(id => typeof id === 'string' && id !== ''))]
+  }
+
   /** La portée telle qu'écrite, sans la confronter à la sélection (instantanés d'historique). */
   public get stored_focus_ids(): string[] { return [...this._focus_ids] }
   public set focus_ids(value: string[]) {
