@@ -379,7 +379,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _initDraw() {
     super._initDraw()
     this.d3_selection?.attr('class', this.class_name).datum(this)
-    this.d3_selection?.style('display', 'inline')
+    // os#1527 — une zone de la légende montrée par le PANNEAU reste cachée du dessin : chaque
+    // redessin reposait `inline`, et l'ancienne légende ressurgissait au premier geste (Julien,
+    // 07/10 : « en manipulant, j'ai vu apparaître l'ancienne légende »). La génération, qui la mesure,
+    // et les captures la montrent.
+    const legend = isLegendElementId(this.id) ? this.drawing_area.legend : undefined
+    const hidden = legend !== undefined && legend.hidden_on_screen && !legend._generating
+    this.d3_selection?.style('display', hidden ? 'none' : 'inline')
     this.d3_selection?.attr('font-family', this.name_label_font_family)
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
