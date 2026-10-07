@@ -277,21 +277,14 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   const in_bands = dimensionInMemberBands(app_data, tagg)
   // os#1511 — L'ÉCART DES ENFANTS d'un nœud désagrégé : il place les membres, il va donc dans
   // « Placer », mais il n'a de sens que si la dimension se dessine en nœuds.
-  // Le diagramme par membre s'offre aussi à une dimension en bandes de flux (Julien, 07/10, sur
-  // Filière : « je n'ai pas écart vertical des enfants ? ») ; l'écart des enfants, aux nœuds seuls.
-  const gap_items = can_draw && (drawing === 'nodes' || drawing === 'multi')
+  // Le diagramme par membre est un DESSIN (cf. « Dessiner ») ; ici, l'écart des enfants, aux nœuds.
+  const gap_items = can_draw && drawing === 'nodes'
     ? <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
       {/* os#1511 — dès deux porteurs, la dimension se range en bandes et le mode d'écart n'a plus
           d'effet : on le dit, au lieu de cocher un mode qui ne s'applique pas. Choisir un mode
           quitte les bandes. Offert dès qu'un nœud la porte : le choisir fait porter la dimension
           par tous les nœuds (`applyMemberBands`). */}
-      <CheckItem
-        label={t('Banner.draw_member_bands') + ` (${app_data.drawing_area.disaggregation_gap_value})`}
-        checked={in_bands}
-        closeOnSelect={false}
-        onClick={() => applyMemberBands(app_data, tagg, true)}
-      />
-      {drawing !== 'nodes' ? null : GAP_MODES.map(g => (
+      {GAP_MODES.map(g => (
         <CheckItem
           key={g.value}
           label={t(g.label_key) + (g.value === 'constant'
@@ -406,8 +399,16 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                 checked={drawing === 'multi'}
                 onClick={() => applyDimensionDrawing(app_data, tagg, 'multi')}
               />
+              {/* os#1511 — UN DIAGRAMME PAR MEMBRE est un dessin, à côté des bandes et des nœuds
+                  (Julien, 07/10 : « c'est une option de Dessiner et pas de Placer »). Tous les
+                  nœuds portent alors la dimension, sans que leur réglage change. */}
+              <CheckItem
+                label={t('Banner.draw_member_bands') + ` (${app_data.drawing_area.disaggregation_gap_value})`}
+                checked={in_bands}
+                onClick={() => applyMemberBands(app_data, tagg, true)}
+              />
               {tagg.is_hierarchical
-                ? <Submenu label={t('Banner.draw_nodes')} checked={drawing === 'nodes'}>
+                ? <Submenu label={t('Banner.draw_nodes')} checked={drawing === 'nodes' && !in_bands}>
                   <MenuGroup title={t('Banner.draw_carriers')} fontSize='0.7rem'>
                     {dimensionCarrierCandidates(app_data).map(node => (
                       <CheckItem

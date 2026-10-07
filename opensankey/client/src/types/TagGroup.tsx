@@ -1543,8 +1543,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public get member_bands(): boolean | undefined { return this._member_bands }
   public set member_bands(value: boolean | undefined) {
     this._member_bands = value
-    // Sous des bandes demandées, tous les nœuds portent la dimension (`Node.driving_dimension`).
-    this.drawingChanged()
+    // Sous des bandes demandées, tous les nœuds portent la dimension (`Node.driving_dimension`), y
+    // compris ceux réglés sur une AUTRE : le dessin de toutes les dimensions est à relire.
+    ;(this._ref_sankey.data_taggs_list as Class_DataTagGroup[]).forEach(dimension => dimension.drawingChanged())
   }
 
   /** os#1511 — nœud de référence de la mise en page désagrégée : `undefined` = automatique. */

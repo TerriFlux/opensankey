@@ -61,6 +61,7 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     applyMemberBands(app, pays, true)
     expect(b.driving_dimension).toBe(pays)
     expect(b.own_driving_dimension).toBeUndefined()
+    // Un noeud regle sur une autre dimension la garde : il s y decoupe dans chaque bande.
     expect(c.driving_dimension).toBe(autre)
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
     const ecrit: { [k: string]: unknown } = {}
