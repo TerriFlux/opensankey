@@ -134,6 +134,29 @@ describe('coordonnees du volet et offre au lecteur, dans le fichier', () => {
     expect(o?.reader).toEqual({ nodes: true, nodes_label: 'Process' })
   })
 
+  it('sa#615 : le tri de la liste des noeuds s ecrit et se relit, colonne et sens compris', () => {
+    const mc = freshMenuConfig()
+    const by_tag = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
+    const by_name = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
+    mc.setMainZoneWindowReader(by_tag, { nodes: true, node_taggs: ['filiere'], nodes_sort: { tagg: 'filiere', dir: 'desc' } })
+    mc.setMainZoneWindowReader(by_name, { nodes: true, nodes_sort: { dir: 'asc' } })
+    const occupants = roundTrip(mc.mainZoneStateToJSON()).main_zone_occupants
+    expect(occupants.find(x => x.id === by_tag)?.reader?.nodes_sort).toEqual({ tagg: 'filiere', dir: 'desc' })
+    expect(occupants.find(x => x.id === by_name)?.reader?.nodes_sort).toEqual({ dir: 'asc' })
+  })
+
+  it('sa#615 : un tri malforme est ignore ; un fichier sans tri s ouvre sans tri', () => {
+    const mc = freshMenuConfig()
+    const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
+    mc.setMainZoneWindowReader(id, { nodes: true })
+    const json = mc.mainZoneStateToJSON()
+    const entry = (json['occupants'] as Type_JSON)[id] as Type_JSON
+    expect((entry['reader'] as Type_JSON)['nodes_sort']).toBeUndefined()
+    expect(roundTrip(json).main_zone_occupants.find(x => x.id === id)?.reader).toEqual({ nodes: true })
+    ;(entry['reader'] as Type_JSON)['nodes_sort'] = { tagg: 'filiere', dir: 'haut' }
+    expect(roundTrip(json).main_zone_occupants.find(x => x.id === id)?.reader).toEqual({ nodes: true })
+  })
+
   it('ne s ecrivent pas quand rien n est pose', () => {
     const mc = freshMenuConfig()
     const id = mc.openMainZoneWindow({ kind: 'selection' }, 'osp.repr.unit')
