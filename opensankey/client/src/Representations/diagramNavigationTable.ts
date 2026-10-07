@@ -22,7 +22,7 @@ import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { applyDimensionCut, swapDimensionDrawings } from '../components/ui/dimensionDrawingHost'
 import {
-  coupeChoisirNiveau, coupeEffacerZoom, coupeZoomer, listeDuZoom, lireCoupe
+  candidatsAuNiveau, coupeChoisirNiveau, coupeEffacerZoom, coupeZoomer, listeDuZoom, lireCoupe, type Type_CoupeEnTableau
 } from '../Algorithms/DimensionTableCut'
 import {
   buildFigureNavigationTable, levelShortName, type Type_FigureNavDimension
@@ -50,12 +50,43 @@ export const diagramNavigationDimensions = (app_data: Class_ApplicationData): Cl
     .filter(dim => dim.is_hierarchical && dim.tags_list.length > 1)
 }
 
-/** Pose une sélection sur le diagramme : le geste annulable, sous le voile des gestes lourds. */
+/**
+ * 07/10/2026 — LA PORTÉE QUE DIT LE TABLEAU (zoom partagé avec les fenêtres liées) : le zoom le plus
+ * fin AU-DESSUS de la colonne (« Blé, Maïs » : Céréales). Un zoom au niveau de la colonne restreint
+ * les membres montrés, ce n'est pas une portée ; une coupe mixte n'en a pas.
+ */
+export const focusOfCoupe = (coupe: Type_CoupeEnTableau): string[] => {
+  if (coupe.mixte || coupe.colonnes.length !== 1) return []
+  const above = [...coupe.zooms.keys()].filter(k => k < coupe.colonnes[0])
+  if (above.length === 0) return []
+  return (coupe.zooms.get(Math.max(...above)) ?? []).map(m => m.id)
+}
+
+/**
+ * ✕ D'UN ZOOM. Quand ce zoom est la PORTÉE du diagramme (posée par une fenêtre liée, « Céréales »),
+ * on en sort comme la couronne en sort : la portée redevient une part, au niveau qu'elle occupait
+ * (« Céréales » parmi les filières) — tout revient. Sinon, le ✕ du tableau : ce zoom tombe, la
+ * colonne reste.
+ */
+const sortirDuZoom = (dim: Class_DataTagGroup, coupe: Type_CoupeEnTableau, depth: number, zoom: Class_DataTag[]): string[] => {
+  const focus = dim.focus_ids
+  const is_focus = focus.length === zoom.length && zoom.every(m => focus.includes(m.id))
+  if (!is_focus) return coupeEffacerZoom(dim, coupe, depth)
+  const above = new Map([...coupe.zooms.entries()].filter(([k]) => k < depth))
+  return candidatsAuNiveau(dim, depth, above).map(m => m.id)
+}
+
+/**
+ * Pose une sélection sur le diagramme : le geste annulable, sous le voile des gestes lourds. La
+ * portée du diagramme suit le zoom que le tableau montre (✕ : elle tombe), dans le même pas.
+ */
 const poser = (app_data: Class_ApplicationData, dim: Class_DataTagGroup, ids: string[]) => {
   if (ids.length === 0) return
+  const members = ids.map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+  const focus = focusOfCoupe(lireCoupe(dim, members))
   // Plusieurs membres sur une dimension à choix unique : elle passe en choix multiple, dans le même
   // pas d'historique (comme la couronne liée) — sinon le cube n'adresserait plus rien.
-  app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, ids, { multi: ids.length > 1 }))
+  app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, ids, { multi: ids.length > 1, focus }))
 }
 
 /** Le tableau des dimensions `dims` du diagramme. */
@@ -80,7 +111,7 @@ export const buildDiagramNavigationTable = (
           active: coupe.colonnes.includes(depth),
           column: !coupe.mixte && coupe.colonnes[0] === depth,
           zooms: zoom === undefined ? undefined : zoom.map(m => levelShortName(m.display_name)),
-          clear: zoom === undefined ? undefined : () => poser(app_data, dim, coupeEffacerZoom(dim, coupe, depth)),
+          clear: zoom === undefined ? undefined : () => poser(app_data, dim, sortirDuZoom(dim, coupe, depth, zoom)),
           pick: liste.membres.length === 0 ? undefined : {
             members: liste.membres,
             chosen: liste.coches,

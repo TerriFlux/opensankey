@@ -167,7 +167,8 @@ export const figureControlsOf = (
     const kind = controlKindOf(ui?.kind, attr.default, !!choices && choices.length > 0)
     if (kind === 'none') return
 
-    const value = key in options ? options[key] : attr.default
+    const raw_value = key in options ? options[key] : attr.default
+    const value = ui?.shownValueOf ? ui.shownValueOf(raw_value) : raw_value
     out.push({
       key,
       kind,

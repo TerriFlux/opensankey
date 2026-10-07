@@ -398,7 +398,7 @@ const inMemberBands = (dim: Class_DataTagGroup, carriers: number): boolean =>
 
 /**
  * CE QUE LE DIAGRAMME DESSINE, lu dans le modèle : chaque dimension non vide, son rôle d'après
- * `drawing` (bannière et nœuds porteurs), ses montrés = sa sélection. Le diagramme n'a pas de portée.
+ * `drawing` (bannière et nœuds porteurs), ses montrés = sa sélection, sa portée = `focus_ids`.
  *  - en nœuds, deux porteurs ou plus rangés par membre (`member_bands`, automatique) : `cases` ;
  *  - en nœuds sinon : `parts` / nœuds ;
  *  - en bandes, la dimension qui découpe les flux (`draws_bands`, la première de la liste) :
@@ -426,7 +426,8 @@ export const fromDiagram = (sankey: Type_ViewSankey): Type_DimensionViewState =>
       role,
       resume: role === 'cases' ? 'cases' : 'parts',
       variants,
-      focus: role === 'none' ? [...selection] : [],
+      // 07/10/2026 — le diagramme a désormais une PORTÉE (`focus_ids`, zoom partagé en lié).
+      focus: dim.focus_ids.length > 0 ? dim.focus_ids : role === 'none' ? [...selection] : [],
       shown: selection,
       hidden: [],
       diagram: { banner: dim.banner, carriers, member_bands: dim.member_bands }
