@@ -6,8 +6,8 @@ import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronn
 
 // 04/10/2026 — os#1511, refonte etape 2, lot 3 : LES GESTES DE LA COURONNE ecrivent l etat unique.
 // Chaque geste lit l etat, le modifie, l ecrit par `writeCouronneState` (detachee) et, liee, la
-// selection du diagramme pour `shown`. Jamais une ancienne cle ; le diagramme ne bouge jamais a cause
-// d un zoom.
+// selection du diagramme pour `shown`. Jamais une ancienne cle. 07/10/2026 : liee, le zoom est partage
+// avec le diagramme ; detachee, il reste a la figure.
 
 type Bag = { [k: string]: unknown }
 
@@ -50,15 +50,15 @@ describe('os#1511 couronneGestures — detachee', () => {
   })
   test('deplie : la part cede sa place a ses enfants (mixte) ; shift+clic replie', () => {
     const m = monter(det)
-    m.g().unfold(part(['filiere', 'cereales']), false)
+    m.g().unfold(part(['filiere', 'cereales']))
     expect(m.parts('filiere')).toEqual(['ble', 'mais', 'lait', 'viande'])
     expect(m.plan().columns.filiere.mixed).toBe(true)
-    m.g().fold(part(['filiere', 'ble']), false)
+    m.g().fold(part(['filiere', 'ble']))
     expect(m.parts('filiere')).toEqual(['cereales', 'lait', 'viande'])
   })
   test('zoom : la portee descend sous la part ; le centre remonte a la part', () => {
     const m = monter(det)
-    m.g().zoomTo(part(['filiere', 'cereales']), false)
+    m.g().zoomTo(part(['filiere', 'cereales']))
     expect(m.state().dims.filiere.focus).toEqual(['cereales'])
     expect(m.parts('filiere')).toEqual(['ble', 'mais'])
     m.g().back?.()
@@ -136,22 +136,73 @@ describe('os#1511 couronneGestures — une couronne par membre, retirer une colo
 })
 
 describe('os#1511 couronneGestures — liee', () => {
-  test('zoom : la portee seule, le diagramme ne bouge pas ; la couronne descend d un niveau', () => {
+  // 07/10/2026 — REVIREMENT : lie, le zoom est partage. La portee vit sur la dimension du diagramme.
+  test('zoom : le diagramme zoome aussi (portee + selection restreinte) ; le centre ramene tout', () => {
     const m = monter(lie)
-    m.g().zoomTo(part(['filiere', 'cereales']), false)
-    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    m.g().zoomTo(part(['filiere', 'cereales']))
+    expect(m.s.filiere.focus_ids).toEqual(['cereales'])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['ble', 'mais'])
     expect(m.parts('filiere')).toEqual(['ble', 'mais'])
+    // La figure n ecrit pas sa portee : c est celle du diagramme.
+    expect((m.box.options[COURONNE_KEY] as { dims: Bag }).dims.filiere).not.toHaveProperty('focus')
+    m.g().back?.()
+    expect(m.s.filiere.focus_ids).toEqual([])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.parts('filiere')).toEqual(['cereales', 'lait', 'viande'])
   })
-  test('legende : decocher garde la ligne et ne touche pas au diagramme', () => {
+  test('zoom : un seul pas d annulation, d ou que vienne le geste', () => {
+    const m = monter(lie)
+    m.g().zoomTo(part(['filiere', 'cereales']))
+    m.s.app.history.applyUndo()
+    expect(m.s.filiere.focus_ids).toEqual([])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    m.s.app.history.applyRedo()
+    expect(m.s.filiere.focus_ids).toEqual(['cereales'])
+  })
+  test('une autre fenetre liee lit la meme portee', () => {
+    const m = monter(lie)
+    m.g().zoomTo(part(['filiere', 'cereales']))
+    expect(readCouronneState(lie, m.s.sankey).dims.filiere.focus).toEqual(['cereales'])
+  })
+  test('detachee zoomee : le diagramme ne bouge pas', () => {
+    const m = monter(det)
+    m.g().zoomTo(part(['filiere', 'cereales']))
+    expect(m.s.filiere.focus_ids).toEqual([])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+  })
+  test('migration : une portee propre d une figure liee est ignoree sans portee du diagramme', () => {
+    const m = monter({ ...lie, [COURONNE_KEY]: { version: 1, order: ['filiere', 'pays'], dims: { filiere: { focus: ['cereales'] } } } })
+    expect(m.state().dims.filiere.focus).toEqual([])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+  })
+  test('une selection qui sort de la portee defait le zoom', () => {
+    const m = monter(lie)
+    m.g().zoomTo(part(['filiere', 'cereales']))
+    m.s.filiere.selectMembers(['lait'])
+    expect(m.s.filiere.focus_ids).toEqual([])
+  })
+  // 07/10/2026 — lie, les decoches sont ceux du diagramme (partages).
+  test('legende : decocher retire le membre du diagramme, la ligne reste ; un pas d annulation', () => {
     const m = monter(lie)
     m.g().toggleHidden('filiere', 'lait', false)
-    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'viande'])
+    expect(m.s.filiere.hidden_ids).toEqual(['lait'])
     expect(m.parts('filiere')).toEqual(['cereales', 'viande'])
     expect(m.plan().legend.filiere.find(e => e.member_id === 'lait')?.checked).toBe(false)
+    expect(readCouronneState(lie, m.s.sankey).dims.filiere.hidden).toEqual(['lait'])
+    m.s.app.history.applyUndo()
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.s.filiere.hidden_ids).toEqual([])
+  })
+  test('legende detachee : le diagramme ne bouge pas', () => {
+    const m = monter(det)
+    m.g().toggleHidden('filiere', 'lait', false)
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.s.filiere.hidden_ids).toEqual([])
   })
   test('deplie et en-tete ecrivent la selection du diagramme, en un pas', () => {
     const m = monter(lie)
-    m.g().unfold(part(['filiere', 'cereales']), false)
+    m.g().unfold(part(['filiere', 'cereales']))
     expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['ble', 'mais', 'lait', 'viande'])
     m.g().chooseColumn('pays', 1, false)
     expect(m.s.pays.selected_tags_list.map(t => t.id)).toEqual(['europe', 'ameriques', 'asie'])

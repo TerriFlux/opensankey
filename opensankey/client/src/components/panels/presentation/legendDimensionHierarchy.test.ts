@@ -11,7 +11,7 @@ if (typeof globalThis.structuredClone !== 'function') {
 // os#1526 — dans la legende, un membre d une dimension a niveaux se CHOISIT dans le diagramme, par
 // le meme geste que le tableau et la barre du haut (regle parent/enfant, historique).
 
-function monter(banner: 'one' | 'multi') {
+function monter(banner: 'one' | 'multi' | 'sequence') {
   const app = new Class_ApplicationData(false)
   const sankey = app.drawing_area.sankey
   const dim = sankey.addDataTagGroup('pays', 'Pays', false) as unknown as Class_DataTagGroup
@@ -45,8 +45,10 @@ describe('os#1526 — choisir un membre de dimension depuis la legende', () => {
     expect(choisis(dim)).toEqual(['europe'])
   })
 
-  test('un membre : il remplace la selection', () => {
-    const { app, dim } = monter('one')
+  test('en sequence : un membre remplace la selection', () => {
+    // os#1511, 07/10 — « un membre » ne tient plus sur une dimension hiérarchisée (additive) : seule
+    // la séquence en lit un à la fois.
+    const { app, dim } = monter('sequence')
     chooseLegendDimensionTag(app, dim, 'france')
     expect(choisis(dim)).toEqual(['france'])
   })

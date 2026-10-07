@@ -17,8 +17,10 @@
 // `levels_display(_by)`, `small_multiples_by` ni `nested_tagg_ids` : `readCouronneState` les relit
 // encore pour les fichiers d'avant, et l'écriture les retire.
 //
-// LE DIAGRAMME NE BOUGE JAMAIS À CAUSE D'UN ZOOM (règle de Julien) : liée, zoomer ne pose que la
-// portée, et la couronne descend d'un niveau sous un membre que le diagramme montre d'un bloc.
+// 07/10/2026 — REVIREMENT DE JULIEN : LIÉE, LE ZOOM EST PARTAGÉ. La portée d'une dimension est
+// celle du diagramme (`focus_ids` du groupe) : zoomer pose la portée ET restreint la sélection du
+// diagramme à ce qu'elle couvre (`applyDimensionFocus`), et toutes les fenêtres liées suivent.
+// Détachée, la figure zoome seule. Le choix « Clic sur une part » n'a plus que Déplie / Zoome.
 //
 // LES GESTES : en-tête (colonne seule, ctrl+clic ajoutée, reclic désactive) ; part « Déplie » (la part
 // cède sa place à ses enfants : mixte) et son shift+clic (replie) ; part « Zoome » (portée) et son
@@ -30,7 +32,7 @@
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
+import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '../components/ui/dimensionDrawingHost'
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
   antichainOf, readCouronneState, writeCouronneState,
@@ -122,8 +124,16 @@ export interface Type_CouronneGestureHost {
   linked?: boolean
 }
 
-/** Ce que le clic sur une part fait en plus de sélectionner (`interaction_click`). */
+/**
+ * Ce que le clic sur une part fait en plus de sélectionner (`interaction_click`). 07/10/2026 — deux
+ * choix, `aggregate` (Déplie) et `zoom` (Zoome) ; `none` et `both` sont les valeurs d'avant, relues
+ * (`partClickModeOf`) : le diagramme suit selon le lien, plus selon le choix.
+ */
 export type Type_PartClickMode = 'none' | 'aggregate' | 'zoom' | 'both'
+
+/** Les quatre valeurs d'avant ramenées aux deux choix : `none` / `aggregate` → Déplie, `zoom` / `both` → Zoome. */
+export const partClickModeOf = (raw: unknown): 'aggregate' | 'zoom' =>
+  raw === 'zoom' || raw === 'both' ? 'zoom' : 'aggregate'
 
 /**
  * LES GESTES D'UNE COURONNE, relus à chaque appel sur ses réglages du moment. `null` : aucune
@@ -148,14 +158,26 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
 
   /**
    * ÉCRIT un état, et — liée — la sélection du diagramme des dimensions de `diagram` (ce que la figure
-   * montre), en un seul pas d'annulation. Détachée, `diagram` n'est écrit que si `diagram_too` (le clic
-   * « et le déplie dans le diagramme »).
+   * montre), en un seul pas d'annulation. Détachée, rien du diagramme ne bouge.
+   *
+   * 07/10/2026 — LIÉE, LA PORTÉE EST AU DIAGRAMME (revirement de Julien) : une dimension dont la
+   * portée change zoome le diagramme (`applyDimensionFocus`) — sa portée, et sa sélection restreinte
+   * aux montrés sous la nouvelle portée (ou à la coupe demandée) —, dans le même pas.
    */
   const commit = (next: Type_CouronneState, diagram: { dim: Class_DataTagGroup, ids: string[] }[] = []) => {
     const out = writeCouronneState(host.options, next)
-    const cuts = diagram.filter(c => c.ids.length > 0 && !sameIds(c.dim.selected_tags_list.map(m => m.id), c.ids))
-    if (cuts.length === 0) { host.write(out); return }
+    const asked = linked ? diagram : []
+    const zooms = linked
+      ? next.order.map(id => dimOf(id)).filter((d): d is Class_DataTagGroup => d !== undefined)
+        .filter(d => next.dims[d.id] !== undefined && !sameIds(next.dims[d.id].focus, d.focus_ids))
+      : []
+    const cuts = asked.filter(c => !zooms.includes(c.dim) && c.ids.length > 0 && !sameIds(c.dim.selected_tags_list.map(m => m.id), c.ids))
+    if (cuts.length === 0 && zooms.length === 0) { host.write(out); return }
     app.runHeavyGesture(() => inOneHistoryStep(app.history, () => {
+      zooms.forEach(d => {
+        const ids = asked.find(c => c.dim === d)?.ids ?? next.dims[d.id].shown
+        applyDimensionFocus(app, d, next.dims[d.id].focus, ids)
+      })
       cuts.forEach(c => applyDimensionCut(app, c.dim, c.ids, { multi: true }))
       host.write(out)
     }))
@@ -190,7 +212,9 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     if (alone) {
       next.order.forEach(o => { if (o !== id && o !== cells_dim) next = withDim(next, o, { active: false }) })
     }
-    return { next, diagram: linked ? [{ dim: d, ids: (d.membersAtLevel(depth) as Class_DataTag[]).map(m => m.id) }] : [] }
+    // Liée, le diagramme prend le niveau sous sa portée (07/10/2026 : la portée est partagée).
+    const level = focus.length > 0 ? shown : (d.membersAtLevel(depth) as Class_DataTag[]).map(m => m.id)
+    return { next, diagram: linked ? [{ dim: d, ids: level }] : [] }
   }
   const chooseColumn = (id: string, depth: number, alone: boolean) => {
     const r = nextWithColumn(state, id, depth, alone)
@@ -255,23 +279,23 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     return { refs, d, m }
   }
 
-  /** « Déplie » : la part cède sa place à ses enfants (mixte). `diagram_too` : le diagramme suit. */
-  const unfold = (part_id: string, diagram_too: boolean) => {
+  /** « Déplie » : la part cède sa place à ses enfants (mixte). Liée, le diagramme se déplie avec elle. */
+  const unfold = (part_id: string) => {
     const { d, m } = refOf(part_id)
     if (d === undefined || m === undefined || kidsOf(m).length === 0) return
     if (linked) { commit(state, [{ dim: d, ids: diagramUnfolded(d, m) }]); return }
     const shown = antichainOf(d, [...(st(d.id).shown.filter(id => id !== m.id)), ...kidsOf(m).map(c => c.id)])
-    commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }), diagram_too ? [{ dim: d, ids: diagramUnfolded(d, m) }] : [])
+    commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }))
   }
   /** Shift+clic « Déplie » : la part et ses voisins se replient dans leur parent (pas au-delà de la portée). */
-  const fold = (part_id: string, diagram_too: boolean) => {
+  const fold = (part_id: string) => {
     const { d, m } = refOf(part_id)
     const p = m?.parent as Class_DataTag | undefined
     if (d === undefined || m === undefined || p === undefined) return
     if (focusOf(d).includes(p) || (p.parent === undefined && rootsOf(d).length === 1)) return
     if (linked) { commit(state, [{ dim: d, ids: diagramFolded(d, p) }]); return }
     const shown = antichainOf(d, [...st(d.id).shown.filter(id => !(d.tags_dict[id] as Class_DataTag).hasAncestor(p)), p.id])
-    commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }), diagram_too ? [{ dim: d, ids: diagramFolded(d, p) }] : [])
+    commit(withDim(state, d.id, { shown, hidden: hiddenFor(d, shown) }))
   }
 
   // ── 07/10/2026 (lot 2) — LES +/− DU TABLEAU CROISÉ ────────────────────────────────────────────
@@ -308,12 +332,12 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   /**
    * L'état quand la portée de `d` devient `ids`. Détachée, les montrés couvrent la nouvelle portée :
    * en descendant, au moins un niveau sous elle (à la colonne d'avant si elle est plus fine) ; en
-   * remontant, à la profondeur de la portée quittée (« Céréales » redevient une part). Liée, seule
-   * la portée change : la sélection du diagramme dit le reste.
+   * remontant, à la profondeur de la portée quittée (« Céréales » redevient une part). Liée, c'est
+   * pareil (07/10/2026, le zoom est partagé) : la portée et ces montrés deviennent la portée et la
+   * sélection du diagramme (`commit`).
    */
   const nextWithFocus = (s: Type_CouronneState, d: Class_DataTagGroup, ids: string[]): Type_CouronneState => {
     const focus = membersOf(d, antichainOf(d, ids))
-    if (linked) return withDim(s, d.id, { focus: focus.map(f => f.id) })
     const old_focus = focusOf(d)
     const old_shown = shownOf(d)
     const column = minDepth(d, old_shown, entryDepthOf(d))
@@ -342,9 +366,9 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   /**
    * « Zoome » sur une part : chaque dimension de sa route prend ce membre pour portée ; la dimension
    * cliquée descend sous lui, les autres s'y lisent (ou gardent ce qu'elles montraient dessous).
-   * Liée, le diagramme ne bouge pas ; détachée sous « et le déplie dans le diagramme », il suit.
+   * Liée, le diagramme zoome avec elle (07/10/2026) ; détachée, la figure seule.
    */
-  const zoomTo = (part_id: string, diagram_too: boolean) => {
+  const zoomTo = (part_id: string) => {
     const { refs, d, m } = refOf(part_id)
     if (d === undefined || m === undefined) return
     // 05/10/2026 — UNE FEUILLE : la portée s'y pose si une autre dimension prend la découpe.
@@ -357,13 +381,11 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
       const rm = rd?.tags_dict[r.member_id] as Class_DataTag | undefined
       if (rd === undefined || rm === undefined) return
       if (rd === d) { next = nextWithFocus(next, rd, [rm.id]); return }
-      if (linked) { next = withDim(next, rd.id, { focus: [rm.id] }); return }
       const under = shownOf(rd).filter(x => x !== rm && x.hasAncestor(rm)).map(x => x.id)
       const shown = under.length > 0 ? under : [rm.id]
       next = withDim(next, rd.id, { focus: [rm.id], shown, hidden: hiddenFor(rd, shown) })
     })
-    if (cutter !== undefined) { commit(withCutter(next, cutter)); return }
-    commit(next, diagram_too && !linked ? [{ dim: d, ids: diagramUnfolded(d, m) }] : [])
+    commit(cutter !== undefined ? withCutter(next, cutter) : next)
   }
 
   /**
@@ -388,7 +410,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   /**
    * La dimension `o` prend la découpe : active sur ses parts mémorisées s'il y en a deux ; sur une
    * seule part qui a des enfants, sa portée s'y pose (elle découpe un niveau dessous ; liée, le
-   * diagramme ne bouge pas).
+   * diagramme zoome avec elle, 07/10/2026).
    */
   const withCutter = (s: Type_CouronneState, o: string): Type_CouronneState => {
     const od = dimOf(o)
@@ -424,29 +446,49 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   const back_id = [...state.order].reverse().find(o => o !== cells_dim && st(o).focus.length > 0)
   const back = back_id === undefined ? undefined : () => zoomUp(back_id)
 
-  /** Le clic sur une part, selon « Clic sur une part » : déplier, ou zoomer ; shift+clic à l'envers. */
-  const activatePart = (part_id: string, gesture: { shift: boolean }, mode: Type_PartClickMode, diagram_shown: boolean) => {
-    const zoom = mode === 'zoom' || mode === 'both'
-    const diagram_too = diagram_shown && (mode === 'aggregate' || mode === 'both')
-    if (zoom) {
-      if (gesture.shift) { const { d } = refOf(part_id); if (d) zoomUp(d.id) } else zoomTo(part_id, diagram_too)
+  /**
+   * Le clic sur une part, selon « Clic sur une part » : déplier, ou zoomer ; shift+clic à l'envers.
+   * 07/10/2026 — que le diagramme suive ne dépend que du LIEN (liée : oui ; détachée : non).
+   */
+  const activatePart = (part_id: string, gesture: { shift: boolean }, mode: Type_PartClickMode) => {
+    if (partClickModeOf(mode) === 'zoom') {
+      if (gesture.shift) { const { d } = refOf(part_id); if (d) zoomUp(d.id) } else zoomTo(part_id)
       return
     }
-    if (gesture.shift) fold(part_id, diagram_too)
+    if (gesture.shift) fold(part_id)
     // 05/10/2026 — « Déplie » sur une feuille ne se tait plus : il n'y a rien à déplier, il zoome
     // (la portée sur la feuille, une autre dimension découpe).
-    else if (leafZoomable(part_id)) zoomTo(part_id, false)
-    else unfold(part_id, diagram_too)
+    else if (leafZoomable(part_id)) zoomTo(part_id)
+    else unfold(part_id)
   }
 
   // ── LÉGENDE, ARBRE ───────────────────────────────────────────────────────────────────────────
 
-  /** Une case de légende : décocher retire la part du dessin, la ligne reste (liée comme détachée). */
+  /**
+   * Une case de légende : décocher retire la part du dessin, la ligne reste. 07/10/2026 — liée, les
+   * décochés sont ceux du DIAGRAMME (partagés) : le membre quitte sa sélection — il n'y est plus
+   * dessiné — et garde sa ligne dans toutes les fenêtres liées ; un pas d'historique.
+   */
   const toggleHidden = (id: string, member_id: string, show: boolean) => {
     const s = st(id)
     if (s === undefined || !s.shown.includes(member_id)) return
     const hidden = show ? s.hidden.filter(h => h !== member_id) : [...new Set([...s.hidden, member_id])]
     if (hidden.length >= s.shown.length) return
+    const d = dimOf(id)
+    if (linked && d !== undefined) {
+      // Les montrés hors portée (au-dessus d'elle) restent choisis tels quels dans le diagramme.
+      const chosen = (d.selected_tags_list as Class_DataTag[]).map(m => m.id)
+      // Une part que le diagramme ne choisit pas elle-même (il montre son parent d'un bloc) : rien à
+      // décocher dans le diagramme.
+      if (!show && !chosen.includes(member_id)) return
+      const ids = show ? [...chosen, member_id] : chosen.filter(m => m !== member_id)
+      if (ids.length === 0) return
+      app.runHeavyGesture(() => inOneHistoryStep(app.history, () => {
+        applyDimensionHidden(app, d, hidden, ids)
+        host.write(writeCouronneState(host.options, withDim(state, id, { hidden })))
+      }))
+      return
+    }
     commit(withDim(state, id, { hidden }))
   }
 
@@ -475,7 +517,8 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   /**
    * Une dimension en « une couronne par membre » doit en montrer au moins deux : sinon elle descend
    * d'un niveau — détachée, sous sa portée ; liée, sa portée se pose sur le membre que le diagramme
-   * montre seul (la règle liée la fait descendre dessous ; le diagramme ne bouge pas).
+   * montre seul (la règle liée la fait descendre dessous ; le diagramme prend la portée, sa sélection
+   * ne change pas).
    */
   const withCells = (s: Type_CouronneState, d: Class_DataTagGroup): Type_CouronneState => {
     const ds = s.dims[d.id]

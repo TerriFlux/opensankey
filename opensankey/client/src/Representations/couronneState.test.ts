@@ -227,45 +227,56 @@ describe('os#1511 couronneState — les cas de Julien', () => {
     expect(plan.cut[1].parts.map(p => p.path)).toEqual([['europe'], ['ameriques'], ['asie']])
   })
 
-  test('liee, la selection du diagramme sort de la portee : la portee revient a la racine', () => {
+  // 07/10/2026 — REVIREMENT : liee, la portee est celle du DIAGRAMME (`focus_ids` de la dimension).
+  test('liee : la portee est celle du diagramme ; une selection qui en sort la ramene a la racine', () => {
+    const s = monterSocle()
+    const options = { descriptor: croise }
+    s.filiere.focus_ids = ['cereales']
+    s.filiere.selectMembers(['ble', 'mais'])
+    expect(readCouronneState(options, s.sankey, true).dims.filiere).toMatchObject({ focus: ['cereales'], shown: P('ble', 'mais') })
+    // Le diagramme passe a Lait + Viande (la barre du haut) : il n est plus zoome.
+    s.filiere.selectMembers(['lait', 'viande'])
+    expect(readCouronneState(options, s.sankey, true).dims.filiere).toMatchObject({ focus: [], shown: P('lait', 'viande') })
+  })
+
+  test('liee : une portee propre ecrite par une figure d avant est ignoree (pas de zoom silencieux)', () => {
     const s = monterSocle()
     const options = { descriptor: croise }
     const st = readCouronneState(options, s.sankey, true)
-    const zoome = writeCouronneState(options, { ...st, dims: { ...st.dims, filiere: { ...st.dims.filiere, focus: ['cereales'] } } })
-    // Le diagramme montre ses filieres : sous Cereales, la figure montre ses HS4.
-    expect(readCouronneState(zoome, s.sankey, true).dims.filiere).toMatchObject({ focus: ['cereales'], shown: P('ble', 'mais') })
-    // Le diagramme passe a Lait + Viande : plus rien ne touche Cereales.
-    s.filiere.selectMembers(['lait', 'viande'])
-    expect(readCouronneState(zoome, s.sankey, true).dims.filiere).toMatchObject({ focus: [], shown: P('lait', 'viande') })
+    const zoome = writeCouronneState(options, { ...st, linked: false, dims: { ...st.dims, filiere: { ...st.dims.filiere, focus: ['cereales'] } } })
+    const ancien = { ...zoome, coordinates_linked: undefined }
+    expect(readCouronneState(ancien, s.sankey, true).dims.filiere.focus).toEqual([])
+    expect(s.filiere.focus_ids).toEqual([])
   })
 
   test('liee zoomee : le diagramme montre le membre de la portee d un bloc, la couronne descend d un niveau', () => {
-    // REGLE DE LA COURONNE LIEE (Julien, lot 2) : diagramme aux filieres, couronne zoomee sur Cereales
-    // -> ses HS4 ; diagramme a Europe seule, couronne zoomee sur Europe -> ses pays. Le diagramme ne
-    // bouge pas.
+    // REGLE DE LA COURONNE LIEE (Julien, lot 2) : diagramme zoome sur Cereales, qu il montre d un bloc
+    // -> la couronne montre ses HS4 ; zoome sur Europe seule -> ses pays.
     const s = monterSocle()
     const options = { descriptor: croise }
-    const st = readCouronneState(options, s.sankey, true)
-    const zoome = writeCouronneState(options, {
-      ...st, dims: { ...st.dims, filiere: { ...st.dims.filiere, focus: ['cereales'] }, pays: { ...st.dims.pays, focus: ['europe'] } }
-    })
+    s.filiere.focus_ids = ['cereales']
+    s.filiere.selectMembers(['cereales'])
+    s.pays.focus_ids = ['europe']
     s.pays.selectMembers(['europe'])
-    const lu = readCouronneState(zoome, s.sankey, true)
+    const lu = readCouronneState(options, s.sankey, true)
     expect(lu.dims.filiere).toMatchObject({ focus: ['cereales'], shown: P('ble', 'mais') })
     expect(lu.dims.pays).toMatchObject({ focus: ['europe'], shown: P('fr', 'es') })
-    expect(s.filiere.selected_tags_list.map(m => m.id)).toEqual(P('cereales', 'lait', 'viande'))
-    expect(s.pays.selected_tags_list.map(m => m.id)).toEqual(['europe'])
-    // La legende : les parts ainsi calculees, rien que le diagramme ne montre pas.
+    // La legende : les parts ainsi calculees.
     const plan = drawPlanOf(lu, s.sankey)
     expect(plan.legend.filiere.map(e => e.member_id)).toEqual(P('ble', 'mais'))
   })
 
-  test('liee, les decoches restent a la figure', () => {
+  // 07/10/2026 — lie, les decoches sont ceux du DIAGRAMME (partages) ; ceux d une figure liee d avant sont ignores.
+  test('liee, les decoches sont ceux du diagramme', () => {
     const s = monterSocle()
     const options = { descriptor: croise }
     const st = readCouronneState(options, s.sankey, true)
     const bag = writeCouronneState(options, { ...st, dims: { ...st.dims, filiere: { ...st.dims.filiere, hidden: ['lait'] } } })
-    expect((bag[COURONNE_KEY] as { dims: { filiere: object } }).dims.filiere).not.toHaveProperty('shown')
+    const ecrit = (bag[COURONNE_KEY] as { dims: { filiere: object } }).dims.filiere
+    expect(ecrit).not.toHaveProperty('shown')
+    expect(ecrit).not.toHaveProperty('hidden')
+    s.filiere.hidden_ids = ['lait']
+    s.filiere.selectMembers(['cereales', 'viande'])
     const plan = drawPlanOf(readCouronneState(bag, s.sankey, true), s.sankey)
     expect(parts(plan, 'filiere')).toEqual(['cereales', 'viande'])
     expect(plan.legend.filiere.find(e => e.member_id === 'lait')?.checked).toBe(false)

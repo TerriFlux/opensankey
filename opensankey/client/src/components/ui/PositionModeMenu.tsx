@@ -55,6 +55,7 @@ import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
 import type { Type_TopbarFigureChoice, Type_TopbarFigureMenus } from '../../types/MenuConfig'
 import { FigureDrawingIcon, isFigureDrawingIconName } from './FigureDrawingIcon'
+import { DimensionDrawingIcon, dimensionDrawingIconName } from './DimensionDrawingIcon'
 
 export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinition, label_key: string }[] = [
   { value: 'absolute', icon: faLocationDot, label_key: 'Banner.posModeShort_absolute' },
@@ -92,8 +93,10 @@ const CheckItem = ({ label, checked, onClick, icon, glyph, closeOnSelect, disabl
  * os#1511 — UN SOUS-MENU. Chakra v2 n'en a pas de natif : même patron que le menu Aide (tutoriels),
  * ouverture au survol, et l'entrée ne ferme pas le menu parent.
  */
-const Submenu = ({ label, icon, checked, disabled, children }: {
+const Submenu = ({ label, icon, glyph, checked, disabled, children }: {
   label: string, icon?: React.ReactElement, checked?: boolean, disabled?: boolean, children: React.ReactNode
+  /** 07/10/2026 — un petit visuel devant le libellé, sur la même ligne (cf. `CheckItem`). */
+  glyph?: React.ReactElement
 }) => {
   const [open, setOpen] = React.useState(false)
   return (
@@ -102,6 +105,7 @@ const Submenu = ({ label, icon, checked, disabled, children }: {
         <MenuButton as={MenuItem} closeOnSelect={false} fontSize='0.75rem' icon={icon} isDisabled={disabled}>
           <HStack justifyContent='space-between' spacing='0.75rem'>
             <HStack spacing='0.5rem'>
+              {glyph ?? null}
               <Box as='span'>{label}</Box>
               {checked ? <CheckIcon boxSize='0.6rem' /> : null}
             </HStack>
@@ -277,21 +281,14 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   const in_bands = dimensionInMemberBands(app_data, tagg)
   // os#1511 — L'ÉCART DES ENFANTS d'un nœud désagrégé : il place les membres, il va donc dans
   // « Placer », mais il n'a de sens que si la dimension se dessine en nœuds.
-  // Le diagramme par membre s'offre aussi à une dimension en bandes de flux (Julien, 07/10, sur
-  // Filière : « je n'ai pas écart vertical des enfants ? ») ; l'écart des enfants, aux nœuds seuls.
-  const gap_items = can_draw && (drawing === 'nodes' || drawing === 'multi')
+  // Le diagramme par membre est un DESSIN (cf. « Dessiner ») ; ici, l'écart des enfants, aux nœuds.
+  const gap_items = can_draw && drawing === 'nodes'
     ? <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
       {/* os#1511 — dès deux porteurs, la dimension se range en bandes et le mode d'écart n'a plus
           d'effet : on le dit, au lieu de cocher un mode qui ne s'applique pas. Choisir un mode
           quitte les bandes. Offert dès qu'un nœud la porte : le choisir fait porter la dimension
           par tous les nœuds (`applyMemberBands`). */}
-      <CheckItem
-        label={t('Banner.draw_member_bands') + ` (${app_data.drawing_area.disaggregation_gap_value})`}
-        checked={in_bands}
-        closeOnSelect={false}
-        onClick={() => applyMemberBands(app_data, tagg, true)}
-      />
-      {drawing !== 'nodes' ? null : GAP_MODES.map(g => (
+      {GAP_MODES.map(g => (
         <CheckItem
           key={g.value}
           label={t(g.label_key) + (g.value === 'constant'
@@ -339,9 +336,16 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     {gap_items !== null ? <>{can_position ? <MenuDivider /> : null}{gap_items}</> : null}
   </>
   // La couronne : Afficher (liée), puis Dessiner sur la figure ; rien de « Placer ».
-  const show_items = submenuEntry('show', t('Banner.show_submenu'), <>
+  // os#1511, 07/10 — « Afficher » se retire là où la NATURE de la dimension tranche (Julien : « en
+  // mode multiple on peut ne cliquer qu'un seul membre, je ne vois pas l'intérêt ») : hiérarchisée,
+  // elle est additive, toujours en choix multiple (`Class_DataTagGroup.admissibleBanner`) ; en
+  // séquence (années, scénarios), un membre à la fois. Seule une dimension plate, dont rien ne dit
+  // si ses membres se somment, garde le choix.
+  const nature_decides = tagg.is_hierarchical || tagg.banner === 'sequence'
+  const show_items = nature_decides ? null : submenuEntry('show', t('Banner.show_submenu'), <>
     <CheckItem
       label={t('Banner.draw_one')}
+      glyph={<DimensionDrawingIcon name='one' />}
       checked={drawing === 'one'}
       onClick={() => applyDimensionDrawing(app_data, tagg, 'one')}
     />
@@ -352,7 +356,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     />
   </>)
   if (figure !== undefined) {
-    if (!can_draw || figure.detached) return null
+    if (!can_draw || figure.detached || show_items === null) return null
     return <Menu placement='bottom-start'>
       <MenuButton
         as={Button}
@@ -385,7 +389,11 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
         // dimension entre dans le libellé, sans quoi ils seraient indiscernables.
         aria-label={t('Banner.posMode_title') + ' — ' + tagg.name}
       >
-        <FontAwesomeIcon icon={current.icon} />
+        {/* 07/10/2026 — LE BOUTON DIT LE DESSIN, comme celui d'une couronne (Julien) : un membre, en
+            bandes, en nœuds, en diagrammes séparés. Sans dessin à offrir, le mode de position. */}
+        {can_draw
+          ? <DimensionDrawingIcon name={dimensionDrawingIconName(drawing, in_bands)} />
+          : <FontAwesomeIcon icon={current.icon} />}
       </MenuButton>
     </OSTooltip>
     {/* Portal : hôtes à contexte d'empilement propre (topbar / panneau) — sans lui la
@@ -403,11 +411,22 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
             submenuEntry('draw', t('Banner.draw_submenu'), <>
               <CheckItem
                 label={t('Banner.draw_bands')}
+                glyph={<DimensionDrawingIcon name='bands' />}
                 checked={drawing === 'multi'}
                 onClick={() => applyDimensionDrawing(app_data, tagg, 'multi')}
               />
+              {/* os#1511 — UN DIAGRAMME PAR MEMBRE est un dessin, à côté des bandes et des nœuds
+                  (Julien, 07/10 : « c'est une option de Dessiner et pas de Placer »). Tous les
+                  nœuds portent alors la dimension, sans que leur réglage change. */}
+              <CheckItem
+                label={t('Banner.draw_member_bands') + ` (${app_data.drawing_area.disaggregation_gap_value})`}
+                glyph={<DimensionDrawingIcon name='separate' />}
+                checked={in_bands}
+                onClick={() => applyMemberBands(app_data, tagg, true)}
+              />
               {tagg.is_hierarchical
-                ? <Submenu label={t('Banner.draw_nodes')} checked={drawing === 'nodes'}>
+                ? <Submenu label={t('Banner.draw_nodes')} glyph={<DimensionDrawingIcon name='nodes' />}
+                  checked={drawing === 'nodes' && !in_bands}>
                   <MenuGroup title={t('Banner.draw_carriers')} fontSize='0.7rem'>
                     {dimensionCarrierCandidates(app_data).map(node => (
                       <CheckItem

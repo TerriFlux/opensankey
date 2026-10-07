@@ -436,27 +436,6 @@ export const diagramIsShown = (app_data: unknown): boolean => {
   return panes === undefined || panes.length > 0
 }
 
-/** Les choix du clic qui écrivent dans le diagramme. */
-export const CLICK_CHOICES_ON_DIAGRAM: readonly string[] = ['aggregate', 'both']
-
-/**
- * Julien : « dans le cas où il n'y a pas de diagramme il y a des commandes en trop ». Sans diagramme
- * à côté de la figure, déplier « dans le diagramme » ne se voit nulle part : le choix se grise, et le
- * geste ne l'écrit pas (cf. `donutClickGestures`).
- */
-const clickChoiceUnavailable = (value: string, ctx: { app_data: unknown }) =>
-  CLICK_CHOICES_ON_DIAGRAM.includes(value) && !diagramIsShown(ctx.app_data)
-    ? {
-      en: 'No diagram is shown beside the figure: nothing to expand there.',
-      fr: 'Aucun diagramme n’est affiché à côté de la figure : rien à y déplier.',
-      es: 'No se muestra ningún diagrama junto a la figura: nada que desplegar.',
-      de: 'Neben der Abbildung wird kein Diagramm angezeigt: dort gibt es nichts aufzuklappen.',
-      it: 'Nessun diagramma è mostrato accanto alla figura: niente da espandere.',
-      'zh-CN': '图形旁没有显示图表：无处可展开。',
-      ja: '図の横に図表が表示されていないため、展開する先がありません。'
-    }
-    : null
-
 export const INTERACTION_CONFIG = {
   // ── 24/09/2026 — LE CLIC OUVRE L'ANNEAU, TOUJOURS. CE RÉGLAGE DIT CE QU'IL FAIT EN PLUS ─────
   //
@@ -482,23 +461,25 @@ export const INTERACTION_CONFIG = {
     // était là depuis toujours, sous « Rien de plus » : personne ne pouvait le deviner, et le jour où
     // les deux choix « dans le diagramme » se sont grisés sans diagramme, il ne restait en apparence
     // que le zoom.
-    en: 'Expanding opens the part as a new ring; zooming makes it the centre. The diagram follows when the choice names it.',
-    fr: 'Déplier ouvre la part en un nouvel anneau ; zoomer en fait le centre. Le diagramme suit quand le choix le nomme.',
-    es: 'Desplegar abre la parte en un nuevo anillo; hacer zoom la convierte en el centro. El diagrama sigue cuando la opción lo nombra.',
-    de: 'Aufklappen öffnet den Teil als neuen Ring; Zoomen macht ihn zur Mitte. Das Diagramm folgt, wenn die Wahl es nennt.',
-    it: 'Espandere apre la parte in un nuovo anello; ingrandire la rende il centro. Il diagramma segue quando la scelta lo nomina.',
-    'zh-CN': '展开会把该部分打开为新的一环；放大会以它为中心。选项提到图时，图也会随之变化。',
-    ja: '展開すると部分が新しいリングとして開き、ズームするとそれが中心になります。選択肢が図に触れている場合は図も追従します。'
+    // 07/10/2026 — DEUX CHOIX (revirement de Julien) : « il ne devrait pas y avoir les options doublées
+    // "zoom" et "zoom et déplie dans le diagramme" : c'est l'attribut LIÉ qui détermine ça ». Liée,
+    // le geste vaut pour le diagramme et toutes les fenêtres liées ; détachée, pour la figure seule.
+    en: 'Expanding opens the part as a new ring; zooming makes it the centre. Linked to the diagram, the diagram and the other linked windows follow.',
+    fr: 'Déplier ouvre la part en un nouvel anneau ; zoomer en fait le centre. Liée au diagramme, le diagramme et les autres fenêtres liées suivent.',
+    es: 'Desplegar abre la parte en un nuevo anillo; hacer zoom la convierte en el centro. Vinculada al diagrama, el diagrama y las demás ventanas vinculadas la siguen.',
+    de: 'Aufklappen öffnet den Teil als neuen Ring; Zoomen macht ihn zur Mitte. Mit dem Diagramm verknüpft, folgen das Diagramm und die anderen verknüpften Fenster.',
+    it: 'Espandere apre la parte in un nuovo anello; ingrandire la rende il centro. Collegata al diagramma, il diagramma e le altre finestre collegate la seguono.',
+    'zh-CN': '展开会把该部分打开为新的一环；放大会以它为中心。与图关联时，图和其他关联窗口也会随之变化。',
+    ja: '展開すると部分が新しいリングとして開き、ズームするとそれが中心になります。図と連動している場合は、図と他の連動ウィンドウも追従します。'
   }, {
     kind: 'select',
     choices: [
-      choice('none', { en: 'Expands it in the ring', fr: 'Déplie dans la couronne', es: 'Lo despliega en la corona', de: 'Klappt ihn im Ring auf', it: 'Lo espande nella corona', 'zh-CN': '在环图中展开', ja: 'リングで展開する' }),
-      choice('aggregate', { en: 'Expands it in the ring and the diagram', fr: 'Déplie dans la couronne et le diagramme', es: 'Lo despliega en la corona y el diagrama', de: 'Klappt ihn im Ring und im Diagramm auf', it: 'Lo espande nella corona e nel diagramma', 'zh-CN': '在环图和图中展开', ja: 'リングと図で展開する' }),
-      choice('zoom', { en: 'Zooms in', fr: 'Zoome dedans', es: 'Hace zoom', de: 'Zoomt hinein', it: 'Ingrandisce', 'zh-CN': '放大', ja: 'ズームする' }),
-      choice('both', { en: 'Zooms in and expands it in the diagram', fr: 'Zoome dedans et déplie dans le diagramme', es: 'Hace zoom y lo despliega en el diagrama', de: 'Zoomt hinein und klappt ihn im Diagramm auf', it: 'Ingrandisce e lo espande nel diagramma', 'zh-CN': '放大并在图中展开', ja: 'ズームし、図でも展開する' })
+      choice('none', { en: 'Expands it', fr: 'Déplie', es: 'Lo despliega', de: 'Klappt ihn auf', it: 'Lo espande', 'zh-CN': '展开', ja: '展開する' }),
+      choice('zoom', { en: 'Zooms in', fr: 'Zoome', es: 'Hace zoom', de: 'Zoomt hinein', it: 'Ingrandisce', 'zh-CN': '放大', ja: 'ズームする' })
     ],
     advanced: true,
-    choiceUnavailable: clickChoiceUnavailable
+    // Les valeurs d'avant : `aggregate` → Déplie, `both` → Zoome (cf. `partClickModeOf`).
+    shownValueOf: (raw: unknown) => raw === 'zoom' || raw === 'both' ? 'zoom' : 'none'
   }),
   interaction_tooltip: entry<boolean>(true, 'interaction', {
     en: 'Tooltip on hover', fr: 'Info-bulle au survol', es: 'Información al pasar el ratón',

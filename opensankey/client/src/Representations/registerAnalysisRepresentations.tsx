@@ -118,7 +118,7 @@ import type { Type_CouronneSankey, Type_CouronneState } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
 import { planDrawsRings, planLevelsDisplayOf } from '../Charts/couronneTree'
-import { couronneGesturesOf, type Type_CouronneGestures } from './couronneGestures'
+import { couronneGesturesOf, partClickModeOf, type Type_CouronneGestures } from './couronneGestures'
 import type { Type_TopbarFigureChoice } from '../types/MenuConfig'
 import {
   crossEnds, crossEntryLinkId, crossExpansionEntriesOf, crossExpansionEntry, crossExpansionOf,
@@ -1577,15 +1577,13 @@ const dataDimensionClickGestures = (
   focusTo?: (path: string[]) => void
 } | null => {
   // 04/10/2026 (lot 3) — LES GESTES DE LA COURONNE (`couronneGestures`) : déplier (la part cède sa
-  // place à ses enfants), zoomer (la portée ; liée, le diagramme ne bouge pas), et leur shift+clic.
+  // place à ses enfants), zoomer (la portée), et leur shift+clic. 07/10/2026 — deux choix, Déplie /
+  // Zoome ; liée, le diagramme et les autres fenêtres liées suivent (le zoom compris), détachée non.
   const g = couronneGesturesOfCtx(ctx)
   if (g === null) return null
-  const chosen = (['none', 'aggregate', 'zoom', 'both'] as const).find(m => m === style.interaction_click) ?? 'none'
-  // 05/10/2026 — liée, « Déplie dans la couronne » déplie aussi le diagramme (la ⚙ le grise).
-  const mode = chosen === 'none' && g.linked ? 'aggregate' : chosen
-  const diagram_shown = diagramIsShown(ctx.app_data)
+  const mode = partClickModeOf(style.interaction_click)
   return {
-    activate: (part_id, gesture) => g.activatePart(part_id, gesture, mode, diagram_shown),
+    activate: (part_id, gesture) => g.activatePart(part_id, gesture, mode),
     // Le centre remonte d'un cran la dernière dimension zoomée, quel que soit le réglage du moment.
     back: g.back
   }

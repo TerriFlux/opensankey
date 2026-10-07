@@ -129,6 +129,24 @@ interface Type_MembreRepresente {
   membres: Class_DataTag[]
   dimension: Class_DataTagGroup
   noeud: Class_NodeElement
+  /**
+   * La BANDE de l'entrée quand l'axe se range en bandes (un diagramme par membre) : la clé du
+   * membre de `bande_dim` dont elle fait partie. Sur un axe rangé par sa propre dimension, c'est
+   * `cle` ; sur un nœud qui porte une AUTRE dimension sous un diagramme par membre (SOCLE : les
+   * postes de « Ressources » dans la bande « Céréales »), c'est le membre de la bande.
+   */
+  bande?: string
+  bande_dim?: Class_DataTagGroup
+}
+
+/**
+ * os#1511 — LA DIMENSION « UN DIAGRAMME PAR MEMBRE » DEMANDÉE (`member_bands` vrai), s'il y en a
+ * une : tous les nœuds la portent, ceux qui portent une autre dimension se découpent DANS chaque
+ * bande par la leur (Julien, 07/10 : filières en diagrammes, « Ressources et emplois » en nœuds sur
+ * Ressources et Emplois, « Type de matière » en bandes sur les flux).
+ */
+export function diagrammeParMembreDe(sankey: Class_Sankey): Class_DataTagGroup | undefined {
+  return (sankey.data_taggs_list as Class_DataTagGroup[]).find(dimension => dimension.member_bands === true)
 }
 
 const estAutres = (entree: Type_MembreRepresente): boolean => entree.cle === OTHERS_ID
@@ -138,7 +156,19 @@ function entreeDuNoeud(node: Class_NodeElement): { dimension: Class_DataTagGroup
   const parsed = parseGeneratedId(node.id)
   if (parsed === undefined) return undefined
   const dimension = node.sankey.nodes_dict[parsed.origin]?.driving_dimension
-  return dimension === undefined ? undefined : { dimension, cle: parsed.members[0] }
+  // Un nœud d'une bande ET de sa propre dimension porte deux clés : la bande, puis la sienne.
+  return dimension === undefined ? undefined : { dimension, cle: parsed.members[parsed.members.length - 1] }
+}
+
+/** La bande d'un nœud engendré dans un diagramme par membre ET par sa propre dimension. */
+function bandeDuNoeud(node: Class_NodeElement): Class_DataTag[] {
+  const parsed = parseGeneratedId(node.id)
+  if (parsed === undefined || parsed.members.length < 2) return []
+  const bande_dim = diagrammeParMembreDe(node.sankey)
+  if (bande_dim === undefined) return []
+  if (parsed.members[0] === OTHERS_ID) return bande_dim.nodes_folded_members
+  const membre = bande_dim.tags_dict[parsed.members[0]] as Class_DataTag | undefined
+  return membre === undefined ? [] : [membre]
 }
 
 /**
@@ -150,9 +180,10 @@ function entreeDuNoeud(node: Class_NodeElement): { dimension: Class_DataTagGroup
 export function membersOfGeneratedNode(node: Class_NodeElement): Class_DataTag[] {
   const entree = entreeDuNoeud(node)
   if (entree === undefined) return []
-  if (entree.cle === OTHERS_ID) return entree.dimension.nodes_folded_members
+  const bande = bandeDuNoeud(node)
+  if (entree.cle === OTHERS_ID) return [...bande, ...entree.dimension.nodes_folded_members]
   const membre = entree.dimension.tags_dict[entree.cle] as Class_DataTag | undefined
-  return membre === undefined ? [] : [membre]
+  return membre === undefined ? bande : [...bande, membre]
 }
 
 /**
@@ -287,7 +318,12 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // os#1524 — DEUX PASSES : on arrête d'abord les membres de chaque axe, puis on crée. Le nom d'un
   // nœud engendré dépend des AUTRES axes (préfixe seulement si un même membre y figure aussi).
   const plans: { axe: Class_NodeElement, dimension: Class_DataTagGroup, membres: Class_DataTag[],
-    replies: Set<Class_DataTag> }[] = []
+    replies: Set<Class_DataTag>, en_bandes: boolean,
+    bande?: { dimension: Class_DataTagGroup, membres: Class_DataTag[], replies: Set<Class_DataTag> } }[] = []
+  // UN DIAGRAMME PAR MEMBRE DEMANDÉ : ses membres, rangés une fois pour tous les axes.
+  const bande_dim = diagrammeParMembreDe(sankey)
+  const bande_membres = bande_dim === undefined ? [] : ordonnerMembres(bande_dim,
+    bande_dim.selected_tags_list as Class_DataTag[], bande_dim.members_order, membre => valeurDe(bande_dim, membre))
   axes.forEach(axe => {
     // Garde n°2, PAR NŒUD : `is_driven_by_dimension` a pu devenir faux entre-temps.
     const dimension = axe.driving_dimension
@@ -299,7 +335,11 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // de CET axe. Sauf quand la dimension se range en bandes (un diagramme par membre) : les axes
     // y partagent un même ordre, sans quoi les bandes ne s'aligneraient pas d'une colonne à l'autre.
     const porteurs = dimension.carriers_count
-    const en_bandes = porteurs >= 2 && bandesParMembre(dimension, porteurs)
+    // Sous un diagramme par membre demandé, les autres dimensions ne se rangent pas en bandes :
+    // elles se découpent DANS celles de la dimension demandée.
+    const en_bandes = dimension === bande_dim ||
+      (bande_dim === undefined && porteurs >= 2 && bandesParMembre(dimension, porteurs))
+    const dans_bandes = bande_dim !== undefined && dimension !== bande_dim
     const choisis = ordonnerMembres(dimension, dimension.selected_tags_list as Class_DataTag[],
       dimension.members_order,
       membre => en_bandes ? valeurDe(dimension, membre) : valeurSurAxe(axe, membre))
@@ -325,10 +365,19 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     // l'axe reste lui-même, visible, et son flux porte l'agrégat du membre (`valueCurrent` fait
     // déjà ce repli). Le déplacement porte alors sur un vrai nœud du fichier, et l'export n'a plus
     // qu'une ligne.
+    if (dans_bandes) {
+      // Découpé par bande ET par sa dimension : même un seul membre de la sienne se répète par bande.
+      if (membres.length === 0 || bande_membres.length === 0) return
+      plans.push({
+        axe, dimension, membres, replies: replisDe(dimension, choisis), en_bandes: false,
+        bande: { dimension: bande_dim, membres: bande_membres, replies: replisDe(bande_dim, bande_membres) }
+      })
+      return
+    }
     if (membres.length === 1) return
     // Le repli « Autres » se décide sur TOUTE la sélection (règle par dimension, cf. plus haut) ;
     // chaque axe n'en reçoit que ses propres membres.
-    plans.push({ axe, dimension, membres, replies: replisDe(dimension, choisis) })
+    plans.push({ axe, dimension, membres, replies: replisDe(dimension, choisis), en_bandes })
   })
   // os#1524 — LE PRÉFIXE « <axe> - » SEULEMENT S'IL DÉSAMBIGUÏSE : quand un même membre est
   // engendré sur au moins deux axes de la dimension (CARTOFOB : quatorze « Chêne » ; pays
@@ -342,8 +391,13 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     membres.forEach(membre => deja.add(membre))
     vus.set(dimension, deja)
   })
-  plans.forEach(({ axe, dimension, membres, replies }) => {
-    par_axe.set(axe.id, creerNoeudsDeMembre(sankey, axe, membres, replies, ambigues.has(dimension)))
+  plans.forEach(({ axe, dimension, membres, replies, en_bandes, bande }) => {
+    const entrees = bande === undefined
+      ? creerNoeudsDeMembre(sankey, axe, membres, replies, ambigues.has(dimension))
+      : creerNoeudsDansBandes(sankey, axe, membres, replies, bande)
+    // Rangé en bandes par sa propre dimension : chaque entrée est sa bande.
+    if (en_bandes) entrees.forEach(entree => { entree.bande = entree.cle; entree.bande_dim = dimension })
+    par_axe.set(axe.id, entrees)
   })
   if (par_axe.size === 0) return 0
 
@@ -447,6 +501,8 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
 function appliquerPositionsManuelles(par_axe: Map<string, Type_MembreRepresente[]>): void {
   par_axe.forEach((entrees, axe_id) => entrees.forEach(entree => {
     if (estAutres(entree)) return
+    // Un nœud d'une bande ET de sa dimension n'a pas de membre à lui seul où garder sa position.
+    if (entree.bande !== undefined && entree.bande !== entree.cle) return
     const position = entree.membres[0]?.positionOn(axe_id)
     if (position === undefined) return
     entree.noeud.setPosXY(position.x, position.y)
@@ -489,19 +545,17 @@ export function bandesParMembre(dimension: Class_DataTagGroup, porteurs: number)
 }
 
 /** Les axes découpés de ce tour, regroupés par dimension rangée en bandes. */
-function axesEnBandes(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): string[][] {
+function axesEnBandes(_sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): string[][] {
+  // Les entrées d'un axe rangé en bandes portent leur bande (cf. l'étape 1) : on regroupe par la
+  // dimension de ces bandes — un nœud découpé par sa propre dimension DANS les bandes d'une autre
+  // se range avec elle.
   const par_dimension = new Map<Class_DataTagGroup, string[]>()
-  par_axe.forEach((_membres, axe_id) => {
-    const dimension = sankey.nodes_dict[axe_id]?.driving_dimension
-    if (dimension === undefined) return
-    par_dimension.set(dimension, [...(par_dimension.get(dimension) ?? []), axe_id])
+  par_axe.forEach((membres, axe_id) => {
+    const bande_dim = membres.find(m => m.bande_dim !== undefined)?.bande_dim
+    if (bande_dim === undefined) return
+    par_dimension.set(bande_dim, [...(par_dimension.get(bande_dim) ?? []), axe_id])
   })
-  const out: string[][] = []
-  par_dimension.forEach((axe_ids, dimension) => {
-    // Le compte est celui des nœuds qui PORTENT la dimension, pas de ceux découpés à ce tour.
-    if (axe_ids.length >= 2 && bandesParMembre(dimension, dimension.carriers_count)) out.push(axe_ids)
-  })
-  return out
+  return [...par_dimension.values()].filter(axe_ids => axe_ids.length >= 2)
 }
 
 /**
@@ -540,11 +594,12 @@ function rangerEnBandes(
   // Les entrées dans l'ordre choisi — le même pour tous les axes de la dimension, « Autres » en
   // dernier, apparié d'un axe à l'autre par sa clé.
   const ordre: string[] = []
-  axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ cle }) => {
-    if (!ordre.includes(cle)) ordre.push(cle)
+  axe_ids.forEach(id => (par_axe.get(id) ?? []).forEach(({ bande }) => {
+    if (bande !== undefined && !ordre.includes(bande)) ordre.push(bande)
   }))
-  const noeudDe = (axe_id: string, cle: string) =>
-    (par_axe.get(axe_id) ?? []).find(m => m.cle === cle)?.noeud
+  // Les nœuds d'un axe dans une bande : un seul, ou un par membre de sa propre dimension.
+  const noeudsDe = (axe_id: string, bande: string) =>
+    (par_axe.get(axe_id) ?? []).filter(m => m.bande === bande).map(m => m.noeud)
   // Le haut de chaque axe, relevé AVANT tout déplacement, et les axes de gauche à droite.
   const haut_axe = new Map<string, number>()
   axe_ids.forEach(id => {
@@ -562,10 +617,9 @@ function rangerEnBandes(
   ordre.forEach(cle => {
     // ── PASSE 1 : la forme de la bande, à une translation près ──────────────────────────────
     const axe_de = new Map<Class_NodeElement, string>()
-    de_gauche_a_droite.forEach(id => {
-      const noeud = noeudDe(id, cle)
-      if (noeud !== undefined && !places.has(noeud)) axe_de.set(noeud, id)
-    })
+    de_gauche_a_droite.forEach(id => noeudsDe(id, cle).forEach(noeud => {
+      if (!places.has(noeud)) axe_de.set(noeud, id)
+    }))
     if (axe_de.size === 0) return
     const y = new Map<Class_NodeElement, number>()
     const poser = (depart: Class_NodeElement) => {
@@ -584,6 +638,17 @@ function rangerEnBandes(
       }
     }
     axe_de.forEach((_id, noeud) => { if (!y.has(noeud)) poser(noeud) })
+    // Plusieurs nœuds d'un même axe dans la bande (ses postes) : sans se chevaucher, dans l'ordre.
+    const par_colonne = new Map<string, Class_NodeElement[]>()
+    axe_de.forEach((id, noeud) => par_colonne.set(id, [...(par_colonne.get(id) ?? []), noeud]))
+    par_colonne.forEach(noeuds => {
+      if (noeuds.length < 2) return
+      noeuds.sort((p, q) => (y.get(p) as number) - (y.get(q) as number))
+      for (let i = 1; i < noeuds.length; i++) {
+        const bas = (y.get(noeuds[i - 1]) as number) + noeuds[i - 1].getShapeHeightToUse()
+        if ((y.get(noeuds[i]) as number) < bas) y.set(noeuds[i], bas)
+      }
+    })
 
     // ── PASSE 2 : sous le nœud le plus bas de la bande précédente ───────────────────────────
     const plus_haut = Math.min(...y.values())
@@ -867,6 +932,46 @@ function creerNoeudsDeMembre(
 }
 
 /**
+ * os#1511 — UN NŒUD DÉCOUPÉ PAR BANDE ET PAR SA DIMENSION (Julien, 07/10 : filières en un
+ * diagramme par membre, et dans chaque bande « Ressources » découpé par poste). Une entrée par
+ * case (membre de la bande × membre de sa dimension), « Autres » de part et d'autre compris ; une
+ * case sans valeur sur les flux de l'axe n'a pas de nœud. Nom : « Céréales - Production ».
+ */
+function creerNoeudsDansBandes(
+  sankey: Class_Sankey,
+  axe: Class_NodeElement,
+  membres: Class_DataTag[],
+  replies: Set<Class_DataTag>,
+  bande: { dimension: Class_DataTagGroup, membres: Class_DataTag[], replies: Set<Class_DataTag> }
+): Type_MembreRepresente[] {
+  const dimension = axe.driving_dimension as Class_DataTagGroup
+  const t = sankey.drawing_area.application_data?.t
+  const autres = (t ? t('sunburst.others') : '') || 'Autres'
+  const parts = (liste: Class_DataTag[], repl: Set<Class_DataTag>) => {
+    const out: { cle: string, nom: string, membres: Class_DataTag[] }[] = liste
+      .filter(membre => !repl.has(membre)).map(membre => ({ cle: membre.id, nom: membre.name, membres: [membre] }))
+    const replies_ici = liste.filter(membre => repl.has(membre))
+    if (replies_ici.length > 0) out.push({ cle: OTHERS_ID, nom: autres, membres: replies_ici })
+    return out
+  }
+  const flux = [...axe.input_links_list, ...axe.output_links_list].filter(f => !isGeneratedMemberLink(f))
+  const engendres: Type_MembreRepresente[] = []
+  parts(bande.membres, bande.replies).forEach(b => parts(membres, replies).forEach(d => {
+    const vises = [...b.membres, ...d.membres]
+    if (flux.every(f => valeurPourCase(f, vises) === 0)) return
+    const noeud = sankey.addNewNode(generatedId(axe.id, [b.cle, d.cle]), `${b.nom} - ${d.nom}`)
+    noeud.copyAttrFrom(axe)
+    heriterExtremite(sankey, axe, noeud)
+    noeud.position_u = axe.position_u
+    noeud.position_x = axe.position_x
+    if (d.cle === OTHERS_ID) noeud.shape_color = OTHERS_COLOR
+    if (axe.drawing_area.effective_gap_mode === 'keep') noeud.setPosXY(axe.position_x, axe.position_y)
+    engendres.push({ cle: d.cle, membres: vises, dimension, noeud, bande: b.cle, bande_dim: bande.dimension })
+  }))
+  return engendres
+}
+
+/**
  * Répartit un flux sur les nœuds de membre de ses DEUX bouts : un flux par case du croisement.
  *
  * Un bout sans axe ne se découpe pas et reste lui-même — c'est le cas courant, et c'est ce que
@@ -896,11 +1001,16 @@ function repartir(
   // diagonale a un sens, chaque membre se reliant à lui-même.
   // L'appariement se fait par CLÉ : « Autres » rejoint « Autres » même quand les axes, rangés
   // chacun par ses propres valeurs, n'ont pas replié leurs membres dans le même ordre.
-  const meme_dimension = gauche[0] !== undefined && droite[0] !== undefined &&
-    gauche[0].dimension === droite[0].dimension
+  // Même règle pour les BANDES d'un diagramme par membre : une bande ne se relie qu'à elle-même.
+  const compatibles = (g: Type_MembreRepresente | undefined, d: Type_MembreRepresente | undefined) => {
+    if (g === undefined || d === undefined) return true
+    if (g.dimension === d.dimension && g.cle !== d.cle) return false
+    if (g.bande_dim !== undefined && g.bande_dim === d.bande_dim && g.bande !== d.bande) return false
+    return true
+  }
 
   gauche.forEach(g => droite.forEach(d => {
-    if (meme_dimension && g?.cle !== d?.cle) return
+    if (!compatibles(g, d)) return
     // « Autres » vise TOUS ses membres repliés : le cube somme plusieurs membres d'un même groupe.
     const entrees = [g, d].filter((e): e is Type_MembreRepresente => e !== undefined)
     const vises = [...new Set(entrees.flatMap(entree => entree.membres))]
@@ -910,7 +1020,8 @@ function repartir(
     // graphe, comme son nœud, et donc effaçable au tour suivant sans tenir de registre. Les
     // membres y figurent pour l'unicité seulement — un flux engendré retrouve sa coordonnée par
     // ses NŒUDS (cf. `memberOfGeneratedNode`), qui la portent déjà.
-    const id = generatedId(flux.id, [...new Set(entrees.map(entree => entree.cle))])
+    const id = generatedId(flux.id, [...new Set(entrees.flatMap(entree =>
+      entree.bande !== undefined && entree.bande !== entree.cle ? [entree.bande, entree.cle] : [entree.cle]))])
     const nouveau = sankey.addNewLinkWithId(id, g?.noeud ?? flux.source, d?.noeud ?? flux.target)
     nouveau.copyAttrFrom(flux)
     // Sa valeur est un SCALAIRE : un flux engendré naît d'un choix de coordonnées, donc il ne
