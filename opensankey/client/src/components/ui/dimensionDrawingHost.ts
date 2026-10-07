@@ -132,6 +132,13 @@ const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, stat
 /** Une bannière à choix unique ne lit qu'un membre. */
 const UNIQUE_BANNERS = ['one', 'topbar', 'sequence']
 
+/**
+ * La bannière `banner` ferait-elle lire UN SEUL membre de `tagg` ? Pas « un membre » sur une dimension
+ * hiérarchisée : additive, elle le reçoit en choix multiple (`Class_DataTagGroup.admissibleBanner`).
+ */
+const readsOneMember = (tagg: Class_DataTagGroup, banner: string) =>
+  UNIQUE_BANNERS.includes(banner) && !(banner !== 'sequence' && tagg.is_hierarchical)
+
 /** Le placement des nœuds engendrés d'une dimension : il appartient au dessin « en nœuds ». */
 type Type_NodesPlacement = { member_bands: boolean | undefined, reference_node_id: string | undefined }
 
@@ -173,19 +180,19 @@ export const swapDimensionDrawings = (
   const placement_a = nodesPlacementOf(a)
   const placement_b = nodesPlacementOf(b)
   const positions_before = manualPositionsOf([a, b])
-  const take = (own: Type_Snapshot, other: Type_Snapshot): Type_Snapshot => {
+  const take = (tagg: Class_DataTagGroup, own: Type_Snapshot, other: Type_Snapshot): Type_Snapshot => {
     const takes_nodes = other.carriers.length > 0
     const banner = takes_nodes ? own.banner : other.banner
     return {
       banner,
       carriers: other.carriers,
-      selected: !takes_nodes && UNIQUE_BANNERS.includes(banner) ? own.selected.slice(0, 1) : own.selected,
+      selected: !takes_nodes && readsOneMember(tagg, banner) ? own.selected.slice(0, 1) : own.selected,
       bands: other.bands,
       focus: own.focus,
       hidden: own.hidden
     }
   }
-  const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(before_a, before_b)], [b, take(before_b, before_a)]]
+  const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(a, before_a, before_b)], [b, take(b, before_b, before_a)]]
   // Les dimensions qui arrivent sur des porteurs : placement automatique.
   const arriving = [a, b].filter((_tagg, i) => [before_b, before_a][i].carriers.length > 0)
   app_data.history.saveUndo(() => {
@@ -314,7 +321,7 @@ export const applyDimensionLevel = (app_data: Class_ApplicationData, tagg: Class
  */
 export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, banner: string) => {
   const now = snapshot(app_data, tagg)
-  const unique = UNIQUE_BANNERS.includes(banner)
+  const unique = readsOneMember(tagg, banner)
   // Une bannière quitte aussi le diagramme par membre : sous lui, tous les nœuds portent la dimension.
   commit(app_data, tagg, {
     ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected, bands: undefined
