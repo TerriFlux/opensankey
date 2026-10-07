@@ -29,7 +29,7 @@ export interface Type_DimensionMatrixTableOptions {
   /** L'unité affichée, `''` sans unité. */
   unit: string
   /** `export_xlsx` / `export_csv` : les infobulles des deux boutons d'export (sa#593). */
-  labels: { expand: string, collapse: string, export_xlsx: string, export_csv: string, empty: string, subtotal?: string }
+  labels: { expand: string, collapse: string, export_xlsx: string, export_csv: string, empty: string, subtotal?: (name: string) => string }
   /** +/− d'une ligne ; `gesture.shift` : tout le niveau (07/10/2026). */
   on_toggle: (member_id: string, expanded: boolean, gesture: { shift: boolean }) => void
   /** 07/10/2026 (lot 2) — +/− d'un en-tête de colonne ; absent : colonnes à plat. */
@@ -189,9 +189,10 @@ export const drawDimensionMatrixTable = (
   }
 
   // 07/10/2026 (lot 2) — LES EN-TÊTES DE COLONNES EN ARBRE. Un membre ouvert coiffe ses colonnes
-  // (« − Europe » au-dessus de son sous-total et de ses sous-régions) ; sa propre colonne, à gauche,
-  // est son sous-total (« Total »). Autant de rangées d'en-têtes que de crans ouverts ; une colonne
-  // fermée occupe toutes les rangées sous elle. Sans colonne ouverte : une seule rangée, comme avant.
+  // (« − Europe » au-dessus de ses sous-régions et de son sous-total) ; sa propre colonne, À DROITE
+  // (comme Excel), est son sous-total (« Total Europe »). Autant de rangées d'en-têtes que de crans
+  // ouverts ; une colonne fermée occupe toutes les rangées sous elle. Sans colonne ouverte : une
+  // seule rangée, comme avant.
   const header_rows = 1 + Math.max(0, ...matrix.columns.map(c => (c.kind === 'member' && c.expanded ? (c.depth ?? 0) + 1 : 0)))
   const hrs: HTMLTableRowElement[] = Array.from({ length: header_rows }, () => document.createElement('tr'))
   const head_cell = (th: HTMLTableCellElement, c: Type_MatrixColumn | null, bottom: boolean) => {
@@ -211,47 +212,52 @@ export const drawDimensionMatrixTable = (
   head_cell(corner, null, true)
   css(corner, { left: '0', verticalAlign: 'bottom' })
   hrs[0].appendChild(corner)
-  /** Les colonnes coiffées par la colonne `i` (elle comprise), si elle est ouverte. */
-  const spanOf = (i: number): number => {
-    const c = matrix.columns[i]
-    if (!(c.kind === 'member' && c.expanded)) return 1
-    let n = 1
-    while (i + n < matrix.columns.length && matrix.columns[i + n].kind === 'member' && (matrix.columns[i + n].depth ?? 0) > (c.depth ?? 0)) n++
-    return n
-  }
-  /**
-   * Le +/− d'un en-tête de colonne. Sur une colonne fermée, il se pose AU-DESSUS du libellé (aligné à
-   * droite) : la colonne garde sa largeur, le tableau ne déborde pas plus qu'avant.
-   */
-  const columnToggle = (th: HTMLTableCellElement, c: Type_MatrixColumn, stacked: boolean) => {
+  /** Les groupes qui COMMENCENT à chaque colonne : un ouvert coiffe ses descendants, qui le précèdent. */
+  const groups_at = new Map<number, number[]>()
+  matrix.columns.forEach((c, j) => {
+    if (!(c.kind === 'member' && c.expanded)) return
+    const d = c.depth ?? 0
+    let start = j
+    while (start - 1 >= 0 && matrix.columns[start - 1].kind === 'member' && (matrix.columns[start - 1].depth ?? 0) > d) start--
+    groups_at.set(start, [...(groups_at.get(start) ?? []), j])
+  })
+  /** Le +/− d'un en-tête de colonne, devant son nom, comme les lignes. */
+  const columnToggle = (th: HTMLTableCellElement, c: Type_MatrixColumn) => {
     if (!o.on_column_toggle || c.kind !== 'member' || !c.has_children || !c.member_id) return
     const member_id = c.member_id
     const expanded = c.expanded === true
-    const button = toggleButton(expanded ? o.labels.collapse : o.labels.expand, expanded, c.label, o.level_hint,
-      g => o.on_column_toggle?.(member_id, !expanded, g))
-    if (stacked) css(button, { display: 'block', width: '14px', height: '14px', lineHeight: '10px', fontSize: '11px', margin: '0 0 2px auto' })
-    th.appendChild(button)
+    th.appendChild(toggleButton(expanded ? o.labels.collapse : o.labels.expand, expanded, c.label, o.level_hint,
+      g => o.on_column_toggle?.(member_id, !expanded, g)))
+  }
+  const foldedTitle = (th: HTMLElement, c: Type_MatrixColumn) => {
+    if (c.folded_names) th.title = c.folded_names.join(', ')
   }
   // Le haut d'une rangée sticky : les rangées d'en-têtes s'empilent.
   const ROW_PX = 26
   matrix.columns.forEach((c, i) => {
-    const depth = c.kind === 'member' ? (c.depth ?? 0) : 0
-    if (c.kind === 'member' && c.expanded) {
-      // Le groupe : « − Europe » sur toutes ses colonnes, puis son sous-total sous lui.
+    // Les groupes qui commencent ici, du plus haut au plus bas.
+    ;(groups_at.get(i) ?? []).sort((a, b) => (matrix.columns[a].depth ?? 0) - (matrix.columns[b].depth ?? 0)).forEach(j => {
+      const g = matrix.columns[j]
+      const d = g.depth ?? 0
       const group = document.createElement('th')
       group.scope = 'colgroup'
-      group.colSpan = spanOf(i)
-      head_cell(group, c, false)
-      css(group, { textAlign: 'center', borderLeft: line, top: `${depth * ROW_PX}px` })
-      columnToggle(group, c, false)
-      group.appendChild(document.createTextNode(c.label))
-      hrs[depth].appendChild(group)
+      group.colSpan = j - i + 1
+      head_cell(group, g, false)
+      css(group, { textAlign: 'center', borderLeft: line, top: `${d * ROW_PX}px` })
+      columnToggle(group, g)
+      group.appendChild(document.createTextNode(g.label))
+      foldedTitle(group, g)
+      hrs[d].appendChild(group)
+    })
+    const depth = c.kind === 'member' ? (c.depth ?? 0) : 0
+    if (c.kind === 'member' && c.expanded) {
+      // Son sous-total, sous le groupe, à droite de ses enfants : « Total Europe ».
       const sub = document.createElement('th')
       sub.scope = 'col'
       sub.rowSpan = header_rows - depth - 1
       head_cell(sub, c, true)
       css(sub, { borderLeft: line, top: `${(depth + 1) * ROW_PX}px`, verticalAlign: 'bottom' })
-      sortable(sub, o.labels.subtotal ?? 'Total', c.key, 'right')
+      sortable(sub, o.labels.subtotal ? o.labels.subtotal(c.label) : `Total ${c.label}`, c.key, 'right')
       hrs[depth + 1].appendChild(sub)
       return
     }
@@ -260,8 +266,9 @@ export const drawDimensionMatrixTable = (
     th.rowSpan = header_rows - depth
     head_cell(th, c, true)
     css(th, { top: `${depth * ROW_PX}px`, verticalAlign: 'bottom' })
-    columnToggle(th, c, true)
+    columnToggle(th, c)
     sortable(th, c.label, c.key, 'right')
+    foldedTitle(th, c)
     hrs[depth].appendChild(th)
   })
   hrs.forEach(tr => {
@@ -292,6 +299,7 @@ export const drawDimensionMatrixTable = (
       const member_id = r.member_id
       th.appendChild(toggleButton(r.expanded ? o.labels.collapse : o.labels.expand, r.expanded, r.label, o.level_hint,
         g => o.on_toggle(member_id, !r.expanded, g)))
+      if (r.folded_names) th.title = r.folded_names.join(', ')
     } else {
       // L'alignement des libellés ne doit pas dépendre de la présence d'un bouton.
       const spacer = document.createElement('span')

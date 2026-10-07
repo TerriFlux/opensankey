@@ -73,8 +73,8 @@ import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOth
 import type { Type_JSON } from '../types/Utils'
 import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
 import {
-  buildDimensionMatrix, dimensionMatrixExportTable, matrixDecimals, matrixInputOfPlan, matrixNumberFormatter,
-  nextMatrixSort
+  buildDimensionMatrix, dimensionMatrixExportTable, MATRIX_OTHERS_PREFIX, matrixDecimals, matrixInputOfPlan,
+  matrixNumberFormatter, nextMatrixSort
 } from '../Charts/DimensionMatrix'
 import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
 import { fromFigure, planFor } from './dimensionViewState'
@@ -2395,6 +2395,8 @@ export const registerAnalysisRepresentations = (): void => {
  */
 const matrix_row_toggles = new Map<string, Map<string, boolean>>()
 const matrix_column_toggles = new Map<string, Map<string, boolean>>()
+/** Les « Autres » ouverts (+) de chaque tableau : un état d'affichage, comme le tri. */
+const matrix_others_open = new Map<string, Set<string>>()
 /** Le tri choisi dans chaque tableau (absent : Total décroissant). */
 const matrix_sorts = new Map<string, Type_MatrixSort>()
 
@@ -2447,6 +2449,8 @@ const registerDimensionMatrix = (): void => {
     label: (a) => a.t('matrix.label'),
     icon: <FaTable />,
     reads_generated_origin: true,
+    // Julien, 07/10 : le tableau d'un flux engendré « → Europe » montre TOUS les continents.
+    generated_origin_whole: true,
     // Sur une décomposition par dimension(s) de données seulement : c'est elle qui a des lignes et
     // des colonnes. Un sujet sans dimension à niveaux n'a rien à croiser.
     isAvailable: (ctx) => {
@@ -2460,6 +2464,16 @@ const registerDimensionMatrix = (): void => {
       matrix_row_toggles.set(key, toggles)
       const column_toggles = matrix_column_toggles.get(key) ?? new Map<string, boolean>()
       matrix_column_toggles.set(key, column_toggles)
+      const others_open = matrix_others_open.get(key) ?? new Set<string>()
+      matrix_others_open.set(key, others_open)
+      /** + / − sur un « Autres » : il montre ou cache ses membres repliés. */
+      const toggleOthers = (id: string, expanded: boolean): boolean => {
+        if (!id.startsWith(MATRIX_OTHERS_PREFIX)) return false
+        if (expanded) others_open.add(id)
+        else others_open.delete(id)
+        render()
+        return true
+      }
       let teardown: () => void = () => { container.innerHTML = '' }
 
       const render = () => {
@@ -2490,7 +2504,19 @@ const registerDimensionMatrix = (): void => {
           : { kind: 'link' as const, link: a.subject.link }
         // Dans une fenêtre, les +/− écrivent l'état (`gestures`) ; hors fenêtre, ils restent au tableau.
         const gestures = input ? couronneGesturesOfCtx(ctx) : null
+        // 07/10/2026 — « AUTRES » COMME LA COURONNE : ses réglages (`parts_group_under`, `parts_max`),
+        // les lignes en parts, les colonnes en cases (seuil des bandes tant que l'auteur n'en pose pas).
+        const style = figureChartStyleOf(ctx.options ?? {}, DONUT_STYLE_DEFAULTS)
         const matrix = cut === null ? null : buildDimensionMatrix(subject, cut, a.nav, {
+          others: {
+            label: t('sunburst.others') as string,
+            rows: { min_share_pct: style.parts_group_under, max_parts: style.parts_max },
+            columns: {
+              min_share_pct: style.parts_group_under > 0 ? style.parts_group_under : OTHERS_MIN_SHARE_PCT,
+              max_parts: style.parts_max
+            },
+            opened: others_open
+          },
           axes: input ? { rows: input.rows, columns: input.columns } : undefined,
           row_toggles: gestures ? undefined : toggles,
           column_toggles: gestures ? undefined : column_toggles,
@@ -2547,11 +2573,13 @@ const registerDimensionMatrix = (): void => {
           unit,
           labels: {
             expand: t('matrix.expand'), collapse: t('matrix.collapse'),
-            export_xlsx: t('matrix.export_xlsx'), export_csv: t('matrix.export_csv'), empty: t('matrix.empty'), subtotal: t('matrix.total')
+            export_xlsx: t('matrix.export_xlsx'), export_csv: t('matrix.export_csv'), empty: t('matrix.empty'),
+            subtotal: (name: string) => t('matrix.subtotal', { name, defaultValue: 'Total {{name}}' }) as string
           },
           // 07/10/2026 (lot 2) — +/− d'une ligne ou d'une colonne : l'état commun (le secteur du
           // sunburst s'ouvre de même) ; Maj+clic : tout le niveau.
           on_toggle: (member_id, expanded, gesture) => {
+            if (toggleOthers(member_id, expanded)) return
             if (gestures && row_id !== undefined) {
               toggleAxisMember(gestures, sankey, row_id, member_id, expanded, gesture.shift)
               return
@@ -2560,6 +2588,7 @@ const registerDimensionMatrix = (): void => {
             render()
           },
           on_column_toggle: (member_id, expanded, gesture) => {
+            if (toggleOthers(member_id, expanded)) return
             if (gestures && col_id !== null) {
               toggleAxisMember(gestures, sankey, col_id, member_id, expanded, gesture.shift)
               return

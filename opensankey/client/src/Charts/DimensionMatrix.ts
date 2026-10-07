@@ -38,6 +38,8 @@ import type { Type_DataCut, Type_DataDimensionSubject } from './DataDimensionHie
 import type { Type_ExportColumn, Type_ExportRow, Type_ExportTable } from './TableExport'
 import type { Type_CouronneSankey } from '../Representations/couronneState'
 import type { Type_MatrixAxisPlan, Type_MatrixPlan } from '../Representations/dimensionViewState'
+import { foldSmallCells, foldSmallParts, OTHERS_ID } from '../Algorithms/DimensionOthers'
+import type { Type_OthersOptions } from '../Algorithms/DimensionOthers'
 
 // ── 07/10/2026 — LE TABLEAU LIT LE MODÈLE COMMUN (os#1511, refonte « rôles communs », lot 2) ──────
 //
@@ -98,11 +100,13 @@ export interface Type_MatrixColumn {
   /**
    * 07/10/2026 (lot 2) — LES COLONNES SONT UN ARBRE, comme les lignes : profondeur (0 au premier
    * niveau), le membre a-t-il des enfants, est-il ouvert. Ouvert, sa colonne est le SOUS-TOTAL, à
-   * gauche de celles de ses enfants. Absents hors colonnes de membres.
+   * DROITE de celles de ses enfants (comme Excel). Absents hors colonnes de membres.
    */
   depth?: number
   has_children?: boolean
   expanded?: boolean
+  /** « Autres » : les noms des membres repliés (son info-bulle). */
+  folded_names?: string[]
 }
 
 export interface Type_MatrixRow {
@@ -115,6 +119,8 @@ export interface Type_MatrixRow {
   /** Le membre a des enfants dans sa dimension (on peut l'ouvrir). */
   has_children: boolean
   expanded: boolean
+  /** « Autres » : les noms des membres repliés (son info-bulle). */
+  folded_names?: string[]
   /** Une valeur par colonne, dans l'ordre de `columns` ; `null` = absente (cellule vide). */
   cells: (number | null)[]
 }
@@ -157,7 +163,20 @@ export interface Type_DimensionMatrixOptions {
    * la couronne le dit (`matrixCutOfCouronne`). Remplace la lecture à la racine de la coupe.
    */
   coordinates?: ReadonlyMap<string, Class_DataTag[]>
+  /**
+   * 07/10/2026 — « AUTRES », LA RÈGLE DE LA COURONNE (Julien : « pour les TCD il faut coller aux
+   * couronnes ») : les lignes se replient comme ses PARTS (`foldSmallParts`), les colonnes comme ses
+   * CASES (`foldSmallCells` : une colonne vide disparaît), frères par frères, avec les réglages de
+   * la figure. « Autres » vient en dernier ; `opened` : ceux qu'on a ouverts (+), par clé
+   * (`matrixOthersId`). Absent : rien ne se replie.
+   */
+  others?: { label: string, rows: Type_OthersOptions, columns: Type_OthersOptions, opened?: ReadonlySet<string> }
 }
+
+/** Le préfixe de l'identifiant d'un « Autres » du tableau (ce n'est pas un membre). */
+export const MATRIX_OTHERS_PREFIX = `${OTHERS_ID}:`
+/** L'« Autres » de l'axe `axis` sous le membre `parent_id` (`''` : au premier niveau). */
+export const matrixOthersId = (axis: 'r' | 'c', parent_id: string): string => `${MATRIX_OTHERS_PREFIX}${axis}:${parent_id}`
 
 export interface Type_MatrixSort {
   key: string
@@ -268,7 +287,11 @@ export const buildDimensionMatrix = (
     }
   })
 
-  // ── LES COLONNES : un arbre comme les lignes, le sous-total d'un ouvert à gauche de ses enfants ─
+  const others = options.others
+  const othersOpen = (id: string) => others?.opened?.has(id) ?? false
+  const row_roots = dimensionRootsOf(row_dim)
+
+  // ── LES COLONNES : un arbre comme les lignes, le sous-total d'un ouvert à DROITE de ses enfants ─
   const columns: Type_MatrixColumn[] = []
   const col_hidden_members = col_dim && !axes ? dimensionHiddenMembers(col_dim, cut.hidden) : new Set<string>()
   const col_tree = axes?.columns
@@ -278,18 +301,36 @@ export const buildDimensionMatrix = (
       children: (m: Class_DataTag) => (m.children as Class_DataTag[]).filter(c => !col_hidden_members.has(c.id))
     }
   const col_entry = col_dim ? (axes?.columns ? axes.columns.entry : matrixFrontierOf(col_dim, cut)) : []
-  /** Les membres des colonnes, dans l'ordre des colonnes. */
-  const col_members: Class_DataTag[] = []
+  /** La coordonnée de chaque colonne (plusieurs membres pour « Autres »), dans l'ordre des colonnes. */
+  const col_coords: Class_DataTag[][] = []
   if (col_dim) {
+    // Ce que pèse une colonne, pour le repli : au Total des lignes (leur portée, sinon leur somme).
+    const rows_whole = axes ? (axes.rows.total ?? axes.rows.entry) : (row_roots.length === 1 ? [row_roots[0]] : row_roots)
+    const weight = (m: Class_DataTag) => valueAt(new Map([[row_dim.id, rows_whole], [col_dim.id, [m]]])) ?? 0
     const visit = (m: Class_DataTag, depth: number) => {
       const expanded = col_tree.expanded(m)
-      col_members.push(m)
+      if (expanded) siblings(col_tree.children(m), m.id, depth + 1)
+      col_coords.push([m])
       columns.push({
         key: `c:${m.id}`, label: m.name, member_id: m.id, kind: 'member', depth, has_children: m.children.length > 0, expanded
       })
-      if (expanded) col_tree.children(m).forEach(c => visit(c, depth + 1))
     }
-    col_entry.forEach(m => visit(m, 0))
+    const siblings = (members: Class_DataTag[], parent_id: string, depth: number) => {
+      const { kept, folded } = others
+        ? foldSmallCells(members.map(m => ({ m, value: weight(m) })), others.columns)
+        : { kept: members.map(m => ({ m, value: 0 })), folded: [] }
+      kept.forEach(k => visit(k.m, depth))
+      if (folded.length === 0 || others === undefined) return
+      const id = matrixOthersId('c', parent_id)
+      const open = othersOpen(id)
+      if (open) folded.forEach(f => visit(f.m, depth + 1))
+      col_coords.push(folded.map(f => f.m))
+      columns.push({
+        key: `c:${id}`, label: others.label, member_id: id, kind: 'member', depth, has_children: true, expanded: open,
+        folded_names: folded.map(f => f.m.name)
+      })
+    }
+    siblings(col_entry, '', 0)
     columns.push({ key: 'c:__total__', label: options.total_label ?? 'Total', member_id: null, kind: 'total' })
   } else {
     columns.push({ key: 'c:__value__', label: options.value_label ?? 'Value', member_id: null, kind: 'value' })
@@ -309,7 +350,7 @@ export const buildDimensionMatrix = (
     if (!col_dim) {
       return [valueAt(new Map([[row_dim.id, row_members]])), null]
     }
-    const cells = col_members.map(c => valueAt(new Map([[row_dim.id, row_members], [col_dim.id, [c]]])))
+    const cells = col_coords.map(c => valueAt(new Map([[row_dim.id, row_members], [col_dim.id, c]])))
     const total = col_total_coord !== null
       ? valueAt(new Map([[row_dim.id, row_members], [col_dim.id, col_total_coord]]))
       : sumOf(col_top.map(i => cells[i]))
@@ -356,6 +397,27 @@ export const buildDimensionMatrix = (
     })
 
   const rows: Type_MatrixRow[] = []
+  /** Ce que pèse une ligne pour le repli : sa colonne Total (ou Valeur). */
+  const row_weight = (cells: (number | null)[]) => cells[col_dim ? cells.length - 1 : 0] ?? 0
+  /**
+   * DES FRÈRES : triés, les petits repliés dans « Autres » (règle des parts de la couronne), en
+   * dernier ; « Autres » ouvert montre ses membres en dessous.
+   */
+  const siblingRows = (members: Class_DataTag[], parent_id: string, depth: number) => {
+    const list = ordered(members)
+    const { kept, folded } = others
+      ? foldSmallParts(list.map(e => ({ ...e, value: row_weight(e.cells) })), others.rows)
+      : { kept: list, folded: [] }
+    kept.forEach(e => visit(e.m, depth, e.cells))
+    if (folded.length === 0 || others === undefined) return
+    const id = matrixOthersId('r', parent_id)
+    const open = othersOpen(id)
+    rows.push({
+      key: `r:${id}`, label: others.label, member_id: id, depth, kind: 'member', has_children: true, expanded: open,
+      cells: columns.map((_, i) => sumOf(folded.map(f => f.cells[i]))), folded_names: folded.map(f => f.m.name)
+    })
+    if (open) folded.forEach(f => visit(f.m, depth + 1, f.cells))
+  }
   const visit = (m: Class_DataTag, depth: number, cells: (number | null)[]) => {
     const expanded = isExpanded(m)
     rows.push({
@@ -365,7 +427,7 @@ export const buildDimensionMatrix = (
     if (!expanded) return
     const children = shownChildren(m)
     const start = rows.length
-    ordered(children).forEach(c => visit(c.m, depth + 1, c.cells))
+    siblingRows(children, m.id, depth + 1)
     // LE NON RÉPARTI : ce que le parent déclare et que ses enfants ne couvrent pas, colonne par
     // colonne. Il se tait quand des enfants sont cachés : l'écart est alors voulu.
     if (children.length !== (m.children as Class_DataTag[]).length) return
@@ -384,7 +446,6 @@ export const buildDimensionMatrix = (
       })
     }
   }
-  const row_roots = dimensionRootsOf(row_dim)
   // Liée, l'entrée ne garde que ce qui mène à ce que le diagramme montre (le reste y est décoché).
   // Par l'état commun, l'entrée est celle du plan : sous la portée (le zoom restreint le tableau).
   const entry = axes
@@ -394,7 +455,7 @@ export const buildDimensionMatrix = (
   // Liée, une dimension qui ne découpe pas se lit au membre que le diagramme montre.
   const linked_single = !axes && cut.linked && !cut.dividing.includes(row_dim) && frontier.length === 1
   if (linked_single) visit(frontier[0], 0, cellsAt([frontier[0]]))
-  else ordered(entry).forEach(e => visit(e.m, 0, e.cells))
+  else siblingRows(entry, '', 0)
 
   // LA LIGNE TOTAL : à la racine unique (à la portée) quand rien n'est décoché, sinon la somme des
   // lignes d'entrée.
