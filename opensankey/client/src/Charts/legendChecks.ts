@@ -111,6 +111,47 @@ export const appendLegendContextRows = (
   })
 }
 
+/** os#1527 — la capsule qui cache ou montre la légende d'une figure (cf. `appendLegendCapsule`). */
+export interface Type_LegendCapsule {
+  /** « Légende », traduit. */
+  label: string
+  toggle: (show: boolean) => void
+}
+
+/**
+ * os#1527 — LA CAPSULE DE LA LÉGENDE d'une figure, comme celle du diagramme : posée en surimpression
+ * dans le coin de la figure du côté de la légende (`position` : left / right / bottom), elle ne prend
+ * aucune place. Légende affichée : « ‹ » (ou « › », « ▾ » selon le côté) la replie ; masquée :
+ * « Légende » et la flèche la rouvrent. Le clic reste à la capsule.
+ */
+export const appendLegendCapsule = (
+  root: HTMLElement, capsule: Type_LegendCapsule, shown: boolean, position: string
+): HTMLButtonElement => {
+  root.style.position = 'relative'
+  const side = position === 'left' ? 'left' : position === 'bottom' ? 'bottom' : 'right'
+  const b = document.createElement('button')
+  b.type = 'button'
+  b.className = 'figure_legend_capsule'
+  b.title = capsule.label
+  b.setAttribute('aria-label', capsule.label)
+  b.setAttribute('aria-expanded', String(shown))
+  const arrow = side === 'left' ? (shown ? '‹' : '›') : side === 'right' ? (shown ? '›' : '‹') : (shown ? '▾' : '▴')
+  b.textContent = shown ? arrow : (side === 'right' ? `${arrow} ${capsule.label}` : `${capsule.label} ${arrow}`)
+  Object.assign(b.style, {
+    position: 'absolute', zIndex: '2', top: side === 'bottom' ? 'auto' : '0.25rem',
+    bottom: side === 'bottom' ? '0.25rem' : 'auto',
+    left: side === 'left' ? '0' : 'auto', right: side === 'left' ? 'auto' : '0',
+    padding: shown ? '0.3rem 0.2rem' : '0.3rem 0.5rem', fontSize: '0.75rem', lineHeight: '1',
+    color: '#4a5568', cursor: 'pointer', background: 'white', border: '1px solid #e2e8f0',
+    borderRadius: side === 'left' ? '0 999px 999px 0' : side === 'right' ? '999px 0 0 999px' : '999px',
+    boxShadow: '1px 1px 3px rgba(0, 0, 0, 0.12)'
+  })
+  b.addEventListener('pointerdown', e => e.stopPropagation())
+  b.addEventListener('click', e => { e.stopPropagation(); capsule.toggle(!shown) })
+  root.appendChild(b)
+  return b
+}
+
 /** La teinte d'une ligne décochée (pastille et texte). */
 export const LEGEND_UNCHECKED_SWATCH = '#cbd5e0'
 export const LEGEND_UNCHECKED_INK = '#a0aec0'

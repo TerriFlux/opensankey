@@ -41,8 +41,8 @@ import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText, figurePercentText } from './figureFormat'
 import { discRadiusInZone, layoutDonutCallouts } from './donutCalloutLayout'
 import {
-  LEGEND_UNCHECKED_INK, appendLegendContextRows, legendCheckBox, legendCheckRows, legendMemberKeyOf,
-  type Type_LegendChecks, type Type_LegendContextRow
+  LEGEND_UNCHECKED_INK, appendLegendCapsule, appendLegendContextRows, legendCheckBox, legendCheckRows,
+  legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 
 /**
@@ -431,6 +431,8 @@ export interface Type_SunburstChartOptions {
   legend_checks?: Type_LegendChecks
   /** 06/10/2026 (os#1527) — les lignes de rappel des coordonnées (« Année : 2015 »), sous la légende. */
   legend_context?: Type_LegendContextRow[]
+  /** 07/10/2026 (os#1527) — la capsule qui cache ou montre la légende (cf. `appendLegendCapsule`). */
+  legend_capsule?: Type_LegendCapsule
   /** L'unité à écrire à côté des valeurs, quand l'auteur la demande. */
   unit?: string
   /** 30/09/2026 — le diviseur qui va avec `unit` (kt → Mt : 1 000) ; le dessin reste sur le brut. */
@@ -2131,6 +2133,10 @@ export const drawSunburstChart = (
     }
 
     // ── Légende ───────────────────────────────────────────────────────────────────
+    // os#1527 — la capsule qui la cache ou la montre, comme sur le diagramme et la couronne à plat.
+    if (opts.legend_capsule && st.legend_parts !== 'none') {
+      appendLegendCapsule(root_el.node() as HTMLElement, opts.legend_capsule, st.legend_visible, st.legend_position)
+    }
     // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
     // un conteneur vide laisserait une gouttière.
     const legend = root_el.append('div')
