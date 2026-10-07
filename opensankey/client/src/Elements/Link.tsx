@@ -908,15 +908,26 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _memberBandColor(): string | undefined {
     // os#1511 — UN DIAGRAMME PAR MEMBRE : chaque bande prend la couleur de son membre (Julien,
     // 07/10 : « sans couleur »). Lue sur les nœuds engendrés des deux bouts.
+    // Une dimension en nœuds qui colore les flux (« Couleurs des membres sur les flux ») l'emporte
+    // sur la bande : « comment faire pour que la couleur devienne celle de Ressources et emplois ».
     if (!isGeneratedMemberId(this.id)) return undefined
-    const bande = (this.sankey.data_taggs_list as Class_DataTagGroup[]).find(tagg => tagg.member_bands === true)
+    const dimensions = this.sankey.data_taggs_list as Class_DataTagGroup[]
+    const bande = dimensions.find(tagg => tagg.member_bands === true)
     if (bande === undefined) return undefined
-    const membres = [...new Set([this.source, this.target]
-      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
-      .filter(membre => membre.group === bande))]
-    if (membres.length !== 1) return undefined
-    const color = membres[0].color
-    return (color && color !== 'grey') ? color : undefined
+    const aux_bouts = [this.source, this.target].flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
+    const couleurDe = (tagg: Class_DataTagGroup) => {
+      const membres = [...new Set(aux_bouts.filter(membre => membre.group === tagg))]
+      if (membres.length !== 1) return undefined
+      const color = membres[0].color
+      return (color && color !== 'grey') ? color : undefined
+    }
+    for (const tagg of dimensions) {
+      if (tagg !== bande && tagg.use_colors) {
+        const color = couleurDe(tagg)
+        if (color !== undefined) return color
+      }
+    }
+    return couleurDe(bande)
   }
 
   private _singleMemberDimensionColor(): string | undefined {

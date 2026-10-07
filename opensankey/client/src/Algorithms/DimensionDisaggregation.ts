@@ -476,6 +476,10 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   }
   // 3 bis) CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page.
   appliquerPositionsManuelles(par_axe)
+  // 3 ter) UN NOM RÉPÉTÉ À L'IDENTIQUE D'UNE BANDE À L'AUTRE NE S'ÉCRIT QU'UNE FOIS, à sa première
+  //    apparition (Julien, 07/10 : « mettre les labels à droite et à gauche uniquement pour les plus
+  //    hauts, vu qu'ils sont repris en dessous à l'identique »).
+  nommerUneFois(par_axe)
 
   // 4) Les nœuds d'axe quittent le DESSIN, pas le modèle : ils sont représentés par leurs
   //    membres, mais restent ce d'où l'on repart au prochain changement de niveau — et ce que
@@ -508,6 +512,25 @@ function appliquerPositionsManuelles(par_axe: Map<string, Type_MembreRepresente[
     entree.noeud.setPosXY(position.x, position.y)
     entree.noeud.captureCenterFromCorner()
   }))
+}
+
+/**
+ * Dans un diagramme par membre, les nœuds d'un axe découpé par sa propre dimension répètent les
+ * mêmes noms dans chaque bande : seul le plus haut de chaque nom garde son libellé.
+ */
+function nommerUneFois(par_axe: Map<string, Type_MembreRepresente[]>): void {
+  par_axe.forEach(entrees => {
+    const par_nom = new Map<string, Class_NodeElement[]>()
+    entrees.forEach(entree => {
+      if (entree.bande === undefined || entree.bande === entree.cle) return
+      par_nom.set(entree.noeud.name, [...(par_nom.get(entree.noeud.name) ?? []), entree.noeud])
+    })
+    par_nom.forEach(noeuds => {
+      if (noeuds.length < 2) return
+      const premier = noeuds.reduce((a, b) => (b.position_y < a.position_y ? b : a))
+      noeuds.forEach(noeud => { if (noeud !== premier) noeud.name_label_is_visible = false })
+    })
+  })
 }
 
 /**
@@ -971,8 +994,11 @@ function creerNoeudsDansBandes(
     const vises = [...b.membres, ...d.membres]
     if (flux.every(f => valeurPourCase(f, vises) === 0)) return
     // Le nom du membre SEUL, comme dans le diagramme que la bande répète : la bande se reconnaît à
-    // sa couleur et à sa place (Julien, 07/10 : « le même type de graphe multiplié »).
-    const noeud = sankey.addNewNode(generatedId(axe.id, [b.cle, d.cle]), d.nom)
+    // sa couleur et à sa place (Julien, 07/10 : « le même type de graphe multiplié »). Un axe dont
+    // la dimension n'a qu'un membre (Matière au niveau « Matière ») prend le nom de la BANDE : c'est
+    // lui qui la nomme.
+    const nom = membres.length === 1 ? b.nom : d.nom
+    const noeud = sankey.addNewNode(generatedId(axe.id, [b.cle, d.cle]), nom)
     noeud.copyAttrFrom(axe)
     heriterExtremite(sankey, axe, noeud)
     noeud.position_u = axe.position_u

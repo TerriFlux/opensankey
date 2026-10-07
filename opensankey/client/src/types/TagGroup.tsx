@@ -1831,6 +1831,15 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   /**
+   * os#1511 — dessinée EN NŒUDS (un nœud par membre, ou un diagramme par membre) avec au moins deux
+   * membres : la légende la liste, pour cocher ou masquer ses membres comme ceux d'une dimension en
+   * bandes (Julien, 07/10 : « on ne devait pas avoir la légende des trois groupes ? »).
+   */
+  public get draws_members_as_nodes(): boolean {
+    return this.drawing === 'nodes' && this.selected_tags_list.length > 1
+  }
+
+  /**
    * os#1511 — un membre montré seul, dans SA couleur : dimension à niveaux, couleurs activées, un
    * seul membre choisi qui porte une vraie couleur. `undefined` sinon — dont la racine « Tous
    * produits », grise. Lu par le flux (`Link.getShapeColorToUse`). Choix multiple compris (07/10) :

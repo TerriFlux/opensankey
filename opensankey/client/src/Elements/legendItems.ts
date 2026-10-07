@@ -170,6 +170,8 @@ type Type_TagGroupForLegend = {
   // Troisième terme : `Class_DataTagGroup.draws_members_in_color` — la dimension se dessine
   // membre par membre, chacun à sa couleur (bandes). Absent sur les groupes de nœuds et de flux.
   draws_members_in_color?: boolean
+  // os#1511 — dimension dessinée en nœuds, listée pour cocher ou masquer ses membres.
+  draws_members_as_nodes?: boolean
   // os#1511 — `Class_DataTagGroup.members_drawn_in_bands` : membres dessinés en propre sur au moins
   // un flux visible, et présence d'une bande « Autres ». Absent : la légende garde les membres choisis.
   members_drawn_in_bands?: { members: Set<string>, has_others: boolean }
@@ -322,6 +324,7 @@ export function tagGroupCarriesFormatting(tag_group: Type_TagGroupForLegend): bo
   // `use_colors` (sans commande sur une dimension) soit allumé ou non.
   return tag_group.use_colors || tag_group.has_style_patch === true
     || tag_group.draws_members_in_color === true
+    || tag_group.draws_members_as_nodes === true
 }
 
 /**
