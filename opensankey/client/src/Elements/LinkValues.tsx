@@ -49,13 +49,88 @@ export type UnitType = typeof unit_constants[number]
  * @export
  * @class Class_ElementValueTree
  */
+type Type_ValueChildren = { [tag_id: string]: Class_ElementValue; } | { [tag_id: string]: Class_ElementValueTree; }
+
+/**
+ * os#1528 — UNE BRANCHE PAS ENCORE CONSTRUITE. L'arbre est dense (un enfant par membre, à chaque
+ * étage) : sur un gros cube (SOCLE filières agrégées : 36 × 3 × 43 × 4 × 19 = 352 944 feuilles par
+ * flux, dont 13 % portent une donnée) le construire à l'ouverture prenait 770 Mo et faisait manquer
+ * de mémoire l'éditeur. Une branche garde donc ce qu'il faut pour se construire À LA PREMIÈRE
+ * LECTURE de `children` : les dimensions encore à déplier sous elle, le JSON qui la remplit, et
+ * l'absence structurelle (#188) à propager. Construite, elle est exactement l'arbre dense d'avant.
+ */
+type Type_LazyBranch = {
+  /** Les dimensions sous cet étage, de haut en bas ; vide : les enfants sont des valeurs. */
+  below: Class_DataTagGroup[]
+  json: Type_JSON | null
+  matching_taggs_id: { [_: string]: string; }
+  matching_tags_id: { [_: string]: { [_: string]: string; }; }
+  mark_missing_as_absent: boolean
+  /** `markStructurallyAbsent` reçue avant la construction. */
+  absent: boolean
+}
+
+/**
+ * os#1528 — ce JSON de branche doit-il être lu TOUT DE SUITE ? Oui s'il pose des étiquettes de flux
+ * ou des valeurs coordonnées sur une valeur : elles s'inscrivent auprès de leurs étiquettes
+ * (`addReference`), que la légende, les filtres et la suppression d'une étiquette interrogent sans
+ * passer par l'arbre. Le reste (des nombres) peut attendre qu'on le lise.
+ */
+const jsonNeedsEagerRead = (json: Type_JSON): boolean => {
+  for (const key in json) {
+    const sub = json[key] as unknown
+    if ((key === 'tags' || key === 'tagged_values') && sub !== null && typeof sub === 'object' && Object.keys(sub as object).length > 0) return true
+    if (sub !== null && typeof sub === 'object' && !Array.isArray(sub) && jsonNeedsEagerRead(sub as Type_JSON)) return true
+  }
+  return false
+}
+
 export class Class_ElementValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
   public parent: Class_ElementValueTree | ValueParentElement
-  public children: { [tag_id: string]: Class_ElementValue; } | { [tag_id: string]: Class_ElementValueTree; }
 
   public data_tag_group: Class_DataTagGroup
+
+  // os#1528 — enfants construits, ou de quoi les construire (cf. `Type_LazyBranch`).
+  private _children: Type_ValueChildren = {}
+  private _lazy: Type_LazyBranch | null = null
+
+  /** Les enfants, un par membre du groupe : construits à la première lecture (os#1528). */
+  public get children(): Type_ValueChildren {
+    if (this._lazy !== null) this._build()
+    return this._children
+  }
+  public set children(_: Type_ValueChildren) {
+    this._lazy = null
+    this._children = _
+  }
+
+  /** os#1528 — la branche est-elle construite ? Faux : rien n'y a encore été lu ni écrit. */
+  public get is_built(): boolean { return this._lazy === null }
+
+  /** os#1528 — pas construite, et rien à y lire : toutes ses valeurs sont vierges. */
+  private get _is_blank_unbuilt(): boolean {
+    return this._lazy !== null && this._lazy.json === null && !this._lazy.absent
+  }
+
+  /** os#1528 — construit la branche : un enfant par membre, puis ce qu'elle avait reçu. */
+  private _build() {
+    const lazy = this._lazy as Type_LazyBranch
+    this._lazy = null
+    const children: { [tag_id: string]: Class_ElementValue | Class_ElementValueTree } = {}
+    this._children = children as Type_ValueChildren
+    const [next, ...rest] = lazy.below
+    this.data_tag_group.tags_list.forEach(tag => {
+      children[tag.id] = next !== undefined
+        ? new Class_ElementValueTree(this, next, rest)
+        : this.createValue(this)
+    })
+    if (lazy.json !== null) {
+      this._readJSON(lazy.json, lazy.matching_taggs_id, lazy.matching_tags_id, lazy.mark_missing_as_absent)
+    }
+    if (lazy.absent) Object.values(children).forEach(child => child.markStructurallyAbsent())
+  }
 
   public unit_data_tag(child: Class_ElementValueTree | Class_ElementValue): Class_DataTag | undefined {
     if (this.data_tag_group.is_unit) return this.data_tag_group.tags_dict[this.getDataTagIdFromChild(child) as string]
@@ -69,16 +144,20 @@ export class Class_ElementValueTree {
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
+  /**
+   * @param below os#1528 — les dimensions à déplier SOUS cet étage (de haut en bas) : la branche
+   * les retient et ne construit rien avant qu'on la lise. Vide : ses enfants sont des valeurs.
+   */
   constructor(
     parent: Class_ElementValueTree | ValueParentElement,
-    data_tag_group: Class_DataTagGroup
+    data_tag_group: Class_DataTagGroup,
+    below: Class_DataTagGroup[] = []
   ) {
     this.parent = parent
     this.data_tag_group = data_tag_group
-    this.children = {}
-    data_tag_group.tags_list.forEach(tag => {
-      this.children[tag.id] = this.createValue(this)
-    })
+    this._lazy = {
+      below, json: null, matching_taggs_id: {}, matching_tags_id: {}, mark_missing_as_absent: false, absent: false
+    }
   }
 
   protected createValue(_: Class_ElementValueTree | ValueParentElement): Class_ElementValue {
@@ -97,6 +176,13 @@ export class Class_ElementValueTree {
   public delete() {
     if (!this._is_currently_deleted) {
       this._is_currently_deleted = true
+      // os#1528 — une branche jamais construite n'a rien à défaire.
+      if (this._lazy !== null) {
+        this._lazy = null
+        this._children = {}
+        if (this.parent instanceof Class_ElementValueTree) this.parent.removeChild(this)
+        return
+      }
       Object.keys(this.children)
         .forEach(id => {
           this.children[id].delete()
@@ -131,6 +217,8 @@ export class Class_ElementValueTree {
   }
 
   public get has_result() {
+    // os#1528 — une branche vierge non construite n'a ni donnée ni résultat : rien à construire.
+    if (this._is_blank_unbuilt) return false
     let has_result = false
     Object.values(this.children)
       .forEach(child => {
@@ -140,6 +228,7 @@ export class Class_ElementValueTree {
   }
 
   public get has_intervals() {
+    if (this._is_blank_unbuilt) return false
     let has_intervals = false
     Object.values(this.children)
       .forEach(child => {
@@ -149,6 +238,7 @@ export class Class_ElementValueTree {
   }
 
   public get has_data() {
+    if (this._is_blank_unbuilt) return false
     let has_data = false
     Object.values(this.children)
       .forEach(child => {
@@ -158,10 +248,12 @@ export class Class_ElementValueTree {
   }
 
   public get has_collected_data(): boolean {
+    if (this._is_blank_unbuilt) return false
     return Object.values(this.children).some(child => child.has_collected_data)
   }
 
   public set_only_data() {
+    if (this._is_blank_unbuilt) return
     Object.values(this.children)
       .forEach(child => child.set_only_data())
   }
@@ -185,6 +277,12 @@ export class Class_ElementValueTree {
   ) {
     const json_object: Type_JSON = {}
     json_object['datatag_group'] = this.data_tag_group.id
+    // os#1528 — une branche vierge non construite ne s'écrit pas feuille par feuille : relue, une
+    // étiquette absente du JSON donne une valeur vierge, exactement ce qu'elle porte.
+    if (this._is_blank_unbuilt) return json_object
+    // Une branche lue mais jamais ouverte se construit pour s'écrire : réécrire son JSON tel quel
+    // casserait le point fixe de l'aller-retour (#230), le texte relu n'étant pas celui qu'écrit
+    // une branche construite. Seules les branches à données se construisent ainsi.
     Object.entries(this.children)
       .forEach(([id, child]) => {
         json_object[id] = child.toJSON(kwargs)
@@ -208,6 +306,25 @@ export class Class_ElementValueTree {
     matching_taggs_id: { [_: string]: string; } = {},
     matching_tags_id: { [_: string]: { [_: string]: string; }; } = {},
     mark_missing_as_absent = false
+  ) {
+    // os#1528 — une branche non construite GARDE son JSON pour la construction (sauf s'il pose des
+    // étiquettes, cf. `jsonNeedsEagerRead`) : c'est ce qui épargne à l'ouverture tout le cube.
+    if (this._is_blank_unbuilt && this._lazy !== null && !jsonNeedsEagerRead(json_object)) {
+      this._lazy.json = json_object
+      this._lazy.matching_taggs_id = matching_taggs_id
+      this._lazy.matching_tags_id = matching_tags_id
+      this._lazy.mark_missing_as_absent = mark_missing_as_absent
+      return
+    }
+    // Construite (ou à construire maintenant, `children` y pourvoit) : lecture immédiate.
+    this._readJSON(json_object, matching_taggs_id, matching_tags_id, mark_missing_as_absent)
+  }
+
+  private _readJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: { [_: string]: string; },
+    matching_tags_id: { [_: string]: { [_: string]: string; }; },
+    mark_missing_as_absent: boolean
   ) {
     const cited_tag_ids = new Set<string>()
     Object.entries(json_object)
@@ -239,11 +356,21 @@ export class Class_ElementValueTree {
 
   /** Cf. `fromJSON` : propage le marqueur #188 à toutes les feuilles de la branche. */
   public markStructurallyAbsent() {
+    // os#1528 — retenue pour la construction : marquer ne doit pas construire la branche.
+    if (this._lazy !== null) { this._lazy.absent = true; return }
     Object.values(this.children).forEach(child => child.markStructurallyAbsent())
   }
 
   // PUBLIC METHODS =====================================================================
   public expand(data_tag_group: Class_DataTagGroup) {
+    // os#1528 — branche vierge non construite : la dimension s'ajoute sous les autres, comme le
+    // ferait le dépliage de chacune de ses feuilles (vierges : rien à recopier).
+    if (this._is_blank_unbuilt && this._lazy !== null) {
+      if (this.data_tag_group !== data_tag_group && !this._lazy.below.includes(data_tag_group)) {
+        this._lazy.below.push(data_tag_group)
+      }
+      return this
+    }
     if (this.data_tag_group !== data_tag_group)
       Object.keys(this.children)
         .forEach(id => {
@@ -596,6 +723,8 @@ export class Class_ElementValueTree {
   }
 
   public getMaxValue() {
+    // os#1528 — des feuilles vierges valent 0 (cf. `Class_LinkValue.getMaxValue`).
+    if (this._is_blank_unbuilt) return this.data_tag_group.tags_list.length > 0 ? 0 : null
     let max: number | null = null
     Object.entries(this.children)
       .forEach(child => {
@@ -975,17 +1104,22 @@ export class Class_ElementValue {
 
   public expand(data_tag_group: Class_DataTagGroup) {
     const new_parent = new Class_ElementValueTree(this.parent, data_tag_group)
-    // Le constructeur du sous-arbre a DÉJÀ créé une valeur par membre : il ne reste qu'à y
-    // recopier celle qu'on déplie. On passait auparavant par `extend`, un par membre, qui
-    // reclasse tous les enfants (`kindOfChildren`) à chaque appel pour finir par rendre un
-    // enfant qui existait déjà — n appels balayant n enfants, donc un coût en n².
+    // Le sous-arbre a une valeur par membre : il ne reste qu'à y recopier celle qu'on déplie. On
+    // passait auparavant par `extend`, un par membre, qui reclasse tous les enfants
+    // (`kindOfChildren`) à chaque appel pour finir par rendre un enfant qui existait déjà — n
+    // appels balayant n enfants, donc un coût en n².
     //
     // C'est ce que le profil V8 a montré sur le SOCLE, où déplier 263 pays sous 148 produits
     // faisait 5 millions de comparaisons : 45 s dans `kindOfChildren`, 23 s dans
     // `getDataTagIdFromChild`. Mesuré le 28/09.
-    Object.values(new_parent.children).forEach(child => {
-      if (child instanceof Class_ElementValue) child.copyFrom(this)
-    })
+    //
+    // os#1528 — une valeur VIERGE (celle d'un flux qu'on vient de créer, dont on déplie les
+    // dimensions) n'a rien à recopier : le sous-arbre reste non construit, et c'est tout le gain.
+    if (!this.is_blank) {
+      Object.values(new_parent.children).forEach(child => {
+        if (child instanceof Class_ElementValue) child.copyFrom(this)
+      })
+    }
     // Les QUATRE appelants de `expand` rangent eux-mêmes le sous-arbre rendu à la place de la
     // feuille dépliée (`this.children[id] = …`, `this._values = …`). Se retirer du parent serait
     // donc chercher une clé pour la voir écrasée dans la foulée : 9,8 s au profil V8 du SOCLE,
@@ -1061,6 +1195,20 @@ export class Class_ElementValue {
   public get tagged_values_list(): Class_ElementTaggedValue[] { return [...this._tagged_values] }
 
   public get has_tagged_values(): boolean { return this._tagged_values.length > 0 }
+
+  /**
+   * os#1528 — la valeur est-elle VIERGE, telle qu'à sa construction ? Rien de saisi, de calculé,
+   * d'étiqueté ni de marqué : la recopier ne transmettrait rien. Les sous-classes ajoutent leurs
+   * propres champs.
+   */
+  public get is_blank(): boolean {
+    const empty = (v: (number | null)[]) => v.every(x => x === null)
+    return empty(this._data_value) && empty(this._data_min) && empty(this._data_max) &&
+      empty(this._data_uncertainty) && empty(this._result_value) && empty(this._result_min) &&
+      empty(this._result_max) && this.text_value === null && !this.structurally_absent &&
+      this.value_objective === null && this.value_objective_rank === null &&
+      this.value_objective_target === null && this._flux_tags.length === 0 && this._tagged_values.length === 0
+  }
 
   public get has_result(): boolean { return false }
   public get has_intervals(): boolean { return false }
@@ -1420,6 +1568,13 @@ export class Class_LinkValue extends Class_ElementValue {
   }
 
   // OVERRIDES ==========================================================================
+  public override get is_blank(): boolean {
+    return super.is_blank && this.value_option === 'value' && this._ratio_unit_tag === null &&
+      this._data_source === null && this._data_url === null && this._data_hypothesis === null &&
+      this._determination === null && this._result_uncertainty === null &&
+      this._result_uncertainty_abs === null && this._result_uncertainty_bound === null
+  }
+
   public get has_result() {
     return this._result_value[Class_LinkValue.SRC] !== null || (this.value_option != 'value' && this.value_option != 'intervals')
   }
