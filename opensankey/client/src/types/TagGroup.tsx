@@ -845,12 +845,15 @@ export abstract class Class_ProtoTagGroup {
    */
   public set banner(value: tag_banner_type) {
     if (value === 'topbar') {
-      this._banner = 'one'
+      this._banner = this.admissibleBanner('one')
       this._in_topbar = true
       return
     }
-    this._banner = value
+    this._banner = this.admissibleBanner(value)
   }
+
+  /** La bannière que ce groupe accepte pour `value` (cf. `Class_DataTagGroup` : dimension additive). */
+  protected admissibleBanner(value: tag_banner_type): tag_banner_type { return value }
 }
 // CLASS TAGGROUP ***********************************************************************
 /**
@@ -1562,6 +1565,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (Array.isArray(focus_lu)) this._focus_ids = focus_lu.filter((v): v is string => typeof v === 'string' && v !== '')
     const decoches_lus = json_object['hidden_members']
     if (Array.isArray(decoches_lus)) this._hidden_ids = decoches_lus.filter((v): v is string => typeof v === 'string' && v !== '')
+    // os#1511 — la bannière est lue avant les membres et leur parenté : une dimension hiérarchisée
+    // enregistrée « un membre à la fois » passe ici au choix multiple, son membre coché gardé.
+    this.invalidateHierarchyIndex()
+    this.normalizeBanner()
   }
 
   /**
@@ -1730,6 +1737,25 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * c'est l'attachement qui prime, la bannière ne dit plus rien alors —, sinon `multi` (choix
    * multiple, en bandes), `one` (un membre à la fois, défilé de séquence compris), `other`.
    */
+  /**
+   * os#1511, 07/10 — LA NATURE DE LA DIMENSION DÉCIDE DU NOMBRE DE MEMBRES LUS, plus un réglage
+   * (Julien : « en mode multiple on peut ne cliquer qu'un seul membre, je ne vois pas l'intérêt »).
+   * Une dimension HIÉRARCHISÉE est additive (ses membres se somment en leur parent) : on peut
+   * toujours en lire plusieurs, « un membre à la fois » devient donc le choix multiple — le membre
+   * coché reste, et un membre seul garde sa couleur (`single_member_color`). La séquence (années,
+   * scénarios : à ne pas sommer) et les dimensions plates gardent leur bannière.
+   */
+  protected admissibleBanner(value: tag_banner_type): tag_banner_type {
+    if (value !== 'one' || this._tags === undefined) return value
+    return this.is_hierarchical ? 'multi' : value
+  }
+
+  /** Ramène la bannière à ce que la nature de la dimension admet (relecture, parenté changée). */
+  public normalizeBanner(): void {
+    const current = this.banner
+    if (this.admissibleBanner(current) !== current) this.banner = current
+  }
+
   public get drawing(): Type_DimensionDrawing {
     if (this.carriers_count > 0) return 'nodes'
     const banner = this.banner
@@ -1800,12 +1826,15 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   /**
-   * os#1511 — un membre à la fois, dans SA couleur : dimension à niveaux, couleurs activées, un
+   * os#1511 — un membre montré seul, dans SA couleur : dimension à niveaux, couleurs activées, un
    * seul membre choisi qui porte une vraie couleur. `undefined` sinon — dont la racine « Tous
-   * produits », grise. Lu par le flux (`Link.getShapeColorToUse`).
+   * produits », grise. Lu par le flux (`Link.getShapeColorToUse`). Choix multiple compris (07/10) :
+   * une dimension hiérarchisée n'a plus de « un membre à la fois », un membre coché seul y tient lieu.
    */
   public get single_member_color(): string | undefined {
-    if (!this.use_colors || !this.is_hierarchical || this.drawing !== 'one') return undefined
+    if (!this.use_colors || !this.is_hierarchical) return undefined
+    const drawing = this.drawing
+    if (drawing !== 'one' && drawing !== 'multi') return undefined
     const selected = this.selected_tags_list
     if (selected.length !== 1) return undefined
     const color = selected[0].color
@@ -1957,6 +1986,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    */
   public hierarchyChanged() {
     this.invalidateHierarchyIndex()
+    this.normalizeBanner()
     if (this._palette === undefined || this._palette.frozen || this._palette_suspended) return
     this.recolorFromPalette()
   }

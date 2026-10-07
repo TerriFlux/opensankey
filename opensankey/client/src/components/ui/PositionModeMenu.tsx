@@ -339,7 +339,13 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     {gap_items !== null ? <>{can_position ? <MenuDivider /> : null}{gap_items}</> : null}
   </>
   // La couronne : Afficher (liée), puis Dessiner sur la figure ; rien de « Placer ».
-  const show_items = submenuEntry('show', t('Banner.show_submenu'), <>
+  // os#1511, 07/10 — « Afficher » se retire là où la NATURE de la dimension tranche (Julien : « en
+  // mode multiple on peut ne cliquer qu'un seul membre, je ne vois pas l'intérêt ») : hiérarchisée,
+  // elle est additive, toujours en choix multiple (`Class_DataTagGroup.admissibleBanner`) ; en
+  // séquence (années, scénarios), un membre à la fois. Seule une dimension plate, dont rien ne dit
+  // si ses membres se somment, garde le choix.
+  const nature_decides = tagg.is_hierarchical || tagg.banner === 'sequence'
+  const show_items = nature_decides ? null : submenuEntry('show', t('Banner.show_submenu'), <>
     <CheckItem
       label={t('Banner.draw_one')}
       checked={drawing === 'one'}
@@ -352,7 +358,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
     />
   </>)
   if (figure !== undefined) {
-    if (!can_draw || figure.detached) return null
+    if (!can_draw || figure.detached || show_items === null) return null
     return <Menu placement='bottom-start'>
       <MenuButton
         as={Button}
