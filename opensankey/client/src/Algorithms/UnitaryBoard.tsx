@@ -7,6 +7,7 @@ import { Class_DataTagGroup } from '../types/TagGroup'
 import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_Sankey } from '../types/Sankey'
+import type { Class_Tag } from '../types/Tag'
 
 /**
  * os#1422 — CE FICHIER DIT DEUX CHOSES, ET ELLES SONT MAINTENANT NOMMÉES.
@@ -49,6 +50,29 @@ export const resolveUnitaryCenterNode = (
 }
 
 /**
+ * sa#611 — LA RÈGLE DE FORME DU NŒUD CENTRAL : un groupe d'étiquettes de nœuds et les étiquettes
+ * de ce groupe qui donnent la capsule. Les autres centres ont le rectangle.
+ */
+export type Type_UnitaryCapsuleRule = { tag_group_id: string, tag_ids: string[] }
+
+/**
+ * Les étiquettes de la règle, résolues dans le sankey qui porte les étiquettes ; `null` quand la
+ * règle est absente ou ne désigne rien qui existe (groupe supprimé, étiquettes renommées) : on
+ * retombe alors sur le défaut plutôt que de mettre tous les centres en rectangle.
+ */
+const capsuleTagsOf = (
+  tags_sankey: Class_Sankey, rule: Type_UnitaryCapsuleRule | null
+): Class_Tag[] | null => {
+  if (rule === null) return null
+  const group = tags_sankey.node_taggs_dict[rule.tag_group_id]
+  if (!group) return null
+  const tags = rule.tag_ids
+    .map(id => group.tags_dict[id])
+    .filter((tag): tag is Class_Tag => tag !== undefined)
+  return tags.length > 0 ? tags : null
+}
+
+/**
  * Pose styles, échelle et disposition du board unitaire autour d'UN nœud central.
  */
 export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node_id?: string) => {
@@ -83,16 +107,23 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node
  * elle — ses nœuds délèguent `hasGivenTag` à leur sujet (règle 3 du contrat du lot 6) —
  * et doit donc désigner le sankey SOURCE, sans quoi `productTag` serait `undefined` et
  * aucun produit n'aurait sa capsule.
+ *
+ * `capsule_rule` — sa#611 : LE GROUPE ET LES ÉTIQUETTES QUI DONNENT LA CAPSULE AU CENTRE, choisis
+ * par l'auteur dans les réglages du volet Unit. Absente, ou sans étiquette connue du sankey des
+ * étiquettes : le défaut, « type de noeud » = « produit ». Elle ne vaut que pour le CENTRE ; les
+ * extrémités gardent le défaut (cf. plus bas).
  */
 export const applyUnitaryBoardStyles = (
   drawing_area: Class_DrawingArea,
   center_node: Class_NodeElement,
-  tags_sankey: Class_Sankey = drawing_area.sankey
+  tags_sankey: Class_Sankey = drawing_area.sankey,
+  capsule_rule: Type_UnitaryCapsuleRule | null = null
 ) => {
   const center_nodes = [center_node]
   const node_type = tags_sankey.node_taggs_dict['type de noeud']
   const productTag = node_type?.tags_dict['produit']
   const _sectorTag = node_type?.tags_dict['secteur']
+  const center_capsule_tags = capsuleTagsOf(tags_sankey, capsule_rule)
 
   // Repartir d'une feuille blanche : retirer TOUS les styles assignés (styles
   // unitaires/exchange/product d'un précédent passage, mais AUSSI les styles
@@ -156,7 +187,12 @@ export const applyUnitaryBoardStyles = (
       // resetAttributes) → on les force ici.
       n.use_stock_for_height = false
       n.stock_shape_is_visible = false
-      if (n.hasGivenTag(productTag)) {
+      // sa#611 — le centre suit la règle de l'auteur quand il en a posé une ; les extrémités
+      // gardent le défaut, dont dépendent leur encombrement et donc l'écart entre libellés.
+      const is_capsule = (n === center_node && center_capsule_tags !== null)
+        ? center_capsule_tags.some(tag => n.hasGivenTag(tag))
+        : n.hasGivenTag(productTag)
+      if (is_capsule) {
         n.shape_type = 'capsule'
       } else {
         n.shape_type = 'rect'
