@@ -44,11 +44,10 @@ import {
   dimensionDrawingEnabledFor, positionModeSelectorEnabledFor, loneSubmenuOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyDisaggregationGap, applyMemberBands, applyMembersColorFlows, applyMembersOrder,
+  applyDimensionDrawing, applyMemberBands, applyMembersColorFlows, applyMembersOrder,
   dimensionCarrierCandidates,
   dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
-import type { Type_DisaggregationGap } from '../../types/Utils'
 import { MEMBERS_ORDERS } from '../../Algorithms/DimensionMemberOrder'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
@@ -64,12 +63,6 @@ export const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinitio
 ]
 
 /** Les modes d'écart vertical des enfants, dans l'ordre de `DisaggregationGapControl`. */
-const GAP_MODES: { value: Type_DisaggregationGap, label_key: string }[] = [
-  { value: 'fill', label_key: 'MEP.childGapFill' },
-  { value: 'keep', label_key: 'MEP.childGapKeep' },
-  { value: 'children_dy', label_key: 'MEP.childGapDy' },
-  { value: 'constant', label_key: 'MEP.childGapConst' }
-]
 
 /** Une entrée cochable. */
 const CheckItem = ({ label, checked, onClick, icon, glyph, closeOnSelect, disabled, title }: {
@@ -279,27 +272,8 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   const can_position = positionModeSelectorEnabledFor(app_data)
   const drawing = dimensionDrawingOf(app_data, tagg)
   const in_bands = dimensionInMemberBands(app_data, tagg)
-  // os#1511 — L'ÉCART DES ENFANTS d'un nœud désagrégé : il place les membres, il va donc dans
-  // « Placer », mais il n'a de sens que si la dimension se dessine en nœuds.
-  // Le diagramme par membre est un DESSIN (cf. « Dessiner ») ; ici, l'écart des enfants, aux nœuds.
-  const gap_items = can_draw && drawing === 'nodes'
-    ? <MenuGroup title={t('MEP.childGapMode')} fontSize='0.7rem'>
-      {/* os#1511 — dès deux porteurs, la dimension se range en bandes et le mode d'écart n'a plus
-          d'effet : on le dit, au lieu de cocher un mode qui ne s'applique pas. Choisir un mode
-          quitte les bandes. Offert dès qu'un nœud la porte : le choisir fait porter la dimension
-          par tous les nœuds (`applyMemberBands`). */}
-      {GAP_MODES.map(g => (
-        <CheckItem
-          key={g.value}
-          label={t(g.label_key) + (g.value === 'constant'
-            ? ` (${app_data.drawing_area.disaggregation_gap_value})` : '')}
-          checked={!in_bands && app_data.drawing_area.disaggregation_gap_mode === g.value}
-          closeOnSelect={false}
-          onClick={() => applyDisaggregationGap(app_data, g.value, tagg)}
-        />
-      ))}
-    </MenuGroup>
-    : null
+  // os#1511 (Julien, 07/10) — plus de mode d'écart des enfants ici : l'écart est CONSTANT, et sa
+  // valeur se règle dans « Navigation » et par le curseur en haut de la légende.
   const position_items = <>
     {can_position ? POSITION_MODE_META.map(m => (
       <CheckItem
@@ -333,7 +307,6 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
         ))}
       </MenuGroup>
     </> : null}
-    {gap_items !== null ? <>{can_position ? <MenuDivider /> : null}{gap_items}</> : null}
   </>
   // La couronne : Afficher (liée), puis Dessiner sur la figure ; rien de « Placer ».
   // os#1511, 07/10 — « Afficher » se retire là où la NATURE de la dimension tranche (Julien : « en
@@ -468,7 +441,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                   ))}
               </MenuGroup>
             </>, { disabled: drawing === 'one' }),
-            can_position || gap_items !== null
+            can_position
               ? submenuEntry('place', t('Banner.place_submenu'), position_items)
               : null
           ])

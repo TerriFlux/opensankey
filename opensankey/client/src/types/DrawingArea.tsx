@@ -664,7 +664,8 @@ export class Class_DrawingArea {
   // Mode d'écart vertical des enfants pour les opérations structurelles
   // (désagrégation, expansion latérale, englobement). Persisté (défaut 'fill' =
   // comportement historique #1231). cf. Type_DisaggregationGap.
-  protected _disaggregation_gap_mode: Type_DisaggregationGap = 'fill'
+  // os#1511 (Julien, 07/10) — l'écart CONSTANT est le défaut, et le seul réglage offert.
+  protected _disaggregation_gap_mode: Type_DisaggregationGap = 'constant'
   public get disaggregation_gap_mode(): Type_DisaggregationGap { return this._disaggregation_gap_mode }
   public set disaggregation_gap_mode(v: Type_DisaggregationGap) { this._disaggregation_gap_mode = v }
   // Sous-mode GLOBAL du filtre vue (commun à tous les view tags) : 'filter' = visibilité

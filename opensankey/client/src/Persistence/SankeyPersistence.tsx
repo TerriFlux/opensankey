@@ -2198,7 +2198,7 @@ export class DrawingAreaPersistence {
     // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
     // (défaut 'fill' → sérialisé seulement s'il diffère) et valeur constante (sérialisée seulement
     // si explicitement définie ; sinon le getter retombe sur default_style.shape_position_dy).
-    if (drawing_area.disaggregation_gap_mode !== 'fill')
+    if (drawing_area.disaggregation_gap_mode !== 'constant')
       json_object['disaggregation_gap_mode'] = drawing_area.disaggregation_gap_mode
     if (drawing_area['_disaggregation_gap_value'] != null)
       json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
@@ -2694,7 +2694,7 @@ export class DrawingAreaPersistence {
     // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
     // (null si absente ⇒ le getter retombe sur default_style.shape_position_dy).
     drawing_area['_disaggregation_gap_mode'] =
-      getStringFromJSON(json_object, 'disaggregation_gap_mode', 'fill') as Type_DisaggregationGap
+      getStringFromJSON(json_object, 'disaggregation_gap_mode', 'constant') as Type_DisaggregationGap
     drawing_area['_disaggregation_gap_value'] =
       getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
     // OS#1302 — les anciennes globales de pointe/épaisseur (structure_mode_force_min,

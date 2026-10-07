@@ -288,8 +288,59 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
       borderRadius: legend.legend_bg_border ? '0.25rem' : undefined
     }}
   >
+    <GapSlider app_data={app_data} />
     {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} />)}
   </div>
+}
+
+/**
+ * os#1511 — L'ÉCART VERTICAL ENTRE LES NŒUDS, en haut de la légende, comme le curseur « Spacing » de
+ * SankeyMATIC (Julien, 07/10). Offert dès qu'une dimension se dessine en nœuds. Le dessin suit le
+ * curseur ; un seul pas d'historique par geste, au relâcher.
+ */
+const GapSlider = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const da = app_data.drawing_area
+  const [value, setValue] = React.useState(da.disaggregation_gap_value)
+  const start = React.useRef<number | undefined>(undefined)
+  const frame = React.useRef<number | undefined>(undefined)
+  React.useEffect(() => () => { if (frame.current !== undefined) cancelAnimationFrame(frame.current) }, [])
+  const en_noeuds = da.sankey.data_taggs_list.some(tagg => (tagg as unknown as { drawing?: string }).drawing === 'nodes')
+  if (!en_noeuds) return null
+  const apply = (v: number) => {
+    da.disaggregation_gap_value = v
+    da.rebuildDimensionNodes()
+    da.draw()
+  }
+  const commit = () => {
+    const before = start.current
+    start.current = undefined
+    const after = da.disaggregation_gap_value
+    if (before === undefined || before === after) return
+    app_data.history.saveUndo(() => { apply(before); setValue(before) })
+    app_data.history.saveRedo(() => { apply(after); setValue(after) })
+  }
+  const t = app_data.t as ((key: string) => string) | undefined
+  const label = (t ? t('MEP.childGapValue') : '') || 'Écart'
+  const max = Math.max(150, Math.ceil(value * 1.5))
+  return <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85em', margin: '0.2rem 0 0.4rem' }}>
+    <span style={{ flex: '0 0 auto' }}>{label}</span>
+    <input
+      type='range' min={0} max={max} step={1} value={value}
+      style={{ flex: '1 1 auto', minWidth: 0 }}
+      onPointerDown={() => { if (start.current === undefined) start.current = da.disaggregation_gap_value }}
+      onKeyDown={() => { if (start.current === undefined) start.current = da.disaggregation_gap_value }}
+      onChange={evt => {
+        const v = Number(evt.currentTarget.value)
+        if (start.current === undefined) start.current = da.disaggregation_gap_value
+        setValue(v)
+        if (frame.current !== undefined) cancelAnimationFrame(frame.current)
+        frame.current = requestAnimationFrame(() => { frame.current = undefined; apply(v) })
+      }}
+      onPointerUp={commit}
+      onKeyUp={commit}
+    />
+    <span style={{ flex: '0 0 2.2em', textAlign: 'right', color: UNCHECKED_INK }}>{value}</span>
+  </label>
 }
 
 /** `#rrggbb` (ou nom de couleur) avec une opacité : `color-mix`, que tous les navigateurs servis lisent. */
