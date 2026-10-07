@@ -18,6 +18,7 @@ import { MATRIX_SORT_LABEL } from './DimensionMatrix'
 import type { Type_DimensionMatrix, Type_MatrixColumn, Type_MatrixRow } from './DimensionMatrix'
 import { appendTableExportButtons } from './TableExport'
 import type { Type_TableExportFormat } from './TableExport'
+import type { Type_FigureZoomHandle } from './figureZoomBridge'
 
 export interface Type_DimensionMatrixTableOptions {
   /** Le nombre écrit dans une cellule (unité NON comprise : elle est dans l'en-tête). */
@@ -55,7 +56,22 @@ export interface Type_DimensionMatrixTableOptions {
     /** ⇄ : absent quand il n'y a pas de colonnes. */
     swap?: { label: string, on_swap: () => void }
   }
+  /**
+   * 07/10/2026 — LE ZOOM, COMME DANS UN TABLEUR (Julien : « la taille des cases et la police »). Tout
+   * le tableau se met à l'échelle `scale` ; Ctrl+molette, et les boutons −/+/% de la fenêtre par la
+   * poignée publiée (`publish`, `null` au démontage). `on_scale` : l'échelle retenue, pour la
+   * retrouver au redessin. Absent : pas de zoom.
+   */
+  zoom?: {
+    scale: number
+    on_scale: (k: number) => void
+    publish: (handle: Type_FigureZoomHandle | null) => void
+  }
 }
+
+/** Les bornes du zoom d'un tableau, comme un tableur (10 % à 400 % chez Excel ; ici lisible). */
+export const MATRIX_ZOOM_MIN = 0.5
+export const MATRIX_ZOOM_MAX = 3
 
 const INDENT_PX = 16
 
@@ -165,6 +181,34 @@ export const drawDimensionMatrixTable = (
   const table = document.createElement('table')
   css(table, { borderCollapse: 'separate', borderSpacing: '0', fontVariantNumeric: 'tabular-nums', minWidth: '100%' })
   scroller.appendChild(table)
+  // 07/10/2026 — LE ZOOM DU TABLEAU : cases, police et boutons ensemble (`zoom` CSS : le défilement
+  // et les en-têtes figés suivent). Ctrl+molette, comme un tableur ; les boutons de la fenêtre par la
+  // poignée publiée.
+  const unpublish = (() => {
+    const zoom = o.zoom
+    if (zoom === undefined) return () => { /* pas de zoom */ }
+    let k = Math.min(MATRIX_ZOOM_MAX, Math.max(MATRIX_ZOOM_MIN, zoom.scale))
+    const apply = (next: number) => {
+      k = Math.min(MATRIX_ZOOM_MAX, Math.max(MATRIX_ZOOM_MIN, next))
+      ;(table.style as CSSStyleDeclaration & { zoom: string }).zoom = String(k)
+      table.style.minWidth = `${100 / k}%`
+      zoom.on_scale(k)
+    }
+    ;(table.style as CSSStyleDeclaration & { zoom: string }).zoom = String(k)
+    table.style.minWidth = `${100 / k}%`
+    scroller.addEventListener('wheel', (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.deltaY === 0) return
+      e.preventDefault()
+      apply(k * Math.pow(2, -e.deltaY / 500))
+    }, { passive: false })
+    zoom.publish({
+      getScale: () => k,
+      setScale: (next) => apply(next),
+      scaleBy: (factor) => apply(k * factor),
+      fit: () => apply(1)
+    })
+    return () => zoom.publish(null)
+  })()
 
   const line = '1px solid rgba(127,127,127,0.35)'
   const strong_line = '1px solid rgba(127,127,127,0.8)'
@@ -326,6 +370,7 @@ export const drawDimensionMatrixTable = (
   })
 
   return () => {
+    unpublish()
     removeExport()
     container.innerHTML = ''
   }

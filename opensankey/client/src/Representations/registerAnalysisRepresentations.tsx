@@ -71,7 +71,9 @@ import type { Type_MemberRef } from '../Charts/memberSectorId'
 import { dimensionRootsOf } from '../Charts/DataDimensionHierarchy'
 import { foldSmallCells, OTHERS_MIN_SHARE_PCT } from '../Algorithms/DimensionOthers'
 import type { Type_JSON } from '../types/Utils'
-import { representation_registry, type Type_RepresentationContext } from './RepresentationRegistry'
+import {
+  representation_registry, type Type_RepresentationContext, type Type_RepresentationZoom
+} from './RepresentationRegistry'
 import {
   buildDimensionMatrix, dimensionMatrixExportTable, MATRIX_OTHERS_PREFIX, matrixDecimals, matrixInputOfPlan,
   matrixNumberFormatter, nextMatrixSort
@@ -79,7 +81,7 @@ import {
 import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
 import { fromFigure, planFor } from './dimensionViewState'
 import type { Type_MatrixPlan } from './dimensionViewState'
-import { drawDimensionMatrixTable } from '../Charts/DimensionMatrixTable'
+import { drawDimensionMatrixTable, MATRIX_ZOOM_MAX, MATRIX_ZOOM_MIN } from '../Charts/DimensionMatrixTable'
 import { csvDecimalOf, downloadTable } from '../Charts/TableExport'
 import {
   figureChartStyleOf, figureTextsOf, DONUT_STYLE_DEFAULTS, BARS_STYLE_DEFAULTS
@@ -103,7 +105,7 @@ import type { Type_HierarchyReading } from '../Charts/AnalysisChartData'
 import { drawSunburstChart } from '../Charts/SunburstChart'
 import type { Type_LegendCheckEntry, Type_LegendChecks } from '../Charts/legendChecks'
 import {
-  figureViewOf, publishFigureZoom, rememberFigureView
+  figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
 } from '../Charts/figureZoomBridge'
 import { ZOOM_TOPIC } from '../types/EventBus'
 import { readSunburstStyle, SUNBURST_ZOOM } from './SunburstRepresentation'
@@ -2422,6 +2424,27 @@ const matrix_column_toggles = new Map<string, Map<string, boolean>>()
 const matrix_others_open = new Map<string, Set<string>>()
 /** Le tri choisi dans chaque tableau (absent : Total décroissant). */
 const matrix_sorts = new Map<string, Type_MatrixSort>()
+/** 07/10/2026 — le zoom de chaque tableau (absent : 100 %), un état d'affichage comme le tri. */
+const matrix_zooms = new Map<string, number>()
+
+/**
+ * 07/10/2026 — LE ZOOM DU TABLEAU CROISÉ, capacité déclarée comme celle de la couronne : les boutons
+ * −/+/% de la fenêtre parlent au tableau monté dans la vignette active (cf. `figureZoomBridge`). Des
+ * crans de 25 %, comme un tableur ; « ajuster » revient à 100 %.
+ */
+const MATRIX_ZOOM: Type_RepresentationZoom = {
+  getScale: (ctx) => matrixZoomHandleOf(ctx)?.getScale() ?? 1,
+  setScale: (k, ctx) => matrixZoomHandleOf(ctx)?.setScale(k),
+  scaleBy: (factor, ctx) => matrixZoomHandleOf(ctx)?.scaleBy(factor),
+  step: 1.25,
+  min: MATRIX_ZOOM_MIN,
+  max: MATRIX_ZOOM_MAX,
+  neutral: 1,
+  isAvailable: (ctx) => matrixZoomHandleOf(ctx) !== null,
+  fit: (ctx) => matrixZoomHandleOf(ctx)?.fit?.()
+}
+const matrixZoomHandleOf = (ctx: Type_RepresentationContext) =>
+  figureZoomHandle(ctx.window_id, ctx.app_data.menu_configuration?.main_zone_active_pane_key)
 
 /** Ce qu'on lit en plus du sujet : les coordonnées des dimensions SANS niveaux (l'année, par exemple). */
 const matrixCoordinateLabel = (sankey: { data_taggs_list: unknown[] }, nav: Type_FigureNavigation): string =>
@@ -2471,6 +2494,7 @@ const registerDimensionMatrix = (): void => {
     order: 35,
     label: (a) => a.t('matrix.label'),
     icon: <FaTable />,
+    zoom: MATRIX_ZOOM,
     reads_generated_origin: true,
     // Julien, 07/10 : le tableau d'un flux engendré « → Europe » montre TOUS les continents.
     generated_origin_whole: true,
@@ -2590,6 +2614,14 @@ const registerDimensionMatrix = (): void => {
           : undefined
         teardown = drawDimensionMatrixTable(container, matrix, {
           axes,
+          zoom: {
+            scale: matrix_zooms.get(key) ?? 1,
+            on_scale: (k: number) => {
+              matrix_zooms.set(key, k)
+              ctx.app_data.menu_configuration.notify(ZOOM_TOPIC)
+            },
+            publish: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle)
+          },
           format,
           format_share: (v) => percent.format(v),
           title,
