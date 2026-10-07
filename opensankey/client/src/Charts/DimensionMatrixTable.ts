@@ -15,7 +15,7 @@
 // couleur de série : un tableau ne code rien par la couleur.
 
 import { MATRIX_SORT_LABEL } from './DimensionMatrix'
-import type { Type_DimensionMatrix, Type_MatrixRow } from './DimensionMatrix'
+import type { Type_DimensionMatrix, Type_MatrixColumn, Type_MatrixRow } from './DimensionMatrix'
 import { appendTableExportButtons } from './TableExport'
 import type { Type_TableExportFormat } from './TableExport'
 
@@ -29,8 +29,13 @@ export interface Type_DimensionMatrixTableOptions {
   /** L'unité affichée, `''` sans unité. */
   unit: string
   /** `export_xlsx` / `export_csv` : les infobulles des deux boutons d'export (sa#593). */
-  labels: { expand: string, collapse: string, export_xlsx: string, export_csv: string, empty: string }
-  on_toggle: (member_id: string, expanded: boolean) => void
+  labels: { expand: string, collapse: string, export_xlsx: string, export_csv: string, empty: string, subtotal?: string }
+  /** +/− d'une ligne ; `gesture.shift` : tout le niveau (07/10/2026). */
+  on_toggle: (member_id: string, expanded: boolean, gesture: { shift: boolean }) => void
+  /** 07/10/2026 (lot 2) — +/− d'un en-tête de colonne ; absent : colonnes à plat. */
+  on_column_toggle?: (member_id: string, expanded: boolean, gesture: { shift: boolean }) => void
+  /** « Maj+clic : tout le niveau », ajouté à l'info-bulle des +/− quand le geste existe. */
+  level_hint?: string
   /** sa#593 — exporter le tableau TEL QU'IL EST AFFICHÉ, en Excel ou en CSV. */
   on_export: (format: Type_TableExportFormat) => void
   /** Clic sur un en-tête : la clé de la colonne, ou `MATRIX_SORT_LABEL` pour l'en-tête des lignes. */
@@ -55,6 +60,27 @@ export interface Type_DimensionMatrixTableOptions {
 const INDENT_PX = 16
 
 const css = (el: HTMLElement, style: Partial<CSSStyleDeclaration>) => { Object.assign(el.style, style) }
+
+/** Le bouton +/− d'une ligne ou d'un en-tête de colonne. */
+const toggleButton = (
+  label: string, expanded: boolean, text: string, hint: string | undefined,
+  on: (gesture: { shift: boolean }) => void
+): HTMLButtonElement => {
+  const toggle = document.createElement('button')
+  toggle.type = 'button'
+  toggle.className = 'dimension_matrix_toggle'
+  toggle.setAttribute('aria-expanded', String(expanded))
+  toggle.setAttribute('aria-label', `${label} ${text}`)
+  toggle.title = hint ? `${label} — ${hint}` : label
+  toggle.textContent = expanded ? '−' : '+'
+  css(toggle, {
+    font: 'inherit', width: '18px', height: '18px', lineHeight: '14px', padding: '0', marginRight: '6px',
+    cursor: 'pointer', borderRadius: '3px', border: '1px solid rgba(127,127,127,0.5)',
+    background: 'transparent', color: 'inherit', verticalAlign: 'middle'
+  })
+  toggle.addEventListener('click', (e) => { e.stopPropagation(); on({ shift: e.shiftKey }) })
+  return toggle
+}
 
 /** Monte le tableau dans `container` ; rend la fonction de démontage. */
 export const drawDimensionMatrixTable = (
@@ -145,7 +171,6 @@ export const drawDimensionMatrixTable = (
   const sticky_bg = 'var(--chakra-colors-chakra-body-bg, Canvas)'
 
   const thead = document.createElement('thead')
-  const hr = document.createElement('tr')
   /** Un en-tête TRIABLE : un bouton dans le <th>, `aria-sort` sur le <th>, la flèche du sens. */
   const sortable = (th: HTMLTableCellElement, text: string, key: string, align: 'left' | 'right') => {
     const active = matrix.sort.key === key
@@ -162,28 +187,87 @@ export const drawDimensionMatrixTable = (
     button.addEventListener('click', () => o.on_sort(key))
     th.appendChild(button)
   }
+
+  // 07/10/2026 (lot 2) — LES EN-TÊTES DE COLONNES EN ARBRE. Un membre ouvert coiffe ses colonnes
+  // (« − Europe » au-dessus de son sous-total et de ses sous-régions) ; sa propre colonne, à gauche,
+  // est son sous-total (« Total »). Autant de rangées d'en-têtes que de crans ouverts ; une colonne
+  // fermée occupe toutes les rangées sous elle. Sans colonne ouverte : une seule rangée, comme avant.
+  const header_rows = 1 + Math.max(0, ...matrix.columns.map(c => (c.kind === 'member' && c.expanded ? (c.depth ?? 0) + 1 : 0)))
+  const hrs: HTMLTableRowElement[] = Array.from({ length: header_rows }, () => document.createElement('tr'))
+  const head_cell = (th: HTMLTableCellElement, c: Type_MatrixColumn | null, bottom: boolean) => {
+    css(th, {
+      textAlign: c === null ? 'left' : 'right', fontWeight: '600', padding: '4px 8px', position: 'sticky',
+      top: '0', zIndex: c === null ? '2' : '1', background: sticky_bg, whiteSpace: 'nowrap',
+      borderBottom: bottom ? strong_line : line,
+      ...(c?.kind === 'total' ? { borderLeft: strong_line } : {})
+    })
+  }
   const corner = document.createElement('th')
   corner.scope = 'col'
+  corner.rowSpan = header_rows
   sortable(corner, matrix.column_dimension
     ? `${matrix.row_dimension.label} \\ ${matrix.column_dimension.label}`
     : matrix.row_dimension.label, MATRIX_SORT_LABEL, 'left')
-  css(corner, {
-    textAlign: 'left', fontWeight: '600', padding: '4px 8px', position: 'sticky', top: '0', left: '0', zIndex: '2',
-    background: sticky_bg, borderBottom: strong_line, whiteSpace: 'nowrap'
-  })
-  hr.appendChild(corner)
-  matrix.columns.forEach(c => {
+  head_cell(corner, null, true)
+  css(corner, { left: '0', verticalAlign: 'bottom' })
+  hrs[0].appendChild(corner)
+  /** Les colonnes coiffées par la colonne `i` (elle comprise), si elle est ouverte. */
+  const spanOf = (i: number): number => {
+    const c = matrix.columns[i]
+    if (!(c.kind === 'member' && c.expanded)) return 1
+    let n = 1
+    while (i + n < matrix.columns.length && matrix.columns[i + n].kind === 'member' && (matrix.columns[i + n].depth ?? 0) > (c.depth ?? 0)) n++
+    return n
+  }
+  /**
+   * Le +/− d'un en-tête de colonne. Sur une colonne fermée, il se pose AU-DESSUS du libellé (aligné à
+   * droite) : la colonne garde sa largeur, le tableau ne déborde pas plus qu'avant.
+   */
+  const columnToggle = (th: HTMLTableCellElement, c: Type_MatrixColumn, stacked: boolean) => {
+    if (!o.on_column_toggle || c.kind !== 'member' || !c.has_children || !c.member_id) return
+    const member_id = c.member_id
+    const expanded = c.expanded === true
+    const button = toggleButton(expanded ? o.labels.collapse : o.labels.expand, expanded, c.label, o.level_hint,
+      g => o.on_column_toggle?.(member_id, !expanded, g))
+    if (stacked) css(button, { display: 'block', width: '14px', height: '14px', lineHeight: '10px', fontSize: '11px', margin: '0 0 2px auto' })
+    th.appendChild(button)
+  }
+  // Le haut d'une rangée sticky : les rangées d'en-têtes s'empilent.
+  const ROW_PX = 26
+  matrix.columns.forEach((c, i) => {
+    const depth = c.kind === 'member' ? (c.depth ?? 0) : 0
+    if (c.kind === 'member' && c.expanded) {
+      // Le groupe : « − Europe » sur toutes ses colonnes, puis son sous-total sous lui.
+      const group = document.createElement('th')
+      group.scope = 'colgroup'
+      group.colSpan = spanOf(i)
+      head_cell(group, c, false)
+      css(group, { textAlign: 'center', borderLeft: line, top: `${depth * ROW_PX}px` })
+      columnToggle(group, c, false)
+      group.appendChild(document.createTextNode(c.label))
+      hrs[depth].appendChild(group)
+      const sub = document.createElement('th')
+      sub.scope = 'col'
+      sub.rowSpan = header_rows - depth - 1
+      head_cell(sub, c, true)
+      css(sub, { borderLeft: line, top: `${(depth + 1) * ROW_PX}px`, verticalAlign: 'bottom' })
+      sortable(sub, o.labels.subtotal ?? 'Total', c.key, 'right')
+      hrs[depth + 1].appendChild(sub)
+      return
+    }
     const th = document.createElement('th')
     th.scope = 'col'
+    th.rowSpan = header_rows - depth
+    head_cell(th, c, true)
+    css(th, { top: `${depth * ROW_PX}px`, verticalAlign: 'bottom' })
+    columnToggle(th, c, true)
     sortable(th, c.label, c.key, 'right')
-    css(th, {
-      textAlign: 'right', fontWeight: '600', padding: '4px 8px', position: 'sticky', top: '0', zIndex: '1',
-      background: sticky_bg, borderBottom: strong_line, whiteSpace: 'nowrap',
-      ...(c.kind === 'total' ? { borderLeft: strong_line } : {})
-    })
-    hr.appendChild(th)
+    hrs[depth].appendChild(th)
   })
-  thead.appendChild(hr)
+  hrs.forEach(tr => {
+    if (header_rows > 1) css(tr, { height: `${ROW_PX}px` })
+    thead.appendChild(tr)
+  })
   table.appendChild(thead)
 
   const tbody = document.createElement('tbody')
@@ -205,22 +289,9 @@ export const drawDimensionMatrixTable = (
       ...(r.kind === 'residual' ? { fontStyle: 'italic', opacity: '0.75' } : {})
     })
     if (r.kind === 'member' && r.has_children && r.member_id) {
-      const toggle = document.createElement('button')
-      toggle.type = 'button'
-      toggle.className = 'dimension_matrix_toggle'
-      toggle.setAttribute('aria-expanded', String(r.expanded))
-      const label = r.expanded ? o.labels.collapse : o.labels.expand
-      toggle.setAttribute('aria-label', `${label} ${r.label}`)
-      toggle.title = label
-      toggle.textContent = r.expanded ? '−' : '+'
-      css(toggle, {
-        font: 'inherit', width: '18px', height: '18px', lineHeight: '14px', padding: '0', marginRight: '6px',
-        cursor: 'pointer', borderRadius: '3px', border: '1px solid rgba(127,127,127,0.5)',
-        background: 'transparent', color: 'inherit', verticalAlign: 'middle'
-      })
       const member_id = r.member_id
-      toggle.addEventListener('click', () => o.on_toggle(member_id, !r.expanded))
-      th.appendChild(toggle)
+      th.appendChild(toggleButton(r.expanded ? o.labels.collapse : o.labels.expand, r.expanded, r.label, o.level_hint,
+        g => o.on_toggle(member_id, !r.expanded, g)))
     } else {
       // L'alignement des libellés ne doit pas dépendre de la présence d'un bouton.
       const spacer = document.createElement('span')
@@ -235,7 +306,7 @@ export const drawDimensionMatrixTable = (
       const td = document.createElement('td')
       td.textContent = v === null ? '' : (col.kind === 'share' ? o.format_share(v) : o.format(v))
       css(td, {
-        textAlign: 'right', padding: '3px 8px', fontWeight: col.kind === 'total' ? '600' : weight,
+        textAlign: 'right', padding: '3px 8px', fontWeight: col.kind === 'total' || col.expanded ? '600' : weight,
         borderBottom: line, whiteSpace: 'nowrap',
         ...(col.kind === 'total' ? { borderLeft: strong_line } : {}),
         ...(is_total ? { borderTop: strong_line } : {}),

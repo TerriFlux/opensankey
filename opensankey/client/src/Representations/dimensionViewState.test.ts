@@ -1,12 +1,14 @@
 import { memberPathSectorId } from '../Charts/memberSectorId'
 import type { Type_MemberRef } from '../Charts/memberSectorId'
 import { drawPlanOf } from '../Charts/couronnePlan'
-import { matrixCutOfCouronne } from '../Charts/DimensionMatrix'
+import { buildDimensionMatrix, matrixInputOfPlan } from '../Charts/DimensionMatrix'
+import type { Type_DimensionMatrix } from '../Charts/DimensionMatrix'
 import { descripteur, monterSocle } from '../Charts/__fixtures__/couronneSocle'
 import type { Type_Socle } from '../Charts/__fixtures__/couronneSocle'
 import { disaggregateDimensionNodes, isGeneratedMemberNode } from '../Algorithms/DimensionDisaggregation'
 import type { Class_NodeElement } from '../Elements/Node'
 import { readCouronneState } from './couronneState'
+import type { Type_CouronneState } from './couronneState'
 import {
   applyLabel, choiceOfLabel, collapseMember, depthsOf, DRAWING_LABELS, expandMember, fromCouronneState, fromDiagram,
   fromFigure, groupingOf, labelOfDimension, openedOf, planFor, showLevel, toCouronneState, toDiagramPatch,
@@ -55,6 +57,29 @@ const CAS: { nom: string, options: Bag, diagramme?: { filiere?: string[], pays?:
   { nom: 'liee multiples par pays', options: { descriptor: croise, small_multiples_by: 'pays' }, diagramme: { pays: ['europe', 'ameriques'] } },
   { nom: 'cle couronne ecrite', options: { couronne: { version: 1, order: ['pays', 'filiere'], dims: { pays: { focus: [], shown: ['europe', 'asie'], hidden: [], active: true, drawing: 'sunburst' }, filiere: { focus: [], shown: ['cereales', 'lait'], hidden: ['lait'], active: true, drawing: 'multiples' } } }, coordinates_linked: false } }
 ]
+
+/**
+ * La lecture du tableau d AVANT les roles (sa!929, `matrixCutOfCouronne`), gardee comme reference : les
+ * deux premieres dimensions actives, celles qui decoupent d abord, dans l ordre de l etat ; les autres a
+ * la coordonnee du plan de la couronne, sinon a leurs parts.
+ */
+const ancienneLecture = (cs: Type_CouronneState, s: Type_Socle) => {
+  const plan = drawPlanOf(cs, s.sankey)
+  const order = cs.order.filter(id => cs.dims[id] !== undefined)
+  if (order.length === 0) return null
+  const actives = order.filter(id => cs.dims[id].active)
+  const divides = (id: string) => plan.cut.some(c => c.dimension_id === id) || plan.cells?.dimension_id === id
+  const chosen = [...actives.filter(divides), ...actives.filter(id => !divides(id))].slice(0, 2)
+    .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+  const row_id = chosen[0] ?? order[0]
+  const col_id = chosen[1] ?? null
+  const coordinates: { [id: string]: string[] } = {}
+  order.filter(id => id !== row_id && id !== col_id).forEach(id => {
+    const ids = plan.fixed[id] ?? cs.dims[id].shown.filter(m => !cs.dims[id].hidden.includes(m))
+    if (ids.length > 0) coordinates[id] = ids
+  })
+  return { row_id, col_id, coordinates }
+}
 
 const monter = (diagramme?: { filiere?: string[], pays?: string[] }) => {
   const s = monterSocle()
@@ -111,15 +136,13 @@ describe('os#1511 modele commun — figure : relecture des anciens formats et no
       expect(toCouronneState(st)).toEqual(cs)
       // La couronne : le plan d aujourd hui.
       expect(couronnePlan(st, s)).toEqual(drawPlanOf(cs, s.sankey))
-      // Le tableau : la coupe d aujourd hui.
-      const m = matrixCutOfCouronne(cs, drawPlanOf(cs, s.sankey), s.sankey)
+      // Le tableau : par les roles, les memes axes que la lecture d avant.
+      const m = ancienneLecture(cs, s)
       const mp = matrixPlan(st, s)
       if (m === null) { expect(mp).toBeNull(); return }
       expect(mp.rows.dimension_id).toBe(m.row_id)
       expect(mp.columns?.dimension_id ?? null).toBe(m.col_id)
-      const coords: Bag = {}
-      m.coordinates.forEach((v, k) => { coords[k] = v.map(t => t.id) })
-      expect(mp.coordinates).toEqual(coords)
+      expect(mp.coordinates).toEqual(m.coordinates)
       // Ecrit puis relu : le meme etat.
       const relu = fromFigure(toFigureOptions(c.options, st), undefined, s.sankey)
       expect(toCouronneState(relu)).toEqual(cs)
@@ -350,5 +373,65 @@ describe('os#1511 modele commun — le diagramme', () => {
     expect(cp.cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques'] })
     expect(matrixPlan(st, s).columns?.dimension_id).toBe('pays')
     expect(fromCouronneState(toCouronneState(st)).dims.pays.role).toBe('cases')
+  })
+})
+
+describe('os#1511 modele commun, lot 2 — le tableau croise par les roles', () => {
+  const plan = (options: Bag, s: Type_Socle, linked = false) => matrixPlan(fromFigure(options, linked, s.sankey), s)
+  const lignesDe = (st: Type_DimensionViewState, s: Type_Socle) => {
+    const input = matrixInputOfPlan(matrixPlan(st, s), s.sankey)
+    return buildDimensionMatrix(
+      { kind: 'link', link: s.lien }, { linked: false, dims: [], dividing: [], opened: new Set<string>() }, { data_tags: null },
+      { axes: { rows: input.rows, columns: input.columns }, coordinates: input.coordinates, total_label: 'Total' }
+    ) as Type_DimensionMatrix
+  }
+
+  test('couronne croisee : filieres en lignes, continents en colonnes, totaux a la racine', () => {
+    const s = monterSocle()
+    const mp = plan(det({ dimension_opening: ouverts }), s)
+    expect(mp.rows).toMatchObject({ dimension_id: 'filiere', entry: ['cereales', 'lait', 'viande'], total: ['produits'], scope: [] })
+    expect(mp.columns).toMatchObject({ dimension_id: 'pays', entry: ['europe', 'ameriques', 'asie'], total: ['monde'] })
+  })
+
+  test('une couronne par pays : pays en colonnes (role cases)', () => {
+    const s = monterSocle()
+    const st = fromFigure(det({ dimension_opening: ouverts, small_multiples_by: 'pays' }), false, s.sankey)
+    expect(st.dims.pays.role).toBe('cases')
+    expect(matrixPlan(st, s).columns?.dimension_id).toBe('pays')
+    expect(matrixPlan(st, s).rows.dimension_id).toBe('filiere')
+  })
+
+  test('zoom cereales : le tableau est restreint a la portee, son total a la portee', () => {
+    const s = monterSocle()
+    const mp = plan(det({ dimension_opening: { filiere: ['produits'] }, hierarchy_focus: zoom(ref('filiere', 'cereales')) }), s)
+    expect(mp.rows).toMatchObject({ entry: ['ble', 'mais'], total: ['cereales'], scope: ['cereales'] })
+  })
+
+  test('une ligne decochee disparait, le total devient la somme', () => {
+    const s = monterSocle()
+    const mp = plan(det({ dimension_opening: ouverts, dimension_hidden: { filiere: ['lait'] } }), s)
+    expect(mp.rows.entry).toEqual(['cereales', 'viande'])
+    expect(mp.rows.total).toBeNull()
+  })
+
+  test('ouvrir une ligne ou une colonne = ouvrir le secteur du sunburst', () => {
+    const s = monterSocle()
+    const base = fromFigure(det({ dimension_opening: ouverts }), false, s.sankey)
+    const st = {
+      ...base,
+      dims: { ...base.dims, filiere: expandMember(s.filiere, base.dims.filiere, 'cereales'), pays: expandMember(s.pays, base.dims.pays, 'europe') }
+    }
+    const mp = matrixPlan(st, s)
+    expect(mp.rows).toMatchObject({ entry: ['cereales', 'lait', 'viande'], opened: ['cereales'], total: ['produits'] })
+    expect(mp.columns).toMatchObject({ entry: ['europe', 'ameriques', 'asie'], opened: ['europe'], total: ['monde'] })
+    const mx = lignesDe(st, s)
+    expect(mx.columns.map(c => [c.key, c.depth ?? null, c.expanded ?? null])).toEqual([
+      ['c:europe', 0, true], ['c:fr', 1, false], ['c:es', 1, false], ['c:ameriques', 0, false], ['c:asie', 0, false],
+      ['c:__total__', null, null]
+    ])
+    // Sous-total Europe = France + Espagne ; le Total ne compte pas deux fois l Europe.
+    const cereales = mx.rows.find(r => r.member_id === 'cereales')
+    expect(cereales?.cells).toEqual([66, 32, 34, 74, 40, 180])
+    expect(mx.rows.filter(r => r.depth === 1).map(r => r.member_id).sort()).toEqual(['ble', 'mais'])
   })
 })

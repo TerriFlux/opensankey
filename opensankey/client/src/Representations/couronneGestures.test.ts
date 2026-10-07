@@ -171,3 +171,56 @@ describe('os#1511 couronneGestures — liee', () => {
     expect(m.parts('filiere')).toEqual(['cereales', 'lait', 'viande'])
   })
 })
+
+// 07/10/2026 — os#1511, lot 2 : LES GESTES DU TABLEAU CROISE ecrivent l etat commun.
+describe('os#1511 couronneGestures — tableau croise', () => {
+  const ouverts = { ...det, dimension_opening: { filiere: ['produits'], pays: ['monde'] } }
+  const selection = (m: ReturnType<typeof monter>, dim: 'filiere' | 'pays') => m.s[dim].selected_tags_list.map(t => t.id)
+
+  test('detachee : + ouvre un membre (mixte), - le referme', () => {
+    const m = monter(ouverts)
+    m.g().openMember('pays', 'europe')
+    expect(m.state().dims.pays.shown).toEqual(['fr', 'es', 'ameriques', 'asie'])
+    m.g().closeMember('pays', 'europe')
+    expect(m.state().dims.pays.shown).toEqual(['europe', 'ameriques', 'asie'])
+  })
+  test('une part unique ouverte d un cran : + ouvre la route', () => {
+    const m = monter({ ...det, dimension_opening: { filiere: ['produits'] } })
+    expect(m.state().dims.pays.shown).toEqual(['monde'])
+    m.g().openMember('pays', 'europe')
+    expect(m.state().dims.pays.shown).toEqual(['fr', 'es', 'ameriques', 'asie'])
+  })
+  test('- ne replie pas la portee', () => {
+    const m = monter(ouverts)
+    m.g().setFocus('filiere', ['cereales'])
+    const avant = m.state().dims.filiere.shown
+    m.g().closeMember('filiere', 'cereales')
+    expect(m.state().dims.filiere.shown).toEqual(avant)
+  })
+  test('maj+clic : tout le niveau', () => {
+    const m = monter(ouverts)
+    m.g().showLevel('pays', 2)
+    expect(m.state().dims.pays.shown).toEqual(['fr', 'es', 'br', 'us', 'cn'])
+  })
+  test('colonnes = role cases : la couronne revient en une couronne par pays ; (aucune) les retire', () => {
+    const m = monter(ouverts)
+    m.g().setMatrixColumns('filiere', 'pays')
+    expect(m.state().dims.pays.drawing).toBe('multiples')
+    expect(m.state().order).toEqual(['filiere', 'pays'])
+    expect(m.plan().cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques', 'asie'] })
+    m.g().swap('filiere', 'pays')
+    expect(m.state().dims.filiere.drawing).toBe('multiples')
+    expect(m.state().order).toEqual(['pays', 'filiere'])
+    m.g().setMatrixColumns('pays', null)
+    expect(m.state().dims.filiere).toMatchObject({ active: false, drawing: 'sectors' })
+    expect(m.plan().cells).toBeNull()
+  })
+  test('liee : + ouvre la selection du diagramme', () => {
+    const m = monter(lie)
+    expect(selection(m, 'pays')).toEqual(['monde'])
+    m.g().openMember('pays', 'europe')
+    expect(selection(m, 'pays').sort()).toEqual(['ameriques', 'asie', 'es', 'fr'])
+    m.g().closeMember('pays', 'europe')
+    expect(selection(m, 'pays').sort()).toEqual(['ameriques', 'asie', 'europe'])
+  })
+})
