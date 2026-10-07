@@ -328,11 +328,15 @@ export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Clas
   })
 }
 
-/** Les nœuds qui portent la dimension deviennent exactement `node_ids` (annulable). */
+/**
+ * Les nœuds qui portent la dimension deviennent exactement `node_ids` (annulable). Choisir ses
+ * nœuds, c'est le dessin « en nœuds » : on quitte le diagramme par membre (Julien, 07/10 : « en
+ * mode un diagramme par membre, je n'arrive pas à revenir au mode en nœuds »).
+ */
 export const applyDimensionCarriers = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_ids: string[]
 ) => {
-  commit(app_data, tagg, { ...snapshot(app_data, tagg), carriers: node_ids })
+  commit(app_data, tagg, { ...snapshot(app_data, tagg), carriers: node_ids, bands: false })
 }
 
 /**
@@ -475,5 +479,6 @@ export const toggleDimensionCarrier = (
   const carriers = now.carriers.includes(node_id)
     ? now.carriers.filter(id => id !== node_id)
     : [...now.carriers, node_id]
-  commit(app_data, tagg, { ...now, carriers })
+  // Cocher un nœud dans « En nœuds » quitte le diagramme par membre (cf. `applyDimensionCarriers`).
+  commit(app_data, tagg, { ...now, carriers, bands: false })
 }
