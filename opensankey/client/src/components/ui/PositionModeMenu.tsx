@@ -413,7 +413,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                       <CheckItem
                         key={node.id}
                         label={node.name}
-                        checked={node.driving_dimension === tagg}
+                        checked={node.own_driving_dimension === tagg}
                         closeOnSelect={false}
                         onClick={() => toggleDimensionCarrier(app_data, tagg, node.id)}
                       />

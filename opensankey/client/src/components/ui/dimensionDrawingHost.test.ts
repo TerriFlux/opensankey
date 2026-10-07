@@ -3,8 +3,9 @@ import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
   applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
-  applyMemberBands, applyReferenceNode, dimensionCarriersOf, dimensionInMemberBands, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
+  applyMemberBands, applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
 } from './dimensionDrawingHost'
+import { NodeElementPersistence } from '../../Persistence/SankeyPersistence'
 
 if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
@@ -48,9 +49,9 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([b.id])
   })
 
-  test('un diagramme par membre fait porter la dimension par tous les noeuds, en un pas annulable', () => {
-    // Julien, 07/10 : « si on selectionne un diagramme par membre, ca doit automatiquement
-    // selectionner tous les noeuds comme representant ».
+  test('un diagramme par membre fait porter la dimension par tous les noeuds, sans changer leur reglage', () => {
+    // Julien, 07/10 : tous les noeuds representent la dimension en bandes, mais un noeud qui ne la
+    // portait pas garde son parametre : revenir en arriere rend le diagramme d avant.
     const { app, pays, a, b } = monter()
     const c = app.drawing_area.sankey.addNewNodeWithName('C')
     const autre = app.drawing_area.sankey.addDataTagGroup('autre', 'Autre', false) as Class_DataTagGroup
@@ -58,11 +59,17 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     c.driving_dimension = autre
     toggleDimensionCarrier(app, pays, a.id)
     applyMemberBands(app, pays, true)
-    expect(dimensionCarriersOf(app, pays).map(n => n.id).sort()).toEqual([a.id, b.id].sort())
+    expect(b.driving_dimension).toBe(pays)
+    expect(b.own_driving_dimension).toBeUndefined()
     expect(c.driving_dimension).toBe(autre)
-    expect(dimensionInMemberBands(app, pays)).toBe(true)
-    app.history.applyUndo()
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
+    const ecrit: { [k: string]: unknown } = {}
+    NodeElementPersistence.toJSON(b, ecrit as never)
+    expect(ecrit['driving_dimension']).toBeUndefined()
+    app.history.applyUndo()
+    expect(b.driving_dimension).toBeUndefined()
+    applyDimensionDrawing(app, pays, 'multi')
+    expect(b.driving_dimension).toBeUndefined()
   })
 
   test('quitter en noeuds detache tous les porteurs, et l annulation les rend', () => {

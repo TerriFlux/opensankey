@@ -886,8 +886,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // os#1511 lot 2 — DIMENSION PILOTE : clé ADDITIVE, écrite par le seul nœud qui représente
     // un axe. Les nœuds qu'il engendre, eux, ne sont jamais écrits : ils se refabriquent au
     // chargement depuis les membres, et c'est cet attachement qui permet de les reconstruire.
-    if (node.driving_dimension !== undefined) {
-      json_object['driving_dimension'] = node.driving_dimension.id
+    if (node.own_driving_dimension !== undefined) {
+      json_object['driving_dimension'] = node.own_driving_dimension.id
     }
     if (node.tooltip_text) json_object['tooltip_text'] = node.tooltip_text
     // #411 — trace d'origine du nœud, voir LinkElementPersistence.

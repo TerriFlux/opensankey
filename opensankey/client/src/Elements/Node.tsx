@@ -1083,8 +1083,26 @@ export class Class_NodeElement extends Class_NodeBase {
    * ordinaire qu'un nœud rattaché à un axe fantôme).
    */
   public get driving_dimension(): Class_DataTagGroup | undefined {
+    return this.own_driving_dimension ?? this.implicit_driving_dimension
+  }
+
+  /** La dimension que CE nœud a été réglé pour porter — ce que le fichier écrit et l'éditeur coche. */
+  public get own_driving_dimension(): Class_DataTagGroup | undefined {
     if (this._driving_dimension_id === undefined) return undefined
     return this.sankey.data_taggs_dict[this._driving_dimension_id] as Class_DataTagGroup | undefined
+  }
+
+  /**
+   * os#1511 — UN DIAGRAMME PAR MEMBRE répète le diagramme ENTIER : tout nœud sans dimension à lui la
+   * porte alors, sans que son réglage change (Julien, 07/10 : « si c'est un diagramme par membre, on
+   * n'a pas besoin de tester le nœud, et comme ça on garde son paramètre » — revenir en arrière puis
+   * passer à une autre représentation ne doit pas trouver des nœuds devenus porteurs). Seulement sous
+   * des bandes DEMANDÉES (`member_bands` vrai) et dès qu'un nœud porte la dimension pour de bon.
+   */
+  private get implicit_driving_dimension(): Class_DataTagGroup | undefined {
+    if (isGeneratedMemberId(this.id)) return undefined
+    return (this.sankey.data_taggs_list as Class_DataTagGroup[])
+      .find(dimension => dimension.member_bands === true && dimension.own_carriers_count > 0)
   }
 
   public set driving_dimension(dimension: Class_DataTagGroup | undefined) {

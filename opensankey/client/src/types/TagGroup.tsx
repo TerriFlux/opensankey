@@ -1541,7 +1541,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
   public get member_bands(): boolean | undefined { return this._member_bands }
-  public set member_bands(value: boolean | undefined) { this._member_bands = value }
+  public set member_bands(value: boolean | undefined) {
+    this._member_bands = value
+    // Sous des bandes demandées, tous les nœuds portent la dimension (`Node.driving_dimension`).
+    this.drawingChanged()
+  }
 
   /** os#1511 — nœud de référence de la mise en page désagrégée : `undefined` = automatique. */
   public get reference_node_id(): string | undefined { return this._reference_node_id }
@@ -1691,7 +1695,21 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   private _carriers_memo: number | undefined = undefined
 
   /** Un nœud a pris, quitté ou perdu (suppression) cette dimension : le dessin est à relire. */
-  public drawingChanged(): void { this._carriers_memo = undefined }
+  public drawingChanged(): void {
+    this._carriers_memo = undefined
+    this._own_carriers_memo = undefined
+  }
+
+  /** Nœuds RÉGLÉS pour porter la dimension, sans ceux qu'un diagramme par membre y ajoute. */
+  public get own_carriers_count(): number {
+    if (this._own_carriers_memo === undefined) {
+      this._own_carriers_memo = this._ref_sankey.nodes_list
+        .filter((node: Class_NodeElement) => node.own_driving_dimension === this).length
+      queueMicrotask(() => { this._own_carriers_memo = undefined })
+    }
+    return this._own_carriers_memo
+  }
+  private _own_carriers_memo: number | undefined = undefined
 
   /** Choix multiple, pas en nœuds, et plusieurs membres possibles : de quoi faire des bandes. */
   private get _may_draw_bands(): boolean {
