@@ -3,7 +3,7 @@ import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
   applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
-  applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
+  applyMemberBands, applyReferenceNode, dimensionCarriersOf, dimensionInMemberBands, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -46,6 +46,23 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionCarriersOf(app, pays).map(n => n.id).sort()).toEqual([a.id, b.id].sort())
     toggleDimensionCarrier(app, pays, a.id)
     expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([b.id])
+  })
+
+  test('un diagramme par membre fait porter la dimension par tous les noeuds, en un pas annulable', () => {
+    // Julien, 07/10 : « si on selectionne un diagramme par membre, ca doit automatiquement
+    // selectionner tous les noeuds comme representant ».
+    const { app, pays, a, b } = monter()
+    const c = app.drawing_area.sankey.addNewNodeWithName('C')
+    const autre = app.drawing_area.sankey.addDataTagGroup('autre', 'Autre', false) as Class_DataTagGroup
+    autre.addTag('X', 'x')
+    c.driving_dimension = autre
+    toggleDimensionCarrier(app, pays, a.id)
+    applyMemberBands(app, pays, true)
+    expect(dimensionCarriersOf(app, pays).map(n => n.id).sort()).toEqual([a.id, b.id].sort())
+    expect(c.driving_dimension).toBe(autre)
+    expect(dimensionInMemberBands(app, pays)).toBe(true)
+    app.history.applyUndo()
+    expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
   })
 
   test('quitter en noeuds detache tous les porteurs, et l annulation les rend', () => {
