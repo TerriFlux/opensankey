@@ -445,9 +445,9 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                 app_data.drawing_area.sankey.data_taggs_list.some(d => d.member_bands === true)
                 ? <CheckItem
                   label={t('Banner.members_color_flows')}
-                  checked={tagg.use_colors}
+                  checked={tagg.paints_member_bands_flows}
                   closeOnSelect={false}
-                  onClick={() => applyMembersColorFlows(app_data, tagg, !tagg.use_colors)}
+                  onClick={() => applyMembersColorFlows(app_data, tagg, !tagg.paints_flows)}
                 />
                 : null}
               {/* os#1511 — L'ORDRE DES MEMBRES, en bandes comme en nœuds : par valeur au premier

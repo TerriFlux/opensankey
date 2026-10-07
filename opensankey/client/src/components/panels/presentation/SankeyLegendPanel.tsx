@@ -34,6 +34,8 @@ import { LEGEND_SAMPLE_VALUE } from '../../../Elements/legendTagStyle'
 import { openPresentationFor } from './openPresentation'
 import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDimensionChoice'
 import { ZOOM_TOPIC } from '../../../types/EventBus'
+import type { Class_DataTagGroup } from '../../../types/TagGroup'
+import { applyMembersColorFlows } from '../../ui/dimensionDrawingHost'
 
 /** Largeur de la colonne de légende, en px d'écran. */
 export const SANKEY_LEGEND_PANEL_PX = 240
@@ -228,7 +230,42 @@ const LegendRow = ({ app_data, item }: {
       : null}
     {item.heading === true ? null : <Swatch app_data={app_data} item={item} unchecked={unchecked} />}
     {label}
+    {is_title ? <PaintFlowsButton app_data={app_data} group_id={legend.tagGroupIdOfTitle(item.id)} /> : null}
   </div>
+}
+
+/**
+ * os#1511 — LE PINCEAU d'un titre de dimension, sous un diagramme par membre : c'est elle qui peint
+ * les flux (Julien, 07/10 : « il faut pouvoir choisir dans la légende, et le premier choix c'est
+ * Ressources et emplois qui peint les branches, et pas les diagrammes »). Plein = elle peint.
+ */
+const PaintFlowsButton = ({ app_data, group_id }: { app_data: Class_ApplicationData, group_id: string | undefined }) => {
+  const sankey = app_data.drawing_area.sankey
+  const group = group_id === undefined ? undefined
+    : (sankey.data_taggs_list as Class_DataTagGroup[]).find(g => g.id === group_id)
+  if (group === undefined || !group.may_paint_member_bands_flows) return null
+  const paints = group.paints_member_bands_flows
+  const t = app_data.t as ((key: string) => string) | undefined
+  const title = t ? t('Banner.legend_paints_flows') : ''
+  return <button
+    type='button'
+    title={title || undefined}
+    aria-label={title || undefined}
+    aria-pressed={paints}
+    onClick={evt => {
+      evt.stopPropagation()
+      if (!paints) applyMembersColorFlows(app_data, group, true)
+    }}
+    style={{
+      flex: '0 0 auto', marginLeft: 'auto', padding: '0 0.2rem', border: 'none', borderRadius: '0.2rem',
+      background: paints ? '#2c7a7b' : 'transparent', color: paints ? '#ffffff' : UNCHECKED_INK,
+      cursor: paints ? 'default' : 'pointer', lineHeight: 1
+    }}
+  >
+    <svg width='12' height='12' viewBox='0 0 16 16' aria-hidden='true'>
+      <path fill='currentColor' d='M14.6 1.4a1.4 1.4 0 0 0-2 0L6.8 7.2l2 2 5.8-5.8a1.4 1.4 0 0 0 0-2zM5.9 8.1c-1.6 0-2.9 1.3-2.9 2.9 0 1.2-.8 2-2 2 .8 1 2 1.6 3.4 1.6 2.3 0 4.1-1.8 4.1-4.1L5.9 8.1z' />
+    </svg>
+  </button>
 }
 
 /**

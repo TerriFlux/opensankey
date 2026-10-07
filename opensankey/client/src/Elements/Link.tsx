@@ -34,6 +34,7 @@ import type {
   Class_Tag,
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
+import { flowPainterOf } from '../types/TagGroup'
 import { isGeneratedMemberId, parseGeneratedId } from './GeneratedMemberMark'
 import { OTHERS_COLOR, OTHERS_EXCEPTION_SHARE_PCT, OTHERS_ID } from '../Algorithms/DimensionOthers'
 import { ordonnerMembres } from '../Algorithms/DimensionMemberOrder'
@@ -908,8 +909,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _memberBandColor(): string | undefined {
     // os#1511 — UN DIAGRAMME PAR MEMBRE : chaque bande prend la couleur de son membre (Julien,
     // 07/10 : « sans couleur »). Lue sur les nœuds engendrés des deux bouts.
-    // Une dimension en nœuds qui colore les flux (« Couleurs des membres sur les flux ») l'emporte
-    // sur la bande : « comment faire pour que la couleur devienne celle de Ressources et emplois ».
+    // QUI PEINT LES FLUX (Julien, 07/10 : « il faut pouvoir choisir dans la légende, et le premier
+    // choix c'est Ressources et emplois qui peint les branches, et pas les diagrammes ») :
+    //  1. la dimension choisie dans la légende (`use_colors`, une seule à la fois) ;
+    //  2. à défaut, une dimension EN NŒUDS dont un bout porte un membre (les postes) ;
+    //  3. à défaut, la bande (la filière).
+    // Un membre sans couleur enregistrée prend celle de la carte par défaut (`displayColorOf`).
     if (!isGeneratedMemberId(this.id)) return undefined
     const dimensions = this.sankey.data_taggs_list as Class_DataTagGroup[]
     const bande = dimensions.find(tagg => tagg.member_bands === true)
@@ -917,17 +922,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const aux_bouts = [this.source, this.target].flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
     const couleurDe = (tagg: Class_DataTagGroup) => {
       const membres = [...new Set(aux_bouts.filter(membre => membre.group === tagg))]
-      if (membres.length !== 1) return undefined
-      const color = membres[0].color
-      return (color && color !== 'grey') ? color : undefined
+      return membres.length === 1 ? tagg.displayColorOf(membres[0]) : undefined
     }
-    for (const tagg of dimensions) {
-      if (tagg !== bande && tagg.use_colors) {
-        const color = couleurDe(tagg)
-        if (color !== undefined) return color
-      }
-    }
-    return couleurDe(bande)
+    const peintre = flowPainterOf(dimensions)
+    return peintre === undefined ? undefined : couleurDe(peintre)
   }
 
   private _singleMemberDimensionColor(): string | undefined {

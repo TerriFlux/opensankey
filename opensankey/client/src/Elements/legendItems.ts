@@ -187,6 +187,8 @@ type Type_TagGroupForLegend = {
   // des nœuds NOMMÉS sur le diagramme. Une légende de couleurs n'a de sens que pour ce qui n'est
   // pas nommé à sa place — les bandes d'un flux. Absent = comportement d'avant.
   is_drawn_as_nodes?: boolean
+  // os#1511 — couleur d'un membre à l'écran (la sienne, sinon la carte par défaut).
+  displayColorOf?(tag: Type_TagForLegend): string
   selected_tags_list: Type_TagForLegend[]
   // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
   // absent, le calcul retombe sur `selected_tags_list` (comportement d'avant
@@ -700,7 +702,10 @@ export function computeLegendItems(
             applyTagStyleFormat(item, own_style, tag.color)
           }
         } else {
-          item.swatch_color = tag.color
+          // Diagramme par membre : la couleur que les flux montrent, même sans couleur enregistrée.
+          item.swatch_color = tag_group.draws_members_as_nodes === true && tag_group.displayColorOf !== undefined
+            ? tag_group.displayColorOf(tag)
+            : tag.color
         }
         if (offered !== null) {
           // os#1526 — la case : cochée = choisi dans le diagramme ; un clic coche ou décoche.

@@ -282,8 +282,12 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
     if (deja !== undefined) return deja
     let flux_de_la_dimension = flux_par_dimension.get(dimension)
     if (flux_de_la_dimension === undefined) {
+      // Un diagramme par membre se range sur TOUT le diagramme : ses nœuds peuvent tous porter
+      // une autre dimension (SOCLE filières), et aucun flux ne touchait alors « un porteur » — les
+      // bandes sortaient dans l'ordre de l'arbre (Julien, 07/10 : « ce n'est plus trié »).
       flux_de_la_dimension = sankey.links_list.filter(flux => !isGeneratedMemberLink(flux) &&
-        [flux.source, flux.target].some(bout => bout.driving_dimension === dimension))
+        (dimension.member_bands === true ||
+          [flux.source, flux.target].some(bout => bout.driving_dimension === dimension)))
       flux_par_dimension.set(dimension, flux_de_la_dimension)
     }
     const valeur = flux_de_la_dimension.reduce((total, flux) => total + valeurPourCase(flux, [membre]), 0)

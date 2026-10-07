@@ -459,11 +459,10 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
  */
 export const applyMembersColorFlows = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
   const dimensions = app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]
-  const before = dimensions.map(d => [d, d.use_colors] as [Class_DataTagGroup, boolean])
-  const after = dimensions.map(d => [d, d === tagg ? on : (on && d.drawing === 'nodes' ? false : d.use_colors)] as
-    [Class_DataTagGroup, boolean])
+  const before = dimensions.map(d => [d, d.paints_flows] as [Class_DataTagGroup, boolean])
+  const after = dimensions.map(d => [d, d === tagg ? on : (on ? false : d.paints_flows)] as [Class_DataTagGroup, boolean])
   const apply = (state: [Class_DataTagGroup, boolean][]) => {
-    state.forEach(([d, v]) => { d.use_colors = v })
+    state.forEach(([d, v]) => { d.paints_flows = v })
     app_data.drawing_area.draw()
     app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   }

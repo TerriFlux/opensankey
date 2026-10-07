@@ -102,7 +102,7 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // seulement hors défaut, donc à tenir HORS du sac, sinon une valeur remise au défaut ressortait
   // au prochain enregistrement. `bands_by_value` / `nodes_by_value` sont relus (ancien format de
   // `members_order`) puis abandonnés.
-  'topbar', 'member_bands', 'members_order', 'bands_by_value', 'nodes_by_value',
+  'topbar', 'member_bands', 'paints_flows', 'members_order', 'bands_by_value', 'nodes_by_value',
   // os#1511 — la portée (zoom) partagée par les fenêtres liées, écrite seulement quand elle est posée.
   'focus',
   // os#1511 — les décochés partagés par les fenêtres liées, écrits seulement quand il y en a.
@@ -1398,6 +1398,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // étape dans le créneau de chaque nœud. `undefined` = automatique : bandes dès que deux nœuds ou
   // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
   private _member_bands: boolean | undefined = undefined
+  // os#1511 — c'est CETTE dimension qui peint les flux d'un diagramme par membre (légende, pinceau).
+  private _paints_flows: boolean = false
   // os#1511 — NŒUD DE RÉFÉRENCE de la mise en page désagrégée (Julien, 01/10 : « la faire à partir
   // d'un nœud de référence et tout placer autour de lui »). Il ne bouge pas ; les nœuds engendrés
   // se placent autour de lui le long des flux. `undefined` = automatique
@@ -1477,6 +1479,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._levels = [...tagg_to_copy._levels]
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
+    this._paints_flows = tagg_to_copy._paints_flows
     this._reference_node_id = tagg_to_copy._reference_node_id
     this._members_order = tagg_to_copy._members_order
     this._focus_ids = [...tagg_to_copy._focus_ids]
@@ -1501,6 +1504,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
+    if (this._paints_flows) json_object['paints_flows'] = true
     if (this._reference_node_id !== undefined) json_object['reference_node'] = this._reference_node_id
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
     if (this._members_order !== undefined) json_object['members_order'] = this._members_order
@@ -1553,6 +1557,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // `current_level` (fichiers d'avant le 02/10) n'est plus lu : le niveau courant se déduit de
     // la sélection relue avec les membres, qui le contredisait parfois.
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
+    this._paints_flows = json_object['paints_flows'] === true
     const reference = json_object['reference_node']
     if (typeof reference === 'string' && reference !== '') this._reference_node_id = reference
     const ordre_lu = json_object['members_order']
@@ -1607,6 +1612,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public set focus_ids(value: string[]) {
     this._focus_ids = [...new Set(value.filter(id => typeof id === 'string' && id !== ''))]
   }
+
+  /** os#1511 — la dimension choisie pour peindre les flux d'un diagramme par membre. */
+  public get paints_flows(): boolean { return this._paints_flows }
+  public set paints_flows(value: boolean) { this._paints_flows = value }
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
   public get member_bands(): boolean | undefined { return this._member_bands }
@@ -1831,12 +1840,32 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   /**
+   * os#1511 — LA COULEUR D'UN MEMBRE À L'ÉCRAN : la sienne, ou à défaut (vide, « grey » : SOCLE
+   * filières, aucune couleur enregistrée) celle de la carte par défaut, par rang dans la dimension.
+   * Rien n'est écrit sur le membre : le fichier garde ce qu'il avait.
+   */
+  public displayColorOf(tag: Class_ProtoTag): string {
+    const own = tag.color
+    if (own && own !== 'grey') return own
+    const tags = this.tags_list
+    if (this._fallback_colors === undefined || this._fallback_colors.length !== tags.length) {
+      const n = Math.max(11, tags.length)
+      const colors = colormap({ colormap: 'jet', nshades: n, format: 'hex', alpha: 1 }) as string[]
+      const step = tags.length < 11 ? Math.max(1, Math.floor(11 / Math.max(1, tags.length))) : 1
+      this._fallback_colors = tags.map((_t, i) => colors[Math.min(colors.length - 1, i * step)])
+    }
+    const index = (tags as Class_ProtoTag[]).indexOf(tag)
+    return index < 0 ? '#8d929b' : this._fallback_colors[index]
+  }
+  private _fallback_colors: string[] | undefined = undefined
+
+  /**
    * os#1511 — dessinée EN NŒUDS (un nœud par membre, ou un diagramme par membre) avec au moins deux
    * membres : la légende la liste, pour cocher ou masquer ses membres comme ceux d'une dimension en
    * bandes (Julien, 07/10 : « on ne devait pas avoir la légende des trois groupes ? »).
    */
   public get draws_members_as_nodes(): boolean {
-    return this.drawing === 'nodes' && this.selected_tags_list.length > 1
+    return this.drawing === 'nodes' && this._in_member_bands_context && this.selected_tags_list.length > 1
   }
 
   /**
@@ -2057,7 +2086,29 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * couleurs n'a de sens que pour ce qui n'est pas nommé à sa place — les bandes d'un flux.
    */
   public get is_drawn_as_nodes(): boolean {
-    return this.drawing === 'nodes'
+    // SAUF sous un diagramme par membre (Julien, 07/10 : « on ne devait pas avoir la légende des
+    // trois groupes ? ») : les noms ne s'écrivent qu'une fois et les flux se peignent par l'une des
+    // dimensions — la légende sert à choisir laquelle, et à cocher ou masquer les membres.
+    return this.drawing === 'nodes' && !this._in_member_bands_context
+  }
+
+  private get _in_member_bands_context(): boolean {
+    return (this._ref_sankey.data_taggs_list as Class_DataTagGroup[]).some(t => t.member_bands === true)
+  }
+
+  /**
+   * os#1511 — CETTE dimension peint-elle les flux du diagramme par membre ? Celle choisie dans la
+   * légende (`paints_flows`), sinon une dimension en nœuds à plusieurs membres (les postes), sinon
+   * la bande. `false` hors diagramme par membre. Lue aussi par `Link._memberBandColor`.
+   */
+  public get paints_member_bands_flows(): boolean {
+    return flowPainterOf(this._ref_sankey.data_taggs_list as Class_DataTagGroup[]) === this
+  }
+
+  /** Peut-elle peindre les flux du diagramme par membre (bouton pinceau de la légende) ? */
+  public get may_paint_member_bands_flows(): boolean {
+    if (!this._in_member_bands_context) return false
+    return this.member_bands === true || (this.drawing === 'nodes' && this.selected_tags_list.length > 1)
   }
 
   /**
@@ -2794,4 +2845,17 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
     this._siblings = value
     this._ref_sankey.draw()
   }
+}
+
+/**
+ * os#1511 — LA DIMENSION QUI PEINT LES FLUX d'un diagramme par membre (Julien, 07/10 : « le premier
+ * choix, c'est Ressources et emplois qui peint les branches, et pas les diagrammes ») : celle choisie
+ * dans la légende (`paints_flows`), sinon une dimension en nœuds à plusieurs membres, sinon la bande.
+ * `undefined` hors diagramme par membre.
+ */
+export function flowPainterOf(dims: Class_DataTagGroup[]): Class_DataTagGroup | undefined {
+  const bande = dims.find(t => t.member_bands === true)
+  if (bande === undefined) return undefined
+  const peut = (t: Class_DataTagGroup) => t === bande || (t.drawing === 'nodes' && t.selected_tags_list.length > 1)
+  return dims.find(t => t.paints_flows && peut(t)) ?? dims.find(t => t !== bande && peut(t)) ?? bande
 }
