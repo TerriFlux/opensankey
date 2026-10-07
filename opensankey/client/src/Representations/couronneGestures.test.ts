@@ -181,12 +181,24 @@ describe('os#1511 couronneGestures — liee', () => {
     m.s.filiere.selectMembers(['lait'])
     expect(m.s.filiere.focus_ids).toEqual([])
   })
-  test('legende : decocher garde la ligne et ne touche pas au diagramme', () => {
+  // 07/10/2026 — lie, les decoches sont ceux du diagramme (partages).
+  test('legende : decocher retire le membre du diagramme, la ligne reste ; un pas d annulation', () => {
     const m = monter(lie)
     m.g().toggleHidden('filiere', 'lait', false)
-    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'viande'])
+    expect(m.s.filiere.hidden_ids).toEqual(['lait'])
     expect(m.parts('filiere')).toEqual(['cereales', 'viande'])
     expect(m.plan().legend.filiere.find(e => e.member_id === 'lait')?.checked).toBe(false)
+    expect(readCouronneState(lie, m.s.sankey).dims.filiere.hidden).toEqual(['lait'])
+    m.s.app.history.applyUndo()
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.s.filiere.hidden_ids).toEqual([])
+  })
+  test('legende detachee : le diagramme ne bouge pas', () => {
+    const m = monter(det)
+    m.g().toggleHidden('filiere', 'lait', false)
+    expect(m.s.filiere.selected_tags_list.map(t => t.id)).toEqual(['cereales', 'lait', 'viande'])
+    expect(m.s.filiere.hidden_ids).toEqual([])
   })
   test('deplie et en-tete ecrivent la selection du diagramme, en un pas', () => {
     const m = monter(lie)

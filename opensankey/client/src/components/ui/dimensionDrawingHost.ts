@@ -75,14 +75,15 @@ const dimensionsDrawnAsNodes = (app_data: Class_ApplicationData): Class_DataTagG
     .map(node => node.driving_dimension)
     .filter((tagg): tagg is Class_DataTagGroup => tagg !== undefined))]
 
-type Type_Snapshot = { banner: string, carriers: string[], selected: string[], bands: boolean | undefined, focus: string[] }
+type Type_Snapshot = { banner: string, carriers: string[], selected: string[], bands: boolean | undefined, focus: string[], hidden: string[] }
 
 const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_Snapshot => ({
   banner: (tagg as unknown as { banner: string }).banner,
   carriers: dimensionCarriersOf(app_data, tagg).map(node => node.id),
   selected: tagg.selected_tags_list.map(tag => tag.id),
   bands: tagg.member_bands,
-  focus: tagg.stored_focus_ids
+  focus: tagg.stored_focus_ids,
+  hidden: tagg.stored_hidden_ids
 })
 
 /**
@@ -106,6 +107,7 @@ const restoreAll = (app_data: Class_ApplicationData, states: [Class_DataTagGroup
     ;(tagg as unknown as { banner: string }).banner = state.banner
     tagg.member_bands = state.bands
     tagg.focus_ids = state.focus
+    tagg.hidden_ids = state.hidden
     dimensionCarrierCandidates(app_data).forEach(node => {
       if (!state.carriers.includes(node.id) && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
     })
@@ -179,7 +181,8 @@ export const swapDimensionDrawings = (
       carriers: other.carriers,
       selected: !takes_nodes && UNIQUE_BANNERS.includes(banner) ? own.selected.slice(0, 1) : own.selected,
       bands: other.bands,
-      focus: own.focus
+      focus: own.focus,
+      hidden: own.hidden
     }
   }
   const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(before_a, before_b)], [b, take(before_b, before_a)]]
@@ -230,7 +233,33 @@ export const applyDimensionCut = (
   // 07/10/2026 — la PORTÉE du diagramme (zoom partagé) : celle que le geste dit (`focus`), sinon elle
   // reste tant que la nouvelle sélection y tient, et tombe sinon — dans le même pas d'historique.
   const focus = options.focus ?? (focusHolds(tagg, now.focus, ids) ? now.focus : [])
-  commit(app_data, tagg, { ...now, banner, selected: ids, focus })
+  commit(app_data, tagg, { ...now, banner, selected: ids, focus, hidden: hiddenKept(tagg, now.hidden, ids) })
+}
+
+/**
+ * 07/10/2026 — LES DÉCOCHÉS QUI RESTENT après une nouvelle sélection : ceux qui ne sont pas choisis
+ * et dont un frère l'est (ils gardent leur ligne parmi les montrés) ; les autres tombent.
+ */
+const hiddenKept = (tagg: Class_DataTagGroup, hidden: string[], ids: string[]): string[] => {
+  const chosen = ids.map(id => tagg.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+  return hidden.filter(h => {
+    const m = tagg.tags_dict[h] as Class_DataTag | undefined
+    return m !== undefined && !ids.includes(h) && chosen.some(c => c.parent === m.parent)
+  })
+}
+
+/**
+ * 07/10/2026 — DÉCOCHER DANS LE DIAGRAMME (os#1511 : en LIÉ, les décochés sont partagés). Les
+ * décochés deviennent `hidden`, la sélection `ids` (les montrés moins les décochés) : le diagramme ne
+ * dessine plus un décoché, les fenêtres liées gardent sa ligne, grisée. Un pas d'historique.
+ */
+export const applyDimensionHidden = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, hidden: string[], ids: string[]
+) => {
+  if (ids.length === 0) return
+  const now = snapshot(app_data, tagg)
+  const banner = now.carriers.length === 0 && ids.length > 1 && UNIQUE_BANNERS.includes(now.banner) ? 'multi' : now.banner
+  commit(app_data, tagg, { ...now, banner, selected: ids, hidden: [...hidden] })
 }
 
 /** Toute la sélection `ids` tient-elle sous la portée `focus` (non vide) ? */
@@ -263,7 +292,7 @@ export const applyDimensionFocus = (
     ? (focus.length === 1 ? [...focus] : now.selected)
     : (ids.length > 0 ? ids : now.selected)
   const banner = !unique && now.carriers.length === 0 && selected.length > 1 && UNIQUE_BANNERS.includes(now.banner) ? 'multi' : now.banner
-  commit(app_data, tagg, { ...now, banner, selected, focus: [...focus] })
+  commit(app_data, tagg, { ...now, banner, selected, focus: [...focus], hidden: hiddenKept(tagg, now.hidden, selected) })
 }
 
 /** os#1511 — UN NIVEAU ENTIER : tous les membres que montre le niveau `index` (annulable). */

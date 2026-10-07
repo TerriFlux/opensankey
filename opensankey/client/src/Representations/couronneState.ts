@@ -210,7 +210,8 @@ export const normalizeCouronneState = (state: Type_CouronneState, sankey: Type_C
     const focus_members = () => focus.map(f => memberOf(dim, f) as Class_DataTag)
     let shown: string[]
     if (state.linked) {
-      const selection = dim.selected_tags_list as Class_DataTag[]
+      // 07/10/2026 — les décochés du diagramme gardent leur ligne : ils comptent parmi les montrés.
+      const selection = linkedShownOf(dim)
       const projected = projectSelection(dim, selection, focus_members())
       if (projected === null) { focus = []; shown = antichainOf(dim, selection.map(m => m.id)) } else shown = projected
       // 04/10/2026 (lot 3) — « UNE COURONNE PAR MEMBRE » ZOOMÉE SUR PLUSIEURS MEMBRES (« Europe,
@@ -244,13 +245,22 @@ export const normalizeCouronneState = (state: Type_CouronneState, sankey: Type_C
   return { linked: state.linked, order, dims }
 }
 
+/**
+ * 07/10/2026 — LES MONTRÉS D'UNE FIGURE LIÉE : la sélection du diagramme, plus ses décochés (qui
+ * gardent leur ligne, grisée), dans l'ordre de la dimension.
+ */
+const linkedShownOf = (dim: Class_DataTagGroup): Class_DataTag[] => {
+  const hidden = dim.hidden_ids
+  return (dim.tags_list as Class_DataTag[]).filter(m => m.is_selected || hidden.includes(m.id))
+}
+
 /** L'état d'une dimension qu'aucun réglage ne nomme : rien d'ouvert (la première s'ouvre d'un cran). */
 const defaultDimensionState = (dim: Class_DataTagGroup, linked: boolean, first: boolean): Type_CouronneDimensionState => {
   const roots = dimensionRootsOf(dim)
   const shown = linked
-    ? (dim.selected_tags_list as Class_DataTag[]).map(m => m.id)
+    ? linkedShownOf(dim).map(m => m.id)
     : (first && roots.length === 1 ? childrenOf(roots[0]).map(m => m.id) : roots.map(m => m.id))
-  return { focus: linked ? dim.focus_ids : [], shown, hidden: [], active: true, drawing: 'sectors' }
+  return { focus: linked ? dim.focus_ids : [], shown, hidden: linked ? dim.hidden_ids : [], active: true, drawing: 'sectors' }
 }
 
 // ── LIRE ─────────────────────────────────────────────────────────────────────────────────────────
@@ -319,7 +329,7 @@ const withDiagramFocus = (state: Type_CouronneState, sankey: Type_CouronneSankey
   const dims: Type_CouronneState['dims'] = {}
   Object.entries(state.dims).forEach(([id, d]) => {
     const dim = dimOf(sankey, id)
-    dims[id] = { ...d, focus: dim === undefined ? [] : dim.focus_ids }
+    dims[id] = { ...d, focus: dim === undefined ? [] : dim.focus_ids, hidden: dim === undefined ? [] : dim.hidden_ids }
   })
   return { ...state, dims }
 }
@@ -482,10 +492,9 @@ export const writeCouronneState = (options: Type_Options, state: Type_CouronneSt
     order: [...state.order],
     dims: Object.fromEntries(state.order.filter(id => state.dims[id] !== undefined).map(id => {
       const d = state.dims[id]
-      // Liée, ni `focus` ni `shown` : ce sont la portée et la sélection du diagramme.
+      // Liée, ni `focus`, ni `shown`, ni `hidden` : la portée, la sélection et les décochés du diagramme.
       return [id, {
-        ...(state.linked ? {} : { focus: [...d.focus], shown: [...d.shown] }),
-        hidden: [...d.hidden],
+        ...(state.linked ? {} : { focus: [...d.focus], shown: [...d.shown], hidden: [...d.hidden] }),
         active: d.active,
         drawing: d.drawing
       }]

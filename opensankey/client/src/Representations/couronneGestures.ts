@@ -32,7 +32,7 @@
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { applyDimensionCut, applyDimensionFocus } from '../components/ui/dimensionDrawingHost'
+import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '../components/ui/dimensionDrawingHost'
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
   antichainOf, readCouronneState, writeCouronneState,
@@ -464,12 +464,31 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
 
   // ── LÉGENDE, ARBRE ───────────────────────────────────────────────────────────────────────────
 
-  /** Une case de légende : décocher retire la part du dessin, la ligne reste (liée comme détachée). */
+  /**
+   * Une case de légende : décocher retire la part du dessin, la ligne reste. 07/10/2026 — liée, les
+   * décochés sont ceux du DIAGRAMME (partagés) : le membre quitte sa sélection — il n'y est plus
+   * dessiné — et garde sa ligne dans toutes les fenêtres liées ; un pas d'historique.
+   */
   const toggleHidden = (id: string, member_id: string, show: boolean) => {
     const s = st(id)
     if (s === undefined || !s.shown.includes(member_id)) return
     const hidden = show ? s.hidden.filter(h => h !== member_id) : [...new Set([...s.hidden, member_id])]
     if (hidden.length >= s.shown.length) return
+    const d = dimOf(id)
+    if (linked && d !== undefined) {
+      // Les montrés hors portée (au-dessus d'elle) restent choisis tels quels dans le diagramme.
+      const chosen = (d.selected_tags_list as Class_DataTag[]).map(m => m.id)
+      // Une part que le diagramme ne choisit pas elle-même (il montre son parent d'un bloc) : rien à
+      // décocher dans le diagramme.
+      if (!show && !chosen.includes(member_id)) return
+      const ids = show ? [...chosen, member_id] : chosen.filter(m => m !== member_id)
+      if (ids.length === 0) return
+      app.runHeavyGesture(() => inOneHistoryStep(app.history, () => {
+        applyDimensionHidden(app, d, hidden, ids)
+        host.write(writeCouronneState(host.options, withDim(state, id, { hidden })))
+      }))
+      return
+    }
     commit(withDim(state, id, { hidden }))
   }
 
