@@ -8,6 +8,8 @@ import {
   buildDimensionMatrix, dimensionMatrixExportTable, MATRIX_SORT_LABEL, matrixDecimals, matrixNumberFormatter, nextMatrixSort
 } from './DimensionMatrix'
 import { tableToCsv } from './TableExport'
+import { drawDimensionMatrixTable, MATRIX_ZOOM_MAX, MATRIX_ZOOM_MIN } from './DimensionMatrixTable'
+import type { Type_FigureZoomHandle } from './figureZoomBridge'
 import type { Type_DimensionMatrix } from './DimensionMatrix'
 
 if (typeof globalThis.structuredClone !== 'function') {
@@ -62,6 +64,41 @@ const matrice = (
 ) as Type_DimensionMatrix
 
 const lignes = (mx: Type_DimensionMatrix) => mx.rows.map(r => [r.label, r.depth, ...r.cells])
+
+describe('os#1519 — zoom du tableau, comme un tableur', () => {
+  test('echelle de depart, Ctrl+molette, poignee de la fenetre, bornes, retrait au demontage', () => {
+    const mx = matrice(monter(), { filiere: ['produits', 'cereales'], pays: ['monde'] })
+    const host = document.createElement('div')
+    const scales: number[] = []
+    let handle: Type_FigureZoomHandle | null = null
+    const teardown = drawDimensionMatrixTable(host, mx, {
+      format: v => String(v), format_share: v => String(v), title: 'T', unit: '',
+      labels: { expand: '+', collapse: '-', export_xlsx: 'x', export_csv: 'c', empty: 'vide' },
+      on_toggle: () => { /* rien */ }, on_export: () => { /* rien */ }, on_sort: () => { /* rien */ }, sort_label: 'Trier',
+      zoom: { scale: 1.5, on_scale: k => scales.push(k), publish: h => { handle = h } }
+    })
+    const table = host.querySelector('table') as HTMLTableElement
+    const zoomOf = () => Number((table.style as CSSStyleDeclaration & { zoom: string }).zoom)
+    expect(zoomOf()).toBe(1.5)
+    expect(handle).not.toBeNull()
+    const h = handle as unknown as Type_FigureZoomHandle
+    h.scaleBy(2)
+    expect(zoomOf()).toBe(MATRIX_ZOOM_MAX)
+    h.setScale(0.1)
+    expect(zoomOf()).toBe(MATRIX_ZOOM_MIN)
+    h.fit?.()
+    expect(zoomOf()).toBe(1)
+    const scroller = table.parentElement as HTMLElement
+    scroller.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, ctrlKey: true, cancelable: true }))
+    expect(zoomOf()).toBe(2)
+    // Sans Ctrl, la molette fait défiler : pas de zoom.
+    scroller.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, cancelable: true }))
+    expect(zoomOf()).toBe(2)
+    expect(scales[scales.length - 1]).toBe(2)
+    teardown()
+    expect(handle).toBeNull()
+  })
+})
 
 describe('os#1519 — tableau croise', () => {
   test('deux dimensions : filieres en lignes avec sous-total, pays en colonnes, et les totaux', () => {
