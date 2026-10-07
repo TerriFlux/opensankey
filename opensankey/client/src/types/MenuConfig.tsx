@@ -407,7 +407,29 @@ export type Type_MainZoneReader = {
   level_taggs?: string[], flux_taggs?: string[],
   /** sa#608 — le nom que l'auteur donne à la liste des nœuds du bandeau (« Process ») ; absent : « Nœuds ». */
   nodes_label?: string
+  /** sa#615 — le tri de la liste des nœuds du bandeau ; absent : l'ordre du diagramme. */
+  nodes_sort?: Type_NodesSort
 }
+
+/**
+ * sa#615 — LE TRI DE LA LISTE DES NŒUDS DU BANDEAU : une colonne et un sens. `tagg` nomme la
+ * colonne d'un groupe d'étiquettes ; absent, c'est la colonne des noms de nœuds.
+ */
+export type Type_NodesSort = { tagg?: string, dir: 'asc' | 'desc' }
+
+/** sa#615 — Relit le tri de la liste des nœuds ; `undefined` quand il est absent ou malformé. */
+export const readNodesSort = (raw: unknown): Type_NodesSort | undefined => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined
+  const r = raw as { [k: string]: unknown }
+  const dir = r['dir']
+  if (dir !== 'asc' && dir !== 'desc') return undefined
+  if (r['tagg'] === undefined) return { dir }
+  return typeof r['tagg'] === 'string' && r['tagg'] !== '' ? { tagg: r['tagg'], dir } : undefined
+}
+
+/** sa#615 — Le tri tel qu'il s'écrit dans le fichier. */
+const nodesSortToJSON = (sort: Type_NodesSort): Type_JSON =>
+  sort.tagg !== undefined ? { tagg: sort.tagg, dir: sort.dir } : { dir: sort.dir }
 
 /** sa#603 — les quatre listes de groupes qu'un en-tête peut montrer, dans l'ordre du bandeau. */
 export const MAIN_ZONE_READER_GROUP_KEYS = ['data_taggs', 'level_taggs', 'node_taggs', 'flux_taggs'] as const
@@ -482,6 +504,8 @@ const readMainZoneReader = (raw: unknown): Type_MainZoneReader | undefined => {
   if (r['header'] === true) reader.header = true
   if (r['nodes'] === true) reader.nodes = true
   if (typeof r['nodes_label'] === 'string' && r['nodes_label'].trim() !== '') reader.nodes_label = r['nodes_label']
+  const nodes_sort = readNodesSort(r['nodes_sort'])
+  if (nodes_sort) reader.nodes_sort = nodes_sort
   MAIN_ZONE_READER_GROUP_KEYS.forEach(key => {
     const list = ids(r[key])
     if (list) reader[key] = list
@@ -2374,6 +2398,7 @@ export class Class_MenuConfig {
     if (reader.header) next.header = true
     if (reader.nodes) next.nodes = true
     if (reader.nodes_label && reader.nodes_label.trim() !== '') next.nodes_label = reader.nodes_label
+    if (reader.nodes_sort) next.nodes_sort = { ...reader.nodes_sort }
     MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (reader[key]) next[key] = [...(reader[key] as string[])] })
     if (Object.keys(next).length > 0) o.reader = next
     else delete o.reader
@@ -4561,6 +4586,7 @@ export class Class_MenuConfig {
       if (o.reader.header) reader['header'] = true
       if (o.reader.nodes) reader['nodes'] = true
       if (o.reader.nodes_label) reader['nodes_label'] = o.reader.nodes_label
+      if (o.reader.nodes_sort) reader['nodes_sort'] = nodesSortToJSON(o.reader.nodes_sort)
       MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (o.reader?.[key]) reader[key] = [...(o.reader[key] as string[])] })
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }
