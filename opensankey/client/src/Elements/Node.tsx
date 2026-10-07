@@ -1097,12 +1097,12 @@ export class Class_NodeElement extends Class_NodeBase {
    * porte alors, sans que son réglage change (Julien, 07/10 : « si c'est un diagramme par membre, on
    * n'a pas besoin de tester le nœud, et comme ça on garde son paramètre » — revenir en arrière puis
    * passer à une autre représentation ne doit pas trouver des nœuds devenus porteurs). Seulement sous
-   * des bandes DEMANDÉES (`member_bands` vrai) et dès qu'un nœud porte la dimension pour de bon.
+   * des bandes DEMANDÉES (`member_bands` vrai) — même si aucun nœud ne la porte pour de bon : on
+   * peut les demander depuis une dimension en bandes de flux (Julien, 07/10, sur Filière).
    */
   private get implicit_driving_dimension(): Class_DataTagGroup | undefined {
     if (isGeneratedMemberId(this.id)) return undefined
-    return (this.sankey.data_taggs_list as Class_DataTagGroup[])
-      .find(dimension => dimension.member_bands === true && dimension.own_carriers_count > 0)
+    return (this.sankey.data_taggs_list as Class_DataTagGroup[]).find(dimension => dimension.member_bands === true)
   }
 
   public set driving_dimension(dimension: Class_DataTagGroup | undefined) {

@@ -72,6 +72,21 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(b.driving_dimension).toBeUndefined()
   })
 
+  test('depuis des bandes de flux, un diagramme par membre dessine tous les noeuds, et une banniere en sort', () => {
+    // Julien, 07/10, sur Filiere : la dimension n est portee par aucun noeud.
+    const { app, pays, a, b } = monter()
+    applyDimensionDrawing(app, pays, 'multi')
+    applyMemberBands(app, pays, true)
+    expect(dimensionDrawingOf(app, pays)).toBe('nodes')
+    expect([a.driving_dimension, b.driving_dimension]).toEqual([pays, pays])
+    expect(dimensionCarriersOf(app, pays)).toEqual([])
+    applyDimensionDrawing(app, pays, 'multi')
+    expect(pays.member_bands).toBeUndefined()
+    expect(dimensionDrawingOf(app, pays)).toBe('multi')
+    app.history.applyUndo()
+    expect(pays.member_bands).toBe(true)
+  })
+
   test('quitter en noeuds detache tous les porteurs, et l annulation les rend', () => {
     const { app, pays, a } = monter()
     toggleDimensionCarrier(app, pays, a.id)
