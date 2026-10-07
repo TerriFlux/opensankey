@@ -739,6 +739,17 @@ function hauteurAlignee(
  * de référence. Un flux dont l'une des accroches ne se calcule pas (cf. `linkAttachOffsetY`) n'a
  * pas d'entrée.
  */
+/**
+ * Le haut d'un axe déduit de son CENTRE mémorisé (`center_y`), comme pour son créneau (étape 1 ter).
+ * Au rebâti, la hauteur de l'axe et son coin répondent à des tours différents : sur le SOCLE
+ * filières agrégées, « Ressources » mesurait 79 px avec un coin posé pour 354, et ses flux droits
+ * se lisaient 138 px en pente (Julien, 07/10 : « ça marche pas même sur le cas simple, trois nœuds
+ * et deux flux droits »). Le centre, lui, est la position que l'on voit.
+ */
+function hautVrai(noeud: Class_NodeElement): number {
+  return noeud.center_y === undefined ? noeud.position_y : noeud.center_y - noeud.getShapeHeightToUse() / 2
+}
+
 function pentesEntreAxes(
   sankey: Class_Sankey,
   par_axe: Map<string, Type_MembreRepresente[]>
@@ -753,7 +764,7 @@ function pentesEntreAxes(
     const acc_c = cible.linkAttachOffsetY(lien)
     const epaisseur = lien.thicknessSourceRaw
     if (acc_s === undefined || acc_c === undefined || !(epaisseur > 0)) return
-    pentes.set(lien.id, ((cible.position_y + acc_c) - (source.position_y + acc_s)) / epaisseur)
+    pentes.set(lien.id, ((hautVrai(cible) + acc_c) - (hautVrai(source) + acc_s)) / epaisseur)
   })
   return pentes
 }
