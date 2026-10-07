@@ -77,8 +77,9 @@ describe('os#1519 — zoom du tableau, comme un tableur', () => {
       on_toggle: () => { /* rien */ }, on_export: () => { /* rien */ }, on_sort: () => { /* rien */ }, sort_label: 'Trier',
       zoom: { scale: 1.5, on_scale: k => scales.push(k), publish: h => { handle = h } }
     })
-    const table = host.querySelector('table') as HTMLTableElement
-    const zoomOf = () => Number((table.style as CSSStyleDeclaration & { zoom: string }).zoom)
+    // Le tableau, ou la grille des tableaux par membre, se zoome dans son conteneur.
+    const zoomed = host.querySelector('.dimension_matrix_zoom') as HTMLElement
+    const zoomOf = () => Number((zoomed.style as CSSStyleDeclaration & { zoom: string }).zoom)
     expect(zoomOf()).toBe(1.5)
     expect(handle).not.toBeNull()
     const h = handle as unknown as Type_FigureZoomHandle
@@ -88,7 +89,7 @@ describe('os#1519 — zoom du tableau, comme un tableur', () => {
     expect(zoomOf()).toBe(MATRIX_ZOOM_MIN)
     h.fit?.()
     expect(zoomOf()).toBe(1)
-    const scroller = table.parentElement as HTMLElement
+    const scroller = zoomed.parentElement as HTMLElement
     scroller.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, ctrlKey: true, cancelable: true }))
     expect(zoomOf()).toBe(2)
     // Sans Ctrl, la molette fait défiler : pas de zoom.

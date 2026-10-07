@@ -114,7 +114,7 @@ import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
 // 04/10/2026 — os#1511, refonte étape 2, lot 2 : CE QUE LA COURONNE DESSINE se lit à un seul endroit.
 import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronneState'
-import type { Type_CouronneSankey, Type_CouronneState } from './couronneState'
+import type { Type_CouronneReader, Type_CouronneSankey, Type_CouronneState } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
 import { planDrawsRings, planLevelsDisplayOf } from '../Charts/couronneTree'
@@ -972,10 +972,14 @@ const figureBreadcrumbOf = (
  * L'en-tête surligné est lu sur ce que la couronne DESSINE (la profondeur de sa frontière), pas sur un
  * état à part. `null` : la figure ne découpe pas selon des dimensions de données, ou hors fenêtre.
  */
-const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement | null => {
+const figureNavigationTableOf = (ctx: Type_RepresentationContext, representation: 'couronne' | 'matrix' = 'couronne'): HTMLElement | null => {
   // 04/10/2026 (lot 3) — LU SUR LE PLAN, ÉCRIT PAR LES GESTES DE LA COURONNE (`couronneGestures`) :
   // plus aucune coupe ni ancienne clé ici.
-  const g = couronneGesturesOfCtx(ctx)
+  // 07/10/2026 — LE MÊME TABLEAU AU-DESSUS DU TABLEAU CROISÉ (`representation: 'matrix'`) : mêmes
+  // en-têtes, ctrl+clic, ⇅ (= lignes / colonnes), cases de zoom, ⚙ ; son sélecteur de dessin dit
+  // Plat / Hiérarchique / Un tableau par membre.
+  const matrix = representation === 'matrix'
+  const g = couronneGesturesOfCtx(ctx, matrix ? 'matrix' : undefined)
   const { window_id, pane_key } = ctx
   if (g === null || window_id === undefined || pane_key === undefined) return null
   const { state, plan } = g
@@ -1077,7 +1081,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     return {
       id: dim.id,
       name: dim.name,
-      drawing: drawingChoiceOf(ctx, g, dim.id),
+      drawing: drawingChoiceOf(ctx, g, dim.id, representation),
       summary: mixed && !in_rings ? t('Banner.cut_custom') as string : undefined,
       members: extras?.members?.(dim.id) ?? undefined,
       levels: levels.map(({ raw, depth }) => {
@@ -1115,14 +1119,17 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
     memory_key: `${window_id}/${pane_key}`,
     t: (key: string, o?: { [k: string]: unknown }) => t(key, o),
     move: (dim_id, delta) => g.move(rows.map(d => d.id), dim_id, delta),
-    settings: extras?.settings,
+    // Le tableau n'a pas de parts à cliquer : « Clic sur une part » ne s'y propose pas.
+    settings: matrix ? extras?.settings?.filter(s => !s.key.includes('interaction_click')) : extras?.settings,
     labels: {
       title: t('sunburst.nav.title') as string,
       dimension: (name: string) => t('sunburst.nav.dimension', { name }) as string,
       cut_by: (level: string) => t('sunburst.nav.cut_by', { level }) as string,
       clear_zoom: t('sunburst.nav.clear_zoom') as string,
       pick_zoom: t('sunburst.nav.pick_zoom') as string,
-      drawing: t('sunburst.nav.drawing') as string,
+      drawing: matrix
+        ? t('matrix.nav.drawing', { defaultValue: 'Comment cette dimension se dessine dans le tableau' }) as string
+        : t('sunburst.nav.drawing') as string,
       // 04/10/2026 — libellés en français par défaut, traduits en une passe quand l'itération s'arrête.
       uncut: (level: string) => t('sunburst.nav.uncut', {
         level, defaultValue: 'Découpé par {{level}} — recliquer pour ne plus découper par cette dimension'
@@ -1130,12 +1137,20 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
       ctrl_hint: t('sunburst.nav.ctrl_hint', {
         defaultValue: 'Ctrl+clic (⌘+clic) : ajouter cette colonne à celles qui découpent, ou l\'en retirer'
       }) as string,
-      swap: t('sunburst.nav.swap', {
-        defaultValue: 'Échanger l\'ordre des dimensions (ligne du haut = anneau intérieur)'
-      }) as string,
-      move_up: t('sunburst.nav.move_up', { defaultValue: 'Monter cette dimension (vers l\'anneau intérieur)' }) as string,
-      move_down: t('sunburst.nav.move_down', { defaultValue: 'Descendre cette dimension (vers l\'anneau extérieur)' }) as string,
-      settings: t('sunburst.nav.settings', { defaultValue: 'Réglages de la couronne' }) as string,
+      swap: matrix
+        ? t('matrix.nav.swap', { defaultValue: 'Échanger lignes et colonnes (ligne du haut = lignes du tableau)' }) as string
+        : t('sunburst.nav.swap', {
+          defaultValue: 'Échanger l\'ordre des dimensions (ligne du haut = anneau intérieur)'
+        }) as string,
+      move_up: matrix
+        ? t('matrix.nav.move_up', { defaultValue: 'Monter cette dimension (vers les lignes)' }) as string
+        : t('sunburst.nav.move_up', { defaultValue: 'Monter cette dimension (vers l\'anneau intérieur)' }) as string,
+      move_down: matrix
+        ? t('matrix.nav.move_down', { defaultValue: 'Descendre cette dimension (vers les colonnes)' }) as string
+        : t('sunburst.nav.move_down', { defaultValue: 'Descendre cette dimension (vers l\'anneau extérieur)' }) as string,
+      settings: matrix
+        ? t('matrix.nav.settings', { defaultValue: 'Réglages du tableau' }) as string
+        : t('sunburst.nav.settings', { defaultValue: 'Réglages de la couronne' }) as string,
       members: t('sunburst.nav.members', { defaultValue: 'Choisir les membres' }) as string
     }
   })
@@ -1146,12 +1161,41 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext): HTMLElement |
  * membre (exclusif). Un choix sans effet se grise avec sa raison ; le choix courant reste toujours
  * sélectionnable pour en sortir.
  */
-const drawingChoiceOf = (ctx: Type_RepresentationContext, g: Type_CouronneGestures, dim_id: string): Type_TopbarFigureChoice => {
+const drawingChoiceOf = (
+  ctx: Type_RepresentationContext, g: Type_CouronneGestures, dim_id: string, representation: 'couronne' | 'matrix' = 'couronne'
+): Type_TopbarFigureChoice => {
   const t = ctx.app_data.t
   const now = g.drawingOf(dim_id)
   const value = now === 'sunburst' ? 'rings' : now
   const rings_ok = g.offersRingsFor(dim_id) || value === 'rings'
   const multiples_ok = g.offersMultiplesFor(dim_id) || value === 'multiples'
+  if (representation === 'matrix') {
+    // 07/10/2026 — LE TABLEAU CROISÉ : le même dessin écrit (secteurs = plat, sunburst =
+    // hiérarchique, une couronne par membre = un tableau par membre), ses propres mots.
+    return {
+      key: `dimension_drawing:${dim_id}`,
+      label: t('matrix.nav.drawing', { defaultValue: 'Comment cette dimension se dessine dans le tableau' }) as string,
+      value,
+      options: [
+        { value: 'sectors', label: t('matrix.draw_flat', { defaultValue: 'Plat' }) as string, icon: 'table_flat' },
+        {
+          value: 'rings', label: t('matrix.draw_hierarchical', { defaultValue: 'Hiérarchique' }) as string, icon: 'table_tree',
+          disabled: !rings_ok,
+          title: rings_ok ? undefined : t('matrix.draw_hierarchical_unavailable', {
+            defaultValue: 'Un seul niveau est montré : dépliez un membre (+) ou choisissez un niveau plus fin'
+          }) as string
+        },
+        {
+          value: 'multiples', label: t('matrix.draw_tables', { defaultValue: 'Un tableau par membre' }) as string, icon: 'table_multiples',
+          disabled: !multiples_ok,
+          title: multiples_ok ? undefined : t('matrix.draw_tables_unavailable', {
+            defaultValue: 'Il faut une autre dimension active pour les lignes'
+          }) as string
+        }
+      ],
+      choose: (v) => g.setDrawing(dim_id, v === 'rings' ? 'sunburst' : v === 'multiples' ? 'multiples' : 'sectors')
+    }
+  }
   return {
     key: `dimension_drawing:${dim_id}`,
     label: t('sunburst.nav.drawing') as string,
@@ -1175,7 +1219,7 @@ const drawingChoiceOf = (ctx: Type_RepresentationContext, g: Type_CouronneGestur
  * 04/10/2026 (lot 3) — LES GESTES DE LA COURONNE d'une vignette (`couronneGestures`), écrits sur ses
  * réglages. `null` : hors fenêtre, ou la figure ne découpe pas selon des dimensions de données.
  */
-export const couronneGesturesOfCtx = (ctx: Type_RepresentationContext): Type_CouronneGestures | null => {
+export const couronneGesturesOfCtx = (ctx: Type_RepresentationContext, reader?: Type_CouronneReader): Type_CouronneGestures | null => {
   const { window_id, pane_key } = ctx
   if (!ctx.element || window_id === undefined || pane_key === undefined) return null
   const subject = chartSubjectOf(ctx.element)
@@ -1186,7 +1230,8 @@ export const couronneGesturesOfCtx = (ctx: Type_RepresentationContext): Type_Cou
     app: ctx.app_data,
     options: ctx.options ?? {},
     declared: [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])],
-    write: o => ctx.app_data.menu_configuration.setMainZonePaneOptions(window_id, pane_key, o as unknown as Type_JSON)
+    write: o => ctx.app_data.menu_configuration.setMainZonePaneOptions(window_id, pane_key, o as unknown as Type_JSON),
+    reader
   })
 }
 
@@ -2474,7 +2519,9 @@ const matrixScopeLabel = (plan: Type_MatrixPlan, sankey: Type_CouronneSankey): s
   return [
     names(plan.rows.dimension_id, plan.rows.scope),
     ...(plan.columns ? [names(plan.columns.dimension_id, plan.columns.scope)] : []),
-    ...Object.entries(plan.coordinates).map(([id, ids]) => names(id, ids))
+    // Les cases : leur portée seule (chaque petit tableau porte le nom de son membre).
+    ...(plan.cases ? [names(plan.cases.dimension_id, plan.cases.scope)] : []),
+    ...Object.entries(plan.coordinates).filter(([id]) => id !== plan.cases?.dimension_id).map(([id, ids]) => names(id, ids))
   ].filter(x => x !== '').join(' · ')
 }
 
@@ -2542,8 +2589,11 @@ const registerDimensionMatrix = (): void => {
         // portée, sans les décochés. L'ancienne coupe (`analysisDataCutOf`) ne sert plus qu'à défaut.
         const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
         const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+        // 07/10/2026 — CORRECTION DE JULIEN : lignes puis colonnes = les dimensions en parts (dans
+        // l'ordre), plates ou hiérarchiques ; les cases = un tableau par membre. Un sac d'avant la
+        // version 2 garde ses colonnes (`reader: 'matrix'`).
         const view_state = sankey.data_taggs_dict[decompose.data_tagg_id] !== undefined
-          ? fromFigure(ctx.options, undefined, sankey, declared)
+          ? fromFigure(ctx.options, undefined, sankey, declared, 'matrix')
           : null
         const plan = view_state ? planFor(view_state, 'matrix', sankey).plan as Type_MatrixPlan | null : null
         const input = plan ? matrixInputOfPlan(plan, sankey) : null
@@ -2554,7 +2604,7 @@ const registerDimensionMatrix = (): void => {
           ? { kind: 'node' as const, node: a.subject.node }
           : { kind: 'link' as const, link: a.subject.link }
         // Dans une fenêtre, les +/− écrivent l'état (`gestures`) ; hors fenêtre, ils restent au tableau.
-        const gestures = input ? couronneGesturesOfCtx(ctx) : null
+        const gestures = input ? couronneGesturesOfCtx(ctx, 'matrix') : null
         // 07/10/2026 — « AUTRES » COMME LA COURONNE : ses réglages (`parts_group_under`, `parts_max`),
         // les lignes en parts, les colonnes en cases (seuil des bandes tant que l'auteur n'en pose pas).
         const style = figureChartStyleOf(ctx.options ?? {}, DONUT_STYLE_DEFAULTS)
@@ -2569,6 +2619,7 @@ const registerDimensionMatrix = (): void => {
             opened: others_open
           },
           axes: input ? { rows: input.rows, columns: input.columns } : undefined,
+          cases: input?.cases,
           row_toggles: gestures ? undefined : toggles,
           column_toggles: gestures ? undefined : column_toggles,
           sort: matrix_sorts.get(key),
@@ -2616,7 +2667,10 @@ const registerDimensionMatrix = (): void => {
             }
           }
           : undefined
+        // 07/10/2026 — LE TABLEAU DE NAVIGATION de la couronne, au-dessus du tableau croisé.
+        const navigation = gestures ? figureNavigationTableOf(ctx, 'matrix') ?? undefined : undefined
         teardown = drawDimensionMatrixTable(container, matrix, {
+          navigation,
           axes,
           zoom: {
             scale: matrix_zooms.get(key) ?? 1,

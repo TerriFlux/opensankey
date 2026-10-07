@@ -36,7 +36,7 @@ import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '..
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
   antichainOf, readCouronneState, writeCouronneState,
-  type Type_CouronneDrawing, type Type_CouronneSankey, type Type_CouronneState
+  type Type_CouronneDrawing, type Type_CouronneReader, type Type_CouronneSankey, type Type_CouronneState
 } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 
@@ -122,6 +122,8 @@ export interface Type_CouronneGestureHost {
   write: (options: Type_Bag) => void
   /** La figure est-elle liée ? Absent : ce que disent ses réglages. */
   linked?: boolean
+  /** 07/10/2026 — le tableau croisé relit les sacs d'avant la version 2 avec leurs colonnes. */
+  reader?: Type_CouronneReader
 }
 
 /**
@@ -142,7 +144,7 @@ export const partClickModeOf = (raw: unknown): 'aggregate' | 'zoom' =>
 export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   const app = host.app
   const sankey = app.drawing_area.sankey as unknown as Type_CouronneSankey
-  const state = readCouronneState(host.options, sankey, host.linked, host.declared)
+  const state = readCouronneState(host.options, sankey, host.linked, host.declared, host.reader)
   if (state.order.length === 0) return null
   const linked = state.linked
   const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup | undefined
@@ -579,17 +581,18 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * liée, le diagramme ne bouge pas).
    */
   //
-  // 07/10/2026 (lot 2) — PAR LES RÔLES : la dimension en colonnes prend le rôle CASES (« une couronne
-  // par membre » : revenue à la couronne, une couronne par pays) et passe en fin d'ordre ; celle des
-  // lignes, le rôle PARTS. Une colonne qui ne montre qu'un membre descend d'un cran (`withCells`).
+  // 07/10/2026 — CORRECTION DE JULIEN : colonnes ≠ cases. La dimension en colonnes est la SECONDE en
+  // rôle PARTS (l'anneau extérieur de la couronne croisée), juste après celle des lignes ; « une
+  // couronne par membre » est un tableau par membre. Une colonne qui ne montre qu'un membre descend
+  // d'un cran (`withCells`).
   const setMatrixColumns = (row_id: string, col_id: string | null) => {
     if (st(row_id) === undefined || (col_id !== null && st(col_id) === undefined)) return
     const parts = (o: string) => st(o).drawing === 'multiples' ? { drawing: 'sectors' as const } : {}
     let next = withDim(state, row_id, { active: true, ...parts(row_id) })
     state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false, ...parts(o) }) })
     if (col_id !== null) {
-      next = withDim(next, col_id, { active: true, drawing: 'multiples' })
-      next = { ...next, order: [row_id, ...next.order.filter(o => o !== row_id && o !== col_id), col_id] }
+      next = withDim(next, col_id, { active: true, ...parts(col_id) })
+      next = { ...next, order: [row_id, col_id, ...next.order.filter(o => o !== row_id && o !== col_id)] }
       next = withCells(next, dimOf(col_id) as Class_DataTagGroup)
     }
     commit(next)
