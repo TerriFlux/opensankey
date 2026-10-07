@@ -99,6 +99,18 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(pays.member_bands).toBe(true)
   })
 
+  test('cocher un noeud dans En noeuds quitte le diagramme par membre, et l annulation y revient', () => {
+    const { app, pays, a } = monter()
+    applyDimensionDrawing(app, pays, 'multi')
+    applyMemberBands(app, pays, true)
+    toggleDimensionCarrier(app, pays, a.id)
+    expect(pays.member_bands).toBe(false)
+    expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([a.id])
+    expect(dimensionDrawingOf(app, pays)).toBe('nodes')
+    app.history.applyUndo()
+    expect(pays.member_bands).toBe(true)
+  })
+
   test('quitter en noeuds detache tous les porteurs, et l annulation les rend', () => {
     const { app, pays, a } = monter()
     toggleDimensionCarrier(app, pays, a.id)
