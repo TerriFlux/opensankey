@@ -413,7 +413,10 @@ export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Cl
   // Demandé : en vigueur, quels que soient les porteurs (ils le deviennent tous). Automatique : dès
   // deux porteurs réglés.
   if (tagg.member_bands !== undefined) return tagg.member_bands
-  return dimensionCarriersOf(app_data, tagg).length >= 2
+  // Sous le diagramme par membre d'une autre dimension, celle-ci se découpe dans ses bandes.
+  const demandee = (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+    .some(other => other !== tagg && other.member_bands === true)
+  return !demandee && dimensionCarriersOf(app_data, tagg).length >= 2
 }
 
 /**
@@ -424,9 +427,15 @@ export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Cl
  * leur réglage change (`Node.driving_dimension`) — revenir en arrière rend le diagramme d'avant.
  */
 export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  // Un seul diagramme par membre à la fois : tous les nœuds portent SA dimension.
+  const others = on
+    ? (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+      .filter(other => other !== tagg && other.member_bands === true)
+    : []
   const before = tagg.member_bands
   const positions_before = manualPositionsOf([tagg])
-  const apply = (value: boolean | undefined, positions?: Type_ManualPositions) => {
+  const apply = (value: boolean | undefined, others_value: boolean | undefined, positions?: Type_ManualPositions) => {
+    others.forEach(other => { other.member_bands = others_value })
     tagg.member_bands = value
     setManualPositions([tagg], positions)
     app_data.drawing_area.rebuildDimensionNodes()
@@ -434,9 +443,9 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
     app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
   }
-  app_data.history.saveUndo(() => apply(before, positions_before))
-  app_data.history.saveRedo(() => apply(on))
-  apply(on)
+  app_data.history.saveUndo(() => apply(before, true, positions_before))
+  app_data.history.saveRedo(() => apply(on, undefined))
+  apply(on, undefined)
 }
 
 /**
