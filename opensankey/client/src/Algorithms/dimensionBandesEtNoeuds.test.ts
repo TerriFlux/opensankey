@@ -65,8 +65,8 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     // Le diagramme repete : les noeuds de poste portent le nom du poste seul.
     const noms = sankey.nodes_list.filter(isGeneratedMemberNode).map(n => n.name).sort()
     expect(noms).toEqual([
-      'Alimentation', 'Alimentation', 'Cereales', 'Exportations', 'Exportations',
-      'Importations', 'Importations', 'Lait', 'Production', 'Production'
+      'Alimentation', 'Alimentation', 'Exportations', 'Exportations',
+      'Importations', 'Importations', 'Matiere', 'Matiere', 'Production', 'Production'
     ])
     expect(ressources.own_driving_dimension?.id).toBe('poste')
     // Un diagramme par filiere, pas en plus des bandes de filiere sur les flux.
@@ -111,8 +111,10 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     const production = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Production')
       .sort((a, b) => a.position_y - b.position_y)
     expect(production.map(n => n.name_label_is_visible)).toEqual([true, false])
-    // Le noeud central, un par bande, garde son nom partout.
-    expect(sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Lait')[0].name_label_is_visible).toBe(true)
+    // Le noeud central, que rien ne decoupe, porte le nom de son axe, ecrit lui aussi une seule fois.
+    const matiere = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Matiere')
+      .sort((a, b) => a.position_y - b.position_y)
+    expect(matiere.map(n => n.name_label_is_visible)).toEqual([true, false])
   })
 
   test('par defaut les postes peignent les flux, et la legende liste les dimensions', () => {
@@ -129,6 +131,15 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     expect(lien?.getShapeColorToUse()).toBe('#0000aa')
     expect(filiere.draws_members_as_nodes).toBe(true)
     expect(poste.draws_members_as_nodes).toBe(true)
+  })
+
+  test('une dimension qui ne decoupe aucun noeud ne peint pas : la filiere reprend la main', () => {
+    const { sankey, filiere, poste } = monter()
+    // Un seul poste par noeud : Production a gauche, Exportations a droite.
+    choisir(poste, poste.tags_dict['production'] as Class_DataTag, poste.tags_dict['exportations'] as Class_DataTag)
+    disaggregateDimensionNodes(sankey)
+    expect(poste.splits_nodes).toBe(false)
+    expect(filiere.paints_member_bands_flows).toBe(true)
   })
 })
 
