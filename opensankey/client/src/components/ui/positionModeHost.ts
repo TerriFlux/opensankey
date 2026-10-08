@@ -144,8 +144,15 @@ export const positionModeSelectorEnabledFor = (app: Type_PositionModeHostApp): b
  * Il engendre des nœuds, donc change ce que le lecteur voit bien plus qu'un mode de position :
  * c'est à l'auteur de l'ouvrir, et le parc publié ne bouge pas.
  */
-export const dimensionDrawingEnabledFor = (app: Pick<Type_PositionModeHostApp, 'is_static' | 'publish_options'>): boolean =>
-  !app.is_static || app.publish_options.dimension_drawing === true
+export const dimensionDrawingEnabledFor = (
+  app: Pick<Type_PositionModeHostApp, 'is_static' | 'publish_options'>,
+  tagg?: { is_hierarchical: boolean }
+): boolean =>
+  // 08/10/2026 — UNE DIMENSION À NIVEAUX garde son menu en lecture (Julien : « en mode publication il
+  // faudrait pouvoir voir les boutons de réglage par dataTag dans une hiérarchie ») : ses membres se
+  // choisissent dans le tableau de navigation, et le menu vient avec, comme celui d'une couronne
+  // (03/10). Les gestes ne touchent que la session du lecteur.
+  !app.is_static || app.publish_options.dimension_drawing === true || tagg?.is_hierarchical === true
 
 /**
  * 03/10/2026 — UN MENU À UNE SEULE ENTRÉE-SOUS-MENU S'APLATIT (demande Julien) : « Dessiner › » seul
@@ -164,8 +171,8 @@ export const loneSubmenuOf = <T extends { is_submenu: boolean }>(
  * os#1511 — Le menu d'une dimension existe dès qu'il a quelque chose à offrir : la position, le
  * dessin, ou les deux. C'est le gate que lisent les trois hôtes.
  */
-export const dimensionMenuEnabledFor = (app: Type_PositionModeHostApp): boolean =>
-  positionModeSelectorEnabledFor(app) || dimensionDrawingEnabledFor(app)
+export const dimensionMenuEnabledFor = (app: Type_PositionModeHostApp, tagg?: { is_hierarchical: boolean }): boolean =>
+  positionModeSelectorEnabledFor(app) || dimensionDrawingEnabledFor(app, tagg)
 
 /**
  * #370 — Choisit le mode d'affichage (absolu / proportionnel / échelle adaptée) D'UNE
