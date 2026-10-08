@@ -317,8 +317,6 @@ type Type_RepresentationCommon = {
    *  - `showMainZoneOccupant` : jamais atteinte, `openMainZoneWindow` bifurque avant.
    *  - la ré-affirmation `representation = id` de `_normalizeMainZoneOccupants` : appliquée ici,
    *    elle donnerait `w_7` pour nature et la fenêtre n'aurait plus rien à dessiner.
-   *  - le remplacement EN PLACE de `setMainZoneWindowRepresentation` : il rebaptiserait la fenêtre
-   *    du nom de sa nouvelle nature — même piège que la fenêtre de feuille (os#1385 lot 0).
    *  - les accesseurs de compatibilité (`main_zone_show_diagram`, `…_spreadsheet`, `…_doc`) et la
    *    rangée d'interrupteurs de la barre du haut, qui désignent une fenêtre par son identifiant
    *    de registre : une nature `allow_many` n'y paraît pas, et c'est voulu — elle s'ouvre depuis

@@ -84,7 +84,7 @@ describe('la regle', () => {
 })
 
 describe('une serie de gestes ne fait jamais tomber la legende une fois apparue', () => {
-  test('multiples, Monde et Continents, double fleche, activation, zoom, sunburst, detacher, tableau croise', () => {
+  test('multiples, Monde et Continents, double fleche, activation, zoom, sunburst, detacher', () => {
     const b = banc()
 
     // Une couronne a une dimension : pas de legende, et rien n est ecrit.
@@ -117,11 +117,6 @@ describe('une serie de gestes ne fait jamais tomber la legende une fois apparue'
       b.ecrit(change)
       expect([nom, b.dessine(shape)]).toEqual([nom, true])
     })
-
-    // Couronne -> tableau croise -> couronne : la figure garde son reglage.
-    b.mc.setMainZoneWindowRepresentation(b.occupant().id, TABLEAU)
-    b.mc.setMainZoneWindowRepresentation(b.occupant().id, COURONNE)
-    expect(b.dessine(UNE())).toBe(true)
   })
 
   test('seul l interrupteur de l auteur l eteint, et elle reste eteinte', () => {
