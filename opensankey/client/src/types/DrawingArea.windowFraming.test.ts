@@ -397,3 +397,32 @@ describe('OS#388 — cas 2 : changer de menu ancré ne change pas la réserve', 
     expect(menu_configuration.getRightChromeReservedPx()).toBe(reserve_config)
   })
 })
+
+describe('sa#621 — l\'en-tête du volet passe par-dessus le dessin cadré', () => {
+
+  it('le cadre réserve la hauteur de l\'en-tête en haut et en bas, et la décale comme une barre du haut', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5 }
+    const sans_entete = drawing_area.window_fitting_height
+    expect(drawing_area.getNavBarHeight()).toBe(0)
+
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5, reserve_top: 28, reserve_bottom: 28 }
+    // Le dessin cadré se pose entre les deux marges : il ne touche jamais les boutons de l'en-tête.
+    expect(drawing_area.window_fitting_height).toBe(sans_entete - 56)
+    expect(drawing_area.getNavBarHeight()).toBe(28)
+    // La largeur ne change pas : l'en-tête est une bande du haut.
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5 }
+    const largeur = drawing_area.window_fitting_width
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5, reserve_top: 28, reserve_bottom: 28 }
+    expect(drawing_area.window_fitting_width).toBe(largeur)
+  })
+
+  it('une zone non cadrée ignore les réserves d\'en-tête posées pour un conteneur', () => {
+    const { drawing_area } = buildDrawnApp()
+    const avant = drawing_area.window_fitting_height
+    drawing_area.overlay_reserve_top = 28
+    drawing_area.overlay_reserve_bottom = 28
+    // La zone du conteneur principal, non cadrée : sa barre est celle de la page, rien d'autre.
+    expect(drawing_area.window_fitting_height).toBe(avant)
+  })
+})

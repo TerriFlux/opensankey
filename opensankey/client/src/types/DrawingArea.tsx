@@ -108,6 +108,15 @@ export type Type_CanvasFrame = {
    * d'un volet flottant, que le SVG — plus loin dans la page, au même plan — recouvrirait sinon.
    */
   notch?: number
+  /**
+   * sa#621 — L'EN-TÊTE DU VOLET PASSE PAR-DESSUS LE DESSIN. Le cadre couvre toute la case, en-tête
+   * compris, et le cadrage automatique laisse libres `reserve_top` px en haut et `reserve_bottom` en
+   * bas : le dessin cadré ne touche jamais les boutons de l'en-tête, mais un dessin qu'on agrandit
+   * peut passer dessous. C'est le régime qu'avait la barre du haut de la page sur le dessin non
+   * cadré (cf. `getNavBarHeight`).
+   */
+  reserve_top?: number,
+  reserve_bottom?: number
 } | 'hidden'
 
 /** sa#581 — Le découpage CSS du SVG pour un cadre (cf. `Type_CanvasFrame.inset` / `notch`). */
@@ -4776,17 +4785,38 @@ export class Class_DrawingArea {
    * s'y loge au lieu de recouvrir le dessin. Posée par celui qui pose la note ; 0 sinon.
    */
   public frame_bottom_reserved = 0
+  /**
+   * sa#621 — hauteurs laissées libres en haut et en bas d'une zone dessinée dans un CONTENEUR (zone
+   * détachée : le rendu d'un volet Sankey inactif) parce qu'un en-tête y passe par-dessus le dessin.
+   * Même régime que `Type_CanvasFrame.reserve_top/bottom` pour la zone cadrée : le volet inactif se
+   * cadre exactement comme quand il est actif. 0 sinon.
+   */
+  public overlay_reserve_top = 0
+  public overlay_reserve_bottom = 0
+  /** sa#621 — Les deux réserves de l'en-tête posé par-dessus le dessin (cf. `overlay_reserve_top`). */
+  protected _overlayReserves(): { top: number, bottom: number } {
+    const frame = this.canvas_frame
+    if (frame && frame !== 'hidden') return { top: frame.reserve_top ?? 0, bottom: frame.reserve_bottom ?? 0 }
+    if (this.is_detached) return { top: this.overlay_reserve_top, bottom: this.overlay_reserve_bottom }
+    return { top: 0, bottom: 0 }
+  }
 
   public get window_fitting_height(): number {
     // Canevas cadré dans une case de la grande zone : c'est elle qu'on remplit.
     const frame = this.canvas_frame
+    // sa#621 — moins ce que l'en-tête du volet, posé par-dessus, réserve en haut et en bas.
+    const overlay = this._overlayReserves()
     if (frame && frame !== 'hidden') {
       return frame.height - this._fit_margin - this._scrollbar_reserve_bottom - this.frame_bottom_reserved
+        - overlay.top - overlay.bottom
     }
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin - this._scrollbar_reserve_bottom - this.frame_bottom_reserved
+      if (h > 0) {
+        return h - this._fit_margin - this._scrollbar_reserve_bottom - this.frame_bottom_reserved
+          - overlay.top - overlay.bottom
+      }
     }
     // Mode embarqué (embedded) : le SVG fait 100% du conteneur hôte (#sankey_app),
     // qui peut être plus court que la fenêtre quand l'embarqueur ajoute sa PROPRE
@@ -5026,8 +5056,10 @@ export class Class_DrawingArea {
     // Hors du conteneur principal, ou canevas cadré dans sa case : aucun menu autour du
     // conteneur → pas d'offset. (os#1385 : lecture explicite de la géométrie, même sémantique
     // qu'avant — `is_detached` est exactement `!is_in_main_container`.)
+    // sa#621 — sauf l'en-tête du VOLET, quand il passe par-dessus le dessin : il joue alors pour la
+    // case le rôle que la barre du haut joue pour la page (cf. `Type_CanvasFrame.reserve_top`).
     if (!this.is_in_main_container || this.is_framed) {
-      return 0
+      return this._overlayReserves().top
     }
     if (this.static && !this.application_data.publish_options.topbar) {
       return 0

@@ -113,7 +113,8 @@ export type Type_AdditionalMenus = {
    * sa#621 — ils vivaient dans la colonne d'outils de droite ; elle est passée dans le volet
    * actif, et ce qui concerne le fichier entier est monté dans la BARRE DU HAUT (`MenuTopNavBar`),
    * à côté de l'Explorateur. Un bouton posé ici y prend donc le style de cette barre
-   * (`TopBarToolButton`).
+   * (`TopBarToolButton`). OpenSankey+ n'y pose plus le sien : le menu « Vues » ouvre déjà le
+   * panneau (arbitrage Alexandre, 08/10).
    */
   additional_tools_item: JSX.Element[],
 
@@ -1080,7 +1081,7 @@ export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number)
 // Largeur (px) de la colonne d'outils (barre verticale : configuration, filtres, outils du curseur,
 // cadrage, zoom). sa#621 — elle vit sur le bord droit du VOLET ACTIF, par-dessus son contenu, et ne
 // réserve donc plus rien à droite de la page (cf. getToolsColumnWidthPx).
-export const TOOLS_COLUMN_WIDTH_PX = 48
+export const TOOLS_COLUMN_WIDTH_PX = 30
 // Dimensions du panneau de configuration (drawer/inspecteur). Source de vérité
 // ici (et non dans SankeyMenus) : getConfigPanelPinnedReservedPx en a besoin
 // pour la réserve de largeur du mode épinglé (#1243).
