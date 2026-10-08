@@ -308,7 +308,7 @@ describe('os#1478 les cent trente cles sans objet ne sont plus offertes a une pa
       'shape_position_type', 'shape_anchor_align_vertical', 'shape_position_u_locked', 'shape_hatch',
       // Catalogue du FLUX : courbure, tangentes, fleches, encoches, points de passage.
       'shape_curvature', 'shape_starting_tangeant', 'shape_is_arrow', 'shape_source_notch',
-      'shape_waypoints', 'shape_link_caps'
+      'shape_waypoints', 'shape_pass_points', 'shape_link_caps'
     ]
     geometrie.forEach(cle => {
       expect([cle, attributeAppliesToElements([part], cle)]).toEqual([cle, false])

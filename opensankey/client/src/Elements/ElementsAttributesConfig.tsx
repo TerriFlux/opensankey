@@ -109,6 +109,10 @@ export type Type_OrientationSetting = Type_Orientation | 'auto'
 // (mêmes unités que position_x/y des nœuds). La liste, vide par défaut, achemine
 // le tracé source → wp[0] → … → wp[n] → cible. Cf. opensankey#1301.
 export type Type_LinkWaypoint = { x: number, y: number }
+// Point de passage lisse d'un flux (opensankey#1301) : u = fraction de l'ancre source
+// (0) à l'ancre cible (1) le long de la corde, v = décalage perpendiculaire à l'axe du
+// flux, en unités MONDE. Relatif aux ancres → suit les déplacements de nœuds.
+export type Type_LinkPassPoint = { u: number, v: number }
 // Ancrage de droiture d'un flux (#665, refonte multi-ancrage). 'none' = libre (flux non
 // contraint). 'source'/'target' = l'accroche aval/amont s'aligne sur l'autre (déplace le
 // nœud opposé). 'highest'/'lowest' = les deux accroches s'alignent sur la plus haute / la
@@ -4229,6 +4233,35 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       ja: 'フローが通過する自由な経路点（Alt+クリックで追加、ドラッグで移動、右クリックで削除）'
     }
   } satisfies AttributeConfig<Type_LinkWaypoint[]>,
+
+  // opensankey#1301 — points de PASSAGE lisses (Alt+clic). La courbe paramétrique reste
+  // (4 poignées, orientation, côtés d'attache) et passe par chaque point avec une tangente
+  // parallèle à l'axe du flux. Coordonnées RELATIVES aux ancres (cf. Type_LinkPassPoint) :
+  // le point suit les nœuds. Les waypoints MONDE ci-dessus restent ceux de l'import e!Sankey.
+  pass_points: {
+    default: [] as Type_LinkPassPoint[],
+    type: (() => []) as (() => Type_LinkPassPoint[]),
+    category: 'shape' as const,
+    actions: ['drawElements', 'drawControlPoint'] as LinkBaseActionType[],
+    labels: {
+      en: 'Pass points',
+      fr: 'Points de passage',
+      es: 'Puntos de paso',
+      de: 'Durchgangspunkte',
+      it: 'Punti di passaggio',
+      'zh-CN': '经过点',
+      ja: '通過点'
+    },
+    tooltips: {
+      en: 'Points the curved flow passes through (Alt+click the flow to add one, drag a point to move it, right-click a point to remove it)',
+      fr: 'Points par lesquels passe la courbe du flux (Alt+clic sur le flux pour en ajouter un, glisser un point pour le déplacer, clic droit sur un point pour le retirer)',
+      es: 'Puntos por los que pasa la curva del flujo (Alt+clic en el flujo para añadir uno, arrastrar un punto para moverlo, clic derecho para eliminarlo)',
+      de: 'Punkte, durch die die Kurve des Flusses verläuft (Alt+Klick auf den Fluss zum Hinzufügen, Punkt ziehen zum Verschieben, Rechtsklick zum Entfernen)',
+      it: 'Punti attraverso cui passa la curva del flusso (Alt+clic sul flusso per aggiungerne uno, trascinare per spostarlo, clic destro per rimuoverlo)',
+      'zh-CN': '流量曲线所经过的点（Alt+点击流量可添加，拖动可移动，右键点击可删除）',
+      ja: 'フローの曲線が通過する点（Alt+クリックで追加、ドラッグで移動、右クリックで削除）'
+    }
+  } satisfies AttributeConfig<Type_LinkPassPoint[]>,
 
   // opensankey#1301 — offset d'ancre importé (fidélité e!Sankey). Décalage de l'ancre
   // le long du bord du nœud, DEPUIS le coin (relatif → survit aux déplacements/resize) :
