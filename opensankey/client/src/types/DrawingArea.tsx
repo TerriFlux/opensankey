@@ -4822,14 +4822,14 @@ export class Class_DrawingArea {
   // l'utilisateur a la main sur la caméra et n'a rien demandé.
 
   /** Réserve des panneaux qui S'OUVRENT et se FERMENT — barre latérale (config,
-   *  filtres, modèles) et colonne tableur/doc/unitaire. EXCLUT la colonne d'outils,
-   *  permanente : elle est là au repos, la rendre ferait dessiner sous les boutons.
+   *  filtres, modèles) et colonne tableur/doc/unitaire. (sa#621 — la colonne d'outils
+   *  n'est plus une réserve : elle vit dans le volet actif, par-dessus le dessin.)
    *  Nulle sur une zone détachée, dont le cadrage suit son conteneur hôte. */
   public get panel_reserve_right(): number {
     if (this.is_detached || this.is_framed) return 0
     const mc = this.application_data.menu_configuration
     if (!mc) return 0
-    return Math.max(0, mc.getMainZoneRightReservedPx() - mc.getToolsColumnWidthPx())
+    return Math.max(0, mc.getMainZoneRightReservedPx())
   }
 
   /** Symétrique en bas : réserve de la doc en mode bandeau. */

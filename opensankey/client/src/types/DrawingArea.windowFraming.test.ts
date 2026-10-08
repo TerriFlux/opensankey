@@ -356,15 +356,16 @@ describe('OS#388 — en caméra libre, un panneau se SUPERPOSE au diagramme', ()
     expect(drawing_area.chrome_fitting_width).toBe(drawing_area.window_fitting_width)
   })
 
-  it('la colonne d\'outils, permanente, n\'est jamais rendue au chrome', () => {
+  it('sa#621 — la colonne d\'outils vit dans le volet actif : elle ne réserve rien', () => {
     const { app, drawing_area } = buildDrawnApp()
+    const zone_avant = drawing_area.window_fitting_width
     app.menu_configuration.tools_column_enabled = true
-    const tools = app.menu_configuration.getToolsColumnWidthPx()
-    expect(tools).toBeGreaterThan(0)
+    expect(app.menu_configuration.getToolsColumnWidthPx()).toBeGreaterThan(0)
 
-    // Aucun panneau ouvert : rien à rendre, chrome == zone cadrée (outils déjà retranchés
-    // des deux côtés). Les rendre ferait dessiner sous les boutons.
+    // Elle passe par-dessus le contenu du volet : ni la page, ni le dessin ne lui cèdent de place.
+    expect(app.menu_configuration.getRightChromeReservedPx()).toBe(0)
     expect(drawing_area.panel_reserve_right).toBe(0)
+    expect(drawing_area.window_fitting_width).toBe(zone_avant)
     expect(drawing_area.chrome_fitting_width).toBe(drawing_area.window_fitting_width)
   })
 })
@@ -393,7 +394,6 @@ describe('OS#388 — cas 2 : changer de menu ancré ne change pas la réserve', 
 
     // La seule grandeur qui compte pour le fenêtrage, elle, n'a pas bougé.
     expect(panels.getSidebarReservedPx()).toBe(reserve_config)
-    expect(menu_configuration.getRightChromeReservedPx()).toBe(
-      menu_configuration.getToolsColumnWidthPx() + reserve_config)
+    expect(menu_configuration.getRightChromeReservedPx()).toBe(reserve_config)
   })
 })
