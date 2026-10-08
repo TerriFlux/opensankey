@@ -376,10 +376,9 @@ describe('os#1511 modele commun — le diagramme', () => {
     const st = fromDiagram(s.sankey)
     expect(st.dims.filiere.role).toBe('none')
     const bands = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'sankey', 'bands'), focus: [] } } }
-    // 08/10 (472b3aa0f) — une dimension hiérarchisée n'est plus forcée en choix multiple : Pays reste
-    // en « un membre à la fois », ne demande pas les bandes, et ne les voit donc pas prises.
+    // Pays, posée en choix multiple, voit les bandes prises par Filière.
     expect(toDiagramPatch(bands, s.sankey)).toEqual({
-      dims: { filiere: { banner: 'multi' } }, warnings: []
+      dims: { filiere: { banner: 'multi' } }, warnings: [{ dimension_id: 'pays', code: 'bands_taken' }]
     })
     expect(s.filiere.banner).toBe('sequence')
     const per_member = { ...st, dims: { ...st.dims, pays: { ...applyLabel(st.dims.pays, 'sankey', 'member_bands'), focus: [], shown: ['europe', 'asie'] } } }
