@@ -27,8 +27,8 @@ function porte(flux: Class_LinkElement, membre: Class_DataTag): boolean {
 }
 
 /**
- * CE NŒUD TRANSFORME-T-IL la dimension ? Oui quand il a des entrées ET des sorties, et qu'aucun
- * membre choisi n'est présent à la fois en entrée et en sortie : « Transformation » reçoit de la
+ * CE NŒUD TRANSFORME-T-IL la dimension ? Oui quand il a des entrées ET des sorties, et que les
+ * membres présents en entrée ne sont pas EXACTEMENT ceux présents en sortie : « Transformation » reçoit de la
  * matière première et rend des produits transformés et des coproduits. Le découper selon le type de
  * matière ferait des morceaux sans lien (Julien, 08/10 : « il n'y a pas de lien entre Transformation
  * - Matière première et Transformation - Produits transformés, qui n'a pas d'entrée ? »). Une
@@ -45,5 +45,10 @@ export function nodeTransformsDimension(node: Class_NodeElement, dimension: Clas
   const a_l_entree = presents(entrees)
   const a_la_sortie = presents(sorties)
   if (a_l_entree.size === 0 || a_la_sortie.size === 0) return false
-  return ![...a_l_entree].some(membre => a_la_sortie.has(membre))
+  // Les MÊMES membres des deux côtés, sinon le nœud transforme : « Transformation » rend un peu de
+  // matière première (vers son équilibrage) mais crée des produits transformés qui n'y entrent pas
+  // — son morceau « Produits transformés » n'aurait aucune entrée (Julien, 08/10 : « je peux
+  // toujours cocher Transformation »). Un nœud qui respecte le bilan membre à membre passe.
+  if (a_l_entree.size !== a_la_sortie.size) return true
+  return [...a_l_entree].some(membre => !a_la_sortie.has(membre))
 }
