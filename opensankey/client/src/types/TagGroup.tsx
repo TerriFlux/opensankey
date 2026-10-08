@@ -1613,6 +1613,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._focus_ids = [...new Set(value.filter(id => typeof id === 'string' && id !== ''))]
   }
 
+  /**
+   * os#1511 — un de ses axes est-il vraiment DÉCOUPÉ (deux nœuds au moins dans une même bande) ?
+   * Posé à chaque désagrégation, jamais écrit. Cf. `flowPainterOf`.
+   */
+  public splits_nodes: boolean = false
+
   /** os#1511 — la dimension choisie pour peindre les flux d'un diagramme par membre. */
   public get paints_flows(): boolean { return this._paints_flows }
   public set paints_flows(value: boolean) { this._paints_flows = value }
@@ -2866,12 +2872,14 @@ export function flowPainterOf(dims: Class_DataTagGroup[]): Class_DataTagGroup | 
   if (bande === undefined) return undefined
   const peut = (t: Class_DataTagGroup) => t === bande || (t.drawing === 'nodes' && t.selected_tags_list.length > 1)
   const choisie = dims.find(t => t.paints_flows && peut(t))
+  // Par défaut, seule une dimension qui DÉCOUPE un nœud peut peindre : sinon chaque flux n'aurait
+  // qu'une couleur par colonne, et la filière ne se verrait plus.
   if (choisie !== undefined) return choisie
   // À défaut, la dimension en nœuds portée par le PLUS de nœuds : sur le SOCLE transfo, « Ressources
   // et emplois » (Ressources, Emplois) plutôt que « Type de matière » (Matière transformée seule).
   let meilleure: Class_DataTagGroup | undefined
   dims.forEach(t => {
-    if (t === bande || !peut(t)) return
+    if (t === bande || !peut(t) || !t.splits_nodes) return
     if (meilleure === undefined || t.own_carriers_count > meilleure.own_carriers_count) meilleure = t
   })
   return meilleure ?? bande

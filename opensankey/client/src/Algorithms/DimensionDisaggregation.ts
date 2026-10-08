@@ -401,6 +401,10 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
       : creerNoeudsDansBandes(sankey, axe, membres, replies, bande)
     // Rangé en bandes par sa propre dimension : chaque entrée est sa bande.
     if (en_bandes) entrees.forEach(entree => { entree.bande = entree.cle; entree.bande_dim = dimension })
+    // Un DIAGRAMME PAR MEMBRE demandé répète le diagramme : un nœud que rien d'autre ne découpe y
+    // garde le nom de son axe (« Matière première », pas « Matière première - Céréales ») ; la bande
+    // se lit à sa couleur, sa place et la légende, et le nom ne s'écrit qu'en haut (`nommerUneFois`).
+    if (dimension === bande_dim && bande === undefined) entrees.forEach(entree => { entree.noeud.name = axe.name })
     par_axe.set(axe.id, entrees)
   })
   if (par_axe.size === 0) return 0
@@ -480,6 +484,19 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   }
   // 3 bis) CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page.
   appliquerPositionsManuelles(par_axe)
+  // 3 quater) QUELLES DIMENSIONS DÉCOUPENT VRAIMENT un nœud (deux entrées au moins d'un même axe,
+  //    dans une même bande) : seules celles-là peuvent peindre les flux par défaut. Au niveau
+  //    « Ressources / Emplois », chaque nœud n'a qu'un poste, et c'est la filière qui peint.
+  ;(sankey.data_taggs_list as Class_DataTagGroup[]).forEach(dimension => { dimension.splits_nodes = false })
+  par_axe.forEach(entrees => {
+    const par_bande = new Map<string, Set<string>>()
+    entrees.forEach(entree => {
+      const cle = entree.bande ?? ''
+      par_bande.set(cle, (par_bande.get(cle) ?? new Set<string>()).add(entree.cle))
+    })
+    const dimension = entrees[0]?.dimension
+    if (dimension !== undefined && [...par_bande.values()].some(cles => cles.size > 1)) dimension.splits_nodes = true
+  })
   // 3 ter) UN NOM RÉPÉTÉ À L'IDENTIQUE D'UNE BANDE À L'AUTRE NE S'ÉCRIT QU'UNE FOIS, à sa première
   //    apparition (Julien, 07/10 : « mettre les labels à droite et à gauche uniquement pour les plus
   //    hauts, vu qu'ils sont repris en dessous à l'identique »).
@@ -526,7 +543,7 @@ function nommerUneFois(par_axe: Map<string, Type_MembreRepresente[]>): void {
   par_axe.forEach(entrees => {
     const par_nom = new Map<string, Class_NodeElement[]>()
     entrees.forEach(entree => {
-      if (entree.bande === undefined || entree.bande === entree.cle) return
+      if (entree.bande === undefined) return
       par_nom.set(entree.noeud.name, [...(par_nom.get(entree.noeud.name) ?? []), entree.noeud])
     })
     par_nom.forEach(noeuds => {
@@ -1014,7 +1031,9 @@ function creerNoeudsDansBandes(
     // sa couleur et à sa place (Julien, 07/10 : « le même type de graphe multiplié »). Un axe dont
     // la dimension n'a qu'un membre (Matière au niveau « Matière ») prend le nom de la BANDE : c'est
     // lui qui la nomme.
-    const nom = membres.length === 1 ? b.nom : d.nom
+    // Un seul membre de sa dimension : le nœud n'est pas découpé dans la bande, il garde le nom de
+    // son AXE, comme dans le diagramme que la bande répète.
+    const nom = membres.length === 1 ? axe.name : d.nom
     const noeud = sankey.addNewNode(generatedId(axe.id, [b.cle, d.cle]), nom)
     noeud.copyAttrFrom(axe)
     heriterExtremite(sankey, axe, noeud)
