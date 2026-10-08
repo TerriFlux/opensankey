@@ -88,22 +88,32 @@ describe('os#1511 — un diagramme par membre', () => {
     engendres.forEach(l => expect(pente(l)).toBeCloseTo(0, 6))
   })
 
-  test('une pente d origine est gardee, et chaque bande commence sous le noeud le plus bas de la precedente', () => {
+  test('la bande est le diagramme a l echelle : ecarts a la mediane au prorata de la hauteur', () => {
+    // Julien, 08/10 : « une ligne mediane horizontale et des ecarts relatifs a la hauteur la plus
+    // grande, comme en mode proportionnel ». « Produits agricoles » 50 plus bas que les deux autres.
     const { sankey, app } = monter()
-    // « Produits agricoles » 50 plus bas : les flux d origine descendent puis remontent.
-    sankey.nodes_list.find(n => n.name === 'Produits agricoles')?.setPosXY(300, 150)
+    const produits = sankey.nodes_list.find(n => n.name === 'Produits agricoles')
+    produits?.setPosXY(300, 150)
+    produits?.captureCenterFromCorner()
     app.drawing_area.disaggregation_gap_value = 25
-    // La pente se garde telle quelle, en pixels : la bande reproduit la mise en page de l auteur.
-    const avant = new Map(sankey.links_list.map(l => [l.id, pente(l)]))
+    const axes = sankey.nodes_list.filter(n => !isGeneratedMemberNode(n))
+    const centre = (n: Class_NodeElement) => n.position_y + n.getShapeHeightToUse() / 2
+    const ecart_maitre = centre(produits as Class_NodeElement) - centre(axes.find(n => n.name === 'Monde - Import') as Class_NodeElement)
+    const hauteur_max = Math.max(...axes.map(n => n.getShapeHeightToUse()))
     disaggregateDimensionNodes(sankey)
-    sankey.links_list.filter(isGeneratedMemberLink).forEach(l =>
-      expect(pente(l)).toBeCloseTo(avant.get(l.id.split(MEMBER_NODE_MARK)[0]) as number, 6))
+    ;['espagne', 'maroc'].forEach(m => {
+      const bande = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.id.endsWith(m))
+      const k = Math.max(...bande.map(n => n.getShapeHeightToUse())) / hauteur_max
+      const de = (nom: string) => centre(bande.find(n => n.id.startsWith(axes.find(a => a.name === nom)?.id + MEMBER_NODE_MARK)) as Class_NodeElement)
+      expect(de('Produits agricoles') - de('Monde - Import')).toBeCloseTo(ecart_maitre * k, 6)
+    })
     const bande = (suffixe: string) => sankey.nodes_list.filter(isGeneratedMemberNode)
       .filter(n => n.id.endsWith(suffixe)).map(n => ({ y: n.position_y, h: n.getShapeHeightToUse() }))
     const bas_espagne = Math.max(...bande('espagne').map(e => e.y + e.h))
     const haut_maroc = Math.min(...bande('maroc').map(m => m.y))
     expect(haut_maroc).toBeCloseTo(bas_espagne + 25, 6)
   })
+
 
   test('decoche, chaque noeud retrouve son empilement propre', () => {
     const { sankey, app, pays } = monter()

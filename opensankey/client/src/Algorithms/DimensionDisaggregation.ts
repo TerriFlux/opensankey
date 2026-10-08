@@ -501,6 +501,7 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   //    apparition (Julien, 07/10 : « mettre les labels à droite et à gauche uniquement pour les plus
   //    hauts, vu qu'ils sont repris en dessous à l'identique »).
   nommerUneFois(par_axe)
+  nommerLesBandes(par_axe)
 
   // 4) Les nœuds d'axe quittent le DESSIN, pas le modèle : ils sont représentés par leurs
   //    membres, mais restent ce d'où l'on repart au prochain changement de niveau — et ce que
@@ -551,6 +552,39 @@ function nommerUneFois(par_axe: Map<string, Type_MembreRepresente[]>): void {
       const premier = noeuds.reduce((a, b) => (b.position_y < a.position_y ? b : a))
       noeuds.forEach(noeud => { if (noeud !== premier) noeud.name_label_is_visible = false })
     })
+  })
+}
+
+/**
+ * os#1511 — LE NOM DE CHAQUE BANDE d'un diagramme par membre (Julien, 08/10 : « on ne voit pas
+ * apparaître les noms des filières, Céréales, Oléoprotéagineux… il faut le faire »). Le premier nœud,
+ * en partant de la gauche, que rien ne découpe dans la bande (un seul nœud de son axe) prend le nom
+ * du membre de la bande, écrit dans toutes les bandes : à gauche sur le SOCLE transfo (Ressources),
+ * au centre sur le SOCLE full (Matière, quand Ressources est découpé par poste).
+ */
+function nommerLesBandes(par_axe: Map<string, Type_MembreRepresente[]>): void {
+  const par_bande = new Map<string, Type_MembreRepresente[]>()
+  par_axe.forEach(entrees => entrees.forEach(entree => {
+    if (entree.bande === undefined || entree.bande_dim?.member_bands !== true) return
+    par_bande.set(entree.bande, [...(par_bande.get(entree.bande) ?? []), entree])
+  }))
+  par_bande.forEach((entrees, bande) => {
+    const par_colonne = new Map<string, Type_MembreRepresente[]>()
+    entrees.forEach(entree => {
+      const axe_id = parseGeneratedId(entree.noeud.id)?.origin ?? ''
+      par_colonne.set(axe_id, [...(par_colonne.get(axe_id) ?? []), entree])
+    })
+    const seules = [...par_colonne.values()].filter(colonne => colonne.length === 1).map(colonne => colonne[0])
+    if (seules.length === 0) return
+    const premiere = seules.reduce((a, b) => (b.noeud.position_x < a.noeud.position_x ? b : a))
+    const dimension = premiere.bande_dim as Class_DataTagGroup
+    const t = premiere.noeud.drawing_area.application_data?.t
+    const nom = bande === OTHERS_ID
+      ? ((t ? t('sunburst.others') : '') || 'Autres')
+      : (dimension.tags_dict[bande] as Class_DataTag | undefined)?.name
+    if (nom === undefined) return
+    premiere.noeud.name = nom
+    premiere.noeud.name_label_is_visible = true
   })
 }
 
@@ -657,6 +691,28 @@ function rangerEnBandes(
     (sankey.nodes_dict[a].position_u - sankey.nodes_dict[b].position_u) ||
     (sankey.nodes_dict[a].position_x - sankey.nodes_dict[b].position_x))
 
+  // LE DIAGRAMME D'ORIGINE, mesuré avant découpage (`creneaux`) : le centre de chaque axe, la
+  // médiane de l'ensemble et la hauteur du plus haut axe. Absent (appel sans créneaux) : les
+  // bandes suivent les flux de proche en proche.
+  const maitre = (() => {
+    if (creneaux === undefined) return undefined
+    const centres = new Map<string, number>()
+    let haut = Infinity
+    let bas = -Infinity
+    let hauteur_max = 0
+    axe_ids.forEach(id => {
+      const c = creneaux.get(id)
+      if (c === undefined) return
+      const centre = c.centre ?? c.haut + c.hauteur / 2
+      centres.set(id, centre)
+      haut = Math.min(haut, centre - c.hauteur / 2)
+      bas = Math.max(bas, centre + c.hauteur / 2)
+      hauteur_max = Math.max(hauteur_max, c.hauteur)
+    })
+    if (centres.size !== axe_ids.length) return undefined
+    return { centres, mediane: (haut + bas) / 2, hauteur_max }
+  })()
+
   let bas_precedent: number | undefined = undefined
   ordre.forEach(cle => {
     // ── PASSE 1 : la forme de la bande, à une translation près ──────────────────────────────
@@ -666,44 +722,59 @@ function rangerEnBandes(
     }))
     if (axe_de.size === 0) return
     const y = new Map<Class_NodeElement, number>()
-    const poser = (depart: Class_NodeElement) => {
-      y.set(depart, haut_axe.get(axe_de.get(depart) as string) as number)
-      const file = [depart]
-      while (file.length > 0) {
-        const a = file.shift() as Class_NodeElement
-        const flux = [...a.input_links_list, ...a.output_links_list] as Class_LinkElement[]
-        flux.forEach(lien => {
-          if (!isGeneratedMemberLink(lien) || !lien.is_visible) return
-          const b = (lien.source === a ? lien.target : lien.source) as Class_NodeElement
-          if (!axe_de.has(b) || y.has(b)) return
-          y.set(b, hauteurAlignee(a, b, lien, pentes, y.get(a) as number, haut_axe, axe_de))
-          file.push(b)
-        })
-      }
-    }
-    axe_de.forEach((_id, noeud) => { if (!y.has(noeud)) poser(noeud) })
-    // Plusieurs nœuds d'un même axe dans la bande (ses postes) : ESPACÉS comme dans le diagramme
-    // découpé sur place, que la bande répète (Julien, 07/10 : « je m'attends à voir le même type
-    // de graphe multiplié, mais ça fait un truc tout ramassé »). Dans l'ordre, un demi-écart de
-    // bande entre deux, la pile recentrée sur celle qu'avaient posée les flux droits.
     const ecart_enfants = ecart / 2
     const par_colonne = new Map<string, Class_NodeElement[]>()
     axe_de.forEach((id, noeud) => par_colonne.set(id, [...(par_colonne.get(id) ?? []), noeud]))
-    par_colonne.forEach(noeuds => {
-      if (noeuds.length < 2) return
-      noeuds.sort((p, q) => (y.get(p) as number) - (y.get(q) as number))
-      const haut = y.get(noeuds[0]) as number
-      const bas = Math.max(...noeuds.map(n => (y.get(n) as number) + n.getShapeHeightToUse()))
-      let curseur = 0
-      const relatifs = noeuds.map(n => {
-        const r = curseur
+    // Les nœuds d'un axe dans la bande (ses postes) forment une PILE, dans l'ordre choisi, espacés
+    // d'un demi-écart de bande.
+    const pile = (noeuds: Class_NodeElement[]) =>
+      noeuds.reduce((total, n) => total + n.getShapeHeightToUse(), 0) + ecart_enfants * (noeuds.length - 1)
+    const poserPile = (noeuds: Class_NodeElement[], centre: number) => {
+      let curseur = centre - pile(noeuds) / 2
+      noeuds.forEach(n => {
+        y.set(n, curseur)
         curseur += n.getShapeHeightToUse() + ecart_enfants
-        return r
       })
-      const hauteur = curseur - ecart_enfants
-      const depart = (haut + bas) / 2 - hauteur / 2
-      noeuds.forEach((n, i) => y.set(n, depart + relatifs[i]))
-    })
+    }
+    if (maitre !== undefined) {
+      // LA BANDE EST LE DIAGRAMME À L'ÉCHELLE (Julien, 08/10 : « des translations verticales
+      // absolues, alors que les épaisseurs se réduisent, ça donne une impression de déformation ; il
+      // faut une ligne médiane horizontale et des écarts relatifs à la hauteur la plus grande, comme
+      // en mode proportionnel »). Chaque axe garde son écart à la médiane du diagramme d'origine,
+      // multiplié par le rapport entre la plus haute pile de la bande et le plus haut axe d'origine.
+      let plus_haute = 0
+      par_colonne.forEach(noeuds => { plus_haute = Math.max(plus_haute, pile(noeuds)) })
+      const k = maitre.hauteur_max > 0 ? plus_haute / maitre.hauteur_max : 1
+      par_colonne.forEach((noeuds, id) => {
+        const centre = maitre.centres.get(id)
+        poserPile(noeuds, centre === undefined ? 0 : (centre - maitre.mediane) * k)
+      })
+    } else {
+      // Sans mesure du diagramme d'origine : la forme suit les flux, de proche en proche.
+      const poser = (depart: Class_NodeElement) => {
+        y.set(depart, haut_axe.get(axe_de.get(depart) as string) as number)
+        const file = [depart]
+        while (file.length > 0) {
+          const a = file.shift() as Class_NodeElement
+          const flux = [...a.input_links_list, ...a.output_links_list] as Class_LinkElement[]
+          flux.forEach(lien => {
+            if (!isGeneratedMemberLink(lien) || !lien.is_visible) return
+            const b = (lien.source === a ? lien.target : lien.source) as Class_NodeElement
+            if (!axe_de.has(b) || y.has(b)) return
+            y.set(b, hauteurAlignee(a, b, lien, pentes, y.get(a) as number, haut_axe, axe_de))
+            file.push(b)
+          })
+        }
+      }
+      axe_de.forEach((_id, noeud) => { if (!y.has(noeud)) poser(noeud) })
+      par_colonne.forEach(noeuds => {
+        if (noeuds.length < 2) return
+        noeuds.sort((p, q) => (y.get(p) as number) - (y.get(q) as number))
+        const haut = y.get(noeuds[0]) as number
+        const bas = Math.max(...noeuds.map(n => (y.get(n) as number) + n.getShapeHeightToUse()))
+        poserPile(noeuds, (haut + bas) / 2)
+      })
+    }
     // Deux AXES peuvent partager une colonne (SOCLE transfo : Matière transformée et Équilibrage
     // transformation sortant) : dans la bande, leurs nœuds ne se chevauchent pas non plus — ils
     // gardent leur ordre et le plus bas descend, d'un demi-écart.
@@ -720,7 +791,9 @@ function rangerEnBandes(
 
     // ── PASSE 2 : sous le nœud le plus bas de la bande précédente ───────────────────────────
     const plus_haut = Math.min(...y.values())
-    const decalage = bas_precedent === undefined ? 0 : bas_precedent + ecart - plus_haut
+    // La première bande a sa médiane là où était celle du diagramme d'origine (ses nœuds sont
+    // posés autour de 0) ; les suivantes, sous le nœud le plus bas de la précédente.
+    const decalage = bas_precedent === undefined ? (maitre?.mediane ?? 0) : bas_precedent + ecart - plus_haut
     y.forEach((haut, noeud) => {
       noeud.position_y = haut + decalage
       noeud.captureCenterFromCorner()
