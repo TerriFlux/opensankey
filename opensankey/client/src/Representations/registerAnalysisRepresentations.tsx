@@ -1924,7 +1924,10 @@ export const registerAnalysisRepresentations = (): void => {
     id: 'osp.repr.donut',
     nature: 'donut',
     order: 20,
-    label: (a) => a.t('inspector.analysis.repr.donut', { defaultValue: 'Couronne' }),
+    // sa#617 — la clé `inspector.analysis.repr.donut` n'existait dans aucun catalogue : « Couronne »
+    // s'affichait en français dans les sept langues. Le libellé rejoint les autres natures de volet.
+    label: (a) => a.t('Spreadsheet.zone.donut'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.donut'),
     icon: <FaChartPie />,
     own: DONUT_OWN,
     socle: DONUT_SOCLE,
@@ -2355,7 +2358,9 @@ export const registerAnalysisRepresentations = (): void => {
     id: 'osp.repr.bars',
     nature: 'bars',
     order: 30,
-    label: (a) => a.t('inspector.analysis.repr.bar', { defaultValue: 'Barres' }),
+    // sa#617 — même défaut que la couronne (`inspector.analysis.repr.bar` absente des catalogues).
+    label: (a) => a.t('Spreadsheet.zone.bars'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.bars'),
     icon: <FaChartBar />,
     own: BARS_OWN,
     socle: BARS_SOCLE,
@@ -2491,6 +2496,7 @@ const registerDimensionMatrix = (): void => {
     scale: 'element',
     order: 35,
     label: (a) => a.t('matrix.label'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.matrix'),
     icon: <FaTable />,
     zoom: MATRIX_ZOOM,
     reads_generated_origin: true,

@@ -56,6 +56,7 @@ export const registerBaseRepresentations = (): void => {
     scale: 'diagram',
     order: 10,
     label: (a) => a.t('Spreadsheet.zone.diagram'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.diagram'),
     icon: <FaProjectDiagram />,
     // Le SVG sous tout le reste : la grande zone lui réserve ce que les autres
     // occupants ne prennent pas, et c'est tout ce qu'il lui faut.
@@ -73,6 +74,7 @@ export const registerBaseRepresentations = (): void => {
     scale: 'diagram',
     order: 20,
     label: (a) => a.t('Spreadsheet.zone.spreadsheet'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.spreadsheet'),
     icon: <FaTable />,
     // os#1356 — PAS DE VERROU EN LECTURE, ET C'EST VOULU (arbitrage Julien).
     // Univer n'a pas de mode lecture seule ici : le visiteur d'une page publiée
@@ -136,6 +138,7 @@ export const registerBaseRepresentations = (): void => {
     scale: 'diagram',
     order: 25,
     label: (a) => a.t('Spreadsheet.zone.json'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.json'),
     icon: <FaCode />,
     // 30/09/2026 — RÉSERVÉE À LA LICENCE DEV (arbitrage Julien) : le texte du format natif est
     // un outil de mise au point, pas une lecture du diagramme. Le gate l'écarte des sélecteurs
@@ -171,6 +174,7 @@ export const registerBaseRepresentations = (): void => {
     scale: 'diagram',
     order: 30,
     label: (a) => a.t('Spreadsheet.zone.doc'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.doc'),
     icon: <FaFileAlt />,
     publish_option: 'doc',
     // Même critère que `hasDocToShow` (publishedDoc, couche éditeur) : la doc
@@ -259,6 +263,7 @@ export const registerBaseRepresentations = (): void => {
     // colonne de la pop-up se contentait d'un `defaultValue`, donc d'un libellé français pour
     // les sept langues. Une nature qui paraît dans le sélecteur de la barre du haut se traduit.
     label: (a) => a.t('Spreadsheet.zone.infos'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.infos'),
     icon: <FaInfoCircle />,
     host: 'component'
   })
@@ -284,6 +289,7 @@ export const registerBaseRepresentations = (): void => {
     // l'en-tête pose à côté du libellé (`describeContent`, juste dessous). Une fenêtre dit donc
     // « Sankey · Origine » là où le canevas dit « Sankey » tout court.
     label: (a) => a.t('Spreadsheet.zone.diagram'),
+    description: (a) => a.t('Spreadsheet.zone.type_description.diagram'),
     // sa#567 — L'ICÔNE DU DIAGRAMME, et non plus l'œil : un Sankey est un Sankey, qu'il soit le
     // canevas ou un volet de plus (arbitrage Alexandre, 29/09). L'œil reste le symbole des VUES.
     icon: <FaProjectDiagram />,

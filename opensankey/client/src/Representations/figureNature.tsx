@@ -87,6 +87,8 @@ export interface Type_FigureNatureSpec {
   scale?: Type_RepresentationScale
   order: number
   label: (app_data: Class_ApplicationData) => string
+  /** sa#617 — à quoi sert la nature, en une ligne (cf. `Type_RepresentationEntry.description`). */
+  description?: (app_data: Class_ApplicationData) => string
   icon?: React.ReactNode
   zoom?: Type_RepresentationZoom
   isAvailable?: (ctx: Type_RepresentationContext) => boolean
@@ -166,6 +168,7 @@ export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
     scale: spec.scale ?? 'element',
     order: spec.order,
     label: spec.label,
+    description: spec.description,
     icon: spec.icon,
     zoom: spec.zoom,
     isAvailable: spec.isAvailable,
