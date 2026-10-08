@@ -112,11 +112,11 @@ describe('os#1511 — la legende suit le mode d affichage', () => {
     expect(groupes).toContain('pays')
   })
 
-  test('EN NOEUDS : elle en sort', () => {
+  test('EN NOEUDS, plusieurs membres : elle reste, pour cocher, survoler et peindre (08/10)', () => {
     const m = monter()
     m.cible.driving_dimension = m.pays
     const groupes = legendTagGroupsOrder(m.sankey as never).map(g => g.id)
-    expect(groupes).not.toContain('pays')
+    expect(groupes).toContain('pays')
   })
 
   test('EN BANDES, les entrees de ses membres sont bien emises', () => {
