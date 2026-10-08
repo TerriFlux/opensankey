@@ -21,8 +21,9 @@ import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Type_JSON } from '../types/Utils'
 import { format_value } from '../types/Utils'
+import { displayedNameOf } from '../Elements/ElementNaming'
 import {
-  defaultNormalizationRule, describeNormalizationNotice, normalizationNodeKind, normalizationReference,
+  defaultNormalizationRule, describeNormalizationReference, normalizationNodeKind, normalizationReference,
   normalizationRulesFromJSON, normalizedValueFor, resolveNormalizationRule
 } from './NormalizationRule'
 import type { Type_NormalizationRule } from './NormalizationRule'
@@ -71,17 +72,19 @@ const normalized = (link: Class_LinkElement, end: 'source' | 'target'): number |
   normalizedValueFor(end === 'source' ? link.source : link.target, link.valueCurrent, link.sankey)
 
 describe('sa#595 — la famille d un noeud et sa regle par defaut', () => {
-  test('un secteur rapporte a ses sorties vers des produits, sinon matieres premieres, coproduits, rejets', () => {
+  // sa#616 — la règle commune remplace la priorité de sa#607 (produit d'abord).
+  test('un secteur rapporte a ses sorties (sinon entrees) vers des matieres premieres, produits, coproduits, sinon au total', () => {
     const app = load()
     const sucrerie = nodeNamed(app, 'Sucrerie (Sucre)')
     expect(normalizationNodeKind(sucrerie)).toBe('secteur')
     expect(resolveNormalizationRule(sucrerie, app.drawing_area.sankey)).toEqual({
-      side: 'outputs',
+      side: 'outputs_else_inputs',
       filter: {
         on: 'counterpart',
         tag_group_id: 'type de matiere',
-        tag_ids: ['produit', 'matiere premiere', 'coproduit', 'rejet'],
-        negate: false
+        tag_ids: ['matiere premiere', 'produit', 'coproduit'],
+        negate: false,
+        else_all: true
       }
     })
   })
@@ -96,16 +99,16 @@ describe('sa#595 — la famille d un noeud et sa regle par defaut', () => {
     })
   })
 
-  test('sans les groupes des etudes, le defaut est toutes les sorties', () => {
+  test('sans les groupes des etudes, le defaut est toutes les sorties (sinon les entrees, hors marche)', () => {
     const app = load(json => {
       delete (json as { [k: string]: unknown })['fluxTags']
       const tags = (json as { nodeTags: { [k: string]: unknown } }).nodeTags
       delete tags['type de matiere']
     })
     const sankey = app.drawing_area.sankey
-    expect(defaultNormalizationRule('secteur', sankey)).toEqual({ side: 'outputs', filter: null })
+    expect(defaultNormalizationRule('secteur', sankey)).toEqual({ side: 'outputs_else_inputs', filter: null })
     expect(defaultNormalizationRule('produit', sankey)).toEqual({ side: 'outputs', filter: null })
-    expect(defaultNormalizationRule('other', sankey)).toEqual({ side: 'outputs', filter: null })
+    expect(defaultNormalizationRule('other', sankey)).toEqual({ side: 'outputs_else_inputs', filter: null })
   })
 })
 
@@ -173,8 +176,11 @@ describe('sa#595 — une reference vide laisse la valeur vide, et dit pourquoi',
       filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: ['intrant externe'], negate: false }
     }
     const reference = normalizationReference(sucrerie, rule)
-    expect(reference).toEqual({ value: null, links: [], reason: 'no_flux_matches', tag_id: null, skipped_tag_ids: [] })
-    expect(describeNormalizationNotice(reference, rule, app.drawing_area.sankey, t))
+    expect(reference).toEqual({
+      value: null, links: [], reason: 'no_flux_matches', tag_id: null, skipped_tag_ids: [],
+      side: 'outputs', side_fell_back: false, all_fallback: false
+    })
+    expect(describeNormalizationReference(reference, sucrerie, displayedNameOf, t))
       .toContain('Flux.normalization.reason_no_flux_matches')
   })
 
@@ -264,7 +270,8 @@ const load607 = (): Class_ApplicationData => {
 const t607 = (key: string, options?: { [k: string]: string }) => key + (options ? JSON.stringify(options) : '')
 
 describe('sa#607 — protocole de test de l issue (kt)', () => {
-  test('1. OS (Blé tendre) 2023 : faute de produit, la reference est les matieres premieres', () => {
+  // sa#616 — les matières premières sont désormais le premier choix : mêmes nombres, rien de sauté.
+  test('1. OS (Blé tendre) 2023 : la reference est les matieres premieres', () => {
     const app = load607()
     select(app, '2023', 'kt')
     const os = nodeNamed(app, 'OS (Blé tendre)')
@@ -272,7 +279,7 @@ describe('sa#607 — protocole de test de l issue (kt)', () => {
     const ref = 31100 + 2430
     expect(reference.reason).toBeNull()
     expect(reference.tag_id).toBe('matiere premiere')
-    expect(reference.skipped_tag_ids).toEqual(['produit'])
+    expect(reference.skipped_tag_ids).toEqual([])
     expect(reference.value).toBeCloseTo(ref, 9)
 
     expect(normalized(linkBetween(app, 'OS (Blé tendre)', 'Grains collectés (Blé tendre)'), 'source')).toBeCloseTo(31100 / ref, 12)
@@ -291,7 +298,7 @@ describe('sa#607 — protocole de test de l issue (kt)', () => {
     const fab = nodeNamed(app, 'Fabrication de babeurre concentré (Lait)')
     const reference = normalizationReference(fab, resolveNormalizationRule(fab, app.drawing_area.sankey))
     expect(reference.tag_id).toBe('coproduit')
-    expect(reference.skipped_tag_ids).toEqual(['produit', 'matiere premiere'])
+    expect(reference.skipped_tag_ids).toEqual(['matiere premiere', 'produit'])
     expect(normalized(linkBetween(app, 'Fabrication de babeurre concentré (Lait)', 'Babeurre concentré (Lait)'), 'source'))
       .toBeCloseTo(1, 12)
     expect(normalized(linkBetween(app, 'Fabrication de babeurre concentré (Lait)', 'Eau - Générée (Lait)'), 'source'))
@@ -300,16 +307,15 @@ describe('sa#607 — protocole de test de l issue (kt)', () => {
       .toBeCloseTo(5.477, 3)
   })
 
-  test('3. Sucrerie : inchangee, la reference reste les produits, sans avis', () => {
+  test('3. Sucrerie : la reference reste les produits', () => {
     const app = load()
     select(app, '2019', 'kt')
     const sucrerie = nodeNamed(app, 'Sucrerie (Sucre)')
     const rule = resolveNormalizationRule(sucrerie, app.drawing_area.sankey)
     const reference = normalizationReference(sucrerie, rule)
     expect(reference.tag_id).toBe('produit')
-    expect(reference.skipped_tag_ids).toEqual([])
+    expect(reference.skipped_tag_ids).toEqual(['matiere premiere'])
     expect(reference.links.map(l => l.target.name)).toEqual(['Sucre (Sucre)'])
-    expect(describeNormalizationNotice(reference, rule, app.drawing_area.sankey, t607)).toBeNull()
   })
 
   test('4. OS (Epeautre) 2015 : toutes les sorties sont nulles, avis et pas de valeur', () => {
@@ -322,8 +328,8 @@ describe('sa#607 — protocole de test de l issue (kt)', () => {
     // Des flux à 0 ne se dessinent pas : le côté est vide à l'écran, c'est ce que l'avis dit.
     expect(reference.reason).not.toBeNull()
     expect(normalized(linkBetween(app, 'OS (Epeautre)', 'Grains collectés (Epeautre)'), 'source')).toBeNull()
-    expect(describeNormalizationNotice(reference, rule, app.drawing_area.sankey, t607))
-      .toContain('Flux.normalization.notice{')
+    expect(describeNormalizationReference(reference, os, displayedNameOf, t607))
+      .toContain('Flux.normalization.reference_none{')
   })
 
   test('5. l ordre de la liste decide : coproduits avant matieres premieres', () => {
@@ -350,16 +356,13 @@ describe('sa#607 — la priorite se tranche par annee et par unite, et se dit', 
     expect(reference().tag_id).toBeNull()
   })
 
-  test('l avis dit l etiquette qui a servi et celles qui manquaient', () => {
+  test('la note nomme le flux qui a servi', () => {
     const app = load607()
     select(app, '2023', 'kt')
     const fab = nodeNamed(app, 'Fabrication de babeurre concentré (Lait)')
     const rule = resolveNormalizationRule(fab, app.drawing_area.sankey)
-    const notice = describeNormalizationNotice(normalizationReference(fab, rule), rule, app.drawing_area.sankey, t607)
-    expect(notice).toContain('Flux.normalization.notice_fallback')
-    expect(notice).toContain('Coproduit')
-    expect(notice).toContain('"skipped":"Produit, Matière première"')
-    expect(notice).not.toContain('Rejet')
+    expect(describeNormalizationReference(normalizationReference(fab, rule), fab, n => n.name, t607))
+      .toBe('Flux.normalization.reference_note{"flows":"Babeurre concentré (Lait)"}')
   })
 
   test('une regle a une seule etiquette (tag_id) se relit comme une liste a un element', () => {
@@ -381,5 +384,205 @@ describe('sa#607 — la priorite se tranche par annee et par unite, et se dit', 
     expect(normalizationRulesFromJSON({
       secteur: { side: 'outputs', filter: { on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: [] } }
     })).toEqual({})
+  })
+})
+
+// ==================================================================================================
+// sa#616 — MARCHÉ À DEUX FACES = DÉBOUCHÉS INTÉRIEURS ; SINON MATIÈRES PREMIÈRES > PRODUITS >
+// COPRODUITS > TOTAL, SUR LES ENTRÉES S'IL N'Y A PAS DE SORTIE
+// ==================================================================================================
+//
+// Fixture : extrait du fichier joint à l'issue (Référentiel Coefficients SOCLE, 2026-10-08) — les
+// cinq process du protocole et leurs voisins, plus « Conditionnement de lait », secteur que le
+// référentiel classe en marché. Les nombres attendus sont ceux du protocole, qui sont ceux du
+// classeur du référentiel (`build_referentiel_excel.py`, `PRIORITE`).
+
+const FIXTURE_616 = path.join(__dirname, '__fixtures__', 'sa616_referentiel_extrait.json')
+
+const load616 = (): Class_ApplicationData => {
+  const json = JSON.parse(fs.readFileSync(FIXTURE_616, 'utf-8')) as Type_JSON
+  const app = new Class_ApplicationData(false)
+  app.fromJSON(json as never, {}, false)
+  app.drawing_area.bypass_redraws = true
+  select(app, '2023', 'kt')
+  return app
+}
+
+/** La désignation du référentiel : « Type de process » = « Marché ». */
+const MARKET_616 = { tag_group_id: 'type de process', tag_ids: ['marche'] }
+
+/** La référence de `name` sous la règle du diagramme, la famille lue sur « Type de process ». */
+const reference616 = (app: Class_ApplicationData, name: string) => {
+  const node = nodeNamed(app, name)
+  const rule = resolveNormalizationRule(node, app.drawing_area.sankey, null, MARKET_616)
+  return { node, rule, reference: normalizationReference(node, rule) }
+}
+
+/** La valeur normalisée d'un flux de `center`, sous la règle résolue pour lui. */
+const normalized616 = (app: Class_ApplicationData, center: string, link: Class_LinkElement): number | null => {
+  const { reference } = reference616(app, center)
+  const value = link.valueCurrent
+  return reference.value === null || value === null || value === undefined ? null : value / reference.value
+}
+
+describe('sa#616 — protocole de test de l issue (2023, kt)', () => {
+  test('1. Exportations (Blé tendre), sans sortie : rapportee aux matieres premieres entrantes', () => {
+    const app = load616()
+    const { reference } = reference616(app, 'Exportations (Blé tendre)')
+    expect(reference.reason).toBeNull()
+    expect(reference.side).toBe('inputs')
+    expect(reference.side_fell_back).toBe(true)
+    expect(reference.tag_id).toBe('matiere premiere')
+    expect(reference.links.map(l => l.source.name)).toEqual(['Grains collectés (Blé tendre)'])
+    const n = (source: string) =>
+      normalized616(app, 'Exportations (Blé tendre)', linkBetween(app, source, 'Exportations (Blé tendre)'))
+    expect(n('Grains collectés (Blé tendre)')).toBeCloseTo(1, 12)
+    expect(n('Farine (Blé tendre)')).toBeCloseTo(0.013, 3)
+    expect(n('Issues de meunerie (Blé tendre)')).toBeCloseTo(0.009, 3)
+    expect(n('Gluten (Blé tendre)')).toBeCloseTo(0.007, 3)
+    expect(n('Amidon (Blé tendre)')).toBeCloseTo(0.003, 3)
+    expect(n('Malt (Blé tendre)')).toBeCloseTo(0.001, 3)
+  })
+
+  test('2. Importations (Blé tendre), sans entree : rapportee aux matieres premieres sortantes', () => {
+    const app = load616()
+    const { reference } = reference616(app, 'Importations (Blé tendre)')
+    expect(reference.side).toBe('outputs')
+    expect(reference.side_fell_back).toBe(false)
+    expect(reference.links.map(l => l.target.name)).toEqual(['Grains collectés (Blé tendre)'])
+    const n = (target: string) =>
+      normalized616(app, 'Importations (Blé tendre)', linkBetween(app, 'Importations (Blé tendre)', target))
+    expect(n('Farine (Blé tendre)')).toBeCloseTo(2.585, 3)
+    expect(n('Amidon (Blé tendre)')).toBeCloseTo(0.785, 3)
+    expect(n('Gluten (Blé tendre)')).toBeCloseTo(0.515, 3)
+    expect(n('Issues de meunerie (Blé tendre)')).toBeCloseTo(0.503, 3)
+    expect(n('Malt (Blé tendre)')).toBeCloseTo(0.017, 3)
+  })
+
+  test('3. Meunerie (Blé tendre), transformation : faute de matiere premiere sortie, les produits', () => {
+    const app = load616()
+    const meunerie = 'Meunerie (Blé tendre)'
+    const { reference } = reference616(app, meunerie)
+    expect(reference.tag_id).toBe('produit')
+    expect(reference.links.map(l => l.target.name)).toEqual(['Farine (Blé tendre)'])
+    expect(normalized616(app, meunerie, linkBetween(app, meunerie, 'Farine (Blé tendre)'))).toBeCloseTo(1, 12)
+    expect(normalized616(app, meunerie, linkBetween(app, meunerie, 'Issues de meunerie (Blé tendre)'))).toBeCloseTo(0.174, 3)
+    expect(normalized616(app, meunerie, linkBetween(app, 'Grains collectés disponibles (meunerie) (Blé tendre)', meunerie)))
+      .toBeCloseTo(1.174, 3)
+  })
+
+  test('4. Farine (Blé tendre), marche a deux faces : les debouches interieurs', () => {
+    const app = load616()
+    const farine = 'Farine (Blé tendre)'
+    const { rule, reference } = reference616(app, farine)
+    expect(rule).toEqual({
+      side: 'outputs',
+      filter: { on: 'link', tag_group_id: 'echange', tag_ids: ['exportation'], negate: true }
+    })
+    expect(reference.links.map(l => l.target.name)).not.toContain('Exportations (Blé tendre)')
+    expect(normalized616(app, farine, linkBetween(app, farine, 'Autres IAA (Blé tendre)'))).toBeCloseTo(0.44, 2)
+    expect(normalized616(app, farine, linkBetween(app, farine, 'Exportations (Blé tendre)'))).toBeCloseTo(0.047, 3)
+  })
+
+  test('5. Casserie (Œufs) : les produits, coquilles en kt par kt d ovoproduits', () => {
+    const app = load616()
+    const { reference } = reference616(app, 'Casserie (Œufs)')
+    expect(reference.links.map(l => l.target.name)).toEqual(['Ovoproduits (casserie) (Œufs)'])
+    expect(normalized616(app, 'Casserie (Œufs)', linkBetween(app, 'Casserie (Œufs)', 'Coquilles (Œufs)'))).toBeCloseTo(0.134, 3)
+  })
+
+  test('l etiquette de valeur d une entree suit la meme regle', () => {
+    const app = load616()
+    const link = linkBetween(app, 'Farine (Blé tendre)', 'Exportations (Blé tendre)')
+    // Sans désignation, Exportations (secteur) n'est pas un marché : la règle commune vaut aussi.
+    expect(normalized(link, 'target')).toBeCloseTo(0.013, 3)
+  })
+})
+
+describe('sa#616 — ce qui fait un process de marche', () => {
+  test('sans reglage, type de noeud = produit ; avec, l etiquette designee', () => {
+    const app = load616()
+    const sankey = app.drawing_area.sankey
+    const conditionnement = nodeNamed(app, 'Conditionnement de lait (Lait)')
+    expect(normalizationNodeKind(conditionnement, sankey.node_taggs_dict)).toBe('secteur')
+    expect(normalizationNodeKind(conditionnement, sankey.node_taggs_dict, MARKET_616)).toBe('produit')
+    expect(resolveNormalizationRule(conditionnement, sankey, null, MARKET_616).filter?.tag_group_id).toBe('echange')
+    // Une désignation qui ne désigne rien que le diagramme connaisse retombe sur le défaut.
+    const unknown = { tag_group_id: 'type de process', tag_ids: ['inconnue'] }
+    expect(normalizationNodeKind(conditionnement, sankey.node_taggs_dict, unknown)).toBe('secteur')
+    expect(normalizationNodeKind(nodeNamed(app, 'Farine (Blé tendre)'), sankey.node_taggs_dict)).toBe('produit')
+  })
+
+  test('un marche a une seule face prend la regle commune', () => {
+    const app = load616()
+    const importations = nodeNamed(app, 'Importations (Blé tendre)')
+    expect(normalizationNodeKind(importations, app.drawing_area.sankey.node_taggs_dict, MARKET_616)).toBe('produit')
+    expect(reference616(app, 'Importations (Blé tendre)').rule.side).toBe('outputs_else_inputs')
+  })
+
+  test('la regle personnalisee d un volet n est pas touchee', () => {
+    const app = load616()
+    const custom: Type_NormalizationRule = { side: 'outputs', filter: null }
+    const exportations = nodeNamed(app, 'Exportations (Blé tendre)')
+    expect(resolveNormalizationRule(exportations, app.drawing_area.sankey, custom, MARKET_616)).toBe(custom)
+    expect(normalizationReference(exportations, custom).reason).toBe('no_flux_on_side')
+  })
+})
+
+describe('sa#616 — la note nomme les flux de reference, sous leur libelle affiche', () => {
+  const note = (app: Class_ApplicationData, name: string) => {
+    const { node, reference } = reference616(app, name)
+    return describeNormalizationReference(reference, node, displayedNameOf, t607)
+  }
+
+  test('faute de sortie : le flux entrant de matiere premiere', () => {
+    expect(note(load616(), 'Exportations (Blé tendre)'))
+      .toBe('Flux.normalization.reference_note{"flows":"Grains collectés"}')
+  })
+
+  test('sur les sorties : le produit', () => {
+    expect(note(load616(), 'Meunerie (Blé tendre)')).toBe('Flux.normalization.reference_note{"flows":"Farine"}')
+  })
+
+  test('un marche a deux faces : tous ses debouches interieurs, joints par +', () => {
+    const text = note(load616(), 'Farine (Blé tendre)')
+    expect(text).toContain('Autres IAA + ')
+    expect(text).toContain('Ménages')
+    expect(text).not.toContain('Exportations')
+  })
+
+  test('une reference vide : aucun, et pourquoi', () => {
+    const app = load616()
+    const exportations = nodeNamed(app, 'Exportations (Blé tendre)')
+    const reference = normalizationReference(exportations, { side: 'outputs', filter: null })
+    expect(describeNormalizationReference(reference, exportations, displayedNameOf, t607)).toBe(
+      'Flux.normalization.reference_none{"reason":"Flux.normalization.reason_no_flux_on_side"}')
+  })
+
+  test('faute de toute categorie, le total du cote', () => {
+    const app = load616()
+    // Les entrées de Farine viennent de nœuds sans type de matière : le total, donc le %.
+    const rule: Type_NormalizationRule = {
+      side: 'inputs',
+      filter: {
+        on: 'counterpart', tag_group_id: 'type de matiere', tag_ids: ['matiere premiere', 'produit'], negate: false, else_all: true
+      }
+    }
+    const reference = normalizationReference(nodeNamed(app, 'Farine (Blé tendre)'), rule)
+    expect(reference.all_fallback).toBe(true)
+    expect(reference.value).toBeCloseTo(4310 + 336, 6)
+    expect(reference.links).toHaveLength(2)
+  })
+})
+
+describe('sa#616 — la regle s enregistre', () => {
+  test('« sorties, sinon entrees » et « sinon tous les flux » se relisent', () => {
+    const rules = {
+      secteur: {
+        side: 'outputs_else_inputs' as const,
+        filter: { on: 'counterpart' as const, tag_group_id: 'type de matiere', tag_ids: ['produit'], negate: false, else_all: true }
+      }
+    }
+    expect(normalizationRulesFromJSON(JSON.parse(JSON.stringify(rules)))).toEqual(rules)
   })
 })
