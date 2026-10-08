@@ -20,7 +20,7 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: 'Element analysis',
-        view: 'View',
+        view: 'Diagram',
         back_to_selection: 'Back to selection',
         // os#1394 — same crumb, when there is no selection but an active representation.
         back_to_representation: 'Back to the figure',
@@ -32,7 +32,7 @@ export const resources_inspector = {
         unpin: 'Unpin the panel (floats over the drawing)',
         // Cibles : singulier / pluriel (fil d'Ariane).
         target: {
-          view: 'View',
+          view: 'Diagram',
           node: 'Node', nodes: 'nodes',
           link: 'Flow', links: 'flows',
           container: 'Area', containers: 'areas',
@@ -43,6 +43,9 @@ export const resources_inspector = {
           representation: 'Figure', representations: 'figures'
         },
         nothing_here: 'No settings available for: {{target}}.',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: 'Settings of this pane only: “{{name}}”.',
+        pane_nothing: 'This pane has no settings of its own.',
         // os#1394 — settings of the active representation of the main zone.
         representation: {
           none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
@@ -94,7 +97,8 @@ export const resources_inspector = {
           title: 'Title',
           mfa: 'MFA',
           styles: 'Styles',
-          representation: 'Representation'
+          representation: 'Representation',
+          pane: 'Pane'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -418,7 +422,7 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: 'Analyse de l’élément',
-        view: 'Vue',
+        view: 'Diagramme',
         back_to_selection: 'Retour à la sélection',
         // os#1394 — le même retour, quand il n'y a pas de sélection mais une représentation active.
         back_to_representation: 'Retour à la figure',
@@ -426,7 +430,7 @@ export const resources_inspector = {
         pin: 'Épingler le panneau (le dessin se recadre à gauche)',
         unpin: 'Détacher le panneau (survol du dessin)',
         target: {
-          view: 'Vue',
+          view: 'Diagramme',
           node: 'Nœud', nodes: 'nœuds',
           link: 'Flux', links: 'flux',
           container: 'Zone', containers: 'zones',
@@ -437,6 +441,9 @@ export const resources_inspector = {
           representation: 'Figure', representations: 'figures'
         },
         nothing_here: 'Aucun réglage disponible pour : {{target}}.',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: 'Réglages de ce volet seulement : « {{name}} ».',
+        pane_nothing: 'Ce volet n\'a pas de réglage propre.',
         // os#1394 — réglages de la représentation active de la grande zone.
         representation: {
           none: 'Aucune représentation active : ouvrez un volet sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
@@ -488,7 +495,8 @@ export const resources_inspector = {
           title: 'Titre',
           mfa: 'AFM',
           styles: 'Styles',
-          representation: 'Représentation'
+          representation: 'Représentation',
+          pane: 'Volet'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -799,14 +807,14 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: 'Análisis del elemento',
-        view: 'Vista',
+        view: 'Diagrama',
         back_to_selection: 'Volver a la selección',
         back_to_representation: 'Volver a la figura',
         go_to_figure: 'Ir a la figura',
         pin: 'Fijar el panel (el dibujo se reajusta a su izquierda)',
         unpin: 'Desacoplar el panel (flota sobre el dibujo)',
         target: {
-          view: 'Vista',
+          view: 'Diagrama',
           node: 'Nodo', nodes: 'nodos',
           link: 'Flujo', links: 'flujos',
           container: 'Zona', containers: 'zonas',
@@ -817,6 +825,9 @@ export const resources_inspector = {
           representation: 'Figura', representations: 'figuras'
         },
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: 'Ajustes de este panel únicamente: « {{name}} ».',
+        pane_nothing: 'Este panel no tiene ajustes propios.',
         representation: {
           none: 'Ninguna representación activa: abra un panel sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
           axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Navegación y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
@@ -856,7 +867,8 @@ export const resources_inspector = {
           title: 'Título',
           mfa: 'AFM',
           styles: 'Estilos',
-          representation: 'Representación'
+          representation: 'Representación',
+          pane: 'Panel'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1156,14 +1168,14 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: 'Analyse des Elements',
-        view: 'Ansicht',
+        view: 'Diagramm',
         back_to_selection: 'Zurück zur Auswahl',
         back_to_representation: 'Zurück zur Abbildung',
         go_to_figure: 'Zur Abbildung',
         pin: 'Panel anheften (die Zeichnung wird links davon neu angepasst)',
         unpin: 'Panel lösen (schwebt über der Zeichnung)',
         target: {
-          view: 'Ansicht',
+          view: 'Diagramm',
           node: 'Knoten', nodes: 'Knoten',
           link: 'Fluss', links: 'Flüsse',
           container: 'Bereich', containers: 'Bereiche',
@@ -1174,6 +1186,9 @@ export const resources_inspector = {
           representation: 'Abbildung', representations: 'Abbildungen'
         },
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: 'Nur Einstellungen dieses Bereichs: « {{name}} ».',
+        pane_nothing: 'Dieser Bereich hat keine eigenen Einstellungen.',
         representation: {
           none: 'Keine aktive Darstellung: Öffnen Sie einen Bereich auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
           axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Navigation und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
@@ -1213,7 +1228,8 @@ export const resources_inspector = {
           title: 'Titel',
           mfa: 'MFA',
           styles: 'Stile',
-          representation: 'Darstellung'
+          representation: 'Darstellung',
+          pane: 'Bereich'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1513,14 +1529,14 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: 'Analisi dell’elemento',
-        view: 'Vista',
+        view: 'Diagramma',
         back_to_selection: 'Torna alla selezione',
         back_to_representation: 'Torna alla figura',
         go_to_figure: 'Vai alla figura',
         pin: 'Fissa il pannello (il disegno si ridimensiona alla sua sinistra)',
         unpin: 'Sgancia il pannello (fluttua sopra il disegno)',
         target: {
-          view: 'Vista',
+          view: 'Diagramma',
           node: 'Nodo', nodes: 'nodi',
           link: 'Flusso', links: 'flussi',
           container: 'Zona', containers: 'zone',
@@ -1531,6 +1547,9 @@ export const resources_inspector = {
           representation: 'Figura', representations: 'figure'
         },
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: 'Impostazioni di questo solo riquadro: « {{name}} ».',
+        pane_nothing: 'Questo riquadro non ha impostazioni proprie.',
         representation: {
           none: 'Nessuna rappresentazione attiva: aprite un riquadro su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
           axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Navigazione e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
@@ -1570,7 +1589,8 @@ export const resources_inspector = {
           title: 'Titolo',
           mfa: 'AFM',
           styles: 'Stili',
-          representation: 'Rappresentazione'
+          representation: 'Rappresentazione',
+          pane: 'Riquadro'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1867,7 +1887,7 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: '要素分析',
-        view: '视图',
+        view: '图表',
         back_to_selection: '返回所选内容',
         // os#1394 — anglais en attendant une relecture native (comme d'autres clés récentes).
         back_to_representation: '返回图形',
@@ -1876,7 +1896,7 @@ export const resources_inspector = {
         unpin: '取消固定面板（浮于绘图之上）',
         // Cibles : singulier / pluriel (fil d'Ariane).
         target: {
-          view: '视图',
+          view: '图表',
           node: '节点', nodes: '节点',
           link: '流量', links: '流量',
           container: '区域', containers: '区域',
@@ -1887,6 +1907,9 @@ export const resources_inspector = {
           representation: '图形', representations: '图形'
         },
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: '仅此窗格的设置：«{{name}}»。',
+        pane_nothing: '此窗格没有自己的设置。',
         representation: {
           none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
           axis_in_navigation: '分析轴（按此分解、按此比较）在「导航与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
@@ -1928,7 +1951,8 @@ export const resources_inspector = {
           title: '标题',
           mfa: 'MFA',
           styles: '样式',
-          representation: 'Representation'
+          representation: 'Representation',
+          pane: '窗格'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -2228,7 +2252,7 @@ export const resources_inspector = {
         // unitaire). Elle porte sur UN nœud ou UN flux, là où
         // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
         element_analysis: '要素の分析',
-        view: 'ビュー',
+        view: 'ダイアグラム',
         back_to_selection: '選択に戻る',
         // os#1394 — anglais en attendant une relecture native (comme d'autres clés récentes).
         back_to_representation: '図に戻る',
@@ -2237,7 +2261,7 @@ export const resources_inspector = {
         unpin: 'パネルの固定を解除（描画の上に浮かびます）',
         // Cibles : singulier / pluriel (fil d'Ariane).
         target: {
-          view: 'ビュー',
+          view: 'ダイアグラム',
           node: 'ノード', nodes: 'ノード',
           link: 'フロー', links: 'フロー',
           container: 'エリア', containers: 'エリア',
@@ -2248,6 +2272,9 @@ export const resources_inspector = {
           representation: '図', representations: '図'
         },
         nothing_here: '{{target}} に利用できる設定はありません。',
+        // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
+        pane_intro: 'このペインだけの設定：«{{name}}»。',
+        pane_nothing: 'このペインには固有の設定がありません。',
         representation: {
           none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
           axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「ナビゲーションと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
@@ -2289,7 +2316,8 @@ export const resources_inspector = {
           title: 'タイトル',
           mfa: 'MFA',
           styles: 'スタイル',
-          representation: 'Representation'
+          representation: 'Representation',
+          pane: 'ペイン'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
