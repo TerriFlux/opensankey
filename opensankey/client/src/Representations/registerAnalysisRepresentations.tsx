@@ -113,7 +113,7 @@ import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
 // 04/10/2026 — os#1511, refonte étape 2, lot 2 : CE QUE LA COURONNE DESSINE se lit à un seul endroit.
-import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronneState'
+import { COURONNE_KEY, LEGACY_COURONNE_KEYS, MATRIX_REPRESENTATION, readCouronneState } from './couronneState'
 import type { Type_CouronneReader, Type_CouronneSankey, Type_CouronneState } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
@@ -372,7 +372,7 @@ const couronneOf = (ctx: Type_RepresentationContext): { state: Type_CouronneStat
   if (decompose?.kind !== 'data_dimension') return null
   const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
   if (sankey.data_taggs_dict[decompose.data_tagg_id] === undefined) return null
-  const state = readCouronneState(ctx.options, sankey, undefined, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])])
+  const state = readCouronneState(ctx.options, sankey, undefined, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])], 'couronne')
   return { state, plan: drawPlanOf(state, sankey, { name: subjectNameOf(ctx) }) }
 }
 
@@ -979,7 +979,7 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext, representation
   // en-têtes, ctrl+clic, ⇅ (= lignes / colonnes), cases de zoom, ⚙ ; son sélecteur de dessin dit
   // Plat / Hiérarchique / Un tableau par membre.
   const matrix = representation === 'matrix'
-  const g = couronneGesturesOfCtx(ctx, matrix ? 'matrix' : undefined)
+  const g = couronneGesturesOfCtx(ctx, matrix ? 'matrix' : 'couronne')
   const { window_id, pane_key } = ctx
   if (g === null || window_id === undefined || pane_key === undefined) return null
   const { state, plan } = g
@@ -1219,7 +1219,7 @@ const drawingChoiceOf = (
  * 04/10/2026 (lot 3) — LES GESTES DE LA COURONNE d'une vignette (`couronneGestures`), écrits sur ses
  * réglages. `null` : hors fenêtre, ou la figure ne découpe pas selon des dimensions de données.
  */
-export const couronneGesturesOfCtx = (ctx: Type_RepresentationContext, reader?: Type_CouronneReader): Type_CouronneGestures | null => {
+export const couronneGesturesOfCtx = (ctx: Type_RepresentationContext, reader: Type_CouronneReader): Type_CouronneGestures | null => {
   const { window_id, pane_key } = ctx
   if (!ctx.element || window_id === undefined || pane_key === undefined) return null
   const subject = chartSubjectOf(ctx.element)
@@ -1372,7 +1372,7 @@ const legendEntriesOf = (dim: Class_DataTagGroup, state: Type_CouronneState, pla
  */
 const dataLegendOf = (ctx: Type_RepresentationContext) => {
   const a = analysisOf(ctx)
-  const g = couronneGesturesOfCtx(ctx)
+  const g = couronneGesturesOfCtx(ctx, 'couronne')
   if (!a || g === null) return null
   const reading = hierarchyReadingOf(ctx)
   const couronne = reading.data_plan
@@ -1624,7 +1624,7 @@ const dataDimensionClickGestures = (
   // 04/10/2026 (lot 3) — LES GESTES DE LA COURONNE (`couronneGestures`) : déplier (la part cède sa
   // place à ses enfants), zoomer (la portée), et leur shift+clic. 07/10/2026 — deux choix, Déplie /
   // Zoome ; liée, le diagramme et les autres fenêtres liées suivent (le zoom compris), détachée non.
-  const g = couronneGesturesOfCtx(ctx)
+  const g = couronneGesturesOfCtx(ctx, 'couronne')
   if (g === null) return null
   const mode = partClickModeOf(style.interaction_click)
   return {
@@ -2539,7 +2539,7 @@ const toggleAxisMember = (
 
 const registerDimensionMatrix = (): void => {
   representation_registry.register({
-    id: 'osp.repr.matrix',
+    id: MATRIX_REPRESENTATION,
     scale: 'element',
     order: 35,
     label: (a) => a.t('matrix.label'),
@@ -2646,32 +2646,14 @@ const registerDimensionMatrix = (): void => {
         // dit ; et les dimensions hors des axes lues ailleurs qu'à leur tout (« Europe »).
         const scope = plan ? matrixScopeLabel(plan, sankey) : ''
         const title = [displayedNameOf(element), scope, coordinate].filter(x => x !== '').join(' · ')
-        // 06/10/2026 — LES AXES DANS LA BARRE : la dimension en colonnes (07/10 : en rôle CASES) et ⇄
-        // (échange des rôles), écrits par les gestes de la couronne (même état, même pas d'annulation).
+        // 07/10/2026 — LE TABLEAU DE NAVIGATION de la couronne, au-dessus du tableau croisé : lignes,
+        // colonnes (⇅) et tableaux par membre s'y règlent (08/10 : seul, le sélecteur « Colonnes : » et
+        // ⇄ de l'en-tête retirés).
         const row_id = plan?.rows.dimension_id
         const col_id = plan?.columns?.dimension_id ?? null
-        const axes = gestures && row_id !== undefined
-          ? {
-            columns_label: t('matrix.columns', { defaultValue: 'Colonnes :' }) as string,
-            column: col_id ?? '',
-            choices: [
-              { value: '', label: t('matrix.no_columns', { defaultValue: '(aucune)' }) as string },
-              ...gestures.state.order.filter(id => id !== row_id).map(id => ({
-                value: id, label: (sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup).name
-              }))
-            ],
-            on_column: (value: string) => gestures.setMatrixColumns(row_id, value === '' ? null : value),
-            swap: col_id === null ? undefined : {
-              label: t('matrix.swap_axes', { defaultValue: 'Échanger lignes et colonnes' }) as string,
-              on_swap: () => gestures.swap(row_id, col_id)
-            }
-          }
-          : undefined
-        // 07/10/2026 — LE TABLEAU DE NAVIGATION de la couronne, au-dessus du tableau croisé.
         const navigation = gestures ? figureNavigationTableOf(ctx, 'matrix') ?? undefined : undefined
         teardown = drawDimensionMatrixTable(container, matrix, {
           navigation,
-          axes,
           zoom: {
             scale: matrix_zooms.get(key) ?? 1,
             on_scale: (k: number) => {

@@ -122,8 +122,13 @@ export interface Type_CouronneGestureHost {
   write: (options: Type_Bag) => void
   /** La figure est-elle liée ? Absent : ce que disent ses réglages. */
   linked?: boolean
-  /** 07/10/2026 — le tableau croisé relit les sacs d'avant la version 2 avec leurs colonnes. */
-  reader?: Type_CouronneReader
+  /**
+   * 07/10/2026 — le tableau croisé relit les sacs d'avant la version 2 avec leurs colonnes.
+   * 08/10/2026 — OBLIGATOIRE : un hôte qui l'oubliait relisait un tableau v1 en couronne, et son
+   * premier geste réécrivait le sac en v2, colonnes changées en un tableau par membre
+   * (`couronneReaderOf` le tire de la nature de la vignette).
+   */
+  reader: Type_CouronneReader
 }
 
 /**
@@ -574,30 +579,6 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     commit(next)
   }
 
-  /**
-   * 06/10/2026 — LES COLONNES DU TABLEAU CROISÉ : `col_id` devient la seconde dimension active (les
-   * autres, hors `row_id`, se désactivent) ; `null` : plus de colonnes, `row_id` reste seule active.
-   * Une dimension qui ne montre qu'un membre à enfants se pose dessus (elle découpe un cran dessous ;
-   * liée, le diagramme ne bouge pas).
-   */
-  //
-  // 07/10/2026 — CORRECTION DE JULIEN : colonnes ≠ cases. La dimension en colonnes est la SECONDE en
-  // rôle PARTS (l'anneau extérieur de la couronne croisée), juste après celle des lignes ; « une
-  // couronne par membre » est un tableau par membre. Une colonne qui ne montre qu'un membre descend
-  // d'un cran (`withCells`).
-  const setMatrixColumns = (row_id: string, col_id: string | null) => {
-    if (st(row_id) === undefined || (col_id !== null && st(col_id) === undefined)) return
-    const parts = (o: string) => st(o).drawing === 'multiples' ? { drawing: 'sectors' as const } : {}
-    let next = withDim(state, row_id, { active: true, ...parts(row_id) })
-    state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false, ...parts(o) }) })
-    if (col_id !== null) {
-      next = withDim(next, col_id, { active: true, ...parts(col_id) })
-      next = { ...next, order: [row_id, col_id, ...next.order.filter(o => o !== row_id && o !== col_id)] }
-      next = withCells(next, dimOf(col_id) as Class_DataTagGroup)
-    }
-    commit(next)
-  }
-
   /** « En sunburst » a-t-il un effet ? La dimension doit montrer plus d'un niveau sous sa portée. */
   const offersRingsFor = (id: string): boolean => {
     const d = dimOf(id)
@@ -634,7 +615,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     chooseColumn, deactivate,
     unfold, fold, zoomTo, zoomUp, back, activatePart, openMember, closeMember, showLevel,
     setFocus, toggleHidden, setShown, chosenOf,
-    move, swap, setMatrixColumns, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
+    move, swap, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
     linkedOptions
   }
 }

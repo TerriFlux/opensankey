@@ -44,23 +44,11 @@ export interface Type_DimensionMatrixTableOptions {
   /** « Trier par » : l'info-bulle des en-têtes. */
   sort_label: string
   /**
-   * 06/10/2026 — LES AXES, dans la barre du tableau : le choix de la dimension en colonnes et ⇄ qui
-   * échange lignes et colonnes. Absent : rien (tableau hors fenêtre, page publiée).
-   */
-  /**
    * 07/10/2026 — LE TABLEAU DE NAVIGATION de la fenêtre (`buildFigureNavigationTable`, celui de la
-   * couronne), posé sous le titre. Présent, il remplace le sélecteur « Colonnes » et ⇄.
+   * couronne), posé sous le titre : lignes, colonnes (⇅) et tableaux par membre s'y règlent.
+   * 08/10/2026 — il a remplacé le sélecteur « Colonnes : » et ⇄ de l'en-tête (sa!936), retirés.
    */
   navigation?: HTMLElement
-  axes?: {
-    columns_label: string
-    /** La dimension en colonnes (`''` : aucune), et les choix possibles. */
-    column: string
-    choices: { value: string, label: string }[]
-    on_column: (value: string) => void
-    /** ⇄ : absent quand il n'y a pas de colonnes. */
-    swap?: { label: string, on_swap: () => void }
-  }
   /**
    * 07/10/2026 — LE ZOOM, COMME DANS UN TABLEUR (Julien : « la taille des cases et la police »). Tout
    * le tableau se met à l'échelle `scale` ; Ctrl+molette, et les boutons −/+/% de la fenêtre par la
@@ -126,42 +114,6 @@ export const drawDimensionMatrixTable = (
   title.textContent = o.unit ? `${o.title} · ${o.unit}` : o.title
   css(title, { fontWeight: '600', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })
   head.appendChild(title)
-  // 07/10/2026 — LE TABLEAU DE NAVIGATION dit déjà lignes, colonnes (⇅) et tableaux par membre : le
-  // sélecteur « Colonnes » et ⇄ ne restent que sans lui.
-  if (o.axes && !o.navigation) {
-    const axes = o.axes
-    const label = document.createElement('label')
-    label.className = 'dimension_matrix_columns'
-    css(label, { display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', fontSize: '12px' })
-    label.appendChild(document.createTextNode(axes.columns_label))
-    const select = document.createElement('select')
-    css(select, { font: 'inherit', padding: '1px 2px', maxWidth: '180px' })
-    axes.choices.forEach(c => {
-      const opt = document.createElement('option')
-      opt.value = c.value
-      opt.textContent = c.label
-      opt.selected = c.value === axes.column
-      select.appendChild(opt)
-    })
-    select.addEventListener('change', () => axes.on_column(select.value))
-    label.appendChild(select)
-    head.appendChild(label)
-    if (axes.swap) {
-      const swap = axes.swap
-      const button = document.createElement('button')
-      button.type = 'button'
-      button.className = 'dimension_matrix_swap'
-      button.textContent = '⇄'
-      button.title = swap.label
-      button.setAttribute('aria-label', swap.label)
-      css(button, {
-        font: 'inherit', fontSize: '14px', lineHeight: '18px', padding: '0 6px', cursor: 'pointer', borderRadius: '3px',
-        border: '1px solid rgba(127,127,127,0.5)', background: 'transparent', color: 'inherit'
-      })
-      button.addEventListener('click', () => swap.on_swap())
-      head.appendChild(button)
-    }
-  }
   // sa#593 — les deux boutons d'export, communs à tout tableau (cf. `TableExport`). Dans CET en-tête,
   // celui du tableau, et non dans celui du volet : le lecteur d'une page publiée ne voit pas le second.
   const removeExport = appendTableExportButtons(head, {

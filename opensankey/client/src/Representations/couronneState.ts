@@ -77,6 +77,13 @@ export const COURONNE_STATE_VERSION = 2
 /** Qui lit l'état : la couronne (défaut) ou le tableau croisé (relecture des sacs d'avant). */
 export type Type_CouronneReader = 'couronne' | 'matrix'
 
+/** La nature du tableau croisé (cf. `registerDimensionMatrix`). */
+export const MATRIX_REPRESENTATION = 'osp.repr.matrix'
+
+/** Le lecteur de l'état d'une vignette, d'après sa nature : le tableau croisé, ou la couronne. */
+export const couronneReaderOf = (representation_id: string): Type_CouronneReader =>
+  representation_id === MATRIX_REPRESENTATION ? 'matrix' : 'couronne'
+
 /** Les clés d'avant, retirées à l'écriture (`hierarchy_focus` seulement quand il porte des membres). */
 export const LEGACY_COURONNE_KEYS = [
   DIMENSION_OPENING_KEY, DIMENSION_HIDDEN_KEY, INACTIVE_DIMENSIONS_KEY, SMALL_MULTIPLES_KEY,
