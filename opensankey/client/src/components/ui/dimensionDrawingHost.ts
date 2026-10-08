@@ -151,6 +151,10 @@ const setNodesPlacement = (tagg: Class_DataTagGroup, placement: Type_NodesPlacem
   tagg.reference_node_id = placement.reference_node_id
 }
 
+/** L'ordre des dimensions où `a` et `b` ont échangé leur place (les autres ne bougent pas). */
+const orderWithSwapped = (order: string[], a: string, b: string): string[] =>
+  order.map(id => id === a ? b : id === b ? a : id)
+
 /**
  * os#1526 — ⇅ DANS LE TABLEAU DU DIAGRAMME : les deux dimensions ÉCHANGENT LEUR DESSIN (Julien,
  * 06/10 : « si l'une est en bandes et l'autre en nœuds, on inverse avec la double flèche »). C'est
@@ -170,12 +174,18 @@ const setNodesPlacement = (tagg: Class_DataTagGroup, placement: Type_NodesPlacem
  *    membres peuvent porter des positions d'un autre dessin (position commune d'un ancien fichier,
  *    « [SOCLE] Pays partenaires » : les filières, toutes empilées à x = 955 au milieu du
  *    diagramme) ; c'est la règle de « Placer », qui efface aussi les positions manuelles.
+ *  - leur PLACE dans l'ordre des dimensions (Julien, 08/10 : avec trois dimensions, ▲ sur « Type de
+ *    matière » lui donnait les nœuds de « Filière » mais le tableau ne bougeait pas) : la ligne suit
+ *    son dessin, comme la liste d'une couronne suit l'ordre de ses anneaux.
  * Un seul pas d'historique, un seul dessin ; l'annulation rend tout.
  */
 export const swapDimensionDrawings = (
   app_data: Class_ApplicationData, a: Class_DataTagGroup, b: Class_DataTagGroup
 ) => {
   if (a === b) return
+  const sankey = app_data.drawing_area.sankey
+  const order_before = [...sankey.getTagGroupsOrder('data_taggs')]
+  const order_after = orderWithSwapped(order_before, a.id, b.id)
   const before_a = snapshot(app_data, a)
   const before_b = snapshot(app_data, b)
   const placement_a = nodesPlacementOf(a)
@@ -200,9 +210,11 @@ export const swapDimensionDrawings = (
     setNodesPlacement(a, placement_a)
     setNodesPlacement(b, placement_b)
     setManualPositions([a, b], positions_before)
+    sankey.setTagGroupsOrder('data_taggs', [...order_before])
     restoreAll(app_data, [[a, before_a], [b, before_b]])
   })
   const redo = () => {
+    sankey.setTagGroupsOrder('data_taggs', [...order_after])
     setNodesPlacement(a, placement_b)
     setNodesPlacement(b, placement_a)
     setManualPositions(arriving, undefined)
