@@ -72,18 +72,6 @@ describe('une nature allow_many ouvre autant de fenetres quon lui demande', () =
     mc.openMainZoneWindow({ kind: 'diagram' }, NATURE_MANY, 'right')
     expect(mc.main_zone_main_id).toBe(MAIN_ZONE_CANVAS_ID)
   })
-
-  it('changer la nature dune telle fenetre ne la rebaptise pas', () => {
-    // Le remplacement EN PLACE lui donnerait lidentifiant de sa nouvelle nature : deux vues de
-    // groupe qui changent pour la meme fusionneraient en une seule.
-    const mc = freshMenuConfig()
-    const a = mc.openMainZoneWindow({ kind: 'diagram' }, NATURE_MANY, 'right')
-    const b = mc.openMainZoneWindow({ kind: 'diagram' }, NATURE_MANY, 'right')
-
-    mc.setMainZoneWindowRepresentation(a, NATURE_ONE)
-    expect(mc.main_zone_occupants.find(o => o.id === a)?.representation).toBe(NATURE_ONE)
-    expect(mc.main_zone_occupants.find(o => o.id === b)?.representation).toBe(NATURE_MANY)
-  })
 })
 
 describe('chaque fenetre de groupe garde son groupe', () => {

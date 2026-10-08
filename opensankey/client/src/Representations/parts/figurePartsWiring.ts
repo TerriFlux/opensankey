@@ -226,8 +226,8 @@ export const figurePartsWiring = (
   // Julien, deux fois : « si je passe par Couronne et si je sélectionne Barres dans le sélecteur de
   // la fenêtre, ça ne met pas à jour l'inspecteur. »
   //
-  // LE MAILLON QUI MANQUAIT, et il manquait POUR UNE BONNE RAISON. `setMainZoneWindowRepresentation`
-  // n'émet que `MAIN_ZONE_TOPIC` ; l'inspecteur s'y re-rend AUSSITÔT, c'est-à-dire AVANT que
+  // LE MAILLON QUI MANQUAIT, et il manquait POUR UNE BONNE RAISON. Le changement de nature d'une
+  // fenêtre (geste retiré depuis par sa#618 ; la part change encore de sorte sans lui) n'émet que `MAIN_ZONE_TOPIC` ; l'inspecteur s'y re-rend AUSSITÔT, c'est-à-dire AVANT que
   // l'effet de la vignette n'ait redessiné quoi que ce soit. À ce rendu-là, la représentation
   // active est déjà la neuve mais les parts portent encore l'ancienne nature : il montre donc
   // fidèlement la couronne. Le rendu d'après devrait lever la contradiction — sauf qu'il n'arrive
