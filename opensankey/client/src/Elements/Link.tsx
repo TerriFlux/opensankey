@@ -925,7 +925,31 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return membres.length === 1 ? tagg.displayColorOf(membres[0]) : undefined
     }
     const peintre = flowPainterOf(dimensions)
-    return peintre === undefined ? undefined : couleurDe(peintre)
+    if (peintre === undefined) return undefined
+    return couleurDe(peintre) ?? this._couleurParDonnees(peintre, aux_bouts)
+  }
+
+  /**
+   * os#1511 — LA COULEUR LUE DANS LES DONNÉES du flux d'origine, quand aucun bout ne porte un membre
+   * du peintre (Julien, 08/10 : « pourquoi Type de matière ne porte pas sa couleur, là il est
+   * gris » — Matière première → Transformation ne touche aucun nœud découpé par type de matière,
+   * mais ses données ne disent que « matière première »). Un seul membre du peintre présent à la
+   * coordonnée du flux (bande et autres coupes comprises) : sa couleur ; plusieurs : rien.
+   */
+  private _couleurParDonnees(peintre: Class_DataTagGroup, aux_bouts: Class_DataTag[]): string | undefined {
+    const parsed = parseGeneratedId(this.id)
+    const origine = parsed === undefined ? undefined : this.sankey.links_dict[parsed.origin] as Class_LinkElement | undefined
+    if (origine === undefined) return undefined
+    const autres = [...new Set(aux_bouts.filter(membre => membre.group !== peintre))]
+    const groupes_bouts = new Set(autres.map(membre => membre.group))
+    const base = (origine.selected_data_tags_list as Class_DataTag[])
+      .filter(tag => tag.group !== peintre && !groupes_bouts.has(tag.group))
+      .concat(autres)
+    const presents = (peintre.selected_tags_list as Class_DataTag[]).filter(membre => {
+      const contributions = origine.contributingValuesFor(base.concat([membre]))
+      return contributions !== null && contributions.some(valeur => (this.readLayer(valeur) ?? 0) !== 0)
+    })
+    return presents.length === 1 ? peintre.displayColorOf(presents[0]) : undefined
   }
 
   private _singleMemberDimensionColor(): string | undefined {
