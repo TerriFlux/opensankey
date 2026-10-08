@@ -427,9 +427,11 @@ export class LinkControlPoints {
   /**
    * Branche Alt+clic sur le tracé du flux (.link_path / .link_shape) pour insérer
    * un point de contrôle à la position du curseur, sur le segment le plus proche.
+   * Les bandes (.link_band) en font partie : elles reçoivent le pointeur (os#1511)
+   * et recouvrent le tracé principal, qui ne voit alors plus le clic.
    */
   public bindWaypointInsertion() {
-    const paths = this.link.d3_selection?.selectAll<SVGPathElement, unknown>('.link_path, .link_shape')
+    const paths = this.link.d3_selection?.selectAll<SVGPathElement, unknown>('.link_path, .link_shape, .link_band')
     if (!paths) return
     // Empêche le <g> du flux de démarrer un drag sur Alt+mousedown.
     paths.on('mousedown.wpinsert', (event: MouseEvent) => {
