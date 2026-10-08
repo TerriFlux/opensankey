@@ -1659,8 +1659,16 @@ export const drawDonutChart = (
     for (const size of sizes) {
       const w = Math.max(0, ...lines.map(line => labelTextWidthPx(line.text, size)))
       const h = lines.length * size * 1.15
-      // Tourné, le texte reste au milieu : il tient s'il y tenait, mesuré à plat comme hier.
-      const spot = fitLabelInSector(w, h, inner, radius, d.startAngle, d.endAngle, turned)
+      // Tourné, le texte reste sur le rayon du milieu, et se MESURE TOURNÉ : le long du rayon
+      // (radiale), sa largeur court dans l'épaisseur de l'anneau ; le long de l'arc, c'est sa
+      // hauteur. Mesuré à plat (jusqu'au 08/10/2026), un texte qui tenait couché se taisait dès que
+      // le cadre à plat débordait du milieu — les quatre parts égales d'une couronne perdaient
+      // toutes leur nom en radiale (figureTextOrientation.test).
+      const spot = orientation === 'radial'
+        ? fitRadialLabelInSector(w, h, inner, radius, d.startAngle, d.endAngle)
+        : orientation === 'tangential'
+          ? fitRadialLabelInSector(h, w, inner, radius, d.startAngle, d.endAngle)
+          : fitLabelInSector(w, h, inner, radius, d.startAngle, d.endAngle)
       if (spot !== null) { found = { ...spot, size }; break }
     }
     fit_spots.set(d.data.id, found)

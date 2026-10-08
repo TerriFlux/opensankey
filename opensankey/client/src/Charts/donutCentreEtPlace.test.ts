@@ -58,7 +58,8 @@ describe('la couronne seule se cadre sur son disque', () => {
     const svg = svgOf(el)
     expect(svg.getAttribute('width')).toBe('100%')
     expect(svg.style.flex).toBe('1 1 0px')
-    expect(svg.style.minWidth).toBe('0px')
+    // jsdom garde le zero sans unite tel qu il est ecrit ('0') ; un navigateur le rend '0px'.
+    expect(svg.style.minWidth).toMatch(/^0(px)?$/)
   })
 
   test('la legende a cote garde une largeur reservee, elle ne prend pas le reste', () => {

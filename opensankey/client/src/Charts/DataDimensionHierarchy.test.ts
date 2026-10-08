@@ -169,11 +169,17 @@ describe('os#1511 — le foyer d une couronne de dimension de donnees', () => {
     expect(racine.children.map(c => c.label)).toEqual(['Ble', 'Mais'])
   })
 
-  test('un foyer sur une feuille est ignore : la figure revient au sujet', () => {
+  // 04/10/2026 (0d632ceb6, tableau de navigation) — « cliquer une part zoome toujours sur ce
+  // membre » : une feuille de la SEULE dimension qui decoupe n est plus ignoree, elle se montre
+  // seule (« Espagne », 100 %), au centre comme dans l anneau.
+  test('un foyer sur une feuille la montre seule, a 100 %', () => {
     const m = monter()
     const racine = arbre(m, undefined, { focus: foyer(m, m.lait) })?.roots[0] as Type_SunburstNode
     expect(racine.id).toBe(m.lien.id)
-    expect(racine.value).toBe(49)
+    expect(racine.label).toBe('Lait')
+    expect(racine.value).toBe(7)
+    expect(racine.children.map(c => [c.id, c.value]))
+      .toEqual([[memberSectorId(m.groupe.id, m.lait.id), 7]])
   })
 
   test('un foyer sur un membre disparu est ignore', () => {

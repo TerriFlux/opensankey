@@ -118,6 +118,12 @@ interface Cas {
   options: Bag
   /** Le diagramme : les membres choisis par dimension. */
   diagramme?: { filiere?: string[], pays?: string[] }
+  /**
+   * 07/10/2026 (dbbcaffb2, « zoom partage en lie ») — la PORTEE DU DIAGRAMME (`focus_ids`). Liee, la
+   * couronne lit le zoom la, et plus dans son `hierarchy_focus` : un cas lie zoome la pose donc aussi
+   * sur le diagramme, ou le code d avant le lisait (dans la figure) reste pour l ancien trace.
+   */
+  portee?: { filiere?: string[], pays?: string[] }
 }
 
 const croise = descripteur('filiere', 'pays')
@@ -190,12 +196,20 @@ const CAS: Cas[] = [
   {
     nom: 'L3 liee, zoom cereales, diagramme sous la portee',
     options: { descriptor: croise, hierarchy_focus: zoom(ref('filiere', 'cereales')) },
-    diagramme: { filiere: ['ble', 'mais', 'lait'], pays: ['europe', 'ameriques'] }
+    // Zoomer en lie restreint la selection du diagramme a la portee (`applyDimensionFocus`) : Lait
+    // n y est plus. Une selection qui en sortirait annulerait la portee (cas L9).
+    diagramme: { filiere: ['ble', 'mais'], pays: ['europe', 'ameriques'] }, portee: { filiere: ['cereales'] }
   },
-  { nom: 'L4 liee, zoom cereales, diagramme aux filieres', options: { descriptor: croise, hierarchy_focus: zoom(ref('filiere', 'cereales')) } },
+  {
+    nom: 'L4 liee, zoom cereales, diagramme aux filieres',
+    options: { descriptor: croise, hierarchy_focus: zoom(ref('filiere', 'cereales')) },
+    // Le diagramme reste aux filieres, mais restreint a la portee : Cereales seule.
+    diagramme: { filiere: ['cereales'] }, portee: { filiere: ['cereales'] }
+  },
   {
     nom: 'L5 liee, zoom Europe, pays a un membre',
-    options: { descriptor: croise, hierarchy_focus: zoom(ref('pays', 'europe')) }, diagramme: { pays: ['europe'] }
+    options: { descriptor: croise, hierarchy_focus: zoom(ref('pays', 'europe')) }, diagramme: { pays: ['europe'] },
+    portee: { pays: ['europe'] }
   },
   {
     nom: 'L6 liee, filieres desactivees',
@@ -208,7 +222,8 @@ const CAS: Cas[] = [
   { nom: 'L8 liee, sunburst mixte', options: { descriptor: croise, levels_display: 'rings' }, diagramme: { filiere: ['ble', 'mais', 'lait'] } },
   {
     nom: 'L9 liee, la selection sort de la portee',
-    options: { descriptor: croise, hierarchy_focus: zoom(ref('filiere', 'cereales')) }, diagramme: { filiere: ['lait', 'viande'] }
+    options: { descriptor: croise, hierarchy_focus: zoom(ref('filiere', 'cereales')) }, diagramme: { filiere: ['lait', 'viande'] },
+    portee: { filiere: ['cereales'] }
   },
   { nom: 'L10 liee, un pays seul', options: { descriptor: croise }, diagramme: { filiere: ['cereales'], pays: ['fr'] } }
 ]
@@ -254,6 +269,13 @@ const ECARTS: { [nom: string]: { pourquoi: string, ancien: Bag, nouveau: Bag } }
       paths: { filiere: { cereales: ['cereales'], lait: ['lait'], viande: ['viande'] }, pays: { fr: ['fr'], es: ['es'] } }
     }
   },
+  'L4 liee, zoom cereales, diagramme aux filieres': {
+    pourquoi: 'MEME REGLE QUE L5, depuis le zoom partage (dbbcaffb2, 07/10) : zoomer en lie restreint le diagramme ' +
+      'a la portee, il montre donc Cereales d un bloc, et la couronne zoomee descend d UN niveau sous lui (Ble, ' +
+      'Mais). Le code d avant lisait la dimension sur Cereales sans decouper.',
+    ancien: { cut: [], parts: {}, whole: ['cereales'] },
+    nouveau: { cut: ['filiere'], parts: { filiere: ['ble', 'mais'] }, whole: null }
+  },
   'L9 liee, la selection sort de la portee': {
     pourquoi: 'REGLE DU MODELE (Julien) : liee, si la selection du diagramme ne touche plus la portee, la portee ' +
       'revient a la racine. Avant, la couronne restait zoomee sur Cereales et montrait Ble, Mais que le ' +
@@ -267,6 +289,8 @@ const monterCas = (c: Cas) => {
   const s = monterSocle()
   if (c.diagramme?.filiere) s.filiere.selectMembers(c.diagramme.filiere)
   if (c.diagramme?.pays) s.pays.selectMembers(c.diagramme.pays)
+  if (c.portee?.filiere) s.filiere.focus_ids = c.portee.filiere
+  if (c.portee?.pays) s.pays.focus_ids = c.portee.pays
   return s
 }
 
