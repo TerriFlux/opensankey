@@ -158,6 +158,13 @@ export const resources_template = {
         section_thumbnail_orphan: 'Image missing from the pinned projects: kept as it is.',
         section_thumbnail_no_slot: 'Pin a diagram in a page first: the images come from the projects of the section',
         section_thumbnail_none: 'No image in the projects pinned by the pages',
+        page_status: 'Progress',
+        page_status_finalise: 'Nearly final',
+        page_status_copil: 'To be tested',
+        page_status_prevu: 'Planned',
+        page_announced: 'Announced page: its card shows on the home page, without a link, until a diagram is pinned',
+        page_vignette: 'Card image',
+        page_vignette_project: 'Project…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -424,6 +431,13 @@ export const resources_template = {
         section_thumbnail_orphan: 'Image absente des briques épinglées : conservée telle quelle.',
         section_thumbnail_no_slot: 'Épinglez d\'abord un diagramme dans une page : les images viennent des briques de la section',
         section_thumbnail_none: 'Aucune image dans les briques épinglées par les pages',
+        page_status: 'Avancement',
+        page_status_finalise: 'Quasi-finalisé',
+        page_status_copil: 'À tester',
+        page_status_prevu: 'Prévu',
+        page_announced: 'Page annoncée : sa carte figure sur l\'accueil, sans lien, jusqu\'à ce qu\'un diagramme y soit épinglé',
+        page_vignette: 'Vignette',
+        page_vignette_project: 'Projet…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -691,6 +705,13 @@ export const resources_template = {
         section_thumbnail_orphan: 'Imagen ausente de los proyectos anclados: se conserva tal cual.',
         section_thumbnail_no_slot: 'Ancle primero un diagrama en una página: las imágenes vienen de los proyectos de la sección',
         section_thumbnail_none: 'Ninguna imagen en los proyectos anclados por las páginas',
+        page_status: 'Avance',
+        page_status_finalise: 'Casi finalizado',
+        page_status_copil: 'Por probar',
+        page_status_prevu: 'Previsto',
+        page_announced: 'Página anunciada: su tarjeta aparece en la portada, sin enlace, hasta que se ancle un diagrama',
+        page_vignette: 'Imagen de la tarjeta',
+        page_vignette_project: 'Proyecto…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -953,6 +974,13 @@ export const resources_template = {
         section_thumbnail_orphan: 'Bild in den angehefteten Projekten nicht vorhanden: unverändert beibehalten.',
         section_thumbnail_no_slot: 'Heften Sie zuerst ein Diagramm an eine Seite: die Bilder stammen aus den Projekten des Abschnitts',
         section_thumbnail_none: 'Kein Bild in den von den Seiten angehefteten Projekten',
+        page_status: 'Fortschritt',
+        page_status_finalise: 'Fast fertig',
+        page_status_copil: 'Zu testen',
+        page_status_prevu: 'Geplant',
+        page_announced: 'Angekündigte Seite: Ihre Karte erscheint ohne Link auf der Startseite, bis ein Diagramm angeheftet wird',
+        page_vignette: 'Kartenbild',
+        page_vignette_project: 'Projekt…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -1215,6 +1243,13 @@ export const resources_template = {
         section_thumbnail_orphan: 'Immagine assente dai progetti agganciati: conservata com\'è.',
         section_thumbnail_no_slot: 'Aggancia prima un diagramma in una pagina: le immagini vengono dai progetti della sezione',
         section_thumbnail_none: 'Nessuna immagine nei progetti agganciati dalle pagine',
+        page_status: 'Avanzamento',
+        page_status_finalise: 'Quasi definitivo',
+        page_status_copil: 'Da testare',
+        page_status_prevu: 'Previsto',
+        page_announced: 'Pagina annunciata: la sua scheda appare nella home, senza link, finché non viene agganciato un diagramma',
+        page_vignette: 'Immagine della scheda',
+        page_vignette_project: 'Progetto…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -1475,6 +1510,13 @@ export const resources_template = {
         section_thumbnail_orphan: '该图片不在已固定的项目中：原样保留。',
         section_thumbnail_no_slot: '请先在某个页面固定一个图表：图片来自本章节的项目',
         section_thumbnail_none: '页面固定的项目中没有图片',
+        page_status: '进度',
+        page_status_finalise: '基本完成',
+        page_status_copil: '待测试',
+        page_status_prevu: '计划中',
+        page_announced: '预告页面：在固定图表之前，其卡片显示在首页上，但没有链接',
+        page_vignette: '卡片图片',
+        page_vignette_project: '项目…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -1732,6 +1774,13 @@ export const resources_template = {
         section_thumbnail_orphan: 'ピン留めしたプロジェクトにない画像です：そのまま保持します。',
         section_thumbnail_no_slot: 'まずページに図をピン留めしてください：画像はセクションのプロジェクトから取得します',
         section_thumbnail_none: 'ページがピン留めしたプロジェクトに画像がありません',
+        page_status: '進捗',
+        page_status_finalise: 'ほぼ完成',
+        page_status_copil: 'テスト予定',
+        page_status_prevu: '予定',
+        page_announced: '予告ページ：図がピン留めされるまで、カードはリンクなしでホームに表示されます',
+        page_vignette: 'カード画像',
+        page_vignette_project: 'プロジェクト…',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
