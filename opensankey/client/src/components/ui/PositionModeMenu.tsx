@@ -267,7 +267,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   // os#1511 — LE DESSIN change la structure du diagramme (des nœuds engendrés), là où la position
   // n'est qu'une façon de lire : en lecture, il ne s'offre que si la page le demande
   // (`dimension_drawing`). Chaque moitié du menu a son propre gate ; seule, elle se montre à plat.
-  const can_draw = dimensionDrawingEnabledFor(app_data)
+  const can_draw = dimensionDrawingEnabledFor(app_data, tagg)
   const can_position = positionModeSelectorEnabledFor(app_data)
   const drawing = dimensionDrawingOf(app_data, tagg)
   const in_bands = dimensionInMemberBands(app_data, tagg)
