@@ -52,6 +52,8 @@ import type { Class_Tag } from '../types/Tag'
 import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_ContainerElement } from './TextZone'
 import type { Class_NodeBase } from './NodeBase'
+import type { Class_NodeElement } from './Node'
+import { membersOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 
 // Marge interne du cadre autour des zones générées (px monde)
 const LEGEND_PADDING = 10
@@ -866,16 +868,46 @@ function hoverPredicate(
       : (carried: readonly Class_Tag[]) => carried.includes(tag)
     const is_data_group = tag.group.id in sankey.data_taggs_dict
     return {
-      node: n => n.hasGivenTag(tag), link: l => l.hasGivenTag(tag), band,
+      node: n => n.hasGivenTag(tag) || (is_data_group && engendreParmi(n, [tag])),
+      link: l => l.hasGivenTag(tag) || (is_data_group && fluxEngendreParmi(l, [tag])),
+      band,
       data_tags: is_data_group ? [tag] : undefined
     }
   }
   const carriesOne = (element: Type_TagCarrier) => tags.some(t => element.hasGivenTag(t))
   const bandCarriesOne = (carried: readonly Class_Tag[]) => carried.some(t => tags.includes(t))
+  const is_data = group.id in sankey.data_taggs_dict
   return {
-    node: carriesOne, link: carriesOne, band: bandCarriesOne,
-    data_tags: (group.id in sankey.data_taggs_dict) ? tags : undefined
+    node: n => carriesOne(n) || (is_data && engendreParmi(n, tags)),
+    link: l => carriesOne(l) || (is_data && fluxEngendreParmi(l, tags)),
+    band: bandCarriesOne,
+    data_tags: is_data ? tags : undefined
   }
+}
+
+/**
+ * os#1511 — UN NŒUD ENGENDRÉ ne porte pas le membre qu'il représente comme une étiquette : il le
+ * porte dans sa marque d'id (`membersOfGeneratedNode`). En mode nœuds, le survol d'un membre dans
+ * la légende ne désignait donc rien (Julien, 08/10 : « quand on est sur des modes pas en bandes,
+ * passer la souris sur la légende ne met pas en exergue »). Un membre parent désigne ses enfants.
+ */
+export function engendreParmi(element: unknown, tags: readonly Class_Tag[]): boolean {
+  const node = element as Class_NodeElement
+  if (typeof node?.id !== 'string' || node.sankey === undefined) return false
+  return membersOfGeneratedNode(node).some(membre => {
+    let courant: { parent?: unknown } | undefined = membre as unknown as { parent?: unknown }
+    while (courant !== undefined) {
+      if (tags.includes(courant as unknown as Class_Tag)) return true
+      courant = courant.parent as { parent?: unknown } | undefined
+    }
+    return false
+  })
+}
+
+/** Un flux engendré dont un bout représente l'un de ces membres. */
+function fluxEngendreParmi(element: unknown, tags: readonly Class_Tag[]): boolean {
+  const link = element as { source?: unknown, target?: unknown }
+  return engendreParmi(link.source, tags) || engendreParmi(link.target, tags)
 }
 
 // SA#545 — cible de survol d'un item : son étiquette, ou, pour un titre de groupe, le groupe de son
