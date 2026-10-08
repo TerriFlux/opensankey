@@ -44,11 +44,10 @@ import {
   dimensionDrawingEnabledFor, positionModeSelectorEnabledFor, loneSubmenuOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyMemberBands, applyMembersColorFlows, applyMembersOrder,
+  applyDimensionDrawing, applyMemberBands, applyMembersColorFlows,
   dimensionCarrierCandidates,
   dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
 } from './dimensionDrawingHost'
-import { MEMBERS_ORDERS } from '../../Algorithms/DimensionMemberOrder'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -423,23 +422,8 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                   onClick={() => applyMembersColorFlows(app_data, tagg, !tagg.paints_flows)}
                 />
                 : null}
-              {/* os#1511 — L'ORDRE DES MEMBRES, en bandes comme en nœuds : par valeur au premier
-                  niveau (défaut), à tous les niveaux, ou ordre de l'arbre. Sur une dimension plate,
-                  les deux premiers se confondent : un seul est proposé. */}
-              <MenuDivider />
-              <MenuGroup title={t('Banner.order_title')} fontSize='0.7rem'>
-                {MEMBERS_ORDERS
-                  .filter(o => tagg.is_hierarchical || o !== 'value_all_levels')
-                  .map(o => (
-                    <CheckItem
-                      key={o}
-                      label={t('Banner.order_' + o)}
-                      checked={tagg.members_order === o}
-                      closeOnSelect={false}
-                      onClick={() => applyMembersOrder(app_data, tagg, o)}
-                    />
-                  ))}
-              </MenuGroup>
+              {/* os#1511 — l'ORDRE DES MEMBRES vit dans « Navigation » (Julien, 08/10 : « ici on garde
+                  l'essentiel, ce qu'un utilisateur en mode publication veut faire »). */}
             </>, { disabled: drawing === 'one' }),
             can_position
               ? submenuEntry('place', t('Banner.place_submenu'), position_items)
