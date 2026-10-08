@@ -65,8 +65,8 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     // Le diagramme repete : les noeuds de poste portent le nom du poste seul.
     const noms = sankey.nodes_list.filter(isGeneratedMemberNode).map(n => n.name).sort()
     expect(noms).toEqual([
-      'Alimentation', 'Alimentation', 'Exportations', 'Exportations',
-      'Importations', 'Importations', 'Matiere', 'Matiere', 'Production', 'Production'
+      'Alimentation', 'Alimentation', 'Cereales', 'Exportations', 'Exportations',
+      'Importations', 'Importations', 'Lait', 'Production', 'Production'
     ])
     expect(ressources.own_driving_dimension?.id).toBe('poste')
     // Un diagramme par filiere, pas en plus des bandes de filiere sur les flux.
@@ -111,10 +111,13 @@ describe('os#1511 — un diagramme par filiere, les postes en noeuds dans chaque
     const production = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Production')
       .sort((a, b) => a.position_y - b.position_y)
     expect(production.map(n => n.name_label_is_visible)).toEqual([true, false])
-    // Le noeud central, que rien ne decoupe, porte le nom de son axe, ecrit lui aussi une seule fois.
-    const matiere = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.name === 'Matiere')
-      .sort((a, b) => a.position_y - b.position_y)
-    expect(matiere.map(n => n.name_label_is_visible)).toEqual([true, false])
+    // Le premier noeud que rien ne decoupe (Matiere, au centre) porte le NOM DE LA BANDE, dans
+    // chaque bande (Julien, 08/10 : « on ne voit pas apparaitre les noms des filieres »).
+    ;['Cereales', 'Lait'].forEach(nom => {
+      const noeud = sankey.nodes_list.filter(isGeneratedMemberNode).find(n => n.name === nom)
+      expect(noeud?.id.startsWith('Matiere')).toBe(true)
+      expect(noeud?.name_label_is_visible).toBe(true)
+    })
   })
 
   test('par defaut les postes peignent les flux, et la legende liste les dimensions', () => {
