@@ -2167,8 +2167,9 @@ export class Class_MenuConfig {
    * qu'il partage alors aussi. Il est posé À CÔTÉ de l'original : à sa droite dans la grille, ou
    * décalé d'un cran s'il flotte. Il devient le volet actif.
    *
-   * La copie n'est pas une vue, même quand l'original en est une : une vue n'a qu'un volet. Elle
-   * porte le nom `name`, que l'appelant choisit libre (« … 2 »).
+   * La copie n'est pas la vue de l'original, même quand l'original en est une : une vue n'a qu'un
+   * volet. Elle porte le nom `name`, que l'appelant choisit libre (« … 2 »), et le document en fait
+   * aussitôt une vue à elle (sa#619, cf. `Class_ApplicationData.registerPanesAsViews`).
    *
    * Un volet Sankey n'a rien de plus à recopier ici : l'original est le volet actif quand on le
    * duplique, donc le dessin vivant, et c'est de lui que naît un volet Sankey sans rendu.
@@ -2234,6 +2235,17 @@ export class Class_MenuConfig {
     return o ? this._mainZoneOccupantToJSON(o) : undefined
   }
 
+  /**
+   * sa#619 — Le volet que décrit une forme écrite (une entrée de `main_zone.occupants`, le volet
+   * d'une vue), tel qu'il serait ouvert — sans l'ouvrir : de quoi lui calculer un nom.
+   */
+  public mainZoneOccupantOfJSON(id: string, json: Type_JSON): Type_MainZoneOccupant {
+    const e = this._parseMainZoneOccupantEntry(id, json)
+    const o: Type_MainZoneOccupant = { id, subject: e.subject, representation: e.representation, place: e.place, size: e.size }
+    if (e.name) o.name = e.name
+    return o
+  }
+
   /** Note l'état des volets ENREGISTRÉS parmi `ids`, qui s'apprêtent à quitter la grande zone. */
   protected _snapshotSavedWindows(ids: string[]): void {
     ids.forEach(id => {
@@ -2252,11 +2264,11 @@ export class Class_MenuConfig {
   /**
    * Ouvre le volet d'une vue depuis la forme qu'elle en garde, et le relie à elle.
    *
-   * Même règle d'identifiant qu'à l'ouverture d'un volet (`openMainZoneWindow`) : une nature
-   * d'échelle diagramme sur la feuille courante n'a qu'une fenêtre, qu'on RÉUTILISE si elle est déjà
-   * là — la vue lui rend sa place et ses réglages —, tout autre sujet prend un identifiant neuf. La
-   * place `main` s'obtient par l'échange ordinaire (`makeMainZoneOccupantMain`) : la principale du
-   * moment prend la place du volet, rien ne disparaît.
+   * Une nature d'échelle diagramme sur la feuille courante prend l'identifiant de son registre s'il
+   * est libre, ou si le volet qui le porte EST déjà cette vue — la vue lui rend sa place et ses
+   * réglages ; sinon (sa#581, sa#619 : ce volet-là est une autre vue) et pour tout autre sujet, le
+   * volet prend un identifiant neuf. La place `main` s'obtient par l'échange ordinaire
+   * (`makeMainZoneOccupantMain`) : la principale du moment prend la place du volet, rien ne disparaît.
    *
    * Rend l'identifiant du volet, ou `null` quand la forme ne nomme aucune nature.
    */
@@ -2269,9 +2281,11 @@ export class Class_MenuConfig {
     // sa#581 — UN VOLET SANKEY DE PLUS, et non celui qui est déjà là. Plusieurs volets Sankey
     // coexistent : le premier porte l'identifiant de registre, et le réutiliser pour rappeler une
     // vue enlèverait à ce volet-là ce qu'il montrait. Il ne se réutilise que s'il EST déjà cette vue.
-    const sankey_taken = e.representation === MAIN_ZONE_CANVAS_ID && this.isMainZoneOccupant(MAIN_ZONE_CANVAS_ID) &&
-      this.mainZoneOccupantById(MAIN_ZONE_CANVAS_ID)?.saved_view !== view_id
-    if (!mainZoneSubjectUsesOwnWindowId(e.subject) && !sankey_taken) {
+    // sa#619 — et de même pour toute nature : depuis que tout volet est une vue, le volet qui porte
+    // l'identifiant de registre (le tableur, la doc…) est une AUTRE vue, qu'on ne détourne pas.
+    const registry_taken = this.isMainZoneOccupant(e.representation) &&
+      this.mainZoneOccupantById(e.representation)?.saved_view !== view_id
+    if (!mainZoneSubjectUsesOwnWindowId(e.subject) && !registry_taken) {
       id = e.representation
       if (id === '') return null
       if (!this.isMainZoneOccupant(id)) {
@@ -3193,9 +3207,17 @@ export class Class_MenuConfig {
    * à l'historique comme UNE action. À appeler par l'interface, autour du geste de l'utilisateur.
    */
   public undoableMainZone(work: () => void): void {
-    const end = this.beginUndoableMainZone()
-    try { work() } finally { end() }
+    // sa#619 — UN GROUPE : un volet ouvert par le geste devient une vue pendant le geste (cf.
+    // `Class_ApplicationData.registerPanesAsViews`), et l'enregistrement s'annule avec lui — sans
+    // quoi annuler l'ouverture laisserait dans le fichier la vue d'un volet qui n'existe plus.
+    this.undoableGroup(() => {
+      const end = this.beginUndoableMainZone()
+      try { work() } finally { end() }
+    })
   }
+
+  /** sa#619 — Un geste annulable est-il en cours (ce qu'on inscrit s'y fond) ? */
+  public get undo_group_open(): boolean { return this._undo_group !== null }
 
   /**
    * Le même, pour un geste qui DURE (déplacer une séparation) : la photo d'avant est prise au
