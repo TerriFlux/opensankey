@@ -1464,7 +1464,10 @@ export const menuStyles = {
       },
     },
     item: {
-      gridTemplateColumns: '1.5rem auto',
+      // Troisième colonne : la pastille « dev » (DevBadge) suit le libellé sur la MÊME ligne ;
+      // avec deux colonnes seulement elle partait seule à la ligne suivante.
+      gridTemplateColumns: '1.5rem auto auto',
+      justifyContent: 'start',
       fontSize: '0.8rem',
       whiteSpace: 'nowrap',
       minWidth: '100%',
@@ -2504,7 +2507,10 @@ export const tabsStyles = {
       },
     },
     item: {
-      gridTemplateColumns: '1.5rem auto',
+      // Troisième colonne : la pastille « dev » (DevBadge) suit le libellé sur la MÊME ligne ;
+      // avec deux colonnes seulement elle partait seule à la ligne suivante.
+      gridTemplateColumns: '1.5rem auto auto',
+      justifyContent: 'start',
       fontSize: '0.8rem',
       whiteSpace: 'nowrap',
       minWidth: '100%',
