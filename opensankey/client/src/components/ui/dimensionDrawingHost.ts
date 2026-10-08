@@ -134,11 +134,11 @@ const restore = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, stat
 const UNIQUE_BANNERS = ['one', 'topbar', 'sequence']
 
 /**
- * La bannière `banner` ferait-elle lire UN SEUL membre de `tagg` ? Pas « un membre » sur une dimension
- * hiérarchisée : additive, elle le reçoit en choix multiple (`Class_DataTagGroup.admissibleBanner`).
+ * La bannière `banner` ferait-elle lire UN SEUL membre de `tagg` ? Oui pour « un membre », même sur
+ * une dimension hiérarchisée depuis le 08/10 (Julien : « la sélection des filières doit se faire
+ * comme Unité ou Année, par un sélecteur simple »).
  */
-const readsOneMember = (tagg: Class_DataTagGroup, banner: string) =>
-  UNIQUE_BANNERS.includes(banner) && !(banner !== 'sequence' && tagg.is_hierarchical)
+const readsOneMember = (_tagg: Class_DataTagGroup, banner: string) => UNIQUE_BANNERS.includes(banner)
 
 /** Le placement des nœuds engendrés d'une dimension : il appartient au dessin « en nœuds ». */
 type Type_NodesPlacement = { member_bands: boolean | undefined, reference_node_id: string | undefined }

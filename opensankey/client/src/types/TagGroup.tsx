@@ -1761,9 +1761,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * coché reste, et un membre seul garde sa couleur (`single_member_color`). La séquence (années,
    * scénarios : à ne pas sommer) et les dimensions plates gardent leur bannière.
    */
+  // 08/10/2026 — RÈGLE LEVÉE À LA DEMANDE de Julien : « la sélection des filières doit se faire
+  // comme Unité ou Année, par un sélecteur simple ». Une dimension hiérarchisée garde « un membre à
+  // la fois » quand on le choisit explicitement ; elle n'est plus forcée en choix multiple.
   protected admissibleBanner(value: tag_banner_type): tag_banner_type {
-    if (value !== 'one' || this._tags === undefined) return value
-    return this.is_hierarchical ? 'multi' : value
+    return value
   }
 
   /** Ramène la bannière à ce que la nature de la dimension admet (relecture, parenté changée). */

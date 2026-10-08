@@ -31,15 +31,16 @@ function monter() {
 }
 
 describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => {
-  test('une dimension hierarchisee reste en choix multiple, son membre coche garde', () => {
-    // os#1511, 07/10 : hiérarchisée = additive, « un membre à la fois » n'existe plus pour elle.
+  test('une dimension hierarchisee accepte un membre a la fois quand on le choisit', () => {
+    // 08/10 (Julien : « la selection des filieres doit se faire comme Unite ou Annee, par un
+    // selecteur simple ») : la regle du 07/10 qui forcait le choix multiple est levee.
     const { app, pays } = monter()
     applyDimensionDrawing(app, pays, 'multi')
-    expect(dimensionDrawingOf(app, pays)).toBe('multi')
     applyDimensionCut(app, pays, ['europe', 'afrique'])
+    expect(pays.selected_tags_list).toHaveLength(2)
     applyDimensionDrawing(app, pays, 'one')
-    expect(dimensionDrawingOf(app, pays)).toBe('multi')
-    expect(pays.selected_tags_list.map(t => t.id).sort()).toEqual(['afrique', 'europe'])
+    expect(dimensionDrawingOf(app, pays)).toBe('one')
+    expect(pays.selected_tags_list).toHaveLength(1)
   })
 
   test('une sequence garde un membre a la fois', () => {
