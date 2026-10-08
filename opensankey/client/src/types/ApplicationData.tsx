@@ -1783,8 +1783,9 @@ export class Class_ApplicationData {
     // Post processing & menu updating
     this._afterFromJSON()
     this._sankey_panes.sync()
-    // sa#619 — tout volet est une vue, ceux d'un fichier d'avant compris (cf. `registerPanesAsViews`).
-    this.registerPanesAsViews()
+    // sa#619 — tout volet est une vue, ceux d'un fichier d'avant compris (cf. `registerPanesAsViews`),
+    // sans faire du fichier qu'on ouvre un document modifié.
+    this.registerPanesAsViews(true)
     // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
     // à l'enregistrement (œil ON / view_mode), il est RESTAURÉ tel quel à l'ouverture pour
     // que le sous-ensemble curé de la vue s'affiche sans réintervention manuelle.
@@ -2280,8 +2281,12 @@ export class Class_ApplicationData {
     this.registerPanesAsViews()
   }
 
-  /** OpenSankey+ : chaque volet ouvert qui n'est pas encore une vue le devient (sa#619). */
-  public registerPanesAsViews(): void { }
+  /**
+   * OpenSankey+ : chaque volet ouvert qui n'est pas encore une vue le devient (sa#619). `quiet` : à la
+   * lecture d'un fichier, qui n'en devient pas un document modifié.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public registerPanesAsViews(quiet: boolean = false): void { }
 
   /** sa#619 — > 0 pendant la lecture d'un fichier : les volets n'y deviennent pas des vues. */
   protected _pane_views_hold: number = 0
@@ -2289,6 +2294,10 @@ export class Class_ApplicationData {
   /** sa#619 — Le volet `occupant_id` peut-il être SUPPRIMÉ (sa vue quitter le fichier) ? */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public canDeletePane(occupant_id: string): boolean { return false }
+
+  /** sa#619 — La vue `view_id` peut-elle être supprimée (le « − » d'une vignette du sélecteur) ? */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public canDeletePaneView(view_id: string): boolean { return false }
 
   /**
    * sa#619 — FERMER UN VOLET, le geste de la croix : il quitte l'écran, et reste dans le fichier
@@ -2307,6 +2316,17 @@ export class Class_ApplicationData {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public deletePane(occupant_id: string): Type_PaneDeletion | null { return null }
+
+  /** sa#619 — SUPPRIMER LA VUE `view_id` et ses volets (cf. `deletePane`) — le « − » d'une vignette. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public deletePaneView(view_id: string): Type_PaneDeletion | null { return null }
+
+  /**
+   * sa#619 — DUPLIQUER LA VUE `view_id` sous le nom `name`, et la montrer — le « + » d'une vignette.
+   * OpenSankey+ ; rend la copie, ou `null`.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public duplicateView(view_id: string, name: string): string | null { return null }
 
   /**
    * sa#619 — LE BOUTON « ANNULER » DU BANDEAU de suppression : défait la suppression si elle est
@@ -2410,6 +2430,11 @@ export class Class_ApplicationData {
 
   /** sa#581 — Bascule commandée par l'activation d'un volet Sankey (cf. `Class_SankeyPanes.activate`). */
   public switchViewForPane(id: string): void { this._views_reader.switchViewForPane(id) }
+  /**
+   * sa#619 — Bascule SANS DESSIN : deux volets Sankey montrent le même dessin sous deux vues, et la vue
+   * courante change seulement de nom (cf. `Class_SankeyPanes.swapLiveViews`).
+   */
+  public switchViewForPaneWithoutRedraw(id: string): void { this._views_reader.renameCurrentView(id) }
   /** sa#581 — Avant une bascule de vue : la mise en page du volet vivant est mise à l'abri. */
   public beforeViewChange(): void { this._sankey_panes.beforeViewChange() }
   /** sa#581 — Après une bascule de vue : la mise en page qui convient (cf. `Class_SankeyPanes`). */
