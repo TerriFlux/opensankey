@@ -420,11 +420,9 @@ export const applyDisaggregationGap = (
 export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): boolean => {
   // Demandé : en vigueur, quels que soient les porteurs (ils le deviennent tous). Automatique : dès
   // deux porteurs réglés.
-  if (tagg.member_bands !== undefined) return tagg.member_bands
-  // Sous le diagramme par membre d'une autre dimension, celle-ci se découpe dans ses bandes.
-  const demandee = (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-    .some(other => other !== tagg && other.member_bands === true)
-  return !demandee && dimensionCarriersOf(app_data, tagg).length >= 2
+  // Seulement DEMANDÉ (Julien, 08/10) : plus de passage d'office dès deux porteurs.
+  void app_data
+  return tagg.member_bands === true
 }
 
 /**

@@ -44,7 +44,11 @@ function monter(produits_porte: boolean, petit_pays = false) {
   const sortie = sankey.addNewLink(produits, exports)
   imports.driving_dimension = pays
   exports.driving_dimension = pays
-  if (produits_porte) produits.driving_dimension = pays
+  if (produits_porte) {
+    produits.driving_dimension = pays
+    // Les bandes se demandent (plus de passage d office, 08/10).
+    pays.member_bands = true
+  }
 
   // Un noeud ne descend pas sous 40 px : un « petit pays » (moins de 20 ici, a 2 px par unite) a un
   // noeud plus haut que sa part de pile. Sans lui, toutes les parts depassent ce plancher.

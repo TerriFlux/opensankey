@@ -53,6 +53,7 @@ function monter() {
   poser(sortie, espagne, 30)
   poser(sortie, maroc, 20)
   choisir(pays, espagne, maroc)
+  pays.member_bands = true
   return { app, sankey, pays }
 }
 
@@ -61,12 +62,12 @@ const yDe = (sankey: ReturnType<typeof monter>['sankey'], suffixe: string) =>
     .map(n => ({ y: n.position_y, h: n.getShapeHeightToUse() }))
 
 describe('os#1511 — un diagramme par membre', () => {
-  test('automatique des que deux noeuds portent la dimension, et reglable', () => {
+  test('seulement sur demande, meme quand plusieurs noeuds portent la dimension (08/10)', () => {
     const { pays } = monter()
-    expect(bandesParMembre(pays, 1)).toBe(false)
-    expect(bandesParMembre(pays, 3)).toBe(true)
-    pays.member_bands = false
+    pays.member_bands = undefined
     expect(bandesParMembre(pays, 3)).toBe(false)
+    pays.member_bands = true
+    expect(bandesParMembre(pays, 3)).toBe(true)
   })
 
   /** Accroche cible moins accroche source : 0 = flux droit. */
@@ -129,6 +130,7 @@ describe('os#1511 — un diagramme par membre', () => {
 
   test('le reglage fait l aller retour du fichier, et reste muet tant qu il n est pas pose', () => {
     const { pays } = monter()
+    pays.member_bands = undefined
     expect((pays.toJSON() as { member_bands?: boolean }).member_bands).toBeUndefined()
     pays.member_bands = false
     const json = pays.toJSON()

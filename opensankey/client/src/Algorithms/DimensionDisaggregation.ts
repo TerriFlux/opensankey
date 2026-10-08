@@ -654,7 +654,11 @@ function centrerSurAxe(noeuds: Class_NodeElement[], creneau: { centre: number | 
  * la portent. Un seul porteur n'a pas de diagramme à répéter.
  */
 export function bandesParMembre(dimension: Class_DataTagGroup, porteurs: number): boolean {
-  return dimension.member_bands ?? porteurs >= 2
+  // os#1511 (Julien, 08/10) — PLUS D'AUTOMATIQUE : une dimension portée par deux nœuds se rangeait
+  // d'office en diagrammes (« Ressources - Ressources », « Emplois - Emplois », des nœuds vides).
+  // Un diagramme par membre se DEMANDE (Dessiner) ; c'est la règle des mises en page nouvelles.
+  void porteurs
+  return dimension.member_bands === true
 }
 
 /** Les axes découpés de ce tour, regroupés par dimension rangée en bandes. */
