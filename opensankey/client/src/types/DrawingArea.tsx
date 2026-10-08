@@ -2104,7 +2104,7 @@ export class Class_DrawingArea {
 
     // Init drawing area
     const x = this._fit_margin / 2
-    const y = this._fit_margin / 2 + this.getNavBarHeight() // init drawing area zone with a margin for taking into account the navbar
+    const y = this._fit_margin / 2 + this.fit_top_offset // init drawing area zone with a margin for taking into account the navbar
     // #291 — Groupe d'enveloppe interposé entre la racine SVG et g_drawing. Il ne porte AUCUN
     // transform (donc reste en coordonnées écran, comme le cadre #viewport_border), et porte le
     // clip-path qui découpe le contenu au rectangle du cadre. g_drawing conserve, lui, le transform
@@ -3055,7 +3055,7 @@ export class Class_DrawingArea {
         // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
         // uses the paper bounds (not the stale elements bbox from the previous format).
         this._updateScrollbars()
-        this._applyFitCamera(new_k, this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
+        this._applyFitCamera(new_k, this._fit_margin / 2, this._fit_margin / 2 + this.fit_top_offset)
         this.drawBackground()
         this.drawGrid()
         if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
@@ -3143,7 +3143,7 @@ export class Class_DrawingArea {
       this._k_fit = 1
       if (this.d3_selection_zoom_area) {
         this._updateScrollbars()
-        this._applyFitCamera(1, this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
+        this._applyFitCamera(1, this._fit_margin / 2, this._fit_margin / 2 + this.fit_top_offset)
       }
       this.drawBackground()
       this.drawGrid()
@@ -3380,12 +3380,12 @@ export class Class_DrawingArea {
             // c'est le monde (0,0) qui est épinglé à la marge, pas le bord de la bbox.
             : (this._fit_margin / 2 + label_overflow_left) - (anchor_origin ? 0 : bbox.x) * new_k
       const py = unitary_center_node
-        ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
+        ? this.window_fitting_height / 2 + this.fit_top_offset - cny * new_k
         : anchor_v === 'center'
-          ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
+          ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.fit_top_offset
           : anchor_v === 'end'
-            ? this.getNavBarHeight() + (this.window_fitting_height - this._fit_margin / 2 - label_overflow_bottom) - (bbox.y + bbox.height) * new_k
-            : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - (anchor_origin ? 0 : bbox.y) * new_k
+            ? this.fit_top_offset + (this.window_fitting_height - this._fit_margin / 2 - label_overflow_bottom) - (bbox.y + bbox.height) * new_k
+            : this._fit_margin / 2 + this.fit_top_offset + label_overflow_top - (anchor_origin ? 0 : bbox.y) * new_k
       // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
       // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
       this._applyFitCamera(new_k, px, py)
@@ -4194,7 +4194,7 @@ export class Class_DrawingArea {
    * (0,0) absolu de l'écran, qui serait masqué sous la barre de navigation.
    */
   public resetCameraToOrigin(): void {
-    const t = d3.zoomIdentity.translate(this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
+    const t = d3.zoomIdentity.translate(this._fit_margin / 2, this._fit_margin / 2 + this.fit_top_offset)
     this.setCamera(t)
     this.drawBackground()
     this.drawGrid()
@@ -4793,6 +4793,18 @@ export class Class_DrawingArea {
    */
   public overlay_reserve_top = 0
   public overlay_reserve_bottom = 0
+  /**
+   * sa#621 — Ordonnée (px, repère du SVG) où commence la zone où le CADRAGE pose le dessin : sous la
+   * barre de la page (`getNavBarHeight`) et sous l'en-tête du volet quand il passe par-dessus.
+   *
+   * À DISTINGUER de la zone VISIBLE (feuille, fond, découpe, barres de défilement — le « chrome »),
+   * qui reste sur `getNavBarHeight` et couvre l'en-tête : le fond du diagramme passe sous ses boutons,
+   * seul le dessin cadré s'en écarte (retour d'Alexandre, 08/10).
+   */
+  public get fit_top_offset(): number {
+    return this.getNavBarHeight() + this._overlayReserves().top
+  }
+
   /** sa#621 — Les deux réserves de l'en-tête posé par-dessus le dessin (cf. `overlay_reserve_top`). */
   protected _overlayReserves(): { top: number, bottom: number } {
     const frame = this.canvas_frame
@@ -4883,8 +4895,12 @@ export class Class_DrawingArea {
 
   /** Hauteur du CHROME (cf. `chrome_fitting_width`). */
   public get chrome_fitting_height(): number {
-    if (this._auto_fit_mode !== 'none') return this.window_fitting_height
-    return this.window_fitting_height + this.panel_reserve_bottom + this._scrollbar_reserve_bottom
+    // sa#621 — la feuille, son fond et sa découpe couvrent la case ENTIÈRE, en-tête compris : seul le
+    // dessin cadré s'écarte de l'en-tête posé par-dessus (cf. `fit_top_offset`).
+    const overlay = this._overlayReserves()
+    const overlay_h = overlay.top + overlay.bottom
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_height + overlay_h
+    return this.window_fitting_height + overlay_h + this.panel_reserve_bottom + this._scrollbar_reserve_bottom
   }
   // Largeur réservée à droite de la grande zone pour le tableur/doc (split view). Source globale
   // (menu_configuration) plutôt qu'un champ par instance : sinon chaque vue, recréée à la volée par
@@ -5056,10 +5072,8 @@ export class Class_DrawingArea {
     // Hors du conteneur principal, ou canevas cadré dans sa case : aucun menu autour du
     // conteneur → pas d'offset. (os#1385 : lecture explicite de la géométrie, même sémantique
     // qu'avant — `is_detached` est exactement `!is_in_main_container`.)
-    // sa#621 — sauf l'en-tête du VOLET, quand il passe par-dessus le dessin : il joue alors pour la
-    // case le rôle que la barre du haut joue pour la page (cf. `Type_CanvasFrame.reserve_top`).
     if (!this.is_in_main_container || this.is_framed) {
-      return this._overlayReserves().top
+      return 0
     }
     if (this.static && !this.application_data.publish_options.topbar) {
       return 0
