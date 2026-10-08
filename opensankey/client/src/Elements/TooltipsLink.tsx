@@ -42,6 +42,9 @@ export type Type_LinkSeries = {
   entries: Type_LinkSeriesEntry[]
 }
 
+/** Au-delà de ce nombre de cases du cube, pas de série dans l'info-bulle (cf. getValueComboEntries). */
+const MAX_SERIES_CUBE = 5000
+
 export class LinkTooltip {
 
   private _link: Class_LinkElement
@@ -51,9 +54,13 @@ export class LinkTooltip {
   }
 
   public getBlockHTML(block_id: string): string | null {
-    const groups = this.getChildLinkGroups()
-    const combos = this.getValueComboEntries(this._link)
+    // os#1511 (Julien, 08/10 : « passer la souris sur une bande plante l'appli », « c'est la mémoire
+    // qui explose ») — CALCULÉS SEULEMENT POUR LE BLOC QUI EN A BESOIN. Les combinaisons de valeurs
+    // d'un cube SOCLE (filières × postes × matières × 43 unités × années) se comptent par centaines de
+    // milliers : énumérées à chaque survol, pour chaque bloc, l'onglet le saturait.
+    const groups = block_id === 'data' || block_id === 'series_data' ? this.getChildLinkGroups() : []
     const has_children = groups.length > 0
+    const combos = block_id === 'series_data' && has_children ? this.getValueComboEntries(this._link) : []
     const has_series = combos.length > 1
     switch (block_id) {
     case 'flux':
@@ -412,6 +419,11 @@ export class LinkTooltip {
    * Vide si le lien n'a pas de dataTags (valeur unique).
    */
   private getValueComboEntries(link: Class_LinkElement): { key: string, label: string, value: Class_LinkValue }[] {
+    // Une SÉRIE se lit sur quelques dizaines de valeurs (des années, des régions). Au-delà d'un cube
+    // de quelques milliers de cases, on n'énumère pas : ce serait illisible, et ruineux en mémoire.
+    const taille = (link.sankey.data_taggs_list as { tags_list: unknown[] }[])
+      .reduce((produit, groupe) => produit * Math.max(1, groupe.tags_list.length), 1)
+    if (taille > MAX_SERIES_CUBE) return []
     const all = link.getAllValues()
     const entries: { key: string, label: string, value: Class_LinkValue }[] = []
     Object.values(all).forEach(([val, tags]) => {
