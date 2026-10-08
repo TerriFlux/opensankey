@@ -99,11 +99,14 @@ describe('os#1511 — un diagramme par membre', () => {
     const axes = sankey.nodes_list.filter(n => !isGeneratedMemberNode(n))
     const centre = (n: Class_NodeElement) => n.position_y + n.getShapeHeightToUse() / 2
     const ecart_maitre = centre(produits as Class_NodeElement) - centre(axes.find(n => n.name === 'Monde - Import') as Class_NodeElement)
-    const hauteur_max = Math.max(...axes.map(n => n.getShapeHeightToUse()))
     disaggregateDimensionNodes(sankey)
+    // La plus grande bande garde la mise en page telle quelle ; les autres a leur echelle.
+    const haute = (m: string) => Math.max(...sankey.nodes_list.filter(isGeneratedMemberNode)
+      .filter(n => n.id.endsWith(m)).map(n => n.getShapeHeightToUse()))
+    const hauteur_max = Math.max(haute('espagne'), haute('maroc'))
     ;['espagne', 'maroc'].forEach(m => {
       const bande = sankey.nodes_list.filter(isGeneratedMemberNode).filter(n => n.id.endsWith(m))
-      const k = Math.max(...bande.map(n => n.getShapeHeightToUse())) / hauteur_max
+      const k = haute(m) / hauteur_max
       const de = (nom: string) => centre(bande.find(n => n.id.startsWith(axes.find(a => a.name === nom)?.id + MEMBER_NODE_MARK)) as Class_NodeElement)
       expect(de('Produits agricoles') - de('Monde - Import')).toBeCloseTo(ecart_maitre * k, 6)
     })

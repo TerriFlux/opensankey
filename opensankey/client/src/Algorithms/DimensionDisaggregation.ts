@@ -437,6 +437,9 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   sankey.links_list
     .filter(flux => !isGeneratedMemberLink(flux))
     .forEach(flux => repartir(sankey, flux, par_axe))
+  // 2 bis) L'ORDRE DES FLUX de chaque nœud suit celui de l'auteur (Julien, 08/10 : « le link_idx,
+  //    output ou input links, ne semble pas respecté »).
+  ordonnerFluxEngendres(sankey, par_axe)
 
   // 3) LA MISE EN PAGE, APRÈS LES FLUX — et l'ordre n'est pas un détail.
   //
@@ -589,6 +592,38 @@ function nommerLesBandes(par_axe: Map<string, Type_MembreRepresente[]>): void {
 }
 
 /**
+ * os#1511 — LES FLUX ENGENDRÉS PRENNENT LA PLACE DE LEUR FLUX D'ORIGINE dans l'ordre des flux de
+ * chaque nœud (`links_order`, qui fixe l'empilement des entrées et des sorties). Sur un nœud
+ * engendré, le rang est celui du flux d'origine chez son AXE ; sur un nœud que rien ne découpe,
+ * celui du flux d'origine chez lui-même (il y est encore, masqué). À rang égal — les cases d'un
+ * même flux —, l'ordre de création, qui suit l'ordre des membres. Sans cela, les flux engendrés
+ * s'empilaient dans l'ordre où on les créait, et se croisaient.
+ */
+function ordonnerFluxEngendres(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): void {
+  const touches = new Set<Class_NodeElement>()
+  sankey.links_list.filter(isGeneratedMemberLink).forEach(lien => {
+    touches.add(lien.source as Class_NodeElement)
+    touches.add(lien.target as Class_NodeElement)
+  })
+  touches.forEach(noeud => {
+    const axe_id = parseGeneratedId(noeud.id)?.origin
+    const reference = (axe_id !== undefined && par_axe.has(axe_id) ? sankey.nodes_dict[axe_id] : noeud) as Class_NodeElement | undefined
+    if (reference === undefined) return
+    const rang = new Map<string, number>()
+    reference.links_order.forEach((lien, i) => rang.set(lien.id, i))
+    const rangDe = (lien: Class_LinkElement) => {
+      const origine = parseGeneratedId(lien.id)?.origin ?? lien.id
+      return rang.get(origine) ?? rang.get(lien.id) ?? Number.MAX_SAFE_INTEGER
+    }
+    const ordre = noeud.links_order
+      .map((lien, i) => ({ lien, i }))
+      .sort((p, q) => (rangDe(p.lien) - rangDe(q.lien)) || (p.i - q.i))
+      .map(({ lien }) => lien.id)
+    noeud.applyLinksOrder(ordre)
+  })
+}
+
+/**
  * Recentre la pile des membres sur le CENTRE de l'axe. Au dessin, tout nœud libre garde son
  * centre quand sa taille change (`anchorByCenterIfResized`) : son voisin « Produits agricoles »
  * grandit autour du sien. Des membres empilés depuis le HAUT de l'axe débordaient vers le bas, et
@@ -691,15 +726,14 @@ function rangerEnBandes(
     (sankey.nodes_dict[a].position_u - sankey.nodes_dict[b].position_u) ||
     (sankey.nodes_dict[a].position_x - sankey.nodes_dict[b].position_x))
 
-  // LE DIAGRAMME D'ORIGINE, mesuré avant découpage (`creneaux`) : le centre de chaque axe, la
-  // médiane de l'ensemble et la hauteur du plus haut axe. Absent (appel sans créneaux) : les
+  // LE DIAGRAMME D'ORIGINE, mesuré avant découpage (`creneaux`) : le centre de chaque axe et la
+  // médiane de l'ensemble. Absent (appel sans créneaux) : les
   // bandes suivent les flux de proche en proche.
   const maitre = (() => {
     if (creneaux === undefined) return undefined
     const centres = new Map<string, number>()
     let haut = Infinity
     let bas = -Infinity
-    let hauteur_max = 0
     axe_ids.forEach(id => {
       const c = creneaux.get(id)
       if (c === undefined) return
@@ -707,11 +741,23 @@ function rangerEnBandes(
       centres.set(id, centre)
       haut = Math.min(haut, centre - c.hauteur / 2)
       bas = Math.max(bas, centre + c.hauteur / 2)
-      hauteur_max = Math.max(hauteur_max, c.hauteur)
     })
     if (centres.size !== axe_ids.length) return undefined
-    return { centres, mediane: (haut + bas) / 2, hauteur_max }
+    return { centres, mediane: (haut + bas) / 2 }
   })()
+
+  // La hauteur de chaque bande (sa plus haute pile, à l'écart des enfants près) et la plus grande.
+  const ecart_piles = ecart / 2
+  const hauteurDeBande = (cle: string) => {
+    let haute = 0
+    axe_ids.forEach(id => {
+      const noeuds = noeudsDe(id, cle).filter(n => !places.has(n))
+      if (noeuds.length === 0) return
+      haute = Math.max(haute, noeuds.reduce((t, n) => t + n.getShapeHeightToUse(), 0) + ecart_piles * (noeuds.length - 1))
+    })
+    return haute
+  }
+  const hauteur_bande_max = Math.max(0, ...ordre.map(hauteurDeBande))
 
   let bas_precedent: number | undefined = undefined
   ordre.forEach(cle => {
@@ -742,9 +788,10 @@ function rangerEnBandes(
       // faut une ligne médiane horizontale et des écarts relatifs à la hauteur la plus grande, comme
       // en mode proportionnel »). Chaque axe garde son écart à la médiane du diagramme d'origine,
       // multiplié par le rapport entre la plus haute pile de la bande et le plus haut axe d'origine.
-      let plus_haute = 0
-      par_colonne.forEach(noeuds => { plus_haute = Math.max(plus_haute, pile(noeuds)) })
-      const k = maitre.hauteur_max > 0 ? plus_haute / maitre.hauteur_max : 1
+      // La PLUS GRANDE bande garde la mise en page telle quelle (k = 1) ; les autres se réduisent
+      // par rapport à elle (Julien, 08/10 : rapporter à l'axe agrégé compressait même la plus
+      // grande, Fourrages, de moitié).
+      const k = hauteur_bande_max > 0 ? hauteurDeBande(cle) / hauteur_bande_max : 1
       par_colonne.forEach((noeuds, id) => {
         const centre = maitre.centres.get(id)
         poserPile(noeuds, centre === undefined ? 0 : (centre - maitre.mediane) * k)
