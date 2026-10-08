@@ -4770,14 +4770,23 @@ export class Class_DrawingArea {
     if (this.is_bg_image_ratio_mode) return
     this._height = _; this.drawBackground(); this.drawGrid()
   }
+  /**
+   * sa#616 — hauteur laissée libre SOUS le dessin d'une zone cadrée dans une case ou un conteneur
+   * hôte : la note qu'une vignette pose en bas de sa case (les flux de référence du mode normalisé)
+   * s'y loge au lieu de recouvrir le dessin. Posée par celui qui pose la note ; 0 sinon.
+   */
+  public frame_bottom_reserved = 0
+
   public get window_fitting_height(): number {
     // Canevas cadré dans une case de la grande zone : c'est elle qu'on remplit.
     const frame = this.canvas_frame
-    if (frame && frame !== 'hidden') return frame.height - this._fit_margin - this._scrollbar_reserve_bottom
+    if (frame && frame !== 'hidden') {
+      return frame.height - this._fit_margin - this._scrollbar_reserve_bottom - this.frame_bottom_reserved
+    }
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin - this._scrollbar_reserve_bottom
+      if (h > 0) return h - this._fit_margin - this._scrollbar_reserve_bottom - this.frame_bottom_reserved
     }
     // Mode embarqué (embedded) : le SVG fait 100% du conteneur hôte (#sankey_app),
     // qui peut être plus court que la fenêtre quand l'embarqueur ajoute sa PROPRE

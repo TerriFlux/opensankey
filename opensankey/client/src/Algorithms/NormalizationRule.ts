@@ -373,78 +373,29 @@ export const normalizedValueFor = (
 // --- Ce qu'on en dit -------------------------------------------------------------------------
 
 type Type_Translate = (key: string, options?: { [k: string]: string }) => string
-type Type_NamedTagGroups = {
-  [id: string]: { name: string, tags_dict: { [id: string]: { name: string } | undefined } } | undefined
-}
-
-type Type_NamedSankey = { node_taggs_dict: Type_NamedTagGroups, flux_taggs_dict: Type_NamedTagGroups }
-
-/** Les noms des étiquettes `tag_ids` du groupe du filtre, dans l'ordre. */
-const tagNamesOf = (filter: Type_NormalizationFilter, tag_ids: string[], sankey: Type_NamedSankey): string[] => {
-  const group = (filter.on === 'link' ? sankey.flux_taggs_dict : sankey.node_taggs_dict)[filter.tag_group_id]
-  return tag_ids.map(id => group?.tags_dict[id]?.name ?? id)
-}
 
 /**
- * Une règle en clair : « Sorties — Type de matière est Produit », « Sorties — Tous les flux » ;
- * sa#607 — une priorité : « Sorties — Type de matière est Produit, sinon Matière première ».
+ * sa#616 — LA NOTE DES FLUX DE RÉFÉRENCE : « Flux de référence (= 1) : Ovoproduits hors blanc + Eau
+ * + Blanc d'œuf ». Toujours dite en mode normalisé, et non plus seulement quand la règle s'était
+ * écartée de son premier choix (sa#607) : un avis qui n'apparaît que sur certaines vignettes se lit
+ * comme une erreur, et la question du lecteur est toujours la même — à quoi ce 1 correspond-il.
+ * Nommer les FLUX y répond mieux que décrire la règle (« Sorties — Type de matière est Produit »),
+ * qu'il faudrait encore appliquer de tête pour retrouver les flux.
+ *
+ * Chaque flux est nommé par le nœud d'EN FACE de `center` (le centre de l'étoile), sous son
+ * libellé affiché (`nameOf`). Référence vide : « aucun », et pourquoi.
  */
-export const describeNormalizationRule = (
-  rule: Type_NormalizationRule,
-  sankey: Type_NamedSankey,
+export const describeNormalizationReference = (
+  reference: Pick<Type_NormalizationReference, 'links' | 'reason'>,
+  center: Class_NodeElement,
+  nameOf: (node: Class_NodeElement) => string,
   t: Type_Translate
 ): string => {
-  const side = t('Flux.normalization.side_' + rule.side)
-  const filter = rule.filter
-  if (filter === null) return side + ' — ' + t('Flux.normalization.filter_all')
-  const group = (filter.on === 'link' ? sankey.flux_taggs_dict : sankey.node_taggs_dict)[filter.tag_group_id]
-  const op = t('Flux.normalization.op_' + (filter.negate ? 'is_not' : 'is'))
-  const tags = tagNamesOf(filter, filter.tag_ids, sankey).join(t('Flux.normalization.or_else'))
-  // sa#616 — « …, sinon Tous les flux ».
-  const all = filter.else_all === true ? t('Flux.normalization.or_else') + t('Flux.normalization.filter_all') : ''
-  return `${side} — ${group?.name ?? filter.tag_group_id} ${op} ${tags}${all}`
-}
-
-/**
- * Ce que le volet dit de la valeur normalisée d'un nœud ; `null` quand il n'y a rien à en dire.
- *
- * Deux cas : la référence est VIDE (la raison, et la règle entière) ; ou la règle laissait un CHOIX
- * — plusieurs étiquettes, ou le total en dernier recours, ou « sorties, sinon entrées » qui a pris
- * les entrées — et l'avis dit lequel a été fait : la catégorie et le côté qui ont servi (sa#616 ;
- * sa#607 ne le disait que hors de la première étiquette, mais la priorité « matière première
- * d'abord » se tranche autrement d'un process à l'autre : un coefficient rapporté aux matières
- * premières ne se lit pas comme un coefficient par produit). Faute de sortie, ou faute de toutes
- * les étiquettes, il dit aussi ce qui manquait.
- */
-export const describeNormalizationNotice = (
-  reference: Type_NormalizationReference,
-  rule: Type_NormalizationRule,
-  sankey: Type_NamedSankey,
-  t: Type_Translate
-): string | null => {
   if (reference.reason !== null) {
-    return t('Flux.normalization.notice', {
-      reason: t('Flux.normalization.reason_' + reference.reason),
-      rule: describeNormalizationRule(rule, sankey, t)
-    })
+    return t('Flux.normalization.reference_none', { reason: t('Flux.normalization.reason_' + reference.reason) })
   }
-  const filter = rule.filter
-  const chooses_tag = filter !== null && (filter.tag_ids.length > 1 || filter.else_all === true)
-  if (!chooses_tag && !reference.side_fell_back) return null
-  const used: Type_NormalizationRule = {
-    side: reference.side ?? 'outputs',
-    filter: (filter === null || reference.tag_id === null)
-      ? null
-      : { ...filter, tag_ids: [reference.tag_id], else_all: false }
-  }
-  const missing = [
-    ...(reference.side_fell_back ? [t('Flux.normalization.missing_outputs')] : []),
-    ...(filter !== null && reference.all_fallback ? tagNamesOf(filter, reference.skipped_tag_ids, sankey) : [])
-  ]
-  const rule_text = describeNormalizationRule(used, sankey, t)
-  return missing.length === 0
-    ? t('Flux.normalization.notice_reference', { rule: rule_text })
-    : t('Flux.normalization.notice_fallback', { rule: rule_text, skipped: missing.join(', ') })
+  const flows = reference.links.map(l => nameOf(l.target === center ? l.source : l.target))
+  return t('Flux.normalization.reference_note', { flows: flows.join(' + ') })
 }
 
 // --- Persistance -----------------------------------------------------------------------------
