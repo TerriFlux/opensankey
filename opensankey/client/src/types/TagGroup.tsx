@@ -1871,7 +1871,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * bandes (Julien, 07/10 : « on ne devait pas avoir la légende des trois groupes ? »).
    */
   public get draws_members_as_nodes(): boolean {
-    return this.drawing === 'nodes' && this._in_member_bands_context && this.selected_tags_list.length > 1
+    return this.drawing === 'nodes' && this.selected_tags_list.length > 1
   }
 
   /**
@@ -2095,7 +2095,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // SAUF sous un diagramme par membre (Julien, 07/10 : « on ne devait pas avoir la légende des
     // trois groupes ? ») : les noms ne s'écrivent qu'une fois et les flux se peignent par l'une des
     // dimensions — la légende sert à choisir laquelle, et à cocher ou masquer les membres.
-    return this.drawing === 'nodes' && !this._in_member_bands_context
+    // Et, depuis le 08/10, dès que plusieurs de ses membres sont dessinés (« les nœuds découpés ont
+    // disparu de la légende ») : la légende sert à cocher, masquer, survoler et peindre. Seul un
+    // membre unique, déjà nommé par son nœud, reste hors de la légende.
+    return this.drawing === 'nodes' && this.selected_tags_list.length < 2
   }
 
   private get _in_member_bands_context(): boolean {
