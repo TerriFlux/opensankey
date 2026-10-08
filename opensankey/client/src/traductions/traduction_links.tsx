@@ -146,6 +146,7 @@ export const resources_flux = {
           kind_other: 'Other nodes',
           side_outputs: 'Outputs',
           side_inputs: 'Inputs',
+          side_outputs_else_inputs: 'Outputs, otherwise inputs',
           filter_all: 'All flows',
           filter_counterpart: 'Tag of the node opposite',
           filter_link: 'Tag of the flow',
@@ -164,7 +165,9 @@ export const resources_flux = {
           reason_zero_reference: 'the reference sum is zero',
           rule_sum: 'Sum of the flows kept by the rule',
           notice: 'Normalised value empty: {{reason}} ({{rule}}).',
-          notice_fallback: 'Normalised value relative to: {{rule}}, for lack of {{skipped}}.'
+          notice_fallback: 'Normalised value relative to: {{rule}}, for lack of {{skipped}}.',
+          notice_reference: 'Normalised value relative to: {{rule}}.',
+          missing_outputs: 'outputs'
         },
         labels: {
           value: 'Value',
@@ -411,6 +414,7 @@ export const resources_flux = {
           kind_other: 'Autres nœuds',
           side_outputs: 'Sorties',
           side_inputs: 'Entrées',
+          side_outputs_else_inputs: 'Sorties, sinon entrées',
           filter_all: 'Tous les flux',
           filter_counterpart: 'Étiquette du nœud d\'en face',
           filter_link: 'Étiquette du flux',
@@ -429,7 +433,9 @@ export const resources_flux = {
           reason_zero_reference: 'la somme de référence est nulle',
           rule_sum: 'Somme des flux retenus par la règle',
           notice: 'Valeur normalisée vide : {{reason}} ({{rule}}).',
-          notice_fallback: 'Valeur normalisée rapportée à : {{rule}}, faute de {{skipped}}.'
+          notice_fallback: 'Valeur normalisée rapportée à : {{rule}}, faute de {{skipped}}.',
+          notice_reference: 'Valeur normalisée rapportée à : {{rule}}.',
+          missing_outputs: 'sortie'
         },
         labels: {
           source: 'Noeud source',
@@ -675,6 +681,7 @@ export const resources_flux = {
           kind_other: 'Otros nodos',
           side_outputs: 'Salidas',
           side_inputs: 'Entradas',
+          side_outputs_else_inputs: 'Salidas, si no entradas',
           filter_all: 'Todos los flujos',
           filter_counterpart: 'Etiqueta del nodo opuesto',
           filter_link: 'Etiqueta del flujo',
@@ -693,7 +700,9 @@ export const resources_flux = {
           reason_zero_reference: 'la suma de referencia es nula',
           rule_sum: 'Suma de los flujos que retiene la regla',
           notice: 'Valor normalizado vacío: {{reason}} ({{rule}}).',
-          notice_fallback: 'Valor normalizado referido a: {{rule}}, a falta de {{skipped}}.'
+          notice_fallback: 'Valor normalizado referido a: {{rule}}, a falta de {{skipped}}.',
+          notice_reference: 'Valor normalizado referido a: {{rule}}.',
+          missing_outputs: 'salidas'
         },
         labels: {
           value: 'Valor',
@@ -939,6 +948,7 @@ export const resources_flux = {
           kind_other: 'Andere Knoten',
           side_outputs: 'Ausgänge',
           side_inputs: 'Eingänge',
+          side_outputs_else_inputs: 'Ausgänge, sonst Eingänge',
           filter_all: 'Alle Flüsse',
           filter_counterpart: 'Tag des gegenüberliegenden Knotens',
           filter_link: 'Tag des Flusses',
@@ -957,7 +967,9 @@ export const resources_flux = {
           reason_zero_reference: 'die Referenzsumme ist null',
           rule_sum: 'Summe der von der Regel behaltenen Flüsse',
           notice: 'Normierter Wert leer: {{reason}} ({{rule}}).',
-          notice_fallback: 'Normierter Wert bezogen auf: {{rule}}, mangels {{skipped}}.'
+          notice_fallback: 'Normierter Wert bezogen auf: {{rule}}, mangels {{skipped}}.',
+          notice_reference: 'Normierter Wert bezogen auf: {{rule}}.',
+          missing_outputs: 'Ausgängen'
         },
         labels: {
           value: 'Wert',
@@ -1203,6 +1215,7 @@ export const resources_flux = {
           kind_other: 'Altri nodi',
           side_outputs: 'Uscite',
           side_inputs: 'Entrate',
+          side_outputs_else_inputs: 'Uscite, altrimenti entrate',
           filter_all: 'Tutti i flussi',
           filter_counterpart: 'Etichetta del nodo opposto',
           filter_link: 'Etichetta del flusso',
@@ -1221,7 +1234,9 @@ export const resources_flux = {
           reason_zero_reference: 'la somma di riferimento è nulla',
           rule_sum: 'Somma dei flussi trattenuti dalla regola',
           notice: 'Valore normalizzato vuoto: {{reason}} ({{rule}}).',
-          notice_fallback: 'Valore normalizzato riferito a: {{rule}}, in mancanza di {{skipped}}.'
+          notice_fallback: 'Valore normalizzato riferito a: {{rule}}, in mancanza di {{skipped}}.',
+          notice_reference: 'Valore normalizzato riferito a: {{rule}}.',
+          missing_outputs: 'uscite'
         },
         labels: {
           value: 'Valore',
@@ -1467,6 +1482,7 @@ export const resources_flux = {
           kind_other: '其他节点',
           side_outputs: '输出',
           side_inputs: '输入',
+          side_outputs_else_inputs: '输出，否则输入',
           filter_all: '所有流量',
           filter_counterpart: '对端节点的标签',
           filter_link: '流量的标签',
@@ -1485,7 +1501,9 @@ export const resources_flux = {
           reason_zero_reference: '参考总和为零',
           rule_sum: '规则保留的流量之和',
           notice: '归一化数值为空：{{reason}}（{{rule}}）。',
-          notice_fallback: '归一化数值的参考：{{rule}}（因缺少{{skipped}}）。'
+          notice_fallback: '归一化数值的参考：{{rule}}（因缺少{{skipped}}）。',
+          notice_reference: '归一化数值的参考：{{rule}}。',
+          missing_outputs: '输出'
         },
         labels: {
           value: '数值',
@@ -1731,6 +1749,7 @@ export const resources_flux = {
           kind_other: 'その他のノード',
           side_outputs: '出力',
           side_inputs: '入力',
+          side_outputs_else_inputs: '出力、なければ入力',
           filter_all: 'すべてのフロー',
           filter_counterpart: '相手側ノードのタグ',
           filter_link: 'フローのタグ',
@@ -1749,7 +1768,9 @@ export const resources_flux = {
           reason_zero_reference: '基準の合計がゼロ',
           rule_sum: '規則が残すフローの合計',
           notice: '正規化値が空です：{{reason}}（{{rule}}）。',
-          notice_fallback: '正規化値の基準：{{rule}}（{{skipped}}がないため）。'
+          notice_fallback: '正規化値の基準：{{rule}}（{{skipped}}がないため）。',
+          notice_reference: '正規化値の基準：{{rule}}。',
+          missing_outputs: '出力'
         },
         labels: {
           value: '値',
