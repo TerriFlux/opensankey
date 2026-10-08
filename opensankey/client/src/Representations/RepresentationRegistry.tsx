@@ -710,14 +710,23 @@ export class Class_RepresentationRegistry {
    * se peuple le sélecteur du contrôleur. Un `isAvailable` qui lève est traité
    * comme un refus — une représentation cassée disparaît, elle n'emporte pas le
    * sélecteur avec elle.
+   *
+   * sa#631 — `placed` : la question porte sur un volet DÉJÀ POSÉ dans la grande zone, et non sur
+   * ce qu'on peut ouvrir. Les réglages de publication (`isOfferedToReader`) ne gouvernent que ce
+   * que le lecteur OUVRE lui-même ; un volet que l'auteur a enregistré dans le fichier se montre
+   * quelle que soit sa nature. Sans ce passe, une page dont l'auteur avait posé un volet Unit.
+   * sans cocher `unitary` affichait « Aucune représentation pour cet élément » dans chaque case.
+   * Le reste du filtre (licence, exigences du diagramme, disponibilité pour l'objet) tient.
    */
-  public list(ctx: Type_RepresentationContext): Type_RepresentationEntry[] {
+  public list(
+    ctx: Type_RepresentationContext, { placed = false }: { placed?: boolean } = {}
+  ): Type_RepresentationEntry[] {
     const caps = diagramCapabilities(ctx.app_data)
     return [...this._entries.values()]
       .filter(e => e.scale === ctx.scale)
       .filter(e => (e.gate ? e.gate(ctx.app_data) : true))
       .filter(e => meetsNeeds(e.needs, caps))
-      .filter(e => isOfferedToReader(e, ctx.app_data))
+      .filter(e => placed || isOfferedToReader(e, ctx.app_data))
       .filter(e => {
         if (!e.isAvailable) return true
         try { return e.isAvailable(ctx) } catch { return false }

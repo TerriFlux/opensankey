@@ -350,6 +350,9 @@ describe('os#1511 modele commun — le diagramme', () => {
     // os#1511, 07/10 — hiérarchisée, « un membre » se relit en choix multiple : seule une séquence
     // en lit encore un à la fois.
     ;(s.filiere as unknown as { banner: string }).banner = 'sequence'
+    // 08/10 (472b3aa0f) — une dimension hiérarchisée n'est plus FORCÉE en choix multiple : Pays garde
+    // sa bannière par défaut (un membre à la fois). Le cas testé est celui d'un Pays en choix multiple.
+    s.pays.banner = 'multi'
     const st = fromDiagram(s.sankey)
     expect(st.dims.filiere.role).toBe('none')
     const bands = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'sankey', 'bands'), focus: [] } } }

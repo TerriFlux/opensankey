@@ -389,8 +389,12 @@ export class Class_ViewportChrome {
       const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
       const thumbX = arrow + scrollFraction * (trackW - thumbW)
       const barY = navH + fm + overlay.top + viewH + overlay.bottom + (gutter - sb) / 2
+      // sa#632 — `inherit`, jamais `visible` : sur un enfant, `visible` l'emporte sur le
+      // `visibility: hidden` que le SVG reçoit quand le diagramme est fermé ou couvert par un
+      // volet en plein écran (`_applyCanvasFrameStyle`). Les barres restaient alors seules à
+      // l'écran — un trait vertical sur le bord droit d'une page publiée.
       this._d3_scrollbar_h
-        .attr('visibility', 'visible')
+        .attr('visibility', 'inherit')
         .attr('transform', `translate(${fm}, ${barY})`)
       this._d3_scrollbar_h.select('.scrollbar-track')
         .attr('x', arrow).attr('y', 0).attr('width', trackW).attr('height', sb)
@@ -412,7 +416,7 @@ export class Class_ViewportChrome {
       const thumbY = arrow + scrollFraction * (trackH - thumbH)
       const barX = fm + viewW + (gutter - sb) / 2
       this._d3_scrollbar_v
-        .attr('visibility', 'visible')
+        .attr('visibility', 'inherit')
         .attr('transform', `translate(${barX}, ${fitTop + fm})`)
       this._d3_scrollbar_v.select('.scrollbar-track')
         .attr('x', 0).attr('y', arrow).attr('width', sb).attr('height', trackH)
@@ -498,8 +502,9 @@ export class Class_ViewportChrome {
       this._d3_viewport_border.attr('visibility', 'hidden')
       return
     }
+    // sa#632 — `inherit` : le cadre se cache avec le SVG (cf. updateScrollbars).
     this._d3_viewport_border
-      .attr('visibility', 'visible')
+      .attr('visibility', 'inherit')
       .attr('x', r.x)
       .attr('y', r.y)
       .attr('width', Math.max(0, r.w))

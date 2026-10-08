@@ -187,6 +187,25 @@ describe('os#1361 offre au lecteur', () => {
     expect(isOfferedToReader(e, off)).toBe(false)
     expect(isOfferedToReader(e, on)).toBe(true)
   })
+
+  // sa#631 — un volet Unit. enregistre par l auteur, sur une page publiee sans `unitary` :
+  // chaque case disait « Aucune representation pour cet element ».
+  it('sa#631 - un volet pose se montre meme quand la page ne l offre pas au lecteur', () => {
+    const registry = new Class_RepresentationRegistry()
+    registry.register(entry({ id: 'unit', scale: 'element', publish_option: 'unitary' }))
+    const a = app({ is_static: true, publish_options: { representations: null } })
+    const ctx = elementContext(a, element)
+    expect(registry.list(ctx).map(x => x.id)).toEqual([])
+    expect(registry.list(ctx, { placed: true }).map(x => x.id)).toEqual(['unit'])
+  })
+
+  it('sa#631 - un volet pose reste soumis a la licence et a l objet', () => {
+    const registry = new Class_RepresentationRegistry()
+    registry.register(entry({ id: 'sans_licence', scale: 'element', gate: () => false }))
+    registry.register(entry({ id: 'pas_pour_lui', scale: 'element', isAvailable: () => false }))
+    const a = app({ is_static: true, publish_options: { representations: null } })
+    expect(registry.list(elementContext(a, element), { placed: true })).toEqual([])
+  })
 })
 
 describe('os#1361 diagramCapabilities', () => {
