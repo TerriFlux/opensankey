@@ -28,6 +28,7 @@ import type { Class_NodeElement } from '../../Elements/Node'
 import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
+import { nodeTransformsDimension } from '../../Algorithms/DimensionTransform'
 
 export type { Type_DimensionDrawing } from '../../types/TagGroup'
 
@@ -336,7 +337,10 @@ export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Clas
 export const applyDimensionCarriers = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_ids: string[]
 ) => {
-  commit(app_data, tagg, { ...snapshot(app_data, tagg), carriers: node_ids, bands: false })
+  // Un nœud qui TRANSFORME la dimension ne se coche pas (cf. `carrierRefusal`) ; décocher, toujours.
+  const now = snapshot(app_data, tagg)
+  const carriers = node_ids.filter(id => now.carriers.includes(id) || carrierRefusal(app_data, tagg, id) === undefined)
+  commit(app_data, tagg, { ...now, carriers, bands: false })
 }
 
 /**
@@ -495,9 +499,23 @@ export const toggleDimensionCarrier = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string
 ) => {
   const now = snapshot(app_data, tagg)
+  if (!now.carriers.includes(node_id) && carrierRefusal(app_data, tagg, node_id) !== undefined) return
   const carriers = now.carriers.includes(node_id)
     ? now.carriers.filter(id => id !== node_id)
     : [...now.carriers, node_id]
   // Cocher un nœud dans « En nœuds » quitte le diagramme par membre (cf. `applyDimensionCarriers`).
   commit(app_data, tagg, { ...now, carriers, bands: false })
+}
+
+/**
+ * os#1511 — POURQUOI CE NŒUD NE PEUT PAS PORTER la dimension, ou `undefined` s'il le peut : un nœud
+ * qui la TRANSFORME (aucun membre commun entre ses entrées et ses sorties, cf.
+ * `nodeTransformsDimension`) se découperait en morceaux sans lien. La raison sert de libellé.
+ */
+export const carrierRefusal = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string
+): 'transforms' | undefined => {
+  const node = app_data.drawing_area.sankey.nodes_dict[node_id] as Class_NodeElement | undefined
+  if (node === undefined) return undefined
+  return nodeTransformsDimension(node, tagg) ? 'transforms' : undefined
 }
