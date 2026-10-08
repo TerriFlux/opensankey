@@ -56,6 +56,12 @@ describe('os#1511 — le rappel des dataTags ne double pas le bloc de couleurs',
   test('un groupe SANS couleurs garde son rappel : c est le seul endroit qui le nomme', () => {
     const m = monter()
     m.pays.use_colors = false
+    // Depuis « un seul dessin » (bf78a4196, 02/10), une dimension a niveaux est toujours a choix
+    // multiple et, avec deux membres retenus, se dessine en BANDES, chacun a sa couleur : elle porte
+    // donc des couleurs meme sans `use_colors`. Le groupe vraiment SANS couleurs est celui qui se lit
+    // sur UN membre — « Annee : 2015 ».
+    m.pays.tags_list.forEach(t => t.setUnSelected())
+    ;(m.pays.tags_dict['europe'] as Class_DataTag).setSelected()
     const items = computeLegendItems(
       m.sankey as never, RAPPEL_ALLUME, {} as never)
     const rappels = items.filter(i => typeof i.text === 'string' && i.text.startsWith('Pays : '))

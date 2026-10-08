@@ -109,7 +109,10 @@ describe('les quatre modes au trace', () => {
     const el = draw('show')
 
     expect(dehors(el)).toHaveLength(0)
-    expect(dedans(el).filter(t => (t.textContent ?? '').includes('nom long')).length).toBe(8)
+    // Depuis le rayon a marge fixe (05/10), le secteur est plus etroit et le nom passe sur deux
+    // lignes (`tspan`) : on relit les lignes separees d un blanc, comme a l ecran.
+    const ecrit = (t: Element) => [...t.querySelectorAll('tspan')].map(s => s.textContent ?? '').join(' ')
+    expect(dedans(el).filter(t => ecrit(t).includes('nom long')).length).toBe(8)
   })
 
   test('Detacher sort ce qui ne tient pas', () => {

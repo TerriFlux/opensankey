@@ -15,7 +15,8 @@
 
 import { buildParts } from './buildParts'
 import type { Type_FigureParts } from './buildParts'
-import { partStyleOf } from './partStyle'
+import { partNatureStyleOf, partStyleOf } from './partStyle'
+import type { Class_ElementStyle } from '../../Elements/Element'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BarPartStyle, DonutPartStyle, elementStyleConfigs, FigurePartStyle, SunburstPartStyle } from '../../Elements/ElementStyle'
 import { SUNBURST_STYLE_DEFAULTS, sunburstPartStyle } from '../../Charts/SunburstChart'
@@ -106,7 +107,9 @@ describe('os#1449 regler le style, ou regler une part', () => {
   it('regler le style change TOUTES les parts', () => {
     // La seconde moitie de la demande : « pour editer globalement on le fait par les styles ».
     const figure = twoParts()
-    const part_style = partStyleOf(figure.document.drawing_area.sankey)
+    // 04/10/2026 (eaf06fcd2) — la police d un secteur vit sur l etage de la NATURE (13 px au disque),
+    // qui masque le generique : regler la police de toutes les parts, c est regler ce style-la.
+    const part_style = partNatureStyleOf(figure.document.drawing_area.sankey, 'sunburst') as Class_ElementStyle
 
     part_style.name_label_font_size = 22
 
@@ -116,7 +119,7 @@ describe('os#1449 regler le style, ou regler une part', () => {
 
   it('regler UNE part ne change pas les autres', () => {
     const figure = twoParts()
-    const part_style = partStyleOf(figure.document.drawing_area.sankey)
+    const part_style = partNatureStyleOf(figure.document.drawing_area.sankey, 'sunburst') as Class_ElementStyle
     part_style.name_label_font_size = 22
 
     figure.by_id['n_ble'].name_label_font_size = 30
