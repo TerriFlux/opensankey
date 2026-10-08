@@ -1081,7 +1081,7 @@ export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number)
 // Largeur (px) de la colonne d'outils (barre verticale : configuration, filtres, outils du curseur,
 // cadrage, zoom). sa#621 — elle vit sur le bord droit du VOLET ACTIF, par-dessus son contenu, et ne
 // réserve donc plus rien à droite de la page (cf. getToolsColumnWidthPx).
-export const TOOLS_COLUMN_WIDTH_PX = 30
+export const TOOLS_COLUMN_WIDTH_PX = 36
 // Dimensions du panneau de configuration (drawer/inspecteur). Source de vérité
 // ici (et non dans SankeyMenus) : getConfigPanelPinnedReservedPx en a besoin
 // pour la réserve de largeur du mode épinglé (#1243).

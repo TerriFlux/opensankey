@@ -370,8 +370,14 @@ export class Class_ViewportChrome {
     // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
     // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
     // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
+    // sa#621 — la zone de CADRAGE commence sous l'en-tête du volet quand il passe par-dessus le
+    // dessin (`fit_top_offset`) : le dessin borné s'y centre, comme le dessin cadré.
+    const fitTop = da.fit_top_offset
+    // sa#621 — … mais les barres se logent au bord de la case ENTIÈRE (sous l'en-tête, la marge
+    // basse comprise) : à droite et sous la barre d'outils du volet, jamais au milieu du dessin.
+    const overlay = da.overlay_reserves
     da.zoomListener
-      .extent([[fm, navH + fm], [viewW - fm, navH + viewH - fm]])
+      .extent([[fm, fitTop + fm], [viewW - fm, fitTop + viewH - fm]])
       .translateExtent([[panX0, panY0], [panX1, panY1]])
 
     // Barre horizontale : logée dans la gouttière SOUS le cadre, sur la largeur de la zone.
@@ -382,7 +388,7 @@ export class Class_ViewportChrome {
       const thumbW = Math.max(0, Math.min(trackW, Math.max(30, (viewW / screenW) * trackW)))
       const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
       const thumbX = arrow + scrollFraction * (trackW - thumbW)
-      const barY = navH + fm + viewH + (gutter - sb) / 2
+      const barY = navH + fm + overlay.top + viewH + overlay.bottom + (gutter - sb) / 2
       this._d3_scrollbar_h
         .attr('visibility', 'visible')
         .attr('transform', `translate(${fm}, ${barY})`)
@@ -407,7 +413,7 @@ export class Class_ViewportChrome {
       const barX = fm + viewW + (gutter - sb) / 2
       this._d3_scrollbar_v
         .attr('visibility', 'visible')
-        .attr('transform', `translate(${barX}, ${navH + fm})`)
+        .attr('transform', `translate(${barX}, ${fitTop + fm})`)
       this._d3_scrollbar_v.select('.scrollbar-track')
         .attr('x', 0).attr('y', arrow).attr('width', sb).attr('height', trackH)
       this._d3_scrollbar_v.select('.scrollbar-thumb')

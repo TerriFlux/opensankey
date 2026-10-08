@@ -4806,6 +4806,7 @@ export class Class_DrawingArea {
   }
 
   /** sa#621 — Les deux réserves de l'en-tête posé par-dessus le dessin (cf. `overlay_reserve_top`). */
+  public get overlay_reserves(): { top: number, bottom: number } { return this._overlayReserves() }
   protected _overlayReserves(): { top: number, bottom: number } {
     const frame = this.canvas_frame
     if (frame && frame !== 'hidden') return { top: frame.reserve_top ?? 0, bottom: frame.reserve_bottom ?? 0 }
