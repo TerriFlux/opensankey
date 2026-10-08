@@ -10,7 +10,7 @@
 // barres, son etage de style est seme, le champ d angle lui est rendu. Tout cela est vrai — et
 // invisible, parce que personne ne redemandait a l inspecteur de le lire.
 //
-// La chaine du geste : `setMainZoneWindowRepresentation` n emet que `MAIN_ZONE_TOPIC`. L inspecteur
+// La chaine du geste : le changement de nature (retire depuis par sa#618) n emet que `MAIN_ZONE_TOPIC`. L inspecteur
 // s y re-rend AUSSITOT, donc AVANT que l effet de la vignette n ait redessine la figure. A ce
 // rendu-la, la representation active est deja la neuve mais les parts portent encore l ancienne
 // nature : il montre fidelement la couronne.

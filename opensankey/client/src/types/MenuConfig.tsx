@@ -625,6 +625,13 @@ export type Type_MainZoneOccupant = {
    * choix, comme `value_mode`. Absent = tout est montré.
    */
   hide_neutral?: boolean
+  /**
+   * sa#618 — LE NOM QUE L'AUTEUR A DONNÉ À CE VOLET, quand il n'est pas une vue (une vue porte le
+   * sien, `views_dict[saved_view].name`). Absent : le volet se nomme comme l'enregistrement le
+   * nommerait (« <type> <légende> », cf. `mainZonePaneName`). Posé par le renommage et par
+   * « Dupliquer » ; retiré quand le volet devient une vue. La clé ne s'écrit que si elle est posée.
+   */
+  name?: string
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -681,8 +688,8 @@ export const mainZoneSubjectView = (s: Type_MainZoneSubject): string =>
  * Le cas SANS feuille, lui, ne bouge pas d'un iota, et c'est délibéré : c'est l'invariant que
  * lisent la barre du haut, le paramètre d'URL `rep` et les accesseurs de compatibilité
  * (`main_zone_show_spreadsheet`…), qui désignent tous une fenêtre par son identifiant de
- * registre. La règle se relit à quatre endroits (ouverture, normalisation, changement de nature,
- * état d'URL) et ils DOIVENT s'accorder : si l'un d'eux croyait qu'une fenêtre de feuille est
+ * registre. La règle se relit à trois endroits (ouverture, normalisation, état d'URL — le
+ * changement de nature, quatrième, a été retiré par sa#618) et ils DOIVENT s'accorder : si l'un d'eux croyait qu'une fenêtre de feuille est
  * nommée par sa représentation, il l'écraserait avec le canevas de la feuille courante.
  *
  * os#1498 — CE PRÉDICAT NE VOIT QUE LE SUJET, et ne suffit donc plus à lui seul : une fenêtre de
@@ -731,7 +738,7 @@ const MAIN_ZONE_NONE_ACTIVE = 'os.main_zone.none_active'
  *
  * D'où ce second prédicat, qui lit aussi l'IDENTIFIANT. Il ne dit jamais « non » là où celui du
  * sujet dit « oui » : c'est un sur-ensemble, et aucune fenêtre d'aujourd'hui ne change de camp.
- * Partout où un occupant est sous la main — normalisation, changement de nature, état d'URL —,
+ * Partout où un occupant est sous la main — normalisation, état d'URL —,
  * c'est lui qu'on interroge ; le prédicat de sujet reste pour les décisions qui se prennent AVANT
  * qu'une fenêtre existe (l'ouverture, où il n'y a encore qu'un sujet et une nature).
  */
@@ -2131,8 +2138,91 @@ export class Class_MenuConfig {
     if (view_id) {
       this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
       o.saved_view = view_id
+      // sa#618 — la vue porte désormais le nom du volet.
+      delete o.name
     } else delete o.saved_view
     this._notifyMainZone()
+  }
+
+  /**
+   * sa#618 — Donne un nom au volet `id`, ou lui retire le sien (`undefined`, chaîne vide) : il se
+   * nomme alors comme l'enregistrement le nommerait. Sans effet sur un volet enregistré, que sa vue
+   * nomme (cf. `Class_ApplicationData.renameView`). L'unicité est à la charge de l'appelant.
+   */
+  public setMainZoneOccupantName(id: string, name: string | undefined): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o || o.saved_view) return
+    const clean = name?.trim() ?? ''
+    if ((o.name ?? '') === clean) return
+    if (clean === '') delete o.name
+    else o.name = clean
+    this._notifyMainZone()
+  }
+
+  /**
+   * sa#618 — DUPLIQUE LE VOLET `id` : un volet neuf, du même type, sur le même sujet, avec les mêmes
+   * réglages — ses figures (recopiées, et non partagées : régler la copie ne règle pas l'original),
+   * ses coordonnées de données, son bandeau de lecteur, son type de valeur, ses vignettes masquées,
+   * ce qu'un volet Sankey montre pour lui seul, et les réglages qu'il partage avec d'autres volets,
+   * qu'il partage alors aussi. Il est posé À CÔTÉ de l'original : à sa droite dans la grille, ou
+   * décalé d'un cran s'il flotte. Il devient le volet actif.
+   *
+   * La copie n'est pas une vue, même quand l'original en est une : une vue n'a qu'un volet. Elle
+   * porte le nom `name`, que l'appelant choisit libre (« … 2 »).
+   *
+   * Un volet Sankey n'a rien de plus à recopier ici : l'original est le volet actif quand on le
+   * duplique, donc le dessin vivant, et c'est de lui que naît un volet Sankey sans rendu.
+   *
+   * Rend l'identifiant de la copie, ou `null` si `id` n'est pas ouvert.
+   */
+  public duplicateMainZoneWindow(id: string, name: string): string | null {
+    const host = this._host
+    const o = host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return null
+    // La forme écrite du volet, relue : c'est la copie profonde que l'écriture garantit déjà.
+    const e = this._parseMainZoneOccupantEntry('', this._mainZoneOccupantToJSON(o))
+    let copy_id = ''
+    do {
+      host._main_zone_window_seq += 1
+      copy_id = `w_${host._main_zone_window_seq}`
+    } while (this.isMainZoneOccupant(copy_id))
+    const floating = o.place === 'floating'
+    this._pushMainZoneOccupant({ id: copy_id, subject: e.subject, representation: e.representation }, floating ? 'floating' : 'right')
+    const c = host._main_zone_occupants.find(x => x.id === copy_id)!
+    if (e.sync) c.sync = e.sync
+    if (e.data_tags) c.data_tags = e.data_tags
+    if (e.reader) c.reader = e.reader
+    if (e.value_mode) c.value_mode = e.value_mode
+    if (e.hide_neutral) c.hide_neutral = true
+    if (e.reading) c.reading = e.reading
+    if (e.panes) c.panes = e.panes
+    const clean = name.trim()
+    if (clean !== '') c.name = clean
+    if (floating) {
+      const g = o.geometry ?? defaultMainZoneFloatingGeometry()
+      c.geometry = clampMainZoneFloatingGeometry({ ...g, x: g.x + 24, y: g.y + 24 })
+    } else if (gridHas(host._main_zone_grid, o.id) && !host._main_zone_detached.has(o.id)) {
+      // La copie prend la moitié de la case de l'original, à sa droite (cf. `gridSplitPane`).
+      host._main_zone_grid = gridSplitPane(host._main_zone_grid, o.id, copy_id, 'right')
+      this._relabelMainZoneGrid()
+    }
+    this._normalizeMainZoneOccupants()
+    // Les figures, recopiées réglage par réglage : une figure promue (posée sur un nœud) reste celle
+    // de l'original, la copie en reçoit une à elle.
+    Object.entries(this._figures[o.id] ?? {}).forEach(([key, fig]) => {
+      const json = fig.toJSON()
+      if (json !== undefined) {
+        this.figureOf(copy_id, key).fromJSON(
+          JSON.parse(JSON.stringify(json)), this._figure_report, `main_zone[${copy_id}].figures[${key}]`
+        )
+      }
+    })
+    if (floating) this.enforceMainZoneFloatingCap(copy_id)
+    host._main_zone_active_id = copy_id
+    host._main_zone_active_pane_key = null
+    host._main_zone_selected_pane_keys = []
+    this._notifyMainZone()
+    return copy_id
   }
 
   /**
@@ -2222,6 +2312,8 @@ export class Class_MenuConfig {
     else delete o.panes
     this._host._main_zone_occupants.forEach(x => { if (x !== o && x.saved_view === view_id) delete x.saved_view })
     o.saved_view = view_id
+    // sa#618 — c'est la vue qui le nomme.
+    delete o.name
     // sa#581 — un volet Sankey montre SA vue : c'est sa coordonnée, et non plus « la vue courante ».
     if (isSankeyPane(o)) o.subject = { kind: 'diagram', view: view_id }
     this._host._main_zone_detached.delete(id)
@@ -2242,78 +2334,6 @@ export class Class_MenuConfig {
     return id
   }
 
-  /**
-   * Change la NATURE d'une fenêtre sur le même sujet — le geste « type de graphique » d'Excel.
-   * Fenêtre à id propre (sujet élément, ou diagramme d'une autre feuille) : on change la
-   * représentation, l'id ne bouge pas. Fenêtre diagramme de la feuille courante : l'id EST la
-   * représentation, donc la fenêtre est remplacée en place (même place, même poids) ; si la
-   * représentation visée est déjà ouverte ailleurs, celle-ci se referme simplement.
-   *
-   * Le remplacement en place ne vaut QUE pour ce dernier cas : appliqué à une fenêtre de
-   * feuille, il lui donnerait l'identifiant de la représentation — donc celui du canevas de la
-   * feuille courante — et les deux canevas fusionneraient en un seul (os#1385 lot 0).
-   *
-   * os#1418 — CHANGER DE NATURE JETTE LES FIGURES DE LA FENÊTRE, et c'est un changement
-   * OBSERVABLE : passer une fenêtre de l'étoile à la couronne puis revenir à l'étoile ne
-   * retrouve plus les réglages qu'on y avait faits. C'est délibéré — les réglages d'une nature
-   * n'ont pas de sens dans une autre (un flux de référence d'étoile dans un sunburst, un axe de
-   * décomposition dans le tableur) — et c'est aussi ce que faisait l'ancien mécanisme, qui
-   * gardait certes le sac `options` mais le donnait à lire à une entrée de registre qui n'y
-   * reconnaissait rien. La différence est qu'on le dit, et qu'on ne traîne plus les clés mortes.
-   */
-  public setMainZoneWindowRepresentation(id: string, representation: string): void {
-    const o = this._host._main_zone_occupants.find(x => x.id === id)
-    if (!o || o.representation === representation) return
-    // Dans la branche « remplacement en place » l'occupant change d'id : ses figures ne doivent
-    // pas rester indexées sous l'ancien — orphelines et persistées.
-    //
-    // 03/10/2026 — ELLES SUIVENT LA FENÊTRE, ELLES NE SONT PLUS JETÉES (Julien : « quand je passe en
-    // tableau croisé et reviens sur la couronne, je revois apparaître les boutons pour configurer
-    // chaque dimension »). Les jeter ici défaisait l'arbitrage du 18/09 (« changer de nature ne
-    // perd pas les réglages », cf. `figureOf`, qui re-nature la figure en gardant sa surcharge) :
-    // un aller-retour couronne → tableau croisé → couronne perdait « Liées au diagramme » (la
-    // couronne détachée revenait LIÉE, avec les menus de dimension de la couronne liée), sa coupe,
-    // son axe. Seule la fenêtre qui QUITTE la grande zone (branche du milieu) jette les siennes.
-    const carried = this._figures[id]
-    delete this._figures[id]
-    // os#1498 — LE JUGE EST L'OCCUPANT, PAS SON SUJET. Une fenêtre de nature `allow_many` a un
-    // sujet diagramme sans feuille mais un identifiant propre : la traiter par le remplacement en
-    // place la rebaptiserait du nom de sa nouvelle nature, et deux vues de groupe qui changent
-    // pour la même nature fusionneraient en une — exactement le piège d'os#1385 lot 0.
-    if (mainZoneOccupantUsesOwnWindowId(o)) {
-      o.representation = representation
-    } else if (this.isMainZoneOccupant(representation)) {
-      this._host._main_zone_occupants = this._host._main_zone_occupants.filter(x => x.id !== id)
-      this._host._main_zone_detached.delete(id)
-    } else {
-      o.id = representation
-      o.representation = representation
-      if (this._host._main_zone_active_id === id) this._host._main_zone_active_id = representation
-      // sa#589 — le volet change de nom, pas de case.
-      this._host._main_zone_grid = gridRename(this._host._main_zone_grid, id, representation)
-    }
-    this._normalizeMainZoneOccupants()
-    // 04/10/2026 — une nature choisie maintenant : ses figures sont neuves (cf. `fresh_own`).
-    this._host._fresh_figure_windows.add(o.id)
-    // La fenêtre est toujours là, sous son id courant, et cet id n'indexe rien d'autre : ses
-    // figures la suivent. Sinon (elle a quitté la zone, ou fusionné avec une voisine), elles
-    // s'en vont, sauf les promues.
-    if (carried && this._host._main_zone_occupants.includes(o) && this._figures[o.id] === undefined) {
-      this._figures[o.id] = carried
-    } else if (carried) {
-      Object.keys(carried).forEach(k => { if (this._isDroppableFigure(carried[k])) delete carried[k] })
-      if (Object.keys(carried).length > 0) {
-        const by_key = this._figures[id] ?? (this._figures[id] = {})
-        Object.assign(by_key, carried)
-      }
-    }
-    // os#1423 — la sélection est relue APRÈS la normalisation, et sur l'id COURANT de la fenêtre
-    // (la branche « remplacement en place » vient peut-être de le changer). Un sujet `elements`
-    // garde ses vignettes en changeant de nature — donc sa sélection ; un sujet à critère, dont
-    // les vignettes se redemandent au diagramme, la perd (cf. `_resyncMainZoneSelection`).
-    this._resyncMainZoneSelection(o.id)
-    this._notifyMainZone()
-  }
   /**
    * Épingle (node/link/elements/tag) ou remet à suivre (selection) une fenêtre à sujet élément.
    *
@@ -4214,8 +4234,8 @@ export class Class_MenuConfig {
     }
     // os#1418 — les figures des fenêtres qui viennent de disparaître s'en vont avec elles. Ici
     // et non dans chaque voie de fermeture : `hideMainZoneOccupant`, `setMainZoneOccupantIds`,
-    // le changement de nature en place et la déduplication mènent tous ici, et un seul ménage
-    // vaut mieux que quatre qu'il faudrait penser à ajouter au cinquième appelant.
+    // et la déduplication mènent tous ici, et un seul ménage vaut mieux que trois qu'il faudrait
+    // penser à ajouter au quatrième appelant.
     this._pruneOrphanFigures()
   }
 
@@ -4603,6 +4623,8 @@ export class Class_MenuConfig {
     }
     // 05/10/2026 — LES VIGNETTES MASQUÉES, seulement s'il y en a (cf. `Type_MainZoneOccupant.panes`).
     if (o.panes?.hidden && o.panes.hidden.length > 0) entry['panes'] = { hidden: [...o.panes.hidden] }
+    // sa#618 — le nom donné au volet, seulement s'il en a un.
+    if (o.name) entry['name'] = o.name
     // sa#566 — LE LIEN À LA VUE, écrit seulement quand il existe et seulement dans la grande zone :
     // un volet éphémère n'écrit pas la clé, d'où un fichier inchangé pour qui n'enregistre rien.
     if (order !== undefined && o.saved_view) entry['saved_view'] = o.saved_view
@@ -4741,6 +4763,8 @@ export class Class_MenuConfig {
     const reading = readPaneReading(e['reading'])
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
     const panes = readPanesState(e['panes'])
+    // sa#618 — le nom donné au volet ; absent = celui qu'il se donne.
+    const name = getStringFromJSON(e, 'name', '').trim()
     return {
       id,
       subject,
@@ -4759,6 +4783,7 @@ export class Class_MenuConfig {
       hide_neutral,
       reading,
       panes,
+      name: name !== '' ? name : undefined,
       maximized: getBooleanFromJSON(e, 'maximized', false)
     }
   }
@@ -4801,7 +4826,8 @@ export class Class_MenuConfig {
         if (figures || options) raw_figures.set(id, { figures, options })
       })
       host._main_zone_occupants = entries.map(({
-        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, hide_neutral, reading
+        id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, hide_neutral,
+        reading, name
       }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
@@ -4813,6 +4839,8 @@ export class Class_MenuConfig {
         if (hide_neutral) o.hide_neutral = true
         if (reading && isSankeyPane(o)) o.reading = reading
         if (panes) o.panes = panes
+        // sa#618 — un volet enregistré porte le nom de sa vue, pas le sien.
+        if (name && !saved_view) o.name = name
         return o
       })
       // sa#566 — les notes de volets fermés parlaient de l'état qu'on quitte.

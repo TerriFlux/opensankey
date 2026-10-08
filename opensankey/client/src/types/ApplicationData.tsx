@@ -2201,13 +2201,32 @@ export class Class_ApplicationData {
   public saveWindowAsView(occupant_id: string, name: string): string | null { return null }
 
   /**
+   * sa#618 — CE NOM EST-IL DÉJÀ CELUI D'UNE AUTRE VUE OU D'UN AUTRE VOLET ? Une page publiée désigne
+   * une vue par son nom (la première trouvée) : deux homonymes, et l'une ne se désigne plus. Comptent
+   * les vues du document, le diagramme de départ quand il est listé parmi elles, et les noms donnés
+   * aux volets qui ne sont pas des vues. `except` : la vue ou le volet qu'on renomme, et la vue que ce
+   * volet est. Les doublons d'un fichier d'avant ne sont pas défaits, seulement plus créés.
+   */
+  public isPaneNameTaken(name: string, except: { view?: string, occupant?: string } = {}): boolean {
+    const clean = name.trim()
+    const mc = this.menu_configuration
+    const occupants = mc?.main_zone_occupants ?? []
+    const own_view = except.view ?? occupants.find(o => o.id === except.occupant)?.saved_view
+    if (Object.entries(this._views).some(([id, v]) => id !== own_view && v.name === clean)) return true
+    if (own_view !== default_main_sankey_id && this.show_master_in_views && this.master_view_display_name === clean) return true
+    return occupants.some(o => o.id !== except.occupant && o.name === clean)
+  }
+
+  /**
    * Renomme une vue — le double-clic sur son nom, dans le bandeau de son volet. Un nom vide est
-   * refusé : une vue sans nom ne se retrouverait plus dans le sélecteur. Rend `true` si c'est fait.
+   * refusé : une vue sans nom ne se retrouverait plus dans le sélecteur. sa#618 — un nom déjà pris
+   * aussi (cf. `isPaneNameTaken`). Rend `true` si c'est fait.
    */
   public renameView(id: string, name: string): boolean {
     const view = this._views[id]
     const clean = name.trim()
     if (!view || clean === '') return false
+    if (view.name !== clean && this.isPaneNameTaken(clean, { view: id })) return false
     if (view.name !== clean) {
       view.name = clean
       this.menu_configuration?.notifyMainZone()
