@@ -517,7 +517,11 @@ export class Class_DrawingArea {
       svg.style('position', null).style('left', null).style('top', null)
         .style('width', null).style('height', null).style('z-index', null).style('clip-path', null)
         .attr('width', '100%').attr('height', this._svgDefaultHeight())
-      if (f === 'hidden') svg.style('visibility', 'hidden')
+      // sa#632 — Masqué, il sort aussi du flux de la page (`fixed`, coin haut gauche) : il garde
+      // la hauteur de la fenêtre AU MOMENT où il a été posé, et ne la suit plus une fois caché ;
+      // resté dans le flux, il allongeait la page dès que la fenêtre rapetissait, et le
+      // navigateur ajoutait sa propre barre de défilement sur le bord droit.
+      if (f === 'hidden') svg.style('visibility', 'hidden').style('position', 'fixed').style('left', '0px').style('top', '0px')
       else svg.style('visibility', null)
       return
     }
