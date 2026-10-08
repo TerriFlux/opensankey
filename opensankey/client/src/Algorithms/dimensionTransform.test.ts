@@ -30,6 +30,10 @@ function monter() {
   }
   poser(mp_node, transfo, mp, 100)
   poser(transfo, mt, pt, 80)
+  // Une part de matiere premiere ressort vers l equilibrage : un membre commun, et pourtant le
+  // morceau « Produits transformes » n aurait aucune entree.
+  const equilibrage = sankey.addNewNodeWithName('Equilibrage')
+  poser(transfo, equilibrage, mp, 20)
   poser(mt, fin, pt, 80)
   matiere.tags_list.forEach(t => t.setSelected())
   return { app, matiere, transfo, mt }
