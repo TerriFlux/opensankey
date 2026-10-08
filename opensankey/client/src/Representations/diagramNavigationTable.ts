@@ -46,7 +46,8 @@ export interface Type_DiagramNavigationOptions {
  */
 export const diagramNavigationDimensions = (app_data: Class_ApplicationData): Class_DataTagGroup[] => {
   if (app_data.publish_options.embedded) return []
-  return (app_data.drawing_area.sankey.data_taggs_list as unknown as Class_DataTagGroup[])
+  // Dans l'ORDRE des dimensions (`getTagGroupsAsList`), que ⇅ fait suivre au dessin.
+  return (app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs') as unknown as Class_DataTagGroup[])
     .filter(dim => dim.is_hierarchical && dim.tags_list.length > 1)
 }
 
