@@ -46,7 +46,7 @@ import {
 import {
   applyDimensionDrawing, applyMemberBands, applyMembersColorFlows,
   dimensionCarrierCandidates,
-  dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier
+  dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier, carrierRefusal
 } from './dimensionDrawingHost'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
@@ -400,15 +400,21 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                 ? <Submenu label={t('Banner.draw_nodes')} glyph={<DimensionDrawingIcon name='nodes' />}
                   checked={drawing === 'nodes' && !in_bands}>
                   <MenuGroup title={t('Banner.draw_carriers')} fontSize='0.7rem'>
-                    {dimensionCarrierCandidates(app_data).map(node => (
-                      <CheckItem
+                    {dimensionCarrierCandidates(app_data).map(node => {
+                      // os#1511 — un nœud qui TRANSFORME la dimension ne se coche pas (il se
+                      // découperait en morceaux sans lien) ; déjà coché, il se décoche toujours.
+                      const checked = node.own_driving_dimension === tagg
+                      const refus = carrierRefusal(app_data, tagg, node.id)
+                      return <CheckItem
                         key={node.id}
-                        label={node.name}
-                        checked={node.own_driving_dimension === tagg}
+                        label={node.name + (refus !== undefined ? ' — ' + t('Banner.carrier_transforms') : '')}
+                        title={refus !== undefined ? t('Banner.carrier_transforms_tooltip') : undefined}
+                        checked={checked}
+                        disabled={refus !== undefined && !checked}
                         closeOnSelect={false}
                         onClick={() => toggleDimensionCarrier(app_data, tagg, node.id)}
                       />
-                    ))}
+                    })}
                   </MenuGroup>
                 </Submenu>
                 : null}
