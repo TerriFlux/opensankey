@@ -1769,22 +1769,26 @@ export class Class_ApplicationData {
     const previous_will_draw = this._from_json_will_draw
     this._from_json_will_draw = draw
     // sa#619 — l'enregistrement des volets comme vues attend lui aussi la fin de la lecture, pour la
-    // même raison : il prendrait les vues des volets pour absentes, et en referait.
+    // même raison : il prendrait les vues des volets pour absentes, et en referait. Et jusqu'à la fin
+    // du post-traitement, qui notifie la grande zone : il est fait plus bas, une fois, sans faire du
+    // fichier qu'on ouvre un document modifié.
     this._pane_views_hold += 1
     try {
-      // sa#581 — LES VOLETS SANKEY ATTENDENT LA FIN DE LA LECTURE : la disposition se relit avant
-      // les vues, et une synchronisation faite entre les deux prendrait les vues des volets pour
-      // disparues.
-      this._sankey_panes.hold(() => this._fromJSON(json_object, kwargs))
+      try {
+        // sa#581 — LES VOLETS SANKEY ATTENDENT LA FIN DE LA LECTURE : la disposition se relit avant
+        // les vues, et une synchronisation faite entre les deux prendrait les vues des volets pour
+        // disparues.
+        this._sankey_panes.hold(() => this._fromJSON(json_object, kwargs))
+      } finally {
+        this._from_json_will_draw = previous_will_draw
+      }
+      // Post processing & menu updating
+      this._afterFromJSON()
+      this._sankey_panes.sync()
     } finally {
-      this._from_json_will_draw = previous_will_draw
       this._pane_views_hold -= 1
     }
-    // Post processing & menu updating
-    this._afterFromJSON()
-    this._sankey_panes.sync()
-    // sa#619 — tout volet est une vue, ceux d'un fichier d'avant compris (cf. `registerPanesAsViews`),
-    // sans faire du fichier qu'on ouvre un document modifié.
+    // sa#619 — tout volet est une vue, ceux d'un fichier d'avant compris (cf. `registerPanesAsViews`).
     this.registerPanesAsViews(true)
     // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
     // à l'enregistrement (œil ON / view_mode), il est RESTAURÉ tel quel à l'ouverture pour

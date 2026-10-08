@@ -579,6 +579,10 @@ export class Class_SankeyPanes {
       this._busy = was_busy
     }
     this.remember()
+    // sa#619 — le volet qu'on vient d'ouvrir devient une vue une fois le dessin posé sur lui : pendant
+    // l'activation, la grande zone notifie (le volet vivant change), et l'enregistrement y changerait la
+    // vue du volet sous les pieds de l'activation (cf. `registerPanesAsViews`).
+    this.host.registerPanesAsViews()
   }
 
   /** La vue existe-t-elle encore dans le document (le maître existe toujours) ? */
@@ -634,13 +638,19 @@ export class Class_SankeyPanes {
       }
       const active = mc.main_zone_active_id
       let next: string | null = null
-      if (active !== null && open.has(active) && mc.main_zone_live_sankey_id !== active) next = active
+      // sa#619 — PAS ENCORE DE VIVANT, ET UN VOLET MONTRE LA VUE COURANTE : un document qu'on vient de
+      // lire, dont le fichier dit la vue courante mais pas le volet actif (le premier, d'office). Le
+      // dessin se pose sur le volet de cette vue : activer l'autre changerait la vue du document qu'on
+      // ouvre — et l'ouverture rouvrirait ensuite le volet de celle-ci (cf. `showOpenedModel`).
+      const showing_current = mc.main_zone_live_sankey_id === null
+        ? panes.find(p => this.coordinateOf(p) === this.host.current_view_id)
+        : undefined
+      if (showing_current) next = showing_current.id
+      else if (active !== null && open.has(active) && mc.main_zone_live_sankey_id !== active) next = active
       // Plus de vivant (on vient de le fermer) alors qu'il reste des volets Sankey : le dessin se
       // pose sur l'un d'eux — celui qui montre la vue courante, sinon le premier —, faute de quoi
       // il resterait masqué derrière des rendus qu'on ne peut pas éditer.
-      else if (mc.main_zone_live_sankey_id === null && panes.length > 0) {
-        next = (panes.find(p => this.coordinateOf(p) === this.host.current_view_id) ?? panes[0]).id
-      }
+      else if (mc.main_zone_live_sankey_id === null && panes.length > 0) next = panes[0].id
       if (next !== null) {
         this._busy = false
         this.activate(next)
@@ -964,7 +974,14 @@ export class Class_SankeyPanes {
     // sa#603 — un geste de la barre générale sur un groupe que le vivant a choisi pour lui (filet :
     // `guardSoon` l'a d'ordinaire déjà vu).
     if (this.reconcileLive()) this.redrawLive()
-    if (this._renders.size === 0) return false
+    if (this._renders.size === 0) {
+      // sa#619 — un volet enregistré à mise en page propre qui a quitté le dessin vivant n'a pas de
+      // rendu tant qu'on ne le montre pas (masqué par un plein écran) : ce que le vivant partage avec
+      // lui l'atteint quand même, dans sa vue (cf. `applyToRender`).
+      const shared = this.shareLiveLayout()
+      if (shared) mc.notifyMainZone()
+      return shared
+    }
     const current_heavy = this.isHeavyView(host.current_view_id)
     const base_key = current_heavy ? null : sankeyDataKey(host.drawing_area.sankey)
     const epoch = host.draw_epoch
@@ -1143,7 +1160,7 @@ export class Class_SankeyPanes {
     // (et que relisent les outils hors de l'appli). Quand une vue à mise en page propre occupe le
     // dessin, la base est à l'abri : elle suit elle aussi, sans quoi l'enregistrement écrirait la
     // mise en page d'avant le geste.
-    if (!render.mirror && coordinate === default_main_sankey_id) {
+    if (!render.mirror && this.showsBase(o)) {
       const parked = this.parkedBase()
       if (parked && parked.drawing_area !== source) {
         const parked_was = parked.drawing_area.bypass_redraws
@@ -1246,12 +1263,18 @@ export class Class_SankeyPanes {
   }
 
   /**
-   * Le volet est-il celui du DIAGRAMME, dont la mise en page est la base ? Pas un volet qui parcourt
-   * une vue légère ordinaire : il montre lui aussi la base, mais sa mise en page à lui vit dans son
-   * rendu, et l'échange ferait de celle-ci la base que la racine du fichier écrit.
+   * Le volet est-il celui du DIAGRAMME, dont la mise en page est la BASE (celle que la racine du fichier
+   * écrit) ? Le volet qui montre le maître, ou celui qu'est la vue « de base » du diagramme — une vue
+   * légère SANS mise en page propre, avec un volet (sa#619, cf. `registerPanesAsViews`). Pas un volet
+   * qui parcourt une vue légère ordinaire : il montre lui aussi la base, mais sa mise en page à lui vit
+   * dans son rendu, et l'échange ferait de celle-ci la base que la racine du fichier écrit.
    */
-  protected showsMaster(o: Type_MainZoneOccupant): boolean {
-    return this.coordinateOf(o) === default_main_sankey_id
+  protected showsBase(o: Type_MainZoneOccupant): boolean {
+    const coordinate = this.coordinateOf(o)
+    if (coordinate === default_main_sankey_id) return true
+    const entry = this.host.views_dict[coordinate]
+    return !!entry && !!entry.is_light && !entry.own_layout && !!entry.window && !entry.window_only &&
+      this.isRegisteredOn(o, coordinate)
   }
 
   /** Le volet est-il celui d'une vue légère à mise en page PROPRE (qu'il garde dans sa vue) ? */
@@ -1274,7 +1297,7 @@ export class Class_SankeyPanes {
     if (from_view === to_view || this._layout_owner !== from.id || from_view !== this.host.current_view_id) return false
     const from_own = this.ownsLayoutView(from)
     const to_own = this.ownsLayoutView(to)
-    if (!(from_own || this.showsMaster(from)) || !(to_own || this.showsMaster(to))) return false
+    if (!(from_own || this.showsBase(from)) || !(to_own || this.showsBase(to))) return false
     // Une vue à mise en page propre vivante s'est posée par-dessus la base, qu'elle a mise à l'abri.
     if (from_own && !this.parkedBase()) return false
     if (this.tagSelectionPrint(from_view) !== this.tagSelectionPrint(to_view)) return false
