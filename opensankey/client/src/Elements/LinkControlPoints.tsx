@@ -28,6 +28,10 @@ import * as d3 from '../d3Modules'
 import { Class_LinkElement } from './Link'
 import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { Type_LinkPassPoint } from './ElementsAttributesConfig'
+import {
+  passPointCenterline, passPointToWorld, worldToPassPoint, Type_PassPointFrame, Type_Pt
+} from './linkPassPoints'
 
 /**
  * Distance euclidienne d'un point p au segment [a, b] (opensankey#1301 —
@@ -80,6 +84,9 @@ export class LinkControlPoints {
    * suppression), sinon réutilisées (l'index i ↔ waypoint i, ordre préservé).
    */
   private _waypoint_handles: Class_Handler[] = []
+
+  /** opensankey#1301 — poignées des points de passage lisses (index i ↔ point i). */
+  private _pass_handles: Class_Handler[] = []
 
   constructor(
     link: Class_LinkElement,
@@ -157,6 +164,7 @@ export class LinkControlPoints {
     this._control_points.ending_bezier_point.unDraw()
     this._control_points.middle_recycling_point.unDraw()
     this.undrawWaypointHandles()
+    this.undrawPassHandles()
   }
 
   public drawControlPoint() {
@@ -175,6 +183,11 @@ export class LinkControlPoints {
       this.syncAndDrawWaypointHandles()
     else
       this.undrawWaypointHandles()
+    // Points de passage lisses : poignées bleues, les 4 noires gardent leur rôle.
+    if (this.hasPassPoints())
+      this.syncAndDrawPassHandles()
+    else
+      this.undrawPassHandles()
 
     // Draw control handler
     this._control_points.starting_curve_point.draw()
@@ -201,7 +214,7 @@ export class LinkControlPoints {
       this._control_points.middle_recycling_point.setInvisible()
     // Clean previous shape
     this.link.d3_selection?.selectAll('.link_control_path').remove()
-    if (this._control_points.is_dragged && !this.hasEditableWaypoints()) {
+    if (this._control_points.is_dragged && !this.hasEditableWaypoints() && !this.hasPassPoints()) {
       // Get control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
       const y1 = this._control_points.starting_curve_point.position_y
@@ -273,6 +286,7 @@ export class LinkControlPoints {
     this._control_points.ending_bezier_point.unDraw()
     this._control_points.middle_recycling_point.unDraw()
     this.undrawWaypointHandles()
+    this.undrawPassHandles()
   }
 
   // =========== opensankey#1301 — points de contrôle libres (waypoints) ==============
@@ -325,12 +339,12 @@ export class LinkControlPoints {
       })
       // Croix rouge de suppression, en haut-droite de la poignée (taille écran
       // constante). Re-appendue à chaque draw (h.draw vide les enfants du <g>).
-      this.appendDeleteCross(h, i)
+      this.appendDeleteCross(h, () => this.removeWaypoint(i))
     })
   }
 
-  /** Ajoute une petite croix rouge cliquable pour supprimer le waypoint d'index i. */
-  private appendDeleteCross(h: Class_Handler, i: number) {
+  /** Ajoute une petite croix rouge cliquable qui retire le point (onRemove). */
+  private appendDeleteCross(h: Class_Handler, onRemove: () => void) {
     if (!h.d3_selection) return
     const z = this.link.drawing_area.getZoomScale() || 1
     const s = 4 / z          // demi-taille de la croix
@@ -359,7 +373,7 @@ export class LinkControlPoints {
     g.on('pointerup', (event: MouseEvent) => {
       event.stopPropagation()
       event.preventDefault()
-      this.removeWaypoint(i)
+      onRemove()
     })
     g.on('click', (event: MouseEvent) => event.stopPropagation())
   }
@@ -453,6 +467,12 @@ export class LinkControlPoints {
     if (!world_node) return
     // Coordonnées MONDE (le groupe de contenu porte le repère des position_x/y).
     const [wx, wy] = d3.pointer(event, world_node)
+    // Un flux routé (waypoints MONDE, import e!Sankey) reste routé ; sinon l'Alt+clic
+    // pose un point de passage lisse sur la courbe paramétrique.
+    if (!this.hasEditableWaypoints()) {
+      this.insertPassPoint([wx, wy])
+      return
+    }
     // Polyligne courante : ancre source, waypoints, ancre cible.
     const pts: Array<[number, number]> = [
       [this.link.position_x_start, this.link.position_y_start],
@@ -484,6 +504,176 @@ export class LinkControlPoints {
     })
     this.link.draw()
     this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
+  }
+
+  // =========== opensankey#1301 — points de passage lisses ==============
+
+  /** Le flux a-t-il des points de passage à honorer ? (pas en recyclage ni en routé). */
+  public hasPassPoints(): boolean {
+    const pp = this.link.shape_pass_points
+    return !this.link.shape_is_recycling && !this.hasEditableWaypoints() && Array.isArray(pp) && pp.length > 0
+  }
+
+  /** Repère des points de passage : axe du flux pour hh/vv, corde sinon. */
+  public passPointFrame(): Type_PassPointFrame {
+    const o = this.link.shape_orientation
+    if (o === 'hh') return 'h'
+    if (o === 'vv') return 'v'
+    return 'chord'
+  }
+
+  private anchors(): [Type_Pt, Type_Pt] {
+    return [
+      [this.link.position_x_start, this.link.position_y_start],
+      [this.link.position_x_end, this.link.position_y_end]
+    ]
+  }
+
+  /** Points de passage en coordonnées MONDE (vide si le flux n'en a pas). */
+  public passPointsWorld(): Type_Pt[] {
+    if (!this.hasPassPoints()) return []
+    const [s, t] = this.anchors()
+    const frame = this.passPointFrame()
+    return this.link.shape_pass_points.map(p => passPointToWorld(p, s, t, frame))
+  }
+
+  /** Point vers lequel se dose la tangente de départ : 1er point de passage, sinon p5. */
+  private startTangentReference(): Type_Pt {
+    const pp = this.passPointsWorld()
+    if (pp.length > 0) return pp[0]
+    return [this._control_points.ending_curve_point.position_x, this._control_points.ending_curve_point.position_y]
+  }
+
+  /** Point vers lequel se dose la tangente d'arrivée : dernier point de passage, sinon p1. */
+  private endTangentReference(): Type_Pt {
+    const pp = this.passPointsWorld()
+    if (pp.length > 0) return pp[pp.length - 1]
+    return [this._control_points.starting_curve_point.position_x, this._control_points.starting_curve_point.position_y]
+  }
+
+  /** Médiane échantillonnée du flux par ses points de passage (poignées à jour). */
+  public passPointCenterline(): Type_Pt[] {
+    this.computeControlPoints()
+    const cp = this._control_points
+    const [s, t] = this.anchors()
+    return passPointCenterline({
+      p0: s,
+      p1: [cp.starting_curve_point.position_x, cp.starting_curve_point.position_y],
+      p2: [cp.starting_bezier_point.position_x, cp.starting_bezier_point.position_y],
+      p4: [cp.ending_bezier_point.position_x, cp.ending_bezier_point.position_y],
+      p5: [cp.ending_curve_point.position_x, cp.ending_curve_point.position_y],
+      p6: t,
+      pass: this.passPointsWorld(),
+      frame: this.passPointFrame(),
+      curved: this.link.shape_is_curved
+    })
+  }
+
+  private clonePassPoints(): Type_LinkPassPoint[] {
+    return (this.link.shape_pass_points ?? []).map(p => ({ u: p.u, v: p.v }))
+  }
+
+  /** Remplace les points de passage, avec undo/redo. */
+  private commitPassPoints(before: Type_LinkPassPoint[], after: Type_LinkPassPoint[]) {
+    this.link.drawing_area.application_data.history.saveUndo(() => {
+      this.link.shape_pass_points = before.map(p => ({ u: p.u, v: p.v }))
+      this.link.draw()
+    })
+    this.link.shape_pass_points = after
+    this.link.drawing_area.application_data.history.saveRedo(() => {
+      this.link.shape_pass_points = after.map(p => ({ u: p.u, v: p.v }))
+      this.link.draw()
+    })
+    this.link.draw()
+    this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
+  }
+
+  /** Pose un point de passage au point MONDE w, dans le tronçon le plus proche. */
+  private insertPassPoint(w: Type_Pt) {
+    const [s, t] = this.anchors()
+    const frame = this.passPointFrame()
+    const pts: Type_Pt[] = [s, ...this.passPointsWorld(), t]
+    let best_seg = 0
+    let best_dist = Infinity
+    for (let k = 0; k < pts.length - 1; k++) {
+      const d = distancePointToSegment(w, pts[k], pts[k + 1])
+      if (d < best_dist) {
+        best_dist = d
+        best_seg = k
+      }
+    }
+    const before = this.clonePassPoints()
+    const after = this.clonePassPoints()
+    after.splice(best_seg, 0, worldToPassPoint(w, s, t, frame))
+    this.commitPassPoints(before, after)
+  }
+
+  public removePassPoint(i: number) {
+    const before = this.clonePassPoints()
+    if (i < 0 || i >= before.length) return
+    this.commitPassPoints(before, before.filter((_, k) => k !== i))
+  }
+
+  private undrawPassHandles() {
+    this._pass_handles.forEach(h => h.unDraw())
+    this._pass_handles = []
+  }
+
+  private createPassHandler(i: number): Class_Handler {
+    return new Class_Handler(
+      'pp_' + i + '_' + this.link.id,
+      this.link.drawing_area,
+      this.link,
+      () => {
+        this._control_points.is_dragged = true
+        const ghost = this.clonePassPoints()
+        this.link.drawing_area.application_data.history.saveUndo(() => {
+          this.link.shape_pass_points = ghost.map(p => ({ u: p.u, v: p.v }))
+          this.link.draw()
+        })
+      },
+      (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+        const pps = this.clonePassPoints()
+        if (!pps[i]) return
+        const [s, t] = this.anchors()
+        const frame = this.passPointFrame()
+        const w = passPointToWorld(pps[i], s, t, frame)
+        pps[i] = worldToPassPoint([w[0] + event.dx, w[1] + event.dy], s, t, frame)
+        // Réaffectation (jamais de mutation du défaut partagé) ; le setter redessine.
+        this.link.shape_pass_points = pps
+      },
+      () => {
+        this._control_points.is_dragged = false
+        this.link.drawShape()
+        this.drawControlPoint()
+        this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
+        const ghost = this.clonePassPoints()
+        this.link.drawing_area.application_data.history.saveRedo(() => {
+          this.link.shape_pass_points = ghost.map(p => ({ u: p.u, v: p.v }))
+          this.link.draw()
+        })
+      },
+      { class: 'pp_handle', color: '#1565c0', size: 7 }
+    )
+  }
+
+  private syncAndDrawPassHandles() {
+    const pts = this.passPointsWorld()
+    if (this._pass_handles.length !== pts.length) {
+      this._pass_handles.forEach(h => h.unDraw())
+      this._pass_handles = pts.map((_, i) => this.createPassHandler(i))
+    }
+    this._pass_handles.forEach((h, i) => {
+      h.setPosXY(pts[i][0], pts[i][1])
+      h.setVisible()
+      h.draw()
+      h.d3_selection?.on('contextmenu', (event: MouseEvent) => {
+        event.preventDefault()
+        event.stopPropagation()
+        this.removePassPoint(i)
+      })
+      this.appendDeleteCross(h, () => this.removePassPoint(i))
+    })
   }
 
   public get control_points_position() {
@@ -604,8 +794,9 @@ export class LinkControlPoints {
     const x1 = this._control_points.starting_curve_point.position_x
     const y1 = this._control_points.starting_curve_point.position_y
 
-    const x5 = this._control_points.ending_curve_point.position_x
-    const y5 = this._control_points.ending_curve_point.position_y
+    // opensankey#1301 — avec des points de passage, la tangente de départ se dose sur le
+    // premier tronçon (p1 → 1er point), pas sur toute la courbe.
+    const [x5, y5] = this.startTangentReference()
 
     let x2, y2
     // Normal mode
@@ -640,8 +831,8 @@ export class LinkControlPoints {
   * @memberof Class_LinkElement
   */
   private computeEndingBezierPoint() {
-    const x1 = this._control_points.starting_curve_point.position_x
-    const y1 = this._control_points.starting_curve_point.position_y
+    // opensankey#1301 — symétrique : dernier tronçon (dernier point → p5).
+    const [x1, y1] = this.endTangentReference()
 
     const x5 = this._control_points.ending_curve_point.position_x
     const y5 = this._control_points.ending_curve_point.position_y
@@ -864,7 +1055,7 @@ export class LinkControlPoints {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.starting_bezier_point.position_x + event.dx
         const x1 = this._control_points.starting_curve_point.position_x
-        const x5 = this._control_points.ending_curve_point.position_x
+        const x5 = this.startTangentReference()[0]
         // Compute starting tangeant point coef based on new handle pos
         const dx1x5 = Math.abs(x5 - x1)
         if (dx1x5 > 0) // Avoid NaN
@@ -874,7 +1065,7 @@ export class LinkControlPoints {
         // Compute new handle position
         const handle_new_pos_y = this._control_points.starting_bezier_point.position_y + event.dy
         const y1 = this._control_points.starting_curve_point.position_y
-        const y5 = this._control_points.ending_curve_point.position_y
+        const y5 = this.startTangentReference()[1]
         // Compute starting tangeant point coef based on new handle pos
         const dy1y5 = Math.abs(y5 - y1)
         if (dy1y5 > 0) // Avoid NaN
@@ -897,7 +1088,7 @@ export class LinkControlPoints {
       if (this.link.is_horizontal || this.link.is_vertical_horizontal) {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.ending_bezier_point.position_x + event.dx
-        const x1 = this._control_points.starting_curve_point.position_x
+        const x1 = this.endTangentReference()[0]
         const x5 = this._control_points.ending_curve_point.position_x
         // Compute starting tangeant point coef based on new handle pos
         const dx1x5 = Math.abs(x5 - x1)
@@ -907,7 +1098,7 @@ export class LinkControlPoints {
       else {
         // Compute new handle position
         const handle_new_pos_y = this._control_points.ending_bezier_point.position_y + event.dy
-        const y1 = this._control_points.starting_curve_point.position_y
+        const y1 = this.endTangentReference()[1]
         const y5 = this._control_points.ending_curve_point.position_y
         // Compute starting tangeant point coef based on new handle pos
         const dy1y5 = Math.abs(y5 - y1)

@@ -284,6 +284,11 @@ export function scaleModelGeometry(da: Class_DrawingArea, r: number, include_lab
     if (Array.isArray(wps) && wps.length > 0) {
       l.shape_waypoints = wps.map(p => ({ x: p.x * r, y: p.y * r }))
     }
+    // Points de passage : u relatif aux ancres (invariant), v en unités MONDE (à scaler).
+    const pps = l.shape_pass_points
+    if (Array.isArray(pps) && pps.length > 0) {
+      l.shape_pass_points = pps.map(p => ({ u: p.u, v: p.v * r }))
+    }
     if (include_labels) {
       LABEL_NUM_KEYS.forEach(k => scaleNumAttr(l, k, r))
       LABEL_RICH_KEYS.forEach(k => scaleRichAttr(l, k, r))
