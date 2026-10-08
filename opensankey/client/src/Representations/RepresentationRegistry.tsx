@@ -285,6 +285,13 @@ type Type_RepresentationCommon = {
    */
   short_label?: (app_data: Class_ApplicationData) => string
   /**
+   * sa#617 — CE À QUOI SERT CE TYPE DE VOLET, en une ligne traduite (« Voir comment un total se
+   * répartit »). Le libellé nomme, la description oriente : elle s'affiche au survol, sous le nom,
+   * partout où un type est PROPOSÉ (menu « + », liste des natures de l'en-tête). Absente = le
+   * survol ne montre que le nom.
+   */
+  description?: (app_data: Class_ApplicationData) => string
+  /**
    * sa#613 — CE QUE LE VOLET MONTRERA une fois les sélecteurs de son bandeau choisis, au bout de
    * l'invitation « Sélectionner une année pour afficher son Sankey unitaire ». Absent : « les
    * vignettes « <libellé> » ».
