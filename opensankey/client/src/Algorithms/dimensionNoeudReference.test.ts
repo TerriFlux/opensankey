@@ -108,7 +108,7 @@ describe('os#1511 — tout placer autour d un noeud de reference', () => {
   test('choisi parmi les porteurs : les bandes se centrent sur lui et gardent la pente d origine', () => {
     const { sankey, pays, produits } = monter(true)
     const centre = produits.position_y + produits.getShapeHeightToUse() / 2
-    const avant = new Map(sankey.links_list.map(l => [l.id, pente(l) / l.thicknessSourceRaw]))
+    const avant = new Map(sankey.links_list.map(l => [l.id, pente(l)]))
     pays.reference_node_id = produits.id
     disaggregateDimensionNodes(sankey)
     const tous = sankey.nodes_list.filter(isGeneratedMemberNode)
@@ -116,7 +116,7 @@ describe('os#1511 — tout placer autour d un noeud de reference', () => {
     const bas = Math.max(...tous.map(n => n.position_y + n.getShapeHeightToUse()))
     expect((haut + bas) / 2).toBeCloseTo(centre, 6)
     sankey.links_list.filter(isGeneratedMemberLink).forEach(l =>
-      expect(pente(l) / l.thicknessSourceRaw).toBeCloseTo(avant.get(l.id.split('--par--')[0]) as number, 6))
+      expect(pente(l)).toBeCloseTo(avant.get(l.id.split('--par--')[0]) as number, 6))
   })
 
   test('le reglage fait l aller retour du fichier, et reste muet tant qu il n est pas pose', () => {

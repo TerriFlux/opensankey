@@ -93,12 +93,11 @@ describe('os#1511 — un diagramme par membre', () => {
     // « Produits agricoles » 50 plus bas : les flux d origine descendent puis remontent.
     sankey.nodes_list.find(n => n.name === 'Produits agricoles')?.setPosXY(300, 150)
     app.drawing_area.disaggregation_gap_value = 25
-    // La pente se garde A L ECHELLE du flux : par pixel d epaisseur (07/10, un fin membre ne doit
-    // pas reprendre l ecart absolu de l agregat).
-    const avant = new Map(sankey.links_list.map(l => [l.id, pente(l) / l.thicknessSourceRaw]))
+    // La pente se garde telle quelle, en pixels : la bande reproduit la mise en page de l auteur.
+    const avant = new Map(sankey.links_list.map(l => [l.id, pente(l)]))
     disaggregateDimensionNodes(sankey)
     sankey.links_list.filter(isGeneratedMemberLink).forEach(l =>
-      expect(pente(l) / l.thicknessSourceRaw).toBeCloseTo(avant.get(l.id.split(MEMBER_NODE_MARK)[0]) as number, 6))
+      expect(pente(l)).toBeCloseTo(avant.get(l.id.split(MEMBER_NODE_MARK)[0]) as number, 6))
     const bande = (suffixe: string) => sankey.nodes_list.filter(isGeneratedMemberNode)
       .filter(n => n.id.endsWith(suffixe)).map(n => ({ y: n.position_y, h: n.getShapeHeightToUse() }))
     const bas_espagne = Math.max(...bande('espagne').map(e => e.y + e.h))
