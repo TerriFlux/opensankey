@@ -2865,5 +2865,14 @@ export function flowPainterOf(dims: Class_DataTagGroup[]): Class_DataTagGroup | 
   const bande = dims.find(t => t.member_bands === true)
   if (bande === undefined) return undefined
   const peut = (t: Class_DataTagGroup) => t === bande || (t.drawing === 'nodes' && t.selected_tags_list.length > 1)
-  return dims.find(t => t.paints_flows && peut(t)) ?? dims.find(t => t !== bande && peut(t)) ?? bande
+  const choisie = dims.find(t => t.paints_flows && peut(t))
+  if (choisie !== undefined) return choisie
+  // À défaut, la dimension en nœuds portée par le PLUS de nœuds : sur le SOCLE transfo, « Ressources
+  // et emplois » (Ressources, Emplois) plutôt que « Type de matière » (Matière transformée seule).
+  let meilleure: Class_DataTagGroup | undefined
+  dims.forEach(t => {
+    if (t === bande || !peut(t)) return
+    if (meilleure === undefined || t.own_carriers_count > meilleure.own_carriers_count) meilleure = t
+  })
+  return meilleure ?? bande
 }

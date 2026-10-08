@@ -687,6 +687,19 @@ function rangerEnBandes(
       const depart = (haut + bas) / 2 - hauteur / 2
       noeuds.forEach((n, i) => y.set(n, depart + relatifs[i]))
     })
+    // Deux AXES peuvent partager une colonne (SOCLE transfo : Matière transformée et Équilibrage
+    // transformation sortant) : dans la bande, leurs nœuds ne se chevauchent pas non plus — ils
+    // gardent leur ordre et le plus bas descend, d'un demi-écart.
+    const par_x = new Map<number, Class_NodeElement[]>()
+    axe_de.forEach((_id, noeud) => par_x.set(noeud.position_x, [...(par_x.get(noeud.position_x) ?? []), noeud]))
+    par_x.forEach(noeuds => {
+      if (noeuds.length < 2) return
+      noeuds.sort((p, q) => (y.get(p) as number) - (y.get(q) as number))
+      for (let i = 1; i < noeuds.length; i++) {
+        const bas = (y.get(noeuds[i - 1]) as number) + noeuds[i - 1].getShapeHeightToUse()
+        if ((y.get(noeuds[i]) as number) < bas) y.set(noeuds[i], bas + ecart_enfants)
+      }
+    })
 
     // ── PASSE 2 : sous le nœud le plus bas de la bande précédente ───────────────────────────
     const plus_haut = Math.min(...y.values())
