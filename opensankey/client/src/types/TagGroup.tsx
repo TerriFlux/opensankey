@@ -2379,7 +2379,15 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public updateTagsReferences(): void {
     // On datatags update everything is impacted (les bandes de valeurs
     // coordonnées sont dérivées au draw — rien à synchroniser)
-    this._ref_sankey.drawing_area.draw()
+    // os#1511 — SAUF les nœuds et flux ENGENDRÉS : un flux engendré porte un scalaire lu à la
+    // coordonnée du moment (unité, année…). Changer d'unité sans les refaire gardait les kt sous
+    // une échelle en kt de matière grasse, et la mise en page volait en éclats (Julien, 08/10).
+    // Pendant un geste groupé (`bypass_redraws`), c'est le geste qui refait et redessine.
+    const drawing_area = this._ref_sankey.drawing_area
+    if (!drawing_area.bypass_redraws && this._ref_sankey.nodes_list.some(node => node.is_driven_by_dimension)) {
+      drawing_area.rebuildDimensionNodes()
+    }
+    drawing_area.draw()
   }
 
   // PROTECTED METHODS ==================================================================
