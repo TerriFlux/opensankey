@@ -1864,6 +1864,14 @@ export class Class_IconLibrary {
       <path d="M8 7h8M8 11h8M8 15h5" />
     </svg>
   )
+  // sa#620 — l'onglet « Volet » de l'inspecteur : une fenêtre et sa barre de titre.
+  protected _icon_tab_pane = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 9h18M7 6.5h.01M10 6.5h.01" />
+    </svg>
+  )
   protected _icon_tab_legend = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2060,6 +2068,7 @@ export class Class_IconLibrary {
   public get icon_tab_tooltip() { return this._icon_tab_tooltip }
   public get icon_tab_title() { return this._icon_tab_title }
   public get icon_tab_layout() { return this._icon_tab_layout }
+  public get icon_tab_pane() { return this._icon_tab_pane }
   public get icon_tab_legend() { return this._icon_tab_legend }
   public get icon_afm() { return this._icon_afm }
   public get icon_open_close_config() { return this._icon_open_close_config }
