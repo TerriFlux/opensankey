@@ -36,7 +36,7 @@ import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '..
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
   antichainOf, readCouronneState, writeCouronneState,
-  type Type_CouronneDrawing, type Type_CouronneSankey, type Type_CouronneState
+  type Type_CouronneDrawing, type Type_CouronneReader, type Type_CouronneSankey, type Type_CouronneState
 } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 
@@ -122,6 +122,13 @@ export interface Type_CouronneGestureHost {
   write: (options: Type_Bag) => void
   /** La figure est-elle liée ? Absent : ce que disent ses réglages. */
   linked?: boolean
+  /**
+   * 07/10/2026 — le tableau croisé relit les sacs d'avant la version 2 avec leurs colonnes.
+   * 08/10/2026 — OBLIGATOIRE : un hôte qui l'oubliait relisait un tableau v1 en couronne, et son
+   * premier geste réécrivait le sac en v2, colonnes changées en un tableau par membre
+   * (`couronneReaderOf` le tire de la nature de la vignette).
+   */
+  reader: Type_CouronneReader
 }
 
 /**
@@ -142,7 +149,7 @@ export const partClickModeOf = (raw: unknown): 'aggregate' | 'zoom' =>
 export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   const app = host.app
   const sankey = app.drawing_area.sankey as unknown as Type_CouronneSankey
-  const state = readCouronneState(host.options, sankey, host.linked, host.declared)
+  const state = readCouronneState(host.options, sankey, host.linked, host.declared, host.reader)
   if (state.order.length === 0) return null
   const linked = state.linked
   const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup | undefined
@@ -572,29 +579,6 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     commit(next)
   }
 
-  /**
-   * 06/10/2026 — LES COLONNES DU TABLEAU CROISÉ : `col_id` devient la seconde dimension active (les
-   * autres, hors `row_id`, se désactivent) ; `null` : plus de colonnes, `row_id` reste seule active.
-   * Une dimension qui ne montre qu'un membre à enfants se pose dessus (elle découpe un cran dessous ;
-   * liée, le diagramme ne bouge pas).
-   */
-  //
-  // 07/10/2026 (lot 2) — PAR LES RÔLES : la dimension en colonnes prend le rôle CASES (« une couronne
-  // par membre » : revenue à la couronne, une couronne par pays) et passe en fin d'ordre ; celle des
-  // lignes, le rôle PARTS. Une colonne qui ne montre qu'un membre descend d'un cran (`withCells`).
-  const setMatrixColumns = (row_id: string, col_id: string | null) => {
-    if (st(row_id) === undefined || (col_id !== null && st(col_id) === undefined)) return
-    const parts = (o: string) => st(o).drawing === 'multiples' ? { drawing: 'sectors' as const } : {}
-    let next = withDim(state, row_id, { active: true, ...parts(row_id) })
-    state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false, ...parts(o) }) })
-    if (col_id !== null) {
-      next = withDim(next, col_id, { active: true, drawing: 'multiples' })
-      next = { ...next, order: [row_id, ...next.order.filter(o => o !== row_id && o !== col_id), col_id] }
-      next = withCells(next, dimOf(col_id) as Class_DataTagGroup)
-    }
-    commit(next)
-  }
-
   /** « En sunburst » a-t-il un effet ? La dimension doit montrer plus d'un niveau sous sa portée. */
   const offersRingsFor = (id: string): boolean => {
     const d = dimOf(id)
@@ -631,7 +615,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     chooseColumn, deactivate,
     unfold, fold, zoomTo, zoomUp, back, activatePart, openMember, closeMember, showLevel,
     setFocus, toggleHidden, setShown, chosenOf,
-    move, swap, setMatrixColumns, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
+    move, swap, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
     linkedOptions
   }
 }

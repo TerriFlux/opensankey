@@ -28,7 +28,8 @@
 //   couronne  secteurs / sunburst = parts ; une couronne par membre = cases ;
 //   Sankey    un membre à la fois = none ; bandes / nœuds / expansion = parts ;
 //             un diagramme par membre = cases (nœuds rangés en bandes, une par membre) ;
-//   tableau   lignes = parts ; colonnes = cases.
+//   tableau   plat / hiérarchique = parts (lignes, puis colonnes, dans l'ordre) ; un tableau par
+//             membre = cases.
 //
 // L'état est une INTERFACE à trois sources :
 //   - le DIAGRAMME, qui garde son état dans le modèle (bannière, sélection, nœuds porteurs,
@@ -41,6 +42,18 @@
 // 07/10/2026 — LOT 2 : le TABLEAU CROISÉ est branché (`fromFigure` + `planFor(…, 'matrix')`, gestes de
 // `couronneGestures`) : lignes = parts, colonnes = cases, axes dépliables comme le sunburst.
 //
+// 07/10/2026 — CORRECTION DE JULIEN (« si on sélectionne Sous-régions, on ne devrait pas voir les
+// continents ») : colonnes ≠ cases.
+//   - deux dimensions en PARTS croisées = LIGNES × COLONNES (la couronne croisée, anneau intérieur →
+//     lignes, extérieur → colonnes ; ⇅ décide) ;
+//   - CASES = PLUSIEURS TABLEAUX, un par membre (une couronne / un diagramme par membre), « Autres »
+//     comme les cases de la couronne ;
+//   - la VARIANTE du tableau, par dimension : PLAT (= secteurs : les membres montrés seuls, sans
+//     ancêtres ni sous-totaux) ou HIÉRARCHIQUE (= sunburst : les ancêtres en en-têtes de groupes
+//     dépliables, avec sous-totaux). Elle est ALIGNÉE sur celle de la couronne (même dessin écrit) :
+//     changer de représentation dans une fenêtre fait sunburst ⇄ hiérarchique, secteurs ⇄ plat, une
+//     couronne par membre ⇄ un tableau par membre. Défaut : plat.
+//
 // Module PUR : aucune classe instanciée, aucun React, aucun DOM.
 
 import type { Class_DataTag } from '../types/Tag'
@@ -52,7 +65,7 @@ import { isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 import {
   antichainOf, COURONNE_KEY, readCouronneState, writeCouronneState
 } from './couronneState'
-import type { Type_CouronneDimensionState, Type_CouronneSankey, Type_CouronneState } from './couronneState'
+import type { Type_CouronneDimensionState, Type_CouronneReader, Type_CouronneSankey, Type_CouronneState } from './couronneState'
 
 // ── LES TYPES ────────────────────────────────────────────────────────────────────────────────────
 
@@ -60,7 +73,7 @@ export type Type_Representation = 'couronne' | 'sankey' | 'matrix'
 export type Type_DimensionRole = 'none' | 'parts' | 'cases'
 export type Type_CouronneVariant = 'sectors' | 'sunburst'
 export type Type_SankeyVariant = 'bands' | 'nodes' | 'expansion'
-export type Type_MatrixVariant = 'rows'
+export type Type_MatrixVariant = 'flat' | 'hierarchical'
 /** Le regroupement que l'ordre produit : par nœud (les parts dans chaque figure) ou par membre (les cases). */
 export type Type_Grouping = 'by_node' | 'by_member'
 
@@ -70,7 +83,7 @@ export interface Type_DimensionVariants {
   matrix: Type_MatrixVariant
 }
 
-export const DEFAULT_VARIANTS: Type_DimensionVariants = { couronne: 'sectors', sankey: 'bands', matrix: 'rows' }
+export const DEFAULT_VARIANTS: Type_DimensionVariants = { couronne: 'sectors', sankey: 'bands', matrix: 'flat' }
 
 /** Ce que le diagramme porte d'une dimension et que le modèle commun ne sait pas déduire. */
 export interface Type_DiagramExtras {
@@ -120,14 +133,14 @@ type Type_Options = { [key: string]: unknown }
 export type Type_CouronneLabel = 'sectors' | 'sunburst' | 'multiples'
 /** `one` « Un membre à la fois », `bands`, `nodes`, `expansion` (à ajouter), `member_bands` « Un diagramme par membre ». */
 export type Type_SankeyLabel = 'one' | 'bands' | 'nodes' | 'expansion' | 'member_bands'
-/** Le tableau : la dimension en lignes ou en colonnes. */
-export type Type_MatrixLabel = 'rows' | 'columns'
+/** Le tableau : plat, hiérarchique, un tableau par membre (07/10/2026). */
+export type Type_MatrixLabel = 'flat' | 'hierarchical' | 'tables'
 export type Type_DrawingLabel = Type_CouronneLabel | Type_SankeyLabel | Type_MatrixLabel
 
 export const DRAWING_LABELS: { [r in Type_Representation]: readonly Type_DrawingLabel[] } = {
   couronne: ['sectors', 'sunburst', 'multiples'],
   sankey: ['one', 'bands', 'nodes', 'expansion', 'member_bands'],
-  matrix: ['rows', 'columns']
+  matrix: ['flat', 'hierarchical', 'tables']
 }
 
 export interface Type_DrawingChoice {
@@ -143,7 +156,7 @@ export const choiceOfLabel = (representation: Type_Representation, label: string
   switch (label) {
     case 'one': return { role: 'none', grouping: 'by_node' }
     case 'multiples':
-    case 'columns': return { role: 'cases', grouping: 'by_member' }
+    case 'tables': return { role: 'cases', grouping: 'by_member' }
     case 'member_bands': return { role: 'cases', variant: 'nodes', grouping: 'by_member' }
     default: return { role: 'parts', variant: label as Type_DrawingChoice['variant'], grouping: 'by_node' }
   }
@@ -161,13 +174,12 @@ export const labelOfDimension = (representation: Type_Representation, d: Pick<Ty
   }
   if (d.role === 'none') return null
   if (representation === 'couronne') return d.role === 'cases' ? 'multiples' : d.variants.couronne
-  return d.role === 'cases' ? 'columns' : 'rows'
+  return d.role === 'cases' ? 'tables' : d.variants.matrix
 }
 
 /**
- * Pose une variante, et aligne la PROFONDEUR des autres représentations : sunburst = expansion
- * (plusieurs niveaux dessinés) ; secteurs = bandes ou nœuds (la frontière seule). Le tableau montre
- * toujours ses lignes ouvertes.
+ * Pose une variante, et aligne la PROFONDEUR des autres représentations : sunburst = expansion =
+ * hiérarchique (plusieurs niveaux dessinés) ; secteurs = plat = bandes ou nœuds (la frontière seule).
  */
 export const withVariant = (
   variants: Type_DimensionVariants, representation: Type_Representation, variant: string
@@ -175,12 +187,19 @@ export const withVariant = (
   const out = { ...variants }
   if (representation === 'couronne' && (variant === 'sectors' || variant === 'sunburst')) {
     out.couronne = variant
+    out.matrix = variant === 'sunburst' ? 'hierarchical' : 'flat'
     if (variant === 'sunburst') out.sankey = 'expansion'
     else if (out.sankey === 'expansion') out.sankey = 'bands'
   } else if (representation === 'sankey' && (variant === 'bands' || variant === 'nodes' || variant === 'expansion')) {
     out.sankey = variant
     out.couronne = variant === 'expansion' ? 'sunburst' : 'sectors'
-  } else if (representation === 'matrix' && variant === 'rows') out.matrix = variant
+    out.matrix = variant === 'expansion' ? 'hierarchical' : 'flat'
+  } else if (representation === 'matrix' && (variant === 'flat' || variant === 'hierarchical')) {
+    out.matrix = variant
+    out.couronne = variant === 'hierarchical' ? 'sunburst' : 'sectors'
+    if (variant === 'hierarchical') out.sankey = 'expansion'
+    else if (out.sankey === 'expansion') out.sankey = 'bands'
+  }
   return out
 }
 
@@ -339,7 +358,8 @@ const readVariants = (raw: unknown): Partial<Type_DimensionVariants> => {
   const out: Partial<Type_DimensionVariants> = {}
   if (v['couronne'] === 'sectors' || v['couronne'] === 'sunburst') out.couronne = v['couronne']
   if (v['sankey'] === 'bands' || v['sankey'] === 'nodes' || v['sankey'] === 'expansion') out.sankey = v['sankey']
-  if (v['matrix'] === 'rows') out.matrix = v['matrix']
+  // 'rows' (lot 1) ne se relit pas : la variante du tableau suit le dessin de la couronne.
+  if (v['matrix'] === 'flat' || v['matrix'] === 'hierarchical') out.matrix = v['matrix']
   return out
 }
 
@@ -357,15 +377,17 @@ const storedVariantsOf = (options: Type_Options | null | undefined): { [id: stri
 
 /**
  * L'ÉTAT D'UNE FIGURE (couronne ou tableau, qui lisent le même sac) : la clé `couronne` et tous les
- * anciens formats (`readCouronneState`), plus les variantes des autres représentations.
+ * anciens formats (`readCouronneState`), plus les variantes des autres représentations. `reader` :
+ * le tableau relit les sacs d'avant la version 2 avec leurs colonnes (`matrixLegacyColumns`).
  */
 export const fromFigure = (
   options: Type_Options | null | undefined,
   linked: boolean | undefined,
   sankey: Type_CouronneSankey,
-  declared_ids?: string[]
+  declared_ids?: string[],
+  reader: Type_CouronneReader = 'couronne'
 ): Type_DimensionViewState =>
-  fromCouronneState(readCouronneState(options, sankey, linked, declared_ids), storedVariantsOf(options))
+  fromCouronneState(readCouronneState(options, sankey, linked, declared_ids, reader), storedVariantsOf(options))
 
 /**
  * Le sac d'une figure qui porte `state` (`writeCouronneState` : anciennes clés retirées), les
@@ -532,6 +554,11 @@ export const toDiagramPatch = (state: Type_DimensionViewState, sankey: Type_View
 
 export interface Type_MatrixAxisPlan {
   dimension_id: string
+  /**
+   * 07/10/2026 — PLAT (les membres seuls, à plat : `opened` vide, `entry` = `members`) ou
+   * HIÉRARCHIQUE (les ancêtres en groupes, avec sous-totaux).
+   */
+  variant: Type_MatrixVariant
   /** Les membres de l'axe (parts ; une part unique s'ouvre d'un cran). */
   members: string[]
   /** Les ouverts (sous-totaux / en-têtes de groupe), sous la portée : ceux de `openedOf`. */
@@ -550,6 +577,8 @@ export interface Type_MatrixAxisPlan {
 export interface Type_MatrixPlan {
   rows: Type_MatrixAxisPlan
   columns: Type_MatrixAxisPlan | null
+  /** 07/10/2026 — la dimension en CASES : un tableau par membre (ses membres, à plat). */
+  cases: Type_MatrixAxisPlan | null
   /** Où se lisent les autres dimensions. */
   coordinates: { [dimension_id: string]: string[] }
 }
@@ -578,24 +607,25 @@ export type Type_RepresentationPlan =
   | { representation: 'sankey', plan: Type_SankeyPlan }
 
 /**
- * 07/10/2026 (lot 2) — LES AXES DU TABLEAU PAR LES RÔLES : les colonnes sont la dimension en `cases`
- * (« une couronne par membre » = un membre par colonne) dès qu'une autre découpe ; les lignes, la
- * première dimension en `parts` (celle qui découpe d'abord). Sans `cases`, l'ORDRE décide : anneau
- * intérieur → lignes, anneau extérieur → colonnes (la couronne croisée, produits × continents).
+ * LES AXES DU TABLEAU PAR LES RÔLES (07/10/2026, correction de Julien) :
+ *  - la dimension en `cases` (la dernière) fait UN TABLEAU PAR MEMBRE, dès qu'une autre est active ;
+ *    seule active, elle découpe comme une part (la couronne fait de même) ;
+ *  - les dimensions en `parts` font les LIGNES puis les COLONNES, dans l'ORDRE (anneau intérieur →
+ *    lignes, extérieur → colonnes ; ⇅ les échange), celles qui découpent d'abord.
  */
 export const matrixAxesOfState = (
   state: Type_DimensionViewState, sankey: Type_CouronneSankey
-): { row_id: string, col_id: string | null } | null => {
+): { row_id: string, col_id: string | null, cases_id: string | null } | null => {
   const ids = state.order.filter(id => state.dims[id] !== undefined && sankey.data_taggs_dict[id] !== undefined)
   if (ids.length === 0) return null
   const actives = ids.filter(id => state.dims[id].role !== 'none')
   const divides = (id: string) => partsOf(state.dims[id]).length >= 2
-  const cases = [...actives].reverse().find(id => state.dims[id].role === 'cases')
-  const others = actives.filter(id => id !== cases)
-  if (cases !== undefined && others.length > 0) return { row_id: others.find(divides) ?? others[0], col_id: cases }
-  const chosen = [...actives.filter(divides), ...actives.filter(id => !divides(id))].slice(0, 2)
+  const last_cases = [...actives].reverse().find(id => state.dims[id].role === 'cases')
+  const cases_id = last_cases !== undefined && actives.some(id => id !== last_cases) ? last_cases : null
+  const parts = actives.filter(id => id !== cases_id)
+  const chosen = [...parts.filter(divides), ...parts.filter(id => !divides(id))].slice(0, 2)
     .sort((a, b) => ids.indexOf(a) - ids.indexOf(b))
-  return { row_id: chosen[0] ?? ids[0], col_id: chosen[1] ?? null }
+  return { row_id: chosen[0] ?? ids[0], col_id: chosen[1] ?? null, cases_id }
 }
 
 /**
@@ -603,8 +633,14 @@ export const matrixAxesOfState = (
  * que les anneaux du sunburst, `openedOf`), son premier niveau sous la portée et son Total. Une part
  * unique qui a des enfants s'ouvre d'un cran (« Monde » en colonnes, ce sont ses continents) : elle
  * fait alors la portée.
+ *
+ * 07/10/2026 — PLAT : les membres seuls, sans leurs ancêtres (au niveau Sous-régions, pas de
+ * continents ni de sous-totaux de continents) ; le Total reste celui de la portée quand les membres la
+ * couvrent.
  */
-export const matrixAxisOf = (dim: Class_DataTagGroup, d: Pick<Type_DimensionView, 'focus' | 'shown' | 'hidden'>): Type_MatrixAxisPlan => {
+export const matrixAxisOf = (
+  dim: Class_DataTagGroup, d: Pick<Type_DimensionView, 'focus' | 'shown' | 'hidden'>, variant: Type_MatrixVariant = 'hierarchical'
+): Type_MatrixAxisPlan => {
   let parts = antichainSorted(dim, d.shown.filter(id => !d.hidden.includes(id)))
   let focus = d.focus
   const one = parts.length === 1 ? memberOf(dim, parts[0]) : undefined
@@ -624,25 +660,36 @@ export const matrixAxisOf = (dim: Class_DataTagGroup, d: Pick<Type_DimensionView
     [...scope, ...opened.map(id => memberOf(dim, id) as Class_DataTag)].every(m =>
       childrenOf(m).length === 0 ? keep.has(m.id) : childrenOf(m).every(c => keep.has(c.id)))
   const telling = F.filter(f => !(roots.length === 1 && roots[0] === f)).map(f => f.id)
-  return { dimension_id: dim.id, members: parts, opened, entry, total: covers ? scope.map(m => m.id) : null, scope: telling }
+  const total = covers ? scope.map(m => m.id) : null
+  if (variant === 'flat') {
+    return { dimension_id: dim.id, variant, members: parts, opened: [], entry: [...parts], total, scope: telling }
+  }
+  return { dimension_id: dim.id, variant, members: parts, opened, entry, total, scope: telling }
 }
 
-/** Le plan du tableau : les axes par les rôles, la coordonnée des autres dimensions celle de la couronne. */
+/**
+ * Le plan du tableau : les axes par les rôles, la coordonnée des autres dimensions celle de la
+ * couronne. La dimension des cases se lit, dans le tableau d'ensemble, à son Total (sa portée, sinon
+ * ses membres) ; chaque petit tableau la lit à son membre.
+ */
 const matrixPlanOf = (state: Type_DimensionViewState, sankey: Type_CouronneSankey): Type_MatrixPlan | null => {
   const axes = matrixAxesOfState(state, sankey)
   if (axes === null) return null
   const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup
-  const axis = (id: string) => matrixAxisOf(dimOf(id), state.dims[id])
+  const axis = (id: string, variant?: Type_MatrixVariant) =>
+    matrixAxisOf(dimOf(id), state.dims[id], variant ?? state.dims[id].variants.matrix)
   const fixed = drawPlanOf(toCouronneState(state), sankey).fixed
+  const cases = axes.cases_id ? axis(axes.cases_id, 'flat') : null
   const coordinates: Type_MatrixPlan['coordinates'] = {}
   state.order.filter(id => state.dims[id] !== undefined && sankey.data_taggs_dict[id] !== undefined)
     .filter(id => id !== axes.row_id && id !== axes.col_id)
     .forEach(id => {
       const dim = dimOf(id)
-      const ids = (fixed[id] ?? partsOf(state.dims[id])).filter(m => memberOf(dim, m) !== undefined)
+      const read = id === axes.cases_id && cases !== null ? (cases.total ?? cases.members) : (fixed[id] ?? partsOf(state.dims[id]))
+      const ids = read.filter(m => memberOf(dim, m) !== undefined)
       if (ids.length > 0) coordinates[id] = ids
     })
-  return { rows: axis(axes.row_id), columns: axes.col_id ? axis(axes.col_id) : null, coordinates }
+  return { rows: axis(axes.row_id), columns: axes.col_id ? axis(axes.col_id) : null, cases, coordinates }
 }
 
 /** Le plan du Sankey : quelle dimension en bandes, en nœuds, en expansion, par membre. */
@@ -681,7 +728,8 @@ const partsOf = (d: Type_DimensionView) => d.shown.filter(id => !d.hidden.includ
 
 /**
  * CE QUE CHAQUE REPRÉSENTATION DESSINERAIT de l'état (généralise `drawPlanOf`) : la couronne (son
- * plan, inchangé), le tableau (lignes = parts, colonnes = cases, ouverts, portée — branché au lot 2),
+ * plan, inchangé), le tableau (lignes puis colonnes = parts, un tableau par membre = cases, plat ou
+ * hiérarchique, portée),
  * le Sankey (bandes, nœuds, expansion, un diagramme par membre, regroupement ; non branché).
  */
 export const planFor = (

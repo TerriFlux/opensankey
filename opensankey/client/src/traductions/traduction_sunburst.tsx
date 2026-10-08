@@ -59,7 +59,7 @@ export const resources_sunburst = {
           cut_by: 'Découper par {{level}}',
           clear_zoom: 'Annuler ce zoom (et ceux en dessous)',
           pick_zoom: 'Choisir les membres zoomés à ce niveau (la figure lit leur somme)',
-          drawing: 'Comment cette dimension se dessine quand elle découpe la couronne',
+          drawing: 'Comment cette dimension se dessine quand elle découpe la figure',
           title: 'Navigation',
           toggle_part: 'Afficher ou masquer {{name}}'
         },
