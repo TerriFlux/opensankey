@@ -1160,8 +1160,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // disent déjà.
     // Un bout « Autres » représente plusieurs membres repliés : ils entrent tous dans la
     // coordonnée, le cube les somme (cf. membersOfGeneratedNode).
-    const membres_axes = [this.source, this.target]
-      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
+    // UNE FOIS CHACUN : les deux bouts d'une chaîne sur une même dimension (Matière transformée →
+    // Emplois, tous deux découpés par type de matière) portent le même membre ; lu deux fois, il
+    // doublait chaque bande (Julien, 08/10 : 26 381 en sortie pour 13 191 en entrée).
+    const membres_axes = [...new Set([this.source, this.target]
+      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement)))]
     multi_dim.selected_tags_list.forEach(tag => {
       const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
       let v = (origine !== undefined && membres_axes.length > 0)
