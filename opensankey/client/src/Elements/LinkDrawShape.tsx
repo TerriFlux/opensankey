@@ -30,6 +30,7 @@ import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
 import { effectiveOpacity, Type_OpacityGuards } from './elementOpacity'
 import { LINK_DASH_ARRAY } from './linkDash'
+import { offsetBandPath, polylinePath, Type_Pt } from './linkPassPoints'
 
 /**
  * Sur-pente de la bézier par rapport à la corde (cf. drawShape).
@@ -185,7 +186,8 @@ export class LinkDrawShape {
       // représenter une épaisseur variable, donc un flux tapered est toujours en forme.
       // opensankey#1301 — points de contrôle libres : toujours en trait épais
       // (la géométrie de contour paramétrique ne s'applique pas), même tapered.
-      const has_waypoints = this.hasWaypoints()
+      // Points de passage lisses : même rendu en trait (jointures rondes) que les waypoints.
+      const has_waypoints = this.hasWaypoints() || this._link_control_points.hasPassPoints()
       const show_as_path = has_waypoints || (!this._link.isTapered && (
         this._link.shape_show_as_path_locked ||
         show_as_dash ||
@@ -415,6 +417,8 @@ export class LinkDrawShape {
 
     const full_src = link.thicknessSource
     const full_tgt = link.thicknessTarget
+    // opensankey#1301 — avec des points de passage, chaque bande suit la même courbe.
+    const has_pass_points = this._link_control_points.hasPassPoints()
     const transverse = link.orientation_in_effect === 'hh' ? [0, 1] : [1, 0]
     // Contour exact réservé aux courbes hh/vv hors drag (comme le tracé
     // principal) ; tous les autres cas — flux droits, orientations vh/hv,
@@ -498,14 +502,18 @@ export class LinkDrawShape {
       const off_lo_tgt = -full_tgt / 2 + lo * full_tgt
       const off_hi_src = -full_src / 2 + cum * full_src
       const off_hi_tgt = -full_tgt / 2 + cum * full_tgt
-      const path = use_exact
-        ? this.getExactBezierOutline(
-          [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
-          off_lo_src, off_lo_tgt,
-          off_hi_src, off_hi_tgt,
-          transverse
-        )
-        : genericBandPath(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
+      let path: string
+      if (has_pass_points)
+        path = this.getPassPointBand(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
+      else
+        path = use_exact
+          ? this.getExactBezierOutline(
+            [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
+            off_lo_src, off_lo_tgt,
+            off_hi_src, off_hi_tgt,
+            transverse
+          )
+          : genericBandPath(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
       this._link.d3_selection?.append('path')
         .classed('link', true)
         .classed('link_band', true)
@@ -590,6 +598,9 @@ export class LinkDrawShape {
     // opensankey#1301 — points de contrôle libres : simple trait le long de la médiane.
     if (this.hasWaypoints()) {
       return this.getWaypointStroke()
+    }
+    if (this._link_control_points.hasPassPoints()) {
+      return this.getPassPointStroke()
     }
     // Security
     if (this._link.shape_is_curved) {
@@ -831,6 +842,24 @@ export class LinkDrawShape {
     }
     out.push(V[V.length - 1])
     return out
+  }
+
+  // POINTS DE PASSAGE LISSES (opensankey#1301) =======================================
+
+  /** Tracé simple trait le long de la courbe par les points de passage. */
+  private getPassPointStroke(): string {
+    return polylinePath(this._link_control_points.passPointCenterline())
+  }
+
+  /**
+   * Contour entre deux bords décalés de la courbe par les points de passage : le flux
+   * entier (±½ épaisseur) ou une de ses bandes (#285). Sens transverse = celui des bandes
+   * paramétriques (hh → y, vv → x).
+   */
+  private getPassPointBand(a_src: number, a_tgt: number, b_src: number, b_tgt: number): string {
+    const frame = this._link_control_points.passPointFrame()
+    const transverse: Type_Pt | undefined = frame === 'h' ? [0, 1] : frame === 'v' ? [1, 0] : undefined
+    return offsetBandPath(this._link_control_points.passPointCenterline(), a_src, a_tgt, b_src, b_tgt, transverse)
   }
 
   /** Tracé simple trait (stroke) le long de la médiane routée. */
@@ -1115,6 +1144,10 @@ export class LinkDrawShape {
     // partagée par les 3 rendus. is_outline → contour fermé, sinon → simple trait.
     if (this.hasWaypoints()) {
       return is_outline ? this.getWaypointOutline() : this.getWaypointStroke()
+    }
+    if (this._link_control_points.hasPassPoints()) {
+      return is_outline ? this.getPassPointBand(-this._link.thicknessSource / 2, -this._link.thicknessTarget / 2,
+        this._link.thicknessSource / 2, this._link.thicknessTarget / 2) : this.getPassPointStroke()
     }
     if (!this._link.shape_is_curved) {
       if (is_outline) {

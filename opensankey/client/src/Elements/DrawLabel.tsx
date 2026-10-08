@@ -24,6 +24,7 @@ import { isLegendChildId } from './legendIds'
 import { resolveInlineEditEntry } from './inlineEditEntry'
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
+import { polylineMidpoint } from './linkPassPoints'
 import { Class_BaseShape } from './Element'
 import { effectiveOpacity } from './elementOpacity'
 import { getWrapMeasure, labelFontTemplate, setWrapMeasure, textBBox, wrapMeasureKey } from './labelMeasureCache'
@@ -2671,6 +2672,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
    * de waypoint (ou recyclage) → repli sur le calcul paramétrique historique.
    */
   protected getWaypointLabelMidpoint(): [number, number] | null {
+    // Points de passage lisses : milieu de la courbe échantillonnée.
+    if (this._link_control_points.hasPassPoints()) return polylineMidpoint(this._link_control_points.passPointCenterline())
     const wps = this.link.shape_waypoints
     if (this.link.shape_is_recycling || !Array.isArray(wps) || wps.length === 0) return null
     const pts: Array<[number, number]> = [
