@@ -1220,6 +1220,9 @@ export type Type_LazyLabelMenuItems = Array<{
   // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
   tooltip?: () => string
   hidden?: () => boolean
+  // Fonctionnalité réservée au dev : le menu affiche le badge « dev » (la visibilité, elle,
+  // reste à la charge de `hidden`).
+  dev?: boolean
 }>
 /** Entrées supplémentaires du menu « Aide ». */
 export type Type_ExtraHelpMenuItems = Array<{
