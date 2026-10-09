@@ -2376,7 +2376,6 @@ export class Class_ApplicationData {
    *  - Le volet de la vue est déjà ouvert : il passe au premier plan (`bringMainZoneOccupantForward`).
    *  - Il est fermé : il se rouvre depuis la forme que la vue en garde, à sa place et, s'il y était,
    *    en plein écran.
-   *  - Une vue ÉPHÉMÈRE qu'on quitte est oubliée, si plus aucun volet ne la montre.
    *
    * sa#581 — UNE VUE SANS VOLET (fichier d'avant, vue générée par les étiquettes) se montre dans un
    * VOLET SANKEY, puisqu'il n'y a plus de fenêtre principale pour l'accueillir d'office : le volet
@@ -2385,7 +2384,7 @@ export class Class_ApplicationData {
    * sur un GESTE : un export qui parcourt les vues ne touche pas aux volets. Et un volet Sankey qui
    * reçoit la vue devient le vivant : c'est sur lui que le dessin se pose.
    */
-  public placeViewOnPanes(prev_id: string, id: string): void {
+  public placeViewOnPanes(id: string): void {
     const mc = this.menu_configuration
     if (!mc || !this.is_main) return
     this.captureSavedViewWindows()
@@ -2409,11 +2408,6 @@ export class Class_ApplicationData {
       // Un autre volet en plein écran cacherait le diagramme.
       const maximized = mc.main_zone_maximized_id
       if (maximized !== null && maximized !== mc.main_zone_live_sankey_id) mc.setMainZoneMaximized(null)
-    }
-    // Une vue éphémère qu'on quitte est oubliée si plus aucun volet ne la montre — APRÈS le
-    // placement : le volet qui la montrait vient peut-être de recevoir la vue choisie.
-    if (prev_id !== id && this._views[prev_id]?.ephemeral && !this._sankey_panes.anyPaneShows(prev_id)) {
-      this.forgetEphemeralView(prev_id)
     }
   }
 
@@ -2443,8 +2437,6 @@ export class Class_ApplicationData {
   public beforeViewChange(): void { this._sankey_panes.beforeViewChange() }
   /** sa#581 — Après une bascule de vue : la mise en page qui convient (cf. `Class_SankeyPanes`). */
   public afterViewChange(id: string): void { this._sankey_panes.afterViewChange(id) }
-  /** sa#581 — Oublie une vue éphémère que plus aucun volet ne montre. */
-  public forgetEphemeralViewOf(id: string): void { if (this._views[id]?.ephemeral) this.forgetEphemeralView(id) }
 
   /**
    * sa#581 — UNE VUE EST-ELLE OUVERTE, c'est-à-dire montrée par un volet ? C'est ce que le sélecteur
@@ -2465,7 +2457,7 @@ export class Class_ApplicationData {
    */
   public showView(id: string): void | Promise<void> {
     if (id !== this._current_view_id) return this.requestViewChange(id)
-    this.runAsViewGesture(() => this._sankey_panes.hold(() => this.placeViewOnPanes(id, id)))
+    this.runAsViewGesture(() => this._sankey_panes.hold(() => this.placeViewOnPanes(id)))
     this._sankey_panes.sync()
   }
 
@@ -2592,7 +2584,7 @@ export class Class_ApplicationData {
     const view_id = this._current_view_id
     const listed = view_id === default_main_sankey_id
       ? this._show_master_in_views
-      : this._views_order.includes(view_id) && !this._views[view_id]?.ephemeral
+      : this._views_order.includes(view_id)
     // 01/10/2026 — UN MODÈLE OUVERT SE VOIT. Une grande zone vide après un chargement passait pour
     // un échec (« rien ne se crée ») : le dessin était fait, mais masqué faute de volet. Sans vue
     // enregistrée à rouvrir, le diagramme s'ouvre donc dans un volet Sankey.
@@ -2658,13 +2650,6 @@ export class Class_ApplicationData {
     if (!mc) return
     this._sankey_panes.hold(() => mc.main_zone_sankey_panes.forEach(p => mc.setSankeyPaneView(p.id, '')))
     this._sankey_panes.sync()
-  }
-
-  /** Oublie une vue éphémère (cf. `Type_ViewEntry.ephemeral`). OpenSankey+ y ajoute son ménage. */
-  protected forgetEphemeralView(id: string): void {
-    delete this._views[id]
-    const at = this._views_order.indexOf(id)
-    if (at >= 0) this._views_order.splice(at, 1)
   }
 
   // ESPACE DE TRAVAIL DANS LE FICHIER (os#1385, lot 4, D8) ==============================
