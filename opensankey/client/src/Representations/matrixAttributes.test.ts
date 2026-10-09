@@ -14,6 +14,7 @@ import {
   matrixDecimalsChosen, matrixUnitChoices, matrixUnitOf
 } from './matrixAttributes'
 import { DONUT_STYLE_DEFAULTS } from '../Charts/figureChartStyle'
+import { figureControlsOf } from './figureControls'
 
 if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
@@ -39,6 +40,15 @@ describe('sa#623 — réglages du tableau croisé', () => {
     expect(MATRIX_ATTRIBUTES[MATRIX_UNIT_KEY].default).toBe('')
     expect(MATRIX_ATTRIBUTES['parts_group_under'].default).toBe(DONUT_STYLE_DEFAULTS.parts_group_under)
     expect(MATRIX_ATTRIBUTES['parts_max'].default).toBe(DONUT_STYLE_DEFAULTS.parts_max)
+  })
+
+  it('les quatre réglages paraissent dans l\'onglet Graphe (famille vide), pas sous Styles seulement', () => {
+    // L'onglet Graphe rend `family: ''` (cf. FigureOwnSettings) : une clé rangée en Forme ou en
+    // Valeur n'y paraissait pas, et l'onglet restait vide (retour de recette, 09/10).
+    const items = figureControlsOf(MATRIX_ATTRIBUTES, {}, ['style', 'identity'], 'fr', { app_data: {}, element: null })
+    expect(items.map(i => i.key).sort())
+      .toEqual([MATRIX_DECIMALS_KEY, MATRIX_UNIT_KEY, 'parts_group_under', 'parts_max'].sort())
+    items.forEach(i => expect(i.family).toBe(''))
   })
 
   it('décimales : fixées de 0 à 6, sinon automatiques', () => {

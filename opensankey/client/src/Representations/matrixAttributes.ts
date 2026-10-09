@@ -25,7 +25,9 @@
 //    sur les clés de la couronne, mais rien ne permettait de les régler sur un tableau.
 //
 // Toutes de sorte 'style' : une façon de lire les mêmes chiffres, qui a un sens sur le tableau voisin
-// et dans un style. Ce que le tableau MONTRE (lignes, colonnes, portée) reste au tableau de
+// et dans un style. Toutes dans l'onglet GRAPHE (famille `''`) : il ne montre que les réglages sans
+// famille, et `parts_*` en aurait reçu une par son préfixe (Forme) — le tableau n'a pas de parts à
+// mettre en forme, ses quatre réglages sont ceux du tableau entier. Ce que le tableau MONTRE (lignes, colonnes, portée) reste au tableau de
 // navigation et aux coordonnées, et n'est pas redéclaré ici.
 //
 // À PART de `registerAnalysisRepresentations`, pour la même raison qu'`analysisFigureAttributes` :
@@ -80,13 +82,17 @@ const decimalsChoices = [
   }))
 ]
 
+/** Range des clés reprises du catalogue dans l'onglet Graphe, quel que soit leur préfixe. */
+const inGraphTab = (config: Type_FigureAttributesConfig): Type_FigureAttributesConfig =>
+  Object.fromEntries(Object.entries(config).map(([key, attr]) => [key, { ...attr, ui: { ...(attr.ui ?? {}), family: '' } }]))
+
 export const MATRIX_ATTRIBUTES: Type_FigureAttributesConfig = {
   // Les défauts sont ceux que le tableau appliquait (cf. DONUT_STYLE_DEFAULTS) : aucun tableau
   // enregistré ne change d'aspect.
-  ...honours(FIGURE_ATTRIBUTES_CONFIG, {
+  ...inGraphTab(honours(FIGURE_ATTRIBUTES_CONFIG, {
     parts_group_under: { default: 0.5 },
     parts_max: { default: 20 }
-  }),
+  })),
   [MATRIX_DECIMALS_KEY]: figureAttribute<string>(MATRIX_DECIMALS_AUTO, 'style', {
     en: 'Decimals', fr: 'Décimales', es: 'Decimales', de: 'Nachkommastellen',
     it: 'Decimali', 'zh-CN': '小数位数', ja: '小数点以下の桁数'
@@ -98,7 +104,7 @@ export const MATRIX_ATTRIBUTES: Type_FigureAttributesConfig = {
     it: 'Lo stesso numero di decimali in tutte le celle. Automatico: scelto in base al totale della tabella.',
     'zh-CN': '所有单元格使用相同的小数位数。自动：根据表格总计选择。',
     ja: 'すべてのセルで同じ小数点以下の桁数。自動：表の合計に応じて選択。'
-  }, { kind: 'select', choices: decimalsChoices, family: 'value_label' }),
+  }, { kind: 'select', choices: decimalsChoices }),
   [MATRIX_UNIT_KEY]: figureAttribute<string>('', 'style', {
     en: 'Unit shown', fr: 'Unité affichée', es: 'Unidad mostrada', de: 'Angezeigte Einheit',
     it: 'Unità mostrata', 'zh-CN': '显示单位', ja: '表示する単位'
@@ -112,7 +118,6 @@ export const MATRIX_ATTRIBUTES: Type_FigureAttributesConfig = {
     ja: '表の値を同じ量の別の単位に換算します。図は変わりません。'
   }, {
     kind: 'select',
-    family: 'value_label',
     choicesOf: (ctx: Type_FigureChoiceContext) => matrixUnitChoices(ctx.element)
   })
 }
