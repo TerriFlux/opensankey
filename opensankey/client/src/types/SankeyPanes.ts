@@ -473,9 +473,20 @@ export class Class_SankeyPanes {
   // BASCULES DE VUE ================================================================================
   // Appelées par `ViewsReader.applyViewChange`, avant et après le changement de zone de dessin.
 
-  /** Avant une bascule : la mise en page propre du volet vivant est mise à l'abri. */
+  /**
+   * Avant une bascule : la mise en page propre du volet vivant est mise à l'abri.
+   *
+   * sa#635 — UNE VUE LOURDE GARDE CE QU'ON Y FAIT, comme toute vue : quittée, elle est écrite dans son
+   * entrée. Le volet vivant qui la montre l'y écrit (`keepLayoutOf`) ; sans lui — une bascule
+   * programmatique l'a posée hors de tout volet —, elle s'y écrit quand même. Plus de pop-up « Vue
+   * non enregistrée » ni d'instantané à rétablir : le seul « enregistrer » est celui du document.
+   */
   public beforeViewChange(): void {
-    if (this._layout_owner === null) return
+    if (this._layout_owner === null) {
+      const current = this.host.current_view_id
+      if (this.isHeavyView(current)) this.storeLiveInView(current)
+      return
+    }
     const owner = this._layout_owner
     this._layout_owner = null
     this.keepLayoutOf(owner)
@@ -715,11 +726,6 @@ export class Class_SankeyPanes {
     } else this.disposeRender(id)
     this._cameras.delete(id)
     this._known.delete(id)
-    // Une vue éphémère que plus rien ne montre est oubliée (cf. `Type_ViewEntry.ephemeral`).
-    const entry = this.host.views_dict[memo.coordinate]
-    if (entry?.ephemeral && memo.coordinate !== this.host.current_view_id && !this.anyPaneShows(memo.coordinate)) {
-      this.host.forgetEphemeralViewOf(memo.coordinate)
-    }
   }
 
   /** Garde le rendu d'un volet fermé (cf. `_buried`). */

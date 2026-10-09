@@ -143,8 +143,12 @@ export type Type_FigureControl = {
    *
    * Absent : le réglage reste dans l'onglet propre à la figure (le centre, la légende, le geste du
    * clic — qui n'ont d'équivalent dans aucune famille).
+   *
+   * sa#623 — `''` : l'onglet propre à la figure, MÊME QUAND LE PRÉFIXE DE LA CLÉ DIT UNE FAMILLE.
+   * Le tableau croisé n'a ni formes ni étiquettes : son regroupement en « Autres » (`parts_*`) est
+   * un réglage du tableau entier, et c'est dans son onglet Graphe qu'on le cherche.
    */
-  family?: 'shape' | 'name_label' | 'value_label'
+  family?: 'shape' | 'name_label' | 'value_label' | ''
   /**
    * os#1425 — UN RÉGLAGE AVANCÉ : vrai, mais rarement ce qu'on vient chercher.
    *

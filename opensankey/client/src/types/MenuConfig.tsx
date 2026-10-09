@@ -5211,19 +5211,12 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
-  private _ref_to_save_in_cache_indicator_marks: MutableRefObject<number>
   // sa#424 (lot 4) — signal de RAFRAÎCHISSEMENT de l'alerte « aucun fichier
   // téléchargé » portée par le bouton d'enregistrement. Un signal distinct est
   // nécessaire : réutiliser l'indicateur de cache en lui repassant sa valeur
   // courante ne redessine rien (React abandonne un setState de valeur égale), et
   // l'alerte restait donc affichée après le premier téléchargement.
   private _ref_to_last_download_updater: MutableRefObject<() => void>
-  // Session toggle "ne jamais enregistrer la vue" : when true, switching away
-  // from an edited view discards changes silently (no "Vue non enregistrée"
-  // modal). Reset by clicking the cache cloud icon. Lives here (OS base) so the
-  // OS-base cloud button and the OSP view machinery share one flag.
-  private _ref_to_never_save_view_session: MutableRefObject<(b: boolean) => void>
-  private _ref_to_never_save_view_session_value: MutableRefObject<boolean>
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
@@ -5432,10 +5425,7 @@ export class Class_MenuConfig {
       current: (b: boolean) => this.recordSaveState(b)
     }
     this._ref_to_save_in_cache_indicator_value = { current: true }
-    this._ref_to_save_in_cache_indicator_marks = { current: 0 }
     this._ref_to_last_download_updater = { current: () => null }
-    this._ref_to_never_save_view_session = { current: (_: boolean) => null }
-    this._ref_to_never_save_view_session_value = { current: false }
     this._ref_to_toolbar_updater = { current: () => null }
     this._ref_to_toolbar_link_visual_filter_updater = { current: () => null }
     this._ref_to_toolbar_node_tag_updater = { current: () => null }
@@ -6373,23 +6363,14 @@ export class Class_MenuConfig {
 
   /**
    * sa#633 — CE QUE FAIT TOUT GESTIONNAIRE DU TÉMOIN, le défaut comme celui de la barre du haut :
-   * poser la valeur (`true` = enregistré, `false` = modifié), l'annoncer si elle change (os#1442),
-   * et COMPTER les marques « modifié ».
-   *
-   * Le compte sert la pop-up « Vue non enregistrée » d'OpenSankey+ : elle doit savoir si la vue
-   * lourde qu'on quitte a été modifiée depuis qu'on l'a chargée, et la valeur ne le dit pas — elle
-   * est déjà à `false` dès qu'un geste a modifié le document AILLEURS.
+   * poser la valeur (`true` = enregistré, `false` = modifié) et l'annoncer si elle change (os#1442).
+   * sa#635 — plus de compte des marques « modifié » : il ne servait que la pop-up « Vue non
+   * enregistrée » d'OpenSankey+, qui a disparu.
    */
   public recordSaveState(b: boolean): void {
-    if (!b) this._ref_to_save_in_cache_indicator_marks.current++
     if (this._ref_to_save_in_cache_indicator_value.current === b) return
     this._ref_to_save_in_cache_indicator_value.current = b
     this.notify(SAVE_STATE_TOPIC)
-  }
-
-  /** sa#633 — Nombre de marques « modifié » reçues par le témoin (cf. `recordSaveState`). Ne décroît jamais. */
-  public get modified_marks(): number {
-    return this._ref_to_save_in_cache_indicator_marks.current
   }
 
   /**
@@ -6399,27 +6380,18 @@ export class Class_MenuConfig {
    * (`file_holder`) : c'est la source qui passe à « enregistré ». Le bouton du haut, lui, lit le
    * document ACTIF — la figure — dont le témoin ne bougeait donc jamais : pas de coche verte après
    * un Ctrl+S sur une couronne. Et dans l'autre sens, une retouche de la couronne marquait la figure
-   * « modifiée » sans que la source le sache. On partage donc les refs (slot, valeur et — sa#633 —
-   * compte des marques) : un seul témoin, quel que soit le document par lequel on le lit ou l'écrit.
+   * « modifiée » sans que la source le sache. On partage donc les refs (slot et valeur) : un seul
+   * témoin, quel que soit le document par lequel on le lit ou l'écrit.
    *
    * PAS pour les feuilles : elles ont un état par feuille, voulu (os#1442, pastilles d'onglets).
    */
   public shareSaveStateWith(source: Class_MenuConfig): void {
     this._ref_to_save_in_cache_indicator = source._ref_to_save_in_cache_indicator
     this._ref_to_save_in_cache_indicator_value = source._ref_to_save_in_cache_indicator_value
-    this._ref_to_save_in_cache_indicator_marks = source._ref_to_save_in_cache_indicator_marks
   }
 
   public get ref_to_last_download_updater(): MutableRefObject<() => void> {
     return this._ref_to_last_download_updater
-  }
-
-  public get ref_to_never_save_view_session(): MutableRefObject<(b: boolean) => void> {
-    return this._ref_to_never_save_view_session
-  }
-
-  public get ref_to_never_save_view_session_value(): MutableRefObject<boolean> {
-    return this._ref_to_never_save_view_session_value
   }
 
   public get ref_to_toolbar_updater(): MutableRefObject<() => void> {

@@ -29,7 +29,7 @@ type Host = {
   gestures: number
   isWindowOnlyView: (id: string) => boolean
   runAsViewGesture: (work: () => void) => void
-  placeViewOnPanes: (prev_id: string, id: string) => void
+  placeViewOnPanes: (id: string) => void
 }
 
 const makeHost = (current_view_id = MASTER_VIEW_ID): Host => {
@@ -52,7 +52,7 @@ const makeHost = (current_view_id = MASTER_VIEW_ID): Host => {
     gestures: 0,
     isWindowOnlyView: (id) => !!host.views_dict[id]?.window_only,
     runAsViewGesture: (work) => { host.gestures += 1; work() },
-    placeViewOnPanes: (_prev_id, id) => { host.placed.push(id) },
+    placeViewOnPanes: (id) => { host.placed.push(id) },
   }
   return host
 }
@@ -60,8 +60,6 @@ const makeHost = (current_view_id = MASTER_VIEW_ID): Host => {
 /** Lecteur de test : le corps du switch est remplacé par un journal (aucun diagramme monté). */
 class TestReader extends ViewsReader {
   public applied: string[] = []
-  public intercept_ids: string[] = []
-  public intercept: (id: string) => boolean = () => false
   public fail_on: string | null = null
 
   constructor(
@@ -77,11 +75,6 @@ class TestReader extends ViewsReader {
     if (id === this.fail_on) throw new Error('switch casse')
     this.applied.push(id)
     ;(this.host as unknown as Host).current_view_id = id
-  }
-
-  protected override interceptViewChange(id: string): boolean {
-    this.intercept_ids.push(id)
-    return this.intercept(id)
   }
 }
 
@@ -103,13 +96,6 @@ describe('os#1368 ViewsReader.setCurrentView — le chemin programmatique ne bou
     // l application des options de publication a l ouverture.
     expect(reader.applied).toEqual(['heavy1'])
     expect(calls).toEqual([])
-  })
-
-  it('respecte toujours l interception OSP', () => {
-    const reader = new TestReader(makeHost())
-    reader.intercept = () => true
-    reader.setCurrentView('heavy1')
-    expect(reader.applied).toEqual([])
   })
 })
 
@@ -136,16 +122,6 @@ describe('os#1368 ViewsReader.requestViewChange — le chemin interactif', () =>
     const reader = new TestReader(makeHost('heavy1'), indicator, () => Promise.resolve())
     reader.requestViewChange(MASTER_VIEW_ID)
     expect(reader.applied).toEqual([MASTER_VIEW_ID])
-    expect(calls).toEqual([])
-  })
-
-  it('un switch avorte par l interception ne pose aucun indicateur', () => {
-    const { indicator, calls } = makeSpyIndicator()
-    const reader = new TestReader(makeHost(), indicator, () => Promise.resolve())
-    reader.intercept = () => true
-    reader.requestViewChange('heavy1')
-    expect(reader.intercept_ids).toEqual(['heavy1'])
-    expect(reader.applied).toEqual([])
     expect(calls).toEqual([])
   })
 
@@ -205,11 +181,10 @@ describe('sa#581 ViewsReader — une vue qui n est qu un volet', () => {
     reader.setCurrentView('pane1')
     expect(host.placed).toEqual(['pane1'])
     expect(reader.applied).toEqual([])
-    expect(reader.intercept_ids).toEqual([])
     expect(host.current_view_id).toBe('light1')
   })
 
-  it('le chemin interactif aussi : un geste, sans indicateur ni interception', () => {
+  it('le chemin interactif aussi : un geste, sans indicateur', () => {
     const { indicator, calls } = makeSpyIndicator()
     const host = makeHost('light1')
     const reader = new TestReader(host, indicator, () => Promise.resolve())
@@ -218,7 +193,6 @@ describe('sa#581 ViewsReader — une vue qui n est qu un volet', () => {
     expect(host.placed).toEqual(['pane1'])
     expect(host.gestures).toBe(1)
     expect(reader.applied).toEqual([])
-    expect(reader.intercept_ids).toEqual([])
     expect(calls).toEqual([])
   })
 

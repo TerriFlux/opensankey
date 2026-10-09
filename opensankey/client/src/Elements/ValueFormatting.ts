@@ -23,6 +23,7 @@
 
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import type { Class_LinkElement } from './Link'
+import type { Type_ResolvedUnit } from '../types/Units'
 import { addThousandsSeparator } from './numberFormat'
 
 export { addThousandsSeparator }
@@ -51,6 +52,17 @@ export const resolveValueUnitFactor = (sample_link?: Class_LinkElement): number 
   const model = lv.unit_type === 'unit_model' ? sample_link.sankey.units.resolve(lv.unit) : undefined
   if (model) return model.unit_type.displayFactor(model.unit)
   return (lv.unit_factor && lv.unit_factor > 1) ? lv.unit_factor : 1
+}
+
+/**
+ * sa#623 — L'UNITÉ DU REGISTRE que `sample_link` affiche, avec sa GRANDEUR : ce qu'il faut à une
+ * figure pour écrire ses valeurs dans une autre unité de la même grandeur (le tableau croisé en Mt
+ * quand le diagramme écrit kt). `undefined` hors du registre (texte libre, aucune unité).
+ */
+export const resolveValueUnitModel = (sample_link?: Class_LinkElement): Type_ResolvedUnit | undefined => {
+  if (!sample_link) return undefined
+  const lv = getNameLabelValues(sample_link, 'value_label')
+  return lv.unit_type === 'unit_model' ? sample_link.sankey.units.resolve(lv.unit) : undefined
 }
 
 /**
