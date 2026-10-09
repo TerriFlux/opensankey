@@ -418,9 +418,9 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                   </MenuGroup>
                 </Submenu>
                 : null}
-              {/* os#1511 — sous un diagramme par membre, une dimension en nœuds peut colorer les flux. */}
-              {drawing === 'nodes' && !in_bands &&
-                app_data.drawing_area.sankey.data_taggs_list.some(d => d.member_bands === true)
+              {/* os#1511 — une dimension en nœuds peut colorer les flux, avec ou sans diagramme par
+                  membre (Julien, 09/10). */}
+              {drawing === 'nodes' && !in_bands && tagg.selected_tags_list.length > 1
                 ? <CheckItem
                   label={t('Banner.members_color_flows')}
                   checked={tagg.paints_member_bands_flows}

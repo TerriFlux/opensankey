@@ -2118,7 +2118,6 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /** Peut-elle peindre les flux du diagramme par membre (bouton pinceau de la légende) ? */
   public get may_paint_member_bands_flows(): boolean {
-    if (!this._in_member_bands_context) return false
     return this.member_bands === true || (this.drawing === 'nodes' && this.selected_tags_list.length > 1)
   }
 
@@ -2874,7 +2873,11 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
  */
 export function flowPainterOf(dims: Class_DataTagGroup[]): Class_DataTagGroup | undefined {
   const bande = dims.find(t => t.member_bands === true)
-  if (bande === undefined) return undefined
+  // Hors diagramme par membre (Julien, 09/10 : « je ne peux pas sélectionner les autres dataTags
+  // pour la couleur ») : seule une dimension en nœuds CHOISIE peint ; sinon, les règles habituelles.
+  if (bande === undefined) {
+    return dims.find(t => t.paints_flows && t.drawing === 'nodes' && t.selected_tags_list.length > 1)
+  }
   const peut = (t: Class_DataTagGroup) => t === bande || (t.drawing === 'nodes' && t.selected_tags_list.length > 1)
   const choisie = dims.find(t => t.paints_flows && peut(t))
   // Par défaut, seule une dimension qui DÉCOUPE un nœud peut peindre : sinon chaque flux n'aurait
