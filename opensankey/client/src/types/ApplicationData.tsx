@@ -47,7 +47,7 @@ import { layoutModeOf } from '../Representations/paneSync'
 // os#1482 — les tableaux de bord (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
   implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId, mainZoneWithViewOnCurrentSheet,
-  dashboardViewRefs, type Type_Dashboard
+  dashboardViewRefs, mainZoneWithPaneRefs, mainZoneWithPanesExpanded, type Type_Dashboard
 } from './Dashboards'
 import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, getStringFromJSON, makeId, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { PublishOptions } from './PublishOptions'
@@ -278,6 +278,17 @@ export const workspaceStateFromJSON = (
 export type Type_LibraryRef = {
   project_id: number
   path: string
+}
+
+/**
+ * sa#619 — CE QUE REND LA SUPPRESSION D'UN VOLET (cf. `Class_ApplicationData.deletePane`) : la vue
+ * supprimée, le nombre des AUTRES tableaux de bord dont elle a été retirée (le bandeau le dit), et
+ * l'état de l'historique juste après le geste — le bouton « Annuler » du bandeau ne défait que lui.
+ */
+export type Type_PaneDeletion = {
+  view_id: string
+  other_dashboards: number
+  stamp: number
 }
 
 /** Relecture défensive de la clé racine `library_ref` : absente ou malformée => null. */
@@ -1757,17 +1768,28 @@ export class Class_ApplicationData {
     // qu'effacée : `_loadSheetContent` repasse par `fromJSON` (chargement imbriqué).
     const previous_will_draw = this._from_json_will_draw
     this._from_json_will_draw = draw
+    // sa#619 — l'enregistrement des volets comme vues attend lui aussi la fin de la lecture, pour la
+    // même raison : il prendrait les vues des volets pour absentes, et en referait. Et jusqu'à la fin
+    // du post-traitement, qui notifie la grande zone : il est fait plus bas, une fois, sans faire du
+    // fichier qu'on ouvre un document modifié.
+    this._pane_views_hold += 1
     try {
-      // sa#581 — LES VOLETS SANKEY ATTENDENT LA FIN DE LA LECTURE : la disposition se relit avant
-      // les vues, et une synchronisation faite entre les deux prendrait les vues des volets pour
-      // disparues.
-      this._sankey_panes.hold(() => this._fromJSON(json_object, kwargs))
+      try {
+        // sa#581 — LES VOLETS SANKEY ATTENDENT LA FIN DE LA LECTURE : la disposition se relit avant
+        // les vues, et une synchronisation faite entre les deux prendrait les vues des volets pour
+        // disparues.
+        this._sankey_panes.hold(() => this._fromJSON(json_object, kwargs))
+      } finally {
+        this._from_json_will_draw = previous_will_draw
+      }
+      // Post processing & menu updating
+      this._afterFromJSON()
+      this._sankey_panes.sync()
     } finally {
-      this._from_json_will_draw = previous_will_draw
+      this._pane_views_hold -= 1
     }
-    // Post processing & menu updating
-    this._afterFromJSON()
-    this._sankey_panes.sync()
+    // sa#619 — tout volet est une vue, ceux d'un fichier d'avant compris (cf. `registerPanesAsViews`).
+    this.registerPanesAsViews(true)
     // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
     // à l'enregistrement (œil ON / view_mode), il est RESTAURÉ tel quel à l'ouverture pour
     // que le sous-ensemble curé de la vue s'affiche sans réintervention manuelle.
@@ -2076,9 +2098,14 @@ export class Class_ApplicationData {
       if (dashboard.sheet && dashboard.sheet !== this._current_sheet_id && this._sheets[dashboard.sheet]) {
         this.switchToSheet(dashboard.sheet, false)
       }
-      this.menu_configuration.mainZoneStateFromJSON(dashboard.main_zone)
+      // sa#619 — les volets qui sont des vues reprennent les réglages de leur vue : le tableau de
+      // bord n'en garde que la place (cf. `mainZoneWithPaneRefs`).
+      const main_zone = mainZoneWithPanesExpanded(
+        dashboard.main_zone, view_id => this._views[view_id] ? (this._views[view_id].window ?? null) : undefined
+      )
+      this.menu_configuration.mainZoneStateFromJSON(main_zone)
       // Les fenêtres dépaysées d'abord, en synchrone : elles ne passent pas par le voile.
-      const refs = dashboardViewRefs(dashboard.main_zone)
+      const refs = dashboardViewRefs(main_zone)
       refs.filter(r => r.sheet !== '' && r.sheet !== this._current_sheet_id).forEach(r => {
         const doc = this.sheetApplication(r.sheet)
         if (!doc || doc === this) return
@@ -2135,6 +2162,8 @@ export class Class_ApplicationData {
   }
 
   public captureDashboardMainZone(): Type_JSON {
+    // sa#619 — les vues d'abord : c'est d'elles que le tableau de bord reprendra les réglages.
+    this.captureSavedViewWindows()
     const main_zone = this.menu_configuration.mainZoneStateToJSON()
     const raw = main_zone['occupants'] as Type_JSON
     this.menu_configuration.main_zone_occupants.forEach(o => {
@@ -2154,7 +2183,8 @@ export class Class_ApplicationData {
       const subject = { ...(entry['subject'] as Type_JSON ?? { kind: 'diagram' }), view }
       entry['subject'] = subject
     })
-    return main_zone
+    // sa#619 — un volet qui est une vue n'y laisse que sa place : ses réglages sont ceux de sa vue.
+    return mainZoneWithPaneRefs(main_zone, view_id => !!this._views[view_id]?.window)
   }
 
   /** Crée un tableau de bord depuis l'écran, la rend courante, et la rend. */
@@ -2234,9 +2264,84 @@ export class Class_ApplicationData {
     return true
   }
 
-  /** OpenSankey+ : le volet cesse d'être une vue ; il reste ouvert, devenu éphémère. */
+  // TOUT VOLET EST UNE VUE (sa#619) ======================================================
+  //
+  // Plus de volet éphémère : un volet ouvert est une vue dès sa création, sous son nom par défaut,
+  // et l'œil « Enregistrer comme vue » a disparu. FERMER (la croix) et SUPPRIMER deviennent deux
+  // gestes : fermé, le volet reste dans le fichier et se rouvre tel qu'on l'a laissé ; supprimé, sa
+  // vue quitte le fichier et tous les tableaux de bord. Un volet VIERGE (rien réglé depuis qu'il est
+  // ouvert) est supprimé à la fermeture : essayer un volet puis le fermer ne laisse pas de trace.
+  // Les gestes qui créent ou suppriment une vue sont d'OpenSankey+ : ils sont déclarés ici, et
+  // inertes — sans vues, fermer reste ce que c'était.
+
+  /**
+   * sa#619 — APRÈS CHAQUE CHANGEMENT DE LA GRANDE ZONE (cf. `Class_Workspace`) : le volet Sankey
+   * qu'on active devient le vivant (`Class_SankeyPanes.sync`), puis tout volet ouvert qui n'est pas
+   * encore une vue le devient (`registerPanesAsViews`) — sur une grande zone que la synchronisation
+   * a déjà remise d'aplomb.
+   */
+  public afterMainZoneChange(): void {
+    this._sankey_panes.sync()
+    this.registerPanesAsViews()
+  }
+
+  /**
+   * OpenSankey+ : chaque volet ouvert qui n'est pas encore une vue le devient (sa#619). `quiet` : à la
+   * lecture d'un fichier, qui n'en devient pas un document modifié.
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public unsaveWindowView(occupant_id: string): void { }
+  public registerPanesAsViews(quiet: boolean = false): void { }
+
+  /** sa#619 — > 0 pendant la lecture d'un fichier : les volets n'y deviennent pas des vues. */
+  protected _pane_views_hold: number = 0
+
+  /** sa#619 — Le volet `occupant_id` peut-il être SUPPRIMÉ (sa vue quitter le fichier) ? */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public canDeletePane(occupant_id: string): boolean { return false }
+
+  /** sa#619 — La vue `view_id` peut-elle être supprimée (le « − » d'une vignette du sélecteur) ? */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public canDeletePaneView(view_id: string): boolean { return false }
+
+  /**
+   * sa#619 — FERMER UN VOLET, le geste de la croix : il quitte l'écran, et reste dans le fichier
+   * s'il est une vue. Le geste s'annule. OpenSankey+ y ajoute le cas du volet vierge, supprimé.
+   */
+  public closePane(occupant_id: string): void {
+    const mc = this.menu_configuration
+    if (!mc) return
+    mc.undoableMainZone(() => mc.hideMainZoneOccupant(occupant_id))
+  }
+
+  /**
+   * sa#619 — SUPPRIMER UN VOLET : il quitte l'écran, sa vue quitte le fichier et tous les tableaux
+   * de bord, en un seul geste annulable. Rend de quoi l'annoncer et l'annuler, ou `null` si rien
+   * n'a été fait (cf. `canDeletePane`).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public deletePane(occupant_id: string): Type_PaneDeletion | null { return null }
+
+  /** sa#619 — SUPPRIMER LA VUE `view_id` et ses volets (cf. `deletePane`) — le « − » d'une vignette. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public deletePaneView(view_id: string): Type_PaneDeletion | null { return null }
+
+  /**
+   * sa#619 — DUPLIQUER LA VUE `view_id` sous le nom `name`, et la montrer — le « + » d'une vignette.
+   * OpenSankey+ ; rend la copie, ou `null`.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public duplicateView(view_id: string, name: string): string | null { return null }
+
+  /**
+   * sa#619 — LE BOUTON « ANNULER » DU BANDEAU de suppression : défait la suppression si elle est
+   * toujours le dernier geste — sinon il défairait autre chose, et ne fait rien. Rend `true` si
+   * c'est fait.
+   */
+  public undoPaneDeletion(deletion: Type_PaneDeletion): boolean {
+    if (this.history.stamp !== deletion.stamp || !this.history.can_undo) return false
+    this.history.applyUndo()
+    return true
+  }
 
   /**
    * Reverse dans les vues l'état de leurs volets : celui des volets OUVERTS, et la note laissée par
@@ -2329,6 +2434,11 @@ export class Class_ApplicationData {
 
   /** sa#581 — Bascule commandée par l'activation d'un volet Sankey (cf. `Class_SankeyPanes.activate`). */
   public switchViewForPane(id: string): void { this._views_reader.switchViewForPane(id) }
+  /**
+   * sa#619 — Bascule SANS DESSIN : deux volets Sankey montrent le même dessin sous deux vues, et la vue
+   * courante change seulement de nom (cf. `Class_SankeyPanes.swapLiveViews`).
+   */
+  public switchViewForPaneWithoutRedraw(id: string): void { this._views_reader.renameCurrentView(id) }
   /** sa#581 — Avant une bascule de vue : la mise en page du volet vivant est mise à l'abri. */
   public beforeViewChange(): void { this._sankey_panes.beforeViewChange() }
   /** sa#581 — Après une bascule de vue : la mise en page qui convient (cf. `Class_SankeyPanes`). */

@@ -740,7 +740,8 @@ export class Class_Workspace {
     // geste, parce que c'est littéralement le même (D5, « toucher rend actif »).
     this.menu_configuration.subscribe(MAIN_ZONE_TOPIC, () => this.refreshActive())
     // sa#581 — ET LE VOLET SANKEY QU'ON ACTIVE DEVIENT CELUI QUI PORTE LE DESSIN du document
-    // principal (cf. `Class_SankeyPanes.sync`) : même geste, « toucher rend actif ».
-    this.menu_configuration.subscribe(MAIN_ZONE_TOPIC, () => this._main?.sankey_panes.sync())
+    // principal (cf. `Class_SankeyPanes.sync`) : même geste, « toucher rend actif ». sa#619 — puis
+    // tout volet ouvert devient une vue du document (cf. `afterMainZoneChange`).
+    this.menu_configuration.subscribe(MAIN_ZONE_TOPIC, () => this._main?.afterMainZoneChange())
   }
 }

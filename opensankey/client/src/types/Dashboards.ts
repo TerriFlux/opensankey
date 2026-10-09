@@ -8,6 +8,7 @@
 
 import { getStringFromJSON } from './Utils'
 import type { Type_JSON } from './Utils'
+import { gridFromJSON, gridKeep, gridToJSON } from './MainZoneGrid'
 
 /**
  * os#1482 — LES TABLEAUX DE BORD : la vue de l'ESPACE DE TRAVAIL (cf. NOTE-TABLEAUX DE BORD.md).
@@ -112,6 +113,117 @@ export const mainZoneWithViewOnCurrentSheet = (main_zone: Type_JSON, view_id: st
   return copy
 }
 
+// sa#619 — UN TABLEAU DE BORD CITE SES VOLETS, IL NE LES RECOPIE PLUS ==========================
+//
+// Un tableau de bord gardait une copie complète de chacun de ses volets, réglages compris, et c'est
+// cette copie qu'il rejouait. Or depuis sa#619 tout volet est une vue : ses réglages vivent dans sa
+// vue (`Type_ViewEntry.window`), et une vue placée dans deux tableaux de bord est UN seul objet
+// (décision D-B) — la régler dans l'un la montre réglée dans l'autre. Le tableau de bord ne garde donc
+// d'un volet qui est une vue que ce qui lui est propre : sa DISPOSITION (place, taille, rang,
+// géométrie s'il flotte) et la vue qu'il est. Les réglages sont ceux de la vue, relus à l'activation.
+//
+// UN SUJET DIAGRAMME RESTE dans la référence : il dit QUELLE vue d'un document le volet montre (un
+// volet Sankey, le canevas d'une autre feuille), et c'est par lui que les tableaux de bord citent les
+// vues pour la navigation (cf. `dashboardViewRefs`). Un sujet d'élément (nœud, sélection, critère…)
+// est un réglage du volet : il vit dans la vue.
+//
+// UN VOLET QUI N'EST PAS UNE VUE garde sa forme complète : le volet Sankey qui montre une vue du
+// fichier sans en être une (le diagramme, une étape de tutoriel), ou tout volet d'un document qui ne
+// sait pas enregistrer de vues (OpenSankey sans licence +). Rien d'autre ne porte ses réglages.
+
+/** Les clés d'un volet qu'un tableau de bord garde quand ce volet est une vue : sa disposition. */
+export const DASHBOARD_PANE_LAYOUT_KEYS = ['place', 'size', 'order', 'representation', 'geometry', 'saved_view']
+
+/** La vue que ce volet de tableau de bord EST (`''` s'il n'en est pas une). */
+export const dashboardPaneViewOf = (entry: unknown): string =>
+  (entry && typeof entry === 'object' && !Array.isArray(entry)) ? getStringFromJSON(entry as Type_JSON, 'saved_view', '') : ''
+
+/** Un sujet de volet qui est un diagramme (absent : un volet d'avant os#1387, diagramme lui aussi). */
+const isDiagramSubject = (subject: unknown): boolean =>
+  !subject || (typeof subject === 'object' && !Array.isArray(subject) &&
+    getStringFromJSON(subject as Type_JSON, 'kind', 'diagram') === 'diagram')
+
+/** La RÉFÉRENCE d'un volet qui est une vue : sa disposition, et son sujet s'il est un diagramme. */
+export const dashboardPaneRef = (entry: Type_JSON): Type_JSON => {
+  const ref: Type_JSON = {}
+  DASHBOARD_PANE_LAYOUT_KEYS.forEach(key => {
+    if (entry[key] !== undefined) ref[key] = JSON.parse(JSON.stringify(entry[key])) as Type_JSON
+  })
+  const subject = entry['subject']
+  if (subject && isDiagramSubject(subject)) ref['subject'] = JSON.parse(JSON.stringify(subject)) as Type_JSON
+  return ref
+}
+
+/**
+ * LE VOLET D'UNE VUE, posé à la place que lui donne un tableau de bord : les réglages de la vue
+ * (`window`), la disposition de la référence. Une vue retient aussi qu'elle était en plein écran ;
+ * c'est le tableau de bord qui le dit ici (`main_zone.maximized`), d'où la clé retirée.
+ */
+export const dashboardPaneExpanded = (ref: Type_JSON, window: Type_JSON): Type_JSON => {
+  const pane = JSON.parse(JSON.stringify(window)) as Type_JSON
+  delete pane['maximized']
+  DASHBOARD_PANE_LAYOUT_KEYS.forEach(key => {
+    if (ref[key] !== undefined) pane[key] = JSON.parse(JSON.stringify(ref[key])) as Type_JSON
+  })
+  if (ref['subject'] && isDiagramSubject(ref['subject'])) pane['subject'] = JSON.parse(JSON.stringify(ref['subject'])) as Type_JSON
+  return pane
+}
+
+/** Les volets d'une disposition, en dictionnaire (vide si la disposition n'en décrit pas). */
+const occupantsOf = (main_zone: Type_JSON): Type_JSON => {
+  const raw = main_zone['occupants']
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw as Type_JSON : {}
+}
+
+/**
+ * Une copie de `main_zone` où chaque volet qui est une vue du document (`isPaneView`) n'est plus
+ * qu'une référence. C'est la forme qu'un tableau de bord garde.
+ */
+export const mainZoneWithPaneRefs = (main_zone: Type_JSON, isPaneView: (view_id: string) => boolean): Type_JSON => {
+  const copy = JSON.parse(JSON.stringify(main_zone)) as Type_JSON
+  const occupants = occupantsOf(copy)
+  Object.entries(occupants).forEach(([id, v]) => {
+    const view = dashboardPaneViewOf(v)
+    if (view !== '' && isPaneView(view)) occupants[id] = dashboardPaneRef(v as Type_JSON)
+  })
+  return copy
+}
+
+/**
+ * Une copie de `main_zone` prête à être rejouée : chaque volet qui est une vue reprend les réglages
+ * de sa vue (`windowOf`). Un volet dont la vue n'existe plus (`undefined` : supprimée) n'est pas
+ * rejoué : il n'y a plus rien à montrer — ni réglages, ni nature sûre. Un volet qui n'est pas une vue,
+ * ou dont la vue ne garde pas de volet (`null`), est rejoué tel qu'il a été gardé.
+ */
+export const mainZoneWithPanesExpanded = (
+  main_zone: Type_JSON, windowOf: (view_id: string) => Type_JSON | null | undefined
+): Type_JSON => {
+  const copy = JSON.parse(JSON.stringify(main_zone)) as Type_JSON
+  const occupants = occupantsOf(copy)
+  const gone: string[] = []
+  Object.entries(occupants).forEach(([id, v]) => {
+    const view = dashboardPaneViewOf(v)
+    if (view === '') return
+    const window = windowOf(view)
+    if (window) occupants[id] = dashboardPaneExpanded(v as Type_JSON, window)
+    else if (window === undefined) gone.push(id)
+  })
+  gone.forEach(id => withoutPane(copy, id))
+  return copy
+}
+
+/** Retire de la disposition `main_zone` (en place) le volet `id` : sa case, son plein écran. */
+const withoutPane = (main_zone: Type_JSON, id: string): void => {
+  delete occupantsOf(main_zone)[id]
+  const grid = gridFromJSON(main_zone['grid'])
+  if (grid) {
+    const kept = gridKeep(grid, x => x !== id)
+    if (kept) main_zone['grid'] = gridToJSON(kept)
+    else delete main_zone['grid']
+  }
+  if (getStringFromJSON(main_zone, 'maximized', '') === id) delete main_zone['maximized']
+}
+
 /**
  * LE MAGASIN des tableaux de bord de l'espace de travail. Un seul par hôte (cf. `Class_MenuConfig`), comme
  * la liste des fenêtres.
@@ -207,6 +319,51 @@ export class Class_DashboardsStore {
     this._order = []
     this._current = null
     this._seq = 0
+  }
+
+  /** sa#619 — Les tableaux de bord (dans leur ordre) où figure le volet qui est la vue `view_id`. */
+  public dashboardsWithPaneView(view_id: string): string[] {
+    return this._order.filter(id => {
+      const dashboard = this._entries[id]
+      return !!dashboard && Object.values(occupantsOf(dashboard.main_zone)).some(v => dashboardPaneViewOf(v) === view_id)
+    })
+  }
+
+  /**
+   * sa#619 — LA VUE `view_id` QUITTE TOUS LES TABLEAUX DE BORD : son volet en est retiré, sa case
+   * rendue à ses voisins. Rend, pour l'annulation, la disposition d'avant de chaque tableau de bord
+   * touché (cf. `restoreMainZones`).
+   */
+  public removePaneView(view_id: string): { [id: string]: Type_JSON } {
+    const before: { [id: string]: Type_JSON } = {}
+    this.dashboardsWithPaneView(view_id).forEach(id => {
+      const dashboard = this._entries[id]
+      before[id] = JSON.parse(JSON.stringify(dashboard.main_zone)) as Type_JSON
+      const main_zone = JSON.parse(JSON.stringify(dashboard.main_zone)) as Type_JSON
+      Object.entries(occupantsOf(main_zone))
+        .filter(([, v]) => dashboardPaneViewOf(v) === view_id)
+        .forEach(([occupant_id]) => withoutPane(main_zone, occupant_id))
+      dashboard.main_zone = main_zone
+    })
+    return before
+  }
+
+  /** sa#619 — Rend à des tableaux de bord encore présents la disposition qu'ils avaient. */
+  public restoreMainZones(main_zones: { [id: string]: Type_JSON }): void {
+    Object.entries(main_zones).forEach(([id, main_zone]) => {
+      const dashboard = this._entries[id]
+      if (dashboard) dashboard.main_zone = JSON.parse(JSON.stringify(main_zone)) as Type_JSON
+    })
+  }
+
+  /** sa#619 — La disposition actuelle des tableaux de bord `ids` (cf. `restoreMainZones`). */
+  public mainZonesOf(ids: string[]): { [id: string]: Type_JSON } {
+    const out: { [id: string]: Type_JSON } = {}
+    ids.forEach(id => {
+      const dashboard = this._entries[id]
+      if (dashboard) out[id] = JSON.parse(JSON.stringify(dashboard.main_zone)) as Type_JSON
+    })
+    return out
   }
 
   /**

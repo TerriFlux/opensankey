@@ -129,6 +129,15 @@ export class Class_ApplicationHistory {
   protected _stamp = 0
   public get stamp(): number { return this._stamp }
 
+  /**
+   * sa#619 — VRAI PENDANT QU'UNE ENTRÉE SE REJOUE (annuler, rétablir). Ce qu'on rejoue rend un état
+   * d'avant ou d'après un geste, tel qu'il était : rien ne doit s'y ajouter en chemin — un volet rendu
+   * par l'annulation ne devient pas une vue neuve parce que la vue courante n'est pas encore revenue
+   * (cf. `Class_ApplicationData.registerPanesAsViews`).
+   */
+  protected _replaying = false
+  public get replaying(): boolean { return this._replaying }
+
   /** `f`, précédé du retour au contexte où le geste a été fait. */
   protected _inContext(f: () => void): () => void {
     const context = this.context
@@ -207,7 +216,8 @@ export class Class_ApplicationHistory {
    */
   public applyUndo() {
     if (this.can_undo) {
-      this._transitions_table[this._index_table % history_size].toPrev()
+      this._replaying = true
+      try { this._transitions_table[this._index_table % history_size].toPrev() } finally { this._replaying = false }
       this._index_table = this._index_table - 1
       this._stamp += 1
       this._notifyMenus()
@@ -219,7 +229,8 @@ export class Class_ApplicationHistory {
    */
   public applyRedo() {
     if (this.can_redo) {
-      this._transitions_table[this._index_table % history_size].toNext()
+      this._replaying = true
+      try { this._transitions_table[this._index_table % history_size].toNext() } finally { this._replaying = false }
       this._index_table = this._index_table + 1
       this._stamp += 1
       this._notifyMenus()
