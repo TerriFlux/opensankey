@@ -1749,6 +1749,8 @@ export class Class_ApplicationData {
     if (into_current_sheet && this.has_sheets && !keep_file_state && !json_object['sheets']) {
       this._loadSheetContent(json_object, draw)
       this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+      // sa#624 — un contenu posé dans la feuille a ses vues : les tableaux de bord les reprennent.
+      this.afterContentLoadedIntoSheet()
       return
     }
     // this.sendWaitingToast(
@@ -1996,6 +1998,12 @@ export class Class_ApplicationData {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public resumeDashboards(fallback_name?: string): void { }
+
+  /**
+   * sa#624 — OpenSankey+ : un contenu vient d'être chargé DANS la feuille courante (un modèle ajouté
+   * comme feuille) ; ses vues seront reprises en tableaux de bord une fois l'écran posé.
+   */
+  protected afterContentLoadedIntoSheet(): void { }
 
   /**
    * Relit la clé racine `dashboards`. Symétrique de l'écriture, et sous la condition de
@@ -2962,6 +2970,12 @@ export class Class_ApplicationData {
     this._sheets[id] = { name: this._defaultSheetName(1) }
     this._sheets_order = [id]
     this._current_sheet_id = id
+    // sa#624 — les tableaux de bord d'avant les feuilles décrivaient la seule qu'il y avait : celle-ci.
+    const dashboards = this.menu_configuration?.dashboards
+    dashboards?.order.forEach(dashboard_id => {
+      const dashboard = dashboards.byId(dashboard_id)
+      if (dashboard && !dashboard.sheet) dashboard.sheet = id
+    })
   }
 
   /** Rafraîchit le snapshot gzip de la feuille courante depuis l'état vivant. */
