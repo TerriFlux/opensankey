@@ -230,6 +230,10 @@ const LegendRow = ({ app_data, item }: {
       : null}
     {item.heading === true ? null : <Swatch app_data={app_data} item={item} unchecked={unchecked} />}
     {label}
+    {/* os#1511 (Jean-Yves, 09/10) — un ▾ dit que la valeur se change (« Année : 2023 ▾ »). */}
+    {is_dimension_choice && !editing
+      ? <span className='sankey_legend_panel_choice' style={{ flex: '0 0 auto', color: '#718096', fontSize: '0.75em', marginTop: '0.15em' }}>▾</span>
+      : null}
     {is_title ? <PaintFlowsButton app_data={app_data} group_id={legend.tagGroupIdOfTitle(item.id)} /> : null}
   </div>
 }
@@ -289,8 +293,40 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
     }}
   >
     <GapSlider app_data={app_data} />
+    <FlowColorSelect app_data={app_data} />
     {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} />)}
   </div>
+}
+
+/**
+ * os#1511 (Jean-Yves, 09/10 : « ce n'est pas clair comment on choisit comment on colorie le
+ * diagramme ») — LA DIMENSION QUI COLORE LES FLUX, dite et choisie en haut de la légende. Mêmes
+ * candidates et même geste que le pinceau des titres (`PaintFlowsButton`).
+ */
+const FlowColorSelect = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const groups = (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+    .filter(g => g.may_paint_member_bands_flows)
+  if (groups.length === 0) return null
+  const current = groups.find(g => g.paints_member_bands_flows)
+  const t = app_data.t as ((key: string, o?: { [k: string]: unknown }) => string) | undefined
+  const label = (t ? t('Banner.legend_flow_color', { defaultValue: 'Couleur des flux' }) : '') || 'Couleur des flux'
+  return <label
+    className='sankey_legend_panel_flow_color'
+    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85em', margin: '0.2rem 0 0.4rem' }}
+  >
+    <span style={{ flex: '0 0 auto' }}>{label}</span>
+    <select
+      value={current?.id ?? ''}
+      style={{ flex: '1 1 auto', minWidth: 0, font: 'inherit' }}
+      onChange={evt => {
+        const group = groups.find(g => g.id === evt.currentTarget.value)
+        if (group !== undefined) applyMembersColorFlows(app_data, group, true)
+      }}
+    >
+      {current === undefined ? <option value=''>—</option> : null}
+      {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+    </select>
+  </label>
 }
 
 /**

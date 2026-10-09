@@ -20,12 +20,12 @@ import type { ReactNode } from 'react'
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { applyDimensionCut, swapDimensionDrawings } from '../components/ui/dimensionDrawingHost'
+import { applyDimensionCut, applyMemberBands, swapDimensionDrawings } from '../components/ui/dimensionDrawingHost'
 import {
   candidatsAuNiveau, coupeChoisirNiveau, coupeEffacerZoom, coupeZoomer, listeDuZoom, lireCoupe, type Type_CoupeEnTableau
 } from '../Algorithms/DimensionTableCut'
 import {
-  buildFigureNavigationTable, levelShortName, type Type_FigureNavDimension
+  buildFigureNavigationTable, levelShortName, type Type_FigureNavControl, type Type_FigureNavDimension
 } from './figureNavigationTable'
 
 export interface Type_DiagramNavigationOptions {
@@ -90,12 +90,132 @@ const poser = (app_data: Class_ApplicationData, dim: Class_DataTagGroup, ids: st
   app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, ids, { multi: ids.length > 1, focus }))
 }
 
+/** Le membre du premier niveau dont `m` descend (lui-même s'il en est un). */
+const racineDe = (m: Class_DataTag): Class_DataTag => {
+  let r = m
+  while (r.parent !== undefined) r = r.parent
+  return r
+}
+
+/** Une autre dimension SUPERPOSE plusieurs membres en bandes sur les flux (pas un diagramme par membre). */
+const autreEnBandes = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Class_DataTagGroup | undefined =>
+  (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]).find(other =>
+    other !== dim && other.member_bands !== true && other.drawing === 'multi' && other.selected_tags_list.length > 1)
+
+/**
+ * os#1511 (Jean-Yves, 09/10) — LA COMMANDE DU LECTEUR d'une dimension, résolue sur l'état du
+ * diagramme. Chaque geste passe par les gestes annulables du diagramme (`applyDimensionCut`,
+ * `applyMemberBands`), sous le voile des gestes lourds.
+ */
+const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Type_FigureNavControl | undefined => {
+  const control = dim.reader_control
+  if (control === undefined) return undefined
+  // Une traduction absente (i18n pas encore chargée) rend `null` : repli sur le français.
+  const t = (key: string, o: { [k: string]: unknown }, repli: string) => (app_data.t(key, o) as string | null) || repli
+  const label = control.label ?? dim.name
+  const nom = (m: Class_DataTag) => levelShortName(m.display_name)
+  const selection = dim.selected_tags_list as Class_DataTag[]
+  const couper = (ids: string[], multi: boolean) =>
+    applyDimensionCut(app_data, dim, ids, { multi, focus: [] })
+  // Les cases « Distinguer… » des autres dimensions se décochent quand celle-ci superpose plusieurs
+  // membres en bandes : deux dimensions en bandes, on ne verrait plus rien (règle de Jean-Yves).
+  const decocherLesCases = () => (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+    .filter(other => other !== dim && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
+    .forEach(other => {
+      const racines = other.membersAtLevel(0)
+      if (racines.length > 0) applyDimensionCut(app_data, other, racines.map(m => m.id), { multi: racines.length > 1, focus: [] })
+    })
+  if (control.kind === 'toggle') {
+    const bandes = autreEnBandes(app_data, dim)
+    return {
+      kind: 'toggle',
+      label,
+      checked: dim.current_level_index > 0,
+      frozen: bandes === undefined ? undefined : t('Banner.reader_toggle_frozen', {
+        name: bandes.name, defaultValue: 'Indisponible : plusieurs membres de « {{name}} » sont superposés'
+      }, `Indisponible : plusieurs membres de « ${bandes.name} » sont superposés`),
+      set: (on: boolean) => {
+        const membres = dim.membersAtLevel(on ? 1 : 0)
+        if (membres.length === 0) return
+        app_data.runHeavyGesture(() => couper(membres.map(m => m.id), membres.length > 1))
+      }
+    }
+  }
+  if (control.kind === 'level') {
+    const coupe = lireCoupe(dim, selection)
+    const options = (dim.levels as string[]).map((raw, depth) => ({ value: String(depth), label: levelShortName(raw) }))
+      .filter((_o, depth) => depth >= coupe.entree)
+    return {
+      kind: 'level',
+      label,
+      options,
+      value: String(coupe.colonnes.length === 1 ? coupe.colonnes[0] : dim.current_level_index),
+      set: (value: string) => {
+        const membres = dim.membersAtLevel(Number(value))
+        if (membres.length === 0) return
+        app_data.runHeavyGesture(() => couper(membres.map(m => m.id), membres.length > 1))
+      }
+    }
+  }
+  // `pick` : les membres du premier niveau.
+  const racines = dim.membersAtLevel(0)
+  const choisies = [...new Set(selection.map(m => racineDe(m).id))]
+  const multi = dim.member_bands === true
+  const racine = !multi && choisies.length === 1 ? dim.tags_dict[choisies[0]] as Class_DataTag | undefined : undefined
+  const enfants = racine ? dim.childrenOf(racine) : []
+  const enfants_choisis = enfants.filter(e => selection.includes(e))
+  const toutes = t('Banner.reader_all', { defaultValue: 'Toutes' }, 'Toutes')
+  const sub = racine === undefined || enfants.length === 0 ? undefined : {
+    label: levelShortName((dim.levels as string[])[1] ?? ''),
+    summary: enfants_choisis.length === 0 ? toutes : enfants_choisis.map(nom).join(', '),
+    pick: {
+      members: enfants,
+      // « Toutes » : le membre parent est choisi, toutes les cases sont cochées.
+      chosen: enfants_choisis.length === 0 ? enfants.map(e => e.id) : enfants_choisis.map(e => e.id),
+      apply: (ids: string[]) => app_data.runHeavyGesture(() => {
+        if (ids.length === 0 || ids.length === enfants.length) {
+          couper([racine.id], false)
+          return
+        }
+        couper(ids, ids.length > 1)
+        if (ids.length > 1) decocherLesCases()
+      })
+    }
+  }
+  return {
+    kind: 'pick',
+    label,
+    options: racines.map(m => ({ value: m.id, label: nom(m) })),
+    chosen: choisies,
+    multi,
+    multi_label: control.multi_label ?? t('Banner.reader_several', { defaultValue: 'Sélectionner plusieurs' }, 'Sélectionner plusieurs'),
+    set_multi: (on: boolean) => app_data.runHeavyGesture(() => {
+      if (on) {
+        couper(choisies, choisies.length > 1)
+        applyMemberBands(app_data, dim, true)
+      } else {
+        applyMemberBands(app_data, dim, false)
+        if (choisies.length > 0) couper([choisies[0]], false)
+      }
+    }),
+    choose: (value: string) => app_data.runHeavyGesture(() => couper([value], false)),
+    pick: multi ? {
+      members: racines,
+      chosen: choisies,
+      apply: (ids: string[]) => { if (ids.length > 0) app_data.runHeavyGesture(() => couper(ids, ids.length > 1)) }
+    } : undefined,
+    sub
+  }
+}
+
 /** Le tableau des dimensions `dims` du diagramme. */
 export const buildDiagramNavigationTable = (
   app_data: Class_ApplicationData, dims: Class_DataTagGroup[], options: Type_DiagramNavigationOptions
 ): HTMLElement => {
   const t = app_data.t
   const dimensions: Type_FigureNavDimension[] = dims.map(dim => {
+    const control = readerControlOf(app_data, dim)
+    if (control !== undefined) return { id: dim.id, name: dim.name, levels: [], control }
     const coupe = lireCoupe(dim, dim.selected_tags_list as Class_DataTag[])
     const levels = (dim.levels as string[]).map((raw, depth) => ({ raw, depth })).filter(l => l.depth >= coupe.entree)
     return {

@@ -232,7 +232,12 @@ export class NodeEventsHandler {
       // comportement historique (purge) — jamais l'inspecteur d'édition.
       // SA#552 — la ligne de rappel d'une dimension ouvre la liste de ses étiquettes, et
       // pas en plus la présentation de la zone (#542).
-      if (isLegendDimensionZoneId(this._node.id)) {
+      // os#1511 (Jean-Yves, 09/10 : cliquer « Viande bovine - 2023 - kt » ouvrait une fenêtre vide
+      // qu'on ne pouvait pas fermer) — le TITRE du dessin n'a rien à présenter : clic inerte.
+      const is_title = (this._node as unknown as { is_title?: boolean }).is_title === true
+      if (is_title) {
+        // rien
+      } else if (isLegendDimensionZoneId(this._node.id)) {
         openLegendDimensionChoice(drawing_area.application_data, this._node.id, { x: event.clientX, y: event.clientY })
       } else {
         openPresentationFor(

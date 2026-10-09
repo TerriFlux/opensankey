@@ -92,7 +92,35 @@ export interface Type_FigureNavDimension {
    * React). L'élément appartient à l'hôte : le tableau rebâti le reprend tel quel.
    */
   leading?: HTMLElement
+  /**
+   * os#1511 (Jean-Yves, 09/10) — LA COMMANDE DU LECTEUR, à la place des colonnes de niveaux : une
+   * case, une liste de niveaux ou un choix de membres (cf. `types/ReaderControl`).
+   */
+  control?: Type_FigureNavControl
 }
+
+/** Une option de liste. */
+export interface Type_FigureNavOption { value: string, label: string }
+
+/** os#1511 — les trois commandes du lecteur, déjà résolues (état et gestes). */
+export type Type_FigureNavControl =
+  | {
+    kind: 'toggle', label: string, checked: boolean,
+    /** La case est gelée ; la raison en info-bulle. */
+    frozen?: string,
+    set: (on: boolean) => void
+  }
+  | { kind: 'level', label: string, options: Type_FigureNavOption[], value: string, set: (value: string) => void }
+  | {
+    kind: 'pick', label: string, options: Type_FigureNavOption[], chosen: string[],
+    /** Plusieurs membres à la fois (un diagramme par membre) : la case et son libellé. */
+    multi: boolean, multi_label: string, set_multi: (on: boolean) => void,
+    choose: (value: string) => void,
+    /** Mode « plusieurs » : la liste à cases. */
+    pick?: Type_FigureNavZoomPick,
+    /** Le niveau suivant, seulement si le membre choisi en a. */
+    sub?: { label: string, summary: string, pick: Type_FigureNavZoomPick }
+  }
 
 export interface Type_FigureNavTable {
   dimensions: Type_FigureNavDimension[]
@@ -250,11 +278,13 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   table.style.borderCollapse = 'collapse'
   table.style.tableLayout = 'auto'
   table.style.maxWidth = '100%'
-  const columns = Math.max(0, ...model.dimensions.map(d => d.levels.length))
+  const columns = Math.max(0, ...model.dimensions.map(d => d.control ? 0 : d.levels.length))
+  // os#1511 — des commandes du LECTEUR : ni échange de dessin, ni titre commun ; elles se lisent seules.
+  const has_controls = model.dimensions.some(d => d.control !== undefined)
   // 04/10/2026 — L'ORDRE : une colonne tout à gauche. Deux lignes : un ⇅ qui les échange, à cheval
   // sur les deux ; davantage : ▲▼ par ligne.
-  const move = model.dimensions.length > 1 ? model.move : undefined
-  const prefix = dimensionNamesPrefix(model.dimensions.map(d => d.name))
+  const move = model.dimensions.length > 1 && !has_controls ? model.move : undefined
+  const prefix = has_controls ? null : dimensionNamesPrefix(model.dimensions.map(d => d.name))
   if (prefix) {
     // Le début commun, une fois, au-dessus de la colonne des noms (style d'un en-tête de niveau).
     const top = table.insertRow()
@@ -313,6 +343,16 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
         order.appendChild(up)
         order.appendChild(down)
       }
+    }
+    if (dim.control) {
+      const cell = head.insertCell()
+      cell.className = 'figure_navigation_control'
+      cell.colSpan = 1 + 2 * columns
+      cell.style.padding = '0.15rem 0.5rem 0.15rem 0'
+      cell.style.whiteSpace = 'nowrap'
+      if (i > 0) cell.style.paddingTop = '0.35rem'
+      fillControlCell(model, cell, dim.id, dim.control)
+      return
     }
     const name = head.insertCell()
     name.className = 'figure_navigation_name'
@@ -484,6 +524,119 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, wher
     keepClick(x, level.clear)
     wrap.appendChild(x)
   }
+}
+
+/** Une case à cocher et son libellé, cliquables ensemble. */
+const checkbox = (label: string, checked: boolean, set: (on: boolean) => void, frozen?: string): HTMLLabelElement => {
+  const wrap = document.createElement('label')
+  wrap.style.display = 'inline-flex'
+  wrap.style.alignItems = 'center'
+  wrap.style.gap = '0.3rem'
+  wrap.style.cursor = frozen ? 'not-allowed' : 'pointer'
+  wrap.style.color = frozen ? '#a0aec0' : '#2d3748'
+  if (frozen) wrap.title = frozen
+  const box = document.createElement('input')
+  box.type = 'checkbox'
+  box.checked = checked
+  box.disabled = frozen !== undefined
+  box.style.margin = '0'
+  box.style.cursor = 'inherit'
+  box.addEventListener('pointerdown', e => e.stopPropagation())
+  box.addEventListener('click', e => e.stopPropagation())
+  box.addEventListener('change', () => set(box.checked))
+  wrap.addEventListener('pointerdown', e => e.stopPropagation())
+  const text = document.createElement('span')
+  text.textContent = label
+  wrap.appendChild(box)
+  wrap.appendChild(text)
+  return wrap
+}
+
+/** Une liste déroulante à choix unique. */
+const dropdown = (options: Type_FigureNavOption[], value: string, set: (value: string) => void): HTMLSelectElement => {
+  const select = document.createElement('select')
+  select.style.font = 'inherit'
+  select.style.padding = '0 0.2rem'
+  select.style.border = '1px solid #cbd5e0'
+  select.style.borderRadius = '3px'
+  select.style.background = 'white'
+  select.style.maxWidth = '16rem'
+  options.forEach(o => {
+    const opt = document.createElement('option')
+    opt.value = o.value
+    opt.textContent = o.label
+    opt.selected = o.value === value
+    select.appendChild(opt)
+  })
+  select.addEventListener('pointerdown', e => e.stopPropagation())
+  select.addEventListener('click', e => e.stopPropagation())
+  select.addEventListener('change', () => set(select.value))
+  return select
+}
+
+/** Un libellé gras de commande. */
+const controlLabel = (text: string): HTMLSpanElement => {
+  const span = document.createElement('span')
+  span.textContent = text
+  span.style.fontWeight = '700'
+  return span
+}
+
+/** Un résumé cliquable (« Céréales +2 ▾ ») qui ouvre la liste à cases d'un choix multiple. */
+const pickButton = (model: Type_FigureNavTable, key: string, title: string, summary: string, pick: Type_FigureNavZoomPick): HTMLElement => {
+  const b = plainButton(`${summary} ▾`, title)
+  b.className = 'figure_navigation_reader_pick'
+  b.style.border = '1px solid #cbd5e0'
+  b.style.borderRadius = '3px'
+  b.style.background = 'white'
+  b.style.padding = '0 0.3rem'
+  b.style.maxWidth = '16rem'
+  b.style.overflow = 'hidden'
+  b.style.textOverflow = 'ellipsis'
+  b.style.whiteSpace = 'nowrap'
+  b.style.verticalAlign = 'middle'
+  b.dataset.navPopover = key
+  keepClick(b, () => toggleFigureNavPopover(key, b, zoomPickerContent(model.t, title, pick)))
+  refreshFigureNavPopover(key, zoomPickerContent(model.t, title, pick))
+  return b
+}
+
+/** Le résumé d'une liste de membres choisis : le premier, « +N » pour les autres. */
+const summaryOf = (labels: string[], empty: string): string =>
+  labels.length === 0 ? empty : labels.length === 1 ? labels[0] : `${labels[0]} +${labels.length - 1}`
+
+/** os#1511 — LA COMMANDE DU LECTEUR d'une ligne : case, liste de niveaux ou choix de membres. */
+const fillControlCell = (model: Type_FigureNavTable, cell: HTMLTableCellElement, dim_id: string, control: Type_FigureNavControl) => {
+  const row = document.createElement('div')
+  row.style.display = 'flex'
+  row.style.alignItems = 'center'
+  row.style.gap = '0.5rem'
+  row.style.flexWrap = 'wrap'
+  cell.appendChild(row)
+  if (control.kind === 'toggle') {
+    row.appendChild(checkbox(control.label, control.checked, control.set, control.frozen))
+    return
+  }
+  row.appendChild(controlLabel(control.label))
+  if (control.kind === 'level') {
+    row.appendChild(dropdown(control.options, control.value, control.set))
+    return
+  }
+  if (control.multi && control.pick) {
+    const labels = control.options.filter(o => control.chosen.includes(o.value)).map(o => o.label)
+    row.appendChild(pickButton(model, `${model.memory_key}|reader|${dim_id}`, control.label, summaryOf(labels, '—'), control.pick))
+  } else {
+    row.appendChild(dropdown(control.options, control.chosen[0] ?? '', control.choose))
+  }
+  const sub = control.sub
+  if (sub && !control.multi) {
+    row.appendChild(controlLabel(sub.label))
+    row.appendChild(pickButton(model, `${model.memory_key}|reader_sub|${dim_id}`, sub.label, sub.summary, sub.pick))
+  }
+  const multi = checkbox(control.multi_label, control.multi, control.set_multi)
+  multi.style.fontSize = '11px'
+  multi.style.color = '#4a5568'
+  row.appendChild(multi)
 }
 
 /** LE SÉLECTEUR DE DESSIN d'une dimension : l'icône du dessin courant, un ⌄, et son menu. */
