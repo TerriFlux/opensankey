@@ -715,11 +715,6 @@ export class Class_SankeyPanes {
     } else this.disposeRender(id)
     this._cameras.delete(id)
     this._known.delete(id)
-    // Une vue éphémère que plus rien ne montre est oubliée (cf. `Type_ViewEntry.ephemeral`).
-    const entry = this.host.views_dict[memo.coordinate]
-    if (entry?.ephemeral && memo.coordinate !== this.host.current_view_id && !this.anyPaneShows(memo.coordinate)) {
-      this.host.forgetEphemeralViewOf(memo.coordinate)
-    }
   }
 
   /** Garde le rendu d'un volet fermé (cf. `_buried`). */

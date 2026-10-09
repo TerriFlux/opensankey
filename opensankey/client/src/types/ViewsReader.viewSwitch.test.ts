@@ -29,7 +29,7 @@ type Host = {
   gestures: number
   isWindowOnlyView: (id: string) => boolean
   runAsViewGesture: (work: () => void) => void
-  placeViewOnPanes: (prev_id: string, id: string) => void
+  placeViewOnPanes: (id: string) => void
 }
 
 const makeHost = (current_view_id = MASTER_VIEW_ID): Host => {
@@ -52,7 +52,7 @@ const makeHost = (current_view_id = MASTER_VIEW_ID): Host => {
     gestures: 0,
     isWindowOnlyView: (id) => !!host.views_dict[id]?.window_only,
     runAsViewGesture: (work) => { host.gestures += 1; work() },
-    placeViewOnPanes: (_prev_id, id) => { host.placed.push(id) },
+    placeViewOnPanes: (id) => { host.placed.push(id) },
   }
   return host
 }
