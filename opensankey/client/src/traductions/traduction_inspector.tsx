@@ -370,11 +370,11 @@ export const resources_inspector = {
         // os#1400 — a nature can legitimately have NO navigation section (the radial zoom of a
         // sunburst is a click in the figure, the sorting of a sheet belongs to the component).
         // An empty panel is not a gap, but it must SAY so rather than look broken.
-        nothing_for_representation: 'Nothing applies to “{{representation}}”: this pane is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active pane.',
-        active_window: 'this pane',
+        nothing_for_representation: 'Nothing applies to “{{representation}}”: this view is navigated from within it (clicking in the figure, sorting the sheet, the outline of the text). Thresholds, levels and tags come back as soon as the diagram is the active view.',
+        active_window: 'this view',
         // os#1408 — the tools column button, greyed out: the panel exists somewhere, just not for
         // the window being looked at. A guardrail is never mute.
-        no_section_for_window: 'Navigation and coordinates: nothing for “{{representation}}”, which is navigated from within it. They come back as soon as the diagram is the active pane.',
+        no_section_for_window: 'Navigation and coordinates: nothing for “{{representation}}”, which is navigated from within it. They come back as soon as the diagram is the active view.',
         // os#1402 — the analysis axis of a donut or a histogram: navigation, not configuration.
         // It makes parts come in and go out, and it even changes the NATURE of what can be
         // pointed at (a part is a flow, a child node or a tag depending on the axis).
@@ -756,11 +756,11 @@ export const resources_inspector = {
         select_elements: 'Sélectionner des éléments',
         deselect_all: 'Tout désélectionner',
         selection_summary: 'Sélection : {{summary}}',
-        nothing_for_representation: 'Rien ne s\'applique à « {{representation}} » : ce volet se navigue en lui-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est le volet actif.',
-        active_window: 'ce volet',
+        nothing_for_representation: 'Rien ne s\'applique à « {{representation}} » : cette vue se navigue en elle-même (clic dans la figure, tri du tableur, sommaire du texte). Les seuils, les niveaux et les étiquettes reviennent dès que le diagramme est la vue active.',
+        active_window: 'cette vue',
         // os#1408 — le bouton grisé de la colonne d'outils : le panneau existe quelque part, mais
         // pas pour ce qu'on regarde. Un garde-fou n'est jamais muet.
-        no_section_for_window: 'Navigation et coordonnées : rien pour « {{representation}} », qui se navigue en lui-même. Elles reviennent dès que le diagramme est le volet actif.',
+        no_section_for_window: 'Navigation et coordonnées : rien pour « {{representation}} », qui se navigue en lui-même. Elles reviennent dès que le diagramme est la vue active.',
         analysis_axis: 'Axe d\'analyse',
         // os#1420 — les coordonnées sous lesquelles une figure lit ses valeurs. Une figure suit
         // le diagramme par défaut et s'épingle d'un geste : deux couronnes côte à côte, deux
@@ -1128,9 +1128,9 @@ export const resources_inspector = {
         select_elements: 'Seleccionar elementos',
         deselect_all: 'Deseleccionar todo',
         selection_summary: 'Selección: {{summary}}',
-        nothing_for_representation: 'Nada se aplica a «{{representation}}»: este panel se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es el panel activo.',
-        active_window: 'este panel',
-        no_section_for_window: 'Navegación y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es el panel activo.',
+        nothing_for_representation: 'Nada se aplica a «{{representation}}»: esta vista se navega desde dentro (clic en la figura, ordenación de la hoja, índice del texto). Los umbrales, los niveles y las etiquetas vuelven en cuanto el diagrama es la vista activa.',
+        active_window: 'esta vista',
+        no_section_for_window: 'Navegación y coordenadas: nada para «{{representation}}», que se navega desde dentro. Vuelven en cuanto el diagrama es la vista activa.',
         analysis_axis: 'Eje de análisis',
         figure_data_tags: 'Coordenadas de la figura',
         figure_settings: 'Coordenadas',
@@ -1489,9 +1489,9 @@ export const resources_inspector = {
         select_elements: 'Elemente auswählen',
         deselect_all: 'Auswahl aufheben',
         selection_summary: 'Auswahl: {{summary}}',
-        nothing_for_representation: 'Nichts gilt für „{{representation}}“: Dieser Bereich wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm der aktive Bereich ist.',
-        active_window: 'dieser Bereich',
-        no_section_for_window: 'Navigation und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm der aktive Bereich ist.',
+        nothing_for_representation: 'Nichts gilt für „{{representation}}“: Diese Ansicht wird in sich selbst navigiert (Klick in die Abbildung, Sortieren der Tabelle, Inhaltsverzeichnis des Textes). Schwellenwerte, Ebenen und Tags kehren zurück, sobald das Diagramm die aktive Ansicht ist.',
+        active_window: 'diese Ansicht',
+        no_section_for_window: 'Navigation und Koordinaten: nichts für „{{representation}}“, das in sich selbst navigiert wird. Sie kehren zurück, sobald das Diagramm die aktive Ansicht ist.',
         analysis_axis: 'Analyseachse',
         figure_data_tags: 'Koordinaten der Abbildung',
         figure_settings: 'Koordinaten',
@@ -1850,9 +1850,9 @@ export const resources_inspector = {
         select_elements: 'Selezionare elementi',
         deselect_all: 'Deselezionare tutto',
         selection_summary: 'Selezione: {{summary}}',
-        nothing_for_representation: 'Nulla si applica a «{{representation}}»: questo riquadro si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è il riquadro attivo.',
-        active_window: 'questo riquadro',
-        no_section_for_window: 'Navigazione e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è il riquadro attivo.',
+        nothing_for_representation: 'Nulla si applica a «{{representation}}»: questa vista si naviga al proprio interno (clic nella figura, ordinamento del foglio, sommario del testo). Soglie, livelli ed etichette tornano non appena il diagramma è la vista attiva.',
+        active_window: 'questa vista',
+        no_section_for_window: 'Navigazione e coordinate: niente per «{{representation}}», che si naviga al proprio interno. Tornano non appena il diagramma è la vista attiva.',
         analysis_axis: 'Asse di analisi',
         figure_data_tags: 'Coordinate della figura',
         figure_settings: 'Coordinate',
@@ -2215,9 +2215,9 @@ export const resources_inspector = {
         select_elements: '选择元素',
         deselect_all: '取消全选',
         selection_summary: '所选：{{summary}}',
-        nothing_for_representation: '没有可用项适用于{{representation}}：该窗格在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动窗格时，阈值、层级和标签会重新出现。',
-        active_window: '该窗格',
-        no_section_for_window: '导航与坐标：{{representation}} 没有可用项，该窗格在其内部导航。当图表成为活动窗格时，它们会重新出现。',
+        nothing_for_representation: '没有可用项适用于{{representation}}：该视图在其内部导航（在图形中点击、表格排序、文本目录）。当图表成为活动视图时，阈值、层级和标签会重新出现。',
+        active_window: '该视图',
+        no_section_for_window: '导航与坐标：{{representation}} 没有可用项，该视图在其内部导航。当图表成为活动视图时，它们会重新出现。',
         analysis_axis: '分析轴',
         figure_data_tags: '图形坐标',
         figure_settings: '坐标',
@@ -2580,9 +2580,9 @@ export const resources_inspector = {
         select_elements: '要素を選択',
         deselect_all: '選択をすべて解除',
         selection_summary: '選択：{{summary}}',
-        nothing_for_representation: '{{representation}} に適用されるものはありません。このペインはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなペインになれば、しきい値・階層・タグは戻ります。',
-        active_window: 'このペイン',
-        no_section_for_window: 'ナビゲーションと座標：{{representation}} には該当するものがありません。このペインはそれ自体の中で操作します。ダイアグラムがアクティブなペインになれば戻ります。',
+        nothing_for_representation: '{{representation}} に適用されるものはありません。このビューはそれ自体の中で操作します（図をクリック、表を並べ替え、本文の目次）。ダイアグラムがアクティブなビューになれば、しきい値・階層・タグは戻ります。',
+        active_window: 'このビュー',
+        no_section_for_window: 'ナビゲーションと座標：{{representation}} には該当するものがありません。このビューはそれ自体の中で操作します。ダイアグラムがアクティブなビューになれば戻ります。',
         analysis_axis: '分析の軸',
         figure_data_tags: '図の座標',
         figure_settings: '座標',

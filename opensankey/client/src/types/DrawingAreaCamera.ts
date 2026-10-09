@@ -155,9 +155,9 @@ export function flyToNode(da: Class_DrawingArea, node: Class_NodeElement, scale?
   const k = scale ?? t0.k
   const cx = node.position_x + node.getShapeWidthToUse() / 2
   const cy = node.position_y + node.getShapeHeightToUse() / 2
-  // Place le centre du nœud au centre de la fenêtre visible (sous la nav bar).
+  // Place le centre du nœud au centre de la fenêtre visible (sous la nav bar et l'en-tête du volet).
   const px = da.window_fitting_width / 2
-  const py = da.window_fitting_height / 2 + da.getNavBarHeight()
+  const py = da.window_fitting_height / 2 + da.fit_top_offset
   const to = CameraMath.centerTransform({ x: cx, y: cy }, { x: px, y: py }, k)
   setCamera(da, to, { animate: true })
 }
@@ -174,9 +174,9 @@ export function flyToPoint(da: Class_DrawingArea, wx: number, wy: number, scale?
   if (!area_node || !Number.isFinite(wx) || !Number.isFinite(wy)) return
   const t0 = d3.zoomTransform(area_node)
   const k = scale ?? t0.k
-  // Place le point monde au centre de la fenêtre visible (sous la nav bar).
+  // Place le point monde au centre de la fenêtre visible (sous la nav bar et l'en-tête du volet).
   const px = da.window_fitting_width / 2
-  const py = da.window_fitting_height / 2 + da.getNavBarHeight()
+  const py = da.window_fitting_height / 2 + da.fit_top_offset
   const to = CameraMath.centerTransform({ x: wx, y: wy }, { x: px, y: py }, k)
   setCamera(da, to, { animate: true })
 }
@@ -185,7 +185,7 @@ export function flyToPoint(da: Class_DrawingArea, wx: number, wy: number, scale?
 function viewportCenter(da: Class_DrawingArea): [number, number] {
   return [
     da.window_fitting_width / 2,
-    da.window_fitting_height / 2 + da.getNavBarHeight()
+    da.window_fitting_height / 2 + da.fit_top_offset
   ]
 }
 
@@ -389,7 +389,7 @@ export function getViewport(da: Class_DrawingArea): { width: number, height: num
   return {
     width: da.window_fitting_width,
     height: da.window_fitting_height,
-    top_offset: da.getNavBarHeight()
+    top_offset: da.fit_top_offset
   }
 }
 

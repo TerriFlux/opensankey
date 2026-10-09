@@ -118,6 +118,8 @@ export interface SankeyGlobals {
   // parfois une topbar réduite au strict nécessaire. Défaut à true : le parc existant ne
   // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
   app_info?: boolean
+  // sa#621 — SANS EFFET : la bascule a quitté la barre du haut. Encore lue, pour qu'une page
+  // déjà publiée qui la porte se relise sans erreur.
   sidebar_toggle?: boolean
   // sa#567 — default FALSE : le bandeau de TOUTE fenêtre de la grande zone (« Sankey ⌄ », « Couronne ⌄ », masquer,
   // flotter, plein écran, détacher, fermer). Ses gestes arrangent l'espace de travail de l'auteur ;

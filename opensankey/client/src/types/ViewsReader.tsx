@@ -329,7 +329,7 @@ export class ViewsReader {
    */
   public setCurrentView(id: string) {
     // sa#581 — une vue qui n'est qu'un volet ne change rien au diagramme : on rappelle son volet.
-    if (this.host.isWindowOnlyView(id)) { this.host.placeViewOnPanes(this.host.current_view_id, id); return }
+    if (this.host.isWindowOnlyView(id)) { this.host.placeViewOnPanes(id); return }
     // OSP peut intercepter (modifs non sauvegardées => pop-up) et avorter le switch immédiat.
     if (this.interceptViewChange(id)) return
     this.applyViewChange(id)
@@ -395,7 +395,7 @@ export class ViewsReader {
   public requestViewChange(id: string): void | Promise<void> {
     // sa#581 — une vue qui n'est qu'un volet : son volet revient, le diagramme ne bouge pas.
     if (this.host.isWindowOnlyView(id)) {
-      this.host.runAsViewGesture(() => this.host.placeViewOnPanes(this.host.current_view_id, id))
+      this.host.runAsViewGesture(() => this.host.placeViewOnPanes(id))
       return
     }
     if (this.interceptViewChange(id)) return
@@ -449,8 +449,6 @@ export class ViewsReader {
 
   protected applyViewChangeBody(id: string) {
     const host = this.host
-    // sa#566 — la vue qu'on quitte : son volet se ferme si celui de la vue d'arrivée le remplace.
-    const prev_id = host.current_view_id
     // Mode de position (absolu / proportionnel / échelle adaptée) = état d'affichage GLOBAL du
     // viewer, pas une géométrie propre à la vue : capturé sur la DA sortante, ré-appliqué plus bas.
     const prev_position_mode = host.drawing_area.sankey.styles_dict['default'].shape_position_type
@@ -489,7 +487,7 @@ export class ViewsReader {
     // sa#566 — UNE VUE EST UN VOLET ENREGISTRÉ : la bascule pose le sien. Pas pendant l'activation
     // d'un tableau de bord, qui pose lui-même toute la grille. sa#581 — ni pendant l'activation
     // d'un volet Sankey, qui a déjà choisi où la vue se montre.
-    if (host.is_main && !dashboards?.activating && !host.sankey_panes.activating) host.placeViewOnPanes(prev_id, id)
+    if (host.is_main && !dashboards?.activating && !host.sankey_panes.activating) host.placeViewOnPanes(id)
     host.drawing_area.sankey.setVisible()
     // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
     if (id !== MASTER_VIEW_ID && !is_light) {

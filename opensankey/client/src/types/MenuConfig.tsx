@@ -104,12 +104,17 @@ export type Type_AdditionalMenus = {
   additional_nav_item: JSX.Element[],
   additional_bottom_item: JSX.Element[],
   /**
-   * os#1488 — BOUTONS DE LA COLONNE D'OUTILS (droite), injectés par une couche supérieure.
+   * os#1488 — BOUTONS D'OUTILS DU FICHIER, injectés par une couche supérieure.
    *
-   * La colonne est rendue par l'éditeur (`SankeyMenus`), mais un panneau d'OpenSankey+ — la
-   * gestion des vues et des tableaux de bord — doit pouvoir y poser son bouton, comme l'Explorateur y a
-   * le sien. Sans ce créneau il fallait soit descendre le panneau dans l'éditeur, soit lui
-   * prendre une place dans la barre du haut, qui en porte déjà neuf.
+   * Ils sont rendus par l'éditeur, mais un panneau d'OpenSankey+ — la gestion des vues et des
+   * tableaux de bord — doit pouvoir y poser son bouton, comme l'Explorateur y a le sien. Sans ce
+   * créneau il fallait descendre le panneau dans l'éditeur.
+   *
+   * sa#621 — ils vivaient dans la colonne d'outils de droite ; elle est passée dans le volet
+   * actif, et ce qui concerne le fichier entier est monté dans la BARRE DU HAUT (`MenuTopNavBar`),
+   * à côté de l'Explorateur. Un bouton posé ici y prend donc le style de cette barre
+   * (`TopBarToolButton`). OpenSankey+ n'y pose plus le sien : le menu « Vues » ouvre déjà le
+   * panneau (arbitrage Alexandre, 08/10).
    */
   additional_tools_item: JSX.Element[],
 
@@ -1073,10 +1078,10 @@ const sameMainZoneGrid = (a: Type_MainZoneGridNode | null, b: Type_MainZoneGridN
 /** Hauteur (px) du bandeau du bas pour une hauteur demandée, bornée par ce que l'écran laisse. */
 export const mainZoneBottomBandHeightPx = (wanted_px: number, content_h: number): number =>
   Math.min(Math.max(MAIN_ZONE_MIN_BOTTOM_PX, wanted_px), Math.max(MAIN_ZONE_MIN_BOTTOM_PX, content_h - MAIN_ZONE_MIN_BOTTOM_PX))
-// Largeur (px) de la colonne d'outils rétractable à droite (barre verticale + config + filtres +
-// undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
-// getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
-export const TOOLS_COLUMN_WIDTH_PX = 48
+// Largeur (px) de la colonne d'outils (barre verticale : configuration, filtres, outils du curseur,
+// cadrage, zoom). sa#621 — elle vit sur le bord droit du VOLET ACTIF, par-dessus son contenu, et ne
+// réserve donc plus rien à droite de la page (cf. getToolsColumnWidthPx).
+export const TOOLS_COLUMN_WIDTH_PX = 36
 // Dimensions du panneau de configuration (drawer/inspecteur). Source de vérité
 // ici (et non dans SankeyMenus) : getConfigPanelPinnedReservedPx en a besoin
 // pour la réserve de largeur du mode épinglé (#1243).
@@ -1649,12 +1654,12 @@ export class Class_MenuConfig {
   protected _notifyMainZone() { this._host._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._host._tools_column_open }
   public set tools_column_open(v: boolean) { this._host._tools_column_open = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par la colonne d'outils.
+  /** Largeur (px) de la colonne d'outils à l'écran, 0 quand elle n'y est pas.
    *
-   *  Nulle quand la colonne est REPLIÉE (07/08) : repliée, elle ne laisse
-   *  qu'une poignée flottante, elle ne doit donc plus rogner le dessin — c'est
-   *  tout l'intérêt de la replier sur une page publiée, où chaque pixel de
-   *  diagramme compte. */
+   *  sa#621 — CE N'EST PLUS UNE RÉSERVE. La colonne vit sur le bord droit du volet actif, par-dessus
+   *  son contenu : elle ne retire rien à la page ni au dessin (cf. `getRightChromeReservedPx`). Sa
+   *  largeur ne sert plus qu'aux fenêtres qui s'ouvrent au bord droit de l'écran, pour ne pas
+   *  recouvrir la colonne d'un volet qui touche ce bord. */
   public getToolsColumnWidthPx(): number {
     return (this.tools_column_enabled && this.tools_column_open)
       ? TOOLS_COLUMN_WIDTH_PX : 0
@@ -1813,15 +1818,16 @@ export class Class_MenuConfig {
   // latérale partagée, comme la config et les filtres. Sa réserve, quand elle est
   // ancrée, passe donc par panels.getSidebarReservedPx().
 
-  /** Réserve TOTALE de « chrome » à droite : colonne d'outils + barre latérale
-   *  unifiée. C'est l'offset commun de la colonne tableur/doc/unitaire
-   *  (MainZoneTabs) et de la réserve du diagramme — même système de fenêtrage
-   *  pour tous les panneaux dockés (#1243). */
+  /** Réserve TOTALE de « chrome » à droite : la barre latérale unifiée. C'est
+   *  l'offset commun de la colonne tableur/doc/unitaire (MainZoneTabs) et de la
+   *  réserve du diagramme — même système de fenêtrage pour tous les panneaux
+   *  dockés (#1243). sa#621 — la colonne d'outils n'y entre plus : elle vit dans
+   *  le volet actif, par-dessus son contenu. */
   public getRightChromeReservedPx(): number {
     // La barre latérale unifiée (config / filtre / recherche / modèles) est
     // couverte par panels.getSidebarReservedPx() — ne PAS ré-additionner la
     // réserve du filtre.
-    return this.getToolsColumnWidthPx() + this.panels.getSidebarReservedPx()
+    return this.panels.getSidebarReservedPx()
   }
   // --- Occupants de la grande zone (os#1355/1361) -----------------------------------------
 
@@ -4507,8 +4513,8 @@ export class Class_MenuConfig {
    * La mise en page (MainZoneTabs) lit la même `mainZoneRightColumnWidthPx`.
    */
   public getMainZoneRightReservedPx(): number {
-    // Le chrome droit (colonne d'outils + barre latérale) se réserve toujours : il occupe
-    // l'extrême droite et la colonne d'occupants se décale d'autant vers la gauche.
+    // Le chrome droit (la barre latérale) se réserve toujours : il occupe l'extrême droite et la
+    // colonne d'occupants se décale d'autant vers la gauche.
     const tools = this.getRightChromeReservedPx()
     // os#1385 — rien à réserver : on ne lit pas la fenêtre (une zone détachée ne doit jamais
     // interroger celle de la page, cf. DrawingArea.foreignWindow.test).
