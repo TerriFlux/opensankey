@@ -481,6 +481,15 @@ export class Class_Workspace {
   }
 
   /**
+   * sa#622 — TOUS LES DOCUMENTS MONTÉS DANS LA FENÊTRE `occupant_id` (une étoile par vignette),
+   * démontés exclus. Sert aux gestes qui valent pour le volet entier : une retouche d'élément, qui
+   * se redessine dans chaque vignette où l'élément paraît, et le zoom.
+   */
+  public boundWindowDocuments(occupant_id: string): Class_ApplicationData[] {
+    return Object.values(this._window_documents[occupant_id] ?? {}).filter(doc => doc && !doc.disposed)
+  }
+
+  /**
    * os#1385 (lot 2, D5) — LE DOCUMENT ACTIF : celui que l'utilisateur édite.
    *
    * RÉSOLU À L'APPEL, JAMAIS CAPTURÉ. C'est tout le contrat : une commande de l'espace de travail

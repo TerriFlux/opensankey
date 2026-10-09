@@ -2,6 +2,7 @@ import colormap from 'colormap'
 import i18next from 'i18next'
 import { Type_LangMap, normalizeLang, parseLangMap, parseStylePatch, resolveLangMap, serializeLangMap, serializeStylePatch } from '../Persistence/persistenceMigrations'
 import type { Type_StylePatch } from './Theme'
+import { parseReaderControl, type Type_ReaderControl } from './ReaderControl'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
@@ -103,6 +104,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   // au prochain enregistrement. `bands_by_value` / `nodes_by_value` sont relus (ancien format de
   // `members_order`) puis abandonnés.
   'topbar', 'member_bands', 'paints_flows', 'members_order', 'bands_by_value', 'nodes_by_value',
+  // os#1511 — la commande du lecteur dans le tableau du diagramme (case, liste de niveaux, choix).
+  'reader_control',
   // os#1511 — la portée (zoom) partagée par les fenêtres liées, écrite seulement quand elle est posée.
   'focus',
   // os#1511 — les décochés partagés par les fenêtres liées, écrits seulement quand il y en a.
@@ -1400,6 +1403,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   private _member_bands: boolean | undefined = undefined
   // os#1511 — c'est CETTE dimension qui peint les flux d'un diagramme par membre (légende, pinceau).
   private _paints_flows: boolean = false
+  // os#1511 (Jean-Yves, 09/10) — LA COMMANDE DU LECTEUR : comment la ligne de cette dimension se
+  // présente dans le tableau du diagramme, à la place des colonnes de niveaux. `undefined` = le
+  // tableau habituel. Écrite seulement si elle est posée.
+  private _reader_control: Type_ReaderControl | undefined = undefined
   // os#1511 — NŒUD DE RÉFÉRENCE de la mise en page désagrégée (Julien, 01/10 : « la faire à partir
   // d'un nœud de référence et tout placer autour de lui »). Il ne bouge pas ; les nœuds engendrés
   // se placent autour de lui le long des flux. `undefined` = automatique
@@ -1480,6 +1487,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
     this._paints_flows = tagg_to_copy._paints_flows
+    this._reader_control = tagg_to_copy._reader_control === undefined ? undefined : { ...tagg_to_copy._reader_control }
     this._reference_node_id = tagg_to_copy._reference_node_id
     this._members_order = tagg_to_copy._members_order
     this._focus_ids = [...tagg_to_copy._focus_ids]
@@ -1505,6 +1513,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
     if (this._paints_flows) json_object['paints_flows'] = true
+    if (this._reader_control !== undefined) json_object['reader_control'] = { ...this._reader_control }
     if (this._reference_node_id !== undefined) json_object['reference_node'] = this._reference_node_id
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a quitté le défaut.
     if (this._members_order !== undefined) json_object['members_order'] = this._members_order
@@ -1558,6 +1567,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // la sélection relue avec les membres, qui le contredisait parfois.
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
     this._paints_flows = json_object['paints_flows'] === true
+    this._reader_control = parseReaderControl(json_object['reader_control'])
     const reference = json_object['reference_node']
     if (typeof reference === 'string' && reference !== '') this._reference_node_id = reference
     const ordre_lu = json_object['members_order']
@@ -1622,6 +1632,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /** os#1511 — la dimension choisie pour peindre les flux d'un diagramme par membre. */
   public get paints_flows(): boolean { return this._paints_flows }
   public set paints_flows(value: boolean) { this._paints_flows = value }
+
+  /** os#1511 — la commande du lecteur de cette dimension (cf. `_reader_control`). */
+  public get reader_control(): Type_ReaderControl | undefined { return this._reader_control }
+  public set reader_control(value: Type_ReaderControl | undefined) { this._reader_control = value }
 
   /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
   public get member_bands(): boolean | undefined { return this._member_bands }

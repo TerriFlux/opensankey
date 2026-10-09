@@ -210,6 +210,9 @@ export interface SankeyGlobals {
   // ailleurs (règle de la racine : la feuille courante porte un Sankey).
   sheet?: string
   view?: string        // ouvre sur cette vue (id OU nom, comme le sélecteur de vues)
+  // sa#625 — ouvre sur ce TABLEAU DE BORD (id OU nom). Sans lui, la page s'ouvre sur le tableau de
+  // bord qui montre `view`, sinon sur le courant du fichier. Inconnu => option ignorée (warn).
+  dashboard?: string
   // Restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la
   // première du groupe. sa#412 — accepte aussi une LISTE de labels : le filtre actif est posé
   // sur le premier, et le viewer publié rend un sélecteur de label VISIBLE à côté du sélecteur
@@ -284,6 +287,8 @@ export interface PublishOptions {
   // os#1385 (lot 6) — feuille d'ouverture (id OU nom) ; null = la feuille courante du fichier.
   sheet: string | null
   view: string | null
+  // sa#625 — tableau de bord d'ouverture (id OU nom) ; null = celui de `view`, sinon le courant.
+  dashboard: string | null
   view_label: string | null
   // sa#412 — liste complète des labels de page déclarés par `view_label` (normalisée : une
   // chaîne simple devient [chaîne]). `view_label` ci-dessus reste le filtre ACTIF (premier de
@@ -594,6 +599,7 @@ export const getPublishOptions = (): PublishOptions => {
     // désigne des FICHIERS, et chacun apporte les feuilles qu'il contient.
     sheet: strFilled(s.sheet),
     view: view_value,
+    dashboard: strFilled(s.dashboard),
     view_label: view_label_value,
     view_labels: page_view_labels,
     representations: idList(s.representations),
@@ -674,6 +680,7 @@ export type ViewerSankeyOptions = {
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
   sheet?: string       // os#1385 lot 6 : ouvre sur cette FEUILLE (id OU nom d'onglet)
   view?: string        // sa#397 : ouvre sur cette vue (id OU nom)
+  dashboard?: string   // sa#625 : ouvre sur ce tableau de bord (id OU nom)
   // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396).
   // sa#412 : une LISTE rend en plus le sélecteur de label visible (cf. SankeyGlobals).
   view_label?: string | string[]
@@ -702,7 +709,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n', 'attachments',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
-    'sheet', 'view', 'view_label', 'representations',
+    'sheet', 'view', 'dashboard', 'view_label', 'representations',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {

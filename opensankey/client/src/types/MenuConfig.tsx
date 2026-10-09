@@ -88,6 +88,10 @@ import {
 // valeur ferait remonter toute la zone de dessin dans le menu.
 import type { Class_NodeElement } from '../Elements/Node'
 import { isPaneValueMode, type Type_PaneValueMode } from '../Representations/paneValueMode'
+import {
+  paneLookToJSON, readPaneLook, withPaneArea, withPaneElementStyle, withPaneFrame,
+  type Type_PaneArea, type Type_PaneLook, type Type_PaneLookBag, type Type_PaneLookKind
+} from '../Representations/paneLook'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -637,6 +641,12 @@ export type Type_MainZoneOccupant = {
    * « Dupliquer » ; retiré quand le volet devient une vue. La clé ne s'écrit que si elle est posée.
    */
   name?: string
+  /**
+   * sa#622 — LA MISE EN FORME PROPRE DU VOLET : son titre et sa légende, dessinés une fois pour lui,
+   * et les retouches de nœuds et de flux faites dans ses vignettes (cf. `Representations/paneLook`).
+   * Elle ne touche pas le diagramme. La clé ne s'écrit que si elle est posée.
+   */
+  look?: Type_PaneLook
   // os#1418 — `options` A DISPARU. Un occupant ne porte plus de réglages : il dit ce qu'il
   // montre et où il est, et les réglages appartiennent aux FIGURES (`Class_Figure`, une par
   // vignette, cf. `figureOf`). C'est ce qui permet à une figure de suivre le style de sa nature
@@ -2214,6 +2224,7 @@ export class Class_MenuConfig {
     if (e.reader) c.reader = e.reader
     if (e.value_mode) c.value_mode = e.value_mode
     if (e.hide_neutral) c.hide_neutral = true
+    if (e.look) c.look = e.look
     if (e.reading) c.reading = e.reading
     if (e.panes) c.panes = e.panes
     const clean = name.trim()
@@ -2337,6 +2348,9 @@ export class Class_MenuConfig {
     // sa#609 — et s'il masque ses process neutres.
     if (e.hide_neutral) o.hide_neutral = true
     else delete o.hide_neutral
+    // sa#622 — et sa mise en forme propre.
+    if (e.look) o.look = e.look
+    else delete o.look
     // sa#603 — et ce que son volet Sankey montrait pour lui seul.
     if (e.reading) o.reading = e.reading
     else delete o.reading
@@ -2496,6 +2510,57 @@ export class Class_MenuConfig {
     const occupants = this._host._main_zone_occupants
     const o = occupants.find(x => x.id === id)
     return o ? (mainZoneLeaderOf(occupants, o)?.hide_neutral === true) : false
+  }
+
+  /**
+   * sa#622 — LA MISE EN FORME PROPRE DU VOLET `id` (titre, légende, retouches d'éléments), ou `null`.
+   * L'objet rendu est celui du volet : à lire, jamais à modifier (les setters ci-dessous le font).
+   */
+  public mainZonePaneLook(id: string): Type_PaneLook | null {
+    return this._host._main_zone_occupants.find(x => x.id === id)?.look ?? null
+  }
+
+  /**
+   * sa#622 — POSE (ou retire, `value === undefined`) LA RETOUCHE `key` d'un nœud ou d'un flux du
+   * diagramme dans le volet `id`. Rend vrai si quelque chose a changé.
+   *
+   * PAS D'INSCRIPTION À L'HISTORIQUE ICI : la retouche part d'un geste sur un élément de vignette,
+   * que l'inspecteur inscrit déjà (`updateElements`), et dont l'annulation repasse par ici.
+   * L'inscrire deux fois demanderait deux Ctrl+Z pour un geste.
+   */
+  public setMainZonePaneElementStyle(
+    id: string, kind: Type_PaneLookKind, element_id: string, key: string, value: unknown
+  ): boolean {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return false
+    const { look, changed } = withPaneElementStyle(o.look, kind, element_id, key, value)
+    if (!changed) return false
+    if (look) o.look = look
+    else delete o.look
+    this._notifyMainZone()
+    return true
+  }
+
+  /** sa#622 — REMPLACE LE CADRAGE des figures du volet `id` (mode, ancrage, verrous). */
+  public setMainZonePaneArea(id: string, area: Type_PaneArea): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const { look, changed } = withPaneArea(o.look, area)
+    if (!changed) return
+    if (look) o.look = look
+    else delete o.look
+    this._notifyMainZone()
+  }
+
+  /** sa#622 — REMPLACE LE TITRE ET LA LÉGENDE du volet `id` (clés `title_*`, `legend_*`). */
+  public setMainZonePaneFrame(id: string, frame: Type_PaneLookBag): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const { look, changed } = withPaneFrame(o.look, frame)
+    if (!changed) return
+    if (look) o.look = look
+    else delete o.look
+    this._notifyMainZone()
   }
 
   /**
@@ -4666,6 +4731,9 @@ export class Class_MenuConfig {
     if (o.value_mode) entry['value_mode'] = o.value_mode
     // sa#609 — les process neutres masqués, seulement si c'est posé.
     if (o.hide_neutral) entry['hide_neutral'] = true
+    // sa#622 — la mise en forme propre du volet, seulement s'il en a une.
+    const look = paneLookToJSON(o.look)
+    if (look) entry['look'] = look as Type_JSON
     // sa#603 — ce qu'un volet Sankey montre pour lui seul, seulement s'il a choisi quelque chose.
     if (o.reading && Object.keys(o.reading).length > 0) {
       entry['reading'] = JSON.parse(JSON.stringify(o.reading)) as Type_JSON
@@ -4808,6 +4876,8 @@ export class Class_MenuConfig {
     const value_mode = isPaneValueMode(e['value_mode']) ? e['value_mode'] : undefined
     // sa#609 — les process neutres masqués ; absent = tout est montré.
     const hide_neutral = e['hide_neutral'] === true ? true : undefined
+    // sa#622 — la mise en forme propre du volet ; absente = celle de ses figures.
+    const look = readPaneLook(e['look'])
     // sa#603 — ce que le volet Sankey montre pour lui seul ; absent = tout suit la barre générale.
     const reading = readPaneReading(e['reading'])
     // 05/10/2026 — les vignettes masquées (cf. `Type_MainZoneOccupant.panes`) ; absentes = toutes.
@@ -4830,6 +4900,7 @@ export class Class_MenuConfig {
       reader,
       value_mode,
       hide_neutral,
+      look,
       reading,
       panes,
       name: name !== '' ? name : undefined,
@@ -4876,7 +4947,7 @@ export class Class_MenuConfig {
       })
       host._main_zone_occupants = entries.map(({
         id, subject, representation, place, size, geometry, saved_view, sync, panes, data_tags, reader, value_mode, hide_neutral,
-        reading, name
+        look, reading, name
       }) => {
         const o: Type_MainZoneOccupant = { id, subject, representation, place, size }
         if (geometry) o.geometry = geometry
@@ -4886,6 +4957,7 @@ export class Class_MenuConfig {
         if (reader) o.reader = reader
         if (value_mode) o.value_mode = value_mode
         if (hide_neutral) o.hide_neutral = true
+        if (look) o.look = look
         if (reading && isSankeyPane(o)) o.reading = reading
         if (panes) o.panes = panes
         // sa#618 — un volet enregistré porte le nom de sa vue, pas le sien.
