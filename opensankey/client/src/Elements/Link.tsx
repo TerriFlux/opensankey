@@ -915,10 +915,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     //  2. à défaut, une dimension EN NŒUDS dont un bout porte un membre (les postes) ;
     //  3. à défaut, la bande (la filière).
     // Un membre sans couleur enregistrée prend celle de la carte par défaut (`displayColorOf`).
-    if (!isGeneratedMemberId(this.id)) return undefined
     const dimensions = this.sankey.data_taggs_list as Class_DataTagGroup[]
-    const bande = dimensions.find(tagg => tagg.member_bands === true)
-    if (bande === undefined) return undefined
+    // Un flux d'origine (non découpé) se peint aussi, par ses données, quand une dimension en nœuds
+    // est choisie pour peindre (hors diagramme par membre, les flux non découpés existent).
+    if (!isGeneratedMemberId(this.id)) {
+      const peintre = flowPainterOf(dimensions)
+      return peintre === undefined ? undefined : this._couleurParDonnees(peintre, [])
+    }
     const aux_bouts = [this.source, this.target].flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
     const couleurDe = (tagg: Class_DataTagGroup) => {
       const membres = [...new Set(aux_bouts.filter(membre => membre.group === tagg))]
@@ -938,7 +941,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   private _couleurParDonnees(peintre: Class_DataTagGroup, aux_bouts: Class_DataTag[]): string | undefined {
     const parsed = parseGeneratedId(this.id)
-    const origine = parsed === undefined ? undefined : this.sankey.links_dict[parsed.origin] as Class_LinkElement | undefined
+    const origine = parsed === undefined ? this : this.sankey.links_dict[parsed.origin] as Class_LinkElement | undefined
     if (origine === undefined) return undefined
     const autres = [...new Set(aux_bouts.filter(membre => membre.group !== peintre))]
     const groupes_bouts = new Set(autres.map(membre => membre.group))
@@ -1843,6 +1846,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Sans porteur : échelle de la zone de dessin, comme toujours. Quand seuls les
     // groupes d'unité portent des échelles (tout le parc), le porteur EST le tag d'unité
     // de la valeur : comportement strictement identique à l'historique.
+    // os#1511 (Julien, 09/10 : « l'échelle n'a toujours pas changé ») — l'échelle calée sur un nœud
+    // de référence prime sur l'échelle propre de l'unité : toutes les unités suivent le nœud.
+    if (this.drawing_area.reference_scale_applied) {
+      return this.shape_local_link_scale
+        ? this.drawing_area.scaleValueToPx(_) / this.shape_local_link_scale
+        : this.drawing_area.scaleValueToPx(_)
+    }
     const unit_tag = current_value?.unit_data_tag()
     const carrier = resolveScaleCarrierTag(this.sankey, unit_tag)
     const carrier_scale = carrier?.own_scale

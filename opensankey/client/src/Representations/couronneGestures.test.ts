@@ -2,7 +2,7 @@ import { descripteur, monterSocle } from '../Charts/__fixtures__/couronneSocle'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import { memberPathSectorId } from '../Charts/memberSectorId'
 import { couronneGesturesOf, type Type_CouronneGestures } from './couronneGestures'
-import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronneState'
+import { COURONNE_KEY, LEGACY_COURONNE_KEYS, couronneReaderOf, readCouronneState, type Type_CouronneReader } from './couronneState'
 
 // 04/10/2026 — os#1511, refonte etape 2, lot 3 : LES GESTES DE LA COURONNE ecrivent l etat unique.
 // Chaque geste lit l etat, le modifie, l ecrit par `writeCouronneState` (detachee) et, liee, la
@@ -11,14 +11,14 @@ import { COURONNE_KEY, LEGACY_COURONNE_KEYS, readCouronneState } from './couronn
 
 type Bag = { [k: string]: unknown }
 
-const monter = (options: Bag) => {
+const monter = (options: Bag, reader: Type_CouronneReader = 'couronne') => {
   const s = monterSocle()
   const app = s.app as unknown as { runHeavyGesture: (w: () => void) => void }
   app.runHeavyGesture = (w: () => void) => w()
   const box = { options, writes: 0 }
   const g = (): Type_CouronneGestures => couronneGesturesOf({
     app: s.app, options: box.options, declared: ['filiere', 'pays'],
-    write: o => { box.options = o; box.writes++ }
+    write: o => { box.options = o; box.writes++ }, reader
   }) as Type_CouronneGestures
   const state = () => readCouronneState(box.options, s.sankey)
   const plan = () => drawPlanOf(state(), s.sankey)
@@ -253,18 +253,29 @@ describe('os#1511 couronneGestures — tableau croise', () => {
     m.g().showLevel('pays', 2)
     expect(m.state().dims.pays.shown).toEqual(['fr', 'es', 'br', 'us', 'cn'])
   })
-  test('colonnes = role cases : la couronne revient en une couronne par pays ; (aucune) les retire', () => {
+  test('une couronne par membre devenue colonnes du tableau (sac version 1) : relue en colonnes par le tableau', () => {
     const m = monter(ouverts)
-    m.g().setMatrixColumns('filiere', 'pays')
-    expect(m.state().dims.pays.drawing).toBe('multiples')
-    expect(m.state().order).toEqual(['filiere', 'pays'])
-    expect(m.plan().cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques', 'asie'] })
-    m.g().swap('filiere', 'pays')
-    expect(m.state().dims.filiere.drawing).toBe('multiples')
-    expect(m.state().order).toEqual(['pays', 'filiere'])
-    m.g().setMatrixColumns('pays', null)
-    expect(m.state().dims.filiere).toMatchObject({ active: false, drawing: 'sectors' })
-    expect(m.plan().cells).toBeNull()
+    m.g().setDrawing('pays', 'multiples')
+    const v1 = { ...m.box.options, couronne: { ...(m.box.options.couronne as Bag), version: 1 } }
+    expect(readCouronneState(v1, m.s.sankey).dims.pays.drawing).toBe('multiples')
+    const lu = readCouronneState(v1, m.s.sankey, undefined, undefined, 'matrix')
+    expect(lu.dims.pays.drawing).toBe('sectors')
+    expect(lu.order[lu.order.length - 1]).toBe('pays')
+    // Version 2 : un tableau par membre.
+    expect(readCouronneState(m.box.options, m.s.sankey, undefined, undefined, 'matrix').dims.pays.drawing).toBe('multiples')
+  })
+  test('un geste sur un tableau v1 ecrit la v2 SANS changer ses colonnes en tableaux par membre', () => {
+    const m = monter(ouverts)
+    m.g().setDrawing('pays', 'multiples')
+    const v1 = { ...m.box.options, couronne: { ...(m.box.options.couronne as Bag), version: 1 } }
+    // L hote OS+ tire le lecteur de la nature de la vignette.
+    const t = monter(v1, couronneReaderOf('osp.repr.matrix'))
+    t.g().showLevel('filiere', 1)
+    expect((t.box.options.couronne as Bag).version).toBe(2)
+    const lu = readCouronneState(t.box.options, t.s.sankey, undefined, undefined, 'matrix')
+    expect(lu.dims.pays.drawing).toBe('sectors')
+    expect(lu.order[lu.order.length - 1]).toBe('pays')
+    expect(couronneReaderOf('osp.repr.donut')).toBe('couronne')
   })
   test('liee : + ouvre la selection du diagramme', () => {
     const m = monter(lie)

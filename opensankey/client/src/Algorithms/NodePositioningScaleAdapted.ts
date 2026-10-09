@@ -171,6 +171,9 @@ export class NodePositioningScaleAdapted {
    * `maximum_node`) sont volontairement ignorés : ils ne suivent pas l'échelle, et les faire
    * entrer ici rendrait la grandeur dépendante de l'échelle courante.
    */
+  /** os#1511 — la grandeur d'UN nœud (max entrées / sorties visibles), pour une échelle calée sur lui. */
+  public magnitudeOf(n: Class_NodeElement): number { return this.nodeMagnitude(n, undefined) }
+
   private nodeMagnitude(n: Class_NodeElement, tags?: Class_DataTag[]): number {
     let sum_in = 0
     let sum_out = 0

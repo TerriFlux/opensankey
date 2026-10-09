@@ -1,4 +1,4 @@
-﻿// ==================================================================================================
+// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -1699,11 +1699,11 @@ export class Class_MenuConfig {
   }
   // 04/10/2026 (os#1511, lot 3) — CE QUE LE TABLEAU DE NAVIGATION D'UNE COURONNE TIENT D'OS+ : la ⚙
   // (clic sur une part, liée / détachée) et le sélecteur Arbre de chaque ligne. `null` : rien de plus.
-  protected _figure_navigation_extras: ((ctx: Type_RepresentationContext) => Type_FigureNavigationExtras | null) | null = null
-  public get figure_navigation_extras(): ((ctx: Type_RepresentationContext) => Type_FigureNavigationExtras | null) | null {
+  protected _figure_navigation_extras: ((ctx: Type_RepresentationContext, representation_id: string) => Type_FigureNavigationExtras | null) | null = null
+  public get figure_navigation_extras(): ((ctx: Type_RepresentationContext, representation_id: string) => Type_FigureNavigationExtras | null) | null {
     return this._host._figure_navigation_extras
   }
-  public set figure_navigation_extras(v: ((ctx: Type_RepresentationContext) => Type_FigureNavigationExtras | null) | null) {
+  public set figure_navigation_extras(v: ((ctx: Type_RepresentationContext, representation_id: string) => Type_FigureNavigationExtras | null) | null) {
     this._host._figure_navigation_extras = v
   }
 

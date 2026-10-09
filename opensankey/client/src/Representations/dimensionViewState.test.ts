@@ -108,14 +108,15 @@ describe('os#1511 modele commun — libelles du selecteur', () => {
     expect(choiceOfLabel('sankey', 'member_bands')).toEqual({ role: 'cases', variant: 'nodes', grouping: 'by_member' })
     expect(choiceOfLabel('couronne', 'multiples')).toEqual({ role: 'cases', grouping: 'by_member' })
     expect(choiceOfLabel('couronne', 'sunburst')).toEqual({ role: 'parts', variant: 'sunburst', grouping: 'by_node' })
-    expect(choiceOfLabel('matrix', 'columns')).toEqual({ role: 'cases', grouping: 'by_member' })
+    expect(choiceOfLabel('matrix', 'tables')).toEqual({ role: 'cases', grouping: 'by_member' })
+    expect(choiceOfLabel('matrix', 'hierarchical')).toEqual({ role: 'parts', variant: 'hierarchical', grouping: 'by_node' })
     expect(choiceOfLabel('couronne', 'bands')).toBeUndefined()
   })
 
   test('sunburst et expansion sont la meme profondeur, chaque representation garde sa variante', () => {
     const sun = applyLabel(vue(), 'couronne', 'sunburst')
     expect(labelOfDimension('sankey', sun)).toBe('expansion')
-    expect(labelOfDimension('matrix', sun)).toBe('rows')
+    expect(labelOfDimension('matrix', sun)).toBe('hierarchical')
     const nodes = applyLabel(sun, 'sankey', 'nodes')
     expect(labelOfDimension('couronne', nodes)).toBe('sectors')
     // Un membre a la fois dans le Sankey, puis retour : la dimension reprend son role.
@@ -136,10 +137,12 @@ describe('os#1511 modele commun — figure : relecture des anciens formats et no
       expect(toCouronneState(st)).toEqual(cs)
       // La couronne : le plan d aujourd hui.
       expect(couronnePlan(st, s)).toEqual(drawPlanOf(cs, s.sankey))
-      // Le tableau : par les roles, les memes axes que la lecture d avant.
+      // Le tableau, relu comme avant la version 2 (une couronne par membre en colonnes) : les memes
+      // axes que la lecture d avant.
       const m = ancienneLecture(cs, s)
-      const mp = matrixPlan(st, s)
+      const mp = matrixPlan(fromFigure(c.options, undefined, s.sankey, undefined, 'matrix'), s)
       if (m === null) { expect(mp).toBeNull(); return }
+      expect(mp.cases).toBeNull()
       expect(mp.rows.dimension_id).toBe(m.row_id)
       expect(mp.columns?.dimension_id ?? null).toBe(m.col_id)
       expect(mp.coordinates).toEqual(m.coordinates)
@@ -159,7 +162,7 @@ describe('os#1511 modele commun — figure : relecture des anciens formats et no
     const off = fromFigure(det({ dimension_opening: ouverts, inactive_dimensions: ['pays'] }), undefined, s.sankey)
     expect(off.dims.pays.role).toBe('none')
     const rings = fromFigure(det({ dimension_opening: { filiere: ['produits', 'cereales'] }, levels_display_by: { filiere: 'rings' } }), undefined, s.sankey)
-    expect(rings.dims.filiere.variants).toEqual({ couronne: 'sunburst', sankey: 'expansion', matrix: 'rows' })
+    expect(rings.dims.filiere.variants).toEqual({ couronne: 'sunburst', sankey: 'expansion', matrix: 'hierarchical' })
   })
 
   test('la variante Sankey choisie dans une fenetre est ecrite et relue', () => {
@@ -175,14 +178,14 @@ describe('os#1511 modele commun — figure : relecture des anciens formats et no
 })
 
 describe('os#1511 modele commun — changement de representation', () => {
-  test('une couronne par pays, un diagramme par pays, pays en colonnes', () => {
+  test('une couronne par pays, un diagramme par pays, un tableau par pays', () => {
     const s = monterSocle()
     const st = fromFigure(det({ dimension_opening: ouverts, small_multiples_by: 'pays' }), undefined, s.sankey)
     expect(labelOfDimension('couronne', st.dims.pays)).toBe('multiples')
     expect(labelOfDimension('sankey', st.dims.pays)).toBe('member_bands')
-    expect(labelOfDimension('matrix', st.dims.pays)).toBe('columns')
+    expect(labelOfDimension('matrix', st.dims.pays)).toBe('tables')
     expect(labelOfDimension('sankey', st.dims.filiere)).toBe('bands')
-    expect(labelOfDimension('matrix', st.dims.filiere)).toBe('rows')
+    expect(labelOfDimension('matrix', st.dims.filiere)).toBe('flat')
     const cp = couronnePlan(st, s)
     expect(cp.cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques', 'asie'] })
     const sp = sankeyPlan(st, s)
@@ -190,7 +193,24 @@ describe('os#1511 modele commun — changement de representation', () => {
     expect(sp.members).toEqual({ pays: ['europe', 'ameriques', 'asie'], filiere: ['cereales', 'lait', 'viande'] })
     const mp = matrixPlan(st, s)
     expect(mp.rows).toMatchObject({ dimension_id: 'filiere', members: ['cereales', 'lait', 'viande'] })
-    expect(mp.columns).toMatchObject({ dimension_id: 'pays', members: ['europe', 'ameriques', 'asie'] })
+    expect(mp.columns).toBeNull()
+    expect(mp.cases).toMatchObject({ dimension_id: 'pays', members: ['europe', 'ameriques', 'asie'] })
+  })
+
+  test('sunburst = hierarchique, secteurs = plat : un seul dessin ecrit, lu par les deux', () => {
+    const s = monterSocle()
+    const options = det({ dimension_opening: { filiere: ['produits', 'cereales'], pays: ['monde'] }, levels_display_by: { filiere: 'rings' } })
+    const st = fromFigure(options, false, s.sankey)
+    expect(labelOfDimension('couronne', st.dims.filiere)).toBe('sunburst')
+    expect(labelOfDimension('matrix', st.dims.filiere)).toBe('hierarchical')
+    expect(labelOfDimension('matrix', st.dims.pays)).toBe('flat')
+    // Plat choisi dans le tableau : la couronne revient en secteurs.
+    const flat = { ...st, dims: { ...st.dims, filiere: applyLabel(st.dims.filiere, 'matrix', 'flat') } }
+    expect(toCouronneState(flat).dims.filiere.drawing).toBe('sectors')
+    expect(labelOfDimension('sankey', flat.dims.filiere)).toBe('bands')
+    // Un tableau par membre choisi dans le tableau : une couronne par membre.
+    const tables = { ...st, dims: { ...st.dims, pays: applyLabel(st.dims.pays, 'matrix', 'tables') } }
+    expect(toCouronneState(tables).dims.pays.drawing).toBe('multiples')
   })
 
   test('changer de representation dans une fenetre garde son etat', () => {
@@ -334,7 +354,7 @@ describe('os#1511 modele commun — le diagramme', () => {
     expect(st.dims.pays.role).toBe('cases')
     expect(labelOfDimension('sankey', st.dims.pays)).toBe('member_bands')
     expect(labelOfDimension('couronne', st.dims.pays)).toBe('multiples')
-    expect(labelOfDimension('matrix', st.dims.pays)).toBe('columns')
+    expect(labelOfDimension('matrix', st.dims.pays)).toBe('tables')
     expect(st.order[st.order.length - 1]).toBe('pays')
     expect(sankeyPlan(st, s)).toMatchObject({ per_member: 'pays', grouping: 'by_member' })
     expect(toDiagramPatch(st, s.sankey)).toEqual({ dims: {}, warnings: [] })
@@ -356,7 +376,7 @@ describe('os#1511 modele commun — le diagramme', () => {
     const st = fromDiagram(s.sankey)
     expect(st.dims.filiere.role).toBe('none')
     const bands = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'sankey', 'bands'), focus: [] } } }
-    // Pays, hiérarchisée donc en choix multiple, voit les bandes prises par Filière.
+    // Pays, posée en choix multiple, voit les bandes prises par Filière.
     expect(toDiagramPatch(bands, s.sankey)).toEqual({
       dims: { filiere: { banner: 'multi' } }, warnings: [{ dimension_id: 'pays', code: 'bands_taken' }]
     })
@@ -380,7 +400,7 @@ describe('os#1511 modele commun — le diagramme', () => {
     const cp = couronnePlan(st, s)
     expect(cp.cut.map(c => c.dimension_id)).toEqual(['filiere'])
     expect(cp.cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques'] })
-    expect(matrixPlan(st, s).columns?.dimension_id).toBe('pays')
+    expect(matrixPlan(st, s).cases?.dimension_id).toBe('pays')
     expect(fromCouronneState(toCouronneState(st)).dims.pays.role).toBe('cases')
   })
 })
@@ -402,12 +422,58 @@ describe('os#1511 modele commun, lot 2 — le tableau croise par les roles', () 
     expect(mp.columns).toMatchObject({ dimension_id: 'pays', entry: ['europe', 'ameriques', 'asie'], total: ['monde'] })
   })
 
-  test('une couronne par pays : pays en colonnes (role cases)', () => {
+  test('une couronne par pays : un tableau par pays (role cases) ; sac version 1 : pays en colonnes', () => {
     const s = monterSocle()
-    const st = fromFigure(det({ dimension_opening: ouverts, small_multiples_by: 'pays' }), false, s.sankey)
+    const bag = det({ dimension_opening: ouverts, small_multiples_by: 'pays' })
+    const st = fromFigure(toFigureOptions(bag, fromFigure(bag, false, s.sankey)), false, s.sankey, undefined, 'matrix')
     expect(st.dims.pays.role).toBe('cases')
-    expect(matrixPlan(st, s).columns?.dimension_id).toBe('pays')
+    expect(matrixPlan(st, s).cases?.dimension_id).toBe('pays')
+    expect(matrixPlan(st, s).columns).toBeNull()
     expect(matrixPlan(st, s).rows.dimension_id).toBe('filiere')
+    // Le meme etat ecrit en version 1 (sa!936, « Colonnes : Pays ») : relu par le tableau, pays en colonnes.
+    const v1 = { ...bag, couronne: { version: 1, order: ['filiere', 'pays'], dims: {
+      filiere: { focus: [], shown: ['cereales', 'lait', 'viande'], hidden: [], active: true, drawing: 'sectors' },
+      pays: { focus: [], shown: ['europe', 'ameriques', 'asie'], hidden: [], active: true, drawing: 'multiples' }
+    } } }
+    const lu = fromFigure(v1, false, s.sankey, undefined, 'matrix')
+    expect(matrixPlan(lu, s).columns?.dimension_id).toBe('pays')
+    expect(matrixPlan(lu, s).cases).toBeNull()
+    // La couronne, elle, garde une couronne par pays.
+    expect(fromFigure(v1, false, s.sankey).dims.pays.role).toBe('cases')
+  })
+
+  test('plat : pays au niveau des pays, ni continents ni sous-totaux ; hierarchique : les continents en groupes', () => {
+    const s = monterSocle()
+    const base = fromFigure(det({ dimension_opening: ouverts }), false, s.sankey)
+    const st = { ...base, dims: { ...base.dims, pays: showLevel(s.pays, base.dims.pays, 2) } }
+    const flat = lignesDe(st, s)
+    expect(flat.columns.map(c => c.key)).toEqual(['c:fr', 'c:es', 'c:br', 'c:us', 'c:cn', 'c:__total__'])
+    expect(flat.columns.every(c => !c.expanded && (c.depth ?? 0) === 0)).toBe(true)
+    const mp = matrixPlan(st, s)
+    expect(mp.columns).toMatchObject({ variant: 'flat', opened: [], total: ['monde'] })
+    const hier = { ...st, dims: { ...st.dims, pays: applyLabel(st.dims.pays, 'matrix', 'hierarchical') } }
+    const mh = lignesDe(hier, s)
+    expect(mh.columns.filter(c => c.expanded).map(c => c.member_id)).toEqual(['europe', 'ameriques', 'asie'])
+    // Meme Total general, plat ou hierarchique.
+    expect(flat.rows[flat.rows.length - 1].cells.slice(-1)).toEqual(mh.rows[mh.rows.length - 1].cells.slice(-1))
+  })
+
+  test('un tableau par continent : memes lignes, memes colonnes, la somme des tableaux fait l ensemble', () => {
+    const s = monterSocle()
+    const base = fromFigure(det({ dimension_opening: ouverts }), false, s.sankey)
+    const st = { ...base, dims: { ...base.dims, pays: applyLabel(base.dims.pays, 'couronne', 'multiples') } }
+    const mp = matrixPlan(st, s)
+    expect(mp.cases?.dimension_id).toBe('pays')
+    const input = matrixInputOfPlan(mp, s.sankey)
+    const mx = buildDimensionMatrix(
+      { kind: 'link', link: s.lien }, { linked: false, dims: [], dividing: [], opened: new Set<string>() }, { data_tags: null },
+      { axes: { rows: input.rows, columns: input.columns }, cases: input.cases, coordinates: input.coordinates, total_label: 'Total' }
+    ) as Type_DimensionMatrix
+    const tables = mx.cases?.tables ?? []
+    expect(tables.map(tb => tb.member_id).sort()).toEqual(['ameriques', 'asie', 'europe'])
+    tables.forEach(tb => expect(tb.cells.length).toBe(mx.rows.length))
+    const total = (cells: (number | null)[][]) => cells[cells.length - 1][0] ?? 0
+    expect(tables.reduce((acc, tb) => acc + total(tb.cells), 0)).toBeCloseTo(total(mx.rows.map(r => r.cells)))
   })
 
   test('zoom cereales : le tableau est restreint a la portee, son total a la portee', () => {
@@ -423,12 +489,17 @@ describe('os#1511 modele commun, lot 2 — le tableau croise par les roles', () 
     expect(mp.rows.total).toBeNull()
   })
 
-  test('ouvrir une ligne ou une colonne = ouvrir le secteur du sunburst', () => {
+  test('hierarchique : ouvrir une ligne ou une colonne = ouvrir le secteur du sunburst', () => {
     const s = monterSocle()
     const base = fromFigure(det({ dimension_opening: ouverts }), false, s.sankey)
+    const hier = (d: Type_DimensionView) => applyLabel(d, 'matrix', 'hierarchical')
     const st = {
       ...base,
-      dims: { ...base.dims, filiere: expandMember(s.filiere, base.dims.filiere, 'cereales'), pays: expandMember(s.pays, base.dims.pays, 'europe') }
+      dims: {
+        ...base.dims,
+        filiere: hier(expandMember(s.filiere, base.dims.filiere, 'cereales')),
+        pays: hier(expandMember(s.pays, base.dims.pays, 'europe'))
+      }
     }
     const mp = matrixPlan(st, s)
     expect(mp.rows).toMatchObject({ entry: ['cereales', 'lait', 'viande'], opened: ['cereales'], total: ['produits'] })

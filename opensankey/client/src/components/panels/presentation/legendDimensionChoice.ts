@@ -25,7 +25,7 @@ import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { isLegendDataTagZoneId, legendDataTagZoneId } from '../../../Elements/legendIds'
 import { closePresentationTooltip } from './openPresentation'
-import { applyDimensionCut } from '../../ui/dimensionDrawingHost'
+import { applyDimensionCut, applyDimensionHidden } from '../../ui/dimensionDrawingHost'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
 
 // Liste déroulante : hauteur d'une ligne et marge verticale (px écran), plafond de hauteur
@@ -147,6 +147,15 @@ export const chooseLegendDimensionTag = (
       ? [tag_id]
       : before.includes(tag_id) ? before.filter(id => id !== tag_id) : [...before, tag_id]
     if (after.length === 0 || (after.length === before.length && after.every(id => before.includes(id)))) return
+    // 09/10/2026 (os#1511, lot 3) — DÉCOCHER est UN geste, partout (légende de la couronne, tableau
+    // croisé, légende du Sankey) : `applyDimensionHidden`. Le membre garde sa ligne, décoché, et les
+    // fenêtres liées le voient décoché ; le recocher le rend. Un membre qui n'était pas montré entre
+    // par la coupe, comme avant.
+    if (isMultiDimension(group)) {
+      const hidden = group.hidden_ids
+      if (before.includes(tag_id)) { applyDimensionHidden(app_data, group, [...hidden, tag_id], after); return }
+      if (hidden.includes(tag_id)) { applyDimensionHidden(app_data, group, hidden.filter(id => id !== tag_id), after); return }
+    }
     applyDimensionCut(app_data, group, after)
     return
   }

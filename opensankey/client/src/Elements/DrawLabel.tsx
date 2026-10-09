@@ -62,6 +62,16 @@ function getCanvasFontStringAtSize(
 
 // Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
 // break point so d3-textwrap can wrap the resulting sub-words onto separate lines.
+/**
+ * os#1511 — la compensation de police (1/k, police verrouillée) d'un élément. Le titre calé en
+ * haut vit dans le calque écran, qui annule déjà le zoom : pas de compensation pour lui.
+ */
+const fontCompensationOf = (element: unknown): number => {
+  const el = element as { is_title?: boolean, title_on_top?: boolean, drawing_area?: { font_compensation?: number } }
+  if (el.is_title === true && el.title_on_top === true) return 1
+  return el.drawing_area?.font_compensation ?? 1
+}
+
 export function breakLongWords(text: string, maxWidth: number, font: string): string {
   if (!text || maxWidth <= 0) return text
   const ctx = getMeasureContext()
@@ -257,7 +267,7 @@ export abstract class DrawLabelBase {
    */
   protected getEffectiveFontSize(): number {
     const raw = this._label_values.font_size
-    const comp = this._element.drawing_area?.font_compensation ?? 1
+    const comp = fontCompensationOf(this._element)
     return raw * comp
   }
 
@@ -990,7 +1000,7 @@ export abstract class DrawLabelBase {
       // venant de Quill) on contre-scale tout le FO à la place, comme la légende
       // (cf. Legend.applyPosition). L'empreinte locale visible vaut donc
       // width*comp × height*comp. En mode déverrouillé, comp = 1 (no-op).
-      const comp = this._element.drawing_area?.font_compensation ?? 1
+      const comp = fontCompensationOf(this._element)
 
       if (this.getEffectiveTextAngle() === -90) {
         // Colonne tournée : colWidth=height, colHeight=width (mêmes principes
@@ -1384,7 +1394,7 @@ export abstract class DrawLabelBase {
 
       const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
       // Issue #1232 : même compensation qu'à la pose initiale (drawFO).
-      const comp = this._element.drawing_area?.font_compensation ?? 1
+      const comp = fontCompensationOf(this._element)
 
       // Récupérer les dimensions natives du FO, puis l'empreinte locale visible.
       const foWidth = parseFloat(fo.attr('width')) || 0
@@ -1580,7 +1590,7 @@ export abstract class DrawLabelBase {
     const wrap_long = force_nowrap ? false : (lbl?.wrap_long_words ?? false)
     // Compensation zoom (issue #165) : le foreignObject vit dans le repère
     // local zoomé, donc la CSS font-size en px y est aussi multipliée par k.
-    const comp = this._element.drawing_area?.font_compensation ?? 1
+    const comp = fontCompensationOf(this._element)
     const raw_font_size = lbl?.font_size ?? 12
     const font_size = raw_font_size * comp
     const line_height = Math.max(font_size * 1.3, 14 * comp)
@@ -1795,7 +1805,7 @@ export abstract class DrawLabelBase {
     const hasSpecialContent = this.applySpecialTextContent(textElement, labelText)
 
     if (!hasSpecialContent) {
-      const k_inv_local = this._element.drawing_area?.font_compensation ?? 1
+      const k_inv_local = fontCompensationOf(this._element)
       // Issue #165 — box_width est défini par l'utilisateur en px écran. En mode
       // police verrouillée la font est grossie de k_inv en coords locales pour
       // rester constante à l'écran ; on grossit box_width du MÊME facteur, donc
@@ -2641,7 +2651,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     // logique puis on compense le fit-zoom à la fin pour garder une police
     // constante à l'écran (issue #165).
     const font_size = this._label_values.font_size
-    const comp = this._element.drawing_area?.font_compensation ?? 1
+    const comp = fontCompensationOf(this._element)
     return font_size * comp
   }
 
@@ -3248,7 +3258,7 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     // Éditeur de valeur étroit : une valeur est numérique et courte, la box_width
     // du label (~300px) donnait une zone d'édition démesurée. On part d'une boîte
     // compacte qui grandit avec le contenu (force_nowrap).
-    const box_width = 60 * (this._element.drawing_area?.font_compensation ?? 1)
+    const box_width = 60 * fontCompensationOf(this._element)
 
     let box_pos_x = label_pos_x
     if (label_anchor === 'end') box_pos_x -= box_width

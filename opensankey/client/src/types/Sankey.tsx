@@ -1085,6 +1085,8 @@ export class Class_Sankey {
     if (existing) return existing
     const title = this.addNewContainer(default_title_id, default_title_text)
     title.is_title = true
+    // os#1511 — un titre neuf se cale en haut du diagramme à chaque dessin.
+    title.title_on_top = true
     // Le titre édite un texte de label indépendant (name_label_text), il ne
     // renomme PAS la zone de texte (name reste l'identifiant interne).
     title.name_label_custom = true
@@ -1097,6 +1099,30 @@ export class Class_Sankey {
     const pos = this._computeTitleTopCenter(title.getShapeWidthToUse())
     title.setPosXY(pos.x, pos.y)
     return title
+  }
+
+  /**
+   * os#1511 — POSE LE TITRE AU-DESSUS DU DIAGRAMME, centré sur la largeur des nœuds visibles,
+   * s'il est réglé pour (`title_on_top`). Appelée à chaque dessin, après le placement des nœuds :
+   * le titre suit le diagramme où qu'il soit (y négatif compris), au lieu de coordonnées fixes.
+   */
+  public placeTitleOnTop(): void {
+    const title = this.getTitleContainer()
+    if (title === undefined || !title.title_on_top || !title.is_visible) return
+    const nodes = this.visible_nodes_list
+    if (nodes.length === 0) return
+    let min_x = Infinity, max_x = -Infinity, min_y = Infinity
+    nodes.forEach(n => {
+      min_x = Math.min(min_x, n.position_x)
+      max_x = Math.max(max_x, n.position_x + n.getShapeWidthToUse())
+      min_y = Math.min(min_y, n.position_y)
+    })
+    const width = title.getShapeWidthToUse()
+    const height = title.getShapeHeightToUse()
+    const x = (min_x + max_x) / 2 - width / 2
+    const y = min_y - height - 20
+    if (Math.abs(title.position_x - x) < 0.5 && Math.abs(title.position_y - y) < 0.5) return
+    title.setPosXY(x, y)
   }
 
   /**

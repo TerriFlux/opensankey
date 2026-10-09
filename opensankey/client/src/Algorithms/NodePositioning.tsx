@@ -83,6 +83,8 @@ export class NodePositioning {
   // << echelle adaptee >> sans element de reference (cf. ScaleOverrides.applyMaximumNodeScale).
   public tallestNodeMagnitude() { return this._scale.tallestNodeMagnitude() }
 
+  public nodeMagnitudeOf(n: Class_NodeElement) { return this._scale.magnitudeOf(n) }
+
   // os#1352 — Regime `element` : oubli de la capture au changement de regime, et diagnostic
   // expose quand l'element de reference est absent ou nul.
   public forgetScaleAdaptedCapture() { return this._scale.forgetScaleAdaptedCapture() }

@@ -60,7 +60,7 @@ import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { disaggregateDimensionNodes } from '../Algorithms/DimensionDisaggregation'
-import { parseGeneratedId } from '../Elements/GeneratedMemberMark'
+import { isGeneratedMemberId, parseGeneratedId } from '../Elements/GeneratedMemberMark'
 import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
 import type { Class_DataTagGroup as Type_DataTagGroup } from './TagGroup'
 import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
@@ -191,6 +191,10 @@ export class Class_DrawingArea {
   public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  // os#1511 — CALQUE ÉCRAN : frère de `g_elements`, il annule le zoom (cf. `updateScreenOverlay`).
+  // Ce qui y vit (le titre calé en haut) est en coordonnées d'écran et n'entre dans AUCUNE mesure du
+  // contenu (cadrage, défilement, papier), qui lisent toutes `g_elements`.
+  public d3_selection_screen_overlay: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
@@ -1176,6 +1180,13 @@ export class Class_DrawingArea {
   // Applied as a final cap/floor on each node's rendered height. Fixed px (does
   // not follow the diagram scale), mirroring the flux size-limit control.
   private _maximum_node?: number
+  // os#1511 (Julien, 09/10 : « une taille de nœud donnée pour Matière et une échelle qui
+  // s'adapte ») — un nœud de référence et sa hauteur en px : à chaque dessin, l'échelle se recale
+  // pour que ce nœud garde cette hauteur, quelle que soit la coupe (filière, unité, année).
+  private _scale_reference_node: { id: string, px: number } | undefined = undefined
+  // Vrai le temps d'une frame où l'échelle calée sur le nœud a été posée : les flux la suivent
+  // alors au lieu de l'échelle propre de leur unité (cf. `Link.scaleValueToPx`).
+  private _reference_scale_applied = false
   private _minimum_node?: number
 
   // OS#1302 — le mode structure « forcer l'épaisseur min », le mode « pointe
@@ -1409,6 +1420,7 @@ export class Class_DrawingArea {
     this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
     this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
     this._maximum_node = drawing_area_to_copy._maximum_node
+    this._scale_reference_node = drawing_area_to_copy._scale_reference_node
     this._minimum_node = drawing_area_to_copy._minimum_node
     // OS#1302 — pointe/épaisseur migrées vers les attributs de flux (résolus par le style).
     this._scale = drawing_area_to_copy._scale
@@ -1489,8 +1501,24 @@ export class Class_DrawingArea {
     // engendré qui n'existe plus (son membre vient d'être découpé) cède la place à l'élément
     // d'ORIGINE, dont l'id précède la marque — le tout dont il n'était qu'une part.
     const selected_ids = this.selected_elements_list.map(element => element.id)
+    // os#1511 (Julien, 09/10 : « quand je passe de Céréales à Oléoprotéagineux, il faut que je
+    // retouche l'écart pour que ça se mette correctement ») — les nœuds engendrés se placent
+    // d'après leurs hauteurs, donc d'après l'échelle : celle calée sur un nœud de référence est
+    // posée AVANT, sur la nouvelle coupe, au lieu d'arriver au dessin, après le placement.
+    if (this._scale_reference_node !== undefined) {
+      this.beginScaleFrame()
+      this.applyReferenceNodeScale()
+    }
     this.withBypassRedraws(() => {
       disaggregateDimensionNodes(this.sankey)
+      // Sous une échelle calée sur un nœud, le premier placement lit encore des grandeurs de
+      // l'ancienne coupe (créneaux des axes, hauteurs) : une seconde passe, sur l'état posé par la
+      // première, donne ce que donnait le geste sur l'écart (cf. echelleNoeudReferenceCoupe.test).
+      if (this._scale_reference_node !== undefined) {
+        this.beginScaleFrame()
+        this.applyReferenceNodeScale()
+        disaggregateDimensionNodes(this.sankey)
+      }
     }, false)
     const find = (id: string) =>
       (this.sankey.nodes_dict[id] ?? this.sankey.links_dict[id]) as Class_ProtoElement | undefined
@@ -2161,6 +2189,7 @@ export class Class_DrawingArea {
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', this.domId('g_select_zone'))
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', this.domId('def_gradient')) ?? null
+    this.d3_selection_screen_overlay = this.d3_selection.append('g').attr('id', this.domId('g_screen_overlay'))
 
     // Filtre d'ombre portée partagé, référencé par les éléments dont
     // shape_shadow_visible est vrai (cf. NodeDrawShape / LinkDrawShape).
@@ -2416,6 +2445,8 @@ export class Class_DrawingArea {
     // os#1383 — EXACT en échelle adaptée sans grandeur de référence : le nœud le plus haut
     // remplit alors le plafond à chaque datatag et dans chaque vue, dans les deux sens.
     this.applyMaximumNodeScale(_position_type === 'scale_adapted' && !adapted)
+    // os#1511 — l'échelle calée sur un nœud de référence passe en dernier : c'est elle qui décide.
+    this.applyReferenceNodeScale()
     // PR 3 — central entry point for parametric layout. Node.applyPosition
     // is now a pass-through in parametric mode, so positions must be
     // refreshed here before any node is drawn. Single source of truth.
@@ -2492,6 +2523,8 @@ export class Class_DrawingArea {
     // anti-chevauchement est un artefact d'affichage, dont une donnée persistée ne doit rien
     // déduire. Cet appel-ci y est donc un no-op (signature déjà consommée).
     this.reorganizeIOOnDataSelectionChange()
+    // os#1511 — le titre se cale au-dessus des nœuds tels qu'ils vont être dessinés.
+    this.placeTitleAtScreenTop()
     // Draw grid
     this.drawBackground()
     this.drawGrid()
@@ -4381,6 +4414,8 @@ export class Class_DrawingArea {
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+      // os#1511 — le calque écran (titre calé en haut) annule le zoom : il reste en place.
+      this.updateScreenOverlay()
 
       // #680 — Le désenclenchement des modes au zoom manuel est fait aux POINTS D'ENTRÉE du
       // zoom (DrawingAreaInteractions._eventMouseScroll pour la molette/pinch ; zoomByFactor /
@@ -5228,6 +5263,7 @@ export class Class_DrawingArea {
    */
   public beginScaleFrame() {
     this._scale_effective = undefined
+    this._reference_scale_applied = false
     this._scaleValueToPx.domain([0, this._scale])
   }
 
@@ -5274,6 +5310,75 @@ export class Class_DrawingArea {
       this._minimum_flux = value
       this.drawElements()
     }
+  }
+
+  public get scale_reference_node(): { id: string, px: number } | undefined { return this._scale_reference_node }
+  public set scale_reference_node(value: { id: string, px: number } | undefined) {
+    this._scale_reference_node = value !== undefined && value.px > 0 && value.id !== '' ? value : undefined
+    this.drawElements()
+  }
+
+  /**
+   * os#1511 — L'ÉCHELLE CALÉE SUR UN NŒUD : la grandeur du nœud de référence rendue à sa hauteur
+   * en px (px = valeur / échelle × 100). Un nœud découpé (masqué) compte pour la somme de ses
+   * nœuds engendrés. Sans nœud ou sans grandeur : rien.
+   */
+  public applyReferenceNodeScale(): void {
+    const ref = this._scale_reference_node
+    if (ref === undefined) return
+    const node = this._sankey.nodes_dict[ref.id]
+    if (node === undefined) return
+    // La grandeur se lit sur les flux D'ORIGINE du nœud, qui portent la valeur de la coupe
+    // courante, et non sur ses flux engendrés : au rebâti, ceux-ci sont encore ceux de l'ancienne
+    // coupe (Julien, 09/10 : « passer de Céréales à Oléoprotéagineux place mal les nœuds »).
+    const somme = (liens: { id: string, valueCurrent?: number | null }[]) => liens
+      .filter(l => !isGeneratedMemberId(l.id))
+      .reduce((total, l) => total + Math.abs(l.valueCurrent ?? 0), 0)
+    let magnitude = Math.max(somme(node.input_links_list), somme(node.output_links_list))
+    if (!(magnitude > 0) && node.is_visible) magnitude = this.nodePositioning.nodeMagnitudeOf(node)
+    if (!(magnitude > 0)) {
+      magnitude = this._sankey.nodes_list
+        .filter(n => n.is_visible && parseGeneratedId(n.id)?.origin === ref.id)
+        .reduce((total, n) => total + this.nodePositioning.nodeMagnitudeOf(n), 0)
+    }
+    if (!(magnitude > 0)) return
+    this.setEffectiveScale(magnitude * 100 / ref.px)
+    this._reference_scale_applied = true
+  }
+
+  /** os#1511 — l'échelle de cette frame vient-elle du nœud de référence ? */
+  public get reference_scale_applied(): boolean { return this._reference_scale_applied }
+
+  /**
+   * os#1511 (Julien, 09/10 : « le titre doit se caler en haut de l'écran ») — le titre réglé
+   * `title_on_top` se pose en haut de la zone VISIBLE, centré, à chaque dessin et à chaque zoom ou
+   * déplacement. Sans zone de zoom (tests, export hors écran) : au-dessus des nœuds.
+   */
+  public placeTitleAtScreenTop(): void {
+    this.updateScreenOverlay()
+    const title = this._sankey.getTitleContainer()
+    if (title === undefined || !title.title_on_top || !title.is_visible) return
+    const width = this.window_fitting_width
+    if (this.d3_selection_screen_overlay === null || !(width > 0)) {
+      this._sankey.placeTitleOnTop()
+      return
+    }
+    // En px d'écran : le calque annule le zoom.
+    const x = width / 2 - title.getShapeWidthToUse() / 2
+    const y = 12
+    if (Math.abs(title.position_x - x) < 0.5 && Math.abs(title.position_y - y) < 0.5) return
+    title.setPosXY(x, y)
+    title.draw()
+  }
+
+  /** os#1511 — le calque écran annule la transformation de zoom de son parent. */
+  public updateScreenOverlay(): void {
+    const overlay = this.d3_selection_screen_overlay
+    const zoom_node = this.d3_selection_zoom_area?.node() ?? null
+    if (overlay === null || zoom_node === null) return
+    const t = d3.zoomTransform(zoom_node)
+    const k = t.k > 0 ? t.k : 1
+    overlay.attr('transform', `scale(${1 / k}) translate(${-t.x},${-t.y})`)
   }
 
   // Node height limit (px), independent of the flux size limit.
