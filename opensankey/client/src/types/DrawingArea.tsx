@@ -1180,6 +1180,9 @@ export class Class_DrawingArea {
   // s'adapte ») — un nœud de référence et sa hauteur en px : à chaque dessin, l'échelle se recale
   // pour que ce nœud garde cette hauteur, quelle que soit la coupe (filière, unité, année).
   private _scale_reference_node: { id: string, px: number } | undefined = undefined
+  // Vrai le temps d'une frame où l'échelle calée sur le nœud a été posée : les flux la suivent
+  // alors au lieu de l'échelle propre de leur unité (cf. `Link.scaleValueToPx`).
+  private _reference_scale_applied = false
   private _minimum_node?: number
 
   // OS#1302 — le mode structure « forcer l'épaisseur min », le mode « pointe
@@ -5239,6 +5242,7 @@ export class Class_DrawingArea {
    */
   public beginScaleFrame() {
     this._scale_effective = undefined
+    this._reference_scale_applied = false
     this._scaleValueToPx.domain([0, this._scale])
   }
 
@@ -5311,7 +5315,11 @@ export class Class_DrawingArea {
     }
     if (!(magnitude > 0)) return
     this.setEffectiveScale(magnitude * 100 / ref.px)
+    this._reference_scale_applied = true
   }
+
+  /** os#1511 — l'échelle de cette frame vient-elle du nœud de référence ? */
+  public get reference_scale_applied(): boolean { return this._reference_scale_applied }
 
   /**
    * os#1511 (Julien, 09/10 : « le titre doit se caler en haut de l'écran ») — le titre réglé

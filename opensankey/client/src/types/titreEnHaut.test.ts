@@ -35,3 +35,17 @@ test('un titre sans le reglage garde sa place', () => {
   sankey.placeTitleOnTop()
   expect([titre.position_x, titre.position_y]).toEqual([42, 43])
 })
+
+test('le titre cale en haut ne compte pas dans le cadrage du diagramme', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { contentBoundsFromModel } = require('./DrawingAreaCamera')
+  const app = new Class_ApplicationData(false)
+  const sankey = app.drawing_area.sankey
+  const a = sankey.addNewNodeWithName('A')
+  a.setPosXY(0, 0)
+  const sans = contentBoundsFromModel(app.drawing_area)
+  const titre = sankey.getOrCreateTitleContainer()
+  titre.setPosXY(-5000, -5000)
+  const avec = contentBoundsFromModel(app.drawing_area)
+  expect(avec).toEqual(sans)
+})
