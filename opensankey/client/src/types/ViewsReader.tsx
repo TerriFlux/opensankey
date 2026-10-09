@@ -29,13 +29,12 @@ import type { Class_ApplicationData } from './ApplicationData'
  * application de la sélection de visibilité). Il compose `ViewsQuery` (logique pure) comme le
  * faisait `ViewsManager`, et opère la DA via l'hôte `Class_ApplicationData`.
  *
- * La CRÉATION / ÉDITION des vues (heredited_attr, snapshot « original », dialogues de
- * sauvegarde, promotion light→heavy, suppression, sync depuis les view tags) reste en
- * OpenSankey+ : `ViewsManager` (OSP) ÉTEND cette classe et
+ * La CRÉATION / ÉDITION des vues (heredited_attr, suppression, sync depuis les view tags) reste
+ * en OpenSankey+ : `ViewsManager` (OSP) ÉTEND cette classe et
  *   - surcharge `fromViewJSON` pour reconstruire via `DrawingAreaPersistenceOSP` (fidélité
  *     édition + `name` + conversion legacy pré-0.9) ;
- *   - surcharge les hooks-gabarit de `setCurrentView` (`interceptViewChange`,
- *     `afterHeavyViewLoaded`, `afterLightViewLoaded`, `updateViewMenus`) et de `viewsFromJSON`
+ *   - surcharge les hooks-gabarit de `setCurrentView` (`afterHeavyViewLoaded`,
+ *     `updateViewMenus`) et de `viewsFromJSON`
  *     (`onViewParsed`) pour y greffer la logique d'édition, SANS dupliquer le corps de lecture.
  *
  * Ainsi un viewer OS pur restitue un fichier multi-vues ; l'atelier d'édition reste OSP.
@@ -123,18 +122,12 @@ export class ViewsReader {
    */
   protected onViewParsed(_view_id: string, _view_json: Type_JSON): void { /* lecture : no-op */ }
 
-  /**
-   * Intercepteur de bascule de vue (avant tout switch). OS : jamais (retourne false). OSP :
-   * si la vue courante a des modifs non sauvegardées, déclenche la pop-up « sauvegarder ? » et
-   * retourne true pour AVORTER le switch immédiat.
-   */
-  protected interceptViewChange(_id: string): boolean { return false }
+  // sa#635 — PLUS D'INTERCEPTION DE BASCULE : la pop-up « Vue non enregistrée » d'OpenSankey+ a
+  // disparu. Une vue lourde garde ce qu'on y fait, écrit dans son entrée quand on la quitte (cf.
+  // `Class_SankeyPanes.beforeViewChange`) ; le seul « enregistrer » est celui du document.
 
-  /** Après chargement d'une vue HEAVY. OS : rien. OSP : cascade heredited_attr + clone « original ». */
+  /** Après chargement d'une vue HEAVY. OS : rien. OSP : cascade heredited_attr. */
   protected afterHeavyViewLoaded(_id: string): void { /* lecture : no-op */ }
-
-  /** Après chargement d'une vue LIGHT. OS : rien. OSP : purge le snapshot « original ». */
-  protected afterLightViewLoaded(_id: string): void { /* lecture : no-op */ }
 
   /** Rafraîchit les composants de menu liés aux vues. OS : menus de base. OSP : + menus OSP. */
   protected updateViewMenus(): void {
@@ -330,16 +323,14 @@ export class ViewsReader {
   public setCurrentView(id: string) {
     // sa#581 — une vue qui n'est qu'un volet ne change rien au diagramme : on rappelle son volet.
     if (this.host.isWindowOnlyView(id)) { this.host.placeViewOnPanes(id); return }
-    // OSP peut intercepter (modifs non sauvegardées => pop-up) et avorter le switch immédiat.
-    if (this.interceptViewChange(id)) return
     this.applyViewChange(id)
   }
 
   /**
    * sa#581 — LA BASCULE QU'UNE ACTIVATION DE VOLET SANKEY COMMANDE : le volet devient le vivant,
-   * et le dessin passe sur sa vue. Sans interception — la mise en page du volet quitté est gardée
-   * d'office (cf. `Class_SankeyPanes`), il n'y a rien à demander — et sans replacement de volets :
-   * celui qui reçoit la vue est déjà choisi.
+   * et le dessin passe sur sa vue. La mise en page du volet quitté est gardée d'office (cf.
+   * `Class_SankeyPanes`), et la vue n'est replacée sur aucun volet : celui qui la reçoit est déjà
+   * choisi.
    */
   public switchViewForPane(id: string) {
     this.applyViewChange(id)
@@ -357,7 +348,6 @@ export class ViewsReader {
     this.beforeViewLeft()
     this.host.current_view_id = id
     this.followViewWithDashboard(id)
-    this.afterLightViewLoaded(id)
     this.updateViewMenus()
   }
 
@@ -383,9 +373,6 @@ export class ViewsReader {
    * heavy, un indicateur est posé, la main est rendue au navigateur le temps qu'il le peigne, puis
    * seulement le travail lourd démarre — et l'indicateur est retiré au retour, échec compris.
    *
-   * L'interception OSP (« sauvegarder ? ») reste évaluée SYNCHRONEMENT, avant toute cession : un
-   * switch avorté n'a pas d'indicateur à retirer.
-   *
    * Le chemin light reste synchrone : il ne reconstruit rien, et lui coûter une frame pour un
    * clignotement serait pire que rien.
    */
@@ -395,7 +382,6 @@ export class ViewsReader {
       this.host.runAsViewGesture(() => this.host.placeViewOnPanes(id))
       return
     }
-    if (this.interceptViewChange(id)) return
     const path = viewSwitchPath(id, MASTER_VIEW_ID, this.host.views_dict)
     return this.switch_progress.run(path, () => {
       // sa#581 — GESTE D'UTILISATEUR : la vue choisie trouve un volet où se montrer, quitte à en
@@ -486,12 +472,8 @@ export class ViewsReader {
     // d'un volet Sankey, qui a déjà choisi où la vue se montre.
     if (host.is_main && !dashboards?.activating && !host.sankey_panes.activating) host.placeViewOnPanes(id)
     host.drawing_area.sankey.setVisible()
-    // Hooks d'édition (OSP) : cascade heredited_attr + clone « original » (heavy) / purge (light).
-    if (id !== MASTER_VIEW_ID && !is_light) {
-      this.afterHeavyViewLoaded(id)
-    } else if (is_light) {
-      this.afterLightViewLoaded(id)
-    }
+    // Hook d'édition (OSP) : cascade heredited_attr (heavy).
+    if (id !== MASTER_VIEW_ID && !is_light) this.afterHeavyViewLoaded(id)
     // sa#581 — la mise en page qui convient : celle du volet vivant si la vue est la sienne, sinon
     // celle que la vue enregistre (vue légère à mise en page propre).
     host.afterViewChange(id)

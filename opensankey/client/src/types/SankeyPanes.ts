@@ -473,9 +473,20 @@ export class Class_SankeyPanes {
   // BASCULES DE VUE ================================================================================
   // Appelées par `ViewsReader.applyViewChange`, avant et après le changement de zone de dessin.
 
-  /** Avant une bascule : la mise en page propre du volet vivant est mise à l'abri. */
+  /**
+   * Avant une bascule : la mise en page propre du volet vivant est mise à l'abri.
+   *
+   * sa#635 — UNE VUE LOURDE GARDE CE QU'ON Y FAIT, comme toute vue : quittée, elle est écrite dans son
+   * entrée. Le volet vivant qui la montre l'y écrit (`keepLayoutOf`) ; sans lui — une bascule
+   * programmatique l'a posée hors de tout volet —, elle s'y écrit quand même. Plus de pop-up « Vue
+   * non enregistrée » ni d'instantané à rétablir : le seul « enregistrer » est celui du document.
+   */
   public beforeViewChange(): void {
-    if (this._layout_owner === null) return
+    if (this._layout_owner === null) {
+      const current = this.host.current_view_id
+      if (this.isHeavyView(current)) this.storeLiveInView(current)
+      return
+    }
     const owner = this._layout_owner
     this._layout_owner = null
     this.keepLayoutOf(owner)
