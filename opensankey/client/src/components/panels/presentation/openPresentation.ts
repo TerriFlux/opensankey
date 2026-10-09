@@ -230,6 +230,9 @@ const openPresentationPane = (
   const mc = app_data.menu_configuration
   if (!mc.main_zone_hosted) return null
   if (isLegendEntry(element)) return null
+  // os#1511 — une ZONE DE TEXTE n'est pas un nœud du diagramme : un volet de nœud ne la trouverait
+  // pas et resterait vide (« Sélectionnez un nœud ou un flux »). Elle garde la pop-up de panneau.
+  if (!isLinkLike(element) && app_data.drawing_area.sankey.containers_dict[element.id] !== undefined) return null
   const subject: Type_MainZoneSubject = isLinkLike(element)
     ? { kind: 'link', id: element.id }
     : { kind: 'node', id: element.id }

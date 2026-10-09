@@ -328,6 +328,13 @@ describe('sa#563 le clic ouvre un volet flottant quand la grande zone est la', (
     expect(app.menu_configuration.main_zone_active_id).toBe(first)
   })
 
+  it('une ZONE DE TEXTE (le titre) n ouvre pas de volet de noeud vide', () => {
+    const app = hostedApp()
+    const zone = app.drawing_area.sankey.getOrCreateTitleContainer()
+    openPresentationFor(app, zone as never, { x: 100, y: 100 })
+    expect(app.menu_configuration.mainZoneOccupantsIn('floating')).toHaveLength(0)
+  })
+
   it('SANS grande zone, la pop-up de panneau reste le contenant (viewer du paquet MIT)', () => {
     const app = new Class_ApplicationDataReal(false)
     expect(app.menu_configuration.main_zone_hosted).toBe(false)
