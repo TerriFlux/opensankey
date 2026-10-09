@@ -1846,6 +1846,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Sans porteur : échelle de la zone de dessin, comme toujours. Quand seuls les
     // groupes d'unité portent des échelles (tout le parc), le porteur EST le tag d'unité
     // de la valeur : comportement strictement identique à l'historique.
+    // os#1511 (Julien, 09/10 : « l'échelle n'a toujours pas changé ») — l'échelle calée sur un nœud
+    // de référence prime sur l'échelle propre de l'unité : toutes les unités suivent le nœud.
+    if (this.drawing_area.reference_scale_applied) {
+      return this.shape_local_link_scale
+        ? this.drawing_area.scaleValueToPx(_) / this.shape_local_link_scale
+        : this.drawing_area.scaleValueToPx(_)
+    }
     const unit_tag = current_value?.unit_data_tag()
     const carrier = resolveScaleCarrierTag(this.sankey, unit_tag)
     const carrier_scale = carrier?.own_scale
