@@ -25,7 +25,8 @@
 // zone, pas ici : c'est une contrainte d'espace, pas de représentation.
 
 import React from 'react'
-import { FaProjectDiagram, FaTable, FaFileAlt, FaCode, FaInfoCircle } from 'react-icons/fa'
+import { FaProjectDiagram, FaFileAlt, FaCode, FaInfoCircle } from 'react-icons/fa'
+import { SpreadsheetIcon } from './typeIcons'
 // os#1473 — la couronne et les barres sont des natures d'OpenSankey, comme le sunburst.
 import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
@@ -75,7 +76,8 @@ export const registerBaseRepresentations = (): void => {
     order: 20,
     label: (a) => a.t('Spreadsheet.zone.spreadsheet'),
     description: (a) => a.t('Spreadsheet.zone.type_description.spreadsheet'),
-    icon: <FaTable />,
+    // sa#626 — pas celle du Tableau croisé : le tableur a plusieurs feuilles.
+    icon: <SpreadsheetIcon />,
     // os#1356 — PAS DE VERROU EN LECTURE, ET C'EST VOULU (arbitrage Julien).
     // Univer n'a pas de mode lecture seule ici : le visiteur d'une page publiée
     // peut donc éditer des cellules. Ce qu'il change vit dans SON navigateur —
@@ -143,7 +145,10 @@ export const registerBaseRepresentations = (): void => {
     // 30/09/2026 — RÉSERVÉE À LA LICENCE DEV (arbitrage Julien) : le texte du format natif est
     // un outil de mise au point, pas une lecture du diagramme. Le gate l'écarte des sélecteurs
     // (`list`) ; une page publiée ne l'offre donc pas non plus, `is_static` ne donnant pas dev.
-    gate: (a) => a.has_sankey_dev,
+    // sa#626 — EN ÉDITION, POUR TOUS (arbitrage Alexandre, 09/10) : la barre des tâches des volets
+    // montre tous les types dès le départ, et un fichier, même vide, a son texte. Une page publiée
+    // reste réservée à la licence dev.
+    gate: (a) => a.has_sankey_dev || !a.is_static,
     // os#1418 — LA CLÉ RACINE REGARDÉE, déclarée ici bien que l'onglet vive dans l'éditeur.
     //
     // Elle est de sorte 'navigation' et pas 'style' : changer de clé racine ne change pas la

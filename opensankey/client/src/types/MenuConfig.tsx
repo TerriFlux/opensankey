@@ -2140,14 +2140,6 @@ export class Class_MenuConfig {
     return true
   }
 
-  /**
-   * sa#626 — LES VOLETS FLOTTANTS, du premier plan vers l'arrière (l'ordre de la liste de la barre
-   * des tâches).
-   */
-  public get main_zone_floating_stack(): Type_MainZoneOccupant[] {
-    return this._host._main_zone_occupants.filter(o => o.place === 'floating').reverse().map(o => ({ ...o }))
-  }
-
   /** Le volet ouvert qui EST la vue `view_id`, s'il y en a un. */
   public mainZoneOccupantOfSavedView(view_id: string): Type_MainZoneOccupant | undefined {
     const o = this._host._main_zone_occupants.find(x => x.saved_view === view_id)
@@ -3693,8 +3685,7 @@ export class Class_MenuConfig {
   }
   public set main_zone_active_id(id: string | null) {
     // sa#626 — TOUCHER UN VOLET FLOTTANT LE PASSE AU PREMIER PLAN, comme une fenêtre du système :
-    // sans cela tous restaient au même plan, dans l'ordre de leur ouverture, et la liste de la
-    // barre des tâches (« du premier plan vers l'arrière ») n'aurait rien dit de ce qu'on voit.
+    // sans cela tous restaient au même plan, dans l'ordre de leur ouverture.
     // Avant le test d'identité : un volet déjà actif peut être passé derrière un volet qu'on vient
     // d'ouvrir.
     if (id !== null && this._raiseFloatingOccupant(id) && this._host._main_zone_active_id === id) {

@@ -2372,26 +2372,7 @@ export class Class_ApplicationData {
   public closePane(occupant_id: string): void {
     const mc = this.menu_configuration
     if (!mc) return
-    const view_id = mc.mainZoneOccupantById(occupant_id)?.saved_view
     mc.undoableMainZone(() => mc.hideMainZoneOccupant(occupant_id))
-    if (view_id) this._closed_pane_views = [view_id, ...this._closed_pane_views.filter(id => id !== view_id)]
-  }
-
-  /**
-   * sa#626 — LES VUES DES VOLETS FERMÉS PAR LA CROIX, du plus récent au plus ancien : la liste de la
-   * barre des tâches les range ainsi. Mémoire de la SESSION seulement — le fichier ne dit pas quand un
-   * volet a été fermé ; un volet fermé avant l'ouverture du fichier se range après, par l'ordre des vues.
-   */
-  protected _closed_pane_views: string[] = []
-  public get recently_closed_pane_views(): readonly string[] { return this._closed_pane_views }
-
-  /**
-   * sa#626 — MONTRER UN TABLEAU DE BORD, geste d'utilisateur (barre des tâches des volets). OpenSankey+
-   * l'inscrit en plus à l'historique (cf. `Class_ApplicationDataOSP.showDashboard`).
-   */
-  public showDashboard(id: string): void | Promise<void> {
-    if (!this.menu_configuration?.dashboards.byId(id) || id === this.current_dashboard_id) return
-    return this.activateDashboard(id, true)
   }
 
   /**
