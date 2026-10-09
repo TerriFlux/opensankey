@@ -240,6 +240,12 @@ export type Type_RepresentationContext = {
    * est l'une de plusieurs, et à qui dire la taille de son contenu. Absent hors grande zone.
    */
   tile?: Type_TileHost
+  /**
+   * sa#621 — CE QUE L'EN-TÊTE DU VOLET, POSÉ PAR-DESSUS LA CASE, LUI PREND en haut et en bas (px).
+   * Seulement pour une figure qui le déclare (`overlay_header`) et seule dans son volet : son dessin
+   * s'étend alors sous l'en-tête, et son cadrage laisse cette hauteur libre. Absent = rien.
+   */
+  overlay_reserve?: { top: number, bottom: number }
 }
 
 /** Démontage seul ; `void` quand il n'y a rien à défaire. */
@@ -400,6 +406,13 @@ type Type_RepresentationCommon = {
    * avant de se ranger. Absent = non, la vignette se montre tout de suite.
    */
   reports_tile_fit?: boolean
+  /**
+   * sa#621 — LA FIGURE SAIT LAISSER LIBRE UN EN-TÊTE POSÉ PAR-DESSUS SA CASE (`ctx.overlay_reserve`).
+   * Seule dans son volet, elle s'étend alors sous l'en-tête, qui n'a plus de fond : ses boutons se
+   * posent sur le fond du dessin, comme sur un volet Sankey. Absent = non, l'en-tête reste une bande
+   * au-dessus de la figure.
+   */
+  overlay_header?: boolean
   /**
    * sa#609 — LE SUJET DE CETTE VIGNETTE EST-IL UN PROCESS NEUTRE : au plus un flux non nul en entrée
    * et au plus un en sortie, pour les valeurs que la figure DESSINE (coordonnées du volet comprises) ?

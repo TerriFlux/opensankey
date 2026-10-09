@@ -361,7 +361,8 @@ const DockHint = ({ app_data, width_px }: { app_data: Class_ApplicationData, wid
     <Box
       className='panel_dock_hint'
       position='fixed'
-      right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
+      // sa#621 — au bord de la page : la colonne d'outils vit désormais dans le volet actif.
+      right='0px'
       // os#1494 — la barre de la PAGE (cf. `pageNavBarHeightPx`) : la zone de dessin active
       // répond 0 dès qu'elle est cadrée, et la bande d'ancrage remontait alors sur la barre.
       top={pageNavBarHeightPx() + 'px'}
@@ -604,7 +605,7 @@ const PanelFrame = ({
           display={hidden ? 'none' : 'flex'}
           flexDirection='column'
           zIndex={is_sidebar ? PANEL_Z_SIDEBAR : is_popup ? PANEL_Z_POPUP : PANEL_Z_TOOLTIP}
-          right={is_sidebar ? app_data.menu_configuration.getToolsColumnWidthPx() + 'px' : undefined}
+          right={is_sidebar ? '0px' : undefined}
           bottom={is_sidebar ? da.getBottomBarHeight() + 'px' : undefined}
           // Pop-up : ANCRÉE à l'origine du viewport (0,0). react-draggable pose la
           // géométrie via un `transform: translate(x,y)` ; sans left/top explicites,
@@ -705,7 +706,8 @@ export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }
     <Box
       className='panel_sidebar_surface'
       position='fixed'
-      right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
+      // sa#621 — au bord de la page : la colonne d'outils vit désormais dans le volet actif.
+      right='0px'
       // os#1494 — même correction que la coquille qu'il recouvre : sans elle, le fond blanc de
       // la barre latérale montait sur la barre du haut pendant qu'un panneau s'y (re)montait.
       top={pageNavBarHeightPx() + 'px'}
