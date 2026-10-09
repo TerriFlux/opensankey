@@ -60,6 +60,8 @@ export interface Type_MatrixAxisInput {
   members: ReadonlySet<string>
   /** Où se lit le Total de l'axe ; `null` : la somme du premier niveau. */
   total: Class_DataTag[] | null
+  /** 09/10/2026 (lot 3) — les décochés : une ligne grisée, hors du Total (lignes seulement). */
+  hidden?: Class_DataTag[]
 }
 
 /** Le plan du tableau (`planFor(…, 'matrix')`), en membres. */
@@ -77,7 +79,8 @@ export const matrixInputOfPlan = (
       entry: members(a.entry),
       opened: new Set(a.opened),
       members: new Set(a.members),
-      total: a.total === null ? null : members(a.total)
+      total: a.total === null ? null : members(a.total),
+      hidden: members(a.hidden ?? [])
     }
   }
   const coordinates = new Map<string, Class_DataTag[]>()
@@ -127,6 +130,8 @@ export interface Type_MatrixRow {
   expanded: boolean
   /** « Autres » : les noms des membres repliés (son info-bulle). */
   folded_names?: string[]
+  /** 09/10/2026 (lot 3) — un membre DÉCOCHÉ : sa ligne reste, grisée, hors du Total. */
+  hidden?: boolean
   /** Une valeur par colonne, dans l'ordre de `columns` ; `null` = absente (cellule vide). */
   cells: (number | null)[]
 }
@@ -466,6 +471,28 @@ export const buildDimensionMatrix = (
     recipes.push({ kind: 'sum_of', members: folded.map(f => [f.m]) })
     if (open) folded.forEach(f => visit(f.m, depth + 1, f.cells))
   }
+  /**
+   * 09/10/2026 (lot 3) — LES DÉCOCHÉS gardent leur ligne, grisée, après leurs frères : sous leur parent
+   * quand il est ouvert, sinon au premier niveau. Hors du Total (`top_index` les ignore) et des
+   * sous-totaux (le non-réparti se tait quand des enfants manquent).
+   */
+  const hidden_rows = axes?.rows.hidden ?? []
+  const hidden_placed = new Set<string>()
+  const expanded_rows = new Set<string>()
+  const hiddenRows = (parent_id: string, depth: number) => {
+    hidden_rows
+      .filter(h => !hidden_placed.has(h.id) && (parent_id === ''
+        ? !(h.parent !== undefined && expanded_rows.has(h.parent.id))
+        : h.parent?.id === parent_id))
+      .forEach(h => {
+        hidden_placed.add(h.id)
+        rows.push({
+          key: `r:${h.id}`, label: h.name, member_id: h.id, depth, kind: 'member',
+          has_children: false, expanded: false, cells: cellsAt([h]), hidden: true
+        })
+        recipes.push({ kind: 'at', members: [h] })
+      })
+  }
   const visit = (m: Class_DataTag, depth: number, cells: (number | null)[]) => {
     const expanded = isExpanded(m)
     const self = rows.length
@@ -475,13 +502,15 @@ export const buildDimensionMatrix = (
     })
     recipes.push({ kind: 'at', members: [m] })
     if (!expanded) return
+    expanded_rows.add(m.id)
     const children = shownChildren(m)
     const start = rows.length
     siblingRows(children, m.id, depth + 1)
+    hiddenRows(m.id, depth + 1)
     // LE NON RÉPARTI : ce que le parent déclare et que ses enfants ne couvrent pas, colonne par
     // colonne. Il se tait quand des enfants sont cachés : l'écart est alors voulu.
     if (children.length !== (m.children as Class_DataTag[]).length) return
-    const child_index = rows.map((r, i) => (i >= start && r.depth === depth + 1 && r.kind === 'member' ? i : -1)).filter(i => i >= 0)
+    const child_index = rows.map((r, i) => (i >= start && r.depth === depth + 1 && r.kind === 'member' && !r.hidden ? i : -1)).filter(i => i >= 0)
     const child_rows = child_index.map(i => rows[i])
     const gaps = cells.map((parent, i) => {
       if (parent === null) return null
@@ -508,10 +537,11 @@ export const buildDimensionMatrix = (
   const linked_single = !axes && cut.linked && !cut.dividing.includes(row_dim) && frontier.length === 1
   if (linked_single) visit(frontier[0], 0, cellsAt([frontier[0]]))
   else siblingRows(entry, '', 0)
+  hiddenRows('', 0)
 
   // LA LIGNE TOTAL : à la racine unique (à la portée) quand rien n'est décoché, sinon la somme des
-  // lignes d'entrée.
-  const top_index = rows.map((r, i) => (r.depth === 0 && r.kind === 'member' ? i : -1)).filter(i => i >= 0)
+  // lignes d'entrée (décochés exclus).
+  const top_index = rows.map((r, i) => (r.depth === 0 && r.kind === 'member' && !r.hidden ? i : -1)).filter(i => i >= 0)
   const top = top_index.map(i => rows[i])
   const row_total_coord: Class_DataTag[] | null = axes
     ? axes.rows.total

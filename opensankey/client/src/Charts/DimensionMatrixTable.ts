@@ -14,7 +14,7 @@
 // italique, la ligne et la colonne Total séparées d'un trait. Encre du texte toujours, jamais de
 // couleur de série : un tableau ne code rien par la couleur.
 
-import { MATRIX_SORT_LABEL } from './DimensionMatrix'
+import { MATRIX_OTHERS_PREFIX, MATRIX_SORT_LABEL } from './DimensionMatrix'
 import type { Type_DimensionMatrix, Type_MatrixColumn, Type_MatrixRow } from './DimensionMatrix'
 import { appendTableExportButtons } from './TableExport'
 import type { Type_TableExportFormat } from './TableExport'
@@ -37,6 +37,13 @@ export interface Type_DimensionMatrixTableOptions {
   on_column_toggle?: (member_id: string, expanded: boolean, gesture: { shift: boolean }) => void
   /** « Maj+clic : tout le niveau », ajouté à l'info-bulle des +/− quand le geste existe. */
   level_hint?: string
+  /**
+   * 09/10/2026 (os#1511, lot 3) — LA CASE D'UNE LIGNE : décocher un membre (`checked` faux) le retire
+   * du Total et garde sa ligne grisée ; le geste est celui de la légende de la couronne. `check_label` :
+   * son info-bulle. Absent : pas de cases (tableau hors fenêtre).
+   */
+  on_check?: (member_id: string, checked: boolean) => void
+  check_label?: (name: string) => string
   /** sa#593 — exporter le tableau TEL QU'IL EST AFFICHÉ, en Excel ou en CSV. */
   on_export: (format: Type_TableExportFormat) => void
   /** Clic sur un en-tête : la clé de la colonne, ou `MATRIX_SORT_LABEL` pour l'en-tête des lignes. */
@@ -316,6 +323,26 @@ export const drawDimensionMatrixTable = (
         borderBottom: line, ...(is_total ? { borderTop: strong_line } : {}),
         ...(r.kind === 'residual' ? { fontStyle: 'italic', opacity: '0.75' } : {})
       })
+      if (r.hidden) css(tr, { opacity: '0.45' })
+      // La case : un membre MONTRÉ de la dimension des lignes (ni « Autres », ni sous-total ouvert, ni
+      // non-réparti, ni Total).
+      const on_check = o.on_check
+      if (on_check && r.kind === 'member' && !r.expanded && r.member_id && !r.member_id.startsWith(MATRIX_OTHERS_PREFIX)) {
+        const member_id = r.member_id
+        const box = document.createElement('input')
+        box.type = 'checkbox'
+        box.className = 'dimension_matrix_check'
+        // L'attribut aussi (`defaultChecked`) : une copie du tableau (innerHTML) garde la case.
+        box.defaultChecked = !r.hidden
+        box.checked = !r.hidden
+        const label = o.check_label?.(r.label) ?? r.label
+        box.title = label
+        box.setAttribute('aria-label', label)
+        css(box, { margin: '0 4px 0 0', verticalAlign: 'middle', cursor: 'pointer' })
+        box.addEventListener('click', e => e.stopPropagation())
+        box.addEventListener('change', () => on_check(member_id, box.checked))
+        th.appendChild(box)
+      }
       if (r.kind === 'member' && r.has_children && r.member_id) {
         const member_id = r.member_id
         th.appendChild(toggleButton(r.expanded ? o.labels.collapse : o.labels.expand, r.expanded, r.label, o.level_hint,

@@ -79,8 +79,8 @@ import {
   matrixNumberFormatter, nextMatrixSort
 } from '../Charts/DimensionMatrix'
 import type { Type_MatrixSort } from '../Charts/DimensionMatrix'
-import { fromFigure, planFor } from './dimensionViewState'
-import type { Type_MatrixPlan } from './dimensionViewState'
+import { fromFigure, planFor, toCouronneState } from './dimensionViewState'
+import type { Type_DimensionViewState, Type_MatrixPlan } from './dimensionViewState'
 import { drawDimensionMatrixTable, MATRIX_ZOOM_MAX, MATRIX_ZOOM_MIN } from '../Charts/DimensionMatrixTable'
 import { csvDecimalOf, downloadTable } from '../Charts/TableExport'
 import {
@@ -113,7 +113,7 @@ import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
 // 04/10/2026 — os#1511, refonte étape 2, lot 2 : CE QUE LA COURONNE DESSINE se lit à un seul endroit.
-import { COURONNE_KEY, LEGACY_COURONNE_KEYS, MATRIX_REPRESENTATION, readCouronneState } from './couronneState'
+import { COURONNE_KEY, LEGACY_COURONNE_KEYS, DONUT_REPRESENTATION, BARS_REPRESENTATION, MATRIX_REPRESENTATION } from './couronneState'
 import type { Type_CouronneReader, Type_CouronneSankey, Type_CouronneState } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
@@ -364,16 +364,75 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
  * `null` : la figure ne découpe pas selon des dimensions de données.
  */
 const couronneOf = (ctx: Type_RepresentationContext): { state: Type_CouronneState, plan: Type_DrawPlan } | null => {
-  if (!ctx.element) return null
+  const v = figureDimensionViewOf(ctx, 'couronne')
+  return v === null ? null : { state: v.couronne, plan: v.plan as Type_DrawPlan }
+}
+
+/** Ce qu'une figure sur dimensions de données lit et dessine : l'état commun, sa forme couronne, son plan. */
+export type Type_FigureDimensionView = {
+  /** Les dimensions déclarées par le descripteur en vigueur. */
+  declared: string[]
+  /** L'état dans le modèle commun (`fromFigure`). */
+  view: Type_DimensionViewState
+  /** Le même, vu par la couronne (ce que ses gestes manipulent). */
+  couronne: Type_CouronneState
+  /** `planFor(view, …)` : le plan de la couronne, ou celui du tableau (`null` : rien à croiser). */
+  plan: Type_DrawPlan | Type_MatrixPlan | null
+}
+
+const figure_view_memo = new Map<string, Type_FigureDimensionView | null>()
+const memo_object_ids = new WeakMap<object, number>()
+let memo_next_id = 0
+let memo_clear_armed = false
+const memoIdOf = (o: object): number => {
+  let id = memo_object_ids.get(o)
+  if (id === undefined) { id = ++memo_next_id; memo_object_ids.set(o, id) }
+  return id
+}
+/** Ce que le plan d'une figure liée lit du diagramme : sélection, portée et décochés de chaque dimension. */
+const diagramSignatureOf = (sankey: Type_CouronneSankey): string =>
+  (sankey.data_taggs_list as unknown as Class_DataTagGroup[]).map(d =>
+    `${d.id}:${d.selected_tags_list.map(t => t.id).join(',')}|${d.focus_ids.join(',')}|${d.hidden_ids.join(',')}`
+  ).join(';')
+
+/**
+ * 09/10/2026 (os#1511, lot 3) — LE SEUL POINT DE DÉCISION d'une figure sur dimensions de données,
+ * couronne ET tableau croisé : `fromFigure` (l'état de la fenêtre, lu par `reader`) puis `planFor`.
+ * Un rendu le demandait ~7 fois (centre, légende, cases, tableau de navigation…) : il est MÉMOÏSÉ
+ * le temps d'un passage synchrone, sur le sac, l'élément, le nom du sujet et ce que le diagramme
+ * montre (une figure liée le lit) ; le mémo se vide à la microtâche suivante. `null` : la figure ne
+ * découpe pas selon des dimensions de données.
+ */
+export const figureDimensionViewOf = (
+  ctx: Type_RepresentationContext, reader: Type_CouronneReader
+): Type_FigureDimensionView | null => {
+  if (!ctx.element || !ctx.options) return null
+  const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
+  const name = subjectNameOf(ctx)
+  const key = `${reader}|${memoIdOf(ctx.options)}|${memoIdOf(ctx.element as object)}|${name}|${diagramSignatureOf(sankey)}`
+  if (figure_view_memo.has(key)) return figure_view_memo.get(key) ?? null
+  const out = computeFigureDimensionView(ctx, reader, sankey, name)
+  figure_view_memo.set(key, out)
+  if (!memo_clear_armed) {
+    memo_clear_armed = true
+    void Promise.resolve().then(() => { figure_view_memo.clear(); memo_clear_armed = false })
+  }
+  return out
+}
+
+const computeFigureDimensionView = (
+  ctx: Type_RepresentationContext, reader: Type_CouronneReader, sankey: Type_CouronneSankey, name: string
+): Type_FigureDimensionView | null => {
   const subject = chartSubjectOf(ctx.element)
-  if (!subject) return null
+  if (!subject || !ctx.element) return null
   const descriptor = descriptorInEffect(ctx.element, subject, ctx.options)
   const decompose = descriptor ? effectiveDecompose(descriptor) : null
   if (decompose?.kind !== 'data_dimension') return null
-  const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
   if (sankey.data_taggs_dict[decompose.data_tagg_id] === undefined) return null
-  const state = readCouronneState(ctx.options, sankey, undefined, [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])], 'couronne')
-  return { state, plan: drawPlanOf(state, sankey, { name: subjectNameOf(ctx) }) }
+  const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
+  const view = fromFigure(ctx.options, undefined, sankey, declared, reader)
+  const representation = reader === 'matrix' ? 'matrix' : 'couronne'
+  return { declared, view, couronne: toCouronneState(view), plan: planFor(view, representation, sankey, { name }).plan as Type_FigureDimensionView['plan'] }
 }
 
 /** La lecture `reading`, une case des petits multiples posée : sa dimension lue sur `members`. */
@@ -1061,7 +1120,8 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext, representation
   const entryDepthOf = (d: Class_DataTagGroup) => dimensionRootsOf(d).length === 1 ? 1 : 0
   // Les cases (« une couronne par membre ») : leur niveau est surligné aussi.
   const cells_dim = plan.cells_dimension_id
-  const extras = app_data.menu_configuration.figure_navigation_extras?.(ctx) ?? null
+  // 09/10/2026 (lot 3) — la nature de la vignette : OS+ en tire le lecteur de ses gestes.
+  const extras = app_data.menu_configuration.figure_navigation_extras?.(ctx, matrix ? MATRIX_REPRESENTATION : DONUT_REPRESENTATION) ?? null
 
   const dimensions: Type_FigureNavDimension[] = rows.map(dim => {
     const entry_depth = entryDepthOf(dim)
@@ -1966,7 +2026,7 @@ export const registerAnalysisRepresentations = (): void => {
 
   // Couronne — le graphique d analyse en parts d un tout, dessine en d3 pur (sur en panneau).
   registerFigureNature({
-    id: 'osp.repr.donut',
+    id: DONUT_REPRESENTATION,
     nature: 'donut',
     order: 20,
     // sa#617 — la clé `inspector.analysis.repr.donut` n'existait dans aucun catalogue : « Couronne »
@@ -2400,7 +2460,7 @@ export const registerAnalysisRepresentations = (): void => {
 
   // Barres — toujours proposees quand il y a une analyse.
   registerFigureNature({
-    id: 'osp.repr.bars',
+    id: BARS_REPRESENTATION,
     nature: 'bars',
     order: 30,
     // sa#617 — même défaut que la couronne (`inspector.analysis.repr.bar` absente des catalogues).
@@ -2588,14 +2648,13 @@ const registerDimensionMatrix = (): void => {
         // en rôle parts, colonnes = celle en rôle cases, axes ouverts comme le sunburst, restreints à la
         // portée, sans les décochés. L'ancienne coupe (`analysisDataCutOf`) ne sert plus qu'à défaut.
         const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
-        const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
         // 07/10/2026 — CORRECTION DE JULIEN : lignes puis colonnes = les dimensions en parts (dans
         // l'ordre), plates ou hiérarchiques ; les cases = un tableau par membre. Un sac d'avant la
         // version 2 garde ses colonnes (`reader: 'matrix'`).
-        const view_state = sankey.data_taggs_dict[decompose.data_tagg_id] !== undefined
-          ? fromFigure(ctx.options, undefined, sankey, declared, 'matrix')
-          : null
-        const plan = view_state ? planFor(view_state, 'matrix', sankey).plan as Type_MatrixPlan | null : null
+        // 09/10/2026 (lot 3) — lu au point de décision commun (`figureDimensionViewOf`).
+        const figure_view = figureDimensionViewOf(ctx, 'matrix')
+        const view_state = figure_view?.view ?? null
+        const plan = (figure_view?.plan ?? null) as Type_MatrixPlan | null
         const input = plan ? matrixInputOfPlan(plan, sankey) : null
         const cut = input
           ? { linked: view_state?.linked ?? false, dims: [], dividing: [], opened: new Set<string>() }
@@ -2692,6 +2751,12 @@ const registerDimensionMatrix = (): void => {
             render()
           },
           level_hint: gestures ? t('matrix.level_hint', { defaultValue: 'Maj+clic : tout le niveau' }) as string : undefined,
+          // 09/10/2026 (lot 3) — DÉCOCHER UNE LIGNE : le geste de la légende de la couronne
+          // (`toggleHidden` → liée, `applyDimensionHidden` sur le diagramme).
+          on_check: gestures && row_id !== undefined
+            ? (member_id, checked) => gestures.toggleHidden(row_id, member_id, checked)
+            : undefined,
+          check_label: (name: string) => t('sunburst.nav.toggle_part', { name }) as string,
           sort_label: t('matrix.sort_by'),
           on_sort: (sort_key) => {
             if (matrix === null) return
