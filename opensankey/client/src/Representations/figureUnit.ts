@@ -45,6 +45,25 @@ export const figureUnitFactorOfNode = (node: {
   return link ? resolveValueUnitFactor(link) : figureUnitFactorOf(node.sankey)
 }
 
+/**
+ * sa#623 — LE FLUX REPRÉSENTATIF d'un sujet de figure, celui sur lequel son unité se lit : pour un
+ * nœud, ses propres flux d'abord (`figureUnitOfNode`) ; sinon le premier flux du diagramme
+ * (`figureUnitOf`). Lu sur la forme, pour servir aussi les listes de choix, qui ne reçoivent que
+ * l'élément.
+ */
+export const figureSampleLinkOf = (element: unknown): Class_LinkElement | undefined => {
+  if (!element || typeof element !== 'object') return undefined
+  const e = element as {
+    input_links_list?: Class_LinkElement[]
+    output_links_list?: Class_LinkElement[]
+    sankey?: { links_list?: Class_LinkElement[] }
+  }
+  const own = Array.isArray(e.input_links_list)
+    ? (e.input_links_list[0] ?? e.output_links_list?.[0])
+    : undefined
+  return own ?? e.sankey?.links_list?.[0]
+}
+
 /** L'unité pour un NŒUD : ses propres flux d'abord, le diagramme à défaut. */
 export const figureUnitOfNode = (node: {
   input_links_list?: Class_LinkElement[]
