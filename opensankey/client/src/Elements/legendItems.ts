@@ -157,6 +157,8 @@ type Type_TagForLegend = {
 type Type_TagGroupForLegend = {
   id: string
   name: string
+  // os#1511 — la bannière d'une dimension (`one`, `sequence` : choix unique), cf. `legendTagGroupsOrder`.
+  banner?: string
   // #542 — `Class_ProtoTagGroup.description`, même contrat que sur l'étiquette.
   description?: string
   // Mise en forme pilotée par le groupe — voir tagGroupCarriesFormatting().
@@ -418,8 +420,13 @@ export function legendTagGroupsOrder(sankey: Type_SankeyForLegend): Type_TagGrou
   if (previewed !== undefined) {
     return [...sankey.node_taggs_list, ...sankey.flux_taggs_list].filter(group => group.id === previewed)
   }
+  // os#1511 (Jean-Yves, 09/10 : « mettre les champs année et unité en premier ») — les dimensions à
+  // choix UNIQUE (« Année : 2023 », « Unité : kt ») sont des sélecteurs, pas des clés de couleur : elles
+  // ouvrent la légende, dans l'ordre de l'auteur.
+  const unique = (group: Type_TagGroupForLegend) => group.banner === 'one' || group.banner === 'sequence'
+  const data = sankey.data_taggs_list
   // os#1511 — une dimension dessinée EN NŒUDS ne paraît pas : cf. `is_drawn_as_nodes`.
-  return [...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...sankey.data_taggs_list]
+  return [...data.filter(unique), ...sankey.node_taggs_list, ...sankey.flux_taggs_list, ...data.filter(g => !unique(g))]
     .filter(group => group.is_drawn_as_nodes !== true)
 }
 
