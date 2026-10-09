@@ -77,8 +77,11 @@ export const COURONNE_STATE_VERSION = 2
 /** Qui lit l'état : la couronne (défaut) ou le tableau croisé (relecture des sacs d'avant). */
 export type Type_CouronneReader = 'couronne' | 'matrix'
 
-/** La nature du tableau croisé (cf. `registerDimensionMatrix`). */
+/** Les natures qui lisent cet état : la couronne, les barres, le tableau croisé (cf. `registerAnalysisRepresentations`). */
+export const DONUT_REPRESENTATION = 'osp.repr.donut'
+export const BARS_REPRESENTATION = 'osp.repr.bars'
 export const MATRIX_REPRESENTATION = 'osp.repr.matrix'
+export const DIMENSION_FIGURE_REPRESENTATIONS: readonly string[] = [DONUT_REPRESENTATION, BARS_REPRESENTATION, MATRIX_REPRESENTATION]
 
 /** Le lecteur de l'état d'une vignette, d'après sa nature : le tableau croisé, ou la couronne. */
 export const couronneReaderOf = (representation_id: string): Type_CouronneReader =>

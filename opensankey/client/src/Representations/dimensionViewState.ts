@@ -364,7 +364,7 @@ const readVariants = (raw: unknown): Partial<Type_DimensionVariants> => {
 }
 
 /** Les variantes écrites à côté de l'état de la couronne (clé `variants` de chaque dimension). */
-const storedVariantsOf = (options: Type_Options | null | undefined): { [id: string]: Partial<Type_DimensionVariants> } => {
+export const storedVariantsOf =(options: Type_Options | null | undefined): { [id: string]: Partial<Type_DimensionVariants> } => {
   const bag = options?.[COURONNE_KEY] as Type_Options | undefined
   const dims = bag?.['dims']
   if (dims === null || typeof dims !== 'object' || Array.isArray(dims)) return {}
@@ -404,6 +404,15 @@ export const toFigureOptions = (options: Type_Options, state: Type_DimensionView
   })
   return out
 }
+
+/**
+ * 09/10/2026 (lot 3) — LE SEUL ÉCRIVAIN du sac d'une figure : un état de couronne (celui que les gestes
+ * manipulent) écrit par `toFigureOptions`, les variantes des autres représentations GARDÉES. Avant,
+ * `writeCouronneState` réécrivait la clé sans elles : un geste de couronne effaçait la variante Sankey
+ * ou tableau choisie dans la même fenêtre.
+ */
+export const figureOptionsOf = (options: Type_Options, cs: Type_CouronneState): Type_Options =>
+  toFigureOptions(options, fromCouronneState(cs, storedVariantsOf(options)))
 
 // ── LE DIAGRAMME ─────────────────────────────────────────────────────────────────────────────────
 
@@ -572,6 +581,11 @@ export interface Type_MatrixAxisPlan {
   total: string[] | null
   /** La portée qui RESTREINT l'axe (« Céréales »), pour le titre ; vide à la racine. */
   scope: string[]
+  /**
+   * 09/10/2026 (lot 3) — LES DÉCOCHÉS de l'axe : ils gardent leur ligne, grisée et hors du Total,
+   * comme dans la légende de la couronne (le tableau a ses cases à cocher).
+   */
+  hidden: string[]
 }
 
 export interface Type_MatrixPlan {
@@ -661,10 +675,11 @@ export const matrixAxisOf = (
       childrenOf(m).length === 0 ? keep.has(m.id) : childrenOf(m).every(c => keep.has(c.id)))
   const telling = F.filter(f => !(roots.length === 1 && roots[0] === f)).map(f => f.id)
   const total = covers ? scope.map(m => m.id) : null
+  const hidden = antichainSorted(dim, d.hidden.filter(id => d.shown.includes(id)))
   if (variant === 'flat') {
-    return { dimension_id: dim.id, variant, members: parts, opened: [], entry: [...parts], total, scope: telling }
+    return { dimension_id: dim.id, variant, members: parts, opened: [], entry: [...parts], total, scope: telling, hidden }
   }
-  return { dimension_id: dim.id, variant, members: parts, opened, entry, total, scope: telling }
+  return { dimension_id: dim.id, variant, members: parts, opened, entry, total, scope: telling, hidden }
 }
 
 /**

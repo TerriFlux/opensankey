@@ -10,7 +10,7 @@
 // (os#1511, refonte étape 2, lot 3).
 //
 // Chaque geste LIT l'état (`readCouronneState`), le MODIFIE, et l'ÉCRIT : la figure par
-// `writeCouronneState` (la seule clé `couronne`), et — liée — ce qu'elle montre par le geste annulable
+// `figureOptionsOf` (la seule clé `couronne`, variantes gardées), et — liée — ce qu'elle montre par le geste annulable
 // de l'hôte sur la sélection du diagramme (`applyDimensionCut`), puisque liée, `shown` EST cette
 // sélection. Les deux écritures font UN pas d'annulation (`inOneHistoryStep`). Plus rien n'écrit
 // `dimension_opening`, `dimension_hidden`, `hierarchy_focus` (membres), `inactive_dimensions`,
@@ -35,10 +35,11 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '../components/ui/dimensionDrawingHost'
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
-  antichainOf, readCouronneState, writeCouronneState,
+  antichainOf, readCouronneState,
   type Type_CouronneDrawing, type Type_CouronneReader, type Type_CouronneSankey, type Type_CouronneState
 } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
+import { figureOptionsOf } from './dimensionViewState'
 
 type Type_Bag = { [key: string]: unknown }
 
@@ -172,7 +173,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * aux montrés sous la nouvelle portée (ou à la coupe demandée) —, dans le même pas.
    */
   const commit = (next: Type_CouronneState, diagram: { dim: Class_DataTagGroup, ids: string[] }[] = []) => {
-    const out = writeCouronneState(host.options, next)
+    const out = figureOptionsOf(host.options, next)
     const asked = linked ? diagram : []
     const zooms = linked
       ? next.order.map(id => dimOf(id)).filter((d): d is Class_DataTagGroup => d !== undefined)
@@ -492,7 +493,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
       if (ids.length === 0) return
       app.runHeavyGesture(() => inOneHistoryStep(app.history, () => {
         applyDimensionHidden(app, d, hidden, ids)
-        host.write(writeCouronneState(host.options, withDim(state, id, { hidden })))
+        host.write(figureOptionsOf(host.options, withDim(state, id, { hidden })))
       }))
       return
     }
@@ -608,7 +609,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * au diagramme. `also` : d'autres clés de la figure posées dans le même geste (épingles, couche).
    */
   const linkedOptions = (link: boolean, base: Type_Bag = host.options): Type_Bag =>
-    writeCouronneState(base, { ...state, linked: link })
+    figureOptionsOf(base, { ...state, linked: link })
 
   return {
     state, plan, linked, cells_dim,
