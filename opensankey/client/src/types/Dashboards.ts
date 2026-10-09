@@ -353,6 +353,13 @@ export class Class_DashboardsStore {
    * `current` sur un tableau de bord implicite (cf. `ViewsReader.applyViewChange`).
    */
   public activating: boolean = false
+  /**
+   * sa#625 — LA REPRISE DE SA#624 EST-ELLE FAITE ? Posé par la reprise, écrit dans le fichier
+   * (`resumed: true`) : un fichier repris ne l'est plus. Sans ce témoin, chaque ouverture redonnait
+   * un tableau de bord à toute vue parcourue qu'aucun ne montre — c'est-à-dire à celles dont
+   * l'auteur avait SUPPRIMÉ le tableau de bord, qui revenaient dans l'éditeur comme sur la page publiée.
+   */
+  public resumed: boolean = false
 
   public get entries(): { readonly [id: string]: Type_Dashboard } { return this._entries }
   public get order(): readonly string[] { return this._order }
@@ -470,6 +477,7 @@ export class Class_DashboardsStore {
     this._order = []
     this._current = null
     this._seq = 0
+    this.resumed = false
   }
 
   /** sa#619 — Les tableaux de bord (dans leur ordre) où figure le volet qui est la vue `view_id`. */
@@ -595,6 +603,7 @@ export class Class_DashboardsStore {
     })
     const json: Type_JSON = { order: [...this._order], entries }
     if (this._current !== null && this._current in this._entries) json['current'] = this._current
+    if (this.resumed) json['resumed'] = true
     return json
   }
 
@@ -630,6 +639,7 @@ export class Class_DashboardsStore {
     this._order = [...explicit, ...rest]
     const current = getStringFromJSON(j, 'current', '')
     this._current = (current !== '' && current in entries) ? current : null
+    this.resumed = j['resumed'] === true
     this._realignSeq()
   }
 
