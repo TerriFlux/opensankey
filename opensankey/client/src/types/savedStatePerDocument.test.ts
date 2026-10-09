@@ -76,6 +76,8 @@ describe('os#1442 le changement sannonce sur le bus de lhote', () => {
     // Topic d HOTE, et c est le point : l abonne — la barre d onglets — est unique et montee une
     // fois ; elle doit s eveiller pour un document qui n existait pas quand elle s est abonnee.
     const { ws, main, other_sheet } = buildTwoSheetWorkspace()
+    // sa#633 — creer la seconde feuille a modifie le fichier : on part de lui enregistre.
+    markSaved(main)
     let heard = 0
     ws.menu_configuration.subscribe(SAVE_STATE_TOPIC, () => { heard++ })
     const sheet_app = main.sheetApplication(other_sheet)!
@@ -147,5 +149,85 @@ describe('os#1442 lire letat dune feuille ne la charge pas', () => {
     main.releaseSheetDocument(other_sheet)
 
     expect(main.liveSheetDocument(other_sheet)).toBeNull()
+  })
+})
+
+describe('sa#633 le temoin compte les marques « modifie »', () => {
+
+  it('chaque marque compte, meme quand la valeur ne change pas ; « enregistre » ne compte pas', () => {
+    // Ce que la valeur seule ne dit pas : une fois a `false`, elle ne bouge plus, alors que la pop-up
+    // « Vue non enregistree » d OpenSankey+ doit savoir si la vue a ete retouchee DEPUIS.
+    const ws = new Class_Workspace(false)
+    const doc = ws.createDocument({ offscreen: true })
+    expect(doc.menu_configuration.modified_marks).toBe(0)
+
+    markModified(doc)
+    markModified(doc)
+
+    expect(doc.menu_configuration.modified_marks).toBe(2)
+    markSaved(doc)
+    expect(doc.menu_configuration.modified_marks).toBe(2)
+    expect(doc.has_unsaved_changes).toBe(false)
+  })
+
+  it('un document qui partage le temoin de sa source partage aussi son compte', () => {
+    const ws = new Class_Workspace(false)
+    const source = ws.createDocument({ offscreen: true })
+    const figure = ws.createDocument({ offscreen: true })
+    figure.menu_configuration.shareSaveStateWith(source.menu_configuration)
+
+    markModified(figure)
+
+    expect(source.has_unsaved_changes).toBe(true)
+    expect(source.menu_configuration.modified_marks).toBe(1)
+  })
+
+  it('markDocumentModified marque le document modifie', () => {
+    const ws = new Class_Workspace(false)
+    const doc = ws.createDocument({ offscreen: true })
+
+    doc.markDocumentModified()
+
+    expect(doc.has_unsaved_changes).toBe(true)
+  })
+})
+
+describe('sa#633 les gestes de feuille marquent le document modifie', () => {
+  // Ils posaient `true` — « enregistre » — juste apres avoir change le fichier.
+  const savedTwoSheets = () => {
+    const { main, other_sheet } = buildTwoSheetWorkspace()
+    markSaved(main)
+    expect(main.has_unsaved_changes).toBe(false)
+    return { main, other_sheet }
+  }
+
+  it('creer une feuille', () => {
+    const { main } = savedTwoSheets()
+    main.createNewSheet(false)
+    expect(main.has_unsaved_changes).toBe(true)
+  })
+
+  it('dupliquer la feuille courante', () => {
+    const { main } = savedTwoSheets()
+    main.duplicateCurrentSheetAsNewSheet()
+    expect(main.has_unsaved_changes).toBe(true)
+  })
+
+  it('importer une feuille', () => {
+    const { main } = savedTwoSheets()
+    main.addSheetFromJSON(main.toSheetContentJSON(), { name: 'Importee' })
+    expect(main.has_unsaved_changes).toBe(true)
+  })
+
+  it('renommer une feuille', () => {
+    const { main, other_sheet } = savedTwoSheets()
+    main.renameSheet(other_sheet, 'Renommee')
+    expect(main.has_unsaved_changes).toBe(true)
+  })
+
+  it('supprimer une feuille', () => {
+    const { main, other_sheet } = savedTwoSheets()
+    main.deleteSheet(other_sheet, false)
+    expect(main.has_unsaved_changes).toBe(true)
   })
 })
