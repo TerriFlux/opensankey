@@ -8,7 +8,8 @@
 
 import { getStringFromJSON } from './Utils'
 import type { Type_JSON } from './Utils'
-import { gridFromJSON, gridKeep, gridToJSON } from './MainZoneGrid'
+import { gridFrames, gridFromJSON, gridKeep, gridToJSON } from './MainZoneGrid'
+import type { Type_MainZoneGridFrame, Type_MainZoneGridNode } from './MainZoneGrid'
 
 /**
  * os#1482 — LES TABLEAUX DE BORD : la vue de l'ESPACE DE TRAVAIL (cf. NOTE-TABLEAUX DE BORD.md).
@@ -224,6 +225,99 @@ const withoutPane = (main_zone: Type_JSON, id: string): void => {
   if (getStringFromJSON(main_zone, 'maximized', '') === id) delete main_zone['maximized']
 }
 
+// sa#624 — L'ÉCRAN EST TOUJOURS UN TABLEAU DE BORD ==============================================
+//
+// Le sélecteur de la barre du haut ne montre plus que des tableaux de bord, et ce qu'on voit à
+// l'écran EST le tableau de bord courant : il s'enregistre au fil de l'eau, on ne le « recapture »
+// plus. Un fichier d'avant qui se lisait comme une suite de vues — un modèle SOCLE, les étapes d'un
+// tutoriel — devient une suite de tableaux de bord, un par vue, dans l'ordre des vues et sous leur
+// nom : la disposition de l'écran, son volet qui parcourait les vues montrant chacune à son tour.
+
+/**
+ * La disposition d'un tableau de bord à un seul volet : le volet Sankey `pane_id` (l'identifiant du
+ * diagramme, `MAIN_ZONE_CANVAS_ID`, passé par l'appelant pour garder ce module pur) qui montre la
+ * vue `view_id`.
+ */
+export const singleSankeyPaneMainZone = (view_id: string, pane_id: string): Type_JSON => ({
+  occupants: {
+    [pane_id]: { place: 'main', size: 1, order: 0, representation: pane_id, subject: { kind: 'diagram', view: view_id } }
+  }
+})
+
+/**
+ * Une copie de `main_zone` où chaque volet qui MONTRE la vue `from` sans en être une — le volet qui
+ * parcourt les vues d'un fichier d'avant — montre `to`. `null` quand aucun volet ne la montre : la
+ * disposition ne sait alors pas où poser `to`.
+ */
+export const mainZoneWithWalkedView = (main_zone: Type_JSON, from: string, to: string): Type_JSON | null => {
+  const copy = JSON.parse(JSON.stringify(main_zone)) as Type_JSON
+  let found = false
+  Object.values(occupantsOf(copy)).forEach(v => {
+    if (!v || typeof v !== 'object' || Array.isArray(v) || dashboardPaneViewOf(v) !== '') return
+    const s = (v as Type_JSON)['subject']
+    if (!s || typeof s !== 'object' || Array.isArray(s)) return
+    const sj = s as Type_JSON
+    if (getStringFromJSON(sj, 'kind', 'diagram') !== 'diagram' || getStringFromJSON(sj, 'view', '') !== from) return
+    sj['view'] = to
+    found = true
+  })
+  return found ? copy : null
+}
+
+/** Une case de la mosaïque d'un tableau de bord : un volet et sa place, en fractions de l'écran. */
+export type Type_DashboardMosaicTile = { id: string, entry: Type_JSON, frame: Type_MainZoneGridFrame }
+
+/**
+ * LA MOSAÏQUE D'UN TABLEAU DE BORD, pour sa vignette : la case de chaque volet dans un écran de
+ * `1 × 1`. La grille du fichier si elle y est, sinon celle que disent les places d'avant (grande
+ * case, colonne droite, bandeau du bas) ; un volet en plein écran occupe tout. Les volets flottants
+ * n'ont pas de case : ils ne sont dessinés que s'il n'y en a pas d'autres.
+ */
+export const dashboardMosaic = (main_zone: Type_JSON): Type_DashboardMosaicTile[] => {
+  const occupants = occupantsOf(main_zone)
+  const entryOf = (id: string): Type_JSON | null => {
+    const v = occupants[id]
+    return (v && typeof v === 'object' && !Array.isArray(v)) ? v as Type_JSON : null
+  }
+  const ids = Object.keys(occupants)
+    .filter(id => entryOf(id) !== null)
+    .sort((a, b) => getNumberOrMax(entryOf(a), 'order') - getNumberOrMax(entryOf(b), 'order'))
+  const full: Type_MainZoneGridFrame = { top: 0, left: 0, width: 1, height: 1 }
+  const maximized = getStringFromJSON(main_zone, 'maximized', '')
+  if (maximized !== '' && entryOf(maximized)) return [{ id: maximized, entry: entryOf(maximized) as Type_JSON, frame: full }]
+  const place = (id: string) => getStringFromJSON(entryOf(id) as Type_JSON, 'place', 'right')
+  const docked = ids.filter(id => place(id) !== 'floating')
+  const file_grid = gridFromJSON(main_zone['grid'])
+  let grid = file_grid ? gridKeep(file_grid, id => docked.includes(id)) : null
+  if (!grid && docked.length > 0) {
+    // Les places d'avant, comme `Class_MenuConfig._legacyMainZoneGrid` : la grande case, la colonne
+    // droite, le bandeau du bas — à leurs parts par défaut, la vignette n'a pas besoin de mieux.
+    const principal = docked.find(id => place(id) === 'main') ?? docked.find(id => place(id) === 'right') ?? docked[0]
+    const right = docked.filter(id => id !== principal && place(id) !== 'bottom')
+    const bottom = docked.filter(id => id !== principal && place(id) === 'bottom')
+    const stack = (dir: 'row' | 'column', list: string[]): Type_MainZoneGridNode =>
+      list.length === 1 ? { pane: list[0] } : { split: dir, children: list.map(pane => ({ pane })), sizes: list.map(() => 1) }
+    let g: Type_MainZoneGridNode = { pane: principal }
+    if (right.length > 0) g = { split: 'row', children: [g, stack('column', right)], sizes: [0.65, 0.35] }
+    if (bottom.length > 0) g = { split: 'column', children: [g, stack('row', bottom)], sizes: [0.7, 0.3] }
+    grid = g
+  }
+  if (grid) {
+    const { frames } = gridFrames(grid, full, 0.02)
+    return Object.entries(frames).map(([id, frame]) => ({ id, entry: entryOf(id) as Type_JSON, frame }))
+  }
+  // Rien que des volets flottants : côte à côte.
+  return ids.map((id, i) => ({
+    id, entry: entryOf(id) as Type_JSON, frame: { top: 0, left: i / ids.length, width: 1 / ids.length, height: 1 }
+  }))
+}
+
+/** Un nombre d'une entrée (`Number.MAX_SAFE_INTEGER` s'il manque : rangé en dernier). */
+const getNumberOrMax = (entry: Type_JSON | null, key: string): number => {
+  const v = entry ? entry[key] : undefined
+  return typeof v === 'number' && Number.isFinite(v) ? v : Number.MAX_SAFE_INTEGER
+}
+
 /**
  * LE MAGASIN des tableaux de bord de l'espace de travail. Un seul par hôte (cf. `Class_MenuConfig`), comme
  * la liste des fenêtres.
@@ -256,6 +350,47 @@ export class Class_DashboardsStore {
     let id = ''
     do { id = `s_${++this._seq}` } while (id in this._entries)
     return id
+  }
+
+  /** sa#624 — Le rang de `id` dans l'ordre (-1 s'il n'y est pas). */
+  public indexOf(id: string): number { return this._order.indexOf(id) }
+
+  /**
+   * sa#624 — Ajoute un tableau de bord au rang `index` (borné ; un identifiant déjà présent est
+   * remplacé et déplacé) ; rend son identifiant. C'est le geste de Nouveau et de Dupliquer, qui
+   * posent le tableau de bord juste après le courant, et de l'annulation d'une suppression.
+   */
+  public insert(dashboard: Type_Dashboard, index: number): string {
+    this._order = this._order.filter(x => x !== dashboard.id)
+    this._order.splice(Math.max(0, Math.min(index, this._order.length)), 0, dashboard.id)
+    this._entries[dashboard.id] = dashboard
+    this._realignSeq()
+    return dashboard.id
+  }
+
+  /**
+   * sa#624 — L'ORDRE, donné d'un bloc : les identifiants connus dans l'ordre dit, sans doublon ; les
+   * tableaux de bord qu'il oublie suivent, dans leur ordre d'avant — rien ne disparaît.
+   */
+  public setOrder(ids: readonly string[]): void {
+    const listed = [...new Set(ids.filter(id => id in this._entries))]
+    const seen = new Set(listed)
+    this._order = [...listed, ...this._order.filter(id => !seen.has(id))]
+  }
+
+  /** sa#624 — Ce nom est-il celui d'un AUTRE tableau de bord que `except` ? */
+  public nameTaken(name: string, except?: string): boolean {
+    const clean = name.trim()
+    return this._order.some(id => id !== except && this._entries[id]?.name === clean)
+  }
+
+  /** sa#624 — `base` s'il est libre, sinon « base 2 », « base 3 »… */
+  public uniqueName(base: string): string {
+    const clean = base.trim()
+    if (!this.nameTaken(clean)) return clean
+    let n = 2
+    while (this.nameTaken(`${clean} ${n}`)) n += 1
+    return `${clean} ${n}`
   }
 
   /** Ajoute (ou remplace, à même identifiant) un tableau de bord ; rend son identifiant. */

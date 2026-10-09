@@ -7,7 +7,7 @@
 
 import {
   Class_DashboardsStore, implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId,
-  mainZoneWithViewOnCurrentSheet, dashboardViewRefs
+  mainZoneWithViewOnCurrentSheet, dashboardViewRefs, mainZoneWithWalkedView, singleSankeyPaneMainZone, dashboardMosaic
 } from './Dashboards'
 import { Class_ApplicationData } from './ApplicationData'
 import { MAIN_ZONE_CANVAS_ID, mainZoneSubjectView } from './MenuConfig'
@@ -148,5 +148,70 @@ describe('le sujet de fenetre porte la vue demandee', () => {
       }
     } as unknown as Type_JSON)
     expect(relu.main_zone_occupants.find(x => x.id === 'w_1')?.subject).toEqual({ kind: 'node', id: 'n1' })
+  })
+})
+
+// sa#624 — L'ECRAN EST TOUJOURS UN TABLEAU DE BORD : les briques pures du magasin et de la reprise.
+describe('sa#624 : ordre, noms, reprise d une vue parcourue, mosaique', () => {
+  const store = (): Class_DashboardsStore => {
+    const s = new Class_DashboardsStore()
+    ;['A', 'B', 'C'].forEach(name => s.add({ id: s.newId(), name, main_zone: layout({}) }))
+    return s
+  }
+
+  it('insert pose un tableau de bord a un rang, setOrder garde ceux qu il oublie', () => {
+    const s = store()
+    s.insert({ id: 'x', name: 'X', main_zone: layout({}) }, 1)
+    expect(s.order).toEqual(['s_1', 'x', 's_2', 's_3'])
+    s.insert({ id: 'x', name: 'X', main_zone: layout({}) }, 99)
+    expect(s.order).toEqual(['s_1', 's_2', 's_3', 'x'])
+    s.setOrder(['s_3', 'inconnu', 's_1', 's_3'])
+    expect(s.order).toEqual(['s_3', 's_1', 's_2', 'x'])
+    expect(s.indexOf('s_2')).toBe(2)
+  })
+
+  it('un nom libre reste tel quel, un nom pris recoit un numero', () => {
+    const s = store()
+    expect(s.uniqueName('D')).toBe('D')
+    expect(s.uniqueName('A')).toBe('A 2')
+    s.add({ id: 'y', name: 'A 2', main_zone: layout({}) })
+    expect(s.uniqueName('A')).toBe('A 3')
+    expect(s.nameTaken('A', 's_1')).toBe(false)
+    expect(s.nameTaken('A', 's_2')).toBe(true)
+  })
+
+  it('le volet qui parcourt les vues montre la vue demandee ; un volet qui est une vue ne bouge pas', () => {
+    const screen = layout({
+      [MAIN_ZONE_CANVAS_ID]: canvasOn('v2'),
+      w_1: { ...canvasOn('v2'), place: 'right', saved_view: 'v2' },
+      w_2: { place: 'right', size: 1, order: 2, representation: 'osp.repr.doc', subject: { kind: 'diagram' }, saved_view: 'doc' }
+    })
+    const walked = mainZoneWithWalkedView(screen, 'v2', 'v3') as Type_JSON
+    const occupants = walked['occupants'] as Type_JSON
+    expect(((occupants[MAIN_ZONE_CANVAS_ID] as Type_JSON)['subject'] as Type_JSON)['view']).toBe('v3')
+    expect(((occupants['w_1'] as Type_JSON)['subject'] as Type_JSON)['view']).toBe('v2')
+    // L'original n'est pas touche ; sans volet sur la vue, pas de disposition.
+    expect(((screen['occupants'] as Type_JSON)[MAIN_ZONE_CANVAS_ID] as Type_JSON)['subject']).toEqual({ kind: 'diagram', view: 'v2' })
+    expect(mainZoneWithWalkedView(screen, 'v9', 'v3')).toBeNull()
+    expect(dashboardViewRefs(singleSankeyPaneMainZone('v1', MAIN_ZONE_CANVAS_ID)))
+      .toEqual([{ occupant_id: MAIN_ZONE_CANVAS_ID, representation: MAIN_ZONE_CANVAS_ID, sheet: '', view: 'v1' }])
+  })
+
+  it('la mosaique : la grille du fichier, les places d avant, le plein ecran', () => {
+    const one = dashboardMosaic(singleSankeyPaneMainZone('v1', MAIN_ZONE_CANVAS_ID))
+    expect(one.map(t => [t.id, t.frame])).toEqual([[MAIN_ZONE_CANVAS_ID, { top: 0, left: 0, width: 1, height: 1 }]])
+    const legacy = layout({
+      [MAIN_ZONE_CANVAS_ID]: canvasOn('v1'),
+      w_1: { place: 'right', size: 1, order: 1, representation: 'osp.repr.doc', subject: { kind: 'diagram' } },
+      w_2: { place: 'floating', size: 1, order: 2, representation: 'osp.repr.doc', subject: { kind: 'diagram' } }
+    })
+    const tiles = dashboardMosaic(legacy)
+    expect(tiles.map(t => t.id).sort()).toEqual([MAIN_ZONE_CANVAS_ID, 'w_1'])
+    const main = tiles.find(t => t.id === MAIN_ZONE_CANVAS_ID)!.frame
+    const right = tiles.find(t => t.id === 'w_1')!.frame
+    expect(main.left).toBe(0)
+    expect(right.left).toBeGreaterThan(main.left + main.width - 0.0001)
+    expect(dashboardMosaic({ ...legacy, maximized: 'w_1' }).map(t => t.id)).toEqual(['w_1'])
+    expect(dashboardMosaic({ occupants: {} })).toEqual([])
   })
 })
