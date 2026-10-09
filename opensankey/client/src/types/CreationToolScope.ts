@@ -31,6 +31,7 @@
 import type { Class_ApplicationData } from './ApplicationData'
 import type { Type_CreationTool } from './DrawingArea'
 import { MAIN_ZONE_CANVAS_ID } from './MenuConfig'
+import { representation_registry } from '../Representations/RepresentationRegistry'
 
 /**
  * Les gestes de la colonne d'outils. Les quatre outils de création, plus les deux boutons qui
@@ -63,9 +64,14 @@ export const TOOL_GESTURE_SCOPE: { [gesture in Type_ToolGesture]: () => string[]
   // voit au survol d'un nœud DESSINÉ, donc là aussi, et nulle part ailleurs.
   selection: () => [MAIN_ZONE_CANVAS_ID],
   // Le pinceau recopie l'apparence d'un élément sur ceux qu'on clique ensuite : ces clics se
-  // font sur le dessin.
-  style_paint: () => [MAIN_ZONE_CANVAS_ID]
+  // font sur le dessin — et, depuis sa#622, sur les vignettes des natures qui le déclarent
+  // (`style_paint`, l'étoile unitaire), dont les nœuds et les flux sont de vrais éléments.
+  style_paint: () => [MAIN_ZONE_CANVAS_ID, ...stylePaintNatures()]
 }
+
+/** sa#622 — les natures, hors canevas, qui déclarent le pinceau de style (lues à l'appel). */
+export const stylePaintNatures = (): string[] =>
+  representation_registry.all().filter(entry => entry.style_paint === true).map(entry => entry.id)
 
 /**
  * sa#581 — LA NATURE D'AUCUN VOLET : ce que la fenêtre active « montre » quand la grande zone

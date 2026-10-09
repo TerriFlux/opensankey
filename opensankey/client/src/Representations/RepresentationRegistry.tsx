@@ -200,6 +200,28 @@ export type Type_RepresentationZoom = {
   fit?: (ctx: Type_RepresentationContext) => void
 }
 
+/** sa#622 — une entrée de la légende d'un volet : un nom et sa couleur. */
+export type Type_PaneLegendEntry = { label: string, color: string }
+
+/** sa#622 — un groupe de la légende d'un volet : son nom, puis ses entrées. */
+export type Type_PaneLegendSection = { title: string, entries: Type_PaneLegendEntry[] }
+
+/**
+ * sa#622 — LE TITRE ET LA LÉGENDE D'UN VOLET, dessinés UNE FOIS pour lui, au-dessus et autour de sa
+ * grille de vignettes (arbitrage Alexandre, 09/10/2026 : une légende par vignette se répéterait neuf
+ * fois sur une grille de neuf). Leurs réglages vivent sur le volet (`Type_MainZoneOccupant.look`),
+ * pas sur ses figures, et les onglets Titre et Légende de l'inspecteur les y écrivent.
+ */
+export type Type_RepresentationPaneFrame = {
+  /** Les réglages offerts : des clés `title_*` et `legend_*` du catalogue des figures. */
+  attributes: Type_FigureAttributesConfig
+  /**
+   * Ce que la légende énumère pour ce volet. `ctx` est celui du volet : `window_id` posé, sans
+   * élément (la légende parle de toutes les vignettes à la fois).
+   */
+  legend: (ctx: Type_RepresentationContext) => Type_PaneLegendSection[]
+}
+
 /** Ce qu'une représentation reçoit en entrée. */
 export type Type_RepresentationContext = {
   app_data: Class_ApplicationData
@@ -443,6 +465,18 @@ type Type_RepresentationCommon = {
    * ailleurs.
    */
   zoom?: Type_RepresentationZoom
+  /**
+   * sa#622 — LE PINCEAU DE STYLE VAUT DANS CETTE NATURE : ses vignettes montent des documents dont
+   * les éléments se cliquent (l'étoile unitaire). Il recopie l'apparence d'un élément sur ceux qu'on
+   * clique ensuite, d'une vignette à l'autre. Absent = non (cf. la portée du geste `style_paint`).
+   */
+  style_paint?: boolean
+  /**
+   * sa#622 — LE TITRE ET LA LÉGENDE DU VOLET ENTIER (cf. `Type_RepresentationPaneFrame`). Absent :
+   * la nature n'en a pas, ou les dessine dans chaque figure (clés `title_*`, `legend_*` déclarées
+   * dans `attributes`).
+   */
+  pane_frame?: Type_RepresentationPaneFrame
   /**
    * 15/09/2026 — CE QUE CETTE FENÊTRE MONTRE, en plus de son sujet : un texte COURT, écrit par
    * l'en-tête à côté du fil d'Ariane.

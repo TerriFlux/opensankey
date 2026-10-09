@@ -4650,7 +4650,20 @@ export class Class_DrawingArea {
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+    // sa#622 — les zones armées avec elle (les vignettes d'un même volet) quittent le pinceau aussi :
+    // un coup de pinceau dans l'une ne doit pas laisser les autres armées. La liste est vidée AVANT
+    // d'appeler les pairs, qui ne rappellent donc personne.
+    const peers = this.style_paint_peers
+    this.style_paint_peers = []
+    peers.forEach(peer => { if (peer !== this && peer.isInStylePaintMode()) peer.exitStylePaintMode() })
   }
+
+  /**
+   * sa#622 — LES ZONES ARMÉES DU MÊME PINCEAU que celle-ci : les vignettes d'un volet Sankey unitaire,
+   * chacune son document, qu'un seul bouton arme ensemble (la source est dans l'une, les cibles dans
+   * toutes). Vide hors de ce cas. Transitoire.
+   */
+  public style_paint_peers: Class_DrawingArea[] = []
 
   // Mode « placer une zone de texte » : l'utilisateur glisse un rectangle sur le
   // fond pour poser une ZDT à cette position/taille (cf. DrawingAreaInteractions,
