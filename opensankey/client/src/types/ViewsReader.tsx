@@ -362,6 +362,9 @@ export class ViewsReader {
     const host = this.host
     const dashboards = host.menu_configuration?.dashboards
     if (!dashboards || !host.is_main || dashboards.activating) return
+    // sa#624 — quand l'écran est le tableau de bord courant, une vue qui change dans un volet change
+    // ce tableau de bord, elle n'en fait pas sortir.
+    if (host.dashboards_follow_screen) return
     const explicit = dashboards.current !== null && !isImplicitDashboardId(dashboards.current)
     if (host.sankey_panes.activating && explicit) return
     dashboards.current = implicitDashboardId(id)
