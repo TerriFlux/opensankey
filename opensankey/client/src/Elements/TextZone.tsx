@@ -12,6 +12,10 @@ export class Class_ContainerElement extends Class_NodeBase {
   // zone de texte normale, éditable via l'interface ZDT. Son texte peut contenir
   // des jetons {NomDuGroupe} remplacés par la valeur sélectionnée du data tag.
   protected _is_title: boolean = false
+  // os#1511 (Julien, 09/10 : « il faut que le titre se cale en haut, et pas sur les coordonnées, car
+  // le y peut être négatif ») — le titre se pose À CHAQUE DESSIN au-dessus du diagramme, centré
+  // sur sa largeur (`Class_Sankey.placeTitleOnTop`). Persisté (`title_on_top`).
+  protected _title_on_top: boolean = false
 
   // #542 — texte libre lu par le bloc INFOS de la présentation. Seules les
   // entrées de légende le renseignent, depuis la définition de leur étiquette ou
@@ -49,6 +53,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     const cast_copy = container_to_copy as Class_ContainerElement
     this._tied_to_nodes = cast_copy._tied_to_nodes
     this._is_title = cast_copy._is_title
+    this._title_on_top = cast_copy._title_on_top
 
     cast_copy._attached_node.forEach(n => {
       const node = this.drawing_area.sankey.nodes_dict[n.id]
@@ -104,6 +109,8 @@ export class Class_ContainerElement extends Class_NodeBase {
   // GETTERS / SETTERS ===========================================================
   public get is_title(): boolean { return this._is_title }
   public set is_title(_: boolean) { this._is_title = _ }
+  public get title_on_top(): boolean { return this._title_on_top }
+  public set title_on_top(_: boolean) { this._title_on_top = _ }
 
   public get tooltip_text(): string { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
