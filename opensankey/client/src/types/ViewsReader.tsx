@@ -12,7 +12,7 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON } fro
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { decodeViewsFromDelta } from './viewDelta'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
-import { implicitDashboardId } from './Dashboards'
+import { implicitDashboardId, isImplicitDashboardId } from './Dashboards'
 import type { Type_ViewLabelDef } from './ViewsQuery'
 import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
 import { TUTORIAL_TOPIC } from './EventBus'
@@ -140,6 +140,9 @@ export class ViewsReader {
   protected updateViewMenus(): void {
     this.host.menu_configuration?.updateAllMenuComponents()
   }
+
+  /** Juste avant que la vue courante cède la place. OS : rien. OSP : la vignette de la vue quittée. */
+  protected beforeViewLeft(): void { /* lecture : no-op */ }
 
   // ========================================================================================
   // CHARGEMENT / EXTRACTION DE VUES (lecture). Opèrent la DA via l'hôte.
@@ -343,6 +346,38 @@ export class ViewsReader {
   }
 
   /**
+   * sa#619 — LA BASCULE SANS DESSIN que commande l'échange de deux volets Sankey qui montrent le même
+   * dessin sous deux vues (cf. `Class_SankeyPanes.swapLiveViews`) : la vue courante change de NOM,
+   * pas de contenu — le maître ou une vue légère, sur la même zone de dessin. Le reste de la bascule
+   * ordinaire, ce qui ne touche pas au dessin, est fait ici : la vignette de la vue quittée, le crochet
+   * des vues légères, les menus. Le tableau de bord courant ne bouge pas : choisir un volet n'en sort
+   * pas (cf. `applyViewChangeBody`).
+   */
+  public renameCurrentView(id: string) {
+    this.beforeViewLeft()
+    this.host.current_view_id = id
+    this.followViewWithDashboard(id)
+    this.afterLightViewLoaded(id)
+    this.updateViewMenus()
+  }
+
+  /**
+   * Le tableau de bord courant devient l'implicite de la vue `id` — sauf pendant l'activation d'un
+   * tableau de bord, qui a déjà posé le sien, et, sa#619, quand c'est l'activation d'un volet Sankey
+   * qui change la vue alors qu'un tableau de bord EXPLICITE est courant : depuis que tout volet est une
+   * vue, passer d'un volet Sankey à l'autre change de vue, et cliquer dans un volet ne fait pas sortir
+   * du tableau de bord qu'on regarde. Sur le principal seulement (cf. `applyViewChangeBody`).
+   */
+  protected followViewWithDashboard(id: string) {
+    const host = this.host
+    const dashboards = host.menu_configuration?.dashboards
+    if (!dashboards || !host.is_main || dashboards.activating) return
+    const explicit = dashboards.current !== null && !isImplicitDashboardId(dashboards.current)
+    if (host.sankey_panes.activating && explicit) return
+    dashboards.current = implicitDashboardId(id)
+  }
+
+  /**
    * os#1368 — Bascule INTERACTIVE (geste d'utilisateur : sélecteur, bandeau, vignette, F7/F8/F9,
    * lien `view://`). Même corps que `setCurrentView`, seul l'ORDONNANCEMENT change : sur le chemin
    * heavy, un indicateur est posé, la main est rendue au navigateur le temps qu'il le peigne, puis
@@ -446,8 +481,8 @@ export class ViewsReader {
     // pour que le sélecteur dise ce qu'on regarde — sauf pendant une activation, qui a déjà posé
     // la sienne. Sur le principal seulement : la vue d'un document de feuille ne dit rien de
     // l'écran.
+    this.followViewWithDashboard(id)
     const dashboards = host.menu_configuration?.dashboards
-    if (dashboards && host.is_main && !dashboards.activating) dashboards.current = implicitDashboardId(id)
     // sa#566 — UNE VUE EST UN VOLET ENREGISTRÉ : la bascule pose le sien. Pas pendant l'activation
     // d'un tableau de bord, qui pose lui-même toute la grille. sa#581 — ni pendant l'activation
     // d'un volet Sankey, qui a déjà choisi où la vue se montre.

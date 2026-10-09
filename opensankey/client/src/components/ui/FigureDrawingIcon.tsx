@@ -16,7 +16,7 @@
 
 import React from 'react'
 
-export type Type_FigureDrawingIconName = 'sectors' | 'rings' | 'multiples'
+export type Type_FigureDrawingIconName = 'sectors' | 'rings' | 'multiples' | 'table_flat' | 'table_tree' | 'table_multiples'
 
 /** Un secteur d'anneau, de `a0` à `a1` (radians, 0 en haut, sens horaire), rayons `r0` < `r1`. */
 const sector = (cx: number, cy: number, r0: number, r1: number, a0: number, a1: number): string => {
@@ -37,6 +37,23 @@ const ring = (cx: number, cy: number, r0: number, r1: number, parts: number[], g
   return out
 }
 
+/** Un rectangle plein (une cellule, une barre d'en-tête). */
+const rect = (x: number, y: number, w: number, h: number): string => `M${x} ${y}h${w}v${h}h${-w}Z`
+
+/** 07/10/2026 — un petit tableau : une colonne de libellés et `cols` colonnes de `rows` lignes. */
+const grid = (x: number, y: number, w: number, rows: number, cols: number, indent: number[] = []): string[] => {
+  const out: string[] = []
+  const rh = 2
+  const cw = (w - 4) / cols
+  for (let r = 0; r < rows; r++) {
+    const yy = y + r * (rh + 1)
+    const ind = indent[r] ?? 0
+    out.push(rect(x + ind, yy, 3 - ind, rh))
+    for (let c = 0; c < cols; c++) out.push(rect(x + 4 + c * cw, yy, cw - 0.6, rh))
+  }
+  return out
+}
+
 const PATHS: { [name in Type_FigureDrawingIconName]: string[] } = {
   sectors: ring(8, 8, 3.6, 7.5, [0.45, 0.3, 0.25]),
   rings: [
@@ -47,11 +64,16 @@ const PATHS: { [name in Type_FigureDrawingIconName]: string[] } = {
     ...ring(2.9, 8, 1.2, 2.6, [0.6, 0.4], 0.35),
     ...ring(8, 8, 1.2, 2.6, [0.5, 0.5], 0.35),
     ...ring(13.1, 8, 1.2, 2.6, [0.7, 0.3], 0.35)
-  ]
+  ],
+  // 07/10/2026 — le tableau croisé : plat (des lignes égales), hiérarchique (un groupe et ses lignes en
+  // retrait), un tableau par membre (deux petits tableaux).
+  table_flat: [rect(1, 1.5, 14, 2), ...grid(1, 5, 14, 4, 3)],
+  table_tree: [rect(1, 1.5, 14, 2), ...grid(1, 5, 14, 4, 3, [0, 1.2, 1.2, 0])],
+  table_multiples: [...grid(0.5, 3, 7, 4, 1), ...grid(8.5, 3, 7, 4, 1)]
 }
 
 export const isFigureDrawingIconName = (name: unknown): name is Type_FigureDrawingIconName =>
-  name === 'sectors' || name === 'rings' || name === 'multiples'
+  typeof name === 'string' && Object.prototype.hasOwnProperty.call(PATHS, name)
 
 /** Le visuel d'un choix de dessin, à la taille du texte voisin (16 px par défaut). */
 export const FigureDrawingIcon = ({ name, size = 16 }: { name: Type_FigureDrawingIconName, size?: number }) => (

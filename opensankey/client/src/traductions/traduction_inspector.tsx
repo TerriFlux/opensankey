@@ -44,11 +44,11 @@ export const resources_inspector = {
         },
         nothing_here: 'No settings available for: {{target}}.',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: 'Settings of this pane only: “{{name}}”.',
-        pane_nothing: 'This pane has no settings of its own.',
+        pane_intro: 'Settings of this view only: “{{name}}”.',
+        pane_nothing: 'This view has no settings of its own.',
         // os#1394 — settings of the active representation of the main zone.
         representation: {
-          none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          none: 'No active representation: open a view on a node or a flow (star, donut, bars, sunburst) to set it here.',
           // os#1402 — a setting that has moved must say where it went, otherwise the author
           // keeps looking for it where it used to be.
           axis_in_navigation: 'The analysis axis (decompose by, compare across) is set in “Navigation and coordinates”: it changes what is shown, not the way it is drawn. The legend, the axes and their ticks, the units will come here.',
@@ -98,7 +98,7 @@ export const resources_inspector = {
           mfa: 'MFA',
           styles: 'Styles',
           representation: 'Representation',
-          pane: 'Pane'
+          pane: 'View'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -394,8 +394,8 @@ export const resources_inspector = {
         // 19/09/2026 — the documentation panel lost its bar too: edit / side by side / preview
         // is how the text is shown, i.e. navigation, so it lives here.
         doc_mode: 'Documentation display',
-        window_subject: 'Pane subject',
-        subject_sheet_gone: 'The sheet this pane looks at is gone: its subject can no longer be set here.',
+        window_subject: 'View subject',
+        subject_sheet_gone: 'The sheet this view looks at is gone: its subject can no longer be set here.',
         subject_nothing_to_offer: 'No visible node or flow can be shown as “{{representation}}”: nothing to offer here.',
         short: {
           subject: 'Subject',
@@ -442,11 +442,11 @@ export const resources_inspector = {
         },
         nothing_here: 'Aucun réglage disponible pour : {{target}}.',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: 'Réglages de ce volet seulement : « {{name}} ».',
-        pane_nothing: 'Ce volet n\'a pas de réglage propre.',
+        pane_intro: 'Réglages de cette vue seulement : « {{name}} ».',
+        pane_nothing: 'Cette vue n\'a pas de réglage propre.',
         // os#1394 — réglages de la représentation active de la grande zone.
         representation: {
-          none: 'Aucune représentation active : ouvrez un volet sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
+          none: 'Aucune représentation active : ouvrez une vue sur un nœud ou un flux (étoile, couronne, barres, sunburst) pour la régler ici.',
           // os#1402 — un réglage qui a déménagé doit dire où il est parti, sinon l'auteur le
           // cherche là où il l'avait laissé.
           axis_in_navigation: 'L\'axe d\'analyse (décomposer par, comparer selon) se règle dans « Navigation et coordonnées » : il change ce qui est montré, pas la façon de le dessiner. La légende, les axes et leurs graduations, les unités viendront ici.',
@@ -496,7 +496,7 @@ export const resources_inspector = {
           mfa: 'AFM',
           styles: 'Styles',
           representation: 'Représentation',
-          pane: 'Volet'
+          pane: 'Vue'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -779,8 +779,8 @@ export const resources_inspector = {
         // os#1411 — le choix du sujet d'une figure d'élément, venu de la barre des sujets qui
         // vivait au bord de la fenêtre. « De quoi » est la première question de navigation d'une
         // figure d'élément, et elle se pose désormais ici, avec les autres.
-        window_subject: 'Sujet du volet',
-        subject_sheet_gone: 'La feuille que ce volet regarde n\'existe plus : son sujet ne se règle plus d\'ici.',
+        window_subject: 'Sujet de la vue',
+        subject_sheet_gone: 'La feuille que cette vue regarde n\'existe plus : son sujet ne se règle plus d\'ici.',
         subject_nothing_to_offer: 'Aucun nœud ni flux visible ne peut être montré en « {{representation}} » : rien à proposer ici.',
         short: {
           subject: 'Sujet',
@@ -826,10 +826,10 @@ export const resources_inspector = {
         },
         nothing_here: 'Ningún ajuste disponible para: {{target}}.',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: 'Ajustes de este panel únicamente: « {{name}} ».',
-        pane_nothing: 'Este panel no tiene ajustes propios.',
+        pane_intro: 'Ajustes de esta vista únicamente: « {{name}} ».',
+        pane_nothing: 'Esta vista no tiene ajustes propios.',
         representation: {
-          none: 'Ninguna representación activa: abra un panel sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
+          none: 'Ninguna representación activa: abra una vista sobre un nodo o un flujo (estrella, anillo, barras, sunburst) para ajustarla aquí.',
           axis_in_navigation: 'El eje de análisis (descomponer por, comparar según) se ajusta en «Navegación y coordenadas»: cambia lo que se muestra, no la forma de dibujarlo. La leyenda, los ejes y sus graduaciones, las unidades vendrán aquí.',
           scope: 'Aplicar a',
           scope_pane: 'Esta figura',
@@ -868,7 +868,7 @@ export const resources_inspector = {
           mfa: 'AFM',
           styles: 'Estilos',
           representation: 'Representación',
-          pane: 'Panel'
+          pane: 'Vista'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1140,8 +1140,8 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'Esta figura lee {{pinned}}, el diagrama muestra {{current}}',
         json_root_key: 'Clave raíz del JSON',
         doc_mode: 'Visualización de la documentación',
-        window_subject: 'Sujeto del panel',
-        subject_sheet_gone: 'La hoja que mira este panel ya no existe: su sujeto ya no se ajusta aquí.',
+        window_subject: 'Sujeto de la vista',
+        subject_sheet_gone: 'La hoja que mira esta vista ya no existe: su sujeto ya no se ajusta aquí.',
         subject_nothing_to_offer: 'Ningún nodo ni flujo visible puede mostrarse como «{{representation}}»: nada que ofrecer aquí.',
         short: {
           subject: 'Sujeto',
@@ -1187,10 +1187,10 @@ export const resources_inspector = {
         },
         nothing_here: 'Keine Einstellungen verfügbar für: {{target}}.',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: 'Nur Einstellungen dieses Bereichs: « {{name}} ».',
-        pane_nothing: 'Dieser Bereich hat keine eigenen Einstellungen.',
+        pane_intro: 'Nur Einstellungen dieser Ansicht: « {{name}} ».',
+        pane_nothing: 'Diese Ansicht hat keine eigenen Einstellungen.',
         representation: {
-          none: 'Keine aktive Darstellung: Öffnen Sie einen Bereich auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
+          none: 'Keine aktive Darstellung: Öffnen Sie eine Ansicht auf einem Knoten oder einem Fluss (Stern, Ring, Balken, Sunburst), um sie hier einzustellen.',
           axis_in_navigation: 'Die Analyseachse (zerlegen nach, vergleichen über) wird unter „Navigation und Koordinaten“ eingestellt: Sie ändert, was gezeigt wird, nicht die Art der Darstellung. Legende, Achsen und ihre Skalenstriche sowie Einheiten kommen hierher.',
           scope: 'Anwenden auf',
           scope_pane: 'Diese Abbildung',
@@ -1229,7 +1229,7 @@ export const resources_inspector = {
           mfa: 'MFA',
           styles: 'Stile',
           representation: 'Darstellung',
-          pane: 'Bereich'
+          pane: 'Ansicht'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1501,8 +1501,8 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'Diese Abbildung liest {{pinned}}, das Diagramm zeigt {{current}}',
         json_root_key: 'JSON-Stammschlüssel',
         doc_mode: 'Anzeige der Dokumentation',
-        window_subject: 'Gegenstand des Bereichs',
-        subject_sheet_gone: 'Das Blatt, das dieser Bereich zeigt, existiert nicht mehr: sein Gegenstand lässt sich hier nicht mehr einstellen.',
+        window_subject: 'Gegenstand der Ansicht',
+        subject_sheet_gone: 'Das Blatt, das diese Ansicht zeigt, existiert nicht mehr: sein Gegenstand lässt sich hier nicht mehr einstellen.',
         subject_nothing_to_offer: 'Kein sichtbarer Knoten und kein sichtbarer Fluss lässt sich als „{{representation}}“ darstellen: hier gibt es nichts anzubieten.',
         short: {
           subject: 'Gegenstand',
@@ -1548,10 +1548,10 @@ export const resources_inspector = {
         },
         nothing_here: 'Nessuna impostazione disponibile per: {{target}}.',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: 'Impostazioni di questo solo riquadro: « {{name}} ».',
-        pane_nothing: 'Questo riquadro non ha impostazioni proprie.',
+        pane_intro: 'Impostazioni di questa sola vista: « {{name}} ».',
+        pane_nothing: 'Questa vista non ha impostazioni proprie.',
         representation: {
-          none: 'Nessuna rappresentazione attiva: aprite un riquadro su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
+          none: 'Nessuna rappresentazione attiva: aprite una vista su un nodo o un flusso (stella, anello, barre, sunburst) per regolarla qui.',
           axis_in_navigation: 'L\'asse di analisi (scomporre per, confrontare secondo) si regola in «Navigazione e coordinate»: cambia ciò che viene mostrato, non il modo di disegnarlo. La legenda, gli assi e le loro tacche, le unità arriveranno qui.',
           scope: 'Applicare a',
           scope_pane: 'Questa figura',
@@ -1590,7 +1590,7 @@ export const resources_inspector = {
           mfa: 'AFM',
           styles: 'Stili',
           representation: 'Rappresentazione',
-          pane: 'Riquadro'
+          pane: 'Vista'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -1862,8 +1862,8 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'Questa figura legge {{pinned}}, il diagramma mostra {{current}}',
         json_root_key: 'Chiave radice del JSON',
         doc_mode: 'Visualizzazione della documentazione',
-        window_subject: 'Soggetto del riquadro',
-        subject_sheet_gone: 'Il foglio che questo riquadro guarda non esiste più: il suo soggetto non si imposta più da qui.',
+        window_subject: 'Soggetto della vista',
+        subject_sheet_gone: 'Il foglio che questa vista guarda non esiste più: il suo soggetto non si imposta più da qui.',
         subject_nothing_to_offer: 'Nessun nodo né flusso visibile può essere mostrato come «{{representation}}»: niente da proporre qui.',
         short: {
           subject: 'Soggetto',
@@ -1908,10 +1908,10 @@ export const resources_inspector = {
         },
         nothing_here: '没有可用于以下对象的设置：{{target}}。',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: '仅此窗格的设置：«{{name}}»。',
-        pane_nothing: '此窗格没有自己的设置。',
+        pane_intro: '仅此视图的设置：«{{name}}»。',
+        pane_nothing: '此视图没有自己的设置。',
         representation: {
-          none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          none: '没有活动的表示：在节点或流上打开一个视图（星形、环形、条形、旭日图），即可在此设置。',
           axis_in_navigation: '分析轴（按此分解、按此比较）在「导航与坐标」中设置：它改变显示的内容，而不是呈现方式。图例、坐标轴及其刻度、单位今后会放在这里。',
           scope: '应用于',
           scope_pane: '本图',
@@ -1952,7 +1952,7 @@ export const resources_inspector = {
           mfa: 'MFA',
           styles: '样式',
           representation: 'Representation',
-          pane: '窗格'
+          pane: '视图'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -2227,8 +2227,8 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: '该图形读取 {{pinned}}，图表显示 {{current}}',
         json_root_key: 'JSON 根键',
         doc_mode: '文档显示',
-        window_subject: '窗格主体',
-        subject_sheet_gone: '该窗格所看的工作表已不存在：其主题无法再在此设置。',
+        window_subject: '视图主体',
+        subject_sheet_gone: '该视图所看的工作表已不存在：其主题无法再在此设置。',
         subject_nothing_to_offer: '没有可见的节点或流可以用「{{representation}}」显示：此处无可选项。',
         short: {
           subject: '主体',
@@ -2273,10 +2273,10 @@ export const resources_inspector = {
         },
         nothing_here: '{{target}} に利用できる設定はありません。',
         // sa#620 — l'onglet des réglages du volet actif (ex-menu de son en-tête).
-        pane_intro: 'このペインだけの設定：«{{name}}»。',
-        pane_nothing: 'このペインには固有の設定がありません。',
+        pane_intro: 'このビューだけの設定：«{{name}}»。',
+        pane_nothing: 'このビューには固有の設定がありません。',
         representation: {
-          none: 'No active representation: open a pane on a node or a flow (star, donut, bars, sunburst) to set it here.',
+          none: 'アクティブな表示がありません：ノードまたはフローでビューを開くと（スター、リング、バー、サンバースト）、ここで設定できます。',
           axis_in_navigation: '分析の軸（分解の軸、比較の軸）は「ナビゲーションと座標」で設定します。表示される内容を変えるものであり、見せ方を変えるものではありません。凡例、軸と目盛り、単位は今後ここに入ります。',
           scope: '適用先',
           scope_pane: 'この図',
@@ -2317,7 +2317,7 @@ export const resources_inspector = {
           mfa: 'MFA',
           styles: 'スタイル',
           representation: 'Representation',
-          pane: 'ペイン'
+          pane: 'ビュー'
         },
         // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
@@ -2592,8 +2592,8 @@ export const resources_inspector = {
         figure_data_tag_pinned_hint: 'この図は {{pinned}} を読み、ダイアグラムは {{current}} を表示しています',
         json_root_key: 'JSON のルートキー',
         doc_mode: '文書の表示',
-        window_subject: 'ペインの対象',
-        subject_sheet_gone: 'このペインが見ているシートはもうありません。ここから主題を設定することはできません。',
+        window_subject: 'ビューの対象',
+        subject_sheet_gone: 'このビューが見ているシートはもうありません。ここから主題を設定することはできません。',
         subject_nothing_to_offer: '「{{representation}}」で表示できる可視のノードやフローがありません。ここに提示できるものはありません。',
         short: {
           subject: '対象',

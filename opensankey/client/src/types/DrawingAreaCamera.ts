@@ -405,7 +405,16 @@ export function getViewport(da: Class_DrawingArea): { width: number, height: num
  * contenu vide teste `width === 0 && height === 0`.
  */
 export function contentBounds(da: Class_DrawingArea): { x: number, y: number, width: number, height: number } | null {
+  // os#1511 — UN TITRE CALÉ EN HAUT DE L'ÉCRAN ne fait pas partie du contenu : il suit la vue, et
+  // le compter faisait courir le cadrage après lui (Julien, 09/10 : « le diagramme ne se centre
+  // plus »). Caché le temps de la mesure.
+  const title = da.sankey.getTitleContainer()
+  const title_sel = title?.title_on_top ? title.d3_selection : null
+  const title_display = title_sel?.style('display') ?? null
+  title_sel?.style('display', 'none')
   const bbox = da.d3_selection_elements_group?.node()?.getBBox()
+  if (title_display === null || title_display === '') title_sel?.style('display', null)
+  else title_sel?.style('display', title_display)
   if (!bbox) return null
   return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height }
 }
@@ -445,7 +454,9 @@ export function contentBoundsFromModel(
   const legend_in_panel = da.legend?.hidden_on_screen === true
   const shape_holders = [
     ...da.sankey.visible_nodes_list,
-    ...da.sankey.containers_list.filter(c => c.is_visible && !(legend_in_panel && isLegendElementId(c.id)))
+    ...da.sankey.containers_list.filter(c => c.is_visible && !(legend_in_panel && isLegendElementId(c.id))
+      // os#1511 — le titre calé en haut de l'écran suit la vue : hors du contenu (cf. contentBounds).
+      && !(c.is_title && c.title_on_top))
   ]
   shape_holders.forEach(n => {
     push(n.position_x - n.shape_margin_left, n.position_y - n.shape_margin_top)

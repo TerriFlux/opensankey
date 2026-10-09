@@ -60,12 +60,17 @@ export interface Type_MatrixAxisInput {
   members: ReadonlySet<string>
   /** Où se lit le Total de l'axe ; `null` : la somme du premier niveau. */
   total: Class_DataTag[] | null
+  /** 09/10/2026 (lot 3) — les décochés : une ligne grisée, hors du Total (lignes seulement). */
+  hidden?: Class_DataTag[]
 }
 
 /** Le plan du tableau (`planFor(…, 'matrix')`), en membres. */
 export const matrixInputOfPlan = (
   plan: Type_MatrixPlan, sankey: Type_CouronneSankey
-): { rows: Type_MatrixAxisInput, columns: Type_MatrixAxisInput | null, coordinates: Map<string, Class_DataTag[]> } => {
+): {
+  rows: Type_MatrixAxisInput, columns: Type_MatrixAxisInput | null, cases: Type_MatrixAxisInput | null,
+  coordinates: Map<string, Class_DataTag[]>
+} => {
   const axis = (a: Type_MatrixAxisPlan): Type_MatrixAxisInput => {
     const dim = sankey.data_taggs_dict[a.dimension_id] as Class_DataTagGroup
     const members = (ids: string[]) => ids.map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
@@ -74,7 +79,8 @@ export const matrixInputOfPlan = (
       entry: members(a.entry),
       opened: new Set(a.opened),
       members: new Set(a.members),
-      total: a.total === null ? null : members(a.total)
+      total: a.total === null ? null : members(a.total),
+      hidden: members(a.hidden ?? [])
     }
   }
   const coordinates = new Map<string, Class_DataTag[]>()
@@ -83,7 +89,10 @@ export const matrixInputOfPlan = (
     const ms = d === undefined ? [] : ids.map(m => d.tags_dict[m] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
     if (ms.length > 0) coordinates.set(id, ms)
   })
-  return { rows: axis(plan.rows), columns: plan.columns ? axis(plan.columns) : null, coordinates }
+  return {
+    rows: axis(plan.rows), columns: plan.columns ? axis(plan.columns) : null, cases: plan.cases ? axis(plan.cases) : null,
+    coordinates
+  }
 }
 
 /** Tolérance RELATIVE de l'écart parent ↔ Σ enfants, la même que la couronne. */
@@ -121,8 +130,22 @@ export interface Type_MatrixRow {
   expanded: boolean
   /** « Autres » : les noms des membres repliés (son info-bulle). */
   folded_names?: string[]
+  /** 09/10/2026 (lot 3) — un membre DÉCOCHÉ : sa ligne reste, grisée, hors du Total. */
+  hidden?: boolean
   /** Une valeur par colonne, dans l'ordre de `columns` ; `null` = absente (cellule vide). */
   cells: (number | null)[]
+}
+
+/** 07/10/2026 — un des tableaux parallèles : un membre de la dimension des cases (ou « Autres »). */
+export interface Type_MatrixCase {
+  key: string
+  label: string
+  /** Le membre ; l'identifiant d'« Autres » (`matrixOthersId('k', '')`) pour les repliés. */
+  member_id: string
+  /** « Autres » : les noms des membres repliés (son info-bulle). */
+  folded_names?: string[]
+  /** Les cellules, ligne par ligne, dans l'ordre de `rows` et de `columns` du tableau d'ensemble. */
+  cells: (number | null)[][]
 }
 
 export interface Type_DimensionMatrix {
@@ -132,6 +155,13 @@ export interface Type_DimensionMatrix {
   rows: Type_MatrixRow[]
   /** Le tri en vigueur, pour que l'en-tête l'annonce. */
   sort: Type_MatrixSort
+  /**
+   * 07/10/2026 — UN TABLEAU PAR MEMBRE (rôle cases, correction de Julien) : les mêmes lignes et les
+   * mêmes colonnes que le tableau d'ensemble (`rows`, `columns`, qui lisent la dimension des cases à
+   * son Total), une grille de cellules par membre. Tous alignés : ordre, « Autres » et colonnes sont
+   * ceux de l'ensemble. Absent : un seul tableau.
+   */
+  cases?: { dimension: { id: string, label: string }, tables: Type_MatrixCase[] }
 }
 
 export interface Type_DimensionMatrixOptions {
@@ -148,6 +178,12 @@ export interface Type_DimensionMatrixOptions {
    * sujet) ; `coordinates` dit où se lisent les autres dimensions.
    */
   axes?: { rows: Type_MatrixAxisInput, columns: Type_MatrixAxisInput | null }
+  /**
+   * 07/10/2026 — LA DIMENSION DES CASES : un tableau par membre (son `entry`), repliés en « Autres »
+   * comme les cases de la couronne (`others.cases`, sinon `others.columns`). Sa coordonnée dans le
+   * tableau d'ensemble vient de `coordinates`.
+   */
+  cases?: Type_MatrixAxisInput | null
   node_value_mode?: 'max' | 'inputs' | 'outputs'
   residual_label?: string
   total_label?: string
@@ -170,13 +206,13 @@ export interface Type_DimensionMatrixOptions {
    * la figure. « Autres » vient en dernier ; `opened` : ceux qu'on a ouverts (+), par clé
    * (`matrixOthersId`). Absent : rien ne se replie.
    */
-  others?: { label: string, rows: Type_OthersOptions, columns: Type_OthersOptions, opened?: ReadonlySet<string> }
+  others?: { label: string, rows: Type_OthersOptions, columns: Type_OthersOptions, cases?: Type_OthersOptions, opened?: ReadonlySet<string> }
 }
 
 /** Le préfixe de l'identifiant d'un « Autres » du tableau (ce n'est pas un membre). */
 export const MATRIX_OTHERS_PREFIX = `${OTHERS_ID}:`
-/** L'« Autres » de l'axe `axis` sous le membre `parent_id` (`''` : au premier niveau). */
-export const matrixOthersId = (axis: 'r' | 'c', parent_id: string): string => `${MATRIX_OTHERS_PREFIX}${axis}:${parent_id}`
+/** L'« Autres » de l'axe `axis` sous le membre `parent_id` (`''` : au premier niveau) ; `k` : les cases. */
+export const matrixOthersId = (axis: 'r' | 'c' | 'k', parent_id: string): string => `${MATRIX_OTHERS_PREFIX}${axis}:${parent_id}`
 
 export interface Type_MatrixSort {
   key: string
@@ -345,17 +381,33 @@ export const buildDimensionMatrix = (
     ? axes.columns?.total ?? null
     : col_dim && col_hidden_members.size === 0 && col_roots.length === 1 ? [col_roots[0]] : null
 
-  /** Les cellules d'une ligne, à une coordonnée de la dimension des lignes. */
-  const cellsAt = (row_members: Class_DataTag[]): (number | null)[] => {
+  /**
+   * Les cellules d'une ligne, à une coordonnée de la dimension des lignes ; `layer` : la dimension des
+   * cases lue à un membre (un des tableaux parallèles).
+   */
+  type Type_Layer = [string, Class_DataTag[]] | null
+  const at = (layer: Type_Layer, ...entries: [string, Class_DataTag[]][]) => new Map(layer ? [...entries, layer] : entries)
+  const cellsAt = (row_members: Class_DataTag[], layer: Type_Layer = null): (number | null)[] => {
     if (!col_dim) {
-      return [valueAt(new Map([[row_dim.id, row_members]])), null]
+      return [valueAt(at(layer, [row_dim.id, row_members])), null]
     }
-    const cells = col_coords.map(c => valueAt(new Map([[row_dim.id, row_members], [col_dim.id, c]])))
+    const cells = col_coords.map(c => valueAt(at(layer, [row_dim.id, row_members], [col_dim.id, c])))
     const total = col_total_coord !== null
-      ? valueAt(new Map([[row_dim.id, row_members], [col_dim.id, col_total_coord]]))
+      ? valueAt(at(layer, [row_dim.id, row_members], [col_dim.id, col_total_coord]))
       : sumOf(col_top.map(i => cells[i]))
     return [...cells, total]
   }
+  /**
+   * 07/10/2026 — LA RECETTE DE CHAQUE LIGNE, pour la rejouer dans chaque tableau parallèle : un membre
+   * (ou la portée), une somme de membres (« Autres »), une somme de lignes (le Total), un écart (le
+   * non réparti).
+   */
+  type Type_Recipe =
+    | { kind: 'at', members: Class_DataTag[] }
+    | { kind: 'sum_of', members: Class_DataTag[][] }
+    | { kind: 'sum_rows', rows: number[] }
+    | { kind: 'gap', parent: number, children: number[] }
+  const recipes: Type_Recipe[] = []
 
   // ── LES LIGNES : l'arbre de la dimension, ouvert par l'état (ou la coupe) puis par les +/− ────
   const frontier = axes ? [] : matrixFrontierOf(row_dim, cut)
@@ -416,22 +468,50 @@ export const buildDimensionMatrix = (
       key: `r:${id}`, label: others.label, member_id: id, depth, kind: 'member', has_children: true, expanded: open,
       cells: columns.map((_, i) => sumOf(folded.map(f => f.cells[i]))), folded_names: folded.map(f => f.m.name)
     })
+    recipes.push({ kind: 'sum_of', members: folded.map(f => [f.m]) })
     if (open) folded.forEach(f => visit(f.m, depth + 1, f.cells))
+  }
+  /**
+   * 09/10/2026 (lot 3) — LES DÉCOCHÉS gardent leur ligne, grisée, après leurs frères : sous leur parent
+   * quand il est ouvert, sinon au premier niveau. Hors du Total (`top_index` les ignore) et des
+   * sous-totaux (le non-réparti se tait quand des enfants manquent).
+   */
+  const hidden_rows = axes?.rows.hidden ?? []
+  const hidden_placed = new Set<string>()
+  const expanded_rows = new Set<string>()
+  const hiddenRows = (parent_id: string, depth: number) => {
+    hidden_rows
+      .filter(h => !hidden_placed.has(h.id) && (parent_id === ''
+        ? !(h.parent !== undefined && expanded_rows.has(h.parent.id))
+        : h.parent?.id === parent_id))
+      .forEach(h => {
+        hidden_placed.add(h.id)
+        rows.push({
+          key: `r:${h.id}`, label: h.name, member_id: h.id, depth, kind: 'member',
+          has_children: false, expanded: false, cells: cellsAt([h]), hidden: true
+        })
+        recipes.push({ kind: 'at', members: [h] })
+      })
   }
   const visit = (m: Class_DataTag, depth: number, cells: (number | null)[]) => {
     const expanded = isExpanded(m)
+    const self = rows.length
     rows.push({
       key: `r:${m.id}`, label: m.name, member_id: m.id, depth, kind: 'member',
       has_children: m.children.length > 0, expanded, cells
     })
+    recipes.push({ kind: 'at', members: [m] })
     if (!expanded) return
+    expanded_rows.add(m.id)
     const children = shownChildren(m)
     const start = rows.length
     siblingRows(children, m.id, depth + 1)
+    hiddenRows(m.id, depth + 1)
     // LE NON RÉPARTI : ce que le parent déclare et que ses enfants ne couvrent pas, colonne par
     // colonne. Il se tait quand des enfants sont cachés : l'écart est alors voulu.
     if (children.length !== (m.children as Class_DataTag[]).length) return
-    const child_rows = rows.slice(start).filter(r => r.depth === depth + 1 && r.kind === 'member')
+    const child_index = rows.map((r, i) => (i >= start && r.depth === depth + 1 && r.kind === 'member' && !r.hidden ? i : -1)).filter(i => i >= 0)
+    const child_rows = child_index.map(i => rows[i])
     const gaps = cells.map((parent, i) => {
       if (parent === null) return null
       const sum = child_rows.reduce((acc, r) => acc + (r.cells[i] ?? 0), 0)
@@ -444,6 +524,7 @@ export const buildDimensionMatrix = (
         key: `r:${m.id}:__residual__`, label: options.residual_label ?? 'Unallocated', member_id: null,
         depth: depth + 1, kind: 'residual', has_children: false, expanded: false, cells: gaps
       })
+      recipes.push({ kind: 'gap', parent: self, children: child_index })
     }
   }
   // Liée, l'entrée ne garde que ce qui mène à ce que le diagramme montre (le reste y est décoché).
@@ -456,10 +537,12 @@ export const buildDimensionMatrix = (
   const linked_single = !axes && cut.linked && !cut.dividing.includes(row_dim) && frontier.length === 1
   if (linked_single) visit(frontier[0], 0, cellsAt([frontier[0]]))
   else siblingRows(entry, '', 0)
+  hiddenRows('', 0)
 
   // LA LIGNE TOTAL : à la racine unique (à la portée) quand rien n'est décoché, sinon la somme des
-  // lignes d'entrée.
-  const top = rows.filter(r => r.depth === 0 && r.kind === 'member')
+  // lignes d'entrée (décochés exclus).
+  const top_index = rows.map((r, i) => (r.depth === 0 && r.kind === 'member' && !r.hidden ? i : -1)).filter(i => i >= 0)
+  const top = top_index.map(i => rows[i])
   const row_total_coord: Class_DataTag[] | null = axes
     ? axes.rows.total
     : row_roots.length === 1 && hidden.size === 0 && !linked_single ? [row_roots[0]] : null
@@ -470,6 +553,55 @@ export const buildDimensionMatrix = (
     key: 'r:__total__', label: options.total_label ?? 'Total', member_id: null, depth: 0, kind: 'total',
     has_children: false, expanded: false, cells: total_cells
   })
+  recipes.push(row_total_coord !== null ? { kind: 'at', members: row_total_coord } : { kind: 'sum_rows', rows: top_index })
+
+  // 07/10/2026 — UN TABLEAU PAR MEMBRE DES CASES : les recettes des lignes rejouées au membre. Les
+  // cases se replient comme celles de la couronne (au Total des lignes et des colonnes), en dernier.
+  const case_axis = options.cases ?? null
+  const case_dim = case_axis?.dim ?? null
+  let tables: Type_MatrixCase[] | null = null
+  if (case_axis !== null && case_dim !== null && case_dim !== row_dim && case_dim !== col_dim) {
+    const grand_rows = axes ? (axes.rows.total ?? axes.rows.entry) : (row_roots.length === 1 ? [row_roots[0]] : row_roots)
+    const grand_cols = col_dim ? (axes?.columns ? (axes.columns.total ?? axes.columns.entry) : col_roots) : null
+    const weight = (ms: Class_DataTag[]) => valueAt(new Map([
+      [row_dim.id, grand_rows], ...(col_dim && grand_cols ? [[col_dim.id, grand_cols] as [string, Class_DataTag[]]] : []), [case_dim.id, ms]
+    ])) ?? 0
+    const weighed = case_axis.entry.map(m => ({ m, value: weight([m]) })).sort((a, b) => b.value - a.value)
+    const { kept, folded } = others
+      ? foldSmallCells(weighed, others.cases ?? others.columns)
+      : { kept: weighed, folded: [] as typeof weighed }
+    const layerCells = (members: Class_DataTag[]): (number | null)[][] => {
+      const layer: Type_Layer = [case_dim.id, members]
+      const out: (number | null)[][] = []
+      recipes.forEach(rc => {
+        if (rc.kind === 'at') out.push(cellsAt(rc.members, layer))
+        else if (rc.kind === 'sum_of') {
+          const each = rc.members.map(ms => cellsAt(ms, layer))
+          out.push(columns.map((_, i) => sumOf(each.map(c => c[i]))))
+        } else if (rc.kind === 'sum_rows') out.push(columns.map((_, i) => sumOf(rc.rows.map(r => out[r][i]))))
+        else {
+          out.push(out[rc.parent].map((parent, i) => {
+            if (parent === null) return null
+            const gap = parent - rc.children.reduce((acc, r) => acc + (out[r][i] ?? 0), 0)
+            return Math.abs(gap) > Math.max(BALANCE_TOLERANCE, Math.abs(parent) * BALANCE_TOLERANCE) ? gap : null
+          }))
+        }
+      })
+      if (!col_dim) {
+        const whole = out[out.length - 1][0]
+        out.forEach(c => { c[1] = whole !== null && whole !== 0 && c[0] !== null ? (c[0] as number) / whole : null })
+      }
+      return out
+    }
+    tables = kept.map(k => ({ key: `k:${k.m.id}`, label: k.m.name, member_id: k.m.id, cells: layerCells([k.m]) }))
+    if (folded.length > 0 && others !== undefined) {
+      const id = matrixOthersId('k', '')
+      tables.push({
+        key: `k:${id}`, label: others.label, member_id: id, folded_names: folded.map(f => f.m.name),
+        cells: layerCells(folded.map(f => f.m))
+      })
+    }
+  }
 
   // LE BRUIT D'ARRONDI N'EST PAS DU NON RÉPARTI. Des valeurs saisies au millième (le SOCLE) laissent
   // entre un parent et la somme de ses enfants arrondis un écart d'une unité du dernier chiffre :
@@ -481,7 +613,12 @@ export const buildDimensionMatrix = (
     const r = rows[i]
     if (r.kind !== 'residual') continue
     r.cells = r.cells.map(v => v !== null && Math.abs(v) > noise ? v : null)
-    if (r.cells.every(v => v === null)) rows.splice(i, 1)
+    if (r.cells.every(v => v === null)) {
+      rows.splice(i, 1)
+      tables?.forEach(tb => tb.cells.splice(i, 1))
+    } else {
+      tables?.forEach(tb => { tb.cells[i] = tb.cells[i].map(v => v !== null && Math.abs(v) > noise ? v : null) })
+    }
   }
 
   // LA PART DU TOTAL, sans deuxième dimension.
@@ -497,7 +634,8 @@ export const buildDimensionMatrix = (
     column_dimension: col_dim ? { id: col_dim.id, label: col_dim.name } : null,
     columns,
     rows,
-    sort: by_label || found >= 0 ? sort : { key: default_key, dir: sort.dir }
+    sort: by_label || found >= 0 ? sort : { key: default_key, dir: sort.dir },
+    ...(tables !== null && case_dim !== null ? { cases: { dimension: { id: case_dim.id, label: case_dim.name }, tables } } : {})
   }
 }
 
@@ -532,14 +670,25 @@ export const dimensionMatrixExportTable = (
       ? { label: c.label, kind: 'share' as const }
       : { label: c.label, kind: 'number' as const, decimals: options.decimals ?? 0 })
   ]
-  const rows: Type_ExportRow[] = matrix.rows.map(r => ({
+  const rowsOf = (cells_of: (i: number) => (number | null)[], lead: string[]): Type_ExportRow[] => matrix.rows.map((r, j) => ({
     cells: [
-      r.label,
+      ...lead,
+      // Le retrait ne vaut que pour la première colonne : derrière celle du membre, il s'écrit.
+      lead.length > 0 ? '  '.repeat(r.depth) + r.label : r.label,
       ...(with_unit ? [unit] : []),
-      ...r.cells.map((v, i) => v === null ? null : matrix.columns[i].kind === 'share' ? v : v / factor)
+      ...cells_of(j).map((v, i) => v === null ? null : matrix.columns[i].kind === 'share' ? v : v / factor)
     ],
-    depth: r.depth,
+    depth: lead.length > 0 ? 0 : r.depth,
     strong: r.kind === 'total' || (r.kind === 'member' && r.expanded)
   }))
-  return { title: options.title, columns, rows }
+  // 07/10/2026 — UN TABLEAU PAR MEMBRE : les tableaux l'un sous l'autre, le membre en première colonne.
+  const cases = matrix.cases
+  if (cases) {
+    return {
+      title: options.title,
+      columns: [{ label: cases.dimension.label, kind: 'text' }, ...columns],
+      rows: cases.tables.flatMap(tb => rowsOf(j => tb.cells[j], [tb.label]))
+    }
+  }
+  return { title: options.title, columns, rows: rowsOf(j => matrix.rows[j].cells, []) }
 }

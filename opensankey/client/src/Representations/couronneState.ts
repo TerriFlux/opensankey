@@ -65,8 +65,27 @@ export const COURONNE_KEY = 'couronne'
  */
 export const SUBJECT_FOCUS_KEY = 'subject_focus'
 
-/** La version du format écrit sous `COURONNE_KEY`. */
-export const COURONNE_STATE_VERSION = 1
+/**
+ * La version du format écrit sous `COURONNE_KEY`.
+ *
+ * 07/10/2026 — VERSION 2 : le TABLEAU CROISÉ lit « une couronne par membre » comme UN TABLEAU PAR
+ * MEMBRE (correction de Julien). En version 1 (sa!936, sa!939), le tableau en faisait ses COLONNES :
+ * un sac d'avant relu par le tableau (`reader: 'matrix'`) garde ses colonnes (`matrixLegacyColumns`).
+ */
+export const COURONNE_STATE_VERSION = 2
+
+/** Qui lit l'état : la couronne (défaut) ou le tableau croisé (relecture des sacs d'avant). */
+export type Type_CouronneReader = 'couronne' | 'matrix'
+
+/** Les natures qui lisent cet état : la couronne, les barres, le tableau croisé (cf. `registerAnalysisRepresentations`). */
+export const DONUT_REPRESENTATION = 'osp.repr.donut'
+export const BARS_REPRESENTATION = 'osp.repr.bars'
+export const MATRIX_REPRESENTATION = 'osp.repr.matrix'
+export const DIMENSION_FIGURE_REPRESENTATIONS: readonly string[] = [DONUT_REPRESENTATION, BARS_REPRESENTATION, MATRIX_REPRESENTATION]
+
+/** Le lecteur de l'état d'une vignette, d'après sa nature : le tableau croisé, ou la couronne. */
+export const couronneReaderOf = (representation_id: string): Type_CouronneReader =>
+  representation_id === MATRIX_REPRESENTATION ? 'matrix' : 'couronne'
 
 /** Les clés d'avant, retirées à l'écriture (`hierarchy_focus` seulement quand il porte des membres). */
 export const LEGACY_COURONNE_KEYS = [
@@ -293,6 +312,35 @@ const storedCouronneState = (raw: unknown, linked: boolean): Type_CouronneState 
  * descripteur quand le sac n'en porte pas (`options.descriptor`) ; un état déjà écrit les ignore.
  */
 export const readCouronneState = (
+  options: Type_Options | null | undefined,
+  sankey: Type_CouronneSankey,
+  linked?: boolean,
+  declared_ids?: string[],
+  reader: Type_CouronneReader = 'couronne'
+): Type_CouronneState => {
+  const raw = options?.[COURONNE_KEY]
+  const version = raw !== null && typeof raw === 'object' ? (raw as Type_Options)['version'] : undefined
+  const state = readCouronneStateAnyVersion(options, sankey, linked, declared_ids)
+  return reader === 'matrix' && !(typeof version === 'number' && version >= 2) ? matrixLegacyColumns(state) : state
+}
+
+/**
+ * 07/10/2026 — UN SAC D'AVANT LA VERSION 2 LU PAR LE TABLEAU CROISÉ : la dimension en « une couronne
+ * par membre » y faisait les COLONNES (sa!936 « Colonnes : », ou une couronne par membre changée en
+ * tableau). Elle redevient une dimension en parts, en sectors, en fin d'ordre : la seconde dimension
+ * en parts, donc les colonnes. Le premier geste dans le tableau écrit la version 2.
+ */
+export const matrixLegacyColumns = (state: Type_CouronneState): Type_CouronneState => {
+  const cases = state.order.find(id => state.dims[id]?.drawing === 'multiples')
+  if (cases === undefined) return state
+  return {
+    ...state,
+    order: [...state.order.filter(id => id !== cases), cases],
+    dims: { ...state.dims, [cases]: { ...state.dims[cases], drawing: 'sectors' } }
+  }
+}
+
+const readCouronneStateAnyVersion = (
   options: Type_Options | null | undefined,
   sankey: Type_CouronneSankey,
   linked?: boolean,

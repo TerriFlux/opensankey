@@ -416,6 +416,7 @@ export class ContainerPersistence extends NodeBasePersistence {
     // Titre du diagramme : zone de texte marquée is_title (additif/rétrocompatible)
     if (container.is_title) {
       json_object['is_title'] = true
+      if (container.title_on_top) json_object['title_on_top'] = true
     }
 
     return json_object
@@ -493,6 +494,8 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.fromJSON(version, container, json_object, kwargs)
 
     container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
+    container['_title_on_top'] = getBooleanFromJSON(json_object, 'title_on_top', false)
+    container.syncTitleLayer()
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
     configKeys.forEach(key => {
@@ -2194,6 +2197,7 @@ export class DrawingAreaPersistence {
     // sa#529 — idem pour les bornes de hauteur des nœuds : sérialisées si DÉFINIES.
     // « Pas de borne » = clé absente (removeMaximumNodeHeight / removeMinimumNodeHeight).
     if (drawing_area.maximum_node !== undefined) json_object['maximum_node'] = drawing_area.maximum_node
+    if (drawing_area.scale_reference_node !== undefined) json_object['scale_reference_node'] = { ...drawing_area.scale_reference_node }
     if (drawing_area.minimum_node !== undefined) json_object['minimum_node'] = drawing_area.minimum_node
     // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
     // (défaut 'fill' → sérialisé seulement s'il diffère) et valeur constante (sérialisée seulement
@@ -2690,6 +2694,11 @@ export class DrawingAreaPersistence {
     drawing_area['_scale_adapted_reference'] =
       scale_adapted_ref_raw === 'element' ? 'element' : 'diagram'
     drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
+    {
+      const ref = json_object['scale_reference_node'] as { id?: unknown, px?: unknown } | undefined
+      drawing_area['_scale_reference_node'] = ref && typeof ref.id === 'string' && typeof ref.px === 'number' && ref.px > 0
+        ? { id: ref.id, px: ref.px } : undefined
+    }
     drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
     // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
     // (null si absente ⇒ le getter retombe sur default_style.shape_position_dy).

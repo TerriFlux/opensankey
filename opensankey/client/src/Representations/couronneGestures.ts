@@ -10,7 +10,7 @@
 // (os#1511, refonte étape 2, lot 3).
 //
 // Chaque geste LIT l'état (`readCouronneState`), le MODIFIE, et l'ÉCRIT : la figure par
-// `writeCouronneState` (la seule clé `couronne`), et — liée — ce qu'elle montre par le geste annulable
+// `figureOptionsOf` (la seule clé `couronne`, variantes gardées), et — liée — ce qu'elle montre par le geste annulable
 // de l'hôte sur la sélection du diagramme (`applyDimensionCut`), puisque liée, `shown` EST cette
 // sélection. Les deux écritures font UN pas d'annulation (`inOneHistoryStep`). Plus rien n'écrit
 // `dimension_opening`, `dimension_hidden`, `hierarchy_focus` (membres), `inactive_dimensions`,
@@ -35,10 +35,11 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '../components/ui/dimensionDrawingHost'
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
-  antichainOf, readCouronneState, writeCouronneState,
-  type Type_CouronneDrawing, type Type_CouronneSankey, type Type_CouronneState
+  antichainOf, readCouronneState,
+  type Type_CouronneDrawing, type Type_CouronneReader, type Type_CouronneSankey, type Type_CouronneState
 } from './couronneState'
 import { drawPlanOf } from '../Charts/couronnePlan'
+import { figureOptionsOf } from './dimensionViewState'
 
 type Type_Bag = { [key: string]: unknown }
 
@@ -122,6 +123,13 @@ export interface Type_CouronneGestureHost {
   write: (options: Type_Bag) => void
   /** La figure est-elle liée ? Absent : ce que disent ses réglages. */
   linked?: boolean
+  /**
+   * 07/10/2026 — le tableau croisé relit les sacs d'avant la version 2 avec leurs colonnes.
+   * 08/10/2026 — OBLIGATOIRE : un hôte qui l'oubliait relisait un tableau v1 en couronne, et son
+   * premier geste réécrivait le sac en v2, colonnes changées en un tableau par membre
+   * (`couronneReaderOf` le tire de la nature de la vignette).
+   */
+  reader: Type_CouronneReader
 }
 
 /**
@@ -142,7 +150,7 @@ export const partClickModeOf = (raw: unknown): 'aggregate' | 'zoom' =>
 export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   const app = host.app
   const sankey = app.drawing_area.sankey as unknown as Type_CouronneSankey
-  const state = readCouronneState(host.options, sankey, host.linked, host.declared)
+  const state = readCouronneState(host.options, sankey, host.linked, host.declared, host.reader)
   if (state.order.length === 0) return null
   const linked = state.linked
   const dimOf = (id: string) => sankey.data_taggs_dict[id] as Class_DataTagGroup | undefined
@@ -165,7 +173,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * aux montrés sous la nouvelle portée (ou à la coupe demandée) —, dans le même pas.
    */
   const commit = (next: Type_CouronneState, diagram: { dim: Class_DataTagGroup, ids: string[] }[] = []) => {
-    const out = writeCouronneState(host.options, next)
+    const out = figureOptionsOf(host.options, next)
     const asked = linked ? diagram : []
     const zooms = linked
       ? next.order.map(id => dimOf(id)).filter((d): d is Class_DataTagGroup => d !== undefined)
@@ -485,7 +493,7 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
       if (ids.length === 0) return
       app.runHeavyGesture(() => inOneHistoryStep(app.history, () => {
         applyDimensionHidden(app, d, hidden, ids)
-        host.write(writeCouronneState(host.options, withDim(state, id, { hidden })))
+        host.write(figureOptionsOf(host.options, withDim(state, id, { hidden })))
       }))
       return
     }
@@ -572,29 +580,6 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     commit(next)
   }
 
-  /**
-   * 06/10/2026 — LES COLONNES DU TABLEAU CROISÉ : `col_id` devient la seconde dimension active (les
-   * autres, hors `row_id`, se désactivent) ; `null` : plus de colonnes, `row_id` reste seule active.
-   * Une dimension qui ne montre qu'un membre à enfants se pose dessus (elle découpe un cran dessous ;
-   * liée, le diagramme ne bouge pas).
-   */
-  //
-  // 07/10/2026 (lot 2) — PAR LES RÔLES : la dimension en colonnes prend le rôle CASES (« une couronne
-  // par membre » : revenue à la couronne, une couronne par pays) et passe en fin d'ordre ; celle des
-  // lignes, le rôle PARTS. Une colonne qui ne montre qu'un membre descend d'un cran (`withCells`).
-  const setMatrixColumns = (row_id: string, col_id: string | null) => {
-    if (st(row_id) === undefined || (col_id !== null && st(col_id) === undefined)) return
-    const parts = (o: string) => st(o).drawing === 'multiples' ? { drawing: 'sectors' as const } : {}
-    let next = withDim(state, row_id, { active: true, ...parts(row_id) })
-    state.order.forEach(o => { if (o !== row_id && o !== col_id) next = withDim(next, o, { active: false, ...parts(o) }) })
-    if (col_id !== null) {
-      next = withDim(next, col_id, { active: true, drawing: 'multiples' })
-      next = { ...next, order: [row_id, ...next.order.filter(o => o !== row_id && o !== col_id), col_id] }
-      next = withCells(next, dimOf(col_id) as Class_DataTagGroup)
-    }
-    commit(next)
-  }
-
   /** « En sunburst » a-t-il un effet ? La dimension doit montrer plus d'un niveau sous sa portée. */
   const offersRingsFor = (id: string): boolean => {
     const d = dimOf(id)
@@ -624,14 +609,14 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * au diagramme. `also` : d'autres clés de la figure posées dans le même geste (épingles, couche).
    */
   const linkedOptions = (link: boolean, base: Type_Bag = host.options): Type_Bag =>
-    writeCouronneState(base, { ...state, linked: link })
+    figureOptionsOf(base, { ...state, linked: link })
 
   return {
     state, plan, linked, cells_dim,
     chooseColumn, deactivate,
     unfold, fold, zoomTo, zoomUp, back, activatePart, openMember, closeMember, showLevel,
     setFocus, toggleHidden, setShown, chosenOf,
-    move, swap, setMatrixColumns, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
+    move, swap, offersRingsFor, offersMultiplesFor, drawingOf, setDrawing,
     linkedOptions
   }
 }
