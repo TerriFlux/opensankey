@@ -145,10 +145,9 @@ export const registerBaseRepresentations = (): void => {
     // 30/09/2026 — RÉSERVÉE À LA LICENCE DEV (arbitrage Julien) : le texte du format natif est
     // un outil de mise au point, pas une lecture du diagramme. Le gate l'écarte des sélecteurs
     // (`list`) ; une page publiée ne l'offre donc pas non plus, `is_static` ne donnant pas dev.
-    // sa#626 — EN ÉDITION, POUR TOUS (arbitrage Alexandre, 09/10) : la barre des tâches des volets
-    // montre tous les types dès le départ, et un fichier, même vide, a son texte. Une page publiée
-    // reste réservée à la licence dev.
-    gate: (a) => a.has_sankey_dev || !a.is_static,
+    // sa#626 — maintenu, édition comprise (Alexandre, 09/10) : la barre des tâches des volets ne
+    // montre son icône qu'avec la licence dev.
+    gate: (a) => a.has_sankey_dev,
     // os#1418 — LA CLÉ RACINE REGARDÉE, déclarée ici bien que l'onglet vive dans l'éditeur.
     //
     // Elle est de sorte 'navigation' et pas 'style' : changer de clé racine ne change pas la

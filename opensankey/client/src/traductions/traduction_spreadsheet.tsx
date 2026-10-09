@@ -229,6 +229,18 @@ export const resources_spreadsheet = {
             doc: 'Write a text that accompanies the diagrams',
             json: 'Read the raw file (advanced use)'
           },
+          // sa#626 — le bouton « Nouveau … » du sélecteur des vues d'un type (barre des tâches des volets).
+          new_of_type: {
+            diagram: 'New Sankey',
+            unitary: 'New unitary Sankey',
+            donut: 'New donut',
+            bars: 'New bar chart',
+            matrix: 'New cross table',
+            spreadsheet: 'New spreadsheet',
+            infos: 'New info',
+            doc: 'New doc',
+            json: 'New JSON'
+          },
           move_right: 'Move to the right column',
           move_bottom: 'Move to the bottom band',
           make_main: 'Move to the large area',
@@ -595,6 +607,17 @@ export const resources_spreadsheet = {
             doc: 'Rédiger un texte qui accompagne les diagrammes',
             json: 'Lire le fichier brut (usage avancé)'
           },
+          new_of_type: {
+            diagram: 'Nouveau Sankey',
+            unitary: 'Nouveau Sankey unitaire',
+            donut: 'Nouvelle couronne',
+            bars: 'Nouvelles barres',
+            matrix: 'Nouveau tableau croisé',
+            spreadsheet: 'Nouveau tableur',
+            infos: 'Nouvelles infos',
+            doc: 'Nouvelle doc',
+            json: 'Nouveau JSON'
+          },
           move_right: 'Passer dans la colonne de droite',
           move_bottom: 'Passer dans le bandeau du bas',
           make_main: 'Passer dans la grande case',
@@ -935,6 +958,17 @@ export const resources_spreadsheet = {
             doc: 'Redactar un texto que acompaña a los diagramas',
             json: 'Leer el archivo en bruto (uso avanzado)'
           },
+          new_of_type: {
+            diagram: 'Nuevo Sankey',
+            unitary: 'Nuevo Sankey unitario',
+            donut: 'Nueva corona',
+            bars: 'Nuevas barras',
+            matrix: 'Nueva tabla cruzada',
+            spreadsheet: 'Nueva hoja de cálculo',
+            infos: 'Nueva info',
+            doc: 'Nuevo doc',
+            json: 'Nuevo JSON'
+          },
           move_right: 'Mover a la columna derecha',
           move_bottom: 'Mover a la banda inferior',
           make_main: 'Mover al área grande',
@@ -1274,6 +1308,17 @@ export const resources_spreadsheet = {
             doc: 'Einen Begleittext zu den Diagrammen verfassen',
             json: 'Die Rohdatei lesen (für Fortgeschrittene)'
           },
+          new_of_type: {
+            diagram: 'Neues Sankey',
+            unitary: 'Neues unitäres Sankey',
+            donut: 'Neuer Ring',
+            bars: 'Neue Balken',
+            matrix: 'Neue Kreuztabelle',
+            spreadsheet: 'Neue Tabelle',
+            infos: 'Neue Infos',
+            doc: 'Neues Doc',
+            json: 'Neues JSON'
+          },
           move_right: 'In die rechte Spalte verschieben',
           move_bottom: 'In das untere Band verschieben',
           make_main: 'In den großen Bereich verschieben',
@@ -1612,6 +1657,17 @@ export const resources_spreadsheet = {
             spreadsheet: 'Inserire e leggere i dati del file, come in un foglio di calcolo',
             doc: 'Scrivere un testo che accompagna i diagrammi',
             json: 'Leggere il file grezzo (uso avanzato)'
+          },
+          new_of_type: {
+            diagram: 'Nuovo Sankey',
+            unitary: 'Nuovo Sankey unitario',
+            donut: 'Nuova corona',
+            bars: 'Nuove barre',
+            matrix: 'Nuova tabella incrociata',
+            spreadsheet: 'Nuovo foglio di calcolo',
+            infos: 'Nuove info',
+            doc: 'Nuovo doc',
+            json: 'Nuovo JSON'
           },
           move_right: 'Sposta nella colonna destra',
           move_bottom: 'Sposta nella fascia inferiore',
@@ -1957,6 +2013,17 @@ export const resources_spreadsheet = {
             doc: '撰写配合图表的说明文字',
             json: '查看原始文件（高级用途）'
           },
+          new_of_type: {
+            diagram: '新建桑基图',
+            unitary: '新建单位桑基图',
+            donut: '新建环形图',
+            bars: '新建柱状图',
+            matrix: '新建交叉表',
+            spreadsheet: '新建电子表格',
+            infos: '新建信息',
+            doc: '新建文档',
+            json: '新建 JSON'
+          },
           move_right: '移到右栏',
           move_bottom: '移到底栏',
           make_main: '移到大区域',
@@ -2301,6 +2368,17 @@ export const resources_spreadsheet = {
             spreadsheet: 'スプレッドシートのようにファイルのデータを入力・閲覧する',
             doc: '図に添える文章を書く',
             json: '生ファイルを読む（上級者向け）'
+          },
+          new_of_type: {
+            diagram: '新しいサンキー',
+            unitary: '新しい単位サンキー',
+            donut: '新しいドーナツ',
+            bars: '新しい棒グラフ',
+            matrix: '新しいクロス集計表',
+            spreadsheet: '新しいスプレッドシート',
+            infos: '新しい情報',
+            doc: '新しい文書',
+            json: '新しい JSON'
           },
           move_right: '右の列へ移動',
           move_bottom: '下の帯へ移動',
