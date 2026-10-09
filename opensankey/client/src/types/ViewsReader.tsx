@@ -58,6 +58,13 @@ export class ViewsReader {
    */
   public get gesture_progress(): Class_ViewSwitchProgress { return this.switch_progress }
 
+  /**
+   * sa#636 — LES ZONES DE DESSIN DES VUES COMPLÈTES QU'ON A QUITTÉES, gardées vivantes tant qu'une
+   * entrée d'historique y a été faite (cf. `keepDrawingArea`), avec l'instantané qu'elles avaient
+   * écrit dans leur vue en la quittant : c'est lui qui dit qu'elles sont encore la vue.
+   */
+  protected _kept_drawing_areas = new Map<string, { drawing_area: Class_DrawingArea, json: Uint8Array }>()
+
   constructor(protected readonly host: Class_ApplicationData) {
     this.query = new ViewsQuery(host)
     this.switch_progress = new Class_ViewSwitchProgress({
@@ -184,6 +191,8 @@ export class ViewsReader {
     // aval voit des snapshots complets. Détection structurelle (`__patch`) : un fichier ancien
     // ou mixte se relit sans rien changer.
     decodeViewsFromDelta(json_object)
+    // sa#636 — un autre fichier, ou le même relu : ses vues n'ont rien gardé de celles d'avant.
+    this._kept_drawing_areas.clear()
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       return
@@ -441,13 +450,16 @@ export class ViewsReader {
     // #680 (revu) — Caméra de la vue SORTANTE, capturée avant unDraw : reportée sur la vue
     // entrante en mode 'none' (changer de vue ne recadre pas).
     const prev_camera = host.drawing_area.getCameraTransform()
-    // sa#568 — le dessin qu'on quitte : l'historique ne repart que s'il est REMPLACÉ (cf. plus bas).
+    // sa#568 — le dessin qu'on quitte : l'historique ne repart que s'il est PERDU (cf. plus bas).
     const prev_drawing_area = host.drawing_area
+    const prev_view_id = host.current_view_id
     // sa#581 — la mise en page PROPRE du volet vivant est mise à l'abri avant que le dessin change.
     host.beforeViewChange()
     host.drawing_area.sankey.setInvisible()
     host.drawing_area.purgeSelection()
     host.drawing_area.unDraw()
+    // sa#636 — la vue complète qu'on quitte garde son dessin si l'historique y renvoie.
+    let lost = this.keepDrawingArea(prev_view_id, prev_drawing_area, id)
     // Vue LIGHT = pas d'override géométrie/style propre : réutilise la DA maître (géométrie
     // héritée), AUCUN rebuild (pas d'extractViewFromJSON), seule la sélection de visibilité change.
     const is_light = id !== MASTER_VIEW_ID && !!host.views_dict[id]?.is_light
@@ -457,7 +469,10 @@ export class ViewsReader {
       // (splitTrade idempotent) quand le fichier s'ouvre directement sur une vue.
       host.drawing_area.afterFromJSON()
     } else {
-      this.extractViewFromJSON(host.views_dict[id].json, id)
+      const kept = this.takeKeptDrawingArea(id)
+      if (kept.lost) lost = true
+      if (kept.drawing_area) host.replaceDrawingArea(kept.drawing_area)
+      else this.extractViewFromJSON(host.views_dict[id].json, id)
     }
     // Identité LOGIQUE de la vue courante (découplée de l'id du Sankey de la DA). Posée AVANT
     // applyViewTagSelection / les redraws.
@@ -506,13 +521,60 @@ export class ViewsReader {
       if (host.keep_camera_across_views && prev_camera) host.drawing_area.setCamera(prev_camera)
     } else host.drawing_area.applyAutoFitMode(false)
     host.drawing_area.orderElementOnDA()
-    // sa#568 — L'HISTORIQUE NE REPART QUE SI LE DESSIN A CHANGÉ D'OBJET (vue lourde, reconstruite
-    // depuis son instantané) : ses entrées désigneraient des éléments morts. Le maître et les vues
-    // légères gardent le même dessin — l'historique reste valable, et annuler / rétablir valent pour
-    // toutes les actions du fichier, quel que soit le volet (Alexandre, 03/10).
-    if (host.drawing_area !== prev_drawing_area) host.resetHistory()
+    // sa#568 — annuler / rétablir valent pour toutes les actions du fichier, quel que soit le volet
+    // (Alexandre, 03/10). sa#636 — et quelle que soit la vue : une vue complète garde son dessin tant
+    // que l'historique y renvoie, et chaque entrée ramène sa vue avant de se rejouer (cf.
+    // `Class_SankeyPanes.history_context`). L'HISTORIQUE NE REPART QUE SI UN DESSIN QU'IL DÉSIGNE EST
+    // PERDU : la vue complète qu'on quittait a été supprimée, ou son instantané a changé sans elle.
+    if (lost) host.resetHistory()
+    this.pruneKeptDrawingAreas()
     // Rafraîchit les composants de menu liés aux vues (base OS ; OSP ajoute ses propres menus).
     this.updateViewMenus()
+  }
+
+  // ZONES DE DESSIN GARDÉES (sa#636) ===========================================================
+  //
+  // Une vue complète n'a pas de dessin vivant à elle : à chaque bascule, sa zone de dessin était
+  // reconstruite depuis son instantané, et celle qu'on quittait jetée — avec l'historique, dont les
+  // entrées désignent ses nœuds et ses flux. On garde désormais la zone de dessin d'une vue complète
+  // quittée TANT QU'UNE ENTRÉE D'HISTORIQUE Y RENVOIE : la mémoire reste bornée par la taille de
+  // l'historique, et une vue où l'on n'a rien fait se reconstruit comme avant.
+
+  /**
+   * La zone de dessin de la vue complète `view_id`, qu'on quitte pour `next_id` : gardée si
+   * l'historique y renvoie. Rend `true` si elle est perdue alors qu'il y renvoie — la vue a été
+   * supprimée, ou c'est elle qu'on reconstruit.
+   */
+  protected keepDrawingArea(view_id: string, drawing_area: Class_DrawingArea, next_id: string): boolean {
+    const host = this.host
+    // Le maître et les vues légères partagent un dessin, qui ne se perd jamais.
+    if (drawing_area === host.master_drawing_area || view_id === MASTER_VIEW_ID) return false
+    if (host.views_dict[view_id]?.is_light) return false
+    if (!host.history.targetsView(view_id)) return false
+    const entry = host.views_dict[view_id]
+    // Sans contexte (document hors écran), une entrée ne ramène pas sa vue : garder ne servirait à rien.
+    if (view_id === next_id || !entry || host.history.context === null) return true
+    this._kept_drawing_areas.set(view_id, { drawing_area, json: entry.json })
+    return false
+  }
+
+  /**
+   * La zone de dessin gardée de la vue `id`, si elle l'est encore : son instantané est celui qu'elle
+   * a écrit en la quittant. Sinon elle est perdue (`lost` si l'historique y renvoyait).
+   */
+  protected takeKeptDrawingArea(id: string): { drawing_area?: Class_DrawingArea, lost: boolean } {
+    const kept = this._kept_drawing_areas.get(id)
+    if (!kept) return { lost: false }
+    this._kept_drawing_areas.delete(id)
+    if (kept.json === this.host.views_dict[id]?.json) return { drawing_area: kept.drawing_area, lost: false }
+    return { lost: this.host.history.targetsView(id) }
+  }
+
+  /** Les zones de dessin gardées auxquelles l'historique ne renvoie plus s'en vont. */
+  protected pruneKeptDrawingAreas(): void {
+    Array.from(this._kept_drawing_areas.keys()).forEach(id => {
+      if (!this.host.history.targetsView(id)) this._kept_drawing_areas.delete(id)
+    })
   }
 
   // Navigation : gestes d'utilisateur (boutons de bandeau, F7 / F8 / F9) => chemin interactif.

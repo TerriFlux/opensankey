@@ -187,6 +187,15 @@ type Type_PaneRender = {
 /** Ce qu'on retient d'un volet Sankey pour réagir à sa fermeture, une fois qu'il est parti. */
 type Type_PaneMemo = { coordinate: string, saved_view?: string }
 
+/**
+ * sa#568 / sa#636 — OÙ UN GESTE DU DOCUMENT PRINCIPAL A ÉTÉ FAIT (cf. `Type_HistoryContext`) : le
+ * volet Sankey vivant, et la vue courante.
+ */
+type Type_GestureContext = { pane: string | null, view: string }
+
+const isGestureContext = (context: unknown): context is Type_GestureContext =>
+  typeof context === 'object' && context !== null && 'view' in context && 'pane' in context
+
 /** Délai de regroupement des reconstructions, après le dernier dessin du vivant. */
 const REFRESH_DELAY_MS = 250
 
@@ -949,14 +958,36 @@ export class Class_SankeyPanes {
   }
 
   public readonly history_context: Type_HistoryContext = {
-    capture: () => this.host.menu_configuration?.main_zone_live_sankey_id ?? null,
+    capture: (): Type_GestureContext => ({
+      pane: this.host.menu_configuration?.main_zone_live_sankey_id ?? null,
+      view: this.host.current_view_id
+    }),
     restore: (context: unknown) => {
+      if (!isGestureContext(context)) return
       const mc = this.host.menu_configuration
-      if (!mc || typeof context !== 'string' || mc.main_zone_live_sankey_id === context) return
-      if (!this.paneById(context)) return
-      mc.main_zone_active_id = context
-      this.sync()
-    }
+      if (mc && context.pane !== null && mc.main_zone_live_sankey_id !== context.pane && this.paneById(context.pane)) {
+        mc.main_zone_active_id = context.pane
+        this.sync()
+      }
+      this.restoreGestureView(context.view)
+    },
+    inView: (context: unknown, view_id: string) => isGestureContext(context) && context.view === view_id
+  }
+
+  /**
+   * sa#636 — LA VUE DU GESTE REDEVIENT LA VUE COURANTE avant qu'on le rejoue, quand elle n'est pas sur
+   * le même dessin : une vue complète a sa propre zone de dessin, dont les nœuds et les flux sont ceux
+   * que l'entrée désigne (cf. `ViewsReader.keepDrawingArea`). Le maître et les vues légères partagent
+   * le leur : entre eux, rien ne bascule. Le volet du geste, rétabli juste avant, a d'ordinaire déjà
+   * ramené la vue — un volet est sa vue (sa#619) ; c'est le filet d'une vue montrée sans volet à elle.
+   */
+  protected restoreGestureView(view_id: string): void {
+    const host = this.host
+    const current = host.current_view_id
+    if (current === view_id) return
+    if (!this.isHeavyView(view_id) && !this.isHeavyView(current)) return
+    if (view_id !== default_main_sankey_id && !host.views_dict[view_id]) return
+    host.runAsViewGesture(() => host.setCurrentView(view_id))
   }
 
   protected scheduleRefresh(): void {

@@ -45,11 +45,21 @@ export const history_size: number = 10
  * vivant, s'appliquerait à la mise en page de B. L'historique retient donc, pour chaque entrée, le
  * contexte du geste (`capture`), et le rétablit (`restore`) avant de la rejouer — le volet A
  * redevient le vivant, puis le geste est défait.
+ *
+ * sa#636 — Le contexte dit aussi la VUE du geste (`inView`) : une vue complète a sa propre zone de
+ * dessin, et une entrée qui y a été faite ne se rejoue que sur elle (cf. `targetsView`).
  */
 export type Type_HistoryContext = {
   capture: () => unknown
   restore: (context: unknown) => void
+  inView: (context: unknown, view_id: string) => boolean
 }
+
+/**
+ * sa#636 — Le contexte d'une entrée faite SANS contexte connu (l'historique n'en avait pas encore) :
+ * on ne sait pas ce qu'elle vise, donc elle vise tout (cf. `targetsView`).
+ */
+const UNKNOWN_CONTEXT = Symbol('unknown_history_context')
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -69,7 +79,10 @@ export class Class_ApplicationHistory {
    */
   protected _transitions_table: {
     toNext: () => void,
-    toPrev: () => void
+    toPrev: () => void,
+    // sa#636 — le contexte capturé de chaque côté ; `undefined` pour une entrée hors contexte.
+    next_context?: unknown,
+    prev_context?: unknown
   }[] = []
 
   /**
@@ -138,15 +151,35 @@ export class Class_ApplicationHistory {
   protected _replaying = false
   public get replaying(): boolean { return this._replaying }
 
-  /** `f`, précédé du retour au contexte où le geste a été fait. */
-  protected _inContext(f: () => void): () => void {
+  /** `f`, précédé du retour au contexte où le geste a été fait — et ce contexte (sa#636). */
+  protected _inContext(f: () => void): { f: () => void, captured: unknown } {
     const context = this.context
-    if (!context) return f
+    if (!context) return { f, captured: UNKNOWN_CONTEXT }
     const captured = context.capture()
-    return () => {
-      context.restore(captured)
-      f()
+    return {
+      f: () => {
+        context.restore(captured)
+        f()
+      },
+      captured
     }
+  }
+
+  /**
+   * sa#636 — UNE ENTRÉE ENCORE JOUABLE (à annuler ou à rétablir) A-T-ELLE ÉTÉ FAITE DANS LA VUE
+   * `view_id` ? C'est ce qui dit si la zone de dessin d'une vue complète qu'on quitte doit rester
+   * vivante : ses entrées désignent ses nœuds et ses flux. Une entrée hors contexte ne vise aucun
+   * dessin ; une entrée faite sans contexte connu les vise tous.
+   */
+  public targetsView(view_id: string): boolean {
+    const matches = (context: unknown) => context !== undefined &&
+      (context === UNKNOWN_CONTEXT || !this.context || this.context.inView(context, view_id))
+    for (let i = this._index_table_min; i <= this._index_table_max; i = i + 1) {
+      const slot = this._transitions_table[i % history_size]
+      if (i > this._index_table_min && matches(slot.prev_context)) return true
+      if (i < this._index_table_max && matches(slot.next_context)) return true
+    }
+    return false
   }
 
   // CONSTRUCTOR ========================================================================
@@ -194,7 +227,10 @@ export class Class_ApplicationHistory {
     in_context: boolean = true
   ) {
     this.increaseIndexes()
-    this._transitions_table[this._index_table % history_size].toPrev = in_context ? this._inContext(f) : f
+    const slot = this._transitions_table[this._index_table % history_size]
+    const entry = in_context ? this._inContext(f) : { f, captured: undefined }
+    slot.toPrev = entry.f
+    slot.prev_context = entry.captured
     this._stamp += 1
     this._notifyMenus()
   }
@@ -207,7 +243,10 @@ export class Class_ApplicationHistory {
     f: () => void,
     in_context: boolean = true
   ) {
-    this._transitions_table[(this._index_table - 1) % history_size].toNext = in_context ? this._inContext(f) : f
+    const slot = this._transitions_table[(this._index_table - 1) % history_size]
+    const entry = in_context ? this._inContext(f) : { f, captured: undefined }
+    slot.toNext = entry.f
+    slot.next_context = entry.captured
     this._notifyMenus()
   }
 
