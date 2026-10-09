@@ -59,16 +59,6 @@ export type Type_ViewEntry = {
    */
   window?: Type_JSON
   /**
-   * sa#566 — UNE VUE QU'ON A CESSÉ D'ENREGISTRER PENDANT QU'ON LA REGARDAIT.
-   *
-   * « Ne plus enregistrer » ne doit rien changer à l'écran. Or supprimer la vue COURANTE ramène au
-   * maître, donc repeint le diagramme. L'entrée reste donc en mémoire, le temps qu'on la regarde,
-   * mais elle quitte l'ordre des vues — ni sélecteur, ni navigation, ni fichier — et elle est
-   * oubliée dès qu'on bascule ailleurs (cf. `ApplicationData.applySavedViewWindowsOnSwitch`).
-   * C'est littéralement un volet éphémère. JAMAIS écrit.
-   */
-  ephemeral?: boolean
-  /**
    * sa#581 — UNE VUE LÉGÈRE À MISE EN PAGE PROPRE : le volet Sankey qu'on a enregistré. Elle
    * montre les données du MODÈLE (comme toute vue légère : elles restent communes à tous les
    * volets) avec SA mise en page — positions, apparence, zones de texte, légende, réglages de la
