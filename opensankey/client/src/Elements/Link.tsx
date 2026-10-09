@@ -1292,6 +1292,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
         membre => par_membre.get(membre)?.value ?? 0)
       kept.splice(0, kept.length, ...ordre.map(membre => par_membre.get(membre) as typeof kept[number]))
       bands.splice(0, bands.length, ...kept)
+      // os#1511 (09/10, vues synthétiques SOCLE) — UN SEUL MEMBRE CHOISI : sa bande unique, à la
+      // couleur du membre (gris pour « Matière »), recouvrait la couleur que la dimension qui peint
+      // les flux leur donne. La bande prend alors celle du peintre, s'il y en a un.
+      if (multi_dim.selected_tags_list.length === 1) {
+        const peinte = this._memberBandColor()
+        if (peinte !== undefined) bands.forEach(band => { band.color = peinte })
+      }
       if (folded.length > 0) {
         bands.splice(0, bands.length, ...kept, {
           id: OTHERS_ID,
