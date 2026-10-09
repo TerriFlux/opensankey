@@ -49,3 +49,13 @@ test('le titre cale en haut ne compte pas dans le cadrage du diagramme', () => {
   const avec = contentBoundsFromModel(app.drawing_area)
   expect(avec).toEqual(sans)
 })
+
+test('le titre cale en haut vit dans le calque ecran, hors du contenu', () => {
+  const app = new Class_ApplicationData(false)
+  const sankey = app.drawing_area.sankey
+  sankey.addNewNodeWithName('A')
+  const titre = sankey.getOrCreateTitleContainer()
+  expect((titre as unknown as { _svg_parent_group: string })._svg_parent_group).toBe('g_screen_overlay')
+  titre.title_on_top = false
+  expect((titre as unknown as { _svg_parent_group: string })._svg_parent_group).toBe('g_elements_sankey')
+})

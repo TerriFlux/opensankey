@@ -495,6 +495,7 @@ export class ContainerPersistence extends NodeBasePersistence {
 
     container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
     container['_title_on_top'] = getBooleanFromJSON(json_object, 'title_on_top', false)
+    container.syncTitleLayer()
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
     configKeys.forEach(key => {

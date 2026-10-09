@@ -191,6 +191,10 @@ export class Class_DrawingArea {
   public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  // os#1511 — CALQUE ÉCRAN : frère de `g_elements`, il annule le zoom (cf. `updateScreenOverlay`).
+  // Ce qui y vit (le titre calé en haut) est en coordonnées d'écran et n'entre dans AUCUNE mesure du
+  // contenu (cadrage, défilement, papier), qui lisent toutes `g_elements`.
+  public d3_selection_screen_overlay: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
@@ -1497,6 +1501,14 @@ export class Class_DrawingArea {
     // engendré qui n'existe plus (son membre vient d'être découpé) cède la place à l'élément
     // d'ORIGINE, dont l'id précède la marque — le tout dont il n'était qu'une part.
     const selected_ids = this.selected_elements_list.map(element => element.id)
+    // os#1511 (Julien, 09/10 : « quand je passe de Céréales à Oléoprotéagineux, il faut que je
+    // retouche l'écart pour que ça se mette correctement ») — les nœuds engendrés se placent
+    // d'après leurs hauteurs, donc d'après l'échelle : celle calée sur un nœud de référence est
+    // posée AVANT, sur la nouvelle coupe, au lieu d'arriver au dessin, après le placement.
+    if (this._scale_reference_node !== undefined) {
+      this.beginScaleFrame()
+      this.applyReferenceNodeScale()
+    }
     this.withBypassRedraws(() => {
       disaggregateDimensionNodes(this.sankey)
     }, false)
@@ -2169,6 +2181,7 @@ export class Class_DrawingArea {
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', this.domId('g_select_zone'))
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', this.domId('def_gradient')) ?? null
+    this.d3_selection_screen_overlay = this.d3_selection.append('g').attr('id', this.domId('g_screen_overlay'))
 
     // Filtre d'ombre portée partagé, référencé par les éléments dont
     // shape_shadow_visible est vrai (cf. NodeDrawShape / LinkDrawShape).
@@ -4393,8 +4406,8 @@ export class Class_DrawingArea {
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
-      // os#1511 — le titre reste en haut de la zone visible quand on zoome ou déplace.
-      this.placeTitleAtScreenTop()
+      // os#1511 — le calque écran (titre calé en haut) annule le zoom : il reste en place.
+      this.updateScreenOverlay()
 
       // #680 — Le désenclenchement des modes au zoom manuel est fait aux POINTS D'ENTRÉE du
       // zoom (DrawingAreaInteractions._eventMouseScroll pour la molette/pinch ; zoomByFactor /
@@ -5327,21 +5340,30 @@ export class Class_DrawingArea {
    * déplacement. Sans zone de zoom (tests, export hors écran) : au-dessus des nœuds.
    */
   public placeTitleAtScreenTop(): void {
+    this.updateScreenOverlay()
     const title = this._sankey.getTitleContainer()
     if (title === undefined || !title.title_on_top || !title.is_visible) return
-    const zoom_node = this.d3_selection_zoom_area?.node() ?? null
     const width = this.window_fitting_width
-    if (zoom_node === null || !(width > 0)) {
+    if (this.d3_selection_screen_overlay === null || !(width > 0)) {
       this._sankey.placeTitleOnTop()
       return
     }
-    const t = d3.zoomTransform(zoom_node)
-    const k = t.k > 0 ? t.k : 1
-    const x = (width / 2 - t.x) / k - title.getShapeWidthToUse() / 2
-    const y = (12 - t.y) / k
+    // En px d'écran : le calque annule le zoom.
+    const x = width / 2 - title.getShapeWidthToUse() / 2
+    const y = 12
     if (Math.abs(title.position_x - x) < 0.5 && Math.abs(title.position_y - y) < 0.5) return
     title.setPosXY(x, y)
     title.draw()
+  }
+
+  /** os#1511 — le calque écran annule la transformation de zoom de son parent. */
+  public updateScreenOverlay(): void {
+    const overlay = this.d3_selection_screen_overlay
+    const zoom_node = this.d3_selection_zoom_area?.node() ?? null
+    if (overlay === null || zoom_node === null) return
+    const t = d3.zoomTransform(zoom_node)
+    const k = t.k > 0 ? t.k : 1
+    overlay.attr('transform', `scale(${1 / k}) translate(${-t.x},${-t.y})`)
   }
 
   // Node height limit (px), independent of the flux size limit.
