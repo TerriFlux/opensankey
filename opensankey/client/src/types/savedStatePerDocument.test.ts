@@ -152,25 +152,9 @@ describe('os#1442 lire letat dune feuille ne la charge pas', () => {
   })
 })
 
-describe('sa#633 le temoin compte les marques « modifie »', () => {
+describe('sa#633 le temoin d un document subordonne', () => {
 
-  it('chaque marque compte, meme quand la valeur ne change pas ; « enregistre » ne compte pas', () => {
-    // Ce que la valeur seule ne dit pas : une fois a `false`, elle ne bouge plus, alors que la pop-up
-    // « Vue non enregistree » d OpenSankey+ doit savoir si la vue a ete retouchee DEPUIS.
-    const ws = new Class_Workspace(false)
-    const doc = ws.createDocument({ offscreen: true })
-    expect(doc.menu_configuration.modified_marks).toBe(0)
-
-    markModified(doc)
-    markModified(doc)
-
-    expect(doc.menu_configuration.modified_marks).toBe(2)
-    markSaved(doc)
-    expect(doc.menu_configuration.modified_marks).toBe(2)
-    expect(doc.has_unsaved_changes).toBe(false)
-  })
-
-  it('un document qui partage le temoin de sa source partage aussi son compte', () => {
+  it('un document qui partage le temoin de sa source le marque modifie', () => {
     const ws = new Class_Workspace(false)
     const source = ws.createDocument({ offscreen: true })
     const figure = ws.createDocument({ offscreen: true })
@@ -179,7 +163,6 @@ describe('sa#633 le temoin compte les marques « modifie »', () => {
     markModified(figure)
 
     expect(source.has_unsaved_changes).toBe(true)
-    expect(source.menu_configuration.modified_marks).toBe(1)
   })
 
   it('markDocumentModified marque le document modifie', () => {

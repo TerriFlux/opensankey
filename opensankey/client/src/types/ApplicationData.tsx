@@ -2330,8 +2330,9 @@ export class Class_ApplicationData {
   // Plus de volet éphémère : un volet ouvert est une vue dès sa création, sous son nom par défaut,
   // et l'œil « Enregistrer comme vue » a disparu. FERMER (la croix) et SUPPRIMER deviennent deux
   // gestes : fermé, le volet reste dans le fichier et se rouvre tel qu'on l'a laissé ; supprimé, sa
-  // vue quitte le fichier et tous les tableaux de bord. Un volet VIERGE (rien réglé depuis qu'il est
-  // ouvert) est supprimé à la fermeture : essayer un volet puis le fermer ne laisse pas de trace.
+  // vue quitte le fichier et tous les tableaux de bord. sa#635 — la croix ne supprime JAMAIS, même un
+  // volet qu'on n'a pas réglé : rien à l'écran ne dirait lequel elle supprimerait. Essayer un volet
+  // puis le jeter, c'est Ctrl+Z juste après l'avoir ouvert (l'ouverture et sa vue s'annulent ensemble).
   // Les gestes qui créent ou suppriment une vue sont d'OpenSankey+ : ils sont déclarés ici, et
   // inertes — sans vues, fermer reste ce que c'était.
 
@@ -2366,7 +2367,7 @@ export class Class_ApplicationData {
 
   /**
    * sa#619 — FERMER UN VOLET, le geste de la croix : il quitte l'écran, et reste dans le fichier
-   * s'il est une vue. Le geste s'annule. OpenSankey+ y ajoute le cas du volet vierge, supprimé.
+   * s'il est une vue. Le geste s'annule.
    */
   public closePane(occupant_id: string): void {
     const mc = this.menu_configuration
@@ -3418,9 +3419,7 @@ export class Class_ApplicationData {
    * (`current(false)` — `true` veut dire « enregistré », cf. `has_unsaved_changes`).
    *
    * Une vingtaine de ces gestes posaient `true`, certains en se croyant « marqués modifiés » : ils
-   * déclaraient le document enregistré et cachaient le travail à enregistrer. OpenSankey+ surcharge
-   * la méthode : un tel geste ne modifie pas la vue lourde courante, et ne doit pas ouvrir la pop-up
-   * « Vue non enregistrée » quand on la quitte.
+   * déclaraient le document enregistré et cachaient le travail à enregistrer.
    */
   public markDocumentModified(): void {
     this.menu_configuration?.ref_to_save_in_cache_indicator.current(false)
