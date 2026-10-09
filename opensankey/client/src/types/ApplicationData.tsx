@@ -1333,6 +1333,10 @@ export class Class_ApplicationData {
     // sa#581 — ZÉRO, C'EST VIDE (arbitrage Alexandre, 30/09 : « Nouveau diagramme : vide aussi ») :
     // une feuille blanche sous la barre du haut, et le « + » ouvre ce qu'on veut y voir. Les
     // volets Sankey partent avec leurs rendus et leurs mises en page.
+    //
+    // sa#624 — ET LES TABLEAUX DE BORD, AVANT l'écran : ils décrivaient l'écran du diagramme qu'on
+    // jette, et ne montreraient plus que des volets vides. L'écran vidé en refait un, le seul.
+    this.menu_configuration?.dashboards.clear()
     this.menu_configuration?.resetMainZone()
     this._sankey_panes.reset()
     this._sankey_panes.restoreBaseLayout()
