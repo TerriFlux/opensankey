@@ -1956,9 +1956,46 @@ export class Class_ApplicationData {
   protected dashboardsToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
     if (kwargs && kwargs['without_sheets'] === true) return
     if (!this.is_main) return
+    // sa#624 — le tableau de bord courant est l'écran : il le rejoint avant d'être écrit.
+    this.flushScreenToDashboard()
     const dashboards = this.menu_configuration?.dashboards.toJSON()
     if (dashboards) json_object['dashboards'] = dashboards
   }
+
+  /**
+   * sa#624 — L'ÉCRAN EST-IL LE TABLEAU DE BORD COURANT ? Vrai chez OpenSankey+ en édition (cf.
+   * `Class_ApplicationDataOSP`) : le sélecteur de la barre du haut ne montre que des tableaux de
+   * bord, tout fichier en a au moins un, et ce qu'on voit est le courant. Faux ici, en lecture et
+   * sans licence qui permette d'enregistrer des vues : la barre du haut garde ses vues, et les
+   * tableaux de bord leur règle d'avant (implicites, sortie au changement d'onglet).
+   */
+  public get dashboards_follow_screen(): boolean { return false }
+
+  /**
+   * sa#624 — LE TABLEAU DE BORD COURANT REJOINT L'ÉCRAN : sa disposition, la vue de chaque volet et
+   * l'onglet au premier plan. Il « s'enregistre au fil de l'eau » sans qu'on le recopie à chaque
+   * geste : l'écran ne se lit qu'aux moments où on le quitte ou le regarde ailleurs — avant d'en
+   * activer un autre, d'écrire le fichier, de le dupliquer, d'en dessiner la vignette. Muet pendant
+   * une activation : l'écran est alors celui qu'on rejoue, pas celui qu'on quitte.
+   */
+  public flushScreenToDashboard(): void {
+    if (!this.dashboards_follow_screen) return
+    const dashboards = this.menu_configuration?.dashboards
+    if (!dashboards || dashboards.activating) return
+    const dashboard = dashboards.current !== null ? dashboards.byId(dashboards.current) : undefined
+    if (!dashboard) return
+    dashboard.main_zone = this.captureDashboardMainZone()
+    if (this._current_sheet_id !== '') dashboard.sheet = this._current_sheet_id
+    else delete dashboard.sheet
+  }
+
+  /**
+   * sa#624 — OpenSankey+ : LA REPRISE des tableaux de bord d'un fichier qu'on vient d'ouvrir, une fois
+   * son écran posé (cf. `Class_ApplicationDataOSP.resumeDashboards`). `fallback_name` : le nom du
+   * tableau de bord à créer s'il n'y en a aucun.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public resumeDashboards(fallback_name?: string): void { }
 
   /**
    * Relit la clé racine `dashboards`. Symétrique de l'écriture, et sous la condition de
@@ -2010,8 +2047,13 @@ export class Class_ApplicationData {
 
   /** L'identifiant de le tableau de bord ACTIVE : l'explicite posée, sinon l'implicite de la vue courante. */
   public get current_dashboard_id(): string {
-    const current = this.menu_configuration.dashboards.current
-    if (current !== null && (viewIdOfImplicitDashboard(current) !== null || this.menu_configuration.dashboards.byId(current))) {
+    const dashboards = this.menu_configuration.dashboards
+    const current = dashboards.current
+    // sa#624 — l'écran est toujours un tableau de bord explicite : plus d'implicite.
+    if (this.dashboards_follow_screen) {
+      return (current !== null && dashboards.byId(current)) ? current : (dashboards.order[0] ?? '')
+    }
+    if (current !== null && (viewIdOfImplicitDashboard(current) !== null || dashboards.byId(current))) {
       return current
     }
     return implicitDashboardId(this._current_view_id)
@@ -2019,9 +2061,12 @@ export class Class_ApplicationData {
 
   /**
    * L'ordre de navigation des TABLEAUX DE BORD : la seule liste du sélecteur, des flèches et de F8/F9
-   * (règle du repli automatique, cf. `Class_DashboardsStore.navigationOrder`).
+   * (règle du repli automatique, cf. `Class_DashboardsStore.navigationOrder`). sa#624 — quand l'écran
+   * est un tableau de bord, la liste est celle des tableaux de bord, sans implicites : les vues
+   * qu'on parcourait sont devenues les leurs à l'ouverture du fichier.
    */
   public get dashboard_navigation_order(): string[] {
+    if (this.dashboards_follow_screen) return [...this.menu_configuration.dashboards.order]
     return this.menu_configuration.dashboards.navigationOrder(this.views_navigation_order, this._current_sheet_id)
   }
 
@@ -2039,7 +2084,7 @@ export class Class_ApplicationData {
   public dashboardName(id: string): string {
     const view_id = viewIdOfImplicitDashboard(id)
     if (view_id !== null) {
-      return view_id === default_main_sankey_id ? this._master_view_name : (this._views[view_id]?.name ?? view_id)
+      return view_id === default_main_sankey_id ? this.master_view_display_name : (this._views[view_id]?.name ?? view_id)
     }
     return this.menu_configuration.dashboards.byId(id)?.name ?? id
   }
@@ -2071,9 +2116,12 @@ export class Class_ApplicationData {
    * `requestViewChange`) ; `false` = le chemin programmatique, strictement synchrone.
    */
   public activateDashboard(id: string, interactive: boolean = true): void | Promise<void> {
+    const dashboards = this.menu_configuration.dashboards
+    // sa#624 — le tableau de bord qu'on quitte garde l'écran tel qu'on le laisse. Pas celui qu'on
+    // réactive : c'est lui qu'on rejoue (à l'ouverture d'un fichier, cf. `showOpenedModel`).
+    if (id !== dashboards.current) this.flushScreenToDashboard()
     // sa#566 — les volets des vues sont reversés AVANT que le tableau de bord remplace la grille.
     this.captureSavedViewWindows()
-    const dashboards = this.menu_configuration.dashboards
     const switchTo = (view_id: string): void | Promise<void> =>
       interactive ? this.requestViewChange(view_id) : this.setCurrentView(view_id)
     const implicit_view = viewIdOfImplicitDashboard(id)
@@ -2140,11 +2188,6 @@ export class Class_ApplicationData {
   }
 
   /**
-   * CAPTURER L'ÉCRAN : la disposition de la grande zone, et pour chaque fenêtre diagramme la vue
-   * que son document montre en ce moment (le principal pour la feuille courante, le document de
-   * feuille pour une fenêtre dépaysée). C'est ce qu'un tableau de bord fige.
-   */
-  /**
    * os#1492 — SORTIR DE LE TABLEAU DE BORD COURANTE, parce que l'écran ne lui ressemble plus.
    *
    * Appelé quand l'utilisateur change d'onglet lui-même : le tableau de bord décrivait une feuille au
@@ -2153,14 +2196,28 @@ export class Class_ApplicationData {
    * Sans tableau de bord courante, `current_dashboard_id` retombe sur le tableau de bord implicite de la vue courante
    * — donc sur ce qu'on regarde vraiment.
    *
+   * sa#624 — QUAND L'ÉCRAN EST LE TABLEAU DE BORD (`dashboards_follow_screen`), changer d'onglet n'en
+   * sort plus : le tableau de bord courant suit l'écran, onglet compris. Seule une page BLANCHE
+   * (`blank`, une feuille neuve, appelé avant que l'écran ne se vide) en ouvre un nouveau : le courant
+   * garde l'écran qu'on quitte, et le suivant naît de l'écran vide (cf. `ensureDashboards` d'OpenSankey+).
+   *
    * Muet pendant une activation : c'est elle qui bascule l'onglet, et elle sait ce qu'elle fait.
    */
-  public leaveCurrentDashboard(): void {
+  public leaveCurrentDashboard(blank: boolean = false): void {
     const dashboards = this.menu_configuration?.dashboards
     if (!dashboards || dashboards.activating) return
+    if (this.dashboards_follow_screen) {
+      if (!blank) return
+      this.flushScreenToDashboard()
+    }
     dashboards.current = null
   }
 
+  /**
+   * CAPTURER L'ÉCRAN : la disposition de la grande zone, et pour chaque fenêtre diagramme la vue
+   * que son document montre en ce moment (le principal pour la feuille courante, le document de
+   * feuille pour une fenêtre dépaysée). C'est ce qu'un tableau de bord fige.
+   */
   public captureDashboardMainZone(): Type_JSON {
     // sa#619 — les vues d'abord : c'est d'elles que le tableau de bord reprendra les réglages.
     this.captureSavedViewWindows()
@@ -2198,15 +2255,7 @@ export class Class_ApplicationData {
     return dashboard
   }
 
-  /** Recapture l'écran dans un tableau de bord existante. */
-  public updateDashboardFromScreen(id: string): boolean {
-    const dashboard = this.menu_configuration.dashboards.byId(id)
-    if (!dashboard) return false
-    dashboard.main_zone = this.captureDashboardMainZone()
-    if (this._current_sheet_id !== '') dashboard.sheet = this._current_sheet_id
-    else delete dashboard.sheet
-    return true
-  }
+  // sa#624 — « Recapturer » a disparu : le tableau de bord courant EST l'écran (cf. `flushScreenToDashboard`).
 
   public deleteDashboard(id: string): boolean {
     return this.menu_configuration.dashboards.remove(id)
@@ -2942,10 +2991,13 @@ export class Class_ApplicationData {
     // fenêtres une par une avant de pouvoir travailler. Cf. `resetMainZone`, qui dit aussi
     // pourquoi BASCULER vers une feuille qui existe, à l'inverse, garde la grille — et pourquoi,
     // depuis sa#581, « neuve » veut dire vide.
-    this.menu_configuration?.resetMainZone()
+    //
     // os#1492 — et on sort de le tableau de bord courante, pour la même raison qu'à la bascule : une page
     // blanche, dont on vient de vider les fenêtres, ne ressemble à aucun tableau de bord composée.
-    this.leaveCurrentDashboard()
+    // sa#624 — AVANT de vider l'écran : quand il est le tableau de bord courant, celui-ci garde ce
+    // qu'on quitte, et la page blanche devient un tableau de bord neuf.
+    this.leaveCurrentDashboard(true)
+    this.menu_configuration?.resetMainZone()
     this._loadSheetContent(blank_json, draw)
     const id = makeId('sheet')
     this._sheets[id] = { name }
