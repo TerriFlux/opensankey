@@ -47,7 +47,7 @@ import { layoutModeOf } from '../Representations/paneSync'
 // os#1482 — les tableaux de bord (vue de l'espace de travail) : magasin pur + règles d'identifiants.
 import {
   implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId, mainZoneWithViewOnCurrentSheet,
-  dashboardViewRefs, mainZoneWithPaneRefs, mainZoneWithPanesExpanded, type Type_Dashboard
+  dashboardViewRefs, mainZoneWithPaneRefs, mainZoneWithPanesExpanded, dashboardShownViews, type Type_Dashboard
 } from './Dashboards'
 import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, getStringFromJSON, makeId, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { PublishOptions } from './PublishOptions'
@@ -1978,6 +1978,13 @@ export class Class_ApplicationData {
   public get dashboards_follow_screen(): boolean { return false }
 
   /**
+   * sa#625 — LA BARRE DU HAUT PARCOURT-ELLE LES TABLEAUX DE BORD ? En édition quand l'écran en est un
+   * (`dashboards_follow_screen`), et chez OpenSankey+ sur une page publiée : le lecteur passe d'un
+   * tableau de bord à l'autre (sélecteur, flèches, F8/F9) sans jamais en modifier aucun. Faux ici.
+   */
+  public get dashboards_navigated(): boolean { return this.dashboards_follow_screen }
+
+  /**
    * sa#624 — LE TABLEAU DE BORD COURANT REJOINT L'ÉCRAN : sa disposition, la vue de chaque volet et
    * l'onglet au premier plan. Il « s'enregistre au fil de l'eau » sans qu'on le recopie à chaque
    * geste : l'écran ne se lit qu'aux moments où on le quitte ou le regarde ailleurs — avant d'en
@@ -2061,9 +2068,10 @@ export class Class_ApplicationData {
   public get current_dashboard_id(): string {
     const dashboards = this.menu_configuration.dashboards
     const current = dashboards.current
-    // sa#624 — l'écran est toujours un tableau de bord explicite : plus d'implicite.
-    if (this.dashboards_follow_screen) {
-      return (current !== null && dashboards.byId(current)) ? current : (dashboards.order[0] ?? '')
+    // sa#624 — l'écran est toujours un tableau de bord explicite : plus d'implicite. sa#625 — sur une
+    // page publiée aussi, le premier de ceux qu'elle montre à défaut.
+    if (this.dashboards_navigated) {
+      return (current !== null && dashboards.byId(current)) ? current : (this.dashboard_navigation_order[0] ?? '')
     }
     if (current !== null && (viewIdOfImplicitDashboard(current) !== null || dashboards.byId(current))) {
       return current
@@ -2078,8 +2086,92 @@ export class Class_ApplicationData {
    * qu'on parcourait sont devenues les leurs à l'ouverture du fichier.
    */
   public get dashboard_navigation_order(): string[] {
-    if (this.dashboards_follow_screen) return [...this.menu_configuration.dashboards.order]
+    if (this.dashboards_navigated) {
+      // sa#625 — l'étiquette de vue d'une page publiée (`view_label`) ne garde que les tableaux de
+      // bord qui montrent une vue qui la porte. Aucun : elle ne restreint rien, comme pour les vues.
+      const label = this._publish_view_label_filter
+      const labeled = label ? this.dashboardsWithViewLabel(label) : []
+      return labeled.length > 0 ? labeled : [...this.menu_configuration.dashboards.order]
+    }
     return this.menu_configuration.dashboards.navigationOrder(this.views_navigation_order, this._current_sheet_id)
+  }
+
+  /**
+   * sa#625 — Les tableaux de bord, dans leur ordre, qui montrent sur la feuille courante une vue
+   * portant l'étiquette `label` (cf. `dashboardShownViews`). Les vues d'une autre feuille vivent dans
+   * le document de cette feuille : un tableau de bord posé sur une autre feuille n'en fait pas partie.
+   */
+  public dashboardsWithViewLabel(label: string): string[] {
+    const labeled = new Set(this._views_reader.viewIdsWithLabel(label))
+    if (labeled.size === 0) return []
+    const sheet = this._current_sheet_id
+    const dashboards = this.menu_configuration.dashboards
+    return dashboards.order.filter(id => {
+      const dashboard = dashboards.byId(id)
+      if (!dashboard || (dashboard.sheet !== undefined && dashboard.sheet !== sheet)) return false
+      return dashboardShownViews(dashboard.main_zone, sheet).some(view => labeled.has(view))
+    })
+  }
+
+  /**
+   * sa#625 — LE TABLEAU DE BORD QUI MONTRE LA VUE `view_id`, parmi `order` : celui qui en est né
+   * (`dashboard_<vue>`, la reprise de sa#624), sinon le premier dont elle est la vue principale, sinon
+   * le premier qui la montre. `null` : aucun ne la montre.
+   */
+  public dashboardShowingView(view_id: string, order: readonly string[] = this.dashboard_navigation_order): string | null {
+    const born = migratedDashboardId(view_id)
+    if (order.includes(born)) return born
+    const main = order.find(id => this.dashboardMainViewId(id) === view_id)
+    if (main !== undefined) return main
+    const dashboards = this.menu_configuration.dashboards
+    return order.find(id => {
+      const dashboard = dashboards.byId(id)
+      return !!dashboard && dashboardShownViews(dashboard.main_zone, this._current_sheet_id).includes(view_id)
+    }) ?? null
+  }
+
+  /** sa#625 — Un tableau de bord désigné par son identifiant OU son nom, comme une vue ; `null` sinon. */
+  public resolveDashboardId(value: string): string | null {
+    const dashboards = this.menu_configuration.dashboards
+    if (dashboards.byId(value)) return value
+    return dashboards.order.find(id => dashboards.byId(id)?.name === value) ?? null
+  }
+
+  /**
+   * sa#625 — LE TABLEAU DE BORD SUR LEQUEL S'OUVRE UNE PAGE PUBLIÉE, par ordre de priorité :
+   *  1. celui qu'elle désigne (`dashboard` : identifiant ou nom) ;
+   *  2. celui qui montre la vue qu'elle désigne (`view`) — c'est ainsi que les pages publiées avant les
+   *     tableaux de bord retrouvent leur contenu : la reprise de sa#624 a fait de chaque vue qu'on
+   *     parcourait le tableau de bord `dashboard_<vue>` ;
+   *  3. le courant du fichier, s'il fait partie de ceux que la page montre (étiquette `view_label`),
+   *     sinon le premier d'entre eux.
+   * Additif et tolérant comme les options de vues : une valeur inconnue est signalée et ignorée.
+   *
+   * Rend vrai quand la vue désignée par la page est servie par un tableau de bord : elle n'a plus à
+   * être posée seule.
+   */
+  protected applyPublishDashboardOptions(): boolean {
+    const opts = this.publish_options
+    const dashboards = this.menu_configuration.dashboards
+    const order = this.dashboard_navigation_order
+    let target: string | null = null
+    if (opts.dashboard) {
+      target = this.resolveDashboardId(opts.dashboard)
+      // eslint-disable-next-line no-console
+      if (target === null) console.warn(`[OpenSankey] dashboard : tableau de bord introuvable « ${opts.dashboard} »`)
+    }
+    let view_served = false
+    if (target === null && opts.view) {
+      const view_id = this._views_reader.resolveViewIdFromSelection(opts.view)
+      target = view_id !== null ? this.dashboardShowingView(view_id, order) : null
+      view_served = target !== null
+    }
+    if (target === null) {
+      const current = dashboards.current
+      target = (current !== null && order.includes(current)) ? current : (order[0] ?? null)
+    }
+    if (target !== null && target !== dashboards.current) void this.activateDashboard(target, false)
+    return view_served
   }
 
   public get has_dashboard_before(): boolean {
@@ -2218,7 +2310,8 @@ export class Class_ApplicationData {
   public leaveCurrentDashboard(blank: boolean = false): void {
     const dashboards = this.menu_configuration?.dashboards
     if (!dashboards || dashboards.activating) return
-    if (this.dashboards_follow_screen) {
+    // sa#625 — sur une page publiée non plus : le lecteur change d'onglet dans le tableau de bord.
+    if (this.dashboards_navigated) {
       if (!blank) return
       this.flushScreenToDashboard()
     }
@@ -3887,7 +3980,9 @@ export class Class_ApplicationData {
         // Restreint le sélecteur/la navigation aux vues du label (cf. views_navigation_order) ;
         // la vue courante devient la première du groupe si elle n'en fait pas partie.
         this._publish_view_label_filter = opts.view_label
-        if (!labeled_ids.includes(this._current_view_id)) {
+        // sa#625 — une page qui parcourt des tableaux de bord ouvre le premier de l'étiquette (plus bas).
+        const by_dashboards = this.dashboards_navigated && this.dashboardsWithViewLabel(opts.view_label).length > 0
+        if (!by_dashboards && !labeled_ids.includes(this._current_view_id)) {
           this.setCurrentView(labeled_ids[0])
         }
       }
@@ -3898,7 +3993,11 @@ export class Class_ApplicationData {
     // publish ne rend le sélecteur de label que si > 1 label est présent dans le fichier.
     this._publish_view_labels = opts.view_labels ?? []
 
-    if (opts.view) {
+    // sa#625 — UNE PAGE PUBLIÉE MONTRE DES TABLEAUX DE BORD. La vue qu'elle désigne s'ouvre par le
+    // tableau de bord qui la montre ; celle qu'aucun ne montre s'ouvre comme avant, ci-dessous.
+    const view_served = this.dashboards_navigated && this.applyPublishDashboardOptions()
+
+    if (opts.view && !view_served) {
       const view_id = this._views_reader.resolveViewIdFromSelection(opts.view)
       if (!view_id) {
         // eslint-disable-next-line no-console

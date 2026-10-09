@@ -274,3 +274,25 @@ describe('sa#398 getPublishOptions — sélection de vues PAR diagramme (diagram
     expect(window.sankey?.sous_filieres).toBeUndefined()
   })
 })
+
+describe('sa#625 getPublishOptions — dashboard', () => {
+  afterEach(() => {
+    delete window.sankey
+  })
+
+  it('absent : null ; posé : relu tel quel ; invalide ou vide : ignoré', () => {
+    window.sankey = { publish: true }
+    expect(getPublishOptions().dashboard).toBeNull()
+    window.sankey = { publish: true, dashboard: 'Bilan 2023' }
+    expect(getPublishOptions().dashboard).toBe('Bilan 2023')
+    window.sankey = { publish: true, dashboard: '' }
+    expect(getPublishOptions().dashboard).toBeNull()
+    window.sankey = { publish: true, dashboard: 42 as never }
+    expect(getPublishOptions().dashboard).toBeNull()
+  })
+
+  it('applyViewerOptions : la prop viewer dashboard arrive dans window.sankey', () => {
+    applyViewerOptions({ dashboard: 's_2' })
+    expect(window.sankey?.dashboard).toBe('s_2')
+  })
+})

@@ -312,6 +312,22 @@ export const dashboardMosaic = (main_zone: Type_JSON): Type_DashboardMosaicTile[
   }))
 }
 
+/**
+ * sa#625 — LES VUES QU'UN TABLEAU DE BORD MONTRE sur la feuille `current_sheet` (`''` sans feuilles) :
+ * celles que ses volets à sujet diagramme demandent sur cette feuille, et celles que ses volets SONT
+ * (sa#619). C'est par elles qu'une page publiée retrouve un tableau de bord : la vue qu'elle désigne,
+ * ou l'étiquette de vue qui en sélectionne plusieurs.
+ */
+export const dashboardShownViews = (main_zone: Type_JSON, current_sheet: string): string[] => {
+  const shown: string[] = []
+  const add = (view: string) => { if (view !== '' && !shown.includes(view)) shown.push(view) }
+  dashboardViewRefs(main_zone)
+    .filter(ref => ref.sheet === '' || ref.sheet === current_sheet)
+    .forEach(ref => add(ref.view))
+  Object.values(occupantsOf(main_zone)).forEach(v => add(dashboardPaneViewOf(v)))
+  return shown
+}
+
 /** Un nombre d'une entrée (`Number.MAX_SAFE_INTEGER` s'il manque : rangé en dernier). */
 const getNumberOrMax = (entry: Type_JSON | null, key: string): number => {
   const v = entry ? entry[key] : undefined

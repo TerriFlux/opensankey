@@ -7,7 +7,8 @@
 
 import {
   Class_DashboardsStore, implicitDashboardId, viewIdOfImplicitDashboard, migratedDashboardId,
-  mainZoneWithViewOnCurrentSheet, dashboardViewRefs, mainZoneWithWalkedView, singleSankeyPaneMainZone, dashboardMosaic
+  mainZoneWithViewOnCurrentSheet, dashboardViewRefs, mainZoneWithWalkedView, singleSankeyPaneMainZone, dashboardMosaic,
+  dashboardShownViews
 } from './Dashboards'
 import { Class_ApplicationData } from './ApplicationData'
 import { MAIN_ZONE_CANVAS_ID, mainZoneSubjectView } from './MenuConfig'
@@ -213,5 +214,19 @@ describe('sa#624 : ordre, noms, reprise d une vue parcourue, mosaique', () => {
     expect(right.left).toBeGreaterThan(main.left + main.width - 0.0001)
     expect(dashboardMosaic({ ...legacy, maximized: 'w_1' }).map(t => t.id)).toEqual(['w_1'])
     expect(dashboardMosaic({ occupants: {} })).toEqual([])
+  })
+})
+
+describe('sa#625 — les vues qu un tableau de bord montre', () => {
+  it('celles de ses volets diagramme sur la feuille, et celles que ses volets sont', () => {
+    const main_zone = layout({
+      canvas: canvasOn('v1'),
+      other: canvasOn('v9', 'sheet_b'),
+      here: canvasOn('v2', 'sheet_a'),
+      pane: { place: 'right', size: 1, order: 1, representation: 'os.repr.donut', saved_view: 'v3' }
+    })
+    expect(dashboardShownViews(main_zone, 'sheet_a')).toEqual(['v1', 'v2', 'v3'])
+    expect(dashboardShownViews(main_zone, 'sheet_b')).toEqual(['v1', 'v9', 'v3'])
+    expect(dashboardShownViews(layout({}), '')).toEqual([])
   })
 })
