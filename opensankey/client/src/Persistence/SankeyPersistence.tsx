@@ -416,6 +416,7 @@ export class ContainerPersistence extends NodeBasePersistence {
     // Titre du diagramme : zone de texte marquée is_title (additif/rétrocompatible)
     if (container.is_title) {
       json_object['is_title'] = true
+      if (container.title_on_top) json_object['title_on_top'] = true
     }
 
     return json_object
@@ -493,6 +494,7 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.fromJSON(version, container, json_object, kwargs)
 
     container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
+    container['_title_on_top'] = getBooleanFromJSON(json_object, 'title_on_top', false)
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
     configKeys.forEach(key => {

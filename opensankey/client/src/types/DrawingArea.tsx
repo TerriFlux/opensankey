@@ -2492,6 +2492,8 @@ export class Class_DrawingArea {
     // anti-chevauchement est un artefact d'affichage, dont une donnée persistée ne doit rien
     // déduire. Cet appel-ci y est donc un no-op (signature déjà consommée).
     this.reorganizeIOOnDataSelectionChange()
+    // os#1511 — le titre se cale au-dessus des nœuds tels qu'ils vont être dessinés.
+    this._sankey.placeTitleOnTop()
     // Draw grid
     this.drawBackground()
     this.drawGrid()
