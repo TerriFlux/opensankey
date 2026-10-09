@@ -472,6 +472,12 @@ type Type_RepresentationCommon = {
    */
   style_paint?: boolean
   /**
+   * sa#622 — LE GROUPE DE CADRAGE DE LA COLONNE D'OUTILS VAUT POUR CE VOLET : mode de cadrage,
+   * ancrage, verrous de police et de taille, réglés pour toutes ses vignettes et rangés sur le volet
+   * (`Type_MainZoneOccupant.look.area`). La nature les applique à ses figures (`applyPaneArea`).
+   */
+  pane_framing?: boolean
+  /**
    * sa#622 — LE TITRE ET LA LÉGENDE DU VOLET ENTIER (cf. `Type_RepresentationPaneFrame`). Absent :
    * la nature n'en a pas, ou les dessine dans chaque figure (clés `title_*`, `legend_*` déclarées
    * dans `attributes`).

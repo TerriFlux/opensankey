@@ -943,6 +943,19 @@ export class Class_DrawingArea {
 
   // OS#1315 — Ancrage du cadrage (cf. Type_FitAnchor). Défaut 'center'.
   protected _fit_anchor: Type_FitAnchor = 'center'
+
+  /**
+   * sa#622 — UNE ZONE UNITAIRE QUI SUIT LES RÉGLAGES DE CADRAGE (les étoiles d'un volet Sankey
+   * unitaire, qui les reçoivent du volet). Sans ce drapeau — le plateau unitaire, tout fichier
+   * d'avant —, une zone `is_unitary` se recadre à chaque dessin sur son nœud central, quels que
+   * soient le mode et l'ancrage. Avec lui :
+   *  - mode 'none' : la caméra posée par l'auteur (zoom, déplacement) est gardée d'un dessin à
+   *    l'autre, après un premier cadrage ;
+   *  - 'width' / 'height' : l'échelle remplit la largeur, ou donne au nœud central sa hauteur de
+   *    référence ; 'full', le défaut des étoiles, prend le plus petit des deux (le cadrage d'avant) ;
+   *  - ancrage 'top_left' : le contenu se pose en haut à gauche au lieu de centrer le nœud central.
+   */
+  public unitary_fit_settings: boolean = false
   public get fit_anchor(): Type_FitAnchor { return this._fit_anchor }
   public set fit_anchor(v: Type_FitAnchor) {
     if (this._fit_anchor === v) return
@@ -1717,7 +1730,8 @@ export class Class_DrawingArea {
     // l'identique après (le cadrage ne bouge donc pas d'un dataTag à l'autre).
     // Mode de cadrage 'none' (revu post-#680) : même capture — la caméra est
     // strictement préservée d'un draw à l'autre, aucun fit automatique.
-    const preserve_camera = this._size_locked || (this._auto_fit_mode === 'none' && !this.is_unitary)
+    const preserve_camera = this._size_locked ||
+      (this._auto_fit_mode === 'none' && (!this.is_unitary || this.unitary_fit_settings))
     const zoom_node = preserve_camera ? this.d3_selection_zoom_area?.node() : null
     const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
     // Tant qu'on n'est pas dans un état « rétréci pour débordement », le transform
@@ -1774,7 +1788,10 @@ export class Class_DrawingArea {
     // labels INCLUS) et les suivants (_k_fit hérité ≠ 1, bbox labels EXCLUS + overflow)
     // donnaient une échelle ET un centrage différents → board « pas centré », nœud
     // central qui saute. Scopé is_unitary : aucun effet sur le diagramme principal.
-    if (this.is_unitary) this._k_fit = 1
+    // sa#622 — sauf pour une étoile en caméra libre qui a déjà été cadrée : elle ne recadre pas.
+    const unitary_free_camera = this.is_unitary && this.unitary_fit_settings && !this._size_locked &&
+      this._auto_fit_mode === 'none' && live_zoom_transform !== null
+    if (this.is_unitary && !unitary_free_camera) this._k_fit = 1
     // drawElements() ci-dessus a dessiné les labels alors que #draw_zoom venait d'être
     // recréé à k=1 (font_compensation = 1/k = 1, police brute). C'est areaAutoFit (ou la
     // réapplication du transform verrouillé) qui pose ensuite le zoom de cadrage. Or
@@ -1784,7 +1801,7 @@ export class Class_DrawingArea {
     // rapetisse. On capture donc _k_fit avant le fit pour forcer un rafraîchissement
     // final quand le fit ne l'a pas déjà fait.
     const k_fit_before_fit = this._k_fit
-    if (!this._size_locked && this._auto_fit_mode === 'none' && !this.is_unitary) {
+    if (!this._size_locked && this._auto_fit_mode === 'none' && (!this.is_unitary || unitary_free_camera)) {
       if (live_zoom_transform) {
         // Mode 'none' — draws suivants : la caméra est réappliquée telle quelle
         // (zoom/pan conservés), aucun recadrage automatique.
@@ -3015,6 +3032,17 @@ export class Class_DrawingArea {
    * recenter() : c'est la définition même de « recentrer ». Les autres fits (changement de
    * data tag, redimensionnement…) gardent leur cadrage habituel.
    */
+  /**
+   * sa#622 — L'ÉCHELLE D'UN CADRAGE UNITAIRE, entre celle qui remplit la largeur et celle qui
+   * remplit la hauteur : le plus petit des deux (tout tient), sauf réglage de cadrage d'une étoile
+   * de volet (`unitary_fit_settings`) qui demande la largeur ou la hauteur.
+   */
+  protected unitaryFitScale(k_width: number, k_height: number): number {
+    if (this.unitary_fit_settings && this._auto_fit_mode === 'width') return k_width
+    if (this.unitary_fit_settings && this._auto_fit_mode === 'height') return k_height
+    return Math.min(k_width, k_height)
+  }
+
   public areaAutoFit(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean, fill_axis_forced?: boolean, keep_zoom?: boolean) {
 
     // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
@@ -3285,7 +3313,7 @@ export class Class_DrawingArea {
             const k_width = half_w > 0
               ? (this.window_fitting_width - this._fit_margin) / (2 * half_w)
               : k_height
-            new_k = Math.min(k_height, k_width)
+            new_k = this.unitaryFitScale(k_width, k_height)
           } else {
             // Fallback (central sans hauteur) : fit des FORMES des nœuds visibles (pas des
             // libellés, souvent très longs), centré sur le nœud (demi-extension max ×2).
@@ -3297,12 +3325,12 @@ export class Class_DrawingArea {
             })
             const half_w = Math.max(cnx - minX, maxX - cnx)
             const half_h = Math.max(cny - minY, maxY - cny)
-            new_k = Math.min(avail_w / (2 * half_w), avail_h / (2 * half_h))
+            new_k = this.unitaryFitScale(avail_w / (2 * half_w), avail_h / (2 * half_h))
           }
         } else {
           // Pas de nœud central : on prend la plus petite des deux échelles pour que TOUT
           // rentre (formes + labels) sur les deux axes ; center_h/center_v recentrent le mou.
-          new_k = Math.min(avail_w / bbox.width, avail_h / bbox.height)
+          new_k = this.unitaryFitScale(avail_w / bbox.width, avail_h / bbox.height)
           // sa#601 — c'est aussi le cadrage d'une vignette en grille (cf. `in_tile_grid`).
           if (this.in_tile_grid) this._tile_content = { w: bbox.width, h: bbox.height }
         }
@@ -3407,7 +3435,9 @@ export class Class_DrawingArea {
       }
       // 'start' = coin haut-gauche à la marge ; 'center' = bbox centrée ; 'end' = bord bas/droite
       // épinglé au bord de la fenêtre (le côté opposé, plus grand, déborde et est masqué).
-      const px = unitary_center_node
+      // sa#622 — une étoile ancrée en haut à gauche pose son contenu au coin, comme un Sankey.
+      const unitary_top_left = this.is_unitary && this.unitary_fit_settings && this._fit_anchor === 'top_left'
+      const px = unitary_center_node && !unitary_top_left
         ? this.window_fitting_width / 2 - cnx * new_k
         : anchor_h === 'center'
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
@@ -3416,7 +3446,7 @@ export class Class_DrawingArea {
             // 'start' : bord du contenu à la marge — sauf ancrage origine (OS#1315) où
             // c'est le monde (0,0) qui est épinglé à la marge, pas le bord de la bbox.
             : (this._fit_margin / 2 + label_overflow_left) - (anchor_origin ? 0 : bbox.x) * new_k
-      const py = unitary_center_node
+      const py = unitary_center_node && !unitary_top_left
         ? this.window_fitting_height / 2 + this.fit_top_offset - cny * new_k
         : anchor_v === 'center'
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.fit_top_offset

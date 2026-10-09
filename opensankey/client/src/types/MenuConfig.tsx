@@ -89,8 +89,8 @@ import {
 import type { Class_NodeElement } from '../Elements/Node'
 import { isPaneValueMode, type Type_PaneValueMode } from '../Representations/paneValueMode'
 import {
-  paneLookToJSON, readPaneLook, withPaneElementStyle, withPaneFrame,
-  type Type_PaneLook, type Type_PaneLookBag, type Type_PaneLookKind
+  paneLookToJSON, readPaneLook, withPaneArea, withPaneElementStyle, withPaneFrame,
+  type Type_PaneArea, type Type_PaneLook, type Type_PaneLookBag, type Type_PaneLookKind
 } from '../Representations/paneLook'
 
 export type Type_AdditionalMenus = {
@@ -2526,6 +2526,17 @@ export class Class_MenuConfig {
     else delete o.look
     this._notifyMainZone()
     return true
+  }
+
+  /** sa#622 — REMPLACE LE CADRAGE des figures du volet `id` (mode, ancrage, verrous). */
+  public setMainZonePaneArea(id: string, area: Type_PaneArea): void {
+    const o = this._host._main_zone_occupants.find(x => x.id === id)
+    if (!o) return
+    const { look, changed } = withPaneArea(o.look, area)
+    if (!changed) return
+    if (look) o.look = look
+    else delete o.look
+    this._notifyMainZone()
   }
 
   /** sa#622 — REMPLACE LE TITRE ET LA LÉGENDE du volet `id` (clés `title_*`, `legend_*`). */
