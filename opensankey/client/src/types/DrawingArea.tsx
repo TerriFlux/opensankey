@@ -60,7 +60,7 @@ import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { disaggregateDimensionNodes } from '../Algorithms/DimensionDisaggregation'
-import { parseGeneratedId } from '../Elements/GeneratedMemberMark'
+import { isGeneratedMemberId, parseGeneratedId } from '../Elements/GeneratedMemberMark'
 import { applyHierarchyPaletteIfGrey } from '../Algorithms/DimensionPalette'
 import type { Class_DataTagGroup as Type_DataTagGroup } from './TagGroup'
 import type { Type_GeoImageBox, Type_GeoReference } from '../Algorithms/geoProjection'
@@ -1511,6 +1511,14 @@ export class Class_DrawingArea {
     }
     this.withBypassRedraws(() => {
       disaggregateDimensionNodes(this.sankey)
+      // Sous une échelle calée sur un nœud, le premier placement lit encore des grandeurs de
+      // l'ancienne coupe (créneaux des axes, hauteurs) : une seconde passe, sur l'état posé par la
+      // première, donne ce que donnait le geste sur l'écart (cf. echelleNoeudReferenceCoupe.test).
+      if (this._scale_reference_node !== undefined) {
+        this.beginScaleFrame()
+        this.applyReferenceNodeScale()
+        disaggregateDimensionNodes(this.sankey)
+      }
     }, false)
     const find = (id: string) =>
       (this.sankey.nodes_dict[id] ?? this.sankey.links_dict[id]) as Class_ProtoElement | undefined
@@ -5320,7 +5328,14 @@ export class Class_DrawingArea {
     if (ref === undefined) return
     const node = this._sankey.nodes_dict[ref.id]
     if (node === undefined) return
-    let magnitude = node.is_visible ? this.nodePositioning.nodeMagnitudeOf(node) : 0
+    // La grandeur se lit sur les flux D'ORIGINE du nœud, qui portent la valeur de la coupe
+    // courante, et non sur ses flux engendrés : au rebâti, ceux-ci sont encore ceux de l'ancienne
+    // coupe (Julien, 09/10 : « passer de Céréales à Oléoprotéagineux place mal les nœuds »).
+    const somme = (liens: { id: string, valueCurrent?: number | null }[]) => liens
+      .filter(l => !isGeneratedMemberId(l.id))
+      .reduce((total, l) => total + Math.abs(l.valueCurrent ?? 0), 0)
+    let magnitude = Math.max(somme(node.input_links_list), somme(node.output_links_list))
+    if (!(magnitude > 0) && node.is_visible) magnitude = this.nodePositioning.nodeMagnitudeOf(node)
     if (!(magnitude > 0)) {
       magnitude = this._sankey.nodes_list
         .filter(n => n.is_visible && parseGeneratedId(n.id)?.origin === ref.id)
