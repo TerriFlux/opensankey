@@ -89,6 +89,7 @@ import {
 import type { Type_FigureChartStyle, Type_FigureText } from '../Charts/figureChartStyle'
 import { figureValueFormatOf, figureValueFormatter } from '../Charts/figureFormat'
 import { figureUnitFactorOf, figureUnitFactorOfNode, figureUnitOf, figureUnitOfNode } from './figureUnit'
+import { MATRIX_ATTRIBUTES, matrixDecimalsChosen, matrixUnitOf } from './matrixAttributes'
 import { figureNavigationOf, withDataLayer } from '../Charts/FigureNavigation'
 import type { Type_FigureNavigation } from '../Charts/FigureNavigation'
 import {
@@ -2606,6 +2607,9 @@ const registerDimensionMatrix = (): void => {
     description: (a) => a.t('Spreadsheet.zone.type_description.matrix'),
     icon: <FaTable />,
     zoom: MATRIX_ZOOM,
+    // sa#623 — SES RÉGLAGES À LUI (décimales, unité affichée, « Autres ») : déclarés, ils lui donnent
+    // son menu de configuration — sans eux, la roue montrait ceux du diagramme (cf. matrixAttributes).
+    attributes: MATRIX_ATTRIBUTES,
     reads_generated_origin: true,
     // Julien, 07/10 : le tableau d'un flux engendré « → Europe » montre TOUS les continents.
     generated_origin_whole: true,
@@ -2690,16 +2694,23 @@ const registerDimensionMatrix = (): void => {
           share_label: t('matrix.share')
         })
         const app_data = ctx.app_data
-        const unit = a.subject.kind === 'node' ? figureUnitOfNode(a.subject.node) : figureUnitOf(app_data.drawing_area.sankey)
-        const factor = unitFactorOfSubject(a.subject, app_data)
+        const element = a.subject.kind === 'node' ? a.subject.node : a.subject.link
+        // sa#623 — L'UNITÉ CHOISIE pour ce tableau (réglage `matrix_unit`), sinon celle du diagramme.
+        const shown_unit = matrixUnitOf(ctx.options ?? {}, element, {
+          label: a.subject.kind === 'node' ? figureUnitOfNode(a.subject.node) : figureUnitOf(app_data.drawing_area.sankey),
+          factor: unitFactorOfSubject(a.subject, app_data)
+        })
+        const unit = shown_unit.label
+        const factor = shown_unit.factor
         const lang = app_data.language || 'fr'
         // Des décimales FIXES pour tout le tableau (cf. `matrixDecimals`), l'unité dans l'en-tête.
+        // sa#623 — celles que l'auteur a fixées (`matrix_decimals`), sinon d'après le total.
         const total_row = matrix?.rows[matrix.rows.length - 1]
         const grand = (total_row?.cells[matrix?.column_dimension ? total_row.cells.length - 1 : 0] ?? 0) / factor
-        const numbers = matrixNumberFormatter(matrixDecimals(grand), lang)
+        const decimals = matrixDecimalsChosen(ctx.options ?? {}) ?? matrixDecimals(grand)
+        const numbers = matrixNumberFormatter(decimals, lang)
         const format = (v: number) => numbers(v / factor)
         const percent = new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 1 })
-        const element = a.subject.kind === 'node' ? a.subject.node : a.subject.link
         const coordinate = matrixCoordinateLabel(element.sankey, a.nav)
         // 07/10/2026 — LA PORTÉE DANS LE TITRE (« Céréales ») : le tableau est restreint au zoom, il le
         // dit ; et les dimensions hors des axes lues ailleurs qu'à leur tout (« Europe »).
@@ -2768,7 +2779,7 @@ const registerDimensionMatrix = (): void => {
           on_export: (format) => {
             if (matrix === null) return
             const table = dimensionMatrixExportTable(matrix, {
-              title, factor, unit, unit_label: t('matrix.unit'), decimals: matrixDecimals(grand)
+              title, factor, unit, unit_label: t('matrix.unit'), decimals
             })
             void downloadTable(table, format, { decimal: csvDecimalOf(lang) })
           }
