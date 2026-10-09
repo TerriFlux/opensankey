@@ -5133,6 +5133,7 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
+  private _ref_to_save_in_cache_indicator_marks: MutableRefObject<number>
   // sa#424 (lot 4) — signal de RAFRAÎCHISSEMENT de l'alerte « aucun fichier
   // téléchargé » portée par le bouton d'enregistrement. Un signal distinct est
   // nécessaire : réutiliser l'indicateur de cache en lui repassant sa valeur
@@ -5347,16 +5348,13 @@ export class Class_MenuConfig {
     // document ne pouvait pas exister. Le défaut enregistre donc, et annonce.
     //
     // Quand une barre du haut EST montée, `useModelSlot` remplace ce défaut par son propre
-    // gestionnaire, qui écrit la même valeur et annonce le même topic (cf. MenuTop) : les deux
-    // chemins disent la même chose, et c'est `_value` qui fait foi dans les deux cas.
+    // gestionnaire, qui passe par le même `recordSaveState` (cf. MenuTop) : les deux chemins
+    // disent la même chose, et c'est `_value` qui fait foi dans les deux cas.
     this._ref_to_save_in_cache_indicator = {
-      current: (b: boolean) => {
-        if (this._ref_to_save_in_cache_indicator_value.current === b) return
-        this._ref_to_save_in_cache_indicator_value.current = b
-        this.notify(SAVE_STATE_TOPIC)
-      }
+      current: (b: boolean) => this.recordSaveState(b)
     }
     this._ref_to_save_in_cache_indicator_value = { current: true }
+    this._ref_to_save_in_cache_indicator_marks = { current: 0 }
     this._ref_to_last_download_updater = { current: () => null }
     this._ref_to_never_save_view_session = { current: (_: boolean) => null }
     this._ref_to_never_save_view_session_value = { current: false }
@@ -6296,20 +6294,42 @@ export class Class_MenuConfig {
   }
 
   /**
+   * sa#633 — CE QUE FAIT TOUT GESTIONNAIRE DU TÉMOIN, le défaut comme celui de la barre du haut :
+   * poser la valeur (`true` = enregistré, `false` = modifié), l'annoncer si elle change (os#1442),
+   * et COMPTER les marques « modifié ».
+   *
+   * Le compte sert la pop-up « Vue non enregistrée » d'OpenSankey+ : elle doit savoir si la vue
+   * lourde qu'on quitte a été modifiée depuis qu'on l'a chargée, et la valeur ne le dit pas — elle
+   * est déjà à `false` dès qu'un geste a modifié le document AILLEURS.
+   */
+  public recordSaveState(b: boolean): void {
+    if (!b) this._ref_to_save_in_cache_indicator_marks.current++
+    if (this._ref_to_save_in_cache_indicator_value.current === b) return
+    this._ref_to_save_in_cache_indicator_value.current = b
+    this.notify(SAVE_STATE_TOPIC)
+  }
+
+  /** sa#633 — Nombre de marques « modifié » reçues par le témoin (cf. `recordSaveState`). Ne décroît jamais. */
+  public get modified_marks(): number {
+    return this._ref_to_save_in_cache_indicator_marks.current
+  }
+
+  /**
    * L'ÉTAT « ENREGISTRÉ » D'UN DOCUMENT SUBORDONNÉ EST CELUI DE SA SOURCE.
    *
    * Une couronne (document de parts) ou une étoile renvoie tout enregistrement à sa source
    * (`file_holder`) : c'est la source qui passe à « enregistré ». Le bouton du haut, lui, lit le
    * document ACTIF — la figure — dont le témoin ne bougeait donc jamais : pas de coche verte après
    * un Ctrl+S sur une couronne. Et dans l'autre sens, une retouche de la couronne marquait la figure
-   * « modifiée » sans que la source le sache. On partage donc les DEUX refs (slot et valeur) : un
-   * seul témoin, quel que soit le document par lequel on le lit ou l'écrit.
+   * « modifiée » sans que la source le sache. On partage donc les refs (slot, valeur et — sa#633 —
+   * compte des marques) : un seul témoin, quel que soit le document par lequel on le lit ou l'écrit.
    *
    * PAS pour les feuilles : elles ont un état par feuille, voulu (os#1442, pastilles d'onglets).
    */
   public shareSaveStateWith(source: Class_MenuConfig): void {
     this._ref_to_save_in_cache_indicator = source._ref_to_save_in_cache_indicator
     this._ref_to_save_in_cache_indicator_value = source._ref_to_save_in_cache_indicator_value
+    this._ref_to_save_in_cache_indicator_marks = source._ref_to_save_in_cache_indicator_marks
   }
 
   public get ref_to_last_download_updater(): MutableRefObject<() => void> {

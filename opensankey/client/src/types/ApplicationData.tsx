@@ -2951,7 +2951,7 @@ export class Class_ApplicationData {
     this._sheets[id] = { name }
     this._sheets_order.push(id)
     this._current_sheet_id = id
-    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.markDocumentModified()
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
     return id
   }
@@ -2972,7 +2972,7 @@ export class Class_ApplicationData {
     this._sheets[id] = { name: this._copyPrefix() + source.name }
     this._sheets_order.splice(idx + 1, 0, id)
     this._current_sheet_id = id
-    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.markDocumentModified()
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
     return id
   }
@@ -3075,7 +3075,7 @@ export class Class_ApplicationData {
       ? { name, type, json: compressJSONToGzip(content) }
       : { name, json: compressJSONToGzip(content) }
     this._sheets_order.push(id)
-    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.markDocumentModified()
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
     return id
   }
@@ -3153,7 +3153,7 @@ export class Class_ApplicationData {
     const trimmed = name.trim()
     if (!sheet || trimmed === '' || sheet.name === trimmed) return
     sheet.name = trimmed
-    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.markDocumentModified()
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
   }
 
@@ -3214,7 +3214,7 @@ export class Class_ApplicationData {
     delete this._sheet_apps[id]
     const idx = this._sheets_order.indexOf(id)
     if (idx >= 0) this._sheets_order.splice(idx, 1)
-    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.markDocumentModified()
     this.menu_configuration?.ref_to_sheet_tabs_updater.current()
   }
 
@@ -3355,6 +3355,20 @@ export class Class_ApplicationData {
    */
   public get has_unsaved_changes(): boolean {
     return !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
+  }
+
+  /**
+   * sa#633 — LE DOCUMENT A CHANGÉ, PAS LE DESSIN QU'ON REGARDE : une feuille, une vue ou un tableau
+   * de bord créés, renommés ou supprimés, un réglage du fichier. Le témoin passe à « modifié »
+   * (`current(false)` — `true` veut dire « enregistré », cf. `has_unsaved_changes`).
+   *
+   * Une vingtaine de ces gestes posaient `true`, certains en se croyant « marqués modifiés » : ils
+   * déclaraient le document enregistré et cachaient le travail à enregistrer. OpenSankey+ surcharge
+   * la méthode : un tel geste ne modifie pas la vue lourde courante, et ne doit pas ouvrir la pop-up
+   * « Vue non enregistrée » quand on la quitte.
+   */
+  public markDocumentModified(): void {
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(false)
   }
 
   public sheetApplication(sheet_id: string): Class_ApplicationData | null {
