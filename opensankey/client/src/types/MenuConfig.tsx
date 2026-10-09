@@ -2125,8 +2125,7 @@ export class Class_MenuConfig {
     if (at < 0) return
     const o = host._main_zone_occupants[at]
     if (o.place === 'floating') {
-      host._main_zone_occupants.splice(at, 1)
-      host._main_zone_occupants.push(o)
+      this._raiseFloatingOccupant(id)
     } else if (host._main_zone_maximized_id !== null && host._main_zone_maximized_id !== id) {
       host._main_zone_maximized_id = null
     }
@@ -2135,6 +2134,20 @@ export class Class_MenuConfig {
     host._main_zone_active_pane_key = null
     host._main_zone_selected_pane_keys = []
     this._notifyMainZone()
+  }
+
+  /**
+   * sa#626 — LE PLAN DES VOLETS FLOTTANTS est leur rang dans la liste des occupants : le dernier est
+   * peint par-dessus les autres. Passe le volet flottant `id` en dernier, sans notifier ; rend `true`
+   * s'il a changé de plan (`false` : pas flottant, ou déjà devant).
+   */
+  protected _raiseFloatingOccupant(id: string): boolean {
+    const list = this._host._main_zone_occupants
+    const at = list.findIndex(o => o.id === id)
+    if (at < 0 || list[at].place !== 'floating') return false
+    if (list.slice(at + 1).every(o => o.place !== 'floating')) return false
+    list.push(...list.splice(at, 1))
+    return true
   }
 
   /** Le volet ouvert qui EST la vue `view_id`, s'il y en a un. */
@@ -3736,6 +3749,14 @@ export class Class_MenuConfig {
     return this._host._main_zone_active_id ?? this.main_zone_main_id
   }
   public set main_zone_active_id(id: string | null) {
+    // sa#626 — TOUCHER UN VOLET FLOTTANT LE PASSE AU PREMIER PLAN, comme une fenêtre du système :
+    // sans cela tous restaient au même plan, dans l'ordre de leur ouverture.
+    // Avant le test d'identité : un volet déjà actif peut être passé derrière un volet qu'on vient
+    // d'ouvrir.
+    if (id !== null && this._raiseFloatingOccupant(id) && this._host._main_zone_active_id === id) {
+      this._notifyMainZone()
+      return
+    }
     if (this._host._main_zone_active_id === id) return
     this._host._main_zone_active_id = id
     // sa#566 — désigner un autre volet lui rend la main : le premier plan d'une vue choisie cesse.

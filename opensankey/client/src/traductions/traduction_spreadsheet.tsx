@@ -229,6 +229,18 @@ export const resources_spreadsheet = {
             doc: 'Write a text that accompanies the diagrams',
             json: 'Read the raw file (advanced use)'
           },
+          // sa#626 — le bouton « Nouveau … » du sélecteur des vues d'un type (barre des tâches des volets).
+          new_of_type: {
+            diagram: 'New Sankey',
+            unitary: 'New unitary Sankey',
+            donut: 'New donut',
+            bars: 'New bar chart',
+            matrix: 'New cross table',
+            spreadsheet: 'New spreadsheet',
+            infos: 'New info',
+            doc: 'New doc',
+            json: 'New JSON'
+          },
           move_right: 'Move to the right column',
           move_bottom: 'Move to the bottom band',
           make_main: 'Move to the large area',
@@ -250,6 +262,7 @@ export const resources_spreadsheet = {
           // bouton, lui, tronque), et cette phrase annonce les deux gestes que le menu réunit.
           active_window_menu: 'Change the representation of this view, or open a new one',
           new_window: 'New view',
+          taskbar: 'File views',
           window_shows: 'What this view shows',
           // sa#568 — la section du menu d'en-tête où l'on coche ce que le volet hérite des autres.
           window_sync: 'Settings inherited from other views',
@@ -594,6 +607,17 @@ export const resources_spreadsheet = {
             doc: 'Rédiger un texte qui accompagne les diagrammes',
             json: 'Lire le fichier brut (usage avancé)'
           },
+          new_of_type: {
+            diagram: 'Nouveau Sankey',
+            unitary: 'Nouveau Sankey unitaire',
+            donut: 'Nouvelle couronne',
+            bars: 'Nouvelles barres',
+            matrix: 'Nouveau tableau croisé',
+            spreadsheet: 'Nouveau tableur',
+            infos: 'Nouvelles infos',
+            doc: 'Nouvelle doc',
+            json: 'Nouveau JSON'
+          },
           move_right: 'Passer dans la colonne de droite',
           move_bottom: 'Passer dans le bandeau du bas',
           make_main: 'Passer dans la grande case',
@@ -613,6 +637,7 @@ export const resources_spreadsheet = {
           close: 'Fermer',
           active_window_menu: 'Changer la représentation de cette vue, ou en ouvrir une nouvelle',
           new_window: 'Nouvelle vue',
+          taskbar: 'Vues du fichier',
           window_shows: 'Ce que montre cette vue',
           window_sync: 'Réglages hérités des autres vues',
           window_sync_alone: 'Aucune autre vue dont hériter ces réglages pour le moment',
@@ -933,6 +958,17 @@ export const resources_spreadsheet = {
             doc: 'Redactar un texto que acompaña a los diagramas',
             json: 'Leer el archivo en bruto (uso avanzado)'
           },
+          new_of_type: {
+            diagram: 'Nuevo Sankey',
+            unitary: 'Nuevo Sankey unitario',
+            donut: 'Nueva corona',
+            bars: 'Nuevas barras',
+            matrix: 'Nueva tabla cruzada',
+            spreadsheet: 'Nueva hoja de cálculo',
+            infos: 'Nueva info',
+            doc: 'Nuevo doc',
+            json: 'Nuevo JSON'
+          },
           move_right: 'Mover a la columna derecha',
           move_bottom: 'Mover a la banda inferior',
           make_main: 'Mover al área grande',
@@ -952,6 +988,7 @@ export const resources_spreadsheet = {
           close: 'Cerrar',
           active_window_menu: 'Cambiar la representación de esta vista o abrir una nueva',
           new_window: 'Nueva vista',
+          taskbar: 'Vistas del archivo',
           window_shows: 'Lo que muestra esta vista',
           window_sync: 'Ajustes heredados de las otras vistas',
           window_sync_alone: 'Aún no hay otra vista de la que heredar estos ajustes',
@@ -1271,6 +1308,17 @@ export const resources_spreadsheet = {
             doc: 'Einen Begleittext zu den Diagrammen verfassen',
             json: 'Die Rohdatei lesen (für Fortgeschrittene)'
           },
+          new_of_type: {
+            diagram: 'Neues Sankey',
+            unitary: 'Neues unitäres Sankey',
+            donut: 'Neuer Ring',
+            bars: 'Neue Balken',
+            matrix: 'Neue Kreuztabelle',
+            spreadsheet: 'Neue Tabelle',
+            infos: 'Neue Infos',
+            doc: 'Neues Doc',
+            json: 'Neues JSON'
+          },
           move_right: 'In die rechte Spalte verschieben',
           move_bottom: 'In das untere Band verschieben',
           make_main: 'In den großen Bereich verschieben',
@@ -1290,6 +1338,7 @@ export const resources_spreadsheet = {
           close: 'Schließen',
           active_window_menu: 'Darstellung dieser Ansicht ändern oder eine neue Ansicht öffnen',
           new_window: 'Neue Ansicht',
+          taskbar: 'Ansichten der Datei',
           window_shows: 'Was diese Ansicht zeigt',
           window_sync: 'Von anderen Ansichten übernommene Einstellungen',
           window_sync_alone: 'Noch keine andere Ansicht, von der diese Einstellungen übernommen werden können',
@@ -1609,6 +1658,17 @@ export const resources_spreadsheet = {
             doc: 'Scrivere un testo che accompagna i diagrammi',
             json: 'Leggere il file grezzo (uso avanzato)'
           },
+          new_of_type: {
+            diagram: 'Nuovo Sankey',
+            unitary: 'Nuovo Sankey unitario',
+            donut: 'Nuova corona',
+            bars: 'Nuove barre',
+            matrix: 'Nuova tabella incrociata',
+            spreadsheet: 'Nuovo foglio di calcolo',
+            infos: 'Nuove info',
+            doc: 'Nuovo doc',
+            json: 'Nuovo JSON'
+          },
           move_right: 'Sposta nella colonna destra',
           move_bottom: 'Sposta nella fascia inferiore',
           make_main: 'Spostare nell\'area grande',
@@ -1628,6 +1688,7 @@ export const resources_spreadsheet = {
           close: 'Chiudi',
           active_window_menu: 'Cambiare la rappresentazione di questa vista o aprirne una nuova',
           new_window: 'Nuova vista',
+          taskbar: 'Viste del file',
           window_shows: 'Ciò che mostra questa vista',
           window_sync: 'Impostazioni ereditate dalle altre viste',
           window_sync_alone: 'Ancora nessun\'altra vista da cui ereditare queste impostazioni',
@@ -1952,6 +2013,17 @@ export const resources_spreadsheet = {
             doc: '撰写配合图表的说明文字',
             json: '查看原始文件（高级用途）'
           },
+          new_of_type: {
+            diagram: '新建桑基图',
+            unitary: '新建单位桑基图',
+            donut: '新建环形图',
+            bars: '新建柱状图',
+            matrix: '新建交叉表',
+            spreadsheet: '新建电子表格',
+            infos: '新建信息',
+            doc: '新建文档',
+            json: '新建 JSON'
+          },
           move_right: '移到右栏',
           move_bottom: '移到底栏',
           make_main: '移到大区域',
@@ -1971,6 +2043,7 @@ export const resources_spreadsheet = {
           close: '关闭',
           active_window_menu: '更改此视图的表示方式，或打开新视图',
           new_window: '新建视图',
+          taskbar: '文件中的视图',
           window_shows: '此视图显示的内容',
           window_sync: '从其他视图继承的设置',
           window_sync_alone: '暂无可继承这些设置的其他视图',
@@ -2296,6 +2369,17 @@ export const resources_spreadsheet = {
             doc: '図に添える文章を書く',
             json: '生ファイルを読む（上級者向け）'
           },
+          new_of_type: {
+            diagram: '新しいサンキー',
+            unitary: '新しい単位サンキー',
+            donut: '新しいドーナツ',
+            bars: '新しい棒グラフ',
+            matrix: '新しいクロス集計表',
+            spreadsheet: '新しいスプレッドシート',
+            infos: '新しい情報',
+            doc: '新しい文書',
+            json: '新しい JSON'
+          },
           move_right: '右の列へ移動',
           move_bottom: '下の帯へ移動',
           make_main: '大きな領域に移動します',
@@ -2315,6 +2399,7 @@ export const resources_spreadsheet = {
           close: '閉じる',
           active_window_menu: 'このビューの表示形式を変更、または新しいビューを開く',
           new_window: '新しいビュー',
+          taskbar: 'ファイルのビュー',
           window_shows: 'このビューが表示する内容',
           window_sync: '他のビューから継承した設定',
           window_sync_alone: 'これらの設定を継承できる他のビューはまだありません',
