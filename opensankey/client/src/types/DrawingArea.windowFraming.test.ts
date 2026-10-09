@@ -356,15 +356,16 @@ describe('OS#388 — en caméra libre, un panneau se SUPERPOSE au diagramme', ()
     expect(drawing_area.chrome_fitting_width).toBe(drawing_area.window_fitting_width)
   })
 
-  it('la colonne d\'outils, permanente, n\'est jamais rendue au chrome', () => {
+  it('sa#621 — la colonne d\'outils vit dans le volet actif : elle ne réserve rien', () => {
     const { app, drawing_area } = buildDrawnApp()
+    const zone_avant = drawing_area.window_fitting_width
     app.menu_configuration.tools_column_enabled = true
-    const tools = app.menu_configuration.getToolsColumnWidthPx()
-    expect(tools).toBeGreaterThan(0)
+    expect(app.menu_configuration.getToolsColumnWidthPx()).toBeGreaterThan(0)
 
-    // Aucun panneau ouvert : rien à rendre, chrome == zone cadrée (outils déjà retranchés
-    // des deux côtés). Les rendre ferait dessiner sous les boutons.
+    // Elle passe par-dessus le contenu du volet : ni la page, ni le dessin ne lui cèdent de place.
+    expect(app.menu_configuration.getRightChromeReservedPx()).toBe(0)
     expect(drawing_area.panel_reserve_right).toBe(0)
+    expect(drawing_area.window_fitting_width).toBe(zone_avant)
     expect(drawing_area.chrome_fitting_width).toBe(drawing_area.window_fitting_width)
   })
 })
@@ -393,7 +394,39 @@ describe('OS#388 — cas 2 : changer de menu ancré ne change pas la réserve', 
 
     // La seule grandeur qui compte pour le fenêtrage, elle, n'a pas bougé.
     expect(panels.getSidebarReservedPx()).toBe(reserve_config)
-    expect(menu_configuration.getRightChromeReservedPx()).toBe(
-      menu_configuration.getToolsColumnWidthPx() + reserve_config)
+    expect(menu_configuration.getRightChromeReservedPx()).toBe(reserve_config)
+  })
+})
+
+describe('sa#621 — l\'en-tête du volet passe par-dessus le dessin cadré', () => {
+
+  it('le cadre réserve la hauteur de l\'en-tête au cadrage, en haut et en bas, mais pas à la feuille', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5 }
+    const sans_entete = drawing_area.window_fitting_height
+    const feuille = drawing_area.chrome_fitting_height
+    expect(drawing_area.fit_top_offset).toBe(0)
+
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5, reserve_top: 28, reserve_bottom: 28 }
+    // Le dessin cadré se pose entre les deux marges : il ne touche jamais les boutons de l'en-tête.
+    expect(drawing_area.window_fitting_height).toBe(sans_entete - 56)
+    expect(drawing_area.fit_top_offset).toBe(28)
+    // La feuille et son fond, eux, passent sous l'en-tête : ils couvrent toujours toute la case.
+    expect(drawing_area.chrome_fitting_height).toBe(feuille)
+    expect(drawing_area.getNavBarHeight()).toBe(0)
+    // La largeur ne change pas : l'en-tête est une bande du haut.
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5 }
+    const largeur = drawing_area.window_fitting_width
+    app.main_zone_canvas_frame = { left: 0, top: 40, width: 800, height: 600, inset: 5, reserve_top: 28, reserve_bottom: 28 }
+    expect(drawing_area.window_fitting_width).toBe(largeur)
+  })
+
+  it('une zone non cadrée ignore les réserves d\'en-tête posées pour un conteneur', () => {
+    const { drawing_area } = buildDrawnApp()
+    const avant = drawing_area.window_fitting_height
+    drawing_area.overlay_reserve_top = 28
+    drawing_area.overlay_reserve_bottom = 28
+    // La zone du conteneur principal, non cadrée : sa barre est celle de la page, rien d'autre.
+    expect(drawing_area.window_fitting_height).toBe(avant)
   })
 })
