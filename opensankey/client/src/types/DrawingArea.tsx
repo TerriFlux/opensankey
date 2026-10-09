@@ -1176,6 +1176,10 @@ export class Class_DrawingArea {
   // Applied as a final cap/floor on each node's rendered height. Fixed px (does
   // not follow the diagram scale), mirroring the flux size-limit control.
   private _maximum_node?: number
+  // os#1511 (Julien, 09/10 : « une taille de nœud donnée pour Matière et une échelle qui
+  // s'adapte ») — un nœud de référence et sa hauteur en px : à chaque dessin, l'échelle se recale
+  // pour que ce nœud garde cette hauteur, quelle que soit la coupe (filière, unité, année).
+  private _scale_reference_node: { id: string, px: number } | undefined = undefined
   private _minimum_node?: number
 
   // OS#1302 — le mode structure « forcer l'épaisseur min », le mode « pointe
@@ -1409,6 +1413,7 @@ export class Class_DrawingArea {
     this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
     this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
     this._maximum_node = drawing_area_to_copy._maximum_node
+    this._scale_reference_node = drawing_area_to_copy._scale_reference_node
     this._minimum_node = drawing_area_to_copy._minimum_node
     // OS#1302 — pointe/épaisseur migrées vers les attributs de flux (résolus par le style).
     this._scale = drawing_area_to_copy._scale
@@ -2416,6 +2421,8 @@ export class Class_DrawingArea {
     // os#1383 — EXACT en échelle adaptée sans grandeur de référence : le nœud le plus haut
     // remplit alors le plafond à chaque datatag et dans chaque vue, dans les deux sens.
     this.applyMaximumNodeScale(_position_type === 'scale_adapted' && !adapted)
+    // os#1511 — l'échelle calée sur un nœud de référence passe en dernier : c'est elle qui décide.
+    this.applyReferenceNodeScale()
     // PR 3 — central entry point for parametric layout. Node.applyPosition
     // is now a pass-through in parametric mode, so positions must be
     // refreshed here before any node is drawn. Single source of truth.
@@ -2493,7 +2500,7 @@ export class Class_DrawingArea {
     // déduire. Cet appel-ci y est donc un no-op (signature déjà consommée).
     this.reorganizeIOOnDataSelectionChange()
     // os#1511 — le titre se cale au-dessus des nœuds tels qu'ils vont être dessinés.
-    this._sankey.placeTitleOnTop()
+    this.placeTitleAtScreenTop()
     // Draw grid
     this.drawBackground()
     this.drawGrid()
@@ -4383,6 +4390,8 @@ export class Class_DrawingArea {
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+      // os#1511 — le titre reste en haut de la zone visible quand on zoome ou déplace.
+      this.placeTitleAtScreenTop()
 
       // #680 — Le désenclenchement des modes au zoom manuel est fait aux POINTS D'ENTRÉE du
       // zoom (DrawingAreaInteractions._eventMouseScroll pour la molette/pinch ; zoomByFactor /
@@ -5276,6 +5285,55 @@ export class Class_DrawingArea {
       this._minimum_flux = value
       this.drawElements()
     }
+  }
+
+  public get scale_reference_node(): { id: string, px: number } | undefined { return this._scale_reference_node }
+  public set scale_reference_node(value: { id: string, px: number } | undefined) {
+    this._scale_reference_node = value !== undefined && value.px > 0 && value.id !== '' ? value : undefined
+    this.drawElements()
+  }
+
+  /**
+   * os#1511 — L'ÉCHELLE CALÉE SUR UN NŒUD : la grandeur du nœud de référence rendue à sa hauteur
+   * en px (px = valeur / échelle × 100). Un nœud découpé (masqué) compte pour la somme de ses
+   * nœuds engendrés. Sans nœud ou sans grandeur : rien.
+   */
+  public applyReferenceNodeScale(): void {
+    const ref = this._scale_reference_node
+    if (ref === undefined) return
+    const node = this._sankey.nodes_dict[ref.id]
+    if (node === undefined) return
+    let magnitude = node.is_visible ? this.nodePositioning.nodeMagnitudeOf(node) : 0
+    if (!(magnitude > 0)) {
+      magnitude = this._sankey.nodes_list
+        .filter(n => n.is_visible && parseGeneratedId(n.id)?.origin === ref.id)
+        .reduce((total, n) => total + this.nodePositioning.nodeMagnitudeOf(n), 0)
+    }
+    if (!(magnitude > 0)) return
+    this.setEffectiveScale(magnitude * 100 / ref.px)
+  }
+
+  /**
+   * os#1511 (Julien, 09/10 : « le titre doit se caler en haut de l'écran ») — le titre réglé
+   * `title_on_top` se pose en haut de la zone VISIBLE, centré, à chaque dessin et à chaque zoom ou
+   * déplacement. Sans zone de zoom (tests, export hors écran) : au-dessus des nœuds.
+   */
+  public placeTitleAtScreenTop(): void {
+    const title = this._sankey.getTitleContainer()
+    if (title === undefined || !title.title_on_top || !title.is_visible) return
+    const zoom_node = this.d3_selection_zoom_area?.node() ?? null
+    const width = this.window_fitting_width
+    if (zoom_node === null || !(width > 0)) {
+      this._sankey.placeTitleOnTop()
+      return
+    }
+    const t = d3.zoomTransform(zoom_node)
+    const k = t.k > 0 ? t.k : 1
+    const x = (width / 2 - t.x) / k - title.getShapeWidthToUse() / 2
+    const y = (12 - t.y) / k
+    if (Math.abs(title.position_x - x) < 0.5 && Math.abs(title.position_y - y) < 0.5) return
+    title.setPosXY(x, y)
+    title.draw()
   }
 
   // Node height limit (px), independent of the flux size limit.
