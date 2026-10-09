@@ -108,9 +108,27 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   // GETTERS / SETTERS ===========================================================
   public get is_title(): boolean { return this._is_title }
-  public set is_title(_: boolean) { this._is_title = _ }
+  public set is_title(_: boolean) {
+    this._is_title = _
+    this.syncTitleLayer()
+  }
   public get title_on_top(): boolean { return this._title_on_top }
-  public set title_on_top(_: boolean) { this._title_on_top = _ }
+  public set title_on_top(_: boolean) {
+    this._title_on_top = _
+    this.syncTitleLayer()
+  }
+
+  /**
+   * os#1511 — le titre calé en haut vit dans le CALQUE ÉCRAN (`g_screen_overlay`), hors du contenu :
+   * il ne pèse plus sur le cadrage ni sur rien de ce qui place le diagramme (Julien, 09/10 : « il
+   * faut complètement déconnecter le titre des opérations qui concernent le placement »).
+   */
+  public syncTitleLayer(): void {
+    const layer = this._is_title && this._title_on_top ? 'g_screen_overlay' : 'g_elements_sankey'
+    if (this._svg_parent_group === layer) return
+    this.unDraw()
+    this._svg_parent_group = layer
+  }
 
   public get tooltip_text(): string { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
