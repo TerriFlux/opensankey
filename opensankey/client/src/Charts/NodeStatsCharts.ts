@@ -52,7 +52,7 @@ import { LEGEND_HEADING_WEIGHT, partLegendRows, type Type_LegendRow } from '../E
 import { appendLegendRows } from '../Elements/legendRowsDom'
 import {
   appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRoomWithNavigation, legendRowSectorId,
-  prependLegendNavigation,
+  placeCapsuleAtColumnEdge, prependLegendNavigation,
   type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
@@ -2449,9 +2449,9 @@ export const drawDonutChart = (
 
   // os#1527 — LA CAPSULE DE LA LÉGENDE, comme sur le diagramme : affichée, « ‹ » la replie ;
   // masquée par elle, « Légende › » la rouvre. Du côté de la légende, sans prendre de place.
-  if (!cell && opts.legend_capsule && st.legend_parts !== 'none') {
-    appendLegendCapsule(root.node() as HTMLElement, opts.legend_capsule, legend_shown, st.legend_position)
-  }
+  const capsule = !cell && opts.legend_capsule && st.legend_parts !== 'none'
+    ? appendLegendCapsule(root.node() as HTMLElement, opts.legend_capsule, legend_shown, st.legend_position)
+    : undefined
   if (!legend_shown) return
   // 24/09/2026 — DESSOUS, LA LÉGENDE EST UN BANDEAU, PAS UNE COLONNE COUCHÉE.
   //
@@ -2465,6 +2465,9 @@ export const drawDonutChart = (
     .style('max-height', below ? `${legend_room}px` : '100%')
     .style('overflow-y', 'auto')
     .style('font-size', `${st.legend_font_size}px`)
+  // os#1527 (Julien, 10/10) — À CÔTÉ, la colonne part du HAUT, sur toute la hauteur, comme celle du
+  // Sankey : elle n'est plus centrée verticalement avec le disque.
+  if (!below) legend.style('align-self', 'stretch')
   if (below) {
     legend
       .style('display', 'flex')
@@ -2521,6 +2524,7 @@ export const drawDonutChart = (
     },
     id_prefix: 'donut_legend'
   })
+  if (capsule && !below) placeCapsuleAtColumnEdge(capsule, root.node() as HTMLElement, legend_node, st.legend_position)
   placed_rows.forEach(({ row, el }) => {
     const e = item_of.get(row)
     if (e === undefined) return

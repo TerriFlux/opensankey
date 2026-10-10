@@ -233,7 +233,8 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   if (model.vertical) {
     box.style.fontSize = '11px'
     box.style.lineHeight = '1.35'
-    box.style.padding = '0.3rem 0.4rem'
+    // Collé à gauche, aligné sur les lignes de la légende dessous (Julien, 10/10).
+    box.style.padding = '0.3rem 0.4rem 0.3rem 0'
     box.appendChild(buildVerticalRows(model))
     return box
   }

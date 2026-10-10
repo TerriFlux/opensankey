@@ -191,6 +191,32 @@ export const appendLegendCapsule = (
   return b
 }
 
+/**
+ * os#1527 (Julien, 10/10 : « sur le Sankey la pastille est bien placée, pas sur la couronne ») — la
+ * capsule d'une légende OUVERTE à côté se colle au bord INTÉRIEUR de sa colonne, côté dessin, en haut,
+ * comme celle du Sankey. `root` est le conteneur positionné où elle vit ; `legend`, la colonne.
+ */
+export const placeCapsuleAtColumnEdge = (
+  capsule: HTMLElement, root: HTMLElement, legend: HTMLElement, position: string
+): void => {
+  if (position !== 'left' && position !== 'right') return
+  const place = () => {
+    const r = root.getBoundingClientRect()
+    const l = legend.getBoundingClientRect()
+    if (l.width === 0) return
+    if (position === 'left') {
+      capsule.style.left = `${Math.round(l.right - r.left)}px`
+      capsule.style.right = 'auto'
+    } else {
+      capsule.style.right = `${Math.round(r.right - l.left)}px`
+      capsule.style.left = 'auto'
+    }
+    capsule.style.top = `${Math.round(l.top - r.top) + 8}px`
+  }
+  place()
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(place)
+}
+
 // ── os#1527 (10/10) — LE TABLEAU DE NAVIGATION EN HAUT DE LA COLONNE DE LÉGENDE ──────────────────────
 //
 // Julien : « la même chose pour les couronnes » que le Sankey (`main_zone_canvas_column_navigation`).
@@ -218,8 +244,9 @@ export const prependLegendNavigation = (legend: HTMLElement, navigation: HTMLEle
   wrap.style.borderBottom = `1px solid ${ui_line}`
   wrap.style.marginBottom = '0.3rem'
   wrap.style.flexBasis = '100%'
-  if (position === 'left') wrap.style.paddingLeft = '1rem'
-  else wrap.style.paddingRight = '1rem'
+  // Julien, 10/10 (« ça pourrait être collé plus à gauche ») : le tableau s'aligne sur les lignes de
+  // la légende ; la capsule est au bord de la colonne, côté dessin (`placeCapsuleAtColumnEdge`).
+  void position
   wrap.appendChild(navigation)
   legend.insertBefore(wrap, legend.firstChild)
   return wrap
