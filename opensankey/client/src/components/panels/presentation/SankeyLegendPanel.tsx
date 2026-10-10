@@ -30,7 +30,6 @@ import React from 'react'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_LegendItem } from '../../../Elements/legendItems'
-import { LEGEND_SAMPLE_VALUE } from '../../../Elements/legendTagStyle'
 import { colouredLegendItems, legendColorerOf, type Type_DimensionForColumn } from '../../../Elements/legendColumn'
 import { openPresentationFor } from './openPresentation'
 import { legendTitlePresentable } from './legendGroupPresentation'
@@ -38,17 +37,23 @@ import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDime
 import { ZOOM_TOPIC } from '../../../types/EventBus'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { applyMembersColorFlows } from '../../ui/dimensionDrawingHost'
-import { ui_accent, ui_bg_selected, ui_bg_subtle, ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_ink_strong, ui_line_strong } from '../../../css/uiTokens'
+import { ui_accent, ui_bg_selected, ui_bg_subtle, ui_ink_disabled, ui_ink_muted } from '../../../css/uiTokens'
+// os#1527 — LE MODÈLE DE LÉGENDE COMMUN : la colonne garde ses lignes React (gestes d'Alexandre,
+// renommage en place, pinceau) mais lit EXACTEMENT les mesures et la pastille des couronnes
+// (`Elements/legendRows`, rendu DOM `legendRowsDom`) : choix le moins risqué, aucun geste ne change.
+import {
+  LEGEND_FONT_PX, LEGEND_GAP, LEGEND_HEADING_WEIGHT, LEGEND_INK, LEGEND_ROW_PAD_X, LEGEND_ROW_PAD_Y,
+  LEGEND_UNCHECKED_INK, legendRowPaddingLeft, legendSwatchMarkup
+} from '../../../Elements/legendRows'
+import { legendItemSwatch } from '../../../Elements/legendSvg'
 
 /** Largeur de la colonne de légende, en px d'écran. */
 export const SANKEY_LEGEND_PANEL_PX = 240
 
-// Même teinte qu'une ligne décochée de la légende des couronnes (`Charts/legendChecks.ts`).
-const UNCHECKED_SWATCH = ui_line_strong
-const UNCHECKED_INK = ui_ink_disabled
-const INK = ui_ink_strong
+// Même teinte qu'une ligne décochée de la légende des couronnes (modèle commun).
+const UNCHECKED_INK = LEGEND_UNCHECKED_INK
+const INK = LEGEND_INK
 const HOVER_BG = ui_bg_subtle
-const INDENT_EM = 1
 
 /** Les entrées du panneau, relues à chaque régénération de la légende. */
 export const useSankeyLegendItems = (app_data: Class_ApplicationData): readonly Type_LegendItem[] => {
@@ -76,64 +81,18 @@ const ScaleBar = ({ app_data }: { app_data: Class_ApplicationData }) => {
   </svg>
 }
 
-// Les hachures d'un nœud (`shape_hatch`), dans l'orientation du style : un motif de traits.
-const HATCH_ANGLE: { [k: string]: number } = { vertical: 0, horizontal: 90, diagonal: 45, antidiagonal: -45 }
-
+// LA PASTILLE COMMUNE (`legendSwatchMarkup`) : la même que celle des couronnes et de l'image exportée
+// — couleur dessinée, bordure, pointillés, hachures, icône du catalogue, valeur d'exemple.
 const Swatch = ({ app_data, item, unchecked }: { app_data: Class_ApplicationData, item: Type_LegendItem, unchecked: boolean }) => {
-  const pattern_id = React.useId().replace(/:/g, '_')
+  const pattern_id = 'legend_panel_' + React.useId().replace(/[^a-zA-Z0-9_-]/g, '_')
   if (item.scale_bar === true) return <ScaleBar app_data={app_data} />
-  const swatch = item.format?.swatch
-  const color = unchecked ? UNCHECKED_SWATCH : (swatch?.color ?? item.swatch_color)
-  const icon = item.format?.icon
-  if (color === undefined && icon === undefined) return null
-  const value = item.format?.value
-  const has_value = value !== undefined
-  // os#1527 — la pastille de la légende des couronnes : 0,7 em de côté, coins de 2 px (cf.
-  // `appendDonutLegendRows`) ; élargie quand elle porte la valeur d'exemple.
-  const w = has_value ? 30 : 14
-  const h = 14
-  const border = swatch?.border_visible === true
-  const dashed = swatch?.border_dashed === true || swatch?.link_dashed === true
-  const hatch = swatch?.hatch !== undefined && swatch.hatch !== 'none' ? HATCH_ANGLE[swatch.hatch] : undefined
-  const ink = unchecked ? UNCHECKED_INK : ui_ink
-  // L'icône par son nom : le tracé du catalogue du diagramme, comme sur un nœud (`DrawLabel`).
-  const icon_path = icon !== undefined && !icon.is_image && icon.icon_name
-    ? app_data.drawing_area.sankey.getIconFromCatalog(icon.icon_name) as string | undefined
-    : undefined
-  return <svg width={`${(0.7 * w) / h}em`} height='0.7em' viewBox={`0 0 ${w} ${h}`}
-    style={{ flex: '0 0 auto', marginTop: '0.15em' }} aria-hidden>
-    {hatch !== undefined
-      ? <defs>
-        <pattern id={pattern_id} width={3} height={3} patternUnits='userSpaceOnUse' patternTransform={`rotate(${hatch})`}>
-          <rect width={3} height={3} fill={color ?? 'none'} />
-          <line x1={0} y1={0} x2={0} y2={3} stroke={ink} strokeWidth={1} />
-        </pattern>
-      </defs>
-      : null}
-    <rect
-      x={0.5} y={0.5} width={w - 1} height={h - 1} rx={2}
-      fill={hatch !== undefined ? `url(#${pattern_id})` : (color ?? 'none')}
-      fillOpacity={unchecked ? 1 : (swatch?.opacity ?? 1)}
-      stroke={border || dashed ? (swatch?.border_color ?? ui_ink_secondary) : 'none'}
-      strokeWidth={border ? Math.min(3, swatch?.border_thickness ?? 1) : 1}
-      strokeDasharray={dashed ? '3 2' : undefined}
-    />
-    {icon?.is_image === true && icon.image_src !== undefined
-      ? <image href={icon.image_src} x={1} y={1} width={h - 2} height={h - 2} />
-      : null}
-    {icon_path !== undefined && icon_path !== ''
-      ? <svg x={1} y={1} width={h - 2} height={h - 2} viewBox={icon?.view_box || '0 0 24 24'}>
-        <path d={icon_path} fill={unchecked ? UNCHECKED_INK : (icon?.color ?? ink)} />
-      </svg>
-      : null}
-    {has_value
-      ? <text x={w / 2} y={h / 2} dominantBaseline='central' textAnchor='middle' fontSize={9}
-        fill={value?.color ?? INK} fontWeight={value?.bold === true ? 700 : 400}
-        fontStyle={value?.italic === true ? 'italic' : undefined}
-        fontFamily={value?.font_family || undefined}
-      >{value?.uppercase === true ? LEGEND_SAMPLE_VALUE.toLocaleUpperCase() : LEGEND_SAMPLE_VALUE}</text>
-      : null}
-  </svg>
+  const markup = legendSwatchMarkup(legendItemSwatch(item), {
+    unchecked,
+    pattern_id,
+    iconPath: name => app_data.drawing_area.sankey.getIconFromCatalog(name) as string | undefined
+  })
+  if (markup === '') return null
+  return <span style={{ display: 'inline-flex', flex: '0 0 auto' }} dangerouslySetInnerHTML={{ __html: markup }} />
 }
 
 const LegendRow = ({ app_data, item }: {
@@ -178,7 +137,7 @@ const LegendRow = ({ app_data, item }: {
 
   const label_style: React.CSSProperties = {
     flex: '1 1 auto', minWidth: 0, overflowWrap: 'anywhere',
-    fontWeight: item.bold === true || name_format?.bold === true ? 600 : 400,
+    fontWeight: item.bold === true || name_format?.bold === true ? LEGEND_HEADING_WEIGHT : 400,
     fontStyle: name_format?.italic === true || item.pinned === true ? 'italic' : undefined,
     textTransform: name_format?.uppercase === true ? 'uppercase' : undefined,
     fontFamily: name_format?.font_family,
@@ -208,11 +167,11 @@ const LegendRow = ({ app_data, item }: {
     role={toggles ? 'menuitemcheckbox' : undefined}
     aria-checked={toggles ? checked : undefined}
     style={{
-      // os#1527 — mêmes mesures qu'une ligne de la légende des couronnes (`appendDonutLegendRows`).
-      display: 'flex', alignItems: 'flex-start', gap: '0.35rem',
-      padding: '0.1rem 0.2rem', borderRadius: '0.2rem',
+      // os#1527 — mêmes mesures qu'une ligne de la légende des couronnes (`appendLegendRows`).
+      display: 'flex', alignItems: 'flex-start', gap: LEGEND_GAP,
+      padding: `${LEGEND_ROW_PAD_Y} ${LEGEND_ROW_PAD_X}`, borderRadius: '0.2rem',
       marginTop: item.starts_group === true || is_title ? '0.5rem' : 0,
-      paddingLeft: `calc(0.2rem + ${(item.indent ?? 0) * INDENT_EM}em)`,
+      paddingLeft: legendRowPaddingLeft(item.indent ?? 0),
       cursor: clickable ? 'pointer' : 'default',
       background: hover && clickable ? HOVER_BG : undefined
     }}
@@ -292,7 +251,7 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
     style={{
       // os#1527 — le corps de la légende des couronnes était à 14 px ; os#1511 (Julien, 10/10 : « il y a
       // moyen de jouer sur des polices plus petites ») — 12 px, sous la navigation (11 px) de la colonne.
-      fontSize: '12px', color: INK,
+      fontSize: `${LEGEND_FONT_PX}px`, color: INK,
       padding: '0.25rem 0.5rem 0.5rem', userSelect: 'none',
       background: bg_opacity > 0 ? hexWithOpacity(legend.legend_bg_color, bg_opacity) : undefined,
       border: legend.legend_bg_border ? `1px solid ${ui_ink_disabled}` : undefined,

@@ -19,29 +19,84 @@
 // Module sans modèle ni React : le tracé n'a pas à connaître les dimensions.
 
 import { memberSectorId, parseMemberSectorPath } from './memberSectorId'
-import { ui_ink_disabled, ui_ink_secondary, ui_line, ui_line_strong } from '../css/uiTokens'
+import { ui_ink_secondary, ui_line } from '../css/uiTokens'
+import {
+  LEGEND_UNCHECKED_INK, LEGEND_UNCHECKED_SWATCH, dimensionLegendRows, sortLegendRowsByDrawing,
+  type Type_LegendMember, type Type_LegendRow
+} from '../Elements/legendRows'
 
-/** Une ligne d'un bloc de dimension. */
-export interface Type_LegendCheckEntry {
-  /** L'identifiant de secteur du membre (`memberSectorId(dim, membre)`), celui que `toggle` reçoit. */
-  id: string
-  label: string
-  /** La profondeur du membre dans sa dimension : le retrait, relatif au bloc. */
-  depth: number
-  /** Dessiné (coché) ou retiré (décoché). */
-  checked: boolean
-  /**
-   * Un ancêtre ouvert (sunburst) : une ligne sans case, montrée seulement si un anneau le dessine.
-   */
-  heading?: boolean
-}
+export { LEGEND_UNCHECKED_INK, LEGEND_UNCHECKED_SWATCH }
 
+/**
+ * os#1527 — LES BLOCS DE LA LÉGENDE PAR DIMENSION, en lignes du modèle commun (`Type_LegendRow`, cf.
+ * `Elements/legendRows`) : posées par `dimensionLegendRows` comme celles du Sankey, chaque entrée
+ * désigne son membre (`target`) ; la couleur est celle du secteur, posée au tracé (`drawnLegendRows`).
+ */
 export interface Type_LegendChecks {
-  /** Les lignes de chaque dimension qui découpe, par identifiant de dimension. */
-  blocks: { [dimension_id: string]: Type_LegendCheckEntry[] }
-  /** Cocher / décocher un membre (`id` d'une ligne) : le geste annulable de la figure. */
+  /** Les lignes de chaque dimension qui découpe, par identifiant de dimension (sans titre). */
+  blocks: { [dimension_id: string]: Type_LegendRow[] }
+  /** Cocher / décocher un membre (identifiant de secteur de membre) : le geste annulable de la figure. */
   toggle: (id: string, show: boolean) => void
   hint?: (label: string) => string
+}
+
+/** L'identifiant de secteur de membre d'une ligne (`memberSectorId`), ou sa clé. */
+export const legendRowSectorId = (row: Type_LegendRow): string =>
+  row.target !== undefined ? memberSectorId(row.target.dimension_id, row.target.member_id) : row.key
+
+/** Un membre de dimension tel que la couronne le lit. */
+type Type_CouronneMember = Type_LegendMember & { children?: Type_CouronneMember[] }
+
+/**
+ * LE BLOC D'UNE DIMENSION DE COURONNE : les membres listés par le plan (`listed`, cochés ou non), comme
+ * si tout était coché (ordre stable, sa!879), en lignes communes — en-têtes des ancêtres ouverts dans la
+ * portée (`focus`), retraits relatifs. L'ordre du DESSIN est posé au tracé (`drawnLegendRows`) ; ici,
+ * celui de la dimension.
+ */
+export const couronneLegendRows = <M extends Type_CouronneMember>(
+  dim: { id: string },
+  roots: readonly M[],
+  listed: ReadonlyMap<string, { checked: boolean }>,
+  focus: readonly M[],
+  labelOf: (member: M) => string,
+  hasAncestor: (member: M, ancestor: M) => boolean
+): Type_LegendRow[] => {
+  // Les listés, dans l'ordre de l'arbre de la dimension.
+  const members: M[] = []
+  const visit = (m: M) => {
+    if (listed.has(m.id)) { members.push(m); return }
+    ;((m.children ?? []) as M[]).forEach(visit)
+  }
+  roots.forEach(visit)
+  const inScope = (m: M) => focus.length === 0 || focus.some(f => m !== f && hasAncestor(m, f))
+  return dimensionLegendRows(dim, {
+    listed: members,
+    labelOf,
+    checkedOf: m => listed.get(m.id)?.checked ?? true,
+    keyOf: m => memberSectorId(dim.id, m.id),
+    headingKeyOf: route => memberSectorId(dim.id, route[route.length - 1]),
+    inScope
+  })
+}
+
+/**
+ * Les lignes d'un bloc À POSER : chaque entrée prend la couleur du secteur qui la dessine
+ * (`colorOf(identifiant de secteur de membre)`, sinon `fallback`), et le bloc se range dans l'ORDRE
+ * DES SECTEURS DESSINÉS (`rankOf`, arbitrage 1) — une ligne non dessinée (décochée) reste derrière sa
+ * voisine.
+ */
+export const drawnLegendRows = (
+  rows: readonly Type_LegendRow[],
+  colorOf: (sector_id: string) => string | undefined,
+  fallback: string,
+  rankOf?: (sector_id: string) => number | undefined
+): Type_LegendRow[] => {
+  const coloured = rows.map(row => row.kind === 'entry'
+    ? { ...row, swatch: colorOf(legendRowSectorId(row)) ?? fallback }
+    : row)
+  return rankOf === undefined
+    ? coloured
+    : sortLegendRowsByDrawing(coloured, row => rankOf(legendRowSectorId(row)))
 }
 
 /**
@@ -52,23 +107,6 @@ export interface Type_LegendChecks {
 export const legendMemberKeyOf = (sector_id: string): string => {
   const last = (parseMemberSectorPath(sector_id) ?? []).slice(-1)[0]
   return last === undefined ? sector_id : memberSectorId(last.dimension_id, last.member_id)
-}
-
-/** La case d'une ligne de légende : cochée = dessinée. Le clic reste à la légende. */
-export const legendCheckBox = (
-  checks: Type_LegendChecks, entry: Type_LegendCheckEntry, below = false
-): HTMLInputElement => {
-  const box = document.createElement('input')
-  box.type = 'checkbox'
-  box.checked = entry.checked
-  box.className = 'node_stats_legend_check'
-  box.title = checks.hint?.(entry.label) ?? entry.label
-  box.style.margin = below ? '0' : '0.1em 0 0'
-  box.style.flex = '0 0 auto'
-  box.style.cursor = 'pointer'
-  box.addEventListener('pointerdown', e => e.stopPropagation())
-  box.addEventListener('click', e => { e.stopPropagation(); checks.toggle(entry.id, box.checked) })
-  return box
 }
 
 /**
@@ -151,27 +189,4 @@ export const appendLegendCapsule = (
   b.addEventListener('click', e => { e.stopPropagation(); capsule.toggle(!shown) })
   root.appendChild(b)
   return b
-}
-
-/** La teinte d'une ligne décochée (pastille et texte). */
-export const LEGEND_UNCHECKED_SWATCH = ui_line_strong
-export const LEGEND_UNCHECKED_INK = ui_ink_disabled
-
-/**
- * Les lignes d'un bloc à poser : chaque membre retrouve la couleur d'un secteur qui le dessine ;
- * décoché, il reste à sa place, grisé ; un en-tête (ancêtre) ne vient que si un anneau le dessine.
- * Le retrait part du membre le moins profond du bloc.
- */
-export const legendCheckRows = (
-  entries: readonly Type_LegendCheckEntry[], colorOf: (id: string) => string | undefined, fallback: string
-): { entry: Type_LegendCheckEntry, color: string, indent: number }[] => {
-  const kept = entries
-    .map(entry => ({ entry, drawn: colorOf(entry.id) }))
-    .filter(r => !r.entry.heading || r.drawn !== undefined)
-  const base = Math.min(...kept.map(r => r.entry.depth))
-  return kept.map(({ entry, drawn }) => ({
-    entry,
-    color: !entry.checked ? LEGEND_UNCHECKED_SWATCH : drawn ?? fallback,
-    indent: entry.depth - base
-  }))
 }

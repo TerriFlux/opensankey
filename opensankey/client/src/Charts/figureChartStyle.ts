@@ -198,7 +198,8 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // 04/10/2026 — 14 (12 avant). Jean-Yves : « la taille des polices est un peu déséquilibrée ;
   // augmenter un peu la taille de la police de légende ». Les titres de bloc de la légende en
   // arbre héritent de cette taille. Les barres gardent 12 (cf. `BARS_STYLE_DEFAULTS`).
-  legend_font_size: 14,
+  // os#1527 (Julien, 10/10) — 12 px (`ui_text`), comme la légende du Sankey : un modèle commun.
+  legend_font_size: 12,
   legend_width: 230,
   // La légende nomme les parts sans dire leur parent : sous un seul cran il n'y en a pas à dire,
   // et sous une hiérarchie c'est ce qui rend la liste lisible — donc vrai d'office, et sans effet

@@ -41,9 +41,12 @@ import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText, figurePercentText } from './figureFormat'
 import { discRadiusInZone, layoutDonutCallouts } from './donutCalloutLayout'
 import {
-  LEGEND_UNCHECKED_INK, appendLegendCapsule, appendLegendContextRows, legendCheckBox, legendCheckRows,
-  legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
+  appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRowSectorId,
+  type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
+// os#1527 — le modèle et le rendu de légende communs (couronnes et Sankey).
+import type { Type_LegendRow } from '../Elements/legendRows'
+import { appendLegendRows } from '../Elements/legendRowsDom'
 import { ui_ink, ui_ink_muted, ui_white } from '../css/uiTokens'
 import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 
@@ -256,8 +259,9 @@ export const SUNBURST_STYLE_DEFAULTS: Type_SunburstStyle = {
   legend_levels: true,
   legend_position: 'right',
   // 04/10/2026 — deux points de plus, comme la couronne (Jean-Yves : « augmenter un peu la taille
-  // de la police de légende »).
-  legend_font_size: 14,
+  // de la police de légende »). os#1527 (Julien, 10/10) — 12 px (`ui_text`) : la même police que la
+  // légende du Sankey, un modèle de légende commun.
+  legend_font_size: 12,
   legend_width: 220,
   notes_visible: true,
   tooltip_visible: true,
@@ -2250,55 +2254,43 @@ export const drawSunburstChart = (
             .filter(l => l !== '')
         )]
         const label = tree.rings.find(r => r?.dimension_id === dim_id)?.dimension_label ?? ''
-        legend.append('div')
-          .style('padding', k === 0 ? '0.1rem 0.2rem' : '0.5rem 0.2rem 0.1rem')
-          .style('color', palette.muted).style('font-weight', 'bold')
-          .attr('title', [label, ...levels].join(' · '))
-          .text([label, ...levels].join(' · '))
+        const legend_node = legend.node() as HTMLElement
+        // os#1527 — LE MODÈLE COMMUN : titre (gras, sans pastille), en-têtes des ancêtres ouverts (gras,
+        // sans pastille), membres à la couleur de leur secteur, dans l'ORDRE DES SECTEURS DESSINÉS,
+        // « Autres » en dernier ; posés par le rendu commun (`appendLegendRows`).
+        const title: Type_LegendRow = { key: `${dim_id}/title`, kind: 'title', label: [label, ...levels].join(' · '), indent: 0 }
+        const residual = mine.find(sl => sl.is_residual)
+        const others: Type_LegendRow[] = residual !== undefined
+          ? [{ key: `${dim_id}/__others__`, kind: 'others', label: others_label, indent: 0, swatch: residual.color }]
+          : []
         // 04/10/2026 — AVEC SES CASES (os#1511) : le bloc liste les membres de la dimension comme si
-        // tout était coché, dans l'ordre de la dimension ; un membre décoché reste à sa place, grisé.
+        // tout était coché ; un membre décoché reste à sa place, grisé.
         const checks = opts.legend_checks
         const block = checks?.blocks[dim_id]
         if (checks && block && block.length > 0) {
           const color_of = new Map<string, string>()
+          const rank = new Map<string, number>()
           mine.forEach(sl => {
             if (sl.is_residual) return
             const key = legendMemberKeyOf(sl.id)
-            if (!color_of.has(key)) color_of.set(key, sl.color)
+            if (!color_of.has(key)) { color_of.set(key, sl.color); rank.set(key, rank.size) }
           })
-          legendCheckRows(block, id => color_of.get(id), palette.others).forEach(({ entry, color, indent }) => {
-            const row = legend.append('div')
-              .attr('class', entry.heading ? 'sunburst_branch sunburst_branch_heading' : 'sunburst_branch')
-              .attr('data-part-id', entry.id)
-              .style('display', 'flex').style('align-items', 'center')
-              .style('gap', '0.35rem').style('padding', `0.05rem 0.2rem 0.05rem ${0.2 + indent * 0.9}rem`)
-            if (!entry.heading) {
-              (row.node() as HTMLElement).appendChild(legendCheckBox(checks, entry))
-              if (!entry.checked) row.classed('node_stats_legend_unchecked', true).style('color', LEGEND_UNCHECKED_INK)
-            }
-            row.append('span')
-              .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-              .style('border-radius', '2px').style('background', color)
-            row.append('span')
-              .style('flex', '1 1 auto').style('overflow', 'hidden')
-              .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-              .attr('title', entry.label).text(entry.label)
+          const rows = [title, ...drawnLegendRows(block, id => color_of.get(id), palette.others, id => rank.get(id)), ...others]
+          appendLegendRows(legend_node, rows, {
+            row_class: 'sunburst_branch',
+            onToggle: (row, show) => checks.toggle(legendRowSectorId(row), show),
+            hintOf: row => checks.hint?.(row.label),
+            id_prefix: `sunburst_legend_${k}`
+          }).forEach(({ row, el }) => {
+            if (row.kind === 'title' && k > 0) el.style.marginTop = '0.5rem'
+            if (row.kind === 'heading') el.classList.add('sunburst_branch_heading')
+            if (row.target !== undefined) el.setAttribute('data-part-id', legendRowSectorId(row))
+            if (!el.title) el.title = row.label
           })
-          const residual_row = mine.find(sl => sl.is_residual)
-          if (residual_row !== undefined) {
-            const row = legend.append('div')
-              .attr('class', 'sunburst_branch')
-              .style('display', 'flex').style('align-items', 'center')
-              .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
-            row.append('span')
-              .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-              .style('border-radius', '2px').style('background', residual_row.color)
-            row.append('span').text(others_label)
-          }
           return
         }
         // Les membres, chacun une fois : un continent répété sous chaque filière est UN membre.
-        const rows: { key: string, label: string, color: string, indent: number }[] = []
+        const rows: Type_LegendRow[] = []
         const seen = new Set<string>()
         const by_id = new Map(slices.map(sl => [sl.id, sl]))
         mine.forEach(sl => {
@@ -2309,7 +2301,7 @@ export const drawSunburstChart = (
           const key = `${parent?.label ?? ''}/${sl.label}`
           if (seen.has(key)) return
           seen.add(key)
-          const row = { key, label: sl.label, color: sl.color, indent: within }
+          const row: Type_LegendRow = { key: `${dim_id}/${key}`, kind: 'entry', label: sl.label, swatch: sl.color, indent: within }
           if (parent !== undefined) {
             // Sous son parent, après ses frères déjà posés.
             const at = rows.findIndex(r => r.label === parent.label && r.indent === within - 1)
@@ -2322,39 +2314,23 @@ export const drawSunburstChart = (
           }
           rows.push(row)
         })
-        const item = (text: string, color: string, indent: number) => {
-          const row = legend.append('div')
-            .attr('class', 'sunburst_branch')
-            .style('display', 'flex').style('align-items', 'center')
-            .style('gap', '0.35rem').style('padding', `0.05rem 0.2rem 0.05rem ${0.2 + indent * 0.9}rem`)
-          row.append('span')
-            .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-            .style('border-radius', '2px').style('background', color)
-          row.append('span')
-            .style('flex', '1 1 auto').style('overflow', 'hidden')
-            .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-            .attr('title', text).text(text)
-        }
-        rows.forEach(r => item(r.label, r.color, r.indent))
-        const residual = mine.find(sl => sl.is_residual)
-        if (residual !== undefined) item(others_label, residual.color, 0)
+        // Un membre suivi des siens est un ANCÊTRE OUVERT : en-tête, gras, sans pastille (arbitrage 2).
+        rows.forEach((row, i) => {
+          if (i + 1 < rows.length && rows[i + 1].indent > row.indent) { row.kind = 'heading'; delete row.swatch }
+        })
+        appendLegendRows(legend_node, [title, ...rows, ...others], { row_class: 'sunburst_branch', id_prefix: `sunburst_legend_${k}` })
+          .forEach(({ el, row }) => {
+            if (row.kind === 'title' && k > 0) el.style.marginTop = '0.5rem'
+            if (!el.title) el.title = row.label
+          })
       })
     } else if (unnamed_branches.length > 0) {
       legend.append('div').style('height', '0.4rem')
-      const items = legend.selectAll('div.sunburst_branch')
-        .data(unnamed_branches).enter().append('div')
-        .attr('class', 'sunburst_branch')
-        .style('display', 'flex').style('align-items', 'center')
-        .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
-      items.append('span')
-        .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-        .style('border-radius', '2px')
-        // La pastille reprend la couleur DU SECTEUR, telle qu'elle est dessinée.
-        .style('background', b => b.color)
-      items.append('span')
-        .style('flex', '1 1 auto').style('overflow', 'hidden')
-        .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-        .attr('title', b => b.label).text(b => b.label)
+      // La pastille reprend la couleur DU SECTEUR, telle qu'elle est dessinée.
+      appendLegendRows(legend.node() as HTMLElement, unnamed_branches.map((b, i): Type_LegendRow => ({
+        key: `branch/${i}`, kind: 'entry', label: b.label, swatch: b.color, indent: 0
+      })), { row_class: 'sunburst_branch', id_prefix: 'sunburst_branches' })
+        .forEach(({ el, row }) => { el.title = row.label })
     }
     // os#1527 — les coordonnées que la figure ne découpe pas (« Année : 2015 »), comme le diagramme.
     const legend_node = legend.node() as HTMLElement | null

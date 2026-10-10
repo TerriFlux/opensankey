@@ -46,14 +46,16 @@ import { discRadiusInZone, layoutDonutCallouts, zoneHalfOfDisc } from './donutCa
 import { mountFigureTextZones } from '../Representations/figureTextZones'
 import type { Type_FigureCrumb } from '../Representations/figureTextZones'
 // os#1511 — la légende en arbre : même règle (ordre, retrait) que la légende du diagramme.
-import { LEGEND_INDENT_EM, legendTreeRows } from '../Elements/legendHierarchy'
-import type { Type_LegendTreeAncestor, Type_LegendTreeRow } from '../Elements/legendHierarchy'
+import type { Type_LegendTreeAncestor } from '../Elements/legendHierarchy'
+// os#1527 — le modèle et le rendu de légende communs (couronnes et Sankey).
+import { LEGEND_HEADING_WEIGHT, partLegendRows, type Type_LegendRow } from '../Elements/legendRows'
+import { appendLegendRows } from '../Elements/legendRowsDom'
 import {
-  LEGEND_UNCHECKED_INK, appendLegendCapsule, appendLegendContextRows, legendCheckBox, legendCheckRows,
-  legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
+  appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRowSectorId,
+  type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
-import { ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_line_strong } from '../css/uiTokens'
+import { ui_ink, ui_ink_muted, ui_ink_secondary, ui_line_strong } from '../css/uiTokens'
 import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 export interface Type_StatSlice {
@@ -828,13 +830,17 @@ export const sliceLegendAncestors = (s: Type_StatSlice): Type_LegendTreeAncestor
  * Sans `legend_levels`, aucune ligne d'en-tête : la liste à plat, au nom court.
  */
 export const donutLegendRows = <T>(
-  entries: readonly T[], sliceOf: (entry: T) => Type_StatSlice, st: Type_FigureChartStyle
-): Type_LegendTreeRow<T>[] =>
-  legendTreeRows(
-    entries,
-    entry => st.legend_levels ? sliceLegendAncestors(sliceOf(entry)) : undefined,
-    entry => sliceOf(entry).id === OTHERS_ID
-  )
+  entries: readonly T[], sliceOf: (entry: T) => Type_StatSlice, st: Type_FigureChartStyle,
+  more: { swatchOf?: (entry: T) => string | undefined, checkedOf?: (entry: T) => boolean | undefined } = {}
+): { row: Type_LegendRow, part?: T }[] =>
+  partLegendRows(entries, {
+    keyOf: entry => sliceOf(entry).id,
+    labelOf: entry => sliceOf(entry).label,
+    ancestorsOf: entry => st.legend_levels ? sliceLegendAncestors(sliceOf(entry)) : undefined,
+    isOthers: entry => sliceOf(entry).id === OTHERS_ID,
+    swatchOf: more.swatchOf,
+    checkedOf: more.checkedOf
+  })
 
 /**
  * Le nom d'une part tel que l'info-bulle d'une LIGNE DE LÉGENDE l'écrit : précédé de son parent sous
@@ -843,61 +849,6 @@ export const donutLegendRows = <T>(
  */
 export const sliceTooltipLabel = (s: Type_StatSlice, st: Type_FigureChartStyle): string =>
   (st.legend_levels && s.parent_label && (s.depth ?? 0) > 0) ? `${s.parent_label} › ${s.label}` : s.label
-
-type Type_LegendEntryRow<T> = Extract<Type_LegendTreeRow<T>, { kind: 'entry' }>
-
-/**
- * Pose les lignes de `rows` dans `legend` et rend la sélection des ENTRÉES (les en-têtes n'ont ni
- * pastille ni survol), chacune avec sa pastille et son nom. En colonne, le retrait vaut
- * `LEGEND_INDENT_EM` par niveau et un nom trop long passe à la ligne, comme dans la légende verticale
- * du diagramme ; en bandeau (`below`), les lignes s'enchaînent sans retrait ni coupure, comme sa
- * légende horizontale.
- */
-const appendDonutLegendRows = <T>(
-  legend: d3.Selection<HTMLElement, unknown, null, undefined>,
-  rows: Type_LegendTreeRow<T>[],
-  below: boolean,
-  swatch_color: (entry: T) => string,
-  label: (entry: T) => string
-): d3.Selection<HTMLDivElement, Type_LegendEntryRow<T>, HTMLElement, unknown> => {
-  const all = legend
-    .selectAll<HTMLDivElement, Type_LegendTreeRow<T>>('div.node_stats_legend_row')
-    .data(rows)
-    .enter().append('div')
-    .attr('class', r => 'node_stats_legend_row '
-      + (r.kind === 'heading' ? 'node_stats_legend_heading' : 'node_stats_legend_item'))
-    .attr('data-legend-indent', r => String(r.indent))
-    .style('padding-top', '0.1rem').style('padding-bottom', '0.1rem').style('padding-right', '0.2rem')
-    .style('padding-left', r => below ? '0.2rem' : `calc(0.2rem + ${r.indent * LEGEND_INDENT_EM}em)`)
-  if (below) all.style('flex', '0 0 auto')
-  all.filter(r => r.kind === 'heading')
-    .style('font-weight', '600')
-    .style('white-space', below ? 'nowrap' : 'normal')
-    .style('overflow-wrap', below ? 'normal' : 'break-word')
-    .text(r => r.kind === 'heading' ? r.label : '')
-  const items = all.filter(r => r.kind === 'entry') as unknown as
-    d3.Selection<HTMLDivElement, Type_LegendEntryRow<T>, HTMLElement, unknown>
-  items
-    .style('display', 'flex')
-    .style('align-items', below ? 'center' : 'flex-start')
-    .style('gap', '0.35rem')
-    .style('cursor', 'default')
-  items.append('span')
-    .style('flex', '0 0 auto')
-    .style('width', '0.7rem')
-    .style('height', '0.7rem')
-    // En colonne le nom peut tenir sur deux lignes : la pastille reste en face de la première.
-    .style('margin-top', below ? '0' : '0.15em')
-    .style('border-radius', '2px')
-    .style('background', r => swatch_color(r.entry))
-  items.append('span')
-    .style('flex', '1 1 auto')
-    .style('min-width', '0')
-    .style('white-space', below ? 'nowrap' : 'normal')
-    .style('overflow-wrap', below ? 'normal' : 'break-word')
-    .text(r => label(r.entry))
-  return items
-}
 
 /**
  * La place que la légende commune prend : une LARGEUR à côté des cases, une HAUTEUR dessous — les
@@ -932,55 +883,49 @@ export const drawSmallMultiplesLegend = (
       .style('justify-content', 'center').style('align-content', 'flex-start').style('column-gap', '0.8rem')
   }
   const arcs = () => d3.select(scope).selectAll<SVGPathElement, unknown>('path.node_stats_arc')
+  const legend_node = root.node() as HTMLElement
+  // Le survol d'une entrée met la part en avant dans TOUTES les cases.
+  const highlight = (sid: string | undefined) => {
+    if (sid === undefined) return
+    arcs().style('opacity', function () {
+      return (this as SVGPathElement).getAttribute('data-repr-id') === sid ? null : '0.35'
+    })
+  }
+  const unhighlight = () => { arcs().style('opacity', null) }
   // 04/10/2026 — LES CASES PAR DIMENSION (os#1511) : la légende commune des multiples liste les membres
   // de chaque dimension des parts comme si tout était coché, chacun avec sa case ; décocher grise la
-  // ligne à sa place. Le survol met en avant la part dans toutes les cases, comme sans cases.
+  // ligne à sa place. os#1527 — lignes du modèle commun, dans l'ordre des parts dessinées.
   const blocks = checks ? Object.entries(checks.blocks).filter(([, b]) => b.length > 0) : []
   if (checks && blocks.length > 0) {
     const drawn_id = new Map<string, string>()
+    const rank = new Map<string, number>()
     entries.forEach(s => {
       if (s.id === OTHERS_ID) return
       const key = legendMemberKeyOf(s.id)
-      if (!drawn_id.has(key)) drawn_id.set(key, s.id)
+      if (!drawn_id.has(key)) { drawn_id.set(key, s.id); rank.set(key, rank.size) }
     })
+    const rows: Type_LegendRow[] = []
     blocks.forEach(([, block]) => {
-      legendCheckRows(block, id => {
+      rows.push(...drawnLegendRows(block, id => {
         const sid = drawn_id.get(id)
         return sid === undefined ? undefined : colors.get(sid) ?? OTHERS_COLOR
-      }, OTHERS_COLOR).forEach(({ entry, color, indent }) => {
-        const row = root.append('div')
-          .attr('class', 'node_stats_legend_row node_stats_legend_item')
-          .attr('data-part-id', drawn_id.get(entry.id) ?? entry.id)
-          .attr('title', entry.label)
-          .style('display', 'flex').style('align-items', below ? 'center' : 'flex-start').style('gap', '0.35rem')
-          .style('padding', `0.1rem 0.2rem 0.1rem ${below ? 0.2 : 0.2 + indent * LEGEND_INDENT_EM}em`)
-        if (below) row.style('flex', '0 0 auto')
-        if (!entry.heading) {
-          (row.node() as HTMLElement).appendChild(legendCheckBox(checks, entry, below))
-          if (!entry.checked) row.classed('node_stats_legend_unchecked', true).style('color', LEGEND_UNCHECKED_INK)
-        }
-        row.append('span')
-          .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-          .style('margin-top', below ? '0' : '0.15em').style('border-radius', '2px').style('background', color)
-        row.append('span').style('flex', '1 1 auto').style('min-width', '0').text(entry.label)
-        const sid = drawn_id.get(entry.id)
-        if (sid === undefined) return
-        row.on('mouseover', () => {
-          arcs().style('opacity', function () {
-            return (this as SVGPathElement).getAttribute('data-repr-id') === sid ? null : '0.35'
-          })
-        }).on('mouseout', () => { arcs().style('opacity', null) })
-      })
+      }, OTHERS_COLOR, id => rank.get(id)))
     })
     const others = entries.find(s => s.id === OTHERS_ID)
     if (others) {
-      const row = root.append('div')
-        .attr('class', 'node_stats_legend_row node_stats_legend_item')
-        .style('display', 'flex').style('align-items', 'center').style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
-      row.append('span').style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-        .style('border-radius', '2px').style('background', colors.get(others.id) ?? OTHERS_COLOR)
-      row.append('span').text(others.label)
+      rows.push({ key: OTHERS_ID, kind: 'others', label: others.label, indent: 0, swatch: colors.get(others.id) ?? OTHERS_COLOR })
     }
+    appendLegendRows(legend_node, rows, {
+      below,
+      onToggle: (row, show) => checks.toggle(legendRowSectorId(row), show),
+      hintOf: row => checks.hint?.(row.label),
+      onHover: row => highlight(drawn_id.get(legendRowSectorId(row))),
+      onLeave: unhighlight,
+      id_prefix: 'multiples_legend'
+    }).forEach(({ row, el }) => {
+      el.setAttribute('data-part-id', row.kind === 'others' ? OTHERS_ID : (drawn_id.get(legendRowSectorId(row)) ?? legendRowSectorId(row)))
+      if (!el.title) el.title = row.label
+    })
     return
   }
   const head = st.legend_levels
@@ -989,27 +934,26 @@ export const drawSmallMultiplesLegend = (
   if (head) {
     root.append('div')
       .attr('class', 'node_stats_legend_head')
-      .style('font-weight', '600')
+      .style('font-weight', String(LEGEND_HEADING_WEIGHT))
       .style('padding', '0.1rem 0.2rem 0.25rem')
       .style('flex-basis', below ? '100%' : 'auto')
       .style('text-align', below ? 'center' : 'left')
       .text(head)
   }
-  const arcsOf = () => d3.select(scope).selectAll<SVGPathElement, unknown>('path.node_stats_arc')
-  appendDonutLegendRows(
-    root as unknown as d3.Selection<HTMLElement, unknown, null, undefined>,
-    donutLegendRows(entries, s => s, st), below,
-    s => colors.get(s.id) ?? s.color ?? OTHERS_COLOR, s => s.label
-  )
-    .attr('data-part-id', r => r.entry.id)
+  const placed = donutLegendRows(entries, s => s, st, { swatchOf: s => colors.get(s.id) ?? s.color ?? OTHERS_COLOR })
+  const slice_of = new Map(placed.filter(p => p.part !== undefined).map(p => [p.row, p.part as Type_StatSlice]))
+  appendLegendRows(legend_node, placed.map(p => p.row), {
+    below,
+    onHover: row => highlight(slice_of.get(row)?.id),
+    onLeave: unhighlight,
+    id_prefix: 'multiples_legend'
+  }).forEach(({ row, el }) => {
+    const s = slice_of.get(row)
+    if (s === undefined) return
+    el.setAttribute('data-part-id', s.id)
     // L'info-bulle garde le nom complet : c'est elle qui dit le parent au survol.
-    .attr('title', r => sliceTooltipLabel(r.entry, st))
-    .on('mouseover', (_, r) => {
-      arcsOf().style('opacity', function () {
-        return (this as SVGPathElement).getAttribute('data-repr-id') === r.entry.id ? null : '0.35'
-      })
-    })
-    .on('mouseout', () => { arcsOf().style('opacity', null) })
+    el.title = sliceTooltipLabel(s, st)
+  })
 }
 // Barres groupées (#390) : au-delà de ce nombre de séries, une grappe devient
 // illisible. On TRONQUE, on ne replie PAS dans un « Autres » : les deux axes croisés
@@ -2496,83 +2440,56 @@ export const drawDonutChart = (
   // os#1511 — en arbre : nom court, ancêtres ouverts en en-têtes, retrait par niveau.
   // 04/10/2026 — une ligne par part de `legend_parts` (toutes les candidates sous des cases), à sa
   // place fixe ; elle retrouve son secteur s'il est dessiné, sinon elle reste là, décochée.
+  // os#1527 — les lignes du modèle commun (`partLegendRows`), posées par le rendu commun
+  // (`appendLegendRows`) : mêmes mesures, même pastille, mêmes en-têtes que la colonne du Sankey.
   const toggle = opts.legend_toggle
   const hidden_ids = new Set(toggle?.hidden.map(h => h.id) ?? [])
   const arc_of = new Map(arcs.map(a => [a.data.id, a]))
   const legend_colors = donutPartColors(legend_parts, st)
-  type Type_LegendItem = { slice: Type_StatSlice, arc?: d3.PieArcDatum<Type_StatSlice>, checked: boolean }
-  const legend_items: Type_LegendItem[] = legend_parts.map(s => ({
+  type Type_DonutLegendItem = { slice: Type_StatSlice, arc?: d3.PieArcDatum<Type_StatSlice>, checked: boolean }
+  const legend_items: Type_DonutLegendItem[] = legend_parts.map(s => ({
     slice: s, arc: arc_of.get(s.id), checked: !hidden_ids.has(s.id)
   }))
-  const all_items = appendDonutLegendRows(
-    legend as unknown as d3.Selection<HTMLElement, unknown, null, undefined>,
-    donutLegendRows(legend_items, e => e.slice, st), below,
-    e => e.arc ? colorOf(e.arc.data, e.arc.index) : e.checked ? (legend_colors.get(e.slice.id) ?? OTHERS_COLOR) : ui_line_strong,
-    e => e.slice.label
-  )
-    .attr('title', r => r.entry.arc ? legend_title(r.entry.arc) : r.entry.slice.label)
-  all_items.filter(r => !r.entry.checked)
-    .classed('node_stats_legend_unchecked', true)
-    .style('color', ui_ink_disabled)
-  const items = all_items.filter(r => r.entry.arc !== undefined) as unknown as
-    d3.Selection<HTMLDivElement, { entry: { arc: d3.PieArcDatum<Type_StatSlice> } }, HTMLElement, unknown>
-  items
-    // os#1481 — LE SURVOL DE LA LÉGENDE NE MANGE PLUS L'OPACITÉ RÉGLÉE.
-    //
-    // Julien, à l'écran : « ni opacité ne marche ». Elle était pourtant LUE (cf. `fill-opacity`
-    // plus haut) — et c'est bien pire qu'un réglage jamais branché : elle marchait jusqu'au premier
-    // survol d'une entrée de légende, après quoi `mouseout` remettait **1** à tous les secteurs.
-    // L'opacité de l'auteur était alors perdue jusqu'au redessin suivant, sans que rien ne le dise.
-    //
-    // Un test de résolveur ne pouvait pas voir ça : l'aspect rendait la bonne valeur, et le tracé
-    // l'écrivait. C'est le geste d'APRÈS qui l'effaçait.
-    .on('mouseover', (_, r) => {
-      g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
-        .attr('fill-opacity', a => a.index === r.entry.arc.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
-    })
-    .on('mouseout', () => {
-      g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
-        .attr('fill-opacity', a => arcOpacity(a))
-    })
-  // ── LE POURCENTAGE, SEULEMENT QUAND LE DESSIN NE LE DIT PAS (Julien, 24/09/2026) ────────────
-  //
-  // « Je vois pas trop l'intérêt de mettre les pourcentages qui sont déjà sur le graphe. » Il a
-  // raison : une couronne écrit son pourcentage dans le secteur d'office (`value_label_percent`
-  // vaut 'total' depuis os#1489), et la légende le redisait à côté — deux fois le même nombre,
-  // dans la même image.
-  //
-  // La règle est donc celle de `legend_parts: 'auto'`, un cran plus bas : LA LÉGENDE DIT CE QUE LE
-  // DESSIN N'A PAS DIT. Valeur masquée sur les secteurs, le nombre revient dans la légende, et
-  // rien n'est perdu.
-  if (!st.value_label_is_visible) {
-    all_items.append('span')
-      .style('flex', '0 0 auto')
-      .style('color', ui_ink_muted)
-      .text(r => r.entry.arc ? pctText(r.entry.arc.data.value, total) : '')
-  }
-  // 03/10/2026 — LES CASES DE LA LÉGENDE (os#1511) : cochée = la part est dessinée. « Autres » n'en a
-  // pas (c'est un repli, pas un membre). 04/10/2026 — chaque ligne garde sa place, cochée ou non.
-  if (toggle) {
-    const boxOf = (checked: boolean, id: string, label: string) => {
-      const box = document.createElement('input')
-      box.type = 'checkbox'
-      box.checked = checked
-      box.className = 'node_stats_legend_check'
-      box.title = toggle.hint?.(label) ?? label
-      box.style.margin = below ? '0' : '0.1em 0 0'
-      box.style.flex = '0 0 auto'
-      box.style.cursor = 'pointer'
-      box.addEventListener('pointerdown', e => e.stopPropagation())
-      box.addEventListener('click', e => { e.stopPropagation(); toggle.toggle(id, box.checked) })
-      return box
-    }
-    all_items.each(function (r) {
-      if (r.entry.slice.id === OTHERS_ID) return
-      this.insertBefore(boxOf(r.entry.checked, r.entry.slice.id, r.entry.slice.label), this.firstChild)
-    })
-  }
+  const placed = donutLegendRows(legend_items, e => e.slice, st, {
+    swatchOf: e => e.arc ? colorOf(e.arc.data, e.arc.index) : (legend_colors.get(e.slice.id) ?? OTHERS_COLOR),
+    checkedOf: e => toggle ? e.checked : undefined
+  })
+  const item_of = new Map(placed.filter(p => p.part !== undefined).map(p => [p.row, p.part as Type_DonutLegendItem]))
+  if (toggle?.hint) placed.forEach(p => { if (p.row.checked !== undefined) p.row.hint = toggle.hint?.(p.row.label) })
   const legend_node = legend.node()
-  if (legend_node) appendLegendContextRows(legend_node, opts.legend_context, below)
+  if (!legend_node) return
+  const arcPaths = () => g.selectAll<SVGPathElement, d3.PieArcDatum<Type_StatSlice>>('path.node_stats_arc')
+  const placed_rows = appendLegendRows(legend_node, placed.map(p => p.row), {
+    below,
+    onToggle: toggle ? (row, show) => { const e = item_of.get(row); if (e) toggle.toggle(e.slice.id, show) } : undefined,
+    // os#1481 — LE SURVOL DE LA LÉGENDE NE MANGE PLUS L'OPACITÉ RÉGLÉE : `mouseout` rend à chaque
+    // secteur SON opacité (`arcOpacity`), pas 1.
+    onHover: (row) => {
+      const arc = item_of.get(row)?.arc
+      if (arc === undefined) return
+      arcPaths().attr('fill-opacity', a => a.index === arc.index ? arcOpacity(a) : arcOpacity(a) * 0.35)
+    },
+    onLeave: (row) => {
+      if (item_of.get(row)?.arc === undefined) return
+      arcPaths().attr('fill-opacity', a => arcOpacity(a))
+    },
+    id_prefix: 'donut_legend'
+  })
+  placed_rows.forEach(({ row, el }) => {
+    const e = item_of.get(row)
+    if (e === undefined) return
+    el.title = e.arc ? legend_title(e.arc) : e.slice.label
+    // ── LE POURCENTAGE, SEULEMENT QUAND LE DESSIN NE LE DIT PAS (Julien, 24/09/2026) : la légende dit
+    // ce que le dessin n'a pas dit. Valeur masquée sur les secteurs, le nombre revient ici.
+    if (!st.value_label_is_visible) {
+      const pct = document.createElement('span')
+      pct.style.flex = '0 0 auto'
+      pct.style.color = ui_ink_muted
+      pct.textContent = e.arc ? pctText(e.arc.data.value, total) : ''
+      el.appendChild(pct)
+    }
+  })
+  appendLegendContextRows(legend_node, opts.legend_context, below)
 }
 
 // ==================================================================================================

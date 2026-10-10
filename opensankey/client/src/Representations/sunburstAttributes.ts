@@ -280,7 +280,7 @@ const HONOURED = honours(FIGURE_ATTRIBUTES_CONFIG, {
   legend_parts: {},
   legend_levels: {},
   legend_position: {},
-  legend_font_size: { default: 14 },
+  legend_font_size: { default: 12 },
   legend_width: {},
   notes_visible: {},
   interaction_tooltip: {},

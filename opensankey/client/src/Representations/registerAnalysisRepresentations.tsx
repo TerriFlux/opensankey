@@ -31,7 +31,7 @@ import {
   donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
 } from '../Charts/NodeStatsCharts'
 import type { Type_ChartOptions, Type_StatSlice } from '../Charts/NodeStatsCharts'
-import { appendLegendContextRows, type Type_LegendCapsule } from '../Charts/legendChecks'
+import { appendLegendContextRows, couronneLegendRows, type Type_LegendCapsule } from '../Charts/legendChecks'
 import { tagGroupCarriesFormatting } from '../Elements/legendItems'
 import { legendDataTagZoneId } from '../Elements/legendIds'
 import { openLegendDimensionChoice } from '../components/panels/presentation/legendDimensionChoice'
@@ -104,7 +104,8 @@ import type { Type_HierarchyReading } from '../Charts/AnalysisChartData'
 // 24/09/2026 — le tracé à anneaux et sa lecture de style, appelés par la couronne quand le mode
 // « un anneau par niveau » le demande. Le disque n'est plus une autre figure, c'en est un mode.
 import { drawSunburstChart } from '../Charts/SunburstChart'
-import type { Type_LegendCheckEntry, Type_LegendChecks } from '../Charts/legendChecks'
+import type { Type_LegendChecks } from '../Charts/legendChecks'
+import type { Type_LegendRow } from '../Elements/legendRows'
 import {
   figureViewOf, figureZoomHandle, publishFigureZoom, rememberFigureView
 } from '../Charts/figureZoomBridge'
@@ -1404,26 +1405,17 @@ const legendChecksOf = (ctx: Type_RepresentationContext): Type_LegendChecks | un
  * dans l'ordre de la dimension ; leurs ancêtres sous la portée en en-têtes (le tracé ne les montre que
  * si un anneau les dessine). Liée, un membre que le diagramme ne montre pas n'y figure pas.
  */
-const legendEntriesOf = (dim: Class_DataTagGroup, state: Type_CouronneState, plan: Type_DrawPlan): Type_LegendCheckEntry[] => {
-  const listed = new Map((plan.legend[dim.id] ?? []).map(e => [e.member_id, e]))
-  const shown = [...listed.keys()].map(id => dim.tags_dict[id] as Class_DataTag | undefined).filter((m): m is Class_DataTag => m !== undefined)
+const legendEntriesOf = (dim: Class_DataTagGroup, state: Type_CouronneState, plan: Type_DrawPlan): Type_LegendRow[] => {
+  // os#1527 — les lignes du MODÈLE COMMUN (`couronneLegendRows` → `dimensionLegendRows`), les mêmes
+  // que la légende du Sankey : en-têtes des ancêtres ouverts, retraits relatifs ; la couleur et l'ordre
+  // des secteurs dessinés se posent au tracé (`drawnLegendRows`).
+  const listed = new Map((plan.legend[dim.id] ?? []).map(e => [e.member_id, { checked: e.checked }]))
   const focus = (state.dims[dim.id]?.focus ?? []).map(id => dim.tags_dict[id] as Class_DataTag | undefined)
     .filter((m): m is Class_DataTag => m !== undefined)
-  const inScope = (m: Class_DataTag) => focus.length === 0 || focus.some(f => m !== f && m.hasAncestor(f))
-  const holds = (m: Class_DataTag) => shown.some(x => x !== m && x.hasAncestor(m))
-  const out: Type_LegendCheckEntry[] = []
-  const visit = (m: Class_DataTag) => {
-    const e = listed.get(m.id)
-    if (e !== undefined) {
-      out.push({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m), depth: dim.depthOf(m), checked: e.checked })
-      return
-    }
-    if (!holds(m)) return
-    if (inScope(m)) out.push({ id: memberSectorId(dim.id, m.id), label: displayedNameOf(m), depth: dim.depthOf(m), checked: true, heading: true })
-    ;(m.children as Class_DataTag[]).forEach(visit)
-  }
-  dimensionRootsOf(dim).forEach(visit)
-  return out
+  return couronneLegendRows(
+    dim, dimensionRootsOf(dim) as unknown as Class_DataTag[], listed, focus,
+    m => displayedNameOf(m), (m, ancestor) => m.hasAncestor(ancestor)
+  )
 }
 
 /**
