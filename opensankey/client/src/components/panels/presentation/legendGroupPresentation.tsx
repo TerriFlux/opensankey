@@ -35,6 +35,7 @@ import { TAG_GROUP_VIEW_REPRESENTATION_ID } from '../../../Representations/repre
 import { TAG_GROUP_VIEW_OPTION_KEY } from '../../../Representations/TagGroupViewRepresentation'
 import type { Type_Presentable } from './openPresentation'
 import { placeFloatingNear } from './openPresentation'
+import { ui_line_strong, ui_white } from '../../../css/uiTokens'
 
 export { isLegendGroupZoneId }
 
@@ -75,7 +76,7 @@ const CHECKER_BACKGROUND = {
     'linear-gradient(45deg, #c8c8c8 25%, transparent 25%, transparent 75%, #c8c8c8 75%)',
   backgroundSize: '0.3rem 0.3rem',
   backgroundPosition: '0 0, 0.15rem 0.15rem',
-  backgroundColor: '#ffffff'
+  backgroundColor: ui_white
 }
 
 /** Carré d'une étiquette : sa couleur à son opacité, sur un damier quand le style ne fixe que celle-ci. */
@@ -85,7 +86,7 @@ const TagSwatch = ({ color, opacity, checker }: { color: string, opacity: number
     className={checker ? 'legend_swatch_checker' : undefined}
     style={{
       flex: 'none', width: '0.6rem', height: '0.6rem', borderRadius: '2px',
-      border: '1px solid #cbd5e0', display: 'inline-block',
+      border: `1px solid ${ui_line_strong}`, display: 'inline-block',
       ...(checker ? CHECKER_BACKGROUND : {})
     }}
   >

@@ -42,6 +42,7 @@ import {
 } from '../../types/PanelManager'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { default_font_size } from '../../css/Theme'
+import { ui_bg_subtle, ui_ink_disabled, ui_line, ui_line_strong } from '../../css/uiTokens'
 
 // react-draggable : typings relâchés comme dans SankeyMenus (les props
 // deviennent requises selon la source des @types tirée par le CI).
@@ -177,8 +178,8 @@ const PanelHeader = ({
         alignItems: 'center',
         gap: '0.25rem',
         padding: '0.2rem 0.3rem',
-        borderBottom: '1px solid #e2e8f0',
-        background: '#f7fafc',
+        borderBottom: `1px solid ${ui_line}`,
+        background: ui_bg_subtle,
         // Saisissable : déplacer la pop-up, ou DÉTACHER un menu ancré (Lot 6).
         cursor: (mode === 'popup' || mode === 'sidebar') ? 'grab' : 'default',
         userSelect: 'none'
@@ -303,7 +304,7 @@ const SidebarResizeHandle = ({ startWidth, onPreview, onCommit }: {
       style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: '7px',
         cursor: 'ew-resize', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#cbd5e0', zIndex: 1
+        color: ui_line_strong, zIndex: 1
       }}
       _hover={{ color: 'gray.500', bg: 'rgba(0,0,0,0.04)' }}
     >
@@ -341,7 +342,7 @@ const PopupResizeHandle = ({ startW, startH, onPreview, onCommit }: {
       style={{
         position: 'absolute', right: 0, bottom: 0, width: '16px', height: '16px',
         cursor: 'nwse-resize', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
-        padding: '2px', color: '#a0aec0', zIndex: 1
+        padding: '2px', color: ui_ink_disabled, zIndex: 1
       }}
       _hover={{ color: 'gray.500' }}
     >
@@ -625,7 +626,7 @@ const PanelFrame = ({
           maxWidth={is_tooltip ? TOOLTIP_MAX_W + 'px' : undefined}
           height={is_popup ? eff_h + 'px' : undefined}
           maxHeight={is_tooltip ? '60vh' : undefined}
-          borderLeft={is_sidebar ? '1px solid #e2e8f0' : undefined}
+          borderLeft={is_sidebar ? `1px solid ${ui_line}` : undefined}
           borderRadius={is_sidebar ? undefined : 'md'}
           boxShadow={is_sidebar ? undefined : '0 4px 16px rgba(0, 0, 0, 0.25)'}
           border={is_sidebar ? undefined : '1px solid'}
@@ -715,7 +716,7 @@ export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }
       width={panels.sidebar_width_px + 'px'}
       zIndex={PANEL_Z_SIDEBAR - 1}
       bg='white'
-      borderLeft='1px solid #e2e8f0'
+      borderLeft={`1px solid ${ui_line}`}
     />
   )
 }

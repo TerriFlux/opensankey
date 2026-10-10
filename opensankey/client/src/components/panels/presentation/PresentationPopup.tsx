@@ -45,6 +45,7 @@ import {
 } from './PresentationBlockRegistry'
 import type { Type_Presentable } from './openPresentation'
 import { LegendTagGroupBlock, legendTagGroupOf, openTagGroupView } from './legendGroupPresentation'
+import { ui_bg_muted, ui_ink_disabled, ui_ink_muted, ui_ink_secondary } from '../../../css/uiTokens'
 
 // Blocs de CONTENU, patron fixe. Les diagrammes (unitaire / analyse) n'y figurent pas : ce sont
 // des natures du volet, pas des blocs de présentation (cf. l'en-tête).
@@ -76,7 +77,7 @@ const CollapsibleBlock = ({ title, summary, is_open, onToggle, children }: React
   is_open: boolean
   onToggle: () => void
 }>) => (
-  <Box style={{ borderTop: '1px solid #edf2f7' }}>
+  <Box style={{ borderTop: `1px solid ${ui_bg_muted}` }}>
     <Box
       role='button'
       tabIndex={0}
@@ -90,18 +91,18 @@ const CollapsibleBlock = ({ title, summary, is_open, onToggle, children }: React
         padding: '0.15rem 0.1rem', cursor: 'pointer', userSelect: 'none'
       }}
     >
-      <Box as='span' style={{ color: '#718096', fontSize: '0.55rem', flex: 'none' }}>
+      <Box as='span' style={{ color: ui_ink_muted, fontSize: '0.55rem', flex: 'none' }}>
         {is_open ? <FaChevronDown /> : <FaChevronRight />}
       </Box>
       <Text as='span' style={{
         fontSize: '0.6rem', letterSpacing: '0.05em',
-        textTransform: 'uppercase', color: '#4a5568', fontWeight: 600
+        textTransform: 'uppercase', color: ui_ink_secondary, fontWeight: 600
       }}>
         {title}
       </Text>
       {summary && (
         <Text as='span' style={{
-          marginLeft: 'auto', fontSize: '0.6rem', color: '#a0aec0',
+          marginLeft: 'auto', fontSize: '0.6rem', color: ui_ink_disabled,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%'
         }}>
           {summary}

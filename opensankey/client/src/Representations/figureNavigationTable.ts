@@ -37,6 +37,7 @@ import {
   drawingMenuContent, refreshFigureNavPopover, settingsMenuContent, toggleFigureNavPopover, zoomPickerContent,
   type Type_FigureNavZoomPick
 } from './figureNavigationPopover'
+import { ui_accent, ui_bg_selected, ui_danger, ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_line, ui_line_strong } from '../css/uiTokens'
 
 /** Une colonne : un niveau d'une dimension. */
 export interface Type_FigureNavLevel {
@@ -164,7 +165,7 @@ export interface Type_FigureNavTable {
 /** Le repli, par vignette, le temps de la session (un état d'affichage, pas un réglage). */
 const collapsed_tables = new Set<string>()
 
-const ACCENT = '#2b6cb0'
+const ACCENT = ui_accent
 
 /** La largeur d'une case de zoom : au-delà, le nom se coupe (« Produits bruts - Cér… +1 »). */
 const ZOOM_CELL_WIDTH = '8.5rem'
@@ -221,7 +222,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   // 05/10/2026 — un cran plus grand et plus aéré (Jean-Yves) : 12 px (11 avant), interligne 1,45.
   box.style.fontSize = '12px'
   box.style.lineHeight = '1.45'
-  box.style.color = '#2d3748'
+  box.style.color = ui_ink
   box.style.display = 'flex'
   box.style.alignItems = 'flex-start'
   box.style.gap = '0.3rem'
@@ -240,7 +241,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   const collapsed = collapsed_tables.has(model.memory_key)
   const fold = plainButton(collapsed ? '▸' : '▾', model.labels.title)
   fold.className = 'figure_navigation_fold'
-  fold.style.color = '#718096'
+  fold.style.color = ui_ink_muted
   fold.style.flex = '0 0 auto'
   fold.style.width = '0.9rem'
   keepClick(fold, () => {
@@ -258,7 +259,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   if (settings.length > 0) {
     const gear = plainButton('⚙', model.labels.settings)
     gear.className = 'figure_navigation_settings'
-    gear.style.color = '#718096'
+    gear.style.color = ui_ink_muted
     gear.style.flex = '0 0 auto'
     gear.style.fontSize = '12px'
     const key = `${model.memory_key}|settings`
@@ -307,7 +308,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     title.className = 'figure_navigation_names_title'
     title.textContent = prefix.title
     title.style.fontWeight = '600'
-    title.style.color = '#718096'
+    title.style.color = ui_ink_muted
     title.style.whiteSpace = 'nowrap'
     title.style.padding = '0 0.5rem 0 0'
     if (columns > 0) top.insertCell().colSpan = 2 * columns
@@ -320,7 +321,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
     const head = table.insertRow()
     head.className = 'figure_navigation_head'
     // 05/10/2026 — un filet fin entre les lignes de dimensions (Jean-Yves : séparer les en-têtes).
-    if (i > 0) head.style.borderTop = '1px solid #e2e8f0'
+    if (i > 0) head.style.borderTop = `1px solid ${ui_line}`
     if (move && (model.dimensions.length > 2 || i === 0)) {
       const order = head.insertCell()
       order.className = 'figure_navigation_order'
@@ -331,11 +332,11 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       const arrow = (text: string, title: string, go: () => void, disabled = false) => {
         const b = plainButton(text, title)
         b.style.display = 'block'
-        b.style.color = disabled ? '#cbd5e0' : '#4a5568'
+        b.style.color = disabled ? ui_line_strong : ui_ink_secondary
         b.style.fontSize = '12px'
         b.style.lineHeight = '1'
         b.style.padding = '0.05rem 0.15rem'
-        b.style.border = '1px solid #cbd5e0'
+        b.style.border = `1px solid ${ui_line_strong}`
         b.style.borderRadius = '3px'
         b.style.background = 'white'
         b.style.margin = '0.05rem 0'
@@ -381,7 +382,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       sum.className = 'figure_navigation_summary'
       sum.textContent = ` ${dim.summary}`
       sum.style.fontWeight = '400'
-      sum.style.color = '#718096'
+      sum.style.color = ui_ink_muted
       sum.style.fontStyle = 'italic'
       name.appendChild(sum)
     }
@@ -391,7 +392,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       const key = `${model.memory_key}|members|${dim.id}`
       const caret = plainButton(' ▾', model.labels.members)
       caret.className = 'figure_navigation_members'
-      caret.style.color = '#718096'
+      caret.style.color = ui_ink_muted
       caret.style.fontSize = '9px'
       caret.dataset.navPopover = key
       keepClick(caret, () => toggleFigureNavPopover(key, caret, members))
@@ -411,10 +412,10 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       const th = head.insertCell()
       const td = head.insertCell()
       th.style.padding = '0.2rem 0.35rem 0.2rem 0.45rem'
-      th.style.borderLeft = level ? '1px solid #e2e8f0' : 'none'
+      th.style.borderLeft = level ? `1px solid ${ui_line}` : 'none'
       td.style.padding = '0.2rem 0.45rem 0.2rem 0.3rem'
       // 05/10/2026 — L'EN-TÊTE ET SA CASE DE ZOOM SE DISTINGUENT : un filet pointillé les sépare.
-      td.style.borderLeft = level ? '1px dotted #cbd5e0' : 'none'
+      td.style.borderLeft = level ? `1px dotted ${ui_line_strong}` : 'none'
       for (const cell of [th, td]) {
         cell.style.whiteSpace = 'nowrap'
         if (i > 0) cell.style.paddingTop = '0.35rem'
@@ -422,13 +423,13 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       if (!level) continue
       th.className = level.active ? 'figure_navigation_level figure_navigation_active' : 'figure_navigation_level'
       if (level.active) {
-        th.style.background = '#ebf4ff'
+        th.style.background = ui_bg_selected
         th.style.boxShadow = `inset 0 -2px 0 ${ACCENT}`
       }
       if (level.column) th.className += ' figure_navigation_column'
       const tip = level.column ? model.labels.uncut(level.label) : model.labels.cut_by(level.label)
       const head_btn = plainButton(level.label, level.choose_with ? `${tip}\n${model.labels.ctrl_hint}` : tip)
-      head_btn.style.color = level.active ? ACCENT : '#2d3748'
+      head_btn.style.color = level.active ? ACCENT : ui_ink
       head_btn.style.fontWeight = level.active ? '700' : '600'
       // 04/10/2026 — clic simple : cette colonne seule (sur la colonne qui découpe : la désélectionner) ;
       // ctrl+clic ou ⌘+clic : l'ajouter aux colonnes qui découpent, ou l'en retirer.
@@ -473,7 +474,7 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
     const block = document.createElement('div')
     block.className = 'figure_navigation_column_dimension'
     if (i > 0) {
-      block.style.borderTop = '1px solid #e2e8f0'
+      block.style.borderTop = `1px solid ${ui_line}`
       block.style.paddingTop = '0.3rem'
     }
     list.appendChild(block)
@@ -502,7 +503,7 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       sum.textContent = dim.summary
       sum.style.fontWeight = '400'
       sum.style.fontStyle = 'italic'
-      sum.style.color = '#718096'
+      sum.style.color = ui_ink_muted
       head.appendChild(sum)
     }
     const members = dim.members
@@ -510,7 +511,7 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       const key = `${model.memory_key}|members|${dim.id}`
       const caret = plainButton('▾', model.labels.members)
       caret.className = 'figure_navigation_members'
-      caret.style.color = '#718096'
+      caret.style.color = ui_ink_muted
       caret.style.fontSize = '9px'
       caret.dataset.navPopover = key
       keepClick(caret, () => toggleFigureNavPopover(key, caret, members))
@@ -533,7 +534,7 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       item.className = level.active ? 'figure_navigation_level figure_navigation_active' : 'figure_navigation_level'
       const tip = level.column ? model.labels.uncut(level.label) : model.labels.cut_by(level.label)
       const btn = plainButton(level.label, tip)
-      btn.style.color = level.active ? ACCENT : '#2d3748'
+      btn.style.color = level.active ? ACCENT : ui_ink
       btn.style.fontWeight = level.active ? '700' : '400'
       if (level.active) btn.style.borderBottom = `2px solid ${ACCENT}`
       const choose = level.choose
@@ -607,7 +608,7 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLElement, where: string
     td.dataset.navPopover = key
     const caret = plainButton('▾', model.labels.pick_zoom)
     caret.className = 'figure_navigation_pick'
-    caret.style.color = '#718096'
+    caret.style.color = ui_ink_muted
     caret.style.flex = '0 0 auto'
     caret.style.fontSize = '9px'
     caret.style.padding = '0 0.1rem'
@@ -626,7 +627,7 @@ const fillZoomCell = (model: Type_FigureNavTable, td: HTMLElement, where: string
   if (zooms.length > 0 && level.clear) {
     const x = plainButton('✕', model.labels.clear_zoom)
     x.className = 'figure_navigation_clear'
-    x.style.color = '#c53030'
+    x.style.color = ui_danger
     x.style.flex = '0 0 auto'
     // Collé au membre : en fin de case, il toucherait l'en-tête du niveau suivant.
     keepClick(x, level.clear)
@@ -641,7 +642,7 @@ const checkbox = (label: string, checked: boolean, set: (on: boolean) => void, f
   wrap.style.alignItems = 'center'
   wrap.style.gap = '0.3rem'
   wrap.style.cursor = frozen ? 'not-allowed' : 'pointer'
-  wrap.style.color = frozen ? '#a0aec0' : '#2d3748'
+  wrap.style.color = frozen ? ui_ink_disabled : ui_ink
   if (frozen) wrap.title = frozen
   const box = document.createElement('input')
   box.type = 'checkbox'
@@ -665,7 +666,7 @@ const dropdown = (options: Type_FigureNavOption[], value: string, set: (value: s
   const select = document.createElement('select')
   select.style.font = 'inherit'
   select.style.padding = '0 0.2rem'
-  select.style.border = '1px solid #cbd5e0'
+  select.style.border = `1px solid ${ui_line_strong}`
   select.style.borderRadius = '3px'
   select.style.background = 'white'
   select.style.maxWidth = '16rem'
@@ -694,7 +695,7 @@ const controlLabel = (text: string): HTMLSpanElement => {
 const pickButton = (model: Type_FigureNavTable, key: string, title: string, summary: string, pick: Type_FigureNavZoomPick): HTMLElement => {
   const b = plainButton(`${summary} ▾`, title)
   b.className = 'figure_navigation_reader_pick'
-  b.style.border = '1px solid #cbd5e0'
+  b.style.border = `1px solid ${ui_line_strong}`
   b.style.borderRadius = '3px'
   b.style.background = 'white'
   b.style.padding = '0 0.3rem'
@@ -758,7 +759,7 @@ const fillControlCell = (model: Type_FigureNavTable, cell: HTMLElement, dim_id: 
   }
   const multi = checkbox(control.multi_label, control.multi, control.set_multi)
   multi.style.fontSize = '11px'
-  multi.style.color = '#4a5568'
+  multi.style.color = ui_ink_secondary
   row.appendChild(multi)
 }
 
@@ -770,8 +771,8 @@ const drawingButton = (model: Type_FigureNavTable, dim_id: string, choice: Type_
   b.style.display = 'inline-flex'
   b.style.alignItems = 'center'
   b.style.gap = '0.1rem'
-  b.style.color = '#4a5568'
-  b.style.border = '1px solid #cbd5e0'
+  b.style.color = ui_ink_secondary
+  b.style.border = `1px solid ${ui_line_strong}`
   b.style.borderRadius = '3px'
   b.style.padding = '0 0.15rem'
   b.style.marginRight = '0.3rem'
@@ -782,7 +783,7 @@ const drawingButton = (model: Type_FigureNavTable, dim_id: string, choice: Type_
   const caret = document.createElement('span')
   caret.textContent = '▾'
   caret.style.fontSize = '9px'
-  caret.style.color = '#718096'
+  caret.style.color = ui_ink_muted
   b.appendChild(caret)
   const key = `${model.memory_key}|draw|${dim_id}`
   b.dataset.navPopover = key

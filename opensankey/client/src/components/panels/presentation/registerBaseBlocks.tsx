@@ -39,6 +39,7 @@ import {
   presentation_block_registry,
   type Type_BlockRenderContext
 } from './PresentationBlockRegistry'
+import { ui_bg_muted, ui_ink_secondary } from '../../../css/uiTokens'
 
 // --- Accès défensif aux données ---------------------------------------------
 
@@ -168,7 +169,7 @@ const linkSeries = (el: Unknown_Element): Type_LinkSeries | null => {
 
 const SERIES_BAR_FILL = '#9ac2ae'
 const SERIES_BAR_CURRENT = '#2f855a'
-const SERIES_BAR_TRACK = '#edf2f7'
+const SERIES_BAR_TRACK = ui_bg_muted
 
 const SeriesBars = ({ series, compact }: { series: Type_LinkSeries, compact: boolean }) => {
   // Échelle commune à toutes les barres — c'est ce qui les rend comparables. Une
@@ -196,7 +197,7 @@ const SeriesBars = ({ series, compact }: { series: Type_LinkSeries, compact: boo
             style={{
               maxWidth: '11rem', whiteSpace: 'nowrap',
               overflow: 'hidden', textOverflow: 'ellipsis',
-              color: e.is_current ? '#22543d' : '#4a5568',
+              color: e.is_current ? '#22543d' : ui_ink_secondary,
               fontWeight: e.is_current ? 700 : 400
             }}
           >
@@ -215,7 +216,7 @@ const SeriesBars = ({ series, compact }: { series: Type_LinkSeries, compact: boo
             as='span'
             style={{
               fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
-              color: e.is_current ? '#22543d' : '#4a5568',
+              color: e.is_current ? '#22543d' : ui_ink_secondary,
               fontWeight: e.is_current ? 700 : 400
             }}
           >
@@ -360,7 +361,7 @@ export function registerBasePresentationBlocks(): void {
                 key={n + i}
                 as='span'
                 style={{
-                  background: '#edf2f7', borderRadius: '4px',
+                  background: ui_bg_muted, borderRadius: '4px',
                   padding: '0 0.3rem', fontSize: '0.7rem', whiteSpace: 'nowrap'
                 }}
               >
