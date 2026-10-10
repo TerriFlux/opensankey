@@ -92,9 +92,18 @@ describe('os#1527 — une meme dimension hierarchique, les memes lignes', () => 
 
   test('un membre decoche (non dessine) reste derriere son voisin', () => {
     const rows = dimensionLegendRows({ id: 'pays' }, { listed: LISTED, labelOf: m => m.display_name })
+      .map(r => r.target?.member_id === 'france' ? { ...r, checked: false } : r)
     const sorted = sortLegendRowsByDrawing(rows, r => r.target?.member_id === 'france' ? undefined
       : DRAWN.findIndex(m => m.id === r.target?.member_id))
     expect(sorted.map(r => r.label)).toEqual(['Afrique', 'Europe', 'France', 'Allemagne'])
+  })
+
+  test('un membre coche sans rien a dessiner va en fin de son niveau', () => {
+    const rows = dimensionLegendRows({ id: 'pays' }, { listed: LISTED, labelOf: m => m.display_name })
+      .map(r => r.kind === 'entry' ? { ...r, checked: true } : r)
+    const sorted = sortLegendRowsByDrawing(rows, r => r.target?.member_id === 'afrique' ? undefined
+      : DRAWN.findIndex(m => m.id === r.target?.member_id))
+    expect(sorted.map(r => r.label)).toEqual(['Europe', 'Allemagne', 'France', 'Afrique'])
   })
 })
 
