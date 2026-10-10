@@ -265,11 +265,15 @@ export function sortLegendRowsByDrawing(
     return node.rank
   }
   const order = (nodes: Node[]): Node[] => {
-    // Un frère sans rang hérite de celui qui le précède : il reste derrière lui.
+    // Un frère DÉCOCHÉ sans rang hérite de celui qui le précède : il reste derrière lui. Un frère sans
+    // rang parce qu'il n'a RIEN à dessiner (valeur nulle, toujours coché) va à la fin — Julien, 10/10 :
+    // « Viande chevaline » sans secteur restait en tête.
     let previous = -Infinity
     const keyed = nodes.map((node, i) => {
-      const r = Number.isFinite(node.rank) ? node.rank : previous
-      previous = r
+      const r = Number.isFinite(node.rank) ? node.rank
+        : node.row.checked === false ? previous
+          : Infinity
+      if (Number.isFinite(r)) previous = r
       return { node, r, i }
     })
     keyed.sort((a, b) => a.r - b.r || a.i - b.i)

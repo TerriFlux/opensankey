@@ -33,7 +33,8 @@ import {
 } from '../Charts/NodeStatsCharts'
 import type { Type_ChartOptions, Type_StatSlice } from '../Charts/NodeStatsCharts'
 import {
-  appendLegendContextRows, couronneLegendRows, prependLegendNavigation, type Type_LegendCapsule
+  appendLegendCapsule, appendLegendContextRows, couronneLegendRows, placeCapsuleAtColumnEdge, prependLegendNavigation,
+  type Type_LegendCapsule
 } from '../Charts/legendChecks'
 import { tagGroupCarriesFormatting } from '../Elements/legendItems'
 import { legendDataTagZoneId } from '../Elements/legendIds'
@@ -2131,7 +2132,9 @@ export const registerAnalysisRepresentations = (): void => {
         container.innerHTML = ''
         const titled = figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx))
         const below = style.legend_position === 'bottom'
-        const { breadcrumb, legend_navigation } = navigationOf(!below)
+        // os#1527 (Julien, 10/10) — la capsule replie la légende commune, comme sur la couronne seule.
+        const legend_shown = style.legend_visible !== false
+        const { breadcrumb, legend_navigation } = navigationOf(!below && legend_shown)
         const host = mountFigureTextZones(
           container, withMeasureCaption(titled, measureCaptionOf(ctx, titled[0]?.text ?? '')), breadcrumb)
         // 02/10/2026 — UNE LÉGENDE COMMUNE (Julien : « pour les multiples, il ne faut pas voir les
@@ -2139,7 +2142,9 @@ export const registerAnalysisRepresentations = (): void => {
         // intéressante »). Les cases n'écrivent plus le nom des parts — ce sont les mêmes partout —
         // et une seule légende les nomme, posée d'office, à la place que dit `legend_position`.
         // Sa place est RÉSERVÉE avant les cases : elles se mesurent sur ce qui reste, toutes égales.
-        const room = smallMultiplesLegendRoom(style, host.clientWidth, host.clientHeight, legend_navigation !== undefined)
+        const room = legend_shown
+          ? smallMultiplesLegendRoom(style, host.clientWidth, host.clientHeight, legend_navigation !== undefined)
+          : 0
         const frame = document.createElement('div')
         frame.style.display = 'flex'
         frame.style.flexDirection = below ? 'column' : style.legend_position === 'left' ? 'row-reverse' : 'row'
@@ -2152,8 +2157,12 @@ export const registerAnalysisRepresentations = (): void => {
         legend.style.flex = `0 0 ${Math.max(0, Math.floor(room))}px`
         legend.style.minWidth = '0'
         legend.style.minHeight = '0'
-        legend.style.alignSelf = below ? 'stretch' : 'center'
+        // os#1527 (Julien, 10/10) — à côté, la colonne part du HAUT, comme celle du Sankey.
+        legend.style.alignSelf = 'stretch'
         legend.style.maxHeight = '100%'
+        if (!legend_shown) legend.style.display = 'none'
+        const capsule_spec = legendCapsuleOf(ctx)
+        const capsule = capsule_spec ? appendLegendCapsule(frame, capsule_spec, legend_shown, style.legend_position) : undefined
         frame.appendChild(grid)
         frame.appendChild(legend)
         grid.style.flex = '1 1 0'
@@ -2316,6 +2325,7 @@ export const registerAnalysisRepresentations = (): void => {
         legendChecksOf(ctx))
         // os#1527 — « Année : 2015 » sous la légende commune, comme la couronne seule et le diagramme.
         appendLegendContextRows(legend, legendContextOf(ctx), style.legend_position === 'bottom')
+        if (capsule && legend_shown && !below) placeCapsuleAtColumnEdge(capsule, frame, legend, style.legend_position)
         return () => {
           teardowns.forEach(f => f())
           publishFigureZoom(ctx.window_id, ctx.pane_key, null)
