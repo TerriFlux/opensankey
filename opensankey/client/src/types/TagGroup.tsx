@@ -1637,8 +1637,14 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public get reader_control(): Type_ReaderControl | undefined { return this._reader_control }
   public set reader_control(value: Type_ReaderControl | undefined) { this._reader_control = value }
 
-  /** os#1511 — un diagramme par membre : `undefined` = automatique (cf. `_member_bands`). */
+  /** os#1511 — un diagramme par membre : le réglage tel qu'écrit (`undefined` : non posé). */
   public get member_bands(): boolean | undefined { return this._member_bands }
+  /**
+   * 10/10/2026 (os#1511, lot 4) — LA RÈGLE « UN DIAGRAMME PAR MEMBRE », la seule : il se DEMANDE
+   * (Julien, 08/10 : plus d'automatique dès deux porteurs). Désagrégation, gestes, légende et modèle
+   * commun la lisent ici, plus chacun à sa façon.
+   */
+  public get draws_member_bands(): boolean { return this._member_bands === true }
   public set member_bands(value: boolean | undefined) {
     this._member_bands = value
     // Sous des bandes demandées, tous les nœuds portent la dimension (`Node.driving_dimension`), y
@@ -2118,7 +2124,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   private get _in_member_bands_context(): boolean {
-    return (this._ref_sankey.data_taggs_list as Class_DataTagGroup[]).some(t => t.member_bands === true)
+    return (this._ref_sankey.data_taggs_list as Class_DataTagGroup[]).some(t => t.draws_member_bands)
   }
 
   /**
@@ -2132,7 +2138,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /** Peut-elle peindre les flux du diagramme par membre (bouton pinceau de la légende) ? */
   public get may_paint_member_bands_flows(): boolean {
-    return this.member_bands === true || (this.drawing === 'nodes' && this.selected_tags_list.length > 1)
+    return this.draws_member_bands || (this.drawing === 'nodes' && this.selected_tags_list.length > 1)
   }
 
   /**
@@ -2886,7 +2892,7 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
  * `undefined` hors diagramme par membre.
  */
 export function flowPainterOf(dims: Class_DataTagGroup[]): Class_DataTagGroup | undefined {
-  const bande = dims.find(t => t.member_bands === true)
+  const bande = dims.find(t => t.draws_member_bands)
   // Hors diagramme par membre (Julien, 09/10 : « je ne peux pas sélectionner les autres dataTags
   // pour la couleur ») : seule une dimension en nœuds CHOISIE peint ; sinon, les règles habituelles.
   if (bande === undefined) {

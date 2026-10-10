@@ -451,7 +451,8 @@ type Type_RepresentationCommon = {
   /**
    * 07/10/2026 (os#1511, lot 2) — posée sur l'origine d'un élément engendré, la figure NE se restreint
    * PAS au membre : elle montre l'origine entière (le tableau croisé « Produits agricoles → Europe »
-   * ouvre tous les continents). Absent : la portée de départ est le membre (la couronne).
+   * ouvre tous les continents). Absent : la portée de départ est le membre. 10/10/2026 (lot 4) — couronne,
+   * barres et tableau la posent tous (une règle pour les trois).
    */
   generated_origin_whole?: boolean
   /**

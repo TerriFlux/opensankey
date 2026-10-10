@@ -51,7 +51,7 @@ import {
 } from './analysisFigureAttributes'
 import {
   dataDimensionLevelsDisplay, readFigureDataFocus, readFigureDimensionZooms, readFigureFocus, readFigureLevelsDisplay,
-  readFigureOpening, smallMultiplesApply
+  isFigureLinked, readFigureOpening, smallMultiplesApply
 } from './figureOpening'
 
 /** La clé unique de l'état d'une couronne sur dimensions de données. */
@@ -318,10 +318,20 @@ export const readCouronneState = (
   declared_ids?: string[],
   reader: Type_CouronneReader = 'couronne'
 ): Type_CouronneState => {
-  const raw = options?.[COURONNE_KEY]
-  const version = raw !== null && typeof raw === 'object' ? (raw as Type_Options)['version'] : undefined
   const state = readCouronneStateAnyVersion(options, sankey, linked, declared_ids)
-  return reader === 'matrix' && !(typeof version === 'number' && version >= 2) ? matrixLegacyColumns(state) : state
+  return reader === 'matrix' && couronneStateVersionOf(options) < 2 ? matrixLegacyColumns(state) : state
+}
+
+/**
+ * 10/10/2026 (os#1511, lot 4) — LA VERSION DU SAC, lue à un seul endroit : celle écrite sous
+ * `COURONNE_KEY` ; une clé sans version est la 1 (sa!936) ; pas de clé du tout (anciennes clés,
+ * ou rien), 0. Une version future se lit comme la nôtre, au mieux.
+ */
+export const couronneStateVersionOf = (options: Type_Options | null | undefined): number => {
+  const raw = options?.[COURONNE_KEY]
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return 0
+  const version = (raw as Type_Options)['version']
+  return typeof version === 'number' && version >= 1 ? version : 1
 }
 
 /**
@@ -346,7 +356,7 @@ const readCouronneStateAnyVersion = (
   linked?: boolean,
   declared_ids?: string[]
 ): Type_CouronneState => {
-  const is_linked = linked ?? readFigureOpening(options).data.linked
+  const is_linked = linked ?? isFigureLinked(options)
   const raw_stored = storedCouronneState(options?.[COURONNE_KEY], is_linked)
   const stored = raw_stored !== undefined && is_linked ? withDiagramFocus(raw_stored, sankey) : raw_stored
   if (stored !== undefined) {

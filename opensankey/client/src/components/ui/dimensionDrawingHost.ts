@@ -434,7 +434,7 @@ export const dimensionInMemberBands = (app_data: Class_ApplicationData, tagg: Cl
   // deux porteurs réglés.
   // Seulement DEMANDÉ (Julien, 08/10) : plus de passage d'office dès deux porteurs.
   void app_data
-  return tagg.member_bands === true
+  return tagg.draws_member_bands
 }
 
 /**
@@ -448,7 +448,7 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
   // Un seul diagramme par membre à la fois : tous les nœuds portent SA dimension.
   const others = on
     ? (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-      .filter(other => other !== tagg && other.member_bands === true)
+      .filter(other => other !== tagg && other.draws_member_bands)
     : []
   const before = tagg.member_bands
   const positions_before = manualPositionsOf([tagg])

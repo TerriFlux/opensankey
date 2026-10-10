@@ -117,6 +117,8 @@ export interface Type_FigureNatureSpec {
   fresh_own?: { [key: string]: unknown }
   /** Lit le cube : un élément engendré lui donne son origine (cf. `Type_RepresentationEntry`). */
   reads_generated_origin?: boolean
+  /** Cf. `Type_RepresentationEntry.generated_origin_whole`. */
+  generated_origin_whole?: boolean
   /**
    * LES PARTS, dans l'ordre du tracé. `null` = rien à dessiner ici (pas d'analyse, sujet sans
    * décomposition) : la figure ne s'affiche pas, et c'est une réponse, pas une panne.
@@ -177,6 +179,7 @@ export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
     attributes,
     fresh_own: spec.fresh_own,
     reads_generated_origin: spec.reads_generated_origin,
+    generated_origin_whole: spec.generated_origin_whole,
     draw: (container, ctx) => {
       const parts = spec.parts(ctx)
       if (parts === null) return undefined

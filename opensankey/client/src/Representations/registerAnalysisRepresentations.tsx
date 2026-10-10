@@ -49,7 +49,7 @@ import {
   HIERARCHY_FOCUS_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
 } from './analysisFigureAttributes'
 import {
-  readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
+  isFigureLinked, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
   withElementOpening
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
@@ -1748,10 +1748,11 @@ const donutClickGestures = (
   const in_pane = window_id !== undefined && pane_key !== undefined
   // Sans diagramme affiché, « le déplie dans le diagramme » n'écrit rien : le menu le grise
   // (`choiceUnavailable`), le geste s'y aligne.
-  const wants_unfold = (style.interaction_click === 'aggregate' || style.interaction_click === 'both')
-    && diagramIsShown(app_data)
-  const wants_drill = (style.interaction_click === 'zoom' || style.interaction_click === 'both')
-    && in_pane
+  // 10/10/2026 (os#1511, lot 4) — LA RÈGLE DES DIMENSIONS, ICI AUSSI (Julien : « oui ») : le réglage
+  // dit seulement Déplie / Zoome (`partClickModeOf`, les quatre valeurs d'avant ramenées à deux) ; que
+  // le DIAGRAMME suive, c'est le lien de la figure qui le décide (`isFigureLinked`), plus le réglage.
+  const wants_unfold = isFigureLinked(ctx.options) && diagramIsShown(app_data)
+  const wants_drill = partClickModeOf(style.interaction_click) === 'zoom' && in_pane
 
   const writePath = (path: string[]) => {
     app_data.menu_configuration.setMainZonePaneOptions(
@@ -2051,8 +2052,11 @@ export const registerAnalysisRepresentations = (): void => {
     // sur Céréales et je veux voir les pays qui importent »). L'usine reste « Déplie dans la couronne » :
     // une couronne enregistrée sans réglage s'ouvre comme avant.
     fresh_own: DONUT_FRESH_OWN,
-    // 06/10/2026 — sur un flux engendré (« exports vers l'Europe »), son origine zoomée sur l'Europe.
+    // 06/10/2026 — sur un flux engendré (« exports vers l'Europe »), son origine.
+    // 10/10/2026 (lot 4) — ENTIÈRE, comme le tableau croisé : une règle pour les deux (à l'essai chez
+    // Julien ; retirer `generated_origin_whole` rend le zoom sur le membre).
     reads_generated_origin: true,
+    generated_origin_whole: true,
     // os#1399 — LA CIBLE D UNE PART, resolue et non declaree : selon l axe de decomposition, un
     // secteur est un flux, un noeud enfant ou un tag. Le descripteur EFFECTIF est celui que la
     // figure dessine (reglage de vignette compris), donc celui qui dit ce qu on vient de cliquer.
@@ -2473,6 +2477,7 @@ export const registerAnalysisRepresentations = (): void => {
     socle: BARS_SOCLE,
     extra_attributes: ANALYSIS_ATTRIBUTES,
     reads_generated_origin: true,
+    generated_origin_whole: true,
     // La meme cible de part que la couronne, et pour la meme raison : c est la meme analyse, vue
     // autrement. Une barre porte l objet que l axe designe, exactement comme un secteur.
     resolveElementTarget: ({ target, ctx }) => analysisPartTarget(target, analysisOf(ctx)?.descriptor),

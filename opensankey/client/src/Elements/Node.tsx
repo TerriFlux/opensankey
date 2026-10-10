@@ -1105,7 +1105,7 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   private get implicit_driving_dimension(): Class_DataTagGroup | undefined {
     if (isGeneratedMemberId(this.id)) return undefined
-    return (this.sankey.data_taggs_list as Class_DataTagGroup[]).find(dimension => dimension.member_bands === true)
+    return (this.sankey.data_taggs_list as Class_DataTagGroup[]).find(dimension => dimension.draws_member_bands)
   }
 
   public set driving_dimension(dimension: Class_DataTagGroup | undefined) {

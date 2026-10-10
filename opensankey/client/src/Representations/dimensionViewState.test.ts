@@ -344,12 +344,13 @@ describe('os#1511 modele commun — le diagramme', () => {
     expect(engendres).toBe(sp.members.pays.length)
   })
 
-  test('deux porteurs : un diagramme par membre, sauf member_bands faux', () => {
+  // 10/10/2026 (lot 4) — un diagramme par membre se DEMANDE (`draws_member_bands`), plus d'automatique.
+  test('deux porteurs et un diagramme par membre demande : cases ; sans la demande, des noeuds', () => {
     const s = monterSocle()
     s.pays.selectMembers(['europe', 'ameriques'])
     nœud(s, 'A').driving_dimension = s.pays
     nœud(s, 'B').driving_dimension = s.pays
-    s.pays.drawingChanged()
+    s.pays.member_bands = true
     const st = fromDiagram(s.sankey)
     expect(st.dims.pays.role).toBe('cases')
     expect(labelOfDimension('sankey', st.dims.pays)).toBe('member_bands')
@@ -361,7 +362,7 @@ describe('os#1511 modele commun — le diagramme', () => {
     // Rang « en nœuds » : le patch coupe les bandes par membre.
     const nodes = { ...st, dims: { ...st.dims, pays: applyLabel(st.dims.pays, 'sankey', 'nodes') } }
     expect(toDiagramPatch(nodes, s.sankey).dims.pays).toEqual({ member_bands: false })
-    s.pays.member_bands = false
+    s.pays.member_bands = undefined
     expect(fromDiagram(s.sankey).dims.pays.role).toBe('parts')
   })
 
@@ -383,7 +384,8 @@ describe('os#1511 modele commun — le diagramme', () => {
     expect(s.filiere.banner).toBe('sequence')
     const per_member = { ...st, dims: { ...st.dims, pays: { ...applyLabel(st.dims.pays, 'sankey', 'member_bands'), focus: [], shown: ['europe', 'asie'] } } }
     const p = toDiagramPatch(per_member, s.sankey)
-    expect(p.dims.pays).toEqual({ selected: ['europe', 'asie'] })
+    // Un diagramme par membre se demande : le patch le pose.
+    expect(p.dims.pays).toEqual({ selected: ['europe', 'asie'], member_bands: true })
     expect(p.warnings.map(w => w.code)).toEqual(['carriers_needed', 'cases_need_two_carriers'])
     const exp = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'couronne', 'sunburst'), focus: [] } } }
     expect(toDiagramPatch(exp, s.sankey).warnings.map(w => w.code)).toEqual(['expansion_unsupported', 'carriers_needed'])
@@ -395,7 +397,7 @@ describe('os#1511 modele commun — le diagramme', () => {
     s.pays.selectMembers(['europe', 'ameriques'])
     nœud(s, 'A').driving_dimension = s.pays
     nœud(s, 'B').driving_dimension = s.pays
-    s.pays.drawingChanged()
+    s.pays.member_bands = true
     const st = fromDiagram(s.sankey)
     const cp = couronnePlan(st, s)
     expect(cp.cut.map(c => c.dimension_id)).toEqual(['filiere'])

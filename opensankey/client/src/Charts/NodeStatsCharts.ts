@@ -54,7 +54,7 @@ import {
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
 import { ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_line_strong } from '../css/uiTokens'
-import { OTHERS_COLOR } from '../Algorithms/DimensionOthers'
+import { foldSmallParts, OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 export interface Type_StatSlice {
   id: string
@@ -777,7 +777,7 @@ export const donutPartColors = (
   })
   const out = new Map<string, string>()
   parts.forEach((d, i) => {
-    if (d.id === '__others__') out.set(d.id, OTHERS_COLOR)
+    if (d.id === OTHERS_ID) out.set(d.id, OTHERS_COLOR)
     else if (st.parts_color_source === 'model' && d.color) out.set(d.id, d.color)
     // Hors descente, `branch_id` est absent : l'index du secteur commande, comme hier.
     else if (d.branch_id === undefined) out.set(d.id, paletteColor(i))
@@ -800,7 +800,7 @@ export const smallMultiplesLegendEntries = (
 ): Type_StatSlice[] => {
   const seen = new Map<string, Type_StatSlice>()
   drawn.forEach(kept => kept.forEach(s => { if (!seen.has(s.id)) seen.set(s.id, s) }))
-  const rank = (id: string) => id === '__others__'
+  const rank = (id: string) => id === OTHERS_ID
     ? Number.MAX_SAFE_INTEGER
     : (order.indexOf(id) < 0 ? Number.MAX_SAFE_INTEGER - 1 : order.indexOf(id))
   return [...seen.values()].sort((a, b) => rank(a.id) - rank(b.id))
@@ -833,7 +833,7 @@ export const donutLegendRows = <T>(
   legendTreeRows(
     entries,
     entry => st.legend_levels ? sliceLegendAncestors(sliceOf(entry)) : undefined,
-    entry => sliceOf(entry).id === '__others__'
+    entry => sliceOf(entry).id === OTHERS_ID
   )
 
 /**
@@ -939,7 +939,7 @@ export const drawSmallMultiplesLegend = (
   if (checks && blocks.length > 0) {
     const drawn_id = new Map<string, string>()
     entries.forEach(s => {
-      if (s.id === '__others__') return
+      if (s.id === OTHERS_ID) return
       const key = legendMemberKeyOf(s.id)
       if (!drawn_id.has(key)) drawn_id.set(key, s.id)
     })
@@ -972,7 +972,7 @@ export const drawSmallMultiplesLegend = (
         }).on('mouseout', () => { arcs().style('opacity', null) })
       })
     })
-    const others = entries.find(s => s.id === '__others__')
+    const others = entries.find(s => s.id === OTHERS_ID)
     if (others) {
       const row = root.append('div')
         .attr('class', 'node_stats_legend_row node_stats_legend_item')
@@ -1132,17 +1132,15 @@ const pctText = figurePercentText
 export const foldDonutParts = (
   slices: readonly Type_StatSlice[], st: Type_FigureChartStyle, others_label: string
 ): Type_StatSlice[] => {
-  const total = slices.reduce((s, d) => s + d.value, 0)
-  const kept: Type_StatSlice[] = []
-  let others = 0
-  orderParts([...slices], st.parts_order).forEach((s, i) => {
-    const under = st.parts_group_under > 0 && s.value / total < st.parts_group_under / 100
-    const over = st.parts_max > 0 && i >= st.parts_max
-    if (!under && !over) kept.push(s)
-    else others += s.value
+  // 10/10/2026 (os#1511, lot 4) — LA RÈGLE « AUTRES » EST UNE (`foldSmallParts`, celle des bandes, des
+  // nœuds et du tableau) : choix par VALEUR, plafond « Autres » compris, jamais une part repliée seule.
+  // Avant, la couronne repliait par RANG dans l'ordre affiché et pouvait replier une part seule.
+  const { kept, folded } = foldSmallParts(orderParts([...slices], st.parts_order), {
+    min_share_pct: st.parts_group_under, max_parts: st.parts_max
   })
-  if (others > 0) kept.push({ id: '__others__', label: others_label, value: others, color: OTHERS_COLOR })
-  return kept
+  if (folded.length === 0) return kept
+  const others = folded.reduce((s, d) => s + d.value, 0)
+  return [...kept, { id: OTHERS_ID, label: others_label, value: others, color: OTHERS_COLOR }]
 }
 
 /**
@@ -2569,7 +2567,7 @@ export const drawDonutChart = (
       return box
     }
     all_items.each(function (r) {
-      if (r.entry.slice.id === '__others__') return
+      if (r.entry.slice.id === OTHERS_ID) return
       this.insertBefore(boxOf(r.entry.checked, r.entry.slice.id, r.entry.slice.label), this.firstChild)
     })
   }
@@ -3182,7 +3180,7 @@ export const drawStackedBarChart = (
     color: (st.parts_color_source === 'model' && v.color) ? v.color : paletteColor(i)
   }))
   if (has_others) {
-    category_order.push({ id: '__others__', label: opts.others_label ?? 'Others', color: OTHERS_COLOR })
+    category_order.push({ id: OTHERS_ID, label: opts.others_label ?? 'Others', color: OTHERS_COLOR })
   }
   const kept_ids = new Set(kept.map(k => k.id))
 
@@ -3236,7 +3234,7 @@ export const drawStackedBarChart = (
     let acc = 0
     const bx = x(s.id) ?? 0
     category_order.forEach(cat => {
-      const value = cat.id === '__others__'
+      const value = cat.id === OTHERS_ID
         ? series_total(s) - kept_sum
         : (by_id.get(cat.id) ?? 0)
       if (value <= 0) return
