@@ -111,6 +111,17 @@ describe('os#1527 resume de la navigation et entrees de la colonne', () => {
     expect(navigationSummary(dims, t)).toBe('2023 · kt · Selection of produits')
   })
 
+  test('navigationSummary : ni case, ni niveau de detail, ni dimension en noeuds', () => {
+    const dims = [
+      dim('fil', 'Filiere', ['Volailles'], { reader_control: { kind: 'pick' } }),
+      dim('an', 'Annee', ['2023']),
+      dim('un', 'Unite', ['kt']),
+      dim('mat', 'Type de matiere', ['Matiere'], { reader_control: { kind: 'toggle' } }),
+      dim('poste', 'Ressources et emplois', ['Prod', 'Imp'], { drawing: 'nodes', reader_control: { kind: 'level' } })
+    ]
+    expect(navigationSummary(dims)).toBe('Volailles · 2023 · kt')
+  })
+
   test('colouredLegendItems : seule la dimension qui porte la couleur, par le releve donne', () => {
     const app = {
       drawing_area: {

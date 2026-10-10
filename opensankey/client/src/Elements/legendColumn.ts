@@ -19,6 +19,10 @@ export type Type_DimensionForColumn = {
   draws_bands?: boolean
   paints_member_bands_flows?: boolean
   selected_tags_list: { display_name?: string, name: string }[]
+  /** Dessin de la dimension (`nodes` : portée par des nœuds, nommés sur le dessin). */
+  drawing?: string
+  /** Commande du lecteur (`toggle`, `level`, `pick`), cf. types/ReaderControl. */
+  reader_control?: { kind: string }
 }
 
 /** Ce que le filtre lit de l'application. */
@@ -80,8 +84,13 @@ export const navigationSummary = (
   t?: (key: string, options?: { [k: string]: unknown }) => unknown
 ): string => {
   const colorer = legendColorerOf(dims)
+  // Julien, 10/10 (« Volailles · 2023 · kt · Matière » : trop bavard) — on ne résume que ce qui se
+  // CHOISIT membre par membre : pas une dimension réglée par une case ou un niveau de détail (son
+  // état se lit sur le dessin), ni une dimension portée par des nœuds (ses membres y sont nommés).
+  const resumable = (g: Type_DimensionForColumn) => g !== colorer && g.drawing !== 'nodes' &&
+    g.reader_control?.kind !== 'toggle' && g.reader_control?.kind !== 'level'
   return dims
-    .filter(g => g !== colorer)
+    .filter(resumable)
     .map(g => {
       const tags = g.selected_tags_list
       if (tags.length === 0) return ''
