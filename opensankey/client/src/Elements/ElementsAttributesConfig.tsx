@@ -186,7 +186,9 @@ export const font_families = [
   'Zapf Chancery,cursive',
 ]
 export const default_stick_to_drawing = true
-export const default_masked = true
+// os#1511 (Julien, 10/10 : « la plupart du temps elle doit être ouverte, et c'est l'utilisateur qui
+// décide de la fermer ») — la légende est OUVERTE par défaut. Son état est toujours écrit (`mask_legend`).
+export const default_masked = false
 export const default_display_legend_scale = false
 export const default_scale_legend_unit = ''
 export const default_scale_legend_ratio = 1

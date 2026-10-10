@@ -35,6 +35,11 @@ export interface Type_DiagramNavigationOptions {
   members?: (dim: Class_DataTagGroup) => ((close: () => void) => ReactNode) | null
   /** os#1526 — l'élément de l'hôte posé devant le nom d'une dimension (son menu), cf. `leading`. */
   leading?: (dim: Class_DataTagGroup) => HTMLElement | undefined
+  /**
+   * os#1511 (Julien, 10/10) — EN COLONNE, en haut de la légende : les commandes s'empilent, et une
+   * dimension PLATE à choix unique (Unité) y a sa liste.
+   */
+  vertical?: boolean
 }
 
 /**
@@ -44,11 +49,32 @@ export interface Type_DiagramNavigationOptions {
  * règle : la bande les montre, la barre du haut et Coordonnées les retirent. Rien en mode EMBARQUÉ,
  * dont le conteneur appartient à la page hôte : il garde ses sélecteurs.
  */
-export const diagramNavigationDimensions = (app_data: Class_ApplicationData): Class_DataTagGroup[] => {
+export const diagramNavigationDimensions = (
+  app_data: Class_ApplicationData, options: { with_flat?: boolean } = {}
+): Class_DataTagGroup[] => {
   if (app_data.publish_options.embedded) return []
   // Dans l'ORDRE des dimensions (`getTagGroupsAsList`), que ⇅ fait suivre au dessin.
+  // os#1511 (10/10) — en colonne, aussi les dimensions PLATES à choix unique (Unité) : leur liste y
+  // vit, la frise garde les séquences.
   return (app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs') as unknown as Class_DataTagGroup[])
-    .filter(dim => dim.is_hierarchical && dim.tags_list.length > 1)
+    .filter(dim => dim.tags_list.length > 1 &&
+      (dim.is_hierarchical || (options.with_flat === true && isFlatSingleChoice(dim))))
+}
+
+/** Une dimension plate à choix unique, hors frise (la séquence a sa barre). */
+const isFlatSingleChoice = (dim: Class_DataTagGroup): boolean =>
+  !dim.is_hierarchical && dim.banner === 'one' && dim.drawing !== 'nodes'
+
+/** os#1511 — LA LISTE d'une dimension plate à choix unique, en colonne. */
+const flatChoiceControl = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Type_FigureNavControl => {
+  const chosen = (dim.selected_tags_list as Class_DataTag[])[0]
+  return {
+    kind: 'level',
+    label: dim.reader_control?.label ?? dim.name,
+    options: (dim.tags_list as Class_DataTag[]).map(m => ({ value: m.id, label: levelShortName(m.display_name) })),
+    value: chosen?.id ?? '',
+    set: (id: string) => app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, [id], { multi: false, focus: [] }))
+  }
 }
 
 /**
@@ -214,7 +240,8 @@ export const buildDiagramNavigationTable = (
 ): HTMLElement => {
   const t = app_data.t
   const dimensions: Type_FigureNavDimension[] = dims.map(dim => {
-    const control = readerControlOf(app_data, dim)
+    const control = readerControlOf(app_data, dim) ??
+      (options.vertical === true && isFlatSingleChoice(dim) ? flatChoiceControl(app_data, dim) : undefined)
     if (control !== undefined) return { id: dim.id, name: dim.name, levels: [], control }
     const coupe = lireCoupe(dim, dim.selected_tags_list as Class_DataTag[])
     const levels = (dim.levels as string[]).map((raw, depth) => ({ raw, depth })).filter(l => l.depth >= coupe.entree)
@@ -254,6 +281,7 @@ export const buildDiagramNavigationTable = (
   return buildFigureNavigationTable({
     dimensions,
     move,
+    vertical: options.vertical,
     memory_key: options.memory_key,
     t: (key: string, o?: { [k: string]: unknown }) => t(key, o),
     labels: {

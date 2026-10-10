@@ -155,6 +155,8 @@ export interface Type_FigureNavTable {
   move?: (dim_id: string, delta: -1 | 1) => void
   /** La traduction, pour la liste à cases. */
   t: (key: string, options?: { [k: string]: unknown }) => unknown
+  /** os#1511 (10/10) — en colonne (haut de la légende) : les commandes passent à la ligne. */
+  vertical?: boolean
   /** La clé sous laquelle le repli se souvient (fenêtre + vignette). */
   memory_key: string
 }
@@ -278,6 +280,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   table.style.borderCollapse = 'collapse'
   table.style.tableLayout = 'auto'
   table.style.maxWidth = '100%'
+  if (model.vertical) table.style.width = '100%'
   const columns = Math.max(0, ...model.dimensions.map(d => d.control ? 0 : d.levels.length))
   // os#1511 — des commandes du LECTEUR : ni échange de dessin, ni titre commun ; elles se lisent seules.
   const has_controls = model.dimensions.some(d => d.control !== undefined)
@@ -349,7 +352,7 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
       cell.className = 'figure_navigation_control'
       cell.colSpan = 1 + 2 * columns
       cell.style.padding = '0.15rem 0.5rem 0.15rem 0'
-      cell.style.whiteSpace = 'nowrap'
+      cell.style.whiteSpace = model.vertical ? 'normal' : 'nowrap'
       if (i > 0) cell.style.paddingTop = '0.35rem'
       fillControlCell(model, cell, dim.id, dim.control)
       return
@@ -610,28 +613,43 @@ const fillControlCell = (model: Type_FigureNavTable, cell: HTMLTableCellElement,
   const row = document.createElement('div')
   row.style.display = 'flex'
   row.style.alignItems = 'center'
-  row.style.gap = '0.5rem'
+  row.style.gap = model.vertical ? '0.2rem 0.5rem' : '0.5rem'
   row.style.flexWrap = 'wrap'
   cell.appendChild(row)
+  // En colonne, une liste prend la largeur qui reste (elle ne déborde pas de la légende).
+  const fit = (el: HTMLElement) => {
+    if (!model.vertical) return el
+    el.style.flex = '1 1 8rem'
+    el.style.minWidth = '0'
+    el.style.maxWidth = '100%'
+    return el
+  }
   if (control.kind === 'toggle') {
     row.appendChild(checkbox(control.label, control.checked, control.set, control.frozen))
     return
   }
   row.appendChild(controlLabel(control.label))
   if (control.kind === 'level') {
-    row.appendChild(dropdown(control.options, control.value, control.set))
+    row.appendChild(fit(dropdown(control.options, control.value, control.set)))
     return
   }
   if (control.multi && control.pick) {
     const labels = control.options.filter(o => control.chosen.includes(o.value)).map(o => o.label)
-    row.appendChild(pickButton(model, `${model.memory_key}|reader|${dim_id}`, control.label, summaryOf(labels, '—'), control.pick))
+    row.appendChild(fit(pickButton(model, `${model.memory_key}|reader|${dim_id}`, control.label, summaryOf(labels, '—'), control.pick)))
   } else {
-    row.appendChild(dropdown(control.options, control.chosen[0] ?? '', control.choose))
+    row.appendChild(fit(dropdown(control.options, control.chosen[0] ?? '', control.choose)))
   }
   const sub = control.sub
   if (sub && !control.multi) {
+    if (model.vertical) {
+      // En colonne, la sous-filière a sa propre ligne, sous la filière.
+      const brk = document.createElement('div')
+      brk.style.flexBasis = '100%'
+      brk.style.height = '0'
+      row.appendChild(brk)
+    }
     row.appendChild(controlLabel(sub.label))
-    row.appendChild(pickButton(model, `${model.memory_key}|reader_sub|${dim_id}`, sub.label, sub.summary, sub.pick))
+    row.appendChild(fit(pickButton(model, `${model.memory_key}|reader_sub|${dim_id}`, sub.label, sub.summary, sub.pick)))
   }
   const multi = checkbox(control.multi_label, control.multi, control.set_multi)
   multi.style.fontSize = '11px'
