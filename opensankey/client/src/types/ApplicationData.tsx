@@ -311,6 +311,8 @@ export class Class_ApplicationData {
   // Per-side SVG-space padding applied around the diagram in raster/PDF/SVG exports
   // to absorb stroke-widths and font ascenders that getBBox doesn't include.
   public static readonly export_edge_padding: number = 5
+  /** os#1527 lot 1 — écart entre la légende et le dessin dans une image exportée (px d'image). */
+  public static readonly export_legend_gap: number = 20
 
   /**
    * os#1385 — L'ESPACE DE TRAVAIL qui porte ce document. Posé par le constructeur AVANT
@@ -4521,27 +4523,29 @@ export class Class_ApplicationData {
   }
 
   public pre_process_export_svg(convert_fo: boolean = false) {
-    // os#1527 lot 3 — la légende du panneau, cachée à l'écran, entre dans l'export À SA PLACE (à
-    // gauche du dessin) : montrée le temps du cadrage, du clone et de la mesure, recachée ensuite.
+    // os#1527 lot 1 — L'IMAGE PORTE LA LÉGENDE DE LA COLONNE (`legend.exportSvg`), à gauche du dessin,
+    // et plus les zones de l'ancienne légende : elles sortent du cadrage le temps du cadrage d'export
+    // et du clone, et leurs nœuds sont retirés du clone.
     const legend = this.drawing_area.legend
-    const in_panel = legend.hidden_on_screen && !legend.masked
-    const hideLegend = legend.showForCapture(this.drawing_area.is_paper_mode)
-    if (in_panel) {
-      // Le cadrage d'export change le zoom, donc la largeur de la légende (textes à taille d'écran
-      // constante) et des noms du dessin : on cadre, puis on la repose au zoom d'export.
-      this.drawing_area.areaAutoFit(undefined, undefined, false)
-      this.drawing_area.refreshLabelsForExport()
-      // Interlignes et pastilles suivent la police compensée : mise en page refaite à ce zoom.
-      legend.draw()
-      legend.placeForCapture()
-    }
+    // Zones montrées à l'écran (page sans colonne) : le cadrage d'export les a ignorées, l'écran se
+    // recadre ensuite avec elles.
+    const zones_on_screen = !legend.hidden_on_screen && legend.frame !== undefined
     try {
-      return this._preProcessExportSvgWithLegend(convert_fo)
+      return legend.withZonesOutOfBounds(() => this._preProcessExportSvgWithLegend(convert_fo))
     } finally {
-      hideLegend()
-      // Le cadrage d'export comptait la légende : l'écran se recadre sans elle.
-      if (in_panel) this.drawing_area.areaAutoFit()
+      if (zones_on_screen) this.drawing_area.areaAutoFit()
     }
+  }
+
+  /**
+   * os#1527 lot 1 — largeur (px d'image) qu'ajoute la légende à un export au zoom courant, écart au
+   * dessin compris ; 0 si elle est masquée ou vide. Remplace l'ancien `legend_width` des calculs de
+   * taille d'image (PNG à taille imposée, images d'animation).
+   */
+  public exportLegendWidth(): number {
+    const da = this.drawing_area
+    const width = da.legend.exportSvg(da.is_paper_mode ? 1 : da.getZoomScale()).width
+    return width > 0 ? width + Class_ApplicationData.export_legend_gap : 0
   }
 
   private _preProcessExportSvgWithLegend(convert_fo: boolean) {
@@ -4565,12 +4569,23 @@ export class Class_ApplicationData {
       clone_node.querySelectorAll('foreignObject').forEach(fo => fo.remove())
     }
 
-    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
+    // os#1527 lot 1 — les zones de l'ancienne légende quittent l'image ; la légende de la colonne
+    // y entre, à gauche du dessin (masquée : rien).
+    const legend = this.drawing_area.legend
+    if (clone_node) legend.removeZonesFrom(clone_node)
+    const scale_da = this.drawing_area.is_paper_mode ? 1 : this.drawing_area.getZoomScale()
+    const legend_svg = legend.exportSvg(scale_da)
+    const legend_gap = Class_ApplicationData.export_legend_gap
+    const legend_w = legend_svg.width > 0 ? legend_svg.width + legend_gap : 0
 
     // Matches the SVG-space inset applied to the g_drawing translate so the diagram
     // sits inside the export viewport with comfortable padding on every side.
     const edge_pad = Class_ApplicationData.export_edge_padding
     let export_width: number, export_height: number
+    // Décalage du dessin vers la droite (place de la légende) et coin de la légende.
+    let shift_x = legend_w
+    let legend_x = edge_pad
+    let legend_y = edge_pad
     // OS#1250 phase 4 — la taille d'export dérive du CONTENU (bounds via la façade
     // caméra), plus du canvas. Doit rester d'accord avec le translate posé par
     // _pre_process_export_svg : même origine, même padding.
@@ -4581,17 +4596,31 @@ export class Class_ApplicationData {
       const dims = this.drawing_area.getPaperDimensionsMm()
       const paper_w = Class_DrawingArea.mmToPx(dims.width)
       const paper_h = Class_DrawingArea.mmToPx(dims.height)
+      const content_x = bounds ? bounds.x : 0
       const content_right = bounds ? bounds.x + bounds.width : 0
       const content_bottom = bounds ? bounds.y + bounds.height : 0
-      export_width = Math.max(paper_w, content_right + 5) + 2 * edge_pad
-      export_height = Math.max(paper_h, content_bottom + 5) + 2 * edge_pad
+      // La légende dans la PAGE si elle y tient : à gauche du dessin, sinon à sa droite ; sinon la
+      // page s'élargit à gauche.
+      shift_x = 0
+      legend_y = edge_pad + (bounds ? bounds.y : 0)
+      if (legend_w > 0 && content_x - legend_w >= 0) {
+        legend_x = edge_pad + content_x - legend_w
+      } else if (legend_w > 0 && content_right + legend_w <= paper_w) {
+        legend_x = edge_pad + content_right + legend_gap
+      } else {
+        shift_x = legend_w
+      }
+      export_width = Math.max(paper_w, content_right + 5) + shift_x + 2 * edge_pad
+      export_height = Math.max(paper_h, content_bottom + 5, legend_y - edge_pad + legend_svg.height) + 2 * edge_pad
     } else {
       // Mode libre : le contenu est ancré à son coin haut-gauche, donc la taille est celle
       // du contenu — et non plus celle du canvas, qui valait au minimum la fenêtre et
       // faisait embarquer ses marges vides dans l'export.
-      const scale_da = this.drawing_area.getZoomScale()
       export_width = ((bounds?.width ?? this.drawing_area.width) * scale_da) + legend_w + 5 + 2 * edge_pad
-      export_height = ((bounds?.height ?? this.drawing_area.height) * scale_da) + 5 + 2 * edge_pad
+      export_height = Math.max(
+        ((bounds?.height ?? this.drawing_area.height) * scale_da) + 5,
+        legend_svg.height
+      ) + 2 * edge_pad
     }
 
     // Watermark "réalisé avec OpenSankey.fr" for raster/PDF exports without
@@ -4600,12 +4629,17 @@ export class Class_ApplicationData {
     // the free trial, so trial users don't get the mark either.
     const watermark = convert_fo ? this.exportWatermark(export_width, export_height) : ''
 
+    const inner = d3_select?.node()?.innerHTML ?? ''
+    const legend_g = legend_svg.svg !== ''
+      ? `<g transform="translate(${legend_x},${legend_y})">${legend_svg.svg}</g>`
+      : ''
     const svg_with_header = '<svg version="1.1" ' +
       ' height=\'' + export_height.toString() + '\'' +
       ' width=\'' + export_width.toString() + '\'' +
       ' xmlns="http://www.w3.org/2000/svg"' +
       ' xmlns:xlink="http://www.w3.org/1999/xlink">' +
-      (d3_select?.node()?.innerHTML ?? '') +
+      (shift_x > 0 ? `<g transform="translate(${shift_x},0)">${inner}</g>` : inner) +
+      legend_g +
       watermark +
       '</svg>'
     d3_select?.remove()

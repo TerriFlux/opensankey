@@ -943,7 +943,7 @@ export function legendIndentWidth(item: Type_LegendItem, police: number): number
 }
 
 // Estimation de largeur de texte sans DOM (moyenne ~0.55 em par caractère)
-function estimateTextWidth(text: string, font_size: number): number {
+export function estimateTextWidth(text: string, font_size: number): number {
   return text.length * font_size * 0.55
 }
 

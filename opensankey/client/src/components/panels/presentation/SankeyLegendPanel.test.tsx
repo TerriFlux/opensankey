@@ -5,6 +5,8 @@ import { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Class_Tag } from '../../../types/Tag'
 import { installJsdomRenderStubs, resetHost } from '../../../Persistence/renderFingerprint'
 import { SankeyLegendPanel } from './SankeyLegendPanel'
+import { refreshLegendModel } from '../../../Elements/LegendGenerator'
+import { legendTitlePresentable } from './legendGroupPresentation'
 
 // os#1527 — le panneau de legende du diagramme : une case par etiquette qui se coche, une pastille par
 // entree, le fond regle dans le menu Legende ; decocher passe par le geste de la legende dessinee.
@@ -54,6 +56,40 @@ describe('os#1527 panneau de legende du diagramme', () => {
     expect(indic.is_selected).toBe(false)
     const after = host.querySelector('[data-legend-id="legend-tag-fiab-indic"] input[type=checkbox]') as HTMLInputElement
     expect(after.checked).toBe(false)
+    act(() => { root.unmount() })
+    host.remove()
+  })
+
+  test('lot 0 : sans les zones de la legende, cases, renommage et pop-up du titre fonctionnent', () => {
+    const { app, indic } = makeApp()
+    const da = app.drawing_area
+    da.legend._generating = true
+    da.sankey.containers_list.filter(c => c.id.startsWith('legend')).forEach(c => da.sankey.deleteContainer(c))
+    da.legend._generating = false
+    expect(da.sankey.containers_dict['legend-group-fiab']).toBeUndefined()
+    refreshLegendModel(da)
+    // Le titre se presente par son seul id
+    expect(legendTitlePresentable(app, 'legend-group-fiab')?.name).toBe('Fiabilite')
+    expect(legendTitlePresentable(app, 'legend-tag-fiab-full')).toBeUndefined()
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    act(() => { root.render(<SankeyLegendPanel app_data={app} />) })
+    const title = host.querySelector('[data-legend-id="legend-group-fiab"]') as HTMLElement
+    expect(title).not.toBeNull()
+    jest.useFakeTimers()
+    act(() => { title.click(); jest.advanceTimersByTime(300) })
+    jest.useRealTimers()
+    expect(app.menu_configuration.panels.getMode('presentation:legend-group-fiab')).toBe('popup')
+    // La case : toujours le geste de la legende
+    const row = host.querySelector('[data-legend-id="legend-tag-fiab-indic"]') as HTMLElement
+    jest.useFakeTimers()
+    act(() => { row.click(); jest.advanceTimersByTime(300) })
+    jest.useRealTimers()
+    expect(indic.is_selected).toBe(false)
+    // Le renommage, par l id
+    act(() => { da.legend.renameEntry('legend-tag-fiab-full', 'Complete') })
+    expect(host.textContent).toContain('Complete')
     act(() => { root.unmount() })
     host.remove()
   })

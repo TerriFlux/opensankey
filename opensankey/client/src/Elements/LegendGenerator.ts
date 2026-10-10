@@ -38,6 +38,9 @@ import {
   Type_SankeyForLegend, legendEntrySwatchShift, legendWrappedLineCount, legendWrappedShapeHeight
 } from './legendItems'
 import { LEGEND_SAMPLE_FONT_EM, LEGEND_SAMPLE_VALUE, Type_LegendTextFormat } from './legendTagStyle'
+// os#1527 lot 1 — la légende de la colonne dans les images (modules purs)
+import { colouredLegendItems, navigationSummary, type Type_DimensionForColumn } from './legendColumn'
+import { legendToSvg, type Type_LegendSvg } from './legendSvg'
 
 // Ré-exports : les identifiants (legendIds) et la partie pure du générateur
 // (legendItems) vivent dans des modules feuilles — testables sans tirer le
@@ -57,8 +60,6 @@ import { membersOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 
 // Marge interne du cadre autour des zones générées (px monde)
 const LEGEND_PADDING = 10
-// os#1527 lot 3 — écart entre la légende et le dessin dans une capture (px monde)
-const LEGEND_CAPTURE_GAP = 20
 
 // SA#549 — facteur d'opacité du carré d'une entrée d'étiquette masquée
 const LEGEND_DIMMED_SWATCH_OPACITY = 0.3
@@ -346,9 +347,8 @@ export class Class_LegendConfig {
   private _panel_items: readonly Type_LegendItem[] = []
   private _panel_listeners = new Set<() => void>()
   private _in_panel: boolean = false
-  // os#1527 lot 3 — capture en cours (export, vignette) : la légende est montrée à sa place
+  // os#1527 lot 1 — capture en cours (export, vignette) : les zones sortent du cadrage
   private _capturing: boolean = false
-  private _capture_paper: boolean = false
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -552,9 +552,68 @@ export class Class_LegendConfig {
 
   /**
    * os#1527 — les zones de la légende sont-elles CACHÉES du dessin en ce moment ? Oui quand le
-   * panneau les montre, sauf le temps d'une capture (`showForCapture`). Lu par le cadrage.
+   * panneau les montre.
    */
-  public get hidden_on_screen(): boolean { return this._in_panel && !this._capturing }
+  public get hidden_on_screen(): boolean { return this._in_panel }
+
+  /**
+   * os#1527 (lot 1) — les zones de la légende sont-elles HORS DU CADRAGE ? Cachées à l'écran, ou le
+   * temps d'une capture (export, vignette) : l'image porte la légende de la colonne (`exportSvg`), à
+   * gauche du dessin, et non plus les zones. Lu par le cadrage (`contentBoundsFromModel`).
+   */
+  public get excluded_from_bounds(): boolean { return this._in_panel || this._capturing }
+
+  /**
+   * os#1527 (lot 1) — exécute une capture (export, vignette) avec les zones de la légende HORS DU
+   * CADRAGE : le dessin se cadre et se mesure sans elles, la légende de la colonne prend leur place
+   * dans l'image. Réentrant.
+   */
+  public withZonesOutOfBounds<T>(capture: () => T): T {
+    if (this._capturing) return capture()
+    this._capturing = true
+    try {
+      return capture()
+    } finally {
+      this._capturing = false
+    }
+  }
+
+  /**
+   * os#1527 (lot 1) — LA LÉGENDE DE LA COLONNE, EN SVG, pour une image (export, vignette) : les
+   * entrées que montre la colonne (`colouredLegendItems` : seule la dimension qui porte la couleur),
+   * précédées d'une ligne qui résume la navigation (« Volailles · 2023 · kt »), aux réglages de la
+   * légende (police, largeur, disposition, fond). `scale` : px d'image par px du diagramme (zoom
+   * d'export) ; la police suit le zoom quand elle n'est pas verrouillée. Masquée : rien.
+   */
+  public exportSvg(scale: number, id_prefix?: string): Type_LegendSvg {
+    if (this._masked) return { svg: '', width: 0, height: 0 }
+    const da = this._drawing_area
+    const model = computeLegendModel(da)
+    const app_data = da.application_data
+    const items = colouredLegendItems(app_data, model.all_items, id => model.group_titles.get(id)?.tag_group_id)
+    const t = app_data.t as unknown as (key: string, options?: { [k: string]: unknown }) => unknown
+    const summary = navigationSummary(da.sankey.data_taggs_list as unknown as Type_DimensionForColumn[], t)
+    return legendToSvg(items, {
+      police: this._legend_police,
+      width: this._width,
+      horizontal: this._legend_horizontal,
+      bg_color: this._legend_bg_color,
+      bg_opacity: this._legend_bg_opacity,
+      bg_border: this._legend_bg_border,
+      summary,
+      scale_bar_height: SCALE_BAR_HEIGHT_PX * scale,
+      show_hidden_tags: this._show_hidden_tags,
+      iconPath: name => da.sankey.getIconFromCatalog(name) as string | undefined,
+      id_prefix
+    }, da.font_size_locked ? 1 : scale)
+  }
+
+  /** os#1527 (lot 1) — retire d'un clone du SVG (export, vignette) les nœuds des zones de la légende. */
+  public removeZonesFrom(root: Element): void {
+    this._drawing_area.sankey.containers_list
+      .filter(c => isLegendElementId(c.id))
+      .forEach(c => root.querySelectorAll(`[id="${c.svg_group}"]`).forEach(el => el.remove()))
+  }
 
   /** os#1527 — montre ou cache les zones de la légende (cf. `hidden_on_screen`). `show` force. */
   public applyPanelDisplay(show: boolean = false): void {
@@ -565,63 +624,6 @@ export class Class_LegendConfig {
         if (hidden) c.d3_selection?.style('display', 'none')
         else c.d3_selection?.style('display', null)
       })
-  }
-
-  /**
-   * os#1527 lot 3 — LA LÉGENDE À SA PLACE DANS UNE CAPTURE (export SVG/PNG/PDF, vignette de vue).
-   * Les captures clonent le SVG affiché, où la légende du panneau est cachée : le temps de la
-   * capture, on la pose À GAUCHE DU DESSIN — là où le panneau la montre à l'écran —, visible et
-   * comptée dans le cadrage. `diagram` : l'emprise du dessin SANS la légende, en coordonnées du
-   * diagramme (`contentBoundsFromModel`, appelée avant). En mode papier, si la gauche sort de la
-   * page, à droite. Renvoie de quoi la recacher. Sans panneau (ou légende masquée) : rien.
-   */
-  public showForCapture(paper: boolean = false): () => void {
-    if (!this._in_panel || this._masked || this.frame === undefined || this._capturing) return () => { /* rien */ }
-    this._capture_paper = paper
-    this._capturing = true
-    this.placeForCapture()
-    return () => {
-      this._capturing = false
-      this.applyPanelDisplay()
-    }
-  }
-
-  /**
-   * os#1527 lot 3 — POSE LA LÉGENDE À GAUCHE DU DESSIN pendant une capture, sur ce qui est RENDU :
-   * l'emprise du dessin noms compris (mesurée légende cachée) et la largeur réelle de la légende au
-   * zoom courant — ses textes sont à taille d'écran constante, leur largeur en coordonnées du
-   * diagramme dépend donc du zoom. À rappeler après un recadrage (export). Sans rendu (tests) :
-   * emprise et largeur du modèle.
-   */
-  public placeForCapture(): void {
-    const frame = this.frame
-    if (!this._capturing || frame === undefined) return
-    const da = this._drawing_area
-    const legend_containers = da.sankey.containers_list.filter(c => isLegendElementId(c.id))
-    this.applyPanelDisplay(false)
-    this._capturing = false
-    const diagram = da.contentBounds()
-    this._capturing = true
-    this.applyPanelDisplay()
-    if (diagram === null || (diagram.width === 0 && diagram.height === 0)) return
-    // Bord gauche de la légende (ses formes ; les noms sont à leur droite) et largeur rendue.
-    const left = Math.min(...legend_containers.map(c => c.position_x - c.shape_margin_left))
-    let screen_left = Infinity
-    let screen_right = -Infinity
-    legend_containers.forEach(c => {
-      const rect = (c.d3_selection?.node() as Element | null | undefined)?.getBoundingClientRect?.()
-      if (rect === undefined || rect.width === 0) return
-      screen_left = Math.min(screen_left, rect.left)
-      screen_right = Math.max(screen_right, rect.right)
-    })
-    const k = da.getZoomScale() || 1
-    const width = isFinite(screen_left)
-      ? (screen_right - screen_left) / k
-      : frame.getShapeWidthToUse() + frame.shape_margin_left + frame.shape_margin_right
-    let target_left = diagram.x - LEGEND_CAPTURE_GAP - width
-    if (this._capture_paper && target_left < 0) target_left = diagram.x + diagram.width + LEGEND_CAPTURE_GAP
-    const top = Math.min(...legend_containers.map(c => c.position_y - c.shape_margin_top))
-    this._moveLegend(target_left - left, diagram.y - top)
   }
 
   /** os#1527 — prévenu à chaque régénération ; renvoie le désabonnement. */
@@ -1011,6 +1013,140 @@ function clearLegendHighlight(drawing_area: Class_DrawingArea) {
   })
 }
 
+/** os#1527 (lot 0) — le MODÈLE de la légende : entrées et relevés, sans aucune zone. */
+export type Type_LegendModel = {
+  values: Type_LegendConfigValues
+  /** Entrées posées sur le dessin (`renderableLegendItems`). */
+  items: Type_LegendItem[]
+  /** TOUTES les entrées, étiquettes masquées comprises : ce que lit la colonne. */
+  all_items: Type_LegendItem[]
+  entry_tags: Map<string, { tag_group_id: string, tag_id: string }>
+  entry_groups: Map<string, string>
+  group_titles: Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>
+}
+
+/**
+ * os#1527 (lot 0) — CALCULE le modèle de la légende depuis l'état courant (entrées de
+ * `computeLegendItems`, zones cliquables, titres de groupe), SANS toucher aux zones ni à la
+ * configuration. Lu par `refreshLegendModel` (la colonne) et par l'export (`exportSvg`).
+ */
+export function computeLegendModel(drawing_area: Class_DrawingArea): Type_LegendModel {
+  const config = drawing_area.legend
+  const sankey = drawing_area.sankey
+  const values = config.values()
+
+  // Masquée : aucune entrée (et la génération supprime toutes les zones)
+  let items: Type_LegendItem[] = []
+  // os#1527 — TOUTES les entrées, étiquettes masquées comprises : le panneau de légende les garde,
+  // décochées, comme la légende des couronnes (ordre stable, porte de retour).
+  let all_items: Type_LegendItem[] = []
+  if (!values.masked) {
+    const app_data = drawing_area.application_data
+    const t = app_data.t
+    // Ligne « données collectées / calculées » : seulement s'il y a des résultats
+    let data_type_label: string | undefined = undefined
+    if (values.show_data_type && sankey.links_list.some(l => l.has_result)) {
+      data_type_label = drawing_area.data_source === 'data'
+        ? t('MEP.leg_data_collected')
+        : t('MEP.leg_data_calculated')
+    }
+    // Valeurs à intervalle : détection DOM (les « * » sont posés par le rendu des labels)
+    const has_interval_values = drawing_area.d3_selection
+      ?.selectAll('.link_value')
+      .nodes()
+      .some(lv => (lv as SVGElement).innerHTML?.includes('*')) ?? false
+    const env: Type_LegendEnv = {
+      data_type_label,
+      has_interval_values,
+      t_free_value: t('MEP.use_colors_free_value'),
+      t_dashed_links: t('MEP.legend_dashed_links'),
+      t_scale: t('scale'),
+      t_dimension_change: t('MEP.legend_dimension_change'),
+      // os#1511 — entrée « Autres » d'une dimension en bandes (même libellé que la couronne)
+      t_others: t('sunburst.others'),
+      // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
+      default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
+    }
+    const scale_text = computeScaleText(
+      drawing_area.scale,
+      // sa#283 — dans l'ordre de taggs_order : la résolution du porteur généralisé
+      // donne la priorité au groupe le plus tardif (cf. computeScaleText).
+      sankey.getTagGroupsAsList('data_taggs') as unknown as Parameters<typeof computeScaleText>[1],
+      values,
+      env.t_scale ?? 'Echelle'
+    )
+    // sa#532 — `computeLegendItems` décrit aussi les étiquettes DÉSÉLECTIONNÉES
+    // (marquées `dimmed`), pour que la légende puisse devenir une porte de retour ;
+    // `renderableLegendItems` dit ce qui est effectivement posé sur le diagramme.
+    // SA#549 — il les garde, rayées, quand le réglage `show_hidden_tags` est allumé ;
+    // éteint (défaut, fichiers existants), l'aspect est inchangé (golden de rendu #530).
+    all_items = computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
+    items = renderableLegendItems(all_items, values.show_hidden_tags === true)
+  }
+
+  // SA#549 — zones qu'un clic bascule : entrées (et leur valeur d'exemple) des étiquettes de
+  // NŒUDS et de FLUX. Les étiquettes de données en sont exclues : les désélectionner change la
+  // valeur affichée, sans rien masquer.
+  // os#1526 — SAUF LES DIMENSIONS À NIVEAUX : un clic sur un de leurs membres le CHOISIT dans le
+  // diagramme (cf. `toggleEntryTag`), comme le tableau et la barre du haut.
+  const filter_group_ids = new Set([
+    ...sankey.node_taggs_list, ...sankey.flux_taggs_list,
+    ...sankey.data_taggs_list.filter(g => (g as unknown as Class_DataTagGroup).is_hierarchical)
+  ].map(g => g.id))
+  const entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
+  // os#1527 — relevé sur TOUTES les entrées : une étiquette masquée reste cochable depuis le panneau.
+  all_items.forEach(item => {
+    if (item.tag_group_id === undefined || item.tag_id === undefined) return
+    if (!filter_group_ids.has(item.tag_group_id)) return
+    const target = { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
+    entry_tags.set(item.id, target)
+    const sample_id = legendSampleZoneId(item)
+    if (sample_id !== undefined) entry_tags.set(sample_id, target)
+  })
+  // SA#549 — titres de groupe (renommer au double-clic renomme le groupe) : le groupe d'un bloc
+  // se relève sur ses entrées, le titre étant l'item « sur sa ligne » du bloc sans étiquette.
+  const group_of_block = new Map<string, string>()
+  all_items.forEach(item => {
+    if (item.block_id !== undefined && item.tag_group_id !== undefined) group_of_block.set(item.block_id, item.tag_group_id)
+  })
+  const entry_groups = new Map<string, string>()
+  all_items.forEach(item => {
+    if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+    const group_id = group_of_block.get(item.block_id)
+    if (group_id !== undefined) entry_groups.set(item.id, group_id)
+  })
+  // SA#551 — titres de groupe de nœuds ou de flux, lignes épinglées comprises (sans entrée, leur
+  // groupe se retrouve par l'id de bloc) : un clic ouvre ou ferme le groupe.
+  const group_of_block_id = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+  const blockIdOf = (group_id: string) => LEGEND_CHILD_PREFIX + 'block-' + legendSlug(group_id)
+  sankey.node_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'node_taggs', pinned: false }))
+  sankey.flux_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'flux_taggs', pinned: false }))
+  const group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
+  all_items.forEach(item => {
+    if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
+    const target = group_of_block_id.get(item.block_id)
+    if (target !== undefined) group_titles.set(item.id, { ...target, pinned: item.pinned === true })
+  })
+  return { values, items, all_items, entry_tags, entry_groups, group_titles }
+}
+
+/**
+ * os#1527 (lot 0) — LE MODÈLE DE LA LÉGENDE, SÉPARÉ DE SES ZONES : calcule les entrées, pose les
+ * relevés (zones cliquables, groupes des titres) et les entrées de la colonne, puis prévient ses
+ * abonnés (`subscribePanel`). Ne dépend d'aucune zone : la colonne fonctionne même quand les zones
+ * n'existent pas. `regenerateLegend` l'appelle, puis fabrique les zones comme avant.
+ */
+export function refreshLegendModel(drawing_area: Class_DrawingArea): Type_LegendModel {
+  const config = drawing_area.legend
+  const model = computeLegendModel(drawing_area)
+  config.entry_tags = model.entry_tags
+  config.entry_groups = model.entry_groups
+  config.group_titles = model.group_titles
+  // Après les relevés : le panneau, prévenu ici, les lit pour ses cases et ses clics.
+  config.panel_items = model.all_items
+  return model
+}
+
 /**
  * (Re)génère les zones de la légende depuis l'état courant du modèle et les
  * paramètres. Idempotente : les conteneurs existants sont réutilisés par id
@@ -1024,105 +1160,8 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     // os#1527 — les zones cachées (panneau) ne se mesurent pas : montrées le temps de la génération
     // (césure des noms, largeurs), recachées à la fin. Synchrone : rien ne s'affiche.
     config.applyPanelDisplay(true)
-    const values = config.values()
-
-    // Masquée (ou aucun contenu) → tout supprimer
-    let items: Type_LegendItem[] = []
-    // os#1527 — TOUTES les entrées, étiquettes masquées comprises : le panneau de légende les garde,
-    // décochées, comme la légende des couronnes (ordre stable, porte de retour).
-    let all_items: Type_LegendItem[] = []
-    if (!values.masked) {
-      const app_data = drawing_area.application_data
-      const t = app_data.t
-      // Ligne « données collectées / calculées » : seulement s'il y a des résultats
-      let data_type_label: string | undefined = undefined
-      if (values.show_data_type && sankey.links_list.some(l => l.has_result)) {
-        data_type_label = drawing_area.data_source === 'data'
-          ? t('MEP.leg_data_collected')
-          : t('MEP.leg_data_calculated')
-      }
-      // Valeurs à intervalle : détection DOM (les « * » sont posés par le rendu des labels)
-      const has_interval_values = drawing_area.d3_selection
-        ?.selectAll('.link_value')
-        .nodes()
-        .some(lv => (lv as SVGElement).innerHTML?.includes('*')) ?? false
-      const env: Type_LegendEnv = {
-        data_type_label,
-        has_interval_values,
-        t_free_value: t('MEP.use_colors_free_value'),
-        t_dashed_links: t('MEP.legend_dashed_links'),
-        t_scale: t('scale'),
-        t_dimension_change: t('MEP.legend_dimension_change'),
-        // os#1511 — entrée « Autres » d'une dimension en bandes (même libellé que la couronne)
-        t_others: t('sunburst.others'),
-        // SA#553 — défauts usine, ceux que prend l'étiquette générée (cf. Element.resolveTagStyleLayers)
-        default_value: (k: string) => (ALL_ATTRIBUTES_CONFIG as { [k: string]: { default?: unknown } | undefined })[k]?.default
-      }
-      const scale_text = computeScaleText(
-        drawing_area.scale,
-        // sa#283 — dans l'ordre de taggs_order : la résolution du porteur généralisé
-        // donne la priorité au groupe le plus tardif (cf. computeScaleText).
-        sankey.getTagGroupsAsList('data_taggs') as unknown as Parameters<typeof computeScaleText>[1],
-        values,
-        env.t_scale ?? 'Echelle'
-      )
-      // sa#532 — `computeLegendItems` décrit aussi les étiquettes DÉSÉLECTIONNÉES
-      // (marquées `dimmed`), pour que la légende puisse devenir une porte de retour ;
-      // `renderableLegendItems` dit ce qui est effectivement posé sur le diagramme.
-      // SA#549 — il les garde, rayées, quand le réglage `show_hidden_tags` est allumé ;
-      // éteint (défaut, fichiers existants), l'aspect est inchangé (golden de rendu #530).
-      all_items = computeLegendItems(sankey as unknown as Type_SankeyForLegend, values, env, scale_text)
-      items = renderableLegendItems(all_items, values.show_hidden_tags === true)
-    }
-
-    // SA#549 — zones qu'un clic bascule : entrées (et leur valeur d'exemple) des étiquettes de
-    // NŒUDS et de FLUX. Les étiquettes de données en sont exclues : les désélectionner change la
-    // valeur affichée, sans rien masquer.
-    // os#1526 — SAUF LES DIMENSIONS À NIVEAUX : un clic sur un de leurs membres le CHOISIT dans le
-    // diagramme (cf. `toggleEntryTag`), comme le tableau et la barre du haut.
-    const filter_group_ids = new Set([
-      ...sankey.node_taggs_list, ...sankey.flux_taggs_list,
-      ...sankey.data_taggs_list.filter(g => (g as unknown as Class_DataTagGroup).is_hierarchical)
-    ].map(g => g.id))
-    const entry_tags = new Map<string, { tag_group_id: string, tag_id: string }>()
-    // os#1527 — relevé sur TOUTES les entrées : une étiquette masquée reste cochable depuis le panneau.
-    all_items.forEach(item => {
-      if (item.tag_group_id === undefined || item.tag_id === undefined) return
-      if (!filter_group_ids.has(item.tag_group_id)) return
-      const target = { tag_group_id: item.tag_group_id, tag_id: item.tag_id }
-      entry_tags.set(item.id, target)
-      const sample_id = legendSampleZoneId(item)
-      if (sample_id !== undefined) entry_tags.set(sample_id, target)
-    })
-    config.entry_tags = entry_tags
-    // SA#549 — titres de groupe (renommer au double-clic renomme le groupe) : le groupe d'un bloc
-    // se relève sur ses entrées, le titre étant l'item « sur sa ligne » du bloc sans étiquette.
-    const group_of_block = new Map<string, string>()
-    all_items.forEach(item => {
-      if (item.block_id !== undefined && item.tag_group_id !== undefined) group_of_block.set(item.block_id, item.tag_group_id)
-    })
-    const entry_groups = new Map<string, string>()
-    all_items.forEach(item => {
-      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
-      const group_id = group_of_block.get(item.block_id)
-      if (group_id !== undefined) entry_groups.set(item.id, group_id)
-    })
-    config.entry_groups = entry_groups
-    // SA#551 — titres de groupe de nœuds ou de flux, lignes épinglées comprises (sans entrée, leur
-    // groupe se retrouve par l'id de bloc) : un clic ouvre ou ferme le groupe.
-    const group_of_block_id = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
-    const blockIdOf = (group_id: string) => LEGEND_CHILD_PREFIX + 'block-' + legendSlug(group_id)
-    sankey.node_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'node_taggs', pinned: false }))
-    sankey.flux_taggs_list.forEach(g => group_of_block_id.set(blockIdOf(g.id), { tag_group_id: g.id, type_group: 'flux_taggs', pinned: false }))
-    const group_titles = new Map<string, { tag_group_id: string, type_group: 'node_taggs' | 'flux_taggs', pinned: boolean }>()
-    all_items.forEach(item => {
-      if (!item.own_line || item.block_id === undefined || item.tag_group_id !== undefined) return
-      const target = group_of_block_id.get(item.block_id)
-      if (target !== undefined) group_titles.set(item.id, { ...target, pinned: item.pinned === true })
-    })
-    config.group_titles = group_titles
-    // os#1527 — après les relevés : le panneau, prévenu ici, les lit pour ses cases et ses clics.
-    config.panel_items = all_items
+    // os#1527 (lot 0) — le modèle d'abord (colonne prévenue), les zones ensuite.
+    const { values, items, entry_tags, group_titles } = refreshLegendModel(drawing_area)
 
     // Police EFFECTIVE en coordonnées monde : en mode « police verrouillée »
     // les labels sont contre-scalés par font_compensation au rendu (issue

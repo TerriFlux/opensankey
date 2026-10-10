@@ -31,8 +31,9 @@ import React from 'react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_LegendItem } from '../../../Elements/legendItems'
 import { LEGEND_SAMPLE_VALUE } from '../../../Elements/legendTagStyle'
-import { LEGEND_BLOCK_PREFIX, isLegendDataTagZoneId, legendSlug } from '../../../Elements/legendIds'
+import { colouredLegendItems } from '../../../Elements/legendColumn'
 import { openPresentationFor } from './openPresentation'
+import { legendTitlePresentable } from './legendGroupPresentation'
 import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDimensionChoice'
 import { ZOOM_TOPIC } from '../../../types/EventBus'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
@@ -159,8 +160,9 @@ const LegendRow = ({ app_data, item }: {
   const act = (anchor: { x: number, y: number }) => {
     if (toggles) { legend.toggleEntryTag(item.id); return }
     if (is_title) {
-      const zone = app_data.drawing_area.sankey.containers_dict[item.id]
-      if (zone !== undefined) openPresentationFor(app_data, zone as unknown as Parameters<typeof openPresentationFor>[1], anchor)
+      // os#1527 (lot 0) — par l'id du titre, sans passer par sa zone (qui peut ne pas exister).
+      const title = legendTitlePresentable(app_data, item.id)
+      if (title !== undefined) openPresentationFor(app_data, title, anchor)
       return
     }
     if (is_dimension_choice) openLegendDimensionChoice(app_data, item.id, anchor)
@@ -304,32 +306,10 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
 }
 
 /**
- * os#1511 (Julien, 10/10 : « je ne pense pas qu'il faille garder la légende pour les choses qui ne
- * sont pas de la couleur ») — LA COLONNE NE LÉGENDE QUE CE QUI EST EN COULEUR : une dimension de
- * données n'y paraît que si ses couleurs se voient sur le dessin (bandes à plusieurs membres, ou
- * c'est elle qui peint les flux). Les autres se choisissent dans la navigation, en haut de la même
- * colonne. Les zones de légende du MODÈLE (exports) ne changent pas.
+ * os#1511 — LA COLONNE NE LÉGENDE QUE CE QUI EST EN COULEUR (cf. `Elements/legendColumn`, partagé avec
+ * l'export, qui montre les mêmes entrées).
  */
-export const colouredLegendItems = (app_data: Class_ApplicationData, items: readonly Type_LegendItem[]): readonly Type_LegendItem[] => {
-  const legend = app_data.drawing_area.legend
-  // os#1511 (Julien, 10/10 : « la légende montre le dataTag qui porte la couleur ») — UNE seule
-  // dimension : celle qui fait des bandes à plusieurs membres colore les flux à la place de toute
-  // autre ; sans bandes, celle qui peint les flux.
-  const dims = app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]
-  const colorer = dims.find(g => g.draws_bands && g.selected_tags_list.length > 1)
-    ?? dims.find(g => g.paints_member_bands_flows)
-  const hidden = new Set(dims.filter(g => g !== colorer).map(g => g.id))
-  if (hidden.size === 0) return items
-  // Les BLOCS des dimensions écartées (titre compris, que `tagGroupIdOfTitle` ne rattache pas
-  // toujours), et les lignes de rappel « Année : 2023 ▾ », qui se choisissent dans la navigation.
-  const hidden_blocks = new Set([...hidden].map(id => LEGEND_BLOCK_PREFIX + legendSlug(id)))
-  return items.filter(item => {
-    if (isLegendDataTagZoneId(item.id)) return false
-    if (item.block_id !== undefined && hidden_blocks.has(item.block_id)) return false
-    const group = item.tag_group_id ?? legend.tagGroupIdOfTitle(item.id)
-    return group === undefined || !hidden.has(group)
-  })
-}
+export { colouredLegendItems }
 
 /**
  * os#1511 (Jean-Yves, 09/10 : « ce n'est pas clair comment on choisit comment on colorie le

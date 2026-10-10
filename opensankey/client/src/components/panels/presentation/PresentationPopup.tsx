@@ -131,7 +131,9 @@ export const PresentationContent = ({ app_data, element }: {
   const { t } = app_data
   const tag_group = legendTagGroupOf(app_data, element)
 
-  const block_ids = isLinkLike(element) ? POPUP_LINK_BLOCKS : POPUP_NODE_BLOCKS
+  // os#1527 (lot 0) — le titre d'un groupe n'a pas de blocs : sa fiche suffit (et l'élément peut
+  // n'être que son id, sans zone — `legendTitlePresentable`).
+  const block_ids = tag_group !== undefined ? [] : isLinkLike(element) ? POPUP_LINK_BLOCKS : POPUP_NODE_BLOCKS
   const content = block_ids
     .map(id => {
       const ctx = {
