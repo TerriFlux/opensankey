@@ -94,6 +94,18 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     expect(caseMatiere.disabled).toBe(true)
   })
 
+  test('en colonne, pas de tableau : un bloc par dimension, niveaux a la ligne', () => {
+    const { app, filiere, matiere } = monter()
+    matiere.reader_control = undefined
+    const box = buildDiagramNavigationTable(app, [filiere, matiere], { memory_key: 'col', vertical: true })
+    expect(box.querySelector('table')).toBeNull()
+    const blocs = box.querySelectorAll('.figure_navigation_column_dimension')
+    expect(blocs).toHaveLength(2)
+    // La filiere garde sa commande ; le type de matiere montre ses niveaux (a partir de l entree).
+    expect(blocs[0].querySelector('select')).not.toBeNull()
+    expect(blocs[1].querySelectorAll('.figure_navigation_level').length).toBeGreaterThan(0)
+  })
+
   test('la commande du lecteur survit a l enregistrement', () => {
     const { app, filiere } = monter()
     filiere.reader_control = { kind: 'pick', label: 'Filière', multi_label: 'Sélectionner plusieurs filières' }
