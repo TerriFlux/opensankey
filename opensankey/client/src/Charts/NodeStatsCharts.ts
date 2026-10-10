@@ -607,6 +607,20 @@ export const barLabelBottom = (angles: readonly number[]): number => {
 }
 
 /**
+ * os#1527 (Julien, 10/10 : « j'ai toujours la légende comme avant ») — LA LÉGENDE SUIT LES SECTEURS
+ * DESSINÉS : une ligne dont la part a un secteur prend son rang ; une part sans secteur (décochée)
+ * reste juste après celle qui la précédait dans la liste reçue. Stable : rien d'autre ne bouge.
+ */
+export const orderLikeArcs = <T extends { arc?: { index: number } }>(items: T[]): T[] => {
+  let last = -1
+  const keyed = items.map((item, i) => {
+    if (item.arc !== undefined) last = item.arc.index
+    return { item, i, key: item.arc !== undefined ? item.arc.index : last + 0.5 }
+  })
+  return keyed.sort((a, b) => (a.key - b.key) || (a.i - b.i)).map(k => k.item)
+}
+
+/**
  * L'ordre d'une liste de parts selon `parts_order` ; 'model' garde l'ordre reçu.
  *
  * 04/10/2026 — 'value_desc' (le défaut) trie TOUTES LES PARTS ENSEMBLE, catégories confondues :
@@ -2447,9 +2461,9 @@ export const drawDonutChart = (
   const arc_of = new Map(arcs.map(a => [a.data.id, a]))
   const legend_colors = donutPartColors(legend_parts, st)
   type Type_DonutLegendItem = { slice: Type_StatSlice, arc?: d3.PieArcDatum<Type_StatSlice>, checked: boolean }
-  const legend_items: Type_DonutLegendItem[] = legend_parts.map(s => ({
+  const legend_items: Type_DonutLegendItem[] = orderLikeArcs(legend_parts.map(s => ({
     slice: s, arc: arc_of.get(s.id), checked: !hidden_ids.has(s.id)
-  }))
+  })))
   const placed = donutLegendRows(legend_items, e => e.slice, st, {
     swatchOf: e => e.arc ? colorOf(e.arc.data, e.arc.index) : (legend_colors.get(e.slice.id) ?? OTHERS_COLOR),
     checkedOf: e => toggle ? e.checked : undefined
