@@ -470,6 +470,59 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
   list.style.gap = '0.3rem'
   list.style.width = '100%'
   list.style.minWidth = '0'
+  // os#1527 (10/10) — LA ⚙ EN TÊTE DE COLONNE, comme celle de la bande : les réglages de la couronne
+  // restent accessibles quand le tableau monte dans la légende. À gauche : la capsule de la légende
+  // occupe le coin d'en face.
+  const settings = model.settings ?? []
+  if (settings.length > 0) {
+    const top = document.createElement('div')
+    top.className = 'figure_navigation_column_top'
+    top.style.display = 'flex'
+    top.style.alignItems = 'center'
+    const gear = plainButton('⚙', model.labels.settings)
+    gear.className = 'figure_navigation_settings'
+    gear.style.color = ui_ink_muted
+    gear.style.fontSize = '12px'
+    const key = `${model.memory_key}|settings`
+    gear.dataset.navPopover = key
+    keepClick(gear, () => toggleFigureNavPopover(key, gear, settingsMenuContent(model.labels.settings, settings)))
+    refreshFigureNavPopover(key, settingsMenuContent(model.labels.settings, settings))
+    top.appendChild(gear)
+    list.appendChild(top)
+  }
+  // L'ORDRE, comme dans la bande : deux dimensions, un ⇅ sur la première ; davantage, ▲▼ par dimension.
+  const has_controls = model.dimensions.some(d => d.control !== undefined)
+  const move = model.dimensions.length > 1 && !has_controls ? model.move : undefined
+  const orderButtons = (dim_id: string, i: number): HTMLElement[] => {
+    if (!move) return []
+    const arrow = (text: string, title: string, go: () => void, disabled: boolean) => {
+      const b = plainButton(text, title)
+      b.style.color = disabled ? ui_line_strong : ui_ink_secondary
+      b.style.fontSize = '10px'
+      b.style.lineHeight = '1'
+      b.style.padding = '0.05rem 0.15rem'
+      b.style.border = `1px solid ${ui_line_strong}`
+      b.style.borderRadius = '3px'
+      b.style.background = 'white'
+      b.style.fontWeight = '400'
+      b.style.flex = '0 0 auto'
+      if (disabled) { b.disabled = true; b.style.cursor = 'default' }
+      keepClick(b, disabled ? () => { /* rien au-delà du bord */ } : go)
+      return b
+    }
+    if (model.dimensions.length === 2) {
+      if (i > 0) return []
+      const b = arrow('⇅', model.labels.swap, () => move(dim_id, 1), false)
+      b.className = 'figure_navigation_swap'
+      return [b]
+    }
+    const up = arrow('▲', model.labels.move_up, () => move(dim_id, -1), i === 0)
+    up.className = 'figure_navigation_up'
+    const down = arrow('▼', model.labels.move_down, () => move(dim_id, 1), i === model.dimensions.length - 1)
+    down.className = 'figure_navigation_down'
+    up.style.fontSize = down.style.fontSize = '8px'
+    return [up, down]
+  }
   model.dimensions.forEach((dim, i) => {
     const block = document.createElement('div')
     block.className = 'figure_navigation_column_dimension'
@@ -518,6 +571,7 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       refreshFigureNavPopover(key, members)
       head.appendChild(caret)
     }
+    orderButtons(dim.id, i).forEach(b => head.appendChild(b))
     block.appendChild(head)
     // os#1511 (Julien, 10/10) — les niveaux suivent le nom SUR LA MÊME LIGNE (« Filière ³  Sous-filière ») ;
     // un zoom ne se résume plus en « Céréales +2 ✕ », la légende juste dessous détaille les membres :
@@ -532,13 +586,22 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       item.style.maxWidth = '100%'
       item.className = level.active ? 'figure_navigation_level figure_navigation_active' : 'figure_navigation_level'
       const tip = level.column ? model.labels.uncut(level.label) : model.labels.cut_by(level.label)
-      const btn = plainButton(level.label, tip)
+      const btn = plainButton(level.label, level.choose_with && model.labels.ctrl_hint ? `${tip}\n${model.labels.ctrl_hint}` : tip)
       btn.style.color = level.active ? ACCENT : ui_ink
       btn.style.fontWeight = level.active ? '700' : '400'
       if (level.active) btn.style.borderBottom = `2px solid ${ACCENT}`
       const choose = level.choose
-      if (choose) keepClick(btn, choose)
-      else { btn.style.cursor = 'default'; keepClick(btn, () => { /* inerte */ }) }
+      const with_ctrl = level.choose_with
+      // Comme dans la bande : clic simple = cette colonne seule ; ctrl+clic (⌘+clic) = l'ajouter ou la retirer.
+      if (choose || with_ctrl) {
+        btn.addEventListener('pointerdown', e => e.stopPropagation())
+        btn.addEventListener('click', e => {
+          e.stopPropagation()
+          e.preventDefault()
+          const go = (e.ctrlKey || e.metaKey) && with_ctrl ? with_ctrl : choose
+          go?.()
+        })
+      } else { btn.style.cursor = 'default'; keepClick(btn, () => { /* inerte */ }) }
       btn.style.fontSize = '11px'
       item.style.fontWeight = '400'
       item.style.marginLeft = '0.4rem'

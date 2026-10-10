@@ -28,10 +28,13 @@ import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import {
   drawDonutChart, drawBarChart, drawGroupedBarChart, paletteColor, mountSmallMultipleCells, smallMultipleCentrePlan, centreCaptionPlan,
-  donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom
+  donutPartColors, orderParts, drawSmallMultiplesLegend, smallMultiplesLegendEntries, smallMultiplesLegendRoom,
+  donutLegendBeside
 } from '../Charts/NodeStatsCharts'
 import type { Type_ChartOptions, Type_StatSlice } from '../Charts/NodeStatsCharts'
-import { appendLegendContextRows, couronneLegendRows, type Type_LegendCapsule } from '../Charts/legendChecks'
+import {
+  appendLegendContextRows, couronneLegendRows, prependLegendNavigation, type Type_LegendCapsule
+} from '../Charts/legendChecks'
 import { tagGroupCarriesFormatting } from '../Elements/legendItems'
 import { legendDataTagZoneId } from '../Elements/legendIds'
 import { openLegendDimensionChoice } from '../components/panels/presentation/legendDimensionChoice'
@@ -103,7 +106,8 @@ import {
 import type { Type_HierarchyReading } from '../Charts/AnalysisChartData'
 // 24/09/2026 — le tracé à anneaux et sa lecture de style, appelés par la couronne quand le mode
 // « un anneau par niveau » le demande. Le disque n'est plus une autre figure, c'en est un mode.
-import { drawSunburstChart } from '../Charts/SunburstChart'
+import { drawSunburstChart, sunburstLegendBeside } from '../Charts/SunburstChart'
+import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 import type { Type_LegendChecks } from '../Charts/legendChecks'
 import type { Type_LegendRow } from '../Elements/legendRows'
 import {
@@ -1034,7 +1038,9 @@ const figureBreadcrumbOf = (
  * L'en-tête surligné est lu sur ce que la couronne DESSINE (la profondeur de sa frontière), pas sur un
  * état à part. `null` : la figure ne découpe pas selon des dimensions de données, ou hors fenêtre.
  */
-const figureNavigationTableOf = (ctx: Type_RepresentationContext, representation: 'couronne' | 'matrix' = 'couronne'): HTMLElement | null => {
+const figureNavigationTableOf = (
+  ctx: Type_RepresentationContext, representation: 'couronne' | 'matrix' = 'couronne', vertical = false
+): HTMLElement | null => {
   // 04/10/2026 (lot 3) — LU SUR LE PLAN, ÉCRIT PAR LES GESTES DE LA COURONNE (`couronneGestures`) :
   // plus aucune coupe ni ancienne clé ici.
   // 07/10/2026 — LE MÊME TABLEAU AU-DESSUS DU TABLEAU CROISÉ (`representation: 'matrix'`) : mêmes
@@ -1179,6 +1185,8 @@ const figureNavigationTableOf = (ctx: Type_RepresentationContext, representation
   })
   return buildFigureNavigationTable({
     dimensions,
+    // os#1527 (10/10) — en tête de la colonne de légende, quand elle est à côté du disque.
+    vertical,
     memory_key: `${window_id}/${pane_key}`,
     t: (key: string, o?: { [k: string]: unknown }) => t(key, o),
     move: (dim_id, delta) => g.move(rows.map(d => d.id), dim_id, delta),
@@ -2103,8 +2111,16 @@ export const registerAnalysisRepresentations = (): void => {
       // 02/10/2026 — le fil d'Ariane, sous le titre, pour les trois tracés (une seule ligne pour
       // les petits multiples : toutes leurs cases sont zoomées sur la même part).
       // 03/10/2026 — sur dimensions de données, le TABLEAU DE NAVIGATION à sa place (os#1511).
-      const breadcrumb: Type_FigureCrumb[] | HTMLElement = figureNavigationTableOf(ctx) ??
-        figureBreadcrumbOf(ctx, gestures.focusTo)
+      // os#1527 (10/10) — LÉGENDE À CÔTÉ DU DISQUE : le tableau monte en tête de sa colonne, en rendu
+      // vertical, comme celui du Sankey (`main_zone_canvas_column_navigation`) ; légende dessous ou
+      // masquée, il reste en bande au-dessus du disque. Même règle pour les trois tracés.
+      const navigationOf = (beside: boolean): {
+        breadcrumb: Type_FigureCrumb[] | HTMLElement, legend_navigation?: HTMLElement
+      } => {
+        const table = figureNavigationTableOf(ctx, 'couronne', beside)
+        if (table === null) return { breadcrumb: figureBreadcrumbOf(ctx, gestures.focusTo) }
+        return beside ? { breadcrumb: [], legend_navigation: table } : { breadcrumb: table }
+      }
 
       // 01/10/2026 — UNE PETITE COURONNE PAR MEMBRE (Julien : « une petite couronne par membre de
       // la seconde hiérarchie »). La grille sous le titre de la figure, chaque case titrée par son
@@ -2114,6 +2130,8 @@ export const registerAnalysisRepresentations = (): void => {
       if (split) {
         container.innerHTML = ''
         const titled = figureTextsOf(ctx.options ?? {}, figureTitleFallback(ctx))
+        const below = style.legend_position === 'bottom'
+        const { breadcrumb, legend_navigation } = navigationOf(!below)
         const host = mountFigureTextZones(
           container, withMeasureCaption(titled, measureCaptionOf(ctx, titled[0]?.text ?? '')), breadcrumb)
         // 02/10/2026 — UNE LÉGENDE COMMUNE (Julien : « pour les multiples, il ne faut pas voir les
@@ -2121,8 +2139,7 @@ export const registerAnalysisRepresentations = (): void => {
         // intéressante »). Les cases n'écrivent plus le nom des parts — ce sont les mêmes partout —
         // et une seule légende les nomme, posée d'office, à la place que dit `legend_position`.
         // Sa place est RÉSERVÉE avant les cases : elles se mesurent sur ce qui reste, toutes égales.
-        const below = style.legend_position === 'bottom'
-        const room = smallMultiplesLegendRoom(style, host.clientWidth, host.clientHeight)
+        const room = smallMultiplesLegendRoom(style, host.clientWidth, host.clientHeight, legend_navigation !== undefined)
         const frame = document.createElement('div')
         frame.style.display = 'flex'
         frame.style.flexDirection = below ? 'column' : style.legend_position === 'left' ? 'row-reverse' : 'row'
@@ -2292,6 +2309,7 @@ export const registerAnalysisRepresentations = (): void => {
             }
           })
         })
+        if (legend_navigation) prependLegendNavigation(legend, legend_navigation, style.legend_position)
         drawSmallMultiplesLegend(legend, grid, smallMultiplesLegendEntries(
           tree_order.length > 0 ? tree_order : union_order.map(s => s.id), drawn), colors, style,
         // 04/10/2026 — les cases de chaque dimension des parts (os#1511).
@@ -2316,6 +2334,38 @@ export const registerAnalysisRepresentations = (): void => {
         ? ringsTreeOf(ctx, a, hierarchyReadingOf(ctx), expandedOf(ctx.options))
         : null
       if (rings) {
+        const rings_style: Partial<Type_SunburstStyle> = {
+          ...readSunburstStyle(ctx.options ?? {}),
+          // ⚠️ LA COULEUR SE DECIDE COMME DANS L'ANNEAU UNIQUE, et c'est ce qui manquait.
+          //
+          // Julien : « quand ça dit un anneau par niveau, y a plus de couleurs ». Le tracé du
+          // disque lisait `parts_color_source` SUR LE SAC BRUT, donc « couleur du diagramme » —
+          // le défaut d'une couronne. Il ne voyait pas la bascule en palette que `donutStyleOf`
+          // fait sous une descente, et un anneau de nœuds sans couleur propre devenait un aplat.
+          // Les deux modes lisent maintenant la MÊME décision, ce qui est la définition de la
+          // fusion : changer de mode change le dessin, pas les couleurs.
+          color_source: style.parts_color_source,
+          depth_shading: style.parts_depth_shading,
+          // 26/09/2026 — LE SEUIL D'AFFICHAGE VAUT DANS LES DEUX MODES.
+          //
+          // Julien, capture a l appui : « pas sur que ca marche en mode un anneau par niveau ».
+          // Ca ne marchait pas — le trace du disque ne connait que des regles en PIXELS, et le
+          // seuil s arretait a la porte de l autre mode. Les deux modes sont UNE figure : un
+          // reglage qui mord dans l un doit mordre dans l autre, sinon changer de mode change
+          // ce que la figure dit.
+          labels_min_share: style.labels_min_share,
+          // 03/10/2026 — la règle des étiquettes qui ne tiennent pas, celle de la couronne ; et
+          // « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
+          labels_small: style.labels_small,
+          labels_small_outer: labelsSmallOuterOf(ctx),
+          // 03/10/2026 — la légende de la COURONNE (`donutStyleOf`), pas le défaut du disque.
+          legend_visible: style.legend_visible,
+          click_action: 'aggregate',
+          // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
+          centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')
+        }
+        // os#1527 (10/10) — légende à côté : le tableau en tête de sa colonne ; sinon en bande.
+        const { breadcrumb, legend_navigation } = navigationOf(sunburstLegendBeside(rings_style))
         const teardown = drawSunburstChart(container, rings, {
           parts: wiring.by_id,
           on_part_select: wiring.on_part_select,
@@ -2332,36 +2382,7 @@ export const registerAnalysisRepresentations = (): void => {
           // sous 'none' il l'avale. Or la couronne a besoin de tous les clics — c'est eux qui
           // ouvrent les anneaux. Ce que l'auteur a réglé est lu, lui, par `donutClickGestures`,
           // qui décide ce que le geste fait EN PLUS.
-          style: {
-            ...readSunburstStyle(ctx.options ?? {}),
-            // ⚠️ LA COULEUR SE DECIDE COMME DANS L'ANNEAU UNIQUE, et c'est ce qui manquait.
-            //
-            // Julien : « quand ça dit un anneau par niveau, y a plus de couleurs ». Le tracé du
-            // disque lisait `parts_color_source` SUR LE SAC BRUT, donc « couleur du diagramme » —
-            // le défaut d'une couronne. Il ne voyait pas la bascule en palette que `donutStyleOf`
-            // fait sous une descente, et un anneau de nœuds sans couleur propre devenait un aplat.
-            // Les deux modes lisent maintenant la MÊME décision, ce qui est la définition de la
-            // fusion : changer de mode change le dessin, pas les couleurs.
-            color_source: style.parts_color_source,
-            depth_shading: style.parts_depth_shading,
-            // 26/09/2026 — LE SEUIL D'AFFICHAGE VAUT DANS LES DEUX MODES.
-            //
-            // Julien, capture a l appui : « pas sur que ca marche en mode un anneau par niveau ».
-            // Ca ne marchait pas — le trace du disque ne connait que des regles en PIXELS, et le
-            // seuil s arretait a la porte de l autre mode. Les deux modes sont UNE figure : un
-            // reglage qui mord dans l un doit mordre dans l autre, sinon changer de mode change
-            // ce que la figure dit.
-            labels_min_share: style.labels_min_share,
-            // 03/10/2026 — la règle des étiquettes qui ne tiennent pas, celle de la couronne ; et
-            // « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
-            labels_small: style.labels_small,
-            labels_small_outer: labelsSmallOuterOf(ctx),
-            // 03/10/2026 — la légende de la COURONNE (`donutStyleOf`), pas le défaut du disque.
-            legend_visible: style.legend_visible,
-            click_action: 'aggregate',
-            // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
-            centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')
-          },
+          style: rings_style,
           texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
           // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
           // 03/10/2026 — sur dimensions de données, la ligne dit le contexte des autres dimensions.
@@ -2374,6 +2395,7 @@ export const registerAnalysisRepresentations = (): void => {
           // 05/10/2026 — non zoomée, le nom court du jeu de données au centre, en gras.
           centre_name: dataCentreNameOf(ctx),
           breadcrumb,
+          legend_navigation,
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
@@ -2411,6 +2433,8 @@ export const registerAnalysisRepresentations = (): void => {
         return () => { teardown() }
       }
 
+      // os#1527 (10/10) — légende à côté : le tableau en tête de sa colonne ; sinon en bande.
+      const { breadcrumb, legend_navigation } = navigationOf(donutLegendBeside(style))
       // LE CENTRE N'EST PAS UN SECTEUR : il voyage dans la même liste (c'est ce qui lui donne un
       // élément, une sélection et un inspecteur) mais il ne se découpe pas en arc. Le tracé va le
       // chercher par son identifiant, dans l'aspect (`FIGURE_CENTRE_PART_ID`).
@@ -2421,6 +2445,7 @@ export const registerAnalysisRepresentations = (): void => {
           ...chartOptions(ctx, DONUT_STYLE_DEFAULTS),
           style,
           breadcrumb,
+          legend_navigation,
           legend_toggle: legendToggleOf(ctx),
           legend_context: legendContextOf(ctx),
           legend_capsule: legendCapsuleOf(ctx),

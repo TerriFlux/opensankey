@@ -107,6 +107,17 @@ export const toggleFigureNavPopover = (
   document.addEventListener('keydown', onKey, true)
   open = { key, box, root, close }
   render(open, content)
+  // os#1527 (10/10) — OUVERTE DEPUIS LA COLONNE DE LÉGENDE (bord droit ou bas de la fenêtre), la
+  // surcouche rentre dans l'écran : décalée à gauche, ou posée au-dessus de la case si elle déborde.
+  requestAnimationFrame(() => {
+    if (open?.box !== box) return
+    const r = box.getBoundingClientRect()
+    if (r.right > window.innerWidth - 4) box.style.left = `${Math.max(4, window.innerWidth - r.width - 4)}px`
+    if (r.bottom > window.innerHeight - 4) {
+      const above = rect.top - r.height - 2
+      box.style.top = `${Math.max(4, above >= 4 ? above : window.innerHeight - r.height - 4)}px`
+    }
+  })
 }
 
 /** Le tableau redessiné redonne son contenu à la surcouche ouverte de même clé. */

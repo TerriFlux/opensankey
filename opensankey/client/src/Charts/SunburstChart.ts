@@ -41,7 +41,8 @@ import type { Type_FigureView, Type_FigureZoomHandle } from './figureZoomBridge'
 import { figureNumberText, figurePercentText } from './figureFormat'
 import { discRadiusInZone, layoutDonutCallouts } from './donutCalloutLayout'
 import {
-  appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRowSectorId,
+  appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRoomWithNavigation, legendRowSectorId,
+  prependLegendNavigation,
   type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 // os#1527 — le modèle et le rendu de légende communs (couronnes et Sankey).
@@ -207,6 +208,15 @@ export interface Type_SunburstStyle {
   notes_visible: boolean
   tooltip_visible: boolean
   click_action: 'both' | 'zoom' | 'aggregate' | 'none'
+}
+
+/**
+ * os#1527 (10/10) — LA LÉGENDE DU DISQUE EST-ELLE À CÔTÉ ? Affichée et pas dessous : le tableau de
+ * navigation monte alors dans sa colonne (`legend_navigation`) ; sinon il reste en bande au-dessus.
+ */
+export const sunburstLegendBeside = (style: Partial<Type_SunburstStyle>): boolean => {
+  const st = { ...SUNBURST_STYLE_DEFAULTS, ...style }
+  return st.legend_visible && st.legend_position !== 'bottom'
 }
 
 /** Les défauts : ce que le tracé faisait avant que ces réglages existent. */
@@ -454,6 +464,11 @@ export interface Type_SunburstChartOptions {
   texts?: (subject_name: string) => Type_FigureText[]
   /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
   breadcrumb?: Type_FigureCrumb[] | HTMLElement
+  /**
+   * os#1527 (10/10) — LE TABLEAU DE NAVIGATION, en rendu vertical, en tête de la colonne de légende
+   * (légende à côté seulement, cf. `sunburstLegendBeside`) ; la colonne s'élargit pour le couvrir.
+   */
+  legend_navigation?: HTMLElement
   empty_label?: string
   // Regroupement des secteurs trop étroits, au sein d'une même fratrie.
   others_label?: string
@@ -1341,6 +1356,12 @@ export const drawSunburstChart = (
     const branches_total = branches.reduce((acc, r) => acc + r.value, 0)
     const total = centre_node ? centre_node.value : branches_total
     if (branches.length === 0 || branches_total <= 0 || width < 120 || height < 120) {
+      // Le tableau reste accessible sur une figure vide : c'est lui qui permet d'en sortir.
+      if (opts.legend_navigation && st.legend_visible && st.legend_position !== 'bottom') {
+        host.style.display = 'flex'
+        host.style.flexDirection = 'column'
+        prependLegendNavigation(host, opts.legend_navigation, 'left').style.flex = '0 0 auto'
+      }
       drawEmptyLabel(sel, opts.empty_label ?? '', palette.muted)
       return
     }
@@ -1558,14 +1579,16 @@ export const drawSunburstChart = (
     // La largeur demandée (`legend_width`) plafonne la colonne large ; l'étroite en prend les
     // deux tiers. Les deux restent bornées par la place disponible.
     const room = legend_below ? height : width
-    const wide = Math.min(Math.max(80, st.legend_width), room * 0.32)
+    // os#1527 (10/10) — le tableau de navigation en tête de colonne : la colonne large, élargie pour lui.
+    const legend_navigation = st.legend_visible && !legend_below ? opts.legend_navigation : undefined
+    const wide = legendRoomWithNavigation(Math.min(Math.max(80, st.legend_width), room * 0.32), room, legend_navigation !== undefined)
     const narrow = Math.min(Math.max(60, st.legend_width * 0.68), room * 0.28)
     // 03/10/2026 — PLUSIEURS DIMENSIONS DÉCOUPENT : la légende les liste toutes, un bloc chacune (cf.
     // plus bas) ; elle prend la colonne large d'office.
     const multi_dimension = slices.some(sl => sl.nested !== undefined && sl.nested.index > 0)
     const legend_width = !st.legend_visible
       ? 0
-      : st.legend_parts === 'all' || (multi_dimension && st.legend_parts !== 'none')
+      : st.legend_parts === 'all' || (multi_dimension && st.legend_parts !== 'none') || legend_navigation
         ? wide
         : unnamedBranches(geometryFor(narrow)).length > 0 ? wide : narrow
     const geo = geometryFor(legend_width)
@@ -2152,6 +2175,7 @@ export const drawSunburstChart = (
       .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
       .style('color', palette.ink)
       .style('display', st.legend_visible ? 'block' : 'none')
+    if (legend_navigation) prependLegendNavigation(legend.node() as HTMLElement, legend_navigation, st.legend_position)
     // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
     const show_rings = st.legend_visible && st.legend_levels && !multi_dimension
 
