@@ -146,7 +146,7 @@ interface Type_MembreRepresente {
  * Ressources et Emplois, « Type de matière » en bandes sur les flux).
  */
 export function diagrammeParMembreDe(sankey: Class_Sankey): Class_DataTagGroup | undefined {
-  return (sankey.data_taggs_list as Class_DataTagGroup[]).find(dimension => dimension.member_bands === true)
+  return (sankey.data_taggs_list as Class_DataTagGroup[]).find(dimension => dimension.draws_member_bands)
 }
 
 const estAutres = (entree: Type_MembreRepresente): boolean => entree.cle === OTHERS_ID
@@ -286,7 +286,7 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
       // une autre dimension (SOCLE filières), et aucun flux ne touchait alors « un porteur » — les
       // bandes sortaient dans l'ordre de l'arbre (Julien, 07/10 : « ce n'est plus trié »).
       flux_de_la_dimension = sankey.links_list.filter(flux => !isGeneratedMemberLink(flux) &&
-        (dimension.member_bands === true ||
+        (dimension.draws_member_bands ||
           [flux.source, flux.target].some(bout => bout.driving_dimension === dimension)))
       flux_par_dimension.set(dimension, flux_de_la_dimension)
     }
@@ -658,7 +658,7 @@ export function bandesParMembre(dimension: Class_DataTagGroup, porteurs: number)
   // d'office en diagrammes (« Ressources - Ressources », « Emplois - Emplois », des nœuds vides).
   // Un diagramme par membre se DEMANDE (Dessiner) ; c'est la règle des mises en page nouvelles.
   void porteurs
-  return dimension.member_bands === true
+  return dimension.draws_member_bands
 }
 
 /** Les axes découpés de ce tour, regroupés par dimension rangée en bandes. */

@@ -423,14 +423,18 @@ const carriersOf = (sankey: Type_ViewSankey, dim: Class_DataTagGroup): string[] 
     .filter(n => !isGeneratedMemberId(n.id) && n.driving_dimension === dim)
     .map(n => n.id)
 
-/** Le même test que `DimensionDisaggregation.bandesParMembre` + `axesEnBandes`, sans l'importer. */
+/**
+ * Un diagramme par membre : la règle du modèle (`draws_member_bands`, demandé), et deux porteurs pour
+ * qu'il y ait des diagrammes à répéter. 10/10/2026 (lot 4) — l'automatique « dès deux porteurs »
+ * qu'on lisait encore ici était levé partout ailleurs depuis le 08/10.
+ */
 const inMemberBands = (dim: Class_DataTagGroup, carriers: number): boolean =>
-  carriers >= 2 && (dim.member_bands ?? true)
+  carriers >= 2 && dim.draws_member_bands
 
 /**
  * CE QUE LE DIAGRAMME DESSINE, lu dans le modèle : chaque dimension non vide, son rôle d'après
  * `drawing` (bannière et nœuds porteurs), ses montrés = sa sélection, sa portée = `focus_ids`.
- *  - en nœuds, deux porteurs ou plus rangés par membre (`member_bands`, automatique) : `cases` ;
+ *  - en nœuds, deux porteurs ou plus rangés par membre (`member_bands` demandé) : `cases` ;
  *  - en nœuds sinon : `parts` / nœuds ;
  *  - en bandes, la dimension qui découpe les flux (`draws_bands`, la première de la liste) :
  *    `parts` / bandes ; une autre en choix multiple se lit sur la SOMME de ses membres : `none` ;
@@ -549,8 +553,8 @@ export const toDiagramPatch = (state: Type_DimensionViewState, sankey: Type_View
         const n = known_carriers.length
         if (d.role === 'cases') {
           if (n < 2) warn(id, 'cases_need_two_carriers')
-          if (dim.member_bands === false) p.member_bands = true
-        } else if (n >= 2 && (dim.member_bands ?? true)) p.member_bands = false
+          if (!dim.draws_member_bands) p.member_bands = true
+        } else if (dim.draws_member_bands) p.member_bands = false
       }
     }
     if (!sameSet(selected, cur.shown)) p.selected = selected

@@ -21,7 +21,10 @@ const part = (id: string, value: number, parent: { id: string, label: string }):
 })
 const ALL: Type_StatSlice[] = [
   part('Ble', 20, BRUTS), part('Orge', 8, BRUTS), part('Mais', 7, BRUTS),
-  part('Malt', 1.2, TRANSF), part('Farine', 0.4, TRANSF), part('Sorgho', 0.1, BRUTS)
+  part('Malt', 1.2, TRANSF), part('Farine', 0.4, TRANSF), part('Sorgho', 0.1, BRUTS),
+  // 10/10/2026 (os#1511, lot 4) — la regle commune ne replie jamais une part SEULE : deux petites
+  // parts pour que « Autres » se forme.
+  part('Seigle', 0.05, BRUTS)
 ]
 
 const STYLE: Type_FigureChartStyle = {

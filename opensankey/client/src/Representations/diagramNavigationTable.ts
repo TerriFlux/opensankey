@@ -186,7 +186,7 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
   // `pick` : les membres du premier niveau.
   const racines = dim.membersAtLevel(0)
   const choisies = [...new Set(selection.map(m => racineDe(m).id))]
-  const multi = dim.member_bands === true
+  const multi = dim.draws_member_bands
   const racine = !multi && choisies.length === 1 ? dim.tags_dict[choisies[0]] as Class_DataTag | undefined : undefined
   const enfants = racine ? dim.childrenOf(racine) : []
   const enfants_choisis = enfants.filter(e => selection.includes(e))

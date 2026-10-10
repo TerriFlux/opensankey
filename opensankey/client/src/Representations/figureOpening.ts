@@ -68,12 +68,21 @@ const legacyDataOpening = (entries: string[]): { [dimension_id: string]: string[
   return out
 }
 
+/**
+ * 10/10/2026 (os#1511, lot 4) — LA FIGURE EST-ELLE LIÉE AU DIAGRAMME (Suit / Épinglée) ? La seule
+ * lecture : `coordinates_linked` quand il est écrit, sinon l'entrée `detache` d'avant (sinon liée).
+ * L'état de la couronne, la couche de données et l'hôte de gestes la lisent tous ici.
+ */
+export const isFigureLinked = (options: Type_Options | null | undefined): boolean => {
+  const linked_raw = options?.[COORDINATES_LINKED_KEY]
+  return typeof linked_raw === 'boolean' ? linked_raw : !stringsOf(options?.[HIERARCHY_EXPANDED_KEY]).includes(LEGACY_DETACHED_ENTRY)
+}
+
 /** Ce que la figure a ouvert, lu sur son sac de réglages. */
-export const readFigureOpening = (options: Type_Options | null | undefined): Type_FigureOpening => {
+export const readFigureOpening =(options: Type_Options | null | undefined): Type_FigureOpening => {
   const raw = stringsOf(options?.[HIERARCHY_EXPANDED_KEY])
   const elements = new Set(raw.filter(e => e !== LEGACY_DETACHED_ENTRY && !e.startsWith(MEMBER_SECTOR_PREFIX)))
-  const linked_raw = options?.[COORDINATES_LINKED_KEY]
-  const linked = typeof linked_raw === 'boolean' ? linked_raw : !raw.includes(LEGACY_DETACHED_ENTRY)
+  const linked = isFigureLinked(options)
   // Liée, la figure n'a pas de coupe propre : ce qu'un fichier d'avant y avait laissé est ignoré,
   // comme il l'était au dessin.
   // 03/10/2026 — les dimensions désactivées valent pour la figure liée comme détachée.
@@ -187,7 +196,7 @@ export const storedFigureDataLayer = (options: Type_Options | null | undefined):
  * `true` collectées, `false` réconciliées, `undefined` celle du diagramme.
  */
 export const readFigureDataLayer = (options: Type_Options | null | undefined): boolean | undefined => {
-  if (readFigureOpening(options).data.linked) return undefined
+  if (isFigureLinked(options)) return undefined
   const layer = storedFigureDataLayer(options)
   return layer === undefined ? undefined : layer === 'collected'
 }

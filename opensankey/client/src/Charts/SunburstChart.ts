@@ -45,7 +45,7 @@ import {
   legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { ui_ink, ui_ink_muted, ui_white } from '../css/uiTokens'
-import { OTHERS_COLOR } from '../Algorithms/DimensionOthers'
+import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -789,7 +789,7 @@ export const foldNarrowChildren = (
   const folded = total - kept.reduce((acc, c) => acc + c.value, 0)
   if (folded <= 0) return kept
   return [...kept, {
-    id: '__others__' + children[0].id,
+    id: OTHERS_ID + children[0].id,
     label: others_label,
     value: folded,
     declared: folded,
