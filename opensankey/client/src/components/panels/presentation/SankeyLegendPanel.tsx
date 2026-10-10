@@ -308,9 +308,13 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
  */
 export const colouredLegendItems = (app_data: Class_ApplicationData, items: readonly Type_LegendItem[]): readonly Type_LegendItem[] => {
   const legend = app_data.drawing_area.legend
-  const hidden = new Set((app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-    .filter(g => !((g.draws_bands && g.selected_tags_list.length > 1) || g.paints_member_bands_flows))
-    .map(g => g.id))
+  // os#1511 (Julien, 10/10 : « la légende montre le dataTag qui porte la couleur ») — UNE seule
+  // dimension : celle qui fait des bandes à plusieurs membres colore les flux à la place de toute
+  // autre ; sans bandes, celle qui peint les flux.
+  const dims = app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]
+  const colorer = dims.find(g => g.draws_bands && g.selected_tags_list.length > 1)
+    ?? dims.find(g => g.paints_member_bands_flows)
+  const hidden = new Set(dims.filter(g => g !== colorer).map(g => g.id))
   if (hidden.size === 0) return items
   return items.filter(item => {
     const group = item.tag_group_id ?? legend.tagGroupIdOfTitle(item.id)
