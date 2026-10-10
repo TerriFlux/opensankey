@@ -19,7 +19,7 @@ describe('os#1511 lot 4 — Autres : la regle commune', () => {
     expect(two.map(s => s.id)).toEqual(['a', 'b', OTHERS_ID])
   })
   test('le plafond compte Autres et choisit par valeur', () => {
-    const st = { ...DONUT_STYLE_DEFAULTS, parts_order: 'label' as const, parts_group_under: 0, parts_max: 3 }
+    const st = { ...DONUT_STYLE_DEFAULTS, parts_order: 'name' as const, parts_group_under: 0, parts_max: 3 }
     const out = foldDonutParts([part('a', 1), part('b', 2), part('c', 30), part('d', 40)], st, 'Autres')
     // Les gardees dans l ordre du reglage, « Autres » en dernier.
     expect(out.slice(0, 2).map(s => s.id).sort()).toEqual(['c', 'd'])

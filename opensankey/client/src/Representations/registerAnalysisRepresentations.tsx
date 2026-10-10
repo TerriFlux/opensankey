@@ -49,7 +49,7 @@ import {
   HIERARCHY_FOCUS_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
 } from './analysisFigureAttributes'
 import {
-  readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
+  isFigureLinked, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
   withElementOpening
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
@@ -1748,10 +1748,11 @@ const donutClickGestures = (
   const in_pane = window_id !== undefined && pane_key !== undefined
   // Sans diagramme affiché, « le déplie dans le diagramme » n'écrit rien : le menu le grise
   // (`choiceUnavailable`), le geste s'y aligne.
-  const wants_unfold = (style.interaction_click === 'aggregate' || style.interaction_click === 'both')
-    && diagramIsShown(app_data)
-  const wants_drill = (style.interaction_click === 'zoom' || style.interaction_click === 'both')
-    && in_pane
+  // 10/10/2026 (os#1511, lot 4) — LA RÈGLE DES DIMENSIONS, ICI AUSSI (Julien : « oui ») : le réglage
+  // dit seulement Déplie / Zoome (`partClickModeOf`, les quatre valeurs d'avant ramenées à deux) ; que
+  // le DIAGRAMME suive, c'est le lien de la figure qui le décide (`isFigureLinked`), plus le réglage.
+  const wants_unfold = isFigureLinked(ctx.options) && diagramIsShown(app_data)
+  const wants_drill = partClickModeOf(style.interaction_click) === 'zoom' && in_pane
 
   const writePath = (path: string[]) => {
     app_data.menu_configuration.setMainZonePaneOptions(

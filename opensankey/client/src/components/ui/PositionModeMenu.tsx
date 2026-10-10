@@ -313,7 +313,9 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   // elle est additive, toujours en choix multiple (`Class_DataTagGroup.admissibleBanner`) ; en
   // séquence (années, scénarios), un membre à la fois. Seule une dimension plate, dont rien ne dit
   // si ses membres se somment, garde le choix.
-  const nature_decides = tagg.is_hierarchical || tagg.banner === 'sequence'
+  // 10/10/2026 (lot 4) — RÉOUVERT aux dimensions hiérarchisées : depuis 472b3aa0f elles admettent « un
+  // membre à la fois » (Julien : choisir les filières comme l'unité ou l'année). Seule la séquence tranche.
+  const nature_decides = tagg.banner === 'sequence'
   const show_items = nature_decides ? null : submenuEntry('show', t('Banner.show_submenu'), <>
     <CheckItem
       label={t('Banner.draw_one')}
