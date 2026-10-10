@@ -615,14 +615,19 @@ export const barLabelBottom = (angles: readonly number[]): number => {
 
 /**
  * os#1527 (Julien, 10/10 : « j'ai toujours la légende comme avant ») — LA LÉGENDE SUIT LES SECTEURS
- * DESSINÉS : une ligne dont la part a un secteur prend son rang ; une part sans secteur (décochée)
- * reste juste après celle qui la précédait dans la liste reçue. Stable : rien d'autre ne bouge.
+ * DESSINÉS : une ligne dont la part a un secteur prend son rang. Une part DÉCOCHÉE (sans secteur parce
+ * qu'on l'a retirée) garde sa place, juste après sa voisine précédente : la liste ne saute pas au
+ * décochage. Une part sans secteur parce qu'elle n'a RIEN à dessiner (valeur nulle) va à la fin —
+ * Julien, 10/10 : « Viande chevaline » se retrouvait en tête, devant Céréales.
  */
-export const orderLikeArcs = <T extends { arc?: { index: number } }>(items: T[]): T[] => {
+export const orderLikeArcs = <T extends { arc?: { index: number }, checked?: boolean }>(items: T[]): T[] => {
   let last = -1
   const keyed = items.map((item, i) => {
     if (item.arc !== undefined) last = item.arc.index
-    return { item, i, key: item.arc !== undefined ? item.arc.index : last + 0.5 }
+    const key = item.arc !== undefined ? item.arc.index
+      : item.checked === false ? last + 0.5
+        : Number.POSITIVE_INFINITY
+    return { item, i, key }
   })
   return keyed.sort((a, b) => (a.key - b.key) || (a.i - b.i)).map(k => k.item)
 }
