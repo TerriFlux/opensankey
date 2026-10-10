@@ -190,3 +190,37 @@ export const appendLegendCapsule = (
   root.appendChild(b)
   return b
 }
+
+// ── os#1527 (10/10) — LE TABLEAU DE NAVIGATION EN HAUT DE LA COLONNE DE LÉGENDE ──────────────────────
+//
+// Julien : « la même chose pour les couronnes » que le Sankey (`main_zone_canvas_column_navigation`).
+// Légende À CÔTÉ du disque : le tableau, en rendu vertical, se pose en tête de sa colonne, au-dessus
+// des lignes, séparé d'un filet ; la bande horizontale au-dessus du disque disparaît. Légende dessous
+// ou masquée : la bande reste (c'est l'appelant qui choisit, cf. `registerAnalysisRepresentations`).
+
+/** La largeur sous laquelle une colonne qui porte le tableau ne descend pas (si la figure la permet). */
+export const LEGEND_NAVIGATION_MIN_PX = 200
+
+/**
+ * La place de la légende à côté, élargie pour le tableau : au moins `LEGEND_NAVIGATION_MIN_PX`, sans
+ * dépasser 42 % de la largeur disponible (la borne de la couronne). Sans tableau : inchangée.
+ */
+export const legendRoomWithNavigation = (room: number, available: number, has_navigation: boolean): number =>
+  has_navigation ? Math.max(room, Math.min(LEGEND_NAVIGATION_MIN_PX, available * 0.42)) : room
+
+/**
+ * Pose `navigation` en tête de la colonne `legend`, un filet dessous. `position` : le côté de la
+ * légende — la capsule occupe le coin haut de ce côté, le tableau s'en écarte d'autant.
+ */
+export const prependLegendNavigation = (legend: HTMLElement, navigation: HTMLElement, position: string): HTMLElement => {
+  const wrap = document.createElement('div')
+  wrap.className = 'figure_legend_navigation'
+  wrap.style.borderBottom = `1px solid ${ui_line}`
+  wrap.style.marginBottom = '0.3rem'
+  wrap.style.flexBasis = '100%'
+  if (position === 'left') wrap.style.paddingLeft = '1rem'
+  else wrap.style.paddingRight = '1rem'
+  wrap.appendChild(navigation)
+  legend.insertBefore(wrap, legend.firstChild)
+  return wrap
+}

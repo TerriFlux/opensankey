@@ -51,7 +51,8 @@ import type { Type_LegendTreeAncestor } from '../Elements/legendHierarchy'
 import { LEGEND_HEADING_WEIGHT, partLegendRows, type Type_LegendRow } from '../Elements/legendRows'
 import { appendLegendRows } from '../Elements/legendRowsDom'
 import {
-  appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRowSectorId,
+  appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRoomWithNavigation, legendRowSectorId,
+  prependLegendNavigation,
   type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
@@ -154,6 +155,12 @@ export interface Type_ChartOptions {
   centre_name?: { text: string, bold: boolean }
   /** 02/10/2026 — le fil d'Ariane d'une figure zoomée, posé sous le titre (cf. `mountFigureTextZones`). */
   breadcrumb?: Type_FigureCrumb[] | HTMLElement
+  /**
+   * os#1527 (10/10) — LE TABLEAU DE NAVIGATION, en rendu vertical, posé EN TÊTE DE LA COLONNE DE
+   * LÉGENDE (légende à côté du disque seulement : l'appelant le décide, cf. `donutLegendBeside`). La
+   * place réservée à la légende le couvre (`legendRoomWithNavigation`) ; le disque prend le reste.
+   */
+  legend_navigation?: HTMLElement
   /**
    * 03/10/2026 — DES CASES À CÔTÉ DE LA LÉGENDE (Jean-Yves, os#1511) : décocher une entrée retire sa
    * part, comme le sélecteur de la barre du haut ; les parts retirées restent dans la légende,
@@ -868,10 +875,20 @@ export const sliceTooltipLabel = (s: Type_StatSlice, st: Type_FigureChartStyle):
  * La place que la légende commune prend : une LARGEUR à côté des cases, une HAUTEUR dessous — les
  * mêmes bornes que la légende d'une couronne seule (`drawDonutChart`), prises sur toute la figure.
  */
-export const smallMultiplesLegendRoom = (st: Type_FigureChartStyle, width: number, height: number): number =>
+export const smallMultiplesLegendRoom = (
+  st: Type_FigureChartStyle, width: number, height: number, has_navigation = false
+): number =>
   st.legend_position === 'bottom'
     ? Math.min(st.legend_width, height * 0.28, st.legend_font_size * 7)
-    : Math.min(st.legend_width, width * 0.32)
+    : legendRoomWithNavigation(Math.min(st.legend_width, width * 0.32), width, has_navigation)
+
+/**
+ * os#1527 (10/10) — LA LÉGENDE D'UNE COURONNE EST-ELLE À CÔTÉ DU DISQUE ? Affichée, avec des parts,
+ * pas dessous : c'est là que le tableau de navigation monte dans sa colonne (`legend_navigation`).
+ * Sinon il reste en bande au-dessus du disque.
+ */
+export const donutLegendBeside = (st: Type_FigureChartStyle): boolean =>
+  st.legend_visible && st.legend_parts !== 'none' && st.legend_position !== 'bottom'
 
 /**
  * LA LÉGENDE COMMUNE, dans `legend` (le conteneur que l'appelant a posé à côté ou sous la grille,
@@ -1228,6 +1245,13 @@ export const drawDonutChart = (
   // Une case taillée à son disque peut être plus petite que le plancher d'une figure : elle dessine.
   const too_small = opts.small_multiple?.box === undefined && (width < 80 || height < 80)
   if (slices.length === 0 || total <= 0 || too_small) {
+    // Le tableau reste accessible sur une figure vide : c'est lui qui permet d'en sortir.
+    if (opts.legend_navigation) {
+      const host = sel.node() as HTMLElement
+      host.style.display = 'flex'
+      host.style.flexDirection = 'column'
+      prependLegendNavigation(host, opts.legend_navigation, 'left').style.flex = '0 0 auto'
+    }
     drawEmptyLabel(sel, opts.empty_label ?? '')
     return
   }
@@ -1289,11 +1313,13 @@ export const drawDonutChart = (
   // La place que la légende prend au dessin. À CÔTÉ, c'est une largeur, et `legend_width` la dit.
   // DESSOUS, c'est une hauteur, et `legend_width` n'en parle pas : un bandeau qui revient à la
   // ligne tient en deux ou trois lignes, on lui réserve donc une bande, pas la moitié du cadre.
+  // os#1527 (10/10) — le tableau de navigation en tête de colonne : la place réservée le couvre.
+  const legend_navigation = legend_shown && !below ? opts.legend_navigation : undefined
   const legend_room = !legend_shown
     ? 0
     : below
       ? Math.min(st.legend_width, height * 0.28, st.legend_font_size * 7)
-      : Math.min(st.legend_width, width * 0.42)
+      : legendRoomWithNavigation(Math.min(st.legend_width, width * 0.42), width, legend_navigation !== undefined)
   const side = below
     ? Math.max(100, Math.min(width, height - legend_room - 12) - 8)
     : Math.max(100, Math.min(width - legend_room - 12, height) - 8)
@@ -2442,6 +2468,7 @@ export const drawDonutChart = (
       .style('column-gap', '0.8rem')
       .style('width', '100%')
   }
+  if (legend_navigation) prependLegendNavigation(legend.node() as HTMLElement, legend_navigation, st.legend_position)
   if (legend_head) {
     legend.append('div')
       .attr('class', 'node_stats_legend_head')
