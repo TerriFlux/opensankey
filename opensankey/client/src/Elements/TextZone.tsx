@@ -5,6 +5,19 @@ import { ContainerStyle } from './ElementStyle'
 
 export const default_container_content = 'Text Label ...'
 
+/**
+ * os#1511 — le nom d'une dimension au pluriel, en minuscules, pour le titre (« Filière » →
+ * « filières », « Type de matière » → « types de matière ») : le premier mot prend un s, sauf s'il
+ * finit déjà par s, x ou z.
+ */
+export const pluralGroupName = (name: string): string => {
+  const words = name.trim().split(/\s+/)
+  if (words.length === 0 || words[0] === '') return name
+  const first = words[0].charAt(0).toLocaleLowerCase() + words[0].slice(1)
+  words[0] = /[sxz]$/i.test(first) ? first : first + 's'
+  return words.join(' ')
+}
+
 export class Class_ContainerElement extends Class_NodeBase {
 
   // Une (et une seule) zone de texte peut être marquée comme titre du diagramme.
@@ -82,9 +95,18 @@ export class Class_ContainerElement extends Class_NodeBase {
       })
     }
     // Data tags : toujours un tag montré -> on substitue sa valeur.
+    // os#1511 (Julien, 10/10) — PLUSIEURS membres montrés (bandes, un diagramme par membre) : un mot
+    // générique, « Sélection de filières », au lieu de la liste entière qui débordait du titre.
     interpolateGroups(
       this.drawing_area.sankey.data_taggs_list,
-      grp => grp.selected_tags_list.map(tag => tag.display_name).join(', ')
+      grp => {
+        const tags = grp.selected_tags_list
+        if (tags.length <= 1) return tags.map(tag => tag.display_name).join(', ')
+        const pluriel = pluralGroupName(grp.name)
+        const t = this.drawing_area.application_data?.t
+        return (t ? t('Banner.title_selection', { name: pluriel, defaultValue: 'Sélection de {{name}}' }) as string | null : null) ||
+          `Sélection de ${pluriel}`
+      }
     )
     // View tags : la sélection n'a de sens que si le filtre vue est actif (view_mode).
     // En « vue complète » (view_mode false), le tag reste sélectionné en interne mais
