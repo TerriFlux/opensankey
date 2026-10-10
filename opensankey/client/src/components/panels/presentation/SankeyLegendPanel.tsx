@@ -31,6 +31,7 @@ import React from 'react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_LegendItem } from '../../../Elements/legendItems'
 import { LEGEND_SAMPLE_VALUE } from '../../../Elements/legendTagStyle'
+import { LEGEND_BLOCK_PREFIX, isLegendDataTagZoneId, legendSlug } from '../../../Elements/legendIds'
 import { openPresentationFor } from './openPresentation'
 import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDimensionChoice'
 import { ZOOM_TOPIC } from '../../../types/EventBus'
@@ -317,7 +318,12 @@ export const colouredLegendItems = (app_data: Class_ApplicationData, items: read
     ?? dims.find(g => g.paints_member_bands_flows)
   const hidden = new Set(dims.filter(g => g !== colorer).map(g => g.id))
   if (hidden.size === 0) return items
+  // Les BLOCS des dimensions écartées (titre compris, que `tagGroupIdOfTitle` ne rattache pas
+  // toujours), et les lignes de rappel « Année : 2023 ▾ », qui se choisissent dans la navigation.
+  const hidden_blocks = new Set([...hidden].map(id => LEGEND_BLOCK_PREFIX + legendSlug(id)))
   return items.filter(item => {
+    if (isLegendDataTagZoneId(item.id)) return false
+    if (item.block_id !== undefined && hidden_blocks.has(item.block_id)) return false
     const group = item.tag_group_id ?? legend.tagGroupIdOfTitle(item.id)
     return group === undefined || !hidden.has(group)
   })
