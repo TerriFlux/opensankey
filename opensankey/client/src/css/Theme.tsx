@@ -4,7 +4,7 @@ import {
   menuAnatomy, modalAnatomy, stepperAnatomy
 } from '@chakra-ui/anatomy'
 import { createMultiStyleConfigHelpers, defineStyle, extendTheme, SystemStyleObject } from '@chakra-ui/react'
-import { ui_control_height, ui_font_heading, ui_ink_secondary, ui_radius, ui_text, ui_text_large } from './uiTokens'
+import { ui_control_height, ui_font_heading, ui_font_stack, ui_ink, ui_ink_secondary, ui_radius, ui_radius_small, ui_text, ui_text_large, ui_white } from './uiTokens'
 
 const createHelpers = () => ({
   tag: createMultiStyleConfigHelpers(tagAnatomy.keys),
@@ -3605,6 +3605,20 @@ export const opensankey_theme = extendTheme({
     },
     TextArea: {
       baseStyle: otherStyles.textarea_base_style
+    },
+    // Interface, 10/10 — LES INFO-BULLES DE BOUTONS (`OSTooltip`) PARLENT LES JETONS : encre du
+    // chrome en fond, texte blanc à 12 px, petit rayon des commandes. Les variables CSS de Chakra
+    // (`--tooltip-bg`, `--tooltip-fg`) portent la teinte jusqu'à la flèche (`--popper-arrow-bg`).
+    Tooltip: {
+      baseStyle: {
+        '--tooltip-bg': ui_ink,
+        '--tooltip-fg': ui_white,
+        _dark: { '--tooltip-bg': ui_ink, '--tooltip-fg': ui_white },
+        fontFamily: ui_font_stack,
+        fontSize: ui_text,
+        fontWeight: 'normal',
+        borderRadius: ui_radius_small
+      }
     },
     Drawer: {
       baseStyle: drawerStyles.base,
