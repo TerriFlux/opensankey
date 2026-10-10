@@ -44,8 +44,8 @@ import {
   dimensionDrawingEnabledFor, positionModeSelectorEnabledFor, loneSubmenuOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyMemberBands, applyMembersColorFlows,
-  dimensionCarrierCandidates,
+  applyDimensionDrawing, applyMemberBands, applyMembersColorFlows, applyNodesExpansion,
+  dimensionCarrierCandidates, dimensionOffersExpansion,
   dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier, carrierRefusal
 } from './dimensionDrawingHost'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
@@ -419,6 +419,19 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                     })}
                   </MenuGroup>
                 </Submenu>
+                : null}
+              {/* os#1511 (lot 5) — EN EXPANSION : en nœuds, les ouverts gardent leur nœud et leurs
+                  enfants s'ouvrent vers l'extérieur, sur les porteurs aux extrémités seulement. */}
+              {tagg.is_hierarchical && drawing === 'nodes' && !in_bands
+                ? <CheckItem
+                  label={t('Banner.draw_expansion', { defaultValue: 'En expansion (aux extrémités)' })}
+                  title={dimensionOffersExpansion(app_data, tagg)
+                    ? t('Banner.draw_expansion_tooltip', { defaultValue: 'Les membres ouverts gardent leur nœud ; leurs enfants s\'ouvrent vers l\'extérieur du diagramme' })
+                    : t('Banner.draw_expansion_unavailable', { defaultValue: 'Seulement sur un nœud porteur à une extrémité du diagramme (sans flux d\'un côté)' })}
+                  checked={tagg.nodes_expansion}
+                  disabled={!tagg.nodes_expansion && !dimensionOffersExpansion(app_data, tagg)}
+                  onClick={() => applyNodesExpansion(app_data, tagg, !tagg.nodes_expansion)}
+                />
                 : null}
               {/* os#1511 — une dimension en nœuds peut colorer les flux, avec ou sans diagramme par
                   membre (Julien, 09/10). */}

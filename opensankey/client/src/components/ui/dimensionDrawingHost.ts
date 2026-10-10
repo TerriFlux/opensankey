@@ -29,6 +29,7 @@ import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 import { nodeTransformsDimension } from '../../Algorithms/DimensionTransform'
+import { expansionSideOf } from '../../Algorithms/DimensionExpansion'
 
 export type { Type_DimensionDrawing } from '../../types/TagGroup'
 
@@ -464,6 +465,30 @@ export const applyMemberBands = (app_data: Class_ApplicationData, tagg: Class_Da
   app_data.history.saveUndo(() => apply(before, true, positions_before))
   app_data.history.saveRedo(() => apply(on, undefined))
   apply(on, undefined)
+}
+
+/**
+ * os#1511 (lot 5) — L'EXPANSION offerte ? Il faut un nœud porteur À UNE EXTRÉMITÉ (sans flux d'un
+ * côté) : c'est là seulement que le côté de l'expansion ne fait pas de doute (Julien, 10/10).
+ */
+export const dimensionOffersExpansion = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): boolean =>
+  dimensionCarriersOf(app_data, tagg).some(node => expansionSideOf(node) !== undefined)
+
+/**
+ * os#1511 (lot 5) — EN NŒUDS, L'EXPANSION AUX EXTRÉMITÉS (cf. `DimensionExpansion`) : les membres
+ * ouverts gardent leur nœud, leurs enfants s'ouvrent vers l'extérieur. Annulable.
+ */
+export const applyNodesExpansion = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  const before = tagg.nodes_expansion
+  const apply = (value: boolean) => {
+    tagg.nodes_expansion = value
+    app_data.drawing_area.rebuildDimensionNodes()
+    app_data.drawing_area.draw()
+    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+  app_data.history.saveUndo(() => apply(before))
+  app_data.history.saveRedo(() => apply(on))
+  apply(on)
 }
 
 /**
