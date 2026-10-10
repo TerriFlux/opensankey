@@ -2,21 +2,9 @@ import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeBase } from './NodeBase'
 import { ContainerStyle } from './ElementStyle'
+import { pluralGroupName } from './titleTokens'
 
 export const default_container_content = 'Text Label ...'
-
-/**
- * os#1511 — le nom d'une dimension au pluriel, en minuscules, pour le titre (« Filière » →
- * « filières », « Type de matière » → « types de matière ») : le premier mot prend un s, sauf s'il
- * finit déjà par s, x ou z.
- */
-export const pluralGroupName = (name: string): string => {
-  const words = name.trim().split(/\s+/)
-  if (words.length === 0 || words[0] === '') return name
-  const first = words[0].charAt(0).toLocaleLowerCase() + words[0].slice(1)
-  words[0] = /[sxz]$/i.test(first) ? first : first + 's'
-  return words.join(' ')
-}
 
 export class Class_ContainerElement extends Class_NodeBase {
 

@@ -1,4 +1,4 @@
-import { pluralGroupName } from './TextZone'
+import { pluralGroupName } from './titleTokens'
 
 // os#1511 (Julien, 10/10) — plusieurs membres montres : le titre dit « Selection de filieres ».
 
