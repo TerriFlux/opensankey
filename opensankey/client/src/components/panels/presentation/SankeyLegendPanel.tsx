@@ -284,8 +284,9 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
   return <div
     className='sankey_legend_panel'
     style={{
-      // os#1527 — le corps de la légende des couronnes (`legend_font_size`, 14 par défaut).
-      fontSize: '14px', color: INK,
+      // os#1527 — le corps de la légende des couronnes était à 14 px ; os#1511 (Julien, 10/10 : « il y a
+      // moyen de jouer sur des polices plus petites ») — 12 px, sous la navigation (11 px) de la colonne.
+      fontSize: '12px', color: INK,
       padding: '0.25rem 0.5rem 0.5rem', userSelect: 'none',
       background: bg_opacity > 0 ? hexWithOpacity(legend.legend_bg_color, bg_opacity) : undefined,
       border: legend.legend_bg_border ? '1px solid #a0aec0' : undefined,

@@ -227,6 +227,16 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
   box.style.gap = '0.3rem'
   box.style.overflow = 'hidden'
 
+  // os#1511 (Julien, 10/10 : « ça ne rentre plus ») — EN COLONNE, pas de tableau : une dimension par
+  // bloc, son nom puis ses niveaux à la ligne, en plus petit. La colonne se replie elle-même (capsule).
+  if (model.vertical) {
+    box.style.fontSize = '11px'
+    box.style.lineHeight = '1.35'
+    box.style.padding = '0.3rem 0.4rem'
+    box.appendChild(buildVerticalRows(model))
+    return box
+  }
+
   const collapsed = collapsed_tables.has(model.memory_key)
   const fold = plainButton(collapsed ? '▸' : '▾', model.labels.title)
   fold.className = 'figure_navigation_fold'
@@ -447,10 +457,105 @@ export const buildFigureNavigationTable = (model: Type_FigureNavTable): HTMLElem
 }
 
 /**
+ * os#1511 (10/10) — LES DIMENSIONS EN COLONNE : un bloc par dimension, séparés d'un filet. Une
+ * commande du lecteur garde sa forme (elle passe à la ligne) ; une dimension à niveaux montre son nom
+ * (menu, ▾ de l'arbre) puis ses niveaux à la ligne, chacun avec sa case de zoom.
+ */
+const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
+  const list = document.createElement('div')
+  list.className = 'figure_navigation_column'
+  list.style.display = 'flex'
+  list.style.flexDirection = 'column'
+  list.style.gap = '0.3rem'
+  list.style.width = '100%'
+  list.style.minWidth = '0'
+  model.dimensions.forEach((dim, i) => {
+    const block = document.createElement('div')
+    block.className = 'figure_navigation_column_dimension'
+    if (i > 0) {
+      block.style.borderTop = '1px solid #e2e8f0'
+      block.style.paddingTop = '0.3rem'
+    }
+    list.appendChild(block)
+    if (dim.control) {
+      fillControlCell(model, block, dim.id, dim.control)
+      return
+    }
+    const head = document.createElement('div')
+    head.style.display = 'flex'
+    head.style.alignItems = 'center'
+    head.style.gap = '0.2rem'
+    head.style.fontWeight = '700'
+    head.style.minWidth = '0'
+    if (dim.drawing) head.appendChild(drawingButton(model, dim.id, dim.drawing))
+    else if (dim.leading) head.appendChild(dim.leading)
+    const label = document.createElement('span')
+    label.textContent = dim.name
+    label.title = model.labels.dimension(dim.name)
+    label.style.overflow = 'hidden'
+    label.style.textOverflow = 'ellipsis'
+    label.style.whiteSpace = 'nowrap'
+    label.style.minWidth = '0'
+    head.appendChild(label)
+    if (dim.summary) {
+      const sum = document.createElement('span')
+      sum.textContent = dim.summary
+      sum.style.fontWeight = '400'
+      sum.style.fontStyle = 'italic'
+      sum.style.color = '#718096'
+      head.appendChild(sum)
+    }
+    const members = dim.members
+    if (members) {
+      const key = `${model.memory_key}|members|${dim.id}`
+      const caret = plainButton('▾', model.labels.members)
+      caret.className = 'figure_navigation_members'
+      caret.style.color = '#718096'
+      caret.style.fontSize = '9px'
+      caret.dataset.navPopover = key
+      keepClick(caret, () => toggleFigureNavPopover(key, caret, members))
+      refreshFigureNavPopover(key, members)
+      head.appendChild(caret)
+    }
+    block.appendChild(head)
+    const levels = document.createElement('div')
+    levels.style.display = 'flex'
+    levels.style.flexWrap = 'wrap'
+    levels.style.gap = '0.15rem 0.6rem'
+    levels.style.marginTop = '0.1rem'
+    levels.style.paddingLeft = '0.2rem'
+    dim.levels.forEach((level, c) => {
+      const item = document.createElement('div')
+      item.style.display = 'inline-flex'
+      item.style.alignItems = 'center'
+      item.style.gap = '0.15rem'
+      item.style.maxWidth = '100%'
+      item.className = level.active ? 'figure_navigation_level figure_navigation_active' : 'figure_navigation_level'
+      const tip = level.column ? model.labels.uncut(level.label) : model.labels.cut_by(level.label)
+      const btn = plainButton(level.label, tip)
+      btn.style.color = level.active ? ACCENT : '#2d3748'
+      btn.style.fontWeight = level.active ? '700' : '400'
+      if (level.active) btn.style.borderBottom = `2px solid ${ACCENT}`
+      const choose = level.choose
+      if (choose) keepClick(btn, choose)
+      else { btn.style.cursor = 'default'; keepClick(btn, () => { /* inerte */ }) }
+      item.appendChild(btn)
+      const zoom = document.createElement('div')
+      zoom.style.maxWidth = ZOOM_CELL_WIDTH
+      fillZoomCell(model, zoom, `${dim.id}|${c}`, level)
+      item.appendChild(zoom)
+      levels.appendChild(item)
+    })
+    block.appendChild(levels)
+  })
+  return list
+}
+
+/**
  * LA CASE DE ZOOM D'UN NIVEAU, sur une ligne de largeur fixe : le résumé (« Céréales +2 »), le ⌄ qui
  * ouvre la liste à cases (discret au survol d'une case vide), le ✕ qui annule ce zoom.
  */
-const fillZoomCell = (model: Type_FigureNavTable, td: HTMLTableCellElement, where: string, level: Type_FigureNavLevel) => {
+const fillZoomCell = (model: Type_FigureNavTable, td: HTMLElement, where: string, level: Type_FigureNavLevel) => {
   const zooms = level.zooms ?? []
   // `width` sur une case de tableau en disposition automatique est un MINIMUM ; le contenu, de largeur
   // nulle mais au moins toute la case, ne pousse pas la colonne : elle garde la largeur de son en-tête
@@ -609,7 +714,7 @@ const summaryOf = (labels: string[], empty: string): string =>
   labels.length === 0 ? empty : labels.length === 1 ? labels[0] : `${labels[0]} +${labels.length - 1}`
 
 /** os#1511 — LA COMMANDE DU LECTEUR d'une ligne : case, liste de niveaux ou choix de membres. */
-const fillControlCell = (model: Type_FigureNavTable, cell: HTMLTableCellElement, dim_id: string, control: Type_FigureNavControl) => {
+const fillControlCell = (model: Type_FigureNavTable, cell: HTMLElement, dim_id: string, control: Type_FigureNavControl) => {
   const row = document.createElement('div')
   row.style.display = 'flex'
   row.style.alignItems = 'center'
