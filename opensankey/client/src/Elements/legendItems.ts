@@ -24,8 +24,9 @@ import { lireCoupe, listeDuZoom } from '../Algorithms/DimensionTableCut'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_DataTag } from '../types/Tag'
 // os#1511 — retrait et ordre de l'arbre, partagés avec la légende des figures
-import { LEGEND_INDENT_EM, legendTreeRows, sortByTreeRanks } from './legendHierarchy'
-import type { Type_LegendTreeAncestor } from './legendHierarchy'
+import { LEGEND_INDENT_EM, sortByTreeRanks } from './legendHierarchy'
+// os#1527 — le modèle de légende commun aux couronnes et au Sankey
+import { dimensionLegendRows } from './legendRows'
 
 // ITEMS (pur) ========================================================================
 
@@ -191,6 +192,9 @@ type Type_TagGroupForLegend = {
   is_drawn_as_nodes?: boolean
   // os#1511 — couleur d'un membre à l'écran (la sienne, sinon la carte par défaut).
   displayColorOf?(tag: Type_TagForLegend): string
+  // os#1527 — les membres dans l'ORDRE DU DESSIN (`Class_DataTagGroup.legendMembersOrder`). Absent
+  // (mocks, groupes de nœuds et de flux) : l'ordre de l'arbre.
+  legendMembersOrder?(tags: readonly Type_TagForLegend[]): Type_TagForLegend[]
   selected_tags_list: Type_TagForLegend[]
   // sa#532 — TOUTES les étiquettes du groupe, sélectionnées ou non. Optionnel :
   // absent, le calcul retombe sur `selected_tags_list` (comportement d'avant
@@ -486,7 +490,6 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
   return new Set(all_groups.filter(g => emitted_blocks.has(LEGEND_CHILD_PREFIX + 'block-' + slug(g.id))))
 }
 
-/** os#1511 — profondeur d'un membre dans l'arbre de sa dimension (0 = racine). */
 /**
  * os#1526 — LES MEMBRES PROPOSÉS EN CASES par la légende d'une dimension à niveaux : ceux du niveau
  * montré sous les zooms du tableau (`listeDuZoom` de la colonne). `null` : pas une vraie dimension
@@ -500,24 +503,6 @@ function offeredDimensionMembers(group: Type_TagGroupForLegend): Set<Type_TagFor
   const coupe = lireCoupe(real, real.selected_tags_list as Class_DataTag[])
   if (coupe.mixte || coupe.colonnes.length !== 1) return null
   return new Set(listeDuZoom(real, coupe, coupe.colonnes[0]).membres as unknown as Type_TagForLegend[])
-}
-
-function tagDepth(tag: Type_TagForLegend): number {
-  let depth = 0
-  for (let p = tag.parent; p !== undefined; p = p.parent) depth++
-  return depth
-}
-
-/**
- * os#1511 — les ancêtres OUVERTS d'un membre montré, du plus haut au plus proche : ceux qui ne sont
- * pas plus haut que le moins profond des membres montrés (`min_depth`). Au-dessus, ce sont des
- * niveaux que la légende ne déplie pas (« Tous produits ») : ils ne s'écrivent pas.
- */
-function openAncestors(tag: Type_TagForLegend, min_depth: number): Type_TagForLegend[] {
-  const ancestors: Type_TagForLegend[] = []
-  let depth = tagDepth(tag)
-  for (let p = tag.parent; p !== undefined && --depth >= min_depth; p = p.parent) ancestors.unshift(p)
-  return ancestors
 }
 
 /**
@@ -645,18 +630,27 @@ export function computeLegendItems(
       })
       if (displayed_tags.length === 0) return
       // os#1511 — dimension à niveaux : les membres désagrégés prennent ENSEMBLE la place de leur
-      // parent (ordre de l'arbre), en retrait ; chaque ancêtre OUVERT s'écrit une fois, en en-tête
-      // sans pastille, à la place de son premier membre — exactement la légende des couronnes.
+      // parent, en retrait ; chaque ancêtre OUVERT s'écrit une fois, en en-tête sans pastille, à la
+      // place de son premier membre. os#1527 — les lignes du MODÈLE COMMUN (`dimensionLegendRows`),
+      // les mêmes que la légende des couronnes, dans l'ORDRE DU DESSIN (le réglage `members_order` de
+      // la dimension, comme ses bandes) ; les identifiants de zone restent ceux d'avant.
       const hierarchical = is_data_tagg && displayed_tags.some(tag => tag.parent !== undefined)
-      if (hierarchical) sortByHierarchy(displayed_tags, tag_group.tags_list ?? displayed_tags)
-      const min_depth = hierarchical ? Math.min(...displayed_tags.map(tagDepth)) : 0
-      const ancestors_by_id = new Map<string, Type_TagForLegend>()
-      const rows = legendTreeRows(displayed_tags, (tag): Type_LegendTreeAncestor[] | undefined => {
-        if (!hierarchical) return undefined
-        return openAncestors(tag, min_depth).map(a => {
-          ancestors_by_id.set(a.id, a)
-          return { id: a.id, label: a.display_name }
-        })
+      const tag_of = new Map(displayed_tags.map(tag => [tag.id, tag] as [string, Type_TagForLegend]))
+      const drawingOrder = (tags: Type_TagForLegend[]): Type_TagForLegend[] => {
+        if (!is_data_tagg) return tags
+        if (tag_group.legendMembersOrder !== undefined) return tag_group.legendMembersOrder(tags)
+        if (hierarchical) sortByHierarchy(tags, tag_group.tags_list ?? tags)
+        return tags
+      }
+      const rows = dimensionLegendRows<Type_TagForLegend>(tag_group, {
+        listed: displayed_tags,
+        hierarchical,
+        order: drawingOrder,
+        labelOf: tag => tag.display_name,
+        keyOf: tag => LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
+        // La clé de l'en-tête est la ROUTE de l'ancêtre (deux routes, deux en-têtes).
+        headingKeyOf: route => LEGEND_CHILD_PREFIX + 'heading-' + slug(tag_group.id) + '-' + route.map(slug).join('--'),
+        descriptionOf: tag => definitionOf(tag)
       })
       const block_id = LEGEND_CHILD_PREFIX + 'block-' + slug(tag_group.id)
       const title: Type_LegendItem = {
@@ -673,26 +667,16 @@ export function computeLegendItems(
       items.push(title)
       rows.forEach(row => {
         if (row.kind === 'heading') {
-          // La clé de l'en-tête est la ROUTE de l'ancêtre (deux routes, deux en-têtes) ; son
-          // dernier maillon est l'ancêtre lui-même.
-          const route = row.key.split('\u0000')
-          const heading: Type_LegendItem = {
-            id: LEGEND_CHILD_PREFIX + 'heading-' + slug(tag_group.id) + '-' + route.map(slug).join('--'),
-            text: row.label,
-            bold: true,
-            heading: true,
-            block_id
-          }
+          const heading: Type_LegendItem = { id: row.key, text: row.label, bold: true, heading: true, block_id }
           if (row.indent > 0) heading.indent = row.indent
-          const ancestor = ancestors_by_id.get(route[route.length - 1])
-          const heading_description = ancestor !== undefined ? definitionOf(ancestor) : undefined
-          if (heading_description !== undefined) heading.description = heading_description
+          if (row.description !== undefined) heading.description = row.description
           items.push(heading)
           return
         }
-        const tag = row.entry
+        const tag = tag_of.get(row.target?.member_id ?? '')
+        if (row.kind !== 'entry' || tag === undefined) return
         const item: Type_LegendItem = {
-          id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
+          id: row.key,
           text: legendEntryText(tag, tag_group, config.entry_template),
           tag_group_id: tag_group.id,
           tag_id: tag.id,
@@ -724,8 +708,7 @@ export function computeLegendItems(
           item.dimmed = true
         }
         if (row.indent > 0) item.indent = row.indent
-        const tag_description = definitionOf(tag)
-        if (tag_description !== undefined) item.description = tag_description
+        if (row.description !== undefined) item.description = row.description
         items.push(item)
       })
       if (en_bandes?.has_others) {

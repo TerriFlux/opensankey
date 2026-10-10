@@ -469,7 +469,8 @@ const DONUT_HONOURS = {
   legend_parts: { default: 'all', visibleIf: (o: Type_Bag) => o['legend_visible'] === true && !smallMultiplesOn(o) },
   // 04/10/2026 — DEUX POINTS DE PLUS (Jean-Yves : « augmenter un peu la taille de la police de
   // légende »), comme `DONUT_STYLE_DEFAULTS`. Les barres gardent les 12 du catalogue.
-  legend_font_size: { default: 14, visibleIf: legendShown },
+  // os#1527 (Julien, 10/10) — 12 px, comme la légende du Sankey (modèle commun).
+  legend_font_size: { default: 12, visibleIf: legendShown },
   legend_width: { default: 230, visibleIf: legendShown },
   // Et la valeur avec, écrite en pourcentage : c'est ce qu'une couronne dit de mieux — la part
   // d'un tout. Le pourcentage REMPLACE le nombre (os#1489), il ne s'y ajoute pas.

@@ -50,7 +50,8 @@ const draw = (slices: Type_StatSlice[], over: Partial<Type_FigureChartStyle>): H
 /** Le texte de la legende seule — jamais celui des secteurs, qui sont des <text> du SVG. */
 const legendText = (el: HTMLElement): string =>
   [...el.querySelectorAll('div')]
-    .filter(d => d.querySelector('svg') === null && d.children.length > 0)
+    // os#1527 — la pastille de legende est un petit svg (`legend_swatch`) : seul le svg du trace est ecarte.
+    .filter(d => d.querySelector('svg:not(.legend_swatch)') === null && d.children.length > 0)
     .map(d => d.textContent ?? '')
     .join(' ')
 

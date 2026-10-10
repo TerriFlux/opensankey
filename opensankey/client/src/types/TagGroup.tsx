@@ -11,7 +11,7 @@ import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTa
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
 import { Type_AssignmentRule, Type_RuleMeasurable, parseAssignmentRule, resolveRuleTag, serializeAssignmentRule } from './TagAssignmentRule'
-import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER } from '../Algorithms/DimensionMemberOrder'
+import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER, ordonnerMembres } from '../Algorithms/DimensionMemberOrder'
 import { foldSmallParts } from '../Algorithms/DimensionOthers'
 import {
   Type_HierarchicalPaletteParams, Type_PaletteNode, computeHierarchicalColors, default_hierarchical_palette_params
@@ -1958,15 +1958,31 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
         totaux.set(bande.id, (totaux.get(bande.id) ?? 0) + bande.value)
       }))
       const replies = this.foldedMembersOf(totaux)
-      this._fold_memo = { cle, replies }
+      this._fold_memo = { cle, replies, totaux }
       queueMicrotask(() => { this._fold_memo = undefined })
       return replies
     } finally {
       this._fold_computing = false
     }
   }
-  private _fold_memo: { cle: string, replies: Set<string> } | undefined = undefined
+  private _fold_memo: { cle: string, replies: Set<string>, totaux: Map<string, number> } | undefined = undefined
   private _fold_computing = false
+
+  /**
+   * os#1527 — LES MEMBRES DANS L'ORDRE DU DESSIN, pour la légende (arbitrage de Julien, 10/10 : la
+   * légende suit l'ordre des bandes). Même règle que les bandes et les nœuds (`members_order`, cf.
+   * `ordonnerMembres`), sur les totaux des bandes des flux visibles — ceux qui décident aussi du repli
+   * en « Autres » (`globalFoldedMembers`). Sans bandes, totaux nuls : l'ordre de l'arbre.
+   */
+  public legendMembersOrder<T extends { id: string }>(members: readonly T[]): T[] {
+    this.globalFoldedMembers()
+    const totaux = this._fold_memo?.totaux ?? new Map<string, number>()
+    const tags = members.map(m => this.tags_dict[m.id] as Class_DataTag | undefined)
+    if (tags.some(t => t === undefined)) return [...members]
+    const by_id = new Map(members.map(m => [m.id, m]))
+    return ordonnerMembres(this, tags as Class_DataTag[], this.members_order, tag => totaux.get(tag.id) ?? 0)
+      .map(tag => by_id.get(tag.id) as T)
+  }
 
   /**
    * os#1511 — CE QUE LES BANDES DESSINENT VRAIMENT de cette dimension, sur les flux visibles

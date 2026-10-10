@@ -19,8 +19,14 @@
 // masquées gardées », grisée).
 
 import { estimateTextWidth, type Type_LegendItem } from './legendItems'
-import { LEGEND_SAMPLE_VALUE } from './legendTagStyle'
-import { ui_ink, ui_ink_disabled, ui_ink_secondary, ui_ink_strong, ui_font_stack, ui_line_strong } from '../css/uiTokens'
+import { LEGEND_SWATCH_EM, legendSwatch, type Type_LegendRowSwatch, type Type_LegendSwatch } from './legendRows'
+import { ui_ink_disabled, ui_ink_strong, ui_font_stack } from '../css/uiTokens'
+
+/** La pastille d'une entrée de la légende du Sankey, au format du modèle commun. */
+export const legendItemSwatch = (item: Type_LegendItem): Type_LegendRowSwatch | undefined =>
+  item.format !== undefined
+    ? { color: item.swatch_color, format: item.format }
+    : item.swatch_color
 
 export type Type_LegendSvgConfig = {
   /** Légende masquée (`mask_legend`) : rien. */
@@ -51,11 +57,8 @@ export type Type_LegendSvg = { svg: string, width: number, height: number }
 
 const EMPTY: Type_LegendSvg = { svg: '', width: 0, height: 0 }
 
-// Les hachures d'un nœud (`shape_hatch`), dans l'orientation du style (cf. `Swatch` de la colonne).
-const HATCH_ANGLE: { [k: string]: number } = { vertical: 0, horizontal: 90, diagonal: 45, antidiagonal: -45 }
-
-// Mesures de la colonne, en polices (cf. `SankeyLegendPanel` : pastille 0,7 em, écart 0,35 rem…)
-const SWATCH_EM = 0.7
+// Mesures de la colonne, en polices : celles du modèle commun (`legendRows`) — pastille 0,7 em…
+const SWATCH_EM = LEGEND_SWATCH_EM
 const GAP_EM = 0.35
 const LINE_EM = 1.25
 const ROW_PAD_EM = 0.1
@@ -94,66 +97,20 @@ export const wrapText = (text: string, font: number, max_w: number): string[] =>
   return lines
 }
 
-type Type_Swatch = { w: number, h: number, svg: (x: number, y: number) => string }
-
-/** La pastille d'une entrée (cf. `Swatch` de la colonne), ou `undefined` si l'entrée n'en a pas. */
+/**
+ * La pastille d'une entrée, ou `undefined` si l'entrée n'en a pas : LA pastille commune
+ * (`legendSwatch`, la même que la colonne et les couronnes), à la police de l'image.
+ */
 const swatchOf = (
   item: Type_LegendItem, P: number, unchecked: boolean, config: Type_LegendSvgConfig, pattern_id: string
-): Type_Swatch | undefined => {
+): Type_LegendSwatch | undefined => {
   if (item.heading === true) return undefined
   if (item.scale_bar === true) {
     const h = Math.max(4, config.scale_bar_height ?? 50)
     const w = Math.max(2, P / 6)
     return { w: w + 0.3 * P, h, svg: (x, y) => `<rect x="${n(x + 0.15 * P)}" y="${n(y)}" width="${n(w)}" height="${n(h)}" fill="black"/>` }
   }
-  const swatch = item.format?.swatch
-  const color = unchecked ? ui_line_strong : (swatch?.color ?? item.swatch_color)
-  const icon = item.format?.icon
-  if (color === undefined && icon === undefined) return undefined
-  const has_value = item.format?.value !== undefined
-  const h = SWATCH_EM * P
-  // Élargie quand elle porte la valeur d'exemple (30 × 14 dans la colonne), ou des tirets de flux.
-  const w = has_value ? h * 30 / 14 : (swatch?.link_dashed === true ? h * 2 : h)
-  const border = swatch?.border_visible === true
-  const dashed = swatch?.border_dashed === true || swatch?.link_dashed === true
-  const hatch = swatch?.hatch !== undefined && swatch.hatch !== 'none' ? HATCH_ANGLE[swatch.hatch] : undefined
-  const ink = unchecked ? ui_ink_disabled : ui_ink
-  const unit = h / 14
-  return {
-    w, h,
-    svg: (x, y) => {
-      const parts: string[] = []
-      if (hatch !== undefined) {
-        parts.push(`<defs><pattern id="${pattern_id}" width="${n(3 * unit)}" height="${n(3 * unit)}" patternUnits="userSpaceOnUse" patternTransform="rotate(${hatch})">` +
-          `<rect width="${n(3 * unit)}" height="${n(3 * unit)}" fill="${esc(color ?? 'none')}"/>` +
-          `<line x1="0" y1="0" x2="0" y2="${n(3 * unit)}" stroke="${ink}" stroke-width="${n(unit)}"/></pattern></defs>`)
-      }
-      const stroke = border || dashed ? esc(swatch?.border_color ?? ui_ink_secondary) : 'none'
-      const stroke_w = border ? Math.min(3, swatch?.border_thickness ?? 1) * unit : unit
-      parts.push(`<rect x="${n(x + 0.5 * unit)}" y="${n(y + 0.5 * unit)}" width="${n(w - unit)}" height="${n(h - unit)}" rx="${n(2 * unit)}"` +
-        ` fill="${hatch !== undefined ? `url(#${pattern_id})` : esc(color ?? 'none')}"` +
-        ` fill-opacity="${unchecked ? 1 : (swatch?.opacity ?? 1)}" stroke="${stroke}" stroke-width="${n(stroke_w)}"` +
-        (dashed ? ` stroke-dasharray="${n(3 * unit)} ${n(2 * unit)}"` : '') + '/>')
-      if (icon?.is_image === true && icon.image_src !== undefined) {
-        parts.push(`<image href="${esc(icon.image_src)}" x="${n(x + unit)}" y="${n(y + unit)}" width="${n(h - 2 * unit)}" height="${n(h - 2 * unit)}"/>`)
-      } else if (icon !== undefined && icon.icon_name) {
-        const d = config.iconPath?.(icon.icon_name)
-        if (d) {
-          parts.push(`<svg x="${n(x + unit)}" y="${n(y + unit)}" width="${n(h - 2 * unit)}" height="${n(h - 2 * unit)}" viewBox="${esc(icon.view_box || '0 0 24 24')}">` +
-            `<path d="${esc(d)}" fill="${esc(unchecked ? ui_ink_disabled : (icon.color ?? ink))}"/></svg>`)
-        }
-      }
-      const value = item.format?.value
-      if (value !== undefined) {
-        const sample = value.uppercase === true ? LEGEND_SAMPLE_VALUE.toLocaleUpperCase() : LEGEND_SAMPLE_VALUE
-        parts.push(`<text x="${n(x + w / 2)}" y="${n(y + h / 2 + 3.2 * unit)}" text-anchor="middle" font-size="${n(9 * unit)}"` +
-          ` fill="${esc(value.color ?? ui_ink_strong)}" font-weight="${value.bold === true ? 700 : 400}"` +
-          (value.italic === true ? ' font-style="italic"' : '') +
-          (value.font_family ? ` font-family="${esc(value.font_family)}"` : '') + `>${esc(sample)}</text>`)
-      }
-      return parts.join('')
-    }
-  }
+  return legendSwatch(legendItemSwatch(item), SWATCH_EM * P, { unchecked, pattern_id, iconPath: config.iconPath })
 }
 
 /** Le `<text>` d'une entrée, ligne par ligne, avec le nom souligné d'un groupe épinglé. */
