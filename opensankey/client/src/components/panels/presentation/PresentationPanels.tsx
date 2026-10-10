@@ -35,7 +35,7 @@ import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import { PresentationPopup } from './PresentationPopup'
-import { legendTagGroupOf } from './legendGroupPresentation'
+import { legendTagGroupOf, legendTitlePresentable } from './legendGroupPresentation'
 import { LegendDimensionChoice } from './LegendDimensionPanel'
 import {
   findLegendDimension, groupIdOfLegendDimensionPanel, isLegendDimensionPanelId
@@ -65,7 +65,9 @@ const findElementById = (
   const found = sankey.nodes_dict[element_id]
     ?? sankey.links_dict[element_id]
     ?? sankey.containers_dict[element_id]
-  return (found ?? null) as unknown as Presentable | null
+  // os#1527 (lot 0) — titre de groupe de la légende ouvert depuis la colonne : il n'a pas besoin de
+  // sa zone (cf. `legendTitlePresentable`).
+  return (found ?? legendTitlePresentable(app_data, element_id) ?? null) as unknown as Presentable | null
 }
 
 /**

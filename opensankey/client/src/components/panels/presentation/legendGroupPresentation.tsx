@@ -54,6 +54,22 @@ export const findLegendTagGroup = (
     .find(group => group.id === group_id) as unknown as Class_TagGroup | undefined
 }
 
+/**
+ * os#1527 (lot 0) — LE TITRE D'UN GROUPE, PRÉSENTABLE SANS SA ZONE : la colonne de légende ouvre la
+ * pop-up d'un titre par son seul identifiant, que les zones de l'ancienne légende existent ou non.
+ * La pop-up n'en lit que l'id (le groupe se retrouve par le relevé de la légende) et le nom.
+ * `undefined` si l'id n'est pas le titre d'un groupe de nœuds ou de flux.
+ */
+export const legendTitlePresentable = (
+  app_data: Class_ApplicationData,
+  zone_id: string
+): Type_Presentable | undefined => {
+  if (!isLegendGroupZoneId(zone_id)) return undefined
+  const group = findLegendTagGroup(app_data, zone_id)
+  if (group === undefined) return undefined
+  return { id: zone_id, name: group.name, getElementProperty: () => undefined }
+}
+
 /** Le groupe d'une zone, si cette zone est un titre de groupe de nœuds ou de flux. */
 export const legendTagGroupOf = (
   app_data: Class_ApplicationData,

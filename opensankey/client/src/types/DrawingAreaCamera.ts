@@ -450,8 +450,9 @@ export function contentBoundsFromModel(
   // (-margin_left, -margin_top) et mesure getShapeWidthToUse() + les marges (cf.
   // NodeDrawShape.drawShape) : elle s'étend donc de position − margin_left/top à
   // position + taille + margin_right/bottom.
-  // os#1527 — légende lue dans le panneau : ses zones, masquées à l'écran, ne comptent pas.
-  const legend_in_panel = da.legend?.hidden_on_screen === true
+  // os#1527 — légende lue dans le panneau : ses zones, masquées à l'écran, ne comptent pas ; ni
+  // pendant une capture (lot 1), où l'image porte la légende de la colonne à leur place.
+  const legend_in_panel = da.legend?.excluded_from_bounds === true
   const shape_holders = [
     ...da.sankey.visible_nodes_list,
     ...da.sankey.containers_list.filter(c => c.is_visible && !(legend_in_panel && isLegendElementId(c.id))

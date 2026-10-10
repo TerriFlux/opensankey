@@ -2,6 +2,7 @@ import { Class_ApplicationData } from './ApplicationData'
 import type { Class_Tag } from './Tag'
 import { installJsdomRenderStubs, resetHost } from '../Persistence/renderFingerprint'
 import { contentBoundsFromModel } from './DrawingAreaCamera'
+import { refreshLegendModel } from '../Elements/LegendGenerator'
 
 /**
  * os#1527 — la légende lue dans sa COLONNE : le panneau reçoit toutes les entrées (étiquettes
@@ -60,6 +61,27 @@ describe('os#1527 — panneau de légende', () => {
     expect(indic.is_selected).toBe(true)
   })
 
+  it('lot 0 : le modèle de la colonne ne dépend pas des zones', () => {
+    const { app } = makeLegend()
+    const da = app.drawing_area
+    const legend = da.legend
+    // Zones retirées du modèle (sans casser la légende : c est le générateur qui les retire)
+    legend._generating = true
+    da.sankey.containers_list.filter(c => c.id.startsWith('legend')).forEach(c => da.sankey.deleteContainer(c))
+    legend._generating = false
+    expect(da.sankey.containers_dict['legend']).toBeUndefined()
+    expect(da.sankey.containers_dict['legend-tag-fiab-indic']).toBeUndefined()
+    let heard = 0
+    const off = legend.subscribePanel(() => { heard++ })
+    refreshLegendModel(da)
+    off()
+    expect(heard).toBe(1)
+    expect(ids(app)).toEqual(expect.arrayContaining(['legend-group-fiab', 'legend-tag-fiab-full', 'legend-tag-fiab-indic']))
+    expect(legend.isToggleEntry('legend-tag-fiab-indic')).toBe(true)
+    expect(legend.tagGroupIdOfTitle('legend-group-fiab')).toBe('fiab')
+    expect(legend.canRenameEntry('legend-tag-fiab-indic')).toBe(true)
+  })
+
   it('légende masquée : panneau vide', () => {
     const { app } = makeLegend()
     app.drawing_area.legend.masked = true
@@ -88,24 +110,45 @@ describe('os#1527 — panneau de légende', () => {
     expect(frame.d3_selection?.style('display')).not.toBe('none')
   })
 
-  it('capture (export, vignette) : la légende revient à sa place, à gauche du dessin, puis repart', () => {
+  it('export : la légende de la colonne à gauche du dessin, les zones hors du cadrage et de l image', () => {
     const { app } = makeLegend()
     const legend = app.drawing_area.legend
+    // Légende posée loin à droite : visible à l écran (pas de colonne), elle ferait la borne droite
     legend.position_x = 5000
+    const right = () => {
+      const b = contentBoundsFromModel(app.drawing_area)
+      return b === null ? 0 : b.x + b.width
+    }
+    expect(right()).toBeGreaterThan(5000)
+    // Pendant une capture, les zones sortent du cadrage
+    expect(legend.withZonesOutOfBounds(() => right())).toBeLessThan(5000)
+    expect(right()).toBeGreaterThan(5000)
+    const svg = app.pre_process_export_svg(false)
+    // Plus aucune zone de l ancienne légende dans l image ; la légende de la colonne, elle, y est
+    expect(svg).not.toContain('gg_legend')
+    expect(svg).toContain('sankey_legend_export')
+    expect(svg).toContain('Indicative')
+    const legend_w = app.exportLegendWidth()
+    expect(legend_w).toBeGreaterThan(0)
+    expect(svg).toMatch(/<g transform="translate\([\d.]+,0\)">/)
+    // Légende masquée : ni légende ni décalage
+    legend.masked = true
+    const bare = app.pre_process_export_svg(false)
+    expect(bare).not.toContain('sankey_legend_export')
+    expect(app.exportLegendWidth()).toBe(0)
+  })
+
+  it('export depuis la colonne : mêmes entrées que la colonne', () => {
+    const { app } = makeLegend()
+    const legend = app.drawing_area.legend
     legend.in_panel = true
-    const frame = app.drawing_area.sankey.containers_dict['legend']
-    const diagram = app.drawing_area.contentBounds()
-    expect(diagram).not.toBeNull()
-    const hide = legend.showForCapture()
-    expect(legend.hidden_on_screen).toBe(false)
-    expect(frame.d3_selection?.style('display')).not.toBe('none')
-    // À gauche du dessin (rendu, noms compris), sans le chevaucher
-    expect(frame.position_x + frame.getShapeWidthToUse()).toBeLessThan(diagram!.x)
-    // Comptée dans le cadrage pendant la capture
-    expect(contentBoundsFromModel(app.drawing_area)!.x).toBeLessThan(diagram!.x)
-    hide()
+    const out = legend.exportSvg(1)
+    expect(out.svg).toContain('Fiabilite')
+    expect(out.svg).toContain('Full')
+    // La vue écran n est pas touchée : les zones restent cachées
+    app.pre_process_export_svg(false)
     expect(legend.hidden_on_screen).toBe(true)
-    expect(frame.d3_selection?.style('display')).toBe('none')
+    expect(app.drawing_area.sankey.containers_dict['legend'].d3_selection?.style('display')).toBe('none')
   })
 
   it('redessin complet : la légende du panneau est déjà cachée quand le cadrage mesure', () => {
@@ -133,14 +176,6 @@ describe('os#1527 — panneau de légende', () => {
     expect(zone.d3_selection?.style('display')).toBe('none')
     app.drawing_area.sankey.containers_dict['legend'].draw()
     expect(app.drawing_area.sankey.containers_dict['legend'].d3_selection?.style('display')).toBe('none')
-  })
-
-  it('capture sans panneau : rien ne bouge', () => {
-    const { app } = makeLegend()
-    const legend = app.drawing_area.legend
-    const x = legend.position_x
-    legend.showForCapture()()
-    expect(legend.position_x).toBe(x)
   })
 
   it('légende figée à la main : passer en panneau la régénère', () => {
