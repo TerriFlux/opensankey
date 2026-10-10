@@ -1169,7 +1169,9 @@ export class LegendPersistence {
     json_legend['x'] = legend.position_x
     json_legend['y'] = legend.position_y
     if (!legend.managed) json_legend['legend_managed'] = false
-    if (!legend.masked) json_legend['mask_legend'] = legend.masked
+    // os#1511 (10/10) — toujours écrit : le défaut a changé (légende ouverte), un fichier doit dire
+    // ce que son auteur a choisi.
+    json_legend['mask_legend'] = legend.masked
     if (legend.width != default_width) json_legend['legend_width'] = legend.width
     if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
     if (legend.scale_legend_unit !== '') json_legend['scale_legend_unit'] = legend.scale_legend_unit

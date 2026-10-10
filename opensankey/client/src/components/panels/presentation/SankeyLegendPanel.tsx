@@ -277,8 +277,8 @@ const PaintFlowsButton = ({ app_data, group_id }: { app_data: Class_ApplicationD
  * côté du dessin et lui réserve sa place ; vide quand la légende est masquée.
  */
 export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const items = useSankeyLegendItems(app_data)
   const legend = app_data.drawing_area.legend
+  const items = colouredLegendItems(app_data, useSankeyLegendItems(app_data))
   // Le FOND et le CADRE réglés pour la légende (menu Légende) : ceux du panneau.
   const bg_opacity = legend.legend_bg_opacity / 100
   return <div
@@ -296,6 +296,25 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
     <FlowColorSelect app_data={app_data} />
     {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} />)}
   </div>
+}
+
+/**
+ * os#1511 (Julien, 10/10 : « je ne pense pas qu'il faille garder la légende pour les choses qui ne
+ * sont pas de la couleur ») — LA COLONNE NE LÉGENDE QUE CE QUI EST EN COULEUR : une dimension de
+ * données n'y paraît que si ses couleurs se voient sur le dessin (bandes à plusieurs membres, ou
+ * c'est elle qui peint les flux). Les autres se choisissent dans la navigation, en haut de la même
+ * colonne. Les zones de légende du MODÈLE (exports) ne changent pas.
+ */
+export const colouredLegendItems = (app_data: Class_ApplicationData, items: readonly Type_LegendItem[]): readonly Type_LegendItem[] => {
+  const legend = app_data.drawing_area.legend
+  const hidden = new Set((app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+    .filter(g => !((g.draws_bands && g.selected_tags_list.length > 1) || g.paints_member_bands_flows))
+    .map(g => g.id))
+  if (hidden.size === 0) return items
+  return items.filter(item => {
+    const group = item.tag_group_id ?? legend.tagGroupIdOfTitle(item.id)
+    return group === undefined || !hidden.has(group)
+  })
 }
 
 /**
