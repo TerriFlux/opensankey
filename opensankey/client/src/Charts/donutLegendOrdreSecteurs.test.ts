@@ -12,12 +12,22 @@ describe('os#1527 — legende de couronne dans l ordre des secteurs', () => {
     expect(orderLikeArcs(items).map(i => i.id)).toEqual(['cereales', 'oleo', 'viande'])
   })
 
-  test('une ligne sans secteur reste apres sa voisine precedente', () => {
+  test('une part sans valeur va a la fin, meme en tete de liste', () => {
     const items = [
-      { id: 'viande', arc: { index: 1 } },
-      { id: 'oeufs' },
-      { id: 'cereales', arc: { index: 0 } }
+      { id: 'chevaline', checked: true },
+      { id: 'viande', arc: { index: 1 }, checked: true },
+      { id: 'oeufs', checked: true },
+      { id: 'cereales', arc: { index: 0 }, checked: true }
     ]
-    expect(orderLikeArcs(items).map(i => i.id)).toEqual(['cereales', 'viande', 'oeufs'])
+    expect(orderLikeArcs(items).map(i => i.id)).toEqual(['cereales', 'viande', 'chevaline', 'oeufs'])
+  })
+
+  test('une part decochee garde sa place apres sa voisine', () => {
+    const items = [
+      { id: 'viande', arc: { index: 1 }, checked: true },
+      { id: 'ble', checked: false },
+      { id: 'cereales', arc: { index: 0 }, checked: true }
+    ]
+    expect(orderLikeArcs(items).map(i => i.id)).toEqual(['cereales', 'viande', 'ble'])
   })
 })

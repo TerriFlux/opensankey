@@ -42,7 +42,7 @@ import { figureNumberText, figurePercentText } from './figureFormat'
 import { discRadiusInZone, layoutDonutCallouts } from './donutCalloutLayout'
 import {
   appendLegendCapsule, appendLegendContextRows, drawnLegendRows, legendMemberKeyOf, legendRoomWithNavigation, legendRowSectorId,
-  prependLegendNavigation,
+  placeCapsuleAtColumnEdge, prependLegendNavigation,
   type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 // os#1527 — le modèle et le rendu de légende communs (couronnes et Sankey).
@@ -2163,19 +2163,23 @@ export const drawSunburstChart = (
 
     // ── Légende ───────────────────────────────────────────────────────────────────
     // os#1527 — la capsule qui la cache ou la montre, comme sur le diagramme et la couronne à plat.
-    if (opts.legend_capsule && st.legend_parts !== 'none') {
-      appendLegendCapsule(root_el.node() as HTMLElement, opts.legend_capsule, st.legend_visible, st.legend_position)
-    }
+    const capsule = opts.legend_capsule && st.legend_parts !== 'none'
+      ? appendLegendCapsule(root_el.node() as HTMLElement, opts.legend_capsule, st.legend_visible, st.legend_position)
+      : undefined
     // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
     // un conteneur vide laisserait une gouttière.
+    // os#1527 (Julien, 10/10) — à côté, la colonne part du HAUT, comme celle du Sankey.
     const legend = root_el.append('div')
       .style('flex', legend_below ? '0 0 auto' : '1 1 0').style('min-width', '0')
-      .style('align-self', 'center')
+      .style('align-self', legend_below ? 'center' : 'stretch')
       .style('max-height', legend_below ? `${legend_width}px` : '100%')
       .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
       .style('color', palette.ink)
       .style('display', st.legend_visible ? 'block' : 'none')
     if (legend_navigation) prependLegendNavigation(legend.node() as HTMLElement, legend_navigation, st.legend_position)
+    if (capsule && st.legend_visible && !legend_below) {
+      placeCapsuleAtColumnEdge(capsule, root_el.node() as HTMLElement, legend.node() as HTMLElement, st.legend_position)
+    }
     // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
     const show_rings = st.legend_visible && st.legend_levels && !multi_dimension
 
