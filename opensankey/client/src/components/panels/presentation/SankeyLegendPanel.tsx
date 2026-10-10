@@ -31,7 +31,7 @@ import React from 'react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_LegendItem } from '../../../Elements/legendItems'
 import { LEGEND_SAMPLE_VALUE } from '../../../Elements/legendTagStyle'
-import { colouredLegendItems } from '../../../Elements/legendColumn'
+import { colouredLegendItems, legendColorerOf, type Type_DimensionForColumn } from '../../../Elements/legendColumn'
 import { openPresentationFor } from './openPresentation'
 import { legendTitlePresentable } from './legendGroupPresentation'
 import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDimensionChoice'
@@ -323,6 +323,24 @@ const FlowColorSelect = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const current = groups.find(g => g.paints_member_bands_flows)
   const t = app_data.t as ((key: string, o?: { [k: string]: unknown }) => string) | undefined
   const label = (t ? t('Banner.legend_flow_color', { defaultValue: 'Couleur des flux' }) : '') || 'Couleur des flux'
+  // os#1511 (Julien, 10/10 : « je peux avoir Couleur des flux sur Ressources et emplois alors que je
+  // suis en bandes sur Filières, et c'est Filière qui porte les couleurs ») — des BANDES à plusieurs
+  // membres colorent les flux quoi qu'on choisisse ici : la liste dit laquelle, et se fige.
+  const bands = legendColorerOf(app_data.drawing_area.sankey.data_taggs_list as unknown as Type_DimensionForColumn[])
+  if (bands !== undefined && bands.draws_bands === true && (bands.selected_tags_list?.length ?? 0) > 1) {
+    const why = (t ? t('Banner.legend_flow_color_bands', { name: bands.name, defaultValue: 'Les bandes de « {{name}} » colorent les flux' }) : '') ||
+      `Les bandes de « ${bands.name} » colorent les flux`
+    return <label
+      className='sankey_legend_panel_flow_color'
+      title={why}
+      style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85em', margin: '0.2rem 0 0.4rem' }}
+    >
+      <span style={{ flex: '0 0 auto' }}>{label}</span>
+      <select value={bands.id} disabled style={{ flex: '1 1 auto', minWidth: 0, font: 'inherit' }} onChange={() => { /* figé */ }}>
+        <option value={bands.id}>{bands.name}</option>
+      </select>
+    </label>
+  }
   return <label
     className='sankey_legend_panel_flow_color'
     style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85em', margin: '0.2rem 0 0.4rem' }}
