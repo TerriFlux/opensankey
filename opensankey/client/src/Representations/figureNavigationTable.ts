@@ -519,12 +519,11 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       head.appendChild(caret)
     }
     block.appendChild(head)
-    const levels = document.createElement('div')
-    levels.style.display = 'flex'
-    levels.style.flexWrap = 'wrap'
-    levels.style.gap = '0.15rem 0.6rem'
-    levels.style.marginTop = '0.1rem'
-    levels.style.paddingLeft = '0.2rem'
+    // os#1511 (Julien, 10/10) — les niveaux suivent le nom SUR LA MÊME LIGNE (« Filière ³  Sous-filière ») ;
+    // un zoom ne se résume plus en « Céréales +2 ✕ », la légende juste dessous détaille les membres :
+    // un petit compteur, qui ouvre la liste à cases.
+    head.style.flexWrap = 'wrap'
+    const levels = head
     dim.levels.forEach((level, c) => {
       const item = document.createElement('div')
       item.style.display = 'inline-flex'
@@ -540,14 +539,31 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
       const choose = level.choose
       if (choose) keepClick(btn, choose)
       else { btn.style.cursor = 'default'; keepClick(btn, () => { /* inerte */ }) }
+      btn.style.fontSize = '11px'
+      item.style.fontWeight = '400'
+      item.style.marginLeft = '0.4rem'
       item.appendChild(btn)
-      const zoom = document.createElement('div')
-      zoom.style.maxWidth = ZOOM_CELL_WIDTH
-      fillZoomCell(model, zoom, `${dim.id}|${c}`, level)
-      item.appendChild(zoom)
+      const pick = level.pick
+      const zooms = level.zooms ?? []
+      if (pick) {
+        const key = `${model.memory_key}|zoom|${dim.id}|${c}`
+        const title = `${level.label} — ${model.labels.pick_zoom}`
+        const badge = plainButton(zooms.length > 0 ? String(zooms.length) : '▾', zooms.length > 0 ? zooms.join('\n') : model.labels.pick_zoom)
+        badge.className = 'figure_navigation_count'
+        badge.style.fontSize = '9px'
+        badge.style.lineHeight = '1'
+        badge.style.padding = zooms.length > 0 ? '0.1rem 0.25rem' : '0'
+        badge.style.borderRadius = '999px'
+        badge.style.color = zooms.length > 0 ? ACCENT : ui_ink_muted
+        badge.style.background = zooms.length > 0 ? ui_bg_selected : 'none'
+        badge.style.verticalAlign = 'super'
+        badge.dataset.navPopover = key
+        keepClick(badge, () => toggleFigureNavPopover(key, badge, zoomPickerContent(model.t, title, pick)))
+        refreshFigureNavPopover(key, zoomPickerContent(model.t, title, pick))
+        item.appendChild(badge)
+      }
       levels.appendChild(item)
     })
-    block.appendChild(levels)
   })
   return list
 }
