@@ -1,3 +1,5 @@
+import { ui_accent, ui_bg_muted, ui_bg_selected, ui_bg_subtle, ui_font_stack, ui_ink, ui_ink_disabled, ui_ink_muted, ui_line, ui_line_strong, ui_radius, ui_text, ui_text_small, ui_white } from '../css/uiTokens'
+
 export class TooltipBehaviorManager {
   private tooltip: HTMLElement
   private escHandler: (e: KeyboardEvent) => void
@@ -197,15 +199,20 @@ export class TooltipBehaviorManager {
 }
 
 
+// Interface, 10/10 — L'INFO-BULLE PARLE LES JETONS DU LECTEUR (`css/uiTokens.ts`) : filet fin
+// `ui_line_strong` au lieu du cadre noir de 2 px, rayon `ui_radius`, police et encres du chrome, et
+// l'accent UNIQUE `ui_accent` pour le focus clavier, l'épingle active et les en-têtes de section.
+// Le focus reste un contour de 2 px décalé, visible sur le fond blanc comme sur le diagramme.
 export const TOOLTIP_STYLES = `
   .sankey-tooltip {
     position: fixed !important;
-    background: white;
-    border: 2px solid #333;
-    border-radius: 8px;
+    background: ${ui_white};
+    color: ${ui_ink};
+    border: 1px solid ${ui_line_strong};
+    border-radius: ${ui_radius};
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 12px;
+    font-family: ${ui_font_stack};
+    font-size: ${ui_text};
     display: flex;
     flex-direction: column;
     width: max-content;
@@ -221,14 +228,14 @@ export const TOOLTIP_STYLES = `
     outline: none;
   }
   .sankey-tooltip:focus {
-    outline: 3px solid #4a9eff; 
+    outline: 2px solid ${ui_accent};
     outline-offset: 2px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px #4a9eff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
   .tooltip-header {
     padding: 12px 16px 8px 16px;
-    border-bottom: 1px solid #eee; 
-    background: #fafafa;
+    border-bottom: 1px solid ${ui_line};
+    background: ${ui_bg_subtle};
     position: sticky; 
     top: 0; 
     z-index: 1;
@@ -237,12 +244,12 @@ export const TOOLTIP_STYLES = `
     margin: 0 0 4px 0; 
     font-size: 14px; 
     font-weight: 600; 
-    color: #333; 
+    color: ${ui_ink}; 
   }
   .tooltip-subtitle { 
     margin: 0 0 8px 0; 
-    color: #666; 
-    font-size: 11px; 
+    color: ${ui_ink_muted}; 
+    font-size: ${ui_text_small}; 
   }
   .tooltip-content {
     /* flex:1 + min-height:0 => la zone scrollable occupe la place restante et
@@ -337,9 +344,9 @@ export const TOOLTIP_STYLES = `
   .section-header td {
     padding: 6px 12px; 
     font-weight: 600; 
-    color: #333;
-    background: linear-gradient(90deg, #f0f8ff 0%, #e6f3ff 100%);
-    border-left: 3px solid #4a9eff; 
+    color: ${ui_ink};
+    background: ${ui_bg_selected};
+    border-left: 3px solid ${ui_accent}; 
     border-right: 0; 
     border-top: 0; 
     border-bottom: 1px solid #e0e0e0;
@@ -375,7 +382,7 @@ export const TOOLTIP_STYLES = `
     border: none;
     font-size: 18px;
     cursor: pointer;
-    color: #666;
+    color: ${ui_ink_muted};
     padding: 4px;
     border-radius: 4px;
     /* ✅ AJOUT : S'assurer que le bouton est au-dessus de tout */
@@ -390,12 +397,12 @@ export const TOOLTIP_STYLES = `
     line-height: 1;
   }
   .tooltip-close:hover {
-    background: #f0f0f0;
-    color: #333;
+    background: ${ui_bg_muted};
+    color: ${ui_ink};
   }
   /* ✅ AJOUT : Focus pour l'accessibilité */
   .tooltip-close:focus {
-    outline: 2px solid #4a9eff;
+    outline: 2px solid ${ui_accent};
     outline-offset: 2px;
   }
   /* En-tête déplaçable : curseur move, sauf sur les boutons/onglets */
@@ -416,7 +423,7 @@ export const TOOLTIP_STYLES = `
     background: none;
     border: none;
     cursor: pointer;
-    color: #999;
+    color: ${ui_ink_disabled};
     padding: 4px;
     border-radius: 4px;
     z-index: 10001;
@@ -430,15 +437,15 @@ export const TOOLTIP_STYLES = `
     transform: rotate(45deg);
   }
   .tooltip-pin:hover {
-    background: #f0f0f0;
-    color: #333;
+    background: ${ui_bg_muted};
+    color: ${ui_ink};
   }
   .tooltip-pin.active {
-    color: #4a9eff;
+    color: ${ui_accent};
     transform: rotate(0deg);
   }
   .tooltip-pin:focus {
-    outline: 2px solid #4a9eff;
+    outline: 2px solid ${ui_accent};
     outline-offset: 2px;
   }
 `

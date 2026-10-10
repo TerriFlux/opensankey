@@ -45,6 +45,7 @@ import {
   legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { ui_ink, ui_ink_muted, ui_white } from '../css/uiTokens'
+import { OTHERS_COLOR } from '../Algorithms/DimensionOthers'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -566,7 +567,7 @@ const THEME = {
     surface: '#fcfcfb',
     ink: ui_ink,
     muted: ui_ink_muted,
-    others: '#CFD0CB',
+    others: OTHERS_COLOR,
     palette: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']
   },
   dark: {

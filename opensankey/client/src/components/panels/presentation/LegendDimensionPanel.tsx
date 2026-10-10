@@ -30,7 +30,7 @@ import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { chooseLegendDimensionTag, isMultiDimension, legendDimensionPanelId } from './legendDimensionChoice'
 import { buildDiagramNavigationTable } from '../../../Representations/diagramNavigationTable'
 import { DRAW_TOPIC } from '../../../types/EventBus'
-import { ui_bg_muted, ui_ink_strong, ui_line_strong } from '../../../css/uiTokens'
+import { ui_accent, ui_bg_muted, ui_bg_selected, ui_ink_strong, ui_line_strong } from '../../../css/uiTokens'
 
 const HOVER_BG = ui_bg_muted
 // Même plan que les pop-ups (PanelShell) : au-dessus du dessin et du chrome, sous les dialogues.
@@ -109,7 +109,9 @@ export const LegendDimensionChoice = ({ app_data, group }: {
             cursor={locked ? 'default' : 'pointer'}
             opacity={locked ? 0.6 : 1}
             fontWeight={!multi && is_selected ? 600 : 400}
-            background={!multi && is_selected ? HOVER_BG : undefined}
+            // Interface, 10/10 — la tranche choisie parle l'accent du lecteur (encre bleue, fond bleuté).
+            color={!multi && is_selected ? ui_accent : undefined}
+            background={!multi && is_selected ? ui_bg_selected : undefined}
             _hover={locked ? undefined : { background: HOVER_BG }}
             onClick={() => { if (!locked) choose(tag.id) }}
             onKeyDown={(evt: React.KeyboardEvent) => {
@@ -120,7 +122,7 @@ export const LegendDimensionChoice = ({ app_data, group }: {
             }}
           >
             <span>{tag.display_name}</span>
-            {multi ? <span aria-hidden style={{ visibility: is_selected ? 'visible' : 'hidden' }}>✓</span> : null}
+            {multi ? <span aria-hidden style={{ visibility: is_selected ? 'visible' : 'hidden', color: ui_accent }}>✓</span> : null}
           </Box>
         )
       })}

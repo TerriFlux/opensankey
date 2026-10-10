@@ -54,6 +54,7 @@ import {
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
 import { ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_line_strong } from '../css/uiTokens'
+import { OTHERS_COLOR } from '../Algorithms/DimensionOthers'
 
 export interface Type_StatSlice {
   id: string
@@ -692,7 +693,7 @@ const DEFAULT_FORMAT = (v: number) => figureNumberText(v, FIGURE_VALUE_FORMAT_DE
 // Regroupement « Autres » (cf. ecodata historique) : parts < 0,5 % du total ou au-delà de 20
 // secteurs — un donut à 50 secteurs est illisible. Les deux seuils sont désormais des RÉGLAGES
 // (`parts_group_under`, `parts_max`, cf. figureChartStyle) dont ils restent la valeur d'usine.
-const OTHERS_COLOR = '#CFD0CB'
+// La teinte « Autres » est celle du dessin (`DimensionOthers.OTHERS_COLOR`), importée plus haut.
 // 26/09/2026 — LA PART ANGULAIRE MINIMALE POUR QU'UN SECTEUR S'ÉCRIVE EST UN RÉGLAGE.
 //
 // Julien, capture du panneau « Affichage » du diagramme a l appui : « pour les couronnes, un

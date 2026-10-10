@@ -36,7 +36,7 @@ import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDime
 import { ZOOM_TOPIC } from '../../../types/EventBus'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { applyMembersColorFlows } from '../../ui/dimensionDrawingHost'
-import { ui_bg_subtle, ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_ink_strong, ui_line_strong, ui_white } from '../../../css/uiTokens'
+import { ui_accent, ui_bg_selected, ui_bg_subtle, ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_ink_strong, ui_line_strong } from '../../../css/uiTokens'
 
 /** Largeur de la colonne de légende, en px d'écran. */
 export const SANKEY_LEGEND_PANEL_PX = 240
@@ -226,7 +226,7 @@ const LegendRow = ({ app_data, item }: {
     {toggles
       ? <input
         type='checkbox' checked={checked} readOnly tabIndex={-1}
-        style={{ margin: '0.1em 0 0', flex: '0 0 auto', cursor: 'pointer' }}
+        style={{ margin: '0.1em 0 0', flex: '0 0 auto', cursor: 'pointer', accentColor: ui_accent }}
       />
       : null}
     {item.heading === true ? null : <Swatch app_data={app_data} item={item} unchecked={unchecked} />}
@@ -262,8 +262,10 @@ const PaintFlowsButton = ({ app_data, group_id }: { app_data: Class_ApplicationD
       if (!paints) applyMembersColorFlows(app_data, group, true)
     }}
     style={{
+      // Interface, 10/10 — « choisi » parle l'accent du lecteur (comme la frise et le tableau de
+      // navigation) : encre bleue sur fond bleuté, au lieu du sarcelle plein.
       flex: '0 0 auto', marginLeft: 'auto', padding: '0 0.2rem', border: 'none', borderRadius: '0.2rem',
-      background: paints ? '#2c7a7b' : 'transparent', color: paints ? ui_white : UNCHECKED_INK,
+      background: paints ? ui_bg_selected : 'transparent', color: paints ? ui_accent : UNCHECKED_INK,
       cursor: paints ? 'default' : 'pointer', lineHeight: 1
     }}
   >
@@ -387,7 +389,7 @@ const GapSlider = ({ app_data }: { app_data: Class_ApplicationData }) => {
     <span style={{ flex: '0 0 auto' }}>{label}</span>
     <input
       type='range' min={0} max={max} step={1} value={value}
-      style={{ flex: '1 1 auto', minWidth: 0 }}
+      style={{ flex: '1 1 auto', minWidth: 0, accentColor: ui_accent }}
       onPointerDown={() => { if (start.current === undefined) start.current = da.disaggregation_gap_value }}
       onKeyDown={() => { if (start.current === undefined) start.current = da.disaggregation_gap_value }}
       onChange={evt => {
