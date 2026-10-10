@@ -44,6 +44,7 @@ import {
   LEGEND_UNCHECKED_INK, appendLegendCapsule, appendLegendContextRows, legendCheckBox, legendCheckRows,
   legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
+import { ui_ink, ui_ink_muted, ui_white } from '../css/uiTokens'
 
 /**
  * os#1425 — LA MISE EN FORME D'UNE COURONNE, telle que la nature la déclare.
@@ -563,14 +564,14 @@ export interface Type_SunburstChartOptions {
 const THEME = {
   light: {
     surface: '#fcfcfb',
-    ink: '#2D3748',
-    muted: '#718096',
+    ink: ui_ink,
+    muted: ui_ink_muted,
     others: '#CFD0CB',
     palette: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']
   },
   dark: {
     surface: '#1a1a19',
-    ink: '#ffffff',
+    ink: ui_white,
     muted: '#c3c2b7',
     others: '#4a4a46',
     palette: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767']
@@ -716,7 +717,7 @@ export const inkOn = (fill: string, ink: string): string => {
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
   }
   const luminance = 0.2126 * chan(c.r) + 0.7152 * chan(c.g) + 0.0722 * chan(c.b)
-  return luminance > 0.45 ? ink : '#ffffff'
+  return luminance > 0.45 ? ink : ui_white
 }
 
 // Éclaircissement par ANNEAU : la teinte dit la branche, la clarté dit la profondeur.

@@ -53,6 +53,7 @@ import {
   legendMemberKeyOf, type Type_LegendCapsule, type Type_LegendChecks, type Type_LegendContextRow
 } from './legendChecks'
 import { FIGURE_VALUE_FORMAT_DEFAULTS, figureNumberText, figurePercentText } from './figureFormat'
+import { ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_line_strong } from '../css/uiTokens'
 
 export interface Type_StatSlice {
   id: string
@@ -1114,7 +1115,7 @@ const drawEmptyLabel = (
     .style('align-items', 'center')
     .style('justify-content', 'center')
     .style('height', '100%')
-    .style('color', '#718096')
+    .style('color', ui_ink_muted)
     .style('font-size', '0.85rem')
     .text(label)
 }
@@ -1439,7 +1440,7 @@ export const drawDonutChart = (
   // blanc illisible. Sans fond, le texte est sur le blanc de la figure.
   const sectorInk = (d: d3.PieArcDatum<Type_StatSlice>): string => {
     const fill = sectorFill(d)
-    return fill === 'none' ? '#2D3748' : inkOn(fill, '#2D3748')
+    return fill === 'none' ? ui_ink : inkOn(fill, ui_ink)
   }
   const paths = g.selectAll('path')
     .data(arcs)
@@ -2078,7 +2079,7 @@ export const drawDonutChart = (
     items.append('polyline')
       .attr('class', 'node_stats_callout_line')
       .attr('fill', 'none')
-      .attr('stroke', '#718096').attr('stroke-width', 1)
+      .attr('stroke', ui_ink_muted).attr('stroke-width', 1)
       .attr('points', d => traitOf(d))
     const texts = items.append('text')
       .attr('class', 'node_stats_callout_text')
@@ -2200,7 +2201,7 @@ export const drawDonutChart = (
       .attr('dominant-baseline', 'central')
       .attr('y', inner * 0.58)
       .attr('font-size', Math.max(9, inner * 0.18))
-      .attr('fill', '#718096')
+      .attr('fill', ui_ink_muted)
       .attr('pointer-events', 'none')
       .text(`‹ ${opts.centre_back_label ?? ''}`.trim())
   }
@@ -2214,7 +2215,7 @@ export const drawDonutChart = (
       .attr('class', 'node_stats_cell_name_block')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('fill', centre?.value?.color ?? '#2D3748')
+      .attr('fill', centre?.value?.color ?? ui_ink)
       .attr('pointer-events', 'none')
     const name_h = placed.size * 1.15
     const value_h = value_size !== null ? value_size * 1.2 : 0
@@ -2285,7 +2286,7 @@ export const drawDonutChart = (
     const text = g.append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('fill', '#2D3748')
+      .attr('fill', ui_ink)
       // Le texte du centre est DÉCORATIF : il laisse passer le clic vers le disque de retour posé
       // dessous. Sans cette ligne, le nom écrit au milieu avalait le geste et le trou ne ramenait
       // en arrière que sur ses bords.
@@ -2343,7 +2344,7 @@ export const drawDonutChart = (
             ? below_top + (i + 0.5) * caption.size * 1.2
             : top + lines_in * name_h + value_h + (i + 0.5) * caption.size * 1.2)
           .attr('font-size', caption.size)
-          .attr('fill', '#718096')
+          .attr('fill', ui_ink_muted)
           .text(line)
       })
     }
@@ -2507,13 +2508,13 @@ export const drawDonutChart = (
   const all_items = appendDonutLegendRows(
     legend as unknown as d3.Selection<HTMLElement, unknown, null, undefined>,
     donutLegendRows(legend_items, e => e.slice, st), below,
-    e => e.arc ? colorOf(e.arc.data, e.arc.index) : e.checked ? (legend_colors.get(e.slice.id) ?? OTHERS_COLOR) : '#cbd5e0',
+    e => e.arc ? colorOf(e.arc.data, e.arc.index) : e.checked ? (legend_colors.get(e.slice.id) ?? OTHERS_COLOR) : ui_line_strong,
     e => e.slice.label
   )
     .attr('title', r => r.entry.arc ? legend_title(r.entry.arc) : r.entry.slice.label)
   all_items.filter(r => !r.entry.checked)
     .classed('node_stats_legend_unchecked', true)
-    .style('color', '#a0aec0')
+    .style('color', ui_ink_disabled)
   const items = all_items.filter(r => r.entry.arc !== undefined) as unknown as
     d3.Selection<HTMLDivElement, { entry: { arc: d3.PieArcDatum<Type_StatSlice> } }, HTMLElement, unknown>
   items
@@ -2547,7 +2548,7 @@ export const drawDonutChart = (
   if (!st.value_label_is_visible) {
     all_items.append('span')
       .style('flex', '0 0 auto')
-      .style('color', '#718096')
+      .style('color', ui_ink_muted)
       .text(r => r.entry.arc ? pctText(r.entry.arc.data.value, total) : '')
   }
   // 03/10/2026 — LES CASES DE LA LÉGENDE (os#1511) : cochée = la part est dessinée. « Autres » n'en a
@@ -2870,7 +2871,7 @@ export const drawBarChart = (
             font_family: styleOf(d).name_label_font_family,
             bold: styleOf(d).name_label_bold,
             italic: styleOf(d).name_label_italic,
-            color: styleOf(d).name_label_color || (inside ? 'white' : '#2D3748')
+            color: styleOf(d).name_label_color || (inside ? 'white' : ui_ink)
           })
         })
       })
@@ -2917,7 +2918,7 @@ export const drawBarChart = (
   g.append('line')
     .attr('x1', 0).attr('x2', w)
     .attr('y1', h).attr('y2', h)
-    .attr('stroke', '#CBD5E0')
+    .attr('stroke', ui_line_strong)
   // Le nom d'une barre, BARRE PAR BARRE (os#1463) : la visibilité, la typographie, la boîte de
   // texte et « masquer si ça dépasse » sont ceux de la part quand elle les dit.
   //
@@ -3030,7 +3031,7 @@ export const drawBarChart = (
             bold: styleOf(d).name_label_bold,
             italic: styleOf(d).name_label_italic,
             color: styleOf(d).name_label_color
-              || (aspectOf(d.id)?.name?.inside === true ? 'white' : '#4A5568')
+              || (aspectOf(d.id)?.name?.inside === true ? 'white' : ui_ink_secondary)
           })
         })
         text.append('title').text(bar_title(d))
@@ -3067,7 +3068,7 @@ export const drawBarChart = (
       .style('cursor', 'move')
     items.append('line')
       .attr('class', 'node_stats_callout_line')
-      .attr('stroke', '#718096').attr('stroke-width', 1)
+      .attr('stroke', ui_ink_muted).attr('stroke-width', 1)
       .attr('x1', d => edgeOf(d).x).attr('y1', d => edgeOf(d).y)
       .attr('x2', d => positionOf(d).x).attr('y2', d => positionOf(d).y)
     const texts = items.append('text')
@@ -3117,7 +3118,7 @@ export const drawBarChart = (
     g.append('text')
       .attr('class', 'node_stats_out_of_scale')
       .attr('x', 0).attr('y', -(margin.top) + 10)
-      .attr('font-size', 9).attr('font-style', 'italic').attr('fill', '#718096')
+      .attr('font-size', 9).attr('font-style', 'italic').attr('fill', ui_ink_muted)
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
 
@@ -3251,16 +3252,16 @@ export const drawStackedBarChart = (
     if (st.value_label_is_visible) {
       g.append('text')
         .attr('x', bx + x.bandwidth() / 2).attr('y', yPx(acc) - 4)
-        .attr('text-anchor', 'middle').attr('font-size', st.name_label_font_size).attr('fill', '#2D3748')
+        .attr('text-anchor', 'middle').attr('font-size', st.name_label_font_size).attr('fill', ui_ink)
         .text(fmt(acc))
     }
   })
 
   // Ligne de base + labels de série.
-  g.append('line').attr('x1', 0).attr('x2', w).attr('y1', h).attr('y2', h).attr('stroke', '#CBD5E0')
+  g.append('line').attr('x1', 0).attr('x2', w).attr('y1', h).attr('y2', h).attr('stroke', ui_line_strong)
   g.selectAll('text.node_stats_bar_label')
     .data(series).enter().append('text')
-    .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', '#4A5568')
+    .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', ui_ink_secondary)
     .attr('transform', s => {
       const cx = (x(s.id) ?? 0) + x.bandwidth() / 2
       return rotate_labels
@@ -3297,7 +3298,7 @@ export const drawStackedBarChart = (
   if (notes_shown) {
     aside.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
-      .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
+      .style('padding', '0.1rem 0.2rem').style('color', ui_ink_muted).style('font-style', 'italic')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
 }
@@ -3457,7 +3458,7 @@ export const drawGroupedBarChart = (
         g.append('text')
           .attr('class', 'node_stats_bar_value')
           .attr('x', bx + x_serie.bandwidth() / 2).attr('y', yPx(total) - 4)
-          .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#2D3748')
+          .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', ui_ink)
           .text(fmt(total))
       }
       // Libellé de barre : seulement quand la couleur sert déjà aux catégories.
@@ -3465,7 +3466,7 @@ export const drawGroupedBarChart = (
         g.append('text')
           .attr('class', 'node_stats_grouped_serie_label')
           .attr('transform', `translate(${bx + x_serie.bandwidth() / 2},${h + 4}) rotate(-45)`)
-          .attr('text-anchor', 'end').attr('font-size', 8).attr('fill', '#718096')
+          .attr('text-anchor', 'end').attr('font-size', 8).attr('fill', ui_ink_muted)
           .text(so.label.length > 10 ? so.label.slice(0, 9) + '…' : so.label)
           .append('title').text(`${grp.label} · ${so.label}`)
       }
@@ -3473,11 +3474,11 @@ export const drawGroupedBarChart = (
   })
 
   // Ligne de base + libellé de chaque grappe (1er axe), sous les libellés de barre.
-  g.append('line').attr('x1', 0).attr('x2', w).attr('y1', h).attr('y2', h).attr('stroke', '#CBD5E0')
+  g.append('line').attr('x1', 0).attr('x2', w).attr('y1', h).attr('y2', h).attr('stroke', ui_line_strong)
   const group_label_y = h + (stacked ? 34 : 0)
   g.selectAll('text.node_stats_bar_label')
     .data(groups).enter().append('text')
-    .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', '#4A5568')
+    .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', ui_ink_secondary)
     .attr('transform', grp => {
       const cx = (x_group(grp.id) ?? 0) + x_group.bandwidth() / 2
       return rotate_labels
@@ -3532,7 +3533,7 @@ export const drawGroupedBarChart = (
   if (dropped > 0 && st.notes_visible) {
     aside.append('div')
       .attr('class', 'node_stats_legend_truncated')
-      .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
+      .style('padding', '0.1rem 0.2rem').style('color', ui_ink_muted).style('font-style', 'italic')
       .text(opts.truncated_label ? opts.truncated_label(dropped) : `+${dropped}`)
   }
 
@@ -3544,13 +3545,13 @@ export const drawGroupedBarChart = (
   if (per_group && st.notes_visible) {
     aside.append('div')
       .attr('class', 'node_stats_legend_independent_scales')
-      .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
+      .style('padding', '0.1rem 0.2rem').style('color', ui_ink_muted).style('font-style', 'italic')
       .text(opts.independent_scales_label ?? 'independent scales')
   }
   if (lifted > 0 && st.notes_visible) {
     aside.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
-      .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
+      .style('padding', '0.1rem 0.2rem').style('color', ui_ink_muted).style('font-style', 'italic')
       .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
 }
@@ -3615,7 +3616,7 @@ export const drawNodeDonutOnGroup = (
       .attr('dominant-baseline', 'central')
       .attr('font-size', Math.max(8, Math.min(inner_r * 0.5, 14)))
       .attr('font-weight', 'bold')
-      .attr('fill', '#2D3748')
+      .attr('fill', ui_ink)
       .attr('pointer-events', 'none')
       .text(DEFAULT_FORMAT(total))
   }

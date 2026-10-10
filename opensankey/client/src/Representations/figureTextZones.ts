@@ -36,6 +36,7 @@
 // moteurs qui ne l'ont pas encore rejoint (histogrammes, couronne d'OpenSankey+).
 
 import type { Type_FigureText } from '../Charts/figureChartStyle'
+import { ui_accent, ui_ink_disabled, ui_ink_secondary } from '../css/uiTokens'
 
 /** Le bloc DOM d'une zone de texte. `is_title` ne change que sa classe (cf. en-tête). */
 const buildTextBlock = (text: Type_FigureText, is_title: boolean): HTMLElement => {
@@ -96,7 +97,7 @@ const buildBreadcrumb = (crumbs: Type_FigureCrumb[]): HTMLElement => {
   line.style.padding = '0.1rem 0.4rem'
   line.style.fontSize = '12px'
   line.style.lineHeight = '1.3'
-  line.style.color = '#4a5568'
+  line.style.color = ui_ink_secondary
   line.style.whiteSpace = 'nowrap'
   line.style.overflow = 'hidden'
   line.style.textOverflow = 'ellipsis'
@@ -106,7 +107,7 @@ const buildBreadcrumb = (crumbs: Type_FigureCrumb[]): HTMLElement => {
     if (i > 0) {
       const sep = document.createElement('span')
       sep.textContent = CRUMB_SEPARATOR
-      sep.style.color = '#a0aec0'
+      sep.style.color = ui_ink_disabled
       line.appendChild(sep)
     }
     const last = i === crumbs.length - 1
@@ -124,7 +125,7 @@ const buildBreadcrumb = (crumbs: Type_FigureCrumb[]): HTMLElement => {
       b.style.padding = '0'
       b.style.margin = '0'
       b.style.font = 'inherit'
-      b.style.color = '#2b6cb0'
+      b.style.color = ui_accent
       b.style.cursor = 'pointer'
       b.addEventListener('mouseenter', () => { b.style.textDecoration = 'underline' })
       b.addEventListener('mouseleave', () => { b.style.textDecoration = 'none' })

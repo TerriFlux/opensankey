@@ -4,6 +4,7 @@ import {
   menuAnatomy, modalAnatomy, stepperAnatomy
 } from '@chakra-ui/anatomy'
 import { createMultiStyleConfigHelpers, defineStyle, extendTheme, SystemStyleObject } from '@chakra-ui/react'
+import { ui_control_height, ui_font_heading, ui_ink_secondary, ui_radius, ui_text, ui_text_large } from './uiTokens'
 
 const createHelpers = () => ({
   tag: createMultiStyleConfigHelpers(tagAnatomy.keys),
@@ -65,7 +66,7 @@ export const default_font_size = '0.7rem'
 const BASE_STYLES = {
   borderStyle: {
     border: 'solid 1px',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     borderColor: 'gray.100'
   },
   buttonBase: {
@@ -75,15 +76,15 @@ const BASE_STYLES = {
     color: 'white',
     minW: 'unset',
     border: 'solid 1px',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     minWidth: 'unset',
     fill: 'white',
     path: 'white'
   },
   inputField: {
-    height: '1.5rem',
+    height: ui_control_height,
     border: 'solid 1px',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     borderColor: 'gray.100',
     fontSize: 'unset',
     textStyle: 'h4',
@@ -202,7 +203,7 @@ export const modalStyles = {
       textStyle: 'h1',
       color: 'white',
       background: 'primaire.2',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       paddingRight: '5rem'
     },
     closeButton: {
@@ -287,7 +288,7 @@ export const modalStyles = {
       textStyle: 'h1',
       color: 'white',
       background: 'primaire.2',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       paddingRight: '5rem'
     },
     closeButton: {
@@ -321,8 +322,8 @@ export const modalStyles = {
 // #1258 — hauteur UNIQUE de 1.5rem (celle des selects/inputs xs) et minWidth
 // carré : plus aucun call site ne doit surcharger padding/height en sx.
 export const menuconfigBaseButton = {
-  height: '1.5rem',
-  minWidth: '1.5rem',
+  height: ui_control_height,
+  minWidth: ui_control_height,
   padding: '0 0.4rem',
   fontSize: 'unset',
   backgroundColor: 'white',
@@ -442,7 +443,7 @@ export const buttonStyles = {
     alignSelf: 'center',
     justifySelf: 'center',
     border: 'solid 1px',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     borderColor: 'primaire.3',
     bg: 'primaire.3',
     bgColor: 'primaire.3',
@@ -469,7 +470,7 @@ export const buttonStyles = {
     bg: 'none',
     bgColor: 'none',
     borderColor: 'none',
-    color: '#4A5568',
+    color: ui_ink_secondary,
     display: 'block',
     _hover: {
       borderColor: 'lightgrey',
@@ -746,7 +747,7 @@ export const buttonStyles = {
   menuconfigpanel_del_button_in_table: defineStyle({
     height: '1.5rem',
     width: '1.5rem',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     textStyle: 'h4',
     padding: 0,
     borderColor: 'primaire.1',
@@ -1017,7 +1018,7 @@ export const buttonStyles = {
   text_menu_select: defineStyle({
     height: '1.5rem',
     width: '100%',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     textStyle: 'h4',
     fontSize: default_font_size,
     background: 'none',
@@ -1368,7 +1369,7 @@ export const inputStyles = {
       height: '1.5rem',
       border: 'solid 1px',
       fontSize: 'unset',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.100',
       textStyle: 'h4',
       bg: 'gray.50',
@@ -1409,7 +1410,7 @@ export const menuStyles = {
     button: {
       height: '3rem',
       width: '4rem',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       textStyle: 'h4',
       fontSize: default_font_size,
       border: '0px',
@@ -1620,7 +1621,7 @@ export const checkboxStyles = {
       h: '2rem',
       w: '100%',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.50',
       margin: '0',
       padding: '0',
@@ -1905,7 +1906,7 @@ export const numberInputStyles = {
       height: '1.5rem',
       fontSize: 'unset',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.100',
       textStyle: 'h4',
       bg: 'white',
@@ -1954,7 +1955,7 @@ export const selectStyles = {
     field: {
       height: '1.5rem',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.50',
       fontSize: 'unset',
       bg: 'white',
@@ -1975,7 +1976,7 @@ export const selectStyles = {
     field: {
       height: '1.5rem',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.50',
     }
   }),
@@ -1986,7 +1987,7 @@ export const selectStyles = {
       paddingRight: '0.8rem',
       height: 'revert',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.50',
     },
     icon: {
@@ -1998,7 +1999,7 @@ export const selectStyles = {
     field: {
       height: '1.25rem',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.50',
     }
   })
@@ -2271,7 +2272,7 @@ export const tableStyles = {
       textStyle: 'h2',
       paddingInlineStart: '1rem',
       tr: {
-        borderRadius: '6px'
+        borderRadius: ui_radius
       }
     },
     tbody: {
@@ -2401,7 +2402,7 @@ export const tabsStyles = {
     button: {
       height: '3rem',
       width: '4rem',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       textStyle: 'h4',
       fontSize: default_font_size,
       border: '0px',
@@ -2417,7 +2418,7 @@ export const tabsStyles = {
     item: { display: 'grid', fontSize: default_font_size },
     root: {
       border: 'inherit',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'inherit',
       WebkitUserSelect: 'none', /* Chrome all / Safari all */
       MozUserSelect: 'none', /* Firefox all */
@@ -2672,7 +2673,7 @@ const sliderStyles = {
       width: '1.5rem',
       height: '1.5rem',
       border: 'solid 1px',
-      borderRadius: '6px',
+      borderRadius: ui_radius,
       borderColor: 'gray.50',
       bg: 'openSankey.50',
       bgColor: 'openSankey.50',
@@ -2702,7 +2703,7 @@ const otherStyles = {
     height: '1.5rem',
     margin: '0',
     border: 'solid 1px',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     color: 'white',
     borderColor: 'primaire.1',
     bg: 'primaire.1',
@@ -3181,7 +3182,7 @@ const layerStyles = {
     bgColor: 'white',
     border: 'solid 1px',
     borderColor: 'primaire.2',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     fontSize: default_font_size
   },
 
@@ -3198,7 +3199,7 @@ const layerStyles = {
     fontWeight: 'bold',
     color: 'white',
     background: 'primaire.2',
-    borderRadius: '6px',
+    borderRadius: ui_radius,
     paddingRight: '1rem'
   },
 
@@ -3501,14 +3502,14 @@ const layerStyles = {
 // ===============================
 const textStyles = {
   xl: { fontSize: '16px' },
-  lg: { fontSize: '14px' },
-  md: { fontSize: '12px' },
+  lg: { fontSize: ui_text_large },
+  md: { fontSize: ui_text },
   sm: { fontSize: '10px' },
   xs: { fontSize: '8px' },
-  h1: { fontFamily: 'Open Sans,sans-serif', fontWeight: 'bold' },
-  h2: { fontFamily: 'Open Sans,sans-serif', fontWeight: 'bold' },
-  h3: { fontFamily: 'Open Sans,sans-serif', fontWeight: 'bold' },
-  h4: { fontFamily: 'Open Sans,sans-serif', fontWeight: 'normal' },
+  h1: { fontFamily: ui_font_heading, fontWeight: 'bold' },
+  h2: { fontFamily: ui_font_heading, fontWeight: 'bold' },
+  h3: { fontFamily: ui_font_heading, fontWeight: 'bold' },
+  h4: { fontFamily: ui_font_heading, fontWeight: 'normal' },
   title_sub_section: { fontSize: '0.7rem', fontWeight: 'bold' },
   filter_heading: {
     fontSize: '0.8rem',

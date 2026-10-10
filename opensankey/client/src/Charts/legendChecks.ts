@@ -19,6 +19,7 @@
 // Module sans modèle ni React : le tracé n'a pas à connaître les dimensions.
 
 import { memberSectorId, parseMemberSectorPath } from './memberSectorId'
+import { ui_ink_disabled, ui_ink_secondary, ui_line, ui_line_strong } from '../css/uiTokens'
 
 /** Une ligne d'un bloc de dimension. */
 export interface Type_LegendCheckEntry {
@@ -142,7 +143,7 @@ export const appendLegendCapsule = (
     bottom: side === 'bottom' ? '0.25rem' : 'auto',
     left: side === 'left' ? '0' : 'auto', right: side === 'left' ? 'auto' : '0',
     padding: shown ? '0.3rem 0.2rem' : '0.3rem 0.5rem', fontSize: '0.75rem', lineHeight: '1',
-    color: '#4a5568', cursor: 'pointer', background: 'white', border: '1px solid #e2e8f0',
+    color: ui_ink_secondary, cursor: 'pointer', background: 'white', border: `1px solid ${ui_line}`,
     borderRadius: side === 'left' ? '0 999px 999px 0' : side === 'right' ? '999px 0 0 999px' : '999px',
     boxShadow: '1px 1px 3px rgba(0, 0, 0, 0.12)'
   })
@@ -153,8 +154,8 @@ export const appendLegendCapsule = (
 }
 
 /** La teinte d'une ligne décochée (pastille et texte). */
-export const LEGEND_UNCHECKED_SWATCH = '#cbd5e0'
-export const LEGEND_UNCHECKED_INK = '#a0aec0'
+export const LEGEND_UNCHECKED_SWATCH = ui_line_strong
+export const LEGEND_UNCHECKED_INK = ui_ink_disabled
 
 /**
  * Les lignes d'un bloc à poser : chaque membre retrouve la couleur d'un secteur qui le dessine ;

@@ -126,6 +126,7 @@ import {
   crossOpeningAt
 } from '../Charts/CrossHierarchy'
 import type { Type_CrossAxis, Type_CrossSpec } from '../Charts/CrossHierarchy'
+import { ui_ink_muted, ui_ink_secondary } from '../css/uiTokens'
 
 /**
  * Sujet d'analyse d'un élément PRÉSENTABLE. La pop-up de présentation s'ouvre pour
@@ -868,7 +869,7 @@ const withSubjectLine = (ctx: Type_RepresentationContext, texts: Type_FigureText
   if (subject === '' || texts.some(z => z.text.toLocaleLowerCase().includes(short))) return texts
   return [...texts, {
     text: subject, position: 'bottom', font_size: 12, bold: false, italic: false, font_family: '',
-    color: '#4A5568', align: 'middle', wrap: false
+    color: ui_ink_secondary, align: 'middle', wrap: false
   }]
 }
 
@@ -932,7 +933,7 @@ const withMeasureCaption = (texts: Type_FigureText[], caption: string): Type_Fig
   ? texts
   : [...texts, {
     text: caption, position: 'top', font_size: 11, bold: false, italic: false, font_family: '',
-    color: '#718096', align: 'middle', wrap: false
+    color: ui_ink_muted, align: 'middle', wrap: false
   }]
 
 /**

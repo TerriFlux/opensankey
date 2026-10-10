@@ -36,15 +36,16 @@ import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDime
 import { ZOOM_TOPIC } from '../../../types/EventBus'
 import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { applyMembersColorFlows } from '../../ui/dimensionDrawingHost'
+import { ui_bg_subtle, ui_ink, ui_ink_disabled, ui_ink_muted, ui_ink_secondary, ui_ink_strong, ui_line_strong, ui_white } from '../../../css/uiTokens'
 
 /** Largeur de la colonne de légende, en px d'écran. */
 export const SANKEY_LEGEND_PANEL_PX = 240
 
 // Même teinte qu'une ligne décochée de la légende des couronnes (`Charts/legendChecks.ts`).
-const UNCHECKED_SWATCH = '#cbd5e0'
-const UNCHECKED_INK = '#a0aec0'
-const INK = '#1a202c'
-const HOVER_BG = '#f7fafc'
+const UNCHECKED_SWATCH = ui_line_strong
+const UNCHECKED_INK = ui_ink_disabled
+const INK = ui_ink_strong
+const HOVER_BG = ui_bg_subtle
 const INDENT_EM = 1
 
 /** Les entrées du panneau, relues à chaque régénération de la légende. */
@@ -92,7 +93,7 @@ const Swatch = ({ app_data, item, unchecked }: { app_data: Class_ApplicationData
   const border = swatch?.border_visible === true
   const dashed = swatch?.border_dashed === true || swatch?.link_dashed === true
   const hatch = swatch?.hatch !== undefined && swatch.hatch !== 'none' ? HATCH_ANGLE[swatch.hatch] : undefined
-  const ink = unchecked ? UNCHECKED_INK : '#2d3748'
+  const ink = unchecked ? UNCHECKED_INK : ui_ink
   // L'icône par son nom : le tracé du catalogue du diagramme, comme sur un nœud (`DrawLabel`).
   const icon_path = icon !== undefined && !icon.is_image && icon.icon_name
     ? app_data.drawing_area.sankey.getIconFromCatalog(icon.icon_name) as string | undefined
@@ -111,7 +112,7 @@ const Swatch = ({ app_data, item, unchecked }: { app_data: Class_ApplicationData
       x={0.5} y={0.5} width={w - 1} height={h - 1} rx={2}
       fill={hatch !== undefined ? `url(#${pattern_id})` : (color ?? 'none')}
       fillOpacity={unchecked ? 1 : (swatch?.opacity ?? 1)}
-      stroke={border || dashed ? (swatch?.border_color ?? '#4a5568') : 'none'}
+      stroke={border || dashed ? (swatch?.border_color ?? ui_ink_secondary) : 'none'}
       strokeWidth={border ? Math.min(3, swatch?.border_thickness ?? 1) : 1}
       strokeDasharray={dashed ? '3 2' : undefined}
     />
@@ -232,7 +233,7 @@ const LegendRow = ({ app_data, item }: {
     {label}
     {/* os#1511 (Jean-Yves, 09/10) — un ▾ dit que la valeur se change (« Année : 2023 ▾ »). */}
     {is_dimension_choice && !editing
-      ? <span className='sankey_legend_panel_choice' style={{ flex: '0 0 auto', color: '#718096', fontSize: '0.75em', marginTop: '0.15em' }}>▾</span>
+      ? <span className='sankey_legend_panel_choice' style={{ flex: '0 0 auto', color: ui_ink_muted, fontSize: '0.75em', marginTop: '0.15em' }}>▾</span>
       : null}
     {is_title ? <PaintFlowsButton app_data={app_data} group_id={legend.tagGroupIdOfTitle(item.id)} /> : null}
   </div>
@@ -262,7 +263,7 @@ const PaintFlowsButton = ({ app_data, group_id }: { app_data: Class_ApplicationD
     }}
     style={{
       flex: '0 0 auto', marginLeft: 'auto', padding: '0 0.2rem', border: 'none', borderRadius: '0.2rem',
-      background: paints ? '#2c7a7b' : 'transparent', color: paints ? '#ffffff' : UNCHECKED_INK,
+      background: paints ? '#2c7a7b' : 'transparent', color: paints ? ui_white : UNCHECKED_INK,
       cursor: paints ? 'default' : 'pointer', lineHeight: 1
     }}
   >
@@ -289,7 +290,7 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
       fontSize: '12px', color: INK,
       padding: '0.25rem 0.5rem 0.5rem', userSelect: 'none',
       background: bg_opacity > 0 ? hexWithOpacity(legend.legend_bg_color, bg_opacity) : undefined,
-      border: legend.legend_bg_border ? '1px solid #a0aec0' : undefined,
+      border: legend.legend_bg_border ? `1px solid ${ui_ink_disabled}` : undefined,
       borderRadius: legend.legend_bg_border ? '0.25rem' : undefined
     }}
   >

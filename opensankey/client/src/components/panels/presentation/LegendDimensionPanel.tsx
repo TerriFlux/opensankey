@@ -30,8 +30,9 @@ import type { Class_DataTagGroup } from '../../../types/TagGroup'
 import { chooseLegendDimensionTag, isMultiDimension, legendDimensionPanelId } from './legendDimensionChoice'
 import { buildDiagramNavigationTable } from '../../../Representations/diagramNavigationTable'
 import { DRAW_TOPIC } from '../../../types/EventBus'
+import { ui_bg_muted, ui_ink_strong, ui_line_strong } from '../../../css/uiTokens'
 
-const HOVER_BG = '#edf2f7'
+const HOVER_BG = ui_bg_muted
 // Même plan que les pop-ups (PanelShell) : au-dessus du dessin et du chrome, sous les dialogues.
 const LIST_Z_INDEX = 40
 
@@ -69,9 +70,9 @@ export const LegendDimensionChoice = ({ app_data, group }: {
   const box_style: React.CSSProperties = {
     position: 'fixed', left: geometry.x, top: geometry.y, minWidth: geometry.w,
     maxHeight: geometry.h, overflowY: 'auto', zIndex: LIST_Z_INDEX,
-    background: 'white', border: '1px solid #cbd5e0', borderRadius: '0.25rem',
+    background: 'white', border: `1px solid ${ui_line_strong}`, borderRadius: '0.25rem',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', padding: '0.25rem 0',
-    fontSize: '0.875rem', lineHeight: '1.25rem', color: '#1a202c'
+    fontSize: '0.875rem', lineHeight: '1.25rem', color: ui_ink_strong
   }
   if (group.is_hierarchical) return <LegendDimensionTable app_data={app_data} group={group} style={box_style} />
 
