@@ -31,7 +31,8 @@ import {
 } from '@chakra-ui/react'
 import type { CheckboxProps } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
-import { FaSquare } from 'react-icons/fa'
+import { FaPlay, FaSquare } from 'react-icons/fa'
+import { ui_accent } from '../../css/uiTokens'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { t } from 'i18next'
@@ -190,7 +191,9 @@ export type typeElementSelectable = {
   label: string,
   value: string,
   selected: boolean,
-  disabled?: boolean
+  disabled?: boolean,
+  // sa#639 — la valeur que la lecture montre en ce moment (piste en cours d'une liste de lecture).
+  current?: boolean
 }[]
 
 
@@ -295,6 +298,8 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
       key={'elements_' + i}
       isDisabled={el.disabled}
       icon={el.selected ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
+      fontWeight={el.current ? 700 : undefined}
+      color={el.current ? ui_accent : undefined}
       onClick={() => {
         // Update list of selected element before letting parent decide what to do with it (via onClick)
         el.selected = !el.selected
@@ -303,9 +308,15 @@ export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all 
         onClick(new_selected_elements)
         setMenuListItems(renderMenu())
       }}>
-      {el.label}
+      {el.current ? <>{el.label} <FaPlay style={{ display: 'inline', fontSize: '0.6em', marginLeft: '0.3em' }} /></> : el.label}
     </MenuItem>
   })
+  // sa#639 — la liste est figée à l'ouverture : la lecture qui avance pendant qu'elle est ouverte la
+  // refait, pour que la piste en cours suive.
+  const current_value = elements.find(el => el.current)?.value ?? null
+  useEffect(() => {
+    if (displayBgOverlay) setMenuListItems(renderMenu())
+  }, [current_value])
 
   // Background overlay for when we want to close selector by clicking outside Menu (sometime the DA) we don't trigger any other event
   const backgroundOverlay = <div style={{

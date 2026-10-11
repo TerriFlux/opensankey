@@ -3,6 +3,10 @@ import i18next from 'i18next'
 import { Type_LangMap, normalizeLang, parseLangMap, parseStylePatch, resolveLangMap, serializeLangMap, serializeStylePatch } from '../Persistence/persistenceMigrations'
 import type { Type_StylePatch } from './Theme'
 import { parseReaderControl, type Type_ReaderControl } from './ReaderControl'
+import {
+  type Type_PlaybackSettings, type Type_PlaybackSource, copyPlaybackSettings, defaultPlaybackSettings,
+  parsePlaybackSettings, playback
+} from './Playback'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
@@ -112,7 +116,12 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'hidden_members',
   // os#1511 (lot 5) — en nœuds, l'expansion aux extrémités ; écrite seulement quand elle est posée.
   'nodes_expansion',
+  // sa#639 — la Lecture du sélecteur et ses réglages, écrits seulement quand elle est cochée.
+  'playback',
 ])
+
+// sa#639 — de quoi distinguer deux dimensions homonymes de deux documents, pour le moteur de lecture.
+let playback_uid = 0
 
 /**
  * os#1511 — Nom par défaut d'une profondeur que l'auteur n'a pas nommée : « Niveau 3 » (langue
@@ -854,11 +863,21 @@ export abstract class Class_ProtoTagGroup {
       this._in_topbar = true
       return
     }
+    // sa#639 — `sequence` non plus n'est plus une forme : c'est « un membre » + la case Lecture
+    // (cf. `Class_DataTagGroup.playback`). Les fichiers existants s'ouvrent sans changement visible.
+    if (value === 'sequence') {
+      this._banner = this.admissibleBanner('one')
+      this.sequenceBannerRead()
+      return
+    }
     this._banner = this.admissibleBanner(value)
   }
 
   /** La bannière que ce groupe accepte pour `value` (cf. `Class_DataTagGroup` : dimension additive). */
   protected admissibleBanner(value: tag_banner_type): tag_banner_type { return value }
+
+  /** sa#639 — un ancien `banner: 'sequence'` : la dimension coche sa Lecture. */
+  protected sequenceBannerRead(): void { /* seules les dimensions lisent */ }
 }
 // CLASS TAGGROUP ***********************************************************************
 /**
@@ -1436,6 +1455,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // garde sa ligne, grisée, dans les légendes et le tableau de navigation des fenêtres liées.
   private _hidden_ids: string[] = []
 
+  // sa#639 — LA LECTURE, une case du sélecteur : `undefined` = décochée. Ses réglages (boucle,
+  // aléatoire, délai en secondes, lecture automatique) voyagent avec le fichier : ce que l'auteur
+  // règle est ce que le lecteur trouve. Remplace la bannière « Séquence », relue « un membre » +
+  // Lecture. Écrite seulement si elle est cochée.
+  private _playback: Type_PlaybackSettings | undefined = undefined
+  // Pendant une lecture : le choix de l'utilisateur, que le défilement ne touche pas (le diagramme
+  // ne montre que le membre en cours) ; la sortie de lecture le rétablit.
+  private _playback_checked: string[] | undefined = undefined
+  private _playback_takeover: (() => void) | undefined = undefined
+  private _playback_writing = false
+  private _playback_source: Type_PlaybackSource | undefined = undefined
+  private readonly _playback_uid = ++playback_uid
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -1499,6 +1531,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._members_order = tagg_to_copy._members_order
     this._focus_ids = [...tagg_to_copy._focus_ids]
     this._hidden_ids = [...tagg_to_copy._hidden_ids]
+    this._playback = tagg_to_copy._playback === undefined ? undefined : copyPlaybackSettings(tagg_to_copy._playback)
   }
 
   protected _toJSON(
@@ -1529,6 +1562,29 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._focus_ids.length > 0) json_object['focus'] = [...this._focus_ids]
     // os#1511 — clé ADDITIVE, écrite seulement quand des membres sont décochés.
     if (this._hidden_ids.length > 0) json_object['hidden_members'] = [...this._hidden_ids]
+    // sa#639 — clé ADDITIVE, écrite seulement quand la Lecture est cochée. « Un membre » + Lecture
+    // s'écrit encore `banner: 'sequence'` (comme `topbar`, os#1517), pour qu'un viewer antérieur
+    // garde sa frise.
+    //
+    // LA LECTURE AUTOMATIQUE N'EST PAS UN RÉGLAGE (Alexandre, recette du 11/10) : elle s'enregistre.
+    // Un fichier enregistré pendant que la lecture tourne la relance à l'ouverture (appli, page
+    // publiée) ; enregistré hors lecture (ou en pause), il s'ouvre à l'arrêt. Une seule lecture
+    // tourne à la fois : au plus un sélecteur par fichier.
+    if (this._playback !== undefined) {
+      json_object['playback'] = {
+        ...copyPlaybackSettings(this._playback),
+        autoplay: playback.isSource(this.playback_key) && playback.status === 'playing'
+      }
+      if (json_object['banner'] === 'one') json_object['banner'] = 'sequence'
+    }
+    // Pendant une lecture, le fichier garde le choix de l'utilisateur, pas le membre qui défile.
+    const checked = this._playback_checked
+    const tags_json = json_object['tags'] as Type_JSON | undefined
+    if (checked !== undefined && tags_json) {
+      Object.entries(tags_json).forEach(([id, tag_json]) => {
+        if (tag_json && typeof tag_json === 'object') (tag_json as Type_JSON)['selected'] = checked.includes(id)
+      })
+    }
   }
 
   protected _fromJSON(
@@ -1554,6 +1610,16 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
     if ( getBooleanFromJSON(json_object, 'is_sequence', false)) {
       this.banner = 'sequence'
+    }
+    // sa#639 — clé présente : elle fait foi (après `banner: 'sequence'`, qui a coché la Lecture avec
+    // ses réglages par défaut). Absente : une bannière explicite la décoche (fichier enregistré sans
+    // Lecture) ; un JSON muet (mise à jour partielle) n'efface rien.
+    const playback_read = json_object['playback']
+    if (playback_read !== undefined) {
+      this._playback = parsePlaybackSettings(playback_read)
+    } else if (json_object['banner'] !== undefined && json_object['banner'] !== 'sequence'
+      && !getBooleanFromJSON(json_object, 'is_sequence', false)) {
+      this._playback = undefined
     }
     this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
     this._propagate_structure = getBooleanFromJSON(json_object, 'propagate_structure', this._propagate_structure)
@@ -1817,8 +1883,130 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._member_bands === true || this.carriers_count > 0) return 'nodes'
     const banner = this.banner
     if (banner === 'multi') return 'multi'
-    if (banner === 'one' || banner === 'topbar' || banner === 'sequence') return 'one'
+    if (banner === 'one' || banner === 'topbar') return 'one'
     return 'other'
+  }
+
+  // LA LECTURE (sa#639) ===============================================================
+  //
+  // Le sélecteur fait défiler ses valeurs : toutes, dans l'ordre du groupe, s'il choisit un membre ;
+  // seulement celles qui sont cochées, une à la fois, s'il en choisit plusieurs. Le défilement ne
+  // touche jamais au choix de l'utilisateur : il est gardé à part (`_playback_checked`), écrit tel
+  // quel dans le fichier, montré par les sélecteurs (`playback_checked_ids`) et rétabli à la sortie.
+
+  protected sequenceBannerRead(): void {
+    if (this._playback === undefined) this._playback = defaultPlaybackSettings()
+  }
+
+  /** Les réglages de lecture, `undefined` quand la case Lecture est décochée. */
+  public get playback(): Type_PlaybackSettings | undefined {
+    return this._playback === undefined ? undefined : copyPlaybackSettings(this._playback)
+  }
+  public set playback(value: Type_PlaybackSettings | undefined) {
+    this._playback = value === undefined ? undefined : copyPlaybackSettings(value)
+    if (value === undefined && playback.isSource(this.playback_key)) playback.stop()
+    else if (value !== undefined) playback.settingsChanged(this.playback_key)
+  }
+
+  /** Le sélecteur porte-t-il les commandes de lecture ? (case cochée, et un sélecteur à montrer) */
+  public get plays(): boolean { return this._playback !== undefined && this.banner !== 'none' }
+
+  /** Ce qui identifie cette dimension auprès du moteur de lecture. */
+  public get playback_key(): string { return `data_tagg#${this._playback_uid}` }
+
+  /** Les membres que la lecture fait défiler, dans l'ordre du groupe (l'export animé les reprend). */
+  public get playback_steps(): string[] {
+    if (this.banner !== 'multi') return this.tags_list.map(tag => tag.id)
+    const checked = this._playback_checked ?? this.selected_tags_list.map(tag => tag.id)
+    return this.tags_list.filter(tag => checked.includes(tag.id)).map(tag => tag.id)
+  }
+
+  /**
+   * Pendant la lecture d'un choix MULTIPLE : les membres cochés, que les sélecteurs continuent de
+   * montrer (le diagramme n'en montre qu'un). `undefined` sinon — un choix unique montre le membre
+   * qui défile, comme l'ancienne frise.
+   */
+  public get playback_checked_ids(): string[] | undefined {
+    return this.banner === 'multi' ? this._playback_checked : undefined
+  }
+
+  /** Le membre que la lecture montre en ce moment, `null` hors lecture. */
+  public get playback_current_id(): string | null { return playback.currentStep(this.playback_key) }
+
+  /** La dimension appartient-elle encore au diagramme ouvert ? */
+  public get is_alive(): boolean {
+    const sankey = this._ref_sankey
+    const drawing_area = sankey.drawing_area
+    return sankey.data_taggs_dict[this.id] === this && drawing_area.sankey === sankey
+      && drawing_area.application_data.drawing_area === drawing_area
+  }
+
+  /**
+   * Une sélection va être écrite (cf. `Class_ProtoTag.selectionWillChange`). Venue d'ailleurs que
+   * la lecture, elle en fait sortir : le choix de l'utilisateur revient d'abord, sans dessin, puis
+   * le geste s'y applique (un membre coché ou décoché l'est par rapport à son choix).
+   */
+  public noteSelectionWillChange(): void {
+    const takeover = this._playback_takeover
+    if (takeover === undefined || this._playback_writing) return
+    const checked = this._playback_checked ?? []
+    this._playback_writing = true
+    try {
+      this.tags_list.forEach(tag => { if (checked.includes(tag.id)) tag.setSelected(); else tag.setUnSelected() })
+    } finally {
+      this._playback_writing = false
+    }
+    takeover()
+  }
+
+  /** La source que le moteur de lecture fait défiler (cf. `Type_PlaybackSource`). */
+  public playbackSource(): Type_PlaybackSource {
+    if (this._playback_source !== undefined) return this._playback_source
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const group = this
+    this._playback_source = {
+      key: this.playback_key,
+      steps: () => group.playback_steps,
+      settings: () => group._playback ?? defaultPlaybackSettings(),
+      begin: takeover => {
+        group._playback_checked = group.selected_tags_list.map(tag => tag.id)
+        group._playback_takeover = takeover
+      },
+      show: step => group.showPlaybackSelection([step]),
+      end: restore => {
+        const checked = group._playback_checked
+        group._playback_takeover = undefined
+        group._playback_checked = undefined
+        if (!group.is_alive) return
+        if (restore && checked !== undefined) group.showPlaybackSelection(checked)
+        else group._ref_sankey.drawing_area.application_data.menu_configuration?.updateAllComponentsRelatedToDataTags()
+      },
+      alive: () => group.is_alive,
+      isExitTarget: target => {
+        if (typeof document === 'undefined') return false
+        const drawing = document.getElementById(group._ref_sankey.drawing_area.domId('g_drawing'))
+        const svg = drawing?.closest('svg')
+        return svg ? svg.contains(target) : false
+      }
+    }
+    return this._playback_source
+  }
+
+  /** Montre ces membres sans toucher à l'historique ni au choix gardé. */
+  private showPlaybackSelection(ids: string[]): void {
+    const application_data = this._ref_sankey.drawing_area.application_data
+    this._playback_writing = true
+    try {
+      this.tags_list.forEach(tag => { if (ids.includes(tag.id)) tag.setSelected(); else tag.setUnSelected() })
+      this.checkSelectionCoherence()
+      application_data.after_tag_selection_change?.()
+    } finally {
+      this._playback_writing = false
+    }
+    // Comme un choix fait au sélecteur : la dimension impose son mode, puis on dessine.
+    this.applyPositionModeToDrawing(false, false)
+    this.updateTagsReferences()
+    application_data.menu_configuration?.updateAllComponentsRelatedToDataTags()
   }
 
   /**
@@ -2386,7 +2574,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public selectTagsFromId(
     id: string
   ) {
-
+    // sa#639 — choisir pendant une lecture en fait sortir : l'annulation revient au choix d'avant.
+    this.noteSelectionWillChange()
     const old_selected = this.selected_tags_list[0].id
     const _selectTagsFromId = (_: string) => {
       this.tags_list

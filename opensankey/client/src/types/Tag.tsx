@@ -248,6 +248,7 @@ export abstract class Class_ProtoTag {
     this._name_map = { ...tag_to_copy._name_map }
     this._long_name_map = { ...tag_to_copy._long_name_map }
     this._color = tag_to_copy._color
+    if (this._is_selected !== tag_to_copy._is_selected) this.selectionWillChange()
     this._is_selected = tag_to_copy._is_selected
     // #537 - definition et mise en forme suivent l'etiquette. Sans ces lignes,
     // une duplication de groupe ou une fusion de mise en page les perdrait en
@@ -447,6 +448,7 @@ export abstract class Class_ProtoTag {
   ) {
     // Avoid useless update
     if (this._is_selected === false) {
+      this.selectionWillChange()
       // Set attributes
       this._is_selected = true
       // Update this fingerprint
@@ -461,6 +463,7 @@ export abstract class Class_ProtoTag {
   ) {
     // Avoid useless update
     if (this._is_selected === true) {
+      this.selectionWillChange()
       // Set attributes
       this._is_selected = false
       // Update this fingerprint
@@ -471,6 +474,7 @@ export abstract class Class_ProtoTag {
   }
 
   public toogleSelected() {
+    this.selectionWillChange()
     // Set attributes
     this._is_selected = !this._is_selected
     // SA#553 - les porteurs de l'etiquette generee n'ont pas de reference a redessiner : leur
@@ -485,6 +489,13 @@ export abstract class Class_ProtoTag {
   }
 
   // PROTECTED METHODS ==================================================================
+
+  /**
+   * sa#639 — la sélection va changer. Une dimension en lecture l'apprend ainsi : un choix fait
+   * pendant le défilement (sélecteur, annulation, vue…) fait sortir de lecture, et s'applique au
+   * choix de l'utilisateur, pas au membre qui défilait.
+   */
+  protected selectionWillChange(): void { /* rien par défaut */ }
 
   protected abstract cleanForDeletion(): void
   protected abstract update(): void
@@ -593,7 +604,11 @@ export abstract class Class_ProtoTag {
 
   // Selection
   public get is_selected() { return this._is_selected }
-  public set is_selected(_: boolean) { this._is_selected = _ }
+  public set is_selected(_: boolean) {
+    if (this._is_selected === _) return
+    this.selectionWillChange()
+    this._is_selected = _
+  }
 
   // Group
   public abstract get group(): Class_ProtoTagGroup
@@ -1315,6 +1330,8 @@ export class Class_DataTag extends Class_ProtoTag {
   protected updateFingerprint() {
     this._ref_sankey.dataTagsUpdated()
   }
+
+  protected selectionWillChange(): void { this._group?.noteSelectionWillChange() }
 
   // GETTERS ============================================================================
 

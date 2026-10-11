@@ -32,7 +32,6 @@ import {
   getBooleanFromJSON, getNumberFromJSON, getStringFromJSON
 } from '../types/Utils'
 import { Class_DataTagGroup } from './TagGroup'
-import { Class_DataTag } from './Tag'
 import {
   Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, PANE_PICKERS_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
 } from './EventBus'
@@ -1324,9 +1323,6 @@ export class Class_MenuConfig {
   /* ========================================
     Configuration menu
     ========================================*/
-  // Timeout between steps in sequence (in ms)
-  private _timeout_sequence: number = 2000
-
   /**
    * Order of buttons in top menu
    *
@@ -6067,50 +6063,9 @@ export class Class_MenuConfig {
       this
     )
   }
+  // sa#639 — le moteur de la frise (`launchDataSequence`, boucle et délai globaux, non enregistrés)
+  // est devenu le moteur de lecture (`types/Playback`) ; ses réglages vivent sur chaque sélecteur.
   private _ref_to_drawer_sequence_data_tag_updater: MutableRefObject<(() => void)>
-  /**
-   * Launch datatagg sequence, it go through each tag of a group and draw sankey
-   *
-   * @param {Class_DataTagGroup} tagg
-   * @memberof Class_MenuConfigOSP
-   */
-  public launchDataSequence(tagg: Class_DataTagGroup) {
-    const curr_tag = tagg.first_selected_tags as Class_DataTag | undefined
-    const tagg_list = tagg.tags_list
-
-    if (curr_tag && this._is_playing_sequence && tagg_list.length > 1) {
-      const idx_curr_tag = tagg_list.indexOf(curr_tag)
-
-      if (idx_curr_tag < tagg_list.length - 1) {
-        // Draw sankey with next tag selected
-        const next_tag = tagg_list[idx_curr_tag + 1]
-        tagg.selectTagsFromId(next_tag.id)
-        // Lauch timeout to recursively call launchDataSequence
-        setTimeout(() => {
-          this.updateAllComponentsRelatedToDataTags()
-          this.launchDataSequence(tagg)
-        }, this._timeout_sequence)
-
-      }
-      //If we are at the last tag of the group & loop sequence is at true then select first tag of the group
-      else if (this._is_sequence_loop && idx_curr_tag == tagg_list.length - 1) {
-        // Draw sankey with first tag of the group
-        const first_tag = tagg_list[0]
-        tagg.selectTagsFromId(first_tag.id)
-        // Lauch timeout to recursively call launchDataSequence
-        setTimeout(() => {
-          this.updateAllComponentsRelatedToDataTags()
-          this.launchDataSequence(tagg)
-        }, this._timeout_sequence)
-      } else {//get here when there is no next tag
-        this._is_playing_sequence = false
-        this.updateAllComponentsRelatedToDataTags()
-      }
-    } else {//get here when there curr_tag is undefined wich can be an error or we stop the sequence
-      this._is_playing_sequence = false
-      this.updateAllComponentsRelatedToDataTags()
-    }
-  }
 
   /**
    * Cancel a timed out process - It wont happen
@@ -6127,20 +6082,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_apparence_updater.current()
   }
 
-  //Var used for the dataTagg sequence component
-  private _is_playing_sequence: boolean = false
-  private _is_sequence_loop: boolean = false
-
   public get ref_to_drawer_sequence_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_drawer_sequence_data_tag_updater }
-
-  public get is_playing_sequence(): boolean { return this._is_playing_sequence }
-  public set is_playing_sequence(b: boolean) { this._is_playing_sequence = b }
-
-  public get is_sequence_loop(): boolean { return this._is_sequence_loop }
-  public set is_sequence_loop(value: boolean) { this._is_sequence_loop = value }
-
-  public get timeout_sequence(): number { return this._timeout_sequence }
-  public set timeout_sequence(value: number) { this._timeout_sequence = value }
 
   // os#1385 — les refs ci-dessous marquées « hôte » rendent l'objet de l'ESPACE DE TRAVAIL :
   // un document secondaire repeint la même barre du haut, les mêmes dialogues.
