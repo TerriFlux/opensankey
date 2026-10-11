@@ -4,36 +4,38 @@ if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
 }
 
-// os#1511 — Julien, 09/10 : le titre se cale en haut du diagramme, pas sur des coordonnees fixes
-// (« le y peut etre negatif »).
+// os#1511 — Julien, 09/10 : le titre se cale en haut de l ecran, pas sur des coordonnees fixes
+// (« le y peut etre negatif »). C est un affichage d ecran (calque ecran) dont le texte vient de
+// la zone de texte titre.
 
-test('le titre se pose au-dessus des noeuds, centre sur leur largeur, ou qu ils soient', () => {
+test('un titre neuf est cale en haut, dans le calque ecran', () => {
   const app = new Class_ApplicationData(false)
-  const sankey = app.drawing_area.sankey
-  const a = sankey.addNewNodeWithName('A')
-  const b = sankey.addNewNodeWithName('B')
-  a.setPosXY(100, -300)
-  b.setPosXY(500, -200)
-  sankey.addNewLink(a, b)
-  const titre = sankey.getOrCreateTitleContainer()
+  const titre = app.drawing_area.sankey.getOrCreateTitleContainer()
   expect(titre.title_on_top).toBe(true)
-  titre.setPosXY(9999, 9999)
-  sankey.placeTitleOnTop()
-  const haut = Math.min(a.position_y, b.position_y)
-  expect(titre.position_y + titre.getShapeHeightToUse()).toBeLessThanOrEqual(haut)
-  const centre_noeuds = (a.position_x + b.position_x + b.getShapeWidthToUse()) / 2
-  expect(titre.position_x + titre.getShapeWidthToUse() / 2).toBeCloseTo(centre_noeuds, 6)
+  expect(titre.on_screen_layer).toBe(true)
 })
 
-test('un titre sans le reglage garde sa place', () => {
+test('sans ecran, le titre cale en haut garde sa place', () => {
   const app = new Class_ApplicationData(false)
   const sankey = app.drawing_area.sankey
   sankey.addNewNodeWithName('A')
   const titre = sankey.getOrCreateTitleContainer()
-  titre.title_on_top = false
   titre.setPosXY(42, 43)
-  sankey.placeTitleOnTop()
+  app.drawing_area.placeTitleAtScreenTop()
   expect([titre.position_x, titre.position_y]).toEqual([42, 43])
+})
+
+test('un titre sans le reglage est une zone du dessin, comptee dans le cadrage', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { contentBoundsFromModel } = require('./DrawingAreaCamera')
+  const app = new Class_ApplicationData(false)
+  const sankey = app.drawing_area.sankey
+  sankey.addNewNodeWithName('A').setPosXY(0, 0)
+  const titre = sankey.getOrCreateTitleContainer()
+  titre.title_on_top = false
+  expect(titre.on_screen_layer).toBe(false)
+  titre.setPosXY(-5000, -5000)
+  expect(contentBoundsFromModel(app.drawing_area).x).toBeLessThanOrEqual(-5000)
 })
 
 test('le titre cale en haut ne compte pas dans le cadrage du diagramme', () => {

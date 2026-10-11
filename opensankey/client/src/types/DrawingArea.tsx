@@ -5442,17 +5442,15 @@ export class Class_DrawingArea {
   /**
    * os#1511 (Julien, 09/10 : « le titre doit se caler en haut de l'écran ») — le titre réglé
    * `title_on_top` se pose en haut de la zone VISIBLE, centré, à chaque dessin et à chaque zoom ou
-   * déplacement. Sans zone de zoom (tests, export hors écran) : au-dessus des nœuds.
+   * déplacement, en px d'écran dans le calque écran. Sans écran (pas de calque, largeur nulle) : rien
+   * à placer, le titre n'est pas dessiné.
    */
   public placeTitleAtScreenTop(): void {
     this.updateScreenOverlay()
     const title = this._sankey.getTitleContainer()
-    if (title === undefined || !title.title_on_top || !title.is_visible) return
+    if (title === undefined || !title.on_screen_layer || !title.is_visible) return
     const width = this.window_fitting_width
-    if (this.d3_selection_screen_overlay === null || !(width > 0)) {
-      this._sankey.placeTitleOnTop()
-      return
-    }
+    if (this.d3_selection_screen_overlay === null || !(width > 0)) return
     // En px d'écran : le calque annule le zoom.
     const x = width / 2 - title.getShapeWidthToUse() / 2
     const y = 12

@@ -60,18 +60,19 @@ function getCanvasFontStringAtSize(
   return labelFontTemplate(node).replace('{size}', String(fontSizePx))
 }
 
-// Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
-// break point so d3-textwrap can wrap the resulting sub-words onto separate lines.
 /**
- * os#1511 — la compensation de police (1/k, police verrouillée) d'un élément. Le titre calé en
- * haut vit dans le calque écran, qui annule déjà le zoom : pas de compensation pour lui.
+ * os#1511 — la compensation de police (1/k, police verrouillée) d'un élément. Un élément du calque
+ * écran (`on_screen_layer`) y est en px d'écran, le calque annulant déjà le zoom : pas de
+ * compensation pour lui.
  */
 const fontCompensationOf = (element: unknown): number => {
-  const el = element as { is_title?: boolean, title_on_top?: boolean, drawing_area?: { font_compensation?: number } }
-  if (el.is_title === true && el.title_on_top === true) return 1
+  const el = element as { on_screen_layer?: boolean, drawing_area?: { font_compensation?: number } }
+  if (el.on_screen_layer === true) return 1
   return el.drawing_area?.font_compensation ?? 1
 }
 
+// Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
+// break point so d3-textwrap can wrap the resulting sub-words onto separate lines.
 export function breakLongWords(text: string, maxWidth: number, font: string): string {
   if (!text || maxWidth <= 0) return text
   const ctx = getMeasureContext()

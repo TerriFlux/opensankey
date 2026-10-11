@@ -1102,30 +1102,6 @@ export class Class_Sankey {
   }
 
   /**
-   * os#1511 — POSE LE TITRE AU-DESSUS DU DIAGRAMME, centré sur la largeur des nœuds visibles,
-   * s'il est réglé pour (`title_on_top`). Appelée à chaque dessin, après le placement des nœuds :
-   * le titre suit le diagramme où qu'il soit (y négatif compris), au lieu de coordonnées fixes.
-   */
-  public placeTitleOnTop(): void {
-    const title = this.getTitleContainer()
-    if (title === undefined || !title.title_on_top || !title.is_visible) return
-    const nodes = this.visible_nodes_list
-    if (nodes.length === 0) return
-    let min_x = Infinity, max_x = -Infinity, min_y = Infinity
-    nodes.forEach(n => {
-      min_x = Math.min(min_x, n.position_x)
-      max_x = Math.max(max_x, n.position_x + n.getShapeWidthToUse())
-      min_y = Math.min(min_y, n.position_y)
-    })
-    const width = title.getShapeWidthToUse()
-    const height = title.getShapeHeightToUse()
-    const x = (min_x + max_x) / 2 - width / 2
-    const y = min_y - height - 20
-    if (Math.abs(title.position_x - x) < 0.5 && Math.abs(title.position_y - y) < 0.5) return
-    title.setPosXY(x, y)
-  }
-
-  /**
    * Position par défaut du titre : centré horizontalement sur la bbox logique
    * des nœuds visibles, juste au-dessus.
    */
