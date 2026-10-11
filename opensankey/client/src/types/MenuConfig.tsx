@@ -67,7 +67,7 @@ import {
 } from '../Representations/paneSync'
 import { readPaneReading, type Type_GroupReading, type Type_PaneReading } from '../Representations/paneReading'
 import {
-  basePaneKeyOf, formatPanesParam, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys, withPanesParam
+  basePaneKeyOf, parsePanesParam, rawPanesParam, readPanesState, visiblePaneKeys
 } from './mainZonePanes'
 // os#1418 — la DÉCLARATION des attributs d'une nature vit dans son entrée de registre. Import de
 // VALEUR, donc arête réelle : `RepresentationRegistry` ne prend de ce fichier qu'un `import type`
@@ -2721,8 +2721,8 @@ export class Class_MenuConfig {
 
   /**
    * Le LECTEUR coche ou décoche : `visible` = ce qu'il veut voir parmi `keys`. Jamais vide ; égal au
-   * choix de l'auteur, il s'efface. Reporté dans l'adresse (`replaceState`, pas d'historique) ;
-   * le fichier n'est pas touché.
+   * choix de l'auteur, il s'efface. Il vaut pour la session : ni l'adresse ni le fichier ne sont
+   * touchés.
    */
   public setMainZoneReaderVisiblePanes(id: string, visible: string[], keys: string[]): void {
     const chosen = keys.filter(k => visible.includes(k))
@@ -2735,13 +2735,9 @@ export class Class_MenuConfig {
     else panes[id] = chosen
     host._main_zone_reader_panes = panes
     this._dropHiddenFromSelection(id, keys.filter(k => !chosen.includes(k)))
-    if (typeof window !== 'undefined' && window.history?.replaceState) {
-      try {
-        const url = new URL(window.location.href)
-        const search = withPanesParam(url.search, formatPanesParam(panes))
-        window.history.replaceState(window.history.state, '', url.pathname + search + url.hash)
-      } catch { /* adresse exotique (blob:, data:) : le choix vaut pour la session */ }
-    }
+    // os#1511 (lot 6, Julien 11/10) — L'ADRESSE D'UNE PAGE PUBLIÉE NE BOUGE JAMAIS (cf.
+    // `Class_ApplicationData.syncUrlState`) : le choix du lecteur vaut pour la session, il ne s'écrit
+    // plus dans `?panes=`. Un lien qui en porte encore un (partagé avant) s'ouvre toujours ainsi.
     this._notifyMainZone()
   }
 

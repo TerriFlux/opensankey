@@ -8,8 +8,10 @@
 
 // 06/10/2026 — LE MODÈLE COMMUN couronne · Sankey · tableau croisé (os#1511, refonte « rôles
 // communs », lot 1 sur 5 : modèle pur). Branchés depuis : la couronne et le tableau croisé
-// (`fromFigure`, `toCouronneState`, `figureOptionsOf`, `planFor`) ; le côté Sankey (`fromDiagram`,
-// `toDiagramPatch`, `planFor(…, 'sankey')`) attend le lot qui le branchera.
+// (`fromFigure`, `toCouronneState`, `figureOptionsOf`, `planFor`). 11/10/2026 (lot 6) — LE CÔTÉ
+// SANKEY EST RETIRÉ (`fromDiagram`, `toDiagramPatch`, `planFor(…, 'sankey')`) : Julien a sauté son
+// branchement (lot 5a), le ⇅ du Sankey faisant déjà « ordre + dessin » ; ses gestes restent ceux de
+// `dimensionDrawingHost`. Les VARIANTES Sankey restent : elles s'écrivent dans le sac d'une figure.
 //
 // Trois représentations, une même grammaire (validée par Julien). Pour chaque dimension :
 //   RÔLE      `none`  elle ne découpe pas : elle se lit au total, ou à sa portée ;
@@ -33,9 +35,7 @@
 //   tableau   plat / hiérarchique = parts (lignes, puis colonnes, dans l'ordre) ; un tableau par
 //             membre = cases.
 //
-// L'état est une INTERFACE à trois sources :
-//   - le DIAGRAMME, qui garde son état dans le modèle (bannière, sélection, nœuds porteurs,
-//     `member_bands`) : `fromDiagram` le lit, `toDiagramPatch` DÉCRIT les écritures sans les faire ;
+// L'état est une INTERFACE à deux sources :
 //   - la figure LIÉE (Suit / Épinglée) : membres montrés = la sélection du diagramme ;
 //   - la figure DÉTACHÉE : tout est à elle, sous la clé `couronne` (`couronneState`), que
 //     `fromFigure` / `toFigureOptions` lisent et écrivent (anciens formats compris).
@@ -63,7 +63,6 @@ import type { Class_DataTagGroup } from '../types/TagGroup'
 import { dimensionRootsOf, openedForSelection } from '../Charts/DataDimensionHierarchy'
 import { drawPlanOf } from '../Charts/couronnePlan'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
-import { isGeneratedMemberId } from '../Elements/GeneratedMemberMark'
 import {
   antichainOf, COURONNE_KEY, readCouronneState, writeCouronneState
 } from './couronneState'
@@ -87,16 +86,6 @@ export interface Type_DimensionVariants {
 
 export const DEFAULT_VARIANTS: Type_DimensionVariants = { couronne: 'sectors', sankey: 'bands', matrix: 'flat' }
 
-/** Ce que le diagramme porte d'une dimension et que le modèle commun ne sait pas déduire. */
-export interface Type_DiagramExtras {
-  /** La bannière (`one`, `multi`, `sequence`, `none`…), gardée pour ne pas réécrire une séquence en « un membre ». */
-  banner: string
-  /** Les nœuds qui la portent (`driving_dimension`), hors nœuds engendrés. */
-  carriers: string[]
-  /** `undefined` = automatique (bandes par membre dès deux porteurs). */
-  member_bands: boolean | undefined
-}
-
 export interface Type_DimensionView {
   role: Type_DimensionRole
   /** Le rôle que reprend une dimension remise en jeu (couronne : désactivée, elle garde « une couronne par membre »). */
@@ -108,11 +97,9 @@ export interface Type_DimensionView {
   shown: string[]
   /** Les décochés (⊂ `shown`), qui gardent leur ligne. */
   hidden: string[]
-  /** Source diagramme seulement. */
-  diagram?: Type_DiagramExtras
 }
 
-export type Type_ViewSource = 'diagram' | 'linked' | 'detached'
+export type Type_ViewSource = 'linked' | 'detached'
 
 export interface Type_DimensionViewState {
   source: Type_ViewSource
@@ -120,11 +107,6 @@ export interface Type_DimensionViewState {
   linked: boolean
   order: string[]
   dims: { [dimension_id: string]: Type_DimensionView }
-}
-
-/** Ce que ce module lit d'un Sankey : ses dimensions, et ses nœuds pour les porteurs. */
-export interface Type_ViewSankey extends Type_CouronneSankey {
-  nodes_list?: unknown[]
 }
 
 type Type_Options = { [key: string]: unknown }
@@ -344,7 +326,7 @@ export const toCouronneState = (state: Type_DimensionViewState): Type_CouronneSt
     const d = state.dims[id]
     if (d === undefined) return
     const role = d.role === 'none' ? d.resume : d.role
-    const focus = d.role === 'none' && d.focus.length === 0 && d.diagram !== undefined ? [...d.shown] : [...d.focus]
+    const focus = [...d.focus]
     dims[id] = {
       focus, shown: [...d.shown], hidden: [...d.hidden],
       active: d.role !== 'none',
@@ -416,155 +398,6 @@ export const toFigureOptions = (options: Type_Options, state: Type_DimensionView
 export const figureOptionsOf = (options: Type_Options, cs: Type_CouronneState): Type_Options =>
   toFigureOptions(options, fromCouronneState(cs, storedVariantsOf(options)))
 
-// ── LE DIAGRAMME ─────────────────────────────────────────────────────────────────────────────────
-
-type Type_DiagramNode = { id: string, driving_dimension?: unknown }
-
-const carriersOf = (sankey: Type_ViewSankey, dim: Class_DataTagGroup): string[] =>
-  ((sankey.nodes_list ?? []) as Type_DiagramNode[])
-    .filter(n => !isGeneratedMemberId(n.id) && n.driving_dimension === dim)
-    .map(n => n.id)
-
-/**
- * Un diagramme par membre : la règle du modèle (`draws_member_bands`, demandé), et deux porteurs pour
- * qu'il y ait des diagrammes à répéter. 10/10/2026 (lot 4) — l'automatique « dès deux porteurs »
- * qu'on lisait encore ici était levé partout ailleurs depuis le 08/10.
- */
-const inMemberBands = (dim: Class_DataTagGroup, carriers: number): boolean =>
-  carriers >= 2 && dim.draws_member_bands
-
-/**
- * CE QUE LE DIAGRAMME DESSINE, lu dans le modèle : chaque dimension non vide, son rôle d'après
- * `drawing` (bannière et nœuds porteurs), ses montrés = sa sélection, sa portée = `focus_ids`.
- *  - en nœuds, deux porteurs ou plus rangés par membre (`member_bands` demandé) : `cases` ;
- *  - en nœuds sinon : `parts` / nœuds ;
- *  - en bandes, la dimension qui découpe les flux (`draws_bands`, la première de la liste) :
- *    `parts` / bandes ; une autre en choix multiple se lit sur la SOMME de ses membres : `none` ;
- *  - un membre à la fois, séquence, aucune bannière : `none`, lue sur ses membres choisis.
- * Ordre : celui des dimensions du fichier, la dimension des cases en dernier.
- */
-export const fromDiagram = (sankey: Type_ViewSankey): Type_DimensionViewState => {
-  const dims: Type_DimensionViewState['dims'] = {}
-  const order: string[] = []
-  ;(sankey.data_taggs_list as Class_DataTagGroup[]).filter(d => d.tags_list.length > 0).forEach(dim => {
-    const selection = antichainOf(dim, (dim.selected_tags_list as Class_DataTag[]).map(m => m.id))
-    const carriers = carriersOf(sankey, dim)
-    const drawing = dim.drawing
-    let role: Type_DimensionRole = 'none'
-    let variants: Type_DimensionVariants = { ...DEFAULT_VARIANTS }
-    if (drawing === 'nodes') {
-      role = inMemberBands(dim, carriers.length) ? 'cases' : 'parts'
-      variants = withVariant(variants, 'sankey', 'nodes')
-    } else if (drawing === 'multi' && dim.draws_bands) {
-      role = 'parts'
-    }
-    order.push(dim.id)
-    dims[dim.id] = {
-      role,
-      resume: role === 'cases' ? 'cases' : 'parts',
-      variants,
-      // 07/10/2026 — le diagramme a désormais une PORTÉE (`focus_ids`, zoom partagé en lié).
-      focus: dim.focus_ids.length > 0 ? dim.focus_ids : role === 'none' ? [...selection] : [],
-      shown: selection,
-      hidden: [],
-      diagram: { banner: dim.banner, carriers, member_bands: dim.member_bands }
-    }
-  })
-  const cases = order.filter(id => dims[id].role === 'cases')
-  return { source: 'diagram', linked: true, order: [...order.filter(id => !cases.includes(id)), ...cases], dims }
-}
-
-/** Une écriture dans le modèle, par dimension ; seuls les champs à changer sont présents. */
-export interface Type_DiagramDimensionPatch {
-  banner?: string
-  /** Les nœuds qui doivent porter la dimension, exactement. */
-  carriers?: string[]
-  member_bands?: boolean | undefined
-  /** Les membres à choisir (`selectMembers`). */
-  selected?: string[]
-}
-
-export type Type_DiagramWarning =
-  /** Une dimension lue à la somme de plusieurs membres : le diagramme ne le fait que si une autre prend les bandes. */
-  | 'sum_needs_bands_elsewhere'
-  /** En bandes, mais une dimension plus haut dans la liste les prend : elle se lira à la somme. */
-  | 'bands_taken'
-  /** En nœuds sans aucun nœud porteur connu : le modèle ne sait pas lesquels choisir. */
-  | 'carriers_needed'
-  /** Un diagramme par membre veut deux porteurs au moins. */
-  | 'cases_need_two_carriers'
-  /** L'expansion n'est pas encore dessinée par le Sankey : en nœuds à la place. */
-  | 'expansion_unsupported'
-  /** Le diagramme n'a pas de portée : seuls les montrés passent. */
-  | 'focus_ignored'
-
-export interface Type_DiagramPatch {
-  dims: { [dimension_id: string]: Type_DiagramDimensionPatch }
-  warnings: { dimension_id: string, code: Type_DiagramWarning }[]
-}
-
-const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x))
-
-/**
- * LES ÉCRITURES qui feraient dessiner `state` au diagramme, décrites et non faites (le geste les
- * fera, en un pas d'historique). Seul ce qui change est décrit.
- */
-export const toDiagramPatch = (state: Type_DimensionViewState, sankey: Type_ViewSankey): Type_DiagramPatch => {
-  const now = fromDiagram(sankey)
-  const patch: Type_DiagramPatch = { dims: {}, warnings: [] }
-  const warn = (dimension_id: string, code: Type_DiagramWarning) => patch.warnings.push({ dimension_id, code })
-  const list = (sankey.data_taggs_list as Class_DataTagGroup[]).map(d => d.id)
-  const wants_bands = (id: string) => state.dims[id]?.role === 'parts' && state.dims[id].variants.sankey === 'bands'
-  const any_bands = state.order.some(wants_bands)
-  state.order.forEach(id => {
-    const d = state.dims[id]
-    const cur = now.dims[id]
-    const dim = sankey.data_taggs_dict[id] as Class_DataTagGroup | undefined
-    if (d === undefined || cur === undefined || dim === undefined || cur.diagram === undefined) return
-    const p: Type_DiagramDimensionPatch = {}
-    const banner = cur.diagram.banner
-    const carriers_now = cur.diagram.carriers
-    const known_carriers = d.diagram?.carriers.length ? d.diagram.carriers : carriers_now
-    const parts = d.shown.filter(m => !d.hidden.includes(m))
-    let selected: string[]
-    if (d.role === 'none') {
-      selected = d.focus.length > 0 ? [...d.focus] : (parts.length > 0 ? parts : dimensionRootsOf(dim).map(m => m.id))
-      if (carriers_now.length > 0) p.carriers = []
-      // Déjà lue sans découper (un membre à la fois, ou choix multiple sans les bandes) : la bannière
-      // reste. Sinon, un membre : « un membre à la fois » ; plusieurs : leur somme, en choix multiple.
-      if (cur.role !== 'none') {
-        if (selected.length === 1) p.banner = 'one'
-        else {
-          p.banner = 'multi'
-          if (!any_bands) warn(id, 'sum_needs_bands_elsewhere')
-        }
-      }
-    } else {
-      selected = parts
-      if (d.focus.length > 0 && state.source === 'diagram') warn(id, 'focus_ignored')
-      const variant = d.role === 'cases' ? 'nodes' : d.variants.sankey
-      if (variant === 'bands') {
-        if (banner !== 'multi') p.banner = 'multi'
-        if (carriers_now.length > 0) p.carriers = []
-        const before = list.slice(0, list.indexOf(id)).find(o => state.order.includes(o) ? wants_bands(o) : now.dims[o]?.diagram?.banner === 'multi')
-        if (before !== undefined) warn(id, 'bands_taken')
-      } else {
-        if (variant === 'expansion') warn(id, 'expansion_unsupported')
-        if (known_carriers.length === 0) warn(id, 'carriers_needed')
-        else if (!sameSet(known_carriers, carriers_now)) p.carriers = [...known_carriers]
-        const n = known_carriers.length
-        if (d.role === 'cases') {
-          if (n < 2) warn(id, 'cases_need_two_carriers')
-          if (!dim.draws_member_bands) p.member_bands = true
-        } else if (dim.draws_member_bands) p.member_bands = false
-      }
-    }
-    if (!sameSet(selected, cur.shown)) p.selected = selected
-    if (Object.keys(p).length > 0) patch.dims[id] = p
-  })
-  return patch
-}
-
 // ── LE PLAN DE CHAQUE REPRÉSENTATION ─────────────────────────────────────────────────────────────
 
 export interface Type_MatrixAxisPlan {
@@ -603,28 +436,9 @@ export interface Type_MatrixPlan {
   coordinates: { [dimension_id: string]: string[] }
 }
 
-export interface Type_SankeyPlan {
-  /** La dimension qui découpe les flux en bandes (une seule). */
-  bands: string | null
-  /** Les dimensions dessinées en nœuds, dans l'ordre. */
-  nodes: string[]
-  /** Les dimensions en expansion (plusieurs niveaux, parents compris). */
-  expansion: string[]
-  /** La dimension « un diagramme par membre ». */
-  per_member: string | null
-  grouping: Type_Grouping
-  /** Les membres dessinés de chaque dimension qui découpe (montrés − décochés). */
-  members: { [dimension_id: string]: string[] }
-  /** Les ouverts des dimensions en expansion. */
-  opened: { [dimension_id: string]: string[] }
-  /** Où se lisent les dimensions qui ne découpent pas. */
-  coordinates: { [dimension_id: string]: string[] }
-}
-
 export type Type_RepresentationPlan =
   | { representation: 'couronne', plan: Type_DrawPlan }
   | { representation: 'matrix', plan: Type_MatrixPlan | null }
-  | { representation: 'sankey', plan: Type_SankeyPlan }
 
 /**
  * LES AXES DU TABLEAU PAR LES RÔLES (07/10/2026, correction de Julien) :
@@ -713,53 +527,19 @@ const matrixPlanOf = (state: Type_DimensionViewState, sankey: Type_CouronneSanke
   return { rows: axis(axes.row_id), columns: axes.col_id ? axis(axes.col_id) : null, cases, coordinates }
 }
 
-/** Le plan du Sankey : quelle dimension en bandes, en nœuds, en expansion, par membre. */
-const sankeyPlanOf = (state: Type_DimensionViewState, sankey: Type_CouronneSankey): Type_SankeyPlan => {
-  const plan: Type_SankeyPlan = {
-    bands: null, nodes: [], expansion: [], per_member: null, grouping: 'by_node', members: {}, opened: {}, coordinates: {}
-  }
-  const list = (sankey.data_taggs_list as Class_DataTagGroup[]).map(d => d.id)
-  const ids = state.order.filter(id => state.dims[id] !== undefined && sankey.data_taggs_dict[id] !== undefined)
-  // Les bandes : comme `draws_bands`, la première DE LA LISTE DU FICHIER qui les veut.
-  const bands = [...ids].sort((a, b) => list.indexOf(a) - list.indexOf(b))
-    .find(id => state.dims[id].role === 'parts' && state.dims[id].variants.sankey === 'bands' && partsOf(state.dims[id]).length > 1)
-  // Un diagramme par membre : la dernière qui le demande.
-  const per_member = [...ids].reverse().find(id => state.dims[id].role === 'cases' && partsOf(state.dims[id]).length > 1)
-  ids.forEach(id => {
-    const d = state.dims[id]
-    const dim = sankey.data_taggs_dict[id] as Class_DataTagGroup
-    const parts = partsOf(d)
-    if (id === per_member) { plan.per_member = id; plan.members[id] = parts; return }
-    if (d.role === 'parts' && parts.length > 1) {
-      if (d.variants.sankey === 'bands') {
-        if (id === bands) { plan.bands = id; plan.members[id] = parts; return }
-      } else {
-        plan.members[id] = parts
-        if (d.variants.sankey === 'expansion') { plan.expansion.push(id); plan.opened[id] = openedOf(dim, d) } else plan.nodes.push(id)
-        return
-      }
-    }
-    plan.coordinates[id] = d.role === 'none' && d.focus.length > 0 ? [...d.focus] : parts
-  })
-  plan.grouping = plan.per_member !== null ? 'by_member' : 'by_node'
-  return plan
-}
-
 const partsOf = (d: Type_DimensionView) => d.shown.filter(id => !d.hidden.includes(id))
 
 /**
  * CE QUE CHAQUE REPRÉSENTATION DESSINERAIT de l'état (généralise `drawPlanOf`) : la couronne (son
  * plan, inchangé), le tableau (lignes puis colonnes = parts, un tableau par membre = cases, plat ou
- * hiérarchique, portée),
- * le Sankey (bandes, nœuds, expansion, un diagramme par membre, regroupement ; non branché).
+ * hiérarchique, portée).
  */
 export const planFor = (
   state: Type_DimensionViewState,
-  representation: Type_Representation,
+  representation: 'couronne' | 'matrix',
   sankey: Type_CouronneSankey,
   subject?: { name: string }
 ): Type_RepresentationPlan => {
   if (representation === 'couronne') return { representation, plan: drawPlanOf(toCouronneState(state), sankey, subject) }
-  if (representation === 'matrix') return { representation, plan: matrixPlanOf(state, sankey) }
-  return { representation, plan: sankeyPlanOf(state, sankey) }
+  return { representation, plan: matrixPlanOf(state, sankey) }
 }
