@@ -53,7 +53,7 @@ import {
   HIERARCHY_FOCUS_KEY, donutLegendLatched, donutLegendShown, type Type_DonutLegendShape
 } from './analysisFigureAttributes'
 import {
-  isFigureLinked, readFigureDataFocus, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
+  isFigureLinked, readFigureDataLayer, readFigureFocus, readFigureLevelsDisplay, readFigureOpening,
   withElementOpening
 } from './figureOpening'
 import { diagramIsShown } from './figureCatalogue'
@@ -355,11 +355,7 @@ const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_HierarchyRead
     // son membre (cf. `smallMultiplesOf`).
     exclude_dimension_ids: split ? [split.dimension.id] : undefined,
     data_opening: readFigureOpening(raw).data,
-    // 02/10/2026 — « Zoome dedans » : le secteur de membre où la figure est descendue. Les petits
-    // multiples le lisent aussi : toutes les cases se re-enracinent sur la même part.
-    // 04/10/2026 (lot 2) — ces trois clés ne servent plus qu'aux ÉCRIVAINS (gestes) et au tableau
-    // croisé ; le dessin lit le plan (`data_plan`).
-    data_focus: readFigureDataFocus(raw),
+    // 04/10/2026 (lot 2) — le dessin lit le plan (`data_plan`) : le foyer (« Zoome dedans ») y est.
     data_plan: couronneOf(ctx) ?? undefined
   }
 }
@@ -416,7 +412,7 @@ export const figureDimensionViewOf = (
 ): Type_FigureDimensionView | null => {
   if (!ctx.element || !ctx.options) return null
   const sankey = ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey
-  const name = subjectNameOf(ctx)
+  const name = subjectFullNameOf(ctx)
   const key = `${reader}|${memoIdOf(ctx.options)}|${memoIdOf(ctx.element as object)}|${name}|${diagramSignatureOf(sankey)}`
   if (figure_view_memo.has(key)) return figure_view_memo.get(key) ?? null
   const out = computeFigureDimensionView(ctx, reader, sankey, name)
@@ -712,7 +708,7 @@ const chartOptions = (
  * REGARDÉ qui a changé, et c'est lui qu'on lit.
  */
 const figureTitleFallback = (ctx: Type_RepresentationContext): string =>
-  focusedNodeOf(ctx)?.name ?? dataFocusNameOf(ctx) ?? subjectNameOf(ctx)
+  focusedNodeOf(ctx)?.name ?? dataFocusNameOf(ctx) ?? subjectFullNameOf(ctx)
 
 /**
  * 04/10/2026 — LE NOM DU ZOOM : un zoom à plusieurs membres se nomme en entier (« Europe, Amériques »).
@@ -725,16 +721,35 @@ const dataFocusNameOf = (ctx: Type_RepresentationContext): string | undefined =>
 }
 
 /**
- * 03/10/2026 — LE NOM COURT DU SUJET, pour la ligne de ce que le centre mesure : le nœud, ou pour un
- * flux son libellé propre s'il en a un, sinon son ARRIVÉE (« Monde - Export ») — c'est elle qui dit
- * ce que le flux mesure, la source étant ce que les anneaux découpent.
+ * 11/10/2026 — LE NOM COURT DU SUJET, la seule fonction qui le dit (os#1511). Pour un flux, son
+ * libellé propre s'il en a un ; sinon une extrémité, la source étant ce que les anneaux découpent.
+ * Deux formes :
+ *  - `caption` (03/10, la ligne de ce que le centre mesure, la ligne du sujet) : le nœud en entier ;
+ *    pour un flux, son ARRIVÉE (« Monde - Export ») ;
+ *  - `centre` (05/10, Jean-Yves : « Exports » / « Imports », au centre et dans le menu des
+ *    vignettes) : ce que mesure le jeu de données en un mot. Le nœud en nom court ; pour un flux,
+ *    le bout qui n'a pas d'autre flux (« Monde - Export », et non « Produits agricoles »), en nom
+ *    court, à défaut en entier ; vide si aucun bout, ou deux, ne l'est.
+ * Vide sans sujet.
  */
-const subjectShortNameOf = (ctx: Type_RepresentationContext): string => {
+export const subjectShortNameOf = (ctx: Type_RepresentationContext, form: 'caption' | 'centre' = 'caption'): string => {
   const subject = chartSubjectOf(ctx.element)
-  if (subject?.kind === 'node') return displayedNameOf(subject.node)
+  if (subject?.kind === 'node') {
+    const name = displayedNameOf(subject.node)
+    return form === 'centre' ? shortNodeNameOf(name) : name
+  }
   if (subject?.kind !== 'flux') return ''
   const own = displayedLabelOf(subject.link)
-  return own !== '' && own !== subject.link.name ? own : displayedNameOf(subject.link.target)
+  if (own !== '' && own !== subject.link.name) return own
+  const { source, target } = subject.link
+  if (form === 'caption') return displayedNameOf(target)
+  const ends = [
+    ...(!source.hasInputLinks() ? [source] : []),
+    ...(!target.hasOutputLinks() ? [target] : [])
+  ]
+  if (ends.length !== 1) return ''
+  const name = displayedNameOf(ends[0])
+  return shortNodeNameOf(name) || name
 }
 
 /**
@@ -748,29 +763,6 @@ export const shortNodeNameOf = (name: string): string => {
   if (tail === '' || /\s/.test(tail)) return ''
   const word = tail.charAt(0).toLocaleUpperCase() + tail.slice(1)
   return /[sxz]$/i.test(word) ? word : `${word}s`
-}
-
-/**
- * 05/10/2026 — CE QUE MESURE LE JEU DE DONNÉES, EN UN MOT, au centre de la couronne (Jean-Yves :
- * « Exports » / « Imports »). Pour un flux : son libellé propre s'il en a un ; sinon son extrémité
- * — le bout qui n'a pas d'autre flux (« Monde - Export », et non « Produits agricoles » que les
- * anneaux découpent) — en nom court, à défaut en entier. Pour un nœud : son nom court. Vide sinon.
- */
-export const centreSubjectNameOf = (ctx: Type_RepresentationContext): string => {
-  const subject = chartSubjectOf(ctx.element)
-  if (subject?.kind === 'node') return shortNodeNameOf(displayedNameOf(subject.node))
-  if (subject?.kind !== 'flux') return ''
-  const own = displayedLabelOf(subject.link)
-  if (own !== '' && own !== subject.link.name) return own
-  const source = subject.link.source
-  const target = subject.link.target
-  const ends = [
-    ...(!source.hasInputLinks() ? [source] : []),
-    ...(!target.hasOutputLinks() ? [target] : [])
-  ]
-  if (ends.length !== 1) return ''
-  const name = displayedNameOf(ends[0])
-  return shortNodeNameOf(name) || name
 }
 
 /**
@@ -870,7 +862,7 @@ const centreContextOf = (ctx: Type_RepresentationContext): string => {
 const withSubjectLine = (ctx: Type_RepresentationContext, texts: Type_FigureText[]): Type_FigureText[] => {
   const a = analysisOf(ctx)
   if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension') return texts
-  const subject = subjectNameOf(ctx)
+  const subject = subjectFullNameOf(ctx)
   const short = subjectShortNameOf(ctx).toLocaleLowerCase()
   if (subject === '' || texts.some(z => z.text.toLocaleLowerCase().includes(short))) return texts
   return [...texts, {
@@ -890,7 +882,7 @@ const dataRingsCentreContent = (
   const a = analysisOf(ctx)
   if (!a || effectiveDecompose(a.descriptor)?.kind !== 'data_dimension' || dataScopeOf(ctx).length > 0) return own
   // 05/10/2026 — sauf quand le jeu de données a un nom court : il s'écrit au centre (`dataCentreNameOf`).
-  if (centreSubjectNameOf(ctx) !== '') return own
+  if (subjectShortNameOf(ctx, 'centre') !== '') return own
   const { window_id, pane_key } = ctx
   const explicit = window_id !== undefined && pane_key !== undefined
     ? ctx.app_data.menu_configuration.figureOf(window_id, pane_key).isAttributeOverloaded('centre_content')
@@ -906,7 +898,7 @@ const dataRingsCentreContent = (
  */
 const dataCentreNameOf = (ctx: Type_RepresentationContext): { text: string, bold: boolean } | undefined => {
   if (!isDataDimensionFigure(ctx) || dataScopeOf(ctx).length > 0) return undefined
-  const text = centreSubjectNameOf(ctx)
+  const text = subjectShortNameOf(ctx, 'centre')
   return text !== '' ? { text, bold: true } : undefined
 }
 
@@ -917,7 +909,7 @@ const dataCentreNameOf = (ctx: Type_RepresentationContext): { text: string, bold
  */
 const dataCentreCaptionOf = (ctx: Type_RepresentationContext): string => {
   const context = centreContextOf(ctx)
-  const subject = dataScopeOf(ctx).length > 0 ? centreSubjectNameOf(ctx) : ''
+  const subject = dataScopeOf(ctx).length > 0 ? subjectShortNameOf(ctx, 'centre') : ''
   return [subject, context].filter(s => s !== '').join(' · ')
 }
 
@@ -956,8 +948,8 @@ const labelsSmallOuterOf = (ctx: Type_RepresentationContext): 'hide' | undefined
   return explicit ? undefined : 'hide'
 }
 
-/** Le nom du SUJET, ce que la figure nomme quand elle n'est pas descendue. */
-const subjectNameOf = (ctx: Type_RepresentationContext): string => {
+/** Le nom ENTIER du sujet, ce que la figure nomme quand elle n'est pas descendue (le court : `subjectShortNameOf`). */
+const subjectFullNameOf = (ctx: Type_RepresentationContext): string => {
   const subject = chartSubjectOf(ctx.element)
   return subject?.kind === 'node'
     ? subject.node.name
@@ -986,7 +978,7 @@ const figureBreadcrumbOf = (
   const sankey = ctx.app_data.drawing_area.sankey
   const decompose = analysisOf(ctx)?.descriptor.decompose
   let labels: string[]
-  let root_label = subjectNameOf(ctx)
+  let root_label = subjectFullNameOf(ctx)
   if (decompose?.kind === 'data_dimension') {
     if (dataScopeOf(ctx).length === 0) return []
     // LA RACINE DE LA DIMENSION où l'on est entré (« Produits agricoles ») plutôt que le flux
@@ -1328,7 +1320,7 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
   // SANS les décochés de la dimension, aux valeurs pleines ; la couronne, elle, ne dessine que les
   // cochés.
   const full_state: Type_CouronneState = { ...state, dims: { ...state.dims, [dim.id]: { ...state.dims[dim.id], hidden: [] } } }
-  const full_plan = drawPlanOf(full_state, ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey, { name: subjectNameOf(ctx) })
+  const full_plan = drawPlanOf(full_state, ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey, { name: subjectFullNameOf(ctx) })
   const all = analysisPartInputs(
     a.subject, a.descriptor,
     flatParts(a.subject, a.descriptor, a.nav, { ...reading, data_plan: { state: full_state, plan: full_plan } }, expandedOf(ctx.options ?? {}))
@@ -2064,7 +2056,7 @@ export const registerAnalysisRepresentations = (): void => {
     resolveElementTarget: ({ target, ctx }) => analysisPartTarget(target, analysisOf(ctx)?.descriptor),
     // 05/10/2026 — sur dimensions de données, la couronne écrit toujours son sujet (titre, ou à défaut
     // la ligne de `withSubjectLine`) : la vignette ne le redit pas au-dessus.
-    names_subject: (ctx) => isDataDimensionFigure(ctx) && subjectNameOf(ctx) !== '',
+    names_subject: (ctx) => isDataDimensionFigure(ctx) && subjectFullNameOf(ctx) !== '',
     // LE REFUS. Sans lui, la couronne est PROPOSEE sous un croisement de deux axes de comparaison,
     // et `flatParts` lui rend alors la PREMIERE GRAPPE seule, dessinee comme si elle etait le tout.
     // Une figure fausse se lit sans se voir, la ou une nature absente se remarque.

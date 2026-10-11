@@ -67,7 +67,6 @@ import { readCouronneState } from '../Representations/couronneState'
 import type { Type_CouronneSankey, Type_CouronneState } from '../Representations/couronneState'
 import type { Type_DataCut, Type_DataOpening } from './DataDimensionHierarchy'
 import { parseMemberSectorPath } from './memberSectorId'
-import type { Type_MemberRef } from './memberSectorId'
 import { buildCrossTree, crossFrontier } from './CrossHierarchy'
 import type { Type_SunburstNode, Type_SunburstSankey, Type_SunburstTree } from './SunburstHierarchy'
 // Les libellés du graphique doivent citer les éléments SOUS LE NOM QUE LE DIAGRAMME
@@ -367,11 +366,6 @@ export interface Type_HierarchyReading {
    * (cf. `foldInPlaceLevels`). Absente : un anneau par niveau partout, comme hier.
    */
   levels_display_of?: (dimension_id: string) => 'in_place' | 'rings'
-  /**
-   * 02/10/2026 — LE FOYER d'une couronne de dimensions de données (« Zoome dedans ») : la coordonnée
-   * du secteur où elle est descendue (cf. `readFigureDataFocus`). Absent : elle regarde son sujet.
-   */
-  data_focus?: Type_MemberRef[]
   /**
    * 04/10/2026 — UNE COUPE IMPOSÉE, à la place de celle que `data_opening` écrirait. Sert à la
    * légende à cases (os#1511) : elle se calcule sur la coupe SANS décochés, pour que décocher ne

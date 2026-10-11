@@ -7,7 +7,9 @@
 // ==================================================================================================
 
 // 06/10/2026 — LE MODÈLE COMMUN couronne · Sankey · tableau croisé (os#1511, refonte « rôles
-// communs », lot 1 sur 5 : modèle pur, rien n'est branché).
+// communs », lot 1 sur 5 : modèle pur). Branchés depuis : la couronne et le tableau croisé
+// (`fromFigure`, `toCouronneState`, `figureOptionsOf`, `planFor`) ; le côté Sankey (`fromDiagram`,
+// `toDiagramPatch`, `planFor(…, 'sankey')`) attend le lot qui le branchera.
 //
 // Trois représentations, une même grammaire (validée par Julien). Pour chaque dimension :
 //   RÔLE      `none`  elle ne découpe pas : elle se lit au total, ou à sa portée ;

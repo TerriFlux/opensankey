@@ -46,12 +46,12 @@ import {
 import type { Type_DataOpening } from '../Charts/DataDimensionHierarchy'
 import { MEMBER_SECTOR_PREFIX, memberSectorId, parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
-  COORDINATES_LINKED_KEY, DIMENSION_HIDDEN_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
+  DIMENSION_HIDDEN_KEY, DIMENSION_OPENING_KEY, HIERARCHY_EXPANDED_KEY, HIERARCHY_FOCUS_KEY,
   INACTIVE_DIMENSIONS_KEY, LEVELS_DISPLAY_BY_KEY, SMALL_MULTIPLES_KEY
 } from './analysisFigureAttributes'
 import {
   dataDimensionLevelsDisplay, readFigureDataFocus, readFigureDimensionZooms, readFigureFocus, readFigureLevelsDisplay,
-  isFigureLinked, readFigureOpening, smallMultiplesApply
+  isFigureLinked, readFigureOpening, smallMultiplesApply, withFigureLinked
 } from './figureOpening'
 
 /** La clé unique de l'état d'une couronne sur dimensions de données. */
@@ -523,11 +523,11 @@ const isDataFocus = (options: Type_Options): boolean =>
 /**
  * Le sac qui porte `state` sous `COURONNE_KEY`, les anciennes clés RETIRÉES (`undefined` : le sac est
  * assigné entier, cf. `Figure.assign`). Liée, `shown` ne s'écrit pas : c'est la sélection du
- * diagramme. Le lien lui-même s'écrit encore dans `coordinates_linked`, tant que le mode de fenêtre
+ * diagramme. Le lien lui-même s'écrit encore dans `coordinates_linked` (`withFigureLinked`), tant que le mode de fenêtre
  * (sa!883) ne le porte pas.
  */
 export const writeCouronneState = (options: Type_Options, state: Type_CouronneState): Type_Options => {
-  const out: Type_Options = { ...options }
+  const out: Type_Options = withFigureLinked(options, state.linked)
   LEGACY_COURONNE_KEYS.forEach(k => { out[k] = undefined })
   out[SUBJECT_FOCUS_KEY] = undefined
   if (isDataFocus(options)) out[HIERARCHY_FOCUS_KEY] = undefined
@@ -544,7 +544,6 @@ export const writeCouronneState = (options: Type_Options, state: Type_CouronneSt
     void _dropped
     out['descriptor'] = { ...descriptor, decompose }
   }
-  out[COORDINATES_LINKED_KEY] = state.linked ? undefined : false
   out[COURONNE_KEY] = {
     version: COURONNE_STATE_VERSION,
     order: [...state.order],
