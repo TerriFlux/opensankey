@@ -116,6 +116,8 @@ import {
 } from '../Charts/figureZoomBridge'
 import { ZOOM_TOPIC } from '../types/EventBus'
 import { readSunburstStyle, SUNBURST_ZOOM } from './SunburstRepresentation'
+// os#1527 (11/10/2026) — le sunburst lit les réglages communs sur la mise en forme de la couronne.
+import { couronneRingsStyle } from './couronneRingsStyle'
 import { sunburstPartInputs } from './parts/sunburstParts'
 import type { Type_SunburstTree } from '../Charts/SunburstHierarchy'
 import { sortSunburstTree } from '../Charts/SunburstHierarchy'
@@ -2252,11 +2254,11 @@ export const registerAnalysisRepresentations = (): void => {
               parts: wiring.by_id,
               on_part_select: wiring.on_part_select,
               branch_color: paletteColor,
+              // os#1527 (11/10) — les réglages communs de la couronne, comme le sunburst seul ; dans une
+              // case, ce qui ne tient pas se tait tant que l'auteur n'a rien choisi (le défaut d'avant).
               style: {
-                ...readSunburstStyle(ctx.options ?? {}),
-                color_source: style.parts_color_source,
-                depth_shading: style.parts_depth_shading,
-                labels_min_share: style.labels_min_share,
+                ...couronneRingsStyle(ctx.options ?? {}, style),
+                labels_small: labelsSmallOuterOf(ctx) ?? style.labels_small,
                 legend_visible: false,
                 click_action: 'aggregate'
               },
@@ -2336,32 +2338,17 @@ export const registerAnalysisRepresentations = (): void => {
         ? ringsTreeOf(ctx, a, hierarchyReadingOf(ctx), expandedOf(ctx.options))
         : null
       if (rings) {
+        // os#1527 (11/10/2026) — LES RÉGLAGES COMMUNS SE LISENT SUR LA MISE EN FORME DE LA COURONNE.
+        //
+        // Couleur, seuil, sortie des étiquettes, orientation, police, valeur, légende : la même
+        // lecture qu'à plat (`couronneRingsStyle`), ce qui fait que changer de mode change le dessin
+        // et pas les réglages. Ce qui est propre au sunburst (son trou, `centre_hole_rings`) ne
+        // s'applique qu'en sunburst. Il ne reste ici que ce qui dépend du dessin en cours.
         const rings_style: Partial<Type_SunburstStyle> = {
-          ...readSunburstStyle(ctx.options ?? {}),
-          // ⚠️ LA COULEUR SE DECIDE COMME DANS L'ANNEAU UNIQUE, et c'est ce qui manquait.
-          //
-          // Julien : « quand ça dit un anneau par niveau, y a plus de couleurs ». Le tracé du
-          // disque lisait `parts_color_source` SUR LE SAC BRUT, donc « couleur du diagramme » —
-          // le défaut d'une couronne. Il ne voyait pas la bascule en palette que `donutStyleOf`
-          // fait sous une descente, et un anneau de nœuds sans couleur propre devenait un aplat.
-          // Les deux modes lisent maintenant la MÊME décision, ce qui est la définition de la
-          // fusion : changer de mode change le dessin, pas les couleurs.
-          color_source: style.parts_color_source,
-          depth_shading: style.parts_depth_shading,
-          // 26/09/2026 — LE SEUIL D'AFFICHAGE VAUT DANS LES DEUX MODES.
-          //
-          // Julien, capture a l appui : « pas sur que ca marche en mode un anneau par niveau ».
-          // Ca ne marchait pas — le trace du disque ne connait que des regles en PIXELS, et le
-          // seuil s arretait a la porte de l autre mode. Les deux modes sont UNE figure : un
-          // reglage qui mord dans l un doit mordre dans l autre, sinon changer de mode change
-          // ce que la figure dit.
-          labels_min_share: style.labels_min_share,
-          // 03/10/2026 — la règle des étiquettes qui ne tiennent pas, celle de la couronne ; et
-          // « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
-          labels_small: style.labels_small,
+          ...couronneRingsStyle(ctx.options ?? {}, style),
+          // 03/10/2026 — « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
           labels_small_outer: labelsSmallOuterOf(ctx),
-          // 03/10/2026 — la légende de la COURONNE (`donutStyleOf`), pas le défaut du disque.
-          legend_visible: style.legend_visible,
+          // ⚠️ FORCÉ, cf. plus bas : le disque a besoin de rapporter tous les clics.
           click_action: 'aggregate',
           // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
           centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')

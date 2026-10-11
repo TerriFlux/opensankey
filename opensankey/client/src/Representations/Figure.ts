@@ -474,7 +474,7 @@ export class Class_FigureNature {
       if (!style.is_default_style) style.name = name
       const accepted: Type_OptionBag = {}
       // Les clés d'avant traduites d'abord : elles ne doivent ni se rapporter inconnues, ni rester.
-      Object.entries(upgradeLegacyFigureKeys(attrs as Type_OptionBag)).forEach(([key, value]) => {
+      Object.entries(upgradeLegacyFigureKeys(attrs as Type_OptionBag, k => this.isDeclared(k))).forEach(([key, value]) => {
         const sort = this.sortOf(key)
         if (sort === undefined) {
           report.add({ nature: this.id, key, where: `${where}[${style_id}]`, reason: 'unknown_key' })
@@ -642,7 +642,7 @@ export class Class_Figure {
   /** Reprend TELLE QUELLE une surcharge d'avant (migration) : pas de minimisation, rien ne se perd. */
   public loadOwn(storage: Type_OptionBag): void {
     this._storage = {}
-    Object.entries(upgradeLegacyFigureKeys(storage)).forEach(([key, v]) => { if (v !== undefined) this._storage[key] = v })
+    Object.entries(upgradeLegacyFigureKeys(storage, k => this.nature.isDeclared(k))).forEach(([key, v]) => { if (v !== undefined) this._storage[key] = v })
   }
 
   // --- persistance ---
@@ -689,7 +689,7 @@ export class Class_Figure {
     const attrs = entry['attributes']
     if (attrs && typeof attrs === 'object' && !Array.isArray(attrs)) {
       const own: Type_OptionBag = {}
-      Object.entries(upgradeLegacyFigureKeys(attrs as Type_OptionBag)).forEach(([key, value]) => {
+      Object.entries(upgradeLegacyFigureKeys(attrs as Type_OptionBag, k => this.nature.isDeclared(k))).forEach(([key, value]) => {
         if (!this.nature.isDeclared(key)) {
           report.add({ nature: this.nature.id, key, where, reason: 'unknown_key' })
         }

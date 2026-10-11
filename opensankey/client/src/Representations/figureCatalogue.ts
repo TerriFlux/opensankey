@@ -312,6 +312,22 @@ export const CENTRE_CONFIG = {
     en: 'The rings share what the hole leaves.', fr: 'Les anneaux se partagent ce que le trou laisse.',
     es: 'Los anillos se reparten lo que deja el hueco.', de: 'Die Ringe teilen sich, was das Loch übrig lässt.',
     it: 'Gli anelli si dividono ciò che il foro lascia.', 'zh-CN': '各环平分中心孔之外的空间。', ja: '穴が残した部分をリングで分け合います。'
+  }, { kind: 'number', min: 5, max: 80, step: 1, advanced: true }),
+  // os#1527 (11/10/2026) — LE TROU DU SUNBURST, À PART DE CELUI DE LA COURONNE. Julien : « le mode
+  // sunburst devrait réduire la taille du centre, sinon ça fait des couronnes trop étroites ». Une
+  // couronne à plat a UN anneau, et un grand trou lui laisse la place d'écrire son total ; un
+  // sunburst y empile ses niveaux, qui se partageaient ce que les 55 % de la couronne laissaient.
+  centre_hole_rings: entry<number>(25, 'centre', {
+    en: 'Sunburst hole (% of radius)', fr: 'Trou du sunburst (% du rayon)', es: 'Hueco del sunburst (% del radio)',
+    de: 'Loch des Sunbursts (% des Radius)', it: 'Foro del sunburst (% del raggio)', 'zh-CN': '旭日图中心孔（半径 %）', ja: 'サンバーストの穴（半径の %）'
+  }, {
+    en: 'In one ring per level, the levels share what the hole leaves: a small hole gives wider rings.',
+    fr: 'En un anneau par niveau, les niveaux se partagent ce que le trou laisse : un petit trou donne des anneaux plus larges.',
+    es: 'Con un anillo por nivel, los niveles se reparten lo que deja el hueco: un hueco pequeño da anillos más anchos.',
+    de: 'Bei einem Ring pro Ebene teilen sich die Ebenen, was das Loch übrig lässt: ein kleines Loch ergibt breitere Ringe.',
+    it: 'Con un anello per livello, i livelli si dividono ciò che il foro lascia: un foro piccolo dà anelli più larghi.',
+    'zh-CN': '每层一环时，各层平分中心孔之外的空间：孔越小，环越宽。',
+    ja: '階層ごとに 1 リングのとき、各階層は穴が残した部分を分け合います。穴が小さいほどリングは太くなります。'
   }, { kind: 'number', min: 5, max: 80, step: 1, advanced: true })
 } as const
 
