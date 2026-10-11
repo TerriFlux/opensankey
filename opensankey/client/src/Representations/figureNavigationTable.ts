@@ -120,7 +120,8 @@ export type Type_FigureNavControl =
     /** Mode « plusieurs » : la liste à cases. */
     pick?: Type_FigureNavZoomPick,
     /** Le niveau suivant, seulement si le membre choisi en a. */
-    sub?: { label: string, summary: string, pick: Type_FigureNavZoomPick }
+    /** « Distinguer les sous-filières » : les sous-membres du membre choisi, en bandes. */
+    sub_toggle?: { label: string, checked: boolean, frozen?: string, set: (on: boolean) => void }
   }
 
 export interface Type_FigureNavTable {
@@ -820,27 +821,26 @@ const fillControlCell = (model: Type_FigureNavTable, cell: HTMLElement, dim_id: 
     return
   }
   if (control.multi && control.pick) {
-    const labels = control.options.filter(o => control.chosen.includes(o.value)).map(o => o.label)
+    // Les libellés de l'arbre portent leur retrait : le résumé les lit sans.
+    const labels = control.options.filter(o => control.chosen.includes(o.value)).map(o => o.label.trim())
     row.appendChild(fit(pickButton(model, `${model.memory_key}|reader|${dim_id}`, control.label, summaryOf(labels, '—'), control.pick)))
   } else {
     row.appendChild(fit(dropdown(control.options, control.chosen[0] ?? '', control.choose)))
-  }
-  const sub = control.sub
-  if (sub && !control.multi) {
-    if (model.vertical) {
-      // En colonne, la sous-filière a sa propre ligne, sous la filière.
-      const brk = document.createElement('div')
-      brk.style.flexBasis = '100%'
-      brk.style.height = '0'
-      row.appendChild(brk)
-    }
-    row.appendChild(controlLabel(sub.label))
-    row.appendChild(fit(pickButton(model, `${model.memory_key}|reader_sub|${dim_id}`, sub.label, sub.summary, sub.pick)))
   }
   const multi = checkbox(control.multi_label, control.multi, control.set_multi)
   multi.style.fontSize = '11px'
   multi.style.color = ui_ink_secondary
   row.appendChild(multi)
+  // os#1511 (Jean-Yves, 11/10) — « DISTINGUER LES SOUS-FILIÈRES », sur sa ligne, comme la case du type
+  // de matière (les deux s'excluent : l'une cochée gèle l'autre).
+  const sub = control.sub_toggle
+  if (sub && !control.multi) {
+    const brk = document.createElement('div')
+    brk.style.flexBasis = '100%'
+    brk.style.height = '0'
+    row.appendChild(brk)
+    row.appendChild(checkbox(sub.label, sub.checked, sub.set, sub.frozen))
+  }
 }
 
 /** LE SÉLECTEUR DE DESSIN d'une dimension : l'icône du dessin courant, un ⌄, et son menu. */

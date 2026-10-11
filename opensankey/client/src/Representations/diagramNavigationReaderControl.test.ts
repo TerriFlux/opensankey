@@ -2,7 +2,7 @@ import { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { buildDiagramNavigationTable } from './diagramNavigationTable'
-import { applyDimensionCut, applyReaderSeveral, applyReaderSubPick } from '../components/ui/dimensionDrawingHost'
+import { applyReaderSeveral, applyReaderSubPick } from '../components/ui/dimensionDrawingHost'
 
 if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
@@ -51,7 +51,7 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     const { app, filiere, matiere } = monter()
     const box = table(app, [filiere, matiere])
     const caseMatiere = [...box.querySelectorAll('input[type=checkbox]')]
-      .find(c => c.parentElement?.textContent?.includes('Distinguer')) as HTMLInputElement
+      .find(c => c.parentElement?.textContent?.includes('Distinguer mati')) as HTMLInputElement
     expect(caseMatiere).toBeDefined()
     expect(caseMatiere.checked).toBe(false)
     caseMatiere.checked = true
@@ -60,38 +60,45 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     expect(matiere.selected_tags_list.map(m => m.id).sort()).toEqual(['mp', 'produits'])
     const box2 = table(app, [filiere, matiere])
     const caseApres = [...box2.querySelectorAll('input[type=checkbox]')]
-      .find(c => c.parentElement?.textContent?.includes('Distinguer')) as HTMLInputElement
+      .find(c => c.parentElement?.textContent?.includes('Distinguer mati')) as HTMLInputElement
     expect(caseApres.checked).toBe(true)
   })
 
-  test('la filiere se choisit dans une liste a choix unique, la sous-filiere seulement si elle existe', async () => {
+  test('la filiere se choisit dans un arbre ; Distinguer les sous-filieres seulement si elle en a', async () => {
     const { app, filiere, matiere } = monter()
     const box = table(app, [filiere, matiere])
     const liste = box.querySelector('select') as HTMLSelectElement
-    expect([...liste.options].map(o => o.value)).toEqual(['cereales', 'lait'])
+    // Jean-Yves, 11/10 : filiere OU sous-filiere, dans l ordre de l arbre.
+    expect([...liste.options].map(o => o.value)).toEqual(['cereales', 'ble', 'mais', 'orge', 'lait'])
     expect(liste.value).toBe('cereales')
-    // Céréales a des sous-filières : leur choix est là, « Toutes » par défaut.
-    expect(box.textContent).toContain('Sous-filière')
-    expect(box.textContent).toContain('Toutes')
+    expect(box.textContent).toContain('Distinguer les sous-filières')
     liste.value = 'lait'
     liste.dispatchEvent(new Event('change'))
     await attendre()
     expect(filiere.selected_tags_list.map(m => m.id)).toEqual(['lait'])
-    // Lait n'a pas de sous-filière : plus de choix de sous-filière.
-    expect(table(app, [filiere, matiere]).textContent).not.toContain('Sous-filière')
+    // Lait n a pas de sous-filiere : pas de case.
+    expect(table(app, [filiere, matiere]).textContent).not.toContain('Distinguer les sous-filières')
   })
 
-  test('superposer deux sous-filieres decoche et gele la case du type de matiere', async () => {
+  test('distinguer les sous-filieres les met en bandes et gele la case du type de matiere', async () => {
     const { app, filiere, matiere } = monter()
     matiere.membersAtLevel(1).forEach(m => m.setSelected())
     matiere.tags_dict.matiere.setUnSelected()
     expect(matiere.current_level_index).toBe(1)
-    // La sous-filiere a sa liste a cases (popover) : on pose directement deux sous-filieres.
-    expect(table(app, [filiere, matiere]).querySelector('.figure_navigation_reader_pick')).not.toBeNull()
-    applyDimensionCut(app, filiere, ['ble', 'mais'], { multi: true, focus: [] })
+    const caseSous = [...table(app, [filiere, matiere]).querySelectorAll('input[type=checkbox]')]
+      .find(c => c.parentElement?.textContent?.includes('sous-filières')) as HTMLInputElement
+    caseSous.checked = true
+    caseSous.dispatchEvent(new Event('change'))
+    await attendre()
+    expect(filiere.selected_tags_list.map(m => m.id).sort()).toEqual(['ble', 'mais', 'orge'])
+    // Les deux cases s excluent : celle du type de matiere s est decochee et se gele.
+    expect(matiere.current_level_index).toBe(0)
     const caseMatiere = [...table(app, [filiere, matiere]).querySelectorAll('input[type=checkbox]')]
-      .find(c => c.parentElement?.textContent?.includes('Distinguer')) as HTMLInputElement
+      .find(c => c.parentElement?.textContent?.includes('Distinguer mati')) as HTMLInputElement
     expect(caseMatiere.disabled).toBe(true)
+    const caseSousApres = [...table(app, [filiere, matiere]).querySelectorAll('input[type=checkbox]')]
+      .find(c => c.parentElement?.textContent?.includes('sous-filières')) as HTMLInputElement
+    expect(caseSousApres.checked).toBe(true)
   })
 
   test('deux sous-filieres decochent la case des autres : un seul pas a annuler', () => {

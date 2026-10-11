@@ -142,6 +142,8 @@ export interface Type_FigureNavZoomPick {
    * pas pendant qu'on coche).
    */
   apply: (ids: string[], candidates: Class_DataTag[]) => void
+  /** os#1511 (11/10) — la liste est un ARBRE : le retrait (niveau) de chaque membre. */
+  indentOf?: (m: Class_DataTag) => number
 }
 
 /**
@@ -163,6 +165,7 @@ const ZoomMemberPicker = ({ t, title, pick }: { t: Type_T, title: string, pick: 
       membres={membres}
       chosen={en_attente ? new Set<string>() : new Set(chosen)}
       single={false}
+      indentOf={pick.indentOf}
       apply={ids => {
         setAttenteSur(null)
         if (ids.length === chosen.length && ids.every(id => chosen.includes(id))) return
