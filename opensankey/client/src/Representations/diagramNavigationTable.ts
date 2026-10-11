@@ -74,9 +74,12 @@ export const navigationShownDimensions = (
   app_data: Class_ApplicationData, in_column: boolean = app_data.drawing_area.legend.in_panel
 ): Class_DataTagGroup[] => diagramNavigationDimensions(app_data, { with_flat: in_column })
 
-/** Une dimension plate à choix unique, hors frise (la séquence a sa barre). */
+/**
+ * Une dimension plate à choix unique, hors frise (la séquence a sa barre). sa#639 — la séquence est
+ * devenue « un membre » + la case Lecture : une dimension qui se lit reste à la frise, comme avant.
+ */
 const isFlatSingleChoice = (dim: Class_DataTagGroup): boolean =>
-  !dim.is_hierarchical && dim.banner === 'one' && dim.drawing !== 'nodes'
+  !dim.is_hierarchical && dim.banner === 'one' && dim.drawing !== 'nodes' && !dim.plays
 
 /** os#1511 — LA LISTE d'une dimension plate à choix unique, en colonne. */
 const flatChoiceControl = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Type_FigureNavControl => {
