@@ -86,7 +86,7 @@ import { isLegendElementId } from '../Elements/legendIds'
 import { document_type_registry, SANKEY_DOCUMENT_TYPE } from './DocumentTypeRegistry'
 import type { Type_DocumentType } from './DocumentTypeRegistry'
 import type { Class_DataTagGroup } from './TagGroup'
-import { playback } from './Playback'
+import { findRegisteredAutoplay, playback, type Type_PlaybackSource } from './Playback'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -1871,15 +1871,17 @@ export class Class_ApplicationData {
   public armAutoplay(on_open: boolean = false): void {
     if (!this.is_main) return
     const drawing_area = this._drawing_area
-    const autoplayed = () => drawing_area.sankey.getTagGroupsAsList('data_taggs')
+    // sa#640 — une dimension, sinon une autre source inscrite (le sélecteur de nœuds d'un volet).
+    const autoplayed = (): Type_PlaybackSource | null => drawing_area.sankey.getTagGroupsAsList('data_taggs')
       .map(group => group as Class_DataTagGroup)
       .find(group => group.plays && group.playback?.autoplay === true)
-    if (on_open) this._autoplay_pending = autoplayed() !== undefined ? drawing_area : null
+      ?.playbackSource() ?? findRegisteredAutoplay(this)
+    if (on_open) this._autoplay_pending = autoplayed() !== null ? drawing_area : null
     if (this._autoplay_pending !== drawing_area) return
     playback.autoplay(() => {
       if (this._autoplay_pending !== drawing_area || this._drawing_area !== drawing_area) return null
       if (playback.status !== 'idle') return null
-      return autoplayed()?.playbackSource() ?? null
+      return autoplayed()
     }, () => { if (this._autoplay_pending === drawing_area) this._autoplay_pending = null })
   }
 
