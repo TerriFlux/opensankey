@@ -922,7 +922,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const peintre = flowPainterOf(dimensions)
       return peintre === undefined ? undefined : this._couleurParDonnees(peintre, [])
     }
-    const aux_bouts = [this.source, this.target].flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement))
+    const aux_bouts = this._membresAuxBouts()
     const couleurDe = (tagg: Class_DataTagGroup) => {
       const membres = [...new Set(aux_bouts.filter(membre => membre.group === tagg))]
       return membres.length === 1 ? tagg.displayColorOf(membres[0]) : undefined
@@ -939,6 +939,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * mais ses données ne disent que « matière première »). Un seul membre du peintre présent à la
    * coordonnée du flux (bande et autres coupes comprises) : sa couleur ; plusieurs : rien.
    */
+  /**
+   * os#1511 — LES MEMBRES QUE PORTENT LES BOUTS d'un flux engendré, une fois chacun. 10/10/2026
+   * (lot 5, expansion) — un flux d'expansion relie un membre ouvert à son enfant : seul l'ENFANT fait
+   * la coordonnée (le parent, son ancêtre, la contient) ; lus tous deux, le cube les aurait croisés.
+   */
+  private _membresAuxBouts(): Class_DataTag[] {
+    const membres = [...new Set([this.source, this.target]
+      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement)))]
+    return membres.filter(m => !membres.some(autre => autre !== m && autre.hasAncestor(m)))
+  }
+
   private _couleurParDonnees(peintre: Class_DataTagGroup, aux_bouts: Class_DataTag[]): string | undefined {
     const parsed = parseGeneratedId(this.id)
     const origine = parsed === undefined ? this : this.sankey.links_dict[parsed.origin] as Class_LinkElement | undefined
@@ -1190,8 +1201,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // UNE FOIS CHACUN : les deux bouts d'une chaîne sur une même dimension (Matière transformée →
     // Emplois, tous deux découpés par type de matière) portent le même membre ; lu deux fois, il
     // doublait chaque bande (Julien, 08/10 : 26 381 en sortie pour 13 191 en entrée).
-    const membres_axes = [...new Set([this.source, this.target]
-      .flatMap(bout => membersOfGeneratedNode(bout as Class_NodeElement)))]
+    const membres_axes = this._membresAuxBouts()
     multi_dim.selected_tags_list.forEach(tag => {
       const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
       let v = (origine !== undefined && membres_axes.length > 0)

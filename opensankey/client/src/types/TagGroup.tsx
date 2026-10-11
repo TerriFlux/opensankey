@@ -110,6 +110,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'focus',
   // os#1511 — les décochés partagés par les fenêtres liées, écrits seulement quand il y en a.
   'hidden_members',
+  // os#1511 (lot 5) — en nœuds, l'expansion aux extrémités ; écrite seulement quand elle est posée.
+  'nodes_expansion',
 ])
 
 /**
@@ -1401,6 +1403,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // étape dans le créneau de chaque nœud. `undefined` = automatique : bandes dès que deux nœuds ou
   // plus la portent (cf. `DimensionDisaggregation.bandesParMembre`). Écrit seulement s'il est posé.
   private _member_bands: boolean | undefined = undefined
+  // os#1511 (lot 5, Julien 10/10) — EN NŒUDS, L'EXPANSION : sur un nœud porteur À UNE EXTRÉMITÉ (sans
+  // flux d'un côté), les membres ouverts gardent leur nœud et leurs enfants s'ouvrent vers l'extérieur,
+  // colonne par colonne (cf. `DimensionDisaggregation`). Écrite seulement si elle est posée.
+  private _nodes_expansion: boolean = false
   // os#1511 — c'est CETTE dimension qui peint les flux d'un diagramme par membre (légende, pinceau).
   private _paints_flows: boolean = false
   // os#1511 (Jean-Yves, 09/10) — LA COMMANDE DU LECTEUR : comment la ligne de cette dimension se
@@ -1486,6 +1492,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._levels = [...tagg_to_copy._levels]
     this._palette = tagg_to_copy._palette === undefined ? undefined : copyPalette(tagg_to_copy._palette)
     this._member_bands = tagg_to_copy._member_bands
+    this._nodes_expansion = tagg_to_copy._nodes_expansion
     this._paints_flows = tagg_to_copy._paints_flows
     this._reader_control = tagg_to_copy._reader_control === undefined ? undefined : { ...tagg_to_copy._reader_control }
     this._reference_node_id = tagg_to_copy._reference_node_id
@@ -1512,6 +1519,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     if (this._palette !== undefined) json_object['palette'] = copyPalette(this._palette)
     // os#1511 — clé ADDITIVE, écrite seulement quand l'auteur a tranché (sinon : automatique).
     if (this._member_bands !== undefined) json_object['member_bands'] = this._member_bands
+    if (this._nodes_expansion) json_object['nodes_expansion'] = true
     if (this._paints_flows) json_object['paints_flows'] = true
     if (this._reader_control !== undefined) json_object['reader_control'] = { ...this._reader_control }
     if (this._reference_node_id !== undefined) json_object['reference_node'] = this._reference_node_id
@@ -1566,6 +1574,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // `current_level` (fichiers d'avant le 02/10) n'est plus lu : le niveau courant se déduit de
     // la sélection relue avec les membres, qui le contredisait parfois.
     if (typeof json_object['member_bands'] === 'boolean') this._member_bands = json_object['member_bands'] as boolean
+    if (typeof json_object['nodes_expansion'] === 'boolean') this._nodes_expansion = json_object['nodes_expansion'] as boolean
     this._paints_flows = json_object['paints_flows'] === true
     this._reader_control = parseReaderControl(json_object['reader_control'])
     const reference = json_object['reference_node']
@@ -1645,6 +1654,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * commun la lisent ici, plus chacun à sa façon.
    */
   public get draws_member_bands(): boolean { return this._member_bands === true }
+  /** os#1511 (lot 5) — en nœuds, l'expansion aux extrémités (cf. `_nodes_expansion`). */
+  public get nodes_expansion(): boolean { return this._nodes_expansion }
+  public set nodes_expansion(value: boolean) {
+    this._nodes_expansion = value
+    this.drawingChanged()
+  }
   public set member_bands(value: boolean | undefined) {
     this._member_bands = value
     // Sous des bandes demandées, tous les nœuds portent la dimension (`Node.driving_dimension`), y

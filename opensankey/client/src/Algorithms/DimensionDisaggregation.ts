@@ -36,6 +36,8 @@ import type { Class_Sankey } from '../types/Sankey'
 import { generatedId, isGeneratedMemberId, parseGeneratedId } from '../Elements/GeneratedMemberMark'
 import { OTHERS_COLOR, OTHERS_ID } from './DimensionOthers'
 import { ordonnerMembres } from './DimensionMemberOrder'
+import { expansionSideOf, expansionTreeOf, unfoldExpansion } from './DimensionExpansion'
+import type { Type_ExpansionSide, Type_ExpansionTree } from './DimensionExpansion'
 import { NodeLeftExtremityStyle, NodeRightExtremityStyle } from '../Elements/ElementStyle'
 
 // La marque vit dans un module SANS dépendance : le constructeur d'un flux la lit aussi, pour
@@ -323,7 +325,8 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   // nœud engendré dépend des AUTRES axes (préfixe seulement si un même membre y figure aussi).
   const plans: { axe: Class_NodeElement, dimension: Class_DataTagGroup, membres: Class_DataTag[],
     replies: Set<Class_DataTag>, en_bandes: boolean,
-    bande?: { dimension: Class_DataTagGroup, membres: Class_DataTag[], replies: Set<Class_DataTag> } }[] = []
+    bande?: { dimension: Class_DataTagGroup, membres: Class_DataTag[], replies: Set<Class_DataTag> },
+    expansion?: { side: Type_ExpansionSide, tree: Type_ExpansionTree } }[] = []
   // UN DIAGRAMME PAR MEMBRE DEMANDÉ : ses membres, rangés une fois pour tous les axes.
   const bande_dim = diagrammeParMembreDe(sankey)
   const bande_membres = bande_dim === undefined ? [] : ordonnerMembres(bande_dim,
@@ -377,6 +380,19 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
         bande: { dimension: bande_dim, membres: bande_membres, replies: replisDe(bande_dim, bande_membres) }
       })
       return
+    }
+    // os#1511 (lot 5) — L'EXPANSION, AUX EXTRÉMITÉS SEULEMENT (cf. `DimensionExpansion`) : le premier
+    // niveau se désagrège comme « en nœuds », sans « Autres » (un ouvert ne se replie pas), et les
+    // ouverts s'étendent vers l'extérieur après la mise en page.
+    if (dimension.nodes_expansion && !en_bandes && bande_dim === undefined) {
+      const side = expansionSideOf(axe)
+      const tree = side === undefined ? null : expansionTreeOf(dimension, membres)
+      if (side !== undefined && tree !== null) {
+        // Le premier niveau dans l'ordre des membres (valeur sur cet axe), comme « en nœuds ».
+        const tops = ordonnerMembres(dimension, tree.tops, dimension.members_order, membre => valeurSurAxe(axe, membre))
+        plans.push({ axe, dimension, membres: tops, replies: new Set(), en_bandes: false, expansion: { side, tree: { ...tree, tops } } })
+        return
+      }
     }
     if (membres.length === 1) return
     // Le repli « Autres » se décide sur TOUTE la sélection (règle par dimension, cf. plus haut) ;
@@ -487,6 +503,15 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
   }
   // 3 bis) CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page.
   appliquerPositionsManuelles(par_axe)
+  // 3 bis') os#1511 (lot 5) — LES EXPANSIONS, une fois le premier niveau à sa place (déplacé à la
+  //    main compris) : les enfants de chaque ouvert s'empilent dans son créneau, vers l'extérieur.
+  plans.forEach(({ axe, dimension, expansion }) => {
+    if (expansion === undefined) return
+    const tops = new Map<Class_DataTag, Class_NodeElement>()
+    ;(par_axe.get(axe.id) ?? []).forEach(entree => { if (entree.membres.length === 1) tops.set(entree.membres[0], entree.noeud) })
+    unfoldExpansion(sankey, axe, expansion.side, expansion.tree, tops,
+      membre => ambigues.has(dimension) ? `${axe.name} - ${membre.name}` : membre.name)
+  })
   // 3 quater) QUELLES DIMENSIONS DÉCOUPENT VRAIMENT un nœud (deux entrées au moins d'un même axe,
   //    dans une même bande) : seules celles-là peuvent peindre les flux par défaut. Au niveau
   //    « Ressources / Emplois », chaque nœud n'a qu'un poste, et c'est la filière qui peint.
