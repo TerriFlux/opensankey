@@ -25,6 +25,12 @@ export const figureDrawsSunburst = (o: Type_Bag | null | undefined): boolean => 
   if (!o) return false
   if (o['levels_display'] === 'rings') return true
   const by = o['levels_display_by']
-  return by !== null && typeof by === 'object' && !Array.isArray(by) &&
-    Object.values(by as Type_Bag).includes('rings')
+  if (by !== null && typeof by === 'object' && !Array.isArray(by) && Object.values(by as Type_Bag).includes('rings')) return true
+  // Julien, 11/10 (« le centre est toujours trop gros ») — le choix « En sunburst » du menu de la
+  // dimension s'écrit dans l'ÉTAT de la couronne (`couronne.dims[id].drawing`, cf. couronneState), pas
+  // dans les clés d'avant : sans cette lecture, ce sunburst gardait le trou de la couronne.
+  const state = o['couronne']
+  const dims = state !== null && typeof state === 'object' ? (state as Type_Bag)['dims'] : undefined
+  return dims !== null && typeof dims === 'object' &&
+    Object.values(dims as Type_Bag).some(d => d !== null && typeof d === 'object' && (d as Type_Bag)['drawing'] === 'sunburst')
 }

@@ -1078,7 +1078,12 @@ export const sunburstArcLabel = (
     ? Math.max(1, Math.floor(height_px / (font_size * LABEL_LINE_HEIGHT)))
     : 1
   const wrapped = max_lines > 1 ? wrapWords(label, room, max_lines) : null
-  return wrapped ? wrapped.join('\n') : label.slice(0, Math.max(1, room - 1)) + '…'
+  if (wrapped) return wrapped.join('\n')
+  // os#1527 (Julien, 11/10 : « les labels coupés avec … ne sont pas communs avec les couronnes ») —
+  // comme la couronne à plat : un nom qui ne tient pas NE TIENT PAS, et la règle commune « Si
+  // l'étiquette ne tient pas » (`labels_small` : détacher, masquer…) décide. Tronqué seulement si
+  // l'auteur a demandé de tout écrire (`always`).
+  return mode === 'always' ? label.slice(0, Math.max(1, room - 1)) + '…' : null
 }
 
 /** Interligne des étiquettes à plusieurs lignes, en multiples de la taille de police. */

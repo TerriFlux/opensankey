@@ -181,11 +181,13 @@ describe('sunburstArcLabel', () => {
     expect(sunburstArcLabel('Cereales Bio', 200, 12)).toBeNull()
   })
 
-  it('tronque quand le nom depasse l epaisseur de l anneau', () => {
-    // Un nom tronque ne nomme pas : c est la legende qui le dira en entier.
-    const text = sunburstArcLabel('Cereales Conventionnel', 200, 40)
-    expect(text).not.toBeNull()
-    expect(text).not.toBe('Cereales Conventionnel')
+  it('un nom qui depasse l epaisseur de l anneau ne tient pas (la regle commune decide)', () => {
+    // os#1527 (11/10) : comme la couronne a plat, plus de troncature « … » ; `labels_small` detache ou masque.
+    expect(sunburstArcLabel('Cereales Conventionnel', 200, 40)).toBeNull()
+  })
+
+  it('tronque encore quand l auteur demande de tout ecrire', () => {
+    const text = sunburstArcLabel('Cereales Conventionnel', 200, 40, { mode: 'always' })
     expect(text!.endsWith('…')).toBe(true)
   })
 
@@ -195,16 +197,13 @@ describe('sunburstArcLabel', () => {
     expect(sunburstArcLabel('Cereales Bio', 120, 90, { box_px: 60 })).toBe('Cereales\nBio')
   })
 
-  it('tronque plutot que de couper un mot, meme avec une boite', () => {
-    const text = sunburstArcLabel('Conventionnel Bio', 200, 40, { box_px: 150 })
-    expect(text!.endsWith('…')).toBe(true)
-    expect(text!.includes('\n')).toBe(false)
+  it('ne coupe jamais un mot : sans place, le nom ne tient pas', () => {
+    expect(sunburstArcLabel('Conventionnel Bio', 200, 40, { box_px: 150 })).toBeNull()
   })
 
-  it('tronque quand l arc ne tient pas les lignes', () => {
+  it('ne tient pas quand l arc ne tient pas les lignes', () => {
     // 20 px d arc : deux lignes de 11,5 px n y tiennent pas.
-    const text = sunburstArcLabel('Cereales Bio', 20, 90, { box_px: 60 })
-    expect(text!.endsWith('…')).toBe(true)
+    expect(sunburstArcLabel('Cereales Bio', 20, 90, { box_px: 60 })).toBeNull()
   })
 })
 

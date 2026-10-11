@@ -557,13 +557,21 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
     commit(next)
   }
 
-  /** « En sunburst » a-t-il un effet ? La dimension doit montrer plus d'un niveau sous sa portée. */
-  const offersRingsFor = (id: string): boolean => {
-    const d = dimOf(id)
-    if (d === undefined) return false
+  /** La dimension montre-t-elle déjà plus d'un niveau sous sa portée ? */
+  const showsSeveralLevels = (d: Class_DataTagGroup): boolean => {
     const f = focusOf(d)
     const entry = f.length > 0 ? Math.min(...f.map(x => d.depthOf(x))) + 1 : entryDepthOf(d)
     return shownOf(d).some(m => d.depthOf(m) > entry)
+  }
+  /**
+   * « En sunburst » a-t-il un effet ? La dimension montre déjà plusieurs niveaux, OU un membre montré
+   * peut se détailler (Julien, 11/10 : « on devrait pouvoir sélectionner sunburst quand il y a
+   * possibilité de désagréger ») — le choisir ouvre alors le niveau suivant (`setDrawing`).
+   */
+  const offersRingsFor = (id: string): boolean => {
+    const d = dimOf(id)
+    if (d === undefined) return false
+    return showsSeveralLevels(d) || shownOf(d).some(m => d.childrenOf(m).length > 0)
   }
   /** « Une couronne par membre » demande une AUTRE dimension active pour les parts. */
   const offersMultiplesFor = (id: string): boolean => state.order.some(o => o !== id && st(o).active)
@@ -572,6 +580,13 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   const setDrawing = (id: string, drawing: Type_CouronneDrawing) => {
     const d = dimOf(id)
     if (d === undefined || drawing === drawingOf(id)) return
+    if (drawing === 'sunburst' && !showsSeveralLevels(d)) {
+      // Un seul niveau montré : le sunburst ouvre le niveau SUIVANT (Filières au centre, leur détail
+      // autour), sinon il ne dessinerait qu'un anneau, comme les secteurs.
+      const deepest = Math.max(...shownOf(d).map(m => d.depthOf(m)))
+      const r = nextWithColumn(withDim(state, id, { drawing }), id, deepest + 1, false)
+      if (r !== null) { commit(r.next, r.diagram); return }
+    }
     if (drawing !== 'multiples') { commit(withDim(state, id, { drawing })); return }
     if (!offersMultiplesFor(id)) return
     let next = state
