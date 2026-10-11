@@ -119,8 +119,18 @@ export type Type_AdditionalMenus = {
    * à côté de l'Explorateur. Un bouton posé ici y prend donc le style de cette barre
    * (`TopBarToolButton`). OpenSankey+ n'y pose plus le sien : le menu « Vues » ouvre déjà le
    * panneau (arbitrage Alexandre, 08/10).
+   *
+   * sa#638 — ils ferment le groupe du DOCUMENT, entre « Enregistrer » et l'Explorateur : la
+   * couche SaaS y pose « Partager ».
    */
   additional_tools_item: JSX.Element[],
+  /**
+   * sa#638 — LE BOUTON DE COMPTE, posé par la couche qui gère les comptes. L'éditeur le rend en
+   * DERNIER, tout à droite de la barre du haut : c'est là qu'on cherche son compte dans toutes les
+   * applis. Un créneau à part plutôt que `additional_nav_item`, dont l'ordre dépend de l'ordre
+   * d'initialisation des couches.
+   */
+  additional_account_item: JSX.Element[],
 
   formations_menu: object,
   template_module_key: string[]
@@ -5362,6 +5372,7 @@ export class Class_MenuConfig {
     additional_nav_item: [],
     additional_bottom_item: [],
     additional_tools_item: [],
+    additional_account_item: [],
 
     formations_menu: {},
     template_module_key: ['essential'],
