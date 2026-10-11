@@ -1,6 +1,7 @@
 import { Class_ApplicationData } from './ApplicationData'
 import type { Class_DataTagGroup } from './TagGroup'
 import type { Type_JSON } from './Utils'
+import { playback } from './Playback'
 
 // sa#639 — LA LECTURE DEVIENT UNE CASE du sélecteur d'une dimension, indépendante du nombre de
 // membres. Deux contrats ici : la COMPATIBILITÉ (un fichier `banner: 'sequence'` s'ouvre sans
@@ -41,14 +42,30 @@ describe('sa#639 — compatibilité de la séquence', () => {
   test('un membre + Lecture s écrit encore sequence, avec ses réglages', () => {
     const { g } = groupe()
     g.banner = 'one'
-    g.playback = { loop: true, shuffle: true, delay: 0.05, autoplay: true }
+    g.playback = { loop: true, shuffle: true, delay: 0.05, autoplay: false }
     const json = g.toJSON()
     expect(json['banner']).toBe('sequence')
-    expect(json['playback']).toEqual({ loop: true, shuffle: true, delay: 0.05, autoplay: true })
+    expect(json['playback']).toEqual({ loop: true, shuffle: true, delay: 0.05, autoplay: false })
     const { g: relu } = groupe()
     relu.fromJSON(json)
     expect(relu.banner).toBe('one')
-    expect(relu.playback).toEqual({ loop: true, shuffle: true, delay: 0.05, autoplay: true })
+    expect(relu.playback).toEqual({ loop: true, shuffle: true, delay: 0.05, autoplay: false })
+  })
+
+  test('la lecture automatique s enregistre : vraie si la lecture tourne, fausse à l arrêt ou en pause', () => {
+    const { g } = groupe()
+    // Un fichier ouvert en lecture automatique, enregistré sans lecture : elle ne revient pas.
+    g.playback = { loop: true, shuffle: false, delay: 2, autoplay: true }
+    expect((g.toJSON()['playback'] as Type_JSON)['autoplay']).toBe(false)
+    playback.play(g.playbackSource())
+    try {
+      expect((g.toJSON()['playback'] as Type_JSON)['autoplay']).toBe(true)
+      playback.pause()
+      expect((g.toJSON()['playback'] as Type_JSON)['autoplay']).toBe(false)
+    } finally {
+      playback.stop()
+    }
+    expect((g.toJSON()['playback'] as Type_JSON)['autoplay']).toBe(false)
   })
 
   test('plusieurs + Lecture : la bannière reste multi, la Lecture voyage à part', () => {

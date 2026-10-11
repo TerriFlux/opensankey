@@ -31,9 +31,13 @@
 //  - aléatoire = mélange sans répétition, nouveau mélange à chaque tour ;
 //  - ⏸ garde la valeur en cours à l'écran, ▶ reprend à la suivante ;
 //  - fin sans boucle, ou geste qui change ce que la source montre : sortie de lecture ;
-//  - lecture automatique : le premier geste du lecteur (clic, touche) la fait sortir de lecture.
+//  - lecture automatique (fichier enregistré pendant la lecture) : le premier geste du lecteur
+//    (clic, touche) la fait sortir de lecture.
 
-/** Les réglages de lecture d'un sélecteur, enregistrés avec lui. Délai en SECONDES. */
+/**
+ * Les réglages de lecture d'un sélecteur, enregistrés avec lui. Délai en SECONDES. `autoplay` n'est
+ * pas un réglage qu'on coche : il dit si la lecture tournait quand le fichier a été enregistré.
+ */
 export type Type_PlaybackSettings = {
   loop: boolean
   shuffle: boolean

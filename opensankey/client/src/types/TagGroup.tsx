@@ -1565,8 +1565,16 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // sa#639 — clé ADDITIVE, écrite seulement quand la Lecture est cochée. « Un membre » + Lecture
     // s'écrit encore `banner: 'sequence'` (comme `topbar`, os#1517), pour qu'un viewer antérieur
     // garde sa frise.
+    //
+    // LA LECTURE AUTOMATIQUE N'EST PAS UN RÉGLAGE (Alexandre, recette du 11/10) : elle s'enregistre.
+    // Un fichier enregistré pendant que la lecture tourne la relance à l'ouverture (appli, page
+    // publiée) ; enregistré hors lecture (ou en pause), il s'ouvre à l'arrêt. Une seule lecture
+    // tourne à la fois : au plus un sélecteur par fichier.
     if (this._playback !== undefined) {
-      json_object['playback'] = copyPlaybackSettings(this._playback)
+      json_object['playback'] = {
+        ...copyPlaybackSettings(this._playback),
+        autoplay: playback.isSource(this.playback_key) && playback.status === 'playing'
+      }
       if (json_object['banner'] === 'one') json_object['banner'] = 'sequence'
     }
     // Pendant une lecture, le fichier garde le choix de l'utilisateur, pas le membre qui défile.
