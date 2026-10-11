@@ -8,6 +8,8 @@
 
 import { getStringFromJSON } from './Utils'
 import type { Type_JSON } from './Utils'
+import { copyPlaybackSettings, parsePlaybackSettings, playback } from './Playback'
+import type { Type_PlaybackSettings } from './Playback'
 import { gridFrames, gridFromJSON, gridKeep, gridToJSON } from './MainZoneGrid'
 import type { Type_MainZoneGridFrame, Type_MainZoneGridNode } from './MainZoneGrid'
 
@@ -328,6 +330,9 @@ export const dashboardShownViews = (main_zone: Type_JSON, current_sheet: string)
   return shown
 }
 
+/** sa#641 — Les tableaux de bord auprès du moteur de lecture : un seul jeu par hôte, une seule clé. */
+export const DASHBOARDS_PLAYBACK_KEY = 'dashboards'
+
 /** Un nombre d'une entrée (`Number.MAX_SAFE_INTEGER` s'il manque : rangé en dernier). */
 const getNumberOrMax = (entry: Type_JSON | null, key: string): number => {
   const v = entry ? entry[key] : undefined
@@ -360,6 +365,22 @@ export class Class_DashboardsStore {
    * l'auteur avait SUPPRIMÉ le tableau de bord, qui revenaient dans l'éditeur comme sur la page publiée.
    */
   public resumed: boolean = false
+  /**
+   * sa#641 — LE DIAPORAMA : la case « Lecture » des réglages des tableaux de bord (`undefined` =
+   * décochée) et ses réglages, ceux d'un sélecteur (sa#639) — boucle, aléatoire, délai. Enregistrés
+   * avec le fichier ; `autoplay` y dit si le diaporama tournait à l'enregistrement.
+   */
+  protected _playback: Type_PlaybackSettings | undefined = undefined
+  /** sa#641 — Compté à chaque lecture de fichier : un diaporama ne survit pas à son fichier. */
+  protected _loads: number = 0
+
+  public get playback(): Type_PlaybackSettings | undefined {
+    return this._playback === undefined ? undefined : copyPlaybackSettings(this._playback)
+  }
+  public set playback(value: Type_PlaybackSettings | undefined) {
+    this._playback = value === undefined ? undefined : copyPlaybackSettings(value)
+  }
+  public get loads(): number { return this._loads }
 
   public get entries(): { readonly [id: string]: Type_Dashboard } { return this._entries }
   public get order(): readonly string[] { return this._order }
@@ -478,6 +499,7 @@ export class Class_DashboardsStore {
     this._current = null
     this._seq = 0
     this.resumed = false
+    this._playback = undefined
   }
 
   /** sa#619 — Les tableaux de bord (dans leur ordre) où figure le volet qui est la vue `view_id`. */
@@ -604,12 +626,21 @@ export class Class_DashboardsStore {
     const json: Type_JSON = { order: [...this._order], entries }
     if (this._current !== null && this._current in this._entries) json['current'] = this._current
     if (this.resumed) json['resumed'] = true
+    // sa#641 — clé ADDITIVE, écrite seulement quand la Lecture est cochée. Comme pour un sélecteur
+    // (sa#639), la lecture automatique n'est pas un réglage : elle dit que le diaporama tournait.
+    if (this._playback !== undefined) {
+      json['playback'] = {
+        ...copyPlaybackSettings(this._playback),
+        autoplay: playback.isSource(DASHBOARDS_PLAYBACK_KEY) && playback.status === 'playing'
+      }
+    }
     return json
   }
 
   /** Relit la clé racine. Absente ou malformée : le magasin est VIDÉ (c'est un autre fichier). */
   public fromJSON(json: unknown): void {
     this.clear()
+    this._loads += 1
     if (!json || typeof json !== 'object' || Array.isArray(json)) return
     const j = json as Type_JSON
     const raw = j['entries']
@@ -640,6 +671,7 @@ export class Class_DashboardsStore {
     const current = getStringFromJSON(j, 'current', '')
     this._current = (current !== '' && current in entries) ? current : null
     this.resumed = j['resumed'] === true
+    this._playback = parsePlaybackSettings(j['playback'])
     this._realignSeq()
   }
 

@@ -261,3 +261,41 @@ describe('sa#639 — moteur de lecture', () => {
     expect(source.shown).toEqual(['a'])
   })
 })
+
+// sa#641 — un pas qui se met en place en plusieurs temps (un tableau de bord dont les volets se
+// dessinent) : le moteur attend qu'il y soit avant de compter le délai.
+describe('sa#641 — un pas asynchrone', () => {
+  const asyncSetup = () => {
+    const { clock, engine, source } = setup()
+    const pending: (() => void)[] = []
+    source.show = (step: string) => {
+      source.shown.push(step)
+      return new Promise<void>(resolve => { pending.push(resolve) })
+    }
+    const settle = async () => { pending.splice(0).forEach(r => r()); await Promise.resolve(); await Promise.resolve() }
+    return { clock, engine, source, settle }
+  }
+
+  test('le pas suivant attend que le précédent soit en place', async () => {
+    const { clock, engine, source, settle } = asyncSetup()
+    engine.play(source)
+    expect(source.shown).toEqual(['a'])
+    clock.tick(5000)
+    expect(source.shown).toEqual(['a'])
+    await settle()
+    clock.paint()
+    // Le délai court depuis le début du pas : il est déjà écoulé.
+    clock.advance(0)
+    expect(source.shown).toEqual(['a', 'b'])
+  })
+
+  test('⏸ pendant la mise en place : rien ne repart quand elle finit', async () => {
+    const { clock, engine, source, settle } = asyncSetup()
+    engine.play(source)
+    engine.pause()
+    await settle()
+    clock.tick(5000)
+    expect(source.shown).toEqual(['a'])
+    expect(clock.pending_timers).toBe(0)
+  })
+})
