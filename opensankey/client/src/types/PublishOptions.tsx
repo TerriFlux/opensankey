@@ -238,6 +238,57 @@ export interface SankeyGlobals {
   [key: string]: unknown
 }
 
+/**
+ * os#1511 (lot 6, 11/10/2026) — LES OPTIONS BOOLÉENNES D'UNE PAGE PUBLIÉE ET LEUR DÉFAUT, la seule
+ * table. `getPublishOptions` la lit, la modale de publication d'OS+ (`OPTION_GROUPS`) aussi, et la
+ * liste des props du viewer (`applyViewerOptions`) en tire ses clés : un défaut ne s'écrit plus
+ * deux fois (le 08/08, `fit_toolbar` à `true` ici et à `false` dans la modale coupait la barre de toute
+ * page publiée par elle). Le SENS de chaque option est dit dans `SankeyGlobals`.
+ */
+export const PUBLISH_FLAG_DEFAULTS = {
+  publish: false,
+  editable: false,
+  topbar: true,
+  footer: false,
+  toolbar: false,
+  position_mode_selector: true,
+  dimension_drawing: false,
+  fit_toolbar: true,
+  fullscreen: true,
+  filter_bar: true,
+  embedded: false,
+  recenter: true,
+  edit_button: true,
+  unitary: false,
+  doc: false,
+  representation: false,
+  navigation_help: false,
+  badge: true,
+  app_info: true,
+  sidebar_toggle: true,
+  canvas_header: false,
+  pane_picker: false,
+  data_type: true,
+  data_type_intervals: true,
+  value_filter: true,
+  view_filter: true,
+  level_filter: true,
+  node_filter: true,
+  data_filter: true,
+  data_links_reveal: false,
+  lock_zoom: false,
+  zoom_control: false,
+  tooltip_on_hover: false,
+  export_json: false
+} as const
+
+export type Type_PublishFlag = keyof typeof PUBLISH_FLAG_DEFAULTS
+
+/** Les options booléennes lues dans `window.sankey`, chacune à son défaut quand elle manque. */
+const publishFlagsOf = (s: SankeyGlobals): { [k in Type_PublishFlag]: boolean } =>
+  Object.fromEntries((Object.keys(PUBLISH_FLAG_DEFAULTS) as Type_PublishFlag[])
+    .map(k => [k, bool((s as Record<string, unknown>)[k], PUBLISH_FLAG_DEFAULTS[k])])) as { [k in Type_PublishFlag]: boolean }
+
 export interface PublishOptions {
   publish: boolean
   editable: boolean
@@ -555,41 +606,10 @@ export const getPublishOptions = (): PublishOptions => {
     if (typeof translated === 'string') header_value = translated
   }
   return {
-    publish: bool(s.publish, false),
-    editable: bool(s.editable, false),
-    topbar: bool(s.topbar, true),
-    footer: bool(s.footer, false),
-    toolbar: bool(s.toolbar, false),
-    position_mode_selector: bool(s.position_mode_selector, true),
-    dimension_drawing: bool(s.dimension_drawing, false),
-    fit_toolbar: bool(s.fit_toolbar, true),
-    fullscreen: bool(s.fullscreen, true),
-    filter_bar: bool(s.filter_bar, true),
-    embedded: bool(s.embedded, false),
-    recenter: bool(s.recenter, true),
-    edit_button: bool(s.edit_button, true),
-    unitary: bool(s.unitary, false),
-    doc: bool(s.doc, false),
+    // Les options booléennes : leur défaut dans `PUBLISH_FLAG_DEFAULTS`, la seule table.
+    ...publishFlagsOf(s),
     doc_file: str(s.doc_file),
     attachments: parseAttachments(s.attachments, _effectiveLang()),
-    representation: bool(s.representation, false),
-    navigation_help: bool(s.navigation_help, false),
-    badge: bool(s.badge, true),
-    app_info: bool(s.app_info, true),
-    sidebar_toggle: bool(s.sidebar_toggle, true),
-    canvas_header: bool(s.canvas_header, false),
-    pane_picker: bool(s.pane_picker, false),
-    data_type: bool(s.data_type, true),
-    data_type_intervals: bool(s.data_type_intervals, true),
-    value_filter: bool(s.value_filter, true),
-    view_filter: bool(s.view_filter, true),
-    level_filter: bool(s.level_filter, true),
-    node_filter: bool(s.node_filter, true),
-    data_filter: bool(s.data_filter, true),
-    data_links_reveal: bool(s.data_links_reveal, false),
-    lock_zoom: bool(s.lock_zoom, false),
-    zoom_control: bool(s.zoom_control, false),
-    tooltip_on_hover: bool(s.tooltip_on_hover, false),
     language: str(s.language),
     minimum_flux: num(s.minimum_flux),
     position_mode: posMode(s.position_mode),
@@ -604,7 +624,6 @@ export const getPublishOptions = (): PublishOptions => {
     view_label: view_label_value,
     view_labels: page_view_labels,
     representations: idList(s.representations),
-    export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
     diagram: (typeof s.diagram === 'string')
@@ -695,19 +714,22 @@ export type ViewerSankeyOptions = {
  * Merge des props Viewer dans window.sankey (force `publish: true`).
  * Props prioritaires : une clé fournie en prop écrase la valeur existante de window.sankey.
  */
+const VIEWER_FLAGS_NOT_PROPS: readonly Type_PublishFlag[] = ['publish', 'app_info', 'sidebar_toggle', 'export_json']
+
 export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const w = window as unknown as { sankey?: SankeyGlobals }
   const current = (w.sankey ?? {}) as SankeyGlobals
   const next: SankeyGlobals = { ...current, publish: true }
 
+  // Les options booléennes : celles de la table (`PUBLISH_FLAG_DEFAULTS`), sauf celles qu'un viewer
+  // ne reçoit pas en prop (le mode publié, posé ici ; l'info et la bascule, l'export).
+  const flag_keys = (Object.keys(PUBLISH_FLAG_DEFAULTS) as Type_PublishFlag[])
+    .filter(k => !VIEWER_FLAGS_NOT_PROPS.includes(k)) as Array<keyof ViewerSankeyOptions>
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'dimension_drawing', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge', 'canvas_header', 'pane_picker',
+    ...flag_keys,
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list',
-    'data_type', 'data_type_intervals', 'value_filter',
-    'view_filter', 'level_filter', 'node_filter', 'data_filter', 'data_links_reveal',
-    'lock_zoom', 'zoom_control', 'tooltip_on_hover', 'language', 'header_i18n', 'attachments',
+    'language', 'header_i18n', 'attachments',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
     'sheet', 'view', 'dashboard', 'view_label', 'representations',
