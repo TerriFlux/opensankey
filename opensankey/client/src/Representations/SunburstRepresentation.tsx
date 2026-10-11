@@ -40,7 +40,6 @@ import {
 import { drawSunburstChart } from '../Charts/SunburstChart'
 import { sunburstPartInputs } from './parts/sunburstParts'
 import { figurePartsWiring } from './parts/figurePartsWiring'
-import type { Type_SunburstStyle } from '../Charts/SunburstChart'
 // os#1420 — la NAVIGATION de la figure : ce qu'elle montre, sous quelles coordonnées.
 import { figureNavigationOf } from '../Charts/FigureNavigation'
 import { BARS_STYLE_DEFAULTS } from '../Charts/figureChartStyle'
@@ -107,79 +106,11 @@ export const readSunburstOptions = (raw: { [key: string]: unknown }): Type_Sunbu
   }
 }
 
-/**
- * os#1425 — LA MISE EN FORME, lue du même sac. Tout ce qui n'est pas dit retombe sur ce que le
- * tracé faisait avant que ces réglages existent (`SUNBURST_STYLE_DEFAULTS`), et une valeur d'un
- * type inattendu — persistée par une version ultérieure — est ignorée plutôt que de casser.
- */
-export const readSunburstStyle = (raw: { [key: string]: unknown }): Partial<Type_SunburstStyle> => {
-  const out: { [key: string]: unknown } = {}
-  const keep = (key: string, kind: 'string' | 'number' | 'boolean', as = key) => {
-    if (typeof raw[key] === kind) out[as] = raw[key]
-  }
-  // TOUTES LES CLÉS SONT CELLES DU CATALOGUE (figureCatalogue) : la couronne les lit là où toute
-  // autre figure — et un nœud ou un flux, quand la question est la même — les lit. Le tracé les
-  // reçoit sous des noms courts, les siens.
-  // Forme, parts, échelle.
-  keep('shape_opacity', 'number', 'opacity')
-  keep('shape_border_visible', 'boolean', 'border_visible')
-  keep('shape_border_color', 'string', 'border_color')
-  keep('shape_border_thickness', 'number', 'border_thickness')
-  keep('parts_color_source', 'string', 'color_source')
-  keep('parts_depth_shading', 'boolean', 'depth_shading')
-  keep('parts_color_axis', 'string', 'color_axis')
-  keep('parts_texture_axis', 'string', 'texture_axis')
-  keep('parts_group_under', 'number', 'others_threshold')
-  keep('parts_max', 'number', 'parts_max')
-  keep('scale_factor', 'number', 'scale_factor')
-  // Libellé. « Là où ça tient / toujours / jamais » se dit avec deux clés d'élément.
-  if (raw.name_label_is_visible === false) out.labels_mode = 'none'
-  else if (raw.name_label_prune_if_unfitting === false) out.labels_mode = 'always'
-  else if (typeof raw.name_label_is_visible === 'boolean' ||
-    typeof raw.name_label_prune_if_unfitting === 'boolean') out.labels_mode = 'fit'
-  keep('name_label_orientation', 'string', 'label_orientation')
-  keep('name_label_strip_parent', 'boolean', 'strip_parent')
-  keep('name_label_separator', 'string', 'separator')
-  keep('name_label_separator_part', 'string', 'separator_part')
-  keep('name_label_box_width', 'number', 'box_width')
-  keep('name_label_callout', 'boolean', 'callout')
-  keep('name_label_font_family', 'string', 'font_family')
-  keep('name_label_font_size', 'number', 'font_size')
-  keep('name_label_bold', 'boolean', 'bold')
-  keep('name_label_italic', 'boolean', 'italic')
-  keep('name_label_uppercase', 'boolean', 'uppercase')
-  if (typeof raw.name_label_contrast_color === 'boolean') {
-    out.color_mode = raw.name_label_contrast_color ? 'auto' : 'fixed'
-  }
-  keep('name_label_color', 'string', 'label_color')
-  // Valeur.
-  keep('value_label_is_visible', 'boolean', 'value_visible')
-  keep('value_label_unit_visible', 'boolean', 'unit_visible')
-  keep('value_label_percent', 'string', 'label_percent')
-  keep('value_label_significant_digits', 'boolean', 'significant_digits')
-  keep('value_label_nb_significant_digits', 'number', 'nb_significant_digits')
-  keep('value_label_custom_digit', 'boolean', 'custom_digit')
-  // 04/10/2026 — des chiffres significatifs cochés sans décimales dites décident seuls, comme
-  // avant que la décimale unique devienne le défaut (même règle que `figureValueFormatOf`).
-  if (raw.value_label_significant_digits === true && typeof raw.value_label_custom_digit !== 'boolean') {
-    out.custom_digit = false
-  }
-  keep('value_label_nb_digit', 'number', 'nb_digit')
-  keep('value_label_scientific_notation', 'boolean', 'scientific_notation')
-  // Centre, légende, mentions, gestes.
-  keep('centre_content', 'string', 'centre_content')
-  keep('centre_hole', 'number', 'centre_hole')
-  keep('legend_visible', 'boolean', 'legend_visible')
-  keep('legend_parts', 'string', 'legend_parts')
-  keep('legend_levels', 'boolean', 'legend_levels')
-  keep('legend_position', 'string', 'legend_position')
-  keep('legend_font_size', 'number', 'legend_font_size')
-  keep('legend_width', 'number', 'legend_width')
-  keep('notes_visible', 'boolean', 'notes_visible')
-  keep('interaction_tooltip', 'boolean', 'tooltip_visible')
-  keep('interaction_click', 'string', 'click_action')
-  return out as Partial<Type_SunburstStyle>
-}
+// os#1527 (11/10/2026) — `readSunburstStyle` vit dans un module SANS DÉPENDANCE
+// (`couronneRingsStyle`), pour que la couronne en mode sunburst et ses tests le lisent sans entraîner
+// les gestes du diagramme ; on le réexporte ici pour les appelants d'avant.
+import { readSunburstStyle } from './couronneRingsStyle'
+export { readSunburstStyle }
 
 // Clic sur un secteur → l'axe NIVEAU bouge, et lui seul. C'est le pont demandé par
 // l'issue : le sunburst et le niveau d'agrégation parlent de la même chose, naviguer

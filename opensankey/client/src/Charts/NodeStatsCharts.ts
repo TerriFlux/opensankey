@@ -1244,6 +1244,11 @@ export const drawDonutChart = (
   opts: Type_ChartOptions = {}
 ) => {
   const st = opts.style ?? DONUT_STYLE_DEFAULTS
+  // os#1527 (11/10/2026) — UNE SEULE SORTIE DES ÉTIQUETTES, comme au sunburst : l'interrupteur de
+  // figure `name_label_callout` (« étiquettes qui ne tiennent pas : dehors ») est le choix « Détacher »
+  // de `labels_small`. Il sortait ici TOUTES les étiquettes, au disque seulement celles qui ne tiennent
+  // pas : la même case disait deux choses selon le mode. Une PART qui demande à sortir sort toujours.
+  const labels_small = st.name_label_callout ? 'detach' : st.labels_small
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container, opts)
   const total = slices.reduce((s, d) => s + d.value, 0)
@@ -1633,12 +1638,15 @@ export const drawDonutChart = (
   // étiquettes sorties (`MIN_CELL_CALLOUT_FONT_PX`) pour tenir dedans : les disques y sont petits,
   // et « 4,32 Mt (52 %) » qui sort en détaché d'un secteur d'un demi-tour se lit moins bien qu'un
   // point de police en moins.
+  // os#1527 (11/10/2026) — L'ORIENTATION DU NOM : celle que la part dit, sinon celle de la FIGURE
+  // (`name_label_orientation`, commune à la couronne et au sunburst ; horizontale par défaut).
+  const orientationOf = (id: string) => aspectOf(id)?.name?.orientation ?? st.name_label_orientation
   const fit_spots = new Map<string, { x: number, y: number, size: number } | null>()
   const fitSpotOf = (d: d3.PieArcDatum<Type_StatSlice>): { x: number, y: number, size: number } | null => {
     if (fit_spots.has(d.data.id)) return fit_spots.get(d.data.id) ?? null
     const s = styleOf(d)
     const lines = sector_lines(d)
-    const orientation = aspectOf(d.data.id)?.name?.orientation
+    const orientation = orientationOf(d.data.id)
     const turned = orientation === 'tangential' || orientation === 'radial'
     const sizes = [s.name_label_font_size]
     if (cell && !turned) {
@@ -1681,14 +1689,11 @@ export const drawDonutChart = (
     // part se tait, dedans comme dehors. Seule une part qui demande elle-même à sortir passe outre.
     const above_threshold = (d.endAngle - d.startAngle) / (2 * Math.PI) >= labelMinShare(st)
     if (said !== undefined) return said && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
-    if (st.name_label_callout) {
-      return above_threshold && (d.endAngle - d.startAngle) * radius >= MIN_CALLOUT_EDGE_PX
-    }
     // 01/10/2026 — TROP PETIT POUR SON ÉTIQUETTE : elle sort au lieu de se taire. Un secteur d'à
     // peine un pixel n'a pas de bord où accrocher son trait ; il reste muet.
     // 03/10/2026 — seulement sous « Détacher » (`labels_small`) ; les trois autres modes la gardent
     // dans l'anneau ou la taisent.
-    if (st.labels_small !== 'detach' || (d.endAngle - d.startAngle) * radius < 1) return false
+    if (labels_small !== 'detach' || (d.endAngle - d.startAngle) * radius < 1) return false
     return above_threshold && !sectorFits(d)
   }
   /**
@@ -1702,7 +1707,7 @@ export const drawDonutChart = (
   type Type_RadialSpot = { x: number, y: number, size: number, rotate: number, lines: { text: string, is_value: boolean }[] }
   const radial_spots = new Map<string, Type_RadialSpot | null>()
   const radialSpotOf = (d: d3.PieArcDatum<Type_StatSlice>): Type_RadialSpot | null => {
-    if (st.labels_small !== 'radial') return null
+    if (labels_small !== 'radial') return null
     if (radial_spots.has(d.data.id)) return radial_spots.get(d.data.id) ?? null
     let found: Type_RadialSpot | null = null
     if (!isWholeRing(d.startAngle, d.endAngle) && aspectOf(d.data.id)?.label_callout !== true && !sectorFits(d)) {
@@ -1768,7 +1773,7 @@ export const drawDonutChart = (
     const spot = isWholeRing(d.startAngle, d.endAngle) ? null : fitSpotOf(d)
     const [ax, ay] = spot !== null ? [spot.x, spot.y] : label_arc.centroid(d)
     const at = `translate(${ax + (a_name?.shift_x ?? 0)},${ay + (a_name?.shift_y ?? 0)})`
-    const orientation = aspectOf(d.data.id)?.name?.orientation
+    const orientation = orientationOf(d.data.id)
     // HORIZONTALE, ou rien de dit : le texte reste droit, pose au centroide — le dessin d'hier.
     if (orientation !== 'tangential' && orientation !== 'radial') return at
     const deg = ((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90
@@ -1825,8 +1830,8 @@ export const drawDonutChart = (
   // une part qui refuse elle-même de sortir, qui déborde comme hier.
   const mustFitInside = (d: d3.PieArcDatum<Type_StatSlice>): boolean => {
     if (aspectOf(d.data.id)?.name?.prune_if_unfitting ?? styleOf(d).name_label_prune_if_unfitting) return true
-    if (st.labels_small === 'show') return false
-    if (st.labels_small === 'detach') return aspectOf(d.data.id)?.label_callout !== false
+    if (labels_small === 'show') return false
+    if (labels_small === 'detach') return aspectOf(d.data.id)?.label_callout !== false
     return true
   }
   const labelled = with_text.filter(d =>

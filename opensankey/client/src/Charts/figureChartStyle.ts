@@ -118,7 +118,14 @@ export interface Type_FigureChartStyle {
   levels_display: 'in_place' | 'rings'
   /** centre_* (couronne) */
   centre_content: 'both' | 'name' | 'value' | 'none'
+  /** Le trou de la couronne À PLAT (un anneau), en % du rayon. */
   centre_hole: number
+  /**
+   * os#1527 (11/10/2026) — LE TROU DU SUNBURST (un anneau par niveau), en % du rayon. PROPRE à ce
+   * mode : les niveaux s'y partagent ce que le trou laisse, et le trou de la couronne (55 %) les
+   * rendait trop étroits. Lu par le tracé à anneaux seul (cf. `couronneRingsStyle`).
+   */
+  centre_hole_rings: number
   /** name_label_* : les étiquettes DANS le dessin (noms de barres, % des secteurs). */
   name_label_is_visible: boolean
   name_label_font_size: number
@@ -149,6 +156,14 @@ export interface Type_FigureChartStyle {
    * FAUX par défaut : aucune figure enregistrée ne voit ses étiquettes sortir.
    */
   name_label_callout: boolean
+  /**
+   * os#1527 (11/10/2026) — COMMENT LE NOM COURT DANS SA PART, AU NIVEAU DE LA FIGURE : horizontal,
+   * radial (le long du rayon) ou le long de l'arc. COMMUN à la couronne à plat et au sunburst — une
+   * seule clé, `name_label_orientation`, que les deux tracés lisent ; une part qui la dit l'emporte.
+   * Jusqu'ici la couronne ne l'offrait que part par part et le sunburst la tenait en dur (radial) :
+   * passer d'un mode à l'autre changeait l'écriture sans que rien ne l'annonce.
+   */
+  name_label_orientation: 'radial' | 'tangential' | 'horizontal'
   /** value_label_* : la valeur écrite dans le dessin, et le pourcentage. */
   value_label_is_visible: boolean
   // 01/10/2026 — `value_total` / `value_parent` : la valeur ET son pourcentage (« 59,3 Mt (40 %) »).
@@ -219,6 +234,12 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   levels_display: 'in_place',
   centre_content: 'value',
   centre_hole: 55,
+  // os#1527 (11/10/2026) — 25 % DU RAYON EN SUNBURST, contre 55 % à plat. Trois niveaux s'y
+  // partageaient 45 % du rayon (15 % chacun) ; ils en ont 75 % (25 % chacun, 1,7 fois plus large).
+  // 25 et non moins : le trou garde un diamètre d'une demi-fois le rayon, où le centre écrit encore
+  // son nom et sa valeur (police réduite au besoin, `centre_plan`), et c'est la valeur du disque
+  // d'avant la fusion (22 %) à peine arrondie.
+  centre_hole_rings: 25,
   // os#1489 — UNE COURONNE MONTRE SON NOM ET SON POURCENTAGE, D'EMBLÉE (demande de Julien).
   //
   // ⚠️ RENVERSEMENT ASSUMÉ. os#1431 les avait éteints « sans quoi toute couronne déjà
@@ -259,6 +280,10 @@ export const DONUT_STYLE_DEFAULTS: Type_FigureChartStyle = {
   // Le tracé d'hier : la règle automatique, inchangée.
   // os#1463 — personne ne sort son étiquette tant qu'on ne le demande pas.
   name_label_callout: false,
+  // 25/09/2026 (Julien) — « horizontale avec un retour à la ligne ; le truc en diagonale c'est trop
+  // moche ». os#1527 (11/10) : le MÊME défaut en sunburst, la clé étant devenue commune ; ce qui ne
+  // tient pas à plat dans un anneau se règle par « Si l'étiquette ne tient pas » (dont « Radial »).
+  name_label_orientation: 'horizontal',
   value_label_is_visible: true,
   // 01/10/2026 — LA VALEUR ET SON POURCENTAGE, sans le nom (cf. `name_label_is_visible`).
   value_label_percent: 'value_total',

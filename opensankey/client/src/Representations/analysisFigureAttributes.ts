@@ -24,6 +24,8 @@ import { figureAttribute, figureNatureAttributes } from './figureAttribute'
 import { hierarchyReadingAttributes } from './sunburstAttributes'
 // os#1479 — le tri « socle / propre », fait par la règle et non à la main (cf. son commentaire).
 import { splitByCommonHonours } from './figureCommonHonours'
+// os#1527 (11/10/2026) — « suis-je en sunburst ? », une réponse pour le panneau et le tracé.
+import { figureDrawsSunburst } from './couronneSunburstMode'
 import type { Type_FigureAttributesConfig } from './Figure'
 import { FIGURE_DATA_TAGS_KEY } from '../Charts/FigureNavigation'
 import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
@@ -483,7 +485,26 @@ const DONUT_HONOURS = {
   // n'importe quel secteur ; `centre_content` reste lu, comme DÉFAUT de cette part (les couronnes
   // enregistrées le portent), mais ne s'offre plus dans l'inspecteur de la figure.
   centre_content: { default: 'value', visibleIf: () => false },
-  centre_hole: { default: 55 },
+  // ── os#1527 (11/10/2026) — CE QUI EST COMMUN AUX DEUX MODES, CE QUI EST PROPRE À CHACUN ───────
+  //
+  // Julien : « le mode sunburst et couronne ne partagent pas les paramètres, par exemple sur le
+  // positionnement du libellé ; le sunburst devrait réduire la taille du centre ». Le sunburst n'est
+  // pas une autre figure, c'est un MODE de la couronne (`levels_display`) : tout réglage se déclare
+  // donc ICI, une fois, et le tracé à anneaux le lit sur la même mise en forme
+  // (`couronneRingsStyle`). Ce qui n'a de sens que dans un mode ne se montre que dans ce mode.
+  //
+  // PROPRE À LA COURONNE À PLAT : son trou (55 %), où le total s'écrit en grand.
+  centre_hole: { default: 55, visibleIf: (o: Type_Bag) => !figureDrawsSunburst(o) },
+  // PROPRE AU SUNBURST : son trou à lui, plus petit — les niveaux s'y partagent ce qu'il laisse.
+  centre_hole_rings: { default: 25, visibleIf: figureDrawsSunburst },
+  // COMMUN : comment le nom court dans sa part. La couronne ne l'offrait que part par part, et le
+  // sunburst écrivait en radial sans le dire (le panneau d'une part annonçait « horizontale »).
+  name_label_orientation: { default: 'horizontal', visibleIf: named },
+  // DOUBLON RETIRÉ : « Étiquettes qui ne tiennent pas : dehors » est le choix « Détacher » de « Si
+  // l'étiquette ne tient pas » (`labels_small`). La clé reste déclarée — elle est du socle commun,
+  // et les barres l'honorent — mais la couronne ne l'offre plus ; un ancien VRAI se relit
+  // « Détacher » (`upgradeLegacyFigureKeys`).
+  name_label_callout: { visibleIf: () => false },
   // 26/09/2026 — LE SEUIL D'AFFICHAGE DES ÉTIQUETTES, ET SEULEMENT SUR LA COURONNE.
   //
   // Julien, capture du panneau « Affichage » du diagramme à l'appui : « pour les couronnes, un
