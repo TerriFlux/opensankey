@@ -5966,6 +5966,17 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToNodesDimTags()
     this._ref_to_menu_config_tags_updater['level_taggs'].current()
     this._ref_to_toolbar_level_tag_filter_updater.current()
+    this.updatePlacedSelectorBars()
+  }
+
+  /**
+   * sa#642 — les barres du haut et du bas portent les sélecteurs de toute sorte de groupe (plus
+   * seulement des dimensions) : un changement d'étiquettes de nœuds, de flux ou de niveaux les
+   * redessine aussi.
+   */
+  private updatePlacedSelectorBars() {
+    this._ref_to_drawer_sequence_data_tag_updater.current()
+    this._ref_to_toolbar_data_tag_updater.current()
   }
 
   public updateAllComponentsRelatedToNodeTags() {
@@ -5975,6 +5986,7 @@ export class Class_MenuConfig {
     this._ref_to_unitarytag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
+    this.updatePlacedSelectorBars()
   }
 
   public updateAllComponentsRelatedToFluxTags() {
@@ -5982,6 +5994,7 @@ export class Class_MenuConfig {
     this._ref_to_toolbar_link_tag_updater.current()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['flux_taggs'].current()
+    this.updatePlacedSelectorBars()
   }
 
   public updateAllComponentsRelatedToDataTags() {
