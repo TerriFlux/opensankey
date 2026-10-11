@@ -33,7 +33,8 @@ import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import {
-  applyDimensionCut, applyDimensionFocus, applyDimensionHidden, inOneHistoryStep
+  applyDimensionCut, applyDimensionFocus, applyDimensionHidden, applyNodesExpansion, dimensionOffersExpansion,
+  inOneHistoryStep
 } from '../components/ui/dimensionDrawingHost'
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
@@ -149,7 +150,11 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
    * portée change zoome le diagramme (`applyDimensionFocus`) — sa portée, et sa sélection restreinte
    * aux montrés sous la nouvelle portée (ou à la coupe demandée) —, dans le même pas.
    */
-  const commit = (next: Type_CouronneState, diagram: { dim: Class_DataTagGroup, ids: string[] }[] = []) => {
+  const commit = (
+    next: Type_CouronneState, diagram: { dim: Class_DataTagGroup, ids: string[] }[] = [],
+    // Un geste du diagramme de plus, dans le même pas d'historique (cf. `setDrawing`).
+    also?: () => void
+  ) => {
     const out = figureOptionsOf(host.options, next)
     const asked = linked ? diagram : []
     const zooms = linked
@@ -157,13 +162,14 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
         .filter(d => next.dims[d.id] !== undefined && !sameIds(next.dims[d.id].focus, d.focus_ids))
       : []
     const cuts = asked.filter(c => !zooms.includes(c.dim) && c.ids.length > 0 && !sameIds(c.dim.selected_tags_list.map(m => m.id), c.ids))
-    if (cuts.length === 0 && zooms.length === 0) { host.write(out); return }
+    if (cuts.length === 0 && zooms.length === 0 && also === undefined) { host.write(out); return }
     app.runHeavyGesture(() => inOneHistoryStep(app.history, () => {
       zooms.forEach(d => {
         const ids = asked.find(c => c.dim === d)?.ids ?? next.dims[d.id].shown
         applyDimensionFocus(app, d, next.dims[d.id].focus, ids)
       })
       cuts.forEach(c => applyDimensionCut(app, c.dim, c.ids, { multi: true }))
+      also?.()
       host.write(out)
     }))
   }
@@ -580,20 +586,28 @@ export const couronneGesturesOf = (host: Type_CouronneGestureHost) => {
   const setDrawing = (id: string, drawing: Type_CouronneDrawing) => {
     const d = dimOf(id)
     if (d === undefined || drawing === drawingOf(id)) return
+    // 11/10/2026 (os#1511) — SUNBURST = EXPANSION (Julien : « fais ») : liée, une figure qui passe en
+    // sunburst met la dimension du diagramme EN EXPANSION, et la retire en en sortant — quand le
+    // diagramme la dessine en nœuds sur un porteur à une extrémité (sinon l'expansion n'a pas de côté).
+    const want = drawing === 'sunburst'
+    const follow = linked && d.nodes_expansion !== want &&
+      (!want || (d.drawing === 'nodes' && dimensionOffersExpansion(app, d)))
+      ? () => applyNodesExpansion(app, d, want)
+      : undefined
     if (drawing === 'sunburst' && !showsSeveralLevels(d)) {
       // Un seul niveau montré : le sunburst ouvre le niveau SUIVANT (Filières au centre, leur détail
       // autour), sinon il ne dessinerait qu'un anneau, comme les secteurs.
       const deepest = Math.max(...shownOf(d).map(m => d.depthOf(m)))
       const r = nextWithColumn(withDim(state, id, { drawing }), id, deepest + 1, false)
-      if (r !== null) { commit(r.next, r.diagram); return }
+      if (r !== null) { commit(r.next, r.diagram, follow); return }
     }
-    if (drawing !== 'multiples') { commit(withDim(state, id, { drawing })); return }
+    if (drawing !== 'multiples') { commit(withDim(state, id, { drawing }), [], follow); return }
     if (!offersMultiplesFor(id)) return
     let next = state
     state.order.forEach(o => { if (o !== id && st(o).drawing === 'multiples') next = withDim(next, o, { drawing: 'sectors' }) })
     next = withDim(next, id, { drawing: 'multiples', active: true })
     next = { ...next, order: [...next.order.filter(o => o !== id), id] }
-    commit(withCells(next, d))
+    commit(withCells(next, d), [], follow)
   }
 
   /**

@@ -1,4 +1,5 @@
-import { monterSocle } from '../Charts/__fixtures__/couronneSocle'
+import { descripteur, monterSocle } from '../Charts/__fixtures__/couronneSocle'
+import { couronneGesturesOf, type Type_CouronneGestures } from '../Representations/couronneGestures'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 import { expansionSideOf, expansionTreeOf } from './DimensionExpansion'
@@ -51,6 +52,26 @@ describe('os#1511 lot 5 — expansion aux extremites', () => {
     m.s.pays.nodes_expansion = false
     m.da.rebuildDimensionNodes()
     expect(visibles(m)).toEqual(['A', 'B--par--ameriques', 'B--par--asie', 'B--par--es', 'B--par--fr'])
+  })
+
+  test('une couronne liee en sunburst met le diagramme en expansion, en secteurs la retire ; detachee, rien', () => {
+    const m = monter()
+    const app = m.s.app as unknown as { runHeavyGesture: (w: () => void) => void }
+    app.runHeavyGesture = (w: () => void) => w()
+    m.B.driving_dimension = m.s.pays
+    m.s.pays.banner = 'multi'
+    m.s.pays.selectMembers(['fr', 'es', 'ameriques', 'asie'])
+    const box: { options: { [k: string]: unknown } } = { options: { descriptor: descripteur('pays') } }
+    const g = (reader: 'couronne' = 'couronne') => couronneGesturesOf({
+      app: m.s.app, options: box.options, declared: ['pays'], write: o => { box.options = o }, reader
+    }) as Type_CouronneGestures
+    g().setDrawing('pays', 'sunburst')
+    expect(m.s.pays.nodes_expansion).toBe(true)
+    g().setDrawing('pays', 'sectors')
+    expect(m.s.pays.nodes_expansion).toBe(false)
+    box.options = { ...box.options, coordinates_linked: false }
+    g().setDrawing('pays', 'sunburst')
+    expect(m.s.pays.nodes_expansion).toBe(false)
   })
 
   test('sur la source, a gauche ; un noeud du milieu ne s etend pas', () => {
