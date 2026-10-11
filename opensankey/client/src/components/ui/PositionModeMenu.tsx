@@ -434,13 +434,16 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                 />
                 : null}
               {/* os#1511 — une dimension en nœuds peut colorer les flux, avec ou sans diagramme par
-                  membre (Julien, 09/10). */}
-              {drawing === 'nodes' && !in_bands && tagg.selected_tags_list.length > 1
+                  membre (Julien, 09/10). 11/10 — et la BANDE d'un diagramme par membre aussi : depuis
+                  que la légende n'a plus de sélecteur « Couleur des flux », ce menu offre les mêmes
+                  candidates que lui (`may_paint_member_bands_flows`). Cocher une dimension retire la
+                  couleur à la précédente. */}
+              {tagg.may_paint_member_bands_flows
                 ? <CheckItem
                   label={t('Banner.members_color_flows')}
                   checked={tagg.paints_member_bands_flows}
                   closeOnSelect={false}
-                  onClick={() => applyMembersColorFlows(app_data, tagg, !tagg.paints_flows)}
+                  onClick={() => applyMembersColorFlows(app_data, tagg, !tagg.paints_member_bands_flows)}
                 />
                 : null}
               {/* os#1511 — l'ORDRE DES MEMBRES vit dans « Navigation » (Julien, 08/10 : « ici on garde
