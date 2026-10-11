@@ -504,6 +504,108 @@ export const applyMembersOrder = (
   apply(ordre)
 }
 
+/**
+ * 03/10/2026 — UN SEUL PAS D'ANNULATION pour un geste du diagramme suivi d'un réglage de figure :
+ * les annulations que `run` empile (le geste de l'hôte, l'écriture de la figure) sont recueillies,
+ * puis posées en UNE entrée, avec `undoAlso` / `redoAlso` en plus.
+ */
+export const inOneHistoryStep = (
+  history: { saveUndo: (f: () => void) => void, saveRedo: (f: () => void) => void },
+  run: () => void, undoAlso: () => void = () => undefined, redoAlso: () => void = () => undefined
+) => {
+  const undos: (() => void)[] = []
+  const redos: (() => void)[] = []
+  const own = history as unknown as { [k: string]: unknown }
+  const had_own = Object.prototype.hasOwnProperty.call(own, 'saveUndo')
+  const saveUndo = own.saveUndo
+  const saveRedo = own.saveRedo
+  own.saveUndo = (f: () => void) => { undos.push(f) }
+  own.saveRedo = (f: () => void) => { redos.push(f) }
+  try {
+    run()
+  } finally {
+    // Une instance de classe retrouve les méthodes de son prototype ; un objet simple, les siennes.
+    if (had_own) { own.saveUndo = saveUndo; own.saveRedo = saveRedo } else { delete own.saveUndo; delete own.saveRedo }
+  }
+  history.saveUndo(() => { undoAlso(); [...undos].reverse().forEach(f => f()) })
+  history.saveRedo(() => { redos.forEach(f => f()); redoAlso() })
+}
+
+// ── os#1511 (Jean-Yves, 09/10) — LES GESTES DES COMMANDES DU LECTEUR ──────────────────────────────
+//
+// Une case « Distinguer… », une liste de niveaux, une liste de membres avec « Sélectionner
+// plusieurs » (cf. `Class_DataTagGroup.reader_control`). Le tableau du diagramme les MONTRE
+// (`diagramNavigationTable`) ; leurs règles vivent ici, en gestes nommés, chacun UN pas d'historique.
+
+/** Les membres du premier niveau dont descend la sélection de `tagg` (eux-mêmes s'ils en sont). */
+export const readerChosenRoots = (tagg: Class_DataTagGroup): string[] => [...new Set(
+  (tagg.selected_tags_list as Class_DataTag[]).map(m => {
+    let r = m
+    while (r.parent !== undefined) r = r.parent
+    return r.id
+  }))]
+
+/**
+ * Une AUTRE dimension superpose-t-elle plusieurs membres en bandes (pas un diagramme par membre) ?
+ * La case « Distinguer… » de `tagg` est alors GELÉE : deux dimensions en bandes, on ne verrait plus
+ * rien (règle de Jean-Yves).
+ */
+export const readerToggleBlocker = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_DataTagGroup | undefined =>
+  (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]).find(other =>
+    other !== tagg && other.member_bands !== true && other.drawing === 'multi' && other.selected_tags_list.length > 1)
+
+/** Le lecteur choisit des membres : choix multiple dès plusieurs, sans portée. */
+export const applyReaderPick = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[]) => {
+  if (ids.length === 0) return
+  applyDimensionCut(app_data, tagg, ids, { multi: ids.length > 1, focus: [] })
+}
+
+/** Le lecteur choisit un NIVEAU entier (liste de niveaux). */
+export const applyReaderLevel = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, depth: number) =>
+  applyReaderPick(app_data, tagg, tagg.membersAtLevel(depth).map(m => m.id))
+
+/** La case « Distinguer… » : cochée, le deuxième niveau ; décochée, le premier. */
+export const applyReaderToggle = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) =>
+  applyReaderLevel(app_data, tagg, on ? 1 : 0)
+
+/**
+ * Le lecteur choisit des SOUS-MEMBRES de `root` : aucun ou tous, c'est `root` ; plusieurs, ils se
+ * superposent en bandes, et les cases « Distinguer… » des autres dimensions se décochent (cf.
+ * `readerToggleBlocker`), dans le même pas.
+ */
+export const applyReaderSubPick = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, root: Class_DataTag, ids: string[]
+) => {
+  if (ids.length === 0 || ids.length === tagg.childrenOf(root).length) {
+    applyReaderPick(app_data, tagg, [root.id])
+    return
+  }
+  inOneHistoryStep(app_data.history, () => {
+    applyReaderPick(app_data, tagg, ids)
+    if (ids.length < 2) return
+    ;(app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+      .filter(other => other !== tagg && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
+      .forEach(other => applyReaderToggle(app_data, other, false))
+  })
+}
+
+/**
+ * « Sélectionner plusieurs » : cochée, un diagramme par membre sur les membres choisis ; décochée,
+ * un seul diagramme, sur le premier. Un pas.
+ */
+export const applyReaderSeveral = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
+  const chosen = readerChosenRoots(tagg)
+  inOneHistoryStep(app_data.history, () => {
+    if (on) {
+      applyReaderPick(app_data, tagg, chosen)
+      applyMemberBands(app_data, tagg, true)
+    } else {
+      applyMemberBands(app_data, tagg, false)
+      applyReaderPick(app_data, tagg, chosen.slice(0, 1))
+    }
+  })
+}
+
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */
 export const toggleDimensionCarrier = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, node_id: string

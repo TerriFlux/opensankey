@@ -32,7 +32,9 @@
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { applyDimensionCut, applyDimensionFocus, applyDimensionHidden } from '../components/ui/dimensionDrawingHost'
+import {
+  applyDimensionCut, applyDimensionFocus, applyDimensionHidden, inOneHistoryStep
+} from '../components/ui/dimensionDrawingHost'
 import { parseMemberSectorPath } from '../Charts/memberSectorId'
 import {
   antichainOf, readCouronneState,
@@ -43,32 +45,7 @@ import { figureOptionsOf } from './dimensionViewState'
 
 type Type_Bag = { [key: string]: unknown }
 
-/**
- * 03/10/2026 — UN SEUL PAS D'ANNULATION pour un geste du diagramme suivi d'un réglage de figure :
- * les annulations que `run` empile (le geste de l'hôte, l'écriture de la figure) sont recueillies,
- * puis posées en UNE entrée, avec `undoAlso` / `redoAlso` en plus.
- */
-export const inOneHistoryStep = (
-  history: { saveUndo: (f: () => void) => void, saveRedo: (f: () => void) => void },
-  run: () => void, undoAlso: () => void = () => undefined, redoAlso: () => void = () => undefined
-) => {
-  const undos: (() => void)[] = []
-  const redos: (() => void)[] = []
-  const own = history as unknown as { [k: string]: unknown }
-  const had_own = Object.prototype.hasOwnProperty.call(own, 'saveUndo')
-  const saveUndo = own.saveUndo
-  const saveRedo = own.saveRedo
-  own.saveUndo = (f: () => void) => { undos.push(f) }
-  own.saveRedo = (f: () => void) => { redos.push(f) }
-  try {
-    run()
-  } finally {
-    // Une instance de classe retrouve les méthodes de son prototype ; un objet simple, les siennes.
-    if (had_own) { own.saveUndo = saveUndo; own.saveRedo = saveRedo } else { delete own.saveUndo; delete own.saveRedo }
-  }
-  history.saveUndo(() => { undoAlso(); [...undos].reverse().forEach(f => f()) })
-  history.saveRedo(() => { redos.forEach(f => f()); redoAlso() })
-}
+export { inOneHistoryStep }
 
 // ── OUTILS SUR UNE DIMENSION ─────────────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import { buildDiagramNavigationTable } from './diagramNavigationTable'
-import { applyDimensionCut } from '../components/ui/dimensionDrawingHost'
+import { applyDimensionCut, applyReaderSeveral, applyReaderSubPick } from '../components/ui/dimensionDrawingHost'
 
 if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
@@ -92,6 +92,27 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     const caseMatiere = [...table(app, [filiere, matiere]).querySelectorAll('input[type=checkbox]')]
       .find(c => c.parentElement?.textContent?.includes('Distinguer')) as HTMLInputElement
     expect(caseMatiere.disabled).toBe(true)
+  })
+
+  test('deux sous-filieres decochent la case des autres : un seul pas a annuler', () => {
+    const { app, filiere, matiere } = monter()
+    matiere.membersAtLevel(1).forEach(m => m.setSelected())
+    matiere.tags_dict.matiere.setUnSelected()
+    applyReaderSubPick(app, filiere, filiere.tags_dict.cereales as Class_DataTag, ['ble', 'mais'])
+    expect(filiere.selected_tags_list.map(m => m.id).sort()).toEqual(['ble', 'mais'])
+    expect(matiere.current_level_index).toBe(0)
+    app.history.applyUndo()
+    expect(filiere.selected_tags_list.map(m => m.id)).toEqual(['cereales'])
+    expect(matiere.current_level_index).toBe(1)
+  })
+
+  test('selectionner plusieurs puis annuler rend un seul diagramme, en un pas', () => {
+    const { app, filiere } = monter()
+    applyReaderSeveral(app, filiere, true)
+    expect(filiere.draws_member_bands).toBe(true)
+    app.history.applyUndo()
+    expect(filiere.draws_member_bands).toBe(false)
+    expect(filiere.selected_tags_list.map(m => m.id)).toEqual(['cereales'])
   })
 
   test('en colonne, pas de tableau : un bloc par dimension, niveaux a la ligne', () => {

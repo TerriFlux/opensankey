@@ -78,6 +78,14 @@ export const isFigureLinked = (options: Type_Options | null | undefined): boolea
   return typeof linked_raw === 'boolean' ? linked_raw : !stringsOf(options?.[HIERARCHY_EXPANDED_KEY]).includes(LEGACY_DETACHED_ENTRY)
 }
 
+/**
+ * 11/10/2026 — LIER / DÉTACHER, la seule écriture de `coordinates_linked` (liée : la clé tombe, c'est
+ * le défaut ; détachée : `false`). La couronne, le tableau croisé et l'hôte de gestes d'OS+ l'écrivent
+ * tous ici, comme ils le lisent par `isFigureLinked`.
+ */
+export const withFigureLinked = (options: Type_Options, linked: boolean): Type_Options =>
+  ({ ...options, [COORDINATES_LINKED_KEY]: linked ? undefined : false })
+
 /** Ce que la figure a ouvert, lu sur son sac de réglages. */
 export const readFigureOpening =(options: Type_Options | null | undefined): Type_FigureOpening => {
   const raw = stringsOf(options?.[HIERARCHY_EXPANDED_KEY])
@@ -116,9 +124,8 @@ const nonEmpty = (by: { [dimension_id: string]: string[] } | undefined) => {
  * Une clé sans objet est retirée (`undefined` : le sac est assigné entier, cf. `Figure.assign`).
  */
 export const withFigureOpening = (options: Type_Options, opening: Type_FigureOpening): Type_Options => ({
-  ...options,
+  ...withFigureLinked(options, opening.data.linked),
   [HIERARCHY_EXPANDED_KEY]: opening.elements.size > 0 ? [...opening.elements] : undefined,
-  [COORDINATES_LINKED_KEY]: opening.data.linked ? undefined : false,
   [DIMENSION_OPENING_KEY]: !opening.data.linked && opening.data.opened !== undefined ? opening.data.opened : undefined,
   [DIMENSION_HIDDEN_KEY]: opening.data.linked ? undefined : nonEmpty(opening.data.hidden),
   [INACTIVE_DIMENSIONS_KEY]: opening.data.inactive !== undefined && opening.data.inactive.length > 0

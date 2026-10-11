@@ -20,7 +20,10 @@ import type { ReactNode } from 'react'
 import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
-import { applyDimensionCut, applyMemberBands, swapDimensionDrawings } from '../components/ui/dimensionDrawingHost'
+import {
+  applyDimensionCut, applyReaderLevel, applyReaderPick, applyReaderSeveral, applyReaderSubPick, applyReaderToggle,
+  readerChosenRoots, readerToggleBlocker, swapDimensionDrawings
+} from '../components/ui/dimensionDrawingHost'
 import {
   candidatsAuNiveau, coupeChoisirNiveau, coupeEffacerZoom, coupeZoomer, listeDuZoom, lireCoupe, type Type_CoupeEnTableau
 } from '../Algorithms/DimensionTableCut'
@@ -60,6 +63,16 @@ export const diagramNavigationDimensions = (
     .filter(dim => dim.tags_list.length > 1 &&
       (dim.is_hierarchical || (options.with_flat === true && isFlatSingleChoice(dim))))
 }
+
+/**
+ * os#1511 (11/10) — LES DIMENSIONS QUE LA NAVIGATION AFFICHE, la seule liste que lisent la colonne,
+ * la bande et la barre du haut (qui les retire : une dimension n'est qu'à un endroit). En colonne
+ * (légende posée dans son panneau, `legend.in_panel`), les dimensions à niveaux et les plates à choix
+ * unique (Unité) ; en bande, les dimensions à niveaux seules.
+ */
+export const navigationShownDimensions = (
+  app_data: Class_ApplicationData, in_column: boolean = app_data.drawing_area.legend.in_panel
+): Class_DataTagGroup[] => diagramNavigationDimensions(app_data, { with_flat: in_column })
 
 /** Une dimension plate à choix unique, hors frise (la séquence a sa barre). */
 const isFlatSingleChoice = (dim: Class_DataTagGroup): boolean =>
@@ -116,22 +129,11 @@ const poser = (app_data: Class_ApplicationData, dim: Class_DataTagGroup, ids: st
   app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, ids, { multi: ids.length > 1, focus }))
 }
 
-/** Le membre du premier niveau dont `m` descend (lui-même s'il en est un). */
-const racineDe = (m: Class_DataTag): Class_DataTag => {
-  let r = m
-  while (r.parent !== undefined) r = r.parent
-  return r
-}
-
-/** Une autre dimension SUPERPOSE plusieurs membres en bandes sur les flux (pas un diagramme par membre). */
-const autreEnBandes = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Class_DataTagGroup | undefined =>
-  (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]).find(other =>
-    other !== dim && other.member_bands !== true && other.drawing === 'multi' && other.selected_tags_list.length > 1)
-
 /**
  * os#1511 (Jean-Yves, 09/10) — LA COMMANDE DU LECTEUR d'une dimension, résolue sur l'état du
- * diagramme. Chaque geste passe par les gestes annulables du diagramme (`applyDimensionCut`,
- * `applyMemberBands`), sous le voile des gestes lourds.
+ * diagramme. Ses règles (case gelée, cases décochées, « Sélectionner plusieurs ») sont des gestes
+ * nommés de l'hôte (`applyReader*`, un pas d'historique chacun) ; ici, la lecture et le voile des
+ * gestes lourds.
  */
 const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Type_FigureNavControl | undefined => {
   const control = dim.reader_control
@@ -141,18 +143,9 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
   const label = control.label ?? dim.name
   const nom = (m: Class_DataTag) => levelShortName(m.display_name)
   const selection = dim.selected_tags_list as Class_DataTag[]
-  const couper = (ids: string[], multi: boolean) =>
-    applyDimensionCut(app_data, dim, ids, { multi, focus: [] })
-  // Les cases « Distinguer… » des autres dimensions se décochent quand celle-ci superpose plusieurs
-  // membres en bandes : deux dimensions en bandes, on ne verrait plus rien (règle de Jean-Yves).
-  const decocherLesCases = () => (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-    .filter(other => other !== dim && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
-    .forEach(other => {
-      const racines = other.membersAtLevel(0)
-      if (racines.length > 0) applyDimensionCut(app_data, other, racines.map(m => m.id), { multi: racines.length > 1, focus: [] })
-    })
+  const heavy = (gesture: () => void) => app_data.runHeavyGesture(gesture)
   if (control.kind === 'toggle') {
-    const bandes = autreEnBandes(app_data, dim)
+    const bandes = readerToggleBlocker(app_data, dim)
     return {
       kind: 'toggle',
       label,
@@ -161,9 +154,7 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
         name: bandes.name, defaultValue: 'Indisponible : plusieurs membres de « {{name}} » sont superposés'
       }, `Indisponible : plusieurs membres de « ${bandes.name} » sont superposés`),
       set: (on: boolean) => {
-        const membres = dim.membersAtLevel(on ? 1 : 0)
-        if (membres.length === 0) return
-        app_data.runHeavyGesture(() => couper(membres.map(m => m.id), membres.length > 1))
+        if (dim.membersAtLevel(on ? 1 : 0).length > 0) heavy(() => applyReaderToggle(app_data, dim, on))
       }
     }
   }
@@ -177,15 +168,14 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
       options,
       value: String(coupe.colonnes.length === 1 ? coupe.colonnes[0] : dim.current_level_index),
       set: (value: string) => {
-        const membres = dim.membersAtLevel(Number(value))
-        if (membres.length === 0) return
-        app_data.runHeavyGesture(() => couper(membres.map(m => m.id), membres.length > 1))
+        const depth = Number(value)
+        if (dim.membersAtLevel(depth).length > 0) heavy(() => applyReaderLevel(app_data, dim, depth))
       }
     }
   }
   // `pick` : les membres du premier niveau.
   const racines = dim.membersAtLevel(0)
-  const choisies = [...new Set(selection.map(m => racineDe(m).id))]
+  const choisies = readerChosenRoots(dim)
   const multi = dim.draws_member_bands
   const racine = !multi && choisies.length === 1 ? dim.tags_dict[choisies[0]] as Class_DataTag | undefined : undefined
   const enfants = racine ? dim.childrenOf(racine) : []
@@ -198,14 +188,7 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
       members: enfants,
       // « Toutes » : le membre parent est choisi, toutes les cases sont cochées.
       chosen: enfants_choisis.length === 0 ? enfants.map(e => e.id) : enfants_choisis.map(e => e.id),
-      apply: (ids: string[]) => app_data.runHeavyGesture(() => {
-        if (ids.length === 0 || ids.length === enfants.length) {
-          couper([racine.id], false)
-          return
-        }
-        couper(ids, ids.length > 1)
-        if (ids.length > 1) decocherLesCases()
-      })
+      apply: (ids: string[]) => heavy(() => applyReaderSubPick(app_data, dim, racine, ids))
     }
   }
   return {
@@ -215,20 +198,12 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
     chosen: choisies,
     multi,
     multi_label: control.multi_label ?? t('Banner.reader_several', { defaultValue: 'Sélectionner plusieurs' }, 'Sélectionner plusieurs'),
-    set_multi: (on: boolean) => app_data.runHeavyGesture(() => {
-      if (on) {
-        couper(choisies, choisies.length > 1)
-        applyMemberBands(app_data, dim, true)
-      } else {
-        applyMemberBands(app_data, dim, false)
-        if (choisies.length > 0) couper([choisies[0]], false)
-      }
-    }),
-    choose: (value: string) => app_data.runHeavyGesture(() => couper([value], false)),
+    set_multi: (on: boolean) => heavy(() => applyReaderSeveral(app_data, dim, on)),
+    choose: (value: string) => heavy(() => applyReaderPick(app_data, dim, [value])),
     pick: multi ? {
       members: racines,
       chosen: choisies,
-      apply: (ids: string[]) => { if (ids.length > 0) app_data.runHeavyGesture(() => couper(ids, ids.length > 1)) }
+      apply: (ids: string[]) => { if (ids.length > 0) heavy(() => applyReaderPick(app_data, dim, ids)) }
     } : undefined,
     sub
   }
