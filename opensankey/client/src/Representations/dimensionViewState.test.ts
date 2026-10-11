@@ -5,17 +5,15 @@ import { buildDimensionMatrix, matrixInputOfPlan, matrixOthersId } from '../Char
 import type { Type_DimensionMatrix } from '../Charts/DimensionMatrix'
 import { descripteur, monterSocle } from '../Charts/__fixtures__/couronneSocle'
 import type { Type_Socle } from '../Charts/__fixtures__/couronneSocle'
-import { disaggregateDimensionNodes, isGeneratedMemberNode } from '../Algorithms/DimensionDisaggregation'
-import type { Class_NodeElement } from '../Elements/Node'
 import { readCouronneState } from './couronneState'
 import type { Type_CouronneState } from './couronneState'
 import {
-  applyLabel, choiceOfLabel, collapseMember, depthsOf, DRAWING_LABELS, expandMember, fromCouronneState, fromDiagram,
-  fromFigure, groupingOf, labelOfDimension, openedOf, planFor, showLevel, toCouronneState, toDiagramPatch,
+  applyLabel, choiceOfLabel, collapseMember, depthsOf, DRAWING_LABELS, expandMember,
+  fromFigure, groupingOf, labelOfDimension, openedOf, planFor, showLevel, toCouronneState,
   toFigureOptions, DEFAULT_VARIANTS
 } from './dimensionViewState'
 import type {
-  Type_DimensionView, Type_DimensionViewState, Type_MatrixPlan, Type_Representation, Type_SankeyPlan
+  Type_DimensionView, Type_DimensionViewState, Type_MatrixPlan, Type_Representation
 } from './dimensionViewState'
 import type { Type_DrawPlan } from '../Charts/couronnePlan'
 
@@ -33,7 +31,6 @@ const ouverts = { filiere: ['produits'], pays: ['monde'] }
 
 const couronnePlan = (st: Type_DimensionViewState, s: Type_Socle) => planFor(st, 'couronne', s.sankey).plan as Type_DrawPlan
 const matrixPlan = (st: Type_DimensionViewState, s: Type_Socle) => planFor(st, 'matrix', s.sankey).plan as Type_MatrixPlan
-const sankeyPlan = (st: Type_DimensionViewState, s: Type_Socle) => planFor(st, 'sankey', s.sankey).plan as Type_SankeyPlan
 
 /** Les reglages reels du filet de la couronne (anciens formats, liee et detachee). */
 const CAS: { nom: string, options: Bag, diagramme?: { filiere?: string[], pays?: string[] } }[] = [
@@ -188,9 +185,6 @@ describe('os#1511 modele commun — changement de representation', () => {
     expect(labelOfDimension('matrix', st.dims.filiere)).toBe('flat')
     const cp = couronnePlan(st, s)
     expect(cp.cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques', 'asie'] })
-    const sp = sankeyPlan(st, s)
-    expect(sp).toMatchObject({ per_member: 'pays', bands: 'filiere', grouping: 'by_member' })
-    expect(sp.members).toEqual({ pays: ['europe', 'ameriques', 'asie'], filiere: ['cereales', 'lait', 'viande'] })
     const mp = matrixPlan(st, s)
     expect(mp.rows).toMatchObject({ dimension_id: 'filiere', members: ['cereales', 'lait', 'viande'] })
     expect(mp.columns).toBeNull()
@@ -217,10 +211,7 @@ describe('os#1511 modele commun — changement de representation', () => {
     const s = monterSocle()
     const options = det({ dimension_opening: { filiere: ['produits', 'cereales'], pays: ['monde'] }, levels_display_by: { filiere: 'rings' } })
     const st = fromFigure(options, false, s.sankey)
-    // Couronne -> Sankey -> tableau -> couronne : l etat ne passe que par le plan, il ne change pas.
-    const sp = sankeyPlan(st, s)
-    expect(sp.expansion).toEqual(['filiere'])
-    expect(sp.opened.filiere).toEqual(['cereales'])
+    // Couronne -> tableau -> couronne : l etat ne passe que par le plan, il ne change pas.
     expect(matrixPlan(st, s).rows.opened).toContain('cereales')
     const back = fromFigure(toFigureOptions(options, st), false, s.sankey)
     expect(back).toEqual(st)
@@ -284,126 +275,14 @@ describe('os#1511 modele commun — profondeur', () => {
     expect(collapseMember(s.filiere, expandMember(s.filiere, d, 'lait'), 'lait').hidden).toEqual(['lait'])
   })
 
-  test('expansion mixte : sunburst, expansion Sankey et lignes ouvertes disent la meme chose', () => {
+  test('expansion mixte : sunburst et lignes ouvertes disent la meme chose', () => {
     const s = monterSocle()
     const base = fromFigure(det({ dimension_opening: ouverts }), false, s.sankey)
     const f = expandMember(s.filiere, applyLabel(base.dims.filiere, 'couronne', 'sunburst'), 'cereales')
     const st = { ...base, dims: { ...base.dims, filiere: f } }
     const cut = couronnePlan(st, s).cut.find(c => c.dimension_id === 'filiere')
     expect(cut?.parts.map(p => p.path)).toEqual([['cereales', 'ble'], ['cereales', 'mais'], ['lait'], ['viande']])
-    expect(sankeyPlan(st, s)).toMatchObject({ expansion: ['filiere'], opened: { filiere: ['cereales'] } })
     expect(matrixPlan(st, s).rows.members).toEqual(['ble', 'mais', 'lait', 'viande'])
-  })
-})
-
-describe('os#1511 modele commun — le diagramme', () => {
-  const nœud = (s: Type_Socle, name: string) => s.sankey.nodes_list.find(n => n.name === name) as Class_NodeElement
-
-  test('un membre a la fois : role none, lu sur le membre choisi', () => {
-    const s = monterSocle()
-    s.pays.selectMembers(['europe'])
-    const st = fromDiagram(s.sankey)
-    expect(st.source).toBe('diagram')
-    expect(st.dims.pays).toMatchObject({ role: 'none', focus: ['europe'], shown: ['europe'] })
-    expect(labelOfDimension('sankey', st.dims.pays)).toBe('one')
-    expect(sankeyPlan(st, s).coordinates.pays).toEqual(['europe'])
-    // Vu par la couronne : desactivee, lue sur sa portee.
-    expect(couronnePlan(st, s).fixed.pays).toEqual(['europe'])
-  })
-
-  test('en bandes : la premiere dimension en choix multiple decoupe les flux', () => {
-    const s = monterSocle()
-    s.filiere.banner = 'multi'
-    s.pays.banner = 'multi'
-    s.pays.selectMembers(['europe', 'asie'])
-    expect(s.filiere.draws_bands).toBe(true)
-    expect(s.pays.draws_bands).toBe(false)
-    const st = fromDiagram(s.sankey)
-    expect(labelOfDimension('sankey', st.dims.filiere)).toBe('bands')
-    // La seconde se lit a la somme de ses membres : le dessin d aujourd hui.
-    expect(st.dims.pays.role).toBe('none')
-    const sp = sankeyPlan(st, s)
-    expect(sp.bands).toBe('filiere')
-    expect(sp.coordinates.pays).toEqual(['europe', 'asie'])
-    expect(toDiagramPatch(st, s.sankey)).toEqual({ dims: {}, warnings: [] })
-  })
-
-  test('en nœuds, un porteur : parts en nœuds, et le dessin engendre un nœud par membre', () => {
-    const s = monterSocle()
-    s.pays.selectMembers(['europe', 'ameriques', 'asie'])
-    nœud(s, 'A').driving_dimension = s.pays
-    s.pays.drawingChanged()
-    const st = fromDiagram(s.sankey)
-    expect(st.dims.pays.role).toBe('parts')
-    expect(labelOfDimension('sankey', st.dims.pays)).toBe('nodes')
-    expect(st.dims.pays.diagram?.carriers).toEqual([nœud(s, 'A').id])
-    const sp = sankeyPlan(st, s)
-    expect(sp).toMatchObject({ nodes: ['pays'], per_member: null, grouping: 'by_node' })
-    disaggregateDimensionNodes(s.sankey)
-    const engendres = s.sankey.nodes_list.filter(n => isGeneratedMemberNode(n)).length
-    expect(engendres).toBe(sp.members.pays.length)
-  })
-
-  // 10/10/2026 (lot 4) — un diagramme par membre se DEMANDE (`draws_member_bands`), plus d'automatique.
-  test('deux porteurs et un diagramme par membre demande : cases ; sans la demande, des noeuds', () => {
-    const s = monterSocle()
-    s.pays.selectMembers(['europe', 'ameriques'])
-    nœud(s, 'A').driving_dimension = s.pays
-    nœud(s, 'B').driving_dimension = s.pays
-    s.pays.member_bands = true
-    const st = fromDiagram(s.sankey)
-    expect(st.dims.pays.role).toBe('cases')
-    expect(labelOfDimension('sankey', st.dims.pays)).toBe('member_bands')
-    expect(labelOfDimension('couronne', st.dims.pays)).toBe('multiples')
-    expect(labelOfDimension('matrix', st.dims.pays)).toBe('tables')
-    expect(st.order[st.order.length - 1]).toBe('pays')
-    expect(sankeyPlan(st, s)).toMatchObject({ per_member: 'pays', grouping: 'by_member' })
-    expect(toDiagramPatch(st, s.sankey)).toEqual({ dims: {}, warnings: [] })
-    // Rang « en nœuds » : le patch coupe les bandes par membre.
-    const nodes = { ...st, dims: { ...st.dims, pays: applyLabel(st.dims.pays, 'sankey', 'nodes') } }
-    expect(toDiagramPatch(nodes, s.sankey).dims.pays).toEqual({ member_bands: false })
-    s.pays.member_bands = undefined
-    expect(fromDiagram(s.sankey).dims.pays.role).toBe('parts')
-  })
-
-  test('le patch decrit les ecritures sans les faire', () => {
-    const s = monterSocle()
-    // os#1511, 07/10 — hiérarchisée, « un membre » se relit en choix multiple : seule une séquence
-    // en lit encore un à la fois.
-    ;(s.filiere as unknown as { banner: string }).banner = 'sequence'
-    // 08/10 (472b3aa0f) — une dimension hiérarchisée n'est plus FORCÉE en choix multiple : Pays garde
-    // sa bannière par défaut (un membre à la fois). Le cas testé est celui d'un Pays en choix multiple.
-    s.pays.banner = 'multi'
-    const st = fromDiagram(s.sankey)
-    expect(st.dims.filiere.role).toBe('none')
-    const bands = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'sankey', 'bands'), focus: [] } } }
-    // Pays, posée en choix multiple, voit les bandes prises par Filière.
-    expect(toDiagramPatch(bands, s.sankey)).toEqual({
-      dims: { filiere: { banner: 'multi' } }, warnings: [{ dimension_id: 'pays', code: 'bands_taken' }]
-    })
-    expect(s.filiere.banner).toBe('sequence')
-    const per_member = { ...st, dims: { ...st.dims, pays: { ...applyLabel(st.dims.pays, 'sankey', 'member_bands'), focus: [], shown: ['europe', 'asie'] } } }
-    const p = toDiagramPatch(per_member, s.sankey)
-    // Un diagramme par membre se demande : le patch le pose.
-    expect(p.dims.pays).toEqual({ selected: ['europe', 'asie'], member_bands: true })
-    expect(p.warnings.map(w => w.code)).toEqual(['carriers_needed', 'cases_need_two_carriers'])
-    const exp = { ...st, dims: { ...st.dims, filiere: { ...applyLabel(st.dims.filiere, 'couronne', 'sunburst'), focus: [] } } }
-    expect(toDiagramPatch(exp, s.sankey).warnings.map(w => w.code)).toEqual(['expansion_unsupported', 'carriers_needed'])
-  })
-
-  test('du diagramme a la couronne : un diagramme par pays donne une couronne par pays', () => {
-    const s = monterSocle()
-    s.filiere.banner = 'multi'
-    s.pays.selectMembers(['europe', 'ameriques'])
-    nœud(s, 'A').driving_dimension = s.pays
-    nœud(s, 'B').driving_dimension = s.pays
-    s.pays.member_bands = true
-    const st = fromDiagram(s.sankey)
-    const cp = couronnePlan(st, s)
-    expect(cp.cut.map(c => c.dimension_id)).toEqual(['filiere'])
-    expect(cp.cells).toEqual({ dimension_id: 'pays', members: ['europe', 'ameriques'] })
-    expect(matrixPlan(st, s).cases?.dimension_id).toBe('pays')
-    expect(fromCouronneState(toCouronneState(st)).dims.pays.role).toBe('cases')
   })
 })
 

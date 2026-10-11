@@ -61,17 +61,6 @@ export const visiblePaneKeys = (
   return kept.length > 0 ? kept : keys
 }
 
-/**
- * Forme compacte : `w_2:exporte,importe;w_5:a` — fenêtre, deux-points, clés VISIBLES séparées par
- * des virgules ; fenêtres séparées par des points-virgules. Chaque nom est encodé
- * (`encodeURIComponent`), les séparateurs restent lisibles dans l'adresse.
- */
-export const formatPanesParam = (choice: { [id: string]: string[] }): string =>
-  Object.entries(choice)
-    .filter(([, keys]) => keys.length > 0)
-    .map(([id, keys]) => encodeURIComponent(id) + ':' + keys.map(encodeURIComponent).join(','))
-    .join(';')
-
 /** Lit le paramètre BRUT (non décodé) ; une entrée malformée est ignorée, jamais fatale. */
 export const parsePanesParam = (raw: string | null | undefined): { [id: string]: string[] } => {
   const out: { [id: string]: string[] } = {}
@@ -91,16 +80,4 @@ export const parsePanesParam = (raw: string | null | undefined): { [id: string]:
 export const rawPanesParam = (search: string): string | null => {
   const m = new RegExp('(?:^|[?&])' + PANES_URL_PARAM + '=([^&#]*)').exec(search)
   return m ? m[1].replace(/\+/g, ' ') : null
-}
-
-/**
- * Réécrit `panes` dans une chaîne de requête, les autres paramètres intacts. Valeur vide = retiré.
- * Écrit à la main plutôt que par `URLSearchParams`, qui encoderait `:` `,` `;` et rendrait
- * l'adresse illisible.
- */
-export const withPanesParam = (search: string, value: string): string => {
-  const kept = search.replace(/^\?/, '').split('&')
-    .filter(p => p !== '' && p.split('=')[0] !== PANES_URL_PARAM)
-  if (value !== '') kept.push(PANES_URL_PARAM + '=' + value)
-  return kept.length > 0 ? '?' + kept.join('&') : ''
 }
