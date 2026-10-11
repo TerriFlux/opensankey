@@ -21,9 +21,10 @@ import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Class_DataTag } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import {
-  applyDimensionCut, applyReaderLevel, applyReaderPick, applyReaderSeveral, applyReaderSubPick, applyReaderToggle,
-  readerChosenRoots, readerToggleBlocker, swapDimensionDrawings
+  applyDimensionCut, applyReaderLevel, applyReaderPick, applyReaderSeveral, applyReaderSubDistinguish, applyReaderToggle,
+  readerToggleBlocker, swapDimensionDrawings
 } from '../components/ui/dimensionDrawingHost'
+import { pluralGroupName } from '../Elements/titleTokens'
 import {
   candidatsAuNiveau, coupeChoisirNiveau, coupeEffacerZoom, coupeZoomer, listeDuZoom, lireCoupe, type Type_CoupeEnTableau
 } from '../Algorithms/DimensionTableCut'
@@ -176,39 +177,52 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
       }
     }
   }
-  // `pick` : les membres du premier niveau.
-  const racines = dim.membersAtLevel(0)
-  const choisies = readerChosenRoots(dim)
+  // `pick` (Jean-Yves, 11/10) : la liste est un ARBRE (filière ou sous-filière, n'importe lequel) ;
+  // « Sélectionner plusieurs » mélange les niveaux ; « Distinguer les sous-filières » remplace le choix
+  // des sous-filières (bandes), et n'existe que pour UN membre choisi qui a des sous-membres.
+  const arbre: Class_DataTag[] = []
+  const descendre = (m: Class_DataTag) => { arbre.push(m); dim.childrenOf(m).forEach(descendre) }
+  dim.membersAtLevel(0).forEach(descendre)
+  const retrait = (m: Class_DataTag) => '   '.repeat(dim.depthOf(m))
   const multi = dim.draws_member_bands
-  const racine = !multi && choisies.length === 1 ? dim.tags_dict[choisies[0]] as Class_DataTag | undefined : undefined
-  const enfants = racine ? dim.childrenOf(racine) : []
-  const enfants_choisis = enfants.filter(e => selection.includes(e))
-  const toutes = t('Banner.reader_all', { defaultValue: 'Toutes' }, 'Toutes')
-  const sub = racine === undefined || enfants.length === 0 ? undefined : {
-    label: levelShortName((dim.levels as string[])[1] ?? ''),
-    summary: enfants_choisis.length === 0 ? toutes : enfants_choisis.map(nom).join(', '),
-    pick: {
-      members: enfants,
-      // « Toutes » : le membre parent est choisi, toutes les cases sont cochées.
-      chosen: enfants_choisis.length === 0 ? enfants.map(e => e.id) : enfants_choisis.map(e => e.id),
-      apply: (ids: string[]) => heavy(() => applyReaderSubPick(app_data, dim, racine, ids))
-    }
+  const ids = selection.map(m => m.id)
+  // Le membre « distingué » : choisi seul, ou dont TOUS les sous-membres sont choisis (en bandes).
+  const parent_commun = selection.length > 1 && selection.every(m => m.parent !== undefined && m.parent === selection[0].parent)
+    ? selection[0].parent as Class_DataTag
+    : undefined
+  const distingue = !multi
+    ? (parent_commun !== undefined && dim.childrenOf(parent_commun).length === selection.length
+        ? parent_commun
+        : selection.length === 1 ? selection[0] : undefined)
+    : undefined
+  const sous = distingue ? dim.childrenOf(distingue) : []
+  const niveau_suivant = levelShortName((dim.levels as string[])[(distingue ? dim.depthOf(distingue) : 0) + 1] ?? '')
+  const bloque = readerToggleBlocker(app_data, dim)
+  const sub_toggle = distingue === undefined || sous.length < 2 ? undefined : {
+    label: t('Banner.reader_distinguish', { name: pluralGroupName(niveau_suivant || 'sous-membre') },
+      `Distinguer les ${pluralGroupName(niveau_suivant || 'sous-membre')}`),
+    checked: parent_commun === distingue,
+    frozen: bloque === undefined ? undefined : t('Banner.reader_toggle_frozen', {
+      name: bloque.name, defaultValue: 'Indisponible : plusieurs membres de « {{name}} » sont superposés'
+    }, `Indisponible : plusieurs membres de « ${bloque.name} » sont superposés`),
+    set: (on: boolean) => heavy(() => applyReaderSubDistinguish(app_data, dim, distingue, on))
   }
   return {
     kind: 'pick',
     label,
-    options: racines.map(m => ({ value: m.id, label: nom(m) })),
-    chosen: choisies,
+    options: arbre.map(m => ({ value: m.id, label: retrait(m) + nom(m) })),
+    chosen: distingue ? [distingue.id] : ids,
     multi,
     multi_label: control.multi_label ?? t('Banner.reader_several', { defaultValue: 'Sélectionner plusieurs' }, 'Sélectionner plusieurs'),
     set_multi: (on: boolean) => heavy(() => applyReaderSeveral(app_data, dim, on)),
     choose: (value: string) => heavy(() => applyReaderPick(app_data, dim, [value])),
     pick: multi ? {
-      members: racines,
-      chosen: choisies,
-      apply: (ids: string[]) => { if (ids.length > 0) heavy(() => applyReaderPick(app_data, dim, ids)) }
+      members: arbre,
+      chosen: ids,
+      indentOf: (m: Class_DataTag) => dim.depthOf(m),
+      apply: (picked: string[]) => { if (picked.length > 0) heavy(() => applyReaderPick(app_data, dim, picked)) }
     } : undefined,
-    sub
+    sub_toggle
   }
 }
 

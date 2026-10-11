@@ -615,11 +615,32 @@ export const applyReaderSubPick = (
 }
 
 /**
- * « Sélectionner plusieurs » : cochée, un diagramme par membre sur les membres choisis ; décochée,
- * un seul diagramme, sur le premier. Un pas.
+ * os#1511 (Jean-Yves, 11/10) — « DISTINGUER LES SOUS-FILIÈRES » : cochée, les sous-membres de `root`
+ * en bandes (et les autres cases « Distinguer… » se décochent : on ne peut pas distinguer deux
+ * dimensions à la fois) ; décochée, `root` seul. Un pas.
+ */
+export const applyReaderSubDistinguish = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, root: Class_DataTag, on: boolean
+) => {
+  const children = tagg.childrenOf(root)
+  if (!on || children.length < 2) {
+    applyReaderPick(app_data, tagg, [root.id])
+    return
+  }
+  inOneHistoryStep(app_data.history, () => {
+    applyReaderPick(app_data, tagg, children.map(c => c.id))
+    ;(app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+      .filter(other => other !== tagg && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
+      .forEach(other => applyReaderToggle(app_data, other, false))
+  })
+}
+
+/**
+ * « Sélectionner plusieurs » : cochée, un diagramme par membre sur les membres choisis — de
+ * n'importe quel niveau, mélangés (Jean-Yves, 11/10) ; décochée, un seul diagramme, sur le premier. Un pas.
  */
 export const applyReaderSeveral = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
-  const chosen = readerChosenRoots(tagg)
+  const chosen = (tagg.selected_tags_list as Class_DataTag[]).map(m => m.id)
   inOneHistoryStep(app_data.history, () => {
     if (on) {
       applyReaderPick(app_data, tagg, chosen)

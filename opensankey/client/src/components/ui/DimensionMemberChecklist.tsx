@@ -35,7 +35,7 @@ export const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g,
 export const LISTE_MAX = '16rem'
 export const ligne_style = { fontSize: '0.78rem', lineHeight: '1.45rem' }
 
-export const DimensionMemberChecklist = ({ t, membres, chosen, single, apply, vider, selectAll, attente }: {
+export const DimensionMemberChecklist = ({ t, membres, chosen, single, apply, vider, selectAll, attente, indentOf }: {
   t: Type_T,
   /** Les membres proposés, dans l'ordre où la liste les montre. */
   membres: Class_DataTag[],
@@ -51,6 +51,8 @@ export const DimensionMemberChecklist = ({ t, membres, chosen, single, apply, vi
   selectAll?: () => void,
   /** La ligne qui dit l'attente, posée sous « (Tout sélectionner) ». */
   attente?: ReactNode,
+  /** os#1511 (11/10) — une liste en ARBRE : le niveau de chaque membre, en retrait. */
+  indentOf?: (m: Class_DataTag) => number,
 }) => {
   const [recherche, setRecherche] = React.useState('')
   const q = sansAccents(recherche.trim())
@@ -118,7 +120,8 @@ export const DimensionMemberChecklist = ({ t, membres, chosen, single, apply, vi
             </Radio>
           </Box>
         }
-        return <Box key={m.id} {...ligne_style} title={m.display_name}>
+        return <Box key={m.id} {...ligne_style} title={m.display_name}
+          paddingLeft={indentOf && q === '' ? `${indentOf(m)}em` : undefined}>
           <Checkbox size='sm' isChecked={coche} onChange={e => basculer(m.id, e.target.checked)}>
             <Text as='span' ml='0.35rem' fontSize='0.78rem'>{m.display_name}</Text>
           </Checkbox>
