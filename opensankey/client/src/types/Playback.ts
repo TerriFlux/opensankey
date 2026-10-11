@@ -102,6 +102,9 @@ export interface Type_PlaybackSource {
 
 export type Type_PlaybackStatus = 'idle' | 'playing' | 'paused'
 
+/** sa#640 — rend la source à relancer dans `app_data` (fichier enregistré pendant sa lecture), ou `null`. */
+export type Type_AutoplayFinder = (app_data: unknown) => Type_PlaybackSource | null
+
 /** L'horloge du moteur, remplaçable dans les tests. */
 export type Type_PlaybackClock = {
   now: () => number
@@ -266,6 +269,31 @@ export class Class_Playback {
     if (this._source?.alive?.() === false) this.takeover()
   }
 
+  // sa#640 — LES SOURCES DE LECTURE AUTOMATIQUE QUE CE PAQUET NE CONNAÎT PAS. Le sélecteur de nœuds
+  // d'un volet vit dans l'éditeur, que ce paquet n'importe pas : l'éditeur inscrit ici de quoi
+  // trouver, dans un document qu'on ouvre, la source enregistrée pendant sa lecture (cf.
+  // `ApplicationData.autoplaySource`).
+  private _autoplay_finders = new Set<Type_AutoplayFinder>()
+
+  /** Inscrit une source de lecture automatique ; rend de quoi la retirer. */
+  public registerAutoplayFinder(finder: Type_AutoplayFinder): () => void {
+    this._autoplay_finders.add(finder)
+    return () => { this._autoplay_finders.delete(finder) }
+  }
+
+  /** La première source inscrite qui a une lecture automatique à relancer dans `app_data`. */
+  public registeredAutoplay(app_data: unknown): Type_PlaybackSource | null {
+    for (const finder of this._autoplay_finders) {
+      try {
+        const source = finder(app_data)
+        if (source !== null) return source
+      } catch {
+        // Une source qui lève ne doit pas empêcher l'ouverture du fichier.
+      }
+    }
+    return null
+  }
+
   // MÉCANIQUE ======================================================================================
 
   private round(last_shown: string | undefined): string[] {
@@ -362,30 +390,3 @@ export class Class_Playback {
 /** LA lecture de l'application : il n'y en a qu'une à la fois. */
 export const playback = new Class_Playback()
 
-// sa#640 — LES AUTRES SOURCES DE LECTURE AUTOMATIQUE. Les dimensions vivent ici (`Class_DataTagGroup`) ;
-// le sélecteur de nœuds d'un volet vit dans l'éditeur, que ce paquet n'importe pas. L'éditeur inscrit
-// donc ici de quoi trouver, dans un document qu'on ouvre, la source enregistrée pendant sa lecture.
-
-/** Rend la source à relancer dans `app_data` (un fichier enregistré pendant sa lecture), ou `null`. */
-export type Type_AutoplayFinder = (app_data: unknown) => Type_PlaybackSource | null
-
-const autoplay_finders = new Set<Type_AutoplayFinder>()
-
-/** Inscrit une source de lecture automatique ; rend de quoi la retirer. */
-export const registerAutoplayFinder = (finder: Type_AutoplayFinder): () => void => {
-  autoplay_finders.add(finder)
-  return () => { autoplay_finders.delete(finder) }
-}
-
-/** La première source inscrite qui a une lecture automatique à relancer dans `app_data`. */
-export const findRegisteredAutoplay = (app_data: unknown): Type_PlaybackSource | null => {
-  for (const finder of autoplay_finders) {
-    try {
-      const source = finder(app_data)
-      if (source !== null) return source
-    } catch {
-      // Une source qui lève ne doit pas empêcher l'ouverture du fichier.
-    }
-  }
-  return null
-}
