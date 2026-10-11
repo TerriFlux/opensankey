@@ -315,8 +315,9 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   // si ses membres se somment, garde le choix.
   // 10/10/2026 (lot 4) — RÉOUVERT aux dimensions hiérarchisées : depuis 472b3aa0f elles admettent « un
   // membre à la fois » (Julien : choisir les filières comme l'unité ou l'année). Seule la séquence tranche.
-  const nature_decides = tagg.banner === 'sequence'
-  const show_items = nature_decides ? null : submenuEntry('show', t('Banner.show_submenu'), <>
+  // sa#639 — plus rien ne tranche : la séquence est devenue « un membre » + la case Lecture, et la
+  // Lecture se combine à tous les choix (elle fait défiler les membres cochés d'un choix multiple).
+  const show_items = submenuEntry('show', t('Banner.show_submenu'), <>
     <CheckItem
       label={t('Banner.draw_one')}
       glyph={<DimensionDrawingIcon name='one' />}

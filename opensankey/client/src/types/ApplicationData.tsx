@@ -85,6 +85,8 @@ import { isLegendElementId } from '../Elements/legendIds'
 // aucun cycle à l'exécution.
 import { document_type_registry, SANKEY_DOCUMENT_TYPE } from './DocumentTypeRegistry'
 import type { Type_DocumentType } from './DocumentTypeRegistry'
+import type { Class_DataTagGroup } from './TagGroup'
+import { playback } from './Playback'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -1615,7 +1617,8 @@ export class Class_ApplicationData {
     // disparaître le réenregistrement en place de l'étude ouverte.
     const origin = this._sankeytheque_origin
     const restore = (snapshot: Type_JSON) => {
-      this.fromJSON(snapshot)
+      // sa#639 — un instantané d'annulation n'est pas une ouverture : pas de lecture automatique.
+      this.fromJSON(snapshot, { no_autoplay: true })
       this._sankeytheque_origin = origin
       onRestore?.()
     }
@@ -1757,6 +1760,8 @@ export class Class_ApplicationData {
       this.menu_configuration?.ref_to_sheet_tabs_updater.current()
       // sa#624 — un contenu posé dans la feuille a ses vues : les tableaux de bord les reprennent.
       this.afterContentLoadedIntoSheet()
+      // sa#639 — un fichier ouvert dans la feuille lance aussi sa lecture automatique.
+      if (!kwargs?.['no_autoplay']) this.armAutoplay(true)
       return
     }
     // this.sendWaitingToast(
@@ -1848,6 +1853,34 @@ export class Class_ApplicationData {
       )
     }
     // })
+    // sa#639 — une lecture qui défilait le document remplacé s'arrête, sans rien redessiner ; puis
+    // un fichier qu'on OUVRE (pas une feuille qu'on rebascule, pas un instantané d'annulation)
+    // lance la lecture automatique de son sélecteur.
+    playback.dropDeadSource()
+    if (!keep_file_state && !kwargs?.['no_autoplay']) this.armAutoplay(true)
+  }
+
+  // sa#639 — LECTURE AUTOMATIQUE À L'OUVERTURE ===================================================
+  //
+  // Le fichier l'arme ; elle démarre une fois le dessin d'ouverture peint. La page publiée la
+  // réarme après ses options d'état (présélections, mise en page chargée à part) — elle reprend
+  // alors sur ce qu'elles montrent. Une fois que le lecteur en est sorti (premier geste) ou
+  // qu'elle est allée au bout, elle ne revient pas avant le prochain fichier.
+  private _autoplay_pending: Class_DrawingArea | null = null
+
+  public armAutoplay(on_open: boolean = false): void {
+    if (!this.is_main) return
+    const drawing_area = this._drawing_area
+    const autoplayed = () => drawing_area.sankey.getTagGroupsAsList('data_taggs')
+      .map(group => group as Class_DataTagGroup)
+      .find(group => group.plays && group.playback?.autoplay === true)
+    if (on_open) this._autoplay_pending = autoplayed() !== undefined ? drawing_area : null
+    if (this._autoplay_pending !== drawing_area) return
+    playback.autoplay(() => {
+      if (this._autoplay_pending !== drawing_area || this._drawing_area !== drawing_area) return null
+      if (playback.status !== 'idle') return null
+      return autoplayed()?.playbackSource() ?? null
+    }, () => { if (this._autoplay_pending === drawing_area) this._autoplay_pending = null })
   }
 
   /**
@@ -3941,6 +3974,9 @@ export class Class_ApplicationData {
     // zone de dessin et le jeu de vues (cf. `_loadSheetContent`). Poser une vue puis changer de
     // feuille l'aurait posée sur le document qu'on quitte.
     this.applyPublishSheetOption()
+    // sa#639 — la lecture automatique repart de ce que ces options montrent (elle démarre après
+    // le dessin, la sortie anticipée plus bas ne l'empêche pas).
+    this.armAutoplay()
     const opts = this.publish_options
     // sa#409 — crochet d'upgrade headless : exposé D'ABORD (la suite de la méthode a une sortie
     // anticipée), et idempotent (les viewers React repassent ici à chaque ré-application).
