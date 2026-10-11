@@ -13,9 +13,10 @@ export class Class_ContainerElement extends Class_NodeBase {
   // zone de texte normale, éditable via l'interface ZDT. Son texte peut contenir
   // des jetons {NomDuGroupe} remplacés par la valeur sélectionnée du data tag.
   protected _is_title: boolean = false
-  // os#1511 (Julien, 09/10 : « il faut que le titre se cale en haut, et pas sur les coordonnées, car
-  // le y peut être négatif ») — le titre se pose À CHAQUE DESSIN au-dessus du diagramme, centré
-  // sur sa largeur (`Class_Sankey.placeTitleOnTop`). Persisté (`title_on_top`).
+  // os#1511 — titre « en haut » : un AFFICHAGE D'ÉCRAN. La zone de texte fournit le texte (jetons
+  // compris), l'édition et la persistance ; le dessin vit dans le calque écran (cf.
+  // `syncTitleLayer`), posé en haut de la zone visible par `Class_DrawingArea.placeTitleAtScreenTop`.
+  // Persisté (`title_on_top`), vrai pour un titre neuf.
   protected _title_on_top: boolean = false
 
   // #542 — texte libre lu par le bloc INFOS de la présentation. Seules les
@@ -139,6 +140,13 @@ export class Class_ContainerElement extends Class_NodeBase {
     this.unDraw()
     this._svg_parent_group = layer
   }
+
+  /**
+   * os#1511 — la zone vit-elle dans le calque écran ? Elle y est en px d'écran : hors de toute
+   * mesure du contenu (cadrage, papier) et sans compensation de police (le calque annule déjà le
+   * zoom). Seul le titre calé en haut y vit aujourd'hui.
+   */
+  public get on_screen_layer(): boolean { return this._svg_parent_group === 'g_screen_overlay' }
 
   public get tooltip_text(): string { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
