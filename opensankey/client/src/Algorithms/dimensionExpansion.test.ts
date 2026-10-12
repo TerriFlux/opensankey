@@ -3,6 +3,7 @@ import { couronneGesturesOf, type Type_CouronneGestures } from '../Representatio
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
 import { expansionSideOf, expansionTreeOf } from './DimensionExpansion'
+import { NodeLeftExtremityStyle, NodeRightExtremityStyle } from '../Elements/ElementStyle'
 
 // 10/10/2026 — os#1511, lot 5 : L'EXPANSION D'UNE DIMENSION EN NOEUDS, AUX EXTREMITES (Julien :
 // vers l exterieur, la ou le cote ne fait pas de doute ; un noeud du milieu ne s etend pas).
@@ -44,6 +45,14 @@ describe('os#1511 lot 5 — expansion aux extremites', () => {
     const europe = m.da.sankey.nodes_dict['B--par--europe']
     const fr = m.da.sankey.nodes_dict['B--par--fr']
     expect(fr.position_x).toBeGreaterThan(europe.position_x)
+    // 11/10 — l'ouvert au centre de ses enfants, les enfants a l'ecart de desagregation, nom a l'exterieur.
+    const es = m.da.sankey.nodes_dict['B--par--es']
+    const kids = [fr, es].sort((a, b) => a.position_y - b.position_y)
+    const gap = m.da.disaggregation_gap_value
+    expect(kids[1].position_y - (kids[0].position_y + kids[0].getShapeHeightToUse())).toBeCloseTo(gap)
+    const centre = (kids[0].position_y + kids[1].position_y + kids[1].getShapeHeightToUse()) / 2
+    expect(europe.position_y + europe.getShapeHeightToUse() / 2).toBeCloseTo(centre)
+    expect(fr.hasStyle(NodeRightExtremityStyle)).toBe(m.B.hasStyle(NodeRightExtremityStyle) || !m.B.hasStyle(NodeLeftExtremityStyle))
     const entree = europe.input_links_list.filter(l => l.is_visible).reduce((t, l) => t + valeur(l), 0)
     const sortie = europe.output_links_list.filter(l => l.is_visible).reduce((t, l) => t + valeur(l), 0)
     expect(entree).toBeGreaterThan(0)

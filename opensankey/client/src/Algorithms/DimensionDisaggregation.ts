@@ -501,17 +501,19 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
       centrerSurAxe(noeuds, creneau)
     })
   }
-  // 3 bis) CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page.
-  appliquerPositionsManuelles(par_axe)
-  // 3 bis') os#1511 (lot 5) — LES EXPANSIONS, une fois le premier niveau à sa place (déplacé à la
-  //    main compris) : les enfants de chaque ouvert s'empilent dans son créneau, vers l'extérieur.
+  // 3 bis) os#1511 (lot 5) — LES EXPANSIONS : les enfants de chaque ouvert vers l'extérieur ; les feuilles
+  //    s'empilent avec l'écart de désagrégation et chaque ouvert se centre sur ses enfants (Julien,
+  //    11/10). Les nœuds dépliés prennent le style d'extrémité de l'axe : nom à l'extérieur.
   plans.forEach(({ axe, dimension, expansion }) => {
     if (expansion === undefined) return
     const tops = new Map<Class_DataTag, Class_NodeElement>()
     ;(par_axe.get(axe.id) ?? []).forEach(entree => { if (entree.membres.length === 1) tops.set(entree.membres[0], entree.noeud) })
     unfoldExpansion(sankey, axe, expansion.side, expansion.tree, tops,
-      membre => ambigues.has(dimension) ? `${axe.name} - ${membre.name}` : membre.name)
+      membre => ambigues.has(dimension) ? `${axe.name} - ${membre.name}` : membre.name,
+      noeud => heriterExtremite(sankey, axe, noeud))
   })
+  // 3 ter') CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page (expansions comprises).
+  appliquerPositionsManuelles(par_axe)
   // 3 quater) QUELLES DIMENSIONS DÉCOUPENT VRAIMENT un nœud (deux entrées au moins d'un même axe,
   //    dans une même bande) : seules celles-là peuvent peindre les flux par défaut. Au niveau
   //    « Ressources / Emplois », chaque nœud n'a qu'un poste, et c'est la filière qui peint.
