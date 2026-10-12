@@ -336,8 +336,10 @@ export const LegendGapSlider = ({ app_data }: { app_data: Class_ApplicationData 
   const t = app_data.t as ((key: string) => string) | undefined
   const label = (t ? t('MEP.childGapValue') : '') || 'Écart'
   const max = Math.max(150, Math.ceil(value * 1.5))
-  return <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85em', margin: '0.2rem 0 0.4rem' }}>
-    <span style={{ flex: '0 0 auto' }}>{label}</span>
+  // os#1511 (Julien, 12/10 : « que ce soit harmonieux ») — la taille et la graisse des libellés de
+  // la navigation de la colonne (11 px, gras), et non une fraction de la police de l'hôte.
+  return <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '11px', margin: '0.2rem 0 0.4rem' }}>
+    <span style={{ flex: '0 0 auto', fontWeight: 700 }}>{label}</span>
     <input
       type='range' min={0} max={max} step={1} value={value}
       style={{ flex: '1 1 auto', minWidth: 0, accentColor: ui_accent }}
