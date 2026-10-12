@@ -73,8 +73,54 @@ describe('os#1528 arbre de valeurs construit a la demande', () => {
     const out = root.toJSON() as { [k: string]: Type_JSON }
     const a3 = out['a3'] as { [k: string]: Type_JSON }
     expect((a3['b7'] as { [k: string]: Type_JSON })['c1']).toEqual({ data_value: 42 })
-    // Une branche vierge s ecrit sans ses feuilles.
-    expect(out['a0']).toEqual({ datatag_group: 'b' })
+    // Une branche jamais ouverte n ecrit que les etiquettes que son JSON cite.
+    expect(out['a0']).toBeUndefined()
+  })
+
+  test('enregistrer une branche lue ne la construit pas', () => {
+    // SOCLE synthetiques transfo : 8 flux de 680 000 cases. Construire pour tester has_result
+    // puis pour ecrire, c etait reconstruire le cube a chaque enregistrement (out of memory).
+    const { link } = monter()
+    const root = valuesOf(link)
+    root.fromJSON({
+      datatag_group: 'a',
+      a3: { datatag_group: 'b', b7: { datatag_group: 'c', c1: { data_value: 42, result_value: 40 }, c2: {} } },
+      a4: { datatag_group: 'b', b0: { datatag_group: 'c', c9: { data_min: 1, data_max: 3 } } }
+    })
+    expect(root.has_data).toBe(true)
+    expect(root.has_result).toBe(true)
+    expect(root.has_collected_data).toBe(true)
+    expect(root.has_intervals).toBe(false)
+    const out = root.toJSON()
+    expect(builtLeaves(root)).toBe(0)
+    expect(out).toEqual({
+      datatag_group: 'a',
+      a3: { datatag_group: 'b', b7: { datatag_group: 'c', c1: { data_value: 42, result_value: 40 }, c2: {} } },
+      a4: { datatag_group: 'b', b0: { datatag_group: 'c', c9: { data_min: 1, data_max: 3 } } }
+    })
+  })
+
+  test('point fixe : relire puis reecrire donne le meme texte, branche ouverte ou non', () => {
+    const json: Type_JSON = {
+      datatag_group: 'a',
+      a3: { datatag_group: 'b', b7: { datatag_group: 'c', c1: { data_value: 42 } } },
+      a4: { datatag_group: 'b', b0: { datatag_group: 'c', c9: { data_value: 5, id: 'ancien' } } }
+    }
+    const ecrire = (source: Type_JSON, ouvrir: boolean) => {
+      const { link, groups } = monter()
+      const root = valuesOf(link)
+      root.fromJSON(JSON.parse(JSON.stringify(source)) as Type_JSON)
+      // Le dessin ouvre le chemin des membres choisis : une branche construite, les autres non.
+      if (ouvrir) root.getValueForDataTags([tagOf(groups[0], 'a3'), tagOf(groups[1], 'b7'), tagOf(groups[2], 'c1')])
+      return JSON.stringify(root.toJSON())
+    }
+    for (const ouvrir of [false, true]) {
+      const j1 = ecrire(json, ouvrir)
+      // L id d un fichier ancien ne se reecrit pas (OS#1367) : le texte est celui de la valeur.
+      expect(j1).not.toContain('ancien')
+      const j2 = ecrire(JSON.parse(j1) as Type_JSON, ouvrir)
+      expect(j2).toBe(j1)
+    }
   })
 
   test('ecrire une valeur la retrouve, et l arbre construit reste coherent', () => {
