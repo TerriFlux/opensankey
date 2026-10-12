@@ -562,6 +562,11 @@ function desagreger(sankey: Class_Sankey): number {
   })
   // 3 ter') CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page (expansions comprises).
   appliquerPositionsManuelles(par_axe)
+  // 3 ter'') L'ÉCART ENTRE VOISINS D'UNE COLONNE, puis l'ordre des flux selon la géométrie (Julien,
+  //    12/10 : en passant de Céréales à Oléoprotéagineux, « Importations matière première » colle à
+  //    « Production », voire la chevauche, et « Exportations » passe au-dessus de « Transformation »).
+  tenirLesEcarts(sankey, par_axe)
+  ordonnerFluxSelonLaGeometrie(sankey)
   // 3 quater) QUELLES DIMENSIONS DÉCOUPENT VRAIMENT un nœud (deux entrées au moins d'un même axe,
   //    dans une même bande) : seules celles-là peuvent peindre les flux par défaut. Au niveau
   //    « Ressources / Emplois », chaque nœud n'a qu'un poste, et c'est la filière qui peint.
@@ -604,14 +609,108 @@ function desagreger(sankey: Class_Sankey): number {
  */
 function appliquerPositionsManuelles(par_axe: Map<string, Type_MembreRepresente[]>): void {
   par_axe.forEach((entrees, axe_id) => entrees.forEach(entree => {
-    if (estAutres(entree)) return
-    // Un nœud d'une bande ET de sa dimension n'a pas de membre à lui seul où garder sa position.
-    if (entree.bande !== undefined && entree.bande !== entree.cle) return
-    const position = entree.membres[0]?.positionOn(axe_id)
+    const position = positionManuelle(entree, axe_id)
     if (position === undefined) return
     entree.noeud.setPosXY(position.x, position.y)
     entree.noeud.captureCenterFromCorner()
   }))
+}
+
+/** La position que l'auteur a donnée à la main au nœud de cette entrée, s'il y en a une. */
+function positionManuelle(entree: Type_MembreRepresente, axe_id: string): { x: number, y: number } | undefined {
+  if (estAutres(entree)) return undefined
+  // Un nœud d'une bande ET de sa dimension n'a pas de membre à lui seul où garder sa position.
+  if (entree.bande !== undefined && entree.bande !== entree.cle) return undefined
+  return entree.membres[0]?.positionOn(axe_id)
+}
+
+/**
+ * os#1511 — L'ÉCART DE DÉSAGRÉGATION ENTRE VOISINS D'UNE COLONNE, une fois les positions manuelles
+ * posées. Une position manuelle est un y absolu, relevé sur UN membre de la dimension voisine (la
+ * filière) : sur une autre, les hauteurs changent et un nœud qui n'existait pas apparaît (les
+ * importations de matière première, absentes des céréales) — d'où des nœuds collés ou chevauchants.
+ *
+ * Par axe, et dans un axe par COLONNE (des nœuds qui se recouvrent en x : un membre déplacé dans
+ * une autre colonne n'est plus le voisin des autres), de haut en bas. Le premier nœud placé à la
+ * main est l'ancre : les nœuds automatiques au-dessus de lui s'empilent vers le haut à partir de
+ * lui ; en dessous, chacun se pose à l'écart du précédent. Un nœud placé à la main ne remonte
+ * jamais, il ne descend que s'il chevauchait. Une colonne sans position manuelle garde la mise en
+ * page automatique, qui tient déjà l'écart. Les bandes ont leur propre rangement (`rangerEnBandes`).
+ */
+function tenirLesEcarts(sankey: Class_Sankey, par_axe: Map<string, Type_MembreRepresente[]>): void {
+  const ecart = sankey.drawing_area.disaggregation_gap_value
+  par_axe.forEach((entrees, axe_id) => {
+    if (entrees.some(entree => entree.bande !== undefined)) return
+    const manuels = new Set(entrees.filter(entree => positionManuelle(entree, axe_id) !== undefined).map(e => e.noeud))
+    if (manuels.size === 0) return
+    colonnes(entrees.map(entree => entree.noeud)).forEach(colonne => {
+      const ordre = [...colonne].sort((a, b) => a.position_y - b.position_y)
+      const ancre = ordre.findIndex(noeud => manuels.has(noeud))
+      if (ancre < 0) return
+      const poser = (noeud: Class_NodeElement, y: number) => {
+        if (Math.abs(noeud.position_y - y) < 0.5) return
+        noeud.position_y = y
+        noeud.captureCenterFromCorner()
+      }
+      // Seul un écart TROP PETIT se corrige : un voisin déjà loin reste où la mise en page l'a mis.
+      for (let i = ancre - 1; i >= 0; i--) {
+        const dessous = ordre[i + 1]
+        const noeud = ordre[i]
+        const y = dessous.position_y - ecart - noeud.getShapeHeightToUse()
+        if (noeud.position_y > y) poser(noeud, y)
+      }
+      for (let i = ancre + 1; i < ordre.length; i++) {
+        const dessus = ordre[i - 1]
+        const noeud = ordre[i]
+        const y = dessus.position_y + dessus.getShapeHeightToUse() + ecart
+        if (noeud.position_y < y) poser(noeud, y)
+      }
+    })
+  })
+}
+
+/** Les nœuds regroupés en colonnes : deux nœuds dont les étendues en x se recouvrent sont voisins. */
+function colonnes(noeuds: Class_NodeElement[]): Class_NodeElement[][] {
+  const groupes: { gauche: number, droite: number, noeuds: Class_NodeElement[] }[] = []
+  ;[...noeuds].sort((a, b) => a.position_x - b.position_x).forEach(noeud => {
+    const gauche = noeud.position_x
+    const droite = gauche + noeud.getShapeWidthToUse()
+    const groupe = groupes.find(g => gauche < g.droite && g.gauche < droite)
+    if (groupe === undefined) {
+      groupes.push({ gauche, droite, noeuds: [noeud] })
+      return
+    }
+    groupe.gauche = Math.min(groupe.gauche, gauche)
+    groupe.droite = Math.max(groupe.droite, droite)
+    groupe.noeuds.push(noeud)
+  })
+  return groupes.map(g => g.noeuds)
+}
+
+/**
+ * os#1511 — L'ORDRE DES FLUX SUIT LA GÉOMÉTRIE sur les nœuds que touche un flux engendré (Julien,
+ * 12/10 : « links_order n'est pas mis à jour, exportations matière première se retrouve au-dessus
+ * de transformation »). Les membres se posent où la mise en page et l'auteur les mettent, et ce
+ * lieu change d'un membre de la filière à l'autre : un ordre figé fait croiser les flux. Chaque flux
+ * se range à la hauteur du CENTRE de son autre bout ; à hauteur égale, l'ordre d'avant
+ * (`ordonnerFluxEngendres`, celui de l'auteur) départage.
+ */
+function ordonnerFluxSelonLaGeometrie(sankey: Class_Sankey): void {
+  const touches = new Set<Class_NodeElement>()
+  sankey.links_list.filter(isGeneratedMemberLink).forEach(lien => {
+    touches.add(lien.source as Class_NodeElement)
+    touches.add(lien.target as Class_NodeElement)
+  })
+  const centre = (noeud: Class_NodeElement) => noeud.position_y + noeud.getShapeHeightToUse() / 2
+  touches.forEach(noeud => {
+    const autreBout = (lien: Class_LinkElement) =>
+      centre((lien.source === noeud ? lien.target : lien.source) as Class_NodeElement)
+    const ordre = noeud.links_order
+      .map((lien, i) => ({ lien, i, y: autreBout(lien) }))
+      .sort((p, q) => (p.y - q.y) || (p.i - q.i))
+      .map(({ lien }) => lien.id)
+    noeud.applyLinksOrder(ordre)
+  })
 }
 
 /**
