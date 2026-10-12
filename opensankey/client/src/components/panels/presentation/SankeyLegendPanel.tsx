@@ -241,7 +241,14 @@ const PaintFlowsButton = ({ app_data, group_id }: { app_data: Class_ApplicationD
  * Le contenu de la colonne de légende du diagramme. L'hôte (grande zone de l'éditeur) le pose à
  * côté du dessin et lui réserve sa place ; vide quand la légende est masquée.
  */
-export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const SankeyLegendPanel = ({ app_data, gap_slider = true }: {
+  app_data: Class_ApplicationData
+  /**
+   * os#1511 (12/10) — l'écart vertical en tête du panneau. Faux quand l'hôte le pose lui-même dans
+   * le bloc de réglages de la colonne, avec Filtres et Affichage (`LegendGapSlider`).
+   */
+  gap_slider?: boolean
+}) => {
   const legend = app_data.drawing_area.legend
   const items = colouredLegendItems(app_data, useSankeyLegendItems(app_data))
   // Le FOND et le CADRE réglés pour la légende (menu Légende) : ceux du panneau.
@@ -258,7 +265,7 @@ export const SankeyLegendPanel = ({ app_data }: { app_data: Class_ApplicationDat
       borderRadius: legend.legend_bg_border ? '0.25rem' : undefined
     }}
   >
-    <GapSlider app_data={app_data} />
+    {gap_slider ? <LegendGapSlider app_data={app_data} /> : null}
     {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} />)}
   </div>
 }
@@ -282,7 +289,7 @@ export { colouredLegendItems }
  * SankeyMATIC (Julien, 07/10). Offert dès qu'une dimension se dessine en nœuds. Le dessin suit le
  * curseur ; un seul pas d'historique par geste, au relâcher.
  */
-const GapSlider = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const LegendGapSlider = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const da = app_data.drawing_area
   const [value, setValue] = React.useState(da.disaggregation_gap_value)
   const start = React.useRef<number | undefined>(undefined)
