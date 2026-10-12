@@ -77,7 +77,10 @@ const dimensionsDrawnAsNodes = (app_data: Class_ApplicationData): Class_DataTagG
     .map(node => node.driving_dimension)
     .filter((tagg): tagg is Class_DataTagGroup => tagg !== undefined))]
 
-type Type_Snapshot = { banner: string, carriers: string[], selected: string[], bands: boolean | undefined, focus: string[], hidden: string[] }
+type Type_Snapshot = {
+  banner: string, carriers: string[], selected: string[], bands: boolean | undefined, focus: string[], hidden: string[],
+  parked: string[]
+}
 
 const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Type_Snapshot => ({
   banner: (tagg as unknown as { banner: string }).banner,
@@ -85,7 +88,8 @@ const snapshot = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Ty
   selected: tagg.selected_tags_list.map(tag => tag.id),
   bands: tagg.member_bands,
   focus: tagg.stored_focus_ids,
-  hidden: tagg.stored_hidden_ids
+  hidden: tagg.stored_hidden_ids,
+  parked: tagg.parked_carrier_ids
 })
 
 /**
@@ -110,6 +114,7 @@ const restoreAll = (app_data: Class_ApplicationData, states: [Class_DataTagGroup
     tagg.member_bands = state.bands
     tagg.focus_ids = state.focus
     tagg.hidden_ids = state.hidden
+    tagg.parked_carrier_ids = state.parked
     dimensionCarrierCandidates(app_data).forEach(node => {
       if (!state.carriers.includes(node.id) && node.driving_dimension === tagg) node.setDrivingDimensionId(undefined)
     })
@@ -201,7 +206,9 @@ export const swapDimensionDrawings = (
       selected: !takes_nodes && readsOneMember(tagg, banner) ? own.selected.slice(0, 1) : own.selected,
       bands: other.bands,
       focus: own.focus,
-      hidden: own.hidden
+      hidden: own.hidden,
+      // Les porteurs passent à l'autre dimension : rien à mettre de côté.
+      parked: takes_nodes ? [] : own.parked
     }
   }
   const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(a, before_a, before_b)], [b, take(b, before_b, before_a)]]
@@ -337,8 +344,11 @@ export const applyDimensionBanner = (app_data: Class_ApplicationData, tagg: Clas
   const now = snapshot(app_data, tagg)
   const unique = readsOneMember(tagg, banner)
   // Une bannière quitte aussi le diagramme par membre : sous lui, tous les nœuds portent la dimension.
+  // Les porteurs quittés sont MIS DE CÔTÉ (Julien, 12/10) : en bandes, une colonne d'extrémité qui la
+  // portait s'efface (cf. `DimensionDisaggregation.foldBandedExtremities`) ; revenir en nœuds la rend.
   commit(app_data, tagg, {
-    ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected, bands: undefined
+    ...now, banner, carriers: [], selected: unique ? now.selected.slice(0, 1) : now.selected, bands: undefined,
+    parked: now.carriers.length > 0 ? now.carriers : now.parked
   })
 }
 
@@ -353,7 +363,7 @@ export const applyDimensionCarriers = (
   // Un nœud qui TRANSFORME la dimension ne se coche pas (cf. `carrierRefusal`) ; décocher, toujours.
   const now = snapshot(app_data, tagg)
   const carriers = node_ids.filter(id => now.carriers.includes(id) || carrierRefusal(app_data, tagg, id) === undefined)
-  commit(app_data, tagg, { ...now, carriers, bands: false })
+  commit(app_data, tagg, { ...now, carriers, bands: false, parked: carriers.length > 0 ? [] : now.parked })
 }
 
 /**
@@ -662,7 +672,7 @@ export const toggleDimensionCarrier = (
     ? now.carriers.filter(id => id !== node_id)
     : [...now.carriers, node_id]
   // Cocher un nœud dans « En nœuds » quitte le diagramme par membre (cf. `applyDimensionCarriers`).
-  commit(app_data, tagg, { ...now, carriers, bands: false })
+  commit(app_data, tagg, { ...now, carriers, bands: false, parked: carriers.length > 0 ? [] : now.parked })
 }
 
 /**
