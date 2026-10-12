@@ -87,6 +87,7 @@ import { document_type_registry, SANKEY_DOCUMENT_TYPE } from './DocumentTypeRegi
 import type { Type_DocumentType } from './DocumentTypeRegistry'
 import type { Class_DataTagGroup } from './TagGroup'
 import { playback } from './Playback'
+import type { Type_PlaybackSource } from './Playback'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -1871,16 +1872,24 @@ export class Class_ApplicationData {
   public armAutoplay(on_open: boolean = false): void {
     if (!this.is_main) return
     const drawing_area = this._drawing_area
-    const autoplayed = () => drawing_area.sankey.getTagGroupsAsList('data_taggs')
-      .map(group => group as Class_DataTagGroup)
-      .find(group => group.plays && group.playback?.autoplay === true)
-    if (on_open) this._autoplay_pending = autoplayed() !== undefined ? drawing_area : null
+    if (on_open) this._autoplay_pending = this.autoplaySource() !== null ? drawing_area : null
     if (this._autoplay_pending !== drawing_area) return
     playback.autoplay(() => {
       if (this._autoplay_pending !== drawing_area || this._drawing_area !== drawing_area) return null
       if (playback.status !== 'idle') return null
-      return autoplayed()?.playbackSource() ?? null
+      return this.autoplaySource()
     }, () => { if (this._autoplay_pending === drawing_area) this._autoplay_pending = null })
+  }
+
+  /**
+   * Ce que la lecture automatique lance : le sélecteur enregistré pendant sa lecture, `null` sans.
+   * sa#641 — OpenSankey+ y ajoute le diaporama des tableaux de bord.
+   */
+  protected autoplaySource(): Type_PlaybackSource | null {
+    const group = this._drawing_area.sankey.getTagGroupsAsList('data_taggs')
+      .map(group => group as Class_DataTagGroup)
+      .find(group => group.plays && group.playback?.autoplay === true)
+    return group?.playbackSource() ?? playback.registeredAutoplay(this)
   }
 
   /**
