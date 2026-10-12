@@ -33,6 +33,9 @@ import {
 } from '../types/Utils'
 import { Class_DataTagGroup } from './TagGroup'
 import {
+  copyPlaybackSettings, parsePlaybackSettings, playback, type Type_PlaybackSettings
+} from './Playback'
+import {
   Class_EventBus, HOST_TOPICS, MAIN_ZONE_TOPIC, PANE_PICKERS_TOPIC, SAVE_STATE_TOPIC, SELECTION_TOPIC
 } from './EventBus'
 import { Class_PanelManager, Type_PanelMode, Type_PopupGeometry } from './PanelManager'
@@ -427,7 +430,16 @@ export type Type_MainZoneReader = {
   nodes_label?: string
   /** sa#615 — le tri de la liste des nœuds du bandeau ; absent : l'ordre du diagramme. */
   nodes_sort?: Type_NodesSort
+  /**
+   * sa#640 — LA LECTURE DU SÉLECTEUR DE NŒUDS : les nœuds que le volet montre défilent un à un.
+   * Absente : la case « Lecture » est décochée. Mêmes réglages que la lecture d'une dimension
+   * (sa#639) ; `autoplay` dit si la lecture tournait quand le fichier a été enregistré.
+   */
+  playback?: Type_PlaybackSettings
 }
+
+/** sa#640 — ce qui identifie la lecture du volet `id` auprès du moteur (cf. `Class_Playback`). */
+export const mainZonePlaybackKey = (id: string): string => `main_zone_pane#${id}`
 
 /**
  * sa#615 — LE TRI DE LA LISTE DES NŒUDS DU BANDEAU : une colonne et un sens. `tagg` nomme la
@@ -524,6 +536,8 @@ const readMainZoneReader = (raw: unknown): Type_MainZoneReader | undefined => {
   if (typeof r['nodes_label'] === 'string' && r['nodes_label'].trim() !== '') reader.nodes_label = r['nodes_label']
   const nodes_sort = readNodesSort(r['nodes_sort'])
   if (nodes_sort) reader.nodes_sort = nodes_sort
+  const playback_read = parsePlaybackSettings(r['playback'])
+  if (playback_read) reader.playback = playback_read
   MAIN_ZONE_READER_GROUP_KEYS.forEach(key => {
     const list = ids(r[key])
     if (list) reader[key] = list
@@ -2475,6 +2489,7 @@ export class Class_MenuConfig {
     if (reader.nodes) next.nodes = true
     if (reader.nodes_label && reader.nodes_label.trim() !== '') next.nodes_label = reader.nodes_label
     if (reader.nodes_sort) next.nodes_sort = { ...reader.nodes_sort }
+    if (reader.playback) next.playback = copyPlaybackSettings(reader.playback)
     MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (reader[key]) next[key] = [...(reader[key] as string[])] })
     if (Object.keys(next).length > 0) o.reader = next
     else delete o.reader
@@ -4726,6 +4741,15 @@ export class Class_MenuConfig {
       if (o.reader.nodes) reader['nodes'] = true
       if (o.reader.nodes_label) reader['nodes_label'] = o.reader.nodes_label
       if (o.reader.nodes_sort) reader['nodes_sort'] = nodesSortToJSON(o.reader.nodes_sort)
+      // sa#640 — comme une dimension (sa#639) : un fichier enregistré pendant que la lecture tourne
+      // la relance à l'ouverture.
+      if (o.reader.playback) {
+        const key = mainZonePlaybackKey(o.id)
+        reader['playback'] = {
+          ...copyPlaybackSettings(o.reader.playback),
+          autoplay: playback.isSource(key) && playback.status === 'playing'
+        }
+      }
       MAIN_ZONE_READER_GROUP_KEYS.forEach(key => { if (o.reader?.[key]) reader[key] = [...(o.reader[key] as string[])] })
       if (Object.keys(reader).length > 0) entry['reader'] = reader
     }

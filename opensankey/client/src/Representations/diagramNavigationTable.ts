@@ -143,7 +143,13 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
   const control = dim.reader_control
   if (control === undefined) return undefined
   // Une traduction absente (i18n pas encore chargée) rend `null` : repli sur le français.
-  const t = (key: string, o: { [k: string]: unknown }, repli: string) => (app_data.t(key, o) as string | null) || repli
+  // Une traduction absente rend `null` (i18n pas chargée) ou LA CLÉ ELLE-MÊME (clé inconnue, sans
+  // `defaultValue`) : dans les deux cas, repli sur le français (« Banner.reader_distinguish » s'est
+  // affiché en ligne le 11/10).
+  const t = (key: string, o: { [k: string]: unknown }, repli: string) => {
+    const s = app_data.t(key, o) as string | null
+    return s && s !== key ? s : repli
+  }
   const label = control.label ?? dim.name
   const nom = (m: Class_DataTag) => levelShortName(m.display_name)
   const selection = dim.selected_tags_list as Class_DataTag[]
@@ -199,7 +205,9 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
   const niveau_suivant = levelShortName((dim.levels as string[])[(distingue ? dim.depthOf(distingue) : 0) + 1] ?? '')
   const bloque = readerToggleBlocker(app_data, dim)
   const sub_toggle = distingue === undefined || sous.length < 2 ? undefined : {
-    label: t('Banner.reader_distinguish', { name: pluralGroupName(niveau_suivant || 'sous-membre') },
+    label: t('Banner.reader_distinguish', {
+      name: pluralGroupName(niveau_suivant || 'sous-membre'), defaultValue: 'Distinguer les {{name}}'
+    },
       `Distinguer les ${pluralGroupName(niveau_suivant || 'sous-membre')}`),
     checked: parent_commun === distingue,
     frozen: bloque === undefined ? undefined : t('Banner.reader_toggle_frozen', {

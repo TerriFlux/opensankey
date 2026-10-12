@@ -94,10 +94,17 @@ const contributionsOf = (flows: Class_LinkElement[], membre: Class_DataTag): Cla
   })
 
 /**
- * DÉPLIE l'expansion d'un axe dont les nœuds du premier niveau existent déjà (`tops`, engendrés et
- * placés comme « en nœuds ») : pour chaque ouvert, ses enfants dans la colonne suivante vers
- * l'extérieur, empilés dans le créneau de leur parent, reliés à lui par un flux d'expansion qui
- * porte leur valeur sur les flux de l'axe. Rend les nœuds créés.
+ * DÉPLIE l'expansion d'un axe dont les nœuds du premier niveau existent déjà (`tops`, engendrés comme
+ * « en nœuds ») : pour chaque ouvert, ses enfants dans la colonne suivante vers l'extérieur, reliés à
+ * lui par un flux d'expansion qui porte leur valeur sur les flux de l'axe. `decorate` habille chaque
+ * nœud créé (le style d'extrémité de l'axe : nom à l'extérieur). Rend les nœuds créés.
+ *
+ * 11/10/2026 — LA MISE EN PAGE (Julien : « l'écart vertical doit s'appliquer aux nœuds en expansion
+ * et les nœuds parents doivent être placés au centre de leurs enfants ») : les FEUILLES de l'arbre
+ * (enfants dépliés, et membres non ouverts du premier niveau) s'empilent dans l'ordre de l'arbre avec
+ * l'écart de désagrégation (`disaggregation_gap_value`) ; chaque ouvert se centre ensuite sur le bloc
+ * de ses enfants, du plus profond vers l'axe ; le tout se recentre sur le créneau de l'axe. En
+ * « garder les positions », rien n'est réempilé.
  */
 export const unfoldExpansion = (
   sankey: Class_Sankey,
@@ -105,16 +112,22 @@ export const unfoldExpansion = (
   side: Type_ExpansionSide,
   tree: Type_ExpansionTree,
   topNodes: Map<Class_DataTag, Class_NodeElement>,
-  nameOf: (membre: Class_DataTag) => string
+  nameOf: (membre: Class_DataTag) => string,
+  decorate: (noeud: Class_NodeElement) => void = () => undefined
 ): Class_NodeElement[] => {
   const flows = flowsOf(side === 'right' ? axe.input_links_list : axe.output_links_list)
   const sign = side === 'right' ? 1 : -1
   // L'écart d'une colonne d'expansion : une fois et demie l'écart horizontal de l'axe, pour que le
-  // nom de l'ouvert, écrit du côté libre, ne recouvre pas ses enfants.
+  // nom d'un nœud, écrit à l'extérieur, ne recouvre pas la colonne suivante.
   const step = Math.max(120, (axe.shape_position_dx > 0 ? axe.shape_position_dx : 200) * 1.5)
   const created: Class_NodeElement[] = []
   const nodeOf = new Map(topNodes)
-  // Niveau par niveau, du premier vers l'extérieur : un parent est placé avant ses enfants.
+  const valueOf = new Map<Class_DataTag, number>()
+  // Les enfants d'un ouvert, du plus gros au plus petit (comme les membres « en nœuds »).
+  const kidsOf = (m: Class_DataTag): Class_DataTag[] =>
+    [...(tree.children.get(m) ?? [])].sort((a, b) => (valueOf.get(b) ?? 0) - (valueOf.get(a) ?? 0))
+
+  // 1) LES NŒUDS ET LES FLUX, niveau par niveau, du premier vers l'extérieur.
   let frontier = [...tree.tops]
   while (frontier.length > 0) {
     const next: Class_DataTag[] = []
@@ -122,19 +135,22 @@ export const unfoldExpansion = (
       const kids = tree.children.get(parent)
       const parent_node = nodeOf.get(parent)
       if (kids === undefined || parent_node === undefined) return
-      const kid_nodes = kids.map(kid => {
+      kids.forEach(kid => {
         const noeud = sankey.addNewNode(generatedId(axe.id, [kid.id]), nameOf(kid))
         noeud.copyAttrFrom(axe)
+        decorate(noeud)
         // La colonne VOISINE (comme l'expansion d'une hiérarchie, `Hierarchies.updateNodePositioning`) :
         // dans celle de l'axe, l'ouvert et ses enfants compteraient deux fois dans sa hauteur.
         noeud.position_u = parent_node.position_u + sign
         noeud.position_x = parent_node.position_x + sign * step
+        if (axe.drawing_area.effective_gap_mode === 'keep') noeud.setPosXY(noeud.position_x, parent_node.position_y)
         nodeOf.set(kid, noeud)
         created.push(noeud)
         // LES FLUX D'EXPANSION, un par flux de l'axe, du parent vers l'enfant (puits) ou de l'enfant
         // vers le parent (source). Leur identifiant nomme le flux d'ORIGINE, comme un flux engendré par
         // `repartir` : c'est sur lui que ses bandes se relisent (`Link.tagged_value_bands`), à la
         // coordonnée de ses bouts — l'enfant (le parent, son ancêtre, ne s'y ajoute pas).
+        let total = 0
         flows.forEach(flux => {
           const contributions = contributionsOf([flux], kid)
           if (contributions.length === 0) return
@@ -145,24 +161,57 @@ export const unfoldExpansion = (
           lien.copyAttrFrom(flux)
           const valeur = lien.value
           if (valeur !== null) {
-            valeur.valueData = contributions.reduce((total, v) => total + (v.valueData ?? 0), 0)
+            valeur.valueData = contributions.reduce((t, v) => t + (v.valueData ?? 0), 0)
             if (contributions.some(v => v.valueResult !== null)) {
-              valeur.valueResult = contributions.reduce((total, v) => total + (v.readLayer(false) ?? 0), 0)
+              valeur.valueResult = contributions.reduce((t, v) => t + (v.readLayer(false) ?? 0), 0)
             }
+            total += valeur.valueData ?? 0
           }
         })
-        return noeud
+        valueOf.set(kid, total)
       })
-      // Empilés dans le créneau du parent, comme les enfants d'une expansion de hiérarchie.
-      if (axe.drawing_area.effective_gap_mode !== 'keep') {
-        axe.drawing_area.nodePositioning.layoutChildrenInParentSlot(
-          kid_nodes, parent_node.position_y, parent_node.getShapeHeightToUse())
-      } else {
-        kid_nodes.forEach(n => n.setPosXY(parent_node.position_x + sign * step, parent_node.position_y))
-      }
       next.push(...kids)
     })
     frontier = next
   }
+  if (axe.drawing_area.effective_gap_mode === 'keep') return created
+
+  // 2) LES FEUILLES, empilées dans l'ordre de l'arbre avec l'écart de désagrégation.
+  const tops = tree.tops.map(m => nodeOf.get(m)).filter((n): n is Class_NodeElement => n !== undefined)
+  if (tops.length === 0) return created
+  const old_top = Math.min(...tops.map(n => n.position_y))
+  const old_bottom = Math.max(...tops.map(n => n.position_y + n.getShapeHeightToUse()))
+  const gap = axe.drawing_area.disaggregation_gap_value
+  let cursor = 0
+  const place = (m: Class_DataTag): { top: number, bottom: number } | null => {
+    const n = nodeOf.get(m)
+    if (n === undefined) return null
+    const kids = kidsOf(m)
+    const h = n.getShapeHeightToUse()
+    if (kids.length === 0) {
+      const top = cursor
+      n.position_y = top
+      cursor += h + gap
+      return { top, bottom: top + h }
+    }
+    // 3) L'OUVERT, au centre du bloc de ses enfants.
+    const spans = kids.map(place).filter((s): s is { top: number, bottom: number } => s !== null)
+    const top = Math.min(...spans.map(s => s.top))
+    const bottom = Math.max(...spans.map(s => s.bottom))
+    n.position_y = (top + bottom) / 2 - h / 2
+    return { top: Math.min(top, n.position_y), bottom: Math.max(bottom, n.position_y + h) }
+  }
+  const spans = tree.tops.map(place).filter((s): s is { top: number, bottom: number } => s !== null)
+  // 4) LE BLOC, recentré sur le créneau que le premier niveau occupait.
+  const block_top = Math.min(...spans.map(s => s.top))
+  const block_bottom = Math.max(...spans.map(s => s.bottom))
+  const delta = (old_top + old_bottom) / 2 - (block_top + block_bottom) / 2
+  ;[...tops, ...created].forEach(n => {
+    n.position_y += delta
+    n.captureCenterFromCorner()
+  })
+  // L'ORDRE DES FLUX sur chaque nœud suit la hauteur de leur autre bout (comme après l'expansion d'une
+  // hiérarchie, `Hierarchies.disaggregationExpansion`) : sans lui, les flux d'expansion se croisaient.
+  axe.drawing_area.reorganizeIOLinksOf(new Set([...tops, ...created]))
   return created
 }

@@ -109,8 +109,11 @@ export function removeGeneratedMemberNodes(sankey: Class_Sankey): number {
   //
   // Les axes d'aujourd'hui s'y ajoutent : au tout premier tour, rien n'a encore été engendré,
   // donc `a_rendre` est vide et c'est `is_driven_by_dimension` qui porte la liste.
+  // Les colonnes d'extrémité effacées au tour précédent (`foldBandedExtremities`) aussi : la règle
+  // se rejoue à chaque tour, et la dimension a pu quitter les bandes entre-temps.
+  const mis_de_cote = new Set((sankey.data_taggs_list as Class_DataTagGroup[]).flatMap(d => d.parked_carrier_ids))
   sankey.nodes_list
-    .filter(node => a_rendre.has(node.id) || node.is_driven_by_dimension)
+    .filter(node => a_rendre.has(node.id) || node.is_driven_by_dimension || mis_de_cote.has(node.id))
     .forEach(axe => {
       axe.setVisible()
       ;[...axe.input_links_list, ...axe.output_links_list].forEach(flux => flux.setVisible())
@@ -259,6 +262,51 @@ export function generatedOriginOf(
  * il n'y aurait rien à montrer, et le vider serait pire que le laisser.
  */
 export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
+  const engendres = desagreger(sankey)
+  foldBandedExtremities(sankey)
+  return engendres
+}
+
+/**
+ * os#1511 — UNE COLONNE D'EXTRÉMITÉ DONT LA DIMENSION EST EN BANDES S'EFFACE (Julien, 12/10 : « on a
+ * 3 dimensions et 3 colonnes ; si une des dimensions est en bandes, une des colonnes devrait
+ * disparaître — là, Marchés utilisateurs n'est pas utile »).
+ *
+ * Un nœud qui portait la dimension avant son passage en bandes (`parked_carrier_ids`) n'est plus qu'un
+ * nœud seul : ses membres se lisent déjà en bandes sur les autres flux, qui portent le même cube. S'il
+ * est à une EXTRÉMITÉ (aucun flux d'un côté), il s'efface avec ses flux. Arbitrages de Julien :
+ *  - extrémités seulement, comme l'expansion (lot 5b) : effacer un nœud du milieu obligerait à fusionner
+ *    ses flux entrant et sortant, ce qui ne vaut que si les deux portent le même cube ;
+ *  - jamais si le diagramme se vide : SOCLE, « Ressources et emplois » pilote les deux bouts, et ses
+ *    deux colonnes effacées ne laisseraient plus aucun flux.
+ * Masqués, pas supprimés : le fichier les garde, et revenir en nœuds les rend (`removeGeneratedMemberNodes`).
+ * Rend le nombre de nœuds effacés.
+ */
+export function foldBandedExtremities(sankey: Class_Sankey): number {
+  const a_masquer = new Set<Class_NodeElement>()
+  ;(sankey.data_taggs_list as Class_DataTagGroup[]).forEach(dimension => {
+    if (!dimension.draws_bands) return
+    dimension.parked_carrier_ids.forEach(id => {
+      const noeud = sankey.nodes_dict[id]
+      if (noeud === undefined || isGeneratedMemberNode(noeud) || noeud.is_driven_by_dimension || !noeud.is_visible) return
+      const reels = (flux: Class_LinkElement[]) => flux.filter(lien => !isGeneratedMemberLink(lien)).length
+      const entrees = reels(noeud.input_links_list)
+      const sorties = reels(noeud.output_links_list)
+      if (entrees + sorties === 0 || (entrees > 0 && sorties > 0)) return
+      a_masquer.add(noeud)
+    })
+  })
+  if (a_masquer.size === 0) return 0
+  // Leurs flux, engendrés compris (un axe voisin désagrégé y accroche les siens).
+  const flux_masques = new Set<Class_LinkElement>()
+  a_masquer.forEach(noeud => [...noeud.input_links_list, ...noeud.output_links_list].forEach(flux => flux_masques.add(flux)))
+  if (!sankey.links_list.some(flux => flux.is_visible && !flux_masques.has(flux))) return 0
+  a_masquer.forEach(noeud => noeud.setInvisible())
+  flux_masques.forEach(flux => flux.setInvisible())
+  return a_masquer.size
+}
+
+function desagreger(sankey: Class_Sankey): number {
   removeGeneratedMemberNodes(sankey)
 
   // Garde n°2, au PORTILLON : on ne prend que les nœuds d'axe, et jamais un engendré (un
@@ -501,17 +549,19 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
       centrerSurAxe(noeuds, creneau)
     })
   }
-  // 3 bis) CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page.
-  appliquerPositionsManuelles(par_axe)
-  // 3 bis') os#1511 (lot 5) — LES EXPANSIONS, une fois le premier niveau à sa place (déplacé à la
-  //    main compris) : les enfants de chaque ouvert s'empilent dans son créneau, vers l'extérieur.
+  // 3 bis) os#1511 (lot 5) — LES EXPANSIONS : les enfants de chaque ouvert vers l'extérieur ; les feuilles
+  //    s'empilent avec l'écart de désagrégation et chaque ouvert se centre sur ses enfants (Julien,
+  //    11/10). Les nœuds dépliés prennent le style d'extrémité de l'axe : nom à l'extérieur.
   plans.forEach(({ axe, dimension, expansion }) => {
     if (expansion === undefined) return
     const tops = new Map<Class_DataTag, Class_NodeElement>()
     ;(par_axe.get(axe.id) ?? []).forEach(entree => { if (entree.membres.length === 1) tops.set(entree.membres[0], entree.noeud) })
     unfoldExpansion(sankey, axe, expansion.side, expansion.tree, tops,
-      membre => ambigues.has(dimension) ? `${axe.name} - ${membre.name}` : membre.name)
+      membre => ambigues.has(dimension) ? `${axe.name} - ${membre.name}` : membre.name,
+      noeud => heriterExtremite(sankey, axe, noeud))
   })
+  // 3 ter') CE QUE L'AUTEUR A DÉPLACÉ À LA MAIN L'EMPORTE, après toute mise en page (expansions comprises).
+  appliquerPositionsManuelles(par_axe)
   // 3 quater) QUELLES DIMENSIONS DÉCOUPENT VRAIMENT un nœud (deux entrées au moins d'un même axe,
   //    dans une même bande) : seules celles-là peuvent peindre les flux par défaut. Au niveau
   //    « Ressources / Emplois », chaque nœud n'a qu'un poste, et c'est la filière qui peint.
