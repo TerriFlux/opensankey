@@ -90,8 +90,11 @@ export interface Type_PlaybackSource {
    * montre (un clic dans le sélecteur, une annulation) : la lecture s'arrête et ce choix reste.
    */
   begin(takeover: () => void): void
-  /** Montre un pas, de façon synchrone. */
-  show(step: string): void
+  /**
+   * Montre un pas. Synchrone, ou une promesse tenue quand le pas est en place (sa#641 : un tableau
+   * de bord, dont les volets se dessinent après la bascule) — le délai court depuis le début du pas.
+   */
+  show(step: string): void | Promise<void>
   /** La lecture finit : `restore` = revenir au choix de l'utilisateur (sinon il vient d'en faire un). */
   end(restore: boolean): void
   /** La source existe-t-elle encore ? (un autre fichier a pu être ouvert entre deux pas) */
@@ -321,11 +324,11 @@ export class Class_Playback {
     }
     this._index = next
     const started = this._clock.now()
-    source.show(this._order[next])
+    const shown = source.show(this._order[next])
     // `show` a pu faire sortir de lecture (le dessin a changé la sélection d'une autre façon).
     if (this._source !== source || generation !== this._generation) return
     this.notify()
-    this._clock.afterPaint(() => {
+    const schedule = () => this._clock.afterPaint(() => {
       if (generation !== this._generation || this._status !== 'playing') return
       const delay_ms = source.settings().delay * 1000
       const wait = Math.max(0, delay_ms - (this._clock.now() - started))
@@ -335,6 +338,9 @@ export class Class_Playback {
         this.step()
       }, wait)
     })
+    // sa#641 — un pas qui se met en place en plusieurs temps : le suivant attend qu'il y soit.
+    if (shown) void shown.then(() => { if (generation === this._generation) schedule() }, () => this.stop())
+    else schedule()
   }
 
   private finish(restore: boolean): void {
