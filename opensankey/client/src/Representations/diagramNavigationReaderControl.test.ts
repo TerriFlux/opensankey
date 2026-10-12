@@ -143,4 +143,34 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     copie.fromJSON(json as never)
     expect(copie.reader_control).toEqual(filiere.reader_control)
   })
+
+  test('en colonne, annee et unite d abord, en bloc a part ; peu d annees : des pastilles', async () => {
+    // Julien, 12/10 : l annee quitte la frise, au-dessus de la filiere avec l unite, en pastilles.
+    const { app, filiere, matiere } = monter()
+    const sankey = app.drawing_area.sankey
+    const annee = sankey.addDataTagGroup('annee', 'Année', false) as Class_DataTagGroup
+    ;['2015', '2019', '2023'].forEach(a => annee.addTag(a, a))
+    ;(annee.tags_dict['2023'] as Class_DataTag).setSelected()
+    annee.banner = 'one'
+    const unite = sankey.addDataTagGroup('unite', 'Unité', false) as Class_DataTagGroup
+    ;['kt', 'pj', 'kt_ms', 'kt_mp', 'kt_mg', 'kt_ca'].forEach(u => unite.addTag(u, u))
+    ;(unite.tags_dict['kt'] as Class_DataTag).setSelected()
+    unite.banner = 'one'
+    const box = buildDiagramNavigationTable(app, [filiere, annee, unite, matiere], { memory_key: 'essai', vertical: true })
+    const blocs = [...box.querySelectorAll('.figure_navigation_column_dimension')] as HTMLElement[]
+    expect(blocs[0].textContent).toContain('Année')
+    expect(blocs[1].textContent).toContain('Unité')
+    expect(blocs[2].textContent).toContain('Filière')
+    // La fin du contexte se marque plus fort que les autres separations.
+    expect(blocs[2].style.borderTop).toContain('2px')
+    expect(blocs[1].style.borderTop).toContain('1px')
+    // Trois annees : des pastilles ; six unites : une liste.
+    const pastilles = [...blocs[0].querySelectorAll('[role=radio]')] as HTMLElement[]
+    expect(pastilles.map(p => p.textContent)).toEqual(['2015', '2019', '2023'])
+    expect(pastilles.map(p => p.getAttribute('aria-checked'))).toEqual(['false', 'false', 'true'])
+    expect(blocs[1].querySelector('select')).not.toBeNull()
+    pastilles[0].click()
+    await attendre()
+    expect(annee.selected_tags_list.map(m => m.id)).toEqual(['2015'])
+  })
 })

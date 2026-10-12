@@ -98,6 +98,11 @@ export interface Type_FigureNavDimension {
    * case, une liste de niveaux ou un choix de membres (cf. `types/ReaderControl`).
    */
   control?: Type_FigureNavControl
+  /**
+   * os#1511 (Julien, 12/10) — UNE DIMENSION DE CONTEXTE (année, unité) : où et en quoi on lit, pas
+   * ce qu'on découpe. En colonne, ces dimensions forment le premier bloc, séparé des autres.
+   */
+  context?: boolean
 }
 
 /** Une option de liste. */
@@ -111,7 +116,11 @@ export type Type_FigureNavControl =
     frozen?: string,
     set: (on: boolean) => void
   }
-  | { kind: 'level', label: string, options: Type_FigureNavOption[], value: string, set: (value: string) => void }
+  | {
+    kind: 'level', label: string, options: Type_FigureNavOption[], value: string, set: (value: string) => void,
+    /** Peu d'options (les trois années) : des pastilles côte à côte plutôt qu'une liste. */
+    pills?: boolean
+  }
   | {
     kind: 'pick', label: string, options: Type_FigureNavOption[], chosen: string[],
     /** Plusieurs membres à la fois (un diagramme par membre) : la case et son libellé. */
@@ -529,8 +538,11 @@ const buildVerticalRows = (model: Type_FigureNavTable): HTMLElement => {
     const block = document.createElement('div')
     block.className = 'figure_navigation_column_dimension'
     if (i > 0) {
-      block.style.borderTop = `1px solid ${ui_line}`
+      // Le passage du bloc de contexte (année, unité) aux dimensions qu'on découpe se marque plus fort.
+      const fin_du_contexte = model.dimensions[i - 1].context === true && dim.context !== true
+      block.style.borderTop = fin_du_contexte ? `2px solid ${ui_line_strong}` : `1px solid ${ui_line}`
       block.style.paddingTop = '0.3rem'
+      if (fin_du_contexte) block.style.marginTop = '0.3rem'
     }
     list.appendChild(block)
     if (dim.control) {
@@ -764,6 +776,36 @@ const dropdown = (options: Type_FigureNavOption[], value: string, set: (value: s
   return select
 }
 
+/**
+ * os#1511 (Julien, 12/10) — DES PASTILLES À CHOIX UNIQUE, côte à côte, la choisie pleine : le
+ * sélecteur des trois années de la frise, gardé quand il y a peu d'options.
+ */
+const pills = (options: Type_FigureNavOption[], value: string, set: (value: string) => void): HTMLElement => {
+  const group = document.createElement('div')
+  group.className = 'figure_navigation_pills'
+  group.setAttribute('role', 'radiogroup')
+  group.style.display = 'inline-flex'
+  group.style.flexWrap = 'wrap'
+  options.forEach((o, i) => {
+    const chosen = o.value === value
+    const b = plainButton(o.label, o.label)
+    b.setAttribute('role', 'radio')
+    b.setAttribute('aria-checked', String(chosen))
+    b.style.padding = '0.05rem 0.5rem'
+    b.style.border = `1px solid ${chosen ? ACCENT : ui_line_strong}`
+    if (i > 0) b.style.marginLeft = '-1px'
+    b.style.borderRadius = i === 0 ? '3px 0 0 3px' : i === options.length - 1 ? '0 3px 3px 0' : '0'
+    b.style.background = chosen ? ACCENT : 'white'
+    b.style.color = chosen ? 'white' : ui_ink_secondary
+    b.style.fontWeight = chosen ? '700' : '400'
+    b.style.position = 'relative'
+    if (chosen) b.style.zIndex = '1'
+    keepClick(b, () => { if (!chosen) set(o.value) })
+    group.appendChild(b)
+  })
+  return group
+}
+
 /** Un libellé gras de commande. */
 const controlLabel = (text: string): HTMLSpanElement => {
   const span = document.createElement('span')
@@ -817,7 +859,9 @@ const fillControlCell = (model: Type_FigureNavTable, cell: HTMLElement, dim_id: 
   }
   row.appendChild(controlLabel(control.label))
   if (control.kind === 'level') {
-    row.appendChild(fit(dropdown(control.options, control.value, control.set)))
+    row.appendChild(control.pills === true
+      ? pills(control.options, control.value, control.set)
+      : fit(dropdown(control.options, control.value, control.set)))
     return
   }
   if (control.multi && control.pick) {

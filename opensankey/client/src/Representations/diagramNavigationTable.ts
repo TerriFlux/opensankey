@@ -82,7 +82,13 @@ export const navigationShownDimensions = (
 const isFlatSingleChoice = (dim: Class_DataTagGroup): boolean =>
   !dim.is_hierarchical && dim.banner === 'one' && dim.drawing !== 'nodes' && !dim.plays
 
-/** os#1511 — LA LISTE d'une dimension plate à choix unique, en colonne. */
+/**
+ * os#1511 (Julien, 12/10) — AU-DELÀ, une liste : les trois années de la frise se lisent d'un coup
+ * d'œil en pastilles, les 43 unités non.
+ */
+const PILLS_MAX = 5
+
+/** os#1511 — LA LISTE d'une dimension plate à choix unique, en colonne ; ses PASTILLES s'il y a peu de membres. */
 const flatChoiceControl = (app_data: Class_ApplicationData, dim: Class_DataTagGroup): Type_FigureNavControl => {
   const chosen = (dim.selected_tags_list as Class_DataTag[])[0]
   return {
@@ -90,9 +96,21 @@ const flatChoiceControl = (app_data: Class_ApplicationData, dim: Class_DataTagGr
     label: dim.reader_control?.label ?? dim.name,
     options: (dim.tags_list as Class_DataTag[]).map(m => ({ value: m.id, label: levelShortName(m.display_name) })),
     value: chosen?.id ?? '',
-    set: (id: string) => app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, [id], { multi: false, focus: [] }))
+    set: (id: string) => app_data.runHeavyGesture(() => applyDimensionCut(app_data, dim, [id], { multi: false, focus: [] })),
+    pills: dim.tags_list.length <= PILLS_MAX
   }
 }
+
+/**
+ * os#1511 (Julien, 12/10) — EN COLONNE, LE CONTEXTE D'ABORD : les dimensions plates à choix unique
+ * (année, unité) disent où et en quoi on lit ; elles passent au-dessus de celles qu'on découpe
+ * (filière, matière, postes), dans leur ordre. Les autres gardent le leur.
+ */
+const contextFirst = (dims: Class_DataTagGroup[]): Class_DataTagGroup[] =>
+  [...dims.filter(isContextDimension), ...dims.filter(dim => !isContextDimension(dim))]
+
+const isContextDimension = (dim: Class_DataTagGroup): boolean =>
+  isFlatSingleChoice(dim) && dim.reader_control === undefined
 
 /**
  * 07/10/2026 — LA PORTÉE QUE DIT LE TABLEAU (zoom partagé avec les fenêtres liées) : le zoom le plus
@@ -236,13 +254,16 @@ const readerControlOf = (app_data: Class_ApplicationData, dim: Class_DataTagGrou
 
 /** Le tableau des dimensions `dims` du diagramme. */
 export const buildDiagramNavigationTable = (
-  app_data: Class_ApplicationData, dims: Class_DataTagGroup[], options: Type_DiagramNavigationOptions
+  app_data: Class_ApplicationData, given_dims: Class_DataTagGroup[], options: Type_DiagramNavigationOptions
 ): HTMLElement => {
   const t = app_data.t
+  const dims = options.vertical === true ? contextFirst(given_dims) : given_dims
   const dimensions: Type_FigureNavDimension[] = dims.map(dim => {
     const control = readerControlOf(app_data, dim) ??
       (options.vertical === true && isFlatSingleChoice(dim) ? flatChoiceControl(app_data, dim) : undefined)
-    if (control !== undefined) return { id: dim.id, name: dim.name, levels: [], control }
+    if (control !== undefined) {
+      return { id: dim.id, name: dim.name, levels: [], control, context: options.vertical === true && isContextDimension(dim) }
+    }
     const coupe = lireCoupe(dim, dim.selected_tags_list as Class_DataTag[])
     const levels = (dim.levels as string[]).map((raw, depth) => ({ raw, depth })).filter(l => l.depth >= coupe.entree)
     return {
