@@ -23,6 +23,7 @@ export const resources_rationalisation = {
         nav_undetail: 'Detailed by {{level}} — click again to stop detailing',
         reader_all: 'All',
         reader_several: 'Select several',
+        reader_distinguish: 'Distinguish the {{name}}',
         reader_toggle_frozen: 'Unavailable: several members of « {{name}} » are overlaid',
         title_selection: 'Selection of {{name}}'
       },
@@ -113,6 +114,7 @@ export const resources_rationalisation = {
         nav_undetail: 'Détaillé par {{level}} — recliquer pour ne plus détailler',
         reader_all: 'Toutes',
         reader_several: 'Sélectionner plusieurs',
+        reader_distinguish: 'Distinguer les {{name}}',
         reader_toggle_frozen: 'Indisponible : plusieurs membres de « {{name}} » sont superposés',
         title_selection: 'Sélection de {{name}}'
       },
@@ -203,6 +205,7 @@ export const resources_rationalisation = {
         nav_undetail: 'Detallado por {{level}}: vuelva a hacer clic para dejar de detallar',
         reader_all: 'Todas',
         reader_several: 'Seleccionar varios',
+        reader_distinguish: 'Distinguir los {{name}}',
         reader_toggle_frozen: 'No disponible: varios miembros de « {{name}} » están superpuestos',
         title_selection: 'Selección de {{name}}'
       },
@@ -293,6 +296,7 @@ export const resources_rationalisation = {
         nav_undetail: 'Nach {{level}} aufgeschlüsselt — erneut klicken, um die Aufschlüsselung aufzuheben',
         reader_all: 'Alle',
         reader_several: 'Mehrere auswählen',
+        reader_distinguish: '{{name}} unterscheiden',
         reader_toggle_frozen: 'Nicht verfügbar: mehrere Mitglieder von « {{name}} » sind überlagert',
         title_selection: 'Auswahl von {{name}}'
       },
@@ -383,6 +387,7 @@ export const resources_rationalisation = {
         nav_undetail: 'Dettagliato per {{level}}: fare di nuovo clic per non dettagliare più',
         reader_all: 'Tutte',
         reader_several: 'Selezionare più membri',
+        reader_distinguish: 'Distinguere i {{name}}',
         reader_toggle_frozen: 'Non disponibile: più membri di « {{name}} » sono sovrapposti',
         title_selection: 'Selezione di {{name}}'
       },
@@ -473,6 +478,7 @@ export const resources_rationalisation = {
         nav_undetail: '已按 {{level}} 细分——再次单击取消细分',
         reader_all: '全部',
         reader_several: '选择多个',
+        reader_distinguish: '区分{{name}}',
         reader_toggle_frozen: '不可用：« {{name}} » 的多个成员相互叠加',
         title_selection: '{{name}} 的选择'
       },
@@ -563,6 +569,7 @@ export const resources_rationalisation = {
         nav_undetail: '{{level}} で詳細表示中 — もう一度クリックで解除',
         reader_all: 'すべて',
         reader_several: '複数選択',
+        reader_distinguish: '{{name}}を区別',
         reader_toggle_frozen: '利用不可：« {{name}} » の複数のメンバーが重なっています',
         title_selection: '{{name}} の選択'
       },
