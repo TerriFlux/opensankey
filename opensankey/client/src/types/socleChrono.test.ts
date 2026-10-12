@@ -54,7 +54,11 @@ maybe('os#1511 — chrono du SOCLE a deux flux', () => {
     // eslint-disable-next-line no-console
     console.log(`  noeuds engendres : ${engendres}   flux : ${sankey.links_list.length}`)
 
-    chrono('toJSON', () => app.toJSON())
+    // os#1528 — l enregistrement : ce qu il ecrit et ce qu il laisse en memoire (out of memory au
+    // Ctrl+S sur les synthetiques transfo quand il construisait le cube pour l ecrire).
+    const texte = chrono('toJSON + stringify', () => JSON.stringify(app.toJSON()))
+    // eslint-disable-next-line no-console
+    console.log(`  JSON ecrit : ${(texte.length / 1e6).toFixed(1)} Mo   tas : ${(process.memoryUsage().heapUsed / 1e6).toFixed(0)} Mo`)
     expect(sankey.nodes_list.length).toBeGreaterThan(0)
   }, 900000)
 })

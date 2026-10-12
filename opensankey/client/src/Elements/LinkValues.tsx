@@ -114,6 +114,65 @@ export class Class_ElementValueTree {
     return this._lazy !== null && this._lazy.json === null && !this._lazy.absent
   }
 
+  /**
+   * os#1528 — lue mais jamais ouverte : la branche attend son JSON et peut répondre sans se
+   * construire (cf. `_pendingSome`, `_pendingToJSON`). Pas quand une absence (#188) est à
+   * propager : l'absence porte sur les étiquettes que le JSON ne cite PAS, il faut alors construire.
+   */
+  private get _pending(): Type_LazyBranch | null {
+    const lazy = this._lazy
+    return lazy !== null && lazy.json !== null && !lazy.absent && !lazy.mark_missing_as_absent ? lazy : null
+  }
+
+  /**
+   * os#1528 — une feuille du JSON en attente satisfait-elle `test` ? Chaque feuille est lue dans une
+   * valeur JETABLE, puis oubliée : la mémoire reste celle d'une valeur, pas celle du cube. Le JSON
+   * en attente ne pose ni étiquette ni valeur coordonnée (`jsonNeedsEagerRead`) : le lire ne
+   * s'inscrit nulle part.
+   */
+  private _pendingSome(lazy: Type_LazyBranch, test: (value: Class_ElementValue) => boolean): boolean {
+    const walk = (json: Type_JSON, group: Class_DataTagGroup, below: Class_DataTagGroup[]): boolean => {
+      const [next, ...rest] = below
+      return group.tags_list.some(tag => {
+        const sub = json[tag.id]
+        if (sub === null || typeof sub !== 'object') return false
+        if (next !== undefined) return walk(sub as Type_JSON, next, rest)
+        const value = this.createValue(this)
+        value.fromJSON(sub as Type_JSON, lazy.matching_taggs_id, lazy.matching_tags_id)
+        return test(value)
+      })
+    }
+    return walk(lazy.json as Type_JSON, this.data_tag_group, lazy.below)
+  }
+
+  /**
+   * os#1528 — écrit le JSON en attente SANS construire la branche. Construire pour écrire, c'était
+   * reconstruire tout le cube à chaque enregistrement (SOCLE synthétiques transfo, 8 flux de
+   * 680 000 cases : « out of memory » dans Firefox). Chaque feuille passe par une valeur jetable,
+   * lue puis écrite : le texte est celui qu'écrit la valeur, pas celui du fichier lu, ce qui garde
+   * le point fixe de l'aller-retour (#230) — réécrire le JSON brut le cassait. Seules les étiquettes
+   * citées s'écrivent : relue, une étiquette absente donne une valeur vierge.
+   */
+  private _pendingToJSON(lazy: Type_LazyBranch, kwargs?: Type_JSON): Type_JSON {
+    const write = (json: Type_JSON, group: Class_DataTagGroup, below: Class_DataTagGroup[]): Type_JSON => {
+      const json_object: Type_JSON = { datatag_group: group.id }
+      const [next, ...rest] = below
+      group.tags_list.forEach(tag => {
+        const sub = json[tag.id]
+        if (sub === null || typeof sub !== 'object') return
+        if (next !== undefined) {
+          json_object[tag.id] = write(sub as Type_JSON, next, rest)
+          return
+        }
+        const value = this.createValue(this)
+        value.fromJSON(sub as Type_JSON, lazy.matching_taggs_id, lazy.matching_tags_id)
+        json_object[tag.id] = value.toJSON(kwargs)
+      })
+      return json_object
+    }
+    return write(lazy.json as Type_JSON, this.data_tag_group, lazy.below)
+  }
+
   /** os#1528 — construit la branche : un enfant par membre, puis ce qu'elle avait reçu. */
   private _build() {
     const lazy = this._lazy as Type_LazyBranch
@@ -219,6 +278,8 @@ export class Class_ElementValueTree {
   public get has_result() {
     // os#1528 — une branche vierge non construite n'a ni donnée ni résultat : rien à construire.
     if (this._is_blank_unbuilt) return false
+    const pending = this._pending
+    if (pending !== null) return this._pendingSome(pending, value => value.has_result)
     let has_result = false
     Object.values(this.children)
       .forEach(child => {
@@ -229,6 +290,8 @@ export class Class_ElementValueTree {
 
   public get has_intervals() {
     if (this._is_blank_unbuilt) return false
+    const pending = this._pending
+    if (pending !== null) return this._pendingSome(pending, value => value.has_intervals)
     let has_intervals = false
     Object.values(this.children)
       .forEach(child => {
@@ -239,6 +302,8 @@ export class Class_ElementValueTree {
 
   public get has_data() {
     if (this._is_blank_unbuilt) return false
+    const pending = this._pending
+    if (pending !== null) return this._pendingSome(pending, value => value.has_data)
     let has_data = false
     Object.values(this.children)
       .forEach(child => {
@@ -249,6 +314,8 @@ export class Class_ElementValueTree {
 
   public get has_collected_data(): boolean {
     if (this._is_blank_unbuilt) return false
+    const pending = this._pending
+    if (pending !== null) return this._pendingSome(pending, value => value.has_collected_data)
     return Object.values(this.children).some(child => child.has_collected_data)
   }
 
@@ -280,9 +347,9 @@ export class Class_ElementValueTree {
     // os#1528 — une branche vierge non construite ne s'écrit pas feuille par feuille : relue, une
     // étiquette absente du JSON donne une valeur vierge, exactement ce qu'elle porte.
     if (this._is_blank_unbuilt) return json_object
-    // Une branche lue mais jamais ouverte se construit pour s'écrire : réécrire son JSON tel quel
-    // casserait le point fixe de l'aller-retour (#230), le texte relu n'étant pas celui qu'écrit
-    // une branche construite. Seules les branches à données se construisent ainsi.
+    // Une branche lue mais jamais ouverte s'écrit depuis son JSON, sans se construire.
+    const pending = this._pending
+    if (pending !== null) return this._pendingToJSON(pending, kwargs)
     Object.entries(this.children)
       .forEach(([id, child]) => {
         json_object[id] = child.toJSON(kwargs)
