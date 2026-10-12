@@ -31,7 +31,9 @@ import React from 'react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_LegendItem } from '../../../Elements/legendItems'
 import { colouredLegendItems } from '../../../Elements/legendColumn'
-import { openPresentationFor } from './openPresentation'
+import {
+  matchesPresentationTrigger, openPresentationFor, schedulePresentationHover, schedulePresentationHoverClose
+} from './openPresentation'
 import { legendTitlePresentable } from './legendGroupPresentation'
 import { isLegendDimensionZoneId, openLegendDimensionChoice } from './legendDimensionChoice'
 import { ZOOM_TOPIC } from '../../../types/EventBus'
@@ -107,7 +109,14 @@ const LegendRow = ({ app_data, item }: {
   const unchecked = toggles && !checked
   const is_title = legend.tagGroupIdOfTitle(item.id) !== undefined
   const is_dimension_choice = item.dimension_choice === true && isLegendDimensionZoneId(item.id)
-  const clickable = toggles || is_title || is_dimension_choice
+  // #542 — LA DÉFINITION D'UNE ENTRÉE se lit dans l'info-bulle de présentation (bloc INFOS, qui lit
+  // le `tooltip_text` de la zone), au survol nu comme sur la légende dessinée. La zone existe aussi en
+  // colonne (masquée, cf. `legend.in_panel`) ; sans elle, on retombe sur l'info-bulle du navigateur.
+  const zone = item.description
+    ? app_data.drawing_area.sankey.containers_dict[item.id] as unknown as Parameters<typeof openPresentationFor>[1] | undefined
+    : undefined
+  const shows_definition = zone !== undefined && !is_title && !is_dimension_choice
+  const clickable = toggles || is_title || is_dimension_choice || shows_definition
   const name_format = item.format?.name
   const text = textOf(item)
 
@@ -124,7 +133,9 @@ const LegendRow = ({ app_data, item }: {
       if (title !== undefined) openPresentationFor(app_data, title, anchor)
       return
     }
-    if (is_dimension_choice) openLegendDimensionChoice(app_data, item.id, anchor)
+    if (is_dimension_choice) { openLegendDimensionChoice(app_data, item.id, anchor); return }
+    // #542 — entrée non cochable qui porte une définition : le clic la pose en pop-up.
+    if (shows_definition) openPresentationFor(app_data, zone, anchor)
   }
   const onClick = (evt: React.MouseEvent) => {
     if (editing || !clickable) return
@@ -163,7 +174,7 @@ const LegendRow = ({ app_data, item }: {
   return <div
     className='sankey_legend_panel_row'
     data-legend-id={item.id}
-    title={item.description || undefined}
+    title={zone === undefined ? (item.description || undefined) : undefined}
     role={toggles ? 'menuitemcheckbox' : undefined}
     aria-checked={toggles ? checked : undefined}
     style={{
@@ -175,8 +186,20 @@ const LegendRow = ({ app_data, item }: {
       cursor: clickable ? 'pointer' : 'default',
       background: hover && clickable ? HOVER_BG : undefined
     }}
-    onMouseEnter={() => { setHover(true); if (!item.heading) legend.highlightEntry(item.id) }}
-    onMouseLeave={() => { setHover(false); legend.clearHighlight() }}
+    onMouseEnter={evt => {
+      setHover(true)
+      if (!item.heading) legend.highlightEntry(item.id)
+      if (zone !== undefined && !editing && matchesPresentationTrigger(zone, evt)) {
+        // À droite de la ligne : l'info-bulle ne recouvre pas la colonne qu'on parcourt.
+        const rect = evt.currentTarget.getBoundingClientRect()
+        schedulePresentationHover(app_data, zone, { x: rect.right, y: rect.top })
+      }
+    }}
+    onMouseLeave={() => {
+      setHover(false)
+      legend.clearHighlight()
+      if (zone !== undefined) schedulePresentationHoverClose(app_data)
+    }}
     onClick={onClick}
     onDoubleClick={evt => {
       if (!legend.canRenameEntry(item.id)) return

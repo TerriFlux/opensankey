@@ -332,6 +332,8 @@ export const legendSwatch = (
   const border = fmt?.border_visible === true
   const dashed = fmt?.border_dashed === true || fmt?.link_dashed === true
   const hatch = fmt?.hatch !== undefined && fmt.hatch !== 'none' ? HATCH_ANGLE[fmt.hatch] : undefined
+  // SA#551 — opacité sans couleur : un damier sous le carré dit « transparence », pas « gris ».
+  const checker = !unchecked && fmt?.opacity !== undefined && fmt.color === undefined
   const ink = unchecked ? LEGEND_UNCHECKED_INK : ui_ink
   const unit = h / 14
   const pattern_id = options.pattern_id ?? 'legend_hatch'
@@ -339,6 +341,15 @@ export const legendSwatch = (
     w, h,
     svg: (x, y) => {
       const parts: string[] = []
+      if (checker) {
+        const cell = num(3.5 * unit)
+        const checker_id = `${pattern_id}_checker`
+        parts.push(`<defs><pattern id="${checker_id}" width="${num(7 * unit)}" height="${num(7 * unit)}" patternUnits="userSpaceOnUse">` +
+          `<rect width="${num(7 * unit)}" height="${num(7 * unit)}" fill="#ffffff"/>` +
+          `<rect width="${cell}" height="${cell}" fill="#c8c8c8"/>` +
+          `<rect x="${cell}" y="${cell}" width="${cell}" height="${cell}" fill="#c8c8c8"/></pattern></defs>`)
+        parts.push(`<rect x="${num(x + 0.5 * unit)}" y="${num(y + 0.5 * unit)}" width="${num(w - unit)}" height="${num(h - unit)}" rx="${num(2 * unit)}" fill="url(#${checker_id})"/>`)
+      }
       if (hatch !== undefined) {
         parts.push(`<defs><pattern id="${pattern_id}" width="${num(3 * unit)}" height="${num(3 * unit)}" patternUnits="userSpaceOnUse" patternTransform="rotate(${hatch})">` +
           `<rect width="${num(3 * unit)}" height="${num(3 * unit)}" fill="${esc(color ?? 'none')}"/>` +

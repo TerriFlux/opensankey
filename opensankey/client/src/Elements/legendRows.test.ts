@@ -140,4 +140,12 @@ describe('os#1527 — le rendu commun', () => {
     expect(dashed).toContain('viewBox="0 0 28 14"')
     expect(legendSwatchMarkup(undefined)).toBe('')
   })
+
+  test('SA#551 : opacite sans couleur = damier sous le carre, pas avec une couleur', () => {
+    const transparent = legendSwatchMarkup({ color: '#123456', format: { swatch: { opacity: 0.3 } } }, { pattern_id: 'p' })
+    expect(transparent).toContain('fill="url(#p_checker)"')
+    expect(transparent.indexOf('url(#p_checker)')).toBeLessThan(transparent.indexOf('fill-opacity="0.3"'))
+    const coloured = legendSwatchMarkup({ color: '#123456', format: { swatch: { opacity: 0.3, color: '#ff0000' } } })
+    expect(coloured).not.toContain('_checker')
+  })
 })
