@@ -20,7 +20,7 @@ import {
 // SA#553 — valeurs par défaut de l'étiquette générée (même règle que la cascade)
 import { untaggedDefaultsStyle } from './tagStyles'
 import { OTHERS_COLOR, OTHERS_ID } from '../Algorithms/DimensionOthers'
-import { lireCoupe, listeDuZoom } from '../Algorithms/DimensionTableCut'
+import { sankeyTableOf } from '../Representations/sankeyTable'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_DataTag } from '../types/Tag'
 // os#1511 — retrait et ordre de l'arbre, partagés avec la légende des figures
@@ -492,17 +492,18 @@ function hideOverriddenLegendEntries(items: Type_LegendItem[], sankey: Type_Sank
 
 /**
  * os#1526 — LES MEMBRES PROPOSÉS EN CASES par la légende d'une dimension à niveaux : ceux du niveau
- * montré sous les zooms du tableau (`listeDuZoom` de la colonne). `null` : pas une vraie dimension
- * hiérarchisée (maquette), ou une coupe mixte, ou la racine seule — la légende garde alors les seuls
- * membres choisis.
+ * montré sous les zooms du tableau (la liste de la colonne, lue comme le tableau du diagramme la lit,
+ * `sankeyTableOf` du modèle commun). `null` : pas une vraie dimension hiérarchisée (maquette), ou une
+ * coupe mixte, ou la racine seule — la légende garde alors les seuls membres choisis.
  */
 function offeredDimensionMembers(group: Type_TagGroupForLegend): Set<Type_TagForLegend> | null {
   const real = group as unknown as Class_DataTagGroup
   if (typeof real.membersAtLevel !== 'function' || typeof real.depthOf !== 'function') return null
   if (!(group.tags_list ?? []).some(tag => tag.parent !== undefined)) return null
-  const coupe = lireCoupe(real, real.selected_tags_list as Class_DataTag[])
-  if (coupe.mixte || coupe.colonnes.length !== 1) return null
-  return new Set(listeDuZoom(real, coupe, coupe.colonnes[0]).membres as unknown as Type_TagForLegend[])
+  const table = sankeyTableOf(real, { shown: (real.selected_tags_list as Class_DataTag[]).map(m => m.id), hidden: [] })
+  if (table.mixed || table.depths.length !== 1) return null
+  const offered = table.levels.find(l => l.depth === table.depths[0])?.offered ?? []
+  return new Set(offered.map(id => real.tags_dict[id]) as unknown as Type_TagForLegend[])
 }
 
 /**

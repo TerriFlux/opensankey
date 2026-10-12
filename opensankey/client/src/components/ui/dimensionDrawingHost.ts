@@ -30,6 +30,12 @@ import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
 import { nodeTransformsDimension } from '../../Algorithms/DimensionTransform'
 import { expansionSideOf } from '../../Algorithms/DimensionExpansion'
+import {
+  diagramExpansion, diagramReaderLevel, diagramReaderPick, diagramReaderSeveral, diagramReaderSubDistinguish,
+  diagramReaderSubPick, diagramReaderToggle, fromDiagram, isEmptyDiagramPatch, readerBlockerOf, readerRootsOf, swapInOrder,
+  toDiagramPatch
+} from '../../Representations/dimensionViewState'
+import type { Type_DiagramPatch, Type_DimensionViewState, Type_ViewSankey } from '../../Representations/dimensionViewState'
 
 export type { Type_DimensionDrawing } from '../../types/TagGroup'
 
@@ -157,79 +163,89 @@ const setNodesPlacement = (tagg: Class_DataTagGroup, placement: Type_NodesPlacem
   tagg.reference_node_id = placement.reference_node_id
 }
 
-/** L'ordre des dimensions où `a` et `b` ont échangé leur place (les autres ne bougent pas). */
-const orderWithSwapped = (order: string[], a: string, b: string): string[] =>
-  order.map(id => id === a ? b : id === b ? a : id)
+// ── 11/10/2026 — LA PORTE DU MODÈLE COMMUN ──────────────────────────────────────────────────────────
+
+const viewSankeyOf = (app_data: Class_ApplicationData): Type_ViewSankey =>
+  app_data.drawing_area.sankey as unknown as Type_ViewSankey
 
 /**
- * os#1526 — ⇅ DANS LE TABLEAU DU DIAGRAMME : les deux dimensions ÉCHANGENT LEUR DESSIN (Julien,
- * 06/10 : « si l'une est en bandes et l'autre en nœuds, on inverse avec la double flèche »). C'est
- * le sens de l'ordre des dimensions sur un diagramme : il n'y a pas d'imbrication à réordonner,
- * seulement quelle dimension découpe les flux en bandes et laquelle découpe les nœuds.
- *
- * Le dessin échangé est TOUT le dessin, pour que le résultat soit celui qu'on aurait obtenu en
- * posant la configuration directement :
- *  - la bannière et les nœuds porteurs. Une dimension en nœuds n'a pas de bannière qui compte
- *    (`drawing` = 'nodes' dès qu'un nœud la porte) : celle qui prend les nœuds garde donc la sienne
- *    et TOUS ses membres choisis — lui passer la bannière « un membre » de l'autre la réduisait au
- *    premier membre, et le diagramme se vidait ;
- *  - le PLACEMENT des nœuds (`member_bands` : un diagramme par membre ou l'écart des enfants,
- *    `reference_node_id`) : resté sur l'ancienne dimension, « nœuds à écart constant » devenait,
- *    sur la nouvelle, des bandes par membre automatiques ;
- *  - les positions manuelles : celle qui arrive sur les porteurs est placée AUTOMATIQUEMENT. Ses
- *    membres peuvent porter des positions d'un autre dessin (position commune d'un ancien fichier,
- *    « [SOCLE] Pays partenaires » : les filières, toutes empilées à x = 955 au milieu du
- *    diagramme) ; c'est la règle de « Placer », qui efface aussi les positions manuelles.
- *  - leur PLACE dans l'ordre des dimensions (Julien, 08/10 : avec trois dimensions, ▲ sur « Type de
- *    matière » lui donnait les nœuds de « Filière » mais le tableau ne bougeait pas) : la ligne suit
- *    son dessin, comme la liste d'une couronne suit l'ordre de ses anneaux.
- * Un seul pas d'historique, un seul dessin ; l'annulation rend tout.
+ * 11/10/2026 (os#1511) — POSER UN PATCH DU MODÈLE COMMUN (`toDiagramPatch`) : LA PORTE par laquelle
+ * le tableau du diagramme, ⇅ et les commandes du lecteur écrivent. Les dimensions touchées prennent
+ * leur nouvel état (bannière, porteurs, sélection, portée, décochés, placement des nœuds, expansion),
+ * les lignes leur nouvel ordre, les positions manuelles s'effacent là où le patch demande le placement
+ * automatique ; puis UN redécoupage et UN dessin. Un seul pas d'historique, l'annulation rend tout.
+ * Un patch vide n'écrit rien.
+ */
+export const applyDiagramPatch = (app_data: Class_ApplicationData, patch: Type_DiagramPatch) => {
+  if (isEmptyDiagramPatch(patch)) return
+  const sankey = app_data.drawing_area.sankey
+  const taggs = Object.keys(patch.dims)
+    .map(id => sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup | undefined)
+    .filter((t): t is Class_DataTagGroup => t !== undefined)
+  const before = taggs.map(t => [t, snapshot(app_data, t)] as [Class_DataTagGroup, Type_Snapshot])
+  const after = before.map(([t, s]) => {
+    const p = patch.dims[t.id]
+    return [t, {
+      banner: p.banner ?? s.banner,
+      carriers: p.carriers ?? s.carriers,
+      selected: p.selected ?? s.selected,
+      bands: 'member_bands' in p ? p.member_bands : s.bands,
+      focus: p.focus ?? s.focus,
+      hidden: p.hidden ?? s.hidden,
+      parked: p.parked ?? s.parked
+    }] as [Class_DataTagGroup, Type_Snapshot]
+  })
+  const placements = taggs.map(t => [t, nodesPlacementOf(t), t.nodes_expansion] as [Class_DataTagGroup, Type_NodesPlacement, boolean])
+  const auto = taggs.filter(t => patch.dims[t.id].auto_place === true)
+  const positions_before = manualPositionsOf(auto)
+  const order_before = [...sankey.getTagGroupsOrder('data_taggs')]
+  app_data.history.saveUndo(() => {
+    placements.forEach(([t, placement, expansion]) => {
+      setNodesPlacement(t, placement)
+      if (t.nodes_expansion !== expansion) t.nodes_expansion = expansion
+    })
+    setManualPositions(auto, positions_before)
+    if (patch.order !== undefined) sankey.setTagGroupsOrder('data_taggs', [...order_before])
+    restoreAll(app_data, before)
+  })
+  const redo = () => {
+    if (patch.order !== undefined) sankey.setTagGroupsOrder('data_taggs', [...patch.order])
+    taggs.forEach(t => {
+      const p = patch.dims[t.id]
+      if ('member_bands' in p) t.member_bands = p.member_bands
+      if ('reference_node_id' in p) t.reference_node_id = p.reference_node_id
+      if (p.expansion !== undefined) t.nodes_expansion = p.expansion
+    })
+    setManualPositions(auto, undefined)
+    restoreAll(app_data, after)
+  }
+  app_data.history.saveRedo(redo)
+  redo()
+}
+
+/** Un geste du modèle commun sur le diagramme : l'état lu, transformé, écrit par `applyDiagramPatch`. */
+export const applyDiagramGesture = (
+  app_data: Class_ApplicationData,
+  gesture: (state: Type_DimensionViewState, sankey: Type_ViewSankey) => Type_DimensionViewState
+) => {
+  const sankey = viewSankeyOf(app_data)
+  applyDiagramPatch(app_data, toDiagramPatch(gesture(fromDiagram(sankey), sankey), sankey))
+}
+
+/**
+ * os#1526 — ⇅ DANS LE TABLEAU DU DIAGRAMME (Julien, 06/10 : « si l'une est en bandes et l'autre en
+ * nœuds, on inverse avec la double flèche »). 11/10/2026 — c'est L'ORDRE DU MODÈLE COMMUN
+ * (`swapInOrder`) : sur le diagramme, le dessin est attaché à la place, les deux dimensions échangent
+ * donc TOUT leur dessin (bannière et porteurs, placement des nœuds, placement automatique de celle qui
+ * arrive sur des porteurs — « [SOCLE] Pays partenaires » : les filières n'y restent pas empilées à
+ * x = 955) et leurs LIGNES (Julien, 08/10 : la ligne suit son dessin). Celle qui prend les nœuds garde
+ * sa bannière et TOUS ses membres. Un seul pas d'historique, un seul dessin.
  */
 export const swapDimensionDrawings = (
   app_data: Class_ApplicationData, a: Class_DataTagGroup, b: Class_DataTagGroup
 ) => {
   if (a === b) return
-  const sankey = app_data.drawing_area.sankey
-  const order_before = [...sankey.getTagGroupsOrder('data_taggs')]
-  const order_after = orderWithSwapped(order_before, a.id, b.id)
-  const before_a = snapshot(app_data, a)
-  const before_b = snapshot(app_data, b)
-  const placement_a = nodesPlacementOf(a)
-  const placement_b = nodesPlacementOf(b)
-  const positions_before = manualPositionsOf([a, b])
-  const take = (tagg: Class_DataTagGroup, own: Type_Snapshot, other: Type_Snapshot): Type_Snapshot => {
-    const takes_nodes = other.carriers.length > 0
-    const banner = takes_nodes ? own.banner : other.banner
-    return {
-      banner,
-      carriers: other.carriers,
-      selected: !takes_nodes && readsOneMember(tagg, banner) ? own.selected.slice(0, 1) : own.selected,
-      bands: other.bands,
-      focus: own.focus,
-      hidden: own.hidden,
-      // Les porteurs passent à l'autre dimension : rien à mettre de côté.
-      parked: takes_nodes ? [] : own.parked
-    }
-  }
-  const after: [Class_DataTagGroup, Type_Snapshot][] = [[a, take(a, before_a, before_b)], [b, take(b, before_b, before_a)]]
-  // Les dimensions qui arrivent sur des porteurs : placement automatique.
-  const arriving = [a, b].filter((_tagg, i) => [before_b, before_a][i].carriers.length > 0)
-  app_data.history.saveUndo(() => {
-    setNodesPlacement(a, placement_a)
-    setNodesPlacement(b, placement_b)
-    setManualPositions([a, b], positions_before)
-    sankey.setTagGroupsOrder('data_taggs', [...order_before])
-    restoreAll(app_data, [[a, before_a], [b, before_b]])
-  })
-  const redo = () => {
-    sankey.setTagGroupsOrder('data_taggs', [...order_after])
-    setNodesPlacement(a, placement_b)
-    setNodesPlacement(b, placement_a)
-    setManualPositions(arriving, undefined)
-    restoreAll(app_data, after)
-  }
-  app_data.history.saveRedo(redo)
-  redo()
+  applyDiagramGesture(app_data, (state, sankey) => swapInOrder(state, sankey, a.id, b.id))
 }
 
 /** Pose un état et l'inscrit dans l'historique, avec l'état d'avant pour l'annuler. */
@@ -505,20 +521,12 @@ export const dimensionOffersExpansion = (app_data: Class_ApplicationData, tagg: 
 
 /**
  * os#1511 (lot 5) — EN NŒUDS, L'EXPANSION AUX EXTRÉMITÉS (cf. `DimensionExpansion`) : les membres
- * ouverts gardent leur nœud, leurs enfants s'ouvrent vers l'extérieur. Annulable.
+ * ouverts gardent leur nœud, leurs enfants s'ouvrent vers l'extérieur. Annulable. 14/10/2026 — un
+ * geste du modèle commun (`diagramExpansion`), posé par la porte `applyDiagramPatch` : le menu de la
+ * dimension et la couronne liée qui passe en sunburst (`couronneGestures.setDrawing`) écrivent par là.
  */
-export const applyNodesExpansion = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
-  const before = tagg.nodes_expansion
-  const apply = (value: boolean) => {
-    tagg.nodes_expansion = value
-    app_data.drawing_area.rebuildDimensionNodes()
-    app_data.drawing_area.draw()
-    app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
-  }
-  app_data.history.saveUndo(() => apply(before))
-  app_data.history.saveRedo(() => apply(on))
-  apply(on)
-}
+export const applyNodesExpansion = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) =>
+  applyDiagramGesture(app_data, (state, sankey) => diagramExpansion(state, sankey, tagg.id, on))
 
 /**
  * os#1511 — LES MEMBRES DE CETTE DIMENSION COLORENT LES FLUX d'un diagramme par membre, au lieu de
@@ -589,20 +597,14 @@ export const inOneHistoryStep = (
 //
 // Une case « Distinguer… », une liste de niveaux, une liste de membres avec « Sélectionner
 // plusieurs » (cf. `Class_DataTagGroup.reader_control`). Le tableau du diagramme les MONTRE
-// (`diagramNavigationTable`) ; leurs règles vivent ici, en gestes nommés, chacun UN pas d'historique.
+// (`diagramNavigationTable`) ; 11/10/2026 — leurs règles sont des gestes du MODÈLE COMMUN
+// (`diagramReader*`), posés ici par la porte `applyDiagramPatch` : chacun UN pas d'historique.
 
 /** Les membres du premier niveau dont descend la sélection de `tagg` (eux-mêmes s'ils en sont). */
-export const readerChosenRoots = (tagg: Class_DataTagGroup): string[] => [...new Set(
-  (tagg.selected_tags_list as Class_DataTag[]).map(m => {
-    let r = m
-    while (r.parent !== undefined) r = r.parent
-    return r.id
-  }))]
-
-/** Les AUTRES dimensions qui superposent plusieurs membres en bandes (pas un diagramme par membre). */
-const otherBandedDimensions = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_DataTagGroup[] =>
-  (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]).filter(other =>
-    other !== tagg && other.member_bands !== true && other.drawing === 'multi' && other.selected_tags_list.length > 1)
+export const readerChosenRoots = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): string[] => {
+  const d = fromDiagram(viewSankeyOf(app_data)).dims[tagg.id]
+  return d === undefined ? [] : readerRootsOf(tagg, d)
+}
 
 /**
  * Une AUTRE dimension superpose-t-elle plusieurs membres en bandes, SANS que le lecteur puisse la
@@ -611,53 +613,30 @@ const otherBandedDimensions = (app_data: Class_ApplicationData, tagg: Class_Data
  *
  * os#1511 (Jean-Yves, 14/10 : « on doit d'abord désélectionner types de matières ou sous-filières
  * avant de pouvoir sélectionner l'alternative ») — une dimension qui A une commande ne gèle plus :
- * cocher l'autre case la ramène à un seul membre dans le même pas (`releaseOtherBands`).
+ * cocher l'autre case la ramène à un seul membre dans le même pas (`releaseOtherBands` du modèle).
  */
-export const readerToggleBlocker = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_DataTagGroup | undefined =>
-  otherBandedDimensions(app_data, tagg).find(other => other.reader_control === undefined)
-
-/**
- * os#1511 (14/10) — LES CASES « DISTINGUER… » S'EXCLUENT D'ELLES-MÊMES : avant de superposer les
- * membres de `tagg`, chaque autre dimension superposée qui a une commande revient à un membre — une
- * case se décoche (premier niveau), un choix de sous-membres revient à leur membre de tête.
- */
-const releaseOtherBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup) => {
-  // Les superposées, et toute autre case « Distinguer… » cochée (la règle d'avant, quel que soit
-  // le dessin de sa dimension).
-  const cochees = (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-    .filter(other => other !== tagg && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
-  ;[...new Set([...otherBandedDimensions(app_data, tagg), ...cochees])].forEach(other => {
-    const kind = other.reader_control?.kind
-    if (kind === 'toggle') applyReaderToggle(app_data, other, false)
-    else if (kind === 'level') applyReaderLevel(app_data, other, 0)
-    else if (kind === 'pick') applyReaderPick(app_data, other, readerChosenRoots(other).slice(0, 1))
-  })
+export const readerToggleBlocker = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_DataTagGroup | undefined => {
+  const sankey = viewSankeyOf(app_data)
+  const id = readerBlockerOf(fromDiagram(sankey), sankey, tagg.id)
+  return id === undefined ? undefined : app_data.drawing_area.sankey.data_taggs_dict[id] as unknown as Class_DataTagGroup
 }
 
 /** Le lecteur choisit des membres : choix multiple dès plusieurs, sans portée. */
 export const applyReaderPick = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[]) => {
   if (ids.length === 0) return
-  applyDimensionCut(app_data, tagg, ids, { multi: ids.length > 1, focus: [] })
+  applyDiagramGesture(app_data, (state, sankey) => diagramReaderPick(state, sankey, tagg.id, ids))
 }
 
 /** Le lecteur choisit un NIVEAU entier (liste de niveaux). */
 export const applyReaderLevel = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, depth: number) =>
-  applyReaderPick(app_data, tagg, tagg.membersAtLevel(depth).map(m => m.id))
+  applyDiagramGesture(app_data, (state, sankey) => diagramReaderLevel(state, sankey, tagg.id, depth))
 
 /**
  * La case « Distinguer… » : cochée, le deuxième niveau ; décochée, le premier. Cochée, elle libère
- * d'abord les autres dimensions superposées (`releaseOtherBands`), dans le même pas.
+ * d'abord les autres dimensions superposées, dans le même pas (`diagramReaderToggle`).
  */
-export const applyReaderToggle = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean): void => {
-  if (!on) {
-    applyReaderLevel(app_data, tagg, 0)
-    return
-  }
-  inOneHistoryStep(app_data.history, () => {
-    releaseOtherBands(app_data, tagg)
-    applyReaderLevel(app_data, tagg, 1)
-  })
-}
+export const applyReaderToggle = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean): void =>
+  applyDiagramGesture(app_data, (state, sankey) => diagramReaderToggle(state, sankey, tagg.id, on))
 
 /**
  * Le lecteur choisit des SOUS-MEMBRES de `root` : aucun ou tous, c'est `root` ; plusieurs, ils se
@@ -666,19 +645,7 @@ export const applyReaderToggle = (app_data: Class_ApplicationData, tagg: Class_D
  */
 export const applyReaderSubPick = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, root: Class_DataTag, ids: string[]
-) => {
-  if (ids.length === 0 || ids.length === tagg.childrenOf(root).length) {
-    applyReaderPick(app_data, tagg, [root.id])
-    return
-  }
-  inOneHistoryStep(app_data.history, () => {
-    applyReaderPick(app_data, tagg, ids)
-    if (ids.length < 2) return
-    ;(app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-      .filter(other => other !== tagg && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
-      .forEach(other => applyReaderToggle(app_data, other, false))
-  })
-}
+) => applyDiagramGesture(app_data, (state, sankey) => diagramReaderSubPick(state, sankey, tagg.id, root.id, ids))
 
 /**
  * os#1511 (Jean-Yves, 11/10) — « DISTINGUER LES SOUS-FILIÈRES » : cochée, les sous-membres de `root`
@@ -687,34 +654,14 @@ export const applyReaderSubPick = (
  */
 export const applyReaderSubDistinguish = (
   app_data: Class_ApplicationData, tagg: Class_DataTagGroup, root: Class_DataTag, on: boolean
-) => {
-  const children = tagg.childrenOf(root)
-  if (!on || children.length < 2) {
-    applyReaderPick(app_data, tagg, [root.id])
-    return
-  }
-  inOneHistoryStep(app_data.history, () => {
-    releaseOtherBands(app_data, tagg)
-    applyReaderPick(app_data, tagg, children.map(c => c.id))
-  })
-}
+) => applyDiagramGesture(app_data, (state, sankey) => diagramReaderSubDistinguish(state, sankey, tagg.id, root.id, on))
 
 /**
  * « Sélectionner plusieurs » : cochée, un diagramme par membre sur les membres choisis — de
  * n'importe quel niveau, mélangés (Jean-Yves, 11/10) ; décochée, un seul diagramme, sur le premier. Un pas.
  */
-export const applyReaderSeveral = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) => {
-  const chosen = (tagg.selected_tags_list as Class_DataTag[]).map(m => m.id)
-  inOneHistoryStep(app_data.history, () => {
-    if (on) {
-      applyReaderPick(app_data, tagg, chosen)
-      applyMemberBands(app_data, tagg, true)
-    } else {
-      applyMemberBands(app_data, tagg, false)
-      applyReaderPick(app_data, tagg, chosen.slice(0, 1))
-    }
-  })
-}
+export const applyReaderSeveral = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) =>
+  applyDiagramGesture(app_data, (state, sankey) => diagramReaderSeveral(state, sankey, tagg.id, on))
 
 /** Coche ou décoche un nœud porteur : c'est ce qui désagrège ce nœud selon la dimension. */
 export const toggleDimensionCarrier = (
