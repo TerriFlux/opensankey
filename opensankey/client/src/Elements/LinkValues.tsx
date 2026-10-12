@@ -68,6 +68,11 @@ type Type_LazyBranch = {
   mark_missing_as_absent: boolean
   /** `markStructurallyAbsent` reçue avant la construction. */
   absent: boolean
+  /**
+   * Réponses déjà calculées sur le JSON en attente (`has_result`…). Ce JSON ne change pas tant que
+   * la branche n'est pas construite (toute écriture la construit, et ce sac part avec `_lazy`).
+   */
+  answers?: { [question: string]: boolean }
 }
 
 /**
@@ -130,7 +135,15 @@ export class Class_ElementValueTree {
    * en attente ne pose ni étiquette ni valeur coordonnée (`jsonNeedsEagerRead`) : le lire ne
    * s'inscrit nulle part.
    */
-  private _pendingSome(lazy: Type_LazyBranch, test: (value: Class_ElementValue) => boolean): boolean {
+  private _pendingSome(
+    lazy: Type_LazyBranch, question: string, test: (value: Class_ElementValue) => boolean
+  ): boolean {
+    // La carte « Coordonnées » pose `has_result` / `has_intervals` à CHAQUE rendu, sur tous les
+    // flux : sans données réconciliées la réponse est non, et il fallait relire tout le cube
+    // (SOCLE synthétiques transfo, ~5 millions de cases) à chaque geste dans l'éditeur de groupe.
+    const answers = lazy.answers ?? (lazy.answers = {})
+    const known = answers[question]
+    if (known !== undefined) return known
     const walk = (json: Type_JSON, group: Class_DataTagGroup, below: Class_DataTagGroup[]): boolean => {
       const [next, ...rest] = below
       return group.tags_list.some(tag => {
@@ -142,7 +155,7 @@ export class Class_ElementValueTree {
         return test(value)
       })
     }
-    return walk(lazy.json as Type_JSON, this.data_tag_group, lazy.below)
+    return (answers[question] = walk(lazy.json as Type_JSON, this.data_tag_group, lazy.below))
   }
 
   /**
@@ -279,7 +292,7 @@ export class Class_ElementValueTree {
     // os#1528 — une branche vierge non construite n'a ni donnée ni résultat : rien à construire.
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
-    if (pending !== null) return this._pendingSome(pending, value => value.has_result)
+    if (pending !== null) return this._pendingSome(pending, 'has_result', value => value.has_result)
     let has_result = false
     Object.values(this.children)
       .forEach(child => {
@@ -291,7 +304,7 @@ export class Class_ElementValueTree {
   public get has_intervals() {
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
-    if (pending !== null) return this._pendingSome(pending, value => value.has_intervals)
+    if (pending !== null) return this._pendingSome(pending, 'has_intervals', value => value.has_intervals)
     let has_intervals = false
     Object.values(this.children)
       .forEach(child => {
@@ -303,7 +316,7 @@ export class Class_ElementValueTree {
   public get has_data() {
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
-    if (pending !== null) return this._pendingSome(pending, value => value.has_data)
+    if (pending !== null) return this._pendingSome(pending, 'has_data', value => value.has_data)
     let has_data = false
     Object.values(this.children)
       .forEach(child => {
@@ -315,7 +328,7 @@ export class Class_ElementValueTree {
   public get has_collected_data(): boolean {
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
-    if (pending !== null) return this._pendingSome(pending, value => value.has_collected_data)
+    if (pending !== null) return this._pendingSome(pending, 'has_collected_data', value => value.has_collected_data)
     return Object.values(this.children).some(child => child.has_collected_data)
   }
 

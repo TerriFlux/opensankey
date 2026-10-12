@@ -54,6 +54,11 @@ maybe('os#1511 — chrono du SOCLE a deux flux', () => {
     // eslint-disable-next-line no-console
     console.log(`  noeuds engendres : ${engendres}   flux : ${sankey.links_list.length}`)
 
+    // os#1528 — la question que la carte Coordonnees pose a chaque rendu (Toolbar, has_data_type).
+    const question = () => sankey.links_list.some(l => l.has_result || l.has_intervals)
+    chrono('has_result || has_intervals, 1er rendu', question)
+    chrono('has_result || has_intervals, rendu suivant', question)
+
     // os#1528 — l enregistrement : ce qu il ecrit et ce qu il laisse en memoire (out of memory au
     // Ctrl+S sur les synthetiques transfo quand il construisait le cube pour l ecrire).
     const texte = chrono('toJSON + stringify', () => JSON.stringify(app.toJSON()))

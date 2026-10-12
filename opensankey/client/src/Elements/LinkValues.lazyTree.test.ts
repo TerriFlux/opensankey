@@ -100,6 +100,28 @@ describe('os#1528 arbre de valeurs construit a la demande', () => {
     })
   })
 
+  test('une reponse sur une branche lue se calcule une fois', () => {
+    // La carte Coordonnees pose has_result a chaque rendu : sans memoire, chaque geste relisait
+    // tout le cube (5 millions de cases sur les SOCLE synthetiques transfo).
+    const { link } = monter()
+    const root = valuesOf(link)
+    root.fromJSON({
+      datatag_group: 'a',
+      a3: { datatag_group: 'b', b7: { datatag_group: 'c', c1: { data_value: 42 }, c2: { data_value: 1 } } }
+    })
+    const spy = jest.spyOn(Class_ElementValueTree.prototype as unknown as { createValue: () => unknown }, 'createValue')
+    expect(root.has_result).toBe(false)
+    const lectures = spy.mock.calls.length
+    expect(lectures).toBeGreaterThan(0)
+    expect(root.has_result).toBe(false)
+    expect(root.has_intervals).toBe(false)
+    expect(root.has_intervals).toBe(false)
+    // has_intervals relit une fois, has_result plus du tout.
+    expect(spy.mock.calls.length).toBe(2 * lectures)
+    spy.mockRestore()
+    expect(builtLeaves(root)).toBe(0)
+  })
+
   test('point fixe : relire puis reecrire donne le meme texte, branche ouverte ou non', () => {
     const json: Type_JSON = {
       datatag_group: 'a',
