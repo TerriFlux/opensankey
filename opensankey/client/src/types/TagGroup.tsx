@@ -14,6 +14,10 @@ import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
+import {
+  type Type_SelectorForm, type Type_SelectorPlace, type Type_SelectorLayoutCandidate,
+  effectiveSelectorForm, isSelectorForm, isSelectorPlace
+} from './SelectorLayout'
 import { Type_AssignmentRule, Type_RuleMeasurable, parseAssignmentRule, resolveRuleTag, serializeAssignmentRule } from './TagAssignmentRule'
 import { Type_MembersOrder, MEMBERS_ORDERS, DEFAULT_MEMBERS_ORDER, ordonnerMembres } from '../Algorithms/DimensionMemberOrder'
 import { foldSmallParts } from '../Algorithms/DimensionOthers'
@@ -120,6 +124,8 @@ const KNOWN_TAGG_JSON_KEYS = new Set([
   'parked_carriers',
   // sa#639 — la Lecture du sélecteur et ses réglages, écrits seulement quand elle est cochée.
   'playback',
+  // sa#642 — la forme et la place du sélecteur, écrites seulement quand l'auteur les a choisies.
+  'form', 'place',
 ])
 
 // sa#639 — de quoi distinguer deux dimensions homonymes de deux documents, pour le moteur de lecture.
@@ -170,7 +176,14 @@ export abstract class Class_ProtoTagGroup {
   // Compatibilité : `banner: 'topbar'` des fichiers existants se lit « un membre » + barre du haut,
   // et ce cas s'écrit encore `banner: 'topbar'` (en plus de `topbar: true`) pour qu'un viewer
   // publié antérieur le montre toujours en haut.
-  private _in_topbar: boolean = false
+  //
+  // sa#642 — la barre du haut devient une des trois PLACES du sélecteur (panneau Filtres, barre du
+  // haut, barre du bas), et la case une liste à trois choix. `undefined` = rien choisi : la place
+  // d'aujourd'hui (cf. `defaultSelectorPlace`). « Barre du haut » s'écrit toujours `topbar: true`.
+  private _selector_place: Type_SelectorPlace | undefined = undefined
+  // sa#642 — la FORME du sélecteur (liste, rangée de boutons, frise) ; `undefined` = celle
+  // d'aujourd'hui (cf. `effectiveSelectorForm`). Écrite seulement quand l'auteur l'a choisie.
+  private _selector_form: Type_SelectorForm | undefined = undefined
 
   /**
    * True if tag is currently on a deletion process
@@ -274,7 +287,8 @@ export abstract class Class_ProtoTagGroup {
     // Map complète (pas la string résolue) : les traductions survivent à la copie.
     this._name_map = { ...tagg_to_copy._name_map }
     this._banner = tagg_to_copy._banner
-    this._in_topbar = tagg_to_copy._in_topbar
+    this._selector_place = tagg_to_copy._selector_place
+    this._selector_form = tagg_to_copy._selector_form
     this._tag_count = tagg_to_copy._tag_count
     // #486 - les separateurs suivent le groupe : sans cette ligne, un updateFrom
     // (fusion de mise en page, duplication) les perdrait silencieusement et le
@@ -350,8 +364,12 @@ export abstract class Class_ProtoTagGroup {
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
     // os#1517 — « un membre, en barre du haut » s'écrit comme avant, pour les viewers antérieurs ;
     // les autres combinaisons portent la barre du haut dans sa propre clé.
-    json_object['banner'] = (this._in_topbar && this._banner === 'one') ? 'topbar' : this._banner
-    if (this._in_topbar) json_object['topbar'] = true
+    json_object['banner'] = (this.in_topbar && this._banner === 'one') ? 'topbar' : this._banner
+    if (this.in_topbar) json_object['topbar'] = true
+    // sa#642 — la barre du haut est portée par `topbar` (lu par les viewers antérieurs) ; les deux
+    // autres places, et la forme, s'écrivent seulement quand l'auteur les a choisies.
+    if (this._selector_place !== undefined && this._selector_place !== 'top') json_object['place'] = this._selector_place
+    if (this._selector_form !== undefined) json_object['form'] = this._selector_form
     json_object['tags_order'] = this._tags_order
     // #486 - ecrits seulement quand ils s'ecartent du defaut : un diagramme qui
     // n'en declare pas produit exactement le meme JSON qu'avant.
@@ -421,8 +439,11 @@ export abstract class Class_ProtoTagGroup {
     if (valid_banners.includes(banner_read)) this.banner = banner_read
     // os#1517 — clé présente seulement quand elle vaut vrai ; absente, on ne touche à rien
     // (`fromJSON` sert aussi aux mises à jour partielles).
-    if (json_object['topbar'] === true) this._in_topbar = true
-    else if (json_object['topbar'] === false) this._in_topbar = false
+    if (json_object['topbar'] === true) this._selector_place = 'top'
+    else if (json_object['topbar'] === false && this._selector_place === 'top') this._selector_place = undefined
+    // sa#642 — une place écrite fait foi (« barre du haut » n'en est jamais une : cf. `_toJSON`).
+    if (isSelectorPlace(json_object['place'])) this._selector_place = json_object['place']
+    if (isSelectorForm(json_object['form'])) this._selector_form = json_object['form']
     // #537 - cle absente = defaut du format. On n'ecrase que si la cle est
     // presente : `fromJSON` sert aussi aux mises a jour partielles, ou un JSON
     // muet ne doit rien effacer.
@@ -844,8 +865,34 @@ export abstract class Class_ProtoTagGroup {
   public get banner(): tag_banner_type { return this._banner }
 
   /** os#1517 — le choix se fait-il dans la barre du haut ? Indépendant de `banner`. */
-  public get in_topbar(): boolean { return this._in_topbar }
-  public set in_topbar(value: boolean) { this._in_topbar = value }
+  public get in_topbar(): boolean { return this.selector_place === 'top' }
+  public set in_topbar(value: boolean) {
+    if (value) this._selector_place = 'top'
+    else if (this._selector_place === 'top') this._selector_place = undefined
+  }
+
+  /** sa#642 — OÙ le sélecteur se montre : celle que l'auteur a choisie, sinon celle d'aujourd'hui. */
+  public get selector_place(): Type_SelectorPlace { return this._selector_place ?? this.defaultSelectorPlace() }
+  /** La place telle qu'écrite (`undefined` : rien choisi), pour l'annulation. */
+  public get stored_selector_place(): Type_SelectorPlace | undefined { return this._selector_place }
+  public set selector_place(value: Type_SelectorPlace | undefined) { this._selector_place = value }
+
+  /** La place d'un groupe dont l'auteur n'a pas choisi la place : le panneau Filtres. */
+  protected defaultSelectorPlace(): Type_SelectorPlace { return 'panel' }
+
+  /** sa#642 — la forme choisie par l'auteur, `undefined` s'il n'a rien choisi. */
+  public get stored_selector_form(): Type_SelectorForm | undefined { return this._selector_form }
+  public set selector_form(value: Type_SelectorForm | undefined) { this._selector_form = value }
+
+  /** Ce que les règles de forme et de place regardent de ce sélecteur (cf. `SelectorLayout`). */
+  public get selector_layout_candidate(): Type_SelectorLayoutCandidate {
+    return { banner: this._banner, value_count: this.tags_list_with_untagged.length }
+  }
+
+  /** sa#642 — la forme DESSINÉE : choisie et utilisable, sinon celle d'aujourd'hui, sinon la liste. */
+  public get selector_form(): Type_SelectorForm {
+    return effectiveSelectorForm(this._selector_form, this.selector_place, this.selector_layout_candidate)
+  }
 
   // SETTERS ============================================================================
   public set name(value: string) {
@@ -862,7 +909,7 @@ export abstract class Class_ProtoTagGroup {
   public set banner(value: tag_banner_type) {
     if (value === 'topbar') {
       this._banner = this.admissibleBanner('one')
-      this._in_topbar = true
+      this._selector_place = 'top'
       return
     }
     // sa#639 — `sequence` non plus n'est plus une forme : c'est « un membre » + la case Lecture
@@ -1925,6 +1972,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /** Le sélecteur porte-t-il les commandes de lecture ? (case cochée, et un sélecteur à montrer) */
   public get plays(): boolean { return this._playback !== undefined && this.banner !== 'none' }
+
+  /**
+   * sa#642 — une dimension qui se lit, sans place choisie, est dans la barre du bas : la place de la
+   * séquence d'avant (os#1511), puis de la Lecture (sa#639). Un fichier existant s'ouvre donc tel quel.
+   */
+  protected defaultSelectorPlace(): Type_SelectorPlace { return this.plays ? 'bottom' : 'panel' }
 
   /** Ce qui identifie cette dimension auprès du moteur de lecture. */
   public get playback_key(): string { return `data_tagg#${this._playback_uid}` }
