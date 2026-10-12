@@ -1889,7 +1889,7 @@ export class Class_ApplicationData {
     const group = this._drawing_area.sankey.getTagGroupsAsList('data_taggs')
       .map(group => group as Class_DataTagGroup)
       .find(group => group.plays && group.playback?.autoplay === true)
-    return group?.playbackSource() ?? null
+    return group?.playbackSource() ?? playback.registeredAutoplay(this)
   }
 
   /**
