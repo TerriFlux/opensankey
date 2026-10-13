@@ -211,6 +211,8 @@ export function legendToSvg(items: readonly Type_LegendItem[], config: Type_Lege
     let entries_x = 0
     let row_top = y
     let row_h = 0
+    // Les entrées du groupe courant s'empilent une par ligne (elles ne tenaient pas toutes derrière le titre).
+    let stacked = false
     const newLine = () => {
       if (row_h > 0) row_top += row_h + 2 * ROW_PAD_EM * P
       x = 0
@@ -238,6 +240,9 @@ export function legendToSvg(items: readonly Type_LegendItem[], config: Type_Lege
         newLine()
         if (index > 0 && startsBlock(item)) row_top += GROUP_GAP_EM * P
         entries_x = 0
+        stacked = false
+      } else if (stacked && x > 0) {
+        newLine()
       } else if (x > entries_x && x + entry_w > max_w) {
         if (entries_x + entry_w > max_w || entries_x > max_w / 2) entries_x = 0
         const keep = entries_x
@@ -255,10 +260,12 @@ export function legendToSvg(items: readonly Type_LegendItem[], config: Type_Lege
         x += entry_w + 0.6 * P
         entries_x = x
         // Le titre ne garde ses entrées sur sa ligne que si elles y tiennent TOUTES ; sinon elles
-        // partent dessous, à gauche — pas une colonne décalée sous la première entrée.
+        // s'empilent dessous, une par ligne, comme dans la colonne — pas un remplissage en
+        // drapeau où deux courtes partagent une ligne et les longues ont chacune la leur.
         if (x + groupEntriesWidth(shown, index + 1, P, config, prefix) > max_w) {
           newLine()
           entries_x = 0
+          stacked = true
         }
       } else if (own_line) {
         newLine()

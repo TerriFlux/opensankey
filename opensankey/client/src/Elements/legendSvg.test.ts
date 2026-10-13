@@ -67,6 +67,10 @@ describe('os#1527 legendToSvg', () => {
     expect(Number(full?.getAttribute('y'))).toBeGreaterThan(title_y)
     // La premiere entree repart a gauche, sous le titre, pas decalee derriere lui
     expect(Number(full?.getAttribute('x'))).toBeLessThan(Number(tspan('Fiabilite')?.getAttribute('x')) + 30)
+    // Puis une entree par ligne, meme quand deux courtes tiendraient ensemble
+    const indic = tspan('Indicative')
+    expect(Number(indic?.getAttribute('y'))).toBeGreaterThan(Number(full?.getAttribute('y')))
+    expect(Number(indic?.getAttribute('x'))).toBe(Number(full?.getAttribute('x')))
   })
 
   test('retour a la ligne a la largeur de la legende', () => {
