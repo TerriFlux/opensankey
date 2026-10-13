@@ -397,6 +397,8 @@ export const resources_inspector = {
         window_subject: 'View subject',
         subject_sheet_gone: 'The sheet this view looks at is gone: its subject can no longer be set here.',
         subject_nothing_to_offer: 'No visible node or flow can be shown as “{{representation}}”: nothing to offer here.',
+        // os#1511 — the collapsible block of the legend column holding Filters and Display.
+        drawing_settings: 'Drawing settings',
         short: {
           subject: 'Subject',
           node: 'Nodes',
@@ -782,6 +784,7 @@ export const resources_inspector = {
         window_subject: 'Sujet de la vue',
         subject_sheet_gone: 'La feuille que cette vue regarde n\'existe plus : son sujet ne se règle plus d\'ici.',
         subject_nothing_to_offer: 'Aucun nœud ni flux visible ne peut être montré en « {{representation}} » : rien à proposer ici.',
+        drawing_settings: 'Réglages du dessin',
         short: {
           subject: 'Sujet',
           node: 'Nœuds',
@@ -1143,6 +1146,7 @@ export const resources_inspector = {
         window_subject: 'Sujeto de la vista',
         subject_sheet_gone: 'La hoja que mira esta vista ya no existe: su sujeto ya no se ajusta aquí.',
         subject_nothing_to_offer: 'Ningún nodo ni flujo visible puede mostrarse como «{{representation}}»: nada que ofrecer aquí.',
+        drawing_settings: 'Ajustes del dibujo',
         short: {
           subject: 'Sujeto',
           node: 'Nodos',
@@ -1504,6 +1508,7 @@ export const resources_inspector = {
         window_subject: 'Gegenstand der Ansicht',
         subject_sheet_gone: 'Das Blatt, das diese Ansicht zeigt, existiert nicht mehr: sein Gegenstand lässt sich hier nicht mehr einstellen.',
         subject_nothing_to_offer: 'Kein sichtbarer Knoten und kein sichtbarer Fluss lässt sich als „{{representation}}“ darstellen: hier gibt es nichts anzubieten.',
+        drawing_settings: 'Zeichnungseinstellungen',
         short: {
           subject: 'Gegenstand',
           node: 'Knoten',
@@ -1865,6 +1870,7 @@ export const resources_inspector = {
         window_subject: 'Soggetto della vista',
         subject_sheet_gone: 'Il foglio che questa vista guarda non esiste più: il suo soggetto non si imposta più da qui.',
         subject_nothing_to_offer: 'Nessun nodo né flusso visibile può essere mostrato come «{{representation}}»: niente da proporre qui.',
+        drawing_settings: 'Impostazioni del disegno',
         short: {
           subject: 'Soggetto',
           node: 'Nodi',
@@ -2230,6 +2236,7 @@ export const resources_inspector = {
         window_subject: '视图主体',
         subject_sheet_gone: '该视图所看的工作表已不存在：其主题无法再在此设置。',
         subject_nothing_to_offer: '没有可见的节点或流可以用「{{representation}}」显示：此处无可选项。',
+        drawing_settings: '绘图设置',
         short: {
           subject: '主体',
           node: '节点',
@@ -2595,6 +2602,7 @@ export const resources_inspector = {
         window_subject: 'ビューの対象',
         subject_sheet_gone: 'このビューが見ているシートはもうありません。ここから主題を設定することはできません。',
         subject_nothing_to_offer: '「{{representation}}」で表示できる可視のノードやフローがありません。ここに提示できるものはありません。',
+        drawing_settings: '描画の設定',
         short: {
           subject: '対象',
           node: 'ノード',
