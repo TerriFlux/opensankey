@@ -540,6 +540,17 @@ export class LinkControlPoints {
     return this.link.shape_pass_points.map(p => passPointToWorld(p, s, t, frame))
   }
 
+  /**
+   * Points de passage en coordonnées MONDE, rapportés à `s` et `t` plutôt qu'aux ancres. Sert
+   * à l'ordre des flux d'un nœud, qui PRODUIT les ancres : les lire là serait circulaire. Avec
+   * les centres des nœuds, l'écart est d'une demi-épaisseur, sans effet sur l'ordre.
+   */
+  public passPointsWorldBetween(s: Type_Pt, t: Type_Pt): Type_Pt[] {
+    if (!this.hasPassPoints()) return []
+    const frame = this.passPointFrame()
+    return this.link.shape_pass_points.map(p => passPointToWorld(p, s, t, frame))
+  }
+
   /** Point vers lequel se dose la tangente de départ : 1er point de passage, sinon p5. */
   private startTangentReference(): Type_Pt {
     const pp = this.passPointsWorld()

@@ -2408,6 +2408,28 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return s
   }
 
+  /**
+   * Le point par lequel ce flux rejoint `node` (une de ses extrémités) : le dernier point de la
+   * route à l'arrivée, le premier au départ — point de passage (Alt+clic) ou waypoint routé.
+   * `null` sans route : c'est alors le nœud opposé qui dit d'où vient le flux. `s` et `t` sont
+   * les centres source et cible (cf. `passPointsWorldBetween`).
+   *
+   * Julien, 13/10 : sur SOCLE transfo, Ressources → Matière transformée passe SOUS Transformation
+   * mais était rangé au-dessus de Transformation → Matière transformée à l'arrivée, parce que
+   * Ressources est plus haut : les deux flux se croisaient juste avant le nœud.
+   */
+  public routePointNear(node: Class_NodeElement, s: [number, number], t: [number, number]): [number, number] | null {
+    const at_source = node === this.source
+    const wps = this.shape_waypoints
+    if (!this.shape_is_recycling && Array.isArray(wps) && wps.length > 0) {
+      const w = at_source ? wps[0] : wps[wps.length - 1]
+      return [w.x, w.y]
+    }
+    const pp = this._link_control_points.passPointsWorldBetween(s, t)
+    if (pp.length === 0) return null
+    return at_source ? pp[0] : pp[pp.length - 1]
+  }
+
   /** Side derived from node relative positions, ignoring any anchor lock. */
   /**
    * opensankey#1301 — auto-suivi du côté d'accroche : le côté du nœud `node` qui
