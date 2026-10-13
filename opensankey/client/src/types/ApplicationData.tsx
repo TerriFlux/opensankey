@@ -2778,8 +2778,12 @@ export class Class_ApplicationData {
    * par lui aussi, et ils doivent retrouver les volets tels qu'ils étaient.
    *
    * Sans effet dans une page publiée : elle s'ouvre toujours comme son auteur l'a publiée.
+   *
+   * @param file_name sa#657 — le nom du fichier ouvert, quand le geste le connaît : OpenSankey+ en
+   *   nomme ce que le fichier ne nommait pas (cf. sa surcharge).
    */
-  public showOpenedModel(): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public showOpenedModel(file_name?: string): void {
     const mc = this.menu_configuration
     if (!mc || !this.is_main || this.is_static) return
     mc.resetMainZone()
