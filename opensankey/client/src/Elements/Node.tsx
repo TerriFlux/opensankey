@@ -3431,8 +3431,26 @@ export class Class_NodeElement extends Class_NodeBase {
     return ok
   }
 
+  /**
+   * Au moins un flux de ce nœud est TRACÉ : visible ET au-dessus du seuil de flux. Le seuil n'agit
+   * qu'au tracé du flux (`_shouldBeDrawn`), pas sur `is_visible` : sans lui, un nœud dont tous les
+   * flux passent sous le seuil comptait encore des flux « visibles » et échappait à la règle des
+   * orphelins — il restait seul à l'écran, case « Nœuds orphelins » décochée.
+   */
+  public get has_drawn_link(): boolean {
+    for (const id in this._input_links) {
+      const l = this._input_links[id]
+      if (l.is_visible && l.passes_value_threshold) return true
+    }
+    for (const id in this._output_links) {
+      const l = this._output_links[id]
+      if (l.is_visible && l.passes_value_threshold) return true
+    }
+    return false
+  }
+
   private get orphan_visible() {
-    if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
+    if (!this.has_drawn_link) {
       // #364 — Cadre englobant vidé par la sélection courante : un parent en
       // `container_mode` est une ENVELOPPE, pas un nœud à part entière. Il n'a
       // aucun flux visible par construction (ceux qu'il porte sont masqués par le

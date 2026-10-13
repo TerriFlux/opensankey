@@ -3910,6 +3910,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
   }
 
+  /** Lecture publique du seuil de flux : un nœud dont aucun flux ne le passe est orphelin. */
+  public get passes_value_threshold(): boolean {
+    return this.is_value_above_threshold
+  }
+
   /**
    * Seuil d'affichage exprimé en pixels (#seuil px). Renvoie true (= le flux passe
    * le seuil) quand : le seuil est nul/négatif (désactivé), le flux n'a pas de
