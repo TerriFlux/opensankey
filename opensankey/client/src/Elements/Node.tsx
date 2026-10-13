@@ -1946,7 +1946,10 @@ export class Class_NodeElement extends Class_NodeBase {
       // faisceau en miroir (CCW à la source, CW à la cible) → pas de croisement. cf. bundleTie.
       // os#1508 — rang en O(1) (table sur le Sankey) : `links_list.indexOf(l)` par flux coûtait des secondes.
       const ord = this.sankey.linkOrdinal(l)
-      const [ox, oy] = centre(other)
+      // D'où le flux arrive vraiment : son point de route le plus proche s'il en a un (point de
+      // passage, waypoint), sinon le nœud opposé. Le nœud opposé ment dès que la route fait un
+      // détour : un flux qui vient d'en haut mais passe par en dessous doit s'accrocher en dessous.
+      const [ox, oy] = l.routePointNear(this, centre(l.source), centre(l.target)) ?? centre(other)
       const geo: Type_IOGeo = { side, ox, oy, turning, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
