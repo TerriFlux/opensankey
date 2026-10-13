@@ -407,15 +407,20 @@ export class Class_ApplicationData {
    * La mention « réalisé avec OpenSankey.fr » des exports PNG et PDF faits sans licence, posée en bas
    * à droite d'une image de `width` × `height`. Chaîne vide quand la licence (ou l'essai, ou une page
    * publiée) la retire. Partagée par l'export du diagramme et celui d'un volet (sa#592).
+   *
+   * `left_free_below` : ordonnée sous laquelle la colonne de gauche est vide (le bas de la légende
+   * posée à gauche du dessin). Si la mention y tient, elle part en bas à GAUCHE, dans cette place
+   * réservée, au lieu de chevaucher le dessin en bas à droite.
    */
-  public exportWatermark(width: number, height: number): string {
+  public exportWatermark(width: number, height: number, left_free_below?: number): string {
     if (this.has_sankey_plus) return ''
     const font_size = Math.max(12, Math.min(width, height) * 0.018)
     // Inset >= 1 line-height keeps the baseline clear of the body's default 8px
     // margin in wkhtmltopdf/wkhtmltoimage, so the watermark never overflows the page.
     const inset = font_size * 1.6
-    return `<text x='${width - inset}' y='${height - inset}'` +
-      ' text-anchor=\'end\' dominant-baseline=\'alphabetic\'' +
+    const left = left_free_below !== undefined && left_free_below <= height - inset - font_size * 1.5
+    return `<text x='${left ? inset : width - inset}' y='${height - inset}'` +
+      ` text-anchor='${left ? 'start' : 'end'}' dominant-baseline='alphabetic'` +
       ` font-family='Arial, Helvetica, sans-serif' font-size='${font_size}'` +
       ' fill=\'#000000\' fill-opacity=\'0.45\'>' +
       'réalisé avec OpenSankey.fr' +
@@ -4672,7 +4677,9 @@ export class Class_ApplicationData {
     // an active OpenSankey+ license. Gated on convert_fo so raw SVG export
     // stays watermark-free. has_sankey_plus is overridden in OS+ to include
     // the free trial, so trial users don't get the mark either.
-    const watermark = convert_fo ? this.exportWatermark(export_width, export_height) : ''
+    // Légende en colonne à gauche du dessin (dessin décalé d'autant) : la mention va sous elle.
+    const left_free_below = shift_x > 0 ? legend_y + legend_svg.height : undefined
+    const watermark = convert_fo ? this.exportWatermark(export_width, export_height, left_free_below) : ''
 
     const inner = d3_select?.node()?.innerHTML ?? ''
     const legend_g = legend_svg.svg !== ''
