@@ -1039,7 +1039,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // « quand on choisit un membre à la fois, il ne met pas les couleurs »). En bandes, chaque
       // bande porte la couleur de son membre ; un seul membre, c'est une seule bande, donc la même
       // couleur — sans quoi choisir « Sucre » rendait le flux gris.
-      const member_color = this._memberBandColor() ?? this._singleMemberDimensionColor()
+      // os#1511 (Julien, 13/10 : « sur le flux d'équilibrage je n'arrive pas à changer sa couleur en
+      // gris ») — UNE COULEUR POSÉE SUR LE FLUX LUI-MÊME l'emporte sur celle que lui donne une
+      // dimension : l'inspecteur la montrait surchargée, et le dessin gardait celle des postes. Elle
+      // ne passe QUE devant la dimension : les règles d'étiquettes ci-dessous restent ce qu'elles
+      // étaient (les rendus figés du corpus le vérifient), et la règle 5 la rend s'il n'y en a pas.
+      const member_color = this.isAttributeOverloaded('shape_color')
+        ? undefined
+        : this._memberBandColor() ?? this._singleMemberDimensionColor()
       if (member_color !== undefined) return member_color
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
@@ -1306,7 +1313,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // couleur du membre (gris pour « Matière »), recouvrait la couleur que la dimension qui peint
       // les flux leur donne. La bande prend alors celle du peintre, s'il y en a un.
       if (multi_dim.selected_tags_list.length === 1) {
-        const peinte = this._memberBandColor()
+        // os#1511 (13/10) — la couleur posée sur le flux lui-même passe avant celle du peintre.
+        const peinte = this.isAttributeOverloaded('shape_color') ? this.shape_color : this._memberBandColor()
         if (peinte !== undefined) bands.forEach(band => { band.color = peinte })
       }
       if (folded.length > 0) {
