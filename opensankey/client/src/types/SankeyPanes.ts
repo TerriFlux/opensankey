@@ -498,6 +498,17 @@ export class Class_SankeyPanes {
     }
     const owner = this._layout_owner
     this._layout_owner = null
+    // Le dessin vivant est celui de la vue COURANTE. Un tableau de bord qui s'active a déjà posé sa
+    // grille (`mainZoneStateFromJSON`) et pointé le volet vivant vers la vue qui arrive : garder le
+    // dessin sous la coordonnée du volet l'écrirait dans CETTE vue-là — la vue lourde d'arrivée
+    // recevait ainsi le contenu de celle qu'on quitte (Formation AFM Territorial : les deux tableaux
+    // de bord montraient « Verre »). Il s'écrit dans la sienne.
+    const o = this.paneById(owner)
+    const current = this.host.current_view_id
+    if (o && this.coordinateOf(o) !== current) {
+      if (this.isHeavyView(current)) this.storeLiveInView(current)
+      return
+    }
     this.keepLayoutOf(owner)
   }
 
