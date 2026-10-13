@@ -280,12 +280,20 @@ export function disaggregateDimensionNodes(sankey: Class_Sankey): number {
  *  - jamais si le diagramme se vide : SOCLE, « Ressources et emplois » pilote les deux bouts, et ses
  *    deux colonnes effacées ne laisseraient plus aucun flux.
  * Masqués, pas supprimés : le fichier les garde, et revenir en nœuds les rend (`removeGeneratedMemberNodes`).
+ *
+ * 13/10 (Julien, SOCLE transfo : « si je mets Ressources / Emplois en bandes, ça cache beaucoup de
+ * flux ») — LA PRÉMISSE SE VÉRIFIE, elle ne se suppose pas. Une extrémité ne s'efface que si les
+ * membres que portent SES flux se lisent encore sur les flux qui restent. Sur le transfo, Ressources
+ * et Emplois n'existent que sur les flux de Ressources et d'Emplois ; les effacer ne laissait que la
+ * bande « Transformation », et les deux tiers du bilan disparaissaient sans rien qui les montre.
  * Rend le nombre de nœuds effacés.
  */
 export function foldBandedExtremities(sankey: Class_Sankey): number {
   const a_masquer = new Set<Class_NodeElement>()
+  const fluxDe = (noeud: Class_NodeElement) => [...noeud.input_links_list, ...noeud.output_links_list]
   ;(sankey.data_taggs_list as Class_DataTagGroup[]).forEach(dimension => {
     if (!dimension.draws_bands) return
+    const candidats: Class_NodeElement[] = []
     dimension.parked_carrier_ids.forEach(id => {
       const noeud = sankey.nodes_dict[id]
       if (noeud === undefined || isGeneratedMemberNode(noeud) || noeud.is_driven_by_dimension || !noeud.is_visible) return
@@ -293,7 +301,17 @@ export function foldBandedExtremities(sankey: Class_Sankey): number {
       const entrees = reels(noeud.input_links_list)
       const sorties = reels(noeud.output_links_list)
       if (entrees + sorties === 0 || (entrees > 0 && sorties > 0)) return
-      a_masquer.add(noeud)
+      candidats.push(noeud)
+    })
+    if (candidats.length === 0) return
+    // Les membres (de valeur positive) que portent des flux visibles.
+    const membres = (flux: Class_LinkElement[]) => new Set(flux
+      .filter(lien => lien.is_visible)
+      .flatMap(lien => lien.dimensionBandsRaw(dimension).filter(b => b.value > 0).map(b => b.id)))
+    const leurs_flux = new Set(candidats.flatMap(fluxDe))
+    const restants = membres(sankey.links_list.filter(lien => !leurs_flux.has(lien)))
+    candidats.forEach(noeud => {
+      if ([...membres(fluxDe(noeud))].every(id => restants.has(id))) a_masquer.add(noeud)
     })
   })
   if (a_masquer.size === 0) return 0
