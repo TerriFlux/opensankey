@@ -77,6 +77,28 @@ describe('os#1511 — colonne d extremite en bandes', () => {
     expect(visibles(m)).toEqual(['A', 'B'])
   })
 
+  // 13/10 (SOCLE transfo) — la colonne ne s efface que si ses membres se lisent ailleurs : Ressources et
+  // Emplois n existaient que sur leurs propres flux, et les effacer cachait les deux tiers du bilan.
+  test('une colonne dont un membre ne se lit sur aucun autre flux reste', () => {
+    const m = monter(true)
+    // A -> B ne porte plus rien en Asie : seule C (par B -> C) la montre.
+    const AB = m.A.output_links_list[0]
+    ;['ble', 'mais', 'lait_cru', 'beurre', 'viande'].forEach(f => {
+      ;[m.s.filiere, m.s.pays].forEach(g => g.tags_list.forEach(t => t.setUnSelected()))
+      ;(m.s.filiere.tags_dict[f] as Class_DataTag).setSelected()
+      ;(m.s.pays.tags_dict['cn'] as Class_DataTag).setSelected()
+      ;(AB.value as Class_LinkValue).valueData = 0
+    })
+    m.s.filiere.selectMembers(['cereales', 'lait', 'viande'])
+    m.s.pays.selectMembers(['europe', 'ameriques', 'asie'])
+    ;(m.C as Class_NodeElement).driving_dimension = m.s.pays
+    m.da.rebuildDimensionNodes()
+    applyDimensionDrawing(m.s.app, m.s.pays, 'multi')
+    expect(m.s.pays.parked_carrier_ids).toEqual(['C'])
+    expect(visibles(m)).toContain('C')
+    expect((m.BC as Class_LinkElement).is_visible).toBe(true)
+  })
+
   test('un membre a la fois ne dessine pas de bandes : la colonne reste', () => {
     const m = monter(true)
     ;(m.C as Class_NodeElement).driving_dimension = m.s.pays
