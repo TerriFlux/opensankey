@@ -3458,6 +3458,13 @@ export class Class_NodeElement extends Class_NodeBase {
       // gardait affiché — vide et étiqueté — même quand la sélection de dataTags
       // ne laisse aucun de ses membres visible. Le critère porte sur les ENFANTS.
       if (containerFrameIsEmptied(this.dimensions_as_parent)) return false
+      // Orphelin PAR LE SEUIL : des flux visibles, tous trop minces pour être tracés. Seule la case
+      // globale « Nœuds orphelins » le garde. L'attribut par nœud ci-dessous vaut VRAI par défaut
+      // (un nœud qu'on vient de créer, sans flux, doit se voir) : le consulter ici rendait la case
+      // inopérante, le nœud restait seul à l'écran (Julien, 13/10).
+      if (this.visible_input_links_list.length + this.visible_output_links_list.length > 0) {
+        return this.drawing_area.show_orphan_nodes
+      }
       // Option globale « Nœuds orphelins » (drawing_area) OU override par-nœud
       // (shape_orphan_node_visible) : un nœud sans lien visible reste affiché.
       if (this.shape_orphan_node_visible || this.drawing_area.show_orphan_nodes) return true
