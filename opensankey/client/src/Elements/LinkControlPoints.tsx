@@ -26,6 +26,7 @@
 
 import * as d3 from '../d3Modules'
 import { Class_LinkElement } from './Link'
+import type { Class_NodeElement } from './Node'
 import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Type_LinkPassPoint } from './ElementsAttributesConfig'
@@ -537,7 +538,29 @@ export class LinkControlPoints {
     if (!this.hasPassPoints()) return []
     const [s, t] = this.anchors()
     const frame = this.passPointFrame()
-    return this.link.shape_pass_points.map(p => passPointToWorld(p, s, t, frame))
+    return this.link.shape_pass_points.map(p => this.resolvePassPoint(p, s, t, frame))
+  }
+
+  /**
+   * Le nœud auquel le point `p` est accroché, s'il existe, est visible et n'est pas une extrémité
+   * du flux (sa taille dépend de ce flux : on bouclerait). Sinon `undefined`, et le point se lit
+   * en relatif comme avant.
+   */
+  public passPointNode(p: Type_LinkPassPoint): Class_NodeElement | undefined {
+    if (!p.node) return undefined
+    const n = this.link.sankey.nodes_dict[p.node]
+    if (!n || n === this.link.source || n === this.link.target || !n.is_visible) return undefined
+    return n
+  }
+
+  /** Point en coordonnées MONDE : sous le centre de son nœud s'il est accroché, sinon relatif. */
+  private resolvePassPoint(p: Type_LinkPassPoint, s: Type_Pt, t: Type_Pt, frame: Type_PassPointFrame): Type_Pt {
+    const n = this.passPointNode(p)
+    if (!n) return passPointToWorld(p, s, t, frame)
+    return [
+      n.position_x + n.getShapeWidthToUse() / 2,
+      n.position_y + n.getShapeHeightToUse() + (p.gap ?? 0)
+    ]
   }
 
   /**
@@ -548,7 +571,7 @@ export class LinkControlPoints {
   public passPointsWorldBetween(s: Type_Pt, t: Type_Pt): Type_Pt[] {
     if (!this.hasPassPoints()) return []
     const frame = this.passPointFrame()
-    return this.link.shape_pass_points.map(p => passPointToWorld(p, s, t, frame))
+    return this.link.shape_pass_points.map(p => this.resolvePassPoint(p, s, t, frame))
   }
 
   /** Point vers lequel se dose la tangente de départ : 1er point de passage, sinon p5. */
@@ -584,18 +607,18 @@ export class LinkControlPoints {
   }
 
   private clonePassPoints(): Type_LinkPassPoint[] {
-    return (this.link.shape_pass_points ?? []).map(p => ({ u: p.u, v: p.v }))
+    return (this.link.shape_pass_points ?? []).map(p => ({ ...p }))
   }
 
   /** Remplace les points de passage, avec undo/redo. */
   private commitPassPoints(before: Type_LinkPassPoint[], after: Type_LinkPassPoint[]) {
     this.link.drawing_area.application_data.history.saveUndo(() => {
-      this.link.shape_pass_points = before.map(p => ({ u: p.u, v: p.v }))
+      this.link.shape_pass_points = before.map(p => ({ ...p }))
       this.link.draw()
     })
     this.link.shape_pass_points = after
     this.link.drawing_area.application_data.history.saveRedo(() => {
-      this.link.shape_pass_points = after.map(p => ({ u: p.u, v: p.v }))
+      this.link.shape_pass_points = after.map(p => ({ ...p }))
       this.link.draw()
     })
     this.link.draw()
@@ -642,17 +665,23 @@ export class LinkControlPoints {
         this._control_points.is_dragged = true
         const ghost = this.clonePassPoints()
         this.link.drawing_area.application_data.history.saveUndo(() => {
-          this.link.shape_pass_points = ghost.map(p => ({ u: p.u, v: p.v }))
+          this.link.shape_pass_points = ghost.map(p => ({ ...p }))
           this.link.draw()
         })
       },
       (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
         const pps = this.clonePassPoints()
         if (!pps[i]) return
+        // Accroché à un nœud : le glisser règle l'ÉCART sous le nœud, le point reste sous son centre.
+        if (this.passPointNode(pps[i])) {
+          pps[i] = { ...pps[i], gap: Math.max(0, (pps[i].gap ?? 0) + event.dy) }
+          this.link.shape_pass_points = pps
+          return
+        }
         const [s, t] = this.anchors()
         const frame = this.passPointFrame()
         const w = passPointToWorld(pps[i], s, t, frame)
-        pps[i] = worldToPassPoint([w[0] + event.dx, w[1] + event.dy], s, t, frame)
+        pps[i] = { ...worldToPassPoint([w[0] + event.dx, w[1] + event.dy], s, t, frame) }
         // Réaffectation (jamais de mutation du défaut partagé) ; le setter redessine.
         this.link.shape_pass_points = pps
       },
@@ -663,7 +692,7 @@ export class LinkControlPoints {
         this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
         const ghost = this.clonePassPoints()
         this.link.drawing_area.application_data.history.saveRedo(() => {
-          this.link.shape_pass_points = ghost.map(p => ({ u: p.u, v: p.v }))
+          this.link.shape_pass_points = ghost.map(p => ({ ...p }))
           this.link.draw()
         })
       },
