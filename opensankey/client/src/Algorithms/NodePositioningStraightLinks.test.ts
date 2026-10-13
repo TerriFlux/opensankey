@@ -41,6 +41,10 @@ type FakeLink = {
   shape_straight_mode?: string
   shape_straight_include_children: boolean
   shape_straight_offset: number
+  id?: string
+  thicknessSourceRaw?: number
+  shape_straight_below_link?: string
+  shape_straight_below_gap?: number
 }
 
 const link = (source: FakeNode, target: FakeNode, opts: Partial<FakeLink> = {}): FakeLink => ({
@@ -184,5 +188,22 @@ describe('os#1372 — enforceStraightLinks : l ensemble redresse est inchange', 
     run([link(a, b, { shape_straight_mode: 'target' })])
     expect(a.position_y).toBe(340)
     expect(b.position_y).toBe(340)
+  })
+
+  // Julien, 13/10 (SOCLE transfo) — Transformation -> Matiere transformee sous Matiere premiere ->
+  // Emplois, 200 px entre le bas du premier et le haut du second, quelle que soit l epaisseur.
+  it('sous un flux de reference : haut du flux a l ecart voulu sous le bas de la reference', () => {
+    const mp = node('mp', 100), emp = node('emp', 0)
+    const tr = node('tr', 900), mt = node('mt', 50)
+    const ref = link(mp, emp, { id: 'mp_emp', thicknessSourceRaw: 40, shape_must_stay_straight: true })
+    const sous = link(tr, mt, {
+      id: 'tr_mt', thicknessSourceRaw: 60, shape_straight_below_link: 'mp_emp', shape_straight_below_gap: 200
+    })
+    // Declare AVANT sa reference : l ordre de traitement ne doit pas en dependre.
+    run([sous, ref])
+    expect(emp.position_y).toBe(100)
+    // bas de la reference = 100 + 20 ; haut du flux = 120 + 200 ; son centre = 320 + 30
+    expect(tr.position_y).toBe(350)
+    expect(mt.position_y).toBe(350)
   })
 })

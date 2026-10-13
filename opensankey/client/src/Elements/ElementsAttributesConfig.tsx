@@ -3999,6 +3999,60 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
 
+  // Julien, 13/10 (SOCLE transfo) — UN FLUX DROIT POSÉ SOUS UN AUTRE : son haut reste à
+  // `straight_below_gap` pixels sous le bas du flux de référence, quelles que soient les épaisseurs
+  // de la donnée lue. Une contrainte ENTRE DEUX FLUX, recalculée à chaque dessin comme la droiture
+  // (cf. NodePositioningStraightLinks), plutôt que des nœuds invisibles qui fausseraient le modèle.
+  straight_below_link: {
+    default: '' as string,
+    type: (() => '') as (() => string),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Below flow',
+      fr: 'Sous le flux',
+      es: 'Bajo el flujo',
+      de: 'Unter dem Fluss',
+      it: 'Sotto il flusso',
+      'zh-CN': '位于流量之下',
+      ja: '下に置くフロー'
+    },
+    tooltips: {
+      en: 'Keep this straight flow below another straight flow, at a constant distance whatever the data shown.',
+      fr: 'Garder ce flux droit sous un autre flux droit, à distance constante quelle que soit la donnée lue.',
+      es: 'Mantener este flujo recto bajo otro flujo recto, a una distancia constante sean cuales sean los datos mostrados.',
+      de: 'Diesen geraden Fluss unter einem anderen geraden Fluss halten, in konstantem Abstand unabhängig von den angezeigten Daten.',
+      it: 'Mantieni questo flusso dritto sotto un altro flusso dritto, a distanza costante qualunque siano i dati mostrati.',
+      'zh-CN': '让此直线流量保持在另一条直线流量之下，无论显示何种数据，间距保持不变。',
+      ja: 'この直線フローを別の直線フローの下に、表示するデータにかかわらず一定の間隔で保ちます。'
+    }
+  } satisfies AttributeConfig<string>,
+
+  straight_below_gap: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Gap below',
+      fr: 'Écart en dessous',
+      es: 'Separación debajo',
+      de: 'Abstand darunter',
+      it: 'Distanza sotto',
+      'zh-CN': '下方间距',
+      ja: '下の間隔'
+    },
+    tooltips: {
+      en: 'Distance in pixels between the bottom of the reference flow and the top of this flow.',
+      fr: 'Distance en pixels entre le bas du flux de référence et le haut de ce flux.',
+      es: 'Distancia en píxeles entre la parte inferior del flujo de referencia y la parte superior de este flujo.',
+      de: 'Abstand in Pixeln zwischen der Unterkante des Referenzflusses und der Oberkante dieses Flusses.',
+      it: 'Distanza in pixel tra il fondo del flusso di riferimento e la cima di questo flusso.',
+      'zh-CN': '参考流量底部与此流量顶部之间的距离（像素）。',
+      ja: '基準フローの下端とこのフローの上端との間隔（ピクセル）。'
+    }
+  } satisfies AttributeConfig<number>,
+
   is_reference_flux: {
     default: false,
     type: (() => false) as (() => boolean),

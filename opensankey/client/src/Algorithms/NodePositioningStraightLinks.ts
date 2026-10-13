@@ -47,7 +47,8 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
   const effectiveMode = (L: Class_LinkElement): Type_StraightMode | null => {
     const m = L.shape_straight_mode
     if (m && m !== 'none') return m
-    return L.shape_must_stay_straight ? 'source' : null
+    // Un flux posé sous un autre est droit par construction (cf. `belowLine`).
+    return (L.shape_must_stay_straight || !!L.shape_straight_below_link) ? 'source' : null
   }
 
   // os#1372 — Candidats redressables calculés UNE FOIS pour tout l'appel, au lieu d'être
@@ -103,6 +104,29 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
   })
   // Amont → aval : un nœud déplacé comme cible doit l'être avant d'être source.
   items.sort((a, b) => a.L.source.position_u - b.L.source.position_u)
+  // Julien, 13/10 — un flux posé SOUS UN AUTRE passe après tous les autres : la ligne de son
+  // flux de référence doit être déjà fixée. Un seul niveau : la référence d'un flux « sous » ne
+  // doit pas être elle-même « sous » un autre (sinon l'ordre entre eux reste celui de l'amont).
+  const refOf = (L: Class_LinkElement): Class_LinkElement | undefined => {
+    const id = L.shape_straight_below_link
+    if (!id || id === L.id) return undefined
+    return (da.sankey.links_list as Class_LinkElement[]).find(R => R.id === id && R.is_visible)
+  }
+  items.sort((a, b) => (refOf(a.L) ? 1 : 0) - (refOf(b.L) ? 1 : 0))
+
+  // Ligne (centre de bande, côté source) de chaque flux redressé, une fois fixée.
+  const line_of = new Map<Class_LinkElement, number>()
+  /** Centre de bande que doit prendre `L` pour que son haut soit `gap` px sous le bas de `R`. */
+  const belowLine = (L: Class_LinkElement, R: Class_LinkElement): number | undefined => {
+    let r_centre = line_of.get(R)
+    if (r_centre === undefined) {
+      const s = (R.source as Class_NodeElement).getOutputLinkStartingPoint(R)
+      if (!s) return undefined
+      r_centre = s.y
+    }
+    const half = (link: Class_LinkElement) => (link.thicknessSourceRaw ?? 0) / 2
+    return r_centre + half(R) + (L.shape_straight_below_gap || 0) + half(L)
+  }
 
   let moved = false
   items.forEach(({ L, mode, startOff, endOff }) => {
@@ -114,7 +138,11 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
     // Lignes cibles src/tgt telles que `tgtLine - srcLine == off`. Le nœud de référence du mode
     // reste en place (delta nul), l'autre est amené pour satisfaire l'écart.
     let srcLine: number, tgtLine: number
-    switch (mode) {
+    const R = refOf(L)
+    const below = R ? belowLine(L, R) : undefined
+    // Sous un flux de référence : c'est lui qui fixe la ligne, les DEUX nœuds y sont amenés.
+    if (below !== undefined) { srcLine = below; tgtLine = below + off }
+    else switch (mode) {
     case 'target':
       tgtLine = tgtAccr; srcLine = tgtAccr - off; break
     case 'highest': // ancre = accroche la plus haute (min y)
@@ -128,6 +156,7 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
     // 'source' (défaut) et 'absolute' (réservé → repli sur 'source' pour l'instant).
     default: srcLine = srcAccr; tgtLine = srcAccr + off; break
     }
+    line_of.set(L, srcLine)
     const ds = srcLine - srcAccr
     if (Math.abs(ds) > 0.5) { L.source.position_y += ds; moved = true }
     const dt = tgtLine - tgtAccr
