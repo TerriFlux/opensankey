@@ -73,6 +73,19 @@ describe('os#1385 lot 4 — la clé racine workspace', () => {
     expect(reloaded.menu_configuration.panels.getMode('config')).toBe('sidebar')
   })
 
+  // Julien, 13/10 (SOCLE publie) — la barre Navigation ouverte a l enregistrement s imposait au lecteur.
+  it('une page PUBLIEE ne rejoue pas les panneaux de l auteur, mais garde la langue', () => {
+    const app = mkMain()
+    app.language = 'fr'
+    app.menu_configuration.panels.setMode('filter', 'sidebar')
+    const saved = app.toJSON() as Type_JSON
+
+    const reader = new Class_Workspace(true).createDocument()
+    reader.fromJSON(deepClone(saved), {}, false)
+    expect(reader.language).toBe('fr')
+    expect(reader.menu_configuration.panels.getMode('filter')).not.toBe('sidebar')
+  })
+
   it('un fichier ANTERIEUR (langue et panneaux a la racine) se relit tel quel', () => {
     const source = mkMain()
     const file = source.toJSON() as Type_JSON

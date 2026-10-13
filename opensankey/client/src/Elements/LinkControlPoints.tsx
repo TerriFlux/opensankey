@@ -557,9 +557,11 @@ export class LinkControlPoints {
   private resolvePassPoint(p: Type_LinkPassPoint, s: Type_Pt, t: Type_Pt, frame: Type_PassPointFrame): Type_Pt {
     const n = this.passPointNode(p)
     if (!n) return passPointToWorld(p, s, t, frame)
+    // Le point est sur la MÉDIANE du flux : la demi-épaisseur en plus met le HAUT du flux à `gap`
+    // sous le nœud, quelle que soit l'épaisseur de la donnée lue (Julien, 13/10).
     return [
       n.position_x + n.getShapeWidthToUse() / 2,
-      n.position_y + n.getShapeHeightToUse() + (p.gap ?? 0)
+      n.position_y + n.getShapeHeightToUse() + (p.gap ?? 0) + this.link.thickness / 2
     ]
   }
 
