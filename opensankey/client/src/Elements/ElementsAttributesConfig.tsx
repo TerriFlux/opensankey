@@ -112,7 +112,9 @@ export type Type_LinkWaypoint = { x: number, y: number }
 // Point de passage lisse d'un flux (opensankey#1301) : u = fraction de l'ancre source
 // (0) à l'ancre cible (1) le long de la corde, v = décalage perpendiculaire à l'axe du
 // flux, en unités MONDE. Relatif aux ancres → suit les déplacements de nœuds.
-export type Type_LinkPassPoint = { u: number, v: number }
+// `node` / `gap` (Julien, 13/10) — point ACCROCHÉ À UN NŒUD : sous son centre, `gap` px sous son
+// bas, recalculé à chaque dessin. `u` / `v` restent posés : on y revient en décrochant.
+export type Type_LinkPassPoint = { u: number, v: number, node?: string, gap?: number }
 // Ancrage de droiture d'un flux (#665, refonte multi-ancrage). 'none' = libre (flux non
 // contraint). 'source'/'target' = l'accroche aval/amont s'aligne sur l'autre (déplace le
 // nœud opposé). 'highest'/'lowest' = les deux accroches s'alignent sur la plus haute / la

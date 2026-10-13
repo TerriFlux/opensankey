@@ -289,7 +289,8 @@ export function scaleModelGeometry(da: Class_DrawingArea, r: number, include_lab
     // Points de passage : u relatif aux ancres (invariant), v en unités MONDE (à scaler).
     const pps = l.shape_pass_points
     if (Array.isArray(pps) && pps.length > 0) {
-      l.shape_pass_points = pps.map(p => ({ u: p.u, v: p.v * r }))
+      // L'écart sous un nœud (`gap`) est en unités MONDE aussi ; le nœud accroché est gardé.
+      l.shape_pass_points = pps.map(p => ({ ...p, v: p.v * r, ...(p.gap !== undefined ? { gap: p.gap * r } : {}) }))
     }
     if (include_labels) {
       LABEL_NUM_KEYS.forEach(k => scaleNumAttr(l, k, r))
