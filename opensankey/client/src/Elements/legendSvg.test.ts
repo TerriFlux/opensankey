@@ -59,6 +59,16 @@ describe('os#1527 legendToSvg', () => {
     expect(horizontal.height).toBeLessThan(legendToSvg(items, config()).height)
   })
 
+  test('horizontal : titre seul sur sa ligne quand ses entrees ne tiennent pas derriere lui', () => {
+    const doc = parse(legendToSvg(items, config({ horizontal: true, width: 90 })).svg)
+    const tspan = (text: string) => Array.from(doc.querySelectorAll('tspan')).find(t => t.textContent === text)
+    const title_y = Number(tspan('Fiabilite')?.getAttribute('y'))
+    const full = tspan('Full')
+    expect(Number(full?.getAttribute('y'))).toBeGreaterThan(title_y)
+    // La premiere entree repart a gauche, sous le titre, pas decalee derriere lui
+    expect(Number(full?.getAttribute('x'))).toBeLessThan(Number(tspan('Fiabilite')?.getAttribute('x')) + 30)
+  })
+
   test('retour a la ligne a la largeur de la legende', () => {
     expect(wrapText('un deux trois quatre cinq six', 10, 40).length).toBeGreaterThan(1)
     const long: Type_LegendItem = { id: 'legend-tag-x', text: 'un nom tres long qui ne tient pas sur une ligne', swatch_color: '#123456' }

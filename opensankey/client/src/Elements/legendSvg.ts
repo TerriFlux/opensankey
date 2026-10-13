@@ -141,6 +141,21 @@ const textSvg = (
 const startsBlock = (item: Type_LegendItem): boolean =>
   item.starts_group === true || (item.own_line === true && item.block_id !== undefined && item.tag_group_id === undefined)
 
+/** Horizontal : largeur, sur une ligne, des entrées d'un groupe à partir de `from` (jusqu'à la ligne suivante imposée). */
+const groupEntriesWidth = (
+  shown: readonly Type_LegendItem[], from: number, P: number, config: Type_LegendSvgConfig, prefix: string
+): number => {
+  let w = 0
+  for (let i = from; i < shown.length; i++) {
+    const item = shown[i]
+    if (item.group_title === true || item.own_line === true || item.starts_group === true || item.wrap === true) break
+    const swatch = swatchOf(item, P, isUnchecked(item), config, `${prefix}_hatch_${i}`)
+    w += (swatch !== undefined ? swatch.w + GAP_EM * P : 0) +
+      estimateTextWidth(textOf(item), P) * (item.bold === true ? 1.1 : 1) + (w > 0 ? INLINE_GAP_EM * P : 0)
+  }
+  return w
+}
+
 /**
  * os#1527 — la légende de la colonne en SVG : un `<g>` dont l'origine est son coin haut-gauche, sa
  * largeur et sa hauteur. `k` multiplie toutes les mesures de texte (police, largeur, marges) : 1 pour
@@ -239,6 +254,12 @@ export function legendToSvg(items: readonly Type_LegendItem[], config: Type_Lege
       if (title) {
         x += entry_w + 0.6 * P
         entries_x = x
+        // Le titre ne garde ses entrées sur sa ligne que si elles y tiennent TOUTES ; sinon elles
+        // partent dessous, à gauche — pas une colonne décalée sous la première entrée.
+        if (x + groupEntriesWidth(shown, index + 1, P, config, prefix) > max_w) {
+          newLine()
+          entries_x = 0
+        }
       } else if (own_line) {
         newLine()
       } else {
