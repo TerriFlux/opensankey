@@ -27,10 +27,11 @@ const centres = (l: ReturnType<typeof build>['l']): [[number, number], [number, 
   [[l.source.position_x, l.source.position_y], [l.target.position_x, l.target.position_y]]
 
 describe('point de passage accroche sous un noeud', () => {
-  it('se place sous le centre du noeud, a l ecart voulu, et le suit', () => {
+  it('met le HAUT du flux a l ecart voulu sous le centre du noeud, et le suit', () => {
     const { b, c, l } = build()
+    expect(l.thickness).toBeGreaterThan(0)
     const expected = (): [number, number] =>
-      [c.position_x + c.getShapeWidthToUse() / 2, c.position_y + c.getShapeHeightToUse() + 100]
+      [c.position_x + c.getShapeWidthToUse() / 2, c.position_y + c.getShapeHeightToUse() + 100 + l.thickness / 2]
     expect(l.routePointNear(b, ...centres(l))).toEqual(expected())
     c.position_y = 500
     expect(l.routePointNear(b, ...centres(l))).toEqual(expected())
