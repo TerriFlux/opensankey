@@ -21,11 +21,11 @@
 
 // --- Encres (texte et traits du chrome) -------------------------------------------------------
 /** Encre forte : titres, texte des listes déroulantes (Chakra gray.800). */
-export const ui_ink_strong = '#1a202c'
+export const ui_ink_strong = '#1a2330'
 /** Encre courante du texte de l'interface (Chakra gray.700). */
 export const ui_ink = '#2d3748'
 /** Encre secondaire : libellés de second rang, contours de commandes (Chakra gray.600). */
-export const ui_ink_secondary = '#4a5568'
+export const ui_ink_secondary = '#4a5768'
 /** Encre atténuée : légendes d'axes, indications, valeurs annexes (Chakra gray.500). */
 export const ui_ink_muted = '#718096'
 /** Encre désactivée ou décochée (Chakra gray.400). */
@@ -33,7 +33,7 @@ export const ui_ink_disabled = '#a0aec0'
 
 // --- Filets (bordures, séparateurs) -------------------------------------------------------------
 /** Filet discret : séparateurs de sections (Chakra gray.200). */
-export const ui_line = '#e2e8f0'
+export const ui_line = '#dde3ea'
 /** Filet fort : contours de commandes, cases décochées (Chakra gray.300). */
 export const ui_line_strong = '#cbd5e0'
 
@@ -45,11 +45,12 @@ export const ui_bg_subtle = '#f7fafc'
 /** Fond doux : survol de liste, pastilles, pistes (Chakra gray.100). */
 export const ui_bg_muted = '#edf2f7'
 /** Fond « choisi » ou survolé, dans la teinte de l'accent (Chakra blue.50). */
-export const ui_bg_selected = '#ebf4ff'
+export const ui_bg_selected = '#e2f1f2'
 
 // --- Accent et états -----------------------------------------------------------------------------
 /** L'accent UNIQUE « choisi / actif » du chrome (Chakra blue.700). */
-export const ui_accent = '#2b6cb0'
+// Charte TerriFlux (sa#655) : accent = bleu-vert du site (terriflux-site/src/styles/global.css).
+export const ui_accent = '#127c81'
 /** Danger, erreur (Chakra red.700). */
 export const ui_danger = '#c53030'
 
@@ -63,7 +64,7 @@ export const ui_text_large = '14px'
 /** Pile de polices du chrome (celle de `body` dans `css/main.css`). */
 export const ui_font_stack = 'system-ui, sans-serif'
 /** Police des titres du thème Chakra (`textStyles.h1…h4`). */
-export const ui_font_heading = 'Open Sans,sans-serif'
+export const ui_font_heading = 'system-ui, sans-serif'
 
 // --- Formes ----------------------------------------------------------------------------------------
 /** Rayon des petites commandes (boutons au trait du lecteur et de la frise). */

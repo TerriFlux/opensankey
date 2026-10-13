@@ -28,23 +28,31 @@ const createHelpers = () => ({
 
 const { tag, slider, tabs, table, select, popover, numberInput, accordion, card, checkbox, breadcrumb, drawer, input, edit, menu, modal, stepper } = createHelpers()
 
-// Couleurs communes
+// Couleurs communes. Charte TerriFlux (sa#655, décision de Julien du 12/10/2026) : la couleur de
+// marque est le bleu-vert du site (#127c81, terriflux-site/src/styles/global.css) ; les verts
+// OpenSankey (.3 et .6, openSankey.*) et la palette `blue` de Chakra (sélections, cases à cocher)
+// passent dans sa gamme. L'orange (.1, outils d'édition) et le bleu pâle (.2) restent : ce sont
+// des couleurs FONCTIONNELLES.
 const COLORS = {
   primaire: {
-    1: '#F7AD7C', 2: '#78A7C2', 3: '#78C2AD',
-    4: '#B49E90', 5: '#8EA4B1', 6: '#8EB1A8'
+    1: '#F7AD7C', 2: '#78A7C2', 3: '#198f91',
+    4: '#B49E90', 5: '#8EA4B1', 6: '#6bc2c6'
   },
   secondaire: {
-    1: '#DA996D', 2: '#668EA5', 3: '#66A593',
-    4: '#968478', 5: '#778A95', 6: '#77958D'
+    1: '#DA996D', 2: '#668EA5', 3: '#127c81',
+    4: '#968478', 5: '#778A95', 6: '#4fa9ad'
   },
   tertiaire: {
-    1: '#BC835E', 2: '#557689', 3: '#55897A',
-    4: '#786960', 5: '#606F78', 6: '#607871'
+    1: '#BC835E', 2: '#557689', 3: '#0e6165',
+    4: '#786960', 5: '#606F78', 6: '#2f7f83'
   },
   openSankey: {
-    50: '#C1E5DB', 100: '#66a59366', 200: '#66a593',
-    300: '#25B48C', 400: '#78C2AD'
+    50: '#e2f1f2', 100: '#127c8166', 200: '#127c81',
+    300: '#0e6165', 400: '#198f91'
+  },
+  blue: {
+    50: '#e2f1f2', 100: '#bfe3e5', 200: '#8fcfd2', 300: '#6bc2c6', 400: '#198f91',
+    500: '#127c81', 600: '#0e6165', 700: '#0b4f52', 800: '#083c3e', 900: '#052a2b'
   },
   // Ajoute les couleurs orange pour l'état indéterminé
   orange: {

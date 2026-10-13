@@ -39,6 +39,7 @@
 // `drawing_area.connection_gesture`, sans import.
 
 import * as d3 from '../d3Modules'
+import { ui_accent } from '../css/uiTokens'
 
 import { Class_LinkElement } from '../Elements/Link'
 import type { Class_DrawingArea } from './DrawingArea'
@@ -191,7 +192,7 @@ export class Class_ConnectionGestureHandler {
       g.append('path')
         .attr('d', `M ${-arrow_size * 0.6} ${-arrow_size} L ${arrow_size * 0.6} 0 L ${-arrow_size * 0.6} ${arrow_size}`)
         .attr('fill', 'none')
-        .attr('stroke', '#2b6cb0')
+        .attr('stroke', ui_accent)
         .attr('stroke-width', 2.5 / k)
         .attr('stroke-linecap', 'round')
         .attr('stroke-linejoin', 'round')
