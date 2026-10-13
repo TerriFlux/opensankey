@@ -2932,7 +2932,10 @@ export class Class_ApplicationData {
     if (state.language !== undefined) this._language = state.language
     // Garde défensive `?.` : `menu_configuration` n'est posée que par
     // `createNewMenuConfiguration` (cf. `main_zone` ci-dessus).
-    if (state.panels) this.menu_configuration?.panels.fromJSON(state.panels)
+    // Julien, 13/10 (SOCLE publié) — PAS EN LECTURE : les panneaux sont l'espace de travail de
+    // l'AUTEUR (sa barre « Navigation » ouverte à l'enregistrement, ses pop-ups). Rejoués sur une
+    // page publiée, ils s'imposaient au lecteur ; il part d'une page à légende ouverte, navigation fermée.
+    if (state.panels && !this.is_static) this.menu_configuration?.panels.fromJSON(state.panels)
   }
 
   // FEUILLES DE DESSIN (OS#85) =========================================================
