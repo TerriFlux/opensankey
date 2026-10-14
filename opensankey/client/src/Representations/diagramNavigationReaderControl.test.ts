@@ -80,7 +80,7 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     expect(table(app, [filiere, matiere]).textContent).not.toContain('Distinguer les sous-filières')
   })
 
-  test('distinguer les sous-filieres les met en bandes et gele la case du type de matiere', async () => {
+  test('distinguer les sous-filieres decoche le type de matiere, et le recocher ramene la filiere', async () => {
     const { app, filiere, matiere } = monter()
     matiere.membersAtLevel(1).forEach(m => m.setSelected())
     matiere.tags_dict.matiere.setUnSelected()
@@ -91,14 +91,20 @@ describe('os#1511 — commandes du lecteur du tableau du diagramme', () => {
     caseSous.dispatchEvent(new Event('change'))
     await attendre()
     expect(filiere.selected_tags_list.map(m => m.id).sort()).toEqual(['ble', 'mais', 'orge'])
-    // Les deux cases s excluent : celle du type de matiere s est decochee et se gele.
+    // Les deux cases s excluent : celle du type de matiere s est decochee, sans se geler.
     expect(matiere.current_level_index).toBe(0)
     const caseMatiere = [...table(app, [filiere, matiere]).querySelectorAll('input[type=checkbox]')]
       .find(c => c.parentElement?.textContent?.includes('Distinguer mati')) as HTMLInputElement
-    expect(caseMatiere.disabled).toBe(true)
+    expect(caseMatiere.disabled).toBe(false)
     const caseSousApres = [...table(app, [filiere, matiere]).querySelectorAll('input[type=checkbox]')]
       .find(c => c.parentElement?.textContent?.includes('sous-filières')) as HTMLInputElement
     expect(caseSousApres.checked).toBe(true)
+    // Jean-Yves, 14/10 : recocher le type de matiere directement ramene la filiere a Cereales.
+    caseMatiere.checked = true
+    caseMatiere.dispatchEvent(new Event('change'))
+    await attendre()
+    expect(matiere.current_level_index).toBe(1)
+    expect(filiere.selected_tags_list.map(m => m.id)).toEqual(['cereales'])
   })
 
   test('deux sous-filieres decochent la case des autres : un seul pas a annuler', () => {
