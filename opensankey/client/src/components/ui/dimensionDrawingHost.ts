@@ -389,6 +389,25 @@ export const applyReferenceNode = (
 }
 
 /**
+ * REVENIR « EN NŒUDS » (Julien, 14/10 : « si je passe de nœuds à bandes je perds la sélection des
+ * nœuds ; quand je reviens je dois les resélectionner ») — les porteurs mis de côté au passage en
+ * bandes (`parked_carrier_ids`) REDEVIENNENT porteurs : c'est pour cela qu'on les gardait. Ceux qui
+ * n'existent plus ou ne peuvent plus porter la dimension (`carrierRefusal`) sont écartés. Sans
+ * porteur mis de côté, `fallback` (le premier candidat, cf. l'éditeur de groupe) ; rien sinon.
+ * Annulable (cf. `applyDimensionCarriers`). Rend les ids rattachés.
+ */
+export const applyDimensionNodes = (
+  app_data: Class_ApplicationData, tagg: Class_DataTagGroup, fallback?: string
+): string[] => {
+  const nodes = app_data.drawing_area.sankey.nodes_dict
+  const remis = tagg.parked_carrier_ids
+    .filter(id => nodes[id] !== undefined && carrierRefusal(app_data, tagg, id) === undefined)
+  const ids = remis.length > 0 ? remis : (fallback !== undefined ? [fallback] : [])
+  if (ids.length > 0) applyDimensionCarriers(app_data, tagg, ids)
+  return ids
+}
+
+/**
  * Un membre à la fois, ou plusieurs en bandes. Quitter « en nœuds » détache TOUS les porteurs.
  * Revenir à un seul membre garde le premier qui était choisi — un choix unique à plusieurs membres
  * ne rendrait plus aucune valeur.
