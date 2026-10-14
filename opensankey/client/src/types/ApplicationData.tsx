@@ -725,10 +725,13 @@ export class Class_ApplicationData {
    * reference. Callers keep using `app_data.drawing_area` (getter) so no
    * downstream binding needs updating. */
   public replaceDrawingArea(new_drawing_area: Class_DrawingArea): void {
+    const previous_legend = this._drawing_area?.legend
     if (this._drawing_area?.d3_selection_zoom_area != null) {
       this._drawing_area.unDraw()
     }
     this._drawing_area = new_drawing_area
+    // sa#665 — la légende en colonne survit au remplacement.
+    new_drawing_area.legend.adoptPanelStateFrom(previous_legend)
   }
 
   public createNewIconLibrary(): Class_IconLibrary {
@@ -1295,8 +1298,11 @@ export class Class_ApplicationData {
     // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
     this._publish_settings = {}
     // Undraw and create new DA
+    const previous_legend = this._drawing_area.legend
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
+    // sa#665 — la légende en colonne survit au nouveau fichier (page à plusieurs diagrammes).
+    this._drawing_area.legend.adoptPanelStateFrom(previous_legend)
 
     this._drawing_area.bypass_redraws = by_pass_redraw
 
