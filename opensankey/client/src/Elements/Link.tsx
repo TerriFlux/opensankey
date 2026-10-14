@@ -1183,6 +1183,28 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * os#1511 (Julien, 14/10, panorama de l'agriculture : faire cohabiter les bandes des filières
+   * végétales et animales) — LA DIMENSION QUI DÉCOUPE CE FLUX en bandes, parmi celles qui en font
+   * (`Class_DataTagGroup.draws_bands`) :
+   *  - une seule : elle ;
+   *  - plusieurs : celle qui VENTILE ce flux (au moins une bande à valeur) — les flux végétaux par
+   *    culture, les flux animaux par filière animale ;
+   *  - plusieurs le ventilent (Matière végétale → Élevage) : celle qui ventile aussi les flux qui
+   *    SORTENT de son nœud d'arrivée — le flux prend la lecture de la suite du diagramme (arbitrage
+   *    de Julien : « filière animale ») ; à défaut, la première de la liste.
+   */
+  public bandDimension(): Class_DataTagGroup | undefined {
+    const candidates = (this.sankey.data_taggs_list as Class_DataTagGroup[]).filter(tagg => tagg.draws_bands)
+    if (candidates.length <= 1) return candidates[0]
+    const ventile = (lien: Class_LinkElement, dim: Class_DataTagGroup) =>
+      lien.dimensionBandsRaw(dim).some(band => band.value > 0)
+    const miennes = candidates.filter(dim => ventile(this, dim))
+    if (miennes.length <= 1) return miennes[0] ?? candidates[0]
+    const sorties = this.target.output_links_list.filter(lien => lien !== this && lien.is_visible)
+    return miennes.find(dim => sorties.some(lien => ventile(lien, dim))) ?? miennes[0]
+  }
+
+  /**
    * os#1511 — les bandes d'une dimension en bandes sur CE flux, AVANT tout repli « Autres » : une
    * par membre choisi de valeur positive, dans l'ordre de la sélection. Public : la dimension les
    * lit sur tous les flux visibles pour décider ce qui se replie au total
@@ -1238,7 +1260,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
           .filter(autre => autre.group.id !== multi_dim.id && !groupes_axes.has(autre.group.id))
           .concat([tag as Class_DataTag])
           .concat(membres_axes)
-        const contributions = porteur.contributingValuesFor(coordonnee)
+        // Pas de repli sur la racine pour la dimension des bandes : chaque bande vaudrait le total.
+        const contributions = porteur.contributingValuesFor(coordonnee, new Set([multi_dim.id]))
         if (contributions !== null) {
           const somme = contributions.reduce((total, valeur) => total + (this.readLayer(valeur) ?? 0), 0)
           if (somme > 0) v = somme
@@ -1298,7 +1321,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // os#1511 — une dimension ATTACHÉE à un nœud fait des NŒUDS, jamais des bandes. Sans cette
     // exclusion, la mettre en choix multiple produisait les deux à la fois pour le même axe.
     // Une seule dimension se dessine en nœuds ; les autres restent en bandes.
-    const multi_dim = this.sankey.data_taggs_list.find(tagg => tagg.draws_bands)
+    const multi_dim = this.bandDimension()
     if (multi_dim) {
       const bands: Type_DimensionBand[] = this.dimensionBandsRaw(multi_dim)
       // os#1511 — « AUTRES » (règle arrêtée avec Julien le 01/10) : le repli se décide AU TOTAL de
@@ -2817,12 +2840,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * et invalide au passage les caches de visibilité de tout le diagramme. Viser la coordonnée
    * directement ne touche à rien et ne laisse rien à restaurer.
    */
-  public contributingValuesFor(data_tags: Class_DataTag[]): Class_LinkValue[] | null {
+  public contributingValuesFor(
+    data_tags: Class_DataTag[], sans_repli?: ReadonlySet<string>
+  ): Class_LinkValue[] | null {
     if (this._values instanceof Class_LinkValue) {
       if (this._values.structurally_absent) return null
       return [this._values]
     }
-    return this._values.getContributingValues(data_tags) as Class_LinkValue[] | null
+    return this._values.getContributingValues(data_tags, sans_repli) as Class_LinkValue[] | null
   }
 
   /**
@@ -2931,7 +2956,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // serait pris pour un flux de structure.
       if (value_current === null) {
         // os#1511 (14/10) — la dimension qui fait les bandes d'abord (cf. `draws_bands`).
-        const multi_dim = this.sankey.data_taggs_list.find(tagg => tagg.draws_bands) ??
+        const multi_dim = this.bandDimension() ??
           this.sankey.data_taggs_list.find(tagg => tagg.banner === 'multi' && tagg.tags_list.length > 1)
         if (multi_dim) {
           const vals = multi_dim.selected_tags_list

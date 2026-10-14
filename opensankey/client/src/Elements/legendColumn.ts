@@ -39,8 +39,19 @@ export type Type_AppForColumn = {
  * autre ; sans bandes, celle qui peint les flux. `undefined` : aucune.
  */
 export const legendColorerOf = <T extends Type_DimensionForColumn>(dims: readonly T[]): T | undefined =>
-  dims.find(g => g.draws_bands === true && g.selected_tags_list.length > 1)
-  ?? dims.find(g => g.paints_member_bands_flows === true)
+  legendColorersOf(dims)[0]
+
+/**
+ * os#1511 (14/10, panorama : filières végétales ET animales en bandes) — TOUTES les dimensions qui
+ * colorent le dessin : chaque flux prend ses bandes de celle qui le ventile, plusieurs peuvent donc
+ * colorer à la fois ; sans bandes, celle qui peint les flux.
+ */
+export const legendColorersOf = <T extends Type_DimensionForColumn>(dims: readonly T[]): T[] => {
+  const bandes = dims.filter(g => g.draws_bands === true && g.selected_tags_list.length > 1)
+  if (bandes.length > 0) return bandes
+  const peintre = dims.find(g => g.paints_member_bands_flows === true)
+  return peintre === undefined ? [] : [peintre]
+}
 
 /**
  * os#1511 (Julien, 10/10 : « je ne pense pas qu'il faille garder la légende pour les choses qui ne
@@ -58,8 +69,8 @@ export const colouredLegendItems = (
   const legend = app_data.drawing_area.legend
   const groupOfTitle = titleGroupOf ?? ((id: string) => legend.tagGroupIdOfTitle(id))
   const dims = app_data.drawing_area.sankey.data_taggs_list as Type_DimensionForColumn[]
-  const colorer = legendColorerOf(dims)
-  const hidden = new Set(dims.filter(g => g !== colorer).map(g => g.id))
+  const colorers = legendColorersOf(dims)
+  const hidden = new Set(dims.filter(g => !colorers.includes(g)).map(g => g.id))
   if (hidden.size === 0) return items
   // Les BLOCS des dimensions écartées (titre compris, que `tagGroupIdOfTitle` ne rattache pas
   // toujours), et les lignes de rappel « Année : 2023 ▾ », qui se choisissent dans la navigation.
@@ -83,11 +94,11 @@ export const navigationSummary = (
   dims: readonly Type_DimensionForColumn[],
   t?: (key: string, options?: { [k: string]: unknown }) => unknown
 ): string => {
-  const colorer = legendColorerOf(dims)
+  const colorers = legendColorersOf(dims)
   // Julien, 10/10 (« Volailles · 2023 · kt · Matière » : trop bavard) — on ne résume que ce qui se
   // CHOISIT membre par membre : pas une dimension réglée par une case ou un niveau de détail (son
   // état se lit sur le dessin), ni une dimension portée par des nœuds (ses membres y sont nommés).
-  const resumable = (g: Type_DimensionForColumn) => g !== colorer && g.drawing !== 'nodes' &&
+  const resumable = (g: Type_DimensionForColumn) => !colorers.includes(g) && g.drawing !== 'nodes' &&
     g.reader_control?.kind !== 'toggle' && g.reader_control?.kind !== 'level'
   return dims
     .filter(resumable)

@@ -2126,11 +2126,16 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * en bandes mais sur « Toutes filières » seule, prenait la main sur la filière animale et ses neuf
    * membres choisis, et chaque flux n'avait qu'une bande grise.
    */
+  //
+  // os#1511 (Julien, 14/10, panorama : faire COHABITER filières végétales et animales) — PLUSIEURS
+  // dimensions peuvent faire des bandes à la fois : toutes celles qui superposent plusieurs membres.
+  // Chaque flux choisit la sienne (`Class_LinkElement.bandDimension`), celle qui le ventile. Aucune
+  // ne superpose : la première de la liste, comme avant.
   public get draws_bands(): boolean {
     if (!this._may_draw_bands) return false
+    if (this.selected_tags_list.length > 1) return true
     const candidates = this._ref_sankey.data_taggs_list.filter(tagg => tagg._may_draw_bands)
-    const superposee = candidates.find(tagg => tagg.selected_tags_list.length > 1)
-    return (superposee ?? candidates[0]) === this
+    return !candidates.some(tagg => tagg.selected_tags_list.length > 1) && candidates[0] === this
   }
 
   /**
