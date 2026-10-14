@@ -93,23 +93,46 @@ export const colouredLegendItems = (
 export const navigationSummary = (
   dims: readonly Type_DimensionForColumn[],
   t?: (key: string, options?: { [k: string]: unknown }) => unknown
-): string => {
+): string => resumableDimensions(dims)
+  .map(g => selectionLabel(g, t))
+  .filter(s => s !== '')
+  .join(' · ')
+
+type Type_T = (key: string, options?: { [k: string]: unknown }) => unknown
+
+/**
+ * Julien, 10/10 (« Volailles · 2023 · kt · Matière » : trop bavard) — on ne résume que ce qui se
+ * CHOISIT membre par membre : pas la dimension qui porte la couleur (la légende la montre), ni une
+ * dimension réglée par une case ou un niveau de détail (son état se lit sur le dessin), ni une
+ * dimension portée par des nœuds (ses membres y sont nommés).
+ */
+const resumableDimensions = <T extends Type_DimensionForColumn>(dims: readonly T[]): T[] => {
   const colorers = legendColorersOf(dims)
-  // Julien, 10/10 (« Volailles · 2023 · kt · Matière » : trop bavard) — on ne résume que ce qui se
-  // CHOISIT membre par membre : pas une dimension réglée par une case ou un niveau de détail (son
-  // état se lit sur le dessin), ni une dimension portée par des nœuds (ses membres y sont nommés).
-  const resumable = (g: Type_DimensionForColumn) => !colorers.includes(g) && g.drawing !== 'nodes' &&
-    g.reader_control?.kind !== 'toggle' && g.reader_control?.kind !== 'level'
-  return dims
-    .filter(resumable)
-    .map(g => {
-      const tags = g.selected_tags_list
-      if (tags.length === 0) return ''
-      if (tags.length === 1) return tags[0].display_name ?? tags[0].name
-      const plural = pluralGroupName(g.name)
-      const translated = t ? t('Banner.title_selection', { name: plural, defaultValue: 'Sélection de {{name}}' }) : undefined
-      return typeof translated === 'string' && translated !== '' ? translated : `Sélection de ${plural}`
-    })
-    .filter(s => s !== '')
-    .join(' · ')
+  return dims.filter(g => !colorers.includes(g) && g.drawing !== 'nodes' &&
+    g.reader_control?.kind !== 'toggle' && g.reader_control?.kind !== 'level')
 }
+
+/** Le membre choisi d'une dimension, ou « Sélection de … » quand plusieurs sont montrés ; '' : aucun. */
+const selectionLabel = (g: Type_DimensionForColumn, t?: Type_T): string => {
+  const tags = g.selected_tags_list
+  if (tags.length === 0) return ''
+  if (tags.length === 1) return tags[0].display_name ?? tags[0].name
+  const plural = pluralGroupName(g.name)
+  const translated = t ? t('Banner.title_selection', { name: plural, defaultValue: 'Sélection de {{name}}' }) : undefined
+  return typeof translated === 'string' && translated !== '' ? translated : `Sélection de ${plural}`
+}
+
+/**
+ * sa#664 (Julien, 14/10, SOCLE filières : « y a pas unité, territoire, nom de la céréale ») — LES
+ * LIGNES DE RAPPEL en tête de la colonne, en lecture seule : « Unité : kt », « Territoire : France
+ * entière », « Céréale : Blé tendre ». Une dimension à une seule valeur n'a pas de sélecteur, et une
+ * autre peut se choisir hors de la colonne (barre du haut, frise) : sans elles, la légende ne dit plus
+ * ce qu'on regarde. Mêmes dimensions que le résumé des exports (`navigationSummary`).
+ */
+export const legendContextRows = (
+  dims: readonly Type_DimensionForColumn[],
+  t?: Type_T
+): { id: string, label: string }[] => resumableDimensions(dims)
+  .map(g => ({ id: g.id, value: selectionLabel(g, t), name: g.name }))
+  .filter(r => r.value !== '')
+  .map(r => ({ id: r.id, label: `${r.name} : ${r.value}` }))
