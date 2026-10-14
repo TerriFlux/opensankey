@@ -90,6 +90,26 @@ const jsonNeedsEagerRead = (json: Type_JSON): boolean => {
   return false
 }
 
+/**
+ * os#1511 (Julien, 14/10 : « c'est très long, comme tout ce qu'on fait avec ce jeu de données ») —
+ * MÉMOIRE DES RÉPONSES DU CUBE pendant un dessin (`DrawingArea.withNodeSizeMemo` l'ouvre et la
+ * ferme). Les bandes demandent sans cesse « cette branche porte-t-elle une donnée ? » ; la réponse
+ * négative parcourt toute la branche, et sur le panorama de l'agriculture, au niveau Postes, ces
+ * parcours prenaient 38 des 47 s d'un clic. Pendant un dessin, aucune valeur ne s'écrit : la
+ * réponse ne peut pas changer. Hors dessin (`null`), rien n'est retenu.
+ */
+export const valueTreeAnswers: { active: WeakMap<object, { [question: string]: boolean }> | null } = { active: null }
+
+const answerOnce = (tree: object, question: string, compute: () => boolean): boolean => {
+  const memo = valueTreeAnswers.active
+  if (memo === null) return compute()
+  let answers = memo.get(tree)
+  if (answers === undefined) { answers = {}; memo.set(tree, answers) }
+  const known = answers[question]
+  if (known !== undefined) return known
+  return (answers[question] = compute())
+}
+
 /** os#1511 — aucune dimension exclue du repli sur la racine (cf. `getContributingValues`). */
 const SANS_REPLI_AUCUN: ReadonlySet<string> = new Set()
 
@@ -296,36 +316,21 @@ export class Class_ElementValueTree {
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
     if (pending !== null) return this._pendingSome(pending, 'has_result', value => value.has_result)
-    let has_result = false
-    Object.values(this.children)
-      .forEach(child => {
-        has_result = has_result || child.has_result
-      })
-    return has_result
+    return answerOnce(this, 'has_result', () => Object.values(this.children).some(child => child.has_result))
   }
 
   public get has_intervals() {
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
     if (pending !== null) return this._pendingSome(pending, 'has_intervals', value => value.has_intervals)
-    let has_intervals = false
-    Object.values(this.children)
-      .forEach(child => {
-        has_intervals = has_intervals || child.has_intervals
-      })
-    return has_intervals
+    return answerOnce(this, 'has_intervals', () => Object.values(this.children).some(child => child.has_intervals))
   }
 
   public get has_data() {
     if (this._is_blank_unbuilt) return false
     const pending = this._pending
     if (pending !== null) return this._pendingSome(pending, 'has_data', value => value.has_data)
-    let has_data = false
-    Object.values(this.children)
-      .forEach(child => {
-        has_data = has_data || child.has_data
-      })
-    return has_data
+    return answerOnce(this, 'has_data', () => Object.values(this.children).some(child => child.has_data))
   }
 
   public get has_collected_data(): boolean {
