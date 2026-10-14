@@ -47,7 +47,11 @@ type FakeLink = {
   shape_straight_below_gap?: number
 }
 
+// Un vrai flux a toujours un id : enforceStraightLinks le lit pour reconnaître les flux engendrés
+// par une dimension (os#1511, 199696db0).
+let link_seq = 0
 const link = (source: FakeNode, target: FakeNode, opts: Partial<FakeLink> = {}): FakeLink => ({
+  id: `L${++link_seq}_${source.id}_${target.id}`,
   source,
   target,
   is_visible: true,
