@@ -1157,6 +1157,8 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // SankeyMATIC (openSankeymaticEditor) ou depuis le menu d'import. Sorti du
   // panneau Tableur, dont le sous-onglet texte est devenu la vue JSON.
   ref_setter_show_sankeymatic_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // sa#671 — collage d'un tableau croisé (lignes → colonnes), mini-appli `/crosstab/`.
+  ref_setter_show_crosstab_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   // sa#424 (lot 3) — fenêtre « Exporter » UNIQUE : le choix du format de rendu
   // et ses réglages au même endroit, là où le menu Exporter de la barre
@@ -5528,6 +5530,7 @@ export class Class_MenuConfig {
       ref_setter_show_unitary_process_editor: { current: () => null },
       ref_setter_show_lca_catalog_explorer: { current: () => null },
       ref_setter_show_sankeymatic_editor: { current: () => null },
+      ref_setter_show_crosstab_editor: { current: () => null },
 
       ref_setter_show_modal_export: { current: () => null },
       ref_setter_show_modal_new_document: { current: () => null },
@@ -5591,6 +5594,7 @@ export class Class_MenuConfig {
     dialogs.ref_setter_show_unitary_process_editor.current(false)
     dialogs.ref_setter_show_lca_catalog_explorer.current(false)
     dialogs.ref_setter_show_sankeymatic_editor.current(false)
+    dialogs.ref_setter_show_crosstab_editor.current(false)
     dialogs.ref_setter_show_modal_export.current(false)
     dialogs.ref_setter_show_modal_new_document.current(false)
     dialogs.ref_setter_show_open_diagram_choice.current(false)
