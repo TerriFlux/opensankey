@@ -425,6 +425,13 @@ export const sunburstPartStyle = (
 
 export interface Type_SunburstChartOptions {
   format?: (value: number) => string
+  /**
+   * os#1511 (Julien, 14/10 : « les barres, pour moi, c'est une variante des couronnes ») — LE MÊME
+   * ARBRE DESSINÉ EN BARRES : une barre par membre du premier anneau, EMPILÉE de ses feuilles (les
+   * membres de la dimension suivante), aux couleurs, avec la légende, les cases et les gestes de la
+   * couronne. Absent : les anneaux.
+   */
+  layout?: 'rings' | 'bars'
   /** La mise en forme réglée par l'auteur ; absente, les défauts ci-dessus. */
   style?: Partial<Type_SunburstStyle>
   /**
@@ -1656,6 +1663,135 @@ export const drawSunburstChart = (
       .on('dblclick', () => { svg.call(zoom.transform, d3.zoomIdentity) })
     zoomer = { svg, zoom }
 
+    // ── os#1511 (14/10) — LES BARRES, VARIANTE DE LA COURONNE ──────────────────────────────────
+    //
+    // Julien : « pour moi c'est une variante des couronnes, elle devrait avoir un comportement
+    // similaire, notamment l'utilisation de la légende et des couleurs ; et surtout des histogrammes
+    // CUMULÉS, pas à côté, quand on fait du croisé ». Les mêmes secteurs (`slices` : mêmes couleurs,
+    // mêmes identifiants de part, même repli « Autres »), posés en barres : une par secteur du premier
+    // anneau, empilée de ses feuilles dans l'ordre des secteurs. La légende est celle de la couronne.
+    if (opts.layout === 'bars') {
+      const bars = slices.filter(sl => sl.depth === 0)
+      const segmentsOf = (bar: Type_SunburstSlice): Type_SunburstSlice[] => {
+        const leaves = slices.filter(sl => sl.depth > 0 && sl.children_count === 0 && sl.path[0] === bar.id)
+        return leaves.length > 0 ? leaves : [bar]
+      }
+      const font = st.font_size
+      const max_value = bars.reduce((m, b) => Math.max(m, b.value), 0)
+      // LA PLACE DES NOMS SOUS LES BARRES : droits s'ils tiennent dans leur colonne, inclinés sinon.
+      const textWidth = (text: string) => text.length * font * 0.52
+      const longest = bars.reduce((m, b) => Math.max(m, textWidth(b.label)), 0)
+      const band_guess = Math.max(40, box_w - 16) / Math.max(1, bars.length) * 0.75
+      const tilted = longest > band_guess
+      const bottom = tilted ? Math.min(box_h * 0.4, longest * 0.6 + font * 1.5) : font * 2.2
+      const top = font * 1.8
+      // Incliné, le premier nom part vers la gauche de sa barre : la marge le garde entier.
+      const left = tilted ? Math.min(box_w * 0.12, longest * 0.82 * 0.5) : 8
+      const x = d3.scaleBand<string>().domain(bars.map(b => b.id)).range([left, box_w - 8]).padding(0.18)
+      const y = d3.scaleLinear().domain([0, max_value > 0 ? max_value : 1]).range([box_h - bottom, top])
+      const bars_g = zoom_layer.append('g').attr('class', 'sunburst_bars')
+      const fillOf = (d: Type_SunburstSlice): string => {
+        const s = styleOf(d.id)
+        if (s.background_visible === false) return 'none'
+        return s.fill ?? d.color
+      }
+      const barTitle = (d: Type_SunburstSlice, parent?: Type_SunburstSlice) => {
+        const inside = parent !== undefined && parent !== d
+        return `${inside ? parent.label + ' · ' : ''}${d.label}\n` +
+          `${valueText(d.value, styleOf(d.id))} (${pctText(d.value, inside ? parent.value : total)})`
+      }
+      // LE CLIC DE LA COURONNE, mot pour mot : sélectionner, puis le geste réglé (déplier, zoomer).
+      const onSlice = (evt: MouseEvent, d: Type_SunburstSlice) => {
+        opts.on_part_select?.(d.id)
+        if (d.is_residual || st.click_action === 'none') return
+        if (st.click_action !== 'zoom') {
+          const ancestry = centre_node ? [centre_node.id, ...d.path] : [...d.path]
+          opts.on_arc_click?.(
+            d.id, d.is_disaggregated, d.dimension_id, ancestry,
+            { shift: evt.shiftKey === true, alt: evt.altKey === true }
+          )
+        }
+        if (st.click_action !== 'aggregate' && d.children_count > 0) {
+          focus_id = d.id
+          render()
+        }
+      }
+      const baseline = y(0)
+      bars_g.append('line')
+        .attr('x1', left).attr('x2', box_w - 8).attr('y1', baseline).attr('y2', baseline)
+        .attr('stroke', palette.muted).attr('stroke-width', 1)
+      bars.forEach(bar => {
+        const bx = x(bar.id) ?? 0
+        const bw = x.bandwidth()
+        const segments = segmentsOf(bar)
+        let cumul = 0
+        segments.forEach(seg => {
+          const y0 = y(cumul)
+          cumul += Math.max(0, seg.value)
+          const y1 = y(cumul)
+          const h = Math.max(0, y0 - y1)
+          const fill = fillOf(seg)
+          const s = styleOf(seg.id)
+          const rect = bars_g.append('rect')
+            .attr('class', 'sunburst_bar')
+            .attr('data-part-id', seg.id)
+            .attr('x', bx).attr('width', bw).attr('y', y1).attr('height', h)
+            .attr('fill', fill)
+            .attr('fill-opacity', s.opacity)
+            .attr('stroke', s.border_visible ? s.border_color : palette.surface)
+            .attr('stroke-width', s.border_visible ? s.border_thickness : 0.6)
+            .attr('stroke-dasharray', partDashArray(aspectOf(seg.id)) ?? (seg.is_disaggregated ? '3 2' : null))
+            .attr('filter', partShadow(aspectOf(seg.id), defs))
+            .style('cursor', st.click_action !== 'none' && !seg.is_residual ? 'pointer' : 'default')
+            .on('click', (evt: MouseEvent) => onSlice(evt, seg))
+          if (st.tooltip_visible) rect.append('title').text(barTitle(seg, bar))
+          // Le nom et la valeur DANS le segment, s'ils y tiennent, à l'encre qui contraste avec lui.
+          const value = formatWith(s)(seg.value)
+          const ink = s.color_mode === 'fixed'
+            ? s.label_color
+            : inkOn(fill === 'none' ? palette.surface : fill, palette.ink)
+          const fits = (text: string) => textWidth(text) <= bw - 4
+          const lines: string[] = []
+          if (seg !== bar && h >= font * 2.5 && fits(seg.label)) lines.push(seg.label)
+          if (seg !== bar && h >= font * 1.3 && fits(value)) lines.push(value)
+          if (lines.length > 0) {
+            const text = bars_g.append('text')
+              .attr('class', 'sunburst_bar_label')
+              .attr('text-anchor', 'middle').attr('pointer-events', 'none')
+              .attr('font-size', font).attr('font-family', st.font_family)
+              .attr('fill', ink)
+            const cy = y1 + h / 2 - (lines.length - 1) * font * 0.6
+            lines.forEach((line, i) => text.append('tspan')
+              .attr('x', bx + bw / 2).attr('y', cy + i * font * 1.2).attr('dominant-baseline', 'central')
+              .text(line))
+          }
+        })
+        // Le TOTAL au-dessus de la barre, comme la valeur au centre de la couronne.
+        bars_g.append('text')
+          .attr('class', 'sunburst_bar_total')
+          .attr('x', bx + bw / 2).attr('y', y(bar.value) - font * 0.5)
+          .attr('text-anchor', 'middle').attr('font-size', font).attr('font-family', st.font_family)
+          .attr('font-weight', 'bold').attr('fill', palette.ink).attr('pointer-events', 'none')
+          .text(fmtUnit(bar.value))
+        // Le NOM sous la barre : cliquable comme le secteur intérieur de la couronne.
+        const name = bars_g.append('text')
+          .attr('class', 'sunburst_bar_name')
+          .attr('font-size', font).attr('font-family', st.font_family).attr('fill', palette.ink)
+          .style('cursor', st.click_action !== 'none' && !bar.is_residual ? 'pointer' : 'default')
+          .on('click', (evt: MouseEvent) => onSlice(evt, bar))
+          .text(bar.label)
+        if (tilted) {
+          name.attr('text-anchor', 'end')
+            .attr('transform', `translate(${bx + bw / 2},${baseline + font * 0.9}) rotate(-35)`)
+        } else {
+          name.attr('text-anchor', 'middle').attr('x', bx + bw / 2).attr('y', baseline + font * 1.3)
+        }
+        if (st.tooltip_visible) name.append('title').text(barTitle(bar))
+      })
+      drawLegend()
+      return
+    }
+
     // Centre monté AVANT les secteurs : leur survol y écrit le fil d'Ariane.
     // 01/10/2026 — le texte personnalisé de la part de centre, s'il y en a un.
     const centre_custom = opts.parts?.[FIGURE_CENTRE_PART_ID] !== undefined
@@ -2167,223 +2303,227 @@ export const drawSunburstChart = (
     }
 
     // ── Légende ───────────────────────────────────────────────────────────────────
-    // os#1527 — la capsule qui la cache ou la montre, comme sur le diagramme et la couronne à plat.
-    const capsule = opts.legend_capsule && st.legend_parts !== 'none'
-      ? appendLegendCapsule(root_el.node() as HTMLElement, opts.legend_capsule, st.legend_visible, st.legend_position)
-      : undefined
-    // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
-    // un conteneur vide laisserait une gouttière.
-    // os#1527 (Julien, 10/10) — à côté, la colonne part du HAUT, comme celle du Sankey.
-    const legend = root_el.append('div')
-      .style('flex', legend_below ? '0 0 auto' : '1 1 0').style('min-width', '0')
-      .style('align-self', legend_below ? 'center' : 'stretch')
-      .style('max-height', legend_below ? `${legend_width}px` : '100%')
-      .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
-      .style('color', palette.ink)
-      .style('display', st.legend_visible ? 'block' : 'none')
-    if (legend_navigation) prependLegendNavigation(legend.node() as HTMLElement, legend_navigation, st.legend_position)
-    if (capsule && st.legend_visible && !legend_below) {
-      placeCapsuleAtColumnEdge(capsule, root_el.node() as HTMLElement, legend.node() as HTMLElement, st.legend_position)
-    }
-    // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
-    const show_rings = st.legend_visible && st.legend_levels && !multi_dimension
-
-    // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
-    // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
-    // répète pas d'un anneau à l'autre : il s'écrit quand il change, et un changement
-    // d'axe est justement ce qu'il faut voir sur une couronne enchaînée (os#1424).
-    let previous_axis: string | null = null
-    for (let d = 0; show_rings && d < rings; d++) {
-      const level = d + level_offset
-      const ring_info = tree.rings[level]
-      if (ring_info && ring_info.dimension_id !== previous_axis) {
-        legend.append('div')
-          .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
-          .style('overflow', 'hidden').style('text-overflow', 'ellipsis')
-          .style('white-space', 'nowrap')
-          .attr('title', ring_info.dimension_label)
-          .text(ring_info.dimension_label)
-        previous_axis = ring_info.dimension_id
+    // os#1511 (14/10) — une FONCTION, pour que les barres (`layout: 'bars'`) posent la même.
+    function drawLegend () {
+      // os#1527 — la capsule qui la cache ou la montre, comme sur le diagramme et la couronne à plat.
+      const capsule = opts.legend_capsule && st.legend_parts !== 'none'
+        ? appendLegendCapsule(root_el.node() as HTMLElement, opts.legend_capsule, st.legend_visible, st.legend_position)
+        : undefined
+      // « Aucune » ne pose même pas la colonne : la place est déjà rendue au disque plus haut, et
+      // un conteneur vide laisserait une gouttière.
+      // os#1527 (Julien, 10/10) — à côté, la colonne part du HAUT, comme celle du Sankey.
+      const legend = root_el.append('div')
+        .style('flex', legend_below ? '0 0 auto' : '1 1 0').style('min-width', '0')
+        .style('align-self', legend_below ? 'center' : 'stretch')
+        .style('max-height', legend_below ? `${legend_width}px` : '100%')
+        .style('overflow-y', 'auto').style('font-size', `${st.legend_font_size}px`)
+        .style('color', palette.ink)
+        .style('display', st.legend_visible ? 'block' : 'none')
+      if (legend_navigation) prependLegendNavigation(legend.node() as HTMLElement, legend_navigation, st.legend_position)
+      if (capsule && st.legend_visible && !legend_below) {
+        placeCapsuleAtColumnEdge(capsule, root_el.node() as HTMLElement, legend.node() as HTMLElement, st.legend_position)
       }
-      // Les niveaux d'un axe s'appellent souvent « 1 », « 2 » dans le modèle. Seul, le
-      // chiffre ne dit rien — on lui remet son mot, sans toucher aux niveaux qui portent
-      // un vrai nom (« Produit fini », « Région »…).
-      const named = ring_info?.level_label ?? ''
-      const name = (named === '' || /^\d+$/.test(named)) && opts.level_label
-        ? opts.level_label(named === '' ? level + 1 : Number(named))
-        : (named || String(level + 1))
-      const row = legend.append('div')
-        .style('display', 'flex').style('align-items', 'center')
-        .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
-      row.append('span')
-        .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
-        .style('border-radius', '50%')
-        .style('border', `2px solid ${palette.muted}`)
-        .style('opacity', String(1 - d * 0.15))
-      row.append('span')
-        .style('flex', '1 1 auto').style('overflow', 'hidden')
-        .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-        // Le niveau SÉLECTIONNÉ dans le contrôleur est celui que le Sankey montre à
-        // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
-        .style('font-weight', ring_info?.is_selected_level ? 'bold' : 'normal')
-        .text(name)
-    }
+      // Les NIVEAUX dans la légende (`legend_levels`) : de quoi chaque anneau est la coupe.
+      const show_rings = st.legend_visible && st.legend_levels && !multi_dimension
 
-    // os#1509 — LES TEXTURES, ce que chaque motif nomme sur l'axe texturé : une pastille hachurée
-    // par branche, dans l'ordre d'attribution des motifs.
-    const texture_rows = [...new Map(
-      slices.filter(sl => sl.texture !== null).map(sl => [sl.texture as number, sl.texture_label])
-    ).entries()].sort((a, b) => a[0] - b[0])
-    if (st.legend_visible && texture_rows.length > 0) {
-      legend.append('div').style('height', '0.4rem')
-      const rows = legend.selectAll('div.sunburst_texture_row')
-        .data(texture_rows).enter().append('div')
-        .attr('class', 'sunburst_texture_row')
-        .style('display', 'flex').style('align-items', 'center')
-        .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
-      rows.each(function ([kind]) {
-        const swatch = d3.select(this).append('svg')
-          .attr('width', 14).attr('height', 14).style('flex', '0 0 auto')
-        const swatch_defs = swatch.append('defs') as unknown as d3.Selection<SVGDefsElement, unknown, null, undefined>
-        const id = `sunburst_tex_legend_${Math.random().toString(36).slice(2, 8)}_${kind}`
-        defineTexturePattern(swatch_defs, id, kind, palette.ink)
-        swatch.append('rect').attr('width', 14).attr('height', 14).attr('rx', 2)
-          .attr('fill', palette.others)
-        swatch.append('rect').attr('width', 14).attr('height', 14).attr('rx', 2)
-          .attr('fill', `url(#${id})`)
-      })
-      rows.append('span')
-        .style('flex', '1 1 auto').style('overflow', 'hidden')
-        .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
-        .attr('title', ([, label]) => label).text(([, label]) => label)
-    }
-
-    // Puis les BRANCHES QUE LE DESSIN NE NOMME PAS, et elles seules : un secteur assez
-    // large porte déjà son nom, le répéter à côté ne fait que prendre la place du disque.
-    // Un secteur trop étroit, ou dont le nom a été tronqué, n'existe en toutes lettres
-    // que dans son info-bulle — c'est là que la légende sert.
-    // ── 03/10/2026 — UN BLOC PAR DIMENSION QUI DÉCOUPE (Julien : « il n'y a pas la légende pour les
-    // deux dimensions ») ───────────────────────────────────────────────────────────────────────
-    //
-    // Dans l'ordre des anneaux, de l'intérieur vers l'extérieur : le titre de la dimension et de ses
-    // niveaux, puis ses membres — en arbre quand elle montre plusieurs niveaux, « Autres » en dernier.
-    // Chaque dimension ayant sa famille de couleurs, chaque membre a sa pastille.
-    if (multi_dimension && st.legend_visible && st.legend_parts !== 'none') {
-      const ringOf = (sl: Type_SunburstSlice) => tree.rings[sl.depth + level_offset]
-      const dimOf = (sl: Type_SunburstSlice) => sl.dimension_id || ringOf(sl)?.dimension_id || ''
-      const dim_order: string[] = []
-      for (let d = 0; d < rings; d++) {
-        const id = tree.rings[d + level_offset]?.dimension_id
-        if (id !== undefined && !dim_order.includes(id)) dim_order.push(id)
+      // Les ANNEAUX d'abord : c'est ce que le sunburst apporte de plus qu'un camembert,
+      // et sans ce rappel un anneau n'est qu'un cercle de plus. Le nom de l'AXE ne se
+      // répète pas d'un anneau à l'autre : il s'écrit quand il change, et un changement
+      // d'axe est justement ce qu'il faut voir sur une couronne enchaînée (os#1424).
+      let previous_axis: string | null = null
+      for (let d = 0; show_rings && d < rings; d++) {
+        const level = d + level_offset
+        const ring_info = tree.rings[level]
+        if (ring_info && ring_info.dimension_id !== previous_axis) {
+          legend.append('div')
+            .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
+            .style('overflow', 'hidden').style('text-overflow', 'ellipsis')
+            .style('white-space', 'nowrap')
+            .attr('title', ring_info.dimension_label)
+            .text(ring_info.dimension_label)
+          previous_axis = ring_info.dimension_id
+        }
+        // Les niveaux d'un axe s'appellent souvent « 1 », « 2 » dans le modèle. Seul, le
+        // chiffre ne dit rien — on lui remet son mot, sans toucher aux niveaux qui portent
+        // un vrai nom (« Produit fini », « Région »…).
+        const named = ring_info?.level_label ?? ''
+        const name = (named === '' || /^\d+$/.test(named)) && opts.level_label
+          ? opts.level_label(named === '' ? level + 1 : Number(named))
+          : (named || String(level + 1))
+        const row = legend.append('div')
+          .style('display', 'flex').style('align-items', 'center')
+          .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
+        row.append('span')
+          .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+          .style('border-radius', '50%')
+          .style('border', `2px solid ${palette.muted}`)
+          .style('opacity', String(1 - d * 0.15))
+        row.append('span')
+          .style('flex', '1 1 auto').style('overflow', 'hidden')
+          .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+          // Le niveau SÉLECTIONNÉ dans le contrôleur est celui que le Sankey montre à
+          // côté : le désigner ici est ce qui fait que les deux parlent de la même chose.
+          .style('font-weight', ring_info?.is_selected_level ? 'bold' : 'normal')
+          .text(name)
       }
-      dim_order.forEach((dim_id, k) => {
-        const mine = slices.filter(sl => dimOf(sl) === dim_id)
-        if (mine.length === 0) return
-        const levels = [...new Set(
-          [...Array(rings).keys()]
-            .map(d => tree.rings[d + level_offset])
-            .filter(r => r?.dimension_id === dim_id)
-            .map(r => r?.level_label ?? '')
-            .filter(l => l !== '')
-        )]
-        const label = tree.rings.find(r => r?.dimension_id === dim_id)?.dimension_label ?? ''
-        const legend_node = legend.node() as HTMLElement
-        // os#1527 — LE MODÈLE COMMUN : titre (gras, sans pastille), en-têtes des ancêtres ouverts (gras,
-        // sans pastille), membres à la couleur de leur secteur, dans l'ORDRE DES SECTEURS DESSINÉS,
-        // « Autres » en dernier ; posés par le rendu commun (`appendLegendRows`).
-        const title: Type_LegendRow = { key: `${dim_id}/title`, kind: 'title', label: [label, ...levels].join(' · '), indent: 0 }
-        const residual = mine.find(sl => sl.is_residual)
-        const others: Type_LegendRow[] = residual !== undefined
-          ? [{ key: `${dim_id}/__others__`, kind: 'others', label: others_label, indent: 0, swatch: residual.color }]
-          : []
-        // 04/10/2026 — AVEC SES CASES (os#1511) : le bloc liste les membres de la dimension comme si
-        // tout était coché ; un membre décoché reste à sa place, grisé.
-        const checks = opts.legend_checks
-        const block = checks?.blocks[dim_id]
-        if (checks && block && block.length > 0) {
-          const color_of = new Map<string, string>()
-          const rank = new Map<string, number>()
+
+      // os#1509 — LES TEXTURES, ce que chaque motif nomme sur l'axe texturé : une pastille hachurée
+      // par branche, dans l'ordre d'attribution des motifs.
+      const texture_rows = [...new Map(
+        slices.filter(sl => sl.texture !== null).map(sl => [sl.texture as number, sl.texture_label])
+      ).entries()].sort((a, b) => a[0] - b[0])
+      if (st.legend_visible && texture_rows.length > 0) {
+        legend.append('div').style('height', '0.4rem')
+        const rows = legend.selectAll('div.sunburst_texture_row')
+          .data(texture_rows).enter().append('div')
+          .attr('class', 'sunburst_texture_row')
+          .style('display', 'flex').style('align-items', 'center')
+          .style('gap', '0.35rem').style('padding', '0.05rem 0.2rem')
+        rows.each(function ([kind]) {
+          const swatch = d3.select(this).append('svg')
+            .attr('width', 14).attr('height', 14).style('flex', '0 0 auto')
+          const swatch_defs = swatch.append('defs') as unknown as d3.Selection<SVGDefsElement, unknown, null, undefined>
+          const id = `sunburst_tex_legend_${Math.random().toString(36).slice(2, 8)}_${kind}`
+          defineTexturePattern(swatch_defs, id, kind, palette.ink)
+          swatch.append('rect').attr('width', 14).attr('height', 14).attr('rx', 2)
+            .attr('fill', palette.others)
+          swatch.append('rect').attr('width', 14).attr('height', 14).attr('rx', 2)
+            .attr('fill', `url(#${id})`)
+        })
+        rows.append('span')
+          .style('flex', '1 1 auto').style('overflow', 'hidden')
+          .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+          .attr('title', ([, label]) => label).text(([, label]) => label)
+      }
+
+      // Puis les BRANCHES QUE LE DESSIN NE NOMME PAS, et elles seules : un secteur assez
+      // large porte déjà son nom, le répéter à côté ne fait que prendre la place du disque.
+      // Un secteur trop étroit, ou dont le nom a été tronqué, n'existe en toutes lettres
+      // que dans son info-bulle — c'est là que la légende sert.
+      // ── 03/10/2026 — UN BLOC PAR DIMENSION QUI DÉCOUPE (Julien : « il n'y a pas la légende pour les
+      // deux dimensions ») ───────────────────────────────────────────────────────────────────────
+      //
+      // Dans l'ordre des anneaux, de l'intérieur vers l'extérieur : le titre de la dimension et de ses
+      // niveaux, puis ses membres — en arbre quand elle montre plusieurs niveaux, « Autres » en dernier.
+      // Chaque dimension ayant sa famille de couleurs, chaque membre a sa pastille.
+      if (multi_dimension && st.legend_visible && st.legend_parts !== 'none') {
+        const ringOf = (sl: Type_SunburstSlice) => tree.rings[sl.depth + level_offset]
+        const dimOf = (sl: Type_SunburstSlice) => sl.dimension_id || ringOf(sl)?.dimension_id || ''
+        const dim_order: string[] = []
+        for (let d = 0; d < rings; d++) {
+          const id = tree.rings[d + level_offset]?.dimension_id
+          if (id !== undefined && !dim_order.includes(id)) dim_order.push(id)
+        }
+        dim_order.forEach((dim_id, k) => {
+          const mine = slices.filter(sl => dimOf(sl) === dim_id)
+          if (mine.length === 0) return
+          const levels = [...new Set(
+            [...Array(rings).keys()]
+              .map(d => tree.rings[d + level_offset])
+              .filter(r => r?.dimension_id === dim_id)
+              .map(r => r?.level_label ?? '')
+              .filter(l => l !== '')
+          )]
+          const label = tree.rings.find(r => r?.dimension_id === dim_id)?.dimension_label ?? ''
+          const legend_node = legend.node() as HTMLElement
+          // os#1527 — LE MODÈLE COMMUN : titre (gras, sans pastille), en-têtes des ancêtres ouverts (gras,
+          // sans pastille), membres à la couleur de leur secteur, dans l'ORDRE DES SECTEURS DESSINÉS,
+          // « Autres » en dernier ; posés par le rendu commun (`appendLegendRows`).
+          const title: Type_LegendRow = { key: `${dim_id}/title`, kind: 'title', label: [label, ...levels].join(' · '), indent: 0 }
+          const residual = mine.find(sl => sl.is_residual)
+          const others: Type_LegendRow[] = residual !== undefined
+            ? [{ key: `${dim_id}/__others__`, kind: 'others', label: others_label, indent: 0, swatch: residual.color }]
+            : []
+          // 04/10/2026 — AVEC SES CASES (os#1511) : le bloc liste les membres de la dimension comme si
+          // tout était coché ; un membre décoché reste à sa place, grisé.
+          const checks = opts.legend_checks
+          const block = checks?.blocks[dim_id]
+          if (checks && block && block.length > 0) {
+            const color_of = new Map<string, string>()
+            const rank = new Map<string, number>()
+            mine.forEach(sl => {
+              if (sl.is_residual) return
+              const key = legendMemberKeyOf(sl.id)
+              if (!color_of.has(key)) { color_of.set(key, sl.color); rank.set(key, rank.size) }
+            })
+            const rows = [title, ...drawnLegendRows(block, id => color_of.get(id), palette.others, id => rank.get(id)), ...others]
+            appendLegendRows(legend_node, rows, {
+              row_class: 'sunburst_branch',
+              onToggle: (row, show) => checks.toggle(legendRowSectorId(row), show),
+              hintOf: row => checks.hint?.(row.label),
+              id_prefix: `sunburst_legend_${k}`
+            }).forEach(({ row, el }) => {
+              if (row.kind === 'title' && k > 0) el.style.marginTop = '0.5rem'
+              if (row.kind === 'heading') el.classList.add('sunburst_branch_heading')
+              if (row.target !== undefined) el.setAttribute('data-part-id', legendRowSectorId(row))
+              if (!el.title) el.title = row.label
+            })
+            return
+          }
+          // Les membres, chacun une fois : un continent répété sous chaque filière est UN membre.
+          const rows: Type_LegendRow[] = []
+          const seen = new Set<string>()
+          const by_id = new Map(slices.map(sl => [sl.id, sl]))
           mine.forEach(sl => {
             if (sl.is_residual) return
-            const key = legendMemberKeyOf(sl.id)
-            if (!color_of.has(key)) { color_of.set(key, sl.color); rank.set(key, rank.size) }
-          })
-          const rows = [title, ...drawnLegendRows(block, id => color_of.get(id), palette.others, id => rank.get(id)), ...others]
-          appendLegendRows(legend_node, rows, {
-            row_class: 'sunburst_branch',
-            onToggle: (row, show) => checks.toggle(legendRowSectorId(row), show),
-            hintOf: row => checks.hint?.(row.label),
-            id_prefix: `sunburst_legend_${k}`
-          }).forEach(({ row, el }) => {
-            if (row.kind === 'title' && k > 0) el.style.marginTop = '0.5rem'
-            if (row.kind === 'heading') el.classList.add('sunburst_branch_heading')
-            if (row.target !== undefined) el.setAttribute('data-part-id', legendRowSectorId(row))
-            if (!el.title) el.title = row.label
-          })
-          return
-        }
-        // Les membres, chacun une fois : un continent répété sous chaque filière est UN membre.
-        const rows: Type_LegendRow[] = []
-        const seen = new Set<string>()
-        const by_id = new Map(slices.map(sl => [sl.id, sl]))
-        mine.forEach(sl => {
-          if (sl.is_residual) return
-          const within = sl.nested?.depth ?? 0
-          // L'ascendant dans la MÊME dimension : de quoi poser l'arbre.
-          const parent = within > 0 ? by_id.get(sl.path[sl.path.length - 2] ?? '') : undefined
-          const key = `${parent?.label ?? ''}/${sl.label}`
-          if (seen.has(key)) return
-          seen.add(key)
-          const row: Type_LegendRow = { key: `${dim_id}/${key}`, kind: 'entry', label: sl.label, swatch: sl.color, indent: within }
-          if (parent !== undefined) {
-            // Sous son parent, après ses frères déjà posés.
-            const at = rows.findIndex(r => r.label === parent.label && r.indent === within - 1)
-            if (at >= 0) {
-              let end = at + 1
-              while (end < rows.length && rows[end].indent > rows[at].indent) end++
-              rows.splice(end, 0, row)
-              return
+            const within = sl.nested?.depth ?? 0
+            // L'ascendant dans la MÊME dimension : de quoi poser l'arbre.
+            const parent = within > 0 ? by_id.get(sl.path[sl.path.length - 2] ?? '') : undefined
+            const key = `${parent?.label ?? ''}/${sl.label}`
+            if (seen.has(key)) return
+            seen.add(key)
+            const row: Type_LegendRow = { key: `${dim_id}/${key}`, kind: 'entry', label: sl.label, swatch: sl.color, indent: within }
+            if (parent !== undefined) {
+              // Sous son parent, après ses frères déjà posés.
+              const at = rows.findIndex(r => r.label === parent.label && r.indent === within - 1)
+              if (at >= 0) {
+                let end = at + 1
+                while (end < rows.length && rows[end].indent > rows[at].indent) end++
+                rows.splice(end, 0, row)
+                return
+              }
             }
-          }
-          rows.push(row)
-        })
-        // Un membre suivi des siens est un ANCÊTRE OUVERT : en-tête, gras, sans pastille (arbitrage 2).
-        rows.forEach((row, i) => {
-          if (i + 1 < rows.length && rows[i + 1].indent > row.indent) { row.kind = 'heading'; delete row.swatch }
-        })
-        appendLegendRows(legend_node, [title, ...rows, ...others], { row_class: 'sunburst_branch', id_prefix: `sunburst_legend_${k}` })
-          .forEach(({ el, row }) => {
-            if (row.kind === 'title' && k > 0) el.style.marginTop = '0.5rem'
-            if (!el.title) el.title = row.label
+            rows.push(row)
           })
-      })
-    } else if (unnamed_branches.length > 0) {
-      legend.append('div').style('height', '0.4rem')
-      // La pastille reprend la couleur DU SECTEUR, telle qu'elle est dessinée.
-      appendLegendRows(legend.node() as HTMLElement, unnamed_branches.map((b, i): Type_LegendRow => ({
-        key: `branch/${i}`, kind: 'entry', label: b.label, swatch: b.color, indent: 0
-      })), { row_class: 'sunburst_branch', id_prefix: 'sunburst_branches' })
-        .forEach(({ el, row }) => { el.title = row.label })
-    }
-    // os#1527 — les coordonnées que la figure ne découpe pas (« Année : 2015 »), comme le diagramme.
-    const legend_node = legend.node() as HTMLElement | null
-    if (legend_node) appendLegendContextRows(legend_node, opts.legend_context)
-
-    // ── Mentions ──────────────────────────────────────────────────────────────────
-    const mention = (text: string) => legend.append('div')
-      .attr('class', 'sunburst_mention')
-      .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
-      .style('font-style', 'italic').text(text)
-    // Le centre d'un sunburst à plusieurs racines n'est pas « le total du diagramme » :
-    // c'est une somme, juste seulement si les racines ne se recouvrent pas. Le taire
-    // ferait lire un tout là où il y a un empilement.
-    if (st.notes_visible) {
-      if (!centre_node && opts.roots_sum_hint) mention(opts.roots_sum_hint)
-      if (tree.mismatch_count > 0 && opts.mismatch_label) {
-        mention(opts.mismatch_label(tree.mismatch_count))
+          // Un membre suivi des siens est un ANCÊTRE OUVERT : en-tête, gras, sans pastille (arbitrage 2).
+          rows.forEach((row, i) => {
+            if (i + 1 < rows.length && rows[i + 1].indent > row.indent) { row.kind = 'heading'; delete row.swatch }
+          })
+          appendLegendRows(legend_node, [title, ...rows, ...others], { row_class: 'sunburst_branch', id_prefix: `sunburst_legend_${k}` })
+            .forEach(({ el, row }) => {
+              if (row.kind === 'title' && k > 0) el.style.marginTop = '0.5rem'
+              if (!el.title) el.title = row.label
+            })
+        })
+      } else if (unnamed_branches.length > 0) {
+        legend.append('div').style('height', '0.4rem')
+        // La pastille reprend la couleur DU SECTEUR, telle qu'elle est dessinée.
+        appendLegendRows(legend.node() as HTMLElement, unnamed_branches.map((b, i): Type_LegendRow => ({
+          key: `branch/${i}`, kind: 'entry', label: b.label, swatch: b.color, indent: 0
+        })), { row_class: 'sunburst_branch', id_prefix: 'sunburst_branches' })
+          .forEach(({ el, row }) => { el.title = row.label })
       }
-      if (tree.is_truncated && opts.truncated_label) mention(opts.truncated_label)
+      // os#1527 — les coordonnées que la figure ne découpe pas (« Année : 2015 »), comme le diagramme.
+      const legend_node = legend.node() as HTMLElement | null
+      if (legend_node) appendLegendContextRows(legend_node, opts.legend_context)
+
+      // ── Mentions ──────────────────────────────────────────────────────────────────
+      const mention = (text: string) => legend.append('div')
+        .attr('class', 'sunburst_mention')
+        .style('padding', '0.1rem 0.2rem').style('color', palette.muted)
+        .style('font-style', 'italic').text(text)
+      // Le centre d'un sunburst à plusieurs racines n'est pas « le total du diagramme » :
+      // c'est une somme, juste seulement si les racines ne se recouvrent pas. Le taire
+      // ferait lire un tout là où il y a un empilement.
+      if (st.notes_visible) {
+        if (!centre_node && opts.roots_sum_hint) mention(opts.roots_sum_hint)
+        if (tree.mismatch_count > 0 && opts.mismatch_label) {
+          mention(opts.mismatch_label(tree.mismatch_count))
+        }
+        if (tree.is_truncated && opts.truncated_label) mention(opts.truncated_label)
+      }
     }
+    drawLegend()
   }
 
   render()
