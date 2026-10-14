@@ -36,6 +36,7 @@ import { ANALYSIS_ATTRIBUTES, BARS_OWN, BARS_SOCLE, DONUT_EXTRA_ATTRIBUTES, DONU
 import type { Type_JSON } from '../types/Utils'
 import { donutClickGestures, hierarchyInEffect } from './donutClickGestures'
 import { registerFigureNature } from './figureNature'
+import type { Type_PartsWiring } from './parts/figurePartsWiring'
 import { FaChartBar, FaChartPie } from 'react-icons/fa'
 import { SUNBURST_ZOOM, readSunburstStyle } from './SunburstRepresentation'
 import { analysisPartTarget } from './AnalysisPartTarget'
@@ -222,6 +223,114 @@ const ringsTreeOf = (
   // personne ne le faisait — les secteurs sortaient dans l'ordre du fichier, à plat par valeur
   // décroissante. Une seule figure, un seul ordre.
   return tree ? sortSunburstTree(tree, style.parts_order) : null
+}
+
+/**
+ * LA COURONNE EN ANNEAUX, et depuis le 14/10/2026 LES BARRES CROISÉES (os#1511) : le même arbre,
+ * les mêmes réglages communs, la même légende à cases, les mêmes gestes — seul le `layout` change.
+ * Julien : « les barres, pour moi, c'est une variante des couronnes ; et surtout des histogrammes
+ * cumulés, pas à côté, quand on fait du croisé ».
+ */
+const drawCouronneRings = (
+  container: HTMLElement,
+  ctx: Type_RepresentationContext,
+  wiring: Type_PartsWiring,
+  rings: Type_SunburstTree,
+  layout: 'rings' | 'bars'
+): (() => void) => {
+  const style = donutStyleOf(ctx)
+  const gestures = donutClickGestures(ctx, style)
+  const t = ctx.app_data.t
+  const navigationOf = (beside: boolean): {
+    breadcrumb: Type_FigureCrumb[] | HTMLElement, legend_navigation?: HTMLElement
+  } => {
+    const table = figureNavigationTableOf(ctx, 'couronne', beside)
+    if (table === null) return { breadcrumb: figureBreadcrumbOf(ctx, gestures.focusTo) }
+    return beside ? { breadcrumb: [], legend_navigation: table } : { breadcrumb: table }
+  }
+  // os#1527 (11/10/2026) — LES RÉGLAGES COMMUNS SE LISENT SUR LA MISE EN FORME DE LA COURONNE.
+  //
+  // Couleur, seuil, sortie des étiquettes, orientation, police, valeur, légende : la même
+  // lecture qu'à plat (`couronneRingsStyle`), ce qui fait que changer de mode change le dessin
+  // et pas les réglages. Ce qui est propre au sunburst (son trou, `centre_hole_rings`) ne
+  // s'applique qu'en sunburst. Il ne reste ici que ce qui dépend du dessin en cours.
+  const rings_style: Partial<Type_SunburstStyle> = {
+    ...couronneRingsStyle(ctx.options ?? {}, style),
+    // 03/10/2026 — « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
+    labels_small_outer: labelsSmallOuterOf(ctx),
+    // ⚠️ FORCÉ, cf. plus bas : le disque a besoin de rapporter tous les clics.
+    click_action: 'aggregate',
+    // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
+    centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')
+  }
+  // os#1527 (10/10) — légende à côté : le tableau en tête de sa colonne ; sinon en bande.
+  const { breadcrumb, legend_navigation } = navigationOf(sunburstLegendBeside(rings_style))
+  const teardown = drawSunburstChart(container, rings, {
+    layout,
+    parts: wiring.by_id,
+    on_part_select: wiring.on_part_select,
+    // 04/10/2026 — les cases de chaque bloc de dimension de la légende (os#1511).
+    legend_checks: legendChecksOf(ctx),
+    // os#1527 — « Année : 2015 », comme la couronne en secteurs et le diagramme.
+    legend_context: legendContextOf(ctx),
+    legend_capsule: legendCapsuleOf(ctx),
+    // LA PALETTE DE LA COURONNE, et non celle du disque : les deux modes sont une seule
+    // figure, ils ne peuvent pas avoir deux jeux de teintes (cf. `branch_color`).
+    branch_color: paletteColor,
+    // ⚠️ `click_action` EST FORCÉ, et ce n'est pas ignorer le réglage de l'auteur : le tracé
+    // du disque se sert de cette clé pour décider s'il RAPPORTE le clic (`on_arc_click`), et
+    // sous 'none' il l'avale. Or la couronne a besoin de tous les clics — c'est eux qui
+    // ouvrent les anneaux. Ce que l'auteur a réglé est lu, lui, par `donutClickGestures`,
+    // qui décide ce que le geste fait EN PLUS.
+    style: rings_style,
+    texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
+    // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
+    // 03/10/2026 — sur dimensions de données, la ligne dit le contexte des autres dimensions.
+    centre_caption: isDataDimensionFigure(ctx)
+      ? dataCentreCaptionOf(ctx)
+      : measureCaptionOf(ctx,
+        ['both', 'name'].includes(readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both') &&
+            rings.roots.length === 1 ? rings.roots[0].label : ''),
+    caption_plan: centreCaptionPlan,
+    // 05/10/2026 — non zoomée, le nom court du jeu de données au centre, en gras.
+    centre_name: dataCentreNameOf(ctx),
+    breadcrumb,
+    legend_navigation,
+    label_positions: wiring.label_positions,
+    on_label_move: wiring.on_label_move,
+    unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
+    unit_factor: unitFactorOfSubject(chartSubjectOf(ctx.element), ctx.app_data),
+    empty_label: t('sunburst.empty') as string,
+    others_label: t('sunburst.others') as string,
+    truncated_label: t('sunburst.truncated') as string,
+    back_label: t('sunburst.back') as string,
+    level_label: (index: number) => t('sunburst.level', { index }) as string,
+    // 03/10/2026 — le nom au centre suit la règle des petites couronnes (réduit, deux lignes).
+    centre_plan: smallMultipleCentrePlan,
+    // LE MÊME GESTE QUE DANS L'ANNEAU UNIQUE, et c'est ce qui fait que les deux modes sont
+    // une seule figure : un clic déplie, shift+clic replie (cf. `donutClickGestures`).
+    //
+    // ⚠️ LA TOUCHE VIENT DU TRACÉ, elle n'est pas supposée. La première version passait
+    // `{ shift: false }` en dur : le geste inverse était annoncé et ne marchait pas en
+    // anneaux — exactement le genre d'écart qu'on ne voit qu'en essayant.
+    //
+    // ET LA ROUTE AVEC : le disque la tient déjà (c'est son `ancestry`, du centre au secteur
+    // cliqué), et c'est exactement ce que `disaggregateAlong` attend. Un secteur d'anneau
+    // extérieur est profond par nature — sans elle, on dépliait son dernier cran seul.
+    on_arc_click: (
+      node_id: string, _is: boolean, _dim: string, path: string[],
+      gesture?: { shift: boolean, alt?: boolean }
+    ) => gestures.activate?.(node_id, { shift: gesture?.shift === true, alt: gesture?.alt === true }, path),
+    // 02/10/2026 — LE CENTRE REMONTE D'UN CRAN quand la figure est zoomée, comme à plat.
+    on_centre_click: gestures.back ? () => { gestures.back?.(); return true } : undefined,
+    // LE ZOOM, prêté à la colonne d'outils par le même pont que le disque : c'est ce qui
+    // rend `SUNBURST_ZOOM` vrai sur une couronne en anneaux (cf. la déclaration `zoom`).
+    zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),
+    on_zoom: () => ctx.app_data.menu_configuration.notify(ZOOM_TOPIC),
+    initial_view: figureViewOf(ctx.window_id, ctx.pane_key),
+    on_view: (view) => rememberFigureView(ctx.window_id, ctx.pane_key, view)
+  })
+  return () => { teardown() }
 }
 
 /**
@@ -1237,88 +1346,7 @@ export const registerAnalysisRepresentations = (): void => {
         ? ringsTreeOf(ctx, a, hierarchyReadingOf(ctx), expandedOf(ctx.options))
         : null
       if (rings) {
-        // os#1527 (11/10/2026) — LES RÉGLAGES COMMUNS SE LISENT SUR LA MISE EN FORME DE LA COURONNE.
-        //
-        // Couleur, seuil, sortie des étiquettes, orientation, police, valeur, légende : la même
-        // lecture qu'à plat (`couronneRingsStyle`), ce qui fait que changer de mode change le dessin
-        // et pas les réglages. Ce qui est propre au sunburst (son trou, `centre_hole_rings`) ne
-        // s'applique qu'en sunburst. Il ne reste ici que ce qui dépend du dessin en cours.
-        const rings_style: Partial<Type_SunburstStyle> = {
-          ...couronneRingsStyle(ctx.options ?? {}, style),
-          // 03/10/2026 — « masquer » par défaut sur l'anneau le plus externe (cf. `labelsSmallOuterOf`).
-          labels_small_outer: labelsSmallOuterOf(ctx),
-          // ⚠️ FORCÉ, cf. plus bas : le disque a besoin de rapporter tous les clics.
-          click_action: 'aggregate',
-          // 03/10/2026 — non zoomée sur dimensions de données, le centre tait le sujet (au titre).
-          centre_content: dataRingsCentreContent(ctx, readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both')
-        }
-        // os#1527 (10/10) — légende à côté : le tableau en tête de sa colonne ; sinon en bande.
-        const { breadcrumb, legend_navigation } = navigationOf(sunburstLegendBeside(rings_style))
-        const teardown = drawSunburstChart(container, rings, {
-          parts: wiring.by_id,
-          on_part_select: wiring.on_part_select,
-          // 04/10/2026 — les cases de chaque bloc de dimension de la légende (os#1511).
-          legend_checks: legendChecksOf(ctx),
-          // os#1527 — « Année : 2015 », comme la couronne en secteurs et le diagramme.
-          legend_context: legendContextOf(ctx),
-          legend_capsule: legendCapsuleOf(ctx),
-          // LA PALETTE DE LA COURONNE, et non celle du disque : les deux modes sont une seule
-          // figure, ils ne peuvent pas avoir deux jeux de teintes (cf. `branch_color`).
-          branch_color: paletteColor,
-          // ⚠️ `click_action` EST FORCÉ, et ce n'est pas ignorer le réglage de l'auteur : le tracé
-          // du disque se sert de cette clé pour décider s'il RAPPORTE le clic (`on_arc_click`), et
-          // sous 'none' il l'avale. Or la couronne a besoin de tous les clics — c'est eux qui
-          // ouvrent les anneaux. Ce que l'auteur a réglé est lu, lui, par `donutClickGestures`,
-          // qui décide ce que le geste fait EN PLUS.
-          style: rings_style,
-          texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
-          // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
-          // 03/10/2026 — sur dimensions de données, la ligne dit le contexte des autres dimensions.
-          centre_caption: isDataDimensionFigure(ctx)
-            ? dataCentreCaptionOf(ctx)
-            : measureCaptionOf(ctx,
-              ['both', 'name'].includes(readSunburstStyle(ctx.options ?? {}).centre_content ?? 'both') &&
-                rings.roots.length === 1 ? rings.roots[0].label : ''),
-          caption_plan: centreCaptionPlan,
-          // 05/10/2026 — non zoomée, le nom court du jeu de données au centre, en gras.
-          centre_name: dataCentreNameOf(ctx),
-          breadcrumb,
-          legend_navigation,
-          label_positions: wiring.label_positions,
-          on_label_move: wiring.on_label_move,
-          unit: figureUnitOf(ctx.app_data.drawing_area.sankey),
-          unit_factor: unitFactorOfSubject(chartSubjectOf(ctx.element), ctx.app_data),
-          empty_label: t('sunburst.empty') as string,
-          others_label: t('sunburst.others') as string,
-          truncated_label: t('sunburst.truncated') as string,
-          back_label: t('sunburst.back') as string,
-          level_label: (index: number) => t('sunburst.level', { index }) as string,
-          // 03/10/2026 — le nom au centre suit la règle des petites couronnes (réduit, deux lignes).
-          centre_plan: smallMultipleCentrePlan,
-          // LE MÊME GESTE QUE DANS L'ANNEAU UNIQUE, et c'est ce qui fait que les deux modes sont
-          // une seule figure : un clic déplie, shift+clic replie (cf. `donutClickGestures`).
-          //
-          // ⚠️ LA TOUCHE VIENT DU TRACÉ, elle n'est pas supposée. La première version passait
-          // `{ shift: false }` en dur : le geste inverse était annoncé et ne marchait pas en
-          // anneaux — exactement le genre d'écart qu'on ne voit qu'en essayant.
-          //
-          // ET LA ROUTE AVEC : le disque la tient déjà (c'est son `ancestry`, du centre au secteur
-          // cliqué), et c'est exactement ce que `disaggregateAlong` attend. Un secteur d'anneau
-          // extérieur est profond par nature — sans elle, on dépliait son dernier cran seul.
-          on_arc_click: (
-            node_id: string, _is: boolean, _dim: string, path: string[],
-            gesture?: { shift: boolean, alt?: boolean }
-          ) => gestures.activate?.(node_id, { shift: gesture?.shift === true, alt: gesture?.alt === true }, path),
-          // 02/10/2026 — LE CENTRE REMONTE D'UN CRAN quand la figure est zoomée, comme à plat.
-          on_centre_click: gestures.back ? () => { gestures.back?.(); return true } : undefined,
-          // LE ZOOM, prêté à la colonne d'outils par le même pont que le disque : c'est ce qui
-          // rend `SUNBURST_ZOOM` vrai sur une couronne en anneaux (cf. la déclaration `zoom`).
-          zoom_handle: (handle) => publishFigureZoom(ctx.window_id, ctx.pane_key, handle),
-          on_zoom: () => ctx.app_data.menu_configuration.notify(ZOOM_TOPIC),
-          initial_view: figureViewOf(ctx.window_id, ctx.pane_key),
-          on_view: (view) => rememberFigureView(ctx.window_id, ctx.pane_key, view)
-        })
-        return () => { teardown() }
+        return drawCouronneRings(container, ctx, wiring, rings, 'rings')
       }
 
       // os#1527 (10/10) — légende à côté : le tableau en tête de sa colonne ; sinon en bande.
@@ -1401,6 +1429,13 @@ export const registerAnalysisRepresentations = (): void => {
     draw: (container, parts, wiring, ctx) => {
       const a = analysisOf(ctx)
       if (!a) return undefined
+      // os#1511 (14/10) — CROISÉE (plusieurs dimensions découpent), LA BARRE EST UNE COURONNE DÉPLIÉE :
+      // une barre par membre de la première dimension, empilée par la suivante, aux couleurs et avec
+      // la légende de la couronne (cf. `drawCouronneRings`).
+      const rings = ringsTreeOf(ctx, a, hierarchyReadingOf(ctx), expandedOf(ctx.options))
+      if (rings && rings.rings.some(ring => ring.dimension_id !== rings.rings[0]?.dimension_id)) {
+        return drawCouronneRings(container, ctx, wiring, rings, 'bars')
+      }
       const opts = chartOptions(ctx, BARS_STYLE_DEFAULTS)
       if (isGroupedCross(a.descriptor)) {
         // Regime d echelle du DESCRIPTEUR (#393) : la pop-up de presentation lit la meme analyse
