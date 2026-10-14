@@ -30,7 +30,7 @@ import React from 'react'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_LegendItem } from '../../../Elements/legendItems'
-import { colouredLegendItems } from '../../../Elements/legendColumn'
+import { colouredLegendItems, legendContextRows, type Type_DimensionForColumn } from '../../../Elements/legendColumn'
 import {
   matchesPresentationTrigger, openPresentationFor, schedulePresentationHover, schedulePresentationHoverClose
 } from './openPresentation'
@@ -274,6 +274,11 @@ export const SankeyLegendPanel = ({ app_data, gap_slider = true }: {
 }) => {
   const legend = app_data.drawing_area.legend
   const items = colouredLegendItems(app_data, useSankeyLegendItems(app_data))
+  // sa#664 — ce qu'on regarde : « Unité : kt », « Territoire : … », « Céréale : … ». Relu à chaque
+  // régénération de la légende (`useSankeyLegendItems` abonne le panneau), donc à chaque sélection.
+  const context_rows = legendContextRows(
+    app_data.drawing_area.sankey.data_taggs_list as unknown as Type_DimensionForColumn[],
+    app_data.t as ((key: string, options?: { [k: string]: unknown }) => unknown) | undefined)
   // Le FOND et le CADRE réglés pour la légende (menu Légende) : ceux du panneau.
   const bg_opacity = legend.legend_bg_opacity / 100
   return <div
@@ -289,6 +294,11 @@ export const SankeyLegendPanel = ({ app_data, gap_slider = true }: {
     }}
   >
     {gap_slider ? <LegendGapSlider app_data={app_data} /> : null}
+    {context_rows.length > 0
+      ? <div className='sankey_legend_panel_context' style={{ margin: '0.1rem 0 0.4rem', color: ui_ink_muted }}>
+        {context_rows.map(row => <div key={row.id} style={{ padding: `0 ${LEGEND_ROW_PAD_X}`, overflowWrap: 'anywhere' }}>{row.label}</div>)}
+      </div>
+      : null}
     {items.map(item => <LegendRow key={item.id} app_data={app_data} item={item} />)}
   </div>
 }
