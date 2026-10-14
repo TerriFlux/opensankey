@@ -399,8 +399,17 @@ export class Class_LegendConfig {
    * cours de bypass de redraws). Ne fait rien si cassée — snapshot statique.
    */
   public draw() {
-    if (!this._managed) return
     if (this._drawing_area.bypass_redraws) return
+    if (!this._managed) {
+      // sa#663 — légende figée DANS LA COLONNE : ses zones ne se régénèrent pas, mais la colonne suit
+      // l'état courant (changer de céréale change les entrées) et les zones restent cachées (un
+      // redessin des conteneurs les remontrait par-dessus le diagramme).
+      if (this._in_panel) {
+        refreshLegendModel(this._drawing_area)
+        this.applyPanelDisplay()
+      }
+      return
+    }
     regenerateLegend(this._drawing_area)
   }
 
@@ -417,6 +426,9 @@ export class Class_LegendConfig {
   public markBroken() {
     if (this._generating) return
     if (!this._managed) return
+    // sa#663 — dans la colonne, les zones sont cachées : personne ne les retouche, une écriture qui
+    // passe par elles vient du programme (changement de sélection). La figer arrêterait la colonne.
+    if (this._in_panel) return
     this._managed = false
     // SA#549 — une légende figée ne bascule plus rien au clic : la main ne doit plus le promettre
     // (la classe, posée à la régénération, survivrait sinon jusqu'à « Régénérer »).
