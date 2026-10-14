@@ -99,21 +99,26 @@ const jsonNeedsEagerRead = (json: Type_JSON): boolean => {
  * réponse ne peut pas changer. Hors dessin (`null`), rien n'est retenu.
  */
 export const valueTreeAnswers: {
+  /** Ce qui se déduit des valeurs et de la sélection : ouverte pour un dessin, un rebâti, un geste. */
   active: WeakMap<object, { [question: string]: unknown }> | null
-  /** Le graphe (nœuds, flux) ne bouge pas non plus dans la portée : vrai pour un dessin, pas pour un rebâti. */
-  graph_stable: boolean
-} = { active: null, graph_stable: false }
+  /**
+   * Ce qui dépend AUSSI du graphe (les flux voisins, les flux visibles) : ouverte pour un dessin
+   * seulement, et refermée avec lui — un rebâti refait les flux engendrés.
+   */
+  stable: WeakMap<object, { [question: string]: unknown }> | null
+} = { active: null, stable: null }
 
 /**
  * La réponse de `compute` à `question` sur `owner`, retenue tant que la mémoire est ouverte
  * (cf. `withValueTreeAnswers`) ; recalculée à chaque appel hors de cette portée. Ne convient qu'à ce
- * qui se déduit des valeurs et de la sélection, ni l'une ni l'autre ne bougeant dans la portée.
+ * qui se déduit des valeurs et de la sélection, ni l'une ni l'autre ne bougeant dans la portée ;
+ * `needs_stable_graph` : et du graphe, retenue alors le temps d'un dessin seulement.
  */
 export const rememberInValueScope = <T,>(
   owner: object, question: string, compute: () => T, needs_stable_graph: boolean = false
 ): T => {
-  const memo = valueTreeAnswers.active
-  if (memo === null || (needs_stable_graph && !valueTreeAnswers.graph_stable)) return compute()
+  const memo = needs_stable_graph ? valueTreeAnswers.stable : valueTreeAnswers.active
+  if (memo === null) return compute()
   let answers = memo.get(owner)
   if (answers === undefined) { answers = {}; memo.set(owner, answers) }
   if (question in answers) return answers[question] as T
@@ -134,14 +139,15 @@ const answerOnce = (tree: object, question: string, compute: () => boolean): boo
  * 42 s du changement de niveau sur le panorama.
  */
 export const withValueTreeAnswers = <T,>(fn: () => T, graph_stable: boolean = false): T => {
-  if (valueTreeAnswers.active !== null) return fn()
-  valueTreeAnswers.active = new WeakMap()
-  valueTreeAnswers.graph_stable = graph_stable
+  const opens_active = valueTreeAnswers.active === null
+  const opens_stable = graph_stable && valueTreeAnswers.stable === null
+  if (opens_active) valueTreeAnswers.active = new WeakMap()
+  if (opens_stable) valueTreeAnswers.stable = new WeakMap()
   try {
     return fn()
   } finally {
-    valueTreeAnswers.active = null
-    valueTreeAnswers.graph_stable = false
+    if (opens_active) valueTreeAnswers.active = null
+    if (opens_stable) valueTreeAnswers.stable = null
   }
 }
 
@@ -751,11 +757,24 @@ export class Class_ElementValueTree {
     if (racines.size !== 1) return undefined
     const racine = [...racines][0]
     if (matching_tags.includes(racine)) return undefined
-    const porte = (child: Class_ElementValue | Class_ElementValueTree | undefined) =>
-      child !== undefined && (child.has_data || child.has_result)
-    if (!porte(this.children[racine.id])) return undefined
-    const autres = Object.entries(this.children).some(([id, child]) => id !== racine.id && porte(child))
-    return autres ? undefined : racine
+    return this._seulEnfantPorteur() === racine.id ? racine : undefined
+  }
+
+  /**
+   * os#1511 — l'id de l'UNIQUE enfant qui porte une donnée, `null` s'il y en a zéro ou plusieurs.
+   * Ne dépend pas des membres visés : retenu le temps d'un dessin (cf. `rememberInValueScope`). Sur
+   * les pays partenaires (~250 enfants), le parcours refait à chaque bande prenait 11 s d'un niveau.
+   */
+  private _seulEnfantPorteur(): string | null {
+    return rememberInValueScope(this, 'seul_enfant_porteur', () => {
+      let seul: string | null = null
+      for (const [id, child] of Object.entries(this.children)) {
+        if (!(child.has_data || child.has_result)) continue
+        if (seul !== null) return null
+        seul = id
+      }
+      return seul
+    })
   }
 
   private _getContributingValuesStrict(

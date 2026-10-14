@@ -1937,7 +1937,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
         : this.drawing_area.scaleValueToPx(_)
     }
     const unit_tag = current_value?.unit_data_tag()
-    const carrier = resolveScaleCarrierTag(this.sankey, unit_tag)
+    // os#1511 — le porteur ne dépend que de la sélection et des tags à échelle propre, fixes pendant
+    // un dessin ou un rebâti (les surcharges d'épaisseur changent la VALEUR d'une échelle, pas le
+    // tag qui la porte) : résolu une fois par portée au lieu de chaque pixel (cf. `rememberInValueScope`).
+    const carrier = rememberInValueScope(this.sankey, `scale_carrier|${unit_tag?.id ?? ''}`,
+      () => resolveScaleCarrierTag(this.sankey, unit_tag))
     const carrier_scale = carrier?.own_scale
     if (carrier_scale !== undefined && !this.shape_local_link_scale) {
       this.setDomainLocalScale(carrier_scale)

@@ -1631,6 +1631,7 @@ export class Class_DrawingArea {
   public invalidateNodeSizeMemo() {
     this._node_size_memo?.clear(); this._link_side_memo?.clear(); this._radial_departure_memo?.clear()
     if (valueTreeAnswers.active !== null) valueTreeAnswers.active = new WeakMap()
+    if (valueTreeAnswers.stable !== null) valueTreeAnswers.stable = new WeakMap()
   }
   public withNodeSizeMemo<T>(fn: () => T): T {
     if (this._node_size_memo) return fn()

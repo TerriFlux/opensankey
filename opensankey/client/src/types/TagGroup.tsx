@@ -8,7 +8,7 @@ import {
   parsePlaybackSettings, playback
 } from './Playback'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
+import { Class_ElementValue, Class_ElementTaggedValue, rememberInValueScope, withValueTreeAnswers } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag, untaggedTagId } from './Tag'
@@ -2229,6 +2229,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * visibilité d'un flux qui relirait ses bandes) rend l'ensemble vide plutôt que de boucler.
    */
   public globalFoldedMembers(): Set<string> {
+    // os#1511 — retenus le temps d'un dessin : la clé ci-dessous, bâtie sur tous les flux et tous les
+    // membres, se recomposait à chaque bande (cf. `rememberInValueScope`).
+    return rememberInValueScope(this, 'global_folded_members', () => this._globalFoldedMembers(), true)
+  }
+
+  private _globalFoldedMembers(): Set<string> {
     if (this._fold_computing) return new Set()
     const sankey = this._ref_sankey
     this._fold_computing = true
@@ -2714,10 +2720,13 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // une échelle en kt de matière grasse, et la mise en page volait en éclats (Julien, 08/10).
     // Pendant un geste groupé (`bypass_redraws`), c'est le geste qui refait et redessine.
     const drawing_area = this._ref_sankey.drawing_area
-    if (!drawing_area.bypass_redraws && this._ref_sankey.nodes_list.some(node => node.is_driven_by_dimension)) {
-      drawing_area.rebuildDimensionNodes()
-    }
-    drawing_area.draw()
+    // os#1511 — une portée de mémoire pour le rebâti et le dessin (cf. `withValueTreeAnswers`).
+    withValueTreeAnswers(() => {
+      if (!drawing_area.bypass_redraws && this._ref_sankey.nodes_list.some(node => node.is_driven_by_dimension)) {
+        drawing_area.rebuildDimensionNodes()
+      }
+      drawing_area.draw()
+    })
   }
 
   // PROTECTED METHODS ==================================================================

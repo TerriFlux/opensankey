@@ -28,6 +28,7 @@ import type { Class_NodeElement } from '../../Elements/Node'
 import type { Type_DisaggregationGap } from '../../types/Utils'
 import type { Type_MembersOrder } from '../../Algorithms/DimensionMemberOrder'
 import { isGeneratedMemberId } from '../../Elements/GeneratedMemberMark'
+import { withValueTreeAnswers } from '../../Elements/LinkValues'
 import { nodeTransformsDimension } from '../../Algorithms/DimensionTransform'
 import { expansionSideOf } from '../../Algorithms/DimensionExpansion'
 import {
@@ -133,8 +134,12 @@ const restoreAll = (app_data: Class_ApplicationData, states: [Class_DataTagGroup
   // Un aperçu (menu unitaire) a pu laisser `bypass_redraws` posé : le dessin final doit passer.
   drawing_area.bypass_redraws = false
   drawing_area.withBypassRedraws(() => states.forEach(([tagg, state]) => poseSelection(tagg, state.selected)), false)
-  drawing_area.rebuildDimensionNodes()
-  drawing_area.draw()
+  // os#1511 — UNE portée de mémoire pour le rebâti ET le dessin qui le suit : les valeurs des bandes
+  // des flux d'origine, calculées au rebâti, servent encore au dessin (cf. `withValueTreeAnswers`).
+  withValueTreeAnswers(() => {
+    drawing_area.rebuildDimensionNodes()
+    drawing_area.draw()
+  })
   app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
 }
