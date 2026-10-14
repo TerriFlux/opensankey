@@ -2120,10 +2120,17 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /**
    * CETTE dimension est celle que les flux découpent en bandes (`Link.tagged_value_bands`) : la
    * première de la liste qui le peut. Une seule dimension se dessine en bandes à la fois.
+   *
+   * os#1511 (Julien, 14/10, panorama de l'agriculture : « matières animales en bande ne colorie
+   * pas ») — la première qui SUPERPOSE vraiment plusieurs membres passe devant : la filière végétale,
+   * en bandes mais sur « Toutes filières » seule, prenait la main sur la filière animale et ses neuf
+   * membres choisis, et chaque flux n'avait qu'une bande grise.
    */
   public get draws_bands(): boolean {
-    return this._may_draw_bands &&
-      this._ref_sankey.data_taggs_list.find(tagg => tagg._may_draw_bands) === this
+    if (!this._may_draw_bands) return false
+    const candidates = this._ref_sankey.data_taggs_list.filter(tagg => tagg._may_draw_bands)
+    const superposee = candidates.find(tagg => tagg.selected_tags_list.length > 1)
+    return (superposee ?? candidates[0]) === this
   }
 
   /**

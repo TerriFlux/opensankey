@@ -2918,8 +2918,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // sans quoi value serait null (résolution 1 tag/groupe) et le flux
       // serait pris pour un flux de structure.
       if (value_current === null) {
-        const multi_dim = this.sankey.data_taggs_list.find(tagg =>
-          tagg.banner === 'multi' && tagg.tags_list.length > 1)
+        // os#1511 (14/10) — la dimension qui fait les bandes d'abord (cf. `draws_bands`).
+        const multi_dim = this.sankey.data_taggs_list.find(tagg => tagg.draws_bands) ??
+          this.sankey.data_taggs_list.find(tagg => tagg.banner === 'multi' && tagg.tags_list.length > 1)
         if (multi_dim) {
           const vals = multi_dim.selected_tags_list
             .map(tag => {
