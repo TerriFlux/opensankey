@@ -36,6 +36,14 @@ export const resources_spreadsheet = {
           layout_native: 'SankeyMATIC',
           layout_auto: 'Auto',
         },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: 'Crosstab to Sankey',
+          help: 'Paste a table copied from Excel: first row = columns, first column = rows, each cell a value. Every cell becomes a flow from its row to its column.',
+          summary: '{{rows}} rows × {{cols}} columns',
+          ignored: 'cells ignored (empty, zero or not a number)',
+          empty: 'No numeric cell found: check that the first row and the first column hold the names.',
+        },
         sheet: {
           flux: 'Flows',
           analysis: 'Results analysis',
@@ -428,6 +436,14 @@ export const resources_spreadsheet = {
           layout_native: 'SankeyMATIC',
           layout_auto: 'Auto',
         },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: 'Tableau croisé en Sankey',
+          help: 'Collez un tableau copié depuis Excel : première ligne = colonnes, première colonne = lignes, chaque cellule une valeur. Chaque cellule devient un flux de sa ligne vers sa colonne.',
+          summary: '{{rows}} lignes × {{cols}} colonnes',
+          ignored: 'cellules ignorées (vides, nulles ou non numériques)',
+          empty: 'Aucune cellule numérique trouvée : vérifiez que la première ligne et la première colonne portent les noms.',
+        },
         sheet: {
           flux: 'Flux',
           analysis: 'Analyse des résultats',
@@ -781,6 +797,14 @@ export const resources_spreadsheet = {
           layout_native: 'SankeyMATIC',
           layout_auto: 'Auto',
         },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: 'Tabla cruzada en Sankey',
+          help: 'Pegue una tabla copiada desde Excel: primera fila = columnas, primera columna = filas, cada celda un valor. Cada celda se convierte en un flujo de su fila a su columna.',
+          summary: '{{rows}} filas × {{cols}} columnas',
+          ignored: 'celdas ignoradas (vacías, nulas o no numéricas)',
+          empty: 'No se encontró ninguna celda numérica: compruebe que la primera fila y la primera columna llevan los nombres.',
+        },
         sheet: {
           flux: 'Flujos',
           analysis: 'Análisis de resultados',
@@ -1132,6 +1156,14 @@ export const resources_spreadsheet = {
           layout: 'Layout:',
           layout_native: 'SankeyMATIC',
           layout_auto: 'Auto',
+        },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: 'Kreuztabelle als Sankey',
+          help: 'Fügen Sie eine aus Excel kopierte Tabelle ein: erste Zeile = Spalten, erste Spalte = Zeilen, jede Zelle ein Wert. Jede Zelle wird zu einem Fluss von ihrer Zeile zu ihrer Spalte.',
+          summary: '{{rows}} Zeilen × {{cols}} Spalten',
+          ignored: 'Zellen ignoriert (leer, null oder keine Zahl)',
+          empty: 'Keine numerische Zelle gefunden: Prüfen Sie, ob die erste Zeile und die erste Spalte die Namen tragen.',
         },
         sheet: {
           flux: 'Flüsse',
@@ -1485,6 +1517,14 @@ export const resources_spreadsheet = {
           layout_native: 'SankeyMATIC',
           layout_auto: 'Auto',
         },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: 'Tabella incrociata in Sankey',
+          help: 'Incollate una tabella copiata da Excel: prima riga = colonne, prima colonna = righe, ogni cella un valore. Ogni cella diventa un flusso dalla sua riga alla sua colonna.',
+          summary: '{{rows}} righe × {{cols}} colonne',
+          ignored: 'celle ignorate (vuote, nulle o non numeriche)',
+          empty: 'Nessuna cella numerica trovata: verificate che la prima riga e la prima colonna portino i nomi.',
+        },
         sheet: {
           flux: 'Flussi',
           analysis: 'Analisi dei risultati',
@@ -1833,6 +1873,14 @@ export const resources_spreadsheet = {
           layout: '布局：',
           layout_native: 'SankeyMATIC',
           layout_auto: '自动',
+        },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: '交叉表转桑基图',
+          help: '粘贴从 Excel 复制的表格：第一行为列名，第一列为行名，每个单元格为一个数值。每个单元格成为从其行到其列的一条流。',
+          summary: '{{rows}} 行 × {{cols}} 列',
+          ignored: '个单元格被忽略（空、为零或非数值）',
+          empty: '未找到数值单元格：请检查第一行和第一列是否为名称。',
         },
         sheet: {
           flux: '流量',
@@ -2191,6 +2239,14 @@ export const resources_spreadsheet = {
           layout: 'レイアウト：',
           layout_native: 'SankeyMATIC',
           layout_auto: '自動',
+        },
+        // sa#671 — mini-appli « tableau croisé » : une grille collée depuis Excel.
+        crosstab: {
+          title: 'クロス集計表からサンキー図',
+          help: 'Excel からコピーした表を貼り付けます。1 行目が列名、1 列目が行名、各セルが値です。各セルが、その行からその列へのフローになります。',
+          summary: '{{rows}} 行 × {{cols}} 列',
+          ignored: 'セルを無視しました（空、ゼロ、または数値以外）',
+          empty: '数値のセルが見つかりません。1 行目と 1 列目に名前があるか確認してください。',
         },
         sheet: {
           flux: 'フロー',
