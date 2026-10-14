@@ -90,6 +90,9 @@ const jsonNeedsEagerRead = (json: Type_JSON): boolean => {
   return false
 }
 
+/** os#1511 — aucune dimension exclue du repli sur la racine (cf. `getContributingValues`). */
+const SANS_REPLI_AUCUN: ReadonlySet<string> = new Set()
+
 export class Class_ElementValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -673,7 +676,51 @@ export class Class_ElementValueTree {
    * n'existe pas ici » n'est pas « il vaut 0 ». Si toutes les feuilles d'un parent sont
    * absentes, le parent l'est aussi — sinon le diagramme se remplirait de flux fantômes.
    */
-  public getContributingValues(data_tags: Class_DataTag[]): Class_ElementValue[] | null {
+  public getContributingValues(
+    data_tags: Class_DataTag[], sans_repli: ReadonlySet<string> = SANS_REPLI_AUCUN
+  ): Class_ElementValue[] | null {
+    const strict = this._getContributingValuesStrict(data_tags, sans_repli)
+    if (strict !== null) return strict
+    // os#1511 (Julien, 14/10, panorama : filières végétales ET animales en bandes) — LE FLUX N'EST PAS
+    // VENTILÉ PAR CETTE DIMENSION : sa branche ne porte de donnée qu'à la RACINE (« Toutes filières »)
+    // et rien sous les membres visés. Il se lit alors à la racine, quelle que soit la sélection :
+    // choisir des cultures ne doit pas effacer les flux animaux, rangés sous « Toutes » végétales.
+    // Jamais pour une dimension de `sans_repli` (celle qui découpe le flux en bandes : chaque bande
+    // vaudrait le total), ni si un autre membre porte une donnée (un flux ventilé mais absent pour
+    // Céréales n'affiche pas le total).
+    if (sans_repli.has(this.data_tag_group.id)) return null
+    const racine = this._seuleRacinePortee(data_tags)
+    if (racine === undefined) return null
+    const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
+    return this._contributionOf(this.children[racine.id], remaining_tags, sans_repli)
+  }
+
+  /**
+   * os#1511 (14/10) — la racine de la dimension de cet étage qui porte SEULE une donnée, quand les
+   * membres visés en descendent et n'en portent aucune ; `undefined` sinon.
+   */
+  private _seuleRacinePortee(data_tags: Class_DataTag[]): Class_DataTag | undefined {
+    const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
+    if (matching_tags.length === 0) return undefined
+    const racineDe = (tag: Class_DataTag) => {
+      let r = tag
+      while (r.parent !== undefined) r = r.parent as Class_DataTag
+      return r
+    }
+    const racines = new Set(matching_tags.map(racineDe))
+    if (racines.size !== 1) return undefined
+    const racine = [...racines][0]
+    if (matching_tags.includes(racine)) return undefined
+    const porte = (child: Class_ElementValue | Class_ElementValueTree | undefined) =>
+      child !== undefined && (child.has_data || child.has_result)
+    if (!porte(this.children[racine.id])) return undefined
+    const autres = Object.entries(this.children).some(([id, child]) => id !== racine.id && porte(child))
+    return autres ? undefined : racine
+  }
+
+  private _getContributingValuesStrict(
+    data_tags: Class_DataTag[], sans_repli: ReadonlySet<string>
+  ): Class_ElementValue[] | null {
     if (data_tags.length === 0) return null
     const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
     const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
@@ -691,7 +738,7 @@ export class Class_ElementValueTree {
     if (matching_tags.length > 1) {
       const cumul: Class_ElementValue[] = []
       matching_tags.forEach(membre => {
-        const part = this.getContributingValues([membre, ...remaining_tags])
+        const part = this._getContributingValuesStrict([membre, ...remaining_tags], sans_repli)
         if (part !== null) cumul.push(...part)
       })
       return cumul.length > 0 ? cumul : null
@@ -699,7 +746,7 @@ export class Class_ElementValueTree {
     const member = matching_tags[0]
 
     // 1. Ce que porte le membre visé lui-même.
-    const carried = this._contributionOf(this.children[member.id], remaining_tags)
+    const carried = this._contributionOf(this.children[member.id], remaining_tags, sans_repli)
     if (carried !== null) return carried
 
     // 2. À défaut, ses feuilles. Un membre sans descendance est sa propre feuille : il n'y a
@@ -708,7 +755,7 @@ export class Class_ElementValueTree {
     if (leaves.length === 1 && leaves[0] === member) return null
     const contributions: Class_ElementValue[] = []
     leaves.forEach(leaf => {
-      const contribution = this._contributionOf(this.children[leaf.id], remaining_tags)
+      const contribution = this._contributionOf(this.children[leaf.id], remaining_tags, sans_repli)
       if (contribution !== null) contributions.push(...contribution)
     })
     return contributions.length > 0 ? contributions : null
@@ -724,7 +771,8 @@ export class Class_ElementValueTree {
    */
   private _contributionOf(
     child: Class_ElementValue | Class_ElementValueTree | undefined,
-    remaining_tags: Class_DataTag[]
+    remaining_tags: Class_DataTag[],
+    sans_repli: ReadonlySet<string> = SANS_REPLI_AUCUN
   ): Class_ElementValue[] | null {
     if (child === undefined) return null
     if (child instanceof Class_ElementValue) {
@@ -732,7 +780,7 @@ export class Class_ElementValueTree {
       if (!child.has_data && !child.has_result) return null
       return [child]
     }
-    return child.getContributingValues(remaining_tags)
+    return child.getContributingValues(remaining_tags, sans_repli)
   }
 
   // #188 — mirror getValueForDataTags but return the structurally-absent marker
