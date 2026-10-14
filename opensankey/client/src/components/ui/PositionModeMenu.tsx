@@ -45,9 +45,9 @@ import {
 } from './positionModeHost'
 import {
   applyDimensionDrawing, applyMemberBands, applyMembersColorFlows, applyNodesExpansion,
-  dimensionCarrierCandidates, dimensionOffersExpansion,
-  dimensionDrawingOf, dimensionInMemberBands, toggleDimensionCarrier, carrierRefusal
+  dimensionCarrierCandidates, dimensionOffersExpansion, toggleDimensionCarrier, carrierRefusal
 } from './dimensionDrawingHost'
+import { fromDiagram, sankeyLabelOf, type Type_ViewSankey } from '../../Representations/dimensionViewState'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
@@ -269,8 +269,14 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
   // (`dimension_drawing`). Chaque moitié du menu a son propre gate ; seule, elle se montre à plat.
   const can_draw = dimensionDrawingEnabledFor(app_data, tagg)
   const can_position = positionModeSelectorEnabledFor(app_data)
-  const drawing = dimensionDrawingOf(app_data, tagg)
-  const in_bands = dimensionInMemberBands(app_data, tagg)
+  // 11/10/2026 (os#1511) — LU PAR LE MODÈLE COMMUN : le libellé du sélecteur (un membre / en bandes /
+  // en nœuds / en expansion / un diagramme par membre) est le rôle et la variante de la dimension
+  // (`fromDiagram` → `sankeyLabelOf`). Les libellés restent ceux d'avant.
+  const view = fromDiagram(app_data.drawing_area.sankey as unknown as Type_ViewSankey).dims[tagg.id]
+  const label = view === undefined ? null : sankeyLabelOf(view)
+  const drawing: 'one' | 'multi' | 'nodes' | 'other' = label === 'one' ? 'one' : label === 'bands' ? 'multi'
+    : label === null ? 'other' : 'nodes'
+  const in_bands = label === 'member_bands'
   // os#1511 (Julien, 07/10) — plus de mode d'écart des enfants ici : l'écart est CONSTANT, et sa
   // valeur se règle dans « Navigation » et par le curseur en haut de la légende.
   const position_items = <>
@@ -429,7 +435,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                   title={dimensionOffersExpansion(app_data, tagg)
                     ? t('Banner.draw_expansion_tooltip', { defaultValue: 'Les membres ouverts gardent leur nœud ; leurs enfants s\'ouvrent vers l\'extérieur du diagramme' })
                     : t('Banner.draw_expansion_unavailable', { defaultValue: 'Seulement sur un nœud porteur à une extrémité du diagramme (sans flux d\'un côté)' })}
-                  checked={tagg.nodes_expansion}
+                  checked={label === 'expansion'}
                   disabled={!tagg.nodes_expansion && !dimensionOffersExpansion(app_data, tagg)}
                   onClick={() => applyNodesExpansion(app_data, tagg, !tagg.nodes_expansion)}
                 />
