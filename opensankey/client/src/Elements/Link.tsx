@@ -2747,6 +2747,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.target_side_locked = false
   }
 
+  /**
+   * os#1511 (Julien, 14/10 : « afficher les datatags comme dans Excel ») — LES VALEURS PORTÉES par ce
+   * flux, coordonnée par coordonnée : une visite par feuille du cube qui porte une donnée ou un
+   * résultat, avec ses étiquettes dans l'ordre des dimensions. Sans dimension, sa seule valeur,
+   * portée ou non (le flux a sa ligne quoi qu'il arrive). Les branches en attente sont lues depuis
+   * leur JSON sans se construire (cf. `Class_ElementValueTree.forEachCarriedLeaf`) : la valeur
+   * visitée peut être JETABLE ; pour écrire, repasser par `valueForTags(tags)`.
+   */
+  public forEachCarriedValue(visit: (value: Class_LinkValue, tags: Class_DataTag[]) => void) {
+    if (this._values === undefined) return
+    if (this._values instanceof Class_LinkValue) {
+      if (!this._values.structurally_absent) visit(this._values, [])
+      return
+    }
+    this._values.forEachCarriedLeaf((value, tags) => visit(value as Class_LinkValue, tags))
+  }
+
   public valueForTags(_: Class_ProtoTag[]): Class_LinkValue | null {
     if (this._values instanceof Class_LinkValue)
       return this._values

@@ -223,6 +223,51 @@ export class Class_ElementValueTree {
   }
 
   /**
+   * os#1511 (Julien, 14/10 : « afficher les datatags comme dans Excel ») — visite chaque feuille qui
+   * PORTE quelque chose (donnée ou résultat) avec sa coordonnée, de haut en bas dans l'ordre des
+   * dimensions, SANS construire les branches en attente : une branche lue mais jamais ouverte se
+   * parcourt depuis son JSON, chaque feuille dans une valeur jetable (cf. `_pendingSome`). C'est la
+   * lecture du tableur, qui liste le cube comme la feuille de données Excel : une ligne par
+   * coordonnée. Une valeur jetable ne s'écrit pas : pour écrire, `getValueForDataTags(tags)`.
+   */
+  public forEachCarriedLeaf(
+    visit: (value: Class_ElementValue, tags: Class_DataTag[]) => void, tags: Class_DataTag[] = []
+  ) {
+    if (this._is_blank_unbuilt) return
+    const pending = this._pending
+    if (pending !== null) {
+      const walk = (json: Type_JSON, group: Class_DataTagGroup, below: Class_DataTagGroup[], path: Class_DataTag[]) => {
+        const [next, ...rest] = below
+        group.tags_list.forEach(tag => {
+          const sub = json[tag.id]
+          if (sub === null || typeof sub !== 'object') return
+          const here = [...path, tag]
+          if (next !== undefined) {
+            walk(sub as Type_JSON, next, rest, here)
+            return
+          }
+          const value = this.createValue(this)
+          value.fromJSON(sub as Type_JSON, pending.matching_taggs_id, pending.matching_tags_id)
+          if (value.has_data || value.has_result) visit(value, here)
+        })
+      }
+      walk(pending.json as Type_JSON, this.data_tag_group, pending.below, tags)
+      return
+    }
+    Object.entries(this.children).forEach(([id, child]) => {
+      const tag = this.data_tag_group.tags_dict[id]
+      if (tag === undefined) return
+      const here = [...tags, tag]
+      if (child instanceof Class_ElementValueTree) {
+        child.forEachCarriedLeaf(visit, here)
+      }
+      else if (!child.structurally_absent && (child.has_data || child.has_result)) {
+        visit(child, here)
+      }
+    })
+  }
+
+  /**
    * os#1528 — écrit le JSON en attente SANS construire la branche. Construire pour écrire, c'était
    * reconstruire tout le cube à chaque enregistrement (SOCLE synthétiques transfo, 8 flux de
    * 680 000 cases : « out of memory » dans Firefox). Chaque feuille passe par une valeur jetable,
