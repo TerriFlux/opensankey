@@ -639,6 +639,20 @@ export class Class_LegendConfig {
   }
 
   /** os#1527 — prévenu à chaque régénération ; renvoie le désabonnement. */
+  /**
+   * sa#665 — LA ZONE DE DESSIN A ÉTÉ REMPLACÉE (autre fichier d'une page à plusieurs diagrammes, reset) :
+   * la nouvelle légende reprend l'état de colonne de l'ancienne — vivre dans le panneau (zones cachées
+   * dès leur premier dessin, cf. `NodeBase._initDraw`) et ses abonnés (le panneau se relit au premier
+   * dessin, par `refreshLegendModel`). Sans quoi l'ancienne légende ressurgissait par-dessus le
+   * diagramme et la colonne restait sur le fichier précédent. Champ posé directement : l'accesseur
+   * régénérerait et recadrerait une zone pas encore dessinée.
+   */
+  public adoptPanelStateFrom(previous: Class_LegendConfig | undefined): void {
+    if (previous === undefined || previous === this) return
+    this._in_panel = previous._in_panel
+    previous._panel_listeners.forEach(listener => this._panel_listeners.add(listener))
+  }
+
   public subscribePanel(listener: () => void): () => void {
     this._panel_listeners.add(listener)
     return () => { this._panel_listeners.delete(listener) }
