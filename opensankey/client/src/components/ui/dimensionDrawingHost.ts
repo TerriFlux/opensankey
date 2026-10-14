@@ -580,14 +580,40 @@ export const readerChosenRoots = (tagg: Class_DataTagGroup): string[] => [...new
     return r.id
   }))]
 
+/** Les AUTRES dimensions qui superposent plusieurs membres en bandes (pas un diagramme par membre). */
+const otherBandedDimensions = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_DataTagGroup[] =>
+  (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]).filter(other =>
+    other !== tagg && other.member_bands !== true && other.drawing === 'multi' && other.selected_tags_list.length > 1)
+
 /**
- * Une AUTRE dimension superpose-t-elle plusieurs membres en bandes (pas un diagramme par membre) ?
- * La case « Distinguer… » de `tagg` est alors GELÉE : deux dimensions en bandes, on ne verrait plus
- * rien (règle de Jean-Yves).
+ * Une AUTRE dimension superpose-t-elle plusieurs membres en bandes, SANS que le lecteur puisse la
+ * ramener à un seul (elle n'a pas de commande) ? La case « Distinguer… » de `tagg` est alors GELÉE :
+ * deux dimensions en bandes, on ne verrait plus rien (règle de Jean-Yves).
+ *
+ * os#1511 (Jean-Yves, 14/10 : « on doit d'abord désélectionner types de matières ou sous-filières
+ * avant de pouvoir sélectionner l'alternative ») — une dimension qui A une commande ne gèle plus :
+ * cocher l'autre case la ramène à un seul membre dans le même pas (`releaseOtherBands`).
  */
 export const readerToggleBlocker = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): Class_DataTagGroup | undefined =>
-  (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[]).find(other =>
-    other !== tagg && other.member_bands !== true && other.drawing === 'multi' && other.selected_tags_list.length > 1)
+  otherBandedDimensions(app_data, tagg).find(other => other.reader_control === undefined)
+
+/**
+ * os#1511 (14/10) — LES CASES « DISTINGUER… » S'EXCLUENT D'ELLES-MÊMES : avant de superposer les
+ * membres de `tagg`, chaque autre dimension superposée qui a une commande revient à un membre — une
+ * case se décoche (premier niveau), un choix de sous-membres revient à leur membre de tête.
+ */
+const releaseOtherBands = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup) => {
+  // Les superposées, et toute autre case « Distinguer… » cochée (la règle d'avant, quel que soit
+  // le dessin de sa dimension).
+  const cochees = (app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
+    .filter(other => other !== tagg && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
+  ;[...new Set([...otherBandedDimensions(app_data, tagg), ...cochees])].forEach(other => {
+    const kind = other.reader_control?.kind
+    if (kind === 'toggle') applyReaderToggle(app_data, other, false)
+    else if (kind === 'level') applyReaderLevel(app_data, other, 0)
+    else if (kind === 'pick') applyReaderPick(app_data, other, readerChosenRoots(other).slice(0, 1))
+  })
+}
 
 /** Le lecteur choisit des membres : choix multiple dès plusieurs, sans portée. */
 export const applyReaderPick = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, ids: string[]) => {
@@ -599,9 +625,20 @@ export const applyReaderPick = (app_data: Class_ApplicationData, tagg: Class_Dat
 export const applyReaderLevel = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, depth: number) =>
   applyReaderPick(app_data, tagg, tagg.membersAtLevel(depth).map(m => m.id))
 
-/** La case « Distinguer… » : cochée, le deuxième niveau ; décochée, le premier. */
-export const applyReaderToggle = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) =>
-  applyReaderLevel(app_data, tagg, on ? 1 : 0)
+/**
+ * La case « Distinguer… » : cochée, le deuxième niveau ; décochée, le premier. Cochée, elle libère
+ * d'abord les autres dimensions superposées (`releaseOtherBands`), dans le même pas.
+ */
+export const applyReaderToggle = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean): void => {
+  if (!on) {
+    applyReaderLevel(app_data, tagg, 0)
+    return
+  }
+  inOneHistoryStep(app_data.history, () => {
+    releaseOtherBands(app_data, tagg)
+    applyReaderLevel(app_data, tagg, 1)
+  })
+}
 
 /**
  * Le lecteur choisit des SOUS-MEMBRES de `root` : aucun ou tous, c'est `root` ; plusieurs, ils se
@@ -638,10 +675,8 @@ export const applyReaderSubDistinguish = (
     return
   }
   inOneHistoryStep(app_data.history, () => {
+    releaseOtherBands(app_data, tagg)
     applyReaderPick(app_data, tagg, children.map(c => c.id))
-    ;(app_data.drawing_area.sankey.data_taggs_list as Class_DataTagGroup[])
-      .filter(other => other !== tagg && other.reader_control?.kind === 'toggle' && other.current_level_index > 0)
-      .forEach(other => applyReaderToggle(app_data, other, false))
   })
 }
 
