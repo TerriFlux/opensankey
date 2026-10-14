@@ -2,7 +2,8 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTag } from '../../types/Tag'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
 import {
-  applyDimensionBanner, applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDisaggregationGap,
+  applyDimensionBanner, applyDimensionCarriers, applyDimensionCut, applyDimensionDrawing, applyDimensionLevel, applyDimensionNodes,
+  applyDisaggregationGap,
   applyMemberBands, applyReferenceNode, dimensionCarriersOf, dimensionDrawingOf, swapDimensionDrawings, toggleDimensionCarrier
 } from './dimensionDrawingHost'
 import { NodeElementPersistence } from '../../Persistence/SankeyPersistence'
@@ -200,6 +201,25 @@ describe('os#1511 — le dessin d une dimension depuis la barre du haut', () => 
     expect(dimensionDrawingOf(app, pays)).toBe('multi')
     app.history.applyUndo()
     expect(pays.isWholeLevelSelected(0)).toBe(true)
+  })
+
+  // Julien, 14/10 : « si je passe de noeuds a bandes je perds la selection des noeuds ».
+  test('revenir en noeuds reprend les porteurs mis de cote au passage en bandes', () => {
+    const { app, pays, a, b } = monter()
+    applyDimensionCarriers(app, pays, [a.id, b.id])
+    applyDimensionDrawing(app, pays, 'multi')
+    expect(dimensionCarriersOf(app, pays)).toEqual([])
+    expect(applyDimensionNodes(app, pays, a.id).sort()).toEqual([a.id, b.id].sort())
+    expect(dimensionCarriersOf(app, pays).map(n => n.id).sort()).toEqual([a.id, b.id].sort())
+    expect(pays.parked_carrier_ids).toEqual([])
+    app.history.applyUndo()
+    expect(dimensionCarriersOf(app, pays)).toEqual([])
+  })
+
+  test('sans porteur mis de cote, revenir en noeuds prend le noeud propose', () => {
+    const { app, pays, b } = monter()
+    expect(applyDimensionNodes(app, pays, b.id)).toEqual([b.id])
+    expect(dimensionCarriersOf(app, pays).map(n => n.id)).toEqual([b.id])
   })
 
   test('les porteurs et le noeud de reference se posent et s annulent', () => {
