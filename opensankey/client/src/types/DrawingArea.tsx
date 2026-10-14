@@ -56,6 +56,7 @@ import {
 } from '../Elements/Link'
 import { Class_LegendConfig } from '../Elements/LegendGenerator'
 import { isLegendElementId } from '../Elements/legendIds'
+import { valueTreeAnswers } from '../Elements/LinkValues'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -1628,18 +1629,23 @@ export class Class_DrawingArea {
   public get radial_departure_memo() { return this._radial_departure_memo }
   public invalidateNodeSizeMemo() {
     this._node_size_memo?.clear(); this._link_side_memo?.clear(); this._radial_departure_memo?.clear()
+    if (valueTreeAnswers.active !== null) valueTreeAnswers.active = new WeakMap()
   }
   public withNodeSizeMemo<T>(fn: () => T): T {
     if (this._node_size_memo) return fn()
     this._node_size_memo = new Map()
     this._link_side_memo = new Map()
     this._radial_departure_memo = new Map()
+    // os#1511 — et les réponses du cube de valeurs (cf. `valueTreeAnswers`), sauf mémoire déjà ouverte.
+    const opened_answers = valueTreeAnswers.active === null
+    if (opened_answers) valueTreeAnswers.active = new WeakMap()
     try {
       return fn()
     } finally {
       this._node_size_memo = null
       this._link_side_memo = null
       this._radial_departure_memo = null
+      if (opened_answers) valueTreeAnswers.active = null
     }
   }
   /** Réorganise les flux E/S de chaque nœud, sous une seule mémo de tailles (cf. ci-dessus). */
