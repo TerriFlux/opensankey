@@ -56,7 +56,7 @@ import {
 } from '../Elements/Link'
 import { Class_LegendConfig } from '../Elements/LegendGenerator'
 import { isLegendElementId } from '../Elements/legendIds'
-import { valueTreeAnswers } from '../Elements/LinkValues'
+import { valueTreeAnswers, withValueTreeAnswers } from '../Elements/LinkValues'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -1532,7 +1532,8 @@ export class Class_DrawingArea {
       this.beginScaleFrame()
       this.applyReferenceNodeScale()
     }
-    this.withBypassRedraws(() => {
+    // os#1511 — le rebâti n'écrit aucune valeur : les réponses du cube sont retenues tout du long.
+    withValueTreeAnswers(() => this.withBypassRedraws(() => {
       disaggregateDimensionNodes(this.sankey)
       // Sous une échelle calée sur un nœud, le premier placement lit encore des grandeurs de
       // l'ancienne coupe (créneaux des axes, hauteurs) : une seconde passe, sur l'état posé par la
@@ -1542,7 +1543,7 @@ export class Class_DrawingArea {
         this.applyReferenceNodeScale()
         disaggregateDimensionNodes(this.sankey)
       }
-    }, false)
+    }, false))
     const find = (id: string) =>
       (this.sankey.nodes_dict[id] ?? this.sankey.links_dict[id]) as Class_ProtoElement | undefined
     selected_ids.forEach(id => {
@@ -1636,16 +1637,13 @@ export class Class_DrawingArea {
     this._node_size_memo = new Map()
     this._link_side_memo = new Map()
     this._radial_departure_memo = new Map()
-    // os#1511 — et les réponses du cube de valeurs (cf. `valueTreeAnswers`), sauf mémoire déjà ouverte.
-    const opened_answers = valueTreeAnswers.active === null
-    if (opened_answers) valueTreeAnswers.active = new WeakMap()
     try {
-      return fn()
+      // os#1511 — et les réponses du cube de valeurs (cf. `withValueTreeAnswers`).
+      return withValueTreeAnswers(fn, true)
     } finally {
       this._node_size_memo = null
       this._link_side_memo = null
       this._radial_departure_memo = null
-      if (opened_answers) valueTreeAnswers.active = null
     }
   }
   /** Réorganise les flux E/S de chaque nœud, sous une seule mémo de tailles (cf. ci-dessus). */
@@ -1700,7 +1698,8 @@ export class Class_DrawingArea {
     // isInFullDraw) : les flux doivent alors tous être redessinés.
     this._in_full_draw = true
     try {
-      this._drawBody()
+      // os#1511 — aucune valeur ne s'écrit pendant un dessin : les réponses du cube sont retenues.
+      withValueTreeAnswers(() => this._drawBody(), true)
     } finally {
       this._in_full_draw = false
     }

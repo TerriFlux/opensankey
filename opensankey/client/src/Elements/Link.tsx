@@ -44,7 +44,7 @@ import { membersOfGeneratedNode } from '../Algorithms/DimensionDisaggregation'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
-import { Class_ElementValueTree, Class_LinkValue, Class_ElementTaggedValue } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue, Class_ElementTaggedValue, rememberInValueScope } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_DrawingArea } from '../types/DrawingArea'
@@ -1194,6 +1194,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
    *    de Julien : « filière animale ») ; à défaut, la première de la liste.
    */
   public bandDimension(): Class_DataTagGroup | undefined {
+    // os#1511 — retenue le temps d'un dessin (cf. `rememberInValueScope`) ; pas d'un rebâti : elle
+    // lit les flux qui sortent du nœud d'arrivée, que le rebâti refait.
+    return rememberInValueScope(this, 'band_dimension', () => this._bandDimension(), true)
+  }
+
+  private _bandDimension(): Class_DataTagGroup | undefined {
     const candidates = (this.sankey.data_taggs_list as Class_DataTagGroup[]).filter(tagg => tagg.draws_bands)
     if (candidates.length <= 1) return candidates[0]
     const ventile = (lien: Class_LinkElement, dim: Class_DataTagGroup) =>
@@ -1214,6 +1220,34 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this._is_expansion_link) return []
     const band_style = (tags: Class_Tag[]) => this._bandStyle(tags)
     const bands: Type_DimensionBand[] = []
+    // os#1511 (Julien, 14/10 : « il faut que ce soit rapide ») — les VALEURS des bandes ne dépendent
+    // que du cube et de la sélection : retenues le temps d'un dessin ou d'un rebâti, où un même flux
+    // les redemandait pour son épaisseur, ses deux bouts, sa dimension de bandes et ses voisins. Les
+    // pixels, eux, suivent l'échelle et se recalculent à chaque fois.
+    this._dimensionBandValues(multi_dim).forEach(({ tag, leaf, v }) => {
+      const { color: styled_color, ...styled_opacity } = band_style(valueTags(leaf))
+      // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
+      // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
+      // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
+      const band_own_scale = tag.own_scale
+      if (band_own_scale !== undefined && band_own_scale > 0) {
+        this.setDomainLocalScale(band_own_scale)
+        bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
+      }
+      else {
+        bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
+      }
+    })
+    return bands
+  }
+
+  /** os#1511 — les valeurs des bandes de `multi_dim` sur ce flux (cf. `dimensionBandsRaw`). */
+  private _dimensionBandValues(multi_dim: Class_DataTagGroup): { tag: Class_DataTag, leaf: Class_LinkValue | null, v: number }[] {
+    return rememberInValueScope(this, `band_values|${multi_dim.id}`, () => this._computeDimensionBandValues(multi_dim))
+  }
+
+  private _computeDimensionBandValues(multi_dim: Class_DataTagGroup): { tag: Class_DataTag, leaf: Class_LinkValue | null, v: number }[] {
+    const values: { tag: Class_DataTag, leaf: Class_LinkValue | null, v: number }[] = []
     // os#1511 — UN FLUX ENGENDRÉ ne porte qu'un scalaire : il naît d'un choix de coordonnées
     // et ne sait pas se redécouper par un autre axe. Ses bandes se lisent donc sur le flux
     // D'ORIGINE, à la coordonnée de son membre. Sans cela, chaque bande valait le total du
@@ -1268,20 +1302,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
         }
       }
       if (v === null || v <= 0) return
-      const { color: styled_color, ...styled_opacity } = band_style(valueTags(leaf))
-      // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
-      // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
-      // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
-      const band_own_scale = (tag as Class_DataTag).own_scale
-      if (band_own_scale !== undefined && band_own_scale > 0) {
-        this.setDomainLocalScale(band_own_scale)
-        bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
-      }
-      else {
-        bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: styled_color ?? tag.color, value: v, ...styled_opacity })
-      }
+      values.push({ tag: tag as Class_DataTag, leaf, v })
     })
-    return bands
+    return values
   }
 
   /** SA#541 — couleur et opacité imposées à une bande par les styles des étiquettes de sa valeur. */

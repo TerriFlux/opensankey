@@ -98,16 +98,51 @@ const jsonNeedsEagerRead = (json: Type_JSON): boolean => {
  * parcours prenaient 38 des 47 s d'un clic. Pendant un dessin, aucune valeur ne s'écrit : la
  * réponse ne peut pas changer. Hors dessin (`null`), rien n'est retenu.
  */
-export const valueTreeAnswers: { active: WeakMap<object, { [question: string]: boolean }> | null } = { active: null }
+export const valueTreeAnswers: {
+  active: WeakMap<object, { [question: string]: unknown }> | null
+  /** Le graphe (nœuds, flux) ne bouge pas non plus dans la portée : vrai pour un dessin, pas pour un rebâti. */
+  graph_stable: boolean
+} = { active: null, graph_stable: false }
 
-const answerOnce = (tree: object, question: string, compute: () => boolean): boolean => {
+/**
+ * La réponse de `compute` à `question` sur `owner`, retenue tant que la mémoire est ouverte
+ * (cf. `withValueTreeAnswers`) ; recalculée à chaque appel hors de cette portée. Ne convient qu'à ce
+ * qui se déduit des valeurs et de la sélection, ni l'une ni l'autre ne bougeant dans la portée.
+ */
+export const rememberInValueScope = <T,>(
+  owner: object, question: string, compute: () => T, needs_stable_graph: boolean = false
+): T => {
   const memo = valueTreeAnswers.active
-  if (memo === null) return compute()
-  let answers = memo.get(tree)
-  if (answers === undefined) { answers = {}; memo.set(tree, answers) }
-  const known = answers[question]
-  if (known !== undefined) return known
-  return (answers[question] = compute())
+  if (memo === null || (needs_stable_graph && !valueTreeAnswers.graph_stable)) return compute()
+  let answers = memo.get(owner)
+  if (answers === undefined) { answers = {}; memo.set(owner, answers) }
+  if (question in answers) return answers[question] as T
+  const answer = compute()
+  answers[question] = answer
+  return answer
+}
+
+const answerOnce = (tree: object, question: string, compute: () => boolean): boolean =>
+  rememberInValueScope(tree, question, compute)
+
+/**
+ * Ouvre la mémoire des réponses le temps de `fn` (sauf si elle l'est déjà). À n'employer que là où
+ * aucune valeur ne s'écrit : un dessin, le rebâti des nœuds de membre.
+ *
+ * os#1511 (Julien, 14/10 : « il faut que ce soit rapide ») — ouverte d'abord autour du seul
+ * `withNodeSizeMemo`, elle manquait au reste du dessin et au rebâti, où passaient encore 37 des
+ * 42 s du changement de niveau sur le panorama.
+ */
+export const withValueTreeAnswers = <T,>(fn: () => T, graph_stable: boolean = false): T => {
+  if (valueTreeAnswers.active !== null) return fn()
+  valueTreeAnswers.active = new WeakMap()
+  valueTreeAnswers.graph_stable = graph_stable
+  try {
+    return fn()
+  } finally {
+    valueTreeAnswers.active = null
+    valueTreeAnswers.graph_stable = false
+  }
 }
 
 /** os#1511 — aucune dimension exclue du repli sur la racine (cf. `getContributingValues`). */
