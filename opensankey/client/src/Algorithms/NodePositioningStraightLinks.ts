@@ -15,6 +15,7 @@ import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_LinkElement } from '../Elements/Link'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Type_StraightMode } from '../Elements/ElementsAttributesConfig'
+import { isGeneratedMemberId, parseGeneratedId } from '../Elements/GeneratedMemberMark'
 
 export function straightenLink(da: Class_DrawingArea, link: Class_LinkElement): boolean {
   if (link.shape_is_recycling || link.source === link.target) return false
@@ -92,6 +93,33 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
   })
   if (to_straighten.size === 0) return false
 
+  // os#1511 (Julien, 14/10, panorama : Ressources et Emplois découpés par poste) — UN FLUX DROIT
+  // DÉCOUPÉ PAR UNE DIMENSION ne garde sa rectitude que sur sa PLUS GROSSE part : les flux
+  // engendrés héritent l'attribut de leur flux d'origine, et chacun redressait le même nœud à son
+  // tour (le dernier gagnait), ou alignait chaque membre d'en face sur sa propre part (les nœuds
+  // s'empilaient). Production végétale → Matière végétale reste droit, les autres parts suivent.
+  const plus_grosse = new Map<string, Class_LinkElement>()
+  to_straighten.forEach((_mode, L) => {
+    const origine = isGeneratedMemberId(L.id) ? parseGeneratedId(L.id)?.origin : undefined
+    if (origine === undefined) return
+    const deja = plus_grosse.get(origine)
+    if (deja === undefined || (L.thickness ?? 0) > (deja.thickness ?? 0)) plus_grosse.set(origine, L)
+  })
+  ;[...to_straighten.keys()].forEach(L => {
+    const origine = isGeneratedMemberId(L.id) ? parseGeneratedId(L.id)?.origin : undefined
+    if (origine !== undefined && plus_grosse.get(origine) !== L) to_straighten.delete(L)
+  })
+  // Un nœud ENGENDRÉ qu'on redresse entraîne ses frères (les autres membres de son axe) du même
+  // décalage : l'empilement et ses écarts sont gardés.
+  const deplacer = (noeud: Class_NodeElement, dy: number) => {
+    const axe = isGeneratedMemberId(noeud.id) ? parseGeneratedId(noeud.id)?.origin : undefined
+    const groupe = axe === undefined
+      ? [noeud]
+      : (da.sankey.nodes_list as Class_NodeElement[]).filter(n =>
+        n.is_visible && isGeneratedMemberId(n.id) && parseGeneratedId(n.id)?.origin === axe)
+    groupe.forEach(n => { n.position_y += dy })
+  }
+
   // Offsets d'accroche relatifs (invariants par translation), capturés depuis le cache AVANT
   // tout déplacement.
   type SItem = { L: Class_LinkElement, mode: Type_StraightMode, startOff: number, endOff: number }
@@ -158,9 +186,9 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
     }
     line_of.set(L, srcLine)
     const ds = srcLine - srcAccr
-    if (Math.abs(ds) > 0.5) { L.source.position_y += ds; moved = true }
+    if (Math.abs(ds) > 0.5) { deplacer(L.source as Class_NodeElement, ds); moved = true }
     const dt = tgtLine - tgtAccr
-    if (Math.abs(dt) > 0.5) { L.target.position_y += dt; moved = true }
+    if (Math.abs(dt) > 0.5) { deplacer(L.target as Class_NodeElement, dt); moved = true }
   })
   return moved
 }
