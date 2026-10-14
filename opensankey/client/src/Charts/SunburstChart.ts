@@ -876,7 +876,10 @@ export const partitionSunburst = (
   // os#1425 — la mise en forme qui touche la COULEUR et le REGROUPEMENT ; le reste (étiquettes,
   // centre, légende) appartient au rendu et n'entre pas dans une partition.
   style: Pick<Type_SunburstStyle, 'color_source' | 'depth_shading' | 'others_threshold'>
-    & Partial<Pick<Type_SunburstStyle, 'color_axis' | 'texture_axis'>> = {
+    & Partial<Pick<Type_SunburstStyle, 'color_axis' | 'texture_axis'>>
+    // os#1511 (Julien, 14/10, les barres) — LA COULEUR DU MEMBRE, telle que le Sankey la dessine, pour
+    // tout secteur qui en a une : ni famille sobre, ni nuance du parent, ni écart au gris.
+    & { member_colors?: boolean } = {
     color_source: 'palette', depth_shading: true, others_threshold: 0
   }
 ): Type_SunburstSlice[] => {
@@ -951,6 +954,7 @@ export const partitionSunburst = (
     //  - sinon, la teinte de la branche, dégradée avec la profondeur si demandé.
     const sliceColor = (): string => {
       if (node.is_residual) return others
+      if (style.member_colors === true && node.color) return node.color
       if (color_branch) return axisColor()
       if (node.palette !== undefined) return familyColor(node, parent_color)
       if (style.color_source === 'model' && node.color) return node.color
@@ -1385,7 +1389,9 @@ export const drawSunburstChart = (
     // précèdent, la légende doit nommer les anneaux restants sans décalage.
     const level_offset = centre_node ? centre_node.depth + 1 : 0
 
-    const slices = partitionSunburst(branches, branchColor, others_label, theme, palette.others, st)
+    // os#1511 (14/10) — en barres, les couleurs des membres du Sankey, pas celles du sunburst.
+    const slices = partitionSunburst(branches, branchColor, others_label, theme, palette.others,
+      { ...st, member_colors: opts.layout === 'bars' })
     const rings = slices.reduce((m, s) => Math.max(m, s.depth), 0) + 1
 
     // La légende se pose à droite (défaut), à gauche, ou dessous — auquel cas elle prend une

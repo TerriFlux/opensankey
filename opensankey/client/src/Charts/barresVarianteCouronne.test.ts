@@ -19,11 +19,11 @@ const leaf = (parent: string, id: string, label: string, value: number, color: s
   dimension_id: 'pays', palette: { index: 1, branch_id: id, depth: 0 }
 })
 
-const root = (id: string, label: string, kids: [string, string, number, string][]): Type_SunburstNode => {
+const root = (id: string, label: string, color: string, kids: [string, string, number, string][]): Type_SunburstNode => {
   const children = kids.map(([kid, name, v, c]) => leaf(id, kid, name, v, c))
   const value = children.reduce((s, c) => s + c.value, 0)
   return {
-    id, label, value, declared: value, color: null, depth: 0, children,
+    id, label, value, declared: value, color, depth: 0, children,
     dimension_id: 'filiere', palette: { index: 0, branch_id: id, depth: 0 }
   }
 }
@@ -32,8 +32,8 @@ const TREE: Type_SunburstTree = {
   dimension_id: 'filiere',
   dimension_label: 'Filiere',
   roots: [
-    root('ce', 'Cereales', [['fr', 'France', 60, '#1f77b4'], ['es', 'Espagne', 30, '#ff7f0e']]),
-    root('la', 'Lait', [['fr', 'France', 20, '#1f77b4'], ['es', 'Espagne', 10, '#ff7f0e']])
+    root('ce', 'Cereales', '#2ca02c', [['fr', 'France', 60, '#1f77b4'], ['es', 'Espagne', 30, '#ff7f0e']]),
+    root('la', 'Lait', '#d62728', [['fr', 'France', 20, '#1f77b4'], ['es', 'Espagne', 10, '#ff7f0e']])
   ],
   rings: [
     { dimension_id: 'filiere', dimension_label: 'Filiere', level_label: '', is_selected_level: true },
@@ -85,5 +85,16 @@ describe('os#1511 les barres croisees sont une couronne depliee', () => {
     expect(text).toContain('Pays')
     expect(text).toContain('France')
     expect(text).toContain('Espagne')
+  })
+
+  test('les couleurs sont celles des membres du Sankey, pas celles du sunburst', () => {
+    // Julien, 14/10 : « la legende ne suit pas la couleur des datatags hierarchiques du Sankey ».
+    const el = draw()
+    expect(el.querySelector('rect[data-part-id="ce/fr"]')?.getAttribute('fill')).toBe('#1f77b4')
+    expect(el.querySelector('rect[data-part-id="ce/es"]')?.getAttribute('fill')).toBe('#ff7f0e')
+    // La premiere dimension aussi : la pastille de Cereales est son vert, pas un gris de famille.
+    const pastilles = Array.from(el.querySelectorAll('.legend_swatch_holder')).map(h => h.innerHTML).join(' ')
+    expect(pastilles).toContain('#2ca02c')
+    expect(pastilles).toContain('#1f77b4')
   })
 })
