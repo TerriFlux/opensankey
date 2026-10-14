@@ -1209,9 +1209,21 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Emplois, tous deux découpés par type de matière) portent le même membre ; lu deux fois, il
     // doublait chaque bande (Julien, 08/10 : 26 381 en sortie pour 13 191 en entrée).
     const membres_axes = this._membresAuxBouts()
+    // os#1511 (Julien, 14/10, SOCLE transfo : Type de matière en bandes, « le flux Ressources →
+    // Matière première est tout petit ») — UNE AUTRE DIMENSION À PLUSIEURS MEMBRES CHOISIS (les
+    // postes : production, importations, déstockage…) : le point que lit `valueForTag` n'en retient
+    // qu'un (560 kt d'importations au lieu de 64 492). La bande se lit alors en SOMME sur la
+    // coordonnée complète, comme pour un membre parent.
+    const groupes_axes_ids = new Set(membres_axes.map(membre => membre.group.id))
+    const compte_par_groupe = new Map<string, number>()
+    ;((origine ?? this).selected_data_tags_list as Class_DataTag[]).forEach(autre => {
+      if (autre.group.id === multi_dim.id || groupes_axes_ids.has(autre.group.id)) return
+      compte_par_groupe.set(autre.group.id, (compte_par_groupe.get(autre.group.id) ?? 0) + 1)
+    })
+    const autre_dimension_multiple = [...compte_par_groupe.values()].some(n => n > 1)
     multi_dim.selected_tags_list.forEach(tag => {
       const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
-      let v = (origine !== undefined && membres_axes.length > 0)
+      let v = (origine !== undefined && membres_axes.length > 0) || autre_dimension_multiple
         ? null
         : (leaf === null ? null : this.readLayer(leaf))
       // os#1511 — une bande sur un membre PARENT vaut la somme de ses feuilles. `valueForTag`
