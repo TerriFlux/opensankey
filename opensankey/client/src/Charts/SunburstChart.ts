@@ -879,7 +879,7 @@ export const partitionSunburst = (
     & Partial<Pick<Type_SunburstStyle, 'color_axis' | 'texture_axis'>>
     // os#1511 (Julien, 14/10, les barres) — LA COULEUR DU MEMBRE, telle que le Sankey la dessine, pour
     // tout secteur qui en a une : ni famille sobre, ni nuance du parent, ni écart au gris.
-    & { member_colors?: boolean } = {
+    & { member_colors?: boolean, whole_span_per_root?: boolean } = {
     color_source: 'palette', depth_shading: true, others_threshold: 0
   }
 ): Type_SunburstSlice[] => {
@@ -996,9 +996,13 @@ export const partitionSunburst = (
     })
   }
 
+  // os#1511 (Julien, 14/10 : « la légende est en couleur mais pas les parties de la barre ») — EN
+  // BARRES, CHAQUE RACINE EST SON PROPRE TOUT : le repli des parts trop étroites (`foldNarrowChildren`)
+  // se mesure dans SA barre, pas dans l'angle que la racine occupe parmi les autres. Sinon une barre
+  // de petit total versait tous ses segments dans « Autres », gris, sous une légende en couleur.
   let cursor = 0
   roots.forEach((root, i) => {
-    const width = (root.value / total) * 2 * Math.PI
+    const width = style.whole_span_per_root === true ? 2 * Math.PI : (root.value / total) * 2 * Math.PI
     walk(root, cursor, cursor + width, 0, branch_color(i), [root.id])
     cursor += width
   })
@@ -1206,6 +1210,27 @@ export const sunburstScope = (
   return { centre: null, branches: capBranches(roots, others_label, max_branches) }
 }
 
+/** os#1511 — `sunburstScope` des barres : rien ne se replie faute d'angle, rien faute de couleur. */
+const barsScope = (
+  roots: Type_SunburstNode[],
+  focused: Type_SunburstNode | null,
+  others_label: string,
+  max_branches: number
+): { centre: Type_SunburstNode | null, branches: Type_SunburstNode[] } => {
+  const centre = focused ?? (roots.length === 1 ? roots[0] : null)
+  const all = (centre ? centre.children : roots).filter(r => r.value > 0)
+  if (all.length <= max_branches) return { centre, branches: all }
+  const kept = all.slice(0, Math.max(1, max_branches - 1))
+  const folded = all.slice(kept.length).reduce((acc, r) => acc + r.value, 0)
+  return {
+    centre,
+    branches: [...kept, {
+      id: '__branches_others__', label: others_label, value: folded, declared: folded, color: null,
+      depth: 0, children: [], is_residual: true, dimension_id: ''
+    }]
+  }
+}
+
 // ── Rendu ─────────────────────────────────────────────────────────────────────────
 
 const drawEmptyLabel = (
@@ -1366,7 +1391,12 @@ export const drawSunburstChart = (
     // Le centre est un nœud (périmètre unitaire ou zoom), les anneaux sa décomposition.
     // Le plafond de parts : celui de la palette, ou plus bas si l'auteur le demande (`parts_max`).
     const max_parts = st.parts_max > 0 ? Math.min(MAX_BRANCHES, Math.round(st.parts_max)) : MAX_BRANCHES
-    const { centre: centre_node, branches } = sunburstScope(tree.roots, focused, others_label, max_parts)
+    // os#1511 (14/10) — EN BARRES, TOUTES LES BRANCHES : une barre de petit total reste une barre (pas
+    // de repli des secteurs trop étroits d'un disque), et chaque membre a sa couleur (pas de plafond
+    // de palette). Seul le réglage de l'auteur (`parts_max`) en garde moins.
+    const { centre: centre_node, branches } = opts.layout === 'bars'
+      ? barsScope(tree.roots, focused, others_label, st.parts_max > 0 ? Math.round(st.parts_max) : Infinity)
+      : sunburstScope(tree.roots, focused, others_label, max_parts)
     // Le centre porte SA valeur, pas celle de ses parts : elles peuvent ne pas boucler
     // avec lui (régime 'sum'), et c'est l'écart que la mention annonce.
     const branches_total = branches.reduce((acc, r) => acc + r.value, 0)
@@ -1391,7 +1421,7 @@ export const drawSunburstChart = (
 
     // os#1511 (14/10) — en barres, les couleurs des membres du Sankey, pas celles du sunburst.
     const slices = partitionSunburst(branches, branchColor, others_label, theme, palette.others,
-      { ...st, member_colors: opts.layout === 'bars' })
+      { ...st, member_colors: opts.layout === 'bars', whole_span_per_root: opts.layout === 'bars' })
     const rings = slices.reduce((m, s) => Math.max(m, s.depth), 0) + 1
 
     // La légende se pose à droite (défaut), à gauche, ou dessous — auquel cas elle prend une
