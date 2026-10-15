@@ -32,7 +32,8 @@ import { withValueTreeAnswers } from '../../Elements/LinkValues'
 import { nodeTransformsDimension } from '../../Algorithms/DimensionTransform'
 import { expansionSideOf } from '../../Algorithms/DimensionExpansion'
 import {
-  diagramExpansion, diagramReaderLevel, diagramReaderPick, diagramReaderSeveral, diagramReaderSubDistinguish,
+  diagramChooseExpansion, diagramExpansion, diagramFoldMember, diagramMemberOpened, diagramUnfoldMember,
+  diagramReaderLevel, diagramReaderPick, diagramReaderSeveral, diagramReaderSubDistinguish,
   diagramReaderSubPick, diagramReaderToggle, fromDiagram, isEmptyDiagramPatch, readerBlockerOf, readerRootsOf, swapInOrder,
   toDiagramPatch
 } from '../../Representations/dimensionViewState'
@@ -532,6 +533,60 @@ export const dimensionOffersExpansion = (app_data: Class_ApplicationData, tagg: 
  */
 export const applyNodesExpansion = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, on: boolean) =>
   applyDiagramGesture(app_data, (state, sankey) => diagramExpansion(state, sankey, tagg.id, on))
+
+/**
+ * 15/10/2026 (os#1511) — LES NŒUDS QUI PORTERAIENT L'EXPANSION si la dimension n'en a pas : ceux mis
+ * de côté au passage en bandes qui sont à une extrémité, sinon tous les nœuds d'extrémité (sans flux
+ * d'un côté) qui peuvent la porter. Ceux qui la portent déjà passent avant tout.
+ */
+export const expansionCarrierCandidates = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): string[] => {
+  const ok = (node: Class_NodeElement | undefined): node is Class_NodeElement =>
+    node !== undefined && expansionSideOf(node) !== undefined && carrierRefusal(app_data, tagg, node.id) === undefined
+  const own = dimensionCarriersOf(app_data, tagg).filter(ok).map(node => node.id)
+  if (own.length > 0) return own
+  const nodes = app_data.drawing_area.sankey.nodes_dict as { [id: string]: Class_NodeElement }
+  const parked = tagg.parked_carrier_ids.map(id => nodes[id]).filter(ok).map(node => node.id)
+  if (parked.length > 0) return parked
+  // Un nœud qui porte déjà une AUTRE dimension la garde.
+  return dimensionCarrierCandidates(app_data)
+    .filter(node => node.own_driving_dimension === undefined && ok(node))
+    .map(node => node.id)
+}
+
+/**
+ * 15/10/2026 (os#1511) — « EN EXPANSION » se propose-t-il dans « Dessiner » ? Il faut une hiérarchie, et
+ * un nœud d'extrémité pour la porter (le côté de l'expansion ne fait alors pas de doute).
+ */
+export const dimensionCanExpand = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup): boolean =>
+  tagg.is_hierarchical && expansionCarrierCandidates(app_data, tagg).length > 0
+
+/**
+ * 15/10/2026 (os#1511) — CHOISIR L'EXPANSION dans « Dessiner », de n'importe quel dessin : le modèle
+ * commun (`diagramChooseExpansion`) traduit par `toDiagramPatch`, posé par `applyDiagramPatch` — un pas
+ * d'historique. Déjà en expansion : on revient en nœuds.
+ */
+export const applyDimensionExpansion = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup) => {
+  if (tagg.nodes_expansion && tagg.drawing === 'nodes') return applyNodesExpansion(app_data, tagg, false)
+  const carriers = expansionCarrierCandidates(app_data, tagg)
+  applyDiagramGesture(app_data, (state, sankey) => diagramChooseExpansion(state, sankey, tagg.id, carriers))
+}
+
+/**
+ * 15/10/2026 (os#1511) — DÉPLIER UN NŒUD (nœud par nœud) : le membre `member_id` cède la place à ses
+ * enfants ; en expansion, il garde son nœud. Annulable, un pas.
+ */
+export const applyMemberUnfold = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, member_id: string) =>
+  applyDiagramGesture(app_data, (state, sankey) => diagramUnfoldMember(state, sankey, tagg.id, member_id))
+
+/** 15/10/2026 (os#1511) — REPLIER UN NŒUD OUVERT : sa descendance dessinée se replie sur lui. Annulable, un pas. */
+export const applyMemberFold = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, member_id: string) =>
+  applyDiagramGesture(app_data, (state, sankey) => diagramFoldMember(state, sankey, tagg.id, member_id))
+
+/** Le membre est-il OUVERT sur le diagramme (en expansion : il garde son nœud, ses enfants dessinés) ? */
+export const memberOpenedInDiagram = (app_data: Class_ApplicationData, tagg: Class_DataTagGroup, member_id: string): boolean => {
+  const sankey = viewSankeyOf(app_data)
+  return diagramMemberOpened(fromDiagram(sankey), sankey, tagg.id, member_id)
+}
 
 /**
  * os#1511 — LES MEMBRES DE CETTE DIMENSION COLORENT LES FLUX d'un diagramme par membre, au lieu de

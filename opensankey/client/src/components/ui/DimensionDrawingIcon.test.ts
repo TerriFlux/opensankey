@@ -16,4 +16,9 @@ describe('os#1511 icone du dessin d une dimension', () => {
     // Un seul membre affiche : rien a separer.
     expect(dimensionDrawingIconName('one', true)).toBe('one')
   })
+
+  test('en expansion : son propre visuel, seulement en noeuds', () => {
+    expect(dimensionDrawingIconName('nodes', false, true)).toBe('expansion')
+    expect(dimensionDrawingIconName('multi', false, true)).toBe('bands')
+  })
 })

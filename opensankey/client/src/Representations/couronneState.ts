@@ -252,7 +252,12 @@ export const normalizeCouronneState = (state: Type_CouronneState, sankey: Type_C
     if (shown.length === 0) shown = focus.length > 0 ? [...focus] : wholeOf(dim)
     let hidden = antichainOf(dim, raw.hidden).filter(h => shown.includes(h))
     if (hidden.length >= shown.length) hidden = []
-    const drawing: Type_CouronneDrawing = raw.drawing === 'multiples' || raw.drawing === 'sunburst' ? raw.drawing : 'sectors'
+    // 15/10/2026 (os#1511) — SUNBURST = EXPANSION, DANS LES DEUX SENS : liée, une figure dont la dimension
+    // est en expansion sur le diagramme (choisie dans « Dessiner ») se lit en sunburst ; le diagramme
+    // sorti de l'expansion, elle retrouve son dessin écrit. L'autre sens est `couronneGestures.setDrawing`.
+    const follows_expansion = state.linked && raw.drawing !== 'multiples' && dim.nodes_expansion && dim.drawing === 'nodes'
+    const drawing: Type_CouronneDrawing = follows_expansion ? 'sunburst'
+      : raw.drawing === 'multiples' || raw.drawing === 'sunburst' ? raw.drawing : 'sectors'
     dims[id] = { focus, shown, hidden, active: raw.active !== false, drawing }
   })
   // Une seule dimension en `multiples` : la dernière qui le demande ; elle passe en fin d'ordre.

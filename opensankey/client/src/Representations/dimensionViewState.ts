@@ -796,6 +796,82 @@ export const diagramExpansion = (
   return withDiagramRoles(withDim(state, dimension_id, { ...d, diagram: { ...d.diagram, expansion: on } }), sankey)
 }
 
+/**
+ * 15/10/2026 (os#1511, décision de Julien du 06/10) — CHOISIR « EN EXPANSION » DANS « DESSINER », de
+ * n'importe quel dessin (bandes, nœuds, un diagramme par membre) : la dimension passe en parts /
+ * expansion. Ses nœuds porteurs restent s'il y en a ; sinon `carriers` (le premier qui convient, choisi
+ * par l'hôte : porteurs mis de côté, puis nœuds d'extrémité), placement automatique. Un seul membre
+ * montré qui a des enfants (la racine « Monde ») s'ouvre d'un cran : l'expansion a un premier niveau.
+ * Ensuite, on déplie nœud par nœud (`diagramUnfoldMember`) ou niveau par niveau (le tableau).
+ */
+export const diagramChooseExpansion = (
+  state: Type_DimensionViewState, sankey: Type_CouronneSankey, dimension_id: string, carriers: string[]
+): Type_DimensionViewState => {
+  const d = state.dims[dimension_id]
+  const x = d?.diagram
+  const dim = sankey.data_taggs_dict[dimension_id] as Class_DataTagGroup | undefined
+  if (d === undefined || x === undefined || dim === undefined) return state
+  const kept = x.carriers.length > 0
+  const porteurs = kept ? x.carriers : carriers
+  if (porteurs.length === 0) return state
+  const parts = partsOf(d)
+  const lone = parts.length === 1 ? memberOf(dim, parts[0]) : undefined
+  const opened = lone !== undefined && childrenOf(lone).length > 0 ? expandMember(dim, d, lone.id) : d
+  const selection = partsOf(opened)
+  const next: Type_DimensionView = {
+    ...opened,
+    diagram: {
+      ...x,
+      carriers: [...porteurs], parked: [], expansion: true, selection,
+      member_bands: x.member_bands === true ? false : x.member_bands,
+      auto_place: kept ? x.auto_place : true
+    }
+  }
+  return withDiagramRoles(withDim(state, dimension_id, next), sankey)
+}
+
+/**
+ * 15/10/2026 (os#1511) — DÉPLIER UN NŒUD du diagramme (nœud par nœud, coupe mixte) : le membre montré
+ * cède la place à ses enfants (`expandMember`) ; en expansion il garde son nœud et ses enfants
+ * s'ouvrent vers l'extérieur. Une feuille, un membre non montré : rien.
+ */
+export const diagramUnfoldMember = (
+  state: Type_DimensionViewState, sankey: Type_CouronneSankey, dimension_id: string, member_id: string
+): Type_DimensionViewState => {
+  const d = state.dims[dimension_id]
+  const dim = sankey.data_taggs_dict[dimension_id] as Class_DataTagGroup | undefined
+  if (d?.diagram === undefined || dim === undefined) return state
+  const next = expandMember(dim, d, member_id)
+  if (next === d) return state
+  const ids = partsOf(next)
+  return diagramCut(state, sankey, dimension_id, ids, { multi: ids.length > 1, focus: d.diagram.stored_focus })
+}
+
+/**
+ * 15/10/2026 (os#1511) — REPLIER UN NŒUD OUVERT : ses descendants montrés se replient sur lui
+ * (`collapseMember`). Symétrique de `diagramUnfoldMember` ; la portée ne se replie pas.
+ */
+export const diagramFoldMember = (
+  state: Type_DimensionViewState, sankey: Type_CouronneSankey, dimension_id: string, member_id: string
+): Type_DimensionViewState => {
+  const d = state.dims[dimension_id]
+  const dim = sankey.data_taggs_dict[dimension_id] as Class_DataTagGroup | undefined
+  if (d?.diagram === undefined || dim === undefined) return state
+  const next = collapseMember(dim, d, member_id)
+  if (next === d) return state
+  const ids = partsOf(next)
+  return diagramCut(state, sankey, dimension_id, ids, { multi: ids.length > 1, focus: d.diagram.stored_focus })
+}
+
+/** Le membre est-il OUVERT sur le diagramme (ancêtre strict d'un membre dessiné, sous la portée) ? */
+export const diagramMemberOpened = (
+  state: Type_DimensionViewState, sankey: Type_CouronneSankey, dimension_id: string, member_id: string
+): boolean => {
+  const d = state.dims[dimension_id]
+  const dim = sankey.data_taggs_dict[dimension_id] as Class_DataTagGroup | undefined
+  return d !== undefined && dim !== undefined && openedOf(dim, d).includes(member_id)
+}
+
 /** Un patch vide : rien à écrire. */
 export const isEmptyDiagramPatch = (patch: Type_DiagramPatch): boolean =>
   patch.order === undefined && Object.keys(patch.dims).length === 0
