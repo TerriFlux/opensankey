@@ -17,7 +17,7 @@
 
 import React from 'react'
 
-export type Type_DimensionDrawingIconName = 'one' | 'bands' | 'nodes' | 'separate'
+export type Type_DimensionDrawingIconName = 'one' | 'bands' | 'nodes' | 'expansion' | 'separate'
 
 type Type_Shape = { d: string, o?: number }
 
@@ -50,6 +50,18 @@ const SHAPES: { [name in Type_DimensionDrawingIconName]: Type_Shape[] } = {
     { d: rect(12.5, 6.4, 2.5, 3.2) },
     { d: rect(12.5, 11.8, 2.5, 3.2) }
   ],
+  // 15/10/2026 — en expansion : un flux vers deux nœuds, dont l'un, ouvert, se déplie encore en deux.
+  expansion: [
+    { d: rect(0.5, 3, 2, 10) },
+    { d: band(2.5, 3, 5.5, 7, 1.5, 5.5), o: 0.55 },
+    { d: band(2.5, 8.5, 4.5, 7, 10, 4.5), o: 0.55 },
+    { d: rect(7, 1.5, 2, 5.5) },
+    { d: rect(7, 10, 2, 4.5) },
+    { d: band(9, 1.5, 3, 13.5, 0.5, 3), o: 0.35 },
+    { d: band(9, 4.5, 2.5, 13.5, 5, 2.5), o: 0.35 },
+    { d: rect(13.5, 0.5, 2, 3) },
+    { d: rect(13.5, 5, 2, 2.5) }
+  ],
   separate: [0.5, 6, 11.5].flatMap(y => [
     { d: rect(1, y, 1.8, 4) },
     { d: rect(2.8, y + 1, 10.4, 2), o: 0.55 },
@@ -73,9 +85,10 @@ export const DimensionDrawingIcon = ({ name, size = 16 }: { name: Type_Dimension
  * diagramme par membre (`dimensionInMemberBands`, en nœuds comme en bandes), des diagrammes séparés.
  */
 export const dimensionDrawingIconName = (
-  drawing: 'one' | 'multi' | 'nodes' | 'other', in_member_bands: boolean
+  drawing: 'one' | 'multi' | 'nodes' | 'other', in_member_bands: boolean, in_expansion = false
 ): Type_DimensionDrawingIconName => {
   if (drawing !== 'multi' && drawing !== 'nodes') return 'one'
   if (in_member_bands) return 'separate'
+  if (drawing === 'nodes' && in_expansion) return 'expansion'
   return drawing === 'nodes' ? 'nodes' : 'bands'
 }

@@ -44,8 +44,8 @@ import {
   dimensionDrawingEnabledFor, positionModeSelectorEnabledFor, loneSubmenuOf
 } from './positionModeHost'
 import {
-  applyDimensionDrawing, applyMemberBands, applyMembersColorFlows, applyNodesExpansion,
-  dimensionCarrierCandidates, dimensionOffersExpansion, toggleDimensionCarrier, carrierRefusal
+  applyDimensionDrawing, applyDimensionExpansion, applyMemberBands, applyMembersColorFlows,
+  dimensionCarrierCandidates, dimensionCanExpand, toggleDimensionCarrier, carrierRefusal
 } from './dimensionDrawingHost'
 import { fromDiagram, sankeyLabelOf, type Type_ViewSankey } from '../../Representations/dimensionViewState'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
@@ -373,7 +373,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
         {/* 07/10/2026 — LE BOUTON DIT LE DESSIN, comme celui d'une couronne (Julien) : un membre, en
             bandes, en nœuds, en diagrammes séparés. Sans dessin à offrir, le mode de position. */}
         {can_draw
-          ? <DimensionDrawingIcon name={dimensionDrawingIconName(drawing, in_bands)} />
+          ? <DimensionDrawingIcon name={dimensionDrawingIconName(drawing, in_bands, label === 'expansion')} />
           : <FontAwesomeIcon icon={current.icon} />}
       </MenuButton>
     </OSTooltip>
@@ -407,7 +407,7 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
               />
               {tagg.is_hierarchical
                 ? <Submenu label={t('Banner.draw_nodes')} glyph={<DimensionDrawingIcon name='nodes' />}
-                  checked={drawing === 'nodes' && !in_bands}>
+                  checked={label === 'nodes'}>
                   <MenuGroup title={t('Banner.draw_carriers')} fontSize='0.7rem'>
                     {dimensionCarrierCandidates(app_data).map(node => {
                       // os#1511 — un nœud qui TRANSFORME la dimension ne se coche pas (il se
@@ -427,17 +427,23 @@ export const PositionModeMenu = ({ app_data, tagg, figure }: {
                   </MenuGroup>
                 </Submenu>
                 : null}
-              {/* os#1511 (lot 5) — EN EXPANSION : en nœuds, les ouverts gardent leur nœud et leurs
-                  enfants s'ouvrent vers l'extérieur, sur les porteurs aux extrémités seulement. */}
-              {tagg.is_hierarchical && drawing === 'nodes' && !in_bands
+              {/* os#1511 (lot 5) — EN EXPANSION : les ouverts gardent leur nœud et leurs enfants
+                  s'ouvrent vers l'extérieur, sur les porteurs aux extrémités seulement.
+                  15/10/2026 (décision de Julien du 06/10) — UN DESSIN À PART ENTIÈRE, proposé de
+                  n'importe quel dessin dès que la dimension a une hiérarchie : le choisir pose
+                  l'expansion par le modèle commun (porteurs d'extrémité choisis s'il n'y en a pas).
+                  On déplie ensuite niveau par niveau (le tableau de navigation) ou nœud par nœud
+                  (clic droit sur un nœud : « Détailler ce membre » / « Replier ce membre »). */}
+              {tagg.is_hierarchical
                 ? <CheckItem
                   label={t('Banner.draw_expansion', { defaultValue: 'En expansion (aux extrémités)' })}
-                  title={dimensionOffersExpansion(app_data, tagg)
+                  glyph={<DimensionDrawingIcon name='expansion' />}
+                  title={label === 'expansion' || dimensionCanExpand(app_data, tagg)
                     ? t('Banner.draw_expansion_tooltip', { defaultValue: 'Les membres ouverts gardent leur nœud ; leurs enfants s\'ouvrent vers l\'extérieur du diagramme' })
                     : t('Banner.draw_expansion_unavailable', { defaultValue: 'Seulement sur un nœud porteur à une extrémité du diagramme (sans flux d\'un côté)' })}
                   checked={label === 'expansion'}
-                  disabled={!tagg.nodes_expansion && !dimensionOffersExpansion(app_data, tagg)}
-                  onClick={() => applyNodesExpansion(app_data, tagg, !tagg.nodes_expansion)}
+                  disabled={label !== 'expansion' && !dimensionCanExpand(app_data, tagg)}
+                  onClick={() => applyDimensionExpansion(app_data, tagg)}
                 />
                 : null}
               {/* os#1511 — une dimension en nœuds peut colorer les flux, avec ou sans diagramme par
