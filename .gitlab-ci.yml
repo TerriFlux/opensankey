@@ -27,13 +27,16 @@ build:
     # Env
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Build open-sankey
-    - bash build_client.sh -I -L -B -D
+    # Build open-sankey : install, lint, bundle autonome (os#1532). Pas de `-D` (tsc dist) ici :
+    # ce dépôt est un miroir sans lockfile, `pnpm install` y résout des @types/d3-* plus stricts
+    # que ceux figés dans le monorepo et `tsc` échoue sur des typages d3 `.on()` — alors que le
+    # paquet npm est produit et typé depuis le monorepo (publish:npm). Seul `build/` compte ici.
+    - bash build_client.sh -I -L -B
     - bash build_server.sh
     - bash build_doc.sh
   artifacts:
     paths:
-      - opensankey/client/build  # c'est le dossier généré par `npm run build`
+      - opensankey/client/build  # produit par `pnpm run bundle` (scripts/build_bundle.cjs)
   except:
     - schedules
 
