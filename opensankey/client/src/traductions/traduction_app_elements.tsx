@@ -199,7 +199,8 @@ export const resources_app_elements = {
         // sa#671 — mini-apps: the top-bar badge naming the app the visitor came in by.
         mini_app_sankeymatic: 'SankeyMATIC express',
         mini_app_crosstab: 'Crosstab → Sankey',
-        mini_app_tooltip: 'Free mini-app. Click to paste again; the whole editor stays available.',
+        mini_app_export: 'Export image',
+        mini_app_open_full: 'Open in the full editor',
         save_as: 'Save as...',
         save_in_cache: 'Save',
         save_destination_browser: 'in the browser',
@@ -1086,7 +1087,8 @@ export const resources_app_elements = {
         // sa#671 — mini-applis : la pastille de la barre du haut nomme l'appli d'arrivée.
         mini_app_sankeymatic: 'SankeyMATIC express',
         mini_app_crosstab: 'Tableau croisé → Sankey',
-        mini_app_tooltip: 'Mini-appli gratuite. Cliquez pour coller de nouveau ; tout l’éditeur reste à portée.',
+        mini_app_export: 'Exporter l’image',
+        mini_app_open_full: 'Ouvrir dans l’éditeur complet',
         save_as: 'Enregistrer sous...',
         save_in_cache: 'Enregistrer',
         save_destination_browser: 'dans le navigateur',
@@ -1957,7 +1959,8 @@ export const resources_app_elements = {
         // sa#671 — mini-applis : la pastille de la barre du haut nomme l'appli d'arrivée.
         mini_app_sankeymatic: 'SankeyMATIC express',
         mini_app_crosstab: 'Tabla cruzada → Sankey',
-        mini_app_tooltip: 'Miniaplicación gratuita. Haga clic para volver a pegar; todo el editor sigue disponible.',
+        mini_app_export: 'Exportar la imagen',
+        mini_app_open_full: 'Abrir en el editor completo',
         save_as: 'Guardar como...',
         save_in_cache: 'Guardar',
         save_destination_browser: 'en el navegador',
@@ -2809,7 +2812,8 @@ export const resources_app_elements = {
         // sa#671 — mini-applis : la pastille de la barre du haut nomme l'appli d'arrivée.
         mini_app_sankeymatic: 'SankeyMATIC express',
         mini_app_crosstab: 'Kreuztabelle → Sankey',
-        mini_app_tooltip: 'Kostenlose Mini-App. Klicken, um erneut einzufügen; der ganze Editor bleibt verfügbar.',
+        mini_app_export: 'Bild exportieren',
+        mini_app_open_full: 'Im vollständigen Editor öffnen',
         save_as: 'Speichern unter...',
         save_in_cache: 'Speichern',
         save_destination_browser: 'im Browser',
@@ -3661,7 +3665,8 @@ export const resources_app_elements = {
         // sa#671 — mini-applis : la pastille de la barre du haut nomme l'appli d'arrivée.
         mini_app_sankeymatic: 'SankeyMATIC express',
         mini_app_crosstab: 'Tabella incrociata → Sankey',
-        mini_app_tooltip: 'Mini-app gratuita. Fate clic per incollare di nuovo; tutto l’editor resta disponibile.',
+        mini_app_export: 'Esporta l’immagine',
+        mini_app_open_full: 'Apri nell’editor completo',
         save_as: 'Salva con nome...',
         save_in_cache: 'Salva',
         save_destination_browser: 'nel browser',
@@ -4500,7 +4505,8 @@ export const resources_app_elements = {
         // sa#671 — mini-applis : la pastille de la barre du haut nomme l'appli d'arrivée.
         mini_app_sankeymatic: 'SankeyMATIC 快速版',
         mini_app_crosstab: '交叉表 → 桑基图',
-        mini_app_tooltip: '免费小应用。点击可再次粘贴；完整编辑器仍然可用。',
+        mini_app_export: '导出图片',
+        mini_app_open_full: '在完整编辑器中打开',
         save_as: '另存为…',
         save_in_cache: '保存',
         save_destination_browser: '到浏览器',
@@ -5359,7 +5365,8 @@ export const resources_app_elements = {
         // sa#671 — mini-applis : la pastille de la barre du haut nomme l'appli d'arrivée.
         mini_app_sankeymatic: 'SankeyMATIC エクスプレス',
         mini_app_crosstab: 'クロス集計表 → サンキー図',
-        mini_app_tooltip: '無料のミニアプリ。クリックで再度貼り付け。エディター全体はそのまま使えます。',
+        mini_app_export: '画像を書き出す',
+        mini_app_open_full: 'フルエディターで開く',
         save_as: '名前を付けて保存…',
         save_in_cache: '保存',
         save_destination_browser: 'ブラウザーに',
