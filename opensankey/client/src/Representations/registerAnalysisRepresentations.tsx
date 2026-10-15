@@ -270,6 +270,8 @@ const drawCouronneRings = (
   const { breadcrumb, legend_navigation } = navigationOf(sunburstLegendBeside(rings_style))
   const teardown = drawSunburstChart(container, rings, {
     layout,
+    // os#1531 — posée dans le diagramme : pas de fond, le diagramme se voit dessous.
+    ...(ctx.in_diagram === true ? { bare: true } : {}),
     parts: wiring.by_id,
     on_part_select: wiring.on_part_select,
     // 04/10/2026 — les cases de chaque bloc de dimension de la légende (os#1511).

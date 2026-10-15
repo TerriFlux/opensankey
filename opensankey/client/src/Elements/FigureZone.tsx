@@ -32,6 +32,16 @@ export const figureZoneFigureIds = (containers: Iterable<unknown>): string[] => 
   return out
 }
 
+/**
+ * os#1531 (Julien, 15/10 : « comment rendre ça visible ? ») — LA LARGEUR À LAQUELLE LA FIGURE SE
+ * DESSINE, avant d'être étirée à la taille de la zone : comme une image. Agrandir la zone agrandit
+ * donc le texte avec le dessin, au lieu de laisser des étiquettes minuscules dans un grand cadre.
+ */
+export const FIGURE_ZONE_NOMINAL_WIDTH = 420
+
+/** La scène hors écran où les figures posées se dessinent avant d'être adoptées par leur zone. */
+const FIGURE_ZONE_STAGE_ID = 'figure_zone_stage'
+
 /** Taille d'une zone posée : de quoi lire une couronne ou des barres et leur légende. */
 export const FIGURE_ZONE_DEFAULT_SIZE = { width: 420, height: 300 }
 
@@ -42,6 +52,8 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
   // La figure montée et l'hôte qui la porte : GARDÉS d'un dessin à l'autre. Le dessin d'un élément
   // vide son groupe (`Element._draw`) ; on y repose le même hôte, et la figure n'est pas refaite.
   private _host: HTMLDivElement | null = null
+  private _frame: SVGSVGElement | null = null
+  private _observer: MutationObserver | null = null
   private _mounted: Type_FigureZoneMount | null = null
   private _mounted_key = ''
 
@@ -103,62 +115,123 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
     this._mounted_key = ''
   }
 
-  /** La figure, dans un `foreignObject` à la taille de la zone, PAR-DESSUS son fond. */
+  /** La zone quitte le diagramme : la figure, son hôte hors écran et son observateur avec elle. */
+  public override delete() {
+    this._unmount()
+    this._observer?.disconnect()
+    this._observer = null
+    this._host?.remove()
+    this._host = null
+    super.delete()
+  }
+
+  /**
+   * os#1531 (Julien, 15/10 : « il ne faut pas une image, il faut un vrai SVG ») — LA FIGURE EST UN SVG
+   * DU DIAGRAMME, pas un bloc HTML posé dessus.
+   *
+   * Le tracé d'une figure écrit dans un conteneur HTML et y mesure ses textes : il dessine donc dans
+   * un hôte HORS ÉCRAN (rendu, mais invisible), et la zone ADOPTE le `<svg>` qu'il produit — déplacé,
+   * pas copié : ses écouteurs (clic sur une part, info-bulles) le suivent. À chaque redessin du tracé
+   * (geste, redimensionnement), le nouveau `<svg>` remplace l'ancien (`MutationObserver`).
+   *
+   * Dans la zone, il vit dans un `<svg>` à `viewBox` : dessiné à largeur fixe, à la proportion de la
+   * zone, il s'étire à sa taille — texte compris. Et c'est du SVG de bout en bout : l'export le prend.
+   */
   public drawFigure(): void {
     const g = this.d3_selection
     if (g === null) return
     const w = Math.max(80, this.getShapeWidthToUse())
     const h = Math.max(60, this.getShapeHeightToUse())
-    g.selectAll('foreignObject.figure_zone_fo').remove()
-    const fo = g.append('foreignObject')
-      .attr('class', 'figure_zone_fo')
-      .attr('x', 0).attr('y', 0).attr('width', w).attr('height', h)
-    if (this._host === null) {
-      this._host = document.createElement('div')
-      this._host.className = 'figure_zone_host'
-      this._relayPointerToZone(this._host)
+    const nominal_w = FIGURE_ZONE_NOMINAL_WIDTH
+    const nominal_h = Math.max(60, Math.round(nominal_w * h / w))
+    if (this._frame === null) {
+      this._frame = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      this._frame.setAttribute('class', 'figure_zone_svg')
+      this._frame.setAttribute('overflow', 'visible')
+      this._relayPointerToZone(this._frame)
     }
-    this._host.style.width = `${w}px`
-    this._host.style.height = `${h}px`
-    this._host.style.overflow = 'hidden'
-    ;(fo.node() as SVGForeignObjectElement).appendChild(this._host)
-    // Monter une fois ; remonter si la figure, le sujet ou la taille changent ; sinon redessiner.
-    const key = `${this._figure_id}|${this._subject.kind}:${this._subject.id}|${Math.round(w)}x${Math.round(h)}`
+    this._frame.setAttribute('x', '0')
+    this._frame.setAttribute('y', '0')
+    this._frame.setAttribute('width', String(w))
+    this._frame.setAttribute('height', String(h))
+    this._frame.setAttribute('viewBox', `0 0 ${nominal_w} ${nominal_h}`)
+    this._frame.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+    // Le dessin d'un élément vide son groupe : on y repose le même cadre, la figure dedans.
+    ;(g.node() as SVGGElement).appendChild(this._frame)
+
+    const host = this._stagedHost()
+    host.style.width = `${nominal_w}px`
+    host.style.height = `${nominal_h}px`
+    const key = `${this._figure_id}|${this._subject.kind}:${this._subject.id}|${nominal_w}x${nominal_h}`
     if (this._mounted !== null && key === this._mounted_key) {
-      try { this._mounted.redraw?.() } catch { /* idem */ }
+      try { this._mounted.redraw?.() } catch { /* une figure qui échoue ne bloque pas la zone */ }
+      this._adoptChartSvg()
       return
     }
     this._unmount()
-    this._host.replaceChildren()
-    this._mounted = figure_zone_hooks.mount?.(this, this._host) ?? null
+    host.replaceChildren()
+    this._mounted = figure_zone_hooks.mount?.(this, host) ?? null
     this._mounted_key = this._mounted !== null ? key : ''
+    this._adoptChartSvg()
+  }
+
+  /** L'hôte hors écran où le tracé dessine (créé une fois, rangé dans la scène commune). */
+  private _stagedHost(): HTMLDivElement {
+    if (this._host !== null) return this._host
+    let stage = document.getElementById(FIGURE_ZONE_STAGE_ID)
+    if (stage === null) {
+      stage = document.createElement('div')
+      stage.id = FIGURE_ZONE_STAGE_ID
+      // Rendu (les textes se mesurent) mais hors de vue et sans prise sur la page.
+      stage.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;pointer-events:none'
+      document.body.appendChild(stage)
+    }
+    const host = document.createElement('div')
+    host.className = 'figure_zone_host'
+    host.style.overflow = 'hidden'
+    stage.appendChild(host)
+    this._host = host
+    this._observer = typeof MutationObserver === 'function'
+      ? new MutationObserver(() => this._adoptChartSvg())
+      : null
+    this._observer?.observe(host, { childList: true, subtree: true })
+    return host
+  }
+
+  /** Le `<svg>` que le tracé vient de produire passe dans la zone, à la place du précédent. */
+  private _adoptChartSvg(): void {
+    const host = this._host
+    const frame = this._frame
+    if (host === null || frame === null) return
+    const chart = Array.from(host.querySelectorAll('svg')).find(svg => svg.parentElement?.closest('svg') === null)
+    if (chart === undefined) return
+    frame.replaceChildren(chart)
   }
 
   /**
    * os#1531 (Julien, 15/10 : « qu'on puisse draguer l'élément ») — LA FIGURE SE SAISIT COMME LA ZONE.
    *
    * Le dessin de la figure a son propre zoom (glisser = déplacer la vue) qui avalait l'appui : la zone
-   * ne bougeait plus. L'appui et la molette sont donc interceptés à l'entrée de l'hôte et RENVOYÉS au
-   * `foreignObject`, d'où ils remontent au groupe de la zone (son glisser) et au diagramme (son zoom).
+   * ne bougeait plus. L'appui et la molette sont donc interceptés à l'entrée du cadre et RENVOYÉS au
+   * cadre lui-même, d'où ils remontent au groupe de la zone (son glisser) et au diagramme (son zoom).
    * Le CLIC, événement à part, atteint toujours la barre ou le secteur : un appui relâché sans bouger
    * sélectionne la part ; s'il a bougé, le glisser de la zone avale ce clic, comme partout.
    */
-  private _relayPointerToZone(host: HTMLDivElement): void {
+  private _relayPointerToZone(frame: Element): void {
     const relay = (event: Event) => {
       if ((event as { __figure_zone_relayed?: boolean }).__figure_zone_relayed) return
-      const fo = host.parentNode
-      if (fo === null) return
+      if (event.target === frame) return
       event.stopPropagation()
       const copy = event instanceof WheelEvent
         ? new WheelEvent(event.type, event)
         : new MouseEvent(event.type, event as MouseEvent)
       ;(copy as unknown as { __figure_zone_relayed: boolean }).__figure_zone_relayed = true
-      fo.dispatchEvent(copy)
+      frame.dispatchEvent(copy)
       if (event instanceof WheelEvent) event.preventDefault()
     }
-    host.addEventListener('mousedown', relay, true)
-    host.addEventListener('wheel', relay, { capture: true, passive: false })
-    host.addEventListener('dblclick', relay, true)
+    frame.addEventListener('mousedown', relay, true)
+    frame.addEventListener('wheel', relay, { capture: true, passive: false })
+    frame.addEventListener('dblclick', relay, true)
   }
 
   /**
@@ -183,9 +256,9 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
     const leader = g.insert('g', ':first-child').attr('class', 'figure_zone_leader').attr('pointer-events', 'none')
     leader.append('line')
       .attr('x1', bx).attr('y1', by).attr('x2', ax).attr('y2', ay)
-      .attr('stroke', this.shape_border_color || '#8a8a8a').attr('stroke-width', 1.2)
-      .attr('stroke-dasharray', '4 3')
-    leader.append('circle').attr('cx', ax).attr('cy', ay).attr('r', 3)
+      .attr('stroke', this.shape_border_color || '#6b6b6b').attr('stroke-width', 1.6)
+      .attr('stroke-dasharray', '6 3')
+    leader.append('circle').attr('cx', ax).attr('cy', ay).attr('r', 3.5)
       .attr('fill', this.shape_border_color || '#8a8a8a')
   }
 
