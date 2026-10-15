@@ -25,7 +25,7 @@ afterEach(() => {
   jest.restoreAllMocks()
 })
 
-const scene = () => {
+const scene = (avec_postes = false) => {
   const ws = new Class_Workspace(false)
   const source = ws.createDocument()
   source.drawing_area.bypass_redraws = true
@@ -48,11 +48,23 @@ const scene = () => {
   fr.color = '#00aa00'
   de.color = '#ffaa00'
   pays.levels = ['monde', 'pays']
+  // Les postes : deux membres, un seul porte une valeur sur ce flux (le cas de Julien, 15/10).
+  const postes = avec_postes ? sankey.addDataTagGroup('poste', 'Poste', false) as Class_DataTagGroup : null
+  const bilan = postes ? postes.addTag('Bilan', 'bilan') as Class_DataTag : null
+  const elevage = postes ? postes.addTag('Elevage', 'elevage') as Class_DataTag : null
+  const emplois = postes ? postes.addTag('Emplois', 'emplois') as Class_DataTag : null
+  if (postes && bilan && elevage && emplois) {
+    elevage.parent = bilan
+    emplois.parent = bilan
+    postes.levels = ['bilan', 'postes']
+  }
+  const groupes = [filiere, pays, ...(postes ? [postes] : [])]
   const lien = sankey.addNewLink(sankey.addNewNodeWithName('A'), sankey.addNewNodeWithName('B'))
   const poser = (a: Class_DataTag, b: Class_DataTag, v: number) => {
-    ;[filiere, pays].forEach(g => g.tags_list.forEach(t => t.setUnSelected()))
+    groupes.forEach(g => g.tags_list.forEach(t => t.setUnSelected()))
     a.setSelected()
     b.setSelected()
+    elevage?.setSelected()
     ;(lien.value as Class_LinkValue).valueData = v
   }
   // Le lait pese peu a cote des cereales (moins de 1 %) : en couronne, ses parts seraient trop etroites.
@@ -60,18 +72,32 @@ const scene = () => {
   poser(cereales, de, 2000)
   poser(lait, fr, 4)
   poser(lait, de, 3)
-  ;[filiere, pays].forEach(g => g.tags_list.forEach(t => t.setUnSelected()))
+  groupes.forEach(g => g.tags_list.forEach(t => t.setUnSelected()))
+  elevage?.setSelected()
+  emplois?.setSelected()
   cereales.setSelected()
   lait.setSelected()
   fr.setSelected()
   de.setSelected()
   const window_id = source.menu_configuration.openMainZoneWindow({ kind: 'selection' }, MAIN_ZONE_CANVAS_ID)
   const options: { [k: string]: unknown } = {
-    descriptor: { decompose: { kind: 'data_dimension', data_tagg_id: 'filiere', nested_tagg_ids: ['pays'] }, compare: null }
+    descriptor: {
+      decompose: { kind: 'data_dimension', data_tagg_id: 'filiere', nested_tagg_ids: avec_postes ? ['pays', 'poste'] : ['pays'] },
+      compare: null
+    }
   }
   const ctx = { ...elementContext(source, lien as unknown as Type_Presentable), window_id, pane_key: 'p1', options }
   jest.spyOn(source.menu_configuration, 'setMainZonePaneOptions').mockImplementation(() => undefined)
+  source.drawing_area.legend.legend_show_dataTags = true
   return { ctx }
+}
+
+const dessiner = (ctx: ReturnType<typeof scene>['ctx']) => {
+  const el = sizedContainer(700)
+  const entree = representation_registry.get(BARS_REPRESENTATION)
+  if (!entree) throw new Error('les barres ne se sont pas enregistrees')
+  entree.draw?.(el, ctx)
+  return el
 }
 
 describe('os#1511 barres croisees : couleurs des membres', () => {
@@ -86,5 +112,18 @@ describe('os#1511 barres croisees : couleurs des membres', () => {
     const fills = rects.map(r => r.getAttribute('fill'))
     expect(fills.filter(f => f === '#00aa00')).toHaveLength(2)
     expect(fills.filter(f => f === '#ffaa00')).toHaveLength(2)
+  })
+
+  test('une dimension dont un seul membre porte une valeur ne decoupe pas : elle passe en contexte', () => {
+    // Julien, 15/10 : « si une dimension n a qu un membre elle n est pas active ; c est perturbant sinon ».
+    const { ctx } = scene(true)
+    const el = dessiner(ctx)
+    const texte = el.textContent ?? ''
+    // Pas de bloc de legende « Poste » avec ses cases...
+    expect(texte).not.toContain('Emplois')
+    // ...mais la ligne de contexte, comme l annee.
+    expect(texte).toContain('Poste : Elevage')
+    // Les barres restent empilees par pays.
+    expect(el.querySelectorAll('rect.sunburst_bar')).toHaveLength(4)
   })
 })

@@ -717,6 +717,11 @@ const legendToggleOf = (ctx: Type_RepresentationContext) => {
   // SANS les décochés de la dimension, aux valeurs pleines ; la couronne, elle, ne dessine que les
   // cochés.
   const full_state: Type_CouronneState = { ...state, dims: { ...state.dims, [dim.id]: { ...state.dims[dim.id], hidden: [] } } }
+  // os#1511 (15/10) — et les dimensions qui ne découpent rien restent tues, comme dans le dessin.
+  ;(couronneOf(ctx)?.demoted ?? []).forEach(({ dimension_id, member_id }) => {
+    const d = full_state.dims[dimension_id]
+    if (d !== undefined) full_state.dims[dimension_id] = { ...d, active: false, focus: [member_id] }
+  })
   const full_plan = drawPlanOf(full_state, ctx.app_data.drawing_area.sankey as unknown as Type_CouronneSankey, { name: subjectFullNameOf(ctx) })
   const all = analysisPartInputs(
     a.subject, a.descriptor,
@@ -746,7 +751,10 @@ const legendContextOf = (ctx: Type_RepresentationContext): Type_ChartOptions['le
   const app_data = ctx.app_data
   const sankey = app_data.drawing_area.sankey
   if (!app_data.drawing_area.legend.legend_show_dataTags) return undefined
-  const in_table = new Set(couronne.state.order)
+  // os#1511 (15/10) — une dimension de la figure qui ne découpe rien (un seul membre porteur) se dit
+  // ici, sur ce membre, comme l'année : elle n'est plus « portée par le tableau ».
+  const demoted = new Map(couronne.demoted.map(d => [d.dimension_id, d.member_id]))
+  const in_table = new Set(couronne.state.order.filter(id => !demoted.has(id)))
   const t = app_data.t
   return (sankey.data_taggs_list as unknown as Class_DataTagGroup[])
     .filter(group => !in_table.has(group.id) && group.tags_list.length > 0
@@ -754,7 +762,10 @@ const legendContextOf = (ctx: Type_RepresentationContext): Type_ChartOptions['le
       && group.is_drawn_as_nodes !== true)
     .map(group => {
       const pinned = (a.nav.data_tags ?? []).filter(tag => tag.group.id === group.id)
-      const members = pinned.length > 0 ? pinned : group.selected_tags_list as Class_DataTag[]
+      const seul = demoted.get(group.id)
+      const members = seul !== undefined
+        ? [group.tags_dict[seul] as Class_DataTag].filter(m => m !== undefined)
+        : pinned.length > 0 ? pinned : group.selected_tags_list as Class_DataTag[]
       const label = group.name + ' : ' + members.map(m => m.display_name).join(', ')
       const choosable = couronne.plan.linked && pinned.length === 0 && group.tags_list.length > 1
       return {
