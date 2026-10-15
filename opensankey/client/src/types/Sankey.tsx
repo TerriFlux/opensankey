@@ -63,6 +63,7 @@ import { sortNodesElements } from '../Elements/NodeBase'
 import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, default_title_id, default_title_text } from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
+import { Class_FigureZoneElement, type Type_FigureZoneSubject } from '../Elements/FigureZone'
 import { layerOwnersInEffect } from '../Elements/tagStyles'
 import type { Type_ElementTagStyleLayer } from '../Elements/Element'
 // os#1378 — section `process` (brique Sankey unitaire). Module FEUILLE : import
@@ -1002,6 +1003,19 @@ export class Class_Sankey {
       target
     )
   }
+  /**
+   * os#1531 — UNE FIGURE POSÉE DANS LE DIAGRAMME (cf. `Class_FigureZoneElement`) : une zone qui
+   * dessine la figure `figure_id` du document sur `subject`, rattachée à lui par un trait.
+   */
+  public addNewFigureZone(id: string, name: string, figure_id: string, subject: Type_FigureZoneSubject): Class_FigureZoneElement {
+    let free = id
+    while (this._containers[free]) free = free + '_0'
+    const zone = new Class_FigureZoneElement(free, name, this.drawing_area, figure_id, subject)
+    zone.draw()
+    this._addLabel(zone)
+    return zone
+  }
+
   public addNewContainer(id: string, name: string): Class_ContainerElement {
     if (!this._containers[id]) {
       // Create node

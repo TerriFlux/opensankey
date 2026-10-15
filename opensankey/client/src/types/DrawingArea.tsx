@@ -69,6 +69,7 @@ import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
+import { Class_FigureZoneElement } from '../Elements/FigureZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { dedupeZOrderKeepFirst } from './zOrder'
 import { beginDrawPass, endDrawPass } from './DrawCounters'
@@ -1628,6 +1629,18 @@ export class Class_DrawingArea {
    */
   private _radial_departure_memo: Map<object, Map<string, { x: number, y: number }>> | null = null
   public get radial_departure_memo() { return this._radial_departure_memo }
+  /**
+   * os#1531 — LES TRAITS D'ATTACHE des figures posées sur ces éléments (nœuds, flux), refaits : un
+   * nœud qui bouge emmène le bout du trait. Ne redessine pas les figures, seulement les traits.
+   */
+  public redrawFigureLeadersOf(element_ids: readonly string[]): void {
+    if (element_ids.length === 0) return
+    const ids = new Set(element_ids)
+    this.sankey.containers_list.forEach(c => {
+      if (c instanceof Class_FigureZoneElement && ids.has(c.subject.id)) c.drawLeader()
+    })
+  }
+
   public invalidateNodeSizeMemo() {
     this._node_size_memo?.clear(); this._link_side_memo?.clear(); this._radial_departure_memo?.clear()
     if (valueTreeAnswers.active !== null) valueTreeAnswers.active = new WeakMap()

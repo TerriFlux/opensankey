@@ -2087,6 +2087,10 @@ export class Class_NodeElement extends Class_NodeBase {
     }
     // Redraw links
     this._drawLinks()
+    // os#1531 — et les traits d'attache des figures posées sur ce nœud ou sur ses flux.
+    this.drawing_area.redrawFigureLeadersOf([
+      this.id, ...this.input_links_list.map(l => l.id), ...this.output_links_list.map(l => l.id)
+    ])
   }
   // 🔄 PRIVATE DRAWING METHODS - RÉINTÉGRÉS DIRECTEMENT ===========================
 

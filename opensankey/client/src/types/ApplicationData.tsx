@@ -79,6 +79,7 @@ import {
 } from '../Persistence/persistenceMigrations'
 // Module FEUILLE sans aucun import (cf. legendIds.ts) : sûr à tirer ici, où
 // tout autre chemin vers LegendGenerator créerait un cycle à l'initialisation.
+import { figureZoneFigureIds } from '../Elements/FigureZone'
 import { isLegendElementId } from '../Elements/legendIds'
 // os#1385 (lot 5, D9) — LE REGISTRE DES TYPES DE DOCUMENTS. Import en VALEUR dans ce sens-là
 // SEULEMENT : le registre, lui, ne prend d'ici que des TYPES (effacés à la compilation), donc
@@ -1661,7 +1662,10 @@ export class Class_ApplicationData {
   protected _pruneUnreferencedFiguresBeforeWrite(): void {
     const mc = this.menu_configuration
     if (!mc) return
-    mc.pruneUnreferencedFigures(mc.placedFigureIds(this.drawing_area?.sankey?.nodes_list ?? []))
+    const placed = mc.placedFigureIds(this.drawing_area?.sankey?.nodes_list ?? [])
+    // os#1531 — et les figures posées DANS le diagramme (zones figures).
+    figureZoneFigureIds(this.drawing_area?.sankey?.containers_list ?? []).forEach(id => placed.add(id))
+    mc.pruneUnreferencedFigures(placed)
   }
 
   /**
