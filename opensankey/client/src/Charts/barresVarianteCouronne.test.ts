@@ -97,4 +97,26 @@ describe('os#1511 les barres croisees sont une couronne depliee', () => {
     expect(pastilles).toContain('#2ca02c')
     expect(pastilles).toContain('#1f77b4')
   })
+
+  test('trois dimensions : les segments sont la seconde, la troisieme se somme dedans', () => {
+    // Julien, 15/10 : « toujours vert ». Filiere vegetale x filiere animale x postes : les feuilles
+    // etaient les postes (un seul, vert) ; les segments sont la filiere animale.
+    const poste = (parent: string): Type_SunburstNode => ({
+      id: `${parent}/elevage`, label: 'Elevage', value: 0, declared: 0, color: '#008080', depth: 2, children: [],
+      dimension_id: 'poste', palette: { index: 2, branch_id: 'elevage', depth: 0 }
+    })
+    const tree: Type_SunburstTree = {
+      ...TREE,
+      roots: TREE.roots.map(r => ({
+        ...r,
+        children: r.children.map(c => ({ ...c, children: [{ ...poste(c.id), value: c.value, declared: c.value }] }))
+      })),
+      rings: [...TREE.rings, { dimension_id: 'poste', dimension_label: 'Postes', level_label: '', is_selected_level: true }]
+    }
+    const el = sizedContainer()
+    drawSunburstChart(el, tree, { layout: 'bars', style: { color_source: 'model', legend_visible: true } })
+    const rects = Array.from(el.querySelectorAll('rect.sunburst_bar'))
+    expect(rects.map(r => r.getAttribute('data-part-id'))).toEqual(['ce/fr', 'ce/es', 'la/fr', 'la/es'])
+    expect(rects.map(r => r.getAttribute('fill'))).toEqual(['#1f77b4', '#ff7f0e', '#1f77b4', '#ff7f0e'])
+  })
 })
