@@ -59,9 +59,15 @@ s'installaient plus : ils référençaient soit une version npm jamais publiée
 (`open-sankey` s'arrête à 1.1.4, donc `1.1.7` et `1.2.0` renvoyaient un 404),
 soit un bundle CDN qui n'est plus produit. Ils restent dans l'historique git.
 
-L'exemple **html-viewer** (bundle CDN, zéro installation) est suspendu pour la
-même raison : plus aucune version ne publie de bundle autonome depuis 1.1.4. Il
-reviendra le jour où la chaîne de build en produira un de nouveau.
+## Sans rien installer : `html-viewer/`
+
+[`html-viewer/`](./html-viewer) est une page HTML seule qui charge le **bundle
+autonome** du viewer (React compris) depuis le CDN
+`https://su-model.gitlab.io/opensankey/latest/static/js/opensankey.js` et pose
+ses options dans `window.sankey` (mêmes clés que les props de
+`ViewerOpenSankeyApp`). Le bundle est produit par `opensankey/client/scripts/build_bundle.cjs`
+(`pnpm run bundle`) et publié par le job `pages` à chaque version depuis 1.3.6 ;
+entre 1.1.4 et 1.3.6 aucune version n'en avait publié.
 
 Il n'y a pas d'exemple **éditeur** : depuis le découpage viewer/éditeur,
 l'édition vit dans `@terriflux/opensankey-editor`, sous licence AGPL-3.0, qui

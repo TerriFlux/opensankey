@@ -53,22 +53,26 @@ A bare-bones editor shell is also exported as `DefaultOpenSankeyApp` from
 
 ## No-build alternative (CDN)
 
-If you don't want to set up a React project, a self-contained bundle is
-available and embeds with a single `<script>` tag :
+If you don't want to set up a React project, a self-contained bundle (the
+viewer, React included) is published for every version at
+`https://su-model.gitlab.io/opensankey/<version>/` and embeds with a single
+`<script>` tag :
 
 ```html
-<script
-  defer
-  src="https://su-model.gitlab.io/opensankey/1.1.4/static/js/opensankey-v1.1.4.js"
-></script>
-<div id="react-container"></div>
+<link rel="stylesheet" href="https://su-model.gitlab.io/opensankey/latest/static/css/opensankey.css" />
+<script defer src="https://su-model.gitlab.io/opensankey/latest/static/js/opensankey.js"></script>
+<div id="react-container" style="height: 600px"></div>
 <script>
-  window.sankey = { publish: true, diagram: "example.json" };
+  // Same keys as the ViewerOpenSankeyApp props. `diagram` : a URL (JSON, raw
+  // gzip, zip) or the JSON object inline.
+  window.sankey = { diagram: "example.json", embedded: true, topbar: false };
 </script>
 ```
 
+`latest/` follows the last published version ; pin one with
+`<version>/static/js/opensankey-v<version>.js` (and the `.css` next to it).
 Working sample :
-[examples/1.1.4/html-viewer](https://github.com/TerriFlux/opensankey/tree/main/examples/1.1.4/html-viewer).
+[examples/html-viewer](https://github.com/TerriFlux/opensankey/tree/main/examples/html-viewer).
 
 ## Versions
 

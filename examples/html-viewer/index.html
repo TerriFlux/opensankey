@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenSankey — viewer sans build (bundle CDN)</title>
+    <!-- Le bundle autonome du viewer, React compris. `latest/` suit la dernière version publiée ;
+         pour en figer une : https://su-model.gitlab.io/opensankey/<version>/static/js/opensankey-v<version>.js
+         (et le .css à côté). En local, après `pnpm run bundle` dans opensankey/client :
+         ../../opensankey/client/build/static/{css,js}/opensankey.{css,js}. -->
+    <link rel="stylesheet" href="https://su-model.gitlab.io/opensankey/latest/static/css/opensankey.css" />
+    <script defer src="https://su-model.gitlab.io/opensankey/latest/static/js/opensankey.js"></script>
+    <style>
+      html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+      header { padding: 0.5rem 1rem; border-bottom: 1px solid #d7d7d7; font-size: 14px; }
+      /* Le viewer remplit son conteneur (`embedded: true`) : lui donner une hauteur réelle. */
+      #react-container { height: calc(100% - 41px); }
+    </style>
+  </head>
+  <body>
+    <header>Exemple de diagramme de Sankey — page HTML seule, aucun build</header>
+    <div id="react-container"></div>
+    <script>
+      // Mêmes clés que les props de ViewerOpenSankeyApp (voir ../viewer/src/index.tsx pour la liste
+      // commentée). `diagram` : URL d'un JSON (ou .gz servi brut, ou zip), OU l'objet JSON inline.
+      // Servir cette page par HTTP (`python -m http.server`) : un navigateur refuse le fetch d'un
+      // fichier voisin en file://.
+      window.sankey = {
+        diagram: "example.json",
+        embedded: true,     // remplit #react-container ; false : se cadre sur la hauteur de la fenêtre
+        topbar: false,      // pas de bande réservée en haut du dessin
+        zoom_control: true, // barre + / % / - à droite
+        // language: "fr",  // force la langue des info-bulles (sinon ?lang= puis navigateur)
+      };
+    </script>
+  </body>
+</html>
