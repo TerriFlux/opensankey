@@ -1210,6 +1210,38 @@ export const sunburstScope = (
   return { centre: null, branches: capBranches(roots, others_label, max_branches) }
 }
 
+/**
+ * os#1511 (15/10) — UN NOM DE BARRE EN LIGNES de `per_line` caractères au plus : retour à la ligne aux
+ * espaces, CÉSURE (tiret) d'un mot plus long qu'une ligne ; `max_lines` au plus, la dernière finit
+ * par « … » si le nom ne tient pas.
+ */
+export const wrapBarName = (label: string, per_line: number, max_lines: number): string[] => {
+  const width = Math.max(3, per_line)
+  const pieces: string[] = []
+  label.split(/\s+/).filter(w => w !== '').forEach(word => {
+    let rest = word
+    while (rest.length > width) {
+      pieces.push(rest.slice(0, width - 1) + '-')
+      rest = rest.slice(width - 1)
+    }
+    pieces.push(rest)
+  })
+  const lines: string[] = []
+  pieces.forEach(piece => {
+    const last = lines[lines.length - 1]
+    if (last !== undefined && !last.endsWith('-') && (last + ' ' + piece).length <= width) {
+      lines[lines.length - 1] = last + ' ' + piece
+    } else {
+      lines.push(piece)
+    }
+  })
+  if (lines.length <= max_lines) return lines
+  const kept = lines.slice(0, max_lines)
+  const tail = kept[max_lines - 1].replace(/-$/, '')
+  kept[max_lines - 1] = (tail.length >= width ? tail.slice(0, width - 1) : tail) + '…'
+  return kept
+}
+
 /** os#1511 — `sunburstScope` des barres : rien ne se replie faute d'angle, rien faute de couleur. */
 const barsScope = (
   roots: Type_SunburstNode[],
@@ -1707,7 +1739,10 @@ export const drawSunburstChart = (
     // mêmes identifiants de part, même repli « Autres »), posés en barres : une par secteur du premier
     // anneau, empilée de ses feuilles dans l'ordre des secteurs. La légende est celle de la couronne.
     if (opts.layout === 'bars') {
+      // os#1511 (Julien, 15/10 : « l'ordre des barres devrait être du plus grand au plus petit ») —
+      // les barres par total décroissant, « Autres » en dernier ; leurs segments gardent leur ordre.
       const bars = slices.filter(sl => sl.depth === 0)
+        .sort((a, b) => Number(a.is_residual) - Number(b.is_residual) || b.value - a.value)
       // os#1511 (Julien, 15/10 : « toujours vert ») — LES SEGMENTS SONT LA DIMENSION SOUS LA BARRE, pas
       // les feuilles. Croisée sur trois dimensions (filière végétale × filière animale × postes), les
       // feuilles étaient les postes — un seul sur ce flux, « Élevage et transformation animale » : tout
@@ -1718,20 +1753,25 @@ export const drawSunburstChart = (
         const mine = slices.filter(sl => sl.depth > 0 && sl.path[0] === bar.id &&
           (sl.dimension_id === segment_dim || (sl.is_residual && sl.depth === 1)))
         const parents = new Set(mine.map(sl => sl.path[sl.path.length - 2]))
+        // os#1511 (Julien, 15/10 : « pareil verticalement, la plus grande en bas ») — empilés du plus
+        // grand (en bas) au plus petit, « Autres » tout en haut.
         const deepest = mine.filter(sl => !parents.has(sl.id))
+          .sort((a, b) => Number(a.is_residual) - Number(b.is_residual) || b.value - a.value)
         return deepest.length > 0 ? deepest : [bar]
       }
       const font = st.font_size
       const max_value = bars.reduce((m, b) => Math.max(m, b.value), 0)
-      // LA PLACE DES NOMS SOUS LES BARRES : droits s'ils tiennent dans leur colonne, inclinés sinon.
+      // LES NOMS SOUS LES BARRES, HORIZONTAUX (Julien, 15/10 : « en diagonale ça ne me plaît pas ; il
+      // faut horizontal avec retour à la ligne et césure si besoin ») : sur la largeur de leur colonne,
+      // trois lignes au plus.
       const textWidth = (text: string) => text.length * font * 0.52
-      const longest = bars.reduce((m, b) => Math.max(m, textWidth(b.label)), 0)
-      const band_guess = Math.max(40, box_w - 16) / Math.max(1, bars.length) * 0.75
-      const tilted = longest > band_guess
-      const bottom = tilted ? Math.min(box_h * 0.4, longest * 0.6 + font * 1.5) : font * 2.2
+      const column = Math.max(40, box_w - 16) / Math.max(1, bars.length)
+      const per_line = Math.max(3, Math.floor(column * 0.95 / (font * 0.52)))
+      const name_lines = new Map(bars.map(b => [b.id, wrapBarName(b.label, per_line, 3)]))
+      const most_lines = Math.max(1, ...[...name_lines.values()].map(lines => lines.length))
+      const bottom = most_lines * font * 1.2 + font * 0.8
       const top = font * 1.8
-      // Incliné, le premier nom part vers la gauche de sa barre : la marge le garde entier.
-      const left = tilted ? Math.min(box_w * 0.12, longest * 0.82 * 0.5) : 8
+      const left = 8
       const x = d3.scaleBand<string>().domain(bars.map(b => b.id)).range([left, box_w - 8]).padding(0.18)
       const y = d3.scaleLinear().domain([0, max_value > 0 ? max_value : 1]).range([box_h - bottom, top])
       const bars_g = zoom_layer.append('g').attr('class', 'sunburst_bars')
@@ -1824,13 +1864,10 @@ export const drawSunburstChart = (
           .attr('font-size', font).attr('font-family', st.font_family).attr('fill', palette.ink)
           .style('cursor', st.click_action !== 'none' && !bar.is_residual ? 'pointer' : 'default')
           .on('click', (evt: MouseEvent) => onSlice(evt, bar))
-          .text(bar.label)
-        if (tilted) {
-          name.attr('text-anchor', 'end')
-            .attr('transform', `translate(${bx + bw / 2},${baseline + font * 0.9}) rotate(-35)`)
-        } else {
-          name.attr('text-anchor', 'middle').attr('x', bx + bw / 2).attr('y', baseline + font * 1.3)
-        }
+          .attr('text-anchor', 'middle')
+        ;(name_lines.get(bar.id) ?? [bar.label]).forEach((line, i) => name.append('tspan')
+          .attr('x', bx + bw / 2).attr('y', baseline + font * (1.3 + i * 1.2))
+          .text(line))
         if (st.tooltip_visible) name.append('title').text(barTitle(bar))
       })
       drawLegend()

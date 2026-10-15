@@ -33,6 +33,9 @@ const scene = () => {
   zone.setPosXY(400, 80)
   zone.shape_min_width = 200
   zone.shape_min_height = 150
+  // Sans encart : le cadre de la figure couvre toute la zone (l'encart ajoute une marge, cf. plus bas).
+  zone.shape_color_visible = false
+  zone.shape_border_visible = false
   return { app, sankey, node, zone, figure_id }
 }
 
@@ -132,6 +135,19 @@ describe('os#1531 figure posee dans le diagramme', () => {
     zone.drawFigure()
     expect(montages).toBe(1)
     expect(g.select('svg.figure_zone_svg').attr('width')).toBe('400')
+  })
+
+  test('en encart (fond ou lisere), le dessin garde une marge interieure', () => {
+    // Julien, 15/10 : « un fond blanc, comme l encart de la recolte de BACCFIRE ».
+    const { zone } = scene()
+    const sac = zone.attributes as unknown as { [k: string]: unknown }
+    sac['shape_color_visible'] = true
+    figure_zone_hooks.mount = () => ({ cleanup: () => undefined })
+    const g = monter(zone)
+    zone.drawFigure()
+    const cadre = g.select('svg.figure_zone_svg')
+    expect(Number(cadre.attr('x'))).toBeGreaterThan(0)
+    expect(Number(cadre.attr('width'))).toBeLessThan(200)
   })
 })
 

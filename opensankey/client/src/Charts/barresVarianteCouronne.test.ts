@@ -8,7 +8,7 @@
 // premiere dimension, empilee par la seconde, chaque membre de la seconde a SA couleur dans toutes les
 // barres, la legende a cases de la couronne.
 
-import { drawSunburstChart } from './SunburstChart'
+import { drawSunburstChart, wrapBarName } from './SunburstChart'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import { givePlainDrawingEnvironment, sizedContainer } from './figureDomHarness.test-utils'
 
@@ -119,4 +119,34 @@ describe('os#1511 les barres croisees sont une couronne depliee', () => {
     expect(rects.map(r => r.getAttribute('data-part-id'))).toEqual(['ce/fr', 'ce/es', 'la/fr', 'la/es'])
     expect(rects.map(r => r.getAttribute('fill'))).toEqual(['#1f77b4', '#ff7f0e', '#1f77b4', '#ff7f0e'])
   })
+
+  test('les barres vont de la plus grande a la plus petite', () => {
+    // Julien, 15/10 : « l ordre des barres devrait etre du plus grand au plus petit ».
+    const el = sizedContainer()
+    drawSunburstChart(el, { ...TREE, roots: [...TREE.roots].reverse() }, { layout: 'bars', style: { color_source: 'model' } })
+    const noms = Array.from(el.querySelectorAll('text.sunburst_bar_name')).map(t => t.childNodes[0]?.textContent)
+    expect(noms).toEqual(['Cereales', 'Lait'])
+  })
+
+  test('dans une barre, le segment le plus grand est en bas', () => {
+    // Julien, 15/10 : « pareil verticalement, la plus grande en bas ».
+    const el = sizedContainer()
+    const inverse = { ...TREE, roots: TREE.roots.map(r => ({ ...r, children: [...r.children].reverse() })) }
+    drawSunburstChart(el, inverse, { layout: 'bars', style: { color_source: 'model' } })
+    const segs = Array.from(el.querySelectorAll('rect.sunburst_bar'))
+      .filter(r => (r.getAttribute('data-part-id') ?? '').startsWith('ce/'))
+      .map(r => ({ id: r.getAttribute('data-part-id'), y: Number(r.getAttribute('y')) }))
+    // France (60) sous Espagne (30) : plus bas a l ecran = y plus grand.
+    const fr = segs.find(s => s.id === 'ce/fr')
+    const es = segs.find(s => s.id === 'ce/es')
+    expect((fr?.y ?? 0) > (es?.y ?? 0)).toBe(true)
+  })
+
+  test('les noms des barres : horizontaux, a la ligne aux espaces, cesure d un mot trop long', () => {
+    // Julien, 15/10 : « en diagonale ca ne me plait pas ; horizontal avec retour a la ligne et cesure ».
+    expect(wrapBarName('Fourrages et pailles', 10, 3)).toEqual(['Fourrages', 'et pailles'])
+    expect(wrapBarName('Oleoproteagineux', 8, 3)).toEqual(['Oleopro-', 'teagine-', 'ux'])
+    expect(wrapBarName('Un nom bien trop long pour tenir', 6, 2)).toEqual(['Un nom', 'bien…'])
+  })
 })
+
