@@ -29,6 +29,7 @@ import { FaProjectDiagram, FaFileAlt, FaCode, FaInfoCircle } from 'react-icons/f
 import { SpreadsheetIcon } from './typeIcons'
 // os#1473 — la couronne et les barres sont des natures d'OpenSankey, comme le sunburst.
 import { registerAnalysisRepresentations } from './registerAnalysisRepresentations'
+import { registerFluxMatrix } from './registerFluxMatrix'
 // os#1418 — une nature DÉCLARE ses réglages (défaut, sorte, libellés des 7 langues), et c'est
 // cette déclaration qui lui donne la cascade des styles des nœuds et des flux.
 import { figureAttribute } from './figureAttribute'
@@ -329,4 +330,6 @@ export const registerBaseRepresentations = (): void => {
   // os#1473 — LA COURONNE ET LES BARRES, ici et non plus en OS+ : elles n'ont rien de
   // particulier, et leurs tracés ont toujours vécu dans ce paquet.
   registerAnalysisRepresentations()
+  // os#1530 — le tableau croisé des FLUX (sources × cibles, ou par étiquettes de nœuds).
+  registerFluxMatrix()
 }
