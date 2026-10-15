@@ -89,6 +89,32 @@ export const parseCellNumber = (cell: string): number | null => {
   return Number.isFinite(v) ? v : null
 }
 
+/** La grille brute du texte : une liste de cellules par ligne non vide, séparateur deviné. */
+export const splitCrosstabGrid = (text: string): string[][] => {
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
+  if (lines.length === 0) return []
+  const sep = guessSeparator(lines[0])
+  return lines.map(line => splitLine(line, sep))
+}
+
+// Une cellule qui porte le séparateur, un guillemet ou un saut de ligne s'écrit entre guillemets.
+const quoteCell = (cell: string): string =>
+  /[\t"\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell
+
+/** Le texte d'une grille, tabulé : ce qu'Excel colle, et ce que `parseCrosstabText` relit. */
+export const gridToCrosstabText = (grid: string[][]): string =>
+  grid.map(row => row.map(quoteCell).join('\t')).join('\n')
+
+/** La grille transposée : lignes et colonnes échangées, cellule d'angle comprise (sa#675). */
+export const transposeGrid = (grid: string[][]): string[][] => {
+  const width = grid.reduce((w, row) => Math.max(w, row.length), 0)
+  return Array.from({ length: width }, (_, c) => grid.map(row => row[c] ?? ''))
+}
+
+/** Inverse lignes et colonnes d'un tableau croisé en texte (sa#675). */
+export const transposeCrosstabText = (text: string): string =>
+  gridToCrosstabText(transposeGrid(splitCrosstabGrid(text)))
+
 /** Lit un tableau croisé en texte. Une grille vide ou sans en-tête donne zéro flux. */
 export const parseCrosstabText = (text: string): Type_CrosstabParsed => {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
