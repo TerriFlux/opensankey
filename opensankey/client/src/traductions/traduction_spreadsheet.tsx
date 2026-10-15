@@ -43,6 +43,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} rows × {{cols}} columns',
           ignored: 'cells ignored (empty, zero or not a number)',
           empty: 'No numeric cell found: check that the first row and the first column hold the names.',
+          load_file: 'Load a file (csv, xlsx)',
+          transpose: 'Swap rows and columns',
+          save_table: 'Save the table (.xlsx)',
         },
         sheet: {
           flux: 'Flows',
@@ -443,6 +446,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} lignes × {{cols}} colonnes',
           ignored: 'cellules ignorées (vides, nulles ou non numériques)',
           empty: 'Aucune cellule numérique trouvée : vérifiez que la première ligne et la première colonne portent les noms.',
+          load_file: 'Charger un fichier (csv, xlsx)',
+          transpose: 'Inverser lignes et colonnes',
+          save_table: 'Enregistrer le tableau (.xlsx)',
         },
         sheet: {
           flux: 'Flux',
@@ -804,6 +810,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} filas × {{cols}} columnas',
           ignored: 'celdas ignoradas (vacías, nulas o no numéricas)',
           empty: 'No se encontró ninguna celda numérica: compruebe que la primera fila y la primera columna llevan los nombres.',
+          load_file: 'Cargar un archivo (csv, xlsx)',
+          transpose: 'Intercambiar filas y columnas',
+          save_table: 'Guardar la tabla (.xlsx)',
         },
         sheet: {
           flux: 'Flujos',
@@ -1164,6 +1173,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} Zeilen × {{cols}} Spalten',
           ignored: 'Zellen ignoriert (leer, null oder keine Zahl)',
           empty: 'Keine numerische Zelle gefunden: Prüfen Sie, ob die erste Zeile und die erste Spalte die Namen tragen.',
+          load_file: 'Datei laden (csv, xlsx)',
+          transpose: 'Zeilen und Spalten tauschen',
+          save_table: 'Tabelle speichern (.xlsx)',
         },
         sheet: {
           flux: 'Flüsse',
@@ -1524,6 +1536,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} righe × {{cols}} colonne',
           ignored: 'celle ignorate (vuote, nulle o non numeriche)',
           empty: 'Nessuna cella numerica trovata: verificate che la prima riga e la prima colonna portino i nomi.',
+          load_file: 'Carica un file (csv, xlsx)',
+          transpose: 'Scambia righe e colonne',
+          save_table: 'Salva la tabella (.xlsx)',
         },
         sheet: {
           flux: 'Flussi',
@@ -1881,6 +1896,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} 行 × {{cols}} 列',
           ignored: '个单元格被忽略（空、为零或非数值）',
           empty: '未找到数值单元格：请检查第一行和第一列是否为名称。',
+          load_file: '加载文件（csv、xlsx）',
+          transpose: '交换行与列',
+          save_table: '保存表格（.xlsx）',
         },
         sheet: {
           flux: '流量',
@@ -2247,6 +2265,9 @@ export const resources_spreadsheet = {
           summary: '{{rows}} 行 × {{cols}} 列',
           ignored: 'セルを無視しました（空、ゼロ、または数値以外）',
           empty: '数値のセルが見つかりません。1 行目と 1 列目に名前があるか確認してください。',
+          load_file: 'ファイルを読み込む（csv、xlsx）',
+          transpose: '行と列を入れ替える',
+          save_table: '表を保存（.xlsx）',
         },
         sheet: {
           flux: 'フロー',
