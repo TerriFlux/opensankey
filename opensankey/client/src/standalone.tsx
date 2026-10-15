@@ -33,6 +33,7 @@ import { ViewerOpenSankeyApp } from './ViewApp'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 import { getForcedLanguage, SankeyGlobals } from './types/PublishOptions'
 import { Type_AnyJSON } from './types/Utils'
+import { ui_danger, ui_font_stack } from './css/uiTokens'
 
 const options: SankeyGlobals = window.sankey ?? {}
 
@@ -76,7 +77,7 @@ const mount = async (): Promise<void> => {
   } catch (error) {
     console.error('[OpenSankey] diagramme introuvable ou illisible :', options.diagram, error)
     root.render(
-      <div style={{ padding: '1rem', fontFamily: 'system-ui, sans-serif', color: '#8b0000' }}>
+      <div style={{ padding: '1rem', fontFamily: ui_font_stack, color: ui_danger }}>
         OpenSankey : impossible de charger le diagramme « {String(options.diagram)} ».
       </div>
     )
