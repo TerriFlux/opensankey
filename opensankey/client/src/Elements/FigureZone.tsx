@@ -116,6 +116,7 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
     if (this._host === null) {
       this._host = document.createElement('div')
       this._host.className = 'figure_zone_host'
+      this._relayPointerToZone(this._host)
     }
     this._host.style.width = `${w}px`
     this._host.style.height = `${h}px`
@@ -131,6 +132,33 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
     this._host.replaceChildren()
     this._mounted = figure_zone_hooks.mount?.(this, this._host) ?? null
     this._mounted_key = this._mounted !== null ? key : ''
+  }
+
+  /**
+   * os#1531 (Julien, 15/10 : « qu'on puisse draguer l'élément ») — LA FIGURE SE SAISIT COMME LA ZONE.
+   *
+   * Le dessin de la figure a son propre zoom (glisser = déplacer la vue) qui avalait l'appui : la zone
+   * ne bougeait plus. L'appui et la molette sont donc interceptés à l'entrée de l'hôte et RENVOYÉS au
+   * `foreignObject`, d'où ils remontent au groupe de la zone (son glisser) et au diagramme (son zoom).
+   * Le CLIC, événement à part, atteint toujours la barre ou le secteur : un appui relâché sans bouger
+   * sélectionne la part ; s'il a bougé, le glisser de la zone avale ce clic, comme partout.
+   */
+  private _relayPointerToZone(host: HTMLDivElement): void {
+    const relay = (event: Event) => {
+      if ((event as { __figure_zone_relayed?: boolean }).__figure_zone_relayed) return
+      const fo = host.parentNode
+      if (fo === null) return
+      event.stopPropagation()
+      const copy = event instanceof WheelEvent
+        ? new WheelEvent(event.type, event)
+        : new MouseEvent(event.type, event as MouseEvent)
+      ;(copy as unknown as { __figure_zone_relayed: boolean }).__figure_zone_relayed = true
+      fo.dispatchEvent(copy)
+      if (event instanceof WheelEvent) event.preventDefault()
+    }
+    host.addEventListener('mousedown', relay, true)
+    host.addEventListener('wheel', relay, { capture: true, passive: false })
+    host.addEventListener('dblclick', relay, true)
   }
 
   /**

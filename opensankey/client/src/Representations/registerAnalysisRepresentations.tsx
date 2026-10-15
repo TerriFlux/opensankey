@@ -246,6 +246,7 @@ const drawCouronneRings = (
   const navigationOf = (beside: boolean): {
     breadcrumb: Type_FigureCrumb[] | HTMLElement, legend_navigation?: HTMLElement
   } => {
+    if (ctx.in_diagram === true) return { breadcrumb: [] }
     const table = figureNavigationTableOf(ctx, 'couronne', beside)
     if (table === null) return { breadcrumb: figureBreadcrumbOf(ctx, gestures.focusTo) }
     return beside ? { breadcrumb: [], legend_navigation: table } : { breadcrumb: table }
@@ -285,7 +286,7 @@ const drawCouronneRings = (
     // ouvrent les anneaux. Ce que l'auteur a réglé est lu, lui, par `donutClickGestures`,
     // qui décide ce que le geste fait EN PLUS.
     style: rings_style,
-    texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
+    texts: (subject_name: string) => ctx.in_diagram === true ? [] : withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
     // Le centre du sunburst écrit le nom sauf réglage contraire (son défaut est « nom et valeur »).
     // 03/10/2026 — sur dimensions de données, la ligne dit le contexte des autres dimensions.
     centre_caption: isDataDimensionFigure(ctx)
@@ -376,7 +377,7 @@ const chartOptions = (
     format: figureValueFormatter(figureValueFormatOf(ctx.options, unit, undefined, unitFactorOfSubject(subject, app_data))),
     // os#1477 — TOUT LE TEXTE DE LA FIGURE, titre compris, comme pour le disque : le titre est la
     // zone n° 0 depuis os#1449, et l'auteur peut en ajouter d'autres (`text_zones`).
-    texts: (subject_name: string) => figureTextsOf(ctx.options, subject_name),
+    texts: (subject_name: string) => ctx.in_diagram === true ? [] : figureTextsOf(ctx.options, subject_name),
     // 23/09/2026 — QUAND LA FIGURE EST DESCENDUE, ELLE NOMME CE QU'ELLE MONTRE.
     //
     // Le centre d'une couronne écrit ce nom (`centre_content`), et le titre s'en sert en repli :
@@ -888,6 +889,7 @@ const donutLegendShapeOf = (ctx: Type_RepresentationContext): Type_DonutLegendSh
  * (pop-up, aperçu) : pas de capsule.
  */
 const legendCapsuleOf = (ctx: Type_RepresentationContext): Type_LegendCapsule | undefined => {
+  if (ctx.in_diagram === true) return undefined
   const { window_id, pane_key } = ctx
   if (window_id === undefined || pane_key === undefined) return undefined
   const mc = ctx.app_data.menu_configuration
@@ -1041,7 +1043,14 @@ export const registerAnalysisRepresentations = (): void => {
     if (figure === undefined || subject === undefined) return null
     return mountRepresentation(
       figure.nature.id, host,
-      elementContext(app_data, subject as unknown as Parameters<typeof elementContext>[1], figure.attributes as { [key: string]: unknown })
+      {
+        ...elementContext(app_data, subject as unknown as Parameters<typeof elementContext>[1], {
+          ...(figure.attributes as { [key: string]: unknown }),
+          // os#1531 (Julien, 15/10) — posée dans le diagramme : sans légende.
+          legend_visible: false
+        }),
+        in_diagram: true
+      }
     )
   }
   // ── os#1479 — CE QUE CES DEUX NATURES ONT EN PROPRE, ET RIEN D AUTRE ────────────────────────
@@ -1145,6 +1154,7 @@ export const registerAnalysisRepresentations = (): void => {
       const navigationOf = (beside: boolean): {
         breadcrumb: Type_FigureCrumb[] | HTMLElement, legend_navigation?: HTMLElement
       } => {
+        if (ctx.in_diagram === true) return { breadcrumb: [] }
         const table = figureNavigationTableOf(ctx, 'couronne', beside)
         if (table === null) return { breadcrumb: figureBreadcrumbOf(ctx, gestures.focusTo) }
         return beside ? { breadcrumb: [], legend_navigation: table } : { breadcrumb: table }
@@ -1405,7 +1415,7 @@ export const registerAnalysisRepresentations = (): void => {
             : measureCaptionOf(ctx, centreSaysName(style) ? figureTitleFallback(ctx) : ''),
           // 05/10/2026 — non zoomée, le nom court du jeu de données au centre, en gras.
           centre_name: dataCentreNameOf(ctx),
-          texts: (subject_name: string) => withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
+          texts: (subject_name: string) => ctx.in_diagram === true ? [] : withSubjectLine(ctx, figureTextsOf(ctx.options ?? {}, subject_name)),
           label_positions: wiring.label_positions,
           on_label_move: wiring.on_label_move,
           // 01/10/2026 — le zoom de la couronne à plat, prêté comme celui du mode à anneaux.
