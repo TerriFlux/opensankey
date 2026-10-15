@@ -268,6 +268,12 @@ export type Type_RepresentationContext = {
    * s'étend alors sous l'en-tête, et son cadrage laisse cette hauteur libre. Absent = rien.
    */
   overlay_reserve?: { top: number, bottom: number }
+  /**
+   * os#1531 (Julien, 15/10 : « posée dans le diagramme, c'est sans légende, sans fenêtre ») — LA
+   * FIGURE EST POSÉE DANS LE DIAGRAMME : ni légende, ni titre, ni tableau de navigation, ni capsule ;
+   * le dessin seul, que le trait d'attache rattache à son élément.
+   */
+  in_diagram?: boolean
 }
 
 /** Démontage seul ; `void` quand il n'y a rien à défaire. */

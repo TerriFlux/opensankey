@@ -86,4 +86,23 @@ describe('os#1531 figure posee dans le diagramme', () => {
     zone.drawLeader()
     expect(Number(line().attr('x2'))).toBeLessThan(x2_avant)
   })
+
+  test('un appui sur la figure remonte a la zone (on la saisit partout), sans atteindre le dessin', () => {
+    // Julien, 15/10 : « qu on puisse draguer l element ». Le zoom propre de la figure avalait l appui.
+    const { zone } = scene()
+    let barre: HTMLElement | null = null
+    figure_zone_hooks.mount = (_z, host) => {
+      barre = document.createElement('div')
+      host.appendChild(barre)
+      return { cleanup: () => undefined }
+    }
+    const g = monter(zone)
+    zone.drawFigure()
+    const vus: string[] = []
+    ;(g.node() as SVGGElement).addEventListener('mousedown', () => vus.push('zone'))
+    ;(barre as unknown as HTMLElement).addEventListener('mousedown', () => vus.push('dessin'))
+    ;(barre as unknown as HTMLElement).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    expect(vus).toEqual(['zone'])
+  })
 })
+
