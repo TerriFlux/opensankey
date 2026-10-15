@@ -104,5 +104,24 @@ describe('os#1531 figure posee dans le diagramme', () => {
     ;(barre as unknown as HTMLElement).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
     expect(vus).toEqual(['zone'])
   })
+
+  test('la figure se dessine a largeur fixe puis s etire a la zone : son texte grandit avec elle', () => {
+    // Julien, 15/10 : « comment rendre ca visible ? ». Comme une image.
+    const { zone } = scene()
+    const hotes: HTMLElement[] = []
+    figure_zone_hooks.mount = (_z, host) => { hotes.push(host); return { cleanup: () => undefined } }
+    monter(zone)
+    zone.drawFigure()
+    expect(hotes[0].style.width).toBe('420px')
+    expect(hotes[0].style.transform).toBe(`scale(${200 / 420})`)
+    // Agrandie a la meme proportion : etiree, pas remontee.
+    // La taille posee sans le redessin du cadre (jsdom ne mesure pas les textes).
+    const sac = zone.attributes as unknown as { [k: string]: unknown }
+    sac['shape_min_width'] = 400
+    sac['shape_min_height'] = 300
+    zone.drawFigure()
+    expect(hotes).toHaveLength(1)
+    expect(hotes[0].style.transform).toBe(`scale(${400 / 420})`)
+  })
 })
 

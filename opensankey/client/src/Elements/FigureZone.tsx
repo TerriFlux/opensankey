@@ -32,6 +32,13 @@ export const figureZoneFigureIds = (containers: Iterable<unknown>): string[] => 
   return out
 }
 
+/**
+ * os#1531 (Julien, 15/10 : « comment rendre ça visible ? ») — LA LARGEUR À LAQUELLE LA FIGURE SE
+ * DESSINE, avant d'être étirée à la taille de la zone : comme une image. Agrandir la zone agrandit
+ * donc le texte avec le dessin, au lieu de laisser des étiquettes minuscules dans un grand cadre.
+ */
+export const FIGURE_ZONE_NOMINAL_WIDTH = 420
+
 /** Taille d'une zone posée : de quoi lire une couronne ou des barres et leur légende. */
 export const FIGURE_ZONE_DEFAULT_SIZE = { width: 420, height: 300 }
 
@@ -118,12 +125,18 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
       this._host.className = 'figure_zone_host'
       this._relayPointerToZone(this._host)
     }
-    this._host.style.width = `${w}px`
-    this._host.style.height = `${h}px`
+    // Dessinée à une largeur fixe, à la proportion de la zone, puis étirée à sa taille.
+    const nominal_w = FIGURE_ZONE_NOMINAL_WIDTH
+    const nominal_h = Math.max(60, Math.round(nominal_w * h / w))
+    const scale = w / nominal_w
+    this._host.style.width = `${nominal_w}px`
+    this._host.style.height = `${nominal_h}px`
     this._host.style.overflow = 'hidden'
+    this._host.style.transformOrigin = '0 0'
+    this._host.style.transform = `scale(${scale})`
     ;(fo.node() as SVGForeignObjectElement).appendChild(this._host)
-    // Monter une fois ; remonter si la figure, le sujet ou la taille changent ; sinon redessiner.
-    const key = `${this._figure_id}|${this._subject.kind}:${this._subject.id}|${Math.round(w)}x${Math.round(h)}`
+    // Monter une fois ; remonter si la figure, le sujet ou la PROPORTION changent ; sinon redessiner.
+    const key = `${this._figure_id}|${this._subject.kind}:${this._subject.id}|${nominal_w}x${nominal_h}`
     if (this._mounted !== null && key === this._mounted_key) {
       try { this._mounted.redraw?.() } catch { /* idem */ }
       return
@@ -183,9 +196,9 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
     const leader = g.insert('g', ':first-child').attr('class', 'figure_zone_leader').attr('pointer-events', 'none')
     leader.append('line')
       .attr('x1', bx).attr('y1', by).attr('x2', ax).attr('y2', ay)
-      .attr('stroke', this.shape_border_color || '#8a8a8a').attr('stroke-width', 1.2)
-      .attr('stroke-dasharray', '4 3')
-    leader.append('circle').attr('cx', ax).attr('cy', ay).attr('r', 3)
+      .attr('stroke', this.shape_border_color || '#6b6b6b').attr('stroke-width', 1.6)
+      .attr('stroke-dasharray', '6 3')
+    leader.append('circle').attr('cx', ax).attr('cy', ay).attr('r', 3.5)
       .attr('fill', this.shape_border_color || '#8a8a8a')
   }
 
