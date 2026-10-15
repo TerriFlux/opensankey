@@ -34,7 +34,8 @@ import { effectiveDecompose, isDescriptorEmpty, type Type_AnalysisDescriptor } f
 import { readFigureDataLayer, readFigureFocus, readFigureOpening } from './figureOpening'
 import type { Type_RepresentationContext } from './RepresentationRegistry'
 import type { Type_CouronneReader, Type_CouronneSankey, Type_CouronneState } from './couronneState'
-import type { Type_DrawPlan } from '../Charts/couronnePlan'
+import { drawPlanOf, type Type_DrawPlan } from '../Charts/couronnePlan'
+import { singleValuedCuts } from '../Charts/couronneTree'
 import { fromFigure, planFor, toCouronneState, type Type_DimensionViewState, type Type_MatrixPlan } from './dimensionViewState'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 import type { Class_DataTag } from '../types/Tag'
@@ -276,9 +277,11 @@ export const hierarchyReadingOf = (ctx: Type_RepresentationContext): Type_Hierar
  * les petits multiples, la légende, le centre et le surlignage du tableau lisent tous ce plan.
  * `null` : la figure ne découpe pas selon des dimensions de données.
  */
-export const couronneOf = (ctx: Type_RepresentationContext): { state: Type_CouronneState, plan: Type_DrawPlan } | null => {
+export const couronneOf = (ctx: Type_RepresentationContext): {
+  state: Type_CouronneState, plan: Type_DrawPlan, demoted: Type_FigureDimensionView['demoted']
+} | null => {
   const v = figureDimensionViewOf(ctx, 'couronne')
-  return v === null ? null : { state: v.couronne, plan: v.plan as Type_DrawPlan }
+  return v === null ? null : { state: v.couronne, plan: v.plan as Type_DrawPlan, demoted: v.demoted }
 }
 
 /** Ce qu'une figure sur dimensions de données lit et dessine : l'état commun, sa forme couronne, son plan. */
@@ -291,6 +294,12 @@ export type Type_FigureDimensionView = {
   couronne: Type_CouronneState
   /** `planFor(view, …)` : le plan de la couronne, ou celui du tableau (`null` : rien à croiser). */
   plan: Type_DrawPlan | Type_MatrixPlan | null
+  /**
+   * os#1511 (15/10) — les dimensions qui découperaient sans rien découper (un seul membre porteur de
+   * valeur pour ce sujet) : la figure les lit sur ce membre, en CONTEXTE, comme l'année. L'état, lui,
+   * n'en garde rien : elles redécoupent dès qu'un second membre porte une valeur.
+   */
+  demoted: { dimension_id: string, member_id: string }[]
 }
 
 const figure_view_memo = new Map<string, Type_FigureDimensionView | null>()
@@ -350,7 +359,35 @@ const computeFigureDimensionView = (
   const declared = [decompose.data_tagg_id, ...(decompose.nested_tagg_ids ?? [])]
   const view = fromFigure(ctx.options, undefined, sankey, declared, reader)
   const representation = reader === 'matrix' ? 'matrix' : 'couronne'
-  return { declared, view, couronne: toCouronneState(view), plan: planFor(view, representation, sankey, { name }).plan as Type_FigureDimensionView['plan'] }
+  const couronne = toCouronneState(view)
+  // os#1511 (Julien, 15/10 : « si une dimension n'a qu'un membre, elle n'est pas active ; c'est
+  // perturbant sinon, même dans le tableau croisé on ne comprend rien ») — UNE DIMENSION QUI NE
+  // DÉCOUPE RIEN SE TAIT : un seul de ses membres porte une valeur pour ce sujet. La figure la lit
+  // alors sur ce membre, désactivée, et la légende la dit en contexte. Même règle pour la couronne,
+  // les barres (le même arbre) et le tableau croisé.
+  const nav = withDataLayer(figureNavigationOf(ctx.app_data.drawing_area.sankey, ctx.options), readFigureDataLayer(ctx.options))
+  const demoted = singleValuedCuts(
+    subject.kind === 'node' ? { kind: 'node', node: subject.node } : { kind: 'link', link: subject.link },
+    drawPlanOf(couronne, sankey), couronne, nav
+  )
+  const drawn = demoted.length === 0 ? view : demoteDimensions(view, demoted)
+  return {
+    declared, view, couronne, demoted,
+    plan: planFor(drawn, representation, sankey, { name }).plan as Type_FigureDimensionView['plan']
+  }
+}
+
+/** `view`, ses dimensions `demoted` désactivées et lues sur leur seul membre porteur. */
+const demoteDimensions = (
+  view: Type_DimensionViewState, demoted: { dimension_id: string, member_id: string }[]
+): Type_DimensionViewState => {
+  const dims = { ...view.dims }
+  demoted.forEach(({ dimension_id, member_id }) => {
+    const d = dims[dimension_id]
+    if (d === undefined) return
+    dims[dimension_id] = { ...d, role: 'none', resume: d.role === 'none' ? d.resume : d.role, focus: [member_id] }
+  })
+  return { ...view, dims }
 }
 
 /** La lecture `reading`, une case des petits multiples posée : sa dimension lue sur `members`. */

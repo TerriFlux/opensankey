@@ -80,13 +80,18 @@ export const planDrawsRings = (plan: Type_DrawPlan, state: Type_CouronneState): 
  * L'ARBRE D'UN PLAN. `null` quand aucune dimension n'entre dans la figure (une couronne sur des
  * dimensions sans niveaux serait un mensonge visuel).
  */
-export const buildPlanTree = (
+/**
+ * os#1511 (15/10) — LA LECTURE DES VALEURS D'UN PLAN : la coordonnée de base (dimensions fixées, portée
+ * des dimensions qui découpent) et la valeur du sujet à une coordonnée. Extraite de `buildPlanTree`
+ * pour servir aussi au repli des dimensions à un seul membre porteur (`singleValuedCuts`).
+ */
+const planValueReader = (
   subject: Type_DataDimensionSubject,
   plan: Type_DrawPlan,
   state: Type_CouronneState,
   nav: Type_FigureNavigation,
-  options: Type_PlanTreeOptions = {}
-): Type_SunburstTree | null => {
+  options: Pick<Type_PlanTreeOptions, 'node_value_mode' | 'at'> = {}
+) => {
   const element = subject.kind === 'node' ? subject.node : subject.link
   const sankey = element.sankey
   const groups = sankey.data_taggs_list as unknown as Class_DataTagGroup[]
@@ -97,13 +102,7 @@ export const buildPlanTree = (
   const all = state.order
     .filter(id => id !== plan.cells_dimension_id)
     .map(dimOf).filter((d): d is Class_DataTagGroup => d !== undefined)
-  if (all.length === 0) return null
-  const value_mode = options.value_mode ?? 'sum'
   const node_value_mode = options.node_value_mode ?? 'max'
-  const residual_label = options.residual_label ?? 'Unallocated'
-  const max_depth = Math.max(1, (options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH) + 1)
-  let mismatch_count = 0
-  let is_truncated = false
 
   const focusOf = (d: Class_DataTagGroup) => membersOf(d, state.dims[d.id]?.focus ?? [])
   const asCoord = (ms: Class_DataTag[]): Type_CoordValue | undefined =>
@@ -150,6 +149,61 @@ export const buildPlanTree = (
       ? sunburstNodeValue(subject.node, at, node_value_mode)
       : (linkValueUnder(subject.link, at) ?? 0)
   }
+
+  return { element, dimOf, membersOf, all, focusOf, base, cuts, valueAt }
+}
+
+/**
+ * os#1511 (Julien, 15/10 : « si une dimension n'a qu'un membre, elle n'est pas active ; c'est
+ * perturbant sinon, même dans le tableau croisé on ne comprend rien ») — LES DIMENSIONS QUI DÉCOUPENT
+ * SANS RIEN DÉCOUPER : un seul de leurs membres montrés porte une valeur pour ce sujet. Rend, pour
+ * chacune, ce membre (ou le premier montré si aucun ne porte rien). Jamais toutes : il reste au moins
+ * une dimension qui découpe, celle qui en découpe le plus.
+ */
+export const singleValuedCuts = (
+  subject: Type_DataDimensionSubject,
+  plan: Type_DrawPlan,
+  state: Type_CouronneState,
+  nav: Type_FigureNavigation,
+  node_value_mode: Type_PlanTreeOptions['node_value_mode'] = 'max'
+): { dimension_id: string, member_id: string }[] => {
+  if (plan.cut.length < 2) return []
+  const { cuts, base, valueAt, dimOf } = planValueReader(subject, plan, state, nav, { node_value_mode })
+  const counted = cuts.map(({ c, dim }) => {
+    const valued = c.parts
+      .map(p => p.member_id)
+      .filter(id => {
+        const member = dimOf(dim.id)?.tags_dict[id] as Class_DataTag | undefined
+        return member !== undefined && Math.abs(valueAt(new Map(base).set(dim.id, member))) > 0
+      })
+    return { dimension_id: dim.id, valued, first: c.parts[0]?.member_id }
+  })
+  const single = counted.filter(x => x.valued.length <= 1)
+  if (single.length === 0) return []
+  if (single.length === counted.length) {
+    const keep = [...counted].sort((a, b) => b.valued.length - a.valued.length)[0]
+    single.splice(single.indexOf(keep), 1)
+  }
+  return single
+    .filter(x => (x.valued[0] ?? x.first) !== undefined)
+    .map(x => ({ dimension_id: x.dimension_id, member_id: (x.valued[0] ?? x.first) as string }))
+}
+
+export const buildPlanTree = (
+  subject: Type_DataDimensionSubject,
+  plan: Type_DrawPlan,
+  state: Type_CouronneState,
+  nav: Type_FigureNavigation,
+  options: Type_PlanTreeOptions = {}
+): Type_SunburstTree | null => {
+  const { element, dimOf, membersOf, all, focusOf, base, cuts, valueAt } =
+    planValueReader(subject, plan, state, nav, options)
+  if (all.length === 0) return null
+  const value_mode = options.value_mode ?? 'sum'
+  const residual_label = options.residual_label ?? 'Unallocated'
+  const max_depth = Math.max(1, (options.max_depth ?? SUNBURST_DEFAULT_MAX_DEPTH) + 1)
+  let mismatch_count = 0
+  let is_truncated = false
 
   const colorOf = (dim: Class_DataTagGroup, member: Class_DataTag): string | null =>
     resolvedMemberColors(dim)[member.id] ?? member.color ?? null
