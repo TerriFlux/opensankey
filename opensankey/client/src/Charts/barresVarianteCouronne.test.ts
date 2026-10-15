@@ -127,5 +127,19 @@ describe('os#1511 les barres croisees sont une couronne depliee', () => {
     const noms = Array.from(el.querySelectorAll('text.sunburst_bar_name')).map(t => t.childNodes[0]?.textContent)
     expect(noms).toEqual(['Cereales', 'Lait'])
   })
+
+  test('dans une barre, le segment le plus grand est en bas', () => {
+    // Julien, 15/10 : « pareil verticalement, la plus grande en bas ».
+    const el = sizedContainer()
+    const inverse = { ...TREE, roots: TREE.roots.map(r => ({ ...r, children: [...r.children].reverse() })) }
+    drawSunburstChart(el, inverse, { layout: 'bars', style: { color_source: 'model' } })
+    const segs = Array.from(el.querySelectorAll('rect.sunburst_bar'))
+      .filter(r => (r.getAttribute('data-part-id') ?? '').startsWith('ce/'))
+      .map(r => ({ id: r.getAttribute('data-part-id'), y: Number(r.getAttribute('y')) }))
+    // France (60) sous Espagne (30) : plus bas a l ecran = y plus grand.
+    const fr = segs.find(s => s.id === 'ce/fr')
+    const es = segs.find(s => s.id === 'ce/es')
+    expect((fr?.y ?? 0) > (es?.y ?? 0)).toBe(true)
+  })
 })
 

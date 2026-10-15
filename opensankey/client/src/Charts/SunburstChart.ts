@@ -1721,7 +1721,10 @@ export const drawSunburstChart = (
         const mine = slices.filter(sl => sl.depth > 0 && sl.path[0] === bar.id &&
           (sl.dimension_id === segment_dim || (sl.is_residual && sl.depth === 1)))
         const parents = new Set(mine.map(sl => sl.path[sl.path.length - 2]))
+        // os#1511 (Julien, 15/10 : « pareil verticalement, la plus grande en bas ») — empilés du plus
+        // grand (en bas) au plus petit, « Autres » tout en haut.
         const deepest = mine.filter(sl => !parents.has(sl.id))
+          .sort((a, b) => Number(a.is_residual) - Number(b.is_residual) || b.value - a.value)
         return deepest.length > 0 ? deepest : [bar]
       }
       const font = st.font_size
