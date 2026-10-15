@@ -42,6 +42,25 @@ Si `npm install` échoue sur un conflit de peer dependencies avec
 version déclare `typescript@^3 || ^4` en peer, ce qui bloque tout projet en
 TypeScript 5.
 
+## Sans build : le bundle autonome (CDN)
+
+Pour une page HTML existante, sans projet React : un seul fichier JS, React
+compris, publié pour chaque version sur
+<https://su-model.gitlab.io/opensankey/> (`latest/` suit la dernière).
+
+```html
+<link rel="stylesheet" href="https://su-model.gitlab.io/opensankey/latest/static/css/opensankey.css" />
+<script defer src="https://su-model.gitlab.io/opensankey/latest/static/js/opensankey.js"></script>
+<div id="react-container" style="height: 600px"></div>
+<script>
+  window.sankey = { diagram: "example.json", embedded: true, topbar: false };
+</script>
+```
+
+Les clés de `window.sankey` sont celles des props de `ViewerOpenSankeyApp` ;
+`diagram` est une URL (JSON, gzip brut, zip) ou l'objet JSON inline. Exemple :
+[`examples/html-viewer/`](./examples/html-viewer).
+
 ## Ce que contient ce dépôt
 
 | Chemin | Contenu |

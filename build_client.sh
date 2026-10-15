@@ -86,11 +86,11 @@ if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
-  # DISABLE_ESLINT_PLUGIN: OS build = react-scripts brut (pas craco comme OS+/SA) ; l'eslint
-  # interne de CRA ne charge pas le plugin typescript-eslint v7/v8 et plante sur les commentaires
-  # `eslint-disable @typescript-eslint/...` des fichiers tableur. Le lint est déjà fait par
-  # l'étape dédiée `eslint --fix ./src` au-dessus.
-  printf ">>> Build standalone\n" && DISABLE_ESLINT_PLUGIN=true CI= pnpm run build || exit_if_error $?
+  # os#1532 — bundle AUTONOME du viewer (esbuild, scripts/build_bundle.cjs), consommé par le job
+  # `pages` : opensankey/client/build/{index.html,static/js/main.bundle.js,static/css/main.bundle.css}.
+  # Plus de `react-scripts build` : le paquet viewer n'a plus d'entrée CRA depuis la scission
+  # viewer/éditeur (OS#1331), et CRA re-typait tout le code (c'est `pnpm run dist` qui le fait).
+  printf ">>> Build standalone\n" && pnpm run bundle || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
   printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
