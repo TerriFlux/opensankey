@@ -29,6 +29,8 @@ const chrono = <T>(nom: string, fn: () => T): T => {
 }
 
 maybe('os#1511 — chrono des gestes du lecteur sur le SOCLE', () => {
+  // Sans SOCLE_BENCH (la CI), le describe serait vide : jest 27 rejette une suite sans test.
+  if (fichiers.length === 0) test('SOCLE_BENCH absent, banc non lance', () => undefined)
   fichiers.forEach(fichier => {
     test(path.basename(fichier), () => {
       // eslint-disable-next-line no-console
