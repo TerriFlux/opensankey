@@ -8,7 +8,7 @@
 // premiere dimension, empilee par la seconde, chaque membre de la seconde a SA couleur dans toutes les
 // barres, la legende a cases de la couronne.
 
-import { drawSunburstChart } from './SunburstChart'
+import { drawSunburstChart, wrapBarName } from './SunburstChart'
 import type { Type_SunburstNode, Type_SunburstTree } from './SunburstHierarchy'
 import { givePlainDrawingEnvironment, sizedContainer } from './figureDomHarness.test-utils'
 
@@ -140,6 +140,13 @@ describe('os#1511 les barres croisees sont une couronne depliee', () => {
     const fr = segs.find(s => s.id === 'ce/fr')
     const es = segs.find(s => s.id === 'ce/es')
     expect((fr?.y ?? 0) > (es?.y ?? 0)).toBe(true)
+  })
+
+  test('les noms des barres : horizontaux, a la ligne aux espaces, cesure d un mot trop long', () => {
+    // Julien, 15/10 : « en diagonale ca ne me plait pas ; horizontal avec retour a la ligne et cesure ».
+    expect(wrapBarName('Fourrages et pailles', 10, 3)).toEqual(['Fourrages', 'et pailles'])
+    expect(wrapBarName('Oleoproteagineux', 8, 3)).toEqual(['Oleopro-', 'teagine-', 'ux'])
+    expect(wrapBarName('Un nom bien trop long pour tenir', 6, 2)).toEqual(['Un nom', 'bien…'])
   })
 })
 

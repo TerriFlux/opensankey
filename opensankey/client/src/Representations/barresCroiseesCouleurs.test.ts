@@ -25,7 +25,7 @@ afterEach(() => {
   jest.restoreAllMocks()
 })
 
-const scene = (avec_postes = false) => {
+const scene = (avec_postes = false, chiffres_du_diagramme = false) => {
   const ws = new Class_Workspace(false)
   const source = ws.createDocument()
   source.drawing_area.bypass_redraws = true
@@ -89,6 +89,18 @@ const scene = (avec_postes = false) => {
   const ctx = { ...elementContext(source, lien as unknown as Type_Presentable), window_id, pane_key: 'p1', options }
   jest.spyOn(source.menu_configuration, 'setMainZonePaneOptions').mockImplementation(() => undefined)
   source.drawing_area.legend.legend_show_dataTags = true
+  if (chiffres_du_diagramme) {
+    // Le diagramme ecrit ses flux en 3 chiffres significatifs, et cereales/France vaut 1 234.
+    poser(cereales, fr, 1234)
+    groupes.forEach(g => g.tags_list.forEach(t => t.setUnSelected()))
+    cereales.setSelected()
+    lait.setSelected()
+    fr.setSelected()
+    de.setSelected()
+    if (avec_postes) { elevage?.setSelected(); emplois?.setSelected() }
+    lien.value_label_significant_digits = true
+    lien.value_label_nb_significant_digits = 3
+  }
   return { ctx }
 }
 
@@ -126,4 +138,14 @@ describe('os#1511 barres croisees : couleurs des membres', () => {
     // Les barres restent empilees par pays.
     expect(el.querySelectorAll('rect.sunburst_bar')).toHaveLength(4)
   })
+
+  test('les valeurs suivent le nombre de chiffres significatifs du diagramme', () => {
+    // Julien, 15/10 : « utiliser le nombre de chiffres significatifs du diagramme ».
+    const { ctx } = scene(false, true)
+    const el = dessiner(ctx)
+    const textes = Array.from(el.querySelectorAll('text.sunburst_bar_label tspan')).map(t => (t.textContent ?? '').replace(/\s/g, ' '))
+    expect(textes).toContain('1 230')
+    expect(textes).not.toContain('1 234,0')
+  })
 })
+

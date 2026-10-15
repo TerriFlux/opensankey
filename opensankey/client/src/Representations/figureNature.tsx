@@ -61,6 +61,7 @@ import type { Class_ApplicationData } from '../types/ApplicationData'
 import type { Type_FigureAttributesConfig } from './Figure'
 import { figureNatureAttributes, type Type_HonourSpec } from './figureAttribute'
 import { figurePartsWiring, type Type_PartsWiring } from './parts/figurePartsWiring'
+import { withDiagramNumberFormat } from './figureDiagramNumberFormat'
 import { rememberFigureNatureDefaults } from '../Elements/figureNatureDefaults'
 import type { Type_PartInput } from './parts/buildParts'
 import { figureTitleOf, type Type_FigureChartStyle } from '../Charts/figureChartStyle'
@@ -180,7 +181,10 @@ export const registerFigureNature = (spec: Type_FigureNatureSpec): void => {
     fresh_own: spec.fresh_own,
     reads_generated_origin: spec.reads_generated_origin,
     generated_origin_whole: spec.generated_origin_whole,
-    draw: (container, ctx) => {
+    draw: (container, given) => {
+      // os#1511 (15/10) — le format des valeurs suit celui du diagramme tant que la figure ne dit
+      // rien d'autre (cf. `withDiagramNumberFormat`) : le tracé, ses parts et son style le lisent.
+      const ctx = { ...given, options: withDiagramNumberFormat(given) }
       const parts = spec.parts(ctx)
       if (parts === null) return undefined
       // LES CINQ GESTES, MONTÉS AVANT LE TRACÉ (os#1475) : les parts sont construites en reprenant
