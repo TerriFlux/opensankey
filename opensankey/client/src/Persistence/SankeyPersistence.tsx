@@ -44,6 +44,7 @@ import { determinationCatalogFromJSON, determinationCatalogToJSON } from '../typ
 import { unitaryProcessFromJSON, unitaryProcessToJSON } from '../types/UnitaryProcess'
 import { geoReferenceFromJSON, geoReferenceToJSON } from '../Algorithms/geoProjection'
 import { Class_ContainerElement } from '../Elements/TextZone'
+import { Class_FigureZoneElement, type Type_FigureZoneJSON } from '../Elements/FigureZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
 import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue, TRANSLATABLE_TEXT_ATTRIBUTES } from '../Elements/Element'
@@ -413,6 +414,10 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.toJSON(container, json_object, kwargs)
     json_object['tiedToNode'] = container.tied_to_nodes
     json_object['attachedNodes'] = container.attached_node.map(n => n.id)
+    // os#1531 — une figure posée dans le diagramme : sa figure, son sujet, son trait d'attache.
+    if (container instanceof Class_FigureZoneElement) {
+      json_object['figure_zone'] = container.toFigureZoneJSON() as unknown as Type_JSON
+    }
     // Titre du diagramme : zone de texte marquée is_title (additif/rétrocompatible)
     if (container.is_title) {
       json_object['is_title'] = true
@@ -494,6 +499,8 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.fromJSON(version, container, json_object, kwargs)
 
     container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
+    const figure_zone = json_object['figure_zone'] as unknown as Type_FigureZoneJSON | undefined
+    if (container instanceof Class_FigureZoneElement && figure_zone) container.loadFigureZoneJSON(figure_zone)
     container['_title_on_top'] = getBooleanFromJSON(json_object, 'title_on_top', false)
     container.syncTitleLayer()
 
@@ -1356,7 +1363,14 @@ export class SankeyPersistence {
       const name = typeof raw_name === 'string'
         ? raw_name
         : resolveLangMap(parseLangMap(raw_name, sankey.drawing_area.application_data.language), undefined)
-      if (!sankey.containers_dict[_]) sankey.addNewContainer(_, name)
+      // os#1531 — une zone figure se construit comme telle dès la passe 1 (sa classe ne change plus).
+      const figure_zone = (container_json as Type_JSON)['figure_zone'] as unknown as Type_FigureZoneJSON | undefined
+      if (sankey.containers_dict[_]) return
+      if (figure_zone && typeof figure_zone.figure === 'string' && figure_zone.subject) {
+        sankey.addNewFigureZone(_, name, figure_zone.figure, figure_zone.subject)
+      } else {
+        sankey.addNewContainer(_, name)
+      }
     })
     // Passe 2 : charger.
     entries.forEach(([_, container_json]) => {

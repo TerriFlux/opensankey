@@ -2,6 +2,8 @@
 
 import React from 'react'
 import type { Type_RepresentationContext } from './RepresentationRegistry'
+import { elementContext, mountRepresentation } from './RepresentationRegistry'
+import { figure_zone_hooks } from '../Elements/figureZoneHooks'
 import { drawPlanOf, type Type_DrawPlan } from '../Charts/couronnePlan'
 import { analysisOf, chartSubjectOf, couronneGesturesOfCtx, couronneOf, expandedOf, hierarchyPathOf, hierarchyReadingOf, readingAt, smallMultiplesOf, subjectFullNameOf, unitFactorOfSubject } from './analysisCore'
 import type { Class_DataTagGroup } from '../types/TagGroup'
@@ -1030,6 +1032,18 @@ export const DONUT_FRESH_OWN = { interaction_click: 'zoom' }
  * natures d'OpenSankey : elles n'ont plus rien de particulier.
  */
 export const registerAnalysisRepresentations = (): void => {
+  // os#1531 — UNE FIGURE POSÉE DANS LE DIAGRAMME se dessine par le même registre qu'en fenêtre : la
+  // figure du document que la zone cite, sur son sujet, avec ses réglages (cf. `Class_FigureZoneElement`).
+  figure_zone_hooks.mount = (zone, host) => {
+    const app_data = zone.drawing_area.application_data
+    const figure = app_data.menu_configuration.figureById(zone.figure_id)
+    const subject = zone.subject_element
+    if (figure === undefined || subject === undefined) return null
+    return mountRepresentation(
+      figure.nature.id, host,
+      elementContext(app_data, subject as unknown as Parameters<typeof elementContext>[1], figure.attributes as { [key: string]: unknown })
+    )
+  }
   // ── os#1479 — CE QUE CES DEUX NATURES ONT EN PROPRE, ET RIEN D AUTRE ────────────────────────
   //
   // Le socle (42 cles), les deux etages de style de part, les cinq gestes du cablage, la selection

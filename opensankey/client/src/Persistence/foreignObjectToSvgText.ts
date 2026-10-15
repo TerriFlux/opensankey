@@ -210,6 +210,8 @@ export function convertForeignObjectsInPlace(root: Element): void {
   root.querySelectorAll('foreignObject').forEach((node) => {
     const foNode = node as SVGForeignObjectElement
     if (foNode.querySelector('[contenteditable]')) return
+    // os#1531 — une figure posée dans le diagramme n'est pas un label : son export est le sien.
+    if (foNode.classList.contains('figure_zone_fo')) return
     // os#1385 — l'original vivant est cherché dans le document du CLONE, donc dans celui de la
     // zone exportée : un canevas détaché dans une autre fenêtre de navigateur n'a aucun de ses
     // nœuds dans le document de la page, et la recherche globale y retombait sur le repli
@@ -228,5 +230,5 @@ export function convertForeignObjectsInPlace(root: Element): void {
 /** Vrai si `root` contient au moins un label rich-text à convertir (hors édition en ligne). */
 export function hasConvertibleForeignObjects(root: Element): boolean {
   return Array.from(root.querySelectorAll('foreignObject'))
-    .some((fo) => !fo.querySelector('[contenteditable]'))
+    .some((fo) => !fo.querySelector('[contenteditable]') && !fo.classList.contains('figure_zone_fo'))
 }
