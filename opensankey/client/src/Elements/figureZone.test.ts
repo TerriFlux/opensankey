@@ -58,19 +58,29 @@ describe('os#1531 figure posee dans le diagramme', () => {
     expect((zone2 as Class_FigureZoneElement).subject).toEqual({ kind: 'node', id: node.id })
   })
 
-  test('la figure se monte par le crochet des representations, dans un foreignObject a la taille de la zone', () => {
+  test('la figure est un vrai SVG du diagramme : le SVG que trace la figure passe dans la zone', () => {
+    // Julien, 15/10 : « il ne faut pas une image, il faut un vrai SVG ».
     const { zone } = scene()
-    const vus: HTMLElement[] = []
-    figure_zone_hooks.mount = (_z, host) => { vus.push(host); return { cleanup: () => undefined } }
+    let montages = 0
+    figure_zone_hooks.mount = (_z, host) => {
+      montages++
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svg.setAttribute('class', 'trace')
+      host.appendChild(svg)
+      return { cleanup: () => undefined }
+    }
     const g = monter(zone)
     zone.drawFigure()
-    expect(vus).toHaveLength(1)
-    const fo = g.select('foreignObject.figure_zone_fo')
-    expect(fo.attr('width')).toBe('200')
-    expect(fo.attr('height')).toBe('150')
+    expect(montages).toBe(1)
+    // Aucun foreignObject : un cadre <svg> a la taille de la zone, qui porte le SVG trace.
+    expect(g.select('foreignObject').empty()).toBe(true)
+    const cadre = g.select('svg.figure_zone_svg')
+    expect(cadre.attr('width')).toBe('200')
+    expect(cadre.attr('height')).toBe('150')
+    expect(cadre.select('svg.trace').empty()).toBe(false)
     // Redessinee sans changement : la figure n est pas remontee.
     zone.drawFigure()
-    expect(vus).toHaveLength(1)
+    expect(montages).toBe(1)
   })
 
   test('le trait d attache va du bord de la zone au noeud, et le suit quand il bouge', () => {
@@ -90,38 +100,38 @@ describe('os#1531 figure posee dans le diagramme', () => {
   test('un appui sur la figure remonte a la zone (on la saisit partout), sans atteindre le dessin', () => {
     // Julien, 15/10 : « qu on puisse draguer l element ». Le zoom propre de la figure avalait l appui.
     const { zone } = scene()
-    let barre: HTMLElement | null = null
+    let barre: SVGRectElement | null = null
     figure_zone_hooks.mount = (_z, host) => {
-      barre = document.createElement('div')
-      host.appendChild(barre)
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      barre = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+      svg.appendChild(barre)
+      host.appendChild(svg)
       return { cleanup: () => undefined }
     }
     const g = monter(zone)
     zone.drawFigure()
     const vus: string[] = []
     ;(g.node() as SVGGElement).addEventListener('mousedown', () => vus.push('zone'))
-    ;(barre as unknown as HTMLElement).addEventListener('mousedown', () => vus.push('dessin'))
-    ;(barre as unknown as HTMLElement).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    ;(barre as unknown as SVGRectElement).addEventListener('mousedown', () => vus.push('dessin'))
+    ;(barre as unknown as SVGRectElement).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
     expect(vus).toEqual(['zone'])
   })
 
   test('la figure se dessine a largeur fixe puis s etire a la zone : son texte grandit avec elle', () => {
-    // Julien, 15/10 : « comment rendre ca visible ? ». Comme une image.
+    // Julien, 15/10 : « comment rendre ca visible ? ».
     const { zone } = scene()
-    const hotes: HTMLElement[] = []
-    figure_zone_hooks.mount = (_z, host) => { hotes.push(host); return { cleanup: () => undefined } }
-    monter(zone)
+    let montages = 0
+    figure_zone_hooks.mount = () => { montages++; return { cleanup: () => undefined } }
+    const g = monter(zone)
     zone.drawFigure()
-    expect(hotes[0].style.width).toBe('420px')
-    expect(hotes[0].style.transform).toBe(`scale(${200 / 420})`)
+    expect(g.select('svg.figure_zone_svg').attr('viewBox')).toBe(`0 0 420 ${Math.round(420 * 150 / 200)}`)
     // Agrandie a la meme proportion : etiree, pas remontee.
-    // La taille posee sans le redessin du cadre (jsdom ne mesure pas les textes).
     const sac = zone.attributes as unknown as { [k: string]: unknown }
     sac['shape_min_width'] = 400
     sac['shape_min_height'] = 300
     zone.drawFigure()
-    expect(hotes).toHaveLength(1)
-    expect(hotes[0].style.transform).toBe(`scale(${400 / 420})`)
+    expect(montages).toBe(1)
+    expect(g.select('svg.figure_zone_svg').attr('width')).toBe('400')
   })
 })
 
