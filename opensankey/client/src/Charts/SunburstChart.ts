@@ -1708,9 +1708,18 @@ export const drawSunburstChart = (
     // anneau, empilée de ses feuilles dans l'ordre des secteurs. La légende est celle de la couronne.
     if (opts.layout === 'bars') {
       const bars = slices.filter(sl => sl.depth === 0)
+      // os#1511 (Julien, 15/10 : « toujours vert ») — LES SEGMENTS SONT LA DIMENSION SOUS LA BARRE, pas
+      // les feuilles. Croisée sur trois dimensions (filière végétale × filière animale × postes), les
+      // feuilles étaient les postes — un seul sur ce flux, « Élevage et transformation animale » : tout
+      // était vert. La dimension du premier cran sous les barres empile ; ses niveaux plus fins, s'il y
+      // en a, la découpent ; les dimensions suivantes se somment dans ses segments.
+      const segment_dim = slices.find(sl => sl.depth === 1 && !sl.is_residual)?.dimension_id
       const segmentsOf = (bar: Type_SunburstSlice): Type_SunburstSlice[] => {
-        const leaves = slices.filter(sl => sl.depth > 0 && sl.children_count === 0 && sl.path[0] === bar.id)
-        return leaves.length > 0 ? leaves : [bar]
+        const mine = slices.filter(sl => sl.depth > 0 && sl.path[0] === bar.id &&
+          (sl.dimension_id === segment_dim || (sl.is_residual && sl.depth === 1)))
+        const parents = new Set(mine.map(sl => sl.path[sl.path.length - 2]))
+        const deepest = mine.filter(sl => !parents.has(sl.id))
+        return deepest.length > 0 ? deepest : [bar]
       }
       const font = st.font_size
       const max_value = bars.reduce((m, b) => Math.max(m, b.value), 0)
