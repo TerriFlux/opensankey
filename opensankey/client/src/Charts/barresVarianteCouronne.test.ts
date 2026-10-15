@@ -119,4 +119,13 @@ describe('os#1511 les barres croisees sont une couronne depliee', () => {
     expect(rects.map(r => r.getAttribute('data-part-id'))).toEqual(['ce/fr', 'ce/es', 'la/fr', 'la/es'])
     expect(rects.map(r => r.getAttribute('fill'))).toEqual(['#1f77b4', '#ff7f0e', '#1f77b4', '#ff7f0e'])
   })
+
+  test('les barres vont de la plus grande a la plus petite', () => {
+    // Julien, 15/10 : « l ordre des barres devrait etre du plus grand au plus petit ».
+    const el = sizedContainer()
+    drawSunburstChart(el, { ...TREE, roots: [...TREE.roots].reverse() }, { layout: 'bars', style: { color_source: 'model' } })
+    const noms = Array.from(el.querySelectorAll('text.sunburst_bar_name')).map(t => t.childNodes[0]?.textContent)
+    expect(noms).toEqual(['Cereales', 'Lait'])
+  })
 })
+

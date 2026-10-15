@@ -150,10 +150,12 @@ export class Class_FigureZoneElement extends Class_ContainerElement {
       this._frame.setAttribute('overflow', 'visible')
       this._relayPointerToZone(this._frame)
     }
-    this._frame.setAttribute('x', '0')
-    this._frame.setAttribute('y', '0')
-    this._frame.setAttribute('width', String(w))
-    this._frame.setAttribute('height', String(h))
+    // Dans un encart (fond ou liseré), le dessin garde une marge : il ne touche pas le bord.
+    const pad = this.shape_color_visible || this.shape_border_visible ? Math.min(12, w * 0.03) : 0
+    this._frame.setAttribute('x', String(pad))
+    this._frame.setAttribute('y', String(pad))
+    this._frame.setAttribute('width', String(Math.max(1, w - 2 * pad)))
+    this._frame.setAttribute('height', String(Math.max(1, h - 2 * pad)))
     this._frame.setAttribute('viewBox', `0 0 ${nominal_w} ${nominal_h}`)
     this._frame.setAttribute('preserveAspectRatio', 'xMidYMid meet')
     // Le dessin d'un élément vide son groupe : on y repose le même cadre, la figure dedans.

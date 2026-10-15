@@ -1707,7 +1707,10 @@ export const drawSunburstChart = (
     // mêmes identifiants de part, même repli « Autres »), posés en barres : une par secteur du premier
     // anneau, empilée de ses feuilles dans l'ordre des secteurs. La légende est celle de la couronne.
     if (opts.layout === 'bars') {
+      // os#1511 (Julien, 15/10 : « l'ordre des barres devrait être du plus grand au plus petit ») —
+      // les barres par total décroissant, « Autres » en dernier ; leurs segments gardent leur ordre.
       const bars = slices.filter(sl => sl.depth === 0)
+        .sort((a, b) => Number(a.is_residual) - Number(b.is_residual) || b.value - a.value)
       // os#1511 (Julien, 15/10 : « toujours vert ») — LES SEGMENTS SONT LA DIMENSION SOUS LA BARRE, pas
       // les feuilles. Croisée sur trois dimensions (filière végétale × filière animale × postes), les
       // feuilles étaient les postes — un seul sur ce flux, « Élevage et transformation animale » : tout
