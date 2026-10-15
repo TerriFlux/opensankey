@@ -2,6 +2,19 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Non publié]
+
+### Bundle autonome (os#1532)
+
+- **Le viewer redevient chargeable par une seule balise `<script>`**, sans projet React :
+  `src/standalone.tsx` lit `window.sankey` (`diagram` = URL ou objet, options du viewer) et
+  monte `ViewerOpenSankeyApp` dans `#react-container`. `pnpm run bundle`
+  (`scripts/build_bundle.cjs`, esbuild) écrit `build/static/{js,css}/main.bundle.*`, une page de
+  démonstration et une copie au nom stable `opensankey.js` / `opensankey.css` ; le job `pages` du
+  dépôt public les sert sous `https://su-model.gitlab.io/opensankey/<version>/`. Plus aucun
+  bundle n'était publié depuis 1.1.4 : le job `build` lançait encore `react-scripts build` sans
+  entrée CRA depuis la scission viewer/éditeur (OS#1331). Exemple : `examples/html-viewer/`.
+
 ## [1.3.2] — 2026-09-05
 
 - **Chargement : quatre dessins de flux refaits en moins** (os#1377). Deux causes,

@@ -27,13 +27,16 @@ build:
     # Env
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Build open-sankey
-    - bash build_client.sh -I -L -B -D
+    # Build open-sankey : install, lint, bundle autonome (os#1532). Pas de `-D` (tsc dist) ici :
+    # ce dépôt est un miroir sans lockfile, `pnpm install` y résout des @types/d3-* plus stricts
+    # que ceux figés dans le monorepo et `tsc` échoue sur des typages d3 `.on()` — alors que le
+    # paquet npm est produit et typé depuis le monorepo (publish:npm). Seul `build/` compte ici.
+    - bash build_client.sh -I -L -B
     - bash build_server.sh
     - bash build_doc.sh
   artifacts:
     paths:
-      - opensankey/client/build  # c'est le dossier généré par `npm run build`
+      - opensankey/client/build  # produit par `pnpm run bundle` (scripts/build_bundle.cjs)
   except:
     - schedules
 
@@ -83,7 +86,9 @@ pages:
       fi
     - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
     # === Outils ===
-    - apt-get update -qq && apt-get install -y -qq wget
+    # Le runner du miroir est un SHELL runner (pas docker, `image:` ignoré, pas de root) :
+    # wget y est présent, zip pas forcément (os#1532, 15/10/2026). Pas d'apt-get.
+    - command -v wget >/dev/null || { echo "[ERREUR] wget absent sur le runner"; exit 1; }
     # === Vérification que le build existe ===
     - BUILD_DIR="$CI_PROJECT_DIR/opensankey/client/build"
     - |
@@ -212,7 +217,11 @@ pages:
     - echo "[INFO] Version $APP_VERSION écrite dans $VERSION_DIR"
     - |
       if [ -d "$VERSION_DIR/static" ]; then
-        ( cd "$VERSION_DIR" && zip -rq "static.zip" static/ )
+        if command -v zip >/dev/null; then
+          ( cd "$VERSION_DIR" && zip -rq "static.zip" static/ )
+        else
+          ( cd "$VERSION_DIR" && python3 -m zipfile -c "static.zip" static/ )
+        fi
         echo "[INFO] static.zip créé pour $APP_VERSION"
       fi
     - rm -rf "$LATEST_DIR"

@@ -25,6 +25,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "bundle": "node scripts/build_bundle.cjs",
     "dist": "tsc -p .",
     "test": "react-scripts test --env=jsdom",
     "test_regenerate": "react-scripts test -u",
@@ -122,6 +123,7 @@
     "@types/d3-selection": "^3.0.10",
     "@types/d3-shape": "^3.1.7",
     "@types/d3-transition": "^3.0.8",
+    "esbuild": "^0.25.12",
     "@types/d3-zoom": "^3.0.8",
     "@types/deep-diff": "^1.0.5",
     "@types/file-saver": "^2.0.7",
