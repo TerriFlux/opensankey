@@ -1859,8 +1859,14 @@ export class Class_MenuConfig {
     // La barre latérale unifiée (config / filtre / recherche / modèles) est
     // couverte par panels.getSidebarReservedPx() — ne PAS ré-additionner la
     // réserve du filtre.
-    return this.panels.getSidebarReservedPx()
+    return this.panels.getSidebarReservedPx() + this.extra_chrome_reserved_px
   }
+  /**
+   * sa#671 — Largeur (px) réservée à droite par un chrome que l'ÉDITEUR ne connaît pas : le
+   * panneau de saisie d'une mini-appli, posé par sa coquille. Entre dans la même réserve que
+   * la barre latérale, donc dans la mise en page de la grande zone ET dans le cadrage du dessin.
+   */
+  public extra_chrome_reserved_px = 0
   // --- Occupants de la grande zone (os#1355/1361) -----------------------------------------
 
   /** Les occupants dans l'ordre des piles. COPIE : les mutations passent par les méthodes. */
